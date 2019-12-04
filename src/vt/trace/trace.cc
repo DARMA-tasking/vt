@@ -145,6 +145,10 @@ void Trace::setupNames(
 }
 
 /*virtual*/ Trace::~Trace() {
+  if (!open_events_.empty()) {
+    vtAssert(false, "Trying to dump traces with open events?");
+  }
+  //
   cleanupTracesFile();
 }
 
@@ -609,10 +613,8 @@ void Trace::cleanupTracesFile() {
   if (!traceWritingEnabled(node)) {
     return;
   }
-  //--- Sanity check
-  vtAssert(open_events_.empty(), "Trying to dump traces with open events?");
-  cur_stop_ = traces_.size();
   //--- Dump everything into an output file
+  cur_stop_ = traces_.size();
   writeTracesFile(Z_FINISH);
   outputFooter(node, start_time_, log_file_.get());
   gzclose(log_file_->file_type);
@@ -628,7 +630,7 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     theCollective()->barrier();
   }
   if (traces_.size() > cur_ + ArgType::vt_trace_flush_size) {
-    writeTracesFile(Z_FULL_FLUSH);
+    writeTracesFile(Z_SYNC_FLUSH);
   }
 }
 

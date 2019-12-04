@@ -51,7 +51,6 @@
 #include <memory>
 #include <cstdlib>
 #include <mpi.h>
-#include <zlib.h>
 
 namespace vt {
 
@@ -140,7 +139,7 @@ void CollectiveAnyOps<instance>::abort(
   if (myrt) {
 #if backend_check_enabled(trace_enabled)
     //--- Try to flush most of the traces before aborting
-    myrt->theTrace->writeTracesFile(Z_FINISH);
+    myrt->theTrace->cleanupTracesFile();
 #endif
     myrt->abort(str, code);
   } else {
@@ -156,10 +155,6 @@ void CollectiveAnyOps<instance>::output(
   auto tls_rt = curRT;
   auto myrt = tls_rt ? tls_rt : ::vt::rt;
   if (myrt) {
-#if backend_check_enabled(trace_enabled)
-    //--- Try to flush most of the traces
-    myrt->theTrace->writeTracesFile(Z_FULL_FLUSH);
-#endif
     myrt->output(str,code,error,decorate,formatted);
   } else {
     ::fmt::print(str.c_str());
