@@ -53,7 +53,9 @@
 #include <list>
 #include <memory>
 
-#include <context/context_wrapper.h>
+#if backend_check_enabled(fcontext)
+#  include <context/context_wrapper.h>
+#endif
 
 namespace vt { namespace seq {
 

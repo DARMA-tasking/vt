@@ -42,61 +42,51 @@
 //@HEADER
 */
 
-
 #include "vt/trace/trace_event.h"
-#include "vt/utils/bits/bits_common.h"
 
 #include <string>
 
 namespace vt { namespace trace {
 
 EventClass::EventClass(
-  std::string const& in_event, std::string const& in_hash_event
-) : event(in_event), hash_event(in_hash_event)
-{
-  auto const& event_hash =  std::hash<std::string>{}(in_hash_event);
-  this_event_ = event_hash;
-}
+  TraceEntryIDType id,
+  TraceEntrySeqType seq,
+  std::string const& in_event
+) : this_event_(id), this_event_seq_(seq), event_(in_event)
+{}
 
 TraceEntryIDType EventClass::theEventId() const {
   return this_event_;
 }
 
-TraceEntryIDType EventClass::theEventSeqId() const {
+TraceEntrySeqType EventClass::theEventSeq() const {
   return this_event_seq_;
 }
 
 std::string EventClass::theEventName() const {
-  return event;
+  return event_;
 }
 
 void EventClass::setEventName(std::string const& in_str) {
-  event = in_str;
-}
-
-void EventClass::setEventSeq(TraceEntryIDType const& seq) {
-  this_event_seq_ = seq;
-}
-
-TraceEntryIDType EventClass::theEventSeq() const {
-  return this_event_seq_;
+  event_ = in_str;
 }
 
 Event::Event(
-  std::string const& in_event, std::string const& in_hash_event,
-  TraceEntryIDType const& in_event_type
-) : EventClass(in_event, in_hash_event), this_event_type_(in_event_type)
+  TraceEntryIDType id,
+  TraceEntrySeqType seq,
+  std::string const& in_event,
+  TraceEntryIDType in_event_type,
+  TraceEntrySeqType in_event_type_seq
+) : EventClass(id, seq, in_event),
+    this_event_type_(in_event_type),
+    this_event_type_seq_(in_event_type_seq)
 { }
 
 TraceEntryIDType Event::theEventTypeId() const {
   return this_event_type_;
 }
 
-void Event::setEventTypeSeq(TraceEntryIDType const& seq) {
-  this_event_type_seq_ = seq;
-}
-
-TraceEntryIDType Event::theEventTypeSeq() const {
+TraceEntrySeqType Event::theEventTypeSeq() const {
   return this_event_type_seq_;
 }
 

@@ -61,7 +61,7 @@ template <typename MsgT, typename ElementT>
   HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node
 ) {
   #if backend_check_enabled(trace_enabled)
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
+    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, auto_registry::RegistryTypeEnum::RegVrt
     );
     trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);

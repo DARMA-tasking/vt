@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             smart_ptr_virtual.h
+//                                 criterion.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,63 +42,58 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H
-#define INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H
 
 #include "vt/config.h"
-#include "vt/messaging/message/message.h"
 
-namespace vt { namespace messaging {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-template <typename T>
-struct MsgSharedPtr;
-
-template <typename T>
-struct MsgVirtualPtr final {
-
-  template <typename U>
-  explicit MsgVirtualPtr(MsgSharedPtr<U> in_ptr)
-    : ptr_(MsgSharedPtr<T>(in_ptr)),
-      closure_([in_ptr]{ })
-  { }
-
-  template <typename U>
-  explicit MsgVirtualPtr(MsgVirtualPtr<U> in_vrt)
-    : ptr_(MsgSharedPtr<T>(in_vrt.ptr_)),
-      closure_(in_vrt.closure_)
-  { }
-
-  MsgVirtualPtr(std::nullptr_t) { }
-
-  inline void operator=(std::nullptr_t)
-  {
-    ptr_ = nullptr;
-    closure_ = nullptr;
-  }
-
-  inline T* get() const { return ptr_.get(); }
-  inline T* operator->() const { return ptr_.get(); }
-  inline T& operator*() const { return *ptr_.get(); }
-  inline bool operator==(std::nullptr_t) const { return ptr_ == nullptr; }
-  inline bool operator!=(std::nullptr_t) const { return ptr_ != nullptr; }
-
-private:
-  MsgSharedPtr<T> ptr_ = nullptr;
-  std::function<void()> closure_ = nullptr;
-
-  friend struct PendingSend;
-  MsgSharedPtr<T>& getShared() { return ptr_; }
+enum struct CriterionEnum : uint8_t {
+  Grapevine         = 0,
+  ModifiedGrapevine = 1
 };
 
-}} /* end namespace vt::messaging */
+struct CriterionBase {
+  using LoadType = double;
+};
 
-namespace vt {
+struct GrapevineCriterion : CriterionBase {
+  bool operator()(LoadType, LoadType under, LoadType obj, LoadType avg) const {
+    return not (under + obj > avg);
+  }
+};
 
-template <typename U>
-using MsgVirtualPtr = messaging::MsgVirtualPtr<U>;
+struct ModifiedGrapevineCriterion : CriterionBase {
+  bool operator()(LoadType over, LoadType under, LoadType obj, LoadType) const {
+    return obj < over - under;
+  }
+};
 
-using MsgVirtualPtrAny = messaging::MsgVirtualPtr<ShortMessage>;
+struct Criterion : CriterionBase {
+  explicit Criterion(CriterionEnum const criterion)
+    : criterion_(criterion)
+  { }
 
-} /* end namespace vt */
+  bool operator()(LoadType over, LoadType under, LoadType obj, LoadType avg) const {
+    switch (criterion_) {
+    case CriterionEnum::Grapevine:
+      return GrapevineCriterion()(over, under, obj, avg);
+      break;
+    case CriterionEnum::ModifiedGrapevine:
+      return ModifiedGrapevineCriterion()(over, under, obj, avg);
+      break;
+    default:
+      vtAssert(false, "Incorrect criterion value");
+      return false;
+      break;
+    };
+  }
 
-#endif /*INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H*/
+protected:
+  CriterionEnum const criterion_;
+};
+
+}}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H*/

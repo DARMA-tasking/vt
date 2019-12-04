@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          auto_registry_interface.h
+//                                 gossip_msg.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,38 +42,70 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H
 
-#include "vt/registry/auto/auto_registry_common.h"
 #include "vt/config.h"
-#include "vt/registry/registry.h"
 
-namespace vt { namespace auto_registry {
+#include <vector>
+#include <unordered_map>
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-HandlerType makeAutoHandler(MessageT* const msg);
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-template <typename T, T value>
-HandlerType makeAutoHandlerParam();
+struct GossipMsg : vt::Message {
+  using NodeLoadType = std::unordered_map<NodeType, lb::BaseLB::LoadType>;
 
-template <typename T, bool is_msg, typename... Args>
-HandlerType makeAutoHandlerFunctor();
+  GossipMsg() = default;
+  GossipMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
+    : from_node_(in_from_node), node_load_(in_node_load)
+  { }
 
-AutoActiveType getAutoHandler(HandlerType const& handler);
+  NodeLoadType const& getNodeLoad() const {
+    return node_load_;
+  }
 
-AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
+  void addNodeLoad(NodeType node, lb::BaseLB::LoadType load) {
+    node_load_[node] = load;
+  }
 
-#if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType handlerTraceID(
-    HandlerType const& handler, RegistryTypeEnum reg_type
-  );
-#endif
+  NodeType getFromNode() const { return from_node_; }
 
-}} // end namespace vt::auto_registry
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | from_node_;
+    s | node_load_;
+  }
 
-#include "vt/registry/auto/auto_registry.h"
-#include "vt/registry/auto/functor/auto_registry_functor.h"
-#include "vt/registry/auto/index/auto_registry_index.h"
+private:
+  NodeType from_node_     = uninitialized_destination;
+  NodeLoadType node_load_ = {};
+};
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H*/
+struct LazyMigrationMsg : vt::Message {
+  using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, lb::BaseLB::LoadType>;
+
+  LazyMigrationMsg() = default;
+  LazyMigrationMsg(NodeType in_to_node, ObjsType const& in_objs)
+    : to_node_(in_to_node), objs_(in_objs)
+  { }
+
+  ObjsType const& getObjSet() const {
+    return objs_;
+  }
+
+  NodeType getToNode() const { return to_node_; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | to_node_;
+    s | objs_;
+  }
+
+private:
+  NodeType to_node_ = uninitialized_destination;
+  ObjsType objs_  = {};
+};
+
+}}}} /* end namespace vt::vrt::collection::balance */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H*/

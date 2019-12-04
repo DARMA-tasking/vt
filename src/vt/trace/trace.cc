@@ -49,8 +49,10 @@
 #include "vt/trace/trace.h"
 #include "vt/utils/demangle/demangle.h"
 
-#include <fstream>
 #include <cinttypes>
+#include <fstream>
+#include <iostream>
+#include <map>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -67,6 +69,13 @@ struct vt_gzFile {
 };
 
 using ArgType = vt::arguments::ArgConfig;
+
+template <typename EventT>
+struct TraceEventSeqCompare {
+  bool operator()(EventT* const a, EventT* const b) const {
+    return a->theEventSeq() < b->theEventSeq();
+  }
+};
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
@@ -463,6 +472,12 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     return 0;
   }
 
+  vtAssert(
+   log->ep == no_trace_entry_id
+   or TraceRegistry::getEvent(log->ep).theEventId() not_eq no_trace_entry_id,
+    "Event must exist that was logged"
+  );
+
   // close any idle event as soon as we encounter any other type of event
   if (idle_begun_ and
       log->type != TraceConstantsType::BeginIdle and
@@ -472,18 +487,19 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
 
   auto grouped_begin = [&]() -> TraceEventIDType {
     if (not open_events_.empty()) {
+      LogType* top_event = open_events_.top();
       traces_.push_back(
         new LogType(
           log->time,
-          open_events_.top()->ep,
+          top_event->ep,
           TraceConstantsType::EndProcessing,
-          open_events_.top()->event,
-          open_events_.top()->msg_len,
-          open_events_.top()->node,
-          open_events_.top()->idx1,
-          open_events_.top()->idx2,
-          open_events_.top()->idx3,
-          open_events_.top()->idx4
+          top_event->event,
+          top_event->msg_len,
+          top_event->node,
+          top_event->idx1,
+          top_event->idx2,
+          top_event->idx3,
+          top_event->idx4
         )
       );
     }
@@ -515,18 +531,19 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     traces_.push_back(log);
 
     if (not open_events_.empty()) {
+      LogType* top_event = open_events_.top();
       traces_.push_back(
         new LogType(
           log->time,
-          open_events_.top()->ep,
+          top_event->ep,
           TraceConstantsType::BeginProcessing,
-          open_events_.top()->event,
-          open_events_.top()->msg_len,
-          open_events_.top()->node,
-          open_events_.top()->idx1,
-          open_events_.top()->idx2,
-          open_events_.top()->idx3,
-          open_events_.top()->idx4
+          top_event->event,
+          top_event->msg_len,
+          top_event->node,
+          top_event->idx1,
+          top_event->idx2,
+          top_event->idx3,
+          top_event->idx4
         )
       );
     }
@@ -642,8 +659,8 @@ void Trace::writeTracesFile(int flush) {
     "write_traces_file: traces.size={}, "
     "event_type_container.size={}, event_container.size={}\n",
     traces_.size(),
-    TraceContainersType::event_type_container.size(),
-    TraceContainersType::event_container.size()
+    TraceContainersType::getEventTypeContainer()->size(),
+    TraceContainersType::getEventContainer()->size()
   );
 
   if (traceWritingEnabled(theContext()->getNode())) {
@@ -676,7 +693,6 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType const& traces) {
   for (size_t i = cur_; i < stop_point; i++) {
     auto& log = traces[i];
     auto const& converted_time = timeToInt(log->time - start_time_);
-
     auto const type = static_cast<
       std::underlying_type<decltype(log->type)>::type
     >(log->type);
@@ -846,12 +862,23 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType const& traces) {
 }
 
 void Trace::outputControlFile(std::ofstream& file) {
+
+  using ContainerEventSortedType = std::map<
+    TraceContainerEventType::mapped_type*, bool, TraceEventSeqCompare<TraceEventType>
+  >;
+
+  using ContainerEventTypeSortedType = std::map<
+    TraceContainerEventClassType::mapped_type*, bool, TraceEventSeqCompare<EventClassType>
+  >;
+
   auto const num_nodes = theContext()->getNumNodes();
 
-  auto const num_event_types =
-    TraceContainersType::getEventTypeContainer().size();
-  auto const num_events = TraceContainersType::getEventContainer().size();
-  auto const num_user_events = user_event_.getEvents().size();
+  auto* event_types = TraceContainersType::getEventTypeContainer();
+  auto* events = TraceContainersType::getEventContainer();
+
+  auto const num_event_types = event_types->size();
+  auto const num_events = events->size();
+  auto const num_user_events = user_event.getEvents().size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
@@ -868,7 +895,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   ContainerEventSortedType sorted_event;
   ContainerEventTypeSortedType sorted_event_type;
 
-  for (auto&& elem : TraceContainersType::getEventContainer()) {
+  for (auto&& elem : *TraceContainersType::getEventContainer()) {
     sorted_event.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),
@@ -876,7 +903,7 @@ void Trace::outputControlFile(std::ofstream& file) {
     );
   }
 
-  for (auto&& elem : TraceContainersType::getEventTypeContainer()) {
+  for (auto&& elem : *TraceContainersType::getEventTypeContainer()) {
     sorted_event_type.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          auto_registry_interface.h
+//                              gossip_constants.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,38 +42,16 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_CONSTANTS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_CONSTANTS_H
 
-#include "vt/registry/auto/auto_registry_common.h"
 #include "vt/config.h"
-#include "vt/registry/registry.h"
 
-namespace vt { namespace auto_registry {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-HandlerType makeAutoHandler(MessageT* const msg);
+static constexpr double const gossip_tolerance = 0.05f;
+static constexpr double const gossip_threshold = 1.0f;
 
-template <typename T, T value>
-HandlerType makeAutoHandlerParam();
+}}}} /* end namespace vt::vrt::collection::lb */
 
-template <typename T, bool is_msg, typename... Args>
-HandlerType makeAutoHandlerFunctor();
-
-AutoActiveType getAutoHandler(HandlerType const& handler);
-
-AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
-
-#if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType handlerTraceID(
-    HandlerType const& handler, RegistryTypeEnum reg_type
-  );
-#endif
-
-}} // end namespace vt::auto_registry
-
-#include "vt/registry/auto/auto_registry.h"
-#include "vt/registry/auto/functor/auto_registry_functor.h"
-#include "vt/registry/auto/index/auto_registry_index.h"
-
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_CONSTANTS_H*/

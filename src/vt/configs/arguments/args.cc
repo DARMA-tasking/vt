@@ -80,8 +80,9 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
 /*static*/ bool        ArgConfig::vt_lb_quiet           = false;
-/*static*/ std::string ArgConfig::vt_lb_file_name       = "balance.in";
+/*static*/ std::string ArgConfig::vt_lb_file_name       = "";
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
+/*static*/ std::string ArgConfig::vt_lb_args            = "";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
 /*static*/ bool        ArgConfig::vt_lb_stats           = false;
 /*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
@@ -116,6 +117,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_param        = false;
 /*static*/ bool        ArgConfig::vt_debug_handler      = false;
 /*static*/ bool        ArgConfig::vt_debug_hierlb       = false;
+/*static*/ bool        ArgConfig::vt_debug_gossiplb     = false;
 /*static*/ bool        ArgConfig::vt_debug_scatter      = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence     = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence_vrt = false;
@@ -263,6 +265,7 @@ namespace vt { namespace arguments {
   auto oap = "Enable debug_param        = \"" debug_pp(param)        "\"";
   auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
   auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
+  auto qbp = "Enable debug_gossiplb     = \"" debug_pp(gossiplb)     "\"";
   auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
   auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
   auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
@@ -296,6 +299,7 @@ namespace vt { namespace arguments {
   auto oa = app.add_flag("--vt_debug_param",        vt_debug_param,        oap);
   auto pa = app.add_flag("--vt_debug_handler",      vt_debug_handler,      pap);
   auto qa = app.add_flag("--vt_debug_hierlb",       vt_debug_hierlb,       qap);
+  auto qb = app.add_flag("--vt_debug_gossiplb",     vt_debug_gossiplb,     qbp);
   auto ra = app.add_flag("--vt_debug_scatter",      vt_debug_scatter,      rap);
   auto sa = app.add_flag("--vt_debug_sequence",     vt_debug_sequence,     sap);
   auto ta = app.add_flag("--vt_debug_sequence_vrt", vt_debug_sequence_vrt, tap);
@@ -329,6 +333,7 @@ namespace vt { namespace arguments {
   oa->group(debugGroup);
   pa->group(debugGroup);
   qa->group(debugGroup);
+  qb->group(debugGroup);
   ra->group(debugGroup);
   sa->group(debugGroup);
   ta->group(debugGroup);
@@ -349,6 +354,7 @@ namespace vt { namespace arguments {
 
   auto lb            = "Enable load balancing";
   auto lb_file       = "Enable reading LB configuration from file";
+  auto lb_args       = "Arguments pass to LB: \"x=0 y=1 test=2\"";
   auto lb_quiet      = "Silence load balancing output";
   auto lb_file_name  = "LB configuration file to read";
   auto lb_name       = "Name of the load balancer to use";
@@ -358,14 +364,16 @@ namespace vt { namespace arguments {
   auto lb_stats_file = "Load balancing statistics output file name";
   auto lbn = "NoLB";
   auto lbi = 1;
-  auto lbf = "balance.in";
+  auto lbf = "";
   auto lbd = "vt_lb_stats";
   auto lbs = "stats";
+  auto lba = "";
   auto s  = app.add_flag("--vt_lb",              vt_lb,             lb);
   auto t  = app.add_flag("--vt_lb_file",         vt_lb_file,        lb_file);
   auto t1 = app.add_flag("--vt_lb_quiet",        vt_lb_quiet,       lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name",  vt_lb_file_name,   lb_file_name, lbf);
   auto v  = app.add_option("--vt_lb_name",       vt_lb_name,        lb_name,      lbn);
+  auto v1 = app.add_option("--vt_lb_args",       vt_lb_args,        lb_args,      lba);
   auto w  = app.add_option("--vt_lb_interval",   vt_lb_interval,    lb_interval,  lbi);
   auto ww = app.add_flag("--vt_lb_stats",        vt_lb_stats,       lb_stats);
   auto wx = app.add_option("--vt_lb_stats_dir",  vt_lb_stats_dir,   lb_stats_dir, lbd);
@@ -376,6 +384,7 @@ namespace vt { namespace arguments {
   t1->group(debugLB);
   u->group(debugLB);
   v->group(debugLB);
+  v1->group(debugLB);
   w->group(debugLB);
   ww->group(debugLB);
   wx->group(debugLB);

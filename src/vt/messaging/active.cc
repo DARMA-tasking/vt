@@ -265,7 +265,7 @@ EventType ActiveMessenger::sendMsgSized(
     auto const handler = envelopeGetHandler(msg->env);
     bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
     if (is_auto) {
-      trace::TraceEntryIDType ep = auto_registry::theTraceID(
+      trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
         handler, auto_registry::RegistryTypeEnum::RegGeneral
       );
       if (not is_bcast) {
@@ -298,19 +298,12 @@ EventType ActiveMessenger::sendMsgSized(
     base, uninitialized_destination, msg_size, true, &deliver
   );
 
-  EventType ret = no_event;
-
   if (deliver) {
-    EventType event = no_event;
-
     sendMsgBytesWithPut(dest, base, msg_size, send_tag);
-
-    ret = event;
-  } else {
-    ret = ret_event;
+    return no_event;
   }
 
-  return ret;
+  return ret_event;
 }
 
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(

@@ -413,6 +413,7 @@ void Runtime::printStartupBanner() {
     if (ArgType::vt_lb) {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
+      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
     }
     if (ArgType::vt_lb_stats) {
       auto f9 = warn_cr("--vt_lb_stats", "lblite");
@@ -424,11 +425,20 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
     if (ArgType::vt_lb_file) {
-      auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
-      fmt::print("{}\t{}{}", vt_pre, f10, reset);
-      auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
-      auto f11 = opt_on("--vt_lb_file_name", f12);
-      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+      if (ArgType::vt_lb_file_name == "") {
+        auto warn_lb_file = fmt::format(
+          "{}Warning:{} {}{}{} has no effect: compile-time"
+          " option {}{}{} is empty{}\n", red, reset, magenta, "--vt_lb_file",
+          reset, magenta, "--vt_lb_file_name", reset, reset
+        );
+        fmt::print("{}\t{}{}", vt_pre, warn_lb_file, reset);
+      } else {
+        auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
+        fmt::print("{}\t{}{}", vt_pre, f10, reset);
+        auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
+        auto f11 = opt_on("--vt_lb_file_name", f12);
+        fmt::print("{}\t{}{}", vt_pre, f11, reset);
+      }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", ArgType::vt_lb_name);
       auto a4 = opt_on("--vt_lb_name", a3);
@@ -695,6 +705,7 @@ void Runtime::printStartupBanner() {
   vt_runtime_debug_warn_compile(param)
   vt_runtime_debug_warn_compile(handler)
   vt_runtime_debug_warn_compile(hierlb)
+  vt_runtime_debug_warn_compile(gossiplb)
   vt_runtime_debug_warn_compile(scatter)
   vt_runtime_debug_warn_compile(sequence)
   vt_runtime_debug_warn_compile(sequence_vrt)
@@ -710,6 +721,12 @@ void Runtime::printStartupBanner() {
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
+
+  // Enqueue a check for later in case arguments are modified before work
+  // actually executes
+  theSched->enqueue([this]{
+    this->checkForArgumentErrors();
+  });
 }
 
 void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
@@ -728,6 +745,14 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   std::string units = std::to_string(num_units);
   fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
   fmt::print("{}{}{}\n", vt_pre, f1, reset);
+}
+
+void Runtime::checkForArgumentErrors() {
+  #if !backend_check_enabled(lblite)
+    if (ArgType::vt_lb) {
+      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
+    }
+  #endif
 }
 
 bool Runtime::initialize(bool const force_now) {

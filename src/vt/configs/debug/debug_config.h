@@ -79,7 +79,8 @@ enum CatEnum : uint64_t {
   worker       = 1ull<<26,
   group        = 1ull<<27,
   broadcast    = 1ull<<28,
-  objgroup     = 1ull<<29
+  objgroup     = 1ull<<29,
+  gossiplb     = 1ull<<30
 };
 
 enum CtxEnum : uint64_t {
@@ -123,6 +124,7 @@ vt_option_category_pretty_print(gen,          "general")
 vt_option_category_pretty_print(group,        "group")
 vt_option_category_pretty_print(handler,      "handler")
 vt_option_category_pretty_print(hierlb,       "HierarchicalLB")
+vt_option_category_pretty_print(gossiplb,     "GossipLB")
 vt_option_category_pretty_print(lb,           "lb")
 vt_option_category_pretty_print(location,     "location")
 vt_option_category_pretty_print(objgroup,     "objgroup")

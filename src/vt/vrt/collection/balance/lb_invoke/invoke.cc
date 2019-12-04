@@ -83,9 +83,6 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   }
 
   if (ArgType::vt_lb_file and try_file) {
-    auto const file_name = ArgType::vt_lb_file_name;
-    ReadLBSpec::openFile(file_name);
-    ReadLBSpec::readFile();
     bool const has_spec = ReadLBSpec::hasSpec();
     if (has_spec) {
       the_lb = ReadLBSpec::getLB(phase);

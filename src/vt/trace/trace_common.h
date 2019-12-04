@@ -45,28 +45,31 @@
 #if !defined INCLUDED_TRACE_TRACE_COMMON_H
 #define INCLUDED_TRACE_TRACE_COMMON_H
 
-#include "vt/config.h"
+#include "vt/configs/types/types_type.h"
 
 #include <cstdint>
-#include <functional>
-#include <string>
 
 namespace vt { namespace trace {
 
-static constexpr uint32_t const trace_flush_size = 100000;
+// trace events
+using TraceEntryIDType    = size_t; // uint32_t, maybe..
+using TraceEntrySeqType   = uint32_t;
 
-using TraceEntryIDType = std::hash<std::string>::result_type;
-using TraceEventIDType = uint32_t;
-using TraceMsgLenType = size_t;
+static constexpr TraceEntryIDType const no_trace_entry_id = 0;
+static constexpr TraceEntrySeqType const no_trace_entry_seq = -1;
+
+// user traces
+using TraceEventIDType    = uint32_t;
+using TraceMsgLenType     = size_t;
 using UserSpecEventIDType = int32_t;
 using UserEventIDType     = int64_t;
 
-static constexpr TraceEntryIDType const no_trace_entry_id = u64empty;
 static constexpr TraceEventIDType const no_trace_event = 0;
+static constexpr BitCountType const trace_event_num_bits = 32;
+
 static constexpr NodeType const designated_root_node = 0;
 static constexpr int64_t const trace_reserve_count = 1048576;
-
-static constexpr BitCountType const trace_event_num_bits = 32;
+static constexpr uint32_t const trace_flush_size = 100000;
 
 }} //end namespace vt::trace
 

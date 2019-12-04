@@ -36,12 +36,13 @@ set(
    CatEnum::termds       | \
    CatEnum::barrier      | \
    CatEnum::pipe         | \
-   CatEnum:: pool        | \
+   CatEnum::pool         | \
    CatEnum::reduce       | \
    CatEnum::rdma         | \
    CatEnum::rdma_channel | \
    CatEnum::handler      | \
    CatEnum::hierlb       | \
+   CatEnum::gossiplb     | \
    CatEnum::scatter      | \
    CatEnum::serial_msg   | \
    CatEnum::sequence     | \
@@ -108,6 +109,14 @@ if (${vt_bit_check_overflow})
   set(vt_feature_cmake_bit_check_overflow "1")
 else()
   set(vt_feature_cmake_bit_check_overflow "0")
+endif()
+
+if (${vt_fcontext_enabled})
+  message(STATUS "Building VT with fcontext (ULT) enabled")
+  set(vt_feature_cmake_fcontext "1")
+else()
+  message(STATUS "Building VT with fcontext (ULT) disabled")
+  set(vt_feature_cmake_fcontext "0")
 endif()
 
 set(vt_feature_cmake_no_feature "0")

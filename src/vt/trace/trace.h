@@ -69,7 +69,7 @@ struct vt_gzFile;
 struct Trace {
   using LogType             = Log;
   using TraceConstantsType  = eTraceConstants;
-  using TraceContainersType = TraceContainers<void>;
+  using TraceContainersType = TraceContainers;
   using TimeIntegerType     = int64_t;
   using LogPtrType          = LogType*;
   using TraceContainerType  = std::vector<LogPtrType>;
