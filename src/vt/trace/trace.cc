@@ -878,7 +878,7 @@ void Trace::outputControlFile(std::ofstream& file) {
 
   auto const num_event_types = event_types->size();
   auto const num_events = events->size();
-  auto const num_user_events = user_event.getEvents()->size();
+  auto const num_user_events = user_event_.getEvents()->size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
