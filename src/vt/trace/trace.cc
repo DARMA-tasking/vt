@@ -697,16 +697,16 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType const& traces) {
       std::underlying_type<decltype(log->type)>::type
     >(log->type);
 
-    auto event_iter = TraceContainersType::getEventContainer().find(log->ep);
+    auto event_iter = TraceContainersType::getEventContainer()->find(log->ep);
     auto file = file_->file_type;
 
     if ((log->ep != no_trace_entry_id) and
-      (event_iter == TraceContainersType::getEventContainer().end())) {
+      (event_iter == TraceContainersType::getEventContainer()->end())) {
       vtAssert(false, "Event must exist that was logged");
     }
 
     TraceEntryIDType event_seq_id;
-    if (event_iter == TraceContainersType::getEventContainer().end()) {
+    if (event_iter == TraceContainersType::getEventContainer()->end()) {
       event_seq_id = 0;
     } else {
       event_seq_id = log->ep == no_trace_entry_id ?
@@ -878,7 +878,7 @@ void Trace::outputControlFile(std::ofstream& file) {
 
   auto const num_event_types = event_types->size();
   auto const num_events = events->size();
-  auto const num_user_events = user_event.getEvents().size();
+  auto const num_user_events = user_event.getEvents()->size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
