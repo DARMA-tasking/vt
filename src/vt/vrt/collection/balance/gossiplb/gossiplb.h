@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
+#include "vt/vrt/collection/balance/gossiplb/gossip_constants.h"
 #include "vt/vrt/collection/balance/gossiplb/criterion.h"
 
 #include <random>
@@ -100,6 +101,8 @@ private:
   uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;
   uint16_t num_iters_                               = 4;
+  double pthreshold_                                = gossip_threshold;
+  double lb_tolerance_                              = gossip_tolerance;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   objgroup::proxy::Proxy<GossipLB> proxy_           = {};

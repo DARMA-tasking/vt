@@ -49,8 +49,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-static constexpr double const gossip_tolerance = 0.05f;
-static constexpr double const gossip_threshold = 1.0f;
+static constexpr double const gossip_tolerance = 1.05f;
+static constexpr double const gossip_threshold = 1.05f;
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
