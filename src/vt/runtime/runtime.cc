@@ -60,6 +60,7 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/worker/worker_headers.h"
@@ -151,11 +152,12 @@ void Runtime::pauseForDebugger() {
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (ArgType::vt_stack_file != "") {
-      Runtime::writeToFile(std::get<0>(stack));
-    } else {
+    if (ArgType::vt_stack_file.empty()) {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
       ::fmt::print("\n");
+    }
+    else {
+      Runtime::writeToFile(std::get<0>(stack));
     }
   }
   std::_Exit(EXIT_FAILURE);
@@ -719,9 +721,13 @@ bool Runtime::initialize(bool const force_now) {
     initializeOptionalComponents();
     initializeErrorHandlers();
 #if backend_check_enabled(lblite)
-  if (ArgType::vt_lb_stats) {
-    vrt::collection::balance::StatsLBReader::init();
-  }
+    if (ArgType::vt_lb_stats) {
+      auto lbNames = vrt::collection::balance::lb_names_;
+      auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
+      if (ArgType::vt_lb_name == lbNames[mapLB]) {
+        vrt::collection::balance::StatsLBReader::init();
+      }
+    }
 #endif
     sync();
     if (theContext->getNode() == 0) {
