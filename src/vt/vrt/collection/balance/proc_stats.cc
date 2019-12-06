@@ -92,6 +92,11 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 }
 
 /*static*/ void ProcStats::startIterCleanup() {
+  debug_print(
+    lb, node,
+    "startIterCleanup:\n"
+  );
+
   // Convert the temp ID proc_data_ for the last iteration into perm ID for
   // stats output
   auto const phase = proc_data_.size() - 1;

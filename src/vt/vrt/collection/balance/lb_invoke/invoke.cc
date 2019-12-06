@@ -229,6 +229,8 @@ void LBManager::releaseNow(PhaseType phase) {
   releaseLBPhase(msg.get());
   synced_in_lb_ = false;
   num_invocations_ = num_release_ = 0;
+
+  balance::ProcStats::startIterCleanup();
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
