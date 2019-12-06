@@ -54,7 +54,7 @@
 #include "vt/objgroup/headers.h"
 
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <tuple>
 #include <functional>
 #include <cstdio>
@@ -117,7 +117,7 @@ private:
 
 
 public:
-  static std::vector<std::unordered_map<ElementIDType,TimeType>> user_specified_map_changed_;
+  static std::vector<std::map<ElementIDType,TimeType>> user_specified_map_changed_;
   static VectorDiffPhase phase_changed_map_;
 
   /*

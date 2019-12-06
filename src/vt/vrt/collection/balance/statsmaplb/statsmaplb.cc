@@ -44,9 +44,12 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
 #include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/context/context.h"
+
+#include "vt/runtime/runtime.h"
 
 #include <cstdint>
 #include <random>
@@ -58,35 +61,53 @@ void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
 }
 
 void StatsMapLB::runLB() {
+  //
+  // UH 2019/11/14
+  // This routine is the main point of entry for load balancing.
+  //
+
+  std::cout << " RUNLB ... BaseLB::phase_ " << BaseLB::phase_
+  << " phase_ " << phase_ << std::endl;
+
+  std::cout << " node " << theContext()->getNode()
+  << " map_changed " << balance::StatsLBReader::user_specified_map_changed_[phase_].size()
+  << " proc_data " << balance::ProcStats::proc_data_[phase_].size()
+  << std::endl;
+
+  if (!balance::StatsLBReader::phase_changed_map_.vec_[phase_]) {
+    std::cout << " >>> UH >>> Skip LB ... with phase_changed_map "
+              << " ... node " << theContext()->getNode() << std::endl;
+    return;
+  }
 
   vtAssertExpr(balance::StatsLBReader::user_specified_map_changed_.size() > phase_);
+  vtAssertExpr(balance::ProcStats::proc_comm_.size() > phase_);
 
-  auto const& in_load_stats = balance::StatsLBReader::user_specified_map_changed_[phase_];
+  auto const &currentTempID = balance::ProcStats::proc_data_[phase_];
+  auto const &nextPermID = balance::StatsLBReader::user_specified_map_changed_[phase_];
+
+  auto const& in_load_stats = balance::ProcStats::proc_data_[phase_];
   auto const& in_comm_stats = balance::ProcStats::proc_comm_[phase_];
-
-  // TODO: Check if we keep the import and the compute calls
-  importProcessorData(in_load_stats, in_comm_stats);
-  computeStatistics();
-  startMigrationCollective();
 
   auto const& this_node = theContext()->getNode();
 
-//  vtAssertExpr(balance::StatsLBReader::getProxy()->phase_changed_map_.size() >= phase_);
+  auto epoch = startMigrationCollective();
+  theMsg()->pushEpoch(epoch);
 
-//  if (balance::StatsLBReader::phase_changed_map_[phase_]) {
-    for (auto&& stat : *load_data) {
-      auto const& obj = stat.first;
-      auto const& load = stat.second;
-      debug_print(
-        lb, node,
-        "\t StatsMapLB::migrating object to: obj={}, load={}, to_node={}\n",
-        obj, load, this_node
-      );
-      migrateObjectTo(balance::ProcStats::proc_perm_to_temp_[obj], this_node);
+  for (auto itmp : currentTempID) {
+    auto iter = balance::ProcStats::proc_temp_to_perm_.find(itmp.first);
+    if (iter == balance::ProcStats::proc_temp_to_perm_.end()) {
+      vtAssert(false, "Temp ID must exist!");
     }
-//  }
+    auto myPermID = iter->first;
+    if (nextPermID.count(myPermID) > 0) {
+      migrateObjectTo(itmp.first, this_node);
+    }
+  }
 
+  theMsg()->popEpoch(epoch);
   finishMigrationCollective();
+
 }
 
 
