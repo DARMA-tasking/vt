@@ -49,10 +49,7 @@
 #include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/context/context.h"
 
-#include "vt/runtime/runtime.h"
-
-#include <cstdint>
-#include <random>
+#include <iostream>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -75,8 +72,6 @@ void StatsMapLB::runLB() {
   << std::endl;
 
   if (!balance::StatsLBReader::phase_changed_map_.vec_[phase_]) {
-    std::cout << " >>> UH >>> Skip LB ... with phase_changed_map "
-              << " ... node " << theContext()->getNode() << std::endl;
     return;
   }
 
@@ -99,11 +94,16 @@ void StatsMapLB::runLB() {
     if (iter == balance::ProcStats::proc_temp_to_perm_.end()) {
       vtAssert(false, "Temp ID must exist!");
     }
-    auto myPermID = iter->first;
+    auto myPermID = iter->second;
     if (nextPermID.count(myPermID) > 0) {
       migrateObjectTo(itmp.first, this_node);
     }
   }
+
+  ///
+  /// UH -- TODO Need to loop on the list of next items
+  /// UH -- Previous is only working for the elements that do not move.
+  ///
 
   theMsg()->popEpoch(epoch);
   finishMigrationCollective();
