@@ -61,7 +61,7 @@ struct MigrateMsg final : ::vt::Message {
     NodeType const& in_to, HandlerType const& in_map_fn, IndexT const& in_range,
     ColT* in_elm
   ) : elm_proxy_(in_elm_proxy), from_(in_from), to_(in_to), map_fn_(in_map_fn),
-      range_(in_range), owns_elm_(false), elm_(in_elm)
+      range_(in_range), elm_(in_elm)
   { }
 
   ~MigrateMsg() {
