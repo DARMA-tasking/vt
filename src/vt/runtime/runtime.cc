@@ -82,20 +82,22 @@
 
 namespace vt { namespace runtime {
 
-/*static*/ std::string Runtime::prog_name_ = "";
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
   bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
-     num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
-     user_argv_(argv)
+     num_workers_(in_num_workers), communicator_(in_comm)
 {
-  ArgType::parse(argc, argv);
-  if (argc > 0) {
-    prog_name_ = std::string(argv[0]);
+  // n.b. ref-update of args with pass-through arguments
+  // (pass-through arguments are neither for VT or MPI_Init)
+  int parse_result = ArgType::parse(/*out*/ argc, /*out*/ argv);
+  if (parse_result) {
+    exit(parse_result);
+    return;
   }
+
   sig_user_1_ = false;
   setupSignalHandler();
   setupSignalHandlerINT();
@@ -202,7 +204,7 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
-  std::string app_name = prog_name_ == "" ? "prog" : prog_name_;
+  std::string& app_name = ArgType::prog_name;
   std::string name = ArgType::vt_stack_file == "" ? app_name : ArgType::vt_stack_file;
   auto const& node = debug::preNode();
   std::string file = name + "." + std::to_string(node) + ".stack.out";
@@ -280,7 +282,7 @@ bool Runtime::tryFinalize() {
 
 bool Runtime::initialize(bool const force_now) {
   if (force_now) {
-    initializeContext(user_argc_, user_argv_, communicator_);
+    initializeContext();
     initializeComponents();
     initializeOptionalComponents();
     initializeErrorHandlers();
@@ -467,8 +469,23 @@ void Runtime::setup() {
   debug_print(runtime, node, "end: setup\n");
 }
 
-void Runtime::initializeContext(int argc, char** argv, MPI_Comm* comm) {
-  theContext = std::make_unique<ctx::Context>(argc, argv, is_interop_, comm);
+void Runtime::initializeContext() {
+  std::vector<char*>& mpi_args = ArgType::mpi_init_args;
+  int argc = mpi_args.size() + 1;
+  char* *const argv = new char*[argc + 1];
+
+  int i = 0;
+  argv[i++] = ArgType::argv_prog_name;
+  for (char*& arg : mpi_args) {
+    argv[i++] = arg;
+  }
+  argv[i++] = nullptr;
+
+  theContext = std::make_unique<ctx::Context>(argc, argv, is_interop_, communicator_);
+  // Delete ours. MPI_Init in Context probably leaks a few bytes anyway.
+  // It might be better to always MPI_Init(NULL, NULL, ..) and rely on the
+  // usage of environment variables/state.
+  delete[] argv;
 
   debug_print(runtime, node, "finished initializing context\n");
 }
@@ -522,8 +539,8 @@ void Runtime::initializeTrace() {
     theTrace = std::make_unique<trace::Trace>();
 
     if (ArgType::vt_trace) {
-      std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-      auto const& node = theContext->getNode();
+      std::string& name = ArgType::prog_name;
+      NodeType node = theContext->getNode();
       theTrace->setupNames(
         name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
       );

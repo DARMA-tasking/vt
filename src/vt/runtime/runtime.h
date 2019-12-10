@@ -106,13 +106,12 @@ private:
 
   static bool nodeStackWrite();
   static void writeToFile(std::string const& str);
-  static std::string prog_name_;
 
 protected:
   bool tryInitialize();
   bool tryFinalize();
 
-  void initializeContext(int argc, char** argv, MPI_Comm* comm);
+  void initializeContext();
   void initializeTrace();
   void initializeErrorHandlers();
   void initializeComponents();
@@ -178,8 +177,6 @@ protected:
   bool is_interop_ = false;
   WorkerCountType num_workers_ = no_workers;
   MPI_Comm* communicator_ = nullptr;
-  int user_argc_ = 0;
-  char** user_argv_ = nullptr;
 };
 
 }} /* end namespace vt::runtime */
