@@ -45,10 +45,9 @@
 #define INCLUDED_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_IMPL_H
 
 #include "vt/config.h"
-#include "vt/registry/auto/functor/auto_registry_functor.h"
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/registry/auto/auto_registry_general.h"
-#include "vt/utils/demangle/demangle.h"
+#include "vt/registry/auto/functor/auto_registry_functor.h"
 
 #include <vector>
 #include <memory>
@@ -58,80 +57,38 @@ namespace vt { namespace auto_registry {
 
 template <typename FunctorT, bool msg, typename... Args>
 inline HandlerType makeAutoHandlerFunctor() {
+  // Arg (overload) differentiaton in adapter.
+  using AdapterType = FunctorAdapterArgs<FunctorT, Args...>;
   using ContainerType = AutoActiveFunctorContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveFunctorType>;
   using FuncType = ActiveFnPtrType;
   using RunType = RunnableFunctor<
-    FunctorT, ContainerType, RegInfoType, FuncType, msg, Args...
+    AdapterType, ContainerType, RegInfoType, FuncType, msg
   >;
   return HandlerManagerType::makeHandler(true, true, RunType::idx);
 }
 
-template <typename FunctorT, typename... Args>
-static inline auto functorHandlerWrapperRval(Args&&... args) {
-  typename FunctorT::FunctorType instance;
-  return instance.operator()(std::forward<Args>(args)...);
-}
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
+RegistrarFunctor<RunnableT, RegT, InfoT, FnT>::RegistrarFunctor() {
+  using AdapterType = typename RunnableT::AdapterType;
 
-template <typename FunctorT, typename... Args>
-static inline auto functorHandlerWrapperReg(Args... args) {
-  typename FunctorT::FunctorType instance;
-  return instance.operator()(args...);
-}
+  RegT& reg = getAutoRegistryGen<RegT>();
+  index = reg.size(); // capture current index
 
-template <
-  typename FunctorT, typename RegT, typename InfoT, typename FnT,
-  typename... Args
->
-static inline void pullApart(
-  RegT& reg, bool const& msg,
-  pack<Args...> __attribute__((unused)) packed_args
-) {
+  FnT fn = reinterpret_cast<FnT>(AdapterType::getFunction());
+  NumArgsType num_args = AdapterType::getNumArgs();
+
   #if backend_check_enabled(trace_enabled)
-  using DemangleType = util::demangle::DemanglerUtils;
-  auto const& name = DemangleType::getTypeName<typename FunctorT::FunctorType>();
-  auto const& args = DemangleType::getTypeName<pack<Args...>>();
-  auto const& parsed_type_name =
-    util::demangle::ActiveFunctorDemangler::parseActiveFunctorName(name, args);
+  // trace
+  std::string event_type_name = AdapterType::traceGetEventType();
+  std::string event_name = AdapterType::traceGetEventName();
   auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
-    parsed_type_name.getNamespace(), parsed_type_name.getFuncParams()
-  );
+    event_type_name, event_name);
+  reg.emplace_back(InfoT{NumArgsTag, fn, trace_ep, num_args});
+  #else
+  // non-trace
+  reg.emplace_back(InfoT{NumArgsTag, fn, num_args});
   #endif
-
-  using TupleType = std::tuple<Args...>;
-  static constexpr auto num_args = std::tuple_size<TupleType>::value;
-
-  if (msg) {
-    auto fn_ptr = functorHandlerWrapperReg<FunctorT, Args...>;
-    reg.emplace_back(InfoT{
-      NumArgsTag,
-      reinterpret_cast<FnT>(fn_ptr)
-      #if backend_check_enabled(trace_enabled)
-      , trace_ep
-      #endif
-      , num_args
-    });
-  } else {
-    auto fn_ptr = functorHandlerWrapperRval<FunctorT, Args...>;
-    reg.emplace_back(InfoT{
-      NumArgsTag,
-      reinterpret_cast<FnT>(fn_ptr)
-      #if backend_check_enabled(trace_enabled)
-      , trace_ep
-      #endif
-     , num_args
-    });
-  }
-}
-
-template <typename FunctorT, typename RegT, typename InfoT, typename FnT>
-RegistrarFunctor<FunctorT, RegT, InfoT, FnT>::RegistrarFunctor() {
-  auto& reg = getAutoRegistryGen<RegT>();
-  index = reg.size();
-
-  pullApart<FunctorT, RegT, InfoT, FnT>(
-    reg, FunctorT::IsMsgType, typename FunctorT::PackedArgsType()
-  );
 }
 
 inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const& han) {
@@ -160,9 +117,9 @@ inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& han) {
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
 
-template <typename FunctorT, typename RegT, typename InfoT, typename FnT>
+template <typename RunnableT, typename RegT, typename InfoT, typename FnT>
 AutoHandlerType registerActiveFunctor() {
-  return RegistrarWrapperFunctor<FunctorT, RegT, InfoT, FnT>().registrar.index;
+  return RegistrarWrapperFunctor<RunnableT, RegT, InfoT, FnT>().registrar.index;
 }
 
 }} // end namespace vt::auto_registry

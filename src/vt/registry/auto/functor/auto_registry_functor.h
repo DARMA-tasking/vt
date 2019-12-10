@@ -75,16 +75,12 @@ struct RegistrarWrapperFunctor {
 template <typename FunctorT, typename RegT, typename InfoT, typename FnT>
 AutoHandlerType registerActiveFunctor();
 
-template <typename... Args>
-struct pack { };
-
 template <
-  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename AdapterT, typename RegT, typename InfoT, typename FnT, bool msg,
   typename... Args
 >
 struct RunnableFunctor {
-  using FunctorType = FunctorT;
-  using PackedArgsType = pack<Args...>;
+  using AdapterType = AdapterT;
 
   static constexpr bool const IsMsgType = msg;
 
@@ -94,19 +90,20 @@ struct RunnableFunctor {
 };
 
 template <
-  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename AdapterT, typename RegT, typename InfoT, typename FnT, bool msg,
   typename... Args
 >
-AutoHandlerType const RunnableFunctor<FunctorT,RegT,InfoT,FnT,msg,Args...>::idx =
+AutoHandlerType const RunnableFunctor<AdapterT, RegT, InfoT, FnT, msg, Args...>::idx =
   registerActiveFunctor<
-  RunnableFunctor<FunctorT, RegT, InfoT, FnT, msg, Args...>, RegT, InfoT, FnT
+    RunnableFunctor<AdapterT, RegT, InfoT, FnT, msg, Args...>,
+    RegT, InfoT, FnT
   >();
 
 template <
-  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename AdapterT, typename RegT, typename InfoT, typename FnT, bool msg,
   typename... Args
 >
-bool const RunnableFunctor<FunctorT, RegT, InfoT, FnT, msg, Args...>::IsMsgType;
+bool const RunnableFunctor<AdapterT, RegT, InfoT, FnT, msg, Args...>::IsMsgType;
 
 }} // end namespace vt::auto_registry
 
