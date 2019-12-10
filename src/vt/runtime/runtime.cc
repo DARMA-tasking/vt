@@ -87,7 +87,6 @@
 
 namespace vt { namespace runtime {
 
-/*static*/ std::string Runtime::prog_name_ = "";
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
@@ -97,18 +96,22 @@ Runtime::Runtime(
      num_workers_(in_num_workers),
      communicator_(
        in_comm == nullptr ? MPI_COMM_NULL : *in_comm
-     ),
-     user_argc_(argc),
-     user_argv_(argv)
+     )
 {
-  ArgType::parse(argc, argv);
-  if (argc > 0) {
-    prog_name_ = std::string(argv[0]);
+  // n.b. ref-update of args with pass-through arguments
+  // (pass-through arguments are neither for VT or MPI_Init)
+  int parse_result = ArgType::parse(/*out*/ argc, /*out*/ argv);
+  if (parse_result) {
+    exit(parse_result);
+    return;
   }
+
   sig_user_1_ = false;
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+
+  setupArgs();
 }
 
 bool Runtime::hasSchedRun() const {
@@ -211,7 +214,7 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
-  std::string app_name = prog_name_ == "" ? "prog" : prog_name_;
+  std::string& app_name = ArgType::prog_name;
   std::string name = ArgType::vt_stack_file == "" ? app_name : ArgType::vt_stack_file;
   auto const& node = debug::preNode();
   std::string file = name + "." + std::to_string(node) + ".stack.out";
@@ -490,6 +493,19 @@ void Runtime::setup() {
   debug_print(runtime, node, "end: setup\n");
 }
 
+void Runtime::setupArgs() {
+  std::vector<char*>& mpi_args = ArgType::mpi_init_args;
+  user_argc_ = mpi_args.size() + 1;
+  user_argv_ = std::make_unique<char[][]>(argc + 1);
+
+  int i = 0;
+  user_argv_[i++] = ArgType::argv_prog_name;
+  for (char*& arg : mpi_args) {
+    user_argv_[i++] = arg;
+  }
+  user_argv_[i++] = nullptr;
+}
+
 void Runtime::finalizeMPI() {
   MPI_Barrier(communicator_);
 
@@ -508,7 +524,7 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<ctx::Context>(
     &theContext, Deps<>{},
-    user_argc_, user_argv_, is_interop_, &communicator_
+    user_argc_, user_argv_.get(), is_interop_, &communicator_
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
@@ -536,7 +552,7 @@ void Runtime::initializeComponents() {
       ctx::Context,    // Everything depends on theContext
       sched::Scheduler // Depends on scheduler for triggers
     >{},
-    user_argc_ == 0 ? "prog" : user_argv_[0]
+    ArgType::prog_name
   );
 # endif
 

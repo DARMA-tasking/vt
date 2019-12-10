@@ -111,12 +111,12 @@ private:
 
   static bool nodeStackWrite();
   static void writeToFile(std::string const& str);
-  static std::string prog_name_;
 
 protected:
   bool tryInitialize();
   bool tryFinalize();
 
+  void setupArgs();
   void initializeErrorHandlers();
   void initializeComponents();
   void initializeOptionalComponents();
@@ -185,7 +185,7 @@ protected:
   WorkerCountType num_workers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_NULL;
   int user_argc_ = 0;
-  char** user_argv_ = nullptr;
+  std::unique_ptr<char[][]> user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;
 };
 
