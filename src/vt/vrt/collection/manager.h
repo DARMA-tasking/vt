@@ -867,12 +867,6 @@ namespace details
 
 }}} /* end namespace vt::vrt::collection */
 
-namespace vt {
-
-extern vrt::collection::CollectionManager* theCollection();
-
-}  // end namespace vt
-
 #include "vt/vrt/collection/manager.impl.h"
 #include "vt/vrt/collection/migrate/manager_migrate_attorney.impl.h"
 #include "vt/vrt/collection/send/sendable.impl.h"
