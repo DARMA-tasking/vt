@@ -42,21 +42,33 @@
 //@HEADER
 */
 
+#include "vt/collective/collective_alg.h"
 #include "vt/config.h"
-#include "vt/trace/trace.h"
-#include "vt/timing/timing.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/timing/timing.h"
+#include "vt/trace/trace.h"
 #include "vt/utils/demangle/demangle.h"
 
-#include <zlib.h>
+#include <cinttypes>
+#include <fstream>
+#include <iostream>
+#include <map>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <inttypes.h>
-#include <iostream>
-#include <fstream>
-#include <map>
+
+#include <mpi.h>
+#include <zlib.h>
+
 
 namespace vt { namespace trace {
+
+struct vt_gzFile {
+  gzFile file_type;
+  //---
+  vt_gzFile(gzFile_s *pS) : file_type(pS) { }
+};
+
+using ArgType = vt::arguments::ArgConfig;
 
 template <typename EventT>
 struct TraceEventSeqCompare {
@@ -67,7 +79,7 @@ struct TraceEventSeqCompare {
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(getCurrentTime())
+    start_time_(getCurrentTime()), log_file_(nullptr)
 { }
 
 Trace::Trace() { }
@@ -111,17 +123,18 @@ void Trace::setupNames(
     vtAssert(false, "Must have current directory");
   }
 
-  if (ArgType::vt_trace_dir != "") {
-    full_dir_name = ArgType::vt_trace_dir;
-  } else {
-    full_dir_name = std::string(cur_dir) + "/" + dir_name;
+  if (ArgType::vt_trace_dir.empty()) {
+    full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
+  }
+  else {
+    full_dir_name_ = ArgType::vt_trace_dir;
   }
 
-  if (full_dir_name[full_dir_name.size()-1] != '/')
-    full_dir_name = full_dir_name + "/";
+  if (full_dir_name_[full_dir_name_.size() - 1] != '/')
+    full_dir_name_ = full_dir_name_ + "/";
 
   if (theContext()->getNode() == 0) {
-    int flag = mkdir(full_dir_name.c_str(), S_IRWXU);
+    int flag = mkdir(full_dir_name_.c_str(), S_IRWXU);
     if ((flag < 0) && (errno != EEXIST)) {
       vtAssert(flag >= 0, "Must be able to make directory");
     }
@@ -133,17 +146,21 @@ void Trace::setupNames(
   auto const prog_name = pc[pc.size()-1];
 
   auto const node_str = "." + std::to_string(node) + ".log.gz";
-  if (ArgType::vt_trace_file != "") {
-    full_trace_name = full_dir_name + ArgType::vt_trace_file + node_str;
-    full_sts_name   = full_dir_name + ArgType::vt_trace_file + ".sts";
+  if (ArgType::vt_trace_file.empty()) {
+    full_trace_name_ = full_dir_name_ + trace_name;
+    full_sts_name_   = full_dir_name_ + prog_name + ".sts";
   } else {
-    full_trace_name = full_dir_name + trace_name;
-    full_sts_name   = full_dir_name + prog_name + ".sts";
+    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
+    full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
   }
 }
 
 /*virtual*/ Trace::~Trace() {
-  writeTracesFile();
+  if (!open_events_.empty()) {
+    vtAssert(false, "Trying to dump traces with open events?");
+  }
+  //
+  cleanupTracesFile();
 }
 
 void Trace::addUserNote(std::string const& note) {
@@ -210,26 +227,26 @@ void Trace::addUserBracketedNote(
 }
 
 UserEventIDType Trace::registerUserEventColl(std::string const& name) {
-  return user_event.collective(name);
+  return user_event_.collective(name);
 }
 
 UserEventIDType Trace::registerUserEventRoot(std::string const& name) {
-  return user_event.rooted(name);
+  return user_event_.rooted(name);
 }
 
 UserEventIDType Trace::registerUserEventHash(std::string const& name) {
-  return user_event.hash(name);
+  return user_event_.hash(name);
 }
 
 void Trace::registerUserEventManual(
   std::string const& name, UserSpecEventIDType id
 ) {
-  user_event.user(name, id);
+  user_event_.user(name, id);
 }
 
 void insertNewUserEvent(UserEventIDType event, std::string const& name) {
   #if backend_check_enabled(trace_enabled)
-    theTrace()->user_event.insertEvent(event, name);
+    theTrace()->user_event_.insertEvent(event, name);
   #endif
 }
 
@@ -263,7 +280,7 @@ void Trace::addUserEventManual(UserSpecEventIDType event) {
     event
   );
 
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEvent(id);
 }
 
@@ -332,7 +349,7 @@ void Trace::addUserEventBracketedManualBegin(UserSpecEventIDType event) {
     return;
   }
 
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketedBegin(id);
 }
 
@@ -341,7 +358,7 @@ void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
     return;
   }
 
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketedEnd(id);
 }
 
@@ -358,7 +375,7 @@ void Trace::addUserEventBracketedManual(
     event, begin, end
   );
 
-  auto id = user_event.createEvent(true, false, 0, event);
+  auto id = user_event_.createEvent(true, false, 0, event);
   addUserEventBracketed(id, begin, end);
 }
 
@@ -420,6 +437,10 @@ void Trace::endProcessing(
   log->idx4 = idx4;
 
   logEvent(log);
+
+  if (open_events_.empty()) {
+    cur_stop_ = traces_.size();
+  }
 }
 
 void Trace::beginIdle(double const time) {
@@ -520,19 +541,20 @@ bool Trace::checkDynamicRuntimeEnabled() {
 }
 
 void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
-  if (checkDynamicRuntimeEnabled()) {
+  if (not enabled_ || not traceWritingEnabled(theContext()->getNode())) {
     return;
   }
-
-  auto const trace_cont_size = traces_.size();
-  if (trace_cont_size > 0) {
-    fn(traces_.at(trace_cont_size - 1));
+  if (traces_.empty()) {
+    return;
   }
+  //---
+  auto const trace_cont_size = traces_.size();
+  fn(traces_.at(trace_cont_size - 1));
 }
 
 TraceEventIDType Trace::logEvent(LogPtrType log) {
-  if (not checkDynamicRuntimeEnabled()) {
-    return no_trace_event;
+  if (not enabled_ || not traceWritingEnabled(theContext()->getNode())) {
+    return 0;
   }
 
   vtAssert(
@@ -672,10 +694,12 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   }
 }
 
-bool Trace::checkEnabled() {
-  return ArgType::vt_trace
-    and (ArgType::vt_trace_mod == 0
-         or theContext()->getNode() % ArgType::vt_trace_mod == 1);
+/*static*/ bool Trace::traceWritingEnabled(NodeType node) {
+  if (!ArgType::vt_trace) {
+    return false;
+  }
+  return ((ArgType::vt_trace_mod == 0)
+            or (node % ArgType::vt_trace_mod == 0));
 }
 
 void Trace::enableTracing() {
@@ -686,7 +710,33 @@ void Trace::disableTracing() {
   enabled_ = false;
 }
 
-void Trace::writeTracesFile() {
+void Trace::cleanupTracesFile() {
+  auto const& node = theContext()->getNode();
+  if (!traceWritingEnabled(node)) {
+    return;
+  }
+  //--- Dump everything into an output file
+  cur_stop_ = traces_.size();
+  writeTracesFile(Z_FINISH);
+  outputFooter(node, start_time_, log_file_.get());
+  gzclose(log_file_->file_type);
+}
+
+void Trace::flushTracesFile(bool useGlobalSync) {
+  if (ArgType::vt_trace_flush_size == 0) {
+    // Flush the traces at the end only
+    return;
+  }
+  if (useGlobalSync) {
+    // Synchronize all the nodes before flushing the traces
+    theCollective()->barrier();
+  }
+  if (traces_.size() > cur_ + ArgType::vt_trace_flush_size) {
+    writeTracesFile(Z_SYNC_FLUSH);
+  }
+}
+
+void Trace::writeTracesFile(int flush) {
   auto const node = theContext()->getNode();
 
   debug_print(
@@ -698,42 +748,55 @@ void Trace::writeTracesFile() {
     TraceContainersType::getEventContainer()->size()
   );
 
-  if (checkEnabled()) {
-    auto path = full_trace_name;
-    gzFile file = gzopen(path.c_str(), "wb");
-    outputHeader(node, start_time_, file);
-    writeLogFile(file, traces_);
-    outputFooter(node, start_time_, file);
-    gzclose(file);
+  if (traceWritingEnabled(theContext()->getNode())) {
+    auto path = full_trace_name_;
+    if (not file_is_open_) {
+      log_file_ = std::make_unique<vt_gzFile>(gzopen(path.c_str(), "wb"));
+      outputHeader(node, start_time_, log_file_.get());
+      file_is_open_ = true;
+    }
+    writeLogFile(log_file_.get(), traces_);
+    gzflush(log_file_->file_type, flush);
   }
 
-  if (node == designated_root_node) {
+  if (node != designated_root_node) {
+    return;
+  }
+
+  if ((flush == Z_FINISH) or (not wrote_sts_file_)) {
     std::ofstream file;
-    auto name = full_sts_name;
+    auto name = full_sts_name_;
     file.open(name);
     outputControlFile(file);
-    file.flush();
     file.close();
+    wrote_sts_file_ = true;
   }
 }
 
-void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
-  for (auto&& log : traces) {
-
-    vtAssert(
-      log->ep == no_trace_entry_id
-      or TraceRegistry::getEvent(log->ep).theEventId() not_eq no_trace_entry_id,
-      "Event must exist that was logged"
-    );
-
-    auto const converted_time = timeToInt(log->time - start_time_);
-
+void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType const& traces) {
+  size_t stop_point = cur_stop_;
+  for (size_t i = cur_; i < stop_point; i++) {
+    auto& log = traces[i];
+    auto const& converted_time = timeToInt(log->time - start_time_);
     auto const type = static_cast<
       std::underlying_type<decltype(log->type)>::type
     >(log->type);
 
-    // force guaranteed type (used in format specifiers)
-    size_t event_seq_id = TraceRegistry::getEvent(log->ep).theEventSeq();
+    auto event_iter = TraceContainersType::getEventContainer()->find(log->ep);
+    auto file = file_->file_type;
+
+    if ((log->ep != no_trace_entry_id) and
+      (event_iter == TraceContainersType::getEventContainer()->end())) {
+      vtAssert(false, "Event must exist that was logged");
+    }
+
+    TraceEntryIDType event_seq_id;
+    if (event_iter == TraceContainersType::getEventContainer()->end()) {
+      event_seq_id = 0;
+    } else {
+      event_seq_id = log->ep == no_trace_entry_id ?
+        no_trace_entry_id : event_iter->second.theEventSeq();
+    }
 
     auto const num_nodes = theContext()->getNumNodes();
 
@@ -876,7 +939,7 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
     delete log;
   }
 
-  traces.empty();
+  cur_ = stop_point;
 }
 
 /*static*/ double Trace::getCurrentTime() {
@@ -900,7 +963,7 @@ void Trace::outputControlFile(std::ofstream& file) {
 
   auto const num_event_types = event_types->size();
   auto const num_events = events->size();
-  auto const num_user_events = user_event.getEvents().size();
+  auto const num_user_events = user_event_.getEvents().size();
 
   file << "PROJECTIONS_ID\n"
        << "VERSION 7.0\n"
@@ -961,7 +1024,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   file << "MESSAGE 0 0\n"
        << "TOTAL_STATS 0\n";
 
-  for (auto&& elm : user_event.getEvents()) {
+  for (auto&& elm : user_event_.getEvents()) {
     auto const id = elm.first;
     auto const name = elm.second;
 
@@ -977,20 +1040,20 @@ void Trace::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void Trace::outputHeader(
-  NodeType const node, double const start, gzFile file
+  NodeType const node, double const start, vt_gzFile *file
 ) {
   // Output header for projections file
-  gzprintf(file, "PROJECTIONS-RECORD 0\n");
+  gzprintf(file->file_type, "PROJECTIONS-RECORD 0\n");
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
-  gzprintf(file, "6 0\n");
+  gzprintf(file->file_type, "6 0\n");
 }
 
 /*static*/ void Trace::outputFooter(
-  NodeType const node, double const start, gzFile file
+  NodeType const node, double const start, vt_gzFile *file
 ) {
   // Output footer for projections file, '7' means COMPUTATION_END to
   // Projections
-  gzprintf(file, "7 %lld\n", timeToInt(getCurrentTime() - start));
+  gzprintf(file->file_type, "7 %lld\n", timeToInt(getCurrentTime() - start));
 }
 
 /*static*/ Trace::TimeIntegerType Trace::timeToInt(double const time) {
