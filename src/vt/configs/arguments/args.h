@@ -53,6 +53,9 @@ namespace vt { namespace arguments {
 
 struct ArgConfig {
 
+  /// Parse the arguments into ArgConfig.
+  /// Re-assigns argc/argv to remove consumed arguments.
+  /// Returns 0 on success; a non-0 exit code otherwise.
   static int parse(int& argc, char**& argv);
 
 public:

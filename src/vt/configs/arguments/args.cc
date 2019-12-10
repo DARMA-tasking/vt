@@ -146,17 +146,13 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::parsed                = false;
 
+int parseArguments(CLI::App& app, int& argc, char**& argv);
+
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
   static CLI::App app{"vt"};
 
   if (parsed || argc == 0 || argv == nullptr) {
     return 0;
-  }
-
-  // CLI11 app parser expects to get the arguments in *reverse* order!
-  std::vector<std::string> args;
-  for (auto i = argc-1; i > 0; i--) {
-    args.push_back(std::string(argv[i]));
   }
 
   // fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
@@ -480,15 +476,8 @@ namespace vt { namespace arguments {
   hca->group(schedulerGroup);
   kca->group(schedulerGroup);
 
-  /*
-   * Run the parser!
-   */
-  app.allow_extras(true);
-  try {
-    app.parse(args);
-  } catch (CLI::Error &ex) {
-    return app.exit(ex);
-  }
+  // n.b. ref-update of params.
+  int result = parseArguments(app, argc, argv);
 
   // Determine the final colorization setting.
   if (vt_no_color) {
@@ -497,6 +486,32 @@ namespace vt { namespace arguments {
     // Otherwise, colorize.
     // (Within MPI there is no good method to auto-detect.)
     colorize_output = true;
+  }
+
+  parsed = true;
+
+  return result;
+}
+
+int parseArguments(CLI::App& app, int& argc, char**& argv) {
+
+  // CLI11 app parser expects to get the arguments in *reverse* order!
+  std::vector<std::string> args;
+  for (auto i = argc-1; i > 0; i--) {
+    args.push_back(std::string(argv[i]));
+  }
+
+  /*
+   * Run the parser!
+   */
+  app.allow_extras(true);
+  try {
+    app.parse(args);
+  } catch (CLI::Error &ex) {
+    // Doesn't actually exit..
+    int result = app.exit(ex);
+    // ..CLI11 returns 0 on --help, which is still terminal. Great job.
+    return result ? result : 1;
   }
 
   /*
@@ -531,8 +546,7 @@ namespace vt { namespace arguments {
   argc = new_argc;
   argv = new_argv;
 
-  parsed = true;
-  return 1;
+  return 0; // success
 }
 
 }} /* end namespace vt::arguments */
