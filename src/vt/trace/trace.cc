@@ -368,6 +368,12 @@ void Trace::endProcessing(
   logEvent(log);
 }
 
+void Trace::addMemoryEvent(std::size_t memory) {
+  auto const type = TraceConstantsType::MemoryUsageCurrent;
+  LogPtrType log = new LogType(time, type, memory);
+  logEvent(log);
+}
+
 void Trace::beginIdle(double const time) {
   auto const type = TraceConstantsType::BeginIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
@@ -778,6 +784,16 @@ void Trace::writeLogFile(gzFile file, TraceContainerType const& traces) {
         log->event,
         log->user_supplied_note.length(),
         log->user_supplied_note.c_str()
+      );
+      break;
+    }
+    case TraceConstantsType::MemoryUsageCurrent: {
+      gzprintf(
+        file,
+        "%d %lld %lld \n",
+        type,
+        converted_time,
+        log->memory
       );
       break;
     }

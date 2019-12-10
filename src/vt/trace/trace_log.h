@@ -74,6 +74,7 @@ struct Log {
   UserDataType user_supplied_data = 0;
   UserEventIDType user_event = 0;
   bool user_start = false;
+  std::size_t memory = 0;
 
   void setUserNote(std::string const& note) {
     user_supplied_note = note;
@@ -95,6 +96,12 @@ struct Log {
     double const in_time, TraceConstantsType const in_type,
     std::string const& in_note
   ) : time(in_time), type(in_type), user_supplied_note(in_note)
+  { }
+
+  Log(
+    double const in_time, TraceConstantsType const in_type,
+    std::size_t const in_memory
+  ) : time(in_time), type(in_type), memory(in_memory)
   { }
 
   Log(double const in_time, TraceConstantsType const in_type)

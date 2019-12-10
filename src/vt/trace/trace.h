@@ -138,6 +138,8 @@ struct Trace {
     TraceEventIDType const event = no_trace_event
   );
 
+  void addMemoryEvent(std::size_t memory);
+
   TraceEventIDType messageCreation(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     double const time = getCurrentTime()
