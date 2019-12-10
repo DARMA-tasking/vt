@@ -55,8 +55,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
-
 /*static*/ bool        ArgConfig::colorize_output       = false;
+
 /*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
 /*static*/ int32_t     ArgConfig::vt_sched_progress_han = 0;
 /*static*/ double      ArgConfig::vt_sched_progress_sec = 0.0;
@@ -169,7 +169,13 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_user_str_2         = "";
 /*static*/ std::string ArgConfig::vt_user_str_3         = "";
 
-/*static*/ bool        ArgConfig::parsed                = false;
+/*static*/ std::string ArgConfig::prog_name     {"vt_unknown"};
+/*static*/ char*       ArgConfig::argv_prog_name{const_cast<char*>("vt_unknown")};
+
+/*static*/ std::vector<char*> ArgConfig::mpi_init_args;
+/*static*/ std::vector<char*> ArgConfig::passthru_args;
+
+/*static*/ bool        ArgConfig::parsed_               = false;
 
 static std::unique_ptr<char*[]> new_argv = nullptr;
 
@@ -178,7 +184,7 @@ int parseArguments(CLI::App& app, int& argc, char**& argv);
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
   static CLI::App app{"vt"};
 
-  if (parsed || argc == 0 || argv == nullptr) {
+  if (parsed_ || argc == 0 || argv == nullptr) {
     return 0;
   }
 
@@ -573,8 +579,7 @@ int parseArguments(CLI::App& app, int& argc, char**& argv);
   hca->group(schedulerGroup);
   kca->group(schedulerGroup);
 
-  // n.b. ref-update of params.
-  int result = parseArguments(app, argc, argv);
+  int result = parseArguments(app, /*out*/ argc, /*out*/ argv);
 
   // Determine the final colorization setting.
   if (vt_no_color) {
@@ -585,25 +590,51 @@ int parseArguments(CLI::App& app, int& argc, char**& argv);
     colorize_output = true;
   }
 
-  parsed = true;
+  parsed_ = true;
 
   return result;
 }
 
 int parseArguments(CLI::App& app, int& argc, char**& argv) {
 
-  // CLI11 app parser expects to get the arguments in *reverse* order!
-  std::vector<std::string> args;
-  for (auto i = argc-1; i > 0; i--) {
-    args.push_back(std::string(argv[i]));
+  std::vector<char*> vt_args;
+  std::vector<char*> mpi_args;
+  std::vector<char*> passthru_args;
+
+  // Load up vectors (has curious ability to altnerate vt/mpi/passthru)
+  std::vector<char*>* rargs = nullptr;
+  for (int i = 1; i < argc; i++) {
+    char* c = argv[i];
+    if (0 == strcmp(c, "--vt_args")) {
+      rargs = &vt_args;
+    } else if (0 == strcmp(c, "--vt_mpi_args")) {
+      rargs = &mpi_args;
+    } else if (0 == strcmp(c, "--")) {
+      rargs = &passthru_args;
+    } else if (rargs) {
+      rargs->push_back(c);
+    } else if (0 == strcmp(c, "--help")
+               or 0 == strncmp(c, "--vt_", 5)) {
+      // Implicit start of VT args allows pass-thru 'for compatibility'
+      // although the recommended calling pattern to always provide VT args first.
+      rargs = &vt_args;
+      rargs->push_back(c);
+    } else {
+      passthru_args.push_back(c);
+    }
   }
 
-  /*
-   * Run the parser!
-   */
-  app.allow_extras(true);
+  // All must be accounted for
+  app.allow_extras(false);
+
+  // Build string-vector and reverse order to parse (CLI quirk)
+  std::vector<std::string> args_to_parse;
+  for (auto it = vt_args.end(); it-- != vt_args.begin();) {
+    args_to_parse.push_back(*it);
+  }
+
   try {
-    app.parse(args);
+    app.parse(args_to_parse);
   } catch (CLI::Error &ex) {
     // Doesn't actually exit..
     int result = app.exit(ex);
@@ -611,34 +642,35 @@ int parseArguments(CLI::App& app, int& argc, char**& argv) {
     return result ? result : 1;
   }
 
-  /*
-   * Put the arguments back into argc, argv, but properly order them based on
-   * the input order by comparing between the current args
-   */
-  std::vector<std::string> ret_args;
-  std::vector<std::size_t> ret_idx;
-  int item = argc;
-
-  // Iterate forward (CLI11 reverses the order when it modifies the args)
-  for (auto&& skipped : args) {
-    for (auto ii = item-1; ii >= 0; ii--) {
-      if (std::string(argv[ii]) == skipped) {
-        ret_idx.push_back(ii);
-        item--;
-        break;
-      }
-    }
-    ret_args.push_back(skipped);
+  // Get the clean prog name; don't allow path bleed in usages.
+  // std::filesystem is C++17.
+  std::string prog_name = argv[0];
+  size_t l = prog_name.find_last_of("/\\");
+  if (l not_eq std::string::npos and l + 1 < prog_name.size()) {
+    prog_name = prog_name.substr(l + 1, std::string::npos);
   }
   std::reverse(ret_idx.begin(), ret_idx.end());
 
-  // Use the saved index to setup the new_argv and new_argc
-  int new_argc = ret_args.size() + 1;
-  new_argv = std::make_unique<char*[]>(new_argc + 1);
-  new_argv[0] = argv[0];
-  for (auto ii = 1; ii < new_argc; ii++) {
-    new_argv[ii] = argv[ret_idx[ii - 1]];
+  ArgConfig::prog_name = prog_name;
+  ArgConfig::argv_prog_name = argv[0];
+  ArgConfig::mpi_init_args = mpi_args;
+  ArgConfig::passthru_args = passthru_args;
+
+  // Rebuild passthru into ref-returned argc/argv
+  // (only pass-through, not MPI_Init-bound)
+
+  // It should be possible to modify the original argv as the outgoing
+  // number of arguments is always less. As currently allocated here,
+  // ownership of the new object is ill-defined.
+  int new_argc = passthru_args.size() + 1; // does not include argv[0]
+  char** const new_argv = new char*[new_argc + 1];
+
+  int i = 0;
+  new_argv[i++] = argv[0];
+  for (auto&& arg : passthru_args) {
+    new_argv[i++] = arg;
   }
+  new_argv[i++] = nullptr;
 
   // Set them back with all vt arguments elided
   argc = new_argc;
