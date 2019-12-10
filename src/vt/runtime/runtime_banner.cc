@@ -52,6 +52,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <unistd.h>
 
 namespace vt { namespace runtime {
@@ -163,7 +164,9 @@ void Runtime::printStartupBanner() {
   auto const subversion = std::to_string(std::get<1>(version_tuple));
 
   auto f1 = fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
-  auto f2 = fmt::format("{}Running on: {}\n", green, emph(all_node));
+  auto f2a = fmt::format("{}Program: {} ({})\n", green,
+                         emph(ArgType::prog_name), emph(ArgType::argv_prog_name));
+  auto f2b = fmt::format("{}Running on: {}\n", green, emph(all_node));
   auto f3 = fmt::format("{}Machine Hostname: {}\n", green, emph(hostname));
   auto f3a = fmt::format("{}MPI Version: {}.{}\n", green, emph(version), emph(subversion));
   auto f3b = fmt::format("{}MPI Max tag: {}\n", green, emph(max_tag_str));
@@ -174,7 +177,8 @@ void Runtime::printStartupBanner() {
   auto f7 = fmt::format("{}Compile-time Features Enabled:{}\n", green, reset);
 
   fmt::print("{}{}{}", vt_pre, f1, reset);
-  fmt::print("{}{}{}", vt_pre, f2, reset);
+  fmt::print("{}{}{}", vt_pre, f2a, reset);
+  fmt::print("{}{}{}", vt_pre, f2b, reset);
   fmt::print("{}{}{}", vt_pre, f3, reset);
   fmt::print("{}{}{}", vt_pre, f3a, reset);
   fmt::print("{}{}{}", vt_pre, f3b, reset);
@@ -734,6 +738,41 @@ void Runtime::printStartupBanner() {
   vt_runtime_debug_warn_compile(group)
   vt_runtime_debug_warn_compile(broadcast)
   vt_runtime_debug_warn_compile(objgroup)
+
+  auto arg_str = [](std::vector<char*> const& args) -> std::string {
+    std::stringstream ss;
+    for (auto&& arg : args) {
+      ss << "\"" << arg << "\", ";
+    }
+    std::string s = ss.str();
+    return s.empty() ? s : s.substr(0, s.size() - 2);
+  };
+
+  auto f88 = fmt::format("{}Pass-through Arguments:{}\n", green, reset);
+  fmt::print("{}{}{}", vt_pre, f88, reset);
+
+  std::vector<char*>& mpi_args = ArgType::mpi_init_args;
+  std::vector<char*>& passthru_args = ArgType::passthru_args;
+
+  if (mpi_args.empty() and passthru_args.empty()) {
+    auto f11 = fmt::format("None. All arguments handled.\n");
+    fmt::print("{}\t{}{}", vt_pre, f11, reset);
+  } else {
+    if (not mpi_args.empty()) {
+      auto f11 = fmt::format(
+        "MPI Init args: [{}]\n",
+        arg_str(mpi_args)
+      );
+      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+    }
+    if (not passthru_args.empty()) {
+      auto f11 = fmt::format(
+        "Pass-through args: [{}]\n",
+        arg_str(passthru_args)
+      );
+      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+    }
+  }
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
