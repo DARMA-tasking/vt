@@ -2677,7 +2677,6 @@ MigrateStatus CollectionManager::migrateOut(
    auto map_fn = coll_elm_info.map_fn;
    auto range = coll_elm_info.max_idx;
    auto col_unique_ptr = elm_holder->remove(idx);
-   auto& typed_col_ref = *static_cast<ColT*>(col_unique_ptr.get());
 
    debug_print(
      vrt_coll, node,
@@ -2698,22 +2697,17 @@ MigrateStatus CollectionManager::migrateOut(
 
    using MigrateMsgType = MigrateMsg<ColT, IndexT>;
 
+   auto typed_ptr = std::unique_ptr<ColT>{static_cast<ColT*>(col_unique_ptr.release())};
    auto msg = makeSharedMessage<MigrateMsgType>(
-     proxy, this_node, dest, map_fn, range, &typed_col_ref
+     proxy, this_node, dest, map_fn, range, std::move(typed_ptr)
    );
 
-   theMsg()->sendMsgAuto<
-     MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
-   >(dest, msg);
-
-   theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityMigrated(
-     proxy, dest
-   );
+   // Don't touch col_unique_ptr after this---its invalid!
 
    /*
     * Invoke the virtual epilog migrate out function
     */
-   col_unique_ptr->epiMigrateOut();
+   msg->elm_->epiMigrateOut();
 
    debug_print(
      vrt_coll, node,
@@ -2722,11 +2716,18 @@ MigrateStatus CollectionManager::migrateOut(
    );
 
    /*
-    * Invoke the virtual destroy function and then null std::unique_ptr<ColT>,
-    * which should cause the destructor to fire
+    * Invoke the virtual destroy function on ColT from inside the element
+    * (invoked in addition to the destructor)
     */
-   col_unique_ptr->destroy();
-   col_unique_ptr = nullptr;
+   msg->elm_->destroy();
+
+   theMsg()->sendMsgAuto<
+     MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
+   >(dest, msg);
+
+   theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityMigrated(
+     proxy, dest
+   );
 
    return MigrateStatus::MigratedToRemote;
  } else {

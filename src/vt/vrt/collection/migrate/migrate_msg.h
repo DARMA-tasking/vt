@@ -50,7 +50,21 @@
 #include "vt/vrt/proxy/collection_elm_proxy.h"
 #include "vt/vrt/collection/collection_info.h"
 
+#include <memory>
+
 namespace vt { namespace vrt { namespace collection {
+
+/*
+ * For, now declare our own serializer for unique_ptr that doesn't cover the
+ * specialized destructor case. Eventually this code should move to checkpoint
+ */
+template <typename SerializerT, typename T>
+void serializeUniquePtr(SerializerT& s, std::unique_ptr<T>& ptr) {
+  if (s.isUnpacking()) {
+    ptr = std::make_unique<T>();
+  }
+  s | *ptr;
+}
 
 template <typename ColT, typename IndexT>
 struct MigrateMsg final : ::vt::Message {
@@ -59,16 +73,10 @@ struct MigrateMsg final : ::vt::Message {
   MigrateMsg(
     VrtElmProxy<ColT, IndexT> const& in_elm_proxy, NodeType const& in_from,
     NodeType const& in_to, HandlerType const& in_map_fn, IndexT const& in_range,
-    ColT* in_elm
+    std::unique_ptr<ColT> in_elm
   ) : elm_proxy_(in_elm_proxy), from_(in_from), to_(in_to), map_fn_(in_map_fn),
-      range_(in_range), elm_(in_elm)
+      range_(in_range), elm_(std::move(in_elm))
   { }
-
-  ~MigrateMsg() {
-    if (elm_ and owns_elm_) {
-      delete elm_;
-    }
-  }
 
   VrtElmProxy<ColT, IndexT> getElementProxy() const { return elm_proxy_; }
   NodeType getFromNode() const { return from_; }
@@ -79,11 +87,7 @@ struct MigrateMsg final : ::vt::Message {
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | elm_proxy_ | from_ | to_ | map_fn_ | range_;
-    if (s.isUnpacking()) {
-      elm_ = new ColT{};
-      owns_elm_ = true;
-    }
-    s | *elm_;
+    serializeUniquePtr(s, elm_);
   }
 
 private:
@@ -92,9 +96,8 @@ private:
   NodeType to_ = uninitialized_destination;
   HandlerType map_fn_ = uninitialized_handler;
   IndexT range_;
-  bool owns_elm_ = false;
 public:
-  ColT* elm_ = nullptr;
+  std::unique_ptr<ColT> elm_ = nullptr;
 };
 
 }}} /* end namespace vt::vrt::collection */
