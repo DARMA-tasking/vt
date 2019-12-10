@@ -510,6 +510,17 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_trace_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+    if (ArgType::vt_trace_flush_size != 0) {
+      auto f11 = fmt::format("Flush output incrementally with a buffer of,"
+                             " at least, {} record(s)",
+                             ArgType::vt_trace_flush_size);
+      auto f12 = opt_on("--vt_trace_flush_size", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      auto f11 = fmt::format("Flushing traces at end of run");
+      auto f12 = opt_inverse("--vt_trace_flush_size", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
   #endif
 
@@ -821,7 +832,7 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
-	std::_Exit(code);
+    std::_Exit(code);
     // @todo: why will this not compile with clang!!?
     //quick_exit(code);
   }
