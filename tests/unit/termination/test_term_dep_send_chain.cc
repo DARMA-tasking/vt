@@ -158,7 +158,8 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   void op4(ProxyMsg* msg) {
     checkExpectedStep(3);
     // fmt::print("op4: idx={}, iter={}\n", idx, iter);
-    msg->cb.send(vt::makeMessage<OpIdxMsg>(idx).get());
+    auto m = vt::makeMessage<OpIdxMsg>(idx);
+    msg->cb.send(m.get());
   }
   void op4Impl(OpMsg* msg) {
     checkIncExpectedStep(3);
