@@ -116,8 +116,8 @@ void GossipLB::doLBStages() {
 
     debug_print(
       gossiplb, node,
-      "GossipLB::doLBStages: running iter_={}, num_iters_={}\n",
-      iter_, num_iters_
+      "GossipLB::doLBStages: running iter_={}, num_iters_={}, load={}\n",
+      iter_, num_iters_, this_load
     );
 
     if (first_iter) {
@@ -392,17 +392,23 @@ void GossipLB::decide() {
         // the rest of the stats framework
         auto obj_load = loadMilli(iter->second);
 
+        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
+
         debug_print(
           gossiplb, node,
           "GossipLB::decide: under.size()={}, selected_node={}, selected_load={},"
-          "load_info_.size()={}, obj_id={:x}, obj_load={}, avg={}, "
-          "!(selected_load + obj_load > avg)=!({} + {} > {})={}\n",
-          under.size(), selected_node, selected_load, load_info_.size(),
-          obj_id, obj_load, avg, selected_load, obj_load, avg,
-          not (selected_load + obj_load > avg)
+          "obj_id={:x}, obj_load={}, avg={}, this_new_load_={}, "
+          "criterion={}\n",
+          under.size(),
+          selected_node,
+          selected_load,
+          obj_id,
+          obj_load,
+          avg,
+          this_new_load_,
+          eval
         );
 
-        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
         if (eval) {
           migrate_objs[selected_node][obj_id] = obj_load;
 
