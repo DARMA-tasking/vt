@@ -474,7 +474,11 @@ int parseArguments(CLI::App& app, int& argc, char**& argv);
   addUserArgs(app);
   addSchedulerArgs(app);
 
-  int result = parseArguments(app, /*out*/ argc, /*out*/ argv);
+  int parse_result = parseArguments(app, /*out*/ argc, /*out*/ argv);
+  if (parse_result) {
+    // non-success
+    return parse_result;
+  }
 
   // Determine the final colorization setting.
   if (vt_no_color) {
@@ -487,7 +491,7 @@ int parseArguments(CLI::App& app, int& argc, char**& argv);
 
   parsed_ = true;
 
-  return result;
+  return parse_result;
 }
 
 int parseArguments(CLI::App& app, int& argc, char**& argv) {
