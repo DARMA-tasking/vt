@@ -362,7 +362,7 @@ void Runtime::runScheduler() {
 }
 
 void Runtime::reset() {
-  MPI_Barrier(communicator_);
+  sync();
 
   runtime_active_ = true;
 
@@ -370,7 +370,7 @@ void Runtime::reset() {
   theTerm->addDefaultAction(action);
   theTerm->resetGlobalTerm();
 
-  MPI_Barrier(communicator_);
+  sync();
 
   // Without workers running on the node, the termination detector should
   // assume its locally ready to propagate instead of waiting for them to
@@ -507,7 +507,7 @@ void Runtime::setupArgs() {
 }
 
 void Runtime::finalizeMPI() {
-  MPI_Barrier(communicator_);
+  sync();
 
   if (not is_interop_) {
     MPI_Finalize();
