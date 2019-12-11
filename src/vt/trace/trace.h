@@ -72,7 +72,7 @@ struct Trace {
   using TraceContainersType = TraceContainers;
   using TimeIntegerType     = int64_t;
   using LogPtrType          = LogType*;
-  using TraceContainerType  = std::vector<LogPtrType>;
+  using TraceContainerType  = std::vector< std::unique_ptr<LogType> >;
   using TraceStackType      = std::stack<LogPtrType>;
   using ArgType             = vt::arguments::ArgConfig;
 
@@ -145,15 +145,18 @@ struct Trace {
     TraceEntryIDType const ep, TraceMsgLenType const len,
     NodeType const from_node, double const time = getCurrentTime()
   );
-  TraceEventIDType logEvent(LogPtrType log);
 
+  /// Enable logging of events.
   void enableTracing();
+
+  /// Disable logging of events.
+  /// Events already logged may still be written to the trace log.
   void disableTracing();
 
   void flushTracesFile(bool useGlobalSync);
   void writeTracesFile(int flush);
   void cleanupTracesFile();
-  void writeLogFile(vt_gzFile *file, TraceContainerType const& traces);
+  void writeLogFile(vt_gzFile *file, TraceContainerType &traces);
   bool inIdleEvent() const;
 
   static double getCurrentTime();
@@ -171,8 +174,12 @@ struct Trace {
 
 private:
 
-  void editLastEntry(std::function<void(LogPtrType)> fn);
   static bool traceWritingEnabled(NodeType node);
+
+  /// Log an event, returning a trace event ID if accepted
+  /// or no_trace_event if not accepted (eg. no tracing on node).
+  /// TAKES OWNERSHIP of the supplied Log object.
+  TraceEventIDType logEvent(LogPtrType log);
 
 private:
   TraceContainerType traces_;
