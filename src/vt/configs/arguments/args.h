@@ -168,7 +168,7 @@ public:
   static std::string vt_user_str_3;
 
 private:
-  static bool parsed;
+  static bool parsed_;
 };
 
 inline bool user1() { return ArgConfig::vt_user_1; }
