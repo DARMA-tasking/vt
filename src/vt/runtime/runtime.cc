@@ -338,7 +338,7 @@ void Runtime::runScheduler() {
 }
 
 void Runtime::reset() {
-  MPI_Barrier(theContext->getComm());
+  sync();
 
   runtime_active_ = true;
 
@@ -346,7 +346,7 @@ void Runtime::reset() {
   theTerm->addDefaultAction(action);
   theTerm->resetGlobalTerm();
 
-  MPI_Barrier(theContext->getComm());
+  sync();
 
   // Without workers running on the node, the termination detector should
   // assume its locally ready to propagate instead of waiting for them to
@@ -455,11 +455,11 @@ void Runtime::setup() {
   auto action = std::bind(&Runtime::terminationHandler, this);
   theTerm->addDefaultAction(action);
 
-  MPI_Barrier(theContext->getComm());
+  sync();
 
   // wait for all nodes to start up to initialize the runtime
   theCollective->barrierThen([this]{
-    MPI_Barrier(theContext->getComm());
+    sync();
   });
 
   if (ArgType::vt_pause) {
@@ -491,7 +491,7 @@ void Runtime::initializeContext() {
 }
 
 void Runtime::finalizeContext() {
-  MPI_Barrier(theContext->getComm());
+  sync();
 
   if (not is_interop_) {
     MPI_Finalize();
