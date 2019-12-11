@@ -244,7 +244,7 @@ void GossipLB::propagateRound(EpochType epoch) {
     if (epoch != no_epoch) {
       envelopeSetEpoch(msg->env, epoch);
     }
-    msg->addNodeLoad(this_node, this_load);
+    msg->addNodeLoad(this_node, this_new_load_);
     proxy_[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
   }
 }
@@ -464,6 +464,7 @@ void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
     auto iter = cur_objs_.find(obj.first);
     vtAssert(iter == cur_objs_.end(), "Incoming object should not exist");
     cur_objs_.insert(obj);
+    this_new_load_ += obj.second;
   }
 }
 
