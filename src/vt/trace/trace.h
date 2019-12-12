@@ -181,8 +181,7 @@ private:
 
   /// Log an event, returning a trace event ID if accepted
   /// or no_trace_event if not accepted (eg. no tracing on node).
-  /// TAKES OWNERSHIP of the supplied Log object.
-  TraceEventIDType logEvent(LogType* log);
+  TraceEventIDType logEvent(std::unique_ptr<LogType> log);
 
 private:
   TraceContainerType traces_;
