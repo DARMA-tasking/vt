@@ -33,13 +33,13 @@ TraceRegistry::registerEventHashed(
   TraceEntrySeqType event_type_seq = no_trace_entry_seq;
 
   { // ensure event type / category
-    auto* event_types = TraceContainers::getEventTypeContainer();
+    auto& event_types = TraceContainers::getEventTypeContainer();
 
-    auto type_iter = event_types->find(event_type_id);
-    if (type_iter == event_types->end()) {
-      event_type_seq = event_types->size();
+    auto type_iter = event_types.find(event_type_id);
+    if (type_iter == event_types.end()) {
+      event_type_seq = event_types.size();
 
-      event_types->insert({
+      event_types.insert({
         event_type_id,
         EventClassType{event_type_id, event_type_seq, event_type_name}
       });
@@ -49,21 +49,28 @@ TraceRegistry::registerEventHashed(
   }
 
   { // ensure event
-    auto* events = TraceContainers::getEventContainer();
+    auto& events = TraceContainers::getEventContainer();
 
     TraceEntryIDType event_id = std::hash<std::string>{}(
       event_type_name + std::string("::") + event_name
     );
 
-    auto event_iter = events->find(event_id);
 
-    if (event_iter == events->end()) {
-      TraceEntrySeqType event_seq = events->size();
+    auto event_iter = events.find(event_id);
 
-      events->insert({
-        event_id,
-        TraceEventType{event_id, event_seq, event_name, event_type_id, event_type_seq}
-      });
+    if (event_iter == events.end()) {
+      TraceEntrySeqType event_seq = events.size();
+
+      fmt::print("event_id={}, str={}, size={}, ptr={} BEFORE\n", event_id, event_type_name + std::string("::") + event_name, event_seq, print_ptr(&events));
+
+      // gets very slow inside here after some # of insertions
+      events.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(event_id),
+        std::forward_as_tuple(TraceEventType{event_id, event_seq, event_name, event_type_id, event_type_seq})
+      );
+
+      fmt::print("event_id={}, str={}, size={}, ptr={} AFTER\n", event_id, event_type_name + std::string("::") + event_name, event_seq, print_ptr(&events));
     }
 
     // found or newly added
@@ -76,8 +83,8 @@ TraceRegistry::setTraceName(
   TraceEntryIDType id, std::string const& name, std::string const& type_name
 ) {
 #if backend_check_enabled(trace_enabled)
-  auto* events = TraceContainers::getEventContainer();
-  auto event_iter = events->find(id);
+  auto& events = TraceContainers::getEventContainer();
+  auto event_iter = events.find(id);
   // TODO, increase guard here perhaps:
   // vtAssertInfo(
   //   iter != event_types->end(),
@@ -85,21 +92,21 @@ TraceRegistry::setTraceName(
   //   name, parent, id, type_id
   // );
 
-  if (event_iter != events->end()) {
+  if (event_iter != events.end()) {
     auto type_id = event_iter->second.theEventTypeId();
     if (name != "") {
       event_iter->second.setEventName(name);
     }
 
     if (type_name != "") {
-      auto* event_types = TraceContainers::getEventTypeContainer();
-      auto iter = event_types->find(type_id);
+      auto& event_types = TraceContainers::getEventTypeContainer();
+      auto iter = event_types.find(type_id);
       vtAssertInfo(
-        iter != event_types->end(),
+        iter != event_types.end(),
         "Event type must exist",
         name, type_name, id, type_id
       );
-      if (iter != event_types->end()) {
+      if (iter != event_types.end()) {
         iter->second.setEventName(type_name);
       }
     }
@@ -109,9 +116,12 @@ TraceRegistry::setTraceName(
 
 /*static*/ EventClassType
 TraceRegistry::getEvent(TraceEntryIDType id) {
-  auto* events = TraceContainers::getEventContainer();
-  auto iter = events->find(id);
-  if (iter != events->end()) {
+  auto& events = TraceContainers::getEventContainer();
+  auto iter = events.find(id);
+
+  fmt::print("id={}, found={}, size={}\n", id, (iter == events.end()) ? 0 : iter->second.theEventId(), events.size());
+
+  if (iter != events.end()) {
     return iter->second;
   }
   return EventClassType{no_trace_entry_id, no_trace_entry_seq, std::string{}};

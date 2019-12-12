@@ -10,23 +10,10 @@ namespace vt { namespace trace {
 // that is when auto-handler events are registered.
 // Using a constexpr constructor / initializer list is also relevant.
 // - https://en.cppreference.com/w/cpp/language/constant_initialization
-static std::unique_ptr<TraceContainerEventClassType> event_type_container_{};
-static std::unique_ptr<TraceContainerEventType> event_container_{};
+// static TraceContainerEventClassType event_type_container_  = std::make_unique<TraceContainerEventClassType>();
+// static TraceContainerEventType event_container_ = std::make_unique<TraceContainerEventType>();
 
-/*static*/ TraceContainerEventClassType*
-TraceContainers::getEventTypeContainer(){
-  if (event_type_container_ == nullptr) {
-    event_type_container_ = std::make_unique<TraceContainerEventClassType>();
-  }
-  return event_type_container_.get();
-}
-
-/*static*/ TraceContainerEventType*
-TraceContainers::getEventContainer(){
-  if (event_container_ == nullptr) {
-    event_container_ = std::make_unique<TraceContainerEventType>();
-  }
-  return event_container_.get();
-}
+/*static*/ TraceContainerEventClassType TraceContainers::event_type_container_;
+/*static*/ TraceContainerEventType TraceContainers::event_container_;
 
 }} //end namespace vt::trace

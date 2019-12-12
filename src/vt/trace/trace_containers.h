@@ -58,14 +58,18 @@ using EventClassType = EventClass;
 using TraceContainerEventType = std::unordered_map<TraceEntryIDType, TraceEventType>;
 using TraceContainerEventClassType = std::unordered_map<TraceEntryIDType, EventClassType>;
 
-class TraceContainers {
- public:
-  /// Returns container of all registered event types (aka parents).
-  /// The returned pointer is only valid for the current scope.
-  static TraceContainerEventClassType* getEventTypeContainer();
-  /// Returns container of all registered event.
-  /// The returned pointer is only valid for the current scope.
-  static TraceContainerEventType* getEventContainer();
+struct TraceContainers {
+  static TraceContainerEventClassType& getEventTypeContainer(){
+    return event_type_container_;
+  }
+
+  static TraceContainerEventType& getEventContainer(){
+    return event_container_;
+  }
+
+private:
+  static TraceContainerEventClassType event_type_container_;
+  static TraceContainerEventType event_container_;
 };
 
 }} //end namespace vt::trace

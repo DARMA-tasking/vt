@@ -609,8 +609,8 @@ void Trace::writeTracesFile() {
     "write_traces_file: traces.size={}, "
     "event_type_container.size={}, event_container.size={}\n",
     traces_.size(),
-    TraceContainersType::getEventTypeContainer()->size(),
-    TraceContainersType::getEventContainer()->size()
+    TraceContainersType::getEventTypeContainer().size(),
+    TraceContainersType::getEventContainer().size()
   );
 
   if (checkEnabled()) {
@@ -810,11 +810,11 @@ void Trace::outputControlFile(std::ofstream& file) {
 
   auto const num_nodes = theContext()->getNumNodes();
 
-  auto* event_types = TraceContainersType::getEventTypeContainer();
-  auto* events = TraceContainersType::getEventContainer();
+  auto& event_types = TraceContainersType::getEventTypeContainer();
+  auto& events = TraceContainersType::getEventContainer();
 
-  auto const num_event_types = event_types->size();
-  auto const num_events = events->size();
+  auto const num_event_types = event_types.size();
+  auto const num_events = events.size();
   auto const num_user_events = user_event.getEvents().size();
 
   file << "PROJECTIONS_ID\n"
@@ -832,7 +832,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   ContainerEventSortedType sorted_event;
   ContainerEventTypeSortedType sorted_event_type;
 
-  for (auto&& elem : *TraceContainersType::getEventContainer()) {
+  for (auto&& elem : TraceContainersType::getEventContainer()) {
     sorted_event.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),
@@ -840,7 +840,7 @@ void Trace::outputControlFile(std::ofstream& file) {
     );
   }
 
-  for (auto&& elem : *TraceContainersType::getEventTypeContainer()) {
+  for (auto&& elem : TraceContainersType::getEventTypeContainer()) {
     sorted_event_type.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(&elem.second),
