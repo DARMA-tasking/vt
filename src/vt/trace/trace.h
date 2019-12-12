@@ -71,9 +71,8 @@ struct Trace {
   using TraceConstantsType  = eTraceConstants;
   using TraceContainersType = TraceContainers;
   using TimeIntegerType     = int64_t;
-  using LogPtrType          = LogType*;
   using TraceContainerType  = std::vector< std::unique_ptr<LogType> >;
-  using TraceStackType      = std::stack<LogPtrType>;
+  using TraceStackType      = std::stack<LogType*>;
   using ArgType             = vt::arguments::ArgConfig;
 
   Trace();
@@ -178,8 +177,7 @@ private:
 
   /// Log an event, returning a trace event ID if accepted
   /// or no_trace_event if not accepted (eg. no tracing on node).
-  /// TAKES OWNERSHIP of the supplied Log object.
-  TraceEventIDType logEvent(LogPtrType log);
+  TraceEventIDType logEvent(std::unique_ptr<LogType> log);
 
 private:
   TraceContainerType traces_;
