@@ -179,7 +179,9 @@ void Trace::addUserNote(std::string const& note) {
   auto const type = TraceConstantsType::UserSuppliedNote;
   auto const time = getCurrentTime();
 
-  logEvent(new LogType(time, type, note, Log::UserDataType{}));
+  logEvent(
+    std::make_unique<LogType>(time, type, note, Log::UserDataType{})
+  );
 }
 
 void Trace::addUserData(int32_t data) {
@@ -196,7 +198,9 @@ void Trace::addUserData(int32_t data) {
   auto const type = TraceConstantsType::UserSupplied;
   auto const time = getCurrentTime();
 
-  logEvent(new LogType(time, type, std::string{}, data));
+  logEvent(
+    std::make_unique<LogType>(time, type, std::string{}, data)
+  );
 }
 
 void Trace::addUserBracketedNote(
@@ -215,7 +219,9 @@ void Trace::addUserBracketedNote(
 
   auto const type = TraceConstantsType::UserSuppliedBracketedNote;
 
-  logEvent(new LogType(begin, end, type, note, event));
+  logEvent(
+    std::make_unique<LogType>(begin, end, type, note, event)
+  );
 }
 
 UserEventIDType Trace::registerUserEventColl(std::string const& name) {
@@ -257,7 +263,9 @@ void Trace::addUserEvent(UserEventIDType event) {
   auto const time = getCurrentTime();
   NodeType const node = theContext()->getNode();
 
-  logEvent(new LogType(time, type, node, event, true));
+  logEvent(
+    std::make_unique<LogType>(time, type, node, event, true)
+  );
 }
 
 void Trace::addUserEventManual(UserSpecEventIDType event) {
@@ -289,8 +297,12 @@ void Trace::addUserEventBracketed(UserEventIDType event, double begin, double en
   auto const type = TraceConstantsType::UserEventPair;
   NodeType const node = theContext()->getNode();
 
-  logEvent(new LogType(begin, type, node, event, true));
-  logEvent(new LogType(end, type, node, event, false));
+  logEvent(
+    std::make_unique<LogType>(begin, type, node, event, true)
+  );
+  logEvent(
+    std::make_unique<LogType>(end, type, node, event, false)
+  );
 }
 
 void Trace::addUserEventBracketedBegin(UserEventIDType event) {
@@ -308,7 +320,9 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
   auto const time = getCurrentTime();
   NodeType const node = theContext()->getNode();
 
-  logEvent(new LogType(time, type, node, event, true));
+  logEvent(
+    std::make_unique<LogType>(time, type, node, event, true)
+  );
 }
 
 void Trace::addUserEventBracketedEnd(UserEventIDType event) {
@@ -326,7 +340,9 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
   auto const time = getCurrentTime();
   NodeType const node = theContext()->getNode();
 
-  logEvent(new LogType(time, type, node, event, false));
+  logEvent(
+    std::make_unique<LogType>(time, type, node, event, false)
+  );
 }
 
 void Trace::addUserEventBracketedManualBegin(UserSpecEventIDType event) {
@@ -385,9 +401,11 @@ void Trace::beginProcessing(
 
   auto const type = TraceConstantsType::BeginProcessing;
 
-  logEvent(new LogType(time, ep, type,
-                       event, len, from_node,
-                       idx1, idx2, idx3, idx4));
+  logEvent(
+    std::make_unique<LogType>(
+      time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
+    )
+  );
 }
 
 void Trace::endProcessing(
@@ -408,9 +426,11 @@ void Trace::endProcessing(
 
   auto const type = TraceConstantsType::EndProcessing;
 
-  logEvent(new LogType(time, ep, type,
-                       event, len, from_node,
-                       idx1, idx2, idx3, idx4));
+  logEvent(
+    std::make_unique<LogType>(
+      time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
+    )
+  );
 
   if (open_events_.empty()) {
     cur_stop_ = traces_.size();
@@ -429,7 +449,9 @@ void Trace::beginIdle(double const time) {
   auto const type = TraceConstantsType::BeginIdle;
   NodeType const node = theContext()->getNode();
 
-  logEvent(new LogType(time, type, node));
+  logEvent(
+    std::make_unique<LogType>(time, type, node)
+  );
   idle_begun_ = true; // must set AFTER logEvent
 }
 
@@ -445,7 +467,9 @@ void Trace::endIdle(double const time) {
   auto const type = TraceConstantsType::EndIdle;
   NodeType const node = theContext()->getNode();
 
-  logEvent(new LogType(time, type, node));
+  logEvent(
+    std::make_unique<LogType>(time, type, node)
+  );
   idle_begun_ = false; // must set AFTER logEvent
 }
 
@@ -459,7 +483,9 @@ TraceEventIDType Trace::messageCreation(
   auto const type = TraceConstantsType::Creation;
   NodeType const node = theContext()->getNode();
 
-  return logEvent(new LogType(time, ep, type, node, len));
+  return logEvent(
+    std::make_unique<LogType>(time, ep, type, node, len)
+  );
 }
 
 TraceEventIDType Trace::messageCreationBcast(
@@ -472,7 +498,9 @@ TraceEventIDType Trace::messageCreationBcast(
   auto const type = TraceConstantsType::CreationBcast;
   NodeType const node = theContext()->getNode();
 
-  return logEvent(new LogType(time, ep, type, node, len));
+  return logEvent(
+    std::make_unique<LogType>(time, ep, type, node, len)
+  );
 }
 
 TraceEventIDType Trace::messageRecv(
@@ -486,7 +514,9 @@ TraceEventIDType Trace::messageRecv(
   auto const type = TraceConstantsType::MessageRecv;
   NodeType const node = theContext()->getNode();
 
-  return logEvent(new LogType(time, ep, type, node, len));
+  return logEvent(
+    std::make_unique<LogType>(time, ep, type, node, len)
+  );
 }
 
 bool Trace::checkDynamicRuntimeEnabled() {
@@ -512,11 +542,8 @@ void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
   fn(traces_.at(trace_cont_size - 1));
 }
 
-TraceEventIDType Trace::logEvent(LogPtrType log) {
+TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
   assert(log != nullptr && "log cannot be null");
-
-  // Honor promise of ownership; log remains valid in scope.
-  auto log_uptr = std::unique_ptr<LogType>{log};
 
   if (not enabled_ || not traceWritingEnabled(theContext()->getNode())) {
     return no_trace_event;
@@ -536,34 +563,38 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
   }
 
   auto grouped_begin = [&]() -> TraceEventIDType {
+    TraceEventIDType event = log->event;
+    double logTime = log->time;
+
     if (not open_events_.empty()) {
       LogType* top_event = open_events_.top();
-      auto end_log = std::unique_ptr<LogType>{
-        new LogType(
-          log->time,
-          top_event->ep,
-          TraceConstantsType::EndProcessing,
-          top_event->event,
-          top_event->msg_len,
-          top_event->node,
-          top_event->idx1,
-          top_event->idx2,
-          top_event->idx3,
-          top_event->idx4
-        )
-      };
+      auto end_log = std::make_unique<LogType>(
+        logTime,
+        top_event->ep,
+        TraceConstantsType::EndProcessing,
+        top_event->event,
+        top_event->msg_len,
+        top_event->node,
+        top_event->idx1,
+        top_event->idx2,
+        top_event->idx3,
+        top_event->idx4
+      );
       traces_.push_back(std::move(end_log));
     }
 
-    // push on open stack.
-    open_events_.push(log);
+    // push on open stack -- object is owned by trace collection, NOT stack.
+    open_events_.push(log.get());
 
-    traces_.push_back(std::move(log_uptr));
+    traces_.push_back(std::move(log));
 
-    return log->event;
+    return event;
   };
 
   auto grouped_end = [&]() -> TraceEventIDType {
+    TraceEventIDType event = log->event;
+    double logTime = log->time;
+
     vtAssert(
       not open_events_.empty(), "Stack should be empty"
     );
@@ -580,55 +611,57 @@ TraceEventIDType Trace::logEvent(LogPtrType log) {
     // set up begin/end links
     open_events_.pop();
 
-    traces_.push_back(std::move(log_uptr));
+    traces_.push_back(std::move(log));
 
     if (not open_events_.empty()) {
       LogType* top_event = open_events_.top();
-      auto begin_log = std::unique_ptr<LogType>{
-        new LogType(
-          log->time,
-          top_event->ep,
-          TraceConstantsType::BeginProcessing,
-          top_event->event,
-          top_event->msg_len,
-          top_event->node,
-          top_event->idx1,
-          top_event->idx2,
-          top_event->idx3,
-          top_event->idx4
-        )
-      };
+      auto begin_log = std::make_unique<LogType>(
+        logTime,
+        top_event->ep,
+        TraceConstantsType::BeginProcessing,
+        top_event->event,
+        top_event->msg_len,
+        top_event->node,
+        top_event->idx1,
+        top_event->idx2,
+        top_event->idx3,
+        top_event->idx4
+      );
       traces_.push_back(std::move(begin_log));
     }
 
-    return log->event;
+    return event;
   };
 
   auto basic_new_event_create = [&]() -> TraceEventIDType {
-    traces_.push_back(std::move(log_uptr));
+    TraceEventIDType event = cur_event_++;
+    log->event = event;
+    traces_.push_back(std::move(log));
 
-    log->event = cur_event_++;
-    return log->event;
+    return event;
   };
 
   auto basic_no_event_create = [&]() -> TraceEventIDType {
-    traces_.push_back(std::move(log_uptr));
+    TraceEventIDType event = no_trace_event;
+    log->event = event;
+    traces_.push_back(std::move(log));
 
-    log->event = no_trace_event;
-    return log->event;
+    return event;
   };
 
   auto basic_cur_event = [&]() -> TraceEventIDType {
-    traces_.push_back(std::move(log_uptr));
+    TraceEventIDType event = cur_event_;
+    log->event = event;
+    traces_.push_back(std::move(log));
 
-    log->event = cur_event_;
-    return log->event;
+    return event;
   };
 
   auto basic_create = [&]() -> TraceEventIDType {
-    traces_.push_back(std::move(log_uptr));
+    TraceEventIDType event = log->event;
+    traces_.push_back(std::move(log));
 
-    return log->event;
+    return event;
   };
 
   switch (log->type) {
@@ -765,7 +798,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       event_seq_id = log->ep == no_trace_entry_id ?
         no_trace_entry_id : event_iter->second.theEventSeq();
     }
-    
+
     switch (log->type) {
     case TraceConstantsType::BeginProcessing:
       gzprintf(
@@ -902,8 +935,9 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       vtAssertInfo(false, "Unimplemented log type", converted_time, log->node);
     }
 
-    LogPtrType log_p = traces[i].release();
-    delete log_p;
+    // LogType is released - however, the collection itself is
+    // not trimmed and will grow without bounds fsvo growth.
+    traces[i].reset(nullptr);
   }
 
   cur_ = stop_point;
