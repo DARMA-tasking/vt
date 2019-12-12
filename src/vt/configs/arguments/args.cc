@@ -183,9 +183,9 @@ void addColorArgs(CLI::App& app) {
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";
   auto never  = "Do not colorize output (overrides --vt_color)";
-  auto a  = app.add_flag("-c,--vt_color",    ArgConfig::vt_color,      always);
-  auto b  = app.add_flag("-n,--vt_no_color", ArgConfig::vt_no_color,   never);
-  auto a1 = app.add_flag("-q,--vt_quiet",    ArgConfig::vt_quiet,      quiet);
+  auto a  = app.add_flag("--vt_color",    ArgConfig::vt_color,      always);
+  auto b  = app.add_flag("--vt_no_color", ArgConfig::vt_no_color,   never);
+  auto a1 = app.add_flag("--vt_quiet",    ArgConfig::vt_quiet,      quiet);
   auto outputGroup = "Output Control";
   a->group(outputGroup);
   b->group(outputGroup);
@@ -566,6 +566,8 @@ std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv);
 
   CLI::App app{"vt"};
 
+  app.set_help_flag("--vt_help", "Display help");
+
   addColorArgs(app);
   addSignalArgs(app);
   addMemUsageArgs(app);
@@ -616,8 +618,7 @@ std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv) {
       rargs = &passthru_args;
     } else if (rargs) {
       rargs->push_back(c);
-    } else if (0 == strcmp(c, "--help")
-               or 0 == strncmp(c, "--vt_", 5)) {
+    } else if (0 == strncmp(c, "--vt_", 5)) {
       // Implicit start of VT args allows pass-thru 'for compatibility'
       // although the recommended calling pattern to always provide VT args first.
       rargs = &vt_args;
