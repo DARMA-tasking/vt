@@ -47,6 +47,8 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
+#include <sstream>
 
 #include "CLI/CLI11.hpp"
 
@@ -555,14 +557,14 @@ void addSchedulerArgs(CLI::App& app) {
   kca->group(schedulerGroup);
 }
 
-int parseArguments(CLI::App& app, int& argc, char**& argv);
+std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv);
 
-/*static*/ int ArgConfig::parse(int& argc, char**& argv) {
-  static CLI::App app{"vt"};
-
+/*static*/ std::function<int()> ArgConfig::parse(int& argc, char**& argv) {
   if (parsed_ || argc == 0 || argv == nullptr) {
-    return 0;
+    return nullptr;
   }
+
+  CLI::App app{"vt"};
 
   addColorArgs(app);
   addSignalArgs(app);
@@ -576,10 +578,10 @@ int parseArguments(CLI::App& app, int& argc, char**& argv);
   addUserArgs(app);
   addSchedulerArgs(app);
 
-  int parse_result = parseArguments(app, /*out*/ argc, /*out*/ argv);
-  if (parse_result) {
+  std::function<int()> show_arg_err = parseArguments(app, /*out*/ argc, /*out*/ argv);
+  if (show_arg_err) {
     // non-success
-    return parse_result;
+    return show_arg_err;
   }
 
   // Determine the final colorization setting.
@@ -593,10 +595,10 @@ int parseArguments(CLI::App& app, int& argc, char**& argv);
 
   parsed_ = true;
 
-  return parse_result;
+  return nullptr; // success
 }
 
-int parseArguments(CLI::App& app, int& argc, char**& argv) {
+std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv) {
 
   std::vector<char*> vt_args;
   std::vector<char*> mpi_args;
@@ -637,10 +639,18 @@ int parseArguments(CLI::App& app, int& argc, char**& argv) {
   try {
     app.parse(args_to_parse);
   } catch (CLI::Error &ex) {
-    // Doesn't actually exit..
-    int result = app.exit(ex);
-    // ..CLI11 returns 0 on --help, which is still terminal. Great job.
-    return result ? result : 1;
+    // Return a action to display whatever is relevant and return appropriate
+    // exit code for the application. (Allows MPI_Init/MPI_Abort sandwich.)
+    // The message is captured immedidately to avoid app and exception captures.
+    std::stringstream message_stream;
+    int result = app.exit(ex, message_stream, message_stream);
+    std::string message = message_stream.str();
+
+    return [result, message]{
+      std::cerr << message << std::flush;
+      // ..CLI11 returns 0 on --help, which is still terminal. Great job.
+      return result ? result : 1;
+    };
   }
 
   // Get the clean prog name; don't allow path bleed in usages.
@@ -677,7 +687,7 @@ int parseArguments(CLI::App& app, int& argc, char**& argv) {
   argc = new_argc;
   argv = new_argv.get();
 
-  return 0; // success
+  return nullptr; // success
 }
 
 }} /* end namespace vt::arguments */

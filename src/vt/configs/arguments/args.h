@@ -47,6 +47,7 @@
 
 // Do not pull in any VT dependencies here
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -56,8 +57,9 @@ struct ArgConfig {
 
   /// Parse the arguments into ArgConfig.
   /// Re-assigns argc/argv to remove consumed arguments.
-  /// Returns 0 on success; a non-0 exit code otherwise.
-  static int parse(int& argc, char**& argv);
+  /// Returns nullptr on success; on failure returns a function
+  /// that will display a reason for failure and return an exit code.
+  static std::function<int()> parse(int& argc, char**& argv);
 
 public:
   static bool vt_color;

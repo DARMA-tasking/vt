@@ -98,11 +98,23 @@ Runtime::Runtime(
        in_comm == nullptr ? MPI_COMM_NULL : *in_comm
      )
 {
+  // MPI_Init 'should' be called first on the original arguments,
+  // with the justification that in some environments in addition to removing
+  // special MPI arguments, it can actually ADD arguments not from argv.
+  // That is not done here and doing so move move up parts of 'initialize'.
+
   // n.b. ref-update of args with pass-through arguments
   // (pass-through arguments are neither for VT or MPI_Init)
-  int parse_result = ArgType::parse(/*out*/ argc, /*out*/ argv);
-  if (parse_result) {
-    exit(parse_result);
+  std::function<int()> show_arg_err = ArgType::parse(/*out*/ argc, /*out*/ argv);
+
+  if (show_arg_err) {
+    // To better honor the MPI contract, force an MPI_Init then MPI_Abort.
+    // It might be better to move up the general MPI_Init case; normally
+    // MPI_Init is called as a result of Runtime::initialize (while this is ctor).
+    MPI_Init(NULL, NULL);
+    int result_code = show_arg_err();
+    MPI_Abort(communicator_ ? *communicator_ : MPI_COMM_WORLD, result_code);
+    exit(result_code);
     return;
   }
 
