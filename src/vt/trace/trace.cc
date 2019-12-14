@@ -59,13 +59,13 @@
 #include <mpi.h>
 #include <zlib.h>
 
-
 namespace vt { namespace trace {
 
+// Wrap zlib file implementation to allow header-clean declarations.
+// Lifetime is same as the underlying stream.
 struct vt_gzFile {
   gzFile file_type;
-  //---
-  vt_gzFile(gzFile_s *pS) : file_type(pS) { }
+  vt_gzFile(gzFile pS) : file_type(pS) { }
 };
 
 using ArgType = vt::arguments::ArgConfig;
@@ -720,11 +720,18 @@ void Trace::cleanupTracesFile() {
            or isStsOutputNode(node))) {
     return;
   }
-  //--- Dump everything into an output file
+
+  // No more events can be written.
+  disableTracing();
+
+  //--- Dump everything into an output file and close.
   cur_stop_ = traces_.size();
   writeTracesFile(Z_FINISH);
-  outputFooter(node, start_time_, log_file_.get());
-  gzclose(log_file_->file_type);
+
+  assert(log_file_ && "Trace file must be open"); // opened in writeTracesFile
+  outputFooter(log_file_.get(), node, start_time_);
+  gzclose(log_file_.get()->file_type);
+  log_file_ = nullptr;
 }
 
 void Trace::flushTracesFile(bool useGlobalSync) {
@@ -734,6 +741,7 @@ void Trace::flushTracesFile(bool useGlobalSync) {
   }
   if (useGlobalSync) {
     // Synchronize all the nodes before flushing the traces
+    // (Consider pushing out: barrier usages are probably domain-specific.)
     theCollective()->barrier();
   }
   if (traces_.size() > cur_ + ArgType::vt_trace_flush_size) {
@@ -754,14 +762,16 @@ void Trace::writeTracesFile(int flush) {
   );
 
   if (traceWritingEnabled(node)) {
-    auto path = full_trace_name_;
-    if (not file_is_open_) {
+    if (not log_file_) {
+      auto path = full_trace_name_;
       log_file_ = std::make_unique<vt_gzFile>(gzopen(path.c_str(), "wb"));
-      outputHeader(node, start_time_, log_file_.get());
-      file_is_open_ = true;
+      outputHeader(log_file_.get(), node, start_time_);
     }
-    writeLogFile(log_file_.get(), traces_);
-    gzflush(log_file_->file_type, flush);
+    outputTraces(
+      log_file_.get(), traces_,
+      cur_, cur_stop_, start_time_, flush
+    );
+    cur_ = cur_stop_;
   }
 
   if (not isStsOutputNode(node)) {
@@ -778,27 +788,32 @@ void Trace::writeTracesFile(int flush) {
   }
 }
 
-void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
+/*static*/ void Trace::outputTraces(
+  vt_gzFile* file, TraceContainerType& traces,
+  size_t start, size_t stop, double start_time, int flush
+) {
   auto const num_nodes = theContext()->getNumNodes();
-  size_t stop_point = cur_stop_;
+  gzFile gzfile = file->file_type;
 
-  for (size_t i = cur_; i < stop_point; i++) {
+  // (Wasn't there support added to fetch an event by ID?)
+  auto* event_container = TraceContainersType::getEventContainer();
+
+  for (size_t i = start; i < stop; i++) {
     auto& log = traces[i];
-    auto const& converted_time = timeToInt(log->time - start_time_);
+    auto const& converted_time = timeToInt(log->time - start_time);
     auto const type = static_cast<
       std::underlying_type<decltype(log->type)>::type
     >(log->type);
 
-    auto event_iter = TraceContainersType::getEventContainer()->find(log->ep);
-    auto file = file_->file_type;
+    auto event_iter = event_container->find(log->ep);
 
     if ((log->ep != no_trace_entry_id) and
-      (event_iter == TraceContainersType::getEventContainer()->end())) {
+      (event_iter == event_container->end())) {
       vtAssert(false, "Event must exist that was logged");
     }
 
     TraceEntryIDType event_seq_id;
-    if (event_iter == TraceContainersType::getEventContainer()->end()) {
+    if (event_iter == event_container->end()) {
       event_seq_id = 0;
     } else {
       event_seq_id = log->ep == no_trace_entry_id ?
@@ -808,7 +823,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
     switch (log->type) {
     case TraceConstantsType::BeginProcessing:
       gzprintf(
-        file,
+        gzfile,
         "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
@@ -825,7 +840,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       break;
     case TraceConstantsType::EndProcessing:
       gzprintf(
-        file,
+        gzfile,
         "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
@@ -842,7 +857,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       break;
     case TraceConstantsType::BeginIdle:
       gzprintf(
-        file,
+        gzfile,
         "%d %lld %d\n",
         type,
         converted_time,
@@ -851,7 +866,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       break;
     case TraceConstantsType::EndIdle:
       gzprintf(
-        file,
+        gzfile,
         "%d %lld %d\n",
         type,
         converted_time,
@@ -860,7 +875,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       break;
     case TraceConstantsType::CreationBcast:
       gzprintf(
-        file,
+        gzfile,
         "%d %d %lu %lld %d %d %d %d %d\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
@@ -875,7 +890,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       break;
     case TraceConstantsType::Creation:
       gzprintf(
-        file,
+        gzfile,
         "%d %d %lu %lld %d %d %d 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
@@ -891,7 +906,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
     case TraceConstantsType::BeginUserEventPair:
     case TraceConstantsType::EndUserEventPair:
       gzprintf(
-        file,
+        gzfile,
         "%d %lld %lld %d %d %d\n",
         type,
         log->user_event,
@@ -903,7 +918,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       break;
     case TraceConstantsType::UserSupplied:
       gzprintf(
-        file,
+        gzfile,
         "%d %d %lld\n",
         type,
         log->user_supplied_data,
@@ -912,7 +927,7 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       break;
     case TraceConstantsType::UserSuppliedNote:
       gzprintf(
-        file,
+        gzfile,
         "%d %lld %zu %s\n",
         type,
         converted_time,
@@ -921,9 +936,9 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
       );
       break;
     case TraceConstantsType::UserSuppliedBracketedNote: {
-      auto const converted_end_time = timeToInt(log->end_time - start_time_);
+      auto const converted_end_time = timeToInt(log->end_time - start_time);
       gzprintf(
-        file,
+        gzfile,
         "%d %lld %lld %d %zu %s\n",
         type,
         converted_time,
@@ -945,8 +960,6 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
     // not trimmed and will grow without bounds fsvo growth.
     traces[i].reset(nullptr);
   }
-
-  cur_ = stop_point;
 }
 
 void Trace::outputControlFile(std::ofstream& file) {
@@ -1043,20 +1056,22 @@ void Trace::outputControlFile(std::ofstream& file) {
 }
 
 /*static*/ void Trace::outputHeader(
-  NodeType const node, double const start, vt_gzFile *file
+  vt_gzFile* file, NodeType const node, double const start
 ) {
+  gzFile gzfile = file->file_type;
   // Output header for projections file
-  gzprintf(file->file_type, "PROJECTIONS-RECORD 0\n");
   // '6' means COMPUTATION_BEGIN to Projections: this starts a trace
-  gzprintf(file->file_type, "6 0\n");
+  gzprintf(gzfile, "PROJECTIONS-RECORD 0\n");
+  gzprintf(gzfile, "6 0\n");
 }
 
 /*static*/ void Trace::outputFooter(
-  NodeType const node, double const start, vt_gzFile *file
+  vt_gzFile* file, NodeType const node, double const start
 ) {
-  // Output footer for projections file, '7' means COMPUTATION_END to
-  // Projections
-  gzprintf(file->file_type, "7 %lld\n", timeToInt(getCurrentTime() - start));
+  gzFile gzfile = file->file_type;
+  // Output footer for projections file,
+  // '7' means COMPUTATION_END to Projections
+  gzprintf(gzfile, "7 %lld\n", timeToInt(getCurrentTime() - start));
 }
 
 }} //end namespace vt::trace
