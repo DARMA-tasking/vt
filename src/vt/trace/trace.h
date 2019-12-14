@@ -51,6 +51,8 @@
 #include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_user_event.h"
 
+#include "vt/timing/timing.h"
+
 #include <cassert>
 #include <cstdint>
 #include <functional>
@@ -73,7 +75,6 @@ struct Trace {
   using TimeIntegerType     = int64_t;
   using TraceContainerType  = std::vector< std::unique_ptr<LogType> >;
   using TraceStackType      = std::stack<LogType*>;
-  using ArgType             = vt::arguments::ArgConfig;
 
   Trace();
   Trace(std::string const& in_prog_name, std::string const& in_trace_name);
@@ -153,25 +154,40 @@ struct Trace {
   void disableTracing();
 
   void flushTracesFile(bool useGlobalSync);
-  void writeTracesFile(int flush);
   void cleanupTracesFile();
-  void writeLogFile(vt_gzFile *file, TraceContainerType &traces);
+
   bool inIdleEvent() const;
 
-  static double getCurrentTime();
-  void outputControlFile(std::ofstream& file);
-  static TimeIntegerType timeToInt(double const time);
-  static void traceBeginIdleTrigger();
-  static void outputHeader(
-    NodeType const node, double const start, vt_gzFile *file
-  );
-  static void outputFooter(
-    NodeType const node, double const start, vt_gzFile *file
-  );
+  static inline double getCurrentTime() {
+    return ::vt::timing::Timing::getCurrentTime();
+  }
+
+  static inline TimeIntegerType timeToInt(double const time) {
+    return static_cast<TimeIntegerType>(time * 1e6);
+  }
 
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 private:
+
+  static void traceBeginIdleTrigger();
+
+  // Writes traces to file, optionally flushing.
+  // The traces collection specified may be modified.
+  static void outputTraces(
+    vt_gzFile* file, TraceContainerType& traces,
+    size_t start, size_t stop, double start_time, int flush
+  );
+  static void outputHeader(
+    vt_gzFile* file, NodeType const node, double const start
+  );
+  static void outputFooter(
+    vt_gzFile* file, NodeType const node, double const start
+  );
+
+  void writeTracesFile(int flush);
+
+  void outputControlFile(std::ofstream& file);
 
   static bool traceWritingEnabled(NodeType node);
   static bool isStsOutputNode(NodeType node);
@@ -194,9 +210,14 @@ private:
   std::string full_dir_name_    = "";
   UserEventRegistry user_event_ = {};
   std::unique_ptr<vt_gzFile> log_file_;
-  bool file_is_open_            = false;
   bool wrote_sts_file_          = false;
+
+  // Virtual index of last event written.
   size_t cur_                   = 0;
+  // Virtual index of last event that should be written.
+  // This event (and all previous events) are guaranteed
+  // to not be on the open event stack and thus deletion of
+  // such will not leave dangling pointers.
   size_t cur_stop_              = 0;
 };
 
