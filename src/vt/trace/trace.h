@@ -177,6 +177,7 @@ struct Trace {
 private:
 
   static bool traceWritingEnabled(NodeType node);
+  static bool isStsOutputNode(NodeType node);
 
   /// Log an event, returning a trace event ID if accepted
   /// or no_trace_event if not accepted (eg. no tracing on node).
