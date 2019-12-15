@@ -63,6 +63,8 @@
 
 namespace vt { namespace trace {
 
+using TraceContainersType = TraceContainers;
+
 // Wrap zlib file implementation to allow header-clean declarations.
 // Lifetime is same as the underlying stream.
 struct vt_gzFile {
@@ -660,9 +662,6 @@ void Trace::writeTracesFile(int flush) {
   auto const num_nodes = theContext()->getNumNodes();
   gzFile gzfile = file->file_type;
 
-  // (Wasn't there support added to fetch an event by ID?)
-  auto* event_container = TraceContainersType::getEventContainer();
-
   while (not traces.empty()) {
     std::unique_ptr<LogType> const& log = traces.front();
 
@@ -671,20 +670,15 @@ void Trace::writeTracesFile(int flush) {
       std::underlying_type<decltype(log->type)>::type
     >(log->type);
 
-    auto event_iter = event_container->find(log->ep);
+    vtAssert(
+      log->ep == no_trace_entry_id
+      or TraceRegistry::getEvent(log->ep).theEventId() not_eq no_trace_entry_id,
+      "Event must exist that was logged"
+    );
 
-    if ((log->ep != no_trace_entry_id) and
-      (event_iter == event_container->end())) {
-      vtAssert(false, "Event must exist that was logged");
-    }
-
-    TraceEntryIDType event_seq_id;
-    if (event_iter == event_container->end()) {
-      event_seq_id = 0;
-    } else {
-      event_seq_id = log->ep == no_trace_entry_id ?
-        no_trace_entry_id : event_iter->second.theEventSeq();
-    }
+    TraceEntrySeqType event_seq_id = log->ep == no_trace_entry_id
+      ? 0 // no_trace_entry_seq != 0 (perhaps shift offsets..).
+      : TraceRegistry::getEvent(log->ep).theEventSeq();
 
     switch (log->type) {
     case TraceConstantsType::BeginProcessing:

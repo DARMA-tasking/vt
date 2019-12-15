@@ -113,14 +113,18 @@ TraceRegistry::setTraceName(
 #endif
 }
 
-/*static*/ EventClassType
+static EventClassType not_found_ = EventClassType{
+  no_trace_entry_id, no_trace_entry_seq, std::string{}
+};
+
+/*static*/ EventClassType const&
 TraceRegistry::getEvent(TraceEntryIDType id) {
   auto* events = TraceContainers::getEventContainer();
   auto iter = events->find(id);
   if (iter != events->end()) {
     return iter->second;
   }
-  return EventClassType{no_trace_entry_id, no_trace_entry_seq, std::string{}};
+  return not_found_;
 }
 
 }} //end namespace vt::trace
