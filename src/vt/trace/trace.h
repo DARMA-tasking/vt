@@ -73,8 +73,8 @@ struct Trace {
   using TraceConstantsType  = eTraceConstants;
   using TraceContainersType = TraceContainers;
   using TimeIntegerType     = int64_t;
-  using TraceContainerType  = std::vector< std::unique_ptr<LogType> >;
-  using TraceStackType      = std::stack<LogType*>;
+  using TraceContainerType  = std::vector<std::unique_ptr<LogType>>;
+  using TraceStackType      = std::stack<LogType>;
 
   Trace();
   Trace(std::string const& in_prog_name, std::string const& in_trace_name);

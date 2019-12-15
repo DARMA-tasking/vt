@@ -84,6 +84,11 @@ struct Log {
     user_supplied_data = data;
   }
 
+  // Support copy+move constructors (no operators)
+  Log() = default;
+  Log(Log const& in) = default;
+  Log(Log&& in) = default;
+
   // User event
   Log(
     double const in_begin_time, double const in_end_time,
@@ -128,13 +133,21 @@ struct Log {
       msg_len(in_msg_len)
   { }
 
+  // Generate paired begin/end logs (copies with few changes)
+  Log(
+    Log const& in, double in_time, TraceConstantsType in_type
+  ) : time(in_time), ep(in.ep), type(in_type), event(in.event),
+      node(in.node), msg_len(in.msg_len),
+      idx1(in.idx1), idx2(in.idx2), idx3(in.idx3), idx4(in.idx4)
+  { }
+
   Log(
     double in_time, TraceEntryIDType in_ep, TraceConstantsType in_type,
     TraceEventIDType in_event, TraceMsgLenType in_msg_len, NodeType in_node,
     uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
   ) : time(in_time), ep(in_ep), type(in_type), event(in_event),
-      node(in_node), msg_len(in_msg_len), idx1(in_idx1), idx2(in_idx2),
-      idx3(in_idx3), idx4(in_idx4)
+      node(in_node), msg_len(in_msg_len),
+      idx1(in_idx1), idx2(in_idx2), idx3(in_idx3), idx4(in_idx4)
   { }
 };
 
