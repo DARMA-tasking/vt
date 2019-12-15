@@ -156,10 +156,12 @@ void Trace::setupNames(
 }
 
 /*virtual*/ Trace::~Trace() {
-  if (!open_events_.empty()) {
-    vtAssert(false, "Trying to dump traces with open events?");
-  }
-  //
+  // Not good - not much to do in late destruction.
+  vtWarnIf(
+    not open_events_.empty(),
+    "Trying to dump traces with open events?"
+  );
+
   cleanupTracesFile();
 }
 
@@ -594,11 +596,14 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
 }
 
 /*static*/ bool Trace::traceWritingEnabled(NodeType node) {
-  if (!ArgType::vt_trace) {
-    return false;
-  }
-  return ((ArgType::vt_trace_mod == 0)
-            or (node % ArgType::vt_trace_mod == 0));
+  return (ArgType::vt_trace
+          and (ArgType::vt_trace_mod == 0
+               or (node % ArgType::vt_trace_mod == 0)));
+}
+
+/*static*/ bool Trace::isStsOutputNode(NodeType node) {
+  return (ArgType::vt_trace
+          and node == designated_root_node);
 }
 
 void Trace::enableTracing() {
@@ -611,7 +616,8 @@ void Trace::disableTracing() {
 
 void Trace::cleanupTracesFile() {
   auto const& node = theContext()->getNode();
-  if (!traceWritingEnabled(node)) {
+  if (not (traceWritingEnabled(node)
+           or isStsOutputNode(node))) {
     return;
   }
   //--- Dump everything into an output file
@@ -647,7 +653,7 @@ void Trace::writeTracesFile(int flush) {
     TraceContainersType::getEventContainer()->size()
   );
 
-  if (traceWritingEnabled(theContext()->getNode())) {
+  if (traceWritingEnabled(node)) {
     auto path = full_trace_name_;
     if (not file_is_open_) {
       log_file_ = std::make_unique<vt_gzFile>(gzopen(path.c_str(), "wb"));
@@ -658,7 +664,7 @@ void Trace::writeTracesFile(int flush) {
     gzflush(log_file_->file_type, flush);
   }
 
-  if (node != designated_root_node) {
+  if (not isStsOutputNode(node)) {
     return;
   }
 
@@ -843,10 +849,6 @@ void Trace::writeLogFile(vt_gzFile *file_, TraceContainerType &traces) {
   cur_ = stop_point;
 }
 
-/*static*/ double Trace::getCurrentTime() {
-  return timing::Timing::getCurrentTime();
-}
-
 void Trace::outputControlFile(std::ofstream& file) {
 
   using ContainerEventSortedType = std::map<
@@ -955,10 +957,6 @@ void Trace::outputControlFile(std::ofstream& file) {
   // Output footer for projections file, '7' means COMPUTATION_END to
   // Projections
   gzprintf(file->file_type, "7 %lld\n", timeToInt(getCurrentTime() - start));
-}
-
-/*static*/ Trace::TimeIntegerType Trace::timeToInt(double const time) {
-  return static_cast<TimeIntegerType>(time * 1e6);
 }
 
 }} //end namespace vt::trace
