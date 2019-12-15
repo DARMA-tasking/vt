@@ -55,6 +55,8 @@
 #include <map>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stack>
+#include <queue>
 
 #include <mpi.h>
 #include <zlib.h>
@@ -95,10 +97,6 @@ Trace::Trace() { }
 }
 
 void Trace::initialize() {
-  if (checkDynamicRuntimeEnabled()) {
-    traces_.reserve(trace_reserve_count);
-  }
-
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
   );
@@ -433,10 +431,6 @@ void Trace::endProcessing(
       time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
     )
   );
-
-  if (open_events_.empty()) {
-    cur_stop_ = traces_.size();
-  }
 }
 
 void Trace::beginIdle(double const time) {
@@ -575,7 +569,7 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
         logTime,
         TraceConstantsType::EndProcessing
       );
-      traces_.push_back(std::move(end_log));
+      traces_.push(std::move(end_log));
     }
 
     // Saved copy has independent lifetime
@@ -605,7 +599,7 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     // Add the current trace PRIOR TO adding the stack restart trace.
     TraceEventIDType event = log->event;
     double logTime = log->time;
-    traces_.push_back(std::move(log));
+    traces_.push(std::move(log));
 
     // Emit a '[re]start' event for the reactivated stack item.
     auto begin_log = std::make_unique<LogType>(
@@ -613,7 +607,7 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
       logTime,
       TraceConstantsType::BeginProcessing
     );
-    traces_.push_back(std::move(begin_log));
+    traces_.push(std::move(begin_log));
 
     // Already added to traces
     return event;
@@ -652,7 +646,13 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
 
   // Normal case of event emitted at end
   TraceEventIDType event = log->event;
-  traces_.push_back(std::move(log));
+  traces_.push(std::move(log));
+
+  // If auto-flush, can flush immediately.
+  // TODO: log time of flushing; unify with group-end.
+  if (traces_.size() >= ArgType::vt_trace_flush_size) {
+    writeTracesFile(Z_SYNC_FLUSH);
+  }
 
   return event;
 }
@@ -687,7 +687,6 @@ void Trace::cleanupTracesFile() {
   disableTracing();
 
   //--- Dump everything into an output file and close.
-  cur_stop_ = traces_.size();
   writeTracesFile(Z_FINISH);
 
   assert(log_file_ && "Trace file must be open"); // opened in writeTracesFile
@@ -706,7 +705,7 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     // (Consider pushing out: barrier usages are probably domain-specific.)
     theCollective()->barrier();
   }
-  if (traces_.size() > cur_ + ArgType::vt_trace_flush_size) {
+  if (traces_.size() >= ArgType::vt_trace_flush_size) {
     writeTracesFile(Z_SYNC_FLUSH);
   }
 }
@@ -714,26 +713,28 @@ void Trace::flushTracesFile(bool useGlobalSync) {
 void Trace::writeTracesFile(int flush) {
   auto const node = theContext()->getNode();
 
-  debug_print(
-    trace, node,
-    "write_traces_file: traces.size={}, "
-    "event_type_container.size={}, event_container.size={}\n",
-    traces_.size(),
-    TraceContainersType::getEventTypeContainer()->size(),
-    TraceContainersType::getEventContainer()->size()
-  );
+  size_t to_write = traces_.size();
 
-  if (traceWritingEnabled(node)) {
+  if (traceWritingEnabled(node) and to_write > 0) {
     if (not log_file_) {
       auto path = full_trace_name_;
       log_file_ = std::make_unique<vt_gzFile>(gzopen(path.c_str(), "wb"));
       outputHeader(log_file_.get(), node, start_time_);
     }
-    outputTraces(
-      log_file_.get(), traces_,
-      cur_, cur_stop_, start_time_, flush
+
+    debug_print(
+      trace, node,
+      "write_traces_file: to_write={}, already_written={}, "
+      "event_parents_types={}, event_types={}\n",
+      traces_.size(), trace_write_count_,
+      TraceContainersType::getEventTypeContainer()->size(),
+      TraceContainersType::getEventContainer()->size()
     );
-    cur_ = cur_stop_;
+
+    outputTraces(
+      log_file_.get(), traces_, start_time_, flush
+    );
+    trace_write_count_ += to_write;
   }
 
   if (not isStsOutputNode(node)) {
@@ -752,7 +753,7 @@ void Trace::writeTracesFile(int flush) {
 
 /*static*/ void Trace::outputTraces(
   vt_gzFile* file, TraceContainerType& traces,
-  size_t start, size_t stop, double start_time, int flush
+  double start_time, int flush
 ) {
   auto const num_nodes = theContext()->getNumNodes();
   gzFile gzfile = file->file_type;
@@ -760,8 +761,9 @@ void Trace::writeTracesFile(int flush) {
   // (Wasn't there support added to fetch an event by ID?)
   auto* event_container = TraceContainersType::getEventContainer();
 
-  for (size_t i = start; i < stop; i++) {
-    auto& log = traces[i];
+  while (not traces.empty()) {
+    std::unique_ptr<LogType> const& log = traces.front();
+
     auto const& converted_time = timeToInt(log->time - start_time);
     auto const type = static_cast<
       std::underlying_type<decltype(log->type)>::type
@@ -918,9 +920,8 @@ void Trace::writeTracesFile(int flush) {
       vtAssertInfo(false, "Unimplemented log type", converted_time, log->node);
     }
 
-    // LogType is released - however, the collection itself is
-    // not trimmed and will grow without bounds fsvo growth.
-    traces[i].reset(nullptr);
+    // Poof!
+    traces.pop();
   }
 }
 

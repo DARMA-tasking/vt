@@ -58,11 +58,9 @@
 #include <functional>
 #include <iosfwd>
 #include <memory>
-#include <stack>
 #include <string>
-#include <unordered_map>
-#include <vector>
-
+#include <stack>
+#include <queue>
 
 namespace vt { namespace trace {
 
@@ -73,7 +71,7 @@ struct Trace {
   using TraceConstantsType  = eTraceConstants;
   using TraceContainersType = TraceContainers;
   using TimeIntegerType     = int64_t;
-  using TraceContainerType  = std::vector<std::unique_ptr<LogType>>;
+  using TraceContainerType  = std::queue<std::unique_ptr<LogType>>;
   using TraceStackType      = std::stack<LogType>;
 
   Trace();
@@ -176,10 +174,10 @@ private:
   static void traceBeginIdleTrigger();
 
   // Writes traces to file, optionally flushing.
-  // The traces collection specified may be modified.
+  // The traces collection is modified.
   static void outputTraces(
     vt_gzFile* file, TraceContainerType& traces,
-    size_t start, size_t stop, double start_time, int flush
+    double start_time, int flush
   );
   static void outputHeader(
     vt_gzFile* file, NodeType const node, double const start
@@ -214,14 +212,7 @@ private:
   UserEventRegistry user_event_ = {};
   std::unique_ptr<vt_gzFile> log_file_;
   bool wrote_sts_file_          = false;
-
-  // Virtual index of last event written.
-  size_t cur_                   = 0;
-  // Virtual index of last event that should be written.
-  // This event (and all previous events) are guaranteed
-  // to not be on the open event stack and thus deletion of
-  // such will not leave dangling pointers.
-  size_t cur_stop_              = 0;
+  size_t trace_write_count_     = 0;
 };
 
 }} //end namespace vt::trace
