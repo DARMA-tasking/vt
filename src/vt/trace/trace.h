@@ -69,9 +69,8 @@ struct vt_gzFile;
 struct Trace {
   using LogType             = Log;
   using TraceConstantsType  = eTraceConstants;
-  using TraceContainersType = TraceContainers;
   using TimeIntegerType     = int64_t;
-  using TraceContainerType  = std::queue<std::unique_ptr<LogType>>;
+  using TraceContainerType  = std::queue<LogType>;
   using TraceStackType      = std::stack<LogType>;
 
   Trace();
@@ -194,7 +193,8 @@ private:
 
   /// Log an event, returning a trace event ID if accepted
   /// or no_trace_event if not accepted (eg. no tracing on node).
-  TraceEventIDType logEvent(std::unique_ptr<LogType> log);
+  /// The log object is invalidated after the call.
+  TraceEventIDType logEvent(LogType&& log);
 
 private:
   /*
