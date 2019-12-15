@@ -569,24 +569,18 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     double logTime = log->time;
 
     if (not open_events_.empty()) {
-      LogType* top_event = open_events_.top();
+      // Emit a 'stop' event for the current stack item;
+      // another '[re]start' event will be emitted on group end.
       auto end_log = std::make_unique<LogType>(
+        open_events_.top(),
         logTime,
-        top_event->ep,
-        TraceConstantsType::EndProcessing,
-        top_event->event,
-        top_event->msg_len,
-        top_event->node,
-        top_event->idx1,
-        top_event->idx2,
-        top_event->idx3,
-        top_event->idx4
+        TraceConstantsType::EndProcessing
       );
       traces_.push_back(std::move(end_log));
     }
 
-    // push on open stack -- object is owned by trace collection, NOT stack.
-    open_events_.push(log.get());
+    // Saved copy has independent lifetime
+    open_events_.push(LogType(*log.get()));
 
     traces_.push_back(std::move(log));
 
@@ -598,17 +592,17 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     double logTime = log->time;
 
     vtAssert(
-      not open_events_.empty(), "Stack should be empty"
+      not open_events_.empty(), "Stack should not be empty"
     );
 
     vtAssert(
-      open_events_.top()->ep == log->ep and
-      open_events_.top()->type == TraceConstantsType::BeginProcessing,
+      open_events_.top().ep == log->ep and
+      open_events_.top().type == TraceConstantsType::BeginProcessing,
       "Top event should be correct type and event"
     );
 
     // match event with the one that this ends
-    log->event = open_events_.top()->event;
+    log->event = open_events_.top().event;
 
     // set up begin/end links
     open_events_.pop();
@@ -616,18 +610,11 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     traces_.push_back(std::move(log));
 
     if (not open_events_.empty()) {
-      LogType* top_event = open_events_.top();
+      // Emit a '[re]start' event for the reactivated stack item.
       auto begin_log = std::make_unique<LogType>(
+        open_events_.top(),
         logTime,
-        top_event->ep,
-        TraceConstantsType::BeginProcessing,
-        top_event->event,
-        top_event->msg_len,
-        top_event->node,
-        top_event->idx1,
-        top_event->idx2,
-        top_event->idx3,
-        top_event->idx4
+        TraceConstantsType::BeginProcessing
       );
       traces_.push_back(std::move(begin_log));
     }
