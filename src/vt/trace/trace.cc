@@ -564,13 +564,12 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     endIdle();
   }
 
-  auto grouped_begin = [&]() -> TraceEventIDType {
-    TraceEventIDType event = log->event;
-    double logTime = log->time;
-
+  switch (log->type) {
+  case TraceConstantsType::BeginProcessing: {
     if (not open_events_.empty()) {
       // Emit a 'stop' event for the current stack item;
       // another '[re]start' event will be emitted on group end.
+      double logTime = log->time;
       auto end_log = std::make_unique<LogType>(
         open_events_.top(),
         logTime,
@@ -581,16 +580,9 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
 
     // Saved copy has independent lifetime
     open_events_.push(LogType(*log.get()));
-
-    traces_.push_back(std::move(log));
-
-    return event;
-  };
-
-  auto grouped_end = [&]() -> TraceEventIDType {
-    TraceEventIDType event = log->event;
-    double logTime = log->time;
-
+    break;
+  }
+  case TraceConstantsType::EndProcessing: {
     vtAssert(
       not open_events_.empty(), "Stack should not be empty"
     );
@@ -607,79 +599,62 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     // set up begin/end links
     open_events_.pop();
 
-    traces_.push_back(std::move(log));
+    if (open_events_.empty())
+      break;
 
-    if (not open_events_.empty()) {
-      // Emit a '[re]start' event for the reactivated stack item.
-      auto begin_log = std::make_unique<LogType>(
-        open_events_.top(),
-        logTime,
-        TraceConstantsType::BeginProcessing
-      );
-      traces_.push_back(std::move(begin_log));
-    }
-
-    return event;
-  };
-
-  auto basic_new_event_create = [&]() -> TraceEventIDType {
-    TraceEventIDType event = cur_event_++;
-    log->event = event;
-    traces_.push_back(std::move(log));
-
-    return event;
-  };
-
-  auto basic_no_event_create = [&]() -> TraceEventIDType {
-    TraceEventIDType event = no_trace_event;
-    log->event = event;
-    traces_.push_back(std::move(log));
-
-    return event;
-  };
-
-  auto basic_cur_event = [&]() -> TraceEventIDType {
-    TraceEventIDType event = cur_event_;
-    log->event = event;
-    traces_.push_back(std::move(log));
-
-    return event;
-  };
-
-  auto basic_create = [&]() -> TraceEventIDType {
+    // Add the current trace PRIOR TO adding the stack restart trace.
     TraceEventIDType event = log->event;
+    double logTime = log->time;
     traces_.push_back(std::move(log));
 
-    return event;
-  };
+    // Emit a '[re]start' event for the reactivated stack item.
+    auto begin_log = std::make_unique<LogType>(
+      open_events_.top(),
+      logTime,
+      TraceConstantsType::BeginProcessing
+    );
+    traces_.push_back(std::move(begin_log));
 
-  switch (log->type) {
-  case TraceConstantsType::BeginProcessing:
-    return grouped_begin();
-  case TraceConstantsType::EndProcessing:
-    return grouped_end();
+    // Already added to traces
+    return event;
+  }
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:
   case TraceConstantsType::MessageRecv:
-    return basic_new_event_create();
+    cur_event_++;
+    log->event = cur_event_;
+    break;
   case TraceConstantsType::BeginIdle:
   case TraceConstantsType::EndIdle:
-    return basic_no_event_create();
+    log->event = no_trace_event;
+    break;
   case TraceConstantsType::UserSupplied:
   case TraceConstantsType::UserSuppliedNote:
   case TraceConstantsType::UserSuppliedBracketedNote:
-    return basic_create();
+    // Accept log->event as is.
+    break;
   case TraceConstantsType::UserEvent:
   case TraceConstantsType::UserEventPair:
-    return log->user_start ? basic_cur_event() : basic_new_event_create();
+    if (not log->user_start) {
+      cur_event_++;
+    }
+    log->event = cur_event_;
     break;
   case TraceConstantsType::BeginUserEventPair:
   case TraceConstantsType::EndUserEventPair:
-    return basic_new_event_create();
+    cur_event_++;
+    log->event = cur_event_;
+    break;
   default:
     vtAssert(0, "Not implemented");
     return 0;
   }
+
+  // Normal case of event emitted at end
+  TraceEventIDType event = log->event;
+  traces_.push_back(std::move(log));
+
+  return event;
 }
 
 /*static*/ bool Trace::traceWritingEnabled(NodeType node) {
