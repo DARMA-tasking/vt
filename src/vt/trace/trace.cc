@@ -554,7 +554,8 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
 
   // If auto-flush, can flush immediately.
   // TODO: log time of flushing; unify with group-end.
-  if (traces_.size() >= ArgType::vt_trace_flush_size) {
+  if (ArgType::vt_trace_flush_size not_eq 0
+      and traces_.size() >= ArgType::vt_trace_flush_size) {
     writeTracesFile(Z_SYNC_FLUSH);
   }
 
