@@ -96,7 +96,7 @@ protected:
   void thunkMigrations();
 
 private:
-  uint8_t f_                                        = 2;
+  uint8_t f_                                        = 4;
   uint8_t k_max_                                    = 4;
   uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;

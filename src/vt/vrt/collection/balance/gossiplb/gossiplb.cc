@@ -118,8 +118,8 @@ void GossipLB::doLBStages() {
 
     debug_print(
       gossiplb, node,
-      "GossipLB::doLBStages: running iter_={}, num_iters_={}\n",
-      iter_, num_iters_
+      "GossipLB::doLBStages: running iter_={}, num_iters_={}, load={}\n",
+      iter_, num_iters_, this_load
     );
 
     if (first_iter) {
@@ -244,7 +244,7 @@ void GossipLB::propagateRound(EpochType epoch) {
     if (epoch != no_epoch) {
       envelopeSetEpoch(msg->env, epoch);
     }
-    msg->addNodeLoad(this_node, this_load);
+    msg->addNodeLoad(this_node, this_new_load_);
     proxy_[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
   }
 }
@@ -394,17 +394,23 @@ void GossipLB::decide() {
         // the rest of the stats framework
         auto obj_load = loadMilli(iter->second);
 
+        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
+
         debug_print(
           gossiplb, node,
           "GossipLB::decide: under.size()={}, selected_node={}, selected_load={},"
-          "load_info_.size()={}, obj_id={:x}, obj_load={}, avg={}, "
-          "!(selected_load + obj_load > avg)=!({} + {} > {})={}\n",
-          under.size(), selected_node, selected_load, load_info_.size(),
-          obj_id, obj_load, avg, selected_load, obj_load, avg,
-          not (selected_load + obj_load > avg)
+          "obj_id={:x}, obj_load={}, avg={}, this_new_load_={}, "
+          "criterion={}\n",
+          under.size(),
+          selected_node,
+          selected_load,
+          obj_id,
+          obj_load,
+          avg,
+          this_new_load_,
+          eval
         );
 
-        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
         if (eval) {
           migrate_objs[selected_node][obj_id] = obj_load;
 
@@ -464,6 +470,7 @@ void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
     auto iter = cur_objs_.find(obj.first);
     vtAssert(iter == cur_objs_.end(), "Incoming object should not exist");
     cur_objs_.insert(obj);
+    this_new_load_ += obj.second;
   }
 }
 
