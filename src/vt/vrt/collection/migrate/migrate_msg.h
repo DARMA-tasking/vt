@@ -64,6 +64,12 @@ struct MigrateMsg final : ::vt::Message {
       range_(in_range), elm_(in_elm)
   { }
 
+  ~MigrateMsg() {
+    if (elm_ and owns_elm_) {
+      delete elm_;
+    }
+  }
+
   VrtElmProxy<ColT, IndexT> getElementProxy() const { return elm_proxy_; }
   NodeType getFromNode() const { return from_; }
   NodeType getToNode() const { return to_; }
@@ -75,6 +81,7 @@ struct MigrateMsg final : ::vt::Message {
     s | elm_proxy_ | from_ | to_ | map_fn_ | range_;
     if (s.isUnpacking()) {
       elm_ = new ColT{};
+      owns_elm_ = true;
     }
     s | *elm_;
   }
@@ -85,6 +92,7 @@ private:
   NodeType to_ = uninitialized_destination;
   HandlerType map_fn_ = uninitialized_handler;
   IndexT range_;
+  bool owns_elm_ = false;
 public:
   ColT* elm_ = nullptr;
 };
