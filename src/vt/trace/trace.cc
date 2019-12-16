@@ -81,7 +81,9 @@ Trace::Trace() { }
 }
 
 void Trace::initialize() {
-  traces_.reserve(trace_reserve_count);
+  if (checkDynamicRuntimeEnabled()) {
+    traces_.reserve(trace_reserve_count);
+  }
 
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
@@ -145,6 +147,10 @@ void Trace::setupNames(
 }
 
 void Trace::addUserNote(std::string const& note) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserNote: note={}\n",
@@ -163,6 +169,10 @@ void Trace::addUserNote(std::string const& note) {
 }
 
 void Trace::addUserData(int32_t data) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserData: data={}\n",
@@ -184,6 +194,10 @@ void Trace::addUserBracketedNote(
   double const begin, double const end, std::string const& note,
   TraceEventIDType const event
 ) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n",
@@ -220,6 +234,10 @@ void insertNewUserEvent(UserEventIDType event, std::string const& name) {
 }
 
 void Trace::addUserEvent(UserEventIDType event) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserEvent: event={:x}\n",
@@ -235,6 +253,10 @@ void Trace::addUserEvent(UserEventIDType event) {
 }
 
 void Trace::addUserEventManual(UserSpecEventIDType event) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserEventManual: event={:x}\n",
@@ -246,6 +268,10 @@ void Trace::addUserEventManual(UserSpecEventIDType event) {
 }
 
 void Trace::addUserEventBracketed(UserEventIDType event, double begin, double end) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserEventBracketed: event={:x}, begin={}, end={}\n",
@@ -264,6 +290,10 @@ void Trace::addUserEventBracketed(UserEventIDType event, double begin, double en
 }
 
 void Trace::addUserEventBracketedBegin(UserEventIDType event) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserEventBracketedBegin: event={:x}\n",
@@ -279,6 +309,10 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
 }
 
 void Trace::addUserEventBracketedEnd(UserEventIDType event) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserEventBracketedEnd: event={:x}\n",
@@ -294,11 +328,19 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
 }
 
 void Trace::addUserEventBracketedManualBegin(UserSpecEventIDType event) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   auto id = user_event.createEvent(true, false, 0, event);
   addUserEventBracketedBegin(id);
 }
 
 void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   auto id = user_event.createEvent(true, false, 0, event);
   addUserEventBracketedEnd(id);
 }
@@ -306,6 +348,10 @@ void Trace::addUserEventBracketedManualEnd(UserSpecEventIDType event) {
 void Trace::addUserEventBracketedManual(
   UserSpecEventIDType event, double begin, double end
 ) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   debug_print(
     trace, node,
     "Trace::addUserEventBracketedManual: event={:x}, begin={}, end={}\n",
@@ -322,6 +368,10 @@ void Trace::beginProcessing(
   uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
   uint64_t const idx4
 ) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   auto const type = TraceConstantsType::BeginProcessing;
   LogPtrType log = new LogType(time, ep, type);
 
@@ -348,6 +398,10 @@ void Trace::endProcessing(
   uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
   uint64_t const idx4
 ) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   auto const type = TraceConstantsType::EndProcessing;
   LogPtrType log = new LogType(time, ep, type);
 
@@ -369,6 +423,10 @@ void Trace::endProcessing(
 }
 
 void Trace::beginIdle(double const time) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   auto const type = TraceConstantsType::BeginIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
@@ -384,6 +442,10 @@ void Trace::beginIdle(double const time) {
 }
 
 void Trace::endIdle(double const time) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
   auto const type = TraceConstantsType::EndIdle;
   LogPtrType log = new LogType(time, no_trace_entry_id, type);
 
@@ -401,6 +463,10 @@ void Trace::endIdle(double const time) {
 TraceEventIDType Trace::messageCreation(
   TraceEntryIDType const ep, TraceMsgLenType const len, double const time
 ) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return no_trace_event;
+  }
+
   auto const type = TraceConstantsType::Creation;
   LogPtrType log = new LogType(time, ep, type);
 
@@ -413,6 +479,10 @@ TraceEventIDType Trace::messageCreation(
 TraceEventIDType Trace::messageCreationBcast(
   TraceEntryIDType const ep, TraceMsgLenType const len, double const time
 ) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return no_trace_event;
+  }
+
   auto const type = TraceConstantsType::CreationBcast;
   LogPtrType log = new LogType(time, ep, type);
 
@@ -426,6 +496,10 @@ TraceEventIDType Trace::messageRecv(
   TraceEntryIDType const ep, TraceMsgLenType const len,
   NodeType const from_node, double const time
 ) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return no_trace_event;
+  }
+
   auto const type = TraceConstantsType::MessageRecv;
   LogPtrType log = new LogType(time, ep, type);
 
@@ -434,8 +508,19 @@ TraceEventIDType Trace::messageRecv(
   return logEvent(log);
 }
 
+bool Trace::checkDynamicRuntimeEnabled() {
+  /*
+   * enabled_ -> this is the dynamic check that can be disabled at any point via
+   * the application
+   *
+   * checkEnabled() -> this is the "static" runtime check, may be disabled for a
+   * subset of processors when trace mod is used to reduce overhead
+   */
+  return enabled_ and checkEnabled();
+}
+
 void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
-  if (not enabled_ || not checkEnabled()) {
+  if (checkDynamicRuntimeEnabled()) {
     return;
   }
 
@@ -446,8 +531,8 @@ void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
 }
 
 TraceEventIDType Trace::logEvent(LogPtrType log) {
-  if (not enabled_ || not checkEnabled()) {
-    return 0;
+  if (not checkDynamicRuntimeEnabled()) {
+    return no_trace_event;
   }
 
   vtAssert(
