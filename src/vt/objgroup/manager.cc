@@ -128,7 +128,6 @@ void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch) {
   // Schedule the work of dispatching the message handler for later
   theSched()->enqueue([msg,han,epoch]{
     auto const node = theContext()->getNode();
-    theObjGroup()->dispatch(msg,han);
     runnable::Runnable<ShortMessage>::runObj(han,msg.get(),node);
     theTerm()->consume(epoch);
   });
