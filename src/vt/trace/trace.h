@@ -156,6 +156,7 @@ struct Trace {
   void enableTracing();
   void disableTracing();
   bool checkEnabled();
+  bool checkDynamicRuntimeEnabled();
 
   void writeTracesFile();
   void writeLogFile(gzFile file, TraceContainerType const& traces);
