@@ -1131,4 +1131,8 @@ void TerminationDetector::setupNewEpoch(EpochType const& epoch) {
   state.notifyLocalTerminated();
 }
 
+std::size_t TerminationDetector::getNumTerminatedCollectiveEpochs() const {
+  return epoch_coll_->getSize();
+}
+
 }} // end namespace vt::term

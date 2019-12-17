@@ -72,7 +72,10 @@ public:
   void addEpoch(EpochType const& epoch);
   void closeEpoch(EpochType const& epoch);
 
-  void clean(EpochType const& epoch);
+  /*
+   * Terminated an active epoch by adding it to the sett
+   */
+  std::size_t getSize() const { return terminated_epochs_.size(); }
 
 private:
   // The archetypical epoch for this window container (category,rooted,user,..)
