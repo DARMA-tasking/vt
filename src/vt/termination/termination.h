@@ -190,6 +190,7 @@ public:
   void setLocalTerminated(bool const terminated, bool const no_propagate = true);
   void maybePropagate();
   TermCounterType getNumUnits() const;
+  std::size_t getNumTerminatedCollectiveEpochs() const;
 
 public:
   // TermTerminated interface

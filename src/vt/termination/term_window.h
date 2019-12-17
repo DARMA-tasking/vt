@@ -105,6 +105,11 @@ public:
    */
   void closeEpoch(EpochType const& epoch);
 
+  /*
+   * Terminated an active epoch by adding it to the sett
+   */
+  std::size_t getSize() const { return terminated_epochs_.size(); }
+
 private:
   // The archetypical epoch for this window container (category,rooted,user,..)
   EpochType archetype_epoch_              = no_epoch;
