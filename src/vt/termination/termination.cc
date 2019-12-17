@@ -79,7 +79,7 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
 }
 
 /*static*/ void TerminationDetector::epochTerminatedHandler(TermMsg* msg) {
-  theTerm()->epochTerminated(msg->new_epoch);
+  theTerm()->epochTerminated(msg->new_epoch, false);
 }
 
 /*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
@@ -263,9 +263,9 @@ void TerminationDetector::maybePropagate() {
     bool clean_epoch = false;
     if (state.readySubmitParent()) {
       propagateEpoch(state);
-      if (state.isTerminated() && iter->first != any_epoch_sentinel) {
-        clean_epoch = true;
-      }
+    }
+    if (state.isTerminated() && iter->first != any_epoch_sentinel) {
+      clean_epoch = true;
     }
     if (clean_epoch) {
       iter = epoch_state_.erase(iter);
@@ -494,7 +494,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         state.setTerminated();
 
-        epochTerminated(state.getEpoch());
+        epochTerminated(state.getEpoch(), true);
       } else {
         if (state.g_prod2 == state.g_prod1 and state.g_cons2 == state.g_cons1) {
           state.constant_count++;
@@ -674,11 +674,10 @@ void TerminationDetector::startEpochGraphBuild() {
   theTerm()->has_printed_epoch_graph = true;
 }
 
-void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
-  debug_print(
-    term, node,
-    "cleanupEpoch: epoch={:x}, is_rooted_epoch={}, is_ds={}\n",
-    epoch, isRooted(epoch), isDS(epoch)
+void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
+  fmt::print(
+    "cleanupEpoch: epoch={:x}, is_rooted_epoch={}, is_ds={}, root={}\n",
+    epoch, isRooted(epoch), isDS(epoch), isRoot
   );
 
   if (epoch != any_epoch_sentinel) {
@@ -688,15 +687,20 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch) {
         term_.erase(ds_term_iter);
       }
     } else {
-      auto epoch_iter = epoch_state_.find(epoch);
-      if (epoch_iter != epoch_state_.end()) {
-        epoch_state_.erase(epoch_iter);
+      // For the root, epoch_state_ gets cleared in `maybePropagate` as not to
+      // invalidate the iterator when it ends up terminating. Otherwise, we need
+      // to erase the state
+      if (not isRoot) {
+        auto iter = epoch_state_.find(epoch);
+        if (iter != epoch_state_.end()) {
+          epoch_state_.erase(iter);
+        }
       }
     }
   }
 }
 
-void TerminationDetector::epochTerminated(EpochType const& epoch) {
+void TerminationDetector::epochTerminated(EpochType const& epoch, bool isRoot) {
   debug_print(
     term, node,
     "epochTerminated: epoch={:x}, is_rooted_epoch={}, is_ds={}\n",
@@ -714,6 +718,9 @@ void TerminationDetector::epochTerminated(EpochType const& epoch) {
 
   // Update the window for the epoch archetype
   updateResolvedEpochs(epoch);
+
+  // Call cleanup epoch to remove state
+  cleanupEpoch(epoch, isRoot);
 }
 
 void TerminationDetector::inquireTerminated(
@@ -763,7 +770,7 @@ void TerminationDetector::replyTerminated(
     epoch_wait_status_.erase(iter);
   }
 
-  epochTerminated(epoch);
+  epochTerminated(epoch, false);
 }
 
 void TerminationDetector::updateResolvedEpochs(EpochType const& epoch) {
