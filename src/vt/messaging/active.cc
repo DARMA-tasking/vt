@@ -211,7 +211,7 @@ EventType ActiveMessenger::sendMsgBytes(
 
   {
     #if backend_check_enabled(trace_enabled)
-      double tr_begin;
+      double tr_begin = 0;
       if (ArgType::vt_trace_mpi) {
         tr_begin = vt::timing::Timing::getCurrentTime();
       }
@@ -335,7 +335,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   {
     #if backend_check_enabled(trace_enabled)
-      double tr_begin;
+      double tr_begin = 0;
       if (ArgType::vt_trace_mpi) {
         tr_begin = vt::timing::Timing::getCurrentTime();
       }
@@ -447,7 +447,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
       {
         #if backend_check_enabled(trace_enabled)
-          double tr_begin;
+          double tr_begin = 0;
           if (ArgType::vt_trace_mpi) {
             tr_begin = vt::timing::Timing::getCurrentTime();
           }
@@ -742,7 +742,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     {
       #if backend_check_enabled(trace_enabled)
-        double tr_begin;
+        double tr_begin = 0;
         if (ArgType::vt_trace_mpi) {
           tr_begin = vt::timing::Timing::getCurrentTime();
         }
