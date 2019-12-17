@@ -637,7 +637,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   case TraceConstantsType::UserEvent:
   case TraceConstantsType::UserEventPair:
     log.event = cur_event_;
-    if (not log.user_start) {
+    if (not log.user_data().user_start) {
       cur_event_++;
     }
     break;
@@ -784,7 +784,8 @@ void Trace::writeTracesFile(int flush) {
       : TraceRegistry::getEvent(log.ep).theEventSeq();
 
     switch (log.type) {
-    case TraceConstantsType::BeginProcessing:
+    case TraceConstantsType::BeginProcessing: {
+      auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
         "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
@@ -794,14 +795,16 @@ void Trace::writeTracesFile(int flush) {
         converted_time,
         log.event,
         log.node,
-        log.msg_len,
-        log.idx1,
-        log.idx2,
-        log.idx3,
-        log.idx4
+        sdata.msg_len,
+        sdata.idx1,
+        sdata.idx2,
+        sdata.idx3,
+        sdata.idx4
       );
       break;
-    case TraceConstantsType::EndProcessing:
+    }
+    case TraceConstantsType::EndProcessing: {
+      auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
         "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
@@ -810,20 +813,23 @@ void Trace::writeTracesFile(int flush) {
         event_seq_id,
         converted_time,
         log.event,
+        // Future: remove data from EndProcessing (accept only in begin)
         log.node,
-        log.msg_len,
-        log.idx1,
-        log.idx2,
-        log.idx3,
-        log.idx4
+        sdata.msg_len,
+        sdata.idx1,
+        sdata.idx2,
+        sdata.idx3,
+        sdata.idx4
       );
       break;
+    }
     case TraceConstantsType::BeginIdle:
       gzprintf(
         gzfile,
         "%d %lld %d\n",
         type,
         converted_time,
+        // Future: remove node from idle begin/end (always 'this' node!)
         log.node
       );
       break;
@@ -833,10 +839,12 @@ void Trace::writeTracesFile(int flush) {
         "%d %lld %d\n",
         type,
         converted_time,
+        // Future: remove node from idle begin/end (always 'this' node!)
         log.node
       );
       break;
-    case TraceConstantsType::CreationBcast:
+    case TraceConstantsType::CreationBcast: {
+      auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
         "%d %d %lu %lld %d %d %d %d %d\n",
@@ -846,12 +854,14 @@ void Trace::writeTracesFile(int flush) {
         converted_time,
         log.event,
         log.node,
-        log.msg_len,
+        sdata.msg_len,
         0,
         num_nodes
       );
       break;
-    case TraceConstantsType::Creation:
+    }
+    case TraceConstantsType::Creation: {
+      auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
         "%d %d %lu %lld %d %d %d 0\n",
@@ -861,44 +871,52 @@ void Trace::writeTracesFile(int flush) {
         converted_time,
         log.event,
         log.node,
-        log.msg_len
+        sdata.msg_len
       );
       break;
+    }
     case TraceConstantsType::UserEvent:
     case TraceConstantsType::UserEventPair:
     case TraceConstantsType::BeginUserEventPair:
-    case TraceConstantsType::EndUserEventPair:
+    case TraceConstantsType::EndUserEventPair: {
+      auto const& udata = log.user_data();
       gzprintf(
         gzfile,
         "%d %lld %lld %d %d %d\n",
         type,
-        log.user_event,
+        udata.user_event,
         converted_time,
         log.event,
         log.node,
         0
       );
       break;
-    case TraceConstantsType::UserSupplied:
+    }
+    case TraceConstantsType::UserSupplied: {
+      auto const& udata = log.user_data();
       gzprintf(
         gzfile,
         "%d %d %lld\n",
         type,
-        log.user_supplied_data,
+        udata.user_data,
         converted_time
       );
       break;
-    case TraceConstantsType::UserSuppliedNote:
+    }
+    case TraceConstantsType::UserSuppliedNote: {
+      auto const& udata = log.user_data();
       gzprintf(
         gzfile,
         "%d %lld %zu %s\n",
         type,
         converted_time,
-        log.user_supplied_note.length(),
-        log.user_supplied_note.c_str()
+        udata.user_note.length(),
+        udata.user_note.c_str()
       );
       break;
+    }
     case TraceConstantsType::UserSuppliedBracketedNote: {
+      auto const& udata = log.user_data();
       auto const converted_end_time = timeToInt(log.end_time - start_time);
       gzprintf(
         gzfile,
@@ -907,8 +925,8 @@ void Trace::writeTracesFile(int flush) {
         converted_time,
         converted_end_time,
         log.event,
-        log.user_supplied_note.length(),
-        log.user_supplied_note.c_str()
+        udata.user_note.length(),
+        udata.user_note.c_str()
       );
       break;
     }
