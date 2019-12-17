@@ -681,85 +681,98 @@ void Trace::writeTracesFile(int flush) {
       ? 0 // no_trace_entry_seq != 0 (perhaps shift offsets..).
       : TraceRegistry::getEvent(log->ep).theEventSeq();
 
+    // Use inline brace-initialization conversions to ensure all
+    // parameters are a compatible format width. The braces type{..}
+    // initialization does not permit narrowing coversions and
+    // conforming compilers (minimally) emit a warning.
+    // - http://www.cplusplus.com/reference/cstdio/printf/
+    // - https://stackoverflow.com/a/59348446/2864740
+    using unsigned_int = unsigned int;
+    using unsigned_long = unsigned long;
+    using long_long = long long;
+
     switch (log->type) {
     case TraceConstantsType::BeginProcessing:
       gzprintf(
         gzfile,
-        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
-        type,
-        eTraceEnvelopeTypes::ForChareMsg,
-        event_seq_id,
-        converted_time,
-        log->event,
-        log->node,
-        log->msg_len,
-        log->idx1,
-        log->idx2,
-        log->idx3,
-        log->idx4
+        "%d %d %lu %lld %u %d %zu 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
+        int{type},
+        int{eTraceEnvelopeTypes::ForChareMsg},
+        unsigned_long{event_seq_id},
+        long_long{converted_time},
+        unsigned_int{log->event},
+        int{log->node},
+        size_t{log->msg_len},
+        // 0
+        uint64_t{log->idx1},
+        uint64_t{log->idx2},
+        uint64_t{log->idx3},
+        uint64_t{log->idx4}
       );
       break;
     case TraceConstantsType::EndProcessing:
       gzprintf(
         gzfile,
-        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
-        type,
-        eTraceEnvelopeTypes::ForChareMsg,
-        event_seq_id,
-        converted_time,
-        log->event,
-        log->node,
-        log->msg_len,
-        log->idx1,
-        log->idx2,
-        log->idx3,
-        log->idx4
+        "%d %d %lu %lld %u %d %zu 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
+        int{type},
+        int{eTraceEnvelopeTypes::ForChareMsg},
+        unsigned_long{event_seq_id},
+        long_long{converted_time},
+        unsigned_int{log->event},
+        int{log->node},
+        size_t{log->msg_len},
+        // 0
+        uint64_t{log->idx1},
+        uint64_t{log->idx2},
+        uint64_t{log->idx3},
+        uint64_t{log->idx4}
       );
       break;
     case TraceConstantsType::BeginIdle:
       gzprintf(
         gzfile,
         "%d %lld %d\n",
-        type,
-        converted_time,
-        log->node
+        int{type},
+        long_long{converted_time},
+        int{log->node}
       );
       break;
     case TraceConstantsType::EndIdle:
       gzprintf(
         gzfile,
         "%d %lld %d\n",
-        type,
-        converted_time,
-        log->node
+        int{type},
+        long_long{converted_time},
+        int{log->node}
       );
       break;
     case TraceConstantsType::CreationBcast:
       gzprintf(
         gzfile,
-        "%d %d %lu %lld %d %d %d %d %d\n",
-        type,
-        eTraceEnvelopeTypes::ForChareMsg,
-        event_seq_id,
-        converted_time,
-        log->event,
-        log->node,
-        log->msg_len,
-        0,
-        num_nodes
+        "%d %d %lu %lld %u %d %zu 0 %d\n",
+        int{type},
+        int{eTraceEnvelopeTypes::ForChareMsg},
+        unsigned_long{event_seq_id},
+        long_long{converted_time},
+        unsigned_int{log->event},
+        int{log->node},
+        size_t{log->msg_len},
+        // 0
+        int{num_nodes}
       );
       break;
     case TraceConstantsType::Creation:
       gzprintf(
         gzfile,
-        "%d %d %lu %lld %d %d %d 0\n",
-        type,
-        eTraceEnvelopeTypes::ForChareMsg,
-        event_seq_id,
-        converted_time,
-        log->event,
-        log->node,
-        log->msg_len
+        "%d %d %lu %lld %u %d %zu 0\n",
+        int{type},
+        int{eTraceEnvelopeTypes::ForChareMsg},
+        unsigned_long{event_seq_id},
+        long_long{converted_time},
+        unsigned_int{log->event},
+        int{log->node},
+        size_t{log->msg_len}
+        // 0
       );
       break;
     case TraceConstantsType::UserEvent:
@@ -768,30 +781,30 @@ void Trace::writeTracesFile(int flush) {
     case TraceConstantsType::EndUserEventPair:
       gzprintf(
         gzfile,
-        "%d %lld %lld %d %d %d\n",
-        type,
-        log->user_event,
-        converted_time,
-        log->event,
-        log->node,
-        0
+        "%d %lld %lld %u %d 0\n",
+        int{type},
+        long_long{log->user_event},
+        long_long{converted_time},
+        unsigned_int{log->event},
+        int{log->node}
+        // 0
       );
       break;
     case TraceConstantsType::UserSupplied:
       gzprintf(
         gzfile,
         "%d %d %lld\n",
-        type,
-        log->user_supplied_data,
-        converted_time
+        int{type},
+        int{log->user_supplied_data},
+        long_long{converted_time}
       );
       break;
     case TraceConstantsType::UserSuppliedNote:
       gzprintf(
         gzfile,
         "%d %lld %zu %s\n",
-        type,
-        converted_time,
+        int{type},
+        long_long{converted_time},
         log->user_supplied_note.length(),
         log->user_supplied_note.c_str()
       );
@@ -800,11 +813,11 @@ void Trace::writeTracesFile(int flush) {
       auto const converted_end_time = timeToInt(log->end_time - start_time);
       gzprintf(
         gzfile,
-        "%d %lld %lld %d %zu %s\n",
-        type,
-        converted_time,
-        converted_end_time,
-        log->event,
+        "%d %lld %lld %u %zu %s\n",
+        int{type},
+        long_long{converted_time},
+        long_long{converted_end_time},
+        unsigned_int{log->event},
         log->user_supplied_note.length(),
         log->user_supplied_note.c_str()
       );
