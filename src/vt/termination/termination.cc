@@ -694,6 +694,11 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
         });
       }
     }
+    // Clean up ready state since the epoch has terminated
+    auto ready_iter = epoch_ready_.find(epoch);
+    if (ready_iter != epoch_ready_.end()) {
+      epoch_ready_.erase(ready_iter);
+    }
   }
 }
 
