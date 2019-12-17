@@ -258,19 +258,9 @@ void TerminationDetector::maybePropagate() {
     propagateEpoch(hang_);
   }
 
-  for (auto&& iter = epoch_state_.begin(); iter != epoch_state_.end(); ) {
-    auto &state = iter->second;
-    bool clean_epoch = false;
-    if (state.readySubmitParent()) {
-      propagateEpoch(state);
-    }
-    if (state.isTerminated() && iter->first != any_epoch_sentinel) {
-      clean_epoch = true;
-    }
-    if (clean_epoch) {
-      iter = epoch_state_.erase(iter);
-    } else {
-      ++iter;
+  for (auto&& state : epoch_state_) {
+    if (state.second.readySubmitParent()) {
+      propagateEpoch(state.second);
     }
   }
 }
@@ -675,7 +665,8 @@ void TerminationDetector::startEpochGraphBuild() {
 }
 
 void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
-  fmt::print(
+  debug_print(
+    term, node,
     "cleanupEpoch: epoch={:x}, is_rooted_epoch={}, is_ds={}, root={}\n",
     epoch, isRooted(epoch), isDS(epoch), isRoot
   );
@@ -695,6 +686,12 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
         if (iter != epoch_state_.end()) {
           epoch_state_.erase(iter);
         }
+      } else {
+        // Schedule the cleanup for later, we are in the midst of iterating and
+        // can't safely erase it immediately
+        theSched()->enqueue([epoch]{
+          theTerm()->cleanupEpoch(epoch, false);
+        });
       }
     }
   }
@@ -703,14 +700,17 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
 void TerminationDetector::epochTerminated(EpochType const& epoch, bool isRoot) {
   debug_print(
     term, node,
-    "epochTerminated: epoch={:x}, is_rooted_epoch={}, is_ds={}\n",
-    epoch, isRooted(epoch), isDS(epoch)
+    "epochTerminated: epoch={:x}, is_rooted_epoch={}, is_ds={}, isRoot={}\n",
+    epoch, isRooted(epoch), isDS(epoch), isRoot
   );
 
   // Clear all the successor epochs that are nested by this epoch (waiting on it
   // to complete)
   if (epoch != term::any_epoch_sentinel) {
-    getEpochDep(epoch)->clearSuccessors();
+    auto dep = getEpochDep(epoch);
+    if (dep != nullptr) {
+      dep->clearSuccessors();
+    }
   }
 
   // Trigger actions associated with epoch
