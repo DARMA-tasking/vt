@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/configs/arguments/argparse.h"
 #include "vt/configs/arguments/args.h"
 
 #include <string>
@@ -177,7 +178,7 @@ namespace vt { namespace arguments {
 /*static*/ std::vector<char*> ArgConfig::mpi_init_args;
 /*static*/ std::vector<char*> ArgConfig::passthru_args;
 
-/*static*/ bool        ArgConfig::parsed_               = false;
+/*static*/ bool        ArgParse::parsed_                = false;
 
 void addColorArgs(CLI::App& app) {
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
@@ -559,7 +560,7 @@ void addSchedulerArgs(CLI::App& app) {
 
 std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
 
-/*static*/ std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
+/*static*/ std::tuple<int, std::string> ArgParse::parse(int& argc, char**& argv) {
   if (parsed_ || argc == 0 || argv == nullptr) {
     // Odd case.. pretend nothing bad happened.
     return std::make_tuple(-1, std::string{});
@@ -588,12 +589,12 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   }
 
   // Determine the final colorization setting.
-  if (vt_no_color) {
-    colorize_output = false;
+  if (ArgConfig::vt_no_color) {
+    ArgConfig::colorize_output = false;
   } else {
     // Otherwise, colorize.
     // (Within MPI there is no good method to auto-detect.)
-    colorize_output = true;
+    ArgConfig::colorize_output = true;
   }
 
   parsed_ = true;
@@ -679,7 +680,7 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   }
   new_argv[i++] = nullptr;
 
-  // Set them back with all vt arguments elided
+  // Set them back with all vt (and MPI) arguments elided
   argc = new_argc;
   argv = new_argv.get();
 
