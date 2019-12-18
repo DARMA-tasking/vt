@@ -66,6 +66,7 @@ namespace vt { namespace sched {
 Scheduler::Scheduler() {
   event_triggers.resize(SchedulerEventType::SchedulerEventSize + 1);
   event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
+  progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
 }
 
 void Scheduler::enqueue(ActionType action) {
@@ -126,7 +127,7 @@ bool Scheduler::progressMsgOnlyImpl() {
   return theMsg()->progress() or theEvent()->progress();
 }
 
-void Scheduler::scheduler(bool msg_only) {
+void Scheduler::runProgress(bool msg_only) {
   /*
    * Run through the progress functions `num_iter` times, making forward
    * progress on MPI
@@ -140,6 +141,27 @@ void Scheduler::scheduler(bool msg_only) {
     } else {
       progressImpl();
     }
+  }
+
+  // Reset count of processed handlers since the last time progress was invoked
+  processed_after_last_progress_ = 0;
+  last_progress_time_ = timing::Timing::getCurrentTime();
+}
+
+void Scheduler::scheduler(bool msg_only) {
+  using ArgType  = arguments::ArgConfig;
+  using TimeType = timing::Timing;
+
+  // By default, `vt_sched_progress_han` is 1 and will happen every time we go
+  // through the scheduler
+  bool k_handlers_executed =
+    processed_after_last_progress_ >= ArgType::vt_sched_progress_han;
+  bool enough_time_passed =
+    progress_time_enabled_ and
+    TimeType::getCurrentTime() - last_progress_time_ > ArgType::vt_sched_progress_sec;
+
+  if (k_handlers_executed or enough_time_passed) {
+    runProgress(msg_only);
   }
 
   /*
@@ -179,6 +201,7 @@ void Scheduler::scheduler(bool msg_only) {
    * Run a work unit!
    */
   if (not work_queue_.empty()) {
+    processed_after_last_progress_++;
     runNextUnit();
   }
 
