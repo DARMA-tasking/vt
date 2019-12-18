@@ -156,8 +156,10 @@ public:
   EpochType makeEpochRootedDS(bool child, EpochType parent);
 
 private:
+  enum CallFromEnum { Root, NonRoot };
+
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
-  void cleanupEpoch(EpochType const& epoch, bool isRoot);
+  void cleanupEpoch(EpochType const& epoch, CallFromEnum from);
   void produceConsumeState(
     TermStateType& state, TermCounterType const num_units, bool produce,
     NodeType node
@@ -208,7 +210,7 @@ private:
 
 private:
   bool propagateEpoch(TermStateType& state);
-  void epochTerminated(EpochType const& epoch, bool isRoot);
+  void epochTerminated(EpochType const& epoch, CallFromEnum from);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void setupNewEpoch(EpochType const& epoch);
   void readyNewEpoch(EpochType const& epoch);

@@ -89,7 +89,7 @@ namespace vt { namespace term { namespace ds {
     termds, node,
     "StateDS::rootTerminated: epoch={:x}\n", epoch
   );
-  theTerm()->epochTerminated(epoch, true);
+  theTerm()->epochTerminated(epoch, TerminationDetector::CallFromEnum::Root);
 }
 
 /*static*/ void StateDS::disengage(EpochType epoch) {
@@ -106,7 +106,7 @@ namespace vt { namespace term { namespace ds {
     auto ptr = theTerm()->getDSTerm(epoch);
     if (ptr != nullptr) {
       if (not ptr->isEngaged()) {
-        theTerm()->cleanupEpoch(epoch, false);
+        theTerm()->cleanupEpoch(epoch, TerminationDetector::CallFromEnum::NonRoot);
       }
     }
   });

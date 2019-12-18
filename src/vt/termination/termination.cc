@@ -81,7 +81,7 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
 }
 
 /*static*/ void TerminationDetector::epochTerminatedHandler(TermMsg* msg) {
-  theTerm()->epochTerminated(msg->new_epoch, false);
+  theTerm()->epochTerminated(msg->new_epoch, CallFromEnum::NonRoot);
 }
 
 /*static*/ void TerminationDetector::epochContinueHandler(TermMsg* msg) {
@@ -482,7 +482,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         state.setTerminated();
 
-        epochTerminated(state.getEpoch(), true);
+        epochTerminated(state.getEpoch(), CallFromEnum::Root);
       } else {
         if (state.g_prod2 == state.g_prod1 and state.g_cons2 == state.g_cons1) {
           state.constant_count++;
@@ -662,11 +662,11 @@ void TerminationDetector::startEpochGraphBuild() {
   theTerm()->has_printed_epoch_graph = true;
 }
 
-void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
+void TerminationDetector::cleanupEpoch(EpochType const& epoch, CallFromEnum from) {
   debug_print(
     term, node,
-    "cleanupEpoch: epoch={:x}, is_rooted_epoch={}, is_ds={}, root={}\n",
-    epoch, isRooted(epoch), isDS(epoch), isRoot
+    "cleanupEpoch: epoch={:x}, is_rooted_epoch={}, is_ds={}, isRoot={}\n",
+    epoch, isRooted(epoch), isDS(epoch), from == CallFromEnum::Root ? true : false
   );
 
   if (epoch != any_epoch_sentinel) {
@@ -678,7 +678,7 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
     } else {
       // For the non-root, epoch_state_ can be cleaned immediately. Otherwise,
       // we might be iterating through state so its not safe to erase
-      if (not isRoot) {
+      if (from == CallFromEnum::NonRoot) {
         auto iter = epoch_state_.find(epoch);
         if (iter != epoch_state_.end()) {
           epoch_state_.erase(iter);
@@ -687,7 +687,7 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
         // Schedule the cleanup for later, we are in the midst of iterating and
         // can't safely erase it immediately
         theSched()->enqueue([epoch]{
-          theTerm()->cleanupEpoch(epoch, false);
+          theTerm()->cleanupEpoch(epoch, CallFromEnum::NonRoot);
         });
       }
     }
@@ -699,11 +699,11 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
   }
 }
 
-void TerminationDetector::epochTerminated(EpochType const& epoch, bool isRoot) {
+void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum from) {
   debug_print(
     term, node,
     "epochTerminated: epoch={:x}, is_rooted_epoch={}, is_ds={}, isRoot={}\n",
-    epoch, isRooted(epoch), isDS(epoch), isRoot
+    epoch, isRooted(epoch), isDS(epoch), from == CallFromEnum::Root ? true : false
   );
 
   // Clear all the successor epochs that are nested by this epoch (waiting on it
@@ -722,7 +722,7 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, bool isRoot) {
   updateResolvedEpochs(epoch);
 
   // Call cleanup epoch to remove state
-  cleanupEpoch(epoch, isRoot);
+  cleanupEpoch(epoch, from);
 }
 
 void TerminationDetector::inquireTerminated(
@@ -772,7 +772,7 @@ void TerminationDetector::replyTerminated(
     epoch_wait_status_.erase(iter);
   }
 
-  epochTerminated(epoch, false);
+  epochTerminated(epoch, CallFromEnum::NonRoot);
 }
 
 void TerminationDetector::updateResolvedEpochs(EpochType const& epoch) {
