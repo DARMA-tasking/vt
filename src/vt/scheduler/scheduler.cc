@@ -152,7 +152,7 @@ void Scheduler::scheduler(bool msg_only) {
   using ArgType  = arguments::ArgConfig;
   using TimeType = timing::Timing;
 
-  // By default, `vt_sched_progress_han` is 1 and will happen every time we go
+  // By default, `vt_sched_progress_han` is 0 and will happen every time we go
   // through the scheduler
   bool k_handlers_executed =
     processed_after_last_progress_ >= ArgType::vt_sched_progress_han;
