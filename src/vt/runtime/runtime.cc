@@ -64,9 +64,11 @@
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/debug/debug_colorize.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/configs/error/stack_out.h"
 #include "vt/configs/error/pretty_print_stack.h"
+
+#include "vt/configs/arguments/argparse.h"
+#include "vt/configs/arguments/args.h"
 
 #include <memory>
 #include <iostream>
@@ -99,7 +101,8 @@ Runtime::Runtime(
 
   // n.b. ref-update of args with pass-through arguments
   // (pass-through arguments are neither for VT or MPI_Init)
-  std::tuple<int, std::string> result = ArgType::parse(/*out*/ argc, /*out*/ argv);
+  std::tuple<int, std::string> result =
+    arguments::ArgParse::parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);
 
   if (exit_code not_eq -1) {
