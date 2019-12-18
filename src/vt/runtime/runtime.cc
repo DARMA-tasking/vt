@@ -421,6 +421,33 @@ void Runtime::printStartupBanner() {
     }
   #endif
 
+  {
+    auto f11 = fmt::format(
+      "Running MPI progress {} times each invocation",
+      ArgType::vt_sched_num_progress
+    );
+    auto f12 = opt_on("--vt_sched_num_progress", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  {
+    auto f11 = fmt::format(
+      "Running MPI progress function every {} handler(s) executed",
+      ArgType::vt_sched_progress_han
+    );
+    auto f12 = opt_on("--vt_sched_progress_han", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_sched_progress_sec != 0.0) {
+    auto f11 = fmt::format(
+      "Running MPI progress function every {} seconds",
+      ArgType::vt_sched_progress_sec
+    );
+    auto f12 = opt_on("--vt_sched_progress_sec", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_lb) {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
