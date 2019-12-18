@@ -78,6 +78,12 @@ private:
   static void acknowledgeHan(AckMsg* msg);
   static void rootTerminatedHan(AckMsg* msg);
 
+public:
+  // Expose getter for unit testing purposes
+  std::unordered_map<EpochType, TerminatorType> const& getDSTermMap() {
+    return term_;
+  }
+
 protected:
   std::unordered_map<EpochType, TerminatorType> term_  = {};
 };
