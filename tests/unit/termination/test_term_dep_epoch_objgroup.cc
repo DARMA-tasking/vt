@@ -59,6 +59,10 @@ struct TestTermDepEpochObjGroup : TestParallelHarness { };
 
 struct TestMsg : vt::Message { };
 
+struct TestDep;
+
+vt::objgroup::proxy::Proxy<TestDep> gproxy = {};
+
 struct TestDep {
   void depHandler(TestMsg* msg) {
     //auto const& node = theContext()->getNode();
@@ -74,6 +78,15 @@ struct TestDep {
     EXPECT_EQ(num_dep, 0);
   }
 
+  void nonDepHandlerPing(TestMsg* msg) {
+    auto const this_node = theContext()->getNode();
+    auto const num_nodes = theContext()->getNumNodes();
+    auto const prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+    auto nmsg = vt::makeSharedMessage<TestMsg>();
+    gproxy[prev].send<TestMsg, &TestDep::nonDepHandler>(nmsg);
+  }
+
+
   int num_dep = 0;
   int num_non_dep = 0;
 };
@@ -85,6 +98,7 @@ TEST_F(TestTermDepEpochObjGroup, test_term_dep_epoch_objgroup) {
   int const k = 10;
 
   auto proxy = vt::theObjGroup()->makeCollective<TestDep>();
+  gproxy = proxy;
   vt::theCollective()->barrier();
 
   auto epoch = vt::theTerm()->makeEpochCollectiveDep();
@@ -104,15 +118,18 @@ TEST_F(TestTermDepEpochObjGroup, test_term_dep_epoch_objgroup) {
 
   chain->nextStep([=](NodeType node) {
     auto msg = vt::makeMessage<TestMsg>();
+    // Must explicitly set epoch here due to deficiencies with
+    // objgroup+PendingSend (to be fixed in future PR)
+    envelopeSetEpoch(msg->env, theMsg()->getEpoch());
     return vt::messaging::PendingSend(msg, [=](MsgVirtualPtr<vt::BaseMsgType>){
       auto const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-      auto msg2 = vt::makeSharedMessage<TestMsg>();
-      proxy[next].send<TestMsg, &TestDep::nonDepHandler>(msg2);
+      proxy[next].send<TestMsg, &TestDep::nonDepHandlerPing>(msg);
     });
   });
 
   chain->nextStep([=](NodeType node) {
     auto msg = vt::makeMessage<TestMsg>();
+    envelopeSetEpoch(msg->env, theMsg()->getEpoch());
     return vt::messaging::PendingSend(msg, [=](MsgVirtualPtr<vt::BaseMsgType>){
       EXPECT_EQ(proxy[node].get()->num_dep, 0);
       proxy[node].release(epoch);

@@ -123,11 +123,7 @@ TEST_F(TestTermDepEpochCollection, test_term_dep_epoch_collection) {
   }
 
   chain->nextStep([=](vt::Index1D idx) {
-    auto msg = vt::makeMessage<TestMsg>();
-    return vt::messaging::PendingSend(msg, [=](MsgVirtualPtr<vt::BaseMsgType>){
-      auto msg2 = vt::makeSharedMessage<TestMsg>();
-      proxy[idx].send<TestMsg, &TestDep::nonDepHandler>(msg2);
-    });
+    return proxy[idx].send<TestMsg, &TestDep::nonDepHandler>();
   });
 
   chain->nextStep([=](vt::Index1D idx) {
