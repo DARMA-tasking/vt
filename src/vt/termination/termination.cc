@@ -678,9 +678,8 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, bool isRoot) {
         term_.erase(ds_term_iter);
       }
     } else {
-      // For the root, epoch_state_ gets cleared in `maybePropagate` as not to
-      // invalidate the iterator when it ends up terminating. Otherwise, we need
-      // to erase the state
+      // For the non-root, epoch_state_ can be cleaned immediately. Otherwise,
+      // we might be iterating through state so its not safe to erase
       if (not isRoot) {
         auto iter = epoch_state_.find(epoch);
         if (iter != epoch_state_.end()) {
