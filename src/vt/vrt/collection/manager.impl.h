@@ -488,7 +488,7 @@ template <typename ColT, typename IndexT, typename MsgT>
             std::make_unique<balance::LBListener>(
               [&](NodeType dest, MsgSizeType size, bool bcast){
                 auto& stats = base->getStats();
-                stats.recvToNode(dest, elm_id, size, bcast);
+                stats.recvToNode(dest, perm_elm_id, temp_elm_id, size, bcast);
               }
             );
           theMsg()->addSendListener(std::move(listener));
@@ -3188,23 +3188,6 @@ template <typename always_void>
 DispatchBasePtrType
 CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
-}
-
-template <typename always_void>
-void CollectionManager::schedule(ActionType action) {
-  work_units_.push_back(action);
-}
-
-template <typename always_void>
-bool CollectionManager::scheduler() {
-  if (work_units_.size() == 0) {
-    return false;
-  } else {
-    auto unit = work_units_.back();
-    work_units_.pop_back();
-    unit();
-    return true;
-  }
 }
 
 template <typename ColT>

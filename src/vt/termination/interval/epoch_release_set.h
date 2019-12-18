@@ -66,7 +66,7 @@ struct EpochReleaseSet {
 
   void setReleaseFn(ReleaseFnType in_fn) { release_fn_ = in_fn; }
 
-  void release(EpochType const& epoch) {
+  void release(EpochType epoch) {
     debug_print(
       gen, node,
       "({}): release: epoch={:x}\n",

@@ -674,6 +674,7 @@ private:
   EpochType global_epoch_                                   = no_epoch;
   MaybeReadyType maybe_ready_tag_han_                       = {};
   ContWaitType pending_handler_msgs_                        = {};
+  EpochWaitType pending_epoch_msgs_                         = {};
   ContainerPendingType pending_recvs_                       = {};
   TagType cur_direct_buffer_tag_                            = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;

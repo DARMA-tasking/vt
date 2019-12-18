@@ -138,7 +138,7 @@ struct IntegralSetBase {
     debug_print(
       gen, node,
       "OrderedSet: insertInterval: bounds=[{:x},{:x}] elms_={}, i={}, is_end={}\n",
-      lb_, ub_, elms_, i, hint_ == set_.end()
+      lb_, ub_, elms_, i.lower(), hint_ == set_.end()
     );
 
     auto iter = elms_ == 0 ? set_.end() : hint_;
@@ -184,7 +184,7 @@ struct IntegralSetBase {
     debug_print(
       gen, node,
       "OrderedSet: erase: bounds=[{:x},{:x}] size={}, comp={}, val={}, in={}\n",
-      lb_, ub_, size(), compressedSize(), j, in_set
+      lb_, ub_, size(), compressedSize(), j.lower(), in_set
     );
     vtAssert(in_set, "The element must exist in a interval bucket");
     if (in_set) {
@@ -269,7 +269,7 @@ private:
     debug_print(
       gen, node,
       "OrderedSet: insertSet: bounds=[{:x},{:x}] elms_={}, i={}, is_end={}\n",
-      lb_, ub_, elms_, i, it == set_.end()
+      lb_, ub_, elms_, i.lower(), it == set_.end()
     );
 
     // Insert into the set
@@ -309,8 +309,8 @@ private:
   void insertGlobal(IntervalType const& i) {
     debug_print(
       gen, node,
-      "OrderedSet: insertGlobal: bounds=[{:x},{:x}] elms_={}, i={}\n",
-      lb_, ub_, elms_, i
+      "OrderedSet: insertGlobal: bounds=[{:x},{:x}] elms_={}\n",
+      lb_, ub_, elms_
     );
 
     if (elms_ == 0) {

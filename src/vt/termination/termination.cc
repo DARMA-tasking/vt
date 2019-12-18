@@ -968,9 +968,11 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 }
 
 EpochType TerminationDetector::makeEpochRootedWave(
-  bool has_dep, EpochType successor
+  bool has_dep, EpochType successor, bool dep_epoch
 ) {
-  auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
+  auto const dep = epoch::eEpochCategory::DependentEpoch;
+  auto const ds_cat = dep_epoch ? dep : epoch::eEpochCategory::NoCategoryEpoch;
+  auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, ds_cat);
 
   debug_print(
     term, node,
@@ -1000,10 +1002,12 @@ EpochType TerminationDetector::makeEpochRootedWave(
 }
 
 EpochType TerminationDetector::makeEpochRootedDS(
-  bool has_dep, EpochType successor
+  bool has_dep, EpochType successor, bool dep_epoch
 ) {
-  auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
-  auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, ds_cat);
+  auto const dep = epoch::eEpochCategory::DependentEpoch;
+  auto const ds  = epoch::eEpochCategory::DijkstraScholtenEpoch;
+  auto const cat = dep_epoch ? epoch::EpochManip::makeCat(dep, ds) : ds;
+  auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, cat);
 
   vtAssert(term_.find(epoch) == term_.end(), "New epoch must not exist");
 
@@ -1026,7 +1030,7 @@ EpochType TerminationDetector::makeEpochRootedDS(
 }
 
 EpochType TerminationDetector::makeEpochRooted(
-  bool useDS, bool has_dep, EpochType successor
+  bool useDS, bool has_dep, EpochType successor, bool dep_epoch
 ) {
   /*
    *  This method should only be called by the root node for the rooted epoch
@@ -1047,17 +1051,17 @@ EpochType TerminationDetector::makeEpochRooted(
   vtAssertExpr(not (force_use_ds and force_use_wave));
 
   if ((useDS or force_use_ds) and not force_use_wave) {
-    return makeEpochRootedDS(has_dep,successor);
+    return makeEpochRootedDS(has_dep,successor,dep_epoch);
   } else {
-    return makeEpochRootedWave(has_dep,successor);
+    return makeEpochRootedWave(has_dep,successor,dep_epoch);
   }
 }
 
 EpochType TerminationDetector::makeEpochCollective(
-  bool has_dep, EpochType successor
+  bool has_dep, EpochType successor, bool dep_epoch
 ) {
   auto const dep   = epoch::eEpochCategory::DependentEpoch;
-  auto const cat   = is_dep ? dep : epoch::eEpochCategory::NoCategoryEpoch;
+  auto const cat   = dep_epoch ? dep : epoch::eEpochCategory::NoCategoryEpoch;
   auto const node  = epoch::default_epoch_node;
   auto const epoch = epoch::EpochManip::makeNewEpoch(false, node, false, cat);
 
@@ -1079,33 +1083,39 @@ EpochType TerminationDetector::makeEpochCollective(
 }
 
 EpochType TerminationDetector::makeEpoch(
-  bool is_coll, bool useDS, bool has_dep, EpochType successor
+  bool is_coll, bool useDS, bool has_dep, EpochType successor, bool dep_epoch
 ) {
   return is_coll ?
-    makeEpochCollective(has_dep, successor) :
-    makeEpochRooted(useDS,has_dep, successor);
+    makeEpochCollective(has_dep, successor, dep_epoch) :
+    makeEpochRooted(useDS, has_dep, successor, dep_epoch);
 }
 
 EpochType TerminationDetector::makeEpochRootedDep(
-  bool useDS, bool child, EpochType parent
+  bool useDS, bool has_dep, EpochType successor
 ) {
-  return makeEpochRooted(useDS,child,parent,true);
+  return makeEpochRooted(useDS,has_dep,successor,true);
 }
 
 EpochType TerminationDetector::makeEpochCollectiveDep(
-  bool child, EpochType parent
+  bool has_dep, EpochType successor
 ) {
-  return makeEpochCollective(child,parent,true);
+  return makeEpochCollective(has_dep,successor,true);
 }
 
 void TerminationDetector::releaseEpoch(EpochType epoch) {
   bool const is_dep = isDep(epoch);
 
+  debug_print(
+    term, node,
+    "releaseEpoch: epoch={:x}, is_dep={}\n", epoch, is_dep
+  );
+
   if (is_dep) {
     // Put the epoch in the released set, which is not conclusive due to
-    // parentage, which effects the status. An epoch is *released* iff the epoch
-    // is in the released set and all parents are *released* (or there are no
-    // parents). The epoch any_epoch_sentinel does not count as a parent.
+    // successorship, which effects the status. An epoch is *released* iff the
+    // epoch is in the released set and all successors are *released* (or there
+    // are no successors). The epoch any_epoch_sentinel does not count as a
+    // successor.
     epoch_released_.insert(epoch);
 
     bool const is_released = epochReleased(epoch);
@@ -1113,12 +1123,12 @@ void TerminationDetector::releaseEpoch(EpochType epoch) {
       runReleaseEpochActions(epoch);
     } else {
       // Enqueue continuations to potentially release this epoch since the
-      // child-parent graph is not inverted (one-way knowledge)
-      auto const& parents = getParents(epoch);
-      vtAssert(parents.size() > 0, "Must have unreleased parents in this case");
-      for (auto&& parent : parents) {
-        if (not epochReleased(parent)) {
-          onReleaseEpoch(parent, [epoch]{ theTerm()->releaseEpoch(epoch); });
+      // predecessor-successor graph is not inverted (one-way knowledge)
+      auto const& successors = getEpochDep(epoch)->getSuccessors();
+      vtAssert(successors.size() > 0, "Must have unreleased successors in this case");
+      for (auto&& succ : successors) {
+        if (not epochReleased(succ)) {
+          onReleaseEpoch(succ, [epoch]{ theTerm()->releaseEpoch(epoch); });
         }
       }
     }
@@ -1151,13 +1161,13 @@ void TerminationDetector::onReleaseEpoch(EpochType epoch, ActionType action) {
   }
 }
 
-bool TerminationDetector::epochParentReleased(EpochType epoch) {
+bool TerminationDetector::epochSuccessorReleased(EpochType epoch) {
   //  Test of all parents of a given epoch are released
   bool released = true;
-  auto const& parents = getParents(epoch);
-  if (parents.size() != 0) {
-    for (auto&& parent : parents) {
-      released &= epochReleased(parent);
+  auto const& successors = getEpochDep(epoch)->getSuccessors();
+  if (successors.size() != 0) {
+    for (auto&& succ : successors) {
+      released &= epochReleased(succ);
     }
   }
   return released;
@@ -1182,27 +1192,28 @@ bool TerminationDetector::epochReleased(EpochType epoch) {
     return true;
   }
 
-  // All parents must be released for an epoch to be released even if its in the
-  // release set. Epochs are put in the release set early as to reduce tracking
-  // of epoch "release chains"
-  bool const is_parent_released = epochParentReleased(epoch);
-  if (not is_parent_released) {
+
+  debug_print(
+    term, node,
+    "epochReleased: 2 epoch={:x}, is_dep={}\n", epoch, is_dep
+  );
+
+  // All successors must be released for an epoch to be released even if its in
+  // the release set. Epochs are put in the release set early as to reduce
+  // tracking of epoch "release chains"
+  bool const is_successor_released = epochSuccessorReleased(epoch);
+  if (not is_successor_released) {
     return false;
   }
+
+  debug_print(
+    term, node,
+    "epochReleased: 3 epoch={:x}, is_dep={} {}\n", epoch, is_dep, epoch_released_.find(epoch) == epoch_released_.end()
+  );
 
   // Check the release set
   auto iter = epoch_released_.find(epoch);
   return iter != epoch_released_.end();
-}
-
-TerminationDetector::ParentBagType const&
-TerminationDetector::getParents(EpochType epoch) {
-  if (isDS(epoch)) {
-    return getDSTerm(epoch)->getParents();
-  } else {
-    auto& state = findOrCreateState(epoch, false);
-    return state.getParents();
-  }
 }
 
 bool TerminationDetector::isTerm(EpochType epoch) {

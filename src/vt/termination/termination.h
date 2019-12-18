@@ -144,15 +144,15 @@ public:
    * Interface for making epochs for termination detection
    */
   EpochType makeEpochRooted(
-    bool useDS = false, bool child = true, EpochType parent = no_epoch,
-    bool is_dep = false
+    bool useDS = false, bool child = true, EpochType successor = no_epoch,
+    bool dep_epoch = false
   );
   EpochType makeEpochCollective(
-    bool child = true, EpochType parent = no_epoch, bool is_dep = false
+    bool has_dep = true, EpochType successor = no_epoch, bool dep_epoch = false
   );
   EpochType makeEpoch(
     bool is_coll, bool useDS = false, bool child = true,
-    EpochType parent = no_epoch, bool is_dep = false
+    EpochType successor = no_epoch, bool dep_epoch = false
   );
 
   /*
@@ -167,10 +167,10 @@ public:
    *
    */
   EpochType makeEpochRootedDep(
-    bool useDS = true, bool child = true, EpochType parent = no_epoch
+    bool useDS = true, bool has_dep = true, EpochType successor = no_epoch
   );
   EpochType makeEpochCollectiveDep(
-    bool child = true, EpochType parent = no_epoch
+    bool has_dep = true, EpochType successor = no_epoch
   );
 
   /*
@@ -198,17 +198,16 @@ public:
   void finishNoActivateEpoch(EpochType const& epoch);
 
 private:
-  ParentBagType const& getParents(EpochType epoch);
   void cleanupReleasedEpoch(EpochType epoch);
   void runReleaseEpochActions(EpochType epoch);
-  bool epochParentReleased(EpochType epoch);
+  bool epochSuccessorReleased(EpochType epoch);
 
 public:
   /*
    * Directly call into a specific type of rooted epoch, can not be overridden
    */
-  EpochType makeEpochRootedWave(bool child, EpochType parent, bool dep = false);
-  EpochType makeEpochRootedDS(bool child, EpochType parent, bool dep = false);
+  EpochType makeEpochRootedWave(bool has_dep, EpochType successor, bool dep_epoch = false);
+  EpochType makeEpochRootedDS(bool has_dep, EpochType successor, bool dep_epoch = false);
 
 private:
   enum CallFromEnum { Root, NonRoot };
