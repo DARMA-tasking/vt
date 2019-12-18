@@ -78,6 +78,8 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <tuple>
+
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
@@ -101,20 +103,37 @@ Runtime::Runtime(
   // MPI_Init 'should' be called first on the original arguments,
   // with the justification that in some environments in addition to removing
   // special MPI arguments, it can actually ADD arguments not from argv.
-  // That is not done here and doing so move move up parts of 'initialize'.
+  // That is not done here and doing so moves up parts of 'initialize' logic.
 
   // n.b. ref-update of args with pass-through arguments
   // (pass-through arguments are neither for VT or MPI_Init)
-  std::function<int()> show_arg_err = ArgType::parse(/*out*/ argc, /*out*/ argv);
+  std::tuple<int, std::string> result = ArgType::parse(/*out*/ argc, /*out*/ argv);
+  int exit_code = std::get<0>(result);
 
-  if (show_arg_err) {
+  if (exit_code not_eq -1) {
+    // Help requested or invalid argument(s).
     // To better honor the MPI contract, force an MPI_Init then MPI_Abort.
     // It might be better to move up the general MPI_Init case; normally
     // MPI_Init is called as a result of Runtime::initialize (while this is ctor).
+    MPI_Comm comm = communicator_ ? *communicator_ : MPI_COMM_WORLD;
+    int rank;
     MPI_Init(NULL, NULL);
-    int result_code = show_arg_err();
-    MPI_Abort(communicator_ ? *communicator_ : MPI_COMM_WORLD, result_code);
-    exit(result_code);
+    MPI_Comm_rank(comm, &rank);
+
+    if (rank == 0) {
+      // Only emit output to rank 0 to minimize spam
+      std::string& msg = std::get<1>(result);
+      // exit code of 0 -> 'help'
+      std::ostream& out = exit_code == 0 ? std::cout : std::cerr;
+
+      out << "--- VT INITIALIZATION ABORT ---" << "\n"
+          << msg << "\n"
+          << "--- VT INITIALIZATION ABORT ---" << "\n"
+          << std::flush;
+    }
+
+    MPI_Abort(comm, exit_code);
+    exit(exit_code);
     return;
   }
 

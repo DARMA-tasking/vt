@@ -47,8 +47,8 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
 #include <sstream>
+#include <tuple>
 
 #include "CLI/CLI11.hpp"
 
@@ -557,11 +557,12 @@ void addSchedulerArgs(CLI::App& app) {
   kca->group(schedulerGroup);
 }
 
-std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv);
+std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
 
-/*static*/ std::function<int()> ArgConfig::parse(int& argc, char**& argv) {
+/*static*/ std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
   if (parsed_ || argc == 0 || argv == nullptr) {
-    return nullptr;
+    // Odd case.. pretend nothing bad happened.
+    return std::make_tuple(-1, std::string{});
   }
 
   CLI::App app{"vt"};
@@ -580,10 +581,10 @@ std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv);
   addUserArgs(app);
   addSchedulerArgs(app);
 
-  std::function<int()> show_arg_err = parseArguments(app, /*out*/ argc, /*out*/ argv);
-  if (show_arg_err) {
+  std::tuple<int, std::string> result = parseArguments(app, /*out*/ argc, /*out*/ argv);
+  if (std::get<0>(result) not_eq -1) {
     // non-success
-    return show_arg_err;
+    return result;
   }
 
   // Determine the final colorization setting.
@@ -597,10 +598,10 @@ std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv);
 
   parsed_ = true;
 
-  return nullptr; // success
+  return result;
 }
 
-std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv) {
+std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv) {
 
   std::vector<char*> vt_args;
   std::vector<char*> mpi_args;
@@ -640,18 +641,12 @@ std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv) {
   try {
     app.parse(args_to_parse);
   } catch (CLI::Error &ex) {
-    // Return a action to display whatever is relevant and return appropriate
-    // exit code for the application. (Allows MPI_Init/MPI_Abort sandwich.)
-    // The message is captured immedidately to avoid app and exception captures.
+    // Return exit code and message, delaying logic processing of such.
+    // The default exit code for 'help' is 0.
     std::stringstream message_stream;
     int result = app.exit(ex, message_stream, message_stream);
-    std::string message = message_stream.str();
 
-    return [result, message]{
-      std::cerr << message << std::flush;
-      // ..CLI11 returns 0 on --help, which is still terminal. Great job.
-      return result ? result : 1;
-    };
+    return std::make_tuple(result, message_stream.str());
   }
 
   // Get the clean prog name; don't allow path bleed in usages.
@@ -688,7 +683,7 @@ std::function<int()> parseArguments(CLI::App& app, int& argc, char**& argv) {
   argc = new_argc;
   argv = new_argv.get();
 
-  return nullptr; // success
+  return std::make_tuple(-1, std::string{});
 }
 
 }} /* end namespace vt::arguments */

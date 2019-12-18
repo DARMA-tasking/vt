@@ -50,6 +50,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <tuple>
 
 namespace vt { namespace arguments {
 
@@ -57,9 +58,10 @@ struct ArgConfig {
 
   /// Parse the arguments into ArgConfig.
   /// Re-assigns argc/argv to remove consumed arguments.
-  /// Returns nullptr on success; on failure returns a function
-  /// that will display a reason for failure and return an exit code.
-  static std::function<int()> parse(int& argc, char**& argv);
+  /// On success the tuple will be {-1, ""}. Otherwise the exit code
+  /// (which may be 0 if help was requested) will be returned along
+  /// with an appropriate display message.
+  static std::tuple<int, std::string> parse(int& argc, char**& argv);
 
 public:
   static bool vt_color;
