@@ -95,6 +95,8 @@ struct TermDS : EpochDependency {
   void tryAck();
   void terminated();
   bool hasParent();
+  void disengaged();
+  bool isEngaged() const { return engagementMessageCount > 0; }
 
 private:
   void tryLast();
