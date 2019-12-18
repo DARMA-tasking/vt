@@ -70,8 +70,16 @@ struct TestDep {
   static void nonDepHandler(TestMsg* msg) {
     //auto const& node = theContext()->getNode();
     num_non_dep++;
-    //fmt::print("{}: nonDepHandler: num_non_dep={}\n", node, num_non_dep);
+    //fmt::print("{}: nonDepHandler: num_non_dep={}, epoch={:x}\n", node, num_non_dep, envelopeGetEpoch(msg->env));
     EXPECT_EQ(num_dep, 0);
+  }
+
+  static void nonDepHandlerPing(TestMsg* msg) {
+    auto const& this_node = theContext()->getNode();
+    auto const& num_nodes = theContext()->getNumNodes();
+    auto const prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+    auto nmsg = vt::makeSharedMessage<TestMsg>();
+    vt::theMsg()->sendMsg<TestMsg, TestDep::nonDepHandler>(prev,nmsg);
   }
 
   static int num_dep;
@@ -103,13 +111,19 @@ TEST_F(TestTermDepEpochActive, test_term_dep_epoch_active) {
   vt::theMsg()->popEpoch(epoch);
   vt::theTerm()->finishedEpoch(epoch);
 
+  // Pump the scheduler to see if depHandler runs---it shouldn't until release
+  for (int i = 0; i < 3; i++) {
+    vt::runScheduler();
+  }
+
   auto chain = std::make_unique<vt::messaging::CollectionChainSet<NodeType>>();
   chain->addIndex(this_node);
 
   chain->nextStep([=](NodeType node) {
     auto const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    //fmt::print("{}: building message here for next Step epoch={:x}\n", theContext()->getNode(), theMsg()->getEpoch());
     auto msg = vt::makeSharedMessage<TestMsg>();
-    return vt::theMsg()->sendMsg<TestMsg, TestDep::nonDepHandler>(next,msg);
+    return vt::theMsg()->sendMsg<TestMsg, TestDep::nonDepHandlerPing>(next,msg);
   });
 
   chain->nextStep([=](NodeType node) {
