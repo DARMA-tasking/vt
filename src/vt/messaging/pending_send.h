@@ -56,16 +56,24 @@ namespace vt { namespace messaging {
 struct PendingSend final {
   using SendActionType = std::function<void(MsgVirtualPtr<BaseMsgType>)>;
 
+  enum PendingTermEnum { Produce, Consume };
+
   PendingSend(MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size)
     : msg_(in_msg.template toVirtual<BaseMsgType>())
     , msg_size_(in_msg_size)
-  { }
+  {
+    produceConsumeMsg(PendingTermEnum::Produce);
+  }
   template <typename MsgT>
   PendingSend(MsgSharedPtr<MsgT> in_msg, SendActionType const& in_action)
     : msg_(in_msg.template toVirtual<BaseMsgType>())
     , msg_size_(sizeof(MsgT))
     , send_action_(in_action)
-  { }
+  {
+    produceConsumeMsg(PendingTermEnum::Produce);
+  }
+
+  void produceConsumeMsg(PendingTermEnum op);
 
   explicit PendingSend(std::nullptr_t) { }
   PendingSend(PendingSend&& in)
