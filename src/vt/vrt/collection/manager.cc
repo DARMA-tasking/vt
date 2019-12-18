@@ -114,7 +114,7 @@ void CollectionManager::startPhaseCollective(
   }
 #endif
 #if backend_check_enabled(trace_enabled)
-  theTrace()->flushTracesFile(true);
+  theTrace()->flushTracesFile(false);
 #endif
 }
 
