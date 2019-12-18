@@ -5,16 +5,13 @@
 
 namespace vt { namespace trace {
 
-// These MUST have static-lifetime and be initialized during constant
-// initialization as they are modified during dynamic initialization as
-// that is when auto-handler events are registered.
-// Using a constexpr constructor / initializer list is also relevant.
-// - https://en.cppreference.com/w/cpp/language/constant_initialization
-static std::unique_ptr<TraceContainerEventClassType> event_type_container_{};
-static std::unique_ptr<TraceContainerEventType> event_container_{};
-
 /*static*/ TraceContainerEventClassType*
 TraceContainers::getEventTypeContainer(){
+  // n.b. Container MUST be constant-initialized as this function is used
+  // from dynamic initialization contexts (ie. auto registrations).
+  // static INSIDE function to avoid Clang 3.9 bug; issue not present Clang 5+.
+  static std::unique_ptr<TraceContainerEventClassType> event_type_container_ = nullptr;
+
   if (event_type_container_ == nullptr) {
     event_type_container_ = std::make_unique<TraceContainerEventClassType>();
   }
@@ -23,6 +20,11 @@ TraceContainers::getEventTypeContainer(){
 
 /*static*/ TraceContainerEventType*
 TraceContainers::getEventContainer(){
+  // n.b. Container MUST be constant-initialized as this function is used
+  // from dynamic initialization contexts (ie. auto registrations).
+  // static INSIDE function to avoid Clang 3.9 bug; fixed Clang 5+.
+  static std::unique_ptr<TraceContainerEventType> event_container_ = nullptr;
+
   if (event_container_ == nullptr) {
     event_container_ = std::make_unique<TraceContainerEventType>();
   }
