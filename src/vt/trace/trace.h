@@ -197,6 +197,13 @@ private:
   TraceEventIDType logEvent(std::unique_ptr<LogType> log);
 
 private:
+  /*
+   * Incremental flush mode for zlib. Not set here with zlib constants to reduce
+   * header dependencies.
+   */
+  int incremental_flush_mode = 0;
+
+private:
   TraceContainerType traces_;
   TraceStackType open_events_;
   TraceEventIDType cur_event_   = 1;

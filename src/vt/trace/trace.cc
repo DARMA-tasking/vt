@@ -86,7 +86,33 @@ struct TraceEventSeqCompare {
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   : prog_name_(in_prog_name), trace_name_(in_trace_name),
     start_time_(getCurrentTime()), log_file_(nullptr)
-{ }
+{
+  /*
+   * Incremental flush mode for zlib. Several options are available:
+   *
+   *   Z_NO_FLUSH
+   *   Z_PARTIAL_FLUSH
+   *   Z_SYNC_FLUSH
+   *   Z_FULL_FLUSH
+   *   Z_FINISH
+   *   Z_BLOCK
+   *   Z_TREES
+   *
+   *  Turns out that any flush weaker than Z_FINISH, may not output a valid
+   *  trace---some of these modes produce a completely valid gz file---but don't
+   *  necessarily flush to the next gzprintf newline. Thus, during an exigent
+   *  exit, the traces will not be readable by Projections, unless they are
+   *  altered to clear out the last partially written line. Z_FINISH can be
+   *  invoked for every incremental flush at the cost of space---compression
+   *  across multiple flush epochs will be lost (see zlib docs).
+   *
+   *  For now, the incremental_flush_mode will be Z_SYNC_FINISH, implying that
+   *  the gz files will have to cleaned if a segfault, etc. occurs. Change this
+   *  to Z_FINISH if you want a clean flush.
+   */
+
+  incremental_flush_mode = Z_SYNC_FLUSH;
+}
 
 Trace::Trace() { }
 
@@ -639,7 +665,7 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
   // TODO: log time of flushing; unify with group-end.
   if (ArgType::vt_trace_flush_size not_eq 0
       and traces_.size() >= ArgType::vt_trace_flush_size) {
-    writeTracesFile(Z_SYNC_FLUSH);
+    writeTracesFile(incremental_flush_mode);
   }
 
   return event;
@@ -694,7 +720,7 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     theCollective()->barrier();
   }
   if (traces_.size() >= ArgType::vt_trace_flush_size) {
-    writeTracesFile(Z_SYNC_FLUSH);
+    writeTracesFile(incremental_flush_mode);
   }
 }
 
