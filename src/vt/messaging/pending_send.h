@@ -79,7 +79,8 @@ struct PendingSend final {
   PendingSend(PendingSend&& in)
     : msg_(std::move(in.msg_)),
       msg_size_(std::move(in.msg_size_)),
-      send_action_(std::move(in.send_action_))
+      send_action_(std::move(in.send_action_)),
+      epoch_produced_(std::move(in.epoch_produced_))
   {
     in.msg_ = nullptr;
     in.send_action_ = nullptr;
@@ -105,6 +106,7 @@ private:
   MsgVirtualPtr<BaseMsgType> msg_ = nullptr;
   ByteType msg_size_ = no_byte;
   SendActionType send_action_ = nullptr;
+  EpochType epoch_produced_ = no_epoch;
 };
 
 }} /* end namespace vt::messaging */
