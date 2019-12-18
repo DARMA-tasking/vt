@@ -49,7 +49,7 @@ namespace vt { namespace seq {
 
 /*explicit*/ SeqList::SeqList(SeqType const& seq_id_in)
   : seq_id_(seq_id_in), ready_(true),
-    node_(new SeqNode(seq_node_parent_tag_t, seq_id_))
+    node_(std::make_shared<SeqNode>(seq_node_parent_tag_t, seq_id_))
 { }
 
 void SeqList::addAction(SeqFunType const& fn) {
