@@ -53,8 +53,26 @@ void PendingSend::sendMsg() {
   } else {
     send_action_(msg_);
   }
+  produceConsumeMsg(PendingTermEnum::Consume);
   msg_ = nullptr;
   send_action_ = nullptr;
+}
+
+void PendingSend::produceConsumeMsg(PendingTermEnum op) {
+  if (msg_ != nullptr) {
+    auto const is_epoch = envelopeIsEpochType(msg_->env);
+    auto const is_term = envelopeIsTerm(msg_->env);
+    if (is_epoch and not is_term) {
+      auto ep = envelopeGetEpoch(msg_->env);
+      if (ep != no_epoch and ep != term::any_epoch_sentinel) {
+        if (op == PendingTermEnum::Produce) {
+          theTerm()->produce(ep,1);
+        } else {
+          theTerm()->consume(ep,1);
+        }
+      }
+    }
+  }
 }
 
 }}
