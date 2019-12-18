@@ -734,6 +734,7 @@ void Trace::writeTracesFile(int flush) {
     auto name = full_sts_name_;
     file.open(name);
     outputControlFile(file);
+    file.flush();
     file.close();
     wrote_sts_file_ = true;
   }
