@@ -767,7 +767,7 @@ void Runtime::printStartupBanner() {
     }
     if (not passthru_args.empty()) {
       auto f11 = fmt::format(
-        "Pass-through args: [{}]\n",
+        "Application args: [{}]\n",
         arg_str(passthru_args)
       );
       fmt::print("{}\t{}{}", vt_pre, f11, reset);

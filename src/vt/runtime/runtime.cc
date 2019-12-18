@@ -129,7 +129,7 @@ Runtime::Runtime(
       // exit code of 0 -> 'help'
       std::ostream& out = exit_code == 0 ? std::cout : std::cerr;
 
-      out << "--- VT INITIALIZATION ABORT ---" << "\n"
+      out << "--- VT INITIALIZATION ABORT ---" << "\n\n"
           << msg << "\n"
           << "--- VT INITIALIZATION ABORT ---" << "\n"
           << std::flush;

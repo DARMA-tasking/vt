@@ -558,6 +558,34 @@ void addSchedulerArgs(CLI::App& app) {
   kca->group(schedulerGroup);
 }
 
+class VtFormatter : public CLI::Formatter {
+public:
+  std::string make_usage(const CLI::App *, std::string name) const override {
+    std::stringstream u;
+    u << "\n"
+"Usage:"
+"\n"
+"[APP-ARGS..] [VT-ARGS] [--vt_mpi_args MPI-ARGS..] [-- APP-ARGS..]\n"
+"\n"
+"Arguments up until the first '--vt_*' are treated as application arguments.\n"
+"\n"
+"After the first '--vt_*', additional arguments are treated as VT arguments\n"
+"unless '--vt_mpi_args' or '--' are used to switch the argument mode.\n"
+"The '--vt_args' flag can be used to switch back into VT argument mode.\n"
+"Modes can be switched indefinitely.\n"
+"\n"
+"Application pass-through arguments are supplied to the host program\n"
+"for further processing and are not used by VT for any configuration.\n"
+"MPI (and only MPI) arguments are given directly to MPI_Init.\n"
+"\n"
+"It is an error if an unexpected argument is encountered in VT argument mode.\n"
+"The currently recognized VT arguments are listed below; availability varies\n"
+"based on build and compilation settings.\n"
+      << "\n";
+    return u.str();
+  }
+};
+
 std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
 
 /*static*/ std::tuple<int, std::string> ArgParse::parse(int& argc, char**& argv) {
@@ -566,7 +594,9 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
     return std::make_tuple(-1, std::string{});
   }
 
-  CLI::App app{"vt"};
+  CLI::App app{"vt (Virtual Transport)"};
+
+  app.formatter(std::make_shared<VtFormatter>());
 
   app.set_help_flag("--vt_help", "Display help");
 
