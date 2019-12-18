@@ -217,6 +217,12 @@ private:
 public:
   void addDependency(EpochType predecessor, EpochType successoor);
 
+public:
+  // Methods for testing state of TD from unit tests
+  EpochContainerType<TermStateType> const& getEpochState() { return epoch_state_; }
+  std::unordered_set<EpochType> const& getEpochReadySet() { return epoch_ready_; }
+  std::unordered_set<EpochType> const& getEpochWaitSet() { return epoch_wait_status_; }
+
 private:
   EpochDependency* getEpochDep(EpochType epoch);
   void removeEpochStateDependency(EpochType ep);
