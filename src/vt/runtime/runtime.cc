@@ -128,7 +128,7 @@ Runtime::Runtime(
     }
 
     MPI_Abort(comm, exit_code);
-    exit(exit_code);
+    std::_Exit(exit_code);
     return;
   }
 
