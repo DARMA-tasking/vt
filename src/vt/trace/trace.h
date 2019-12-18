@@ -151,7 +151,6 @@ struct Trace {
   /// Events already logged may still be written to the trace log.
   void disableTracing();
 
-  bool checkEnabled();
   bool checkDynamicRuntimeEnabled();
 
   void flushTracesFile(bool useGlobalSync);

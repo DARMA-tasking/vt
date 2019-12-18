@@ -392,9 +392,6 @@ void Trace::beginProcessing(
     return;
   }
 
-  auto const type = TraceConstantsType::BeginProcessing;
-  LogPtrType log = new LogType(time, ep, type);
-
   debug_print(
     trace, node,
     "event_start: ep={}, event={}, time={}, from={}\n",
@@ -525,25 +522,13 @@ bool Trace::checkDynamicRuntimeEnabled() {
    * checkEnabled() -> this is the "static" runtime check, may be disabled for a
    * subset of processors when trace mod is used to reduce overhead
    */
-  return enabled_ and checkEnabled();
-}
-
-void Trace::editLastEntry(std::function<void(LogPtrType)> fn) {
-  if (not enabled_ || not traceWritingEnabled(theContext()->getNode())) {
-    return;
-  }
-  if (traces_.empty()) {
-    return;
-  }
-  //---
-  auto const trace_cont_size = traces_.size();
-  fn(traces_.at(trace_cont_size - 1));
+  return enabled_ and traceWritingEnabled(theContext()->getNode());
 }
 
 TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
   assert(log != nullptr && "log cannot be null");
 
-  if (not enabled_ || not traceWritingEnabled(theContext()->getNode())) {
+  if (not checkDynamicRuntimeEnabled()) {
     return no_trace_event;
   }
 
