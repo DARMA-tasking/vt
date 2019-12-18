@@ -160,7 +160,7 @@ void Scheduler::scheduler(bool msg_only) {
     progress_time_enabled_ and
     TimeType::getCurrentTime() - last_progress_time_ > ArgType::vt_sched_progress_sec;
 
-  if (k_handlers_executed or enough_time_passed) {
+  if ((not progress_time_enabled_ and k_handlers_executed) or enough_time_passed) {
     runProgress(msg_only);
   }
 
