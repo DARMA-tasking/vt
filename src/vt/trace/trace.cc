@@ -904,6 +904,9 @@ void Trace::writeTracesFile(int flush) {
     // Poof!
     traces.pop();
   }
+
+  // Actually call flush to get it written to disk
+  gzflush(gzfile, flush);
 }
 
 void Trace::outputControlFile(std::ofstream& file) {
