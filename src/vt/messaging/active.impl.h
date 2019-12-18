@@ -159,6 +159,12 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
+
+  auto const is_epoch = envelopeIsEpochType(msg->env);
+  if (is_epoch) {
+    setupEpochMsg(msg);
+  }
+
   return sendMsgSz(this_node, han, msg, msg_size);
 }
 
@@ -200,6 +206,12 @@ ActiveMessenger::sendMsgSz(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
+
+  auto const is_epoch = envelopeIsEpochType(msg->env);
+  if (is_epoch) {
+    setupEpochMsg(msg);
+  }
+
   auto base = promoteMsg(msg).template to<BaseMsgType>();;
   return PendingSendType(base, msg_size);
 }
