@@ -101,12 +101,12 @@ public:
   void addEpoch(EpochType const& epoch);
 
   /*
-   * Terminated an active epoch by adding it to the sett
+   * Track terminated, previously active epoch by adding it to the set
    */
   void closeEpoch(EpochType const& epoch);
 
   /*
-   * Terminated an active epoch by adding it to the sett
+   * Get the size of the current terminated epochs set
    */
   std::size_t getSize() const { return terminated_epochs_.size(); }
 
