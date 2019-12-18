@@ -63,10 +63,12 @@ void PendingSend::produceConsumeMsg(PendingTermEnum op) {
     auto const is_epoch = envelopeIsEpochType(msg_->env);
     auto const is_term = envelopeIsTerm(msg_->env);
     if (is_epoch and not is_term) {
-      auto ep = envelopeGetEpoch(msg_->env);
+      bool const is_produce = op == PendingTermEnum::Produce;
+      auto const ep = is_produce ? envelopeGetEpoch(msg_->env) : epoch_produced_;
       if (ep != no_epoch and ep != term::any_epoch_sentinel) {
-        if (op == PendingTermEnum::Produce) {
+        if (is_produce) {
           theTerm()->produce(ep,1);
+          epoch_produced_ = ep;
         } else {
           theTerm()->consume(ep,1);
         }
