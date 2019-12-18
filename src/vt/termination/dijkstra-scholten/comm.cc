@@ -98,10 +98,10 @@ namespace vt { namespace term { namespace ds {
     "StateDS::disengage: epoch={:x}\n", epoch
   );
 
-  // We are likely inside code that references the map structure that holds DS
-  // terminators. We can remove it safely. So we will enqueue an action to do
-  // the cleanup. This action must see if the DS term is still disengaged (it
-  // can easily be re-engaged after it disengages)
+  // We are likely inside code that holds a reference to this class for holding
+  // DS terminator state. Thus, we can't remove it safely right here. So we will
+  // enqueue an action to do the cleanup. This action must see if the DS term is
+  // still disengaged (it can easily be re-engaged after it disengages).
   theSched()->enqueue([epoch]{
     auto ptr = theTerm()->getDSTerm(epoch);
     if (ptr != nullptr) {
