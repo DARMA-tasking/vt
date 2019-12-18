@@ -136,8 +136,7 @@ Runtime::Runtime(
     }
 
     MPI_Abort(comm, exit_code);
-    exit(exit_code);
-    return;
+    std::_Exit(exit_code); // no return
   }
 
   sig_user_1_ = false;
