@@ -93,8 +93,8 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   theTerm()->addAction(ep, [&done] { done = true; });
   theTerm()->finishedEpoch(ep);
 
-  // It should not break out of this loop because if done, thus after turning a
-  // few times break out
+  // It should not break out of this loop because of `done`, thus `k` is used to
+  // break out
   int k = 0;
   while (not done) {
     k++;
