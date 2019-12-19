@@ -154,13 +154,16 @@ void Scheduler::scheduler(bool msg_only) {
 
   // By default, `vt_sched_progress_han` is 0 and will happen every time we go
   // through the scheduler
+  bool k_handler_enabled = ArgType::vt_sched_progress_han != 0;
   bool k_handlers_executed =
+    k_handler_enabled and
     processed_after_last_progress_ >= ArgType::vt_sched_progress_han;
   bool enough_time_passed =
     progress_time_enabled_ and
     TimeType::getCurrentTime() - last_progress_time_ > ArgType::vt_sched_progress_sec;
 
-  if ((not progress_time_enabled_ and k_handlers_executed) or enough_time_passed) {
+  if ((not progress_time_enabled_ and not k_handler_enabled) or
+      enough_time_passed or k_handlers_executed) {
     runProgress(msg_only);
   }
 
