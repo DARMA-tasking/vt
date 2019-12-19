@@ -447,7 +447,7 @@ void Runtime::printStartupBanner() {
 
   {
     auto f11 = fmt::format(
-      "Running MPI progress function every {} handler(s) executed",
+      "Running MPI progress function at least every {} handler(s) executed",
       ArgType::vt_sched_progress_han
     );
     auto f12 = opt_on("--vt_sched_progress_han", f11);
@@ -456,7 +456,7 @@ void Runtime::printStartupBanner() {
 
   if (ArgType::vt_sched_progress_sec != 0.0) {
     auto f11 = fmt::format(
-      "Running MPI progress function every {} seconds",
+      "Running MPI progress function at least every {} seconds",
       ArgType::vt_sched_progress_sec
     );
     auto f12 = opt_on("--vt_sched_progress_sec", f11);
