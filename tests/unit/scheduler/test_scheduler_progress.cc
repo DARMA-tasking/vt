@@ -81,7 +81,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
     vt::arguments::ArgConfig::vt_sched_progress_sec * fudge
   );
 
-  // Switch back to default scheduler every millisecond
+  // Switch back to default scheduler settings (to not slow down other tests)
   vt::arguments::ArgConfig::vt_sched_progress_han = 0;
   vt::arguments::ArgConfig::vt_sched_progress_sec = 0.0;
 }
@@ -120,7 +120,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
     vt::arguments::ArgConfig::vt_sched_progress_sec * fudge
   );
 
-  // Switch back to default scheduler every millisecond
+  // Switch back to default scheduler settings (to not slow down other tests)
   vt::arguments::ArgConfig::vt_sched_progress_han = 0;
   vt::arguments::ArgConfig::vt_sched_progress_sec = 0.0;
 }
