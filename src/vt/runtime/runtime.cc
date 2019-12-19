@@ -94,21 +94,6 @@ Runtime::Runtime(
      user_argv_(argv)
 {
   ArgType::parse(argc, argv);
-
-  // Must do this here before anything else to avoid unreported hangs
-  if (ArgType::vt_sched_progress_han != 0 and ArgType::vt_sched_progress_sec == 0.0) {
-    // vtAbort does not work here because we are uninitialized
-    auto vt_pre = debug::vtPre();
-    auto bred   = debug::bred();
-    fmt::print(
-      "{}{}If --vt_sched_progress_han != 0, "
-      "you must set --vt_sched_progress_sec to avoid hangs\n",
-      vt_pre, bred
-    );
-    fflush(stdout);
-    abort("", 132);
-  }
-
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
