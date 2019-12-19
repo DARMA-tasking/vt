@@ -51,6 +51,7 @@
 #include "vt/scheduler/prioritized_work_unit.h"
 #include "vt/scheduler/work_unit.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/timing/timing.h"
 
 #include <cassert>
 #include <vector>
@@ -84,9 +85,14 @@ struct Scheduler {
 
   static void checkTermSingleNode();
 
+  bool shouldCallProgress(
+    int32_t processed_since_last_progress, TimeType time_since_last_progress
+  ) const;
+
   bool runNextUnit();
   bool progressMsgOnlyImpl();
   void scheduler(bool msg_only = false);
+  void runProgress(bool msg_only = false);
   bool progressImpl();
   void schedulerForever();
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
@@ -128,6 +134,10 @@ private:
 
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;
+
+  TimeType last_progress_time_ = 0.0;
+  bool progress_time_enabled_ = false;
+  int32_t processed_after_last_progress_ = 0;
 };
 
 }} //end namespace vt::scheduler
