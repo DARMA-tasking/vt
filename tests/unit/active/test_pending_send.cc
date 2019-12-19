@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               pending_send.cc
+//                             test_pending_send.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,43 +42,79 @@
 //@HEADER
 */
 
-#include "vt/messaging/pending_send.h"
-#include "vt/messaging/active.h"
+#include <gtest/gtest.h>
 
-namespace vt { namespace messaging {
+#include "test_parallel_harness.h"
+#include "data_message.h"
 
-void PendingSend::sendMsg() {
-  if (send_action_ == nullptr) {
-    theMsg()->sendMsgSized(msg_, msg_size_);
-  } else {
-    send_action_(msg_);
+#include "vt/transport.h"
+
+namespace vt { namespace tests { namespace unit {
+
+using namespace vt;
+using namespace vt::tests::unit;
+
+struct TestPendingSend : TestParallelHarness {
+  struct TestMsg : vt::Message { };
+  static void handlerPong(TestMsg*) { delivered = true; }
+  static void handlerPing(TestMsg*) {
+    auto const this_node = theContext()->getNode();
+    auto const num_nodes = theContext()->getNumNodes();
+    auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+    auto msg = vt::makeMessage<TestMsg>();
+    theMsg()->sendMsg<TestMsg, handlerPong>(prev, msg.get());
   }
-  consumeMsg();
-  msg_ = nullptr;
-  send_action_ = nullptr;
+
+  static bool delivered;
+};
+
+/*static*/ bool TestPendingSend::delivered = false;
+
+TEST_F(TestPendingSend, test_pending_send_hold) {
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  delivered = false;
+
+  std::vector<messaging::PendingSend> pending;
+  bool done = false;
+  auto ep = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep);
+
+  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+  auto msg = vt::makeMessage<TestMsg>();
+  pending.emplace_back(
+    theMsg()->sendMsg<TestMsg, handlerPing>(next, msg.get())
+  );
+
+  // Must be stamped with the current epoch
+  EXPECT_EQ(envelopeGetEpoch(msg->env), ep);
+
+  theMsg()->popEpoch(ep);
+  theTerm()->addAction(ep, [&done] { done = true; });
+  theTerm()->finishedEpoch(ep);
+
+  // It should not break out of this loop because of `done`, thus `k` is used to
+  // break out
+  int k = 0;
+  while (not done) {
+    k++;
+    vt::runScheduler();
+    if (k > 10) {
+      break;
+    }
+  }
+
+  // Epoch should not end with a valid pending send created in an live epoch
+  EXPECT_EQ(done, false);
+  EXPECT_EQ(delivered, false);
+
+  // Now we send the message off!
+  pending.clear();
+
+  do vt::runScheduler(); while (not done);
+
+  EXPECT_EQ(done, true);
+  EXPECT_EQ(delivered, true);
 }
 
-EpochType PendingSend::getProduceEpoch() const {
-  if (msg_ == nullptr or envelopeIsTerm(msg_->env) or
-      not envelopeIsEpochType(msg_->env)) {
-    return no_epoch;
-  }
-
-  return envelopeGetEpoch(msg_->env);
-}
-
-
-void PendingSend::produceMsg() {
-  epoch_produced_ = getProduceEpoch();
-  if (epoch_produced_ != no_epoch) {
-    theTerm()->produce(epoch_produced_, 1);
-  }
-}
-
-void PendingSend::consumeMsg() {
-  if (epoch_produced_ != no_epoch) {
-    theTerm()->consume(epoch_produced_, 1);
-  }
-}
-
-}}
+}}} // end namespace vt::tests::unit
