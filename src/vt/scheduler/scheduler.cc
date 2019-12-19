@@ -127,6 +127,26 @@ bool Scheduler::progressMsgOnlyImpl() {
   return theMsg()->progress() or theEvent()->progress();
 }
 
+bool Scheduler::shouldCallProgress(
+  int32_t processed_since_last_progress, TimeType time_since_last_progress
+) const {
+  using ArgType   = arguments::ArgConfig;
+
+  // By default, `vt_sched_progress_han` is 0 and will happen every time we go
+  // through the scheduler
+  bool k_handler_enabled = ArgType::vt_sched_progress_han != 0;
+  bool k_handlers_executed =
+    k_handler_enabled and
+    processed_since_last_progress >= ArgType::vt_sched_progress_han;
+  bool enough_time_passed =
+    progress_time_enabled_ and
+    time_since_last_progress > ArgType::vt_sched_progress_sec;
+
+  return
+    (not progress_time_enabled_ and not k_handler_enabled) or
+    enough_time_passed or k_handlers_executed;
+}
+
 void Scheduler::runProgress(bool msg_only) {
   /*
    * Run through the progress functions `num_iter` times, making forward
@@ -149,21 +169,13 @@ void Scheduler::runProgress(bool msg_only) {
 }
 
 void Scheduler::scheduler(bool msg_only) {
-  using ArgType  = arguments::ArgConfig;
-  using TimeType = timing::Timing;
+  using TimerType = timing::Timing;
 
-  // By default, `vt_sched_progress_han` is 0 and will happen every time we go
-  // through the scheduler
-  bool k_handler_enabled = ArgType::vt_sched_progress_han != 0;
-  bool k_handlers_executed =
-    k_handler_enabled and
-    processed_after_last_progress_ >= ArgType::vt_sched_progress_han;
-  bool enough_time_passed =
-    progress_time_enabled_ and
-    TimeType::getCurrentTime() - last_progress_time_ > ArgType::vt_sched_progress_sec;
-
-  if ((not progress_time_enabled_ and not k_handler_enabled) or
-      enough_time_passed or k_handlers_executed) {
+  auto time_since_last_progress = TimerType::getCurrentTime() - last_progress_time_;
+  if (
+    work_queue_.empty() or
+    shouldCallProgress(processed_after_last_progress_, time_since_last_progress)
+  ) {
     runProgress(msg_only);
   }
 
