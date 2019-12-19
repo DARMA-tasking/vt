@@ -56,6 +56,10 @@ namespace vt { namespace tests { namespace unit {
 struct TestSchedProgress : TestParallelHarness { };
 
 TEST_F(TestSchedProgress, test_scheduler_progress_1) {
+  using namespace std::this_thread;
+  using namespace std::chrono;
+  using namespace std::chrono_literals;
+
   // Run scheduler every millisecond
   vt::arguments::ArgConfig::vt_sched_progress_han = 0;
   vt::arguments::ArgConfig::vt_sched_progress_sec = 1.0;
@@ -70,6 +74,12 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
   // function
   auto event = theEvent()->createParentEvent(theContext()->getNode());
   theEvent()->getEventHolder(event).attachAction([&]{ done = true; });
+
+  // Fill the queue with a second amount of work, in smaller increments to see
+  // if progress triggers too early
+  for (int i = 0; i < vt::arguments::ArgConfig::vt_sched_progress_sec / 0.05; i++) {
+    testSched->enqueue([]{ sleep_for(50ms); });
+  }
 
   do testSched->scheduler(); while (not done);
 
