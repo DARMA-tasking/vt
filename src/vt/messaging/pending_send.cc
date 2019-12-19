@@ -53,27 +53,31 @@ void PendingSend::sendMsg() {
   } else {
     send_action_(msg_);
   }
-  produceConsumeMsg(PendingTermEnum::Consume);
+  consumeMsg();
   msg_ = nullptr;
   send_action_ = nullptr;
 }
 
-void PendingSend::produceConsumeMsg(PendingTermEnum op) {
-  if (msg_ != nullptr) {
-    auto const is_epoch = envelopeIsEpochType(msg_->env);
-    auto const is_term = envelopeIsTerm(msg_->env);
-    if (is_epoch and not is_term) {
-      bool const is_produce = op == PendingTermEnum::Produce;
-      auto const ep = is_produce ? envelopeGetEpoch(msg_->env) : epoch_produced_;
-      if (ep != no_epoch and ep != term::any_epoch_sentinel) {
-        if (is_produce) {
-          theTerm()->produce(ep,1);
-          epoch_produced_ = ep;
-        } else {
-          theTerm()->consume(ep,1);
-        }
-      }
-    }
+EpochType PendingSend::getProduceEpoch() const {
+  if (msg_ == nullptr or envelopeIsTerm(msg_->env) or
+      not envelopeIsEpochType(msg_->env)) {
+    return no_epoch;
+  }
+
+  return envelopeGetEpoch(msg_->env);
+}
+
+
+void PendingSend::produceMsg() {
+  epoch_produced_ = getProduceEpoch();
+  if (epoch_produced_ != no_epoch) {
+    theTerm()->produce(epoch_produced_, 1);
+  }
+}
+
+void PendingSend::consumeMsg() {
+  if (epoch_produced_ != no_epoch) {
+    theTerm()->consume(epoch_produced_, 1);
   }
 }
 
