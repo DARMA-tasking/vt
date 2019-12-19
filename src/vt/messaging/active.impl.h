@@ -116,11 +116,7 @@ ActiveMessenger::sendMsgSz(
   ByteType const& msg_size
 ) {
   envelopeSetup(msg->env, dest, han);
-
-  auto const is_epoch = envelopeIsEpochType(msg->env);
-  if (is_epoch) {
-    setupEpochMsg(msg);
-  }
+  setupEpochMsg(msg);
 
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, msg_size);
@@ -207,11 +203,7 @@ ActiveMessenger::sendMsgSz(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-
-  auto const is_epoch = envelopeIsEpochType(msg->env);
-  if (is_epoch) {
-    setupEpochMsg(msg);
-  }
+  setupEpochMsg(msg);
 
   auto base = promoteMsg(msg).template to<BaseMsgType>();;
   return PendingSendType(base, msg_size);
@@ -260,11 +252,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-
-  auto const is_epoch = envelopeIsEpochType(msg->env);
-  if (is_epoch) {
-    setupEpochMsg(msg);
-  }
+  setupEpochMsg(msg);
 
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, sizeof(MessageT));
@@ -300,11 +288,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-
-  auto const is_epoch = envelopeIsEpochType(msg->env);
-  if (is_epoch) {
-    setupEpochMsg(msg);
-  }
+  setupEpochMsg(msg);
 
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, sizeof(MessageT));
@@ -354,11 +338,7 @@ ActiveMessenger::sendMsg(
 
   // setup envelope
   envelopeSetup(msg->env, dest, han);
-
-  auto const is_epoch = envelopeIsEpochType(msg->env);
-  if (is_epoch) {
-    setupEpochMsg(msg);
-  }
+  setupEpochMsg(msg);
 
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, sizeof(MessageT));
