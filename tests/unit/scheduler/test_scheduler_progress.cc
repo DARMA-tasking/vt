@@ -60,7 +60,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
   using namespace std::chrono;
   using namespace std::chrono_literals;
 
-  // Run scheduler every millisecond
+  // Run the progress function every second at least
   vt::arguments::ArgConfig::vt_sched_progress_han = 0;
   vt::arguments::ArgConfig::vt_sched_progress_sec = 1.0;
 
@@ -101,7 +101,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
   using namespace std::chrono;
   using namespace std::chrono_literals;
 
-  // Run scheduler every 10 handlers
+  // Run scheduler every 10 handlers at least
   vt::arguments::ArgConfig::vt_sched_progress_han = 10;
   vt::arguments::ArgConfig::vt_sched_progress_sec = 0.0;
 
