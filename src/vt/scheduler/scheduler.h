@@ -85,6 +85,10 @@ struct Scheduler {
 
   static void checkTermSingleNode();
 
+  bool shouldCallProgress(
+    int32_t processed_since_last_progress, TimeType time_since_last_progress
+  ) const;
+
   bool runNextUnit();
   bool progressMsgOnlyImpl();
   void scheduler(bool msg_only = false);
