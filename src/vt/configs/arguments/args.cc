@@ -470,8 +470,8 @@ namespace vt { namespace arguments {
    */
 
   auto nsched = "Number of times to run the progress function in scheduler";
-  auto ksched = "Run the MPI progress function every k handlers that run";
-  auto ssched = "Run the MPI progress function every s seconds";
+  auto ksched = "Run the MPI progress function at least every k handlers that run";
+  auto ssched = "Run the MPI progress function at least every s seconds";
   auto sca = app.add_option("--vt_sched_num_progress", vt_sched_num_progress, nsched, 2);
   auto hca = app.add_option("--vt_sched_progress_han", vt_sched_progress_han, ksched, 0);
   auto kca = app.add_option("--vt_sched_progress_sec", vt_sched_progress_sec, ssched, 0.0);
