@@ -52,6 +52,7 @@ matrix:
         - ninja-build
         - libmpich-dev
         - mpich
+        - lcov
     env:
       - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 #  - os: linux
