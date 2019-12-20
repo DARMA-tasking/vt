@@ -3,8 +3,7 @@ jobs:
   build:
     docker:
       - image: lifflander1/vt:alpine-final
-    working_directory:
-      - /usr/src
+    working_directory: /usr/src
     steps:
       - checkout
       - run:
@@ -60,8 +59,7 @@ jobs:
   test:
     docker:
       - image: lifflander1/vt:alpine-final
-    working_directory:
-      - /usr/src/vt
+    working_directory: /usr/src/vt
     steps:
       - checkout
       - run:
