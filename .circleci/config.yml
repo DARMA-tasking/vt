@@ -8,8 +8,8 @@ jobs:
     steps:
       - checkout
       - run:
-        name: builder
-        command: source $HOME/.bashrc &&
+          name: builder
+          command: source $HOME/.bashrc &&
              source /usr/share/spack/share/spack/setup-env.sh &&
              spack env activate clang-mpich &&
              export CC=clang &&
@@ -65,8 +65,8 @@ jobs:
     steps:
       - checkout
       - run:
-        name: test
-        command: ninja test
+          name: test
+          command: ninja test
 workflows:
   version: 2
   build_and_test:
