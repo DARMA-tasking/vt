@@ -5,7 +5,6 @@ jobs:
       - image: lifflander1/vt:alpine-final
     working_directory: /usr/src
     steps:
-      - checkout
       - run:
           name: builder
           command: source $HOME/.bashrc &&
@@ -61,7 +60,6 @@ jobs:
       - image: lifflander1/vt:alpine-final
     working_directory: /usr/src/vt
     steps:
-      - checkout
       - run:
           name: test
           command: ninja test
