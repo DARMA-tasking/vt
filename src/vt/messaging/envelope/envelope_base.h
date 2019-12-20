@@ -89,6 +89,7 @@ struct ActiveEnvelope {
 # if backend_check_enabled(trace_enabled)
   /// The trace event for the message for tracking dependencies
   trace::TraceEventIDType trace_event : trace::trace_event_num_bits;
+  bool trace_this                     : 1;
 # endif
 };
 

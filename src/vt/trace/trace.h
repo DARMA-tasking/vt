@@ -201,6 +201,7 @@ struct Trace {
 private:
 
   static void traceBeginIdleTrigger();
+  static void traceEndIdleTrigger();
 
   // Writes traces to file, optionally flushing.
   // The traces collection is modified.

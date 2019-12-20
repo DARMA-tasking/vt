@@ -309,8 +309,10 @@ template <typename MsgT, typename BaseT>
   auto const& total_size = ptr_size + msg_size + han_size + size_size;
   auto const& tag = no_tag;
   if (is_bcast) {
+    theMsg()->setSerialMsgMessage(msg);
     return theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag);
   } else {
+    theMsg()->setSerialMsgMessage(msg);
     return theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag);
   }
 }
@@ -339,6 +341,7 @@ template <typename MsgT, typename BaseT>
   auto eager_default_send =
     [=](MsgSharedPtr<SerializedEagerMsg<MsgT,BaseT>> m) -> messaging::PendingSend {
     using MsgType = SerialEagerPayloadMsg<MsgT,BaseT>;
+    theMsg()->setSerialMsgMessage(m);
     return theMsg()->sendMsg<MsgType,payloadMsgHandler>(dest,m.get());
   };
   auto eager = eager_sender ? eager_sender : eager_default_send;
@@ -366,7 +369,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 template <typename MsgT, typename BaseT>
 /*static*/ messaging::PendingSend
  SerializedMessenger::broadcastSerialMsgHandler(
-  MsgT* msg_ptr, HandlerType const& han
+  MsgT* msg_ptr, HandlerType han
 ) {
   using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
 
@@ -415,13 +418,24 @@ template <typename MsgT, typename BaseT>
       han, ptr_size, serialized_msg_eager_size, group_
     );
 
+    theMsg()->setSerialMsgMessage(payload_msg);
     return theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(
       payload_msg.get()
     );
   } else {
     auto const& total_size = ptr_size + sys_size;
 
-    sys_msg->handler = han;
+    auto han_modified = han;
+
+#   if backend_check_enabled(trace_enabled)
+      // Since we aren't sending the message (just packing it into a buffer, we
+      // need to transfer whether the handler should be traced on that message
+      auto_registry::HandlerManagerType::setHandlerTrace(
+        han_modified, envelopeGetTraceThis(msg->env)
+      );
+#   endif
+
+    sys_msg->handler = han_modified;
     sys_msg->env = msg->env;
     sys_msg->from_node = theContext()->getNode();
     sys_msg->ptr_size = ptr_size;
@@ -431,10 +445,11 @@ template <typename MsgT, typename BaseT>
       serial_msg, node,
       "broadcastSerialMsg (non-eager): container: han={}, sys_size={}, "
       "ptr_size={}, total_size={}, group={:x}\n",
-      han, sys_size, ptr_size, total_size, group_
+      han_modified, sys_size, ptr_size, total_size, group_
     );
 
     using MsgType = SerialWrapperMsgType<MsgT>;
+    theMsg()->setSerialMsgMessage(sys_msg);
     return theMsg()->broadcastMsgSz<MsgType,serialMsgHandlerBcast>(
       sys_msg.get(), total_size, no_tag
     );
@@ -515,6 +530,7 @@ template <typename MsgT, typename BaseT>
           dest, print_ptr(sys_msg.get()), typed_handler
         );
 
+        theMsg()->setSerialMsgMessage(sys_msg);
         return theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
           dest, sys_msg.get(), send_serialized
         );

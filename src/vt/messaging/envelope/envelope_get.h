@@ -127,6 +127,9 @@ inline PriorityLevelType envelopeGetPriorityLevel(Env& env);
  */
 template <typename Env>
 inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env);
+
+template <typename Env>
+inline bool envelopeGetTraceThis(Env& env);
 #endif
 
 } /* end namespace vt */

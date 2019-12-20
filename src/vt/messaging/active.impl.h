@@ -53,6 +53,7 @@
 #include "vt/serialization/auto_dispatch/dispatch_functor.h"
 #include "vt/messaging/message/message_priority.impl.h"
 #include "vt/scheduler/priority.h"
+#include "vt/configs/arguments/args.h"
 
 namespace vt { namespace messaging {
 
@@ -62,6 +63,53 @@ void ActiveMessenger::setTermMessage(MsgPtrT const msg) {
 #if backend_check_enabled(priorities)
   envelopeSetPriority(msg->env, sys_min_priority);
 #endif
+#if backend_check_enabled(trace_enabled)
+  //fmt::print("arguments::traceTerm()={}\n",arguments::traceTerm());
+  envelopeSetTraceThis(msg->env, arguments::traceTerm());
+#endif
+}
+
+template <typename MsgPtrT>
+void ActiveMessenger::setLocationMessage(MsgPtrT const msg) {
+#if backend_check_enabled(trace_enabled)
+  envelopeSetTraceThis(msg->env, arguments::traceLocation());
+#endif
+}
+
+template <typename MsgPtrT>
+void ActiveMessenger::setSerialMsgMessage(MsgPtrT const msg) {
+#if backend_check_enabled(trace_enabled)
+  envelopeSetTraceThis(msg->env, arguments::traceSerialMsg());
+#endif
+}
+
+template <typename MsgPtrT>
+void ActiveMessenger::setCollectionMessage(MsgPtrT const msg) {
+#if backend_check_enabled(trace_enabled)
+  envelopeSetTraceThis(msg->env, arguments::traceCollection());
+#endif
+}
+
+template <typename MsgPtrT>
+void ActiveMessenger::makeTraceCreationSend(
+  MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
+  MsgSizeType msg_size, bool is_bcast
+) {
+  #if backend_check_enabled(trace_enabled)
+    auto cur_event = envelopeGetTraceEvent(msg->env);
+    if (cur_event == trace::no_trace_event) {
+      trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
+      if (not is_bcast) {
+        trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
+        envelopeSetTraceEvent(msg->env, event);
+      } else {
+        trace::TraceEventIDType event = theTrace()->messageCreationBcast(
+          ep, msg_size
+        );
+        envelopeSetTraceEvent(msg->env, event);
+      }
+    }
+  #endif
 }
 
 template <typename MsgPtrT>

@@ -76,16 +76,17 @@ template <typename MsgT>
 
 #if backend_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
-  {
+  bool is_traced = HandlerManagerType::isHandlerTrace(handler);
+  if (is_traced) {
     trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, auto_registry::RegistryTypeEnum::RegGeneral
     );
-    trace::TraceEventIDType trace_event = trace::no_trace_event;
+    trace::TraceEventIDType  trace_event = trace::no_trace_event;
     if (msg) {
       trace_event = envelopeGetTraceEvent(msg->env);
     }
-    size_t msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
 
+    size_t msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
     processing_tag =
       theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
   }
@@ -123,7 +124,9 @@ template <typename MsgT>
   }
 
 #if backend_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
+  if (is_traced) {
+    theTrace()->endProcessing(processing_tag);
+  }
 #endif
 }
 

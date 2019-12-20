@@ -239,6 +239,15 @@ struct ActiveMessenger {
    * \param[in] epoch the epoch to mark on the message
    */
   template <typename MsgPtrT>
+  void setLocationMessage(MsgPtrT const msg);
+
+  template <typename MsgPtrT>
+  void setSerialMsgMessage(MsgPtrT const msg);
+
+  template <typename MsgPtrT>
+  void setCollectionMessage(MsgPtrT const msg);
+
+  template <typename MsgPtrT>
   void setEpochMessage(MsgPtrT const msg, EpochType const& epoch);
 
   /**
@@ -1413,6 +1422,12 @@ struct ActiveMessenger {
   void clearListeners() {
     send_listen_.clear();
   }
+
+  template <typename MsgPtrT>
+  void makeTraceCreationSend(
+    MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
+    MsgSizeType msg_size, bool is_bcast
+  );
 
 private:
   bool testPendingActiveMsgAsyncRecv();

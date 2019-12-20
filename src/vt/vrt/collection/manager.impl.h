@@ -643,6 +643,7 @@ template <typename>
   );
   if (msg->isRoot()) {
     auto new_msg = makeMessage<CollectionConsMsg>(*msg);
+    theMsg()->setCollectionMessage(new_msg);
     theMsg()->broadcastMsg<CollectionConsMsg,collectionFinishedHan>(
       new_msg.get()
     );
@@ -663,6 +664,7 @@ template <typename>
   );
   if (msg->isRoot()) {
     auto nmsg = makeSharedMessage<CollectionGroupMsg>(*msg);
+    theMsg()->setCollectionMessage(nmsg);
     theMsg()->broadcastMsg<CollectionGroupMsg,collectionGroupFinishedHan>(nmsg);
   }
 }
@@ -851,6 +853,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
     envelopeSetGroup(msg->env, group);
   }
 
+  theMsg()->setCollectionMessage(msg);
   auto ret = theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
     msg.get()
   );
@@ -1002,6 +1005,17 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
+  #if backend_check_enabled(trace_enabled)
+    // Create the trace creation event for the broadcast here to connect it a
+    // higher semantic level
+    auto reg_type = member ?
+      auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+      auto_registry::RegistryTypeEnum::RegVrtCollection;
+    auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+    theMsg()->makeTraceCreationSend(msg, handler, reg_type, msg_size, true);
+  #endif
+
+
   msg->setFromNode(this_node);
 
   #if backend_check_enabled(lblite)
@@ -1053,7 +1067,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
         "handler={}, cur_epoch={:x}\n",
         col_proxy, bnode, handler, cur_epoch
       );
-
+      theMsg()->setCollectionMessage(msg);
       return theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(
         bnode,msg.get()
       );
@@ -1424,6 +1438,18 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       }
     #endif
 
+    #if backend_check_enabled(trace_enabled)
+      // Create the trace creation event here to connect it a higher semantic
+      // level. Do it in the imm_context so we see the send event when the user
+      // actually invokes send on the proxy (not outside the event that actually
+      // sent it)
+      auto reg_type = member ?
+        auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+        auto_registry::RegistryTypeEnum::RegVrtCollection;
+      auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+      theMsg()->makeTraceCreationSend(msg, handler, reg_type, msg_size, false);
+    #endif
+
     auto const& from_node = theContext()->getNode();
     msg->setFromNode(from_node);
   }
@@ -1483,6 +1509,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     // route the message to the destination using the location manager
     auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
     vtAssert(lm != nullptr, "LM must exist");
+    theMsg()->setCollectionMessage(msg);
     lm->template routeMsgSerializeHandler<
       MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
     >(toProxy, home_node, msg);
@@ -2272,6 +2299,7 @@ void CollectionManager::finishedInsertEpoch(
   auto msg = makeSharedMessage<UpdateInsertMsg<ColT,IndexT>>(
     proxy,next_insert_epoch
   );
+  theMsg()->setCollectionMessage(msg);
   theMsg()->broadcastMsg<
     UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
   >(msg);
@@ -2371,6 +2399,7 @@ template <typename ColT, typename IndexT>
   if (node != uninitialized_destination) {
     auto send = [untyped_proxy,node]{
       auto smsg = makeSharedMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
+      theMsg()->setCollectionMessage(smsg);
       theMsg()->sendMsg<
         ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
       >(node,smsg);
@@ -2425,6 +2454,7 @@ void CollectionManager::finishedInserting(
   } else {
     auto node = insert_action ? this_node : uninitialized_destination;
     auto msg = makeSharedMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
+    theMsg()->setCollectionMessage(msg);
     theMsg()->sendMsg<DoneInsertMsg<ColT,IndexT>,doneInsertHandler<ColT,IndexT>>(
       cons_node,msg
     );
@@ -2563,6 +2593,7 @@ void CollectionManager::insert(
       );
       theTerm()->produce(insert_epoch,1,insert_node);
       theTerm()->produce(cur_epoch,1,insert_node);
+      theMsg()->setCollectionMessage(msg);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
         insert_node,msg
       );
@@ -2791,6 +2822,7 @@ void CollectionManager::destroy(
   using DestroyMsgType = DestroyMsg<ColT, IndexT>;
   auto const& this_node = theContext()->getNode();
   auto msg = makeMessage<DestroyMsgType>(proxy, this_node);
+  theMsg()->setCollectionMessage(msg);
   theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg.get());
   DestroyHandlers::destroyNow(msg.get());
 }

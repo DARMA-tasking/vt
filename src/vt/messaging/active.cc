@@ -262,21 +262,26 @@ EventType ActiveMessenger::sendMsgSized(
   auto const is_epoch = envelopeIsEpochType(msg->env);
 
   #if backend_check_enabled(trace_enabled)
-    auto const handler = envelopeGetHandler(msg->env);
-    bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
-    if (is_auto) {
-      trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
-        handler, auto_registry::RegistryTypeEnum::RegGeneral
+    // We are not allowed to hold a ref to anything in the envelope, get this,
+    // modify it and put it back
+    auto handler = envelopeGetHandler(msg->env);
+
+    // If trace_this is set locally on the envelope (which was set when the
+    // message was created before the handler was setup based on configuration),
+    // we need to set the trace bits on the handler. This enables the
+    // handler-inside-handler to correctly enable tracing on a very specific
+    // part of the execution, configured by the user (e.g., location tracing
+    // enabled, termination tracing disabled)
+    HandlerManagerType::setHandlerTrace(handler, envelopeGetTraceThis(msg->env));
+
+    // Update the handler with trace bits now set appropriately
+    envelopeSetHandler(msg->env, handler);
+
+    if (not is_bcast or (is_bcast and dest == this_node_)) {
+      makeTraceCreationSend(
+        base, handler, auto_registry::RegistryTypeEnum::RegGeneral,
+        msg_size, is_bcast
       );
-      if (not is_bcast) {
-        trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
-        envelopeSetTraceEvent(msg->env, event);
-      } else if (is_bcast and dest == this_node_) {
-        trace::TraceEventIDType event = theTrace()->messageCreationBcast(
-          ep, msg_size
-        );
-        envelopeSetTraceEvent(msg->env, event);
-      }
     }
   #endif
 

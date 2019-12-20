@@ -49,13 +49,17 @@ namespace vt {
 
 /*static*/ HandlerType HandlerManager::makeHandler(
   bool is_auto, bool is_functor, HandlerIdentifierType id, bool is_objgroup,
-  HandlerControlType control
+  HandlerControlType control, bool is_trace
 ) {
   HandlerType new_han = blank_handler;
   HandlerManager::setHandlerAuto(new_han, is_auto);
   HandlerManager::setHandlerObjGroup(new_han, is_objgroup);
   HandlerManager::setHandlerFunctor(new_han, is_functor);
   HandlerManager::setHandlerIdentifier(new_han, id);
+
+#if backend_check_enabled(trace_enabled)
+  HandlerManager::setHandlerTrace(new_han, is_trace);
+#endif
 
   if (control != 0) {
     HandlerManager::setHandlerControl(new_han, control);
@@ -64,8 +68,8 @@ namespace vt {
   debug_print(
     handler, node,
     "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={},"
-    " id={:x}, control={:x}, han={:x}\n",
-    is_functor, is_auto, is_objgroup, id, control, new_han
+    " id={:x}, control={:x}, han={:x}, is_trace={}\n",
+    is_functor, is_auto, is_objgroup, id, control, new_han, is_trace
   );
 
   return new_han;
@@ -130,6 +134,18 @@ namespace vt {
 /*static*/ bool HandlerManager::isHandlerObjGroup(HandlerType han) {
   return BitPackerType::boolGetField<HandlerBitsType::ObjGroup>(han);
 }
+
+#if backend_check_enabled(trace_enabled)
+/*static*/ bool HandlerManager::isHandlerTrace(HandlerType han) {
+  return BitPackerType::boolGetField<HandlerBitsType::Trace>(han);
+}
+
+/*static*/ void HandlerManager::setHandlerTrace(
+  HandlerType& han, bool is_trace
+) {
+  BitPackerType::boolSetField<HandlerBitsType::Trace>(han, is_trace);
+}
+#endif
 
 } // end namespace vt
 

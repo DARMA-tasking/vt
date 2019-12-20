@@ -186,6 +186,9 @@ inline void envelopeSetPriorityLevel(Env& env, PriorityLevelType priority_level)
  */
 template <typename Env>
 inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt);
+
+template <typename Env>
+inline void envelopeSetTraceThis(Env& env, bool in);
 #endif
 
 } /* end namespace vt */

@@ -71,7 +71,12 @@ template <typename MsgT, typename ElementT>
     trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, reg_enum
     );
-    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
+    // Note: get the event from the envelope to get the semantic connection for
+    // collections---no the current thing running in the queue
+    //
+    // theMsg()->getCurrentTraceEvent();
+    //
+    trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
     auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
     auto const from_node = from != uninitialized_destination ? from : ctx_node;
 
