@@ -1,6 +1,7 @@
 # *vt* => virtual transport
 
 ![Build Status](https://travis-ci.com/DARMA-tasking/vt.svg?branch=develop)
+[![Codacy Badge][codacy-badge]][codacy-link]
 
 ## Introduction : What is *vt*?
 
