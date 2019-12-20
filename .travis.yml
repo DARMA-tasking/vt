@@ -131,7 +131,6 @@ script:
 #- travis_wait 50 ninja -GNinja
 - make -j2
 - make test
-
 after_success:
 - export CODECOV_TOKEN="bc653fec-7e2c-412a-8b4f-b6db6d703a02"
 - lcov --capture --directory . --output-file coverage.info
