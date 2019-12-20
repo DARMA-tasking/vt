@@ -1,0 +1,10 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    
+    runs:
+      using: 'docker'
+      image: 'Dockerfile'
