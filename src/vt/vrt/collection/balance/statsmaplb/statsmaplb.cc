@@ -50,6 +50,8 @@
 #include "vt/context/context.h"
 
 #include <iostream>
+#include <unordered_map>
+
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -78,7 +80,7 @@ void StatsMapLB::runLB() {
   vtAssertExpr(balance::StatsLBReader::user_specified_map_changed_.size() > phase_);
   vtAssertExpr(balance::ProcStats::proc_comm_.size() > phase_);
 
-  auto const &currentTempID = balance::ProcStats::proc_data_[phase_];
+  auto const &currentTempID = balance::ProcStats::proc_data_[phase_]; /* std::unordered_map */
   auto const &nextPermID = balance::StatsLBReader::user_specified_map_changed_[phase_];
 
   auto const& in_load_stats = balance::ProcStats::proc_data_[phase_];
@@ -86,19 +88,71 @@ void StatsMapLB::runLB() {
 
   auto const& this_node = theContext()->getNode();
 
-  auto epoch = startMigrationCollective();
-  theMsg()->pushEpoch(epoch);
+  if (this_node == 0) {
+    std::cout << " ----------------- \n";
+    for (auto itmp : balance::ProcStats::proc_temp_to_perm_) {
+      std::cout << " node " << this_node << " tempID " << itmp.first << " permID " << itmp.second
+                << std::endl;
+    }
+    std::cout << " -0-0-0-0-0-0-0-0-0-0- \n";
+  }
 
+  std::set<balance::ElementIDType> currentPermID;
   for (auto itmp : currentTempID) {
     auto iter = balance::ProcStats::proc_temp_to_perm_.find(itmp.first);
     if (iter == balance::ProcStats::proc_temp_to_perm_.end()) {
       vtAssert(false, "Temp ID must exist!");
     }
-    auto myPermID = iter->second;
-    if (nextPermID.count(myPermID) > 0) {
-      migrateObjectTo(itmp.first, this_node);
+    currentPermID.insert(iter->second);
+  }
+
+  if (this_node == 0) {
+    std::cout << " ----------------- \n";
+    for (auto itmp : currentPermID) {
+      std::cout << " node " << this_node << " PERM_ID " << itmp
+                << std::endl;
+    }
+    std::cout << " -0-0-0-0-0-0-0-0-0-0- \n";
+  }
+
+  //// UH
+  /// E_{t}   = Stay_{t} + Leave_{t}
+  /// E_{t+1} = Stay_{t} + Come_{t}
+  /// What if I make the next temp ID array?
+  /// Migrate the (future) tempID to myself
+  //// UH
+
+  auto epoch = startMigrationCollective();
+  theMsg()->pushEpoch(epoch);
+
+  balance::ElementIDType nextElemID = balance::ProcStats::next_elm_;
+  for (auto itmp : nextPermID) {
+    auto iter = currentPermID.find(itmp.first);
+    if (iter == currentPermID.end()) {
+      auto elm = nextElemID++;
+      balance::ElementIDType newTmpID = (elm << 32) | this_node;
+      balance::ProcStats::proc_perm_to_temp_.insert(std::make_pair(itmp.first, newTmpID));
+      balance::ProcStats::proc_temp_to_perm_.insert(std::make_pair(newTmpID, itmp.first));
+      balance::ProcStats::proc_migrate_.emplace(
+          std::piecewise_construct,
+          std::forward_as_tuple(newTmpID),
+          std::forward_as_tuple([col_elm](NodeType node){
+            col_elm->migrate(node);
+          })
+        );
+      }
+      if (this_node == 0) {
+  std::cout << " INSERT >> node " << this_node << " tempID " << newTmpID << " permID " << itmp.first
+                << " size " << balance::ProcStats::proc_temp_to_perm_.size() << std::endl;
+      }
+      migrateObjectTo(newTmpID, this_node);
+    }
+    else {
+      auto iter = balance::ProcStats::proc_perm_to_temp_.find(itmp.first);
+      migrateObjectTo(iter->first, this_node);
     }
   }
+
 
   ///
   /// UH -- TODO Need to loop on the list of next items
