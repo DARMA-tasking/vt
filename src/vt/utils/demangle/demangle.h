@@ -130,11 +130,13 @@ struct TemplateExtract {
   }
 
   /// Given a string like 'a::b::c', return the namespace of 'a::b'.
-  /// Removes leading '&', if present (as it appears for 'values representing types').
   /// Does not strip out extra template parameterization artifacts.
+  /// Removes any leading '&', if present (as in 'values representing types').
   static std::string getNamespace(std::string const& typestr);
 
   /// Given a string like 'a::b::c', return the barename of 'c'.
+  /// Returns the bare name in absense of any namespace (eg. 'c' -> 'c').
+  /// Removes any leading '&', if present (as in 'values representing types').
   static std::string getBarename(std::string const& typestr);
 
   /// Given a string like 'void (...)' (that is, the string representation of
