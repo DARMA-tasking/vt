@@ -46,7 +46,7 @@
 #include <cstdlib>
 
 struct HelloMsg : vt::Message {
-  HelloMsg(vt::NodeType in_from) : from(in_from) { }
+  explicit HelloMsg(vt::NodeType in_from) : from(in_from) { }
 
   vt::EpochType ep = vt::no_epoch;
   vt::NodeType from = 0;
@@ -71,7 +71,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index1D> {
 };
 
 struct HelloMsg2 : vt::CollectionMessage<MyCol> {
-  HelloMsg2(vt::NodeType in_from) : from(in_from) { }
+  explicit HelloMsg2(vt::NodeType in_from) : from(in_from) { }
 
   vt::EpochType ep = vt::no_epoch;
   vt::NodeType from = 0;

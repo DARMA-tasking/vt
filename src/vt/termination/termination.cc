@@ -1154,7 +1154,7 @@ void TerminationDetector::runReleaseEpochActions(EpochType epoch) {
 void TerminationDetector::onReleaseEpoch(EpochType epoch, ActionType action) {
   // Run an action if an epoch has been released
   bool const is_dep = isDep(epoch);
-  if (not is_dep or (is_dep and epochReleased(epoch))) {
+  if (not is_dep or  epochReleased(epoch)) {
     action();
   } else {
     epoch_release_action_[epoch].push_back(action);
