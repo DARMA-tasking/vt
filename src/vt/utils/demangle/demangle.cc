@@ -82,8 +82,9 @@ TemplateExtract::lastNamedPfType(std::string const& pf, std::string const& tpara
 
 // Given a::b or a::b<c::d> or a<>::b<c>, eg. determines the
 // starting position at which it can be a namespace vs class.
-// That is, the starting position of the rightmost "::" that
+// That is, the STARTING position of the rightmost "::" that
 // is not located inside angle brackets
+// If there is no namespace the result will not start with a "::".
 size_t getNameDivide(
  std::string const& str,
  size_t best, size_t start, size_t depth
@@ -133,12 +134,13 @@ TemplateExtract::getBarename(std::string const& typestr) {
   size_t s = skipTypePrefix(typestr);
   size_t d = getNameDivide(typestr, s, s, 0);
 
-  // skip "::" divider
-  d += 2;
-  if (d >= typestr.length())
-    return typestr;
-
-  return typestr.substr(d, std::string::npos);
+  if (typestr.substr(d, 2) == "::") {
+    // skip "::" divider
+    return typestr.substr(d + 2, std::string::npos);
+  } else {
+    // Namespace is not present - already bare.
+    return typestr.substr(d, std::string::npos);
+  }
 }
 
 /*static*/ std::string
