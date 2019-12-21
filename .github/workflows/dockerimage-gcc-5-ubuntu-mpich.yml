@@ -1,4 +1,4 @@
-name: Docker Image CI for PR tests (clang 8, alpine, mpich)
+name: PR tests (gcc-5, ubuntu, mpich)
 
 on: [pull_request]
 
