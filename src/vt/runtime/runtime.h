@@ -65,13 +65,31 @@ struct Runtime {
   using ComponentPtrType = std::unique_ptr<ComponentT>;
   using ArgType = vt::arguments::ArgConfig;
 
+  /// \brief Constructor for Runtime object
+  ///
+  /// \param argc
+  /// \param argv
+  /// \param in_num_workers
+  /// \param interop_mode
+  /// \param in_comm
+  /// \param in_instance
+  ///
+  /// \note The command line arguments (argc, argv) will get parsed.
+  ///
   Runtime(
     int& argc, char**& argv,
     WorkerCountType in_num_workers = no_workers, bool const interop_mode = false,
     MPI_Comm* in_comm = nullptr,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
-
+  /// \brief Constructor for Runtime object.
+  ///
+  /// \param interop_mode
+  /// \param in_instance
+  ///
+  /// \note No action is done during the creation of the object.
+  /// In particular, this routine will not parse the command line arguments.
+  ///
   explicit Runtime(
     bool const interop_mode = false,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance);
