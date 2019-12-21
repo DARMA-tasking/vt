@@ -1,0 +1,27 @@
+name: Docker Image CI
+
+on: [push]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Docker Build & Push
+        uses: mr-smithers-excellent/docker-build-push@v1.0
+        with:
+            # Name of the Docker image
+            image: lifflander1/vt
+            # Tag override for Docker image
+            tag: build-$(date +%s) # optional
+            # Target Docker registry
+            registry: docker.io
+            # Location of Dockerfile, if not Dockerfile in root directory
+            dockerfile: Dockerfile # optional, default is Dockerfile
+            # Docker registry username
+            username: ${{ secrets.DOCKER_USERNAME }} # optional
+            # Docker registry password
+            password: ${{ secrets.DOCKER_PASSWORD }} # optional
