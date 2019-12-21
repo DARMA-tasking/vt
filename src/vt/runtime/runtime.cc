@@ -91,13 +91,25 @@ Runtime::Runtime(
   bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
-     user_argv_(argv)
+     user_argv_(argv), parsed_arg_(false)
 {
+  parseAndSetup(argc, argv);
+  sig_user_1_ = false;
+}
+
+Runtime::Runtime(bool const interop_mode, RuntimeInstType const in_instance)
+  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
+    num_workers_(no_workers), communicator_(nullptr), user_argc_(0),
+    user_argv_(nullptr), parsed_arg_(false) {
+  sig_user_1_ = false;
+}
+
+void Runtime::parseAndSetup(int& argc, char**& argv) {
   ArgType::parse(argc, argv);
+  parsed_arg_ = true;
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
-  sig_user_1_ = false;
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
@@ -800,6 +812,11 @@ void Runtime::checkForArgumentErrors() {
 }
 
 bool Runtime::initialize(bool const force_now) {
+  //--- Test whether (command-line, input file) arguments
+  //--- have been parsed.
+  if (!parsed_arg_)
+    return false;
+  //
   if (force_now) {
     initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();

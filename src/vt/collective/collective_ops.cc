@@ -82,6 +82,36 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
 }
 
 template <runtime::RuntimeInstType instance>
+RuntimePtrType CollectiveAnyOps<instance>::allocate(
+  bool is_interop,
+  WorkerCountType const num_workers,
+  MPI_Comm* comm
+) {
+  using vt::runtime::RuntimeInst;
+  using vt::runtime::Runtime;
+  using vt::runtime::eRuntimeInstance;
+
+#pragma sst global rt
+  RuntimeInst<instance>::rt = std::make_unique<Runtime>(is_interop);
+
+#pragma sst global rt
+  auto rt_ptr = RuntimeInst<instance>::rt.get();
+  if (instance == runtime::RuntimeInstType::DefaultInstance) {
+    // Set global variable for default instance for backward compatibility
+    ::vt::rt = rt_ptr;
+    curRT = rt_ptr;
+  }
+
+#pragma sst global rt
+  RuntimeInst<instance>::rt->setMPIComm(comm);
+
+#pragma sst global rt
+  RuntimeInst<instance>::rt->setNumWorkers(num_workers);
+
+  return runtime::makeRuntimePtr(rt_ptr);
+}
+
+template <runtime::RuntimeInstType instance>
 void CollectiveAnyOps<instance>::setCurrentRuntimeTLS(RuntimeUnsafePtrType in) {
   bool const has_rt = in != nullptr;
   auto rt_use = has_rt ? in : ::vt::rt;
