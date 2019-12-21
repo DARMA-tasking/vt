@@ -1,4 +1,4 @@
-name: Docker CI PR tests (alpine, clang-8, mpich)
+name: Docker CI PR tests (alpine, clang-8, mpich, trace, LB)
 
 on: [pull_request]
 
