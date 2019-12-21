@@ -1,11 +1,14 @@
 FROM lifflander1/vt:alpine-final
 MAINTAINER Jonathan Lifflander <jliffla@sandia.gov>
 
+COPY . /usr/src/vt/
+
 WORKDIR /usr/src
 
 RUN /bin/bash -c 'source $HOME/.bashrc && \
  source /usr/share/spack/share/spack/setup-env.sh && \
  spack env activate clang-mpich && \
+  ls /usr/src/vt && \
  export CC=clang && \
  export CXX=clang++ && \
  echo $HTTP_PROXY && \
@@ -22,18 +25,15 @@ RUN /bin/bash -c 'source $HOME/.bashrc && \
  unset ALL_PROXY && \
  if [ -d "detector" ]; then rm -Rf detector; fi && \
  if [ -d "checkpoint" ]; then rm -Rf checkpoint; fi && \
- if [ -d "vt" ]; then rm -Rf vt; fi && \
  git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git && \
  export CHECKPOINT=$PWD/checkpoint && \
  export CHECKPOINT_BUILD=/usr/build/checkpoint && \
  git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git && \
  export DETECTOR=$PWD/detector && \
  export DETECTOR_BUILD=/usr/build/detector && \
- git clone -b develop https://github.com/DARMA-tasking/vt.git && \
- export VT=$PWD/vt && \
+ export VT=/usr/src/vt && \
  export VT_BUILD=/usr/build/vt && \
  echo $SOURCE_COMMIT && \
- cd $VT && git checkout $SOURCE_COMMIT && \
  cd $DETECTOR_BUILD && \
  mkdir build && \
  cd build && \
