@@ -62,6 +62,8 @@
 
 namespace vt { namespace term {
 
+using ArgType = vt::arguments::ArgConfig;
+
 static EpochType const arch_epoch_coll = 0ull;
 
 TerminationDetector::TerminationDetector()

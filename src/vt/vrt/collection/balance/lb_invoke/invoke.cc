@@ -57,6 +57,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+using ArgType = vt::arguments::ArgConfig;
+
 /*static*/ objgroup::proxy::Proxy<LBManager> LBManager::proxy_;
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {

@@ -51,6 +51,8 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+using ArgType = vt::arguments::ArgConfig;
+
 CollectionManager::CollectionManager() {
   balance::LBManager::init();
 }
