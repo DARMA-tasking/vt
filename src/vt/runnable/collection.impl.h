@@ -62,7 +62,9 @@ template <typename MsgT, typename ElementT>
   HandlerType handler, MsgT* msg, ElementT* elm, NodeType from,
   bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
 ) {
-  #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
+  trace::TraceProcessingTag processing_tag;
+  {
     auto reg_enum = member ?
       auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
       auto_registry::RegistryTypeEnum::RegVrtCollection;
@@ -72,15 +74,16 @@ template <typename MsgT, typename ElementT>
     trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
     auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
     auto const from_node = from != uninitialized_destination ? from : ctx_node;
-  #endif
 
-  #if backend_check_enabled(trace_enabled)
     auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
-    theTrace()->beginProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
+
+    processing_tag =
+      theTrace()->beginProcessing(
+        trace_id, msg_size, trace_event, from_node,
+        trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
+      );
+  }
+#endif
 
   if (member) {
     auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
@@ -90,12 +93,9 @@ template <typename MsgT, typename ElementT>
     func(msg, elm);
   };
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
+#if backend_check_enabled(trace_enabled)
+  theTrace()->endProcessing(processing_tag);
+#endif
 }
 
 }} /* end namespace vt::runnable */

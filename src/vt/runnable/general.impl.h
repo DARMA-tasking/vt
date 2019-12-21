@@ -74,7 +74,9 @@ template <typename MsgT>
     return runObj(handler, msg, from_node);
   }
 
-  #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
+  trace::TraceProcessingTag processing_tag;
+  {
     trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, auto_registry::RegistryTypeEnum::RegGeneral
     );
@@ -82,12 +84,12 @@ template <typename MsgT>
     if (msg) {
       trace_event = envelopeGetTraceEvent(msg->env);
     }
-  #endif
+    size_t msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
 
-  #if backend_check_enabled(trace_enabled)
-    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
-    theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
-  #endif
+    processing_tag =
+      theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
+  }
+#endif
 
   bool is_functor = false;
   bool is_auto = false;
@@ -120,9 +122,9 @@ template <typename MsgT>
     func(msg);
   }
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(trace_id, msg_size, trace_event, from_node);
-  #endif
+#if backend_check_enabled(trace_enabled)
+  theTrace()->endProcessing(processing_tag);
+#endif
 }
 
 template <typename MsgT>
@@ -131,7 +133,9 @@ template <typename MsgT>
 ) {
   using HandlerManagerType = HandlerManager;
 
-  #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
+  trace::TraceProcessingTag processing_tag;
+  {
     trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, auto_registry::RegistryTypeEnum::RegObjGroup
     );
@@ -139,21 +143,21 @@ template <typename MsgT>
     if (msg) {
       trace_event = envelopeGetTraceEvent(msg->env);
     }
-  #endif
+    size_t msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
 
-  #if backend_check_enabled(trace_enabled)
-    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
-    theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
-  #endif
+    processing_tag =
+      theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
+  }
+#endif
 
   bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
   vtAssert(is_obj, "Must be an object group handler");
   auto pmsg = promoteMsg(msg);
   objgroup::dispatchObjGroup(pmsg.template toVirtual<ShortMessage>(),handler);
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(trace_id, msg_size, trace_event, from_node);
-  #endif
+#if backend_check_enabled(trace_enabled)
+  theTrace()->endProcessing(processing_tag);
+#endif
 }
 
 /*static*/ inline void RunnableVoid::run(
