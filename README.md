@@ -3,6 +3,7 @@
 ![Build Status](https://travis-ci.com/DARMA-tasking/vt.svg?branch=develop)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e21fba68df8947ecb9a9c51b5e159e56)](https://www.codacy.com/gh/DARMA-tasking/vt?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DARMA-tasking/vt&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/DARMA-tasking/vt/branch/develop/graph/badge.svg)](https://codecov.io/gh/DARMA-tasking/vt)
+![](https://github.com/DARMA-tasking/vt/workflows/Docker%20Image%20CI/badge.svg)
 
 ## Introduction : What is *vt*?
 
