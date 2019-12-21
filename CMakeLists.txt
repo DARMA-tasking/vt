@@ -30,6 +30,8 @@ if(CODE_COVERAGE_ENABLED)
     include(cmake/code_coverage.cmake)
 endif(CODE_COVERAGE_ENABLED)
 
+option(MPI_EXTRA_FLAGS "Extra flags to pass to MPI" OFF)
+
 set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)

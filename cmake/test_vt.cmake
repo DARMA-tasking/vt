@@ -43,7 +43,7 @@ function(run_executable_with_mpi)
     COMMAND
       ${MPI_RUN_COMMAND}
       ${MPI_NUMPROC_FLAG} ${ARG_TARGET_NPROC}
-      ${MPI_PRE_FLAGS}
+      ${MPI_PRE_FLAGS} ${MPI_EXTRA_FLAGS}
       ${ARG_WRAPPER_EXECUTABLE} ${ARG_WRAPPER_ARGS} ./${ARG_TARGET_EXECUTABLE}
       ${MPI_EPI_FLAGS} ${ARG_TARGET_ARGS}
   )
