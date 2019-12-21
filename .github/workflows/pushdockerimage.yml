@@ -11,17 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Docker Build & Push
-        uses: mr-smithers-excellent/docker-build-push@v1.0
+        uses: jerray/publish-docker-action@master
         with:
             # Name of the Docker image
-            image: lifflander1/vt
-            # Tag override for Docker image
-            tag: build-$(date +%s) # optional
+            repository: lifflander1/vt
             # Target Docker registry
             registry: docker.io
-            # Location of Dockerfile, if not Dockerfile in root directory
-            dockerfile: Dockerfile # optional, default is Dockerfile
+            auto_tag: true
             # Docker registry username
-            username: ${{ secrets.DOCKER_USERNAME }} # optional
+            username: ${{ secrets.DOCKER_USERNAME }}
             # Docker registry password
-            password: ${{ secrets.DOCKER_PASSWORD }} # optional
+            password: ${{ secrets.DOCKER_PASSWORD }}
