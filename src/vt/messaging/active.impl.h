@@ -99,15 +99,13 @@ void ActiveMessenger::makeTraceCreationSend(
     auto cur_event = envelopeGetTraceEvent(msg->env);
     if (cur_event == trace::no_trace_event) {
       trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
+      trace::TraceEventIDType event = trace::no_trace_event;
       if (not is_bcast) {
-        trace::TraceEventIDType event = theTrace()->messageCreation(ep, msg_size);
-        envelopeSetTraceEvent(msg->env, event);
+        event = theTrace()->messageCreation(ep, msg_size);
       } else {
-        trace::TraceEventIDType event = theTrace()->messageCreationBcast(
-          ep, msg_size
-        );
-        envelopeSetTraceEvent(msg->env, event);
+        event = theTrace()->messageCreationBcast(ep, msg_size);
       }
+      envelopeSetTraceEvent(msg->env, event);
     }
   #endif
 }
