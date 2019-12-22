@@ -72,17 +72,42 @@ struct Log final {
     // Expected ~40 bytes
     struct SysData {
     public:
+      // "Common initial sequence"
+      LogDataType data_type = LogDataType::sys;
+      //
       TraceMsgLenType msg_len;
       uint64_t idx1;
       uint64_t idx2;
       uint64_t idx3;
       uint64_t idx4;
+
+    private:
+      friend struct Log;
+
+      SysData(
+        TraceMsgLenType msg_len,
+        uint64_t in_idx1 = 0, uint64_t in_idx2 = 0,
+        uint64_t in_idx3 = 0, uint64_t in_idx4 = 0
+      ) : msg_len(msg_len),
+          idx1(in_idx1), idx2(in_idx2), idx3(in_idx3), idx4(in_idx4)
+      {
+      }
+
+      SysData() = delete; // prevent ctor looking like value-init
+      SysData(SysData const& in) = default;
+      SysData(SysData&& in) = default;
+      SysData& operator=(SysData const& in) = default;
+      SysData& operator=(SysData&& in) = default;
+
     } sys;
 
     // User event data; cannot be used in 'normal events'.
-    // Extra hoopla for non-trivial std::string type involved.
+    // Placement-new usages for non-trivial std::string type involved.
     // Expected ~30-40 bytes.
     struct UserData {
+      // "Common initial sequence"
+      LogDataType data_type = LogDataType::user;
+      //
       std::string user_note;
       UserDataType user_data;
       UserEventIDType user_event;
@@ -102,20 +127,18 @@ struct Log final {
       {
       }
 
+      // Assigned via placement-new ctors (only)
+      UserData() = delete;
       UserData(UserData const&) = default;
       UserData(UserData&&) = default;
-
-      // Assigned via placement-new ctors
-      UserData() = delete;
       UserData& operator=(UserData const&) = delete;
       UserData& operator=(UserData&&) = delete;
 
-      ~UserData() = default;
     } user;
 
-    // Copy based on type
-    Data(LogDataType data_type, Data const& data) {
-      if (data_type == Log::LogDataType::user) {
+    // Copy based on type.
+    Data(Data const& data) {
+      if (data.user.data_type == Log::LogDataType::user) {
         new (&user) UserData{data.user};
       } else {
         sys = data.sys;
@@ -123,8 +146,8 @@ struct Log final {
     }
 
     // Move based on type
-    Data(LogDataType data_type, Data&& data) {
-      if (data_type == Log::LogDataType::user) {
+    Data(Data&& data) {
+      if (data.user.data_type == Log::LogDataType::user) {
         new (&user) UserData{std::move(data.user)};
       } else {
         sys = std::move(data.sys);
@@ -139,13 +162,8 @@ struct Log final {
     }
 
     ~Data() {
-      // Doesn't (can't) actually cleanup due to no access to which
-      // union member is active. See destroy() which MUST be called by ~Log().
-      // The user-defined ctor IS required as it is implicitly deleted.
-    }
-
-    inline void destroy(LogDataType in_data_type) {
-      if (in_data_type == LogDataType::user) {
+      // Can access "Common initial sequence" per C++11 6.5.2.3/6
+      if (user.data_type == LogDataType::user) {
         // Cleanup placement-new artifacts.
         user.~UserData();
       }
@@ -154,14 +172,14 @@ struct Log final {
 
   // [[deprecated]]] - use appropriate ctor
   void setUserNote(std::string const& note) {
-    if (data_type == LogDataType::user) {
+    if (data.user.data_type == LogDataType::user) {
       data.user.user_note = note;
     }
   }
 
   // [[deprecated]] - use appropriate ctor
   void setUserData(UserDataType user_data) {
-    if (data_type == LogDataType::user) {
+    if (data.user.data_type == LogDataType::user) {
       data.user.user_data = user_data;
     }
   }
@@ -176,8 +194,7 @@ struct Log final {
   ) : time(in.time), end_time(in.end_time),
       type(in.type), ep(in.ep), event(in.event),
       // copy any kind of data
-      data(in.data_type, in.data),
-      data_type(in.data_type)
+      data(in.data)
   {
   }
 
@@ -186,8 +203,7 @@ struct Log final {
   ) : time(in.time), end_time(in.end_time),
       type(in.type), ep(in.ep), event(in.event),
       // move any kind of data
-      data(in.data_type, std::move(in.data)),
-      data_type(in.data_type)
+      data(std::move(in.data))
   {
   }
 
@@ -198,8 +214,7 @@ struct Log final {
     TraceEventIDType const in_event
   ) : time(in_begin_time), end_time(in_end_time),
       type(in_type), event(in_event),
-      data(Data::UserData{in_note, 0, 0, false}),
-      data_type(LogDataType::user)
+      data(Data::UserData{in_note, 0, 0, false})
   {
   }
 
@@ -208,8 +223,7 @@ struct Log final {
       double const in_time, TraceConstantsType const in_type,
       std::string const& in_note, UserDataType in_data
   ) : time(in_time), type(in_type),
-      data(Data::UserData{in_note, 0, 0, false}),
-      data_type(LogDataType::user)
+      data(Data::UserData{in_note, 0, 0, false})
   {
   }
 
@@ -220,8 +234,7 @@ struct Log final {
     UserEventIDType in_user_event, bool in_user_start
   ) : time(in_time), type(in_type),
       node(in_node),
-      data(Data::UserData{std::string{}, 0, in_user_event, in_user_start}),
-      data_type(LogDataType::user)
+      data(Data::UserData{std::string{}, 0, in_user_event, in_user_start})
   {
   }
 
@@ -231,8 +244,7 @@ struct Log final {
     NodeType in_node
   ) : time(in_time), type(in_type),
       node(in_node),
-      data(Data::SysData{0, 0, 0, 0, 0}),
-      data_type(LogDataType::sys)
+      data(Data::SysData{0})
   {
   }
 
@@ -243,8 +255,7 @@ struct Log final {
     TraceMsgLenType const in_msg_len
   ) : time(in_time), type(in_type), ep(in_ep),
       node(in_node),
-      data(Data::SysData{in_msg_len, 0, 0, 0, 0}),
-      data_type(LogDataType::sys)
+      data(Data::SysData{in_msg_len})
   {
   }
 
@@ -254,8 +265,7 @@ struct Log final {
     Log const& in, double in_time, TraceConstantsType in_type
   ) : time(in_time), type(in_type), ep(in.ep), event(in.event),
       node(in.node),
-      data(in.sys_data()),
-      data_type(LogDataType::sys)
+      data(in.sys_data())
   {
   }
 
@@ -265,22 +275,17 @@ struct Log final {
     uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
   ) : time(in_time), type(in_type), ep(in_ep), event(in_event),
       node(in_node),
-      data(Data::SysData{in_msg_len, in_idx1, in_idx2, in_idx3, in_idx4}),
-      data_type(LogDataType::sys)
+      data(Data::SysData{in_msg_len, in_idx1, in_idx2, in_idx3, in_idx4})
   {
   }
 
-  ~Log() {
-    data.destroy(data_type);
-  }
-
   inline Data::UserData const& user_data() const {
-    assert(data_type == LogDataType::user && "Expecting user data-type");
+    assert(data.user.data_type == LogDataType::user && "Expecting user data-type");
     return data.user;
   }
 
   inline Data::SysData const& sys_data() const {
-    assert(data_type == LogDataType::sys && "Expecting sys data-type");
+    assert(data.sys.data_type == LogDataType::sys && "Expecting sys data-type");
     return data.sys;
   }
 
@@ -304,9 +309,6 @@ private:
 
   // Union of sys/user data
   /*union*/ Data data;
-
-  // Active union struct..
-  LogDataType data_type;
 };
 
 }} //end namespace vt::trace
