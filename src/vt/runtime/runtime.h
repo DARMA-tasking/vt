@@ -63,7 +63,6 @@ namespace vt { namespace runtime {
 struct Runtime {
   template <typename ComponentT>
   using ComponentPtrType = std::unique_ptr<ComponentT>;
-  using ArgType = vt::arguments::ArgConfig;
 
   /// \brief Constructor for Runtime object
   ///

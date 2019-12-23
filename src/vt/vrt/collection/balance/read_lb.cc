@@ -56,6 +56,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+using ArgVT = arguments::Args;
+
 /*static*/ std::string ReadLBSpec::filename = {};
 /*static*/ SpecIndex ReadLBSpec::num_entries_ = 0;
 /*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_mod_ = {};
@@ -64,13 +66,13 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /*static*/ bool ReadLBSpec::read_complete_ = false;
 
 /*static*/ bool ReadLBSpec::hasSpec() {
-  if (not ArgType::vt_lb_file) {
+  if (not ArgVT::config.vt_lb_file) {
     return false;
   }
   if (read_complete_) {
     return true;
   } else {
-    auto const file_name = ArgType::vt_lb_file_name;
+    auto const file_name = ArgVT::config.vt_lb_file_name;
     if (file_name == "") {
       vtAbort(
         "--vt_lb_file enabled but no file name is specified: --vt_lb_file_name"

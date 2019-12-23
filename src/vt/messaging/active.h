@@ -173,7 +173,6 @@ struct ActiveMessenger {
   using EpochStackType       = std::stack<EpochType>;
   using PendingSendType      = PendingSend;
   using ListenerType         = std::unique_ptr<Listener>;
-  using ArgType              = vt::arguments::ArgConfig;
 
   ActiveMessenger();
 

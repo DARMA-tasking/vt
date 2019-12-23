@@ -66,7 +66,7 @@ namespace vt { namespace sched {
 Scheduler::Scheduler() {
   event_triggers.resize(SchedulerEventType::SchedulerEventSize + 1);
   event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
-  progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
+  progress_time_enabled_ = arguments::Args::config.vt_sched_progress_sec != 0.0;
 }
 
 void Scheduler::enqueue(ActionType action) {
@@ -130,17 +130,17 @@ bool Scheduler::progressMsgOnlyImpl() {
 bool Scheduler::shouldCallProgress(
   int32_t processed_since_last_progress, TimeType time_since_last_progress
 ) const {
-  using ArgType   = arguments::ArgConfig;
+  using ArgVT = arguments::Args;
 
   // By default, `vt_sched_progress_han` is 0 and will happen every time we go
   // through the scheduler
-  bool k_handler_enabled = ArgType::vt_sched_progress_han != 0;
+  bool k_handler_enabled = ArgVT::config.vt_sched_progress_han != 0;
   bool k_handlers_executed =
     k_handler_enabled and
-    processed_since_last_progress >= ArgType::vt_sched_progress_han;
+    processed_since_last_progress >= ArgVT::config.vt_sched_progress_han;
   bool enough_time_passed =
     progress_time_enabled_ and
-    time_since_last_progress > ArgType::vt_sched_progress_sec;
+    time_since_last_progress > ArgVT::config.vt_sched_progress_sec;
 
   return
     (not progress_time_enabled_ and not k_handler_enabled) or
@@ -152,7 +152,7 @@ void Scheduler::runProgress(bool msg_only) {
    * Run through the progress functions `num_iter` times, making forward
    * progress on MPI
    */
-  auto const num_iter = std::max(1, arguments::ArgConfig::vt_sched_num_progress);
+  auto const num_iter = std::max(1, arguments::Args::config.vt_sched_num_progress);
   for (int i = 0; i < num_iter; i++) {
     if (msg_only) {
       // This is a special case used only during startup when other components

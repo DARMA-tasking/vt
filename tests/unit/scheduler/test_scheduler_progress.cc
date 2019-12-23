@@ -53,6 +53,8 @@
 
 namespace vt { namespace tests { namespace unit {
 
+using ArgVT = vt::arguments::Args;
+
 struct TestSchedProgress : TestParallelHarness { };
 
 TEST_F(TestSchedProgress, test_scheduler_progress_1) {
@@ -61,8 +63,8 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
   using namespace std::chrono_literals;
 
   // Run the progress function every second at least
-  vt::arguments::ArgConfig::vt_sched_progress_han = 0;
-  vt::arguments::ArgConfig::vt_sched_progress_sec = 1.0;
+  ArgVT::config.vt_sched_progress_han = 0;
+  ArgVT::config.vt_sched_progress_sec = 1.0;
 
   bool done = false;
 
@@ -77,7 +79,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
 
   // Fill the queue with a second amount of work, in smaller increments to see
   // if progress triggers too early
-  for (int i = 0; i < vt::arguments::ArgConfig::vt_sched_progress_sec / 0.05; i++) {
+  for (int i = 0; i < ArgVT::config.vt_sched_progress_sec / 0.05; i++) {
     testSched->enqueue([]{ sleep_for(50ms); });
   }
 
@@ -88,12 +90,12 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
   // This ought to take close to a second
   EXPECT_GT(
     vt::timing::Timing::getCurrentTime() - cur_time,
-    vt::arguments::ArgConfig::vt_sched_progress_sec * fudge
+    ArgVT::config.vt_sched_progress_sec * fudge
   );
 
   // Switch back to default scheduler settings (to not slow down other tests)
-  vt::arguments::ArgConfig::vt_sched_progress_han = 0;
-  vt::arguments::ArgConfig::vt_sched_progress_sec = 0.0;
+  ArgVT::config.vt_sched_progress_han = 0;
+  ArgVT::config.vt_sched_progress_sec = 0.0;
 }
 
 TEST_F(TestSchedProgress, test_scheduler_progress_2) {
@@ -102,8 +104,8 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
   using namespace std::chrono_literals;
 
   // Run scheduler every 10 handlers at least
-  vt::arguments::ArgConfig::vt_sched_progress_han = 10;
-  vt::arguments::ArgConfig::vt_sched_progress_sec = 0.0;
+  ArgVT::config.vt_sched_progress_han = 10;
+  ArgVT::config.vt_sched_progress_sec = 0.0;
 
   bool done = false;
 
@@ -127,12 +129,12 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
   // This ought to take close to a second
   EXPECT_GT(
     vt::timing::Timing::getCurrentTime() - cur_time,
-    vt::arguments::ArgConfig::vt_sched_progress_sec * fudge
+    ArgVT::config.vt_sched_progress_sec * fudge
   );
 
   // Switch back to default scheduler settings (to not slow down other tests)
-  vt::arguments::ArgConfig::vt_sched_progress_han = 0;
-  vt::arguments::ArgConfig::vt_sched_progress_sec = 0.0;
+  ArgVT::config.vt_sched_progress_han = 0;
+  ArgVT::config.vt_sched_progress_sec = 0.0;
 }
 
 

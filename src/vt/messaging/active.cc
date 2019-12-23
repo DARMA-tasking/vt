@@ -55,11 +55,13 @@
 
 namespace vt { namespace messaging {
 
+using ArgVT = arguments::Args;
+
 ActiveMessenger::ActiveMessenger()
   : this_node_(theContext()->getNode())
 {
   #if backend_check_enabled(trace_enabled)
-    if (ArgType::vt_trace_mpi) {
+    if (ArgVT::config.vt_trace_mpi) {
       trace_irecv     = trace::registerEventCollective("MPI_Irecv");
       trace_isend     = trace::registerEventCollective("MPI_Isend");
     }
@@ -212,7 +214,7 @@ EventType ActiveMessenger::sendMsgBytes(
   {
     #if backend_check_enabled(trace_enabled)
       double tr_begin = 0;
-      if (ArgType::vt_trace_mpi) {
+      if (ArgVT::config.vt_trace_mpi) {
         tr_begin = vt::timing::Timing::getCurrentTime();
       }
     #endif
@@ -223,7 +225,7 @@ EventType ActiveMessenger::sendMsgBytes(
     );
 
     #if backend_check_enabled(trace_enabled)
-      if (ArgType::vt_trace_mpi) {
+      if (ArgVT::config.vt_trace_mpi) {
         auto tr_end = vt::timing::Timing::getCurrentTime();
         auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
         trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
@@ -336,7 +338,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   {
     #if backend_check_enabled(trace_enabled)
       double tr_begin = 0;
-      if (ArgType::vt_trace_mpi) {
+      if (ArgVT::config.vt_trace_mpi) {
         tr_begin = vt::timing::Timing::getCurrentTime();
       }
     #endif
@@ -347,7 +349,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     );
 
     #if backend_check_enabled(trace_enabled)
-      if (ArgType::vt_trace_mpi) {
+      if (ArgVT::config.vt_trace_mpi) {
         auto tr_end = vt::timing::Timing::getCurrentTime();
         auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, num_bytes);
         trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
@@ -448,7 +450,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       {
         #if backend_check_enabled(trace_enabled)
           double tr_begin = 0;
-          if (ArgType::vt_trace_mpi) {
+          if (ArgVT::config.vt_trace_mpi) {
             tr_begin = vt::timing::Timing::getCurrentTime();
           }
         #endif
@@ -459,7 +461,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         );
 
         #if backend_check_enabled(trace_enabled)
-          if (ArgType::vt_trace_mpi) {
+          if (ArgVT::config.vt_trace_mpi) {
             auto tr_end = vt::timing::Timing::getCurrentTime();
             auto tr_note = fmt::format(
               "Irecv(Data): from={}, bytes={}",
@@ -743,7 +745,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     {
       #if backend_check_enabled(trace_enabled)
         double tr_begin = 0;
-        if (ArgType::vt_trace_mpi) {
+        if (ArgVT::config.vt_trace_mpi) {
           tr_begin = vt::timing::Timing::getCurrentTime();
         }
       #endif
@@ -754,7 +756,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
       );
 
       #if backend_check_enabled(trace_enabled)
-        if (ArgType::vt_trace_mpi) {
+        if (ArgVT::config.vt_trace_mpi) {
           auto tr_end = vt::timing::Timing::getCurrentTime();
           auto tr_note = fmt::format(
             "Irecv(AM): from={}, bytes={}",

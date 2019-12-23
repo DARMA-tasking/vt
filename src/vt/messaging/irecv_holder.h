@@ -58,7 +58,7 @@ namespace vt { namespace messaging {
 
 template <typename T>
 struct IRecvHolder {
-  using ArgType = vt::arguments::ArgConfig;
+  using ArgVT = vt::arguments::Args;
 
   IRecvHolder() = default;
 
@@ -96,7 +96,7 @@ struct IRecvHolder {
         MPI_Test(&e.req, &flag, &stat);
         if (flag == 1) {
           #if backend_check_enabled(trace_enabled)
-            if (ArgType::vt_trace_mpi) {
+            if (ArgVT::config.vt_trace_mpi) {
               auto tr_note = fmt::format(
                 "Irecv completed: from={}", stat.MPI_SOURCE
               );

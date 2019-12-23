@@ -72,8 +72,7 @@ struct vt_gzFile {
   vt_gzFile(gzFile pS) : file_type(pS) { }
 };
 
-using ArgType = vt::arguments::ArgConfig;
-
+using ArgVT = vt::arguments::Args;
 using LogType = Trace::LogType;
 
 template <typename EventT>
@@ -151,11 +150,11 @@ void Trace::setupNames(
     vtAssert(false, "Must have current directory");
   }
 
-  if (ArgType::vt_trace_dir.empty()) {
+  if (ArgVT::config.vt_trace_dir.empty()) {
     full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
   }
   else {
-    full_dir_name_ = ArgType::vt_trace_dir;
+    full_dir_name_ = ArgVT::config.vt_trace_dir;
   }
 
   if (full_dir_name_[full_dir_name_.size() - 1] != '/')
@@ -174,12 +173,12 @@ void Trace::setupNames(
   auto const prog_name = pc[pc.size()-1];
 
   auto const node_str = "." + std::to_string(node) + ".log.gz";
-  if (ArgType::vt_trace_file.empty()) {
+  if (ArgVT::config.vt_trace_file.empty()) {
     full_trace_name_ = full_dir_name_ + trace_name;
     full_sts_name_   = full_dir_name_ + prog_name + ".sts";
   } else {
-    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
-    full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
+    full_trace_name_ = full_dir_name_ + ArgVT::config.vt_trace_file + node_str;
+    full_sts_name_   = full_dir_name_ + ArgVT::config.vt_trace_file + ".sts";
   }
 }
 
@@ -663,8 +662,8 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
 
   // If auto-flush, can flush immediately.
   // TODO: log time of flushing; unify with group-end.
-  if (ArgType::vt_trace_flush_size not_eq 0
-      and traces_.size() >= ArgType::vt_trace_flush_size) {
+  if (ArgVT::config.vt_trace_flush_size not_eq 0
+      and traces_.size() >= ArgVT::config.vt_trace_flush_size) {
     writeTracesFile(incremental_flush_mode);
   }
 
@@ -672,13 +671,13 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
 }
 
 /*static*/ bool Trace::traceWritingEnabled(NodeType node) {
-  return (ArgType::vt_trace
-          and (ArgType::vt_trace_mod == 0
-               or (node % ArgType::vt_trace_mod == 0)));
+  return (ArgVT::config.vt_trace
+          and (ArgVT::config.vt_trace_mod == 0
+               or (node % ArgVT::config.vt_trace_mod == 0)));
 }
 
 /*static*/ bool Trace::isStsOutputNode(NodeType node) {
-  return (ArgType::vt_trace
+  return (ArgVT::config.vt_trace
           and node == designated_root_node);
 }
 
@@ -710,7 +709,7 @@ void Trace::cleanupTracesFile() {
 }
 
 void Trace::flushTracesFile(bool useGlobalSync) {
-  if (ArgType::vt_trace_flush_size == 0) {
+  if (ArgVT::config.vt_trace_flush_size == 0) {
     // Flush the traces at the end only
     return;
   }
@@ -719,7 +718,7 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     // (Consider pushing out: barrier usages are probably domain-specific.)
     theCollective()->barrier();
   }
-  if (traces_.size() >= ArgType::vt_trace_flush_size) {
+  if (traces_.size() >= ArgVT::config.vt_trace_flush_size) {
     writeTracesFile(incremental_flush_mode);
   }
 }
