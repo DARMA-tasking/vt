@@ -44,15 +44,33 @@
 
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/args_utils.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "CLI/CLI11.hpp"
+#include "fmt/format.h"
 
 namespace vt { namespace arguments {
 
 //--- Initialization of static variables for vt::AnchorBase
+/* static */ std::map<ContextEnum, AnchorBase::OrderContextEnum>
+  AnchorBase::emap_ = {
+  {std::make_pair(ContextEnum::dFault, AnchorBase::OrderContextEnum::dFault),
+    std::make_pair(
+      ContextEnum::commandLine, AnchorBase::OrderContextEnum::commandLine),
+    std::make_pair(
+      ContextEnum::thirdParty, AnchorBase::OrderContextEnum::thirdParty)}};
+
+/* static */ std::map<ContextEnum, std::string> AnchorBase::smap_ = {
+  {std::make_pair(ContextEnum::dFault, "Default Value"),
+    std::make_pair(ContextEnum::commandLine, "Command Line"),
+    std::make_pair(ContextEnum::thirdParty, "Third-Party Context")}};
+
+
+//--- Initialization of static variables for vt::Args
 /*static*/ Configs Args::config = {};
 /*static*/ bool Args::parsed = false;
 
@@ -447,6 +465,440 @@ void Args::setup(CLI::App *app_) {
   sca->group(schedulerGroup);
   hca->group(schedulerGroup);
   kca->group(schedulerGroup);
+}
+
+
+/* ------------------------------------------------- */
+// --- Member functions for struct PrintOn
+/* ------------------------------------------------- */
+
+
+template <typename T>
+PrintOn<T>::PrintOn(Anchor<T>* opt, std::string  msg_str)
+  : option_(opt), msg_str_(std::move(msg_str)), condition_(nullptr) {}
+
+template <typename T>
+PrintOn<T>::PrintOn(
+  Anchor<T>* opt, std::string  msg_str, std::function<bool()> fun)
+  : option_(opt), msg_str_(std::move(msg_str)),
+  condition_(std::move(fun)) {}
+
+template <typename T>
+void PrintOn<T>::output() {
+
+  T setValue = option_->getValue();
+  if (setValue == option_->getDefaultValue())
+    return;
+
+  if ((condition_) && (!condition_()))
+    return;
+
+  auto green = debug::green();
+  auto red = debug::red();
+  auto reset = debug::reset();
+  auto bd_green = debug::bd_green();
+  auto magenta = debug::magenta();
+  auto vt_pre = debug::vtPre();
+
+  std::string cli_name = std::string("--") + option_->getName();
+  auto f8 = fmt::format(msg_str_, setValue);
+
+  auto f9 = fmt::format(
+    "{}Option:{} flag {}{}{} on: {}{}\n", green, reset, magenta, cli_name,
+    reset, f8, reset);
+  fmt::print("{}\t{}{}", vt_pre, f9, reset);
+}
+
+
+/* ------------------------------------------------- */
+// --- Member functions for struct PrintOnOff
+/* ------------------------------------------------- */
+
+
+template <typename T>
+PrintOnOff<T>::PrintOnOff(
+  Anchor<T>* opt, std::string msg_on, std::string msg_off)
+  : option_(opt), msg_on_(std::move(msg_on)), msg_off_(std::move(msg_off)),
+  condition_(nullptr) {}
+
+
+template <typename T>
+PrintOnOff<T>::PrintOnOff(
+  Anchor<T>* opt, std::string msg_on, std::string msg_off,
+  std::function<bool()> fun)
+  : option_(opt), msg_on_(std::move(msg_on)), msg_off_(std::move(msg_off)),
+  condition_(std::move(fun)) {}
+
+
+template <typename T>
+void PrintOnOff<T>::output() {
+
+  if ((condition_) && (!condition_()))
+    return;
+
+  auto green = debug::green();
+  auto red = debug::red();
+  auto reset = debug::reset();
+  auto bd_green = debug::bd_green();
+  auto magenta = debug::magenta();
+  auto vt_pre = debug::vtPre();
+
+  std::string cli_name = std::string("--") + option_->getName();
+  T setValue = option_->getValue();
+  const T defaultValue = option_->getDefaultValue();
+
+  if (setValue != defaultValue) {
+    if (!msg_on_.empty()) {
+      auto f_on = fmt::format(msg_on_, setValue);
+      auto f9 = fmt::format(
+        "{}Option:{} flag {}{}{} on: {}{}\n", green, reset, magenta, cli_name,
+        reset, f_on, reset);
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);
+    }
+  } else {
+    if (!msg_off_.empty()) {
+      auto f_off = fmt::format(msg_off_, setValue);
+      auto f12 = fmt::format(
+        "{}Default:{} {}, use {}{}{} to activate{}\n", green, reset, f_off,
+        magenta, cli_name, reset, reset);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+  }
+}
+
+
+/* ------------------------------------------------- */
+// --- Member functions for struct Warning
+/* ------------------------------------------------- */
+
+
+Warning::Warning(Anchor<bool>* opt, std::string compile)
+  : option_(opt), compile_(std::move(compile)), condition_(nullptr) {}
+
+Warning::Warning(
+  Anchor<bool>* opt, std::string compile, std::function<bool()> fun)
+  : option_(opt), compile_(std::move(compile)),
+  condition_(std::move(fun)) {}
+
+void Warning::output() {
+
+  if (!option_->getValue())
+    return;
+
+  if ((condition_) && (!condition_()))
+    return;
+
+  auto green = debug::green();
+  auto red = debug::red();
+  auto reset = debug::reset();
+  auto bd_green = debug::bd_green();
+  auto magenta = debug::magenta();
+  auto vt_pre = debug::vtPre();
+
+  std::string cli_name = std::string("--") + option_->getName();
+  auto fcompile = fmt::format(compile_, option_->getValue());
+  auto f9 = fmt::format(
+    "{}Warning:{} {}{}{} has no effect: compile-time"
+    " feature {}{}{} is disabled{}\n",
+    red, reset, magenta, cli_name, reset, magenta, fcompile, reset, reset);
+  fmt::print("{}\t{}{}", vt_pre, f9, reset);
+}
+
+
+/* ------------------------------------------------- */
+// --- Member functions for struct AnchorBase
+/* ------------------------------------------------- */
+
+
+AnchorBase::AnchorBase(std::string name, std::string desc, std::string grp) :
+  isResolved_(false), name_(std::move(name)), group_(std::move(grp)),
+  description_(std::move(desc)), ordering_(), needsOptOff_(), needsOptOn_(),
+  excludes_(), statusPrint_(PrintOption::never), screenPrint_()
+{
+}
+
+
+/* ------------------------------------------------- */
+// --- Member functions for struct Anchor<T>
+/* ------------------------------------------------- */
+
+
+template <typename T>
+Anchor<T>::Anchor(T& var, const std::string& name, const std::string& desc,
+  const std::string& grp
+) : AnchorBase(name, desc, grp), value_(var), specifications_(),
+    hasNewDefault_(false),
+    resolvedContext_(ContextEnum::dFault), resolvedInstance_(),
+    resolvedToDefault_(false)
+{
+  Instance<T> myCase(var, static_cast<AnchorBase*>(this));
+  specifications_.insert(std::make_pair(ContextEnum::dFault, myCase));
+  ordering_[ContextEnum::dFault] = OrderContextEnum::dFault;
+}
+
+
+template <typename T>
+void Anchor<T>::addInstance(const T& value, bool highestPrecedence) {
+  try {
+    addGeneralInstance(ContextEnum::thirdParty, value);
+  } catch (const std::exception& e) {
+    throw;
+  }
+  if (highestPrecedence)
+    setHighestPrecedence(ContextEnum::thirdParty);
+}
+
+
+template <typename T>
+void Anchor<T>::setHighestPrecedence(const ContextEnum& origin) {
+  // Reset the 'current' highest precedence
+  for (auto& entry : ordering_) {
+    if (entry.second == OrderContextEnum::MAX)
+      entry.second = emap_[entry.first];
+  }
+  ordering_[origin] = OrderContextEnum::MAX;
+}
+
+
+template <typename T>
+void Anchor<T>::setNewDefaultValue(const T& ref) {
+  //--- Context dFault always has one instance
+  //--- So the find is always successful.
+  auto iter = specifications_.find(ContextEnum::dFault);
+  (iter->second).setNewValue(ref);
+  hasNewDefault_ = true;
+}
+
+
+template <typename T>
+void Anchor<T>::setPrintOption(PrintOption po, std::function<bool()> fun) {
+  //--- Test if the 'printer' has already been set
+  //--- If so, release the previous value
+  if ((po != statusPrint_) && (screenPrint_)) {
+    auto* ptr = screenPrint_.release();
+    delete ptr;
+  }
+  //
+  statusPrint_ = po;
+  //
+  auto desc = getDescription();
+  if (statusPrint_ == PrintOption::whenSet) {
+    std::string msg = "'" + desc + "'";
+    screenPrint_ = std::make_unique<PrintOn<T>>(this, msg, fun);
+  }
+  //
+  setPrintOptionImpl(po, fun);
+}
+
+
+template <typename T>
+void Anchor<T>::setPrintOptionImpl(PrintOption po, std::function<bool()> fun) {}
+
+
+template <>
+void Anchor<bool>::setPrintOptionImpl(
+  PrintOption po, std::function<bool()> fun) {
+  //--- Case for a boolean flag
+  auto desc = getDescription();
+  if (statusPrint_ == PrintOption::always) {
+    std::string msg_off = "Inactive flag '" + desc + "'";
+    std::string msg_on = desc;
+    screenPrint_ = std::make_unique<PrintOnOff<bool>>(this, msg_on, msg_off, fun);
+  } else {
+    //--- We should not arrive here
+    vtAssert(
+      statusPrint_ == PrintOption::whenSet,
+      "Unexpected option for boolean flag");
+  }
+}
+
+
+template <>
+void Anchor<std::string>::setPrintOptionImpl(
+  PrintOption po, std::function<bool()> fun) {
+  //--- Case for a string option
+  auto desc = getDescription();
+  if (statusPrint_ == PrintOption::always) {
+    std::string msg_off = "Inactive option '" + desc + "'";
+    std::string msg_on = "'" + desc + "' {}";
+    screenPrint_ =
+      std::make_unique<PrintOnOff<std::string>>(this, msg_on, msg_off, fun);
+  } else {
+    //--- We should not arrive here
+    vtAssert(
+      statusPrint_ == PrintOption::whenSet,
+      "Unexpected option for string option");
+  }
+}
+
+
+template <typename T>
+std::string Anchor<T>::stringifyValue() const {
+  std::string val;
+  if (!isResolved_)
+    return val;
+  //
+  val = getDisplayValue<T>(value_);
+  //
+  return val;
+}
+
+
+template <typename T>
+void Anchor<T>::print() {
+  if (!isResolved_) {
+    std::string code = std::string(" Option ") + name_ +
+                       std::string(" should be resolved before printing.");
+    throw std::runtime_error(code);
+  }
+  //---
+  auto green = debug::green();
+  auto red = debug::red();
+  auto reset = debug::reset();
+  auto bd_green = debug::bd_green();
+  auto magenta = debug::magenta();
+  auto vt_pre = debug::vtPre();
+  //---
+  // Check whether the value should be skipped/overriden
+  for (auto opt : needsOptOn_) {
+    if ((count() > 1) && (opt->count() == 1)) {
+      auto cli_name1 = std::string("--") + name_;
+      auto cli_name2 = std::string("--") + opt->getName();
+      auto f9 = fmt::format(
+        "{}Option:{} {}{}{} skipped; it requires {}{}{} to be active\n", green,
+        reset, magenta, cli_name1, reset, magenta, cli_name2, reset);
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);
+      resetToDefault();
+    }
+  }
+  //---
+  // Check whether the value should be skipped/overriden
+  for (auto opt : needsOptOff_) {
+    if ((count() > 1) && (opt->count() > 1)) {
+      auto cli_name1 = std::string("--") + name_;
+      auto cli_name2 = std::string("--") + opt->getName();
+      auto f9 = fmt::format(
+        "{}Option:{} {}{}{} skipped; it requires {}{}{} to be deactivated\n",
+        green, reset, magenta, cli_name1, reset, magenta, cli_name2, reset);
+      fmt::print("{}\t{}{}", vt_pre, f9, reset);
+      resetToDefault();
+    }
+  }
+  //---
+  if (screenPrint_.get())
+    screenPrint_->output();
+}
+
+
+template <typename T>
+std::string Anchor<T>::stringifyContext() const {
+  std::string val;
+  if (!isResolved_)
+    return val;
+  return smap_[resolvedContext_];
+}
+
+
+template <typename T>
+const T Anchor<T>::getDefaultValue() const {
+  T val;
+  for (auto item : specifications_) {
+    if (item.first == ContextEnum::dFault) {
+      val = item.second.getValue();
+      break;
+    }
+  }
+  return val;
+}
+
+
+template <typename T>
+std::string Anchor<T>::stringifyDefault() const {
+  return getDisplayValue<T>(getDefaultValue());
+}
+
+
+template <typename T>
+void Anchor<T>::resetToDefault() {
+  value_ = getDefaultValue();
+}
+
+
+template <typename T>
+void Anchor<T>::addGeneralInstance(ContextEnum ctxt, const T& value) {
+  // Does not allow to specify a 'dFault' instance
+  if (ctxt == ContextEnum::dFault) {
+    std::string code = std::string("Anchor<T>::addGeneralInstance") +
+                       std::string("::") + std::string(" Default for ") + smap_[ctxt] +
+                       std::string(" Can Not Be Added ");
+    throw std::runtime_error(code);
+  }
+  //---
+  if (specifications_.count(ctxt) > 0) {
+    std::string code = std::string("Anchor<T>::addGeneralInstance") +
+                       std::string(" Context ") + smap_[ctxt] +
+                       std::string(" Already Inserted ");
+    throw std::runtime_error(code);
+    return;
+  }
+  Instance<T> myCase(value, static_cast<AnchorBase*>(this));
+  specifications_.insert(std::make_pair(ctxt, myCase));
+  if (
+    (ordering_.count(ctxt) == 0) || (ordering_[ctxt] != OrderContextEnum::MAX))
+    ordering_[ctxt] = emap_[ctxt];
+}
+
+
+template <typename T>
+void Anchor<T>::checkExcludes() const {
+  for (auto opt_ex : excludes_) {
+    // Check whether the 'excluded' options have specifications
+    // in addition to their default ones.
+    if ((opt_ex->count() > 1) && (this->count() > 1)) {
+      std::string code = std::string("checkExcludes") + std::string("::") +
+                         name_ + std::string(" excludes ") + opt_ex->getName();
+      throw std::runtime_error(code);
+    }
+  }
+}
+
+
+template <typename T>
+void Anchor<T>::resolve() {
+  if (isResolved_)
+    return;
+  //
+  try {
+    checkExcludes();
+  } catch (const std::exception& e) {
+    throw;
+  }
+  //
+  int cmax = 0;
+  ContextEnum rslvContext_ = ContextEnum::dFault;
+  for (const auto& iter : specifications_) {
+    auto my_ctxt = iter.first;
+    if (
+      (ordering_.count(my_ctxt) > 0) &&
+      (static_cast<int>(ordering_[my_ctxt]) > cmax)) {
+      rslvContext_ = my_ctxt;
+      resolvedInstance_ = iter.second;
+      cmax = static_cast<int>(ordering_[my_ctxt]);
+    }
+  }
+  //
+  value_ = resolvedInstance_.getValue();
+  if ((cmax <= 1) || (rslvContext_ == ContextEnum::dFault))
+    resolvedToDefault_ = true;
+  //
+  isResolved_ = true;
+}
+
+
+template <typename T>
+void Anchor<T>::setBannerMsgWarning(
+  std::string msg_compile, std::function<bool()> fun) {
+  screenPrint_ = std::make_unique<Warning>(this, msg_compile, fun);
 }
 
 }} /* end namespace vt::arguments */
