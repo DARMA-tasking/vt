@@ -53,28 +53,56 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
+/**
+ * \struct PendingClosure dependent_send_chain.h vt/messaging/dependent_send_chain.h
+ *
+ * \brief A move-only closure that holds a \c PendingSend that is typically
+ * waiting for termination of another epoch before being released
+ */
 struct PendingClosure {
+  /**
+   * \brief Construct from a \c PendingSend
+   *
+   * \param[in] in_pending the \c PendingSend waiting to be released
+   */
   explicit PendingClosure(PendingSend&& in_pending)
     : pending_(std::move(in_pending))
   { }
   PendingClosure(PendingClosure const&) = delete;
   PendingClosure(PendingClosure&& in) = default;
 
+  /**
+   * \brief Release the pending send
+   */
   void operator()() {
     pending_.release();
   }
 
 private:
-  PendingSend pending_;
+  PendingSend pending_; /**< The \c PendingSend to be released */
 };
 
+/**
+ * \struct DependentSendChain dependent_send_chain.h vt/messaging/dependent_send_chain.h
+ *
+ * \brief A sequenced chain of sends ordered by termination detection
+ */
 class DependentSendChain final {
  public:
   DependentSendChain() { }
 
-  // Add a task to the chain of work to be run in the specified epoch,
-  // with subsequent tasks dependent on all work occuring in the
-  // specified epoch
+  /**
+   * \brief Add a task to the chain for work
+   *
+   * Add a task to the chain of work to be run in the specified epoch,
+   * with subsequent tasks dependent on all work occuring in the
+   * specified epoch
+   *
+   * \param[in] new_epoch the epoch the task is being added to
+   * \param[in] link the \c PendingSend to release when complete
+   */
   void add(EpochType new_epoch, PendingSend&& link) {
     checkInit();
 
@@ -87,14 +115,25 @@ class DependentSendChain final {
     last_epoch_ = new_epoch;
   }
 
+  /**
+   * \brief Indicate that the chain is complete and should be reset
+   */
   void done() {
     reset();
   }
 
+  /**
+   * \brief Check if the chain has terminated
+   *
+   * \return whether the chain has terminated
+   */
   bool isTerminated() {
     return theTerm()->testEpochTerminated(last_epoch_) == vt::term::TermStatusEnum::Terminated;
   }
 
+  /**
+   * This structure is move-only and cannot be copied by design
+   */
   DependentSendChain            (const DependentSendChain&) = delete;
   DependentSendChain            (DependentSendChain&&)      = default;
   DependentSendChain& operator= (const DependentSendChain&) = delete;
@@ -103,6 +142,9 @@ class DependentSendChain final {
   ~DependentSendChain() = default;
 
  private:
+  /**
+   * \brief Check if the chain has been initialized or not, if not then reset it
+   */
   void checkInit() {
     // Done here rather than the constructor to make static
     // initialization of an instance safe
@@ -111,6 +153,9 @@ class DependentSendChain final {
     }
   }
 
+  /**
+   * \brief Reset the chain creating a new epoch to maintain the invariant
+   */
   void reset() {
     // Set up a 'closed' epoch so that we keep an invariant of always
     // having an epoch to call addAction on, rather than edge cases of
@@ -119,7 +164,7 @@ class DependentSendChain final {
     theTerm()->finishedEpoch(last_epoch_);
   }
 
-  EpochType last_epoch_ = no_epoch;
+  EpochType last_epoch_ = no_epoch; /**< The last epoch added to the chain */
 };
 
 }} /* end namespace vt::messaging */
