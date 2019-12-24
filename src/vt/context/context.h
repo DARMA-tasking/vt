@@ -54,33 +54,105 @@
 
 namespace vt {  namespace ctx {
 
+/** \file */
+
+/**
+ * \struct Context context.h vt/context/context.h
+ *
+ * \brief Used to obtain the current node and other context where a handler
+ * executes.
+ *
+ * Context is a core VT component that provides the ability to pass
+ * initialization arguments (through the \c vt::Runtime) and obtain info about
+ * the node on which a handler is executing or the number of nodes. It provides
+ * functionality analogous to \c MPI_Comm_size and \c MPI_Comm_rank.
+ */
 struct Context {
+  /// Constructor with interop and args, not called by the user directly
   Context(int argc, char** argv, bool const interop, MPI_Comm* comm = nullptr);
+
+  /// Constructor with only interop, not called by the user directly
   Context(bool const interop, MPI_Comm* comm = nullptr);
 
+  /**
+   * \brief Gets the current node (analagous to MPI's rank) currently being
+   * used.
+   *
+   * \see \c vt::NodeType
+   *
+   * \return the node currently being run on
+   */
   inline NodeType getNode() const { return thisNode_; }
+
+  /**
+   * \brief Get the number of nodes (analagous to MPI's num ranks) being used
+   *
+   * \see \c vt::NodeType
+   *
+   * \return the number of nodes currently being run on
+   */
   inline NodeType getNumNodes() const { return numNodes_; }
 
+  /**
+   * \brief Get the MPI communicator being used by VT in a given runtime
+   * instance
+   *
+   * \return the \c MPI_Comm being used by VT for communication
+   */
   inline MPI_Comm getComm() const { return communicator_; }
+
+  /**
+   * \brief Informs whether the MPI_Comm being used by the runtime is
+   * \c MPI_COMM_WORLD
+   *
+   * \return whether \c MPI_COMM_WORLD is being used
+   */
   inline bool isCommWorld() const { return is_comm_world_; }
 
+  /**
+   * \brief Relevant only in threaded mode (e.g., \c std::thread, or OpenMP
+   * threads), gets the number of worker threads being used on a given node
+   *
+   * \see \c vt::WorkerCountType
+   *
+   * \return the number of worker threads
+   */
   inline WorkerCountType getNumWorkers() const { return numWorkers_; }
+
+  /**
+   * \brief Informs whether VT is running threaded mode
+   *
+   * \return whether the VT runtime has workers enabled on a given node
+   */
   inline bool hasWorkers() const { return numWorkers_ != no_workers; }
+
+  /**
+   * \brief Relevant only in threaded mode (e.g., \c std::thread, or OpenMP
+   * threads), gets the current worker thread being used to execute a handler
+   *
+   * \see \c vt::WorkerIDType
+   *
+   * \return whether the worker thread ID being used, sequentially numbered
+   */
   inline WorkerIDType getWorker() const {
     return AccessClassTLS(Context, thisWorker_);
   }
 
+  /// Used to manage protected access for other VT runtime components
   friend struct ContextAttorney;
 
 protected:
+  /// Set the number of workers through the attorney (internal)
   void setNumWorkers(WorkerCountType const worker_count) {
     numWorkers_ = worker_count;
   }
+  /// Set the worker through the attorney (internal)
   void setWorker(WorkerIDType const worker) {
     AccessClassTLS(Context, thisWorker_) = worker;
   }
 
 private:
+  /// Set the default worker that runs in threaded mode
   void setDefaultWorker();
 
 private:

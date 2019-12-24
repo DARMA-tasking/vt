@@ -52,15 +52,28 @@
 
 namespace vt {  namespace ctx {
 
+/** \file */
+
+/**
+ * \struct ContextAttorney context_attorney.h vt/context/context_attorney.h
+ *
+ * \brief Used by VT internals for write access to the Context
+ *
+ * Attorney pattern to Context for setting number of workers and current worker
+ * by the runtime and other components
+ */
 struct ContextAttorney {
-  // Allow the worker or worker group to modify the contextual worker
+  /// Allow the worker to modify the contextual worker
   friend worker::WorkerGroupType;
+  /// Allow the worker group to modify the contextual worker
   friend worker::WorkerType;
-  // Allow the runtime to set the number of workers
+  /// Allow the runtime to set the number of workers
   friend runtime::Runtime;
 
 private:
+  /// Allow internal runtime to set the worker
   static void setWorker(WorkerIDType const worker);
+  /// Allow internal runtime to set the number of workers
   static void setNumWorkers(WorkerCountType const worker_count);
 };
 
