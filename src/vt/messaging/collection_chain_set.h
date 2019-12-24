@@ -58,7 +58,7 @@ namespace vt { namespace messaging {
  * \struct CollectionChainSet collection_chain_set.h vt/messaging/collection_chain_set.h
  *
  * \brief A set of chains to maintain a sequence for a set of collection
- * elements that may be local or remote
+ * elements that may be local or remote.
  *
  * Manages a set of chains (sequences) on a set of elements where this is
  * constructed. It may sequence objects that reside on this node or a remote
