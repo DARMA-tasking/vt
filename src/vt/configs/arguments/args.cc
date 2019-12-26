@@ -989,9 +989,7 @@ void PrintOn<T>::output() {
     return;
 
   auto green = debug::green();
-  auto red = debug::red();
   auto reset = debug::reset();
-  auto bd_green = debug::bd_green();
   auto magenta = debug::magenta();
   auto vt_pre = debug::vtPre();
 
