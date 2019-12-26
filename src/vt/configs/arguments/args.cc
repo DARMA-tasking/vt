@@ -146,7 +146,7 @@ void ArgsManager::initializeOutputControl()
   auto quiet = std::string("Quiet VT-output (only errors, warnings)");
   auto ptr_quiet = addFlag("vt_quiet",
     Args::config.vt_quiet, quiet, outputGroup);
-  ptr_quiet->setPrintOption(PrintOption::whenSet);
+  ptr_quiet->setPrintOption(PrintOption::whenSet, nullptr);
 }
 
 void ArgsManager::initializeSignalHandling()
@@ -1032,7 +1032,6 @@ void PrintOnOff<T>::output() {
     return;
 
   auto green = debug::green();
-  auto red = debug::red();
   auto reset = debug::reset();
   auto bd_green = debug::bd_green();
   auto magenta = debug::magenta();
@@ -1085,7 +1084,6 @@ void Warning::output() {
 
   auto red = debug::red();
   auto reset = debug::reset();
-  auto bd_green = debug::bd_green();
   auto magenta = debug::magenta();
   auto vt_pre = debug::vtPre();
 
