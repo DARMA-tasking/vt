@@ -191,8 +191,7 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
   /// \param[in] po Enum PrintOption for the anchor
   /// \param[in] fun Function returning a boolean to constraint the printing
   ///
-  virtual void
-  setPrintOption(PrintOption po, std::function<bool()> fun) = 0;
+  virtual void setPrintOption(PrintOption po, std::function<bool()> fun) = 0;
 
   /// \brief Virtual function returning resolved value
   /// \returns Resolved value
@@ -258,6 +257,13 @@ struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
   /// \param[in] grp_ String for the name of the group
   void setGroup(const std::string& grp_) { group_ = grp_; }
 
+  /// \brief Set the printing option for the anchor
+  ///
+  /// \param[in] po Enum PrintOption for the anchor
+  /// \param[in] fun Function returning a boolean to constraint the printing
+  ///
+  virtual void setPrintOptionImpl(PrintOption po, std::function<bool()> fun)=0;
+
 protected:
   /// \brief Constructor
   ///
@@ -267,14 +273,6 @@ protected:
   /// \note The anchor will be assigned to a default group, named 'Default'.
   ///
   AnchorBase(std::string name, std::string desc, std::string grp);
-
-  /// \brief Set the printing option for the anchor
-  ///
-  /// \param[in] po Enum PrintOption for the anchor
-  /// \param[in] fun Function returning a boolean to constraint the printing
-  ///
-  virtual void
-  setPrintOptionImpl(PrintOption po, std::function<bool()> fun) = 0;
 
 protected:
 
@@ -415,10 +413,8 @@ public:
   /// \note The message will be of the form
   /// "Warning: 'NAME' has no effect: compile-time feature 'MSG' is disabled"
   ///
-  void setBannerMsgWarning(std::string msg,
-    std::function<bool()> fun = nullptr);
+  void setBannerMsgWarning(std::string msg, std::function<bool()> fun=nullptr);
 
-protected:
   /// \brief Add instance from a particular context
   ///
   /// \param[in] ctxt Context for the instance
@@ -439,8 +435,6 @@ protected:
   /// \param[in] fun Function returning a boolean to constraint the printing
   ///
   void setPrintOptionImpl(PrintOption po, std::function<bool()> fun) override;
-
-//  friend struct ArgSetup;
 
 protected:
 
@@ -501,6 +495,7 @@ protected:
 
 };
 
+struct ArgsManager;
 
 struct Args {
 
@@ -509,15 +504,72 @@ public:
 
 public:
 
-  static int parse(int& argc, char**& argv);
+  /// \brief Parse the command line inputs and resolve the precedence rules
+  ///
+  /// \param[in,out] argc Number of arguments
+  /// \param[in,out] argv Array of arguments
+  ///
+  /// \note When exiting, argc and argv will be modified in presence of
+  /// redundancy.
+  ///
+  /// \note At exit, the configuration parameters will be set.
+  ///
+  static void parseAndResolve(int& argc, char**& argv);
 
   /// \brief Returns pointer to the option object for specific name.
   ///
   /// \tparam T  Template type for the value of the parameter
   /// \param[in] name Label for the parameter of interest
   /// \return Pointer to the anchor with the specified label
-//  template <typename T>
-//  std::shared_ptr<Anchor<T>> getOption(const std::string& name) const;
+  template <typename T>
+  static std::shared_ptr<Anchor<T>> getOption(const std::string& name);
+
+  /// \brief Add flag for boolean or integral flag
+  ///
+  /// \tparam T  Template type for the value of the parameter
+  /// \param[in] name Label for the parameter of interest
+  /// \param[in] anchor_value Variable to specify and whose initial value
+  ///                         defines the default value
+  /// \param[in] desc String describing the option
+  ///
+  /// \return Pointer to the anchor with the specified label
+  ///
+  /// \note Creates two instances one for the default value
+  /// (with the current value in 'anchor_value') and
+  /// one for the command line.
+  ///
+  /// \note Matches the argument interface as CLI::App
+  ///
+  template <
+    typename T,
+    typename = typename std::enable_if<
+      std::is_same<T, bool>::value || std::is_same<T, int>::value, T
+      > >
+  static std::shared_ptr<Anchor<T>> addFlag(const std::string& name,
+    T& anchor_value, const std::string& desc = {},
+    const std::string& grp = "Default");
+
+  /// \brief Add option for a specified name
+  ///
+  /// \tparam T  Template type for the value of the parameter
+  /// \param[in] name String labelling the option
+  /// \param[in] anchor_value Variable to specify and whose initial value
+  ///                         defines the default value
+  /// \param[in] desc String describing the option
+  /// \param[in] grp  String for the group owning the anchor
+  ///
+  /// \return Pointer to the anchor with the specified label
+  ///
+  /// \note Creates two instances one for the default value
+  /// (with the current value in 'anchor_value') and
+  /// one for the command line.
+  ///
+  /// \note Matches the argument interface as CLI::App
+  ///
+  template <typename T>
+  static std::shared_ptr<Anchor<T>> addOption(const std::string& name,
+    T& anchor_value, const std::string& desc = "",
+    const std::string& grp = "Default");
 
   /// \brief Set new default value for a specified name
   ///
@@ -529,9 +581,9 @@ public:
   ///
   /// \return Pointer to the anchor with the specified label
   ///
-//  template <typename T>
-//  std::shared_ptr<Anchor<T>>
-//  setNewDefaultValue(const std::string& name, const T& anchor_value);
+  template <typename T>
+  static std::shared_ptr<Anchor<T>> setNewDefaultValue(const std::string& name,
+    const T& anchor_value);
 
   //
   // --- Printing routines
@@ -539,7 +591,7 @@ public:
 
   /// \brief Print the list of options and instances
   ///
-//  void printBanner();
+  static void printBanner();
 
   /// \brief Create string to output the configuration, i.e.
   /// the values of all the options.
@@ -556,14 +608,16 @@ public:
   /// \note Creates a string in the ".INI" formatted
   /// (INI format: https://cliutils.gitlab.io/CLI11Tutorial/chapters/config.html
   /// )
-//  std::string outputConfig(
-//    bool default_also, bool write_description, std::string prefix) const;
+  static std::string outputConfig(bool default_also, bool write_description,
+    std::string prefix);
 
 private:
 
-  static bool parsed;
+  static bool parsed_;
+  static std::unique_ptr<ArgsManager> manager_;
 
-  static void setup(CLI::App *app_);
+  // \brief Routine to verify that the manager has been allocated.
+  static void checkInitialization();
 
 };
 

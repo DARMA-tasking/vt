@@ -45,6 +45,7 @@
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/configs/arguments/args_utils.h"
+#include "vt/trace/trace.h"
 
 #include <string>
 #include <utility>
@@ -72,41 +73,730 @@ namespace vt { namespace arguments {
 
 //--- Initialization of static variables for vt::Args
 /*static*/ Configs Args::config = {};
-/*static*/ bool Args::parsed = false;
+/*static*/ bool Args::parsed_ = false;
+/*static*/ std::unique_ptr<ArgsManager> Args::manager_ = {};
 
-/*static*/
-int Args::parse(int& argc, char**& argv) {
 
-  if (parsed || argc == 0 || argv == nullptr)
-    return 0;
+std::string verifyName(const std::string &name)
+{
+  int ipos = 0;
+  while (name[ipos] == '-') {
+    ipos++;
+  }
+  std::string tmpName = name.substr(ipos);
+  //
+  if (!CLI::detail::valid_name_string(tmpName)) {
+    std::string code = std::string(" Invalid Name ") + name;
+    throw std::invalid_argument(code);
+  }
+  //
+  return tmpName;
+}
 
+
+/* ------------------------------------------------- */
+// --- Member functions of ArgsManager
+/* ------------------------------------------------- */
+
+
+ArgsManager::ArgsManager(const std::string& name) :
+  app_(std::make_unique<CLI::App>(name))
+{
+  initializeOutputControl();
+  initializeSignalHandling();
+  initializeTermination();
+  initializeStackGroup();
+  initializeTracing();
+  initializeLoadBalancing();
+
+  /*
+   * Pausing flag for attaching debugger
+   */
+  auto str_pause = "Pause at Startup to Attach GDB/LLDB";
+  auto str_grp = std::string("Debugging/Launch");
+  auto ptr_pause = addFlag("vt_pause",
+    Args::config.vt_pause, str_pause, str_grp);
+  ptr_pause->setPrintOption(PrintOption::whenSet, nullptr);
+
+  initializeUserOptions();
+  initializeDebug();
+}
+
+void ArgsManager::initializeOutputControl()
+{
+  //--- Flags for controlling the colorization of output from vt
+
+  auto outputGroup = std::string("Output Control");
+
+  auto ptr_color = addFlag("vt_color",
+    Args::config.vt_color, "Colorize output", outputGroup);
+
+  auto ptr_no_color = addFlag("vt_no_color",
+    Args::config.vt_no_color, "No colored output", outputGroup);
+  ptr_no_color->setPrintOption(PrintOption::always, nullptr);
+
+  auto ptr_auto = addFlag("vt_auto_color",
+    Args::config.vt_auto_color, "Colorization of output with isatty",
+    outputGroup);
+  ptr_auto->setPrintOption(PrintOption::whenSet, nullptr);
+
+  ptr_no_color->excludes(ptr_color);
+  ptr_no_color->excludes(ptr_auto);
+
+  auto quiet = std::string("Quiet VT-output (only errors, warnings)");
+  auto ptr_quiet = addFlag("vt_quiet",
+    Args::config.vt_quiet, quiet, outputGroup);
+}
+
+void ArgsManager::initializeSignalHandling()
+{
+  //--- Flags for controlling the signals that VT tries to catch
+
+  auto signalGroup = std::string("Signal Handling");
+
+  auto no_sigint = std::string("No signal handler registration for SIGINT");
+  auto ptr_no_sigint = addFlag("vt_no_SIGINT",
+    Args::config.vt_no_sigint, no_sigint, signalGroup);
+  ptr_no_sigint->setPrintOption(PrintOption::always, nullptr);
+
+  auto no_sigsegv = std::string("No signal handler registration for SIGSEGV");
+  auto ptr_no_sigsegv = addFlag("vt_no_SIGSEGV",
+    Args::config.vt_no_sigsegv, no_sigsegv, signalGroup);
+  ptr_no_sigsegv->setPrintOption(PrintOption::always, nullptr);
+
+  auto no_terminate = std::string(
+    "No signal handler registration for std::terminate");
+  auto ptr_no_terminate = addFlag("vt_no_terminate",
+    Args::config.vt_no_terminate, no_terminate, signalGroup);
+  ptr_no_terminate->setPrintOption(PrintOption::always, nullptr);
+}
+
+void ArgsManager::initializeTermination()
+{
+  //--- Flags for controlling termination
+  auto termGroup = std::string("Termination");
+
+  auto hang = std::string("No hang detection termination");
+  auto ptr_no_detect_hang = addFlag("vt_no_detect_hang",
+    Args::config.vt_no_detect_hang, hang, termGroup);
+  ptr_no_detect_hang->setPrintOption(PrintOption::always, nullptr);
+
+  auto ds = std::string(
+    "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch "
+    "termination detection");
+  auto ptr_rooted_ds = addFlag("vt_term_rooted_use_ds",
+    Args::config.vt_term_rooted_use_ds, ds, termGroup);
+  ptr_rooted_ds->setPrintOption(PrintOption::whenSet, nullptr);
+
+  auto wave = std::string(
+    "Force use of 4-counter algorithm for rooted epoch termination detection");
+  auto ptr_rooted_wave = addFlag("vt_term_rooted_use_wave",
+    Args::config.vt_term_rooted_use_wave, wave, termGroup);
+  ptr_rooted_wave->setPrintOption(PrintOption::whenSet, nullptr);
+
+  auto hang_freq = "Number of tree traversals before detecting a hang";
+  auto ptr_hang_freq = addOption("vt_hang_freq",
+    Args::config.vt_hang_freq, hang_freq, termGroup);
+
+  auto testFcnTerm = [&]() {
+    return !Args::config.vt_no_detect_hang;
+  };
+  ptr_hang_freq->setPrintOption(PrintOption::whenSet, testFcnTerm);
+  ptr_hang_freq->needsOptionOff(ptr_no_detect_hang);
+}
+
+void ArgsManager::initializeStackGroup()
+{
+  //--- Flags to control stack dumping
+
+  auto stackGroup = std::string("Stack Dump Backtrace");
+
+  auto stack = std::string("No strack traces dump");
+  auto ptr_no_stack = addFlag("vt_no_stack",
+    Args::config.vt_no_stack, stack, stackGroup);
+  ptr_no_stack->setPrintOption(PrintOption::always, nullptr);
+
+  auto testFcnStack = [&]() { return !Args::config.vt_no_stack; };
+
+  auto warn = std::string("No stack traces dump when vtWarn(..) invoked");
+  auto ptr_no_warn_stack = addFlag("vt_no_warn_stack",
+    Args::config.vt_no_warn_stack, warn, stackGroup);
+  ptr_no_warn_stack->setPrintOption(PrintOption::whenSet, testFcnStack);
+
+  auto assert = std::string("No stack traces dump when vtAssert(..) invoked");
+  auto ptr_no_assert_stack = addFlag("vt_no_assert_stack",
+    Args::config.vt_no_assert_stack, assert, stackGroup);
+  ptr_no_assert_stack->setPrintOption(PrintOption::whenSet, testFcnStack);
+
+  auto abort = std::string("No stack traces dump when vtAbort(..) invoked");
+  auto ptr_no_abort_stack = addFlag("vt_no_abort_stack",
+    Args::config.vt_no_abort_stack, abort, stackGroup);
+  ptr_no_abort_stack->setPrintOption(PrintOption::whenSet, testFcnStack);
+
+  auto file = std::string("File for dumping stack traces");
+  auto ptr_stack_file = addOption("vt_stack_file",
+    Args::config.vt_stack_file, file, stackGroup);
+  ptr_stack_file->setPrintOption(PrintOption::whenSet, testFcnStack);
+
+  auto dir = std::string("Directory for dumping stack traces");
+  auto ptr_stack_dir = addOption("vt_stack_dir",
+    Args::config.vt_stack_dir, dir, stackGroup);
+  ptr_stack_dir->setPrintOption(PrintOption::whenSet, testFcnStack);
+
+  auto mod =
+    std::string("Modulus for dumping stack traces (node % vt_stack_mod == 0)");
+  auto ptr_stack_mod = addOption("vt_stack_mod",
+    Args::config.vt_stack_mod, mod, stackGroup);
+  ptr_stack_mod->setPrintOption(PrintOption::whenSet, testFcnStack);
+
+  //--- Constraints
+  ptr_no_warn_stack->needsOptionOff(ptr_no_stack);
+  ptr_no_assert_stack->needsOptionOff(ptr_no_stack);
+  ptr_no_abort_stack->needsOptionOff(ptr_no_stack);
+
+  ptr_stack_file->needsOptionOff(ptr_no_stack);
+  ptr_stack_dir->needsOptionOff(ptr_no_stack);
+  ptr_stack_mod->needsOptionOff(ptr_no_stack);
+}
+
+void ArgsManager::initializeTracing()
+{
+  //--- Flags to control tracing output
+  auto traceGroup = std::string("Tracing Configuration");
+
+  auto trace = "Tracing (must be compiled with trace_enabled)";
+  auto ptr_trace = addFlag("vt_trace",
+    Args::config.vt_trace, trace, traceGroup);
+
+  auto tfile = std::string("File for traces");
+  auto ptr_trace_file = addOption("vt_trace_file",
+    Args::config.vt_trace_file, tfile, traceGroup);
+
+  auto tdir = "Directory for trace files";
+  auto ptr_trace_dir = addOption("vt_trace_dir",
+    Args::config.vt_trace_dir, tdir, traceGroup);
+
+  auto tmod = "Modulus for outputting traces";
+  auto ptr_trace_mod = addOption("vt_trace_mod",
+    Args::config.vt_trace_mod, tmod, traceGroup);
+
+  ptr_trace_file->needsOptionOn(ptr_trace);
+  ptr_trace_dir->needsOptionOn(ptr_trace);
+  ptr_trace_mod->needsOptionOn(ptr_trace);
+
+#if !backend_check_enabled(trace_enabled)
+  ptr_trace->setBannerMsgWarning("trace_enabled");
+#else
+  auto testFcnTrace = [&]() { return Args::config.vt_trace; };
+  ptr_trace_file->setPrintOption(PrintOption::whenSet, testFcnTrace);
+  ptr_trace_dir->setPrintOption(PrintOption::whenSet, testFcnTrace);
+  ptr_trace_mod->setPrintOption(PrintOption::whenSet, testFcnTrace);
+#endif
+}
+
+void ArgsManager::initializeLoadBalancing()
+{
+  //--- Flags for enabling load balancing and configuring it
+  auto str_lbGroup = std::string("Load Balancing");
+
+  auto str_lb = std::string("Load balancing");
+  auto ptr_lb = addFlag("vt_lb", Args::config.vt_lb, str_lb, str_lbGroup);
+
+  auto str_lb_stats = std::string("Load balancing statistics");
+  auto ptr_lb_stats = addFlag("vt_lb_stats",
+    Args::config.vt_lb_stats, str_lb_stats, str_lbGroup);
+
+  auto lb_quiet = std::string("Silence load balancing output");
+  auto ptr_lb_quiet = addFlag("vt_lb_quiet",
+    Args::config.vt_lb_quiet, lb_quiet, str_lbGroup);
+
+  auto lb_file = std::string("Enable reading LB configuration from file");
+  auto ptr_lb_file = addFlag("vt_lb_file",
+    Args::config.vt_lb_file, lb_file, str_lbGroup);
+
+  auto lb_file_name = std::string("LB configuration file to read");
+  auto ptr_lb_file_name = addOption("vt_lb_file_name",
+    Args::config.vt_lb_file_name, lb_file_name, str_lbGroup);
+
+  auto lb_name = std::string("Name of the load balancer to use");
+  auto ptr_lb_name = addOption("vt_lb_name",
+    Args::config.vt_lb_name, lb_name, str_lbGroup);
+
+  auto lb_interval = std::string("Load balancing interval");
+  auto ptr_lb_interval = addOption("vt_lb_interval",
+    Args::config.vt_lb_interval, lb_interval, str_lbGroup);
+
+  auto lb_stats_dir = std::string("Load balancing statistics output directory");
+  auto ptr_lb_stats_dir = addOption("vt_lb_stats_dir",
+    Args::config.vt_lb_stats_dir, lb_stats_dir, str_lbGroup);
+
+  auto lb_stats_file = std::string("Load balancing statistics output file name");
+  auto ptr_lb_stats_file = addOption("vt_lb_stats_file",
+    Args::config.vt_lb_stats_file, lb_stats_file, str_lbGroup);
+
+#if !backend_check_enabled(lblite)
+  ptr_lb->setBannerMsgWarning("lblite");
+  ptr_lb_stats->setBannerMsgWarning("lblite");
+#else
+  ptr_lb->setPrintOption(PrintOption::always, nullptr);
+  auto testFcnLB = [&]() { return (Args::config.vt_lb == true); };
+
+  ptr_lb_quiet->setPrintOption(PrintOption::whenSet, testFcnLB);
+
+  auto testFcnLBfile = [&]() {
+    return ((Args::config.vt_lb) and (Args::config.vt_lb_file));
+  };
+  ptr_lb_file->setPrintOption(PrintOption::whenSet, testFcnLBfile);
+  ptr_lb_file_name->setPrintOption(PrintOption::whenSet, testFcnLBfile);
+
+  auto testFcnLBinput = [&]() {
+    return ((Args::config.vt_lb) and (!Args::config.vt_lb_file));
+  };
+  ptr_lb_name->setPrintOption(PrintOption::whenSet, testFcnLBinput);
+  ptr_lb_interval->setPrintOption(PrintOption::whenSet, testFcnLBinput);
+
+  ptr_lb_stats->setPrintOption(PrintOption::always, nullptr);
+
+  auto testFcnLBstats = [&]() { return Args::config.vt_lb_stats; };
+  ptr_lb_stats_dir->setPrintOption(PrintOption::whenSet, testFcnLBstats);
+  ptr_lb_stats_file->setPrintOption(PrintOption::whenSet, testFcnLBstats);
+#endif
+
+  //--- Constraints
+
+  ptr_lb_quiet->needsOptionOn(ptr_lb);
+
+  ptr_lb_file->needsOptionOn(ptr_lb);
+  ptr_lb_file_name->needsOptionOn(ptr_lb);
+
+  ptr_lb_interval->needsOptionOn(ptr_lb);
+  ptr_lb_interval->needsOptionOff(ptr_lb_file);
+
+  ptr_lb_name->needsOptionOn(ptr_lb);
+  ptr_lb_name->needsOptionOff(ptr_lb_file);
+
+  ptr_lb_stats_file->needsOptionOn(ptr_lb_stats);
+  ptr_lb_stats_dir->needsOptionOn(ptr_lb_stats);
+}
+
+void ArgsManager::initializeUserOptions()
+{
+  //
+  // User option flags for convenience; VT will parse these and the app can use
+  // them however the apps requires
+  //
+
+  auto userOpts = std::string("User Options");
+
+  auto user1 = std::string("User Option 1a (boolean)");
+  auto u1 = addFlag("vt_user_1", Args::config.vt_user_1, user1, userOpts);
+  u1->setPrintOption(PrintOption::whenSet, nullptr);
+
+  auto testFcnUser1 = [&]() { return Args::config.vt_user_1; };
+
+  auto userint1 = std::string("User Option 1b (int32_t)");
+  auto ui1 = addOption("vt_user_int_1",
+    Args::config.vt_user_int_1, userint1, userOpts);
+  ui1->setPrintOption(PrintOption::whenSet, testFcnUser1);
+
+  auto userstr1 = std::string("User Option 1c (std::string)");
+  auto us1 = addOption("vt_user_str_1",
+    Args::config.vt_user_str_1, userstr1, userOpts);
+  us1->setPrintOption(PrintOption::whenSet, testFcnUser1);
+
+  //---
+
+  auto user2 = std::string("User Option 2a (boolean)");
+  auto u2 = addFlag("vt_user_2", Args::config.vt_user_2, user2, userOpts);
+  u2->setPrintOption(PrintOption::whenSet, nullptr);
+
+  auto testFcnUser2 = [&]() { return Args::config.vt_user_2; };
+
+  auto userint2 = std::string("User Option 2b (int32_t)");
+  auto ui2 = addOption("vt_user_int_2",
+    Args::config.vt_user_int_2, userint2, userOpts);
+  ui2->setPrintOption(PrintOption::whenSet, testFcnUser2);
+
+  auto userstr2 = std::string("User Option 2c (std::string)");
+  auto us2 = addOption("vt_user_str_2",
+    Args::config.vt_user_str_2, userstr2, userOpts);
+  us2->setPrintOption(PrintOption::whenSet, testFcnUser2);
+
+  //---
+
+  auto user3 = std::string("User Option 3a (boolean)");
+  auto u3 = addFlag("vt_user_3", Args::config.vt_user_3, user3, userOpts);
+  u3->setPrintOption(PrintOption::whenSet, nullptr);
+
+  auto testFcnUser3 = [&]() { return Args::config.vt_user_3; };
+
+  auto userint3 = std::string("User Option 3b (int32_t)");
+  auto ui3 = addOption("vt_user_int_3",
+    Args::config.vt_user_int_3, userint3, userOpts);
+  ui3->setPrintOption(PrintOption::whenSet, testFcnUser3);
+
+  auto userstr3 = std::string("User Option 3c (std::string)");
+  auto us3 = addOption("vt_user_str_3",
+    Args::config.vt_user_str_3, userstr3, userOpts);
+  us3->setPrintOption(PrintOption::whenSet, testFcnUser3);
+}
+
+void ArgsManager::initializeDebug()
+{
+  /*
+   * Flags for controlling debug print output at runtime
+   */
+  std::unordered_map<
+    config::CatEnum, std::tuple<bool*, std::string, std::string>>
+    debug_flag;
+
+  debug_flag[config::none] = std::make_tuple<bool*, std::string, std::string>(
+    &Args::config.vt_debug_none, std::string("debug_none"),
+    std::string(config::PrettyPrintCat<config::none>::str));
+  debug_flag[config::gen] = std::make_tuple(
+    &Args::config.vt_debug_gen, std::string("debug_gen"),
+    std::string(config::PrettyPrintCat<config::gen>::str));
+  debug_flag[config::runtime] = std::make_tuple(
+    &Args::config.vt_debug_runtime, std::string("debug_runtime"),
+    std::string(config::PrettyPrintCat<config::runtime>::str));
+  debug_flag[config::active] = std::make_tuple(
+    &Args::config.vt_debug_active, std::string("debug_active"),
+    std::string(config::PrettyPrintCat<config::active>::str));
+  debug_flag[config::term] = std::make_tuple(
+    &Args::config.vt_debug_term, std::string("debug_term"),
+    std::string(config::PrettyPrintCat<config::term>::str));
+  debug_flag[config::termds] = std::make_tuple(
+    &Args::config.vt_debug_termds, std::string("debug_term_ds"),
+    std::string(config::PrettyPrintCat<config::termds>::str));
+  debug_flag[config::barrier] = std::make_tuple(
+    &Args::config.vt_debug_barrier, std::string("debug_barrier"),
+    std::string(config::PrettyPrintCat<config::barrier>::str));
+  debug_flag[config::event] = std::make_tuple(
+    &Args::config.vt_debug_event, std::string("debug_event"),
+    std::string(config::PrettyPrintCat<config::event>::str));
+  debug_flag[config::pipe] = std::make_tuple(
+    &Args::config.vt_debug_pipe, std::string("debug_pipe"),
+    std::string(config::PrettyPrintCat<config::pipe>::str));
+  debug_flag[config::pool] = std::make_tuple(
+    &Args::config.vt_debug_pool, std::string("debug_pool"),
+    std::string(config::PrettyPrintCat<config::pool>::str));
+  debug_flag[config::reduce] = std::make_tuple(
+    &Args::config.vt_debug_reduce, std::string("debug_reduce"),
+    std::string(config::PrettyPrintCat<config::reduce>::str));
+  debug_flag[config::rdma] = std::make_tuple(
+    &Args::config.vt_debug_rdma, std::string("debug_rdma"),
+    std::string(config::PrettyPrintCat<config::rdma>::str));
+  debug_flag[config::rdma_channel] = std::make_tuple(
+    &Args::config.vt_debug_rdma_channel, std::string("debug_rdma_channel"),
+    std::string(config::PrettyPrintCat<config::rdma_channel>::str));
+  debug_flag[config::rdma_state] = std::make_tuple(
+    &Args::config.vt_debug_rdma_state, std::string("debug_rdma_state"),
+    std::string(config::PrettyPrintCat<config::rdma_state>::str));
+  debug_flag[config::param] = std::make_tuple(
+    &Args::config.vt_debug_param, std::string("debug_param"),
+    std::string(config::PrettyPrintCat<config::param>::str));
+  debug_flag[config::handler] = std::make_tuple(
+    &Args::config.vt_debug_handler, std::string("debug_handler"),
+    std::string(config::PrettyPrintCat<config::handler>::str));
+  debug_flag[config::hierlb] = std::make_tuple(
+    &Args::config.vt_debug_hierlb, std::string("debug_hierlb"),
+    std::string(config::PrettyPrintCat<config::hierlb>::str));
+  debug_flag[config::scatter] = std::make_tuple(
+    &Args::config.vt_debug_scatter, std::string("debug_scatter"),
+    std::string(config::PrettyPrintCat<config::scatter>::str));
+  debug_flag[config::sequence] = std::make_tuple(
+    &Args::config.vt_debug_sequence, std::string("debug_sequence"),
+    std::string(config::PrettyPrintCat<config::sequence>::str));
+  debug_flag[config::sequence_vrt] = std::make_tuple(
+    &Args::config.vt_debug_sequence_vrt, std::string("debug_sequence_vrt"),
+    std::string(config::PrettyPrintCat<config::sequence_vrt>::str));
+  debug_flag[config::serial_msg] = std::make_tuple(
+    &Args::config.vt_debug_serial_msg, std::string("debug_serial_msg"),
+    std::string(config::PrettyPrintCat<config::serial_msg>::str));
+  debug_flag[config::trace] = std::make_tuple(
+    &Args::config.vt_debug_trace, std::string("debug_trace"),
+    std::string(config::PrettyPrintCat<config::trace>::str));
+  debug_flag[config::location] = std::make_tuple(
+    &Args::config.vt_debug_location, std::string("debug_location"),
+    std::string(config::PrettyPrintCat<config::location>::str));
+  debug_flag[config::lb] = std::make_tuple(
+    &Args::config.vt_debug_lb, std::string("debug_lb"),
+    std::string(config::PrettyPrintCat<config::lb>::str));
+  debug_flag[config::vrt] = std::make_tuple(
+    &Args::config.vt_debug_vrt, std::string("debug_vrt"),
+    std::string(config::PrettyPrintCat<config::vrt>::str));
+  debug_flag[config::vrt_coll] = std::make_tuple(
+    &Args::config.vt_debug_vrt_coll, std::string("debug_vrt_coll"),
+    std::string(config::PrettyPrintCat<config::vrt_coll>::str));
+  debug_flag[config::worker] = std::make_tuple(
+    &Args::config.vt_debug_worker, std::string("debug_worker"),
+    std::string(config::PrettyPrintCat<config::worker>::str));
+  debug_flag[config::group] = std::make_tuple(
+    &Args::config.vt_debug_group, std::string("debug_group"),
+    std::string(config::PrettyPrintCat<config::group>::str));
+  debug_flag[config::broadcast] = std::make_tuple(
+    &Args::config.vt_debug_broadcast, std::string("debug_broadcast"),
+    std::string(config::PrettyPrintCat<config::broadcast>::str));
+  debug_flag[config::objgroup] = std::make_tuple(
+    &Args::config.vt_debug_objgroup, std::string("debug_objgroup"),
+    std::string(config::PrettyPrintCat<config::objgroup>::str));
+
+  auto debugGroup =
+    std::string("Debug Print Configuration (must be compile-time enabled)");
+
+  auto ptr_all = addFlag("vt_debug_all",
+    Args::config.vt_debug_all, "Enable all debug prints", debugGroup);
+  ptr_all->setPrintOption(PrintOption::whenSet, nullptr);
+
+  auto ptr_verbose = addFlag("vt_debug_verbose",
+    Args::config.vt_debug_verbose, "Enable verbose debug prints",
+    debugGroup);
+  ptr_verbose->setPrintOption(PrintOption::whenSet, nullptr);
+
+  for (const auto &dcase : debug_flag) {
+    auto my_flag = dcase.second;
+    auto my_name = std::get<1>(my_flag);
+    auto my_desc = std::string("Enable ") + my_name + std::string(" = \"") +
+                   std::get<2>(my_flag) + std::string("\"");
+    auto& my_status = *(std::get<0>(my_flag));
+    auto my_vt_name = std::string("vt_") + my_name;
+    auto my_ptr = addFlag(my_vt_name, my_status, my_desc, debugGroup);
+    my_ptr->setPrintOption(PrintOption::whenSet, nullptr);
+    if (!((vt::config::DefaultConfig::category & dcase.first) != 0)) {
+      if (my_status)
+        my_ptr->setBannerMsgWarning(my_name);
+    }
+  }
+}
+
+template <typename T, typename _unused>
+std::shared_ptr<Anchor<T>> ArgsManager::addFlag(
+  const std::string& name, T& anchor_value, const std::string& desc,
+  const std::string& grp
+) {
+  std::string sname;
+  try {
+    sname = verifyName(name);
+  } catch (const std::exception& e) {
+    throw;
+  }
+
+  auto iter = options_.find(sname);
+  if (iter == options_.end()) {
+    // @todo: stop using default for warn_override and get this from runtime?
+    // @todo: Ask JL about this comment
+    auto anchor = std::make_shared<Anchor<T>>(anchor_value, sname, desc, grp);
+    options_[sname] = anchor;
+    auto aptr = anchor.get();
+    // Insert the flag into CLI app
+    addFlagToCLI<T>(aptr, sname, anchor_value, desc);
+    //
+    return anchor;
+  } else {
+    auto base = iter->second;
+    auto anchor = std::static_pointer_cast<Anchor<T>>(base);
+    return anchor;
+  }
+}
+
+template <>
+void ArgsManager::addFlagToCLI<bool>(
+  Anchor<bool>* aptr, const std::string& sname, bool& anchor_value,
+  const std::string& desc
+) {
+  CLI::callback_t fun = [aptr, &anchor_value](const CLI::results_t& res) {
+    anchor_value = true;
+    aptr->addGeneralInstance(ContextEnum::commandLine, anchor_value);
+    return (res.size() == 1);
+  };
+  std::string cli_name = std::string("--") + sname;
+  auto opt = app_->add_option(cli_name, fun, desc);
+  opt->type_size(0);
+  opt->multi_option_policy(CLI::MultiOptionPolicy::TakeLast);
+  opt->type_name(CLI::detail::type_name<bool>());
+  //
+  std::stringstream out;
+  out << anchor_value;
+  opt->default_str(out.str());
+}
+
+
+template <>
+void ArgsManager::addFlagToCLI<int>(
+  Anchor<int>* aptr, const std::string& sname, int& anchor_value,
+  const std::string& desc
+) {
+  CLI::callback_t fun = [aptr, &anchor_value](const CLI::results_t& res) {
+    anchor_value = static_cast<int>(res.size());
+    aptr->addGeneralInstance(ContextEnum::commandLine, anchor_value);
+    return true;
+  };
+  std::string cli_name = std::string("--") + sname;
+  auto opt = app_->add_option(cli_name, fun, desc);
+  opt->type_size(0);
+  opt->type_name(CLI::detail::type_name<int>());
+  //
+  std::stringstream out;
+  out << anchor_value;
+  opt->default_str(out.str());
+}
+
+template <typename T>
+std::shared_ptr<Anchor<T>> ArgsManager::addOption(
+  const std::string& name, T& anchor_value, const std::string& desc,
+  const std::string& grp
+) {
+  std::string sname;
+  try {
+    sname = verifyName(name);
+  } catch (const std::exception& e) {
+    throw;
+  }
+  auto iter = options_.find(sname);
+  if (iter == options_.end()) {
+    // @todo: stop using default for warn_override and get this from runtime?
+    // @todo: Ask JL
+    auto anchor = std::make_shared<Anchor<T>>(anchor_value, sname, desc, grp);
+    options_[sname] = anchor;
+    auto aptr = anchor.get();
+    //
+    // Insert the option into CLI app
+    //
+    CLI::callback_t fun = [aptr, &anchor_value](CLI::results_t res) {
+      bool myFlag = CLI::detail::lexical_cast(res[0], anchor_value);
+      aptr->addGeneralInstance(ContextEnum::commandLine, anchor_value);
+      return myFlag;
+    };
+    std::string cli_name = std::string("--") + sname;
+    auto opt = app_->add_option(cli_name, fun, desc, true);
+    opt->type_name(CLI::detail::type_name<T>());
+    //
+    std::stringstream out;
+    out << anchor_value;
+    opt->default_str(out.str());
+    //
+    return anchor;
+  } else {
+    auto base = iter->second;
+    auto anchor = std::static_pointer_cast<Anchor<T>>(base);
+    return anchor;
+  }
+}
+
+std::vector<std::string> ArgsManager::getGroupList() const
+{
+  std::vector<std::string> groups;
+  for (const auto& opt : options_) {
+    // Add group if it is not already in there
+    auto gval = opt.second->getGroup();
+    if (std::find(groups.begin(), groups.end(), gval) == groups.end()) {
+      groups.push_back(gval);
+    }
+  }
+  std::sort(groups.begin(), groups.end());
+  return groups;
+}
+
+std::map<std::string, std::shared_ptr<AnchorBase>> ArgsManager::getGroupOptions(
+  const std::string& gname
+) const {
+  std::map<std::string, std::shared_ptr<AnchorBase>> options;
+  for (const auto& opt : options_) {
+    // Add group if it is not already in there
+    auto gval = opt.second->getGroup();
+    if (gval == gname) {
+      options[opt.first] = opt.second;
+    }
+  }
+  return options;
+}
+
+template<typename T>
+std::shared_ptr<Anchor<T>> ArgsManager::getOption(const std::string &name) {
+  std::string sname;
+  try {
+    sname = verifyName(name);
+  } catch (const std::exception& e) {
+    throw;
+  }
+  auto iter = options_.find(sname);
+  if (iter == options_.end()) {
+    std::string code = std::string("ArgSetup::getOption") + std::string("::") +
+                       std::string(" Name ") + sname
+                       + std::string(" Does Not Exist ");
+    throw std::runtime_error(code);
+  }
+  auto base = iter->second;
+  auto anchor = std::static_pointer_cast<Anchor<T>>(base);
+  return std::shared_ptr<Anchor<T>>(anchor);
+}
+
+std::string ArgsManager::outputConfig(
+  bool default_also, bool write_description, std::string prefix
+) const {
+  auto groupList = getGroupList();
+  std::stringstream out;
+  for (const auto& gname : groupList) {
+    auto goptions = getGroupOptions(gname);
+    for (const auto& opt : goptions) {
+      std::string name = prefix + opt.first;
+      std::string value;
+      //
+      auto option = opt.second;
+      //
+      if (static_cast<int>(out.tellp()) != 0)
+        out << std::endl;
+      //
+      out << "; Group [" << option->getGroup() << "]" << std::endl;
+      //
+      if (write_description) {
+        out << "; " << CLI::detail::fix_newlines("; ", option->getDescription())
+            << std::endl;
+      }
+      //
+      if (default_also) {
+        out << "; Default Value = " << option->stringifyDefault() << std::endl;
+      }
+      //
+      if (option->isResolved()) {
+        out << "; Specified by " << option->stringifyContext() << std::endl;
+      } else {
+        out << "; Option/Flag Not Resolved " << std::endl;
+      }
+      //
+      out << option->getName() << " = " << option->stringifyValue();
+      out << std::endl;
+      //
+    }
+  }
+  return out.str();
+}
+
+void ArgsManager::parse(int &argc, char**& argv)
+{
   // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
   for (int i = argc - 1; i > 0; i--) {
     args.emplace_back(argv[i]);
   }
 
-  // fmt::print("argc={}, argv={}\n", argc, print_ptr(argv));
-
-  /* Setup the parser */
-  std::unique_ptr<CLI::App> app_ = std::make_unique<CLI::App>("vt");
-  setup(app_.get());
-
-  /* Run the parser */
+  /*
+   * Run the parser!
+   */
   app_->allow_extras(true);
   try {
     app_->parse(args);
-  } catch (CLI::Error &ex) {
-    return app_->exit(ex);
+  } catch (CLI::Error& ex) {
+    app_->exit(ex);
   }
 
   // Determine the final colorization setting.
-  if (config.vt_no_color) {
-    config.colorize_output = false;
+  if (Args::config.vt_no_color) {
+    Args::config.colorize_output = false;
   } else {
     // Otherwise, colorize.
     // (Within MPI there is no good method to auto-detect.)
-    config.colorize_output = true;
+    Args::config.colorize_output = true;
   }
 
   /*
@@ -130,341 +820,145 @@ int Args::parse(int& argc, char**& argv) {
   }
 
   // Use the saved index to setup the new_argv and new_argc
-  int new_argc = static_cast<int>(ret_args.size()) + 1;
+  size_t new_argc = ret_args.size() + 1;
   char** new_argv = new char*[new_argc + 1];
   new_argv[0] = argv[0];
-  for (int ii = 1; ii < new_argc; ii++) {
+  for (size_t ii = 1; ii < new_argc; ii++) {
     new_argv[ii] = argv[ret_idx[ii - 1]];
   }
 
   // Set them back with all vt arguments elided
-  argc = new_argc;
+  argc = static_cast<int>(new_argc);
   argv = new_argv;
+}
 
-  parsed = true;
-  return 0;
+void ArgsManager::postParsingReview()
+{
+#if backend_check_enabled(trace_enabled)
+  //--- Overwrite the default trace file and directories
+  //--- when they are the empty default values.
+  auto ptr_trace_file = getOption<std::string>("vt_trace_file");
+  if (ptr_trace_file->getValue().empty()) {
+    auto tracePtr = vt::theTrace();
+    if (tracePtr) {
+      ptr_trace_file->setNewDefaultValue(tracePtr->getTraceName());
+      ptr_trace_file->resetToDefault();
+    }
+  }
+  //
+  auto ptr_trace_dir = getOption<std::string>("vt_trace_dir");
+  if (ptr_trace_dir->getValue().empty()) {
+    auto tracePtr = vt::theTrace();
+    if (tracePtr) {
+      ptr_trace_dir->setNewDefaultValue(tracePtr->getDirectory());
+      ptr_trace_dir->resetToDefault();
+    }
+  }
+#endif
+}
+
+template <typename T>
+std::shared_ptr<Anchor<T>>
+ArgsManager::setNewDefaultValue(const std::string& name, const T& anchor_value
+) {
+  auto optPtr = getOption<T>(name);
+  if (optPtr == nullptr) {
+    std::string code = std::string("ArgSetup::setNewDefaultValue")
+                       + std::string(" Name ") + name
+                       + std::string(" Can Not Be Found ");
+    throw std::runtime_error(code);
+  }
+  optPtr->setNewDefaultValue(anchor_value);
+  return std::shared_ptr<Anchor<T>>(optPtr);
+}
+
+
+/* ------------------------------------------------- */
+// --- Member functions for struct Args
+/* ------------------------------------------------- */
+
+
+/*static*/
+void Args::parseAndResolve(int& argc, char**& argv)
+{
+  checkInitialization();
+  try {
+    Args::manager_->parse(argc, argv);
+    Args::parsed_ = true;
+    Args::manager_->resolveOptions();
+  } catch (const std::exception& e) {
+    throw;
+  }
+}
+
+/*static*/ template < typename T, typename unused>
+std::shared_ptr<Anchor<T>> Args::addFlag(
+  const std::string& name, T& anchor_value, const std::string& desc,
+  const std::string& grp
+) {
+  checkInitialization();
+  return Args::manager_->addFlag<T>(name, anchor_value, desc, grp);
+}
+
+/*static*/ template <typename T>
+std::shared_ptr<Anchor<T>> Args::addOption(
+  const std::string& name, T& anchor_value, const std::string& desc,
+  const std::string& grp
+) {
+  checkInitialization();
+  return Args::manager_->addOption<T>(name, anchor_value, desc, grp);
 }
 
 /*static*/
-void Args::setup(CLI::App *app_) {
-  /*
-   * Flags for controlling the colorization of output from vt
-   */
-  auto quiet  = "Quiet the output from vt (only errors, warnings)";
-  auto always = "Colorize output (default)";
-  auto never  = "Do not colorize output (overrides --vt_color)";
-  auto a  = app_->add_flag("-c,--vt_color",      config.vt_color,      always);
-  auto b  = app_->add_flag("-n,--vt_no_color",   config.vt_no_color,   never);
-  auto a1 = app_->add_flag("-q,--vt_quiet",      config.vt_quiet,      quiet);
-  auto outputGroup = "Output Control";
-  a->group(outputGroup);
-  b->group(outputGroup);
-  a1->group(outputGroup);
-  b->excludes(a);
+void Args::checkInitialization()
+{
+  if (!Args::manager_) {
+    Args::manager_ = std::make_unique<ArgsManager>("vt");
+  }
+}
 
-  /*
-   * Flags for controlling the signals that VT tries to catch
-   */
-  auto no_sigint      = "Do not register signal handler for SIGINT";
-  auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
-  auto no_terminate   = "Do not register handler for std::terminate";
-  auto d = app_->add_flag("--vt_no_SIGINT",    config.vt_no_sigint,    no_sigint);
-  auto e = app_->add_flag("--vt_no_SIGSEGV",   config.vt_no_sigsegv,   no_sigsegv);
-  auto f = app_->add_flag("--vt_no_terminate", config.vt_no_terminate, no_terminate);
-  auto signalGroup = "Signa Handling";
-  d->group(signalGroup);
-  e->group(signalGroup);
-  f->group(signalGroup);
+/*static*/ template<typename T>
+std::shared_ptr<Anchor<T>> Args::getOption(const std::string &name)
+{
+  checkInitialization();
+  return Args::manager_->getOption<T>(name);
+}
 
 
-  /*
-   * Flags to control stack dumping
-   */
-  auto stack  = "Do not dump stack traces";
-  auto warn   = "Do not dump stack traces when vtWarn(..) is invoked";
-  auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
-  auto abort  = "Do not dump stack traces when vtAabort(..) is invoked";
-  auto file   = "Dump stack traces to file instead of stdout";
-  auto dir    = "Name of directory to write stack files";
-  auto mod    = "Write stack dump if (node % vt_stack_mod) == 0";
-  auto g = app_->add_flag("--vt_no_warn_stack",   config.vt_no_warn_stack,   warn);
-  auto h = app_->add_flag("--vt_no_assert_stack", config.vt_no_assert_stack, assert);
-  auto i = app_->add_flag("--vt_no_abort_stack",  config.vt_no_abort_stack,  abort);
-  auto j = app_->add_flag("--vt_no_stack",        config.vt_no_stack,        stack);
-  auto k = app_->add_option("--vt_stack_file",    config.vt_stack_file,      file, "");
-  auto l = app_->add_option("--vt_stack_dir",     config.vt_stack_dir,       dir,  "");
-  auto m = app_->add_option("--vt_stack_mod",     config.vt_stack_mod,       mod,  1);
-  auto stackGroup = "Dump Stack Backtrace";
-  g->group(stackGroup);
-  h->group(stackGroup);
-  i->group(stackGroup);
-  j->group(stackGroup);
-  k->group(stackGroup);
-  l->group(stackGroup);
-  m->group(stackGroup);
+/*static*/ template <typename T>
+std::shared_ptr<Anchor<T>>
+Args::setNewDefaultValue(const std::string& name, const T& anchor_value
+) {
+  checkInitialization();
+  return Args::manager_->setNewDefaultValue<T>(name, anchor_value);
+}
 
+/*static*/
+std::string Args::outputConfig(
+  bool default_also, bool write_description, std::string prefix
+) {
+  checkInitialization();
+  return Args::manager_->outputConfig(default_also, write_description,
+    std::move(prefix));
+}
 
-  /*
-   * Flags to control tracing output
-   */
-  auto trace     = "Enable tracing (must be compiled with trace_enabled)";
-  auto trace_mpi = "Enable tracing of MPI calls (must be compiled with "
-                   "trace_enabled)";
-  auto tfile     = "Name of trace files";
-  auto tdir      = "Name of directory for trace files";
-  auto tmod      = "Output trace file if (node % vt_stack_mod) == 0";
-  auto tflushmod = "Flush output trace every (vt_trace_flush_size) trace records";
-  auto n  = app_->add_flag("--vt_trace",              config.vt_trace,           trace);
-  auto nm = app_->add_flag("--vt_trace_mpi",          config.vt_trace_mpi,       trace_mpi);
-  auto o  = app_->add_option("--vt_trace_file",       config.vt_trace_file,      tfile, "");
-  auto p  = app_->add_option("--vt_trace_dir",        config.vt_trace_dir,       tdir,  "");
-  auto q  = app_->add_option("--vt_trace_mod",        config.vt_trace_mod,       tmod,  1);
-  auto qf = app_->add_option("--vt_trace_flush_size", config.vt_trace_flush_size,tflushmod,
-                           0);
-  auto traceGroup = "Tracing Configuration";
-  n->group(traceGroup);
-  nm->group(traceGroup);
-  o->group(traceGroup);
-  p->group(traceGroup);
-  q->group(traceGroup);
-  qf->group(traceGroup);
-
-
-  /*
-   * Flags for controlling debug print output at runtime
-   */
-
-  #define debug_pp(opt) +std::string(vt::config::PrettyPrintCat<config::opt>::str)+
-
-  auto rp  = "Enable all debug prints";
-  auto rq  = "Enable verbose debug prints";
-  auto aap = "Enable debug_none         = \"" debug_pp(none)         "\"";
-  auto bap = "Enable debug_gen          = \"" debug_pp(gen)          "\"";
-  auto cap = "Enable debug_runtime      = \"" debug_pp(runtime)      "\"";
-  auto dap = "Enable debug_active       = \"" debug_pp(active)       "\"";
-  auto eap = "Enable debug_term         = \"" debug_pp(term)         "\"";
-  auto fap = "Enable debug_termds       = \"" debug_pp(termds)       "\"";
-  auto gap = "Enable debug_barrier      = \"" debug_pp(barrier)      "\"";
-  auto hap = "Enable debug_event        = \"" debug_pp(event)        "\"";
-  auto iap = "Enable debug_pipe         = \"" debug_pp(pipe)         "\"";
-  auto jap = "Enable debug_pool         = \"" debug_pp(pool)         "\"";
-  auto kap = "Enable debug_reduce       = \"" debug_pp(reduce)       "\"";
-  auto lap = "Enable debug_rdma         = \"" debug_pp(rdma)         "\"";
-  auto map = "Enable debug_rdma_channel = \"" debug_pp(rdma_channel) "\"";
-  auto nap = "Enable debug_rdma_state   = \"" debug_pp(rdma_state)   "\"";
-  auto oap = "Enable debug_param        = \"" debug_pp(param)        "\"";
-  auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
-  auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
-  auto qbp = "Enable debug_gossiplb     = \"" debug_pp(gossiplb)     "\"";
-  auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
-  auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
-  auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
-  auto uap = "Enable debug_serial_msg   = \"" debug_pp(serial_msg)   "\"";
-  auto vap = "Enable debug_trace        = \"" debug_pp(trace)        "\"";
-  auto wap = "Enable debug_location     = \"" debug_pp(location)     "\"";
-  auto xap = "Enable debug_lb           = \"" debug_pp(lb)           "\"";
-  auto yap = "Enable debug_vrt          = \"" debug_pp(vrt)          "\"";
-  auto zap = "Enable debug_vrt_coll     = \"" debug_pp(vrt_coll)     "\"";
-  auto abp = "Enable debug_worker       = \"" debug_pp(worker)       "\"";
-  auto bbp = "Enable debug_group        = \"" debug_pp(group)        "\"";
-  auto cbp = "Enable debug_broadcast    = \"" debug_pp(broadcast)    "\"";
-  auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
-
-  auto r  = app_->add_flag("--vt_debug_all",          config.vt_debug_all,          rp);
-  auto r1 = app_->add_flag("--vt_debug_verbose",      config.vt_debug_verbose,      rq);
-  auto aa = app_->add_flag("--vt_debug_none",         config.vt_debug_none,         aap);
-  auto ba = app_->add_flag("--vt_debug_gen",          config.vt_debug_gen,          bap);
-  auto ca = app_->add_flag("--vt_debug_runtime",      config.vt_debug_runtime,      cap);
-  auto da = app_->add_flag("--vt_debug_active",       config.vt_debug_active,       dap);
-  auto ea = app_->add_flag("--vt_debug_term",         config.vt_debug_term,         eap);
-  auto fa = app_->add_flag("--vt_debug_termds",       config.vt_debug_termds,       fap);
-  auto ga = app_->add_flag("--vt_debug_barrier",      config.vt_debug_barrier,      gap);
-  auto ha = app_->add_flag("--vt_debug_event",        config.vt_debug_event,        hap);
-  auto ia = app_->add_flag("--vt_debug_pipe",         config.vt_debug_pipe,         iap);
-  auto ja = app_->add_flag("--vt_debug_pool",         config.vt_debug_pool,         jap);
-  auto ka = app_->add_flag("--vt_debug_reduce",       config.vt_debug_reduce,       kap);
-  auto la = app_->add_flag("--vt_debug_rdma",         config.vt_debug_rdma,         lap);
-  auto ma = app_->add_flag("--vt_debug_rdma_channel", config.vt_debug_rdma_channel, map);
-  auto na = app_->add_flag("--vt_debug_rdma_state",   config.vt_debug_rdma_state,   nap);
-  auto oa = app_->add_flag("--vt_debug_param",        config.vt_debug_param,        oap);
-  auto pa = app_->add_flag("--vt_debug_handler",      config.vt_debug_handler,      pap);
-  auto qa = app_->add_flag("--vt_debug_hierlb",       config.vt_debug_hierlb,       qap);
-  auto qb = app_->add_flag("--vt_debug_gossiplb",     config.vt_debug_gossiplb,     qbp);
-  auto ra = app_->add_flag("--vt_debug_scatter",      config.vt_debug_scatter,      rap);
-  auto sa = app_->add_flag("--vt_debug_sequence",     config.vt_debug_sequence,     sap);
-  auto ta = app_->add_flag("--vt_debug_sequence_vrt", config.vt_debug_sequence_vrt, tap);
-  auto ua = app_->add_flag("--vt_debug_serial_msg",   config.vt_debug_serial_msg,   uap);
-  auto va = app_->add_flag("--vt_debug_trace",        config.vt_debug_trace,        vap);
-  auto wa = app_->add_flag("--vt_debug_location",     config.vt_debug_location,     wap);
-  auto xa = app_->add_flag("--vt_debug_lb",           config.vt_debug_lb,           xap);
-  auto ya = app_->add_flag("--vt_debug_vrt",          config.vt_debug_vrt,          yap);
-  auto za = app_->add_flag("--vt_debug_vrt_coll",     config.vt_debug_vrt_coll,     zap);
-  auto ab = app_->add_flag("--vt_debug_worker",       config.vt_debug_worker,       abp);
-  auto bb = app_->add_flag("--vt_debug_group",        config.vt_debug_group,        bbp);
-  auto cb = app_->add_flag("--vt_debug_broadcast",    config.vt_debug_broadcast,    cbp);
-  auto db = app_->add_flag("--vt_debug_objgroup",     config.vt_debug_objgroup,     dbp);
-  auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
-  r->group(debugGroup);
-  r1->group(debugGroup);
-  aa->group(debugGroup);
-  ba->group(debugGroup);
-  ca->group(debugGroup);
-  da->group(debugGroup);
-  ea->group(debugGroup);
-  fa->group(debugGroup);
-  ga->group(debugGroup);
-  ha->group(debugGroup);
-  ia->group(debugGroup);
-  ja->group(debugGroup);
-  ka->group(debugGroup);
-  la->group(debugGroup);
-  ma->group(debugGroup);
-  na->group(debugGroup);
-  oa->group(debugGroup);
-  pa->group(debugGroup);
-  qa->group(debugGroup);
-  qb->group(debugGroup);
-  ra->group(debugGroup);
-  sa->group(debugGroup);
-  ta->group(debugGroup);
-  ua->group(debugGroup);
-  va->group(debugGroup);
-  xa->group(debugGroup);
-  wa->group(debugGroup);
-  ya->group(debugGroup);
-  za->group(debugGroup);
-  ab->group(debugGroup);
-  bb->group(debugGroup);
-  cb->group(debugGroup);
-  db->group(debugGroup);
-
-  /*
-   * Flags for enabling load balancing and configuring it
-   */
-
-  auto lb            = "Enable load balancing";
-  auto lb_file       = "Enable reading LB configuration from file";
-  auto lb_args       = "Arguments pass to LB: \"x=0 y=1 test=2\"";
-  auto lb_quiet      = "Silence load balancing output";
-  auto lb_file_name  = "LB configuration file to read";
-  auto lb_name       = "Name of the load balancer to use";
-  auto lb_interval   = "Load balancing interval";
-  auto lb_stats      = "Enable load balancing statistics";
-  auto lb_stats_dir  = "Load balancing statistics output directory";
-  auto lb_stats_file = "Load balancing statistics output file name";
-  auto lbn = "NoLB";
-  auto lbi = 1;
-  auto lbf = "";
-  auto lbd = "vt_lb_stats";
-  auto lbs = "stats";
-  auto lba = "";
-  auto s  = app_->add_flag("--vt_lb",              config.vt_lb,             lb);
-  auto t  = app_->add_flag("--vt_lb_file",         config.vt_lb_file,        lb_file);
-  auto t1 = app_->add_flag("--vt_lb_quiet",        config.vt_lb_quiet,       lb_quiet);
-  auto u  = app_->add_option("--vt_lb_file_name",  config.vt_lb_file_name,   lb_file_name, lbf);
-  auto v  = app_->add_option("--vt_lb_name",       config.vt_lb_name,        lb_name,      lbn);
-  auto v1 = app_->add_option("--vt_lb_args",       config.vt_lb_args,        lb_args,      lba);
-  auto w  = app_->add_option("--vt_lb_interval",   config.vt_lb_interval,    lb_interval,  lbi);
-  auto ww = app_->add_flag("--vt_lb_stats",        config.vt_lb_stats,       lb_stats);
-  auto wx = app_->add_option("--vt_lb_stats_dir",  config.vt_lb_stats_dir,   lb_stats_dir, lbd);
-  auto wy = app_->add_option("--vt_lb_stats_file", config.vt_lb_stats_file,  lb_stats_file,lbs);
-  auto debugLB = "Load Balancing";
-  s->group(debugLB);
-  t->group(debugLB);
-  t1->group(debugLB);
-  u->group(debugLB);
-  v->group(debugLB);
-  v1->group(debugLB);
-  w->group(debugLB);
-  ww->group(debugLB);
-  wx->group(debugLB);
-  wy->group(debugLB);
-
-  /*
-   * Flags for controlling termination
-   */
-
-  auto hang         = "Disable termination hang detection";
-  auto hang_freq    = "The number of tree traversals before a hang is detected";
-  auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
-  auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
-  auto graph_on     = "Output epoch graph to file (DOT) when hang is detected";
-  auto terse        = "Output epoch graph to file in terse mode";
-  auto progress     = "Print termination counts when progress is stalled";
-  auto hfd          = 1024;
-  auto x  = app_->add_flag("--vt_no_detect_hang",        config.vt_no_detect_hang,       hang);
-  auto x1 = app_->add_flag("--vt_term_rooted_use_ds",    config.vt_term_rooted_use_ds,   ds);
-  auto x2 = app_->add_flag("--vt_term_rooted_use_wave",  config.vt_term_rooted_use_wave, wave);
-  auto x3 = app_->add_option("--vt_epoch_graph_on_hang", config.vt_epoch_graph_on_hang,  graph_on, true);
-  auto x4 = app_->add_flag("--vt_epoch_graph_terse",     config.vt_epoch_graph_terse,    terse);
-  auto x5 = app_->add_option("--vt_print_no_progress",   config.vt_print_no_progress,    progress, true);
-  auto y = app_->add_option("--vt_hang_freq",            config.vt_hang_freq,      hang_freq, hfd);
-  auto debugTerm = "Termination";
-  x->group(debugTerm);
-  x1->group(debugTerm);
-  x2->group(debugTerm);
-  x3->group(debugTerm);
-  x4->group(debugTerm);
-  x5->group(debugTerm);
-  y->group(debugTerm);
-
-  /*
-   * Flags for controlling termination
-   */
-
-  auto pause        = "Pause at startup so GDB/LLDB can be attached";
-  auto z = app_->add_flag("--vt_pause", config.vt_pause, pause);
-  auto launchTerm = "Debugging/Launch";
-  z->group(launchTerm);
-
-  /*
-   * User option flags for convenience; VT will parse these and the app can use
-   * them however the apps requires
-   */
-
-  auto user1    = "User Option 1a (boolean)";
-  auto user2    = "User Option 2a (boolean)";
-  auto user3    = "User Option 3a (boolean)";
-  auto userint1 = "User Option 1b (int32_t)";
-  auto userint2 = "User Option 2b (int32_t)";
-  auto userint3 = "User Option 3b (int32_t)";
-  auto userstr1 = "User Option 1c (std::string)";
-  auto userstr2 = "User Option 2c (std::string)";
-  auto userstr3 = "User Option 3c (std::string)";
-  auto u1  = app_->add_flag("--vt_user_1", config.vt_user_1, user1);
-  auto u2  = app_->add_flag("--vt_user_2", config.vt_user_2, user2);
-  auto u3  = app_->add_flag("--vt_user_3", config.vt_user_3, user3);
-  auto ui1 = app_->add_option("--vt_user_int_1", config.vt_user_int_1, userint1, 0);
-  auto ui2 = app_->add_option("--vt_user_int_2", config.vt_user_int_2, userint2, 0);
-  auto ui3 = app_->add_option("--vt_user_int_3", config.vt_user_int_3, userint3, 0);
-  auto us1 = app_->add_option("--vt_user_str_1", config.vt_user_str_1, userstr1, "");
-  auto us2 = app_->add_option("--vt_user_str_2", config.vt_user_str_2, userstr2, "");
-  auto us3 = app_->add_option("--vt_user_str_3", config.vt_user_str_3, userstr3, "");
-  auto userOpts = "User Options";
-  u1->group(userOpts);
-  u2->group(userOpts);
-  u3->group(userOpts);
-  ui1->group(userOpts);
-  ui2->group(userOpts);
-  ui3->group(userOpts);
-  us1->group(userOpts);
-  us2->group(userOpts);
-  us3->group(userOpts);
-
-  /*
-   * Options for configuring the VT scheduler
-   */
-
-  auto nsched = "Number of times to run the progress function in scheduler";
-  auto ksched = "Run the MPI progress function at least every k handlers that run";
-  auto ssched = "Run the MPI progress function at least every s seconds";
-  auto sca = app_->add_option("--vt_sched_num_progress", config.vt_sched_num_progress, nsched, 2);
-  auto hca = app_->add_option("--vt_sched_progress_han", config.vt_sched_progress_han, ksched, 0);
-  auto kca = app_->add_option("--vt_sched_progress_sec", config.vt_sched_progress_sec, ssched, 0.0);
-  auto schedulerGroup = "Scheduler Configuration";
-  sca->group(schedulerGroup);
-  hca->group(schedulerGroup);
-  kca->group(schedulerGroup);
+/*static*/
+void Args::printBanner() {
+  if (!parsed_) {
+    checkInitialization();
+    std::string msg("Parsing not Called. Will print default values.");
+    vtWarn(msg);
+  }
+  //
+  Args::manager_->postParsingReview();
+  //
+  auto groupList = Args::manager_->getGroupList();
+  for (const auto& gname : groupList) {
+    auto goptions = Args::manager_->getGroupOptions(gname);
+    for (const auto& opt : goptions) {
+      opt.second->print();
+    }
+  }
 }
 
 
@@ -715,7 +1209,8 @@ void Anchor<bool>::setPrintOptionImpl(
 
 template <>
 void Anchor<std::string>::setPrintOptionImpl(
-  PrintOption po, std::function<bool()> fun) {
+  PrintOption po, std::function<bool()> fun
+) {
   //--- Case for a string option
   auto desc = getDescription();
   if (statusPrint_ == PrintOption::always) {
@@ -829,8 +1324,8 @@ void Anchor<T>::addGeneralInstance(ContextEnum ctxt, const T& value) {
   // Does not allow to specify a 'dFault' instance
   if (ctxt == ContextEnum::dFault) {
     std::string code = std::string("Anchor<T>::addGeneralInstance") +
-                       std::string("::") + std::string(" Default for ") + smap_[ctxt] +
-                       std::string(" Can Not Be Added ");
+                       std::string("::") + std::string(" Default for ")
+                       + smap_[ctxt] + std::string(" Can Not Be Added ");
     throw std::runtime_error(code);
   }
   //---

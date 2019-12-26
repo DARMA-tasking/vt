@@ -107,7 +107,7 @@ Runtime::Runtime(bool const interop_mode, RuntimeInstType const in_instance)
 }
 
 void Runtime::parseAndSetup(int& argc, char**& argv) {
-  ArgVT::parse(argc, argv);
+  ArgVT::parseAndResolve(argc, argv);
   parsed_arg_ = true;
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
