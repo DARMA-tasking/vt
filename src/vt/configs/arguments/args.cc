@@ -146,6 +146,7 @@ void ArgsManager::initializeOutputControl()
   auto quiet = std::string("Quiet VT-output (only errors, warnings)");
   auto ptr_quiet = addFlag("vt_quiet",
     Args::config.vt_quiet, quiet, outputGroup);
+  ptr_quiet->setPrintOption(PrintOption::whenSet);
 }
 
 void ArgsManager::initializeSignalHandling()
@@ -1082,7 +1083,6 @@ void Warning::output() {
   if ((condition_) && (!condition_()))
     return;
 
-  auto green = debug::green();
   auto red = debug::red();
   auto reset = debug::reset();
   auto bd_green = debug::bd_green();
@@ -1248,9 +1248,7 @@ void Anchor<T>::print() {
   }
   //---
   auto green = debug::green();
-  auto red = debug::red();
   auto reset = debug::reset();
-  auto bd_green = debug::bd_green();
   auto magenta = debug::magenta();
   auto vt_pre = debug::vtPre();
   //---
@@ -1334,7 +1332,6 @@ void Anchor<T>::addGeneralInstance(ContextEnum ctxt, const T& value) {
                        std::string(" Context ") + smap_[ctxt] +
                        std::string(" Already Inserted ");
     throw std::runtime_error(code);
-    return;
   }
   Instance<T> myCase(value, static_cast<AnchorBase*>(this));
   specifications_.insert(std::make_pair(ctxt, myCase));
