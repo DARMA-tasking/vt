@@ -48,6 +48,7 @@
 // Do not pull in any VT dependencies here
 
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -170,7 +171,7 @@ struct Printer;
 
 
 /// \brief Virtual struct for storing an option/flag
-struct AnchorBase : public std::enable_shared_from_this<AnchorBase> {
+struct AnchorBase: std::enable_shared_from_this<AnchorBase> {
 
   /// \brief Count how many instances of the parameter 'name'
   /// have been specified.
