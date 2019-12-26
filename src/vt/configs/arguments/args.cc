@@ -1031,7 +1031,6 @@ void PrintOnOff<T>::output() {
 
   auto green = debug::green();
   auto reset = debug::reset();
-  auto bd_green = debug::bd_green();
   auto magenta = debug::magenta();
   auto vt_pre = debug::vtPre();
 
