@@ -398,7 +398,7 @@ struct ActiveMessenger {
   );
 
   /**
-   *
+   * \brief Broadcast a message
    *
    * \param[in] han the handler to invoke
    * \param[in] msg the message to send
