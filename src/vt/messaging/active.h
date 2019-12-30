@@ -902,7 +902,7 @@ struct ActiveMessenger {
    *       auto ret = send(vt::RDMA_GetType{ptr, num_bytes}, put_node, vt::no_tag);
    *       msg->mpi_tag_to_recv = std::get<1>(ret);
    *     };
-   *     theMsg()->sendMsg<X>(1, msg);
+   *     theMsg()->sendMsg<PutMessage, myHandler>(1, msg);
    *   }
    * \endcode
    *
