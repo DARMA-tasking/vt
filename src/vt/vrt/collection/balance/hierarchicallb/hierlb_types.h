@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
 
 #include <cstdlib>
 #include <list>

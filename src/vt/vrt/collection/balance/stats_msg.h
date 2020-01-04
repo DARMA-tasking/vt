@@ -159,23 +159,6 @@ static_assert(
   "Must be trivially copyable to avoid serialization."
 );
 
-template <typename ColT>
-struct LoadStatsMsg : NonSerialized<
-  CollectionMessage<ColT>,
-  LoadStatsMsg<ColT>
->, LoadData
-{
-  LoadStatsMsg() = default;
-  LoadStatsMsg(LoadData const& in_load_data, PhaseType const& phase)
-    : LoadData(in_load_data), cur_phase_(phase)
-  {}
-
-  PhaseType getPhase() const { return cur_phase_; }
-
-private:
-  PhaseType cur_phase_ = fst_lb_phase;
-};
-
 struct ProcStatsMsg : NonSerialized<
   collective::ReduceTMsg<LoadData>,
   ProcStatsMsg
@@ -197,28 +180,6 @@ struct ProcStatsMsg : NonSerialized<
   { }
 
   lb::Statistic stat_ = lb::Statistic::P_l;
-};
-
-template <typename ColT>
-struct StatsMsg : collective::ReduceTMsg<LoadData> {
-  using MessageParentType = collective::ReduceTMsg<LoadData>;
-  vt_msg_serialize_prohibited();
-
-  using ProxyType = typename ColT::CollectionProxyType;
-
-  StatsMsg() = default;
-  StatsMsg(
-    PhaseType const& in_cur_phase, TimeType const& in_total_load,
-    ProxyType const& in_proxy
-  ) : ReduceTMsg<LoadData>({in_total_load}),
-      proxy_(in_proxy), cur_phase_(in_cur_phase)
-  { }
-
-  ProxyType getProxy() const { return proxy_; }
-  PhaseType getPhase() const { return cur_phase_; }
-private:
-  ProxyType proxy_ = {};
-  PhaseType cur_phase_ = fst_lb_phase;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
