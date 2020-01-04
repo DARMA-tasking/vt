@@ -50,6 +50,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 NaivePersistence::NaivePersistence(const ElementLoadType *loads, const ElementCommType *comms)
   : loads_(*loads), comms_(comms)
 {
+  if (!comms) vtAbort("Need comms");
+  if (!loads) vtAbort("Need loads");
+
   // Add a bit of overhead for each off-node received message per object
   for (auto &&comm : *comms_) {
     auto obj = loads_.find(comm.first.toObj());
