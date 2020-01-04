@@ -85,7 +85,7 @@ void ElementStats::recvObjData(
 ) {
   comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::CollectionTag{}, pfrom, tfrom, pto, tto, bcast);
-  comm_.at(cur_phase_)[key] += bytes;
+  comm_.at(cur_phase_)[key].receiveMsg(bytes);
 }
 
 void ElementStats::recvFromNode(
@@ -94,7 +94,7 @@ void ElementStats::recvFromNode(
 ) {
   comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, pto, tto, bcast);
-  comm_.at(cur_phase_)[key] += bytes;
+  comm_.at(cur_phase_)[key].receiveMsg(bytes);
 }
 
 void ElementStats::recvToNode(
@@ -103,7 +103,7 @@ void ElementStats::recvToNode(
 ) {
   comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::CollectionToNodeTag{}, pfrom, tfrom, to, bcast);
-  comm_.at(cur_phase_)[key] += bytes;
+  comm_.at(cur_phase_)[key].receiveMsg(bytes);
 }
 
 void ElementStats::setModelWeight(TimeType const& time) {
