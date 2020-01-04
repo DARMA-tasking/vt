@@ -56,11 +56,11 @@ class NaivePersistence : public LoadModel {
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
 
 public:
-  NaivePersistence(const ElementLoadType &loads);
+  NaivePersistence(const ElementLoadType *loads);
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
-  ElementLoadType loads_;
+  const ElementLoadType* loads_;
 
 }; // class NaivePersistence
 
