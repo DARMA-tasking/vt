@@ -52,7 +52,6 @@
 #include "vt/vrt/collection/balance/greedylb/greedylb_msgs.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/timing/timing.h"
 
 #include <unordered_map>
