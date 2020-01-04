@@ -126,7 +126,7 @@ void BaseLB::getArgs(PhaseType phase) {
   using namespace balance;
 
   if (load_model_ == nullptr)
-    load_model_.reset(new balance::NaivePersistence(load_data_));
+    load_model_.reset(new balance::NaivePersistence(load_data_, comm_data));
 
   bool has_spec = ReadLBSpec::hasSpec();
   if (has_spec) {
