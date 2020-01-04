@@ -335,8 +335,8 @@ void BaseLB::computeStatisticsOver(Statistic stat) {
       if (elm.first.onNode() or elm.first.selfEdge()) {
         continue;
       }
-      //vt_print(lb, "comm_load={}, elm={}\n", comm_load, elm.second);
-      comm_load += elm.second;
+      //vt_print(lb, "comm_load={}, elm={}\n", comm_load, elm.second.bytes);
+      comm_load += elm.second.bytes;
     }
     auto msg = makeMessage<StatsMsgType>(Statistic::P_c, comm_load);
     proxy_.template reduce<ReduceOp>(msg,cb);
@@ -348,7 +348,7 @@ void BaseLB::computeStatisticsOver(Statistic stat) {
     for (auto&& elm : *comm_data) {
       // Only count object-to-object direct edges in the O_c statistics
       if (elm.first.cat_ == balance::CommCategory::SendRecv and not elm.first.selfEdge()) {
-        lds.emplace_back(balance::LoadData(elm.second));
+        lds.emplace_back(balance::LoadData(elm.second.bytes));
       }
     }
     auto msg = makeMessage<StatsMsgType>(Statistic::O_c, reduceVec(std::move(lds)));

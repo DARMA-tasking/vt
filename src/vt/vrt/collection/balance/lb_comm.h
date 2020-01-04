@@ -146,7 +146,28 @@ struct LBCommKey {
 // Set the types for the communication graph
 using CommKeyType   = LBCommKey;
 using CommBytesType = double;
-using CommMapType   = std::unordered_map<CommKeyType,CommBytesType>;
+
+struct CommVolume {
+  CommBytesType bytes = 0.0;
+  uint64_t messages = 0;
+
+  void receiveMsg(double b) {
+    messages++;
+    bytes += b;
+  }
+
+  void operator+=(const CommVolume &rhs) {
+    bytes += rhs.bytes;
+    messages += rhs.messages;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT &s) {
+    s | bytes | messages;
+  }
+};
+
+using CommMapType   = std::unordered_map<CommKeyType,CommVolume>;
 
 }}}} /* end namespace vt::vrt::collection::balance */
 

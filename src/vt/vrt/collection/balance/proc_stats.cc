@@ -243,7 +243,7 @@ void ProcStats::outputStatsFile() {
       ) {
         auto const to   = key.toObj();
         auto const from = key.fromObj();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
         fprintf(stats_file_, "%s", obj_str.c_str());
       } else if (
         key.cat_ == CommCategory::NodeToCollection or
@@ -251,7 +251,7 @@ void ProcStats::outputStatsFile() {
       ) {
         auto const to   = key.toObj();
         auto const from = key.fromNode();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
         fprintf(stats_file_, "%s", obj_str.c_str());
       } else if (
         key.cat_ == CommCategory::CollectionToNode or
@@ -259,7 +259,7 @@ void ProcStats::outputStatsFile() {
       ) {
         auto const to   = key.toNode();
         auto const from = key.fromObj();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
         fprintf(stats_file_, "%s", obj_str.c_str());
       } else {
         vtAssert(false, "Invalid balance::CommCategory enum value");
