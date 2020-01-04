@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
 
 #include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/vrt/collection/balance/lb_comm.h"
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -54,14 +55,15 @@ class NaivePersistence : public LoadModel {
   using LoadType = double;
   using ObjIDType = balance::ElementIDType;
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
+  using ElementCommType = balance::CommMapType;
 
 public:
-  NaivePersistence(const ElementLoadType *loads);
+  NaivePersistence(const ElementLoadType *loads, const ElementCommType *comms);
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
   const ElementLoadType* loads_;
-
+  const ElementCommType* comms_;
 }; // class NaivePersistence
 
 }}}} // end namespace

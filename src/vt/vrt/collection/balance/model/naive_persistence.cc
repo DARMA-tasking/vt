@@ -47,8 +47,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-NaivePersistence::NaivePersistence(const ElementLoadType *loads)
-  : loads_(loads)
+NaivePersistence::NaivePersistence(const ElementLoadType *loads, const ElementCommType *comms)
+  : loads_(loads), comms_(comms)
 { }
 
 TimeType NaivePersistence::getWork(ElementIDType object, PhaseOffset /*ignored*/)
