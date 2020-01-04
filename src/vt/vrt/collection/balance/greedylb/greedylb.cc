@@ -308,9 +308,7 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   load_over[bin].push_back(obj_id);
   bin_list.pop_back();
 
-  auto obj_iter = load_data->find(obj_id);
-  vtAssert(obj_iter != load_data->end(), "Obj must exist in stats");
-  auto const& obj_time_milli = loadMilli(obj_iter->second);
+  auto const& obj_time_milli = loadMilli(load_model_->getWork(obj_id, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
 
   this_load -= obj_time_milli;
 

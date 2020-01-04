@@ -122,7 +122,7 @@ void GossipLB::doLBStages() {
 
     if (first_iter) {
       // Copy this node's object assignments to a local, mutable copy
-      cur_objs_ = *load_data;
+      cur_objs_ = *load_data_;
       this_new_load_ = this_load;
     } else {
       // Clear out data structures from previous iteration

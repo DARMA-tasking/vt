@@ -53,6 +53,7 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/objgroup/headers.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
 #include <set>
 #include <map>
@@ -140,7 +141,7 @@ protected:
   int32_t bin_size_                               = 10;
   ObjSampleType obj_sample                        = {};
   LoadType this_load                              = 0.0f;
-  ElementLoadType const* load_data                = nullptr;
+  ElementLoadType const* load_data_               = nullptr;
   ElementCommType const* comm_data                = nullptr;
   StatisticMapType stats                          = {};
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
@@ -148,6 +149,7 @@ protected:
   bool comm_aware_                                = false;
   bool comm_collectives_                          = false;
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
+  std::unique_ptr<balance::LoadModel> load_model_ = nullptr;
 
 private:
   TransferVecType transfers_                      = {};

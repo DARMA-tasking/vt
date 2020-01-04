@@ -70,7 +70,7 @@ void RotateLB::runLB() {
     fflush(stdout);
   }
 
-  for (auto&& stat : *load_data) {
+  for (auto&& stat : *load_data_) {
     auto const& obj = stat.first;
     auto const& load = stat.second;
     vt_debug_print(

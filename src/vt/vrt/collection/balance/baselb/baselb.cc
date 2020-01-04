@@ -55,6 +55,7 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/model/naive_persistence.h"
 
 #include <tuple>
 
@@ -116,13 +117,16 @@ void BaseLB::importProcessorData(
     );
   }
 
-  load_data = &load_in;
+  load_data_ = &load_in;
   comm_data = &comm_in;
 }
 
 void BaseLB::getArgs(PhaseType phase) {
   using ArgType = vt::arguments::ArgConfig;
   using namespace balance;
+
+  if (load_model_ == nullptr)
+    load_model_.reset(new balance::NaivePersistence(load_data_));
 
   bool has_spec = ReadLBSpec::hasSpec();
   if (has_spec) {
@@ -354,8 +358,8 @@ void BaseLB::computeStatisticsOver(Statistic stat) {
   case Statistic::O_l: {
     // Perform the reduction for O_l -> object load only
     std::vector<balance::LoadData> lds;
-    for (auto&& elm : *load_data) {
-      lds.emplace_back(balance::LoadData(elm.second));
+    for (auto&& elm : *load_data_) {
+      lds.emplace_back(load_model_->getWork(elm.second, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
     }
     auto msg = makeMessage<StatsMsgType>(Statistic::O_l, reduceVec(std::move(lds)));
     proxy_.template reduce<ReduceOp>(msg,cb);
