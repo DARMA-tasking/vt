@@ -47,8 +47,8 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb_types.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/messaging/message.h"
+#include "vt/collective/reduce/operators/default_msg.h"
 
 #include <unordered_map>
 #include <cassert>

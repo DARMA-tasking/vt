@@ -48,8 +48,8 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_constants.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_types.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/messaging/message.h"
+#include "vt/collective/reduce/operators/default_msg.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
