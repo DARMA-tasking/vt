@@ -73,6 +73,7 @@ set(
         vrt/collection/balance/rotatelb
         vrt/collection/balance/gossiplb
         vrt/collection/balance/lb_invoke
+        vrt/collection/balance/model
         vrt/collection/balance/proxy
     lb/instrumentation
       lb/instrumentation/centralized
