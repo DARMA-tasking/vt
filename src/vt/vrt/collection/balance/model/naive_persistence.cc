@@ -48,12 +48,19 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 NaivePersistence::NaivePersistence(const ElementLoadType *loads, const ElementCommType *comms)
-  : loads_(loads), comms_(comms)
-{ }
+  : loads_(*loads), comms_(comms)
+{
+  // Add a bit of overhead for each off-node received message per object
+  for (auto &&comm : *comms_) {
+    auto obj = loads_.find(comm.first.toObj());
+    if (obj != loads_.end())
+      obj->second += 0.001 * comm.second.messages;
+  }
+}
 
 TimeType NaivePersistence::getWork(ElementIDType object, PhaseOffset /*ignored*/)
 {
-  return loads_->at(object);
+  return loads_.at(object);
 }
 
 
