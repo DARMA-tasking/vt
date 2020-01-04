@@ -62,7 +62,7 @@ public:
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
-  const ElementLoadType* loads_;
+  ElementLoadType loads_;
   const ElementCommType* comms_;
 }; // class NaivePersistence
 
