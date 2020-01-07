@@ -116,6 +116,8 @@ ActiveMessenger::sendMsgSz(
   ByteType const& msg_size
 ) {
   envelopeSetup(msg->env, dest, han);
+  setupEpochMsg(msg);
+
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, msg_size);
 }
@@ -159,6 +161,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
+
   return sendMsgSz(this_node, han, msg, msg_size);
 }
 
@@ -200,6 +203,8 @@ ActiveMessenger::sendMsgSz(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
+  setupEpochMsg(msg);
+
   auto base = promoteMsg(msg).template to<BaseMsgType>();;
   return PendingSendType(base, msg_size);
 }
@@ -247,6 +252,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
+  setupEpochMsg(msg);
+
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, sizeof(MessageT));
 }
@@ -281,6 +288,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
+  setupEpochMsg(msg);
+
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, sizeof(MessageT));
 }
@@ -329,6 +338,8 @@ ActiveMessenger::sendMsg(
 
   // setup envelope
   envelopeSetup(msg->env, dest, han);
+  setupEpochMsg(msg);
+
   auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, sizeof(MessageT));
 }

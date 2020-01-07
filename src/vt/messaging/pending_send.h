@@ -59,19 +59,28 @@ struct PendingSend final {
   PendingSend(MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size)
     : msg_(in_msg.template toVirtual<BaseMsgType>())
     , msg_size_(in_msg_size)
-  { }
+  {
+    produceMsg();
+  }
   template <typename MsgT>
   PendingSend(MsgSharedPtr<MsgT> in_msg, SendActionType const& in_action)
     : msg_(in_msg.template toVirtual<BaseMsgType>())
     , msg_size_(sizeof(MsgT))
     , send_action_(in_action)
-  { }
+  {
+    produceMsg();
+  }
+
+  EpochType getProduceEpoch() const;
+  void produceMsg();
+  void consumeMsg();
 
   explicit PendingSend(std::nullptr_t) { }
   PendingSend(PendingSend&& in)
     : msg_(std::move(in.msg_)),
       msg_size_(std::move(in.msg_size_)),
-      send_action_(std::move(in.send_action_))
+      send_action_(std::move(in.send_action_)),
+      epoch_produced_(std::move(in.epoch_produced_))
   {
     in.msg_ = nullptr;
     in.send_action_ = nullptr;
@@ -97,6 +106,7 @@ private:
   MsgVirtualPtr<BaseMsgType> msg_ = nullptr;
   ByteType msg_size_ = no_byte;
   SendActionType send_action_ = nullptr;
+  EpochType epoch_produced_ = no_epoch;
 };
 
 }} /* end namespace vt::messaging */
