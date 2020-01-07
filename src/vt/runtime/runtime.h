@@ -128,7 +128,9 @@ protected:
   void setup();
   void terminationHandler();
   void printStartupBanner();
-  void printShutdownBanner(term::TermCounterType const& num_units);
+  void printShutdownBanner(
+    term::TermCounterType const& num_units, std::size_t const coll_epochs
+  );
 
   void pauseForDebugger();
   void setupSignalHandler();

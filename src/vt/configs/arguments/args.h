@@ -64,7 +64,6 @@ public:
   static int32_t vt_sched_num_progress;
   // Derived from vt_*_color arguments after parsing.
   static bool colorize_output;
-  static int32_t vt_sched_num_progress;
   static int32_t vt_sched_progress_han;
   static double vt_sched_progress_sec;
   static bool vt_no_sigint;

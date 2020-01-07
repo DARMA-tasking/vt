@@ -746,7 +746,9 @@ void Runtime::printStartupBanner() {
   });
 }
 
-void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
+void Runtime::printShutdownBanner(
+  term::TermCounterType const& num_units, std::size_t const coll_epochs
+) {
   // If --vt_quiet is set, immediately exit printing nothing during startup
   if (ArgType::vt_quiet) {
     return;
@@ -757,9 +759,11 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   auto magenta  = debug::magenta();
   auto f1 = fmt::format("{}Runtime Finalizing{}", green, reset);
   auto f2 = fmt::format("{}Total work units processed:{} ", green, reset);
+  auto f3 = fmt::format("{}Total collective epochs processed:{} ", green, reset);
   auto vt_pre = bd_green + std::string("vt") + reset + ": ";
   std::string fin = "";
   std::string units = std::to_string(num_units);
+  fmt::print("{}{}{}{}{}\n", vt_pre, f3, magenta, coll_epochs, reset);
   fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
   fmt::print("{}{}{}\n", vt_pre, f1, reset);
 }
@@ -795,6 +799,7 @@ bool Runtime::finalize(bool const force_now) {
   if (force_now) {
     auto const& is_zero = theContext->getNode() == 0;
     auto const& num_units = theTerm->getNumUnits();
+    auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
     sync();
     fflush(stdout);
     fflush(stderr);
@@ -805,7 +810,7 @@ bool Runtime::finalize(bool const force_now) {
     sync();
     sync();
     if (is_zero) {
-      printShutdownBanner(num_units);
+      printShutdownBanner(num_units, coll_epochs);
     }
     finalizeContext();
     finalized_ = true;
