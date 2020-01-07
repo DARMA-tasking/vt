@@ -37,8 +37,12 @@ set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
 include(cmake/build_git_info.cmake)
 
+option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
+
 # Add subdirectories for tests and examples
-add_subdirectory(${PROJECT_LIB_DIR}/context)
+if (${vt_fcontext_enabled})
+  add_subdirectory(${PROJECT_LIB_DIR}/context)
+endif()
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 add_subdirectory(src)
