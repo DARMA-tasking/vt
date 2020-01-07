@@ -70,6 +70,7 @@ public:
   bool inWindow(EpochType const& epoch) const;
   bool isTerminated(EpochType const& epoch) const;
   void addEpoch(EpochType const& epoch);
+  void clean(EpochType const& epoch);
 
   /*
    * Track terminated, previously active epoch by adding it to the set
@@ -79,7 +80,7 @@ public:
   /*
    * Get the size of the current terminated epochs set
    */
-  std::size_t getSize() const { return terminated_epochs_.size(); }
+  std::size_t getSize() const { return getLast() - getFirst() + terminated_.size(); }
 
 private:
   // The archetypical epoch for this window container (category,rooted,user,..)
