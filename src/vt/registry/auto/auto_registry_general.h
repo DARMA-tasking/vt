@@ -96,6 +96,8 @@ struct FunctorAdapterArgs {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
     auto ns = TE::getTypeName<ObjTypeT>();
+    if (ns.empty())
+      ns = "(none)";
     return DU::removeSpaces(ns);
   }
 
@@ -127,6 +129,8 @@ struct FunctorAdapter {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
     auto ns = TE::getNamespace(TE::getValueNamePtr<F,f>());
+    if (ns.empty())
+      ns = "(none)";
     return DU::removeSpaces(ns);
   }
 
@@ -156,6 +160,8 @@ struct FunctorAdapterMember {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
     auto ns = TE::getNamespace(TE::getValueName<F,f>());
+    if (ns.empty())
+      ns = "(none)";
     return DU::removeSpaces(ns);
   }
 
