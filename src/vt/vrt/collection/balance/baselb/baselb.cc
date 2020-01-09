@@ -234,9 +234,6 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
   for (auto&& elm : migrate_list) {
     auto obj_id  = std::get<0>(elm);
     auto to_node = std::get<1>(elm);
-    std::cout << " migrate_list >> size " << migrate_list.size()
-    << " obj " << obj_id << " to_node " << to_node
-    << std::endl;
     vtAssertExpr(
       balance::ProcStats::proc_migrate_.find(obj_id) !=
       balance::ProcStats::proc_migrate_.end()
