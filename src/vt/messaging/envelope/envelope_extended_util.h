@@ -52,20 +52,65 @@
 
 namespace vt {
 
+/** \file */
+
+/**
+ * \brief Get the epoch on an envelope; must be able to hold one
+ *
+ * \param[in,out] env the envelope
+ *
+ * \return the epoch in the envelope
+ */
 template <typename Env>
 inline EpochType envelopeGetEpoch(Env const& env);
 
+/**
+ * \brief Set the epoch on an envelope; must be able to hold one
+ *
+ * \param[in,out] env the envelope
+ * \param[in] epoch epoch to set
+ */
 template <typename Env>
 inline void envelopeSetEpoch(Env& env, EpochType const& epoch);
 
+/**
+ * \brief Get the tag on an envelope; must be able to hold one
+ *
+ * \param[in,out] env the envelope
+ *
+ * \return the tag in the envelope
+ */
 template <typename Env>
 inline TagType envelopeGetTag(Env const& env);
 
+/**
+ * \brief Set the tag on an envelope; must be able to hold one
+ *
+ * \param[in,out] env the envelope
+ * \param[in] tag tag to set
+ */
 template <typename Env>
 inline void envelopeSetTag(Env& env, TagType const& tag);
 
+/**
+ * \brief Initialize an epoch envelope with default values
+ *
+ * \param[in,out] env the envelope
+ */
 inline void envelopeInitEmpty(EpochEnvelope&    env);
+
+/**
+ * \brief Initialize an tag envelope with default values
+ *
+ * \param[in,out] env the envelope
+ */
 inline void envelopeInitEmpty(TagEnvelope&      env);
+
+/**
+ * \brief Initialize an epoch and tag envelope with default values
+ *
+ * \param[in,out] env the envelope
+ */
 inline void envelopeInitEmpty(EpochTagEnvelope& env);
 
 } /* end namespace vt */

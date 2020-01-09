@@ -53,15 +53,52 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
+/**
+ * \struct PendingSend
+ *
+ * \brief A pending send (or other similar operation) that is delayed until this
+ * holder goes out of scope.
+ *
+ * \c PendingSend holds the message and dispatch function for a send (or
+ * broadcast or similar event) to a node, collection, objgroup, etc. This allows
+ * VT to expand the DAG before it actually violates a data or control dependency
+ * by expanding and prematurely performing the operation. We can then wire
+ * future sends up with past ones by associating future events with termination
+ * sequencing---see \c CollectionChainSet
+ */
 struct PendingSend final {
+  /// Function for complex action on send---takes a message to operate on
   using SendActionType = std::function<void(MsgVirtualPtr<BaseMsgType>)>;
 
+  /**
+   * \brief Construct a pending send from a message and size.
+   *
+   * This constructor is for a simple \c PendingSend that does not have a
+   * complex action and is dispatched to the \c ActiveMessenger when released.
+   *
+   * \param[in] in_msg the message to send
+   * \param[in] in_msg_size the size of the message (type is erased)
+   */
   PendingSend(MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size)
     : msg_(in_msg.template toVirtual<BaseMsgType>())
     , msg_size_(in_msg_size)
   {
     produceMsg();
   }
+
+  /**
+   * \brief Construct a pending send from a message and complex action.
+   *
+   * This constructor is for a complex \c PendingSend that holds a \c
+   * std::function for performing the send (e.g., sending to a collection
+   * element). When released, it will run the \c in_action of type \c
+   * SendActionType.
+   *
+   * \param[in] in_msg the message to send
+   * \param[in] in_action the "send" action to run
+   */
   template <typename MsgT>
   PendingSend(MsgSharedPtr<MsgT> in_msg, SendActionType const& in_action)
     : msg_(in_msg.template toVirtual<BaseMsgType>())
@@ -71,8 +108,24 @@ struct PendingSend final {
     produceMsg();
   }
 
+  /**
+   * \brief Get the epoch produced when holder was created
+   *
+   * This is required because the epoch on the envelope can change in some cases
+   * in between when this is created and actually released.
+   *
+   * \return the produce epoch
+   */
   EpochType getProduceEpoch() const;
+
+  /**
+   * \brief Produce on the messages epoch to inhibit early termination
+   */
   void produceMsg();
+
+  /**
+   * \brief Consume on the messages epoch to inhibit early termination
+   */
   void consumeMsg();
 
   explicit PendingSend(std::nullptr_t) { }
@@ -89,8 +142,24 @@ struct PendingSend final {
   PendingSend& operator=(PendingSend&& in) = delete;
   PendingSend& operator=(PendingSend& in) = delete;
 
+  /**
+   * \brief Release the pending send on destruction (when this goes out of scope)
+   *
+   * \code
+   *   {
+   *     auto ps = vt::theMsg()->sendMsg<MyMsg, handler>(msg);
+   *   } // Message is sent here when the destructor runs
+   *
+   *   // Message is sent right away on this following line as the PendingSend
+   *   // is not captured
+   *   vt::theMsg()->sendMsg<MyMsg, handler>(msg);
+   * \endcode
+   */
   ~PendingSend() { release(); }
 
+  /**
+   * \brief Release the message, run action if needed
+   */
   void release() {
     if (msg_ != nullptr || send_action_ != nullptr) {
       sendMsg();
@@ -98,8 +167,8 @@ struct PendingSend final {
   }
 
 private:
-  // Send the message saved directly or trigger the lambda for
-  // specialized sends from the pending holder
+  /// Send the message saved directly or trigger the lambda for
+  /// specialized sends from the pending holder
   void sendMsg();
 
 private:

@@ -49,11 +49,19 @@
 
 namespace vt {
 
+/** \file */
+
 using PutPtrType = void*;
 using PutPtrConstType = void const*;
 using PutEnvSizeType = size_t;
 using PutUnderEnvelopeT = Envelope;
 
+/**
+ * \struct PutEnvelope
+ *
+ * \brief Extended envelope for holding control bits for a message packed with a
+ * put payload.
+ */
 template <typename EnvelopeT, typename SizeT>
 struct PutEnvelope {
   using isByteCopyable = std::true_type;
@@ -61,17 +69,22 @@ struct PutEnvelope {
   using EnvSizeType = SizeT;
   using UnderEnvelopeT = EnvelopeT;
 
-  EnvelopeT env;
+  EnvelopeT env;                /**< The base envelope */
 
-  PtrType data_ptr_;
-  EnvSizeType data_size_;
-  TagType put_data_tag_;
+  PtrType data_ptr_;            /**< The data pointer */
+  EnvSizeType data_size_;       /**< The pointer length */
+  TagType put_data_tag_;        /**< The put tag */
 };
 
 //using PutBasicEnvelope = PutEnvelope<EpochTagEnvelope, size_t>;
 using PutShortEnvelope = PutEnvelope<Envelope, size_t>;
 using eEnvType = messaging::eEnvelopeType;
 
+/**
+ * \brief Initialize a \c PutEnvelope with extra put-related fields
+ *
+ * \param[in,out] env the envelope
+ */
 inline void envelopeInitEmpty(PutShortEnvelope& env) {
   envelopeInitEmpty(env.env);
   setPutType(env.env);
@@ -82,6 +95,13 @@ inline void envelopeInitEmpty(PutShortEnvelope& env) {
 
 static_assert(std::is_pod<PutShortEnvelope>(), "PutShortEnvelope must be POD");
 
+/**
+ * \brief Get the put pointer
+ *
+ * \param[in] env the envelope
+ *
+ * \return the put pointer
+ */
 template <typename Env>
 inline PutPtrType envelopeGetPutPtr(Env const& env) {
   using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
@@ -93,6 +113,13 @@ inline PutPtrType envelopeGetPutPtr(Env const& env) {
   }
 }
 
+/**
+ * \brief Get the put payload byte length
+ *
+ * \param[in] env the envelope
+ *
+ * \return the put length
+ */
 template <typename Env>
 inline PutEnvSizeType envelopeGetPutSize(Env const& env) {
   using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
@@ -104,6 +131,13 @@ inline PutEnvSizeType envelopeGetPutSize(Env const& env) {
   }
 }
 
+/**
+ * \brief Get the put tag
+ *
+ * \param[in] env the envelope
+ *
+ * \return the put tag
+ */
 template <typename Env>
 inline TagType envelopeGetPutTag(Env const& env) {
   using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
@@ -115,6 +149,13 @@ inline TagType envelopeGetPutTag(Env const& env) {
   }
 }
 
+/**
+ * \brief Set the put pointer and byte length for put
+ *
+ * \param[in,out] env the envelope
+ * \param[in] ptr the put pointer
+ * \param[in] size the put byte length
+ */
 template <typename Env>
 inline void envelopeSetPutPtr(
   Env& env, PutPtrConstType ptr, PutEnvSizeType size
@@ -128,6 +169,12 @@ inline void envelopeSetPutPtr(
   }
 }
 
+/**
+ * \brief Set the put pointer only
+ *
+ * \param[in,out] env the envelope
+ * \param[in] ptr the put pointer
+ */
 template <typename Env>
 inline void envelopeSetPutPtrOnly(Env& env, PutPtrConstType ptr) {
   using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
@@ -138,6 +185,12 @@ inline void envelopeSetPutPtrOnly(Env& env, PutPtrConstType ptr) {
   }
 }
 
+/**
+ * \brief Set the put tag
+ *
+ * \param[in,out] env the envelope
+ * \param[in] in_tag the put tag
+ */
 template <typename Env>
 inline void envelopeSetPutTag(Env& env, TagType const& in_tag) {
   using PutType = PutEnvelope<PutUnderEnvelopeT, PutEnvSizeType>;
@@ -148,11 +201,23 @@ inline void envelopeSetPutTag(Env& env, TagType const& in_tag) {
   }
 }
 
+/**
+ * \brief Set the envelope type bit for \c EnvPackedPut
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void setPackedPutType(Env& env) {
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvPackedPut;
 }
 
+/**
+ * \brief Test if \c EnvPackedPut is set on the envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether the bit is set
+ */
 template <typename Env>
 inline bool envelopeIsPackedPutType(Env const& env) {
   auto const& bits = 1 << eEnvType::EnvPackedPut;
