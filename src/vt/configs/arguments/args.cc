@@ -399,6 +399,8 @@ namespace vt { namespace arguments {
   ww->group(debugLB);
   wx->group(debugLB);
   wy->group(debugLB);
+  xx->group(debugLB);
+  xy->group(debugLB);
 
   /*
    * Flags for controlling termination
