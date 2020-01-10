@@ -95,6 +95,8 @@ public:
   static bool vt_lb_stats;
   static std::string vt_lb_stats_dir;
   static std::string vt_lb_stats_file;
+  static std::string vt_lb_stats_dir_in;
+  static std::string vt_lb_stats_file_in;
 
   static bool vt_no_detect_hang;
   static bool vt_print_no_progress;
