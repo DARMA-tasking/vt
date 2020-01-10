@@ -61,6 +61,8 @@
 #include "vt/termination/termination.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/generated/vt_git_revision.h"
@@ -163,11 +165,11 @@ void Runtime::pauseForDebugger() {
 # endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (ArgType::vt_stack_file != "") {
-      Runtime::writeToFile(std::get<0>(stack));
-    } else {
+    if (ArgType::vt_stack_file.empty()) {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
       ::fmt::print("\n");
+    } else {
+      Runtime::writeToFile(std::get<0>(stack));
     }
   }
   std::_Exit(EXIT_FAILURE);
@@ -506,6 +508,20 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_lb_stats_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+
+    auto const fnamein = ArgType::vt_lb_stats_file_in;
+    if (fnamein != "") {
+      auto f11 = fmt::format("LB stats file name in \"{}.0.out\"", fnamein);
+      auto f12 = opt_on("--vt_lb_stats_file_in", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+
+    auto const fdirin = ArgType::vt_lb_stats_dir_in;
+    if (fdirin != "") {
+      auto f11 = fmt::format("LB stats directory in \"{}\"", fdirin);
+      auto f12 = opt_on("--vt_lb_stats_dir_in", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
 
 
@@ -805,6 +821,15 @@ bool Runtime::initialize(bool const force_now) {
     initializeComponents();
     initializeOptionalComponents();
     initializeErrorHandlers();
+#if backend_check_enabled(lblite)
+    if (ArgType::vt_lb_stats) {
+      auto lbNames = vrt::collection::balance::lb_names_;
+      auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
+      if (ArgType::vt_lb_name == lbNames[mapLB]) {
+        vrt::collection::balance::StatsLBReader::init();
+      }
+    }
+#endif
     sync();
     if (theContext->getNode() == 0) {
       printStartupBanner();

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.h
+//                                 stats_lb_reader.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,81 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#if !defined INCLUDED_VRT_COLLECTION_BALANCE_STATS_LB_READER_H
+#define INCLUDED_VRT_COLLECTION_BALANCE_STATS_LB_READER_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/objgroup/headers.h"
 
-#include <unordered_map>
-#include <string>
-#include <type_traits>
+#include <cstdio>
+#include <cstdlib>
+#include <deque>
+#include <functional>
+#include <map>
+#include <set>
+#include <tuple>
+#include <vector>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
 
-enum struct LBType : int8_t {
-  NoLB             = 0,
-  GreedyLB         = 1,
-  HierarchicalLB   = 2,
-  RotateLB         = 3,
-  GossipLB         = 4,
-  StatsMapLB       = 5
-};
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-template <typename SerializerT>
-void serialize(SerializerT& s, LBType lb) {
-  using EnumDataType = typename std::underlying_type<LBType>::type;
-  EnumDataType val = static_cast<EnumDataType>(lb);
-  s | val;
-  lb = static_cast<LBType>(val);
-}
+template<typename Transfer>
+struct TransferMsg;
 
-}}}} /* end namespace vt::vrt::collection::balance */
+using VecMsg = TransferMsg< std::vector< balance::ElementIDType > >;
 
-namespace std {
+} } } }
 
-using LBTypeType = vt::vrt::collection::balance::LBType;
-
-template <>
-struct hash<LBTypeType> {
-  size_t operator()(LBTypeType const& in) const {
-    using LBUnderType = typename std::underlying_type<LBTypeType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-extern std::unordered_map<LBType,std::string> lb_names_;
+struct StatsLBReader {
+
+public:
+  StatsLBReader() = default;
+  StatsLBReader(StatsLBReader const&) = delete;
+  StatsLBReader(StatsLBReader&&) = default;
+
+  static void init();
+  static void destroy();
+  static void clearStats();
+  static void inputStatsFile();
+  static void loadPhaseChangedMap();
+
+public:
+
+  /// \brief Queue to store a map of elements specified by input file.
+  static std::deque< std::set<ElementIDType> > user_specified_map_;
+
+  /// \brief Vector of booleans to indicate whether the user-specified
+  /// map migrates some elements for a specific iteration.
+  static std::vector<bool> phase_changed_map_;
+
+  /// \brief Queue of migrations for each iteration.
+  /// \note At each iteration, a vector of length 2 times (# of migrations)
+  /// is specified. The vector contains the "permanent" ID of the element
+  /// to migrate followed by the node ID to migrate to.
+  static std::deque< std::vector<ElementIDType> > moveList;
+
+protected:
+
+  void doSend(lb::VecMsg *msg);
+  void scatterSend(lb::VecMsg *msg);
+
+  /// \brief Vector counting the received messages per iteration
+  /// \note Only node 0 will use this vector.
+  static std::vector<size_t> msgReceived;
+
+  /// \brief Queue for storing all the migrations per iteration.
+  /// \note Only node 0 will use this queue.
+  static std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>>
+    totalMove;
+
+  static objgroup::proxy::Proxy<StatsLBReader> proxy_;
+
+};
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
+#endif /*INCLUDED_VRT_COLLECTION_BALANCE_STATS_LB_READER_H*/
