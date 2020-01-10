@@ -90,6 +90,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_lb_stats           = false;
 /*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
 /*static*/ std::string ArgConfig::vt_lb_stats_file      = "stats";
+/*static*/ std::string ArgConfig::vt_lb_stats_dir_in    = "vt_lb_stats_in";
+/*static*/ std::string ArgConfig::vt_lb_stats_file_in   = "stats_in";
 
 /*static*/ bool        ArgConfig::vt_term_rooted_use_ds = false;
 /*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
