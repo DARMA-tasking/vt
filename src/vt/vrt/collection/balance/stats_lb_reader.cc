@@ -123,7 +123,7 @@ std::vector<bool> StatsLBReader::phase_changed_map_ = {};
   bool finished = false;
   size_t c1PreviousValue = 0;
   while (!finished) {
-    if (fscanf(pFile, "%zi %c %lli %c %lf", &c1, &separator, &c2,
+    if (fscanf(pFile, "%zu %c %lli %c %lf", &c1, &separator, &c2,
             &separator, &c3) > 0) {
       fgetpos (pFile,&pos);
       fscanf (pFile, "%c", &separator);
