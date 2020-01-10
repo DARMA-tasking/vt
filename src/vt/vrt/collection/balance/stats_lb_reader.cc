@@ -44,17 +44,15 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/stats_lb_reader.h"
-#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
-#include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/runtime/runtime.h"
 
 #include <cstdio>
-#include <string>
-#include <unistd.h>
-#include <unordered_map>
+#include <deque>
+#include <map>
 #include <vector>
 
 #include "fmt/format.h"
@@ -62,16 +60,20 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/
-std::vector<std::map<ElementIDType,TimeType>>
-  StatsLBReader::user_specified_map_changed_ = {};
+std::deque<std::set<ElementIDType>> StatsLBReader::user_specified_map_ = {};
 
 /*static*/
-StatsLBReader::VectorDiffPhase
-StatsLBReader::phase_changed_map_ = {};
+std::deque< std::vector<ElementIDType> > StatsLBReader::moveList = {};
 
-/*static*/ FILE* StatsLBReader::stats_file_ = nullptr;
+/*static*/
+std::vector<size_t> StatsLBReader::msgReceived = {};
 
-/*static*/ bool StatsLBReader::created_dir_ = false;
+/*static*/
+std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>>
+  StatsLBReader::totalMove = {};
+
+/*static*/
+std::vector<bool> StatsLBReader::phase_changed_map_ = {};
 
 /*static*/ objgroup::proxy::Proxy<StatsLBReader> StatsLBReader::proxy_ = {};
 
@@ -80,28 +82,20 @@ StatsLBReader::phase_changed_map_ = {};
   StatsLBReader::proxy_ = theObjGroup()->makeCollective<StatsLBReader>();
   StatsLBReader::inputStatsFile();
   StatsLBReader::loadPhaseChangedMap();
-  proxy_.get()->doReduce();
 }
 
 /*static*/ void StatsLBReader::destroy() {
   theObjGroup()->destroyCollective(StatsLBReader::proxy_);
 }
-/*static*/ void StatsLBReader::clearStats() {
-  StatsLBReader::user_specified_map_changed_.clear();
-}
 
-/*static*/ void StatsLBReader::closeStatsFile() {
-  if (stats_file_) {
-    fclose(stats_file_);
-    stats_file_  = nullptr;
-  }
+/*static*/ void StatsLBReader::clearStats() {
+  StatsLBReader::user_specified_map_.clear();
 }
 
 /*static*/ void StatsLBReader::inputStatsFile() {
 
   using ArgType = vt::arguments::ArgConfig;
 
-  // todo if File exist
   auto const node = theContext()->getNode();
   auto const base_file = std::string(ArgType::vt_lb_stats_file_in);
   auto const dir = std::string(ArgType::vt_lb_stats_dir_in);
@@ -110,16 +104,12 @@ StatsLBReader::phase_changed_map_ = {};
 
   vt_print(lb, "inputStatFile: file={}, iter={}\n", file_name, 0);
 
-  FILE *pFile = std::fopen (file_name.c_str(), "r");
-  vtAssert(pFile, "File opening failed");
+  std::FILE *pFile = std::fopen(file_name.c_str(), "r");
+  if ((pFile == nullptr) or (errno == ENOENT)) {
+    vtAssert(pFile, "File opening failed");
+  }
 
-  // TODO loop on num_iters
-  // Create a map for each different value of the first column
-  // we should assume that every new value on the first column come
-  // just after the end of the communication.
-  // Finally the pattern is Load0, Com0, Load1, Com1, ..., LoadN, ComN
-  // where 0, 1, ..., N are the values of the first column
-  auto elements = std::map<ElementIDType,TimeType> ();
+  std::set<ElementIDType> buffer;
 
   // Load: Format of a line :size_t,ElementIDType,TimeType
   size_t c1;
@@ -133,7 +123,8 @@ StatsLBReader::phase_changed_map_ = {};
   bool finished = false;
   size_t c1PreviousValue = 0;
   while (!finished) {
-    if (fscanf(pFile, "%zi %c %lli %c %lf", &c1, &separator, &c2, &separator, &c3) > 0) {
+    if (fscanf(pFile, "%zi %c %lli %c %lf", &c1, &separator, &c2,
+            &separator, &c3) > 0) {
       fgetpos (pFile,&pos);
       fscanf (pFile, "%c", &separator);
       if (separator == ',') {
@@ -145,56 +136,143 @@ StatsLBReader::phase_changed_map_ = {};
         fsetpos (pFile,&pos);
         if (c1PreviousValue != c1) {
           c1PreviousValue = c1;
-          StatsLBReader::user_specified_map_changed_.push_back(elements);
-          elements.clear();
+          StatsLBReader::user_specified_map_.push_back(buffer);
+          buffer.clear();
         }
-        elements.emplace (c2, c3);
+        buffer.insert(c2);
       }
     } else {
       finished = true;
     }
   }
 
-  if (!elements.empty()) {
-    StatsLBReader::user_specified_map_changed_.push_back(elements);
+  if (!buffer.empty()) {
+    StatsLBReader::user_specified_map_.push_back(buffer);
   }
 
   std::fclose(pFile);
 }
 
 /*static*/ void StatsLBReader::loadPhaseChangedMap() {
-  auto const num_iters = StatsLBReader::user_specified_map_changed_.size() - 1;
+  auto const num_iters = StatsLBReader::user_specified_map_.size() - 1;
   vt_print(lb, "StatsLBReader::loadPhaseChangedMap size : {}\n", num_iters);
-  StatsLBReader::phase_changed_map_.vec_.resize(num_iters);
 
-  for (size_t i = 0; i < num_iters; i++) {
-    auto &unordered_elms = StatsLBReader::user_specified_map_changed_.at(i);
-    auto elms = std::map<ElementIDType,TimeType>(unordered_elms.begin(),
-                                                 unordered_elms.end());
-    unordered_elms = StatsLBReader::user_specified_map_changed_.at(i + 1);
-    auto elmsNext = std::map<ElementIDType,TimeType>(unordered_elms.begin(),
-      unordered_elms.end());
-    //
-    StatsLBReader::phase_changed_map_.vec_[i] =
-      !( (elmsNext.size() == elms.size()) and
-      std::equal(elms.begin(), elms.end(), elmsNext.begin(),
-        [](auto a, auto b) { return (a.first == b.first); }) );
+  auto myNodeID = static_cast<ElementIDType>(theContext()->getNode());
+
+  StatsLBReader::moveList.resize(num_iters + 1);
+  StatsLBReader::phase_changed_map_.resize(num_iters);
+
+  if (myNodeID == 0) {
+    StatsLBReader::msgReceived.resize(num_iters, 0);
+    StatsLBReader::totalMove.resize(num_iters);
   }
+
+  for (size_t ii = 0; ii < num_iters; ++ii) {
+    auto elms = StatsLBReader::user_specified_map_[ii];
+    auto elmsNext = StatsLBReader::user_specified_map_[ii + 1];
+    std::set<ElementIDType> diff;
+    std::set_difference(elmsNext.begin(), elmsNext.end(), elms.begin(),
+      elms.end(), std::inserter(diff, diff.begin()));
+    const size_t qi = diff.size();
+    const size_t pi = elms.size() - (elmsNext.size() - qi);
+    StatsLBReader::moveList[ii].reserve(3 * (pi + qi) + 1);
+    //--- Store the iteration number
+    StatsLBReader::moveList[ii].push_back(static_cast<ElementIDType>(ii));
+    for (auto iEle : diff) {
+      StatsLBReader::moveList[ii].push_back(iEle);  //--- permID to receive
+      StatsLBReader::moveList[ii].push_back(no_element_id); // node moving from
+      StatsLBReader::moveList[ii].push_back(myNodeID); // node moving to
+    }
+    diff.clear();
+    std::set_difference(elms.begin(), elms.end(), elmsNext.begin(),
+      elmsNext.end(), std::inserter(diff, diff.begin()));
+    for (auto iEle : diff) {
+      StatsLBReader::moveList[ii].push_back(iEle);  //--- permID to send
+      StatsLBReader::moveList[ii].push_back(myNodeID); // node migrating from
+      StatsLBReader::moveList[ii].push_back(no_element_id); // node migrating to
+    }
+    //
+    // Create a message storing the vector
+    //
+    auto msg = makeSharedMessage<lb::VecMsg>(StatsLBReader::moveList[ii]);
+    StatsLBReader::proxy_[0].send<lb::VecMsg, &StatsLBReader::doSend>(msg);
+  }
+
 }
 
-void StatsLBReader::doneReduce(VecPhaseMsg *msg) {
-  vt_print(lb, "StatsLBReader::doneReduce with msg of size {}\n",
-    msg->getConstVal().vec_.size());
+void StatsLBReader::doSend(lb::VecMsg *msg) {
+  auto sendVec = msg->getTransfer();
+  ElementIDType iter = sendVec[0];
+  //
+  // --- Combine the different pieces of information
+  //
+  StatsLBReader::msgReceived[iter] += 1;
+  auto &migrate = StatsLBReader::totalMove[iter];
+  for (size_t ii = 1; ii < sendVec.size(); ii += 3) {
+    auto permID = sendVec[ii];
+    auto nodeFrom = static_cast<NodeType>(sendVec[ii+1]);
+    auto nodeTo = static_cast<NodeType>(sendVec[ii+2]);
+    auto iptr = migrate.find(permID);
+    if (iptr == migrate.end()) {
+      migrate.insert(std::make_pair(permID, std::make_pair(nodeFrom, nodeTo)));
+    }
+    else {
+      auto &nodePair = iptr->second;
+      nodePair.first = std::max(nodePair.first, nodeFrom);
+      nodePair.second = std::max(nodePair.second, nodeTo);
+    }
+  }
+  //
+  // --- Check whether all the messages have been received
+  //
+  auto numNodes = theContext()->getNumNodes();
+  if (StatsLBReader::msgReceived[iter] < numNodes)
+    return;
+  //
+  //--- Distribute the information when everything has been received
+  //
+  for (NodeType in = 0; in < numNodes; ++in) {
+    size_t iCount = 0;
+    for (auto iNode : migrate) {
+      if (iNode.second.first == in)
+        iCount += 1;
+    }
+    std::vector<ElementIDType> toMove(2 * iCount + 2);
+    iCount = 0;
+    toMove[iCount++] = iter;
+    toMove[iCount++] = static_cast<ElementIDType>(migrate.size());
+    for (auto iNode : migrate) {
+      if (iNode.second.first == in) {
+        toMove[iCount] = iNode.first;
+        toMove[iCount + 1] = static_cast<ElementIDType>(iNode.second.second);
+        iCount += 2;
+      }
+    }
+    if (in > 0) {
+      auto msg2 = makeSharedMessage<lb::VecMsg>(toMove);
+      StatsLBReader::proxy_[in].send<lb::VecMsg,&StatsLBReader::scatterSend>
+        (msg2);
+    } else {
+      StatsLBReader::moveList[iter].resize(toMove.size() - 1);
+      std::copy(&toMove[1], &toMove[0] + toMove.size(),
+                StatsLBReader::moveList[iter].begin());
+    }
+  }
+  migrate.clear();
 }
 
-void StatsLBReader::doReduce() {
-  vt_print(lb, "StatsLBReader::doReduce {} \n",
-    StatsLBReader::phase_changed_map_.vec_.size());
-
-  auto cb = theCB()->makeBcast<StatsLBReader,VecPhaseMsg,&StatsLBReader::doneReduce>
-    (StatsLBReader::proxy_);
-  auto msg = makeMessage<VecPhaseMsg>(StatsLBReader::phase_changed_map_);
-  StatsLBReader::proxy_.reduce<collective::OrOp<VectorDiffPhase>>(msg.get(),cb);
+void StatsLBReader::scatterSend(lb::VecMsg *msg) {
+  auto recvVec = msg->getTransfer();
+  ElementIDType iter = recvVec[0];
+  StatsLBReader::phase_changed_map_[iter] = (recvVec[1] > 0);
+  auto &myList = StatsLBReader::moveList[iter];
+  if (recvVec.size() <= 2) {
+    myList.clear();
+    return;
+  }
+  //
+  myList.resize(recvVec.size() - 1);
+  std::copy(&recvVec[1], &recvVec[0]+recvVec.size(), myList.begin());
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

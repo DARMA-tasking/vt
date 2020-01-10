@@ -83,7 +83,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 
   //--- User-specified map without any change, thus do not run
   if ((ArgType::vt_lb_name == lb_names_[LBType::StatsMapLB]) and
-      !balance::StatsLBReader::phase_changed_map_.vec_[phase]) {
+      !balance::StatsLBReader::phase_changed_map_[phase]) {
     return LBType::NoLB;
   }
 
