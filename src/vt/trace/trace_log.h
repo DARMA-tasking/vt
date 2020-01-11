@@ -185,27 +185,12 @@ struct Log final {
   }
 
   // No default constructor. Seems wierd? Copy+move all the way..
-  // Support copy+move constructors (no operators)
-
+  // (Copy-constructible and copy-assignable required for dequeue.)
   Log() = delete;
-
-  Log(
-    Log const& in
-  ) : time(in.time), end_time(in.end_time),
-      type(in.type), ep(in.ep), event(in.event),
-      // copy any kind of data
-      data(in.data)
-  {
-  }
-
-  Log(
-    Log&& in
-  ) : time(in.time), end_time(in.end_time),
-      type(in.type), ep(in.ep), event(in.event),
-      // move any kind of data
-      data(std::move(in.data))
-  {
-  }
+  Log(Log const& in) = default;
+  Log(Log&& in) = default;
+  Log& operator=(Log const& in) = default;
+  Log& operator=(Log&& in) = default;
 
   // User event
   Log(
@@ -295,8 +280,8 @@ public:
 
   // Time of the event - all events need a time.
   double time = 0.0;
-  // If an duration can be expressed in a single event.
-  // (Currently only for user-events.)
+  // If a duration can be expressed in a single event.
+  // (Currently only for user-events.. could elim explicit end events.)
   double end_time = 0.0;
 
   TraceConstantsType type = TraceConstantsType::InvalidTraceType;
