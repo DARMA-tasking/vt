@@ -57,12 +57,6 @@ void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
 
 void StatsMapLB::runLB() {
 
-  if (!balance::StatsLBReader::phase_changed_map_[phase_]) {
-    return;
-  }
-
-  vtAssertExpr(balance::StatsLBReader::user_specified_map_.size() > phase_);
-
   auto epoch = startMigrationCollective();
   theMsg()->pushEpoch(epoch);
 
@@ -74,7 +68,7 @@ void StatsMapLB::runLB() {
     }
     else {
       vtAssertExpr(iter != balance::ProcStats::proc_perm_to_temp_.end());
-    };
+    }
   }
 
   theMsg()->popEpoch(epoch);
