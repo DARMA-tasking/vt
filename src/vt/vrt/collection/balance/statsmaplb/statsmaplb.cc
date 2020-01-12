@@ -44,9 +44,13 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
 #include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/context/context.h"
+
+#include <iostream>
+#include <unordered_map>
 
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
@@ -57,16 +61,10 @@ void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
 
 void StatsMapLB::runLB() {
 
-  if (!balance::StatsLBReader::phase_changed_map_[phase_]) {
-    return;
-  }
-
-  vtAssertExpr(balance::StatsLBReader::user_specified_map_.size() > phase_);
-
   auto epoch = startMigrationCollective();
   theMsg()->pushEpoch(epoch);
 
-  auto myNewList = balance::StatsLBReader::moveList[phase_];
+  auto myNewList = balance::StatsLBReader::mmList[phase_];
   for (size_t in = 0; in < myNewList.size(); in += 2) {
     auto iter = balance::ProcStats::proc_perm_to_temp_.find(myNewList[in]);
     if (iter != balance::ProcStats::proc_perm_to_temp_.end()) {
@@ -74,12 +72,13 @@ void StatsMapLB::runLB() {
     }
     else {
       vtAssertExpr(iter != balance::ProcStats::proc_perm_to_temp_.end());
-    };
+    }
   }
-
+  
   theMsg()->popEpoch(epoch);
   finishMigrationCollective();
 
 }
+
 
 }}}} /* end namespace vt::vrt::collection::lb */

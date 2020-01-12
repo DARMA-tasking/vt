@@ -45,11 +45,14 @@
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATSMAPLB_STATSMAPLB_H
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATSMAPLB_STATSMAPLB_H
 
-#include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/collective/reduce/operators/functors/or_op.h"
+
+#include <random>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
-
-struct BaseLB;
 
 struct StatsMapLB : BaseLB {
   StatsMapLB() = default;

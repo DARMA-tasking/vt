@@ -46,7 +46,12 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_STATS_LB_READER_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/vrt/collection/balance/phase_msg.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/timing/timing.h"
 #include "vt/objgroup/headers.h"
 
 #include <cstdio>
@@ -58,62 +63,94 @@
 #include <tuple>
 #include <vector>
 
-
-namespace vt { namespace vrt { namespace collection { namespace lb {
-
-template<typename Transfer>
-struct TransferMsg;
-
-using VecMsg = TransferMsg< std::vector< balance::ElementIDType > >;
-
-} } } }
-
-
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct StatsLBReader {
 
-public:
+  struct VectorDiffPhase {
+    VectorDiffPhase() = default;
+
+
+    friend VectorDiffPhase operator||(VectorDiffPhase v1, VectorDiffPhase const& v2) {
+      for (size_t ii = 0; ii < v1.vec_.size(); ++ii) {
+        v1.vec_[ii] = v1.vec_[ii] or v2.vec_[ii];
+      }
+      return v1;
+    }
+
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      s | vec_;
+    }
+
+    std::vector<bool> vec_;
+  };
+
+  struct VecPhaseMsg : vt::collective::ReduceTMsg<VectorDiffPhase> {
+    VecPhaseMsg() = default;
+
+    explicit VecPhaseMsg(VectorDiffPhase phase) : ReduceTMsg<VectorDiffPhase>() {
+      getVal().vec_ = phase.vec_;
+    }
+
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      ReduceTMsg<VectorDiffPhase>::invokeSerialize(s);
+    }
+  };
+
   StatsLBReader() = default;
   StatsLBReader(StatsLBReader const&) = delete;
   StatsLBReader(StatsLBReader&&) = default;
 
   static void init();
   static void destroy();
+
+protected:
+
+    void doSend2(vt::vrt::collection::lb::TransferMsg< std::vector<ElementIDType> > *msg);
+    void scatterSend2(vt::vrt::collection::lb::TransferMsg< std::vector<ElementIDType> > *msg);
+
+    void doSend(vt::vrt::collection::lb::TransferMsg< std::vector<ElementIDType> > *msg);
+    void scatterSend(vt::vrt::collection::lb::TransferMsg< std::vector<ElementIDType> > *msg);
+
+public:
   static void clearStats();
   static void inputStatsFile();
   static void loadPhaseChangedMap();
 
+  void doneReduce(VecPhaseMsg *msg);
+  void doReduce();
+
+private:
+  static void createStatsFile();
+  static void closeStatsFile();
+
+
 public:
-
-  /// \brief Queue to store a map of elements specified by input file.
+  static std::deque<std::map<ElementIDType,TimeType>> user_specified_map_changed_;
   static std::deque< std::set<ElementIDType> > user_specified_map_;
+  static VectorDiffPhase phase_changed_map_;
 
-  /// \brief Vector of booleans to indicate whether the user-specified
-  /// map migrates some elements for a specific iteration.
-  static std::vector<bool> phase_changed_map_;
+  static std::vector<ElementIDType> migrateList;
 
-  /// \brief Queue of migrations for each iteration.
-  /// \note At each iteration, a vector of length 2 times (# of migrations)
-  /// is specified. The vector contains the "permanent" ID of the element
-  /// to migrate followed by the node ID to migrate to.
-  static std::deque< std::vector<ElementIDType> > moveList;
-
-protected:
-
-  void doSend(lb::VecMsg *msg);
-  void scatterSend(lb::VecMsg *msg);
-
-  /// \brief Vector counting the received messages per iteration
-  /// \note Only node 0 will use this vector.
-  static std::vector<size_t> msgReceived;
-
-  /// \brief Queue for storing all the migrations per iteration.
-  /// \note Only node 0 will use this queue.
+  static std::vector<size_t> mmReceived;
   static std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>>
-    totalMove;
+    mmTotal;
+  static std::deque< std::vector<ElementIDType> > mmList;
+  static std::vector<bool> mmBool;
 
+  /*
+   * Get the proxy for the StatsLBReader
+   */
+  static objgroup::proxy::Proxy<StatsLBReader> getProxy() { return proxy_; }
+
+private:
+  static FILE* stats_file_;
+  static bool created_dir_;
   static objgroup::proxy::Proxy<StatsLBReader> proxy_;
+
+  static size_t numReceived;
 
 };
 

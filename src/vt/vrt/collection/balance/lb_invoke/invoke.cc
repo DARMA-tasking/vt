@@ -57,6 +57,8 @@
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 
+#include <iostream>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/ objgroup::proxy::Proxy<LBManager> LBManager::proxy_;
@@ -81,10 +83,17 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
     return the_lb;
   }
 
+  std::cout << " invoke >> node " << theContext()->getNode() << " phase " << phase << " bool "
+            << static_cast<int>(balance::StatsLBReader::phase_changed_map_.vec_[phase])
+            << " mmBool " << static_cast<int>(balance::StatsLBReader::mmBool[phase])
+            << std::endl;
+
   //--- User-specified map without any change, thus do not run
+//  if ((ArgType::vt_lb_name == lb_names_[LBType::StatsMapLB]) and
+//      !balance::StatsLBReader::phase_changed_map_.vec_[phase]) {
   if ((ArgType::vt_lb_name == lb_names_[LBType::StatsMapLB]) and
-      !balance::StatsLBReader::phase_changed_map_[phase]) {
-    return LBType::NoLB;
+      !balance::StatsLBReader::mmBool[phase]) {
+    return the_lb;
   }
 
   if (ArgType::vt_lb_file and try_file) {
