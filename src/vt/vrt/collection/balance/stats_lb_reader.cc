@@ -154,14 +154,13 @@ std::vector<bool> StatsLBReader::phase_changed_map_ = {};
 }
 
 /*static*/ void StatsLBReader::loadPhaseChangedMap() {
-  auto const num_iters = StatsLBReader::user_specified_map_.size() - 1;
+  const auto num_iters = StatsLBReader::user_specified_map_.size() - 1;
   vt_print(lb, "StatsLBReader::loadPhaseChangedMap size : {}\n", num_iters);
 
-  auto myNodeID = static_cast<ElementIDType>(theContext()->getNode());
-
   StatsLBReader::moveList.resize(num_iters + 1);
-  StatsLBReader::phase_changed_map_.resize(num_iters);
+  StatsLBReader::phase_changed_map_.resize(num_iters, true);
 
+  const auto myNodeID = static_cast<ElementIDType>(theContext()->getNode());
   if (myNodeID == 0) {
     StatsLBReader::msgReceived.resize(num_iters, 0);
     StatsLBReader::totalMove.resize(num_iters);
@@ -178,12 +177,14 @@ std::vector<bool> StatsLBReader::phase_changed_map_ = {};
     StatsLBReader::moveList[ii].reserve(3 * (pi + qi) + 1);
     //--- Store the iteration number
     StatsLBReader::moveList[ii].push_back(static_cast<ElementIDType>(ii));
+    //--- Store partial migration information (i.e. nodes moving in)
     for (auto iEle : diff) {
       StatsLBReader::moveList[ii].push_back(iEle);  //--- permID to receive
       StatsLBReader::moveList[ii].push_back(no_element_id); // node moving from
       StatsLBReader::moveList[ii].push_back(myNodeID); // node moving to
     }
     diff.clear();
+    //--- Store partial migration information (i.e. nodes moving out)
     std::set_difference(elms.begin(), elms.end(), elmsNext.begin(),
       elmsNext.end(), std::inserter(diff, diff.begin()));
     for (auto iEle : diff) {
@@ -202,7 +203,7 @@ std::vector<bool> StatsLBReader::phase_changed_map_ = {};
 
 void StatsLBReader::doSend(lb::VecMsg *msg) {
   auto sendVec = msg->getTransfer();
-  ElementIDType iter = sendVec[0];
+  const ElementIDType iter = sendVec[0];
   //
   // --- Combine the different pieces of information
   //
@@ -265,8 +266,8 @@ void StatsLBReader::doSend(lb::VecMsg *msg) {
 void StatsLBReader::scatterSend(lb::VecMsg *msg) {
   const size_t header = 2;
   auto recvVec = msg->getTransfer();
-  ElementIDType iter = recvVec[0];
-  StatsLBReader::phase_changed_map_[iter] = (recvVec[1] > 0);
+  const ElementIDType iter = recvVec[0];
+  StatsLBReader::phase_changed_map_[iter] = static_cast<bool>(recvVec[1] > 0);
   auto &myList = StatsLBReader::moveList[iter];
   if (recvVec.size() <= header) {
     myList.clear();
