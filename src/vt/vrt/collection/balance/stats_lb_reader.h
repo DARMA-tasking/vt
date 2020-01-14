@@ -89,16 +89,6 @@ public:
   /// \brief Queue to store a map of elements specified by input file.
   static std::deque< std::set<ElementIDType> > user_specified_map_;
 
-  /// \brief Vector of booleans to indicate whether the user-specified
-  /// map migrates some elements for a specific iteration.
-  static std::vector<bool> phase_changed_map_;
-
-  /// \brief Queue of migrations for each iteration.
-  /// \note At each iteration, a vector of length 2 times (# of migrations)
-  /// is specified. The vector contains the "permanent" ID of the element
-  /// to migrate followed by the node ID to migrate to.
-  static std::deque< std::vector<ElementIDType> > moveList;
-
 protected:
 
   void doSend(lb::VecMsg *msg);
@@ -106,7 +96,7 @@ protected:
 
   /// \brief Vector counting the received messages per iteration
   /// \note Only node 0 will use this vector.
-  static std::vector<size_t> msgReceived;
+  static std::vector<size_t> msgsReceived;
 
   /// \brief Queue for storing all the migrations per iteration.
   /// \note Only node 0 will use this queue.

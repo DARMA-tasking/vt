@@ -55,7 +55,16 @@
 #include <vector>
 #include <unordered_map>
 
+namespace vt { namespace vrt { namespace collection { namespace lb {
+
+struct StatsMapLB;
+
+} } } }
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
+
+struct LBManager;
+struct StatsLBReader;
 
 struct ProcStats {
   using MigrateFnType = std::function<void(NodeType)>;
@@ -92,6 +101,21 @@ public:
 private:
   static FILE* stats_file_;
   static bool created_dir_;
+
+  /// \brief Queue of migrations for each iteration.
+  /// \note At each iteration, a vector of length 2 times (# of migrations)
+  /// is specified. The vector contains the "permanent" ID of the element
+  /// to migrate followed by the node ID to migrate to.
+  static std::deque< std::vector<ElementIDType> > proc_move_list_;
+
+  /// \brief Vector of booleans to indicate whether the user-specified
+  /// map migrates elements for a specific iteration.
+  static std::vector< bool > proc_phase_runs_LB_;
+
+  friend struct lb::StatsMapLB;
+  friend struct balance::StatsLBReader;
+  friend struct balance::LBManager;
+
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
