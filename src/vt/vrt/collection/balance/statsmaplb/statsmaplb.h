@@ -61,7 +61,7 @@ struct StatsMapLB : BaseLB {
   void inputParams(balance::SpecEntry* spec) override { }
 
 private:
-  objgroup::proxy::Proxy<StatsMapLB> proxy = {};
+  objgroup::proxy::Proxy<StatsMapLB> proxy_ = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
