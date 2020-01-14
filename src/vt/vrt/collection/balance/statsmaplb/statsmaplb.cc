@@ -52,7 +52,7 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
-  proxy = in_proxy;
+  proxy_ = in_proxy;
 }
 
 void StatsMapLB::runLB() {
