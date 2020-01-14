@@ -82,6 +82,11 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 
 /*static*/ bool ProcStats::created_dir_ = false;
 
+/*static*/ std::deque< std::vector<ElementIDType> >
+  ProcStats::proc_move_list_ = {};
+
+/*static*/ std::vector< bool > ProcStats::proc_phase_runs_LB_ = {};
+
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_comm_.clear();
   ProcStats::proc_data_.clear();

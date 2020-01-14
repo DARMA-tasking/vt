@@ -63,17 +63,11 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 std::deque<std::set<ElementIDType>> StatsLBReader::user_specified_map_ = {};
 
 /*static*/
-std::deque< std::vector<ElementIDType> > StatsLBReader::moveList = {};
-
-/*static*/
-std::vector<size_t> StatsLBReader::msgReceived = {};
+std::vector<size_t> StatsLBReader::msgsReceived = {};
 
 /*static*/
 std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>>
   StatsLBReader::totalMove = {};
-
-/*static*/
-std::vector<bool> StatsLBReader::phase_changed_map_ = {};
 
 /*static*/ objgroup::proxy::Proxy<StatsLBReader> StatsLBReader::proxy_ = {};
 
@@ -105,7 +99,7 @@ std::vector<bool> StatsLBReader::phase_changed_map_ = {};
   vt_print(lb, "inputStatFile: file={}, iter={}\n", file_name, 0);
 
   std::FILE *pFile = std::fopen(file_name.c_str(), "r");
-  if ((pFile == nullptr) or (errno == ENOENT)) {
+  if (pFile == nullptr) {
     vtAssert(pFile, "File opening failed");
   }
 
@@ -157,12 +151,12 @@ std::vector<bool> StatsLBReader::phase_changed_map_ = {};
   const auto num_iters = StatsLBReader::user_specified_map_.size() - 1;
   vt_print(lb, "StatsLBReader::loadPhaseChangedMap size : {}\n", num_iters);
 
-  StatsLBReader::moveList.resize(num_iters + 1);
-  StatsLBReader::phase_changed_map_.resize(num_iters, true);
+  balance::ProcStats::proc_move_list_.resize(num_iters + 1);
+  balance::ProcStats::proc_phase_runs_LB_.resize(num_iters, true);
 
   const auto myNodeID = static_cast<ElementIDType>(theContext()->getNode());
   if (myNodeID == 0) {
-    StatsLBReader::msgReceived.resize(num_iters, 0);
+    StatsLBReader::msgsReceived.resize(num_iters, 0);
     StatsLBReader::totalMove.resize(num_iters);
   }
 
@@ -174,28 +168,29 @@ std::vector<bool> StatsLBReader::phase_changed_map_ = {};
       elms.end(), std::inserter(diff, diff.begin()));
     const size_t qi = diff.size();
     const size_t pi = elms.size() - (elmsNext.size() - qi);
-    StatsLBReader::moveList[ii].reserve(3 * (pi + qi) + 1);
+    auto &myList = ProcStats::proc_move_list_[ii];
+    myList.reserve(3 * (pi + qi) + 1);
     //--- Store the iteration number
-    StatsLBReader::moveList[ii].push_back(static_cast<ElementIDType>(ii));
+    myList.push_back(static_cast<ElementIDType>(ii));
     //--- Store partial migration information (i.e. nodes moving in)
     for (auto iEle : diff) {
-      StatsLBReader::moveList[ii].push_back(iEle);  //--- permID to receive
-      StatsLBReader::moveList[ii].push_back(no_element_id); // node moving from
-      StatsLBReader::moveList[ii].push_back(myNodeID); // node moving to
+      myList.push_back(iEle);  //--- permID to receive
+      myList.push_back(no_element_id); // node moving from
+      myList.push_back(myNodeID); // node moving to
     }
     diff.clear();
     //--- Store partial migration information (i.e. nodes moving out)
     std::set_difference(elms.begin(), elms.end(), elmsNext.begin(),
       elmsNext.end(), std::inserter(diff, diff.begin()));
     for (auto iEle : diff) {
-      StatsLBReader::moveList[ii].push_back(iEle);  //--- permID to send
-      StatsLBReader::moveList[ii].push_back(myNodeID); // node migrating from
-      StatsLBReader::moveList[ii].push_back(no_element_id); // node migrating to
+      myList.push_back(iEle);  //--- permID to send
+      myList.push_back(myNodeID); // node migrating from
+      myList.push_back(no_element_id); // node migrating to
     }
     //
     // Create a message storing the vector
     //
-    auto msg = makeSharedMessage<lb::VecMsg>(StatsLBReader::moveList[ii]);
+    auto msg = makeSharedMessage<lb::VecMsg>(myList);
     StatsLBReader::proxy_[0].send<lb::VecMsg, &StatsLBReader::doSend>(msg);
   }
 
@@ -203,12 +198,12 @@ std::vector<bool> StatsLBReader::phase_changed_map_ = {};
 
 void StatsLBReader::doSend(lb::VecMsg *msg) {
   auto sendVec = msg->getTransfer();
-  const ElementIDType iter = sendVec[0];
+  const ElementIDType phaseID = sendVec[0];
   //
   // --- Combine the different pieces of information
   //
-  StatsLBReader::msgReceived[iter] += 1;
-  auto &migrate = StatsLBReader::totalMove[iter];
+  StatsLBReader::msgsReceived[phaseID] += 1;
+  auto &migrate = StatsLBReader::totalMove[phaseID];
   for (size_t ii = 1; ii < sendVec.size(); ii += 3) {
     const auto permID = sendVec[ii];
     const auto nodeFrom = static_cast<NodeType>(sendVec[ii+1]);
@@ -227,7 +222,7 @@ void StatsLBReader::doSend(lb::VecMsg *msg) {
   // --- Check whether all the messages have been received
   //
   const NodeType numNodes = theContext()->getNumNodes();
-  if (StatsLBReader::msgReceived[iter] < numNodes)
+  if (StatsLBReader::msgsReceived[phaseID] < numNodes)
     return;
   //
   //--- Distribute the information when everything has been received
@@ -241,7 +236,7 @@ void StatsLBReader::doSend(lb::VecMsg *msg) {
     const size_t header = 2;
     std::vector<ElementIDType> toMove(2 * iCount + header);
     iCount = 0;
-    toMove[iCount++] = iter;
+    toMove[iCount++] = phaseID;
     toMove[iCount++] = static_cast<ElementIDType>(migrate.size());
     for (auto iNode : migrate) {
       if (iNode.second.first == in) {
@@ -254,10 +249,11 @@ void StatsLBReader::doSend(lb::VecMsg *msg) {
       StatsLBReader::proxy_[in].send<lb::VecMsg,&StatsLBReader::scatterSend>
         (msg2);
     } else {
-      StatsLBReader::phase_changed_map_[iter] = (migrate.size() > 0);
-      StatsLBReader::moveList[iter].resize(toMove.size() - header);
+      ProcStats::proc_phase_runs_LB_[phaseID] = (migrate.size() > 0);
+      auto &myList = ProcStats::proc_move_list_[phaseID];
+      myList.resize(toMove.size() - header);
       std::copy(&toMove[header], &toMove[0] + toMove.size(),
-                StatsLBReader::moveList[iter].begin());
+        myList.begin());
     }
   }
   migrate.clear();
@@ -266,9 +262,9 @@ void StatsLBReader::doSend(lb::VecMsg *msg) {
 void StatsLBReader::scatterSend(lb::VecMsg *msg) {
   const size_t header = 2;
   auto recvVec = msg->getTransfer();
-  const ElementIDType iter = recvVec[0];
-  StatsLBReader::phase_changed_map_[iter] = static_cast<bool>(recvVec[1] > 0);
-  auto &myList = StatsLBReader::moveList[iter];
+  const ElementIDType phaseID = recvVec[0];
+  ProcStats::proc_phase_runs_LB_[phaseID] = static_cast<bool>(recvVec[1] > 0);
+  auto &myList = ProcStats::proc_move_list_[phaseID];
   if (recvVec.size() <= header) {
     myList.clear();
     return;
