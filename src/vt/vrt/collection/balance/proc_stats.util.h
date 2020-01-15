@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 stats_lb_reader.h
+//                             proc_stats.util.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,71 +42,54 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_STATS_LB_READER_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_STATS_LB_READER_H
+#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_UTIL_H
+#define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_UTIL_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/objgroup/headers.h"
-
-#include <cstdio>
-#include <cstdlib>
 #include <deque>
-#include <functional>
 #include <map>
-#include <set>
-#include <tuple>
 #include <vector>
 
-
-namespace vt { namespace vrt { namespace collection { namespace lb {
-
-template<typename Transfer>
-struct TransferMsg;
-
-using VecMsg = TransferMsg< std::vector< balance::ElementIDType > >;
-
-} } } }
-
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct StatsLBReader {
-
-public:
-  StatsLBReader() = default;
-  StatsLBReader(StatsLBReader const&) = delete;
-  StatsLBReader(StatsLBReader&&) = default;
-
-  static void init();
-  static void destroy();
-  static void clearStats();
-  static void inputStatsFile();
-  static void loadPhaseChangedMap();
-
-public:
-
-  /// \brief Queue to store a map of elements specified by input file.
-  static std::deque< std::set<ElementIDType> > user_specified_map_;
-
-protected:
-
-  void doSend(lb::VecMsg *msg);
-  void scatterSend(lb::VecMsg *msg);
-
+struct StatsRestartReader {
   /// \brief Vector counting the received messages per iteration
   /// \note Only node 0 will use this vector.
-  static std::vector<size_t> msgsReceived;
+  std::vector<size_t> msgsReceived = {};
 
   /// \brief Queue for storing all the migrations per iteration.
   /// \note Only node 0 will use this queue.
-  static std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>>
-    totalMove;
+  std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>>
+    totalMove = {};
 
-  static objgroup::proxy::Proxy<StatsLBReader> proxy_;
+  /// \brief Proxy for communicating the migration information
+  objgroup::proxy::Proxy<StatsRestartReader> proxy = {};
+
+public:
+  StatsRestartReader() = default;
+
+  ~StatsRestartReader();
+
+  static void readStats();
+
+private:
+  static void inputStatsFile(
+    std::deque<std::set<ElementIDType> > &element_history
+  );
+
+  static void createMigrationInfo(
+    std::deque<std::set<ElementIDType> > &element_history
+  );
+
+  using VecMsg = lb::TransferMsg<std::vector<balance::ElementIDType> >;
+  void gatherMsgs(VecMsg *msg);
+
+  void scatterMsgs(VecMsg *msg);
 
 };
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}}}}
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_STATS_LB_READER_H*/
+#endif

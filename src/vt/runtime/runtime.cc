@@ -54,15 +54,12 @@
 #include "vt/rdma/rdma_headers.h"
 #include "vt/parameterization/parameterization.h"
 #include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace.h"
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
-#include "vt/termination/termination.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/generated/vt_git_revision.h"
@@ -826,7 +823,7 @@ bool Runtime::initialize(bool const force_now) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
       if (ArgType::vt_lb_name == lbNames[mapLB]) {
-        vrt::collection::balance::StatsLBReader::init();
+        vrt::collection::balance::ProcStats::readRestartInfo();
       }
     }
 #endif

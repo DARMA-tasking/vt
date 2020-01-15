@@ -64,7 +64,7 @@ struct StatsMapLB;
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LBManager;
-struct StatsLBReader;
+struct StatsRestartReader;
 
 struct ProcStats {
   using MigrateFnType = std::function<void(NodeType)>;
@@ -81,6 +81,8 @@ public:
   static void releaseLB();
 
   static void outputStatsFile();
+
+  static void readRestartInfo();
 
 private:
   static void createStatsFile();
@@ -102,6 +104,7 @@ private:
   static FILE* stats_file_;
   static bool created_dir_;
 
+#if backend_check_enabled(lblite)
   /// \brief Queue of migrations for each iteration.
   /// \note At each iteration, a vector of length 2 times (# of migrations)
   /// is specified. The vector contains the "permanent" ID of the element
@@ -112,9 +115,13 @@ private:
   /// map migrates elements for a specific iteration.
   static std::vector< bool > proc_phase_runs_LB_;
 
-  friend struct lb::StatsMapLB;
-  friend struct balance::StatsLBReader;
+  /// \brief Private object to migrate information from a (restart) input file
+  static StatsRestartReader *proc_reader_;
+#endif
+
   friend struct balance::LBManager;
+  friend struct balance::StatsRestartReader;
+  friend struct lb::StatsMapLB;
 
 };
 

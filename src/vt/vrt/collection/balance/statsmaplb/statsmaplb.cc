@@ -44,12 +44,9 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
-#include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/context/context.h"
-
-
-#include <iostream>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -77,7 +74,7 @@ void StatsMapLB::runLB() {
   finishMigrationCollective();
 
   myNewList.clear();
-  
+
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
