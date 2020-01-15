@@ -53,7 +53,6 @@
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
-#include "vt/vrt/collection/balance/stats_lb_reader.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 
