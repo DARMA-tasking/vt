@@ -104,7 +104,6 @@ private:
   static FILE* stats_file_;
   static bool created_dir_;
 
-#if backend_check_enabled(lblite)
   /// \brief Queue of migrations for each iteration.
   /// \note At each iteration, a vector of length 2 times (# of migrations)
   /// is specified. The vector contains the "permanent" ID of the element
@@ -117,7 +116,6 @@ private:
 
   /// \brief Private object to migrate information from a (restart) input file
   static StatsRestartReader *proc_reader_;
-#endif
 
   friend struct balance::LBManager;
   friend struct balance::StatsRestartReader;
