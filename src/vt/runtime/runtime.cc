@@ -823,7 +823,13 @@ bool Runtime::initialize(bool const force_now) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
       if (ArgType::vt_lb_name == lbNames[mapLB]) {
-        vrt::collection::balance::ProcStats::readRestartInfo();
+        auto const node = theContext->getNode();
+        const std::string &base_file = ArgType::vt_lb_stats_file_in;
+        const std::string &dir = ArgType::vt_lb_stats_dir_in;
+        auto const file = fmt::format("{}.{}.out", base_file, node);
+        const auto file_name =
+          static_cast<std::string>(fmt::format("{}/{}", dir, file));
+        vrt::collection::balance::ProcStats::readRestartInfo(file_name);
       }
     }
 #endif

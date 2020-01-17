@@ -52,8 +52,9 @@
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/timing/timing.h"
 
-#include <vector>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
@@ -82,7 +83,7 @@ public:
 
   static void outputStatsFile();
 
-  static void readRestartInfo();
+  static void readRestartInfo(const std::string &fileName);
 
 private:
   static void createStatsFile();

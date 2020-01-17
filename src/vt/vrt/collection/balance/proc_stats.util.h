@@ -47,6 +47,7 @@
 
 #include <deque>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "vt/config.h"
@@ -72,10 +73,11 @@ public:
 
   ~StatsRestartReader();
 
-  static void readStats();
+  static void readStats(const std::string &fileName);
 
 private:
   static void inputStatsFile(
+    const std::string &fileName,
     std::deque<std::set<ElementIDType> > &element_history
   );
 
