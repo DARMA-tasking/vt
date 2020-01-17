@@ -95,11 +95,11 @@ StatsRestartReader::~StatsRestartReader() {
 }
 
 /*static*/
-void StatsRestartReader::readStats() {
+void StatsRestartReader::readStats(const std::string &fileName) {
 
   // Read the input files
   std::deque< std::set<ElementIDType> > elements_history;
-  inputStatsFile(elements_history);
+  inputStatsFile(fileName, elements_history);
   if (elements_history.empty()) {
     vtWarn("No element history provided");
     return;
@@ -122,19 +122,11 @@ void StatsRestartReader::readStats() {
 
 /*static*/
 void StatsRestartReader::inputStatsFile(
+  const std::string &fileName,
   std::deque< std::set<ElementIDType> > &element_history
 )
 {
-  using ArgType = vt::arguments::ArgConfig;
-  auto const node = theContext()->getNode();
-  const std::string &base_file = ArgType::vt_lb_stats_file_in;
-  const std::string &dir = ArgType::vt_lb_stats_dir_in;
-  auto const file = fmt::format("{}.{}.out", base_file, node);
-  auto const file_name = fmt::format("{}/{}", dir, file);
-
-  vt_print(lb, "inputStatFile: file={}, iter={}\n", file_name, 0);
-
-  std::FILE *pFile = std::fopen(file_name.c_str(), "r");
+  std::FILE *pFile = std::fopen(fileName.c_str(), "r");
   if (pFile == nullptr) {
     vtAssert(pFile, "File opening failed");
   }
@@ -314,11 +306,11 @@ void StatsRestartReader::scatterMsgs(VecMsg *msg) {
   std::copy(&recvVec[header], &recvVec[0]+recvVec.size(), myList.begin());
 }
 
-/*static*/ void ProcStats::readRestartInfo() {
+/*static*/ void ProcStats::readRestartInfo(const std::string &fileName) {
   if (ProcStats::proc_reader_ == nullptr) {
     ProcStats::proc_reader_ = new StatsRestartReader;
   }
-  ProcStats::proc_reader_->readStats();
+  ProcStats::proc_reader_->readStats(fileName);
 }
 
 /*static*/ void ProcStats::clearStats() {
