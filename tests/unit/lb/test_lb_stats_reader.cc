@@ -88,7 +88,8 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
 
   using Stats = vt::vrt::collection::balance::ProcStats;
   for (size_t ii = 0; ii < numElements; ++ii) {
-    myElemList[ii] = getElemPermID(ii, this_node);
+	//--- Shift by 1 to avoid the null permID
+    myElemList[ii] = getElemPermID(ii+1, this_node);
   }
 
   // Write the input file to test
@@ -113,7 +114,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
     }
     for (NodeType in = 0; in+1 < num_node; ++in) {
       for (uint64_t elmID = 1; elmID < numElements; ++elmID) {
-        ElementIDType permID = getElemPermID(elmID, in);
+        ElementIDType permID = getElemPermID(elmID+1, in);
         out << iterID << "," << permID << "," << tval << std::endl;
       }
     }
@@ -139,17 +140,22 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   //--- Check the read values
 
   auto const &migrationList = Stats::getMigrationList();
-  EXPECT_TRUE(migrationList.size() == 2);
+  auto const numIters = migrationList.size();
+
+  EXPECT_TRUE(numIters == iterID - 1);
+
   //--- Iteration 0 -> 1
   size_t phaseID = 0;
   auto myList = migrationList[phaseID];
   EXPECT_TRUE(myList.size() % 2 == 0);
-  for (size_t ii = 1; ii < numElements; ++ii) {
-    auto myPermID = myElemList[ii];
-    auto it = std::find(myList.begin(), myList.end(), myPermID);
-    EXPECT_TRUE(it != myList.end());
-    size_t shift = static_cast<size_t>(it - myList.begin());
-    EXPECT_TRUE(myList[shift+1] == static_cast<ElementIDType>(num_node - 1));
+  if (myList.size() > 0) {
+    for (size_t ii = 1; ii < numElements; ++ii) {
+      auto myPermID = myElemList[ii];
+      auto it = std::find(myList.begin(), myList.end(), myPermID);
+      EXPECT_TRUE(it != myList.end());
+      size_t shift = static_cast<size_t>(it - myList.begin());
+      EXPECT_TRUE(myList[shift+1] == static_cast<ElementIDType>(num_node - 1));
+    }
   }
 
   //--- Iteration 1 -> 2
@@ -162,8 +168,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
     EXPECT_TRUE(myList.size() % 2 == 0);
     for (NodeType in = 0; in+1 < num_node; ++in) {
       for (ElementIDType elmID = 1; elmID < numElements; ++elmID) {
-        //--- Formula inside the function "Stats::getNextElem()"
-        ElementIDType permID = getElemPermID(elmID, in);
+        ElementIDType permID = getElemPermID(elmID + 1, in);
         auto it = std::find(myList.begin(), myList.end(), permID);
         EXPECT_TRUE(it != myList.end());
         size_t shift = static_cast<size_t>(it - myList.begin());

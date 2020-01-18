@@ -109,7 +109,7 @@ void StatsRestartReader::readStats(const std::string &fileName) {
     theObjGroup()->makeCollective<StatsRestartReader>();
 
   const auto num_iters = elements_history.size() - 1;
-  ProcStats::proc_move_list_.resize(num_iters + 1);
+  ProcStats::proc_move_list_.resize(num_iters);
   ProcStats::proc_phase_runs_LB_.resize(num_iters, true);
   if (theContext()->getNode() == 0) {
     ProcStats::proc_reader_->msgsReceived.resize(num_iters, 0);
