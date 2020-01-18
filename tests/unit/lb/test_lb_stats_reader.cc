@@ -130,6 +130,14 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
 
   Stats::readRestartInfo(fileName);
 
+  //--- Spin here so the test does not end before the communications complete
+
+  while (not vt::rt->isTerminated()) {
+    vt::runScheduler();
+  }
+
+  //--- Check the read values
+
   auto const &migrationList = Stats::getMigrationList();
   EXPECT_TRUE(migrationList.size() == 2);
   //--- Iteration 0 -> 1
