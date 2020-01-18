@@ -94,16 +94,20 @@ public:
 
   // @todo: make these private and friend appropriate classes
 public:
-  static ElementIDType next_elm_;
-public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
   static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
   static std::vector<CommMapType> proc_comm_;
+
+  /// \brief Returns a constant reference to the list of migrations.
+  static const std::deque<std::vector<ElementIDType>>& getMigrationList()
+  { return proc_move_list_; };
+
 private:
   static FILE* stats_file_;
   static bool created_dir_;
+  static ElementIDType next_elm_;
 
   /// \brief Queue of migrations for each iteration.
   /// \note At each iteration, a vector of length 2 times (# of migrations)
