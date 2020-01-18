@@ -146,7 +146,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
 
   //--- Iteration 1 -> 2
   phaseID = 1;
-  auto myList = migrationList[phaseID];
+  myList = migrationList[phaseID];
   if (this_node != num_node - 1) {
     EXPECT_TRUE(myList.size() == 0);
   }
