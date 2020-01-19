@@ -262,25 +262,45 @@ private:
 
 }} /* end namespace vt::messaging */
 
+
+// Expose public/common types in vt:: namespace.
 namespace vt {
 
-// For historic reasons;
-// Functionality is now part of MsgSharedPtr
+/**
+ * \internal
+ * \obsolete Use \c MsgPtr<T>, for which is is an alias.
+ */
 template <typename T>
 using MsgVirtualPtr = messaging::MsgSharedPtr<T>;
 
-// For historic reasons;
-// Functionality is now part of MsgSharedPtr
+/**
+ * \internal
+ * \obsolete Use \c MsgPtr<ShortMessage>, or as appropriate.
+ */
 using MsgVirtualPtrAny = messaging::MsgSharedPtr<ShortMessage>;
 
+/**
+ * \internal
+ * \obsolete Use \c MsgPtr<T>, for which is is an alias.
+ */
 template <typename T>
 using MsgSharedPtr = messaging::MsgSharedPtr<T>;
 
+/**
+ * \brief Wrapper to manage Active Messages.
+ *
+ * A MsgPtr represents a 'shared pointer like' object wrapping a
+ * message that correcly manages reference-counts to order to
+ * eliminate memory leaks.
+ */
+template <typename T>
+using MsgPtr = messaging::MsgSharedPtr<T>;
+
 /// Steal ownership of the message (no ref-increase).
 template <typename T>
-inline MsgSharedPtr<T> promoteMsgOwner(T* const msg) {
+inline MsgPtr<T> promoteMsgOwner(T* const msg) {
   msg->has_owner_ = true;
-  return MsgSharedPtr<T>{msg,false};
+  return MsgPtr<T>{msg,false};
 }
 
 /// Take additional ownership of the message (increase message ref).
@@ -288,19 +308,19 @@ inline MsgSharedPtr<T> promoteMsgOwner(T* const msg) {
 // TODO: eliminate if possible as it has confusing semantics
 // with overload and is duplicated by copy/move ctors.
 template <typename T>
-inline MsgSharedPtr<T> promoteMsg(MsgSharedPtr<T> msg) {
+inline MsgPtr<T> promoteMsg(MsgPtr<T> msg) {
   vtAssert(msg->has_owner_, "promoteMsg shared ptr must have owner");
-  return MsgSharedPtr<T>{msg.get(),true};
+  return MsgPtr<T>{msg.get(),true};
 }
 
 /// If the message does not have an owner, steal ownership (no ref-increase).
 /// Otherwise, take additional ownership (increate message ref).
 template <typename T>
-inline MsgSharedPtr<T> promoteMsg(T* msg) {
+inline MsgPtr<T> promoteMsg(T* msg) {
   if (!msg->has_owner_) {
     return promoteMsgOwner(msg);
   } else {
-    return MsgSharedPtr<T>{msg,true};
+    return MsgPtr<T>{msg,true};
   }
 }
 
