@@ -52,13 +52,13 @@
 #include <iosfwd>
 #include <cassert>
 
-namespace vt { namespace messaging {
+namespace vt { namespace impl { namespace messaging {
   // Fwd decl for statics.
   template <typename T>
   struct MsgPtrImplTyped;
-}} // end namespace vt::messaging
+}}} // end namespace vt::impl::messaging
 
-namespace vt { namespace messaging { namespace statics {
+namespace vt { namespace impl { namespace messaging { namespace statics {
   /// Static objects with global lifetime and elimination of allocation.
   /// They are stateless and have a very high/constant reuse pattern.
   struct Holder {
@@ -68,10 +68,10 @@ namespace vt { namespace messaging { namespace statics {
 
   template <typename T>
   /*static*/ MsgPtrImplTyped<T> Holder::TypedMsgPtrImpls;
-}}} // end namespace vt::messaging::statics
+}}}} // end namespace vt::impl:::messaging::statics
 
 
-namespace vt { namespace messaging {
+namespace vt { namespace impl { namespace messaging {
 
 /// Message-type agnostic virtual base class.
 struct MsgPtrImplBase {
@@ -255,27 +255,34 @@ private:
   MsgPtrImplBase* impl_ = nullptr;
 };
 
-}} /* end namespace vt::messaging */
+}}} /* end namespace vt::impl::messaging */
 
+
+// Expose public/common types in vt:: namespace.
 namespace vt {
 
 // For historic reasons;
-// Functionality is now part of MsgSharedPtr
+// Use MsgPtr<T> instead.
 template <typename T>
-using MsgVirtualPtr = messaging::MsgSharedPtr<T>;
+using MsgVirtualPtr = impl::messaging::MsgSharedPtr<T>;
 
 // For historic reasons;
-// Functionality is now part of MsgSharedPtr
-using MsgVirtualPtrAny = messaging::MsgSharedPtr<ShortMessage>;
+// Use MsgPtr<T> instead.
+using MsgVirtualPtrAny = impl::messaging::MsgSharedPtr<ShortMessage>;
+
+// For historic compatibility;
+// Use MsgPtr<T> instead.
+template <typename T>
+using MsgSharedPtr = impl::messaging::MsgSharedPtr<T>;
 
 template <typename T>
-using MsgSharedPtr = messaging::MsgSharedPtr<T>;
+using MsgPtr = impl::messaging::MsgSharedPtr<T>;
 
 /// Steal ownership of the message (no ref-increase).
 template <typename T>
-inline MsgSharedPtr<T> promoteMsgOwner(T* const msg) {
+inline MsgPtr<T> promoteMsgOwner(T* const msg) {
   msg->has_owner_ = true;
-  return MsgSharedPtr<T>{msg,false};
+  return MsgPtr<T>{msg,false};
 }
 
 /// Take additional ownership of the message (increase message ref).
@@ -283,19 +290,19 @@ inline MsgSharedPtr<T> promoteMsgOwner(T* const msg) {
 // TODO: eliminate if possible as it has confusing semantics
 // with overload and is duplicated by copy/move ctors.
 template <typename T>
-inline MsgSharedPtr<T> promoteMsg(MsgSharedPtr<T> msg) {
+inline MsgPtr<T> promoteMsg(MsgPtr<T> msg) {
   vtAssert(msg->has_owner_, "promoteMsg shared ptr must have owner");
-  return MsgSharedPtr<T>{msg.get(),true};
+  return MsgPtr<T>{msg.get(),true};
 }
 
 /// If the message does not have an owner, steal ownership (no ref-increase).
 /// Otherwise, take additional ownership (increate message ref).
 template <typename T>
-inline MsgSharedPtr<T> promoteMsg(T* msg) {
+inline MsgPtr<T> promoteMsg(T* msg) {
   if (!msg->has_owner_) {
     return promoteMsgOwner(msg);
   } else {
-    return MsgSharedPtr<T>{msg,true};
+    return MsgPtr<T>{msg,true};
   }
 }
 
