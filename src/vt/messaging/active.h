@@ -229,8 +229,8 @@ struct ActiveMessenger {
    *
    * \param[in,out] msg the message to mark as a termination message
    */
-  template <typename MsgPtrT>
-  void markAsTermMessage(MsgPtrT const msg);
+  template <typename MsgT>
+  void markAsTermMessage(MsgT* msg);
 
   /**
    * \brief Mark a message as a location message
@@ -262,8 +262,8 @@ struct ActiveMessenger {
    * \param[in,out] msg the message to mark the epoch on (envelope must be able to hold)
    * \param[in] epoch the epoch to mark on the message
    */
-  template <typename MsgPtrT>
-  void setEpochMessage(MsgPtrT const msg, EpochType const& epoch);
+  template <typename MsgT>
+  void setEpochMessage(MsgT* msg, EpochType epoch);
 
   /**
    * \brief Set the tag in the envelope of a message
@@ -271,9 +271,8 @@ struct ActiveMessenger {
    * \param[in,out] msg the message to mark the tag on (envelope must be able to hold)
    * \param[in] tag the tag to mark on the message
    */
-  template <typename MsgPtrT>
-  void setTagMessage(MsgPtrT const msg, TagType const& tag);
-
+  template <typename MsgT>
+  void setTagMessage(MsgT* msg, TagType tag);
 
   /**
    * \defgroup preregister Basic Active Message Send with Pre-Registered Handler
@@ -299,7 +298,7 @@ struct ActiveMessenger {
    *     theMsg()->sendMsg(29, han, msg);
    *   }
    * \endcode
-   *  @{
+   * @{
    */
 
   /**
@@ -312,13 +311,17 @@ struct ActiveMessenger {
    * \param[in] han handler to send the message to
    * \param[in] msg the message to send
    * \param[in] msg_size the size of the message being sent
+   * \param[in] tag the tag to put on the message
    *
    * \return the \c PendingSend for the send
    */
   template <typename MessageT>
   PendingSendType sendMsgSz(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    ByteType const& msg_size
+    NodeType dest,
+    HandlerType han,
+    MessageT* msg,
+    ByteType msg_size,
+    TagType tag
   );
 
   /**
@@ -327,28 +330,16 @@ struct ActiveMessenger {
    * \param[in] dest node to send the message to
    * \param[in] han handler to send the message to
    * \param[in] msg the message to send
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MessageT>
-  PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg
-  );
-
-  /**
-   * \brief Send a message with a pre-registered handler and a tag.
-   *
-   * \param[in] dest node to send the message to
-   * \param[in] han handler to send the message to
-   * \param[in] msg the message to send
    * \param[in] tag the tag to put on the message
    *
    * \return the \c PendingSend for the send
    */
   template <typename MessageT>
   PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    TagType const& tag
+    NodeType dest,
+    HandlerType han,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /**
@@ -357,139 +348,20 @@ struct ActiveMessenger {
    * \param[in] dest node to send the message to
    * \param[in] han handler to send the message to
    * \param[in] msg the message to send (shared ptr)
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MsgT>
-  PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg
-  );
-
-  /**
-   * \brief Send a message with a pre-registered handler and a tag.
-   *
-   * \param[in] dest node to send the message to
-   * \param[in] han handler to send the message to
-   * \param[in] msg the message to send (shared ptr)
    * \param[in] tag the tag to put on the message
    *
    * \return the \c PendingSend for the send
    */
   template <typename MsgT>
   PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-    TagType const& tag
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MsgT>& msg,
+    TagType tag = no_tag
   );
 
   /**
-   * \brief Broadcast a message
-   *
-   * \param[in] han the handler to invoke
-   * \param[in] msg the message to send
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MessageT>
-  PendingSendType broadcastMsg(
-    HandlerType const& han, MessageT* const msg
-  );
-
-  /**
-   * \brief Broadcast a message
-   *
-   * \param[in] han the handler to invoke
-   * \param[in] msg the message to send
-   * \param[in] tag the tag to put on the message
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MessageT>
-  PendingSendType broadcastMsg(
-    HandlerType const& han, MessageT* const msg, TagType const& tag
-  );
-
-  /**
-   * \brief Broadcast a message
-   *
-   * \param[in] han the handler to invoke
-   * \param[in] msg the message to send
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MsgT>
-  PendingSendType broadcastMsg(
-    HandlerType const& han, MsgSharedPtr<MsgT> const& msg
-  );
-
-  /**
-   * \brief Broadcast a message
-   *
-   * \param[in] han the handler to invoke
-   * \param[in] msg the message to send
-   * \param[in] tag the tag to put on the message
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MsgT>
-  PendingSendType broadcastMsg(
-    HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag
-  );
-
-  /**
-   * \brief Broadcast message that may need serialization
-   *
-   * Method for broadcasting a message by automatically dispatching to the
-   * serialization framework if required based on examining compile-time traits
-   * of the message
-   *
-   * \param[in] han the handler to invoke
-   * \param[in] msg the message to send
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MessageT>
-  PendingSendType broadcastMsgAuto(
-    HandlerType const& han, MessageT* const msg
-  );
-
-  /**
-   * \brief Broadcast message that may need serialization
-   *
-   * Method for broadcasting a message by automatically dispatching to the
-   * serialization framework if required based on examining compile-time traits
-   * of the message
-   *
-   * \param[in] han the handler to invoke
-   * \param[in] msg the message to send
-   * \param[in] tag the tag to put on the message
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MessageT>
-  PendingSendType broadcastMsgAuto(
-    HandlerType const& han, MessageT* const msg, TagType const& tag
-  );
-
-  /**
-   * \brief Send message that may need serialization
-   *
-   * Method for sending a message by automatically dispatching to the
-   * serialization framework if required based on examining compile-time traits
-   * of the message
-   *
-   * \param[in] dest the destination node to send the message to
-   * \param[in] han the handler to invoke
-   * \param[in] msg the message to send
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MessageT>
-  PendingSendType sendMsgAuto(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg
-  );
-
-  /**
-   * \brief Send message that may need serialization
+   * \brief Send message that may need serialization.
    *
    * Method for sending a message by automatically dispatching to the
    * serialization framework if required based on examining compile-time traits
@@ -504,8 +376,10 @@ struct ActiveMessenger {
    */
   template <typename MessageT>
   PendingSendType sendMsgAuto(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    TagType const& tag
+    NodeType dest,
+    HandlerType han,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /** @} */
@@ -548,7 +422,7 @@ struct ActiveMessenger {
    * Use this variant to broadcast a message when \c sizeof(Message) != the
    * actual size you want to send (e.g., extra bytes on the end)
    *
-   * \param[in] msg the message to send
+   * \param[in] msg the message to broadcast
    * \param[in] msg_size the size of the message to send
    * \param[in] tag the tag to put on the message
    *
@@ -556,24 +430,27 @@ struct ActiveMessenger {
    */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType broadcastMsgSz(
-    MessageT* const msg, ByteType const& msg_size, TagType const& tag = no_tag
+    MessageT* msg,
+    ByteType msg_size,
+    TagType tag
   );
 
   /**
-   * \brief Broadcast a message, with an optional tag
+   * \brief Broadcast a message.
    *
-   * \param[in] msg the message to send
+   * \param[in] msg the message to broadcast
    * \param[in] tag the tag to put on the message
    *
    * \return the \c PendingSend for the sent message
    */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /**
-   * \brief Send a message, with an optional tag
+   * \brief Send a message.
    *
    * \param[in] dest the destination node to send the message to
    * \param[in] msg the message to send
@@ -583,7 +460,9 @@ struct ActiveMessenger {
    */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /**
@@ -602,12 +481,32 @@ struct ActiveMessenger {
    */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType sendMsgSz(
-    NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
-    TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    ByteType msg_size,
+    TagType tag = no_tag
   );
 
   /**
-   * \brief Send a message with a tag that may need serialization
+   * \brief Broadcast a message that may need serialization.
+   *
+   * This method automatically dispatches to the serialization framework if
+   * required (message has a serialize method) based on examining compile-time
+   * traits of the message.
+   *
+   * \param[in] msg the message to broadcast
+   * \param[in] tag the tag to put on the message
+   *
+   * \return the \c PendingSend for the send
+   */
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  PendingSendType broadcastMsgAuto(
+    MessageT* msg,
+    TagType tag = no_tag
+  );
+
+  /**
+   * \brief Send a message that may need serialization.
    *
    * This method automatically dispatches to the serialization framework if
    * required (message has a serialize method) based on examining compile-time
@@ -621,41 +520,9 @@ struct ActiveMessenger {
    */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg, TagType const& tag
-  );
-
-  /**
-   * \brief Send a message that may need serialization
-   *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
-   *
-   * \param[in] dest the destination node to send the message to
-   * \param[in] msg the message to send
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  PendingSendType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg
-  );
-
-  /**
-   * \brief Broadcast a message that may need serialization
-   *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
-   *
-   * \param[in] msg the message to send
-   * \param[in] tag optional tag to put on the message
-   *
-   * \return the \c PendingSend for the broadcast
-   */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  PendingSendType broadcastMsgAuto(
-    MessageT* const msg, TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /** @} */
@@ -665,7 +532,6 @@ struct ActiveMessenger {
    *             End Send Message Active Function (type-safe handler)
    *----------------------------------------------------------------------------
    */
-
 
   /**
    * \defgroup basicsend Send Message BASIC Active Function
@@ -700,7 +566,7 @@ struct ActiveMessenger {
    */
 
   /**
-   * \brief Broadcast a message
+   * \brief Broadcast a message with a type-safe handler.
    *
    * \param[in] msg the message to broadcast
    * \param[in] tag the optional tag to put on the message
@@ -709,11 +575,12 @@ struct ActiveMessenger {
    */
   template <ActiveFnType* f, typename MessageT>
   PendingSendType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /**
-   * \brief Send a message
+   * \brief Send a message with a type-safe handler.
    *
    * \param[in] dest the destination node to send the message to
    * \param[in] msg the message to broadcast
@@ -723,19 +590,10 @@ struct ActiveMessenger {
    */
   template <ActiveFnType* f, typename MessageT>
   PendingSendType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
-
-  /**
-   * \brief Send a message
-   *
-   * \param[in] dest the destination node to send the message to
-   * \param[in] msg the message to broadcast
-   *
-   * \return the \c PendingSend for the broadcast
-   */
-  template <ActiveFnType* f, typename MessageT>
-  PendingSendType sendMsg(NodeType const& dest, MessageT* const msg);
 
   /** @} */
 
@@ -775,7 +633,7 @@ struct ActiveMessenger {
    */
 
   /**
-   * \brief Broadcast a message
+   * \brief Broadcast a message with a type-safe handler.
    *
    * \param[in] msg the message to broadcast
    * \param[in] tag the optional tag to put on the message
@@ -787,11 +645,12 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /**
-   * \brief Broadcast a message that may need serialization
+   * \brief Broadcast a message that may need serialization.
    *
    * This method automatically dispatches to the serialization framework if
    * required (message has a serialize method) based on examining compile-time
@@ -807,32 +666,16 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsgAuto(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /**
-   * \brief Broadcast a message that may need serialization
-   *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
-   *
-   * \param[in] msg the message to broadcast
-   *
-   * \return the \c PendingSend for the broadcast
-   */
-  template <
-    typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
-  PendingSendType broadcastMsgAuto(MessageT* const msg);
-
-  /**
-   * \brief Send a message with a optional tag
+   * \brief Send a message with a type-safe handler.
    *
    * \param[in] dest the destination node to send the message to
    * \param[in] msg the message to broadcast
-   * \param[in] tag the optional tag to put on the message
+   * \param[in] tag the tag to put on the message
    *
    * \return the \c PendingSend for the send
    */
@@ -841,11 +684,13 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /**
-   * \brief Send a message that may need serialization
+   * \brief Send a message that may need serialization.
    *
    * This method automatically dispatches to the serialization framework if
    * required (message has a serialize method) based on examining compile-time
@@ -862,27 +707,9 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg, TagType const& tag
-  );
-
-  /**
-   * \brief Send a message that may need serialization
-   *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
-   *
-   * \param[in] dest the destination node to send the message to
-   * \param[in] msg the message to broadcast
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <
-    typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
-  PendingSendType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /** @} */
@@ -934,33 +761,89 @@ struct ActiveMessenger {
    */
 
   /**
-   * \brief Send a message with a byte payload for pre-registered manual handler
+   * \brief Broadcast a message.
+   *
+   * \param[in] han the handler to invoke
+   * \param[in] msg the message to broadcast
+   * \param[in] tag the optional tag to put on the message
+   *
+   * \return the \c PendingSend for the send
+   */
+  template <typename MessageT>
+  PendingSendType broadcastMsg(
+    HandlerType han,
+    MessageT* msg,
+    TagType tag = no_tag
+  );
+
+  /**
+   * \brief Broadcast a message.
+   *
+   * \param[in] han the handler to invoke
+   * \param[in] msg the message to broadcast
+   * \param[in] tag the optional tag to put on the message
+   *
+   * \return the \c PendingSend for the send
+   */
+  template <typename MsgT>
+  PendingSendType broadcastMsg(
+    HandlerType han,
+    MsgPtr<MsgT>& msg,
+    TagType tag = no_tag
+  );
+
+  /**
+   * \brief Send a message with a special payload function.
    *
    * \param[in] dest the destination node to send the message to
-   * \param[in] han the handler to send to
-   * \param[in] msg the message to broadcast
-   * \param[in] send_payload_fn send function with payload \c UserSendFnType
+   * \param[in] han the handler to invoke
+   * \param[in] msg the message to send
+   * \param[in] send_payload_fn
    *
    * \return the \c PendingSend for the send
    */
   template <typename MessageT>
   PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
+    NodeType dest,
+    HandlerType han,
+    MessageT* msg,
     UserSendFnType send_payload_fn
   );
 
   /**
-   * \brief Send a message with a byte payload for typesafe auto handler
+   * \brief Send a message with a special payload function.
    *
    * \param[in] dest the destination node to send the message to
-   * \param[in] msg the message to broadcast
-   * \param[in] send_payload_fn send function with payload \c UserSendFnType
+   * \param[in] msg the message to send
+   * \param[in] send_payload_fn
    *
    * \return the \c PendingSend for the send
    */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType sendMsg(
-    NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn
+    NodeType dest,
+    MessageT* msg,
+    UserSendFnType send_payload_fn
+  );
+
+  /**
+   * \brief Broadcast a message that may need serialization.
+   *
+   * This method automatically dispatches to the serialization framework if
+   * required (message has a serialize method) based on examining compile-time
+   * traits of the message.
+   *
+   * \param[in] han the handler to invoke
+   * \param[in] msg the message to broadcast
+   * \param[in] tag the optional tag to put on the message
+   *
+   * \return the \c PendingSend for the send
+   */
+  template <typename MessageT>
+  PendingSendType broadcastMsgAuto(
+    HandlerType han,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /** @} */

@@ -71,7 +71,7 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_1) {
 
   // Make a term message
   auto msg = vt::makeMessage<vt::term::TermMsg>(no_epoch);
-  vt::theMsg()->markAsTermMessage(msg);
+  vt::theMsg()->markAsTermMessage(msg.get());
   testSched->enqueue(msg, std::bind(ordering_fn, 1));
 
   // Make a regular message
