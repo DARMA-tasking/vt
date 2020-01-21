@@ -274,8 +274,36 @@ struct ActiveMessenger {
   template <typename MsgT>
   void setTagMessage(MsgT* msg, TagType tag);
 
+  /*!
+   * \internal
+   * Invoke message sending.
+   * Should be funnel-through method.
+   */
+  template <typename MessageT>
+  ActiveMessenger::PendingSendType sendMsgImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
+
+  /*!
+   * \internal
+   * Invoke broadcast message sending.
+   * Should be funnel-through method.
+   */
+  template <typename MessageT>
+  ActiveMessenger::PendingSendType sendBroadcastImpl(
+    HandlerType han,
+    MsgPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
+
   /**
    * \defgroup preregister Basic Active Message Send with Pre-Registered Handler
+
    *
    * \brief Send a message to pre-registered active message handler.
    *
@@ -321,7 +349,7 @@ struct ActiveMessenger {
     HandlerType han,
     MessageT* msg,
     ByteType msg_size,
-    TagType tag
+    TagType tag = no_tag
   );
 
   /**
@@ -374,6 +402,7 @@ struct ActiveMessenger {
    *
    * \return the \c PendingSend for the send
    */
+
   template <typename MessageT>
   PendingSendType sendMsgAuto(
     NodeType dest,
@@ -432,7 +461,7 @@ struct ActiveMessenger {
   PendingSendType broadcastMsgSz(
     MessageT* msg,
     ByteType msg_size,
-    TagType tag
+    TagType tag = no_tag
   );
 
   /**
@@ -978,8 +1007,8 @@ struct ActiveMessenger {
    *
    * \return the event for tracking the send completion
    */
-  EventType sendMsgSized(
-    MsgSharedPtr<BaseMsgType> const& msg, MsgSizeType const& msg_size
+  EventType doMessageSend(
+    MsgSharedPtr<BaseMsgType>& msg, MsgSizeType msg_size
   );
 
   /**

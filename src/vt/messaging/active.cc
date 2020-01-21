@@ -249,8 +249,8 @@ trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
 }
 #endif
 
-EventType ActiveMessenger::sendMsgSized(
-  MsgSharedPtr<BaseMsgType> const& base, MsgSizeType const& msg_size
+EventType ActiveMessenger::doMessageSend(
+  MsgSharedPtr<BaseMsgType>& base, MsgSizeType msg_size
 ) {
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
@@ -293,7 +293,7 @@ EventType ActiveMessenger::sendMsgSized(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "sendMsgSized: dest={}, handler={:x}, is_bcast={}, is_put={}\n",
+      "doMessageSend: dest={}, handler={:x}, is_bcast={}, is_put={}\n",
       dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
       print_bool(envelopeIsPut(msg->env))
     );
