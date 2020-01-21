@@ -58,13 +58,14 @@ namespace vt { namespace objgroup { namespace proxy {
 
 template <typename ObjT>
 template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void Proxy<ObjT>::broadcast(MsgT* msg) const {
-  return broadcast<MsgT,fn>(promoteMsg(msg));
+void Proxy<ObjT>::broadcast(MsgT* inmsg) const {
+  MsgPtr<MsgT> msg = promoteMsg(inmsg);
+  return broadcast<MsgT,fn>(msg);
 }
 
 template <typename ObjT>
 template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void Proxy<ObjT>::broadcast(MsgSharedPtr<MsgT> msg) const {
+void Proxy<ObjT>::broadcast(MsgPtr<MsgT> msg) const {
   auto proxy = Proxy<ObjT>(*this);
   theObjGroup()->broadcast<ObjT,MsgT,fn>(proxy,msg);
 }
@@ -83,7 +84,10 @@ void Proxy<ObjT>::reduce(
   MsgPtrT inmsg, Callback<MsgT> cb, ReduceStamp stamp
 ) const {
   auto proxy = Proxy<ObjT>(*this);
-  auto msg = promoteMsg(inmsg);
+  // Force promoteMsg(Msg*) to avoid special-case overload behavior
+  // which is now deprecated. The issue is caused because inmsg can be either
+  // Msg* or MsgPtr<Msg> based on call sites.
+  MsgPtr<MsgT> msg = promoteMsg(static_cast<MsgT*>(inmsg));
   msg->setCallback(cb);
   return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,stamp);
 }
@@ -95,7 +99,7 @@ template <
 >
 void Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
   auto proxy = Proxy<ObjT>(*this);
-  auto msg = promoteMsg(inmsg);
+  MsgPtr<MsgT> msg = promoteMsg(static_cast<MsgT*>(inmsg));
   return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,stamp);
 }
 
@@ -103,7 +107,7 @@ template <typename ObjT>
 template <typename MsgPtrT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 void Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
   auto proxy = Proxy<ObjT>(*this);
-  auto msg = promoteMsg(inmsg);
+  MsgPtr<MsgT> msg = promoteMsg(inmsg);
   return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,stamp);
 }
 
