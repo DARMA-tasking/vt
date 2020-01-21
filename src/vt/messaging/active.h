@@ -188,6 +188,33 @@ struct ActiveMessenger {
   template <typename MsgT>
   void setTagMessage(MsgT* msg, TagType tag);
 
+  /*!
+    \internal
+    Invoke message sending.
+    Should be funnel-through method.
+  */
+  template <typename MessageT>
+  ActiveMessenger::PendingSendType sendMsgImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
+
+  /*!
+    \internal
+    Invoke broadcast message sending.
+    Should be funnel-through method.
+  */
+  template <typename MessageT>
+  ActiveMessenger::PendingSendType sendBroadcastImpl(
+    HandlerType han,
+    MsgPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
+
   /*----------------------------------------------------------------------------
    *            Basic Active Message Send with Pre-Registered Handler
    *----------------------------------------------------------------------------
@@ -212,7 +239,7 @@ struct ActiveMessenger {
     HandlerType han,
     MessageT* msg,
     ByteType msg_size,
-    TagType tag
+    TagType tag = no_tag
   );
 
   template <typename MessageT>
@@ -270,7 +297,7 @@ struct ActiveMessenger {
   PendingSendType broadcastMsgSz(
     MessageT* msg,
     ByteType msg_size,
-    TagType tag
+    TagType tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
