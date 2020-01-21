@@ -179,14 +179,14 @@ struct ActiveMessenger {
 
   virtual ~ActiveMessenger();
 
-  template <typename MsgPtrT>
-  void setTermMessage(MsgPtrT const msg);
+  template <typename MsgT>
+  void setTermMessage(MsgT* msg);
 
-  template <typename MsgPtrT>
-  void setEpochMessage(MsgPtrT const msg, EpochType const& epoch);
+  template <typename MsgT>
+  void setEpochMessage(MsgT* msg, EpochType epoch);
 
-  template <typename MsgPtrT>
-  void setTagMessage(MsgPtrT const msg, TagType const& tag);
+  template <typename MsgT>
+  void setTagMessage(MsgT* msg, TagType tag);
 
   /*----------------------------------------------------------------------------
    *            Basic Active Message Send with Pre-Registered Handler
@@ -208,45 +208,40 @@ struct ActiveMessenger {
 
   template <typename MessageT>
   PendingSendType sendMsgSz(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    ByteType const& msg_size
+    NodeType dest,
+    HandlerType han,
+    MessageT* msg,
+    ByteType msg_size,
+    TagType tag
   );
 
   template <typename MessageT>
   PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg
-  );
-
-  template <typename MessageT>
-  PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    TagType const& tag
+    NodeType dest,
+    HandlerType han,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   template <typename MsgT>
   PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg
-  );
-
-  template <typename MsgT>
-  PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-    TagType const& tag
+    NodeType dest,
+    HandlerType han,
+    MsgPtr<MsgT>& msg,
+    TagType tag = no_tag
   );
 
   /*
    *  Auto method for dispatching to the serialization framework if required
    *  based on examining compile-time traits of the message
    */
-  template <typename MessageT>
-  PendingSendType sendMsgAuto(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg
-  );
 
   template <typename MessageT>
   PendingSendType sendMsgAuto(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
-    TagType const& tag
+    NodeType dest,
+    HandlerType han,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /*
@@ -273,43 +268,50 @@ struct ActiveMessenger {
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType broadcastMsgSz(
-    MessageT* const msg, ByteType const& msg_size, TagType const& tag = no_tag
+    MessageT* msg,
+    ByteType msg_size,
+    TagType tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType sendMsgSz(
-    NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
-    TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    ByteType msg_size,
+    TagType tag = no_tag
   );
 
   /*
    *  Auto method for dispatching to the serialization framework if required
    *  based on examining compile-time traits of the message
    */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  PendingSendType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg, TagType const& tag
-  );
-
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  PendingSendType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg
-  );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType broadcastMsgAuto(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
+
+  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  PendingSendType sendMsgAuto(
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
+  );
+
   /*
    *----------------------------------------------------------------------------
    *             End Send Message Active Function (type-safe handler)
@@ -339,16 +341,16 @@ struct ActiveMessenger {
 
   template <ActiveFnType* f, typename MessageT>
   PendingSendType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   template <ActiveFnType* f, typename MessageT>
   PendingSendType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
-
-  template <ActiveFnType* f, typename MessageT>
-  PendingSendType sendMsg(NodeType const& dest, MessageT* const msg);
 
   /*
    *----------------------------------------------------------------------------
@@ -375,7 +377,8 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsg(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   template <
@@ -383,21 +386,18 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsgAuto(
-    MessageT* const msg, TagType const& tag = no_tag
+    MessageT* msg,
+    TagType tag = no_tag
   );
-
-  template <
-    typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
-  PendingSendType broadcastMsgAuto(MessageT* const msg);
 
   template <
     typename FunctorT,
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType sendMsg(
-    NodeType const& dest, MessageT* const msg, TagType const& tag = no_tag
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   template <
@@ -405,15 +405,9 @@ struct ActiveMessenger {
     typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg, TagType const& tag
-  );
-
-  template <
-    typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
-  PendingSendType sendMsgAuto(
-    NodeType const& dest, MessageT* const msg
+    NodeType dest,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /*
@@ -431,49 +425,46 @@ struct ActiveMessenger {
    *
    *----------------------------------------------------------------------------
    */
+
+  template <typename MessageT>
+  PendingSendType broadcastMsg(
+    HandlerType han,
+    MessageT* msg,
+    TagType tag = no_tag
+  );
+
+  template <typename MsgT>
+  PendingSendType broadcastMsg(
+    HandlerType han,
+    MsgPtr<MsgT>& msg,
+    TagType tag = no_tag
+  );
+
   template <typename MessageT>
   PendingSendType sendMsg(
-    NodeType const& dest, HandlerType const& han, MessageT* const msg,
+    NodeType dest,
+    HandlerType han,
+    MessageT* msg,
     UserSendFnType send_payload_fn
   );
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   PendingSendType sendMsg(
-    NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn
-  );
-
-  template <typename MessageT>
-  PendingSendType broadcastMsg(
-    HandlerType const& han, MessageT* const msg
-  );
-
-  template <typename MessageT>
-  PendingSendType broadcastMsg(
-    HandlerType const& han, MessageT* const msg, TagType const& tag
-  );
-
-  template <typename MsgT>
-  PendingSendType broadcastMsg(
-    HandlerType const& han, MsgSharedPtr<MsgT> const& msg
-  );
-
-  template <typename MsgT>
-  PendingSendType broadcastMsg(
-    HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag
+    NodeType dest,
+    MessageT* msg,
+    UserSendFnType send_payload_fn
   );
 
   /*
    *  Auto method for dispatching to the serialization framework if required
    *  based on examining compile-time traits of the message
    */
-  template <typename MessageT>
-  PendingSendType broadcastMsgAuto(
-    HandlerType const& han, MessageT* const msg
-  );
 
   template <typename MessageT>
   PendingSendType broadcastMsgAuto(
-    HandlerType const& han, MessageT* const msg, TagType const& tag
+    HandlerType han,
+    MessageT* msg,
+    TagType tag = no_tag
   );
 
   /*

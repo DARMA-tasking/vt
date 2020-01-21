@@ -56,65 +56,55 @@
 
 namespace vt { namespace messaging {
 
-template <typename MsgPtrT>
-void ActiveMessenger::setTermMessage(MsgPtrT const msg) {
+template <typename MsgT>
+void ActiveMessenger::setTermMessage(MsgT* msg) {
   setTermType(msg->env);
 #if backend_check_enabled(priorities)
   envelopeSetPriority(msg->env, sys_min_priority);
 #endif
 }
 
-template <typename MsgPtrT>
-void ActiveMessenger::setEpochMessage(MsgPtrT msg, EpochType const& epoch) {
+template <typename MsgT>
+void ActiveMessenger::setEpochMessage(MsgT* msg, EpochType epoch) {
   envelopeSetEpoch(msg->env, epoch);
 }
 
-template <typename MsgPtrT>
-void ActiveMessenger::setTagMessage(MsgPtrT msg, TagType const& tag) {
+template <typename MsgT>
+void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
   envelopeSetTag(msg->env, tag);
 }
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg
+  NodeType dest,
+  HandlerType han,
+  MsgSharedPtr<MsgT>& msg,
+  TagType tag
 ) {
-  return sendMsg<MsgT>(dest,han,msg.get());
-}
-
-template <typename MsgT>
-ActiveMessenger::PendingSendType
-ActiveMessenger::sendMsg(
-  NodeType const& dest, HandlerType const& han, MsgSharedPtr<MsgT> const& msg,
-  TagType const& tag
-) {
-  return sendMsg<MsgT>(dest,han,msg.get(),tag);
+  return sendMsgSz<MsgT>(dest, han, msg.get(), sizeof(MsgT), tag);
 }
 
 template <typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType const& dest, HandlerType const& han, MessageT* const msg
+  NodeType dest,
+  HandlerType han,
+  MessageT* msg,
+  TagType tag
 ) {
-  return sendMsgSz<MessageT>(dest, han, msg, sizeof(MessageT));
+  return sendMsgSz<MessageT>(dest, han, msg, sizeof(MessageT), tag);
 }
 
 template <typename MessageT>
-ActiveMessenger::PendingSendType
-ActiveMessenger::sendMsg(
-  NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  TagType const& tag
+ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
+  NodeType dest,
+  HandlerType han,
+  MessageT* msg,
+  ByteType msg_size,
+  TagType tag
 ) {
   if (tag != no_tag) {
     envelopeSetTag(msg->env, tag);
   }
-  return sendMsgSz<MessageT>(dest, han, msg, sizeof(MessageT));
-}
-
-template <typename MessageT>
-ActiveMessenger::PendingSendType
-ActiveMessenger::sendMsgSz(
-  NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  ByteType const& msg_size
-) {
   envelopeSetup(msg->env, dest, han);
   setupEpochMsg(msg);
 
@@ -124,23 +114,19 @@ ActiveMessenger::sendMsgSz(
 
 template <typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, HandlerType const& han, MessageT* const msg
-) {
-  return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,no_tag);
-}
-
-template <typename MessageT>
-ActiveMessenger::PendingSendType
-ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, HandlerType const& han, MessageT* const msg,
-  TagType const& tag
+  NodeType dest,
+  HandlerType han,
+  MessageT* msg,
+  TagType tag
 ) {
   return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
-  MessageT* const msg, ByteType const& msg_size, TagType const& tag
+  MessageT* msg,
+  ByteType msg_size,
+  TagType tag
 ) {
   static_assert(
     std::is_trivially_destructible<MessageT>(),
@@ -162,28 +148,32 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
     envelopeSetTag(msg->env, tag);
   }
 
-  return sendMsgSz(this_node, han, msg, msg_size);
+  return sendMsgSz(this_node, han, msg, msg_size, tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  MessageT* const msg, TagType const& tag
+  MessageT* msg,
+  TagType tag
 ) {
-  return broadcastMsgSz<MessageT,f>(msg,sizeof(MessageT),tag);
+  return broadcastMsgSz<MessageT,f>(msg, sizeof(MessageT), tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, TagType const& tag
+  NodeType dest,
+  MessageT* msg,
+  TagType tag
 ) {
   return sendMsgSz<MessageT,f>(dest, msg, sizeof(MessageT), tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-ActiveMessenger::PendingSendType
-ActiveMessenger::sendMsgSz(
-  NodeType const& dest, MessageT* const msg, ByteType const& msg_size,
-  TagType const& tag
+ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
+  NodeType dest,
+  MessageT* msg,
+  ByteType msg_size,
+  TagType tag
 ) {
   static_assert(
     std::is_trivially_destructible<MessageT>(),
@@ -211,28 +201,25 @@ ActiveMessenger::sendMsgSz(
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, MessageT* const msg, TagType const& tag
+  NodeType dest,
+  MessageT* msg,
+  TagType tag
 ) {
   return ActiveSend<MessageT,f>::sendMsg(dest,msg,tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, MessageT* const msg
-) {
-  return ActiveSend<MessageT,f>::sendMsg(dest,msg,no_tag);
-}
-
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  MessageT* const msg, TagType const& tag
+  MessageT* msg,
+  TagType tag
 ) {
   return ActiveSend<MessageT,f>::broadcastMsg(msg,tag);
 }
 
 template <ActiveFnType* f, typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  MessageT* const msg, TagType const& tag
+  MessageT* msg,
+  TagType tag
 ) {
   auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   auto const& this_node = theContext()->getNode();
@@ -245,7 +232,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 
 template <ActiveFnType* f, typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, TagType const& tag
+  NodeType dest,
+  MessageT* msg,
+  TagType tag
 ) {
   auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   envelopeSetup(msg->env, dest, han);
@@ -258,16 +247,10 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   return PendingSendType(base, sizeof(MessageT));
 }
 
-template <ActiveFnType* f, typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg
-) {
-  return sendMsg<f,MessageT>(dest,msg,no_tag);
-}
-
 template <typename FunctorT, typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  MessageT* const msg, TagType const& tag
+  MessageT* msg,
+  TagType tag
 ) {
   auto const& han =
     auto_registry::makeAutoHandlerFunctor<FunctorT, true, MessageT*>();
@@ -280,7 +263,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 
 template <typename FunctorT, typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, TagType const& tag
+  NodeType dest,
+  MessageT* msg,
+  TagType tag
 ) {
   auto const& han =
     auto_registry::makeAutoHandlerFunctor<FunctorT, true, MessageT*>();
@@ -296,36 +281,26 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename FunctorT, typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  MessageT* const msg, TagType const& tag
+  MessageT* msg,
+  TagType tag
 ) {
   return ActiveSendFunctor<FunctorT,MessageT>::broadcastMsg(msg,tag);
 }
 
 template <typename FunctorT, typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  MessageT* const msg
-) {
-  return ActiveSendFunctor<FunctorT,MessageT>::broadcastMsg(msg,no_tag);
-}
-
-template <typename FunctorT, typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, MessageT* const msg, TagType const& tag
+  NodeType dest,
+  MessageT* msg,
+  TagType tag
 ) {
   return ActiveSendFunctor<FunctorT,MessageT>::sendMsg(dest,msg,tag);
 }
 
-template <typename FunctorT, typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
-  NodeType const& dest, MessageT* const msg
-) {
-  return ActiveSendFunctor<FunctorT,MessageT>::sendMsg(dest,msg,no_tag);
-}
-
 template <typename MessageT>
-ActiveMessenger::PendingSendType
-ActiveMessenger::sendMsg(
-  NodeType const& dest, HandlerType const& han, MessageT* const msg,
+ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
+  NodeType dest,
+  HandlerType han,
+  MessageT* msg,
   UserSendFnType send_payload_fn
 ) {
   namespace ph = std::placeholders;
@@ -346,7 +321,9 @@ ActiveMessenger::sendMsg(
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType const& dest, MessageT* const msg, UserSendFnType send_payload_fn
+  NodeType dest,
+  MessageT* msg,
+  UserSendFnType send_payload_fn
 ) {
   auto const& han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   return sendMsg<MessageT>(dest, han, msg, send_payload_fn);
@@ -354,30 +331,18 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  HandlerType const& han, MsgSharedPtr<MsgT> const& msg
-) {
-  return broadcastMsg<MsgT>(han,msg.get());
-}
-
-template <typename MsgT>
-ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  HandlerType const& han, MsgSharedPtr<MsgT> const& msg, TagType const& tag
+  HandlerType han,
+  MsgSharedPtr<MsgT>& msg,
+  TagType tag
 ) {
   return broadcastMsg<MsgT>(han,msg.get(),tag);
 }
 
 template <typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  HandlerType const& han, MessageT* const msg
-) {
-  auto const& this_node = theContext()->getNode();
-  setBroadcastType(msg->env);
-  return sendMsg(this_node, han, msg);
-}
-
-template <typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  HandlerType const& han, MessageT* const msg, TagType const& tag
+  HandlerType han,
+  MessageT* msg,
+  TagType tag
 ) {
   auto const& this_node = theContext()->getNode();
   setBroadcastType(msg->env);
@@ -389,14 +354,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 
 template <typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  HandlerType const& han, MessageT* const msg
-) {
-  return ActiveSendHandler<MessageT>::broadcastMsg(msg,han,no_tag);
-}
-
-template <typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  HandlerType const& han, MessageT* const msg, TagType const& tag
+  HandlerType han,
+  MessageT* msg,
+  TagType tag
 ) {
   return ActiveSendHandler<MessageT>::broadcastMsg(msg,han,tag);
 }
