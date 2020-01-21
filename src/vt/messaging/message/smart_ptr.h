@@ -298,11 +298,11 @@ inline MsgPtr<T> promoteMsgOwner(T* const msg) {
   return MsgPtr<T>{msg,false};
 }
 
-/// Take additional ownership of the message (increase message ref).
-/// The message must already have an owner.
-// TODO: eliminate if possible as it has confusing semantics
-// with overload and is duplicated by copy/move ctors.
+/// Obsolete form - do not use.
+/// In the iterim change calls to promotMsg(T*), guarded
+/// by an appropriate has_owner_ assert if reelvant.
 template <typename T>
+[[deprecated("Do not use: different smantic meaning")]]
 inline MsgPtr<T> promoteMsg(MsgPtr<T> msg) {
   vtAssert(msg->has_owner_, "promoteMsg shared ptr must have owner");
   return MsgPtr<T>{msg.get(),true};

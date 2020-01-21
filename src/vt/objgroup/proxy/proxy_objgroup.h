@@ -80,7 +80,7 @@ public:
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void broadcast(MsgT* msg) const;
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  void broadcast(MsgSharedPtr<MsgT> msg) const;
+  void broadcast(MsgPtr<MsgT> msg) const;
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   void broadcast(Args&&... args) const;
 
