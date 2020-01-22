@@ -111,7 +111,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
   setupEpochMsg(rawMsg);
 
   auto base = msg.template to<BaseMsgType>();
-  return PendingSendType(base, msg_size);
+  return PendingSendType(std::move(base), msg_size);
 }
 
 template <typename MessageT>
@@ -153,7 +153,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendBroadcastImpl(
   setupEpochMsg(msg);
 
   auto base = msg.template to<BaseMsgType>();
-  return PendingSendType(base, msg_size);
+  return PendingSendType(std::move(base), msg_size);
 }
 
 template <typename MsgT>
