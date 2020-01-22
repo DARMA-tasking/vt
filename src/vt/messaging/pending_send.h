@@ -70,20 +70,26 @@ namespace vt { namespace messaging {
  */
 struct PendingSend final {
   /// Function for complex action on send---takes a message to operate on
-  using SendActionType = std::function<void(MsgVirtualPtr<BaseMsgType>)>;
+  using SendActionType = std::function<void(MsgSharedPtr<BaseMsgType>&)>;
 
   /**
-   * \brief Construct a pending send from a message and size.
+   * \brief Construct a pending send.
    *
-   * This constructor is for a simple \c PendingSend that does not have a
-   * complex action and is dispatched to the \c ActiveMessenger when released.
+   * This is the prefered form, especially for internal constructs.
+   * If an action is specified it will be run. Otherwise the default
+   * internal message-sending action is applied.
    *
    * \param[in] in_msg the message to send
    * \param[in] in_msg_size the size of the message (type is erased)
+   * \param[in] in_action the "send" action to run, if overridden.
    */
-  PendingSend(MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size)
-    : msg_(in_msg.template toVirtual<BaseMsgType>())
+  PendingSend(
+    MsgSharedPtr<BaseMsgType>& in_msg,
+    ByteType in_msg_size,
+    SendActionType in_action = nullptr
+  ) : msg_(in_msg)
     , msg_size_(in_msg_size)
+    , send_action_(in_action)
   {
     produceMsg();
   }
@@ -100,7 +106,30 @@ struct PendingSend final {
    * \param[in] in_action the "send" action to run
    */
   template <typename MsgT>
-  PendingSend(MsgSharedPtr<MsgT> in_msg, SendActionType const& in_action)
+  //  [[deprecated("Should not used by internal VT code")]]
+  PendingSend(MsgSharedPtr<MsgT>& in_msg, SendActionType in_action)
+    : msg_(in_msg.template toVirtual<BaseMsgType>())
+    , msg_size_(sizeof(MsgT))
+    , send_action_(in_action)
+  {
+    produceMsg();
+  }
+
+  /**
+   * \deprecated Use constructor that accepts non-const in_msg.
+   * \brief Construct a pending send from a message and complex action.
+   *
+   * This constructor is for a complex \c PendingSend that holds a \c
+   * std::function for performing the send (e.g., sending to a collection
+   * element). When released, it will run the \c in_action of type \c
+   * SendActionType.
+   *
+   * \param[in] in_msg the message to send
+   * \param[in] in_action the "send" action to run
+   */
+  template <typename MsgT>
+  [[deprecated("Use constructor that accepts non-const in_msg")]]
+  PendingSend(MsgSharedPtr<MsgT> const& in_msg, SendActionType in_action)
     : msg_(in_msg.template toVirtual<BaseMsgType>())
     , msg_size_(sizeof(MsgT))
     , send_action_(in_action)
@@ -172,7 +201,7 @@ private:
   void sendMsg();
 
 private:
-  MsgVirtualPtr<BaseMsgType> msg_ = nullptr;
+  MsgPtr<BaseMsgType> msg_ = nullptr;
   ByteType msg_size_ = no_byte;
   SendActionType send_action_ = nullptr;
   EpochType epoch_produced_ = no_epoch;
