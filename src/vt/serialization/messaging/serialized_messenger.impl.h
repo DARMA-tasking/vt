@@ -403,7 +403,9 @@ template <typename MsgT, typename BaseT>
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
 
-        return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> in){
+        MsgVirtualPtr<BaseMsgType> base_msg = msg.template to<BaseMsgType>();
+        ByteType msg_sz = sizeof(MsgT);
+        return messaging::PendingSend(base_msg, msg_sz, [=](MsgVirtualPtr<BaseMsgType> in){
           runnable::Runnable<MsgT>::run(typed_handler,nullptr,msg.get(),node);
         });
       }

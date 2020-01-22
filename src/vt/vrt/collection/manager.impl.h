@@ -1482,7 +1482,10 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
   if (imm_context) {
     theTerm()->produce(cur_epoch);
-    return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
+
+    MsgVirtualPtr<BaseMsgType> base_msg = msg.template to<BaseMsgType>();
+    ByteType msg_sz = sizeof(MsgT);
+    return messaging::PendingSend(base_msg, msg_sz, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
       schedule([=]{
         theMsg()->pushEpoch(cur_epoch);
         theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
