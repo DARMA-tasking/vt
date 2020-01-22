@@ -97,6 +97,10 @@ struct MsgSharedPtr final {
 
   MsgSharedPtr(std::nullptr_t) {}
 
+  MsgSharedPtr(T* in) {
+    init(in, true, &statics::Holder::TypedMsgPtrImpls<T>);
+  }
+
   MsgSharedPtr(T* in, bool takeRef) {
     init(in, takeRef, &statics::Holder::TypedMsgPtrImpls<T>);
   }
@@ -191,7 +195,7 @@ private:
 
     if (shared) {
       vtAssertInfo(
-        envelopeGetRef(msgPtr->env) > 0, "Bad Ref (before ref)",
+        envelopeGetRef(msgPtr->env) >= 0, "Bad Ref (before ref)",
         shared, envelopeGetRef(msgPtr->env)
       );
       debug_print(
@@ -278,32 +282,28 @@ using MsgSharedPtr = impl::messaging::MsgSharedPtr<T>;
 template <typename T>
 using MsgPtr = impl::messaging::MsgSharedPtr<T>;
 
-/// Steal ownership of the message (no ref-increase).
+/// Obsolete form - do not use.
+/// There is no direct replacement; has_owner_ is removed.
 template <typename T>
+[[deprecated("Do not use: no direct replacement")]]
 inline MsgPtr<T> promoteMsgOwner(T* const msg) {
-  msg->has_owner_ = true;
   return MsgPtr<T>{msg,false};
 }
 
 /// Obsolete form - do not use.
-/// In the iterim change calls to promotMsg(T*), guarded
-/// by an appropriate has_owner_ assert if reelvant.
+/// There is no direct replacement; has_owner_ is removed
+/// and the semantic operation differed from promoteMsg(T*).
 template <typename T>
-[[deprecated("Do not use: different smantic meaning")]]
+[[deprecated("Do not use: no direct repalcement")]]
 inline MsgPtr<T> promoteMsg(MsgPtr<T> msg) {
-  vtAssert(msg->has_owner_, "promoteMsg shared ptr must have owner");
-  return MsgPtr<T>{msg.get(),true};
+  return MsgPtr<T>{msg.get()};
 }
 
-/// If the message does not have an owner, steal ownership (no ref-increase).
-/// Otherwise, take additional ownership (increate message ref).
+/// Wrap a Msg* in a MsgPtr<Msg>, increasing ref-ownership.
+/// This is the same as using MsgPtr<T>{T*} directly.
 template <typename T>
 inline MsgPtr<T> promoteMsg(T* msg) {
-  if (!msg->has_owner_) {
-    return promoteMsgOwner(msg);
-  } else {
-    return MsgPtr<T>{msg,true};
-  }
+  return MsgPtr<T>{msg};
 }
 
 } /* end namespace vt */

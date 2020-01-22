@@ -53,6 +53,8 @@
 
 namespace vt { namespace messaging {
 
+// All extended envelops must have an 'ActiveEnvelope env' field.
+
 struct EpochActiveEnvelope {
   using isByteCopyable = std::true_type;
 

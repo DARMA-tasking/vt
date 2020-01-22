@@ -60,13 +60,8 @@ template <typename EnvelopeT>
 struct ActiveMsg : BaseMsg {
   using EnvelopeType = EnvelopeT;
 
-  /*
-   * Be careful here: `has_owner_' needs to precede the EnvelopeType because
-   * this field may be accessed in contexts where the EnvelopeType is not yet
-   * checked/determined
-   */
-
-  bool has_owner_ = false;
+  // Internal.
+  // Metadata associated with a message.
   EnvelopeType env;
 
   ActiveMsg() {
@@ -143,7 +138,6 @@ struct ActiveMsg : BaseMsg {
   void serializeThis(SerializerT& s) {
     // @todo: do not serialize the entire envelope---it contains specific data
     // for this message
-    s | has_owner_;
     s | env;
   }
 };

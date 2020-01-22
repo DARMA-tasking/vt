@@ -155,7 +155,7 @@ struct BufferedActiveMsg {
 
 struct ActiveMessenger {
   using BufferedMsgType      = BufferedActiveMsg;
-  using MessageType          = ShortMessage*;
+  using RecvMsgType          = ShortMessage;
   using CountType            = int32_t;
   using PendingRecvType      = PendingRecv;
   using EventRecordType      = event::AsyncEvent::EventRecordType;
@@ -500,9 +500,9 @@ struct ActiveMessenger {
    *----------------------------------------------------------------------------
    */
 
+  // Copy ptr_bytes from ptr into msg_dest, starting at offset.
   void packMsg(
-    MessageType const msg, MsgSizeType const& size, void* ptr,
-    MsgSizeType const& ptr_bytes
+    RecvMsgType* msg_dest, MsgSizeType offset, void* ptr, MsgSizeType ptr_bytes
   );
 
   SendDataRetType sendData(

@@ -58,6 +58,10 @@ struct ActiveEnvelope {
   EnvelopeDataType type : envelope_num_bits;
   NodeType dest         : node_num_bits;
   HandlerType han       : handler_num_bits;
+  // Reference count for envelope for lifetime management.
+  // An envelope (and thus message) starts with a reference
+  // count of zero; the correspinding message is released
+  // when, after decremening, the reference count is either 0 or -1.
   RefType ref           : ref_num_bits;
   GroupType group       : group_num_bits;
 

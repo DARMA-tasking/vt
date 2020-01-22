@@ -87,16 +87,15 @@ ActiveMessenger::ActiveMessenger()
 }
 
 void ActiveMessenger::packMsg(
-  MessageType const msg, MsgSizeType const& size, void* ptr,
-  MsgSizeType const& ptr_bytes
+  RecvMsgType* msg_dest, MsgSizeType offset, void* ptr, MsgSizeType ptr_bytes
 ) {
   debug_print(
     active, node,
-    "packMsg: msg_size={}, put_size={}, ptr={}\n",
-    size, ptr_bytes, print_ptr(ptr)
+    "packMsg: offset={}, put_size={}, ptr={}\n",
+    offset, ptr_bytes, print_ptr(ptr)
   );
 
-  char* const msg_buffer = reinterpret_cast<char*>(msg) + size;
+  char* const msg_buffer = reinterpret_cast<char*>(msg_dest) + offset;
   std::memcpy(msg_buffer, ptr, ptr_bytes);
 }
 
@@ -774,13 +773,17 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 }
 
 void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
-  auto buf = irecv->buf;
+  char* buf = irecv->buf;
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
-  auto msg = reinterpret_cast<MessageType>(buf);
-  messageConvertToShared(msg);
-  auto base = promoteMsgOwner(msg);
+  auto msg = static_cast<RecvMsgType*>(static_cast<void*>(buf));
+  // Reset envelope to avoid ref-count=not_shared_msg if the data
+  // comes from a 'new RecvMsgType(..)'.
+  // The MsgPtr will then acquire a ref-count itself.
+  // TODO: Maybe envelope ref-count should be 0 on initialize?
+  envelopeSetRef(msg->env, 0);
+  MsgPtr<RecvMsgType> base = MsgPtr<RecvMsgType>{msg};
 
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_put = envelopeIsPut(msg->env);
