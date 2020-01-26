@@ -185,7 +185,6 @@ EventType ActiveMessenger::sendMsgBytes(
 
   auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const is_shared = isSharedMessage(msg);
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_bcast = envelopeIsBcast(msg->env);
 
@@ -200,9 +199,7 @@ EventType ActiveMessenger::sendMsgBytes(
     );
   }
 
-  if (is_shared) {
-    mpi_event->setManagedMessage(base.to<ShortMessage>());
-  }
+  mpi_event->setManagedMessage(base.to<ShortMessage>());
 
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
@@ -846,7 +843,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 }
 
 void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
-  auto buf = irecv->buf;
+  char* buf = irecv->buf;
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
@@ -858,8 +855,12 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 # endif
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
-  messageConvertToShared(msg);
-  auto base = promoteMsgOwner(msg);
+  // Reset envelope to avoid ref-count=not_shared_msg if the data
+  // comes from a 'new RecvMsgType(..)'.
+  // The MsgPtr will then acquire a ref-count itself.
+  // TODO: Maybe envelope ref-count should be 0 on initialize?
+  envelopeSetRef(msg->env, 0);
+  MsgPtr<MessageType> base = MsgPtr<MessageType>{msg};
 
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_put = envelopeIsPut(msg->env);
