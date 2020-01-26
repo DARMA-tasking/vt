@@ -171,10 +171,9 @@ struct MsgSharedPtr final {
   }
 
   friend std::ostream& operator<<(std::ostream&os, MsgSharedPtr<T> const& m) {
-    auto nrefs = m.ptr_ && m.shared_ ? envelopeGetRef(m.get()->env) : -1;
+    auto nrefs = envelopeGetRef(m.get()->env);
     return os << "MsgSharedPtr("
               <<              m.ptr_    << ","
-              << "shared=" << m.shared_ << ","
               << "ref="    << nrefs
               << ")";
   }
@@ -191,49 +190,43 @@ private:
 
     ptr_ = msgPtr;
     impl_ = impl;
-    bool shared = (shared_ = isSharedMessage<T>(msgPtr));
 
-    if (shared) {
-      vtAssertInfo(
-        envelopeGetRef(msgPtr->env) >= 0, "Bad Ref (before ref)",
-        shared, envelopeGetRef(msgPtr->env)
-      );
-      debug_print(
-        pool, node,
-        "MsgSmartPtr: (auto) init(), ptr={}, envRef={}, takeRef={} address={}\n",
-        print_ptr(msgPtr), envelopeGetRef(msgPtr->env), takeRef, print_ptr(this)
-      );
+    vtAssertInfo(
+      envelopeGetRef(msgPtr->env) >= 0, "Bad Message Ref (before ref)",
+      envelopeGetRef(msgPtr->env)
+    );
+    debug_print(
+      pool, node,
+      "MsgSmartPtr: (auto) init(), ptr={}, envRef={}, takeRef={} address={}\n",
+      print_ptr(msgPtr), envelopeGetRef(msgPtr->env), takeRef, print_ptr(this)
+    );
 
-      if (takeRef) {
-        // Could be moved to type-erased impl..
-        messageRef(msgPtr);
-      }
+    if (takeRef) {
+      // Could be moved to type-erased impl..
+      messageRef(msgPtr);
     }
   }
 
   /// Clear all internal state. Effectively destructor in operation,
   /// with guarantee that init() can be used again after.
   void clear() {
-    bool shared = shared_;
-
-    if (shared) {
-      assert("shared -> message ptr" && ptr_);
-      T* msgPtr = get();
-
-      vtAssertInfo(
-        envelopeGetRef(msgPtr->env) > 0, "Bad Ref (before deref)",
-        shared, envelopeGetRef(msgPtr->env)
-      );
-      debug_print(
-        pool, node,
-        "MsgSmartPtr: (auto) clear(), ptr={}, envRef={}, address={}\n",
-        print_ptr(msgPtr), envelopeGetRef(msgPtr->env), print_ptr(this)
-      );
-
-      impl_->messageDeref(msgPtr);
-
-      shared_ = false;
+    if (not ptr_) {
+      return;
     }
+
+    T* msgPtr = get();
+
+    vtAssertInfo(
+      envelopeGetRef(msgPtr->env) >= 1, "Bad Message Ref (before deref)",
+      envelopeGetRef(msgPtr->env)
+    );
+    debug_print(
+      pool, node,
+      "MsgSmartPtr: (auto) clear(), ptr={}, envRef={}, address={}\n",
+      print_ptr(msgPtr), envelopeGetRef(msgPtr->env), print_ptr(this)
+    );
+
+    impl_->messageDeref(msgPtr);
 
     ptr_ = nullptr;
   }
@@ -241,19 +234,14 @@ private:
   /// Move. Must be invoked on fresh/clear state.
   void moveFrom(MsgSharedPtr<T>&& in) {
     ptr_ = in.ptr_;
-    shared_ = in.shared_;
     impl_ = in.impl_;
     // clean take - nullify/prevent other cleanup
     in.ptr_ = nullptr;
-    in.shared_ = false;
   }
 
 private:
   // Underlying raw message - access as correct type via get()
   BaseMsgType* ptr_ = nullptr;
-  // Is this a shared message?
-  // If so, then it will have a deref done on delete.
-  bool shared_      = false;
   // Type-erased implementation support.
   // Object has a STATIC LIFETIME / is not owned / should not be deleted.
   MsgPtrImplBase* impl_ = nullptr;

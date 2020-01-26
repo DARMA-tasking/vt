@@ -179,9 +179,14 @@ EventType ActiveMessenger::sendMsgBytes(
 ) {
   auto const& msg = base.get();
 
+  // Ensure valid-ref message.
+  vtAssertInfo(
+    envelopeGetRef(msg->env) >= 0, "Bad Message Ref",
+    envelopeGetRef(msg->env)
+  );
+
   auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const is_shared = isSharedMessage(msg);
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_bcast = envelopeIsBcast(msg->env);
 
@@ -196,9 +201,7 @@ EventType ActiveMessenger::sendMsgBytes(
     );
   }
 
-  if (is_shared) {
-    mpi_event->setManagedMessage(base.to<ShortMessage>());
-  }
+  mpi_event->setManagedMessage(base.to<ShortMessage>());
 
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
