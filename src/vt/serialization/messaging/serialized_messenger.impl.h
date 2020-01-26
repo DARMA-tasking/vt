@@ -66,12 +66,11 @@ namespace vt { namespace serialization {
 // Deserializes a Msg (owned by a MsgPtr) from the given data.
 template <typename MsgT>
 static MsgPtr<MsgT> deserializeFullMessage(SerialByteType* source, size_t len) {
-  auto msg = makeMessage<MsgT>();
-  deserializeInPlace<MsgT>(source, len, msg.get());
-  // Deserialization overwrites the envelop ref-count;
-  // as it was guaranteed to be 1 previously, reset the count.
-  envelopeSetRef(msg.get()->env, 1);
-  return msg;
+  auto msg = makeSharedMessage<MsgT>();
+  deserializeInPlace<MsgT>(source, len, msg);
+  // Reset ref-count to 0 (don't accept any deserialized value)
+  envelopeSetRef(msg->env, 0);
+  return promoteMsg(msg);
 }
 
 template <typename MsgT>
