@@ -86,13 +86,15 @@ struct ActiveMsg : BaseMsg {
    * checked/determined
    */
 
-  bool has_owner_ = false;      /**< For smart pointers tracking ownership  */
-
   // Used to track if the message has been serialized.
   // TODO - include only in debug + serialize-enabled VT builds?
   bool base_serialize_called_ = false;
 
-  EnvelopeType env;             /**< The envelope for the message */
+  /*
+   * \internal
+   * \brief The envelope metadata for the message.
+   */
+  EnvelopeType env;
 
   /**
    * \brief Construct an empty message; initializes the envelope state.
@@ -203,7 +205,6 @@ struct ActiveMsg : BaseMsg {
   void serialize(SerializerT& s) {
     base_serialize_called_ = true;
     // n.b. not actually used, as extracted during transmission.
-    s | has_owner_;
     s | env;
   }
 

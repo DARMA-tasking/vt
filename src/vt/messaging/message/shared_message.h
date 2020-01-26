@@ -52,30 +52,65 @@
 
 namespace vt {
 
+/**
+ * \deprecated Use \c makeMesssage.
+ * \brief Create a new 'raw' message.
+ *
+ * Create a new message and initialize internal state.
+ * The arguments are forwarded down to the underlying message's constructor.
+ *
+ * \warning
+ * The returned pointer represents a leaked object until 'promoted' to a MsgPtr.
+ * While \c theMsg send API will automatically perform a promotion, automatic
+ * message promotion should generally not be relied upon.
+ */
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessage(Args&&... args);
 
+/**
+ * \deprecated Use \c makeMesssage.
+ * \brief Create a new 'raw' message, of a given size.
+ *
+ * Create a new message and initialize internal state.
+ * The arguments are forwarded down to the underlying message's constructor.
+ *
+ * \warning
+ * The returned pointer represents a leaked object until 'promoted' to a MsgPtr.
+ * While \c theMsg send API will automatically perform a promotion, automatic
+ * message promotion should generally not be relied upon.
+ */
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessageSz(std::size_t size, Args&&... args);
 
+/**
+ * \deprecated Use \c makeMesssage.
+ * \brief Create a new message.
+ *
+ * Create a new message already wrapped in a MsgPtr.
+ * The arguments are forwarded down to the underlying message's constructor.
+ *
+ * The lifetime of the message is controlled by MsgPtr and will be destroyed
+ * when the returned MsgPtr (and all copies of such) are destroyed.
+ */
 template <typename MsgT, typename... Args>
-MsgSharedPtr<MsgT> makeMessage(Args&&... args);
+MsgPtr<MsgT> makeMessage(Args&&... args);
+
+/**
+ * \deprecated Use \c makeMesssage.
+ * \brief Create a new message, of a size.
+ *
+ * Create a new message already wrapped in a MsgPtr.
+ * The arguments are forwarded down to the underlying message's constructor.
+ *
+ * The lifetime of the message is controlled by MsgPtr and will be destroyed
+ * when the returned MsgPtr (and all copies of such) are destroyed.
+ */
+template <typename MsgT, typename... Args>
+MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args);
 
 template <typename MsgT, typename... Args>
-MsgSharedPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args);
-
-///[obsolete] Use makeMessage instead.
-template <typename MsgT, typename... Args>
-MsgSharedPtr<MsgT> makeMsg(Args&&... args);
-
-template <typename MsgT>
-void messageConvertToShared(MsgT* msg);
-
-template <typename MsgT>
-void messageSetUnmanaged(MsgT* msg);
-
-template <typename MsgT>
-void messageResetDeserdes(MsgSharedPtr<MsgT> const& msg);
+[[deprecated("Use makeMessage instead")]]
+MsgPtr<MsgT> makeMsg(Args&&... args);
 
 } //end namespace vt
 

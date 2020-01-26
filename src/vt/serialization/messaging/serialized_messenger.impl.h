@@ -62,6 +62,7 @@
 
 namespace vt { namespace serialization {
 
+
 template <typename UserMsgT>
 /*static*/ void SerializedMessenger::serialMsgHandlerBcast(
   SerialWrapperMsgType<UserMsgT>* sys_msg

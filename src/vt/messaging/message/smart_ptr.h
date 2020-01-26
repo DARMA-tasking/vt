@@ -97,8 +97,14 @@ struct MsgSharedPtr final {
 
   MsgSharedPtr(std::nullptr_t) {}
 
+  MsgSharedPtr(T* in) {
+    init(in, true, &statics::Holder::TypedMsgPtrImpls<T>);
+  }
+
   MsgSharedPtr(T* in, bool takeRef) {
     init(in, takeRef, &statics::Holder::TypedMsgPtrImpls<T>);
+  }
+
   }
 
   // Overload to retain ORIGINAL type-erased implementation.
@@ -167,10 +173,9 @@ struct MsgSharedPtr final {
   }
 
   friend std::ostream& operator<<(std::ostream&os, MsgSharedPtr<T> const& m) {
-    auto nrefs = m.ptr_ && m.shared_ ? envelopeGetRef(m.get()->env) : -1;
+    auto nrefs = envelopeGetRef(m.get()->env);
     return os << "MsgSharedPtr("
               <<              m.ptr_    << ","
-              << "shared=" << m.shared_ << ","
               << "ref="    << nrefs
               << ")";
   }
@@ -187,49 +192,43 @@ private:
 
     ptr_ = msgPtr;
     impl_ = impl;
-    bool shared = (shared_ = isSharedMessage<T>(msgPtr));
 
-    if (shared) {
-      vtAssertInfo(
-        envelopeGetRef(msgPtr->env) > 0, "Bad Ref (before ref)",
-        shared, envelopeGetRef(msgPtr->env)
-      );
-      debug_print(
-        pool, node,
-        "MsgSmartPtr: (auto) init(), ptr={}, envRef={}, takeRef={} address={}\n",
-        print_ptr(msgPtr), envelopeGetRef(msgPtr->env), takeRef, print_ptr(this)
-      );
+    vtAssertInfo(
+      envelopeGetRef(msgPtr->env) >= 0, "Bad Message Ref (before ref)",
+      envelopeGetRef(msgPtr->env)
+    );
+    debug_print(
+      pool, node,
+      "MsgSmartPtr: (auto) init(), ptr={}, envRef={}, takeRef={} address={}\n",
+      print_ptr(msgPtr), envelopeGetRef(msgPtr->env), takeRef, print_ptr(this)
+    );
 
-      if (takeRef) {
-        // Could be moved to type-erased impl..
-        messageRef(msgPtr);
-      }
+    if (takeRef) {
+      // Could be moved to type-erased impl..
+      messageRef(msgPtr);
     }
   }
 
   /// Clear all internal state. Effectively destructor in operation,
   /// with guarantee that init() can be used again after.
   void clear() {
-    bool shared = shared_;
-
-    if (shared) {
-      assert("shared -> message ptr" && ptr_);
-      T* msgPtr = get();
-
-      vtAssertInfo(
-        envelopeGetRef(msgPtr->env) > 0, "Bad Ref (before deref)",
-        shared, envelopeGetRef(msgPtr->env)
-      );
-      debug_print(
-        pool, node,
-        "MsgSmartPtr: (auto) clear(), ptr={}, envRef={}, address={}\n",
-        print_ptr(msgPtr), envelopeGetRef(msgPtr->env), print_ptr(this)
-      );
-
-      impl_->messageDeref(msgPtr);
-
-      shared_ = false;
+    if (not ptr_) {
+      return;
     }
+
+    T* msgPtr = get();
+
+    vtAssertInfo(
+      envelopeGetRef(msgPtr->env) >= 1, "Bad Message Ref (before deref)",
+      envelopeGetRef(msgPtr->env)
+    );
+    debug_print(
+      pool, node,
+      "MsgSmartPtr: (auto) clear(), ptr={}, envRef={}, address={}\n",
+      print_ptr(msgPtr), envelopeGetRef(msgPtr->env), print_ptr(this)
+    );
+
+    impl_->messageDeref(msgPtr);
 
     ptr_ = nullptr;
   }
@@ -237,19 +236,14 @@ private:
   /// Move. Must be invoked on fresh/clear state.
   void moveFrom(MsgSharedPtr<T>&& in) {
     ptr_ = in.ptr_;
-    shared_ = in.shared_;
     impl_ = in.impl_;
     // clean take - nullify/prevent other cleanup
     in.ptr_ = nullptr;
-    in.shared_ = false;
   }
 
 private:
   // Underlying raw message - access as correct type via get()
   BaseMsgType* ptr_ = nullptr;
-  // Is this a shared message?
-  // If so, then it will have a deref done on delete.
-  bool shared_      = false;
   // Type-erased implementation support.
   // Object has a STATIC LIFETIME / is not owned / should not be deleted.
   MsgPtrImplBase* impl_ = nullptr;
@@ -291,32 +285,28 @@ using MsgSharedPtr = messaging::MsgSharedPtr<T>;
 template <typename T>
 using MsgPtr = messaging::MsgSharedPtr<T>;
 
-/// Steal ownership of the message (no ref-increase).
+/// Obsolete form - do not use.
+/// There is no direct replacement; has_owner_ is removed.
 template <typename T>
+[[deprecated("Do not use: no direct replacement")]]
 inline MsgPtr<T> promoteMsgOwner(T* const msg) {
-  msg->has_owner_ = true;
   return MsgPtr<T>{msg,false};
 }
 
 /// Obsolete form - do not use.
-/// In the iterim change calls to promotMsg(T*), guarded
-/// by an appropriate has_owner_ assert if reelvant.
+/// There is no direct replacement; has_owner_ is removed
+/// and the semantic operation differed from promoteMsg(T*).
 template <typename T>
-[[deprecated("Do not use: different smantic meaning")]]
+[[deprecated("Do not use: no direct repalcement")]]
 inline MsgPtr<T> promoteMsg(MsgPtr<T> msg) {
-  vtAssert(msg->has_owner_, "promoteMsg shared ptr must have owner");
-  return MsgPtr<T>{msg.get(),true};
+  return MsgPtr<T>{msg.get()};
 }
 
-/// If the message does not have an owner, steal ownership (no ref-increase).
-/// Otherwise, take additional ownership (increate message ref).
+/// Wrap a Msg* in a MsgPtr<Msg>, increasing ref-ownership.
+/// This is the same as using MsgPtr<T>{T*} directly.
 template <typename T>
 inline MsgPtr<T> promoteMsg(T* msg) {
-  if (!msg->has_owner_) {
-    return promoteMsgOwner(msg);
-  } else {
-    return MsgPtr<T>{msg,true};
-  }
+  return MsgPtr<T>{msg};
 }
 
 } /* end namespace vt */
