@@ -72,11 +72,7 @@ void messageDeref(MsgT* msg) {
     print_ptr(msg), refcount
   );
 
-  // N.B. makeSharedMessage does NOT increase the envelope ref-count anymore.
-  // Thus in cases where the ref-count is not otherwise increased (likely due to not
-  // being wrapped in a MsgPtr) a messageDeref could possibly, and validly,
-  // occur while the envelope ref-count is 0 and thus wrap around.
-  if (refcount == 0 || refcount == -1) {
+  if (refcount == 0) {
     /* @todo: what is the correct strategy here? invoking dealloc does not
      * invoke the destructor
      *

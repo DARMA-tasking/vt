@@ -52,12 +52,34 @@ namespace vt {
 
 template <typename Env>
 inline void envelopeRef(Env& env) {
-  (reinterpret_cast<Envelope*>(&env))->ref++;
+  Envelope* envp = reinterpret_cast<Envelope*>(&env);
+
+  vtAssert(
+    envp->ref != not_shared_message,
+    "'Not shared message' encountered on message ref-increment. "
+    "This is can be caused by explicitly using 'new Message(..)' "
+    "instead of a MsgPtr/makeMessage/makeSharedMessage construct."
+  );
+  vtAssertInfo( // "wow", likely UB already
+    envp->ref >= 0,
+    "Bad ref-count on message ref-increment.",
+    static_cast<RefType>(envp->ref)
+  );
+
+  envp->ref++;
 }
 
 template <typename Env>
 inline RefType envelopeDeref(Env& env) {
-  return --(reinterpret_cast<Envelope*>(&env))->ref;
+  Envelope* envp = reinterpret_cast<Envelope*>(&env);
+
+  vtAssertInfo(
+    envp->ref >= 1,
+    "Bad ref-count on message ref-decrement.",
+    static_cast<RefType>(envp->ref)
+  );
+
+  return --(envp->ref);
 }
 
 } /* end namespace vt */
