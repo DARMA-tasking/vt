@@ -54,6 +54,7 @@
 #include "vt/runnable/general.h"
 #include "vt/serialization/messaging/serialized_data_msg.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
+#include "vt/messaging/envelope/envelope_set.h" // envelopeSetRef
 
 #include <tuple>
 #include <type_traits>
@@ -62,6 +63,14 @@
 
 namespace vt { namespace serialization {
 
+template <typename MsgT>
+static MsgPtr<MsgT> deserializeFullMessage(SerialByteType* source, size_t len) {
+  auto msg = makeSharedMessage<MsgT>();
+  deserializeInPlace<MsgT>(source, len, msg);
+  // Reset ref-count to 0 (don't accept any deserialized value)
+  envelopeSetRef(msg->env, 0);
+  return promoteMsg(msg);
+}
 
 template <typename UserMsgT>
 /*static*/ void SerializedMessenger::serialMsgHandlerBcast(
@@ -77,11 +86,12 @@ template <typename UserMsgT>
     group_, handler, ptr_size
   );
 
-  auto ptr_offset =
-    reinterpret_cast<char*>(sys_msg) + sizeof(SerialWrapperMsgType<UserMsgT>);
-  auto user_msg = makeMessage<UserMsgT>();
-  deserializeInPlace<UserMsgT>(ptr_offset,ptr_size,user_msg.get());
-  messageResetDeserdes(user_msg);
+  auto ptr_offset = reinterpret_cast<char*>(sys_msg)
+    + sizeof(SerialWrapperMsgType<UserMsgT>);
+  auto msg_data = ptr_offset;
+  auto msg_size = ptr_size;
+  auto user_msg = deserializeFullMessage<UserMsgT>(msg_data, msg_size);
+
   runnable::Runnable<UserMsgT>::run(
     handler, nullptr, user_msg.get(), sys_msg->from_node
   );
@@ -113,12 +123,10 @@ template <typename UserMsgT>
     recv_tag, sys_msg->from_node,
     [handler,recv_tag,node,epoch,is_valid_epoch]
     (RDMA_GetType ptr, ActionType action){
-      // be careful here not to use "msg", it is no longer valid
-      auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
-      auto ptr_size = std::get<1>(ptr);
-      auto msg = makeMessage<UserMsgT>();
-      deserializeInPlace<UserMsgT>(raw_ptr, ptr_size, msg.get());
-      messageResetDeserdes(msg);
+      // be careful here not to use "sys_msg", it is no longer valid
+      auto msg_data = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
+      auto msg_size = std::get<1>(ptr);
+      auto msg = deserializeFullMessage<UserMsgT>(msg_data, msg_size);
 
       debug_print(
         serial_msg, node,
@@ -147,11 +155,9 @@ template <typename UserMsgT, typename BaseEagerMsgT>
 ) {
   auto const handler = sys_msg->handler;
 
-  auto user_msg = makeMessage<UserMsgT>();
-  deserializeInPlace<UserMsgT>(
-    sys_msg->payload.data(), sys_msg->bytes, user_msg.get()
-  );
-  messageResetDeserdes(user_msg);
+  auto msg_data = sys_msg->payload.data();
+  auto msg_size = sys_msg->bytes;
+  auto user_msg = deserializeFullMessage<UserMsgT>(msg_data, msg_size);
 
   auto const& group_ = envelopeGetGroup(sys_msg->env);
 
@@ -387,9 +393,9 @@ template <typename MsgT, typename BaseT>
           dest, sys_msg.get(), send_serialized
         );
       } else {
-        auto user_msg = makeMessage<MsgT>();
-        deserializeInPlace<MsgT>(ptr, ptr_size, user_msg.get());
-        messageResetDeserdes(user_msg);
+        auto msg_data = ptr;
+        auto msg_size = ptr_size;
+        auto user_msg = deserializeFullMessage<MsgT>(msg_data, msg_size);
 
         debug_print(
           serial_msg, node,
