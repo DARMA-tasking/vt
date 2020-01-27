@@ -171,6 +171,16 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
 
   MessageT* rawMsg = msg.get();
 
+  // Semantic guard, which triggers for any message with an already initialized
+  // destination. This guard is valid even for raw MsgT* API calls.
+  // (Probably best type-guard would be to required MsgPtr&& on public API,
+  //  which might be a bit awkward to use..)
+  vtAssert(
+    envelopeGetDest(rawMsg->env) == uninitialized_destination,
+    "Message already has a destination and cannot be reused. "
+    "This can occur if a message is attempted to be sent/broadcast twice."
+  );
+
   bool is_term = envelopeIsTerm(rawMsg->env);
 
   if (!is_term || backend_check_enabled(print_term_msgs)) {
@@ -187,10 +197,11 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
     dest = theContext()->getNode();
     setBroadcastType(rawMsg->env);
   }
+
   if (msg_size == msgsize_not_specified) {
     msg_size = sizeof(MessageT);
   }
-  if (tag != no_tag) {
+  if (tag not_eq no_tag) {
     envelopeSetTag(rawMsg->env, tag);
   }
   envelopeSetup(rawMsg->env, dest, han);

@@ -112,6 +112,21 @@ template <typename MsgT, typename... Args>
 [[deprecated("Use makeMessage instead")]]
 MsgPtr<MsgT> makeMsg(Args&&... args);
 
+/**
+ * \internal
+ * \brief Make a copy of a message with a reset envelope.
+ *
+ * A message can only be sent once. Making a copy of a message allows the
+ * copy to also be sent. Large messages should utilize shared_ptr or similar
+ * to avoid expensive copies of internal state in cases where multiple
+ * transmission is desired, such as for broadcasts.
+ */
+// In the future, if the message and envelope can be teased out
+// into a pair (vs. a nesting) it might be possible to simply
+// copy the pair with a reset envelope.. might be dreams.
+template <typename MsgT>
+MsgPtr<MsgT> copyAndResetMessage(MsgT* msg);
+
 } //end namespace vt
 
 #include "vt/messaging/message/shared_message.impl.h"

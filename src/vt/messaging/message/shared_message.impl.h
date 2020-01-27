@@ -88,6 +88,14 @@ MsgPtr<MsgT> makeMsg(Args&&... args) {
   return makeMessage<MsgT>(std::forward<Args>(args)...);
 }
 
+template <typename MsgT>
+MsgPtr<MsgT> copyAndResetMessage(MsgT* msg) {
+  MsgT* copy = new MsgT{*msg}; // should be copy-ctor (loses "sz" alloc..)
+  envelopeInitEmpty(copy->env);
+  envelopeSetRef(copy->env, 0);
+  return MsgPtr<MsgT>(copy);
+}
+
 } //end namespace vt
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_IMPL_H*/
