@@ -211,19 +211,6 @@ struct ActiveMessenger {
     TagType tag
   );
 
-  /*!
-   * \internal
-   * Invoke broadcast message sending.
-   * Should be funnel-through method.
-   */
-  template <typename MessageT>
-  ActiveMessenger::PendingSendType sendBroadcastImpl(
-    HandlerType han,
-    MsgPtr<MessageT>& msg,
-    ByteType msg_size,
-    TagType tag
-  );
-
   /*----------------------------------------------------------------------------
    *            Basic Active Message Send with Pre-Registered Handler
    *----------------------------------------------------------------------------
@@ -617,6 +604,7 @@ struct ActiveMessenger {
    * stack depending on the value of the `epoch' passed as an argument.
    */
   inline void setGlobalEpoch(EpochType const& epoch = no_epoch);
+
   /*
    * getGlobalEpoch() returns the top epoch on the stack iff epoch_stack.size()
    * > 0, else it returns no_epoch
