@@ -49,7 +49,7 @@ namespace vt { namespace messaging {
 
 void PendingSend::sendMsg() {
   if (send_action_ == nullptr) {
-    theMsg()->sendMsgSized(msg_, msg_size_);
+    theMsg()->doMessageSend(msg_, msg_size_);
   } else {
     send_action_(msg_);
   }

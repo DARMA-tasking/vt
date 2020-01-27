@@ -153,6 +153,15 @@ struct BufferedActiveMsg {
   { }
 };
 
+/*!
+ * Primary interface to send messages, as through 'theMsg()'.
+ *
+ * Message ownership semantics on sending:
+ *
+ * Any call to a sendMsg* or broadcastMsg* method LOSES TRANSFER OWNERSHIP of the
+ * supplied message. It is an error for code to attempt to send/broadcast the
+ * same message again. A new message should be created as required.
+ */
 struct ActiveMessenger {
   using BufferedMsgType      = BufferedActiveMsg;
   using RecvMsgType          = ShortMessage;
@@ -189,10 +198,10 @@ struct ActiveMessenger {
   void setTagMessage(MsgT* msg, TagType tag);
 
   /*!
-    \internal
-    Invoke message sending.
-    Should be funnel-through method.
-  */
+   * \internal
+   * Invoke message sending.
+   * Should be funnel-through method.
+   */
   template <typename MessageT>
   ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
@@ -203,10 +212,10 @@ struct ActiveMessenger {
   );
 
   /*!
-    \internal
-    Invoke broadcast message sending.
-    Should be funnel-through method.
-  */
+   * \internal
+   * Invoke broadcast message sending.
+   * Should be funnel-through method.
+   */
   template <typename MessageT>
   ActiveMessenger::PendingSendType sendBroadcastImpl(
     HandlerType han,
@@ -538,8 +547,12 @@ struct ActiveMessenger {
     RDMA_ContinuationDeleteType next = nullptr
   );
 
-  EventType sendMsgSized(
-    MsgSharedPtr<BaseMsgType> const& msg, MsgSizeType const& msg_size
+  /*!
+   * \internal
+   * Actual sending method/implementation.
+   */
+  EventType doMessageSend(
+    MsgSharedPtr<BaseMsgType>& msg, MsgSizeType msg_size
   );
 
   void performTriggeredActions();
