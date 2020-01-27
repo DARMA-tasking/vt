@@ -340,19 +340,6 @@ struct ActiveMessenger {
     TagType tag
   );
 
-  /*!
-   * \internal
-   * Invoke broadcast message sending.
-   * Should be funnel-through method.
-   */
-  template <typename MessageT>
-  ActiveMessenger::PendingSendType sendBroadcastImpl(
-    HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
-    ByteType msg_size,
-    TagType tag
-  );
-
   /**
    * \defgroup preregister Basic Active Message Send with Pre-Registered Handler
 

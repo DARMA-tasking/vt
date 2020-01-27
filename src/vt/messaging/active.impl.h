@@ -56,6 +56,7 @@
 namespace vt { namespace messaging {
 
 constexpr ByteType msgsize_not_specified = -1;
+constexpr NodeType broadcast_dest = uninitialized_destination;
 
 template <typename MsgT>
 void ActiveMessenger::markAsTermMessage(MsgT* msg) {
@@ -211,16 +212,22 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
 
   MessageT* rawMsg = msg.get();
 
-  auto const& is_term = envelopeIsTerm(rawMsg->env);
+  bool is_term = envelopeIsTerm(rawMsg->env);
+
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "sendMsg of ptr={}, type={}\n",
+      dest == broadcast_dest
+        ? "broadcastMsg of ptr={}, type={}\n"
+        : "sendMsg of ptr={}, type={}\n",
       print_ptr(rawMsg), typeid(MessageT).name()
     );
   }
 
-  // Should likely mirror sendBroadcastImpl
+  if (dest == broadcast_dest) {
+    dest = theContext()->getNode();
+    setBroadcastType(rawMsg->env);
+  }
   if (msg_size == msgsize_not_specified) {
     msg_size = sizeof(MessageT);
   }
@@ -229,48 +236,6 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
   }
   envelopeSetup(rawMsg->env, dest, han);
   setupEpochMsg(rawMsg);
-
-  auto base = msg.template to<BaseMsgType>();
-  return PendingSendType(base, msg_size);
-}
-
-template <typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::sendBroadcastImpl(
-  HandlerType han,
-  MsgSharedPtr<MessageT>& msg,
-  ByteType msg_size,
-  TagType tag
-) {
-  // TODO: also check for serializable..?
-  // Or split paths through impl?
-  static_assert(
-    std::is_trivially_destructible<MessageT>(),
-    "Message bcast without serialization must be trivially destructible"
-  );
-
-  MessageT* rawMsg = msg.get();
-
-  auto const& is_term = envelopeIsTerm(rawMsg->env);
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
-    debug_print(
-      pool, node,
-      "broadcastMsg of ptr={}, type={}\n",
-      print_ptr(rawMsg), typeid(MessageT).name()
-    );
-  }
-
-  auto const& dest = theContext()->getNode();
-  setBroadcastType(rawMsg->env);
-
-  // Should likely mirror sendMsgImpl
-  if (msg_size == msgsize_not_specified) {
-    msg_size = sizeof(MessageT);
-  }
-  if (tag != no_tag) {
-    envelopeSetTag(rawMsg->env, tag);
-  }
-  envelopeSetup(rawMsg->env, dest, han);
-  setupEpochMsg(msg);
 
   auto base = msg.template to<BaseMsgType>();
   return PendingSendType(base, msg_size);
@@ -328,7 +293,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
 ) {
   auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendBroadcastImpl<MessageT>(han, msgptr, msg_size, tag);
+  return sendMsgImpl<MessageT>(
+    broadcast_dest, han, msgptr, msg_size, tag
+  );
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -338,7 +305,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 ) {
   auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendBroadcastImpl<MessageT>(han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MessageT>(
+    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+  );
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -394,7 +363,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 ) {
   auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
   MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendBroadcastImpl<MessageT>(han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MessageT>(
+    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+  );
 }
 
 template <ActiveFnType* f, typename MessageT>
@@ -415,7 +386,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MessageT*>();
   MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendBroadcastImpl<MessageT>(han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MessageT>(
+    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+  );
 }
 
 template <typename FunctorT, typename MessageT>
@@ -488,7 +461,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   MsgSharedPtr<MsgT>& msg,
   TagType tag
 ) {
-  return sendBroadcastImpl<MsgT>(han, msg, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(
+    broadcast_dest, han, msg, msgsize_not_specified, tag
+  );
 }
 
 template <typename MessageT>
@@ -498,7 +473,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   TagType tag
 ) {
   MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendBroadcastImpl<MessageT>(han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MessageT>(
+    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+  );
 }
 
 template <typename MessageT>
@@ -522,7 +499,8 @@ ActiveMessenger::epochPreludeHandler(EpochType const& cur_epoch) {
     epoch_stack_.size()
   );
 
-  return epoch_stack_.push(cur_epoch),epoch_stack_.size();
+  epoch_stack_.push(cur_epoch);
+  return epoch_stack_.size();
 }
 
 inline void ActiveMessenger::epochEpilogHandler(
