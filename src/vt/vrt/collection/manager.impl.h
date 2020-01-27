@@ -820,7 +820,9 @@ template <typename ColT, typename IndexT>
 
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::broadcastRootHandler(MsgT* msg) {
-  theCollection()->broadcastFromRoot<ColT,IndexT,MsgT>(msg);
+  // Ensure copy: message from handler cannot be directly transmitted.
+  auto nmsg = makeMessage<MsgT>(*msg);
+  theCollection()->broadcastFromRoot<ColT,IndexT,MsgT>(nmsg.get());
 }
 
 template <typename ColT, typename IndexT, typename MsgT>

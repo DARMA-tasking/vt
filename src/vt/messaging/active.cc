@@ -331,11 +331,11 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   vtWarnIf(
     dest == theContext()->getNode(),
-    "Destination {} should != this node"
+    "Destination should != this node"
   );
   vtAbortIf(
     dest >= theContext()->getNumNodes() || dest < 0,
-    "Invalid destination: {}"
+    "Invalid destination"
   );
 
   {

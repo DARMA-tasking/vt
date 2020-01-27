@@ -301,26 +301,32 @@ void InfoColl::upTree() {
         group, is_root, root_node, msg_list.size()
       );
 
-      auto const& subtree_zero = static_cast<NodeType>(0);
-      auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
-        msg_in_group.size()-1
-      );
-      auto msg = makeSharedMessage<GroupCollectiveMsg>(
-        group,new_root_cont_,true,subtree_zero,root_node,0,extra
-      );
-      theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
+      {
+        // Send root
+        auto const& subtree_zero = static_cast<NodeType>(0);
+        auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
+          msg_in_group.size()-1
+        );
+        auto msg = makeSharedMessage<GroupCollectiveMsg>(
+          group, new_root_cont_, true, subtree_zero, root_node, 0, extra
+        );
+        theMsg()->sendMsg<GroupCollectiveMsg,newRootHan>(root_node, msg);
+      }
 
       for (std::size_t i = 1; i < msg_list.size(); i++) {
+        MsgPtr<GroupCollectiveMsg> pmsg = copyAndResetMessage(msg_list[i]);
+        pmsg->setOpID(down_tree_cont_);
+
         debug_print(
           group, node,
           "InfoColl::upTree: ROOT group={:x}, new_root={}, sending to={}\n",
-          group, root_node, msg_list[i]->getChild()
+          group, root_node, pmsg->getChild()
         );
 
-        msg_list[i]->setOpID(down_tree_cont_);
-        theMsg()->sendMsg<GroupCollectiveMsg,downHan>(root_node,msg_list[i]);
+        theMsg()->sendMsg<GroupCollectiveMsg,downHan>(root_node, pmsg.get());
         ++send_down_;
       }
+
       in_phase_two_ = true;
       finalize();
       return;
@@ -382,7 +388,8 @@ void InfoColl::upTree() {
      *  Forward all the children messages up the tree (up to 2 of them)
      */
     for (std::size_t i = 0; i < msg_in_group.size(); i++) {
-      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[i].get());
+      MsgPtr<GroupCollectiveMsg> cmsg = copyAndResetMessage(msg_in_group[i].get());
+      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, cmsg.get());
     }
   } else if (is_in_group && msg_in_group.size() == 1) {
     /*
@@ -408,7 +415,8 @@ void InfoColl::upTree() {
       group,op,is_in_group,total_subtree,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
-    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0].get());
+    MsgPtr<GroupCollectiveMsg> msg2 = copyAndResetMessage(msg_in_group[0].get());
+    theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg2.get());
   } else {
     vtAssertExpr(msg_in_group.size() > 2);
 
@@ -453,21 +461,22 @@ void InfoColl::upTree() {
       msg_in_group.size(), msg_list.size()
     );
 
-
     auto iter = msg_list.rbegin();
     auto iter_end = msg_list.rend();
     NodeType* c = static_cast<NodeType*>(std::malloc(sizeof(NodeType) * extra));
 
     for (int i = 0; i < extra; i++) {
       c[i] = (*iter)->getChild();
-      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, *iter);
+      MsgPtr<GroupCollectiveMsg> nmsg = copyAndResetMessage(*iter);
+      theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, nmsg.get());
       iter++;
     }
 
     int32_t i = 0;
     while (iter != iter_end) {
       (*iter)->setOpID(down_tree_cont_);
-      theMsg()->sendMsg<GroupCollectiveMsg,downHan>(c[i % extra],*iter);
+      MsgPtr<GroupCollectiveMsg> nmsg = copyAndResetMessage(*iter);
+      theMsg()->sendMsg<GroupCollectiveMsg,downHan>(c[i % extra], nmsg.get());
       ++send_down_;
       ++iter;
     }
