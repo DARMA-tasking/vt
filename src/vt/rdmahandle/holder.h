@@ -120,13 +120,35 @@ public:
     bool finished_ = true;
   };
 
+  struct LockMPI {
+    LockMPI(bool in_exclusive, vt::NodeType in_rank, MPI_Win in_window)
+      : exclusive_(in_exclusive),
+        rank_(in_rank),
+        window_(in_window)
+    {
+      auto lock_type = exclusive_ ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
+      MPI_Win_lock(lock_type, rank_, 0, window_);
+    }
+    LockMPI(LockMPI const&) = delete;
+    LockMPI(LockMPI&&) = default;
+
+    ~LockMPI() {
+      MPI_Win_unlock(rank_, window_);
+    }
+
+  private:
+    bool exclusive_ = false;
+    vt::NodeType rank_ = vt::uninitialized_destination;
+    MPI_Win window_;
+  };
+
   void get(vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset) {
-    auto lock_type = exclusive ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
     auto mpi_type = TypeMPI<T>::getType();
     RequestHolder r;
-    MPI_Win_lock(lock_type, node, 0, data_window_);
-    MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
-    MPI_Win_unlock(node, data_window_);
+    {
+      LockMPI _scope_lock(exclusive, node, data_window_);
+      MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
+    }
   }
 
   HandleKey key_;
