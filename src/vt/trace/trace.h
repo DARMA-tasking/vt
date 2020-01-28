@@ -66,6 +66,26 @@ namespace vt { namespace trace {
 
 struct vt_gzFile;
 
+/// Tracking information for beginProcessing/endProcessing.
+struct TraceProcessingTag {
+
+  TraceProcessingTag() = default;
+  TraceProcessingTag(TraceProcessingTag const&) = default;
+  TraceProcessingTag& operator=(TraceProcessingTag const&) = default;
+
+  friend struct Trace;
+
+private:
+
+  TraceProcessingTag(
+    TraceEntryIDType ep, TraceEventIDType event
+  ) : ep_(ep), event_(event)
+  {}
+
+  TraceEntryIDType ep_ = trace::no_trace_entry_id;
+  TraceEventIDType event_ = trace::no_trace_event;
+};
+
 struct Trace {
   using LogType             = Log;
   using TraceConstantsType  = eTraceConstants;
@@ -90,13 +110,24 @@ struct Trace {
     std::string const& in_dir_name = ""
   );
 
-  void beginProcessing(
+  /// Initiate a paired event.
+  /// Currently endProcessing MUST be called in the opposite
+  /// order of beginProcessing.
+  TraceProcessingTag beginProcessing(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     TraceEventIDType const event, NodeType const from_node,
     double const time = getCurrentTime(),
     uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
     uint64_t const idx4 = 0
   );
+
+  /// Finalize a paired event.
+  /// The processing_tag value comes from beginProcessing.
+  void endProcessing(
+    TraceProcessingTag processing_tag,
+    double const time = getCurrentTime()
+  );
+
   void endProcessing(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     TraceEventIDType const event, NodeType const from_node,
