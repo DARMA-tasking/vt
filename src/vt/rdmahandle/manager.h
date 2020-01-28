@@ -48,32 +48,13 @@
 #include "vt/config.h"
 #include "vt/rdmahandle/handle.h"
 #include "vt/rdmahandle/handle_key.h"
+#include "vt/rdmahandle/type_mpi.h"
 #include "vt/objgroup/manager.h"
 #include "vt/pipe/pipe_manager.h"
 
 namespace vt { namespace rdma {
 
 using ElemType = int64_t;
-
-template <typename T>
-struct TypeMPI {
-  static auto getType();
-};
-
-template <>
-struct TypeMPI<int> {
-  static auto getType() { return MPI_INT; }
-};
-
-template <>
-struct TypeMPI<double> {
-  static auto getType() { return MPI_DOUBLE; }
-};
-
-template <>
-struct TypeMPI<float> {
-  static auto getType() { return MPI_FLOAT; }
-};
 
 template <typename T, HandleEnum E>
 struct Holder {
