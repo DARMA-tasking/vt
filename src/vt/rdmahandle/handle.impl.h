@@ -69,6 +69,17 @@ Handle<T,E>::rget(vt::NodeType node, T* ptr, std::size_t len, int offset) {
 }
 
 template <typename T, HandleEnum E>
+void Handle<T,E>::put(vt::NodeType node, T* ptr, std::size_t len, int offset) {
+  return Manager::getEntry<T,E>(key_).put(node, false, ptr, len, offset);
+}
+
+template <typename T, HandleEnum E>
+typename Handle<T,E>::RequestType
+Handle<T,E>::rput(vt::NodeType node, T* ptr, std::size_t len, int offset) {
+  return Manager::getEntry<T,E>(key_).rput(node, false, ptr, len, offset);
+}
+
+template <typename T, HandleEnum E>
 void Handle<T,E>::readExclusive(std::function<void(T const*)> fn) {
   Manager::getEntry<T,E>(key_).access(true, fn);
 }

@@ -105,6 +105,23 @@ public:
     rget(node, exclusive, ptr, len, offset);
   }
 
+  RequestHolder rput(
+    vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset
+  ) {
+    auto mpi_type = TypeMPI<T>::getType();
+    RequestHolder r;
+    {
+      LockMPI _scope_lock(exclusive, node, data_window_);
+      MPI_Rput(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
+    }
+    return r;
+  }
+
+  void put(vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset) {
+    rput(node, exclusive, ptr, len, offset);
+  }
+
+
 private:
   HandleKey key_;
   MPI_Win data_window_;

@@ -66,12 +66,15 @@ public:
 
   bool done() const { return reqs_.size() == 0; }
 
+  // Add test() for async check
+
   void wait() {
     if (done()) {
       return;
     } else {
       std::vector<MPI_Status> stats;
       stats.resize(reqs_.size());
+      // @todo: This should test and then run the VT scheduler as to not block
       MPI_Waitall(reqs_.size(), &reqs_[0], &stats[0]);
       reqs_.clear();
     }

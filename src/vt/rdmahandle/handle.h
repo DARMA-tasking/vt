@@ -93,7 +93,9 @@ public:
 
 public:
   void get(vt::NodeType, T* ptr, std::size_t len, int offset);
+  void put(vt::NodeType, T* ptr, std::size_t len, int offset);
   RequestType rget(vt::NodeType, T* ptr, std::size_t len, int offset);
+  RequestType rput(vt::NodeType, T* ptr, std::size_t len, int offset);
 
 protected:
   HandleKey key_ = {};
