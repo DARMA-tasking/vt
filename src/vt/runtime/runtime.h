@@ -99,7 +99,12 @@ struct Runtime {
 
   virtual ~Runtime();
 
+  /// \brief Sets the pointer for the MPI communicator
+  /// \param[in] in_comm: Pointer to the MPI_Comm
   void setMPIComm(MPI_Comm* in_comm) { communicator_ = in_comm; }
+
+  /// \brief Sets the number of workers
+  /// \param[in] in_num_workers: Number of workers
   void setNumWorkers(WorkerCountType in_num_workers) {
     num_workers_ = in_num_workers;
   }
@@ -150,6 +155,10 @@ protected:
   void finalizeComponents();
   void finalizeOptionalComponents();
 
+  // \brief Routine to parse the command-line parameters and
+  // to setup the simulation parameters.
+  // \param[in] argc: Reference to the number of command-line arguments
+  // \param[in] argv: Reference to the array of command-line arguments
   void parseAndSetup(int& argc, char**& argv);
 
   void sync();
