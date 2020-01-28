@@ -670,20 +670,19 @@ LocInstType EntityLocationCoord<EntityID>::getInst() const {
 
 template <typename EntityID>
 template <typename MessageT>
-/*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT *raw_msg) {
-  auto msg = promoteMsg(raw_msg);
-  auto const& entity_id = msg->getEntity();
-  auto const& home_node = msg->getHomeNode();
-  auto const& inst = msg->getLocInst();
-  auto const& serialize = msg->getSerialize();
-  auto const& from_node = msg->getLocFromNode();
+/*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT *msg) {
+  auto const entity_id = msg->getEntity();
+  auto const home_node = msg->getHomeNode();
+  auto const inst = msg->getLocInst();
+  auto const serialize = msg->getSerialize();
+  auto const from_node = msg->getLocFromNode();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
     location, node,
     "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}, "
     "epoch={:x}\n",
-    print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
+    print_ptr(msg), envelopeGetRef(msg->env), inst, serialize, entity_id,
     from_node, epoch
   );
 
@@ -691,7 +690,10 @@ template <typename MessageT>
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
     inst, [=](EntityLocationCoord<EntityID>* loc) {
       theMsg()->pushEpoch(epoch);
-      loc->routeMsg(entity_id, home_node, msg, serialize, from_node);
+
+      MsgPtr<MessageT> msg2 = copyAndResetMessage(msg);
+      loc->routeMsg(entity_id, home_node, msg2, serialize, from_node);
+
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
     }
@@ -700,14 +702,13 @@ template <typename MessageT>
 
 template <typename EntityID>
 /*static*/ void EntityLocationCoord<EntityID>::getLocationHandler(
-  LocMsgType* raw_msg
+  LocMsgType* msg
 ) {
-  auto msg = promoteMsg(raw_msg);
-  auto const& event_id = msg->loc_event;
-  auto const& inst = msg->loc_man_inst;
-  auto const& entity = msg->entity;
-  auto const& home_node = msg->home_node;
-  auto const& ask_node = msg->ask_node;
+  auto const event_id = msg->loc_event;
+  auto const inst = msg->loc_man_inst;
+  auto const entity = msg->entity;
+  auto const home_node = msg->home_node;
+  auto const ask_node = msg->ask_node;
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
@@ -727,6 +728,7 @@ template <typename EntityID>
         event_id, epoch
       );
 
+      MsgPtr<LocMsgType> msg2 = copyAndResetMessage(msg);
       loc->getLocation(entity, home_node, [=](NodeType node) {
         debug_print(
           location, node,
@@ -734,13 +736,11 @@ template <typename EntityID>
           event_id, epoch
         );
 
-        auto msg2 = makeSharedMessage<LocMsgType>(
-          inst, entity, event_id, ask_node, home_node
-        );
         msg2->setResolvedNode(node);
         theMsg()->markAsLocationMessage(msg2);
-        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
+        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2.get());
       });
+
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
     }
@@ -749,12 +749,11 @@ template <typename EntityID>
 
 template <typename EntityID>
 /*static*/ void EntityLocationCoord<EntityID>::updateLocation(
-  LocMsgType *raw_msg
+  LocMsgType *msg
 ) {
-  auto msg = promoteMsg(raw_msg);
-  auto const& event_id = msg->loc_event;
-  auto const& inst = msg->loc_man_inst;
-  auto const& entity = msg->entity;
+  auto const event_id = msg->loc_event;
+  auto const inst = msg->loc_man_inst;
+  auto const entity = msg->entity;
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   debug_print(
