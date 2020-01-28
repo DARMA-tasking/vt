@@ -85,10 +85,8 @@ public:
   template <typename Callable>
   void access(bool exclusive, Callable fn) {
     auto this_node = theContext()->getNode();
-    auto lock_type = exclusive ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
-    MPI_Win_lock(lock_type, this_node, 0, data_window_);
+    LockMPI _scope_lock(exclusive, this_node, data_window_);
     fn(data_base_);
-    MPI_Win_unlock(this_node, data_window_);
   }
 
   RequestHolder rget(
