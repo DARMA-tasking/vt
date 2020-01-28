@@ -121,6 +121,7 @@ protected:
   void initializeComponents();
   void initializeOptionalComponents();
   void initializeWorkers(WorkerCountType const num_workers);
+  void initializeLB();
 
   void finalizeContext();
   void finalizeTrace();
