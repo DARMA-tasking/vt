@@ -518,7 +518,7 @@ public:
   );
 
   template <typename ColT, typename IndexT, typename MsgT>
-  messaging::PendingSend broadcastFromRoot(MsgT* msg);
+  messaging::PendingSend broadcastFromRoot(MsgPtr<MsgT>& msg);
 
 public:
   /*

@@ -820,15 +820,13 @@ template <typename ColT, typename IndexT>
 
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::broadcastRootHandler(MsgT* msg) {
-  // Ensure copy: message from handler cannot be directly transmitted.
-  auto nmsg = makeMessage<MsgT>(*msg);
-  theCollection()->broadcastFromRoot<ColT,IndexT,MsgT>(nmsg.get());
+  // Re-sent, ensure copy
+  MsgPtr<MsgT> nmsg = copyAndResetMessage(msg);
+  theCollection()->broadcastFromRoot<ColT,IndexT,MsgT>(nmsg);
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
-messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
-  auto msg = promoteMsg(raw_msg);
-
+messaging::PendingSend CollectionManager::broadcastFromRoot(MsgPtr<MsgT>& msg) {
   // broadcast to all nodes
   auto const& this_node = theContext()->getNode();
   auto const& proxy = msg->getBcastProxy();
@@ -1007,6 +1005,9 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT *raw_msg,
   HandlerType const& handler, bool const member, bool instrument
 ) {
+  // Re-sent, ensure copy
+  auto msg = makeMessage<MsgT>(*raw_msg);
+
   auto const idx = makeVrtDispatch<MsgT,ColT>();
 
   debug_print(
@@ -1017,8 +1018,6 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 
   auto const& this_node = theContext()->getNode();
   auto const& col_proxy = toProxy.getProxy();
-
-  auto msg = promoteMsg(raw_msg);
 
   #if backend_check_enabled(trace_enabled)
     // Create the trace creation event for the broadcast here to connect it a
@@ -1094,7 +1093,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
         "broadcasting msg to collection: msg={}, handler={}\n",
         print_ptr(raw_msg), handler
       );
-      return broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
+      return broadcastFromRoot<ColT,IdxT,MsgT>(msg);
     }
   } else {
     auto iter = buffered_bcasts_.find(col_proxy);
