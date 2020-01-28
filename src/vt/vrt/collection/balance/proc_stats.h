@@ -60,7 +60,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct StatsMapLB;
 
-} } } }
+}}}} /* end namespace vt::vrt::collection::lb */
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
