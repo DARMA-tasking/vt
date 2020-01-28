@@ -101,8 +101,9 @@ public:
   static std::vector<CommMapType> proc_comm_;
 
   /// \brief Returns a constant reference to the list of migrations.
-  static const std::deque<std::vector<ElementIDType>>& getMigrationList()
-  { return proc_move_list_; };
+  static const std::deque<std::vector<ElementIDType>>& getMigrationList() {
+    return proc_move_list_;
+  }
 
 private:
   static FILE* stats_file_;
@@ -113,11 +114,11 @@ private:
   /// \note At each iteration, a vector of length 2 times (# of migrations)
   /// is specified. The vector contains the "permanent" ID of the element
   /// to migrate followed by the node ID to migrate to.
-  static std::deque< std::vector<ElementIDType> > proc_move_list_;
+  static std::deque<std::vector<ElementIDType>> proc_move_list_;
 
   /// \brief Vector of booleans to indicate whether the user-specified
   /// map migrates elements for a specific iteration.
-  static std::vector< bool > proc_phase_runs_LB_;
+  static std::vector<bool> proc_phase_runs_LB_;
 
   /// \brief Private object to migrate information from a (restart) input file
   static StatsRestartReader *proc_reader_;
