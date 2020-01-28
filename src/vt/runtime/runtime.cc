@@ -812,13 +812,8 @@ void Runtime::checkForArgumentErrors() {
   #endif
 }
 
-bool Runtime::initialize(bool const force_now) {
-  if (force_now) {
-    initializeContext(user_argc_, user_argv_, communicator_);
-    initializeComponents();
-    initializeOptionalComponents();
-    initializeErrorHandlers();
-#if backend_check_enabled(lblite)
+void Runtime::initializeLB() {
+  #if backend_check_enabled(lblite)
     if (ArgType::vt_lb_stats) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
@@ -828,11 +823,20 @@ bool Runtime::initialize(bool const force_now) {
         const std::string &dir = ArgType::vt_lb_stats_dir_in;
         auto const file = fmt::format("{}.{}.out", base_file, node);
         const auto file_name =
-          static_cast<std::string>(fmt::format("{}/{}", dir, file));
+        static_cast<std::string>(fmt::format("{}/{}", dir, file));
         vrt::collection::balance::ProcStats::readRestartInfo(file_name);
       }
     }
-#endif
+  #endif
+}
+
+bool Runtime::initialize(bool const force_now) {
+  if (force_now) {
+    initializeContext(user_argc_, user_argv_, communicator_);
+    initializeComponents();
+    initializeOptionalComponents();
+    initializeErrorHandlers();
+    initializeLB();
     sync();
     if (theContext->getNode() == 0) {
       printStartupBanner();
