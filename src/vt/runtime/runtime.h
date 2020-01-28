@@ -48,9 +48,12 @@
 #include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
-#include "vt/trace/trace.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/arguments/args.h"
+
+#if backend_check_enabled(trace_enabled)
+#include "vt/trace/trace.h"
+#endif
 
 #include <memory>
 #include <functional>
@@ -118,6 +121,7 @@ protected:
   void initializeComponents();
   void initializeOptionalComponents();
   void initializeWorkers(WorkerCountType const num_workers);
+  void initializeLB();
 
   void finalizeContext();
   void finalizeTrace();

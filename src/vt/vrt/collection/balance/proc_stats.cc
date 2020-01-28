@@ -44,6 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/proc_stats.util.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
 #include "vt/configs/arguments/args.h"
@@ -51,9 +52,7 @@
 
 #include <vector>
 #include <unordered_map>
-#include <string>
 #include <cstdio>
-#include <unistd.h>
 #include <sys/stat.h>
 
 #include "fmt/format.h"
@@ -82,6 +81,238 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 
 /*static*/ bool ProcStats::created_dir_ = false;
 
+/*static*/ std::deque< std::vector<ElementIDType> >
+  ProcStats::proc_move_list_ = {};
+
+/*static*/ std::vector< bool > ProcStats::proc_phase_runs_LB_ = {};
+
+/*static*/ StatsRestartReader *ProcStats::proc_reader_ = nullptr;
+
+StatsRestartReader::~StatsRestartReader() {
+  if (proxy.getProxy() != no_obj_group) {
+    theObjGroup()->destroyCollective(proxy);
+  }
+}
+
+/*static*/
+void StatsRestartReader::readStats(const std::string &fileName) {
+
+  // Read the input files
+  std::deque< std::set<ElementIDType> > elements_history;
+  inputStatsFile(fileName, elements_history);
+  if (elements_history.empty()) {
+    vtWarn("No element history provided");
+    return;
+  }
+
+  ProcStats::proc_reader_->proxy =
+    theObjGroup()->makeCollective<StatsRestartReader>();
+
+  const auto num_iters = elements_history.size() - 1;
+  ProcStats::proc_move_list_.resize(num_iters);
+  ProcStats::proc_phase_runs_LB_.resize(num_iters, true);
+  if (theContext()->getNode() == 0) {
+    ProcStats::proc_reader_->msgsReceived.resize(num_iters, 0);
+    ProcStats::proc_reader_->totalMove.resize(num_iters);
+  }
+
+  // Communicate the migration information
+  createMigrationInfo(elements_history);
+}
+
+/*static*/
+void StatsRestartReader::inputStatsFile(
+  const std::string &fileName,
+  std::deque< std::set<ElementIDType> > &element_history
+)
+{
+  std::FILE *pFile = std::fopen(fileName.c_str(), "r");
+  if (pFile == nullptr) {
+    vtAssert(pFile, "File opening failed");
+  }
+
+  std::set<ElementIDType> buffer;
+
+  // Load: Format of a line :size_t, ElementIDType, TimeType
+  size_t phaseID = 0, prevPhaseID = 0;
+  ElementIDType elmID;
+  TimeType tval;
+  CommBytesType d_buffer;
+  using vtCommType = typename std::underlying_type<CommCategory>::type;
+  vtCommType typeID;
+  char separator;
+  fpos_t pos;
+  bool finished = false;
+  while (!finished) {
+    if (fscanf(pFile, "%zu %c %lli %c %lf", &phaseID, &separator, &elmID,
+               &separator, &tval) > 0) {
+      fgetpos (pFile,&pos);
+      fscanf (pFile, "%c", &separator);
+      if (separator == ',') {
+        // COM detected, read the end of line and do nothing else
+        int res = fscanf (pFile, "%lf %c %hhi", &d_buffer, &separator, &typeID);
+        vtAssertExpr(res == 3);
+      } else {
+        // Load detected, create the new element
+        fsetpos (pFile,&pos);
+        if (prevPhaseID != phaseID) {
+          prevPhaseID = phaseID;
+          element_history.push_back(buffer);
+          buffer.clear();
+        }
+        buffer.insert(elmID);
+      }
+    } else {
+      finished = true;
+    }
+  }
+
+  if (!buffer.empty()) {
+    element_history.push_back(buffer);
+  }
+
+  std::fclose(pFile);
+}
+
+/*static*/
+void StatsRestartReader::createMigrationInfo(
+  std::deque< std::set<ElementIDType> > &element_history
+)
+{
+  const auto num_iters = element_history.size() - 1;
+  const auto myNodeID = static_cast<ElementIDType>(theContext()->getNode());
+  auto myProxy = ProcStats::proc_reader_->proxy;
+
+  for (size_t ii = 0; ii < num_iters; ++ii) {
+    auto &elms = element_history[ii];
+    auto &elmsNext = element_history[ii + 1];
+    std::set<ElementIDType> diff;
+    std::set_difference(elmsNext.begin(), elmsNext.end(), elms.begin(),
+                        elms.end(), std::inserter(diff, diff.begin()));
+    const size_t qi = diff.size();
+    const size_t pi = elms.size() - (elmsNext.size() - qi);
+    auto &myList = ProcStats::proc_move_list_[ii];
+    myList.reserve(3 * (pi + qi) + 1);
+    //--- Store the iteration number
+    myList.push_back(static_cast<ElementIDType>(ii));
+    //--- Store partial migration information (i.e. nodes moving in)
+    for (auto iEle : diff) {
+      myList.push_back(iEle);  //--- permID to receive
+      myList.push_back(no_element_id); // node moving from
+      myList.push_back(myNodeID); // node moving to
+    }
+    diff.clear();
+    //--- Store partial migration information (i.e. nodes moving out)
+    std::set_difference(elms.begin(), elms.end(), elmsNext.begin(),
+                        elmsNext.end(), std::inserter(diff, diff.begin()));
+    for (auto iEle : diff) {
+      myList.push_back(iEle);  //--- permID to send
+      myList.push_back(myNodeID); // node migrating from
+      myList.push_back(no_element_id); // node migrating to
+    }
+    //
+    // Create a message storing the vector
+    //
+    auto msg = makeSharedMessage<VecMsg>(myList);
+    myProxy[0].send<VecMsg, &StatsRestartReader::gatherMsgs>(msg);
+    //
+    // Clear old distribution of elements
+    //
+    elms.clear();
+  }
+
+}
+
+void StatsRestartReader::gatherMsgs(VecMsg *msg) {
+  auto sentVec = msg->getTransfer();
+  vtAssert(sentVec.size() % 3 == 1, "Expecting vector of length 3n+1");
+  const ElementIDType phaseID = sentVec[0];
+  //
+  // --- Combine the different pieces of information
+  //
+  ProcStats::proc_reader_->msgsReceived[phaseID] += 1;
+  auto &migrate = ProcStats::proc_reader_->totalMove[phaseID];
+  for (size_t ii = 1; ii < sentVec.size(); ii += 3) {
+    const auto permID = sentVec[ii];
+    const auto nodeFrom = static_cast<NodeType>(sentVec[ii + 1]);
+    const auto nodeTo = static_cast<NodeType>(sentVec[ii + 2]);
+    auto iptr = migrate.find(permID);
+    if (iptr == migrate.end()) {
+      migrate.insert(std::make_pair(permID, std::make_pair(nodeFrom, nodeTo)));
+    }
+    else {
+      auto &nodePair = iptr->second;
+      nodePair.first = std::max(nodePair.first, nodeFrom);
+      nodePair.second = std::max(nodePair.second, nodeTo);
+    }
+  }
+  //
+  // --- Check whether all the messages have been received
+  //
+  const NodeType numNodes = theContext()->getNumNodes();
+  if (ProcStats::proc_reader_->msgsReceived[phaseID] < numNodes)
+    return;
+  //
+  //--- Distribute the information when everything has been received
+  //
+  auto myProxy = ProcStats::proc_reader_->proxy;
+  const size_t header = 2;
+  for (NodeType in = 0; in < numNodes; ++in) {
+    size_t iCount = 0;
+    for (auto iNode : migrate) {
+      if (iNode.second.first == in)
+        iCount += 1;
+    }
+    std::vector<ElementIDType> toMove(2 * iCount + header);
+    iCount = 0;
+    toMove[iCount++] = phaseID;
+    toMove[iCount++] = static_cast<ElementIDType>(migrate.size());
+    for (auto iNode : migrate) {
+      if (iNode.second.first == in) {
+        toMove[iCount++] = iNode.first;
+        toMove[iCount++] = static_cast<ElementIDType>(iNode.second.second);
+      }
+    }
+    if (in > 0) {
+      auto msg2 = makeSharedMessage<VecMsg>(toMove);
+      myProxy[in].send<VecMsg, &StatsRestartReader::scatterMsgs>(msg2);
+    } else {
+      ProcStats::proc_phase_runs_LB_[phaseID] = (!migrate.empty());
+      auto &myList = ProcStats::proc_move_list_[phaseID];
+      myList.resize(toMove.size() - header);
+      std::copy(&toMove[header], &toMove[0] + toMove.size(),
+                myList.begin());
+    }
+  }
+  migrate.clear();
+}
+
+void StatsRestartReader::scatterMsgs(VecMsg *msg) {
+  const size_t header = 2;
+  auto recvVec = msg->getTransfer();
+  vtAssert((recvVec.size() -header) % 2 == 0,
+    "Expecting vector of length 2n+2");
+  //--- Get the iteration number associated with the message
+  const ElementIDType phaseID = recvVec[0];
+  //--- Check whether some migration will be done
+  ProcStats::proc_phase_runs_LB_[phaseID] = static_cast<bool>(recvVec[1] > 0);
+  auto &myList = ProcStats::proc_move_list_[phaseID];
+  if (!ProcStats::proc_phase_runs_LB_[phaseID]) {
+    myList.clear();
+    return;
+  }
+  //--- Copy the migration information
+  myList.resize(recvVec.size() - header);
+  std::copy(&recvVec[header], &recvVec[0]+recvVec.size(), myList.begin());
+}
+
+/*static*/ void ProcStats::readRestartInfo(const std::string &fileName) {
+  if (ProcStats::proc_reader_ == nullptr) {
+    ProcStats::proc_reader_ = new StatsRestartReader;
+  }
+  ProcStats::proc_reader_->readStats(fileName);
+}
+
 /*static*/ void ProcStats::clearStats() {
   ProcStats::proc_comm_.clear();
   ProcStats::proc_data_.clear();
@@ -89,6 +320,9 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
   next_elm_ = 1;
+  ProcStats::proc_move_list_.clear();
+  ProcStats::proc_phase_runs_LB_.clear();
+  delete ProcStats::proc_reader_;
 }
 
 /*static*/ void ProcStats::startIterCleanup() {

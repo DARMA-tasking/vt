@@ -52,10 +52,20 @@
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/timing/timing.h"
 
-#include <vector>
+#include <string>
 #include <unordered_map>
+#include <vector>
+
+namespace vt { namespace vrt { namespace collection { namespace lb {
+
+struct StatsMapLB;
+
+}}}} /* end namespace vt::vrt::collection::lb */
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
+
+struct LBManager;
+struct StatsRestartReader;
 
 struct ProcStats {
   using MigrateFnType = std::function<void(NodeType)>;
@@ -73,6 +83,8 @@ public:
 
   static void outputStatsFile();
 
+  static void readRestartInfo(const std::string &fileName);
+
 private:
   static void createStatsFile();
   static void closeStatsFile();
@@ -82,16 +94,39 @@ public:
 
   // @todo: make these private and friend appropriate classes
 public:
-  static ElementIDType next_elm_;
-public:
   static std::vector<std::unordered_map<ElementIDType,TimeType>> proc_data_;
   static std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
   static std::vector<CommMapType> proc_comm_;
+
+  /// \brief Returns a constant reference to the list of migrations.
+  static const std::deque<std::vector<ElementIDType>>& getMigrationList() {
+    return proc_move_list_;
+  }
+
 private:
   static FILE* stats_file_;
   static bool created_dir_;
+  static ElementIDType next_elm_;
+
+  /// \brief Queue of migrations for each iteration.
+  /// \note At each iteration, a vector of length 2 times (# of migrations)
+  /// is specified. The vector contains the "permanent" ID of the element
+  /// to migrate followed by the node ID to migrate to.
+  static std::deque<std::vector<ElementIDType>> proc_move_list_;
+
+  /// \brief Vector of booleans to indicate whether the user-specified
+  /// map migrates elements for a specific iteration.
+  static std::vector<bool> proc_phase_runs_LB_;
+
+  /// \brief Private object to migrate information from a (restart) input file
+  static StatsRestartReader *proc_reader_;
+
+  friend struct balance::LBManager;
+  friend struct balance::StatsRestartReader;
+  friend struct lb::StatsMapLB;
+
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
