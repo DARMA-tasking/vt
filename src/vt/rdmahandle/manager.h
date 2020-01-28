@@ -46,103 +46,15 @@
 #define INCLUDED_VT_RDMAHANDLE_MANAGER_H
 
 #include "vt/config.h"
+#include "vt/rdmahandle/common.h"
 #include "vt/rdmahandle/handle.h"
 #include "vt/rdmahandle/handle_key.h"
 #include "vt/rdmahandle/type_mpi.h"
+#include "vt/rdmahandle/holder.h"
 #include "vt/objgroup/manager.h"
 #include "vt/pipe/pipe_manager.h"
 
 namespace vt { namespace rdma {
-
-using ElemType = int64_t;
-
-template <typename T, HandleEnum E>
-struct Holder {
-  Holder() = default;
-
-  bool ready() const { return ready_; }
-
-  friend struct Manager;
-
-private:
-  template <typename ProxyT>
-  void addHandle(HandleKey key, ElemType lin, Handle<T,E> han, std::size_t in_size) {
-    handles_[lin] = han;
-    key_ = key;
-    size_ += in_size;
-  }
-
-  void allocateDataWindow(std::size_t const in_len = 0) {
-    std::size_t len = in_len == 0 ? size_ : in_len;
-    fmt::print("allocate: len={}\n", len);
-    MPI_Alloc_mem(len * sizeof(T), MPI_INFO_NULL, &data_base_);
-    MPI_Win_create(data_base_, len * sizeof(T), sizeof(T), MPI_INFO_NULL, MPI_COMM_WORLD, &data_window_);
-    ready_ = true;
-  }
-
-public:
-  template <typename Callable>
-  void access(bool exclusive, Callable fn) {
-    auto this_node = theContext()->getNode();
-    auto lock_type = exclusive ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
-    MPI_Win_lock(lock_type, this_node, 0, data_window_);
-    fn(data_base_);
-    MPI_Win_unlock(this_node, data_window_);
-  }
-
-  struct RequestHolder {
-    RequestHolder() = default;
-    RequestHolder(RequestHolder const&) = delete;
-    RequestHolder(RequestHolder&&) = default;
-
-    ~RequestHolder() { wait(); }
-
-  public:
-    MPI_Request* add() {
-      reqs_.emplace_back(MPI_Request{});
-      return &reqs_[reqs_.size()-1];
-    }
-
-    bool done() const { return reqs_.size() == 0; }
-
-    void wait() {
-      if (done()) {
-        return;
-      } else {
-        std::vector<MPI_Status> stats;
-        stats.resize(reqs_.size());
-        MPI_Waitall(reqs_.size(), &reqs_[0], &stats[0]);
-        reqs_.clear();
-      }
-    }
-
-  private:
-    std::vector<MPI_Request> reqs_;
-    bool finished_ = true;
-  };
-
-  void get(vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset) {
-    auto lock_type = exclusive ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
-    auto mpi_type = TypeMPI<T>::getType();
-    RequestHolder r;
-    MPI_Win_lock(lock_type, node, 0, data_window_);
-    MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
-    MPI_Win_unlock(node, data_window_);
-  }
-
-  HandleKey key_;
-  MPI_Win data_window_;
-  MPI_Win idx_window_;
-  MPI_Win control_window_;
-  T* data_base_ = nullptr;
-  T* idx_base_ = nullptr;
-  T* control_base_ = nullptr;
-  std::size_t size_ = 0;
-  bool ready_ = false;
-
-private:
-  std::unordered_map<ElemType, Handle<T,E>> handles_;
-};
 
 struct Manager {
   using ProxyType    = vt::objgroup::proxy::Proxy<Manager>;
