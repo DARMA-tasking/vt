@@ -57,6 +57,13 @@ RuntimePtrType initialize(
 RuntimePtrType initialize(int& argc, char**& argv, MPI_Comm* comm = nullptr);
 RuntimePtrType initialize(MPI_Comm* comm = nullptr);
 
+///
+/// \brief Allocate routine to allow for two-step initialization
+/// with configuration from command line and input file
+/// \param[in] is_interop: bool (Default value = false)
+/// \param[in] num_workers: WorkerCountType (Default value = no_workers)
+/// \param[in] comm: Pointer to MPI_Comm (Default value = nullptr)
+///
 RuntimePtrType allocate(
   bool is_interop = false,
   WorkerCountType const num_workers = no_workers,

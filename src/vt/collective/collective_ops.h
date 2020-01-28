@@ -68,7 +68,10 @@ struct CollectiveAnyOps {
   );
   ///
   /// \brief Allocate routine to allow for two-step initialization
-  /// with configuration from command line and input (YAML) file
+  /// with configuration from command line and input file
+  /// \param[in] is_interop: bool (Default value = false)
+  /// \param[in] num_workers: WorkerCountType (Default value = no_workers)
+  /// \param[in] comm: Pointer to MPI_Comm (Default value = nullptr)
   ///
   static RuntimePtrType allocate(
     bool is_interop = false,
