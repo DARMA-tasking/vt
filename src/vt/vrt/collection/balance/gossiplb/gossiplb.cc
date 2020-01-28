@@ -477,7 +477,7 @@ void GossipLB::lazyMigrateObjsTo(
 ) {
   using LazyMsg = balance::LazyMigrationMsg;
   auto msg = makeMessage<LazyMsg>(node, objs);
-  envelopeSetEpoch(msg, epoch);
+  envelopeSetEpoch(msg->env, epoch);
   proxy_[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
 }
 
