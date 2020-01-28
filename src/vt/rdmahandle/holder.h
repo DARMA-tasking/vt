@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/rdmahandle/common.h"
+#include "vt/rdmahandle/request_holder.h"
 
 #include <unordered_map>
 #include <vector>
@@ -89,37 +90,6 @@ public:
     MPI_Win_unlock(this_node, data_window_);
   }
 
-  struct RequestHolder {
-    RequestHolder() = default;
-    RequestHolder(RequestHolder const&) = delete;
-    RequestHolder(RequestHolder&&) = default;
-
-    ~RequestHolder() { wait(); }
-
-  public:
-    MPI_Request* add() {
-      reqs_.emplace_back(MPI_Request{});
-      return &reqs_[reqs_.size()-1];
-    }
-
-    bool done() const { return reqs_.size() == 0; }
-
-    void wait() {
-      if (done()) {
-        return;
-      } else {
-        std::vector<MPI_Status> stats;
-        stats.resize(reqs_.size());
-        MPI_Waitall(reqs_.size(), &reqs_[0], &stats[0]);
-        reqs_.clear();
-      }
-    }
-
-  private:
-    std::vector<MPI_Request> reqs_;
-    bool finished_ = true;
-  };
-
   struct LockMPI {
     LockMPI(bool in_exclusive, vt::NodeType in_rank, MPI_Win in_window)
       : exclusive_(in_exclusive),
@@ -142,15 +112,23 @@ public:
     MPI_Win window_;
   };
 
-  void get(vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset) {
+  RequestHolder rget(
+    vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset
+  ) {
     auto mpi_type = TypeMPI<T>::getType();
     RequestHolder r;
     {
       LockMPI _scope_lock(exclusive, node, data_window_);
       MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
     }
+    return r;
   }
 
+  void get(vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset) {
+    rget(node, exclusive, ptr, len, offset);
+  }
+
+private:
   HandleKey key_;
   MPI_Win data_window_;
   MPI_Win idx_window_;

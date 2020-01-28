@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                handle.impl.h
+//                               request_holder.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,46 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RDMAHANDLE_HANDLE_IMPL_H
-#define INCLUDED_VT_RDMAHANDLE_HANDLE_IMPL_H
+#if !defined INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H
+#define INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H
 
 #include "vt/config.h"
-#include "vt/rdmahandle/handle.h"
-#include "vt/rdmahandle/holder.h"
-#include "vt/rdmahandle/manager.h"
+
+#include <vector>
 
 namespace vt { namespace rdma {
 
-template <typename T, HandleEnum E>
-bool Handle<T,E>::ready() const {
-  return Manager::getEntry<T,E>(key_).ready();
-}
+struct RequestHolder {
+  RequestHolder() = default;
+  RequestHolder(RequestHolder const&) = delete;
+  RequestHolder(RequestHolder&&) = default;
 
-template <typename T, HandleEnum E>
-void Handle<T,E>::get(vt::NodeType node, T* ptr, std::size_t len, int offset) {
-  return Manager::getEntry<T,E>(key_).get(node, false, ptr, len, offset);
-}
+  ~RequestHolder() { wait(); }
 
-template <typename T, HandleEnum E>
-typename Handle<T,E>::RequestType
-Handle<T,E>::rget(vt::NodeType node, T* ptr, std::size_t len, int offset) {
-  return Manager::getEntry<T,E>(key_).rget(node, false, ptr, len, offset);
-}
+public:
+  MPI_Request* add() {
+    reqs_.emplace_back(MPI_Request{});
+    return &reqs_[reqs_.size()-1];
+  }
 
-template <typename T, HandleEnum E>
-void Handle<T,E>::readExclusive(std::function<void(T const*)> fn) {
-  Manager::getEntry<T,E>(key_).access(true, fn);
-}
+  bool done() const { return reqs_.size() == 0; }
 
-template <typename T, HandleEnum E>
-void Handle<T,E>::readShared(std::function<void(T const*)> fn) {
-  Manager::getEntry<T,E>(key_).access(false, fn);
-}
+  void wait() {
+    if (done()) {
+      return;
+    } else {
+      std::vector<MPI_Status> stats;
+      stats.resize(reqs_.size());
+      MPI_Waitall(reqs_.size(), &reqs_[0], &stats[0]);
+      reqs_.clear();
+    }
+  }
 
-template <typename T, HandleEnum E>
-void Handle<T,E>::modifyExclusive(std::function<void(T*)> fn) {
-  Manager::getEntry<T,E>(key_).access(true, fn);
-}
-
-template <typename T, HandleEnum E>
-void Handle<T,E>::modifyShared(std::function<void(T*)> fn) {
-  Manager::getEntry<T,E>(key_).access(false, fn);
-}
+private:
+  std::vector<MPI_Request> reqs_;
+  bool finished_ = true;
+};
 
 }} /* end namespace vt::rdma */
 
-#endif /*INCLUDED_VT_RDMAHANDLE_HANDLE_IMPL_H*/
+#endif /*INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H*/

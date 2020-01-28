@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/rdmahandle/handle_key.h"
+#include "vt/rdmahandle/request_holder.h"
 
 #include <functional>
 
@@ -64,6 +65,8 @@ struct Manager;
 template <typename T, HandleEnum E>
 struct Handle : BaseHandle {
   using DataT = T;
+  using RequestType = RequestHolder;
+
   static constexpr HandleEnum handle_type = E;
 
   Handle() = default;
@@ -90,6 +93,7 @@ public:
 
 public:
   void get(vt::NodeType, T* ptr, std::size_t len, int offset);
+  RequestType rget(vt::NodeType, T* ptr, std::size_t len, int offset);
 
 protected:
   HandleKey key_ = {};
