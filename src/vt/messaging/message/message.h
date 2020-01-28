@@ -78,9 +78,9 @@ struct ActiveMsg : BaseMsg {
    * Create a 'copy' that DOES NOT PRESERVE envelope states.
    * This is largely for auto-copy constructors in derived types.
    */
-  ActiveMsg(ActiveMsg const& in) {
-    envelopeInitEmpty(env);
-  }
+  // ActiveMsg(ActiveMsg const& in) {
+  //   envelopeInitEmpty(env);
+  // }
 
   // The 'copy' ctor is bad enough. Forbid a copy assignment.
   ActiveMsg operator=(ActiveMsg const& in) = delete;

@@ -96,11 +96,11 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
   // destination. This guard is valid even for raw MsgT* API calls.
   // (Probably best type-guard would be to required MsgPtr&& on public API,
   //  which might be a bit awkward to use..)
-  vtAssert(
-    envelopeGetDest(rawMsg->env) == uninitialized_destination,
-    "Message already has a destination and cannot be reused. "
-    "This can occur if a message is attempted to be sent/broadcast twice."
-  );
+  // vtAssert(
+  //   envelopeGetDest(rawMsg->env) == uninitialized_destination,
+  //   "Message already has a destination and cannot be reused. "
+  //   "This can occur if a message is attempted to be sent/broadcast twice."
+  // );
 
   bool const is_term = envelopeIsTerm(rawMsg->env);
   if (!is_term || backend_check_enabled(print_term_msgs)) {
