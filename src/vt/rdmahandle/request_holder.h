@@ -93,7 +93,6 @@ public:
 
 private:
   std::vector<MPI_Request> reqs_;
-  bool finished_ = true;
   std::unique_ptr<term::CallableBase> on_done_ = nullptr;
 };
 
