@@ -49,28 +49,44 @@
 
 namespace vt { namespace rdma {
 
+enum struct Lock : int8_t {
+  None      = 0,
+  Exclusive = 1,
+  Shared    = 2
+};
+
 struct LockMPI {
-  LockMPI(bool in_exclusive, vt::NodeType in_rank, MPI_Win in_window)
-    : exclusive_(in_exclusive),
+  LockMPI(Lock in_l, vt::NodeType in_rank, MPI_Win in_window)
+    : l_(in_l),
       rank_(in_rank),
       window_(in_window)
   {
-    auto lock_type = exclusive_ ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
-    MPI_Win_lock(lock_type, rank_, 0, window_);
+    if (l_ != Lock::None) {
+      auto lock_type = l_ == Lock::Exclusive ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
+      MPI_Win_lock(lock_type, rank_, 0, window_);
+    }
   }
   LockMPI(LockMPI const&) = delete;
   LockMPI(LockMPI&&) = default;
 
   ~LockMPI() {
-    MPI_Win_unlock(rank_, window_);
+    if (l_ != Lock::None) {
+      MPI_Win_unlock(rank_, window_);
+    }
   }
 
 private:
-  bool exclusive_ = false;
+  Lock l_ = Lock::None;
   vt::NodeType rank_ = vt::uninitialized_destination;
   MPI_Win window_;
 };
 
 }} /* end namespace vt::rdma */
+
+namespace vt {
+
+using Lock = rdma::Lock;
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_VT_RDMAHANDLE_LOCK_MPI_H*/

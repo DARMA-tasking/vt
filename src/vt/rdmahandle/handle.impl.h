@@ -58,46 +58,100 @@ bool Handle<T,E>::ready() const {
 }
 
 template <typename T, HandleEnum E>
-void Handle<T,E>::get(vt::NodeType node, T* ptr, std::size_t len, int offset) {
-  return Manager::getEntry<T,E>(key_).get(node, false, ptr, len, offset);
+void Handle<T,E>::get(vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l) {
+  return Manager::getEntry<T,E>(key_).get(node, l, ptr, len, offset);
 }
 
 template <typename T, HandleEnum E>
 typename Handle<T,E>::RequestType
-Handle<T,E>::rget(vt::NodeType node, T* ptr, std::size_t len, int offset) {
-  return Manager::getEntry<T,E>(key_).rget(node, false, ptr, len, offset);
+Handle<T,E>::rget(vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l) {
+  return Manager::getEntry<T,E>(key_).rget(node, l, ptr, len, offset);
 }
 
 template <typename T, HandleEnum E>
-void Handle<T,E>::put(vt::NodeType node, T* ptr, std::size_t len, int offset) {
-  return Manager::getEntry<T,E>(key_).put(node, false, ptr, len, offset);
+void Handle<T,E>::get(vt::NodeType node, std::size_t len, int offset, Lock l) {
+  rget(node, len, offset);
 }
 
 template <typename T, HandleEnum E>
 typename Handle<T,E>::RequestType
-Handle<T,E>::rput(vt::NodeType node, T* ptr, std::size_t len, int offset) {
-  return Manager::getEntry<T,E>(key_).rput(node, false, ptr, len, offset);
+Handle<T,E>::rget(vt::NodeType node, std::size_t len, int offset, Lock l) {
+  if (getBuffer() == nullptr) {
+    auto ptr = std::make_unique<T[]>(len);
+    auto r = Manager::getEntry<T,E>(key_).rget(node, l, &ptr[0], len, offset);
+    r.addAction([cptr=std::move(ptr),actions=actions_]{
+      for (auto&& action : actions) {
+        action(&cptr[0]);
+      }
+    });
+    return r;
+  } else {
+    auto r = Manager::getEntry<T,E>(key_).rget(node, l, user_buffer_, len, offset);
+    r.addAction([buffer=user_buffer_,actions=actions_]{
+      for (auto&& action : actions) {
+        action(buffer);
+      }
+    });
+    return r;
+  }
+}
+
+template <typename T, HandleEnum E>
+void Handle<T,E>::put(vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l) {
+  return Manager::getEntry<T,E>(key_).put(node, l, ptr, len, offset);
+}
+
+template <typename T, HandleEnum E>
+typename Handle<T,E>::RequestType
+Handle<T,E>::rput(vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l) {
+  return Manager::getEntry<T,E>(key_).rput(node, l, ptr, len, offset);
+}
+
+template <typename T, HandleEnum E>
+void Handle<T,E>::accum(
+  vt::NodeType node, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l
+) {
+  return Manager::getEntry<T,E>(key_).accum(node, l, ptr, len, offset, op);
+}
+
+template <typename T, HandleEnum E>
+typename Handle<T,E>::RequestType
+Handle<T,E>::raccum(
+  vt::NodeType node, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l
+) {
+  return Manager::getEntry<T,E>(key_).raccum(node, l, ptr, len, offset, op);
 }
 
 template <typename T, HandleEnum E>
 void Handle<T,E>::readExclusive(std::function<void(T const*)> fn) {
-  Manager::getEntry<T,E>(key_).access(true, fn);
+  Manager::getEntry<T,E>(key_).access(Lock::Exclusive, fn);
 }
 
 template <typename T, HandleEnum E>
 void Handle<T,E>::readShared(std::function<void(T const*)> fn) {
-  Manager::getEntry<T,E>(key_).access(false, fn);
+  Manager::getEntry<T,E>(key_).access(Lock::Shared, fn);
 }
 
 template <typename T, HandleEnum E>
 void Handle<T,E>::modifyExclusive(std::function<void(T*)> fn) {
-  Manager::getEntry<T,E>(key_).access(true, fn);
+  Manager::getEntry<T,E>(key_).access(Lock::Exclusive, fn);
 }
 
 template <typename T, HandleEnum E>
 void Handle<T,E>::modifyShared(std::function<void(T*)> fn) {
-  Manager::getEntry<T,E>(key_).access(false, fn);
+  Manager::getEntry<T,E>(key_).access(Lock::Shared, fn);
 }
+
+template <typename T, HandleEnum E>
+void Handle<T,E>::lock(Lock l, vt::NodeType node) {
+  lock_ = Manager::getEntry<T,E>(key_).lock(l, node);
+}
+
+template <typename T, HandleEnum E>
+void Handle<T,E>::unlock() {
+  lock_ = nullptr;
+}
+
 
 }} /* end namespace vt::rdma */
 

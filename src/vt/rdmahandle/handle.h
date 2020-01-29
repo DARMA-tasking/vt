@@ -48,8 +48,11 @@
 #include "vt/config.h"
 #include "vt/rdmahandle/handle_key.h"
 #include "vt/rdmahandle/request_holder.h"
+#include "vt/rdmahandle/lock_mpi.h"
 
 #include <functional>
+#include <vector>
+#include <memory>
 
 namespace vt { namespace rdma {
 
@@ -66,6 +69,7 @@ template <typename T, HandleEnum E>
 struct Handle : BaseHandle {
   using DataT = T;
   using RequestType = RequestHolder;
+  using ActionDataType = std::function<void(T*)>;
 
   static constexpr HandleEnum handle_type = E;
 
@@ -77,13 +81,28 @@ struct Handle : BaseHandle {
   friend struct Manager;
 
 private:
-  Handle(HandleKey in_key, std::size_t in_size)
-    : key_(in_key), size_(in_size)
+  Handle(
+    HandleKey in_key, std::size_t in_size, std::size_t in_offset = 0,
+    std::shared_ptr<LockMPI> in_lock = nullptr
+  ) : key_(in_key),
+      size_(in_size),
+      offset_(in_offset),
+      lock_(in_lock)
   { }
+
+public:
+  Handle<T,E> sub(std::size_t in_offset, std::size_t in_size) {
+    return Handle<T,E>(key_, in_size, offset_ + in_offset, lock_);
+  }
 
 public:
   bool isInit() const { return key_.valid(); }
   bool ready() const;
+  bool hasAction() const { return actions_.size() > 0; }
+  bool clearActions() const { return actions_.clear(); }
+  void addAction(ActionDataType in_action) { actions_.push_back(in_action); }
+  void setBuffer(T* in_buffer) { user_buffer_ = in_buffer; }
+  T* getBuffer() const { return user_buffer_; }
 
 public:
   void readExclusive(std::function<void(T const*)> fn);
@@ -92,14 +111,26 @@ public:
   void modifyShared(std::function<void(T*)> fn);
 
 public:
-  void get(vt::NodeType, T* ptr, std::size_t len, int offset);
-  void put(vt::NodeType, T* ptr, std::size_t len, int offset);
-  RequestType rget(vt::NodeType, T* ptr, std::size_t len, int offset);
-  RequestType rput(vt::NodeType, T* ptr, std::size_t len, int offset);
+  void lock(Lock l, vt::NodeType node);
+  void unlock();
+
+public:
+  void get(vt::NodeType, std::size_t len, int offset, Lock l = Lock::None);
+  void get(vt::NodeType, T* ptr, std::size_t len, int offset, Lock l = Lock::None);
+  void put(vt::NodeType, T* ptr, std::size_t len, int offset, Lock l = Lock::None);
+  void accum(vt::NodeType, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None);
+  RequestType rget(vt::NodeType, T* ptr, std::size_t len, int offset, Lock l = Lock::None);
+  RequestType rget(vt::NodeType, std::size_t len, int offset, Lock l = Lock::None);
+  RequestType rput(vt::NodeType, T* ptr, std::size_t len, int offset, Lock l = Lock::None);
+  RequestType raccum(vt::NodeType, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None);
 
 protected:
   HandleKey key_ = {};
   std::size_t size_  = 0;
+  std::vector<ActionDataType> actions_ = {};
+  T* user_buffer_ = nullptr;
+  std::size_t offset_ = 0;
+  std::shared_ptr<LockMPI> lock_ = nullptr;
 };
 
 }} /* end namespace vt::rdma */

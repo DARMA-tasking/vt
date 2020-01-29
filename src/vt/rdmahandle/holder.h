@@ -52,6 +52,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 namespace vt { namespace rdma {
 
@@ -82,43 +83,71 @@ private:
   }
 
 public:
+  std::shared_ptr<LockMPI> lock(Lock l, vt::NodeType node) {
+    return std::make_shared<LockMPI>(l, node, data_window_);
+  }
+
+public:
   template <typename Callable>
-  void access(bool exclusive, Callable fn) {
+  void access(Lock l, Callable fn) {
     auto this_node = theContext()->getNode();
-    LockMPI _scope_lock(exclusive, this_node, data_window_);
+
+    LockMPI _scope_lock(l, this_node, data_window_);
     fn(data_base_);
   }
 
   RequestHolder rget(
-    vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset
+    vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
   ) {
     auto mpi_type = TypeMPI<T>::getType();
     RequestHolder r;
     {
-      LockMPI _scope_lock(exclusive, node, data_window_);
+      LockMPI _scope_lock(l, node, data_window_);
       MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
     }
     return r;
   }
 
-  void get(vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset) {
-    rget(node, exclusive, ptr, len, offset);
+  void get(vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset) {
+    rget(node, l, ptr, len, offset);
   }
 
   RequestHolder rput(
-    vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset
+    vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
   ) {
     auto mpi_type = TypeMPI<T>::getType();
     RequestHolder r;
     {
-      LockMPI _scope_lock(exclusive, node, data_window_);
+      LockMPI _scope_lock(l, node, data_window_);
       MPI_Rput(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
     }
     return r;
   }
 
-  void put(vt::NodeType node, bool exclusive, T* ptr, std::size_t len, int offset) {
-    rput(node, exclusive, ptr, len, offset);
+  void put(vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset) {
+    rput(node, l, ptr, len, offset);
+  }
+
+  RequestHolder raccum(
+    vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset,
+    MPI_Op op
+  ) {
+    auto mpi_type = TypeMPI<T>::getType();
+    RequestHolder r;
+    {
+      LockMPI _scope_lock(l, node, data_window_);
+      MPI_Raccumulate(
+        ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_, r.add()
+      );
+    }
+    return r;
+  }
+
+  void accum(
+    vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset,
+    MPI_Op op
+  ) {
+    raccum(node, l, ptr, len, offset, op);
   }
 
 

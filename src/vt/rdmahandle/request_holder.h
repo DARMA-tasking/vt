@@ -64,25 +64,36 @@ public:
     return &reqs_[reqs_.size()-1];
   }
 
+  template <typename Callable>
+  void addAction(Callable&& c) {
+    std::unique_ptr<term::CallableBase> callable =
+      std::make_unique<term::CallableHolder<Callable>>(std::move(c));
+    on_done_ = std::move(callable);
+  }
+
   bool done() const { return reqs_.size() == 0; }
 
   // Add test() for async check
 
   void wait() {
-    if (done()) {
-      return;
-    } else {
+    fmt::print("wait: len={}, ptr={}\n", reqs_.size(), on_done_ ? "yes" : "no");
+    if (not done()) {
       std::vector<MPI_Status> stats;
       stats.resize(reqs_.size());
       // @todo: This should test and then run the VT scheduler as to not block
       MPI_Waitall(reqs_.size(), &reqs_[0], &stats[0]);
       reqs_.clear();
     }
+    if (on_done_ != nullptr) {
+      on_done_->invoke();
+    }
+    on_done_ = nullptr;
   }
 
 private:
   std::vector<MPI_Request> reqs_;
   bool finished_ = true;
+  std::unique_ptr<term::CallableBase> on_done_ = nullptr;
 };
 
 }} /* end namespace vt::rdma */
