@@ -58,6 +58,16 @@
 
 namespace vt { namespace rdma {
 
+namespace impl {
+
+struct HandleData;
+
+template <typename T, HandleEnum E, typename ProxyT>
+struct ConstructMsg;
+
+} /* end namespace impl */
+
+
 struct Manager {
   using ProxyType    = vt::objgroup::proxy::Proxy<Manager>;
   using ElemToHandle = std::unordered_map<int64_t, HandleType>;
@@ -69,75 +79,15 @@ struct Manager {
 private:
   void initialize(ProxyType in_proxy);
 
-private:
-  struct HandleData {
-    HandleData(HandleKey in_key, std::size_t in_size, int in_count)
-      : key_(in_key),
-        size_(in_size),
-        count_(in_count)
-    { }
-
-    friend HandleData operator+(HandleData a1, HandleData const& a2) {
-      vtAssertExpr(a1.key_.handle_ != vt::no_handle);
-      vtAssertExpr(a1.key_.handle_ == a2.key_.handle_);
-      vtAssertExpr(a1.key_.isObjGroup() == a2.key_.isObjGroup());
-      a1.size_ += a2.size_;
-      a1.count_ += a2.count_;
-      return a1;
-    }
-
-    HandleKey key_;
-    std::size_t size_ = 0;
-    int count_ = 0;
-  };
-
   template <typename T, HandleEnum E, typename ProxyT>
-  struct ConstructMsg : vt::collective::ReduceTMsg<HandleData> {
-    ConstructMsg() = default;
-    explicit ConstructMsg(HandleData&& data)
-      : vt::collective::ReduceTMsg<HandleData>(std::move(data))
-    { }
-  };
-
-  template <typename T, HandleEnum E, typename ProxyT>
-  void finishMake(ConstructMsg<T, E, ProxyT>* msg) {
-    auto const& key = msg->getVal().key_;
-    auto const& size = msg->getVal().size_;
-    auto const& count = msg->getVal().count_;
-    fmt::print(
-      "{}: finishMake: handle={:x}, size={}, count={}\n",
-      theContext()->getNode(), key.handle_, size, count
-    );
-    auto& entry = getEntry<T,E>(key);
-    entry.allocateDataWindow();
-  }
+  void finishMake(impl::ConstructMsg<T, E, ProxyT>* msg);
 
 public:
   template <typename T, HandleEnum E, typename ProxyT>
-  Handle<T, E> makeHandleCollectiveObjGroup(ProxyT proxy, std::size_t size) {
-    auto proxy_bits = proxy.getProxy();
-    ElemType lin = 0;
-    auto next_handle = ++cur_handle_obj_group_[proxy_bits];
-    auto key = HandleKey{typename HandleKey::ObjGroupTag{}, proxy_bits, next_handle};
-    auto han = Handle<T, E>(key, size);
-    holder_<T,E>[key].template addHandle<ObjGroupProxyType>(key, lin, han, size);
-    auto cb = vt::theCB()->makeBcast<
-      Manager, ConstructMsg<T, E, ProxyT>, &Manager::finishMake<T, E, ProxyT>
-    >(proxy_);
-    auto msg = vt::makeMessage<ConstructMsg<T, E, ProxyT>>(HandleData{key, size, 1});
-    proxy_.template reduce<vt::collective::PlusOp<HandleData>>(msg.get(),cb);
-    return han;
-  }
+  Handle<T, E> makeHandleCollectiveObjGroup(ProxyT proxy, std::size_t size);
 
   template <typename T, HandleEnum E>
-  void deleteHandleCollectiveObjGroup(Handle<T,E> const& han) {
-    auto const key = han.key_;
-    auto iter = holder_<T,E>.find(key);
-    if (iter != holder_<T,E>.end()) {
-      iter->second.deallocate();
-      holder_<T,E>.erase(iter);
-    }
-  }
+  void deleteHandleCollectiveObjGroup(Handle<T,E> const& han);
 
   template <
     typename T,
@@ -147,25 +97,10 @@ public:
   >
   Handle<T, E> makeHandleCollectiveCollection(
     ProxyT proxy, IndexType range, std::size_t size
-  ) {
-    auto proxy_bits = proxy.getProxy();
-    auto idx = proxy.getIndex();
-    auto lin = static_cast<ElemType>(mapping::linearizeDenseIndexRowMajor(&idx, &range));
-    auto next_handle = ++cur_handle_collection_[proxy_bits][lin];
-    auto key = HandleKey{typename HandleKey::CollectionTag{}, proxy_bits, next_handle, size};
-    auto han = Handle<T, E>(key, size);
-    holder_<T,E>[key].template addHandle<VirtualProxyType>(key, lin, han);
-    return han;
-  }
+  );
 
-  // For now, this is static. Really it should be part of the objgroup and the
-  // proxy should be available through the VT component
   template <typename T, HandleEnum E>
-  static Holder<T,E>& getEntry(HandleKey const& key) {
-    vtAssertExpr((holder_<T,E>.find(key) != holder_<T,E>.end()));
-    auto& entry = holder_<T,E>[key];
-    return entry;
-  }
+  Holder<T,E>& getEntry(HandleKey const& key);
 
 public:
   static ProxyType construct();
@@ -207,5 +142,6 @@ struct hash<vt::rdma::HandleKey> {
 } /* end namespace std */
 
 #include "vt/rdmahandle/handle.impl.h"
+#include "vt/rdmahandle/manager.impl.h"
 
 #endif /*INCLUDED_VT_RDMAHANDLE_MANAGER_H*/
