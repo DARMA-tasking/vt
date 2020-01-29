@@ -66,6 +66,8 @@ namespace vt { namespace runtime {
 struct Runtime {
   template <typename ComponentT>
   using ComponentPtrType = std::unique_ptr<ComponentT>;
+  template <typename ComponentT>
+  using ObjGroupPtrType = ComponentT*;
   using ArgType = vt::arguments::ArgConfig;
 
   Runtime(
@@ -164,6 +166,7 @@ public:
   ComponentPtrType<group::GroupManager> theGroup;
   ComponentPtrType<pipe::PipeManager> theCB;
   ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
+  ObjGroupPtrType<rdma::Manager> theHandle;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;

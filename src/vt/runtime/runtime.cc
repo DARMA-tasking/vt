@@ -58,6 +58,7 @@
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/topos/location/location_headers.h"
+#include "vt/rdmahandle/manager.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/collection_headers.h"
@@ -1110,6 +1111,7 @@ void Runtime::initializeComponents() {
   theLocMan = std::make_unique<location::LocationManager>();
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
+  theHandle = rdma::Manager::construct().get();
 
   #if backend_check_enabled(trace_enabled)
     theTrace->initialize();
@@ -1232,6 +1234,7 @@ void Runtime::finalizeComponents() {
   // Reverse order destruction of runtime components.
 
   // Advanced components: may communicate during destruction
+  theHandle = nullptr;
   theCollection = nullptr;
   theVirtualManager = nullptr;
   theLocMan = nullptr;

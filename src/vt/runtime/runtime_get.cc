@@ -125,6 +125,7 @@ CollectionManagerType*      theCollection()     { return CUR_RT->theCollection.g
 group::GroupManager*        theGroup()          { return CUR_RT->theGroup.get();          }
 pipe::PipeManager*          theCB()             { return CUR_RT->theCB.get();             }
 objgroup::ObjGroupManager*  theObjGroup()       { return CUR_RT->theObjGroup.get();       }
+rdma::Manager*              theHandle()         { return CUR_RT->theHandle;               }
 
 #if backend_check_enabled(trace_enabled)
 trace::Trace*               theTrace()          { return CUR_RT->theTrace.get();          }

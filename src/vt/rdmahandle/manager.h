@@ -51,8 +51,10 @@
 #include "vt/rdmahandle/handle_key.h"
 #include "vt/rdmahandle/type_mpi.h"
 #include "vt/rdmahandle/holder.h"
+#include "vt/rdmahandle/manager.fwd.h"
 #include "vt/objgroup/manager.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/topos/mapping/dense/dense.h"
 
 namespace vt { namespace rdma {
 
