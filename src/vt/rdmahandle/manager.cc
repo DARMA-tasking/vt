@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               request_holder.h
+//                                  manager.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,61 +42,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H
-#define INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H
-
 #include "vt/config.h"
-#include "vt/termination/term_action.h"
-
-#include <vector>
-#include <memory>
+#include "vt/rdmahandle/manager.h"
+#include "vt/objgroup/manager.h"
 
 namespace vt { namespace rdma {
 
-struct RequestHolder {
-  RequestHolder() = default;
-  RequestHolder(RequestHolder const&) = delete;
-  RequestHolder(RequestHolder&&) = default;
+void Manager::destroy() {
+  vt::theObjGroup()->destroyCollective(proxy_);
+}
 
-  ~RequestHolder() { wait(); }
+void Manager::initialize(ProxyType in_proxy) {
+  proxy_ = in_proxy;
+}
 
-public:
-  MPI_Request* add() {
-    reqs_.emplace_back(MPI_Request{});
-    return &reqs_[reqs_.size()-1];
-  }
-
-  template <typename Callable>
-  void addAction(Callable&& c) {
-    std::unique_ptr<term::CallableBase> callable =
-      std::make_unique<term::CallableHolder<Callable>>(std::move(c));
-    on_done_ = std::move(callable);
-  }
-
-  bool done() const { return reqs_.size() == 0; }
-
-  // Add test() for async check
-
-  void wait() {
-    fmt::print("wait: len={}, ptr={}\n", reqs_.size(), on_done_ ? "yes" : "no");
-    if (not done()) {
-      std::vector<MPI_Status> stats;
-      stats.resize(reqs_.size());
-      // @todo: This should test and then run the VT scheduler as to not block
-      MPI_Waitall(reqs_.size(), &reqs_[0], &stats[0]);
-      reqs_.clear();
-    }
-    if (on_done_ != nullptr) {
-      on_done_->invoke();
-    }
-    on_done_ = nullptr;
-  }
-
-private:
-  std::vector<MPI_Request> reqs_;
-  std::unique_ptr<term::CallableBase> on_done_ = nullptr;
-};
+/*static*/ typename Manager::ProxyType Manager::construct() {
+  auto proxy = vt::theObjGroup()->makeCollective<Manager>();
+  proxy.get()->initialize(proxy);
+  return proxy;
+}
 
 }} /* end namespace vt::rdma */
-
-#endif /*INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H*/

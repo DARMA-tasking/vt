@@ -50,6 +50,7 @@ set(
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
+    rdmahandle
     topos/location
       topos/location/cache topos/location/message topos/location/record
       topos/location/utility

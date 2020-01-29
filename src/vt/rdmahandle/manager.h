@@ -64,14 +64,10 @@ struct Manager {
 
   Manager() = default;
 
-  void destroy() {
-    vt::theObjGroup()->destroyCollective(proxy_);
-  }
+  void destroy();
 
 private:
-  void initialize(ProxyType in_proxy) {
-    proxy_ = in_proxy;
-  }
+  void initialize(ProxyType in_proxy);
 
 private:
   struct HandleData {
@@ -172,11 +168,7 @@ public:
   }
 
 public:
-  static ProxyType construct() {
-    auto proxy = vt::theObjGroup()->makeCollective<Manager>();
-    proxy.get()->initialize(proxy);
-    return proxy;
-  }
+  static ProxyType construct();
 
 private:
   // Current collective handle for a given objgroup proxy
