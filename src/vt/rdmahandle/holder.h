@@ -68,88 +68,34 @@ struct Holder {
 
 private:
   template <typename ProxyT>
-  void addHandle(HandleKey key, ElemType lin, Handle<T,E> han, std::size_t in_size) {
-    handles_[lin] = han;
-    key_ = key;
-    size_ += in_size;
-  }
-
-  void allocateDataWindow(std::size_t const in_len = 0) {
-    std::size_t len = in_len == 0 ? size_ : in_len;
-    fmt::print("allocate: len={}\n", len);
-    MPI_Alloc_mem(len * sizeof(T), MPI_INFO_NULL, &data_base_);
-    MPI_Win_create(data_base_, len * sizeof(T), sizeof(T), MPI_INFO_NULL, MPI_COMM_WORLD, &data_window_);
-    ready_ = true;
-  }
+  void addHandle(HandleKey key, ElemType lin, Handle<T,E> han, std::size_t size);
+  void allocateDataWindow(std::size_t const in_len = 0);
 
 public:
-  std::shared_ptr<LockMPI> lock(Lock l, vt::NodeType node) {
-    return std::make_shared<LockMPI>(l, node, data_window_);
-  }
+  std::shared_ptr<LockMPI> lock(Lock l, vt::NodeType node);
 
 public:
   template <typename Callable>
-  void access(Lock l, Callable fn) {
-    auto this_node = theContext()->getNode();
-
-    LockMPI _scope_lock(l, this_node, data_window_);
-    fn(data_base_);
-  }
+  void access(Lock l, Callable fn);
 
   RequestHolder rget(
     vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
-  ) {
-    auto mpi_type = TypeMPI<T>::getType();
-    RequestHolder r;
-    {
-      LockMPI _scope_lock(l, node, data_window_);
-      MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
-    }
-    return r;
-  }
-
-  void get(vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset) {
-    rget(node, l, ptr, len, offset);
-  }
+  );
+  void get(vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset);
 
   RequestHolder rput(
     vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
-  ) {
-    auto mpi_type = TypeMPI<T>::getType();
-    RequestHolder r;
-    {
-      LockMPI _scope_lock(l, node, data_window_);
-      MPI_Rput(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
-    }
-    return r;
-  }
-
-  void put(vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset) {
-    rput(node, l, ptr, len, offset);
-  }
+  );
+  void put(vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset);
 
   RequestHolder raccum(
     vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset,
     MPI_Op op
-  ) {
-    auto mpi_type = TypeMPI<T>::getType();
-    RequestHolder r;
-    {
-      LockMPI _scope_lock(l, node, data_window_);
-      MPI_Raccumulate(
-        ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_, r.add()
-      );
-    }
-    return r;
-  }
-
+  );
   void accum(
     vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset,
     MPI_Op op
-  ) {
-    raccum(node, l, ptr, len, offset, op);
-  }
-
+  );
 
 private:
   HandleKey key_;
@@ -167,5 +113,7 @@ private:
 };
 
 }} /* end namespace vt::rdma */
+
+#include "vt/rdmahandle/holder.impl.h"
 
 #endif /*INCLUDED_VT_RDMAHANDLE_HOLDER_H*/

@@ -48,6 +48,7 @@
 #include "vt/config.h"
 
 #include <vector>
+#include <memory>
 
 namespace vt { namespace rdma {
 
