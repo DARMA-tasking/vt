@@ -93,7 +93,7 @@ private:
 public:
   Handle<T,E> sub(std::size_t in_offset, std::size_t in_size = 0) {
     if (in_size == 0) {
-      in_size = size_ + in_offset;
+      in_size = size_ - in_offset;
     }
     return Handle<T,E>(key_, in_size, hoff_ + in_offset, lock_);
   }
