@@ -64,6 +64,10 @@ struct Manager {
 
   Manager() = default;
 
+  void destroy() {
+    vt::theObjGroup()->destroyCollective(proxy_);
+  }
+
 private:
   void initialize(ProxyType in_proxy) {
     proxy_ = in_proxy;
