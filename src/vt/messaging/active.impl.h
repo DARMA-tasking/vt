@@ -205,7 +205,7 @@ ActiveMessenger::sendMsgSz(
   }
   setupEpochMsg(msg);
 
-  auto base = promoteMsg(msg).template to<BaseMsgType>();;
+  auto base = promoteMsg(msg).template to<BaseMsgType>();
   return PendingSendType(base, msg_size);
 }
 

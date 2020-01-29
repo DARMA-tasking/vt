@@ -284,7 +284,7 @@ struct AnchorBase: std::enable_shared_from_this<AnchorBase> {
    * \brief Returns the name of the anchor
    *
    * \return Name of the anchor
-   *
+   */
   std::string getName() const { return name_; }
 
   /**

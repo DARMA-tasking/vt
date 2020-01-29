@@ -265,7 +265,7 @@ struct Warning : public Printer {
   /**
    * \brief Destructor
    */
-  ~Warning() override = default;;
+  ~Warning() override = default;
 
   protected:
   /// Pointer to the anchor
