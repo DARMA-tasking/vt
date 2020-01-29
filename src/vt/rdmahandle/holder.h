@@ -109,6 +109,7 @@ private:
   T* control_base_ = nullptr;
   std::size_t size_ = 0;
   bool ready_ = false;
+  bool mpi2_ = false;
 
 private:
   std::unordered_map<ElemType, Handle<T,E>> handles_;

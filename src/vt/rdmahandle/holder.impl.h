@@ -102,7 +102,11 @@ RequestHolder Holder<T,E>::rget(
   RequestHolder r;
   {
     LockMPI _scope_lock(l, node, data_window_);
-    MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
+    if (mpi2_) {
+      MPI_Get(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_);
+    } else {
+      MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
+    }
   }
   return r;
 }
@@ -122,7 +126,11 @@ RequestHolder Holder<T,E>::rput(
   RequestHolder r;
   {
     LockMPI _scope_lock(l, node, data_window_);
-    MPI_Rput(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
+    if (mpi2_) {
+      MPI_Put(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_);
+    } else {
+      MPI_Rput(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
+    }
   }
   return r;
 }
@@ -143,9 +151,15 @@ RequestHolder Holder<T,E>::raccum(
   RequestHolder r;
   {
     LockMPI _scope_lock(l, node, data_window_);
-    MPI_Raccumulate(
-      ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_, r.add()
-    );
+    if (mpi2_) {
+      MPI_Accumulate(
+        ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_
+      );
+    } else {
+      MPI_Raccumulate(
+        ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_, r.add()
+      );
+    }
   }
   return r;
 }
