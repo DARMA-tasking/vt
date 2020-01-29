@@ -87,11 +87,11 @@ std::shared_ptr<LockMPI> Holder<T,E>::lock(Lock l, vt::NodeType node) {
 
 template <typename T, HandleEnum E>
 template <typename Callable>
-void Holder<T,E>::access(Lock l, Callable fn) {
+void Holder<T,E>::access(Lock l, Callable fn, std::size_t offset) {
   auto this_node = theContext()->getNode();
 
   LockMPI _scope_lock(l, this_node, data_window_);
-  fn(data_base_);
+  fn(data_base_ + offset);
 }
 
 template <typename T, HandleEnum E>

@@ -82,17 +82,20 @@ struct Handle : BaseHandle {
 
 private:
   Handle(
-    HandleKey in_key, std::size_t in_size, std::size_t in_offset = 0,
+    HandleKey in_key, std::size_t in_size, std::size_t in_hoff = 0,
     std::shared_ptr<LockMPI> in_lock = nullptr
   ) : key_(in_key),
       size_(in_size),
-      offset_(in_offset),
+      hoff_(in_hoff),
       lock_(in_lock)
   { }
 
 public:
-  Handle<T,E> sub(std::size_t in_offset, std::size_t in_size) {
-    return Handle<T,E>(key_, in_size, offset_ + in_offset, lock_);
+  Handle<T,E> sub(std::size_t in_offset, std::size_t in_size = 0) {
+    if (in_size == 0) {
+      in_size = size_ + in_offset;
+    }
+    return Handle<T,E>(key_, in_size, hoff_ + in_offset, lock_);
   }
 
 public:
@@ -129,7 +132,7 @@ protected:
   std::size_t size_  = 0;
   std::vector<ActionDataType> actions_ = {};
   T* user_buffer_ = nullptr;
-  std::size_t offset_ = 0;
+  std::size_t hoff_ = 0;
   std::shared_ptr<LockMPI> lock_ = nullptr;
 };
 

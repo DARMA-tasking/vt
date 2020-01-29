@@ -78,7 +78,7 @@ public:
   void deallocate();
 
   template <typename Callable>
-  void access(Lock l, Callable fn);
+  void access(Lock l, Callable fn, std::size_t offset);
 
   RequestHolder rget(
     vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
