@@ -56,28 +56,46 @@
 
 namespace vt {
 
+/** \file */
+
 static constexpr runtime::RuntimeInstType const collective_default_inst =
   runtime::RuntimeInstType::DefaultInstance;
 
+/**
+ * \struct CollectiveAnyOps collective_ops.h vt/collective/collective_ops.h
+ *
+ * \brief ...
+ *
+ */
 template <runtime::RuntimeInstType instance = collective_default_inst>
 struct CollectiveAnyOps {
   // The general methods that interact with the managed runtime holder
+
   static RuntimePtrType initialize(
     int& argc, char**& argv, WorkerCountType const num_workers = no_workers,
     bool is_interop = false, MPI_Comm* comm = nullptr
   );
-  ///
-  /// \brief Allocate routine to allow for two-step initialization
-  /// with configuration from command line and input file
-  /// \param[in] is_interop: bool (Default value = false)
-  /// \param[in] num_workers: WorkerCountType (Default value = no_workers)
-  /// \param[in] comm: Pointer to MPI_Comm (Default value = nullptr)
-  ///
+
+  /** 
+   * \brief Static allocation routine to allow for two-step initialization
+   *
+   * The routine must be called after an initialization that did not parse
+   * the command-line parameters.
+   * This separation allows to resolve parameters specified in an input file.
+   *
+   * \param[in] is_interop (Default value = false)
+   * \param[in] num_workers (Default value = no_workers)
+   * \param[in] comm: Pointer to MPI_Comm (Default value = nullptr)
+   *
+   * \return RuntimePtrType Pointer to the initialized runtime object
+   *
+   */ 
   static RuntimePtrType allocate(
     bool is_interop = false,
     WorkerCountType const num_workers = no_workers,
     MPI_Comm* comm = nullptr
   );
+
   static void finalize(RuntimePtrType in_rt = nullptr);
   static void scheduleThenFinalize(
     RuntimePtrType in_rt = nullptr, WorkerCountType const workers = no_workers

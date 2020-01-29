@@ -50,27 +50,83 @@
 
 namespace vt {
 
+/** \file */
+
+/**
+ * \brief Intialization with parsing of command-line parameters
+ *
+ * \param[in,out] argc number of command-line parameters
+ * \param[in,out] argv array of command-line parameters
+ * \param[in] is_interop (Default value = false)
+ * \param[in] num_workers (Default value = no_workers)
+ * \param[in] comm Pointer to MPI_Comm (Default value = nullptr)
+ *
+ * \return RuntimePtrType Pointer to the new runtime object
+ *
+ */
 RuntimePtrType initialize(
   int& argc, char**& argv, WorkerCountType const num_workers,
   bool is_interop = false, MPI_Comm* comm = nullptr
 );
+
+/**
+ * \brief Intialization with parsing of command-line parameters
+ *
+ * \param[in,out] argc number of command-line parameters
+ * \param[in,out] argv array of command-line parameters
+ * \param[in] comm Pointer to MPI_Comm (Default value = nullptr)
+ *
+ * \return RuntimePtrType Pointer to the new runtime object
+ *
+ */
 RuntimePtrType initialize(int& argc, char**& argv, MPI_Comm* comm = nullptr);
+
+/**
+ * \brief Intialization
+ *
+ * \param[in] comm Pointer to MPI_Comm (Default value = nullptr)
+ *
+ * \return RuntimePtrType Pointer to the new runtime object
+ *
+ */
 RuntimePtrType initialize(MPI_Comm* comm = nullptr);
 
-///
-/// \brief Allocate routine to allow for two-step initialization
-/// with configuration from command line and input file
-/// \param[in] is_interop: bool (Default value = false)
-/// \param[in] num_workers: WorkerCountType (Default value = no_workers)
-/// \param[in] comm: Pointer to MPI_Comm (Default value = nullptr)
-///
+/**
+ * \brief Allocate routine to allow for two-step initialization
+ *
+ * This routine must be called after initializing the runtime object.
+ * It allows to parse and resolve parameters from command line
+ * and from an input file.
+ *
+ * \param[in] is_interop (Default value = false)
+ * \param[in] num_workers (Default value = no_workers)
+ * \param[in] comm Pointer to MPI_Comm (Default value = nullptr)
+ *
+ * \return RuntimePtrType Pointer to the new runtime object
+ *
+ */
 RuntimePtrType allocate(
   bool is_interop = false,
   WorkerCountType const num_workers = no_workers,
   MPI_Comm* comm = nullptr
 );
 
+/**
+ * \brief Finalize
+ *
+ * This routine ...
+ *
+ * \param[in] in_rt
+ *
+ */
 void finalize(RuntimePtrType in_rt);
+
+/**
+ * \brief Finalize
+ *
+ * This routine ...
+ *
+ */
 void finalize();
 
 } /* end namespace vt */

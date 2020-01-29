@@ -60,35 +60,51 @@
 
 namespace vt { namespace runtime {
 
+/** \file */
+
+/**
+ * \struct Runtime runtime.h vt/runtime/runtime.h
+ *
+ * \brief
+ */
 struct Runtime {
   template <typename ComponentT>
   using ComponentPtrType = std::unique_ptr<ComponentT>;
 
-  /// \brief Constructor for Runtime object
-  ///
-  /// \param argc
-  /// \param argv
-  /// \param in_num_workers
-  /// \param interop_mode
-  /// \param in_comm
-  /// \param in_instance
-  ///
-  /// \note The command line arguments (argc, argv) will get parsed.
-  ///
+  /**
+   * \brief Constructor for Runtime object
+   * 
+   * Constructor to use when combining the parsing and initialization
+   * at the same time.
+   * In particular, this routine does not allow to specify parameters
+   * with an input file.
+   * 
+   * \param[in,out] argc
+   * \param[in,out] argv
+   * \param[in] in_num_workers
+   * \param[in] interop_mode
+   * \param[in] in_comm
+   * \param[in] in_instance
+   * 
+   */
   Runtime(
     int& argc, char**& argv,
     WorkerCountType in_num_workers = no_workers, bool const interop_mode = false,
     MPI_Comm* in_comm = nullptr,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
-  /// \brief Constructor for Runtime object.
-  ///
-  /// \param interop_mode
-  /// \param in_instance
-  ///
-  /// \note No action is done during the creation of the object.
-  /// In particular, this routine will not parse the command line arguments.
-  ///
+
+  /**
+   * \brief Constructor for Runtime object.
+   *
+   * Simple constructor to use when doing the two-step initialization.
+   * No action is done during the creation of the object.
+   * In particular, this routine will not parse the command line arguments.
+   * 
+   * \param[in] interop_mode
+   * \param[in] in_instance
+   * 
+   */ 
   explicit Runtime(
     bool const interop_mode = false,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance);
@@ -97,14 +113,23 @@ struct Runtime {
   Runtime(Runtime&&) = delete;
   Runtime& operator=(Runtime const&) = delete;
 
+  /**
+   * \brief Virtual destructor
+   */
   virtual ~Runtime();
 
-  /// \brief Sets the pointer for the MPI communicator
-  /// \param[in] in_comm: Pointer to the MPI_Comm
+  /**
+   * \brief Sets the pointer for the MPI communicator
+   *
+   * \param[in] in_comm: Pointer to the MPI_Comm
+   */
   void setMPIComm(MPI_Comm* in_comm) { communicator_ = in_comm; }
 
-  /// \brief Sets the number of workers
-  /// \param[in] in_num_workers: Number of workers
+  /** 
+   * \brief Sets the number of workers
+   *
+   * \param[in] in_num_workers: Number of workers
+   */
   void setNumWorkers(WorkerCountType in_num_workers) {
     num_workers_ = in_num_workers;
   }
@@ -155,10 +180,12 @@ protected:
   void finalizeComponents();
   void finalizeOptionalComponents();
 
-  // \brief Routine to parse the command-line parameters and
-  // to setup the simulation parameters.
-  // \param[in] argc: Reference to the number of command-line arguments
-  // \param[in] argv: Reference to the array of command-line arguments
+  /**
+   * \brief Routine to parse the command-line parameters and
+   * to setup the simulation parameters.
+   * \param[in] argc: Reference to the number of command-line arguments
+   * \param[in] argv: Reference to the array of command-line arguments
+   */
   void parseAndSetup(int& argc, char**& argv);
 
   void sync();
