@@ -73,6 +73,14 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
 }
 
 template <typename T, HandleEnum E>
+void Holder<T,E>::deallocate() {
+  if (E == HandleEnum::StaticSize and ready_) {
+    MPI_Win_free(&data_window_);
+    MPI_Free_mem(data_base_);
+  }
+}
+
+template <typename T, HandleEnum E>
 std::shared_ptr<LockMPI> Holder<T,E>::lock(Lock l, vt::NodeType node) {
   return std::make_shared<LockMPI>(l, node, data_window_);
 }

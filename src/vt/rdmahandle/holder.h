@@ -75,6 +75,8 @@ public:
   std::shared_ptr<LockMPI> lock(Lock l, vt::NodeType node);
 
 public:
+  void deallocate();
+
   template <typename Callable>
   void access(Lock l, Callable fn);
 

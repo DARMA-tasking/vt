@@ -127,6 +127,16 @@ public:
     return han;
   }
 
+  template <typename T, HandleEnum E>
+  void deleteHandleCollectiveObjGroup(Handle<T,E> const& han) {
+    auto const key = han.key_;
+    auto iter = holder_<T,E>.find(key);
+    if (iter != holder_<T,E>.end()) {
+      iter->second.deallocate();
+      holder_<T,E>.erase(iter);
+    }
+  }
+
   template <
     typename T,
     HandleEnum E,
