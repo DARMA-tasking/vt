@@ -61,6 +61,10 @@ struct RequestHolder {
   ~RequestHolder() { wait(); }
 
 public:
+  void add(std::function<void()> fn) {
+    delayed_ = fn;
+  }
+
   MPI_Request* add() {
     reqs_.emplace_back(MPI_Request{});
     return &reqs_[reqs_.size()-1];
@@ -79,6 +83,10 @@ public:
 
   void wait() {
     fmt::print("wait: len={}, ptr={}\n", reqs_.size(), on_done_ ? "yes" : "no");
+    if (delayed_ != nullptr) {
+      delayed_();
+      delayed_ = nullptr;
+    }
     if (not done()) {
       std::vector<MPI_Status> stats;
       stats.resize(reqs_.size());
@@ -94,6 +102,7 @@ public:
 
 private:
   std::vector<MPI_Request> reqs_;
+  std::function<void()> delayed_ = nullptr;
   std::unique_ptr<term::CallableBase> on_done_ = nullptr;
 };
 
