@@ -65,11 +65,19 @@ struct BaseHandle { };
 
 struct Manager;
 
-template <typename T, HandleEnum E>
+template <typename T, HandleEnum E, typename IndexT = vt::NodeType>
 struct Handle : BaseHandle {
   using DataT = T;
   using RequestType = RequestHolder;
   using ActionDataType = std::function<void(T*)>;
+
+  template <typename U>
+  using isNodeType =
+    typename std::enable_if<std::is_same<IndexT,vt::NodeType>::value, U>::type;
+
+  template <typename U>
+  using isIndexType =
+    typename std::enable_if<not std::is_same<IndexT,vt::NodeType>::value, U>::type;
 
   static constexpr HandleEnum handle_type = E;
 
@@ -118,14 +126,53 @@ public:
   void unlock();
 
 public:
-  void get(vt::NodeType, std::size_t len, int offset, Lock l = Lock::None);
-  void get(vt::NodeType, T* ptr, std::size_t len, int offset, Lock l = Lock::None);
-  void put(vt::NodeType, T* ptr, std::size_t len, int offset, Lock l = Lock::None);
-  void accum(vt::NodeType, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None);
-  RequestType rget(vt::NodeType, T* ptr, std::size_t len, int offset, Lock l = Lock::None);
-  RequestType rget(vt::NodeType, std::size_t len, int offset, Lock l = Lock::None);
-  RequestType rput(vt::NodeType, T* ptr, std::size_t len, int offset, Lock l = Lock::None);
-  RequestType raccum(vt::NodeType, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None);
+  template <typename U = IndexT>
+  void get(
+    U, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<U>* = nullptr
+  );
+  template <typename U = IndexT>
+  void get(
+    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<U>* = nullptr
+  );
+  template <typename U = IndexT>
+  void put(
+    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<U>* = nullptr
+  );
+  template <typename U = IndexT>
+  void accum(
+    U, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
+    isNodeType<U>* = nullptr
+  );
+  template <typename U = IndexT>
+  RequestType rget(
+    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<U>* = nullptr
+  );
+  template <typename U = IndexT>
+  RequestType rget(
+    U, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<U>* = nullptr
+  );
+  template <typename U = IndexT>
+  RequestType rput(
+    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<U>* = nullptr
+  );
+  template <typename U = IndexT>
+  RequestType raccum(
+    U, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
+    isNodeType<U>* = nullptr
+  );
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | key_;
+    s | size_;
+    s | hoff_;
+  }
 
 protected:
   HandleKey key_ = {};
@@ -136,15 +183,31 @@ protected:
   std::shared_ptr<LockMPI> lock_ = nullptr;
 };
 
+// template <typename T, HandleEnum E>
+// struct HandleSlice : Handle<T,E> {
+
+//   HandleSlice(Handle<T,E> in_han, ElemType sub_id, bool is_static, std::size_t num)
+//     : Handle<T,E>(in_han),
+//       sub_id_(sub_id),
+//       is_static_(is_static),
+//       num_(num)
+//   { }
+
+// private:
+//   ElemType sub_id_ = 0;
+//   bool is_static_ = true;
+//   std::size_t num_ = 0;
+// };
+
 }} /* end namespace vt::rdma */
 
 namespace vt {
 
 template <typename T>
-using HandleRDMA = rdma::Handle<T, rdma::HandleEnum::StaticSize>;
+using HandleRDMA = rdma::Handle<T, rdma::HandleEnum::StaticSize, vt::NodeType>;
 
 template <typename T>
-using HandleListRDMA = rdma::Handle<T, rdma::HandleEnum::ConcurrentList>;
+using HandleListRDMA = rdma::Handle<T, rdma::HandleEnum::ConcurrentList, vt::NodeType>;
 
 } /* end namespace vt */
 
