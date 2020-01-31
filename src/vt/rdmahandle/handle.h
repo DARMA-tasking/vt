@@ -116,6 +116,7 @@ public:
   T* getBuffer() const { return user_buffer_; }
 
 public:
+  // Node-level local data accessors
   template <typename U = IndexT>
   void readExclusive(std::function<void(T const*)> fn, isNodeType<U>* = nullptr);
   template <typename U = IndexT>
@@ -124,6 +125,16 @@ public:
   void modifyExclusive(std::function<void(T*)> fn, isNodeType<U>* = nullptr);
   template <typename U = IndexT>
   void modifyShared(std::function<void(T*)> fn, isNodeType<U>* = nullptr);
+
+  // Index-level local data accessors
+  template <typename U = IndexT>
+  void readExclusive(U, std::function<void(T const*)> fn, isIndexType<U>* = nullptr);
+  template <typename U = IndexT>
+  void readShared(U, std::function<void(T const*)> fn, isIndexType<U>* = nullptr);
+  template <typename U = IndexT>
+  void modifyExclusive(U, std::function<void(T*)> fn, isIndexType<U>* = nullptr);
+  template <typename U = IndexT>
+  void modifyShared(U, std::function<void(T*)> fn, isIndexType<U>* = nullptr);
 
 public:
   void lock(Lock l, vt::NodeType node);
@@ -188,6 +199,7 @@ protected:
   T* user_buffer_ = nullptr;
   std::size_t hoff_ = 0;
   std::shared_ptr<LockMPI> lock_ = nullptr;
+  ObjGroupProxyType proxy_ = no_obj_group;
 };
 
 }} /* end namespace vt::rdma */
