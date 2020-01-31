@@ -167,6 +167,9 @@ public:
     isNodeType<U>* = nullptr
   );
 
+  template <typename U = IndexT>
+  std::size_t getSize(U, isNodeType<U>* = nullptr);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | key_;

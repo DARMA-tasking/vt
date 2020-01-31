@@ -96,13 +96,15 @@ void Manager::finishMake(impl::ConstructMsg<T, E, ProxyT>* msg) {
 }
 
 template <typename T, HandleEnum E, typename ProxyT>
-Handle<T, E> Manager::makeHandleCollectiveObjGroup(ProxyT proxy, std::size_t size) {
+Handle<T, E> Manager::makeHandleCollectiveObjGroup(
+  ProxyT proxy, std::size_t size, bool uniform_size
+) {
   auto proxy_bits = proxy.getProxy();
-  ElemType lin = 0;
+  ElemType sub = 0;
   auto next_handle = ++cur_handle_obj_group_[proxy_bits];
   auto key = HandleKey{typename HandleKey::ObjGroupTag{}, proxy_bits, next_handle};
   auto han = Handle<T, E>(key, size);
-  holder_<T,E>[key].template addHandle<ObjGroupProxyType>(key, lin, han, size);
+  holder_<T,E>[key].template addHandle<ObjGroupProxyType>(key, sub, han, size, uniform_size);
   auto cb = vt::theCB()->makeBcast<
     Manager, impl::ConstructMsg<T, E, ProxyT>, &Manager::finishMake<T, E, ProxyT>
   >(proxy_);

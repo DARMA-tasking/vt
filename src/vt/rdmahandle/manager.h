@@ -84,7 +84,9 @@ private:
 
 public:
   template <typename T, HandleEnum E, typename ProxyT>
-  Handle<T, E> makeHandleCollectiveObjGroup(ProxyT proxy, std::size_t size);
+  Handle<T, E> makeHandleCollectiveObjGroup(
+    ProxyT proxy, std::size_t size, bool uniform_size = true
+  );
 
   template <typename T, HandleEnum E>
   void deleteHandleCollectiveObjGroup(Handle<T,E> const& han);

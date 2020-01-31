@@ -137,6 +137,16 @@ Handle<T,E,I>::raccum(
 }
 
 template <typename T, HandleEnum E, typename I>
+template <typename U>
+std::size_t Handle<T,E,I>::getSize(U node, isNodeType<U>*) {
+  if (vt::theHandle()->getEntry<T,E>(key_).isUniform()) {
+    return size_;
+  } else {
+    return vt::theHandle()->getEntry<T,E>(key_).getSize(node);
+  }
+}
+
+template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I>::readExclusive(std::function<void(T const*)> fn) {
   vt::theHandle()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, hoff_);
 }

@@ -68,7 +68,10 @@ struct Holder {
 
 private:
   template <typename ProxyT>
-  void addHandle(HandleKey key, ElemType lin, Handle<T,E> han, std::size_t size);
+  void addHandle(
+    HandleKey key, ElemType lin, Handle<T,E> han, std::size_t size,
+    bool uniform_size
+  );
   void allocateDataWindow(std::size_t const in_len = 0);
 
 public:
@@ -79,6 +82,8 @@ public:
 
   template <typename Callable>
   void access(Lock l, Callable fn, std::size_t offset);
+
+  std::size_t getSize(vt::NodeType node, Lock l = Lock::Shared);
 
   RequestHolder rget(
     vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
@@ -99,6 +104,8 @@ public:
     MPI_Op op
   );
 
+  bool isUniform() const { return uniform_size_; }
+
 private:
   HandleKey key_;
   MPI_Win data_window_;
@@ -106,10 +113,11 @@ private:
   MPI_Win control_window_;
   T* data_base_ = nullptr;
   T* idx_base_ = nullptr;
-  T* control_base_ = nullptr;
+  std::size_t* control_base_ = nullptr;
   std::size_t size_ = 0;
   bool ready_ = false;
   bool mpi2_ = false;
+  bool uniform_size_ = false;
 
 private:
   std::unordered_map<ElemType, Handle<T,E>> handles_;
