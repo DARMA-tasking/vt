@@ -186,22 +186,6 @@ protected:
   std::shared_ptr<LockMPI> lock_ = nullptr;
 };
 
-// template <typename T, HandleEnum E>
-// struct HandleSlice : Handle<T,E> {
-
-//   HandleSlice(Handle<T,E> in_han, ElemType sub_id, bool is_static, std::size_t num)
-//     : Handle<T,E>(in_han),
-//       sub_id_(sub_id),
-//       is_static_(is_static),
-//       num_(num)
-//   { }
-
-// private:
-//   ElemType sub_id_ = 0;
-//   bool is_static_ = true;
-//   std::size_t num_ = 0;
-// };
-
 }} /* end namespace vt::rdma */
 
 namespace vt {
