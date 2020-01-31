@@ -147,22 +147,26 @@ std::size_t Handle<T,E,I>::getSize(U node, isNodeType<U>*) {
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I>::readExclusive(std::function<void(T const*)> fn) {
+template <typename U>
+void Handle<T,E,I>::readExclusive(std::function<void(T const*)> fn, isNodeType<U>*) {
   vt::theHandle()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, hoff_);
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I>::readShared(std::function<void(T const*)> fn) {
+template <typename U>
+void Handle<T,E,I>::readShared(std::function<void(T const*)> fn, isNodeType<U>*) {
   vt::theHandle()->getEntry<T,E>(key_).access(Lock::Shared, fn, hoff_);
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I>::modifyExclusive(std::function<void(T*)> fn) {
+template <typename U>
+void Handle<T,E,I>::modifyExclusive(std::function<void(T*)> fn, isNodeType<U>*) {
   vt::theHandle()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, hoff_);
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I>::modifyShared(std::function<void(T*)> fn) {
+template <typename U>
+void Handle<T,E,I>::modifyShared(std::function<void(T*)> fn, isNodeType<U>*) {
   vt::theHandle()->getEntry<T,E>(key_).access(Lock::Shared, fn, hoff_);
 }
 

@@ -116,10 +116,14 @@ public:
   T* getBuffer() const { return user_buffer_; }
 
 public:
-  void readExclusive(std::function<void(T const*)> fn);
-  void readShared(std::function<void(T const*)> fn);
-  void modifyExclusive(std::function<void(T*)> fn);
-  void modifyShared(std::function<void(T*)> fn);
+  template <typename U = IndexT>
+  void readExclusive(std::function<void(T const*)> fn, isNodeType<U>* = nullptr);
+  template <typename U = IndexT>
+  void readShared(std::function<void(T const*)> fn, isNodeType<U>* = nullptr);
+  template <typename U = IndexT>
+  void modifyExclusive(std::function<void(T*)> fn, isNodeType<U>* = nullptr);
+  template <typename U = IndexT>
+  void modifyShared(std::function<void(T*)> fn, isNodeType<U>* = nullptr);
 
 public:
   void lock(Lock l, vt::NodeType node);
