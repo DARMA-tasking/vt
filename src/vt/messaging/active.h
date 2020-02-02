@@ -274,12 +274,64 @@ struct ActiveMessenger {
   template <typename MsgT>
   void setTagMessage(MsgT* msg, TagType tag);
 
+  #if HAS_SERIALIZATION_LIBRARY
+
+  // Proxy down to serialization after flattening..
+  // ..these calls eventually end up back and the non-serialized sendMsgImpl,
+  // through use of a wrapped message which does not define serialization.
+  // (Although such probably represents an opportunity for additional cleanup.)
+  template <
+    typename MessageT,
+    std::enable_if_t<true
+      and ::serdes::SerializableTraits<MessageT>::has_serialize_function
+      and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
+      int
+    > = 0
+  >
+  ActiveMessenger::PendingSendType sendMsgImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
+
+  template <
+    typename MessageT,
+    std::enable_if_t<true
+      and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
+      and ::serdes::SerializableTraits<MessageT>::is_parserdes,
+      int
+    > = 0
+  >
+  ActiveMessenger::PendingSendType sendMsgImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
+
+#endif
+
   /*!
    * \internal
    * Invoke message sending.
    * Should be funnel-through method.
    */
-  template <typename MessageT>
+  template <
+    typename MessageT,
+#if HAS_SERIALIZATION_LIBRARY
+    // Not required; provides useful errors on bad SFINAE
+    std::enable_if_t<true
+      and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
+      and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
+      int
+    > = 0
+#else
+    typename = void
+#endif
+  >
   ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
     HandlerType han,
@@ -296,7 +348,7 @@ struct ActiveMessenger {
   template <typename MessageT>
   ActiveMessenger::PendingSendType sendBroadcastImpl(
     HandlerType han,
-    MsgPtr<MessageT>& msg,
+    MsgSharedPtr<MessageT>& msg,
     ByteType msg_size,
     TagType tag
   );
@@ -817,7 +869,7 @@ struct ActiveMessenger {
   template <typename MsgT>
   PendingSendType broadcastMsg(
     HandlerType han,
-    MsgPtr<MsgT>& msg,
+    MsgSharedPtr<MsgT>& msg,
     TagType tag = no_tag
   );
 

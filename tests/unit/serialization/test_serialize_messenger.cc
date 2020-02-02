@@ -133,9 +133,8 @@ TEST_F(TestSerialMessenger, test_serial_messenger_1) {
       using TupleType = std::tuple<int, int, int>;
 
       auto msg = makeSharedMessage<DataMsg<TupleType>>(TupleType{val1,val2,val3});
-      SerializedMessenger::sendSerialMsg<
-        DataMsg<TupleType>, testHandler<TupleType>
-      >(1, msg);
+      auto han = auto_registry::makeAutoHandler<DataMsg<TupleType>,testHandler<TupleType>>(nullptr);
+      SerializedMessenger::sendSerialMsg<DataMsg<TupleType>>(1, msg, han);
     }
   }
 }
@@ -148,9 +147,8 @@ TEST_F(TestSerialMessenger, test_serial_messenger_bcast_1) {
       using TupleType = std::tuple<int, int, int>;
 
       auto msg = makeSharedMessage<DataMsg<TupleType>>(TupleType{val1,val2,val3});
-      SerializedMessenger::broadcastSerialMsg<
-        DataMsg<TupleType>, testBcastHandler<TupleType>
-      >(msg);
+      auto han = auto_registry::makeAutoHandler<DataMsg<TupleType>,testBcastHandler<TupleType>>(nullptr);
+      SerializedMessenger::broadcastSerialMsg<DataMsg<TupleType>>(msg, han);
     }
   }
 }
@@ -164,7 +162,8 @@ TEST_F(TestSerialMessenger, test_serial_messenger_2) {
     if (my_node == 0) {
       auto msg = makeSharedMessage<MyDataMsg>();
       msg->init();
-      SerializedMessenger::sendSerialMsg<MyDataMsg, myDataMsgHan>(1, msg);
+      auto han = auto_registry::makeAutoHandler<MyDataMsg,myDataMsgHan>(nullptr);
+      SerializedMessenger::sendSerialMsg<MyDataMsg>(1, msg, han);
     }
   }
 }

@@ -159,10 +159,12 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
     auto promoted_msg = promoteMsg(msg);
     messaging::PendingSend pending(
       promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
-        SerializedMessenger::sendSerialMsg<
-          MsgT, virtualTypedMsgHandler<MsgT>, VirtualMessage
-        >(
-          reinterpret_cast<MsgT*>(mymsg.get()),
+        // Uses special implementation overload not exposed in theMsg..
+        MsgT* typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
+        auto sendSerialHan = auto_registry::makeAutoHandler<MsgT,virtualTypedMsgHandler<MsgT>>(nullptr);
+        SerializedMessenger::sendSerialMsgSendImpl<MsgT, VirtualMessage>(
+          typed_msg,
+          sendSerialHan,
           // custom send lambda to route the message
           [=](MsgSharedPtr<SerialMsgT> innermsg) -> messaging::PendingSend {
             innermsg->setProxy(toProxy);
@@ -231,9 +233,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
 
   sys_msg->info = *info.get();
 
-  SerializedMessenger::sendSerialMsg<MsgType, remoteConstructVrt<MsgType>>(
-    dest, sys_msg
-  );
+  theMsg()->sendMsg<MsgType,remoteConstructVrt<MsgType>>(dest, sys_msg);
 
   return return_proxy;
 }

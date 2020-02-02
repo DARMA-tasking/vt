@@ -48,12 +48,10 @@
 #include "vt/config.h"
 #include "vt/messaging/active.h"
 #include "vt/termination/term_headers.h"
-#include "vt/serialization/auto_dispatch/dispatch.h"
-#include "vt/serialization/auto_dispatch/dispatch_handler.h"
-#include "vt/serialization/auto_dispatch/dispatch_functor.h"
 #include "vt/messaging/message/message_priority.impl.h"
 #include "vt/scheduler/priority.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/serialization/messaging/serialized_messenger.h"
 
 namespace vt { namespace messaging {
 
@@ -121,7 +119,82 @@ void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
   envelopeSetTag(msg->env, tag);
 }
 
-template <typename MessageT>
+#if HAS_SERIALIZATION_LIBRARY
+
+// Conditionally-enabled methods for message types that support serialization.
+// The current implementation of these methods eventually call BACK into
+// sendMsgImpl with a NON-SERIALIZAD MESSAGE.
+// Such probably represents an opportunity for additional cleanup with a
+// formal to-byte/from-byte stage instead of wrapping.
+
+template <
+  typename MessageT,
+  std::enable_if_t<true
+    and ::serdes::SerializableTraits<MessageT>::has_serialize_function
+    and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
+    int
+  >
+>
+ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
+  NodeType dest,
+  HandlerType han,
+  MsgSharedPtr<MessageT>& msg,
+  ByteType msg_size,
+  TagType tag
+) {
+  vtAssert(
+    tag == no_tag,
+    "Tagged messages serialization not implemented."
+  );
+  MessageT* msgp = msg.get();
+  if (dest == broadcast_dest) {
+    return SerializedMessenger::broadcastSerialMsg<MessageT>(msgp,han);
+  } else {
+    return SerializedMessenger::sendSerialMsg<MessageT>(dest,msgp,han);
+  }
+}
+
+template <
+  typename MessageT,
+  std::enable_if_t<true
+    and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
+    and ::serdes::SerializableTraits<MessageT>::is_parserdes,
+    int
+  >
+>
+ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
+  NodeType dest,
+  HandlerType han,
+  MsgSharedPtr<MessageT>& msg,
+  ByteType msg_size,
+  TagType tag
+) {
+  vtAssert(
+    tag == no_tag,
+    "Tagged messages serialization not implemented."
+  );
+  MessageT* msgp = msg.get();
+  if (dest == broadcast_dest) {
+    return SerializedMessenger::broadcastParserdesMsg<MessageT>(msgp,han);
+  } else {
+    return SerializedMessenger::sendParserdesMsg<MessageT>(dest,msgp,han);
+  }
+}
+
+#endif
+
+template <
+  typename MessageT,
+#if HAS_SERIALIZATION_LIBRARY
+  std::enable_if_t<true
+    and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
+    and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
+    int
+  >
+#else
+  typename
+#endif
+>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
   NodeType dest,
   HandlerType han,
@@ -131,7 +204,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
 ) {
   static_assert(
     std::is_trivially_destructible<MessageT>(),
-    "Message sent without serialization must be trivially destructible"
+    "Message sent without serialization must be trivially destructible."
+    " If the message was serializable the appropriate type-enabled template overload"
+    " of sendMsgImpl should have been called."
   );
 
   MessageT* rawMsg = msg.get();
@@ -241,7 +316,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   MessageT* msg,
   TagType tag
 ) {
-  return ActiveSendHandler<MessageT>::sendMsg(dest,msg,han,tag);
+  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
+  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -294,7 +370,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   MessageT* msg,
   TagType tag
 ) {
-  return ActiveSend<MessageT,f>::sendMsg(dest,msg,tag);
+  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
+  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -302,7 +380,11 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   MessageT* msg,
   TagType tag
 ) {
-  return ActiveSend<MessageT,f>::broadcastMsg(msg,tag);
+  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
+  return sendMsgImpl<MessageT>(
+    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+  );
 }
 
 template <ActiveFnType* f, typename MessageT>
@@ -352,7 +434,11 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   MessageT* msg,
   TagType tag
 ) {
-  return ActiveSendFunctor<FunctorT,MessageT>::broadcastMsg(msg,tag);
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MessageT*>();
+  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
+  return sendMsgImpl<MessageT>(
+    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+  );
 }
 
 template <typename FunctorT, typename MessageT>
@@ -361,7 +447,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   MessageT* msg,
   TagType tag
 ) {
-  return ActiveSendFunctor<FunctorT,MessageT>::sendMsg(dest,msg,tag);
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MessageT*>();
+  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
+  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
 template <typename MessageT>
@@ -419,7 +507,10 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   MessageT* msg,
   TagType tag
 ) {
-  return ActiveSendHandler<MessageT>::broadcastMsg(msg,han,tag);
+  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
+  return sendMsgImpl<MessageT>(
+    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+  );
 }
 
 inline ActiveMessenger::EpochStackSizeType

@@ -45,6 +45,12 @@
 #if !defined INCLUDED_SERIALIZATION_SERIALIZATION_H
 #define INCLUDED_SERIALIZATION_SERIALIZATION_H
 
+#if HAS_SERIALIZATION_LIBRARY
+#define HAS_DETECTION_COMPONENT 1
+#include "serialization_library_headers.h"
+#include "traits/serializable_traits.h"
+#endif
+
 #include "vt/config.h"
 #include "vt/serialization/serialize_interface.h"
 #include "vt/serialization/messaging/serialized_messenger.h"

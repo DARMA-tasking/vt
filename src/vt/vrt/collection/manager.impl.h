@@ -75,7 +75,6 @@
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/termination/term_headers.h"
 #include "vt/serialization/serialization.h"
-#include "vt/serialization/auto_dispatch/dispatch.h"
 #include "vt/serialization/auto_sizing/sizing.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
@@ -2130,7 +2129,6 @@ CollectionManager::constructMap(
   typename ColT::IndexType range, HandlerType const& map_handler,
   Args&&... args
 ) {
-  using SerdesMsg = SerializedMessenger;
   using IndexT = typename ColT::IndexType;
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
   using MsgType = CollectionCreateMsg<
@@ -2162,7 +2160,7 @@ CollectionManager::constructMap(
     "construct_map: range={}\n", range.toString().c_str()
   );
 
-  SerdesMsg::broadcastSerialMsg<MsgType,distConstruct<MsgType>>(
+  theMsg()->broadcastMsg<MsgType,distConstruct<MsgType>>(
     create_msg.get()
   );
 

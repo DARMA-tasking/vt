@@ -258,11 +258,7 @@ void Reduce::startReduce(
           "reduce notify root (send): root={}, node={}\n", root, this_node
         );
 
-        using SendDispatch =
-          serialization::auto_dispatch::RequiredSerialization<
-            MessageT, reduceRootRecv<MessageT>
-          >;
-        SendDispatch::sendMsg(root,typed_msg);
+        theMsg()->sendMsg<MessageT,reduceRootRecv<MessageT>>(root,typed_msg);
       } else {
         debug_print(
           reduce, node,
