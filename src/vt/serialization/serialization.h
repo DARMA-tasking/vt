@@ -54,7 +54,6 @@
 #include "vt/config.h"
 #include "vt/serialization/serialize_interface.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
-#include "vt/serialization/messaging/serialized_param_messenger.h"
 #include "vt/serialization/traits/byte_copy_trait.h"
 
 namespace vt { namespace serialization {
