@@ -85,10 +85,10 @@ struct Log final {
       friend struct Log;
 
       SysData(
-        TraceMsgLenType msg_len,
+        TraceMsgLenType in_msg_len,
         uint64_t in_idx1 = 0, uint64_t in_idx2 = 0,
         uint64_t in_idx3 = 0, uint64_t in_idx4 = 0
-      ) : msg_len(msg_len),
+      ) : msg_len(in_msg_len),
           idx1(in_idx1), idx2(in_idx2), idx3(in_idx3), idx4(in_idx4)
       {
       }
@@ -120,10 +120,10 @@ struct Log final {
       friend struct Log;
 
       UserData(
-        std::string const& user_note, UserDataType user_data,
-        UserEventIDType user_event, bool user_start
-      ) : user_note(user_note), user_data(user_data),
-          user_event(user_event), user_start(user_start)
+        std::string const& in_user_note, UserDataType in_user_data,
+        UserEventIDType in_user_event, bool in_user_start
+      ) : user_note(in_user_note), user_data(in_user_data),
+          user_event(in_user_event), user_start(in_user_start)
       {
       }
 

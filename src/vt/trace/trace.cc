@@ -659,7 +659,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   // If auto-flush, can flush immediately.
   // TODO: log time of flushing; unify with group-end.
   if (ArgType::vt_trace_flush_size not_eq 0
-      and traces_.size() >= ArgType::vt_trace_flush_size) {
+      and traces_.size() >= static_cast<std::size_t>(ArgType::vt_trace_flush_size)) {
     writeTracesFile(incremental_flush_mode);
   }
 
@@ -714,7 +714,7 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     // (Consider pushing out: barrier usages are probably domain-specific.)
     theCollective()->barrier();
   }
-  if (traces_.size() >= ArgType::vt_trace_flush_size) {
+  if (traces_.size() >= static_cast<std::size_t>(ArgType::vt_trace_flush_size)) {
     writeTracesFile(incremental_flush_mode);
   }
 }
