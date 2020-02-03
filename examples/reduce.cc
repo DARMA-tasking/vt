@@ -96,14 +96,12 @@ private:
 
   size_t numObjs_ = default_num_objs;
   size_t numPartsPerObject_ = default_nparts_object;
-  double quadValue = 0.0;
 
 public:
 
   explicit Integration1D()
     : vt::Collection<Integration1D, Index1D>(),
-      numObjs_(default_num_objs), numPartsPerObject_(default_nparts_object),
-      quadValue(0.0)
+      numObjs_(default_num_objs), numPartsPerObject_(default_nparts_object)
   { }
 
   //
