@@ -128,6 +128,8 @@ public:
 public:
   bool isInit() const { return key_.valid(); }
 
+  IndexT const& getIndex() const { return index_; }
+
   template <typename U = IndexT>
   bool ready(isNodeType<U>* = nullptr) const;
   template <typename U = IndexT>
