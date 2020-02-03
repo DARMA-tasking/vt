@@ -79,9 +79,6 @@ struct TestColl : Collection<TestColl,Index1D> {
     rmsg->getVal() = 10;
     proxy.reduce<collective::PlusOp<int>>(rmsg.get(),cb);
   }
-
-private:
-  int32_t counter_ = 0;
 };
 
 int main(int argc, char** argv) {
