@@ -94,7 +94,6 @@ private:
   size_t numObjsX_ = 1, numObjsY_ = 1;
   size_t numRowsPerObject_ = default_nrow_object;
   size_t maxIter_ = 5;
-  double normRes_ = 0.0;
 
 public:
 
@@ -106,7 +105,7 @@ public:
       msgReceived_(0), totalReceive_(0),
       numObjsX_(1), numObjsY_(1),
       numRowsPerObject_(default_nrow_object),
-      maxIter_(5), normRes_(0.0)
+      maxIter_(5)
   { }
 
 
