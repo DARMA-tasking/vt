@@ -45,42 +45,34 @@
 #if !defined INCLUDED_TRACE_TRACE_H
 #define INCLUDED_TRACE_TRACE_H
 
-#include "vt/config.h"
-#include "vt/context/context.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_containers.h"
-#include "vt/trace/trace_registry.h"
-#include "vt/trace/trace_constants.h"
-#include "vt/trace/trace_event.h"
 #include "vt/trace/trace_log.h"
+#include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_user_event.h"
 
-#include <cstdint>
-#include <cassert>
-#include <unordered_map>
-#include <stack>
-#include <string>
-#include <vector>
-#include <memory>
-#include <functional>
-#include <iostream>
-#include <fstream>
+#include "vt/timing/timing.h"
 
-#include <mpi.h>
-#include <zlib.h>
+#include <cassert>
+#include <cstdint>
+#include <functional>
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <stack>
+#include <queue>
 
 namespace vt { namespace trace {
+
+struct vt_gzFile;
 
 struct Trace {
   using LogType             = Log;
   using TraceConstantsType  = eTraceConstants;
   using TraceContainersType = TraceContainers;
   using TimeIntegerType     = int64_t;
-  using LogPtrType          = LogType*;
-  using TraceContainerType  = std::vector<LogPtrType>;
-  using TraceStackType      = std::stack<LogPtrType>;
-  using ArgType             = vt::arguments::ArgConfig;
+  using TraceContainerType  = std::queue<std::unique_ptr<LogType>>;
+  using TraceStackType      = std::stack<LogType>;
 
   Trace();
   Trace(std::string const& in_prog_name, std::string const& in_trace_name);
@@ -89,9 +81,9 @@ struct Trace {
 
   friend struct Log;
 
-  std::string getTraceName() const { return full_trace_name; }
-  std::string getSTSName()   const { return full_sts_name;   }
-  std::string getDirectory() const { return full_dir_name;   }
+  std::string getTraceName() const { return full_trace_name_; }
+  std::string getSTSName()   const { return full_sts_name_;   }
+  std::string getDirectory() const { return full_dir_name_;   }
 
   void initialize();
   void setupNames(
@@ -151,32 +143,65 @@ struct Trace {
     TraceEntryIDType const ep, TraceMsgLenType const len,
     NodeType const from_node, double const time = getCurrentTime()
   );
-  TraceEventIDType logEvent(LogPtrType log);
 
+  /// Enable logging of events.
   void enableTracing();
+
+  /// Disable logging of events.
+  /// Events already logged may still be written to the trace log.
   void disableTracing();
-  bool checkEnabled();
+
   bool checkDynamicRuntimeEnabled();
 
-  void writeTracesFile();
-  void writeLogFile(gzFile file, TraceContainerType const& traces);
+  void flushTracesFile(bool useGlobalSync);
+  void cleanupTracesFile();
+
   bool inIdleEvent() const;
 
-  static double getCurrentTime();
-  void outputControlFile(std::ofstream& file);
-  static TimeIntegerType timeToInt(double const time);
-  static void traceBeginIdleTrigger();
-  static void outputHeader(
-    NodeType const node, double const start, gzFile file
-  );
-  static void outputFooter(
-    NodeType const node, double const start, gzFile file
-  );
+  static inline double getCurrentTime() {
+    return ::vt::timing::Timing::getCurrentTime();
+  }
+
+  static inline TimeIntegerType timeToInt(double const time) {
+    return static_cast<TimeIntegerType>(time * 1e6);
+  }
 
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 private:
-  void editLastEntry(std::function<void(LogPtrType)> fn);
+
+  static void traceBeginIdleTrigger();
+
+  // Writes traces to file, optionally flushing.
+  // The traces collection is modified.
+  static void outputTraces(
+    vt_gzFile* file, TraceContainerType& traces,
+    double start_time, int flush
+  );
+  static void outputHeader(
+    vt_gzFile* file, NodeType const node, double const start
+  );
+  static void outputFooter(
+    vt_gzFile* file, NodeType const node, double const start
+  );
+
+  void writeTracesFile(int flush);
+
+  void outputControlFile(std::ofstream& file);
+
+  static bool traceWritingEnabled(NodeType node);
+  static bool isStsOutputNode(NodeType node);
+
+  /// Log an event, returning a trace event ID if accepted
+  /// or no_trace_event if not accepted (eg. no tracing on node).
+  TraceEventIDType logEvent(std::unique_ptr<LogType> log);
+
+private:
+  /*
+   * Incremental flush mode for zlib. Not set here with zlib constants to reduce
+   * header dependencies.
+   */
+  int incremental_flush_mode = 0;
 
 private:
   TraceContainerType traces_;
@@ -187,10 +212,13 @@ private:
   bool enabled_                 = true;
   bool idle_begun_              = false;
   double start_time_            = 0.0;
-  std::string full_trace_name   = "";
-  std::string full_sts_name     = "";
-  std::string full_dir_name     = "";
-  UserEventRegistry user_event  = {};
+  std::string full_trace_name_  = "";
+  std::string full_sts_name_    = "";
+  std::string full_dir_name_    = "";
+  UserEventRegistry user_event_ = {};
+  std::unique_ptr<vt_gzFile> log_file_;
+  bool wrote_sts_file_          = false;
+  size_t trace_write_count_     = 0;
 };
 
 }} //end namespace vt::trace

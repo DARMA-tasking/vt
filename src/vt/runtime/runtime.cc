@@ -128,6 +128,12 @@ void Runtime::pauseForDebugger() {
   if (node == 0 || node == -1) {
     ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
   }
+  // Try to flush out all logs before dying
+# if backend_check_enabled(trace_enabled)
+  if (vt::theTrace()) {
+    vt::theTrace()->cleanupTracesFile();
+  }
+# endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
@@ -149,6 +155,12 @@ void Runtime::pauseForDebugger() {
   auto vt_pre    = debug::vtPre();
   auto bred      = debug::bred();
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
+  // Try to flush out all logs before dying
+# if backend_check_enabled(trace_enabled)
+  if (vt::theTrace()) {
+    vt::theTrace()->cleanupTracesFile();
+  }
+# endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     if (ArgType::vt_stack_file != "") {
@@ -537,6 +549,17 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_trace_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+    if (ArgType::vt_trace_flush_size != 0) {
+      auto f11 = fmt::format("Flush output incrementally with a buffer of,"
+                             " at least, {} record(s)",
+                             ArgType::vt_trace_flush_size);
+      auto f12 = opt_on("--vt_trace_flush_size", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      auto f11 = fmt::format("Flushing traces at end of run");
+      auto f12 = opt_inverse("--vt_trace_flush_size", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
   #endif
 
@@ -853,7 +876,7 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
-	std::_Exit(code);
+    std::_Exit(code);
     // @todo: why will this not compile with clang!!?
     //quick_exit(code);
   }

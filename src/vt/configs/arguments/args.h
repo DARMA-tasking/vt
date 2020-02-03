@@ -83,6 +83,7 @@ public:
   static std::string vt_trace_file;
   static std::string vt_trace_dir;
   static int32_t vt_trace_mod;
+  static int32_t vt_trace_flush_size;
 
   static bool vt_lb;
   static bool vt_lb_file;
