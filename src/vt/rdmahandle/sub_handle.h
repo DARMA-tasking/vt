@@ -100,6 +100,17 @@ public:
   void makeSubHandles() {
     auto const total = totalLocalSize();
     auto const num_local = sub_handles_.size();
+    debug_print(
+      rdma, node,
+      "total={}, num_local={}\n", total, num_local
+    );
+    for (std::size_t i = 0; i < sub_prefix_.size(); i++) {
+      debug_print(
+        rdma, node,
+        "i={} prefix={} layout={}\n",
+        i, sub_prefix_[i], sub_layout_[i]
+      );
+    }
     data_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, total);
     waitForHandleReady(data_handle_);
     loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<std::size_t, E>(proxy_, num_local * 3);
@@ -117,7 +128,11 @@ public:
   }
 
   typename IndexT::DenseIndexType linearize(IndexT idx) {
-    fmt::print("{}: linearize: idx={}, range={}\n", vt::theContext()->getNode(), idx, range_);
+    debug_print(
+      rdma, node,
+      "linearize: idx={}, range={}\n",
+      idx, range_
+    );
     return vt::mapping::linearizeDenseIndexRowMajor(&idx, &range_);
   }
 
@@ -168,6 +183,11 @@ public:
   }
 
   void addLocalIndex(IndexT index, std::size_t size) {
+    debug_print(
+      rdma, node,
+      "addLocalInddex: idx={}, size={}, range={}\n",
+      index, size, range_
+    );
     sub_layout_.push_back(index);
     if (sub_prefix_.size() > 0) {
       vtAssertExpr(sub_layout_.size() >= 2);
