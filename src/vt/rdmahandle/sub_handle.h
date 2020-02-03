@@ -97,24 +97,14 @@ public:
   }
 
   void makeSubHandles() {
-    //auto fn = auto_registry::getHandlerMap(map_han);
     auto const total = totalLocalSize();
     auto const num_local = sub_handles_.size();
     data_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, total);
-    waitForHandle(data_handle_);
-    offset_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, num_local);
-    waitForHandle(offset_handle_);
-    //if (not is_static_) {
+    waitForHandleReady(data_handle_);
     loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, num_local * 3);
-    waitForHandle(loc_handle_);
-    //}
+    waitForHandleReady(loc_handle_);
     vtAssertExpr(sub_prefix_.size() == num_local);
     vtAssertExpr(sub_layout_.size() == num_local);
-    offset_handle_.modifyExclusive([num_local,this](std::size_t* t) {
-      for (std::size_t i = 0; i < num_local; i++) {
-        t[i] = sub_prefix_[i];
-      }
-    });
     loc_handle_.modifyExclusive([num_local,this](std::size_t* t) {
       auto this_node = static_cast<size_t>(vt::theContext()->getNode());
       for (std::size_t i = 0; i < num_local * 3; i += 3) {
@@ -192,14 +182,15 @@ public:
     return total;
   }
 
+  template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
   static ProxyType construct(bool in_is_static, IndexT in_range) {
     auto proxy = vt::theObjGroup()->makeCollective<SubHandle<T,E,IndexT>>();
-    proxy.get()->initialize(proxy, in_is_static, in_range);
+    proxy.get()->template initialize<map_fn>(proxy, in_is_static, in_range);
     return proxy;
   }
 
 private:
-  void waitForHandle(Handle<T,E> const& h) {
+  void waitForHandleReady(Handle<T,E> const& h) {
     do {
       vt::runScheduler();
     } while (not h.ready());
@@ -209,12 +200,11 @@ protected:
   ProxyType proxy_;
   bool is_static_ = false;
   vt::HandlerType map_han_ = 0;
-  IndexT range_ = 0;
+  IndexT range_ = {};
   std::unordered_map<IndexT, SubInfo> sub_handles_;
   std::vector<IndexT> sub_layout_;
   std::vector<std::size_t> sub_prefix_;
   Handle<T, E> data_handle_;
-  Handle<std::size_t, E> offset_handle_;
   Handle<std::size_t, E> loc_handle_;
   Cache<IndexT> cache_;
 };
