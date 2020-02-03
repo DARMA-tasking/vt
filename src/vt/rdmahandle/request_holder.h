@@ -82,7 +82,11 @@ public:
   // Add test() for async check
 
   void wait() {
-    fmt::print("wait: len={}, ptr={}\n", reqs_.size(), on_done_ ? "yes" : "no");
+    debug_print(
+      rdma, node,
+      "wait: len={}, ptr={}\n",
+      reqs_.size(), on_done_ ? "yes" : "no"
+    );
     if (delayed_ != nullptr) {
       delayed_();
       delayed_ = nullptr;

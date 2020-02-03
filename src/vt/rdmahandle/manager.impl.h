@@ -87,9 +87,10 @@ void Manager::finishMake(impl::ConstructMsg<T, E, ProxyT>* msg) {
   auto const& key = msg->getVal().key_;
   auto const& size = msg->getVal().size_;
   auto const& count = msg->getVal().count_;
-  fmt::print(
-    "{}: finishMake: handle={:x}, size={}, count={}\n",
-    theContext()->getNode(), key.handle_, size, count
+  debug_print(
+    rdma, node,
+    "finishMake: handle={:x}, size={}, count={}\n",
+    key.handle_, size, count
   );
   auto& entry = getEntry<T,E>(key);
   entry.allocateDataWindow();
@@ -103,7 +104,7 @@ Handle<T, E> Manager::makeHandleCollectiveObjGroup(
   ElemType sub = 0;
   auto next_handle = ++cur_handle_obj_group_[proxy_bits];
   auto key = HandleKey{typename HandleKey::ObjGroupTag{}, proxy_bits, next_handle};
-  auto han = Handle<T, E>(key, size);
+  auto han = Handle<T, E>{typename Handle<T, E>::NodeTagType{}, key, size};
   holder_<T,E>[key].template addHandle<ObjGroupProxyType>(key, sub, han, size, uniform_size);
   auto cb = vt::theCB()->makeBcast<
     Manager, impl::ConstructMsg<T, E, ProxyT>, &Manager::finishMake<T, E, ProxyT>

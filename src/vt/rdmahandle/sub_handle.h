@@ -58,6 +58,7 @@ namespace vt { namespace rdma {
 
 template <typename T, HandleEnum E, typename IndexT>
 struct SubHandle {
+  using HandleType = Handle<T, vt::rdma::HandleEnum::StaticSize, vt::Index2D>;
   using ProxyType = vt::objgroup::proxy::Proxy<SubHandle<T, E, IndexT>>;
 
   SubHandle() = default;
@@ -125,6 +126,7 @@ public:
         t[i+2] = sub_prefix_[i];
       }
     });
+    ready_ = true;
   }
 
   typename IndexT::DenseIndexType linearize(IndexT idx) {
@@ -190,7 +192,7 @@ public:
     data_handle_.access(l, fn, offset + local_offset);
   }
 
-  void addLocalIndex(IndexT index, std::size_t size) {
+  Handle<T, E, IndexT> addLocalIndex(IndexT index, std::size_t size) {
     debug_print(
       rdma, node,
       "addLocalInddex: idx={}, size={}, range={}\n",
@@ -210,7 +212,13 @@ public:
     }
     auto const offset = sub_prefix_[sub_prefix_.size()-1];
     sub_handles_[index] = SubInfo(size, offset);
+    return Handle<T,E,IndexT>{
+      typename Handle<T,E,IndexT>::IndexTagType{},
+      proxy_.getProxy(), index, size, 0
+    };
   }
+
+  bool ready() const { return ready_; }
 
   std::size_t totalLocalSize() const {
     std::size_t total = 0;
@@ -246,6 +254,7 @@ protected:
   Handle<T, E> data_handle_;
   Handle<std::size_t, E> loc_handle_;
   Cache<IndexT> cache_;
+  bool ready_ = false;
 };
 
 }} /* end namespace vt::rdma */

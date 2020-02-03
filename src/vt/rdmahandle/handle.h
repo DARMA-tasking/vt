@@ -65,6 +65,9 @@ struct BaseHandle { };
 
 struct Manager;
 
+template <typename T, HandleEnum E, typename IndexT>
+struct SubHandle;
+
 template <typename T, HandleEnum E, typename IndexT = vt::NodeType>
 struct Handle : BaseHandle {
   using DataT = T;
@@ -87,15 +90,31 @@ struct Handle : BaseHandle {
   Handle& operator=(Handle const&) = default;
 
   friend struct Manager;
+  friend struct SubHandle<T, E, IndexT>;
+
+  struct NodeTagType { };
+  struct IndexTagType { };
 
 private:
   Handle(
+    NodeTagType,
     HandleKey in_key, std::size_t in_size, std::size_t in_hoff = 0,
     std::shared_ptr<LockMPI> in_lock = nullptr
   ) : key_(in_key),
       size_(in_size),
       hoff_(in_hoff),
       lock_(in_lock)
+  { }
+
+public:
+  Handle(
+    IndexTagType,
+    ObjGroupProxyType in_proxy, IndexT const& in_index, std::size_t in_size,
+    std::size_t in_hoff = 0
+  ) : size_(in_size),
+      hoff_(in_hoff),
+      index_(in_index),
+      proxy_(in_proxy)
   { }
 
 public:
@@ -108,7 +127,12 @@ public:
 
 public:
   bool isInit() const { return key_.valid(); }
-  bool ready() const;
+
+  template <typename U = IndexT>
+  bool ready(isNodeType<U>* = nullptr) const;
+  template <typename U = IndexT>
+  bool ready(isIndexType<U>* = nullptr) const;
+
   bool hasAction() const { return actions_.size() > 0; }
   bool clearActions() const { return actions_.clear(); }
   void addAction(ActionDataType in_action) { actions_.push_back(in_action); }
@@ -194,6 +218,8 @@ public:
     s | key_;
     s | size_;
     s | hoff_;
+    s | index_;
+    s | proxy_;
   }
 
 protected:
@@ -203,12 +229,16 @@ protected:
   T* user_buffer_ = nullptr;
   std::size_t hoff_ = 0;
   std::shared_ptr<LockMPI> lock_ = nullptr;
+  IndexT index_ = {};
   ObjGroupProxyType proxy_ = no_obj_group;
 };
 
 }} /* end namespace vt::rdma */
 
 namespace vt {
+
+template <typename T, rdma::HandleEnum E, typename IndexT = vt::NodeType>
+using Handle = rdma::Handle<T, E, IndexT>;
 
 template <typename T>
 using HandleRDMA = rdma::Handle<T, rdma::HandleEnum::StaticSize, vt::NodeType>;

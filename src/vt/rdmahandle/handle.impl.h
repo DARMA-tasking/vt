@@ -54,8 +54,20 @@
 namespace vt { namespace rdma {
 
 template <typename T, HandleEnum E, typename I>
-bool Handle<T,E,I>::ready() const {
+template <typename U>
+bool Handle<T,E,I>::ready(isNodeType<U>*) const {
   return vt::theHandle()->getEntry<T,E>(key_).ready();
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+bool Handle<T,E,I>::ready(isIndexType<U>*) const {
+  if (proxy_ != no_obj_group) {
+    auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+    return proxy.get()->ready();
+  } else {
+    return false;
+  }
 }
 
 template <typename T, HandleEnum E, typename I>
@@ -185,7 +197,7 @@ void Handle<T,E,I>::readExclusive(
   U idx, std::function<void(T const*)> fn, isIndexType<U>*
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
-  proxy.get()->access(Lock::Exclusive, fn, hoff_);
+  proxy.get()->access(index_, Lock::Exclusive, fn, hoff_);
 }
 
 template <typename T, HandleEnum E, typename I>
@@ -194,7 +206,7 @@ void Handle<T,E,I>::readShared(
   U idx, std::function<void(T const*)> fn, isIndexType<U>*
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
-  proxy.get()->access(Lock::Shared, fn, hoff_);
+  proxy.get()->access(index_, Lock::Shared, fn, hoff_);
 }
 
 template <typename T, HandleEnum E, typename I>
@@ -203,7 +215,7 @@ void Handle<T,E,I>::modifyExclusive(
   U idx, std::function<void(T*)> fn, isIndexType<U>*
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
-  proxy.get()->access(Lock::Exclusive, fn, hoff_);
+  proxy.get()->access(index_, Lock::Exclusive, fn, hoff_);
 }
 
 template <typename T, HandleEnum E, typename I>
@@ -212,7 +224,7 @@ void Handle<T,E,I>::modifyShared(
   U idx, std::function<void(T*)> fn, isIndexType<U>*
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
-  proxy.get()->access(Lock::Shared, fn, hoff_);
+  proxy.get()->access(index_, Lock::Shared, fn, hoff_);
 }
 
 template <typename T, HandleEnum E, typename I>
