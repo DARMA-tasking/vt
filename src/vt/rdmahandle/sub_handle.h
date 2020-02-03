@@ -50,6 +50,7 @@
 #include "vt/rdmahandle/index_info.h"
 #include "vt/rdmahandle/cache.h"
 #include "vt/topos/mapping/mapping_headers.h"
+#include "vt/topos/mapping/dense/dense.h"
 
 #include <unordered_map>
 
@@ -101,18 +102,23 @@ public:
     auto const num_local = sub_handles_.size();
     data_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, total);
     waitForHandleReady(data_handle_);
-    loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, num_local * 3);
+    loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<std::size_t, E>(proxy_, num_local * 3);
     waitForHandleReady(loc_handle_);
     vtAssertExpr(sub_prefix_.size() == num_local);
     vtAssertExpr(sub_layout_.size() == num_local);
-    loc_handle_.modifyExclusive([num_local,this](std::size_t* t) {
+    loc_handle_.modifyExclusive([&](std::size_t* t) {
       auto this_node = static_cast<size_t>(vt::theContext()->getNode());
       for (std::size_t i = 0; i < num_local * 3; i += 3) {
-        t[i+0] = linearize(sub_layout_[i]);
+        t[i+0] = linearize(sub_layout_[i/3]);
         t[i+1] = this_node;
         t[i+2] = sub_prefix_[i];
       }
     });
+  }
+
+  typename IndexT::DenseIndexType linearize(IndexT idx) {
+    fmt::print("{}: linearize: idx={}, range={}\n", vt::theContext()->getNode(), idx, range_);
+    return vt::mapping::linearizeDenseIndexRowMajor(&idx, &range_);
   }
 
   NodeType getHomeNode(IndexT const& idx) {
@@ -164,8 +170,12 @@ public:
   void addLocalIndex(IndexT index, std::size_t size) {
     sub_layout_.push_back(index);
     if (sub_prefix_.size() > 0) {
+      vtAssertExpr(sub_layout_.size() >= 2);
       // Compute a prefix as elements are added
-      auto last_size = sub_layout_[sub_layout_.size()-2].size_;
+      auto last_idx = sub_layout_[sub_layout_.size()-2];
+      auto last_size_iter = sub_handles_.find(last_idx);
+      vtAssertExpr(last_size_iter != sub_handles_.end());
+      auto last_size = last_size_iter->second.size_;
       sub_prefix_.push_back(sub_prefix_[sub_prefix_.size()-1] + last_size);
     } else {
       sub_prefix_.push_back(0);
@@ -177,7 +187,7 @@ public:
   std::size_t totalLocalSize() const {
     std::size_t total = 0;
     for (auto&& elm : sub_handles_) {
-      total += elm.second;
+      total += elm.second.size_;
     }
     return total;
   }
@@ -190,7 +200,8 @@ public:
   }
 
 private:
-  void waitForHandleReady(Handle<T,E> const& h) {
+  template <typename U>
+  void waitForHandleReady(Handle<U,E> const& h) {
     do {
       vt::runScheduler();
     } while (not h.ready());
