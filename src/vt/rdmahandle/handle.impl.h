@@ -173,6 +173,14 @@ void Handle<T,E,I>::modifyShared(std::function<void(T*)> fn, isNodeType<U>*) {
 
 template <typename T, HandleEnum E, typename I>
 template <typename U>
+void Handle<T,E,I>::access(
+  Lock l, std::function<void(T*)> fn, std::size_t offset, isNodeType<U>*
+) {
+  vt::theHandle()->getEntry<T,E>(key_).access(l, fn, hoff_ +  offset);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
 void Handle<T,E,I>::readExclusive(
   U idx, std::function<void(T const*)> fn, isIndexType<U>*
 ) {

@@ -125,6 +125,10 @@ public:
   void modifyExclusive(std::function<void(T*)> fn, isNodeType<U>* = nullptr);
   template <typename U = IndexT>
   void modifyShared(std::function<void(T*)> fn, isNodeType<U>* = nullptr);
+  template <typename U = IndexT>
+  void access(
+    Lock l, std::function<void(T*)> fn, std::size_t size, isNodeType<U>* = nullptr
+  );
 
   // Index-level local data accessors
   template <typename U = IndexT>

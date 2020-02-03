@@ -182,6 +182,14 @@ public:
     data_handle_.get(node, len, offset + chunk_offset, l);
   }
 
+  template <typename Callable>
+  void access(IndexT idx, Lock l, Callable fn, std::size_t offset) {
+    auto iter = sub_handles_.find(idx);
+    vtAssert(iter != sub_handles_.end(), "Index must be local here");
+    auto local_offset  = iter->second.offset_;
+    data_handle_.access(l, fn, offset + local_offset);
+  }
+
   void addLocalIndex(IndexT index, std::size_t size) {
     debug_print(
       rdma, node,
