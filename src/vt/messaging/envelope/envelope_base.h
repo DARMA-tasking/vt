@@ -52,21 +52,42 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
+/**
+ * \struct ActiveEnvelope
+ *
+ * \brief The foundational basic envelope that every VT message has as the first
+ * member.
+ *
+ * Used to contain the associated handler function and other control bits
+ * required to process the message. Extended envelopes contain this as the first
+ * member so the type bits can be used to cast to the specific extended
+ * envelope.
+ */
 struct ActiveEnvelope {
   using isByteCopyable = std::true_type;
 
+  /// The envelope type bits: \c eEnvelopeType
   EnvelopeDataType type : envelope_num_bits;
+  /// Destination node
   NodeType dest         : node_num_bits;
+  /// Handler to execute on arrival
   HandlerType han       : handler_num_bits;
+  /// Local reference count for the outer message to manage memory
   RefType ref           : ref_num_bits;
+  /// The associated group: may imply a non-standard spanning tree or node subset
   GroupType group       : group_num_bits;
 
 # if backend_check_enabled(priorities)
+  /// The priority level for this message, used to interpret \c PriorityType
   PriorityLevelType priority_level : priority_level_num_bits;
+  /// Bitmask that represents the priority this should be processed as
   PriorityType      priority       : priority_num_bits;
 # endif
 
 # if backend_check_enabled(trace_enabled)
+  /// The trace event for the message for tracking dependencies
   trace::TraceEventIDType trace_event : trace::trace_event_num_bits;
 # endif
 };

@@ -52,21 +52,71 @@
 namespace vt { namespace messaging {
 
 // Test the type of Envelope
+
+/** \file */
+
+/**
+ * \brief Test if envelope type is term \c EnvTerm
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether the bit is set
+ */
 template <typename Env>
 inline bool envelopeIsTerm(Env const& env);
 
+/**
+ * \brief Test if envelope type is pipe \c EnvPipe
+ *
+ * This designation if enabled changes how the group bits are
+ * interpreted---either as the \c GroupType or \c PipeType. Note that this works
+ * because its impossible for a message to be sent both as a group and pipe
+ * simultaneously.
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether the bit is set
+ */
 template <typename Env>
 inline bool envelopeIsPipe(Env const& env);
 
+/**
+ * \brief Test if envelope type is put \c EnvPut
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether the bit is set
+ */
 template <typename Env>
 inline bool envelopeIsPut(Env const& env);
 
+/**
+ * \brief Test if envelope type is broadcast \c EnvBroadcast
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether the bit is set
+ */
 template <typename Env>
 inline bool envelopeIsBcast(Env const& env);
 
+/**
+ * \brief Test if envelope type is epoch \c EnvEpoch
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether the bit is set
+ */
 template <typename Env>
 inline bool envelopeIsEpochType(Env const& env);
 
+/**
+ * \brief Test if envelope type is tag \c EnvTag
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether the bit is set
+ */
 template <typename Env>
 inline bool envelopeIsTagType(Env const& env);
 

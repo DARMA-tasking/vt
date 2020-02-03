@@ -56,12 +56,24 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
+/**
+ * \struct IRecvHolder
+ *
+ * \brief Holds a set of pending MPI Irecvs to poll for completion
+ */
 template <typename T>
 struct IRecvHolder {
   using ArgType = vt::arguments::ArgConfig;
 
   IRecvHolder() = default;
 
+  /**
+   * \brief Insert a new element
+   *
+   * \param[in] u element to insert
+   */
   template <typename U>
   void emplace(U&& u) {
     static constexpr std::size_t factor = 4;
@@ -79,6 +91,13 @@ struct IRecvHolder {
     }
   }
 
+  /**
+   * \brief MPI test all the element in the holder
+   *
+   * \param[in] c callable to run if the element \c MPI_Test succeeds
+   *
+   * \return if progress is made
+   */
   template <typename Callable>
   bool testAll(Callable c) {
     bool progress_made = false;
@@ -114,6 +133,9 @@ struct IRecvHolder {
     return progress_made;
   }
 
+  /**
+   * \brief Compress the holder by removing holes and re-arranging elements
+   */
   void compress() {
     std::vector<T> new_holder;
     for (std::size_t i = 0; i < holder_.size(); i++) {

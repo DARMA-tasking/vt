@@ -53,26 +53,45 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
+/**
+ * \struct EpochActiveEnvelope
+ *
+ * \brief Extended envelope that holds an epoch, contains all of \c
+ * ActiveEnvelope
+ */
 struct EpochActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  ActiveEnvelope env;
-  EpochType epoch : epoch_num_bits;
+  ActiveEnvelope env;               /**< The basic envelope */
+  EpochType epoch : epoch_num_bits; /**< The epoch */
 };
 
+/**
+ * \struct EpochActiveEnvelope
+ *
+ * \brief Extended envelope that holds a tag, contains all of \c ActiveEnvelope
+ */
 struct TagActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  ActiveEnvelope env;
-  TagType tag     : tag_num_bits;
+  ActiveEnvelope env;               /**< The basic envelope */
+  TagType tag     : tag_num_bits;   /**< The tag */
 };
 
+/**
+ * \struct EpochActiveEnvelope
+ *
+ * \brief Extended envelope that holds an epoch and tag, contains all of \c
+ * ActiveEnvelope
+ */
 struct EpochTagActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  ActiveEnvelope env;
-  EpochType epoch : epoch_num_bits;
-  TagType tag     : tag_num_bits;
+  ActiveEnvelope env;               /**< The basic envelope */
+  EpochType epoch : epoch_num_bits; /**< The epoch */
+  TagType tag     : tag_num_bits;   /**< The tag */
 };
 
 }} //end namespace vt::messaging

@@ -50,43 +50,77 @@
 
 namespace vt {
 
+/** \file */
+
 // Physical identifier types (nodes, cores, workers, etc.)
 using PhysicalResourceType    = int16_t;
+/// Used to hold the current node/rank or the number of nodes
 using NodeType                = PhysicalResourceType;
+/// Used to hold a core ID
 using CoreType                = PhysicalResourceType;
+/// Used to hold the number of workers on a node
 using WorkerCountType         = PhysicalResourceType;
+/// Used to hold the ID of a worker on a node
 using WorkerIDType            = PhysicalResourceType;
 
 // Runtime system entity types
+/// Used to hold a handler ID which identifier a function pointer/context
 using HandlerType             = int64_t;
+/// Used to hold a seed for random generation
 using SeedType                = int64_t;
+/// Used to hold the control bits in an envelope
 using EnvelopeDataType        = int8_t;
+/// Used to hold a local/remote event to wait for completion
 using EventType               = uint64_t;
+/// Used to hold a sequential identifier for ordered/stateful operations
 using SequentialIDType        = uint64_t;
+/// Used to hold an epoch for termination detection
 using EpochType               = uint64_t;
+/// Used to hold an tag, e.g., on messages or reduces
 using TagType                 = int32_t;
+/// Used to identify a specific barrier
 using BarrierType             = uint64_t;
+/// Used to identify a collective operation
 using CollectiveAlgType       = uint64_t;
+/// Used to hold the reference count for messages
 using RefType                 = int16_t;
+/// Used to store some number of bytes
 using ByteType                = uint64_t;
+/// Used to store the number of bits in a field
 using BitCountType            = int32_t;
+/// Used to store the number of bits for serialization
 using SerialByteType          = char;
+/// Used to store an error code
 using ErrorCodeType           = int32_t;
+/// Used to hold an identifier for a collection or other proxy
 using VirtualProxyType        = uint64_t;
+/// Used to hold an identifier for an element in a collection
 using VirtualElmOnlyProxyType = uint64_t;
+/// Used to hold the count of elements in a collection
 using VirtualElmCountType     = int64_t;
+/// Used for mapping between index to contiguous bits
 using UniqueIndexBitType      = uint64_t;
+/// Used for hold an identifier for a group
 using GroupType               = uint64_t;
+/// Used for hold the size of a message
 using MsgSizeType             = int32_t;
+/// Used for hold a phase for load balancing
 using PhaseType               = uint64_t;
+/// Used for hold the identifier for a pipe (callbacks)
 using PipeType                = uint64_t;
+/// Used for hold the proxy ID for an objgroup
 using ObjGroupProxyType       = uint64_t;
+/// Used for hold the priority of a message
 using PriorityType            = uint16_t;
+/// Used for hold the level for a priority of a message
 using PriorityLevelType       = uint8_t;
 
 // Action types for attaching a closure to a runtime function
+/// Used for generically store an action to perform
 using ActionType              = std::function<void()>;
+/// Used for generically store an action that requires a proxy
 using ActionProxyType         = std::function<void(VirtualProxyType)>;
+/// Used for generically store an action that requires a node
 using ActionNodeType          = std::function<void(NodeType)>;
 
 }  // end namespace vt

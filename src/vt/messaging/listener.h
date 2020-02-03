@@ -49,9 +49,25 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
+/**
+ * \struct Listener listener.h vt/messaging/listener.h
+ *
+ * \brief The base listener to register to listen to message events
+ *
+ */
 struct Listener {
   virtual ~Listener() {}
 
+  /**
+   * \brief The pure virtual method for listening to all message sends while
+   * registered
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] size the size of the message
+   * \param[in] bcast whether the message is being broadcast or sent
+   */
   virtual void send(NodeType dest, MsgSizeType size, bool bcast) = 0;
 };
 

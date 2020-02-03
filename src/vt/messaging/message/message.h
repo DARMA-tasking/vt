@@ -54,8 +54,26 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
+/**
+ * \struct BaseMsg message.h vt/messaging/message/message.h
+ *
+ * \brief The very lowest base class for a message. Used by the runtime to cast
+ * on delivery to handlers without type knowledge.
+ */
 struct BaseMsg { };
 
+/**
+ * \struct ActiveMsg message.h vt/messaging/message/message.h
+ *
+ * \brief The base class for all messages. Common alias is \c vt::Message which
+ * uses the default envelope.
+ *
+ * This is templated over the envelope to allow longer or shorter messages to be
+ * used depending on the target and needed envelope bits.
+ *
+ */
 template <typename EnvelopeT>
 struct ActiveMsg : BaseMsg {
   using EnvelopeType = EnvelopeT;
@@ -66,9 +84,12 @@ struct ActiveMsg : BaseMsg {
    * checked/determined
    */
 
-  bool has_owner_ = false;
-  EnvelopeType env;
+  bool has_owner_ = false;      /**< For smart pointers tracking ownership  */
+  EnvelopeType env;             /**< The envelope for the message */
 
+  /**
+   * \brief Construct an empty message; initializes the envelope state.
+   */
   ActiveMsg() {
     envelopeInitEmpty(env);
 
@@ -81,6 +102,14 @@ struct ActiveMsg : BaseMsg {
 
   #if backend_check_enabled(memory_pool) && \
      !backend_check_enabled(no_pool_alloc_env)
+  /**
+   * \brief Overload of the new operator to use the memory pool to construct a
+   * new message
+   *
+   * \param[in] sz the size to allocate
+   *
+   * \return a pointer to the allocated memory
+   */
   static void* operator new(std::size_t sz) {
     auto const& ptr = thePool()->alloc(sz);
 
@@ -92,6 +121,15 @@ struct ActiveMsg : BaseMsg {
     return ptr;
   }
 
+  /**
+   * \brief Overload of the new operator to use the memory pool to construct a
+   * new message with some extra memory after the message for a put payload.
+   *
+   * \param[in] sz the message size to allocate
+   * \param[in] oversize the extra size to allocate
+   *
+   * \return a pointer to the allocated memory
+   */
   static void* operator new(std::size_t sz, std::size_t oversize) {
     auto const& ptr = thePool()->alloc(sz, oversize);
 
@@ -104,6 +142,11 @@ struct ActiveMsg : BaseMsg {
     return ptr;
   }
 
+  /**
+   * \brief Overload of delete to use the memory pool to de-allocate a message
+   *
+   * \param[in] ptr the pointer to deallocate
+   */
   static void operator delete(void* ptr) {
     debug_print(
       pool, node,
@@ -113,6 +156,14 @@ struct ActiveMsg : BaseMsg {
     return thePool()->dealloc(ptr);
   }
 
+  /**
+   * \brief Overload of the new operator for in-place allocations
+   *
+   * \param[in] size_t the size to allocate
+   * \param[in] mem the memory to in-place allocation
+   *
+   * \return the pointer
+   */
   static void* operator new(std::size_t, void* mem) {
     return mem;
   }
@@ -134,11 +185,22 @@ struct ActiveMsg : BaseMsg {
   }
   #endif
 
-  // Explicitly write parent serialize so derived messages can contain non-byte
-  // serialization. Envelopes, by default, are required to be byte serializable.
+  /**
+   * \brief Explicitly write parent serialize so derived messages can contain
+   * non-byte serialization. Envelopes, by default, are required to be byte
+   * serializable.
+   *
+   * \param[in] s the serializer
+   */
   template <typename SerializerT>
   void serializeParent(SerializerT& s) { }
 
+  /**
+   * \brief Explicit two-part serialization code for this message. Not required
+   * to be called.
+   *
+   * \param[in] s the serializer
+   */
   template <typename SerializerT>
   void serializeThis(SerializerT& s) {
     // @todo: do not serialize the entire envelope---it contains specific data
@@ -152,12 +214,18 @@ struct ActiveMsg : BaseMsg {
 
 namespace vt {
 
+/// Alias to the base of all messages
 using BaseMessage     = messaging::BaseMsg;
+/// Alias to the a message with any envelope
 template <typename EnvelopeT>
 using ActiveMessage   = messaging::ActiveMsg<EnvelopeT>;
+/// Alias to the shortest message available with no epoch or tag allowed
 using ShortMessage    = messaging::ActiveMsg<Envelope>;
+/// Alias to a message with only an epoch
 using EpochMessage    = messaging::ActiveMsg<EpochEnvelope>;
+/// Alias to a message with an epoch and tag
 using EpochTagMessage = messaging::ActiveMsg<EpochTagEnvelope>;
+/// Alias to the default message (with an epoch and tag)
 using Message         = EpochTagMessage;
 
 using BaseMsgType     = ShortMessage;

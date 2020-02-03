@@ -53,27 +53,78 @@ namespace vt {
 
 // Get fields of Envelope
 
+/** \file */
+
+/**
+ * \brief Get the handler on an envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the handler in the envelope
+ */
 template <typename Env>
 inline HandlerType envelopeGetHandler(Env const& env);
 
+/**
+ * \brief Get the destination node on an envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the destination node in the envelope
+ */
 template <typename Env>
 inline NodeType envelopeGetDest(Env const& env);
 
+/**
+ * \brief Get the group on an envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the group in the envelope
+ */
 template <typename Env>
 inline GroupType envelopeGetGroup(Env& env);
 
+/**
+ * \brief Get the reference count on an envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the reference count in the envelope
+ */
 template <typename Env>
 inline RefType envelopeGetRef(Env& env);
 
 #if backend_check_enabled(priorities)
+/**
+ * \brief Get the priority level on an envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the priority level in the envelope
+ */
 template <typename Env>
 inline PriorityType envelopeGetPriority(Env& env);
 
+/**
+ * \brief Get the priority on an envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the priority in the envelope
+ */
 template <typename Env>
 inline PriorityLevelType envelopeGetPriorityLevel(Env& env);
 #endif
 
 #if backend_check_enabled(trace_enabled)
+/**
+ * \brief Get the trace event on an envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the trace event in the envelope
+ */
 template <typename Env>
 inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env);
 #endif

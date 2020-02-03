@@ -52,6 +52,19 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
+/**
+ * \struct CollectionChainSet collection_chain_set.h vt/messaging/collection_chain_set.h
+ *
+ * \brief A set of chains to maintain a sequence for a set of collection
+ * elements that may be local or remote.
+ *
+ * Manages a set of chains (sequences) on a set of elements where this is
+ * constructed. It may sequence objects that reside on this node or a remote
+ * node (either is valid). This enables the user to enqueue sequences of tasks
+ * on each object and coordinate data dependencies.
+ */
 template <class Index>
 class CollectionChainSet final {
  public:
@@ -59,11 +72,28 @@ class CollectionChainSet final {
   CollectionChainSet(const CollectionChainSet&) = delete;
   CollectionChainSet(CollectionChainSet&&) = delete;
 
+  /**
+   * \brief Add an index to the set
+   *
+   * Creates a new, empty \c DependentSendChain for the given index
+   *
+   * \param[in] idx the index to add
+   */
   void addIndex(Index idx) {
     vtAssert(chains_.find(idx) == chains_.end(), "Cannot add an already-present chain");
     chains_[idx] = DependentSendChain();
   }
 
+  /**
+   * \brief Remove an index from the set
+   *
+   * The chain for that index being removed must be terminated (at the end of
+   * the chain). This may be called during migration or when a collection
+   * element's control sequencing is no longer being tracked (on this node) with
+   * this chain set
+   *
+   * \param[in] idx the index to remove
+   */
   void removeIndex(Index idx) {
     auto iter = chains_.find(idx);
     vtAssert(iter != chains_.end(), "Cannot remove a non-present chain");
@@ -72,6 +102,18 @@ class CollectionChainSet final {
     chains_.erase(iter);
   }
 
+  /**
+   * \brief The next step to execute on all the chains resident in this
+   * collection chain set
+   *
+   * Goes through every resident chain and enqueues the action at the end of the
+   * current chain when the preceding steps terminate. Creates a new rooted
+   * epoch for this step to contain/track completion of all the causally related
+   * messages.
+   *
+   * \param[in] step_action The action to perform as a function that returns a
+   * \c PendingSend
+   */
   void nextStep(std::function<PendingSend(Index)> step_action) {
     for (auto &entry : chains_) {
       auto& idx = entry.first;
@@ -109,7 +151,17 @@ class CollectionChainSet final {
   }
 #endif
 
-  // for a step with internal recursive communication and global inter-dependence
+  /**
+   * \brief The next collective step to execute across all resident elements
+   * across all nodes.
+   *
+   * Should be used for steps with internal recursive communication and global
+   * inter-dependence. Creates a global (on the communicator), collective epoch
+   * to track all the casually related messages and collectively wait for
+   * termination of all of the recursive sends..
+   *
+   * \param[in] step_action the next step to execute, returning a \c PendingSend
+   */
   void nextStepCollective(std::function<PendingSend(Index)> step_action) {
     auto epoch = theTerm()->makeEpochCollective();
     vt::theMsg()->pushEpoch(epoch);
@@ -124,6 +176,10 @@ class CollectionChainSet final {
     theTerm()->finishedEpoch(epoch);
   }
 
+  /**
+   * \brief Indicate that the current phase is complete. Resets the state on
+   * each \c DependentSendChain
+   */
   void phaseDone() {
     for (auto &entry : chains_) {
       entry.second.done();

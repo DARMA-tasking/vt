@@ -53,48 +53,137 @@ namespace vt {
 
 // Set the type of Envelope
 
+/** \file */
+
+/**
+ * \brief Clear all type bits make "normal"
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void setNormalType(Env& env);
 
+/**
+ * \brief Set pipe bit \c EnvPipe
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void setPipeType(Env& env);
 
+/**
+ * \brief Set put bit \c EnvPut
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void setPutType(Env& env);
 
+/**
+ * \brief Set term bit \c EnvTerm
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void setTermType(Env& env);
 
+/**
+ * \brief Set broadcast bit (changes how \c dest is interpreted) \c EnvBroadcast
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void setBroadcastType(Env& env);
 
+/**
+ * \brief Set epoch bit \c EnvEpoch
+ *
+ * Indicates that the envelope is either of type \c EpochActiveEnvelope or \c
+ * EpochTagActiveEnvelope depending on whether \c EnvTag is set or not.
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void setEpochType(Env& env);
 
+/**
+ * \brief Set tag bit \c EnvTag
+ *
+ * Indicates that the envelope is either of type \c TagActiveEnvelope or \c
+ * EpochTagActiveEnvelope depending on whether \c EnvEpoch is set or not.
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void setTagType(Env& env);
 
+/**
+ * \brief Set handler field in envelope
+ *
+ * \param[in,out] env the envelope
+ * \param[in] handler the handler
+ */
 template <typename Env>
 inline void envelopeSetHandler(Env& env, HandlerType const& handler);
 
+/**
+ * \brief Set destination \c dest field in envelope
+ *
+ * \param[in,out] env the envelope
+ * \param[in] dest the destination if set or root if (non-group) broadcast
+ */
 template <typename Env>
 inline void envelopeSetDest(Env& env, NodeType const& dest);
 
+/**
+ * \brief Set reference count on envelope.
+ *
+ * This overrides the typical mechanism for (de-)referencing May be dangerous to
+ * set directly. Typically you should use this in special cases when the current
+ * reference count does not apply. For instance, when a message arrives off the
+ * network and the count needs to be reset.
+ *
+ * \param[in,out] env the envelope
+ * \param[in] ref the reference count
+ */
 template <typename Env>
 inline void envelopeSetRef(Env& env, RefType const& ref = 0);
 
+/**
+ * \brief Set pipe bit \c EnvPipe
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void envelopeSetGroup(Env& env, GroupType const& group = default_group);
 
 #if backend_check_enabled(priorities)
+/**
+ * \brief Set priority
+ *
+ * \param[in,out] env the envelope
+ * \param[in] priority the priority
+ */
 template <typename Env>
 inline void envelopeSetPriority(Env& env, PriorityType priority);
 
+/**
+ * \brief Set priority level
+ *
+ * \param[in,out] env the envelope
+ * \param[in] priority_level the priority level
+ */
 template <typename Env>
 inline void envelopeSetPriorityLevel(Env& env, PriorityLevelType priority_level);
 #endif
 
 #if backend_check_enabled(trace_enabled)
+/**
+ * \brief Set trace event
+ *
+ * \param[in,out] env the envelope
+ * \param[in] evt the trace event
+ */
 template <typename Env>
 inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt);
 #endif

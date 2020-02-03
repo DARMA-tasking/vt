@@ -53,9 +53,23 @@ namespace vt {
 
 // Envelope reference counting functions for memory management
 
+/** \file */
+
+/**
+ * \brief Increase the reference count on an envelope
+ *
+ * \param[in] env the envelope
+ */
 template <typename Env>
 inline void envelopeRef(Env& env);
 
+/**
+ * \brief Decrement and get (sub-fetch) reference count on envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the new reference count after decrement
+ */
 template <typename Env>
 inline RefType envelopeDeref(Env& env);
 

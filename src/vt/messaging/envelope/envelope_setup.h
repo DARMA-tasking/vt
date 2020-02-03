@@ -51,14 +51,33 @@
 
 namespace vt {
 
+/** \file */
+
+/**
+ * \brief Setup an envelope for the first time
+ *
+ * \param[in,out] env the envelope
+ * \param[in] dest the destination node
+ * \param[in] handler the handler
+ */
 template <typename Env>
 inline void envelopeSetup(
   Env& env, NodeType const& dest, HandlerType const& handler
 );
 
+/**
+ * \brief Initialize an envelope with default/sentinel values
+ *
+ * \param[in,out] env the envelope
+ */
 template <typename Env>
 inline void envelopeInit(Env& env);
 
+/**
+ * \brief Initialize an envelope without defaults
+ *
+ * \param[in,out] env the envelope
+ */
 inline void envelopeInitEmpty(Envelope& env);
 
 } /* end namespace vt */

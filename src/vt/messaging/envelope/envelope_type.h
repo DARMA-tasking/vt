@@ -49,6 +49,8 @@
 
 namespace vt { namespace messaging {
 
+/** \file */
+
 /*
  *  Envelope Type Bits:
  *    001 -> Pipe Message
@@ -57,16 +59,18 @@ namespace vt { namespace messaging {
  *    ...
  */
 
+/// Enum for envelope type bits, used to cast to sub-types and interpret bits
 enum eEnvelopeType {
-  EnvPipe      = 0,
-  EnvPut       = 1,
-  EnvTerm      = 2,
-  EnvBroadcast = 3,
-  EnvEpochType = 4,
-  EnvTagType   = 5,
-  EnvPackedPut = 6
+  EnvPipe      = 0,             /**< Whether to interpret group field as pipe */
+  EnvPut       = 1,             /**< Whether the envelope has a PUT payload */
+  EnvTerm      = 2,             /**< Whether the message is a term control msg */
+  EnvBroadcast = 3,             /**< Whether the message is being broadcast */
+  EnvEpochType = 4,             /**< Whether the envelope can hold an epoch */
+  EnvTagType   = 5,             /**< Whether the envelope can hold a tag */
+  EnvPackedPut = 6              /**< Whether the message is packed with data */
 };
 
+/// Number of bits allocated for \c eEnvelopeType
 static constexpr BitCountType const envelope_num_bits = 8;
 
 }} /* end namespace vt::messaging */
