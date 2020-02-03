@@ -194,7 +194,7 @@ struct BufferedActiveMsg {
  */
 struct ActiveMessenger {
   using BufferedMsgType      = BufferedActiveMsg;
-  using MessageType          = ShortMessage*;
+  using MessageType          = ShortMessage;
   using CountType            = int32_t;
   using PendingRecvType      = PendingRecv;
   using EventRecordType      = event::AsyncEvent::EventRecordType;
@@ -936,8 +936,7 @@ struct ActiveMessenger {
    * \param[in] ptr_bytes bytes at pointer to pack
    */
   void packMsg(
-    MessageType const msg, MsgSizeType const& size, void* ptr,
-    MsgSizeType const& ptr_bytes
+    MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
   );
 
   /**

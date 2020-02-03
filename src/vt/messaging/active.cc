@@ -87,8 +87,7 @@ ActiveMessenger::ActiveMessenger()
 }
 
 void ActiveMessenger::packMsg(
-  MessageType const msg, MsgSizeType const& size, void* ptr,
-  MsgSizeType const& ptr_bytes
+  MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
 ) {
   debug_print(
     active, node,
@@ -788,7 +787,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
-  auto msg = reinterpret_cast<MessageType>(buf);
+  MessageType* msg = reinterpret_cast<MessageType*>(buf);
   messageConvertToShared(msg);
   auto base = promoteMsgOwner(msg);
 
