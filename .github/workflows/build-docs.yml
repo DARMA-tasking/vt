@@ -1,0 +1,19 @@
+name: Build Documentation
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
+    branches:
+      - develop
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile-docs  --build-arg TRACE_ENABLED=1 --build-arg TOKEN=${{ secrets.GH_PAT }} --build-arg LB_ENABLED=1 --tag vt:docs-$(date +%s)
