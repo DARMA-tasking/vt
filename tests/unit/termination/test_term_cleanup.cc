@@ -89,20 +89,20 @@ TEST_F(TestTermCleanup, test_termination_cleanup_1) {
     theTerm()->addAction(epoch, [&]{ done = true; });
     do vt::runScheduler(); while (not done);
 
-    EXPECT_LT(theTerm()->getEpochState().size(), 2);
-    EXPECT_EQ(theTerm()->getEpochWaitSet().size(), 0);
-    EXPECT_EQ(theTerm()->getDSTermMap().size(), 0);
-    EXPECT_LT(theTerm()->getEpochReadySet().size(), 2);
+    EXPECT_LT(theTerm()->getEpochState().size(), std::size_t{2});
+    EXPECT_EQ(theTerm()->getEpochWaitSet().size(), std::size_t{0});
+    EXPECT_EQ(theTerm()->getDSTermMap().size(), std::size_t{0});
+    EXPECT_LT(theTerm()->getEpochReadySet().size(), std::size_t{2});
   }
 
   while (not vt::rt->isTerminated() or not vt::theSched()->isIdle()) {
     vt::runScheduler();
   }
 
-  EXPECT_LT(theTerm()->getEpochState().size(), 2);
-  EXPECT_EQ(theTerm()->getEpochWaitSet().size(), 0);
-  EXPECT_EQ(theTerm()->getDSTermMap().size(), 0);
-  EXPECT_LT(theTerm()->getEpochReadySet().size(), 2);
+  EXPECT_LT(theTerm()->getEpochState().size(), std::size_t{2});
+  EXPECT_EQ(theTerm()->getEpochWaitSet().size(), std::size_t{0});
+  EXPECT_EQ(theTerm()->getDSTermMap().size(), std::size_t{0});
+  EXPECT_LT(theTerm()->getEpochReadySet().size(), std::size_t{2});
 }
 
 TEST_F(TestTermCleanup, test_termination_cleanup_2) {
@@ -155,10 +155,10 @@ TEST_F(TestTermCleanup, test_termination_cleanup_2) {
     vt::runScheduler();
   }
 
-  EXPECT_LT(theTerm()->getEpochState().size(), 2);
-  EXPECT_EQ(theTerm()->getEpochWaitSet().size(), 0);
-  EXPECT_EQ(theTerm()->getDSTermMap().size(), 0);
-  EXPECT_LT(theTerm()->getEpochReadySet().size(), 2);
+  EXPECT_LT(theTerm()->getEpochState().size(), std::size_t{2});
+  EXPECT_EQ(theTerm()->getEpochWaitSet().size(), std::size_t{0});
+  EXPECT_EQ(theTerm()->getDSTermMap().size(), std::size_t{0});
+  EXPECT_LT(theTerm()->getEpochReadySet().size(), std::size_t{2});
 }
 
 
