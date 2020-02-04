@@ -122,12 +122,6 @@ void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
 
 #if HAS_SERIALIZATION_LIBRARY
 
-// Conditionally-enabled methods for message types that support serialization.
-// The current implementation of these methods eventually call BACK into
-// sendMsgImpl with a NON-SERIALIZAD MESSAGE.
-// Such probably represents an opportunity for additional cleanup with a
-// formal to-byte/from-byte stage instead of wrapping.
-
 template <
   typename MessageT,
   std::enable_if_t<true
@@ -143,6 +137,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
   ByteType msg_size,
   TagType tag
 ) {
+  // These calls eventually end up back and the non-serialized sendMsgImpl,
+  // through use of a wrapped message which does not define serialization.
+  // (Although such probably represents an opportunity for additional cleanup.)
   vtAssert(
     tag == no_tag,
     "Tagged messages serialization not implemented."
@@ -170,6 +167,9 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
   ByteType msg_size,
   TagType tag
 ) {
+  // These calls eventually end up back and the non-serialized sendMsgImpl,
+  // through use of a wrapped message which does not define serialization.
+  // (Although such probably represents an opportunity for additional cleanup.)
   vtAssert(
     tag == no_tag,
     "Tagged messages serialization not implemented."

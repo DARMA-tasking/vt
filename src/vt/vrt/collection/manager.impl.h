@@ -862,7 +862,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   }
 
   theMsg()->markAsCollectionMessage(msg);
-  auto ret = theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
+  auto ret = theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT>>(
     msg.get()
   );
   if (!send_group) {
@@ -1078,7 +1078,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
         col_proxy, bnode, handler, cur_epoch
       );
       theMsg()->markAsCollectionMessage(msg);
-      return theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(
+      return theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT>>(
         bnode,msg.get()
       );
     } else {
@@ -2755,7 +2755,7 @@ MigrateStatus CollectionManager::migrateOut(
      proxy, this_node, dest, map_fn, range, &typed_col_ref
    );
 
-   theMsg()->sendMsgAuto<
+   theMsg()->sendMsg<
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
    >(dest, msg);
 

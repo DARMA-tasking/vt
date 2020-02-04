@@ -82,7 +82,7 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
     auto const node  = theContext()->getNode();
     if (node != 0) {
       auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
-      theMsg()->sendMsgAuto<NewUserEventMsg,newEventHan>(0, msg.get());
+      theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
     }
   }
   return id;
@@ -99,7 +99,7 @@ UserEventIDType UserEventRegistry::rooted(std::string const& in_event_name) {
   auto const node  = theContext()->getNode();
   if (node != 0) {
     auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
-    theMsg()->sendMsgAuto<NewUserEventMsg,newEventHan>(0, msg.get());
+    theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
   }
   return id;
 }
@@ -112,7 +112,7 @@ UserEventIDType UserEventRegistry::user(
   auto const node  = theContext()->getNode();
   if (node != 0) {
     auto msg = makeMessage<NewUserEventMsg>(true, id, in_event_name);
-    theMsg()->sendMsgAuto<NewUserEventMsg,newEventHan>(0, msg.get());
+    theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
   }
   return id;
 }

@@ -273,7 +273,7 @@ void Reduce::startReduce(
         reduce, node,
         "reduce send to parent: parent={}\n", parent
       );
-      theMsg()->sendMsgAuto<MessageT,reduceUp<MessageT>>(parent,typed_msg);
+      theMsg()->sendMsg<MessageT,reduceUp<MessageT>>(parent,typed_msg);
     }
   }
 }

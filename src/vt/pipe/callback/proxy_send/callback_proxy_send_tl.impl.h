@@ -79,7 +79,7 @@ void CallbackProxySendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
      */
     setPipeType(msg->env);
     envelopeSetGroup(msg->env,pipe);
-    theMsg()->sendMsgAuto<MsgT,triggerCallbackMsgHan>(pipe_node,msg);
+    theMsg()->sendMsg<MsgT,triggerCallbackMsgHan>(pipe_node,msg);
   }
 }
 

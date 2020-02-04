@@ -118,7 +118,7 @@ static inline void activeMessageSerialization() {
   (void)num_nodes;  // don't warn about unused variable
 
   /*
-   * The theMsg()->sendMsgAuto(..) will serialize the message sent to the
+   * The theMsg()->sendMsg(..) will serialize the message sent to the
    * destination node if it has a serialize method. If not, it will send the
    * message as if it is sent directly the sendMsg.
    */
@@ -128,7 +128,7 @@ static inline void activeMessageSerialization() {
     auto msg = ::vt::makeSharedMessage<ParticleMsg>(1,2,3);
     msg->particles.push_back(Particle{10,11,12});
     msg->particles.push_back(Particle{13,14,15});
-    ::vt::theMsg()->sendMsgAuto<ParticleMsg,msgSerialA>(to_node, msg);
+    ::vt::theMsg()->sendMsg<ParticleMsg,msgSerialA>(to_node, msg);
   }
 }
 

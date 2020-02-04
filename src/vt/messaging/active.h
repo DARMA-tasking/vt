@@ -178,8 +178,7 @@ struct BufferedActiveMsg {
 /**
  * \struct ActiveMessenger active.h vt/messaging/active.h
  *
- * \brief Core component of VT used to send messages to handlers without a
- * context
+ * \brief Core component of VT used to send messages.
  *
  * ActiveMessenger is a core VT component that provides the ability to send
  * messages \c Message to registered handlers. It manages the incoming and
@@ -221,13 +220,14 @@ struct ActiveMessenger {
   virtual ~ActiveMessenger();
 
   /**
+   * \internal
    * \brief Mark a message as a termination message.
    *
    * Used to ignore certain messages for the sake of termination detection
    * considering them control messages instead of normal message which are
    * tracked/counted by the termination detector
    *
-   * \param[in,out] msg the message to mark as a termination message
+   * \param[in] msg the message to mark as a termination message
    */
   template <typename MsgT>
   void markAsTermMessage(MsgT* msg);
@@ -257,18 +257,20 @@ struct ActiveMessenger {
   void markAsCollectionMessage(MsgPtrT const msg);
 
   /**
+   * \internal
    * \brief Set the epoch in the envelope of a message
    *
-   * \param[in,out] msg the message to mark the epoch on (envelope must be able to hold)
+   * \param[in] msg the message to mark the epoch on (envelope must be able to hold)
    * \param[in] epoch the epoch to mark on the message
    */
   template <typename MsgT>
   void setEpochMessage(MsgT* msg, EpochType epoch);
 
   /**
+   * \internal
    * \brief Set the tag in the envelope of a message
    *
-   * \param[in,out] msg the message to mark the tag on (envelope must be able to hold)
+   * \param[in] msg the message to mark the tag on (envelope must be able to hold)
    * \param[in] tag the tag to mark on the message
    */
   template <typename MsgT>
@@ -276,10 +278,11 @@ struct ActiveMessenger {
 
   #if HAS_SERIALIZATION_LIBRARY
 
-  // Proxy down to serialization after flattening..
-  // ..these calls eventually end up back and the non-serialized sendMsgImpl,
-  // through use of a wrapped message which does not define serialization.
-  // (Although such probably represents an opportunity for additional cleanup.)
+  /**
+   * \internal
+   * Invoke message sending.
+   * Template activated for message with a serialization function.
+   */
   template <
     typename MessageT,
     std::enable_if_t<true
@@ -296,6 +299,11 @@ struct ActiveMessenger {
     TagType tag
   );
 
+  /**
+   * \internal
+   * Invoke message sending.
+   * Template activated for messages with parserdes.
+   */
   template <
     typename MessageT,
     std::enable_if_t<true
@@ -314,10 +322,10 @@ struct ActiveMessenger {
 
 #endif
 
-  /*!
+  /**
    * \internal
    * Invoke message sending.
-   * Should be funnel-through method.
+   * Template activated for messages without serialization.
    */
   template <
     typename MessageT,
@@ -342,7 +350,6 @@ struct ActiveMessenger {
 
   /**
    * \defgroup preregister Basic Active Message Send with Pre-Registered Handler
-
    *
    * \brief Send a message to pre-registered active message handler.
    *
@@ -428,11 +435,9 @@ struct ActiveMessenger {
   );
 
   /**
-   * \brief Send message that may need serialization.
+   * \brief Send a message with a pre-registered handler.
    *
-   * Method for sending a message by automatically dispatching to the
-   * serialization framework if required based on examining compile-time traits
-   * of the message
+   * \deprecated Use \p sendMessage instead.
    *
    * \param[in] dest the destination node to send the message to
    * \param[in] han the handler to invoke
@@ -441,7 +446,6 @@ struct ActiveMessenger {
    *
    * \return the \c PendingSend for the send
    */
-
   template <typename MessageT>
   PendingSendType sendMsgAuto(
     NodeType dest,
@@ -534,7 +538,7 @@ struct ActiveMessenger {
   );
 
   /**
-   * \brief Send a message with a typesafe handler with explicit size.
+   * \brief Send a message with explicit size.
    *
    * Invoke this send variant if you know the size or the \c sizeof(Message) is
    * different than the number of bytes you actually want to send (e.g., extra
@@ -556,11 +560,9 @@ struct ActiveMessenger {
   );
 
   /**
-   * \brief Broadcast a message that may need serialization.
+   * \brief Broadcast a message.
    *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
+   * \deprecated Use \b broadcastMsg instead.
    *
    * \param[in] msg the message to broadcast
    * \param[in] tag the tag to put on the message
@@ -574,11 +576,9 @@ struct ActiveMessenger {
   );
 
   /**
-   * \brief Send a message that may need serialization.
+   * \brief Send a message.
    *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
+   * \deprecated Use \b sendMsg instead.
    *
    * \param[in] dest the destination node to send the message to
    * \param[in] msg the message to send
@@ -701,7 +701,7 @@ struct ActiveMessenger {
    */
 
   /**
-   * \brief Broadcast a message with a type-safe handler.
+   * \brief Broadcast a message.
    *
    * \param[in] msg the message to broadcast
    * \param[in] tag the optional tag to put on the message
@@ -718,11 +718,9 @@ struct ActiveMessenger {
   );
 
   /**
-   * \brief Broadcast a message that may need serialization.
+   * \brief Broadcast a message.
    *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
+   * \deprecated Use \p broadcastMsg instead.
    *
    * \param[in] msg the message to send
    * \param[in] tag the optional tag to put on the message
@@ -758,11 +756,9 @@ struct ActiveMessenger {
   );
 
   /**
-   * \brief Send a message that may need serialization.
+   * \brief Send a message.
    *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
+   * \deprecated Use \p sendMsg instead.
    *
    * \param[in] dest the destination node to send the message to
    * \param[in] msg the message to broadcast
@@ -895,11 +891,9 @@ struct ActiveMessenger {
   );
 
   /**
-   * \brief Broadcast a message that may need serialization.
+   * \brief Broadcast a message.
    *
-   * This method automatically dispatches to the serialization framework if
-   * required (message has a serialize method) based on examining compile-time
-   * traits of the message.
+   * \deprecated Use \p broadcastMsg instead.
    *
    * \param[in] han the handler to invoke
    * \param[in] msg the message to broadcast

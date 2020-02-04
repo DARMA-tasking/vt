@@ -165,7 +165,7 @@ struct Block : Collection<Block,Index1D> {
     );
     auto const from_idx = getIndex().x();
     auto data_msg = makeSharedMessage<DataMsg>(data_,from_idx);
-    theMsg()->sendMsgAuto<DataMsg,SubSolveInfo::solveDataIncoming>(
+    theMsg()->sendMsg<DataMsg,SubSolveInfo::solveDataIncoming>(
       requesting_node, data_msg
     );
   }

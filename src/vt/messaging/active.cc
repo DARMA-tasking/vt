@@ -129,7 +129,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
      * Directly pack if the pool is active (which means it may have
      * overallocated and the remaining size of the (envelope) buffer is
      * sufficient for the for the put payload.
-     *
      */
     bool const direct_buf_pack =
       memory_pool_active                 &&

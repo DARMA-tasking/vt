@@ -415,7 +415,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
     // send to the node discovered by the location manager
-    theMsg()->sendMsgAuto<MessageT, msgHandler>(to_node, msg.get());
+    theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg.get());
   } else {
     debug_print(
       location, node,

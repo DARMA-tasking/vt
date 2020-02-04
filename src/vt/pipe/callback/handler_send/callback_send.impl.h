@@ -110,7 +110,7 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     auto msg = reinterpret_cast<ShortMessage*>(data);
     runnable::Runnable<ShortMessage>::run(handler_, nullptr, msg, this_node);
   } else {
-    theMsg()->sendMsgAuto<SignalDataType>(send_node_, handler_, data);
+    theMsg()->sendMsg<SignalDataType>(send_node_, handler_, data);
   }
 }
 
