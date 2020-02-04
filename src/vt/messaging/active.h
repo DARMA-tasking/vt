@@ -213,10 +213,14 @@ struct ActiveMessenger {
   using ListenerType         = std::unique_ptr<Listener>;
   using ArgType              = vt::arguments::ArgConfig;
 
-  /// Constructor to the active messenger, not directly invoked by the user
+  /**
+   * \internal
+   */
   ActiveMessenger();
 
-  /// Destructor for cleaning up state
+  /**
+   * \internal
+   */
   virtual ~ActiveMessenger();
 
   /**
@@ -225,7 +229,7 @@ struct ActiveMessenger {
    *
    * Used to ignore certain messages for the sake of termination detection
    * considering them control messages instead of normal message which are
-   * tracked/counted by the termination detector
+   * tracked/counted by the termination detector.
    *
    * \param[in] msg the message to mark as a termination message
    */
@@ -917,6 +921,7 @@ struct ActiveMessenger {
    */
 
   /**
+   * \internal
    * \brief Pack a message, used by the system
    *
    * Packs bytes directly after a message into a single contiguous buffer to
@@ -934,6 +939,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Send raw bytes to a node
    *
    * \param[in] ptr the pointer and bytes to send
@@ -947,6 +953,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Receive data as bytes from a node with a priority
    *
    * \param[in] priority the priority to receive the data
@@ -962,6 +969,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Receive data as bytes from a node
    *
    * \param[in] tag the MPI tag to receive on
@@ -976,6 +984,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Receive data as bytes from a node with a priority
    *
    * \param[in] priority the priority to receive the data
@@ -992,6 +1001,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Receive data as bytes with a buffer and priority
    *
    * \param[in] user_buf the buffer to receive into
@@ -1012,6 +1022,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Receive data as bytes with a buffer
    *
    * \param[in] user_buf the buffer to receive into
@@ -1031,6 +1042,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Low-level send of a message, handler and other control data should
    * be set already
    *
@@ -1044,6 +1056,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Poll MPI to discover an incoming message with a handler
    *
    * \return whether a message was found
@@ -1051,6 +1064,7 @@ struct ActiveMessenger {
   bool tryProcessIncomingActiveMsg();
 
   /**
+   * \internal
    * \brief Poll MPI for raw data messages
    *
    * \return whether a message was found
@@ -1058,6 +1072,7 @@ struct ActiveMessenger {
   bool tryProcessDataMsgRecv();
 
   /**
+   * \internal
    * \brief Call into the progress engine
    *
    * \return whether any action was taken (progress was made)
@@ -1065,6 +1080,7 @@ struct ActiveMessenger {
   bool progress();
 
   /**
+   * \internal
    * \brief Register a bare handler
    *
    * \param[in] fn the function to register
@@ -1077,6 +1093,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Swap the underlying handler function pointer
    *
    * \param[in] han the handler to swap function pointers
@@ -1088,6 +1105,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Un-register a bare handler
    *
    * \param[in] han the handler to de-register
@@ -1096,6 +1114,7 @@ struct ActiveMessenger {
   void unregisterHandlerFn(HandlerType const& han, TagType const& tag = no_tag);
 
   /**
+   * \internal
    * \brief Register a handler function for existing handler
    *
    * \param[in] han the handler to swap function pointers
@@ -1107,6 +1126,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Register an active handler (collective)
    *
    * \param[in] fn the function pointer for the handler
@@ -1119,6 +1139,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Get the current handler (valid only while running a handler)
    *
    * \return the handler ID
@@ -1126,6 +1147,7 @@ struct ActiveMessenger {
   HandlerType getCurrentHandler() const;
 
   /**
+   * \internal
    * \brief Get the from node for the current running handler (valid only while
    * running a handler)
    *
@@ -1139,6 +1161,7 @@ struct ActiveMessenger {
   NodeType getFromNodeCurrentHandler() const;
 
   /**
+   * \internal
    * \brief Get the current epoch on the handler running
    *
    * \return the epoch on the message that triggered the current handler
@@ -1147,6 +1170,7 @@ struct ActiveMessenger {
 
   #if backend_check_enabled(trace_enabled)
     /**
+     * \internal
      * \brief Get the trace event on the handler running
      *
      * \return the trace event on the message that triggered the current handler
@@ -1155,6 +1179,7 @@ struct ActiveMessenger {
   #endif
 
   /**
+   * \internal
    * \brief Get the priority on the handler running
    *
    * \return the priority on the message that triggered the current handler
@@ -1162,6 +1187,7 @@ struct ActiveMessenger {
   PriorityType getCurrentPriority() const;
 
   /**
+   * \internal
    * \brief Get the priority level on the handler running
    *
    * \return the priority level of the message that triggered the current handler
@@ -1169,6 +1195,7 @@ struct ActiveMessenger {
   PriorityLevelType getCurrentPriorityLevel() const;
 
   /**
+   * \internal
    * \brief Schedule an active message for future delivery
    *
    * \param[in] base the message ptr
@@ -1182,6 +1209,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Process an incoming active message
    *
    * Forwards the message to the appropriate group nodes or broadcasts it
@@ -1201,6 +1229,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Deliver an active message locally
    *
    * \param[in] base the message ptr
@@ -1215,6 +1244,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Deliver pending messaging waiting for a handler to be registered
    *
    * \param[in] han the handler that will now accept
@@ -1225,12 +1255,14 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Process any messages that might be ready now (handler is now
    * registered)
    */
   void processMaybeReadyHanTag();
 
   /**
+   * \internal
    * \brief Send message as low-level bytes after packing put bytes if needed
    *
    * \param[in] dest the destination of the message
@@ -1246,6 +1278,7 @@ struct ActiveMessenger {
   );
 
   /**
+   * \internal
    * \brief Send message as low-level bytes that is already packed
    *
    * \param[in] dest the destination of the message
@@ -1261,9 +1294,7 @@ struct ActiveMessenger {
   );
 
   /**
-   */
-
-  /**
+   * \internal
    * \brief Set the global epoch (\c pushEpoch is more desirable)
    *
    * \c setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
@@ -1273,9 +1304,8 @@ struct ActiveMessenger {
    */
   inline void setGlobalEpoch(EpochType const& epoch = no_epoch);
 
-  /*
-   */
   /**
+   * \internal
    * \brief Get the current global epoch
    *
    * \c Returns the top epoch on the stack iff \c epoch_stack.size() > 0, else it
@@ -1286,6 +1316,7 @@ struct ActiveMessenger {
   inline EpochType getGlobalEpoch() const;
 
   /**
+   * \internal
    * \brief Push an epoch on the stack
    *
    * Pushes any epoch onto the local stack iff epoch != no_epoch; the epoch
@@ -1297,6 +1328,7 @@ struct ActiveMessenger {
   inline void pushEpoch(EpochType const& epoch);
 
   /**
+   * \internal
    * \brief Pop an epoch off the stack
    *
    * Shall remove the top entry from epoch_size_, iff the size
@@ -1312,6 +1344,7 @@ struct ActiveMessenger {
   inline EpochType popEpoch(EpochType const& epoch = no_epoch);
 
   /**
+   * \internal
    * \brief Returns the top of the epoch stack
    *
    * \return the epoch on the top of the stack
@@ -1319,6 +1352,7 @@ struct ActiveMessenger {
   inline EpochType getEpoch() const;
 
   /**
+   * \internal
    * \brief Get the epoch for a message based on the current context so an
    * subsequent operation on it can be safely delayed
    *
@@ -1330,6 +1364,7 @@ struct ActiveMessenger {
   inline EpochType getEpochContextMsg(MsgT* msg);
 
   /**
+   * \internal
    * \brief Get the epoch for a message based on the current context so an
    * subsequent operation on it can be safely delayed
    *
@@ -1341,6 +1376,7 @@ struct ActiveMessenger {
   inline EpochType getEpochContextMsg(MsgSharedPtr<MsgT> const& msg);
 
   /**
+   * \internal
    * \brief Set the epoch on a message.
    *
    * The method finds the current epoch based on whether its already set on the
@@ -1356,6 +1392,7 @@ struct ActiveMessenger {
   inline EpochType setupEpochMsg(MsgT* msg);
 
   /**
+   * \internal
    * \brief Set the epoch on th message
    *
    * \param[in] msg the message to get/set the epoch on
@@ -1366,6 +1403,7 @@ struct ActiveMessenger {
   inline EpochType setupEpochMsg(MsgSharedPtr<MsgT> const& msg);
 
   /**
+   * \internal
    * \brief Register a listener on the active messenger---see \c Listener
    *
    * \param[in] ptr a \c std::unique_ptr<L> to a listener
@@ -1376,6 +1414,7 @@ struct ActiveMessenger {
   }
 
   /**
+   * \internal
    * \brief Clear all listeners
    */
   void clearListeners() {
