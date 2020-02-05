@@ -171,95 +171,95 @@ public:
   void unlock();
 
 public:
-  template <typename U = IndexT>
+  template <typename NodeU = IndexT>
   void get(
-    U, std::size_t len, int offset, Lock l = Lock::None,
-    isNodeType<U>* = nullptr
+    NodeU node, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename NodeU = IndexT>
   void get(
-    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
-    isNodeType<U>* = nullptr
+    NodeU node, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename NodeU = IndexT>
   void put(
-    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
-    isNodeType<U>* = nullptr
+    NodeU node, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename NodeU = IndexT>
   void accum(
-    U, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
-    isNodeType<U>* = nullptr
+    NodeU node, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename NodeU = IndexT>
   RequestType rget(
-    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
-    isNodeType<U>* = nullptr
+    NodeU node, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename NodeU = IndexT>
   RequestType rget(
-    U, std::size_t len, int offset, Lock l = Lock::None,
-    isNodeType<U>* = nullptr
+    NodeU no, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename NodeU = IndexT>
   RequestType rput(
-    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
-    isNodeType<U>* = nullptr
+    NodeU node, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename NodeU = IndexT>
   RequestType raccum(
-    U, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
-    isNodeType<U>* = nullptr
+    NodeU node, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
   );
 
-  template <typename U = IndexT>
-  std::size_t getSize(U, isNodeType<U>* = nullptr);
+  template <typename NodeU = IndexT>
+  std::size_t getSize(NodeU node, isNodeType<NodeU>* = nullptr);
 
 public:
 
-  template <typename U = IndexT>
+  template <typename IndexU = IndexT>
   void get(
-    U, std::size_t len, int offset, Lock l = Lock::None,
-    isIndexType<U>* = nullptr
+    IndexU idx, std::size_t len, int offset, Lock l = Lock::None,
+    isIndexType<IndexU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename IndexU = IndexT>
   void get(
-    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
-    isIndexType<U>* = nullptr
+    IndexU idx, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isIndexType<IndexU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename IndexU = IndexT>
   void put(
-    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
-    isIndexType<U>* = nullptr
+    IndexU idx, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isIndexType<IndexU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename IndexU = IndexT>
   void accum(
-    U, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
-    isIndexType<U>* = nullptr
+    IndexU idx, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
+    isIndexType<IndexU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename IndexU = IndexT>
   RequestType rget(
-    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
-    isIndexType<U>* = nullptr
+    IndexU idx, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isIndexType<IndexU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename IndexU = IndexT>
   RequestType rget(
-    U, std::size_t len, int offset, Lock l = Lock::None,
-    isIndexType<U>* = nullptr
+    IndexU idx, std::size_t len, int offset, Lock l = Lock::None,
+    isIndexType<IndexU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename IndexU = IndexT>
   RequestType rput(
-    U, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
-    isIndexType<U>* = nullptr
+    IndexU idx, T* ptr, std::size_t len, int offset, Lock l = Lock::None,
+    isIndexType<IndexU>* = nullptr
   );
-  template <typename U = IndexT>
+  template <typename IndexU = IndexT>
   RequestType raccum(
-    U, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
-    isIndexType<U>* = nullptr
+    IndexU idx, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l = Lock::None,
+    isIndexType<IndexU>* = nullptr
   );
 
-  template <typename U = IndexT>
-  std::size_t getSize(U, isIndexType<U>* = nullptr);
+  template <typename IndexU = IndexT>
+  std::size_t getSize(IndexU idx, isIndexType<IndexU>* = nullptr);
 
 
   template <typename SerializerT>
