@@ -110,7 +110,7 @@ struct BaseLB {
   virtual void inputParams(balance::SpecEntry* spec) = 0;
   virtual void runLB() = 0;
 
-private:
+protected:
   balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;
   bool isCollectiveComm(balance::CommCategory cat) const;
   void computeStatisticsOver(Statistic stats);
