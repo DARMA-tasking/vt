@@ -133,12 +133,12 @@ struct TypeMPI<uint64_t> {
   static auto getTypeStr() { return "MPI_UINT64_T"; }
 };
 
-template <>
-struct TypeMPI<std::size_t> {
-  // @todo: this might not be true on some platforms!
-  static auto getType() { return MPI_UINT64_T; }
-  static auto getTypeStr() { return "MPI_UINT64_T"; }
-};
+// template <>
+// struct TypeMPI<std::size_t> {
+//   // @todo: this might not be true on some platforms!
+//   static auto getType() { return MPI_UINT64_T; }
+//   static auto getTypeStr() { return "MPI_UINT64_T"; }
+// };
 
 }} /* end namespace vt::rdma */
 
