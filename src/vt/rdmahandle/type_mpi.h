@@ -52,76 +52,92 @@ namespace vt { namespace rdma {
 template <typename T>
 struct TypeMPI {
   static auto getType() { return MPI_BYTE; }
+  static auto getTypeStr() { return "MPI_BYTE"; }
 };
 
 template <>
 struct TypeMPI<char> {
   static auto getType() { return MPI_SIGNED_CHAR; }
+  static auto getTypeStr() { return "MPI_SIGNED_CHAR"; }
 };
 
 template <>
 struct TypeMPI<wchar_t> {
   static auto getType() { return MPI_WCHAR; }
+  static auto getTypeStr() { return "MPI_WCHAR"; }
 };
 
 template <>
 struct TypeMPI<double> {
   static auto getType() { return MPI_DOUBLE; }
+  static auto getTypeStr() { return "MPI_DOUBLE"; }
 };
 
 template <>
 struct TypeMPI<long double> {
   static auto getType() { return MPI_LONG_DOUBLE; }
+  static auto getTypeStr() { return "MPI_LONG_DOUBLE"; }
 };
 
 template <>
 struct TypeMPI<float> {
   static auto getType() { return MPI_FLOAT; }
+  static auto getTypeStr() { return "MPI_FLOAT"; }
 };
 
 template <>
 struct TypeMPI<int8_t> {
   static auto getType() { return MPI_INT8_T; }
+  static auto getTypeStr() { return "MPI_INT8_T"; }
 };
 
 template <>
 struct TypeMPI<int16_t> {
   static auto getType() { return MPI_INT16_T; }
+  static auto getTypeStr() { return "MPI_INT16_T"; }
 };
 
 template <>
 struct TypeMPI<int32_t> {
   static auto getType() { return MPI_INT32_T; }
+  static auto getTypeStr() { return "MPI_INT32_T"; }
 };
 
 template <>
 struct TypeMPI<int64_t> {
   static auto getType() { return MPI_INT64_T; }
+  static auto getTypeStr() { return "MPI_INT64_T"; }
 };
 
 template <>
 struct TypeMPI<uint8_t> {
   static auto getType() { return MPI_UINT8_T; }
+  static auto getTypeStr() { return "MPI_UINT8_T"; }
 };
 
 template <>
 struct TypeMPI<uint16_t> {
   static auto getType() { return MPI_UINT16_T; }
+  static auto getTypeStr() { return "MPI_UINT16_T"; }
 };
 
 template <>
 struct TypeMPI<uint32_t> {
   static auto getType() { return MPI_UINT32_T; }
+  static auto getTypeStr() { return "MPI_UINT32_T"; }
 };
 
 template <>
 struct TypeMPI<uint64_t> {
   static auto getType() { return MPI_UINT64_T; }
+  static auto getTypeStr() { return "MPI_UINT64_T"; }
 };
 
 template <>
 struct TypeMPI<std::size_t> {
+  // @todo: this might not be true on some platforms!
   static auto getType() { return MPI_UINT64_T; }
+  static auto getTypeStr() { return "MPI_UINT64_T"; }
 };
 
 }} /* end namespace vt::rdma */

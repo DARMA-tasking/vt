@@ -130,20 +130,25 @@ RequestHolder Holder<T,E>::rget(
   vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
 ) {
   auto mpi_type = TypeMPI<T>::getType();
+  auto mpi_type_str = TypeMPI<T>::getTypeStr();
   RequestHolder r;
-  debug_print(
-    rdma, node,
-    "MPI_Get({}, {}, {}, {}, {}, {}, {}, window); {} {} {}\n",
-    print_ptr(ptr), len, mpi_type, node, offset, len, mpi_type,
-    MPI_BYTE, MPI_UINT64_T, MPI_INT64_T
-  );
   if (mpi2_) {
     r.add([=]{
       LockMPI _scope_lock(l, node, data_window_);
+      debug_print_verbose(
+        rdma, node,
+        "MPI_Get({}, {}, {}, {}, {}, {}, {}, window);\n",
+        print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
+      );
       MPI_Get(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_);
     });
   } else {
     LockMPI _scope_lock(l, node, data_window_);
+    debug_print_verbose(
+      rdma, node,
+      "MPI_Rget({}, {}, {}, {}, {}, {}, {}, window);\n",
+      print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
+    );
     MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
   }
   return r;
@@ -161,14 +166,25 @@ RequestHolder Holder<T,E>::rput(
   vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
 ) {
   auto mpi_type = TypeMPI<T>::getType();
+  auto mpi_type_str = TypeMPI<T>::getTypeStr();
   RequestHolder r;
   if (mpi2_) {
     r.add([=]{
       LockMPI _scope_lock(l, node, data_window_);
+      debug_print_verbose(
+        rdma, node,
+        "MPI_Put({}, {}, {}, {}, {}, {}, {}, window);\n",
+        print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
+      );
       MPI_Put(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_);
     });
   } else {
     LockMPI _scope_lock(l, node, data_window_);
+    debug_print_verbose(
+      rdma, node,
+      "MPI_Rput({}, {}, {}, {}, {}, {}, {}, window);\n",
+      print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
+    );
     MPI_Rput(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
   }
   return r;
@@ -187,16 +203,27 @@ RequestHolder Holder<T,E>::raccum(
   MPI_Op op
 ) {
   auto mpi_type = TypeMPI<T>::getType();
+  auto mpi_type_str = TypeMPI<T>::getTypeStr();
   RequestHolder r;
   if (mpi2_) {
     r.add([=]{
       LockMPI _scope_lock(l, node, data_window_);
+      debug_print_verbose(
+        rdma, node,
+        "MPI_Accumulate({}, {}, {}, {}, {}, {}, {}, {}, window);\n",
+        print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str, op
+      );
       MPI_Accumulate(
         ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_
       );
     });
   } else {
     LockMPI _scope_lock(l, node, data_window_);
+    debug_print_verbose(
+      rdma, node,
+      "MPI_Raccumulate({}, {}, {}, {}, {}, {}, {}, {}, window);\n",
+      print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str, op
+    );
     MPI_Raccumulate(
       ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_, r.add()
     );

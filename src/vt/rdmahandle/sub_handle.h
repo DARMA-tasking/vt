@@ -74,21 +74,6 @@ private:
     uint64_t offset_ = 0;
   };
 
-  struct LocInfo {
-    union {
-      struct {
-        uint64_t idx;
-        uint64_t node;
-        uint64_t offset;
-      } info;
-      uint64_t arr[3];
-    } u_;
-
-    LocInfo() = default;
-    // LocInfo(uint64_t in_node, uint64_t offset)
-    //   : u_(
-  };
-
 public:
   template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
   void initialize(ProxyType in_proxy, bool in_is_static, IndexT in_range) {
@@ -114,17 +99,23 @@ public:
     }
     data_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, total);
     waitForHandleReady(data_handle_);
-    loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<uint64_t, E>(proxy_, num_local * 3);
+    loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<uint64_t, E>(
+      proxy_, (num_local + 1) * 3
+    );
     waitForHandleReady(loc_handle_);
     vtAssertExpr(sub_prefix_.size() == num_local);
     vtAssertExpr(sub_layout_.size() == num_local);
     loc_handle_.modifyExclusive([&](uint64_t* t) {
       auto this_node = static_cast<uint64_t>(vt::theContext()->getNode());
-      for (uint64_t i = 0; i < num_local * 3; i += 3) {
+      uint64_t i = 0;
+      for (i = 0; i < num_local * 3; i += 3) {
         t[i+0] = linearize(sub_layout_[i/3]);
         t[i+1] = this_node;
         t[i+2] = sub_prefix_[i/3];
       }
+      t[i+0] = 0;
+      t[i+1] = this_node;
+      t[i+2] = sub_handles_[sub_layout_[sub_layout_.size()-1]].size_ + sub_prefix_[(i-3)/3];
     });
     ready_ = true;
   }
@@ -161,13 +152,13 @@ public:
     auto ptr = std::make_unique<uint64_t[]>(home_size);
     loc_handle_.get(home_node, &ptr[0], home_size, 0, Lock::Exclusive);
     for (uint64_t i = 0; i < home_size; i += 3) {
-      debug_print(
+      debug_print_verbose(
         rdma, node,
         "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{},{}\n",
         idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2]
       );
       if (ptr[i] == lin_idx) {
-        return IndexInfo(ptr[i+1], ptr[i+2]);
+        return IndexInfo(ptr[i+1], ptr[i+2], ptr[i+6]-ptr[i+3]);
       }
     }
     vtAssert(false, "Could not find location info");
@@ -178,7 +169,7 @@ public:
     auto iter = sub_handles_.find(idx);
     if (iter != sub_handles_.end()) {
       auto const this_node = vt::theContext()->getNode();
-      return IndexInfo(this_node, iter->second.offset_);
+      return IndexInfo(this_node, iter->second.offset_, iter->second.size_);
     } else {
       if (cache_.hasIndex(idx)) {
         return cache_.getInfo(idx);
@@ -197,7 +188,10 @@ public:
     data_handle_.get(node, ptr, len, offset + chunk_offset, l);
   }
 
-  uint64_t getSize(IndexT const& idx, Lock l = Lock::Shared);
+  std::size_t getSize(IndexT const& idx, Lock l = Lock::Shared) {
+    auto info = resolveLocation(idx);
+    return info.getSize();
+  }
 
   RequestHolder rget(
     IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset
