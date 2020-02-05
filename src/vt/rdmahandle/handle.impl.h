@@ -237,6 +237,107 @@ void Handle<T,E,I>::unlock() {
   lock_ = nullptr;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Index Overloads
+///////////////////////////////////////////////////////////////////////////
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+void Handle<T,E,I>::get(U index, T* ptr, std::size_t len, int offset, Lock l, isIndexType<U>*) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  proxy.get()->get(index, l, ptr, len, offset + hoff_);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+typename Handle<T,E,I>::RequestType
+Handle<T,E,I>::rget(U index, T* ptr, std::size_t len, int offset, Lock l, isIndexType<U>*) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  return proxy.get()->rget(index, l, ptr, len, offset + hoff_);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+void Handle<T,E,I>::get(U index, std::size_t len, int offset, Lock l, isIndexType<U>*) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  proxy.get()->rget(index, len, offset);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+typename Handle<T,E,I>::RequestType
+Handle<T,E,I>::rget(U index, std::size_t len, int offset, Lock l, isIndexType<U>*) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  if (getBuffer() == nullptr) {
+    auto ptr = std::make_unique<T[]>(len);
+    auto r = proxy.get()->rget(
+      index, l, &ptr[0], len, offset + hoff_
+    );
+    r.addAction([cptr=std::move(ptr),actions=actions_]{
+      for (auto&& action : actions) {
+        action(&cptr[0]);
+      }
+    });
+    return r;
+  } else {
+    auto r = proxy.get()->rget(
+      index, l, user_buffer_, len, offset + hoff_
+    );
+    r.addAction([buffer=user_buffer_,actions=actions_]{
+      for (auto&& action : actions) {
+        action(buffer);
+      }
+    });
+    return r;
+  }
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+void Handle<T,E,I>::put(
+  U index, T* ptr, std::size_t len, int offset, Lock l, isIndexType<U>*
+) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  return proxy.get()->put(index, l, ptr, len, offset + hoff_);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+typename Handle<T,E,I>::RequestType
+Handle<T,E,I>::rput(U index, T* ptr, std::size_t len, int offset, Lock l, isIndexType<U>*) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  return proxy.get()->rput(index, l, ptr, len, offset + hoff_);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+void Handle<T,E,I>::accum(
+  U index, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l, isIndexType<U>*
+) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  return proxy.get()->accum(index, l, ptr, len, offset + hoff_, op);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+typename Handle<T,E,I>::RequestType
+Handle<T,E,I>::raccum(
+  U index, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l, isIndexType<U>*
+) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  return proxy.get()->raccum(index, l, ptr, len, offset + hoff_, op);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
+std::size_t Handle<T,E,I>::getSize(U node, isIndexType<U>*) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
+  // if (proxy.get()->isUniform()) {
+  //   return size_;
+  // } else {
+  //   return proxy.get()->getSize(node);
+  // }
+}
 
 }} /* end namespace vt::rdma */
 

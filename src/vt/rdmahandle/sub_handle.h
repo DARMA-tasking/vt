@@ -66,26 +66,26 @@ struct SubHandle {
 private:
   struct SubInfo {
     SubInfo() = default;
-    SubInfo(std::size_t in_size, std::size_t in_offset)
+    SubInfo(uint64_t in_size, uint64_t in_offset)
       : size_(in_size),
         offset_(in_offset)
     { }
-    std::size_t size_ = 0;
-    std::size_t offset_ = 0;
+    uint64_t size_ = 0;
+    uint64_t offset_ = 0;
   };
 
   struct LocInfo {
     union {
       struct {
-        std::size_t idx;
-        std::size_t node;
-        std::size_t offset;
+        uint64_t idx;
+        uint64_t node;
+        uint64_t offset;
       } info;
-      std::size_t arr[3];
+      uint64_t arr[3];
     } u_;
 
     LocInfo() = default;
-    // LocInfo(std::size_t in_node, std::size_t offset)
+    // LocInfo(uint64_t in_node, uint64_t offset)
     //   : u_(
   };
 
@@ -105,7 +105,7 @@ public:
       rdma, node,
       "total={}, num_local={}\n", total, num_local
     );
-    for (std::size_t i = 0; i < sub_prefix_.size(); i++) {
+    for (uint64_t i = 0; i < sub_prefix_.size(); i++) {
       debug_print(
         rdma, node,
         "i={} prefix={} layout={}\n",
@@ -114,16 +114,16 @@ public:
     }
     data_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, total);
     waitForHandleReady(data_handle_);
-    loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<std::size_t, E>(proxy_, num_local * 3);
+    loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<uint64_t, E>(proxy_, num_local * 3);
     waitForHandleReady(loc_handle_);
     vtAssertExpr(sub_prefix_.size() == num_local);
     vtAssertExpr(sub_layout_.size() == num_local);
-    loc_handle_.modifyExclusive([&](std::size_t* t) {
-      auto this_node = static_cast<size_t>(vt::theContext()->getNode());
-      for (std::size_t i = 0; i < num_local * 3; i += 3) {
+    loc_handle_.modifyExclusive([&](uint64_t* t) {
+      auto this_node = static_cast<uint64_t>(vt::theContext()->getNode());
+      for (uint64_t i = 0; i < num_local * 3; i += 3) {
         t[i+0] = linearize(sub_layout_[i/3]);
         t[i+1] = this_node;
-        t[i+2] = sub_prefix_[i];
+        t[i+2] = sub_prefix_[i/3];
       }
     });
     ready_ = true;
@@ -142,23 +142,36 @@ public:
     using BaseIdxType = vt::index::BaseIndex;
     auto fn = auto_registry::getHandlerMap(map_han_);
     auto const num_nodes = theContext()->getNumNodes();
-    auto const cur = static_cast<BaseIdxType*>(&idx);
-    auto const range = static_cast<BaseIdxType*>(&range_);
+    auto idx_p = idx;
+    auto* cur = static_cast<BaseIdxType*>(&idx_p);
+    auto* range = static_cast<BaseIdxType*>(&range_);
     return fn(cur, range, num_nodes);
   }
 
   IndexInfo fetchInfo(IndexT const& idx) {
+    auto this_node = theContext()->getNode();
     auto home_node = getHomeNode(idx);
     auto home_size = loc_handle_.getSize(home_node);
+    debug_print(
+      rdma, node,
+      "fetchInfo: idx={}, this_node={}, home_node={}, home_size={}\n",
+      idx, this_node, home_node, home_size
+    );
     auto lin_idx = linearize(idx);
-    loc_handle_.addAction([=](std::size_t* b) {
-      for (std::size_t i = 0; i < home_size; i += 3) {
-        if (b[i] == lin_idx) {
-          return IndexInfo(b[i+1], b[i+2]);
-        }
+    auto ptr = std::make_unique<uint64_t[]>(home_size);
+    loc_handle_.get(home_node, &ptr[0], home_size, 0, Lock::Exclusive);
+    for (uint64_t i = 0; i < home_size; i += 3) {
+      debug_print(
+        rdma, node,
+        "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{},{}\n",
+        idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2]
+      );
+      if (ptr[i] == lin_idx) {
+        return IndexInfo(ptr[i+1], ptr[i+2]);
       }
-    });
-    loc_handle_.get(home_node, home_size, 0);
+    }
+    vtAssert(false, "Could not find location info");
+    return IndexInfo{};
   }
 
   IndexInfo resolveLocation(IndexT const& idx) {
@@ -177,22 +190,74 @@ public:
     }
   }
 
-  void get(IndexT const& idx, Lock l, T* ptr, std::size_t len, int offset) {
+  void get(IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset) {
     auto info = resolveLocation(idx);
     auto node = info.getNode();
     auto chunk_offset = info.getOffset();
-    data_handle_.get(node, len, offset + chunk_offset, l);
+    data_handle_.get(node, ptr, len, offset + chunk_offset, l);
   }
 
+  uint64_t getSize(IndexT const& idx, Lock l = Lock::Shared);
+
+  RequestHolder rget(
+    IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset
+  ) {
+    // @todo: make the location lookup async
+    auto info = resolveLocation(idx);
+    auto node = info.getNode();
+    auto chunk_offset = info.getOffset();
+    return data_handle_.rget(node, ptr, len, offset + chunk_offset, l);
+  }
+
+  RequestHolder rput(
+    IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset
+  ) {
+    // @todo: make the location lookup async
+    auto info = resolveLocation(idx);
+    auto node = info.getNode();
+    auto chunk_offset = info.getOffset();
+    return data_handle_.rput(node, ptr, len, offset + chunk_offset, l);
+  }
+
+  void put(IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset) {
+    auto info = resolveLocation(idx);
+    auto node = info.getNode();
+    auto chunk_offset = info.getOffset();
+    data_handle_.put(node, ptr, len, offset + chunk_offset, l);
+  }
+
+  RequestHolder raccum(
+    IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset,
+    MPI_Op op
+  ) {
+    // @todo: make the location lookup async
+    auto info = resolveLocation(idx);
+    auto node = info.getNode();
+    auto chunk_offset = info.getOffset();
+    return data_handle_.raccum(node, l, ptr, len, offset + chunk_offset, l);
+  }
+
+  void accum(
+    IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset,
+    MPI_Op op
+  ) {
+    auto info = resolveLocation(idx);
+    auto node = info.getNode();
+    auto chunk_offset = info.getOffset();
+    data_handle_.accum(node, l, ptr, len, offset + chunk_offset, l);
+  }
+
+  bool isUniform() const { return uniform_size_; }
+
   template <typename Callable>
-  void access(IndexT idx, Lock l, Callable fn, std::size_t offset) {
+  void access(IndexT idx, Lock l, Callable fn, uint64_t offset) {
     auto iter = sub_handles_.find(idx);
     vtAssert(iter != sub_handles_.end(), "Index must be local here");
     auto local_offset  = iter->second.offset_;
     data_handle_.access(l, fn, offset + local_offset);
   }
 
-  Handle<T, E, IndexT> addLocalIndex(IndexT index, std::size_t size) {
+  Handle<T, E, IndexT> addLocalIndex(IndexT index, uint64_t size) {
     debug_print(
       rdma, node,
       "addLocalInddex: idx={}, size={}, range={}\n",
@@ -220,8 +285,8 @@ public:
 
   bool ready() const { return ready_; }
 
-  std::size_t totalLocalSize() const {
-    std::size_t total = 0;
+  uint64_t totalLocalSize() const {
+    uint64_t total = 0;
     for (auto&& elm : sub_handles_) {
       total += elm.second.size_;
     }
@@ -250,11 +315,13 @@ protected:
   IndexT range_ = {};
   std::unordered_map<IndexT, SubInfo> sub_handles_;
   std::vector<IndexT> sub_layout_;
-  std::vector<std::size_t> sub_prefix_;
+  std::vector<uint64_t> sub_prefix_;
   Handle<T, E> data_handle_;
-  Handle<std::size_t, E> loc_handle_;
+  Handle<uint64_t, E> loc_handle_;
   Cache<IndexT> cache_;
   bool ready_ = false;
+  bool mpi2_ = false;
+  bool uniform_size_ = false;
 };
 
 }} /* end namespace vt::rdma */

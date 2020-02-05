@@ -131,6 +131,12 @@ RequestHolder Holder<T,E>::rget(
 ) {
   auto mpi_type = TypeMPI<T>::getType();
   RequestHolder r;
+  debug_print(
+    rdma, node,
+    "MPI_Get({}, {}, {}, {}, {}, {}, {}, window); {} {} {}\n",
+    print_ptr(ptr), len, mpi_type, node, offset, len, mpi_type,
+    MPI_BYTE, MPI_UINT64_T, MPI_INT64_T
+  );
   if (mpi2_) {
     r.add([=]{
       LockMPI _scope_lock(l, node, data_window_);
