@@ -144,7 +144,7 @@ void StatsRestartReader::inputStatsFile(
   fpos_t pos;
   bool finished = false;
   while (!finished) {
-    if (fscanf(pFile, "%zu %c %lli %c %lf", &phaseID, &separator, &elmID,
+    if (fscanf(pFile, "%zu %c %lu %c %lf", &phaseID, &separator, &elmID,
                &separator, &tval) > 0) {
       fgetpos (pFile,&pos);
       fscanf (pFile, "%c", &separator);
@@ -250,7 +250,7 @@ void StatsRestartReader::gatherMsgs(VecMsg *msg) {
   // --- Check whether all the messages have been received
   //
   const NodeType numNodes = theContext()->getNumNodes();
-  if (ProcStats::proc_reader_->msgsReceived[phaseID] < numNodes)
+  if (ProcStats::proc_reader_->msgsReceived[phaseID] < static_cast<std::size_t>(numNodes))
     return;
   //
   //--- Distribute the information when everything has been received
