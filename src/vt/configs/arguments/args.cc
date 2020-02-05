@@ -90,6 +90,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_lb_stats           = false;
 /*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
 /*static*/ std::string ArgConfig::vt_lb_stats_file      = "stats";
+/*static*/ std::string ArgConfig::vt_lb_stats_dir_in    = "vt_lb_stats_in";
+/*static*/ std::string ArgConfig::vt_lb_stats_file_in   = "stats_in";
 
 /*static*/ bool        ArgConfig::vt_term_rooted_use_ds = false;
 /*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
@@ -368,6 +370,8 @@ namespace vt { namespace arguments {
   auto lb_stats      = "Enable load balancing statistics";
   auto lb_stats_dir  = "Load balancing statistics output directory";
   auto lb_stats_file = "Load balancing statistics output file name";
+  auto lb_stats_dir_in  = "Load balancing statistics input directory";
+  auto lb_stats_file_in = "Load balancing statistics input file name";
   auto lbn = "NoLB";
   auto lbi = 1;
   auto lbf = "";
@@ -384,6 +388,10 @@ namespace vt { namespace arguments {
   auto ww = app.add_flag("--vt_lb_stats",        vt_lb_stats,       lb_stats);
   auto wx = app.add_option("--vt_lb_stats_dir",  vt_lb_stats_dir,   lb_stats_dir, lbd);
   auto wy = app.add_option("--vt_lb_stats_file", vt_lb_stats_file,  lb_stats_file,lbs);
+
+  auto xx = app.add_option("--vt_lb_stats_dir_in", vt_lb_stats_dir_in, lb_stats_dir_in, lbd);
+  auto xy = app.add_option("--vt_lb_stats_file_in", vt_lb_stats_file_in, lb_stats_file_in,lbs);
+
   auto debugLB = "Load Balancing";
   s->group(debugLB);
   t->group(debugLB);
@@ -395,6 +403,8 @@ namespace vt { namespace arguments {
   ww->group(debugLB);
   wx->group(debugLB);
   wy->group(debugLB);
+  xx->group(debugLB);
+  xy->group(debugLB);
 
   /*
    * Flags for controlling termination

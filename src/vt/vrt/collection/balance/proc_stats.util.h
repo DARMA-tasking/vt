@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.h
+//                             proc_stats.util.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,56 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_UTIL_H
+#define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_UTIL_H
+
+#include <deque>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "vt/config.h"
-
-#include <unordered_map>
-#include <string>
-#include <type_traits>
+#include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-enum struct LBType : int8_t {
-  NoLB             = 0,
-  GreedyLB         = 1,
-  HierarchicalLB   = 2,
-  RotateLB         = 3,
-  GossipLB         = 4,
-  StatsMapLB       = 5
+struct StatsRestartReader {
+  /// \brief Vector counting the received messages per iteration
+  /// \note Only node 0 will use this vector.
+  std::vector<size_t> msgsReceived = {};
+
+  /// \brief Queue for storing all the migrations per iteration.
+  /// \note Only node 0 will use this queue.
+  std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>>
+    totalMove = {};
+
+  /// \brief Proxy for communicating the migration information
+  objgroup::proxy::Proxy<StatsRestartReader> proxy = {};
+
+public:
+  StatsRestartReader() = default;
+
+  ~StatsRestartReader();
+
+  static void readStats(const std::string &fileName);
+
+private:
+  static void inputStatsFile(
+    const std::string &fileName,
+    std::deque<std::set<ElementIDType> > &element_history
+  );
+
+  static void createMigrationInfo(
+    std::deque<std::set<ElementIDType> > &element_history
+  );
+
+  using VecMsg = lb::TransferMsg<std::vector<balance::ElementIDType> >;
+  void gatherMsgs(VecMsg *msg);
+
+  void scatterMsgs(VecMsg *msg);
+
 };
 
-template <typename SerializerT>
-void serialize(SerializerT& s, LBType lb) {
-  using EnumDataType = typename std::underlying_type<LBType>::type;
-  EnumDataType val = static_cast<EnumDataType>(lb);
-  s | val;
-  lb = static_cast<LBType>(val);
-}
+}}}}
 
-}}}} /* end namespace vt::vrt::collection::balance */
-
-namespace std {
-
-using LBTypeType = vt::vrt::collection::balance::LBType;
-
-template <>
-struct hash<LBTypeType> {
-  size_t operator()(LBTypeType const& in) const {
-    using LBUnderType = typename std::underlying_type<LBTypeType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
-namespace vt { namespace vrt { namespace collection { namespace balance {
-
-extern std::unordered_map<LBType,std::string> lb_names_;
-
-}}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
+#endif
