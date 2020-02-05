@@ -319,6 +319,9 @@ void HierarchicalLB::startMigrations() {
   }
 
   finishMigrationCollective();
+
+  // Re-compute the statistics for the processor load
+  computeStatisticsOver(Statistic::P_l);
 }
 
 void HierarchicalLB::downTreeSend(
