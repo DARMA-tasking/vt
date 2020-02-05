@@ -76,231 +76,59 @@ private:
 
 public:
   template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
-  void initialize(ProxyType in_proxy, bool in_is_static, IndexT in_range) {
-    map_han_ = auto_registry::makeAutoHandlerMap<IndexT, map_fn>();
-    proxy_ = in_proxy;
-    is_static_ = in_is_static;
-    range_ = in_range;
-  }
+  void initialize(ProxyType in_proxy, bool in_is_static, IndexT in_range);
 
-  void makeSubHandles() {
-    auto const total = totalLocalSize();
-    auto const num_local = sub_handles_.size();
-    debug_print(
-      rdma, node,
-      "total={}, num_local={}\n", total, num_local
-    );
-    for (uint64_t i = 0; i < sub_prefix_.size(); i++) {
-      debug_print(
-        rdma, node,
-        "i={} prefix={} layout={}\n",
-        i, sub_prefix_[i], sub_layout_[i]
-      );
-    }
-    data_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, total);
-    waitForHandleReady(data_handle_);
-    loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<uint64_t, E>(
-      proxy_, (num_local + 1) * 3
-    );
-    waitForHandleReady(loc_handle_);
-    vtAssertExpr(sub_prefix_.size() == num_local);
-    vtAssertExpr(sub_layout_.size() == num_local);
-    loc_handle_.modifyExclusive([&](uint64_t* t) {
-      auto this_node = static_cast<uint64_t>(vt::theContext()->getNode());
-      uint64_t i = 0;
-      for (i = 0; i < num_local * 3; i += 3) {
-        t[i+0] = linearize(sub_layout_[i/3]);
-        t[i+1] = this_node;
-        t[i+2] = sub_prefix_[i/3];
-      }
-      t[i+0] = 0;
-      t[i+1] = this_node;
-      t[i+2] = sub_handles_[sub_layout_[sub_layout_.size()-1]].size_ + sub_prefix_[(i-3)/3];
-    });
-    ready_ = true;
-  }
+  void makeSubHandles();
 
-  typename IndexT::DenseIndexType linearize(IndexT idx) {
-    debug_print(
-      rdma, node,
-      "linearize: idx={}, range={}\n",
-      idx, range_
-    );
-    return vt::mapping::linearizeDenseIndexRowMajor(&idx, &range_);
-  }
+  typename IndexT::DenseIndexType linearize(IndexT idx);
 
-  NodeType getHomeNode(IndexT const& idx) {
-    using BaseIdxType = vt::index::BaseIndex;
-    auto fn = auto_registry::getHandlerMap(map_han_);
-    auto const num_nodes = theContext()->getNumNodes();
-    auto idx_p = idx;
-    auto* cur = static_cast<BaseIdxType*>(&idx_p);
-    auto* range = static_cast<BaseIdxType*>(&range_);
-    return fn(cur, range, num_nodes);
-  }
+  NodeType getHomeNode(IndexT const& idx);
 
-  IndexInfo fetchInfo(IndexT const& idx) {
-    auto this_node = theContext()->getNode();
-    auto home_node = getHomeNode(idx);
-    auto home_size = loc_handle_.getSize(home_node);
-    debug_print(
-      rdma, node,
-      "fetchInfo: idx={}, this_node={}, home_node={}, home_size={}\n",
-      idx, this_node, home_node, home_size
-    );
-    auto lin_idx = linearize(idx);
-    auto ptr = std::make_unique<uint64_t[]>(home_size);
-    loc_handle_.get(home_node, &ptr[0], home_size, 0, Lock::Exclusive);
-    for (uint64_t i = 0; i < home_size; i += 3) {
-      debug_print_verbose(
-        rdma, node,
-        "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{},{}\n",
-        idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2]
-      );
-      if (ptr[i] == lin_idx) {
-        return IndexInfo(ptr[i+1], ptr[i+2], ptr[i+6]-ptr[i+3]);
-      }
-    }
-    vtAssert(false, "Could not find location info");
-    return IndexInfo{};
-  }
+  IndexInfo fetchInfo(IndexT const& idx);
 
-  IndexInfo resolveLocation(IndexT const& idx) {
-    auto iter = sub_handles_.find(idx);
-    if (iter != sub_handles_.end()) {
-      auto const this_node = vt::theContext()->getNode();
-      return IndexInfo(this_node, iter->second.offset_, iter->second.size_);
-    } else {
-      if (cache_.hasIndex(idx)) {
-        return cache_.getInfo(idx);
-      } else {
-        auto info = fetchInfo(idx);
-        cache_.saveInfo(idx, info);
-        return info;
-      }
-    }
-  }
+  IndexInfo resolveLocation(IndexT const& idx);
 
-  void get(IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset) {
-    auto info = resolveLocation(idx);
-    auto node = info.getNode();
-    auto chunk_offset = info.getOffset();
-    data_handle_.get(node, ptr, len, offset + chunk_offset, l);
-  }
+  void get(IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset);
 
-  std::size_t getSize(IndexT const& idx, Lock l = Lock::Shared) {
-    auto info = resolveLocation(idx);
-    return info.getSize();
-  }
+  std::size_t getSize(IndexT const& idx, Lock l = Lock::Shared);
 
   RequestHolder rget(
     IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset
-  ) {
-    // @todo: make the location lookup async
-    auto info = resolveLocation(idx);
-    auto node = info.getNode();
-    auto chunk_offset = info.getOffset();
-    return data_handle_.rget(node, ptr, len, offset + chunk_offset, l);
-  }
+  );
 
   RequestHolder rput(
     IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset
-  ) {
-    // @todo: make the location lookup async
-    auto info = resolveLocation(idx);
-    auto node = info.getNode();
-    auto chunk_offset = info.getOffset();
-    return data_handle_.rput(node, ptr, len, offset + chunk_offset, l);
-  }
+  );
 
-  void put(IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset) {
-    auto info = resolveLocation(idx);
-    auto node = info.getNode();
-    auto chunk_offset = info.getOffset();
-    data_handle_.put(node, ptr, len, offset + chunk_offset, l);
-  }
+  void put(IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset);
 
   RequestHolder raccum(
     IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset,
     MPI_Op op
-  ) {
-    // @todo: make the location lookup async
-    auto info = resolveLocation(idx);
-    auto node = info.getNode();
-    auto chunk_offset = info.getOffset();
-    return data_handle_.raccum(node, l, ptr, len, offset + chunk_offset, l);
-  }
+  );
 
   void accum(
     IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset,
     MPI_Op op
-  ) {
-    auto info = resolveLocation(idx);
-    auto node = info.getNode();
-    auto chunk_offset = info.getOffset();
-    data_handle_.accum(node, l, ptr, len, offset + chunk_offset, l);
-  }
+  );
 
   bool isUniform() const { return uniform_size_; }
 
   template <typename Callable>
-  void access(IndexT idx, Lock l, Callable fn, uint64_t offset) {
-    auto iter = sub_handles_.find(idx);
-    vtAssert(iter != sub_handles_.end(), "Index must be local here");
-    auto local_offset  = iter->second.offset_;
-    data_handle_.access(l, fn, offset + local_offset);
-  }
+  void access(IndexT idx, Lock l, Callable fn, uint64_t offset);
 
-  Handle<T, E, IndexT> addLocalIndex(IndexT index, uint64_t size) {
-    debug_print(
-      rdma, node,
-      "addLocalInddex: idx={}, size={}, range={}\n",
-      index, size, range_
-    );
-    sub_layout_.push_back(index);
-    if (sub_prefix_.size() > 0) {
-      vtAssertExpr(sub_layout_.size() >= 2);
-      // Compute a prefix as elements are added
-      auto last_idx = sub_layout_[sub_layout_.size()-2];
-      auto last_size_iter = sub_handles_.find(last_idx);
-      vtAssertExpr(last_size_iter != sub_handles_.end());
-      auto last_size = last_size_iter->second.size_;
-      sub_prefix_.push_back(sub_prefix_[sub_prefix_.size()-1] + last_size);
-    } else {
-      sub_prefix_.push_back(0);
-    }
-    auto const offset = sub_prefix_[sub_prefix_.size()-1];
-    sub_handles_[index] = SubInfo(size, offset);
-    return Handle<T,E,IndexT>{
-      typename Handle<T,E,IndexT>::IndexTagType{},
-      proxy_.getProxy(), index, size, 0
-    };
-  }
+  Handle<T, E, IndexT> addLocalIndex(IndexT index, uint64_t size);
 
   bool ready() const { return ready_; }
 
-  uint64_t totalLocalSize() const {
-    uint64_t total = 0;
-    for (auto&& elm : sub_handles_) {
-      total += elm.second.size_;
-    }
-    return total;
-  }
+  uint64_t totalLocalSize() const;
 
   template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
-  static ProxyType construct(bool in_is_static, IndexT in_range) {
-    auto proxy = vt::theObjGroup()->makeCollective<SubHandle<T,E,IndexT>>();
-    proxy.get()->template initialize<map_fn>(proxy, in_is_static, in_range);
-    return proxy;
-  }
+  static ProxyType construct(bool in_is_static, IndexT in_range);
 
 private:
   template <typename U>
-  void waitForHandleReady(Handle<U,E> const& h) {
-    do {
-      vt::runScheduler();
-    } while (not h.ready());
-  }
+  void waitForHandleReady(Handle<U,E> const& h);
 
 protected:
   ProxyType proxy_;
@@ -319,5 +147,7 @@ protected:
 };
 
 }} /* end namespace vt::rdma */
+
+#include "vt/rdmahandle/sub_handle.h"
 
 #endif /*INCLUDED_VT_RDMAHANDLE_SUB_HANDLE_H*/
