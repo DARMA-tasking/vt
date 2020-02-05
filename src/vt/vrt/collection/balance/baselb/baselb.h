@@ -87,6 +87,13 @@ struct BaseLB {
       comm_collectives_(in_comm_collectives)
   { }
 
+  BaseLB(BaseLB const &) = delete;
+  BaseLB(BaseLB &&) noexcept = default;
+  BaseLB &operator=(BaseLB const &) = delete;
+  BaseLB &operator=(BaseLB &&) noexcept = default;
+
+  virtual ~BaseLB() = default;
+
   void startLBHandler(balance::StartLBMsg* msg, objgroup::proxy::Proxy<BaseLB> proxy);
   void computeStatistics();
   void importProcessorData(ElementLoadType const& ld, ElementCommType const& cm);
