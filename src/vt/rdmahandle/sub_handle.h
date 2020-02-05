@@ -148,6 +148,6 @@ protected:
 
 }} /* end namespace vt::rdma */
 
-#include "vt/rdmahandle/sub_handle.h"
+#include "vt/rdmahandle/sub_handle.impl.h"
 
 #endif /*INCLUDED_VT_RDMAHANDLE_SUB_HANDLE_H*/
