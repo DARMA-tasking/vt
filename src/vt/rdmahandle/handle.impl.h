@@ -332,11 +332,11 @@ template <typename T, HandleEnum E, typename I>
 template <typename U>
 std::size_t Handle<T,E,I>::getSize(U node, isIndexType<U>*) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,U>>(proxy_);
-  // if (proxy.get()->isUniform()) {
-  //   return size_;
-  // } else {
-  //   return proxy.get()->getSize(node);
-  // }
+  if (proxy.get()->isUniform()) {
+    return size_;
+  } else {
+    return proxy.get()->getSize(node);
+  }
 }
 
 }} /* end namespace vt::rdma */
