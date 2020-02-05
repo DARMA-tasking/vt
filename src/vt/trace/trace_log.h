@@ -131,8 +131,8 @@ struct Log final {
       UserData() = delete;
       UserData(UserData const&) = default;
       UserData(UserData&&) = default;
-      UserData& operator=(UserData const&) = delete;
-      UserData& operator=(UserData&&) = delete;
+      UserData& operator=(UserData const&) = default;
+      UserData& operator=(UserData&&) = default;
 
     } user;
 
@@ -154,6 +154,28 @@ struct Log final {
       }
     }
 
+    Data &operator=(Data const& other_data) {
+      clean();
+      if (other_data.user.data_type == Log::LogDataType::user) {
+        new (&user) UserData{other_data.user};
+      } else {
+        sys = other_data.sys;
+      }
+
+      return *this;
+    }
+
+    Data &operator=(Data && other_data) {
+      clean();
+      if (other_data.user.data_type == Log::LogDataType::user) {
+        new (&user) UserData{std::move(other_data.user)};
+      } else {
+        sys = std::move(other_data.sys);
+      }
+
+      return *this;
+    }
+
     Data(UserData const& user_data) {
       new (&user) UserData{user_data};
     }
@@ -162,6 +184,12 @@ struct Log final {
     }
 
     ~Data() {
+      clean();
+    }
+
+  private:
+
+    void clean() {
       // Can access "Common initial sequence" per C++11 6.5.2.3/6
       if (user.data_type == LogDataType::user) {
         // Cleanup placement-new artifacts.
