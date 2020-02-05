@@ -152,6 +152,12 @@ void GossipLB::doLBStages() {
   // Concretize lazy migrations by invoking the BaseLB object migration on new
   // object node assignments
   thunkMigrations();
+
+  // Update the load based on new object assignments
+  this_load = this_new_load_;
+
+  // Re-compute the statistics for the processor load
+  computeStatisticsOver(Statistic::P_l);
 }
 
 void GossipLB::inform() {
