@@ -63,12 +63,26 @@
 
 namespace vt { namespace event {
 
+/** \file */
+
+/**
+ * \brief State of an event that may be local or remote
+ *
+ * Tracks the state of a distributed event
+ */
 enum class EventState : int8_t {
-  EventReady = 1,
-  EventWaiting = 2,
-  EventRemote = 3
+  EventReady = 1,               /**< Indicates event is ready/satisfied */
+  EventWaiting = 2,             /**< Indicates event is waiting on op */
+  EventRemote = 3               /**< Indicates event is non-local */
 };
 
+/**
+ * \struct AsyncEvent event.h vt/event/event.h
+ *
+ * \brief Used to track events
+ *
+ * Component to track events in the system to trigger actions or other events
+ */
 struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
   using EventRecordTypeType = eEventRecord;
   using EventManagerType = EventIDManager;
@@ -87,13 +101,78 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
 
   void initialize() override;
   void finalize() override;
+
+  /**
+   * \brief Create a new event
+   *
+   * \param[in] type the type of event to create
+   * \param[in] node the node that embedded in the event bit field
+   *
+   * \return a new event identifier
+   */
   EventType createEvent(EventRecordTypeType const& type, NodeType const& node);
+
+  /**
+   * \brief Get the event record
+   *
+   * \param[in] event the event identifier
+   *
+   * \return the event record
+   */
   EventRecordType& getEvent(EventType const& event);
+
+  /**
+   * \brief Get the owning node for an event
+   *
+   * \param[in] event the event identifier
+   *
+   * \return the node that owns the event
+   */
   NodeType getOwningNode(EventType const& event);
+
+  /**
+   * \brief Create a new MPI event that holds a MPI_Request
+   *
+   * \param[in] node the node on which the MPI event exists
+   *
+   * \return the event identifier
+   */
   EventType createMPIEvent(NodeType const& node);
+
+  /**
+   * \brief Create a regular type event
+   *
+   * \param[in] node the node that owns it
+   *
+   * \return the event identifier
+   */
   EventType createNormalEvent(NodeType const& node);
+
+  /**
+   * \brief Create a parent event that can have multiple children
+   *
+   * \param[in] node the node that owns it
+   *
+   * \return the event identifier
+   */
   EventType createParentEvent(NodeType const& node);
+
+  /**
+   * \brief Get the holder for an event
+   *
+   * \param[in] event the event identifier
+   *
+   * \return the holder
+   */
   EventHolderType& getEventHolder(EventType const& event);
+
+  /**
+   * \brief Check if a holder exist for an event
+   *
+   * \param[in] event the event identifier
+   *
+   * \return if it exists
+   */
   bool holderExists(EventType const& event);
   bool needsPolling(EventRecordTypeType const& type);
   void removeEventID(EventType const& event);
