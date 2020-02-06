@@ -88,6 +88,7 @@ struct Handle : BaseHandle {
   Handle(Handle const&) = default;
   Handle(Handle&&) = default;
   Handle& operator=(Handle const&) = default;
+  Handle& operator=(Handle&&) = default;
 
   friend struct Manager;
   friend struct SubHandle<T, E, IndexT>;
