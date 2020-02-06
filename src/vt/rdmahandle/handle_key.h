@@ -57,14 +57,14 @@ struct HandleKey {
     } u_;
     bool is_obj_;
   } proxy_ ;
-  HandleType handle_ = no_handle;
+  RDMA_HandleType handle_ = vt::no_rdma_handle;
 
   struct ObjGroupTag   { };
   struct CollectionTag { };
 
   bool isObjGroup() const { return proxy_.is_obj_; }
-  HandleType handle() const { return handle_; }
-  bool valid() const { return handle_ != vt::no_handle; }
+  RDMA_HandleType handle() const { return handle_; }
+  bool valid() const { return handle_ != vt::no_rdma_handle; }
 
   friend bool operator==(HandleKey const& a1, HandleKey const& a2) {
     return
@@ -76,13 +76,13 @@ struct HandleKey {
   }
 
   HandleKey() = default;
-  HandleKey(ObjGroupTag, ObjGroupProxyType in_proxy, HandleType in_handle)
+  HandleKey(ObjGroupTag, ObjGroupProxyType in_proxy, RDMA_HandleType in_handle)
     : handle_(in_handle)
   {
     proxy_.is_obj_ = true;
     proxy_.u_.obj_ = in_proxy;
   }
-  HandleKey(CollectionTag, VirtualProxyType in_proxy, HandleType in_handle)
+  HandleKey(CollectionTag, VirtualProxyType in_proxy, RDMA_HandleType in_handle)
     : handle_(in_handle)
   {
     proxy_.is_obj_ = false;

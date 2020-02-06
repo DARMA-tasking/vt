@@ -59,7 +59,7 @@ struct HandleData {
   { }
 
   friend HandleData operator+(HandleData a1, HandleData const& a2) {
-    vtAssertExpr(a1.key_.handle_ != vt::no_handle);
+    vtAssertExpr(a1.key_.handle_ != vt::no_rdma_handle);
     vtAssertExpr(a1.key_.handle_ == a2.key_.handle_);
     vtAssertExpr(a1.key_.isObjGroup() == a2.key_.isObjGroup());
     a1.size_ += a2.size_;

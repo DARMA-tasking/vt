@@ -70,7 +70,7 @@ struct ConstructMsg;
 
 struct Manager {
   using ProxyType    = vt::objgroup::proxy::Proxy<Manager>;
-  using ElemToHandle = std::unordered_map<int64_t, HandleType>;
+  using ElemToHandle = std::unordered_map<int64_t, RDMA_HandleType>;
 
   Manager() = default;
 
@@ -109,7 +109,7 @@ public:
 
 private:
   // Current collective handle for a given objgroup proxy
-  std::unordered_map<ObjGroupProxyType, HandleType> cur_handle_obj_group_;
+  std::unordered_map<ObjGroupProxyType, RDMA_HandleType> cur_handle_obj_group_;
 
   // Current collective handle for a given collection proxy & element index
   std::unordered_map<VirtualProxyType, ElemToHandle> cur_handle_collection_;

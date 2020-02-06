@@ -66,8 +66,6 @@ using WorkerIDType            = PhysicalResourceType;
 // Runtime system entity types
 /// Used to hold a handler ID which identifier a function pointer/context
 using HandlerType             = int64_t;
-/// Used to hold a RDMA handle ID which identifier a data block
-using HandleType              = int32_t;
 /// Used to hold a seed for random generation
 using SeedType                = int64_t;
 /// Used to hold the control bits in an envelope
