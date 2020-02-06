@@ -78,10 +78,11 @@ private:
 template <typename T>
 struct UpdateData {
   template <typename HandleT>
-  static void init(HandleT& handle, int space, std::size_t size) {
+  static void init(
+    HandleT& handle, int space, std::size_t size, vt::NodeType rank
+) {
     handle.modifyExclusive([=](T* val){
-      auto this_node = theContext()->getNode();
-      setMem(val, space, size, this_node, 0);
+      setMem(val, space, size, rank, 0);
     });
   }
 
@@ -95,10 +96,10 @@ struct UpdateData {
 
   static void test(
     std::unique_ptr<T[]> ptr, int space, std::size_t size, vt::NodeType rank,
-    std::size_t offset
+    std::size_t offset, T val = T{}
   ) {
     for (std::size_t i = offset; i < size; i++) {
-      EXPECT_EQ(ptr[i], static_cast<T>(space * rank + i));
+      EXPECT_EQ(ptr[i], static_cast<T>(space * rank + i + val));
     }
   }
 };
@@ -117,8 +118,9 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
 
   do vt::runScheduler(); while (not handle.ready());
 
+  auto rank = vt::theContext()->getNode();
   int space = 100;
-  UpdateData<T>::init(handle, space, size);
+  UpdateData<T>::init(handle, space, size, rank);
 
   // Barrier to order following locks
   vt::theCollective()->barrier();
@@ -156,13 +158,13 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
 
   do vt::runScheduler(); while (not handle.ready());
 
+  auto rank = vt::theContext()->getNode();
   int space = 100;
-  UpdateData<T>::init(handle, space, size);
+  UpdateData<T>::init(handle, space, size, rank);
 
   // Barrier to order following locks
   vt::theCollective()->barrier();
 
-  auto rank = vt::theContext()->getNode();
   auto num = vt::theContext()->getNumNodes();
   auto next = rank + 1 < num ? rank + 1 : 0;
   //auto prev = rank - 1 >= 0 ? rank - 1 : num-1;
@@ -201,6 +203,47 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
   vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
 }
 
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
+  std::size_t size = 10;
+
+  using T = TypeParam;
+  auto proxy = TestObjGroup::construct();
+  vt::HandleRDMA<T> handle = proxy.get()->makeHandle<T>(size, true);
+
+  do vt::runScheduler(); while (not handle.ready());
+
+  int space = 100;
+  UpdateData<T>::init(handle, space, size, 0);
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  auto num = vt::theContext()->getNumNodes();
+  for (vt::NodeType node = 0; node < num; node++) {
+    {
+      auto ptr = std::make_unique<T[]>(size);
+      for (std::size_t i = 0; i < size; i++) {
+        ptr[i] = static_cast<T>(1);
+      }
+      handle.accum(node, &ptr[0], size, 0, MPI_SUM, vt::Lock::Shared);
+    }
+  }
+
+  // Barrier to allow gets to finish
+  vt::theCollective()->barrier();
+
+  for (vt::NodeType node = 0; node < num; node++) {
+    {
+      auto ptr = std::make_unique<T[]>(size);
+      handle.get(node, &ptr[0], size, 0, vt::Lock::Exclusive);
+      UpdateData<T>::test(std::move(ptr), space, size, 0, 0, num);
+    }
+  }
+
+  vt::theCollective()->barrier();
+  vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
+}
+
 using RDMATestTypes = testing::Types<
   int,
   double,
@@ -214,7 +257,10 @@ using RDMATestTypes = testing::Types<
 >;
 
 REGISTER_TYPED_TEST_CASE_P(
-  TestRDMAHandle, test_rdma_handle_1, test_rdma_handle_2
+  TestRDMAHandle,
+  test_rdma_handle_1,
+  test_rdma_handle_2,
+  test_rdma_handle_3
 );
 
 INSTANTIATE_TYPED_TEST_CASE_P(test_rdma_handle, TestRDMAHandle, RDMATestTypes);
