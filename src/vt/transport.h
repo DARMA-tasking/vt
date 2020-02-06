@@ -80,5 +80,6 @@
 #include "vt/pipe/pipe_headers.h"
 #include "vt/objgroup/headers.h"
 #include "vt/scheduler/priority.h"
+#include "vt/rdmahandle/manager.h"
 
 #endif /*INCLUDED_VT_TRANSPORT_H*/
