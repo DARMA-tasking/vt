@@ -213,6 +213,12 @@ public:
   );
 
   template <typename NodeU = IndexT>
+  T fetchOp(
+    NodeU node, T val, int offset, MPI_Op op, Lock l = Lock::None,
+    isNodeType<NodeU>* = nullptr
+  );
+
+  template <typename NodeU = IndexT>
   std::size_t getSize(NodeU node, isNodeType<NodeU>* = nullptr);
 
 public:

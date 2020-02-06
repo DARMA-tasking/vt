@@ -151,6 +151,14 @@ Handle<T,E,I>::raccum(
 
 template <typename T, HandleEnum E, typename I>
 template <typename U>
+T Handle<T,E,I>::fetchOp(
+  U node, T ptr, int offset, MPI_Op op, Lock l, isNodeType<U>*
+) {
+  return vt::theHandle()->getEntry<T,E>(key_).fetchOp(node, l, ptr, offset, op);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename U>
 std::size_t Handle<T,E,I>::getSize(U node, isNodeType<U>*) {
   if (vt::theHandle()->getEntry<T,E>(key_).isUniform()) {
     return size_;
