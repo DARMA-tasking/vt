@@ -28,6 +28,7 @@ set(
   scheduler
   lb
   trace
+  rdma
 )
 
 option(VT_NO_BUILD_TESTS "Disable building VT tests" OFF)
