@@ -81,10 +81,16 @@ struct UpdateData {
   static void init(HandleT& handle, int space, std::size_t size) {
     handle.modifyExclusive([=](T* val){
       auto this_node = theContext()->getNode();
-      for (std::size_t i = 0; i < size; i++) {
-        val[i] = static_cast<T>(space * this_node + i);
-      }
+      setMem(val, space, size, this_node, 0);
     });
+  }
+
+  static void setMem(
+    T* ptr, int space, std::size_t size, vt::NodeType rank, std::size_t offset
+  ) {
+    for (std::size_t i = offset; i < size; i++) {
+      ptr[i] = static_cast<T>(space * rank + i);
+    }
   }
 
   static void test(
@@ -111,7 +117,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
 
   do vt::runScheduler(); while (not handle.ready());
 
-  int space = 1000;
+  int space = 100;
   UpdateData<T>::init(handle, space, size);
 
   // Barrier to order following locks
@@ -141,6 +147,60 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
   vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
 }
 
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
+  std::size_t size = 10;
+
+  using T = TypeParam;
+  auto proxy = TestObjGroup::construct();
+  vt::HandleRDMA<T> handle = proxy.get()->makeHandle<T>(size, true);
+
+  do vt::runScheduler(); while (not handle.ready());
+
+  int space = 100;
+  UpdateData<T>::init(handle, space, size);
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  auto rank = vt::theContext()->getNode();
+  auto num = vt::theContext()->getNumNodes();
+  auto next = rank + 1 < num ? rank + 1 : 0;
+  //auto prev = rank - 1 >= 0 ? rank - 1 : num-1;
+  for (vt::NodeType node = 0; node < num; node++) {
+    {
+      auto ptr = std::make_unique<T[]>(size);
+      handle.get(node, &ptr[0], size, 0, vt::Lock::Shared);
+      UpdateData<T>::test(std::move(ptr), space, size, node, 0);
+    }
+  }
+
+  // Barrier to allow gets to finish
+  vt::theCollective()->barrier();
+
+  {
+    auto ptr = std::make_unique<T[]>(size/2);
+    UpdateData<T>::setMem(&ptr[0], space, size/2, rank, size/2);
+    handle.put(next, &ptr[0], size/2, size/2, vt::Lock::Exclusive);
+  }
+
+  // Barrier to allow puts to finish
+  vt::theCollective()->barrier();
+
+  {
+    auto ptr = std::make_unique<T[]>(size);
+    auto ptr2 = std::make_unique<T[]>(size);
+    handle.get(next, &ptr[0], size, 0, vt::Lock::Shared);
+    for (std::size_t i  = 0; i < size; i++) {
+      ptr2[i] = ptr[i];
+    }
+    UpdateData<T>::test(std::move(ptr), space, size/2, next, 0);
+    UpdateData<T>::test(std::move(ptr2), space, size/2, rank, size/2);
+  }
+
+  vt::theCollective()->barrier();
+  vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
+}
+
 using RDMATestTypes = testing::Types<
   int,
   double,
@@ -148,10 +208,14 @@ using RDMATestTypes = testing::Types<
   int32_t,
   int64_t,
   uint64_t,
-  int64_t
+  int64_t,
+  int16_t,
+  uint16_t
 >;
 
-REGISTER_TYPED_TEST_CASE_P(TestRDMAHandle, test_rdma_handle_1);
+REGISTER_TYPED_TEST_CASE_P(
+  TestRDMAHandle, test_rdma_handle_1, test_rdma_handle_2
+);
 
 INSTANTIATE_TYPED_TEST_CASE_P(test_rdma_handle, TestRDMAHandle, RDMATestTypes);
 
