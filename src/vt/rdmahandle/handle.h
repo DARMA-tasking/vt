@@ -173,6 +173,14 @@ public:
 
   template <typename NodeU = IndexT>
   void fence(int assert = 0, isNodeType<NodeU>* = nullptr);
+  template <typename NodeU = IndexT>
+  void sync(isNodeType<NodeU>* = nullptr);
+  template <typename NodeU = IndexT>
+  void flush(vt::NodeType node, isNodeType<NodeU>* = nullptr);
+  template <typename NodeU = IndexT>
+  void flushLocal(vt::NodeType node, isNodeType<NodeU>* = nullptr);
+  template <typename NodeU = IndexT>
+  void flushAll(isNodeType<NodeU>* = nullptr);
 
 public:
   template <typename NodeU = IndexT>

@@ -261,6 +261,27 @@ void Holder<T,E>::fence(int assert) {
   MPI_Win_fence(assert, data_window_);
 }
 
+template <typename T, HandleEnum E>
+void Holder<T,E>::sync() {
+  MPI_Win_sync(data_window_);
+}
+
+template <typename T, HandleEnum E>
+void Holder<T,E>::flush(vt::NodeType node) {
+  MPI_Win_flush(node, data_window_);
+}
+
+template <typename T, HandleEnum E>
+void Holder<T,E>::flushLocal(vt::NodeType node) {
+  MPI_Win_flush_local(node, data_window_);
+}
+
+template <typename T, HandleEnum E>
+void Holder<T,E>::flushAll() {
+  MPI_Win_flush_all(data_window_);
+}
+
+
 }} /* end namespace vt::rdma */
 
 #endif /*INCLUDED_VT_RDMAHANDLE_HOLDER_IMPL_H*/

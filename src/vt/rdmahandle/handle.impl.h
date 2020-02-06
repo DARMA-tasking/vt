@@ -251,6 +251,30 @@ void Handle<T,E,I>::fence(int assert, isNodeType<NodeU>*) {
   vt::theHandle()->getEntry<T,E>(key_).fence(assert);
 }
 
+template <typename T, HandleEnum E, typename I>
+template <typename NodeU>
+void Handle<T,E,I>::sync(isNodeType<NodeU>*) {
+  vt::theHandle()->getEntry<T,E>(key_).sync();
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename NodeU>
+void Handle<T,E,I>::flush(vt::NodeType node, isNodeType<NodeU>*) {
+  vt::theHandle()->getEntry<T,E>(key_).flush(node);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename NodeU>
+void Handle<T,E,I>::flushLocal(vt::NodeType node, isNodeType<NodeU>*) {
+  vt::theHandle()->getEntry<T,E>(key_).flushLocal(node);
+}
+
+template <typename T, HandleEnum E, typename I>
+template <typename NodeU>
+void Handle<T,E,I>::flushAll(isNodeType<NodeU>*) {
+  vt::theHandle()->getEntry<T,E>(key_).flushAll();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Index Overloads
 ///////////////////////////////////////////////////////////////////////////
