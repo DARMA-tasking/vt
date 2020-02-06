@@ -408,14 +408,14 @@ void Trace::addUserEventBracketedManual(
   addUserEventBracketed(id, begin, end);
 }
 
-void Trace::beginProcessing(
+TraceProcessingTag Trace::beginProcessing(
   TraceEntryIDType const ep, TraceMsgLenType const len,
   TraceEventIDType const event, NodeType const from_node, double const time,
   uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
   uint64_t const idx4
 ) {
   if (not checkDynamicRuntimeEnabled()) {
-    return;
+    return TraceProcessingTag{};
   }
 
   debug_print(
@@ -426,11 +426,54 @@ void Trace::beginProcessing(
 
   auto const type = TraceConstantsType::BeginProcessing;
 
-  logEvent(
+  TraceEventIDType loggedEvent = logEvent(
     LogType{
       time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
     }
   );
+
+  return TraceProcessingTag{ep, loggedEvent};
+}
+
+void Trace::endProcessing(
+  TraceProcessingTag const processing_tag,
+  double const time
+) {
+  if (not checkDynamicRuntimeEnabled()) {
+    return;
+  }
+
+  TraceEntryIDType ep = processing_tag.ep_;
+  TraceEventIDType event = processing_tag.event_;
+
+  // Allow no-op cases (ie. beginProcessing disabled)
+  if (event == trace::no_trace_event) {
+    return;
+  }
+
+  vtAssert(
+    not open_events_.empty()
+    // This is current contract expectations; however it precludes async closing.
+    and open_events_.top().ep == ep
+    and open_events_.top().event == event,
+    "Event being closed must be on the top of the open event stack."
+  );
+
+  // Final event is same as original with a few .. tweaks.
+  // Always done PRIOR TO restarts.
+  traces_.push(
+    LogType{open_events_.top(), time, TraceConstantsType::EndProcessing}
+  );
+  open_events_.pop();
+
+  if (not open_events_.empty()) {
+    // Emit a '[re]start' event for the reactivated stack item.
+    traces_.push(
+      LogType{open_events_.top(), time, TraceConstantsType::BeginProcessing}
+    );
+  }
+
+  // Unlike logEvent there is currently no flush here.
 }
 
 void Trace::endProcessing(
@@ -586,9 +629,9 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
     break;
   }
   case TraceConstantsType::EndProcessing: {
-    vtAssert(
-      not open_events_.empty(), "Stack should not be empty"
-    );
+    // Ideal route is to call endProcessing(tag) directly as all
+    // data should be on the beginProcessing event and not changed after.
+    // This case remains for compatibility.
 
     vtAssert(
       open_events_.top().ep == log.ep and
@@ -596,29 +639,12 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
       "Top event should be correct type and event"
     );
 
-    // match event with the one that this ends
-    log.event = open_events_.top().event;
+    // Steal top event information
+    LogType const& top = open_events_.top();
+    TraceProcessingTag processing_tag{top.ep, top.event};
+    endProcessing(processing_tag);
 
-    // set up begin/end links
-    open_events_.pop();
-
-    if (open_events_.empty()) {
-      // No event needs to be restarted - add log to trace normally.
-      break;
-    }
-
-    // Add the current trace PRIOR TO adding the stack restart trace.
-    TraceEventIDType event = log.event;
-    double logTime = log.time;
-    traces_.push(std::move(log));
-
-    // Emit a '[re]start' event for the reactivated stack item.
-    traces_.push(
-      LogType{open_events_.top(), logTime, TraceConstantsType::BeginProcessing}
-    );
-
-    // Already added to traces
-    return event;
+    return trace::no_trace_event;
   }
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:

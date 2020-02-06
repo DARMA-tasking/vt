@@ -60,24 +60,26 @@ template <typename MsgT, typename ElementT>
 /*static*/ void RunnableVrt<MsgT,ElementT>::run(
   HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node
 ) {
-  #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
+  trace::TraceProcessingTag processing_tag;
+  {
     trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, auto_registry::RegistryTypeEnum::RegVrt
     );
     trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
-  #endif
+    size_t msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
 
-  #if backend_check_enabled(trace_enabled)
-    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
-    theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
-  #endif
+    processing_tag =
+      theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
+  }
+#endif
 
   auto const func = auto_registry::getAutoHandlerVC(handler);
   func(msg, elm);
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(trace_id, msg_size, trace_event, from_node);
-  #endif
+#if backend_check_enabled(trace_enabled)
+  theTrace()->endProcessing(processing_tag);
+#endif
 }
 
 }} /* end namespace vt::runnable */
