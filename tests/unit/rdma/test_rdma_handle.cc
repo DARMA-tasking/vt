@@ -244,6 +244,29 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
   vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
 }
 
+TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_4) {
+  auto rank = vt::theContext()->getNode();
+  std::size_t per_size = 10;
+  std::size_t size = per_size * (rank + 1);
+
+  using T = TypeParam;
+  auto proxy = TestObjGroup::construct();
+  vt::HandleRDMA<T> handle = proxy.get()->makeHandle<T>(size, false);
+
+  do vt::runScheduler(); while (not handle.ready());
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  auto num = vt::theContext()->getNumNodes();
+  for (vt::NodeType node = 0; node < num; node++) {
+    EXPECT_EQ(handle.getSize(node), (node + 1) * per_size);
+  }
+
+  vt::theCollective()->barrier();
+  vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
+}
+
 using RDMATestTypes = testing::Types<
   int,
   double,
@@ -260,7 +283,8 @@ REGISTER_TYPED_TEST_CASE_P(
   TestRDMAHandle,
   test_rdma_handle_1,
   test_rdma_handle_2,
-  test_rdma_handle_3
+  test_rdma_handle_3,
+  test_rdma_handle_4
 );
 
 INSTANTIATE_TYPED_TEST_CASE_P(test_rdma_handle, TestRDMAHandle, RDMATestTypes);
