@@ -256,6 +256,11 @@ void Holder<T,E>::accum(
   raccum(node, l, ptr, len, offset, op);
 }
 
+template <typename T, HandleEnum E>
+void Holder<T,E>::fence(int assert) {
+  MPI_Win_fence(assert, data_window_);
+}
+
 }} /* end namespace vt::rdma */
 
 #endif /*INCLUDED_VT_RDMAHANDLE_HOLDER_IMPL_H*/

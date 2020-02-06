@@ -106,6 +106,8 @@ public:
 
   T fetchOp(vt::NodeType node, Lock l, T ptr, int offset, MPI_Op op);
 
+  void fence(int assert = 0);
+
   bool isUniform() const { return uniform_size_; }
 
 private:

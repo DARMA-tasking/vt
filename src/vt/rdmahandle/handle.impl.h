@@ -245,6 +245,12 @@ void Handle<T,E,I>::unlock() {
   lock_ = nullptr;
 }
 
+template <typename T, HandleEnum E, typename I>
+template <typename NodeU>
+void Handle<T,E,I>::fence(int assert, isNodeType<NodeU>*) {
+  vt::theHandle()->getEntry<T,E>(key_).fence(assert);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Index Overloads
 ///////////////////////////////////////////////////////////////////////////

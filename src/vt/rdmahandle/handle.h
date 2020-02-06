@@ -171,6 +171,9 @@ public:
   void lock(Lock l, vt::NodeType node);
   void unlock();
 
+  template <typename NodeU = IndexT>
+  void fence(int assert = 0, isNodeType<NodeU>* = nullptr);
+
 public:
   template <typename NodeU = IndexT>
   void get(
