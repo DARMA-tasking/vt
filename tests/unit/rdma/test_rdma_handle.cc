@@ -97,22 +97,6 @@ struct UpdateData {
   }
 };
 
-// template <typename HandleT>
-// struct UpdateData<int> {
-// };
-
-// template <typename HandleT>
-// struct UpdateData<double> {
-//   static void init(vt::HandleRDMA<int>& handle, int space, std::size_t size) {
-//     handle.modifyExclusive([](int* val){
-//       auto this_node = theContext()->getNode();
-//       for (int i = 0; i < size; i++) {
-//         val[i] = space * this_node + i;
-//       }
-//     });
-//   }
-// };
-
 template <typename T>
 struct TestRDMAHandle : TestParallelHarness { };
 
@@ -137,17 +121,18 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
   for (vt::NodeType node = 0; node < num; node++) {
     {
       auto ptr = std::make_unique<T[]>(size);
-      handle.get(node, &ptr[0], size, 0, vt::Lock::Exclusive);
+      handle.get(node, &ptr[0], size, 0, vt::Lock::Shared);
       UpdateData<T>::test(std::move(ptr), space, size, node, 0);
     }
     {
       auto ptr = std::make_unique<T[]>(size/2);
-      handle.get(node, &ptr[0], size/2, size/2, vt::Lock::Exclusive);
+      auto req = handle.rget(node, &ptr[0], size/2, size/2, vt::Lock::Shared);
+      req.wait();
       UpdateData<T>::test(std::move(ptr), space, size/2, node, size/2);
     }
     {
       auto ptr = std::make_unique<T[]>(1);
-      handle.get(node, &ptr[0], 1, size-1, vt::Lock::Exclusive);
+      handle.get(node, &ptr[0], 1, size-1, vt::Lock::Shared);
       UpdateData<T>::test(std::move(ptr), space, 1, node, size-1);
     }
   }
@@ -158,7 +143,12 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
 
 using RDMATestTypes = testing::Types<
   int,
-  double
+  double,
+  float,
+  int32_t,
+  int64_t,
+  uint64_t,
+  int64_t
 >;
 
 REGISTER_TYPED_TEST_CASE_P(TestRDMAHandle, test_rdma_handle_1);
