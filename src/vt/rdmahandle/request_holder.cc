@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               request_holder.h
+//                              request_holder.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,47 +42,57 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H
-#define INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H
+#if !defined INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC
+#define INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC
 
 #include "vt/config.h"
-#include "vt/termination/term_action.h"
-#include "vt/scheduler/scheduler.h"
-
-#include <vector>
-#include <functional>
+#include "vt/rdmahandle/request_holder.h"
 
 namespace vt { namespace rdma {
 
-struct RequestHolder {
-  RequestHolder() = default;
-  RequestHolder(RequestHolder const&) = delete;
-  RequestHolder(RequestHolder&&) = default;
+void RequestHolder::add(std::function<void()> fn) {
+  delayed_ = fn;
+}
 
-  ~RequestHolder() { wait(); }
+MPI_Request* RequestHolder::add() {
+  reqs_.emplace_back(MPI_Request{});
+  return &reqs_[reqs_.size()-1];
+}
 
-public:
-  void add(std::function<void()> fn);
+bool RequestHolder::test() {
+  std::vector<MPI_Request> new_reqs;
+  std::vector<MPI_Status> stats;
+  stats.resize(reqs_.size());
+  auto flags = std::make_unique<int[]>(reqs_.size());
+  MPI_Testall(reqs_.size(), &reqs_[0], &flags[0], &stats[0]);
+  for (std::size_t i = 0; i < reqs_.size(); i++) {
+    if (not flags[i]) {
+      new_reqs.push_back(reqs_[i]);
+    }
+  }
+  reqs_ = std::move(new_reqs);
+  return new_reqs.size() == 0;
+}
 
-  MPI_Request* add();
-
-  template <typename Callable>
-  void addAction(Callable&& c);
-
-  bool done() const { return reqs_.size() == 0; }
-
-  bool test();
-
-  void wait();
-
-private:
-  std::vector<MPI_Request> reqs_;
-  std::function<void()> delayed_ = nullptr;
-  std::unique_ptr<term::CallableBase> on_done_ = nullptr;
-};
+void RequestHolder::wait() {
+  debug_print(
+    rdma, node,
+    "RequestHolder::wait: len={}, ptr={}\n",
+    reqs_.size(), on_done_ ? "yes" : "no"
+  );
+  if (delayed_ != nullptr) {
+    delayed_();
+    delayed_ = nullptr;
+  }
+  while (not test()) {
+    vt::runScheduler();
+  }
+  if (on_done_ != nullptr) {
+    on_done_->invoke();
+  }
+  on_done_ = nullptr;
+}
 
 }} /* end namespace vt::rdma */
 
-#include "vt/rdmahandle/request_holder.impl.h"
-
-#endif /*INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H*/
+#endif /*INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC*/

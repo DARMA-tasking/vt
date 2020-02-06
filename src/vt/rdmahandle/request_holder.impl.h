@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               request_holder.h
+//                            request_holder.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,47 +42,23 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H
-#define INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H
+#if !defined INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_IMPL_H
+#define INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_IMPL_H
 
 #include "vt/config.h"
 #include "vt/termination/term_action.h"
-#include "vt/scheduler/scheduler.h"
 
-#include <vector>
-#include <functional>
+#include <memory>
 
 namespace vt { namespace rdma {
 
-struct RequestHolder {
-  RequestHolder() = default;
-  RequestHolder(RequestHolder const&) = delete;
-  RequestHolder(RequestHolder&&) = default;
-
-  ~RequestHolder() { wait(); }
-
-public:
-  void add(std::function<void()> fn);
-
-  MPI_Request* add();
-
-  template <typename Callable>
-  void addAction(Callable&& c);
-
-  bool done() const { return reqs_.size() == 0; }
-
-  bool test();
-
-  void wait();
-
-private:
-  std::vector<MPI_Request> reqs_;
-  std::function<void()> delayed_ = nullptr;
-  std::unique_ptr<term::CallableBase> on_done_ = nullptr;
-};
+template <typename Callable>
+void RequestHolder::addAction(Callable&& c) {
+  std::unique_ptr<term::CallableBase> callable =
+    std::make_unique<term::CallableHolder<Callable>>(std::move(c));
+  on_done_ = std::move(callable);
+}
 
 }} /* end namespace vt::rdma */
 
-#include "vt/rdmahandle/request_holder.impl.h"
-
-#endif /*INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_H*/
+#endif /*INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_IMPL_H*/
