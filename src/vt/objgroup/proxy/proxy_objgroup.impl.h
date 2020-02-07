@@ -171,6 +171,14 @@ vt::rdma::Handle<T> Proxy<ObjT>::makeHandleRDMA(
   >(*this, size, is_uniform);
 }
 
+template <typename ObjT>
+template <typename T>
+void Proxy<ObjT>::destroyHandleRDMA(vt::rdma::Handle<T> handle) const {
+  return vt::theHandle()->deleteHandleCollectiveObjGroup<
+    T, rdma::HandleEnum::StaticSize
+  >(handle);
+}
+
 }}} /* end namespace vt::objgroup::proxy */
 
 #endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H*/

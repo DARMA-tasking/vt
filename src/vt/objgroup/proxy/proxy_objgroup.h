@@ -157,6 +157,14 @@ public:
   template <typename T>
   vt::rdma::Handle<T> makeHandleRDMA(std::size_t size, bool is_uniform) const;
 
+  /**
+   * \brief Destroy an RDMA handle created from this objgroup
+   *
+   * \param[in] handle the handle to destroy
+   */
+  template <typename T>
+  void destroyHandleRDMA(vt::rdma::Handle<T> handle) const;
+
 public:
 
   /*
