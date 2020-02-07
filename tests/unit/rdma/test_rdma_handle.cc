@@ -144,7 +144,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
   }
 
   vt::theCollective()->barrier();
-  vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
+  proxy.destroyHandleRDMA(handle);
 }
 
 TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
@@ -198,7 +198,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
   }
 
   vt::theCollective()->barrier();
-  vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
+  proxy.destroyHandleRDMA(handle);
 }
 
 TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
@@ -239,7 +239,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
   }
 
   vt::theCollective()->barrier();
-  vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
+  proxy.destroyHandleRDMA(handle);
 }
 
 TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_4) {
@@ -262,7 +262,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_4) {
   }
 
   vt::theCollective()->barrier();
-  vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
+  proxy.destroyHandleRDMA(handle);
 }
 
 TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_5) {
@@ -300,7 +300,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_5) {
   }
 
   vt::theCollective()->barrier();
-  vt::theHandle()->deleteHandleCollectiveObjGroup(handle);
+  proxy.destroyHandleRDMA(handle);
 }
 
 using RDMATestTypes = testing::Types<
