@@ -175,8 +175,12 @@ void SubHandle<T,E,IndexT>::get(
 
 template <typename T, HandleEnum E, typename IndexT>
 std::size_t SubHandle<T,E,IndexT>::getSize(IndexT const& idx, Lock) {
-  auto info = resolveLocation(idx);
-  return info.getSize();
+  if (uniform_size_) {
+    return size_if_uniform_;
+  } else {
+    auto info = resolveLocation(idx);
+    return info.getSize();
+  }
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -268,6 +272,9 @@ Handle<T, E, IndexT> SubHandle<T,E,IndexT>::addLocalIndex(
   }
   auto const offset = sub_prefix_[sub_prefix_.size()-1];
   sub_handles_[index] = SubInfo(size, offset);
+  if (uniform_size_) {
+    size_if_uniform_ = static_cast<std::size_t>(size);
+  }
   return Handle<T,E,IndexT>{
     typename Handle<T,E,IndexT>::IndexTagType{},
     proxy_.getProxy(), index, size, 0

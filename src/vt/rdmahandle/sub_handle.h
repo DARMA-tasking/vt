@@ -144,6 +144,7 @@ protected:
   bool ready_ = false;
   bool mpi2_ = false;
   bool uniform_size_ = false;
+  std::size_t size_if_uniform_ = 0;
 };
 
 }} /* end namespace vt::rdma */
