@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                handle.impl.h
+//                                 handle.fwd.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,21 +42,17 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RDMAHANDLE_HANDLE_IMPL_H
-#define INCLUDED_VT_RDMAHANDLE_HANDLE_IMPL_H
+#if !defined INCLUDED_VT_RDMAHANDLE_HANDLE_FWD_H
+#define INCLUDED_VT_RDMAHANDLE_HANDLE_FWD_H
 
 #include "vt/config.h"
-#include "vt/rdmahandle/handle.h"
-#include "vt/rdmahandle/holder.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/rdmahandle/sub_handle.h"
+#include "vt/rdmahandle/common.h"
 
 namespace vt { namespace rdma {
 
+template <typename T, HandleEnum E, typename IndexT = vt::NodeType, typename=void>
+struct Handle;
 
 }} /* end namespace vt::rdma */
 
-#include "vt/rdmahandle/handle.node.impl.h"
-#include "vt/rdmahandle/handle.index.impl.h"
-
-#endif /*INCLUDED_VT_RDMAHANDLE_HANDLE_IMPL_H*/
+#endif /*INCLUDED_VT_RDMAHANDLE_HANDLE_FWD_H*/

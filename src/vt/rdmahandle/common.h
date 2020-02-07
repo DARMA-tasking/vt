@@ -51,6 +51,11 @@ namespace vt { namespace rdma {
 
 using ElemType = int64_t;
 
+enum struct HandleEnum {
+  StaticSize = 1,
+  ConcurrentList = 2
+};
+
 }} /* end namespace vt::rdma */
 
 #endif /*INCLUDED_VT_RDMAHANDLE_COMMON_H*/
