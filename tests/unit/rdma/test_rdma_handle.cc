@@ -266,7 +266,6 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_4) {
 }
 
 TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_5) {
-  auto rank = vt::theContext()->getNode();
   std::size_t size = 10;
 
   using T = TypeParam;
