@@ -58,7 +58,7 @@ namespace vt { namespace rdma {
 
 template <typename T, HandleEnum E, typename IndexT>
 struct SubHandle {
-  using HandleType = Handle<T, vt::rdma::HandleEnum::StaticSize, vt::Index2D>;
+  using HandleType = Handle<T, vt::rdma::HandleEnum::StaticSize, IndexT>;
   using ProxyType = vt::objgroup::proxy::Proxy<SubHandle<T, E, IndexT>>;
 
   SubHandle() = default;

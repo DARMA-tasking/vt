@@ -46,6 +46,7 @@
 #define INCLUDED_VT_RDMAHANDLE_SUB_HANDLE_IMPL_H
 
 #include "vt/config.h"
+#include "vt/objgroup/manager.h"
 
 namespace vt { namespace rdma {
 
@@ -75,11 +76,9 @@ void SubHandle<T,E,IndexT>::makeSubHandles() {
       i, sub_prefix_[i], sub_layout_[i]
     );
   }
-  data_handle_ = theHandle()->makeHandleCollectiveObjGroup<T, E>(proxy_, total);
+  data_handle_ = proxy_.template makeHandleRDMA<T>(total, false);
   waitForHandleReady(data_handle_);
-  loc_handle_ = theHandle()->makeHandleCollectiveObjGroup<uint64_t, E>(
-    proxy_, (num_local + 1) * 3
-  );
+  loc_handle_ = proxy_.template makeHandleRDMA<uint64_t>((num_local + 1) * 3, false);
   waitForHandleReady(loc_handle_);
   vtAssertExpr(sub_prefix_.size() == num_local);
   vtAssertExpr(sub_layout_.size() == num_local);

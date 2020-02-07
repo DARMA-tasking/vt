@@ -60,9 +60,7 @@ struct TestObjGroup {
 
   template <typename T>
   vt::HandleRDMA<T> makeHandle(std::size_t size, bool uniform) {
-    return vt::theHandle()->template makeHandleCollectiveObjGroup<
-      T, vt::rdma::HandleEnum::StaticSize
-    >(proxy_, size, uniform);
+    return proxy_.template makeHandleRDMA<T>(size, uniform);
   }
 
   static ProxyType construct() {

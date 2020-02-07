@@ -55,6 +55,7 @@
 #include "vt/collective/reduce/operators/functors/none_op.h"
 #include "vt/collective/reduce/operators/callback_op.h"
 #include "vt/utils/static_checks/msg_ptr.h"
+#include "vt/rdmahandle/handle.fwd.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -144,6 +145,17 @@ public:
    * Destruct the objgroup collectively
    */
   void destroyCollective() const;
+
+  /**
+   * \brief Make a new RDMA handle for this objgroup---a collective invocation
+   *
+   * \param[in] size the local size for the handle
+   * \param[in] is_uniform whether all handles have the same size
+   *
+   * \return the new RDMA handle
+   */
+  template <typename T>
+  vt::rdma::Handle<T> makeHandleRDMA(std::size_t size, bool is_uniform) const;
 
 public:
 

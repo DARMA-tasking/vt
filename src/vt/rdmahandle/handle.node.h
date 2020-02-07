@@ -89,10 +89,9 @@ struct Handle<
 
 private:
   /**
-   * \brief Private constructor used the system factor method to construct a new
-   * node-level handle
+   * \brief Private constructor used the system factory method to construct a
+   * new node-level handle
    *
-   * \param[in] NodeTagType tag for getting this constructor
    * \param[in] in_key the key for identifying the handle
    * \param[in] in_size size of local handle
    * \param[in] in_hoff local offset for handle

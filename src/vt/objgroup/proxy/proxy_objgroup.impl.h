@@ -52,6 +52,7 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/reduce/operators/default_op.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/rdmahandle/manager.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -158,6 +159,16 @@ void Proxy<ObjT>::destroyCollective() const {
 template <typename ObjT>
 ObjGroupProxyType Proxy<ObjT>::getProxy() const {
   return proxy_;
+}
+
+template <typename ObjT>
+template <typename T>
+vt::rdma::Handle<T> Proxy<ObjT>::makeHandleRDMA(
+  std::size_t size, bool is_uniform
+) const {
+  return vt::theHandle()->makeHandleCollectiveObjGroup<
+    T, rdma::HandleEnum::StaticSize
+  >(*this, size, is_uniform);
 }
 
 }}} /* end namespace vt::objgroup::proxy */

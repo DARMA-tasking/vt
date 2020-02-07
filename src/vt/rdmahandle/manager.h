@@ -52,11 +52,13 @@
 #include "vt/rdmahandle/type_mpi.h"
 #include "vt/rdmahandle/holder.h"
 #include "vt/rdmahandle/manager.fwd.h"
-#include "vt/objgroup/manager.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/pipe/pipe_manager.h"
 #include "vt/topos/mapping/dense/dense.h"
 
 namespace vt { namespace rdma {
+
+/** \file */
 
 namespace impl {
 
@@ -67,27 +69,59 @@ struct ConstructMsg;
 
 } /* end namespace impl */
 
-
+/**
+ * \struct Manager manager.h vt/rdmahandle/manager.h
+ *
+ * \brief RDMA Handle Manager for creation of node- or index-level handles
+ */
 struct Manager {
   using ProxyType    = vt::objgroup::proxy::Proxy<Manager>;
   using ElemToHandle = std::unordered_map<int64_t, RDMA_HandleType>;
 
   Manager() = default;
 
+  /**
+   * \brief Destroy the component, called when VT is finalized
+   */
   void destroy();
 
 private:
+  /**
+   * \brief Initialize the manager with the objgroup proxy
+   *
+   * \param[in] in_proxy the manager instance's proxy
+   */
   void initialize(ProxyType in_proxy);
 
+  /**
+   * \brief Finish constructing a handle after coordinating each node on
+   * construction
+   *
+   * \param[in] msg construction meta-data message
+   */
   template <typename T, HandleEnum E, typename ProxyT>
   void finishMake(impl::ConstructMsg<T, E, ProxyT>* msg);
 
 public:
+  /**
+   * \brief Construct a new, distributed RDMA handle for an objgroup
+   *
+   * \param[in] proxy the objgroup's proxy
+   * \param[in] size the size for this node's handle
+   * \param[in] uniform_size whether all handles have the same size
+   *
+   * \return the new handle
+   */
   template <typename T, HandleEnum E, typename ProxyT>
   Handle<T, E> makeHandleCollectiveObjGroup(
     ProxyT proxy, std::size_t size, bool uniform_size = true
   );
 
+  /**
+   * \brief Destroy and garbage collect an RDMA handle
+   *
+   * \param[in] han the handle to destroy
+   */
   template <typename T, HandleEnum E>
   void deleteHandleCollectiveObjGroup(Handle<T,E> const& han);
 
@@ -108,16 +142,16 @@ public:
   static ProxyType construct();
 
 private:
-  // Current collective handle for a given objgroup proxy
+  /// Current collective handle for a given objgroup proxy
   std::unordered_map<ObjGroupProxyType, RDMA_HandleType> cur_handle_obj_group_;
 
-  // Current collective handle for a given collection proxy & element index
+  /// Current collective handle for a given collection proxy & element index
   std::unordered_map<VirtualProxyType, ElemToHandle> cur_handle_collection_;
 
-  // Objgroup proxy for this manager
+  /// Objgroup proxy for this manager
   ProxyType proxy_;
 
-  // Holder for RDMA control data
+  /// Holder for RDMA control data
   template <typename T, HandleEnum E>
   static std::unordered_map<HandleKey, Holder<T,E>> holder_;
 };

@@ -50,7 +50,12 @@
 
 namespace vt { namespace rdma {
 
-template <typename T, HandleEnum E, typename IndexT = vt::NodeType, typename=void>
+template <
+  typename T,
+  HandleEnum E = rdma::HandleEnum::StaticSize,
+  typename IndexT = vt::NodeType,
+  typename = void
+>
 struct Handle;
 
 }} /* end namespace vt::rdma */

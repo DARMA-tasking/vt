@@ -88,10 +88,9 @@ public:
   struct IndexTagType { };
 
   /**
-   * \brief Private constructor used the system factor method to construct a new
-   * index-level handle
+   * \brief Private constructor used the system factory method to construct a
+   * new index-level handle
    *
-   * \param[in] IndexTagType tag for getting this constructor
    * \param[in] in_proxy the proxy for managing the indexed handle
    * \param[in] in_index the index for this handle
    * \param[in] in_size size of local handle
@@ -342,6 +341,7 @@ public:
 protected:
   IndexT index_            = {};           /**< The index for the handle */
   ObjGroupProxyType proxy_ = no_obj_group; /**< The managing objgroup proxy */
+  //HandleKey key_           = {};           /**< The key for the collection  */
 };
 
 }} /* end namespace vt::rdma */

@@ -47,6 +47,12 @@
 
 #include "vt/config.h"
 
+namespace vt { namespace rdma {
+
+struct Manager;
+
+}} // end namespace vt::rdma
+
 namespace vt {
 
 extern rdma::Manager* theHandle();
