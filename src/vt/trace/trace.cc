@@ -329,7 +329,7 @@ void Trace::addUserEventBracketed(UserEventIDType event, double begin, double en
     std::make_unique<LogType>(begin, type, node, event, true)
   );
   logEvent(
-    std::make_unique<LogType>(end, type, node, event, false)
+    std::make_unique<LogType>(end, type, node, event, true)
   );
 }
 
