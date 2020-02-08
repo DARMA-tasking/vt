@@ -436,7 +436,7 @@ TraceProcessingTag Trace::beginProcessing(
 }
 
 void Trace::endProcessing(
-  TraceProcessingTag const processing_tag,
+  TraceProcessingTag const& processing_tag,
   double const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
@@ -447,7 +447,7 @@ void Trace::endProcessing(
   TraceEventIDType event = processing_tag.event_;
 
   // Allow no-op cases (ie. beginProcessing disabled)
-  if (event == trace::no_trace_event) {
+  if (ep == trace::no_trace_entry_id) {
     return;
   }
 
