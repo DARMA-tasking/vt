@@ -124,7 +124,7 @@ struct Trace {
   /// Finalize a paired event.
   /// The processing_tag value comes from beginProcessing.
   void endProcessing(
-    TraceProcessingTag processing_tag,
+    TraceProcessingTag const& processing_tag,
     double const time = getCurrentTime()
   );
 
