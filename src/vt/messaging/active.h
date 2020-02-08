@@ -312,8 +312,7 @@ struct ActiveMessenger {
 #if HAS_SERIALIZATION_LIBRARY
 
   // With serialization, the correct method is resolved via SFINAE.
-  // This also includes additional guards on when copy-able transmission
-  // is infered in order to detect areas of ambiguity.
+  // This also includes additional guards to detect ambiguity.
 
   template <typename MessageT>
   ActiveMessenger::PendingSendType sendMsgSerializableImpl(
@@ -324,11 +323,15 @@ struct ActiveMessenger {
     TagType tag
   );
 
+  // All messages that do NOT define their own serialization policy
+  // and do NOT define their own serialization function are required
+  // to be byte-transmittable. This covers basic byte-copyable
+  // messages directly inheriting from ActiveMsg. ActivMsg implements
+  // a serialize function which is implictly inherited..
   template <
     typename MessageT,
     std::enable_if_t<true
-      and ::serdes::SerializableTraits<MessageT>::has_serialize_function
-      and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
+      and not ::vt::messaging::msg_defines_serialize_mode<MessageT>::value,
       int
     > = 0
   >
@@ -339,14 +342,47 @@ struct ActiveMessenger {
     ByteType msg_size,
     TagType tag
   ) {
+#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+    static_assert(
+      not ::vt::messaging::has_own_serialize<MessageT>,
+      "Message prohibiting serialization must not have a serialization function."
+    );
+#endif
+    return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
+  }
+
+  // Serializable and serialization required on this type.
+  template <
+    typename MessageT,
+    std::enable_if_t<true
+      and ::vt::messaging::msg_defines_serialize_mode<MessageT>::value
+      and ::vt::messaging::msg_serialization_mode<MessageT>::required,
+      int
+    > = 0
+  >
+  inline ActiveMessenger::PendingSendType sendMsgImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  ) {
+#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+    static_assert(
+      ::vt::messaging::has_own_serialize<MessageT>,
+      "Message requiring serialization must have a serialization function."
+    );
+#endif
     return sendMsgSerializableImpl<MessageT>(dest, han, msg, msg_size, tag);
   }
 
+  // Serializable, but support is only for derived types.
+  // This type will still be sent using byte-copy serialization.
   template <
     typename MessageT,
     std::enable_if_t<true
-      and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
-      and ::serdes::SerializableTraits<MessageT>::is_parserdes,
+      and ::vt::messaging::msg_defines_serialize_mode<MessageT>::value
+      and ::vt::messaging::msg_serialization_mode<MessageT>::supported,
       int
     > = 0
   >
@@ -357,14 +393,22 @@ struct ActiveMessenger {
     ByteType msg_size,
     TagType tag
   ) {
-    return sendMsgParserdesImpl<MessageT>(dest, han, msg, msg_size, tag);
+#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+    static_assert(
+       ::vt::messaging::has_own_serialize<MessageT>,
+       "Message supporting serialization must have a serialization function."
+     );
+#endif
+    return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
   }
 
+  // Messaged marked as prohibiting serialization cannot define
+  // a serialization function and must be sent via byte-transmission.
   template <
     typename MessageT,
     std::enable_if_t<true
-      and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
-      and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
+      and ::vt::messaging::msg_defines_serialize_mode<MessageT>::value
+      and ::vt::messaging::msg_serialization_mode<MessageT>::prohibited,
       int
     > = 0
   >
@@ -375,6 +419,12 @@ struct ActiveMessenger {
     ByteType msg_size,
     TagType tag
   ) {
+#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+    static_assert(
+      not ::vt::messaging::has_own_serialize<MessageT>,
+      "Message prohibiting serialization must not have a serialization function."
+    );
+#endif
     return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
   }
 

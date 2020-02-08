@@ -133,6 +133,11 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   // These calls eventually end up back and the non-serialized sendMsgImpl,
   // through use of a wrapped message which does not define serialization.
   // (Although such probably represents an opportunity for additional cleanup.)
+  static_assert( // that a message is serializable.
+    ::serdes::SerializableTraits<MessageT>::is_serializable,
+    "Message going through serialization must meet all requirements."
+  );
+
   vtAssert(
     tag == no_tag,
     "Tagged messages serialization not implemented."
@@ -156,10 +161,12 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   TagType tag
 ) {
   static_assert(
-    std::is_trivially_destructible<MessageT>(),
+    std::is_trivially_copyable<MessageT>::value,
+    "Message sent without serialization must be trivially copyable."
+  );
+  static_assert(
+    std::is_trivially_destructible<MessageT>::value,
     "Message sent without serialization must be trivially destructible."
-    " If the message was serializable the appropriate type-enabled template overload"
-    " of sendMsgImpl should have been called."
   );
 
   MessageT* rawMsg = msg.get();

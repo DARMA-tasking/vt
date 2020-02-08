@@ -283,6 +283,21 @@ template <typename MsgT, typename BaseT>
   MsgT* msg_ptr, HandlerType typed_handler,
   ActionEagerSend<MsgT, BaseT> eager_sender, ActionDataSend data_sender
 ) {
+#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+  static_assert(
+    ::vt::messaging::has_own_serialize<MsgT>,
+    "Messages sent via SerializedMessenger must have a serialization function."
+  );
+#endif
+  static_assert(
+    ::vt::messaging::msg_defines_serialize_mode<MsgT>::value,
+    "Messages that define a serialization function must specify serialization mode."
+  );
+  static_assert(
+    ::vt::messaging::msg_serialization_mode<MsgT>::required,
+    "Messages sent via SerializedMessenger should require serialization."
+  );
+
   auto msg = promoteMsg(msg_ptr);
 
   MsgSharedPtr<SerialEagerPayloadMsg<MsgT,BaseT>> payload_msg = nullptr;

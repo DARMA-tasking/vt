@@ -50,5 +50,6 @@
 #include "vt/messaging/message/shared_message.h"
 #include "vt/messaging/message/refs.h"
 #include "vt/messaging/message/message_priority.h"
+#include "vt/messaging/message/message_serialize.h"
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_H*/
