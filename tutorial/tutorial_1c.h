@@ -57,6 +57,7 @@ struct Particle {
     : x(in_x), y(in_y), z(in_z)
   { }
 
+  // Non-message types can use serializers like this.
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | x | y | z;
@@ -74,10 +75,16 @@ struct Data {
   }
 };
 
+// TODO - show data with non-intrusive serialization
+// TODO - show data that does not need serialization
+
 //                  VT Base Message
 //                 \----------------/
 //                  \              /
 struct ParticleMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message; // base message
+  vt_msg_serialize_required();         // mark serialization mode
+
   ParticleMsg() = default;
 
   ParticleMsg(int in_x, int in_y, int in_z)
@@ -86,10 +93,12 @@ struct ParticleMsg : ::vt::Message {
 
   /*
    * Implement a serialize method so the std::vector and pointer are properly
-   * serialization on the send
+   * serialization on the send.
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);    // ensure parent is serialized consistently
+
     s | particles;
     s | x | y | z;
 

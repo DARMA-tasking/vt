@@ -73,6 +73,9 @@ private:
 };
 
 struct ReduceMsg : ::vt::Message, ReduceLink {
+  msg_parent_type = ::vt::Message;
+  msg_serialize_supported();
+
   NodeType reduce_root_ = uninitialized_destination;
   TagType reduce_tag_ = no_tag;
   SequentialIDType reduce_seq_ = no_seq_id;
@@ -81,7 +84,8 @@ struct ReduceMsg : ::vt::Message, ReduceLink {
   HandlerType combine_handler_ = uninitialized_handler;
 
   template <typename SerializerT>
-  void invokeSerialize(SerializerT& s) {
+  void serialize(SerializerT& s) {
+    msg_serialize_parent(s);
     s | reduce_root_ | reduce_tag_ | reduce_seq_ | reduce_proxy_;
     s | reduce_objgroup_;
     s | combine_handler_;

@@ -60,6 +60,9 @@ struct ReduceCombine;
 
 template <typename DataType>
 struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
+  msg_parent_type    = ReduceMsg;
+  msg_serialize_if_needed_by_base_or_type1(DataType);
+
   using CallbackType = CallbackU;
 
   ReduceDataMsg() = default;
@@ -79,9 +82,9 @@ struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
   template <typename MsgT>
   void setCallback(Callback<MsgT> cb) { cb_ = CallbackType{cb}; }
 
-  template <typename SerializerT>
-  void invokeSerialize(SerializerT& s) {
-    ReduceMsg::invokeSerialize(s);
+  template <typename SerializeT>
+  void serialize(SerializeT& s) {
+    msg_serialize_parent(s);
     s | val_;
     s | cb_;
   }
@@ -93,6 +96,9 @@ protected:
 
 template <typename T>
 struct ReduceTMsg : ReduceDataMsg<T> {
+  msg_parent_type = ReduceDataMsg<T>;
+  msg_serialize_if_needed_by_base();
+
   using DataType = T;
   ReduceTMsg() = default;
   explicit ReduceTMsg(DataType&& in_val)
@@ -101,10 +107,18 @@ struct ReduceTMsg : ReduceDataMsg<T> {
   explicit ReduceTMsg(DataType const& in_val)
     : ReduceDataMsg<DataType>(in_val)
   { }
+
+  template <typename SerializeT>
+  void serialize(SerializeT& s) {
+    msg_serialize_parent(s);
+  }
 };
 
 template <typename T, std::size_t N>
 struct ReduceArrMsg : ReduceDataMsg<std::array<T,N>> {
+  msg_parent_type   = ReduceDataMsg<std::array<T,N>>;
+  msg_serialize_if_needed_by_base();
+
   using DataType = std::array<T,N>;
   ReduceArrMsg() = default;
   explicit ReduceArrMsg(DataType&& in_val)
@@ -113,10 +127,18 @@ struct ReduceArrMsg : ReduceDataMsg<std::array<T,N>> {
   explicit ReduceArrMsg(DataType const& in_val)
     : ReduceDataMsg<DataType>(in_val)
   { }
+
+  template <typename SerializeT>
+  void serialize(SerializeT& s) {
+    msg_serialize_parent(s);
+  }
 };
 
 template <typename T>
 struct ReduceVecMsg : ReduceDataMsg<std::vector<T>> {
+  msg_parent_type   = ReduceDataMsg<std::vector<T>>;
+  msg_serialize_required(); // stl collection used in base, always required.
+
   using DataType = std::vector<T>;
 
   ReduceVecMsg() = default;
@@ -129,10 +151,9 @@ struct ReduceVecMsg : ReduceDataMsg<std::vector<T>> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    ReduceDataMsg<std::vector<T>>::invokeSerialize(s);
+    msg_serialize_parent(s);
   }
 };
-
 
 }}}} /* end namespace vt::collective::reduce::operators */
 

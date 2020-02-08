@@ -49,6 +49,9 @@
 #include <array>
 
 struct PingMsg : vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // by payload_
+
   PingMsg() = default;
   explicit PingMsg(int64_t size) {
     payload_.resize(size);
@@ -56,6 +59,7 @@ struct PingMsg : vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | payload_;
   }
 

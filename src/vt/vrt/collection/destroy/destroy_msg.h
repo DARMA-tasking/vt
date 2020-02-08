@@ -53,14 +53,18 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct DestroyMsg final : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  using CollectionProxyType = CollectionProxy<ColT,IndexT>;
+  vt_msg_serialize_if_needed_by_parent_or_type1(CollectionProxyType);
+
   DestroyMsg() = default;
   DestroyMsg(
-    CollectionProxy<ColT,IndexT> const& in_proxy,
+    CollectionProxyType const& in_proxy,
     NodeType const& in_from
   ) : proxy_(in_proxy), from_(in_from)
   { }
 
-  CollectionProxy<ColT,IndexT> getProxy() const { return proxy_; }
+  CollectionProxyType getProxy() const { return proxy_; }
   NodeType getFromNode() const { return from_; }
 
   template <typename Serializer>
@@ -69,7 +73,7 @@ struct DestroyMsg final : ::vt::Message {
   }
 
 private:
-  CollectionProxy<ColT,IndexT> proxy_;
+  CollectionProxyType proxy_;
   NodeType from_ = uninitialized_destination;
 };
 

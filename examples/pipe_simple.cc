@@ -71,20 +71,26 @@ struct HelloMsg : vt::Message {
 };
 
 struct TestMsg : vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // for string
+
   int val = 0;
   std::string s;
 
   TestMsg() : s("hello") {}
 
   template <typename SerializerT>
-  void serialize(SerializerT& m) {
-    m | val;
-    m | s;
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | val;
+    s | s;
   }
 };
+
 struct TestColMsg : CollectionMessage<MyCol> {
   int val = 0;
 };
+
 struct TestMsg2 : vt::Message {
   int val = 0;
 };

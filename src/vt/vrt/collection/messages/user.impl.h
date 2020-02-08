@@ -114,14 +114,8 @@ void CollectionMessage<ColT, BaseMsgT>::setFromNode(NodeType const& node) {
 
 template <typename ColT, typename BaseMsgT>
 template <typename SerializerT>
-void CollectionMessage<ColT, BaseMsgT>::serializeParent(SerializerT& s) {
-  RoutedMessageType<BaseMsgT, ColT>::serializeParent(s);
-  RoutedMessageType<BaseMsgT, ColT>::serializeThis(s);
-}
-
-template <typename ColT, typename BaseMsgT>
-template <typename SerializerT>
-void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
+void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
+  MessageParentType::serialize(s);
   s | vt_sub_handler_;
   s | to_proxy_;
   s | bcast_proxy_;

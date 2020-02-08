@@ -108,6 +108,9 @@ protected:
 };
 
 struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
+  using MessageParentType = collective::ReduceTMsg<GreedyPayload>;
+  vt_msg_serialize_required(); // prev. serialize(1)
+
   GreedyCollectMsg() = default;
   GreedyCollectMsg(ObjSampleType const& in_load, LoadType const& in_profile)
     : collective::ReduceTMsg<GreedyPayload>(GreedyPayload{in_load,in_profile})
@@ -115,7 +118,7 @@ struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    ReduceTMsg<GreedyPayload>::invokeSerialize(s);
+    MessageParentType::serialize(s);
   }
 
   ObjSampleType const& getLoad() const {

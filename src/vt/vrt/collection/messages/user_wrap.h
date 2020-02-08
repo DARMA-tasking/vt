@@ -64,6 +64,9 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename UserMsgT, typename BaseMsgT = ::vt::Message>
 struct ColMsgWrap : CollectionMessage<ColT,BaseMsgT> {
+  using MessageParentType = CollectionMessage<ColT,BaseMsgT>;
+  vt_msg_serialize_if_needed_by_parent_or_type1(UserMsgT);
+
   using UserMsgType = UserMsgT;
 
   ColMsgWrap() = default;
@@ -80,17 +83,7 @@ struct ColMsgWrap : CollectionMessage<ColT,BaseMsgT> {
 
   UserMsgT& getMsg() { return msg_; }
 
-  template <typename SerializerT>
-  void serializeParent(SerializerT& s) {
-    CollectionMessage<ColT,BaseMsgT>::serializeParent(s);
-    CollectionMessage<ColT,BaseMsgT>::serializeThis(s);
-  }
-
-  template <typename SerializerT>
-  void serializeThis(SerializerT& s) {
-    s | msg_;
-  }
-
+  // TODO - does not align with 'serialize if needed' above.
   template <
     typename SerializerT,
     typename T=void,
@@ -99,8 +92,8 @@ struct ColMsgWrap : CollectionMessage<ColT,BaseMsgT> {
     >::type
   >
   void serialize(SerializerT& s) {
-    serializeParent(s);
-    serializeThis(s);
+    MessageParentType::serialize(s);
+    s | msg_;
   }
 
 private:

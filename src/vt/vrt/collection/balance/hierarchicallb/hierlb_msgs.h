@@ -54,6 +54,9 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // prev. serialize(1)
+
   using LoadType = double;
 
   LBTreeUpMsg() = default;
@@ -64,9 +67,9 @@ struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
       child_size_(in_child_size)
   { }
 
-
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
     s | child_load_ | child_ | load_ | child_size_;
   }
 
@@ -84,6 +87,9 @@ private:
 };
 
 struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // prev. serialize(1)
+
   using LoadType = double;
 
   LBTreeDownMsg() = default;
@@ -92,9 +98,9 @@ struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
   ) : from_(in_from), excess_(in_excess), final_child_(in_final_child)
   { }
 
-
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
     s | from_ | excess_ | final_child_;
   }
 

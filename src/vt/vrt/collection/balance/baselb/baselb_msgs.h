@@ -53,6 +53,9 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 template <typename Transfer>
 struct TransferMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_if_needed_by_parent_or_type1(Transfer);
+
   TransferMsg() = default;
   explicit TransferMsg(Transfer const& in_transfer)
     : transfer_(in_transfer)
@@ -60,6 +63,7 @@ struct TransferMsg : vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | transfer_;
   }
 
@@ -70,6 +74,9 @@ private:
 };
 
 struct CountMsg : vt::collective::ReduceTMsg<int32_t> {
+  using MessageParentType = vt::collective::ReduceTMsg<int32_t>;
+  vt_msg_serialize_prohibited();
+
   CountMsg() = delete;
   explicit CountMsg(int32_t in_num)
     : vt::collective::ReduceTMsg<int32_t>(in_num)

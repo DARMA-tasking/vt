@@ -69,9 +69,10 @@ static struct ColMsgWrapTagType { } ColMsgWrapTag { };
 #pragma GCC diagnostic pop
 
 template <typename ColT, typename BaseMsgT = ::vt::Message>
-struct CollectionMessage :
-  RoutedMessageType<BaseMsgT, ColT>, ColT::IndexType::IsByteCopyable
-{
+struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
+  using MessageParentType = RoutedMessageType<BaseMsgT, ColT>;
+  vt_msg_serialize_if_needed_by_parent();
+
   /*
    *. Type aliases for surrounding system => used to deduce during sends
   */
@@ -124,13 +125,8 @@ struct CollectionMessage :
     void setCat(balance::CommCategory cat);
   #endif
 
-  // Explicitly write a parent serializer so derived user messages can contain
-  // non-byte serialization
   template <typename SerializerT>
-  void serializeParent(SerializerT& s);
-
-  template <typename SerializerT>
-  void serializeThis(SerializerT& s);
+  void serialize(SerializerT& s);
 
   friend struct CollectionManager;
 

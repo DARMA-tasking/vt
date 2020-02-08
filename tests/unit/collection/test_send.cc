@@ -76,16 +76,22 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex> {
   template <typename TupleT, std::size_t ...I>
   void unpack(TupleT args, std::index_sequence<I...>);
 };
+
 template <typename... Args>
 struct ColMsg : CollectionMessage<TestCol<Args...>> {
+  using MessageParentType = CollectionMessage<TestCol<Args...>>;
   using TupleType = std::tuple<Args...>;
+  vt_msg_serialize_if_needed_by_parent_or_type1(TupleType);
+
   ColMsg() = default;
   explicit ColMsg(TupleType in_tup) : tup(in_tup) {}
-  TupleType tup;
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | tup;
   }
+
+  TupleType tup;
 };
 
 template <typename... Args>

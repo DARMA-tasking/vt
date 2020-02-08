@@ -57,12 +57,20 @@ using namespace vt::tests::unit;
 struct TrackMsg : ::vt::Message { };
 
 struct SerialTrackMsg : ::vt::Message {
+  // Must be serialized because byte-copyable are supposed
+  // to be trivially destructible. However, the check has
+  // been historically broken so..
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required();
+
   SerialTrackMsg() { ++alloc_count; }
   SerialTrackMsg(SerialTrackMsg const& other) { ++alloc_count; }
   SerialTrackMsg(SerialTrackMsg&& other) { ++alloc_count; }
 
   template <typename Serializer>
-  void serialize(Serializer&) { }
+  void serialize(Serializer& s) {
+    MessageParentType::serialize(s);
+  }
 
   ~SerialTrackMsg() { --alloc_count; }
 

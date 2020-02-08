@@ -154,8 +154,16 @@ struct LoadData {
   int32_t  P_ = 0;
 };
 
+static_assert(
+  vt::messaging::byte_copyable<LoadData>::value,
+  "Must be trivially copyable to avoid serialization."
+);
+
 template <typename ColT>
 struct LoadStatsMsg : CollectionMessage<ColT>, LoadData {
+  msg_parent_type   = CollectionMessage<ColT>;
+  msg_serialize_prohibited();
+
   LoadStatsMsg() = default;
   LoadStatsMsg(LoadData const& in_load_data, PhaseType const& phase)
     : LoadData(in_load_data), cur_phase_(phase)
@@ -168,6 +176,9 @@ private:
 };
 
 struct ProcStatsMsg : collective::ReduceTMsg<LoadData> {
+  msg_parent_type   = collective::ReduceTMsg<LoadData>;
+  msg_serialize_prohibited();
+
   ProcStatsMsg() = default;
   ProcStatsMsg(lb::Statistic in_stat, TimeType const in_total_load)
     : ReduceTMsg<LoadData>(LoadData(in_total_load)),
@@ -183,6 +194,9 @@ struct ProcStatsMsg : collective::ReduceTMsg<LoadData> {
 
 template <typename ColT>
 struct StatsMsg : collective::ReduceTMsg<LoadData> {
+  using MessageParentType = collective::ReduceTMsg<LoadData>;
+  vt_msg_serialize_prohibited();
+
   using ProxyType = typename ColT::CollectionProxyType;
 
   StatsMsg() = default;

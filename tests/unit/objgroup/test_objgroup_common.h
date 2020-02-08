@@ -131,6 +131,9 @@ struct VectorPayload {
 };
 
 struct VecMsg : vt::collective::ReduceTMsg<VectorPayload> {
+  using MessageParentType = vt::collective::ReduceTMsg<VectorPayload>;
+  vt_msg_serialize_required(); // by VectorPayload
+
   VecMsg() = default;
 
   explicit VecMsg(int in_num) : ReduceTMsg<VectorPayload>() {
@@ -141,7 +144,7 @@ struct VecMsg : vt::collective::ReduceTMsg<VectorPayload> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    ReduceTMsg<VectorPayload>::invokeSerialize(s);
+    MessageParentType::serialize(s);
   }
 };
 

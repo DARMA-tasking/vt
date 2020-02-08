@@ -54,10 +54,14 @@ struct MyContext {
 };
 
 struct DataMsg : Message {
+  using MessageParentType = Message;
+  vt_msg_serialize_required(); // by vec_
+
   DataMsg() = default;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | vec_;
   }
 

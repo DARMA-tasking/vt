@@ -65,6 +65,9 @@ struct RequestDataMsg : CollectionMessage<ColT> {
 struct InitMsg : ::vt::collective::ReduceNoneMsg { };
 
 struct DataMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // by payload_
+
   DataMsg() = default;
 
   DataMsg(std::vector<double> const& payload_in, int from_idx_in)
@@ -73,6 +76,7 @@ struct DataMsg : ::vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | payload_;
     s | from_idx_;
   }

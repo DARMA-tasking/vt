@@ -215,6 +215,9 @@ private:
    * \brief Holds the spec for broadcasting to all nodes
    */
   struct SpecMsg : vt::Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required(); // for SpecMapType
+
     SpecMsg() = default;
     SpecMsg(SpecMapType in_mod, SpecMapType in_exact, NodeType in_root)
       : spec_mod_(in_mod),
@@ -224,6 +227,7 @@ private:
 
     template <typename SerializerT>
     void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
       s | spec_mod_;
       s | spec_exact_;
       s | root_;
