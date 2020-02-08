@@ -122,15 +122,8 @@ void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
 
 #if HAS_SERIALIZATION_LIBRARY
 
-template <
-  typename MessageT,
-  std::enable_if_t<true
-    and ::serdes::SerializableTraits<MessageT>::has_serialize_function
-    and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
-    int
-  >
->
-ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
+template <typename MessageT>
+ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   NodeType dest,
   HandlerType han,
   MsgSharedPtr<MessageT>& msg,
@@ -152,15 +145,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
   }
 }
 
-template <
-  typename MessageT,
-  std::enable_if_t<true
-    and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
-    and ::serdes::SerializableTraits<MessageT>::is_parserdes,
-    int
-  >
->
-ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
+template <typename MessageT>
+ActiveMessenger::PendingSendType ActiveMessenger::sendMsgParserdesImpl(
   NodeType dest,
   HandlerType han,
   MsgSharedPtr<MessageT>& msg,
@@ -184,19 +170,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
 
 #endif
 
-template <
-  typename MessageT,
-#if HAS_SERIALIZATION_LIBRARY
-  std::enable_if_t<true
-    and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
-    and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
-    int
-  >
-#else
-  typename
-#endif
->
-ActiveMessenger::PendingSendType ActiveMessenger::sendMsgImpl(
+template <typename MessageT>
+ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   NodeType dest,
   HandlerType han,
   MsgSharedPtr<MessageT>& msg,

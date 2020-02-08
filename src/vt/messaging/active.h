@@ -280,13 +280,59 @@ struct ActiveMessenger {
   template <typename MsgT>
   void setTagMessage(MsgT* msg, TagType tag);
 
-  #if HAS_SERIALIZATION_LIBRARY
+  template <typename MessageT>
+  ActiveMessenger::PendingSendType sendMsgCopyableImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
 
-  /**
-   * \internal
-   * Invoke message sending.
-   * Template activated for message with a serialization function.
-   */
+#if not HAS_SERIALIZATION_LIBRARY
+
+  // Without serialization, everything must use basic copy-able transmission.
+
+  template <
+    typename MessageT,
+    typename = void
+  >
+  inline ActiveMessenger::PendingSendType sendMsgImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  ) {
+    return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
+  }
+
+#endif // not HAS_SERIALIZATION_LIBRARY
+
+#if HAS_SERIALIZATION_LIBRARY
+
+  // With serialization, the correct method is resolved via SFINAE.
+  // This also includes additional guards on when copy-able transmission
+  // is infered in order to detect areas of ambiguity.
+
+  template <typename MessageT>
+  ActiveMessenger::PendingSendType sendMsgSerializableImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
+
+  template <typename MessageT>
+  ActiveMessenger::PendingSendType sendMsgParserdesImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
+
   template <
     typename MessageT,
     std::enable_if_t<true
@@ -295,19 +341,16 @@ struct ActiveMessenger {
       int
     > = 0
   >
-  ActiveMessenger::PendingSendType sendMsgImpl(
+  inline ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MessageT>& msg,
     ByteType msg_size,
     TagType tag
-  );
+  ) {
+    return sendMsgSerializableImpl<MessageT>(dest, han, msg, msg_size, tag);
+  }
 
-  /**
-   * \internal
-   * Invoke message sending.
-   * Template activated for messages with parserdes.
-   */
   template <
     typename MessageT,
     std::enable_if_t<true
@@ -316,41 +359,35 @@ struct ActiveMessenger {
       int
     > = 0
   >
-  ActiveMessenger::PendingSendType sendMsgImpl(
+  inline ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MessageT>& msg,
     ByteType msg_size,
     TagType tag
-  );
+  ) {
+    return sendMsgParserdesImpl<MessageT>(dest, han, msg, msg_size, tag);
+  }
 
-#endif
-
-  /**
-   * \internal
-   * Invoke message sending.
-   * Template activated for messages without serialization.
-   */
   template <
     typename MessageT,
-#if HAS_SERIALIZATION_LIBRARY
-    // Not required; provides useful errors on bad SFINAE
     std::enable_if_t<true
       and not ::serdes::SerializableTraits<MessageT>::has_serialize_function
       and not ::serdes::SerializableTraits<MessageT>::is_parserdes,
       int
     > = 0
-#else
-    typename = void
-#endif
   >
-  ActiveMessenger::PendingSendType sendMsgImpl(
+  inline ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MessageT>& msg,
     ByteType msg_size,
     TagType tag
-  );
+  ) {
+    return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
+  }
+
+#endif // HAS_SERIALIZATION_LIBRARY
 
   /**
    * \defgroup preregister Basic Active Message Send with Pre-Registered Handler
