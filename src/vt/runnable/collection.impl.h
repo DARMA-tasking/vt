@@ -72,7 +72,7 @@ template <typename MsgT, typename ElementT>
       handler, reg_enum
     );
     // Note: get the event from the envelope to get the semantic connection for
-    // collections---no the current thing running in the queue
+    // collections---not the current thing running in the queue
     //
     // theMsg()->getCurrentTraceEvent();
     //
