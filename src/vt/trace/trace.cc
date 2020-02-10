@@ -329,7 +329,7 @@ void Trace::addUserEventBracketed(UserEventIDType event, double begin, double en
     LogType{begin, type, node, event, true}
   );
   logEvent(
-    LogType{end, type, node, event, true}
+    LogType{end, type, node, event, false}
   );
 }
 
