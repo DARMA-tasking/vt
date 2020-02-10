@@ -648,8 +648,7 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     break;
   case TraceConstantsType::BeginUserEventPair:
   case TraceConstantsType::EndUserEventPair:
-    cur_event_++;
-    log->event = cur_event_;
+    log->event = cur_event_++;
     break;
   default:
     vtAssert(0, "Not implemented");
