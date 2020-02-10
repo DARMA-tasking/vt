@@ -109,6 +109,11 @@ struct CollectionMessage :
   bool getWrap() const;
   void setWrap(bool const& wrap);
 
+  #if backend_check_enabled(trace_enabled)
+    trace::TraceEventIDType getFromTraceEvent() const;
+    void setFromTraceEvent(trace::TraceEventIDType in_event);
+  #endif
+
   #if backend_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
@@ -148,6 +153,10 @@ private:
     balance::ElementIDType elm_perm_ = 0;
     balance::ElementIDType elm_temp_ = 0;
     balance::CommCategory cat_ = balance::CommCategory::SendRecv;
+  #endif
+
+  #if backend_check_enabled(trace_enabled)
+    trace::TraceEventIDType trace_event_ = trace::no_trace_event;
   #endif
 };
 

@@ -345,7 +345,7 @@ template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsWrapType<ColT,UserMsgT,MsgT>
 CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
-  NodeType from
+  NodeType from, trace::TraceEventIDType event
 ) {
   using IdxContextHolder = InsertContextHolder<IndexT>;
 
@@ -382,7 +382,7 @@ template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsNotWrapType<ColT,UserMsgT,MsgT>
 CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
-  NodeType from
+  NodeType from, trace::TraceEventIDType event
 ) {
   using IdxContextHolder = InsertContextHolder<IndexT>;
 
@@ -406,7 +406,7 @@ CollectionManager::collectionAutoMsgDeliver(
   IdxContextHolder::set(&idx,proxy);
 
   runnable::RunnableCollection<MsgT,UntypedCollection>::run(
-    han, msg, ptr, from, member, idx1, idx2, idx3, idx4
+    han, msg, ptr, from, member, idx1, idx2, idx3, idx4, event
   );
 
   // Clear the current index context
@@ -489,8 +489,12 @@ template <typename ColT, typename IndexT, typename MsgT>
       // be very careful here, do not touch `base' after running the active
       // message because it might have migrated out and be invalid
       auto const from = col_msg->getFromNode();
+      trace::TraceEventIDType trace_event = trace::no_trace_event;
+      #if backend_check_enabled(trace_enabled)
+        trace_event = col_msg->getFromTraceEvent();
+      #endif
       collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
-        msg,base,handler,member,from
+        msg,base,handler,member,from,trace_event
       );
 
       #if backend_check_enabled(lblite)
@@ -747,8 +751,13 @@ template <typename ColT, typename IndexT, typename MsgT>
   // Dispatch the handler after pushing the contextual epoch
   theMsg()->pushEpoch(cur_epoch);
   auto const from = col_msg->getFromNode();
+
+  trace::TraceEventIDType trace_event = trace::no_trace_event;
+  #if backend_check_enabled(trace_enabled)
+    trace_event = col_msg->getFromTraceEvent();
+  #endif
   collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
-    msg,col_ptr,sub_handler,member,from
+    msg,col_ptr,sub_handler,member,from,trace_event
   );
   theMsg()->popEpoch(cur_epoch);
 
@@ -1012,9 +1021,11 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
       auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
       auto_registry::RegistryTypeEnum::RegVrtCollection;
     auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
-    theMsg()->makeTraceCreationSend(msg, handler, reg_type, msg_size, true);
+    auto event = theMsg()->makeTraceCreationSend(
+      msg, handler, reg_type, msg_size, true
+    );
+    msg->setFromTraceEvent(event);
   #endif
-
 
   msg->setFromNode(this_node);
 
@@ -1447,7 +1458,10 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
         auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
         auto_registry::RegistryTypeEnum::RegVrtCollection;
       auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
-      theMsg()->makeTraceCreationSend(msg, handler, reg_type, msg_size, false);
+      auto event = theMsg()->makeTraceCreationSend(
+        msg, handler, reg_type, msg_size, false
+      );
+      msg->setFromTraceEvent(event);
     #endif
 
     auto const& from_node = theContext()->getNode();

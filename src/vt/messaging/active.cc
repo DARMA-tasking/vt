@@ -280,10 +280,13 @@ EventType ActiveMessenger::sendMsgSized(
     envelopeSetHandler(msg->env, handler);
 
     if (not is_bcast or (is_bcast and dest == this_node_)) {
-      makeTraceCreationSend(
+      // auto cur_event = envelopeGetTraceEvent(msg->env);
+      // if (cur_event == trace::no_trace_event) {
+      auto event = makeTraceCreationSend(
         base, handler, auto_registry::RegistryTypeEnum::RegGeneral,
         msg_size, is_bcast
       );
+      envelopeSetTraceEvent(msg->env, event);
     }
   #endif
 

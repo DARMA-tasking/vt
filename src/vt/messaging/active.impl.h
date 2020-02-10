@@ -91,22 +91,21 @@ void ActiveMessenger::setCollectionMessage(MsgPtrT const msg) {
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::makeTraceCreationSend(
+trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
   MsgSizeType msg_size, bool is_bcast
 ) {
   #if backend_check_enabled(trace_enabled)
-    auto cur_event = envelopeGetTraceEvent(msg->env);
-    if (cur_event == trace::no_trace_event) {
-      trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
-      trace::TraceEventIDType event = trace::no_trace_event;
-      if (not is_bcast) {
-        event = theTrace()->messageCreation(ep, msg_size);
-      } else {
-        event = theTrace()->messageCreationBcast(ep, msg_size);
-      }
-      envelopeSetTraceEvent(msg->env, event);
+    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
+    trace::TraceEventIDType event = trace::no_trace_event;
+    if (not is_bcast) {
+      event = theTrace()->messageCreation(ep, msg_size);
+    } else {
+      event = theTrace()->messageCreationBcast(ep, msg_size);
     }
+    return event;
+  #else
+    return trace::no_trace_event;
   #endif
 }
 

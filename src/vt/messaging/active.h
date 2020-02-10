@@ -1424,7 +1424,7 @@ struct ActiveMessenger {
   }
 
   template <typename MsgPtrT>
-  void makeTraceCreationSend(
+  trace::TraceEventIDType makeTraceCreationSend(
     MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
     MsgSizeType msg_size, bool is_bcast
   );

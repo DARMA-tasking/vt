@@ -54,7 +54,8 @@ struct RunnableCollection {
   static void run(
     HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node,
     bool member,
-    uint64_t idx1 = 0, uint64_t idx2 = 0, uint64_t idx3 = 0, uint64_t idx4 = 0
+    uint64_t idx1 = 0, uint64_t idx2 = 0, uint64_t idx3 = 0, uint64_t idx4 = 0,
+    trace::TraceEventIDType in_trace_event = trace::no_trace_event
   );
 };
 
