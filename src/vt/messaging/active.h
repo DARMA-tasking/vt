@@ -1457,7 +1457,6 @@ private:
   EpochType current_epoch_context_                        = no_epoch;
   PriorityType current_priority_context_                  = no_priority;
   PriorityLevelType current_priority_level_context_       = no_priority_level;
-  EpochType global_epoch_                                 = no_epoch;
   MaybeReadyType maybe_ready_tag_han_                     = {};
   ContWaitType pending_handler_msgs_                      = {};
   ContainerPendingType pending_recvs_                     = {};
