@@ -369,7 +369,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
   NodeType const node = theContext()->getNode();
 
   logEvent(
-    std::make_unique<LogType>(time, type, node, event, false)
+    std::make_unique<LogType>(time, type, node, event, true)
   );
 }
 
@@ -628,8 +628,7 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:
   case TraceConstantsType::MessageRecv:
-    cur_event_++;
-    log->event = cur_event_;
+    log->event = cur_event_++;
     break;
   case TraceConstantsType::BeginIdle:
   case TraceConstantsType::EndIdle:
