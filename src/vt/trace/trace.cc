@@ -329,7 +329,7 @@ void Trace::addUserEventBracketed(UserEventIDType event, double begin, double en
     std::make_unique<LogType>(begin, type, node, event, true)
   );
   logEvent(
-    std::make_unique<LogType>(end, type, node, event, true)
+    std::make_unique<LogType>(end, type, node, event, false)
   );
 }
 
@@ -369,7 +369,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
   NodeType const node = theContext()->getNode();
 
   logEvent(
-    std::make_unique<LogType>(time, type, node, event, false)
+    std::make_unique<LogType>(time, type, node, event, true)
   );
 }
 
@@ -628,8 +628,7 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:
   case TraceConstantsType::MessageRecv:
-    cur_event_++;
-    log->event = cur_event_;
+    log->event = cur_event_++;
     break;
   case TraceConstantsType::BeginIdle:
   case TraceConstantsType::EndIdle:
@@ -642,15 +641,14 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     break;
   case TraceConstantsType::UserEvent:
   case TraceConstantsType::UserEventPair:
+    log->event = cur_event_;
     if (not log->user_start) {
       cur_event_++;
     }
-    log->event = cur_event_;
     break;
   case TraceConstantsType::BeginUserEventPair:
   case TraceConstantsType::EndUserEventPair:
-    cur_event_++;
-    log->event = cur_event_;
+    log->event = cur_event_++;
     break;
   default:
     vtAssert(0, "Not implemented");
