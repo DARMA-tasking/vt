@@ -646,6 +646,7 @@ TraceEventIDType Trace::logEvent(std::unique_ptr<LogType> log) {
     }
     log->event = cur_event_;
     break;
+  }
   case TraceConstantsType::BeginUserEventPair:
   case TraceConstantsType::EndUserEventPair:
     log->event = cur_event_++;
