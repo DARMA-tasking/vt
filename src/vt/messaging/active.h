@@ -230,7 +230,7 @@ struct ActiveMessenger {
    * \param[in,out] msg the message to mark as a termination message
    */
   template <typename MsgPtrT>
-  void setTermMessage(MsgPtrT const msg);
+  void markAsTermMessage(MsgPtrT const msg);
 
   /**
    * \brief Set the epoch in the envelope of a message
@@ -239,13 +239,13 @@ struct ActiveMessenger {
    * \param[in] epoch the epoch to mark on the message
    */
   template <typename MsgPtrT>
-  void setLocationMessage(MsgPtrT const msg);
+  void markAsLocationMessage(MsgPtrT const msg);
 
   template <typename MsgPtrT>
-  void setSerialMsgMessage(MsgPtrT const msg);
+  void markAsSerialMsgMessage(MsgPtrT const msg);
 
   template <typename MsgPtrT>
-  void setCollectionMessage(MsgPtrT const msg);
+  void markAsCollectionMessage(MsgPtrT const msg);
 
   template <typename MsgPtrT>
   void setEpochMessage(MsgPtrT const msg, EpochType const& epoch);

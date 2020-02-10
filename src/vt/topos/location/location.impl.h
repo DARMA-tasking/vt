@@ -172,7 +172,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
         this_inst, id, no_location_event_id, ask_node, home
       );
       msg->setResolvedNode(this_node);
-      theMsg()->setLocationMessage(msg);
+      theMsg()->markAsLocationMessage(msg);
       theMsg()->sendMsg<LocMsgType, updateLocation>(home, msg);
     }
   }
@@ -361,7 +361,7 @@ void EntityLocationCoord<EntityID>::getLocation(
         auto msg = makeSharedMessage<LocMsgType>(
           this_inst, id, event_id, this_node, home_node
         );
-        theMsg()->setLocationMessage(msg);
+        theMsg()->markAsLocationMessage(msg);
         theMsg()->sendMsg<LocMsgType, getLocationHandler>(home_node, msg);
         // save a pending action when information about location arrives
         pending_actions_.emplace(
@@ -408,7 +408,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg.get()),
     epoch
   );
-  theMsg()->setLocationMessage(msg);
+  theMsg()->markAsLocationMessage(msg);
 
   if (to_node != this_node) {
     // set the instance on the message to deliver to the correct manager
@@ -737,7 +737,7 @@ template <typename EntityID>
           inst, entity, event_id, ask_node, home_node
         );
         msg2->setResolvedNode(node);
-        theMsg()->setLocationMessage(msg2);
+        theMsg()->markAsLocationMessage(msg2);
         theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
       });
       theMsg()->popEpoch(epoch);

@@ -432,7 +432,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       auto msg = makeSharedMessage<TermCounterMsg>(
         state.getEpoch(), state.g_prod1, state.g_cons1
       );
-      theMsg()->setTermMessage(msg);
+      theMsg()->markAsTermMessage(msg);
       theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent, msg);
 
       debug_print_verbose(
@@ -477,7 +477,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
       if (is_term) {
         auto msg = makeSharedMessage<TermMsg>(state.getEpoch());
-        theMsg()->setTermMessage(msg);
+        theMsg()->markAsTermMessage(msg);
         theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg);
 
         state.setTerminated();
@@ -506,7 +506,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         );
 
         auto msg = makeSharedMessage<TermMsg>(state.getEpoch(), state.getCurWave());
-        theMsg()->setTermMessage(msg);
+        theMsg()->markAsTermMessage(msg);
         theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(msg);
       }
     }
@@ -587,7 +587,7 @@ void TerminationDetector::countsConstant(TermStateType& state) {
             // Start running final check to see if we are hung for sure
             if (not ArgType::vt_no_detect_hang) {
               auto msg = makeMessage<HangCheckMsg>();
-              theMsg()->setTermMessage(msg.get());
+              theMsg()->markAsTermMessage(msg.get());
               theMsg()->broadcastMsg<HangCheckMsg, hangCheckHandler>(msg.get());
               hangCheckHandler(nullptr);
             }
@@ -604,7 +604,7 @@ void TerminationDetector::startEpochGraphBuild() {
   // file
   if (arguments::ArgConfig::vt_epoch_graph_on_hang) {
     auto msg = makeMessage<BuildGraphMsg>();
-    theMsg()->setTermMessage(msg.get());
+    theMsg()->markAsTermMessage(msg.get());
     theMsg()->broadcastMsg<BuildGraphMsg, buildLocalGraphHandler>(msg.get());
     buildLocalGraphHandler(nullptr);
   }
@@ -977,7 +977,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
    *  epoch
    */
   auto msg = makeSharedMessage<TermMsg>(epoch);
-  theMsg()->setTermMessage(msg);
+  theMsg()->markAsTermMessage(msg);
   theMsg()->broadcastMsg<TermMsg,makeRootedHandler>(msg);
 
   /*

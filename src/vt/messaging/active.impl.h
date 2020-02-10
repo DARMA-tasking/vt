@@ -58,7 +58,7 @@
 namespace vt { namespace messaging {
 
 template <typename MsgPtrT>
-void ActiveMessenger::setTermMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
   setTermType(msg->env);
 #if backend_check_enabled(priorities)
   envelopeSetPriority(msg->env, sys_min_priority);
@@ -70,21 +70,21 @@ void ActiveMessenger::setTermMessage(MsgPtrT const msg) {
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::setLocationMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsLocationMessage(MsgPtrT const msg) {
 #if backend_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceLocation());
 #endif
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::setSerialMsgMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsSerialMsgMessage(MsgPtrT const msg) {
 #if backend_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceSerialMsg());
 #endif
 }
 
 template <typename MsgPtrT>
-void ActiveMessenger::setCollectionMessage(MsgPtrT const msg) {
+void ActiveMessenger::markAsCollectionMessage(MsgPtrT const msg) {
 #if backend_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceCollection());
 #endif

@@ -65,7 +65,7 @@ namespace vt { namespace term { namespace ds {
   auto const node = theContext()->getNode();
   vtAssertExpr(successor != node);
   auto msg = makeSharedMessage<AckMsg>(epoch,node,successor,count);
-  theMsg()->setTermMessage(msg);
+  theMsg()->markAsTermMessage(msg);
   theMsg()->sendMsg<AckMsg,requestAckHan>(successor,msg);
 }
 
@@ -80,7 +80,7 @@ namespace vt { namespace term { namespace ds {
   auto const node = theContext()->getNode();
   vtAssertExpr(predecessor != node);
   auto msg = makeSharedMessage<AckMsg>(epoch,node,predecessor,count);
-  theMsg()->setTermMessage(msg);
+  theMsg()->markAsTermMessage(msg);
   theMsg()->sendMsg<AckMsg,acknowledgeHan>(predecessor,msg);
 }
 
