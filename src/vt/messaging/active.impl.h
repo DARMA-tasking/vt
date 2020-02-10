@@ -65,28 +65,28 @@ void ActiveMessenger::setTermMessage(MsgPtrT const msg) {
 #endif
 #if backend_check_enabled(trace_enabled)
   //fmt::print("arguments::traceTerm()={}\n",arguments::traceTerm());
-  envelopeSetTraceThis(msg->env, arguments::traceTerm());
+  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceTerm());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::setLocationMessage(MsgPtrT const msg) {
 #if backend_check_enabled(trace_enabled)
-  envelopeSetTraceThis(msg->env, arguments::traceLocation());
+  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceLocation());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::setSerialMsgMessage(MsgPtrT const msg) {
 #if backend_check_enabled(trace_enabled)
-  envelopeSetTraceThis(msg->env, arguments::traceSerialMsg());
+  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceSerialMsg());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::setCollectionMessage(MsgPtrT const msg) {
 #if backend_check_enabled(trace_enabled)
-  envelopeSetTraceThis(msg->env, arguments::traceCollection());
+  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceCollection());
 #endif
 }
 

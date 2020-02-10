@@ -128,8 +128,15 @@ inline PriorityLevelType envelopeGetPriorityLevel(Env& env);
 template <typename Env>
 inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env);
 
+/**
+ * \brief Get whether an envelope is runtime traced
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether it is traced
+ */
 template <typename Env>
-inline bool envelopeGetTraceThis(Env& env);
+inline bool envelopeGetTraceRuntimeEnabled(Env& env);
 #endif
 
 } /* end namespace vt */

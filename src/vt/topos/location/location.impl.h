@@ -528,7 +528,9 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
   auto handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
 
 # if backend_check_enabled(trace_enabled)
-  HandlerManagerType::setHandlerTrace(handler, envelopeGetTraceThis(m->env));
+  HandlerManagerType::setHandlerTrace(
+    handler, envelopeGetTraceRuntimeEnabled(m->env)
+  );
 # endif
 
   m->setHandler(handler);
@@ -546,7 +548,9 @@ void EntityLocationCoord<EntityID>::routeMsgSerializeHandler(
   auto handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
 
 # if backend_check_enabled(trace_enabled)
-  HandlerManagerType::setHandlerTrace(handler, envelopeGetTraceThis(m->env));
+  HandlerManagerType::setHandlerTrace(
+    handler, envelopeGetTraceRuntimeEnabled(m->env)
+  );
 # endif
 
   m->setHandler(handler);

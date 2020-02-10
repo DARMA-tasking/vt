@@ -431,7 +431,7 @@ template <typename MsgT, typename BaseT>
       // Since we aren't sending the message (just packing it into a buffer, we
       // need to transfer whether the handler should be traced on that message
       auto_registry::HandlerManagerType::setHandlerTrace(
-        han_modified, envelopeGetTraceThis(msg->env)
+        han_modified, envelopeGetTraceRuntimeEnabled(msg->env)
       );
 #   endif
 

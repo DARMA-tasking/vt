@@ -71,7 +71,7 @@ inline void envelopeInit(Env& env) {
   envelopeSetPriorityLevel(env, 0);
 # endif
 # if backend_check_enabled(trace_enabled)
-  envelopeSetTraceThis(env, true);
+  envelopeSetTraceRuntimeEnabled(env, true);
   envelopeSetTraceEvent(env, trace::no_trace_event);
 # endif
 }

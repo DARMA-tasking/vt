@@ -89,8 +89,8 @@ inline trace::TraceEventIDType envelopeGetTraceEvent(Env& env) {
 }
 
 template <typename Env>
-inline bool envelopeGetTraceThis(Env& env) {
-  return reinterpret_cast<Envelope*>(&env)->trace_this;
+inline bool envelopeGetTraceRuntimeEnabled(Env& env) {
+  return reinterpret_cast<Envelope*>(&env)->trace_rt_enabled;
 }
 #endif
 
