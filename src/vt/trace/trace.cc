@@ -663,7 +663,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   case TraceConstantsType::UserEvent:
   case TraceConstantsType::UserEventPair:
     log.event = cur_event_;
-    if (log.user_data().user_start) {
+    if (not log.user_data().user_start) {
       cur_event_++;
     }
     break;
