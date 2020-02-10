@@ -369,7 +369,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
   NodeType const node = theContext()->getNode();
 
   logEvent(
-    LogType{time, type, node, event, false}
+    LogType{time, type, node, event, true}
   );
 }
 
@@ -649,8 +649,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:
   case TraceConstantsType::MessageRecv:
-    cur_event_++;
-    log.event = cur_event_;
+    log.event = cur_event_++;
     break;
   case TraceConstantsType::BeginIdle:
   case TraceConstantsType::EndIdle:
@@ -663,10 +662,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
     break;
   case TraceConstantsType::UserEvent:
   case TraceConstantsType::UserEventPair:
-    if (not log.user_data().user_start) {
-      cur_event_++;
-    }
-    log.event = cur_event_;
+    log.event = log.user_data().user_start ? cur_event_ : cur_event_++;
     break;
   case TraceConstantsType::BeginUserEventPair:
   case TraceConstantsType::EndUserEventPair:
