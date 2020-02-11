@@ -125,8 +125,8 @@ inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt) 
 }
 
 template <typename Env>
-inline void envelopeSetTraceRuntimeEnabled(Env& env, bool in) {
-  reinterpret_cast<Envelope*>(&env)->trace_rt_enabled = in;
+inline void envelopeSetTraceRuntimeEnabled(Env& env, bool is_trace_enabled) {
+  reinterpret_cast<Envelope*>(&env)->trace_rt_enabled = is_trace_enabled;
 }
 #endif
 
