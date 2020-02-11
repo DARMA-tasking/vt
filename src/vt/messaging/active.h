@@ -233,20 +233,35 @@ struct ActiveMessenger {
   void markAsTermMessage(MsgPtrT const msg);
 
   /**
+   * \brief Mark a message as a location message
+   *
+   * \param[in,out] msg  the message to mark as a location message
+   */
+  template <typename MsgPtrT>
+  void markAsLocationMessage(MsgPtrT const msg);
+
+  /**
+   * \brief Mark a message as a serialization control message
+   *
+   * \param[in,out] msg  the message to mark as a serialization control message
+   */
+  template <typename MsgPtrT>
+  void markAsSerialMsgMessage(MsgPtrT const msg);
+
+  /**
+   * \brief Mark a message as a collection message
+   *
+   * \param[in,out] msg  the message to mark as a collection message
+   */
+  template <typename MsgPtrT>
+  void markAsCollectionMessage(MsgPtrT const msg);
+
+  /**
    * \brief Set the epoch in the envelope of a message
    *
    * \param[in,out] msg the message to mark the epoch on (envelope must be able to hold)
    * \param[in] epoch the epoch to mark on the message
    */
-  template <typename MsgPtrT>
-  void markAsLocationMessage(MsgPtrT const msg);
-
-  template <typename MsgPtrT>
-  void markAsSerialMsgMessage(MsgPtrT const msg);
-
-  template <typename MsgPtrT>
-  void markAsCollectionMessage(MsgPtrT const msg);
-
   template <typename MsgPtrT>
   void setEpochMessage(MsgPtrT const msg, EpochType const& epoch);
 
