@@ -408,6 +408,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     envelopeGetRef(msg->env), msg->getLocFromNode(), print_ptr(msg.get()),
     epoch
   );
+
   theMsg()->markAsLocationMessage(msg);
 
   if (to_node != this_node) {
