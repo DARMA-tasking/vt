@@ -68,11 +68,7 @@ static constexpr HandlerType const blank_handler = 0;
 static constexpr BitCountType const auto_num_bits = 1;
 static constexpr BitCountType const functor_num_bits = 1;
 static constexpr BitCountType const objgroup_num_bits = 1;
-
-#if backend_check_enabled(trace_enabled)
 static constexpr BitCountType const trace_num_bits = 1;
-#endif
-
 static constexpr BitCountType const control_num_bits = 20;
 static constexpr BitCountType const handler_id_num_bits =
  BitCounterType<HandlerType>::value - (
@@ -80,9 +76,7 @@ static constexpr BitCountType const handler_id_num_bits =
    + functor_num_bits
    + objgroup_num_bits
    + control_num_bits
-#if backend_check_enabled(trace_enabled)
    + trace_num_bits
-#endif
  );
 
 // eHandlerBits::ObjGroup identifies the handler as targeting an objgroup; the
@@ -91,12 +85,8 @@ enum eHandlerBits {
   ObjGroup   = 0,
   Auto       = eHandlerBits::ObjGroup   + objgroup_num_bits,
   Functor    = eHandlerBits::Auto       + auto_num_bits,
-#if backend_check_enabled(trace_enabled)
   Trace      = eHandlerBits::Functor    + functor_num_bits,
   Control    = eHandlerBits::Trace      + trace_num_bits,
-#else
-  Control    = eHandlerBits::Functor    + functor_num_bits,
-#endif
   Identifier = eHandlerBits::Control    + control_num_bits
 };
 
