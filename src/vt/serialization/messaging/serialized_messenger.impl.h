@@ -425,17 +425,17 @@ template <typename MsgT, typename BaseT>
   } else {
     auto const& total_size = ptr_size + sys_size;
 
-    auto han_modified = han;
+    auto traceable_han = han;
 
 #   if backend_check_enabled(trace_enabled)
       // Since we aren't sending the message (just packing it into a buffer, we
       // need to transfer whether the handler should be traced on that message
       auto_registry::HandlerManagerType::setHandlerTrace(
-        han_modified, envelopeGetTraceRuntimeEnabled(msg->env)
+        traceable_han, envelopeGetTraceRuntimeEnabled(msg->env)
       );
 #   endif
 
-    sys_msg->handler = han_modified;
+    sys_msg->handler = traceable_han;
     sys_msg->env = msg->env;
     sys_msg->from_node = theContext()->getNode();
     sys_msg->ptr_size = ptr_size;
@@ -445,7 +445,7 @@ template <typename MsgT, typename BaseT>
       serial_msg, node,
       "broadcastSerialMsg (non-eager): container: han={}, sys_size={}, "
       "ptr_size={}, total_size={}, group={:x}\n",
-      han_modified, sys_size, ptr_size, total_size, group_
+      traceable_han, sys_size, ptr_size, total_size, group_
     );
 
     using MsgType = SerialWrapperMsgType<MsgT>;
