@@ -70,6 +70,10 @@ inline void envelopeInit(Env& env) {
   envelopeSetPriority(env, min_priority);
   envelopeSetPriorityLevel(env, 0);
 # endif
+# if backend_check_enabled(trace_enabled)
+  envelopeSetTraceRuntimeEnabled(env, true);
+  envelopeSetTraceEvent(env, trace::no_trace_event);
+# endif
 }
 
 inline void envelopeInitEmpty(Envelope& env) {

@@ -80,6 +80,11 @@ public:
 
   static bool vt_trace;
   static bool vt_trace_mpi;
+  static bool vt_trace_sys_all;
+  static bool vt_trace_sys_term;
+  static bool vt_trace_sys_location;
+  static bool vt_trace_sys_collection;
+  static bool vt_trace_sys_serial_msg;
   static std::string vt_trace_file;
   static std::string vt_trace_dir;
   static int32_t vt_trace_mod;
@@ -159,6 +164,19 @@ private:
 inline bool user1() { return ArgConfig::vt_user_1; }
 inline bool user2() { return ArgConfig::vt_user_2; }
 inline bool user3() { return ArgConfig::vt_user_3; }
+
+inline bool traceTerm() {
+  return ArgConfig::vt_trace_sys_term or ArgConfig::vt_trace_sys_all;
+}
+inline bool traceLocation() {
+  return ArgConfig::vt_trace_sys_location or ArgConfig::vt_trace_sys_all;
+}
+inline bool traceCollection() {
+  return ArgConfig::vt_trace_sys_collection or ArgConfig::vt_trace_sys_all;
+}
+inline bool traceSerialMsg() {
+  return ArgConfig::vt_trace_sys_serial_msg or ArgConfig::vt_trace_sys_all;
+}
 
 }} /* end namespace vt::arguments */
 

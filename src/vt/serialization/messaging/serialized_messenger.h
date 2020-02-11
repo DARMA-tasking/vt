@@ -149,7 +149,7 @@ struct SerializedMessenger {
   static messaging::PendingSend broadcastSerialMsg(MsgT* msg);
 
   template <typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend broadcastSerialMsgHandler(MsgT* msg, HandlerType const& han);
+  static messaging::PendingSend broadcastSerialMsgHandler(MsgT* msg, HandlerType han);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
   static messaging::PendingSend sendSerialMsg(

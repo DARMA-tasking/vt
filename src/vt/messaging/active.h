@@ -230,7 +230,31 @@ struct ActiveMessenger {
    * \param[in,out] msg the message to mark as a termination message
    */
   template <typename MsgPtrT>
-  void setTermMessage(MsgPtrT const msg);
+  void markAsTermMessage(MsgPtrT const msg);
+
+  /**
+   * \brief Mark a message as a location message
+   *
+   * \param[in,out] msg  the message to mark as a location message
+   */
+  template <typename MsgPtrT>
+  void markAsLocationMessage(MsgPtrT const msg);
+
+  /**
+   * \brief Mark a message as a serialization control message
+   *
+   * \param[in,out] msg  the message to mark as a serialization control message
+   */
+  template <typename MsgPtrT>
+  void markAsSerialMsgMessage(MsgPtrT const msg);
+
+  /**
+   * \brief Mark a message as a collection message
+   *
+   * \param[in,out] msg  the message to mark as a collection message
+   */
+  template <typename MsgPtrT>
+  void markAsCollectionMessage(MsgPtrT const msg);
 
   /**
    * \brief Set the epoch in the envelope of a message
@@ -1414,6 +1438,12 @@ struct ActiveMessenger {
     send_listen_.clear();
   }
 
+  template <typename MsgPtrT>
+  trace::TraceEventIDType makeTraceCreationSend(
+    MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
+    MsgSizeType msg_size, bool is_bcast
+  );
+
 private:
   bool testPendingActiveMsgAsyncRecv();
   bool testPendingDataMsgAsyncRecv();
@@ -1442,7 +1472,6 @@ private:
   EpochType current_epoch_context_                        = no_epoch;
   PriorityType current_priority_context_                  = no_priority;
   PriorityLevelType current_priority_level_context_       = no_priority_level;
-  EpochType global_epoch_                                 = no_epoch;
   MaybeReadyType maybe_ready_tag_han_                     = {};
   ContWaitType pending_handler_msgs_                      = {};
   ContainerPendingType pending_recvs_                     = {};

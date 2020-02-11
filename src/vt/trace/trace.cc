@@ -124,9 +124,20 @@ Trace::Trace() { }
   #endif
 }
 
+/*static*/ void Trace::traceEndIdleTrigger() {
+  #if backend_check_enabled(trace_enabled)
+    if (theTrace()->inIdleEvent()) {
+      theTrace()->endIdle();
+    }
+  #endif
+}
+
 void Trace::initialize() {
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
+  );
+  theSched()->registerTrigger(
+    sched::SchedulerEvent::EndIdle, traceEndIdleTrigger
   );
 }
 

@@ -60,7 +60,8 @@ namespace vt { namespace runnable {
 template <typename MsgT, typename ElementT>
 /*static*/ void RunnableCollection<MsgT,ElementT>::run(
   HandlerType handler, MsgT* msg, ElementT* elm, NodeType from,
-  bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
+  bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4,
+  trace::TraceEventIDType in_trace_event
 ) {
 #if backend_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
@@ -71,7 +72,7 @@ template <typename MsgT, typename ElementT>
     trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, reg_enum
     );
-    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
+    trace::TraceEventIDType trace_event = in_trace_event;
     auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
     auto const from_node = from != uninitialized_destination ? from : ctx_node;
 

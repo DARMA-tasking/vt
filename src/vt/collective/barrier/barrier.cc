@@ -215,7 +215,7 @@ void Barrier::barrierUp(
       auto msg = makeSharedMessage<BarrierMsg>(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
       if (skip_term) {
-        theMsg()->setTermMessage(msg);
+        theMsg()->markAsTermMessage(msg);
       }
       debug_print(
         barrier, node,
@@ -226,7 +226,7 @@ void Barrier::barrierUp(
       auto msg = makeSharedMessage<BarrierMsg>(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
       if (skip_term) {
-        theMsg()->setTermMessage(msg);
+        theMsg()->markAsTermMessage(msg);
       }
       debug_print(
         barrier, node,

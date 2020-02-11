@@ -68,10 +68,15 @@ static constexpr HandlerType const blank_handler = 0;
 static constexpr BitCountType const auto_num_bits = 1;
 static constexpr BitCountType const functor_num_bits = 1;
 static constexpr BitCountType const objgroup_num_bits = 1;
+static constexpr BitCountType const trace_num_bits = 1;
 static constexpr BitCountType const control_num_bits = 20;
 static constexpr BitCountType const handler_id_num_bits =
  BitCounterType<HandlerType>::value - (
-   auto_num_bits + functor_num_bits + objgroup_num_bits + control_num_bits
+     auto_num_bits
+   + functor_num_bits
+   + objgroup_num_bits
+   + control_num_bits
+   + trace_num_bits
  );
 
 // eHandlerBits::ObjGroup identifies the handler as targeting an objgroup; the
@@ -80,7 +85,8 @@ enum eHandlerBits {
   ObjGroup   = 0,
   Auto       = eHandlerBits::ObjGroup   + objgroup_num_bits,
   Functor    = eHandlerBits::Auto       + auto_num_bits,
-  Control    = eHandlerBits::Functor    + functor_num_bits,
+  Trace      = eHandlerBits::Functor    + functor_num_bits,
+  Control    = eHandlerBits::Trace      + trace_num_bits,
   Identifier = eHandlerBits::Control    + control_num_bits
 };
 
@@ -91,7 +97,8 @@ struct HandlerManager {
 
   static HandlerType makeHandler(
     bool is_auto, bool is_functor, HandlerIdentifierType id,
-    bool is_objgroup = false, HandlerControlType control = 0
+    bool is_objgroup = false, HandlerControlType control = 0,
+    bool is_trace = true
   );
   static void setHandlerIdentifier(HandlerType& han, HandlerIdentifierType id);
   static void setHandlerControl(HandlerType& han, HandlerControlType control);
@@ -104,6 +111,10 @@ struct HandlerManager {
   static bool isHandlerAuto(HandlerType han);
   static bool isHandlerFunctor(HandlerType han);
   static bool isHandlerObjGroup(HandlerType han);
+#if backend_check_enabled(trace_enabled)
+  static void setHandlerTrace(HandlerType& han, bool is_trace);
+  static bool isHandlerTrace(HandlerType han);
+#endif
 };
 
 } //end namespace vt

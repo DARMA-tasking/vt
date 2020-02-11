@@ -573,6 +573,32 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_inverse("--vt_trace_flush_size", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+    if (not ArgType::vt_trace_sys_all) {
+      if (ArgType::vt_trace_sys_term) {
+        auto f11 = fmt::format("Tracing all system termination messages");
+        auto f12 = opt_on("--vt_trace_sys_term", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+      if (ArgType::vt_trace_sys_location) {
+        auto f11 = fmt::format("Tracing all system location messages");
+        auto f12 = opt_on("--vt_trace_sys_location", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+      if (ArgType::vt_trace_sys_collection) {
+        auto f11 = fmt::format("Tracing all system collection messages");
+        auto f12 = opt_on("--vt_trace_sys_collection", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+      if (ArgType::vt_trace_sys_serial_msg) {
+        auto f11 = fmt::format("Tracing all system serialization messages");
+        auto f12 = opt_on("--vt_trace_sys_serial_msg", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+    } else {
+      auto f11 = fmt::format("Tracing all system messages");
+      auto f12 = opt_on("--vt_trace_sys_all", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
   #endif
 

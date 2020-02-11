@@ -135,6 +135,10 @@ void CollectionMessage<ColT, BaseMsgT>::serializeThis(SerializerT& s) {
     s | elm_temp_;
     s | cat_;
   #endif
+
+  #if backend_check_enabled(trace_enabled)
+    s | trace_event_;
+  #endif
 }
 
 template <typename ColT, typename BaseMsgT>
@@ -196,6 +200,23 @@ void CollectionMessage<ColT, BaseMsgT>::setCat(balance::CommCategory cat) {
   cat_ = cat;
 }
 
+
+#endif
+
+#if backend_check_enabled(trace_enabled)
+
+template <typename ColT, typename BaseMsgT>
+trace::TraceEventIDType
+CollectionMessage<ColT, BaseMsgT>::getFromTraceEvent() const {
+  return trace_event_;
+}
+
+template <typename ColT, typename BaseMsgT>
+void CollectionMessage<ColT, BaseMsgT>::setFromTraceEvent(
+  trace::TraceEventIDType in_event
+) {
+  trace_event_ = in_event;
+}
 
 #endif
 

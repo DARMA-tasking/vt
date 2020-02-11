@@ -186,6 +186,15 @@ inline void envelopeSetPriorityLevel(Env& env, PriorityLevelType priority_level)
  */
 template <typename Env>
 inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt);
+
+/**
+ * \brief Set whether this envelope is traced at runtime
+ *
+ * \param[in,out] env the envelope
+ * \param[in] is_trace_enabled whether it should be traced
+ */
+template <typename Env>
+inline void envelopeSetTraceRuntimeEnabled(Env& env, bool is_trace_enabled);
 #endif
 
 } /* end namespace vt */
