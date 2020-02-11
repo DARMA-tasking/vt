@@ -308,11 +308,10 @@ template <typename MsgT, typename BaseT>
 
   auto const& total_size = ptr_size + msg_size + han_size + size_size;
   auto const& tag = no_tag;
+  theMsg()->markAsSerialMsgMessage(msg);
   if (is_bcast) {
-    theMsg()->markAsSerialMsgMessage(msg);
     return theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag);
   } else {
-    theMsg()->markAsSerialMsgMessage(msg);
     return theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag);
   }
 }
