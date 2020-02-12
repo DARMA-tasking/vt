@@ -127,7 +127,6 @@ struct Log final {
       {
       }
 
-      // Assigned via placement-new ctors (only)
       UserData() = delete;
       UserData(UserData const&) = default;
       UserData(UserData&&) = default;
