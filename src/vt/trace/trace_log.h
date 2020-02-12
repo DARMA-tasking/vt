@@ -137,40 +137,24 @@ struct Log final {
 
     // Copy based on type.
     Data(Data const& data) {
-      if (data.user.data_type == Log::LogDataType::user) {
-        new (&user) UserData{data.user};
-      } else {
-        sys = data.sys;
-      }
+      copyFrom(data);
     }
 
     // Move based on type
     Data(Data&& data) {
-      if (data.user.data_type == Log::LogDataType::user) {
-        new (&user) UserData{std::move(data.user)};
-      } else {
-        sys = std::move(data.sys);
-      }
+      moveFrom(std::move(data));
     }
 
     Data &operator=(Data const& other_data) {
-      clean();
-      if (other_data.user.data_type == Log::LogDataType::user) {
-        new (&user) UserData{other_data.user};
-      } else {
-        sys = other_data.sys;
-      }
+      reset();
+      copyFrom(other_data);
 
       return *this;
     }
 
     Data &operator=(Data && other_data) {
-      clean();
-      if (other_data.user.data_type == Log::LogDataType::user) {
-        new (&user) UserData{std::move(other_data.user)};
-      } else {
-        sys = std::move(other_data.sys);
-      }
+      reset();
+      moveFrom(std::move(other_data));
 
       return *this;
     }
@@ -183,16 +167,34 @@ struct Log final {
     }
 
     ~Data() {
-      clean();
+      reset();
     }
 
   private:
 
-    void clean() {
+    void reset() {
       // Can access "Common initial sequence" per C++11 6.5.2.3/6
       if (user.data_type == LogDataType::user) {
         // Cleanup placement-new artifacts.
         user.~UserData();
+      }
+    }
+
+    void copyFrom(Data const& other_data)
+    {
+      if (other_data.user.data_type == Log::LogDataType::user) {
+        new (&user) UserData{other_data.user};
+      } else {
+        sys = other_data.sys;
+      }
+    }
+
+    void moveFrom(Data && other_data)
+    {
+      if (other_data.user.data_type == Log::LogDataType::user) {
+        new (&user) UserData{std::move(other_data.user)};
+      } else {
+        sys = std::move(other_data.sys);
       }
     }
   };
