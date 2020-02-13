@@ -53,8 +53,11 @@ struct BaseLB;
 
 struct StatsMapLB : BaseLB {
   StatsMapLB() = default;
-  StatsMapLB(StatsMapLB const&) = delete;
-  StatsMapLB(StatsMapLB&&) = default;
+  StatsMapLB(StatsMapLB const &) = delete;
+  StatsMapLB(StatsMapLB &&) noexcept = default;
+  StatsMapLB &operator=(StatsMapLB const &) = delete;
+  StatsMapLB &operator=(StatsMapLB &&) noexcept = default;
+  virtual ~StatsMapLB() = default;
 
   void init(objgroup::proxy::Proxy<StatsMapLB> in_proxy);
   void runLB() override;
