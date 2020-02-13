@@ -56,8 +56,9 @@ namespace vt { namespace trace { namespace file_spec {
 /**
  * \struct Spec spec.h vt/trace/file_spec/spec.h
  *
- * \brief Parses trace spec file when available and tests when its enabled. One
- * node can do the parsing, the other receive the spec from a broadcast.
+ * \brief Parses trace spec file when available and tests when its enabled. A
+ * single node parses the specification; all others receive the spec from a
+ * broadcast.
  *
  * Parses the following format:
  * """
@@ -120,10 +121,10 @@ private:
     bool testTraceEnabledFor(SpecIndex in_idx) const {
       if (is_mod_) {
         // Check if mod idx_ is within range, by dividing out idx_ we get the
-        // pos/neg offset from that nod value
+        // pos/neg offset from that mod value
         return in_idx % idx_ >= idx_ + neg_ or in_idx % idx_ <= pos_;
       } else {
-        // Check intersection with range: [idx_-neg_, idx_-pos_]
+        // Check intersection with range: [idx_+neg_, idx_+pos_]
         return in_idx >= idx_ + neg_ and in_idx <= idx_ + pos_;
       }
     }
