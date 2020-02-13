@@ -124,7 +124,7 @@ private:
         return in_idx % idx_ >= idx_ + neg_ or in_idx % idx_ <= pos_;
       } else {
         // Check intersection with range: [idx_-neg_, idx_-pos_]
-        return in_idx >= idx_ - neg_ and in_idx <= idx_ + pos_;
+        return in_idx >= idx_ + neg_ and in_idx <= idx_ + pos_;
       }
     }
 
