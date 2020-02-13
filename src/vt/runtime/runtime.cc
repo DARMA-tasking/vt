@@ -1057,6 +1057,10 @@ void Runtime::setup() {
     MPI_Barrier(theContext->getComm());
   });
 
+# if backend_check_enabled(trace_enabled)
+  theTrace->parseSpec();
+# endif
+
   if (ArgType::vt_pause) {
     pauseForDebugger();
   }

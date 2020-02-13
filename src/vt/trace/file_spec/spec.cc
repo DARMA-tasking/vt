@@ -197,15 +197,6 @@ void Spec::parse() {
   has_spec_ = true;
 }
 
-void Spec::broadcastSpecWaitReceive() {
-  broadcastSpec();
-  do vt::runScheduler(); while (not finished_bcast_);
-}
-
-void Spec::doneBcast(DoneMsg*) {
-  finished_bcast_ = true;
-}
-
 void Spec::broadcastSpec() {
   auto root = theContext()->getNode();
   auto msg = makeMessage<SpecMsg>(spec_mod_, spec_exact_, root);
