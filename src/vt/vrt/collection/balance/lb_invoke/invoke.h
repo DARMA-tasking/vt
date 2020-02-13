@@ -104,7 +104,7 @@ protected:
   void releaseNow(PhaseType phase);
 
 public:
-  void checkTraceEnabledNextPhase(PhaseType phase) {
+  void setTraceEnabledNextPhase(PhaseType phase) {
     // Check if tracing is enabled for this next phase. Do this immediately before
     // LB runs so LB is always instrumented as the beginning of the next phase
 # if backend_check_enabled(trace_enabled)
@@ -115,13 +115,13 @@ public:
   template <typename MsgT>
   void sysLB(MsgT* msg) {
     debug_print(lb, node, "sysLB\n");
-    checkTraceEnabledNextPhase(msg->phase_);
+    setTraceEnabledNextPhase(msg->phase_);
     return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
   }
   template <typename MsgT>
   void sysReleaseLB(MsgT* msg) {
     debug_print(lb, node, "sysReleaseLB\n");
-    checkTraceEnabledNextPhase(msg->phase_);
+    setTraceEnabledNextPhase(msg->phase_);
     return releaseImpl(msg->phase_, msg->num_collections_);
   }
 
