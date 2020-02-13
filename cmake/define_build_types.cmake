@@ -60,11 +60,22 @@ option(vt_detector_disabled "Build VT with detector disabled" OFF)
 option(vt_lb_enabled "Build VT with load balancing enabled" OFF)
 option(vt_trace_enabled "Build VT with trace enabled" OFF)
 option(vt_priorities_enabled "Build VT with message priorities enabled" ON)
+option(
+  vt_test_trace_runtime_enabled
+  "Build VT with runtime tracing enabled (for testing)" OFF
+)
 
 set(
   vt_priority_bits_per_level 3 CACHE
   STRING "Number of bits to use per VT priority level"
 )
+
+if (${vt_test_trace_runtime_enabled})
+  message(STATUS "Building VT with runtime tracing enabled (for testing)")
+  set(vt_feature_cmake_test_trace_on "1")
+else()
+  set(vt_feature_cmake_test_trace_on "0")
+endif()
 
 if (${vt_detector_disabled})
   message(STATUS "Building VT with detector disabled")

@@ -66,3 +66,4 @@
 #define vt_feature_cmake_priority_bits_level @vt_feature_cmake_priority_bits_level@
 #define vt_feature_cmake_priorities          @vt_feature_cmake_priorities@
 #define vt_feature_cmake_fcontext            @vt_feature_cmake_fcontext@
+#define vt_feature_cmake_test_trace_on       @vt_feature_cmake_test_trace_on@
