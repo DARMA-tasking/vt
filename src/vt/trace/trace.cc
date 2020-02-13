@@ -147,7 +147,7 @@ void Trace::parseSpec() {
     spec_proxy_ = spec_proxy.getProxy();
 
     // Set enabled for the initial phase
-    theTrace()->setTraceEnabledCurrentPhase(0);
+    setTraceEnabledCurrentPhase(0);
   }
 }
 
