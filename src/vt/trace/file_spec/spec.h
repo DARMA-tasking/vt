@@ -195,6 +195,20 @@ public:
    */
   bool specReceived() const { return has_spec_; };
 
+  /**
+   * \brief Clear the current specification (used for testing)
+   */
+  void clear() {
+    spec_mod_.clear();
+    spec_exact_.clear();
+    has_spec_ = false;
+  }
+
+  /**
+   * \brief Get the proxy for the objgroup (used for testing)
+   */
+  ProxyType getProxy() const { return proxy_; }
+
 private:
   /**
    * \struct SpecMsg
