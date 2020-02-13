@@ -48,6 +48,7 @@
 #include "vt/timing/timing.h"
 #include "vt/trace/trace.h"
 #include "vt/utils/demangle/demangle.h"
+#include "vt/trace/file_spec/spec.h"
 
 #include <cinttypes>
 #include <fstream>
@@ -139,6 +140,26 @@ void Trace::initialize() {
   theSched()->registerTrigger(
     sched::SchedulerEvent::EndIdle, traceEndIdleTrigger
   );
+}
+
+void Trace::parseSpec() {
+  if (ArgType::vt_trace_spec_enabled) {
+    auto spec_proxy = file_spec::Spec::construct();
+    theTerm()->produce();
+    if (theContext()->getNode() == 0) {
+      auto spec_ptr = spec_proxy.get();
+      spec_ptr->parse();
+      spec_ptr->broadcastSpec();
+    }
+    while (not spec_proxy.get()->specReceived()) {
+      vt::runScheduler();
+    }
+    theTerm()->consume();
+    spec_proxy_ = spec_proxy.getProxy();
+
+    // Set enabled for the initial phase
+    theTrace()->setTraceEnabledCurrentPhase(0);
+  }
 }
 
 bool Trace::inIdleEvent() const {
@@ -601,8 +622,24 @@ bool Trace::checkDynamicRuntimeEnabled() {
    *
    * checkEnabled() -> this is the "static" runtime check, may be disabled for a
    * subset of processors when trace mod is used to reduce overhead
+   *
+   * trace_enabled_cur_phase_ -> this is whether tracing is enabled for the
+   * current phase (LB phase), which can be disabled via a trace enable
+   * specification file
    */
-  return enabled_ and traceWritingEnabled(theContext()->getNode());
+  return
+    enabled_ and
+    traceWritingEnabled(theContext()->getNode()) and
+    trace_enabled_cur_phase_;
+}
+
+void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
+  if (spec_proxy_ != vt::no_obj_group) {
+    // SpecIndex is signed due to negative/positive, phase is not signed
+    auto spec_index = static_cast<file_spec::Spec::SpecIndex>(cur_phase);
+    vt::objgroup::proxy::Proxy<file_spec::Spec> proxy(spec_proxy_);
+    trace_enabled_cur_phase_ = proxy.get()->checkTraceEnabled(spec_index);
+  }
 }
 
 TraceEventIDType Trace::logEvent(LogType&& log) {
