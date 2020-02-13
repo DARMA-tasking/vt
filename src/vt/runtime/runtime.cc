@@ -566,18 +566,18 @@ void Runtime::printStartupBanner() {
         auto f12 = opt_on("--vt_trace_spec", f11);
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
-      if (ArgType::vt_trace_spec_file_name == "") {
+      if (ArgType::vt_trace_spec_file == "") {
         auto warn_trace_file = fmt::format(
           "{}Warning:{} {}{}{} has no effect: no specification file given"
           " option {}{}{} is empty{}\n", red, reset, magenta,
           "--vt_trace_spec",
-          reset, magenta, "--vt_trace_spec_file_name", reset, reset
+          reset, magenta, "--vt_trace_spec_file", reset, reset
         );
         fmt::print("{}\t{}{}", vt_pre, warn_trace_file, reset);
       } else {
         auto f11 = fmt::format(
           "Using trace specification file \"{}\"",
-          ArgType::vt_trace_spec_file_name
+          ArgType::vt_trace_spec_file
         );
         auto f12 = opt_inverse("--vt_trace_spec", f11);
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
