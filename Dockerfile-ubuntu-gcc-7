@@ -1,0 +1,78 @@
+FROM ubuntu:18.04
+MAINTAINER Jonathan Lifflander <jliffla@sandia.gov>
+
+RUN apt-get update && apt-get install -y \
+  curl \
+  cmake \
+  git \
+  googletest \
+  libmpich-dev \
+  wget \
+  gcc-7 \
+  zlib1g \
+  zlib1g-dev \
+  libopenmpi-dev \
+  ninja-build
+
+COPY . /usr/src/vt/
+
+WORKDIR /usr/src
+
+ARG LB_ENABLED
+ARG TRACE_ENABLED
+
+RUN \
+ dpkg -L zlib1g && \
+ export CC=mpicc && \
+ export CXX=mpicxx && \
+ if [ -d "googletest" ]; then rm -Rf googletest; fi && \
+ if [ -d "detector" ]; then rm -Rf detector; fi && \
+ if [ -d "checkpoint" ]; then rm -Rf checkpoint; fi && \
+ git clone -b release-1.8.1 --depth 1 https://github.com/google/googletest.git && \
+ export GTEST=$PWD/googletest && \
+ export GTEST_BUILD=/usr/build/googletest && \
+ git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git && \
+ export CHECKPOINT=$PWD/checkpoint && \
+ export CHECKPOINT_BUILD=/usr/build/checkpoint && \
+ git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git && \
+ export DETECTOR=$PWD/detector && \
+ export DETECTOR_BUILD=/usr/build/detector && \
+ export VT=$PWD/vt && \
+ export VT_BUILD=/usr/build/vt && \
+ mkdir -p $DETECTOR_BUILD && \
+ mkdir -p $GTEST_BUILD && \
+ mkdir -p $VT_BUILD && \
+ mkdir -p $CHECKPOINT_BUILD && \
+ echo $SOURCE_COMMIT && \
+ cd $GTEST_BUILD && \
+ mkdir build && \
+ cd build && \
+ cmake -DCMAKE_INSTALL_PREFIX=$GTEST_BUILD/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC $GTEST && \
+ make && \
+ make install && \
+ cd $DETECTOR_BUILD && \
+ mkdir build && \
+ cd build && \
+ cmake -DCMAKE_INSTALL_PREFIX=$DETECTOR_BUILD/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC  $DETECTOR && \
+ make && \
+ make install && \
+ cd $CHECKPOINT_BUILD && \
+ mkdir build && \
+ cd build && \
+ cmake -DCMAKE_INSTALL_PREFIX=$CHECKPOINT_BUILD/install -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR_BUILD/install  $CHECKPOINT && \
+ make && \
+ make install && \
+ cd $VT_BUILD && \
+ mkdir build && \
+ cd build && \
+ uname -p && \
+ uname  && \
+ cmake -GNinja -Dvt_lb_enabled=$LB_ENABLED -Dvt_trace_enabled=$TRACE_ENABLED -DMPI_EXTRA_FLAGS=--allow-run-as-root -DVT_NO_BUILD_EXAMPLES=1 -Dgtest_DIR=$GTEST_BUILD/install -DGTEST_ROOT=$GTEST_BUILD/install -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR_BUILD/install -DCMAKE_PREFIX_PATH="$GTEST_BUILD/install;/lib/x86_64-linux-gnu/" -Dcheckpoint_DIR=$CHECKPOINT_BUILD/install  $VT && \
+ ninja && \
+ ninja install && \
+ ninja test
+
+COPY $DETECTOR_BUILD/ $DETECTOR_BUILD
+COPY $CHECKPOINT_BUILD/ $CHECKPOINT_BUILD
+COPY $VT_BUILD/ $VT_BUILD
+COPY $GTEST_BUILD/ $GTEST_BUILD
