@@ -569,7 +569,7 @@ void Runtime::printStartupBanner() {
       }
       if (ArgType::vt_trace_spec_file_name == "") {
         auto warn_trace_file = fmt::format(
-          "{}Warning:{} {}{}{} has no effect: not specification file given"
+          "{}Warning:{} {}{}{} has no effect: no specification file given"
           " option {}{}{} is empty{}\n", red, reset, magenta,
           "--vt_trace_spec_enabled",
           reset, magenta, "--vt_trace_spec_file_name", reset, reset
