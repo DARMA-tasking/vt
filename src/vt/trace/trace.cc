@@ -49,6 +49,7 @@
 #include "vt/trace/trace.h"
 #include "vt/utils/demangle/demangle.h"
 #include "vt/trace/file_spec/spec.h"
+#include "vt/objgroup/headers.h"
 
 #include <cinttypes>
 #include <fstream>
