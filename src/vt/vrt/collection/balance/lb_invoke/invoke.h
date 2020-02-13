@@ -104,13 +104,7 @@ protected:
   void releaseNow(PhaseType phase);
 
 public:
-  void setTraceEnabledNextPhase(PhaseType phase) {
-    // Check if tracing is enabled for this next phase. Do this immediately before
-    // LB runs so LB is always instrumented as the beginning of the next phase
-# if backend_check_enabled(trace_enabled)
-    theTrace()->setTraceEnabledCurrentPhase(phase + 1);
-# endif
-  }
+  void setTraceEnabledNextPhase(PhaseType phase);
 
   template <typename MsgT>
   void sysLB(MsgT* msg) {
