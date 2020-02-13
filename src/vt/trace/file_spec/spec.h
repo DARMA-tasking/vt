@@ -121,10 +121,10 @@ private:
       if (is_mod_) {
         // Check if mod idx_ is within range, by dividing out idx_ we get the
         // pos/neg offset from that nod value
-        return in_idx % idx_ >= neg_ or in_idx % idx_ <= pos_;
+        return in_idx % idx_ >= idx_ + neg_ or in_idx % idx_ <= pos_;
       } else {
         // Check intersection with range: [idx_-neg_, idx_-pos_]
-        return in_idx >= idx_ - neg_ or in_idx <= idx_ + pos_;
+        return in_idx >= idx_ - neg_ and in_idx <= idx_ + pos_;
       }
     }
 
