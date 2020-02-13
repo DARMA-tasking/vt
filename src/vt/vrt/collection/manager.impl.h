@@ -3064,12 +3064,6 @@ void CollectionManager::nextPhase(
   CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
   PhaseType const& cur_phase, ActionFinishedLBType continuation
 ) {
-  // Check if tracing is enabled for this next phase. Do this immediately before
-  // LB runs so LB is always instrumented as the beginning of the next phase
-# if backend_check_enabled(trace_enabled)
-  theTrace()->setTraceEnabledCurrentPhase(cur_phase + 1);
-# endif
-
   using namespace balance;
   using MsgType = PhaseMsg<ColT>;
   auto msg = makeSharedMessage<MsgType>(cur_phase, proxy, true, false);
