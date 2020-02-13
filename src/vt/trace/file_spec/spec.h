@@ -185,12 +185,6 @@ public:
    */
   void parse();
 
-  // /**
-  //  * \brief Call broadcast on parsed specification and then wait for them to
-  //  * receive it
-  //  */
-  // void broadcastSpecWaitReceive();
-
   /**
    * \brief Broadcast parsed specification to all nodes
    */
@@ -226,12 +220,6 @@ private:
     SpecMapType spec_exact_;
     NodeType root_ = uninitialized_destination;
   };
-
-  // /**
-  //  * \brief Invoked by reduce when broadcast is finished and all nodes have the
-  //  * specification
-  //  */
-  // void doneBcast(DoneMsg*);
 
   /**
    * \brief Handler to receive parsed specification
