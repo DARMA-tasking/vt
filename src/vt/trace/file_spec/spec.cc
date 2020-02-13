@@ -216,14 +216,13 @@ void Spec::transferSpec(SpecMsg* msg) {
 void Spec::insertSpec(
   SpecIndex phase, SpecIndex neg, SpecIndex pos, bool is_mod, SpecMapType& map
 ) {
-  auto& filename = ArgType::vt_trace_spec_file_name;
   auto iter = map.find(phase);
   if (iter != map.end()) {
     auto str = fmt::format(
       "Parsing file \"{}\" error: multiple lines start with the same {}:"
       " value \"{}{}\"",
       is_mod ? "mod phase" : "phase",
-      filename,
+      ArgType::vt_trace_spec_file_name,
       is_mod ? "%" : "",
       phase
     );
