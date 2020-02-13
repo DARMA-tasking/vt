@@ -72,18 +72,18 @@ bool Spec::checkTraceEnabled(SpecIndex in_phase) {
 
 bool Spec::hasSpec() {
   if (ArgType::vt_trace_spec) {
-    if (ArgType::vt_trace_spec_file_name == "") {
+    if (ArgType::vt_trace_spec_file == "") {
       vtAbort(
         "--vt_trace_spec enabled but no file name is specified:"
-        " --vt_trace_spec_file_name"
+        " --vt_trace_spec_file"
       );
       return false;
     } else {
-      auto& filename = ArgType::vt_trace_spec_file_name;
+      auto& filename = ArgType::vt_trace_spec_file;
       std::ifstream file(filename);
       if (not file.good()) {
         auto str = fmt::format(
-          "--vt_trace_spec_file_name={} is not a valid file", filename
+          "--vt_trace_spec_file={} is not a valid file", filename
         );
         vtAbort(str);
         return false;
@@ -101,7 +101,7 @@ void Spec::parse() {
     return;
   }
 
-  auto& filename = ArgType::vt_trace_spec_file_name;
+  auto& filename = ArgType::vt_trace_spec_file;
   std::ifstream file(filename);
   vtAssertExpr(file.good());
 
@@ -222,7 +222,7 @@ void Spec::insertSpec(
       "Parsing file \"{}\" error: multiple lines start with the same {}:"
       " value \"{}{}\"",
       is_mod ? "mod phase" : "phase",
-      ArgType::vt_trace_spec_file_name,
+      ArgType::vt_trace_spec_file,
       is_mod ? "%" : "",
       phase
     );

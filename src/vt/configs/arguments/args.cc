@@ -84,7 +84,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_trace_sys_collection = false;
 /*static*/ bool        ArgConfig::vt_trace_sys_serial_msg = false;
 /*static*/ bool        ArgConfig::vt_trace_spec           = false;
-/*static*/ std::string ArgConfig::vt_trace_spec_file_name = "";
+/*static*/ std::string ArgConfig::vt_trace_spec_file      = "";
 
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
@@ -258,7 +258,7 @@ namespace vt { namespace arguments {
   auto qy = app.add_flag("--vt_trace_sys_collection", vt_trace_sys_collection, tsyscoll);
   auto qz = app.add_flag("--vt_trace_sys_serial_msg", vt_trace_sys_serial_msg, tsyssmsg);
   auto qza = app.add_flag("--vt_trace_spec",          vt_trace_spec,           tspec);
-  auto qzb = app.add_option("--vt_trace_spec_file_name", vt_trace_spec_file_name, tspecfile, "");
+  auto qzb = app.add_option("--vt_trace_spec_file",   vt_trace_spec_file,      tspecfile, "");
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);

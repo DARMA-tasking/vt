@@ -68,7 +68,7 @@ TEST_F(TestTraceSpec, test_trace_spec_1) {
   theCollective()->barrier();
 
   Arg::vt_trace_spec = true;
-  Arg::vt_trace_spec_file_name = file_name;
+  Arg::vt_trace_spec_file = file_name;
 
   auto proxy = Spec::construct();
   theTerm()->produce();
@@ -103,7 +103,7 @@ TEST_F(TestTraceSpec, test_trace_spec_2) {
   theCollective()->barrier();
 
   Arg::vt_trace_spec = true;
-  Arg::vt_trace_spec_file_name = file_name;
+  Arg::vt_trace_spec_file = file_name;
 
   auto proxy = Spec::construct();
   theTerm()->produce();
@@ -140,7 +140,7 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
   theCollective()->barrier();
 
   Arg::vt_trace_spec = true;
-  Arg::vt_trace_spec_file_name = file_name;
+  Arg::vt_trace_spec_file = file_name;
 
   auto proxy = Spec::construct();
   theTerm()->produce();
@@ -182,7 +182,7 @@ TEST_F(TestTraceSpec, test_trace_spec_4) {
   theCollective()->barrier();
 
   Arg::vt_trace_spec = true;
-  Arg::vt_trace_spec_file_name = file_name;
+  Arg::vt_trace_spec_file = file_name;
 
   auto proxy = Spec::construct();
   theTerm()->produce();

@@ -90,7 +90,7 @@ public:
   static int32_t vt_trace_mod;
   static int32_t vt_trace_flush_size;
   static bool vt_trace_spec;
-  static std::string vt_trace_spec_file_name;
+  static std::string vt_trace_spec_file;
 
   static bool vt_lb;
   static bool vt_lb_file;
