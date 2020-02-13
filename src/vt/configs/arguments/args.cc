@@ -83,7 +83,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_trace_sys_location   = false;
 /*static*/ bool        ArgConfig::vt_trace_sys_collection = false;
 /*static*/ bool        ArgConfig::vt_trace_sys_serial_msg = false;
-/*static*/ bool        ArgConfig::vt_trace_spec_enabled   = false;
+/*static*/ bool        ArgConfig::vt_trace_spec           = false;
 /*static*/ std::string ArgConfig::vt_trace_spec_file_name = "";
 
 
@@ -244,7 +244,7 @@ namespace vt { namespace arguments {
   auto tsyscoll  = "Trace system virtual context collection events";
   auto tsyssmsg  = "Trace system serialization manager events";
   auto tspec     = "Enable trace spec file (defines which phases tracing is on)";
-  auto tspecfile = "File containing trace spec; --vt_trace_spec_enabled to enable";
+  auto tspecfile = "File containing trace spec; --vt_trace_spec to enable";
   auto n  = app.add_flag("--vt_trace",              vt_trace,           trace);
   auto nm = app.add_flag("--vt_trace_mpi",          vt_trace_mpi,       trace_mpi);
   auto o  = app.add_option("--vt_trace_file",       vt_trace_file,      tfile, "");
@@ -257,7 +257,7 @@ namespace vt { namespace arguments {
   auto qx = app.add_flag("--vt_trace_sys_location",   vt_trace_sys_location,   tsysloc);
   auto qy = app.add_flag("--vt_trace_sys_collection", vt_trace_sys_collection, tsyscoll);
   auto qz = app.add_flag("--vt_trace_sys_serial_msg", vt_trace_sys_serial_msg, tsyssmsg);
-  auto qza = app.add_flag("--vt_trace_spec_enabled",   vt_trace_spec_enabled,   tspec);
+  auto qza = app.add_flag("--vt_trace_spec",          vt_trace_spec,           tspec);
   auto qzb = app.add_option("--vt_trace_spec_file_name", vt_trace_spec_file_name, tspecfile, "");
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);

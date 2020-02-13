@@ -144,7 +144,7 @@ void Trace::initialize() {
 }
 
 void Trace::parseSpec() {
-  if (ArgType::vt_trace_spec_enabled) {
+  if (ArgType::vt_trace_spec) {
     auto spec_proxy = file_spec::Spec::construct();
     theTerm()->produce();
     if (theContext()->getNode() == 0) {

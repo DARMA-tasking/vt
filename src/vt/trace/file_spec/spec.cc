@@ -71,10 +71,10 @@ bool Spec::checkTraceEnabled(SpecIndex in_phase) {
 }
 
 bool Spec::hasSpec() {
-  if (ArgType::vt_trace_spec_enabled) {
+  if (ArgType::vt_trace_spec) {
     if (ArgType::vt_trace_spec_file_name == "") {
       vtAbort(
-        "--vt_trace_spec_enabled enabled but no file name is specified:"
+        "--vt_trace_spec enabled but no file name is specified:"
         " --vt_trace_spec_file_name"
       );
       return false;
