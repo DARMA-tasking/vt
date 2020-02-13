@@ -638,7 +638,27 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
     // SpecIndex is signed due to negative/positive, phase is not signed
     auto spec_index = static_cast<file_spec::Spec::SpecIndex>(cur_phase);
     vt::objgroup::proxy::Proxy<file_spec::Spec> proxy(spec_proxy_);
-    trace_enabled_cur_phase_ = proxy.get()->checkTraceEnabled(spec_index);
+    bool ret = proxy.get()->checkTraceEnabled(spec_index);
+
+    if (trace_enabled_cur_phase_ != ret) {
+      auto time = getCurrentTime();
+      // Close and pop everything, we are disabling traces at this point
+      while (not open_events_.empty()) {
+        traces_.push(
+          LogType{open_events_.top(), time, TraceConstantsType::EndProcessing}
+        );
+        open_events_.pop();
+      }
+    }
+
+    trace_enabled_cur_phase_ = ret;
+
+    debug_print(
+      gen, node,
+      "setTraceEnabledCurrentPhase: phase={}, enabled={}\n",
+      cur_phase,
+      trace_enabled_cur_phase_
+    );
   }
 }
 
