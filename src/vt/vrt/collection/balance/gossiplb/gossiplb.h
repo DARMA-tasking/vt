@@ -80,7 +80,6 @@ protected:
 
   void propagateRound(EpochType epoch = no_epoch);
   void propagateIncoming(GossipMsg* msg);
-  bool isUnderloaded(LoadType load) const;
   bool isUnderloadedRelaxed(LoadType over, LoadType under) const;
   bool isOverloaded(LoadType load) const;
 
