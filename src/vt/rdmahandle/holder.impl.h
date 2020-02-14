@@ -56,7 +56,7 @@ void Holder<T,E>::addHandle(
   HandleKey key, ElemType lin, Handle<T,E> han, std::size_t in_size,
   bool uniform_size
 ) {
-  handles_[lin] = han;
+  handle_ = han;
   key_ = key;
   size_ += in_size;
   uniform_size_ = uniform_size;

@@ -125,9 +125,7 @@ private:
   bool ready_ = false;
   bool mpi2_ = false;
   bool uniform_size_ = false;
-
-private:
-  std::unordered_map<ElemType, Handle<T,E>> handles_;
+  Handle<T,E> handle_;
 };
 
 }} /* end namespace vt::rdma */
