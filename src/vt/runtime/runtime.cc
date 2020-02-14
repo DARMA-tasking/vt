@@ -1000,7 +1000,7 @@ void Runtime::setup() {
   });
 
 # if backend_check_enabled(trace_enabled)
-  theTrace->parseSpec();
+  theTrace->loadAndBroadcastSpec();
 # endif
 
   if (ArgType::vt_pause) {

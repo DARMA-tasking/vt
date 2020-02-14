@@ -132,7 +132,7 @@ void Trace::initialize() {
   );
 }
 
-void Trace::parseSpec() {
+void Trace::loadAndBroadcastSpec() {
   if (ArgType::vt_trace_spec) {
     auto spec_proxy = file_spec::Spec::construct();
     theTerm()->produce();

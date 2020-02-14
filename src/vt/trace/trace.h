@@ -183,7 +183,7 @@ struct Trace {
 
   bool checkDynamicRuntimeEnabled();
 
-  void parseSpec();
+  void loadAndBroadcastSpec();
   void setTraceEnabledCurrentPhase(PhaseType cur_phase);
 
   void flushTracesFile(bool useGlobalSync);
