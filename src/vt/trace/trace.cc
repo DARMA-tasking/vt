@@ -639,6 +639,12 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
         );
         open_events_.pop();
       }
+
+      // Go ahead and perform a trace flush when tracing is disabled (and was
+      // previously enabled) to reduce memory footprint.
+      if (not ret) {
+        flushTracesFile(false);
+      }
     }
 
     trace_enabled_cur_phase_ = ret;
