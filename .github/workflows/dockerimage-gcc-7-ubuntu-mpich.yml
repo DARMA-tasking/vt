@@ -1,6 +1,13 @@
 name: PR tests (gcc-7, ubuntu, mpich, trace runtime, LB)
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - develop
+      - 1.*
+  pull_request:
+    branches:
+      - *
 
 jobs:
 

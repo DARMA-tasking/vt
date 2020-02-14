@@ -1,6 +1,14 @@
 name: PR tests (gcc-5, ubuntu, mpich)
 
-on: [pull_request]
+# Trigger the workflow on push or pull request
+on:
+  push:
+    branches:
+      - develop
+      - 1.*
+  pull_request:
+    branches:
+      - *
 
 jobs:
 
