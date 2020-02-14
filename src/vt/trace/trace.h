@@ -183,6 +183,9 @@ struct Trace {
 
   bool checkDynamicRuntimeEnabled();
 
+  void loadAndBroadcastSpec();
+  void setTraceEnabledCurrentPhase(PhaseType cur_phase);
+
   void flushTracesFile(bool useGlobalSync);
   void cleanupTracesFile();
 
@@ -251,6 +254,8 @@ private:
   std::unique_ptr<vt_gzFile> log_file_;
   bool wrote_sts_file_          = false;
   size_t trace_write_count_     = 0;
+  ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
+  bool trace_enabled_cur_phase_ = true;
 };
 
 }} //end namespace vt::trace

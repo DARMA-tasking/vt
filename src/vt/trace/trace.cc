@@ -48,6 +48,8 @@
 #include "vt/timing/timing.h"
 #include "vt/trace/trace.h"
 #include "vt/utils/demangle/demangle.h"
+#include "vt/trace/file_spec/spec.h"
+#include "vt/objgroup/headers.h"
 
 #include <cinttypes>
 #include <fstream>
@@ -139,6 +141,26 @@ void Trace::initialize() {
   theSched()->registerTrigger(
     sched::SchedulerEvent::EndIdle, traceEndIdleTrigger
   );
+}
+
+void Trace::loadAndBroadcastSpec() {
+  if (ArgType::vt_trace_spec) {
+    auto spec_proxy = file_spec::TraceSpec::construct();
+    theTerm()->produce();
+    if (theContext()->getNode() == 0) {
+      auto spec_ptr = spec_proxy.get();
+      spec_ptr->parse();
+      spec_ptr->broadcastSpec();
+    }
+    while (not spec_proxy.get()->specReceived()) {
+      vt::runScheduler();
+    }
+    theTerm()->consume();
+    spec_proxy_ = spec_proxy.getProxy();
+
+    // Set enabled for the initial phase
+    setTraceEnabledCurrentPhase(0);
+  }
 }
 
 bool Trace::inIdleEvent() const {
@@ -601,8 +623,50 @@ bool Trace::checkDynamicRuntimeEnabled() {
    *
    * checkEnabled() -> this is the "static" runtime check, may be disabled for a
    * subset of processors when trace mod is used to reduce overhead
+   *
+   * trace_enabled_cur_phase_ -> this is whether tracing is enabled for the
+   * current phase (LB phase), which can be disabled via a trace enable
+   * specification file
    */
-  return enabled_ and traceWritingEnabled(theContext()->getNode());
+  return
+    enabled_ and
+    traceWritingEnabled(theContext()->getNode()) and
+    trace_enabled_cur_phase_;
+}
+
+void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
+  if (spec_proxy_ != vt::no_obj_group) {
+    // SpecIndex is signed due to negative/positive, phase is not signed
+    auto spec_index = static_cast<file_spec::TraceSpec::SpecIndex>(cur_phase);
+    vt::objgroup::proxy::Proxy<file_spec::TraceSpec> proxy(spec_proxy_);
+    bool ret = proxy.get()->checkTraceEnabled(spec_index);
+
+    if (trace_enabled_cur_phase_ != ret) {
+      auto time = getCurrentTime();
+      // Close and pop everything, we are disabling traces at this point
+      while (not open_events_.empty()) {
+        traces_.push(
+          LogType{open_events_.top(), time, TraceConstantsType::EndProcessing}
+        );
+        open_events_.pop();
+      }
+
+      // Go ahead and perform a trace flush when tracing is disabled (and was
+      // previously enabled) to reduce memory footprint.
+      if (not ret) {
+        flushTracesFile(false);
+      }
+    }
+
+    trace_enabled_cur_phase_ = ret;
+
+    debug_print(
+      gen, node,
+      "setTraceEnabledCurrentPhase: phase={}, enabled={}\n",
+      cur_phase,
+      trace_enabled_cur_phase_
+    );
+  }
 }
 
 TraceEventIDType Trace::logEvent(LogType&& log) {
