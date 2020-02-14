@@ -68,7 +68,13 @@ namespace vt { namespace trace { namespace file_spec {
  * """
  *
  * This specifies that tracing will be enabled on the following phases:
- * { [0,10], [97,103], [195,205], [297,303], ... }
+ * {
+ *   [0,10], # phase 0 with offsets 0,+10 (subsumes [0,3] from %100 -3 3)
+ *   [97,103] # any phase % 100 with offset -3,+3
+ *   [195,205] # phase 200 with offsets -5,+5 (subsumes [197,203] from %100 -3 3)
+ *   [297,303] # any phase % 100 with offset -3,+3
+ *   [n%100-3,n%100+3] ... # any phase % 100 with offset -3,+3
+ * }
  *
  * The sets of mod-phase and phase-specific entries must be unique. There may be
  * overlap across the two sets, but not within them. Having two entries that
