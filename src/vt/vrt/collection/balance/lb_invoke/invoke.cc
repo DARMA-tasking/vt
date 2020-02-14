@@ -240,7 +240,7 @@ void LBManager::releaseNow(PhaseType phase) {
 }
 
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
-  // Check if tracing is enabled for this next phase. Do this immediately before
+  // Set if tracing is enabled for this next phase. Do this immediately before
   // LB runs so LB is always instrumented as the beginning of the next phase
 # if backend_check_enabled(trace_enabled)
   theTrace()->setTraceEnabledCurrentPhase(phase + 1);
