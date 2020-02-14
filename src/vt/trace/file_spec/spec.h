@@ -60,7 +60,7 @@ namespace vt { namespace trace { namespace file_spec {
  * single node parses the specification; all others receive the spec from a
  * broadcast.
  *
- * Parses the following format:
+ * Parses the following format: [%]<phase> <range negative> <range positive>
  * """
  * 0 0 10
  * %100 -3 3
