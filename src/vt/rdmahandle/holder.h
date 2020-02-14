@@ -117,7 +117,6 @@ public:
 private:
   HandleKey key_;
   MPI_Win data_window_;
-  MPI_Win idx_window_;
   MPI_Win control_window_;
   T* data_base_ = nullptr;
   T* idx_base_ = nullptr;
