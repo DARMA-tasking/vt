@@ -6,7 +6,7 @@ on:
     branches:
       - develop
       - 1.*
-  pull_request
+  pull_request:
 
 jobs:
 
