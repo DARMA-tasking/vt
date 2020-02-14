@@ -20,6 +20,7 @@ WORKDIR /usr/src
 
 ARG LB_ENABLED
 ARG TRACE_ENABLED
+ARG TRACE_RUNTIME_ENABLED
 
 RUN \
  dpkg -L zlib1g && \
@@ -67,7 +68,7 @@ RUN \
  cd build && \
  uname -p && \
  uname  && \
- cmake -GNinja -Dvt_lb_enabled=$LB_ENABLED -Dvt_trace_enabled=$TRACE_ENABLED -DMPI_EXTRA_FLAGS=--allow-run-as-root -DVT_NO_BUILD_EXAMPLES=1 -Dgtest_DIR=$GTEST_BUILD/install -DGTEST_ROOT=$GTEST_BUILD/install -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR_BUILD/install -DCMAKE_PREFIX_PATH="$GTEST_BUILD/install;/lib/x86_64-linux-gnu/" -Dcheckpoint_DIR=$CHECKPOINT_BUILD/install  $VT && \
+ cmake -GNinja -Dvt_test_trace_runtime_enabled=$TRACE_RUNTIME_ENABLED -Dvt_lb_enabled=$LB_ENABLED -Dvt_trace_enabled=$TRACE_ENABLED -DMPI_EXTRA_FLAGS=--allow-run-as-root -DVT_NO_BUILD_EXAMPLES=1 -Dgtest_DIR=$GTEST_BUILD/install -DGTEST_ROOT=$GTEST_BUILD/install -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -DMPI_C_COMPILER=mpicc -DMPI_CXX_COMPILER=mpicxx -Ddetector_DIR=$DETECTOR_BUILD/install -DCMAKE_PREFIX_PATH="$GTEST_BUILD/install;/lib/x86_64-linux-gnu/" -Dcheckpoint_DIR=$CHECKPOINT_BUILD/install  $VT && \
  ninja && \
  ninja install && \
  ninja test
