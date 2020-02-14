@@ -112,6 +112,8 @@ public:
     MPI_Op op
   );
 
+  T fetchOp(IndexT const& idx, Lock l, T ptr, int offset, MPI_Op op);
+
   bool isUniform() const { return uniform_size_; }
 
   template <typename Callable>

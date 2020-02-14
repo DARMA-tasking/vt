@@ -304,6 +304,22 @@ public:
   );
 
   /**
+   * \brief Perform one-sided read-modify-write using the underlying MPI window
+   * on a remote process, calls down to \c MPI_Fetch_and_op.
+   *
+   * \param[in] idx the handle index to target
+   * \param[in] val the value to fetch-op
+   * \param[in] offset the offset
+   * \param[in] op the operation \c MPI_Op to apply for fetch-op
+   * \param[in] l the lock to apply for the fetch-op
+   *
+   * \return the value fetched
+   */
+  T fetchOp(
+    IndexT const& idx, T val, int offset, MPI_Op op, Lock l = Lock::None
+  );
+
+  /**
    * \brief Get the size of the data window for a certain index. If the size is
    * non-uniform, it will remotely fetch the size from that node.
    *

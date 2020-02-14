@@ -197,6 +197,14 @@ Handle<T,E,I,isIdx<I>>::raccum(
 }
 
 template <typename T, HandleEnum E, typename I>
+T Handle<T,E,I,isIdx<I>>::fetchOp(
+  I const& index, T ptr, int offset, MPI_Op op, Lock l
+) {
+  auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
+  return proxy.get()->fetchOp(index, l, ptr, offset, op);
+}
+
+template <typename T, HandleEnum E, typename I>
 std::size_t Handle<T,E,I,isIdx<I>>::getSize(I const& index) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
   if (proxy.get()->isUniform()) {

@@ -239,6 +239,16 @@ void SubHandle<T,E,IndexT>::accum(
 }
 
 template <typename T, HandleEnum E, typename IndexT>
+T SubHandle<T,E,IndexT>::fetchOp(
+  IndexT const& idx, Lock l, T ptr, int offset, MPI_Op op
+) {
+  auto info = resolveLocation(idx);
+  auto node = info.getNode();
+  auto chunk_offset = info.getOffset();
+  return data_handle_.fetchOp(node, ptr, offset + chunk_offset, op, l);
+}
+
+template <typename T, HandleEnum E, typename IndexT>
 template <typename Callable>
 void SubHandle<T,E,IndexT>::access(
   IndexT idx, Lock l, Callable fn, uint64_t offset
