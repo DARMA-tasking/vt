@@ -54,7 +54,7 @@ namespace vt { namespace tests { namespace unit {
 using TestTraceSpec = TestParallelHarness;
 
 TEST_F(TestTraceSpec, test_trace_spec_1) {
-  using Spec = vt::trace::file_spec::Spec;
+  using Spec = vt::trace::file_spec::TraceSpec;
   using Arg = vt::arguments::ArgConfig;
 
   std::string file_name = "test_trace_spec_1.txt";
@@ -86,7 +86,7 @@ TEST_F(TestTraceSpec, test_trace_spec_1) {
 }
 
 TEST_F(TestTraceSpec, test_trace_spec_2) {
-  using Spec = vt::trace::file_spec::Spec;
+  using Spec = vt::trace::file_spec::TraceSpec;
   using Arg = vt::arguments::ArgConfig;
 
   std::string file_name = "test_trace_spec_2.txt";
@@ -121,7 +121,7 @@ TEST_F(TestTraceSpec, test_trace_spec_2) {
 }
 
 TEST_F(TestTraceSpec, test_trace_spec_3) {
-  using Spec = vt::trace::file_spec::Spec;
+  using Spec = vt::trace::file_spec::TraceSpec;
   using Arg = vt::arguments::ArgConfig;
 
   std::string file_name = "test_trace_spec_3.txt";
@@ -164,7 +164,7 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
 }
 
 TEST_F(TestTraceSpec, test_trace_spec_4) {
-  using Spec = vt::trace::file_spec::Spec;
+  using Spec = vt::trace::file_spec::TraceSpec;
   using Arg = vt::arguments::ArgConfig;
 
   std::string file_name = "test_trace_spec_4.txt";

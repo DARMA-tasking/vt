@@ -145,7 +145,7 @@ void Trace::initialize() {
 
 void Trace::loadAndBroadcastSpec() {
   if (ArgType::vt_trace_spec) {
-    auto spec_proxy = file_spec::Spec::construct();
+    auto spec_proxy = file_spec::TraceSpec::construct();
     theTerm()->produce();
     if (theContext()->getNode() == 0) {
       auto spec_ptr = spec_proxy.get();
@@ -637,8 +637,8 @@ bool Trace::checkDynamicRuntimeEnabled() {
 void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
   if (spec_proxy_ != vt::no_obj_group) {
     // SpecIndex is signed due to negative/positive, phase is not signed
-    auto spec_index = static_cast<file_spec::Spec::SpecIndex>(cur_phase);
-    vt::objgroup::proxy::Proxy<file_spec::Spec> proxy(spec_proxy_);
+    auto spec_index = static_cast<file_spec::TraceSpec::SpecIndex>(cur_phase);
+    vt::objgroup::proxy::Proxy<file_spec::TraceSpec> proxy(spec_proxy_);
     bool ret = proxy.get()->checkTraceEnabled(spec_index);
 
     if (trace_enabled_cur_phase_ != ret) {

@@ -54,7 +54,7 @@
 namespace vt { namespace trace { namespace file_spec {
 
 /**
- * \struct Spec spec.h vt/trace/file_spec/spec.h
+ * \struct TraceSpec spec.h vt/trace/file_spec/spec.h
  *
  * \brief Parses trace spec file when available and tests when its enabled. A
  * single node parses the specification; all others receive the spec from a
@@ -82,8 +82,8 @@ namespace vt { namespace trace { namespace file_spec {
  * { [0,3], [97,103], * [195,205], [297,303], ... }
  *
  */
-struct Spec {
-  using ProxyType    = vt::objgroup::proxy::Proxy<Spec>;
+struct TraceSpec {
+  using ProxyType    = vt::objgroup::proxy::Proxy<TraceSpec>;
   using ArgType      = vt::arguments::ArgConfig;
   using SpecIndex    = int64_t;
   using DoneMsg      = collective::ReduceNoneMsg;
@@ -150,7 +150,7 @@ private:
 
 private:
   /**
-   * \brief Initialize the Spec objgroup
+   * \brief Initialize the \c TraceSpec objgroup
    *
    * \param[in] in_proxy the objgroup proxy
    */
@@ -158,7 +158,7 @@ private:
 
 public:
   /**
-   * \brief Construct a new Spec objgroup
+   * \brief Construct a new \c TraceSpec objgroup
    *
    * \return the proxy
    */

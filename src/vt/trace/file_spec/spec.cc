@@ -50,11 +50,11 @@
 
 namespace vt { namespace trace { namespace file_spec {
 
-void Spec::init(ProxyType in_proxy) {
+void TraceSpec::init(ProxyType in_proxy) {
   proxy_ = in_proxy;
 }
 
-bool Spec::checkTraceEnabled(SpecIndex in_phase) {
+bool TraceSpec::checkTraceEnabled(SpecIndex in_phase) {
   vtAssertExpr(has_spec_);
 
   for (auto&& elm : spec_mod_) {
@@ -70,7 +70,7 @@ bool Spec::checkTraceEnabled(SpecIndex in_phase) {
   return false;
 }
 
-bool Spec::hasSpec() {
+bool TraceSpec::hasSpec() {
   if (ArgType::vt_trace_spec) {
     if (ArgType::vt_trace_spec_file == "") {
       vtAbort(
@@ -96,7 +96,7 @@ bool Spec::hasSpec() {
   }
 }
 
-void Spec::parse() {
+void TraceSpec::parse() {
   if (not hasSpec()) {
     return;
   }
@@ -183,7 +183,7 @@ void Spec::parse() {
 
     debug_print(
       trace, node,
-      "Spec::parser: is_mod={}, phase={}, neg={}, pos={}\n",
+      "TraceSpec::parser: is_mod={}, phase={}, neg={}, pos={}\n",
       is_mod, phase, phase_negative_offset, phase_positive_offset
     );
 
@@ -197,13 +197,13 @@ void Spec::parse() {
   has_spec_ = true;
 }
 
-void Spec::broadcastSpec() {
+void TraceSpec::broadcastSpec() {
   auto root = theContext()->getNode();
   auto msg = makeMessage<SpecMsg>(spec_mod_, spec_exact_, root);
-  proxy_.template broadcast<SpecMsg, &Spec::transferSpec>(msg.get());
+  proxy_.template broadcast<SpecMsg, &TraceSpec::transferSpec>(msg.get());
 }
 
-void Spec::transferSpec(SpecMsg* msg) {
+void TraceSpec::transferSpec(SpecMsg* msg) {
   // The broadcast will hit all nodes, so the node that it exists on will
   // ignore it
   if (not has_spec_) {
@@ -213,7 +213,7 @@ void Spec::transferSpec(SpecMsg* msg) {
   }
 }
 
-void Spec::insertSpec(
+void TraceSpec::insertSpec(
   SpecIndex phase, SpecIndex neg, SpecIndex pos, bool is_mod, SpecMapType& map
 ) {
   auto iter = map.find(phase);
@@ -236,15 +236,15 @@ void Spec::insertSpec(
   }
 }
 
-int Spec::eatWhitespace(std::ifstream& file) {
+int TraceSpec::eatWhitespace(std::ifstream& file) {
   while (not file.eof() and std::isspace(file.peek()) and file.peek() != '\n') {
     file.get();
   }
   return file.eof() ? 0 : file.peek();
 }
 
-/*static*/ typename Spec::ProxyType Spec::construct() {
-  auto proxy = theObjGroup()->makeCollective<Spec>();
+/*static*/ typename TraceSpec::ProxyType TraceSpec::construct() {
+  auto proxy = theObjGroup()->makeCollective<TraceSpec>();
   proxy.get()->init(proxy);
   return proxy;
 }
