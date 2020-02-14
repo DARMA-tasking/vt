@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/rdmahandle/manager.h"
+#include "vt/rdmahandle/sub_handle.h"
 
 namespace vt { namespace rdma {
 namespace impl {
@@ -117,6 +118,30 @@ Handle<T, E> Manager::makeHandleCollectiveObjGroup(
   return han;
 }
 
+template <typename T, HandleEnum E, typename ProxyT, typename LookupT>
+HandleSet<T> Manager::makeHandleSetCollectiveObjGroup(
+  ProxyT proxy_objgroup,
+  LookupT max_lookup,
+  std::unordered_map<LookupT, std::size_t> const& map,
+  bool uniform_size
+) {
+  using LookupType = LookupT;
+  using IndexType  = typename HandleSet<T>::IndexType;
+  using SubType = SubHandle<T, vt::rdma::HandleEnum::StaticSize, IndexType>;
+  auto const num_nodes = vt::theContext()->getNumNodes();
+  IndexType range(static_cast<LookupType>(num_nodes), max_lookup);
+  auto proxy = SubType::template construct<Manager::staticHandleMap>(true, range);
+  HandleSet<T> set(typename HandleSet<T>::BuildSetTagType{});
+  auto const this_node = static_cast<LookupT>(vt::theContext()->getNode());
+  for (auto&& elm : map) {
+    IndexType idx(this_node, elm.first);
+    set.addHandle(idx, proxy.get()->addLocalIndex(idx, elm.second));
+  }
+  proxy.get()->makeSubHandles();
+  set.finishedInserts();
+  return set;
+}
+
 template <typename T, HandleEnum E>
 void Manager::deleteHandleCollectiveObjGroup(Handle<T,E> const& han) {
   auto const key = han.key_;
@@ -125,6 +150,11 @@ void Manager::deleteHandleCollectiveObjGroup(Handle<T,E> const& han) {
     iter->second.deallocate();
     holder_<T,E>.erase(iter);
   }
+}
+
+template <typename T>
+void Manager::deleteHandleSetCollectiveObjGroup(HandleSet<T> const& han) {
+
 }
 
 template <

@@ -55,6 +55,7 @@
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/pipe/pipe_manager.h"
 #include "vt/topos/mapping/dense/dense.h"
+#include "vt/rdmahandle/handle_set.h"
 
 namespace vt { namespace rdma {
 
@@ -118,12 +119,44 @@ public:
   );
 
   /**
+   * \brief Construct a static (non-migratable) set of new, distributed RDMA
+   * handles for an objgroup
+   *
+   * \param[in] proxy the objgroup's proxy
+   * \param[in] max_lookup the max lookup on any node
+   * \param[in] map a map of the handles and corresponding sizes to create
+   * \param[in] uniform_size whether all handles have the same size
+   *
+   * \return the new handle set
+   */
+  template <
+    typename T,
+    HandleEnum E,
+    typename ProxyT,
+    typename LookupT = typename HandleSet<T>::LookupType
+  >
+  HandleSet<T> makeHandleSetCollectiveObjGroup(
+    ProxyT proxy_objgroup,
+    LookupT max_lookup,
+    std::unordered_map<LookupT, std::size_t> const& map,
+    bool uniform_size = true
+  );
+
+  /**
    * \brief Destroy and garbage collect an RDMA handle
    *
    * \param[in] han the handle to destroy
    */
   template <typename T, HandleEnum E>
   void deleteHandleCollectiveObjGroup(Handle<T,E> const& han);
+
+  /**
+   * \brief Destroy and garbage collect an RDMA handle
+   *
+   * \param[in] han the handle to destroy
+   */
+  template <typename T>
+  void deleteHandleSetCollectiveObjGroup(HandleSet<T> const& han);
 
   template <
     typename T,
@@ -137,6 +170,13 @@ public:
 
   template <typename T, HandleEnum E>
   Holder<T,E>& getEntry(HandleKey const& key);
+
+private:
+  static vt::NodeType staticHandleMap(
+    vt::Index2D* idx, vt::Index2D*, vt::NodeType
+  ) {
+    return static_cast<vt::NodeType>(idx->x());
+  }
 
 public:
   static ProxyType construct();

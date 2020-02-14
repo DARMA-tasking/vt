@@ -56,6 +56,7 @@
 #include "vt/collective/reduce/operators/callback_op.h"
 #include "vt/utils/static_checks/msg_ptr.h"
 #include "vt/rdmahandle/handle.fwd.h"
+#include "vt/rdmahandle/handle_set.fwd.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -164,6 +165,31 @@ public:
    */
   template <typename T>
   void destroyHandleRDMA(vt::rdma::Handle<T> handle) const;
+
+  /**
+   * \brief Make a new set of RDMA handles for this objgroup---a collective
+   * invocation
+   *
+   * \param[in] max_elm the largest lookup key on any node
+   * \param[in] map a map of the handles and corresponding sizes to create
+   * \param[in] is_uniform whether all handles have the same size
+   *
+   * \return the new RDMA handle
+   */
+  template <typename T>
+  vt::rdma::HandleSet<T> makeHandleSetRDMA(
+    int32_t max_elm,
+    std::unordered_map<int32_t, std::size_t> const& map,
+    bool is_uniform
+  ) const;
+
+  /**
+   * \brief Destroy a set of RDMA handles created from this objgroup
+   *
+   * \param[in] handle the handle set to destroy
+   */
+  template <typename T>
+  void destroyHandleSetRDMA(vt::rdma::HandleSet<T> handle) const;
 
 public:
 

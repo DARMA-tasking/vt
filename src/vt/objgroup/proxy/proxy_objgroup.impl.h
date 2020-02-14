@@ -179,6 +179,25 @@ void Proxy<ObjT>::destroyHandleRDMA(vt::rdma::Handle<T> handle) const {
   >(handle);
 }
 
+template <typename ObjT>
+template <typename T>
+vt::rdma::HandleSet<T> Proxy<ObjT>::makeHandleSetRDMA(
+  int32_t max_elm,
+  std::unordered_map<int32_t, std::size_t> const& map,
+  bool is_uniform
+) const {
+  return vt::theHandle()->makeHandleSetCollectiveObjGroup<
+    T, rdma::HandleEnum::StaticSize
+  >(*this, max_elm, map, is_uniform);
+}
+
+template <typename ObjT>
+template <typename T>
+void Proxy<ObjT>::destroyHandleSetRDMA(vt::rdma::HandleSet<T> set) const {
+  return vt::theHandle()->deleteHandleSetCollectiveObjGroup<T>(set);
+
+}
+
 }}} /* end namespace vt::objgroup::proxy */
 
 #endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H*/
