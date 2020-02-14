@@ -5,9 +5,7 @@ on:
     branches:
       - develop
       - 1.*
-  pull_request:
-    branches:
-      - *
+  pull_request
 
 jobs:
 
