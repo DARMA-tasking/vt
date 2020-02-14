@@ -224,7 +224,7 @@ RequestHolder SubHandle<T,E,IndexT>::raccum(
   auto info = resolveLocation(idx);
   auto node = info.getNode();
   auto chunk_offset = info.getOffset();
-  return data_handle_.raccum(node, l, ptr, len, offset + chunk_offset, l);
+  return data_handle_.raccum(node, ptr, len, offset + chunk_offset, op, l);
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -235,7 +235,7 @@ void SubHandle<T,E,IndexT>::accum(
   auto info = resolveLocation(idx);
   auto node = info.getNode();
   auto chunk_offset = info.getOffset();
-  data_handle_.accum(node, l, ptr, len, offset + chunk_offset, l);
+  data_handle_.accum(node, ptr, len, offset + chunk_offset, op, l);
 }
 
 template <typename T, HandleEnum E, typename IndexT>
