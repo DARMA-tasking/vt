@@ -141,15 +141,15 @@ void TraceSpec::parse() {
      */
     if (std::isdigit(c) or static_cast<char>(c) == '-') {
       file >> phase_negative_offset;
-      if (phase_negative_offset > 0) {
-        auto str = fmt::format(
+      vtAbortIf(
+        phase_negative_offset > 0,
+        fmt::format(
           "Parsing file \"{}\" error: found offset in negative offset position"
           " that is > 0: value \"{}\"",
           filename,
           phase_negative_offset
-        );
-        vtAbort(str);
-      }
+        )
+      );
     }
 
     c = eatWhitespace(file);
@@ -161,15 +161,15 @@ void TraceSpec::parse() {
      */
     if (std::isdigit(c)) {
       file >> phase_positive_offset;
-      if (phase_positive_offset < 0) {
-        auto str = fmt::format(
+      vtAbortIf(
+        phase_positive_offset < 0,
+        fmt::format(
           "Parsing file \"{}\" error: found offset in positive offset position"
           " that is < 0: value \"{}\"",
           filename,
           phase_positive_offset
-        );
-        vtAbort(str);
-      }
+        )
+      );
     }
 
     eatWhitespace(file);
@@ -216,24 +216,22 @@ void TraceSpec::transferSpec(SpecMsg* msg) {
 void TraceSpec::insertSpec(
   SpecIndex phase, SpecIndex neg, SpecIndex pos, bool is_mod, SpecMapType& map
 ) {
-  auto iter = map.find(phase);
-  if (iter != map.end()) {
-    auto str = fmt::format(
+  vtAbortIf(
+    map.find(phase) != map.end(),
+    fmt::format(
       "Parsing file \"{}\" error: multiple lines start with the same {}:"
       " value \"{}{}\"",
       is_mod ? "mod phase" : "phase",
       ArgType::vt_trace_spec_file,
       is_mod ? "%" : "",
       phase
-    );
-    vtAbort(str);
-  } else {
-    map.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(phase),
-      std::forward_as_tuple(SpecEntry{phase, neg, pos, is_mod})
-    );
-  }
+    )
+  );
+  map.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(phase),
+    std::forward_as_tuple(SpecEntry{phase, neg, pos, is_mod})
+  );
 }
 
 int TraceSpec::eatWhitespace(std::ifstream& file) {
