@@ -83,9 +83,9 @@ namespace vt { namespace trace { namespace file_spec {
  *
  * Whether tracing is enabled is calculated as an OR across all specification
  * entries. Thus, if a given phase is contained in any spec line, it is
- * enabled. Please note that 0 % 100 = 0. Therefore, if the above example did
- * not contain the first line, tracing would be enabled as:
- * { [0,3], [97,103], * [195,205], [297,303], ... }
+ * enabled. Note that 0 % 100 = 0. Therefore, if the above example did not
+ * contain the first line, tracing would be enabled as: { [0,3], [97,103], *
+ * [195,205], [297,303], ... }
  *
  */
 struct TraceSpec {
