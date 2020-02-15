@@ -202,6 +202,8 @@ template <typename MsgT, typename BaseT>
   SizeType ptr_size = 0;
   auto sys_size = sizeof(typename decltype(sys_msg)::MsgType);
 
+  msg_ptr->base_serialize_called_ = false;
+
   auto serialized_msg = serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
@@ -216,6 +218,15 @@ template <typename MsgT, typename BaseT>
       }
     }
   );
+
+  vtAssertInfo(
+    msg_ptr->base_serialize_called_,
+    "A message was serialized that did not correctly serialize parents."
+    " All serialized messages are required to call serialize on the"
+    " message's parent type. See 'msg_serialize_parent'. typeid.name={}",
+    typeid(MsgT).name()
+  );
+  msg_ptr->base_serialize_called_ = false;
 
   auto const& group_ = envelopeGetGroup(msg->env);
 
@@ -304,6 +315,8 @@ template <typename MsgT, typename BaseT>
   SerialByteType* ptr = nullptr;
   SizeType ptr_size = 0;
 
+  msg_ptr->base_serialize_called_ = false;
+
   auto serialized_msg = serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
@@ -319,6 +332,15 @@ template <typename MsgT, typename BaseT>
       }
     }
   );
+
+  vtAssertInfo(
+    msg_ptr->base_serialize_called_,
+    "A message was serialized that did not correctly serialize parents."
+    " All serialized messages are required to call serialize on the"
+    " message's parent type. See 'msg_serialize_parent'. typeid.name={}",
+    typeid(MsgT).name()
+  );
+  msg_ptr->base_serialize_called_ = false;
 
   //fmt::print("ptr_size={}\n", ptr_size);
 
