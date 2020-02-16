@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/state/pipe_state.h"
-#include "vt/pipe/interface/remote_container_msg.h"
+#include "vt/pipe/interface/remote_container.h"
 #include "vt/pipe/interface/send_container.h"
 #include "vt/pipe/interface/callback_direct.h"
 #include "vt/pipe/id/pipe_id.h"

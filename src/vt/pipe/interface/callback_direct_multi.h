@@ -49,7 +49,7 @@
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/id/pipe_id.h"
 #include "vt/pipe/interface/base_container.h"
-#include "vt/pipe/interface/remote_container_msg.h"
+#include "vt/pipe/interface/remote_container.h"
 
 #include <tuple>
 #include <utility>
@@ -63,28 +63,28 @@ static struct CallbackDirectSendMultiTagType {} CallbackDirectSendMultiTag { };
 #pragma GCC diagnostic pop
 
 template <typename MsgT, typename TupleT>
-struct CallbackDirectSendMulti : RemoteContainerMsg<MsgT,TupleT> {
+struct CallbackDirectSendMulti : RemoteContainer<MsgT,TupleT> {
 
   template <typename... Args>
   explicit CallbackDirectSendMulti(PipeType const& in_pipe, Args... args)
-    : RemoteContainerMsg<MsgT,TupleT>(in_pipe,std::make_tuple(args...))
+    : RemoteContainer<MsgT,TupleT>(in_pipe,std::make_tuple(args...))
   { }
 
   template <typename... Args>
   CallbackDirectSendMulti(
     CallbackDirectSendMultiTagType, PipeType const& in_pipe,
     std::tuple<Args...> tup
-  ) : RemoteContainerMsg<MsgT,TupleT>(in_pipe,tup)
+  ) : RemoteContainer<MsgT,TupleT>(in_pipe,tup)
   { }
 
   void send(MsgT* m) {
     ::fmt::print("callback send\n");
-    RemoteContainerMsg<MsgT,TupleT>::trigger(m);
+    RemoteContainer<MsgT,TupleT>::trigger(m);
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    RemoteContainerMsg<MsgT,TupleT>::serialize(s);
+    RemoteContainer<MsgT,TupleT>::serialize(s);
   }
 };
 

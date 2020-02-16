@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            remote_container_msg.h
+//                            remote_container.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_H
-#define INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_H
+#if !defined INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_H
+#define INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -58,7 +58,7 @@
 namespace vt { namespace pipe { namespace interface {
 
 template <typename MsgT, typename TupleT>
-struct RemoteContainerMsg : BaseContainer<MsgT> {
+struct RemoteContainer : BaseContainer<MsgT> {
   using VoidSigType   = signal::SigVoidType;
   template <typename T, typename U=void>
   using IsVoidType    = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;
@@ -66,10 +66,10 @@ struct RemoteContainerMsg : BaseContainer<MsgT> {
   using IsNotVoidType = std::enable_if_t<!std::is_same<T,VoidSigType>::value,U>;
 
   template <typename... Args>
-  explicit RemoteContainerMsg(PipeType const& in_pipe, Args... args);
+  explicit RemoteContainer(PipeType const& in_pipe, Args... args);
 
   template <typename... Args>
-  RemoteContainerMsg(PipeType const& in_pipe, std::tuple<Args...> tup);
+  RemoteContainer(PipeType const& in_pipe, std::tuple<Args...> tup);
 
 private:
   template <typename MsgU, typename CallbackT>
@@ -103,6 +103,6 @@ private:
 
 }}} /* end namespace vt::pipe::interface */
 
-#include "vt/pipe/interface/remote_container_msg.impl.h"
+#include "vt/pipe/interface/remote_container.impl.h"
 
-#endif /*INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_H*/
+#endif /*INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_H*/
