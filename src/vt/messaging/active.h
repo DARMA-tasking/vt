@@ -324,15 +324,6 @@ struct ActiveMessenger {
     TagType tag
   );
 
-  template <typename MessageT>
-  ActiveMessenger::PendingSendType sendMsgParserdesImpl(
-    NodeType dest,
-    HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
-    ByteType msg_size,
-    TagType tag
-  );
-
   template <
     typename MessageT,
     std::enable_if_t<true

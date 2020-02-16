@@ -356,9 +356,6 @@ void Runtime::printStartupBanner() {
 #if backend_check_enabled(mpi_rdma)
   features.push_back(vt_feature_str_mpi_rdma);
 #endif
-#if backend_check_enabled(parserdes)
-  features.push_back(vt_feature_str_parserdes);
-#endif
 #if backend_check_enabled(print_term_msgs)
   features.push_back(vt_feature_str_print_term_msgs);
 #endif

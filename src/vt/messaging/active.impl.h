@@ -145,29 +145,6 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   }
 }
 
-template <typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::sendMsgParserdesImpl(
-  NodeType dest,
-  HandlerType han,
-  MsgSharedPtr<MessageT>& msg,
-  ByteType msg_size,
-  TagType tag
-) {
-  // These calls eventually end up back and the non-serialized sendMsgImpl,
-  // through use of a wrapped message which does not define serialization.
-  // (Although such probably represents an opportunity for additional cleanup.)
-  vtAssert(
-    tag == no_tag,
-    "Tagged messages serialization not implemented."
-  );
-  MessageT* msgp = msg.get();
-  if (dest == broadcast_dest) {
-    return SerializedMessenger::broadcastParserdesMsg<MessageT>(msgp,han);
-  } else {
-    return SerializedMessenger::sendParserdesMsg<MessageT>(dest,msgp,han);
-  }
-}
-
 #endif
 
 template <typename MessageT>

@@ -73,9 +73,6 @@ struct SerializedMessenger {
   template <typename UserMsgT>
   using SerialWrapperMsgType = SerializedDataMsg<UserMsgT>;
 
-  template <typename MsgT>
-  static void parserdesHandler(MsgT* msg);
-
   template <typename UserMsgT>
   static void serialMsgHandlerBcast(
     SerialWrapperMsgType<UserMsgT>* sys_msg
@@ -89,21 +86,6 @@ struct SerializedMessenger {
   template <typename UserMsgT, typename BaseEagerMsgT>
   static void payloadMsgHandler(
     SerialEagerPayloadMsg<UserMsgT, BaseEagerMsgT>* sys_msg
-  );
-
-  template <typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend sendParserdesMsg(
-    NodeType dest, MsgT* msg, HandlerType han
-  );
-
-  template <typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend broadcastParserdesMsg(
-    MsgT* msg, HandlerType han
-  );
-
-  template <typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend parserdesMsgSendImpl(
-    MsgT* msg, HandlerType han, NodeType dest
   );
 
   template <typename MsgT, typename BaseT = Message>
