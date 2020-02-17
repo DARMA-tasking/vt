@@ -317,6 +317,18 @@ void SubHandle<T,E,IndexT>::waitForHandleReady(Handle<U,E> const& h) {
   } while (not h.ready());
 }
 
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::destroy() {
+  proxy_.destroyHandleRDMA(data_handle_);
+  proxy_.destroyHandleRDMA(loc_handle_);
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+/*static*/ void SubHandle<T,E,IndexT>::destroyCollective(ProxyType proxy) {
+  proxy.get()->destroy();
+  theObjGroup()->destroyCollective(proxy);
+}
+
 }} /* end namespace vt::rdma */
 
 #endif /*INCLUDED_VT_RDMAHANDLE_SUB_HANDLE_IMPL_H*/

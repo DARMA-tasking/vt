@@ -156,7 +156,7 @@ public:
    * \param[in] han the handle to destroy
    */
   template <typename T>
-  void deleteHandleSetCollectiveObjGroup(HandleSet<T> const& han);
+  void deleteHandleSetCollectiveObjGroup(HandleSet<T>& han);
 
   template <
     typename T,

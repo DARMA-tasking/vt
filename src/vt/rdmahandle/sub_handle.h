@@ -125,6 +125,10 @@ public:
 
   uint64_t totalLocalSize() const;
 
+  void destroy();
+
+  static void destroyCollective(ProxyType proxy);
+
   template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
   static ProxyType construct(bool in_is_static, IndexT in_range);
 
