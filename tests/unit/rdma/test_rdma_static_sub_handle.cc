@@ -143,7 +143,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_1) {
     }
   }
 
-  // Barrier to order following locks
+  // Barrier to finish all pending operations before destroy starts
   vt::theCollective()->barrier();
 
   proxy.destroyHandleSetRDMA(han_set);
@@ -186,8 +186,91 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
     }
   }
 
+  // Barrier to finish all pending operations before destroy starts
+  vt::theCollective()->barrier();
+
+  proxy.destroyHandleSetRDMA(han_set);
+}
+
+TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_3) {
+  using T = TypeParam;
+  auto proxy = TestObjGroup::construct();
+
+  auto this_node = theContext()->getNode();
+  auto num_nodes = theContext()->getNumNodes();
+  int32_t num_hans = 4;
+  int space = 100;
+  std::unordered_map<int32_t, std::size_t> map;
+  for (int i = 0; i < num_hans; i++) {
+    map[i] = (this_node + 1) * (i + 1);
+  }
+  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, false);
+
+  for (int i = 0; i < num_hans; i++) {
+    auto idx_rank = this_node * num_hans + i;
+    UpdateData<T>::init(han_set[i], space, (this_node + 1) * (i + 1), idx_rank);
+  }
+
   // Barrier to order following locks
   vt::theCollective()->barrier();
+
+  for (int node = 0; node < num_nodes; node++) {
+    for (int han = 0; han < num_hans; han++) {
+      vt::Index2D idx(node, han);
+      auto size = han_set->getSize(idx);
+      EXPECT_EQ(size, static_cast<std::size_t>((node + 1) * (han + 1)));
+    }
+  }
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  std::vector<std::unique_ptr<T[]>> accums;
+  std::vector<rdma::RequestHolder> holders;
+
+  for (int node = 0; node < num_nodes; node++) {
+    for (int han = 0; han < num_hans; han++) {
+      vt::Index2D idx(node, han);
+      std::size_t size = (node + 1) * (han + 1);
+
+      accums.emplace_back(std::make_unique<T[]>(size));
+      int cur = accums.size()-1;
+      for (std::size_t i = 0; i < size; i++) {
+        accums[cur][i] = static_cast<T>(1);
+      }
+      holders.emplace_back(
+        han_set->raccum(idx, &accums[cur][0], size, 0, MPI_SUM, vt::Lock::Shared)
+      );
+    }
+  }
+
+  // Wait for all accums to finish
+  for (auto&& elm : holders) {
+    elm.wait();
+  }
+
+  // Clear the memory holders for the accums
+  accums.clear();
+
+  // Wait for all global accums to complete
+  vt::theCollective()->barrier();
+
+  for (int node = 0; node < num_nodes; node++) {
+    for (int han = 0; han < num_hans; han++) {
+      vt::Index2D idx(node, han);
+      std::size_t size = (node + 1) * (han + 1);
+
+      auto idx_rank = node * num_hans + han;
+      auto ptr = std::make_unique<T[]>(size);
+      auto req = han_set->rget(idx, &ptr[0], size, 0, vt::Lock::Exclusive);
+      req.wait();
+      UpdateData<T>::test(std::move(ptr), space, size, idx_rank, 0, num_nodes);
+    }
+  }
+
+  // Barrier to finish all pending operations before destroy starts
+  vt::theCollective()->barrier();
+
 
   proxy.destroyHandleSetRDMA(han_set);
 }
@@ -207,7 +290,8 @@ using RDMASetTestTypes = testing::Types<
 REGISTER_TYPED_TEST_CASE_P(
   TestRDMAHandleSet,
   test_rdma_handle_set_1,
-  test_rdma_handle_set_2
+  test_rdma_handle_set_2,
+  test_rdma_handle_set_3
 );
 
 INSTANTIATE_TYPED_TEST_CASE_P(
