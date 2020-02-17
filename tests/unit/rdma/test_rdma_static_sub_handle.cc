@@ -138,10 +138,13 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_1) {
       auto idx_rank = node * num_hans + han;
       vt::Index2D idx(node, han);
       auto ptr = std::make_unique<T[]>(num_vals);
-      han_set->get(idx, &ptr[0], num_vals, 0, vt::Lock::Exclusive);
+      han_set->get(idx, &ptr[0], num_vals, 0, vt::Lock::Shared);
       UpdateData<T>::test(std::move(ptr), space, num_vals, idx_rank, 0);
     }
   }
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
 
   proxy.destroyHandleSetRDMA(han_set);
 }
