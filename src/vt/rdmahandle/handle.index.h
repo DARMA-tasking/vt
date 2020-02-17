@@ -357,7 +357,6 @@ public:
 protected:
   IndexT index_            = {};           /**< The index for the handle */
   ObjGroupProxyType proxy_ = no_obj_group; /**< The managing objgroup proxy */
-  //HandleKey key_           = {};           /**< The key for the collection  */
 };
 
 }} /* end namespace vt::rdma */
