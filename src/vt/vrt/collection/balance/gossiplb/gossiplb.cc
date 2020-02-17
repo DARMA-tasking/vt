@@ -68,6 +68,10 @@ bool GossipLB::isUnderloaded(LoadType load) const {
   return load < avg * gossip_threshold;
 }
 
+bool GossipLB::isUnderloadedRelaxed(LoadType over, LoadType under) const {
+  return under < over;
+}
+
 bool GossipLB::isOverloaded(LoadType load) const {
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   return load > avg * gossip_threshold;
@@ -328,10 +332,10 @@ NodeType GossipLB::sampleFromCMF(
   return selected_node;
 }
 
-std::vector<NodeType> GossipLB::makeUnderloaded() const {
+std::vector<NodeType> GossipLB::makeUnderloadedRelaxed() const {
   std::vector<NodeType> under = {};
   for (auto&& elm : load_info_) {
-    if (isUnderloaded(elm.first)) {
+    if (isUnderloadedRelaxed(this_new_load_, elm.first)) {
       under.push_back(elm.first);
     }
   }
@@ -364,13 +368,19 @@ void GossipLB::decide() {
   theTerm()->addAction(lazy_epoch, [&decide_done] { decide_done = true; });
 
   if (is_overloaded_) {
-    std::vector<NodeType> under = makeUnderloaded();
-    auto cmf = createCMF(under);
+    std::vector<NodeType> under = makeUnderloadedRelaxed();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
     if (under.size() > 0) {
       // Iterate through all the objects
       for (auto iter = cur_objs_.begin(); iter != cur_objs_.end(); ) {
+        // Rebuild the relaxed underloaded set based on updated load of this node
+        under = makeUnderloadedRelaxed();
+        if (under.size() == 0) {
+          break;
+        }
+        // Rebuild the CMF with the new loads taken into account
+        auto cmf = createCMF(under);
         // Select a node using the CMF
         auto const selected_node = sampleFromCMF(under, cmf);
 
