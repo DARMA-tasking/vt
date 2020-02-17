@@ -65,7 +65,10 @@ void Holder<T,E>::addHandle(
 template <typename T, HandleEnum E>
 void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
   std::size_t len = in_len == 0 ? size_ : in_len;
-  debug_print(rdma, node, "allocate: len={}\n", len);
+  debug_print(
+    rdma, node,
+    "allocate: len={}, in_len={}, size_={}\n", len, in_len, size_
+  );
   // Allocate data window
   MPI_Alloc_mem(len * sizeof(T), MPI_INFO_NULL, &data_base_);
   MPI_Win_create(

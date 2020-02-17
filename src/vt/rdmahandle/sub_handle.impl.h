@@ -139,6 +139,12 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
       idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2]
     );
     if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
+      debug_print_verbose(
+        rdma, node,
+        "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{},{}, {},{},{}\n",
+        idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2],
+        ptr[i+3], ptr[i+4], ptr[i+5]
+      );
       return IndexInfo(ptr[i+1], ptr[i+2], ptr[i+5]-ptr[i+2]);
     }
   }
