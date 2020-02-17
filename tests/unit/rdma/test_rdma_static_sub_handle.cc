@@ -157,15 +157,15 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
   auto num_nodes = theContext()->getNumNodes();
   auto max_hans = num_nodes * num_nodes;
   int32_t num_hans = num_nodes * (this_node + 1);
-  //std::size_t num_vals = this_node;
+  int32_t offset = this_node;
   int space = 100;
   std::unordered_map<int32_t, std::size_t> map;
-  for (int i = 0; i < num_hans; i++) {
+  for (int i = offset; i < num_hans + offset; i++) {
     map[i] = (this_node + 1) + i;
   }
-  auto han_set = proxy.get()->makeHandleSet<T>(max_hans, map, false);
+  auto han_set = proxy.get()->makeHandleSet<T>(max_hans + num_nodes, map, false);
 
-  for (int i = 0; i < num_hans; i++) {
+  for (int i = offset; i < num_hans + offset; i++) {
     auto idx_rank = this_node * max_hans + i;
     UpdateData<T>::init(han_set[i], space, (this_node + 1) + i, idx_rank);
   }
@@ -174,7 +174,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
   vt::theCollective()->barrier();
 
   for (int node = 0; node < num_nodes; node++) {
-    for (int han = 0; han < num_nodes * (node + 1); han++) {
+    for (int han = node; han < (num_nodes * (node + 1)) + node; han++) {
       vt::Index2D idx(node, han);
       auto size = han_set->getSize(idx);
       EXPECT_EQ(size, static_cast<std::size_t>((node + 1) + han));
