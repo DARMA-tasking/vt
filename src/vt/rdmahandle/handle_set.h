@@ -119,6 +119,17 @@ public:
   }
 
   /**
+   * \brief Operator to get a local handle from the set
+   *
+   * \param[in] lookup the local index to look up
+   *
+   * \return the handle from the set
+   */
+  HandleType& operator[](LookupType lookup) {
+    return get(lookup);
+  }
+
+  /**
    * \brief Get any of the local handles from the set
    *
    * \return any handle from the set
@@ -128,6 +139,27 @@ public:
     auto iter = set_.begin();
     vtAssert(iter != set_.end(), "Index must exist here");
     return iter->second;
+  }
+
+  /**
+   * \brief Operator to get any of the local handles from the set
+   *
+   * \return any handle from the set
+   */
+  HandleType& operator*() {
+    return getAny();
+  }
+
+  /**
+   * \brief Operator to get any of the local handles from the set
+   *
+   * \return any handle from the set
+   */
+  HandleType* operator->() {
+    vtAssertExpr(valid_);
+    auto iter = set_.begin();
+    vtAssert(iter != set_.end(), "Index must exist here");
+    return &iter->second;
   }
 
 private:
