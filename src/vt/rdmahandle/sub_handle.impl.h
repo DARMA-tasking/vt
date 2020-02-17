@@ -139,7 +139,7 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
       idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2]
     );
     if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
-      return IndexInfo(ptr[i+1], ptr[i+2], ptr[i+6]-ptr[i+3]);
+      return IndexInfo(ptr[i+1], ptr[i+2], ptr[i+5]-ptr[i+2]);
     }
   }
   vtAssert(false, "Could not find location info");
