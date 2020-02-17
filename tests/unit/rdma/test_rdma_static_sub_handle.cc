@@ -149,6 +149,49 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_1) {
   proxy.destroyHandleSetRDMA(han_set);
 }
 
+TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
+  using T = TypeParam;
+  auto proxy = TestObjGroup::construct();
+
+  auto this_node = theContext()->getNode();
+  auto num_nodes = theContext()->getNumNodes();
+  auto max_hans = num_nodes * num_nodes;
+  int32_t num_hans = num_nodes * (this_node + 1);
+  //std::size_t num_vals = this_node;
+  int space = 100;
+  std::unordered_map<int32_t, std::size_t> map;
+  for (int i = 0; i < num_hans; i++) {
+    map[i] = (this_node + 1) + i;
+  }
+  auto han_set = proxy.get()->makeHandleSet<T>(max_hans, map, false);
+
+  for (int i = 0; i < num_hans; i++) {
+    auto idx_rank = this_node * max_hans + i;
+    UpdateData<T>::init(han_set[i], space, (this_node + 1) + i, idx_rank);
+  }
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  for (int node = 0; node < num_nodes; node++) {
+    for (int han = 0; han < num_nodes * (node + 1); han++) {
+      vt::Index2D idx(node, han);
+      auto size = han_set->getSize(idx);
+      EXPECT_EQ(size, static_cast<std::size_t>((node + 1) + han));
+
+      auto idx_rank = node * max_hans + han;
+      auto ptr = std::make_unique<T[]>(size);
+      han_set->get(idx, &ptr[0], size, 0, vt::Lock::Shared);
+      UpdateData<T>::test(std::move(ptr), space, size, idx_rank, 0);
+    }
+  }
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  proxy.destroyHandleSetRDMA(han_set);
+}
+
 using RDMASetTestTypes = testing::Types<
   int// ,
   // double,
@@ -163,7 +206,8 @@ using RDMASetTestTypes = testing::Types<
 
 REGISTER_TYPED_TEST_CASE_P(
   TestRDMAHandleSet,
-  test_rdma_handle_set_1
+  test_rdma_handle_set_1,
+  test_rdma_handle_set_2
 );
 
 INSTANTIATE_TYPED_TEST_CASE_P(
