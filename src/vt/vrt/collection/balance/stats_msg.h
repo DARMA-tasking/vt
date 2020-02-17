@@ -160,10 +160,11 @@ static_assert(
 );
 
 template <typename ColT>
-struct LoadStatsMsg : CollectionMessage<ColT>, LoadData {
-  msg_parent_type   = CollectionMessage<ColT>;
-  msg_serialize_prohibited();
-
+struct LoadStatsMsg : NonSerialized<
+  CollectionMessage<ColT>,
+  LoadStatsMsg<ColT>
+>, LoadData
+{
   LoadStatsMsg() = default;
   LoadStatsMsg(LoadData const& in_load_data, PhaseType const& phase)
     : LoadData(in_load_data), cur_phase_(phase)
@@ -175,17 +176,23 @@ private:
   PhaseType cur_phase_ = fst_lb_phase;
 };
 
-struct ProcStatsMsg : collective::ReduceTMsg<LoadData> {
-  msg_parent_type   = collective::ReduceTMsg<LoadData>;
-  msg_serialize_prohibited();
+struct ProcStatsMsg : NonSerialized<
+  collective::ReduceTMsg<LoadData>,
+  ProcStatsMsg
+>
+{
+  using MessageParentType = NonSerialized<
+    collective::ReduceTMsg<LoadData>,
+    ProcStatsMsg
+  >;
 
   ProcStatsMsg() = default;
   ProcStatsMsg(lb::Statistic in_stat, TimeType const in_total_load)
-    : ReduceTMsg<LoadData>(LoadData(in_total_load)),
+    : MessageParentType(LoadData(in_total_load)),
       stat_(in_stat)
   { }
   ProcStatsMsg(lb::Statistic in_stat, LoadData&& ld)
-    : ReduceTMsg<LoadData>(std::move(ld)),
+    : MessageParentType(std::move(ld)),
       stat_(in_stat)
   { }
 

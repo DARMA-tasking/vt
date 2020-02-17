@@ -59,19 +59,26 @@ template <typename>
 struct ReduceCombine;
 
 template <typename DataType>
-struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
-  msg_parent_type    = ReduceMsg;
-  msg_serialize_if_needed_by_base_or_type1(DataType);
+struct ReduceDataMsg : SerializeIfNeeded<
+  ReduceMsg,
+  ReduceDataMsg<DataType>,
+  DataType
+>, ReduceCombine<void> {
+  using MessageParentType = SerializeIfNeeded<
+    ReduceMsg,
+    ReduceDataMsg<DataType>,
+    DataType
+  >;
 
   using CallbackType = CallbackU;
 
   ReduceDataMsg() = default;
   explicit ReduceDataMsg(DataType&& in_val)
-    : ReduceMsg(), ReduceCombine<void>(),
+    : MessageParentType(), ReduceCombine<void>(),
       val_(std::forward<DataType>(in_val))
   { }
   explicit ReduceDataMsg(DataType const& in_val)
-    : ReduceMsg(), ReduceCombine<void>(), val_(in_val)
+    : MessageParentType(), ReduceCombine<void>(), val_(in_val)
   { }
 
   DataType const& getConstVal() const { return val_; }
@@ -84,7 +91,7 @@ struct ReduceDataMsg : ReduceMsg, ReduceCombine<void> {
 
   template <typename SerializeT>
   void serialize(SerializeT& s) {
-    msg_serialize_parent(s);
+    MessageParentType::serialize(s);
     s | val_;
     s | cb_;
   }
@@ -95,63 +102,76 @@ protected:
 };
 
 template <typename T>
-struct ReduceTMsg : ReduceDataMsg<T> {
-  msg_parent_type = ReduceDataMsg<T>;
-  msg_serialize_if_needed_by_base();
+struct ReduceTMsg : SerializeIfNeeded<
+  ReduceDataMsg<T>,
+  ReduceTMsg<T>
+> {
+  using MessageParentType = SerializeIfNeeded<
+    ReduceDataMsg<T>,
+    ReduceTMsg<T>
+  >;
 
-  using DataType = T;
   ReduceTMsg() = default;
-  explicit ReduceTMsg(DataType&& in_val)
-    : ReduceDataMsg<DataType>(std::forward<DataType>(in_val))
+  explicit ReduceTMsg(T&& in_val)
+    : MessageParentType(std::forward<T>(in_val))
   { }
-  explicit ReduceTMsg(DataType const& in_val)
-    : ReduceDataMsg<DataType>(in_val)
+  explicit ReduceTMsg(T const& in_val)
+    : MessageParentType(in_val)
   { }
 
   template <typename SerializeT>
-  void serialize(SerializeT& s) {
-    msg_serialize_parent(s);
+  inline void serialize(SerializeT& s) {
+    MessageParentType::serialize(s);
   }
 };
 
 template <typename T, std::size_t N>
-struct ReduceArrMsg : ReduceDataMsg<std::array<T,N>> {
-  msg_parent_type   = ReduceDataMsg<std::array<T,N>>;
-  msg_serialize_if_needed_by_base();
+struct ReduceArrMsg : SerializeIfNeeded<
+  ReduceDataMsg<std::array<T, N>>,
+  ReduceArrMsg<T, N>
+> {
+  using MessageParentType = SerializeIfNeeded<
+    ReduceDataMsg<std::array<T, N>>,
+    ReduceArrMsg<T, N>
+  >;
+  using DataType = std::array<T, N>;
 
-  using DataType = std::array<T,N>;
   ReduceArrMsg() = default;
   explicit ReduceArrMsg(DataType&& in_val)
-    : ReduceDataMsg<DataType>(std::forward<DataType>(in_val))
+    : MessageParentType(std::forward<DataType>(in_val))
   { }
   explicit ReduceArrMsg(DataType const& in_val)
-    : ReduceDataMsg<DataType>(in_val)
+    : MessageParentType(in_val)
   { }
 
   template <typename SerializeT>
-  void serialize(SerializeT& s) {
-    msg_serialize_parent(s);
+  inline void serialize(SerializeT& s) {
+    MessageParentType::serialize(s);
   }
 };
 
 template <typename T>
-struct ReduceVecMsg : ReduceDataMsg<std::vector<T>> {
-  msg_parent_type   = ReduceDataMsg<std::vector<T>>;
-  msg_serialize_required(); // stl collection used in base, always required.
-
+struct ReduceVecMsg : SerializeRequired<
+  ReduceDataMsg<std::vector<T>>,
+  ReduceVecMsg<T>
+> {
+  using MessageParentType = SerializeRequired<
+    ReduceDataMsg<std::vector<T>>,
+    ReduceVecMsg<T>
+  >;
   using DataType = std::vector<T>;
 
   ReduceVecMsg() = default;
   explicit ReduceVecMsg(DataType&& in_val)
-    : ReduceDataMsg<DataType>(std::forward<DataType>(in_val))
+    : MessageParentType(std::forward<DataType>(in_val))
   { }
   explicit ReduceVecMsg(DataType const& in_val)
-    : ReduceDataMsg<DataType>(in_val)
+    : MessageParentType(in_val)
   { }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    msg_serialize_parent(s);
+  inline void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
   }
 };
 

@@ -85,10 +85,14 @@ private:
   NodeLoadType node_load_ = {};
 };
 
-struct LazyMigrationMsg : vt::Message {
-  msg_parent_type       = vt::Message;
-  msg_serialize_required(); // objs_
-
+struct LazyMigrationMsg : SerializeRequired<
+  vt::Message,
+  LazyMigrationMsg
+> {
+  using MessageParentType = SerializeRequired<
+    vt::Message,
+    LazyMigrationMsg
+  >;
   using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, lb::BaseLB::LoadType>;
 
   LazyMigrationMsg() = default;
@@ -104,7 +108,7 @@ struct LazyMigrationMsg : vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    msg_serialize_parent(s);
+    MessageParentType::serialize(s);
     s | to_node_;
     s | objs_;
   }
