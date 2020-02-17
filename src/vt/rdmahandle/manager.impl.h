@@ -157,7 +157,7 @@ void Manager::deleteHandleSetCollectiveObjGroup(HandleSet<T>& han) {
   using IndexType  = typename HandleSet<T>::IndexType;
   using SubType = SubHandle<T, HandleEnum::StaticSize, IndexType>;
   auto proxy = objgroup::proxy::Proxy<SubType>{han.getAny().proxy_};
-  SubType::template destroyCollective(proxy);
+  SubType::destroyCollective(proxy);
 }
 
 template <
