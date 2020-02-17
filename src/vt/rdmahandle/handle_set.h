@@ -118,6 +118,18 @@ public:
     return iter->second;
   }
 
+  /**
+   * \brief Get any of the local handles from the set
+   *
+   * \return any handle from the set
+   */
+  HandleType& getAny() {
+    vtAssertExpr(valid_);
+    auto iter = set_.begin();
+    vtAssert(iter != set_.end(), "Index must exist here");
+    return iter->second;
+  }
+
 private:
   std::unordered_map<IndexType, HandleType> set_; /**< Holds set of handles */
   bool valid_ = false;
