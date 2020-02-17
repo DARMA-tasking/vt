@@ -119,7 +119,7 @@ private:
   MPI_Win data_window_;
   MPI_Win control_window_;
   T* data_base_ = nullptr;
-  std::size_t* control_base_ = nullptr;
+  uint64_t* control_base_ = nullptr;
   std::size_t size_ = 0;
   bool ready_ = false;
   bool mpi2_ = false;

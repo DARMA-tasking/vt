@@ -74,15 +74,22 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
   );
   if (not uniform_size_) {
     // Allocate control window
-    MPI_Alloc_mem(sizeof(std::size_t), MPI_INFO_NULL, &control_base_);
+    MPI_Alloc_mem(sizeof(uint64_t), MPI_INFO_NULL, &control_base_);
     MPI_Win_create(
-      control_base_, sizeof(std::size_t), sizeof(std::size_t), MPI_INFO_NULL,
+      control_base_, sizeof(uint64_t), sizeof(uint64_t), MPI_INFO_NULL,
       MPI_COMM_WORLD, &control_window_
     );
     {
       auto this_node = theContext()->getNode();
       LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_);
-      *control_base_ = size_;
+      auto mpi_type = TypeMPI<uint64_t>::getType();
+      MPI_Put(&size_, 1, mpi_type, this_node, 0, 1, mpi_type, control_window_);
+      debug_print_verbose(
+        rdma, node,
+        "setting allocate size: size={}, window={}\n",
+        size_, print_ptr(&control_window_)
+      );
+
     }
   }
   ready_ = true;
@@ -90,13 +97,18 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
 
 template <typename T, HandleEnum E>
 std::size_t Holder<T,E>::getSize(vt::NodeType node, Lock l) {
-  std::size_t result = 0;
-  auto mpi_type = TypeMPI<std::size_t>::getType();
+  uint64_t result = 0;
+  auto mpi_type = TypeMPI<uint64_t>::getType();
   {
     LockMPI _scope_lock(l, node, control_window_);
     MPI_Get(&result, 1, mpi_type, node, 0, 1, mpi_type, control_window_);
   }
-  return result;
+  debug_print_verbose(
+    rdma, node,
+    "getSize: node={}, result={}, window={}\n",
+    node, result, print_ptr(&control_window_)
+  );
+  return static_cast<std::size_t>(result);
 }
 
 template <typename T, HandleEnum E>
