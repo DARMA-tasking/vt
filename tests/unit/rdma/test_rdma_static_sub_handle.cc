@@ -193,15 +193,15 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
 }
 
 using RDMASetTestTypes = testing::Types<
-  int// ,
-  // double,
-  // float,
-  // int32_t,
-  // int64_t,
-  // uint64_t,
-  // int64_t,
-  // int16_t,
-  // uint16_t
+  int,
+  double,
+  float,
+  int32_t,
+  int64_t,
+  uint64_t,
+  int64_t,
+  int16_t,
+  uint16_t
 >;
 
 REGISTER_TYPED_TEST_CASE_P(
