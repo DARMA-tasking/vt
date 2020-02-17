@@ -119,7 +119,6 @@ private:
   MPI_Win data_window_;
   MPI_Win control_window_;
   T* data_base_ = nullptr;
-  T* idx_base_ = nullptr;
   std::size_t* control_base_ = nullptr;
   std::size_t size_ = 0;
   bool ready_ = false;
