@@ -209,25 +209,181 @@ static constexpr auto const has_own_serialize =
 
 namespace vt { namespace messaging {
 
-enum SerializationMode
+enum struct SerializationMode : int
 {
-  not_specified,     // default value
-  support,           // this has a serialization function that DERIVED types can use.
-                     // this type itself is NOT SERIALIZED for transmission.
-  require,           // REQUIRE that the type is serialized
-  prohibit           // this type cannot be serialized
+ support = 1,
+ require = 2,
+ prohibit = 3
 };
 
+// Trivial test to ensure that the type is ELIGIBLE to be byte-copied, regardless of
+// if such supports explicit serialization. The assertion is that if serialization is
+// not required then it should be skipped.
+// This does not honor suppression (eg. no support of handling isByteCopyable == false).
+// It also implicitly prohibits types with virtual members, which is arguably
+// an artificial limitation of is_trivially_copyable.
 template <typename T>
 struct byte_copyable {
   constexpr static bool value = std::is_trivially_copyable<T>::value and not std::is_pointer<T>::value;
 };
 
-// ref. https://en.cppreference.com/w/cpp/types/void_t
+// C++17 port. ref. https://en.cppreference.com/w/cpp/types/conjunction
+template<class...> struct cxx14_conjunction : std::true_type { };
+template<class B1> struct cxx14_conjunction<B1> : B1 { };
+template<class B1, class... Bn>
+struct cxx14_conjunction<B1, Bn...>
+  : std::conditional_t<bool(B1::value), cxx14_conjunction<Bn...>, B1> {};
+
+// C++17 port. ref. https://en.cppreference.com/w/cpp/types/void_t
 template<typename... Ts>
 struct cxx14_make_void { typedef void type;};
 template<typename... Ts>
 using cxx14_void_t = typename cxx14_make_void<Ts...>::type;
+
+// Foward-declare
+struct BaseMsg;
+
+// Allows testing of is_base_of<DefinesSerializationMode<Msg>,Msg> to determine
+// if one of the CRTP types is used, as the templated type is invariant.
+// All of the CRTP types are required to define the serialize mode which will
+// be picked up via normal inheritance.
+template <typename MsgT>
+struct DefinesSerializationMode {
+};
+
+template <typename MsgT, typename SelfT>
+struct NonSerializedMsg : MsgT, DefinesSerializationMode<SelfT>
+{
+  template <typename... Args>
+  NonSerializedMsg(Args&&... args)
+    : MsgT{std::forward<Args>(args)...}
+  {
+  }
+
+  static constexpr ::vt::messaging::SerializationMode vt_serialize_mode
+    = ::vt::messaging::SerializationMode::prohibit;
+
+  static_assert(
+    std::is_base_of<BaseMsg, MsgT>::value,
+    "Message must derive from BaseMsg."
+  );
+
+  static_assert(
+    MsgT::vt_serialize_mode not_eq vt::messaging::SerializationMode::require,
+    "Parent message must not require serialization."
+  );
+
+  static_assert(
+    vt::messaging::byte_copyable<MsgT>::value,
+    "Message must be byte-copyable because serialization is prohibited."
+  );
+
+  // Attempts to call serialize(..) are forbidden on types expressly
+  // prohibited from being serialized. Assumes CRTP call not skipped
+  // in derived type to be an effective guard. Active Message is also
+  // expected to apply it's own static assert as a cover.
+  template <typename SerializerT>
+  void serialize(SerializerT& s) = delete;
+};
+
+template <typename MsgT, typename SelfT>
+struct SerializeSupportedMsg : MsgT, DefinesSerializationMode<SelfT>
+{
+  template <typename... Args>
+  SerializeSupportedMsg(Args&&... args)
+    : MsgT{std::forward<Args>(args)...}
+  {
+  }
+
+  static constexpr ::vt::messaging::SerializationMode vt_serialize_mode
+    = ::vt::messaging::SerializationMode::support;
+
+  static_assert(
+    std::is_base_of<BaseMsg, MsgT>::value,
+    "Message must derive from BaseMsg."
+  );
+
+  static_assert(
+    MsgT::vt_serialize_mode == vt::messaging::SerializationMode::support,
+    "Message supporting serialization must derive from a message"
+    " that also supports serialization."
+  );
+
+  static_assert(
+    vt::messaging::byte_copyable<MsgT>::value,
+    "Message must be byte-copyable because serialization may be"
+    " prohibited in a derived type."
+  );
+
+  template <typename SerializerT>
+  inline void serialize(SerializerT& s) {
+    MsgT::serialize(s);
+  }
+};
+
+template <typename MsgT, typename SelfT>
+struct SerializeRequiredMsg : MsgT, DefinesSerializationMode<SelfT>
+{
+  template <typename... Args>
+  SerializeRequiredMsg(Args&&... args)
+    : MsgT{std::forward<Args>(args)...}
+  {
+  }
+
+  static constexpr ::vt::messaging::SerializationMode vt_serialize_mode
+    = ::vt::messaging::SerializationMode::require;
+
+  static_assert(
+    std::is_base_of<BaseMsg, MsgT>::value,
+    "Message must derive from BaseMsg."
+  );
+
+  static_assert(
+    MsgT::vt_serialize_mode not_eq vt::messaging::SerializationMode::prohibit,
+    "Message requiring serialization cannot derive from a message"
+    " that prohibits serialization."
+  );
+
+  template <typename SerializerT>
+  inline void serialize(SerializerT& s) {
+    MsgT::serialize(s);
+  }
+};
+
+template <typename MsgT, typename SelfT, typename ...DepTypesT>
+struct SerializeIfNeededMsg : MsgT, DefinesSerializationMode<SelfT>
+{
+  template <typename... Args>
+  SerializeIfNeededMsg(Args&&... args)
+    : MsgT{std::forward<Args>(args)...}
+  {
+  }
+
+  static constexpr ::vt::messaging::SerializationMode vt_serialize_mode
+  = MsgT::vt_serialize_mode == SerializationMode::require
+    or not cxx14_conjunction<byte_copyable<DepTypesT>...>::value
+    ? SerializationMode::require
+    : SerializationMode::support;
+
+  static_assert(
+    std::is_base_of<BaseMsg, MsgT>::value,
+    "Message must derive from BaseMsg."
+  );
+
+  static_assert(false
+    or (vt_serialize_mode == SerializationMode::support
+        and MsgT::vt_serialize_mode == vt::messaging::SerializationMode::support)
+    or (vt_serialize_mode == SerializationMode::require
+        and MsgT::vt_serialize_mode not_eq vt::messaging::SerializationMode::prohibit),
+    "If serialization is not required, base message must support serialization."
+    " If serialization is required, base message must not prohibit serialization."
+  );
+
+  template <typename SerializerT>
+  inline void serialize(SerializerT& s) {
+    MsgT::serialize(s);
+  }
+};
 
 // Use member type to detect if the mode is directly specified.
 // (Can't figure out how to prevent detection of static constexpr from parent.)
@@ -236,10 +392,20 @@ struct msg_defines_serialize_mode
   : std::false_type
 {};
 
+// For messages built with macros
 template <typename U>
 struct msg_defines_serialize_mode<U,
   std::enable_if_t<
     std::is_same<void (U::*)(), decltype(&U::vt_serialize_defined_on_type)>::value
+  >>
+  : std::true_type
+{};
+
+// For messages using CRTP (inherited one level in CRTP-derived types)
+template <typename U>
+struct msg_defines_serialize_mode<U,
+  std::enable_if_t<
+    std::is_base_of<DefinesSerializationMode<U>,U>::value
   >>
   : std::true_type
 {};
@@ -266,5 +432,23 @@ struct msg_serialization_mode<
 };
 
 }} //end namespace vt::messaging
+
+
+// Export CRTP types
+namespace vt {
+
+template <typename MsgT, typename SelfT>
+using NonSerialized = vt::messaging::NonSerializedMsg<MsgT, SelfT>;
+
+template <typename MsgT, typename SelfT>
+using SerializeSupported = vt::messaging::SerializeSupportedMsg<MsgT, SelfT>;
+
+template <typename MsgT, typename SelfT>
+using SerializeRequired = vt::messaging::SerializeRequiredMsg<MsgT, SelfT>;
+
+template <typename MsgT, typename SelfT, typename ...DepTypesT>
+using SerializeIfNeeded = vt::messaging::SerializeIfNeededMsg<MsgT, SelfT, DepTypesT...>;
+
+} //end namespace vt
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_MESSAGE_SERIALIZE_H*/
