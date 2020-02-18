@@ -136,13 +136,13 @@ struct Log final {
     } user;
 
     // Copy based on type.
-    Data(Data const& data) {
-      copyFrom(data);
+    Data(Data const& in) {
+      copyFrom(in);
     }
 
     // Move based on type
-    Data(Data&& data) {
-      moveFrom(std::move(data));
+    Data(Data&& in) {
+      moveFrom(std::move(in));
     }
 
     Data &operator=(Data const& other_data) {
