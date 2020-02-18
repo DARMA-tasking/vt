@@ -275,6 +275,61 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_3) {
   proxy.destroyHandleSetRDMA(han_set);
 }
 
+TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_4) {
+  using T = TypeParam;
+  auto proxy = TestObjGroup::construct();
+
+  auto this_node = theContext()->getNode();
+  auto num_nodes = theContext()->getNumNodes();
+  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+  int32_t num_hans = 4;
+  std::size_t num_vals = 10;
+  int space = 100;
+  std::unordered_map<int32_t, std::size_t> map;
+  for (int i = 0; i < num_hans; i++) {
+    map[i] = num_vals;
+  }
+  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true);
+
+  for (int i = 0; i < num_hans; i++) {
+    auto idx_rank = this_node * num_hans + i;
+    UpdateData<T>::init(han_set[i], space, num_vals, idx_rank);
+  }
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  for (int han = 0; han < num_hans; han++) {
+    vt::Index2D idx(next, han);
+    auto ptr = std::make_unique<T[]>(num_vals/2);
+    auto idx_rank = this_node * num_hans + han;
+    UpdateData<T>::setMem(&ptr[0], space, num_vals/2, idx_rank, num_vals/2);
+    han_set->put(idx, &ptr[0], num_vals/2, num_vals/2, vt::Lock::Exclusive);
+  }
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  for (int han = 0; han < num_hans; han++) {
+    vt::Index2D idx(next, han);
+    auto ptr = std::make_unique<T[]>(num_vals);
+    auto ptr2 = std::make_unique<T[]>(num_vals);
+    han_set->get(idx, &ptr[0], num_vals, 0, vt::Lock::Shared);
+    for (std::size_t i  = 0; i < num_vals; i++) {
+      ptr2[i] = ptr[i];
+    }
+    auto idx_rank = this_node * num_hans + han;
+    auto idx_next_rank = next * num_hans + han;
+    UpdateData<T>::test(std::move(ptr), space, num_vals/2, idx_next_rank, 0);
+    UpdateData<T>::test(std::move(ptr2), space, num_vals/2, idx_rank, num_vals/2);
+  }
+
+  // Barrier to finish all pending operations before destroy starts
+  vt::theCollective()->barrier();
+
+  proxy.destroyHandleSetRDMA(han_set);
+}
+
 using RDMASetTestTypes = testing::Types<
   int,
   double,
@@ -291,7 +346,8 @@ REGISTER_TYPED_TEST_CASE_P(
   TestRDMAHandleSet,
   test_rdma_handle_set_1,
   test_rdma_handle_set_2,
-  test_rdma_handle_set_3
+  test_rdma_handle_set_3,
+  test_rdma_handle_set_4
 );
 
 INSTANTIATE_TYPED_TEST_CASE_P(
