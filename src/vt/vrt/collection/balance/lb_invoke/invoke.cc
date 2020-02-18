@@ -231,6 +231,11 @@ void LBManager::releaseNow(PhaseType phase) {
 
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
+    for (auto&& l : listeners_) {
+      if (l) {
+        l(phase);
+      }
+    }
     destroy_lb_();
     destroy_lb_ = nullptr;
   }
@@ -245,6 +250,16 @@ void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
 # if backend_check_enabled(trace_enabled)
   theTrace()->setTraceEnabledCurrentPhase(phase + 1);
 # endif
+}
+
+int LBManager::registerListenerAfterLB(ListenerFnType fn) {
+  listeners_.push_back(fn);
+  return static_cast<int>(listeners_.size() - 1);
+}
+
+void LBManager::unregisterListenerAfterLB(int element) {
+  vtAssert(listeners_.size() > element, "Listener must exist");
+  listeners_[element] = nullptr;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
