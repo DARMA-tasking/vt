@@ -97,6 +97,17 @@ struct Converter<int32_t> {
   }
 };
 
+template <>
+struct Converter<std::string> {
+  static std::string convert(std::string val, std::string default_) {
+    if (val.size() > 0) {
+      return val;
+    } else {
+      return default_;
+    }
+  }
+};
+
 struct SpecEntry {
   SpecEntry(
     SpecIndex const in_idx, std::string const in_name,
