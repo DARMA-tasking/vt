@@ -330,6 +330,57 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_4) {
   proxy.destroyHandleSetRDMA(han_set);
 }
 
+TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_5) {
+  using T = TypeParam;
+  auto proxy = TestObjGroup::construct();
+
+  auto this_node = theContext()->getNode();
+  auto num_nodes = theContext()->getNumNodes();
+  int32_t num_hans = 4;
+  std::size_t num_vals = 10;
+  int space = 100;
+  std::unordered_map<int32_t, std::size_t> map;
+  for (int i = 0; i < num_hans; i++) {
+    map[i] = num_vals;
+  }
+  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true);
+
+  for (int i = 0; i < num_hans; i++) {
+    auto idx_rank = this_node * num_hans + i;
+    UpdateData<T>::init(han_set[i], space, num_vals, idx_rank);
+  }
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  for (int node = 0; node < num_nodes; node++) {
+    for (int han = 0; han < num_hans; han++) {
+      vt::Index2D idx(node, han);
+      for (int i = 0; i < static_cast<int>(num_vals); i++) {
+        han_set->fetchOp(idx, 1, i, MPI_SUM, vt::Lock::Shared);
+      }
+    }
+  }
+
+  // Barrier to order following locks
+  vt::theCollective()->barrier();
+
+  for (int node = 0; node < num_nodes; node++) {
+    for (int han = 0; han < num_hans; han++) {
+      vt::Index2D idx(node, han);
+      auto idx_rank = node * num_hans + han;
+      auto ptr = std::make_unique<T[]>(num_vals);
+      han_set->get(idx, &ptr[0], num_vals, 0, vt::Lock::Exclusive);
+      UpdateData<T>::test(std::move(ptr), space, num_vals, idx_rank, 0, num_nodes);
+    }
+  }
+
+  // Barrier to finish all pending operations before destroy starts
+  vt::theCollective()->barrier();
+
+  proxy.destroyHandleSetRDMA(han_set);
+}
+
 using RDMASetTestTypes = testing::Types<
   int,
   double,
@@ -347,7 +398,8 @@ REGISTER_TYPED_TEST_CASE_P(
   test_rdma_handle_set_1,
   test_rdma_handle_set_2,
   test_rdma_handle_set_3,
-  test_rdma_handle_set_4
+  test_rdma_handle_set_4,
+  test_rdma_handle_set_5
 );
 
 INSTANTIATE_TYPED_TEST_CASE_P(
