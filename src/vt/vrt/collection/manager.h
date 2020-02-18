@@ -64,6 +64,7 @@
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/staged_token/token.h"
+#include "vt/vrt/collection/listener/listen_events.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/messaging/message.h"
@@ -815,6 +816,27 @@ private:
     VirtualPtrType<ColT, IndexT> vrt_elm_ptr, IndexT const& range,
     HandlerType const& map_han
   );
+
+public:
+  /**
+   * \brief Register listener function for a given collection
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] fn the listener function
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  int registerElementListener(
+    VirtualProxyType proxy, listener::ListenFnType<IndexT> fn
+  );
+
+  /**
+   * \brief Unregister listener function for a given collection
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] element the index of the registered listener function
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void unregisterElementListener(VirtualProxyType proxy, int element);
 
 private:
   template <typename MsgT>
