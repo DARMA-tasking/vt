@@ -51,6 +51,9 @@
 namespace vt { namespace lb { namespace instrumentation {
 
 /*static*/ LBEntityType Entity::cur_entity_id = 0;
+/*static*/ std::unordered_map<LBEntityType, TimeType> Entity::events_;
+/*static*/ std::unordered_map<LBEntityType, Entity::DatabaseType> Entity::entities_;
+/*static*/ std::unordered_map<LBEntityType, Entity::MigratableType*> Entity::migratables_;
 
 /*static*/ LBEntityType Entity::registerEntity() {
   auto const& node = theContext()->getNode();
