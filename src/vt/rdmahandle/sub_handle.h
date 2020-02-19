@@ -94,6 +94,8 @@ public:
 
   IndexInfo fetchInfo(IndexT const& idx);
 
+  void updateInfo(IndexT const& idx, IndexInfo info, NodeType home);
+
   IndexInfo resolveLocation(IndexT const& idx);
 
   void get(IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset);

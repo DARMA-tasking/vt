@@ -61,7 +61,7 @@ void SubHandle<T,E,IndexT>::initialize(
   is_static_ = in_is_static;
   range_ = in_range;
   dense_start_with_zero_ = in_dense_start_with_zero;
-  ordered_opt_ = ordered_opt_ and dense_start_with_zero_;
+  ordered_opt_ = ordered_opt_ and dense_start_with_zero_ and is_static_;
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -191,6 +191,48 @@ int SubHandle<T,E,IndexT>::getOrderedOffset(IndexT idx, NodeType home_node) {
     found_offset = iter->second;
   }
   return found_offset;
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::updateInfo(
+  IndexT const& idx, IndexInfo info, NodeType home
+) {
+  vtAssertExpr(not ordered_opt_);
+  vtAssertExpr(not is_static_);
+  auto this_node = theContext()->getNode();
+  auto home_size = loc_handle_.getSize(home);
+  debug_print(
+    rdma, node,
+    "updateInfo: idx={}, this_node={}, home={}, home_size={}\n",
+    idx, this_node, home, home_size
+  );
+  auto lin_idx = linearize(idx);
+  auto ptr = std::make_unique<uint64_t[]>(home_size);
+  // These can probably be relaxed to Shared locks because lin_idx is never
+  // modified
+  loc_handle_.get(home, &ptr[0], home_size, 0, Lock::Exclusive);
+  for (uint64_t i = 0; i < home_size; i += 4) {
+    debug_print_verbose(
+      rdma, node,
+      "updateInfo: idx={}, node={}, home={}, ptr[{}]={},{},{},{}\n",
+      idx, this_node, home, i, ptr[i+0], ptr[i+1], ptr[i+2], ptr[i+3]
+    );
+    if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
+      debug_print_verbose(
+        rdma, node,
+        "updateInfo: idx={}, node={}, home={}, "
+        "ptr[{}]={},{},{},{}\n",
+        idx, this_node, home, i,
+        ptr[i+0], ptr[i+1], ptr[i+2], ptr[i+3]
+      );
+      int offset = static_cast<int>(i);
+      auto pptr = std::make_unique<uint64_t[]>(2);
+      pptr[0] = info.getOffset();
+      pptr[1] = info.getNode();
+      vtAssertExpr(pptr[1] == this_node);
+      loc_handle_.put(home, &pptr[0], 2, offset + 1, Lock::Exclusive);
+    }
+  }
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -438,7 +480,7 @@ uint64_t SubHandle<T,E,IndexT>::totalLocalSize() const {
 
 template <typename T, HandleEnum E, typename IndexT>
 std::size_t SubHandle<T,E,IndexT>::getNumHandles() const {
-  return sub_handles_.size();
+  return sub_handles_staged_.size();
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -532,8 +574,15 @@ void SubHandle<T,E,IndexT>::afterLB() {
   auto cb = theCB()->makeBcast<
     ThisType,impl::ReduceLBMsg,&ThisType::checkChanged
   >(proxy_);
+  auto epoch = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(epoch);
   auto msg = makeMessage<impl::ReduceLBMsg>(local_changed);
   proxy_.template reduce<collective::OrOp<bool>>(msg.get(),cb);
+  theMsg()->popEpoch(epoch);
+  theTerm()->finishedEpoch(epoch);
+  bool done = false;
+  theTerm()->addAction(epoch, [&]{ done = true; });
+  do vt::runScheduler(); while (not done);
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -566,12 +615,28 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
       std::inserter(new_handles, new_handles.begin())
     );
 
+    debug_print(
+      rdma, node,
+      "checkChanged: in.size()={}, out.size()={}\n",
+      migrate_in_.size(), migrate_out_.size()
+    );
+
     // Now, we need the sizes to re-create the handles that belong here
     std::unordered_map<IndexT, std::size_t> new_handles_sized;
     for (auto&& h : new_handles) {
+      debug_print(
+        rdma, node,
+        "checkChanged: fetching size: idx={}\n", h
+      );
+
       // Fetch the size, which may be remote if it migrated
       new_handles_sized[h] = getSize(h);
     }
+
+    debug_print(
+      rdma, node,
+      "checkChanged: fetched all sizes\n"
+    );
 
     // Fetch all the data for the new handles into buffers
     // @todo: possibly we could do a local memcpy for the purely local
@@ -598,24 +663,38 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     sub_handles_.clear();
     sub_layout_.clear();
     sub_prefix_.clear();
+    if (ordered_opt_) {
+      ordered_local_offset_.clear();
+    }
 
     // New we have everything to re-build the sub-handles
     for (auto&& h : new_handles_sized) {
       addLocalIndex(h.first, h.second);
     }
 
-    // Destroy the old handles
-    proxy_.destroyHandleRDMA(data_handle_);
-    proxy_.destroyHandleRDMA(loc_handle_);
+    // // Destroy the old data handle
+    // proxy_.destroyHandleRDMA(data_handle_);
 
     // Make the new sub-handles, with the new local indices now mapped here
-    makeSubHandles();
+    makeSubHandles(false);
 
     // Invalidate the cache, since handles have migrated and the cached
     // locations may not be valid anymore
     cache_.invalidate();
 
     // Make sure everyone has invalidated, as to not get bad values
+    theCollective()->barrier();
+
+    // Update the locations for all the handles since they are been
+    // re-configured
+    for (auto&& m : new_handles_sized) {
+      auto home = getHomeNode(m.first);
+      // This resolveLocation better be a local operation!
+      auto info = resolveLocation(m.first);
+      updateInfo(m.first, info, home);
+    }
+
+    // Make sure everyone has updated their location data
     theCollective()->barrier();
 
     // Put all the old data where it goes
