@@ -63,6 +63,7 @@ struct HandleSet {
   using HandleType = rdma::Handle<T, HandleEnum::StaticSize, IndexType>;
   using LookupType = int32_t;
 
+  HandleSet() = default;
   HandleSet(HandleSet const&) = default;
   HandleSet(HandleSet&&) = default;
   HandleSet& operator=(HandleSet const&) = default;
@@ -160,6 +161,17 @@ public:
     auto iter = set_.begin();
     vtAssert(iter != set_.end(), "Index must exist here");
     return &iter->second;
+  }
+
+  /**
+   * \brief Serialization for \c HandleSet
+   *
+   * \param[in,out] s the serializer
+   */
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | set_;
+    s | valid_;
   }
 
 private:
