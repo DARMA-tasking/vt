@@ -158,12 +158,15 @@ public:
   );
 
   /**
-   * \brief Construct a static (non-migratable) set of new, distributed RDMA
-   * handles for an objgroup
+   * \brief Construct a migratable set of new, distributed RDMA
+   * handles for a collection
    *
-   * \param[in] collection_proxy the collection proxy
-   * \param[in] map a map of the handles and corresponding sizes to create
+   * \param[in] collection_proxy the collection proxy with index
+   * \param[in] idx_size size of the handle to create
    * \param[in] uniform_size whether all handles have the same size
+   * \param[in] next_handle system-use-only, the handle ID
+   * \param[in] map_han system-use-only, element map for collection
+   * \param[in] in_range system-use-only, range for collection
    *
    * \return the new handle set
    */
