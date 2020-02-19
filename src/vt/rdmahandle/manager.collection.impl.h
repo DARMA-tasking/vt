@@ -136,6 +136,10 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
 
     // If LB is enabled then we need to register an afterLB listener
 #   if backend_check_enabled(lblite)
+    debug_print(
+      rdma, node,
+      "CollectionHandle: registering LB listener\n"
+    );
     auto lb_manager = vrt::collection::balance::LBManager::getProxy();
     lb_manager.get()->registerListenerAfterLB([=](PhaseType){
       sub_proxy.get()->afterLB();
