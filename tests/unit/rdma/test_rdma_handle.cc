@@ -46,6 +46,7 @@
 
 #include "vt/transport.h"
 #include "test_parallel_harness.h"
+#include "test_rdma_common.h"
 
 namespace vt { namespace tests { namespace unit {
 
@@ -71,35 +72,6 @@ struct TestObjGroup {
 
 private:
   ProxyType proxy_;
-};
-
-template <typename T>
-struct UpdateData {
-  template <typename HandleT>
-  static void init(
-    HandleT& handle, int space, std::size_t size, vt::NodeType rank
-) {
-    handle.modifyExclusive([=](T* val){
-      setMem(val, space, size, rank, 0);
-    });
-  }
-
-  static void setMem(
-    T* ptr, int space, std::size_t size, vt::NodeType rank, std::size_t offset
-  ) {
-    for (std::size_t i = offset; i < size; i++) {
-      ptr[i] = static_cast<T>(space * rank + i);
-    }
-  }
-
-  static void test(
-    std::unique_ptr<T[]> ptr, int space, std::size_t size, vt::NodeType rank,
-    std::size_t offset, T val = T{}
-  ) {
-    for (std::size_t i = offset; i < size; i++) {
-      EXPECT_EQ(ptr[i], static_cast<T>(space * rank + i + val));
-    }
-  }
 };
 
 template <typename T>
