@@ -105,7 +105,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     if (map_han == -1) {
       map_han = vrt::collection::UniversalIndexHolder<>::getMap(proxy_bits);
     }
-    sub_proxy = SubType::construct(false, range, map_han);
+    sub_proxy = SubType::construct(false, range, true, map_han);
     // Register the migration listener
     ListenerType fn = [=](ElementListener event, IndexT lidx) {
       if (event == ElementListener::ElementMigratedOut) {
