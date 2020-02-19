@@ -68,6 +68,9 @@ struct HandleData;
 template <typename T, HandleEnum E, typename ProxyT>
 struct ConstructMsg;
 
+template <typename ProxyT, typename IndexT>
+struct InformRDMAMsg;
+
 } /* end namespace impl */
 
 /**
@@ -76,8 +79,9 @@ struct ConstructMsg;
  * \brief RDMA Handle Manager for creation of node- or index-level handles
  */
 struct Manager {
-  using ProxyType    = vt::objgroup::proxy::Proxy<Manager>;
-  using ElemToHandle = std::unordered_map<int64_t, RDMA_HandleType>;
+  using ProxyType       = vt::objgroup::proxy::Proxy<Manager>;
+  using ElemToHandle    = std::unordered_map<int64_t, RDMA_HandleType>;
+  using HandleToManager = std::unordered_map<RDMA_HandleType, ObjGroupProxyType>;
 
   Manager() = default;
 
@@ -102,6 +106,17 @@ private:
    */
   template <typename T, HandleEnum E, typename ProxyT>
   void finishMake(impl::ConstructMsg<T, E, ProxyT>* msg);
+
+  /**
+   * \internal \brief Inform all nodes that an RDMA handle is being constructed,
+   * required when a collection is not mapped to all nodes
+   *
+   * \param[in] msg inform msg
+   */
+  template <typename T, HandleEnum E, typename ProxyT, typename ColT>
+  void informCollectionRDMA(
+    impl::InformRDMAMsg<ProxyT, typename ColT::IndexType>* msg
+  );
 
 public:
   /**
@@ -143,6 +158,29 @@ public:
   );
 
   /**
+   * \brief Construct a static (non-migratable) set of new, distributed RDMA
+   * handles for an objgroup
+   *
+   * \param[in] collection_proxy the collection proxy
+   * \param[in] map a map of the handles and corresponding sizes to create
+   * \param[in] uniform_size whether all handles have the same size
+   *
+   * \return the new handle set
+   */
+  template <
+    typename T,
+    HandleEnum E,
+    typename ColT,
+    typename ProxyT,
+    typename IndexT = typename ColT::IndexType
+  >
+  Handle<T, E, IndexT> makeCollectionHandles(
+    ProxyT collection_proxy, std::size_t idx_size, bool uniform_size = true,
+    RDMA_HandleType next_handle = no_rdma_handle, vt::HandlerType map_han = -1,
+    IndexT in_range = {}
+  );
+
+  /**
    * \brief Destroy and garbage collect an RDMA handle
    *
    * \param[in] han the handle to destroy
@@ -177,6 +215,9 @@ private:
 
   /// Current collective handle for a given collection proxy & element index
   std::unordered_map<VirtualProxyType, ElemToHandle> cur_handle_collection_;
+
+  /// The manager for a given handle and collection
+  std::unordered_map<VirtualProxyType, HandleToManager> collection_to_manager_;
 
   /// Objgroup proxy for this manager
   ProxyType proxy_;

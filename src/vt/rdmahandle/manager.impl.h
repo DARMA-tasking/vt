@@ -82,6 +82,26 @@ struct ConstructMsg : vt::collective::ReduceTMsg<HandleData> {
   { }
 };
 
+template <typename ProxyT, typename IndexT>
+struct InformRDMAMsg : vt::Message {
+  InformRDMAMsg() = default;
+  InformRDMAMsg(
+    ProxyT in_proxy, RDMA_HandleType in_rdma_handle, bool uniform,
+    vt::HandlerType in_map_han, IndexT in_range
+  ) : proxy_(in_proxy),
+      rdma_handle_(in_rdma_handle),
+      uniform_size_(uniform),
+      map_han_(in_map_han),
+      range_(in_range)
+  { }
+
+  ProxyT proxy_;
+  RDMA_HandleType rdma_handle_ = no_rdma_handle;
+  bool uniform_size_ = false;
+  vt::HandlerType map_han_ = 0;
+  IndexT range_;
+};
+
 } /* end namespace impl */
 
 template <typename T, HandleEnum E, typename ProxyT>
@@ -95,6 +115,9 @@ void Manager::finishMake(impl::ConstructMsg<T, E, ProxyT>* msg) {
     key.handle_, size, count
   );
   auto& entry = getEntry<T,E>(key);
+  // Need barrier here so all nodes arrive before blocking in the MPI window
+  // creation
+  theCollective()->barrier();
   entry.allocateDataWindow();
 }
 
@@ -120,7 +143,7 @@ Handle<T, E> Manager::makeHandleCollectiveObjGroup(
 
 template <typename T, HandleEnum E, typename ProxyT, typename LookupT>
 HandleSet<T> Manager::makeHandleSetCollectiveObjGroup(
-  ProxyT proxy_objgroup,
+  ProxyT,
   LookupT max_lookup,
   std::unordered_map<LookupT, std::size_t> const& map,
   bool uniform_size
