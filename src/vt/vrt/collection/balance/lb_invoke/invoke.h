@@ -123,6 +123,7 @@ public:
 public:
   int registerListenerAfterLB(ListenerFnType fn);
   void unregisterListenerAfterLB(int element);
+  void triggerListeners(PhaseType phase);
 
 protected:
   template <typename LB>

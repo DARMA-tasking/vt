@@ -231,17 +231,21 @@ void LBManager::releaseNow(PhaseType phase) {
 
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
-    for (auto&& l : listeners_) {
-      if (l) {
-        l(phase);
-      }
-    }
+    triggerListeners(phase);
     destroy_lb_();
     destroy_lb_ = nullptr;
   }
   releaseLBPhase(msg.get());
   synced_in_lb_ = false;
   num_invocations_ = num_release_ = 0;
+}
+
+void LBManager::triggerListeners(PhaseType phase) {
+  for (auto&& l : listeners_) {
+    if (l) {
+      l(phase);
+    }
+  }
 }
 
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
