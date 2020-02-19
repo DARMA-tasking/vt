@@ -258,7 +258,9 @@ int LBManager::registerListenerAfterLB(ListenerFnType fn) {
 }
 
 void LBManager::unregisterListenerAfterLB(int element) {
-  vtAssert(listeners_.size() > element, "Listener must exist");
+  vtAssert(
+    listeners_.size() > static_cast<std::size_t>(element), "Listener must exist"
+  );
   listeners_[element] = nullptr;
 }
 
