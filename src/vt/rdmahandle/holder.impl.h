@@ -221,7 +221,7 @@ T Holder<T,E>::fetchOp(vt::NodeType node, Lock l, T in, int offset, MPI_Op op) {
     LockMPI _scope_lock(l, node, data_window_);
     debug_print_verbose(
       rdma, node,
-      "MPI_Fetch_and_op({}, {}, {}, {}, {}, {}, {}, window);\n",
+      "MPI_Fetch_and_op({}, {}, {}, {}, {}, {}, window);\n",
       in, print_ptr(&out), mpi_type_str, node, offset, op
     );
     MPI_Fetch_and_op(&in, &out, mpi_type, node, offset, op, data_window_);
