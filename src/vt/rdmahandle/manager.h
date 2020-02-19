@@ -158,16 +158,6 @@ public:
   template <typename T>
   void deleteHandleSetCollectiveObjGroup(HandleSet<T>& han);
 
-  template <
-    typename T,
-    HandleEnum E,
-    typename ProxyT,
-    typename IndexType = typename ProxyT::IndexType
-  >
-  Handle<T, E> makeHandleCollectiveCollection(
-    ProxyT proxy, IndexType range, std::size_t size
-  );
-
   template <typename T, HandleEnum E>
   Holder<T,E>& getEntry(HandleKey const& key);
 

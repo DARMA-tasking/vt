@@ -160,25 +160,6 @@ void Manager::deleteHandleSetCollectiveObjGroup(HandleSet<T>& han) {
   SubType::destroyCollective(proxy);
 }
 
-template <
-  typename T,
-  HandleEnum E,
-  typename ProxyT,
-  typename IndexType
->
-Handle<T, E> Manager::makeHandleCollectiveCollection(
-  ProxyT proxy, IndexType range, std::size_t size
-) {
-  auto proxy_bits = proxy.getProxy();
-  auto idx = proxy.getIndex();
-  auto lin = static_cast<ElemType>(mapping::linearizeDenseIndexRowMajor(&idx, &range));
-  auto next_handle = ++cur_handle_collection_[proxy_bits][lin];
-  auto key = HandleKey{typename HandleKey::CollectionTag{}, proxy_bits, next_handle, size};
-  auto han = Handle<T, E>(key, size);
-  holder_<T,E>[key].template addHandle<VirtualProxyType>(key, lin, han);
-  return han;
-}
-
 // For now, this is static. Really it should be part of the objgroup and the
 // proxy should be available through the VT component
 template <typename T, HandleEnum E>
