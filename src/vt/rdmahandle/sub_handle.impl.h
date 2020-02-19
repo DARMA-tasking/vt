@@ -366,12 +366,20 @@ void SubHandle<T,E,IndexT>::setCollectionExpected(std::size_t count) {
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::migratedOutIndex(IndexT index) {
   vtAssertExpr(not is_static_);
+  debug_print(
+    rdma, node,
+    "migratedOutIndex: idx={}\n", index
+  );
   migrate_out_.push_back(index);
 }
 
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::migratedInIndex(IndexT index) {
   vtAssertExpr(not is_static_);
+  debug_print(
+    rdma, node,
+    "migratedInIndex: idx={}\n", index
+  );
   migrate_in_.push_back(index);
 }
 
@@ -400,6 +408,12 @@ void SubHandle<T,E,IndexT>::afterLB() {
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
   auto global_changed = msg->getVal();
+
+  debug_print(
+    rdma, node,
+    "checkChanged: global_changed={}\n", global_changed
+  );
+
   // Must re-configure all windows
   if (global_changed) {
     std::vector<IndexT> cur_handles;
