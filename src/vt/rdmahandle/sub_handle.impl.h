@@ -229,7 +229,6 @@ void SubHandle<T,E,IndexT>::updateInfo(
       auto pptr = std::make_unique<uint64_t[]>(2);
       pptr[0] = info.getOffset();
       pptr[1] = info.getNode();
-      vtAssertExpr(pptr[1] == this_node);
       loc_handle_.put(home, &pptr[0], 2, offset + 1, Lock::Exclusive);
     }
   }
