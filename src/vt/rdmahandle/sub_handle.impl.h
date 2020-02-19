@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/objgroup/manager.h"
+#include "vt/collective/reduce/operators/default_msg.h"
 
 namespace vt { namespace rdma {
 
@@ -365,17 +366,135 @@ void SubHandle<T,E,IndexT>::setCollectionExpected(std::size_t count) {
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::migratedOutIndex(IndexT index) {
   vtAssertExpr(not is_static_);
+  migrate_out_.push_back(index);
 }
 
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::migratedInIndex(IndexT index) {
   vtAssertExpr(not is_static_);
+  migrate_in_.push_back(index);
 }
+
+namespace impl {
+
+struct ReduceLBMsg : vt::collective::ReduceTMsg<bool> {
+  explicit ReduceLBMsg(bool changed)
+    : vt::collective::ReduceTMsg<bool>(changed)
+  { }
+};
+
+} /* end namespace impl */
 
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::afterLB() {
+  using ThisType = SubHandle<T,E,IndexT>;
   vtAssertExpr(not is_static_);
+  bool local_changed = migrate_in_.size() != 0 or migrate_out_.size() != 0;
+  auto cb = theCB()->makeBcast<
+    ThisType,impl::ReduceLBMsg,&ThisType::checkChanged
+  >(proxy_);
+  auto msg = makeMessage<impl::ReduceLBMsg>(local_changed);
+  proxy_.template reduce<collective::OrOp<bool>>(msg.get(),cb);
 }
+
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
+  auto global_changed = msg->getVal();
+  // Must re-configure all windows
+  if (global_changed) {
+    std::vector<IndexT> cur_handles;
+    for (auto&& h : sub_handles_) {
+      cur_handles.push_back(h.first);
+    }
+    std::vector<IndexT> all_handles;
+    // Union current with migrated in
+    std::set_union(
+      cur_handles.begin(), cur_handles.end(),
+      migrate_in_.begin(), migrate_in_.end(),
+      std::back_inserter(all_handles)
+    );
+    std::vector<IndexT> new_handles;
+    // Minus off the ones migrated out
+    std::set_difference(
+      all_handles.begin(), all_handles.end(),
+      migrate_out_.begin(), migrate_out_.end(),
+      std::inserter(new_handles, new_handles.begin())
+    );
+
+    // Now, we need the sizes to re-create the handles that belong here
+    std::unordered_map<IndexT, std::size_t> new_handles_sized;
+    for (auto&& h : new_handles) {
+      // Fetch the size, which may be remote if it migrated
+      new_handles_sized[h] = getSize(h);
+    }
+
+    // Fetch all the data for the new handles into buffers
+    // @todo: possibly we could do a local memcpy for the purely local
+    // transfers, but it would be very difficult
+    std::unordered_map<IndexT, std::unique_ptr<T[]>> idx_data;
+    std::vector<RequestHolder> reqs;
+    for (auto&& h : new_handles_sized) {
+      idx_data[h.first] = std::make_unique<T[]>(h.second);
+      reqs.emplace_back(
+        rget(h.first, vt::Lock::Shared, &idx_data[h.first][0], h.second, 0)
+      );
+    }
+
+    // Wait for all the fetches to complete
+    for (auto&& r : reqs) {
+      r.wait();
+    }
+    reqs.clear();
+
+    // All must finish before we start destroying the hold sub-handle info
+    theCollective()->barrier();
+
+    // Clear out all the incremental building data structures
+    sub_handles_.clear();
+    sub_layout_.clear();
+    sub_prefix_.clear();
+
+    // New we have everything to re-build the sub-handles
+    for (auto&& h : new_handles_sized) {
+      addLocalIndex(h.first, h.second);
+    }
+
+    // Destroy the old handles
+    proxy_.destroyHandleRDMA(data_handle_);
+    proxy_.destroyHandleRDMA(loc_handle_);
+
+    // Make the new sub-handles, with the new local indices now mapped here
+    makeSubHandles();
+
+    // Invalidate the cache, since handles have migrated and the cached
+    // locations may not be valid anymore
+    cache_.invalidate();
+
+    // Make sure everyone has invalidated, as to not get bad values
+    theCollective()->barrier();
+
+    // Put all the old data where it goes
+    for (auto&& h : new_handles_sized) {
+      reqs.emplace_back(
+        rput(h.first, vt::Lock::Shared, &idx_data[h.first][0], h.second, 0)
+      );
+    }
+
+    // Wait for all the puts to complete
+    for (auto&& r : reqs) {
+      r.wait();
+    }
+    reqs.clear();
+
+    // Clear the migrate buffers
+    migrate_in_.clear();
+    migrate_out_.clear();
+
+    // Make sure all the puts are globally complete before we exit this block
+    theCollective()->barrier();
+  }
+}
+
 
 }} /* end namespace vt::rdma */
 

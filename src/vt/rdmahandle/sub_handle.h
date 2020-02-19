@@ -56,6 +56,12 @@
 
 namespace vt { namespace rdma {
 
+namespace impl {
+
+struct ReduceLBMsg;
+
+} /* end namespace impl */
+
 template <typename T, HandleEnum E, typename IndexT>
 struct SubHandle {
   using HandleType = Handle<T, vt::rdma::HandleEnum::StaticSize, IndexT>;
@@ -129,6 +135,8 @@ public:
 
   void afterLB();
 
+  void checkChanged(impl::ReduceLBMsg* msg);
+
   bool ready() const { return ready_; }
 
   uint64_t totalLocalSize() const;
@@ -169,6 +177,8 @@ protected:
   bool uniform_size_ = false;
   std::size_t size_if_uniform_ = 0;
   std::size_t collection_expected_count_ = 0;
+  std::vector<IndexT> migrate_out_;
+  std::vector<IndexT> migrate_in_;
 };
 
 }} /* end namespace vt::rdma */
