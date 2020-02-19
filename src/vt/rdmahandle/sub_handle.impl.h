@@ -274,7 +274,7 @@ Handle<T, E, IndexT> SubHandle<T,E,IndexT>::addLocalIndex(
 ) {
   debug_print(
     rdma, node,
-    "addLocalInddex: idx={}, size={}, range={}\n",
+    "addLocalIndex: idx={}, size={}, range={}\n",
     index, size, range_
   );
   sub_layout_.push_back(index);
