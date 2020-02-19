@@ -91,7 +91,8 @@ set(
     objgroup
       objgroup/proxy objgroup/holder objgroup/active_func objgroup/dispatch
       objgroup/type_registry
-
+    trace
+      trace/file_spec
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
