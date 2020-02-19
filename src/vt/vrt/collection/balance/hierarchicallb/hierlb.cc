@@ -73,11 +73,26 @@ void HierarchicalLB::init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy) {
 }
 
 void HierarchicalLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"min", "max", "auto"};
+  std::vector<std::string> allowed{"min", "max", "auto", "strategy"};
   spec->checkAllowedKeys(allowed);
   min_threshold = spec->getOrDefault<double>("min", hierlb_threshold_p);
   max_threshold = spec->getOrDefault<double>("max", hierlb_max_threshold_p);
   auto_threshold = spec->getOrDefault<bool>("auto", hierlb_auto_threshold_p);
+
+  std::string extract = spec->getOrDefault<std::string>(
+    "strategy", "LoadOverLessThan"
+  );
+  if (extract.compare("LoadOverLessThan") == 0) {
+    extract_strategy = HeapExtractEnum::LoadOverLessThan;
+  } else if (extract.compare("LoadOverGreaterThan") == 0) {
+    extract_strategy = HeapExtractEnum::LoadOverGreaterThan;
+  } else if (extract.compare("LoadOverOneEach") == 0) {
+    extract_strategy = HeapExtractEnum::LoadOverOneEach;
+  } else {
+    auto str =
+      fmt::format("HierarchicalLB strategy={} is not valid", extract);
+    vtAbort(str);
+  }
 }
 
 void HierarchicalLB::setupTree(double const threshold) {
@@ -201,7 +216,7 @@ void HierarchicalLB::loadStats() {
   }
 
   if (should_lb) {
-    calcLoadOver(HeapExtractEnum::LoadOverLessThan);
+    calcLoadOver(extract_strategy);
 
     lbTreeUpSend(
       bottom_parent, this_load, this_node, load_over, 1, load_over_size
@@ -253,8 +268,13 @@ void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
 
   debug_print(
     hierlb, node,
-    "calcLoadOver: this_load={}, avg_load={}, threshold={}\n",
-    this_load, getAvgLoad(), threshold
+    "calcLoadOver: this_load={}, avg_load={}, threshold={}, "
+    "strategy={}\n",
+    this_load, getAvgLoad(), threshold,
+    extract == HeapExtractEnum::LoadOverLessThan ? "LoadOverLessThan" :
+    extract == HeapExtractEnum::LoadOverGreaterThan ? "LoadOverGreaterThan" :
+    extract == HeapExtractEnum::LoadOverRandom ? "LoadOverRandom" :
+    extract == HeapExtractEnum::LoadOverOneEach ? "LoadOverOneEach" : "?"
   );
 
   if (extract == HeapExtractEnum::LoadOverLessThan) {
