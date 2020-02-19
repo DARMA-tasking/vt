@@ -362,6 +362,21 @@ void SubHandle<T,E,IndexT>::setCollectionExpected(std::size_t count) {
   collection_expected_count_ = count;
 }
 
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::migratedOutIndex(IndexT index) {
+  vtAssertExpr(not is_static_);
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::migratedInIndex(IndexT index) {
+  vtAssertExpr(not is_static_);
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::afterLB() {
+  vtAssertExpr(not is_static_);
+}
+
 }} /* end namespace vt::rdma */
 
 #endif /*INCLUDED_VT_RDMAHANDLE_SUB_HANDLE_IMPL_H*/

@@ -123,6 +123,12 @@ public:
 
   Handle<T, E, IndexT> addLocalIndex(IndexT index, uint64_t size);
 
+  void migratedOutIndex(IndexT index);
+
+  void migratedInIndex(IndexT index);
+
+  void afterLB();
+
   bool ready() const { return ready_; }
 
   uint64_t totalLocalSize() const;
