@@ -51,11 +51,10 @@
 namespace vt { namespace rdma {
 
 template <typename T, HandleEnum E, typename IndexT>
-template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
 void SubHandle<T,E,IndexT>::initialize(
-  ProxyType in_proxy, bool in_is_static, IndexT in_range
+  ProxyType in_proxy, bool in_is_static, IndexT in_range, vt::HandlerType map_han
 ) {
-  map_han_ = auto_registry::makeAutoHandlerMap<IndexT, map_fn>();
+  map_han_ = map_han;
   proxy_ = in_proxy;
   is_static_ = in_is_static;
   range_ = in_range;
@@ -310,8 +309,17 @@ template <typename T, HandleEnum E, typename IndexT>
 template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
 /*static*/ typename SubHandle<T,E,IndexT>::ProxyType
 SubHandle<T,E,IndexT>::construct(bool in_is_static, IndexT in_range) {
+  auto map_han = auto_registry::makeAutoHandlerMap<IndexT, map_fn>();
+  return construct(in_is_static, in_range, map_han);
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+/*static*/ typename SubHandle<T,E,IndexT>::ProxyType
+SubHandle<T,E,IndexT>::construct(
+  bool in_is_static, IndexT in_range, vt::HandlerType map_han
+) {
   auto proxy = vt::theObjGroup()->makeCollective<SubHandle<T,E,IndexT>>();
-  proxy.get()->template initialize<map_fn>(proxy, in_is_static, in_range);
+  proxy.get()->initialize(proxy, in_is_static, in_range, map_han);
   return proxy;
 }
 

@@ -75,8 +75,10 @@ private:
   };
 
 public:
-  template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
-  void initialize(ProxyType in_proxy, bool in_is_static, IndexT in_range);
+  void initialize(
+    ProxyType in_proxy, bool in_is_static, IndexT in_range,
+    vt::HandlerType map_han
+  );
 
   void makeSubHandles();
 
@@ -131,6 +133,9 @@ public:
 
   template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
   static ProxyType construct(bool in_is_static, IndexT in_range);
+  static ProxyType construct(
+    bool in_is_static, IndexT in_range, vt::HandlerType map
+  );
 
 private:
   template <typename U>
