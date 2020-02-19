@@ -86,7 +86,7 @@ public:
     vt::HandlerType map_han
   );
 
-  void makeSubHandles();
+  void makeSubHandles(bool initial = true);
 
   typename IndexT::DenseIndexType linearize(IndexT idx);
 
