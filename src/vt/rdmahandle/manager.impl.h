@@ -146,6 +146,7 @@ HandleSet<T> Manager::makeHandleSetCollectiveObjGroup(
   ProxyT,
   LookupT max_lookup,
   std::unordered_map<LookupT, std::size_t> const& map,
+  bool dense_start_with_zero,
   bool uniform_size
 ) {
   using LookupType = LookupT;
@@ -153,7 +154,9 @@ HandleSet<T> Manager::makeHandleSetCollectiveObjGroup(
   using SubType = SubHandle<T, vt::rdma::HandleEnum::StaticSize, IndexType>;
   auto const num_nodes = vt::theContext()->getNumNodes();
   IndexType range(static_cast<LookupType>(num_nodes), max_lookup);
-  auto proxy = SubType::template construct<Manager::staticHandleMap>(true, range);
+  auto proxy = SubType::template construct<Manager::staticHandleMap>(
+    true, range, dense_start_with_zero
+  );
   HandleSet<T> set(typename HandleSet<T>::BuildSetTagType{});
   auto const this_node = static_cast<LookupT>(vt::theContext()->getNode());
   for (auto&& elm : map) {

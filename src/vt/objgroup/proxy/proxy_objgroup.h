@@ -180,6 +180,7 @@ public:
   vt::rdma::HandleSet<T> makeHandleSetRDMA(
     int32_t max_elm,
     std::unordered_map<int32_t, std::size_t> const& map,
+    bool dense_start_at_zero,
     bool is_uniform
   ) const;
 

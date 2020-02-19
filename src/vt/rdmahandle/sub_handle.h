@@ -83,7 +83,7 @@ private:
 public:
   void initialize(
     ProxyType in_proxy, bool in_is_static, IndexT in_range,
-    vt::HandlerType map_han
+    vt::HandlerType map_han, bool in_dense_start_with_zero
   );
 
   void makeSubHandles(bool initial = true);
@@ -129,6 +129,10 @@ public:
 
   Handle<T, E, IndexT> addLocalIndex(IndexT index, uint64_t size);
 
+  int getOrderedOffset(IndexT idx, NodeType home_node);
+
+  void stageLocalIndex(IndexT index, uint64_t size);
+
   void migratedOutIndex(IndexT index);
 
   void migratedInIndex(IndexT index);
@@ -152,9 +156,12 @@ public:
   static void destroyCollective(ProxyType proxy);
 
   template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
-  static ProxyType construct(bool in_is_static, IndexT in_range);
   static ProxyType construct(
-    bool in_is_static, IndexT in_range, vt::HandlerType map
+    bool in_is_static, IndexT in_range, bool in_dense_start_with_zero
+  );
+  static ProxyType construct(
+    bool in_is_static, IndexT in_range, bool in_dense_start_with_zero,
+    vt::HandlerType map
   );
 
 private:
@@ -167,6 +174,7 @@ protected:
   vt::HandlerType map_han_ = 0;
   IndexT range_ = {};
   std::unordered_map<IndexT, SubInfo> sub_handles_;
+  std::unordered_map<IndexT, std::size_t> sub_handles_staged_;
   std::vector<IndexT> sub_layout_;
   std::vector<uint64_t> sub_prefix_;
   Handle<T, E> data_handle_;
@@ -179,6 +187,9 @@ protected:
   std::size_t collection_expected_count_ = 0;
   std::vector<IndexT> migrate_out_;
   std::vector<IndexT> migrate_in_;
+  bool ordered_opt_ = true;
+  std::unordered_map<IndexT, int> ordered_local_offset_;
+  bool dense_start_with_zero_ = true;
 };
 
 }} /* end namespace vt::rdma */

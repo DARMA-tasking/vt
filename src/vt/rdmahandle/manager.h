@@ -140,6 +140,7 @@ public:
    * \param[in] proxy the objgroup's proxy
    * \param[in] max_lookup the max lookup on any node
    * \param[in] map a map of the handles and corresponding sizes to create
+   * \param[in] dense_start_with_zero handle indices are dense and start at zero
    * \param[in] uniform_size whether all handles have the same size
    *
    * \return the new handle set
@@ -154,6 +155,7 @@ public:
     ProxyT proxy_objgroup,
     LookupT max_lookup,
     std::unordered_map<LookupT, std::size_t> const& map,
+    bool dense_start_with_zero,
     bool uniform_size = true
   );
 

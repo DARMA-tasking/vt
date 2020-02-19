@@ -53,16 +53,41 @@ namespace vt { namespace rdma {
 
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::initialize(
-  ProxyType in_proxy, bool in_is_static, IndexT in_range, vt::HandlerType map_han
+  ProxyType in_proxy, bool in_is_static, IndexT in_range, vt::HandlerType map_han,
+  bool in_dense_start_with_zero
 ) {
   map_han_ = map_han;
   proxy_ = in_proxy;
   is_static_ = in_is_static;
   range_ = in_range;
+  dense_start_with_zero_ = in_dense_start_with_zero;
+  ordered_opt_ = ordered_opt_ and dense_start_with_zero_;
 }
 
 template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::makeSubHandles(bool initial) {
+  using BaseIdxType = vt::index::BaseIndex;
+
+  if (ordered_opt_) {
+    auto this_node = theContext()->getNode();
+    auto num_nodes = theContext()->getNumNodes();
+    auto map_fn = auto_registry::getHandlerMap(map_han_);
+    range_.foreach([&](IndexT cur_idx) {
+      auto* cur_idx_ptr = static_cast<BaseIdxType*>(&cur_idx);
+      auto* range_ptr = static_cast<BaseIdxType*>(&range_);
+      auto home_node = map_fn(cur_idx_ptr, range_ptr, num_nodes);
+      auto iter = sub_handles_staged_.find(cur_idx);
+      if (home_node == this_node and iter != sub_handles_staged_.end()) {
+        stageLocalIndex(iter->first, iter->second);
+      }
+    });
+  } else {
+    for (auto&& h : sub_handles_staged_) {
+      stageLocalIndex(h.first, h.second);
+    }
+  }
+  sub_handles_staged_.clear();
+
   auto const total = totalLocalSize();
   auto const num_local = sub_handles_.size();
   debug_print(
@@ -142,51 +167,107 @@ NodeType SubHandle<T,E,IndexT>::getHomeNode(IndexT const& idx) {
 }
 
 template <typename T, HandleEnum E, typename IndexT>
+int SubHandle<T,E,IndexT>::getOrderedOffset(IndexT idx, NodeType home_node) {
+  auto iter = ordered_local_offset_.find(idx);
+  int found_offset = 0;
+  if (iter == ordered_local_offset_.end()) {
+    using BaseIdxType = vt::index::BaseIndex;
+    auto num_nodes = theContext()->getNumNodes();
+    auto map_fn = auto_registry::getHandlerMap(map_han_);
+    int offset = 0;
+    range_.foreach([&](IndexT cur_idx) {
+      auto* cur_idx_ptr = static_cast<BaseIdxType*>(&cur_idx);
+      auto* range_ptr = static_cast<BaseIdxType*>(&range_);
+      auto map_node = map_fn(cur_idx_ptr, range_ptr, num_nodes);
+      if (home_node == map_node) {
+        if (cur_idx == idx) {
+          found_offset = offset;
+        }
+        offset++;
+      }
+    });
+    ordered_local_offset_[idx] = found_offset;
+  } else {
+    found_offset = iter->second;
+  }
+  return found_offset;
+}
+
+template <typename T, HandleEnum E, typename IndexT>
 IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
   auto this_node = theContext()->getNode();
   auto home_node = getHomeNode(idx);
-  auto home_size = loc_handle_.getSize(home_node);
-  debug_print(
-    rdma, node,
-    "fetchInfo: idx={}, this_node={}, home_node={}, home_size={}\n",
-    idx, this_node, home_node, home_size
-  );
-  auto lin_idx = linearize(idx);
-  auto ptr = std::make_unique<uint64_t[]>(home_size);
-  loc_handle_.get(home_node, &ptr[0], home_size, 0, Lock::Exclusive);
-  if (is_static_) {
-    for (uint64_t i = 0; i < home_size; i += 2) {
+  if (ordered_opt_) {
+    auto offset = getOrderedOffset(idx, home_node);
+    if (is_static_) {
+      auto ptr = std::make_unique<uint64_t[]>(4);
+      loc_handle_.get(home_node, &ptr[0], 4, offset*2, Lock::Exclusive);
+      auto lin_idx = linearize(idx);
       debug_print_verbose(
         rdma, node,
-        "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{}\n",
-        idx, this_node, home_node, i, ptr[i+0], ptr[i+1]
+        "fetchInfo: ordered: offset={}, idx={}, node={}, home={}, "
+        "ptr={},{}, {},{}\n",
+        offset, idx, this_node, home_node, ptr[0], ptr[1], ptr[2], ptr[3]
       );
-      if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
-        debug_print_verbose(
-          rdma, node,
-          "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{}, {},{}\n",
-          idx, this_node, home_node, i, ptr[i+0], ptr[i+1],
-          ptr[i+2], ptr[i+3]
-        );
-        return IndexInfo(home_node, ptr[i+1], ptr[i+3]-ptr[i+1]);
-      }
+      vtAssertExpr(ptr[0] == lin_idx);
+      return IndexInfo(home_node, ptr[1], ptr[3]-ptr[1]);
+    } else {
+      auto ptr = std::make_unique<uint64_t[]>(4);
+      loc_handle_.get(home_node, &ptr[0], 4, offset*4, Lock::Exclusive);
+      auto lin_idx = linearize(idx);
+      debug_print_verbose(
+        rdma, node,
+        "fetchInfo: ordered: offset={}, idx={}, node={}, home={},"
+        " ptr={},{},{},{}\n",
+        offset, idx, this_node, home_node, ptr[0], ptr[1], ptr[2], ptr[3]
+      );
+      vtAssertExpr(ptr[0] == lin_idx);
+      return IndexInfo(ptr[2], ptr[1], ptr[3]);
     }
   } else {
-    for (uint64_t i = 0; i < home_size; i += 4) {
-      debug_print_verbose(
-        rdma, node,
-        "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{},{},{}\n",
-        idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2], ptr[i+3]
-      );
-      if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
+    auto home_size = loc_handle_.getSize(home_node);
+    debug_print(
+      rdma, node,
+      "fetchInfo: idx={}, this_node={}, home_node={}, home_size={}\n",
+      idx, this_node, home_node, home_size
+    );
+    auto lin_idx = linearize(idx);
+    auto ptr = std::make_unique<uint64_t[]>(home_size);
+    loc_handle_.get(home_node, &ptr[0], home_size, 0, Lock::Exclusive);
+    if (is_static_) {
+      for (uint64_t i = 0; i < home_size; i += 2) {
         debug_print_verbose(
           rdma, node,
-          "fetchInfo: idx={}, this_node={}, home_node={}, "
-          "ptr[{}]={},{},{},{}\n",
-          idx, this_node, home_node, i,
-          ptr[i+0], ptr[i+1], ptr[i+2], ptr[i+3]
+          "fetchInfo: idx={}, node={}, home={}, ptr[{}]={},{}\n",
+          idx, this_node, home_node, i, ptr[i+0], ptr[i+1]
         );
-        return IndexInfo(ptr[i+2], ptr[i+1], ptr[i+3]);
+        if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
+          debug_print_verbose(
+            rdma, node,
+            "fetchInfo: idx={}, node={}, home={}, ptr[{}]={},{}, {},{}\n",
+            idx, this_node, home_node, i, ptr[i+0], ptr[i+1],
+            ptr[i+2], ptr[i+3]
+          );
+          return IndexInfo(home_node, ptr[i+1], ptr[i+3]-ptr[i+1]);
+        }
+      }
+    } else {
+      for (uint64_t i = 0; i < home_size; i += 4) {
+        debug_print_verbose(
+          rdma, node,
+          "fetchInfo: idx={}, node={}, home={}, ptr[{}]={},{},{},{}\n",
+          idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2], ptr[i+3]
+        );
+        if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
+          debug_print_verbose(
+            rdma, node,
+            "fetchInfo: idx={}, node={}, home={}, "
+            "ptr[{}]={},{},{},{}\n",
+            idx, this_node, home_node, i,
+            ptr[i+0], ptr[i+1], ptr[i+2], ptr[i+3]
+          );
+          return IndexInfo(ptr[i+2], ptr[i+1], ptr[i+3]);
+        }
       }
     }
   }
@@ -311,6 +392,17 @@ template <typename T, HandleEnum E, typename IndexT>
 Handle<T, E, IndexT> SubHandle<T,E,IndexT>::addLocalIndex(
   IndexT index, uint64_t size
 ) {
+  sub_handles_staged_[index] = size;
+  return Handle<T,E,IndexT>{
+    typename Handle<T,E,IndexT>::IndexTagType{},
+    proxy_.getProxy(), index, size, 0
+  };
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::stageLocalIndex(
+  IndexT index, uint64_t size
+) {
   debug_print(
     rdma, node,
     "addLocalIndex: idx={}, size={}, range={}\n",
@@ -333,10 +425,6 @@ Handle<T, E, IndexT> SubHandle<T,E,IndexT>::addLocalIndex(
   if (uniform_size_) {
     size_if_uniform_ = static_cast<std::size_t>(size);
   }
-  return Handle<T,E,IndexT>{
-    typename Handle<T,E,IndexT>::IndexTagType{},
-    proxy_.getProxy(), index, size, 0
-  };
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -356,18 +444,23 @@ std::size_t SubHandle<T,E,IndexT>::getNumHandles() const {
 template <typename T, HandleEnum E, typename IndexT>
 template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
 /*static*/ typename SubHandle<T,E,IndexT>::ProxyType
-SubHandle<T,E,IndexT>::construct(bool in_is_static, IndexT in_range) {
+SubHandle<T,E,IndexT>::construct(
+  bool in_is_static, IndexT in_range, bool in_dense_start_with_zero
+) {
   auto map_han = auto_registry::makeAutoHandlerMap<IndexT, map_fn>();
-  return construct(in_is_static, in_range, map_han);
+  return construct(in_is_static, in_range, in_dense_start_with_zero, map_han);
 }
 
 template <typename T, HandleEnum E, typename IndexT>
 /*static*/ typename SubHandle<T,E,IndexT>::ProxyType
 SubHandle<T,E,IndexT>::construct(
-  bool in_is_static, IndexT in_range, vt::HandlerType map_han
+  bool in_is_static, IndexT in_range, bool in_dense_start_with_zero,
+  vt::HandlerType map_han
 ) {
   auto proxy = vt::theObjGroup()->makeCollective<SubHandle<T,E,IndexT>>();
-  proxy.get()->initialize(proxy, in_is_static, in_range, map_han);
+  proxy.get()->initialize(
+    proxy, in_is_static, in_range, map_han, in_dense_start_with_zero
+  );
   return proxy;
 }
 
