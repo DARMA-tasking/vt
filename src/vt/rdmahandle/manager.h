@@ -88,14 +88,14 @@ struct Manager {
 
 private:
   /**
-   * \brief Initialize the manager with the objgroup proxy
+   * \internal \brief Initialize the manager with the objgroup proxy
    *
    * \param[in] in_proxy the manager instance's proxy
    */
   void initialize(ProxyType in_proxy);
 
   /**
-   * \brief Finish constructing a handle after coordinating each node on
+   * \internal \brief Finish constructing a handle after coordinating each node on
    * construction
    *
    * \param[in] msg construction meta-data message
