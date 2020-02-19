@@ -127,6 +127,12 @@ public:
 
   uint64_t totalLocalSize() const;
 
+  std::size_t getNumHandles() const;
+
+  std::size_t getCollectionExpected() const;
+
+  void setCollectionExpected(std::size_t count);
+
   void destroy();
 
   static void destroyCollective(ProxyType proxy);
@@ -156,6 +162,7 @@ protected:
   bool mpi2_ = false;
   bool uniform_size_ = false;
   std::size_t size_if_uniform_ = 0;
+  std::size_t collection_expected_count_ = 0;
 };
 
 }} /* end namespace vt::rdma */

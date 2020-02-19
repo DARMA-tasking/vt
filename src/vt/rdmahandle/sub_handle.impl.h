@@ -310,6 +310,11 @@ uint64_t SubHandle<T,E,IndexT>::totalLocalSize() const {
 }
 
 template <typename T, HandleEnum E, typename IndexT>
+std::size_t SubHandle<T,E,IndexT>::getNumHandles() const {
+  return sub_handles_.size();
+}
+
+template <typename T, HandleEnum E, typename IndexT>
 template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
 /*static*/ typename SubHandle<T,E,IndexT>::ProxyType
 SubHandle<T,E,IndexT>::construct(bool in_is_static, IndexT in_range) {
@@ -345,6 +350,16 @@ template <typename T, HandleEnum E, typename IndexT>
 /*static*/ void SubHandle<T,E,IndexT>::destroyCollective(ProxyType proxy) {
   proxy.get()->destroy();
   theObjGroup()->destroyCollective(proxy);
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+std::size_t SubHandle<T,E,IndexT>::getCollectionExpected() const {
+  return collection_expected_count_;
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::setCollectionExpected(std::size_t count) {
+  collection_expected_count_ = count;
 }
 
 }} /* end namespace vt::rdma */
