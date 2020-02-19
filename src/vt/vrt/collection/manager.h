@@ -838,6 +838,16 @@ public:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void unregisterElementListener(VirtualProxyType proxy, int element);
 
+  /**
+   * \brief Get the range that a collection was constructed with
+   *
+   * \param[in] proxy the proxy of the collection
+   *
+   * \return the range of the collection
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  IndexT getRange(VirtualProxyType proxy);
+
 private:
   template <typename MsgT>
   static EpochType getCurrentEpoch(MsgT* msg);

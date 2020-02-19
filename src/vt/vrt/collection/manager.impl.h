@@ -3236,6 +3236,11 @@ void CollectionManager::unregisterElementListener(
   elm_holder->removeListener(element);
 }
 
+template <typename ColT, typename IndexT>
+IndexT CollectionManager::getRange(VirtualProxyType proxy) {
+  auto col_holder = findColHolder<ColT>(proxy);
+  return col_holder->max_idx;
+}
 
 }}} /* end namespace vt::vrt::collection */
 
