@@ -77,22 +77,26 @@ void SubHandle<T,E,IndexT>::makeSubHandles() {
   }
   data_handle_ = proxy_.template makeHandleRDMA<T>(total, false);
   waitForHandleReady(data_handle_);
-  loc_handle_ = proxy_.template makeHandleRDMA<uint64_t>((num_local + 1) * 3, false);
+  // Handle case when the local size is zero
+  auto loc_len = num_local > 0 ? (num_local + 1) * 3 : 0;
+  loc_handle_ = proxy_.template makeHandleRDMA<uint64_t>(loc_len, false);
   waitForHandleReady(loc_handle_);
   vtAssertExpr(sub_prefix_.size() == num_local);
   vtAssertExpr(sub_layout_.size() == num_local);
-  loc_handle_.modifyExclusive([&](uint64_t* t) {
-    auto this_node = static_cast<uint64_t>(vt::theContext()->getNode());
-    uint64_t i = 0;
-    for (i = 0; i < num_local * 3; i += 3) {
-      t[i+0] = linearize(sub_layout_[i/3]);
+  if (loc_len > 0) {
+    loc_handle_.modifyExclusive([&](uint64_t* t) {
+      auto this_node = static_cast<uint64_t>(vt::theContext()->getNode());
+      uint64_t i = 0;
+      for (i = 0; i < num_local * 3; i += 3) {
+        t[i+0] = linearize(sub_layout_[i/3]);
+        t[i+1] = this_node;
+        t[i+2] = sub_prefix_[i/3];
+      }
+      t[i+0] = 0;
       t[i+1] = this_node;
-      t[i+2] = sub_prefix_[i/3];
-    }
-    t[i+0] = 0;
-    t[i+1] = this_node;
-    t[i+2] = sub_handles_[sub_layout_[sub_layout_.size()-1]].size_ + sub_prefix_[(i-3)/3];
-  });
+      t[i+2] = sub_handles_[sub_layout_[sub_layout_.size()-1]].size_ + sub_prefix_[(i-3)/3];
+    });
+  }
   ready_ = true;
 }
 
