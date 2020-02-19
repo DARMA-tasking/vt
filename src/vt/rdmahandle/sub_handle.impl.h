@@ -671,8 +671,8 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
       addLocalIndex(h.first, h.second);
     }
 
-    // // Destroy the old data handle
-    // proxy_.destroyHandleRDMA(data_handle_);
+    // Destroy the old data handle
+    proxy_.destroyHandleRDMA(data_handle_);
 
     // Make the new sub-handles, with the new local indices now mapped here
     makeSubHandles(false);
