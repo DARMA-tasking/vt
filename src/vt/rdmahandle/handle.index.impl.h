@@ -67,7 +67,7 @@ bool Handle<T,E,I,isIdx<I>>::ready() const {
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isIdx<I>>::readExclusive(
-  I const& idx, std::function<void(T const*)> fn
+  std::function<void(T const*)> fn
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
   proxy.get()->access(index_, Lock::Exclusive, fn, this->hoff());
@@ -75,7 +75,7 @@ void Handle<T,E,I,isIdx<I>>::readExclusive(
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isIdx<I>>::readShared(
-  I const& idx, std::function<void(T const*)> fn
+  std::function<void(T const*)> fn
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
   proxy.get()->access(index_, Lock::Shared, fn, this->hoff());
@@ -83,7 +83,7 @@ void Handle<T,E,I,isIdx<I>>::readShared(
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isIdx<I>>::modifyExclusive(
-  I const& idx, std::function<void(T*)> fn
+  std::function<void(T*)> fn
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
   proxy.get()->access(index_, Lock::Exclusive, fn, this->hoff());
@@ -91,7 +91,7 @@ void Handle<T,E,I,isIdx<I>>::modifyExclusive(
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isIdx<I>>::modifyShared(
-  I const& idx, std::function<void(T*)> fn
+  std::function<void(T*)> fn
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
   proxy.get()->access(index_, Lock::Shared, fn, this->hoff());

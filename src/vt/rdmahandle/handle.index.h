@@ -137,34 +137,30 @@ public:
   /**
    * \brief Read the local data for the handle with an exclusive lock
    *
-   * \param[in] idx the local index to read
    * \param[in] fn lambda to read the data
    */
-  void readExclusive(IndexT const& idx, std::function<void(T const*)> fn);
+  void readExclusive(std::function<void(T const*)> fn);
 
   /**
    * \brief Read the local data for the handle with an shared lock
    *
-   * \param[in] idx the local index to read
    * \param[in] fn lambda to read the data
    */
-  void readShared(IndexT const& idx, std::function<void(T const*)> fn);
+  void readShared(std::function<void(T const*)> fn);
 
   /**
    * \brief Modify the local data for the handle with an exclusive lock
    *
-   * \param[in] idx the local index to read
    * \param[in] fn lambda to modify the data
    */
-  void modifyExclusive(IndexT const& idx, std::function<void(T*)> fn);
+  void modifyExclusive(std::function<void(T*)> fn);
 
   /**
    * \brief Modify the local data for the handle with an shared lock
    *
-   * \param[in] idx the local index to read
    * \param[in] fn lambda to modify the data
    */
-  void modifyShared(IndexT const& idx, std::function<void(T*)> fn);
+  void modifyShared(std::function<void(T*)> fn);
 
 public:
 
