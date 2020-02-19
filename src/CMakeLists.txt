@@ -65,7 +65,7 @@ set(
       vrt/collection/traits vrt/collection/defaults vrt/collection/constructor
       vrt/collection/send vrt/collection/destroy vrt/collection/broadcast
       vrt/collection/insert vrt/collection/reducable vrt/collection/mapped_node
-      vrt/collection/dispatch vrt/collection/gettable
+      vrt/collection/dispatch vrt/collection/gettable vrt/collection/rdmaable
       vrt/collection/staged_token
       vrt/collection/listener
       vrt/collection/balance
