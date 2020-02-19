@@ -61,9 +61,12 @@ struct TestObjGroup {
 
   template <typename T>
   vt::rdma::HandleSet<T> makeHandleSet(
-    int32_t max_elm, std::unordered_map<int32_t, std::size_t> map, bool uniform
+    int32_t max_elm, std::unordered_map<int32_t, std::size_t> map,
+    bool dense_start_at_zero, bool uniform
   ) {
-    return proxy_.template makeHandleSetRDMA<T>(max_elm, map, uniform);
+    return proxy_.template makeHandleSetRDMA<T>(
+      max_elm, map, dense_start_at_zero, uniform
+    );
   }
 
   static ProxyType construct() {
@@ -92,7 +95,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_1) {
   for (int i = 0; i < num_hans; i++) {
     map[i] = num_vals;
   }
-  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true);
+  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true, true);
 
   auto this_node = theContext()->getNode();
   for (int i = 0; i < num_hans; i++) {
@@ -134,7 +137,9 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
   for (int i = offset; i < num_hans + offset; i++) {
     map[i] = (this_node + 1) + i;
   }
-  auto han_set = proxy.get()->makeHandleSet<T>(max_hans + num_nodes, map, false);
+  auto han_set = proxy.get()->makeHandleSet<T>(
+    max_hans + num_nodes, map, false, false
+  );
 
   for (int i = offset; i < num_hans + offset; i++) {
     auto idx_rank = this_node * max_hans + i;
@@ -175,7 +180,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_3) {
   for (int i = 0; i < num_hans; i++) {
     map[i] = (this_node + 1) * (i + 1);
   }
-  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, false);
+  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true, false);
 
   for (int i = 0; i < num_hans; i++) {
     auto idx_rank = this_node * num_hans + i;
@@ -260,7 +265,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_4) {
   for (int i = 0; i < num_hans; i++) {
     map[i] = num_vals;
   }
-  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true);
+  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true, true);
 
   for (int i = 0; i < num_hans; i++) {
     auto idx_rank = this_node * num_hans + i;
@@ -314,7 +319,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_5) {
   for (int i = 0; i < num_hans; i++) {
     map[i] = num_vals;
   }
-  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true);
+  auto han_set = proxy.get()->makeHandleSet<T>(num_hans, map, true, true);
 
   for (int i = 0; i < num_hans; i++) {
     auto idx_rank = this_node * num_hans + i;
