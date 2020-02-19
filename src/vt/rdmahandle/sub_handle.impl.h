@@ -79,23 +79,26 @@ void SubHandle<T,E,IndexT>::makeSubHandles() {
   data_handle_ = proxy_.template makeHandleRDMA<T>(total, false);
   waitForHandleReady(data_handle_);
   // Handle case when the local size is zero
-  auto loc_len = num_local > 0 ? (num_local + 1) * 3 : 0;
+  auto loc_len =
+    num_local > 0 ? (is_static_ ? (num_local + 1) * 2 : num_local * 4) : 0;
+  debug_print(
+    rdma, node,
+    "total={}, num_local={}, is_static_={}, loc_len={}\n",
+    total, num_local, is_static_, loc_len
+  );
   loc_handle_ = proxy_.template makeHandleRDMA<uint64_t>(loc_len, false);
   waitForHandleReady(loc_handle_);
   vtAssertExpr(sub_prefix_.size() == num_local);
   vtAssertExpr(sub_layout_.size() == num_local);
-  if (loc_len > 0) {
+  if (is_static_ and loc_len > 0) {
     loc_handle_.modifyExclusive([&](uint64_t* t) {
-      auto this_node = static_cast<uint64_t>(vt::theContext()->getNode());
       uint64_t i = 0;
-      for (i = 0; i < num_local * 3; i += 3) {
-        t[i+0] = linearize(sub_layout_[i/3]);
-        t[i+1] = this_node;
-        t[i+2] = sub_prefix_[i/3];
+      for (i = 0; i < num_local * 2; i += 2) {
+        t[i+0] = linearize(sub_layout_[i/2]);
+        t[i+1] = sub_prefix_[i/2];
       }
       t[i+0] = 0;
-      t[i+1] = this_node;
-      t[i+2] = sub_handles_[sub_layout_[sub_layout_.size()-1]].size_ + sub_prefix_[(i-3)/3];
+      t[i+1] = sub_handles_[sub_layout_[sub_layout_.size()-1]].size_ + sub_prefix_[(i-2)/2];
     });
   }
   ready_ = true;
@@ -136,20 +139,20 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
   auto lin_idx = linearize(idx);
   auto ptr = std::make_unique<uint64_t[]>(home_size);
   loc_handle_.get(home_node, &ptr[0], home_size, 0, Lock::Exclusive);
-  for (uint64_t i = 0; i < home_size; i += 3) {
+  for (uint64_t i = 0; i < home_size; i += 2) {
     debug_print_verbose(
       rdma, node,
-      "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{},{}\n",
-      idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2]
+      "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{}\n",
+      idx, this_node, home_node, i, ptr[i+0], ptr[i+1]
     );
     if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
       debug_print_verbose(
         rdma, node,
-        "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{},{}, {},{},{}\n",
-        idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2],
-        ptr[i+3], ptr[i+4], ptr[i+5]
+        "fetchInfo: idx={}, this_node={}, home_node={}, ptr[{}]={},{}, {},{}\n",
+        idx, this_node, home_node, i, ptr[i+0], ptr[i+1],
+        ptr[i+2], ptr[i+3]
       );
-      return IndexInfo(ptr[i+1], ptr[i+2], ptr[i+5]-ptr[i+2]);
+      return IndexInfo(home_node, ptr[i+1], ptr[i+3]-ptr[i+1]);
     }
   }
   vtAssert(false, "Could not find location info");
