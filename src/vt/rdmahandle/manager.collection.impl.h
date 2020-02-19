@@ -82,7 +82,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
   using BaseIdxType     = vt::index::BaseIndex;
   using ListenerType    = vrt::collection::listener::ListenFnType<IndexT>;
 
-  RDMA_HandleType next_handle = 0;
+  RDMA_HandleType next_handle = in_next_handle;
   auto proxy_bits = collection_proxy.getCollectionProxy();
   auto idx = collection_proxy.getElementProxy().getIndex();
   IndexT range = in_range;
