@@ -76,9 +76,9 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
   void initialize2(TestMsg*) {
     auto proxy = this->getCollectionProxy();
     auto idx = this->getIndex();
-    handle_ = proxy.template makeHandleRDMA<int>(this->getIndex(), 8, true);
+    handle_ = proxy.template makeHandleRDMA<T>(this->getIndex(), 8, true);
     do vt::runScheduler(); while (not handle_.ready());
-    handle_.modifyExclusive([&](int* t) {
+    handle_.modifyExclusive([&](T* t) {
       for (int i = 0; i < 8; i++) {
         t[i] = idx.x() * 100 + idx.y();
       }
