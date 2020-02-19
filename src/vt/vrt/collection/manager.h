@@ -909,6 +909,7 @@ namespace details
 #include "vt/vrt/collection/destroy/destroyable.impl.h"
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"
+#include "vt/vrt/collection/rdmaable/rdmaable.impl.h"
 #include "vt/vrt/collection/balance/elm_stats.impl.h"
 #include "vt/vrt/collection/types/insertable.impl.h"
 #include "vt/vrt/collection/types/indexable.impl.h"
@@ -917,6 +918,7 @@ namespace details
 #include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/vrt/collection/balance/proxy/lbable.impl.h"
+#include "vt/rdmahandle/manager.collection.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"

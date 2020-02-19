@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              proxy_col_traits.h
+//                                  rdmaable.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,49 +42,38 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
-#define INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_RDMAABLE_RDMAABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_RDMAABLE_RDMAABLE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/destroy/destroyable.h"
-#include "vt/vrt/collection/reducable/reducable.h"
-#include "vt/vrt/collection/broadcast/broadcastable.h"
-#include "vt/vrt/collection/insert/insert_finished.h"
-#include "vt/vrt/collection/rdmaable/rdmaable.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/rdmahandle/handle.fwd.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-namespace col_proxy {
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct RDMAable : BaseProxyT {
+  RDMAable() = default;
+  RDMAable(RDMAable const&) = default;
+  RDMAable(RDMAable&&) = default;
+  RDMAable(VirtualProxyType const in_proxy);
+  RDMAable& operator=(RDMAable const&) = default;
 
-template <typename ColT, typename IndexT>
-using Chain5 = RDMAable<ColT,IndexT,BaseCollectionProxy<ColT,IndexT>>;
+  /**
+   * \brief Make a new RDMA handle for this collection---a collective invocation
+   * across all elements
+   *
+   * \param[in] size the local size for the handle
+   * \param[in] is_uniform whether all handles have the same size
+   *
+   * \return the new RDMA handle
+   */
+  template <typename T>
+  vt::rdma::Handle<T, vt::rdma::HandleEnum::StaticSize, IndexT>
+  makeHandleRDMA(IndexT idx, std::size_t size, bool is_uniform) const;
 
-template <typename ColT, typename IndexT>
-using Chain4 = InsertFinished<ColT,IndexT,Chain5<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain3 = Broadcastable<ColT,IndexT,Chain4<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain2 = Destroyable<ColT,IndexT,Chain3<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain1 = Reducable<ColT,IndexT,Chain2<ColT,IndexT>>;
-
-} /* end namespace proxy */
-
-template <typename ColT, typename IndexT>
-struct ProxyCollectionTraits : col_proxy::Chain1<ColT,IndexT> {
-  ProxyCollectionTraits() = default;
-  ProxyCollectionTraits(ProxyCollectionTraits const&) = default;
-  ProxyCollectionTraits(ProxyCollectionTraits&&) = default;
-  explicit ProxyCollectionTraits(VirtualProxyType const in_proxy)
-    : col_proxy::Chain1<ColT,IndexT>(in_proxy)
-  {}
-  ProxyCollectionTraits& operator=(ProxyCollectionTraits const&) = default;
 };
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_RDMAABLE_RDMAABLE_H*/
