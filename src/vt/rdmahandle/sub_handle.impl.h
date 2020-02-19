@@ -250,7 +250,7 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
         "ptr={},{}, {},{}\n",
         offset, idx, this_node, home_node, ptr[0], ptr[1], ptr[2], ptr[3]
       );
-      vtAssertExpr(ptr[0] == lin_idx);
+      vtAssertExpr(ptr[0] == static_cast<uint64_t>(lin_idx));
       return IndexInfo(home_node, ptr[1], ptr[3]-ptr[1]);
     } else {
       auto ptr = std::make_unique<uint64_t[]>(4);
@@ -262,7 +262,7 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
         " ptr={},{},{},{}\n",
         offset, idx, this_node, home_node, ptr[0], ptr[1], ptr[2], ptr[3]
       );
-      vtAssertExpr(ptr[0] == lin_idx);
+      vtAssertExpr(ptr[0] == static_cast<uint64_t>(lin_idx));
       return IndexInfo(ptr[2], ptr[1], ptr[3]);
     }
   } else {
