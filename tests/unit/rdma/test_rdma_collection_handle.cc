@@ -49,19 +49,28 @@
 
 namespace vt { namespace tests { namespace unit {
 
+bool triggered_lb = false;
+
 template <typename T>
 struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
   TestCol() = default;
 
-  struct TestMsg : vt::CollectionMessage<TestCol> {};
+  struct TestMsg : vt::CollectionMessage<TestCol> {
+    TestMsg() = default;
+    explicit TestMsg(EpochType in_epoch)
+      : migrate_epoch_(in_epoch)
+    { }
+    EpochType migrate_epoch_;
+  };
   struct ReduceMsg : vt::collective::ReduceNoneMsg {};
 
-  void initialize(TestMsg*) {
+  void initialize(TestMsg* mm) {
     auto idx = this->getIndex();
     auto proxy = this->getCollectionProxy();
     proxy[idx].template send<
       typename TestCol<T>::TestMsg, &TestCol<T>::initialize2
     >();
+    migrate_epoch_ = mm->migrate_epoch_;
   }
 
   void initialize2(TestMsg*) {
@@ -74,12 +83,69 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
         t[i] = idx.x() * 100 + idx.y();
       }
     });
-    auto cb = theCB()->makeBcast<TestCol<T>,ReduceMsg,&TestCol<T>::done>(proxy);
+    auto cb = theCB()->makeBcast<
+      TestCol<T>,ReduceMsg,&TestCol<T>::afterDataInit
+    >(proxy);
     auto rmsg = makeMessage<ReduceMsg>();
     proxy.reduce(rmsg.get(),cb);
   }
 
-  void done(ReduceMsg*) {
+  void afterDataInit(ReduceMsg*) {
+    auto idx = this->getIndex();
+    auto next_x = idx.x() + 1 < 8 ? idx.x() + 1 : 0;
+    vt::Index2D next(next_x, idx.y());
+    auto ptr = std::make_unique<T[]>(8);
+    handle_.get(next, &ptr[0], 8, 0, vt::Lock::Shared);
+    for (int i = 0; i < 8; i++) {
+      EXPECT_EQ(ptr[i], next_x * 100 + idx.y());
+    }
+    auto proxy = this->getCollectionProxy();
+    auto cb = theCB()->makeBcast<
+      TestCol<T>,ReduceMsg,&TestCol<T>::afterDataCheck
+    >(proxy);
+    auto rmsg = makeMessage<ReduceMsg>();
+    proxy.reduce(rmsg.get(),cb);
+  }
+
+  void afterDataCheck(ReduceMsg*) {
+    auto idx = this->getIndex();
+    theMsg()->pushEpoch(migrate_epoch_);
+    if (idx.x() == 0 and idx.y() == 0) {
+      theTerm()->consume(migrate_epoch_);
+    }
+    if (idx.y() > 1) {
+      auto node = vt::theContext()->getNode();
+      auto num = vt::theContext()->getNumNodes();
+      auto next = node + 1 < num ? node + 1 : 0;
+      this->migrate(next);
+    }
+    theMsg()->popEpoch(migrate_epoch_);
+  }
+
+  void afterMigrate(TestMsg*) {
+    auto idx = this->getIndex();
+    auto proxy = this->getCollectionProxy();
+    proxy[idx].template send<
+      typename TestCol<T>::TestMsg, &TestCol<T>::afterMigratePost
+    >();
+  }
+
+  void afterMigratePost(TestMsg*) {
+    if (not triggered_lb) {
+      triggered_lb = true;
+      auto lb_proxy = vt::vrt::collection::balance::LBManager::getProxy();
+      //fmt::print("{}: triggering listeners\n", theContext()->getNode());
+      lb_proxy.get()->triggerListeners(0);
+    }
+    auto proxy = this->getCollectionProxy();
+    auto cb = theCB()->makeBcast<
+      TestCol<T>,ReduceMsg,&TestCol<T>::afterMigrateCheck
+    >(proxy);
+    auto rmsg = makeMessage<ReduceMsg>();
+    proxy.reduce(rmsg.get(),cb);
+  }
+
+  void afterMigrateCheck(ReduceMsg*) {
     auto idx = this->getIndex();
     auto next_x = idx.x() + 1 < 8 ? idx.x() + 1 : 0;
     vt::Index2D next(next_x, idx.y());
@@ -90,7 +156,16 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
     }
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    vt::Collection<TestCol<T>, vt::Index2D>::serialize(s);
+    s | handle_;
+    s | migrate_epoch_;
+  }
+
+private:
   vt::Handle<T, vt::rdma::HandleEnum::StaticSize, vt::Index2D> handle_;
+  vt::EpochType migrate_epoch_;
 };
 
 template <typename T>
@@ -100,6 +175,8 @@ TYPED_TEST_CASE_P(TestRDMAHandleCollection);
 
 TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
   using T = TypeParam;
+  triggered_lb = false;
+
   auto range = vt::Index2D(8,8);
   auto proxy = theCollection()->constructCollective<TestCol<T>>(
     range, [](vt::Index2D idx){
@@ -107,11 +184,19 @@ TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
     }
   );
 
+  auto migrate_epoch = theTerm()->makeEpochCollective();
   if (theContext()->getNode() == 0) {
+    theTerm()->produce(migrate_epoch);
     proxy.template broadcast<
       typename TestCol<T>::TestMsg, &TestCol<T>::initialize
-    >();
+    >(migrate_epoch);
+    theTerm()->addAction(migrate_epoch,[=]{
+      proxy.template broadcast<
+        typename TestCol<T>::TestMsg, &TestCol<T>::afterMigrate
+      >();
+    });
   }
+  theTerm()->finishedEpoch(migrate_epoch);
 
   do vt::runScheduler(); while (not vt::rt->isTerminated());
 }
