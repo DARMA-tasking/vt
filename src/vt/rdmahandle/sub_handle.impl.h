@@ -67,7 +67,7 @@ void SubHandle<T,E,IndexT>::makeSubHandles() {
   auto const num_local = sub_handles_.size();
   debug_print(
     rdma, node,
-    "total={}, num_local={}\n", total, num_local
+    "total={}, num_local={}, is_static_={}\n", total, num_local, is_static_
   );
   for (uint64_t i = 0; i < sub_prefix_.size(); i++) {
     debug_print(
