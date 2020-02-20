@@ -49,12 +49,36 @@ namespace vt { namespace messaging {
 
 void PendingSend::sendMsg() {
   if (send_action_ == nullptr) {
-    theMsg()->sendMsgSized(msg_.getShared(), msg_size_);
+    theMsg()->sendMsgSized(msg_, msg_size_);
   } else {
     send_action_(msg_);
   }
+  consumeMsg();
   msg_ = nullptr;
   send_action_ = nullptr;
+}
+
+EpochType PendingSend::getProduceEpoch() const {
+  if (msg_ == nullptr or envelopeIsTerm(msg_->env) or
+      not envelopeIsEpochType(msg_->env)) {
+    return no_epoch;
+  }
+
+  return envelopeGetEpoch(msg_->env);
+}
+
+
+void PendingSend::produceMsg() {
+  epoch_produced_ = getProduceEpoch();
+  if (epoch_produced_ != no_epoch) {
+    theTerm()->produce(epoch_produced_, 1);
+  }
+}
+
+void PendingSend::consumeMsg() {
+  if (epoch_produced_ != no_epoch) {
+    theTerm()->consume(epoch_produced_, 1);
+  }
 }
 
 }}

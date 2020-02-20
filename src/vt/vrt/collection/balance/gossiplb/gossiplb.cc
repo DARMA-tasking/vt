@@ -68,6 +68,10 @@ bool GossipLB::isUnderloaded(LoadType load) const {
   return load < avg * gossip_threshold;
 }
 
+bool GossipLB::isUnderloadedRelaxed(LoadType over, LoadType under) const {
+  return under < over;
+}
+
 bool GossipLB::isOverloaded(LoadType load) const {
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   return load > avg * gossip_threshold;
@@ -118,8 +122,8 @@ void GossipLB::doLBStages() {
 
     debug_print(
       gossiplb, node,
-      "GossipLB::doLBStages: running iter_={}, num_iters_={}\n",
-      iter_, num_iters_
+      "GossipLB::doLBStages: running iter_={}, num_iters_={}, load={}\n",
+      iter_, num_iters_, this_load
     );
 
     if (first_iter) {
@@ -148,6 +152,12 @@ void GossipLB::doLBStages() {
   // Concretize lazy migrations by invoking the BaseLB object migration on new
   // object node assignments
   thunkMigrations();
+
+  // Update the load based on new object assignments
+  this_load = this_new_load_;
+
+  // Re-compute the statistics for the processor load
+  computeStatisticsOver(Statistic::P_l);
 }
 
 void GossipLB::inform() {
@@ -244,7 +254,7 @@ void GossipLB::propagateRound(EpochType epoch) {
     if (epoch != no_epoch) {
       envelopeSetEpoch(msg->env, epoch);
     }
-    msg->addNodeLoad(this_node, this_load);
+    msg->addNodeLoad(this_node, this_new_load_);
     proxy_[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
   }
 }
@@ -328,10 +338,10 @@ NodeType GossipLB::sampleFromCMF(
   return selected_node;
 }
 
-std::vector<NodeType> GossipLB::makeUnderloaded() const {
+std::vector<NodeType> GossipLB::makeUnderloadedRelaxed() const {
   std::vector<NodeType> under = {};
   for (auto&& elm : load_info_) {
-    if (isUnderloaded(elm.first)) {
+    if (isUnderloadedRelaxed(this_new_load_, elm.first)) {
       under.push_back(elm.first);
     }
   }
@@ -364,13 +374,19 @@ void GossipLB::decide() {
   theTerm()->addAction(lazy_epoch, [&decide_done] { decide_done = true; });
 
   if (is_overloaded_) {
-    std::vector<NodeType> under = makeUnderloaded();
-    auto cmf = createCMF(under);
+    std::vector<NodeType> under = makeUnderloadedRelaxed();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
     if (under.size() > 0) {
       // Iterate through all the objects
       for (auto iter = cur_objs_.begin(); iter != cur_objs_.end(); ) {
+        // Rebuild the relaxed underloaded set based on updated load of this node
+        under = makeUnderloadedRelaxed();
+        if (under.size() == 0) {
+          break;
+        }
+        // Rebuild the CMF with the new loads taken into account
+        auto cmf = createCMF(under);
         // Select a node using the CMF
         auto const selected_node = sampleFromCMF(under, cmf);
 
@@ -394,17 +410,23 @@ void GossipLB::decide() {
         // the rest of the stats framework
         auto obj_load = loadMilli(iter->second);
 
+        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
+
         debug_print(
           gossiplb, node,
           "GossipLB::decide: under.size()={}, selected_node={}, selected_load={},"
-          "load_info_.size()={}, obj_id={:x}, obj_load={}, avg={}, "
-          "!(selected_load + obj_load > avg)=!({} + {} > {})={}\n",
-          under.size(), selected_node, selected_load, load_info_.size(),
-          obj_id, obj_load, avg, selected_load, obj_load, avg,
-          not (selected_load + obj_load > avg)
+          "obj_id={:x}, obj_load={}, avg={}, this_new_load_={}, "
+          "criterion={}\n",
+          under.size(),
+          selected_node,
+          selected_load,
+          obj_id,
+          obj_load,
+          avg,
+          this_new_load_,
+          eval
         );
 
-        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
         if (eval) {
           migrate_objs[selected_node][obj_id] = obj_load;
 
@@ -464,6 +486,7 @@ void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
     auto iter = cur_objs_.find(obj.first);
     vtAssert(iter == cur_objs_.end(), "Incoming object should not exist");
     cur_objs_.insert(obj);
+    this_new_load_ += obj.second;
   }
 }
 
@@ -472,7 +495,7 @@ void GossipLB::lazyMigrateObjsTo(
 ) {
   using LazyMsg = balance::LazyMigrationMsg;
   auto msg = makeMessage<LazyMsg>(node, objs);
-  envelopeSetEpoch(msg, epoch);
+  envelopeSetEpoch(msg->env, epoch);
   proxy_[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
 }
 

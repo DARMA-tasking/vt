@@ -91,7 +91,8 @@ set(
     objgroup
       objgroup/proxy objgroup/holder objgroup/active_func objgroup/dispatch
       objgroup/type_registry
-
+    trace
+      trace/file_spec
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
@@ -218,6 +219,21 @@ target_include_directories(
   $<INSTALL_INTERFACE:${VT_EXTERNAL_DESTINATION}>
 )
 
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  # Add required flags (GCC & LLVM/Clang)
+  target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE
+    -O0        # no optimization
+    -g         # generate debug info
+    --coverage # sets all required flags
+  )
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE --coverage)
+  else()
+    target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE --coverage)
+  endif()
+endif()
+
+
 install(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
   EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
@@ -238,9 +254,14 @@ install(
   COMPONENT                 runtime
 )
 
+if (${vt_fcontext_enabled})
+  set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
+else()
+  set(FCONTEXT_LIBRARY_EXPORT "")
+endif()
+
 export(
-  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY}
+  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY_EXPORT}
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
-

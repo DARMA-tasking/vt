@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/messaging/message/smart_ptr.h"
-#include "vt/messaging/message/smart_ptr_virtual.h"
 
 namespace vt { namespace objgroup {
 

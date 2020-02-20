@@ -89,7 +89,7 @@ struct SerializedMessengerParam {
     NodeType const& dest, std::tuple<Args...> tup,
     SerializedNonType<T, value> __attribute__((unused)) non = SerializedNonType<T,value>()
   ) {
-    auto const& typed_handler = auto_registry::makeAutoHandler<T,value>();
+    auto const& typed_handler = auto_registry::makeAutoHandlerParam<T,value>();
 
     using TupleType = std::tuple<Args...>;
 

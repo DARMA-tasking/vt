@@ -51,6 +51,7 @@
 
 namespace vt { namespace seq {
 
+#if backend_check_enabled(fcontext)
 void seq_context_fn(fcontext::ContextFuncTransfer t) {
   void* data = t.data;
   SeqULTContext* ctx = reinterpret_cast<SeqULTContext*>(data);
@@ -58,11 +59,19 @@ void seq_context_fn(fcontext::ContextFuncTransfer t) {
   ctx->finish();
   fcontext::jumpContext(t);
 }
+#endif
 
-SeqULTContext::SeqULTContext(SeqULTConstTag)
-  : stack(fcontext::createStack())
-{ }
+#if backend_check_enabled(fcontext)
+  SeqULTContext::SeqULTContext(SeqULTConstTag)
+    : stack(fcontext::createStack())
+  { }
+#else
+  SeqULTContext::SeqULTContext(SeqULTConstTag) {
+    vtAbort("fcontext is not enabled, seq_ult_context should not be used");
+  }
+#endif
 
+#if backend_check_enabled(fcontext)
 void SeqULTContext::initialize(ULTContextFuncType func) {
   context_initialized = true;
   fctx = fcontext::makeContext(stack, func);
@@ -100,18 +109,23 @@ void SeqULTContext::setCurTransferState(fcontext::ContextFuncTransfer* state) {
 void SeqULTContext::clearCurTransferState() {
   cur_transfer_main_state_ = nullptr;
 }
+#endif
 
 void SeqULTContext::start() {
+#if backend_check_enabled(fcontext)
   debug_print_force(
     sequence, node,
     "SeqULTContext: start\n"
   );
 
   has_valid_context_state_ = true;
+
   transfer_holder_ctx_ = fcontext::jumpContext(fctx, static_cast<void*>(this));
+#endif
 }
 
 void SeqULTContext::suspend() {
+#if backend_check_enabled(fcontext)
   vtAssert(cur_transfer_main_state_ != nullptr, "Must have valid state");
   has_valid_context_state_ = true;
 
@@ -123,17 +137,22 @@ void SeqULTContext::suspend() {
 
   transfer_holder_main_ = fcontext::jumpContext(cur_transfer_main_state_->ctx);
   cur_transfer_main_state_ = &transfer_holder_main_.transfer;
+#endif
 }
 
 void SeqULTContext::resume() {
+#if backend_check_enabled(fcontext)
   vtAssert(has_valid_context_state_, "Must have valid context state");
   transfer_holder_ctx_ = fcontext::jumpContext(transfer_holder_ctx_.transfer);
+#endif
 }
 
 void SeqULTContext::finish() {
+#if backend_check_enabled(fcontext)
   vtAssert(has_valid_context_state_, "Must have valid context state");
   has_valid_context_state_ = false;
   cur_transfer_main_state_ = nullptr;
+#endif
 }
 
 

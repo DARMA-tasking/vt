@@ -128,6 +128,12 @@ void Runtime::pauseForDebugger() {
   if (node == 0 || node == -1) {
     ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
   }
+  // Try to flush out all logs before dying
+# if backend_check_enabled(trace_enabled)
+  if (vt::theTrace()) {
+    vt::theTrace()->cleanupTracesFile();
+  }
+# endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
@@ -149,6 +155,12 @@ void Runtime::pauseForDebugger() {
   auto vt_pre    = debug::vtPre();
   auto bred      = debug::bred();
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
+  // Try to flush out all logs before dying
+# if backend_check_enabled(trace_enabled)
+  if (vt::theTrace()) {
+    vt::theTrace()->cleanupTracesFile();
+  }
+# endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     if (ArgType::vt_stack_file != "") {
@@ -421,6 +433,33 @@ void Runtime::printStartupBanner() {
     }
   #endif
 
+  {
+    auto f11 = fmt::format(
+      "Running MPI progress {} times each invocation",
+      ArgType::vt_sched_num_progress
+    );
+    auto f12 = opt_on("--vt_sched_num_progress", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  {
+    auto f11 = fmt::format(
+      "Running MPI progress function at least every {} handler(s) executed",
+      ArgType::vt_sched_progress_han
+    );
+    auto f12 = opt_on("--vt_sched_progress_han", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_sched_progress_sec != 0.0) {
+    auto f11 = fmt::format(
+      "Running MPI progress function at least every {} seconds",
+      ArgType::vt_sched_progress_sec
+    );
+    auto f12 = opt_on("--vt_sched_progress_sec", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_lb) {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
@@ -509,6 +548,40 @@ void Runtime::printStartupBanner() {
       auto f11 = fmt::format("Output every {} files ", ArgType::vt_trace_mod);
       auto f12 = opt_on("--vt_trace_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_flush_size != 0) {
+      auto f11 = fmt::format("Flush output incrementally with a buffer of,"
+                             " at least, {} record(s)",
+                             ArgType::vt_trace_flush_size);
+      auto f12 = opt_on("--vt_trace_flush_size", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      auto f11 = fmt::format("Flushing traces at end of run");
+      auto f12 = opt_inverse("--vt_trace_flush_size", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_spec) {
+      {
+        auto f11 = fmt::format("Using trace enable specification for phases");
+        auto f12 = opt_on("--vt_trace_spec", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+      if (ArgType::vt_trace_spec_file == "") {
+        auto warn_trace_file = fmt::format(
+          "{}Warning:{} {}{}{} has no effect: no specification file given"
+          " option {}{}{} is empty{}\n", red, reset, magenta,
+          "--vt_trace_spec",
+          reset, magenta, "--vt_trace_spec_file", reset, reset
+        );
+        fmt::print("{}\t{}{}", vt_pre, warn_trace_file, reset);
+      } else {
+        auto f11 = fmt::format(
+          "Using trace specification file \"{}\"",
+          ArgType::vt_trace_spec_file
+        );
+        auto f12 = opt_inverse("--vt_trace_spec", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
     }
   }
   #endif
@@ -719,7 +792,9 @@ void Runtime::printStartupBanner() {
   });
 }
 
-void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
+void Runtime::printShutdownBanner(
+  term::TermCounterType const& num_units, std::size_t const coll_epochs
+) {
   // If --vt_quiet is set, immediately exit printing nothing during startup
   if (ArgType::vt_quiet) {
     return;
@@ -730,9 +805,11 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   auto magenta  = debug::magenta();
   auto f1 = fmt::format("{}Runtime Finalizing{}", green, reset);
   auto f2 = fmt::format("{}Total work units processed:{} ", green, reset);
+  auto f3 = fmt::format("{}Total collective epochs processed:{} ", green, reset);
   auto vt_pre = bd_green + std::string("vt") + reset + ": ";
   std::string fin = "";
   std::string units = std::to_string(num_units);
+  fmt::print("{}{}{}{}{}\n", vt_pre, f3, magenta, coll_epochs, reset);
   fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
   fmt::print("{}{}{}\n", vt_pre, f1, reset);
 }
@@ -768,6 +845,7 @@ bool Runtime::finalize(bool const force_now) {
   if (force_now) {
     auto const& is_zero = theContext->getNode() == 0;
     auto const& num_units = theTerm->getNumUnits();
+    auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
     sync();
     fflush(stdout);
     fflush(stderr);
@@ -778,7 +856,7 @@ bool Runtime::finalize(bool const force_now) {
     sync();
     sync();
     if (is_zero) {
-      printShutdownBanner(num_units);
+      printShutdownBanner(num_units, coll_epochs);
     }
     finalizeContext();
     finalized_ = true;
@@ -821,7 +899,7 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
-	std::_Exit(code);
+    std::_Exit(code);
     // @todo: why will this not compile with clang!!?
     //quick_exit(code);
   }
@@ -920,6 +998,10 @@ void Runtime::setup() {
   theCollective->barrierThen([this]{
     MPI_Barrier(theContext->getComm());
   });
+
+# if backend_check_enabled(trace_enabled)
+  theTrace->loadAndBroadcastSpec();
+# endif
 
   if (ArgType::vt_pause) {
     pauseForDebugger();

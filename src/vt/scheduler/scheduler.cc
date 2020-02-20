@@ -66,6 +66,7 @@ namespace vt { namespace sched {
 Scheduler::Scheduler() {
   event_triggers.resize(SchedulerEventType::SchedulerEventSize + 1);
   event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
+  progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
 }
 
 void Scheduler::enqueue(ActionType action) {
@@ -126,7 +127,27 @@ bool Scheduler::progressMsgOnlyImpl() {
   return theMsg()->progress() or theEvent()->progress();
 }
 
-void Scheduler::scheduler(bool msg_only) {
+bool Scheduler::shouldCallProgress(
+  int32_t processed_since_last_progress, TimeType time_since_last_progress
+) const {
+  using ArgType   = arguments::ArgConfig;
+
+  // By default, `vt_sched_progress_han` is 0 and will happen every time we go
+  // through the scheduler
+  bool k_handler_enabled = ArgType::vt_sched_progress_han != 0;
+  bool k_handlers_executed =
+    k_handler_enabled and
+    processed_since_last_progress >= ArgType::vt_sched_progress_han;
+  bool enough_time_passed =
+    progress_time_enabled_ and
+    time_since_last_progress > ArgType::vt_sched_progress_sec;
+
+  return
+    (not progress_time_enabled_ and not k_handler_enabled) or
+    enough_time_passed or k_handlers_executed;
+}
+
+void Scheduler::runProgress(bool msg_only) {
   /*
    * Run through the progress functions `num_iter` times, making forward
    * progress on MPI
@@ -140,6 +161,22 @@ void Scheduler::scheduler(bool msg_only) {
     } else {
       progressImpl();
     }
+  }
+
+  // Reset count of processed handlers since the last time progress was invoked
+  processed_after_last_progress_ = 0;
+  last_progress_time_ = timing::Timing::getCurrentTime();
+}
+
+void Scheduler::scheduler(bool msg_only) {
+  using TimerType = timing::Timing;
+
+  auto time_since_last_progress = TimerType::getCurrentTime() - last_progress_time_;
+  if (
+    work_queue_.empty() or
+    shouldCallProgress(processed_after_last_progress_, time_since_last_progress)
+  ) {
+    runProgress(msg_only);
   }
 
   /*
@@ -179,6 +216,7 @@ void Scheduler::scheduler(bool msg_only) {
    * Run a work unit!
    */
   if (not work_queue_.empty()) {
+    processed_after_last_progress_++;
     runNextUnit();
   }
 

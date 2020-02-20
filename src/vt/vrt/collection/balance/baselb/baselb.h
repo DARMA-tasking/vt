@@ -87,6 +87,13 @@ struct BaseLB {
       comm_collectives_(in_comm_collectives)
   { }
 
+  BaseLB(BaseLB const &) = delete;
+  BaseLB(BaseLB &&) noexcept = default;
+  BaseLB &operator=(BaseLB const &) = delete;
+  BaseLB &operator=(BaseLB &&) noexcept = default;
+
+  virtual ~BaseLB() = default;
+
   void startLBHandler(balance::StartLBMsg* msg, objgroup::proxy::Proxy<BaseLB> proxy);
   void computeStatistics();
   void importProcessorData(ElementLoadType const& ld, ElementCommType const& cm);
@@ -110,7 +117,7 @@ struct BaseLB {
   virtual void inputParams(balance::SpecEntry* spec) = 0;
   virtual void runLB() = 0;
 
-private:
+protected:
   balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;
   bool isCollectiveComm(balance::CommCategory cat) const;
   void computeStatisticsOver(Statistic stats);

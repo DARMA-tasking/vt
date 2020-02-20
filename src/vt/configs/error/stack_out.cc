@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             smart_ptr_virtual.h
+//                                 stack_out.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,63 +42,81 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H
-#define INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H
+#include "fmt/format.h"
 
-#include "vt/config.h"
-#include "vt/messaging/message/message.h"
+#include "vt/configs/error/stack_out.h"
 
-namespace vt { namespace messaging {
+#include <cstdlib>
+#include <vector>
+#include <tuple>
+#include <sstream>
 
-template <typename T>
-struct MsgSharedPtr;
+#include <execinfo.h>
+#include <dlfcn.h>
+#include <cxxabi.h>
 
-template <typename T>
-struct MsgVirtualPtr final {
+namespace vt { namespace debug { namespace stack {
 
-  template <typename U>
-  explicit MsgVirtualPtr(MsgSharedPtr<U> in_ptr)
-    : ptr_(MsgSharedPtr<T>(in_ptr)),
-      closure_([in_ptr]{ })
-  { }
+DumpStackType dumpStack(int skip) {
+  void* callstack[128];
+  int const max_frames = sizeof(callstack) / sizeof(callstack[0]);
+  int num_frames = backtrace(callstack, max_frames);
+  char** symbols = backtrace_symbols(callstack, num_frames);
+  std::ostringstream trace_buf;
+  StackVectorType tuple;
 
-  template <typename U>
-  explicit MsgVirtualPtr(MsgVirtualPtr<U> in_vrt)
-    : ptr_(MsgSharedPtr<T>(in_vrt.ptr_)),
-      closure_(in_vrt.closure_)
-  { }
+  for (auto i = skip; i < num_frames; i++) {
+    //printf("%s\n", symbols[i]);
 
-  MsgVirtualPtr(std::nullptr_t) { }
+    std::string str = "";
+    Dl_info info;
+    if (dladdr(callstack[i], &info) && info.dli_sname) {
+      char *demangled = nullptr;
+      int status = -1;
+      if (info.dli_sname[0] == '_') {
+        demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+      }
+      auto const call = status == 0 ?
+        demangled : info.dli_sname == 0 ? symbols[i] : info.dli_sname;
 
-  inline void operator=(std::nullptr_t)
-  {
-    ptr_ = nullptr;
-    closure_ = nullptr;
+      tuple.emplace_back(
+        std::forward_as_tuple(
+          static_cast<int>(2 + sizeof(void*) * 2), callstack[i], call,
+          static_cast<char*>(callstack[i]) - static_cast<char*>(info.dli_saddr)
+        )
+      );
+
+      auto const& t = tuple.back();
+      str = fmt::format(
+        "{:<4} {:<4} {:<15} {} + {}\n",
+        i, std::get<0>(t), std::get<1>(t), std::get<2>(t), std::get<3>(t)
+      );
+
+      std::free(demangled);
+    } else {
+
+      tuple.emplace_back(
+        std::forward_as_tuple(
+          static_cast<int>(2 + sizeof(void*) * 2), callstack[i], symbols[i], 0
+        )
+      );
+
+      auto const& t = tuple.back();
+      str = fmt::format(
+        "{:10} {} {} {}\n", i, std::get<0>(t), std::get<1>(t), std::get<2>(t)
+      );
+    }
+
+    trace_buf << str;
+  }
+  std::free(symbols);
+
+  if (num_frames == max_frames) {
+    trace_buf << "[truncated]\n";
   }
 
-  inline T* get() const { return ptr_.get(); }
-  inline T* operator->() const { return ptr_.get(); }
-  inline T& operator*() const { return *ptr_.get(); }
-  inline bool operator==(std::nullptr_t) const { return ptr_ == nullptr; }
-  inline bool operator!=(std::nullptr_t) const { return ptr_ != nullptr; }
+  return std::make_tuple(trace_buf.str(),tuple);
+}
 
-private:
-  MsgSharedPtr<T> ptr_ = nullptr;
-  std::function<void()> closure_ = nullptr;
+}}} /* end namespace vt::debug::stack */
 
-  friend struct PendingSend;
-  MsgSharedPtr<T>& getShared() { return ptr_; }
-};
-
-}} /* end namespace vt::messaging */
-
-namespace vt {
-
-template <typename U>
-using MsgVirtualPtr = messaging::MsgVirtualPtr<U>;
-
-using MsgVirtualPtrAny = messaging::MsgVirtualPtr<ShortMessage>;
-
-} /* end namespace vt */
-
-#endif /*INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_VIRTUAL_H*/

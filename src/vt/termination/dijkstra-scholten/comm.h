@@ -68,12 +68,21 @@ public:
   /// Make a call to gotAck(count) on predecessor's terminator instance
   static void acknowledge(EpochType epoch, Endpoint predecessor, int64_t cnt);
   static void rootTerminated(EpochType epoch);
+  /// Have locally disengaged, might need to cleanup meta-data (might never be
+  /// re-engaged)
+  static void disengage(EpochType epoch);
 
 private:
   static TerminatorType* getTerminator(EpochType const& epoch);
   static void requestAckHan(AckMsg* msg);
   static void acknowledgeHan(AckMsg* msg);
   static void rootTerminatedHan(AckMsg* msg);
+
+public:
+  // Expose getter for unit testing purposes
+  std::unordered_map<EpochType, TerminatorType> const& getDSTermMap() {
+    return term_;
+  }
 
 protected:
   std::unordered_map<EpochType, TerminatorType> term_  = {};

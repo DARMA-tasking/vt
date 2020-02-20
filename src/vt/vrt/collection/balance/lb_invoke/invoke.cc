@@ -231,4 +231,12 @@ void LBManager::releaseNow(PhaseType phase) {
   num_invocations_ = num_release_ = 0;
 }
 
+void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
+  // Set if tracing is enabled for this next phase. Do this immediately before
+  // LB runs so LB is always instrumented as the beginning of the next phase
+# if backend_check_enabled(trace_enabled)
+  theTrace()->setTraceEnabledCurrentPhase(phase + 1);
+# endif
+}
+
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
       for (int i = range.x()/2; i < range.x(); i++) {
         proxy[i].insert(i % 2);
       }
-      proxy.finishedInserting([proxy]{
+      proxy.finishedInserting([]{
         ::fmt::print("insertions are finished2\n");
       });
     });

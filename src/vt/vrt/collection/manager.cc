@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/runtime/runtime.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/base/base.h"
 #include "vt/vrt/collection/manager.h"
@@ -112,6 +113,9 @@ void CollectionManager::startPhaseCollective(
     fn();
   }
 #endif
+#if backend_check_enabled(trace_enabled)
+  theTrace()->flushTracesFile(false);
+#endif
 }
 
 DispatchBasePtrType
@@ -120,7 +124,7 @@ getDispatcher(auto_registry::AutoHandlerType const& han) {
 }
 
 void releaseLBPhase(CollectionPhaseMsg* msg) {
-  theCollection()->releaseLBPhase<>(msg);
+  CollectionManager::releaseLBPhase<>(msg);
 }
 
 balance::ElementIDType CollectionManager::getCurrentContextPerm() const {

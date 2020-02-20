@@ -62,6 +62,8 @@ struct RequestDataMsg : CollectionMessage<ColT> {
   NodeType node_;
 };
 
+struct InitMsg : ::vt::collective::ReduceNoneMsg { };
+
 struct DataMsg : ::vt::Message {
   DataMsg() = default;
 
@@ -86,6 +88,16 @@ struct SubSolveMsg : ::vt::Message {
   { }
 
   VirtualProxyType coll_proxy_ = no_vrt_proxy;
+};
+
+struct ProxyMsg : vt::Message {
+  ProxyMsg() = default;
+  ProxyMsg(VirtualProxyType in_proxy) : proxy_(in_proxy) { }
+  VirtualProxyType proxy_ = no_vrt_proxy;
+};
+
+struct SetupGroup {
+  void operator()(ProxyMsg* msg);
 };
 
 // Node-local (MPI rank local) info used for the group
@@ -158,9 +170,25 @@ struct Block : Collection<Block,Index1D> {
     );
   }
 
+  void doneInit(InitMsg *msg) {
+    if (theContext()->getNode() == 0) {
+      auto proxy = this->getCollectionProxy();
+      auto proxy_msg = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
+      theMsg()->broadcastMsg<SetupGroup>(proxy_msg);
+      // Invoke it locally: broadcast sends to all other nodes
+      auto proxy_msg_local = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
+      SetupGroup()(proxy_msg_local);
+    }
+  }
+
   void solve(SolveMsg<Block>* msg) {
     // Invoke initialize here so that the index is ready
     initialize();
+    // Wait for all initializations to complete
+    auto proxy = this->getCollectionProxy();
+    auto cb = theCB()->makeBcast<Block, InitMsg, &Block::doneInit>(proxy);
+    auto empty = makeMessage<InitMsg>();
+    proxy.reduce(empty.get(), cb);
   }
 
 private:
@@ -298,20 +326,12 @@ static void solveGroupSetup(NodeType this_node, VirtualProxyType coll_proxy) {
 
 }
 
-struct ProxyMsg : vt::Message {
-  ProxyMsg() = default;
-  ProxyMsg(VirtualProxyType in_proxy) : proxy_(in_proxy) { }
-  VirtualProxyType proxy_;
-};
-
-struct SetupGroup {
-  void operator()(ProxyMsg* msg) {
-    auto const& this_node = theContext()->getNode();
-    ::fmt::print("SetupGroup: node={}\n", this_node);
-    // Example using the group collective
-    solveGroupSetup(this_node, msg->proxy_);
-  }
-};
+void SetupGroup::operator()(ProxyMsg* msg) {
+  auto const& this_node = theContext()->getNode();
+  ::fmt::print("SetupGroup: node={}\n", this_node);
+  // Example using the group collective
+  solveGroupSetup(this_node, msg->proxy_);
+}
 
 int main(int argc, char** argv) {
   ::vt::CollectiveOps::initialize(argc,argv);
@@ -323,17 +343,13 @@ int main(int argc, char** argv) {
     auto proxy = theCollection()->construct<Block,my_map>(
       range,num_elem,num_pieces
     );
-
-    // need to change trilinos solve because right now it makes sense
-    // only for BC=0 . Need to move the unknowns of BC to RHS , right now they are omitted.
+    //
     auto msg = ::vt::makeSharedMessage<SolveMsg<Block>>();
     proxy.broadcast<SolveMsg<Block>, &Block::solve>(msg);
+  }
 
-    auto proxy_msg = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
-    theMsg()->broadcastMsg<SetupGroup>(proxy_msg);
-    // Invoke it locally: broadcast sends to all other nodes
-    auto proxy_msg_local = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
-    SetupGroup()(proxy_msg_local);
+  while (!::vt::rt->isTerminated()) {
+    runScheduler();
   }
 
   ::vt::CollectiveOps::finalize();

@@ -68,8 +68,6 @@ static constexpr TraceEventIDType const no_trace_event = 0;
 static constexpr BitCountType const trace_event_num_bits = 32;
 
 static constexpr NodeType const designated_root_node = 0;
-static constexpr int64_t const trace_reserve_count = 1048576;
-static constexpr uint32_t const trace_flush_size = 100000;
 
 }} //end namespace vt::trace
 

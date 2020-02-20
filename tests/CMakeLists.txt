@@ -27,6 +27,7 @@ set(
   objgroup
   scheduler
   lb
+  trace
 )
 
 option(VT_NO_BUILD_TESTS "Disable building VT tests" OFF)
@@ -89,7 +90,7 @@ if (${VT_HAS_GTEST} AND NOT ${VT_NO_BUILD_TESTS})
           TEST_SUFFIX            _proc_${PROC}
           TEST_PREFIX            vt:
           TEST_LIST              ${CUR_TEST_LIST}
-          EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_NUMPROC_FLAG} ${PROC}
+          EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS} ${MPI_NUMPROC_FLAG} ${PROC}
         )
 
         set_tests_properties(

@@ -46,54 +46,114 @@
 #define INCLUDED_UTILS_DEMANGLE_DEMANGLE_H
 
 #include "vt/config.h"
-#include "vt/utils/string/static.h"
-#include "vt/utils/demangle/get_type_name.h"
-#include "vt/utils/demangle/demangled_name.h"
 
 #include <string>
 #include <vector>
-#include <cassert>
 #include <cstring>
-#include <iosfwd>
 #include <cstdlib>
 #include <assert.h>
 
 namespace vt { namespace util { namespace demangle {
 
-struct DemanglerUtils {
-  template <typename T>
-  static inline std::string getTypeName() {
-    std::string s{type_name<T>().data()};
-    return s;
+struct TemplateExtract {
+  /// IFF tracing a tracing-enabled build, returns the compiler-dependent
+  /// 'PRETTY PRINT' value of the ADORNED function as a string.
+  /// The only useful bit here is the "[T = ..]" of the template in scope
+  /// as the function name itself is self-evident; GCC and Clang supply this.
+  /// This code will simply NOT COMPILE if the compiler is lacking required
+  /// support; this method cannot be used if tracing is disabled.
+  /// There should probably be a cmake check..
+  template <class T>
+  static constexpr char const* prettyFunctionForType() {
+  #if backend_check_enabled(trace_enabled)
+    return __PRETTY_FUNCTION__;
+  #else
+    assert(false && "Can only be used for a trace_enabled build.");
+    return "";
+  #endif
   }
 
+  /// When the goal is to extract the value "as appearing"
+  /// in the template parameterization, and not the type..
+  template <class T, T PF_VALUE_NAME>
+  static constexpr char const* prettyFunctionForValue() {
+  #if backend_check_enabled(trace_enabled)
+    return __PRETTY_FUNCTION__;
+  #else
+    assert(false && "Can only be used for a trace_enabled build.");
+    return "";
+  #endif
+  }
+
+  // T,T* 'overload' for GCC
+  template <class T, T* PF_VALUE_NAME>
+  static constexpr char const* prettyFunctionForValuePtr() {
+  #if backend_check_enabled(trace_enabled)
+    return __PRETTY_FUNCTION__;
+  #else
+    assert(false && "Can only be used for a trace_enabled build.");
+    return "";
+  #endif
+  }
+
+  /// Given a GCC/Clang-like __PRETTY_FUNCTION__ output,
+  /// extract the template instantiation information as a string,
+  /// assuming a SINGLE template parameter.
+  /// Returns an empty string if such cannot be extracted.
+  static std::string singlePfType(std::string const& pf);
+
+  /// Given a GCG/Clang-long __PRETTY_FUNCTION__ output,
+  /// extract the template information as a string,
+  /// assuming tparam names the LAST template parameter.
+  /// Returns an empty string if such cannot be extracted.
+  static std::string lastNamedPfType(std::string const& spf, std::string const& tparam);
+
+  /// Return the type of T, as a string.
+  /// Requires compiler extension support.
+  template <typename T>
+  static std::string getTypeName() {
+    return singlePfType(prettyFunctionForType<T>());
+  }
+
+  /// Return the type of T, as a string.
+  /// Requires compiler extension support.
+  /// (Might be able to use 'auto T' in C++17.)
+  template <typename T, T value>
+  static std::string getValueName() {
+    return lastNamedPfType(prettyFunctionForValue<T,value>(), "PF_VALUE_NAME");
+  }
+
+  // T,T* 'overload' for GCC
+  template <typename T, T* value>
+  static std::string getValueNamePtr() {
+    return lastNamedPfType(prettyFunctionForValuePtr<T,value>(), "PF_VALUE_NAME");
+  }
+
+  /// Given a string like 'a::b::c', return the namespace of 'a::b'.
+  /// Does not strip out extra template parameterization artifacts.
+  /// Removes any leading '&', if present (as in 'values representing types').
+  static std::string getNamespace(std::string const& typestr);
+
+  /// Given a string like 'a::b::c', return the barename of 'c'.
+  /// Returns the bare name in absense of any namespace (eg. 'c' -> 'c').
+  /// Removes any leading '&', if present (as in 'values representing types').
+  static std::string getBarename(std::string const& typestr);
+
+  /// Given a string like 'void (...)' (that is, the string representation of
+  /// a function type.. return the argument section. As the name indicates
+  /// this is somewhat limited.
+  static std::string getVoidFuncStrArgs(std::string const& typestr);
+};
+
+struct DemanglerUtils {
   static std::vector<std::string>
   splitString(std::string const& str, char delim);
 
   static std::string
   removeSpaces(std::string const& str);
-};
 
-/*
- *                   Example Format for active message function:
- *
- *  vt::auto_registry::Runnable<
- *    vt::auto_registry::FunctorAdapter<
- *      void (vt::term::TermCounterMsg*),
- *      &(vt::term::TerminationDetector::propagate_epoch_handler(
- *        vt::term::TermCounterMsg*)
- *       )
- *    >
- *  >
- */
-struct ActiveFunctionDemangler {
-  static DemangledName parseActiveFunctionName(std::string const& str);
-};
-
-struct ActiveFunctorDemangler {
-  static DemangledName parseActiveFunctorName(
-      std::string const& name, std::string const& args
-  );
+  static std::string
+  join(std::string const& delim, std::vector<std::string> const& strs);
 };
 
 }}} // end namespace vt::util::demangle

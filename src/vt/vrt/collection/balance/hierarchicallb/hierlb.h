@@ -139,6 +139,7 @@ private:
   double max_threshold = 0.0f;
   double min_threshold = 0.0f;
   bool auto_threshold = true;
+  HeapExtractEnum extract_strategy = HeapExtractEnum::LoadOverLessThan;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

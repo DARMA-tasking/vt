@@ -70,18 +70,18 @@ AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han);
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 HandlerType makeAutoHandlerObjGroup(HandlerControlType control);
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-HandlerType makeAutoHandler(MessageT* const msg);
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+HandlerType makeAutoHandler(MsgT* const msg);
 
 template <typename T, T value>
-HandlerType makeAutoHandler();
+HandlerType makeAutoHandlerParam();
 
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 void setHandlerTraceNameObjGroup(
   HandlerControlType ctrl, std::string const& name, std::string const& parent = ""
 );
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 void setHandlerTraceName(std::string const& name, std::string const& parent = "");
 
 template <typename T, T value>

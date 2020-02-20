@@ -69,13 +69,14 @@ inline AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han) {
 
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
-  using FunctorT = FunctorAdapterMember<
+  using AdapterT = FunctorAdapterMember<
     objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT
   >;
   using ContainerType = AutoActiveObjGroupContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveObjGroupType>;
   using FuncType = objgroup::ActiveObjAnyType;
-  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
   auto const obj = true;
   auto const idx = RunType::idx;
   auto const han = HandlerManagerType::makeHandler(true, false, idx, obj, ctrl);
@@ -86,22 +87,23 @@ inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) {
-  using FunctorT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
+  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;
-  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
-  //auto const& name = demangle::DemanglerUtils::getDemangledType<FunctorT>();
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
   return HandlerManagerType::makeHandler(true, false, RunType::idx);
 }
 
 template <typename T, T value>
-inline HandlerType makeAutoHandler() {
-  using FunctorT = FunctorAdapter<T, value>;
+inline HandlerType makeAutoHandlerParam() {
+  using AdapterT = FunctorAdapter<T, value>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;
-  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
   return HandlerManagerType::makeHandler(true, false, RunType::idx);
 }
 
@@ -146,7 +148,7 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 template <typename T, T value>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
-  auto const handler = makeAutoHandler<T,value>();
+  auto const handler = makeAutoHandlerParam<T,value>();
   auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif

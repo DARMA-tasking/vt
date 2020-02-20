@@ -1,0 +1,14 @@
+name: PR tests (gcc-5, ubuntu, mpich)
+
+on: [pull_request]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile-ubuntu --tag vt:$(date +%s)

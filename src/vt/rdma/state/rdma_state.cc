@@ -251,7 +251,9 @@ void State::getData(
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
 
-    #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
+    trace::TraceProcessingTag processing_tag;
+    {
       ::vt::HandlerType const reg_han =
         tag == no_tag or get_any_tag ? this_get_handler :
         std::get<2>(get_tag_holder.find(tag)->second);
@@ -259,11 +261,12 @@ void State::getData(
         reg_han, auto_registry::RegistryTypeEnum::RegRDMAGet
       );
       trace::TraceEventIDType event = theMsg()->getCurrentTraceEvent();
-    #endif
+      size_t msg_size = info.num_bytes;
 
-    #if backend_check_enabled(trace_enabled)
-      theTrace()->beginProcessing(trace_id, info.num_bytes, event, from_node);
-    #endif
+      processing_tag =
+        theTrace()->beginProcessing(trace_id, msg_size, event, from_node);
+    }
+#endif
 
     if (info.cont) {
       info.cont(
@@ -279,9 +282,9 @@ void State::getData(
       }
     }
 
-    #if backend_check_enabled(trace_enabled)
-      theTrace()->endProcessing(trace_id, info.num_bytes, event, from_node);
-    #endif
+#if backend_check_enabled(trace_enabled)
+    theTrace()->endProcessing(processing_tag);
+#endif
   } else {
     pending_tag_gets[tag].push_back(info);
   }
@@ -317,7 +320,9 @@ void State::putData(
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
 
-    #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
+    trace::TraceProcessingTag processing_tag;
+    {
       ::vt::HandlerType const reg_han =
         tag == no_tag or put_any_tag ? this_put_handler :
         std::get<2>(put_tag_holder.find(tag)->second);
@@ -325,11 +330,12 @@ void State::putData(
         reg_han, auto_registry::RegistryTypeEnum::RegRDMAPut
       );
       trace::TraceEventIDType event = theMsg()->getCurrentTraceEvent();
-    #endif
+      size_t msg_size = info.num_bytes;
 
-    #if backend_check_enabled(trace_enabled)
-      theTrace()->beginProcessing(trace_id, info.num_bytes, event, from_node);
-    #endif
+      processing_tag =
+        theTrace()->beginProcessing(trace_id, msg_size, event, from_node);
+    }
+#endif
 
     put_fn(
       base_msg, info.data_ptr, info.num_bytes, info.offset, info.tag,
@@ -344,9 +350,9 @@ void State::putData(
       info.cont_action();
     }
 
-    #if backend_check_enabled(trace_enabled)
-      theTrace()->endProcessing(trace_id, info.num_bytes, event, from_node);
-    #endif
+#if backend_check_enabled(trace_enabled)
+    theTrace()->endProcessing(processing_tag);
+#endif
   } else {
     pending_tag_puts[tag].push_back(info);
   }

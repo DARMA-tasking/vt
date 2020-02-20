@@ -87,16 +87,19 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   );
 
 #if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
-    msg->sub_han, auto_registry::RegistryTypeEnum::RegGeneral
-  );
-  trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
+  trace::TraceProcessingTag processing_tag;
+  {
+    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
+      msg->sub_han, auto_registry::RegistryTypeEnum::RegGeneral
+    );
+    trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
 
-  fmt::print("dataMessageHandler: id={}, ep={}\n", msg->sub_han, ep);
+    size_t msg_size = sizeof(*msg);
+    NodeType const& from_node = theMsg()->getFromNodeCurrentHandler();
 
-  NodeType const& from_node = theMsg()->getFromNodeCurrentHandler();
-
-  theTrace()->beginProcessing(ep, sizeof(*msg), event, from_node);
+    processing_tag =
+      theTrace()->beginProcessing(ep, msg_size, event, from_node);
+  }
 #endif
 
   if (HandlerManagerType::isHandlerFunctor(msg->sub_han)) {
@@ -109,7 +112,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   }
 
 #if backend_check_enabled(trace_enabled)
-  theTrace()->endProcessing(ep, sizeof(*msg), event, from_node);
+  theTrace()->endProcessing(processing_tag);
 #endif
 }
 
@@ -157,7 +160,7 @@ struct Param {
     NodeType const& dest, Tuple tup,
     NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
     return sendDataTuple(dest, han, std::forward<Tuple>(tup));
   }
 
@@ -166,7 +169,7 @@ struct Param {
     NodeType const& dest, DataMsg<std::tuple<Args...>>* msg,
     NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
     msg->sub_han = han;
     return sendDataMsg(dest, han, msg);
   }
@@ -176,7 +179,7 @@ struct Param {
     NodeType const& dest, NonType<T, value> __attribute__((unused)) non,
     Args&&... a
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
 
     staticCheckCopyable<Args...>();
 

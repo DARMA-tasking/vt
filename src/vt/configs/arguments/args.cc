@@ -55,9 +55,11 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
+/*static*/ bool        ArgConfig::colorize_output       = false;
 
 /*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
-/*static*/ bool        ArgConfig::colorize_output       = false;
+/*static*/ int32_t     ArgConfig::vt_sched_progress_han = 0;
+/*static*/ double      ArgConfig::vt_sched_progress_sec = 0.0;
 
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
@@ -76,6 +78,9 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
+/*static*/ int32_t     ArgConfig::vt_trace_flush_size   = 0;
+/*static*/ bool        ArgConfig::vt_trace_spec           = false;
+/*static*/ std::string ArgConfig::vt_trace_spec_file      = "";
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
@@ -153,7 +158,7 @@ namespace vt { namespace arguments {
 
   // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
-  for (auto i = argc-1; i > 0; i--) {
+  for (int i = argc-1; i > 0; i--) {
     args.push_back(std::string(argv[i]));
   }
 
@@ -162,6 +167,7 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling the colorization of output from vt
    */
+
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";
   auto never  = "Do not colorize output (overrides --vt_color)";
@@ -177,6 +183,7 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling the signals that VT tries to catch
    */
+
   auto no_sigint      = "Do not register signal handler for SIGINT";
   auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
   auto no_terminate   = "Do not register handler for std::terminate";
@@ -188,10 +195,10 @@ namespace vt { namespace arguments {
   e->group(signalGroup);
   f->group(signalGroup);
 
-
   /*
    * Flags to control stack dumping
    */
+
   auto stack  = "Do not dump stack traces";
   auto warn   = "Do not dump stack traces when vtWarn(..) is invoked";
   auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
@@ -215,28 +222,37 @@ namespace vt { namespace arguments {
   l->group(stackGroup);
   m->group(stackGroup);
 
-
   /*
    * Flags to control tracing output
    */
+
   auto trace     = "Enable tracing (must be compiled with trace_enabled)";
   auto trace_mpi = "Enable tracing of MPI calls (must be compiled with "
                    "trace_enabled)";
   auto tfile     = "Name of trace files";
   auto tdir      = "Name of directory for trace files";
   auto tmod      = "Output trace file if (node % vt_stack_mod) == 0";
-  auto n  = app.add_flag("--vt_trace",           vt_trace,           trace);
-  auto nm = app.add_flag("--vt_trace_mpi",       vt_trace_mpi,       trace_mpi);
-  auto o  = app.add_option("--vt_trace_file",    vt_trace_file,      tfile, "");
-  auto p  = app.add_option("--vt_trace_dir",     vt_trace_dir,       tdir,  "");
-  auto q  = app.add_option("--vt_trace_mod",     vt_trace_mod,       tmod,  1);
+  auto tflushmod = "Flush output trace every (vt_trace_flush_size) trace records";
+  auto tspec     = "Enable trace spec file (defines which phases tracing is on)";
+  auto tspecfile = "File containing trace spec; --vt_trace_spec to enable";
+  auto n  = app.add_flag("--vt_trace",              vt_trace,           trace);
+  auto nm = app.add_flag("--vt_trace_mpi",          vt_trace_mpi,       trace_mpi);
+  auto o  = app.add_option("--vt_trace_file",       vt_trace_file,      tfile, "");
+  auto p  = app.add_option("--vt_trace_dir",        vt_trace_dir,       tdir,  "");
+  auto q  = app.add_option("--vt_trace_mod",        vt_trace_mod,       tmod,  1);
+  auto qf = app.add_option("--vt_trace_flush_size", vt_trace_flush_size,tflushmod,
+    0);
+  auto qza = app.add_flag("--vt_trace_spec",          vt_trace_spec,           tspec);
+  auto qzb = app.add_option("--vt_trace_spec_file",   vt_trace_spec_file,      tspecfile, "");
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
   o->group(traceGroup);
   p->group(traceGroup);
   q->group(traceGroup);
-
+  qf->group(traceGroup);
+  qza->group(traceGroup);
+  qzb->group(traceGroup);
 
   /*
    * Flags for controlling debug print output at runtime
@@ -464,9 +480,15 @@ namespace vt { namespace arguments {
    */
 
   auto nsched = "Number of times to run the progress function in scheduler";
+  auto ksched = "Run the MPI progress function at least every k handlers that run";
+  auto ssched = "Run the MPI progress function at least every s seconds";
   auto sca = app.add_option("--vt_sched_num_progress", vt_sched_num_progress, nsched, 2);
+  auto hca = app.add_option("--vt_sched_progress_han", vt_sched_progress_han, ksched, 0);
+  auto kca = app.add_option("--vt_sched_progress_sec", vt_sched_progress_sec, ssched, 0.0);
   auto schedulerGroup = "Scheduler Configuration";
   sca->group(schedulerGroup);
+  hca->group(schedulerGroup);
+  kca->group(schedulerGroup);
 
   /*
    * Run the parser!

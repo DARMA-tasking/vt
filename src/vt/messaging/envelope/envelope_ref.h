@@ -57,7 +57,7 @@ template <typename Env>
 inline void envelopeRef(Env& env);
 
 template <typename Env>
-inline void envelopeDeref(Env& env);
+inline RefType envelopeDeref(Env& env);
 
 } /* end namespace vt */
 

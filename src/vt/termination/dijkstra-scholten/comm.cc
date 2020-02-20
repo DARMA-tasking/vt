@@ -89,7 +89,27 @@ namespace vt { namespace term { namespace ds {
     termds, node,
     "StateDS::rootTerminated: epoch={:x}\n", epoch
   );
-  theTerm()->epochTerminated(epoch);
+  theTerm()->epochTerminated(epoch, TerminationDetector::CallFromEnum::Root);
+}
+
+/*static*/ void StateDS::disengage(EpochType epoch) {
+  debug_print(
+    termds, node,
+    "StateDS::disengage: epoch={:x}\n", epoch
+  );
+
+  // We are likely inside code that holds a reference to this class for holding
+  // DS terminator state. Thus, we can't remove it safely right here. So we will
+  // enqueue an action to do the cleanup. This action must see if the DS term is
+  // still disengaged (it can easily be re-engaged after it disengages).
+  theSched()->enqueue([epoch]{
+    auto ptr = theTerm()->getDSTerm(epoch);
+    if (ptr != nullptr) {
+      if (not ptr->isEngaged()) {
+        theTerm()->cleanupEpoch(epoch, TerminationDetector::CallFromEnum::NonRoot);
+      }
+    }
+  });
 }
 
 /*static*/ StateDS::TerminatorType*

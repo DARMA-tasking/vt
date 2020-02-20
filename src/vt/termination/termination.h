@@ -156,8 +156,10 @@ public:
   EpochType makeEpochRootedDS(bool child, EpochType parent);
 
 private:
+  enum CallFromEnum { Root, NonRoot };
+
   TermStateType& findOrCreateState(EpochType const& epoch, bool is_ready);
-  void cleanupEpoch(EpochType const& epoch);
+  void cleanupEpoch(EpochType const& epoch, CallFromEnum from);
   void produceConsumeState(
     TermStateType& state, TermCounterType const num_units, bool produce,
     NodeType node
@@ -190,6 +192,7 @@ public:
   void setLocalTerminated(bool const terminated, bool const no_propagate = true);
   void maybePropagate();
   TermCounterType getNumUnits() const;
+  std::size_t getNumTerminatedCollectiveEpochs() const;
 
 public:
   // TermTerminated interface
@@ -207,7 +210,7 @@ private:
 
 private:
   bool propagateEpoch(TermStateType& state);
-  void epochTerminated(EpochType const& epoch);
+  void epochTerminated(EpochType const& epoch, CallFromEnum from);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
   void setupNewEpoch(EpochType const& epoch);
   void readyNewEpoch(EpochType const& epoch);
@@ -215,6 +218,12 @@ private:
 
 public:
   void addDependency(EpochType predecessor, EpochType successoor);
+
+public:
+  // Methods for testing state of TD from unit tests
+  EpochContainerType<TermStateType> const& getEpochState() { return epoch_state_; }
+  std::unordered_set<EpochType> const& getEpochReadySet() { return epoch_ready_; }
+  std::unordered_set<EpochType> const& getEpochWaitSet() { return epoch_wait_status_; }
 
 private:
   EpochDependency* getEpochDep(EpochType epoch);

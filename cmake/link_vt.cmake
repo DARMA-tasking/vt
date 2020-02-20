@@ -30,6 +30,7 @@ function(link_target_with_vt)
     LINK_CHECKPOINT
     LINK_DETECTOR
     LINK_CLI11
+    LINK_DL
   )
   set(
     multiValueArg
@@ -76,6 +77,16 @@ function(link_target_with_vt)
     endif()
   endif()
 
+  if (NOT DEFINED ARG_LINK_DL AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_DL)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: dl=${ARG_LINK_DL}")
+    endif()
+
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CMAKE_DL_LIBS}
+    )
+  endif()
+
   if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: MPI=${ARG_LINK_MPI}")
@@ -86,13 +97,15 @@ function(link_target_with_vt)
     )
   endif()
 
-  if (NOT DEFINED ARG_LINK_FCONTEXT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FCONTEXT)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: fcontext=${ARG_LINK_FCONTEXT}")
+  if (${vt_fcontext_enabled})
+    if (NOT DEFINED ARG_LINK_FCONTEXT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FCONTEXT)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: fcontext=${ARG_LINK_FCONTEXT}")
+      endif()
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FCONTEXT_LIBRARY}
+        )
     endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FCONTEXT_LIBRARY}
-    )
   endif()
 
   if (NOT DEFINED ARG_LINK_ZLIB AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ZLIB)
@@ -108,7 +121,7 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
-    target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1)
+    target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1 FMT_USE_USER_DEFINED_LITERALS=0)
     target_include_directories(${ARG_TARGET} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/fmt>
       $<INSTALL_INTERFACE:include/fmt>

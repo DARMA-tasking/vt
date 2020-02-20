@@ -10,6 +10,14 @@
 
 namespace vt { namespace trace {
 
+TraceEntryIDType getEventId(std::string const& str) {
+  TraceEntryIDType id = std::hash<std::string>{}(str);
+  // Never allow to equal sentinel value as that violates
+  // the contract in full; a very unlikely case anyway.
+  // (Does not address possibility of other collisions..)
+  return id != no_trace_entry_id ? id : 1;
+}
+
 /*static*/ TraceEntryIDType
 TraceRegistry::registerEventHashed(
     std::string const& event_type_name, std::string const& event_name
@@ -27,9 +35,7 @@ TraceRegistry::registerEventHashed(
   //   events->size()
   // );
 
-  TraceEntryIDType event_type_id = std::hash<std::string>{}(
-    event_type_name
-  );
+  TraceEntryIDType event_type_id = getEventId(event_type_name);
   TraceEntrySeqType event_type_seq = no_trace_entry_seq;
 
   { // ensure event type / category
@@ -51,7 +57,7 @@ TraceRegistry::registerEventHashed(
   { // ensure event
     auto* events = TraceContainers::getEventContainer();
 
-    TraceEntryIDType event_id = std::hash<std::string>{}(
+    TraceEntryIDType event_id = getEventId(
       event_type_name + std::string("::") + event_name
     );
 
@@ -107,14 +113,18 @@ TraceRegistry::setTraceName(
 #endif
 }
 
-/*static*/ EventClassType
+static EventClassType not_found_ = EventClassType{
+  no_trace_entry_id, no_trace_entry_seq, std::string{}
+};
+
+/*static*/ EventClassType const&
 TraceRegistry::getEvent(TraceEntryIDType id) {
   auto* events = TraceContainers::getEventContainer();
   auto iter = events->find(id);
   if (iter != events->end()) {
     return iter->second;
   }
-  return EventClassType{no_trace_entry_id, no_trace_entry_seq, std::string{}};
+  return not_found_;
 }
 
 }} //end namespace vt::trace

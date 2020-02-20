@@ -47,7 +47,71 @@
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
 
+#include "vt/utils/demangle/demangle.h"
+
 namespace vt { namespace auto_registry {
+
+// Not currently used .. maybe regression?
+//template <typename T, typename... Args>
+//static inline auto proxyOperatorToNewInstanceRval(Args&&... args) {
+//  T instance;
+//  return instance.operator()(std::forward<Args>(args)...);
+//}
+
+template <typename T, typename... Args>
+static inline auto proxyOperatorToNewInstanceReg(Args... args) {
+  T instance;
+  return instance.operator()(args...);
+}
+
+/// All Functor Adapters require:
+/// - FunctionPtrType
+/// - ObjType
+/// - getFunction
+/// - traceGetEventType
+/// - traceGetEventName
+/// (The 'Functor' naming is a bit of a misnomer as they are not functors
+///  nor do they strictly wrap functors..)
+
+/// Adapt a type that provides operator()(..)
+/// NOTE:
+/// MULTIPLE INSTANCES of the type will be created and discarded.
+/// This cannot be used for a stateful instance.
+/// This is an implementation detail that could be reconsidered.
+template <typename ObjTypeT, typename... ArgsT>
+struct FunctorAdapterArgs {
+  using FunctionPtrType = void (*)(ArgsT...);
+  using ObjType = ObjTypeT;
+
+  static constexpr FunctionPtrType getFunction() {
+    return &proxyOperatorToNewInstanceReg<ObjType, ArgsT...>;
+  }
+
+  static NumArgsType getNumArgs() {
+    return sizeof...(ArgsT);
+  }
+
+#if backend_check_enabled(trace_enabled)
+  static std::string traceGetEventType() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto ns = TE::getTypeName<ObjTypeT>();
+    if (ns.empty())
+      ns = "(none)";
+    return DU::removeSpaces(ns);
+  }
+
+  static std::string traceGetEventName() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    std::vector<std::string> arg_types = {
+      TE::getTypeName<ArgsT>()...
+    };
+    auto args = DU::join(",", arg_types);
+    return DU::removeSpaces("operator(" + args + ")");
+  }
+#endif // end trace_enabled
+};
 
 template <typename F, F* f>
 struct FunctorAdapter {
@@ -56,10 +120,28 @@ struct FunctorAdapter {
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
-  template <typename... A>
-  auto operator()(A&&... a) -> decltype(auto) {
-    return f(std::forward<A>(a)...);
-   }
+  static NumArgsType getNumArgs() {
+    return 0; // lies - see NumArgsTag, perhaps
+  }
+
+#if backend_check_enabled(trace_enabled)
+  static std::string traceGetEventType() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto ns = TE::getNamespace(TE::getValueNamePtr<F,f>());
+    if (ns.empty())
+      ns = "(none)";
+    return DU::removeSpaces(ns);
+  }
+
+  static std::string traceGetEventName() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto barename = TE::getBarename(TE::getValueNamePtr<F,f>());
+    auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
+    return DU::removeSpaces(barename + "(" + args + ")");
+  }
+#endif // end trace_enabled
 };
 
 template <typename F, F f, typename ObjT = void>
@@ -69,42 +151,60 @@ struct FunctorAdapterMember {
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
-  template <typename... A>
-  auto operator()(A&&... a) -> decltype(auto) {
-    return f(std::forward<A>(a)...);
-   }
+  static NumArgsType getNumArgs() {
+    return 0; // lies - see NumArgsTag, perhaps
+  }
+
+#if backend_check_enabled(trace_enabled)
+  static std::string traceGetEventType() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto ns = TE::getNamespace(TE::getValueName<F,f>());
+    if (ns.empty())
+      ns = "(none)";
+    return DU::removeSpaces(ns);
+  }
+
+  static std::string traceGetEventName() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto barename = TE::getBarename(TE::getValueName<F,f>());
+    auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
+    return DU::removeSpaces(barename + "(" + args + ")");
+  }
+#endif // end trace_enabled
 };
 
-template <typename RegistryT, typename = void>
-RegistryT& getAutoRegistryGen();
+template <typename RegT, typename = void>
+RegT& getAutoRegistryGen();
 
-template <typename RegistryT, typename>
-inline RegistryT& getAutoRegistryGen() {
+template <typename RegT, typename>
+inline RegT& getAutoRegistryGen() {
 #pragma sst keep
-  static RegistryT reg;
+  static RegT reg;
   return reg;
 }
 
-template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
+template <typename AdapterT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarGen {
   AutoHandlerType index;
 
   RegistrarGen();
 };
 
-template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
+template <typename AdapterT, typename RegT, typename InfoT, typename FnT>
 struct RegistrarWrapperGen {
-  RegistrarGen<ActFnT, RegT, InfoT, FnT> registrar;
+  RegistrarGen<AdapterT, RegT, InfoT, FnT> registrar;
 };
 
-template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
+template <typename AdapterT, typename RegT, typename InfoT, typename FnT>
 AutoHandlerType registerActiveGen();
 
-template <typename ActFnT, typename RegT, typename InfoT, typename FnT>
+template <typename AdapterT, typename RegT, typename InfoT, typename FnT>
 struct RunnableGen {
-  using ActFnType = ActFnT;
-  using FunctionPtrType = typename ActFnT::FunctionPtrType;
-  using ObjType = typename ActFnT::ObjType;
+  using AdapterType = AdapterT;
+  using FunctionPtrType = typename AdapterType::FunctionPtrType;
+  using ObjType = typename AdapterType::ObjType;
 
   static AutoHandlerType const idx;
   static constexpr FunctionPtrType getFunction();

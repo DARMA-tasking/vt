@@ -52,82 +52,277 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <new>
 
 namespace vt { namespace trace {
 
-struct Log {
-  using LogPtrType         = std::shared_ptr<Log>;
+struct Log final {
   using TraceConstantsType = eTraceConstants;
   using UserDataType       = int32_t;
 
-  double time = 0.0;
-  double end_time = 0.0;
+  enum LogDataType : uint8_t {
+    user = 1,
+    sys = 2
+  };
 
-  TraceEntryIDType ep = no_trace_entry_id;
-  TraceConstantsType type = TraceConstantsType::InvalidTraceType;
-  TraceEventIDType event = no_trace_event;
-  TraceMsgLenType msg_len = 0;
-  NodeType node = uninitialized_destination;
-  uint64_t idx1 = 0, idx2 = 0, idx3 = 0, idx4 = 0;
+  union Data {
 
-  std::string user_supplied_note = "";
-  UserDataType user_supplied_data = 0;
-  UserEventIDType user_event = 0;
-  bool user_start = false;
+    // System event data; cannot be used in 'user events'.
+    // Type is simple with auto-defined ctor/copy/move..
+    // Expected ~40 bytes
+    struct SysData {
+    public:
+      // "Common initial sequence"
+      LogDataType data_type = LogDataType::sys;
+      //
+      TraceMsgLenType msg_len;
+      uint64_t idx1;
+      uint64_t idx2;
+      uint64_t idx3;
+      uint64_t idx4;
 
+    private:
+      friend struct Log;
+
+      SysData(
+        TraceMsgLenType in_msg_len,
+        uint64_t in_idx1 = 0, uint64_t in_idx2 = 0,
+        uint64_t in_idx3 = 0, uint64_t in_idx4 = 0
+      ) : msg_len(in_msg_len),
+          idx1(in_idx1), idx2(in_idx2), idx3(in_idx3), idx4(in_idx4)
+      {
+      }
+
+      SysData() = delete; // prevent ctor looking like value-init
+      SysData(SysData const& in) = default;
+      SysData(SysData&& in) = default;
+      SysData& operator=(SysData const& in) = default;
+      SysData& operator=(SysData&& in) = default;
+
+    } sys;
+
+    // User event data; cannot be used in 'normal events'.
+    // Placement-new usages for non-trivial std::string type involved.
+    // Expected ~30-40 bytes.
+    struct UserData {
+      // "Common initial sequence"
+      LogDataType data_type = LogDataType::user;
+      //
+      std::string user_note;
+      UserDataType user_data;
+      UserEventIDType user_event;
+      bool user_start;
+
+    private:
+      // All except for direct property access via either
+      // user_data() or sys_data(), which return references,
+      // is internal to Log. No external copies for you.
+      friend struct Log;
+
+      UserData(
+        std::string const& in_user_note, UserDataType in_user_data,
+        UserEventIDType in_user_event, bool in_user_start
+      ) : user_note(in_user_note), user_data(in_user_data),
+          user_event(in_user_event), user_start(in_user_start)
+      {
+      }
+
+      UserData() = delete;
+      UserData(UserData const&) = default;
+      UserData(UserData&&) = default;
+      UserData& operator=(UserData const&) = default;
+      UserData& operator=(UserData&&) = default;
+
+    } user;
+
+    // Copy based on type.
+    Data(Data const& in) {
+      copyFrom(in);
+    }
+
+    // Move based on type
+    Data(Data&& in) {
+      moveFrom(std::move(in));
+    }
+
+    Data &operator=(Data const& other_data) {
+      reset();
+      copyFrom(other_data);
+
+      return *this;
+    }
+
+    Data &operator=(Data && other_data) {
+      reset();
+      moveFrom(std::move(other_data));
+
+      return *this;
+    }
+
+    Data(UserData const& user_data) {
+      new (&user) UserData{user_data};
+    }
+
+    Data(SysData const& sys_data) : sys(sys_data) {
+    }
+
+    ~Data() {
+      reset();
+    }
+
+  private:
+
+    void reset() {
+      // Can access "Common initial sequence" per C++11 6.5.2.3/6
+      if (user.data_type == LogDataType::user) {
+        // Cleanup placement-new artifacts.
+        user.~UserData();
+      }
+    }
+
+    void copyFrom(Data const& other_data)
+    {
+      if (other_data.user.data_type == Log::LogDataType::user) {
+        new (&user) UserData{other_data.user};
+      } else {
+        sys = other_data.sys;
+      }
+    }
+
+    void moveFrom(Data && other_data)
+    {
+      if (other_data.user.data_type == Log::LogDataType::user) {
+        new (&user) UserData{std::move(other_data.user)};
+      } else {
+        sys = std::move(other_data.sys);
+      }
+    }
+  };
+
+  // [[deprecated]]] - use appropriate ctor
   void setUserNote(std::string const& note) {
-    user_supplied_note = note;
+    if (data.user.data_type == LogDataType::user) {
+      data.user.user_note = note;
+    }
   }
 
-  void setUserData(UserDataType data) {
-    user_supplied_data = data;
+  // [[deprecated]] - use appropriate ctor
+  void setUserData(UserDataType user_data) {
+    if (data.user.data_type == LogDataType::user) {
+      data.user.user_data = user_data;
+    }
   }
 
+  // No default constructor. Seems wierd? Copy+move all the way..
+  // (Copy-constructible and copy-assignable required for dequeue.)
+  Log() = delete;
+  Log(Log const& in) = default;
+  Log(Log&& in) = default;
+  Log& operator=(Log const& in) = default;
+  Log& operator=(Log&& in) = default;
+
+  // User event
   Log(
     double const in_begin_time, double const in_end_time,
     TraceConstantsType const in_type, std::string const& in_note,
     TraceEventIDType const in_event
   ) : time(in_begin_time), end_time(in_end_time),
-      type(in_type), event(in_event), user_supplied_note(in_note)
-  { }
+      type(in_type), event(in_event),
+      data(Data::UserData{in_note, 0, 0, false})
+  {
+  }
 
+  // User event
+  Log(
+      double const in_time, TraceConstantsType const in_type,
+      std::string const& in_note, UserDataType in_data
+  ) : time(in_time), type(in_type),
+      data(Data::UserData{in_note, 0, 0, false})
+  {
+  }
+
+  // User event
   Log(
     double const in_time, TraceConstantsType const in_type,
-    std::string const& in_note
-  ) : time(in_time), type(in_type), user_supplied_note(in_note)
-  { }
-
-  Log(double const in_time, TraceConstantsType const in_type)
-    : time(in_time), type(in_type)
-  { }
-
-  Log(
-    double const in_time, TraceConstantsType const in_type,
+    NodeType in_node,
     UserEventIDType in_user_event, bool in_user_start
-  ) : time(in_time), type(in_type), user_event(in_user_event),
-      user_start(in_user_start)
-  { }
+  ) : time(in_time), type(in_type),
+      node(in_node),
+      data(Data::UserData{std::string{}, 0, in_user_event, in_user_start})
+  {
+  }
 
+  // Used for idle
   Log(
     double const in_time, TraceConstantsType const in_type,
-    UserDataType const in_data
-  ) : time(in_time), type(in_type), user_supplied_data(in_data)
-  { }
+    NodeType in_node
+  ) : time(in_time), type(in_type),
+      node(in_node),
+      data(Data::SysData{0})
+  {
+  }
 
+  // Used for messages
   Log(
-    double const in_time, TraceEntryIDType const in_ep,
-    TraceConstantsType const in_type, TraceMsgLenType const in_msg_len = 0
-  ) : time(in_time), ep(in_ep), type(in_type), msg_len(in_msg_len)
-  { }
+    double const in_time, TraceEntryIDType const in_ep, TraceConstantsType const in_type,
+    NodeType in_node,
+    TraceMsgLenType const in_msg_len
+  ) : time(in_time), type(in_type), ep(in_ep),
+      node(in_node),
+      data(Data::SysData{in_msg_len})
+  {
+  }
+
+  // Generate paired begin/end logs (copies with few changes)
+  // NOT VALID FOR USER EVENTS
+  Log(
+    Log const& in, double in_time, TraceConstantsType in_type
+  ) : time(in_time), type(in_type), ep(in.ep), event(in.event),
+      node(in.node),
+      data(in.sys_data())
+  {
+  }
 
   Log(
     double in_time, TraceEntryIDType in_ep, TraceConstantsType in_type,
     TraceEventIDType in_event, TraceMsgLenType in_msg_len, NodeType in_node,
     uint64_t in_idx1, uint64_t in_idx2, uint64_t in_idx3, uint64_t in_idx4
-  ) : time(in_time), ep(in_ep), type(in_type), event(in_event),
-      msg_len(in_msg_len), node(in_node), idx1(in_idx1), idx2(in_idx2),
-      idx3(in_idx3), idx4(in_idx4)
-  { }
+  ) : time(in_time), type(in_type), ep(in_ep), event(in_event),
+      node(in_node),
+      data(Data::SysData{in_msg_len, in_idx1, in_idx2, in_idx3, in_idx4})
+  {
+  }
+
+  inline Data::UserData const& user_data() const {
+    assert(data.user.data_type == LogDataType::user && "Expecting user data-type");
+    return data.user;
+  }
+
+  inline Data::SysData const& sys_data() const {
+    assert(data.sys.data_type == LogDataType::sys && "Expecting sys data-type");
+    return data.sys;
+  }
+
+public:
+
+  // Excluding sys/user-specific data, expected ~24 bytes
+
+  // Time of the event - all events need a time.
+  double time = 0.0;
+  // If a duration can be expressed in a single event.
+  // (Currently only for user-events.. could elim explicit end events.)
+  double end_time = 0.0;
+
+  TraceConstantsType type = TraceConstantsType::InvalidTraceType;
+  TraceEntryIDType ep = no_trace_entry_id;
+  TraceEventIDType event = no_trace_event;
+  // If the event relates to a DIFFERENT node.
+  NodeType node = uninitialized_destination;
+
+private:
+
+  // Union of sys/user data
+  /*union*/ Data data;
 };
 
 }} //end namespace vt::trace

@@ -49,7 +49,15 @@
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 
-namespace vt { namespace runnable {
+namespace vt {
+
+namespace objgroup {
+
+void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch);
+
+} /* end namespace objgroup */
+
+namespace runnable {
 
 template <typename MsgT>
 struct Runnable {
@@ -61,6 +69,8 @@ struct Runnable {
     HandlerType handler, ActiveFnPtrType func, MsgT* msg, NodeType from_node,
     TagType in_tag = no_tag
   );
+
+  friend void objgroup::scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch);
 
 private:
   // Dispatch for object groups: handler with node-local object ptr

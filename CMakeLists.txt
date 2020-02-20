@@ -25,10 +25,13 @@ include(cmake/link_vt.cmake)
 include(cmake/load_packages.cmake)
 
 # Code coverage option of VT
-OPTION(CODE_COVERAGE_ENABLED FALSE)
-if(CODE_COVERAGE_ENABLED)
-    include(cmake/code_coverage.cmake)
-endif(CODE_COVERAGE_ENABLED)
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+# OPTION(CODE_COVERAGE_ENABLED FALSE)
+# if(CODE_COVERAGE_ENABLED)
+#     include(cmake/code_coverage.cmake)
+# endif(CODE_COVERAGE_ENABLED)
+
+set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
 
 set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
@@ -37,8 +40,12 @@ set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
 include(cmake/build_git_info.cmake)
 
+option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
+
 # Add subdirectories for tests and examples
-add_subdirectory(${PROJECT_LIB_DIR}/context)
+if (${vt_fcontext_enabled})
+  add_subdirectory(${PROJECT_LIB_DIR}/context)
+endif()
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 add_subdirectory(src)

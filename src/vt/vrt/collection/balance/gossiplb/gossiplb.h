@@ -82,11 +82,12 @@ protected:
   void propagateRound(EpochType epoch = no_epoch);
   void propagateIncoming(GossipMsg* msg);
   bool isUnderloaded(LoadType load) const;
+  bool isUnderloadedRelaxed(LoadType over, LoadType under) const;
   bool isOverloaded(LoadType load) const;
 
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
-  std::vector<NodeType> makeUnderloaded() const;
+  std::vector<NodeType> makeUnderloadedRelaxed() const;
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
@@ -96,7 +97,7 @@ protected:
   void thunkMigrations();
 
 private:
-  uint8_t f_                                        = 2;
+  uint8_t f_                                        = 4;
   uint8_t k_max_                                    = 4;
   uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;

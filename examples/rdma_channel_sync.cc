@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
   num_nodes = theContext()->getNumNodes();
 
   if (num_nodes != 4) {
-    CollectiveOps::output("requires exactly 4 nodes");
+    fmt::print("requires exactly 4 nodes\n");
     CollectiveOps::finalize();
     return 0;
   }

@@ -74,6 +74,16 @@ void TermDS<CommType>::terminated() {
 }
 
 template <typename CommType>
+void TermDS<CommType>::disengaged() {
+  debug_print(
+    termds, node,
+    "disengaged: epoch={:x}\n", epoch_
+  );
+
+  CommType::disengage(epoch_);
+}
+
+template <typename CommType>
 void TermDS<CommType>::setRoot(bool isRoot) {
   if (isRoot) {
     outstanding.push_back(AckRequest(self, 0));
@@ -303,6 +313,10 @@ void TermDS<CommType>::tryLast() {
     parent = -1;
     C = ackedParent = ackedArbitrary = reqedParent = 0;
     engagementMessageCount = processedSum = 0;
+
+    // Call disengage to trigger potential cleanup (might be the last time we
+    // ever see this DS-epoch)
+    disengaged();
   }
 }
 

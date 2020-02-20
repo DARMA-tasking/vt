@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               get_type_name.h
+//                             test_pending_send.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,37 +42,79 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_DEMANGLE_GET_TYPE_NAME_H
-#define INCLUDED_UTILS_DEMANGLE_GET_TYPE_NAME_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/utils/string/static.h"
+#include "test_parallel_harness.h"
+#include "data_message.h"
 
-namespace vt { namespace util { namespace demangle {
+#include "vt/transport.h"
 
-using StaticString = util::string::StatStr;
+namespace vt { namespace tests { namespace unit {
 
-template <class T>
-constexpr StaticString type_name() {
-#if defined(__clang__)
-  StaticString p = __PRETTY_FUNCTION__;
-  return StaticString(p.data() + 31, p.size() - 31 - 1);
+using namespace vt;
+using namespace vt::tests::unit;
 
-# elif defined(__GNUC__)
-  StaticString p = __PRETTY_FUNCTION__;
+struct TestPendingSend : TestParallelHarness {
+  struct TestMsg : vt::Message { };
+  static void handlerPong(TestMsg*) { delivered = true; }
+  static void handlerPing(TestMsg*) {
+    auto const this_node = theContext()->getNode();
+    auto const num_nodes = theContext()->getNumNodes();
+    auto prev = this_node - 1 >= 0 ? this_node - 1 : num_nodes - 1;
+    auto msg = vt::makeMessage<TestMsg>();
+    theMsg()->sendMsg<TestMsg, handlerPong>(prev, msg.get());
+  }
 
-#   if __cplusplus < 201402
-    return StaticString(p.data() + 36, p.size() - 36 - 1);
-#   else
-    return StaticString(p.data() + 46, p.size() - 46 - 1);
-#   endif
+  static bool delivered;
+};
 
-# elif defined(_MSC_VER)
-  StaticString p = __FUNCSIG__;
-  return StaticString(p.data() + 38, p.size() - 38 - 7);
-#endif
+/*static*/ bool TestPendingSend::delivered = false;
+
+TEST_F(TestPendingSend, test_pending_send_hold) {
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  delivered = false;
+
+  std::vector<messaging::PendingSend> pending;
+  bool done = false;
+  auto ep = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep);
+
+  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+  auto msg = vt::makeMessage<TestMsg>();
+  pending.emplace_back(
+    theMsg()->sendMsg<TestMsg, handlerPing>(next, msg.get())
+  );
+
+  // Must be stamped with the current epoch
+  EXPECT_EQ(envelopeGetEpoch(msg->env), ep);
+
+  theMsg()->popEpoch(ep);
+  theTerm()->addAction(ep, [&done] { done = true; });
+  theTerm()->finishedEpoch(ep);
+
+  // It should not break out of this loop because of `done`, thus `k` is used to
+  // break out
+  int k = 0;
+  while (not done) {
+    k++;
+    vt::runScheduler();
+    if (k > 10) {
+      break;
+    }
+  }
+
+  // Epoch should not end with a valid pending send created in an live epoch
+  EXPECT_EQ(done, false);
+  EXPECT_EQ(delivered, false);
+
+  // Now we send the message off!
+  pending.clear();
+
+  do vt::runScheduler(); while (not done);
+
+  EXPECT_EQ(done, true);
+  EXPECT_EQ(delivered, true);
 }
 
-}}} /* end namespace vt::util::demangle */
-
-#endif /*INCLUDED_UTILS_DEMANGLE_GET_TYPE_NAME_H*/
+}}} // end namespace vt::tests::unit

@@ -1,0 +1,30 @@
+name: Docker Image CI
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
+    branches:
+      - develop
+      - 1.*
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Docker Build & Push
+        uses: jerray/publish-docker-action@master
+        with:
+            # Name of the Docker image
+            repository: lifflander1/vt
+            # Target Docker registry
+            registry: docker.io
+            auto_tag: true
+            # Docker registry username
+            username: ${{ secrets.DOCKER_USERNAME }}
+            # Docker registry password
+            password: ${{ secrets.DOCKER_PASSWORD }}
