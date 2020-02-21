@@ -67,7 +67,10 @@ enum SchedulerEvent {
   EndIdle            = 1,
   BeginIdleMinusTerm = 2,
   EndIdleMinusTerm   = 3,
-  SchedulerEventSize = 4
+  BeginSchedulerLoop = 4,
+  EndSchedulerLoop   = 5,
+
+  LastSchedulerEvent = 5,
 };
 
 struct Scheduler : runtime::component::Component<Scheduler> {
@@ -94,6 +97,16 @@ struct Scheduler : runtime::component::Component<Scheduler> {
 
   void scheduler(bool msg_only = false);
   void runProgress(bool msg_only = false);
+
+  /**
+   * \brief Runs the scheduler until a condition is met.
+   *
+   * Runs the scheduler until a condition is met.
+   * This form SHOULD be used instead of "while (..) { runScheduler(..) }"
+   * in all cases of nested scheduler loops, such as during a barrier,
+   * in order to ensure proper event unwinding and idle time tracking.
+   */
+  void runSchedulerWhile(std::function<bool()> cond);
 
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(

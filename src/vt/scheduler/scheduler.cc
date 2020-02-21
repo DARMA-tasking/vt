@@ -66,8 +66,10 @@ namespace vt { namespace sched {
 }
 
 Scheduler::Scheduler() {
-  event_triggers.resize(SchedulerEventType::SchedulerEventSize + 1);
-  event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
+  auto event_count = SchedulerEventType::LastSchedulerEvent + 1;
+  event_triggers.resize(event_count);
+  event_triggers_once.resize(event_count);
+
   progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
 }
 
@@ -245,6 +247,31 @@ void Scheduler::scheduler(bool msg_only) {
   if (not msg_only) {
     has_executed_ = true;
   }
+}
+
+void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
+  vtAssert(
+    action_depth_ == 0 or not is_idle,
+    "Nested schedulers never expected from idle context"
+  );
+
+  triggerEvent(SchedulerEventType::BeginSchedulerLoop);
+
+  while (cond()) {
+    runScheduler();
+  }
+
+  // At the end of a nested scheduler context, always ensure to enter into
+  // a non-idle state as the outer work resumes, even if the scheduler
+  // work queue is itself empty. That is, a nested scheduler should
+  // ONLY trigger an idle state during the duration of the scheduling loop.
+  // The opposite does not hold: idle is only entered when there is no work.
+  if (action_depth_ > 0 and is_idle) {
+    is_idle = false;
+    triggerEvent(SchedulerEventType::EndIdle);
+  }
+
+  triggerEvent(SchedulerEventType::EndSchedulerLoop);
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
