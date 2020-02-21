@@ -88,18 +88,18 @@ void Scheduler::enqueue(PriorityType priority, ActionType action) {
 }
 
 /*private*/
-bool Scheduler::runNextUnit() {
-  if (not work_queue_.empty()) {
-    auto elm = work_queue_.pop();
-    bool const is_term = elm.isTerm();
-    elm();
-    if (is_term) {
-      num_term_msgs_--;
-    }
-    return true;
-  } else {
-    return false;
+bool Scheduler::runWorkUnit(UnitType& work) {
+  bool const is_term = work.isTerm();
+
+  ++unit_run_depth_;
+  work();
+  --unit_run_depth_;
+
+  if (is_term) {
+    --num_term_msgs_;
   }
+
+  return unit_run_depth_ == 0;
 }
 
 /*private*/
@@ -191,16 +191,18 @@ void Scheduler::scheduler(bool msg_only) {
       is_idle_minus_term = false;
       triggerEvent(SchedulerEventType::EndIdleMinusTerm);
     }
-    if (is_idle and not work_queue_.empty()) {
+    if (is_idle) {
       is_idle = false;
       triggerEvent(SchedulerEventType::EndIdle);
     }
 
     processed_after_last_progress_++;
-    runNextUnit();
+
+    UnitType work = work_queue_.pop();
+    bool top_scheduler = runWorkUnit(work);
 
     // Enter idle state immediately after processing if relevant.
-    if (not is_idle and work_queue_.empty()) {
+    if (top_scheduler and not is_idle and work_queue_.empty()) {
       is_idle = true;
       triggerEvent(SchedulerEventType::BeginIdle);
     }
