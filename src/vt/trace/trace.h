@@ -91,11 +91,12 @@ struct Trace {
   using TraceConstantsType  = eTraceConstants;
   using TimeIntegerType     = int64_t;
   using TraceContainerType  = std::queue<LogType>;
-  using TraceStackType      = std::stack<LogType>;
+  // Although should be used mostly as a stack, vector is exposed to enable
+  // the use of a synthetic pop-push to maintain the stack around idle.
+  using TraceStackType      = std::vector<LogType>;
+  using EventHoldStackType = std::vector<int>;
 
   Trace();
-  Trace(std::string const& in_prog_name, std::string const& in_trace_name);
-
   virtual ~Trace();
 
   friend struct Log;
@@ -135,6 +136,9 @@ struct Trace {
     uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
     uint64_t const idx4 = 0
   );
+
+  void beginSchedulerLoop();
+  void endSchedulerLoop();
 
   void beginIdle(double const time = getCurrentTime());
   void endIdle(double const time = getCurrentTime());
@@ -203,9 +207,6 @@ struct Trace {
 
 private:
 
-  static void traceBeginIdleTrigger();
-  static void traceEndIdleTrigger();
-
   // Writes traces to file, optionally flushing.
   // The traces collection is modified.
   static void outputTraces(
@@ -241,6 +242,7 @@ private:
 private:
   TraceContainerType traces_;
   TraceStackType open_events_;
+  EventHoldStackType event_holds_;
   TraceEventIDType cur_event_   = 1;
   std::string prog_name_        = "";
   std::string trace_name_       = "";
