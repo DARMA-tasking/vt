@@ -72,6 +72,14 @@ struct RDMAable : BaseProxyT {
   vt::rdma::Handle<T, vt::rdma::HandleEnum::StaticSize, IndexT>
   makeHandleRDMA(IndexT idx, std::size_t size, bool is_uniform) const;
 
+  /**
+   * \brief Destroy an RDMA handle created for this collection
+   *
+   * \param[in] handle the handle to destroy
+   */
+  template <typename T, vt::rdma::HandleEnum E, typename IndexU>
+  void destroyHandleRDMA(vt::rdma::Handle<T,E,IndexU> handle) const;
+
 };
 
 }}} /* end namespace vt::vrt::collection */

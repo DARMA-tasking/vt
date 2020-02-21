@@ -186,6 +186,29 @@ void Manager::deleteHandleSetCollectiveObjGroup(HandleSet<T>& han) {
   SubType::destroyCollective(proxy);
 }
 
+template <typename T, HandleEnum E, typename IndexT>
+void Manager::deleteHandleCollection(Handle<T,E,IndexT>& han) {
+  using SubType = SubHandle<T,E,IndexT>;
+  auto proxy = objgroup::proxy::Proxy<SubType>{han.proxy_};
+  proxy.get()->deleteHandle();
+  debug_print(
+    rdma, node,
+    "deleteHandleCollection: num deleted={}, num active={}\n",
+    proxy.get()->getNumDeletedHandles(),
+    proxy.get()->getNumActiveHandles()
+  );
+  // If all of the handles mapped here are deleted, destroy the sub-handle
+  // manager
+  if (proxy.get()->getNumDeletedHandles() == proxy.get()->getNumActiveHandles()) {
+    debug_print(
+      rdma, node,
+      "deleteHandleCollection: deleting handle collection: num={}\n",
+      proxy.get()->getNumDeletedHandles()
+    );
+    SubType::destroyCollective(proxy);
+  }
+}
+
 // For now, this is static. Really it should be part of the objgroup and the
 // proxy should be available through the VT component
 template <typename T, HandleEnum E>

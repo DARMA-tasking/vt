@@ -69,6 +69,14 @@ RDMAable<ColT,IndexT,BaseProxyT>::makeHandleRDMA(
   >(proxy, size, is_uniform);
 }
 
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename T, vt::rdma::HandleEnum E, typename IndexU>
+void RDMAable<ColT,IndexT,BaseProxyT>::destroyHandleRDMA(
+  vt::rdma::Handle<T,E,IndexU> handle
+) const {
+  return vt::theHandle()->deleteHandleCollection(handle);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_RDMAABLE_RDMAABLE_IMPL_H*/

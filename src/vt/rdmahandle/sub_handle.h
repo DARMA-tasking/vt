@@ -149,6 +149,12 @@ public:
 
   std::size_t getNumHandles() const;
 
+  std::size_t getNumActiveHandles() const;
+
+  void deleteHandle();
+
+  std::size_t getNumDeletedHandles() const;
+
   std::size_t getCollectionExpected() const;
 
   void setCollectionExpected(std::size_t count);
@@ -192,6 +198,7 @@ protected:
   bool ordered_opt_ = true;
   std::unordered_map<IndexT, int> ordered_local_offset_;
   bool dense_start_with_zero_ = true;
+  std::size_t deleted_count_ = 0;
 };
 
 }} /* end namespace vt::rdma */

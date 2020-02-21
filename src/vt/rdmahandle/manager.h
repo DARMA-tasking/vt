@@ -201,6 +201,14 @@ public:
   template <typename T>
   void deleteHandleSetCollectiveObjGroup(HandleSet<T>& han);
 
+  /**
+   * \brief Destroy and garbage collect a handle from a collection
+   *
+   * \param[in] han the handle to destroy
+   */
+  template <typename T, HandleEnum E, typename IndexT>
+  void deleteHandleCollection(Handle<T,E,IndexT>& han);
+
   template <typename T, HandleEnum E>
   Holder<T,E>& getEntry(HandleKey const& key);
 

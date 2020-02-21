@@ -483,6 +483,21 @@ std::size_t SubHandle<T,E,IndexT>::getNumHandles() const {
 }
 
 template <typename T, HandleEnum E, typename IndexT>
+std::size_t SubHandle<T,E,IndexT>::getNumActiveHandles() const {
+  return sub_handles_.size();
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+void SubHandle<T,E,IndexT>::deleteHandle() {
+  deleted_count_++;
+}
+
+template <typename T, HandleEnum E, typename IndexT>
+std::size_t SubHandle<T,E,IndexT>::getNumDeletedHandles() const {
+  return deleted_count_;
+}
+
+template <typename T, HandleEnum E, typename IndexT>
 template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
 /*static*/ typename SubHandle<T,E,IndexT>::ProxyType
 SubHandle<T,E,IndexT>::construct(
