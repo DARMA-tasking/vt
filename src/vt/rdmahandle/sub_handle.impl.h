@@ -599,6 +599,13 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     for (auto&& h : sub_handles_) {
       cur_handles.push_back(h.first);
     }
+
+    debug_print(
+      rdma, node,
+      "checkChanged: cur_handles={}, in={}, out={}\n",
+      cur_handles.size(), migrate_in_.size(), migrate_out_.size()
+    );
+
     std::vector<IndexT> all_handles;
     // Union current with migrated in
     std::set_union(
@@ -606,12 +613,27 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
       migrate_in_.begin(), migrate_in_.end(),
       std::back_inserter(all_handles)
     );
+
+    debug_print(
+      rdma, node,
+      "checkChanged: all_handles={}, in={}, out={}\n",
+      all_handles.size(), migrate_in_.size(), migrate_out_.size()
+    );
+
     std::vector<IndexT> new_handles;
+    std::sort(all_handles.begin(), all_handles.end());
+    std::sort(migrate_out_.begin(), migrate_out_.end());
     // Minus off the ones migrated out
     std::set_difference(
       all_handles.begin(), all_handles.end(),
       migrate_out_.begin(), migrate_out_.end(),
       std::inserter(new_handles, new_handles.begin())
+    );
+
+    debug_print(
+      rdma, node,
+      "checkChanged: new_handles={}, in={}, out={}\n",
+      new_handles.size(), migrate_in_.size(), migrate_out_.size()
     );
 
     debug_print(
@@ -670,6 +692,12 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     for (auto&& h : new_handles_sized) {
       addLocalIndex(h.first, h.second);
     }
+
+    debug_print(
+      rdma, node,
+      "checkChanged: new_handles_sized={}, staged={}\n",
+      new_handles_sized.size(), sub_handles_staged_.size()
+    );
 
     // Destroy the old data handle
     proxy_.destroyHandleRDMA(data_handle_);
