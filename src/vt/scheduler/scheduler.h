@@ -116,7 +116,13 @@ struct Scheduler {
 
 private:
 
-  bool runNextUnit();
+  /**
+   * \brief Executes a specific work unit.
+   *
+   * Returns true if returning from the TOP LEVEL scheduler running.
+   * (Nested schedulers can be run as a result of barriers, etc.)
+   */
+  bool runWorkUnit(UnitType& work);
   bool progressMsgOnlyImpl();
   bool progressImpl();
 
@@ -131,6 +137,8 @@ private:
   bool has_executed_      = false;
   bool is_idle            = true;
   bool is_idle_minus_term = true;
+  // The depth of work action currently executing.
+  std::size_t unit_run_depth_ = 0;
 
   // The number of termination messages currently in the queue---they weakly
   // imply idleness for the stake of termination
