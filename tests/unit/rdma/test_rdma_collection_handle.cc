@@ -154,6 +154,25 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
     for (int i = 0; i < 8; i++) {
       EXPECT_EQ(ptr[i], next_x * 100 + idx.y());
     }
+    auto proxy = this->getCollectionProxy();
+    auto cb = theCB()->makeBcast<
+      TestCol<T>,ReduceMsg,&TestCol<T>::afterCheck
+    >(proxy);
+    auto rmsg = makeMessage<ReduceMsg>();
+    proxy.reduce(rmsg.get(),cb);
+  }
+
+  void afterCheck(ReduceMsg*) {
+    auto idx = this->getIndex();
+    auto proxy = this->getCollectionProxy();
+    proxy[idx].template send<
+      typename TestCol<T>::TestMsg, &TestCol<T>::afterCheckPost
+    >();
+  }
+
+  void afterCheckPost(TestMsg*) {
+    auto proxy = this->getCollectionProxy();
+    proxy.destroyHandleRDMA(handle_);
   }
 
   template <typename SerializerT>
