@@ -87,6 +87,7 @@ void Scheduler::enqueue(PriorityType priority, ActionType action) {
 # endif
 }
 
+/*private*/
 bool Scheduler::runNextUnit() {
   if (not work_queue_.empty()) {
     auto elm = work_queue_.pop();
@@ -101,6 +102,7 @@ bool Scheduler::runNextUnit() {
   }
 }
 
+/*private*/
 bool Scheduler::progressImpl() {
   bool const msg_sch = theMsg()->progress();
   bool const evt_sch = theEvent()->progress();
@@ -123,6 +125,7 @@ bool Scheduler::progressImpl() {
   return scheduled_work;
 }
 
+/*private*/
 bool Scheduler::progressMsgOnlyImpl() {
   return theMsg()->progress() or theEvent()->progress();
 }
@@ -243,12 +246,6 @@ void Scheduler::registerTriggerOnce(
     event_triggers.size() >= event, "Must be large enough to hold this event"
   );
   event_triggers_once[event].push_back(trigger);
-}
-
-void Scheduler::schedulerForever() {
-  while (true) {
-    scheduler();
-  }
 }
 
 }} //end namespace vt::scheduler

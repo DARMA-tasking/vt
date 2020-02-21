@@ -89,17 +89,15 @@ struct Scheduler {
     int32_t processed_since_last_progress, TimeType time_since_last_progress
   ) const;
 
-  bool runNextUnit();
-  bool progressMsgOnlyImpl();
   void scheduler(bool msg_only = false);
   void runProgress(bool msg_only = false);
-  bool progressImpl();
-  void schedulerForever();
+
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
     SchedulerEventType const& event, TriggerType trigger
   );
   void triggerEvent(SchedulerEventType const& event);
+
   bool hasSchedRun() const { return has_executed_; }
 
   void enqueue(ActionType action);
@@ -115,6 +113,12 @@ struct Scheduler {
 
   bool isIdle() const { return work_queue_.empty(); }
   bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
+
+private:
+
+  bool runNextUnit();
+  bool progressMsgOnlyImpl();
+  bool progressImpl();
 
 private:
 
