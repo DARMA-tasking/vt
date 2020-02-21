@@ -92,17 +92,15 @@ struct Scheduler : runtime::component::Component<Scheduler> {
     int32_t processed_since_last_progress, TimeType time_since_last_progress
   ) const;
 
-  bool runNextUnit();
-  bool progressMsgOnlyImpl();
   void scheduler(bool msg_only = false);
   void runProgress(bool msg_only = false);
-  bool progressImpl();
-  void schedulerForever();
+
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
     SchedulerEventType const& event, TriggerType trigger
   );
   void triggerEvent(SchedulerEventType const& event);
+
   bool hasSchedRun() const { return has_executed_; }
 
   void enqueue(ActionType action);
@@ -123,6 +121,18 @@ struct Scheduler : runtime::component::Component<Scheduler> {
 
 private:
 
+  /**
+   * \brief Executes a specific work unit.
+   *
+   * Returns true if returning from the TOP LEVEL scheduler running.
+   * (Nested schedulers can be run as a result of barriers, etc.)
+   */
+  bool runWorkUnit(UnitType& work);
+  bool progressMsgOnlyImpl();
+  bool progressImpl();
+
+private:
+
 # if backend_check_enabled(priorities)
   PriorityQueue<UnitType> work_queue_;
 # else
@@ -132,6 +142,8 @@ private:
   bool has_executed_      = false;
   bool is_idle            = true;
   bool is_idle_minus_term = true;
+  // The depth of work action currently executing.
+  unsigned int action_depth_ = 0;
 
   // The number of termination messages currently in the queue---they weakly
   // imply idleness for the stake of termination
@@ -149,7 +161,7 @@ private:
   std::size_t last_memory_usage_poll_ = 0;
 };
 
-}} //end namespace vt::scheduler
+}} //end namespace vt::sched
 
 #include "vt/scheduler/scheduler.impl.h"
 
