@@ -669,11 +669,13 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
     "Event must exist that was logged"
   );
 
-  // close any idle event as soon as we encounter any other type of event
+  // Close any idle event as soon as we encounter any other type of event.
+  // Take the time of the event being emitted as our own as it has already
+  // been created (in the past).
   if (idle_begun_ and
       log.type != TraceConstantsType::BeginIdle and
       log.type != TraceConstantsType::EndIdle) {
-    endIdle();
+    endIdle(log.time);
   }
 
   switch (log.type) {
