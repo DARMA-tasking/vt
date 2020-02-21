@@ -166,7 +166,7 @@ public:
   ComponentPtrType<group::GroupManager> theGroup;
   ComponentPtrType<pipe::PipeManager> theCB;
   ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
-  ObjGroupPtrType<rdma::Manager> theHandle;
+  ObjGroupPtrType<rdma::Manager> theHandleRDMA;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;

@@ -1111,7 +1111,7 @@ void Runtime::initializeComponents() {
   theLocMan = std::make_unique<location::LocationManager>();
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
-  theHandle = rdma::Manager::construct().get();
+  theHandleRDMA = rdma::Manager::construct().get();
 
   #if backend_check_enabled(trace_enabled)
     theTrace->initialize();
@@ -1234,7 +1234,7 @@ void Runtime::finalizeComponents() {
   // Reverse order destruction of runtime components.
 
   // Advanced components: may communicate during destruction
-  theHandle->destroy(); theHandle = nullptr;
+  theHandleRDMA->destroy(); theHandleRDMA = nullptr;
   theCollection = nullptr;
   theVirtualManager = nullptr;
   theLocMan = nullptr;

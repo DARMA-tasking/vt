@@ -166,7 +166,7 @@ template <typename T>
 vt::rdma::Handle<T> Proxy<ObjT>::makeHandleRDMA(
   std::size_t size, bool is_uniform
 ) const {
-  return vt::theHandle()->makeHandleCollectiveObjGroup<
+  return vt::theHandleRDMA()->makeHandleCollectiveObjGroup<
     T, rdma::HandleEnum::StaticSize
   >(*this, size, is_uniform);
 }
@@ -174,7 +174,7 @@ vt::rdma::Handle<T> Proxy<ObjT>::makeHandleRDMA(
 template <typename ObjT>
 template <typename T>
 void Proxy<ObjT>::destroyHandleRDMA(vt::rdma::Handle<T> handle) const {
-  return vt::theHandle()->deleteHandleCollectiveObjGroup<
+  return vt::theHandleRDMA()->deleteHandleCollectiveObjGroup<
     T, rdma::HandleEnum::StaticSize
   >(handle);
 }
@@ -187,7 +187,7 @@ vt::rdma::HandleSet<T> Proxy<ObjT>::makeHandleSetRDMA(
   bool dense_start_at_zero,
   bool is_uniform
 ) const {
-  return vt::theHandle()->makeHandleSetCollectiveObjGroup<
+  return vt::theHandleRDMA()->makeHandleSetCollectiveObjGroup<
     T, rdma::HandleEnum::StaticSize
   >(*this, max_elm, map, dense_start_at_zero, is_uniform);
 }
@@ -195,7 +195,7 @@ vt::rdma::HandleSet<T> Proxy<ObjT>::makeHandleSetRDMA(
 template <typename ObjT>
 template <typename T>
 void Proxy<ObjT>::destroyHandleSetRDMA(vt::rdma::HandleSet<T> set) const {
-  return vt::theHandle()->deleteHandleSetCollectiveObjGroup<T>(set);
+  return vt::theHandleRDMA()->deleteHandleSetCollectiveObjGroup<T>(set);
 
 }
 

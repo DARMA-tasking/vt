@@ -55,7 +55,7 @@ struct Manager;
 
 namespace vt {
 
-extern rdma::Manager* theHandle();
+extern rdma::Manager* theHandleRDMA();
 
 } // end namespace vt
 

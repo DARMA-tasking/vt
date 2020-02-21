@@ -57,14 +57,14 @@ using isNode = typename std::enable_if_t<std::is_same<U,vt::NodeType>::value>;
 
 template <typename T, HandleEnum E, typename I>
 bool Handle<T,E,I,isNode<I>>::ready() const {
-  return vt::theHandle()->getEntry<T,E>(key_).ready();
+  return vt::theHandleRDMA()->getEntry<T,E>(key_).ready();
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::get(
   vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l
 ) {
-  return vt::theHandle()->getEntry<T,E>(key_).get(node, l, ptr, len, offset + this->hoff());
+  return vt::theHandleRDMA()->getEntry<T,E>(key_).get(node, l, ptr, len, offset + this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
@@ -72,7 +72,7 @@ typename Handle<T,E,I,isNode<I>>::RequestType
 Handle<T,E,I,isNode<I>>::rget(
   vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l
 ) {
-    return vt::theHandle()->getEntry<T,E>(key_).rget(node, l, ptr, len, offset + this->hoff());
+    return vt::theHandleRDMA()->getEntry<T,E>(key_).rget(node, l, ptr, len, offset + this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
@@ -87,7 +87,7 @@ typename Handle<T,E,I,isNode<I>>::RequestType
 Handle<T,E,I,isNode<I>>::rget(vt::NodeType node, std::size_t len, int offset, Lock l) {
   if (this->getBuffer() == nullptr) {
     auto ptr = std::make_unique<T[]>(len);
-    auto r = vt::theHandle()->getEntry<T,E>(key_).rget(
+    auto r = vt::theHandleRDMA()->getEntry<T,E>(key_).rget(
       node, l, &ptr[0], len, offset + this->hoff()
     );
     r.addAction([cptr=std::move(ptr),actions=this->actions_]{
@@ -97,7 +97,7 @@ Handle<T,E,I,isNode<I>>::rget(vt::NodeType node, std::size_t len, int offset, Lo
     });
     return r;
   } else {
-    auto r = vt::theHandle()->getEntry<T,E>(key_).rget(
+    auto r = vt::theHandleRDMA()->getEntry<T,E>(key_).rget(
       node, l, this->user_buffer_, len, offset + this->hoff()
     );
     r.addAction([buffer=this->user_buffer_,actions=this->actions_]{
@@ -113,7 +113,7 @@ template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::put(
   vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l
 ) {
-  return vt::theHandle()->getEntry<T,E>(key_).put(node, l, ptr, len, offset + this->hoff());
+  return vt::theHandleRDMA()->getEntry<T,E>(key_).put(node, l, ptr, len, offset + this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
@@ -121,14 +121,14 @@ typename Handle<T,E,I,isNode<I>>::RequestType
 Handle<T,E,I,isNode<I>>::rput(
   vt::NodeType node, T* ptr, std::size_t len, int offset, Lock l
 ) {
-  return vt::theHandle()->getEntry<T,E>(key_).rput(node, l, ptr, len, offset + this->hoff());
+  return vt::theHandleRDMA()->getEntry<T,E>(key_).rput(node, l, ptr, len, offset + this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::accum(
   vt::NodeType node, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l
 ) {
-  return vt::theHandle()->getEntry<T,E>(key_).accum(node, l, ptr, len, offset + this->hoff(), op);
+  return vt::theHandleRDMA()->getEntry<T,E>(key_).accum(node, l, ptr, len, offset + this->hoff(), op);
 }
 
 template <typename T, HandleEnum E, typename I>
@@ -136,80 +136,80 @@ typename Handle<T,E,I,isNode<I>>::RequestType
 Handle<T,E,I,isNode<I>>::raccum(
   vt::NodeType node, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l
 ) {
-  return vt::theHandle()->getEntry<T,E>(key_).raccum(node, l, ptr, len, offset + this->hoff(), op);
+  return vt::theHandleRDMA()->getEntry<T,E>(key_).raccum(node, l, ptr, len, offset + this->hoff(), op);
 }
 
 template <typename T, HandleEnum E, typename I>
 T Handle<T,E,I,isNode<I>>::fetchOp(
   vt::NodeType node, T ptr, int offset, MPI_Op op, Lock l
 ) {
-  return vt::theHandle()->getEntry<T,E>(key_).fetchOp(node, l, ptr, offset, op);
+  return vt::theHandleRDMA()->getEntry<T,E>(key_).fetchOp(node, l, ptr, offset, op);
 }
 
 template <typename T, HandleEnum E, typename I>
 std::size_t Handle<T,E,I,isNode<I>>::getSize(vt::NodeType node) {
-  if (vt::theHandle()->getEntry<T,E>(key_).isUniform()) {
+  if (vt::theHandleRDMA()->getEntry<T,E>(key_).isUniform()) {
     return this->size();
   } else {
-    return vt::theHandle()->getEntry<T,E>(key_).getSize(node);
+    return vt::theHandleRDMA()->getEntry<T,E>(key_).getSize(node);
   }
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::readExclusive(std::function<void(T const*)> fn) {
-  vt::theHandle()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, this->hoff());
+  vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::readShared(std::function<void(T const*)> fn) {
-    vt::theHandle()->getEntry<T,E>(key_).access(Lock::Shared, fn, this->hoff());
+    vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Shared, fn, this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::modifyExclusive(std::function<void(T*)> fn) {
-    vt::theHandle()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, this->hoff());
+    vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::modifyShared(std::function<void(T*)> fn) {
-    vt::theHandle()->getEntry<T,E>(key_).access(Lock::Shared, fn, this->hoff());
+    vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Shared, fn, this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::access(
   Lock l, std::function<void(T*)> fn, std::size_t offset
 ) {
-    vt::theHandle()->getEntry<T,E>(key_).access(l, fn, this->hoff() +  offset);
+    vt::theHandleRDMA()->getEntry<T,E>(key_).access(l, fn, this->hoff() +  offset);
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::fence(int assert) {
-  vt::theHandle()->getEntry<T,E>(key_).fence(assert);
+  vt::theHandleRDMA()->getEntry<T,E>(key_).fence(assert);
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::sync() {
-  vt::theHandle()->getEntry<T,E>(key_).sync();
+  vt::theHandleRDMA()->getEntry<T,E>(key_).sync();
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::flush(vt::NodeType node) {
-  vt::theHandle()->getEntry<T,E>(key_).flush(node);
+  vt::theHandleRDMA()->getEntry<T,E>(key_).flush(node);
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::flushLocal(vt::NodeType node) {
-  vt::theHandle()->getEntry<T,E>(key_).flushLocal(node);
+  vt::theHandleRDMA()->getEntry<T,E>(key_).flushLocal(node);
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::flushAll() {
-  vt::theHandle()->getEntry<T,E>(key_).flushAll();
+  vt::theHandleRDMA()->getEntry<T,E>(key_).flushAll();
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::lock(Lock l, vt::NodeType node) {
-  this->lock_ = vt::theHandle()->getEntry<T,E>(key_).lock(l, node);
+  this->lock_ = vt::theHandleRDMA()->getEntry<T,E>(key_).lock(l, node);
 }
 
 template <typename T, HandleEnum E, typename I>

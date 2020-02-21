@@ -64,7 +64,7 @@ RDMAable<ColT,IndexT,BaseProxyT>::makeHandleRDMA(
 ) const {
   auto col_proxy = this->getProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,idx);
-  return vt::theHandle()->makeCollectionHandles<
+  return vt::theHandleRDMA()->makeCollectionHandles<
     T, rdma::HandleEnum::StaticSize, ColT
   >(proxy, size, is_uniform);
 }
@@ -74,7 +74,7 @@ template <typename T, vt::rdma::HandleEnum E, typename IndexU>
 void RDMAable<ColT,IndexT,BaseProxyT>::destroyHandleRDMA(
   vt::rdma::Handle<T,E,IndexU> handle
 ) const {
-  return vt::theHandle()->deleteHandleCollection(handle);
+  return vt::theHandleRDMA()->deleteHandleCollection(handle);
 }
 
 }}} /* end namespace vt::vrt::collection */
