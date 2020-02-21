@@ -221,7 +221,8 @@ TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
 }
 
 using RDMACollectionTestTypes = testing::Types<
-  int
+  int,
+  double
 >;
 
 REGISTER_TYPED_TEST_CASE_P(
