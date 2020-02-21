@@ -831,7 +831,8 @@ void Trace::writeTracesFile(int flush) {
     );
 
     outputTraces(
-      log_file_.get(), traces_, start_time_, flush
+      log_file_.get(), traces_, start_time_, flush,
+      /*in-out*/ last_written_event_time_
     );
     trace_write_count_ += to_write;
   }
@@ -852,7 +853,8 @@ void Trace::writeTracesFile(int flush) {
 
 /*static*/ void Trace::outputTraces(
   vt_gzFile* file, TraceContainerType& traces,
-  double start_time, int flush
+  double start_time, int flush,
+  /*in-out*/ TimeIntegerType& last_written_event_time
 ) {
   auto const num_nodes = theContext()->getNumNodes();
   gzFile gzfile = file->file_type;
@@ -860,7 +862,7 @@ void Trace::writeTracesFile(int flush) {
   while (not traces.empty()) {
     LogType const& log = traces.front();
 
-    auto const& converted_time = timeToInt(log.time - start_time);
+    TimeIntegerType converted_time = timeToInt(log.time - start_time);
     auto const type = static_cast<
       std::underlying_type<decltype(log.type)>::type
     >(log.type);
@@ -870,6 +872,12 @@ void Trace::writeTracesFile(int flush) {
       or TraceRegistry::getEvent(log.ep).theEventId() not_eq no_trace_entry_id,
       "Event must exist that was logged"
     );
+
+    vtAssert(
+      converted_time >= last_written_event_time,
+      "Events must be written in proper time order."
+    );
+    last_written_event_time = converted_time;
 
     TraceEntrySeqType event_seq_id = log.ep == no_trace_entry_id
       ? 0 // no_trace_entry_seq != 0 (perhaps shift offsets..).

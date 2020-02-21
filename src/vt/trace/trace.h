@@ -209,7 +209,8 @@ private:
   // The traces collection is modified.
   static void outputTraces(
     vt_gzFile* file, TraceContainerType& traces,
-    double start_time, int flush
+    double start_time, int flush,
+    /*in-out*/ TimeIntegerType& last_written_event_time
   );
   static void outputHeader(
     vt_gzFile* file, NodeType const node, double const start
@@ -253,6 +254,7 @@ private:
   std::unique_ptr<vt_gzFile> log_file_;
   bool wrote_sts_file_          = false;
   size_t trace_write_count_     = 0;
+  TimeIntegerType last_written_event_time_ = 0;
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
   bool trace_enabled_cur_phase_ = true;
 };
