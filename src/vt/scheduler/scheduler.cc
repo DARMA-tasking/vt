@@ -180,44 +180,31 @@ void Scheduler::scheduler(bool msg_only) {
   }
 
   /*
-   * Handle cases when the system goes from term-idle to non-term-idle; trigger
-   * user registered listeners
-   */
-  if (num_term_msgs_ == work_queue_.size()) {
-    if (not is_idle_minus_term) {
-      is_idle_minus_term = true;
-      triggerEvent(SchedulerEventType::BeginIdleMinusTerm);
-    }
-  } else {
-    if (is_idle_minus_term) {
-      is_idle_minus_term = false;
-      triggerEvent(SchedulerEventType::EndIdleMinusTerm);
-    }
-  }
-
-  /*
-   * Handle cases when the system goes from completely idle or not; trigger user
-   * registered listeners
-   */
-  if (work_queue_.empty()) {
-    if (not is_idle) {
-      is_idle = true;
-      // Trigger any registered listeners on idle
-      triggerEvent(SchedulerEventType::BeginIdle);
-    }
-  } else {
-    if (is_idle) {
-      is_idle = false;
-      triggerEvent(SchedulerEventType::EndIdle);
-    }
-  }
-
-  /*
    * Run a work unit!
    */
   if (not work_queue_.empty()) {
+    // Leave idle states are before any potential processing.
+    if (is_idle_minus_term and num_term_msgs_ not_eq work_queue_.size()) {
+      is_idle_minus_term = false;
+      triggerEvent(SchedulerEventType::EndIdleMinusTerm);
+    }
+    if (is_idle and not work_queue_.empty()) {
+      is_idle = false;
+      triggerEvent(SchedulerEventType::EndIdle);
+    }
+
     processed_after_last_progress_++;
     runNextUnit();
+
+    // Enter idle state immediately after processing if relevant.
+    if (not is_idle and not work_queue_.empty()) {
+      is_idle = true;
+      triggerEvent(SchedulerEventType::BeginIdle);
+    }
+    if (not is_idle_minus_term and num_term_msgs_ == work_queue_.size()) {
+      is_idle_minus_term = true;
+      triggerEvent(SchedulerEventType::BeginIdleMinusTerm);
+    }
   }
 
   if (not msg_only) {
