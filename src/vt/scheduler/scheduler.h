@@ -52,6 +52,7 @@
 #include "vt/scheduler/work_unit.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/timing/timing.h"
+#include "vt/trace/trace.h"
 
 #include <cassert>
 #include <vector>
@@ -68,6 +69,8 @@ enum SchedulerEvent {
   EndIdleMinusTerm   = 3,
   SchedulerEventSize = 4
 };
+
+struct NestedSchedulerRunner;
 
 struct Scheduler {
   using SchedulerEventType   = SchedulerEvent;
@@ -91,6 +94,17 @@ struct Scheduler {
 
   void scheduler(bool msg_only = false);
   void runProgress(bool msg_only = false);
+
+  /**
+   * \brief Obtain a nested scheduler.
+   *
+   * A nested scheduler that can be used for a local BLOCKING poll.
+   * The scheduler shares the same events as the global scheduler.
+   *
+   * The nested scheduler should be disposed as soon as usages are finished.
+   * The nested scheduler should not be moved or copied to different scopes.
+   */
+  NestedSchedulerRunner beginNestedScheduling();
 
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
@@ -138,7 +152,7 @@ private:
   bool is_idle            = true;
   bool is_idle_minus_term = true;
   // The depth of work action currently executing.
-  std::size_t unit_run_depth_ = 0;
+  unsigned int unit_run_depth_ = 0;
 
   // The number of termination messages currently in the queue---they weakly
   // imply idleness for the stake of termination
@@ -150,6 +164,36 @@ private:
   TimeType last_progress_time_ = 0.0;
   bool progress_time_enabled_ = false;
   int32_t processed_after_last_progress_ = 0;
+};
+
+/**
+  * \brief Facilitates helping with nested scheduling contexts.
+  *
+  * This is a Resource Acquisition type that ensures pre/post
+  * state cleanup when invoking a scheduler in a nested context.
+  * It should be destructed immediately after scheduling.
+  */
+struct NestedSchedulerRunner {
+  NestedSchedulerRunner(unsigned int in_sched_depth);
+
+  NestedSchedulerRunner(NestedSchedulerRunner const&) = default;
+  NestedSchedulerRunner& operator=(NestedSchedulerRunner const&) = default;
+
+  ~NestedSchedulerRunner();
+
+  /**
+   * \brief Invokes one cycle of the scheduler.
+   *
+   * Returns false on VT termination.
+   */
+  bool runScheduler();
+
+private:
+  unsigned int sched_depth_;
+
+#if backend_check_enabled(trace_enabled)
+  trace::TraceProcessingTag processing_event_;
+#endif
 };
 
 }} //end namespace vt::scheduler
