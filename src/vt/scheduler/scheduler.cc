@@ -262,7 +262,9 @@ SchedulerRunner::SchedulerRunner(
 }
 
 SchedulerRunner::~SchedulerRunner() {
+#if backend_check_enabled(trace_enabled)
   theTrace()->endProcessing(processing_event_);
+#endif
 }
 
 bool SchedulerRunner::runScheduler() {
