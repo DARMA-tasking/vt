@@ -132,8 +132,10 @@ void Barrier::waitBarrier(
 
   barrierUp(is_named, is_wait, barrier, skip_term);
 
-  if (not barrier_state.released) {
-    auto sched = theSched()->beginNestedScheduling();
+  { // blocking scheduler loop
+    auto sched = theSched()->beginScheduling(
+      sched::SchedulerTypeID::BarrierWait
+    );
     while (not barrier_state.released) {
       sched.runScheduler();
       if (poll_action) {

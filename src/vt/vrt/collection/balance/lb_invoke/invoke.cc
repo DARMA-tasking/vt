@@ -169,8 +169,10 @@ void LBManager::waitLBCollective() {
   //
   theTerm()->produce();
 
-  if (synced_in_lb_) {
-    auto sched = theSched()->beginNestedScheduling();
+  { // blocking scheduler loop
+    auto sched = theSched()->beginScheduling(
+      sched::SchedulerTypeID::LbWaitCollective
+    );
     while (synced_in_lb_) {
       sched.runScheduler();
     }
