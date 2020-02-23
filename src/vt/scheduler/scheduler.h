@@ -70,7 +70,29 @@ enum SchedulerEvent {
   SchedulerEventSize = 4
 };
 
-struct NestedSchedulerRunner;
+/**
+ * \brief The type of the blocking scheduler loop being run.
+ *
+ * Values less than 1024 are reserved for internal VT usages.
+ */
+enum struct SchedulerTypeID : uint32_t {
+  // Core
+  BarrierWait = 100,
+  // Termination
+  TermRooted = 200,
+  TermCollective = 201,
+  TermEpochGraph = 202,
+  // VRT / Collection
+  CollectionConstruct = 300,
+  // Load Balancing
+  LbWaitCollective = 400,
+  LbGossipInform = 401,
+  LbGossipDecide = 402,
+  // Misc. support
+  TraceSpecLoading = 500
+};
+
+struct SchedulerRunner;
 
 struct Scheduler {
   using SchedulerEventType   = SchedulerEvent;
@@ -96,15 +118,24 @@ struct Scheduler {
   void runProgress(bool msg_only = false);
 
   /**
-   * \brief Obtain a nested scheduler.
+   * \brief Obtain a scheduler runner.
    *
-   * A nested scheduler that can be used for a local BLOCKING poll.
-   * The scheduler shares the same events as the global scheduler.
+   * A scheduler that can be used for a local BLOCKING poll.
+   * The returnted scheduler shares the same events as the global scheduler.
    *
-   * The nested scheduler should be disposed as soon as usages are finished.
-   * The nested scheduler should not be moved or copied to different scopes.
+   * This can be used in place of the the standard vt::runScheduler()
+   * and SHOULD be used in all library code outside of the primary scheduling
+   * loop (which can remain unchanged). In particular, using a scheduler
+   * runner appropriately emits diagnotic tracing events as relevant.
+   *
+   * The scheduler uses RAII and should be destructed as soon
+   * as the usage (eg. scheduler loop) is finished. The object should not
+   * be moved or copied to different contexts.
+   *
+   * \param scheduler_tag - Tag value to write to trace data for additional context.
+   *                        Values less than 1024 are reserved for internal VT usages.
    */
-  NestedSchedulerRunner beginNestedScheduling();
+  SchedulerRunner beginScheduling(SchedulerTypeID scheduler_tag);
 
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
@@ -173,13 +204,13 @@ private:
   * state cleanup when invoking a scheduler in a nested context.
   * It should be destructed immediately after scheduling.
   */
-struct NestedSchedulerRunner {
-  NestedSchedulerRunner(unsigned int in_sched_depth);
+struct SchedulerRunner {
+  SchedulerRunner(unsigned int in_sched_depth, SchedulerTypeID in_sched_tag);
 
-  NestedSchedulerRunner(NestedSchedulerRunner const&) = default;
-  NestedSchedulerRunner& operator=(NestedSchedulerRunner const&) = default;
+  SchedulerRunner(SchedulerRunner const&) = default;
+  SchedulerRunner& operator=(SchedulerRunner const&) = default;
 
-  ~NestedSchedulerRunner();
+  ~SchedulerRunner();
 
   /**
    * \brief Invokes one cycle of the scheduler.
@@ -190,13 +221,14 @@ struct NestedSchedulerRunner {
 
 private:
   unsigned int sched_depth_;
+  SchedulerTypeID sched_tag_;
 
 #if backend_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_event_;
 #endif
 };
 
-}} //end namespace vt::scheduler
+}} //end namespace vt::sched
 
 #include "vt/scheduler/scheduler.impl.h"
 
