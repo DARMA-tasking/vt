@@ -132,10 +132,13 @@ void Barrier::waitBarrier(
 
   barrierUp(is_named, is_wait, barrier, skip_term);
 
-  while (not barrier_state.released) {
-    vt::runScheduler();
-    if (poll_action) {
-      poll_action();
+  if (not barrier_state.released) {
+    auto sched = theSched()->beginNestedScheduling();
+    while (not barrier_state.released) {
+      sched.runScheduler();
+      if (poll_action) {
+        poll_action();
+      }
     }
   }
 

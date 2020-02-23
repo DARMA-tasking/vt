@@ -1820,8 +1820,11 @@ CollectionManager::constructCollectiveMap(
   // Wait for construction to finish before we release control to the user; this
   // ensures that other parts of the system do not migrate elements until the
   // group construction is complete
-  while (constructed_.find(proxy) == constructed_.end()) {
-    vt::runScheduler();
+  if (constructed_.find(proxy) == constructed_.end()) {
+    auto sched = theSched()->beginNestedScheduling();
+    while (constructed_.find(proxy) == constructed_.end()) {
+      sched.runScheduler();
+    }
   }
 
   debug_print(

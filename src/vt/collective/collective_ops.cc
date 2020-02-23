@@ -95,6 +95,7 @@ void CollectiveAnyOps<instance>::scheduleThenFinalize(
   bool const has_rt = in_rt != nullptr;
   auto rt_use = has_rt ? in_rt.unsafe() : curRT;
 
+  // Assumed to be top-level scheduler.
   auto sched_fn = [=]{
     while (not rt_use->isTerminated()) {
       runScheduler();
