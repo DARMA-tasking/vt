@@ -192,8 +192,11 @@ void GossipLB::inform() {
 
   theTerm()->finishedEpoch(propagate_epoch);
 
-  while (not inform_done) {
-    vt::runScheduler();
+  if (not inform_done) {
+    auto sched = theSched()->beginNestedScheduling();
+    while (not inform_done) {
+      sched.runScheduler();
+    }
   }
 
   debug_print(
@@ -457,8 +460,11 @@ void GossipLB::decide() {
 
   theTerm()->finishedEpoch(lazy_epoch);
 
-  while (not decide_done) {
-    vt::runScheduler();
+  if (not decide_done) {
+    auto sched = theSched()->beginNestedScheduling();
+    while (not decide_done) {
+      sched.runScheduler();
+    }
   }
 }
 

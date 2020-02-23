@@ -168,9 +168,14 @@ void LBManager::waitLBCollective() {
   // The invocation should only happen collectively across the whole all nodes.
   //
   theTerm()->produce();
-  while (synced_in_lb_) {
-    vt::runScheduler();
+
+  if (synced_in_lb_) {
+    auto sched = theSched()->beginNestedScheduling();
+    while (synced_in_lb_) {
+      sched.runScheduler();
+    }
   }
+
   synced_in_lb_ = true;
   theTerm()->consume();
 

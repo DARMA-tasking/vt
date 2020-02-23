@@ -141,9 +141,14 @@ void Trace::loadAndBroadcastSpec() {
       spec_ptr->parse();
       spec_ptr->broadcastSpec();
     }
-    while (not spec_proxy.get()->specReceived()) {
-      vt::runScheduler();
+
+    if (not spec_proxy.get()->specReceived()) {
+      auto sched = theSched()->beginNestedScheduling();
+      while (not spec_proxy.get()->specReceived()) {
+        sched.runScheduler();
+      }
     }
+
     theTerm()->consume();
     spec_proxy_ = spec_proxy.getProxy();
 
