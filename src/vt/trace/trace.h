@@ -66,12 +66,25 @@ namespace vt { namespace trace {
 
 struct vt_gzFile;
 
-/// Tracking information for beginProcessing/endProcessing.
+struct Trace;
+
+/**
+ * \brief Support pairing 'end' and 'begin' trace calls.
+ */
 struct TraceProcessingTag {
 
   TraceProcessingTag() = default;
   TraceProcessingTag(TraceProcessingTag const&) = default;
   TraceProcessingTag& operator=(TraceProcessingTag const&) = default;
+
+  /**
+   * \brief Tracking a 'begin' event?
+   *
+   * If not tracking an event, there is nothing to 'end'.
+   */
+  inline bool hasEvent() const {
+    return ep_ not_eq trace::no_trace_entry_id;
+  }
 
   friend struct Trace;
 
@@ -116,10 +129,21 @@ struct Trace {
   TraceProcessingTag beginProcessing(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     TraceEventIDType const event, NodeType const from_node,
-    double const time = getCurrentTime(),
-    uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
-    uint64_t const idx4 = 0
+    uint64_t const idx1, uint64_t const idx2,
+    uint64_t const idx3, uint64_t const idx4,
+    double const time = getCurrentTime()
   );
+
+  TraceProcessingTag beginProcessing(
+    TraceEntryIDType const ep, TraceMsgLenType const len,
+    TraceEventIDType const event, NodeType const from_node,
+    double const time = getCurrentTime(),
+    uint64_t const idx1 = 0, uint64_t const idx2 = 0,
+    uint64_t const idx3 = 0, uint64_t const idx4 = 0
+  ) {
+    // Call overload with unifrom trailing-time.
+    return beginProcessing(ep, len, event, from_node, idx1, idx2, idx3, idx4, time);
+  }
 
   /// Finalize a paired event.
   /// The processing_tag value comes from beginProcessing.

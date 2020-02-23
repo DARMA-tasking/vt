@@ -437,9 +437,10 @@ void Trace::addUserEventBracketedManual(
 
 TraceProcessingTag Trace::beginProcessing(
   TraceEntryIDType const ep, TraceMsgLenType const len,
-  TraceEventIDType const event, NodeType const from_node, double const time,
-  uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
-  uint64_t const idx4
+  TraceEventIDType const event, NodeType const from_node,
+  uint64_t const idx1, uint64_t const idx2,
+  uint64_t const idx3, uint64_t const idx4,
+  double const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return TraceProcessingTag{};
@@ -469,14 +470,13 @@ void Trace::endProcessing(
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
+  // Allow no-op cases (ie. beginProcessing disabled)
+  if (not processing_tag.hasEvent()) {
+    return;
+  }
 
   TraceEntryIDType ep = processing_tag.ep_;
   TraceEventIDType event = processing_tag.event_;
-
-  // Allow no-op cases (ie. beginProcessing disabled)
-  if (ep == trace::no_trace_entry_id) {
-    return;
-  }
 
   vtAssert(
     not open_events_.empty()

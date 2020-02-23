@@ -217,8 +217,10 @@ void Scheduler::scheduler(bool msg_only) {
   }
 }
 
-NestedSchedulerRunner Scheduler::beginNestedScheduling() {
-  return NestedSchedulerRunner{unit_run_depth_};
+SchedulerRunner Scheduler::beginScheduling(
+  SchedulerTypeID scheduler_tag
+) {
+  return SchedulerRunner{unit_run_depth_, scheduler_tag};
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
@@ -254,40 +256,41 @@ void Scheduler::registerTriggerOnce(
   event_triggers_once[event].push_back(trigger);
 }
 
-NestedSchedulerRunner::NestedSchedulerRunner(
-  unsigned int in_sched_depth
-) : sched_depth_(in_sched_depth) {
+SchedulerRunner::SchedulerRunner(
+  unsigned int in_sched_depth, SchedulerTypeID in_sched_tag
+) : sched_depth_(in_sched_depth), sched_tag_(in_sched_tag) {
+}
+
+SchedulerRunner::~SchedulerRunner() {
+  theTrace()->endProcessing(processing_event_);
+}
+
+bool SchedulerRunner::runScheduler() {
 
 #if backend_check_enabled(trace_enabled)
   // It might be more ideal to have a dedicated pairing event.
   // n.b. static here.
   static trace::TraceEntryIDType ep
-    = trace::TraceRegistry::registerEventHashed("Scheduler", "NestedScheduling");
+    = trace::TraceRegistry::registerEventHashed("Scheduler", "RunScheduler");
 
   // Even though such "should" only be called from a nested context,
   // it is possible (such as a barrier on startup) that this is invoked
   // outside of any scheduler execution stack.
-  if (sched_depth_ > 0) {
+  if (sched_depth_ > 0 and not processing_event_.hasEvent()) {
     auto node = theContext()->getNode();
-    trace::TraceEventIDType non_specific_id = 0;
-    processing_event_ = theTrace()->beginProcessing(ep, 0, non_specific_id, node);
-  } else {
-    processing_event_ = trace::TraceProcessingTag{};
+    uint64_t idx1 = static_cast<uint64_t>(sched_tag_);
+    uint64_t idx2 = sched_depth_;
+    processing_event_ = theTrace()->beginProcessing(
+      ep, 0, 0, node, idx1, idx2, 0, 0
+    );
   }
 #endif
 
-}
-
-NestedSchedulerRunner::~NestedSchedulerRunner() {
-  theTrace()->endProcessing(processing_event_);
-}
-
-bool NestedSchedulerRunner::runScheduler() {
   theSched()->scheduler();
   return true;
 }
 
-}} //end namespace vt::scheduler
+}} //end namespace vt::sched
 
 namespace vt {
 
