@@ -66,8 +66,10 @@ namespace vt { namespace term {
   theMsg()->popEpoch();
   theTerm()->finishedEpoch(epoch);
 
-  if (!term_finished) {
-    auto sched = theSched()->beginNestedScheduling();
+  { // blocking scheduler loop
+    auto sched = theSched()->beginScheduling(
+      sched::SchedulerTypeID::TermRooted
+    );
     while (!term_finished) {
       sched.runScheduler();
     }
@@ -103,8 +105,10 @@ namespace vt { namespace term {
   theMsg()->popEpoch();
   theTerm()->finishedEpoch(epoch);
 
-  if (!term_finished) {
-    auto sched = theSched()->beginNestedScheduling();
+  { // blocking scheduler loop
+    auto sched = theSched()->beginScheduling(
+      sched::SchedulerTypeID::TermCollective
+    );
     while (!term_finished) {
       sched.runScheduler();
     }

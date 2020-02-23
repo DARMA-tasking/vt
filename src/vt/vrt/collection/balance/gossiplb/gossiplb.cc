@@ -192,8 +192,10 @@ void GossipLB::inform() {
 
   theTerm()->finishedEpoch(propagate_epoch);
 
-  if (not inform_done) {
-    auto sched = theSched()->beginNestedScheduling();
+  { // blocking scheduler loop
+    auto sched = theSched()->beginScheduling(
+      sched::SchedulerTypeID::LbGossipInform
+    );
     while (not inform_done) {
       sched.runScheduler();
     }
@@ -460,8 +462,10 @@ void GossipLB::decide() {
 
   theTerm()->finishedEpoch(lazy_epoch);
 
-  if (not decide_done) {
-    auto sched = theSched()->beginNestedScheduling();
+  { // blocking scheduler loop
+    auto sched = theSched()->beginScheduling(
+      sched::SchedulerTypeID::LbGossipDecide
+    );
     while (not decide_done) {
       sched.runScheduler();
     }

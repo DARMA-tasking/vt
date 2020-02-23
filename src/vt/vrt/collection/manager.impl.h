@@ -1820,8 +1820,10 @@ CollectionManager::constructCollectiveMap(
   // Wait for construction to finish before we release control to the user; this
   // ensures that other parts of the system do not migrate elements until the
   // group construction is complete
-  if (constructed_.find(proxy) == constructed_.end()) {
-    auto sched = theSched()->beginNestedScheduling();
+  { // blocking scheduler loop
+    auto sched = theSched()->beginScheduling(
+      sched::SchedulerTypeID::CollectionConstruct
+    );
     while (constructed_.find(proxy) == constructed_.end()) {
       sched.runScheduler();
     }

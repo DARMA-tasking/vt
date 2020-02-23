@@ -153,8 +153,10 @@ void Trace::loadAndBroadcastSpec() {
       spec_ptr->broadcastSpec();
     }
 
-    if (not spec_proxy.get()->specReceived()) {
-      auto sched = theSched()->beginNestedScheduling();
+    { // blocking scheduler loop
+      auto sched = theSched()->beginScheduling(
+        sched::SchedulerTypeID::TraceSpecLoading
+      );
       while (not spec_proxy.get()->specReceived()) {
         sched.runScheduler();
       }
