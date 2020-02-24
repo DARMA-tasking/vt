@@ -71,6 +71,7 @@ namespace vt { namespace messaging {
 struct PendingSend final {
   /// Function for complex action on send---takes a message to operate on
   using SendActionType = std::function<void(MsgSharedPtr<BaseMsgType>&)>;
+  using EpochActionType = std::function<void()>;
 
   /**
    * \brief Construct a pending send.
@@ -137,36 +138,11 @@ struct PendingSend final {
     produceMsg();
   }
 
-  /**
-   * \brief Get the epoch produced when holder was created
-   *
-   * This is required because the epoch on the envelope can change in some cases
-   * in between when this is created and actually released.
-   *
-   * \return the produce epoch
-   */
-  EpochType getProduceEpoch() const;
-
-  /**
-   * \brief Produce on the messages epoch to inhibit early termination
-   */
-  void produceMsg();
-
-  /**
-   * \brief Consume on the messages epoch to inhibit early termination
-   */
-  void consumeMsg();
+  PendingSend(EpochType ep, EpochActionType const& in_action);
 
   explicit PendingSend(std::nullptr_t) { }
-  PendingSend(PendingSend&& in)
-    : msg_(std::move(in.msg_)),
-      msg_size_(std::move(in.msg_size_)),
-      send_action_(std::move(in.send_action_)),
-      epoch_produced_(std::move(in.epoch_produced_))
-  {
-    in.msg_ = nullptr;
-    in.send_action_ = nullptr;
-  }
+  PendingSend(PendingSend&& in) noexcept;
+
   PendingSend(const PendingSend&) = delete;
   PendingSend& operator=(PendingSend&& in) = delete;
   PendingSend& operator=(PendingSend& in) = delete;
@@ -189,13 +165,30 @@ struct PendingSend final {
   /**
    * \brief Release the message, run action if needed
    */
-  void release() {
-    if (msg_ != nullptr || send_action_ != nullptr) {
-      sendMsg();
-    }
-  }
+  void release();
 
 private:
+
+  /**
+   * \brief Get the epoch produced when holder was created
+   *
+   * This is required because the epoch on the envelope can change in some cases
+   * in between when this is created and actually released.
+   *
+   * \return the produce epoch
+   */
+  EpochType getProduceEpochFromMsg() const;
+
+  /**
+   * \brief Produce on the messages epoch to inhibit early termination
+   */
+  void produceMsg();
+
+  /**
+   * \brief Consume on the messages epoch to inhibit early termination
+   */
+  void consumeMsg();
+
   /// Send the message saved directly or trigger the lambda for
   /// specialized sends from the pending holder
   void sendMsg();
@@ -203,7 +196,8 @@ private:
 private:
   MsgPtr<BaseMsgType> msg_ = nullptr;
   ByteType msg_size_ = no_byte;
-  SendActionType send_action_ = nullptr;
+  SendActionType send_action_ = {};
+  EpochActionType epoch_action_ = {};
   EpochType epoch_produced_ = no_epoch;
 };
 
