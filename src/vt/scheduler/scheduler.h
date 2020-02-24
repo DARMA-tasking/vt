@@ -178,6 +178,7 @@ private:
 namespace vt {
 
 void runScheduler();
+void runSchedulerThrough(EpochType epoch);
 
 extern sched::Scheduler* theSched();
 

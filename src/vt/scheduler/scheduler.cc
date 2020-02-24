@@ -330,4 +330,8 @@ void runScheduler() {
   theSched()->scheduler();
 }
 
+void runSchedulerThrough(EpochType epoch) {
+  theSched()->runSchedulerWhile([=]{ return !theTerm()->isEpochTerminated(epoch); });
+}
+
 } //end namespace vt
