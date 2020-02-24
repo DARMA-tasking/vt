@@ -226,8 +226,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     "recvObjsDirect: num_recs={}\n", num_recs
   );
 
-  auto epoch = startMigrationCollective();
-  theMsg()->pushEpoch(epoch);
+  startMigrationCollective();
 
   for (decltype(+num_recs) i = 0; i < num_recs; i++) {
     auto const to_node = objGetNode(recs[i]);
@@ -243,7 +242,6 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     migrateObjectTo(new_obj_id, to_node);
   }
 
-  theMsg()->popEpoch(epoch);
   finishMigrationCollective();
 }
 
