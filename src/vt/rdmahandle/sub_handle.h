@@ -72,17 +72,17 @@ struct SubHandle {
 private:
   struct SubInfo {
     SubInfo() = default;
-    SubInfo(uint64_t in_size, uint64_t in_offset)
-      : size_(in_size),
+    SubInfo(uint64_t in_count, uint64_t in_offset)
+      : count_(in_count),
         offset_(in_offset)
     { }
-    uint64_t size_ = 0;
+    uint64_t count_ = 0;
     uint64_t offset_ = 0;
   };
 
 public:
   void initialize(
-    ProxyType in_proxy, bool in_is_static, IndexT in_range,
+    ProxyType in_proxy, bool in_is_migratable, IndexT in_range,
     vt::HandlerType map_han, bool in_dense_start_with_zero
   );
 
@@ -100,7 +100,7 @@ public:
 
   void get(IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset);
 
-  std::size_t getSize(IndexT const& idx, Lock l = Lock::Shared);
+  std::size_t getCount(IndexT const& idx, Lock l = Lock::Shared);
 
   RequestHolder rget(
     IndexT const& idx, Lock l, T* ptr, uint64_t len, int offset
@@ -129,11 +129,11 @@ public:
   template <typename Callable>
   void access(IndexT idx, Lock l, Callable fn, uint64_t offset);
 
-  Handle<T, E, IndexT> addLocalIndex(IndexT index, uint64_t size);
+  Handle<T, E, IndexT> addLocalIndex(IndexT index, uint64_t count);
 
   int getOrderedOffset(IndexT idx, NodeType home_node);
 
-  void stageLocalIndex(IndexT index, uint64_t size);
+  void stageLocalIndex(IndexT index, uint64_t count);
 
   void migratedOutIndex(IndexT index);
 
@@ -145,7 +145,7 @@ public:
 
   bool ready() const { return ready_; }
 
-  uint64_t totalLocalSize() const;
+  uint64_t totalLocalCount() const;
 
   std::size_t getNumHandles() const;
 
@@ -165,10 +165,10 @@ public:
 
   template <mapping::ActiveMapTypedFnType<IndexT> map_fn>
   static ProxyType construct(
-    bool in_is_static, IndexT in_range, bool in_dense_start_with_zero
+    bool in_is_migratable, IndexT in_range, bool in_dense_start_with_zero
   );
   static ProxyType construct(
-    bool in_is_static, IndexT in_range, bool in_dense_start_with_zero,
+    bool in_is_migratable, IndexT in_range, bool in_dense_start_with_zero,
     vt::HandlerType map
   );
 
@@ -178,7 +178,7 @@ private:
 
 protected:
   ProxyType proxy_;
-  bool is_static_ = false;
+  bool is_migratable_ = false;
   vt::HandlerType map_han_ = 0;
   IndexT range_ = {};
   std::unordered_map<IndexT, SubInfo> sub_handles_;
@@ -191,7 +191,7 @@ protected:
   bool ready_ = false;
   bool mpi2_ = false;
   bool uniform_size_ = false;
-  std::size_t size_if_uniform_ = 0;
+  std::size_t count_if_uniform_ = 0;
   std::size_t collection_expected_count_ = 0;
   std::vector<IndexT> migrate_out_;
   std::vector<IndexT> migrate_in_;

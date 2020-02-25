@@ -230,7 +230,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_4) {
 
   auto num = vt::theContext()->getNumNodes();
   for (vt::NodeType node = 0; node < num; node++) {
-    EXPECT_EQ(handle.getSize(node), (node + 1) * per_size);
+    EXPECT_EQ(handle.getCount(node), (node + 1) * per_size);
   }
 
   vt::theCollective()->barrier();

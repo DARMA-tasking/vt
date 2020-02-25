@@ -60,13 +60,13 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename T>
 vt::rdma::Handle<T, vt::rdma::HandleEnum::StaticSize, IndexT>
 RDMAable<ColT,IndexT,BaseProxyT>::makeHandleRDMA(
-  IndexT idx, std::size_t size, bool is_uniform
+  IndexT idx, std::size_t count, bool is_uniform
 ) const {
   auto col_proxy = this->getProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,idx);
   return vt::theHandleRDMA()->makeCollectionHandles<
     T, rdma::HandleEnum::StaticSize, ColT
-  >(proxy, size, is_uniform);
+  >(proxy, count, is_uniform);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

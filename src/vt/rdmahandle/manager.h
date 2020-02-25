@@ -123,14 +123,14 @@ public:
    * \brief Construct a new, distributed RDMA handle for an objgroup
    *
    * \param[in] proxy the objgroup's proxy
-   * \param[in] size the size for this node's handle
-   * \param[in] uniform_size whether all handles have the same size
+   * \param[in] count the local count of T for this handle
+   * \param[in] uniform_count whether all handles have the same count
    *
    * \return the new handle
    */
   template <typename T, HandleEnum E, typename ProxyT>
   Handle<T, E> makeHandleCollectiveObjGroup(
-    ProxyT proxy, std::size_t size, bool uniform_size = true
+    ProxyT proxy, std::size_t count, bool uniform_count = true
   );
 
   /**
@@ -164,7 +164,7 @@ public:
    * handles for a collection
    *
    * \param[in] collection_proxy the collection proxy with index
-   * \param[in] idx_size size of the handle to create
+   * \param[in] idx_count the local count of T for this handle
    * \param[in] uniform_size whether all handles have the same size
    * \param[in] next_handle system-use-only, the handle ID
    * \param[in] map_han system-use-only, element map for collection
@@ -180,7 +180,7 @@ public:
     typename IndexT = typename ColT::IndexType
   >
   Handle<T, E, IndexT> makeCollectionHandles(
-    ProxyT collection_proxy, std::size_t idx_size, bool uniform_size = true,
+    ProxyT collection_proxy, std::size_t idx_count, bool uniform_size = true,
     RDMA_HandleType next_handle = no_rdma_handle, vt::HandlerType map_han = -1,
     IndexT in_range = {}
   );

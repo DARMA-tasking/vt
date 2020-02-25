@@ -93,16 +93,16 @@ private:
    * new node-level handle
    *
    * \param[in] in_key the key for identifying the handle
-   * \param[in] in_size size of local handle
+   * \param[in] in_count count of local handle
    * \param[in] in_hoff local offset for handle
    * \param[in] in_lock handle lock
    */
   Handle(
     NodeTagType,
-    HandleKey in_key, std::size_t in_size, std::size_t in_hoff = 0,
+    HandleKey in_key, std::size_t in_count, std::size_t in_hoff = 0,
     std::shared_ptr<LockMPI> in_lock = nullptr
   ) : BaseTypedHandle<T, E, vt::NodeType>(
-        in_size,
+        in_count,
         in_hoff,
         in_lock
       ),
@@ -137,28 +137,28 @@ public:
    *
    * \param[in] fn lambda to read the data
    */
-  void readExclusive(std::function<void(T const*)> fn);
+  void readExclusive(std::function<void(T const*, std::size_t count)> fn);
 
   /**
    * \brief Read the local data for the handle with an shared lock
    *
    * \param[in] fn lambda to read the data
    */
-  void readShared(std::function<void(T const*)> fn);
+  void readShared(std::function<void(T const*, std::size_t count)> fn);
 
   /**
    * \brief Modify the local data for the handle with an exclusive lock
    *
    * \param[in] fn lambda to modify the data
    */
-  void modifyExclusive(std::function<void(T*)> fn);
+  void modifyExclusive(std::function<void(T*, std::size_t count)> fn);
 
   /**
    * \brief Modify the local data for the handle with an shared lock
    *
    * \param[in] fn lambda to modify the data
    */
-  void modifyShared(std::function<void(T*)> fn);
+  void modifyShared(std::function<void(T*, std::size_t count)> fn);
 
   /**
    * \brief General access function for reading/modifying local data
@@ -167,7 +167,9 @@ public:
    * \param[in] fn lambda to access data
    * \param[in] size number of elements to read
    */
-  void access(Lock l, std::function<void(T*)> fn, std::size_t size);
+  void access(
+    Lock l, std::function<void(T*, std::size_t count)> fn, std::size_t size
+  );
 
   /**
    * \brief Lock the handle to apply multiple operations
@@ -382,14 +384,14 @@ public:
   );
 
   /**
-   * \brief Get the size of the data window on a certain node. If the size is
-   * non-uniform, it will remotely fetch the size from that node.
+   * \brief Get the count of the data window on a certain node. If the count is
+   * non-uniform, it will remotely fetch the count from that node.
    *
-   * \param[in] node the node to request the size
+   * \param[in] node the node to request the count
    *
    * \return the length of the handle's data
    */
-  std::size_t getSize(vt::NodeType node);
+  std::size_t getCount(vt::NodeType node);
 
   /**
    * \brief Serializer for the handle

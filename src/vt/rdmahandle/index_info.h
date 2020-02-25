@@ -51,25 +51,25 @@ namespace vt { namespace rdma {
 
 struct IndexInfo {
   IndexInfo() = default;
-  IndexInfo(vt::NodeType in_node, uint64_t in_offset, uint64_t in_size)
+  IndexInfo(vt::NodeType in_node, uint64_t in_offset, uint64_t in_count)
     : node_(in_node),
       offset_(in_offset),
-      size_(in_size)
+      count_(in_count)
   { }
-  IndexInfo(uint64_t in_node, uint64_t in_offset, uint64_t in_size)
+  IndexInfo(uint64_t in_node, uint64_t in_offset, uint64_t in_count)
     : node_(static_cast<vt::NodeType>(in_node)),
       offset_(in_offset),
-      size_(in_size)
+      count_(in_count)
   { }
 
   vt::NodeType getNode() const { return node_; }
   uint64_t getOffset() const { return offset_; }
-  uint64_t getSize() const { return size_; }
+  uint64_t getCount() const { return count_; }
 
 private:
   vt::NodeType node_ = vt::uninitialized_destination;
   uint64_t offset_ = 0;
-  uint64_t size_ = 0;
+  uint64_t count_ = 0;
 };
 
 }} /* end namespace vt::rdma */

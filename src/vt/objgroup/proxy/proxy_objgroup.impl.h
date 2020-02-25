@@ -164,11 +164,11 @@ ObjGroupProxyType Proxy<ObjT>::getProxy() const {
 template <typename ObjT>
 template <typename T>
 vt::rdma::Handle<T> Proxy<ObjT>::makeHandleRDMA(
-  std::size_t size, bool is_uniform
+  std::size_t count, bool is_uniform
 ) const {
   return vt::theHandleRDMA()->makeHandleCollectiveObjGroup<
     T, rdma::HandleEnum::StaticSize
-  >(*this, size, is_uniform);
+  >(*this, count, is_uniform);
 }
 
 template <typename ObjT>

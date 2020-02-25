@@ -150,13 +150,13 @@ public:
   /**
    * \brief Make a new RDMA handle for this objgroup---a collective invocation
    *
-   * \param[in] size the local size for the handle
-   * \param[in] is_uniform whether all handles have the same size
+   * \param[in] count the local count of T for this handle
+   * \param[in] is_uniform whether all handles have the same count
    *
    * \return the new RDMA handle
    */
   template <typename T>
-  vt::rdma::Handle<T> makeHandleRDMA(std::size_t size, bool is_uniform) const;
+  vt::rdma::Handle<T> makeHandleRDMA(std::size_t count, bool is_uniform) const;
 
   /**
    * \brief Destroy an RDMA handle created from this objgroup

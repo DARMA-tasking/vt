@@ -152,13 +152,13 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
   for (int node = 0; node < num_nodes; node++) {
     for (int han = node; han < (num_nodes * (node + 1)) + node; han++) {
       vt::Index2D idx(node, han);
-      auto size = han_set->getSize(idx);
-      EXPECT_EQ(size, static_cast<std::size_t>((node + 1) + han));
+      auto count = han_set->getCount(idx);
+      EXPECT_EQ(count, static_cast<std::size_t>((node + 1) + han));
 
       auto idx_rank = node * max_hans + han;
-      auto ptr = std::make_unique<T[]>(size);
-      han_set->get(idx, &ptr[0], size, 0, vt::Lock::Shared);
-      UpdateData<T>::test(std::move(ptr), space, size, idx_rank, 0);
+      auto ptr = std::make_unique<T[]>(count);
+      han_set->get(idx, &ptr[0], count, 0, vt::Lock::Shared);
+      UpdateData<T>::test(std::move(ptr), space, count, idx_rank, 0);
     }
   }
 
@@ -193,8 +193,8 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_3) {
   for (int node = 0; node < num_nodes; node++) {
     for (int han = 0; han < num_hans; han++) {
       vt::Index2D idx(node, han);
-      auto size = han_set->getSize(idx);
-      EXPECT_EQ(size, static_cast<std::size_t>((node + 1) * (han + 1)));
+      auto count = han_set->getCount(idx);
+      EXPECT_EQ(count, static_cast<std::size_t>((node + 1) * (han + 1)));
     }
   }
 

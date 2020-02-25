@@ -53,21 +53,21 @@ namespace vt { namespace rdma {
 template <typename T, HandleEnum E>
 template <typename ProxyT>
 void Holder<T,E>::addHandle(
-  HandleKey key, ElemType lin, Handle<T,E> han, std::size_t in_size,
+  HandleKey key, ElemType lin, Handle<T,E> han, std::size_t in_count,
   bool uniform_size
 ) {
   handle_ = han;
   key_ = key;
-  size_ += in_size;
+  count_ += in_count;
   uniform_size_ = uniform_size;
 }
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
-  std::size_t len = in_len == 0 ? size_ : in_len;
+  std::size_t len = in_len == 0 ? count_ : in_len;
   debug_print(
     rdma, node,
-    "allocate: len={}, in_len={}, size_={}\n", len, in_len, size_
+    "allocate: len={}, in_len={}, count_={}\n", len, in_len, count_
   );
   // Allocate data window
   MPI_Alloc_mem(len * sizeof(T), MPI_INFO_NULL, &data_base_);
@@ -86,11 +86,11 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
       auto this_node = theContext()->getNode();
       LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_);
       auto mpi_type = TypeMPI<uint64_t>::getType();
-      MPI_Put(&size_, 1, mpi_type, this_node, 0, 1, mpi_type, control_window_);
+      MPI_Put(&count_, 1, mpi_type, this_node, 0, 1, mpi_type, control_window_);
       debug_print_verbose(
         rdma, node,
         "setting allocate size: size={}, window={}\n",
-        size_, print_ptr(&control_window_)
+        count_, print_ptr(&control_window_)
       );
 
     }
@@ -99,7 +99,7 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
 }
 
 template <typename T, HandleEnum E>
-std::size_t Holder<T,E>::getSize(vt::NodeType node, Lock l) {
+std::size_t Holder<T,E>::getCount(vt::NodeType node, Lock l) {
   uint64_t result = 0;
   auto mpi_type = TypeMPI<uint64_t>::getType();
   {
@@ -108,7 +108,7 @@ std::size_t Holder<T,E>::getSize(vt::NodeType node, Lock l) {
   }
   debug_print_verbose(
     rdma, node,
-    "getSize: node={}, result={}, window={}\n",
+    "getCount: node={}, result={}, window={}\n",
     node, result, print_ptr(&control_window_)
   );
   return static_cast<std::size_t>(result);
@@ -137,7 +137,7 @@ void Holder<T,E>::access(Lock l, Callable fn, std::size_t offset) {
   auto this_node = theContext()->getNode();
 
   LockMPI _scope_lock(l, this_node, data_window_);
-  fn(data_base_ + offset);
+  fn(data_base_ + offset, count_ - offset);
 }
 
 template <typename T, HandleEnum E>

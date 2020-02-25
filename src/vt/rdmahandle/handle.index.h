@@ -139,28 +139,28 @@ public:
    *
    * \param[in] fn lambda to read the data
    */
-  void readExclusive(std::function<void(T const*)> fn);
+  void readExclusive(std::function<void(T const*, std::size_t count)> fn);
 
   /**
    * \brief Read the local data for the handle with an shared lock
    *
    * \param[in] fn lambda to read the data
    */
-  void readShared(std::function<void(T const*)> fn);
+  void readShared(std::function<void(T const*, std::size_t count)> fn);
 
   /**
    * \brief Modify the local data for the handle with an exclusive lock
    *
    * \param[in] fn lambda to modify the data
    */
-  void modifyExclusive(std::function<void(T*)> fn);
+  void modifyExclusive(std::function<void(T*, std::size_t count)> fn);
 
   /**
    * \brief Modify the local data for the handle with an shared lock
    *
    * \param[in] fn lambda to modify the data
    */
-  void modifyShared(std::function<void(T*)> fn);
+  void modifyShared(std::function<void(T*, std::size_t count)> fn);
 
 public:
 
@@ -316,14 +316,14 @@ public:
   );
 
   /**
-   * \brief Get the size of the data window for a certain index. If the size is
-   * non-uniform, it will remotely fetch the size from that node.
+   * \brief Get the count of the data window for a certain index. If the count is
+   * non-uniform, it will remotely fetch the count from that node.
    *
-   * \param[in] idx the index to request the size
+   * \param[in] idx the index to request the count
    *
    * \return the length of the handle's data
    */
-  std::size_t getSize(IndexT const& idx);
+  std::size_t getCount(IndexT const& idx);
 
   /**
    * \brief Lock the handle to apply multiple operations

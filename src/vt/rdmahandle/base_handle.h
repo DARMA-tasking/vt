@@ -95,15 +95,15 @@ protected:
    * \brief Protected construction of a base handle, shared amongst all handle
    * types
    *
-   * \param[in] in_size size of handle
+   * \param[in] in_count count of handle
    * \param[in] in_hoff local offset for handle
    * \param[in] in_lock shared pointer to lock
    */
   BaseTypedHandle(
-    std::size_t in_size,
+    std::size_t in_count,
     std::size_t in_hoff = 0,
     std::shared_ptr<LockMPI> in_lock = nullptr
-  ) : size_(in_size),
+  ) : count_(in_count),
       hoff_(in_hoff),
       lock_(in_lock)
   { }
@@ -150,20 +150,20 @@ public:
   std::size_t hoff() const { return hoff_; }
 
   /**
-   * \brief Get the local handle size
+   * \brief Get the local handle count
    *
    * \return the handle size
    */
-  std::size_t size() const { return size_; }
+  std::size_t count() const { return count_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | size_;
+    s | count_;
     s | hoff_;
   }
 
 protected:
-  std::size_t size_                    = 0;       /**< The size of the handle */
+  std::size_t count_                    = 0;      /**< The count of the handle */
   std::vector<ActionDataType> actions_ = {};      /**< The registered actions */
   T* user_buffer_                      = nullptr; /**< The registered buffer */
   std::size_t hoff_                    = 0;       /**< The local handle offset */

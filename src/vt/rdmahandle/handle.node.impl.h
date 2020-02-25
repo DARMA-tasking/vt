@@ -147,39 +147,47 @@ T Handle<T,E,I,isNode<I>>::fetchOp(
 }
 
 template <typename T, HandleEnum E, typename I>
-std::size_t Handle<T,E,I,isNode<I>>::getSize(vt::NodeType node) {
+std::size_t Handle<T,E,I,isNode<I>>::getCount(vt::NodeType node) {
   if (vt::theHandleRDMA()->getEntry<T,E>(key_).isUniform()) {
-    return this->size();
+    return this->count();
   } else {
-    return vt::theHandleRDMA()->getEntry<T,E>(key_).getSize(node);
+    return vt::theHandleRDMA()->getEntry<T,E>(key_).getCount(node);
   }
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isNode<I>>::readExclusive(std::function<void(T const*)> fn) {
+void Handle<T,E,I,isNode<I>>::readExclusive(
+  std::function<void(T const*, std::size_t count)> fn
+) {
   vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isNode<I>>::readShared(std::function<void(T const*)> fn) {
-    vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Shared, fn, this->hoff());
+void Handle<T,E,I,isNode<I>>::readShared(
+  std::function<void(T const*, std::size_t count)> fn
+) {
+  vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Shared, fn, this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isNode<I>>::modifyExclusive(std::function<void(T*)> fn) {
-    vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, this->hoff());
+void Handle<T,E,I,isNode<I>>::modifyExclusive(
+  std::function<void(T*, std::size_t count)> fn
+) {
+  vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Exclusive, fn, this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isNode<I>>::modifyShared(std::function<void(T*)> fn) {
-    vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Shared, fn, this->hoff());
+void Handle<T,E,I,isNode<I>>::modifyShared(
+  std::function<void(T*, std::size_t count)> fn
+) {
+  vt::theHandleRDMA()->getEntry<T,E>(key_).access(Lock::Shared, fn, this->hoff());
 }
 
 template <typename T, HandleEnum E, typename I>
 void Handle<T,E,I,isNode<I>>::access(
-  Lock l, std::function<void(T*)> fn, std::size_t offset
+  Lock l, std::function<void(T*, std::size_t count)> fn, std::size_t offset
 ) {
-    vt::theHandleRDMA()->getEntry<T,E>(key_).access(l, fn, this->hoff() +  offset);
+  vt::theHandleRDMA()->getEntry<T,E>(key_).access(l, fn, this->hoff() +  offset);
 }
 
 template <typename T, HandleEnum E, typename I>

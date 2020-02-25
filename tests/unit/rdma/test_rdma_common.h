@@ -55,7 +55,7 @@ struct UpdateData {
   static void init(
     HandleT& handle, int space, std::size_t size, vt::NodeType rank
 ) {
-    handle.modifyExclusive([=](T* val){
+    handle.modifyExclusive([=](T* val, std::size_t count){
       setMem(val, space, size, rank, 0);
     });
   }

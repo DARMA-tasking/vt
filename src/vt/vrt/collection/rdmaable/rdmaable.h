@@ -63,14 +63,14 @@ struct RDMAable : BaseProxyT {
    * \brief Make a new RDMA handle for this collection---a collective invocation
    * across all elements
    *
-   * \param[in] size the local size for the handle
-   * \param[in] is_uniform whether all handles have the same size
+   * \param[in] count the local count of T for this handle
+   * \param[in] is_uniform whether all handles have the same count
    *
    * \return the new RDMA handle
    */
   template <typename T>
   vt::rdma::Handle<T, vt::rdma::HandleEnum::StaticSize, IndexT>
-  makeHandleRDMA(IndexT idx, std::size_t size, bool is_uniform) const;
+  makeHandleRDMA(IndexT idx, std::size_t count, bool is_uniform) const;
 
   /**
    * \brief Destroy an RDMA handle created for this collection

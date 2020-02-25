@@ -155,7 +155,7 @@ HandleSet<T> Manager::makeHandleSetCollectiveObjGroup(
   auto const num_nodes = vt::theContext()->getNumNodes();
   IndexType range(static_cast<LookupType>(num_nodes), max_lookup);
   auto proxy = SubType::template construct<Manager::staticHandleMap>(
-    true, range, dense_start_with_zero
+    false, range, dense_start_with_zero
   );
   HandleSet<T> set(typename HandleSet<T>::BuildSetTagType{});
   auto const this_node = static_cast<LookupT>(vt::theContext()->getNode());

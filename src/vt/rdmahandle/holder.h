@@ -83,7 +83,7 @@ public:
   template <typename Callable>
   void access(Lock l, Callable fn, std::size_t offset);
 
-  std::size_t getSize(vt::NodeType node, Lock l = Lock::Shared);
+  std::size_t getCount(vt::NodeType node, Lock l = Lock::Shared);
 
   RequestHolder rget(
     vt::NodeType node, Lock l, T* ptr, std::size_t len, int offset
@@ -120,7 +120,7 @@ private:
   MPI_Win control_window_;
   T* data_base_ = nullptr;
   uint64_t* control_base_ = nullptr;
-  std::size_t size_ = 0;
+  std::size_t count_ = 0;
   bool ready_ = false;
   bool mpi2_ = false;
   bool uniform_size_ = false;
