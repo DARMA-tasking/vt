@@ -168,11 +168,12 @@ public:
 
   /**
    * \brief Make a new set of RDMA handles for this objgroup---a collective
-   * invocation
+   * invocation. This is the overload for a potentially sparse set of handles
+   * with a non-zero starting index.
    *
    * \param[in] max_elm the largest lookup key on any node
-   * \param[in] map a map of the handles and corresponding sizes to create
-   * \param[in] is_uniform whether all handles have the same size
+   * \param[in] map a map of the handles and corresponding counts to create
+   * \param[in] is_uniform whether all handles have the same count
    *
    * \return the new RDMA handle
    */
@@ -180,7 +181,24 @@ public:
   vt::rdma::HandleSet<T> makeHandleSetRDMA(
     int32_t max_elm,
     std::unordered_map<int32_t, std::size_t> const& map,
-    bool dense_start_at_zero,
+    bool is_uniform
+  ) const;
+
+  /**
+   * \brief Make a new set of RDMA handles for this objgroup---a collective
+   * invocation. This is the overload for a dense, start at zero set of handles
+   * to create.
+   *
+   * \param[in] max_elm the largest lookup key on any node
+   * \param[in] vec a vector of the handle counts to create
+   * \param[in] is_uniform whether all handles have the same count
+   *
+   * \return the new RDMA handle
+   */
+  template <typename T>
+  vt::rdma::HandleSet<T> makeHandleSetRDMA(
+    int32_t max_elm,
+    std::vector<std::size_t> const& vec,
     bool is_uniform
   ) const;
 

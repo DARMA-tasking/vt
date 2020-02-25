@@ -64,9 +64,17 @@ struct TestObjGroup {
     int32_t max_elm, std::unordered_map<int32_t, std::size_t> map,
     bool dense_start_at_zero, bool uniform
   ) {
-    return proxy_.template makeHandleSetRDMA<T>(
-      max_elm, map, dense_start_at_zero, uniform
-    );
+    if (dense_start_at_zero) {
+      std::vector<std::size_t> vec;
+      for (int i = 0; i < static_cast<int>(map.size()); i++) {
+        auto iter = map.find(i);
+        vtAssertExpr(iter != map.end());
+        vec.push_back(iter->second);
+      }
+      return proxy_.template makeHandleSetRDMA<T>(max_elm, vec, uniform);
+    } else {
+      return proxy_.template makeHandleSetRDMA<T>(max_elm, map, uniform);
+    }
   }
 
   static ProxyType construct() {
