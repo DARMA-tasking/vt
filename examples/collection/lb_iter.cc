@@ -114,9 +114,7 @@ void executeInEpoch(Callable&& fn) {
   }
   vt::theMsg()->popEpoch(ep);
   vt::theTerm()->finishedEpoch(ep);
-  bool done = false;
-  vt::theTerm()->addAction(ep, [&done]{ done = true; });
-  do vt::runScheduler(); while (!done);
+  vt::runSchedulerThrough(ep);
 }
 
 int main(int argc, char** argv) {

@@ -414,15 +414,10 @@ struct MyObjGroup {
   }
 
   void finishUpdate() {
-    bool vt_working = true;
     chains_->phaseDone();
     vt::theMsg()->popEpoch(epoch_);
-    vt::theTerm()->addAction(epoch_, [&vt_working] { vt_working = false; });
-    vt::theTerm()->finishedEpoch(epoch_);
 
-    while (vt_working) {
-      vt::runScheduler();
-    }
+    vt::runSchedulerThrough(epoch_);
 
     started_ = false;
   }
