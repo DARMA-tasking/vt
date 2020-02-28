@@ -750,9 +750,11 @@ public:
    * the associated handler (if a callback is specified on a particular node,
    * the root will run the handler that triggers the callback at the appropriate
    * location)
+   *
+   * \return a PendingSend corresponding to the reduce
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduceMsg(
+  messaging::PendingSend reduceMsg(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *const msg, ReduceStamp stamp = ReduceStamp{},
     NodeType root_node = uninitialized_destination
@@ -765,9 +767,11 @@ public:
    * \param[in] msg the reduce message
    * \param[in] stamp the reduce stamp
    * \param[in] idx the index of collection element being reduced
+   *
+   * \return a PendingSend corresponding to the reduce
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduceMsg(
+  messaging::PendingSend reduceMsg(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *const msg, ReduceStamp stamp, typename ColT::IndexType const& idx
   );
@@ -784,9 +788,11 @@ public:
    * the associated handler (if a callback is specified on a particular node,
    * the root will run the handler that triggers the callback at the appropriate
    * location)
+   *
+   * \return a PendingSend corresponding to the reduce
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduceMsgExpr(
+  messaging::PendingSend reduceMsgExpr(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
     ReduceStamp stamp = ReduceStamp{},
@@ -802,9 +808,11 @@ public:
    * \param[in] expr_fn expression function to pick indices
    * \param[in] stamp the reduce stamp
    * \param[in] idx the index of collection element being reduced
+   *
+   * \return a PendingSend corresponding to the reduce
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduceMsgExpr(
+  messaging::PendingSend reduceMsgExpr(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
     ReduceStamp stamp, typename ColT::IndexType const& idx

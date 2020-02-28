@@ -75,7 +75,7 @@ struct Reducable : BaseProxyT {
       MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
     >
   >
-  void reduce(
+  messaging::PendingSend reduce(
     MsgT *const msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const;
 
@@ -85,25 +85,25 @@ struct Reducable : BaseProxyT {
     typename MsgT,
     ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
   >
-  void reduce(MsgT *const msg, ReduceStamp stamp = ReduceStamp{}) const;
+  messaging::PendingSend reduce(MsgT *const msg, ReduceStamp stamp = ReduceStamp{}) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduce(
+  messaging::PendingSend reduce(
     MsgT *const msg, ReduceStamp stamp = ReduceStamp{},
     NodeType const& node = uninitialized_destination
   ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduceExpr(
+  messaging::PendingSend reduceExpr(
     MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp = ReduceStamp{},
     NodeType const& node = uninitialized_destination
   ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduce(MsgT *const msg, ReduceStamp stamp, IndexT const& idx) const;
+  messaging::PendingSend reduce(MsgT *const msg, ReduceStamp stamp, IndexT const& idx) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduceExpr(
+  messaging::PendingSend reduceExpr(
     MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, IndexT const& idx
   ) const;
 };

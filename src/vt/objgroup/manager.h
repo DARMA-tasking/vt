@@ -56,6 +56,7 @@
 #include "vt/objgroup/dispatch/dispatch.h"
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/messaging/pending_send.h"
 
 #include <memory>
 #include <functional>
@@ -93,6 +94,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
   using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
   using BaseProxyListType   = std::set<ObjGroupProxyType>;
+  using PendingSendType     = messaging::PendingSend;
 
   /**
    * \internal \brief Construct the ObjGroupManager
@@ -231,9 +233,11 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * \param[in] proxy proxy to the object group
    * \param[in] msg reduction message
    * \param[in] stamp stamp to identify reduction across nodes
+   *
+   * \return the PendingSend corresponding to the reduce
    */
   template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void reduce(
+  PendingSendType reduce(
     ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg,
     collective::reduce::ReduceStamp const& stamp
   );

@@ -60,7 +60,7 @@ Reducable<ColT,IndexT,BaseProxyT>::Reducable(VirtualProxyType const in_proxy)
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-void Reducable<ColT,IndexT,BaseProxyT>::reduce(
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, Callback<MsgT> cb, ReduceStamp stamp
 ) const {
   auto const proxy = this->getProxy();
@@ -76,7 +76,7 @@ void Reducable<ColT,IndexT,BaseProxyT>::reduce(
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename OpT, typename FunctorT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-void Reducable<ColT,IndexT,BaseProxyT>::reduce(
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, ReduceStamp stamp
 ) const {
   auto const proxy = this->getProxy();
@@ -86,7 +86,7 @@ void Reducable<ColT,IndexT,BaseProxyT>::reduce(
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-void Reducable<ColT,IndexT,BaseProxyT>::reduce(
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, ReduceStamp stamp, NodeType const& node
 ) const {
   auto const proxy = this->getProxy();
@@ -95,7 +95,7 @@ void Reducable<ColT,IndexT,BaseProxyT>::reduce(
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-void Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
   MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, NodeType const& node
 ) const {
   auto const proxy = this->getProxy();
@@ -104,7 +104,7 @@ void Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-void Reducable<ColT,IndexT,BaseProxyT>::reduce(
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
   MsgT *const msg, ReduceStamp stamp, IndexT const& idx
 ) const {
   auto const proxy = this->getProxy();
@@ -113,7 +113,7 @@ void Reducable<ColT,IndexT,BaseProxyT>::reduce(
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-void Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
+messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
   MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, IndexT const& idx
 ) const {
   auto const proxy = this->getProxy();

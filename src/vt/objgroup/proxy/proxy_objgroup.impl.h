@@ -80,7 +80,7 @@ template <typename ObjT>
 template <
   typename OpT, typename MsgPtrT, typename MsgT, ActiveTypedFnType<MsgT> *f
 >
-void Proxy<ObjT>::reduce(
+typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::reduce(
   MsgPtrT inmsg, Callback<MsgT> cb, ReduceStamp stamp
 ) const {
   auto proxy = Proxy<ObjT>(*this);
@@ -97,7 +97,7 @@ template <
   typename OpT, typename FunctorT, typename MsgPtrT, typename MsgT,
   ActiveTypedFnType<MsgT> *f
 >
-void Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
+typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
   auto proxy = Proxy<ObjT>(*this);
   MsgPtr<MsgT> msg = promoteMsg(static_cast<MsgT*>(inmsg));
   return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,stamp);
@@ -105,7 +105,7 @@ void Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
 
 template <typename ObjT>
 template <typename MsgPtrT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-void Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
+typename Proxy<ObjT>::PendingSendType Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
   auto proxy = Proxy<ObjT>(*this);
   MsgPtr<MsgT> msg = promoteMsg(inmsg);
   return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,stamp);

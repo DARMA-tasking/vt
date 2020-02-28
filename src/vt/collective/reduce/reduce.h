@@ -59,6 +59,7 @@
 #include "vt/messaging/message.h"
 #include "vt/collective/tree/tree.h"
 #include "vt/utils/hash/hash_tuple.h"
+#include "vt/messaging/pending_send.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -80,6 +81,7 @@ namespace vt { namespace collective { namespace reduce {
 struct Reduce : virtual collective::tree::Tree {
   using ReduceStateType = ReduceState;
   using ReduceNumType   = typename ReduceStateType::ReduceNumType;
+  using PendingSendType = messaging::PendingSend;
 
   /**
    * \internal \brief Construct a new reducer instance

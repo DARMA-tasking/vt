@@ -287,7 +287,7 @@ void ObjGroupManager::broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
 }
 
 template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-void ObjGroupManager::reduce(
+ObjGroupManager::PendingSendType ObjGroupManager::reduce(
   ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg,
   collective::reduce::ReduceStamp const& stamp
 ) {
