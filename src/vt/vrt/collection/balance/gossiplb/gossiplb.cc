@@ -192,9 +192,7 @@ void GossipLB::inform() {
 
   theTerm()->finishedEpoch(propagate_epoch);
 
-  while (not inform_done) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([&inform_done]{ return not inform_done; });
 
   debug_print(
     gossiplb, node,
@@ -457,9 +455,7 @@ void GossipLB::decide() {
 
   theTerm()->finishedEpoch(lazy_epoch);
 
-  while (not decide_done) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([&decide_done]{ return not decide_done; });
 }
 
 void GossipLB::thunkMigrations() {
