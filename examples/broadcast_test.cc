@@ -107,9 +107,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
+  theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
 
   CollectiveOps::finalize();
 

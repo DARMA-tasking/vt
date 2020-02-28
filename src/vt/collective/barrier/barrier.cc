@@ -132,12 +132,13 @@ void Barrier::waitBarrier(
 
   barrierUp(is_named, is_wait, barrier, skip_term);
 
-  while (not barrier_state.released) {
-    vt::runScheduler();
-    if (poll_action) {
+  theSched()->runSchedulerWhile([&poll_action, &barrier_state]{
+    bool cond = not barrier_state.released;
+    if (cond and poll_action) {
       poll_action();
     }
-  }
+    return cond;
+  });
 
   debug_print(
     barrier, node,
