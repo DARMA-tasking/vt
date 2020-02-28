@@ -241,9 +241,9 @@ void Runtime::setupTerminateHandler() {
 }
 
 /*virtual*/ Runtime::~Runtime() {
-  while (runtime_active_ && !aborted_) {
-    runScheduler();
-  }
+  theSched->runSchedulerWhile([this]{
+    return runtime_active_ && !aborted_;
+  });
   if (!aborted_) {
     finalize();
   }

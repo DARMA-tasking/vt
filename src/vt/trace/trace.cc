@@ -148,16 +148,18 @@ void Trace::initialize() {
 void Trace::loadAndBroadcastSpec() {
   if (ArgType::vt_trace_spec) {
     auto spec_proxy = file_spec::TraceSpec::construct();
+
     theTerm()->produce();
     if (theContext()->getNode() == 0) {
       auto spec_ptr = spec_proxy.get();
       spec_ptr->parse();
       spec_ptr->broadcastSpec();
     }
-    while (not spec_proxy.get()->specReceived()) {
-      vt::runScheduler();
-    }
+    theSched()->runSchedulerWhile([&spec_proxy]{
+      return not spec_proxy.get()->specReceived();
+    });
     theTerm()->consume();
+
     spec_proxy_ = spec_proxy.getProxy();
 
     // Set enabled for the initial phase
