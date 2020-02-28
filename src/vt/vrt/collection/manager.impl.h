@@ -1820,9 +1820,9 @@ CollectionManager::constructCollectiveMap(
   // Wait for construction to finish before we release control to the user; this
   // ensures that other parts of the system do not migrate elements until the
   // group construction is complete
-  while (constructed_.find(proxy) == constructed_.end()) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([this, &proxy]{
+    return constructed_.find(proxy) == constructed_.end();
+  });
 
   debug_print(
     vrt_coll, node,
