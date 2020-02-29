@@ -436,9 +436,10 @@ void Trace::addUserEventBracketedManual(
 
 TraceProcessingTag Trace::beginProcessing(
   TraceEntryIDType const ep, TraceMsgLenType const len,
-  TraceEventIDType const event, NodeType const from_node, double const time,
-  uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
-  uint64_t const idx4
+  TraceEventIDType const event, NodeType const from_node,
+  uint64_t const idx1, uint64_t const idx2,
+  uint64_t const idx3, uint64_t const idx4,
+  double const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return TraceProcessingTag{};
@@ -547,6 +548,18 @@ void Trace::beginSchedulerLoop() {
 
   // Capture the current open event depth.
   event_holds_.push_back(open_events_.size());
+
+  // Every nested loop enters into a processing event immediately,
+  // as there is the guarantee that the scheduler is not idle and
+  // must be doing something..
+  static trace::TraceEntryIDType ep
+    = trace::TraceRegistry::registerEventHashed("vt::sched", "Loop");
+
+  auto node = theContext()->getNode();
+  uint64_t sched_depth = event_holds_.size() - 1;
+  cur_loop_event_ = beginProcessing(
+    ep, 0, 0, node, sched_depth, 0, 0, 0, time
+  );
 }
 
 void Trace::endSchedulerLoop() {
@@ -556,7 +569,10 @@ void Trace::endSchedulerLoop() {
     event_holds_.size() > 1,
     "Too many endSchedulerLoop calls."
   );
-  vtAssert(
+
+  endProcessing(cur_loop_event_, time);
+
+  vtAssert( // implicitly true from endProcessing above
     event_holds_.back() == open_events_.size(),
     "Processing events opened in a scheduler loop must be closed by loop end."
   );
