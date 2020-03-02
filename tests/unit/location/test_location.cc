@@ -450,7 +450,7 @@ REGISTER_TYPED_TEST_SUITE_P(
 using LocationMsgType = location::MsgType;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_location_message, TestLocationRoute, LocationMsgType
+  test_location_message, TestLocationRoute, LocationMsgType, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

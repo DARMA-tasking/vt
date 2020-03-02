@@ -129,11 +129,11 @@ using CollectionTestDistTypes = testing::Types<
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_construct_simple, TestConstruct, CollectionTestTypes
+  test_construct_simple, TestConstruct, CollectionTestTypes, DEFAULT_NAME_GEN
 );
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_construct_distributed_simple, TestConstructDist, CollectionTestDistTypes
+  test_construct_distributed_simple, TestConstructDist, CollectionTestDistTypes, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit
