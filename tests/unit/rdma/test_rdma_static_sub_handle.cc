@@ -387,6 +387,8 @@ REGISTER_TYPED_TEST_SUITE_P(
 );
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_rdma_handle_set, TestRDMAHandleSet, RDMASetTestTypes,
+  DEFAULT_NAME_GEN
 );
 
 }}} /* end namespace vt::tests::unit */

@@ -231,7 +231,8 @@ REGISTER_TYPED_TEST_SUITE_P(
 );
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_rdma_handle_collection, TestRDMAHandleCollection, RDMACollectionTestTypes
+  test_rdma_handle_collection, TestRDMAHandleCollection, RDMACollectionTestTypes,
+  DEFAULT_NAME_GEN
 );
 
 }}} /* end namespace vt::tests::unit */
