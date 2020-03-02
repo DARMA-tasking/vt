@@ -113,6 +113,7 @@ void PendingSend::release() {
   } else if ( epoch_action_ ) {
     epoch_action_();
     epoch_action_ = {};
+    consumeMsg();
   }
   if (epoch_produced_ != no_epoch) {
     theMsg()->popEpoch(epoch_produced_);
