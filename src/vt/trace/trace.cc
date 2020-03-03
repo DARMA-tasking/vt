@@ -85,9 +85,7 @@ struct TraceEventSeqCompare {
   }
 };
 
-Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
-  : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(getCurrentTime()), log_file_(nullptr)
+Trace::Trace()
 {
   /*
    * Incremental flush mode for zlib. Several options are available:
@@ -114,37 +112,43 @@ Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
    */
 
   incremental_flush_mode = Z_SYNC_FLUSH;
-}
 
-Trace::Trace() { }
-
-/*static*/ void Trace::traceBeginIdleTrigger() {
-  #if backend_check_enabled(trace_enabled)
-    if (not theTrace()->inIdleEvent()) {
-      theTrace()->beginIdle();
-    }
-  #endif
+  // The first (implied) scheduler always starts with an empty event stack.
+  event_holds_.push_back(0);
 }
 
 void Trace::initialize() {
+#if backend_check_enabled(trace_enabled)
   theSched()->registerTrigger(
-    sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
+    sched::SchedulerEvent::BeginSchedulerLoop, [this]{ beginSchedulerLoop(); }
   );
+  theSched()->registerTrigger(
+    sched::SchedulerEvent::EndSchedulerLoop, [this]{ endSchedulerLoop(); }
+  );
+  theSched()->registerTrigger(
+    sched::SchedulerEvent::BeginIdle, [this]{ beginIdle(); }
+  );
+  theSched()->registerTrigger(
+    sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
+  );
+#endif
 }
 
 void Trace::loadAndBroadcastSpec() {
   if (ArgType::vt_trace_spec) {
     auto spec_proxy = file_spec::TraceSpec::construct();
+
     theTerm()->produce();
     if (theContext()->getNode() == 0) {
       auto spec_ptr = spec_proxy.get();
       spec_ptr->parse();
       spec_ptr->broadcastSpec();
     }
-    while (not spec_proxy.get()->specReceived()) {
-      vt::runScheduler();
-    }
+    theSched()->runSchedulerWhile([&spec_proxy]{
+      return not spec_proxy.get()->specReceived();
+    });
     theTerm()->consume();
+
     spec_proxy_ = spec_proxy.getProxy();
 
     // Set enabled for the initial phase
@@ -432,9 +436,10 @@ void Trace::addUserEventBracketedManual(
 
 TraceProcessingTag Trace::beginProcessing(
   TraceEntryIDType const ep, TraceMsgLenType const len,
-  TraceEventIDType const event, NodeType const from_node, double const time,
-  uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
-  uint64_t const idx4
+  TraceEventIDType const event, NodeType const from_node,
+  uint64_t const idx1, uint64_t const idx2,
+  uint64_t const idx3, uint64_t const idx4,
+  double const time
 ) {
   if (not checkDynamicRuntimeEnabled()) {
     return TraceProcessingTag{};
@@ -473,25 +478,31 @@ void Trace::endProcessing(
     return;
   }
 
+  if (idle_begun_) {
+    // TODO: This should be a prohibited case - vt 1.1?
+    endIdle(time);
+  }
+
   vtAssert(
     not open_events_.empty()
     // This is current contract expectations; however it precludes async closing.
-    and open_events_.top().ep == ep
-    and open_events_.top().event == event,
+    and open_events_.back().ep == ep
+    and open_events_.back().event == event,
     "Event being closed must be on the top of the open event stack."
   );
 
   // Final event is same as original with a few .. tweaks.
   // Always done PRIOR TO restarts.
   traces_.push(
-    LogType{open_events_.top(), time, TraceConstantsType::EndProcessing}
+    LogType{open_events_.back(), time, TraceConstantsType::EndProcessing}
   );
-  open_events_.pop();
+  open_events_.pop_back();
 
-  if (not open_events_.empty()) {
+  if (open_events_.size() > event_holds_.size()) {
     // Emit a '[re]start' event for the reactivated stack item.
+    // The event must be in the current scheduler loop's event stack depth.
     traces_.push(
-      LogType{open_events_.top(), time, TraceConstantsType::BeginProcessing}
+      LogType{open_events_.back(), time, TraceConstantsType::BeginProcessing}
     );
   }
 
@@ -523,7 +534,65 @@ void Trace::endProcessing(
   );
 }
 
+void Trace::beginSchedulerLoop() {
+  double const time = getCurrentTime();
+
+  // Synth-pop any residue from outside scheduler.
+  int sched_top = event_holds_.back();
+  int size = open_events_.size();
+  for (int i = size - 1; i >= sched_top; i--) {
+    traces_.push(
+      LogType{open_events_[i], time, TraceConstantsType::EndProcessing}
+    );
+  }
+
+  // Capture the current open event depth.
+  event_holds_.push_back(open_events_.size());
+
+  // Every nested loop enters into a processing event immediately,
+  // as there is the guarantee that the scheduler is not idle and
+  // must be doing something..
+  static trace::TraceEntryIDType ep
+    = trace::TraceRegistry::registerEventHashed("vt::sched", "Loop");
+
+  auto node = theContext()->getNode();
+  uint64_t sched_depth = event_holds_.size() - 1;
+  cur_loop_event_ = beginProcessing(
+    ep, 0, 0, node, sched_depth, 0, 0, 0, time
+  );
+}
+
+void Trace::endSchedulerLoop() {
+  double const time = getCurrentTime();
+
+  vtAssert(
+    event_holds_.size() > 1,
+    "Too many endSchedulerLoop calls."
+  );
+
+  endProcessing(cur_loop_event_, time);
+
+  vtAssert( // implicitly true from endProcessing above
+    event_holds_.back() == open_events_.size(),
+    "Processing events opened in a scheduler loop must be closed by loop end."
+  );
+
+  event_holds_.pop_back();
+
+  // Synth-push/restore residue from outside scheduler.
+  int sched_top = event_holds_.back();
+  int size = open_events_.size();
+  for (int i = sched_top; i < size; i++) {
+    traces_.push(
+      LogType{open_events_[i], time, TraceConstantsType::BeginProcessing}
+    );
+  }
+}
+
 void Trace::beginIdle(double const time) {
+  if (idle_begun_) {
+    return;
+  }
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
@@ -542,6 +611,9 @@ void Trace::beginIdle(double const time) {
 }
 
 void Trace::endIdle(double const time) {
+  if (not idle_begun_) {
+    return;
+  }
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
@@ -553,10 +625,10 @@ void Trace::endIdle(double const time) {
   auto const type = TraceConstantsType::EndIdle;
   NodeType const node = theContext()->getNode();
 
+  idle_begun_ = false; // must set BEFORE logEvent
   logEvent(
     LogType{time, type, node}
   );
-  idle_begun_ = false; // must set AFTER logEvent
 }
 
 TraceEventIDType Trace::messageCreation(
@@ -635,9 +707,9 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
       // Close and pop everything, we are disabling traces at this point
       while (not open_events_.empty()) {
         traces_.push(
-          LogType{open_events_.top(), time, TraceConstantsType::EndProcessing}
+          LogType{open_events_.back(), time, TraceConstantsType::EndProcessing}
         );
-        open_events_.pop();
+        open_events_.pop_back();
       }
 
       // Go ahead and perform a trace flush when tracing is disabled (and was
@@ -669,26 +741,26 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
     "Event must exist that was logged"
   );
 
-  // close any idle event as soon as we encounter any other type of event
-  if (idle_begun_ and
-      log.type != TraceConstantsType::BeginIdle and
-      log.type != TraceConstantsType::EndIdle) {
-    endIdle();
+  // Close any idle event as soon as we encounter any other type of event.
+  if (idle_begun_) {
+    // TODO: This should be a prohibited case - vt 1.1?
+    endIdle(log.time);
   }
 
   switch (log.type) {
   case TraceConstantsType::BeginProcessing: {
 
-    if (not open_events_.empty()) {
-      // Emit a 'stop' event for the current stack item;
+    if (open_events_.size() > event_holds_.size()) {
+      // Emit a 'stop' event for the current item;
       // another '[re]start' event will be emitted on group end.
+      // The event must be in the current scheduler loop's event stack depth.
       double logTime = log.time;
       traces_.push(
-        LogType{open_events_.top(), logTime, TraceConstantsType::EndProcessing}
+        LogType{open_events_.back(), logTime, TraceConstantsType::EndProcessing}
       );
     }
 
-    open_events_.push(log /* copy, not forwarding rv-ref */);
+    open_events_.push_back(log /* copy, not forwarding rv-ref */);
 
     break;
   }
@@ -698,13 +770,13 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
     // This case remains for compatibility.
 
     vtAssert(
-      open_events_.top().ep == log.ep and
-      open_events_.top().type == TraceConstantsType::BeginProcessing,
+      open_events_.back().ep == log.ep and
+      open_events_.back().type == TraceConstantsType::BeginProcessing,
       "Top event should be correct type and event"
     );
 
     // Steal top event information
-    LogType const& top = open_events_.top();
+    LogType const& top = open_events_.back();
     TraceProcessingTag processing_tag{top.ep, top.event};
     endProcessing(processing_tag);
 
@@ -781,6 +853,8 @@ void Trace::cleanupTracesFile() {
   }
 
   // No more events can be written.
+  // Close any idle for consistency.
+  endIdle();
   disableTracing();
 
   //--- Dump everything into an output file and close.
