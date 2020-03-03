@@ -498,7 +498,8 @@ void Trace::endProcessing(
   );
   open_events_.pop_back();
 
-  if (open_events_.size() > event_holds_.size()) {
+  int hold_at = event_holds_.back();
+  if (open_events_.size() > hold_at) {
     // Emit a '[re]start' event for the reactivated stack item.
     // The event must be in the current scheduler loop's event stack depth.
     traces_.push(
@@ -538,9 +539,9 @@ void Trace::beginSchedulerLoop() {
   double const time = getCurrentTime();
 
   // Synth-pop any residue from outside scheduler.
-  int sched_top = event_holds_.back();
+  int parent_hold_at = event_holds_.back();
   int size = open_events_.size();
-  for (int i = size - 1; i >= sched_top; i--) {
+  for (int i = size - 1; i >= parent_hold_at; i--) {
     traces_.push(
       LogType{open_events_[i], time, TraceConstantsType::EndProcessing}
     );
@@ -580,9 +581,9 @@ void Trace::endSchedulerLoop() {
   event_holds_.pop_back();
 
   // Synth-push/restore residue from outside scheduler.
-  int sched_top = event_holds_.back();
+  int parent_hold_at = event_holds_.back();
   int size = open_events_.size();
-  for (int i = sched_top; i < size; i++) {
+  for (int i = parent_hold_at; i < size; i++) {
     traces_.push(
       LogType{open_events_[i], time, TraceConstantsType::BeginProcessing}
     );
@@ -705,7 +706,8 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
     if (trace_enabled_cur_phase_ != ret) {
       auto time = getCurrentTime();
       // Close and pop everything, we are disabling traces at this point
-      while (not open_events_.empty()) {
+      int hold_at = event_holds_.back();
+      while (open_events_.size() > hold_at) {
         traces_.push(
           LogType{open_events_.back(), time, TraceConstantsType::EndProcessing}
         );
@@ -750,7 +752,8 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   switch (log.type) {
   case TraceConstantsType::BeginProcessing: {
 
-    if (open_events_.size() > event_holds_.size()) {
+    int hold_at = event_holds_.back();
+    if (open_events_.size() > hold_at) {
       // Emit a 'stop' event for the current item;
       // another '[re]start' event will be emitted on group end.
       // The event must be in the current scheduler loop's event stack depth.
