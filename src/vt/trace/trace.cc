@@ -755,13 +755,6 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   TraceEventIDType event = log.event;
   traces_.push(std::move(log));
 
-  // If auto-flush, can flush immediately.
-  // TODO: log time of flushing; unify with group-end.
-  if (ArgType::vt_trace_flush_size not_eq 0
-      and traces_.size() >= static_cast<std::size_t>(ArgType::vt_trace_flush_size)) {
-    writeTracesFile(incremental_flush_mode);
-  }
-
   return event;
 }
 
