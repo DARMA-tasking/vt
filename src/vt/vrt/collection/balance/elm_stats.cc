@@ -121,6 +121,10 @@ void ElementStats::addTime(TimeType const& time) {
   phase_timings_.resize(cur_phase_ + 1);
   phase_timings_.at(cur_phase_) += time;
 
+  subphase_timings_.resize(cur_phase_ + 1);
+  subphase_timings_.at(cur_phase_).resize(cur_subphase_ + 1);
+  subphase_timings_.at(cur_phase_).at(cur_subphase_) += time;
+
   debug_print(
     lb, node,
     "ElementStats: addTime: time={}, cur_load={}\n",
@@ -169,6 +173,10 @@ ElementStats::getComm(PhaseType const& phase) {
   );
 
   return phase_comm;
+}
+
+void ElementStats::setSubPhase(int subphase) {
+  cur_subphase_ = subphase;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
