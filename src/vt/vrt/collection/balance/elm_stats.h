@@ -89,6 +89,7 @@ struct ElementStats {
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
   CommMapType const& getComm(PhaseType const& phase);
+  void setSubPhase(int subphase);
 
   template <typename Serializer>
   void serialize(Serializer& s);
@@ -106,6 +107,9 @@ protected:
   PhaseType cur_phase_ = fst_lb_phase;
   std::vector<TimeType> phase_timings_ = {};
   std::vector<CommMapType> comm_ = {};
+
+  int cur_subphase_ = 0;
+  std::vector<std::vector<TimeType>> subphase_timings_ = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
