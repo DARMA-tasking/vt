@@ -821,6 +821,14 @@ void Trace::writeTracesFile(int flush) {
       TraceContainersType::getEventContainer()->size()
     );
 
+    if (theContext()->getNode() == 0) {
+      vt_print(
+        trace,
+        "writeTracesFile: to_write={}, already_written={}\n",
+        traces_.size(), trace_write_count_
+      );
+    }
+
     outputTraces(
       log_file_.get(), traces_, start_time_, flush
     );
