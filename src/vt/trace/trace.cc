@@ -47,6 +47,7 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/timing/timing.h"
 #include "vt/trace/trace.h"
+#include "vt/trace/trace_user.h"
 #include "vt/utils/demangle/demangle.h"
 #include "vt/trace/file_spec/spec.h"
 #include "vt/objgroup/headers.h"
