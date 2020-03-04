@@ -141,6 +141,9 @@ void Trace::initialize() {
   theSched()->registerTrigger(
     sched::SchedulerEvent::EndIdle, traceEndIdleTrigger
   );
+
+  // Register a trace user event to demarcate flushes that occur
+  flush_event = vt::trace::registerEventCollective("trace_flush");
 }
 
 void Trace::loadAndBroadcastSpec() {
@@ -788,7 +791,7 @@ void Trace::cleanupTracesFile() {
   disableTracing();
 
   //--- Dump everything into an output file and close.
-  writeTracesFile(Z_FINISH);
+  writeTracesFile(Z_FINISH, false);
 
   assert(log_file_ && "Trace file must be open"); // opened in writeTracesFile
   outputFooter(log_file_.get(), node, start_time_);
@@ -807,11 +810,11 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     theCollective()->barrier();
   }
   if (traces_.size() >= static_cast<std::size_t>(ArgType::vt_trace_flush_size)) {
-    writeTracesFile(incremental_flush_mode);
+    writeTracesFile(incremental_flush_mode, true);
   }
 }
 
-void Trace::writeTracesFile(int flush) {
+void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
   auto const node = theContext()->getNode();
 
   size_t to_write = traces_.size();
@@ -840,9 +843,17 @@ void Trace::writeTracesFile(int flush) {
       );
     }
 
-    outputTraces(
-      log_file_.get(), traces_, start_time_, flush
-    );
+    if (is_incremental_flush) {
+      vt::trace::TraceScopedEvent scope(flush_event);
+      outputTraces(
+        log_file_.get(), traces_, start_time_, flush
+      );
+    } else {
+      outputTraces(
+        log_file_.get(), traces_, start_time_, flush
+      );
+    }
+
     trace_write_count_ += to_write;
   }
 
