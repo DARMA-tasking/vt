@@ -175,7 +175,7 @@ ElementStats::getComm(PhaseType const& phase) {
   return phase_comm;
 }
 
-void ElementStats::setSubPhase(int subphase) {
+void ElementStats::setSubPhase(SubphaseType subphase) {
   cur_subphase_ = subphase;
 }
 

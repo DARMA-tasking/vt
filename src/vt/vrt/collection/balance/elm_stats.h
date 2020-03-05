@@ -63,6 +63,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ElementStats {
   using PhaseType       = uint64_t;
+  using SubphaseType    = uint16_t;
   using ArgType         = vt::arguments::ArgConfig;
 
   ElementStats() = default;
@@ -89,7 +90,7 @@ struct ElementStats {
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
   CommMapType const& getComm(PhaseType const& phase);
-  void setSubPhase(int subphase);
+  void setSubPhase(SubphaseType subphase);
 
   template <typename Serializer>
   void serialize(Serializer& s);
@@ -108,7 +109,7 @@ protected:
   std::vector<TimeType> phase_timings_ = {};
   std::vector<CommMapType> comm_ = {};
 
-  int cur_subphase_ = 0;
+  SubphaseType cur_subphase_ = 0;
   std::vector<std::vector<TimeType>> subphase_timings_ = {};
 };
 
