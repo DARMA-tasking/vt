@@ -217,6 +217,13 @@ struct Trace {
 
 private:
 
+  // Emit a 'stop' trace for previous open event or a '[re]start' trace
+  // for a reactivated open event. This assists with output flattening.
+  // The event must be in the current scheduler loop's event stack depth.
+  void emitTraceForTopProcessingEvent(
+    double const time, TraceConstantsType const type
+  );
+
   // Writes traces to file, optionally flushing.
   // The traces collection is modified.
   static void outputTraces(

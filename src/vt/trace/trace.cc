@@ -498,14 +498,7 @@ void Trace::endProcessing(
   );
   open_events_.pop_back();
 
-  std::size_t hold_at = event_holds_.back();
-  if (open_events_.size() > hold_at) {
-    // Emit a '[re]start' event for the reactivated stack item.
-    // The event must be in the current scheduler loop's event stack depth.
-    traces_.push(
-      LogType{open_events_.back(), time, TraceConstantsType::BeginProcessing}
-    );
-  }
+  emitTraceForTopProcessingEvent(time, TraceConstantsType::BeginProcessing);
 
   // Unlike logEvent there is currently no flush here.
 }
@@ -743,28 +736,18 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
     "Event must exist that was logged"
   );
 
+  double time = log.time;
+
   // Close any idle event as soon as we encounter any other type of event.
   if (idle_begun_) {
     // TODO: This should be a prohibited case - vt 1.1?
-    endIdle(log.time);
+    endIdle(time);
   }
 
   switch (log.type) {
   case TraceConstantsType::BeginProcessing: {
-
-    std::size_t hold_at = event_holds_.back();
-    if (open_events_.size() > hold_at) {
-      // Emit a 'stop' event for the current item;
-      // another '[re]start' event will be emitted on group end.
-      // The event must be in the current scheduler loop's event stack depth.
-      double logTime = log.time;
-      traces_.push(
-        LogType{open_events_.back(), logTime, TraceConstantsType::EndProcessing}
-      );
-    }
-
+    emitTraceForTopProcessingEvent(time, TraceConstantsType::EndProcessing);
     open_events_.push_back(log /* copy, not forwarding rv-ref */);
-
     break;
   }
   case TraceConstantsType::EndProcessing: {
@@ -783,17 +766,24 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
     TraceProcessingTag processing_tag{top.ep, top.event};
     endProcessing(processing_tag);
 
-    return trace::no_trace_event;
+    return trace::no_trace_event; // n.b. pushed eagerly
   }
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:
   case TraceConstantsType::MessageRecv:
     log.event = cur_event_++;
     break;
-  case TraceConstantsType::BeginIdle:
-  case TraceConstantsType::EndIdle:
+  case TraceConstantsType::BeginIdle: {
     log.event = no_trace_event;
+    emitTraceForTopProcessingEvent(time, TraceConstantsType::EndProcessing);
     break;
+  }
+  case TraceConstantsType::EndIdle: {
+    log.event = no_trace_event;
+    traces_.push(std::move(log));
+    emitTraceForTopProcessingEvent(time, TraceConstantsType::BeginProcessing);
+    return trace::no_trace_event; // n.b. pushed eagerly
+  }
   case TraceConstantsType::UserSupplied:
   case TraceConstantsType::UserSuppliedNote:
   case TraceConstantsType::UserSuppliedBracketedNote:
@@ -827,6 +817,17 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   }
 
   return event;
+}
+
+void Trace::emitTraceForTopProcessingEvent(
+    double const time, TraceConstantsType const type
+) {
+  std::size_t hold_at = event_holds_.back();
+  if (open_events_.size() > hold_at) {
+    traces_.push(
+      LogType{open_events_.back(), time, type}
+    );
+  }
 }
 
 /*static*/ bool Trace::traceWritingEnabled(NodeType node) {
