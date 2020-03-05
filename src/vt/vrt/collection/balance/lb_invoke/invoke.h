@@ -107,11 +107,13 @@ protected:
 public:
   void printMemoryUsage(PhaseType phase);
   void setTraceEnabledNextPhase(PhaseType phase);
+  void flushTraceNextPhase();
 
   template <typename MsgT>
   void sysLB(MsgT* msg) {
     debug_print(lb, node, "sysLB\n");
     printMemoryUsage(msg->phase_);
+    flushTraceNextPhase();
     setTraceEnabledNextPhase(msg->phase_);
     return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
   }
@@ -119,6 +121,7 @@ public:
   void sysReleaseLB(MsgT* msg) {
     debug_print(lb, node, "sysReleaseLB\n");
     printMemoryUsage(msg->phase_);
+    flushTraceNextPhase();
     setTraceEnabledNextPhase(msg->phase_);
     return releaseImpl(msg->phase_, msg->num_collections_);
   }
