@@ -657,8 +657,8 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
 
       // Go ahead and perform a trace flush when tracing is disabled (and was
       // previously enabled) to reduce memory footprint.
-      if (not ret) {
-        flushTracesFile(false);
+      if (not ret and ArgType::vt_trace_flush_size != 0) {
+        writeTracesFile(incremental_flush_mode, true);
       }
     }
 
