@@ -498,7 +498,7 @@ void Trace::endProcessing(
   );
   open_events_.pop_back();
 
-  int hold_at = event_holds_.back();
+  std::size_t hold_at = event_holds_.back();
   if (open_events_.size() > hold_at) {
     // Emit a '[re]start' event for the reactivated stack item.
     // The event must be in the current scheduler loop's event stack depth.
@@ -539,9 +539,9 @@ void Trace::beginSchedulerLoop() {
   double const time = getCurrentTime();
 
   // Synth-pop any residue from outside scheduler.
-  int parent_hold_at = event_holds_.back();
-  int size = open_events_.size();
-  for (int i = size - 1; i >= parent_hold_at; i--) {
+  std::size_t parent_hold_at = event_holds_.back();
+  std::size_t size = open_events_.size();
+  for (std::size_t i = size - 1; i >= parent_hold_at and i not_eq (std::size_t)-1; i--) {
     traces_.push(
       LogType{open_events_[i], time, TraceConstantsType::EndProcessing}
     );
@@ -581,9 +581,9 @@ void Trace::endSchedulerLoop() {
   event_holds_.pop_back();
 
   // Synth-push/restore residue from outside scheduler.
-  int parent_hold_at = event_holds_.back();
-  int size = open_events_.size();
-  for (int i = parent_hold_at; i < size; i++) {
+  std::size_t parent_hold_at = event_holds_.back();
+  std::size_t size = open_events_.size();
+  for (std::size_t i = parent_hold_at; i < size; i++) {
     traces_.push(
       LogType{open_events_[i], time, TraceConstantsType::BeginProcessing}
     );
@@ -706,7 +706,7 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
     if (trace_enabled_cur_phase_ != ret) {
       auto time = getCurrentTime();
       // Close and pop everything, we are disabling traces at this point
-      int hold_at = event_holds_.back();
+      std::size_t hold_at = event_holds_.back();
       while (open_events_.size() > hold_at) {
         traces_.push(
           LogType{open_events_.back(), time, TraceConstantsType::EndProcessing}
@@ -752,7 +752,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   switch (log.type) {
   case TraceConstantsType::BeginProcessing: {
 
-    int hold_at = event_holds_.back();
+    std::size_t hold_at = event_holds_.back();
     if (open_events_.size() > hold_at) {
       // Emit a 'stop' event for the current item;
       // another '[re]start' event will be emitted on group end.

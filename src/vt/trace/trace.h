@@ -94,7 +94,7 @@ struct Trace {
   // Although should be used mostly as a stack, vector is exposed to enable
   // the use of a synthetic pop-push to maintain the stack around idle.
   using TraceStackType      = std::vector<LogType>;
-  using EventHoldStackType = std::vector<int>;
+  using EventHoldStackType  = std::vector<std::size_t>;
 
   Trace();
   virtual ~Trace();
