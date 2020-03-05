@@ -148,7 +148,7 @@ PhaseType ElementStats::getPhase() const {
 }
 
 TimeType ElementStats::getLoad(PhaseType const& phase) const {
-  vtAssert(phase_timings_.size() >= phase, "Must have phase");
+  vtAssert(phase_timings_.size() > phase, "Must have phase");
   auto const& total_load = phase_timings_.at(phase);
 
   debug_print(
