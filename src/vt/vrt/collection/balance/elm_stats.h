@@ -89,6 +89,8 @@ struct ElementStats {
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
+  TimeType getLoad(PhaseType phase, SubphaseType subphase) const;
+
   CommMapType const& getComm(PhaseType const& phase);
   void setSubPhase(SubphaseType subphase);
 

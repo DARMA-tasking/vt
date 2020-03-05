@@ -160,6 +160,22 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
   return total_load;
 }
 
+TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
+  vtAssert(phase_timings_.size() > phase, "Must have phase");
+  auto const& subphase_loads = subphase_timings_.at(phase);
+
+  vtAssert(subphase_loads.size() > subphase, "Must have subphase");
+  auto total_load = subphase_loads.at(subphase);
+
+  debug_print(
+    lb, node,
+    "ElementStats: getLoad: load={}, phase={}, subphase={}\n",
+    total_load, phase, subphase
+  );
+
+  return total_load;
+}
+
 
 CommMapType const&
 ElementStats::getComm(PhaseType const& phase) {
