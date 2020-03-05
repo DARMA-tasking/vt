@@ -231,11 +231,24 @@ void LBManager::releaseNow(PhaseType phase) {
   num_invocations_ = num_release_ = 0;
 }
 
+void LBManager::triggerListeners(PhaseType phase) {
+  for (auto&& l : listeners_) {
+    if (l) {
+      l(phase);
+    }
+  }
+}
+
+void LBManager::flushTraceNextPhase() {
+#if backend_check_enabled(trace_enabled)
+  theTrace()->flushTracesFile(false);
+# endif
+}
+
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
   // Set if tracing is enabled for this next phase. Do this immediately before
   // LB runs so LB is always instrumented as the beginning of the next phase
 #if backend_check_enabled(trace_enabled)
-  theTrace()->flushTracesFile(false);
   theTrace()->setTraceEnabledCurrentPhase(phase + 1);
 # endif
 }
