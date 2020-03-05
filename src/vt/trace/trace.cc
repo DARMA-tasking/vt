@@ -145,7 +145,7 @@ void Trace::initialize() {
   );
 
   // Register a trace user event to demarcate flushes that occur
-  flush_event = vt::trace::registerEventCollective("trace_flush");
+  flush_event_ = vt::trace::registerEventCollective("trace_flush");
 }
 
 void Trace::loadAndBroadcastSpec() {
@@ -862,7 +862,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
     }
 
     if (is_incremental_flush) {
-      vt::trace::TraceScopedEvent scope(flush_event);
+      vt::trace::TraceScopedEvent scope(flush_event_);
       outputTraces(
         log_file_.get(), traces_, start_time_, flush
       );
