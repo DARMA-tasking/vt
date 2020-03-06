@@ -121,7 +121,7 @@ class CollectionChainSet final {
 
       // The parameter `true` here tells VT to use an efficient rooted DS-epoch
       // by default. This can still be overridden by command-line flags
-      EpochType new_epoch = theTerm()->makeEpochRooted(true);
+      EpochType new_epoch = theTerm()->makeEpochRooted(term::UseDS{true});
       vt::theMsg()->pushEpoch(new_epoch);
 
       chain.add(new_epoch, step_action(idx));
