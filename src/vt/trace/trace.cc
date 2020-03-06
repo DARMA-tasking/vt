@@ -869,13 +869,15 @@ void Trace::writeTracesFile(int flush) {
 
   size_t to_write = traces_.size();
 
-  if (enabled_on_node_ and to_write > 0) {
-    if (not log_file_) {
-      auto path = full_trace_name_;
-      log_file_ = std::make_unique<vt_gzFile>(gzopen(path.c_str(), "wb"));
-      outputHeader(log_file_.get(), node, start_time_);
-    }
+  // Open traces file, even if no events are immediately written.
+  // This maintains later expectations.
+  if (enabled_on_node_ and not log_file_) {
+    auto path = full_trace_name_;
+    log_file_ = std::make_unique<vt_gzFile>(gzopen(path.c_str(), "wb"));
+    outputHeader(log_file_.get(), node, start_time_);
+  }
 
+  if (enabled_on_node_ and to_write > 0) {
     debug_print(
       trace, node,
       "write_traces_file: to_write={}, already_written={}, "
