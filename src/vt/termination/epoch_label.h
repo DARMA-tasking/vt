@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_scope.cc
+//                                epoch_label.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,78 +42,22 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_TERMINATION_EPOCH_LABEL_H
+#define INCLUDED_VT_TERMINATION_EPOCH_LABEL_H
+
 #include "vt/config.h"
-#include "vt/termination/termination.h"
-#include "vt/termination/term_common.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/messaging/active.h"
-#include "vt/utils/bits/bits_common.h"
 
 namespace vt { namespace term {
 
-/*static*/ EpochType TerminationDetector::Scoped::rooted(
-  bool small, ActionType closure
-) {
-  // For now we just use Dijkstra-Scholten if the region is "small"
-  bool const use_dijkstra_scholten = small == true;
-  auto const epoch = theTerm()->makeEpochRooted(UseDS{use_dijkstra_scholten});
-  bool term_finished = false;
-  auto action = [&]{ term_finished = true; };
-  theTerm()->addActionEpoch(epoch,action);
-  vtAssertExpr(closure != nullptr);
-  theMsg()->pushEpoch(epoch);
-  closure();
-  theMsg()->popEpoch();
-  theTerm()->finishedEpoch(epoch);
-  while (!term_finished) {
-    runScheduler();
-  }
-  return epoch;
-}
+struct EpochLabel {
+  bool hasLabel() const;
+  std::string getLabel() const;
+  void setLabel(std::string const& label);
 
-/*static*/ EpochType TerminationDetector::Scoped::rooted(
-  bool small, ActionType closure, ActionType action
-) {
-  bool const use_dijkstra_scholten = small == true;
-  auto const epoch = theTerm()->makeEpochRooted(UseDS{use_dijkstra_scholten});
-  theTerm()->addActionEpoch(epoch,action);
-  vtAssertExpr(closure != nullptr);
-  theMsg()->pushEpoch(epoch);
-  closure();
-  theMsg()->popEpoch();
-  theTerm()->finishedEpoch(epoch);
-  return epoch;
-}
-
-/*static*/ EpochType TerminationDetector::Scoped::collective(
-  ActionType closure
-) {
-  auto const epoch = theTerm()->makeEpochCollective();
-  bool term_finished = false;
-  auto action = [&]{ term_finished = true; };
-  theTerm()->addActionEpoch(epoch,action);
-  vtAssertExpr(closure != nullptr);
-  theMsg()->pushEpoch(epoch);
-  closure();
-  theMsg()->popEpoch();
-  theTerm()->finishedEpoch(epoch);
-  while (!term_finished) {
-    runScheduler();
-  }
-  return epoch;
-}
-
-/*static*/ EpochType TerminationDetector::Scoped::collective(
-  ActionType closure, ActionType action
-) {
-  auto const epoch = theTerm()->makeEpochCollective();
-  theTerm()->addActionEpoch(epoch,action);
-  vtAssertExpr(closure != nullptr);
-  theMsg()->pushEpoch(epoch);
-  closure();
-  theMsg()->popEpoch();
-  theTerm()->finishedEpoch(epoch);
-  return epoch;
-}
+private:
+  std::string label_ = "";
+};
 
 }} /* end namespace vt::term */
+
+#endif /*INCLUDED_VT_TERMINATION_EPOCH_LABEL_H*/
