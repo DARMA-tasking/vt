@@ -72,14 +72,14 @@ class CollectionChainSet final {
     chains_.erase(iter);
   }
 
-  void nextStep(std::function<PendingSend(Index)> step_action) {
+  void nextStep(std::string label, std::function<PendingSend(Index)> step_action) {
     for (auto &entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
 
       // The parameter `true` here tells VT to use an efficient rooted DS-epoch
       // by default. This can still be overridden by command-line flags
-      EpochType new_epoch = theTerm()->makeEpochRooted(term::UseDS{true});
+      EpochType new_epoch = theTerm()->makeEpochRooted(label, term::UseDS{true});
       vt::theMsg()->pushEpoch(new_epoch);
 
       chain.add(new_epoch, step_action(idx));
@@ -87,6 +87,10 @@ class CollectionChainSet final {
       vt::theMsg()->popEpoch(new_epoch);
       theTerm()->finishedEpoch(new_epoch);
     }
+  }
+
+  void nextStep(std::function<PendingSend(Index)> step_action) {
+    return nextStep("", step_action);
   }
 
 #if 0
@@ -109,9 +113,11 @@ class CollectionChainSet final {
   }
 #endif
 
-  // for a step with internal recursive communication and global inter-dependence
-  void nextStepCollective(std::function<PendingSend(Index)> step_action) {
-    auto epoch = theTerm()->makeEpochCollective();
+
+  void nextStepCollective(
+    std::string label, std::function<PendingSend(Index)> step_action
+  ) {
+    auto epoch = theTerm()->makeEpochCollective(label);
     vt::theMsg()->pushEpoch(epoch);
 
     for (auto &entry : chains_) {
@@ -122,6 +128,10 @@ class CollectionChainSet final {
 
     vt::theMsg()->popEpoch(epoch);
     theTerm()->finishedEpoch(epoch);
+  }
+
+  void nextStepCollective(std::function<PendingSend(Index)> step_action) {
+    return nextStepCollective("", step_action);
   }
 
   void phaseDone() {
