@@ -71,20 +71,25 @@ void addUserNoteEpi(std::string const& note, TraceEventIDType const event);
 #if backend_check_enabled(trace_enabled)
 
 struct TraceScopedEventHash final {
+  /**
+   * \begin A scoped (RAII) user event that records duration on destruction.
+   *
+   * A No-OP scoped event can be created by supplying an empty string.
+   */
   explicit TraceScopedEventHash(std::string const& in_str)
     : begin_(Trace::getCurrentTime()),
       str_(in_str)
   {
-    event_ = registerEventHashed(str_);
+    event_ = not in_str.empty() ? registerEventHashed(str_) : no_user_event;
   }
 
   ~TraceScopedEventHash() { end(); }
 
   void end() {
-    if (not ended_) {
+    if (event_ not_eq no_user_event) {
       end_ = Trace::getCurrentTime();
-      ended_ = true;
       theTrace()->addUserEventBracketed(event_, begin_, end_);
+      event_ = no_user_event;
     }
   }
 
@@ -93,10 +98,14 @@ private:
   double end_            = 0.0;
   std::string str_       = "";
   UserEventIDType event_ = 0;
-  bool ended_            = false;
 };
 
 struct TraceScopedEvent final {
+  /**
+   * \begin A scoped (RAII) user event that records duration on destruction.
+   *
+   * A No-OP scoped event can be created by supplying no_user_event.
+   */
   explicit TraceScopedEvent(UserEventIDType event)
     : begin_(Trace::getCurrentTime()),
       event_(event)
@@ -105,10 +114,10 @@ struct TraceScopedEvent final {
   ~TraceScopedEvent() { end(); }
 
   void end() {
-    if (not ended_) {
+    if (event_ not_eq no_user_event) {
       end_ = Trace::getCurrentTime();
-      ended_ = true;
       theTrace()->addUserEventBracketed(event_, begin_, end_);
+      event_ = no_user_event;
     }
   }
 
@@ -116,7 +125,6 @@ private:
   double begin_          = 0.0;
   double end_            = 0.0;
   UserEventIDType event_ = 0;
-  bool ended_            = false;
 };
 
 struct TraceScopedNote final {
