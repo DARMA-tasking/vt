@@ -60,6 +60,7 @@
 #include "vt/collective/tree/tree.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/termination/graph/epoch_graph_reduce.h"
+#include "vt/termination/epoch_tags.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -135,15 +136,89 @@ public:
 
 public:
   /*
-   * Interface for making epochs for termination detection
+   * Interface for creating new epochs for termination detection
+   */
+
+  /**
+   * \brief Create a new rooted epoch
+   *
+   * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
+   * \param[in] has_dep whether the current stack epoch is a successor
+   * \param[in] successor optional successor epoch specified explicitly
+   *
+   * \return the new epoch
    */
   EpochType makeEpochRooted(
-    bool useDS = false, bool child = true, EpochType parent = no_epoch
+    UseDS use_ds = UseDS{false},
+    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
+    EpochType successor = no_epoch
   );
-  EpochType makeEpochCollective(bool child = true, EpochType parent = no_epoch);
+
+  /**
+   * \brief Create a new collective epoch
+   *
+   * \param[in] has_dep whether the current stack epoch is a successor
+   * \param[in] successor optional successor epoch specified explicitly
+   *
+   * \return the new epoch
+   */
+  EpochType makeEpochCollective(
+    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
+    EpochType successor = no_epoch
+  );
+
+  /**
+   * \brief Create a new rooted epoch with a label
+   *
+   * \param[in] label epoch label for debugging purposes
+   * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
+   * \param[in] has_dep whether the current stack epoch is a successor
+   * \param[in] successor optional successor epoch specified explicitly
+   *
+   * \return the new epoch
+   */
+  EpochType makeEpochRooted(
+    std::string label,
+    UseDS use_ds = UseDS{false},
+    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
+    EpochType successor = no_epoch
+  );
+
+  /**
+   * \brief Create a collective epoch with a label
+   *
+   * \param[in] label epoch label for debugging purposes
+   * \param[in] is_coll whether to create a collective or rooted epoch
+   * \param[in] has_dep whether the current stack epoch is a successor
+   * \param[in] successor optional successor epoch specified explicitly
+   *
+   * \return the new epoch
+   */
+  EpochType makeEpochCollective(
+    std::string label,
+    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
+    EpochType successor = no_epoch
+  );
+
+  /**
+   * \brief Create a new rooted or collective epoch with a label
+   *
+   * \param[in] label epoch label for debugging purposes
+   * \param[in] is_coll whether to create a collective or rooted epoch
+   * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
+   * \param[in] has_dep whether the current stack epoch is a successor
+   * \param[in] successor optional successor epoch specified explicitly
+   *
+   * \return the new epoch
+   */
   EpochType makeEpoch(
-    bool is_coll, bool useDS = false, bool child = true, EpochType parent = no_epoch
+    std::string label,
+    bool is_coll,
+    UseDS use_ds = UseDS{false},
+    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
+    EpochType successor = no_epoch
   );
+
   void activateEpoch(EpochType const& epoch);
   void finishedEpoch(EpochType const& epoch);
   void finishNoActivateEpoch(EpochType const& epoch);
@@ -152,8 +227,12 @@ public:
   /*
    * Directly call into a specific type of rooted epoch, can not be overridden
    */
-  EpochType makeEpochRootedWave(bool child, EpochType parent);
-  EpochType makeEpochRootedDS(bool child, EpochType parent);
+  EpochType makeEpochRootedWave(
+    bool has_dep, EpochType successor, std::string label = ""
+  );
+  EpochType makeEpochRootedDS(
+    bool has_dep, EpochType successor, std::string label = ""
+  );
 
 private:
   enum CallFromEnum { Root, NonRoot };
@@ -212,9 +291,11 @@ private:
   bool propagateEpoch(TermStateType& state);
   void epochTerminated(EpochType const& epoch, CallFromEnum from);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
-  void setupNewEpoch(EpochType const& epoch);
+  void setupNewEpoch(EpochType const& epoch, std::string label);
   void readyNewEpoch(EpochType const& epoch);
-  void makeRootedHan(EpochType const& epoch, bool is_root);
+  void makeRootedHan(
+    EpochType const& epoch, bool is_root, std::string label = ""
+  );
 
 public:
   void addDependency(EpochType predecessor, EpochType successoor);

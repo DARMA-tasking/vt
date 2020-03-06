@@ -355,7 +355,8 @@ std::shared_ptr<TerminationDetector::EpochGraph> TerminationDetector::makeGraph(
     // Collect live epochs, both collective and rooted (excluding rooted ones
     // that did not originate on this node)
     std::unordered_map<EpochType, std::shared_ptr<EpochGraph>> live_epochs;
-    auto root = std::make_shared<EpochGraph>(any_epoch_state_.getEpoch());
+    std::string const glabel = "Global";
+    auto root = std::make_shared<EpochGraph>(any_epoch_state_.getEpoch(), glabel);
     // Collect non-rooted epochs, just collective, excluding DS or other rooted
     // epochs (info about them is localized on the creation node)
     auto const this_node = theContext()->getNode();
@@ -364,7 +365,8 @@ std::shared_ptr<TerminationDetector::EpochGraph> TerminationDetector::makeGraph(
       bool const rooted = epoch::EpochManip::isRooted(ep);
       if (not rooted or (rooted and epoch::EpochManip::node(ep) == this_node)) {
         if (not isEpochTerminated(elm.first)) {
-          live_epochs[ep] = std::make_shared<EpochGraph>(ep);
+          auto label = elm.second.getLabel();
+          live_epochs[ep] = std::make_shared<EpochGraph>(ep, label);
         }
       }
     }
@@ -373,7 +375,10 @@ std::shared_ptr<TerminationDetector::EpochGraph> TerminationDetector::makeGraph(
       // proper successor info about the rooted, DS epochs
       if (epoch::EpochManip::node(elm.first) == this_node) {
         if (not isEpochTerminated(elm.first)) {
-          live_epochs[elm.first] = std::make_shared<EpochGraph>(elm.first);
+          auto label = elm.second.getLabel();
+          live_epochs[elm.first] = std::make_shared<EpochGraph>(
+            elm.first, label
+          );
         }
       }
     }
@@ -970,14 +975,15 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 }
 
 EpochType TerminationDetector::makeEpochRootedWave(
-  bool has_dep, EpochType successor
+  bool has_dep, EpochType successor, std::string label
 ) {
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
 
   debug_print(
     term, node,
-    "makeEpochRootedWave: root={}, has_dep={}, epoch={:x}, successor={:x}\n",
-    theContext()->getNode(), has_dep, epoch, successor
+    "makeEpochRootedWave: root={}, has_dep={}, epoch={:x}, successor={:x},"
+    "label={}\n",
+    theContext()->getNode(), has_dep, epoch, successor, label
   );
 
   /*
@@ -991,7 +997,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
   /*
    *  Setup the new rooted epoch locally on the root node (this node)
    */
-  makeRootedHan(epoch,true);
+  makeRootedHan(epoch, true, label);
 
   if (has_dep) {
     addDependency(epoch, successor);
@@ -1002,7 +1008,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
 }
 
 EpochType TerminationDetector::makeEpochRootedDS(
-  bool has_dep, EpochType successor
+  bool has_dep, EpochType successor, std::string label
 ) {
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, ds_cat);
@@ -1010,7 +1016,8 @@ EpochType TerminationDetector::makeEpochRootedDS(
   vtAssert(term_.find(epoch) == term_.end(), "New epoch must not exist");
 
   // Create DS term where this node is the root
-  getDSTerm(epoch, true);
+  auto ds = getDSTerm(epoch, true);
+  ds->setLabel(label);
   getWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
 
@@ -1020,15 +1027,22 @@ EpochType TerminationDetector::makeEpochRootedDS(
 
   debug_print(
     term, node,
-    "makeEpochRootedDS: has_dep={}, successor={:x}, epoch={:x}\n",
-    has_dep, successor, epoch
+    "makeEpochRootedDS: has_dep={}, successor={:x}, epoch={:x}, label={}\n",
+    has_dep, successor, epoch, label
   );
 
   return epoch;
 }
 
 EpochType TerminationDetector::makeEpochRooted(
-  bool useDS, bool has_dep, EpochType successor
+  UseDS use_ds, UseCurrentEpochAsSuccessor has_dep, EpochType successor
+) {
+  return makeEpochRooted("", use_ds, has_dep, successor);
+}
+
+EpochType TerminationDetector::makeEpochRooted(
+  std::string label, UseDS use_ds, UseCurrentEpochAsSuccessor has_dep,
+  EpochType successor
 ) {
   /*
    *  This method should only be called by the root node for the rooted epoch
@@ -1038,8 +1052,8 @@ EpochType TerminationDetector::makeEpochRooted(
 
   debug_print(
     term, node,
-    "makeEpochRooted: root={}, is_ds={}, has_dep={}, successor={:x}\n",
-    theContext()->getNode(), useDS, has_dep, successor
+    "makeEpochRooted: root={}, use_ds={}, has_dep={}, successor={:x}, label={}\n",
+    theContext()->getNode(), use_ds, has_dep, successor, label
   );
 
   bool const force_use_ds = vt::arguments::ArgConfig::vt_term_rooted_use_ds;
@@ -1048,27 +1062,38 @@ EpochType TerminationDetector::makeEpochRooted(
   // Both force options should never be turned on
   vtAssertExpr(not (force_use_ds and force_use_wave));
 
-  if ((useDS or force_use_ds) and not force_use_wave) {
-    return makeEpochRootedDS(has_dep,successor);
+  if ((use_ds or force_use_ds) and not force_use_wave) {
+    return makeEpochRootedDS(has_dep, successor, label);
   } else {
-    return makeEpochRootedWave(has_dep,successor);
+    return makeEpochRootedWave(has_dep, successor, label);
   }
 }
 
 EpochType TerminationDetector::makeEpochCollective(
-  bool has_dep, EpochType successor
+  UseCurrentEpochAsSuccessor has_dep, EpochType successor
+) {
+  debug_print(
+    term, node,
+    "makeEpochCollective: no label\n"
+  );
+
+  return makeEpochCollective("", has_dep, successor);
+}
+
+EpochType TerminationDetector::makeEpochCollective(
+  std::string label, UseCurrentEpochAsSuccessor has_dep, EpochType successor
 ) {
   auto const epoch = epoch::EpochManip::makeNewEpoch();
 
   debug_print(
     term, node,
-    "makeEpochCollective: epoch={:x}, has_dep={}, successor={:x}\n",
-    epoch, has_dep, successor
+    "makeEpochCollective: epoch={:x}, has_dep={}, successor={:x}, label={}\n",
+    epoch, has_dep, successor, label
   );
 
   getWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
-  setupNewEpoch(epoch);
+  setupNewEpoch(epoch, label);
 
   if (has_dep) {
     addDependency(epoch, successor);
@@ -1078,11 +1103,13 @@ EpochType TerminationDetector::makeEpochCollective(
 }
 
 EpochType TerminationDetector::makeEpoch(
-  bool is_coll, bool useDS, bool has_dep, EpochType successor
+  std::string label, bool is_coll, UseDS use_ds,
+  UseCurrentEpochAsSuccessor has_dep,
+  EpochType successor
 ) {
   return is_coll ?
-    makeEpochCollective(has_dep, successor) :
-    makeEpochRooted(useDS,has_dep, successor);
+    makeEpochCollective(label, has_dep, successor) :
+    makeEpochRooted(label, use_ds, has_dep, successor);
 }
 
 void TerminationDetector::activateEpoch(EpochType const& epoch) {
@@ -1101,10 +1128,13 @@ void TerminationDetector::activateEpoch(EpochType const& epoch) {
   }
 }
 
-void TerminationDetector::makeRootedHan(EpochType const& epoch, bool is_root) {
+void TerminationDetector::makeRootedHan(
+  EpochType const& epoch, bool is_root, std::string label
+) {
   bool const is_ready = !is_root;
 
-  findOrCreateState(epoch, is_ready);
+  auto& state = findOrCreateState(epoch, is_ready);
+  state.setLabel(label);
   getWindow(epoch)->addEpoch(epoch);
 
   debug_print(
@@ -1120,7 +1150,9 @@ void TerminationDetector::makeRootedHan(EpochType const& epoch, bool is_root) {
   }
 }
 
-void TerminationDetector::setupNewEpoch(EpochType const& epoch) {
+void TerminationDetector::setupNewEpoch(
+  EpochType const& epoch, std::string label
+) {
   auto epoch_iter = epoch_state_.find(epoch);
 
   bool const found = epoch_iter != epoch_state_.end();
@@ -1134,6 +1166,7 @@ void TerminationDetector::setupNewEpoch(EpochType const& epoch) {
 
   auto& state = findOrCreateState(epoch, false);
   state.notifyLocalTerminated();
+  state.setLabel(label);
 }
 
 std::size_t TerminationDetector::getNumTerminatedCollectiveEpochs() const {
