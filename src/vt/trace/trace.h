@@ -198,7 +198,14 @@ struct Trace {
   /// Events already logged may still be written to the trace log.
   void disableTracing();
 
-  bool checkDynamicRuntimeEnabled();
+  /**
+   * \brief Is the event to be traced?
+   *
+   * This takes both static (node, runtime flags) and current state
+   * into account. Priority (end events) may be accpeted even during a
+   * temporary disabled state in order in perform internal maintenance.
+   */
+  bool checkDynamicRuntimeEnabled(bool is_priority = false);
 
   void loadAndBroadcastSpec();
   void setTraceEnabledCurrentPhase(PhaseType cur_phase);
@@ -267,6 +274,8 @@ private:
   LoopUserEventsType loop_events_;
 
   TraceEventIDType cur_event_   = 1;
+  // Is tracing (ever) allowed on this node? Set during initialization.
+  bool enabled_on_node_         = false;
   bool enabled_                 = true;
   bool idle_begun_              = false;
   double start_time_            = 0.0;
