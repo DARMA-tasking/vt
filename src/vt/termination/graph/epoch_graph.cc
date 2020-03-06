@@ -111,12 +111,7 @@ EpochGraph::EpFormat EpochGraph::formatDOTEpoch(
   } else {
     std::string label_format = "";
     if (label != "") {
-      label_format = fmt::format(
-        "{}{}{}",
-        label != "" ? "\\\""  : "",
-        label != "" ? label : "",
-        label != "" ? "\\\"\\n"  : ""
-      );
+      label_format = fmt::format("{}{}{}", "\\\"", label, "\\\"\\n");
     }
     if (epoch::EpochManip::isRooted(epoch)) {
       auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
