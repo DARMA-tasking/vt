@@ -64,6 +64,8 @@ using TraceMsgLenType     = size_t;
 using UserSpecEventIDType = int32_t;
 using UserEventIDType     = int64_t;
 
+static constexpr UserEventIDType const no_user_event = 0;
+
 static constexpr TraceEventIDType const no_trace_event = 0;
 static constexpr BitCountType const trace_event_num_bits = 32;
 

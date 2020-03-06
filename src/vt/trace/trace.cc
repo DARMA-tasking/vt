@@ -868,12 +868,9 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       );
     }
 
-    if (is_incremental_flush) {
-      vt::trace::TraceScopedEvent scope(flush_event_);
-      outputTraces(
-        log_file_.get(), traces_, start_time_, flush
-      );
-    } else {
+    { // TraceScopedEvent RAII - don't write event on final output.
+      UserEventIDType event = is_incremental_flush ? flush_event_ : no_user_event;
+      vt::trace::TraceScopedEvent scope(event);
       outputTraces(
         log_file_.get(), traces_, start_time_, flush
       );
