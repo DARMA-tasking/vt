@@ -161,6 +161,11 @@ struct Trace {
     TraceEventIDType const event = no_trace_event
   );
 
+  void addMemoryEvent(
+    std::size_t memory,
+    double const time = getCurrentTime()
+  );
+
   TraceEventIDType messageCreation(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     double const time = getCurrentTime()
@@ -229,6 +234,10 @@ private:
   /// or no_trace_event if not accepted (eg. no tracing on node).
   /// The log object is invalidated after the call.
   TraceEventIDType logEvent(LogType&& log);
+
+  std::size_t getTracesSize() const {
+    return traces_.size() * sizeof(Log);
+  }
 
 private:
   /*
