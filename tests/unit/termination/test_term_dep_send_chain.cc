@@ -331,7 +331,7 @@ struct MyObjGroup {
   }
 
   void op1() {
-    chains_->nextStep([=](vt::Index2D idx) {
+    chains_->nextStep("op1", [=](vt::Index2D idx) {
       auto a = calcVal(1,idx);
       auto b = calcVal(2,idx);
       return backend_proxy(idx).template send<OpMsg, &MyCol::op1>(a,b);
@@ -339,7 +339,7 @@ struct MyObjGroup {
   }
 
   void op2() {
-    chains_->nextStep([=](vt::Index2D idx) {
+    chains_->nextStep("op2", [=](vt::Index2D idx) {
       auto a = calcVal(3,idx);
       auto b = calcVal(4,idx);
       return backend_proxy(idx).template send<OpMsg, &MyCol::op2>(a,b);
@@ -347,7 +347,7 @@ struct MyObjGroup {
   }
 
   void op3() {
-    chains_->nextStep([=](vt::Index2D idx) {
+    chains_->nextStep("op3", [=](vt::Index2D idx) {
       std::vector<double> v;
       for (auto i = 0; i < 10; i++) {
         v.push_back(idx.x()*i + idx.y());
@@ -357,7 +357,7 @@ struct MyObjGroup {
   }
 
   void op4() {
-    chains_->nextStep([=](vt::Index2D idx) {
+    chains_->nextStep("op4", [=](vt::Index2D idx) {
       auto node = vt::theContext()->getNode();
       auto num = vt::theContext()->getNumNodes();
       auto next = node + 1 < num ? node + 1 : 0;
@@ -375,7 +375,7 @@ struct MyObjGroup {
   }
 
   void op5() {
-    chains_->nextStep([=](vt::Index2D idx) {
+    chains_->nextStep("op5", [=](vt::Index2D idx) {
       auto a = calcVal(7,idx);
       auto b = calcVal(8,idx);
       return backend_proxy(idx).template send<OpMsg, &MyCol::op5>(a,b);
@@ -383,7 +383,7 @@ struct MyObjGroup {
   }
 
   void op6() {
-    chains_->nextStepCollective([=](vt::Index2D idx) {
+    chains_->nextStepCollective("op6", [=](vt::Index2D idx) {
       auto a = calcVal(9,idx);
       auto b = calcVal(10,idx);
       return backend_proxy(idx).template send<OpMsg, &MyCol::op6>(a,b);
@@ -391,7 +391,7 @@ struct MyObjGroup {
   }
 
   void op7() {
-    chains_->nextStep([=](vt::Index2D idx) {
+    chains_->nextStep("op7", [=](vt::Index2D idx) {
       auto a = calcVal(11,idx);
       auto b = calcVal(12,idx);
       return backend_proxy(idx).template send<OpMsg, &MyCol::op7>(a,b);
@@ -399,7 +399,7 @@ struct MyObjGroup {
   }
 
   void doMigrate() {
-    chains_->nextStep([=](vt::Index2D idx) {
+    chains_->nextStep("doMigrate", [=](vt::Index2D idx) {
       auto a = calcVal(13,idx);
       auto b = calcVal(14,idx);
       return backend_proxy(idx).template send<OpMsg, &MyCol::doMigrate>(a,b);
@@ -421,7 +421,7 @@ struct MyObjGroup {
   }
 
   void finalCheck(int i) {
-    chains_->nextStep([=](vt::Index2D idx) {
+    chains_->nextStep("finalCheck", [=](vt::Index2D idx) {
       return backend_proxy(idx).template send<FinalMsg, &MyCol::finalCheck>(i);
     });
   }
