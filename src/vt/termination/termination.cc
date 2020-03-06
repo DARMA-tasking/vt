@@ -884,49 +884,43 @@ EpochDependency* TerminationDetector::getEpochDep(EpochType epoch) {
   }
 }
 
-void TerminationDetector::addDependency(EpochType predecessor, EpochType successor) {
-  // Add the current active epoch in the messenger as a successor epoch so the
-  // current epoch does not detect termination until the new epoch terminations
-  auto const succ_epoch = successor != no_epoch ? successor : theMsg()->getEpoch();
-  bool const has_successor =
-    succ_epoch != no_epoch && succ_epoch != term::any_epoch_sentinel;
-
+void TerminationDetector::addDependency(
+  EpochType predecessor, EpochType successor
+) {
   debug_print(
     term, node,
-    "addDependency: has_succ={}, in successor={:x}, cur={:x}, predecessor={:x}\n",
-    has_successor, successor, theMsg()->getEpoch(), predecessor
+    "addDependency: successor={:x}, predecessor={:x}, cur_epoch={:x}\n",
+    successor, predecessor, theMsg()->getEpoch()
   );
 
-  if (has_successor) {
-    if (not isEpochTerminated(predecessor)) {
-      /*
-       * Dependency optimization:
-       *
-       * Say that the current dependency structure looks like this:
-       *   where
-       *     succ successors are {c1, c2}
-       *     pred successors are {c1, c3}
-       *
-       *                       succ    pred
-       *                       /  \    /  \
-       *                      c1  c2  c1  c3
-       *
-       * Now that we have added a new dependency, pred -> succ, pred's c1
-       * dependency is carried through the transitive dependency. Thus, we
-       * transform this graph (LHS) to a simpler graph (RHS):
-       *
-       *                pred                    pred
-       *                / | \                   /  \
-       *               c1 c2 succ      ====>   c2  succ
-       *                     /  \                  /  \
-       *                    c1  c3                c1  c3
-       *
-       */
-      auto pred = getEpochDep(predecessor);
-      auto succ_successors = getEpochDep(successor)->getSuccessors();
-      pred->removeIntersection(succ_successors);
-      pred->addSuccessor(succ_epoch);
-    }
+  if (not isEpochTerminated(predecessor)) {
+    /*
+     * Dependency optimization:
+     *
+     * Say that the current dependency structure looks like this:
+     *   where
+     *     succ successors are {c1, c2}
+     *     pred successors are {c1, c3}
+     *
+     *                       succ    pred
+     *                       /  \    /  \
+     *                      c1  c2  c1  c3
+     *
+     * Now that we have added a new dependency, pred -> succ, pred's c1
+     * dependency is carried through the transitive dependency. Thus, we
+     * transform this graph (LHS) to a simpler graph (RHS):
+     *
+     *                pred                    pred
+     *                / | \                   /  \
+     *               c1 c2 succ      ====>   c2  succ
+     *                     /  \                  /  \
+     *                    c1  c3                c1  c3
+     *
+     */
+    auto pred = getEpochDep(predecessor);
+    auto succ_successors = getEpochDep(successor)->getSuccessors();
+    pred->removeIntersection(succ_successors);
+    pred->addSuccessor(successor);
   }
 }
 
@@ -973,15 +967,15 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 }
 
 EpochType TerminationDetector::makeEpochRootedWave(
-  bool has_dep, EpochType successor, std::string label
+  SuccessorEpochCapture successor, std::string label
 ) {
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
 
   debug_print(
     term, node,
-    "makeEpochRootedWave: root={}, has_dep={}, epoch={:x}, successor={:x},"
+    "makeEpochRootedWave: root={}, epoch={:x}, successor={:x},"
     "label={}\n",
-    theContext()->getNode(), has_dep, epoch, successor, label
+    theContext()->getNode(), epoch, successor, label
   );
 
   /*
@@ -997,7 +991,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
    */
   makeRootedHan(epoch, true, label);
 
-  if (has_dep) {
+  if (successor.valid()) {
     addDependency(epoch, successor);
   }
 
@@ -1006,7 +1000,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
 }
 
 EpochType TerminationDetector::makeEpochRootedDS(
-  bool has_dep, EpochType successor, std::string label
+  SuccessorEpochCapture successor, std::string label
 ) {
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, ds_cat);
@@ -1019,28 +1013,27 @@ EpochType TerminationDetector::makeEpochRootedDS(
   getWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
 
-  if (has_dep) {
+  if (successor.valid()) {
     addDependency(epoch, successor);
   }
 
   debug_print(
     term, node,
-    "makeEpochRootedDS: has_dep={}, successor={:x}, epoch={:x}, label={}\n",
-    has_dep, successor, epoch, label
+    "makeEpochRootedDS: successor={:x}, epoch={:x}, label={}\n",
+    successor, epoch, label
   );
 
   return epoch;
 }
 
 EpochType TerminationDetector::makeEpochRooted(
-  UseDS use_ds, UseCurrentEpochAsSuccessor has_dep, EpochType successor
+  UseDS use_ds, SuccessorEpochCapture successor
 ) {
-  return makeEpochRooted("", use_ds, has_dep, successor);
+  return makeEpochRooted("", use_ds, successor);
 }
 
 EpochType TerminationDetector::makeEpochRooted(
-  std::string label, UseDS use_ds, UseCurrentEpochAsSuccessor has_dep,
-  EpochType successor
+  std::string label, UseDS use_ds, SuccessorEpochCapture successor
 ) {
   /*
    *  This method should only be called by the root node for the rooted epoch
@@ -1050,8 +1043,8 @@ EpochType TerminationDetector::makeEpochRooted(
 
   debug_print(
     term, node,
-    "makeEpochRooted: root={}, use_ds={}, has_dep={}, successor={:x}, label={}\n",
-    theContext()->getNode(), use_ds, has_dep, successor, label
+    "makeEpochRooted: root={}, use_ds={}, successor={:x}, label={}\n",
+    theContext()->getNode(), use_ds, successor, label
   );
 
   bool const force_use_ds = vt::arguments::ArgConfig::vt_term_rooted_use_ds;
@@ -1061,39 +1054,39 @@ EpochType TerminationDetector::makeEpochRooted(
   vtAssertExpr(not (force_use_ds and force_use_wave));
 
   if ((use_ds or force_use_ds) and not force_use_wave) {
-    return makeEpochRootedDS(has_dep, successor, label);
+    return makeEpochRootedDS(successor, label);
   } else {
-    return makeEpochRootedWave(has_dep, successor, label);
+    return makeEpochRootedWave(successor, label);
   }
 }
 
 EpochType TerminationDetector::makeEpochCollective(
-  UseCurrentEpochAsSuccessor has_dep, EpochType successor
+  SuccessorEpochCapture successor
 ) {
   debug_print(
     term, node,
     "makeEpochCollective: no label\n"
   );
 
-  return makeEpochCollective("", has_dep, successor);
+  return makeEpochCollective("", successor);
 }
 
 EpochType TerminationDetector::makeEpochCollective(
-  std::string label, UseCurrentEpochAsSuccessor has_dep, EpochType successor
+  std::string label, SuccessorEpochCapture successor
 ) {
   auto const epoch = epoch::EpochManip::makeNewEpoch();
 
   debug_print(
     term, node,
-    "makeEpochCollective: epoch={:x}, has_dep={}, successor={:x}, label={}\n",
-    epoch, has_dep, successor, label
+    "makeEpochCollective: epoch={:x}, successor={:x}, label={}\n",
+    epoch, successor, label
   );
 
   getWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
   setupNewEpoch(epoch, label);
 
-  if (has_dep) {
+  if (successor.valid()) {
     addDependency(epoch, successor);
   }
 
@@ -1102,12 +1095,11 @@ EpochType TerminationDetector::makeEpochCollective(
 
 EpochType TerminationDetector::makeEpoch(
   std::string label, bool is_coll, UseDS use_ds,
-  UseCurrentEpochAsSuccessor has_dep,
-  EpochType successor
+  SuccessorEpochCapture successor
 ) {
   return is_coll ?
-    makeEpochCollective(label, has_dep, successor) :
-    makeEpochRooted(label, use_ds, has_dep, successor);
+    makeEpochCollective(label, successor) :
+    makeEpochRooted(label, use_ds, successor);
 }
 
 void TerminationDetector::activateEpoch(EpochType const& epoch) {
