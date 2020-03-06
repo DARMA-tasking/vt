@@ -188,7 +188,7 @@ EpochType BaseLB::getMigrationEpoch() const {
 }
 
 EpochType BaseLB::startMigrationCollective() {
-  migration_epoch_ = theTerm()->makeEpochCollective();
+  migration_epoch_ = theTerm()->makeEpochCollective("LB migration");
   theTerm()->addAction(migration_epoch_, [this]{ this->migrationDone(); });
   theMsg()->pushEpoch(migration_epoch_);
   return migration_epoch_;
