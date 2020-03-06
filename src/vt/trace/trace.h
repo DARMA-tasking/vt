@@ -95,6 +95,9 @@ struct Trace {
   // the use of a synthetic pop-push to maintain the stack around idle.
   using TraceStackType      = std::vector<LogType>;
   using EventHoldStackType  = std::vector<std::size_t>;
+  // Time scheduler loops were started
+  using LoopStartStackType  = std::vector<double>;
+  using LoopUserEventsType  = std::vector<UserEventIDType>;
 
   Trace();
   virtual ~Trace();
@@ -219,7 +222,6 @@ private:
 
   // Emit a 'stop' trace for previous open event or a '[re]start' trace
   // for a reactivated open event. This assists with output flattening.
-  // The event must be in the current scheduler loop's event stack depth.
   void emitTraceForTopProcessingEvent(
     double const time, TraceConstantsType const type
   );
@@ -259,13 +261,15 @@ private:
 private:
   TraceContainerType traces_;
   TraceStackType open_events_;
+
   EventHoldStackType event_holds_;
+  LoopStartStackType loop_starts_;
+  LoopUserEventsType loop_events_;
 
   TraceEventIDType cur_event_   = 1;
   bool enabled_                 = true;
   bool idle_begun_              = false;
   double start_time_            = 0.0;
-  TraceProcessingTag cur_loop_event_;
   UserEventRegistry user_event_ = {};
 
   std::string prog_name_        = "";

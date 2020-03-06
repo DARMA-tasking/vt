@@ -47,6 +47,7 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/timing/timing.h"
 #include "vt/trace/trace.h"
+#include "vt/trace/trace_user.h"
 #include "vt/utils/demangle/demangle.h"
 #include "vt/trace/file_spec/spec.h"
 #include "vt/objgroup/headers.h"
@@ -131,6 +132,7 @@ void Trace::initialize() {
   theSched()->registerTrigger(
     sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
   );
+
 #endif
 }
 
@@ -453,6 +455,7 @@ TraceProcessingTag Trace::beginProcessing(
 
   auto const type = TraceConstantsType::BeginProcessing;
 
+  emitTraceForTopProcessingEvent(time, TraceConstantsType::EndProcessing);
   TraceEventIDType loggedEvent = logEvent(
     LogType{
       time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
@@ -497,7 +500,6 @@ void Trace::endProcessing(
     LogType{open_events_.back(), time, TraceConstantsType::EndProcessing}
   );
   open_events_.pop_back();
-
   emitTraceForTopProcessingEvent(time, TraceConstantsType::BeginProcessing);
 
   // Unlike logEvent there is currently no flush here.
@@ -531,29 +533,11 @@ void Trace::endProcessing(
 void Trace::beginSchedulerLoop() {
   double const time = getCurrentTime();
 
-  // Synth-pop any residue from outside scheduler.
-  std::size_t parent_hold_at = event_holds_.back();
-  std::size_t size = open_events_.size();
-  for (std::size_t i = size - 1; i >= parent_hold_at and i not_eq (std::size_t)-1; i--) {
-    traces_.push(
-      LogType{open_events_[i], time, TraceConstantsType::EndProcessing}
-    );
-  }
+  // Loop event start
+  loop_starts_.push_back(time);
 
   // Capture the current open event depth.
   event_holds_.push_back(open_events_.size());
-
-  // Every nested loop enters into a processing event immediately,
-  // as there is the guarantee that the scheduler is not idle and
-  // must be doing something..
-  static trace::TraceEntryIDType ep
-    = trace::TraceRegistry::registerEventHashed("vt::sched", "Loop");
-
-  auto node = theContext()->getNode();
-  uint64_t sched_depth = event_holds_.size() - 1;
-  cur_loop_event_ = beginProcessing(
-    ep, 0, 0, node, sched_depth, 0, 0, 0, time
-  );
 }
 
 void Trace::endSchedulerLoop() {
@@ -564,23 +548,26 @@ void Trace::endSchedulerLoop() {
     "Too many endSchedulerLoop calls."
   );
 
-  endProcessing(cur_loop_event_, time);
-
-  vtAssert( // implicitly true from endProcessing above
+  vtAssert(
     event_holds_.back() == open_events_.size(),
     "Processing events opened in a scheduler loop must be closed by loop end."
   );
 
   event_holds_.pop_back();
 
-  // Synth-push/restore residue from outside scheduler.
-  std::size_t parent_hold_at = event_holds_.back();
-  std::size_t size = open_events_.size();
-  for (std::size_t i = parent_hold_at; i < size; i++) {
-    traces_.push(
-      LogType{open_events_[i], time, TraceConstantsType::BeginProcessing}
-    );
+  // Loop event end event - cover/indicate the loop;
+  // use a user event to expose the processing which encompasses the loop.
+  std::size_t depth = loop_starts_.size();
+  while (loop_events_.size() <= depth) {
+    loop_events_.push_back(vt::trace::registerEventCollective(
+      fmt::format("sched_loop({0:02d})", loop_events_.size())
+    ));
   }
+  UserEventIDType loop_event = loop_events_[depth];
+  double loop_start_time = loop_starts_.back();
+  loop_starts_.pop_back();
+
+  addUserEventBracketed(loop_event, loop_start_time, time);
 }
 
 void Trace::beginIdle(double const time) {
@@ -598,6 +585,7 @@ void Trace::beginIdle(double const time) {
   auto const type = TraceConstantsType::BeginIdle;
   NodeType const node = theContext()->getNode();
 
+  emitTraceForTopProcessingEvent(time, TraceConstantsType::EndProcessing);
   logEvent(
     LogType{time, type, node}
   );
@@ -623,6 +611,7 @@ void Trace::endIdle(double const time) {
   logEvent(
     LogType{time, type, node}
   );
+  emitTraceForTopProcessingEvent(time, TraceConstantsType::BeginProcessing);
 }
 
 TraceEventIDType Trace::messageCreation(
@@ -746,7 +735,6 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
 
   switch (log.type) {
   case TraceConstantsType::BeginProcessing: {
-    emitTraceForTopProcessingEvent(time, TraceConstantsType::EndProcessing);
     open_events_.push_back(log /* copy, not forwarding rv-ref */);
     break;
   }
@@ -773,17 +761,10 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   case TraceConstantsType::MessageRecv:
     log.event = cur_event_++;
     break;
-  case TraceConstantsType::BeginIdle: {
+  case TraceConstantsType::BeginIdle:
+  case TraceConstantsType::EndIdle:
     log.event = no_trace_event;
-    emitTraceForTopProcessingEvent(time, TraceConstantsType::EndProcessing);
     break;
-  }
-  case TraceConstantsType::EndIdle: {
-    log.event = no_trace_event;
-    traces_.push(std::move(log));
-    emitTraceForTopProcessingEvent(time, TraceConstantsType::BeginProcessing);
-    return trace::no_trace_event; // n.b. pushed eagerly
-  }
   case TraceConstantsType::UserSupplied:
   case TraceConstantsType::UserSuppliedNote:
   case TraceConstantsType::UserSuppliedBracketedNote:
@@ -822,8 +803,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
 void Trace::emitTraceForTopProcessingEvent(
     double const time, TraceConstantsType const type
 ) {
-  std::size_t hold_at = event_holds_.back();
-  if (open_events_.size() > hold_at) {
+  if (not open_events_.empty()) {
     traces_.push(
       LogType{open_events_.back(), time, type}
     );
