@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 epoch_tags.h
+//                                epoch_tags.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,31 +42,19 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_EPOCH_TAGS_H
-#define INCLUDED_VT_TERMINATION_EPOCH_TAGS_H
-
 #include "vt/config.h"
+#include "vt/termination/epoch_tags.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace term {
 
-struct SuccessorEpochCapture {
-  explicit SuccessorEpochCapture(EpochType epoch)
-    : epoch_(epoch)
-  { }
-  SuccessorEpochCapture();
-  operator EpochType() const { return epoch_; }
-  bool valid() const { return epoch_ != no_epoch; }
-  EpochType epoch_ = no_epoch;
-};
-
-struct UseDS {
-  explicit UseDS(bool use_it)
-    : use_it_(use_it)
-  { }
-  operator bool() const { return use_it_; }
-  bool use_it_ = true;
-};
+SuccessorEpochCapture::SuccessorEpochCapture()
+  : epoch_(
+      (theMsg()->getEpoch() != no_epoch and
+       theMsg()->getEpoch() != term::any_epoch_sentinel) ?
+      theMsg()->getEpoch() :
+      no_epoch
+    )
+{ }
 
 }} /* end namespace vt::term */
-
-#endif /*INCLUDED_VT_TERMINATION_EPOCH_TAGS_H*/

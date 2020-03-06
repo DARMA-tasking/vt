@@ -50,7 +50,7 @@ struct TestTermNestedCollect : action::BaseFixture {
   void kernel(int depth, EpochType parent) {
     vtAssert(depth > 0, "Wrong depth");
     auto epoch = vt::theTerm()->makeEpochCollective(
-      term::UseCurrentEpochAsSuccessor{true}, parent
+      term::SuccessorEpochCapture{parent}
     );
 
     // all ranks should have the same depth
