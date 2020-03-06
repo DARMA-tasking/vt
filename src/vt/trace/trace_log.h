@@ -293,6 +293,13 @@ struct Log final {
   {
   }
 
+  // When tracking memory
+  Log(
+    double const in_time, TraceConstantsType const in_type,
+    std::size_t const in_memory
+  ) : time(in_time), type(in_type), memory(in_memory)
+  { }
+
   inline Data::UserData const& user_data() const {
     assert(data.user.data_type == LogDataType::user && "Expecting user data-type");
     return data.user;
@@ -312,6 +319,7 @@ public:
   // If a duration can be expressed in a single event.
   // (Currently only for user-events.. could elim explicit end events.)
   double end_time = 0.0;
+  std::size_t memory = 0;
 
   TraceConstantsType type = TraceConstantsType::InvalidTraceType;
   TraceEntryIDType ep = no_trace_entry_id;

@@ -465,6 +465,17 @@ TraceProcessingTag Trace::beginProcessing(
     }
   );
 
+  {
+    std::size_t vsz = 0; /* should remain 0 on failure */
+    FILE *f = fopen("/proc/self/stat", "r");
+    for (int i=0; i<22; i++)
+      fscanf(f, "%*s");
+    fscanf(f, "%" PRIu64, &vsz);
+    fclose(f);
+    vsz -= theTrace()->getTracesSize();
+    theTrace()->addMemoryEvent(vsz);
+  }
+
   return TraceProcessingTag{ep, loggedEvent};
 }
 
@@ -518,6 +529,16 @@ void Trace::endProcessing(
   if (not checkDynamicRuntimeEnabled()) {
     return;
   }
+  {
+    std::size_t vsz = 0; /* should remain 0 on failure */
+    FILE *f = fopen("/proc/self/stat", "r");
+    for (int i=0; i<22; i++)
+      fscanf(f, "%*s");
+    fscanf(f, "%" PRIu64, &vsz);
+    fclose(f);
+    vsz -= theTrace()->getTracesSize();
+    theTrace()->addMemoryEvent(vsz);
+  }
 
   debug_print(
     trace, node,
@@ -532,6 +553,12 @@ void Trace::endProcessing(
       time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
     }
   );
+}
+
+void Trace::addMemoryEvent(std::size_t memory, double time) {
+  auto const type = TraceConstantsType::MemoryUsageCurrent;
+  LogPtrType log = new LogType(time, type, memory);
+  logEvent(log);
 }
 
 void Trace::beginIdle(double const time) {
@@ -730,6 +757,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   case TraceConstantsType::EndIdle:
     log.event = no_trace_event;
     break;
+  case TraceConstantsType::MemoryUsageCurrent:
   case TraceConstantsType::UserSupplied:
   case TraceConstantsType::UserSuppliedNote:
   case TraceConstantsType::UserSuppliedBracketedNote:
@@ -1028,6 +1056,16 @@ void Trace::writeTracesFile(int flush) {
         log.event,
         udata.user_note.length(),
         udata.user_note.c_str()
+      );
+      break;
+    }
+    case TraceConstantsType::MemoryUsageCurrent: {
+      gzprintf(
+        file,
+        "%d %lld %lld \n",
+        type,
+        log->memory,
+        converted_time
       );
       break;
     }
