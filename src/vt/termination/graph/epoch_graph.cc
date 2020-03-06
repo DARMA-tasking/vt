@@ -170,21 +170,21 @@ std::string EpochGraph::outputDOT(bool verbose) {
     if (not arguments::ArgConfig::vt_epoch_graph_terse or verbose) {
       if (collective) {
         builder += fmt::format(
-          "\t{:x} [shape=record height=1 label=\"{}|{} collective | {:x} {}\"]\n",
+          "\t{} [shape=record height=1 label=\"{}|{} collective | {:x} {}\"]\n",
           elm.first, str, "{", ep, "}"
         );
       } else {
         builder += fmt::format(
-          "\t{:x} [shape=record height=1 label=\"{}|{} rooted | {:x} | node={} {}\"]\n",
+          "\t{} [shape=record height=1 label=\"{}|{} rooted | {:x} | node={} {}\"]\n",
           elm.first, str, "{", ep, node, "}"
         );
       }
     } else {
-      builder += fmt::format("\t{:x} [label=\"{}\"]\n", elm.first, str);
+      builder += fmt::format("\t{} [label=\"{}\"]\n", elm.first, str);
     }
   }
   for (auto&& elm : links) {
-    builder += fmt::format("\t{:x}->{:x};\n", std::get<0>(elm), std::get<1>(elm));
+    builder += fmt::format("\t{}->{};\n", std::get<0>(elm), std::get<1>(elm));
   }
   builder += "}\n";
   return builder;
