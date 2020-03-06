@@ -111,17 +111,18 @@ class CollectionChainSet final {
    * epoch for this step to contain/track completion of all the causally related
    * messages.
    *
+   * \param[in] label Label for the epoch created for debugging
    * \param[in] step_action The action to perform as a function that returns a
    * \c PendingSend
    */
-  void nextStep(std::function<PendingSend(Index)> step_action) {
+  void nextStep(std::string label, std::function<PendingSend(Index)> step_action) {
     for (auto &entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
 
       // The parameter `true` here tells VT to use an efficient rooted DS-epoch
       // by default. This can still be overridden by command-line flags
-      EpochType new_epoch = theTerm()->makeEpochRooted(term::UseDS{true});
+      EpochType new_epoch = theTerm()->makeEpochRooted(label, term::UseDS{true});
       vt::theMsg()->pushEpoch(new_epoch);
 
       chain.add(new_epoch, step_action(idx));
@@ -129,6 +130,17 @@ class CollectionChainSet final {
       vt::theMsg()->popEpoch(new_epoch);
       theTerm()->finishedEpoch(new_epoch);
     }
+  }
+
+  /**
+   * \brief The next step to execute on all the chains resident in this
+   * collection chain set
+   *
+   * \param[in] step_action The action to perform as a function that returns a
+   * \c PendingSend
+   */
+  void nextStep(std::function<PendingSend(Index)> step_action) {
+    return nextStep("", step_action);
   }
 
 #if 0
@@ -160,10 +172,13 @@ class CollectionChainSet final {
    * to track all the casually related messages and collectively wait for
    * termination of all of the recursive sends..
    *
+   * \param[in] label Label for the epoch created for debugging
    * \param[in] step_action the next step to execute, returning a \c PendingSend
    */
-  void nextStepCollective(std::function<PendingSend(Index)> step_action) {
-    auto epoch = theTerm()->makeEpochCollective();
+  void nextStepCollective(
+    std::string label, std::function<PendingSend(Index)> step_action
+  ) {
+    auto epoch = theTerm()->makeEpochCollective(label);
     vt::theMsg()->pushEpoch(epoch);
 
     for (auto &entry : chains_) {
@@ -174,6 +189,16 @@ class CollectionChainSet final {
 
     vt::theMsg()->popEpoch(epoch);
     theTerm()->finishedEpoch(epoch);
+  }
+
+  /**
+   * \brief The next collective step to execute across all resident elements
+   * across all nodes.
+   *
+   * \param[in] step_action the next step to execute, returning a \c PendingSend
+   */
+  void nextStepCollective(std::function<PendingSend(Index)> step_action) {
+    return nextStepCollective("", step_action);
   }
 
   /**
