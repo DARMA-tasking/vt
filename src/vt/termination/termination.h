@@ -143,28 +143,24 @@ public:
    * \brief Create a new rooted epoch
    *
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
-   * \param[in] has_dep whether the current stack epoch is a successor
-   * \param[in] successor optional successor epoch specified explicitly
+   * \param[in] successor successor epoch that waits for this new epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochRooted(
     UseDS use_ds = UseDS{false},
-    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
-    EpochType successor = no_epoch
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
   );
 
   /**
    * \brief Create a new collective epoch
    *
-   * \param[in] has_dep whether the current stack epoch is a successor
-   * \param[in] successor optional successor epoch specified explicitly
+   * \param[in] successor successor epoch that waits for this new epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochCollective(
-    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
-    EpochType successor = no_epoch
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
   );
 
   /**
@@ -172,32 +168,27 @@ public:
    *
    * \param[in] label epoch label for debugging purposes
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
-   * \param[in] has_dep whether the current stack epoch is a successor
-   * \param[in] successor optional successor epoch specified explicitly
+   * \param[in] successor successor epoch that waits for this new epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochRooted(
     std::string label,
     UseDS use_ds = UseDS{false},
-    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
-    EpochType successor = no_epoch
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
   );
 
   /**
    * \brief Create a collective epoch with a label
    *
    * \param[in] label epoch label for debugging purposes
-   * \param[in] is_coll whether to create a collective or rooted epoch
-   * \param[in] has_dep whether the current stack epoch is a successor
-   * \param[in] successor optional successor epoch specified explicitly
+   * \param[in] successor successor epoch that waits for this new epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochCollective(
     std::string label,
-    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
-    EpochType successor = no_epoch
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
   );
 
   /**
@@ -206,8 +197,7 @@ public:
    * \param[in] label epoch label for debugging purposes
    * \param[in] is_coll whether to create a collective or rooted epoch
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
-   * \param[in] has_dep whether the current stack epoch is a successor
-   * \param[in] successor optional successor epoch specified explicitly
+   * \param[in] successor successor epoch that waits for this new epoch
    *
    * \return the new epoch
    */
@@ -215,8 +205,7 @@ public:
     std::string label,
     bool is_coll,
     UseDS use_ds = UseDS{false},
-    UseCurrentEpochAsSuccessor has_dep = UseCurrentEpochAsSuccessor{true},
-    EpochType successor = no_epoch
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
   );
 
   void activateEpoch(EpochType const& epoch);
@@ -228,10 +217,10 @@ public:
    * Directly call into a specific type of rooted epoch, can not be overridden
    */
   EpochType makeEpochRootedWave(
-    bool has_dep, EpochType successor, std::string label = ""
+    SuccessorEpochCapture successor, std::string label = ""
   );
   EpochType makeEpochRootedDS(
-    bool has_dep, EpochType successor, std::string label = ""
+    SuccessorEpochCapture successor, std::string label = ""
   );
 
 private:
