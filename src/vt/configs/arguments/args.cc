@@ -63,6 +63,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
+/*static*/ std::string ArgConfig::vt_memory_reporters   =
+  "mstats,machinfo,selfstat,sbrk,mallinfo,getrusage,ps";
 
 /*static*/ bool        ArgConfig::vt_no_warn_stack      = false;
 /*static*/ bool        ArgConfig::vt_no_assert_stack    = false;
@@ -199,6 +201,15 @@ namespace vt { namespace arguments {
   d->group(signalGroup);
   e->group(signalGroup);
   f->group(signalGroup);
+
+
+  /*
+   * Flags for controlling memory usage reporting
+   */
+  auto mem_desc = "List of memory reporters to query in order of precedence";
+  auto mm = app.add_option("--vt_memory_reporters", vt_memory_reporters, mem_desc, true);
+  auto memoryGroup = "Memory Usage Reporting";
+  mm->group(memoryGroup);
 
 
   /*
