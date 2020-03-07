@@ -54,6 +54,7 @@
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
+#include "vt/utils/memory/memory_usage.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 

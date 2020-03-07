@@ -418,6 +418,12 @@ void Runtime::printStartupBanner() {
       green, reset, compile, magenta, opt, reset, reset
     );
   };
+  auto opt_to_enable = [=](std::string opt, std::string compile) -> std::string {
+    return fmt::format(
+      "{}Default:{} {}, use {}{}{} to enable{}\n",
+      green, reset, compile, magenta, opt, reset, reset
+    );
+  };
 
   auto f8 = fmt::format("{}Runtime Configuration:{}\n", green, reset);
   fmt::print("{}{}{}", vt_pre, f8, reset);
@@ -748,30 +754,47 @@ void Runtime::printStartupBanner() {
 
     auto usage = util::memory::MemoryUsage::get();
 
-    std::string working_str = "";
     auto working_reporters = usage->getWorkingReporters();
-    for (std::size_t i = 0; i < working_reporters.size(); i++) {
-      working_str += working_reporters[i];
-      if (i != working_reporters.size() - 1) {
-        working_str += ",";
+    if (working_reporters.size() > 0) {
+      std::string working_str = "";
+      for (std::size_t i = 0; i < working_reporters.size(); i++) {
+        working_str += working_reporters[i];
+        if (i != working_reporters.size() - 1) {
+          working_str += ",";
+        }
+      }
+      auto f13 = fmt::format(
+        "{}Working memory reporters:{} {}{}{}\n",
+        green, reset, magenta, working_str, reset
+      );
+      fmt::print("{}\t{}{}", vt_pre, f13, reset);
+
+      auto all_usage_str = usage->getUsageAll();
+      if (all_usage_str != "") {
+        auto f14 = fmt::format(
+          "{}Initial memory usage:{} {}\n",
+          green, reset, all_usage_str
+        );
+        fmt::print("{}\t{}{}", vt_pre, f14, reset);
       }
     }
-    auto f13 = fmt::format(
-      "{}Working memory reporters:{} {}{}{}\n",
-      green, reset, magenta, working_str, reset
-    );
-    fmt::print("{}\t{}{}", vt_pre, f13, reset);
 
-    auto all_usage_str = usage->getUsageAll();
-    if (all_usage_str != "") {
-      auto f14 = fmt::format(
-        "{}Initial memory usage:{} {}\n",
-        green, reset, all_usage_str
+    if (ArgType::vt_print_memory_each_phase) {
+      auto f15 = fmt::format("Printing memory usage each phase");
+      auto f16 = opt_on("--vt_print_memory_each_phase", f15);
+      fmt::print("{}\t{}{}", vt_pre, f16, reset);
+
+      auto f17 = fmt::format(
+        "Printing memory usage from node: {}", ArgType::vt_print_memory_node
       );
-      fmt::print("{}\t{}{}", vt_pre, f14, reset);
+      auto f18 = opt_on("--vt_print_memory_node", f17);
+      fmt::print("{}\t{}{}", vt_pre, f18, reset);
+    } else {
+      auto f15 = fmt::format("Memory usage printing disabled");
+      auto f16 = opt_to_enable("--vt_print_memory_each_phase", f15);
+      fmt::print("{}\t{}{}", vt_pre, f16, reset);
     }
   }
-
 
   if (ArgType::vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");

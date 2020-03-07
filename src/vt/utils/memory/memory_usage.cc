@@ -247,9 +247,11 @@ MemoryUsage::MemoryUsage() {
     }
   }
 
-  // Prime each reporter
+  // Prime each reporter, determine if we have a working reporter
   for (auto&& r : reporters_) {
-    r->getUsage();
+    if (r->getUsage() != 0) {
+      has_working_ = true;
+    }
   }
 }
 
@@ -336,6 +338,10 @@ std::vector<std::string> MemoryUsage::getWorkingReporters() {
     }
   }
   return working;
+}
+
+bool MemoryUsage::hasWorkingReporter() const {
+  return has_working_;
 }
 
 /*static*/ void MemoryUsage::initialize() {

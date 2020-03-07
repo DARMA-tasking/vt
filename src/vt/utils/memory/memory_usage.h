@@ -109,6 +109,8 @@ struct MemoryUsage {
     bool pretty = true, MemoryUnitEnum unit = MemoryUnitEnum::Megabytes
   );
 
+  bool hasWorkingReporter() const;
+
   std::vector<std::string> getWorkingReporters();
 
   static MemoryUsage* get();
@@ -122,6 +124,7 @@ private:
 
   std::vector<std::unique_ptr<Reporter>> reporters_;
   int first_valid_reporter_ = -1;
+  bool has_working_ = false;
 };
 
 }}} /* end namespace vt::util::memory */
