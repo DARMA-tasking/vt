@@ -70,6 +70,8 @@ public:
   static bool vt_no_sigsegv;
   static bool vt_no_terminate;
   static std::string vt_memory_reporters;
+  static bool vt_print_memory_each_phase;
+  static std::string vt_print_memory_node;
 
   static bool vt_no_warn_stack;
   static bool vt_no_assert_stack;
