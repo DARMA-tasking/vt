@@ -214,7 +214,6 @@ template <typename ObjT>
 template <typename T>
 void Proxy<ObjT>::destroyHandleSetRDMA(vt::rdma::HandleSet<T> set) const {
   return vt::theHandleRDMA()->deleteHandleSetCollectiveObjGroup<T>(set);
-
 }
 
 }}} /* end namespace vt::objgroup::proxy */
