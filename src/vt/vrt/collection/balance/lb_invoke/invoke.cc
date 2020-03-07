@@ -231,6 +231,7 @@ void LBManager::releaseNow(PhaseType phase) {
 
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
+    triggerListeners(phase);
     destroy_lb_();
     destroy_lb_ = nullptr;
   }
@@ -239,12 +240,32 @@ void LBManager::releaseNow(PhaseType phase) {
   num_invocations_ = num_release_ = 0;
 }
 
+void LBManager::triggerListeners(PhaseType phase) {
+  for (auto&& l : listeners_) {
+    if (l) {
+      l(phase);
+    }
+  }
+}
+
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
   // Set if tracing is enabled for this next phase. Do this immediately before
   // LB runs so LB is always instrumented as the beginning of the next phase
 # if backend_check_enabled(trace_enabled)
   theTrace()->setTraceEnabledCurrentPhase(phase + 1);
 # endif
+}
+
+int LBManager::registerListenerAfterLB(ListenerFnType fn) {
+  listeners_.push_back(fn);
+  return static_cast<int>(listeners_.size() - 1);
+}
+
+void LBManager::unregisterListenerAfterLB(int element) {
+  vtAssert(
+    listeners_.size() > static_cast<std::size_t>(element), "Listener must exist"
+  );
+  listeners_[element] = nullptr;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

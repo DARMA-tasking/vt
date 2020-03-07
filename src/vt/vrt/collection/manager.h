@@ -64,6 +64,7 @@
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/staged_token/token.h"
+#include "vt/vrt/collection/listener/listen_events.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/messaging/message.h"
@@ -816,6 +817,37 @@ private:
     HandlerType const& map_han
   );
 
+public:
+  /**
+   * \brief Register listener function for a given collection
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] fn the listener function
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  int registerElementListener(
+    VirtualProxyType proxy, listener::ListenFnType<IndexT> fn
+  );
+
+  /**
+   * \brief Unregister listener function for a given collection
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] element the index of the registered listener function
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void unregisterElementListener(VirtualProxyType proxy, int element);
+
+  /**
+   * \brief Get the range that a collection was constructed with
+   *
+   * \param[in] proxy the proxy of the collection
+   *
+   * \return the range of the collection
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  IndexT getRange(VirtualProxyType proxy);
+
 private:
   template <typename MsgT>
   static EpochType getCurrentEpoch(MsgT* msg);
@@ -877,6 +909,7 @@ namespace details
 #include "vt/vrt/collection/destroy/destroyable.impl.h"
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"
+#include "vt/vrt/collection/rdmaable/rdmaable.impl.h"
 #include "vt/vrt/collection/balance/elm_stats.impl.h"
 #include "vt/vrt/collection/types/insertable.impl.h"
 #include "vt/vrt/collection/types/indexable.impl.h"
@@ -885,6 +918,7 @@ namespace details
 #include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/vrt/collection/balance/proxy/lbable.impl.h"
+#include "vt/rdmahandle/manager.collection.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"

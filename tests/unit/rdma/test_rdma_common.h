@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 transport.h
+//                            test_rdma_common.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,44 +42,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TRANSPORT_H
-#define INCLUDED_VT_TRANSPORT_H
+#if !defined INCLUDED_VT_TESTS_RDMA_COMMON_H
+#define INCLUDED_VT_TESTS_RDMA_COMMON_H
 
-#include "vt/config.h"
-#include "vt/collective/tree/tree.h"
-#include "vt/pool/pool.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/message.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/collective.h"
-#include "vt/event/event.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/event/event_msgs.h"
-#include "vt/termination/termination.h"
-#include "vt/rdma/rdma_headers.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace_headers.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/topos/location/location_headers.h"
-#include "vt/topos/index/index.h"
-#include "vt/topos/mapping/mapping_headers.h"
-#include "vt/vrt/context/context_vrtheaders.h"
-#include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
-#include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
-#include "vt/group/group_headers.h"
-#include "vt/epoch/epoch_headers.h"
-#include "vt/pipe/pipe_headers.h"
-#include "vt/objgroup/headers.h"
-#include "vt/scheduler/priority.h"
-#include "vt/rdmahandle/manager.h"
+#include <gtest/gtest.h>
 
-#endif /*INCLUDED_VT_TRANSPORT_H*/
+namespace vt { namespace tests { namespace unit {
+
+template <typename T>
+struct UpdateData {
+  template <typename HandleT>
+  static void init(
+    HandleT& handle, int space, std::size_t size, vt::NodeType rank
+) {
+    handle.modifyExclusive([=](T* val, std::size_t count){
+      setMem(val, space, size, rank, 0);
+    });
+  }
+
+  static void setMem(
+    T* ptr, int space, std::size_t size, vt::NodeType rank, std::size_t offset
+  ) {
+    for (std::size_t i = offset; i < size; i++) {
+      ptr[i] = static_cast<T>(space * rank + i);
+    }
+  }
+
+  static void test(
+    std::unique_ptr<T[]> ptr, int space, std::size_t size, vt::NodeType rank,
+    std::size_t offset, T val = T{}
+  ) {
+    for (std::size_t i = offset; i < size; i++) {
+      EXPECT_EQ(ptr[i], static_cast<T>(space * rank + i + val));
+    }
+  }
+};
+
+}}} /* end namespace vt::tests::unit */
+
+#endif /*INCLUDED_VT_TESTS_RDMA_COMMON_H*/

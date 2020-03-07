@@ -57,7 +57,8 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LBManager {
-  using ArgType = vt::arguments::ArgConfig;
+  using ArgType        = vt::arguments::ArgConfig;
+  using ListenerFnType = std::function<void(PhaseType)>;
 
   LBManager() = default;
   LBManager(LBManager const&) = delete;
@@ -119,6 +120,11 @@ public:
     return releaseImpl(msg->phase_, msg->num_collections_);
   }
 
+public:
+  int registerListenerAfterLB(ListenerFnType fn);
+  void unregisterListenerAfterLB(int element);
+  void triggerListeners(PhaseType phase);
+
 protected:
   template <typename LB>
   objgroup::proxy::Proxy<LB> makeLB(MsgSharedPtr<StartLBMsg> msg);
@@ -130,6 +136,7 @@ private:
   LBType cached_lb_                        = LBType::NoLB;
   std::function<void()> destroy_lb_        = nullptr;
   bool synced_in_lb_                       = true;
+  std::vector<ListenerFnType> listeners_   = {};
 
   static objgroup::proxy::Proxy<LBManager> proxy_;
 };

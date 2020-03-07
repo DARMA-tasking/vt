@@ -226,6 +226,29 @@ void Holder<ColT, IndexT>::runLBCont() {
   vc_lb_continuation_.clear();
 }
 
+template <typename ColT, typename IndexT>
+int Holder<ColT, IndexT>::addListener(listener::ListenFnType<IndexT> fn) {
+  event_listeners_.push_back(fn);
+  return event_listeners_.size() - 1;
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::removeListener(int element) {
+  vtAssert(event_listeners_.size() > element, "Listener must exist");
+  event_listeners_[element] = nullptr;
+}
+
+template <typename ColT, typename IndexT>
+void Holder<ColT, IndexT>::applyListeners(
+  listener::ElementEventEnum event, IndexT const& idx
+) {
+  for (auto&& l : event_listeners_) {
+    if (l) {
+      l(event, idx);
+    }
+  }
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H*/

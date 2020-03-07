@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 transport.h
+//                               rdmaable.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,44 +42,41 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TRANSPORT_H
-#define INCLUDED_VT_TRANSPORT_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_RDMAABLE_RDMAABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_RDMAABLE_RDMAABLE_IMPL_H
 
 #include "vt/config.h"
-#include "vt/collective/tree/tree.h"
-#include "vt/pool/pool.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/message.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/collective.h"
-#include "vt/event/event.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/event/event_msgs.h"
-#include "vt/termination/termination.h"
-#include "vt/rdma/rdma_headers.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace_headers.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/topos/location/location_headers.h"
-#include "vt/topos/index/index.h"
-#include "vt/topos/mapping/mapping_headers.h"
-#include "vt/vrt/context/context_vrtheaders.h"
-#include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
-#include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
-#include "vt/group/group_headers.h"
-#include "vt/epoch/epoch_headers.h"
-#include "vt/pipe/pipe_headers.h"
-#include "vt/objgroup/headers.h"
-#include "vt/scheduler/priority.h"
 #include "vt/rdmahandle/manager.h"
 
-#endif /*INCLUDED_VT_TRANSPORT_H*/
+namespace vt { namespace vrt { namespace collection {
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+RDMAable<ColT,IndexT,BaseProxyT>::RDMAable(
+  VirtualProxyType const in_proxy
+) : BaseProxyT(in_proxy)
+{ }
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename T>
+vt::rdma::Handle<T, vt::rdma::HandleEnum::StaticSize, IndexT>
+RDMAable<ColT,IndexT,BaseProxyT>::makeHandleRDMA(
+  IndexT idx, std::size_t count, bool is_uniform
+) const {
+  auto col_proxy = this->getProxy();
+  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,idx);
+  return vt::theHandleRDMA()->makeCollectionHandles<
+    T, rdma::HandleEnum::StaticSize, ColT
+  >(proxy, count, is_uniform);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename T, vt::rdma::HandleEnum E, typename IndexU>
+void RDMAable<ColT,IndexT,BaseProxyT>::destroyHandleRDMA(
+  vt::rdma::Handle<T,E,IndexU> handle
+) const {
+  return vt::theHandleRDMA()->deleteHandleCollection(handle);
+}
+
+}}} /* end namespace vt::vrt::collection */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_RDMAABLE_RDMAABLE_IMPL_H*/

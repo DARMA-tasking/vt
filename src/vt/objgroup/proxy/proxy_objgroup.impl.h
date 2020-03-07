@@ -52,6 +52,7 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/reduce/operators/default_op.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/rdmahandle/manager.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -158,6 +159,61 @@ void Proxy<ObjT>::destroyCollective() const {
 template <typename ObjT>
 ObjGroupProxyType Proxy<ObjT>::getProxy() const {
   return proxy_;
+}
+
+template <typename ObjT>
+template <typename T>
+vt::rdma::Handle<T> Proxy<ObjT>::makeHandleRDMA(
+  std::size_t count, bool is_uniform
+) const {
+  return vt::theHandleRDMA()->makeHandleCollectiveObjGroup<
+    T, rdma::HandleEnum::StaticSize
+  >(*this, count, is_uniform);
+}
+
+template <typename ObjT>
+template <typename T>
+void Proxy<ObjT>::destroyHandleRDMA(vt::rdma::Handle<T> handle) const {
+  return vt::theHandleRDMA()->deleteHandleCollectiveObjGroup<
+    T, rdma::HandleEnum::StaticSize
+  >(handle);
+}
+
+template <typename ObjT>
+template <typename T>
+vt::rdma::HandleSet<T> Proxy<ObjT>::makeHandleSetRDMA(
+  int32_t max_elm,
+  std::unordered_map<int32_t, std::size_t> const& map,
+  bool is_uniform
+) const {
+  bool dense_start_at_zero = false;
+  return vt::theHandleRDMA()->makeHandleSetCollectiveObjGroup<
+    T, rdma::HandleEnum::StaticSize
+  >(*this, max_elm, map, dense_start_at_zero, is_uniform);
+}
+
+template <typename ObjT>
+template <typename T>
+vt::rdma::HandleSet<T> Proxy<ObjT>::makeHandleSetRDMA(
+  int32_t max_elm,
+  std::vector<std::size_t> const& vec,
+  bool is_uniform
+) const {
+  int32_t i = 0;
+  std::unordered_map<int32_t, std::size_t> map;
+  for (auto&& elm : vec) {
+    map[i++] = elm;
+  }
+  bool dense_start_at_zero = true;
+  return vt::theHandleRDMA()->makeHandleSetCollectiveObjGroup<
+    T, rdma::HandleEnum::StaticSize
+  >(*this, max_elm, map, dense_start_at_zero, is_uniform);
+}
+
+template <typename ObjT>
+template <typename T>
+void Proxy<ObjT>::destroyHandleSetRDMA(vt::rdma::HandleSet<T> set) const {
+  return vt::theHandleRDMA()->deleteHandleSetCollectiveObjGroup<T>(set);
 }
 
 }}} /* end namespace vt::objgroup::proxy */

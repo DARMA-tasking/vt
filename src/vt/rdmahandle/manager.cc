@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 transport.h
+//                                  manager.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,44 +42,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TRANSPORT_H
-#define INCLUDED_VT_TRANSPORT_H
-
 #include "vt/config.h"
-#include "vt/collective/tree/tree.h"
-#include "vt/pool/pool.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/message.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/collective.h"
-#include "vt/event/event.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/event/event_msgs.h"
-#include "vt/termination/termination.h"
-#include "vt/rdma/rdma_headers.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace_headers.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/topos/location/location_headers.h"
-#include "vt/topos/index/index.h"
-#include "vt/topos/mapping/mapping_headers.h"
-#include "vt/vrt/context/context_vrtheaders.h"
-#include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
-#include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
-#include "vt/group/group_headers.h"
-#include "vt/epoch/epoch_headers.h"
-#include "vt/pipe/pipe_headers.h"
-#include "vt/objgroup/headers.h"
-#include "vt/scheduler/priority.h"
 #include "vt/rdmahandle/manager.h"
+#include "vt/objgroup/manager.h"
 
-#endif /*INCLUDED_VT_TRANSPORT_H*/
+namespace vt { namespace rdma {
+
+void Manager::destroy() {
+  vt::theObjGroup()->destroyCollective(proxy_);
+}
+
+void Manager::initialize(ProxyType in_proxy) {
+  proxy_ = in_proxy;
+}
+
+/*static*/ typename Manager::ProxyType Manager::construct() {
+  auto proxy = vt::theObjGroup()->makeCollective<Manager>();
+  proxy.get()->initialize(proxy);
+  return proxy;
+}
+
+}} /* end namespace vt::rdma */

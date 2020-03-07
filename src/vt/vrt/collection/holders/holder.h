@@ -52,6 +52,7 @@
 #include "vt/vrt/collection/holders/elm_holder.h"
 #include "vt/vrt/collection/types/headers.h"
 #include "vt/vrt/collection/messages/user.h"
+#include "vt/vrt/collection/listener/listen_events.h"
 
 #include <unordered_map>
 #include <tuple>
@@ -102,6 +103,9 @@ struct Holder {
   void addLBCont(IndexT const& idx, LBContFnType fn);
   void runLBCont(IndexT const& idx);
   void runLBCont();
+  int addListener(listener::ListenFnType<IndexT> fn);
+  void removeListener(int element);
+  void applyListeners(listener::ElementEventEnum event, IndexT const& idx);
 
   friend struct CollectionManager;
 
@@ -119,6 +123,7 @@ private:
   NodeType group_root_                                            = 0;
   CountType num_erased_not_removed_                               = 0;
   CountType elements_ready_                                       = 0;
+  std::vector<listener::ListenFnType<IndexT>> event_listeners_    = {};
 };
 
 }}} /* end namespace vt::vrt::collection */

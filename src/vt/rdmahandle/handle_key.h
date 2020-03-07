@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 transport.h
+//                                 handle_key.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,44 +42,54 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TRANSPORT_H
-#define INCLUDED_VT_TRANSPORT_H
+#if !defined INCLUDED_VT_RDMAHANDLE_HANDLE_KEY_H
+#define INCLUDED_VT_RDMAHANDLE_HANDLE_KEY_H
 
 #include "vt/config.h"
-#include "vt/collective/tree/tree.h"
-#include "vt/pool/pool.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/message.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/collective.h"
-#include "vt/event/event.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/event/event_msgs.h"
-#include "vt/termination/termination.h"
-#include "vt/rdma/rdma_headers.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace_headers.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/topos/location/location_headers.h"
-#include "vt/topos/index/index.h"
-#include "vt/topos/mapping/mapping_headers.h"
-#include "vt/vrt/context/context_vrtheaders.h"
-#include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
-#include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
-#include "vt/group/group_headers.h"
-#include "vt/epoch/epoch_headers.h"
-#include "vt/pipe/pipe_headers.h"
-#include "vt/objgroup/headers.h"
-#include "vt/scheduler/priority.h"
-#include "vt/rdmahandle/manager.h"
 
-#endif /*INCLUDED_VT_TRANSPORT_H*/
+namespace vt { namespace rdma {
+
+struct HandleKey {
+  struct {
+    union {
+      ObjGroupProxyType obj_;
+      VirtualProxyType  vrt_;
+    } u_;
+    bool is_obj_;
+  } proxy_ ;
+  RDMA_HandleType handle_ = vt::no_rdma_handle;
+
+  struct ObjGroupTag   { };
+  struct CollectionTag { };
+
+  bool isObjGroup() const { return proxy_.is_obj_; }
+  RDMA_HandleType handle() const { return handle_; }
+  bool valid() const { return handle_ != vt::no_rdma_handle; }
+
+  friend bool operator==(HandleKey const& a1, HandleKey const& a2) {
+    return
+      a1.handle_ == a2.handle_ and
+      a1.proxy_.is_obj_ == a2.proxy_.is_obj_ and
+      (a1.proxy_.is_obj_ ?
+       a1.proxy_.u_.obj_ == a2.proxy_.u_.obj_ :
+       a1.proxy_.u_.vrt_ == a2.proxy_.u_.vrt_);
+  }
+
+  HandleKey() = default;
+  HandleKey(ObjGroupTag, ObjGroupProxyType in_proxy, RDMA_HandleType in_handle)
+    : handle_(in_handle)
+  {
+    proxy_.is_obj_ = true;
+    proxy_.u_.obj_ = in_proxy;
+  }
+  HandleKey(CollectionTag, VirtualProxyType in_proxy, RDMA_HandleType in_handle)
+    : handle_(in_handle)
+  {
+    proxy_.is_obj_ = false;
+    proxy_.u_.vrt_ = in_proxy;
+  }
+};
+
+}} /* end namespace vt::rdma */
+
+#endif /*INCLUDED_VT_RDMAHANDLE_HANDLE_KEY_H*/

@@ -1641,10 +1641,16 @@ bool CollectionManager::insertCollectionElement(
         VrtElmProxy<ColT, IndexT>{proxy,idx}, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
+      elm_holder->applyListeners(
+        listener::ElementEventEnum::ElementMigratedIn, idx
+      );
     } else {
       theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntity(
         VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
+      );
+      elm_holder->applyListeners(
+        listener::ElementEventEnum::ElementCreated, idx
       );
     }
     return true;
@@ -2773,6 +2779,10 @@ MigrateStatus CollectionManager::migrateOut(
    col_unique_ptr->destroy();
    col_unique_ptr = nullptr;
 
+   elm_holder->applyListeners(
+     listener::ElementEventEnum::ElementMigratedOut, idx
+   );
+
    return MigrateStatus::MigratedToRemote;
  } else {
    #if backend_check_enabled(runtime_checks)
@@ -2869,6 +2879,11 @@ void CollectionManager::destroyMatching(
   UniversalIndexHolder<>::destroyCollection(untyped_proxy);
   auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
   if (elm_holder) {
+    elm_holder->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>*) {
+      elm_holder->applyListeners(
+        listener::ElementEventEnum::ElementDestroyed, idx
+      );
+    });
     elm_holder->destroyAll();
   }
 
@@ -3203,6 +3218,28 @@ template <typename always_void>
 DispatchBasePtrType
 CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
+}
+
+template <typename ColT, typename IndexT>
+int CollectionManager::registerElementListener(
+  VirtualProxyType proxy, listener::ListenFnType<IndexT> fn
+) {
+  auto elm_holder = findElmHolder<ColT>(proxy);
+  return elm_holder->addListener(fn);
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::unregisterElementListener(
+  VirtualProxyType proxy, int element
+) {
+  auto elm_holder = findElmHolder<ColT>(proxy);
+  elm_holder->removeListener(element);
+}
+
+template <typename ColT, typename IndexT>
+IndexT CollectionManager::getRange(VirtualProxyType proxy) {
+  auto col_holder = findColHolder<ColT>(proxy);
+  return col_holder->max_idx;
 }
 
 }}} /* end namespace vt::vrt::collection */

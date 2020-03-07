@@ -71,6 +71,7 @@ struct Pool;
 }
 namespace rdma {
 struct RDMAManager;
+struct Manager;
 }
 namespace param {
 struct Param;

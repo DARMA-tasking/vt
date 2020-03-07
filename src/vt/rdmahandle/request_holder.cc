@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 transport.h
+//                              request_holder.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,44 +42,57 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TRANSPORT_H
-#define INCLUDED_VT_TRANSPORT_H
+#if !defined INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC
+#define INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC
 
 #include "vt/config.h"
-#include "vt/collective/tree/tree.h"
-#include "vt/pool/pool.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/message.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/collective/collective_alg.h"
-#include "vt/collective/collective.h"
-#include "vt/event/event.h"
-#include "vt/registry/registry.h"
-#include "vt/messaging/active.h"
-#include "vt/parameterization/parameterization.h"
-#include "vt/event/event_msgs.h"
-#include "vt/termination/termination.h"
-#include "vt/rdma/rdma_headers.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/sequence/sequencer_headers.h"
-#include "vt/trace/trace_headers.h"
-#include "vt/scheduler/scheduler.h"
-#include "vt/topos/location/location_headers.h"
-#include "vt/topos/index/index.h"
-#include "vt/topos/mapping/mapping_headers.h"
-#include "vt/vrt/context/context_vrtheaders.h"
-#include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
-#include "vt/standalone/vt_main.h"
-#include "vt/utils/tls/tls.h"
-#include "vt/utils/atomic/atomic.h"
-#include "vt/group/group_headers.h"
-#include "vt/epoch/epoch_headers.h"
-#include "vt/pipe/pipe_headers.h"
-#include "vt/objgroup/headers.h"
-#include "vt/scheduler/priority.h"
-#include "vt/rdmahandle/manager.h"
+#include "vt/rdmahandle/request_holder.h"
 
-#endif /*INCLUDED_VT_TRANSPORT_H*/
+namespace vt { namespace rdma {
+
+void RequestHolder::add(std::function<void()> fn) {
+  delayed_ = fn;
+}
+
+MPI_Request* RequestHolder::add() {
+  reqs_.emplace_back(MPI_Request{});
+  return &reqs_[reqs_.size()-1];
+}
+
+bool RequestHolder::test() {
+  std::vector<MPI_Request> new_reqs;
+  std::vector<MPI_Status> stats;
+  stats.resize(reqs_.size());
+  auto flags = std::make_unique<int[]>(reqs_.size());
+  MPI_Testall(reqs_.size(), &reqs_[0], &flags[0], &stats[0]);
+  for (std::size_t i = 0; i < reqs_.size(); i++) {
+    if (not flags[i]) {
+      new_reqs.push_back(reqs_[i]);
+    }
+  }
+  reqs_ = std::move(new_reqs);
+  return new_reqs.size() == 0;
+}
+
+void RequestHolder::wait() {
+  debug_print(
+    rdma, node,
+    "RequestHolder::wait: len={}, ptr={}\n",
+    reqs_.size(), on_done_ ? "yes" : "no"
+  );
+  if (delayed_ != nullptr) {
+    delayed_();
+    delayed_ = nullptr;
+  }
+  while (not test()) {
+    vt::runScheduler();
+  }
+  if (on_done_ != nullptr) {
+    on_done_->invoke();
+  }
+  on_done_ = nullptr;
+}
+
+}} /* end namespace vt::rdma */
+
+#endif /*INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC*/
