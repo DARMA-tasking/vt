@@ -65,6 +65,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
 /*static*/ std::string ArgConfig::vt_memory_reporters   =
   "mstats,machinfo,selfstat,sbrk,mallinfo,getrusage,ps";
+/*static*/ bool        ArgConfig::vt_print_memory_each_phase = false;
+/*static*/ std::string ArgConfig::vt_print_memory_node  = "0";
 
 /*static*/ bool        ArgConfig::vt_no_warn_stack      = false;
 /*static*/ bool        ArgConfig::vt_no_assert_stack    = false;
@@ -206,10 +208,16 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling memory usage reporting
    */
-  auto mem_desc = "List of memory reporters to query in order of precedence";
+  auto mem_desc  = "List of memory reporters to query in order of precedence";
+  auto mem_phase = "Print memory usage each new phase";
+  auto mem_node  = "Node to print memory usage from or \"all\"";
   auto mm = app.add_option("--vt_memory_reporters", vt_memory_reporters, mem_desc, true);
+  auto mn = app.add_flag("--vt_print_memory_each_phase", vt_print_memory_each_phase, mem_phase);
+  auto mo = app.add_option("--vt_print_memory_node", vt_print_memory_node, mem_node, true);
   auto memoryGroup = "Memory Usage Reporting";
   mm->group(memoryGroup);
+  mn->group(memoryGroup);
+  mo->group(memoryGroup);
 
 
   /*
