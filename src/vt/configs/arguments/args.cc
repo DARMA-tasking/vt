@@ -197,7 +197,7 @@ namespace vt { namespace arguments {
   auto d = app.add_flag("--vt_no_SIGINT",    vt_no_sigint,    no_sigint);
   auto e = app.add_flag("--vt_no_SIGSEGV",   vt_no_sigsegv,   no_sigsegv);
   auto f = app.add_flag("--vt_no_terminate", vt_no_terminate, no_terminate);
-  auto signalGroup = "Signa Handling";
+  auto signalGroup = "Signal Handling";
   d->group(signalGroup);
   e->group(signalGroup);
   f->group(signalGroup);
