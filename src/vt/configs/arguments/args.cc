@@ -89,6 +89,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_trace_sys_serial_msg = false;
 /*static*/ bool        ArgConfig::vt_trace_spec           = false;
 /*static*/ std::string ArgConfig::vt_trace_spec_file      = "";
+/*static*/ bool        ArgConfig::vt_trace_memory_usage   = false;
 
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
@@ -264,6 +265,7 @@ namespace vt { namespace arguments {
   auto tsyssmsg  = "Trace system serialization manager events";
   auto tspec     = "Enable trace spec file (defines which phases tracing is on)";
   auto tspecfile = "File containing trace spec; --vt_trace_spec to enable";
+  auto tmemusage = "Trace memory usage using first memory reporter";
   auto n  = app.add_flag("--vt_trace",              vt_trace,           trace);
   auto nm = app.add_flag("--vt_trace_mpi",          vt_trace_mpi,       trace_mpi);
   auto o  = app.add_option("--vt_trace_file",       vt_trace_file,      tfile, "");
@@ -278,6 +280,7 @@ namespace vt { namespace arguments {
   auto qz = app.add_flag("--vt_trace_sys_serial_msg", vt_trace_sys_serial_msg, tsyssmsg);
   auto qza = app.add_flag("--vt_trace_spec",          vt_trace_spec,           tspec);
   auto qzb = app.add_option("--vt_trace_spec_file",   vt_trace_spec_file,      tspecfile, "");
+  auto qzc = app.add_flag("--vt_trace_memory_usage",  vt_trace_memory_usage,   tmemusage);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
@@ -292,6 +295,7 @@ namespace vt { namespace arguments {
   qz->group(traceGroup);
   qza->group(traceGroup);
   qzb->group(traceGroup);
+  qzc->group(traceGroup);
 
 
   /*

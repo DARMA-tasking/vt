@@ -630,6 +630,11 @@ void Runtime::printStartupBanner() {
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
     }
+    if (ArgType::vt_trace_memory_usage) {
+      auto f11 = fmt::format("Tracing memory usage");
+      auto f12 = opt_on("--vt_trace_memory_usage", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
   #endif
 
