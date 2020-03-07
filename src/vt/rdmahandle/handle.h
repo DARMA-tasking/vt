@@ -51,14 +51,8 @@
 
 namespace vt {
 
-template <typename T, rdma::HandleEnum E, typename I>
-using Handle = rdma::Handle<T, E, I>;
-
-template <typename T>
-using HandleRDMA = rdma::Handle<T, rdma::HandleEnum::StaticSize, vt::NodeType>;
-
-template <typename T>
-using HandleListRDMA = rdma::Handle<T, rdma::HandleEnum::ConcurrentList, vt::NodeType>;
+template <typename T, typename I = vt::NodeType>
+using HandleRDMA = rdma::Handle<T, rdma::HandleEnum::StaticSize, I>;
 
 } /* end namespace vt */
 

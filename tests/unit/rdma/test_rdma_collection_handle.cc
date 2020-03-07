@@ -183,7 +183,7 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
   }
 
 private:
-  vt::Handle<T, vt::rdma::HandleEnum::StaticSize, vt::Index2D> handle_;
+  vt::HandleRDMA<T, vt::Index2D> handle_;
   vt::EpochType migrate_epoch_;
 };
 
