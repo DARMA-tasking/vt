@@ -68,6 +68,7 @@
 #include "vt/configs/arguments/args.h"
 #include "vt/configs/error/stack_out.h"
 #include "vt/configs/error/pretty_print_stack.h"
+#include "vt/utils/memory/memory_usage.h"
 
 #include <memory>
 #include <iostream>
@@ -737,6 +738,41 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_memory_reporters != "") {
+    auto f11 = fmt::format(
+      "Memory usage checker precedence: {}",
+      ArgType::vt_memory_reporters
+    );
+    auto f12 = opt_on("--vt_memory_reporters", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+
+    auto usage = util::memory::MemoryUsage::get();
+
+    std::string working_str = "";
+    auto working_reporters = usage->getWorkingReporters();
+    for (std::size_t i = 0; i < working_reporters.size(); i++) {
+      working_str += working_reporters[i];
+      if (i != working_reporters.size() - 1) {
+        working_str += ",";
+      }
+    }
+    auto f13 = fmt::format(
+      "{}Working memory reporters:{} {}{}{}\n",
+      green, reset, magenta, working_str, reset
+    );
+    fmt::print("{}\t{}{}", vt_pre, f13, reset);
+
+    auto all_usage_str = usage->getUsageAll();
+    if (all_usage_str != "") {
+      auto f14 = fmt::format(
+        "{}Initial memory usage:{} {}\n",
+        green, reset, all_usage_str
+      );
+      fmt::print("{}\t{}{}", vt_pre, f14, reset);
+    }
+  }
+
+
   if (ArgType::vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
     auto f12 = opt_on("--vt_debug_all", f11);
@@ -1027,6 +1063,9 @@ void Runtime::finalizeContext() {
 void Runtime::initializeComponents() {
   debug_print(runtime, node, "begin: initializeComponents\n");
 
+  // Initialize the memory usage tracker on each node
+  util::memory::MemoryUsage::initialize();
+
   // Helper components: not allowed to send messages during construction
   theRegistry = std::make_unique<registry::Registry>();
   theEvent = std::make_unique<event::AsyncEvent>();
@@ -1199,6 +1238,9 @@ void Runtime::finalizeComponents() {
   // Initialize individual memory pool for each worker
   thePool->destroyWorkerPools();
   thePool = nullptr;
+
+  // Finalize memory usage component
+  util::memory::MemoryUsage::finalize();
 
   debug_print(runtime, node, "end: finalizeComponents\n");
 }
