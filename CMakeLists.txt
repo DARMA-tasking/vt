@@ -66,15 +66,18 @@ add_subdirectory(src)
 # Examples
 #
 option(VT_BUILD_EXAMPLES "Build VT examples" ON)
-option(VT_NO_BUILD_EXAMPLES "Disable building VT examples (overrides VT_BUILD_EXAMPLES if ON)" OFF)
 
-if (VT_BUILD_EXAMPLES
-   AND NOT VT_NO_BUILD_EXAMPLES)
+if (VT_BUILD_EXAMPLES)
+  message(
+    STATUS
+    "VT: building examples"
+  )
+
   add_custom_target(examples)
   add_subdirectory(examples)
 else()
   message(
-    STATUS "VT: NOT building examples because VT_NO_BUILD_EXAMPLES is set or VT_BUILD_EXAMPLES is not set"
+    STATUS "VT: NOT building examples because VT_BUILD_EXAMPLES is not set"
   )
 endif()
 
@@ -82,10 +85,8 @@ endif()
 # Tests
 #
 option(VT_BUILD_TESTS "Build VT tests" ON)
-option(VT_NO_BUILD_TESTS "Disable building VT tests (overrides VT_BUILD_TESTS if ON)" OFF)
 
 if (VT_BUILD_TESTS
-   AND NOT VT_NO_BUILD_TESTS
    AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   # CTest implies enable_testing() and defines the BUILD_TESTING option.
   # The default of BUILD_TESTING is ON.
@@ -95,7 +96,6 @@ endif()
 
 if (BUILD_TESTING
    AND VT_BUILD_TESTS
-   AND NOT VT_NO_BUILD_TESTS
    AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   message(
     STATUS
@@ -108,7 +108,7 @@ if (BUILD_TESTING
 else()
   message(
     STATUS
-    "VT: NOT building tests because VT_NO_BUILD_TESTS is set or VT_BUILD_TESTS and BUILD_TESTING are not set"
+    "VT: NOT building tests because VT_BUILD_TESTS or BUILD_TESTING are not set"
   )
 endif()
 
