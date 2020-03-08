@@ -23,9 +23,6 @@ To build *vt*, one must obtain the following dependencies:
 
 ### Optional:
 
-#### If testing is enabled:
-- Google Test (`gtest`), ([https://github.com/google/googletest.git](https://github.com/google/googletest.git))
-
 #### If threading is enabled:
   - OpenMP       _or_
   - `std::thread`s (default from C++ compiler)
@@ -63,7 +60,6 @@ $ perl ./auto.pl --help
     par              |  false      | 14                  |  14
     dry_run          |  false      | 0                   |  0
     verbose          |  false      | 0                   |  0
-    gtest            |  false      |                     |
     clean            |  false      | 0                   |  0
     backend          |  false      | 0                   |  0
     atomic           |  false      |                     |
@@ -78,7 +74,7 @@ $ perl ./auto.pl build_mode=debug compiler_c=clang-3.9     \
 ```
 ###  Manual Build
 
-To start out, obtain `gtest`, `detector`, and `checkpoint` (in that
+To start out, obtain `detector` and `checkpoint` (in that
 order). Stitch them up with cmake, by passing the appropriate paths as they are
 built.
 
