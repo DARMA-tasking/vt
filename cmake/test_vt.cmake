@@ -105,12 +105,12 @@ macro(add_test_for_example_vt test_target test_exec test_list)
       TARGET_EXECUTABLE            ${test_name}
       TARGET_ARGS                  ${ARGN}
       TARGET_NPROC                 ${PROC}
-      TARGET_NAME                  vt:${test_name}_${PROC}
+      TARGET_NAME                  vt_example:${test_name}_${PROC}
       TARGET_WORKING_DIRECTORY     ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     set_tests_properties(
-      vt:${test_name}_${PROC}
+      vt_example:${test_name}_${PROC}
       PROPERTIES
       FAIL_REGULAR_EXPRESSION "Segmentation fault"
     )

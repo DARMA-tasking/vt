@@ -63,6 +63,19 @@ add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 add_subdirectory(src)
 
 #
+# Test prep - ensures examples can be registered as tests.
+#
+option(VT_BUILD_TESTS "Build VT tests" ON)
+
+if (VT_BUILD_TESTS
+   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  # CTest implies enable_testing() and defines the BUILD_TESTING option.
+  # The default of BUILD_TESTING is ON.
+  # Testing is only enabled if the actual project being built is VT.
+  include(CTest)
+endif()
+
+#
 # Examples
 #
 option(VT_BUILD_EXAMPLES "Build VT examples" ON)
@@ -77,22 +90,14 @@ if (VT_BUILD_EXAMPLES)
   add_subdirectory(examples)
 else()
   message(
-    STATUS "VT: NOT building examples because VT_BUILD_EXAMPLES is not set"
+    STATUS "VT: NOT building examples because VT_BUILD_EXAMPLES is not set.\
+ Examples that are not built are NOT TESTED."
   )
 endif()
 
 #
 # Tests
 #
-option(VT_BUILD_TESTS "Build VT tests" ON)
-
-if (VT_BUILD_TESTS
-   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  # CTest implies enable_testing() and defines the BUILD_TESTING option.
-  # The default of BUILD_TESTING is ON.
-  # Testing is only enabled if the actual project being built is VT.
-  include(CTest)
-endif()
 
 if (BUILD_TESTING
    AND VT_BUILD_TESTS
