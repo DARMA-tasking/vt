@@ -96,6 +96,14 @@ private:
   bool failed_ = false;
 };
 
+struct StatM : Reporter {
+  std::size_t getUsage() override;
+  std::string getName() override;
+
+private:
+  bool failed_ = false;
+};
+
 struct MemoryUsage {
   MemoryUsage();
 

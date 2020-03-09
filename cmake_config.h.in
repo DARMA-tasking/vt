@@ -83,3 +83,4 @@
 #cmakedefine vt_has_sys_resource_h
 #cmakedefine vt_has_unistd_h
 #cmakedefine vt_has_inttypes_h
+#cmakedefine vt_has_sysconf

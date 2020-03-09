@@ -50,6 +50,7 @@
 #include <string>
 #include <unordered_map>
 #include <istream>
+#include <fstream>
 #include <cstdio>
 
 #if defined(vt_has_malloc_h)
@@ -211,6 +212,34 @@ std::string Stat::getName() {
   return "selfstat";
 }
 
+std::size_t StatM::getUsage() {
+# if defined(vt_has_sysconf)
+  if (failed_) {
+    return 0;
+  }
+
+  std::size_t to_ignore = 0;
+  std::size_t resident = 0;
+  std::ifstream buffer("/proc/self/statm");
+  if (buffer.good()) {
+    buffer >> to_ignore >> resident;
+    buffer.close();
+
+    auto rss = resident * sysconf(_SC_PAGE_SIZE);
+    return rss;
+  } else {
+    failed_ = true;
+    return 0;
+  }
+# else
+  return 0;
+# endif
+}
+
+std::string StatM::getName() {
+  return "selfstatm";
+}
+
 struct CommaDelimit : std::string {};
 
 std::istream& operator>>(std::istream& is, CommaDelimit& output) {
@@ -225,6 +254,7 @@ MemoryUsage::MemoryUsage() {
   all_reporters.emplace_back(std::make_unique<Mstats>());
   all_reporters.emplace_back(std::make_unique<MachTaskInfo>());
   all_reporters.emplace_back(std::make_unique<Stat>());
+  all_reporters.emplace_back(std::make_unique<StatM>());
   all_reporters.emplace_back(std::make_unique<Sbrk>());
   all_reporters.emplace_back(std::make_unique<Mallinfo>());
   all_reporters.emplace_back(std::make_unique<Getrusage>());
