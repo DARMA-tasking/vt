@@ -152,7 +152,12 @@ std::size_t Getrusage::getUsage() {
 # if defined(vt_has_getrusage)
     struct rusage usage;
     getrusage(RUSAGE_SELF, &usage);
-    return usage.ru_maxrss;
+    // On BSD, units are in KiB, on mach it's in bytes
+#   if defined(__APPLE__) && defined(__MACH__)
+      return usage.ru_maxrss;
+#   else
+      return usage.ru_maxrss * 1024;
+#   endif
 # else
     return 0;
 # endif
