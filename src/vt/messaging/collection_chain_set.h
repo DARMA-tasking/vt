@@ -115,7 +115,9 @@ class CollectionChainSet final {
    * \param[in] step_action The action to perform as a function that returns a
    * \c PendingSend
    */
-  void nextStep(std::string label, std::function<PendingSend(Index)> step_action) {
+  void nextStep(
+    std::string const& label, std::function<PendingSend(Index)> step_action
+  ) {
     for (auto &entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
@@ -176,7 +178,7 @@ class CollectionChainSet final {
    * \param[in] step_action the next step to execute, returning a \c PendingSend
    */
   void nextStepCollective(
-    std::string label, std::function<PendingSend(Index)> step_action
+    std::string const& label, std::function<PendingSend(Index)> step_action
   ) {
     auto epoch = theTerm()->makeEpochCollective(label);
     vt::theMsg()->pushEpoch(epoch);
