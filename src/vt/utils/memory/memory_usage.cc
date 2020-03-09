@@ -176,9 +176,9 @@ std::size_t MachTaskInfo::getUsage() {
 # endif
 }
 
-  std::string MachTaskInfo::getName() {
-    return "machinfo";
-  }
+std::string MachTaskInfo::getName() {
+  return "machinfo";
+}
 
 std::size_t Stat::getUsage() {
   if (failed) {
