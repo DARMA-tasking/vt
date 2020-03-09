@@ -48,7 +48,6 @@
 #include "vt/config.h"
 
 #include <string>
-#include <unordered_map>
 
 namespace vt { namespace util { namespace memory {
 
@@ -59,7 +58,7 @@ enum struct MemoryUnitEnum : int8_t {
   Gigabytes = 3
 };
 
-extern std::unordered_map<MemoryUnitEnum, std::string> memory_unit_names;
+std::string getMemoryUnitName(MemoryUnitEnum unit);
 
 }}} /* end namespace vt::util::memory */
 
