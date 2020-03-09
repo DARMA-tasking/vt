@@ -80,10 +80,10 @@ struct TestMsg : vt::Message {
   TestMsg() : s("hello") {}
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | val;
-    s | s;
+  void serialize(SerializerT& ss) {
+    MessageParentType::serialize(ss);
+    ss | val;
+    ss | s;
   }
 };
 
