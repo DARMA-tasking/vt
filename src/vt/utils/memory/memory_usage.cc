@@ -95,13 +95,13 @@ std::size_t Sbrk::getUsage() {
 # if defined(vt_has_sbrk)
 #   pragma GCC diagnostic push
 #   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    if (!inited) {
-      sbrkinit = reinterpret_cast<uintptr_t>(sbrk(0));
-      inited = true;
+    if (!inited_) {
+      sbrkinit_ = reinterpret_cast<uintptr_t>(sbrk(0));
+      inited_ = true;
     }
     uintptr_t sbrknow = reinterpret_cast<uintptr_t>(sbrk(0));
 #   pragma GCC diagnostic pop
-    return static_cast<std::size_t>(sbrknow - sbrkinit);
+    return static_cast<std::size_t>(sbrknow - sbrkinit_);
 # else
     return 0;
 # endif
@@ -185,14 +185,14 @@ std::string MachTaskInfo::getName() {
 }
 
 std::size_t Stat::getUsage() {
-  if (failed) {
+  if (failed_) {
     return 0;
   }
 
   std::size_t vsz = 0; /* should remain 0 on failure */
   FILE *f = fopen("/proc/self/stat", "r");
   if (!f) {
-    failed = true;
+    failed_ = true;
     return 0;
   }
   for (int i = 0; i < 22; i++) {
@@ -202,7 +202,7 @@ std::size_t Stat::getUsage() {
   fclose(f);
 
   if (!vsz) {
-    failed = true;
+    failed_ = true;
   }
   return vsz;
 }

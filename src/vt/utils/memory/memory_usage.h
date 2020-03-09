@@ -64,8 +64,8 @@ struct Sbrk : Reporter {
   std::string getName() override;
 
 private:
-  bool inited = false;
-  uintptr_t sbrkinit = 0;
+  bool inited_ = false;
+  uintptr_t sbrkinit_ = 0;
 };
 
 struct PS : Reporter {
@@ -93,7 +93,7 @@ struct Stat : Reporter {
   std::string getName() override;
 
 private:
-  bool failed = false;
+  bool failed_ = false;
 };
 
 struct MemoryUsage {
