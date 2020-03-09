@@ -173,7 +173,7 @@ public:
    * \return the new epoch
    */
   EpochType makeEpochRooted(
-    std::string label,
+    std::string const& label,
     UseDS use_ds = UseDS{false},
     SuccessorEpochCapture successor = SuccessorEpochCapture{}
   );
@@ -187,7 +187,7 @@ public:
    * \return the new epoch
    */
   EpochType makeEpochCollective(
-    std::string label,
+    std::string const& label,
     SuccessorEpochCapture successor = SuccessorEpochCapture{}
   );
 
@@ -202,7 +202,7 @@ public:
    * \return the new epoch
    */
   EpochType makeEpoch(
-    std::string label,
+    std::string const& label,
     bool is_coll,
     UseDS use_ds = UseDS{false},
     SuccessorEpochCapture successor = SuccessorEpochCapture{}
@@ -217,10 +217,10 @@ public:
    * Directly call into a specific type of rooted epoch, can not be overridden
    */
   EpochType makeEpochRootedWave(
-    SuccessorEpochCapture successor, std::string label = ""
+    SuccessorEpochCapture successor, std::string const& label = ""
   );
   EpochType makeEpochRootedDS(
-    SuccessorEpochCapture successor, std::string label = ""
+    SuccessorEpochCapture successor, std::string const& label = ""
   );
 
 private:
@@ -280,10 +280,10 @@ private:
   bool propagateEpoch(TermStateType& state);
   void epochTerminated(EpochType const& epoch, CallFromEnum from);
   void epochContinue(EpochType const& epoch, TermWaveType const& wave);
-  void setupNewEpoch(EpochType const& epoch, std::string label);
+  void setupNewEpoch(EpochType const& epoch, std::string const& label);
   void readyNewEpoch(EpochType const& epoch);
   void makeRootedHan(
-    EpochType const& epoch, bool is_root, std::string label = ""
+    EpochType const& epoch, bool is_root, std::string const& label = ""
   );
 
 public:
