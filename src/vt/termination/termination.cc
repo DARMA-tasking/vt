@@ -967,7 +967,7 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 }
 
 EpochType TerminationDetector::makeEpochRootedWave(
-  SuccessorEpochCapture successor, std::string label
+  SuccessorEpochCapture successor, std::string const& label
 ) {
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
 
@@ -1000,7 +1000,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
 }
 
 EpochType TerminationDetector::makeEpochRootedDS(
-  SuccessorEpochCapture successor, std::string label
+  SuccessorEpochCapture successor, std::string const& label
 ) {
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, ds_cat);
@@ -1033,7 +1033,7 @@ EpochType TerminationDetector::makeEpochRooted(
 }
 
 EpochType TerminationDetector::makeEpochRooted(
-  std::string label, UseDS use_ds, SuccessorEpochCapture successor
+  std::string const& label, UseDS use_ds, SuccessorEpochCapture successor
 ) {
   /*
    *  This method should only be called by the root node for the rooted epoch
@@ -1072,7 +1072,7 @@ EpochType TerminationDetector::makeEpochCollective(
 }
 
 EpochType TerminationDetector::makeEpochCollective(
-  std::string label, SuccessorEpochCapture successor
+  std::string const& label, SuccessorEpochCapture successor
 ) {
   auto const epoch = epoch::EpochManip::makeNewEpoch();
 
@@ -1094,7 +1094,7 @@ EpochType TerminationDetector::makeEpochCollective(
 }
 
 EpochType TerminationDetector::makeEpoch(
-  std::string label, bool is_coll, UseDS use_ds,
+  std::string const& label, bool is_coll, UseDS use_ds,
   SuccessorEpochCapture successor
 ) {
   return is_coll ?
@@ -1119,7 +1119,7 @@ void TerminationDetector::activateEpoch(EpochType const& epoch) {
 }
 
 void TerminationDetector::makeRootedHan(
-  EpochType const& epoch, bool is_root, std::string label
+  EpochType const& epoch, bool is_root, std::string const& label
 ) {
   bool const is_ready = !is_root;
 
@@ -1141,7 +1141,7 @@ void TerminationDetector::makeRootedHan(
 }
 
 void TerminationDetector::setupNewEpoch(
-  EpochType const& epoch, std::string label
+  EpochType const& epoch, std::string const& label
 ) {
   auto epoch_iter = epoch_state_.find(epoch);
 
