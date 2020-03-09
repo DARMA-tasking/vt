@@ -66,11 +66,13 @@ set(
       DEFAULT_LINK_SET
     )
 
-    add_test_for_example_vt(
-      ${EXAMPLE_NAME}
-      ${EXAMPLE_FILE}
-      example_tests
-    )
+    if (BUILD_TESTING)
+      add_test_for_example_vt(
+        ${EXAMPLE_NAME}
+        ${EXAMPLE_FILE}
+        example_tests
+      )
+    endif()
 
   endforeach()
 
