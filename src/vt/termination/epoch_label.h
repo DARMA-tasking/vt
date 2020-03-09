@@ -50,7 +50,6 @@
 namespace vt { namespace term {
 
 struct EpochLabel {
-  bool hasLabel() const;
   std::string getLabel() const;
   void setLabel(std::string const& label);
 
