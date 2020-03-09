@@ -2,7 +2,7 @@
 
 GTEST_BRANCHTAG=release-1.10.0
 
-# Fetch googletest from Guthub.
+# Fetch googletest from Github.
 # GitHub does not support git-archive - however this endpoint works (MAR 2020)
 mkdir -p googletest && rm -fr googletest/*
 curl -L https://github.com/google/googletest/tarball/$GTEST_BRANCHTAG \
