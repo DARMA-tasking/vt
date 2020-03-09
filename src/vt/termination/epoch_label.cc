@@ -47,10 +47,6 @@
 
 namespace vt { namespace term {
 
-bool EpochLabel::hasLabel() const {
-  return label_ != "";
-}
-
 std::string EpochLabel::getLabel() const {
   return label_;
 }
