@@ -248,6 +248,13 @@ MemoryUsage::MemoryUsage() {
     auto iter = name_map.find(r);
     if (iter != name_map.end()) {
       reporters_.emplace_back(std::move(all_reporters[iter->second]));
+    } else {
+      if (theContext()->getNode() == 0) {
+        auto warning = fmt::format(
+          "Invalid memory reporter specified: {}", r
+        );
+        vtWarn(warning);
+      }
     }
   }
 
