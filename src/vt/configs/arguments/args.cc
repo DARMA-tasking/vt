@@ -65,7 +65,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
 /*static*/ std::string ArgConfig::vt_memory_reporters   =
-  "mstats,machinfo,selfstat,sbrk,mallinfo,getrusage,ps";
+  "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
 /*static*/ bool        ArgConfig::vt_print_memory_each_phase = false;
 /*static*/ std::string ArgConfig::vt_print_memory_node  = "0";
 /*static*/ bool        ArgConfig::vt_allow_memory_report_with_ps = false;
