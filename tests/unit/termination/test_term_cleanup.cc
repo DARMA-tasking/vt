@@ -117,8 +117,12 @@ TEST_F(TestTermCleanup, test_termination_cleanup_2) {
 
   for (int i = 0; i < num_epochs; i++) {
     EpochType const coll_epoch = theTerm()->makeEpochCollective();
-    EpochType const root_epoch = theTerm()->makeEpochRootedDS(false,no_epoch);
-    EpochType const wave_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+    EpochType const root_epoch = theTerm()->makeEpochRootedDS(
+      term::SuccessorEpochCapture{no_epoch}
+    );
+    EpochType const wave_epoch = theTerm()->makeEpochRootedWave(
+      term::SuccessorEpochCapture{no_epoch}
+    );
     bool coll_done = false;
     bool root_done = false;
     bool wave_done = false;

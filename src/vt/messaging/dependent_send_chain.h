@@ -163,7 +163,7 @@ class DependentSendChain final {
 
     // The parameter `true` here tells VT to use an efficient rooted DS-epoch
     // by default. This can still be overridden by command-line flags
-    last_epoch_ = theTerm()->makeEpochRooted(true);
+    last_epoch_ = theTerm()->makeEpochRooted(term::UseDS{true});
     theTerm()->finishedEpoch(last_epoch_);
   }
 
