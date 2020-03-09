@@ -54,8 +54,11 @@ struct SuccessorEpochCapture {
     : epoch_(epoch)
   { }
   SuccessorEpochCapture();
+
   operator EpochType() const { return epoch_; }
+
   bool valid() const { return epoch_ != no_epoch; }
+
 private:
   EpochType epoch_ = no_epoch;
 };
