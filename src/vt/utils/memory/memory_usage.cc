@@ -218,10 +218,10 @@ std::size_t StatM::getUsage() {
     return 0;
   }
 
-  std::size_t to_ignore = 0;
-  std::size_t resident = 0;
   std::ifstream buffer("/proc/self/statm");
   if (buffer.good()) {
+    std::size_t to_ignore = 0;
+    std::size_t resident = 0;
     buffer >> to_ignore >> resident;
     buffer.close();
 
