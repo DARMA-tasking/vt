@@ -72,7 +72,9 @@ class CollectionChainSet final {
     chains_.erase(iter);
   }
 
-  void nextStep(std::string label, std::function<PendingSend(Index)> step_action) {
+  void nextStep(
+    std::string const& label, std::function<PendingSend(Index)> step_action
+  ) {
     for (auto &entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
@@ -114,7 +116,7 @@ class CollectionChainSet final {
 #endif
 
   void nextStepCollective(
-    std::string label, std::function<PendingSend(Index)> step_action
+    std::string const& label, std::function<PendingSend(Index)> step_action
   ) {
     auto epoch = theTerm()->makeEpochCollective(label);
     vt::theMsg()->pushEpoch(epoch);
