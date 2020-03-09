@@ -16,6 +16,7 @@ check_function_exists(popen vt_has_popen)
 check_function_exists(pclose vt_has_pclose)
 check_function_exists(sbrk vt_has_sbrk)
 check_function_exists(getpid vt_has_getpid)
+check_function_exists(sysconf vt_has_sysconf)
 
 set(CMAKE_REQUIRED_INCLUDES "malloc.h")
 check_function_exists(mallinfo vt_has_mallinfo)
