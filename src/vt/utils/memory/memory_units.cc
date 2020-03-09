@@ -51,9 +51,9 @@ namespace vt { namespace util { namespace memory {
 
 std::unordered_map<MemoryUnitEnum, std::string> memory_unit_names = {
   {MemoryUnitEnum::Bytes,     std::string{"bytes"}},
-  {MemoryUnitEnum::Kilobytes, std::string{"kB"}},
-  {MemoryUnitEnum::Megabytes, std::string{"MB"}},
-  {MemoryUnitEnum::Gigabytes, std::string{"GB"}}
+  {MemoryUnitEnum::Kilobytes, std::string{"KiB"}},
+  {MemoryUnitEnum::Megabytes, std::string{"MiB"}},
+  {MemoryUnitEnum::Gigabytes, std::string{"GiB"}}
 };
 
 std::string getMemoryUnitName(MemoryUnitEnum unit) {
