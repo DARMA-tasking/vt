@@ -260,10 +260,9 @@ MemoryUsage::MemoryUsage() {
 
   // Prime each reporter, determine if we have a working reporter
   for (auto&& r : reporters_) {
-    if (r->getUsage() != 0) {
-      has_working_ = true;
-    }
+    r->getUsage();
   }
+  getFirstUsage();
 }
 
 std::size_t MemoryUsage::getAverageUsage() {
@@ -291,15 +290,13 @@ std::size_t MemoryUsage::getFirstUsage() {
       usage = r->getUsage();
       //fmt::print("reporter: {} usage: {}\n", r->getName(), usage);
       if (usage) {
+        first_valid_reporter_ = cur_elm;
         break;
       }
       cur_elm++;
     }
-    first_valid_reporter_ = cur_elm;
   } else {
-    if (first_valid_reporter_ < reporters_.size()) {
-      usage = reporters_[first_valid_reporter_]->getUsage();
-    }
+    usage = reporters_[first_valid_reporter_]->getUsage();
   }
   return usage;
 }
@@ -352,7 +349,7 @@ std::vector<std::string> MemoryUsage::getWorkingReporters() {
 }
 
 bool MemoryUsage::hasWorkingReporter() const {
-  return has_working_;
+  return first_valid_reporter_ != -1;
 }
 
 /*static*/ void MemoryUsage::initialize() {
