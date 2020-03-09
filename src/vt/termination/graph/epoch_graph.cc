@@ -140,11 +140,15 @@ std::string EpochGraph::outputDOT(bool verbose) {
   outputImpl(links);
 
   for (auto&& elm : links) {
-    if (eps.find(std::get<0>(elm)) == eps.end()) {
-      eps[std::get<0>(elm)] = formatDOTEpoch(std::get<0>(elm), std::get<1>(elm));
+    auto epoch = std::get<0>(elm);
+    auto& epoch_label = std::get<1>(elm);
+    auto succ_epoch = std::get<2>(elm);
+    auto& succ_epoch_label = std::get<3>(elm);
+    if (eps.find(epoch) == eps.end()) {
+      eps[epoch] = formatDOTEpoch(epoch, epoch_label);
     }
-    if (eps.find(std::get<2>(elm)) == eps.end()) {
-      eps[std::get<2>(elm)] = formatDOTEpoch(std::get<2>(elm), std::get<3>(elm));
+    if (eps.find(succ_epoch) == eps.end()) {
+      eps[succ_epoch] = formatDOTEpoch(succ_epoch, succ_epoch_label);
     }
   }
 
