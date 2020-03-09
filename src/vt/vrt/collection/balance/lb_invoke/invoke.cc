@@ -254,4 +254,23 @@ void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
 # endif
 }
 
+
+void LBManager::printMemoryUsage(PhaseType phase) {
+  if (arguments::ArgConfig::vt_print_memory_each_phase) {
+    auto this_node = theContext()->getNode();
+    if (
+      "all" == arguments::ArgConfig::vt_print_memory_node or
+      std::to_string(this_node) == arguments::ArgConfig::vt_print_memory_node
+    ) {
+      auto usage = util::memory::MemoryUsage::get();
+      if (usage->hasWorkingReporter()) {
+        auto memory_usage_str = fmt::format(
+          "Memory Usage: phase={}: {}\n", phase, usage->getUsageAll()
+        );
+        vt_print(gen, memory_usage_str);
+      }
+    }
+  }
+}
+
 }}}} /* end namespace vt::vrt::collection::balance */
