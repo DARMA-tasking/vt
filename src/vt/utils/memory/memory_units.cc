@@ -45,6 +45,8 @@
 #include "vt/config.h"
 #include "vt/utils/memory/memory_units.h"
 
+#include <unordered_map>
+
 namespace vt { namespace util { namespace memory {
 
 std::unordered_map<MemoryUnitEnum, std::string> memory_unit_names = {
@@ -53,5 +55,9 @@ std::unordered_map<MemoryUnitEnum, std::string> memory_unit_names = {
   {MemoryUnitEnum::Megabytes, std::string{"MB"}},
   {MemoryUnitEnum::Gigabytes, std::string{"GB"}}
 };
+
+std::string getMemoryUnitName(MemoryUnitEnum unit) {
+  return memory_unit_names[unit];
+}
 
 }}} /* end namespace vt::util::memory */

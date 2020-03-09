@@ -329,7 +329,7 @@ std::string MemoryUsage::getUsageAll(bool pretty, MemoryUnitEnum unit) {
     }
   }
   if (num_valid > 0) {
-    builder += fmt::format("({})", memory_unit_names[unit]);
+    builder += fmt::format("({})", getMemoryUnitName(unit));
   }
   return builder;
 }
