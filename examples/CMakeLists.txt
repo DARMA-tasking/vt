@@ -49,11 +49,10 @@ set(
   objgroup
 )
 
-if (VT_NO_BUILD_EXAMPLES)
-  message(
-    STATUS "VT: not building examples because VT_NO_BUILD_EXAMPLES is set"
-  )
-else()
+#
+# Examples
+#
+
   foreach(EXAMPLE_NAME ${PROJECT_EXAMPLES_LIST})
     # message("Example: building example >>>>> ${EXAMPLE}")
 
@@ -65,15 +64,16 @@ else()
     link_target_with_vt(
       TARGET ${EXAMPLE_NAME}
       DEFAULT_LINK_SET
-      LINK_GTEST ON
     )
 
-    add_test_for_example_vt(
-      ${EXAMPLE_NAME}
-      ${EXAMPLE_FILE}
-      example_tests
-    )
+    if (BUILD_TESTING)
+      add_test_for_example_vt(
+        ${EXAMPLE_NAME}
+        ${EXAMPLE_FILE}
+        example_tests
+      )
+    endif()
 
   endforeach()
-endif()
+
 

@@ -2,8 +2,10 @@
 #                              CMake for gtests                                #
 ################################################################################
 
-set(PROJECT_TEST_UNIT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/unit)
-set(PROJECT_TEST_PERF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/perf)
+set(PROJECT_TEST_UNIT_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/unit)
+set(PROJECT_TEST_PERF_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/perf)
+set(PROJECT_GTEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/googletest/googletest/include)
+
 set(PROJECT_PERF_TESTS ping_pong)
 
 set(
@@ -31,9 +33,38 @@ set(
   rdma
 )
 
-option(VT_NO_BUILD_TESTS "Disable building VT tests" OFF)
+#
+# Setup/add googletest CMake configuration
+#
 
-if (${VT_HAS_GTEST} AND NOT ${VT_NO_BUILD_TESTS})
+# Add dependency googletest CMake - gtest is exported via 'cxx_library'.
+# Override googletest options.
+set(BUILD_GMOCK OFF CACHE BOOL "Builds the googlemock subproject" FORCE)
+set(INSTALL_GTEST OFF CACHE BOOL "Enable installation of googletest. (Projects embedding googletest may want to turn this OFF.)" FORCE)
+
+add_subdirectory(extern/googletest)
+
+# Hide various options from UI-based property editors
+mark_as_advanced(
+  BUILD_GTEST INSTALL_GTEST BUILD_SHARED_LIBS
+  gtest_build_samples gtest_build_tests
+  gtest_disable_pthreads gtest_force_shared_crt gtest_hide_internal_symbols
+  #BUILD_GMOCK
+  #gmock_build_tests
+)
+
+# Group targets, in IDEs supporting such
+set_target_properties(gtest PROPERTIES FOLDER extern)
+set_target_properties(gtest_main PROPERTIES FOLDER extern)
+#set_target_properties(gmock PROPERTIES FOLDER extern)
+#set_target_properties(gmock_main PROPERTIES FOLDER extern)
+
+include(GoogleTest)
+
+#
+# Unit Tests
+#
+
   set(
     TEST_HEADER_FILES
     ${PROJECT_TEST_UNIT_DIR}/test_harness.h
@@ -57,8 +88,8 @@ if (${VT_HAS_GTEST} AND NOT ${VT_NO_BUILD_TESTS})
 
     foreach (UNIT_TEST_FILE ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
       # message(
-      #   STATUS "Building unit test >>>> dir=${SUB_DIR} test=${UNIT_TEST}, "
-      #   "path=${UNIT_TEST_FILE}"
+      #  STATUS "Building unit test >>>> dir=${SUB_DIR} test=${UNIT_TEST}, "
+      #  "path=${UNIT_TEST_FILE}"
       # )
 
       GET_FILENAME_COMPONENT(
@@ -77,6 +108,7 @@ if (${VT_HAS_GTEST} AND NOT ${VT_NO_BUILD_TESTS})
       add_dependencies(unit_tests ${UNIT_TEST})
 
       target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_TEST_UNIT_DIR})
+      target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_GTEST_INCLUDE_DIR})
 
       link_target_with_vt(
         TARGET ${UNIT_TEST}
@@ -100,27 +132,15 @@ if (${VT_HAS_GTEST} AND NOT ${VT_NO_BUILD_TESTS})
           FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
           PASS_REGULAR_EXPRESSION "PASSED"
         )
-    endforeach()
       endforeach()
+    endforeach()
 
   endforeach()
-else()
-  if (${VT_NO_BUILD_TESTS})
-    message(
-      STATUS
-      "VT: not building unit tests because VT_NO_BUILD_TESTS is set"
-    )
-  else()
-    message(STATUS "VT: not building unit tests because not VT_HAS_GTEST")
-  endif()
-endif()
 
-if (${VT_NO_BUILD_TESTS})
-  message(
-    STATUS
-    "VT: not building performance tests because VT_NO_BUILD_TESTS is set"
-  )
-else()
+#
+# Performance Tests
+#
+
   foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     add_executable(${PERF_TEST} ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc)
     add_dependencies(perf_tests ${PERF_TEST})
@@ -137,5 +157,3 @@ else()
       perf_tests
     )
   endforeach()
-endif()
-

@@ -16,3 +16,4 @@ comment:
 
 ignore:
   - "lib"
+  - "tests/extern"

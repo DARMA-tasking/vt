@@ -89,7 +89,7 @@ using CollectionTestTypes = testing::Types<
 // detecting constructor index
 #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
 
-  INSTANTIATE_TYPED_TEST_CASE_P(
+  INSTANTIATE_TYPED_TEST_SUITE_P(
     test_construct_idx_fst, TestConstruct, CollectionTestTypes
   );
 

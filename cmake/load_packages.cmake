@@ -7,11 +7,12 @@ include(cmake/load_local_packages.cmake)
 include(cmake/load_mpi_package.cmake)
 # ZLIB package
 include(cmake/load_zlib_package.cmake)
-# Google test package
-include(cmake/load_gtest_package.cmake)
 
 # Discover and load threading configuration
 include(cmake/load_threading_package.cmake)
 
 # Doxygen package
 include(cmake/load_doxygen.cmake)
+
+# Tests
+include(cmake/test_vt.cmake)

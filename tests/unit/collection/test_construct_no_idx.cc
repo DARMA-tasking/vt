@@ -85,12 +85,12 @@ using CollectionTestTypes = testing::Types<
   multi_param_no_idx_            ::TestCol<int64_t,int64_t>
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(
-  test_construct_no_idx, TestConstruct, CollectionTestTypes
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_construct_no_idx, TestConstruct, CollectionTestTypes, DEFAULT_NAME_GEN
 );
 
-INSTANTIATE_TYPED_TEST_CASE_P(
-  test_construct_no_idx_dist, TestConstructDist, CollectionTestTypes
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_construct_no_idx_dist, TestConstructDist, CollectionTestTypes, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit
