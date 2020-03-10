@@ -59,6 +59,8 @@ static void hello_world(HelloMsg* msg) {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
+  //auto ptr = malloc(883);
+
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 

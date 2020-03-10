@@ -22,3 +22,9 @@ if (${checkpoint_DIR_FOUND})
   set(VT_HAS_SERIALIZATION_LIBRARY 1)
   set(CHECKPOINT_LIBRARY vt::lib::checkpoint)
 endif()
+
+optional_pkg_directory(mimalloc "mimalloc" 1)
+
+if (${mimalloc_DIR_FOUND})
+  find_package(mimalloc 1.6)
+endif()

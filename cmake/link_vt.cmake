@@ -31,6 +31,7 @@ function(link_target_with_vt)
     LINK_DETECTOR
     LINK_CLI11
     LINK_DL
+    LINK_MIMALLOC
   )
   set(
     multiValueArg
@@ -47,6 +48,10 @@ function(link_target_with_vt)
     message(STATUS "link_target_with_vt: target=${ARG_TARGET}")
     message(STATUS "link_target_with_vt: default link=${ARG_DEFAULT_LINK_SET}")
   endif()
+
+  target_link_libraries(
+    ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} memchecker-static
+  )
 
   if (${ARG_LINK_GTEST})
     if (${ARG_DEBUG_LINK})
@@ -184,5 +189,15 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${ARG_CUSTOM_LINK_ARGS}
      )
+  endif()
+
+  if (NOT DEFINED ARG_LINK_MIMALLOC AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MIMALLOC)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: mimalloc=${ARG_LINK_MIMALLOC}")
+    endif()
+
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} mimalloc-static
+    )
   endif()
 endfunction()

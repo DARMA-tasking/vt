@@ -265,7 +265,7 @@ else()
 endif()
 
 export(
-  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY_EXPORT}
+  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY_EXPORT} memchecker-static
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
