@@ -221,8 +221,8 @@ T Holder<T,E>::fetchOp(vt::NodeType node, Lock l, T in, int offset, MPI_Op op) {
     LockMPI _scope_lock(l, node, data_window_);
     debug_print_verbose(
       rdma, node,
-      "MPI_Fetch_and_op({}, {}, {}, {}, {}, {}, window);\n",
-      in, print_ptr(&out), mpi_type_str, node, offset, op
+      "MPI_Fetch_and_op({}, {}, {}, {}, {}, window);\n",
+      in, print_ptr(&out), mpi_type_str, node, offset
     );
     MPI_Fetch_and_op(&in, &out, mpi_type, node, offset, op, data_window_);
   }
@@ -242,8 +242,8 @@ RequestHolder Holder<T,E>::raccum(
       LockMPI _scope_lock(l, node, data_window_);
       debug_print_verbose(
         rdma, node,
-        "MPI_Accumulate({}, {}, {}, {}, {}, {}, {}, {}, window);\n",
-        print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str, op
+        "MPI_Accumulate({}, {}, {}, {}, {}, {}, {}, window);\n",
+        print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
       );
       MPI_Accumulate(
         ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_
@@ -253,8 +253,8 @@ RequestHolder Holder<T,E>::raccum(
     LockMPI _scope_lock(l, node, data_window_);
     debug_print_verbose(
       rdma, node,
-      "MPI_Raccumulate({}, {}, {}, {}, {}, {}, {}, {}, window);\n",
-      print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str, op
+      "MPI_Raccumulate({}, {}, {}, {}, {}, {}, {}, window);\n",
+      print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
     );
     MPI_Raccumulate(
       ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_, r.add()
