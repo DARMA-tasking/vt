@@ -360,7 +360,7 @@ std::size_t MemoryUsage::getFirstUsage() {
 
 std::string MemoryUsage::getFirstReporter() {
   getFirstUsage();
-  if (first_valid_reporter_ < reporters_.size() and first_valid_reporter_ != -1) {
+  if (first_valid_reporter_ != -1) {
     return reporters_[first_valid_reporter_]->getName();
   } else {
     return "<no-valid-reporter>";
