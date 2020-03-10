@@ -11,6 +11,20 @@ terms of the MIT license. A copy of the license can be found in the file
 #include <string.h>  // memset, memcpy, strlen
 #include <stdlib.h>  // malloc, exit
 
+#ifdef __cplusplus
+# include <atomic> // atomic_size_t, atomic_fetch_add, atomic_fetch_sub
+# define ATOMIC_SIZE_T std::atomic<size_t>
+# define ATOMIC_FETCH_ADD std::atomic_fetch_add
+# define ATOMIC_FETCH_SUB std::atomic_fetch_sub
+# define ATOMIC_LOAD std::atomic_load<std::size_t>
+#else
+# include <stdatomic.h> // atomic_size_t, atomic_fetch_add, atomic_fetch_sub
+# define ATOMIC_SIZE_T atomic_size_t
+# define ATOMIC_FETCH_ADD atomic_fetch_add
+# define ATOMIC_FETCH_SUB atomic_fetch_sub
+# define ATOMIC_LOAD atomic_load
+#endif
+
 #define MI_IN_ALLOC_C
 #include "alloc-override.c"
 #undef MI_IN_ALLOC_C
@@ -57,7 +71,7 @@ extern inline void* _mi_page_malloc(mi_heap_t* heap, mi_page_t* page, size_t siz
   return block;
 }
 
-static atomic_size_t num_current_allocated_ = 0;
+static ATOMIC_SIZE_T num_current_allocated_ = 0;
 
 // allocate a small block
 extern inline mi_decl_restrict void* mi_heap_malloc_small(mi_heap_t* heap, size_t size) mi_attr_noexcept {
@@ -74,7 +88,7 @@ extern inline mi_decl_restrict void* mi_heap_malloc_small(mi_heap_t* heap, size_
   }
   #endif
   if (p != NULL) {
-    atomic_fetch_add(&num_current_allocated_, mi_usable_size(p));
+    ATOMIC_FETCH_ADD(&num_current_allocated_, mi_usable_size(p));
   }
   return p;
 }
@@ -83,9 +97,15 @@ extern inline mi_decl_restrict void* mi_malloc_small(size_t size) mi_attr_noexce
   return mi_heap_malloc_small(mi_get_default_heap(), size);
 }
 
-extern inline size_t getAllocatedSize() {
-  return atomic_load(&num_current_allocated_);
+#ifdef __cplusplus
+extern "C" {
+#endif
+size_t getAllocatedSize() {
+  return ATOMIC_LOAD(&num_current_allocated_);
 }
+#ifdef __cplusplus
+}
+#endif
 
 // The main allocation function
 extern inline mi_decl_restrict void* mi_heap_malloc(mi_heap_t* heap, size_t size) mi_attr_noexcept {
@@ -104,7 +124,7 @@ extern inline mi_decl_restrict void* mi_heap_malloc(mi_heap_t* heap, size_t size
     }
     #endif
     if (p != NULL) {
-      atomic_fetch_add(&num_current_allocated_, mi_usable_size(p));
+      ATOMIC_FETCH_ADD(&num_current_allocated_, mi_usable_size(p));
     }
     return p;
   }
@@ -435,7 +455,7 @@ void mi_free(void* p) mi_attr_noexcept
     mi_heap_stat_decrease(heap, normal[_mi_bin(bsize)], 1);
   }
 #endif
-  atomic_fetch_sub(&num_current_allocated_, mi_page_usable_block_size(page));
+  ATOMIC_FETCH_SUB(&num_current_allocated_, mi_page_usable_block_size(page));
 
   if (mi_likely(tid == segment->thread_id && page->flags.full_aligned == 0)) {  // the thread id matches and it is not a full page, nor has aligned blocks
     // local, and not full or aligned
