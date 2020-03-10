@@ -24,7 +24,7 @@ set(MEMCHECKER_LIBRARY memchecker)
 
 add_library(
   ${MEMCHECKER_LIBRARY}
-  STATIC
+  SHARED
   ${HEADER_FILES} ${SOURCE_FILES}
 )
 
