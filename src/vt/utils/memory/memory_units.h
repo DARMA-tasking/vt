@@ -62,4 +62,19 @@ std::string getMemoryUnitName(MemoryUnitEnum unit);
 
 }}} /* end namespace vt::util::memory */
 
+namespace std {
+
+using MemoryUnitType = vt::util::memory::MemoryUnitEnum;
+
+template <>
+struct hash<MemoryUnitType> {
+  size_t operator()(MemoryUnitType const& in) const {
+    using MemoryUnitUnderType = typename std::underlying_type<MemoryUnitType>::type;
+    auto const val = static_cast<MemoryUnitUnderType>(in);
+    return std::hash<MemoryUnitUnderType>()(val);
+  }
+};
+
+} /* end namespace std */
+
 #endif /*INCLUDED_VT_UTILS_MEMORY_MEMORY_UNITS_H*/
