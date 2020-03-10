@@ -149,15 +149,28 @@ PhaseType ElementStats::getPhase() const {
 
 TimeType ElementStats::getLoad(PhaseType const& phase) const {
   vtAssert(phase_timings_.size() > phase, "Must have phase");
-  auto const& total_load = phase_timings_.at(phase);
 
-  debug_print(
-    lb, node,
-    "ElementStats: getLoad: load={}, phase={}, size={}\n",
-    total_load, phase, phase_timings_.size()
-  );
+  if (focused_subphase_ != no_subphase) {
+    auto const& total_load = subphase_timings_.at(phase).at(focused_subphase_);
 
-  return total_load;
+    debug_print(
+                lb, node,
+                "ElementStats: getLoad: load={}, phase={}, focused_subphase={}, size={}\n",
+                total_load, phase, focused_subphase_, phase_timings_.size()
+                );
+
+    return total_load;
+  } else {
+    auto const& total_load = phase_timings_.at(phase);
+
+    debug_print(
+                lb, node,
+                "ElementStats: getLoad: load={}, phase={}, size={}\n",
+                total_load, phase, phase_timings_.size()
+                );
+
+    return total_load;
+  }
 }
 
 TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
@@ -176,7 +189,6 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   return total_load;
 }
 
-
 CommMapType const&
 ElementStats::getComm(PhaseType const& phase) {
   comm_.resize(phase + 1);
@@ -192,7 +204,14 @@ ElementStats::getComm(PhaseType const& phase) {
 }
 
 void ElementStats::setSubPhase(SubphaseType subphase) {
+  vtAssert(subphase < no_subphase, "subphase must be less than sentinel");
   cur_subphase_ = subphase;
 }
+
+void ElementStats::setFocusedSubPhase(SubphaseType subphase) {
+  focused_subphase_ = subphase;
+}
+
+/*static*/ ElementStats::SubphaseType ElementStats::focused_subphase_ = ElementStats::no_subphase;
 
 }}}} /* end namespace vt::vrt::collection::balance */

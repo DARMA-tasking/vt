@@ -94,6 +94,9 @@ struct ElementStats {
   CommMapType const& getComm(PhaseType const& phase);
   void setSubPhase(SubphaseType subphase);
 
+  static const constexpr SubphaseType no_subphase = std::numeric_limits<SubphaseType>::max();
+  static void setFocusedSubPhase(SubphaseType subphase);
+
   template <typename Serializer>
   void serialize(Serializer& s);
 
@@ -113,6 +116,8 @@ protected:
 
   SubphaseType cur_subphase_ = 0;
   std::vector<std::vector<TimeType>> subphase_timings_ = {};
+
+  static SubphaseType focused_subphase_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
