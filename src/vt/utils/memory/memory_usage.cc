@@ -140,13 +140,13 @@ std::string PS::getName() {
 }
 
 std::size_t Mallinfo::getUsage() {
-# if defined(vt_has_mallinfo) && defined(vt_has_malloc_h)
-    struct mallinfo mi = mallinfo();
-    unsigned int blocks = mi.uordblks;
-    return static_cast<std::size_t>(blocks);
-# else
+// # if defined(vt_has_mallinfo) && defined(vt_has_malloc_h)
+//     struct mallinfo mi = mallinfo();
+//     unsigned int blocks = mi.uordblks;
+//     return static_cast<std::size_t>(blocks);
+// # else
     return 0;
-# endif
+// # endif
 }
 
 std::string Mallinfo::getName() {
