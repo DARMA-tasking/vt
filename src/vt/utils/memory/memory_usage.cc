@@ -77,6 +77,10 @@
 # include <inttypes.h>
 #endif
 
+#if backend_check_enabled(mimalloc)
+# include <mimalloc.h>
+#endif
+
 namespace vt { namespace util { namespace memory {
 
 std::size_t Mstats::getUsage() {
@@ -267,6 +271,20 @@ std::string StatM::getName() {
   return "selfstatm";
 }
 
+std::size_t Mimalloc::getUsage() {
+# if backend_check_enabled(mimalloc)
+  auto total_size = getAllocatedSize();
+  return total_size;
+# else
+  fmt::print("Mimalloc: xxx\n");
+  return 0;
+# endif
+}
+
+std::string Mimalloc::getName() {
+  return "mimalloc";
+}
+
 struct CommaDelimit : std::string {};
 
 std::istream& operator>>(std::istream& is, CommaDelimit& output) {
@@ -278,6 +296,7 @@ MemoryUsage::MemoryUsage() {
   std::vector<std::unique_ptr<Reporter>> all_reporters;
 
   // Register all the memory reporters
+  all_reporters.emplace_back(std::make_unique<Mimalloc>());
   all_reporters.emplace_back(std::make_unique<Mstats>());
   all_reporters.emplace_back(std::make_unique<MachTaskInfo>());
   all_reporters.emplace_back(std::make_unique<Stat>());
