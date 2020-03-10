@@ -93,11 +93,15 @@ uint8_t _mi_bsr(uintptr_t x) {
 #endif
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Return the bin for a given field size.
 // Returns MI_BIN_HUGE if the size is too large.
 // We use `wsize` for the size in "machine word sizes",
 // i.e. byte size == `wsize*sizeof(void*)`.
-extern inline uint8_t _mi_bin(size_t size) {
+uint8_t _mi_bin(size_t size) {
   size_t wsize = _mi_wsize_from_size(size);
   uint8_t bin;
   if (wsize <= 1) {
@@ -136,6 +140,9 @@ extern inline uint8_t _mi_bin(size_t size) {
   return bin;
 }
 
+#ifdef __cplusplus
+}
+#endif
 
 
 /* -----------------------------------------------------------
