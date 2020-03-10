@@ -60,6 +60,7 @@ if (${vt_fcontext_enabled})
 endif()
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
+add_subdirectory(${PROJECT_LIB_DIR}/memchecker)
 
 # Primary VT build
 add_subdirectory(src)
