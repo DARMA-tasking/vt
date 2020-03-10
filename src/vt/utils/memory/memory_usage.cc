@@ -226,12 +226,33 @@ std::size_t StatM::getUsage() {
   std::ifstream buffer("/proc/self/statm");
   if (buffer.good()) {
     std::size_t to_ignore = 0;
-    std::size_t resident = 0;
-    buffer >> to_ignore >> resident;
+    std::size_t npages = 0;
+    buffer >> to_ignore >> npages;
     buffer.close();
 
-    auto rss = resident * sysconf(_SC_PAGE_SIZE);
-    return rss;
+    std::size_t huge_pages = 0;
+    std::size_t huge_page_bytes = 0;
+    std::ifstream meminfo("/proc/meminfo");
+    if (meminfo.good()) {
+      std::string name = "";
+      while (not meminfo.eof()) {
+        std::string line;
+        std::getline(meminfo, line);
+        std::stringstream ss(line);
+        ss >> name;
+        if (name == "HugePages_Total:") {
+          ss >> huge_pages;
+        }
+        if (name == "Hugepagesize:") {
+          ss >> huge_page_bytes;
+          // Convert huge page size recorded in KiB to bytes
+          huge_page_bytes *= 1024;
+        }
+      }
+    }
+
+    return ((npages - huge_pages) * sysconf(_SC_PAGE_SIZE)) +
+      (huge_pages * huge_page_bytes);
   } else {
     failed_ = true;
     return 0;
