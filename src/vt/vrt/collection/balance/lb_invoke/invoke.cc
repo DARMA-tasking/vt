@@ -55,6 +55,7 @@
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
+#include "vt/utils/memory/memory_usage.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -266,6 +267,24 @@ void LBManager::unregisterListenerAfterLB(int element) {
     listeners_.size() > static_cast<std::size_t>(element), "Listener must exist"
   );
   listeners_[element] = nullptr;
+}
+
+void LBManager::printMemoryUsage(PhaseType phase) {
+  if (arguments::ArgConfig::vt_print_memory_each_phase) {
+    auto this_node = theContext()->getNode();
+    if (
+      "all" == arguments::ArgConfig::vt_print_memory_node or
+      std::to_string(this_node) == arguments::ArgConfig::vt_print_memory_node
+    ) {
+      auto usage = util::memory::MemoryUsage::get();
+      if (usage->hasWorkingReporter()) {
+        auto memory_usage_str = fmt::format(
+          "Memory Usage: phase={}: {}\n", phase, usage->getUsageAll()
+        );
+        vt_print(gen, memory_usage_str);
+      }
+    }
+  }
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

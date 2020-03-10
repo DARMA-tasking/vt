@@ -9,6 +9,8 @@ endif()
 
 include(cmake/turn_on_warnings.cmake)
 
+include(cmake/check_system_functions.cmake)
+
 set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
 set(FCONTEXT_LIBRARY fcontext)
 
