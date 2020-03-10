@@ -181,6 +181,7 @@ my $finalstr = <<CMAKESTR
       -Dcheckpoint_DIR=$checkpoint                                           \\
       -Ddetector_DIR=$detector                                               \\
       -Dgtest_DIR=$gtest                                                     \\
+      -Dvt_mimalloc_enabled:BOOL=1   -Dvt_mimalloc_static:BOOL=ON -DMI_INTERPOSE:BOOL=ON -DMI_OVERRIDE:BOOL=ON \\
       -DGTEST_ROOT=$gtest                                                    \\
       $fast_str                                                              \\
       $atomic                                                                \\
