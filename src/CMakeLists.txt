@@ -261,8 +261,16 @@ else()
   set(FCONTEXT_LIBRARY_EXPORT "")
 endif()
 
+if (${vt_mimalloc_enabled})
+  set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
+else()
+  set(MIMALLOC_LIBRARY_EXPORT "")
+endif()
+
 export(
-  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY_EXPORT}
+  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
+                            ${FCONTEXT_LIBRARY_EXPORT}
+                            ${MIMALLOC_LIBRARY_EXPORT}
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
