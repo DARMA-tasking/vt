@@ -115,7 +115,7 @@ std::string Sbrk::getName() {
 std::size_t PS::getUsage() {
 # if defined(vt_has_popen) && defined(vt_has_pclose) && defined(vt_has_getpid)
     if (arguments::ArgConfig::vt_allow_memory_report_with_ps) {
-      auto cmd = fmt::format("/bin/ps -o rss= -p {}", getpid());
+      auto cmd = fmt::format("/bin/ps -o vsz= -p {}", getpid());
       FILE* p = popen(cmd.c_str(), "r");
       std::size_t vsz = 0;
       if (p) {
