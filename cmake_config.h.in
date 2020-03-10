@@ -66,3 +66,21 @@
 #define vt_feature_cmake_priority_bits_level @vt_feature_cmake_priority_bits_level@
 #define vt_feature_cmake_priorities          @vt_feature_cmake_priorities@
 #define vt_feature_cmake_fcontext            @vt_feature_cmake_fcontext@
+#define vt_feature_cmake_test_trace_on       @vt_feature_cmake_test_trace_on@
+
+#cmakedefine vt_has_malloc_h
+#cmakedefine vt_has_malloc_malloc_h
+#cmakedefine vt_has_mach_mach_h
+#cmakedefine vt_has_mstats
+#cmakedefine vt_has_popen
+#cmakedefine vt_has_pclose
+#cmakedefine vt_has_sbrk
+#cmakedefine vt_has_mallinfo
+#cmakedefine vt_has_getrusage
+#cmakedefine vt_has_sysinfo
+#cmakedefine vt_has_mach_task_self
+#cmakedefine vt_has_getpid
+#cmakedefine vt_has_sys_resource_h
+#cmakedefine vt_has_unistd_h
+#cmakedefine vt_has_inttypes_h
+#cmakedefine vt_has_sysconf

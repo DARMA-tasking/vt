@@ -69,6 +69,10 @@ public:
   static bool vt_no_sigint;
   static bool vt_no_sigsegv;
   static bool vt_no_terminate;
+  static std::string vt_memory_reporters;
+  static bool vt_print_memory_each_phase;
+  static std::string vt_print_memory_node;
+  static bool vt_allow_memory_report_with_ps;
 
   static bool vt_no_warn_stack;
   static bool vt_no_assert_stack;
@@ -86,6 +90,7 @@ public:
   static int32_t vt_trace_flush_size;
   static bool vt_trace_spec;
   static std::string vt_trace_spec_file;
+  static bool vt_trace_memory_usage;
 
   static bool vt_lb;
   static bool vt_lb_file;
