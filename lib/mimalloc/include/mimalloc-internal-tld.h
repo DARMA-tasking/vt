@@ -140,7 +140,15 @@ void       _mi_page_free_collect(mi_page_t* page,bool force);
 void       _mi_page_reclaim(mi_heap_t* heap, mi_page_t* page);   // callback from segments
 
 size_t     _mi_bin_size(uint8_t bin);           // for stats
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 uint8_t    _mi_bin(size_t size);                // for stats
+#ifdef __cplusplus
+}
+#endif
+
 uint8_t    _mi_bsr(uintptr_t x);                // bit-scan-right, used on BSD in "os.c"
 
 // "heap.c"
