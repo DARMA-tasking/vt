@@ -104,6 +104,11 @@ private:
   bool failed_ = false;
 };
 
+struct Mimalloc : Reporter {
+  std::size_t getUsage() override;
+  std::string getName() override;
+};
+
 struct MemoryUsage {
   MemoryUsage();
 
