@@ -425,6 +425,18 @@ std::vector<std::string> MemoryUsage::getWorkingReporters() {
   return working;
 }
 
+std::size_t MemoryUsage::convertBytesFromString(std::string const& in) {
+  double val = 0.0;
+  std::string units = "";
+  std::istringstream iss(in);
+  iss >> val >> units;
+  auto unit = getUnitFromString(units);
+  for (int8_t i = 0; i < static_cast<int8_t>(unit); i++) {
+    val *= 1024.0;
+  }
+  return static_cast<std::size_t>(val);
+}
+
 bool MemoryUsage::hasWorkingReporter() const {
   return first_valid_reporter_ != -1;
 }
