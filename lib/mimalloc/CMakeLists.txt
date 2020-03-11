@@ -85,6 +85,10 @@ if(MI_SECURE MATCHES "ON")
   list(APPEND mi_defines MI_SECURE=4)
 endif()
 
+if(MI_OVERRIDE_SYS_FUNCS MATCHES "ON")
+  list(APPEND mi_defines MI_OVERRIDE_SYS_FUNCS=1)
+endif()
+
 if(MI_SEE_ASM MATCHES "ON")
   message(STATUS "Generate assembly listings (MI_SEE_ASM=ON)")
   list(APPEND mi_cflags -save-temps)
