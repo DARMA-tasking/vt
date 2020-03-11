@@ -60,7 +60,7 @@ std::string getMemoryUnitName(MemoryUnitEnum unit) {
   return memory_unit_names[unit];
 }
 
-MemoryUnitEnum getUnitFromString(std::string unit) {
+MemoryUnitEnum getUnitFromString(std::string const& unit) {
   for (auto&& elm : memory_unit_names) {
     if (unit == elm.second) {
       return elm.first;
