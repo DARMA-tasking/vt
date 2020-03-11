@@ -117,7 +117,7 @@ extern inline mi_decl_restrict void* mi_malloc_small(size_t size) mi_attr_noexce
 #ifdef __cplusplus
 extern "C" {
 #endif
-size_t getAllocatedSize() {
+size_t mi_get_allocated_size() {
   return ATOMIC_LOAD(&num_current_allocated_);
 }
 #ifdef __cplusplus
