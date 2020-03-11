@@ -50,7 +50,7 @@
 namespace vt { namespace util { namespace memory {
 
 std::unordered_map<MemoryUnitEnum, std::string> memory_unit_names = {
-  {MemoryUnitEnum::Bytes,     std::string{"bytes"}},
+  {MemoryUnitEnum::Bytes,     std::string{"B"}},
   {MemoryUnitEnum::Kilobytes, std::string{"KiB"}},
   {MemoryUnitEnum::Megabytes, std::string{"MiB"}},
   {MemoryUnitEnum::Gigabytes, std::string{"GiB"}}
@@ -58,6 +58,15 @@ std::unordered_map<MemoryUnitEnum, std::string> memory_unit_names = {
 
 std::string getMemoryUnitName(MemoryUnitEnum unit) {
   return memory_unit_names[unit];
+}
+
+MemoryUnitEnum getUnitFromString(std::string unit) {
+  for (auto&& elm : memory_unit_names) {
+    if (unit == elm.second) {
+      return elm.first;
+    }
+  }
+  return MemoryUnitEnum::Bytes;
 }
 
 }}} /* end namespace vt::util::memory */
