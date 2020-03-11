@@ -121,6 +121,8 @@ struct MemoryUsage {
 
   std::vector<std::string> getWorkingReporters();
 
+  std::size_t convertBytesFromString(std::string const& in);
+
   static MemoryUsage* get();
 
   static void initialize();
