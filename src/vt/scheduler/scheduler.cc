@@ -53,6 +53,7 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/utils/memory/memory_usage.h"
 
 namespace vt { namespace sched {
 
@@ -147,6 +148,36 @@ bool Scheduler::shouldCallProgress(
     enough_time_passed or k_handlers_executed;
 }
 
+void Scheduler::printMemoryUsage() {
+  if (last_memory_usage_poll_ >= arguments::ArgConfig::vt_print_memory_sched_poll) {
+    auto usage = vt::util::memory::MemoryUsage::get();
+
+    if (usage != nullptr) {
+      if (threshold_memory_usage_ == 0) {
+        threshold_memory_usage_ = usage->convertBytesFromString(
+          arguments::ArgConfig::vt_print_memory_threshold
+        );
+      }
+
+      auto cur_bytes = usage->getFirstUsage();
+      if (cur_bytes > last_threshold_memory_usage_ + threshold_memory_usage_) {
+        vt_print(gen, "Memory usage (+) {}\n", usage->getUsageAll());
+        last_threshold_memory_usage_ = cur_bytes;
+      } else if (
+        last_threshold_memory_usage_ > threshold_memory_usage_ and
+        cur_bytes < last_threshold_memory_usage_ - threshold_memory_usage_
+      ) {
+        vt_print(gen, "Memory usage (-) {}\n", usage->getUsageAll());
+        last_threshold_memory_usage_ = cur_bytes;
+      }
+    }
+
+    last_memory_usage_poll_ = 0;
+  } else {
+    last_memory_usage_poll_++;
+  }
+}
+
 void Scheduler::runProgress(bool msg_only) {
   /*
    * Run through the progress functions `num_iter` times, making forward
@@ -161,6 +192,10 @@ void Scheduler::runProgress(bool msg_only) {
     } else {
       progressImpl();
     }
+  }
+
+  if (arguments::ArgConfig::vt_print_memory_at_threshold) {
+    printMemoryUsage();
   }
 
   // Reset count of processed handlers since the last time progress was invoked

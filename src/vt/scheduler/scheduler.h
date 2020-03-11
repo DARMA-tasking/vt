@@ -105,6 +105,8 @@ struct Scheduler {
   void enqueue(ActionType action);
   void enqueue(PriorityType priority, ActionType action);
 
+  void printMemoryUsage();
+
   template <typename MsgT>
   void enqueue(MsgT* msg, ActionType action);
   template <typename MsgT>
@@ -138,6 +140,10 @@ private:
   TimeType last_progress_time_ = 0.0;
   bool progress_time_enabled_ = false;
   int32_t processed_after_last_progress_ = 0;
+
+  std::size_t last_threshold_memory_usage_ = 0;
+  std::size_t threshold_memory_usage_ = 0;
+  std::size_t last_memory_usage_poll_ = 0;
 };
 
 }} //end namespace vt::scheduler
