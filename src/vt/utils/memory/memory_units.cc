@@ -50,7 +50,7 @@
 namespace vt { namespace util { namespace memory {
 
 std::unordered_map<MemoryUnitEnum, std::string> memory_unit_names = {
-  {MemoryUnitEnum::Bytes,     std::string{"bytes"}},
+  {MemoryUnitEnum::Bytes,     std::string{"B"}},
   {MemoryUnitEnum::Kilobytes, std::string{"KiB"}},
   {MemoryUnitEnum::Megabytes, std::string{"MiB"}},
   {MemoryUnitEnum::Gigabytes, std::string{"GiB"}}
