@@ -14,6 +14,7 @@ option(MI_OSX_ZONE          "Use malloc zone to override standard malloc on macO
 option(MI_LOCAL_DYNAMIC_TLS "Use slightly slower, dlopen-compatible TLS mechanism (Unix)" OFF)
 option(MI_BUILD_TESTS       "Build test executables" ON)
 option(MI_CHECK_FULL        "Use full internal invariant checking in DEBUG mode (deprecated, use MI_DEBUG_FULL instead)" OFF)
+option(MI_OVERRIDE_SYS_FUNCS "Override system calls used by huge pages/slurm/alps (warning: makes fork() a no-op)" OFF)
 
 include("cmake/mimalloc-config-version.cmake")
 
