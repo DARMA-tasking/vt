@@ -50,11 +50,22 @@ set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
+# Request C++14, allow fallback (to C++11).. default is to fallback.
+# Might be ideal to have builds request a lower standard.
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 include(cmake/build_git_info.cmake)
+
+include(cmake/check_compiler.cmake)
 
 option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 
 # Bundled dependencies
+
 if (${vt_fcontext_enabled})
   add_subdirectory(${PROJECT_LIB_DIR}/context)
 endif()

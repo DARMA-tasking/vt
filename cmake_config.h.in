@@ -68,6 +68,9 @@
 #define vt_feature_cmake_test_trace_on       @vt_feature_cmake_test_trace_on@
 #define vt_feature_cmake_mimalloc            @vt_feature_cmake_mimalloc@
 
+#cmakedefine vt_quirked_trivially_copyable_on_msg
+#cmakedefine vt_quirked_serialize_method_detection
+
 #cmakedefine vt_has_malloc_h
 #cmakedefine vt_has_malloc_malloc_h
 #cmakedefine vt_has_mach_mach_h
