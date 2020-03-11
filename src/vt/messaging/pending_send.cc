@@ -48,11 +48,23 @@
 namespace vt { namespace messaging {
 
 void PendingSend::sendMsg() {
+  bool const has_epoch = epoch_produced_ != no_epoch;
+
+  // If an epoch exists, push/pop that for the pending send action
+  if (has_epoch) {
+    theMsg()->pushEpoch(epoch_produced_);
+  }
+
   if (send_action_ == nullptr) {
     theMsg()->sendMsgSized(msg_, msg_size_);
   } else {
     send_action_(msg_);
   }
+
+  if (has_epoch) {
+    theMsg()->popEpoch(epoch_produced_);
+  }
+
   consumeMsg();
   msg_ = nullptr;
   send_action_ = nullptr;
