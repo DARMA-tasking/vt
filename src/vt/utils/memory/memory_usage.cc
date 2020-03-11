@@ -273,7 +273,7 @@ std::string StatM::getName() {
 
 std::size_t Mimalloc::getUsage() {
 # if backend_check_enabled(mimalloc)
-  auto total_size = getAllocatedSize();
+  auto total_size = mi_get_allocated_size();
   return total_size;
 # else
   fmt::print("Mimalloc: xxx\n");
