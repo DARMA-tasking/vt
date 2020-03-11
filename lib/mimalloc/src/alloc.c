@@ -33,22 +33,32 @@ terms of the MIT license. A copy of the license can be found in the file
 // Allocation
 // ------------------------------------------------------
 
-extern "C" void * __default_morecore (ptrdiff_t);
-extern "C" void *sbrk (intptr_t __delta) __THROW;
-extern "C" void *(*__morecore)(ptrdiff_t) = __default_morecore;
-extern "C" void * __default_morecore (ptrdiff_t increment) {
+#if MI_OVERRIDE_SYS_FUNCS
+# ifdef __cplusplus
+extern "C" {
+# endif
+
+void * __default_morecore (ptrdiff_t);
+void *sbrk (intptr_t __delta) __THROW;
+void *(*__morecore)(ptrdiff_t) = __default_morecore;
+void * __default_morecore (ptrdiff_t increment) {
   void *result = (void *) sbrk (increment);
   if (result == (void *) -1)
     return NULL;
 
   return result;
 }
-extern "C" int mallopt(int, int) { return 0; }
+int mallopt(int, int) { return 0; }
 
-extern "C" __pid_t fork (void) __THROWNL { return -1; }
-extern "C" int __fork (void) {
+__pid_t fork (void) __THROWNL { return -1; }
+int __fork (void) {
   return -1;
 }
+
+# ifdef __cplusplus
+}
+# endif
+#endif
 
 // Fast allocation in a page: just pop from the free list.
 // Fall back to generic allocation only if the list is empty.
