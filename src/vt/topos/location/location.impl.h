@@ -61,6 +61,9 @@
 
 namespace vt { namespace location {
 
+// buffer ID for tracking buffered messages
+static uint64_t buffer_id_ = 0;
+
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord()
   : EntityLocationCoord<EntityID>( LocationManager::cur_loc_inst++ )
@@ -70,7 +73,19 @@ template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord(
   collection_lm_tag_t, LocInstType identifier
 ) : EntityLocationCoord<EntityID>(identifier)
-{ }
+{
+  if (ArgConfig::vt_print_buffered_msgs) {
+    if (buffer_id_ == 0) {
+      // Stamp in the NodeType bits for this_node in the high bits to create a
+      // globally distinct buffer identifier
+      auto node_stamp = static_cast<decltype(buffer_id_)>(theContext()->getNode());
+      node_stamp <<= (sizeof(decltype(buffer_id_)) - sizeof(NodeType)) * 8;
+      buffer_id_ |= node_stamp;
+      // Make sure it's non-zero
+      buffer_id_++;
+    }
+  }
+}
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
@@ -423,7 +438,26 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
 
     theTerm()->produce(epoch);
 
+    auto this_buffer_id_ = buffer_id_++;
+    if (ArgConfig::vt_print_buffered_msgs) {
+      vt_print(
+        location,
+        "routeMsgNode (trigger): buffering {:x} send to id={}, home={}, "
+        "to={}\n",
+        this_buffer_id_, id, home_node, to_node
+      );
+    }
+
     auto trigger_msg_handler_action = [=](EntityID const& hid) {
+      if (ArgConfig::vt_print_buffered_msgs) {
+        vt_print(
+          location,
+          "routeMsgNode (trigger): unbuffering {:x} send to id={}, home={}, "
+          "to={}\n",
+          this_buffer_id_, id, home_node, to_node
+        );
+      }
+
       bool const& has_handler = msg->hasHandler();
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
@@ -477,8 +511,28 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       );
 
       EntityID id_ = id;
+
+      auto this_buffer_id_2_ = buffer_id_++;
+      if (ArgConfig::vt_print_buffered_msgs) {
+        vt_print(
+          location,
+          "routeMsgNode (no-reg): buffering {:x} send to id={}, home={}, "
+          "to={}\n",
+          this_buffer_id_2_, id_, home_node, to_node
+        );
+      }
+
       // buffer the message here, the entity will be registered in the future
       insertPendingEntityAction(id_, [=](NodeType resolved) {
+        if (ArgConfig::vt_print_buffered_msgs) {
+          vt_print(
+            location,
+            "routeMsgNode (no-reg): unbuffering {:x} send to id={}, home={}, "
+            "to={}\n",
+            this_buffer_id_2_, id_, home_node, to_node
+          );
+        }
+
         auto const& my_node = theContext()->getNode();
 
         debug_print(
@@ -510,7 +564,23 @@ template <typename EntityID>
 void EntityLocationCoord<EntityID>::routeNonEagerAction(
   EntityID const& id, NodeType const& home_node, ActionNodeType action
 ) {
+  auto this_buffer_id_ = buffer_id_++;
+  if (ArgConfig::vt_print_buffered_msgs) {
+    vt_print(
+      location,
+      "getLocation (non-eager): buffering {:x} send to id={}, home={}\n",
+      this_buffer_id_, id, home_node
+    );
+  }
+
   getLocation(id, home_node, [=](NodeType node) {
+    if (ArgConfig::vt_print_buffered_msgs) {
+      vt_print(
+        location,
+        "getLocation (non-eager): unbuffering {:x} send to id={}, home={}, \n",
+        this_buffer_id_, id, home_node
+      );
+    }
     action(node);
   });
 }
@@ -581,8 +651,25 @@ void EntityLocationCoord<EntityID>::routeMsg(
     theMsg()->popEpoch(epoch);
   } else {
     theTerm()->produce(epoch);
+
+    auto this_buffer_id_ = buffer_id_++;
+    if (ArgConfig::vt_print_buffered_msgs) {
+      vt_print(
+        location,
+        "getLocation: buffering {:x} send to id={}, home={}, from={}\n",
+        this_buffer_id_, id, home_node, from_node
+      );
+    }
+
     // non-eager protocol: get location first then send message after resolution
     getLocation(id, home_node, [=](NodeType node) {
+      if (ArgConfig::vt_print_buffered_msgs) {
+        vt_print(
+          location,
+          "getLocation: unbuffering {:x} send to id={}, home={}, from={}\n",
+          this_buffer_id_, id, home_node, from_node
+        );
+      }
       theMsg()->pushEpoch(epoch);
       routeMsgNode<MessageT>(serialize, id, home_node, node, msg);
       theMsg()->popEpoch(epoch);
@@ -705,7 +792,26 @@ template <typename EntityID>
         event_id, epoch
       );
 
+      auto this_buffer_id_ = buffer_id_++;
+      if (ArgConfig::vt_print_buffered_msgs) {
+        vt_print(
+          location,
+          "getLocation (get-loc-han): buffering {:x} send to id={}, home={}, "
+          "ask={}\n",
+          this_buffer_id_, entity, home_node, ask_node
+        );
+      }
+
       loc->getLocation(entity, home_node, [=](NodeType node) {
+        if (ArgConfig::vt_print_buffered_msgs) {
+          vt_print(
+            location,
+            "getLocation (get-loc-han): unbuffering {:x} send to id={}, home={}, "
+            "ask={}\n",
+            this_buffer_id_, entity, home_node, ask_node
+          );
+        }
+
         debug_print(
           location, node,
           "getLocation: (action) event_id={}, epoch={:x}\n",

@@ -76,6 +76,7 @@ public:
   static bool vt_print_memory_at_threshold;
   static std::string vt_print_memory_threshold;
   static int32_t vt_print_memory_sched_poll;
+  static bool vt_print_buffered_msgs;
 
   static bool vt_no_warn_stack;
   static bool vt_no_assert_stack;
