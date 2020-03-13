@@ -53,6 +53,14 @@ namespace vt { namespace vrt { namespace collection {
 
 CollectionManager::CollectionManager() {
   balance::LBManager::init();
+
+  if (ArgType::vt_print_buffered_msgs) {
+    // Stamp in the NodeType bits for this_node in the high bits to create a
+    // globally distinct buffer identifier
+    auto node_stamp = static_cast<decltype(buffer_id_)>(theContext()->getNode());
+    node_stamp <<= (sizeof(decltype(buffer_id_)) - sizeof(NodeType)) * 8;
+    buffer_id_ |= node_stamp;
+  }
 }
 
 /*virtual*/ CollectionManager::~CollectionManager() {
