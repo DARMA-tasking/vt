@@ -1547,9 +1547,26 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
       toProxy.getCollectionProxy()
     );
 
+    auto this_buffer_id_ = buffer_id_++;
+    if (ArgType::vt_print_buffered_msgs) {
+      vt_print(
+        vrt_coll,
+        "not ready: buffering {:x} send to col_proxy={:x}, elm={}\n",
+        this_buffer_id_, col_proxy, elm_proxy.getIndex()
+      );
+    }
+
     theTerm()->produce(cur_epoch);
 
     iter->second.push_back([=](VirtualProxyType /*ignored*/){
+      if (ArgType::vt_print_buffered_msgs) {
+        vt_print(
+          vrt_coll,
+          "ready: unbuffering {:x} send to col_proxy={:x}, elm={}\n",
+          this_buffer_id_, col_proxy, elm_proxy.getIndex()
+        );
+      }
+
       theMsg()->pushEpoch(cur_epoch);
       theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
         toProxy, msg.get(), handler, member, false

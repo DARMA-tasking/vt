@@ -68,6 +68,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_print_memory_each_phase = false;
 /*static*/ std::string ArgConfig::vt_print_memory_node  = "0";
 /*static*/ bool        ArgConfig::vt_allow_memory_report_with_ps = false;
+/*static*/ bool        ArgConfig::vt_print_buffered_msgs = false;
 
 /*static*/ bool        ArgConfig::vt_no_warn_stack      = false;
 /*static*/ bool        ArgConfig::vt_no_assert_stack    = false;
@@ -183,13 +184,16 @@ namespace vt { namespace arguments {
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";
   auto never  = "Do not colorize output (overrides --vt_color)";
+  auto buffer = "Print debugging info about buffered messages";
   auto a  = app.add_flag("-c,--vt_color",      vt_color,      always);
   auto b  = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
   auto a1 = app.add_flag("-q,--vt_quiet",      vt_quiet,      quiet);
+  auto a2 = app.add_flag("--vt_print_buffered_msgs", vt_print_buffered_msgs, buffer);
   auto outputGroup = "Output Control";
   a->group(outputGroup);
   b->group(outputGroup);
   a1->group(outputGroup);
+  a2->group(outputGroup);
   b->excludes(a);
 
   /*

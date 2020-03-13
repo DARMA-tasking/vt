@@ -82,6 +82,7 @@ struct EntityLocationCoord : LocationCoord {
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
   using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
   using LocMsgType = LocationMsg<EntityID>;
+  using ArgConfig = arguments::ArgConfig;
 
   template <typename MessageT>
   using EntityMsgType = EntityMsg<EntityID, MessageT>;

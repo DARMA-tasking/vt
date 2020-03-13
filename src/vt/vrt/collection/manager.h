@@ -878,6 +878,7 @@ private:
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
   balance::ElementIDType cur_context_temp_elm_id_ = balance::no_element_id;
   balance::ElementIDType cur_context_perm_elm_id_ = balance::no_element_id;
+  uint64_t buffer_id_ = 0;
 };
 
 // These are static variables in class templates because Intel 18
