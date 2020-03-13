@@ -81,6 +81,8 @@ EntityLocationCoord<EntityID>::EntityLocationCoord(
       auto node_stamp = static_cast<decltype(buffer_id_)>(theContext()->getNode());
       node_stamp <<= (sizeof(decltype(buffer_id_)) - sizeof(NodeType)) * 8;
       buffer_id_ |= node_stamp;
+      // Make sure it's non-zero
+      buffer_id_++;
     }
   }
 }
