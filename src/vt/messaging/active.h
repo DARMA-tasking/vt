@@ -342,7 +342,7 @@ struct ActiveMessenger {
     ByteType msg_size,
     TagType tag
   ) {
-#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+#ifndef vt_quirked_serialize_method_detection
     static_assert(
       not ::vt::messaging::has_own_serialize<MessageT>,
       "Message prohibiting serialization must not have a serialization function."
@@ -367,7 +367,7 @@ struct ActiveMessenger {
     ByteType msg_size,
     TagType tag
   ) {
-#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+#ifndef vt_quirked_serialize_method_detection
     static_assert(
       ::vt::messaging::has_own_serialize<MessageT>,
       "Message requiring serialization must have a serialization function."
@@ -393,7 +393,7 @@ struct ActiveMessenger {
     ByteType msg_size,
     TagType tag
   ) {
-#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+#ifndef vt_quirked_serialize_method_detection
     static_assert(
        ::vt::messaging::has_own_serialize<MessageT>,
        "Message supporting serialization must have a serialization function."
@@ -419,7 +419,7 @@ struct ActiveMessenger {
     ByteType msg_size,
     TagType tag
   ) {
-#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+#ifndef vt_quirked_serialize_method_detection
     static_assert(
       not ::vt::messaging::has_own_serialize<MessageT>,
       "Message prohibiting serialization must not have a serialization function."

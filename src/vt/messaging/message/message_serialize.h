@@ -57,18 +57,10 @@
 
 namespace vt { namespace messaging {
 
-// Detection support to determine if a message type actually contains
-// a serialize method, itself; the checkpoint built-in detection will return
-// false positives for types deriving from types with intrusive
-// serializtion functions defined.
-// ~HOWEVER~
-// GCC forces a template instantion when attempting to get the type
-// of the specific instantiated template method. Clang will return
-// the relevant type information without an unncessary instantiation.
-// Checking the serialization method is not required, but it can catch
-// some message hierarchy related errors during compilation.
-#if defined(__clang__)
-#define VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE 1
+// Only some compilers can directly check for a serialization method
+// because to do so requires declval on a templated member WITHOUT
+// causing templated instantiation (which will fail).
+#ifndef vt_quirked_serialize_method_detection
 
 template <typename U, typename = void>
 struct has_own_serialize_member_t : std::false_type {};
@@ -87,6 +79,7 @@ template <typename T>
 static constexpr auto const has_own_serialize =
   ::serdes::SerializableTraits<T>::has_serialize_noninstrusive
   or has_own_serialize_member_t<T>::value;
+
 #endif
 
 }} // end vt::messaging
@@ -179,7 +172,7 @@ static constexpr auto const has_own_serialize =
   static constexpr ::vt::messaging::SerializationMode vt_serialize_mode        \
   = (::vt::messaging::msg_serialization_mode<MessageParentType>::required      \
      or not (true                                                              \
-       and vt::messaging::byte_copyable<TYPE1>::value                          \
+       and vt::messaging::is_byte_copyable_t<TYPE1>::value                     \
      )                                                                         \
      ? ::vt::messaging::SerializationMode::require                             \
      : ::vt::messaging::SerializationMode::support)
@@ -189,8 +182,8 @@ static constexpr auto const has_own_serialize =
   static constexpr ::vt::messaging::SerializationMode vt_serialize_mode        \
   = (::vt::messaging::msg_serialization_mode<MessageParentType>::required      \
      or not (true                                                              \
-       and vt::messaging::byte_copyable<TYPE1>::value                          \
-       and vt::messaging::byte_copyable<TYPE2>::value                          \
+       and vt::messaging::is_byte_copyable_t<TYPE1>::value                     \
+       and vt::messaging::is_byte_copyable_t<TYPE2>::value                     \
      )                                                                         \
      ? ::vt::messaging::SerializationMode::require                             \
      : ::vt::messaging::SerializationMode::support)
@@ -200,9 +193,9 @@ static constexpr auto const has_own_serialize =
   static constexpr ::vt::messaging::SerializationMode vt_serialize_mode        \
   = (::vt::messaging::msg_serialization_mode<MessageParentType>::required      \
      or not (true                                                              \
-       and vt::messaging::byte_copyable<TYPE1>::value                          \
-       and vt::messaging::byte_copyable<TYPE2>::value                          \
-       and vt::messaging::byte_copyable<TYPE3>::value                          \
+       and vt::messaging::is_byte_copyable_t<TYPE1>::value                     \
+       and vt::messaging::is_byte_copyable_t<TYPE2>::value                     \
+       and vt::messaging::is_byte_copyable_t<TYPE3>::value                     \
      )                                                                         \
      ? ::vt::messaging::SerializationMode::require                             \
      : ::vt::messaging::SerializationMode::support)
@@ -216,16 +209,22 @@ enum struct SerializationMode : int
  prohibit = 3
 };
 
-// Trivial test to ensure that the type is ELIGIBLE to be byte-copied, regardless of
-// if such supports explicit serialization. The assertion is that if serialization is
-// not required then it should be skipped.
-// This does not honor suppression (eg. no support of handling isByteCopyable == false).
-// It also implicitly prohibits types with virtual members, which is arguably
-// an artificial limitation of is_trivially_copyable.
+// Trivial test to ensure that the type is eligible to be byte-copied,
+// regardless of if the message supports explicit serialization.
+// N.B. This will return TRUE on certain compilers even though the guarantee
+// cannot be validated due to implementation quirks of trivially copyable.
+#ifndef vt_quirked_trivially_copyable_on_msg
 template <typename T>
-struct byte_copyable {
+struct is_byte_copyable_t {
   constexpr static bool value = std::is_trivially_copyable<T>::value and not std::is_pointer<T>::value;
 };
+#else
+template <typename T>
+struct is_byte_copyable_t {
+  // Although this can detect some cases it is not strictly true.
+  constexpr static bool value = std::is_trivially_destructible<T>::value and not std::is_pointer<T>::value;
+};
+#endif
 
 // C++17 port. ref. https://en.cppreference.com/w/cpp/types/conjunction
 template<class...> struct cxx14_conjunction : std::true_type { };
@@ -274,7 +273,7 @@ struct NonSerializedMsg : MsgT, DefinesSerializationMode<SelfT>
   );
 
   static_assert(
-    vt::messaging::byte_copyable<MsgT>::value,
+    vt::messaging::is_byte_copyable_t<MsgT>::value,
     "Message must be byte-copyable because serialization is prohibited."
   );
 
@@ -310,7 +309,7 @@ struct SerializeSupportedMsg : MsgT, DefinesSerializationMode<SelfT>
   );
 
   static_assert(
-    vt::messaging::byte_copyable<MsgT>::value,
+    vt::messaging::is_byte_copyable_t<MsgT>::value,
     "Message must be byte-copyable because serialization may be"
     " prohibited in a derived type."
   );
@@ -361,7 +360,7 @@ struct SerializeIfNeededMsg : MsgT, DefinesSerializationMode<SelfT>
 
   static constexpr ::vt::messaging::SerializationMode vt_serialize_mode
   = MsgT::vt_serialize_mode == SerializationMode::require
-    or not cxx14_conjunction<byte_copyable<DepTypesT>...>::value
+    or not cxx14_conjunction<is_byte_copyable_t<DepTypesT>...>::value
     ? SerializationMode::require
     : SerializationMode::support;
 

@@ -294,7 +294,7 @@ template <typename MsgT, typename BaseT>
   MsgT* msg_ptr, HandlerType typed_handler,
   ActionEagerSend<MsgT, BaseT> eager_sender, ActionDataSend data_sender
 ) {
-#if VT_CHECK_FOR_SERIALIZE_METHOD_ON_TYPE
+#ifndef vt_quirked_serialize_method_detection
   static_assert(
     ::vt::messaging::has_own_serialize<MsgT>,
     "Messages sent via SerializedMessenger must have a serialization function."

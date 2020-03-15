@@ -155,7 +155,7 @@ struct LoadData {
 };
 
 static_assert(
-  vt::messaging::byte_copyable<LoadData>::value,
+  vt::messaging::is_byte_copyable_t<LoadData>::value,
   "Must be trivially copyable to avoid serialization."
 );
 

@@ -161,8 +161,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   TagType tag
 ) {
   static_assert(
-    std::is_trivially_copyable<MessageT>::value,
-    "Message sent without serialization must be trivially copyable."
+    vt::messaging::is_byte_copyable_t<MessageT>::value,
+    "Message sent without serialization must be byte-copyable."
   );
   static_assert(
     std::is_trivially_destructible<MessageT>::value,
