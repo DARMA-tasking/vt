@@ -310,7 +310,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   } else {
     bool const& rec_exists = recs_.exists(id);
 
-    if (not rec_exists) {
+    if (not rec_exists or true) {
       if (home_node != this_node) {
         route_to_node = home_node;
       } else {
@@ -369,7 +369,7 @@ void EntityLocationCoord<EntityID>::getLocation(
       home_node, print_bool(rec_exists), sizeof(LocMsgType)
     );
 
-    if (not rec_exists) {
+    if (not rec_exists or true) {
       if (home_node != this_node) {
         auto const& event_id = fst_location_event_id++;
         auto msg = makeSharedMessage<LocMsgType>(
