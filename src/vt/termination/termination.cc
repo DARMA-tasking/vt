@@ -678,9 +678,15 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, CallFromEnum from
 
   if (epoch != any_epoch_sentinel) {
     if (isDS(epoch)) {
-      auto ds_term_iter = term_.find(epoch);
-      if (ds_term_iter != term_.end()) {
-        term_.erase(ds_term_iter);
+      if (from == CallFromEnum::NonRoot) {
+        auto ds_term_iter = term_.find(epoch);
+        if (ds_term_iter != term_.end()) {
+          term_.erase(ds_term_iter);
+        }
+      } else {
+        theSched()->enqueue([epoch]{
+          theTerm()->cleanupEpoch(epoch, CallFromEnum::NonRoot);
+        });
       }
     } else {
       // For the non-root, epoch_state_ can be cleaned immediately. Otherwise,
