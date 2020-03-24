@@ -207,12 +207,12 @@ EventType AsyncEvent::createEvent(
   auto& container = needsPolling(type)
     ? polling_event_container_ : event_container_;
 
-  container.emplace_front(EventHolderType(std::move(et)));
+  container.emplace_back(EventHolderType(std::move(et)));
 
   lookup_container_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(event),
-    std::forward_as_tuple(container.begin())
+    std::forward_as_tuple(--container.end())
   );
 
   return event;
