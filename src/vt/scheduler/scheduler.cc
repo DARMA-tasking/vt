@@ -149,7 +149,10 @@ bool Scheduler::shouldCallProgress(
 }
 
 void Scheduler::printMemoryUsage() {
-  if (last_memory_usage_poll_ >= arguments::ArgConfig::vt_print_memory_sched_poll) {
+  if (
+    last_memory_usage_poll_ >=
+    static_cast<std::size_t>(arguments::ArgConfig::vt_print_memory_sched_poll)
+  ) {
     auto usage = vt::util::memory::MemoryUsage::get();
 
     if (usage != nullptr) {
