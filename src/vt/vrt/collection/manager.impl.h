@@ -647,7 +647,12 @@ template <typename>
   if (msg->isRoot()) {
     auto new_msg = makeMessage<CollectionConsMsg>(*msg);
     theMsg()->markAsCollectionMessage(new_msg);
-    theMsg()->broadcastMsg<CollectionConsMsg,collectionFinishedHan>(
+    //TODO/QUIRK: on ICC18, using broadcastMsg here results in a huge range
+    // of seemingly unrelated errors relating to template value substitution failure.
+    // Using broadcastMsgAuto (which has an overload of the same signature and
+    // body) somehow avoids triggering all of this.
+    // Is there a very-incompatible overload in broadcastMsg?
+    theMsg()->broadcastMsgAuto<CollectionConsMsg,collectionFinishedHan>(
       new_msg.get()
     );
     collectionFinishedHan(new_msg.get());
