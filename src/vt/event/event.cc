@@ -292,7 +292,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
     }
 
     cur++;
-    if (cur > num_events) {
+    if (num_events > 0 and cur > num_events) {
       break;
     }
   }
