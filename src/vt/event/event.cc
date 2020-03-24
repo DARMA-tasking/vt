@@ -286,8 +286,8 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
     auto id = event->getEventID();
     if (event->testReady()) {
       holder.executeActions();
-      polling_event_container_.erase(iter);
-      iter = lookup_container_.erase(id);
+      iter = polling_event_container_.erase(iter);
+      lookup_container_.erase(id);
     } else {
       iter++;
     }
