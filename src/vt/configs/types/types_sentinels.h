@@ -65,7 +65,7 @@ static constexpr int64_t  const s64empty = 0xFFFFFFFFFFFFFFFF;
 static constexpr int32_t  const s32empty = 0xFEEDFEED;
 
 // Runtime identifier sentinel values
-static constexpr int const num_check_actions                       = 8;
+static constexpr int const num_check_actions                       = -1;
 static constexpr EpochType const no_epoch                          = u64empty;
 static constexpr TagType const no_tag                              = -1;
 static constexpr EventType const no_event                          = u64empty;
