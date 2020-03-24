@@ -280,15 +280,16 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
 void AsyncEvent::testEventsTrigger(int const& num_events) {
   int cur = 0;
   auto& cont = polling_event_container_;
-  for (auto iter = cont.begin(); iter != cont.end(); iter++) {
+  for (auto iter = cont.begin(); iter != cont.end(); ) {
     auto& holder = *iter;
     auto event = holder.get_event();
     auto id = event->getEventID();
     if (event->testReady()) {
       holder.executeActions();
       polling_event_container_.erase(iter);
-      lookup_container_.erase(id);
-      return;
+      iter = lookup_container_.erase(id);
+    } else {
+      iter++;
     }
 
     cur++;
