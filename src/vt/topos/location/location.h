@@ -176,6 +176,7 @@ struct EntityLocationCoord : LocationCoord {
   void printCurrentCache() const;
 
   bool isCached(EntityID const& id) const;
+  void clearCache();
 
   template <typename MessageT>
   bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const;
