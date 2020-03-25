@@ -241,6 +241,11 @@ bool EntityLocationCoord<EntityID>::isCached(EntityID const& id) const {
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::clearCache() {
+  recs_.clearCache();
+}
+
+template <typename EntityID>
 template <typename MessageT>
 bool EntityLocationCoord<EntityID>::useEagerProtocol(MsgSharedPtr<MessageT> msg) const {
 
