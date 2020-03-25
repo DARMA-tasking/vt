@@ -200,6 +200,48 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
   }
 }
 
+TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
+
+  auto const nb_nodes = vt::theContext()->getNumNodes();
+
+  // cannot perform entity migration if less than 3 nodes
+  if (nb_nodes > 2) {
+    auto const my_node  = vt::theContext()->getNode();
+    auto const entity   = location::default_entity;
+    auto const old_home = 0;
+    auto const new_home = 1;
+
+    // Register the entity on the node 0
+    if (my_node == old_home) {
+      vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
+    }
+
+    vt::theCollective()->barrier();
+
+    if (my_node == old_home) {
+      vt::theLocMan()->virtual_loc->entityMigrated(entity, new_home);
+    } else if (my_node == new_home) {
+      vt::theLocMan()->virtual_loc->registerEntityMigrated(
+        entity, old_home, my_node
+      );
+    }
+
+    vt::theCollective()->barrier();
+    // Clear the cache, to see if we can correctly fetch location after all
+    // cached entries are removed. Without the permanent directory, the home
+    // node will not know how to fetch the location.
+    vt::theLocMan()->virtual_loc->clearCache();
+    vt::theCollective()->barrier();
+
+    vt::theLocMan()->virtual_loc->getLocation(
+      entity, old_home, [=](vt::NodeType node) {
+        // With a clear cache, the result should always be correct
+        EXPECT_TRUE(node == new_home);
+      }
+    );
+  }
+}
+
 TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
