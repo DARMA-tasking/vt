@@ -74,7 +74,9 @@ EntityLocationCoord<EntityID>::EntityLocationCoord(
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
-  : LocationCoord(), this_inst(identifier), recs_(default_max_cache_size)
+  : LocationCoord(),
+    this_inst(identifier),
+    recs_(default_max_cache_size, theContext()->getNode())
 {
   debug_print(
     location, node,
@@ -113,7 +115,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   local_registered_.insert(id);
 
-  recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+  recs_.insert(id, home, LocRecType{id, eLocState::Local, this_node});
 
   if (msg_action != nullptr) {
     // vtAssert(
@@ -220,16 +222,17 @@ void EntityLocationCoord<EntityID>::entityMigrated(
     local_registered_.erase(reg_iter);
   }
 
-  recs_.insert(id, LocRecType{id, eLocState::Remote, new_node});
+  recs_.update(id, LocRecType{id, eLocState::Remote, new_node});
 }
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntityMigrated(
-  EntityID const& id, NodeType const& from, LocMsgActionType msg_action
+  EntityID const& id, NodeType const& home_node, NodeType const& from,
+  LocMsgActionType msg_action
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
-  return registerEntity(id, uninitialized_destination, msg_action, true);
+  return registerEntity(id, home_node, msg_action, true);
 }
 
 template <typename EntityID>
@@ -290,7 +293,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   );
 
   if (found) {
-    recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    recs_.insert(id, home_node, LocRecType{id, eLocState::Local, this_node});
     route_to_node = this_node;
   } else {
     bool const& rec_exists = recs_.exists(id);
@@ -341,7 +344,7 @@ void EntityLocationCoord<EntityID>::getLocation(
       "EntityLocationCoord: getLocation: entity is local\n"
     );
 
-    recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    recs_.insert(id, home_node, LocRecType{id, eLocState::Local, this_node});
     action(this_node);
     return;
   } else {
@@ -593,7 +596,8 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::updatePendingRequest(
-  LocEventID const& event_id, EntityID const& id, NodeType const& node
+  LocEventID const& event_id, EntityID const& id,
+  NodeType const& node, NodeType const& home_node
 ) {
 
   debug_print(
@@ -611,13 +615,13 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
 
     auto const& entity = pending_iter->second.entity_;
 
-    recs_.insert(entity, LocRecType{entity, eLocState::Remote, node});
+    recs_.insert(entity, home_node, LocRecType{entity, eLocState::Remote, node});
 
     pending_iter->second.applyNodeAction(node);
 
     pending_actions_.erase(pending_iter);
   } else {
-    recs_.insert(id, LocRecType{id, eLocState::Remote, node});
+    recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, node});
 
     // trigger any pending actions upon registration
     auto pending_lookup_iter = pending_lookups_.find(id);
@@ -749,7 +753,9 @@ template <typename EntityID>
         "updateLocation: event_id={}, running pending: resolved={}, id={}\n",
         event_id, msg->resolved_node, entity
       );
-      loc->updatePendingRequest(event_id, entity, msg->resolved_node);
+      loc->updatePendingRequest(
+        event_id, entity, msg->resolved_node, msg->home_node
+      );
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
     }
