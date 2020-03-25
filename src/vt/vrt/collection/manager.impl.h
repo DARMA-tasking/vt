@@ -1642,7 +1642,7 @@ bool CollectionManager::insertCollectionElement(
 
     if (is_migrated_in) {
       theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntityMigrated(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, migrated_from,
+        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
@@ -2828,7 +2828,15 @@ MigrateStatus CollectionManager::migrateIn(
   vrt_elm_ptr->temp_elm_id_ = balance::ProcStats::getNextElm();
 
   bool const is_static = ColT::isStaticSized();
-  auto const home_node = uninitialized_destination;
+
+  using BaseIdxType = vt::index::BaseIndex;
+  auto idx_copy = idx;
+  auto max_idx_copy = max;
+  auto const cur_cast = static_cast<BaseIdxType*>(&idx_copy);
+  auto const max_cast = static_cast<BaseIdxType*>(&max_idx_copy);
+  auto fn = auto_registry::getHandlerMap(map_han);
+  auto const home_node = fn(cur_cast, max_cast, theContext()->getNumNodes());
+
   auto const inserted = insertCollectionElement<ColT, IndexT>(
     std::move(vrt_elm_ptr), idx, max, map_han, proxy, is_static,
     home_node, true, from
