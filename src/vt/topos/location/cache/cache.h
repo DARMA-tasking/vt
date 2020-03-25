@@ -65,8 +65,8 @@ struct LocationCache {
   explicit LocationCache(LocationSizeType const& in_max_size);
 
   LocationCache(LocationCache const&) = delete;
-  LocationCache(LocationCache&&) = delete;
-  LocationCache& operator=(LocationCache const&) = delete;
+  LocationCache(LocationCache&&) = default;
+  LocationCache& operator=(LocationCache const&) = default;
 
   bool exists(KeyT const& key) const;
   LocationSizeType getSize() const;
