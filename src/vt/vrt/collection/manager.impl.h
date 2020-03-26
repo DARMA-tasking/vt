@@ -2829,11 +2829,10 @@ MigrateStatus CollectionManager::migrateIn(
 
   bool const is_static = ColT::isStaticSized();
 
-  using BaseIdxType = vt::index::BaseIndex;
   auto idx_copy = idx;
   auto max_idx_copy = max;
-  auto const cur_cast = static_cast<BaseIdxType*>(&idx_copy);
-  auto const max_cast = static_cast<BaseIdxType*>(&max_idx_copy);
+  auto const cur_cast = static_cast<vt::index::BaseIndex*>(&idx_copy);
+  auto const max_cast = static_cast<vt::index::BaseIndex*>(&max_idx_copy);
   auto fn = auto_registry::getHandlerMap(map_han);
   auto const home_node = fn(cur_cast, max_cast, theContext()->getNumNodes());
 
