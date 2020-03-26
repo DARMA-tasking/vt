@@ -105,7 +105,6 @@ void LocLookup<KeyT, ValueT>::printCache() const {
   cache_.printCache();
 }
 
-
 }} /* end namespace vt::location */
 
 #endif /*INCLUDED_VT_TOPOS_LOCATION_LOOKUP_LOOKUP_IMPL_H*/
