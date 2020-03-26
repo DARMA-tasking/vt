@@ -177,6 +177,15 @@ function(link_target_with_vt)
     # in all cases, perhaps "-pthread"?
   endif()
 
+  if (${vt_mimalloc_enabled})
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: mimalloc=${vt_mimalloc_enabled}")
+    endif()
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${MIMALLOC_LIBRARY}
+    )
+  endif()
+
   if (${ARG_CUSTOM_LINK_ARGS})
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: custom=${ARG_CUSTOM_LINK_ARGS}")
