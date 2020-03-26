@@ -58,6 +58,9 @@
 namespace vt { namespace lb { namespace instrumentation {
 
 struct CollectMsg : ::vt::collective::reduce::ReduceMsg {
+  using MessageParentType = ::vt::collective::reduce::ReduceMsg;
+  vt_msg_serialize_required(); // by entries_
+
   CollectMsg() = default;
 
   CollectMsg(
@@ -70,6 +73,7 @@ struct CollectMsg : ::vt::collective::reduce::ReduceMsg {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    MessageParentType::serialize(s);
     s | entries_;
     s | phase_;
   }

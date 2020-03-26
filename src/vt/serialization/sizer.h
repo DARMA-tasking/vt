@@ -64,11 +64,15 @@ struct MsgSizer {
 };
 
 #if HAS_SERIALIZATION_LIBRARY
+
 template <typename MsgT>
 struct MsgSizer<
   MsgT,
-  typename std::enable_if_t<
-    ::serdes::SerializableTraits<MsgT>::has_serialize_function
+  typename std::enable_if_t<true
+    and ::vt::messaging::msg_defines_serialize_mode<MsgT>::value
+    and (::vt::messaging::msg_serialization_mode<MsgT>::supported
+         or ::vt::messaging::msg_serialization_mode<MsgT>::required)
+    //    ::vt::messaging::has_own_serialize<MsgT>
   >
 > {
   static std::size_t get(MsgT* msg) {
@@ -77,7 +81,7 @@ struct MsgSizer<
   }
 };
 
-#endif
+#endif // HAS_SERIALIZATION_LIBRARY
 
 }} /* end namespace vt::serialization */
 

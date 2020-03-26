@@ -60,6 +60,9 @@ template <
   typename RemoteInfo, typename ArgsTuple, typename CollectionT, typename IndexT
 >
 struct CollectionCreateMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_if_needed_by_parent_or_type2(RemoteInfo, ArgsTuple);
+
   using CollectionType = CollectionT;
   using IndexType = IndexT;
   using ArgsTupleType = ArgsTuple;
@@ -76,11 +79,15 @@ struct CollectionCreateMsg : ::vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | info | tup | map;
   }
 };
 
 struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
+  using MessageParentType = ::vt::collective::reduce::ReduceMsg;
+  vt_msg_serialize_prohibited();
+
   CollectionConsMsg() = default;
   explicit CollectionConsMsg(VirtualProxyType const& in_proxy)
     : proxy(in_proxy)
@@ -92,6 +99,9 @@ struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
 };
 
 struct CollectionGroupMsg : CollectionConsMsg {
+  using MessageParentType = CollectionConsMsg;
+  vt_msg_serialize_prohibited();
+
   CollectionGroupMsg() = default;
   CollectionGroupMsg(
     VirtualProxyType const& in_proxy, GroupType const& in_group
@@ -105,6 +115,9 @@ private:
 };
 
 struct FinishedUpdateMsg : ::vt::collective::reduce::ReduceMsg {
+  using MessageParentType = ::vt::collective::reduce::ReduceMsg;
+  vt_msg_serialize_prohibited();
+
   FinishedUpdateMsg() = default;
   explicit FinishedUpdateMsg(VirtualProxyType const& in_proxy)
     : proxy_(in_proxy)
@@ -113,10 +126,16 @@ struct FinishedUpdateMsg : ::vt::collective::reduce::ReduceMsg {
   VirtualProxyType proxy_ = {};
 };
 
-struct CollectionPhaseMsg : ::vt::Message {};
+struct CollectionPhaseMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_prohibited();
+};
 
 template <typename ColT, typename IndexT>
 struct InsertMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_prohibited();
+
   InsertMsg() = default;
 
   InsertMsg(
@@ -138,6 +157,9 @@ struct InsertMsg : ::vt::Message {
 
 template <typename ColT, typename IndexT>
 struct DoneInsertMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_prohibited();
+
   DoneInsertMsg() = default;
 
   DoneInsertMsg(
@@ -152,6 +174,9 @@ struct DoneInsertMsg : ::vt::Message {
 
 template <typename ColT, typename IndexT>
 struct ActInsertMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_prohibited();
+
   ActInsertMsg() = default;
 
   explicit ActInsertMsg(CollectionProxy<ColT,IndexT> in_proxy)
@@ -163,6 +188,9 @@ struct ActInsertMsg : ::vt::Message {
 
 template <typename ColT, typename IndexT>
 struct UpdateInsertMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_prohibited();
+
   UpdateInsertMsg() = default;
 
   UpdateInsertMsg(

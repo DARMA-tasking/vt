@@ -63,6 +63,9 @@ struct TestCtx : ::vt::vrt::VirtualContext {
 };
 
 struct DataMsg : vt::vrt::VirtualMessage {
+  using MessageParentType = vt::vrt::VirtualMessage;
+  vt_msg_serialize_required();
+
   int test = 0;
   std::vector<int> vec;
 
@@ -83,6 +86,7 @@ struct DataMsg : vt::vrt::VirtualMessage {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | vec;
     s | test;
   }

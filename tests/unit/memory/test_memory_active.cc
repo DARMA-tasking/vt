@@ -87,7 +87,7 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_send) {
     for (int i = 0; i < num_msg_sent; i++) {
       auto msg = makeMessage<MsgType>();
       msgs.push_back(msg);
-      theMsg()->sendMsgAuto<MsgType,TestMemoryActive<MsgType>::test_handler>(
+      theMsg()->sendMsg<MsgType,TestMemoryActive<MsgType>::test_handler>(
         to_node, msg.get()
       );
     }
@@ -118,7 +118,7 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_broadcast) {
     for (int i = 0; i < num_msg_sent; i++) {
       auto msg = makeMessage<MsgType>();
       msgs.push_back(msg);
-      theMsg()->broadcastMsgAuto<MsgType,TestMemoryActive<MsgType>::test_handler>(
+      theMsg()->broadcastMsg<MsgType,TestMemoryActive<MsgType>::test_handler>(
         msg.get()
       );
     }

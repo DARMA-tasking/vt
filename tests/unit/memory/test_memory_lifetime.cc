@@ -57,12 +57,20 @@ using namespace vt::tests::unit;
 struct TrackMsg : ::vt::Message { };
 
 struct SerialTrackMsg : ::vt::Message {
+  // Must be serialized because byte-copyable are supposed
+  // to be trivially destructible. However, the check has
+  // been historically broken so..
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required();
+
   SerialTrackMsg() { ++alloc_count; }
   SerialTrackMsg(SerialTrackMsg const& other) { ++alloc_count; }
   SerialTrackMsg(SerialTrackMsg&& other) { ++alloc_count; }
 
   template <typename Serializer>
-  void serialize(Serializer&) { }
+  void serialize(Serializer& s) {
+    MessageParentType::serialize(s);
+  }
 
   ~SerialTrackMsg() { --alloc_count; }
 
@@ -116,11 +124,11 @@ TEST_F(TestMemoryLifetime, test_active_send_serial_lifetime_1) {
     auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeSharedMessage<SerialTestMsg>();
-      theMsg()->sendMsgAuto<SerialTestMsg, serialHan>(next_node, msg);
+      theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg);
     }
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<SerialTestMsg>();
-      theMsg()->sendMsgAuto<SerialTestMsg, serialHan>(next_node, msg.get());
+      theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg.get());
     }
 
     theTerm()->addAction([=]{
@@ -139,11 +147,11 @@ TEST_F(TestMemoryLifetime, test_active_bcast_serial_lifetime_1) {
   if (num_nodes > 1) {
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeSharedMessage<SerialTestMsg>();
-      theMsg()->broadcastMsgAuto<SerialTestMsg, serialHan>(msg);
+      theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg);
     }
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<SerialTestMsg>();
-      theMsg()->broadcastMsgAuto<SerialTestMsg, serialHan>(msg.get());
+      theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg.get());
     }
 
     theTerm()->addAction([=]{

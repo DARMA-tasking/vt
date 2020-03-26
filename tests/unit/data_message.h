@@ -57,8 +57,18 @@ using ByteType = char;
 
 template <typename MessageT, NumBytesType num_bytes>
 struct TestStaticBytesMsg : MessageT {
-  std::array<ByteType, num_bytes> payload{};
-  NumBytesType bytes = 0;
+  using MessageParentType = MessageT;
+
+  // This type is fundamentally broken as a message in that
+  // it does not support it's own serialization as required.
+  // It is not even valid to set the serialize mode here
+  // or it will fail to align with subtype expectations.
+  // (It will be sent as byte-copyable since there is no serializer.)
+
+  static_assert(
+    std::is_base_of<BaseMessage, MessageT>::value,
+    "Must derive from Message."
+  );
 
   TestStaticBytesMsg() : MessageT() { }
 
@@ -71,13 +81,20 @@ struct TestStaticBytesMsg : MessageT {
   ) : MessageT(), payload(std::forward<std::array<ByteType, num_bytes>>(arr)),
       bytes(in_bytes)
   { }
+
+  std::array<ByteType, num_bytes> payload{};
+  NumBytesType bytes = 0;
 };
 
 template <typename MessageT, NumBytesType num_bytes>
 struct TestStaticSerialBytesMsg : TestStaticBytesMsg<MessageT,num_bytes> {
+  using MessageParentType = TestStaticBytesMsg<MessageT,num_bytes>;
+  vt_msg_serialize_required();
+
+  // Derived type serializes parent type's members.. (don't do this)
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    MessageT::serializeThis(s);
+    MessageT::serialize(s);
     s | TestStaticBytesMsg<MessageT,num_bytes>::bytes;
     for (auto&& elm : TestStaticBytesMsg<MessageT,num_bytes>::payload) {
       s | elm;

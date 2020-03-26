@@ -75,7 +75,6 @@
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/termination/term_headers.h"
 #include "vt/serialization/serialization.h"
-#include "vt/serialization/auto_dispatch/dispatch.h"
 #include "vt/serialization/auto_sizing/sizing.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
@@ -648,7 +647,12 @@ template <typename>
   if (msg->isRoot()) {
     auto new_msg = makeMessage<CollectionConsMsg>(*msg);
     theMsg()->markAsCollectionMessage(new_msg);
-    theMsg()->broadcastMsg<CollectionConsMsg,collectionFinishedHan>(
+    //TODO/QUIRK: on ICC18, using broadcastMsg here results in a huge range
+    // of seemingly unrelated errors relating to template value substitution failure.
+    // Using broadcastMsgAuto (which has an overload of the same signature and
+    // body) somehow avoids triggering all of this.
+    // Is there a very-incompatible overload in broadcastMsg?
+    theMsg()->broadcastMsgAuto<CollectionConsMsg,collectionFinishedHan>(
       new_msg.get()
     );
     collectionFinishedHan(new_msg.get());
@@ -863,7 +867,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   }
 
   theMsg()->markAsCollectionMessage(msg);
-  auto ret = theMsg()->broadcastMsgAuto<MsgT,collectionBcastHandler<ColT,IndexT>>(
+  auto ret = theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT>>(
     msg.get()
   );
   if (!send_group) {
@@ -1079,7 +1083,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
         col_proxy, bnode, handler, cur_epoch
       );
       theMsg()->markAsCollectionMessage(msg);
-      return theMsg()->sendMsgAuto<MsgT,broadcastRootHandler<ColT,IdxT>>(
+      return theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT>>(
         bnode,msg.get()
       );
     } else {
@@ -2130,7 +2134,6 @@ CollectionManager::constructMap(
   typename ColT::IndexType range, HandlerType const& map_handler,
   Args&&... args
 ) {
-  using SerdesMsg = SerializedMessenger;
   using IndexT = typename ColT::IndexType;
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
   using MsgType = CollectionCreateMsg<
@@ -2162,7 +2165,7 @@ CollectionManager::constructMap(
     "construct_map: range={}\n", range.toString().c_str()
   );
 
-  SerdesMsg::broadcastSerialMsg<MsgType,distConstruct<MsgType>>(
+  theMsg()->broadcastMsg<MsgType,distConstruct<MsgType>>(
     create_msg.get()
   );
 
@@ -2757,7 +2760,7 @@ MigrateStatus CollectionManager::migrateOut(
      proxy, this_node, dest, map_fn, range, &typed_col_ref
    );
 
-   theMsg()->sendMsgAuto<
+   theMsg()->sendMsg<
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
    >(dest, msg);
 

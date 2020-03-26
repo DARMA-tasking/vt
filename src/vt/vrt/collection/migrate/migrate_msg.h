@@ -54,6 +54,8 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 struct MigrateMsg final : ::vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // by elm_, maybe others
 
   MigrateMsg() = default;
   MigrateMsg(
@@ -78,6 +80,7 @@ struct MigrateMsg final : ::vt::Message {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
+    MessageParentType::serialize(s);
     s | elm_proxy_ | from_ | to_ | map_fn_ | range_;
     if (s.isUnpacking()) {
       elm_ = new ColT{};

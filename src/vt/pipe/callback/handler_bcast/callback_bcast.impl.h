@@ -108,7 +108,7 @@ CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) 
     "CallbackBcast: trigger_: this_node={}, include_sender_={}\n",
     this_node, include_sender_
   );
-  theMsg()->broadcastMsgAuto<SignalDataType>(handler_, data);
+  theMsg()->broadcastMsg<SignalDataType>(handler_, data);
   auto msg_group = envelopeGetGroup(data->env);
   bool const is_default = msg_group == default_group;
   if (include_sender_ and is_default) {

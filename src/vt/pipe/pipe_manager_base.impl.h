@@ -50,7 +50,7 @@
 #include "vt/pipe/pipe_manager_base.h"
 #include "vt/pipe/pipe_manager.h"
 #include "vt/pipe/state/pipe_state.h"
-#include "vt/pipe/interface/remote_container_msg.h"
+#include "vt/pipe/interface/remote_container.h"
 #include "vt/pipe/interface/send_container.h"
 #include "vt/pipe/interface/callback_direct.h"
 #include "vt/pipe/signal/signal_holder.h"

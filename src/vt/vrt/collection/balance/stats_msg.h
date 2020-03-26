@@ -154,8 +154,17 @@ struct LoadData {
   int32_t  P_ = 0;
 };
 
+static_assert(
+  vt::messaging::is_byte_copyable_t<LoadData>::value,
+  "Must be trivially copyable to avoid serialization."
+);
+
 template <typename ColT>
-struct LoadStatsMsg : CollectionMessage<ColT>, LoadData {
+struct LoadStatsMsg : NonSerialized<
+  CollectionMessage<ColT>,
+  LoadStatsMsg<ColT>
+>, LoadData
+{
   LoadStatsMsg() = default;
   LoadStatsMsg(LoadData const& in_load_data, PhaseType const& phase)
     : LoadData(in_load_data), cur_phase_(phase)
@@ -167,14 +176,23 @@ private:
   PhaseType cur_phase_ = fst_lb_phase;
 };
 
-struct ProcStatsMsg : collective::ReduceTMsg<LoadData> {
+struct ProcStatsMsg : NonSerialized<
+  collective::ReduceTMsg<LoadData>,
+  ProcStatsMsg
+>
+{
+  using MessageParentType = NonSerialized<
+    collective::ReduceTMsg<LoadData>,
+    ProcStatsMsg
+  >;
+
   ProcStatsMsg() = default;
   ProcStatsMsg(lb::Statistic in_stat, TimeType const in_total_load)
-    : ReduceTMsg<LoadData>(LoadData(in_total_load)),
+    : MessageParentType(LoadData(in_total_load)),
       stat_(in_stat)
   { }
   ProcStatsMsg(lb::Statistic in_stat, LoadData&& ld)
-    : ReduceTMsg<LoadData>(std::move(ld)),
+    : MessageParentType(std::move(ld)),
       stat_(in_stat)
   { }
 
@@ -183,6 +201,9 @@ struct ProcStatsMsg : collective::ReduceTMsg<LoadData> {
 
 template <typename ColT>
 struct StatsMsg : collective::ReduceTMsg<LoadData> {
+  using MessageParentType = collective::ReduceTMsg<LoadData>;
+  vt_msg_serialize_prohibited();
+
   using ProxyType = typename ColT::CollectionProxyType;
 
   StatsMsg() = default;

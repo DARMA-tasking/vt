@@ -57,6 +57,9 @@ namespace vt { namespace vrt {
 
 template <typename RemoteInfo, typename ArgsTuple, typename VirtualContextT>
 struct VrtConstructMsg : Message {
+  using MessageParentType = Message;
+  vt_msg_serialize_if_needed_by_parent_or_type2(RemoteInfo, ArgsTuple);
+
   using VirtualContextType = VirtualContextT;
   using ArgsTupleType = ArgsTuple;
 
@@ -71,11 +74,15 @@ struct VrtConstructMsg : Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | info | tup;
   }
 };
 
 struct VirtualProxyRequestMsg : ShortMessage {
+  using MessageParentType = ShortMessage;
+  vt_msg_serialize_prohibited();
+
   NodeType request_node = uninitialized_destination;
   NodeType construct_node = uninitialized_destination;
   VirtualRequestIDType request_id = no_request_id;

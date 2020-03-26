@@ -46,8 +46,10 @@
 #define INCLUDED_MESSAGING_MESSAGE_MESSAGE_H
 
 #include "vt/config.h"
-#include "vt/messaging/envelope.h"
 #include "vt/pool/pool.h"
+
+#include "vt/messaging/envelope.h"
+#include "vt/messaging/message/message_serialize.h"
 
 #include <typeinfo>
 #include <type_traits>
@@ -85,6 +87,11 @@ struct ActiveMsg : BaseMsg {
    */
 
   bool has_owner_ = false;      /**< For smart pointers tracking ownership  */
+
+  // Used to track if the message has been serialized.
+  // TODO - include only in debug + serialize-enabled VT builds?
+  bool base_serialize_called_ = false;
+
   EnvelopeType env;             /**< The envelope for the message */
 
   /**
@@ -186,28 +193,26 @@ struct ActiveMsg : BaseMsg {
   #endif
 
   /**
-   * \brief Explicitly write parent serialize so derived messages can contain
-   * non-byte serialization. Envelopes, by default, are required to be byte
-   * serializable.
+   * \brief Explicitly serialize this message.
+   *
+   * Should be called froms derived type that support/require serialization.
    *
    * \param[in] s the serializer
    */
   template <typename SerializerT>
-  void serializeParent(SerializerT& s) { }
-
-  /**
-   * \brief Explicit two-part serialization code for this message. Not required
-   * to be called.
-   *
-   * \param[in] s the serializer
-   */
-  template <typename SerializerT>
-  void serializeThis(SerializerT& s) {
-    // @todo: do not serialize the entire envelope---it contains specific data
-    // for this message
+  void serialize(SerializerT& s) {
+    base_serialize_called_ = true;
+    // n.b. not actually used, as extracted during transmission.
     s | has_owner_;
     s | env;
   }
+
+public:
+  // Message supports serialization for derived types.
+  // However, only types that REQUIRE serialization will actually
+  // be serialized while others use byte-copy transmission.
+  using MessageParentType = BaseMsg;
+  vt_msg_serialize_mode_(support);
 };
 
 }} //end namespace vt::messaging
@@ -231,15 +236,18 @@ using Message         = EpochTagMessage;
 using BaseMsgType     = ShortMessage;
 
 static_assert(
-  std::is_trivially_destructible<ShortMessage>::value,
-  "ShortMessage must be trivial destructible"
+  std::is_trivially_copyable<ShortMessage>::value
+  and std::is_trivially_destructible<ShortMessage>::value,
+  "ShortMessage must be trivially copyable destructible"
 );
 static_assert(
-  std::is_trivially_destructible<EpochMessage>::value,
+  std::is_trivially_copyable<EpochMessage>::value
+  and std::is_trivially_destructible<EpochMessage>::value,
   "EpochMessage must be trivial destructible"
 );
 static_assert(
-  std::is_trivially_destructible<EpochTagMessage>::value,
+  std::is_trivially_copyable<EpochTagMessage>::value
+  and std::is_trivially_destructible<EpochTagMessage>::value,
   "EpochTagMessage must be trivial destructible"
 );
 

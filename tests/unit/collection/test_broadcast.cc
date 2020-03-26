@@ -73,15 +73,22 @@ struct TestCol : Collection<TestCol<Args...>,TestIndex> {
 };
 template <typename... Args>
 struct ColMsg : CollectionMessage<TestCol<Args...>> {
+  using MessageParentType = CollectionMessage<TestCol<Args...>>;
   using TupleType = std::tuple<Args...>;
+  vt_msg_serialize_if_needed_by_parent_or_type1(TupleType);
+
   ColMsg() = default;
   explicit ColMsg(TupleType in_tup) : tup(in_tup) {}
-  TupleType tup;
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | tup;
   }
+
+  TupleType tup;
 };
+
 } /* end namespace bcast_col_ */
 
 template <

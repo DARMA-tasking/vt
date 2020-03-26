@@ -58,9 +58,11 @@ namespace vt { namespace vrt {
 template <typename MessageT>
 using RoutedMessageType = LocationRoutedMsg<VirtualProxyType, MessageT>;
 
-struct VirtualMessage :
-    RoutedMessageType<vt::Message>, serialization::ByteCopyTrait
+struct VirtualMessage : RoutedMessageType<vt::Message>
 {
+  using MessageParentType = RoutedMessageType<vt::Message>;
+  vt_msg_serialize_supported();
+  
   // By default, the `VirtualMessage' is byte copyable for serialization, but
   // derived classes may not be. The serialization::ByteCopyTrait specifies this
   // property
@@ -89,16 +91,9 @@ struct VirtualMessage :
   bool getExecuteCommThread() const { return execute_comm_thd_; }
   void setExecuteCommThread(bool const comm) { execute_comm_thd_ = comm; }
 
-  // Explicitly write a parent serializer so derived user messages can contain
-  // non-byte serialization
   template <typename SerializerT>
-  void serializeParent(SerializerT& s) {
-    RoutedMessageType<vt::Message>::serializeParent(s);
-    RoutedMessageType<vt::Message>::serializeThis(s);
-  }
-
-  template <typename SerializerT>
-  void serializeThis(SerializerT& s) {
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | vt_sub_handler_;
     s | to_proxy_;
     s | execute_comm_thd_;

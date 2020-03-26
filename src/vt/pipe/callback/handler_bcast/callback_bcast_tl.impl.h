@@ -70,7 +70,7 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     "CallbackBcast: trigger_: pipe={:x}, this_node={}, include_sender_={}\n",
     pipe, this_node, include_sender_
   );
-  theMsg()->broadcastMsgAuto<MsgT>(handler_, msg);
+  theMsg()->broadcastMsg<MsgT>(handler_, msg);
   auto msg_group = envelopeGetGroup(msg->env);
   bool const is_default = msg_group == default_group;
   if (include_sender_ and is_default) {

@@ -247,7 +247,6 @@ struct CallbackTyped : CallbackRawBaseSingle {
   void serialize(SerializerT& s) {
     CallbackRawBaseSingle::serialize(s);
   }
-
 };
 
 }}}} /* end namespace vt::pipe::callback::cbunion */

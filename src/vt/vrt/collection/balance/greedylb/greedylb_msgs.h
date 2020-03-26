@@ -108,22 +108,18 @@ protected:
 };
 
 struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
+  using MessageParentType = collective::ReduceTMsg<GreedyPayload>;
+  vt_msg_serialize_required(); // prev. serialize(1)
+
   GreedyCollectMsg() = default;
   GreedyCollectMsg(ObjSampleType const& in_load, LoadType const& in_profile)
     : collective::ReduceTMsg<GreedyPayload>(GreedyPayload{in_load,in_profile})
   { }
 
-  #if greedylb_use_parserdes
-    template <typename SerializerT>
-    void parserdes(SerializerT& s) {
-      s & load_;
-    }
-  #else
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      ReduceTMsg<GreedyPayload>::invokeSerialize(s);
-    }
-  #endif
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+  }
 
   ObjSampleType const& getLoad() const {
     return collective::ReduceTMsg<GreedyPayload>::getConstVal().getSample();

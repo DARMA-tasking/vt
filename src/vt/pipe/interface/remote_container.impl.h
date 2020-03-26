@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                         remote_container_msg.impl.h
+//                           remote_container.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,12 +42,12 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_IMPL_H
-#define INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_IMPL_H
+#if !defined INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H
+#define INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
-#include "vt/pipe/interface/remote_container_msg.h"
+#include "vt/pipe/interface/remote_container.h"
 #include "vt/pipe/id/pipe_id.h"
 #include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/context/context.h"
@@ -63,27 +63,27 @@ namespace vt { namespace pipe { namespace interface {
 
 template <typename MsgT, typename TupleT>
 template <typename... Args>
-RemoteContainerMsg<MsgT,TupleT>::RemoteContainerMsg(
+RemoteContainer<MsgT,TupleT>::RemoteContainer(
   PipeType const& in_pipe, Args... args
-) : RemoteContainerMsg<MsgT,TupleT>(in_pipe,std::make_tuple(args...))
+) : RemoteContainer<MsgT,TupleT>(in_pipe,std::make_tuple(args...))
 {}
 
 template <typename MsgT, typename TupleT>
 template <typename... Args>
-RemoteContainerMsg<MsgT,TupleT>::RemoteContainerMsg(
+RemoteContainer<MsgT,TupleT>::RemoteContainer(
   PipeType const& in_pipe, std::tuple<Args...> tup
 ) : BaseContainer<MsgT>(in_pipe), trigger_list_(tup)
 {}
 
 template <typename MsgT, typename TupleT>
 template <typename MsgU, typename CallbackT>
-typename RemoteContainerMsg<MsgT,TupleT>::template IsVoidType<MsgU>
-RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU*) {
+typename RemoteContainer<MsgT,TupleT>::template IsVoidType<MsgU>
+RemoteContainer<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU*) {
   auto const& pid = BaseContainer<MsgT>::getPipe();
   constexpr auto multi_callback = std::tuple_size<decltype(trigger_list_)>();
   debug_print(
     pipe, node,
-    "RemoteContainerMsg: (void) invoke trigger: pipe={:x}, multi={}\n",
+    "RemoteContainer: (void) invoke trigger: pipe={:x}, multi={}\n",
     pid, multi_callback
   );
   cb.trigger(nullptr,pid);
@@ -91,13 +91,13 @@ RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU*) {
 
 template <typename MsgT, typename TupleT>
 template <typename MsgU, typename CallbackT>
-typename RemoteContainerMsg<MsgT,TupleT>::template IsNotVoidType<MsgU>
-RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
+typename RemoteContainer<MsgT,TupleT>::template IsNotVoidType<MsgU>
+RemoteContainer<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
   auto const& pid = BaseContainer<MsgT>::getPipe();
   auto const& multi_callback = std::tuple_size<decltype(trigger_list_)>() > 0;
   debug_print(
     pipe, node,
-    "RemoteContainerMsg: (typed) invoke trigger: pipe={:x}, multi={}, ptr={}\n",
+    "RemoteContainer: (typed) invoke trigger: pipe={:x}, multi={}, ptr={}\n",
     pid, multi_callback, print_ptr(data)
   );
   MsgT* cur_msg = data;
@@ -120,12 +120,12 @@ RemoteContainerMsg<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
 
 template <typename MsgT, typename TupleT>
 template <typename MsgU>
-void RemoteContainerMsg<MsgT,TupleT>::trigger(MsgU* data) {
+void RemoteContainer<MsgT,TupleT>::trigger(MsgU* data) {
   auto const& pipe = BaseContainer<MsgT>::getPipe();
   bool const& is_send_back = isSendBack();
   debug_print(
     pipe, node,
-    "RemoteContainerMsg: pipe={:x}, send_back={}, size={}\n",
+    "RemoteContainer: pipe={:x}, send_back={}, size={}\n",
     pipe, is_send_back, std::tuple_size<decltype(trigger_list_)>()
   );
   if (is_send_back) {
@@ -137,14 +137,14 @@ void RemoteContainerMsg<MsgT,TupleT>::trigger(MsgU* data) {
 }
 
 template <typename MsgT, typename TupleT>
-bool RemoteContainerMsg<MsgT,TupleT>::isSendBack() const {
+bool RemoteContainer<MsgT,TupleT>::isSendBack() const {
   auto const& pipe = this->getPipe();
   return PipeIDBuilder::isSendback(pipe);
 }
 
 template <typename MsgT, typename TupleT>
 template <typename... Ts>
-void RemoteContainerMsg<MsgT,TupleT>::foreach(
+void RemoteContainer<MsgT,TupleT>::foreach(
   std::tuple<Ts...> const& t, MsgT* data
 ) {
   return foreach(t, std::index_sequence_for<Ts...>{}, data);
@@ -152,24 +152,24 @@ void RemoteContainerMsg<MsgT,TupleT>::foreach(
 
 template <typename MsgT, typename TupleT>
 template <typename... Ts, std::size_t... Idx>
-void RemoteContainerMsg<MsgT,TupleT>::foreach(
+void RemoteContainer<MsgT,TupleT>::foreach(
   std::tuple<Ts...> const& tup, std::index_sequence<Idx...>, MsgT* data
 ) {
   auto _={(triggerDirect(std::get<Idx>(tup),data),0)...};
 }
 
 template <typename MsgT, typename TupleT>
-void RemoteContainerMsg<MsgT,TupleT>::triggerDirect(MsgT* data) {
+void RemoteContainer<MsgT,TupleT>::triggerDirect(MsgT* data) {
   return foreach(trigger_list_, data);
 }
 
 template <typename MsgT, typename TupleT>
 template <typename SerializerT>
-void RemoteContainerMsg<MsgT,TupleT>::serialize(SerializerT& s) {
+void RemoteContainer<MsgT,TupleT>::serialize(SerializerT& s) {
   BaseContainer<MsgT>::serializer(s);
   s | trigger_list_;
 }
 
 }}} /* end namespace vt::pipe::interface */
 
-#endif /*INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_MSG_IMPL_H*/
+#endif /*INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H*/

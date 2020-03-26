@@ -50,7 +50,7 @@
 #include "vt/pipe/id/pipe_id.h"
 #include "vt/pipe/signal/signal.h"
 #include "vt/pipe/interface/base_container.h"
-#include "vt/pipe/interface/remote_container_msg.h"
+#include "vt/pipe/interface/remote_container.h"
 #include "vt/context/context.h"
 
 #include <tuple>
@@ -60,8 +60,8 @@
 namespace vt { namespace pipe { namespace interface {
 
 template <typename MsgT, typename CallbackT>
-struct CallbackDirect : RemoteContainerMsg<MsgT,std::tuple<CallbackT>> {
-  using BaseType      = RemoteContainerMsg<MsgT,std::tuple<CallbackT>>;
+struct CallbackDirect : RemoteContainer<MsgT,std::tuple<CallbackT>> {
+  using BaseType      = RemoteContainer<MsgT,std::tuple<CallbackT>>;
   using VoidSigType   = signal::SigVoidType;
   template <typename T, typename U=void>
   using IsVoidType    = std::enable_if_t<std::is_same<T,VoidSigType>::value,U>;

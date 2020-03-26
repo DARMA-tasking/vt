@@ -68,13 +68,19 @@ struct TestCol : Collection<TestCol<IndexT>,IndexT> {
 
 template <typename IndexT>
 struct ColMsg : CollectionMessage<TestCol<IndexT>> {
+  using MessageParentType = CollectionMessage<TestCol<IndexT>>;
+  vt_msg_serialize_if_needed_by_parent();
+
   ColMsg() = default;
   explicit ColMsg(int in_data) : data_(in_data) {}
-  int data_;
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | data_;
   }
+
+  int data_;
 };
 
 template <typename IndexT>

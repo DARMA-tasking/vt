@@ -90,13 +90,19 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   };
 
   struct OpVMsg : vt::CollectionMessage<MyCol> {
+    using MessageParentType = vt::CollectionMessage<MyCol>;
+    vt_msg_serialize_required(); // by stl container
+
     OpVMsg() = default;
     OpVMsg(std::vector<double> in) : vec(in) { }
     OpVMsg(std::vector<double> in, int step_) : vec(in), step(step_) { }
+
     template <typename SerializerT>
     void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
       s | vec | step;
     }
+
     std::vector<double> vec = {};
     int step = 0;
   };

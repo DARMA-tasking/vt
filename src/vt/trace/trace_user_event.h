@@ -77,6 +77,9 @@ void insertNewUserEvent(UserEventIDType event, std::string const& name);
 struct UserEventRegistry {
 
   struct NewUserEventMsg : vt::Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required(); // by name_
+
     NewUserEventMsg() = default;
     NewUserEventMsg(bool in_user, UserEventIDType in_id, std::string in_name)
       : user_(in_user), id_(in_id), name_(in_name)
@@ -84,6 +87,7 @@ struct UserEventRegistry {
 
     template <typename SerializerT>
     void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
       s | user_ | id_ | name_;
     }
 

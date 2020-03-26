@@ -87,8 +87,7 @@ ActiveMessenger::ActiveMessenger()
 }
 
 void ActiveMessenger::packMsg(
-  MessageType const msg, MsgSizeType const& size, void* ptr,
-  MsgSizeType const& ptr_bytes
+  MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
 ) {
   debug_print(
     active, node,
@@ -130,7 +129,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
      * Directly pack if the pool is active (which means it may have
      * overallocated and the remaining size of the (envelope) buffer is
      * sufficient for the for the put payload.
-     *
      */
     bool const direct_buf_pack =
       memory_pool_active                 &&
@@ -249,8 +247,8 @@ trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
 }
 #endif
 
-EventType ActiveMessenger::sendMsgSized(
-  MsgSharedPtr<BaseMsgType> const& base, MsgSizeType const& msg_size
+EventType ActiveMessenger::doMessageSend(
+  MsgSharedPtr<BaseMsgType>& base, MsgSizeType msg_size
 ) {
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
@@ -293,7 +291,7 @@ EventType ActiveMessenger::sendMsgSized(
   if (!is_term || backend_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
-      "sendMsgSized: dest={}, handler={:x}, is_bcast={}, is_put={}\n",
+      "doMessageSend: dest={}, handler={:x}, is_bcast={}, is_put={}\n",
       dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
       print_bool(envelopeIsPut(msg->env))
     );
@@ -788,7 +786,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
-  auto msg = reinterpret_cast<MessageType>(buf);
+  MessageType* msg = reinterpret_cast<MessageType*>(buf);
   messageConvertToShared(msg);
   auto base = promoteMsgOwner(msg);
 

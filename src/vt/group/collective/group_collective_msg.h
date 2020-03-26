@@ -56,6 +56,13 @@ namespace vt { namespace group {
 
 template <typename MsgT>
 struct GroupCollectiveInfoMsg : MsgT {
+  using MessageParentType = MsgT;
+  vt_msg_serialize_prohibited(); // no existing serialization function
+  static_assert(
+    std::is_base_of<BaseMessage, MsgT>::value,
+    "Base must derive from Message."
+  );
+
   using CountType = int32_t;
 
   GroupCollectiveInfoMsg() = default;

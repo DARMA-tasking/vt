@@ -60,19 +60,20 @@ namespace vt { namespace termination { namespace graph {
 // dependency between termination.h and reduce.h
 template <typename T>
 struct EpochGraphMsg : collective::reduce::operators::ReduceTMsg<T> {
+  using MessageParentType = collective::reduce::operators::ReduceTMsg<T>;
+  vt_msg_serialize_if_needed_by_parent();
 
   EpochGraphMsg() = default;
+
   explicit EpochGraphMsg(std::shared_ptr<T> const& graph)
     : collective::reduce::operators::ReduceTMsg<T>(*graph)
   { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    collective::reduce::operators::ReduceTMsg<T>::invokeSerialize(s);
+    MessageParentType::serialize(s);
   }
-
 };
-
 
 }}} /* end namespace vt::termination::graph */
 

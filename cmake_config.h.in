@@ -57,7 +57,6 @@
 #define vt_feature_cmake_production          @vt_feature_cmake_production@
 #define vt_feature_cmake_stdthread           @vt_feature_cmake_stdthread@
 #define vt_feature_cmake_mpi_rdma            @vt_feature_cmake_mpi_rdma@
-#define vt_feature_cmake_parserdes           @vt_feature_cmake_parserdes@
 #define vt_feature_cmake_print_term_msgs     @vt_feature_cmake_print_term_msgs@
 #define vt_feature_cmake_default_threading   @vt_feature_cmake_default_threading@
 #define vt_feature_cmake_no_pool_alloc_env   @vt_feature_cmake_no_pool_alloc_env@
@@ -68,6 +67,9 @@
 #define vt_feature_cmake_fcontext            @vt_feature_cmake_fcontext@
 #define vt_feature_cmake_test_trace_on       @vt_feature_cmake_test_trace_on@
 #define vt_feature_cmake_mimalloc            @vt_feature_cmake_mimalloc@
+
+#cmakedefine vt_quirked_trivially_copyable_on_msg
+#cmakedefine vt_quirked_serialize_method_detection
 
 #cmakedefine vt_has_malloc_h
 #cmakedefine vt_has_malloc_malloc_h

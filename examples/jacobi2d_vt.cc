@@ -231,13 +231,11 @@ public:
     >(proxy(0,0));
     auto msg2 = makeMessage<ReduxMsg>(maxNorm);
     proxy.reduce<collective::MaxOp<double>>(msg2.get(),cb);
-
   }
 
   struct VecMsg : vt::CollectionMessage<LinearPb2DJacobi> {
-
-    IndexType from_index;
-    std::vector<double> val;
+    using MessageParentType = vt::CollectionMessage<LinearPb2DJacobi>;
+    vt_msg_serialize_required(); // stl vector
 
     VecMsg() = default;
     VecMsg(IndexType const& in_index, const std::vector<double> &ref) :
@@ -247,12 +245,14 @@ public:
 
     template <typename Serializer>
     void serialize(Serializer& s) {
+      MessageParentType::serialize(s);
       s | from_index;
       s | val;
     }
 
+    IndexType from_index;
+    std::vector<double> val;
   };
-
 
   void exchange(VecMsg *msg) {
 

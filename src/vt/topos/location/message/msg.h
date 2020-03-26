@@ -53,6 +53,9 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 struct LocationMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_prohibited();
+
   LocInstType loc_man_inst = 0;
   EntityID entity{};
   LocEventID loc_event = no_location_event_id;
@@ -75,8 +78,8 @@ struct LocationMsg : vt::Message {
 
 template <typename EntityID, typename ActiveMessageT>
 struct EntityMsg : ActiveMessageT {
-  // By default, the `EntityMsg' is byte copyable for serialization
-  using isByteCopyable = std::true_type;
+  using MessageParentType = ActiveMessageT;
+  vt_msg_serialize_if_needed_by_parent();
 
   EntityMsg() = default;
   EntityMsg(EntityID const& in_entity_id, NodeType const& in_home_node)
@@ -94,19 +97,12 @@ struct EntityMsg : ActiveMessageT {
   bool hasHandler() const { return handler_ != uninitialized_handler; }
   void setHandler(HandlerType const& han) { handler_ = han; }
   HandlerType getHandler() const { return handler_; }
-  void setSerialize(bool const serialize) { serialize_ = serialize; }
+  void setSerialize(bool const is_serialize) { serialize_ = is_serialize; }
   bool getSerialize() const { return serialize_; }
 
-  // Explicitly write parent serialize so derived classes can have non-byte
-  // serializers
   template <typename SerializerT>
-  void serializeParent(SerializerT& s) {
-    ActiveMessageT::serializeParent(s);
-    ActiveMessageT::serializeThis(s);
-  }
-
-  template <typename SerializerT>
-  void serializeThis(SerializerT& s) {
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | entity_id_;
     s | home_node_;
     s | loc_from_node_;

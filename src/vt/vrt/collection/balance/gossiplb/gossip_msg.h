@@ -53,6 +53,9 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct GossipMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required(); // node_load_
+
   using NodeLoadType = std::unordered_map<NodeType, lb::BaseLB::LoadType>;
 
   GossipMsg() = default;
@@ -72,6 +75,7 @@ struct GossipMsg : vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | from_node_;
     s | node_load_;
   }
@@ -81,7 +85,14 @@ private:
   NodeLoadType node_load_ = {};
 };
 
-struct LazyMigrationMsg : vt::Message {
+struct LazyMigrationMsg : SerializeRequired<
+  vt::Message,
+  LazyMigrationMsg
+> {
+  using MessageParentType = SerializeRequired<
+    vt::Message,
+    LazyMigrationMsg
+  >;
   using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, lb::BaseLB::LoadType>;
 
   LazyMigrationMsg() = default;
@@ -97,6 +108,7 @@ struct LazyMigrationMsg : vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | to_node_;
     s | objs_;
   }

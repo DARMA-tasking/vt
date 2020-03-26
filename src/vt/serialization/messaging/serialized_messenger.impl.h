@@ -62,24 +62,6 @@
 
 namespace vt { namespace serialization {
 
-template <typename MsgT>
-/*static*/ void SerializedMessenger::parserdesHandler(MsgT* msg) {
-  auto const& msg_size = sizeof(MsgT);
-  auto const& han_size = sizeof(HandlerType);
-  auto const& size_size = sizeof(size_t);
-  auto msg_ptr = reinterpret_cast<char*>(msg);
-  auto const& user_handler = *reinterpret_cast<HandlerType*>(
-    msg_ptr + msg_size
-  );
-  auto const& ptr_size = *reinterpret_cast<size_t*>(
-    msg_ptr + msg_size + han_size
-  );
-  auto ptr_offset = msg_ptr + msg_size + han_size + size_size;
-  auto t_ptr = deserializePartial<MsgT>(ptr_offset, ptr_size, msg);
-  auto const& from_node = theMsg()->getFromNodeCurrentHandler();
-  runnable::Runnable<MsgT>::run(user_handler, nullptr, t_ptr, from_node);
-}
-
 template <typename UserMsgT>
 /*static*/ void SerializedMessenger::serialMsgHandlerBcast(
   SerialWrapperMsgType<UserMsgT>* sys_msg
@@ -186,155 +168,9 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   );
 }
 
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsg(
-  NodeType dest, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsg<MsgT,f>(msg, false, dest);
-}
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsg(
-  NodeType dest, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: (functor) dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsg<FunctorT,MsgT>(msg, false, dest);
-}
-
 template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsgHandler(
-  NodeType dest, HandlerType const& handler, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsgHandler<MsgT>(msg, handler, false, dest);
-}
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsg: (functor) msg={}\n", print_ptr(msg)
-  );
-  return parserdesMsg<FunctorT,MsgT>(msg,true);
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsg: msg={}\n", print_ptr(msg)
-  );
-  return parserdesMsg<MsgT,f>(msg,true);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsgHandler(
-  MsgT* msg, HandlerType const& han
-) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsgHandler: msg={}, han={}\n", print_ptr(msg), han
-  );
-  return parserdesMsgHandler<MsgT>(msg,han,true);
-}
-
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsg(
-  MsgT* msg, bool is_bcast, NodeType dest
-) {
-  auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
-  return parserdesMsgHandler(msg,h,is_bcast,dest);
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsg(
-  MsgT* msg, bool is_bcast, NodeType dest
-) {
-  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
-  return parserdesMsgHandler(msg,h,is_bcast,dest);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsgHandler(
-  MsgT* msg, HandlerType const& handler, bool is_bcast, NodeType dest
-) {
-  auto const& user_handler = handler;
-  SizeType ptr_size = 0;
-  auto const& rem_size = thePool()->remainingSize(msg);
-  auto const& msg_size = sizeof(MsgT);
-  auto const& han_size = sizeof(HandlerType);
-  auto const& size_size = sizeof(size_t);
-  auto msg_ptr = reinterpret_cast<char*>(msg);
-
-  auto serialized_msg = serializePartial(
-    *msg, [&](SizeType size) -> SerialByteType* {
-      ptr_size = size;
-      if (size + han_size <= rem_size) {
-        auto ptr = msg_ptr + msg_size + han_size + size_size;
-        return ptr;
-      } else {
-        vtAssert(0, "Must fit in remaining size (current limitation)");
-        return nullptr;
-      }
-    }
-  );
-
-  debug_print(
-    serial_msg, node,
-    "parserdesMsg: ptr_size={}, rem_size={}, msg_size={}, is_bcast={}, "
-    "dest={}\n",
-    ptr_size, rem_size, msg_size, is_bcast, dest
-  );
-
-  *reinterpret_cast<HandlerType*>(msg_ptr + msg_size) = user_handler;
-  *reinterpret_cast<HandlerType*>(msg_ptr + msg_size + han_size) = ptr_size;
-
-  auto const& total_size = ptr_size + msg_size + han_size + size_size;
-  auto const& tag = no_tag;
-  theMsg()->markAsSerialMsgMessage(msg);
-  if (is_bcast) {
-    return theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag);
-  } else {
-    return theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag);
-  }
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
 /*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsg(
-  NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager
-) {
-  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
-  return sendSerialMsgHandler<MsgT,BaseT>(dest,msg,h,eager);
-}
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsg(
-  NodeType dest, MsgT* msg, ActionEagerSend<MsgT, BaseT> eager
-) {
-  auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
-  return sendSerialMsgHandler<MsgT,BaseT>(dest,msg,h,eager);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsgHandler(
-  NodeType dest, MsgT* msg, HandlerType const& handler,
+  NodeType dest, MsgT* msg, HandlerType handler,
   ActionEagerSend<MsgT, BaseT> eager_sender
 ) {
   auto eager_default_send =
@@ -344,30 +180,17 @@ template <typename MsgT, typename BaseT>
     return theMsg()->sendMsg<MsgType,payloadMsgHandler>(dest,m.get());
   };
   auto eager = eager_sender ? eager_sender : eager_default_send;
-  return sendSerialMsgHandler<MsgT,BaseT>(
-    msg,eager,handler,[=](ActionNodeSendType action) -> messaging::PendingSend {
+  return sendSerialMsgSendImpl<MsgT,BaseT>(
+    msg, handler, eager,
+    [=](ActionNodeSendType action) -> messaging::PendingSend {
       return action(dest);
     }
   );
 }
 
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastSerialMsg(MsgT* msg) {
-  auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
-  return broadcastSerialMsgHandler<MsgT,BaseT>(msg,h);
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastSerialMsg(MsgT* msg) {
-  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
-  return broadcastSerialMsgHandler<MsgT,BaseT>(msg,h);
-}
-
 template <typename MsgT, typename BaseT>
 /*static*/ messaging::PendingSend
- SerializedMessenger::broadcastSerialMsgHandler(
+ SerializedMessenger::broadcastSerialMsg(
   MsgT* msg_ptr, HandlerType han
 ) {
   using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
@@ -378,6 +201,8 @@ template <typename MsgT, typename BaseT>
   MsgSharedPtr<SerialWrapperMsgType<MsgT>> sys_msg = nullptr;
   SizeType ptr_size = 0;
   auto sys_size = sizeof(typename decltype(sys_msg)::MsgType);
+
+  msg_ptr->base_serialize_called_ = false;
 
   auto serialized_msg = serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
@@ -393,6 +218,15 @@ template <typename MsgT, typename BaseT>
       }
     }
   );
+
+  vtAssertInfo(
+    msg_ptr->base_serialize_called_,
+    "A message was serialized that did not correctly serialize parents."
+    " All serialized messages are required to call serialize on the"
+    " message's parent type. See 'msg_serialize_parent'. typeid.name={}",
+    typeid(MsgT).name()
+  );
+  msg_ptr->base_serialize_called_ = false;
 
   auto const& group_ = envelopeGetGroup(msg->env);
 
@@ -455,24 +289,33 @@ template <typename MsgT, typename BaseT>
   }
 }
 
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsg(
-  MsgT* msg, ActionEagerSend<MsgT, BaseT> eager, ActionDataSend sender
-) {
-  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
-  return sendSerialMsgHandler<MsgT,BaseT>(msg,eager,h,sender);
-}
-
 template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsgHandler(
-  MsgT* msg_ptr, ActionEagerSend<MsgT, BaseT> eager_sender,
-  HandlerType const& typed_handler, ActionDataSend data_sender
+/*static*/ messaging::PendingSend SerializedMessenger::sendSerialMsgSendImpl(
+  MsgT* msg_ptr, HandlerType typed_handler,
+  ActionEagerSend<MsgT, BaseT> eager_sender, ActionDataSend data_sender
 ) {
+#ifndef vt_quirked_serialize_method_detection
+  static_assert(
+    ::vt::messaging::has_own_serialize<MsgT>,
+    "Messages sent via SerializedMessenger must have a serialization function."
+  );
+#endif
+  static_assert(
+    ::vt::messaging::msg_defines_serialize_mode<MsgT>::value,
+    "Messages that define a serialization function must specify serialization mode."
+  );
+  static_assert(
+    ::vt::messaging::msg_serialization_mode<MsgT>::required,
+    "Messages sent via SerializedMessenger should require serialization."
+  );
+
   auto msg = promoteMsg(msg_ptr);
 
   MsgSharedPtr<SerialEagerPayloadMsg<MsgT,BaseT>> payload_msg = nullptr;
   SerialByteType* ptr = nullptr;
   SizeType ptr_size = 0;
+
+  msg_ptr->base_serialize_called_ = false;
 
   auto serialized_msg = serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
@@ -489,6 +332,15 @@ template <typename MsgT, typename BaseT>
       }
     }
   );
+
+  vtAssertInfo(
+    msg_ptr->base_serialize_called_,
+    "A message was serialized that did not correctly serialize parents."
+    " All serialized messages are required to call serialize on the"
+    " message's parent type. See 'msg_serialize_parent'. typeid.name={}",
+    typeid(MsgT).name()
+  );
+  msg_ptr->base_serialize_called_ = false;
 
   //fmt::print("ptr_size={}\n", ptr_size);
 

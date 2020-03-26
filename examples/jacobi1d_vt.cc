@@ -193,9 +193,8 @@ public:
 
 
   struct VecMsg : vt::CollectionMessage<LinearPb1DJacobi> {
-
-    IdxBase from_index = 0;
-    double val = 0.0;
+    using MessageParentType = vt::CollectionMessage<LinearPb1DJacobi>;
+    vt_msg_serialize_if_needed_by_parent_or_type1(IdxBase);
 
     VecMsg() = default;
 
@@ -206,12 +205,14 @@ public:
 
     template <typename Serializer>
     void serialize(Serializer& s) {
+      MessageParentType::serialize(s);
       s | from_index;
       s | val;
     }
 
+    IdxBase from_index = 0;
+    double val = 0.0;
   };
-
 
   void exchange(VecMsg *msg) {
 
