@@ -56,8 +56,9 @@ bool LocLookup<KeyT, ValueT>::exists(KeyT const& key) const {
 
 template <typename KeyT, typename ValueT>
 ValueT const& LocLookup<KeyT, ValueT>::get(KeyT const& key) {
-  if (directory_.exists(key)) {
-    return directory_.get(key);
+  auto dir_iter = directory_.getIter(key);
+  if (dir_iter != directory_.getIterEnd()) {
+    return dir_iter->second;
   }
   return cache_.get(key);
 }
