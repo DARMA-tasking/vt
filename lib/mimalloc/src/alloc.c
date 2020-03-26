@@ -98,7 +98,7 @@ extern inline void* _mi_page_malloc(mi_heap_t* heap, mi_page_t* page, size_t siz
   return block;
 }
 
-static ATOMIC_SIZE_T num_current_allocated_ = 0;
+ATOMIC_SIZE_T num_current_allocated_ = 0;
 
 // allocate a small block
 extern inline mi_decl_restrict void* mi_heap_malloc_small(mi_heap_t* heap, size_t size) mi_attr_noexcept {
