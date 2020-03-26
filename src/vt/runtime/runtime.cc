@@ -836,6 +836,28 @@ void Runtime::printStartupBanner() {
       auto f16 = opt_to_enable("--vt_print_memory_each_phase", f15);
       fmt::print("{}\t{}{}", vt_pre, f16, reset);
     }
+
+    if (ArgType::vt_print_memory_at_threshold) {
+      auto f15 = fmt::format("Printing memory usage at threshold increment");
+      auto f16 = opt_on("--vt_print_memory_at_threshold", f15);
+      fmt::print("{}\t{}{}", vt_pre, f16, reset);
+
+      auto f17 = fmt::format(
+        "Printing memory usage using threshold: {}",
+        ArgType::vt_print_memory_threshold
+      );
+      auto f18 = opt_on("--vt_print_memory_threshold", f17);
+      fmt::print("{}\t{}{}", vt_pre, f18, reset);
+
+      usage->convertBytesFromString(ArgType::vt_print_memory_threshold);
+
+      auto f19 = fmt::format(
+        "Polling for memory usage threshold every {} scheduler calls",
+        ArgType::vt_print_memory_sched_poll
+      );
+      auto f20 = opt_on("--vt_print_memory_sched_poll", f19);
+      fmt::print("{}\t{}{}", vt_pre, f20, reset);
+    }
   }
 
   if (ArgType::vt_debug_all) {
