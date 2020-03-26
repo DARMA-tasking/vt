@@ -208,21 +208,21 @@ TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
   if (nb_nodes > 2) {
     auto const my_node  = vt::theContext()->getNode();
     auto const entity   = location::default_entity;
-    auto const old_home = 0;
-    auto const new_home = 1;
+    auto const home_node = 0;
+    auto const migrate_to_node = 1;
 
     // Register the entity on the node 0
-    if (my_node == old_home) {
-      vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
+    if (my_node == home_node) {
+      vt::theLocMan()->virtual_loc->registerEntity(entity, home_node);
     }
 
     vt::theCollective()->barrier();
 
-    if (my_node == old_home) {
-      vt::theLocMan()->virtual_loc->entityMigrated(entity, new_home);
-    } else if (my_node == new_home) {
+    if (my_node == home_node) {
+      vt::theLocMan()->virtual_loc->entityMigrated(entity, migrate_to_node);
+    } else if (my_node == migrate_to_node) {
       vt::theLocMan()->virtual_loc->registerEntityMigrated(
-        entity, old_home, my_node
+        entity, home_node, migrate_to_node
       );
     }
 
@@ -234,9 +234,9 @@ TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
     vt::theCollective()->barrier();
 
     vt::theLocMan()->virtual_loc->getLocation(
-      entity, old_home, [=](vt::NodeType node) {
-        // With a clear cache, the result should always be correct
-        EXPECT_TRUE(node == new_home);
+      entity, home_node, [=](vt::NodeType resident_node) {
+        // With a clear cache, the result should always be accurate/up-to-date
+        EXPECT_TRUE(resident_node == migrate_to_node);
       }
     );
   }
