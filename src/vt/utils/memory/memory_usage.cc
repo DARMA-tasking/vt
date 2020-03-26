@@ -276,7 +276,6 @@ std::size_t Mimalloc::getUsage() {
   auto total_size = mi_get_allocated_size();
   return total_size;
 # else
-  fmt::print("Mimalloc: xxx\n");
   return 0;
 # endif
 }
@@ -296,7 +295,9 @@ MemoryUsage::MemoryUsage() {
   std::vector<std::unique_ptr<Reporter>> all_reporters;
 
   // Register all the memory reporters
+# if backend_check_enabled(mimalloc)
   all_reporters.emplace_back(std::make_unique<Mimalloc>());
+# endif
   all_reporters.emplace_back(std::make_unique<Mstats>());
   all_reporters.emplace_back(std::make_unique<MachTaskInfo>());
   all_reporters.emplace_back(std::make_unique<Stat>());
