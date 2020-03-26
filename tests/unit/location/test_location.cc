@@ -233,12 +233,15 @@ TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
     vt::theLocMan()->virtual_loc->clearCache();
     vt::theCollective()->barrier();
 
+    bool executed = false;
     vt::theLocMan()->virtual_loc->getLocation(
-      entity, home_node, [=](vt::NodeType resident_node) {
+      entity, home_node, [=,&executed](vt::NodeType resident_node) {
         // With a clear cache, the result should always be accurate/up-to-date
         EXPECT_TRUE(resident_node == migrate_to_node);
+        executed = true;
       }
     );
+    EXPECT_TRUE(executed);
   }
 }
 
