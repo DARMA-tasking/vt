@@ -234,6 +234,7 @@ void LBManager::releaseNow(PhaseType phase) {
   if (destroy_lb_ != nullptr) {
     triggerListeners(phase);
     destroy_lb_();
+    printMemoryUsage(phase);
     destroy_lb_ = nullptr;
   }
   releaseLBPhase(msg.get());
