@@ -65,6 +65,18 @@ ValueT const& Directory<KeyT, ValueT>::get(KeyT const& key) {
 }
 
 template <typename KeyT, typename ValueT>
+typename Directory<KeyT,ValueT>::DirectoryMapType::iterator
+Directory<KeyT, ValueT>::getIter(KeyT const& key) {
+  return dir_.find(key);
+}
+
+template <typename KeyT, typename ValueT>
+typename Directory<KeyT,ValueT>::DirectoryMapType::iterator
+Directory<KeyT, ValueT>::getIterEnd() {
+  return dir_.end();
+}
+
+template <typename KeyT, typename ValueT>
 LocationSizeType Directory<KeyT, ValueT>::getSize() const {
   return dir_.size();
 }

@@ -53,17 +53,20 @@ namespace vt { namespace location {
 
 template <typename KeyT, typename ValueT>
 struct Directory {
+  using DirectoryMapType = std::unordered_map<KeyT, ValueT>;
 
   Directory() = default;
 
   bool exists(KeyT const& key) const;
   std::size_t getSize() const;
   ValueT const& get(KeyT const& key);
+  typename DirectoryMapType::iterator getIter(KeyT const& key);
+  typename DirectoryMapType::iterator getIterEnd();
   void remove(KeyT const& key);
   void insert(KeyT const& key, ValueT const& value);
 
 private:
-  std::unordered_map<KeyT, ValueT> dir_;
+  DirectoryMapType dir_;
 };
 
 }} /* end namespace vt::location */
