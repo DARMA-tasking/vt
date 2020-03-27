@@ -906,7 +906,8 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       "Event must exist that was logged"
     );
 
-    TraceEntrySeqType event_seq_id = log.ep == no_trace_entry_id
+    // Widen to unsigned long for %lu format
+    unsigned long event_seq_id = log.ep == no_trace_entry_id
       ? 0 // no_trace_entry_seq != 0 (perhaps shift offsets..).
       : TraceRegistry::getEvent(log.ep).theEventSeq();
 
@@ -915,7 +916,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
-        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
+        "%d %d %lu %lld %d %d %zu 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
@@ -934,7 +935,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
-        "%d %d %lu %lld %d %d %d 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
+        "%d %d %lu %lld %d %d %zu 0 %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
@@ -974,7 +975,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
-        "%d %d %lu %lld %d %d %d %d %d\n",
+        "%d %d %lu %lld %d %d %zu 0 %d\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
@@ -982,7 +983,6 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
         log.event,
         log.node,
         sdata.msg_len,
-        0,
         num_nodes
       );
       break;
@@ -991,7 +991,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
-        "%d %d %lu %lld %d %d %d 0\n",
+        "%d %d %lu %lld %d %d %zu 0\n",
         type,
         eTraceEnvelopeTypes::ForChareMsg,
         event_seq_id,
@@ -1068,11 +1068,11 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       );
       break;
     }
-    case TraceConstantsType::MessageRecv:
-      vtAssert(false, "Message receive log type unimplemented");
-      break;
     default:
-      vtAssertInfo(false, "Unimplemented log type", converted_time, log.node);
+      auto log_type = static_cast<std::underlying_type<TraceConstantsType>::type>(log.type);
+      vtAssertInfo(false,
+        "Unimplemented log type", converted_time, log.node, log_type
+      );
     }
 
     // Poof!

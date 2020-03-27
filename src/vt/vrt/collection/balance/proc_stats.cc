@@ -144,8 +144,8 @@ void StatsRestartReader::inputStatsFile(
   fpos_t pos;
   bool finished = false;
   while (!finished) {
-    if (fscanf(pFile, "%zu %c %llu %c %lf", &phaseID, &separator, &elmID,
-               &separator, &tval) > 0) {
+    if (fscanf(pFile, "%zu %c %lu %c %lf",
+               &phaseID, &separator, &elmID, &separator, &tval) > 0) {
       fgetpos (pFile,&pos);
       fscanf (pFile, "%c", &separator);
       if (separator == ',') {
