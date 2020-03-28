@@ -58,8 +58,8 @@ namespace vt { namespace messaging {
 constexpr ByteType msgsize_not_specified = -1;
 constexpr NodeType broadcast_dest = uninitialized_destination;
 
-template <typename MsgT>
-void ActiveMessenger::markAsTermMessage(MsgT* msg) {
+template <typename MsgPtrT>
+void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
   setTermType(msg->env);
 #if backend_check_enabled(priorities)
   envelopeSetPriority(msg->env, sys_min_priority);
@@ -91,6 +91,16 @@ void ActiveMessenger::markAsCollectionMessage(MsgPtrT const msg) {
 #endif
 }
 
+template <typename MsgT>
+void ActiveMessenger::setEpochMessage(MsgT* msg, EpochType epoch) {
+  envelopeSetEpoch(msg->env, epoch);
+}
+
+template <typename MsgT>
+void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
+  envelopeSetTag(msg->env, tag);
+}
+
 template <typename MsgPtrT>
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
@@ -108,16 +118,6 @@ trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   #else
     return trace::no_trace_event;
   #endif
-}
-
-template <typename MsgT>
-void ActiveMessenger::setEpochMessage(MsgT* msg, EpochType epoch) {
-  envelopeSetEpoch(msg->env, epoch);
-}
-
-template <typename MsgT>
-void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
-  envelopeSetTag(msg->env, tag);
 }
 
 #if HAS_SERIALIZATION_LIBRARY

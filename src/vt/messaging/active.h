@@ -176,6 +176,7 @@ struct BufferedActiveMsg {
 };
 
 /**
+ * \internal
  * \struct ActiveMessenger active.h vt/messaging/active.h
  *
  * \brief Core component of VT used to send messages.
@@ -224,7 +225,6 @@ struct ActiveMessenger {
   virtual ~ActiveMessenger();
 
   /**
-   * \internal
    * \brief Mark a message as a termination message.
    *
    * Used to ignore certain messages for the sake of termination detection
@@ -233,13 +233,13 @@ struct ActiveMessenger {
    *
    * \param[in] msg the message to mark as a termination message
    */
-  template <typename MsgT>
-  void markAsTermMessage(MsgT* msg);
+  template <typename MsgPtrT>
+  void markAsTermMessage(MsgPtrT const msg);
 
   /**
    * \brief Mark a message as a location message
    *
-   * \param[in,out] msg  the message to mark as a location message
+   * \param[in] msg the message to mark as a location message
    */
   template <typename MsgPtrT>
   void markAsLocationMessage(MsgPtrT const msg);
@@ -247,7 +247,7 @@ struct ActiveMessenger {
   /**
    * \brief Mark a message as a serialization control message
    *
-   * \param[in,out] msg  the message to mark as a serialization control message
+   * \param[in] msg the message to mark as a serialization control message
    */
   template <typename MsgPtrT>
   void markAsSerialMsgMessage(MsgPtrT const msg);
@@ -255,13 +255,12 @@ struct ActiveMessenger {
   /**
    * \brief Mark a message as a collection message
    *
-   * \param[in,out] msg  the message to mark as a collection message
+   * \param[in] msg the message to mark as a collection message
    */
   template <typename MsgPtrT>
   void markAsCollectionMessage(MsgPtrT const msg);
 
   /**
-   * \internal
    * \brief Set the epoch in the envelope of a message
    *
    * \param[in] msg the message to mark the epoch on (envelope must be able to hold)
@@ -280,13 +279,10 @@ struct ActiveMessenger {
   template <typename MsgT>
   void setTagMessage(MsgT* msg, TagType tag);
 
-  template <typename MessageT>
-  ActiveMessenger::PendingSendType sendMsgCopyableImpl(
-    NodeType dest,
-    HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
-    ByteType msg_size,
-    TagType tag
+  template <typename MsgPtrT>
+  trace::TraceEventIDType makeTraceCreationSend(
+    MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
+    MsgSizeType msg_size, bool is_bcast
   );
 
 #if not HAS_SERIALIZATION_LIBRARY
@@ -429,6 +425,15 @@ struct ActiveMessenger {
   }
 
 #endif // HAS_SERIALIZATION_LIBRARY
+
+  template <typename MessageT>
+  ActiveMessenger::PendingSendType sendMsgCopyableImpl(
+    NodeType dest,
+    HandlerType han,
+    MsgSharedPtr<MessageT>& msg,
+    ByteType msg_size,
+    TagType tag
+  );
 
   /**
    * \defgroup preregister Basic Active Message Send with Pre-Registered Handler
@@ -1498,12 +1503,6 @@ struct ActiveMessenger {
   void clearListeners() {
     send_listen_.clear();
   }
-
-  template <typename MsgPtrT>
-  trace::TraceEventIDType makeTraceCreationSend(
-    MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
-    MsgSizeType msg_size, bool is_bcast
-  );
 
 private:
   bool testPendingActiveMsgAsyncRecv();
