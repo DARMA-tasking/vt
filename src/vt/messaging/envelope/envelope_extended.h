@@ -54,7 +54,7 @@
 namespace vt { namespace messaging {
 
 // Envelope type requirements:
-// - All envelops must have an 'ActiveEnvelope env' field.
+// - All envelops must have an 'ActiveEnvelope env' field as the FIRST field.
 
 /** \file */
 

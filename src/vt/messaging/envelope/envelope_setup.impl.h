@@ -66,14 +66,15 @@ inline void envelopeInit(Env& env) {
   envelopeSetHandler(env, uninitialized_handler);
   envelopeSetRef(env, not_shared_message);
   envelopeSetGroup(env);
-# if backend_check_enabled(priorities)
+#if backend_check_enabled(priorities)
   envelopeSetPriority(env, min_priority);
   envelopeSetPriorityLevel(env, 0);
-# endif
-# if backend_check_enabled(trace_enabled)
+#endif
+#if backend_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(env, true);
   envelopeSetTraceEvent(env, trace::no_trace_event);
-# endif
+#endif
+  envelopeSetHasBeenSerialized(env, false);
 }
 
 inline void envelopeInitEmpty(Envelope& env) {

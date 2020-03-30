@@ -80,14 +80,11 @@ template <typename EnvelopeT>
 struct ActiveMsg : BaseMsg {
   using EnvelopeType = EnvelopeT;
 
-  // Used to track if the message has been serialized.
-  // TODO - include only in debug + serialize-enabled VT builds?
-  bool base_serialize_called_ = false;
-
   /*
    * \internal
    * \brief The envelope metadata for the message.
    */
+  // n.b. Should be first member even if can't guarantee standard layout.
   EnvelopeType env;
 
   /**
@@ -197,8 +194,10 @@ struct ActiveMsg : BaseMsg {
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    base_serialize_called_ = true;
-    // n.b. not actually used, as extracted during transmission.
+    envelopeSetHasBeenSerialized(env, true);
+    // There is some (pipe) code that currently requires the envelope to
+    // be serialized for correct operation; this may be fixed, in which
+    // case it might be possible to omit envelope serialization here.
     s | env;
   }
 

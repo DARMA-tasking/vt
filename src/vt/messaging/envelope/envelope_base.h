@@ -79,18 +79,21 @@ struct ActiveEnvelope {
   /// The associated group: may imply a non-standard spanning tree or node subset
   GroupType group       : group_num_bits;
 
-# if backend_check_enabled(priorities)
+#if backend_check_enabled(priorities)
   /// The priority level for this message, used to interpret \c PriorityType
   PriorityLevelType priority_level : priority_level_num_bits;
   /// Bitmask that represents the priority this should be processed as
   PriorityType      priority       : priority_num_bits;
-# endif
+#endif
 
-# if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
   /// The trace event for the message for tracking dependencies
   trace::TraceEventIDType trace_event : trace::trace_event_num_bits;
   bool trace_rt_enabled               : 1;
-# endif
+#endif
+
+  /// True iff serialization is performed (through to base type).
+  bool has_been_serialized : 1;
 };
 
 }} /* end namespace vt::messaging */

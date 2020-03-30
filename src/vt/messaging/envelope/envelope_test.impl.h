@@ -88,6 +88,11 @@ inline bool envelopeIsTagType(Env const& env) {
     (1 << eEnvType::EnvTagType);
 }
 
+template <typename Env>
+inline bool envelopeHasBeenSerialized(Env& env) {
+  return reinterpret_cast<Envelope const*>(&env)->has_been_serialized;
+}
+
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TEST_IMPL_H*/

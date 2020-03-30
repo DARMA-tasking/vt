@@ -120,6 +120,14 @@ inline bool envelopeIsEpochType(Env const& env);
 template <typename Env>
 inline bool envelopeIsTagType(Env const& env);
 
+/**
+ * \brief Test if the message's base serializer has been called.
+ *
+ * \param[in] env the envelope
+ */
+template <typename Env>
+inline bool envelopeHasBeenSerialized(Env& env);
+
 }} //end namespace vt::messaging
 
 #include "vt/messaging/envelope/envelope_test.impl.h"
