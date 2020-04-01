@@ -81,7 +81,7 @@ struct TraceScopedEventHash final {
   ~TraceScopedEventHash() { end(); }
 
   void end() {
-    if (not ended_) {
+    if (not ended_ and event_ != no_user_event_id) {
       end_ = Trace::getCurrentTime();
       ended_ = true;
       theTrace()->addUserEventBracketed(event_, begin_, end_);
@@ -92,7 +92,7 @@ private:
   double begin_          = 0.0;
   double end_            = 0.0;
   std::string str_       = "";
-  UserEventIDType event_ = 0;
+  UserEventIDType event_ = no_user_event_id;
   bool ended_            = false;
 };
 
@@ -105,7 +105,7 @@ struct TraceScopedEvent final {
   ~TraceScopedEvent() { end(); }
 
   void end() {
-    if (not ended_) {
+    if (not ended_ and event_ != no_user_event_id) {
       end_ = Trace::getCurrentTime();
       ended_ = true;
       theTrace()->addUserEventBracketed(event_, begin_, end_);
@@ -115,7 +115,7 @@ struct TraceScopedEvent final {
 private:
   double begin_          = 0.0;
   double end_            = 0.0;
-  UserEventIDType event_ = 0;
+  UserEventIDType event_ = no_user_event_id;
   bool ended_            = false;
 };
 
@@ -128,8 +128,10 @@ struct TraceScopedNote final {
   { }
 
   ~TraceScopedNote() {
-    end_ = Trace::getCurrentTime();
-    theTrace()->addUserBracketedNote(begin_, end_, note_, event_);
+    if (event_ != no_user_event_id) {
+      end_ = Trace::getCurrentTime();
+      theTrace()->addUserBracketedNote(begin_, end_, note_, event_);
+    }
   }
 
   void end() {

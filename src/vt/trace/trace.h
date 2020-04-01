@@ -224,7 +224,7 @@ private:
     vt_gzFile* file, NodeType const node, double const start
   );
 
-  void writeTracesFile(int flush);
+  void writeTracesFile(int flush, bool is_incremental_flush);
 
   void outputControlFile(std::ofstream& file);
 
@@ -265,6 +265,7 @@ private:
   size_t trace_write_count_     = 0;
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
   bool trace_enabled_cur_phase_ = true;
+  UserEventIDType flush_event_  = no_user_event_id;
 };
 
 }} //end namespace vt::trace
