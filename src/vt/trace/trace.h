@@ -265,7 +265,7 @@ private:
   size_t trace_write_count_     = 0;
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
   bool trace_enabled_cur_phase_ = true;
-  UserEventIDType flush_event_  = 0;
+  UserEventIDType flush_event_  = no_user_event_id;
 };
 
 }} //end namespace vt::trace

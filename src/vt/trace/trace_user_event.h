@@ -92,7 +92,7 @@ struct UserEventRegistry {
     }
 
     bool user_ = false;
-    UserEventIDType id_ = 0;
+    UserEventIDType id_ = no_user_event_id;
     std::string name_;
   };
 
