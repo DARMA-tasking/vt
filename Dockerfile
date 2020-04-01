@@ -55,7 +55,7 @@ RUN /bin/bash -c 'source $HOME/.bashrc && \
  cmake -GNinja -Dvt_lb_enabled=$LB_ENABLED -Dvt_trace_enabled=$TRACE_ENABLED -DCMAKE_INSTALL_PREFIX=$VT_BUILD/install -DCMAKE_EXE_LINKER_FLAGS=-lexecinfo -DCMAKE_BUILD_TYPE=release -DCMAKE_CXX_COMPILER=$CXX -DCMAKE_C_COMPILER=$CC -Ddetector_DIR=$DETECTOR_BUILD/install -Dcheckpoint_DIR=$CHECKPOINT_BUILD/install $VT && \
  ninja && \
  ninja install && \
- ninja test || ctest -V'
+ (ninja test || ctest --rerun-failed -V)'
 
 COPY $DETECTOR_BUILD/ $DETECTOR_BUILD
 COPY $CHECKPOINT_BUILD/ $CHECKPOINT_BUILD
