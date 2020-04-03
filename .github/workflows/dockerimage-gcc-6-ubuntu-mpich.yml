@@ -1,4 +1,4 @@
-name: PR tests (gcc-5, ubuntu, mpich)
+name: PR tests (gcc-6, ubuntu, mpich)
 
 # Trigger the workflow on push or pull request
 on:
@@ -19,7 +19,7 @@ jobs:
       ARCH: amd64
       UBUNTU: 18.04
       COMPILER_TYPE: gnu
-      COMPILER: gcc-5
+      COMPILER: gcc-6
       BUILD_TYPE: release
       ULIMIT_CORE: 0
       VT_LB: 1
