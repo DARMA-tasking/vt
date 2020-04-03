@@ -33,9 +33,9 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.local/cache/
-        key: ${{ runner.os }}-ubuntu-gcc-7-${{ hashFiles('**/*') }}
+        key: ${{ runner.os }}-ubuntu-gcc-7-new-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-ubuntu-gcc-7-
+          ${{ runner.os }}-ubuntu-gcc-7-new-
     - uses: actions/checkout@v1
     - name: Docker Pull Base Image
       shell: bash
