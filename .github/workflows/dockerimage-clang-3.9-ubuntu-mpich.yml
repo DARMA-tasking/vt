@@ -39,15 +39,15 @@ jobs:
           ${{ runner.os }}-ubuntu-clang-3.9
     - uses: actions/checkout@v1
     - name: Docker Pull Base Image
-        shell: bash
-        run: docker-compose pull --ignore-pull-failures ubuntu-cpp
+      shell: bash
+      run: docker-compose pull --ignore-pull-failures ubuntu-cpp
     - name: Build the Docker image
       run: docker-compose run ubuntu-cpp
     - name: Docker Push Base Image
-        if: success()
-        continue-on-error: true
-        shell: bash
-        run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} \
-                       -p ${{ secrets.DOCKER_PASSWORD }}
-          docker-compose push ubuntu-cpp
+      if: success()
+      continue-on-error: true
+      shell: bash
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} \
+                     -p ${{ secrets.DOCKER_PASSWORD }}
+        docker-compose push ubuntu-cpp
