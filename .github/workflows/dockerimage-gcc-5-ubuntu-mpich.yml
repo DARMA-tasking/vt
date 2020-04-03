@@ -34,9 +34,9 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.local/cache/
-        key: ${{ runner.os }}-ubuntu-gcc-5
+        key: ${{ runner.os }}-ubuntu-gcc-5-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-ubuntu-gcc-5
+          ${{ runner.os }}-ubuntu-gcc-5-
     - uses: actions/checkout@v1
     - name: Build the Docker image
       run: docker-compose run ubuntu-cpp
