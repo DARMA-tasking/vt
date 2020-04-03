@@ -1,4 +1,4 @@
-name: PR tests (alpine, clang-8, mpich)
+name: PR tests (clang-8, alpine, mpich)
 
 on: [pull_request]
 
