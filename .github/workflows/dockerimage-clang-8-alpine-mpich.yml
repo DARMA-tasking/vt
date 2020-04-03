@@ -27,9 +27,9 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.local/cache/
-        key: ${{ runner.os }}-ubuntu-clang-8
+        key: ${{ runner.os }}-alpine-clang-8
         restore-keys: |
-          ${{ runner.os }}-ubuntu-clang-8
+          ${{ runner.os }}-alpine-clang-8
     - uses: actions/checkout@v1
     - name: Build the Docker image
       run: docker-compose run alpine-cpp
