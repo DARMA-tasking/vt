@@ -1,0 +1,6 @@
+brew "ccache"
+brew "cmake"
+brew "mpich"
+brew "git"
+brew "llvm@8"
+brew "ninja"
