@@ -8,7 +8,7 @@ ARG compiler=clang
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
 
-RUN source $HOME/.bashrc && \
+RUN source "$HOME/.bashrc" && \
     source /usr/share/spack/share/spack/setup-env.sh && \
     spack env activate clang-mpich
 
