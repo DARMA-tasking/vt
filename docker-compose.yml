@@ -116,7 +116,7 @@ services:
       <<: *vtopts
     volumes: &ubuntu-volumes
       - .:/vt:delegated
-      - ${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cache:/build:delegated
+      - ${CACHE}${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cache:/build:delegated
     command: &vt-cpp-command >
       /bin/bash -c "
         /vt/ci/build_cpp.sh /vt /build &&
@@ -210,5 +210,5 @@ services:
       <<: *vtopts
     volumes: &alpine-volumes
       - .:/vt:delegated
-      - ${ARCH}-alpine-${COMPILER}-cache:/build:delegated
+      - ${CACHE}${ARCH}-alpine-${COMPILER}-cache:/build:delegated
     command: *cpp-command
