@@ -29,8 +29,8 @@ jobs:
       run: brew bundle --file=ci/Brewfile
     - name: Build
       shell: bash
-      run: ci/scripts/build_cpp.sh $(pwd) $(pwd)/build
+      run: ci/build_cpp.sh $(pwd) $(pwd)/build
     - name: Test
       shell: bash
       run: |
-        ci/scripts/test_cpp.sh $(pwd) $(pwd)/build
+        ci/test_cpp.sh $(pwd) $(pwd)/build
