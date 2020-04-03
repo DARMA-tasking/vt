@@ -34,9 +34,9 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.local/cache/
-        key: ${{ runner.os }}-ubuntu-clang-5.0
+        key: ${{ runner.os }}-ubuntu-clang-5.0-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-ubuntu-clang-5.0
+          ${{ runner.os }}-ubuntu-clang-5.0-
     - uses: actions/checkout@v1
     - name: Docker Pull Base Image
       shell: bash
