@@ -5,7 +5,7 @@ set -ex
 source_dir=${1}
 build_dir=${2}
 
-if test ${VT_DOXYGEN_ENABLED:-0} -eq 1
+if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
 then
     token=${3}
 else
@@ -37,7 +37,7 @@ mkdir build
 cd build
 cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_INSTALL_PREFIX="$DETECTOR_BUILD/install" \
-      $DETECTOR
+      "$DETECTOR"
 cmake --build . --target install
 
 git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
@@ -50,7 +50,7 @@ cd build
 cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
       -Ddetector_DIR="$DETECTOR_BUILD/install" \
-      $CHECKPOINT
+      "$CHECKPOINT"
 cmake --build . --target install
 
 export VT=${source_dir}
