@@ -15,8 +15,8 @@ fi
 echo -e "===\n=== ccache statistics before build\n==="
 ccache -s
 
-mkdir -p ${build_dir}
-pushd ${build_dir}
+mkdir -p "${build_dir}"
+pushd "${build_dir}"
 
 http_proxy=""
 https_proxy=""
