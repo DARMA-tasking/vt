@@ -1,7 +1,6 @@
 
 ARG arch=amd64
 FROM ${arch}/ubuntu:20.04
-MAINTAINER Jonathan Lifflander <jliffla@sandia.gov>
 
 ARG proxy=""
 ARG compiler=gcc-9

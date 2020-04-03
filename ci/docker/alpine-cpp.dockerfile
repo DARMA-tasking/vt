@@ -1,7 +1,6 @@
 
 ARG arch=amd64
 FROM lifflander1/vt:alpine-final as base
-MAINTAINER Jonathan Lifflander <jliffla@sandia.gov>
 
 ARG proxy=""
 ARG compiler=clang

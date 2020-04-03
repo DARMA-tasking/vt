@@ -1,7 +1,6 @@
 
 ARG cuda=10.1
 FROM nvidia/cuda:${cuda}-devel-ubuntu18.04 as base
-MAINTAINER Jonathan Lifflander <jliffla@sandia.gov>
 
 ARG proxy=""
 ARG compiler=gcc-7
