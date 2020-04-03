@@ -31,5 +31,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-alpine-clang-8-
     - uses: actions/checkout@v1
+    - name: Docker Pull Base Image
+      shell: bash
+      run: docker-compose pull --ignore-pull-failures alpine-cpp
     - name: Build the Docker image
       run: docker-compose run alpine-cpp
+    - name: Docker Push Base Image
+      if: success()
+      continue-on-error: true
+      shell: bash
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} \
+                     -p ${{ secrets.DOCKER_PASSWORD }}
+        docker-compose push alpine-cpp
