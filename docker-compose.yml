@@ -191,7 +191,9 @@ services:
       VT_DOXYGEN_ENABLED: 1
       CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
     volumes: *ubuntu-volumes
-    command: *vt-cpp-command
+    command: &docs-cpp-command >
+      /bin/bash -c "
+        /vt/ci/build_cpp.sh /vt /build ${TOKEN}"
 
   ##############################################################################
   # C++ build of VT within an alpine linux container (limited to clang

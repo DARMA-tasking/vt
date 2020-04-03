@@ -29,7 +29,7 @@ RUN apt-get update -y -q && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ln -s \
-    $(which $(echo ${compiler}  | cut -d- -f1)++-$(echo ${compiler}  | cut -d- -f2)) \
+    "$(which $(echo ${compiler}  | cut -d- -f1)++-$(echo ${compiler}  | cut -d- -f2))" \
     /usr/bin/clang++
 
 ENV CC=${compiler} \
@@ -38,7 +38,7 @@ ENV CC=${compiler} \
 RUN wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz && \
     tar xzf mpich-3.3.2.tar.gz && \
     rm mpich-3.3.2.tar.gz && \
-    cd mpich-3.3.2 && \
+    pushd mpich-3.3.2 && \
     ./configure \
         --enable-static=false \
         --enable-alloca=true \
@@ -50,7 +50,7 @@ RUN wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz && \
         --enable-timing=none && \
     make -j4 && \
     make install && \
-    cd -  && \
+    popd && \
     rm -rf mpich-3.3.2
 
 ENV MPI_EXTRA_FLAGS="" \

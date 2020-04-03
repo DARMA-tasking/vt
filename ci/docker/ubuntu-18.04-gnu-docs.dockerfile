@@ -43,6 +43,7 @@ ENV MPI_EXTRA_FLAGS="" \
 FROM base as build
 COPY . /vt
 
+ARG token
 ARG VT_LB_ENABLED
 ARG VT_TRACE_ENABLED
 ARG VT_TRACE_RUNTIME_ENABLED
@@ -59,5 +60,5 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
     VT_ASAN_ENABLED=${VT_ASAN_ENABLED} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
-RUN /vt/ci/build_cpp.sh /vt /build ${token}
+RUN /vt/ci/build_cpp.sh /vt /build "${token}"
 COPY /build/ /build
