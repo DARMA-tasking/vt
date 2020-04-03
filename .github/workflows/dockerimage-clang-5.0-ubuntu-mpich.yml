@@ -28,8 +28,15 @@ jobs:
       VT_MIMALLOC: 0
       VT_DOCS: 0
       VT_ASAN: 0
+      CACHE: ~/.local/cache/
 
     steps:
+    - uses: actions/cache@v1
+      with:
+        path: ~/.local/cache/
+        key: ${{ runner.os }}-ubuntu-clang-5.0
+        restore-keys: |
+          ${{ runner.os }}-ubuntu-clang-5.0
     - uses: actions/checkout@v1
     - name: Build the Docker image
       run: docker-compose run ubuntu-cpp
