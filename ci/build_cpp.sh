@@ -71,8 +71,8 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DMPI_C_COMPILER="${MPICC:-mpicc}" \
       -DMPI_CXX_COMPILER="${MPICXX:-mpicxx}" \
-      -DCMAKE_CXX_COMPILER="$CXX" \
-      -DCMAKE_C_COMPILER="$CC" \
+      -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
+      -DCMAKE_C_COMPILER="${CC:-cc}" \
       -DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS:-}" \
       -Ddetector_DIR="$DETECTOR_BUILD/install" \
       -Dcheckpoint_DIR="$CHECKPOINT_BUILD/install" \
