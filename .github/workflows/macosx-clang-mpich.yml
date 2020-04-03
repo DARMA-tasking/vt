@@ -1,0 +1,36 @@
+name: PR tests (clang-8, macosx, mpich)
+
+# Trigger the workflow on push or pull request
+on:
+  push:
+    branches:
+      - develop
+      - 1.*
+  pull_request:
+
+jobs:
+
+  build:
+
+    runs-on: macos-10.15
+
+    strategy:
+      fail-fast: false
+
+    env:
+      CMAKE_BUILD_TYPE: release
+      VT_LB_ENABLED: 1
+      VT_TRACE_ENABLED: 1
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Dependencies
+      shell: bash
+      run: brew bundle --file=ci/Brewfile
+    - name: Build
+      shell: bash
+      run: ci/scripts/build_cpp.sh $(pwd) $(pwd)/build
+    - name: Test
+        shell: bash
+        run: |
+          ci/scripts/test_cpp.sh $(pwd) $(pwd)/build
