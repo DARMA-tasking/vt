@@ -18,9 +18,6 @@ ccache -s
 mkdir -p "${build_dir}"
 pushd "${build_dir}"
 
-http_proxy=""
-https_proxy=""
-
 if test -d "detector"
 then
     rm -Rf detector
