@@ -24,6 +24,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - uses: actions/cache@v1
+      with:
+        path: /usr/local/Cellar
+        key: ${{ runner.os }}-macosx-clang-8-${{ hashFiles('**/*') }}
+        restore-keys: |
+          ${{ runner.os }}-macosx-clang-8-
     - name: Install Dependencies
       shell: bash
       run: brew bundle --file=ci/Brewfile
