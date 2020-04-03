@@ -31,6 +31,6 @@ jobs:
       shell: bash
       run: ci/scripts/build_cpp.sh $(pwd) $(pwd)/build
     - name: Test
-        shell: bash
-        run: |
-          ci/scripts/test_cpp.sh $(pwd) $(pwd)/build
+      shell: bash
+      run: |
+        ci/scripts/test_cpp.sh $(pwd) $(pwd)/build
