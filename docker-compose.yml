@@ -199,6 +199,7 @@ services:
     image: ${REPO}:${ARCH}-alpine-${COMPILER}-cpp
     build:
       context: .
+      target: base
       dockerfile: ci/docker/alpine-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-alpine-${COMPILER}-cpp
