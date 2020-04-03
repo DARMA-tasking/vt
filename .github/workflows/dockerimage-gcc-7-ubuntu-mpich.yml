@@ -13,7 +13,22 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      REPO: lifflander1/vt
+      ARCH: amd64
+      UBUNTU: 18.04
+      COMPILER_TYPE: gnu
+      COMPILER: gcc-7
+      BUILD_TYPE: release
+      ULIMIT_CORE: 0
+      VT_LB: 1
+      VT_TRACE: 1
+      VT_TRACE_RT: 1
+      VT_MIMALLOC: 0
+      VT_DOCS: 0
+      VT_ASAN: 0
+
     steps:
     - uses: actions/checkout@v1
     - name: Build the Docker image
-      run: docker build . --file Dockerfile-ubuntu-gcc-7 --build-arg TRACE_RUNTIME_ENABLED=1 --build-arg TRACE_ENABLED=1 --build-arg LB_ENABLED=1 --tag vt:$(date +%s)
+      run: docker-compose run ubuntu-cpp

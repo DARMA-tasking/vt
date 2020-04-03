@@ -8,7 +8,21 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      REPO: lifflander1/vt
+      ARCH: amd64
+      COMPILER_TYPE: clang
+      COMPILER: clang-8
+      BUILD_TYPE: release
+      ULIMIT_CORE: 0
+      VT_LB: 1
+      VT_TRACE: 0
+      VT_TRACE_RT: 0
+      VT_MIMALLOC: 0
+      VT_DOCS: 0
+      VT_ASAN: 0
+
     steps:
     - uses: actions/checkout@v1
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --build-arg TRACE_ENABLED=0 --build-arg LB_ENABLED=0 --tag vt:$(date +%s)
+      run: docker-compose run alpine-cpp

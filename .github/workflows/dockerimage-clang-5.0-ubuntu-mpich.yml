@@ -1,4 +1,4 @@
-name: PR tests (gcc-5, ubuntu, mpich)
+name: PR tests (clang-5.0, ubuntu, mpich, trace)
 
 # Trigger the workflow on push or pull request
 on:
@@ -18,12 +18,12 @@ jobs:
       REPO: lifflander1/vt
       ARCH: amd64
       UBUNTU: 18.04
-      COMPILER_TYPE: gnu
-      COMPILER: gcc-5
+      COMPILER_TYPE: clang
+      COMPILER: clang-5.0
       BUILD_TYPE: release
       ULIMIT_CORE: 0
       VT_LB: 1
-      VT_TRACE: 0
+      VT_TRACE: 1
       VT_TRACE_RT: 0
       VT_MIMALLOC: 0
       VT_DOCS: 0
