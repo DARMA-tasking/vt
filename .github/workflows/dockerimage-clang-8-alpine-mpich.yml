@@ -26,7 +26,7 @@ jobs:
     steps:
     - uses: actions/cache@v1
       env:
-        cache-name: ubuntu-clang-8
+        cache-name: alpine-clang-8
       with:
         path: ~/.local/cache/
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/*') }}
