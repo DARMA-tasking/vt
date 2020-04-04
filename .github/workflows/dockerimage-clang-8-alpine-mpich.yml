@@ -25,11 +25,13 @@ jobs:
 
     steps:
     - uses: actions/cache@v1
+      env:
+        cache-name: build-ubuntu-clang-8-ccache
       with:
         path: ~/.local/cache/amd64*/ccache/
-        key: ${{ runner.os }}-alpine-clang-8-ccache-${{ hashFiles('**/*') }}
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-alpine-clang-8-ccache-
+          ${{ runner.os }}-${{ env.cache-name }}-
     - uses: actions/checkout@v2
     - name: Docker Pull Base Image
       shell: bash
