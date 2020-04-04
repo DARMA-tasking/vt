@@ -37,5 +37,5 @@ stages:
             COMPILER=gcc-5
             BUILD_TYPE=release
             VT_LB=1
-          action: 'Run services'
-          arguments: 'ubuntu-cpp'
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'run ubuntu-cpp'
