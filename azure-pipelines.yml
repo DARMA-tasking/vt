@@ -38,4 +38,18 @@ stages:
             BUILD_TYPE=release
             VT_LB=1
           action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp'
+      - task: DockerCompose@0
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerComposeFile: '**/docker-compose.yml'
+          dockerComposeFileArgs: |
+            REPO=lifflander1/vt
+            ARCH=amd64
+            UBUNTU=18.04
+            COMPILER_TYPE=gnu
+            COMPILER=gcc-5
+            BUILD_TYPE=release
+            VT_LB=1
+          action: 'Run a Docker Compose command'
           dockerComposeCommand: 'run ubuntu-cpp'
