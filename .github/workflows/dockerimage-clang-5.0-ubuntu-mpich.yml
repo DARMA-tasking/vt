@@ -33,18 +33,18 @@ jobs:
     steps:
     - uses: actions/cache@v1
       env:
-        cache-name: build-ubuntu-clang-5.0-ccache
+        cache-name: ubuntu-clang-5.0
       with:
-        path: ~/.local/cache/amd64*/ccache/
+        path: ~/.local/cache/
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-
     - uses: actions/checkout@v2
     - name: Docker Pull Base Image
       shell: bash
-      run: docker-compose pull --ignore-pull-failures ubuntu-cpp
+      run: docker-compose pull --ignore-pull-failures ubuntu-cpp-clean
     - name: Build the Docker image
-      run: docker-compose run ubuntu-cpp
+      run: docker-compose run ubuntu-cpp-clean
     - name: Docker Push Base Image
       if: success()
       continue-on-error: true
@@ -52,4 +52,4 @@ jobs:
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} \
                      -p ${{ secrets.DOCKER_PASSWORD }}
-        docker-compose push ubuntu-cpp
+        docker-compose push ubuntu-cpp-clean

@@ -57,7 +57,6 @@ export VT=${source_dir}
 export VT_BUILD=${build_dir}/vt
 mkdir -p "$VT_BUILD"
 cd "$VT_BUILD"
-rm -Rf ./*
 cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_test_trace_runtime_enabled="${VT_TRACE_RUNTIME_ENABLED:-0}" \
       -Dvt_lb_enabled="${VT_LB_ENABLED:-1}" \

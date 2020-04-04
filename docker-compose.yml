@@ -123,6 +123,32 @@ services:
         /vt/ci/test_cpp.sh  /vt /build"
 
   ##############################################################################
+  # C++ build/test/clean target for VT on ubuntu platform from container
+  # baseline.
+  #
+  # Example:
+  #   docker-compose run ubuntu-cpp-clean
+  ubuntu-cpp-clean:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-cpp.dockerfile
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
+      args: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *ccache
+      <<: *vtopts
+    volumes: *ubuntu-volumes
+    command: &vt-build-test-clean-cpp-command >
+      /bin/bash -c "
+        /vt/ci/build_cpp.sh /vt /build &&
+        /vt/ci/test_cpp.sh  /vt /build &&
+        /vt/ci/clean_cpp.sh /vt /build"
+
+  ##############################################################################
   # Interactive C++ setup of VT on ubuntu platform from container baseline.
   #
   # After running:
@@ -215,3 +241,22 @@ services:
       - .:/vt:delegated
       - ${CACHE}${ARCH}-alpine-${COMPILER}-cache:/build:delegated
     command: *vt-cpp-command
+
+  ##############################################################################
+  # C++ build/test/clean target for VT on alpine platform from container
+  # baseline.
+  alpine-cpp-clean:
+    image: ${REPO}:${ARCH}-alpine-${COMPILER}-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/alpine-cpp.dockerfile
+      cache_from:
+        - ${REPO}:${ARCH}-alpine-${COMPILER}-cpp
+      args: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *ccache
+      <<: *vtopts
+    volumes: *alpine-volumes
+    command: *vt-build-test-clean-cpp-command
