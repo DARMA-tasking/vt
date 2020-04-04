@@ -32,10 +32,10 @@ jobs:
     steps:
     - uses: actions/cache@v1
       with:
-        path: ~/.local/cache/
-        key: ${{ runner.os }}-ubuntu-gcc-7-new-${{ hashFiles('**/*') }}
+        path: ~/.local/cache/ccache/
+        key: ${{ runner.os }}-ubuntu-gcc-7-ccache-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-ubuntu-gcc-7-new-
+          ${{ runner.os }}-ubuntu-gcc-7-ccache-
     - uses: actions/checkout@v1
     - name: Docker Pull Base Image
       shell: bash
