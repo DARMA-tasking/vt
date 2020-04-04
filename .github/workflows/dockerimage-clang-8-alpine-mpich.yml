@@ -26,10 +26,10 @@ jobs:
     steps:
     - uses: actions/cache@v1
       with:
-        path: ~/.local/cache/
-        key: ${{ runner.os }}-alpine-clang-8-${{ hashFiles('**/*') }}
+        path: ~/.local/cache/ccache/
+        key: ${{ runner.os }}-alpine-clang-8-ccache-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-alpine-clang-8-
+          ${{ runner.os }}-alpine-clang-8-ccache-
     - uses: actions/checkout@v1
     - name: Docker Pull Base Image
       shell: bash

@@ -33,10 +33,10 @@ jobs:
     steps:
     - uses: actions/cache@v1
       with:
-        path: ~/.local/cache/
-        key: ${{ runner.os }}-ubuntu-clang-5.0-${{ hashFiles('**/*') }}
+        path: ~/.local/cache/ccache/
+        key: ${{ runner.os }}-ubuntu-clang-5.0-ccache-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-ubuntu-clang-5.0-
+          ${{ runner.os }}-ubuntu-clang-5.0-ccache-
     - uses: actions/checkout@v1
     - name: Docker Pull Base Image
       shell: bash
