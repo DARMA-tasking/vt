@@ -23,7 +23,7 @@ jobs:
       VT_TRACE_ENABLED: 1
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - uses: actions/cache@v1
       with:
         path: ~/.ccache

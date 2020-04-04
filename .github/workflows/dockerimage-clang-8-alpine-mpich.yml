@@ -30,7 +30,7 @@ jobs:
         key: ${{ runner.os }}-alpine-clang-8-ccache-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-alpine-clang-8-ccache-
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Docker Pull Base Image
       shell: bash
       run: docker-compose pull --ignore-pull-failures alpine-cpp
