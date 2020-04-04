@@ -26,18 +26,18 @@ jobs:
     steps:
     - uses: actions/cache@v1
       env:
-        cache-name: build-ubuntu-clang-8-ccache
+        cache-name: ubuntu-clang-8
       with:
-        path: ~/.local/cache/amd64*/ccache/
+        path: ~/.local/cache/
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-
     - uses: actions/checkout@v2
     - name: Docker Pull Base Image
       shell: bash
-      run: docker-compose pull --ignore-pull-failures alpine-cpp
+      run: docker-compose pull --ignore-pull-failures alpine-cpp-clean
     - name: Build the Docker image
-      run: docker-compose run alpine-cpp
+      run: docker-compose run alpine-cpp-clean
     - name: Docker Push Base Image
       if: success()
       continue-on-error: true
@@ -45,4 +45,4 @@ jobs:
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} \
                      -p ${{ secrets.DOCKER_PASSWORD }}
-        docker-compose push alpine-cpp
+        docker-compose push alpine-cpp-clean
