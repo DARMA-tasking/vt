@@ -31,11 +31,13 @@ jobs:
 
     steps:
     - uses: actions/cache@v1
+      env:
+        cache-name: build-ubuntu-gcc-7-ccache
       with:
         path: ~/.local/cache/amd64*/ccache/
-        key: ${{ runner.os }}-ubuntu-gcc-7-ccache-${{ hashFiles('**/*') }}
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-ubuntu-gcc-7-ccache-
+          ${{ runner.os }}-${{ env.cache-name }}-
     - uses: actions/checkout@v2
     - name: Docker Pull Base Image
       shell: bash
