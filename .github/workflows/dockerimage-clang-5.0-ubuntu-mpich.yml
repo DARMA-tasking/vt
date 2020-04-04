@@ -33,7 +33,7 @@ jobs:
     steps:
     - uses: actions/cache@v1
       with:
-        path: ~/.local/cache/ccache/
+        path: ~/.local/cache/amd64*/ccache/
         key: ${{ runner.os }}-ubuntu-clang-5.0-ccache-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-ubuntu-clang-5.0-ccache-
