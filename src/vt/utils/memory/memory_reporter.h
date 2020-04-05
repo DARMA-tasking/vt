@@ -50,6 +50,9 @@
 namespace vt { namespace util { namespace memory {
 
 struct Reporter {
+
+  virtual ~Reporter() { }
+
   virtual std::size_t getUsage() = 0;
   virtual std::string getName() = 0;
 };
