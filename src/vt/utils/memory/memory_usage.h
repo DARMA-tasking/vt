@@ -54,12 +54,12 @@
 
 namespace vt { namespace util { namespace memory {
 
-struct Mstats : Reporter {
+struct Mstats final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 };
 
-struct Sbrk : Reporter {
+struct Sbrk final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -68,35 +68,27 @@ private:
   uintptr_t sbrkinit_ = 0;
 };
 
-struct PS : Reporter {
+struct PS final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 };
 
-struct Mallinfo : Reporter {
+struct Mallinfo final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 };
 
-struct Getrusage : Reporter {
+struct Getrusage final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 };
 
-struct MachTaskInfo : Reporter {
+struct MachTaskInfo final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 };
 
-struct Stat : Reporter {
-  std::size_t getUsage() override;
-  std::string getName() override;
-
-private:
-  bool failed_ = false;
-};
-
-struct StatM : Reporter {
+struct Stat final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -104,7 +96,15 @@ private:
   bool failed_ = false;
 };
 
-struct Mimalloc : Reporter {
+struct StatM final : Reporter {
+  std::size_t getUsage() override;
+  std::string getName() override;
+
+private:
+  bool failed_ = false;
+};
+
+struct Mimalloc final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 };
