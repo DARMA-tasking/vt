@@ -561,7 +561,7 @@ NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
 
 void ActiveMessenger::scheduleActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool insert
+  MsgSizeType const& size, bool insert, ActionType cont
 ) {
   debug_print_verbose(
     active, node,
@@ -570,13 +570,13 @@ void ActiveMessenger::scheduleActiveMsg(
   );
 
   // Enqueue the message for processing
-  auto run = [=]{ processActiveMsg(base, from, size, insert); };
+  auto run = [=]{ processActiveMsg(base, from, size, insert, cont); };
   theSched()->enqueue(base, run);
 }
 
 bool ActiveMessenger::processActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool insert
+  MsgSizeType const& size, bool insert, ActionType cont
 ) {
   using ::vt::group::GroupActiveAttorney;
 
@@ -596,12 +596,19 @@ bool ActiveMessenger::processActiveMsg(
     );
   }
 
-  return deliver ? deliverActiveMsg(base,from,insert) : false;
+  if (deliver) {
+    return deliverActiveMsg(base,from,insert,cont);
+  } else {
+    if (cont != nullptr) {
+      cont();
+    }
+    return false;
+  }
 }
 
 bool ActiveMessenger::deliverActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
-  bool insert
+  bool insert, ActionType cont
 ) {
   using MsgType = ShortMessage;
   auto msg = base.to<MsgType>().get();
@@ -699,6 +706,10 @@ bool ActiveMessenger::deliverActiveMsg(
       current_priority_level_context_ = no_priority_level;
     #endif
 
+    if (cont != nullptr) {
+      cont();
+    }
+
     if (has_epoch) {
       epochEpilogHandler(cur_epoch,ep_stack_size);
     }
@@ -714,10 +725,12 @@ bool ActiveMessenger::deliverActiveMsg(
         pending_handler_msgs_.emplace(
           std::piecewise_construct,
           std::forward_as_tuple(handler),
-          std::forward_as_tuple(MsgContType{BufferedMsgType{base,from_node}})
+          std::forward_as_tuple(
+            MsgContType{BufferedMsgType{base,from_node,cont}}
+          )
         );
       } else {
-        iter->second.push_back(BufferedMsgType{base,from_node});
+        iter->second.push_back(BufferedMsgType{base,from_node,cont});
       }
     }
   }
@@ -830,7 +843,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         put_tag, sender,
         [=](RDMA_GetType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-          scheduleActiveMsg(base, sender, num_probe_bytes, true);
+          scheduleActiveMsg(base, sender, num_probe_bytes, true, deleter);
         }
      );
     }
@@ -921,7 +934,9 @@ void ActiveMessenger::deliverPendingMsgsHandler(
           "deliverPendingMsgsHandler: msg={}, from={}\n",
           print_ptr(cur->buffered_msg.get()), cur->from_node
         );
-        if (deliverActiveMsg(cur->buffered_msg, cur->from_node, false)) {
+        if (
+          deliverActiveMsg(cur->buffered_msg, cur->from_node, false, cur->cont)
+        ) {
           cur = iter->second.erase(cur);
         } else {
           ++cur;
