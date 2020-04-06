@@ -559,19 +559,20 @@ static std::unique_ptr<char*[]> new_argv = nullptr;
    */
   std::vector<std::string> ret_args;
   std::vector<std::size_t> ret_idx;
-  int item = 0;
+  int item = argc;
 
   // Iterate forward (CLI11 reverses the order when it modifies the args)
   for (auto&& skipped : args) {
-    for (auto ii = item; ii < argc; ii++) {
+    for (auto ii = item-1; ii >= 0; ii--) {
       if (std::string(argv[ii]) == skipped) {
         ret_idx.push_back(ii);
-        item++;
+        item--;
         break;
       }
     }
     ret_args.push_back(skipped);
   }
+  std::reverse(ret_idx.begin(), ret_idx.end());
 
   // Use the saved index to setup the new_argv and new_argc
   int new_argc = ret_args.size() + 1;
