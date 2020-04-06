@@ -1,0 +1,54 @@
+name: PR tests (gcc-8, ubuntu, mpich, address sanitizer)
+
+on:
+  push:
+    branches:
+      - develop
+      - 1.*
+  pull_request:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+      REPO: lifflander1/vt
+      ARCH: amd64
+      UBUNTU: 18.04
+      COMPILER_TYPE: gnu
+      COMPILER: gcc-8
+      BUILD_TYPE: release
+      ULIMIT_CORE: 0
+      VT_LB: 1
+      VT_TRACE: 1
+      VT_TRACE_RT: 0
+      VT_MIMALLOC: 0
+      VT_DOCS: 0
+      VT_ASAN: 1
+      CACHE: ~/.local/cache/
+
+    steps:
+    - uses: actions/cache@v1
+      env:
+        cache-name: ubuntu-gcc-8
+      with:
+        path: ~/.local/cache/
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/*') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-
+    - uses: actions/checkout@v2
+    - name: Docker Pull Base Image
+      shell: bash
+      run: docker-compose pull --ignore-pull-failures ubuntu-cpp-clean
+    - name: Build the Docker image
+      run: docker-compose run ubuntu-cpp-clean
+    - name: Docker Push Base Image
+      if: success()
+      continue-on-error: true
+      shell: bash
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} \
+                     -p ${{ secrets.DOCKER_PASSWORD }}
+        docker-compose push ubuntu-cpp-clean
