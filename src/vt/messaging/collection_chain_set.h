@@ -49,6 +49,7 @@
 #include "vt/messaging/dependent_send_chain.h"
 
 #include <unordered_map>
+#include <unordered_set>
 
 namespace vt { namespace messaging {
 
@@ -137,6 +138,26 @@ class CollectionChainSet final {
   void phaseDone() {
     for (auto &entry : chains_) {
       entry.second.done();
+    }
+  }
+
+  /**
+   * \brief Get the set of indices registered with this chain set
+   */
+  std::unordered_set<Index> getSet() {
+    std::unordered_set<Index> index_set;
+    for (auto &entry : chains_) {
+      index_set.emplace(entry.first);
+    }
+    return index_set;
+  }
+
+  /**
+   * \brief Run a lambda immediately on each element in the index set
+   */
+  void foreach(std::function<void(Index)> fn) {
+    for (auto &entry : chains_) {
+      fn(entry.first);
     }
   }
 
