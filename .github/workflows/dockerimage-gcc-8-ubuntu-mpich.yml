@@ -27,6 +27,7 @@ jobs:
       VT_MIMALLOC: 0
       VT_DOCS: 0
       VT_ASAN: 1
+      VT_POOL: 0
       CACHE: ~/.local/cache/
 
     steps:
