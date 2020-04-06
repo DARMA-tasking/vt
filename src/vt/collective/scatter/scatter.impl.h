@@ -63,14 +63,14 @@ void Scatter::scatter(
   auto const& num_nodes = theContext()->getNumNodes();
   auto const& elm_size = max_proc_size;
   auto const& combined_size = num_nodes * elm_size;
-  auto scatter_msg = makeSharedMessageSz<ScatterMsg>(
+  auto scatter_msg = makeMessageSz<ScatterMsg>(
     combined_size, combined_size, elm_size
   );
   vtAssert(total_size == combined_size, "Sizes must be consistent");
-  auto ptr = reinterpret_cast<char*>(scatter_msg) + sizeof(ScatterMsg);
+  auto ptr = reinterpret_cast<char*>(scatter_msg.get()) + sizeof(ScatterMsg);
 #if backend_check_enabled(memory_pool)
   auto remaining_size = thePool()->remainingSize(
-    reinterpret_cast<void*>(scatter_msg)
+    reinterpret_cast<void*>(scatter_msg.get())
   );
   vtAssertInfo(
     remaining_size >= combined_size,
@@ -84,7 +84,7 @@ void Scatter::scatter(
     scatter, node,
     "Scatter::scatter: total_size={}, elm_size={}, ScatterMsg={}, msg-ptr={}, "
     "ptr={}, remaining_size={}\n",
-    total_size, elm_size, sizeof(ScatterMsg), print_ptr(scatter_msg),
+    total_size, elm_size, sizeof(ScatterMsg), print_ptr(scatter_msg.get()),
     print_ptr(ptr), remaining_size
   );
   auto const& root_node = 0;
@@ -100,10 +100,10 @@ void Scatter::scatter(
   scatter_msg->user_han = handler;
   if (this_node != root_node) {
     theMsg()->sendMsgSz<ScatterMsg,scatterHandler>(
-      root_node, scatter_msg, sizeof(ScatterMsg) + combined_size
+      root_node, scatter_msg.get(), sizeof(ScatterMsg) + combined_size
     );
   } else {
-    scatterIn(scatter_msg);
+    scatterIn(scatter_msg.get());
   }
 }
 
