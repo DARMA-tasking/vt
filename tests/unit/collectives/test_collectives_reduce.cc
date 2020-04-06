@@ -136,45 +136,36 @@ TEST_F(TestReduce, test_reduce_op) {
   auto const my_node = theContext()->getNode();
   auto const root = 0;
 
-  auto msg = makeSharedMessage<MyReduceMsg>(my_node);
+  auto msg = makeMessage<MyReduceMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->num);
-  theCollective()->reduce<MyReduceMsg, reducePlus>(root, msg);
+  theCollective()->reduce<MyReduceMsg, reducePlus>(root, msg.get());
 }
 
 TEST_F(TestReduce, test_reduce_plus_default_op) {
   auto const my_node = theContext()->getNode();
   auto const root = 0;
 
-  auto msg = makeSharedMessage<SysMsg>(my_node);
+  auto msg = makeMessage<SysMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->reduce<
-    SysMsg,
-    SysMsg::msgHandler<SysMsg, PlusOp<int>, Verify<ReduceOP::Plus> >
-  >(root, msg);
+  theCollective()->reduce<PlusOp<int>, Verify<ReduceOP::Plus>>(root, msg.get());
 }
 
 TEST_F(TestReduce, test_reduce_max_default_op) {
   auto const my_node = theContext()->getNode();
   auto const root = 0;
 
-  auto msg = makeSharedMessage<SysMsg>(my_node);
+  auto msg = makeMessage<SysMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->reduce<
-    SysMsg,
-    SysMsg::msgHandler<SysMsg, MaxOp<int>, Verify<ReduceOP::Max> >
-  >(root, msg);
+  theCollective()->reduce<MaxOp<int>, Verify<ReduceOP::Max>>(root, msg.get());
 }
 
 TEST_F(TestReduce, test_reduce_min_default_op) {
   auto const my_node = theContext()->getNode();
   auto const root = 0;
 
-  auto msg = makeSharedMessage<SysMsg>(my_node);
+  auto msg = makeMessage<SysMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->reduce<
-    SysMsg,
-    SysMsg::msgHandler<SysMsg, MinOp<int>, Verify<ReduceOP::Min> >
-  >(root, msg);
+  theCollective()->reduce<MinOp<int>, Verify<ReduceOP::Min>>(root, msg.get());
 }
 
 }}} // end namespace vt::tests::unit
