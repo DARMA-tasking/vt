@@ -123,7 +123,7 @@ namespace vt { namespace rdma {
       msg->mpi_tag_to_recv, msg->send_back,
       [=](RDMA_GetType ptr, ActionType deleter){
         theRDMA()->triggerGetRecvData(
-          op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr)
+          op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
         );
       }
     );
