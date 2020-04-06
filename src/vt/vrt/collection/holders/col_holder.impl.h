@@ -66,8 +66,8 @@ void CollectionHolder<ColT, IndexT>::runLB(PhaseType cur_phase) {
   holder_.foreach([=](IndexT const& idx, CollectionBase<ColT,IndexT>* base){
     auto proxy = base->getCollectionProxy();
     auto phase = cur_phase == no_lb_phase ? base->getStats().getPhase() : cur_phase;
-    auto phase_msg = makeSharedMessage<balance::PhaseMsg<ColT>>(phase,proxy,true,true);
-    balance::ElementStats::syncNextPhase(phase_msg, static_cast<ColT*>(base));
+    auto phase_msg = makeMessage<balance::PhaseMsg<ColT>>(phase,proxy,true,true);
+    balance::ElementStats::syncNextPhase(phase_msg.get(), static_cast<ColT*>(base));
   });
 }
 
