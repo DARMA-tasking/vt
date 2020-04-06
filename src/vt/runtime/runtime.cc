@@ -95,6 +95,7 @@ Runtime::Runtime(
      user_argv_(argv)
 {
   ArgType::parse(argc, argv);
+  copied_argv_ = argv;
   if (argc > 0) {
     prog_name_ = std::string(argv[0]);
   }
@@ -240,6 +241,10 @@ void Runtime::setupTerminateHandler() {
   }
   if (!aborted_) {
     finalize();
+  }
+  if (copied_argv_) {
+    delete [] copied_argv_;
+    copied_argv_ = nullptr;
   }
 }
 
