@@ -12,27 +12,52 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
+    g++-$(echo ${compiler} | cut -d- -f2) \
     ca-certificates \
     curl \
     cmake \
     git \
-    mpich \
-    libmpich-dev \
     wget \
     ${compiler} \
     zlib1g \
     zlib1g-dev \
     ninja-build \
     valgrind \
+    make-guile \
+    libomp5 \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN ln -s \
+    "$(which g++-$(echo ${compiler}  | cut -d- -f2))" \
+    /usr/bin/g++
+
+ENV CC=${compiler} \
+    CXX=g++
+
+RUN wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz && \
+    tar xzf mpich-3.3.2.tar.gz && \
+    rm mpich-3.3.2.tar.gz && \
+    cd mpich-3.3.2 && \
+    ./configure \
+        --enable-static=false \
+        --enable-alloca=true \
+        --disable-long-double \
+        --enable-threads=single \
+        --enable-fortran=no \
+        --enable-fast=all \
+        --enable-g=none \
+        --enable-timing=none && \
+    make -j4 && \
+    make install && \
+    cd - && \
+    rm -rf mpich-3.3.2
+
 ENV MPI_EXTRA_FLAGS="" \
-    CMAKE_PREFIX_PATH="/lib/x86_64-linux-gnu/" \
-    CC=mpicc \
-    CXX=mpicxx \
-    PATH=/usr/lib/ccache/:$PATH
+    PATH=/usr/lib/ccache/:$PATH \
+    MPICC=/usr/local/bin/mpicc \
+    MPICXX=/usr/local/bin/mpicxx
 
 FROM base as build
 COPY . /vt
