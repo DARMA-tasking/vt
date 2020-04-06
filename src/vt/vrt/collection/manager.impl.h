@@ -311,7 +311,7 @@ GroupType CollectionManager::createGroupCollection(
 
       if (!is_group_default && my_in_group) {
         uint64_t const group_tag_mask = 0x0fff0000;
-        auto group_msg = makeSharedMessage<CollectionGroupMsg>(proxy,new_group);
+        auto group_msg = makeMessage<CollectionGroupMsg>(proxy,new_group);
         auto const& group_tag_id = vid | group_tag_mask;
         debug_print(
           vrt_coll, node,
@@ -320,7 +320,7 @@ GroupType CollectionManager::createGroupCollection(
         theGroup()->groupReduce(new_group)->reduce<
           CollectionGroupMsg,
           collectionGroupReduceHan
-        >(group_root, group_msg, group_tag_id);
+        >(group_root, group_msg.get(), group_tag_id);
       } else if (is_group_default) {
         /*
          *  Trigger the group finished handler directly because the default
