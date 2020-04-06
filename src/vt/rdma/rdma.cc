@@ -757,7 +757,6 @@ void RDMAManager::putRegionTypeless(
 
     auto group = state.group_info.get();
 
-    auto local_action = new Action(1, nullptr);
     auto remote_action = new Action(1, after_put_action);
 
     group->walk_region(region, [&](
@@ -780,7 +779,6 @@ void RDMAManager::putRegionTypeless(
         roffset, roffset*elm_size
       );
 
-      local_action->addDep();
       remote_action->addDep();
 
       putData(
@@ -789,7 +787,6 @@ void RDMAManager::putRegionTypeless(
       );
     });
 
-    local_action->release();
     remote_action->release();
   } else {
     vtAssert(
