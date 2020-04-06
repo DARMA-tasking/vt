@@ -87,6 +87,8 @@ static void initData(ByteType const& offset, double* const data_ptr) {
   }
 }
 
+std::vector<double*> ptrs;
+
 static RDMA_PtrType obtain_data_ptr(
   RDMA_ElmType const& elm,
   RDMA_PtrType const& in_ptr = nullptr,
@@ -97,6 +99,7 @@ static RDMA_PtrType obtain_data_ptr(
     double* new_ptr = nullptr;
     if (initDemand) {
       new_ptr = new double[rdma_num_elements];
+      ptrs.push_back(new_ptr);
       if (in_ptr) {
         //std::memcpy(new_ptr, in_ptr, rdma_num_elements * sizeof(double));
       } else {
@@ -183,8 +186,8 @@ int main(int argc, char** argv) {
 
   theCollective()->barrier();
 
+  double* test_data = new double[rdma_num_elements];
   if (my_node == 0) {
-    double* test_data = new double[rdma_num_elements];
     initData(10, test_data);
     // this message that causes a `get' races with the following `put'
     theMsg()->sendMsg<Msg, doGetHandler>(3, makeSharedMessage<Msg>());
@@ -200,6 +203,11 @@ int main(int argc, char** argv) {
 
   while (!rt->isTerminated()) {
     runScheduler();
+  }
+
+  delete [] test_data;
+  for (auto&& elm : ptrs) {
+    delete [] elm;
   }
 
   CollectiveOps::finalize();
