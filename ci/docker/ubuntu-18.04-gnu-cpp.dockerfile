@@ -33,7 +33,11 @@ RUN ln -s \
     "$(which g++-$(echo ${compiler}  | cut -d- -f2))" \
     /usr/bin/g++
 
-ENV CC=${compiler} \
+RUN ln -s \
+    "$(which gcc-$(echo ${compiler}  | cut -d- -f2))" \
+    /usr/bin/gcc
+
+ENV CC=gcc \
     CXX=g++
 
 RUN wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz && \
@@ -55,9 +59,7 @@ RUN wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz && \
     rm -rf mpich-3.3.2
 
 ENV MPI_EXTRA_FLAGS="" \
-    PATH=/usr/lib/ccache/:$PATH \
-    MPICC=/usr/local/bin/mpicc \
-    MPICXX=/usr/local/bin/mpicxx
+    PATH=/usr/lib/ccache/:$PATH
 
 FROM base as build
 COPY . /vt
