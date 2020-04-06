@@ -90,6 +90,7 @@ x-vtopts: &vtopts
   VT_DOXYGEN_ENABLED: ${VT_DOCS:-0}
   VT_TRACE_RUNTIME_ENABLED: ${VT_TRACE_RT:-0}
   VT_ASAN_ENABLED: ${VT_ASAN:-0}
+  VT_POOL_ENABLED: ${VT_POOL:-1}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   https_proxy: ${PROXY:-""}
   http_proxy: ${PROXY:-""}

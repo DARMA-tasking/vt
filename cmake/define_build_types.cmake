@@ -64,6 +64,7 @@ option(
   vt_test_trace_runtime_enabled
   "Build VT with runtime tracing enabled (for testing)" OFF
 )
+option(vt_pool_enabled "Build VT with memory pool" ON)
 
 set(
   vt_priority_bits_per_level 3 CACHE
@@ -145,7 +146,15 @@ set (vt_feature_cmake_mpi_rdma "0")
 set (vt_feature_cmake_print_term_msgs "0")
 set (vt_feature_cmake_default_threading "1")
 set (vt_feature_cmake_no_pool_alloc_env "0")
-set (vt_feature_cmake_memory_pool "1")
+
+if (${vt_pool_enabled})
+  message(STATUS "Building VT with memory pool enabled")
+  set (vt_feature_cmake_memory_pool "1")
+else()
+  message(STATUS "Building VT with memory pool disabled")
+  set (vt_feature_cmake_memory_pool "0")
+endif()
+
 set (vt_feature_cmake_cons_multi_idx "0")
 
 set(cmake_vt_debug_modes_debug                 "${cmake_vt_debug_modes_all}")
