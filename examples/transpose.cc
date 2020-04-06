@@ -171,7 +171,7 @@ struct Block : Collection<Block,Index1D> {
   }
 
   void doneInit(InitMsg *msg) {
-    if (theContext()->getNode() == 0) {
+    if (getIndex().x() == 0) {
       auto proxy = this->getCollectionProxy();
       auto proxy_msg = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
       theMsg()->broadcastMsg<SetupGroup>(proxy_msg);
