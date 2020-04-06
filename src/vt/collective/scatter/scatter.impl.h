@@ -68,6 +68,7 @@ void Scatter::scatter(
   );
   vtAssert(total_size == combined_size, "Sizes must be consistent");
   auto ptr = reinterpret_cast<char*>(scatter_msg) + sizeof(ScatterMsg);
+#if backend_check_enabled(memory_pool)
   auto remaining_size = thePool()->remainingSize(
     reinterpret_cast<void*>(scatter_msg)
   );
@@ -76,6 +77,9 @@ void Scatter::scatter(
     "Remaining size must be sufficient",
     total_size, combined_size, remaining_size, elm_size
   );
+#else
+  auto remaining_size = elm_size;
+#endif
   debug_print(
     scatter, node,
     "Scatter::scatter: total_size={}, elm_size={}, ScatterMsg={}, msg-ptr={}, "
