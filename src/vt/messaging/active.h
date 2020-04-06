@@ -168,10 +168,12 @@ struct BufferedActiveMsg {
 
   MessageType buffered_msg;
   NodeType from_node;
+  ActionType cont;
 
   BufferedActiveMsg(
-    MessageType const& in_buffered_msg, NodeType const& in_from_node
-  ) : buffered_msg(in_buffered_msg), from_node(in_from_node)
+    MessageType const& in_buffered_msg, NodeType const& in_from_node,
+    ActionType in_cont
+  ) : buffered_msg(in_buffered_msg), from_node(in_from_node), cont(in_cont)
   { }
 };
 
@@ -1280,10 +1282,11 @@ struct ActiveMessenger {
    * \param[in] sender the sender of the message
    * \param[in] size the size of the message
    * \param[in] insert whether to insert the message if handler does not exist
+   * \param[in] cont continuation after message is processed
    */
   void scheduleActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
-    MsgSizeType const& size, bool insert
+    MsgSizeType const& size, bool insert, ActionType cont = nullptr
   );
 
   /**
@@ -1298,12 +1301,13 @@ struct ActiveMessenger {
    * \param[in] sender the sender of the message
    * \param[in] size the size of the message
    * \param[in] insert whether to insert the message if handler does not exist
+   * \param[in] cont continuation after message is processed
    *
    * \return whether it was delivered locally
    */
   bool processActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
-    MsgSizeType const& size, bool insert
+    MsgSizeType const& size, bool insert, ActionType cont = nullptr
   );
 
   /**
@@ -1313,12 +1317,13 @@ struct ActiveMessenger {
    * \param[in] base the message ptr
    * \param[in] from_node the node the message came from
    * \param[in] insert whether to insert the message if handler does not exist
+   * \param[in] cont continuation after message is processed
    *
    * \return whether the message was delivered, false when handler does not exist
    */
   bool deliverActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& from_node,
-    bool insert
+    bool insert, ActionType cont
   );
 
   /**
