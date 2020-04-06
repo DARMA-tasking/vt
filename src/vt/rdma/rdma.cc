@@ -223,6 +223,7 @@ namespace vt { namespace rdma {
                   send_back, new_msg
                 );
               }
+              deleter();
             }, false, recv_node
           );
         });
