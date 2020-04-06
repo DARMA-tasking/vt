@@ -159,6 +159,8 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::parsed                = false;
 
+static std::unique_ptr<char*[]> new_argv = nullptr;
+
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
   static CLI::App app{"vt"};
 
@@ -574,7 +576,7 @@ namespace vt { namespace arguments {
 
   // Use the saved index to setup the new_argv and new_argc
   int new_argc = ret_args.size() + 1;
-  char** new_argv = new char*[new_argc + 1];
+  new_argv = std::make_unique<char*[]>(new_argc + 1);
   new_argv[0] = argv[0];
   for (auto ii = 1; ii < new_argc; ii++) {
     new_argv[ii] = argv[ret_idx[ii - 1]];
@@ -582,7 +584,7 @@ namespace vt { namespace arguments {
 
   // Set them back with all vt arguments elided
   argc = new_argc;
-  argv = new_argv;
+  argv = new_argv.get();
 
   parsed = true;
   return 1;
