@@ -180,6 +180,7 @@ protected:
   MPI_Comm* communicator_ = nullptr;
   int user_argc_ = 0;
   char** user_argv_ = nullptr;
+  char** copied_argv_ = nullptr;
 };
 
 }} /* end namespace vt::runtime */
