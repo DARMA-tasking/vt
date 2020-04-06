@@ -80,13 +80,14 @@ static void putDataFn(TestMsg* msg) {
 
     int const num_elm = 2;
     int const offset = num_elm*(my_node-1);
+    auto han = msg->han;
     theRDMA()->putTypedData(msg->han, my_data, num_elm, offset, [=]{
       fmt::print(
         "{}: after put: sending msg back to 0: offset={}\n", my_node, offset
       );
 
-      TestMsg* back = makeSharedMessage<TestMsg>(msg->han);
-      theMsg()->sendMsg<TestMsg, readDataFn>(0, back);
+      auto back = makeMessage<TestMsg>(han);
+      theMsg()->sendMsg<TestMsg, readDataFn>(0, back.get());
     });
   }
 }
@@ -118,10 +119,10 @@ int main(int argc, char** argv) {
       my_node, my_handle_1
     );
 
-    TestMsg* msg1 = makeSharedMessage<TestMsg>(my_handle_1);
-    TestMsg* msg2 = makeSharedMessage<TestMsg>(my_handle_1);
-    theMsg()->sendMsg<TestMsg, putDataFn>(1, msg1);
-    theMsg()->sendMsg<TestMsg, putDataFn>(2, msg2);
+    auto msg1 = makeMessage<TestMsg>(my_handle_1);
+    auto msg2 = makeMessage<TestMsg>(my_handle_1);
+    theMsg()->sendMsg<TestMsg, putDataFn>(1, msg1.get());
+    theMsg()->sendMsg<TestMsg, putDataFn>(2, msg2.get());
   }
 
   while (!rt->isTerminated()) {
