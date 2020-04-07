@@ -31,6 +31,10 @@ jobs:
       CACHE: ~/.local/cache/
 
     steps:
+    - name: Setup Build Root
+      uses: allenevans/set-env@v1.0.0
+      with:
+        BUILD_ROOT: "~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/"
     - name: Prepare caching timestamp
       id: cache_ts
       shell: cmake -P {0}
@@ -41,7 +45,7 @@ jobs:
       env:
         cache-name: ubuntu-gcc-5-cache
       with:
-        path: ~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/ccache
+        path: ${{ env.BUILD_ROOT }}/ccache
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.cache_ts.outputs.timestamp }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-
@@ -59,3 +63,15 @@ jobs:
         docker login -u ${{ secrets.DOCKER_USERNAME }} \
                      -p ${{ secrets.DOCKER_PASSWORD }}
         docker-compose push ubuntu-cpp-clean
+    - name: Zip up CMake output
+      run: |
+        zip -j LastTest.log.gz ${{ env.BUILD_ROOT }}/vt/Testing/Temporary/LastTest.log
+        zip -j cmake-output.log.gz ${{ env.BUILD_ROOT }}/vt/cmake-output.log
+    - uses: actions/upload-artifact@v1
+      with:
+        name: CMake test output
+        path: cmake-output.log.gz
+    - uses: actions/upload-artifact@v1
+      with:
+        name: CMake full output
+        path: LastTest.log.gz
