@@ -33,7 +33,7 @@ jobs:
     steps:
     - uses: actions/cache@v1
       env:
-        cache-name: ubuntu-gcc-6
+        cache-name: ubuntu-gcc-6-ccache
       with:
         path: ~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/ccache
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/*') }}
