@@ -168,6 +168,8 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::parsed                = false;
 
+static std::unique_ptr<char*[]> new_argv = nullptr;
+
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
   static CLI::App app{"vt"};
 
@@ -586,23 +588,24 @@ namespace vt { namespace arguments {
    */
   std::vector<std::string> ret_args;
   std::vector<std::size_t> ret_idx;
-  int item = 0;
+  int item = argc;
 
   // Iterate forward (CLI11 reverses the order when it modifies the args)
   for (auto&& skipped : args) {
-    for (auto ii = item; ii < argc; ii++) {
+    for (auto ii = item-1; ii >= 0; ii--) {
       if (std::string(argv[ii]) == skipped) {
         ret_idx.push_back(ii);
-        item++;
+        item--;
         break;
       }
     }
     ret_args.push_back(skipped);
   }
+  std::reverse(ret_idx.begin(), ret_idx.end());
 
   // Use the saved index to setup the new_argv and new_argc
   int new_argc = ret_args.size() + 1;
-  char** new_argv = new char*[new_argc + 1];
+  new_argv = std::make_unique<char*[]>(new_argc + 1);
   new_argv[0] = argv[0];
   for (auto ii = 1; ii < new_argc; ii++) {
     new_argv[ii] = argv[ret_idx[ii - 1]];
@@ -610,7 +613,7 @@ namespace vt { namespace arguments {
 
   // Set them back with all vt arguments elided
   argc = new_argc;
-  argv = new_argv;
+  argv = new_argv.get();
 
   parsed = true;
   return 1;

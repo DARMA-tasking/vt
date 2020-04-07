@@ -175,13 +175,13 @@ struct Block : Collection<Block,Index1D> {
   }
 
   void doneInit(InitMsg *msg) {
-    if (theContext()->getNode() == 0) {
+    if (getIndex().x() == 0) {
       auto proxy = this->getCollectionProxy();
-      auto proxy_msg = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
-      theMsg()->broadcastMsg<SetupGroup>(proxy_msg);
+      auto proxy_msg = ::vt::makeMessage<ProxyMsg>(proxy.getProxy());
+      theMsg()->broadcastMsg<SetupGroup>(proxy_msg.get());
       // Invoke it locally: broadcast sends to all other nodes
-      auto proxy_msg_local = ::vt::makeSharedMessage<ProxyMsg>(proxy.getProxy());
-      SetupGroup()(proxy_msg_local);
+      auto proxy_msg_local = ::vt::makeMessage<ProxyMsg>(proxy.getProxy());
+      SetupGroup()(proxy_msg_local.get());
     }
   }
 

@@ -111,12 +111,15 @@ void testSerializeVector() {
 
   fmt::print("vec: ptr={}, size={}\n", buf, buf_size);
 
-  auto* tptr1 = deserialize<std::vector<int>>(buf, buf_size);
+  auto buffer = new std::vector<int>;
+  auto* tptr1 = deserialize<std::vector<int>>(buf, buf_size, buffer);
   auto& t = *tptr1;
 
   for (auto&& elm : t) {
     fmt::print("vec: deserialized elm={}\n", elm);
   }
+
+  delete buffer;
 }
 
 void testSerializeUserClass() {
@@ -131,10 +134,13 @@ void testSerializeUserClass() {
 
   fmt::print("ptr={}, size={}\n", buf, buf_size);
 
-  auto* tptr1 = deserialize<MyTest>(buf, buf_size);
+  auto buffer = new MyTest;
+  auto* tptr1 = deserialize<MyTest>(buf, buf_size, buffer);
   auto& t = *tptr1;
 
   t.print();
+
+  delete buffer;
 }
 
 void testSerializeByteUserClass() {
@@ -151,10 +157,13 @@ void testSerializeByteUserClass() {
 
   fmt::print("ptr={}, size={}\n", buf, buf_size);
 
-  auto* tptr1 = deserialize<Type>(buf, buf_size);
+  auto buffer = new Type;
+  auto* tptr1 = deserialize<Type>(buf, buf_size, buffer);
   auto& t = *tptr1;
 
   t.print();
+
+  delete buffer;
 }
 
 void testSerializeTuple() {
@@ -175,12 +184,15 @@ void testSerializeTuple() {
     s1->getSize()
   );
 
+  auto buffer = new serial_type_t;
   auto tptr = deserialize<serial_type_t>(
-    buf2->getBuffer(), s1->getSize()
+    buf2->getBuffer(), s1->getSize(), buffer
   );
   auto& t1 = *tptr;
 
   fmt::print("[[ {}, {} ]]\n", std::get<0>(t1), std::get<1>(t1));
+
+  delete buffer;
 }
 
 void testSerializeTupleVector() {
@@ -201,12 +213,15 @@ void testSerializeTupleVector() {
     s1->getSize()
   );
 
+  auto buffer = new serial_type_t;
   auto tptr = deserialize<serial_type_t>(
-    buf2->getBuffer(), s1->getSize()
+    buf2->getBuffer(), s1->getSize(), buffer
   );
   auto& t1 = *tptr;
 
   fmt::print("[[ {}, {} ]]\n", std::get<0>(t1), std::get<1>(t1)[0]);
+
+  delete buffer;
 }
 
 int main(int argc, char** argv) {

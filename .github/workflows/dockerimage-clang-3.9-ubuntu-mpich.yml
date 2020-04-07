@@ -1,6 +1,12 @@
-name: PR tests (clang-8, alpine, mpich)
+name: PR tests (clang-3.9, ubuntu, mpich)
 
-on: [pull_request]
+# Trigger the workflow on push or pull request
+on:
+  push:
+    branches:
+      - develop
+      - 1.*
+  pull_request:
 
 jobs:
 
@@ -11,8 +17,9 @@ jobs:
     env:
       REPO: lifflander1/vt
       ARCH: amd64
+      UBUNTU: 18.04
       COMPILER_TYPE: clang
-      COMPILER: clang-8
+      COMPILER: clang-3.9
       BUILD_TYPE: release
       ULIMIT_CORE: 0
       VT_LB: 1
@@ -27,7 +34,7 @@ jobs:
     - name: Setup Build Root
       uses: allenevans/set-env@v1.0.0
       with:
-        BUILD_ROOT: "~/.local/cache/${{ env.ARCH }}-alpine-${{ env.COMPILER }}-cache/"
+        BUILD_ROOT: "~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/"
     - name: Prepare caching timestamp
       id: cache_ts
       shell: cmake -P {0}
@@ -36,7 +43,7 @@ jobs:
         message("::set-output name=timestamp::${current_date}")
     - uses: actions/cache@v1
       env:
-        cache-name: alpine-clang-8-cache
+        cache-name: ubuntu-clang-3.9-cache
       with:
         path: ${{ env.BUILD_ROOT }}/ccache
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.cache_ts.outputs.timestamp }}
@@ -45,9 +52,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: Docker Pull Base Image
       shell: bash
-      run: docker-compose pull --ignore-pull-failures alpine-cpp-clean
+      run: docker-compose pull --ignore-pull-failures ubuntu-cpp-clean
     - name: Build the Docker image
-      run: docker-compose run alpine-cpp-clean
+      run: docker-compose run ubuntu-cpp-clean
     - name: Docker Push Base Image
       if: success()
       continue-on-error: true
@@ -55,7 +62,7 @@ jobs:
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} \
                      -p ${{ secrets.DOCKER_PASSWORD }}
-        docker-compose push alpine-cpp-clean
+        docker-compose push ubuntu-cpp-clean
     - name: Zip up CMake output
       run: |
         zip -j LastTest.log.gz ${{ env.BUILD_ROOT }}/vt/Testing/Temporary/LastTest.log
