@@ -147,9 +147,7 @@ services:
     volumes: *ubuntu-volumes
     command: &vt-build-test-clean-cpp-command >
       /bin/bash -c "
-        /vt/ci/build_cpp.sh /vt /build &&
-        /vt/ci/test_cpp.sh  /vt /build &&
-        /vt/ci/clean_cpp.sh /vt /build"
+        /vt/ci/build_cpp.sh /vt /build hello_world"
 
   ##############################################################################
   # Interactive C++ setup of VT on ubuntu platform from container baseline.

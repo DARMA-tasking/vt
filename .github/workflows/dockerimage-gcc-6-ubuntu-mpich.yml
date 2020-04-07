@@ -39,7 +39,7 @@ jobs:
         message("::set-output name=timestamp::${current_date}")
     - uses: actions/cache@v1
       env:
-        cache-name: ubuntu-gcc-6-ccache
+        cache-name: ubuntu-gcc-6-ccache-new
       with:
         path: ~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/ccache
         key: ${{ runner.os }}-${{ env.cache-name }}-${ { steps.cache_ts.outputs.timestamp } }-${{ hashFiles('**/*') }}
