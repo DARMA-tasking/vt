@@ -29,6 +29,7 @@ jobs:
       VT_DOCS: 0
       VT_ASAN: 0
       CACHE: ~/.local/cache/
+      BUILD_ROOT: ~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/
 
     steps:
     - name: Prepare caching timestamp
@@ -41,7 +42,7 @@ jobs:
       env:
         cache-name: ubuntu-gcc-6-cache
       with:
-        path: ~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/ccache
+        path: ${{ env.BUILD_ROOT }}/ccache
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.cache_ts.outputs.timestamp }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-
@@ -59,3 +60,11 @@ jobs:
         docker login -u ${{ secrets.DOCKER_USERNAME }} \
                      -p ${{ secrets.DOCKER_PASSWORD }}
         docker-compose push ubuntu-cpp-clean
+    - uses: actions/upload-artifact@v1
+      with:
+        name: CMake test output
+        path: ${{ env.BUILD_ROOT }}/vt/cmake-output.log
+    - uses: actions/upload-artifact@v1
+      with:
+        name: CMake full output
+        path: ${{ env.BUILD_ROOT }}/vt/Testing/Temporary/LastTest.log
