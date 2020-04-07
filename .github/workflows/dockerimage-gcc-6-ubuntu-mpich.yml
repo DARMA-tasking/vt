@@ -63,13 +63,14 @@ jobs:
         docker login -u ${{ secrets.DOCKER_USERNAME }} \
                      -p ${{ secrets.DOCKER_PASSWORD }}
         docker-compose push ubuntu-cpp-clean
-    - name: Zip up full CMake output
+    - name: Zip up CMake output
       run: |
         zip -j LastTest.log.gz ${{ env.BUILD_ROOT }}/vt/Testing/Temporary/LastTest.log
+        zip -j cmake-output.log.gz ${{ env.BUILD_ROOT }}/vt/cmake-output.log
     - uses: actions/upload-artifact@v1
       with:
         name: CMake test output
-        path: ../../../${{ env.BUILD_ROOT }}/vt/cmake-output.log
+        path: cmake-output.log.gz
     - uses: actions/upload-artifact@v1
       with:
         name: CMake full output
