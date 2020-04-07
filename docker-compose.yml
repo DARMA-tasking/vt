@@ -1,7 +1,7 @@
 
 #
 # Usage:
-# ------ change
+# ------
 #
 # This docker compose file parameterizes build configurations using environment
 # variables from the host. The default values for the build configuration
