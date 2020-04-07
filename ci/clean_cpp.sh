@@ -9,6 +9,6 @@ export VT=${source_dir}
 export VT_BUILD=${build_dir}/vt
 pushd "$VT_BUILD"
 
-rm -Rf ./*
+cmake --build . --target clean
 
 popd
