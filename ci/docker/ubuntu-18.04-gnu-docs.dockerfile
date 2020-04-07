@@ -63,4 +63,3 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
 RUN /vt/ci/build_cpp.sh /vt /build "${token}"
-COPY /build/ /build

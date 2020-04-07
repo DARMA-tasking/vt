@@ -83,7 +83,6 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
 RUN /vt/ci/build_cpp.sh /vt /build
-COPY /build/ /build
 
 FROM build as test
 RUN /vt/ci/test_cpp.sh /vt /build
