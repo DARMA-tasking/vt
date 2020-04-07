@@ -29,9 +29,12 @@ jobs:
       VT_DOCS: 0
       VT_ASAN: 0
       CACHE: ~/.local/cache/
-      BUILD_ROOT: ~/.local/cache/${{ ARCH }}-ubuntu-${{ UBUNTU }}-${{ COMPILER }}-cache/
 
     steps:
+    - name: Setup Build Root
+        uses: allenevans/set-env@v1.0.0
+        with:
+          BUILD_ROOT: "~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/"
     - name: Prepare caching timestamp
       id: cache_ts
       shell: cmake -P {0}
