@@ -2,6 +2,8 @@
 build
 transport
 lib/*-build
+lib/checkpoint
+lib/detector
 .emacs.desktop
 project/*
 balance.in

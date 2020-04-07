@@ -30,12 +30,6 @@ endif()
 include(SetCXXCompilerFlags)
 set_darma_compiler_flags()
 
-# Import the linking macros for VT-related targets
-include(cmake/link_vt.cmake)
-
-# Load packages that are required for core VT build
-include(cmake/load_packages.cmake)
-
 # Code coverage option of VT
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
 # OPTION(CODE_COVERAGE_ENABLED FALSE)
@@ -49,6 +43,12 @@ set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+
+# Import the linking macros for VT-related targets
+include(cmake/link_vt.cmake)
+
+# Load packages that are required for core VT build
+include(cmake/load_packages.cmake)
 
 # Request C++14, allow fallback (to C++11).. default is to fallback.
 # Might be ideal to have builds request a lower standard.
