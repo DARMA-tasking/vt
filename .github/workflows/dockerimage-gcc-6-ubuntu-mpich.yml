@@ -32,9 +32,9 @@ jobs:
 
     steps:
     - name: Setup Build Root
-        uses: allenevans/set-env@v1.0.0
-        with:
-          BUILD_ROOT: "~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/"
+      uses: allenevans/set-env@v1.0.0
+      with:
+        BUILD_ROOT: "~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/"
     - name: Prepare caching timestamp
       id: cache_ts
       shell: cmake -P {0}
