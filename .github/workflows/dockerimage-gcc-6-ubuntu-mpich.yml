@@ -35,7 +35,7 @@ jobs:
       env:
         cache-name: ubuntu-gcc-6
       with:
-        path: ~/.local/cache/
+        path: ~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/ccache
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-
@@ -53,3 +53,15 @@ jobs:
         docker login -u ${{ secrets.DOCKER_USERNAME }} \
                      -p ${{ secrets.DOCKER_PASSWORD }}
         docker-compose push ubuntu-cpp-clean
+    - name: Path
+      shell: bash
+      run: |
+        ls ~/.local/cache
+    - name: Path2
+      shell: bash
+      run: |
+        ls ~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache
+    - name: Path3
+      shell: bash
+      run: |
+        ls ~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/ccache
