@@ -51,6 +51,7 @@
 #include "vt/utils/demangle/demangle.h"
 #include "vt/trace/file_spec/spec.h"
 #include "vt/objgroup/headers.h"
+#include "vt/utils/memory/memory_usage.h"
 
 #include <cinttypes>
 #include <fstream>
@@ -462,6 +463,11 @@ TraceProcessingTag Trace::beginProcessing(
     }
   );
 
+  if (ArgType::vt_trace_memory_usage) {
+    auto usage = util::memory::MemoryUsage::get();
+    addMemoryEvent(usage->getFirstUsage());
+  }
+
   return TraceProcessingTag{ep, loggedEvent};
 }
 
@@ -516,6 +522,11 @@ void Trace::endProcessing(
     return;
   }
 
+  if (ArgType::vt_trace_memory_usage) {
+    auto usage = util::memory::MemoryUsage::get();
+    addMemoryEvent(usage->getFirstUsage());
+  }
+
   debug_print(
     trace, node,
     "event_stop: ep={}, event={}, time={}, from_node={}\n",
@@ -529,6 +540,11 @@ void Trace::endProcessing(
       time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
     }
   );
+}
+
+void Trace::addMemoryEvent(std::size_t memory, double time) {
+  auto const type = TraceConstantsType::MemoryUsageCurrent;
+  logEvent(LogType{time, type, memory});
 }
 
 void Trace::beginIdle(double const time) {
@@ -727,6 +743,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   case TraceConstantsType::EndIdle:
     log.event = no_trace_event;
     break;
+  case TraceConstantsType::MemoryUsageCurrent:
   case TraceConstantsType::UserSupplied:
   case TraceConstantsType::UserSuppliedNote:
   case TraceConstantsType::UserSuppliedBracketedNote:
@@ -1030,6 +1047,17 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
         log.event,
         udata.user_note.length(),
         udata.user_note.c_str()
+      );
+      break;
+    }
+    case TraceConstantsType::MemoryUsageCurrent: {
+      auto const& sdata = log.sys_data();
+      gzprintf(
+        gzfile,
+        "%d %zu %lld \n",
+        type,
+        sdata.msg_len,
+        converted_time
       );
       break;
     }

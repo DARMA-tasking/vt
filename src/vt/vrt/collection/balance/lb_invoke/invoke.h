@@ -104,6 +104,7 @@ protected:
   void releaseNow(PhaseType phase);
 
 public:
+  void printMemoryUsage(PhaseType phase);
   void setTraceEnabledNextPhase(PhaseType phase);
   void flushTraceNextPhase();
 
@@ -111,6 +112,7 @@ public:
   void sysLB(MsgT* msg) {
     debug_print(lb, node, "sysLB\n");
     flushTraceNextPhase();
+    printMemoryUsage(msg->phase_);
     setTraceEnabledNextPhase(msg->phase_);
     return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
   }
@@ -118,6 +120,7 @@ public:
   void sysReleaseLB(MsgT* msg) {
     debug_print(lb, node, "sysReleaseLB\n");
     flushTraceNextPhase();
+    printMemoryUsage(msg->phase_);
     setTraceEnabledNextPhase(msg->phase_);
     return releaseImpl(msg->phase_, msg->num_collections_);
   }
