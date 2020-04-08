@@ -115,7 +115,10 @@ class DependentSendChain final {
     // Set up a 'closed' epoch so that we keep an invariant of always
     // having an epoch to call addAction on, rather than edge cases of
     // whether we've made one yet or not
-    last_epoch_ = theTerm()->makeEpochRooted();
+
+    // The parameter `true` here tells VT to use an efficient rooted DS-epoch
+    // by default. This can still be overridden by command-line flags
+    last_epoch_ = theTerm()->makeEpochRooted(true);
     theTerm()->finishedEpoch(last_epoch_);
   }
 
