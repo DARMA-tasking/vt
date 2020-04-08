@@ -89,8 +89,9 @@ void LocLookup<KeyT, ValueT>::insert(
 
 template <typename KeyT, typename ValueT>
 void LocLookup<KeyT, ValueT>::update(KeyT const& key, ValueT const& value) {
-  if (directory_.exists(key)) {
-    directory_.insert(key, value);
+  auto dir_iter = directory_.getIter(key);
+  if (dir_iter != directory_.getIterEnd()) {
+    dir_iter->second = value;
   } else {
     cache_.insert(key, value);
   }
