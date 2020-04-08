@@ -233,14 +233,6 @@ void LBManager::releaseNow(PhaseType phase) {
   num_invocations_ = num_release_ = 0;
 }
 
-void LBManager::triggerListeners(PhaseType phase) {
-  for (auto&& l : listeners_) {
-    if (l) {
-      l(phase);
-    }
-  }
-}
-
 void LBManager::flushTraceNextPhase() {
 #if backend_check_enabled(trace_enabled)
   theTrace()->flushTracesFile(false);

@@ -133,10 +133,6 @@ void Trace::initialize() {
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
   );
 
-  theSched()->registerTrigger(
-    sched::SchedulerEvent::EndIdle, traceEndIdleTrigger
-  );
-
   // Register a trace user event to demarcate flushes that occur
   flush_event_ = vt::trace::registerEventCollective("trace_flush");
 }
