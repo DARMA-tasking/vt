@@ -656,8 +656,8 @@ private:
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
-    trace::UserEventIDType trace_irecv     = 0;
-    trace::UserEventIDType trace_isend     = 0;
+    trace::UserEventIDType trace_irecv     = trace::no_user_event_id;
+    trace::UserEventIDType trace_isend     = trace::no_user_event_id;
   #endif
 
   HandlerType current_handler_context_                    = uninitialized_handler;
