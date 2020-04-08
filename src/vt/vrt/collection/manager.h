@@ -77,6 +77,7 @@
 #include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/vrt/collection/op_buffer.h"
 
 #include <memory>
 #include <vector>
@@ -965,25 +966,6 @@ private:
 
 private:
   using ActionPendingType = std::function<messaging::PendingSend(void)>;
-
- /**
-  *  \brief The type of operation being buffered
-  */
-  enum BufferTypeEnum {
-    Broadcast = 0x1,
-    Send      = 0x2,
-    Reduce    = 0x4
-  };
-
- /**
-  *  \brief List of potential buffer release triggers that can be composed |
-  */
-  enum BufferReleaseEnum {
-    Unreleased            = 0x0, /**< Sentinel value */
-    AfterFullyConstructed = 0x1, /**< After the collection construct reduction */
-    AfterMetaDataKnown    = 0x2, /**< After meta data is known */
-    AfterGroupReady       = 0x4  /**< After the underlying group is created */
-  };
 
   /**
    * \brief Add to the current buffer-release state of a proxy

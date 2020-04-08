@@ -3190,9 +3190,7 @@ inline bool CollectionManager::checkReady(
   return getReadyBits(proxy, release) == release;
 }
 
-inline
-typename CollectionManager::BufferReleaseEnum
-CollectionManager::getReadyBits(
+inline BufferReleaseEnum CollectionManager::getReadyBits(
   VirtualProxyType proxy, BufferReleaseEnum release
 ) {
   auto release_state = getState(proxy);
