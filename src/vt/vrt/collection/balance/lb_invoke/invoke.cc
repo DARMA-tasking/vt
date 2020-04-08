@@ -225,6 +225,7 @@ void LBManager::releaseNow(PhaseType phase) {
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
     destroy_lb_();
+    printMemoryUsage(phase);
     destroy_lb_ = nullptr;
   }
   releaseLBPhase(msg.get());
