@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   cache.h
+//                                lookup.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,71 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H
-#define INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_LOOKUP_LOOKUP_IMPL_H
+#define INCLUDED_VT_TOPOS_LOCATION_LOOKUP_LOOKUP_IMPL_H
 
 #include "vt/config.h"
-#include "vt/topos/location/location_common.h"
-#include "vt/context/context.h"
-
-#include <list>
-#include <tuple>
-#include <unordered_map>
 
 namespace vt { namespace location {
 
 template <typename KeyT, typename ValueT>
-struct LocationCache {
-  using LookupType = std::tuple<KeyT, ValueT>;
-  using CacheOrderedType = std::list<LookupType>;
-  using ValueIter = typename CacheOrderedType::iterator;
-  using LookupContainerType = std::unordered_map<KeyT, ValueIter>;
+bool LocLookup<KeyT, ValueT>::exists(KeyT const& key) const {
+  return directory_.exists(key) or cache_.exists(key);
+}
 
-  explicit LocationCache(LocationSizeType const& in_max_size);
+template <typename KeyT, typename ValueT>
+ValueT const& LocLookup<KeyT, ValueT>::get(KeyT const& key) {
+  auto dir_iter = directory_.getIter(key);
+  if (dir_iter != directory_.getIterEnd()) {
+    return dir_iter->second;
+  }
+  return cache_.get(key);
+}
 
-  LocationCache(LocationCache const&) = delete;
-  LocationCache(LocationCache&&) = default;
-  LocationCache& operator=(LocationCache const&) = default;
+template <typename KeyT, typename ValueT>
+LocationSizeType LocLookup<KeyT, ValueT>::getCacheSize() const {
+  return cache_.getSize();
+}
 
-  bool exists(KeyT const& key) const;
-  LocationSizeType getSize() const;
-  ValueT const& get(KeyT const& key);
-  void remove(KeyT const& key);
-  void insert(KeyT const& key, ValueT const& value);
-  void printCache() const;
+template <typename KeyT, typename ValueT>
+void LocLookup<KeyT, ValueT>::remove(KeyT const& key) {
+  directory_.remove(key);
+  cache_.remove(key);
+}
 
- private:
-  // container for quick lookup
-  LookupContainerType lookup_;
+template <typename KeyT, typename ValueT>
+void LocLookup<KeyT, ValueT>::insert(
+  KeyT const& key, NodeType const home, ValueT const& value
+) {
+  // If this node is the home, maintain location in permanent directory,
+  // otherwise, insert/update in local cache of locations
+  if (this_node_ == home) {
+    directory_.insert(key, value);
+  } else {
+    cache_.insert(key, value);
+  }
+}
 
-  // the location records sorted in LRU cache
-  CacheOrderedType cache_;
+template <typename KeyT, typename ValueT>
+void LocLookup<KeyT, ValueT>::update(KeyT const& key, ValueT const& value) {
+  auto dir_iter = directory_.getIter(key);
+  if (dir_iter != directory_.getIterEnd()) {
+    dir_iter->second = value;
+  } else {
+    cache_.insert(key, value);
+  }
+}
 
-  // the maximum size the cache is allowed to grow
-  LocationSizeType max_size_;
-};
+template <typename KeyT, typename ValueT>
+void LocLookup<KeyT, ValueT>::clearCache() {
+  cache_ = LocationCache<KeyT, ValueT>{max_cache_size_};
+}
 
-}}  // end namespace vt::location
+template <typename KeyT, typename ValueT>
+void LocLookup<KeyT, ValueT>::printCache() const {
+  cache_.printCache();
+}
 
-#include "vt/topos/location/cache/cache.impl.h"
+}} /* end namespace vt::location */
 
-#endif /*INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_LOOKUP_LOOKUP_IMPL_H*/
