@@ -603,20 +603,8 @@ template <typename>
   CollectionGroupMsg* msg
 ) {
   auto const& proxy = msg->getProxy();
-  auto& buffered = theCollection()->buffered_group_;
-  auto iter = buffered.find(proxy);
-  debug_print(
-    vrt_coll, node,
-    "collectionGroupFinishedHan: proxy={:x}, buffered size={}\n",
-    proxy, (iter != buffered.end() ? iter->second.size() : 0)
-  );
-  if (iter != buffered.end()) {
-    for (auto&& elm : iter->second) {
-      elm(proxy);
-    }
-    iter->second.clear();
-    buffered.erase(iter);
-  }
+  theCollection()->addToState(proxy, BufferReleaseEnum::AfterGroupReady);
+  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
 }
 
 template <typename>
@@ -625,45 +613,14 @@ template <typename>
 ) {
   auto const& proxy = msg->proxy;
   theCollection()->constructed_.insert(proxy);
-  auto& buffered = theCollection()->buffered_bcasts_;
-  auto iter = buffered.find(proxy);
+  theCollection()->addToState(proxy, BufferReleaseEnum::AfterFullyConstructed);
   debug_print(
     vrt_coll, node,
-    "collectionFinishedHan: proxy={:x}, buffered size={}\n",
-    proxy, (iter != buffered.end() ? iter->second.size() : 0)
+    "addToState: proxy={:x}, AfterCons\n", proxy
   );
-  if (iter != buffered.end()) {
-    for (auto&& elm : iter->second) {
-      elm(proxy);
-    }
-    iter->second.clear();
-    buffered.erase(iter);
-  }
-}
-
-template <typename>
-/*static*/ void CollectionManager::collectionConstructHan(
-  CollectionConsMsg* msg
-) {
-  debug_print(
-    vrt_coll, node,
-    "collectionConstructHan: proxy={:x}\n", msg->proxy
-  );
-  if (msg->isRoot()) {
-    auto new_msg = makeMessage<CollectionConsMsg>(*msg);
-    theMsg()->markAsCollectionMessage(new_msg);
-    //TODO/QUIRK: on ICC18, using broadcastMsg here results in a huge range
-    // of seemingly unrelated errors relating to template value substitution failure.
-    // Using broadcastMsgAuto (which has an overload of the same signature and
-    // body) somehow avoids triggering all of this.
-    // Is there a very-incompatible overload in broadcastMsg?
-    theMsg()->broadcastMsgAuto<CollectionConsMsg,collectionFinishedHan>(
-      new_msg.get()
-    );
-    collectionFinishedHan(new_msg.get());
-  } else {
-    // do nothing
-  }
+  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Broadcast);
+  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Send);
+  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
 }
 
 template <typename>
@@ -1013,135 +970,84 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   HandlerType const& handler, bool const member, bool instrument
 ) {
   auto const idx = makeVrtDispatch<MsgT,ColT>();
+  auto const col_proxy = toProxy.getProxy();
+  auto msg = promoteMsg(raw_msg);
 
   debug_print(
     vrt_coll, node,
     "broadcastMsgUntypedHandler: msg={}, idx={}\n",
-    print_ptr(raw_msg), idx
+    print_ptr(msg.get()), idx
   );
 
-  auto const& this_node = theContext()->getNode();
-  auto const& col_proxy = toProxy.getProxy();
+  // save the user's handler in the message
+  msg->setFromNode(theContext()->getNode());
+  msg->setVrtHandler(handler);
+  msg->setBcastProxy(col_proxy);
+  msg->setMember(member);
 
-  auto msg = promoteMsg(raw_msg);
+# if backend_check_enabled(trace_enabled)
+  // Create the trace creation event for the broadcast here to connect it a
+  // higher semantic level
+  auto reg_type = member ?
+    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+    auto_registry::RegistryTypeEnum::RegVrtCollection;
+  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  auto event = theMsg()->makeTraceCreationSend(
+    msg, handler, reg_type, msg_size, true
+  );
+  msg->setFromTraceEvent(event);
+# endif
 
-  #if backend_check_enabled(trace_enabled)
-    // Create the trace creation event for the broadcast here to connect it a
-    // higher semantic level
-    auto reg_type = member ?
-      auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-      auto_registry::RegistryTypeEnum::RegVrtCollection;
-    auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
-    auto event = theMsg()->makeTraceCreationSend(
-      msg, handler, reg_type, msg_size, true
-    );
-    msg->setFromTraceEvent(event);
-  #endif
-
-  msg->setFromNode(this_node);
-
-  #if backend_check_enabled(lblite)
-    msg->setLBLiteInstrument(instrument);
-  #endif
-
-  #if backend_check_enabled(lblite)
-    auto const temp_elm_id = getCurrentContextTemp();
-    auto const perm_elm_id = getCurrentContextPerm();
-
-    debug_print(
-      vrt_coll, node,
-      "broadcasting msg: LB current elm context perm={}, temp={}\n",
-      perm_elm_id, temp_elm_id
-    );
-
-    if (perm_elm_id != balance::no_element_id) {
-      msg->setElm(perm_elm_id, temp_elm_id);
-      msg->setCat(balance::CommCategory::Broadcast);
-    } else {
-      msg->setCat(balance::CommCategory::NodeToCollection);
-    }
-  #endif
-
-  // @todo: implement the action `act' after the routing is finished
-  auto holder = findColHolder<ColT,IdxT>(col_proxy);
-  auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
-
-  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
+# if backend_check_enabled(lblite)
+  msg->setLBLiteInstrument(instrument);
+  auto const temp_elm_id = getCurrentContextTemp();
+  auto const perm_elm_id = getCurrentContextPerm();
 
   debug_print(
     vrt_coll, node,
-    "broadcastMsgUntypedHandler: col_proxy={:x}, found={}, cur_epoch={:x}\n",
-    col_proxy, found_constructed, cur_epoch
+    "broadcasting msg: LB current elm context perm={}, temp={}\n",
+    perm_elm_id, temp_elm_id
   );
 
-  if (holder != nullptr && found_constructed) {
-    // save the user's handler in the message
-    msg->setVrtHandler(handler);
-    msg->setBcastProxy(col_proxy);
-    msg->setMember(member);
-
-    auto const bnode = VirtualProxyBuilder::getVirtualNode(col_proxy);
-
-    if (this_node != bnode) {
-      debug_print(
-        vrt_coll, node,
-        "broadcastMsgUntypedHandler: col_proxy={:x}, sending to root node={}, "
-        "handler={}, cur_epoch={:x}\n",
-        col_proxy, bnode, handler, cur_epoch
-      );
-      theMsg()->markAsCollectionMessage(msg);
-      return theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT>>(
-        bnode,msg.get()
-      );
-    } else {
-      debug_print(
-        vrt_coll, node,
-        "broadcasting msg to collection: msg={}, handler={}\n",
-        print_ptr(raw_msg), handler
-      );
-      return broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
-    }
+  if (perm_elm_id != balance::no_element_id) {
+    msg->setElm(perm_elm_id, temp_elm_id);
+    msg->setCat(balance::CommCategory::Broadcast);
   } else {
-    auto iter = buffered_bcasts_.find(col_proxy);
-    if (iter == buffered_bcasts_.end()) {
-      buffered_bcasts_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(col_proxy),
-        std::forward_as_tuple(ActionContainerType{})
-      );
-      iter = buffered_bcasts_.find(col_proxy);
-    }
-    vtAssert(iter != buffered_bcasts_.end(), "Must exist");
-
-    debug_print(
-      vrt_coll, node,
-      "broadcastMsgUntypedHandler: pushing into buffered sends: col_proxy={:x}\n",
-      col_proxy
-    );
-
-    theTerm()->produce(cur_epoch);
-
-    debug_print(
-      vrt_coll, node,
-      "broadcastMsgUntypedHandler: col_proxy={:x}, cur_epoch={:x}, buffering\n",
-      col_proxy, cur_epoch
-    );
-
-    iter->second.push_back([=](VirtualProxyType /*ignored*/){
-      debug_print(
-        vrt_coll, node,
-        "broadcastMsgUntypedHandler: col_proxy={:x}, running buffered\n",
-        col_proxy
-      );
-      theMsg()->pushEpoch(cur_epoch);
-      theCollection()->broadcastMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg.get(), handler, member, instrument
-      );
-      theMsg()->popEpoch(cur_epoch);
-      theTerm()->consume(cur_epoch);
-    });
-    return messaging::PendingSend(nullptr);
+    msg->setCat(balance::CommCategory::NodeToCollection);
   }
+# endif
+
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
+
+  return bufferOpOrExecute<ColT>(
+    col_proxy,
+    BufferTypeEnum::Broadcast,
+    static_cast<BufferReleaseEnum>(AfterFullyConstructed | AfterMetaDataKnown),
+    cur_epoch,
+    [=]() -> messaging::PendingSend {
+      auto const this_node = theContext()->getNode();
+      auto const bnode = VirtualProxyBuilder::getVirtualNode(col_proxy);
+      if (this_node != bnode) {
+        debug_print(
+          vrt_coll, node,
+          "broadcastMsgUntypedHandler: col_proxy={:x}, sending to root node={}, "
+          "handler={}, cur_epoch={:x}\n",
+          col_proxy, bnode, handler, cur_epoch
+        );
+        theMsg()->markAsCollectionMessage(msg);
+        return theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT>>(
+          bnode,msg.get()
+        );
+      } else {
+        debug_print(
+          vrt_coll, node,
+          "broadcasting msg to collection: msg={}, handler={}\n",
+          print_ptr(msg.get()), handler
+        );
+        return broadcastFromRoot<ColT,IdxT,MsgT>(msg.get());
+      }
+    }
+  );
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
@@ -1159,103 +1065,78 @@ void CollectionManager::reduceMsgExpr(
     "reduceMsg: msg={}\n", print_ptr(raw_msg)
   );
 
-  auto const& col_proxy = proxy.getProxy();
+  auto const col_proxy = toProxy.getProxy();
+  auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
 
-  // @todo: implement the action `act' after the routing is finished
-  auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
-  auto elm_holder = findElmHolder<ColT,IndexT>(col_proxy);
+  bufferOpOrExecute<ColT>(
+    col_proxy,
+    BufferTypeEnum::Reduce,
+    static_cast<BufferReleaseEnum>(
+      AfterFullyConstructed | AfterMetaDataKnown | AfterGroupReady
+    ),
+    cur_epoch,
+    [=]() -> messaging::PendingSend {
+      auto elm_holder = findElmHolder<ColT,IndexT>(col_proxy);
 
-  auto const& group_ready = elm_holder->groupReady();
-  auto const& send_group = elm_holder->useGroup();
-  auto const& group = elm_holder->group();
-  bool const use_group = group_ready && send_group;
+      std::size_t num_elms = 0;
+      if (expr_fn == nullptr) {
+        num_elms = elm_holder->numElements();
+      } else {
+        num_elms = elm_holder->numElementsExpr(expr_fn);
+      }
 
-  debug_print(
-    vrt_coll, node,
-    "reduceMsg: col_proxy={:x}, found={}, group={:x}, group_ready={}, "
-    "use_group={}\n",
-    col_proxy, found_constructed, group, group_ready, send_group
-  );
+      auto const root_node =
+        root == uninitialized_destination ? default_collection_reduce_root_node :
+        root;
 
-  if (!group_ready) {
-    auto iter = buffered_group_.find(col_proxy);
-    if (iter == buffered_group_.end()) {
-      buffered_group_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(col_proxy),
-        std::forward_as_tuple(ActionContainerType{})
-      );
-      iter = buffered_group_.find(col_proxy);
-    }
-    vtAssert(iter != buffered_group_.end(), "Must exist");
+      auto const group_ready = elm_holder->groupReady();
+      auto const send_group = elm_holder->useGroup();
+      auto const group = elm_holder->group();
+      bool const use_group = group_ready && send_group;
 
-    theTerm()->produce(term::any_epoch_sentinel);
+      vtAssert(group_ready, "Must be ready");
 
-    debug_print(
-      vrt_coll, node,
-      "reduceMsgExpr: col_proxy={:x}, buffering reduce operation\n",
-      col_proxy
-    );
+      ReduceVirtualIDType reduce_id = std::make_tuple(stamp,col_proxy);
 
-    iter->second.push_back([=](VirtualProxyType /*ignored*/){
+      auto stamp_iter = reduce_cur_stamp_.find(reduce_id);
+
+      ReduceStamp cur_stamp = stamp;
+      if (stamp == ReduceStamp{} && stamp_iter != reduce_cur_stamp_.end()) {
+        cur_stamp = stamp_iter->second;
+      }
+
+      collective::reduce::Reduce* r = nullptr;
+      if (use_group) {
+        r = theGroup()->groupReducer(group);
+      } else {
+        r = theCollective()->getReducerVrtProxy(col_proxy);
+      }
+
+      auto ret_stamp = r->reduce<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
+
       debug_print(
         vrt_coll, node,
-        "reduceMsgExpr: col_proxy={:x}, running buffered reduce operation\n",
-        col_proxy
+        "reduceMsg: col_proxy={:x}, num_elms={}\n",
+        col_proxy, num_elms
       );
-      theTerm()->consume(term::any_epoch_sentinel);
-      theCollection()->reduceMsgExpr<ColT,MsgT,f>(
-        proxy,msg.get(),expr_fn,stamp,root
+
+      if (stamp_iter == reduce_cur_stamp_.end()) {
+        reduce_cur_stamp_.emplace(
+          std::piecewise_construct,
+          std::forward_as_tuple(reduce_id),
+          std::forward_as_tuple(ret_stamp)
+        );
+      }
+
+      debug_print(
+        vrt_coll, node,
+        "reduceMsg: col_proxy={:x}, seq={}, num_elms={}, tag={}\n",
+        col_proxy, cur_seq, num_elms, tag
       );
-    });
-  } else if (found_constructed && elm_holder) {
-    std::size_t num_elms = 0;
 
-    if (expr_fn == nullptr) {
-      num_elms = elm_holder->numElements();
-    } else {
-      num_elms = elm_holder->numElementsExpr(expr_fn);
+      return messaging::PendingSend{nullptr};
     }
-
-    ReduceVirtualIDType reduce_id = std::make_tuple(stamp,col_proxy);
-
-    auto stamp_iter = reduce_cur_stamp_.find(reduce_id);
-
-    ReduceStamp cur_stamp = stamp;
-    if (stamp == ReduceStamp{} && stamp_iter != reduce_cur_stamp_.end()) {
-      cur_stamp = stamp_iter->second;
-    }
-
-    auto const& root_node =
-      root == uninitialized_destination ? default_collection_reduce_root_node :
-      root;
-
-    collective::reduce::Reduce* r = nullptr;
-    if (use_group) {
-      r = theGroup()->groupReducer(group);
-    } else {
-      r = theCollective()->getReducerVrtProxy(col_proxy);
-    }
-
-    auto ret_stamp = r->reduce<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
-
-    debug_print(
-      vrt_coll, node,
-      "reduceMsg: col_proxy={:x}, num_elms={}\n",
-      col_proxy, num_elms
-    );
-
-    if (stamp_iter == reduce_cur_stamp_.end()) {
-      reduce_cur_stamp_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(reduce_id),
-        std::forward_as_tuple(ret_stamp)
-      );
-    }
-  } else {
-    // @todo: implement this
-    vtAssertExpr(0);
-  }
+  );
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
@@ -1431,142 +1312,76 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
-  if (imm_context) {
-    #if backend_check_enabled(lblite)
-      msg->setLBLiteInstrument(true);
-    #endif
+# if backend_check_enabled(lblite)
+  msg->setLBLiteInstrument(true);
 
-    #if backend_check_enabled(lblite)
-      auto const temp_elm_id = getCurrentContextTemp();
-      auto const perm_elm_id = getCurrentContextPerm();
+  auto const temp_elm_id = getCurrentContextTemp();
+  auto const perm_elm_id = getCurrentContextPerm();
 
-      debug_print(
-        vrt_coll, node,
-        "sending msg: LB current elm context perm={}, temp={}\n",
-        perm_elm_id, temp_elm_id
-      );
+  debug_print(
+    vrt_coll, node,
+    "sending msg: LB current elm context perm={}, temp={}\n",
+    perm_elm_id, temp_elm_id
+  );
 
-      if (perm_elm_id != balance::no_element_id) {
-        msg->setElm(perm_elm_id, temp_elm_id);
-        msg->setCat(balance::CommCategory::SendRecv);
-      } else {
-        msg->setCat(balance::CommCategory::NodeToCollection);
-      }
-    #endif
-
-    #if backend_check_enabled(trace_enabled)
-      // Create the trace creation event here to connect it a higher semantic
-      // level. Do it in the imm_context so we see the send event when the user
-      // actually invokes send on the proxy (not outside the event that actually
-      // sent it)
-      auto reg_type = member ?
-        auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-        auto_registry::RegistryTypeEnum::RegVrtCollection;
-      auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
-      auto event = theMsg()->makeTraceCreationSend(
-        msg, handler, reg_type, msg_size, false
-      );
-      msg->setFromTraceEvent(event);
-    #endif
-
-    auto const& from_node = theContext()->getNode();
-    msg->setFromNode(from_node);
+  if (perm_elm_id != balance::no_element_id) {
+    msg->setElm(perm_elm_id, temp_elm_id);
+    msg->setCat(balance::CommCategory::SendRecv);
+  } else {
+    msg->setCat(balance::CommCategory::NodeToCollection);
   }
+# endif
+
+# if backend_check_enabled(trace_enabled)
+  // Create the trace creation event here to connect it a higher semantic
+  // level. Do it in the imm_context so we see the send event when the user
+  // actually invokes send on the proxy (not outside the event that actually
+  // sent it)
+  auto reg_type = member ?
+    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+    auto_registry::RegistryTypeEnum::RegVrtCollection;
+  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  auto event = theMsg()->makeTraceCreationSend(
+    msg, handler, reg_type, msg_size, false
+  );
+  msg->setFromTraceEvent(event);
+#endif
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
+  msg->setFromNode(theContext()->getNode());
+  msg->setVrtHandler(handler);
+  msg->setProxy(toProxy);
+  msg->setMember(member);
 
+  auto idx = elm_proxy.getIndex();
   debug_print(
     vrt_coll, node,
     "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={:x}, idx={}, "
     "handler={}, imm_context={}\n",
-    col_proxy, cur_epoch, elm_proxy.getIndex(), handler, imm_context
+    col_proxy, cur_epoch, idx, handler, imm_context
   );
 
-  if (imm_context) {
-    theTerm()->produce(cur_epoch);
-
-    auto base_msg = msg.template to<BaseMsgType>();
-    ByteType msg_sz = sizeof(MsgT);
-    return messaging::PendingSend(base_msg, msg_sz, [=](MsgPtr<BaseMsgType> inner_msg){
-      schedule([=]{
-        theMsg()->pushEpoch(cur_epoch);
-        theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
-          toProxy, reinterpret_cast<MsgT*>(inner_msg.get()), handler, member, false
-        );
-        theMsg()->popEpoch(cur_epoch);
-        theTerm()->consume(cur_epoch);
-      });
-    });
-  }
-
-  // auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
-
-  auto holder = findColHolder<ColT, IdxT>(col_proxy);
-  if (holder != nullptr /* && found_constructed*/) {
-    theMsg()->pushEpoch(cur_epoch);
-
-    auto const map_han = holder->map_fn;
-    auto max_idx = holder->max_idx;
-    auto cur_idx = elm_proxy.getIndex();
-    auto fn = auto_registry::getAutoHandlerMap(map_han);
-
-    auto const& num_nodes = theContext()->getNumNodes();
-
-    auto home_node = fn(
-      reinterpret_cast<vt::index::BaseIndex*>(&cur_idx),
-      reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
-      num_nodes
-    );
-
-    msg->setVrtHandler(handler);
-    msg->setProxy(toProxy);
-    msg->setMember(member);
-
-    debug_print(
-      vrt_coll, node,
-      "sending msg to collection: msg={}, handler={}, home_node={}\n",
-      print_ptr(raw_msg), handler, home_node
-    );
-
-    // route the message to the destination using the location manager
-    auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
-    vtAssert(lm != nullptr, "LM must exist");
-    theMsg()->markAsCollectionMessage(msg);
-    lm->template routeMsgSerializeHandler<
-      MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
-    >(toProxy, home_node, msg);
-
-    theMsg()->popEpoch(cur_epoch);
-  } else {
-    auto iter = buffered_sends_.find(toProxy.getCollectionProxy());
-    if (iter == buffered_sends_.end()) {
-      buffered_sends_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(toProxy.getCollectionProxy()),
-        std::forward_as_tuple(ActionContainerType{})
+  return schedule(
+    msg, !imm_context, cur_epoch, [=]{
+      bufferOpOrExecute<ColT>(
+        col_proxy,
+        BufferTypeEnum::Send,
+        BufferReleaseEnum::AfterMetaDataKnown,
+        cur_epoch,
+        [=]() -> messaging::PendingSend {
+          auto home_node = getMapped<ColT>(col_proxy, idx);
+          // route the message to the destination using the location manager
+          auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
+          vtAssert(lm != nullptr, "LM must exist");
+          theMsg()->markAsCollectionMessage(msg);
+          lm->template routeMsgSerializeHandler<
+            MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
+          >(toProxy, home_node, msg);
+          return messaging::PendingSend{nullptr};
+        }
       );
-      iter = buffered_sends_.find(toProxy.getCollectionProxy());
     }
-    vtAssert(iter != buffered_sends_.end(), "Must exist");
-
-    debug_print(
-      vrt_coll, node,
-      "sendMsgUntypedHandler: pushing into buffered sends: col_proxy={:x}\n",
-      toProxy.getCollectionProxy()
-    );
-
-    theTerm()->produce(cur_epoch);
-
-    iter->second.push_back([=](VirtualProxyType /*ignored*/){
-      theMsg()->pushEpoch(cur_epoch);
-      theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
-        toProxy, msg.get(), handler, member, false
-      );
-      theMsg()->popEpoch(cur_epoch);
-      theTerm()->consume(cur_epoch);
-    });
-  }
-  return messaging::PendingSend(nullptr);
+  );
 }
 
 template <typename ColT, typename IndexT>
@@ -1585,36 +1400,7 @@ bool CollectionManager::insertCollectionElement(
   );
 
   if (holder == nullptr) {
-    using HolderType = typename EntireHolder<ColT, IndexT>::InnerHolder;
-
-    EntireHolder<ColT, IndexT>::insert(
-      proxy, std::make_shared<HolderType>(map_han,max_idx,is_static)
-    );
-
-    debug_print(
-      vrt_coll, node,
-      "looking for buffered sends: proxy={:x}, size={}\n",
-      proxy, buffered_sends_.size()
-    );
-
-    auto iter = buffered_sends_.find(proxy);
-    if (iter != buffered_sends_.end()) {
-      debug_print(
-        vrt_coll, node,
-        "looking for buffered sends: FOUND\n"
-      );
-
-      for (auto&& elm : iter->second) {
-        debug_print(
-          vrt_coll, node,
-          "looking for buffered sends: running elm\n"
-        );
-
-        elm(proxy);
-      }
-      iter->second.clear();
-      buffered_sends_.erase(iter);
-    }
+    insertMetaCollection<ColT>(proxy,map_han,max_idx,is_static);
   }
 
   auto elm_holder = findElmHolder<ColT,IndexT>(proxy);
@@ -2071,6 +1857,14 @@ template <typename ColT, typename... Args>
    *  messages can be forwarded properly
    */
   theLocMan()->getCollectionLM<ColT,IndexType>(proxy);
+  debug_print(
+    vrt_coll, node,
+    "addToState: proxy={:x}, AfterMeta\n", proxy
+  );
+  theCollection()->addToState(proxy, BufferReleaseEnum::AfterMetaDataKnown);
+  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Send);
+  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Broadcast);
+  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
 }
 
 template <typename ColT>
@@ -2094,7 +1888,8 @@ template <typename ColT>
 
   auto stamp = makeStamp<StrongUserID>(proxy);
   auto r = theCollection()->reducer();
-  r->reduce<CollectionConsMsg,collectionConstructHan>(root, msg.get(), stamp);
+  auto cb = theCB()->makeBcast<CollectionConsMsg, collectionFinishedHan<void>>();
+  r->reduce<collective::None>(root, msg.get(), cb, stamp);
 }
 
 template <typename ColT>
@@ -2582,116 +2377,82 @@ void CollectionManager::insert(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
   NodeType const& node
 ) {
-  using BaseIdxType      = vt::index::BaseIndex;
   using IdxContextHolder = InsertContextHolder<IndexT>;
 
   auto const untyped_proxy = proxy.getProxy();
-  auto found_constructed = constructed_.find(untyped_proxy) != constructed_.end();
+  auto const cur_epoch = theMsg()->getEpoch();
+  auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
+  vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
 
   debug_print(
     vrt_coll, node,
-    "insert: proxy={:x}, constructed={}\n",
-    untyped_proxy, found_constructed
+    "insert: proxy={:x}\n",
+    untyped_proxy
   );
 
-  if (found_constructed) {
-    auto col_holder = findColHolder<ColT,IndexT>(untyped_proxy);
-    auto max_idx = col_holder->max_idx;
-    auto const& this_node = theContext()->getNode();
-    auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
-    auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
-    vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
+  theTerm()->produce(insert_epoch);
 
-    // Get the handler function
-    auto fn = auto_registry::getHandlerMap(map_han);
+  bufferOpOrExecute<ColT>(
+    untyped_proxy,
+    BufferTypeEnum::Broadcast,
+    static_cast<BufferReleaseEnum>(AfterFullyConstructed | AfterMetaDataKnown),
+    cur_epoch,
+    [=]() -> messaging::PendingSend {
+      auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
+      auto const max_idx = getRange<ColT>(untyped_proxy);
+      auto const mapped_node = getMapped<ColT>(map_han, idx, max_idx);
+      auto const has_explicit_node = node != uninitialized_destination;
+      auto const insert_node = has_explicit_node ? node : mapped_node;
+      auto const this_node = theContext()->getNode();
+      auto cur_idx = idx;
 
-    auto const cur = static_cast<BaseIdxType*>(&idx);
-    auto const max = static_cast<BaseIdxType*>(&max_idx);
-    auto const& mapped_node = fn(cur, max, theContext()->getNumNodes());
+      if (insert_node == this_node) {
+        auto const& num_elms = max_idx.getSize();
+        std::tuple<> tup;
 
-    auto const& has_explicit_node = node != uninitialized_destination;
-    auto const& insert_node = has_explicit_node ? node : mapped_node;
+        // Set the current context index to `idx`, enabled the user to query the
+        // index during the constructor
+        IdxContextHolder::set(&cur_idx,untyped_proxy);
 
-    if (insert_node == this_node) {
-      auto const& num_elms = max_idx.getSize();
-      std::tuple<> tup;
-
-      // Set the current context index to `idx`, enabled the user to query the
-      // index during the constructor
-      IdxContextHolder::set(&idx,untyped_proxy);
-
-      #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
+#       if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
         auto new_vc = DerefCons::derefTuple<ColT,IndexT,std::tuple<>>(
-          num_elms, idx, &tup
+          num_elms, cur_idx, &tup
         );
-      #else
+#       else
         auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
-          num_elms, idx, &tup, std::make_index_sequence<0>{}
+          num_elms, cur_idx, &tup, std::make_index_sequence<0>{}
         );
-      #endif
+#       endif
 
-      /*
-       * Set direct attributes of the newly constructed element directly on
-       * the user's class
-       */
-      CollectionTypeAttorney::setup(new_vc, num_elms, idx, untyped_proxy);
+        /*
+         * Set direct attributes of the newly constructed element directly on
+         * the user's class
+         */
+        CollectionTypeAttorney::setup(new_vc, num_elms, cur_idx, untyped_proxy);
 
-      theCollection()->insertCollectionElement<ColT, IndexT>(
-        std::move(new_vc), idx, max_idx, map_han, untyped_proxy, false,
-        mapped_node
-      );
+        theCollection()->insertCollectionElement<ColT, IndexT>(
+          std::move(new_vc), cur_idx, max_idx, map_han, untyped_proxy, false,
+          mapped_node
+        );
 
-      // Clear the current index context
-      IdxContextHolder::clear();
-    } else {
-      auto const& cur_epoch = theMsg()->getEpoch();
-      auto msg = makeMessage<InsertMsg<ColT,IndexT>>(
-        proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
-      );
-      theTerm()->produce(insert_epoch,1,insert_node);
-      theTerm()->produce(cur_epoch,1,insert_node);
-      theMsg()->markAsCollectionMessage(msg);
-      theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
-        insert_node,msg.get()
-      );
-    }
-  } else {
-    auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
-    auto iter = buffered_bcasts_.find(untyped_proxy);
-    if (iter == buffered_bcasts_.end()) {
-      buffered_bcasts_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(untyped_proxy),
-        std::forward_as_tuple(ActionContainerType{})
-      );
-      iter = buffered_bcasts_.find(untyped_proxy);
-    }
-    vtAssert(iter != buffered_bcasts_.end(), "Must exist");
+        // Clear the current index context
+        IdxContextHolder::clear();
+      } else {
+        auto msg = makeMessage<InsertMsg<ColT,IndexT>>(
+          proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
+        );
+        theTerm()->produce(insert_epoch,1,insert_node);
+        theTerm()->produce(cur_epoch,1,insert_node);
+        theMsg()->markAsCollectionMessage(msg);
+        theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
+          insert_node,msg.get()
+        );
+      }
 
-    debug_print(
-      vrt_coll, node,
-      "pushing dynamic insertion into buffered sends: {}\n",
-      untyped_proxy
-    );
-
-    auto const& cur_epoch = theMsg()->getEpoch();
-    theTerm()->produce(cur_epoch);
-    theTerm()->produce(insert_epoch);
-
-    debug_print(
-      vrt_coll, node,
-      "insert: proxy={:x}, buffering\n", untyped_proxy
-    );
-    iter->second.push_back([=](VirtualProxyType /*ignored*/){
-      debug_print(
-        vrt_coll, node,
-        "insert: proxy={:x}, running buffered\n", untyped_proxy
-      );
-      theCollection()->insert<ColT>(proxy,idx,node);
       theTerm()->consume(insert_epoch);
-      theTerm()->consume(cur_epoch);
-    });
-  }
+      return messaging::PendingSend{nullptr};
+    }
+  );
 }
 
 /*
@@ -3421,6 +3182,103 @@ CollectionManager::restoreFromFile(
   }
 
   return finishedInsert(std::move(token));
+}
+
+inline bool CollectionManager::checkReady(
+  VirtualProxyType proxy, BufferReleaseEnum release
+) {
+  return getReadyBits(proxy, release) == release;
+}
+
+inline
+typename CollectionManager::BufferReleaseEnum
+CollectionManager::getReadyBits(
+  VirtualProxyType proxy, BufferReleaseEnum release
+) {
+  auto release_state = getState(proxy);
+  auto ret = static_cast<BufferReleaseEnum>(release & release_state);
+
+  debug_print(
+    vrt_coll, node,
+    "getReadyBits: proxy={:x}, check release={:b}, state={:b}, ret={:b}\n",
+    proxy, release, release_state, ret
+  );
+
+  return ret;
+}
+
+template <typename ColT>
+messaging::PendingSend CollectionManager::bufferOp(
+  VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
+  EpochType epoch, ActionPendingType action
+) {
+  vtAssertInfo(
+    !checkReady(proxy, release), "Should not be ready if buffering",
+    proxy
+  );
+  theTerm()->produce(epoch);
+  buffers_[proxy][type][release].push_back([=]() -> messaging::PendingSend {
+    theMsg()->pushEpoch(epoch);
+    auto ps = action();
+    theMsg()->popEpoch(epoch);
+    theTerm()->consume(epoch);
+    return std::move(ps);
+  });
+  return messaging::PendingSend{nullptr};
+}
+
+template <typename ColT>
+messaging::PendingSend CollectionManager::bufferOpOrExecute(
+  VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
+  EpochType epoch, ActionPendingType action
+) {
+  if (checkReady(proxy, release)) {
+    return action();
+  } else {
+    return bufferOp<ColT>(proxy, type, release, epoch, action);
+  }
+}
+
+inline void CollectionManager::triggerReadyOps(
+  VirtualProxyType proxy, BufferTypeEnum type
+) {
+  auto proxy_iter = buffers_.find(proxy);
+  if (proxy_iter != buffers_.end()) {
+    auto type_iter = proxy_iter->second.find(type);
+    if (type_iter != proxy_iter->second.end()) {
+      auto release_map = type_iter->second;
+      for (auto iter = release_map.begin(); iter != release_map.end(); ) {
+        if (checkReady(proxy, iter->first)) {
+          for (auto&& action : iter->second) {
+            action();
+          }
+          iter = release_map.erase(iter);
+        } else {
+          iter++;
+        }
+      }
+    }
+  }
+}
+
+template <typename MsgT>
+messaging::PendingSend CollectionManager::schedule(
+  MsgT msg, bool execute_now, EpochType cur_epoch, ActionType action
+) {
+  theTerm()->produce(cur_epoch);
+  return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
+    auto fn = [=]{
+      theMsg()->pushEpoch(cur_epoch);
+      action();
+      theMsg()->popEpoch(cur_epoch);
+      theTerm()->consume(cur_epoch);
+    };
+    if (execute_now) {
+      fn();
+    } else {
+      schedule(fn);
+    }
+  });
 }
 
 }}} /* end namespace vt::vrt::collection */
