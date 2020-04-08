@@ -77,6 +77,10 @@
 # include <inttypes.h>
 #endif
 
+#if backend_check_enabled(mimalloc)
+# include <mimalloc.h>
+#endif
+
 namespace vt { namespace util { namespace memory {
 
 std::size_t Mstats::getUsage() {
@@ -136,7 +140,7 @@ std::string PS::getName() {
 }
 
 std::size_t Mallinfo::getUsage() {
-# if defined(vt_has_mallinfo) && defined(vt_has_malloc_h)
+# if defined(vt_has_mallinfo) && defined(vt_has_malloc_h) && !backend_check_enabled(mimalloc)
     struct mallinfo mi = mallinfo();
     unsigned int blocks = mi.uordblks;
     return static_cast<std::size_t>(blocks);
@@ -267,6 +271,20 @@ std::string StatM::getName() {
   return "selfstatm";
 }
 
+std::size_t Mimalloc::getUsage() {
+# if backend_check_enabled(mimalloc)
+  auto total_size = mi_get_allocated_size();
+  return total_size;
+# else
+  fmt::print("Mimalloc: xxx\n");
+  return 0;
+# endif
+}
+
+std::string Mimalloc::getName() {
+  return "mimalloc";
+}
+
 struct CommaDelimit : std::string {};
 
 std::istream& operator>>(std::istream& is, CommaDelimit& output) {
@@ -278,6 +296,7 @@ MemoryUsage::MemoryUsage() {
   std::vector<std::unique_ptr<Reporter>> all_reporters;
 
   // Register all the memory reporters
+  all_reporters.emplace_back(std::make_unique<Mimalloc>());
   all_reporters.emplace_back(std::make_unique<Mstats>());
   all_reporters.emplace_back(std::make_unique<MachTaskInfo>());
   all_reporters.emplace_back(std::make_unique<Stat>());
