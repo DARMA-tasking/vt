@@ -65,10 +65,16 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
 /*static*/ std::string ArgConfig::vt_memory_reporters   =
-  "mimalloc,mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
+# if backend_check_enabled(mimalloc)
+  "mimalloc,"
+# endif
+  "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
 /*static*/ bool        ArgConfig::vt_print_memory_each_phase = false;
 /*static*/ std::string ArgConfig::vt_print_memory_node  = "0";
 /*static*/ bool        ArgConfig::vt_allow_memory_report_with_ps = false;
+/*static*/ bool        ArgConfig::vt_print_memory_at_threshold = false;
+/*static*/ std::string ArgConfig::vt_print_memory_threshold = "1 GiB";
+/*static*/ int32_t     ArgConfig::vt_print_memory_sched_poll = 100;
 
 /*static*/ bool        ArgConfig::vt_no_warn_stack      = false;
 /*static*/ bool        ArgConfig::vt_no_assert_stack    = false;
@@ -208,15 +214,24 @@ namespace vt { namespace arguments {
   auto mem_phase = "Print memory usage each new phase";
   auto mem_node  = "Node to print memory usage from or \"all\"";
   auto mem_ps    = "Enable memory reporting with PS (warning: forking to query 'ps' may not be scalable)";
+  auto mem_at_thresh = "Print memory usage from scheduler when reaches a threshold increment";
+  auto mem_thresh    = "The threshold increments to print memory usage: \"<value> {GiB,MiB,KiB,B}\"";
+  auto mem_sched     = "The frequency to query the memory threshold check (some memory reporters might be expensive)";
   auto mm = app.add_option("--vt_memory_reporters", vt_memory_reporters, mem_desc, true);
   auto mn = app.add_flag("--vt_print_memory_each_phase", vt_print_memory_each_phase, mem_phase);
   auto mo = app.add_option("--vt_print_memory_node", vt_print_memory_node, mem_node, true);
   auto mp = app.add_flag("--vt_allow_memory_report_with_ps", vt_allow_memory_report_with_ps, mem_ps);
+  auto mq = app.add_flag("--vt_print_memory_at_threshold", vt_print_memory_at_threshold, mem_at_thresh);
+  auto mr = app.add_option("--vt_print_memory_threshold", vt_print_memory_threshold, mem_thresh, true);
+  auto ms = app.add_option("--vt_print_memory_sched_poll", vt_print_memory_sched_poll, mem_sched, true);
   auto memoryGroup = "Memory Usage Reporting";
   mm->group(memoryGroup);
   mn->group(memoryGroup);
   mo->group(memoryGroup);
   mp->group(memoryGroup);
+  mq->group(memoryGroup);
+  mr->group(memoryGroup);
+  ms->group(memoryGroup);
 
 
   /*

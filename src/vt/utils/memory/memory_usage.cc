@@ -276,7 +276,6 @@ std::size_t Mimalloc::getUsage() {
   auto total_size = mi_get_allocated_size();
   return total_size;
 # else
-  fmt::print("Mimalloc: xxx\n");
   return 0;
 # endif
 }
@@ -296,7 +295,9 @@ MemoryUsage::MemoryUsage() {
   std::vector<std::unique_ptr<Reporter>> all_reporters;
 
   // Register all the memory reporters
+# if backend_check_enabled(mimalloc)
   all_reporters.emplace_back(std::make_unique<Mimalloc>());
+# endif
   all_reporters.emplace_back(std::make_unique<Mstats>());
   all_reporters.emplace_back(std::make_unique<MachTaskInfo>());
   all_reporters.emplace_back(std::make_unique<Stat>());
@@ -422,6 +423,18 @@ std::vector<std::string> MemoryUsage::getWorkingReporters() {
     }
   }
   return working;
+}
+
+std::size_t MemoryUsage::convertBytesFromString(std::string const& in) {
+  double val = 0.0;
+  std::string units = "";
+  std::istringstream iss(in);
+  iss >> val >> units;
+  auto unit = getUnitFromString(units);
+  for (int8_t i = 0; i < static_cast<int8_t>(unit); i++) {
+    val *= 1024.0;
+  }
+  return static_cast<std::size_t>(val);
 }
 
 bool MemoryUsage::hasWorkingReporter() const {
