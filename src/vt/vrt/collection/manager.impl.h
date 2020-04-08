@@ -2100,7 +2100,9 @@ CollectionManager::constructMap(
   CollectionInfo<ColT, IndexT> info(range, is_static, node, new_proxy);
 
   if (!is_static) {
-    auto const& insert_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+    auto const& insert_epoch = theTerm()->makeEpochRootedWave(
+      term::SuccessorEpochCapture{no_epoch}
+    );
     theTerm()->finishNoActivateEpoch(insert_epoch);
     info.setInsertEpoch(insert_epoch);
     setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
@@ -2265,7 +2267,9 @@ void CollectionManager::finishedInsertEpoch(
   /*
    *  Add trigger for the next insertion phase/epoch finishing
    */
-  auto const& next_insert_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+  auto const& next_insert_epoch = theTerm()->makeEpochRootedWave(
+    term::SuccessorEpochCapture{no_epoch}
+  );
   theTerm()->finishNoActivateEpoch(next_insert_epoch);
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,next_insert_epoch);
 
