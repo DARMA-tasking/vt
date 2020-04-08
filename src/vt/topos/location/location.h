@@ -52,7 +52,7 @@
 #include "vt/topos/location/utility/entity.h"
 #include "vt/topos/location/utility/coord.h"
 #include "vt/topos/location/message/msg.h"
-#include "vt/topos/location/cache/cache.h"
+#include "vt/topos/location/lookup/lookup.h"
 #include "vt/topos/location/record/record.h"
 #include "vt/topos/location/record/state.h"
 #include "vt/context/context.h"
@@ -73,7 +73,7 @@ struct collection_lm_tag_t {};
 template <typename EntityID>
 struct EntityLocationCoord : LocationCoord {
   using LocRecType = LocRecord<EntityID>;
-  using LocCacheType = LocationCache<EntityID, LocRecType>;
+  using LocCacheType = LocLookup<EntityID, LocRecType>;
   using LocEntityMsg = LocEntity<EntityID>;
   using LocalRegisteredContType = std::unordered_set<EntityID>;
   using LocalRegisteredMsgContType = std::unordered_map<EntityID, LocEntityMsg>;
@@ -115,10 +115,11 @@ struct EntityLocationCoord : LocationCoord {
    *
    *   1) Node 0: registerEntity(my_id, ...);
    *   2) Node 0: entityMigrated(my_id, 1);
-   *   3) Node 1: registerEntityMigrated(my_id, 0, ...);
+   *   3) Node 1: registerEntityMigrated(my_id, <home>, 0, ...);
    */
   void registerEntityMigrated(
-    EntityID const& id, NodeType const& __attribute__((unused)) from,
+    EntityID const& id, NodeType const& home_node,
+    NodeType const& __attribute__((unused)) from_node,
     LocMsgActionType msg_action = nullptr
   );
 
@@ -169,11 +170,13 @@ struct EntityLocationCoord : LocationCoord {
   );
 
   void updatePendingRequest(
-    LocEventID const& event_id, EntityID const& id, NodeType const& node
+    LocEventID const& event_id, EntityID const& id,
+    NodeType const& resolved_node, NodeType const& home_node
   );
   void printCurrentCache() const;
 
   bool isCached(EntityID const& id) const;
+  void clearCache();
 
   template <typename MessageT>
   bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const;

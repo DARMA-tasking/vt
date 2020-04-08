@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   cache.h
+//                                   lookup.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,43 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H
-#define INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_LOOKUP_LOOKUP_H
+#define INCLUDED_VT_TOPOS_LOCATION_LOOKUP_LOOKUP_H
 
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
-#include "vt/context/context.h"
-
-#include <list>
-#include <tuple>
-#include <unordered_map>
+#include "vt/topos/location/cache/cache.h"
+#include "vt/topos/location/directory/directory.h"
 
 namespace vt { namespace location {
 
 template <typename KeyT, typename ValueT>
-struct LocationCache {
-  using LookupType = std::tuple<KeyT, ValueT>;
-  using CacheOrderedType = std::list<LookupType>;
-  using ValueIter = typename CacheOrderedType::iterator;
-  using LookupContainerType = std::unordered_map<KeyT, ValueIter>;
+struct LocLookup {
 
-  explicit LocationCache(LocationSizeType const& in_max_size);
-
-  LocationCache(LocationCache const&) = delete;
-  LocationCache(LocationCache&&) = default;
-  LocationCache& operator=(LocationCache const&) = default;
+  LocLookup(LocationSizeType const& in_max_cache_size, NodeType in_this_node)
+    : max_cache_size_(in_max_cache_size),
+      cache_(in_max_cache_size),
+      this_node_(in_this_node)
+  { }
 
   bool exists(KeyT const& key) const;
-  LocationSizeType getSize() const;
+  LocationSizeType getCacheSize() const;
   ValueT const& get(KeyT const& key);
   void remove(KeyT const& key);
-  void insert(KeyT const& key, ValueT const& value);
+  void insert(KeyT const& key, NodeType const home, ValueT const& value);
+  void update(KeyT const& key, ValueT const& value);
+  void clearCache();
   void printCache() const;
 
- private:
-  // container for quick lookup
-  LookupContainerType lookup_;
-
-  // the location records sorted in LRU cache
-  CacheOrderedType cache_;
-
-  // the maximum size the cache is allowed to grow
-  LocationSizeType max_size_;
+private:
+  LocationSizeType max_cache_size_ = 0;
+  Directory<KeyT, ValueT> directory_;
+  LocationCache<KeyT, ValueT> cache_;
+  NodeType this_node_ = uninitialized_destination;
 };
 
-}}  // end namespace vt::location
+}} /* end namespace vt::location */
 
-#include "vt/topos/location/cache/cache.impl.h"
+#include "vt/topos/location/lookup/lookup.impl.h"
 
-#endif /*INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_LOOKUP_LOOKUP_H*/
