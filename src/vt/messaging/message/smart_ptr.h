@@ -65,6 +65,11 @@ namespace vt { namespace messaging { namespace statics {
   /// They are stateless and have a very high/constant reuse pattern.
   struct Holder {
     template <typename T>
+    static MsgPtrImplTyped<T>* getImpl() {
+      return &TypedMsgPtrImpls<T>;
+    }
+
+    template <typename T>
     static MsgPtrImplTyped<T> TypedMsgPtrImpls;
   };
 
@@ -99,7 +104,7 @@ struct MsgSharedPtr final {
   MsgSharedPtr(std::nullptr_t) {}
 
   MsgSharedPtr(T* in, bool takeRef) {
-    init(in, takeRef, &statics::Holder::TypedMsgPtrImpls<T>);
+    init(in, takeRef, statics::Holder::getImpl<T>());
   }
 
   // Overload to retain ORIGINAL type-erased implementation.
