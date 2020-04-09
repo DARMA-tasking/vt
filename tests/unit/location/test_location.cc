@@ -241,7 +241,16 @@ TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
         executed = true;
       }
     );
+
+    while (not executed) {
+      vt::runScheduler();
+    }
+
+    vt::theCollective()->barrier();
+
     EXPECT_TRUE(executed);
+
+    vt::theCollective()->barrier();
   }
 }
 
