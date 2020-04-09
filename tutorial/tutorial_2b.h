@@ -113,13 +113,21 @@ static inline void collectionReduce() {
    * This is an example of reducing over a virtual context collection
    */
 
-  if (this_node == 0) {
-    // Range of 32 elements for the collection
-    auto range = ::vt::Index1D(32);
-    // Construct the collection: invoked by one node. By default, the elements
-    // will be block mapped to the nodes
-    auto proxy = theCollection()->construct<ReduceCol>(range);
+  // Range of 32 elements for the collection
+  auto range = ::vt::Index1D(32);
 
+  // Construct the collection collectively. By default, the elements will be
+  // block mapped to the nodes
+  auto proxy = theCollection()->constructCollective<ReduceCol>(
+    range, [](vt::Index1D idx){
+      return std::make_unique<ReduceCol>();
+    }
+  );
+
+  // Barrier to wait for all nodes to construct the collection
+  vt::theCollective()->barrier();
+
+  if (this_node == 0) {
     // Broadcast a message to the entire collection. The reduceHandler will be
     // invoked on every element to the collection
     auto msg = ::vt::makeSharedMessage<ColRedMsg>();
