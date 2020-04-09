@@ -9,7 +9,11 @@ include(cmake/threading_config.cmake)
 option(USE_STD_THREAD "whether to force use of std::thread for threading" OFF)
 option(USE_OPENMP "whether to force use of OpenMP for threading" OFF)
 
-find_package(OpenMP)
+if ("$ENV{ATDM_CONFIG_USE_CUDA}" STREQUAL "ON")
+  message(STATUS "VT: CUDA detected from ATDM environment. Not finding OpenMP")
+else()
+  find_package(OpenMP)
+endif()
 
 # OpenMP support
 if (USE_STD_THREAD)
