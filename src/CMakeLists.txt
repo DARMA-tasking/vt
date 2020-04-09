@@ -53,6 +53,8 @@ set(
     topos/location
       topos/location/cache topos/location/message topos/location/record
       topos/location/utility
+      topos/location/directory
+      topos/location/lookup
     topos/index
       topos/index/dense topos/index/traits topos/index/printer
     topos/mapping
@@ -85,6 +87,7 @@ set(
       serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
+    utils/memory
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
       registry/auto/vc registry/auto/rdma registry/auto/index
@@ -260,8 +263,16 @@ else()
   set(FCONTEXT_LIBRARY_EXPORT "")
 endif()
 
+if (${vt_mimalloc_enabled})
+  set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
+else()
+  set(MIMALLOC_LIBRARY_EXPORT "")
+endif()
+
 export(
-  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY_EXPORT}
+  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
+                            ${FCONTEXT_LIBRARY_EXPORT}
+                            ${MIMALLOC_LIBRARY_EXPORT}
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )

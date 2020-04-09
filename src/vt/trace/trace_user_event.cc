@@ -56,7 +56,7 @@ UserEventIDType UserEventRegistry::createEvent(
 ) {
   constexpr NodeType const default_node = 0;
   NodeType const node = rooted ? in_node : default_node;
-  UserEventIDType event = 0;
+  UserEventIDType event = no_user_event_id;
   BitPackerType::boolSetField<eUserEventLayoutBits::Manu>(event, user);
   BitPackerType::boolSetField<eUserEventLayoutBits::Root>(event, rooted);
   BitPackerType::boolSetField<eUserEventLayoutBits::Hash>(event, hash);

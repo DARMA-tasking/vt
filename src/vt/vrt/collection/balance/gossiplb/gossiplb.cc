@@ -182,7 +182,7 @@ void GossipLB::inform() {
   );
 
   bool inform_done = false;
-  auto propagate_epoch = theTerm()->makeEpochCollective();
+  auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
   theTerm()->addAction(propagate_epoch, [&inform_done] { inform_done = true; });
 
   // Underloaded start the round
@@ -370,7 +370,7 @@ void GossipLB::decide() {
   double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
 
   bool decide_done = false;
-  auto lazy_epoch = theTerm()->makeEpochCollective();
+  auto lazy_epoch = theTerm()->makeEpochCollective("GossipLB: decide");
   theTerm()->addAction(lazy_epoch, [&decide_done] { decide_done = true; });
 
   if (is_overloaded_) {

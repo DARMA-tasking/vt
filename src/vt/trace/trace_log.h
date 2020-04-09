@@ -293,6 +293,14 @@ struct Log final {
   {
   }
 
+  // Memory usage event, could create another union type here, but hardly seems
+  // worth it; re-use SysData
+  Log(
+    double in_time, TraceConstantsType in_type, std::size_t in_memory_bytes
+  ) : time(in_time), type(in_type),
+      data(Data::SysData{in_memory_bytes})
+  { }
+
   inline Data::UserData const& user_data() const {
     assert(data.user.data_type == LogDataType::user && "Expecting user data-type");
     return data.user;

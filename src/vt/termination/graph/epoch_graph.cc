@@ -92,17 +92,27 @@ void EpochGraph::detectCycles() {
   detectCyclesImpl(stack);
 }
 
-void EpochGraph::outputImpl(std::set<std::tuple<EpochType, EpochType>> &links)  {
+void EpochGraph::outputImpl(
+  std::set<std::tuple<EpochType, std::string, EpochType, std::string>> &links
+)  {
   for (auto const& s : successors_) {
-    links.insert(std::make_pair(epoch_, s->epoch_));
+    links.insert(
+      std::make_tuple(epoch_, user_label_, s->epoch_, s->user_label_)
+    );
     s->outputImpl(links);
   }
 }
 
-EpochGraph::EpFormat EpochGraph::formatDOTEpoch(EpochType epoch) {
+EpochGraph::EpFormat EpochGraph::formatDOTEpoch(
+  EpochType epoch, std::string label
+) {
   if (epoch == term::any_epoch_sentinel) {
     return std::make_tuple(epoch, static_cast<NodeType>(-1), true, "Global");
   } else {
+    std::string label_format = "";
+    if (label != "") {
+      label_format = fmt::format("{}{}{}", "\\\"", label, "\\\"\\n");
+    }
     if (epoch::EpochManip::isRooted(epoch)) {
       auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
       auto const epoch_category = epoch::EpochManip::category(epoch);
@@ -110,14 +120,14 @@ EpochGraph::EpFormat EpochGraph::formatDOTEpoch(EpochType epoch) {
       auto const ep_node = epoch::EpochManip::node(epoch);
       auto const ep_seq = epoch::EpochManip::seq(epoch);
       if (is_ds) {
-        auto str = fmt::format("{:x}-DS-{}", ep_seq, ep_node);
+        auto str = fmt::format("{}{:x}-DS-{}", label_format, ep_seq, ep_node);
         return std::make_tuple(epoch, ep_node, false, str);
       } else {
-        auto str = fmt::format("{:x}-R-{}", ep_seq, ep_node);
+        auto str = fmt::format("{}{:x}-Wave-{}", label_format, ep_seq, ep_node);
         return std::make_tuple(epoch, ep_node, false, str);
       }
     } else {
-      auto str = fmt::format("{:x}-C", epoch);
+      auto str = fmt::format("{}{:x}-C", label_format, epoch);
       return std::make_tuple(epoch, static_cast<NodeType>(-1), true, str);
     }
   }
@@ -125,16 +135,20 @@ EpochGraph::EpFormat EpochGraph::formatDOTEpoch(EpochType epoch) {
 
 std::string EpochGraph::outputDOT(bool verbose) {
   std::unordered_map<EpochType, EpFormat> eps;
-  std::set<std::tuple<EpochType, EpochType>> links;
+  std::set<std::tuple<EpochType, std::string, EpochType, std::string>> links;
   std::string builder = "";
   outputImpl(links);
 
   for (auto&& elm : links) {
-    if (eps.find(std::get<0>(elm)) == eps.end()) {
-      eps[std::get<0>(elm)] = formatDOTEpoch(std::get<0>(elm));
+    auto epoch = std::get<0>(elm);
+    auto& epoch_label = std::get<1>(elm);
+    auto succ_epoch = std::get<2>(elm);
+    auto& succ_epoch_label = std::get<3>(elm);
+    if (eps.find(epoch) == eps.end()) {
+      eps[epoch] = formatDOTEpoch(epoch, epoch_label);
     }
-    if (eps.find(std::get<1>(elm)) == eps.end()) {
-      eps[std::get<1>(elm)] = formatDOTEpoch(std::get<1>(elm));
+    if (eps.find(succ_epoch) == eps.end()) {
+      eps[succ_epoch] = formatDOTEpoch(succ_epoch, succ_epoch_label);
     }
   }
 
@@ -170,21 +184,23 @@ std::string EpochGraph::outputDOT(bool verbose) {
     if (not arguments::ArgConfig::vt_epoch_graph_terse or verbose) {
       if (collective) {
         builder += fmt::format(
-          "\t{:x} [shape=record height=1 label=\"{}|{} collective | {:x} {}\"]\n",
+          "\t{} [shape=record height=1"
+          " label=\"{}|{} collective | Hex: {:x} {}\"]\n",
           elm.first, str, "{", ep, "}"
         );
       } else {
         builder += fmt::format(
-          "\t{:x} [shape=record height=1 label=\"{}|{} rooted | {:x} | node={} {}\"]\n",
+          "\t{} [shape=record height=1"
+          " label=\"{}|{} rooted | Hex: {:x} | node={} {}\"]\n",
           elm.first, str, "{", ep, node, "}"
         );
       }
     } else {
-      builder += fmt::format("\t{:x} [label=\"{}\"]\n", elm.first, str);
+      builder += fmt::format("\t{} [label=\"{}\"]\n", elm.first, str);
     }
   }
   for (auto&& elm : links) {
-    builder += fmt::format("\t{:x}->{:x};\n", std::get<0>(elm), std::get<1>(elm));
+    builder += fmt::format("\t{}->{};\n", std::get<0>(elm), std::get<2>(elm));
   }
   builder += "}\n";
   return builder;

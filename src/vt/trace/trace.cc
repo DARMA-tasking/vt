@@ -47,9 +47,11 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/timing/timing.h"
 #include "vt/trace/trace.h"
+#include "vt/trace/trace_user.h"
 #include "vt/utils/demangle/demangle.h"
 #include "vt/trace/file_spec/spec.h"
 #include "vt/objgroup/headers.h"
+#include "vt/utils/memory/memory_usage.h"
 
 #include <cinttypes>
 #include <fstream>
@@ -130,6 +132,9 @@ void Trace::initialize() {
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
   );
+
+  // Register a trace user event to demarcate flushes that occur
+  flush_event_ = vt::trace::registerEventCollective("trace_flush");
 }
 
 void Trace::loadAndBroadcastSpec() {
@@ -454,6 +459,11 @@ TraceProcessingTag Trace::beginProcessing(
     }
   );
 
+  if (ArgType::vt_trace_memory_usage) {
+    auto usage = util::memory::MemoryUsage::get();
+    addMemoryEvent(usage->getFirstUsage());
+  }
+
   return TraceProcessingTag{ep, loggedEvent};
 }
 
@@ -508,6 +518,11 @@ void Trace::endProcessing(
     return;
   }
 
+  if (ArgType::vt_trace_memory_usage) {
+    auto usage = util::memory::MemoryUsage::get();
+    addMemoryEvent(usage->getFirstUsage());
+  }
+
   debug_print(
     trace, node,
     "event_stop: ep={}, event={}, time={}, from_node={}\n",
@@ -521,6 +536,11 @@ void Trace::endProcessing(
       time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
     }
   );
+}
+
+void Trace::addMemoryEvent(std::size_t memory, double time) {
+  auto const type = TraceConstantsType::MemoryUsageCurrent;
+  logEvent(LogType{time, type, memory});
 }
 
 void Trace::beginIdle(double const time) {
@@ -642,8 +662,8 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
 
       // Go ahead and perform a trace flush when tracing is disabled (and was
       // previously enabled) to reduce memory footprint.
-      if (not ret) {
-        flushTracesFile(false);
+      if (not ret and ArgType::vt_trace_flush_size != 0) {
+        writeTracesFile(incremental_flush_mode, true);
       }
     }
 
@@ -719,6 +739,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   case TraceConstantsType::EndIdle:
     log.event = no_trace_event;
     break;
+  case TraceConstantsType::MemoryUsageCurrent:
   case TraceConstantsType::UserSupplied:
   case TraceConstantsType::UserSuppliedNote:
   case TraceConstantsType::UserSuppliedBracketedNote:
@@ -743,13 +764,6 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   // Normal case of event emitted at end
   TraceEventIDType event = log.event;
   traces_.push(std::move(log));
-
-  // If auto-flush, can flush immediately.
-  // TODO: log time of flushing; unify with group-end.
-  if (ArgType::vt_trace_flush_size not_eq 0
-      and traces_.size() >= static_cast<std::size_t>(ArgType::vt_trace_flush_size)) {
-    writeTracesFile(incremental_flush_mode);
-  }
 
   return event;
 }
@@ -784,7 +798,7 @@ void Trace::cleanupTracesFile() {
   disableTracing();
 
   //--- Dump everything into an output file and close.
-  writeTracesFile(Z_FINISH);
+  writeTracesFile(Z_FINISH, false);
 
   assert(log_file_ && "Trace file must be open"); // opened in writeTracesFile
   outputFooter(log_file_.get(), node, start_time_);
@@ -803,11 +817,11 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     theCollective()->barrier();
   }
   if (traces_.size() >= static_cast<std::size_t>(ArgType::vt_trace_flush_size)) {
-    writeTracesFile(incremental_flush_mode);
+    writeTracesFile(incremental_flush_mode, true);
   }
 }
 
-void Trace::writeTracesFile(int flush) {
+void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
   auto const node = theContext()->getNode();
 
   size_t to_write = traces_.size();
@@ -828,9 +842,21 @@ void Trace::writeTracesFile(int flush) {
       TraceContainersType::getEventContainer()->size()
     );
 
+    if (theContext()->getNode() == 0) {
+      vt_print(
+        trace,
+        "writeTracesFile: to_write={}, already_written={}\n",
+        traces_.size(), trace_write_count_
+      );
+    }
+
+    vt::trace::TraceScopedEvent scope(
+      is_incremental_flush ? flush_event_ : no_user_event_id
+    );
     outputTraces(
       log_file_.get(), traces_, start_time_, flush
     );
+
     trace_write_count_ += to_write;
   }
 
@@ -1017,6 +1043,17 @@ void Trace::writeTracesFile(int flush) {
         log.event,
         udata.user_note.length(),
         udata.user_note.c_str()
+      );
+      break;
+    }
+    case TraceConstantsType::MemoryUsageCurrent: {
+      auto const& sdata = log.sys_data();
+      gzprintf(
+        gzfile,
+        "%d %zu %lld \n",
+        type,
+        sdata.msg_len,
+        converted_time
       );
       break;
     }

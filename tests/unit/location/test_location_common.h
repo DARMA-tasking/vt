@@ -158,7 +158,9 @@ void verifyCacheConsistency(
     // check if should be serialized or not
     bool serialize = msg->getSerialize();
 
-    vt::theTerm()->addAction(epoch, [=]{
+    bool finished = false;
+
+    vt::theTerm()->addAction(epoch, [=,&finished]{
       if (my_node not_eq home) {
 
         // check the routing protocol to be used by the manager.
@@ -191,6 +193,7 @@ void verifyCacheConsistency(
         // regardless of the protocol (eager or not)
         EXPECT_TRUE(isCached(entity));
       }
+      finished = true;
     });
 
     if (my_node not_eq home) {
@@ -200,6 +203,10 @@ void verifyCacheConsistency(
     // wait for all ranks and finish the epoch
     vt::theCollective()->barrier();
     vt::theTerm()->finishedEpoch(epoch);
+
+    while (not finished) {
+      vt::runScheduler();
+    }
   }
 }
 

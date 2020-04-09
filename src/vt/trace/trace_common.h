@@ -66,6 +66,7 @@ using UserEventIDType     = int64_t;
 
 static constexpr TraceEventIDType const no_trace_event = 0;
 static constexpr BitCountType const trace_event_num_bits = 32;
+static constexpr UserEventIDType const no_user_event_id = 0;
 
 static constexpr NodeType const designated_root_node = 0;
 

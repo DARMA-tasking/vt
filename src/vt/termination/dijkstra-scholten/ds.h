@@ -49,6 +49,7 @@
 #include "vt/termination/dijkstra-scholten/ack_request.h"
 #include "vt/termination/dijkstra-scholten/comm.fwd.h"
 #include "vt/termination/epoch_dependency.h"
+#include "vt/termination/epoch_label.h"
 
 #include <cstdlib>
 #include <map>
@@ -76,7 +77,7 @@ namespace vt { namespace term { namespace ds {
  */
 
 template <typename CommType>
-struct TermDS : EpochDependency {
+struct TermDS : EpochDependency, EpochLabel {
   using CountType = int64_t;
   using AckReqListType = std::list<AckRequest>;
 

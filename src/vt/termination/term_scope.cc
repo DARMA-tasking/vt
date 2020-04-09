@@ -56,7 +56,7 @@ namespace vt { namespace term {
 ) {
   // For now we just use Dijkstra-Scholten if the region is "small"
   bool const use_dijkstra_scholten = small == true;
-  auto const epoch = theTerm()->makeEpochRooted(use_dijkstra_scholten);
+  auto const epoch = theTerm()->makeEpochRooted(UseDS{use_dijkstra_scholten});
   bool term_finished = false;
   auto action = [&]{ term_finished = true; };
   theTerm()->addActionEpoch(epoch,action);
@@ -75,7 +75,7 @@ namespace vt { namespace term {
   bool small, ActionType closure, ActionType action
 ) {
   bool const use_dijkstra_scholten = small == true;
-  auto const epoch = theTerm()->makeEpochRooted(use_dijkstra_scholten);
+  auto const epoch = theTerm()->makeEpochRooted(UseDS{use_dijkstra_scholten});
   theTerm()->addActionEpoch(epoch,action);
   vtAssertExpr(closure != nullptr);
   theMsg()->pushEpoch(epoch);
@@ -88,7 +88,7 @@ namespace vt { namespace term {
 /*static*/ EpochType TerminationDetector::Scoped::collective(
   ActionType closure
 ) {
-  auto const epoch = theTerm()->makeEpochCollective(true);
+  auto const epoch = theTerm()->makeEpochCollective();
   bool term_finished = false;
   auto action = [&]{ term_finished = true; };
   theTerm()->addActionEpoch(epoch,action);
@@ -106,7 +106,7 @@ namespace vt { namespace term {
 /*static*/ EpochType TerminationDetector::Scoped::collective(
   ActionType closure, ActionType action
 ) {
-  auto const epoch = theTerm()->makeEpochCollective(true);
+  auto const epoch = theTerm()->makeEpochCollective();
   theTerm()->addActionEpoch(epoch,action);
   vtAssertExpr(closure != nullptr);
   theMsg()->pushEpoch(epoch);
