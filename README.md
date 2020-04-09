@@ -3,6 +3,7 @@
 ![Build Status](https://travis-ci.com/DARMA-tasking/vt.svg?branch=develop)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e21fba68df8947ecb9a9c51b5e159e56)](https://www.codacy.com/gh/DARMA-tasking/vt?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DARMA-tasking/vt&amp;utm_campaign=Badge_Grade)
 [![codecov](https://codecov.io/gh/DARMA-tasking/vt/branch/develop/graph/badge.svg)](https://codecov.io/gh/DARMA-tasking/vt)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-orange.svg)](https://opensource.org/licenses/BSD-3-Clause)
 ![](https://github.com/DARMA-tasking/vt/workflows/Docker%20Image%20CI/badge.svg)
 ![gcc-5, ubuntu, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(gcc-5,%20ubuntu,%20mpich)/badge.svg?branch=develop)
 ![gcc-6, ubuntu, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(gcc-6,%20ubuntu,%20mpich)/badge.svg?branch=develop)
