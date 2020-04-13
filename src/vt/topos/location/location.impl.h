@@ -666,12 +666,14 @@ template <typename MessageT>
   auto const& from_node = msg->getLocFromNode();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
+  msg->incHops();
+
   debug_print(
     location, node,
     "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}, "
-    "epoch={:x}\n",
+    "epoch={:x}, hops={}\n",
     print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
-    from_node, epoch
+    from_node, epoch, msg->getHops()
   );
 
   theTerm()->produce(epoch);

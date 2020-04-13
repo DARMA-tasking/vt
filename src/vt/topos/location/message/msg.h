@@ -96,6 +96,8 @@ struct EntityMsg : ActiveMessageT {
   HandlerType getHandler() const { return handler_; }
   void setSerialize(bool const serialize) { serialize_ = serialize; }
   bool getSerialize() const { return serialize_; }
+  void incHops() { hops_ += 1; }
+  int getHops() const { return hops_; }
 
   // Explicitly write parent serialize so derived classes can have non-byte
   // serializers
@@ -113,6 +115,7 @@ struct EntityMsg : ActiveMessageT {
     s | loc_man_inst_;
     s | handler_;
     s | serialize_;
+    s | hops_;
   }
 
 private:
@@ -122,6 +125,7 @@ private:
   LocInstType loc_man_inst_ = no_loc_inst;
   HandlerType handler_ = uninitialized_handler;
   bool serialize_ = false;
+  int hops_ = 0;
 };
 
 }}  // end namespace vt::location
