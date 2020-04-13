@@ -101,6 +101,8 @@ struct EntityMsg : ActiveMessageT {
   bool getSerialize() const { return serialize_; }
   void incHops() { hops_ += 1; }
   int16_t getHops() const { return hops_; }
+  void setAskNode(NodeType const& node) { ask_node_ = node; }
+  NodeType getAskNode() const { return ask_node_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -112,6 +114,7 @@ struct EntityMsg : ActiveMessageT {
     s | handler_;
     s | serialize_;
     s | hops_;
+    s | ask_node_;
   }
 
 private:
@@ -122,6 +125,7 @@ private:
   HandlerType handler_ = uninitialized_handler;
   bool serialize_ = false;
   int16_t hops_ = 0;
+  NodeType ask_node_ =  uninitialized_destination;
 };
 
 }}  // end namespace vt::location
