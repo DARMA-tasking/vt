@@ -64,70 +64,51 @@ struct IRecvHolder {
 
   template <typename U>
   void emplace(U&& u) {
-    static constexpr std::size_t factor = 4;
-
-    if (holes_.size() * factor > holder_.size()) {
-      compress();
-    }
-
-    if (holes_.size() > 0) {
-      auto const slot = holes_.back();
-      holes_.pop_back();
-      holder_.emplace(holder_.begin() + slot, std::forward<U>(u));
-    } else {
-      holder_.emplace_back(std::forward<U>(u));
-    }
+    holder_.emplace_back(std::forward<U>(u));
   }
 
   template <typename Callable>
   bool testAll(Callable c) {
     bool progress_made = false;
 
-    // No active elements, skip any tests
-    if (holes_.size() == holder_.size()) {
-      return progress_made;
-    }
-
-    for (std::size_t i = 0; i < holder_.size(); i++) {
+    for (std::size_t i = 0; i < holder_.size(); ) {
       auto& e = holder_[i];
-      if (e.valid) {
-        int flag = 0;
-        MPI_Status stat;
-        MPI_Test(&e.req, &flag, &stat);
-        if (flag == 1) {
-          #if backend_check_enabled(trace_enabled)
-            if (ArgType::vt_trace_mpi) {
-              auto tr_note = fmt::format(
-                "Irecv completed: from={}", stat.MPI_SOURCE
-              );
-              trace::addUserNote(tr_note);
-            }
-          #endif
+      vtAssert(e.valid, "Must be valid");
 
-          c(&e);
-          progress_made = true;
-          e.valid = false;
-          holes_.push_back(i);
+      int flag = 0;
+      MPI_Status stat;
+      MPI_Test(&e.req, &flag, &stat);
+
+      if (flag == 1) {
+        #if backend_check_enabled(trace_enabled)
+          if (ArgType::vt_trace_mpi) {
+            auto tr_note = fmt::format(
+              "Irecv completed: from={}", stat.MPI_SOURCE
+            );
+            trace::addUserNote(tr_note);
+          }
+        #endif
+
+        c(&e);
+        progress_made = true;
+        e.valid = false;
+
+        if (i < holder_.size()) {
+          holder_[i] = holder_[holder_.size() - 1];
+          holder_.resize(holder_.size() - 1);
+        } else {
+          ++i;
         }
+      } else {
+        ++i;
       }
     }
-    return progress_made;
-  }
 
-  void compress() {
-    std::vector<T> new_holder;
-    for (std::size_t i = 0; i < holder_.size(); i++) {
-      if (holder_[i].valid) {
-        new_holder.emplace_back(std::move(holder_[i]));
-      }
-    }
-    holes_.clear();
-    holder_ = std::move(new_holder);
+    return progress_made;
   }
 
 private:
   std::vector<T> holder_;
-  std::vector<int> holes_;
 };
 
 }} /* end namespace vt::messaging */
