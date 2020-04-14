@@ -95,10 +95,11 @@ struct IRecvHolder {
 
         if (i < holder_.size() - 1) {
           holder_[i] = std::move(holder_[holder_.size() - 1]);
-          holder_.pop_back();
         } else {
           ++i;
         }
+
+        holder_.pop_back();
       } else {
         ++i;
       }
