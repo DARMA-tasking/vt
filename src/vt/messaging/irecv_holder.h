@@ -79,7 +79,10 @@ struct IRecvHolder {
       MPI_Status stat;
       MPI_Test(&e.req, &flag, &stat);
 
-      if (flag == 1) {
+      if (flag == 0) {
+        ++i;
+        continue;
+      } else {
         #if backend_check_enabled(trace_enabled)
           if (ArgType::vt_trace_mpi) {
             auto tr_note = fmt::format(
@@ -94,14 +97,12 @@ struct IRecvHolder {
         e.valid = false;
 
         if (i < holder_.size() - 1) {
-          holder_[i] = std::move(holder_[holder_.size() - 1]);
+          holder_[i] = std::move(holder_[holder_.back()]);
         } else {
           ++i;
         }
 
         holder_.pop_back();
-      } else {
-        ++i;
       }
     }
 
