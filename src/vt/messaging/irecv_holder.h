@@ -116,7 +116,7 @@ struct IRecvHolder {
         e.valid = false;
 
         if (i < holder_.size() - 1) {
-          holder_[i] = std::move(holder_[holder_.back()]);
+          holder_[i] = std::move(holder_.back());
         } else {
           ++i;
         }
