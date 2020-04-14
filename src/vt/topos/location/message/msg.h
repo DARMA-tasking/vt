@@ -68,6 +68,14 @@ struct LocationMsg : vt::Message {
       ask_node(in_ask_node), home_node(in_home_node)
   { }
 
+  LocationMsg(
+    LocInstType const& in_loc_man_inst, EntityID const& in_entity,
+    NodeType const& in_ask_node, NodeType const& in_home_node,
+    NodeType in_resolved
+  ) : loc_man_inst(in_loc_man_inst), entity(in_entity), ask_node(in_ask_node),
+      home_node(in_home_node), resolved_node(in_resolved)
+  { }
+
   void setResolvedNode(NodeType const& node) {
     resolved_node = node;
   }

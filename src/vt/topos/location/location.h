@@ -82,6 +82,7 @@ struct EntityLocationCoord : LocationCoord {
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
   using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
   using LocMsgType = LocationMsg<EntityID>;
+  using LocAsksType = std::unordered_map<EntityID, std::unordered_set<NodeType>>;
 
   template <typename MessageT>
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
@@ -178,6 +179,14 @@ struct EntityLocationCoord : LocationCoord {
   bool isCached(EntityID const& id) const;
   void clearCache();
 
+  void sendEagerUpdate(
+    EntityID const& id, NodeType ask_node, NodeType home_node,
+    NodeType deliver_node
+  );
+  void handleEagerUpdate(
+    EntityID const& id, NodeType home_node, NodeType deliver_node
+  );
+
   template <typename MessageT>
   bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const;
 
@@ -186,6 +195,7 @@ private:
   static void msgHandler(MessageT *msg);
   static void getLocationHandler(LocMsgType *msg);
   static void updateLocation(LocMsgType *msg);
+  static void recvEagerUpdate(LocMsgType *msg);
 
   template <typename MessageT>
   void routeMsgEager(
@@ -221,6 +231,9 @@ private:
 
   // pending lookup requests where this manager is the home node
   PendingLocLookupsType pending_lookups_;
+
+  // List of nodes that inquire about an entity that require an update
+  LocAsksType loc_asks_;
 };
 
 }}  // end namespace vt::location
