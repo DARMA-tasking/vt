@@ -49,6 +49,7 @@
 #include "vt/messaging/dependent_send_chain.h"
 
 #include <unordered_map>
+#include <unordered_set>
 
 namespace vt { namespace messaging {
 
@@ -72,14 +73,16 @@ class CollectionChainSet final {
     chains_.erase(iter);
   }
 
-  void nextStep(std::function<PendingSend(Index)> step_action) {
+  void nextStep(
+    std::string const& label, std::function<PendingSend(Index)> step_action
+  ) {
     for (auto &entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
 
       // The parameter `true` here tells VT to use an efficient rooted DS-epoch
       // by default. This can still be overridden by command-line flags
-      EpochType new_epoch = theTerm()->makeEpochRooted(true);
+      EpochType new_epoch = theTerm()->makeEpochRooted(label, term::UseDS{true});
       vt::theMsg()->pushEpoch(new_epoch);
 
       chain.add(new_epoch, step_action(idx));
@@ -87,6 +90,10 @@ class CollectionChainSet final {
       vt::theMsg()->popEpoch(new_epoch);
       theTerm()->finishedEpoch(new_epoch);
     }
+  }
+
+  void nextStep(std::function<PendingSend(Index)> step_action) {
+    return nextStep("", step_action);
   }
 
 #if 0
@@ -109,9 +116,10 @@ class CollectionChainSet final {
   }
 #endif
 
-  // for a step with internal recursive communication and global inter-dependence
-  void nextStepCollective(std::function<PendingSend(Index)> step_action) {
-    auto epoch = theTerm()->makeEpochCollective();
+  void nextStepCollective(
+    std::string const& label, std::function<PendingSend(Index)> step_action
+  ) {
+    auto epoch = theTerm()->makeEpochCollective(label);
     vt::theMsg()->pushEpoch(epoch);
 
     for (auto &entry : chains_) {
@@ -124,9 +132,33 @@ class CollectionChainSet final {
     theTerm()->finishedEpoch(epoch);
   }
 
+  void nextStepCollective(std::function<PendingSend(Index)> step_action) {
+    return nextStepCollective("", step_action);
+  }
+
   void phaseDone() {
     for (auto &entry : chains_) {
       entry.second.done();
+    }
+  }
+
+  /**
+   * \brief Get the set of indices registered with this chain set
+   */
+  std::unordered_set<Index> getSet() {
+    std::unordered_set<Index> index_set;
+    for (auto &entry : chains_) {
+      index_set.emplace(entry.first);
+    }
+    return index_set;
+  }
+
+  /**
+   * \brief Run a lambda immediately on each element in the index set
+   */
+  void foreach(std::function<void(Index)> fn) {
+    for (auto &entry : chains_) {
+      fn(entry.first);
     }
   }
 

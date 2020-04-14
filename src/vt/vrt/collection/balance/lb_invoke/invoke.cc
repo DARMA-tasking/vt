@@ -54,6 +54,7 @@
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
+#include "vt/utils/memory/memory_usage.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -224,6 +225,7 @@ void LBManager::releaseNow(PhaseType phase) {
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
     destroy_lb_();
+    printMemoryUsage(phase);
     destroy_lb_ = nullptr;
   }
   releaseLBPhase(msg.get());
@@ -231,12 +233,37 @@ void LBManager::releaseNow(PhaseType phase) {
   num_invocations_ = num_release_ = 0;
 }
 
+void LBManager::flushTraceNextPhase() {
+#if backend_check_enabled(trace_enabled)
+  theTrace()->flushTracesFile(false);
+# endif
+}
+
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
   // Set if tracing is enabled for this next phase. Do this immediately before
   // LB runs so LB is always instrumented as the beginning of the next phase
-# if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
   theTrace()->setTraceEnabledCurrentPhase(phase + 1);
 # endif
+}
+
+
+void LBManager::printMemoryUsage(PhaseType phase) {
+  if (arguments::ArgConfig::vt_print_memory_each_phase) {
+    auto this_node = theContext()->getNode();
+    if (
+      "all" == arguments::ArgConfig::vt_print_memory_node or
+      std::to_string(this_node) == arguments::ArgConfig::vt_print_memory_node
+    ) {
+      auto usage = util::memory::MemoryUsage::get();
+      if (usage->hasWorkingReporter()) {
+        auto memory_usage_str = fmt::format(
+          "Memory Usage: phase={}: {}\n", phase, usage->getUsageAll()
+        );
+        vt_print(gen, memory_usage_str);
+      }
+    }
+  }
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -64,6 +64,17 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
+/*static*/ std::string ArgConfig::vt_memory_reporters   =
+# if backend_check_enabled(mimalloc)
+  "mimalloc,"
+# endif
+  "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
+/*static*/ bool        ArgConfig::vt_print_memory_each_phase = false;
+/*static*/ std::string ArgConfig::vt_print_memory_node  = "0";
+/*static*/ bool        ArgConfig::vt_allow_memory_report_with_ps = false;
+/*static*/ bool        ArgConfig::vt_print_memory_at_threshold = false;
+/*static*/ std::string ArgConfig::vt_print_memory_threshold = "1 GiB";
+/*static*/ int32_t     ArgConfig::vt_print_memory_sched_poll = 100;
 
 /*static*/ bool        ArgConfig::vt_no_warn_stack      = false;
 /*static*/ bool        ArgConfig::vt_no_assert_stack    = false;
@@ -81,6 +92,7 @@ namespace vt { namespace arguments {
 /*static*/ int32_t     ArgConfig::vt_trace_flush_size   = 0;
 /*static*/ bool        ArgConfig::vt_trace_spec           = false;
 /*static*/ std::string ArgConfig::vt_trace_spec_file      = "";
+/*static*/ bool        ArgConfig::vt_trace_memory_usage   = false;
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
@@ -149,6 +161,8 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::parsed                = false;
 
+static std::unique_ptr<char*[]> new_argv = nullptr;
+
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
   static CLI::App app{"vt"};
 
@@ -190,10 +204,37 @@ namespace vt { namespace arguments {
   auto d = app.add_flag("--vt_no_SIGINT",    vt_no_sigint,    no_sigint);
   auto e = app.add_flag("--vt_no_SIGSEGV",   vt_no_sigsegv,   no_sigsegv);
   auto f = app.add_flag("--vt_no_terminate", vt_no_terminate, no_terminate);
-  auto signalGroup = "Signa Handling";
+  auto signalGroup = "Signal Handling";
   d->group(signalGroup);
   e->group(signalGroup);
   f->group(signalGroup);
+
+  /*
+   * Flags for controlling memory usage reporting
+   */
+  auto mem_desc  = "List of memory reporters to query in order of precedence";
+  auto mem_phase = "Print memory usage each new phase";
+  auto mem_node  = "Node to print memory usage from or \"all\"";
+  auto mem_ps    = "Enable memory reporting with PS (warning: forking to query 'ps' may not be scalable)";
+  auto mem_at_thresh = "Print memory usage from scheduler when reaches a threshold increment";
+  auto mem_thresh    = "The threshold increments to print memory usage: \"<value> {GiB,MiB,KiB,B}\"";
+  auto mem_sched     = "The frequency to query the memory threshold check (some memory reporters might be expensive)";
+  auto mm = app.add_option("--vt_memory_reporters", vt_memory_reporters, mem_desc, true);
+  auto mn = app.add_flag("--vt_print_memory_each_phase", vt_print_memory_each_phase, mem_phase);
+  auto mo = app.add_option("--vt_print_memory_node", vt_print_memory_node, mem_node, true);
+  auto mp = app.add_flag("--vt_allow_memory_report_with_ps", vt_allow_memory_report_with_ps, mem_ps);
+  auto mq = app.add_flag("--vt_print_memory_at_threshold", vt_print_memory_at_threshold, mem_at_thresh);
+  auto mr = app.add_option("--vt_print_memory_threshold", vt_print_memory_threshold, mem_thresh, true);
+  auto ms = app.add_option("--vt_print_memory_sched_poll", vt_print_memory_sched_poll, mem_sched, true);
+  auto memoryGroup = "Memory Usage Reporting";
+  mm->group(memoryGroup);
+  mn->group(memoryGroup);
+  mo->group(memoryGroup);
+  mp->group(memoryGroup);
+  mq->group(memoryGroup);
+  mr->group(memoryGroup);
+  ms->group(memoryGroup);
+
 
   /*
    * Flags to control stack dumping
@@ -235,6 +276,7 @@ namespace vt { namespace arguments {
   auto tflushmod = "Flush output trace every (vt_trace_flush_size) trace records";
   auto tspec     = "Enable trace spec file (defines which phases tracing is on)";
   auto tspecfile = "File containing trace spec; --vt_trace_spec to enable";
+  auto tmemusage = "Trace memory usage using first memory reporter";
   auto n  = app.add_flag("--vt_trace",              vt_trace,           trace);
   auto nm = app.add_flag("--vt_trace_mpi",          vt_trace_mpi,       trace_mpi);
   auto o  = app.add_option("--vt_trace_file",       vt_trace_file,      tfile, "");
@@ -244,6 +286,7 @@ namespace vt { namespace arguments {
     0);
   auto qza = app.add_flag("--vt_trace_spec",          vt_trace_spec,           tspec);
   auto qzb = app.add_option("--vt_trace_spec_file",   vt_trace_spec_file,      tspecfile, "");
+  auto qzc = app.add_flag("--vt_trace_memory_usage",  vt_trace_memory_usage,   tmemusage);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
@@ -253,6 +296,7 @@ namespace vt { namespace arguments {
   qf->group(traceGroup);
   qza->group(traceGroup);
   qzb->group(traceGroup);
+  qzc->group(traceGroup);
 
   /*
    * Flags for controlling debug print output at runtime
@@ -515,23 +559,24 @@ namespace vt { namespace arguments {
    */
   std::vector<std::string> ret_args;
   std::vector<std::size_t> ret_idx;
-  int item = 0;
+  int item = argc;
 
   // Iterate forward (CLI11 reverses the order when it modifies the args)
   for (auto&& skipped : args) {
-    for (auto ii = item; ii < argc; ii++) {
+    for (auto ii = item-1; ii >= 0; ii--) {
       if (std::string(argv[ii]) == skipped) {
         ret_idx.push_back(ii);
-        item++;
+        item--;
         break;
       }
     }
     ret_args.push_back(skipped);
   }
+  std::reverse(ret_idx.begin(), ret_idx.end());
 
   // Use the saved index to setup the new_argv and new_argc
   int new_argc = ret_args.size() + 1;
-  char** new_argv = new char*[new_argc + 1];
+  new_argv = std::make_unique<char*[]>(new_argc + 1);
   new_argv[0] = argv[0];
   for (auto ii = 1; ii < new_argc; ii++) {
     new_argv[ii] = argv[ret_idx[ii - 1]];
@@ -539,7 +584,7 @@ namespace vt { namespace arguments {
 
   // Set them back with all vt arguments elided
   argc = new_argc;
-  argv = new_argv;
+  argv = new_argv.get();
 
   parsed = true;
   return 1;

@@ -113,9 +113,6 @@ void CollectionManager::startPhaseCollective(
     fn();
   }
 #endif
-#if backend_check_enabled(trace_enabled)
-  theTrace()->flushTracesFile(false);
-#endif
 }
 
 DispatchBasePtrType

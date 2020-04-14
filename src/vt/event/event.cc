@@ -207,12 +207,12 @@ EventType AsyncEvent::createEvent(
   auto& container = needsPolling(type)
     ? polling_event_container_ : event_container_;
 
-  container.emplace_front(EventHolderType(std::move(et)));
+  container.emplace_back(EventHolderType(std::move(et)));
 
   lookup_container_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(event),
-    std::forward_as_tuple(container.begin())
+    std::forward_as_tuple(--container.end())
   );
 
   return event;
@@ -280,19 +280,20 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
 void AsyncEvent::testEventsTrigger(int const& num_events) {
   int cur = 0;
   auto& cont = polling_event_container_;
-  for (auto iter = cont.begin(); iter != cont.end(); iter++) {
+  for (auto iter = cont.begin(); iter != cont.end(); ) {
     auto& holder = *iter;
     auto event = holder.get_event();
     auto id = event->getEventID();
     if (event->testReady()) {
       holder.executeActions();
-      polling_event_container_.erase(iter);
+      iter = polling_event_container_.erase(iter);
       lookup_container_.erase(id);
-      return;
+    } else {
+      iter++;
     }
 
     cur++;
-    if (cur > num_events) {
+    if (num_events > 0 and cur > num_events) {
       break;
     }
   }

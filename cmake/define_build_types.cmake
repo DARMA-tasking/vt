@@ -119,6 +119,14 @@ else()
   set(vt_feature_cmake_fcontext "0")
 endif()
 
+if (${vt_mimalloc_enabled})
+  message(STATUS "Building VT with mimalloc enabled")
+  set(vt_feature_cmake_mimalloc "1")
+else()
+  message(STATUS "Building VT with mimalloc disabled")
+  set(vt_feature_cmake_mimalloc "0")
+endif()
+
 set(vt_feature_cmake_no_feature "0")
 set(vt_feature_cmake_production "0")
 

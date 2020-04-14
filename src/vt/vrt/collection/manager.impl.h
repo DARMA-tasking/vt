@@ -311,7 +311,7 @@ GroupType CollectionManager::createGroupCollection(
 
       if (!is_group_default && my_in_group) {
         uint64_t const group_tag_mask = 0x0fff0000;
-        auto group_msg = makeSharedMessage<CollectionGroupMsg>(proxy,new_group);
+        auto group_msg = makeMessage<CollectionGroupMsg>(proxy,new_group);
         auto const& group_tag_id = vid | group_tag_mask;
         debug_print(
           vrt_coll, node,
@@ -320,7 +320,7 @@ GroupType CollectionManager::createGroupCollection(
         theGroup()->groupReduce(new_group)->reduce<
           CollectionGroupMsg,
           collectionGroupReduceHan
-        >(group_root, group_msg, group_tag_id);
+        >(group_root, group_msg.get(), group_tag_id);
       } else if (is_group_default) {
         /*
          *  Trigger the group finished handler directly because the default
@@ -1597,7 +1597,7 @@ bool CollectionManager::insertCollectionElement(
 
     if (is_migrated_in) {
       theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntityMigrated(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, migrated_from,
+        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
     } else {
@@ -2100,7 +2100,9 @@ CollectionManager::constructMap(
   CollectionInfo<ColT, IndexT> info(range, is_static, node, new_proxy);
 
   if (!is_static) {
-    auto const& insert_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+    auto const& insert_epoch = theTerm()->makeEpochRootedWave(
+      term::SuccessorEpochCapture{no_epoch}
+    );
     theTerm()->finishNoActivateEpoch(insert_epoch);
     info.setInsertEpoch(insert_epoch);
     setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
@@ -2265,7 +2267,9 @@ void CollectionManager::finishedInsertEpoch(
   /*
    *  Add trigger for the next insertion phase/epoch finishing
    */
-  auto const& next_insert_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+  auto const& next_insert_epoch = theTerm()->makeEpochRootedWave(
+    term::SuccessorEpochCapture{no_epoch}
+  );
   theTerm()->finishNoActivateEpoch(next_insert_epoch);
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,next_insert_epoch);
 
@@ -2766,7 +2770,14 @@ MigrateStatus CollectionManager::migrateIn(
   vrt_elm_ptr->temp_elm_id_ = balance::ProcStats::getNextElm();
 
   bool const is_static = ColT::isStaticSized();
-  auto const home_node = uninitialized_destination;
+
+  auto idx_copy = idx;
+  auto max_idx_copy = max;
+  auto const cur_cast = static_cast<vt::index::BaseIndex*>(&idx_copy);
+  auto const max_cast = static_cast<vt::index::BaseIndex*>(&max_idx_copy);
+  auto fn = auto_registry::getHandlerMap(map_han);
+  auto const home_node = fn(cur_cast, max_cast, theContext()->getNumNodes());
+
   auto const inserted = insertCollectionElement<ColT, IndexT>(
     std::move(vrt_elm_ptr), idx, max, map_han, proxy, is_static,
     home_node, true, from

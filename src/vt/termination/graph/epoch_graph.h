@@ -65,8 +65,9 @@ struct EpochGraph {
   EpochGraph(EpochGraph const&) = default;
   EpochGraph& operator=(EpochGraph const&) = default;
 
-  explicit EpochGraph(EpochType in_epoch)
-    : epoch_(in_epoch)
+  EpochGraph(EpochType in_epoch, std::string user_label)
+    : epoch_(in_epoch),
+      user_label_(user_label)
   { }
 
 public:
@@ -85,8 +86,10 @@ public:
   void detectCycles();
 
 private:
-  void outputImpl(std::set<std::tuple<EpochType, EpochType>> &links);
-  EpFormat formatDOTEpoch(EpochType epoch);
+  void outputImpl(
+    std::set<std::tuple<EpochType, std::string, EpochType, std::string>> &links
+  );
+  EpFormat formatDOTEpoch(EpochType epoch, std::string label);
 
 public:
   std::string outputDOT(bool verbose = false);
@@ -100,6 +103,7 @@ public:
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | epoch_;
+    s | user_label_;
     std::size_t nc = successors_.size();
     s | nc;
     for (std::size_t i = 0; i < nc; i++) {
@@ -119,6 +123,7 @@ public:
 
 private:
   EpochType epoch_ = no_epoch;
+  std::string user_label_ = "";
   std::vector<std::shared_ptr<EpochGraph>> successors_ = {};
 };
 

@@ -3,6 +3,8 @@ project(vt)
 
 include(cmake/turn_on_warnings.cmake)
 
+include(cmake/check_system_functions.cmake)
+
 set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
 set(FCONTEXT_LIBRARY fcontext)
 
@@ -48,6 +50,19 @@ if (${vt_fcontext_enabled})
 endif()
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
+
+option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
+option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
+if (${vt_mimalloc_enabled})
+  add_subdirectory(${PROJECT_LIB_DIR}/mimalloc)
+  if (${vt_mimalloc_static})
+    set(MIMALLOC_LIBRARY mimalloc-static)
+  else()
+    set(MIMALLOC_LIBRARY mimalloc)
+  endif()
+endif()
+
+# Primary VT build
 add_subdirectory(src)
 
 add_custom_target(examples)

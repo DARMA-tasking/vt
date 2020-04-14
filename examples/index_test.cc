@@ -64,8 +64,7 @@ int main(int argc, char** argv) {
 
   fmt::print(
     "idx={}, idx2={}, idx3={}, size={}, node={}\n",
-    idx.toString().c_str(), idx2.toString().c_str(), idx3.toString().c_str(),
-    sizeof(idx), node
+    idx, idx2, idx3, sizeof(idx), node
   );
 
   int const dim1 = 4, dim2 = 5;
@@ -81,18 +80,15 @@ int main(int argc, char** argv) {
       auto lin_idx = mapping::linearizeDenseIndexColMajor(&cur_idx, &idx_a_max);
       fmt::print(
         "idx={}, max={}, lin={}\n",
-        cur_idx.toString().c_str(), idx_a_max.toString().c_str(), lin_idx
+        cur_idx, idx_a_max, lin_idx
       );
       vtAssertExpr(lin_idx == cur_val);
       cur_val++;
     }
   }
 
-  auto const& idx_a_str = idx_a.toString().c_str();
-  auto const& idx_a_max_str = idx_a_max.toString().c_str();
-
   fmt::print(
-    "idx_a={}, indx_a_max={}, node={}\n", idx_a_str, idx_a_max_str, node_a
+    "idx_a={}, indx_a_max={}, node={}\n", idx_a, idx_a_max, node_a
   );
 
   while (!rt->isTerminated()) {

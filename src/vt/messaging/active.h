@@ -146,10 +146,12 @@ struct BufferedActiveMsg {
 
   MessageType buffered_msg;
   NodeType from_node;
+  ActionType cont;
 
   BufferedActiveMsg(
-    MessageType const& in_buffered_msg, NodeType const& in_from_node
-  ) : buffered_msg(in_buffered_msg), from_node(in_from_node)
+    MessageType const& in_buffered_msg, NodeType const& in_from_node,
+    ActionType in_cont
+  ) : buffered_msg(in_buffered_msg), from_node(in_from_node), cont(in_cont)
   { }
 };
 
@@ -556,15 +558,17 @@ struct ActiveMessenger {
 
   void scheduleActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
-    MsgSizeType const& size, bool insert
+    MsgSizeType const& size, bool insert, ActionType cont = nullptr
   );
+
   bool processActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
-    MsgSizeType const& size, bool insert
+    MsgSizeType const& size, bool insert, ActionType cont = nullptr
   );
+
   bool deliverActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& from_node,
-    bool insert
+    bool insert, ActionType cont
   );
   void deliverPendingMsgsHandler(
     HandlerType const& han, TagType const& tag = no_tag
@@ -656,8 +660,8 @@ private:
 
   #if backend_check_enabled(trace_enabled)
     trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
-    trace::UserEventIDType trace_irecv     = 0;
-    trace::UserEventIDType trace_isend     = 0;
+    trace::UserEventIDType trace_irecv     = trace::no_user_event_id;
+    trace::UserEventIDType trace_isend     = trace::no_user_event_id;
   #endif
 
   HandlerType current_handler_context_                    = uninitialized_handler;
