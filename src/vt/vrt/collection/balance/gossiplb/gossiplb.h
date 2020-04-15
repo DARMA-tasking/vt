@@ -87,7 +87,7 @@ protected:
 
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
-  std::vector<NodeType> makeUnderloadedRelaxed() const;
+  std::vector<NodeType> makeUnderloaded() const;
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
