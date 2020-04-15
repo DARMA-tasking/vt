@@ -118,8 +118,8 @@ void GossipLB::doLBStages() {
 
     debug_print(
       gossiplb, node,
-      "GossipLB::doLBStages: running iter_={}, num_iters_={}, load={}\n",
-      iter_, num_iters_, this_load
+      "GossipLB::doLBStages: (before) running iter_={}, num_iters_={}, load={}, new_load={}\n",
+      iter_, num_iters_, this_load, this_new_load_
     );
 
     if (first_iter) {
@@ -143,6 +143,12 @@ void GossipLB::doLBStages() {
 
     inform();
     decide();
+
+    debug_print(
+      gossiplb, node,
+      "GossipLB::doLBStages: (after) running iter_={}, num_iters_={}, load={}, new_load={}\n",
+      iter_, num_iters_, this_load, this_new_load_
+    );
   }
 
   // Concretize lazy migrations by invoking the BaseLB object migration on new
@@ -173,8 +179,8 @@ void GossipLB::inform() {
   debug_print(
     gossiplb, node,
     "GossipLB::inform: starting inform phase: k_max_={}, k_cur_={}, "
-    "is_underloaded={}, is_overloaded={}\n",
-    k_max_, k_cur_, is_underloaded_, is_overloaded_
+    "is_underloaded={}, is_overloaded={}, load={}\n",
+    k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
   );
 
   bool inform_done = false;
