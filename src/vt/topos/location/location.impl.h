@@ -406,6 +406,7 @@ void EntityLocationCoord<EntityID>::handleEagerUpdate(
   auto this_node = theContext()->getNode();
   vtAssert(this_node != deliver_node, "This should have been a forwarding node");
   vtAssert(home_node != uninitialized_destination, "Home node should be valid");
+  vtAssert(home_node < theContext()->getNumNodes(), "Home node should be valid");
 
   debug_print(
     location, node,
