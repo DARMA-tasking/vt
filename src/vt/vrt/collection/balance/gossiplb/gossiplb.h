@@ -58,9 +58,10 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct GossipLB : BaseLB {
-  using GossipMsg   = balance::GossipMsg;
-  using NodeSetType = std::vector<NodeType>;
-  using ObjsType    = std::unordered_map<ObjIDType, LoadType>;
+  using GossipMsg     = balance::GossipMsg;
+  using NodeSetType   = std::vector<NodeType>;
+  using ObjsType      = std::unordered_map<ObjIDType, LoadType>;
+  using ReduceMsgType = vt::collective::ReduceNoneMsg;
 
   GossipLB() = default;
   GossipLB(GossipLB const&) = delete;
@@ -95,6 +96,8 @@ protected:
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
   void thunkMigrations();
 
+  void setupDone(ReduceMsgType* msg);
+
 private:
   uint8_t f_                                        = 4;
   uint8_t k_max_                                    = 4;
@@ -111,6 +114,7 @@ private:
   std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
+  bool setup_done_                                  = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
