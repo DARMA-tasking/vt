@@ -183,7 +183,15 @@ void GossipLB::inform() {
     k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
   );
 
-  theCollective()->barrier();
+  setup_done_ = false;
+
+  auto cb = theCB()->makeBcast<GossipLB, ReduceMsgType, &GossipLB::setupDone>(proxy_);
+  auto msg = makeMessage<ReduceMsgType>();
+  proxy_.reduce(msg.get(), cb);
+
+  while (not setup_done_) {
+    vt::runScheduler();
+  }
 
   bool inform_done = false;
   auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
@@ -205,6 +213,10 @@ void GossipLB::inform() {
     "GossipLB::inform: finished inform phase: k_max_={}, k_cur_={}\n",
     k_max_, k_cur_
   );
+}
+
+void GossipLB::setupDone(ReduceMsgType* msg) {
+  setup_done_ = true;
 }
 
 void GossipLB::propagateRound(EpochType epoch) {
