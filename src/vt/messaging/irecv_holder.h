@@ -101,28 +101,28 @@ struct IRecvHolder {
       if (flag == 0) {
         ++i;
         continue;
-      } else {
-        #if backend_check_enabled(trace_enabled)
-          if (ArgType::vt_trace_mpi) {
-            auto tr_note = fmt::format(
-              "Irecv completed: from={}", stat.MPI_SOURCE
-            );
-            trace::addUserNote(tr_note);
-          }
-        #endif
-
-        c(&e);
-        progress_made = true;
-        e.valid = false;
-
-        if (i < holder_.size() - 1) {
-          holder_[i] = std::move(holder_.back());
-        } else {
-          ++i;
-        }
-
-        holder_.pop_back();
       }
+
+      #if backend_check_enabled(trace_enabled)
+        if (ArgType::vt_trace_mpi) {
+          auto tr_note = fmt::format(
+            "Irecv completed: from={}", stat.MPI_SOURCE
+          );
+          trace::addUserNote(tr_note);
+        }
+      #endif
+
+      c(&e);
+      progress_made = true;
+      e.valid = false;
+
+      if (i < holder_.size() - 1) {
+        holder_[i] = std::move(holder_.back());
+      } else {
+        ++i;
+      }
+
+      holder_.pop_back();
     }
 
     return progress_made;
