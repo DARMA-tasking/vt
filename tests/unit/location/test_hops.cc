@@ -110,18 +110,14 @@ struct TestColl : Collection<TestColl,vt::Index2D> {
     if (m->do_check_ and m->getHops() > 1) {
       vt_print(gen, "found long hop message hops={}\n", m->getHops());
     }
-    vtAssert(
-      not m->do_check_ or m->getHops() <= 1, "Must be 1 hop after update"
-    );
+    EXPECT_TRUE(not m->do_check_ or m->getHops() <= 1);
   }
 
   void getBack(TestMsg* m) {
     if (m->do_check_ and m->getHops() > 1) {
       vt_print(gen, "found long hop message hops={}\n", m->getHops());
     }
-    vtAssert(
-      not m->do_check_ or m->getHops() <= 1, "Must be 1 hop after update"
-    );
+    EXPECT_TRUE(not m->do_check_ or m->getHops() <= 1);
   }
 
   void dolb(TestMsg* m) {
