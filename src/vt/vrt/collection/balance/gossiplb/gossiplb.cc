@@ -183,6 +183,8 @@ void GossipLB::inform() {
     k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
   );
 
+  theCollective()->barrier();
+
   bool inform_done = false;
   auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
   theTerm()->addAction(propagate_epoch, [&inform_done] { inform_done = true; });
