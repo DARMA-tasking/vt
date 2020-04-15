@@ -60,6 +60,9 @@ namespace vt { namespace event {
 //   return ready;
 // }
 
+void AsyncEvent::initialize() {
+
+}
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
   auto const& this_node = theContext()->getNode();

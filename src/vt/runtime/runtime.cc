@@ -1145,6 +1145,7 @@ void Runtime::initializeComponents() {
   #if backend_check_enabled(trace_enabled)
     theTrace->initialize();
   #endif
+  theEvent->initialize();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }

@@ -84,6 +84,7 @@ struct AsyncEvent {
 
   virtual ~AsyncEvent();
 
+  void initialize();
   void cleanup();
   EventType createEvent(EventRecordTypeType const& type, NodeType const& node);
   EventRecordType& getEvent(EventType const& event);
