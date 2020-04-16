@@ -150,27 +150,15 @@ PhaseType ElementStats::getPhase() const {
 TimeType ElementStats::getLoad(PhaseType const& phase) const {
   vtAssert(phase_timings_.size() > phase, "Must have phase");
 
-  if (focused_subphase_ != no_subphase) {
-    auto const& total_load = subphase_timings_.at(phase).at(focused_subphase_);
+  auto const& total_load = phase_timings_.at(phase);
 
-    debug_print(
-                lb, node,
-                "ElementStats: getLoad: load={}, phase={}, focused_subphase={}, size={}\n",
-                total_load, phase, focused_subphase_, phase_timings_.size()
-                );
+  debug_print(
+              lb, node,
+              "ElementStats: getLoad: load={}, phase={}, size={}\n",
+              total_load, phase, phase_timings_.size()
+              );
 
-    return total_load;
-  } else {
-    auto const& total_load = phase_timings_.at(phase);
-
-    debug_print(
-                lb, node,
-                "ElementStats: getLoad: load={}, phase={}, size={}\n",
-                total_load, phase, phase_timings_.size()
-                );
-
-    return total_load;
-  }
+  return total_load;
 }
 
 TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
@@ -208,10 +196,20 @@ void ElementStats::setSubPhase(SubphaseType subphase) {
   cur_subphase_ = subphase;
 }
 
-void ElementStats::setFocusedSubPhase(SubphaseType subphase) {
-  focused_subphase_ = subphase;
+/*static*/
+void ElementStats::setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase) {
+  focused_subphase_[collection] = subphase;
 }
 
-/*static*/ ElementStats::SubphaseType ElementStats::focused_subphase_ = ElementStats::no_subphase;
+/*static*/
+ElementStats::SubphaseType ElementStats::getFocusedSubPhase(VirtualProxyType collection) {
+  auto i = focused_subphase_.find(collection);
+  if (i != focused_subphase_.end())
+    return i->second;
+  else
+    return no_subphase;
+}
+
+/*static*/ std::unordered_map<VirtualProxyType,ElementStats::SubphaseType> ElementStats::focused_subphase_;
 
 }}}} /* end namespace vt::vrt::collection::balance */
