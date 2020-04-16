@@ -632,6 +632,21 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_trace_memory_usage", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+    if (ArgType::vt_trace_mpi) {
+      auto f11 = fmt::format("Tracing MPI invocations");
+      auto f12 = opt_on("--vt_trace_mpi", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_event_polling) {
+      auto f11 = fmt::format("Tracing event polling (inc. MPI Isend requests)");
+      auto f12 = opt_on("--vt_trace_event_polling", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_irecv_polling) {
+      auto f11 = fmt::format("Tracing MPI Irecv polling");
+      auto f12 = opt_on("--vt_trace_irecv_polling", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
   #endif
 
@@ -1202,6 +1217,7 @@ void Runtime::initializeComponents() {
   #if backend_check_enabled(trace_enabled)
     theTrace->initialize();
   #endif
+  theEvent->initialize();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }

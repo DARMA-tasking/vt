@@ -1525,13 +1525,13 @@ private:
   );
 
 private:
-  NodeType this_node_                   = uninitialized_destination;
-
-  #if backend_check_enabled(trace_enabled)
-    trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
-    trace::UserEventIDType trace_irecv     = trace::no_user_event_id;
-    trace::UserEventIDType trace_isend     = trace::no_user_event_id;
-  #endif
+# if backend_check_enabled(trace_enabled)
+  trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
+  trace::UserEventIDType trace_irecv             = trace::no_user_event_id;
+  trace::UserEventIDType trace_isend             = trace::no_user_event_id;
+  trace::UserEventIDType trace_irecv_polling_am  = trace::no_user_event_id;
+  trace::UserEventIDType trace_irecv_polling_dm  = trace::no_user_event_id;
+# endif
 
   HandlerType current_handler_context_                    = uninitialized_handler;
   NodeType current_node_context_                          = uninitialized_destination;
@@ -1543,9 +1543,10 @@ private:
   ContainerPendingType pending_recvs_                     = {};
   TagType cur_direct_buffer_tag_                          = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
-  std::vector<ListenerType> send_listen_                    = {};
-  IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv = {};
-  IRecvHolder<InProgressDataIRecv> in_progress_data_irecv   = {};
+  std::vector<ListenerType> send_listen_                  = {};
+  IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv;
+  IRecvHolder<InProgressDataIRecv> in_progress_data_irecv;
+  NodeType this_node_                                     = uninitialized_destination;
 };
 
 }} // end namespace vt::messaging
