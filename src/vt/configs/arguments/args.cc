@@ -157,6 +157,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_broadcast    = false;
 /*static*/ bool        ArgConfig::vt_debug_objgroup     = false;
 
+/*static*/ bool        ArgConfig::vt_debug_print_flush  = false;
+
 /*static*/ bool        ArgConfig::vt_user_1             = false;
 /*static*/ bool        ArgConfig::vt_user_2             = false;
 /*static*/ bool        ArgConfig::vt_user_3             = false;
@@ -433,6 +435,11 @@ static std::unique_ptr<char*[]> new_argv = nullptr;
   bb->group(debugGroup);
   cb->group(debugGroup);
   db->group(debugGroup);
+
+  auto dbq = "Always flush VT runtime prints";
+  auto eb  = app.add_flag("--vt_debug_print_flush", vt_debug_print_flush, dbq);
+  eb->group(debugGroup);
+
 
   /*
    * Flags for enabling load balancing and configuring it
