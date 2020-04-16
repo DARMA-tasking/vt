@@ -477,7 +477,16 @@ bool ActiveMessenger::recvDataMsgBuffer(
         buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
         priority
       };
-      in_progress_data_irecv.emplace(std::move(recv_holder));
+
+      int recv_flag = 0;
+      MPI_Status recv_stat;
+      MPI_Test(&recv_holder.req, &recv_flag, &recv_stat);
+      if (recv_flag == 1) {
+        finishPendingDataMsgAsyncRecv(&recv_holder);
+      } else {
+        in_progress_data_irecv.emplace(std::move(recv_holder));
+      }
+
       return true;
     } else {
       return false;
@@ -782,7 +791,16 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     }
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
-    in_progress_active_msg_irecv.emplace(std::move(recv_holder));
+
+    int recv_flag = 0;
+    MPI_Status recv_stat;
+    MPI_Test(&recv_holder.req, &recv_flag, &recv_stat);
+    if (recv_flag == 1) {
+      finishPendingActiveMsgAsyncRecv(&recv_holder);
+    } else {
+      in_progress_active_msg_irecv.emplace(std::move(recv_holder));
+    }
+
     return true;
   } else {
     return false;
