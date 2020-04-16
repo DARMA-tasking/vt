@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                 diagnostic.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,18 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H
 
 #include "vt/config.h"
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/bufferable.h"
-#include "vt/runtime/component/progressable.h"
 
 namespace vt { namespace runtime { namespace component {
 
-struct BaseComponent : Diagnostic, Bufferable, Progressable {
-  template <typename... Deps>
-  struct DepsPack { };
-
-  virtual void initialize() = 0;
-  virtual void finalize() = 0;
-
-  virtual bool pollable() = 0;
-  virtual void startup() = 0;
-
-  virtual ~BaseComponent() { }
+struct Diagnostic {
+  virtual void dumpState() = 0;
+  // @todo diagnostics
 };
 
 }}} /* end namespace vt::runtime::component */
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H*/

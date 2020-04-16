@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                               component_dep.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,45 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_DEP_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_DEP_H
 
 #include "vt/config.h"
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/bufferable.h"
-#include "vt/runtime/component/progressable.h"
+#include "vt/runtime/component/component_registry.h"
 
 namespace vt { namespace runtime { namespace component {
 
-struct BaseComponent : Diagnostic, Bufferable, Progressable {
-  template <typename... Deps>
-  struct DepsPack { };
+template <typename... Args>
+struct AddDep;
 
-  virtual void initialize() = 0;
-  virtual void finalize() = 0;
+template <typename U, typename... Args>
+struct AddDep<U, Args...> {
+  static void add(registry::AutoHandlerType t) {
+    auto u = registry::makeIdx<U>();
+    registry::getIdx(t).push_back(u);
+    AddDep<Args...>::add(t);
+  }
+};
 
-  virtual bool pollable() = 0;
-  virtual void startup() = 0;
+template <>
+struct AddDep<> {
+  static void add(registry::AutoHandlerType t) {
+  }
+};
 
-  virtual ~BaseComponent() { }
+struct ComponentRegistry {
+
+  template <typename U, typename... Args>
+  static void addDep(registry::AutoHandlerType t);
+
+  template <typename T, typename... Deps>
+  static void dependsOn() {
+    auto t = registry::makeIdx<T>();
+    AddDep<Deps...>::add(t);
+  }
+
 };
 
 }}} /* end namespace vt::runtime::component */
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_DEP_H*/

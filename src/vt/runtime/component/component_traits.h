@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                              component_traits.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_TRAITS_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_TRAITS_H
 
 #include "vt/config.h"
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/bufferable.h"
-#include "vt/runtime/component/progressable.h"
 
 namespace vt { namespace runtime { namespace component {
 
-struct BaseComponent : Diagnostic, Bufferable, Progressable {
-  template <typename... Deps>
-  struct DepsPack { };
+template <typename T>
+struct ComponentTraits {
+  template <typename U, typename = decltype(U::construct())>
+  static std::true_type test(int);
 
-  virtual void initialize() = 0;
-  virtual void finalize() = 0;
+  template <typename U>
+  static std::false_type test(...);
 
-  virtual bool pollable() = 0;
-  virtual void startup() = 0;
-
-  virtual ~BaseComponent() { }
+  static constexpr bool hasConstruct = decltype(test<T>(0))::value;
 };
 
 }}} /* end namespace vt::runtime::component */
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_TRAITS_H*/

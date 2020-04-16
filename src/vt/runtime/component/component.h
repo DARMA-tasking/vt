@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                 component.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,74 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_H
 
 #include "vt/config.h"
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/bufferable.h"
-#include "vt/runtime/component/progressable.h"
+#include "vt/runtime/component/component_registry.h"
+#include "vt/runtime/component/component_dep.h"
+#include "vt/runtime/component/component_traits.h"
+#include "vt/runtime/component/base.h"
 
 namespace vt { namespace runtime { namespace component {
 
-struct BaseComponent : Diagnostic, Bufferable, Progressable {
+template <typename T>
+struct Component : BaseComponent {
+
+  Component() = default;
+
   template <typename... Deps>
-  struct DepsPack { };
+  Component(DepsPack<Deps...>) {
+    ComponentRegistry::dependsOn<T, Deps...>();
+  }
 
-  virtual void initialize() = 0;
-  virtual void finalize() = 0;
+  /// Traits for objgroup components which have a specialized static construct
+  template <typename U>
+  using hasCons = typename std::enable_if<ComponentTraits<U>::hasConstruct, T>::type;
+  template <typename U>
+  using hasNoCons = typename std::enable_if<not ComponentTraits<U>::hasConstruct, T>::type;
 
-  virtual bool pollable() = 0;
-  virtual void startup() = 0;
+  template <typename... Args, typename U = T>
+  static std::unique_ptr<T> staticInit(Args&&... args, hasCons<U>* = nullptr) {
+    return T::construct(std::forward<Args>(args)...);
+  }
 
-  virtual ~BaseComponent() { }
+  template <typename... Args, typename U = T>
+  static std::unique_ptr<T> staticInit(Args&&... args, hasNoCons<U>* = nullptr) {
+    return std::make_unique<T>(std::forward<Args>(args)...);
+  }
+
+  bool pollable() override {
+    return false;
+  }
+
+  virtual void initialize() override { }
+  virtual void finalize() override { }
+  virtual void startup() override { }
+
+  // Default empty progress function
+  virtual int progress() override { return 0; }
+
+  void dumpState() override {
+    /* here to compile, should be implemented by each component*/
+  }
+};
+
+template <typename T>
+struct PollableComponent : Component<T> {
+
+  bool pollable() override {
+    return true;
+  }
+
+  // Fail if progress method not overridden by user
+  virtual int progress() override {
+    vtAssert(false, "PollableComponent should have a progress function");
+    return 0;
+  }
+
 };
 
 }}} /* end namespace vt::runtime::component */
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_H*/

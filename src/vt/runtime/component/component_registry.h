@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                             component_registry.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REGISTRY_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REGISTRY_H
 
 #include "vt/config.h"
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/bufferable.h"
-#include "vt/runtime/component/progressable.h"
 
-namespace vt { namespace runtime { namespace component {
+#include <vector>
+#include <tuple>
 
-struct BaseComponent : Diagnostic, Bufferable, Progressable {
-  template <typename... Deps>
-  struct DepsPack { };
+namespace vt { namespace runtime { namespace component { namespace registry {
 
-  virtual void initialize() = 0;
-  virtual void finalize() = 0;
+using AutoHandlerType = HandlerType;
+using RegistryType = std::vector<std::tuple<int,std::vector<int>>>;
 
-  virtual bool pollable() = 0;
-  virtual void startup() = 0;
+inline RegistryType& getRegistry() {
+  static RegistryType reg;
+  return reg;
+}
 
-  virtual ~BaseComponent() { }
+template <typename ObjT>
+struct Registrar {
+  Registrar() {
+    auto& reg = getRegistry();
+    index = reg.size();
+    reg.emplace_back(std::make_tuple(index,std::vector<int>{}));
+  }
+  AutoHandlerType index;
 };
 
-}}} /* end namespace vt::runtime::component */
+template <typename ObjT>
+struct Type {
+  static AutoHandlerType const idx;
+};
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/
+template <typename ObjT>
+AutoHandlerType const Type<ObjT>::idx = Registrar<ObjT>().index;
+
+inline std::vector<int>& getIdx(AutoHandlerType han) {
+  return std::get<1>(getRegistry().at(han));
+}
+
+template <typename ObjT>
+inline AutoHandlerType makeIdx() {
+  return Type<ObjT>::idx;
+}
+
+}}}} /* end namespace vt::runtime::component::registry */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REGISTRY_H*/
