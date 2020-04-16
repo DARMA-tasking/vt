@@ -60,7 +60,13 @@ template <typename T>
 struct IRecvHolder {
   using ArgType = vt::arguments::ArgConfig;
 
+# if backend_check_enabled(trace_enabled)
+  explicit IRecvHolder(trace::UserEventIDType in_trace_user_event)
+    : trace_user_event_(in_trace_user_event)
+  { }
+# else
   IRecvHolder() = default;
+#endif
 
   template <typename U>
   void emplace(U&& u) {
@@ -69,6 +75,15 @@ struct IRecvHolder {
 
   template <typename Callable>
   bool testAll(Callable c) {
+
+#   if backend_check_enabled(trace_enabled)
+    std::size_t const holder_size_start = holder_.size();
+    TimeType tr_begin = 0.0;
+    if (ArgType::vt_trace_irecv_polling) {
+      tr_begin = vt::timing::Timing::getCurrentTime();
+    }
+#   endif
+
     bool progress_made = false;
 
     for (std::size_t i = 0; i < holder_.size(); ) {
@@ -84,14 +99,12 @@ struct IRecvHolder {
         continue;
       }
 
-      #if backend_check_enabled(trace_enabled)
-        if (ArgType::vt_trace_mpi) {
-          auto tr_note = fmt::format(
-            "Irecv completed: from={}", stat.MPI_SOURCE
-          );
-          trace::addUserNote(tr_note);
-        }
-      #endif
+#     if backend_check_enabled(trace_enabled)
+      if (ArgType::vt_trace_mpi) {
+        auto tr_note = fmt::format("Irecv completed: from={}", stat.MPI_SOURCE);
+        trace::addUserNote(tr_note);
+      }
+#     endif
 
       c(&e);
       progress_made = true;
@@ -104,11 +117,29 @@ struct IRecvHolder {
       holder_.pop_back();
     }
 
+#   if backend_check_enabled(trace_enabled)
+    if (ArgType::vt_trace_irecv_polling) {
+       if (holder_size_start > 0) {
+         auto tr_end = vt::timing::Timing::getCurrentTime();
+         auto tr_note = fmt::format(
+           "completed {} of {}",
+           holder_size_start - holder_.size(),
+           holder_size_start
+         );
+         trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_user_event_);
+       }
+    }
+#   endif
+
     return progress_made;
   }
 
 private:
   std::vector<T> holder_;
+
+# if backend_check_enabled(trace_enabled)
+  trace::UserEventIDType trace_user_event_ = trace::no_user_event_id;
+# endif
 };
 
 }} /* end namespace vt::messaging */

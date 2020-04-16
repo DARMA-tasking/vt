@@ -95,6 +95,7 @@ public:
   static std::string vt_trace_spec_file;
   static bool vt_trace_memory_usage;
   static bool vt_trace_event_polling;
+  static bool vt_trace_irecv_polling;
 
   static bool vt_lb;
   static bool vt_lb_file;
