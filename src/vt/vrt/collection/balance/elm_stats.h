@@ -58,6 +58,7 @@
 #include <cstdint>
 #include <vector>
 #include <tuple>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -95,7 +96,8 @@ struct ElementStats {
   void setSubPhase(SubphaseType subphase);
 
   static const constexpr SubphaseType no_subphase = std::numeric_limits<SubphaseType>::max();
-  static void setFocusedSubPhase(SubphaseType subphase);
+  static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
+  static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
 
   template <typename Serializer>
   void serialize(Serializer& s);
@@ -117,7 +119,7 @@ protected:
   SubphaseType cur_subphase_ = 0;
   std::vector<std::vector<TimeType>> subphase_timings_ = {};
 
-  static SubphaseType focused_subphase_;
+  static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
