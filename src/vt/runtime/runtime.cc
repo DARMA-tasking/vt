@@ -844,6 +844,12 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_debug_print_flush) {
+    auto f11 = fmt::format("Flushing stdout after all VT prints is enabled");
+    auto f12 = opt_on("--vt_debug_print_flush", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
 #define vt_runtime_debug_warn_compile(opt)                              \
   do {                                                                  \
     if (!vt_backend_debug_enabled(opt) and ArgType::vt_debug_ ## opt) { \
