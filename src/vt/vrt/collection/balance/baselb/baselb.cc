@@ -178,8 +178,11 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
     );
   }
 
-  if (stats.size() == static_cast<std::size_t>(num_reduce_stats_)) {
-    finishedStats();
+  // If the migration_epoch_ is valid, then we are in the post-process stats
+  if (migration_epoch_ == no_epoch) {
+    if (stats.size() == static_cast<std::size_t>(num_reduce_stats_)) {
+      finishedStats();
+    }
   }
 }
 
@@ -200,6 +203,10 @@ void BaseLB::finishMigrationCollective() {
   }
 
   off_node_migrate_.clear();
+
+  // Re-compute the statistics with the new partition based on current
+  // this_load_ values
+  computeStatistics();
 
   theMsg()->popEpoch(migration_epoch_);
   theTerm()->finishedEpoch(migration_epoch_);
