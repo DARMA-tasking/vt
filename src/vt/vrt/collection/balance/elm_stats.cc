@@ -162,6 +162,9 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
 }
 
 TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
+  if (subphase == no_subphase)
+    return getLoad(phase);
+
   vtAssert(phase_timings_.size() > phase, "Must have phase");
   auto const& subphase_loads = subphase_timings_.at(phase);
 
