@@ -57,7 +57,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 Indexable<ColT,IndexT>::Indexable(IndexT&& in_index)
-  : Migratable<ColT>(),
+  : Migratable(),
     index_(std::move(in_index)),
     set_index_(true)
 { }
@@ -77,7 +77,7 @@ IndexT const& Indexable<ColT,IndexT>::getIndex() const {
 template <typename ColT, typename IndexT>
 template <typename SerializerT>
 void Indexable<ColT,IndexT>::serialize(SerializerT& s) {
-  Migratable<ColT>::serialize(s);
+  Migratable::serialize(s);
   s | set_index_;
   s | index_;
 }

@@ -56,7 +56,6 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT>
 struct Migratable : MigrateHookBase {
 
   Migratable()
