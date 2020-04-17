@@ -66,7 +66,7 @@ struct CollectionElmAttorney {
 
   friend struct CollectionBase<ColT, IndexT>;
   friend struct MigrateHandlers;
-  friend struct Migratable<ColT>;
+  friend struct Migratable;
 
 private:
   static void migrate(

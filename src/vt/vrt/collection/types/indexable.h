@@ -54,7 +54,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-struct Indexable : Migratable<ColT> {
+struct Indexable : Migratable {
 
   explicit Indexable(IndexT&& in_index);
   Indexable() = default;
