@@ -88,7 +88,7 @@ template <typename ColT>
   auto const& cur_phase = msg->getPhase();
   auto const& proxy = col->getCollectionProxy();
   auto const& untyped_proxy = col->getProxy();
-  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(proxy.getProxy()));
+  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
   auto const& comm = stats.getComm(cur_phase);
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
