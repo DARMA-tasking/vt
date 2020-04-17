@@ -58,7 +58,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-struct CollectionBase : Indexable<ColT, IndexT> {
+struct CollectionBase : Indexable<IndexT> {
   using ProxyType = VirtualElmProxyType<ColT, IndexT>;
   using CollectionProxyType = CollectionProxy<ColT, IndexT>;
   using IndexType = IndexT;
