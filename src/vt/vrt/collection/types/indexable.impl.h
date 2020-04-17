@@ -55,16 +55,16 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-Indexable<ColT,IndexT>::Indexable(IndexT&& in_index)
+template <typename IndexT>
+Indexable<IndexT>::Indexable(IndexT&& in_index)
   : Migratable(),
     index_(std::move(in_index)),
     set_index_(true)
 { }
 
 
-template <typename ColT, typename IndexT>
-IndexT const& Indexable<ColT,IndexT>::getIndex() const {
+template <typename IndexT>
+IndexT const& Indexable<IndexT>::getIndex() const {
   if (!set_index_) {
     auto ctx_idx = theCollection()->queryIndexContext<IndexT>();
     vtAssertExpr(ctx_idx != nullptr);
@@ -74,16 +74,16 @@ IndexT const& Indexable<ColT,IndexT>::getIndex() const {
   }
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 template <typename SerializerT>
-void Indexable<ColT,IndexT>::serialize(SerializerT& s) {
+void Indexable<IndexT>::serialize(SerializerT& s) {
   Migratable::serialize(s);
   s | set_index_;
   s | index_;
 }
 
-template <typename ColT, typename IndexT>
-void Indexable<ColT,IndexT>::setIndex(IndexT const& in_index) {
+template <typename IndexT>
+void Indexable<IndexT>::setIndex(IndexT const& in_index) {
   // Set the field and then indicate that the `index_` field is now valid with
   // `set_index_`
   index_ = in_index;

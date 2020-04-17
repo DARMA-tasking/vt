@@ -59,7 +59,7 @@ template <typename ColT, typename IndexT>
 CollectionBase<ColT, IndexT>::CollectionBase(
   bool const static_size, bool const elms_fixed,
   VirtualElmCountType const num
-) : Indexable<ColT, IndexT>(),
+) : Indexable<IndexT>(),
     numElems_(num),
     hasStaticSize_(static_size),
     elmsFixedAtCreation_(elms_fixed)
@@ -106,7 +106,7 @@ template <typename ColT, typename IndexT>
 template <typename ColT, typename IndexT>
 template <typename Serializer>
 void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
-  Indexable<ColT, IndexT>::serialize(s);
+  Indexable<IndexT>::serialize(s);
   s | hasStaticSize_;
   s | elmsFixedAtCreation_;
   s | cur_bcast_epoch_;
