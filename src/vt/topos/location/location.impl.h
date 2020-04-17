@@ -400,6 +400,54 @@ void EntityLocationCoord<EntityID>::getLocation(
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::handleEagerUpdate(
+  EntityID const& id, NodeType home_node, NodeType deliver_node
+) {
+  auto this_node = theContext()->getNode();
+  vtAssert(this_node != deliver_node, "This should have been a forwarding node");
+  vtAssert(home_node != uninitialized_destination, "Home node should be valid");
+  vtAssert(home_node < theContext()->getNumNodes(), "Home node should be valid");
+
+  debug_print(
+    location, node,
+    "handleEagerUpdate: id={}, home_node={}, deliver_node={}\n",
+    id, home_node, deliver_node
+  );
+
+  // Insert a new entry in the cache for the updated location
+  recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, deliver_node});
+
+  auto ask_iter = loc_asks_.find(id);
+  if (ask_iter != loc_asks_.end()) {
+    for (auto&& ask_node : ask_iter->second) {
+      sendEagerUpdate(id, ask_node, home_node, deliver_node);
+    }
+    loc_asks_.erase(ask_iter);
+  }
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::sendEagerUpdate(
+  EntityID const& id, NodeType ask_node, NodeType home_node,
+  NodeType deliver_node
+) {
+  debug_print(
+    location, node,
+    "sendEagerUpdate: id={}, ask_node={}, home_node={}, deliver_node={}\n",
+    id, ask_node, home_node, deliver_node
+  );
+
+  auto this_node = theContext()->getNode();
+  if (ask_node != this_node) {
+    vtAssert(ask_node != uninitialized_destination, "Ask node must be valid");
+    auto msg = makeMessage<LocMsgType>(
+      this_inst, id, ask_node, home_node, deliver_node
+    );
+    theMsg()->sendMsg<LocMsgType, recvEagerUpdate>(ask_node, msg.get());
+  }
+}
+
+template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
   bool const serialize, EntityID const& id, NodeType const& home_node,
@@ -420,8 +468,19 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   theMsg()->markAsLocationMessage(msg);
 
   if (to_node != this_node) {
+    // Get the current ask node, which is the from node for the first hop
+    auto ask_node = msg->getAskNode();
+    if (ask_node != uninitialized_destination) {
+      // Insert into the ask list for a later update when information is known
+      loc_asks_[id].insert(ask_node);
+    }
+
+    // Update the new asking node, as this node is will be the next to ask
+    msg->setAskNode(this_node);
+
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
+
     // send to the node discovered by the location manager
     theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg.get());
   } else {
@@ -459,6 +518,13 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           "EntityLocationCoord: no direct handler: id={}\n", hid
         );
         reg_han_iter->second.applyRegisteredActionMsg(msg.get());
+      }
+
+      auto ask_node = msg->getAskNode();
+
+      if (ask_node != uninitialized_destination) {
+        auto delivered_node = theContext()->getNode();
+        sendEagerUpdate(hid, ask_node, home_node, delivered_node);
       }
     };
 
@@ -688,12 +754,14 @@ template <typename MessageT>
   auto const& from_node = msg->getLocFromNode();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
+  msg->incHops();
+
   debug_print(
     location, node,
     "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}, "
-    "epoch={:x}\n",
+    "epoch={:x}, hops={}, ask={}\n",
     print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
-    from_node, epoch
+    from_node, epoch, msg->getHops(), msg->getAskNode()
   );
 
   theTerm()->produce(epoch);
@@ -784,6 +852,32 @@ template <typename EntityID>
       loc->updatePendingRequest(
         event_id, entity, msg->resolved_node, msg->home_node
       );
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
+    }
+  );
+}
+
+template <typename EntityID>
+/*static*/ void EntityLocationCoord<EntityID>::recvEagerUpdate(
+  LocMsgType *raw_msg
+) {
+  auto msg = promoteMsg(raw_msg);
+  auto const& inst = msg->loc_man_inst;
+  auto const& entity = msg->entity;
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
+
+  debug_print(
+    location, node,
+    "recvEagerUpdate: resolved={}, id={}, epoch={:x}\n",
+    msg->resolved_node, entity, epoch
+  );
+
+  theTerm()->produce(epoch);
+  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
+    inst, [=](EntityLocationCoord<EntityID>* loc) {
+      theMsg()->pushEpoch(epoch);
+      loc->handleEagerUpdate(entity, msg->home_node, msg->resolved_node);
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
     }

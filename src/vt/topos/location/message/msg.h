@@ -71,6 +71,14 @@ struct LocationMsg : vt::Message {
       ask_node(in_ask_node), home_node(in_home_node)
   { }
 
+  LocationMsg(
+    LocInstType const& in_loc_man_inst, EntityID const& in_entity,
+    NodeType const& in_ask_node, NodeType const& in_home_node,
+    NodeType in_resolved
+  ) : loc_man_inst(in_loc_man_inst), entity(in_entity), ask_node(in_ask_node),
+      home_node(in_home_node), resolved_node(in_resolved)
+  { }
+
   void setResolvedNode(NodeType const& node) {
     resolved_node = node;
   }
@@ -99,6 +107,10 @@ struct EntityMsg : ActiveMessageT {
   HandlerType getHandler() const { return handler_; }
   void setSerialize(bool const is_serialize) { serialize_ = is_serialize; }
   bool getSerialize() const { return serialize_; }
+  void incHops() { hops_ += 1; }
+  int16_t getHops() const { return hops_; }
+  void setAskNode(NodeType const& node) { ask_node_ = node; }
+  NodeType getAskNode() const { return ask_node_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -109,6 +121,8 @@ struct EntityMsg : ActiveMessageT {
     s | loc_man_inst_;
     s | handler_;
     s | serialize_;
+    s | hops_;
+    s | ask_node_;
   }
 
 private:
@@ -118,6 +132,8 @@ private:
   LocInstType loc_man_inst_ = no_loc_inst;
   HandlerType handler_ = uninitialized_handler;
   bool serialize_ = false;
+  int16_t hops_ = 0;
+  NodeType ask_node_ =  uninitialized_destination;
 };
 
 }}  // end namespace vt::location
