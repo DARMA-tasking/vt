@@ -485,7 +485,16 @@ bool ActiveMessenger::recvDataMsgBuffer(
         buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
         priority
       };
-      in_progress_data_irecv.emplace(std::move(recv_holder));
+
+      int recv_flag = 0;
+      MPI_Status recv_stat;
+      MPI_Test(&recv_holder.req, &recv_flag, &recv_stat);
+      if (recv_flag == 1) {
+        finishPendingDataMsgAsyncRecv(&recv_holder);
+      } else {
+        in_progress_data_irecv.emplace(std::move(recv_holder));
+      }
+
       return true;
     } else {
       return false;
@@ -515,6 +524,13 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   auto user_buf = irecv->user_buf;
   auto dealloc_user_buf = irecv->dealloc_user_buf;
   auto next = irecv->next;
+
+# if backend_check_enabled(trace_enabled)
+  if (ArgType::vt_trace_mpi) {
+    auto tr_note = fmt::format("DM Irecv completed: from={}", irecv->sender);
+    trace::addUserNote(tr_note);
+  }
+# endif
 
   auto dealloc_buf = [=]{
     debug_print(
@@ -790,7 +806,16 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     }
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
-    in_progress_active_msg_irecv.emplace(std::move(recv_holder));
+
+    int recv_flag = 0;
+    MPI_Status recv_stat;
+    MPI_Test(&recv_holder.req, &recv_flag, &recv_stat);
+    if (recv_flag == 1) {
+      finishPendingActiveMsgAsyncRecv(&recv_holder);
+    } else {
+      in_progress_active_msg_irecv.emplace(std::move(recv_holder));
+    }
+
     return true;
   } else {
     return false;
@@ -801,6 +826,13 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   auto buf = irecv->buf;
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
+
+# if backend_check_enabled(trace_enabled)
+  if (ArgType::vt_trace_mpi) {
+    auto tr_note = fmt::format("AM Irecv completed: from={}", irecv->sender);
+    trace::addUserNote(tr_note);
+  }
+# endif
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
   messageConvertToShared(msg);
