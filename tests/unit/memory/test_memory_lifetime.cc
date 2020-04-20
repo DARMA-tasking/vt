@@ -177,7 +177,7 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_1) {
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
-        theEvent()->cleanup();
+        theEvent()->finalize();
         EXPECT_EQ(envelopeGetRef(msg->env), 1);
         envelopeDeref(msg->env);
       });
@@ -204,7 +204,7 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_2) {
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
-        theEvent()->cleanup();
+        theEvent()->finalize();
         EXPECT_EQ(envelopeGetRef(msg->env), 1);
       });
     }
@@ -229,7 +229,7 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_1) {
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
-        theEvent()->cleanup();
+        theEvent()->finalize();
         EXPECT_EQ(envelopeGetRef(msg->env), 1);
         envelopeDeref(msg->env);
       });
@@ -254,7 +254,7 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_2) {
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
-        theEvent()->cleanup();
+        theEvent()->finalize();
         EXPECT_EQ(envelopeGetRef(msg->env), 1);
       });
     }
@@ -275,7 +275,7 @@ static void callbackHan(CallbackMsg<NormalTestMsg>* msg) {
 
   theTerm()->addAction([send_msg]{
     // Call event cleanup all pending MPI requests to clear
-    theEvent()->cleanup();
+    theEvent()->finalize();
     EXPECT_EQ(envelopeGetRef(send_msg->env), 1);
   });
 }
@@ -292,7 +292,7 @@ TEST_F(TestMemoryLifetime, test_active_send_callback_lifetime_1) {
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
-        theEvent()->cleanup();
+        theEvent()->finalize();
         EXPECT_EQ(envelopeGetRef(msg->env), 1);
       });
     }
@@ -308,7 +308,7 @@ static void callbackHan(CallbackMsg<SerialTestMsg>* msg) {
 
   theTerm()->addAction([send_msg]{
     // Call event cleanup all pending MPI requests to clear
-    theEvent()->cleanup();
+    theEvent()->finalize();
     EXPECT_EQ(envelopeGetRef(send_msg->env), 1);
   });
 }
@@ -325,7 +325,7 @@ TEST_F(TestMemoryLifetime, test_active_serial_callback_lifetime_1) {
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
-        theEvent()->cleanup();
+        theEvent()->finalize();
         EXPECT_EQ(envelopeGetRef(msg->env), 1);
       });
     }

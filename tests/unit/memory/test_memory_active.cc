@@ -99,7 +99,7 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_send) {
      *  thus the memory gets freed (or dereferenced)---the corresponding
      *  messages we are checking for a correct reference count go to 1
      */
-    theEvent()->cleanup();
+    theEvent()->finalize();
     for (auto&& msg : msgs) {
       // We expect 1 reference due to the messageRef above
       EXPECT_EQ(envelopeGetRef(msg->env), 1);
@@ -130,7 +130,7 @@ TYPED_TEST_P(TestMemoryActive, test_memory_remote_broadcast) {
      *  thus the memory gets freed (or dereferenced)---the corresponding
      *  messages we are checking for a correct reference count go to 1
      */
-    theEvent()->cleanup();
+    theEvent()->finalize();
     for (auto&& msg : msgs) {
       // We expect 1 reference due to the messageRef above
       EXPECT_EQ(envelopeGetRef(msg->env), 1);
