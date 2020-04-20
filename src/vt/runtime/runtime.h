@@ -186,6 +186,7 @@ protected:
   MPI_Comm* communicator_ = nullptr;
   int user_argc_ = 0;
   char** user_argv_ = nullptr;
+  component::ComponentPack p_;
 };
 
 }} /* end namespace vt::runtime */

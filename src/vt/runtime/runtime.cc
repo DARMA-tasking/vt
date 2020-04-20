@@ -1195,26 +1195,24 @@ void Runtime::initializeComponents() {
   using component::ComponentPack;
   using component::Deps;
 
-  ComponentPack p;
-
-  p.registerComponent<ctx::Context>(
+  p_.registerComponent<ctx::Context>(
     &theContext, Deps<>{},
     user_argc_, user_argv_, is_interop_, communicator_
   );
 
-  p.registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
+  p_.registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
     ctx::Context // Everything depends on theContext
   >{});
 
-  p.registerComponent<registry::Registry>(&theRegistry, Deps<
+  p_.registerComponent<registry::Registry>(&theRegistry, Deps<
     ctx::Context // Everything depends on theContext
   >{});
 
-  p.registerComponent<pool::Pool>(&thePool, Deps<
+  p_.registerComponent<pool::Pool>(&thePool, Deps<
     ctx::Context // Everything depends on theContext
   >{});
 
-  p.registerComponent<event::AsyncEvent>(&theEvent, Deps<
+  p_.registerComponent<event::AsyncEvent>(&theEvent, Deps<
 #   if backend_check_enabled(trace_enabled)
     trace::Trace,  // For trace user event registrations
 #   endif
@@ -1223,21 +1221,21 @@ void Runtime::initializeComponents() {
   >{});
 
 # if backend_check_enabled(trace_enabled)
-  p.registerComponent<trace::Trace>(&theTrace, Deps<
+  p_.registerComponent<trace::Trace>(&theTrace, Deps<
       ctx::Context // Everything depends on theContext
     >{},
     user_argc_ == 0 ? "prog" : user_argv_[0]
   );
 # endif
 
-  p.registerComponent<objgroup::ObjGroupManager>(
+  p_.registerComponent<objgroup::ObjGroupManager>(
     &theObjGroup, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger to send
     >{}
   );
 
-  p.registerComponent<messaging::ActiveMessenger>(
+  p_.registerComponent<messaging::ActiveMessenger>(
     &theMsg, Deps<
 #     if backend_check_enabled(trace_enabled)
       trace::Trace,      // For trace user event registrations
@@ -1249,14 +1247,14 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p.registerComponent<sched::Scheduler>(
+  p_.registerComponent<sched::Scheduler>(
     &theSched, Deps<
       ctx::Context,             // Everything depends on theContext
       util::memory::MemoryUsage // Depends on memory usage for output
     >{}
   );
 
-  p.registerComponent<term::TerminationDetector>(
+  p_.registerComponent<term::TerminationDetector>(
     &theTerm, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger to send term msgs
@@ -1264,14 +1262,14 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p.registerComponent<collective::CollectiveAlg>(
+  p_.registerComponent<collective::CollectiveAlg>(
     &theCollective, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger for collectives
     >{}
   );
 
-  p.registerComponent<group::GroupManager>(
+  p_.registerComponent<group::GroupManager>(
     &theGroup, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for setting up
@@ -1279,7 +1277,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p.registerComponent<pipe::PipeManager>(
+  p_.registerComponent<pipe::PipeManager>(
     &theCB, Deps<
       ctx::Context,                        // Everything depends on theContext
       messaging::ActiveMessenger,          // Depends on AM for callbacks
@@ -1289,28 +1287,28 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p.registerComponent<rdma::RDMAManager>(
+  p_.registerComponent<rdma::RDMAManager>(
     &theRDMA, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger for RDMA
     >{}
   );
 
-  p.registerComponent<param::Param>(
+  p_.registerComponent<param::Param>(
     &theParam, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger sending
     >{}
   );
 
-  p.registerComponent<seq::Sequencer>(
+  p_.registerComponent<seq::Sequencer>(
     &theSeq, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger for sequencing
     >{}
   );
 
-  p.registerComponent<seq::SequencerVirtual>(
+  p_.registerComponent<seq::SequencerVirtual>(
     &theVirtualSeq, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for sequencing
@@ -1318,14 +1316,14 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p.registerComponent<location::LocationManager>(
+  p_.registerComponent<location::LocationManager>(
     &theLocMan, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger  // Depends on active messenger for sending
     >{}
   );
 
-  p.registerComponent<vrt::VirtualContextManager>(
+  p_.registerComponent<vrt::VirtualContextManager>(
     &theVirtualManager, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for messaging
@@ -1333,7 +1331,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p.registerComponent<vrt::collection::CollectionManager>(
+  p_.registerComponent<vrt::collection::CollectionManager>(
     &theCollection, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for messaging
@@ -1342,7 +1340,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p.registerComponent<rdma::Manager>(
+  p_.registerComponent<rdma::Manager>(
     &theHandleRDMA, Deps<
       ctx::Context,                       // Everything depends on theContext
       messaging::ActiveMessenger,         // Depends on active messenger for messaging
@@ -1351,34 +1349,34 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p.add<ctx::Context>();
-  p.add<util::memory::MemoryUsage>();
-  p.add<registry::Registry>();
-  p.add<event::AsyncEvent>();
-  p.add<pool::Pool>();
+  p_.add<ctx::Context>();
+  p_.add<util::memory::MemoryUsage>();
+  p_.add<registry::Registry>();
+  p_.add<event::AsyncEvent>();
+  p_.add<pool::Pool>();
 # if backend_check_enabled(trace_enabled)
-  p.add<trace::Trace>();
+  p_.add<trace::Trace>();
 # endif
-  p.add<objgroup::ObjGroupManager>();
-  p.add<messaging::ActiveMessenger>();
-  p.add<sched::Scheduler>();
-  p.add<term::TerminationDetector>();
-  p.add<collective::CollectiveAlg>();
-  p.add<group::GroupManager>();
-  p.add<pipe::PipeManager>();
-  p.add<rdma::RDMAManager>();
-  p.add<param::Param>();
-  p.add<seq::Sequencer>();
-  p.add<seq::SequencerVirtual>();
-  p.add<location::LocationManager>();
-  p.add<vrt::VirtualContextManager>();
-  p.add<vrt::collection::CollectionManager>();
-  p.add<rdma::Manager>();
-  p.add<registry::Registry>();
-  p.add<event::AsyncEvent>();
-  p.add<pool::Pool>();
+  p_.add<objgroup::ObjGroupManager>();
+  p_.add<messaging::ActiveMessenger>();
+  p_.add<sched::Scheduler>();
+  p_.add<term::TerminationDetector>();
+  p_.add<collective::CollectiveAlg>();
+  p_.add<group::GroupManager>();
+  p_.add<pipe::PipeManager>();
+  p_.add<rdma::RDMAManager>();
+  p_.add<param::Param>();
+  p_.add<seq::Sequencer>();
+  p_.add<seq::SequencerVirtual>();
+  p_.add<location::LocationManager>();
+  p_.add<vrt::VirtualContextManager>();
+  p_.add<vrt::collection::CollectionManager>();
+  p_.add<rdma::Manager>();
+  p_.add<registry::Registry>();
+  p_.add<event::AsyncEvent>();
+  p_.add<pool::Pool>();
 
-  p.construct();
+  p_.construct();
 
   // #if backend_check_enabled(trace_enabled)
   //   theTrace->initialize();
