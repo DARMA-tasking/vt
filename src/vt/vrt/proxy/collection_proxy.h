@@ -50,6 +50,7 @@
 #include "vt/vrt/proxy/base_elm_proxy.h"
 #include "vt/vrt/proxy/collection_elm_proxy.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/vrt/collection/balance/elm_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -107,6 +108,8 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
     >::type
   >
   ElmProxyType operator()(IndexU const& idx) const;
+
+  void setFocusedSubPhase(balance::ElementStats::SubphaseType subphase);
 };
 
 }}} /* end namespace vt::vrt::collection */
