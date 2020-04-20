@@ -59,6 +59,7 @@
 #include "vt/sequence/seq_matcher.h"
 #include "vt/sequence/seq_action.h"
 #include "vt/sequence/seq_parallel.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <unordered_map>
 #include <list>
@@ -69,7 +70,9 @@
 namespace vt { namespace seq {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-struct TaggedSequencer {
+struct TaggedSequencer
+  : runtime::component::PollableComponent<TaggedSequencer<SeqTag, SeqTrigger>>
+{
   using SeqType = SeqTag;
   using SeqListType = SeqList;
   using SeqContextType = SeqContext;
@@ -140,7 +143,7 @@ struct TaggedSequencer {
 
   void enqueueSeqList(SeqType const& seq_id);
   SeqType getCurrentSeq() const;
-  bool progress();
+  int progress() override;
   bool isLocalTerm();
 
   SeqNodePtrType getNode(SeqType const& id) const;

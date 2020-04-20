@@ -50,6 +50,7 @@
 #include "vt/trace/trace_log.h"
 #include "vt/trace/trace_registry.h"
 #include "vt/trace/trace_user_event.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include "vt/timing/timing.h"
 
@@ -86,15 +87,14 @@ private:
   TraceEventIDType event_ = trace::no_trace_event;
 };
 
-struct Trace {
+struct Trace : runtime::component::Component<Trace> {
   using LogType             = Log;
   using TraceConstantsType  = eTraceConstants;
   using TimeIntegerType     = int64_t;
   using TraceContainerType  = std::queue<LogType>;
   using TraceStackType      = std::stack<LogType>;
 
-  Trace();
-  Trace(std::string const& in_prog_name, std::string const& in_trace_name);
+  Trace(std::string const& in_prog_name);
 
   virtual ~Trace();
 
@@ -104,11 +104,8 @@ struct Trace {
   std::string getSTSName()   const { return full_sts_name_;   }
   std::string getDirectory() const { return full_dir_name_;   }
 
-  void initialize();
-  void setupNames(
-    std::string const& in_prog_name, std::string const& in_trace_name,
-    std::string const& in_dir_name = ""
-  );
+  void initialize() override;
+  void setupNames(std::string const& in_prog_name);
 
   /// Initiate a paired event.
   /// Currently endProcessing MUST be called in the opposite

@@ -187,9 +187,9 @@ void AsyncEvent::cleanup() {
   event_container_.clear();
 }
 
-bool AsyncEvent::progress() {
+int AsyncEvent::progress() {
   theEvent()->testEventsTrigger();
-  return false;
+  return 0;
 }
 
 bool AsyncEvent::isLocalTerm() {

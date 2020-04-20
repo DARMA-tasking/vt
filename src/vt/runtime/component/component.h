@@ -51,6 +51,8 @@
 #include "vt/runtime/component/component_traits.h"
 #include "vt/runtime/component/base.h"
 
+#include <memory>
+
 namespace vt { namespace runtime { namespace component {
 
 template <typename T>
@@ -104,7 +106,7 @@ struct PollableComponent : Component<T> {
 
   // Fail if progress method not overridden by user
   virtual int progress() override {
-    vtAssert(false, "PollableComponent should have a progress function");
+    //vtAssert(false, "PollableComponent should have a progress function");
     return 0;
   }
 

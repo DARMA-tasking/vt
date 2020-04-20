@@ -76,6 +76,7 @@
 #include "vt/configs/arguments/args.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <memory>
 #include <vector>
@@ -90,7 +91,9 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-struct CollectionManager {
+struct CollectionManager
+  : runtime::component::PollableComponent<CollectionManager>
+{
   template <typename ColT, typename IndexT>
   using CollectionType = typename Holder<ColT, IndexT>::Collection;
   template <typename ColT, typename IndexT = typename ColT::IndexType>
@@ -728,7 +731,7 @@ private:
   void schedule(ActionType action);
 
 public:
-  bool progress();
+  int progress() override;
 
 public:
   template <typename ColT, typename IndexT>

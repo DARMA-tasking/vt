@@ -87,9 +87,8 @@ struct TraceEventSeqCompare {
   }
 };
 
-Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
-  : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(getCurrentTime()), log_file_(nullptr)
+Trace::Trace(std::string const& in_prog_name)
+  : prog_name_(in_prog_name), start_time_(getCurrentTime()), log_file_(nullptr)
 {
   /*
    * Incremental flush mode for zlib. Several options are available:
@@ -118,8 +117,6 @@ Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   incremental_flush_mode = Z_SYNC_FLUSH;
 }
 
-Trace::Trace() { }
-
 /*static*/ void Trace::traceBeginIdleTrigger() {
   #if backend_check_enabled(trace_enabled)
     if (not theTrace()->inIdleEvent()) {
@@ -137,6 +134,8 @@ Trace::Trace() { }
 }
 
 void Trace::initialize() {
+  setupNames(prog_name_);
+
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
   );
@@ -172,52 +171,48 @@ bool Trace::inIdleEvent() const {
   return idle_begun_;
 }
 
-void Trace::setupNames(
-  std::string const& in_prog_name, std::string const& in_trace_name,
-  std::string const& in_dir_name
-) {
-  auto const node = theContext()->getNode();
+void Trace::setupNames(std::string const& in_prog_name) {
+  if (ArgType::vt_trace) {
+    auto const node = theContext()->getNode();
 
-  prog_name_ = in_prog_name;
-  trace_name_ = in_trace_name;
-  start_time_ = getCurrentTime();
+    trace_name_ = prog_name_ + "." + std::to_string(node) + ".log.gz";
+    auto dir_name = prog_name_ + "_trace";
 
-  std::string dir_name = (in_dir_name.empty()) ? prog_name_ + "_trace" : in_dir_name;
-
-  char cur_dir[1024];
-  if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
-    vtAssert(false, "Must have current directory");
-  }
-
-  if (ArgType::vt_trace_dir.empty()) {
-    full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
-  }
-  else {
-    full_dir_name_ = ArgType::vt_trace_dir;
-  }
-
-  if (full_dir_name_[full_dir_name_.size() - 1] != '/')
-    full_dir_name_ = full_dir_name_ + "/";
-
-  if (theContext()->getNode() == 0) {
-    int flag = mkdir(full_dir_name_.c_str(), S_IRWXU);
-    if ((flag < 0) && (errno != EEXIST)) {
-      vtAssert(flag >= 0, "Must be able to make directory");
+    char cur_dir[1024];
+    if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
+      vtAssert(false, "Must have current directory");
     }
-  }
 
-  auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
-  auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
-  auto const trace_name = tc[tc.size()-1];
-  auto const prog_name = pc[pc.size()-1];
+    if (ArgType::vt_trace_dir.empty()) {
+      full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
+    }
+    else {
+      full_dir_name_ = ArgType::vt_trace_dir;
+    }
 
-  auto const node_str = "." + std::to_string(node) + ".log.gz";
-  if (ArgType::vt_trace_file.empty()) {
-    full_trace_name_ = full_dir_name_ + trace_name;
-    full_sts_name_   = full_dir_name_ + prog_name + ".sts";
-  } else {
-    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
-    full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
+    if (full_dir_name_[full_dir_name_.size() - 1] != '/')
+      full_dir_name_ = full_dir_name_ + "/";
+
+    if (theContext()->getNode() == 0) {
+      int flag = mkdir(full_dir_name_.c_str(), S_IRWXU);
+      if ((flag < 0) && (errno != EEXIST)) {
+        vtAssert(flag >= 0, "Must be able to make directory");
+      }
+    }
+
+    auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
+    auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
+    auto const trace_name = tc[tc.size()-1];
+    auto const prog_name = pc[pc.size()-1];
+
+    auto const node_str = "." + std::to_string(node) + ".log.gz";
+    if (ArgType::vt_trace_file.empty()) {
+      full_trace_name_ = full_dir_name_ + trace_name;
+      full_sts_name_   = full_dir_name_ + prog_name + ".sts";
+    } else {
+      full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
+      full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
+    }
   }
 }
 
@@ -471,8 +466,7 @@ TraceProcessingTag Trace::beginProcessing(
   );
 
   if (ArgType::vt_trace_memory_usage) {
-    auto usage = util::memory::MemoryUsage::get();
-    addMemoryEvent(usage->getFirstUsage());
+    addMemoryEvent(theMemUsage()->getFirstUsage());
   }
 
   return TraceProcessingTag{ep, loggedEvent};
@@ -530,8 +524,7 @@ void Trace::endProcessing(
   }
 
   if (ArgType::vt_trace_memory_usage) {
-    auto usage = util::memory::MemoryUsage::get();
-    addMemoryEvent(usage->getFirstUsage());
+    addMemoryEvent(theMemUsage()->getFirstUsage());
   }
 
   debug_print(

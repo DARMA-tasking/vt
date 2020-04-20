@@ -62,6 +62,7 @@
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/trace/trace_common.h"
 #include "vt/utils/static_checks/functor.h"
+#include "vt/runtime/component/component_pack.h"
 
 #if backend_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
@@ -193,7 +194,7 @@ struct BufferedActiveMsg {
  *  - \ref functorsend
  *  - \ref sendpayload
  */
-struct ActiveMessenger {
+struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> {
   using BufferedMsgType      = BufferedActiveMsg;
   using MessageType          = ShortMessage;
   using CountType            = int32_t;
@@ -1157,7 +1158,7 @@ struct ActiveMessenger {
    *
    * \return whether any action was taken (progress was made)
    */
-  bool progress();
+  int progress() override;
 
   /**
    * \internal

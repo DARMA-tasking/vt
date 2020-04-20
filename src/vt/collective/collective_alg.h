@@ -53,6 +53,7 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/scatter/scatter.h"
 #include "vt/utils/hash/hash_tuple.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <unordered_map>
 
@@ -61,6 +62,7 @@ namespace vt { namespace collective {
 constexpr CollectiveAlgType const fst_collective_alg = 1;
 
 struct CollectiveAlg :
+    runtime::component::Component<CollectiveAlg>,
     virtual reduce::Reduce,
     virtual barrier::Barrier,
     virtual scatter::Scatter

@@ -46,6 +46,7 @@
 #define INCLUDED_EVENT_EVENT_H
 
 #include "vt/config.h"
+#include "vt/runtime/component/component_pack.h"
 #include "vt/context/context.h"
 #include "vt/event/event_record.h"
 #include "vt/event/event_id.h"
@@ -68,7 +69,7 @@ enum class EventState : int8_t {
   EventRemote = 3
 };
 
-struct AsyncEvent {
+struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
   using EventRecordTypeType = eEventRecord;
   using EventManagerType = EventIDManager;
   using EventStateType = EventState;
@@ -84,7 +85,7 @@ struct AsyncEvent {
 
   virtual ~AsyncEvent();
 
-  void initialize();
+  void initialize() override;
   void cleanup();
   EventType createEvent(EventRecordTypeType const& type, NodeType const& node);
   EventRecordType& getEvent(EventType const& event);
@@ -99,7 +100,7 @@ struct AsyncEvent {
   EventStateType testEventComplete(EventType const& event);
   EventType attachAction(EventType const& event, ActionType callable);
   void testEventsTrigger(int const& num_events = num_check_actions);
-  bool progress();
+  int progress() override;
   bool isLocalTerm();
 
   static void eventFinished(EventFinishedMsg* msg);

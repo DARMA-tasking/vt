@@ -61,6 +61,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/collective/tree/tree.h"
 #include "vt/collective/reduce/reduce.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <memory>
 #include <unordered_map>
@@ -71,7 +72,7 @@
 
 namespace vt { namespace group {
 
-struct GroupManager {
+struct GroupManager : runtime::component::Component<GroupManager> {
   using RegionType = region::Region;
   using RegionPtrType = std::unique_ptr<RegionType>;
   using GroupInfoType = Info;

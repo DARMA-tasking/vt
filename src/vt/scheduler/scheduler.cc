@@ -153,7 +153,7 @@ void Scheduler::printMemoryUsage() {
     last_memory_usage_poll_ >=
     static_cast<std::size_t>(arguments::ArgConfig::vt_print_memory_sched_poll)
   ) {
-    auto usage = vt::util::memory::MemoryUsage::get();
+    auto usage = theMemUsage();
 
     if (usage != nullptr) {
       if (threshold_memory_usage_ == 0) {

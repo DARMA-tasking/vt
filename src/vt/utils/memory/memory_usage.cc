@@ -441,18 +441,4 @@ bool MemoryUsage::hasWorkingReporter() const {
   return first_valid_reporter_ != -1;
 }
 
-/*static*/ void MemoryUsage::initialize() {
-  impl_ = std::make_unique<MemoryUsage>();
-}
-
-/*static*/ void MemoryUsage::finalize() {
-  impl_ = nullptr;
-}
-
-/*static*/ MemoryUsage* MemoryUsage::get() {
-  return impl_.get();
-}
-
-/*static*/ std::unique_ptr<MemoryUsage> MemoryUsage::impl_ = nullptr;
-
 }}} /* end namespace vt::util::memory */

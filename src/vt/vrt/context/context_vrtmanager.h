@@ -57,6 +57,7 @@
 #include "vt/vrt/context/context_vrtinfo.h"
 #include "vt/vrt/proxy/proxy_bits.h"
 #include "vt/vrt/context/context_vrt_internal_msgs.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include "vt/utils/bits/bits_common.h"
 #include "vt/activefn/activefn.h"
@@ -78,7 +79,9 @@ struct PendingRequest {
   { }
 };
 
-struct VirtualContextManager {
+struct VirtualContextManager
+  : runtime::component::Component<VirtualContextManager>
+ {
   using VirtualPtrType = std::unique_ptr<VirtualContext>;
   using PendingRequestType = PendingRequest;
   using VirtualInfoType = VirtualInfo;

@@ -52,13 +52,13 @@ void Manager::destroy() {
   vt::theObjGroup()->destroyCollective(proxy_);
 }
 
-void Manager::initialize(ProxyType in_proxy) {
+void Manager::setup(ProxyType in_proxy) {
   proxy_ = in_proxy;
 }
 
 /*static*/ typename Manager::ProxyType Manager::construct() {
   auto proxy = vt::theObjGroup()->makeCollective<Manager>();
-  proxy.get()->initialize(proxy);
+  proxy.get()->setup(proxy);
   return proxy;
 }
 

@@ -264,8 +264,8 @@ TaggedSequencer<SeqTag, SeqTrigger>::getCurrentSeq() const {
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-bool TaggedSequencer<SeqTag, SeqTrigger>::progress() {
-  return false;
+int TaggedSequencer<SeqTag, SeqTrigger>::progress() {
+  return 0;
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>

@@ -143,8 +143,8 @@ void CollectionManager::schedule(ActionType action) {
   theSched()->enqueue(action);
 }
 
-bool CollectionManager::progress() {
-  return false;
+int CollectionManager::progress() {
+  return 0;
 }
 
 }}} /* end namespace vt::vrt::collection */
