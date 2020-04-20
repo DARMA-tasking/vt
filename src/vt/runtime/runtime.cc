@@ -1012,9 +1012,7 @@ bool Runtime::finalize(bool const force_now) {
     fflush(stdout);
     fflush(stderr);
     sync();
-    finalizeComponents();
-    finalizeOptionalComponents();
-    finalizeTrace();
+    p_ = nullptr;
     sync();
     sync();
     if (is_zero) {
@@ -1179,7 +1177,7 @@ void Runtime::initializeContext(int argc, char** argv, MPI_Comm* comm) {
 }
 
 void Runtime::finalizeContext() {
-  MPI_Barrier(theContext->getComm());
+  MPI_Barrier(*communicator_);
 
   if (not is_interop_) {
     MPI_Finalize();
@@ -1189,30 +1187,29 @@ void Runtime::finalizeContext() {
 void Runtime::initializeComponents() {
   debug_print(runtime, node, "begin: initializeComponents\n");
 
-  // // Initialize the memory usage tracker on each node
-  // util::memory::MemoryUsage::initialize();
-
   using component::ComponentPack;
   using component::Deps;
 
-  p_.registerComponent<ctx::Context>(
+  p_ = std::make_unique<ComponentPack>();
+
+  p_->registerComponent<ctx::Context>(
     &theContext, Deps<>{},
     user_argc_, user_argv_, is_interop_, communicator_
   );
 
-  p_.registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
+  p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
     ctx::Context // Everything depends on theContext
   >{});
 
-  p_.registerComponent<registry::Registry>(&theRegistry, Deps<
+  p_->registerComponent<registry::Registry>(&theRegistry, Deps<
     ctx::Context // Everything depends on theContext
   >{});
 
-  p_.registerComponent<pool::Pool>(&thePool, Deps<
+  p_->registerComponent<pool::Pool>(&thePool, Deps<
     ctx::Context // Everything depends on theContext
   >{});
 
-  p_.registerComponent<event::AsyncEvent>(&theEvent, Deps<
+  p_->registerComponent<event::AsyncEvent>(&theEvent, Deps<
 #   if backend_check_enabled(trace_enabled)
     trace::Trace,  // For trace user event registrations
 #   endif
@@ -1221,21 +1218,21 @@ void Runtime::initializeComponents() {
   >{});
 
 # if backend_check_enabled(trace_enabled)
-  p_.registerComponent<trace::Trace>(&theTrace, Deps<
+  p_->registerComponent<trace::Trace>(&theTrace, Deps<
       ctx::Context // Everything depends on theContext
     >{},
     user_argc_ == 0 ? "prog" : user_argv_[0]
   );
 # endif
 
-  p_.registerComponent<objgroup::ObjGroupManager>(
+  p_->registerComponent<objgroup::ObjGroupManager>(
     &theObjGroup, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger to send
     >{}
   );
 
-  p_.registerComponent<messaging::ActiveMessenger>(
+  p_->registerComponent<messaging::ActiveMessenger>(
     &theMsg, Deps<
 #     if backend_check_enabled(trace_enabled)
       trace::Trace,      // For trace user event registrations
@@ -1247,14 +1244,14 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_.registerComponent<sched::Scheduler>(
+  p_->registerComponent<sched::Scheduler>(
     &theSched, Deps<
       ctx::Context,             // Everything depends on theContext
       util::memory::MemoryUsage // Depends on memory usage for output
     >{}
   );
 
-  p_.registerComponent<term::TerminationDetector>(
+  p_->registerComponent<term::TerminationDetector>(
     &theTerm, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger to send term msgs
@@ -1262,14 +1259,14 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_.registerComponent<collective::CollectiveAlg>(
+  p_->registerComponent<collective::CollectiveAlg>(
     &theCollective, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger for collectives
     >{}
   );
 
-  p_.registerComponent<group::GroupManager>(
+  p_->registerComponent<group::GroupManager>(
     &theGroup, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for setting up
@@ -1277,7 +1274,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_.registerComponent<pipe::PipeManager>(
+  p_->registerComponent<pipe::PipeManager>(
     &theCB, Deps<
       ctx::Context,                        // Everything depends on theContext
       messaging::ActiveMessenger,          // Depends on AM for callbacks
@@ -1287,28 +1284,28 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_.registerComponent<rdma::RDMAManager>(
+  p_->registerComponent<rdma::RDMAManager>(
     &theRDMA, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger for RDMA
     >{}
   );
 
-  p_.registerComponent<param::Param>(
+  p_->registerComponent<param::Param>(
     &theParam, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger sending
     >{}
   );
 
-  p_.registerComponent<seq::Sequencer>(
+  p_->registerComponent<seq::Sequencer>(
     &theSeq, Deps<
       ctx::Context,              // Everything depends on theContext
       messaging::ActiveMessenger // Depends on active messenger for sequencing
     >{}
   );
 
-  p_.registerComponent<seq::SequencerVirtual>(
+  p_->registerComponent<seq::SequencerVirtual>(
     &theVirtualSeq, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for sequencing
@@ -1316,14 +1313,14 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_.registerComponent<location::LocationManager>(
+  p_->registerComponent<location::LocationManager>(
     &theLocMan, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger  // Depends on active messenger for sending
     >{}
   );
 
-  p_.registerComponent<vrt::VirtualContextManager>(
+  p_->registerComponent<vrt::VirtualContextManager>(
     &theVirtualManager, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for messaging
@@ -1331,7 +1328,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_.registerComponent<vrt::collection::CollectionManager>(
+  p_->registerComponent<vrt::collection::CollectionManager>(
     &theCollection, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger for messaging
@@ -1340,7 +1337,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_.registerComponent<rdma::Manager>(
+  p_->registerComponent<rdma::Manager>(
     &theHandleRDMA, Deps<
       ctx::Context,                       // Everything depends on theContext
       messaging::ActiveMessenger,         // Depends on active messenger for messaging
@@ -1349,34 +1346,34 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_.add<ctx::Context>();
-  p_.add<util::memory::MemoryUsage>();
-  p_.add<registry::Registry>();
-  p_.add<event::AsyncEvent>();
-  p_.add<pool::Pool>();
+  p_->add<ctx::Context>();
+  p_->add<util::memory::MemoryUsage>();
+  p_->add<registry::Registry>();
+  p_->add<event::AsyncEvent>();
+  p_->add<pool::Pool>();
 # if backend_check_enabled(trace_enabled)
-  p_.add<trace::Trace>();
+  p_->add<trace::Trace>();
 # endif
-  p_.add<objgroup::ObjGroupManager>();
-  p_.add<messaging::ActiveMessenger>();
-  p_.add<sched::Scheduler>();
-  p_.add<term::TerminationDetector>();
-  p_.add<collective::CollectiveAlg>();
-  p_.add<group::GroupManager>();
-  p_.add<pipe::PipeManager>();
-  p_.add<rdma::RDMAManager>();
-  p_.add<param::Param>();
-  p_.add<seq::Sequencer>();
-  p_.add<seq::SequencerVirtual>();
-  p_.add<location::LocationManager>();
-  p_.add<vrt::VirtualContextManager>();
-  p_.add<vrt::collection::CollectionManager>();
-  p_.add<rdma::Manager>();
-  p_.add<registry::Registry>();
-  p_.add<event::AsyncEvent>();
-  p_.add<pool::Pool>();
+  p_->add<objgroup::ObjGroupManager>();
+  p_->add<messaging::ActiveMessenger>();
+  p_->add<sched::Scheduler>();
+  p_->add<term::TerminationDetector>();
+  p_->add<collective::CollectiveAlg>();
+  p_->add<group::GroupManager>();
+  p_->add<pipe::PipeManager>();
+  p_->add<rdma::RDMAManager>();
+  p_->add<param::Param>();
+  p_->add<seq::Sequencer>();
+  p_->add<seq::SequencerVirtual>();
+  p_->add<location::LocationManager>();
+  p_->add<vrt::VirtualContextManager>();
+  p_->add<vrt::collection::CollectionManager>();
+  p_->add<rdma::Manager>();
+  p_->add<registry::Registry>();
+  p_->add<event::AsyncEvent>();
+  p_->add<pool::Pool>();
 
-  p_.construct();
+  p_->construct();
 
   // #if backend_check_enabled(trace_enabled)
   //   theTrace->initialize();
@@ -1395,12 +1392,6 @@ void Runtime::initializeTrace() {
   //     theTrace->setupNames(
   //       name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
   //     );
-  // #endif
-}
-
-void Runtime::finalizeTrace() {
-  // #if backend_check_enabled(trace_enabled)
-  //   theTrace = nullptr;
   // #endif
 }
 
@@ -1490,53 +1481,6 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   }
 
   debug_print(runtime, node, "end: initializeWorkers\n");
-}
-
-void Runtime::finalizeComponents() {
-  debug_print(runtime, node, "begin: finalizeComponents\n");
-
-  // Reverse order destruction of runtime components.
-
-  // // Advanced components: may communicate during destruction
-  // theHandleRDMA->destroy(); theHandleRDMA = nullptr;
-  // theCollection = nullptr;
-  // theVirtualManager = nullptr;
-  // theLocMan = nullptr;
-  // theVirtualSeq = nullptr;
-  // theSeq = nullptr;
-  // theParam = nullptr;
-  // theRDMA = nullptr;
-
-  // // Core components
-  // theCollective = nullptr;
-  // theTerm = nullptr;
-  // theSched = nullptr;
-  // theMsg = nullptr;
-  // theGroup = nullptr;
-  // theCB = nullptr;
-  // theObjGroup = nullptr;
-
-  // // Helper components: thePool the last to be destructed because it handles
-  // // memory allocations
-  // theRegistry = nullptr;
-  // theEvent->cleanup(); theEvent = nullptr;
-
-  // // Initialize individual memory pool for each worker
-  // thePool->destroyWorkerPools();
-  // thePool = nullptr;
-
-  // // Finalize memory usage component
-  // util::memory::MemoryUsage::finalize();
-
-  debug_print(runtime, node, "end: finalizeComponents\n");
-}
-
-void Runtime::finalizeOptionalComponents() {
-  debug_print(runtime, node, "begin: finalizeOptionalComponents\n");
-
-  theWorkerGrp = nullptr;
-
-  debug_print(runtime, node, "end: finalizeOptionalComponents\n");
 }
 
 }} //end namespace vt::runtime
