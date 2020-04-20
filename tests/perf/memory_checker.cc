@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
   auto this_node = vt::theContext()->getNode();
 
   if (this_node == 0) {
-    auto usage = vt::util::memory::MemoryUsage::get();
+    auto usage = vt::theMemUsage();
     fmt::print("Initial: {}\n", usage->getUsageAll());
 
     for (int i = 0; i < 32; i++) {
