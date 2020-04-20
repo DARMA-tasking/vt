@@ -68,10 +68,6 @@ bool GossipLB::isUnderloaded(LoadType load) const {
   return load < avg * gossip_threshold;
 }
 
-bool GossipLB::isUnderloadedRelaxed(LoadType over, LoadType under) const {
-  return under < over;
-}
-
 bool GossipLB::isOverloaded(LoadType load) const {
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   return load > avg * gossip_threshold;
@@ -122,8 +118,8 @@ void GossipLB::doLBStages() {
 
     debug_print(
       gossiplb, node,
-      "GossipLB::doLBStages: running iter_={}, num_iters_={}, load={}\n",
-      iter_, num_iters_, this_load
+      "GossipLB::doLBStages: (before) running iter_={}, num_iters_={}, load={}, new_load={}\n",
+      iter_, num_iters_, this_load, this_new_load_
     );
 
     if (first_iter) {
@@ -147,17 +143,20 @@ void GossipLB::doLBStages() {
 
     inform();
     decide();
-  }
 
-  // Concretize lazy migrations by invoking the BaseLB object migration on new
-  // object node assignments
-  thunkMigrations();
+    debug_print(
+      gossiplb, node,
+      "GossipLB::doLBStages: (after) running iter_={}, num_iters_={}, load={}, new_load={}\n",
+      iter_, num_iters_, this_load, this_new_load_
+    );
+  }
 
   // Update the load based on new object assignments
   this_load = this_new_load_;
 
-  // Re-compute the statistics for the processor load
-  computeStatisticsOver(Statistic::P_l);
+  // Concretize lazy migrations by invoking the BaseLB object migration on new
+  // object node assignments
+  thunkMigrations();
 }
 
 void GossipLB::inform() {
@@ -177,9 +176,19 @@ void GossipLB::inform() {
   debug_print(
     gossiplb, node,
     "GossipLB::inform: starting inform phase: k_max_={}, k_cur_={}, "
-    "is_underloaded={}, is_overloaded={}\n",
-    k_max_, k_cur_, is_underloaded_, is_overloaded_
+    "is_underloaded={}, is_overloaded={}, load={}\n",
+    k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
   );
+
+  setup_done_ = false;
+
+  auto cb = theCB()->makeBcast<GossipLB, ReduceMsgType, &GossipLB::setupDone>(proxy_);
+  auto msg = makeMessage<ReduceMsgType>();
+  proxy_.reduce(msg.get(), cb);
+
+  while (not setup_done_) {
+    vt::runScheduler();
+  }
 
   bool inform_done = false;
   auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
@@ -201,6 +210,10 @@ void GossipLB::inform() {
     "GossipLB::inform: finished inform phase: k_max_={}, k_cur_={}\n",
     k_max_, k_cur_
   );
+}
+
+void GossipLB::setupDone(ReduceMsgType* msg) {
+  setup_done_ = true;
 }
 
 void GossipLB::propagateRound(EpochType epoch) {
@@ -338,10 +351,10 @@ NodeType GossipLB::sampleFromCMF(
   return selected_node;
 }
 
-std::vector<NodeType> GossipLB::makeUnderloadedRelaxed() const {
+std::vector<NodeType> GossipLB::makeUnderloaded() const {
   std::vector<NodeType> under = {};
   for (auto&& elm : load_info_) {
-    if (isUnderloadedRelaxed(this_new_load_, elm.first)) {
+    if (isUnderloaded(elm.first)) {
       under.push_back(elm.first);
     }
   }
@@ -374,14 +387,14 @@ void GossipLB::decide() {
   theTerm()->addAction(lazy_epoch, [&decide_done] { decide_done = true; });
 
   if (is_overloaded_) {
-    std::vector<NodeType> under = makeUnderloadedRelaxed();
+    std::vector<NodeType> under = makeUnderloaded();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
     if (under.size() > 0) {
       // Iterate through all the objects
       for (auto iter = cur_objs_.begin(); iter != cur_objs_.end(); ) {
         // Rebuild the relaxed underloaded set based on updated load of this node
-        under = makeUnderloadedRelaxed();
+        under = makeUnderloaded();
         if (under.size() == 0) {
           break;
         }

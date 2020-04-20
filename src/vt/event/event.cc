@@ -60,6 +60,15 @@ namespace vt { namespace event {
 //   return ready;
 // }
 
+void AsyncEvent::initialize() {
+# if backend_check_enabled(trace_enabled)
+  if (vt::arguments::ArgConfig::vt_trace_event_polling) {
+    trace_event_polling = trace::registerEventCollective(
+      "AsyncEvent::testEventsTrigger"
+    );
+  }
+# endif
+}
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
   auto const& this_node = theContext()->getNode();
@@ -278,6 +287,15 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
 }
 
 void AsyncEvent::testEventsTrigger(int const& num_events) {
+# if backend_check_enabled(trace_enabled)
+  int32_t num_completed  = 0;
+  TimeType tr_begin = 0.0;
+
+  if (arguments::ArgConfig::vt_trace_event_polling) {
+    tr_begin = timing::Timing::getCurrentTime();
+  }
+# endif
+
   int cur = 0;
   auto& cont = polling_event_container_;
   for (auto iter = cont.begin(); iter != cont.end(); ) {
@@ -288,6 +306,13 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
       holder.executeActions();
       iter = polling_event_container_.erase(iter);
       lookup_container_.erase(id);
+
+#     if backend_check_enabled(trace_enabled)
+      if (arguments::ArgConfig::vt_trace_event_polling) {
+        ++num_completed;
+      }
+#     endif
+
     } else {
       iter++;
     }
@@ -297,6 +322,18 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
       break;
     }
   }
+
+# if backend_check_enabled(trace_enabled)
+  if (arguments::ArgConfig::vt_trace_event_polling) {
+    if (num_completed > 0) {
+      TimeType tr_end = timing::Timing::getCurrentTime();
+      auto tr_note = fmt::format("completed {} of {}", num_completed, cur);
+      trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_event_polling);
+    }
+  } else {
+    (void)num_completed;
+  }
+# endif
 }
 
 }} //end namespace vt::event
