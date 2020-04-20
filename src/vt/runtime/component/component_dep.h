@@ -57,7 +57,7 @@ template <typename U, typename... Args>
 struct AddDep<U, Args...> {
   static void add(registry::AutoHandlerType t) {
     auto u = registry::makeIdx<U>();
-    registry::getIdx(t).push_back(u);
+    registry::getIdx(t).insert(u);
     AddDep<Args...>::add(t);
   }
 };

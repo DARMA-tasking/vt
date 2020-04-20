@@ -49,11 +49,12 @@
 
 #include <vector>
 #include <tuple>
+#include <unordered_set>
 
 namespace vt { namespace runtime { namespace component { namespace registry {
 
 using AutoHandlerType = HandlerType;
-using RegistryType = std::vector<std::tuple<int,std::vector<int>>>;
+using RegistryType = std::vector<std::tuple<int,std::unordered_set<int>>>;
 
 inline RegistryType& getRegistry() {
   static RegistryType reg;
@@ -65,7 +66,7 @@ struct Registrar {
   Registrar() {
     auto& reg = getRegistry();
     index = reg.size();
-    reg.emplace_back(std::make_tuple(index,std::vector<int>{}));
+    reg.emplace_back(std::make_tuple(index,std::unordered_set<int>{}));
   }
   AutoHandlerType index;
 };
@@ -78,7 +79,7 @@ struct Type {
 template <typename ObjT>
 AutoHandlerType const Type<ObjT>::idx = Registrar<ObjT>().index;
 
-inline std::vector<int>& getIdx(AutoHandlerType han) {
+inline std::unordered_set<int>& getIdx(AutoHandlerType han) {
   return std::get<1>(getRegistry().at(han));
 }
 
