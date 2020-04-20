@@ -105,18 +105,12 @@ void PendingSend::consumeMsg() {
 void PendingSend::release() {
   bool send_msg = msg_ != nullptr || send_action_ != nullptr;
   vtAssert(!send_msg || !epoch_action_, "cannot have both a message and epoch action");
-  if (epoch_produced_ != no_epoch) {
-    theMsg()->pushEpoch(epoch_produced_);
-  }
   if (send_msg) {
     sendMsg();
   } else if ( epoch_action_ ) {
     epoch_action_();
     epoch_action_ = {};
     consumeMsg();
-  }
-  if (epoch_produced_ != no_epoch) {
-    theMsg()->popEpoch(epoch_produced_);
   }
 }
 
