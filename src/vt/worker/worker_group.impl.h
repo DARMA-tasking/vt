@@ -131,12 +131,14 @@ void WorkerGroupAny<WorkerT>::enqueueAllWorkers(WorkUnitType const& work_unit) {
 }
 
 template <typename WorkerT>
-void WorkerGroupAny<WorkerT>::progress() {
+int WorkerGroupAny<WorkerT>::progress() {
   for (auto&& elm : workers_) {
     elm->progress();
   }
 
   WorkerGroupCounter::progress();
+
+  return 0;
 }
 
 template <typename WorkerT>

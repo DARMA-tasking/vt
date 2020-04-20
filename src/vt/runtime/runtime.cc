@@ -1261,7 +1261,7 @@ void Runtime::initializeComponents() {
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger to send msgs
       sched::Scheduler,           // Depends on scheduler
-      term::TerminationDetector,  // Depends on TD for idle callbacks
+      term::TerminationDetector   // Depends on TD for idle callbacks
     >{}
   );
 
