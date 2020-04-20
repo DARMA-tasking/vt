@@ -159,6 +159,8 @@ public:
   static bool vt_debug_broadcast;
   static bool vt_debug_objgroup;
 
+  static bool vt_debug_print_flush;
+
   static bool vt_user_1;
   static bool vt_user_2;
   static bool vt_user_3;
@@ -188,6 +190,10 @@ inline bool traceCollection() {
 }
 inline bool traceSerialMsg() {
   return ArgConfig::vt_trace_sys_serial_msg or ArgConfig::vt_trace_sys_all;
+}
+
+inline bool alwaysFlush() {
+  return ArgConfig::vt_debug_print_flush;
 }
 
 }} /* end namespace vt::arguments */
