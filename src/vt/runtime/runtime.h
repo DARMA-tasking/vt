@@ -121,7 +121,7 @@ protected:
   void initializeWorkers(WorkerCountType const num_workers);
   void initializeLB();
 
-  void finalizeContext();
+  void finalizeMPI();
 
   void sync();
   void setup();

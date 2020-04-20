@@ -1015,13 +1015,15 @@ bool Runtime::finalize(bool const force_now) {
     fflush(stdout);
     fflush(stderr);
     sync();
+    // This destroys and finalizes all components in proper reverse
+    // initialization order
     p_ = nullptr;
     sync();
     sync();
     if (is_zero) {
       printShutdownBanner(num_units, coll_epochs);
     }
-    finalizeContext();
+    finalizeMPI();
     finalized_ = true;
     return true;
   } else {
@@ -1173,7 +1175,7 @@ void Runtime::setup() {
   debug_print(runtime, node, "end: setup\n");
 }
 
-void Runtime::finalizeContext() {
+void Runtime::finalizeMPI() {
   MPI_Barrier(*communicator_);
 
   if (not is_interop_) {
