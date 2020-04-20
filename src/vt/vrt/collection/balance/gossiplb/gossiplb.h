@@ -58,9 +58,10 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct GossipLB : BaseLB {
-  using GossipMsg   = balance::GossipMsg;
-  using NodeSetType = std::vector<NodeType>;
-  using ObjsType    = std::unordered_map<ObjIDType, LoadType>;
+  using GossipMsg     = balance::GossipMsg;
+  using NodeSetType   = std::vector<NodeType>;
+  using ObjsType      = std::unordered_map<ObjIDType, LoadType>;
+  using ReduceMsgType = vt::collective::ReduceNoneMsg;
 
   GossipLB() = default;
   GossipLB(GossipLB const&) = delete;
@@ -86,7 +87,7 @@ protected:
 
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
-  std::vector<NodeType> makeUnderloadedRelaxed() const;
+  std::vector<NodeType> makeUnderloaded() const;
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
@@ -94,6 +95,8 @@ protected:
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
   void thunkMigrations();
+
+  void setupDone(ReduceMsgType* msg);
 
 private:
   uint8_t f_                                        = 4;
@@ -111,6 +114,7 @@ private:
   std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
+  bool setup_done_                                  = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
