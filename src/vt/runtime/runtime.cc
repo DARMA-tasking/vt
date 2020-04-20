@@ -92,7 +92,11 @@ Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
   bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
-     num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
+     num_workers_(in_num_workers),
+     communicator_(
+       in_comm == nullptr ? nullptr : std::make_unique<MPI_Comm>(*communicator_)
+     ),
+     user_argc_(argc),
      user_argv_(argv)
 {
   ArgType::parse(argc, argv);
@@ -985,7 +989,7 @@ void Runtime::initializeLB() {
 
 bool Runtime::initialize(bool const force_now) {
   if (force_now) {
-    initializeContext(user_argc_, user_argv_, communicator_);
+    //initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();
     initializeOptionalComponents();
     initializeErrorHandlers();
@@ -1027,7 +1031,7 @@ bool Runtime::finalize(bool const force_now) {
 }
 
 void Runtime::sync() {
-  MPI_Barrier(theContext->getComm());
+  MPI_Barrier(*communicator_);
 }
 
 void Runtime::runScheduler() {
@@ -1035,7 +1039,7 @@ void Runtime::runScheduler() {
 }
 
 void Runtime::reset() {
-  MPI_Barrier(theContext->getComm());
+  MPI_Barrier(*communicator_);
 
   runtime_active_ = true;
 
@@ -1043,7 +1047,7 @@ void Runtime::reset() {
   theTerm->addDefaultAction(action);
   theTerm->resetGlobalTerm();
 
-  MPI_Barrier(theContext->getComm());
+  MPI_Barrier(*communicator_);
 
   // Without workers running on the node, the termination detector should
   // assume its locally ready to propagate instead of waiting for them to
@@ -1194,7 +1198,7 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<ctx::Context>(
     &theContext, Deps<>{},
-    user_argc_, user_argv_, is_interop_, communicator_
+    user_argc_, user_argv_, is_interop_, communicator_.get()
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
@@ -1374,6 +1378,10 @@ void Runtime::initializeComponents() {
   p_->add<pool::Pool>();
 
   p_->construct();
+
+  if (communicator_ == nullptr) {
+    communicator_ = std::make_unique<MPI_Comm>(theContext->getComm());
+  }
 
   // #if backend_check_enabled(trace_enabled)
   //   theTrace->initialize();
