@@ -143,10 +143,17 @@ public:
     live_ = true;
   }
 
+  ~ComponentPack() {
+    destruct();
+  }
+
   void destruct() {
     live_ = false;
     pollable_components_.clear();
-    live_components_.clear();
+    while (live_components_.size() > 0) {
+      live_components_.back()->finalize();
+      live_components_.pop_back();
+    }
   }
 
 private:
