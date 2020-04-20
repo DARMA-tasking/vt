@@ -86,7 +86,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
   virtual ~AsyncEvent();
 
   void initialize() override;
-  void cleanup();
+  void finalize() override;
   EventType createEvent(EventRecordTypeType const& type, NodeType const& node);
   EventRecordType& getEvent(EventType const& event);
   NodeType getOwningNode(EventType const& event);

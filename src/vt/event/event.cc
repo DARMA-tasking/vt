@@ -179,7 +179,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
 /*virtual*/ AsyncEvent::~AsyncEvent() { }
 
-void AsyncEvent::cleanup() {
+void AsyncEvent::finalize() {
   while (polling_event_container_.size() > 0) {
     testEventsTrigger();
   }

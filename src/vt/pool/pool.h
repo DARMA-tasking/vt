@@ -83,7 +83,7 @@ struct Pool : runtime::component::Component<Pool> {
   bool active_env() const;
 
   void initWorkerPools(WorkerCountType const& num_workers);
-  void destroyWorkerPools();
+  void finalize() override;
 
 private:
   /*

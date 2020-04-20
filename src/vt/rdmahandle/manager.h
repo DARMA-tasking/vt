@@ -89,7 +89,7 @@ struct Manager : runtime::component::Component<Manager> {
   /**
    * \brief Destroy the component, called when VT is finalized
    */
-  void destroy();
+  void finalize() override;
 
 private:
   /**

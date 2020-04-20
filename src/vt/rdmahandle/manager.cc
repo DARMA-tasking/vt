@@ -48,7 +48,7 @@
 
 namespace vt { namespace rdma {
 
-void Manager::destroy() {
+void Manager::finalize() {
   vt::theObjGroup()->destroyCollective(proxy_);
 }
 
