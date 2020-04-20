@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/collective/reduce/operators/default_op.h"
-#include "vt/pipe/pipe_headers.h"
 
 namespace vt { namespace collective { namespace reduce { namespace operators {
 
