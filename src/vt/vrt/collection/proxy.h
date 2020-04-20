@@ -46,7 +46,6 @@
 #define INCLUDED_VT_VRT_COLLECTION_PROXY_H
 
 #include "vt/config.h"
-#include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/vrt/proxy/collection_elm_proxy.h"
 
 namespace vt { namespace vrt {
