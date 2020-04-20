@@ -989,7 +989,6 @@ void Runtime::initializeLB() {
 
 bool Runtime::initialize(bool const force_now) {
   if (force_now) {
-    //initializeContext(user_argc_, user_argv_, communicator_);
     initializeComponents();
     initializeOptionalComponents();
     initializeErrorHandlers();
@@ -1174,12 +1173,6 @@ void Runtime::setup() {
   debug_print(runtime, node, "end: setup\n");
 }
 
-void Runtime::initializeContext(int argc, char** argv, MPI_Comm* comm) {
-  // theContext = std::make_unique<ctx::Context>(argc, argv, is_interop_, comm);
-
-  debug_print(runtime, node, "finished initializing context\n");
-}
-
 void Runtime::finalizeContext() {
   MPI_Barrier(*communicator_);
 
@@ -1260,6 +1253,15 @@ void Runtime::initializeComponents() {
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger to send term msgs
       sched::Scheduler            // Depends on scheduler for idle checks
+    >{}
+  );
+
+  p_->registerComponent<worker::WorkerGroupType>(
+    &theWorkerGrp, Deps<
+      ctx::Context,               // Everything depends on theContext
+      messaging::ActiveMessenger, // Depends on active messenger to send msgs
+      sched::Scheduler,           // Depends on scheduler
+      term::TerminationDetector,  // Depends on TD for idle callbacks
     >{}
   );
 
@@ -1377,30 +1379,18 @@ void Runtime::initializeComponents() {
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
 
+  bool const has_workers = num_workers_ != no_workers;
+  if (has_workers) {
+    p_->add<worker::WorkerGroupType>();
+  }
+
   p_->construct();
 
   if (communicator_ == nullptr) {
     communicator_ = std::make_unique<MPI_Comm>(theContext->getComm());
   }
 
-  // #if backend_check_enabled(trace_enabled)
-  //   theTrace->initialize();
-  // #endif
-  // theEvent->initialize();
-
   debug_print(runtime, node, "end: initializeComponents\n");
-}
-
-void Runtime::initializeTrace() {
-  // #if backend_check_enabled(trace_enabled)
-  //   theTrace = std::make_unique<trace::Trace>();
-
-  //     std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-  //     auto const& node = theContext->getNode();
-  //     theTrace->setupNames(
-  //       name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
-  //     );
-  // #endif
 }
 
 namespace {
@@ -1448,22 +1438,20 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   bool const has_workers = num_workers != no_workers;
 
   if (has_workers) {
-    // ContextAttorney::setNumWorkers(num_workers);
+    ContextAttorney::setNumWorkers(num_workers);
 
-    // // Initialize individual memory pool for each worker
-    // thePool->initWorkerPools(num_workers);
+    // Initialize individual memory pool for each worker
+    thePool->initWorkerPools(num_workers);
 
-    // theWorkerGrp = std::make_unique<worker::WorkerGroupType>();
-
-    // auto localTermFn = [](worker::eWorkerGroupEvent event){
-    //   bool const no_local_workers = false;
-    //   bool const is_idle = event == worker::eWorkerGroupEvent::WorkersIdle;
-    //   bool const is_busy = event == worker::eWorkerGroupEvent::WorkersBusy;
-    //   if (is_idle || is_busy) {
-    //     ::vt::theTerm()->setLocalTerminated(is_idle, no_local_workers);
-    //   }
-    // };
-    // theWorkerGrp->registerIdleListener(localTermFn);
+    auto localTermFn = [](worker::eWorkerGroupEvent event){
+      bool const no_local_workers = false;
+      bool const is_idle = event == worker::eWorkerGroupEvent::WorkersIdle;
+      bool const is_busy = event == worker::eWorkerGroupEvent::WorkersBusy;
+      if (is_idle || is_busy) {
+        ::vt::theTerm()->setLocalTerminated(is_idle, no_local_workers);
+      }
+    };
+    theWorkerGrp->registerIdleListener(localTermFn);
   } else {
     // Without workers running on the node, the termination detector should
     // enable/disable the global collective epoch based on the state of the

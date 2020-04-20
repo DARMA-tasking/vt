@@ -115,8 +115,6 @@ protected:
   bool tryInitialize();
   bool tryFinalize();
 
-  void initializeContext(int argc, char** argv, MPI_Comm* comm);
-  void initializeTrace();
   void initializeErrorHandlers();
   void initializeComponents();
   void initializeOptionalComponents();
