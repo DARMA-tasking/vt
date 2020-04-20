@@ -214,6 +214,7 @@ private:
     stack.pop_back();
   }
 
+public:
   bool live() const { return live_; }
   bool registrationsDone() const { return registrations_done_; }
   void finishRegistration() { registrations_done_ = true; }

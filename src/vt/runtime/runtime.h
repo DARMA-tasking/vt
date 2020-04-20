@@ -81,6 +81,7 @@ struct Runtime {
 
   virtual ~Runtime();
 
+  bool live() const { return p_ and p_->live(); }
   bool isTerminated() const { return not runtime_active_; }
   bool isFinializeble() const { return initialized_ and not finalized_; }
   bool isInitialized() const { return initialized_; }
