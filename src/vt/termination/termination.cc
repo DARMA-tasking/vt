@@ -57,6 +57,7 @@
 #include "vt/configs/arguments/args.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/pipe/pipe_headers.h"
 
 #include <memory>
 

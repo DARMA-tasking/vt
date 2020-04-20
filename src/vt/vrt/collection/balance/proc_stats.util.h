@@ -52,6 +52,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
