@@ -70,9 +70,7 @@
 namespace vt { namespace seq {
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-struct TaggedSequencer
-  : runtime::component::PollableComponent<TaggedSequencer<SeqTag, SeqTrigger>>
-{
+struct TaggedSequencer {
   using SeqType = SeqTag;
   using SeqListType = SeqList;
   using SeqContextType = SeqContext;
@@ -143,7 +141,6 @@ struct TaggedSequencer
 
   void enqueueSeqList(SeqType const& seq_id);
   SeqType getCurrentSeq() const;
-  int progress() override;
   bool isLocalTerm();
 
   SeqNodePtrType getNode(SeqType const& id) const;
@@ -200,7 +197,10 @@ private:
 template <typename Fn>
 bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn);
 
-using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
+struct Sequencer
+  : runtime::component::PollableComponent<Sequencer>,
+    TaggedSequencer<SeqType, SeqMigratableTriggerType>
+{ };
 
 #define SEQUENCE_REGISTER_HANDLER(message, handler)                     \
   static void handler(message* m) {                                     \

@@ -221,7 +221,7 @@ private:
   }
 
 public:
-  static ProxyType construct();
+  static std::unique_ptr<Manager> construct();
 
 private:
   /// Current collective handle for a given objgroup proxy

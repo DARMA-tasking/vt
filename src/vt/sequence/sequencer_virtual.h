@@ -96,7 +96,10 @@ private:
     theVirtualSeq()->sequenceVrtMsg<vrtcontext, message, handler>(m, vc); \
   }
 
-using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
+struct SequencerVirtual
+  : runtime::component::PollableComponent<SequencerVirtual>,
+    TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>
+{ };
 
 }} //end namespace vt::seq
 

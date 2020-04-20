@@ -50,15 +50,13 @@
 
 namespace vt { namespace seq {
 
-template <typename SeqTag, template <typename> class SeqTrigger>
-struct TaggedSequencer;
+struct Sequencer;
 
-using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
+//using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
 
-template <typename SeqTag, template <typename> class SeqTrigger>
-struct TaggedSequencerVrt;
+struct SequencerVirtual;
 
-using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
+//using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
 
 }} // end namespace vt::seq
 
