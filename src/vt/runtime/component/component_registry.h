@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REGISTRY_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REGISTRY_H
 
-#include "vt/config.h"
+#include "vt/configs/types/types_type.h"
 
 #include <vector>
 #include <tuple>

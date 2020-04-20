@@ -45,7 +45,6 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
 
-#include "vt/config.h"
 #include "vt/runtime/component/diagnostic.h"
 #include "vt/runtime/component/bufferable.h"
 #include "vt/runtime/component/progressable.h"

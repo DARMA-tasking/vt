@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_TRAITS_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_TRAITS_H
 
-#include "vt/config.h"
+#include <type_traits>
 
 namespace vt { namespace runtime { namespace component {
 

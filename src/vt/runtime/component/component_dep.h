@@ -45,7 +45,6 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_DEP_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_DEP_H
 
-#include "vt/config.h"
 #include "vt/runtime/component/component_registry.h"
 
 namespace vt { namespace runtime { namespace component {

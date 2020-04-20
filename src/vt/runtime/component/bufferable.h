@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_BUFFERABLE_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_BUFFERABLE_H
 
-#include "vt/config.h"
-
 namespace vt { namespace runtime { namespace component {
 
 struct Bufferable {

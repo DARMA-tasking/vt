@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_H
 
-#include "vt/config.h"
+#include "vt/configs/error/hard_error.h"
 #include "vt/runtime/component/component_registry.h"
 #include "vt/runtime/component/component_dep.h"
 #include "vt/runtime/component/component_traits.h"
@@ -106,7 +106,7 @@ struct PollableComponent : Component<T> {
 
   // Fail if progress method not overridden by user
   virtual int progress() override {
-    //vtAssert(false, "PollableComponent should have a progress function");
+    vtAbort("PollableComponent should have a progress function");
     return 0;
   }
 
