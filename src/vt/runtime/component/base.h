@@ -51,14 +51,44 @@
 
 namespace vt { namespace runtime { namespace component {
 
+/**
+ * \struct BaseComponent base.h vt/runtime/component/base.h
+ *
+ * \brief The abstract \c BaseComponent for VT runtime component pack
+ */
 struct BaseComponent : Diagnostic, Bufferable, Progressable {
+  /**
+   * \struct DepsPack
+   *
+   * \brief Set of component types that given component is dependent on
+   */
   template <typename... Deps>
   struct DepsPack { };
 
+  /**
+   * \internal \brief Initialize the component. Invoked after the constructor
+   * fires during the startup sequence
+   */
   virtual void initialize() = 0;
+
+  /**
+   * \internal \brief Finalize the component. Invoked before the destructor
+   * fires during the shutdown sequence
+   */
   virtual void finalize() = 0;
 
+  /**
+   * \internal \brief Returns whether the component should be polled by the
+   * scheduler
+   *
+   * \return whether the component is pollable
+   */
   virtual bool pollable() = 0;
+
+  /**
+   * \internal \brief Invoked after all components are constructed and the
+   * runtime is live
+   */
   virtual void startup() = 0;
 
   virtual ~BaseComponent() { }
