@@ -54,6 +54,7 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke.h"
 #include "vt/timing/timing.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include <cassert>
 #include <type_traits>

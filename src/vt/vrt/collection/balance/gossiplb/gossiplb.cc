@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/balance/gossiplb/gossip_constants.h"
 #include "vt/vrt/collection/balance/gossiplb/criterion.h"
 #include "vt/context/context.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include <cstdint>
 #include <random>

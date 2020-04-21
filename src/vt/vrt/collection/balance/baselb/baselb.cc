@@ -55,6 +55,7 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include <tuple>
 
