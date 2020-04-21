@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               component_pack.h
+//                            component_pack.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,67 +42,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_IMPL_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_IMPL_H
 
-#include "vt/runtime/component/component.h"
-
-#include <list>
-#include <unordered_map>
-#include <unordered_set>
+#include "vt/runtime/component/component_pack.h"
 
 namespace vt { namespace runtime { namespace component {
 
-struct ComponentPack {
+template <typename T, typename... Deps, typename... Cons>
+registry::AutoHandlerType ComponentPack::registerComponent(
+  T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
+) {
+  ComponentRegistry::dependsOn<T, Deps...>();
+  auto idx = registry::makeIdx<T>();
+  registered_components_.push_back(idx);
+  construct_components_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(idx),
+    std::forward_as_tuple(
+      [ref,this,cons...]() mutable {
+        auto ptr = T::template staticInit<Cons...>(std::forward<Cons>(cons)...);
 
-  ComponentPack() = default;
+        // Set the reference for access outside
+        if (ref != nullptr) {
+          *ref = ptr.get();
+        }
 
-public:
-  template <typename T, typename... Deps, typename... Cons>
-  registry::AutoHandlerType registerComponent(
-    T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
+        // Add to pollable for the progress function to be triggered
+        if (ptr->pollable()) {
+          pollable_components_.emplace_back(ptr.get());
+        }
+
+        ptr->initialize();
+        live_components_.emplace_back(std::move(ptr));
+      }
+    )
   );
+  return idx;
+}
 
-  template <typename T>
-  void add();
-
-  void construct();
-
-  ~ComponentPack();
-
-  void destruct();
-
-  int progress();
-
-private:
-  std::list<int> topoSort();
-
-  void topoSortImpl(int v, std::list<int>& order, bool* visited);
-
-  void detectCycles(int root);
-
-  void detectCyclesImpl(std::list<int>& stack, int dep);
-
-public:
-  bool live() const { return live_; }
-  bool registrationsDone() const { return registrations_done_; }
-  void finishRegistration() { registrations_done_ = true; }
-
-private:
-  bool registrations_done_ = false;
-  bool live_ = false;
-  std::vector<registry::AutoHandlerType> registered_components_;
-  std::unordered_set<registry::AutoHandlerType> added_components_;
-  std::unordered_map<registry::AutoHandlerType, ActionType> construct_components_;
-  std::vector<std::unique_ptr<BaseComponent>> live_components_;
-  std::vector<Progressable*> pollable_components_;
-};
-
-template <typename... Ts>
-using Deps = typename BaseComponent::DepsPack<Ts...>;
+template <typename T>
+void ComponentPack::add() {
+  auto idx = registry::makeIdx<T>();
+  added_components_.insert(idx);
+}
 
 }}} /* end namespace vt::runtime::component */
 
-#include "vt/runtime/component/component_pack.impl.h"
-
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_H*/
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_IMPL_H*/
