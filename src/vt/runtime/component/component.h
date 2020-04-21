@@ -177,7 +177,7 @@ struct PollableComponent : Component<T> {
    * \return number of units processed---zero
    */
   virtual int progress() override {
-    vtAbort("PollableComponent should have a progress function");
+    vtAbort("PollableComponent should override the empty progress function");
     return 0;
   }
 
