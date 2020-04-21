@@ -57,7 +57,6 @@ void ComponentPack::construct() {
   // Construct the components, and fire off initialize
   while (not order.empty()) {
     auto next = order.back();
-    //fmt::print("constructing = {}\n", next);
     order.pop_back();
 
     auto iter = construct_components_.find(next);
@@ -84,6 +83,12 @@ void ComponentPack::destruct() {
   live_ = false;
   pollable_components_.clear();
   while (live_components_.size() > 0) {
+    debug_print(
+      runtime, node,
+      "ComponentPack: finalizing component={}\n",
+      live_components_.back()->name()
+    );
+
     live_components_.back()->finalize();
     live_components_.pop_back();
   }
