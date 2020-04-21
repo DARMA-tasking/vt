@@ -47,6 +47,12 @@
 
 namespace vt { namespace runtime { namespace component {
 
+/**
+ * \struct Progressable progressable.h vt/runtime/component/progressable.h
+ *
+ * \brief The abstract \c Progressable trait for pollable components to make
+ * progress from the scheduler
+ */
 struct Progressable {
   virtual int progress() = 0;
 };

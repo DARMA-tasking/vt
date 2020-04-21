@@ -47,6 +47,12 @@
 
 namespace vt { namespace runtime { namespace component {
 
+/**
+ * \struct Bufferable bufferable.h vt/runtime/component/bufferable.h
+ *
+ * \brief The abstract \c Bufferable trait for delaying operations generically
+ * across VT components
+ */
 struct Bufferable {
   // @todo interface for buffering
 };

@@ -47,6 +47,12 @@
 
 namespace vt { namespace runtime { namespace component {
 
+/**
+ * \struct Diagnostic diagnostic.h vt/runtime/component/diagnostic.h
+ *
+ * \brief The abstract \c Diagnostic trait for outputting debugging state
+ * information generically across VT components
+ */
 struct Diagnostic {
   virtual void dumpState() = 0;
   // @todo diagnostics
