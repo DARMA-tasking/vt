@@ -94,6 +94,8 @@ struct WorkerGroupAny
   );
   void enqueueAllWorkers(WorkUnitType const& work_unit);
 
+  std::string name() override { return "WorkerGroup"; }
+
 private:
   WorkerFinishedFnType finished_fn_ = nullptr;
   bool initialized_ = false;

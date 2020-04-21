@@ -99,6 +99,8 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
   using RDMA_PutTypedFunctionType =
     RDMA_StateType::RDMA_PutTypedFunctionType<MsgType>;
 
+  std::string name() override { return "RDMAManager"; }
+
   template <typename T>
   void putTypedData(
     RDMA_HandleType const& rdma_handle, T ptr,

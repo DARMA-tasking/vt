@@ -75,6 +75,8 @@ struct Pool : runtime::component::Component<Pool> {
 
   Pool();
 
+  std::string name() override { return "MemoryPool"; }
+
   void* alloc(size_t const& num_bytes, size_t oversize = 0);
   void dealloc(void* const buf);
   ePoolSize getPoolType(size_t const& num_bytes, size_t const& oversize);

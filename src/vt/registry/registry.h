@@ -66,6 +66,8 @@ struct Registry : runtime::component::Component<Registry> {
 
   Registry() = default;
 
+  std::string name() override { return "Registry"; }
+
   HandlerType registerNewHandler(
     ActiveClosureFnType fn, TagType const& tag = no_tag,
     bool const& is_collective = false

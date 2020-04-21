@@ -113,6 +113,8 @@ struct Mimalloc final : Reporter {
 struct MemoryUsage : runtime::component::Component<MemoryUsage> {
   MemoryUsage();
 
+  std::string name() override { return "MemoryUsage"; }
+
   std::size_t getAverageUsage();
 
   std::size_t getFirstUsage();

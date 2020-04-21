@@ -85,6 +85,7 @@ struct CollectiveAlg :
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
 
+  std::string name() override { return "Collective"; }
 };
 
 using ReduceMsg = reduce::ReduceMsg;

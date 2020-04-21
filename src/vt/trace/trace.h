@@ -98,6 +98,8 @@ struct Trace : runtime::component::Component<Trace> {
 
   virtual ~Trace();
 
+  std::string name() override { return "Trace"; }
+
   friend struct Log;
 
   std::string getTraceName() const { return full_trace_name_; }

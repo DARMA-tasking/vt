@@ -106,6 +106,8 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
   static void eventFinished(EventFinishedMsg* msg);
   static void checkEventFinished(EventCheckFinishedMsg* msg);
 
+  std::string name() override { return "AsyncEvent"; }
+
 private:
   // next event id
   EventType cur_event_ = 0;

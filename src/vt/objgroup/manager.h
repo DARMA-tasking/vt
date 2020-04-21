@@ -82,6 +82,13 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
 
   ObjGroupManager() = default;
 
+  /**
+   * \brief Return the name of the component
+   *
+   * \return the name
+   */
+  std::string name() override { return "ObjGroupManager"; }
+
   /*
    * Creation of a new object group across the distributed system. For now,
    * these use the default group which includes all the nodes in the

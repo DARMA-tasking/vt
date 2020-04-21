@@ -97,6 +97,8 @@ struct GroupManager : runtime::component::Component<GroupManager> {
     cleanup_actions_.clear();
   }
 
+  std::string name() override { return "GroupManager"; }
+
   void setupDefaultGroup();
 
   GroupType newGroup(

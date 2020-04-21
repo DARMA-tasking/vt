@@ -92,6 +92,8 @@ struct VirtualContextManager
 
   VirtualContextManager();
 
+  std::string name() override { return "VirtualContextManager"; }
+
   template <typename VrtContextT, typename... Args>
   VirtualProxyType makeVirtual(Args&& ... args);
 

@@ -130,6 +130,13 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
 
 struct Param : runtime::component::Component<Param> {
 
+  /**
+   * \brief Return the name of the component
+   *
+   * \return the name
+   */
+  std::string name() override { return "Param"; }
+
   template <typename... Args>
   void sendDataTuple(
     NodeType const& dest, HandlerType const& han, std::tuple<Args...>&& tup

@@ -200,7 +200,9 @@ bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn);
 struct Sequencer
   : runtime::component::Component<Sequencer>,
     TaggedSequencer<SeqType, SeqMigratableTriggerType>
-{ };
+{
+  std::string name() override { return "Sequencer"; }
+};
 
 #define SEQUENCE_REGISTER_HANDLER(message, handler)                     \
   static void handler(message* m) {                                     \

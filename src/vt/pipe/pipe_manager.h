@@ -84,6 +84,8 @@ struct PipeManager
 
   PipeManager();
 
+  std::string name() override { return "PipeManager"; }
+
   template <typename MsgT, typename ContextT>
   Callback<MsgT> makeFunc(ContextT* ctx, FuncMsgCtxType<MsgT, ContextT> fn);
   template <typename ContextT>

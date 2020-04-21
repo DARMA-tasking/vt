@@ -143,6 +143,8 @@ struct CollectionManager
 
   virtual ~CollectionManager();
 
+  std::string name() override { return "CollectionManager"; }
+
   template <typename=void>
   void cleanupAll();
 

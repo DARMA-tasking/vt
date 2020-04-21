@@ -80,6 +80,8 @@ struct WorkerGroupOMP
 
   virtual ~WorkerGroupOMP();
 
+  std::string name() override { return "WorkerGroupOMP"; }
+
   void initialize() override;
   void spawnWorkers();
   void spawnWorkersBlock(WorkerCommFnType fn);

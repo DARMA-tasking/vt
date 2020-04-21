@@ -90,6 +90,8 @@ struct LocationManager : runtime::component::Component<LocationManager> {
 
   virtual ~LocationManager();
 
+  std::string name() override { return "LocationManager"; }
+
   static LocInstType cur_loc_inst;
 
   PtrType<VrtLocType> virtual_loc = std::make_unique<VrtLocType>();

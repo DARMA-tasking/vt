@@ -91,6 +91,8 @@ struct TerminationDetector :
   TerminationDetector();
   virtual ~TerminationDetector() {}
 
+  std::string name() override { return "TerminationDetector"; }
+
   /****************************************************************************
    *
    * Termination interface: produce(..)/consume(..) for 4-counter wave-based

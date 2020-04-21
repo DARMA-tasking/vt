@@ -99,7 +99,9 @@ private:
 struct SequencerVirtual
   : runtime::component::Component<SequencerVirtual>,
     TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>
-{ };
+{
+  std::string name() override { return "VirtualSequencer"; }
+};
 
 }} //end namespace vt::seq
 

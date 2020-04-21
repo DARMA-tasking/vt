@@ -49,6 +49,8 @@
 #include "vt/runtime/component/bufferable.h"
 #include "vt/runtime/component/progressable.h"
 
+#include <string>
+
 namespace vt { namespace runtime { namespace component {
 
 /**
@@ -90,6 +92,11 @@ struct BaseComponent : Diagnostic, Bufferable, Progressable {
    * runtime is live
    */
   virtual void startup() = 0;
+
+  /**
+   * \internal \brief Get the name of the component
+   */
+  virtual std::string name() = 0;
 
   virtual ~BaseComponent() { }
 };

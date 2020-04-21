@@ -142,6 +142,13 @@ struct Context : runtime::component::Component<Context> {
   /// Used to manage protected access for other VT runtime components
   friend struct ContextAttorney;
 
+  /**
+   * \brief Return the name of the component
+   *
+   * \return the name
+   */
+  std::string name() override { return "Context"; }
+
 protected:
   /// Set the number of workers through the attorney (internal)
   void setNumWorkers(WorkerCountType const worker_count) {

@@ -84,6 +84,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
 
   Scheduler();
 
+  std::string name() override { return "Scheduler"; }
+
   static void checkTermSingleNode();
 
   bool shouldCallProgress(
