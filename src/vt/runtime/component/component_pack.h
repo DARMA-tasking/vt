@@ -155,6 +155,14 @@ public:
     }
   }
 
+  int progress() {
+    int total = 0;
+    for (auto&& pollable : pollable_components_) {
+      total += pollable->progress();
+    }
+    return total;
+  }
+
 private:
   std::list<int> topoSort() {
     std::list<int> order;

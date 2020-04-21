@@ -54,6 +54,7 @@
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/runtime/runtime.h"
 
 namespace vt { namespace sched {
 
@@ -103,25 +104,11 @@ bool Scheduler::runNextUnit() {
 }
 
 bool Scheduler::progressImpl() {
-  bool const msg_sch = theMsg()->progress();
-  bool const evt_sch = theEvent()->progress();
-  bool const seq_sch = theSeq()->progress();
-  bool const vrt_sch = theVirtualSeq()->progress();
-  bool const col_sch = theCollection()->progress();
-  bool const obj_sch = theObjGroup()->progress();
-
-  bool const worker_sch =
-    theContext()->hasWorkers() ? theWorkerGrp()->progress(),false : false;
-  bool const worker_comm_sch =
-    theContext()->hasWorkers() ? theWorkerGrp()->commScheduler() : false;
+  int const total = curRT->progress();
 
   checkTermSingleNode();
 
-  bool scheduled_work =
-    msg_sch or evt_sch or seq_sch or vrt_sch or
-    col_sch or obj_sch or worker_sch or worker_comm_sch;
-
-  return scheduled_work;
+  return total != 0;
 }
 
 bool Scheduler::progressMsgOnlyImpl() {
