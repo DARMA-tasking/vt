@@ -53,48 +53,120 @@
 
 namespace vt { namespace runtime { namespace component {
 
+/**
+ * \struct ComponentPack component_pack.h vt/runtime/component/component_pack.h
+ *
+ * \brief \c ComponentPack class for holding a set of runtime components that
+ * make up a coherent inter-dependent runtime
+ */
 struct ComponentPack {
 
   ComponentPack() = default;
 
 public:
+  /**
+   * \internal \brief Idempotent registration of a component into this runtime
+   * pack. Component dependencies specified with variadic template parameters in
+   * \c DepsPack. Registration does not imply the component will be created; it
+   * must be added subsequently to be enabled. It simply declares its existence
+   * and connectivity with other components.
+   *
+   * \param[in] ref dumb pointer for access outside
+   * \param[in] cons constructor arguments for the component---bound at
+   * registration time
+   *
+   * \return \c registry::AutoHandlerType with type ID for component
+   */
   template <typename T, typename... Deps, typename... Cons>
   registry::AutoHandlerType registerComponent(
     T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
   );
 
+  /**
+   * \internal \brief Add a component to the pack. It will be constructed along
+   * with all its dependencies. It must be registered via \c registerComponent
+   * before adding.
+   */
   template <typename T>
   void add();
 
+  /**
+   * \internal \brief Construct all added components along with dependences
+   * transitively.
+   */
   void construct();
 
   ~ComponentPack();
 
+  /**
+   * \internal \brief Destruct all live components. Can be re-constructed by
+   * invoking \c construct
+   */
   void destruct();
 
+  /**
+   * \internal \brief Invoke the progress function on all pollable components
+   *
+   * \return the number of work units processed
+   */
   int progress();
 
 private:
+  /**
+   * \internal \brief Topologically sort all the registered components to find a
+   * valid activation order based on registered dependences.
+   *
+   * \return list of handlers representing a valid total ordering that does not
+   * break dependences
+   */
   std::list<int> topoSort();
 
+  /**
+   * \internal \brief Topologically sort all the registered components to find a
+   * valid activation order based on registered dependences.
+   *
+   * \param[in] v current vertex
+   * \param[in] order topological order derived so far
+   * \param[in] visited array of visited vertices
+   */
   void topoSortImpl(int v, std::list<int>& order, bool* visited);
 
+  /**
+   * \internal \brief Detect cycles in the dependence graph
+   *
+   * \param[in] root starting vertex
+   */
   void detectCycles(int root);
 
+  /**
+   * \internal \brief Detect cycles in the dependence graph
+   *
+   * \param[in] stack current stack of traversed vertices
+   * \param[in] dep next vertex to consider
+   */
   void detectCyclesImpl(std::list<int>& stack, int dep);
 
 public:
+
+  /**
+   * \internal \brief Query whether the \c ComponentPack is live
+   *
+   * \return whether it is live
+   */
   bool live() const { return live_; }
-  bool registrationsDone() const { return registrations_done_; }
-  void finishRegistration() { registrations_done_ = true; }
 
 private:
-  bool registrations_done_ = false;
+  /// Whether the pack is live
   bool live_ = false;
+  /// List of registered components
   std::vector<registry::AutoHandlerType> registered_components_;
+  /// Set of added components to be constructed
   std::unordered_set<registry::AutoHandlerType> added_components_;
+  /// Bound constructors for components
   std::unordered_map<registry::AutoHandlerType, ActionType> construct_components_;
+  /// Set of owning pointers to live components
   std::vector<std::unique_ptr<BaseComponent>> live_components_;
+  /// Set of non-owning pointers to pollable components for progress engine
   std::vector<Progressable*> pollable_components_;
 };
 
