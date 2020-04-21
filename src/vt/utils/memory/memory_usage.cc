@@ -123,8 +123,11 @@ std::size_t PS::getUsage() {
       FILE* p = popen(cmd.c_str(), "r");
       std::size_t vsz = 0;
       if (p) {
-        fscanf(p, "%zu", &vsz);
+        int ret = fscanf(p, "%zu", &vsz);
         pclose(p);
+        if (ret not_eq 1) {
+          return 0;
+        }
       }
       return vsz * 1024;
     } else {
@@ -207,12 +210,20 @@ std::size_t Stat::getUsage() {
     return 0;
   }
   for (int i = 0; i < 22; i++) {
-    fscanf(f, "%*s");
+    int ret = fscanf(f, "%*s");
+    if (ret == 0) {
+      failed_ = true;
+      break;
+    }
   }
-  fscanf(f, "%zu", &vsz);
+
+  int ret_vsz = 0;
+  if (not failed_) {
+    ret_vsz = fscanf(f, "%zu", &vsz);
+  }
   fclose(f);
 
-  if (!vsz) {
+  if (!vsz or ret_vsz == 0) {
     failed_ = true;
   }
   return vsz;
