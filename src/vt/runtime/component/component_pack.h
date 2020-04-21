@@ -45,7 +45,6 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_H
 
-#include "vt/config.h"
 #include "vt/runtime/component/component.h"
 
 #include <list>
