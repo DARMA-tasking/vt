@@ -50,21 +50,12 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT>
 template <typename Serializer>
-void Migratable<ColT>::serialize(Serializer& s) {
+void Migratable::serialize(Serializer& s) {
   MigrateHookBase::serialize(s);
   s | stats_;
   s | stats_elm_id_;
   s | temp_elm_id_;
-}
-
-template <typename ColT>
-/*virtual*/ void Migratable<ColT>::destroy() {
-  debug_print(
-    vrt_coll, node,
-    "Migratable<ColT>::destroy(): this={}\n", print_ptr(this)
-  );
 }
 
 }}} /* end namespace vt::vrt::collection */

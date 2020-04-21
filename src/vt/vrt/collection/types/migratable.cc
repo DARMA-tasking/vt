@@ -49,4 +49,11 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+/*virtual*/ void Migratable::destroy() {
+  debug_print(
+    vrt_coll, node,
+    "Migratable::destroy(): this={}\n", print_ptr(this)
+  );
+}
+
 }}} /* end namespace vt::vrt::collection */
