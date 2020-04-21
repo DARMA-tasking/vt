@@ -66,7 +66,7 @@
 
 namespace vt { namespace objgroup {
 
-struct ObjGroupManager : runtime::component::PollableComponent<ObjGroupManager> {
+struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename ObjT>
   using ProxyType           = proxy::Proxy<ObjT>;
   template <typename ObjT>
@@ -167,11 +167,6 @@ struct ObjGroupManager : runtime::component::PollableComponent<ObjGroupManager> 
    * Dispatch to a live obj group pointer with a handler
    */
   void dispatch(MsgVirtualPtrAny msg, HandlerType han);
-
-  /*
-   * Run the progress function to push along postponed events (such as self sends)
-   */
-  int progress() override;
 
   /*
    * Untyped calls for broadcasting or sending msgs to an obj group
