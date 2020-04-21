@@ -198,7 +198,7 @@ template <typename Fn>
 bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn);
 
 struct Sequencer
-  : runtime::component::PollableComponent<Sequencer>,
+  : runtime::component::Component<Sequencer>,
     TaggedSequencer<SeqType, SeqMigratableTriggerType>
 { };
 

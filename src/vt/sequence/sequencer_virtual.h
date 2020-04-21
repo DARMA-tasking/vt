@@ -97,7 +97,7 @@ private:
   }
 
 struct SequencerVirtual
-  : runtime::component::PollableComponent<SequencerVirtual>,
+  : runtime::component::Component<SequencerVirtual>,
     TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>
 { };
 
