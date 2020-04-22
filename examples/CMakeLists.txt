@@ -22,7 +22,6 @@ set(
   hello_world_virtual_context
   jacobi1d_vt
   jacobi2d_vt
-  serialize_example
   hello_world_virtual_context_remote
   hello_world_collection
   simple_collection
