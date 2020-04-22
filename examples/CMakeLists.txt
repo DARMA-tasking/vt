@@ -33,7 +33,7 @@ set(
   simple_collection_collective
   simple_collection_insert
   simple_collection_reduce
-  collection_insert
+  insertable_collection
   rdma_unsized_collection
   group_rooted
   group_collective
