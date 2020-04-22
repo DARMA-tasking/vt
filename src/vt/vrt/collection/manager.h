@@ -979,17 +979,6 @@ private:
   }
 
   /**
-   * \brief Remove from the current buffer-release state of a proxy
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] release the state to remove from the bits
-   */
-  void removeFromState(VirtualProxyType proxy, BufferReleaseEnum release) {
-    proxy_state_[proxy] =
-      static_cast<BufferReleaseEnum>(proxy_state_[proxy] & ~release);
-  }
-
-  /**
    * \brief Get the current release state bits from the collection
    *
    * \param[in] proxy the proxy of the collection
