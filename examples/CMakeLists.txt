@@ -37,6 +37,7 @@ set(
   transpose
   tutorial
   objgroup
+  callback
 )
 
 #
