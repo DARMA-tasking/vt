@@ -42,27 +42,16 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#include <vt/transport.h>
 
-#include <cstdlib>
-#include <cassert>
+struct MyCol : vt::Collection<MyCol, vt::Index1D> {
+  MyCol() = default;
 
-using namespace ::vt;
-using namespace ::vt::collective;
-using namespace ::vt::mapping;
-
-static constexpr std::size_t const default_num_elms = 64;
-
-using IndexType = IdxType1D<std::size_t>;
-
-struct TestColl : Collection<TestColl,IndexType> {
-  TestColl() = default;
-
-  virtual ~TestColl() {
+  virtual ~MyCol() {
     vtAssert(counter_ == 1, "Must be equal");
   }
 
-  struct TestMsg : CollectionMessage<TestColl> { };
+  using TestMsg = vt::CollectionMessage<MyCol>;
 
   void doWork(TestMsg* msg) {
     counter_++;
@@ -73,28 +62,23 @@ private:
 };
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& this_node = theContext()->getNode();
+  vt::NodeType this_node = vt::theContext()->getNode();
 
-  int32_t num_elms = default_num_elms;
+  int num_elms = 64;
 
   if (argc > 1) {
     num_elms = atoi(argv[1]);
   }
 
   if (this_node == 0) {
-    using BaseIndexType = typename IndexType::DenseIndexType;
-    auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
-    auto proxy = theCollection()->construct<TestColl>(range);
-    proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>();
+    auto range = vt::Index1D(num_elms);
+    auto proxy = vt::theCollection()->construct<MyCol>(range);
+    proxy.broadcast<MyCol::TestMsg,&MyCol::doWork>();
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
