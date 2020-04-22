@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#include <vt/transport.h>
 
 #include <cstdlib>
 #include <cassert>
@@ -74,19 +74,16 @@
 //
 
 
-using namespace ::vt;
-
-
 static constexpr std::size_t const default_nrow_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
 static constexpr double const default_tol = 1.0e-02;
 
 
-struct LinearPb2DJacobi : vt::Collection<LinearPb2DJacobi,Index2D> {
+struct LinearPb2DJacobi : vt::Collection<LinearPb2DJacobi,vt::Index2D> {
 
 private:
 
-  Index2D idx_;
+  vt::Index2D idx_;
   std::vector<double> tcur_, told_;
   std::vector<double> rhs_;
   size_t iter_ = 0;
@@ -99,8 +96,8 @@ public:
 
   LinearPb2DJacobi() = default;
 
-  explicit LinearPb2DJacobi(Index2D in_idx)
-    : vt::Collection<LinearPb2DJacobi,Index2D>(), idx_(in_idx),
+  explicit LinearPb2DJacobi(vt::Index2D in_idx)
+    : idx_(in_idx),
       tcur_(), told_(), rhs_(), iter_(0),
       msgReceived_(0), totalReceive_(0),
       numObjsX_(1), numObjsY_(1),
@@ -121,9 +118,8 @@ public:
 
     LPMsg() = default;
 
-    LPMsg(const size_t nx, const size_t ny, const size_t nref) :
-      CollectionMessage<LinearPb2DJacobi>(),
-      numXObjs(nx), numYObjs(ny), numIter(nref)
+    LPMsg(const size_t nx, const size_t ny, const size_t nref)
+      : numXObjs(nx), numYObjs(ny), numIter(nref)
     { }
 
   };
@@ -151,8 +147,8 @@ public:
       // Start a new iteration
       //
       auto proxy = getCollectionProxy();
-      auto loopMsg = makeSharedMessage<BlankMsg>();
-      proxy.broadcast<BlankMsg, &LinearPb2DJacobi::sendInfo>(loopMsg);
+      auto loopMsg = vt::makeMessage<BlankMsg>();
+      proxy.broadcast<BlankMsg, &LinearPb2DJacobi::sendInfo>(loopMsg.get());
     }
     else if (iter > maxIter) {
       fmt::print("\n Maximum Number of Iterations Reached. \n\n");
@@ -226,12 +222,12 @@ public:
     }
 
     auto proxy = this->getCollectionProxy();
-    auto cb = theCB()->makeSend<
+    auto cb = vt::theCB()->makeSend<
       LinearPb2DJacobi,ReduxMsg,&LinearPb2DJacobi::checkCompleteCB
     >(proxy(0,0));
-    auto msg2 = makeMessage<ReduxMsg>(maxNorm);
-    proxy.reduce<collective::MaxOp<double>>(msg2.get(),cb);
 
+    auto msg2 = vt::makeMessage<ReduxMsg>(maxNorm);
+    proxy.reduce<vt::collective::MaxOp<double>>(msg2.get(),cb);
   }
 
   struct VecMsg : vt::CollectionMessage<LinearPb2DJacobi> {
@@ -318,16 +314,16 @@ public:
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
         tcopy[jy] = told_[1 + jy * (numRowsPerObject_ + 2)];
-      auto leftX = makeSharedMessage<VecMsg>(idx_, tcopy);
-      proxy(x-1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(leftX);
+      auto leftX = vt::makeMessage<VecMsg>(idx_, tcopy);
+      proxy(x-1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(leftX.get());
     }
 
     if (y > 0) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + (numRowsPerObject_ + 2)];
-      auto bottomY = makeSharedMessage<VecMsg>(idx_, tcopy);
-      proxy(x, y-1).send<VecMsg, &LinearPb2DJacobi::exchange>(bottomY);
+      auto bottomY = vt::makeMessage<VecMsg>(idx_, tcopy);
+      proxy(x, y-1).send<VecMsg, &LinearPb2DJacobi::exchange>(bottomY.get());
     }
 
     if (size_t(x) < numObjsX_ - 1) {
@@ -336,16 +332,16 @@ public:
         tcopy[jy] = told_[numRowsPerObject_ +
                           jy * (numRowsPerObject_ + 2)];
       }
-      auto rightX = makeSharedMessage<VecMsg>(idx_, tcopy);
-      proxy(x+1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(rightX);
+      auto rightX = vt::makeMessage<VecMsg>(idx_, tcopy);
+      proxy(x+1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(rightX.get());
     }
 
     if (size_t(y) < numObjsY_ - 1) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + numRowsPerObject_ * (numRowsPerObject_ + 2)];
-      auto topY = makeSharedMessage<VecMsg>(idx_, tcopy);
-      proxy(x, y+1).send<VecMsg, &LinearPb2DJacobi::exchange>(topY);
+      auto topY = vt::makeMessage<VecMsg>(idx_, tcopy);
+      proxy(x, y+1).send<VecMsg, &LinearPb2DJacobi::exchange>(topY.get());
     }
 
   }
@@ -434,8 +430,8 @@ public:
     // Start the algorithm with a neighbor-to-neighbor communication
     using CollType = LinearPb2DJacobi;
     auto proxy = this->getCollectionProxy();
-    auto cb = theCB()->makeBcast<CollType, InitMsg, &CollType::doneInit>(proxy);
-    auto empty = makeMessage<InitMsg>();
+    auto cb = vt::theCB()->makeBcast<CollType, InitMsg, &CollType::doneInit>(proxy);
+    auto empty = vt::makeMessage<InitMsg>();
     proxy.reduce(empty.get(),cb);
   }
 
@@ -450,9 +446,9 @@ int main(int argc, char** argv) {
 
   std::string name(argv[0]);
 
-  vt::CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& this_node = theContext()->getNode();
+  vt::NodeType this_node = vt::theContext()->getNode();
 
   if (argc == 1) {
     if (this_node == 0) {
@@ -501,26 +497,22 @@ int main(int argc, char** argv) {
   if (this_node == 0) {
 
     // Create the decomposition into objects
-    using BaseIndexType = typename Index2D::DenseIndexType;
-    auto const& range = Index2D(
+    using BaseIndexType = typename vt::Index2D::DenseIndexType;
+    auto range = vt::Index2D(
       static_cast<BaseIndexType>(numX_objs),
       static_cast<BaseIndexType>(numY_objs)
     );
     auto proxy = vt::theCollection()->construct<LinearPb2DJacobi>(range);
-    auto rootMsg = makeSharedMessage<LinearPb2DJacobi::LPMsg>(
+    auto rootMsg = vt::makeMessage<LinearPb2DJacobi::LPMsg>(
       numX_objs,
       numY_objs,
       maxIter
     );
-    proxy.broadcast<LinearPb2DJacobi::LPMsg,&LinearPb2DJacobi::solve>(rootMsg);
+    proxy.broadcast<LinearPb2DJacobi::LPMsg,&LinearPb2DJacobi::solve>(rootMsg.get());
 
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 
