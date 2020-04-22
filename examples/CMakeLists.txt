@@ -33,7 +33,7 @@ set(
   rdma_unsized_collection
   group_rooted
   group_collective
-  reduce
+  reduce_integral
   transpose
   tutorial
   objgroup

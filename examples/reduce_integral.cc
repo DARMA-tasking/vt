@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  reduce.cc
+//                              reduce_integral.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -59,17 +59,13 @@
 //
 
 
-#include "vt/transport.h"
+#include <vt/transport.h>
 #include <cmath>
-#include <cstdlib>
-
-
-using namespace ::vt;
-
 
 static constexpr std::size_t const default_nparts_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
 static constexpr std::size_t const verbose = 1;
+static constexpr vt::NodeType const reduce_root_node = 0;
 
 static bool root_reduce_finished = false;
 static double exactIntegral = 0.0;
@@ -89,8 +85,9 @@ double f(double x) {
   return sin(M_PI * x);
 }
 
+using ReduceMsg = vt::collective::ReduceTMsg<double>;
 
-struct Integration1D : vt::Collection<Integration1D,Index1D> {
+struct Integration1D : vt::Collection<Integration1D, vt::Index1D> {
 
 private:
 
@@ -100,39 +97,18 @@ private:
 public:
 
   explicit Integration1D()
-    : vt::Collection<Integration1D, Index1D>(),
-      numObjs_(default_num_objs), numPartsPerObject_(default_nparts_object)
+    : numObjs_(default_num_objs),
+      numPartsPerObject_(default_nparts_object)
   { }
-
-  //
-  // QuadSum: structure used for the reduction without callback
-  //
-  struct QuadSum {
-
-    void operator()(vt::collective::ReduceTMsg<double>* msg) {
-      //
-      // The root index knows the reduced value.
-      // It is obtained with ' msg->getConstVal() '
-      //
-      ::fmt::print(" ## The integral over [0, 1] is {}\n",
-                   msg->getConstVal());
-      ::fmt::print(" ## The absolute error is {}\n",
-                   std::fabs(msg->getConstVal() - exactIntegral));
-      //
-      // Set the 'root_reduce_finished' variable to true.
-      //
-      root_reduce_finished = true;
-    }
-
-  };
 
   struct CheckIntegral {
 
-    void operator()(vt::collective::ReduceTMsg<double>* msg) {
-      ::fmt::print(" >> The integral over [0, 1] is {}\n",
-                   msg->getConstVal());
-      ::fmt::print(" >> The absolute error is {}\n",
-                   std::fabs(msg->getConstVal() - exactIntegral));
+    void operator()(ReduceMsg* msg) {
+      fmt::print(" >> The integral over [0, 1] is {}\n", msg->getConstVal());
+      fmt::print(
+        " >> The absolute error is {}\n",
+        std::fabs(msg->getConstVal() - exactIntegral)
+      );
       //
       // Set the 'root_reduce_finished' variable to true.
       //
@@ -146,11 +122,8 @@ public:
     size_t numObjects = 0;
     size_t nIntervalPerObject = 0;
 
-    InitMsg() = default;
-
-    InitMsg(const size_t nobjs, const size_t nint) :
-      CollectionMessage<Integration1D>(),
-      numObjects(nobjs), nIntervalPerObject(nint)
+    InitMsg(const size_t nobjs, const size_t nint)
+      : numObjects(nobjs), nIntervalPerObject(nint)
     { }
 
   };
@@ -192,9 +165,11 @@ public:
 
     if (verbose > 0) {
       double b = a + numPartsPerObject_ * h;
-      ::fmt::print(" Interval [{}, {}], on node {} & object {}, "
-                   "has integral {}.\n", a, b, theContext()->getNode(),
-                   getIndex().x(), quadsum);
+      fmt::print(
+        " Interval [{}, {}], on node {} & object {}, "
+        "has integral {}.\n", a, b, vt::theContext()->getNode(),
+        getIndex(), quadsum
+      );
     }
 
     //
@@ -202,21 +177,9 @@ public:
     //
 
     auto proxy = this->getCollectionProxy();
-    auto msgCB = vt::makeSharedMessage<
-      vt::collective::ReduceTMsg<double>
-      >(quadsum);
-    auto cback = vt::theCB()->makeSend<CheckIntegral>(0);
-    proxy.reduce<vt::collective::PlusOp<double>>(msgCB,cback);
-
-    //
-    // Syntax without a callback function:
-    //
-//    auto proxy = this->getCollectionProxy();
-//    auto msg2 = vt::makeSharedMessage<
-//      vt::collective::ReduceTMsg<double>
-//      >(quadsum);
-//    proxy.reduce<collective::PlusOp<double>, QuadSum>(msg2);
-
+    auto msgCB = vt::makeMessage<ReduceMsg>(quadsum);
+    auto cback = vt::theCB()->makeSend<CheckIntegral>(reduce_root_node);
+    proxy.reduce<vt::collective::PlusOp<double>>(msgCB.get(),cback);
   }
 
 };
@@ -229,14 +192,14 @@ int main(int argc, char** argv) {
 
   std::string name(argv[0]);
 
-  vt::CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (argc == 1) {
     if (this_node == 0) {
-      ::fmt::print(
+      fmt::print(
         stderr, "{}: using default arguments since none provided\n", name
       );
     }
@@ -250,9 +213,10 @@ int main(int argc, char** argv) {
       numIntPerObject = (size_t) strtol(argv[2], nullptr, 10);
     }
     else {
-      ::fmt::print(stderr,
-                   "usage: {} <num-objects> <num-interval-per-object>\n",
-                   name);
+      fmt::print(
+        stderr,
+        "usage: {} <num-objects> <num-interval-per-object>\n", name
+      );
       return 1;
     }
   }
@@ -261,27 +225,25 @@ int main(int argc, char** argv) {
     //
     // Create the interval decomposition into objects
     //
-    using BaseIndexType = typename Index1D::DenseIndexType;
-    auto const& range = Index1D(static_cast<BaseIndexType>(num_objs));
+    using BaseIndexType = typename vt::Index1D::DenseIndexType;
+    auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
     auto proxy = vt::theCollection()->construct<Integration1D>(range);
-    auto rootMsg = makeSharedMessage< Integration1D::InitMsg >
-      (num_objs, numIntPerObject);
-    proxy.broadcast<Integration1D::InitMsg,&Integration1D::compute>(rootMsg);
-  }
-
-  while (!rt->isTerminated()) {
-    runScheduler();
+    proxy.broadcast<Integration1D::InitMsg,&Integration1D::compute>(
+      num_objs, numIntPerObject
+    );
   }
 
   // Add something like this to validate the reduction.
   // Create the variable root_reduce_finished as a static variable,
   // which is only checked on one node.
-  theTerm()->addAction([]{
-    vtAssertExpr(root_reduce_finished == true);
+  vt::theTerm()->addAction([]{
+    if (vt::theContext()->getNode() == reduce_root_node) {
+      vtAssertExpr(root_reduce_finished == true);
+    }
   });
 
-  vt::CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 
