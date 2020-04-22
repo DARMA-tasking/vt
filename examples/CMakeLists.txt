@@ -18,8 +18,6 @@ set(
   term_epoch_advanced
   term_ds
   trace_ring
-  location_test
-  location_test_msg
   lb_iter
   hello_world_virtual_context
   jacobi1d_vt
