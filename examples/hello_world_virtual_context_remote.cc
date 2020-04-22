@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           hello_world_vc_remote.cc
+//                    hello_world_virtual_context_remote.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,24 +42,22 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
-
-using namespace vt;
-using namespace vt::vrt;
+#include <vt/transport.h>
 
 struct TestMsg : vt::vrt::VirtualMessage {
   int from = 0;
 
-  TestMsg(int const& in_from)
-    : VirtualMessage(), from(in_from)
+  explicit TestMsg(int const& in_from)
+    : from(in_from)
   { }
 };
 
 struct MyVC : vt::vrt::VirtualContext {
   int my_data = -1;
 
-  MyVC(int const& my_data_in) : my_data(my_data_in) {
+  explicit MyVC(int const& my_data_in)
+    : my_data(my_data_in)
+  {
     fmt::print("constructing myVC: data={}\n", my_data_in);
   }
 };
@@ -69,28 +67,23 @@ static void testHan(TestMsg* msg, MyVC* vc) {
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
-  if (my_node == 0) {
-    auto proxy = theVirtualManager()->makeVirtualNode<MyVC>(1, 45);
-    auto msg = makeSharedMessage<TestMsg>(my_node);
-    theVirtualManager()->sendMsg<MyVC, TestMsg, testHan>(proxy, msg);
+  if (this_node == 0) {
+    // Create a virtual context remotely on node 1, getting a proxy to it
+    auto proxy = vt::theVirtualManager()->makeVirtualNode<MyVC>(1, 45);
+    auto msg = vt::makeMessage<TestMsg>(this_node);
+    vt::theVirtualManager()->sendMsg<MyVC, TestMsg, testHan>(proxy, msg.get());
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
