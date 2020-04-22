@@ -42,25 +42,16 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
+#include <vt/transport.h>
 
-using namespace vt;
-
-static NodeType my_node = uninitialized_destination;
-static NodeType num_nodes = uninitialized_destination;
-
-#pragma GCC diagnostic ignored "-Wunused-function"
 static void fnTest(int a, int b, bool x) {
   fmt::print("fn: a={}, b={}, x={}\n", a, b, x ? "true" : "false");
 }
 
-#pragma GCC diagnostic ignored "-Wunused-function"
 static void fnTest2(int x, int y) {
   fmt::print("fn2: x={},y={}\n",x,y);
 }
 
-#pragma GCC diagnostic ignored "-Wunused-function"
 static void fnTest3(int x, double y) {
   fmt::print("fn3: x={},y={}\n",x,y);
 }
@@ -72,38 +63,30 @@ struct FunctorTest1 {
 };
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  my_node = theContext()->getNode();
-  num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
-  if (my_node == 0) {
-    #if 0
-    theParam()->sendData(1, buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
-    theParam()->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
-    theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, buildData(10, 20, false));
-    theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, 45, 23, true);
+  if (this_node == 0) {
+    vt::theParam()->sendData(1, vt::buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
+    vt::theParam()->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
+    vt::theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, vt::buildData(10, 20, false));
+    vt::theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, 45, 23, true);
 
-    theParam()->sendData<PARAM_FUNCTION(fnTest2)>(1, 20, 10);
-    theParam()->sendData<PARAM_FUNCTION(fnTest3)>(1, 20, 50.0);
+    vt::theParam()->sendData<PARAM_FUNCTION(fnTest2)>(1, 20, 10);
+    vt::theParam()->sendData<PARAM_FUNCTION(fnTest3)>(1, 20, 50.0);
 
-    theParam()->sendData<FunctorTest1>(1, buildData(20, 50.0));
-    theParam()->sendData<FunctorTest1>(1, 20, 100.0);
-    theParam()->sendData<FunctorTest1>(1, buildData(10, 70.0));
-    #endif
+    vt::theParam()->sendData<FunctorTest1>(1, vt::buildData(20, 50.0));
+    vt::theParam()->sendData<FunctorTest1>(1, 20, 100.0);
+    vt::theParam()->sendData<FunctorTest1>(1, vt::buildData(10, 70.0));
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
