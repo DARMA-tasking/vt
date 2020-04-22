@@ -10,7 +10,7 @@ set(
   rdma_simple_channel
   rdma_channel_sync
   rdma_collective
-  ctx_callback
+  callback_context
   param
   hello_world_functor
   test_seq
