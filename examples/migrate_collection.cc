@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             simple_collection.cc
+//                            migrate_collection.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,38 +44,93 @@
 
 #include <vt/transport.h>
 
-struct MyCol : vt::Collection<MyCol, vt::Index1D> {
-  MyCol() = default;
+static constexpr int32_t const default_num_elms = 16;
 
-  virtual ~MyCol() {
-    vtAssert(counter_ == 1, "Must be equal");
+struct Hello : vt::Collection<Hello, vt::Index1D> {
+  Hello() = default;
+
+  explicit Hello(vt::NodeType create) {
+    vt::NodeType this_node = vt::theContext()->getNode();
+    fmt::print("{}: Hello: create={}, index={}\n", this_node, create, getIndex());
+    test_val = getIndex().x() * 29.3;
   }
 
-  using TestMsg = vt::CollectionMessage<MyCol>;
-
-  void doWork(TestMsg* msg) {
-    counter_++;
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    vt::Collection<Hello, vt::Index1D>::serialize(s);
+    s | test_val;
   }
 
-private:
-  int32_t counter_ = 0;
+  double test_val = 0.0;
 };
+
+struct ColMsg : vt::CollectionMessage<Hello> {
+  explicit ColMsg(vt::NodeType const& in_from_node)
+    : from_node(in_from_node)
+  { }
+
+  vt::NodeType from_node = vt::uninitialized_destination;
+};
+
+static void doWork(ColMsg* msg, Hello* col) {
+  vt::NodeType this_node = vt::theContext()->getNode();
+  fmt::print("{}: idx={}: val={}\n", this_node, col->getIndex(), col->test_val);
+}
+
+static void migrateToNext(ColMsg* msg, Hello* col) {
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  vt::NodeType next_node = (this_node + 1) % num_nodes;
+
+  fmt::print("{}: migrateToNext: idx={}\n", this_node, col->getIndex());
+  col->migrate(next_node);
+}
+
+template <typename Callable>
+void executeInEpoch(Callable&& fn) {
+  auto ep = vt::theTerm()->makeEpochRooted();
+  vt::theMsg()->pushEpoch(ep);
+  fn();
+  vt::theMsg()->popEpoch(ep);
+  vt::theTerm()->finishedEpoch(ep);
+  bool done = false;
+  vt::theTerm()->addAction(ep, [&done]{ done = true; });
+  do vt::runScheduler(); while (!done);
+}
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
-  int num_elms = 64;
+  if (num_nodes == 1) {
+    return vt::rerror("requires at least 2 nodes");
+  }
 
+  int32_t num_elms = default_num_elms;
   if (argc > 1) {
     num_elms = atoi(argv[1]);
   }
 
   if (this_node == 0) {
     auto range = vt::Index1D(num_elms);
-    auto proxy = vt::theCollection()->construct<MyCol>(range);
-    proxy.broadcast<MyCol::TestMsg,&MyCol::doWork>();
+    auto proxy = vt::theCollection()->construct<Hello>(range, this_node);
+
+    executeInEpoch([=]{
+      auto msg = vt::makeMessage<ColMsg>(this_node);
+      proxy.broadcast<ColMsg, doWork>(msg.get());
+    });
+
+    executeInEpoch([=]{
+      auto msg = vt::makeMessage<ColMsg>(this_node);
+      proxy.broadcast<ColMsg, migrateToNext>(msg.get());
+    });
+
+    executeInEpoch([=]{
+      auto msg = vt::makeMessage<ColMsg>(this_node);
+      proxy.broadcast<ColMsg, doWork>(msg.get());
+    });
   }
 
   vt::finalize();

@@ -23,8 +23,8 @@ set(
   jacobi1d_vt
   jacobi2d_vt
   hello_world_virtual_context_remote
+  migrate_collection
   hello_world_collection
-  simple_collection
   simple_collection_collective
   simple_collection_insert
   simple_collection_reduce
