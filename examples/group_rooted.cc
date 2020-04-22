@@ -42,69 +42,55 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
-
-using namespace vt;
-using namespace vt::group;
-
-static GroupType this_group = no_group;
+#include <vt/transport.h>
 
 struct HelloMsg : vt::Message {
   int from;
 
   HelloMsg(int const& in_from)
-    : Message(), from(in_from)
+    : from(in_from)
   { }
 };
 
-struct HelloGroupMsg : ::vt::Message {
-  HelloGroupMsg() = default;
-};
-
 static void hello_world(HelloMsg* msg) {
-  fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
+  fmt::print("{}: Hello from node {}\n", vt::theContext()->getNode(), msg->from);
 }
 
-static void hello_group_handler(HelloGroupMsg* msg) {
-  fmt::print("{}: Hello from group handler\n", theContext()->getNode());
+static void hello_group_handler(HelloMsg* msg) {
+  fmt::print("{}: Hello from group {}\n", vt::theContext()->getNode(), msg->from);
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
+    vt::output("requires at least 2 nodes");
+    vt::finalize();
     return 0;
   }
 
-  if (my_node == 0) {
-    HelloMsg* msg = makeSharedMessage<HelloMsg>(my_node);
-    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
+  if (this_node == 0) {
+    auto msg = vt::makeMessage<HelloMsg>(this_node);
+    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg.get());
 
-    //std::vector<region::Region::BoundType> vec{0,1,2,3,4,5,6,7};
-    //auto list = std::make_unique<region::List>(vec);
-    auto list = std::make_unique<region::Range>(
-      theContext()->getNumNodes() / 2,
-      theContext()->getNumNodes()
-    );
-    this_group = theGroup()->newGroup(std::move(list), [](GroupType group){
-      fmt::print("Group is created\n");
-      auto gmsg = makeSharedMessage<HelloGroupMsg>();
-      envelopeSetGroup(gmsg->env, group);
-      theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(gmsg);
+    using RangeType = vt::group::region::Range;
+    auto list = std::make_unique<RangeType>(num_nodes / 2, num_nodes);
+
+    vt::theGroup()->newGroup(std::move(list), [=](vt::GroupType group){
+      auto gmsg = vt::makeMessage<HelloMsg>(this_node);
+      vt::envelopeSetGroup(gmsg->env, group);
+      vt::theMsg()->broadcastMsg<HelloMsg, hello_group_handler>(gmsg.get());
     });
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
+  while (!vt::rt->isTerminated()) {
+    vt::runScheduler();
   }
 
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
