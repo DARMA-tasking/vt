@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               ctx_callback.cc
+//                             callback_context.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
