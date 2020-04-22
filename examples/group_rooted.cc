@@ -45,9 +45,9 @@
 #include <vt/transport.h>
 
 struct HelloMsg : vt::Message {
-  int from;
+  vt::NodeType from = vt::uninitialized_destination;
 
-  HelloMsg(int const& in_from)
+  explicit HelloMsg(vt::NodeType const& in_from)
     : from(in_from)
   { }
 };
