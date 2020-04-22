@@ -42,23 +42,17 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-
-#include <cstdlib>
-
-using namespace ::vt;
-using namespace ::vt::collective;
+#include <vt/transport.h>
 
 static constexpr int32_t const default_num_elms = 64;
 static int32_t num_iter = 8;
 
-struct IterCol : Collection<IterCol,Index1D> {
+struct IterCol : vt::Collection<IterCol, vt::Index1D> {
   IterCol() = default;
 
-  struct ContinueMsg : collective::ReduceNoneMsg {
-    vt::CollectionProxy<IterCol,Index1D> proxy;
-  };
-  struct IterMsg : CollectionMessage<IterCol> {
+  using EmptyMsg = vt::CollectionMessage<IterCol>;
+
+  struct IterMsg : vt::CollectionMessage<IterCol> {
     IterMsg() = default;
     explicit IterMsg(int64_t const in_work_amt, int64_t const in_iter)
       : iter_(in_iter), work_amt_(in_work_amt)
@@ -69,48 +63,26 @@ struct IterCol : Collection<IterCol,Index1D> {
   };
 
   void iterWork(IterMsg* msg);
-  void nextIter(IterMsg* msg);
-  void finished(ContinueMsg* msg);
+
+  void runLB(EmptyMsg* msg) {
+    auto const idx = getIndex();
+    auto proxy = getCollectionProxy();
+    proxy[idx].LB<EmptyMsg,&IterCol::doneLB>();
+  }
+
+  void doneLB(EmptyMsg* msg) { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    Collection<IterCol,Index1D>::serialize(s);
-    s | cur_iter | data_2;
+    vt::Collection<IterCol, vt::Index1D>::serialize(s);
+    s | data_2;
   }
 
 private:
-  int64_t cur_iter = 0;
   float data_2 = 2.4f;
 };
 
-static bool touch = true;
-static TimeType cur_time = 0;
-
 static double weight = 1.0f;
-
-void finishedNode(int64_t iter) {
-  auto const this_node = vt::theContext()->getNode();
-  if (not touch && this_node == 0) {
-    auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
-    ::fmt::print("iteration: iter={},time={}\n", iter, total_time);
-    touch = not touch;
-  }
-}
-
-void nodeLBHandler(IterCol::ContinueMsg* msg) {
-  static int64_t iter = 0;
-
-  finishedNode(iter);
-  iter++;
-
-  auto proxy = msg->proxy;
-
-  vt::theCollection()->startPhaseCollective([=]{
-    if (vt::theContext()->getNode() == 0) {
-      proxy.template broadcast<IterCol::IterMsg,&IterCol::nextIter>(10,iter);
-    }
-  });
-}
 
 void IterCol::iterWork(IterMsg* msg) {
   double val = 0.1f;
@@ -130,51 +102,25 @@ void IterCol::iterWork(IterMsg* msg) {
   if (idx == 0) {
     fmt::print("{}: iterWork: idx={}\n", this_node, getIndex());
   }
-
-  auto proxy = getCollectionProxy();
-  auto cmsg = makeMessage<ContinueMsg>();
-  cmsg->proxy = proxy;
-
-  // auto cb = theCB()->makeBcast<IterCol,ContinueMsg,&IterCol::finished>(proxy);
-  // proxy.reduce(cmsg.get(),cb);
-
-  auto cb = theCB()->makeBcast<ContinueMsg,nodeLBHandler>();
-  proxy.reduce(cmsg.get(),cb);
 }
 
-void IterCol::finished(ContinueMsg* msg) {
-  auto const idx = getIndex().x();
-
-  finishedNode(cur_iter);
-
-  cur_iter++;
-
-  auto proxy = getCollectionProxy();
-  proxy[idx].LB<IterMsg,&IterCol::nextIter>(10,cur_iter);
-}
-
-void IterCol::nextIter(IterMsg* msg) {
-  auto const this_node = vt::theContext()->getNode();
-
-  //fmt::print("{}: nextIter: idx={}\n", this_node, getIndex());
-
-  if (touch && this_node == 0) {
-    cur_time = vt::timing::Timing::getCurrentTime();
-    touch = not touch;
+template <typename Callable>
+void executeInEpoch(Callable&& fn) {
+  auto this_node = vt::theContext()->getNode();
+  auto ep = vt::theTerm()->makeEpochCollective();
+  vt::theMsg()->pushEpoch(ep);
+  if (this_node == 0) {
+    fn();
   }
-
-  if (msg->iter_ < num_iter) {
-    auto proxy = getCollectionProxy();
-    auto idx = getIndex().x();
-    auto nmsg = makeMessage<IterMsg>(*msg);
-    proxy(idx).send<IterMsg,&IterCol::iterWork>(nmsg.get());
-  }
+  vt::theMsg()->popEpoch(ep);
+  vt::theTerm()->finishedEpoch(ep);
+  bool done = false;
+  vt::theTerm()->addAction(ep, [&done]{ done = true; });
+  do vt::runScheduler(); while (!done);
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
-
-  auto const& this_node = theContext()->getNode();
+  vt::initialize(argc, argv);
 
   int32_t num_elms = default_num_elms;
 
@@ -188,23 +134,40 @@ int main(int argc, char** argv) {
     num_iter = atoi(argv[3]);
   }
 
+  vt::NodeType this_node = vt::theContext()->getNode();
+
   if (this_node == 0) {
-    ::fmt::print(
+    fmt::print(
       "lb_iter: elms={}, weight={}, num_iter={}\n",
       num_elms, weight, num_iter
     );
-
-    auto const& range = Index1D(num_elms);
-    auto proxy = theCollection()->construct<IterCol>(range);
-    auto msg = makeMessage<IterCol::IterMsg>(10,0);
-    proxy.broadcast<IterCol::IterMsg,&IterCol::nextIter>(msg.get());
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
+  auto range = vt::Index1D(num_elms);
+  auto proxy = vt::theCollection()->constructCollective<IterCol>(
+    range, [](vt::Index1D){
+      return std::make_unique<IterCol>();
+    }
+  );
+
+  for (int i = 0; i < num_iter; i++) {
+    auto cur_time = vt::timing::Timing::getCurrentTime();
+
+    executeInEpoch([=]{
+      proxy.broadcast<IterCol::IterMsg,&IterCol::iterWork>(10, i);
+    });
+
+    auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
+    if (this_node == 0) {
+      fmt::print("iteration: iter={},time={}\n", i, total_time);
+    }
+
+    executeInEpoch([=]{
+      proxy.broadcast<IterCol::EmptyMsg,&IterCol::runLB>();
+    });
+
   }
 
-  CollectiveOps::finalize();
-
+  vt::finalize();
   return 0;
 }
