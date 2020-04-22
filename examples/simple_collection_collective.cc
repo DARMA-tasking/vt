@@ -42,69 +42,44 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#include <vt/transport.h>
 
-#include <cstdlib>
-#include <cassert>
+struct Hello : vt::Collection<Hello, vt::Index1D> {
+  Hello() = default;
 
-using namespace ::vt;
-using namespace ::vt::collective;
-using namespace ::vt::mapping;
-
-static constexpr std::size_t const default_num_elms = 64;
-
-using IndexType = IdxType1D<std::size_t>;
-
-struct TestColl : Collection<TestColl,IndexType> {
-  TestColl() = default;
-
-  virtual ~TestColl() {
-    auto num_nodes = theContext()->getNumNodes();
-    vtAssertInfo(
-      counter_ == num_nodes, "Must be equal",
-      counter_, num_nodes, getIndex(), theContext()->getNode()
-    );
+  virtual ~Hello() {
+    vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+    vtAssert(counter_ == num_nodes, "Should receive # nodes broadcasts");
   }
 
-  struct TestMsg : CollectionMessage<TestColl> { };
+  using TestMsg = vt::CollectionMessage<Hello>;
 
   void doWork(TestMsg* msg) {
-    auto const& this_node = theContext()->getNode();
     counter_++;
-    ::fmt::print(
-      "{}: doWork: idx={}, cnt={}\n", this_node, getIndex().x(), counter_
-    );
+    fmt::print("Hello from {}, counter_={}\n", this->getIndex().x(), counter_);
   }
 
 private:
-  int32_t counter_ = 0;
+  int counter_ = 0;
 };
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  int32_t num_elms = default_num_elms;
-
+  int32_t num_elms = 16;
   if (argc > 1) {
     num_elms = atoi(argv[1]);
   }
 
-  using BaseIndexType = typename IndexType::DenseIndexType;
-  auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
-  auto proxy = theCollection()->constructCollective<TestColl>(
-    range, [](IndexType idx){
-      return std::make_unique<TestColl>();
-    }
+  auto range = vt::Index1D(num_elms);
+  auto proxy = vt::theCollection()->constructCollective<Hello>(
+    range, [](vt::Index1D){ return std::make_unique<Hello>(); }
   );
 
-  auto msg = makeSharedMessage<TestColl::TestMsg>();
-  proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(msg);
+  // All nodes send a broadcast to all elements
+  proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
