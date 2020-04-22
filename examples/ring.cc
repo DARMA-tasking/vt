@@ -42,67 +42,58 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
-
-using namespace vt;
-
-static NodeType next_node = uninitialized_destination;
-static NodeType my_node = uninitialized_destination;
-static NodeType num_nodes = uninitialized_destination;
+#include <vt/transport.h>
 
 static int num_total_rings = 2;
 static int num_times = 0;
 
 struct RingMsg : vt::Message {
-  int from;
+  vt::NodeType from = vt::uninitialized_destination;
 
-  RingMsg(int const& in_from)
-    : Message(), from(in_from)
+  explicit RingMsg(vt::NodeType const& in_from)
+    : from(in_from)
   { }
 };
 
 static void sendToNext();
 
 static void ring(RingMsg* msg) {
-  fmt::print("{}: Hello from node {}: num_times={}\n", my_node, msg->from, num_times);
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
+  fmt::print("{}: Hello from node {}: num_times={}\n", this_node, msg->from, num_times);
 
   num_times++;
 
-  if (msg->from != num_nodes-1 or num_times < num_total_rings) {
+  if (msg->from != num_nodes - 1 or num_times < num_total_rings) {
     sendToNext();
   }
 }
 
 static void sendToNext() {
-  RingMsg* msg = makeSharedMessage<RingMsg>(my_node);
-  theMsg()->sendMsg<RingMsg, ring>(next_node, msg);
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  vt::NodeType next_node = this_node + 1 >= num_nodes ? 0 : this_node + 1;
+
+  auto msg = vt::makeMessage<RingMsg>(this_node);
+  vt::theMsg()->sendMsg<RingMsg, ring>(next_node, msg.get());
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  my_node = theContext()->getNode();
-  num_nodes = theContext()->getNumNodes();
-  next_node = my_node+1 >= num_nodes ? 0 : my_node+1;
-
-  fmt::print("{}: my_node = {} here\n",theContext()->getNode(),my_node);
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
-  if (my_node == 0) {
+  if (this_node == 0) {
     sendToNext();
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
