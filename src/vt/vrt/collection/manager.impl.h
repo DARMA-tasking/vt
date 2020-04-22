@@ -3220,7 +3220,7 @@ messaging::PendingSend CollectionManager::bufferOp(
     auto ps = action();
     theMsg()->popEpoch(epoch);
     theTerm()->consume(epoch);
-    return std::move(ps);
+    return ps;
   });
   return messaging::PendingSend{nullptr};
 }
@@ -3231,7 +3231,10 @@ messaging::PendingSend CollectionManager::bufferOpOrExecute(
   EpochType epoch, ActionPendingType action
 ) {
   if (checkReady(proxy, release)) {
-    return action();
+    theMsg()->pushEpoch(epoch);
+    auto ps = action();
+    theMsg()->popEpoch(epoch);
+    return ps;
   } else {
     return bufferOp<ColT>(proxy, type, release, epoch, action);
   }
