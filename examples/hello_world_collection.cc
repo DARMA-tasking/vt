@@ -88,7 +88,6 @@ static void migrateToNext(ColMsg* msg, Hello* col) {
 
 template <typename Callable>
 void executeInEpoch(Callable&& fn) {
-  auto this_node = vt::theContext()->getNode();
   auto ep = vt::theTerm()->makeEpochRooted();
   vt::theMsg()->pushEpoch(ep);
   fn();
