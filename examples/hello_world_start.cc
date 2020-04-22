@@ -70,6 +70,9 @@ using namespace vt::mapping;
 #endif
 
 struct ProxyMsg : vt::vrt::VirtualMessage {
+  using MessageParentType = vt::vrt::VirtualMessage;
+  vt_msg_serialize_required(); // by proxies
+
   std::vector<VirtualProxyType> proxies;
 
   ProxyMsg() = default;
@@ -79,17 +82,21 @@ struct ProxyMsg : vt::vrt::VirtualMessage {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | proxies;
   }
 };
 
 struct WorkMsg : vt::vrt::VirtualMessage {
+  using MessageParentType = vt::vrt::VirtualMessage;
+  vt_msg_serialize_required(); // by work_vec
   std::vector<double> work_vec;
 
   WorkMsg() = default;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
     s | work_vec;
   }
 };
