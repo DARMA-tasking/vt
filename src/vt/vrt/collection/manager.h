@@ -991,19 +991,20 @@ private:
   }
 
   /**
-   * \brief Get ready bits or'ed with the required release bits
+   * \brief Get ready bits AND'ed with the required release bits
    *
    * \param[in] proxy the proxy of the collection
    * \param[in] release the bits to check
    *
-   * \return the current state | release
+   * \return the current state & release
    */
   BufferReleaseEnum getReadyBits(
     VirtualProxyType proxy, BufferReleaseEnum release
   );
 
   /**
-   * \brief Check if the collection is ready given the release bits
+   * \brief Check if the collection is past the stages of setup requested in
+   * release
    *
    * \param[in] proxy the proxy of the collection
    * \param[in] release the bits to check
