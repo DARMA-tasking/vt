@@ -65,18 +65,12 @@ int main(int argc, char** argv) {
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    vt::output("requires at least 2 nodes");
-    vt::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
   if (this_node == 0) {
     auto msg = vt::makeMessage<HelloMsg>(this_node);
     vt::theMsg()->broadcastMsg<HelloWorld>(msg.get());
-  }
-
-  while (!vt::rt->isTerminated()) {
-    vt::runScheduler();
   }
 
   vt::finalize();

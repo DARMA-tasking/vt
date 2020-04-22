@@ -110,10 +110,6 @@ int main(int argc, char** argv) {
     vt::theMsg()->sendMsg<CallbackMsg,handler>(1, msg.get());
   }
 
-  while (!vt::rt->isTerminated()) {
-    vt::runScheduler();
-  }
-
   vt::finalize();
 
   return 0;

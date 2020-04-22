@@ -70,10 +70,6 @@ int main(int argc, char** argv) {
     vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg.get());
   }
 
-  while (!vt::rt->isTerminated()) {
-    vt::runScheduler();
-  }
-
   vt::finalize();
 
   return 0;
