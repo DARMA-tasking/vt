@@ -13,6 +13,7 @@ set(
   ctx_callback
   param
   hello_world_functor
+  hello_world_start
   test_seq
   term_epoch
   term_epoch_advanced
