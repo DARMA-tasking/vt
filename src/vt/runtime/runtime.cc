@@ -595,6 +595,21 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_trace_memory_usage", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+    if (ArgType::vt_trace_mpi) {
+      auto f11 = fmt::format("Tracing MPI invocations");
+      auto f12 = opt_on("--vt_trace_mpi", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_event_polling) {
+      auto f11 = fmt::format("Tracing event polling (inc. MPI Isend requests)");
+      auto f12 = opt_on("--vt_trace_event_polling", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_irecv_polling) {
+      auto f11 = fmt::format("Tracing MPI Irecv polling");
+      auto f12 = opt_on("--vt_trace_irecv_polling", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
   #endif
 
@@ -826,6 +841,12 @@ void Runtime::printStartupBanner() {
   if (ArgType::vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
     auto f12 = opt_on("--vt_debug_all", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_debug_print_flush) {
+    auto f11 = fmt::format("Flushing stdout after all VT prints is enabled");
+    auto f12 = opt_on("--vt_debug_print_flush", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
@@ -1145,6 +1166,7 @@ void Runtime::initializeComponents() {
   #if backend_check_enabled(trace_enabled)
     theTrace->initialize();
   #endif
+  theEvent->initialize();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }

@@ -94,6 +94,8 @@ public:
   static bool vt_trace_spec;
   static std::string vt_trace_spec_file;
   static bool vt_trace_memory_usage;
+  static bool vt_trace_event_polling;
+  static bool vt_trace_irecv_polling;
 
   static bool vt_lb;
   static bool vt_lb_file;
@@ -150,6 +152,8 @@ public:
   static bool vt_debug_broadcast;
   static bool vt_debug_objgroup;
 
+  static bool vt_debug_print_flush;
+
   static bool vt_user_1;
   static bool vt_user_2;
   static bool vt_user_3;
@@ -167,6 +171,10 @@ private:
 inline bool user1() { return ArgConfig::vt_user_1; }
 inline bool user2() { return ArgConfig::vt_user_2; }
 inline bool user3() { return ArgConfig::vt_user_3; }
+
+inline bool alwaysFlush() {
+  return ArgConfig::vt_debug_print_flush;
+}
 
 }} /* end namespace vt::arguments */
 

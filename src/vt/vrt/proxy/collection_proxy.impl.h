@@ -100,6 +100,12 @@ CollectionProxy<ColT, IndexT>::operator()(IndexU const& idx) const {
   return index(idx);
 }
 
+template <typename ColT, typename IndexT>
+void
+CollectionProxy<ColT, IndexT>::setFocusedSubPhase(balance::ElementStats::SubphaseType subphase) {
+  balance::ElementStats::setFocusedSubPhase(this->getProxy(), subphase);
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_PROXY_COLLECTION_PROXY_IMPL_H*/

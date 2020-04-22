@@ -55,6 +55,7 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include <tuple>
 
@@ -165,21 +166,26 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   stats[the_stat][lb::StatisticQuantity::skw] = skew;
   stats[the_stat][lb::StatisticQuantity::kur] = krte;
 
+  bool is_before = migration_epoch_ == no_epoch;
+
   if (theContext()->getNode() == 0) {
     vt_print(
       lb,
       "BaseLB: Statistic={}: "
       " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
       " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
-      " npr={}, imb={:.2f}, num_stats={}\n",
+      " npr={}, imb={:.2f}, num_stats={}, before={}\n",
       lb_stat_name_[the_stat],
       max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
-      stats.size()
+      stats.size(), is_before
     );
   }
 
-  if (stats.size() == static_cast<std::size_t>(num_reduce_stats_)) {
-    finishedStats();
+  // If the migration_epoch_ is valid, then we are in the post-process stats
+  if (is_before) {
+    if (stats.size() == static_cast<std::size_t>(num_reduce_stats_)) {
+      finishedStats();
+    }
   }
 }
 
@@ -200,6 +206,10 @@ void BaseLB::finishMigrationCollective() {
   }
 
   off_node_migrate_.clear();
+
+  // Re-compute the statistics with the new partition based on current
+  // this_load_ values
+  computeStatistics();
 
   theMsg()->popEpoch(migration_epoch_);
   theTerm()->finishedEpoch(migration_epoch_);

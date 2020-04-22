@@ -160,6 +160,10 @@ namespace vt { namespace debug {
 NodeType preNode();
 }} /* end namespace vt::debug */
 
+namespace vt { namespace arguments {
+bool alwaysFlush();
+}} /* end namespace vt::arguments */
+
 namespace vt { namespace config {
 
 template <CatEnum cat, CtxEnum ctx, ModeEnum mod>
@@ -177,7 +181,7 @@ static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
       vt_print_colorize_impl(::vt::debug::green(), PrettyPrintCat<cat>::print(), ":"),
       user
     );
-    if (vt_option_check_enabled(mod, ModeEnum::flush)) {
+    if (vt_option_check_enabled(mod, ModeEnum::flush) or arguments::alwaysFlush()) {
       fflush(stdout);
     }
   }

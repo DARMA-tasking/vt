@@ -54,6 +54,7 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke.h"
 #include "vt/timing/timing.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include <cassert>
 #include <type_traits>
@@ -67,6 +68,8 @@ void ElementStats::serialize(Serializer& s) {
   s | cur_phase_;
   s | phase_timings_;
   s | comm_;
+  s | cur_subphase_;
+  s | subphase_timings_;
 }
 
 template <typename ColT>
@@ -86,7 +89,7 @@ template <typename ColT>
   auto const& cur_phase = msg->getPhase();
   auto const& proxy = col->getCollectionProxy();
   auto const& untyped_proxy = col->getProxy();
-  auto const& total_load = stats.getLoad(cur_phase);
+  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
   auto const& comm = stats.getComm(cur_phase);
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
