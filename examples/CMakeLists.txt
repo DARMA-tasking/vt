@@ -37,6 +37,7 @@ set(
   transpose
   tutorial
   objgroup
+  callback
 )
 
 if (VT_NO_BUILD_EXAMPLES)
