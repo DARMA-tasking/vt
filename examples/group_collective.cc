@@ -42,99 +42,77 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
-
-using namespace vt;
-using namespace vt::group;
-
-static GroupType this_group = no_group;
+#include <vt/transport.h>
 
 struct HelloMsg : vt::Message {
   int from;
 
   explicit HelloMsg(int const& in_from)
-    : Message(), from(in_from)
+    : from(in_from)
   { }
 };
 
-struct HelloGroupMsg : ::vt::Message {
-  HelloGroupMsg() = default;
-};
-
-#pragma GCC diagnostic ignored "-Wunused-function"
-static void hello_world(HelloMsg* msg) {
-  fmt::print("{}: Hello from node {}\n", theContext()->getNode(), msg->from);
-}
+struct HelloGroupMsg : vt::Message { };
 
 static void hello_group_handler(HelloGroupMsg* msg) {
-  fmt::print("{}: Hello from group handler\n", theContext()->getNode());
+  fmt::print("{}: Hello from group handler\n", vt::theContext()->getNode());
 }
 
-struct SysMsg : collective::ReduceTMsg<int> {
-  explicit SysMsg(int in_num)
-    : ReduceTMsg<int>(in_num)
-  { }
-};
+using ReduceMsg = vt::collective::ReduceTMsg<int>;
 
 struct Print {
-  void operator()(SysMsg* msg) {
+  void operator()(ReduceMsg* msg) {
     fmt::print("final value={}\n", msg->getConstVal());
   }
 };
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes < 2) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
+    vt::output("requires at least 2 nodes");
+    vt::finalize();
     return 0;
   }
 
-  srand48(my_node * 29);
+  srand48(this_node * 29);
 
-  //auto const& random_node_filter = drand48() < 0.5;
-  //auto const& even_node_filter   = my_node % 2 == 0;
-  auto const& odd_node_filter    = my_node % 2 == 1;
+  bool odd_node_filter = this_node % 2 == 1;
 
-  this_group = theGroup()->newGroupCollective(
-    odd_node_filter, [=](GroupType group){
+  vt::GroupType new_group = vt::theGroup()->newGroupCollective(
+    odd_node_filter, [=](vt::GroupType group){
       auto const& root = 0;
-      auto const& in_group = theGroup()->inGroup(group);
-      auto const& root_node = theGroup()->groupRoot(group);
-      auto const& is_default_group = theGroup()->groupDefault(group);
+      auto const& in_group = vt::theGroup()->inGroup(group);
+      auto const& root_node = vt::theGroup()->groupRoot(group);
+      auto const& is_default_group = vt::theGroup()->groupDefault(group);
       fmt::print(
         "{}: Group is created: group={}, in_group={}, root={}, "
         "is_default_group={}\n",
-        my_node, group, in_group, root_node, is_default_group
+        this_node, group, in_group, root_node, is_default_group
       );
       if (in_group) {
-        auto msg = makeSharedMessage<SysMsg>(1);
-        //fmt::print("msg->num={}\n", msg->getConstVal());
-        theGroup()->groupReduce(group)->reduce<
-          SysMsg, SysMsg::msgHandler<SysMsg,collective::PlusOp<int>,Print>
-        >(root, msg);
+        using Op = vt::collective::PlusOp<int>;
+        auto msg = vt::makeMessage<ReduceMsg>(1);
+        vt::theGroup()->groupReduce(group)->reduce<Op, Print>(root, msg.get());
       }
-      fmt::print("node={}\n", my_node);
-      if (my_node == 1) {
-        //vtAssertExpr(in_group);
-        auto msg = makeSharedMessage<HelloGroupMsg>();
-        envelopeSetGroup(msg->env, group);
-        fmt::print("calling broadcasting={}\n", my_node);
-        theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg);
+      if (this_node == 1) {
+        auto msg = vt::makeMessage<HelloGroupMsg>();
+        vt::envelopeSetGroup(msg->env, group);
+        vt::theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg.get());
       }
     }
   );
 
-  while (!rt->isTerminated()) {
-    runScheduler();
+  fmt::print("{}: New group={}\n", this_node, new_group);
+
+  while (!vt::rt->isTerminated()) {
+    vt::runScheduler();
   }
 
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
