@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                pipe_simple.cc
+//                                  callback.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
