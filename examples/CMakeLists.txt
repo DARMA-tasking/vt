@@ -36,7 +36,7 @@ set(
   simple_collection_reduce
   collection_insert
   rdma_unsized_collection
-  group_example_1
+  group_rooted
   group_collective
   reduce
   transpose
