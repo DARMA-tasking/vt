@@ -36,6 +36,7 @@ set(
    CatEnum::termds       | \
    CatEnum::barrier      | \
    CatEnum::pipe         | \
+   CatEnum::param        | \
    CatEnum::pool         | \
    CatEnum::reduce       | \
    CatEnum::rdma         | \
