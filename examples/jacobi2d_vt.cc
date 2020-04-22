@@ -83,7 +83,6 @@ struct LinearPb2DJacobi : vt::Collection<LinearPb2DJacobi,vt::Index2D> {
 
 private:
 
-  vt::Index2D idx_;
   std::vector<double> tcur_, told_;
   std::vector<double> rhs_;
   size_t iter_ = 0;
@@ -94,11 +93,8 @@ private:
 
 public:
 
-  LinearPb2DJacobi() = default;
-
-  explicit LinearPb2DJacobi(vt::Index2D in_idx)
-    : idx_(in_idx),
-      tcur_(), told_(), rhs_(), iter_(0),
+  LinearPb2DJacobi()
+    : tcur_(), told_(), rhs_(), iter_(0),
       msgReceived_(0), totalReceive_(0),
       numObjsX_(1), numObjsY_(1),
       numRowsPerObject_(default_nrow_object),
@@ -254,25 +250,25 @@ public:
 
     // Receive and treat the message from a neighboring object.
 
-    if (this->idx_.x() > msg->from_index.x()) {
+    if (this->getIndex().x() > msg->from_index.x()) {
       const size_t ldx = numRowsPerObject_ + 2;
       for (size_t jy = 0; jy < msg->val.size(); ++jy) {
         this->told_[jy*ldx] = msg->val[jy];
       }
       msgReceived_ += 1;
     }
-    else if (this->idx_.x() < msg->from_index.x()) {
+    else if (this->getIndex().x() < msg->from_index.x()) {
       const size_t ldx = numRowsPerObject_ + 2;
       for (size_t jy = 0; jy < msg->val.size(); ++jy) {
         this->told_[numRowsPerObject_ + 1 + jy*ldx] = msg->val[jy];
       }
       msgReceived_ += 1;
     }
-    else if (this->idx_.y() > msg->from_index.y()) {
+    else if (this->getIndex().y() > msg->from_index.y()) {
       std::copy(msg->val.begin(), msg->val.end(), this->told_.begin());
       msgReceived_ += 1;
     }
-    else if (this->idx_.y() < msg->from_index.y()) {
+    else if (this->getIndex().y() < msg->from_index.y()) {
       std::copy(msg->val.begin(), msg->val.end(),
                 &this->told_[(numRowsPerObject_ + 1)*(numRowsPerObject_ + 2)]);
       msgReceived_ += 1;
@@ -307,14 +303,15 @@ public:
     //
 
     auto proxy = this->getCollectionProxy();
-    auto const x = idx_.x();
-    auto const y = idx_.y();
+    auto idx = this->getIndex();
+    auto const x = idx.x();
+    auto const y = idx.y();
 
     if (x > 0) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
         tcopy[jy] = told_[1 + jy * (numRowsPerObject_ + 2)];
-      auto leftX = vt::makeMessage<VecMsg>(idx_, tcopy);
+      auto leftX = vt::makeMessage<VecMsg>(idx, tcopy);
       proxy(x-1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(leftX.get());
     }
 
@@ -322,7 +319,7 @@ public:
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + (numRowsPerObject_ + 2)];
-      auto bottomY = vt::makeMessage<VecMsg>(idx_, tcopy);
+      auto bottomY = vt::makeMessage<VecMsg>(idx, tcopy);
       proxy(x, y-1).send<VecMsg, &LinearPb2DJacobi::exchange>(bottomY.get());
     }
 
@@ -332,7 +329,7 @@ public:
         tcopy[jy] = told_[numRowsPerObject_ +
                           jy * (numRowsPerObject_ + 2)];
       }
-      auto rightX = vt::makeMessage<VecMsg>(idx_, tcopy);
+      auto rightX = vt::makeMessage<VecMsg>(idx, tcopy);
       proxy(x+1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(rightX.get());
     }
 
@@ -340,7 +337,7 @@ public:
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + numRowsPerObject_ * (numRowsPerObject_ + 2)];
-      auto topY = vt::makeMessage<VecMsg>(idx_, tcopy);
+      auto topY = vt::makeMessage<VecMsg>(idx, tcopy);
       proxy(x, y+1).send<VecMsg, &LinearPb2DJacobi::exchange>(topY.get());
     }
 
@@ -369,10 +366,12 @@ public:
     size_t maxNObjs = (size_t) std::max(numObjsX_, numObjsY_);
     int nf = 3 * int(numRowsPerObject_ * maxNObjs + 1) / 4;
 
+    auto idx = this->getIndex();
+
     for (size_t iy = 0; iy < ldy; ++iy) {
       for (size_t ix = 0; ix < ldx; ++ix) {
-        double x0 = ( numRowsPerObject_ * idx_.x() + ix) * hx;
-        double y0 = ( numRowsPerObject_ * idx_.y() + iy) * hy;
+        double x0 = ( numRowsPerObject_ * idx.x() + ix) * hx;
+        double y0 = ( numRowsPerObject_ * idx.y() + iy) * hy;
         size_t node = ix + iy * ldx;
         tcur_[node] = sin(nf * M_PI * (x0 * x0 + y0 * y0));
       }
@@ -388,25 +387,25 @@ public:
     //--- The total number of grid points in Y-direction is
     //--- (numRowsPerObject_ * numObjsY_) + 2
     //
-    if (idx_.x() == 0) {
+    if (idx.x() == 0) {
       for (size_t jy = 0; jy < ldy; ++jy)
         tcur_[jy * ldy] = 0.0;
       totalReceive_ -= 1;
     }
 
-    if (idx_.y() == 0) {
+    if (idx.y() == 0) {
       for (size_t jx = 0; jx < ldx; ++jx)
         tcur_[jx] = 0.0;
       totalReceive_ -= 1;
     }
 
-    if (numObjsX_ == size_t(idx_.x()) + 1) {
+    if (numObjsX_ == size_t(idx.x()) + 1) {
       for (size_t jy = 0; jy < ldy; ++jy)
         tcur_[jy * ldy + (ldx - 1)] = 0.0;
       totalReceive_ -= 1;
     }
 
-    if (numObjsY_ == size_t(idx_.y()) + 1) {
+    if (numObjsY_ == size_t(idx.y()) + 1) {
       for (size_t jx = 0; jx < ldx; ++jx)
         tcur_[jx + (ldx - 1)*ldy] = 0.0;
       totalReceive_ -= 1;
