@@ -22,7 +22,7 @@ set(
   location_test_msg
   lb_iter
   hello_world_vrtContext
-  hello_world_vc
+  hello_world_virtual_context
   jacobi1d_recur_vc
   jacobi1d_node
   jacobi1d_vt

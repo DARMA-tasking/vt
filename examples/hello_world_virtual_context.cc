@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              hello_world_vc.cc
+//                        hello_world_virtual_context.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,82 +42,74 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
-
-using namespace vt;
-using namespace vt::vrt;
+#include <vt/transport.h>
 
 struct HelloMsg : vt::Message {
-  VirtualProxyType proxy;
+  vt::VirtualProxyType proxy;
 
-  HelloMsg(VirtualProxyType const& in_proxy)
-    : Message(), proxy(in_proxy)
+  explicit HelloMsg(vt::VirtualProxyType const& in_proxy)
+    : proxy(in_proxy)
   { }
 };
 
 struct TestMsg : vt::vrt::VirtualMessage {
   int from = 0;
 
-  TestMsg(int const& in_from)
-    : VirtualMessage(), from(in_from)
+  explicit TestMsg(int const& in_from)
+    : from(in_from)
   { }
 };
 
 struct MyVC : vt::vrt::VirtualContext {
   int my_data = 10;
 
-  MyVC(int const& my_data_in) : my_data(my_data_in) { }
+  explicit MyVC(int const& my_data_in)
+    : my_data(my_data_in)
+  { }
 };
 
 static void my_han(TestMsg* msg, MyVC* vc) {
-  auto this_node = theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
   fmt::print(
     "{}: vc={}: msg->from={}, vc->my_data={}\n",
     this_node, print_ptr(vc), msg->from, vc->my_data
   );
 }
 
-static void sendMsgToProxy(VirtualProxyType const& proxy) {
-  auto this_node = theContext()->getNode();
+static void sendMsgToProxy(vt::VirtualProxyType const& proxy) {
+  auto this_node = vt::theContext()->getNode();
   fmt::print("{}: sendMsgToProxy: proxy={}\n", this_node, proxy);
 
-  auto m = makeSharedMessage<TestMsg>(this_node + 32);
-  theVirtualManager()->sendMsg<MyVC, TestMsg, my_han>(proxy, m);
+  auto m = vt::makeMessage<TestMsg>(this_node + 32);
+  vt::theVirtualManager()->sendMsg<MyVC, TestMsg, my_han>(proxy, m.get());
 }
 
 static void hello_world(HelloMsg* msg) {
-  auto this_node = theContext()->getNode();
+  auto this_node = vt::theContext()->getNode();
   fmt::print("{}: hello: proxy={}\n", this_node, msg->proxy);
   sendMsgToProxy(msg->proxy);
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
-  if (my_node == 0) {
-    auto proxy = theVirtualManager()->makeVirtual<MyVC>(29);
+  if (this_node == 0) {
+    auto proxy = vt::theVirtualManager()->makeVirtual<MyVC>(29);
     sendMsgToProxy(proxy);
 
     // send out the proxy to all the nodes
-    HelloMsg* msg = makeSharedMessage<HelloMsg>(proxy);
-    theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
+    auto msg = vt::makeMessage<HelloMsg>(proxy);
+    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg.get());
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
