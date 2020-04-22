@@ -67,9 +67,7 @@ int main(int argc, char** argv) {
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    vt::output("requires at least 2 nodes");
-    vt::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
   if (this_node == 0) {
@@ -84,10 +82,6 @@ int main(int argc, char** argv) {
       vt::envelopeSetGroup(gmsg->env, group);
       vt::theMsg()->broadcastMsg<HelloMsg, hello_group_handler>(gmsg.get());
     });
-  }
-
-  while (!vt::rt->isTerminated()) {
-    vt::runScheduler();
   }
 
   vt::finalize();

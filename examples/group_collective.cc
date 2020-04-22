@@ -73,9 +73,7 @@ int main(int argc, char** argv) {
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes < 2) {
-    vt::output("requires at least 2 nodes");
-    vt::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
   srand48(this_node * 29);
@@ -107,10 +105,6 @@ int main(int argc, char** argv) {
   );
 
   fmt::print("{}: New group={}\n", this_node, new_group);
-
-  while (!vt::rt->isTerminated()) {
-    vt::runScheduler();
-  }
 
   vt::finalize();
 
