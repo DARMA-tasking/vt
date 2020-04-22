@@ -62,20 +62,14 @@ int main(int argc, char** argv) {
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
-  if (num_nodes < 2) {
-    return 0;
-  }
-
   auto proxy = vt::theObjGroup()->makeCollective<MyObjGroup>();
 
   if (this_node == 0) {
     proxy[0].send<MyMsg,&MyObjGroup::handler>(5,10);
-    proxy[1].send<MyMsg,&MyObjGroup::handler>(10,20);
+    if (num_nodes > 1) {
+      proxy[1].send<MyMsg,&MyObjGroup::handler>(10,20);
+    }
     proxy.broadcast<MyMsg,&MyObjGroup::handler>(400,500);
-  }
-
-  while (!vt::rt->isTerminated()) {
-    vt::runScheduler();
   }
 
   vt::finalize();
