@@ -14,9 +14,8 @@ set(
   param
   hello_world_functor
   test_seq
-  term_epoch
-  term_epoch_advanced
-  termination_dijkstra_scholten.cc
+  termination_collective
+  termination_dijkstra_scholten
   trace_ring
   lb_iter
   hello_world_virtual_context
