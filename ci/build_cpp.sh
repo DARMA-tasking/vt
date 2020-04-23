@@ -28,30 +28,40 @@ then
     rm -Rf checkpoint
 fi
 
-git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git
-export DETECTOR=$PWD/detector
-export DETECTOR_BUILD=${build_dir}/detector
-mkdir -p "$DETECTOR_BUILD"
-cd "$DETECTOR_BUILD"
-mkdir build
-cd build
-cmake -G "${CMAKE_GENERATOR:-Ninja}" \
-      -DCMAKE_INSTALL_PREFIX="$DETECTOR_BUILD/install" \
-      "$DETECTOR"
-cmake --build . --target install
+if test -d "${source_dir}/lib/detector"
+then
+    echo "Detector already in lib... not downloading, building, and installing"
+else
+    git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git
+    export DETECTOR=$PWD/detector
+    export DETECTOR_BUILD=${build_dir}/detector
+    mkdir -p "$DETECTOR_BUILD"
+    cd "$DETECTOR_BUILD"
+    mkdir build
+    cd build
+    cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+          -DCMAKE_INSTALL_PREFIX="$DETECTOR_BUILD/install" \
+          "$DETECTOR"
+    cmake --build . --target install
+fi
 
-git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
-export CHECKPOINT=$PWD/checkpoint
-export CHECKPOINT_BUILD=${build_dir}/checkpoint
-mkdir -p "$CHECKPOINT_BUILD"
-cd "$CHECKPOINT_BUILD"
-mkdir build
-cd build
-cmake -G "${CMAKE_GENERATOR:-Ninja}" \
-      -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
-      -Ddetector_DIR="$DETECTOR_BUILD/install" \
-      "$CHECKPOINT"
-cmake --build . --target install
+if test -d "${source_dir}/lib/checkpoint"
+then
+    echo "Checkpoint already in lib... not downloading, building, and installing"
+else
+    git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
+    export CHECKPOINT=$PWD/checkpoint
+    export CHECKPOINT_BUILD=${build_dir}/checkpoint
+    mkdir -p "$CHECKPOINT_BUILD"
+    cd "$CHECKPOINT_BUILD"
+    mkdir build
+    cd build
+    cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+          -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
+          -Ddetector_DIR="$DETECTOR_BUILD/install" \
+          "$CHECKPOINT"
+    cmake --build . --target install
+fi
 
 export VT=${source_dir}
 export VT_BUILD=${build_dir}/vt
