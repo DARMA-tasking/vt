@@ -13,7 +13,6 @@ set(
   callback_context
   param
   hello_world_functor
-  test_seq
   termination_collective
   termination_rooted
   trace_ring
