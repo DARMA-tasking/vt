@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                         simple_collection_insert.cc
+//                    hello_world_collection_staged_insert.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
