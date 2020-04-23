@@ -94,7 +94,7 @@ Runtime::Runtime(
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers),
      communicator_(
-       in_comm == nullptr ? nullptr : std::make_unique<MPI_Comm>(*communicator_)
+       in_comm == nullptr ? nullptr : std::make_unique<MPI_Comm>(*in_comm)
      ),
      user_argc_(argc),
      user_argv_(argv)
