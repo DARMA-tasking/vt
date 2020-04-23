@@ -172,47 +172,49 @@ bool Trace::inIdleEvent() const {
 }
 
 void Trace::setupNames(std::string const& in_prog_name) {
-  if (ArgType::vt_trace) {
-    auto const node = theContext()->getNode();
+  if (not ArgType::vt_trace) {
+    return;
+  }
 
-    trace_name_ = prog_name_ + "." + std::to_string(node) + ".log.gz";
-    auto dir_name = prog_name_ + "_trace";
+  auto const node = theContext()->getNode();
 
-    char cur_dir[1024];
-    if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
-      vtAssert(false, "Must have current directory");
+  trace_name_ = prog_name_ + "." + std::to_string(node) + ".log.gz";
+  auto dir_name = prog_name_ + "_trace";
+
+  char cur_dir[1024];
+  if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
+    vtAssert(false, "Must have current directory");
+  }
+
+  if (ArgType::vt_trace_dir.empty()) {
+    full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
+  }
+  else {
+    full_dir_name_ = ArgType::vt_trace_dir;
+  }
+
+  if (full_dir_name_[full_dir_name_.size() - 1] != '/')
+    full_dir_name_ = full_dir_name_ + "/";
+
+  if (theContext()->getNode() == 0) {
+    int flag = mkdir(full_dir_name_.c_str(), S_IRWXU);
+    if ((flag < 0) && (errno != EEXIST)) {
+      vtAssert(flag >= 0, "Must be able to make directory");
     }
+  }
 
-    if (ArgType::vt_trace_dir.empty()) {
-      full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
-    }
-    else {
-      full_dir_name_ = ArgType::vt_trace_dir;
-    }
+  auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
+  auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
+  auto const trace_name = tc[tc.size()-1];
+  auto const prog_name = pc[pc.size()-1];
 
-    if (full_dir_name_[full_dir_name_.size() - 1] != '/')
-      full_dir_name_ = full_dir_name_ + "/";
-
-    if (theContext()->getNode() == 0) {
-      int flag = mkdir(full_dir_name_.c_str(), S_IRWXU);
-      if ((flag < 0) && (errno != EEXIST)) {
-        vtAssert(flag >= 0, "Must be able to make directory");
-      }
-    }
-
-    auto const tc = util::demangle::DemanglerUtils::splitString(trace_name_, '/');
-    auto const pc = util::demangle::DemanglerUtils::splitString(prog_name_, '/');
-    auto const trace_name = tc[tc.size()-1];
-    auto const prog_name = pc[pc.size()-1];
-
-    auto const node_str = "." + std::to_string(node) + ".log.gz";
-    if (ArgType::vt_trace_file.empty()) {
-      full_trace_name_ = full_dir_name_ + trace_name;
-      full_sts_name_   = full_dir_name_ + prog_name + ".sts";
-    } else {
-      full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
-      full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
-    }
+  auto const node_str = "." + std::to_string(node) + ".log.gz";
+  if (ArgType::vt_trace_file.empty()) {
+    full_trace_name_ = full_dir_name_ + trace_name;
+    full_sts_name_   = full_dir_name_ + prog_name + ".sts";
+  } else {
+    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
+    full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
   }
 }
 
