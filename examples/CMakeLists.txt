@@ -15,7 +15,7 @@ set(
   hello_world_functor
   test_seq
   termination_collective
-  termination_dijkstra_scholten
+  termination_rooted
   trace_ring
   lb_iter
   hello_world_virtual_context
