@@ -1,62 +1,42 @@
 
-set(
-  PROJECT_EXAMPLES_LIST
-  hello_world
-  ring
-  rdma_simple_get
-  rdma_simple_get_direct
-  rdma_simple_put
-  rdma_simple_put_direct
-  callback_context
-  param
-  hello_world_functor
-  termination_collective
-  termination_rooted
-  lb_iter
-  hello_world_virtual_context
-  jacobi1d_vt
-  jacobi2d_vt
-  hello_world_virtual_context_remote
-  migrate_collection
-  hello_world_collection
-  hello_world_collection_collective
-  hello_world_collection_staged_insert
-  hello_world_collection_reduce
-  insertable_collection
-  group_rooted
-  group_collective
-  reduce_integral
-  transpose
-  tutorial
-  objgroup
-  callback
-)
-
 #
 # Examples
 #
 
-  foreach(EXAMPLE_NAME ${PROJECT_EXAMPLES_LIST})
-    # message("Example: building example >>>>> ${EXAMPLE}")
+set(
+  PROJECT_EXAMPLES_LIST
+  tutorial
+)
 
-    set(EXAMPLE_FILE "${EXAMPLE_NAME}.cc")
+macro(add_example example_name)
+  set(EXAMPLE_FILE "${example_name}.cc")
 
-    add_executable(${EXAMPLE_NAME} ${EXAMPLE_FILE})
-    add_dependencies(examples ${EXAMPLE_NAME})
+  add_executable(${example_name} ${EXAMPLE_FILE})
+  add_dependencies(examples ${example_name})
 
-    link_target_with_vt(
-      TARGET ${EXAMPLE_NAME}
-      DEFAULT_LINK_SET
+  link_target_with_vt(
+    TARGET ${example_name}
+    DEFAULT_LINK_SET
+  )
+
+  if (BUILD_TESTING)
+    add_test_for_example_vt(
+      ${example_name}
+      ${EXAMPLE_FILE}
+      example_tests
     )
+  endif()
+endmacro()
 
-    if (BUILD_TESTING)
-      add_test_for_example_vt(
-        ${EXAMPLE_NAME}
-        ${EXAMPLE_FILE}
-        example_tests
-      )
-    endif()
+foreach(EXAMPLE_NAME ${PROJECT_EXAMPLES_LIST})
+  # message("Example: building example >>>>> ${EXAMPLE_NAME}")
 
-  endforeach()
+  add_example(${EXAMPLE_NAME})
+endforeach()
 
-
+add_subdirectory(callback)
+add_subdirectory(collection)
+add_subdirectory(group)
+add_subdirectory(hello_world)
+add_subdirectory(rdma)
+add_subdirectory(termination)
