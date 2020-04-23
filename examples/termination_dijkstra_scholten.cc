@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  term_ds.cc
+//                        termination_dijkstra_scholten.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //

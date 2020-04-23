@@ -16,7 +16,7 @@ set(
   test_seq
   term_epoch
   term_epoch_advanced
-  term_ds
+  termination_dijkstra_scholten.cc
   trace_ring
   lb_iter
   hello_world_virtual_context
