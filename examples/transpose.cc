@@ -42,29 +42,26 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#include <vt/transport.h>
 
 #include <vector>
-
-using namespace vt;
 
 static constexpr int const num_pieces = 4;
 static constexpr int const num_elem = 1024;
 static constexpr int const block_size = num_elem / num_pieces;
 
 template <typename ColT>
-struct SolveMsg : CollectionMessage<ColT> {};
+struct SolveMsg : vt::CollectionMessage<ColT> {};
 
 template <typename ColT>
-struct RequestDataMsg : CollectionMessage<ColT> {
-  RequestDataMsg() = default;
-  RequestDataMsg(NodeType in_node) : node_(in_node) { }
-  NodeType node_;
+struct RequestDataMsg : vt::CollectionMessage<ColT> {
+  explicit RequestDataMsg(vt::NodeType in_node) : node_(in_node) { }
+  vt::NodeType node_;
 };
 
-struct InitMsg : ::vt::collective::ReduceNoneMsg { };
+struct InitMsg : vt::collective::ReduceNoneMsg { };
 
-struct DataMsg : ::vt::Message {
+struct DataMsg : vt::Message {
   DataMsg() = default;
 
   DataMsg(std::vector<double> const& payload_in, int from_idx_in)
@@ -81,19 +78,20 @@ struct DataMsg : ::vt::Message {
   int from_idx_ = 0;
 };
 
-struct SubSolveMsg : ::vt::Message {
-  SubSolveMsg() = default;
-  SubSolveMsg(VirtualProxyType in_proxy)
+struct SubSolveMsg : vt::Message {
+  explicit SubSolveMsg(vt::VirtualProxyType in_proxy)
     : coll_proxy_(in_proxy)
   { }
 
-  VirtualProxyType coll_proxy_ = no_vrt_proxy;
+  vt::VirtualProxyType coll_proxy_ = vt::no_vrt_proxy;
 };
 
 struct ProxyMsg : vt::Message {
-  ProxyMsg() = default;
-  ProxyMsg(VirtualProxyType in_proxy) : proxy_(in_proxy) { }
-  VirtualProxyType proxy_ = no_vrt_proxy;
+  explicit ProxyMsg(vt::VirtualProxyType in_proxy)
+    : proxy_(in_proxy)
+  { }
+
+  vt::VirtualProxyType proxy_ = vt::no_vrt_proxy;
 };
 
 struct SetupGroup {
@@ -131,13 +129,13 @@ struct SubSolveInfo {
 /*static*/ SubSolveInfo solver_info = {};
 
 // The VT collection with blocks of data
-struct Block : Collection<Block,Index1D> {
+struct Block : vt::Collection<Block, vt::Index1D> {
 
   Block() = default;
   Block(int num_elm, int n_pieces) {
-    ::fmt::print(
+    fmt::print(
       "construct: node={}, elm={}, pieces={}\n",
-      theContext()->getNode(), num_elm, n_pieces
+      vt::theContext()->getNode(), num_elm, n_pieces
     );
   }
 
@@ -151,7 +149,7 @@ struct Block : Collection<Block,Index1D> {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    Collection<Block,Index1D>::serialize(s);
+    vt::Collection<Block, vt::Index1D>::serialize(s);
     s | data_;
   }
 
@@ -164,19 +162,19 @@ struct Block : Collection<Block,Index1D> {
       getIndex(), requesting_node
     );
     auto const from_idx = getIndex().x();
-    auto data_msg = makeSharedMessage<DataMsg>(data_,from_idx);
-    theMsg()->sendMsgAuto<DataMsg,SubSolveInfo::solveDataIncoming>(
-      requesting_node, data_msg
+    auto data_msg = vt::makeMessage<DataMsg>(data_,from_idx);
+    vt::theMsg()->sendMsg<DataMsg,SubSolveInfo::solveDataIncoming>(
+      requesting_node, data_msg.get()
     );
   }
 
-  void doneInit(InitMsg *msg) {
+  void doneInit(InitMsg* msg) {
     if (getIndex().x() == 0) {
       auto proxy = this->getCollectionProxy();
-      auto proxy_msg = ::vt::makeMessage<ProxyMsg>(proxy.getProxy());
-      theMsg()->broadcastMsg<SetupGroup>(proxy_msg.get());
+      auto proxy_msg = vt::makeMessage<ProxyMsg>(proxy.getProxy());
+      vt::theMsg()->broadcastMsg<SetupGroup>(proxy_msg.get());
       // Invoke it locally: broadcast sends to all other nodes
-      auto proxy_msg_local = ::vt::makeMessage<ProxyMsg>(proxy.getProxy());
+      auto proxy_msg_local = vt::makeMessage<ProxyMsg>(proxy.getProxy());
       SetupGroup()(proxy_msg_local.get());
     }
   }
@@ -186,8 +184,8 @@ struct Block : Collection<Block,Index1D> {
     initialize();
     // Wait for all initializations to complete
     auto proxy = this->getCollectionProxy();
-    auto cb = theCB()->makeBcast<Block, InitMsg, &Block::doneInit>(proxy);
-    auto empty = makeMessage<InitMsg>();
+    auto cb = vt::theCB()->makeBcast<Block, InitMsg, &Block::doneInit>(proxy);
+    auto empty = vt::makeMessage<InitMsg>();
     proxy.reduce(empty.get(), cb);
   }
 
@@ -197,23 +195,23 @@ private:
 
 //using ActiveMapTypedFnType = NodeType(IndexT*, IndexT*, NodeType);
 template <typename IndexT>
-::vt::NodeType my_map(IndexT* idx, IndexT* max_idx, NodeType num_nodes) {
+vt::NodeType my_map(IndexT* idx, IndexT* max_idx, vt::NodeType num_nodes) {
   // simple round-robin for 1-d only.
   return idx->x() % num_nodes;
 }
 
 // group-targeted handler for the sub-solve
 /*static*/ void SubSolveInfo::subSolveHandler(SubSolveMsg* msg) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
-  auto const group_id = envelopeGetGroup(msg->env);
-  MPI_Comm sub_comm = theGroup()->getGroupComm(group_id);
+  auto const group_id = vt::envelopeGetGroup(msg->env);
+  MPI_Comm sub_comm = vt::theGroup()->getGroupComm(group_id);
   int sub_size = 0, sub_rank = 0;
   MPI_Comm_size(sub_comm, &sub_size);
   MPI_Comm_rank(sub_comm, &sub_rank);
 
-  ::fmt::print(
+  fmt::print(
     "subSolveHandler: node={}, num={}, sub_rank={}, sub_size={}\n",
     this_node, num_nodes, sub_rank, sub_size
   );
@@ -225,7 +223,7 @@ template <typename IndexT>
   // Reconstruct the collection proxy type. Note: you can transfer the typed
   // proxy and skip this step, but then the proxy has to carry the type or be
   // templated
-  CollectionProxy<Block,Index1D> proxy(msg->coll_proxy_);
+  vt::CollectionProxy<Block, vt::Index1D> proxy(msg->coll_proxy_);
 
   // Do a simple "blocked" map from collection pieces to node
   auto const blocks_to_node = num_pieces / sub_size;
@@ -258,11 +256,11 @@ template <typename IndexT>
       solver_info.have_blocks_++;
     } else {
       // It's a remote collection block
-      auto msg2 = makeSharedMessage<RequestDataMsg<Block>>(this_node);
+      auto msg2 = vt::makeMessage<RequestDataMsg<Block>>(this_node);
       // Here we will send "this_node" to indicate which nod it should come back
       // to.  Eventually, I will implement a "sub_rank" in VT which can use the
       // sub-rank instead of the global node id.
-      proxy[block_id].send<RequestDataMsg<Block>,&Block::dataRequest>(msg2);
+      proxy[block_id].send<RequestDataMsg<Block>,&Block::dataRequest>(msg2.get());
     }
   }
 
@@ -292,11 +290,8 @@ template <typename IndexT>
   }
 }
 
-static void solveGroupSetup(NodeType this_node, VirtualProxyType coll_proxy) {
+static void solveGroupSetup(vt::NodeType this_node, vt::VirtualProxyType coll_proxy) {
   auto const& is_even_node = this_node % 2 == 0;
-
-  auto const& the_comm = theContext()->getComm();
-  (void)the_comm;  // don't warn about unused variable
 
   // This is how you would explicitly create/get a new communicator for this
   // group. Because of the change I made, there is automatically one created for
@@ -304,22 +299,23 @@ static void solveGroupSetup(NodeType this_node, VirtualProxyType coll_proxy) {
   // ranks), you can use the one that is created automatically by VT. See below:
   // theGroup()->getGroupComm(...)
 
+  // auto const& the_comm = vt::theContext()->getComm();
   // MPI_Comm manual_sub_comm;
   // MPI_Comm_split(the_comm, is_even_node, this_node, &manual_sub_comm);
   // solver_info.sub_comm = manual_sub_comm;
 
-  ::fmt::print(
+  fmt::print(
     "solveGroupSetup: node={}, is_even_node={}\n",
     this_node, is_even_node
   );
 
-  theGroup()->newGroupCollective(
-    is_even_node, [=](GroupType group_id){
+  vt::theGroup()->newGroupCollective(
+    is_even_node, [=](vt::GroupType group_id){
       fmt::print("Group is created: id={:x}\n", group_id);
       if (this_node == 1) {
-        auto msg = makeSharedMessage<SubSolveMsg>(coll_proxy);
-        envelopeSetGroup(msg->env, group_id);
-        theMsg()->broadcastMsg<SubSolveMsg,SubSolveInfo::subSolveHandler>(msg);
+        auto msg = vt::makeMessage<SubSolveMsg>(coll_proxy);
+        vt::envelopeSetGroup(msg->env, group_id);
+        vt::theMsg()->broadcastMsg<SubSolveMsg,SubSolveInfo::subSolveHandler>(msg.get());
       }
     }, true
   );
@@ -327,31 +323,25 @@ static void solveGroupSetup(NodeType this_node, VirtualProxyType coll_proxy) {
 }
 
 void SetupGroup::operator()(ProxyMsg* msg) {
-  auto const& this_node = theContext()->getNode();
-  ::fmt::print("SetupGroup: node={}\n", this_node);
+  vt::NodeType this_node = vt::theContext()->getNode();
+  fmt::print("SetupGroup: node={}\n", this_node);
   // Example using the group collective
   solveGroupSetup(this_node, msg->proxy_);
 }
 
 int main(int argc, char** argv) {
-  ::vt::CollectiveOps::initialize(argc,argv);
+  vt::initialize(argc, argv);
 
-  auto const& this_node = theContext()->getNode();
+  vt::NodeType this_node = vt::theContext()->getNode();
 
   if (this_node == 0) {
-    auto const& range = Index1D(num_pieces);
-    auto proxy = theCollection()->construct<Block,my_map>(
-      range,num_elem,num_pieces
+    auto range = vt::Index1D(num_pieces);
+    auto proxy = vt::theCollection()->construct<Block, my_map>(
+      range, num_elem, num_pieces
     );
-    //
-    auto msg = ::vt::makeSharedMessage<SolveMsg<Block>>();
-    proxy.broadcast<SolveMsg<Block>, &Block::solve>(msg);
+    proxy.broadcast<SolveMsg<Block>, &Block::solve>();
   }
 
-  while (!::vt::rt->isTerminated()) {
-    runScheduler();
-  }
-
-  ::vt::CollectiveOps::finalize();
+  vt::finalize();
   return 0;
 }
