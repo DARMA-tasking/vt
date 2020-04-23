@@ -80,7 +80,7 @@ struct WorkerGroupAny
 
   virtual ~WorkerGroupAny();
 
-  void initialize();
+  void initialize() override;
   void spawnWorkers();
   void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
