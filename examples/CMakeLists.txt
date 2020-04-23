@@ -15,7 +15,6 @@ set(
   hello_world_functor
   termination_collective
   termination_rooted
-  trace_ring
   lb_iter
   hello_world_virtual_context
   jacobi1d_vt
