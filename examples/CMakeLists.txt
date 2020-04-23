@@ -25,7 +25,7 @@ set(
   hello_world_virtual_context_remote
   migrate_collection
   hello_world_collection
-  simple_collection_collective
+  hello_world_collection_collective
   simple_collection_insert
   simple_collection_reduce
   insertable_collection
