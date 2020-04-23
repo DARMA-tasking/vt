@@ -27,7 +27,7 @@ set(
   hello_world_collection
   hello_world_collection_collective
   hello_world_collection_staged_insert
-  simple_collection_reduce
+  hello_world_collection_reduce
   insertable_collection
   rdma_unsized_collection
   group_rooted
