@@ -51,7 +51,7 @@ static std::unique_ptr<double[]> my_data = nullptr;
 
 struct HandleMsg : vt::Message {
   vt::RDMA_HandleType han;
-  HandleMsg(vt::RDMA_HandleType const& in_han) : han(in_han) { }
+  explicit HandleMsg(vt::RDMA_HandleType const& in_han) : han(in_han) { }
 };
 
 static void tellHandle(HandleMsg* msg) {
