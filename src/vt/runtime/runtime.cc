@@ -1218,7 +1218,8 @@ void Runtime::initializeComponents() {
 
 # if backend_check_enabled(trace_enabled)
   p_->registerComponent<trace::Trace>(&theTrace, Deps<
-      ctx::Context // Everything depends on theContext
+      ctx::Context,    // Everything depends on theContext
+      sched::Scheduler // Depends on scheduler for triggers
     >{},
     user_argc_ == 0 ? "prog" : user_argv_[0]
   );
