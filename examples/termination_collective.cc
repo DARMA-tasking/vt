@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                        termination_dijkstra_scholten.cc
+//                          termination_collective.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -77,23 +77,24 @@ int main(int argc, char** argv) {
     return vt::rerror("requires at least 2 nodes");
   }
 
-  if (this_node == 0) {
-    auto epoch = vt::theTerm()->makeEpochRooted(vt::term::UseDS{true});
+  auto epoch = vt::theTerm()->makeEpochCollective();
 
-    // This action will not run until all messages originating from the
-    // following send are completed
-    vt::theTerm()->addAction(epoch, [=]{
-      fmt::print("{}: finished epoch={:x}\n", this_node, epoch);
-    });
+  // This action will not run until all messages originating from the
+  // sends are completed
+  vt::theTerm()->addAction(epoch, [=]{
+    fmt::print("{}: finished epoch={:x}\n", this_node, epoch);
+  });
 
+  // Message must go out of scope before finalize
+  {
     auto msg = vt::makeMessage<TestMsg>();
     vt::envelopeSetEpoch(msg->env, epoch);
     vt::theMsg()->sendMsg<TestMsg, test_handler>(nextNode(), msg.get());
-    vt::theTerm()->finishedEpoch(epoch);
   }
+
+  vt::theTerm()->finishedEpoch(epoch);
 
   vt::finalize();
 
   return 0;
 }
-
