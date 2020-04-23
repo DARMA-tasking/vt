@@ -42,81 +42,70 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-
-#include <cstdlib>
-#include <cassert>
-
-using namespace ::vt;
-using namespace ::vt::collective;
-using namespace ::vt::mapping;
+#include <vt/transport.h>
 
 static constexpr std::size_t const default_num_elms = 64;
 
-using IndexType = IdxType1D<std::size_t>;
+struct Hello : vt::Collection<Hello, vt::Index1D> {
 
-struct TestColl : Collection<TestColl,IndexType> {
-  TestColl() = default;
+  // Default constructor for migration
+  Hello() = default;
 
-  virtual ~TestColl() {
-    // auto num_nodes = theContext()->getNumNodes();
-    // vtAssertInfo(
-    //   counter_ == num_nodes, "Must be equal",
-    //   counter_, num_nodes, getIndex(), theContext()->getNode()
-    // );
-    fmt::print("{}: destroying TestColl\n", getIndex());
+  // Constructor used during insertion
+  explicit Hello(std::string const& input_string)
+    : in(input_string)
+  { }
+
+  virtual ~Hello() {
+    vtAssert(counter_ == 1, "Must be equal");
   }
 
-  struct TestMsg : CollectionMessage<TestColl> { };
+  using TestMsg = vt::CollectionMessage<Hello>;
 
   void doWork(TestMsg* msg) {
-    auto const& this_node = theContext()->getNode();
     counter_++;
-    ::fmt::print(
-      "{}: doWork: idx={}, cnt={}\n", this_node, getIndex().x(), counter_
-    );
+
+    vt::NodeType this_node = vt::theContext()->getNode();
+    fmt::print("{}: Hello from {}: {}\n", this_node, this->getIndex(), in);
   }
 
 private:
-  int32_t counter_ = 0;
+  int counter_ = 0;
+  std::string in;
 };
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
-  int32_t num_elms = default_num_elms;
-
+  int num_elms = 32;
   if (argc > 1) {
     num_elms = atoi(argv[1]);
   }
 
-  using BaseIndexType = typename IndexType::DenseIndexType;
-  auto const& range = IndexType(static_cast<BaseIndexType>(num_elms));
-  auto token = theCollection()->constructInsert<TestColl>(range);
+  auto range = vt::Index1D(num_elms);
+  auto token = vt::theCollection()->constructInsert<Hello>(range);
 
-  for (size_t i = 0; i < default_num_elms; i++) {
-    if (i % num_nodes == static_cast<size_t>(this_node)) {
-      fmt::print("node={}: inserting {}\n", this_node, i);
-      token[i].insert();
+  for (int i = 0; i < num_elms; i++) {
+    // Insert even elements, round-robin the insertions from each node
+    if ((i / 2) % num_nodes == this_node and i % 2 == 0) {
+      auto str = fmt::format("inserted from {}", this_node);
+
+      // Construct the i'th element on this node, passing str to the constructor
+      token[i].insert(str);
     }
   }
 
-  fmt::print("finishedInsert: node={}: finished\n", this_node);
-  auto proxy = theCollection()->finishedInsert(std::move(token));
+  // Finish all inserts on this node by invalidating the insert token
+  auto proxy = vt::theCollection()->finishedInsert(std::move(token));
 
   if (this_node == 1) {
-    auto msg = makeSharedMessage<TestColl::TestMsg>();
-    proxy[2].send<TestColl::TestMsg,&TestColl::doWork>(msg);
+    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
