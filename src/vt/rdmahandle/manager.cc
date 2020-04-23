@@ -60,7 +60,7 @@ void Manager::setup(ProxyType in_proxy) {
   auto ptr = std::make_unique<Manager>();
   auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
   proxy.get()->setup(proxy);
-  return std::move(ptr);
+  return ptr;
 }
 
 }} /* end namespace vt::rdma */
