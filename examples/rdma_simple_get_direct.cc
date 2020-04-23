@@ -42,62 +42,56 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
+#include <vt/transport.h>
 
-using namespace vt;
-
-static NodeType my_node = uninitialized_destination;
-static NodeType num_nodes = uninitialized_destination;
-
-static RDMA_HandleType my_handle = no_rdma_handle;
+#include <memory>
 
 static int const my_data_len = 8;
-static double* my_data = nullptr;
+static std::unique_ptr<double[]> my_data = nullptr;
 
-struct TestMsg : vt::Message {
-  RDMA_HandleType han;
-  TestMsg(RDMA_HandleType const& in_han) : Message(), han(in_han) { }
+struct HandleMsg : vt::Message {
+  vt::RDMA_HandleType han;
+  HandleMsg(vt::RDMA_HandleType const& in_han) : han(in_han) { }
 };
 
-static void tellHandle(TestMsg* msg) {
-  if (my_node != 0) {
-    fmt::print("{}: handle={}, requesting data\n", my_node, msg->han);
+static void tellHandle(HandleMsg* msg) {
+  vt::NodeType this_node = vt::theContext()->getNode();
+
+  if (this_node != 0) {
+    fmt::print("{}: handle={}, requesting data\n", this_node, msg->han);
     int const num_elm = 2;
-    theRDMA()->getTypedDataInfoBuf(msg->han, my_data, num_elm, no_byte, no_tag, [=]{
-      for (auto i = 0; i < num_elm; i++) {
-        fmt::print("node {}: \t: my_data[{}] = {}\n", my_node, i, my_data[i]);
+    vt::theRDMA()->getTypedDataInfoBuf(
+      msg->han, &my_data[0], num_elm, vt::no_byte, vt::no_tag, [=]{
+        for (auto i = 0; i < num_elm; i++) {
+          fmt::print("node {}: \t: my_data[{}] = {}\n", this_node, i, my_data[i]);
+        }
       }
-    });
+    );
   }
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  my_node = theContext()->getNode();
-  num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
 
-  my_data = new double[my_data_len];
+  my_data = std::make_unique<double[]>(my_data_len);
 
   // initialize my_data buffer, all but node 0 get -1.0
   for (auto i = 0; i < my_data_len; i++) {
-    my_data[i] = my_node == 0 ? (my_node+1)*i+1 : -1.0;
+    my_data[i] = this_node == 0 ? (this_node+1)*i+1 : -1.0;
   }
 
-  if (my_node == 0) {
-    my_handle = theRDMA()->registerNewTypedRdmaHandler(my_data, my_data_len);
+  if (this_node == 0) {
+    vt::RDMA_HandleType my_handle =
+      vt::theRDMA()->registerNewTypedRdmaHandler(&my_data[0], my_data_len);
 
-    auto msg = makeSharedMessage<TestMsg>(my_node);
+    auto msg = vt::makeMessage<HandleMsg>(this_node);
     msg->han = my_handle;
-    theMsg()->broadcastMsg<TestMsg, tellHandle>(msg);
+    vt::theMsg()->broadcastMsg<HandleMsg, tellHandle>(msg.get());
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
