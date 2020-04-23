@@ -23,7 +23,6 @@ set(
   hello_world_collection_staged_insert
   hello_world_collection_reduce
   insertable_collection
-  rdma_unsized_collection
   group_rooted
   group_collective
   reduce_integral
