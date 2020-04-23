@@ -44,8 +44,6 @@
 
 #include <vt/transport.h>
 
-static constexpr std::size_t const default_num_elms = 64;
-
 struct Hello : vt::Collection<Hello, vt::Index1D> {
 
   // Default constructor for migration
