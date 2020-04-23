@@ -42,27 +42,23 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
-#include <cstdlib>
+#include <vt/transport.h>
 
-using namespace vt;
+#include <memory>
 
-static NodeType my_node = uninitialized_destination;
-static NodeType num_nodes = uninitialized_destination;
-
-static RDMA_HandleType my_handle = no_rdma_handle;
-
-struct TestMsg : vt::Message {
-  RDMA_HandleType han;
-  TestMsg(RDMA_HandleType const& in_han) : Message(), han(in_han) { }
+struct HandleMsg : vt::Message {
+  vt::RDMA_HandleType han;
+  explicit HandleMsg(vt::RDMA_HandleType const& in_han) : han(in_han) { }
 };
 
-static double* my_data = nullptr;
+static std::unique_ptr<double[]> my_data = nullptr;
 
-static void read_data_fn(TestMsg* msg) {
-  fmt::print("{}: read_data_fn: handle={}\n", my_node, msg->han);
+static void read_data_fn(HandleMsg* msg) {
+  vt::NodeType this_node = vt::theContext()->getNode();
 
-  if (my_node == 0) {
+  fmt::print("{}: read_data_fn: handle={}\n", this_node, msg->han);
+
+  if (this_node == 0) {
     int const len = 10;
     for (auto i = 0; i < len; i++) {
       fmt::print("\t: my_data[{}] = {}\n", i, my_data[i]);
@@ -70,90 +66,89 @@ static void read_data_fn(TestMsg* msg) {
   }
 }
 
-static void put_data_fn(TestMsg* msg) {
-  fmt::print("{}: put_data_fn: handle={}\n", my_node, msg->han);
+static void put_data_fn(HandleMsg* msg) {
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::RDMA_HandleType handle = msg->han;
 
-  if (my_node < 4) {
-    fmt::print("{}: putting data\n", my_node);
+  fmt::print("{}: put_data_fn: handle={}\n", this_node, handle);
+
+  if (this_node < 4) {
+    fmt::print("{}: putting data\n", this_node);
 
     int const local_data_len = 3;
     double* local_data = new double[local_data_len];
     for (auto i = 0; i < local_data_len; i++) {
-      local_data[i] = (i+1)*1000*(my_node+1);
+      local_data[i] = (i+1)*1000*(this_node+1);
     }
-    theRDMA()->putData(
-      msg->han, local_data, sizeof(double)*local_data_len,
-      (my_node-1)*local_data_len, no_tag, vt::rdma::rdma_default_byte_size,
+
+    vt::theRDMA()->putData(
+      handle, local_data, sizeof(double)*local_data_len,
+      (this_node-1)*local_data_len, vt::no_tag, vt::rdma::rdma_default_byte_size,
       [=]{
         delete [] local_data;
-        fmt::print("{}: after put: sending msg back to 0\n", my_node);
-        auto msg2 = makeSharedMessage<TestMsg>(my_node);
-        msg2->han = my_handle;
-        theMsg()->sendMsg<TestMsg,read_data_fn>(0, msg2);
+        fmt::print("{}: after put: sending msg back to 0\n", this_node);
+        auto msg2 = vt::makeMessage<HandleMsg>(this_node);
+        msg2->han = handle;
+        vt::theMsg()->sendMsg<HandleMsg,read_data_fn>(0, msg2.get());
       }
     );
   }
 }
 
 static void put_handler_fn(
-  BaseMessage* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes, ByteType offset,
-  TagType tag, bool
+  vt::BaseMessage*, vt::RDMA_PtrType in_ptr, vt::ByteType in_num_bytes,
+  vt::ByteType offset, vt::TagType tag, bool
 ) {
+  vt::NodeType this_node = vt::theContext()->getNode();
+
   fmt::print(
     "{}: put_handler_fn: my_data={}, in_ptr={}, in_num_bytes={}, tag={}, "
     "offset={}\n",
-    my_node, print_ptr(my_data), print_ptr(in_ptr), in_num_bytes, tag, offset
+    this_node, print_ptr(&my_data[0]), print_ptr(in_ptr), in_num_bytes, tag,
+    offset
   );
 
   auto count = in_num_bytes/sizeof(double);
   for (decltype(count) i = 0; i < count; i++) {
     ::fmt::print(
       "{}: put_handler_fn: data[{}] = {}\n",
-      my_node, i, static_cast<double*>(in_ptr)[i]
+      this_node, i, static_cast<double*>(in_ptr)[i]
     );
   }
 
-  std::memcpy(my_data + offset, in_ptr, in_num_bytes);
+  std::memcpy(&my_data[0] + offset, in_ptr, in_num_bytes);
 }
 
-
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  my_node = theContext()->getNode();
-  num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes != 4) {
-    fmt::print("requires exactly 4 nodes\n");
-    CollectiveOps::finalize();
-    return 0;
+    return vt::rerror("requires exactly 4 nodes");
   }
 
-  if (my_node == 0) {
+  if (this_node == 0) {
     auto const len = 64;
-    my_data = new double[len];
+    my_data = std::make_unique<double[]>(len);
 
     for (auto i = 0; i < len; i++) {
       my_data[i] = i+1;
     }
 
-    //my_handle = theRDMA()->register_new_typed_rdma_handler(my_data, 10);
-    my_handle = theRDMA()->registerNewRdmaHandler();
-    theRDMA()->associatePutFunction<BaseMessage,put_handler_fn>(
+    vt::RDMA_HandleType my_handle = vt::theRDMA()->registerNewRdmaHandler();
+    vt::theRDMA()->associatePutFunction<vt::BaseMessage,put_handler_fn>(
       nullptr, my_handle, put_handler_fn, false
     );
-    fmt::print("{}: initializing my_handle={}\n", my_node, my_handle);
+    fmt::print("{}: initializing my_handle={}\n", this_node, my_handle);
 
-    auto msg = makeSharedMessage<TestMsg>(my_node);
+    auto msg = vt::makeMessage<HandleMsg>(this_node);
     msg->han = my_handle;
-    theMsg()->broadcastMsg<TestMsg,put_data_fn>(msg);
+    vt::theMsg()->broadcastMsg<HandleMsg,put_data_fn>(msg.get());
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
