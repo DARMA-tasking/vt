@@ -227,11 +227,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   virtual ~ActiveMessenger();
 
 
-  /**
-   * \brief Return the name of the component
-   *
-   * \return the name
-   */
   std::string name() override { return "ActiveMessenger"; }
 
   /**

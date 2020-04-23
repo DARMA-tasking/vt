@@ -86,11 +86,6 @@ struct Manager : runtime::component::Component<Manager> {
 
   Manager() = default;
 
-  /**
-   * \brief Return the name of the component
-   *
-   * \return the name
-   */
   std::string name() override { return "HandleRDMA"; }
 
   /**
