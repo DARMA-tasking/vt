@@ -48,70 +48,55 @@
 
 using namespace vt;
 
-static NodeType my_node = uninitialized_destination;
-static NodeType num_nodes = uninitialized_destination;
-static EpochType cur_epoch = no_epoch;
-static int32_t num = 2;
+using TestMsg = vt::Message;
 
-struct TestMsg : Message {};
+vt::NodeType nextNode() {
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  return (this_node + 1) % num_nodes;
+}
 
 static void test_handler(TestMsg* msg) {
-  ::fmt::print("node={}, running handler: num={}\n", my_node, num);
-  num--;
+  static int num = 3;
 
+  vt::NodeType this_node = vt::theContext()->getNode();
+
+  auto epoch = vt::envelopeGetEpoch(msg->env);
+  fmt::print("{}: test_handler: num={}, epoch={:x}\n", this_node, num, epoch);
+
+  num--;
   if (num > 0) {
-    auto msg2 = makeSharedMessage<TestMsg>();
-    envelopeSetEpoch(msg2->env, cur_epoch);
-    theMsg()->sendMsg<TestMsg,test_handler>((my_node + 1) % num_nodes,msg2);
+    auto msg_send = vt::makeMessage<TestMsg>();
+    vt::theMsg()->sendMsg<TestMsg, test_handler>(nextNode(), msg_send.get());
   }
 }
 
 int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+  vt::initialize(argc, argv);
 
-  my_node = theContext()->getNode();
-  num_nodes = theContext()->getNumNodes();
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
-    CollectiveOps::output("requires at least 2 nodes");
-    CollectiveOps::finalize();
-    return 0;
+    return vt::rerror("requires at least 2 nodes");
   }
 
-  if (0) {
-    cur_epoch = theTerm()->makeEpochCollective();
+  if (this_node == 0) {
+    auto epoch = vt::theTerm()->makeEpochRooted(term::UseDS{true});
 
-    fmt::print("{}: new cur_epoch={}\n", my_node, cur_epoch);
-
-    theMsg()->sendMsg<TestMsg,test_handler>(
-      (my_node + 1) % num_nodes,
-      makeSharedMessage<TestMsg>()
-    );
-
-    theTerm()->addAction(cur_epoch, []{
-      fmt::print("{}: running attached action: cur_epoch={}\n", my_node, cur_epoch);
-    });
-    theTerm()->finishedEpoch(cur_epoch);
-  }
-
-  if (my_node == 0) {
-    cur_epoch = theTerm()->makeEpochRooted(term::UseDS{true});
-
-    theTerm()->addAction(cur_epoch, []{
-      fmt::print("{}: running attached action: cur_epoch={}\n", my_node, cur_epoch);
+    // This action will not run until all messages originating from the
+    // following send are completed
+    vt::theTerm()->addAction(epoch, [=]{
+      fmt::print("{}: finished epoch={:x}\n", this_node, epoch);
     });
 
-    auto msg = makeSharedMessage<TestMsg>();
-    envelopeSetEpoch(msg->env, cur_epoch);
-    theMsg()->sendMsg<TestMsg,test_handler>((my_node + 1) % num_nodes,msg);
-    theTerm()->finishedEpoch(cur_epoch);
+    auto msg = vt::makeMessage<TestMsg>();
+    vt::envelopeSetEpoch(msg->env, epoch);
+    vt::theMsg()->sendMsg<TestMsg, test_handler>(nextNode(), msg.get());
+    vt::theTerm()->finishedEpoch(epoch);
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
-
-  CollectiveOps::finalize();
+  vt::finalize();
 
   return 0;
 }
