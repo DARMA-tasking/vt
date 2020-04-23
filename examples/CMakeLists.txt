@@ -26,7 +26,7 @@ set(
   migrate_collection
   hello_world_collection
   hello_world_collection_collective
-  simple_collection_insert
+  hello_world_collection_staged_insert
   simple_collection_reduce
   insertable_collection
   rdma_unsized_collection
