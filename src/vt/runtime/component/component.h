@@ -147,7 +147,7 @@ struct Component : BaseComponent {
   /**
    * \brief Empty default diagnostic dump state
    */
-  void dumpState() override { }
+  virtual void dumpState() override { }
 };
 
 /**
