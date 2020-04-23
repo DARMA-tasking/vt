@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.h
+//                                 zoltanlb.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,47 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_CC
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_CC
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 
-#include <unordered_map>
-#include <string>
-#include <type_traits>
+#include <zoltan.h>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-enum struct LBType : int8_t {
-  NoLB             = 0,
-  GreedyLB         = 1,
-  HierarchicalLB   = 2,
-  RotateLB         = 3,
-  GossipLB         = 4,
-  ZoltanLB         = 6
-};
-
-template <typename SerializerT>
-void serialize(SerializerT& s, LBType lb) {
-  using EnumDataType = typename std::underlying_type<LBType>::type;
-  EnumDataType val = static_cast<EnumDataType>(lb);
-  s | val;
-  lb = static_cast<LBType>(val);
+void ZoltanLB::init(objgroup::proxy::Proxy<ZoltanLB> in_proxy) {
+  proxy = in_proxy;
 }
 
-}}}} /* end namespace vt::vrt::collection::balance */
+void ZoltanLB::inputParams(balance::SpecEntry* spec) { }
 
-namespace std {
+void ZoltanLB::runLB() {
+  initZoltan();
 
-using LBTypeType = vt::vrt::collection::balance::LBType;
+  auto const& this_node = theContext()->getNode();
+  // auto const& num_nodes = theContext()->getNumNodes();
+  // auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
 
-template <>
-struct hash<LBTypeType> {
-  size_t operator()(LBTypeType const& in) const {
-    using LBUnderType = typename std::underlying_type<LBTypeType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
+  if (this_node == 0) {
+    vt_print(lb, "ZoltanLB: runLB\n");
+    fflush(stdout);
   }
-};
 
-} /* end namespace std */
+  startMigrationCollective();
+  finishMigrationCollective();
+}
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+Zoltan_Struct* ZoltanLB::initZoltan() {
+  float ver = 0.0f;
+  auto const ret = Zoltan_Initialize(0, nullptr, &ver);
+  assert(ret == ZOLTAN_OK);
 
-extern std::unordered_map<LBType,std::string> lb_names_;
+  auto zoltan = Zoltan_Create(theContext()->getComm());
+  return zoltan;
+}
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_CC*/

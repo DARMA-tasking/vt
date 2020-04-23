@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.h
+//                                  zoltanlb.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,33 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 
-#include <unordered_map>
-#include <string>
-#include <type_traits>
+#include <zoltan.h>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-enum struct LBType : int8_t {
-  NoLB             = 0,
-  GreedyLB         = 1,
-  HierarchicalLB   = 2,
-  RotateLB         = 3,
-  GossipLB         = 4,
-  ZoltanLB         = 6
+struct ZoltanLB : BaseLB {
+
+  ZoltanLB() = default;
+
+  void init(objgroup::proxy::Proxy<ZoltanLB> in_proxy);
+  void runLB() override;
+  void inputParams(balance::SpecEntry* spec) override;
+
+private:
+  Zoltan_Struct* initZoltan();
+
+private:
+  objgroup::proxy::Proxy<ZoltanLB> proxy = {};
 };
 
-template <typename SerializerT>
-void serialize(SerializerT& s, LBType lb) {
-  using EnumDataType = typename std::underlying_type<LBType>::type;
-  EnumDataType val = static_cast<EnumDataType>(lb);
-  s | val;
-  lb = static_cast<LBType>(val);
-}
+}}}} /* end namespace vt::vrt::collection::lb */
 
-}}}} /* end namespace vt::vrt::collection::balance */
-
-namespace std {
-
-using LBTypeType = vt::vrt::collection::balance::LBType;
-
-template <>
-struct hash<LBTypeType> {
-  size_t operator()(LBTypeType const& in) const {
-    using LBUnderType = typename std::underlying_type<LBTypeType>::type;
-    auto const val = static_cast<LBUnderType>(in);
-    return std::hash<LBUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
-namespace vt { namespace vrt { namespace collection { namespace balance {
-
-extern std::unordered_map<LBType,std::string> lb_names_;
-
-}}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_H*/
