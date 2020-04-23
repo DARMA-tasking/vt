@@ -55,7 +55,12 @@ registry::AutoHandlerType ComponentPack::registerComponent(
 ) {
   ComponentRegistry::dependsOn<T, Deps...>();
   auto idx = registry::makeIdx<T>();
-  registered_components_.push_back(idx);
+
+  if (registered_set_.find(idx) == registered_set_.end()) {
+    registered_set_.insert(idx);
+    registered_components_.push_back(idx);
+  }
+
   construct_components_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(idx),

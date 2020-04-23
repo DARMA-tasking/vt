@@ -160,6 +160,8 @@ private:
   bool live_ = false;
   /// List of registered components
   std::vector<registry::AutoHandlerType> registered_components_;
+  /// Set of registered components to make it idempotent
+  std::unordered_set<registry::AutoHandlerType> registered_set_;
   /// Set of added components to be constructed
   std::unordered_set<registry::AutoHandlerType> added_components_;
   /// Bound constructors for components
