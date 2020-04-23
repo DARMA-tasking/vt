@@ -7,9 +7,6 @@ set(
   rdma_simple_get_direct
   rdma_simple_put
   rdma_simple_put_direct
-  rdma_simple_channel
-  rdma_channel_sync
-  rdma_collective
   callback_context
   param
   hello_world_functor
