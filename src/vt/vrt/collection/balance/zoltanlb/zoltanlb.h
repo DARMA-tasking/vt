@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.cc
+//                                  zoltanlb.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,39 +42,33 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_H
+
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <zoltan.h>
 
-namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-std::unordered_map<LBType,std::string> lb_names_ = {
-  {LBType::NoLB,           std::string{"NoLB"          }},
-  {LBType::GreedyLB,       std::string{"GreedyLB"      }},
-  {LBType::HierarchicalLB, std::string{"HierarchicalLB"}},
-  {LBType::RotateLB,       std::string{"RotateLB"      }},
-  {LBType::GossipLB,       std::string{"GossipLB"      }},
-  {LBType::StatsMapLB,     std::string{"StatsMapLB"    }},
-  {LBType::ZoltanLB,       std::string{"ZoltanLB"      }}
+struct ZoltanLB : BaseLB {
+
+  ZoltanLB() = default;
+
+  void init(objgroup::proxy::Proxy<ZoltanLB> in_proxy);
+  void runLB() override;
+  void inputParams(balance::SpecEntry* spec) override;
+
+private:
+  Zoltan_Struct* initZoltan();
+
+private:
+  objgroup::proxy::Proxy<ZoltanLB> proxy = {};
 };
 
-} /* end namespace balance */
+}}}} /* end namespace vt::vrt::collection::lb */
 
-namespace lb {
-
-std::unordered_map<Statistic,std::string> lb_stat_name_ = {
-  {Statistic::P_l,         std::string{"P_l"}},
-  {Statistic::P_c,         std::string{"P_c"}},
-  {Statistic::P_t,         std::string{"P_t"}},
-  {Statistic::O_l,         std::string{"O_l"}},
-  {Statistic::O_c,         std::string{"O_c"}},
-  {Statistic::O_t,         std::string{"O_t"}},
-  {Statistic::ObjectRatio, std::string{"ObjectRatio"}},
-  {Statistic::EdgeRatio,   std::string{"EdgeRatio"}}
-};
-
-} /* end namespace lb */
-
-}}} /* end namespace vt::vrt::collection::balance */
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_H*/

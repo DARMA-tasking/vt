@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.cc
+//                                 zoltanlb.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,39 +42,47 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_CC
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_CC
+
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <zoltan.h>
 
-namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-std::unordered_map<LBType,std::string> lb_names_ = {
-  {LBType::NoLB,           std::string{"NoLB"          }},
-  {LBType::GreedyLB,       std::string{"GreedyLB"      }},
-  {LBType::HierarchicalLB, std::string{"HierarchicalLB"}},
-  {LBType::RotateLB,       std::string{"RotateLB"      }},
-  {LBType::GossipLB,       std::string{"GossipLB"      }},
-  {LBType::StatsMapLB,     std::string{"StatsMapLB"    }},
-  {LBType::ZoltanLB,       std::string{"ZoltanLB"      }}
-};
+void ZoltanLB::init(objgroup::proxy::Proxy<ZoltanLB> in_proxy) {
+  proxy = in_proxy;
+}
 
-} /* end namespace balance */
+void ZoltanLB::inputParams(balance::SpecEntry* spec) { }
 
-namespace lb {
+void ZoltanLB::runLB() {
+  initZoltan();
 
-std::unordered_map<Statistic,std::string> lb_stat_name_ = {
-  {Statistic::P_l,         std::string{"P_l"}},
-  {Statistic::P_c,         std::string{"P_c"}},
-  {Statistic::P_t,         std::string{"P_t"}},
-  {Statistic::O_l,         std::string{"O_l"}},
-  {Statistic::O_c,         std::string{"O_c"}},
-  {Statistic::O_t,         std::string{"O_t"}},
-  {Statistic::ObjectRatio, std::string{"ObjectRatio"}},
-  {Statistic::EdgeRatio,   std::string{"EdgeRatio"}}
-};
+  auto const& this_node = theContext()->getNode();
+  // auto const& num_nodes = theContext()->getNumNodes();
+  // auto const next_node = this_node + 1 > num_nodes-1 ? 0 : this_node + 1;
 
-} /* end namespace lb */
+  if (this_node == 0) {
+    vt_print(lb, "ZoltanLB: runLB\n");
+    fflush(stdout);
+  }
 
-}}} /* end namespace vt::vrt::collection::balance */
+  startMigrationCollective();
+  finishMigrationCollective();
+}
+
+Zoltan_Struct* ZoltanLB::initZoltan() {
+  float ver = 0.0f;
+  auto const ret = Zoltan_Initialize(0, nullptr, &ver);
+  assert(ret == ZOLTAN_OK);
+
+  auto zoltan = Zoltan_Create(theContext()->getComm());
+  return zoltan;
+}
+
+}}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_CC*/
