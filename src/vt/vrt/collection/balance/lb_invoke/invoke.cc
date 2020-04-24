@@ -150,7 +150,9 @@ void LBManager::collectiveImpl(
     case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
     case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
     case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
+#   if backend_check_enabled(zoltan)
     case LBType::ZoltanLB:       makeLB<lb::ZoltanLB>(msg);       break;
+ #  endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
       break;
