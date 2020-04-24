@@ -48,6 +48,8 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 
+#if backend_check_enabled(zoltan)
+
 #include <zoltan.h>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
@@ -118,7 +120,8 @@ void ZoltanLB::runLB() {
   Zoltan_LB_Free_Part(
     &export_global_ids, &export_local_ids, &export_procs, &export_to_part
   );
-  Zoltan_Destroy(&zoltan_);
+
+  destroyZoltan();
 }
 
 Zoltan_Struct* ZoltanLB::initZoltan() {
@@ -128,6 +131,10 @@ Zoltan_Struct* ZoltanLB::initZoltan() {
 
   zoltan_ = Zoltan_Create(theContext()->getComm());
   return zoltan_;
+}
+
+void ZoltanLB::destroyZoltan() {
+  Zoltan_Destroy(&zoltan_);
 }
 
 void ZoltanLB::setParams() {
@@ -192,49 +199,53 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
     }
   }
 
-  // Only get communication edges between vertices/migratable elements
-  // Insert local comm objs into a std::set for deterministic ordering
-  std::vector<balance::LBCommKey> comm_objs;
-  for (auto&& elm : *comm_data) {
-    if (elm.first.cat_ == balance::CommCategory::SendRecv) {
-      comm_objs.push_back(elm.first);
+  if (do_edges_) {
+    // Only get communication edges between vertices/migratable elements
+    // Insert local comm objs into a std::set for deterministic ordering
+    std::vector<balance::LBCommKey> comm_objs;
+    for (auto&& elm : *comm_data) {
+      if (elm.first.cat_ == balance::CommCategory::SendRecv) {
+        comm_objs.push_back(elm.first);
+      }
     }
-  }
 
-  // Set the number of communication edges
-  graph->num_edges = static_cast<int>(comm_objs.size());
+    // Set the number of communication edges
+    graph->num_edges = static_cast<int>(comm_objs.size());
 
-  // Allocate space for each edge to describe it
-  graph->edge_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_edges);
+    // Allocate space for each edge to describe it
+    graph->edge_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_edges);
 
-  // Allocate space for each edge weight
-  graph->edge_weight = std::make_unique<int[]>(graph->num_edges);
+    // Allocate space for each edge weight
+    graph->edge_weight = std::make_unique<int[]>(graph->num_edges);
 
-  // Allocate space for indexing array into neighbor_gid array for each edge
-  graph->neighbor_idx = std::make_unique<int[]>(graph->num_edges);
+    // Allocate space for indexing array into neighbor_gid array for each edge
+    graph->neighbor_idx = std::make_unique<int[]>(graph->num_edges);
 
-  // Allocate space indexing array for edge edge_gid[i] beginning at
-  // neighbor_gid[neighbor_idx[i]]
-  graph->neighbor_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_edges * 2);
+    // Allocate space indexing array for edge edge_gid[i] beginning at
+    // neighbor_gid[neighbor_idx[i]]
+    graph->neighbor_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_edges * 2);
 
-  // Set the edge weights as bytes in the communication graph
-  {
-    int edge_idx = 0;
-    int neighbor_idx = 0;
-    for (auto&& elm : comm_objs) {
-      auto iter = comm_data->find(elm);
-      auto bytes = iter->second;
-      graph->edge_weight[edge_idx] = bytes;
+    // Set the edge weights as bytes in the communication graph
+    {
+      int edge_idx = 0;
+      int neighbor_idx = 0;
+      for (auto&& elm : comm_objs) {
+        auto iter = comm_data->find(elm);
+        auto bytes = iter->second;
+        graph->edge_weight[edge_idx] = bytes;
 
-      // This edge begins at neighbor_idx
-      graph->neighbor_idx[edge_idx] = neighbor_idx;
+        // This edge begins at neighbor_idx
+        graph->neighbor_idx[edge_idx] = neighbor_idx;
 
-      // Set up the links between communicating GIDs
-      graph->neighbor_gid[neighbor_idx++] = iter->first.fromObjTemp();
-      graph->neighbor_gid[neighbor_idx++] = iter->first.toObjTemp();
+        // Set up the links between communicating GIDs
+        graph->neighbor_gid[neighbor_idx++] = iter->first.fromObjTemp();
+        graph->neighbor_gid[neighbor_idx++] = iter->first.toObjTemp();
 
-      edge_idx++;
+        edge_idx++;
+      }
     }
+  } else {
+    graph->num_edges = 0;
   }
 
   return graph;
@@ -322,5 +333,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*backend_check_enabled(zoltan)*/
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_CC*/

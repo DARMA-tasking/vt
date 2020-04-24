@@ -50,6 +50,8 @@
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 
+#if backend_check_enabled(zoltan)
+
 #include <zoltan.h>
 
 #include <memory>
@@ -87,6 +89,7 @@ private:
   };
 
   Zoltan_Struct* initZoltan();
+  void destroyZoltan();
   void setParams();
   std::unique_ptr<Graph> makeGraph();
 
@@ -117,5 +120,7 @@ private:
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
+
+#endif /*backend_check_enabled(zoltan)*/
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_H*/

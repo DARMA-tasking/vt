@@ -375,6 +375,12 @@ void Runtime::printStartupBanner() {
 #if backend_check_enabled(mpi_access_guards)
   features.push_back(vt_feature_str_mpi_access_guards);
 #endif
+#if backend_check_enabled(zoltan)
+  features.push_back(vt_feature_str_zoltan);
+#endif
+#if backend_check_enabled(mimalloc)
+  features.push_back(vt_feature_str_mimalloc);
+#endif
 
   std::string dirty = "";
   if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
