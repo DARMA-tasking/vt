@@ -52,6 +52,8 @@
 
 #include <zoltan.h>
 
+#include <memory>
+
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct ZoltanLB : BaseLB {
@@ -63,10 +65,55 @@ struct ZoltanLB : BaseLB {
   void inputParams(balance::SpecEntry* spec) override;
 
 private:
+  struct Graph {
+    using GID = std::unique_ptr<ZOLTAN_ID_TYPE[]>;
+    using LID = std::unique_ptr<int[]>;
+
+    Graph() = default;
+
+    int num_vertices = 0;        /* number of vertices locally owned */
+    int num_edges = 0;           /* number of my hyperedges */
+    int num_all_neighbors = 0;   /* number of vertices in local hyperedges */
+
+    GID vertex_gid = nullptr;    /* global ID of these vertices */
+    GID edge_gid = nullptr;      /* global ID of each of local hyperedges */
+    GID neighbor_gid = nullptr;  /* Vertices of edge edge_gid[i] begin at
+                                    neighbor_gid[neighbor_idx[i]] */
+
+    LID vertex_weight = nullptr; /* weight of each vertex */
+    LID edge_weight = nullptr;   /* weight of each edge */
+    LID neighbor_idx = nullptr;  /* compressed hyperedge format:
+                                    neighbor_gid idx of edge's vertices */
+  };
+
   Zoltan_Struct* initZoltan();
+  void setParams();
+  std::unique_ptr<Graph> makeGraph();
+
+private:
+  static int getNumberOfVertices(void *data, int *ierr);
+  static void getVertexList(
+    void *data, int gid_size, int lid_size, ZOLTAN_ID_PTR global_id,
+    ZOLTAN_ID_PTR local_id, int weight_dim, float *obj_weights, int *ierr
+  );
+  static void getHypergraphSize(
+    void *data, int *num_lists, int *num_nonzeroes, int *format, int *ierr
+  );
+  static void getHypergraph(
+    void *data, int gid_size, int num_edges, int num_nonzeroes, int format,
+    ZOLTAN_ID_PTR edge_gid, int *vertex_ptr, ZOLTAN_ID_PTR vertex_gid, int *ierr
+  );
+  static void getHypergraphEdgeSize(void *data, int *num_edges, int *ierr);
+  static void getHypergraphEdgeWeights(
+    void *data, int num_gid, int num_lid, int num_edges, int edge_weight_dim,
+    ZOLTAN_ID_PTR edge_gid, ZOLTAN_ID_PTR edge_lid, float *edge_weights,
+    int *ierr
+  );
 
 private:
   objgroup::proxy::Proxy<ZoltanLB> proxy = {};
+  Zoltan_Struct* zoltan_ = nullptr;
+  bool do_edges_ = true;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
