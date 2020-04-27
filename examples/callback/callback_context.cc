@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                             callback_context.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,75 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
+#include <vector>
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+// Define a context class
+struct MyContext {
+  int x = 29;
+};
 
-namespace vt { namespace param {
+// DataMsg that will be sent from the callback
+struct DataMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required(); // by vec_
 
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
+  DataMsg() = default;
 
-template<typename T, T value>
-struct NonType {};
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | vec_;
+  }
 
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
+  std::vector<int> vec_;
+};
 
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
-}
+// Message that contains the callback
+struct CallbackMsg : vt::Message {
+  CallbackMsg() = default;
+  explicit CallbackMsg(vt::Callback<DataMsg> in_cb) : cb(in_cb) { }
 
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
+  vt::Callback<DataMsg> cb;
+};
 
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+// Special handler that takes a data message and a context
+static void callbackFn(DataMsg* msg, MyContext* ctx) {
+  fmt::print("callbackFn: msg={}, ctx={}\n", print_ptr(msg), print_ptr(ctx));
+  fmt::print("callbackFn: x={}, vec.size={}\n", ctx->x, msg->vec_.size());
+  for (auto&& elm : msg->vec_) {
+    fmt::print("\t elm={}\n", elm);
   }
 }
 
-}} /* end namespace vt::param */
+// Handler that triggers the callback
+static void handler(CallbackMsg* msg) {
+  auto cb = msg->cb;
+  auto data_msg = vt::makeMessage<DataMsg>();
+  data_msg->vec_ = std::vector<int>{18,45,28,-1,344};
+  fmt::print("handler: vec.size={}\n", data_msg->vec_.size());
+  cb.send(data_msg.get());
+}
 
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/
+// Some instance of the context
+static MyContext my_global_ctx = {};
+
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  vt::NodeType this_node = vt::theContext()->getNode();
+
+  if (this_node == 0) {
+    my_global_ctx.x = 1283;
+
+    // Make a callback that triggers the callback with a context
+    auto cb = vt::theCB()->makeFunc<DataMsg,MyContext>(&my_global_ctx, callbackFn);
+    auto msg = vt::makeMessage<CallbackMsg>(cb);
+    vt::theMsg()->sendMsg<CallbackMsg,handler>(1, msg.get());
+  }
+
+  vt::finalize();
+
+  return 0;
+}

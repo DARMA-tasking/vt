@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                                hello_world.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,35 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
+struct HelloMsg : vt::Message {
+  HelloMsg(vt::NodeType in_from) : from(in_from) { }
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+  vt::NodeType from = 0;
+};
 
-namespace vt { namespace param {
-
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
-
-template<typename T, T value>
-struct NonType {};
-
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
-
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
+static void hello_world(HelloMsg* msg) {
+  vt::NodeType this_node = vt::theContext()->getNode();
+  fmt::print("{}: Hello from node {}\n", this_node, msg->from);
 }
 
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
 
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
+  if (num_nodes == 1) {
+    return vt::rerror("requires at least 2 nodes");
   }
+
+  if (this_node == 0) {
+    auto msg = vt::makeMessage<HelloMsg>(this_node);
+    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg.get());
+  }
+
+  vt::finalize();
+
+  return 0;
 }
-
-}} /* end namespace vt::param */
-
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                                   param.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
-
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
-
-namespace vt { namespace param {
-
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
-
-template<typename T, T value>
-struct NonType {};
-
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
-
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
+static void fnTest(int a, int b, bool x) {
+  fmt::print("fn: a={}, b={}, x={}\n", a, b, x ? "true" : "false");
 }
 
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
+static void fnTest2(int x, int y) {
+  fmt::print("fn2: x={},y={}\n",x,y);
 }
 
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+static void fnTest3(int x, double y) {
+  fmt::print("fn3: x={},y={}\n",x,y);
+}
+
+struct FunctorTest1 {
+  void operator()(int x, double y) const {
+    fmt::print("FunctorTest1: x={},y={}\n",x,y);
   }
+};
+
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
+  if (num_nodes == 1) {
+    return vt::rerror("requires at least 2 nodes");
+  }
+
+  if (this_node == 0) {
+    vt::theParam()->sendData(1, vt::buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
+    vt::theParam()->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
+    vt::theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, vt::buildData(10, 20, false));
+    vt::theParam()->sendData<PARAM_FUNCTION(fnTest)>(1, 45, 23, true);
+
+    vt::theParam()->sendData<PARAM_FUNCTION(fnTest2)>(1, 20, 10);
+    vt::theParam()->sendData<PARAM_FUNCTION(fnTest3)>(1, 20, 50.0);
+
+    vt::theParam()->sendData<FunctorTest1>(1, vt::buildData(20, 50.0));
+    vt::theParam()->sendData<FunctorTest1>(1, 20, 100.0);
+    vt::theParam()->sendData<FunctorTest1>(1, vt::buildData(10, 70.0));
+  }
+
+  vt::finalize();
+
+  return 0;
 }
-
-}} /* end namespace vt::param */
-
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/

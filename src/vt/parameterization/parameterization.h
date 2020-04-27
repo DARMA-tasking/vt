@@ -65,9 +65,13 @@ using HandlerManagerType = vt::HandlerManager;
 
 template <typename Tuple>
 struct DataMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by tup
+
   Tuple tup;
   HandlerType sub_han = uninitialized_handler;
 
+  DataMsg() = default;
   DataMsg(HandlerType const& in_sub_han, Tuple&& a)
     : Message(), tup(std::forward<Tuple>(a)), sub_han(in_sub_han)
   { }
@@ -76,6 +80,13 @@ struct DataMsg : vt::Message {
   DataMsg(HandlerType const& in_sub_han, Args&&... a)
     : Message(), tup(std::forward<Args>(a)...), sub_han(in_sub_han)
   { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | tup;
+    s | sub_han;
+  }
 };
 
 
@@ -104,11 +115,11 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
 
   if (HandlerManagerType::isHandlerFunctor(msg->sub_han)) {
     auto fn = auto_registry::getAutoHandlerFunctor(msg->sub_han);
-    invokeCallableTuple(std::forward<Tuple>(msg->tup), fn, true);
+    invokeCallableTuple(msg->tup, fn, true);
   } else {
     // regular active function
     auto fn = auto_registry::getAutoHandler(msg->sub_han);
-    invokeCallableTuple(std::forward<Tuple>(msg->tup), fn, false);
+    invokeCallableTuple(msg->tup, fn, false);
   }
 
 #if backend_check_enabled(trace_enabled)
@@ -119,20 +130,17 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
 struct Param {
 
   template <typename... Args>
-  EventType sendDataTuple(
+  void sendDataTuple(
     NodeType const& dest, HandlerType const& han, std::tuple<Args...>&& tup
   ) {
     staticCheckCopyable<Args...>();
 
     using TupleType = typename std::decay<decltype(tup)>::type;
 
-    DataMsg<TupleType>* m = new DataMsg<TupleType>(
+    auto m = makeMessage<DataMsg<TupleType>>(
       han, std::forward<std::tuple<Args...>>(tup)
     );
-
-    return theMsg()->sendMsg<DataMsg<TupleType>, dataMessageHandler>(
-      dest, m, [=]{ delete m; }
-    );
+    theMsg()->sendMsg<DataMsg<TupleType>, dataMessageHandler>(dest, m.get());
   }
 
   template <typename... Args>
@@ -146,36 +154,34 @@ struct Param {
   }
 
   template <typename DataMsg>
-  EventType sendDataMsg(
+  void sendDataMsg(
     NodeType const& dest, HandlerType const& __attribute__((unused)) han,
-    DataMsg* m
+    MsgSharedPtr<DataMsg> m
   ) {
-    return theMsg()->sendMsg<DataMsg, dataMessageHandler>(
-      dest, m, [=]{ delete m; }
-    );
+    theMsg()->sendMsg<DataMsg, dataMessageHandler>(dest, m.get());
   }
 
   template <typename T, T value, typename Tuple>
-  EventType sendData(
+  void sendData(
     NodeType const& dest, Tuple tup,
     NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
     auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
-    return sendDataTuple(dest, han, std::forward<Tuple>(tup));
+    sendDataTuple(dest, han, std::forward<Tuple>(tup));
   }
 
   template <typename T, T value, typename... Args>
-  EventType sendData(
-    NodeType const& dest, DataMsg<std::tuple<Args...>>* msg,
+  void sendData(
+    NodeType const& dest, MsgSharedPtr<DataMsg<std::tuple<Args...>>> msg,
     NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
     auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
     msg->sub_han = han;
-    return sendDataMsg(dest, han, msg);
+    sendDataMsg(dest, han, msg);
   }
 
   template <typename T, T value, typename... Args>
-  EventType sendData(
+  void sendData(
     NodeType const& dest, NonType<T, value> __attribute__((unused)) non,
     Args&&... a
   ) {
@@ -185,16 +191,13 @@ struct Param {
 
     using TupleType = std::tuple<Args...>;
 
-    DataMsg<TupleType>* m = new DataMsg<TupleType>(
-      han, std::forward<Args>(a)...
-    );
-
-    return sendDataMsg(dest, han, m);
+    auto m = makeMessage<DataMsg<TupleType>>(han, std::forward<Args>(a)...);
+    sendDataMsg(dest, han, m);
   }
 
   template <typename T, T value, typename... Args>
-  EventType sendData(NodeType const& dest, Args&&... a) {
-    return sendData(dest, NonType<T,value>(), std::forward<Args>(a)...);
+  void sendData(NodeType const& dest, Args&&... a) {
+    sendData(dest, NonType<T,value>(), std::forward<Args>(a)...);
   }
 
   /*
@@ -202,22 +205,24 @@ struct Param {
    */
 
   template <typename FunctorT, typename... Args>
-  EventType sendDataHelperFunctor(
+  void sendDataHelperFunctor(
     NodeType const& dest, std::tuple<Args...>&& tup
   ) {
     auto const& han = auto_registry::makeAutoHandlerFunctor<
       FunctorT, false, Args...
     >();
-    return sendDataTuple(dest, han, std::forward<std::tuple<Args...>>(tup));
+    sendDataTuple(dest, han, std::forward<std::tuple<Args...>>(tup));
   }
 
   template <typename FunctorT, typename Tuple>
-  EventType sendData(NodeType const& dest, Tuple tup) {
-    return sendDataHelperFunctor<FunctorT>(dest, std::forward<Tuple>(tup));
+  void sendData(NodeType const& dest, Tuple tup) {
+    sendDataHelperFunctor<FunctorT>(dest, std::forward<Tuple>(tup));
   }
 
   template <typename FunctorT, typename... Args>
-  EventType sendData(NodeType const& dest, DataMsg<std::tuple<Args...>>* msg) {
+  void sendData(
+    NodeType const& dest, MsgSharedPtr<DataMsg<std::tuple<Args...>>> msg
+  ) {
     staticCheckCopyable<Args...>();
 
     auto const& han = auto_registry::makeAutoHandlerFunctor<
@@ -225,11 +230,11 @@ struct Param {
     >();
     msg->sub_han = han;
 
-    return sendDataMsg(dest, han, msg);
+    sendDataMsg(dest, han, msg);
   }
 
   template <typename FunctorT, typename... Args>
-  EventType sendData(NodeType const& dest, Args&&... a) {
+  void sendData(NodeType const& dest, Args&&... a) {
     staticCheckCopyable<Args...>();
 
     auto const& han = auto_registry::makeAutoHandlerFunctor<
@@ -238,11 +243,8 @@ struct Param {
 
     using TupleType = std::tuple<Args...>;
 
-    DataMsg<TupleType>* m = new DataMsg<TupleType>(
-      han, std::forward<Args>(a)...
-    );
-
-    return sendDataMsg(dest, han, m);
+    auto m = makeMessage<DataMsg<TupleType>>(han, std::forward<Args>(a)...);
+    sendDataMsg(dest, han, m);
   }
 };
 
@@ -253,8 +255,8 @@ namespace vt {
 extern param::Param* theParam();
 
 template <typename... Args>
-param::DataMsg<std::tuple<Args...>>* buildData(Args&&... a) {
-  return new param::DataMsg<std::tuple<Args...>>(
+MsgSharedPtr<param::DataMsg<std::tuple<Args...>>> buildData(Args&&... a) {
+  return makeMessage<param::DataMsg<std::tuple<Args...>>>(
     uninitialized_handler, std::forward<Args>(a)...
   );
 }

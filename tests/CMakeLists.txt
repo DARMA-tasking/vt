@@ -2,6 +2,7 @@
 #                              CMake for gtests                                #
 ################################################################################
 
+
 set(PROJECT_TEST_UNIT_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 set(PROJECT_TEST_PERF_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/perf)
 set(PROJECT_GTEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/googletest/googletest/include)
@@ -10,6 +11,7 @@ set(
   PROJECT_PERF_TESTS
   ping_pong
   memory_checker
+  comm_cost_curve
 )
 
 set(

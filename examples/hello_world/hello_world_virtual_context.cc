@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                        hello_world_virtual_context.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,74 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
+struct HelloMsg : vt::Message {
+  vt::VirtualProxyType proxy;
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+  explicit HelloMsg(vt::VirtualProxyType const& in_proxy)
+    : proxy(in_proxy)
+  { }
+};
 
-namespace vt { namespace param {
+struct TestMsg : vt::vrt::VirtualMessage {
+  int from = 0;
 
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
+  explicit TestMsg(int const& in_from)
+    : from(in_from)
+  { }
+};
 
-template<typename T, T value>
-struct NonType {};
+struct MyVC : vt::vrt::VirtualContext {
+  int my_data = 10;
 
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
+  explicit MyVC(int const& my_data_in)
+    : my_data(my_data_in)
+  { }
+};
 
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
+static void my_han(TestMsg* msg, MyVC* vc) {
+  auto this_node = vt::theContext()->getNode();
+  fmt::print(
+    "{}: vc={}: msg->from={}, vc->my_data={}\n",
+    this_node, print_ptr(vc), msg->from, vc->my_data
   );
 }
 
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
+static void sendMsgToProxy(vt::VirtualProxyType const& proxy) {
+  auto this_node = vt::theContext()->getNode();
+  fmt::print("{}: sendMsgToProxy: proxy={}\n", this_node, proxy);
+
+  auto m = vt::makeMessage<TestMsg>(this_node + 32);
+  vt::theVirtualManager()->sendMsg<MyVC, TestMsg, my_han>(proxy, m.get());
 }
 
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+static void hello_world(HelloMsg* msg) {
+  auto this_node = vt::theContext()->getNode();
+  fmt::print("{}: hello: proxy={}\n", this_node, msg->proxy);
+  sendMsgToProxy(msg->proxy);
+}
+
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
+  if (num_nodes == 1) {
+    return vt::rerror("requires at least 2 nodes");
   }
+
+  if (this_node == 0) {
+    auto proxy = vt::theVirtualManager()->makeVirtual<MyVC>(29);
+    sendMsgToProxy(proxy);
+
+    // send out the proxy to all the nodes
+    auto msg = vt::makeMessage<HelloMsg>(proxy);
+    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg.get());
+  }
+
+  vt::finalize();
+
+  return 0;
 }
-
-}} /* end namespace vt::param */
-
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/

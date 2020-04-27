@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                             group_collective.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,71 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
+struct HelloMsg : vt::Message {
+  int from;
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+  explicit HelloMsg(int const& in_from)
+    : from(in_from)
+  { }
+};
 
-namespace vt { namespace param {
+struct HelloGroupMsg : vt::Message { };
 
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
-
-template<typename T, T value>
-struct NonType {};
-
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
-
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
+static void hello_group_handler(HelloGroupMsg* msg) {
+  fmt::print("{}: Hello from group handler\n", vt::theContext()->getNode());
 }
 
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
+using ReduceMsg = vt::collective::ReduceTMsg<int>;
 
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+struct Print {
+  void operator()(ReduceMsg* msg) {
+    fmt::print("final value={}\n", msg->getConstVal());
   }
+};
+
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
+  if (num_nodes < 2) {
+    return vt::rerror("requires at least 2 nodes");
+  }
+
+  srand48(this_node * 29);
+
+  bool odd_node_filter = this_node % 2 == 1;
+
+  vt::GroupType new_group = vt::theGroup()->newGroupCollective(
+    odd_node_filter, [=](vt::GroupType group){
+      auto const& root = 0;
+      auto const& in_group = vt::theGroup()->inGroup(group);
+      auto const& root_node = vt::theGroup()->groupRoot(group);
+      auto const& is_default_group = vt::theGroup()->groupDefault(group);
+      fmt::print(
+        "{}: Group is created: group={}, in_group={}, root={}, "
+        "is_default_group={}\n",
+        this_node, group, in_group, root_node, is_default_group
+      );
+      if (in_group) {
+        using Op = vt::collective::PlusOp<int>;
+        auto msg = vt::makeMessage<ReduceMsg>(1);
+        vt::theGroup()->groupReduce(group)->reduce<Op, Print>(root, msg.get());
+      }
+      if (this_node == 1) {
+        auto msg = vt::makeMessage<HelloGroupMsg>();
+        vt::envelopeSetGroup(msg->env, group);
+        vt::theMsg()->broadcastMsg<HelloGroupMsg, hello_group_handler>(msg.get());
+      }
+    }
+  );
+
+  fmt::print("{}: New group={}\n", this_node, new_group);
+
+  vt::finalize();
+
+  return 0;
 }
-
-}} /* end namespace vt::param */
-
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/

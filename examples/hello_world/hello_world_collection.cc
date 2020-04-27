@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                          hello_world_collection.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,44 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
+struct Hello : vt::Collection<Hello, vt::Index1D> {
+  Hello() = default;
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
-
-namespace vt { namespace param {
-
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
-
-template<typename T, T value>
-struct NonType {};
-
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
-
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
-}
-
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
-
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+  virtual ~Hello() {
+    vtAssert(counter_ == 1, "Must be equal");
   }
+
+  using TestMsg = vt::CollectionMessage<Hello>;
+
+  void doWork(TestMsg* msg) {
+    fmt::print("Hello from {}\n", this->getIndex());
+    counter_++;
+  }
+
+private:
+  int32_t counter_ = 0;
+};
+
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  vt::NodeType this_node = vt::theContext()->getNode();
+
+  int num_elms = 64;
+
+  if (argc > 1) {
+    num_elms = atoi(argv[1]);
+  }
+
+  if (this_node == 0) {
+    auto range = vt::Index1D(num_elms);
+    auto proxy = vt::theCollection()->construct<Hello>(range);
+    proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
+  }
+
+  vt::finalize();
+
+  return 0;
 }
-
-}} /* end namespace vt::param */
-
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/

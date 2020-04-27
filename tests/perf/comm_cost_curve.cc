@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                              comm_cost_curve.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,91 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
 
-#include "vt/config.h"
+#include <vt/transport.h>
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+#include <cstdlib>
+#include <array>
 
-namespace vt { namespace param {
+struct PingMsg : vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // by payload_
 
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
+  PingMsg() = default;
+  explicit PingMsg(int64_t size) {
+    payload_.resize(size);
+  }
 
-template<typename T, T value>
-struct NonType {};
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | payload_;
+  }
 
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
+  std::vector<char> payload_;
+};
 
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
+static constexpr int64_t const max_bytes = 0x1000000;
+static int pings = 64;
+static bool is_done = false;
+
+static void done(PingMsg* msg) {
+  is_done = true;
 }
 
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
-
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+static void handler(PingMsg*) {
+  static int count = 0;
+  count++;
+  if (count == pings) {
+    auto msg = vt::makeMessage<PingMsg>(1);
+    vt::theMsg()->sendMsg<PingMsg,done>(0, msg.get());
+    count = 0;
   }
 }
 
-}} /* end namespace vt::param */
+template <int64_t bytes>
+void sender() {
+  auto start = vt::timing::Timing::getCurrentTime();
+  for (int i = 0; i < pings; i++) {
+    auto msg = vt::makeMessage<PingMsg>(bytes);
+    vt::theMsg()->sendMsg<PingMsg,handler>(1, msg.get());
+  }
+  while (not is_done) vt::runScheduler();
+  is_done = false;
+  auto time = (vt::timing::Timing::getCurrentTime() - start) / pings;
+  auto Mb = static_cast<double>(bytes) / 1024.0 / 1024.0;
+  fmt::print("{:<8} {:<16} 0x{:<10x} {:<22} {:<22}\n", pings, bytes, bytes, Mb, time);
+}
 
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/
+template <int64_t bytes>
+void send() {
+  sender<bytes>();
+  send<bytes << 1>();
+}
+
+template <>
+void send<max_bytes>() {
+  sender<max_bytes>();
+}
+
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  auto const this_node = vt::theContext()->getNode();
+
+  if (argc == 2) {
+    pings = atoi(argv[1]);
+  } else {
+    pings = 10;
+  }
+
+  if (this_node == 0) {
+    fmt::print(
+      "{:<8} {:<16} 0x{:<10} {:<22} {:<22}\n",
+      "Pings", "Bytes", "Bytes", "Mb", "Time per"
+    );
+    send<0x1>();
+  }
+
+  vt::finalize();
+}

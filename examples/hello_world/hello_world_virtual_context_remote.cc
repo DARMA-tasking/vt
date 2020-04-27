@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                    hello_world_virtual_context_remote.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,48 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
+struct TestMsg : vt::vrt::VirtualMessage {
+  int from = 0;
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+  explicit TestMsg(int const& in_from)
+    : from(in_from)
+  { }
+};
 
-namespace vt { namespace param {
+struct MyVC : vt::vrt::VirtualContext {
+  int my_data = -1;
 
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
-
-template<typename T, T value>
-struct NonType {};
-
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
-
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
-}
-
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
-
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+  explicit MyVC(int const& my_data_in)
+    : my_data(my_data_in)
+  {
+    fmt::print("constructing myVC: data={}\n", my_data_in);
   }
+};
+
+static void testHan(TestMsg* msg, MyVC* vc) {
+  fmt::print("testHan: msg->from={}, my_data={}\n", msg->from, vc->my_data);
 }
 
-}} /* end namespace vt::param */
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
 
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
+  if (num_nodes == 1) {
+    return vt::rerror("requires at least 2 nodes");
+  }
+
+  if (this_node == 0) {
+    // Create a virtual context remotely on node 1, getting a proxy to it
+    auto proxy = vt::theVirtualManager()->makeVirtualNode<MyVC>(1, 45);
+    auto msg = vt::makeMessage<TestMsg>(this_node);
+    vt::theVirtualManager()->sendMsg<MyVC, TestMsg, testHan>(proxy, msg.get());
+  }
+
+  vt::finalize();
+
+  return 0;
+}

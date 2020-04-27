@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                                   ring.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,58 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
+static int num_total_rings = 2;
+static int num_times = 0;
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+struct RingMsg : vt::Message {
+  vt::NodeType from = vt::uninitialized_destination;
 
-namespace vt { namespace param {
+  explicit RingMsg(vt::NodeType const& in_from)
+    : from(in_from)
+  { }
+};
 
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
+static void sendToNext();
 
-template<typename T, T value>
-struct NonType {};
+static void ring(RingMsg* msg) {
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
+  fmt::print("{}: Hello from node {}: num_times={}\n", this_node, msg->from, num_times);
 
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
-}
+  num_times++;
 
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
-
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+  if (msg->from != num_nodes - 1 or num_times < num_total_rings) {
+    sendToNext();
   }
 }
 
-}} /* end namespace vt::param */
+static void sendToNext() {
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+  vt::NodeType next_node = this_node + 1 >= num_nodes ? 0 : this_node + 1;
 
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/
+  auto msg = vt::makeMessage<RingMsg>(this_node);
+  vt::theMsg()->sendMsg<RingMsg, ring>(next_node, msg.get());
+}
+
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
+
+  if (num_nodes == 1) {
+    return vt::rerror("requires at least 2 nodes");
+  }
+
+  if (this_node == 0) {
+    sendToNext();
+  }
+
+  vt::finalize();
+
+  return 0;
+}

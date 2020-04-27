@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                          test_collection_group.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,58 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
+#include "test_parallel_harness.h"
+#include "test_collection_common.h"
+#include "data_message.h"
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+#include "vt/transport.h"
 
-namespace vt { namespace param {
+#include <cstdint>
 
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
+namespace vt { namespace tests { namespace unit {
 
-template<typename T, T value>
-struct NonType {};
+struct MyReduceMsg : collective::ReduceTMsg<int> {
+  explicit MyReduceMsg(int const in_num)
+    : collective::ReduceTMsg<int>(in_num)
+  { }
+};
 
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
+struct ColA : Collection<ColA,Index1D> {
+  struct TestMsg : CollectionMessage<ColA> { };
 
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
-}
+  void finishedReduce(MyReduceMsg* m) {
+    fmt::print("at root: final num={}\n", m->getVal());
+    finished = true;
+  }
 
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
+  void doReduce(TestMsg* msg) {
+    auto const proxy = getCollectionProxy();
+    auto cb = theCB()->makeBcast<ColA, MyReduceMsg, &ColA::finishedReduce>(proxy);
+    auto reduce_msg = makeMessage<MyReduceMsg>(getIndex().x());
+    proxy.reduce<collective::PlusOp<int>>(reduce_msg.get(),cb);
+  }
 
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+  virtual ~ColA() {
+    EXPECT_TRUE(finished);
+  }
+
+private:
+  bool finished = false;
+};
+
+struct TestCollectionGroup : TestParallelHarness { };
+
+
+TEST_F(TestCollectionGroup, test_collection_group_1) {
+  auto const my_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  if (my_node == 0) {
+    auto const range = Index1D(std::max(num_nodes / 2, 1));
+    auto const proxy = theCollection()->construct<ColA>(range);
+    proxy.broadcast<ColA::TestMsg,&ColA::doReduce>();
   }
 }
 
-}} /* end namespace vt::param */
-
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/
+}}} // end namespace vt::tests::unit

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 param_meta.h
+//                          rdma_simple_get_direct.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,56 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
+#include <memory>
 
-#include <tuple>
-#include <utility>
-#include <functional>
-#include <type_traits>
+static int const my_data_len = 8;
+static std::unique_ptr<double[]> my_data = nullptr;
 
-namespace vt { namespace param {
+struct HandleMsg : vt::Message {
+  vt::RDMA_HandleType han;
+  explicit HandleMsg(vt::RDMA_HandleType const& in_han) : han(in_han) { }
+};
 
-template <typename... Args>
-using MultiParamType = void(*)(Args...);
+static void tellHandle(HandleMsg* msg) {
+  vt::NodeType this_node = vt::theContext()->getNode();
 
-template<typename T, T value>
-struct NonType {};
-
-#define PARAM_FUNCTION_RHS(value) vt::param::NonType<decltype(&value),(&value)>()
-#define PARAM_FUNCTION(value) decltype(&value),(&value)
-
-template <typename Function, typename Tuple, size_t... I>
-auto callFnTuple(Function f, Tuple t, std::index_sequence<I...>) {
-  return f(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(t)
-    )...
-  );
-}
-
-template <size_t size, typename TypedFnT, typename... Args>
-void invokeFnTuple(TypedFnT f, std::tuple<Args...> t) {
-  using TupleType = std::tuple<Args...>;
-  callFnTuple(f, std::forward<TupleType>(t), std::make_index_sequence<size>{});
-}
-
-template <typename FnT, typename... Args>
-void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functor) {
-  using TupleType = typename std::decay<decltype(tup)>::type;
-  static constexpr auto size = std::tuple_size<TupleType>::value;
-  if (is_functor) {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
-  } else {
-    auto typed_fn = reinterpret_cast<MultiParamType<Args...>>(fn);
-    return invokeFnTuple<size>(typed_fn, tup);
+  if (this_node != 0) {
+    fmt::print("{}: handle={}, requesting data\n", this_node, msg->han);
+    int const num_elm = 2;
+    vt::theRDMA()->getTypedDataInfoBuf(
+      msg->han, &my_data[0], num_elm, vt::no_byte, vt::no_tag, [=]{
+        for (auto i = 0; i < num_elm; i++) {
+          fmt::print("node {}: \t: my_data[{}] = {}\n", this_node, i, my_data[i]);
+        }
+      }
+    );
   }
 }
 
-}} /* end namespace vt::param */
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
 
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/
+  vt::NodeType this_node = vt::theContext()->getNode();
+
+  my_data = std::make_unique<double[]>(my_data_len);
+
+  // initialize my_data buffer, all but node 0 get -1.0
+  for (auto i = 0; i < my_data_len; i++) {
+    my_data[i] = this_node == 0 ? (this_node+1)*i+1 : -1.0;
+  }
+
+  if (this_node == 0) {
+    vt::RDMA_HandleType my_handle =
+      vt::theRDMA()->registerNewTypedRdmaHandler(&my_data[0], my_data_len);
+
+    auto msg = vt::makeMessage<HandleMsg>(this_node);
+    msg->han = my_handle;
+    vt::theMsg()->broadcastMsg<HandleMsg, tellHandle>(msg.get());
+  }
+
+  vt::finalize();
+
+  return 0;
+}
