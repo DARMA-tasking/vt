@@ -55,8 +55,8 @@
 namespace vt { namespace vrt { namespace collection {
 
 /*
- * `CollectionIndexProxy' (variant with IndexT baked into class, allowing
- * constructors to be forwarded for building indicies in line without the type.
+ * `CollectionProxy' (variant with IndexT baked into class, allowing
+ * constructors to be forwarded for building indices in line without the type.
  */
 
 template <typename ColT, typename IndexT = typename ColT::IndexType>
