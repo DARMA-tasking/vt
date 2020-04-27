@@ -109,6 +109,12 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
   >
   ElmProxyType operator()(IndexU const& idx) const;
 
+  /**
+   * Sets a subphase from which load records should be considered, in
+   * place of the summed load over the entire phase.
+   *
+   * This must be called on every process
+   */
   void setFocusedSubPhase(balance::ElementStats::SubphaseType subphase);
 };
 
