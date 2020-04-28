@@ -96,36 +96,31 @@ Channel::initChannelGroup() {
   );
 
   MPI_Group world;
-  auto const& group_create_ret = MPI_Comm_group(theContext()->getComm(), &world);
-
-  vtAssert(
-    group_create_ret == MPI_SUCCESS,
-    "MPI_Comm_group: Should be successful"
-  );
-
   int channel_group_nodes[2] = {};
-
   channel_group_nodes[target_pos_] = target_;
   channel_group_nodes[non_target_pos_] = non_target_;
 
-  auto const& group_incl_ret = MPI_Group_incl(
-    world, 2, channel_group_nodes, &channel_group_
-  );
+  {
+    VT_ALLOW_MPI_CALLS;
 
-  vtAssert(
-    group_incl_ret == MPI_SUCCESS, "MPI_Group_incl: Should be successful"
-  );
-
-  theRDMA()->collective_scope_.mpiCollectiveWait([&]{
-    auto const& comm_create_ret = MPI_Comm_create_group(
-      theContext()->getComm(), channel_group_, channel_group_tag_, &channel_comm_
+    const int group_create_ret = MPI_Comm_group(
+      theContext()->getComm(), &world
     );
+    vtAssertMPISuccess(group_create_ret, "MPI_Comm_group");
 
-    vtAssert(
-      comm_create_ret == MPI_SUCCESS,
-      "MPI_Comm_create_group: Should be successful"
+    const int group_incl_ret = MPI_Group_incl(
+      world, 2, channel_group_nodes, &channel_group_
     );
-  });
+    vtAssertMPISuccess(group_incl_ret, "MPI_Group_incl");
+
+    theRDMA()->collective_scope_.mpiCollectiveWait([&]{
+      auto const& comm_create_ret = MPI_Comm_create_group(
+        theContext()->getComm(), channel_group_, channel_group_tag_, &channel_comm_
+      );
+
+      vtAssertMPISuccess(comm_create_ret, "MPI_Comm_create_group");
+    });
+  }
 
   debug_print(
     rdma_channel, node,
@@ -186,6 +181,7 @@ Channel::lockChannelForOp() {
   vtAssert(initialized_, "Channel must be initialized");
 
   if (not locked_) {
+    VT_ALLOW_MPI_CALLS;
     constexpr int const mpi_win_lock_assert_arg = 0;
 
     auto const& lock_type =
@@ -201,7 +197,7 @@ Channel::lockChannelForOp() {
       lock_type, MPI_LOCK_EXCLUSIVE
     );
 
-    auto const ret = MPI_Win_lock(
+    const int ret = MPI_Win_lock(
       lock_type, target_pos_, mpi_win_lock_assert_arg, window_
     );
 
@@ -222,7 +218,8 @@ Channel::unlockChannelForOp() {
   vtAssert(initialized_, "Channel must be initialized");
 
   if (locked_) {
-    auto const& ret = MPI_Win_unlock(target_pos_, window_);
+    VT_ALLOW_MPI_CALLS;
+    const int ret = MPI_Win_unlock(target_pos_, window_);
 
     vtAssert(ret == MPI_SUCCESS, "MPI_Win_unlock: Should be successful");
 
@@ -264,13 +261,15 @@ Channel::writeDataToChannel(
   );
 
   if (op_type_ == RDMA_TypeType::Get) {
-    auto const& get_ret = MPI_Get(
+    VT_ALLOW_MPI_CALLS;
+    const int get_ret = MPI_Get(
       ptr, ptr_num_bytes, MPI_BYTE, target_pos_, d_offset, num_bytes_,
       MPI_BYTE, window_
     );
     vtAssert(get_ret == MPI_SUCCESS, "MPI_Get: Should be successful");
   } else if (op_type_ == RDMA_TypeType::Put) {
-    auto const& put_ret = MPI_Put(
+    VT_ALLOW_MPI_CALLS;
+    const int put_ret = MPI_Put(
       ptr, ptr_num_bytes, MPI_BYTE, target_pos_, d_offset, num_bytes_,
       MPI_BYTE, window_
     );
@@ -286,6 +285,7 @@ Channel::freeChannel() {
     unlockChannelForOp();
   }
   if (initialized_) {
+    VT_ALLOW_MPI_CALLS;
     MPI_Win_free(&window_);
     MPI_Group_free(&channel_group_);
     MPI_Comm_free(&channel_comm_);
@@ -298,6 +298,7 @@ Channel::freeChannel() {
 
 void
 Channel::initChannelWindow() {
+
   debug_print(
     rdma_channel, node,
     "channel: create window: num_bytes={}\n", num_bytes_
@@ -316,9 +317,7 @@ Channel::initChannelWindow() {
       );
     }
 
-    vtAssert(
-      win_create_ret == MPI_SUCCESS, "MPI_Win_create: Should be successful"
-    );
+    vtAssertMPISuccess(win_create_ret, "MPI_Win_create");
   });
 
   initialized_ = true;

@@ -53,6 +53,7 @@
 #include "vt/timing/timing.h"
 #include "vt/scheduler/priority.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
+#include "vt/runtime/mpi_access.h"
 
 namespace vt { namespace messaging {
 
@@ -212,6 +213,7 @@ EventType ActiveMessenger::sendMsgBytes(
   );
 
   {
+    VT_ALLOW_MPI_CALLS;
     #if backend_check_enabled(trace_enabled)
       double tr_begin = 0;
       if (ArgType::vt_trace_mpi) {
@@ -219,10 +221,11 @@ EventType ActiveMessenger::sendMsgBytes(
       }
     #endif
 
-    MPI_Isend(
+    const int ret = MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
       mpi_event->getRequest()
     );
+    vtAssertMPISuccess(ret, "MPI_Isend");
 
     #if backend_check_enabled(trace_enabled)
       if (ArgType::vt_trace_mpi) {
@@ -357,6 +360,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   );
 
   {
+    VT_ALLOW_MPI_CALLS;
     #if backend_check_enabled(trace_enabled)
       double tr_begin = 0;
       if (ArgType::vt_trace_mpi) {
@@ -364,10 +368,11 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
       }
     #endif
 
-    MPI_Isend(
+    const int ret = MPI_Isend(
       data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
       mpi_event->getRequest()
     );
+    vtAssertMPISuccess(ret, "MPI_Isend");
 
     #if backend_check_enabled(trace_enabled)
       if (ArgType::vt_trace_mpi) {
@@ -445,10 +450,11 @@ bool ActiveMessenger::recvDataMsgBuffer(
     MPI_Status stat;
     int flag;
 
-    MPI_Iprobe(
+    const int probe_ret = MPI_Iprobe(
       node == uninitialized_destination ? MPI_ANY_SOURCE : node,
       tag, theContext()->getComm(), &flag, &stat
     );
+    vtAssertMPISuccess(probe_ret, "MPI_Iprobe");
 
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
@@ -469,6 +475,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
       MPI_Request req;
 
       {
+        VT_ALLOW_MPI_CALLS;
+
         #if backend_check_enabled(trace_enabled)
           double tr_begin = 0;
           if (ArgType::vt_trace_mpi) {
@@ -476,10 +484,11 @@ bool ActiveMessenger::recvDataMsgBuffer(
           }
         #endif
 
-        MPI_Irecv(
+        const int recv_ret = MPI_Irecv(
           buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
           theContext()->getComm(), &req
         );
+        vtAssertMPISuccess(recv_ret, "MPI_Irecv");
 
         #if backend_check_enabled(trace_enabled)
           if (ArgType::vt_trace_mpi) {
@@ -770,6 +779,8 @@ bool ActiveMessenger::deliverActiveMsg(
 }
 
 bool ActiveMessenger::tryProcessIncomingActiveMsg() {
+  VT_ALLOW_MPI_CALLS; // MPI_Iprove, MPI_Irecv, MPI_Test
+
   CountType num_probe_bytes;
   MPI_Status stat;
   int flag;
