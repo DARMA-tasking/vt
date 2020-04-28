@@ -55,10 +55,12 @@
 #include <zoltan.h>
 
 #include <memory>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct ZoltanLB : BaseLB {
+  using ReduceMsg = collective::ReduceTMsg<int>;
 
   ZoltanLB() = default;
 
@@ -92,6 +94,33 @@ private:
   void destroyZoltan();
   void setParams();
   std::unique_ptr<Graph> makeGraph();
+  void makeGraphSymmetric();
+  void combineEdges();
+  void countEdges();
+  void allocateEdges();
+  void reduceCount(ReduceMsg* msg);
+  void allocateShareEdgeGIDs();
+
+  struct CommMsg : vt::Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required(); // comm_
+
+    CommMsg() = default;
+    explicit CommMsg(ElementCommType in_comm)
+      : comm_(in_comm)
+    { }
+
+    ElementCommType comm_;
+
+    template <typename SerializerT>
+    void serialize(SerializerT& s) {
+      MessageParentType::serialize(s);
+      s | comm_;
+    }
+  };
+
+  void recvSharedEdges(CommMsg* msg);
+  void recvEdgeGID(CommMsg* msg);
 
 private:
   static int getNumberOfVertices(void *data, int *ierr);
@@ -116,7 +145,13 @@ private:
 private:
   objgroup::proxy::Proxy<ZoltanLB> proxy = {};
   Zoltan_Struct* zoltan_ = nullptr;
-  bool do_edges_ = true;
+  bool do_edges_ = false;
+  bool use_shared_edges_ = false;
+  std::unordered_map<std::string, std::string> zoltan_config_;
+  ElementCommType load_comm_symm;
+  ElementCommType load_comm_edge_id;
+  int max_edges_per_node_ = 0;
+  balance::ElementIDType edge_id_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

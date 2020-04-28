@@ -103,6 +103,7 @@ struct LBCommKey {
   ElementIDType from_temp_ = no_element_id;
   ElementIDType to_        = no_element_id;
   ElementIDType to_temp_   = no_element_id;
+  ElementIDType edge_id_   = no_element_id;
   NodeType nfrom_          = uninitialized_destination;
   NodeType nto_            = uninitialized_destination;
   CommCategory  cat_       = CommCategory::SendRecv;
@@ -113,6 +114,7 @@ struct LBCommKey {
   ElementIDType toObjTemp()    const { return to_temp_; }
   ElementIDType fromNode()     const { return nfrom_; }
   ElementIDType toNode()       const { return nto_; }
+  ElementIDType edgeID()       const { return edge_id_; }
 
   bool selfEdge() const { return cat_ == CommCategory::SendRecv and from_ == to_; }
   bool offNode() const {
@@ -137,7 +139,7 @@ struct LBCommKey {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | from_ | to_ | from_temp_ | to_temp_ | nfrom_ | nto_ | cat_;
+    s | from_ | to_ | from_temp_ | to_temp_ | nfrom_ | nto_ | cat_ | edge_id_;
   }
 };
 
