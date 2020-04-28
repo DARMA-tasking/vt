@@ -43,6 +43,7 @@
 */
 
 #include <vt/transport.h>
+#include "vt/runtime/mpi_access.h"
 
 #include <vector>
 
