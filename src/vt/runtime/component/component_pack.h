@@ -153,7 +153,7 @@ public:
    *
    * \return whether it is live
    */
-  bool live() const { return live_; }
+  bool isLive() const { return live_; }
 
 private:
   /// Whether the pack is live

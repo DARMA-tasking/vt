@@ -110,12 +110,12 @@ DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
 namespace vt { namespace debug {
 
 NodeType preNode() {
-  return ::vt::curRT != nullptr and ::vt::curRT->live() ?
+  return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
     theContext()->getNode() :
     -1;
 }
 NodeType preNodes() {
-  return ::vt::curRT != nullptr and ::vt::curRT->live() ?
+  return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
     theContext()->getNumNodes() :
     -1;
 }
