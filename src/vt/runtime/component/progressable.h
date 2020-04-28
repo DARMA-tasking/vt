@@ -54,6 +54,12 @@ namespace vt { namespace runtime { namespace component {
  * progress from the scheduler
  */
 struct Progressable {
+
+  /**
+   * \brief Progress function for incremental polling
+   *
+   * \return the number of units executed---zero if no progress was made
+   */
   virtual int progress() = 0;
 };
 
