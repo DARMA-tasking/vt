@@ -1017,7 +1017,7 @@ bool Runtime::finalize(bool const force_now) {
     sync();
     // This destroys and finalizes all components in proper reverse
     // initialization order
-    p_ = nullptr;
+    p_.reset(nullptr);
     sync();
     sync();
     if (is_zero) {
