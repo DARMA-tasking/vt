@@ -83,6 +83,11 @@ else
     cmake --build . --target install
 fi
 
+if test ${VT_ZOLTAN_ENABLED:-0} -eq 1
+then
+    export ZOLTAN_CONFIG=${ZOLTAN_DIR:-""}
+fi
+
 export VT=${source_dir}
 export VT_BUILD=${build_dir}/vt
 mkdir -p "$VT_BUILD"
@@ -96,6 +101,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_mimalloc_enabled="${VT_MIMALLOC_ENABLED:-0}" \
       -Dvt_asan_enabled="${VT_ASAN_ENABLED:-0}" \
       -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
+      -Dzoltan_DIR="${ZOLTAN_CONFIG:-}" \
       -DMI_INTERPOSE:BOOL=ON \
       -DMI_OVERRIDE:BOOL=ON \
       -DMPI_EXTRA_FLAGS="${MPI_EXTRA_FLAGS:-}" \
