@@ -50,16 +50,18 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_ZOLTAN AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ZOLTAN)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: zoltan=${ARG_LINK_ZOLTAN}")
-    endif()
+    if (vt_zoltan_enabled)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: zoltan=${ARG_LINK_ZOLTAN}")
+      endif()
 
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} zoltan
-    )
-    target_include_directories(
-      ${ARG_TARGET} PUBLIC $<BUILD_INTERFACE:${Zoltan_INCLUDE_DIRS}>
-    )
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} zoltan
+        )
+      target_include_directories(
+        ${ARG_TARGET} PUBLIC $<BUILD_INTERFACE:${Zoltan_INCLUDE_DIRS}>
+        )
+    endif()
   endif()
 
   if (${ARG_LINK_GTEST})
