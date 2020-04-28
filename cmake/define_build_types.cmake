@@ -140,6 +140,14 @@ else()
   set(vt_feature_cmake_mimalloc "0")
 endif()
 
+if (vt_mpi_guards)
+  message(STATUS "Building VT with user MPI prevention guards enabled")
+  set(vt_feature_cmake_mpi_access_guards "1")
+else()
+  message(STATUS "Building VT with user MPI prevention guards disabled")
+  set(vt_feature_cmake_mpi_access_guards "0")
+endif()
+
 set(vt_feature_cmake_no_feature "0")
 set(vt_feature_cmake_production "0")
 

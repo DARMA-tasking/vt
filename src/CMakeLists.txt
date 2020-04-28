@@ -8,6 +8,7 @@ set(TOP_LEVEL_SUBDIRS
   objgroup
   pool
   pipe
+  pmpi
   rdma
   topos
   vrt
