@@ -67,7 +67,7 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
     MPI_Init(&argc, &argv);
   }
 
-  if (comm != nullptr) {
+  if (comm != nullptr and *comm != MPI_COMM_NULL) {
     communicator_ = *comm;
   } else {
     communicator_ = MPI_COMM_WORLD;

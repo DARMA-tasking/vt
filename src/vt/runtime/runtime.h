@@ -180,7 +180,7 @@ protected:
   bool runtime_active_ = false;
   bool is_interop_ = false;
   WorkerCountType num_workers_ = no_workers;
-  std::unique_ptr<MPI_Comm> communicator_ = nullptr;
+  MPI_Comm communicator_ = MPI_COMM_NULL;
   int user_argc_ = 0;
   char** user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;

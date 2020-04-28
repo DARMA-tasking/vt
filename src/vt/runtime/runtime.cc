@@ -94,7 +94,7 @@ Runtime::Runtime(
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers),
      communicator_(
-       in_comm == nullptr ? nullptr : std::make_unique<MPI_Comm>(*in_comm)
+       in_comm == nullptr ? MPI_COMM_NULL : *in_comm
      ),
      user_argc_(argc),
      user_argv_(argv)
@@ -1032,7 +1032,7 @@ bool Runtime::finalize(bool const force_now) {
 }
 
 void Runtime::sync() {
-  MPI_Barrier(*communicator_);
+  MPI_Barrier(communicator_);
 }
 
 void Runtime::runScheduler() {
@@ -1040,7 +1040,7 @@ void Runtime::runScheduler() {
 }
 
 void Runtime::reset() {
-  MPI_Barrier(*communicator_);
+  MPI_Barrier(communicator_);
 
   runtime_active_ = true;
 
@@ -1048,7 +1048,7 @@ void Runtime::reset() {
   theTerm->addDefaultAction(action);
   theTerm->resetGlobalTerm();
 
-  MPI_Barrier(*communicator_);
+  MPI_Barrier(communicator_);
 
   // Without workers running on the node, the termination detector should
   // assume its locally ready to propagate instead of waiting for them to
@@ -1176,7 +1176,7 @@ void Runtime::setup() {
 }
 
 void Runtime::finalizeMPI() {
-  MPI_Barrier(*communicator_);
+  MPI_Barrier(communicator_);
 
   if (not is_interop_) {
     MPI_Finalize();
@@ -1193,7 +1193,7 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<ctx::Context>(
     &theContext, Deps<>{},
-    user_argc_, user_argv_, is_interop_, communicator_.get()
+    user_argc_, user_argv_, is_interop_, &communicator_
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
@@ -1389,8 +1389,8 @@ void Runtime::initializeComponents() {
 
   p_->construct();
 
-  if (communicator_ == nullptr) {
-    communicator_ = std::make_unique<MPI_Comm>(theContext->getComm());
+  if (communicator_ == MPI_COMM_NULL) {
+    communicator_ = theContext->getComm();
   }
 
   debug_print(runtime, node, "end: initializeComponents\n");
