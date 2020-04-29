@@ -121,8 +121,7 @@ public:
 
   /**
    * \brief Enqueue a lambda with an embedded closed set of MPI
-   * collectives. Spin in the VT scheduler until it terminates. All other nodes
-   * must not depend on this node to enqueue a matching collective.
+   * collectives. Spin in the VT scheduler until it terminates.
    *
    * \param[in] action the action containing an MPI collective
    */
