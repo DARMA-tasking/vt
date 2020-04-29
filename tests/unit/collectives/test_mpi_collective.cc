@@ -81,25 +81,32 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
     done++;
   });
 
-  theCollective()->mpiCollective([&done]{
+  auto this_node = theContext()->getNode();
+  int root = 0;
+  int bcast_val = this_node == root ? 29 : 0;
+
+  theCollective()->mpiCollective([&done,&bcast_val]{
     auto comm = theContext()->getComm();
-    int val = 0;
     vt_print(barrier, "run MPI_Bcast\n");
-    MPI_Bcast(&val, 1, MPI_INT, 0, comm);
+    MPI_Bcast(&bcast_val, 1, MPI_INT, 0, comm);
     done++;
   });
 
-  theCollective()->mpiCollective([&done]{
+  int reduce_val_out = 0;
+
+  theCollective()->mpiCollective([&done,&reduce_val_out]{
     auto comm = theContext()->getComm();
     int val_in = 1;
-    int val_out = 0;
     vt_print(barrier, "run MPI_Reduce\n");
-    MPI_Reduce(&val_in, &val_out, 1, MPI_INT, MPI_SUM, 0, comm);
+    MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
     done++;
   });
 
-  theTerm()->addAction([&done]{
+  theTerm()->addAction([&done,&bcast_val,&reduce_val_out]{
+    auto num_nodes = theContext()->getNumNodes();
     EXPECT_EQ(done, 3);
+    EXPECT_EQ(bcast_val, 29);
+    EXPECT_EQ(reduce_val_out, num_nodes);
   });
 
   while (not vt::rt->isTerminated()) {
