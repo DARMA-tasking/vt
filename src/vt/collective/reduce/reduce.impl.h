@@ -157,18 +157,20 @@ void Reduce::reduceAddMsg(
     msg->reduce_objgroup_
   };
 
-  auto exists = ReduceStateHolder<MessageT>::exists(group_,lookup);
+  auto exists = state_.exists(group_,lookup);
   if (not exists) {
     auto num_contrib_state = num_contrib == -1 ? 1 : num_contrib;
-    ReduceState<MessageT> state(
+    ReduceState state(
       msg->reduce_tag_,msg->reduce_seq_,num_contrib_state
     );
-    ReduceStateHolder<MessageT>::insert(group_,lookup,std::move(state));
+    state_.insert(group_,lookup,std::move(state));
   }
 
-  auto& state = ReduceStateHolder<MessageT>::find(group_,lookup);
+  auto& state = state_.find(group_,lookup);
   auto msg_ptr = promoteMsg(msg);
-  state.msgs.push_back(msg_ptr);
+
+  // Run-time cast with lasting type info to ReduceMsg for holder
+  state.msgs.push_back(msg_ptr.template to<ReduceMsg>());
   if (num_contrib != -1) {
     state.num_contrib_ = num_contrib;
   }
@@ -191,7 +193,7 @@ void Reduce::startReduce(
   ObjGroupProxyType objgroup, bool use_num_contrib
 ) {
   auto lookup = ReduceIdentifierType{tag,seq,proxy,objgroup};
-  auto& state = ReduceStateHolder<MessageT>::find(group_,lookup);
+  auto& state = state_.find(group_,lookup);
 
   std::size_t nmsgs = state.msgs.size();
   auto const contrib =
@@ -213,15 +215,17 @@ void Reduce::startReduce(
       auto size = state.msgs.size();
       for (decltype(size) i = 0; i < size; i++) {
         bool const has_next = i+1 < size;
-        state.msgs[i]->next_ = has_next ? state.msgs[i+1].get() : nullptr;
-        state.msgs[i]->count_ = size - i;
-        state.msgs[i]->is_root_ = false;
+        auto typed_msg = static_cast<MessageT*>(state.msgs[i].get());
+        typed_msg->next_ = has_next ?
+          static_cast<MessageT*>(state.msgs[i+1].get()) : nullptr;
+        typed_msg->count_ = size - i;
+        typed_msg->is_root_ = false;
 
         debug_print(
           reduce, node,
           "i={} next={} has_next={} count={} msgs.size()={}, ref={}\n",
-          i, print_ptr(state.msgs[i]->next_), has_next, state.msgs[i]->count_,
-          size, envelopeGetRef(state.msgs[i]->env)
+          i, print_ptr(typed_msg->next_), has_next, typed_msg->count_,
+          size, envelopeGetRef(typed_msg->env)
         );
       }
 

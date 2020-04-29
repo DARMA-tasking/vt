@@ -54,10 +54,9 @@
 
 namespace vt { namespace collective { namespace reduce {
 
-template <typename T>
 struct ReduceState {
   using ReduceNumType = int32_t;
-  using ReduceVecType = std::vector<MsgSharedPtr<T>>;
+  using ReduceVecType = std::vector<MsgSharedPtr<ReduceMsg>>;
 
   ReduceState(
     TagType in_tag_, SequentialIDType in_seq_id_, ReduceNumType in_num_contrib

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          reduce_state_holder.impl.h
+//                           reduce_state_holder.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,15 +42,12 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H
-
 #include "vt/config.h"
+#include "vt/collective/reduce/reduce_state_holder.h"
 
 namespace vt { namespace collective { namespace reduce {
 
-template <typename T>
-/*static*/ bool ReduceStateHolder<T>::exists(
+bool ReduceStateHolder::exists(
   GroupType group, ReduceIDType const& id
 ) {
   auto group_iter = state_lookup_.find(group);
@@ -66,9 +63,8 @@ template <typename T>
   }
 }
 
-template <typename T>
-/*static*/ typename ReduceStateHolder<T>::ReduceStateType&
-ReduceStateHolder<T>::find(GroupType group, ReduceIDType const& id) {
+ReduceStateHolder::ReduceStateType&
+ReduceStateHolder::find(GroupType group, ReduceIDType const& id) {
   auto group_iter = state_lookup_.find(group);
   vtAssertExpr(group_iter != state_lookup_.end());
   auto id_iter = group_iter->second.find(id);
@@ -76,8 +72,7 @@ ReduceStateHolder<T>::find(GroupType group, ReduceIDType const& id) {
   return id_iter->second;
 }
 
-template <typename T>
-/*static*/ void ReduceStateHolder<T>::erase(
+void ReduceStateHolder::erase(
   GroupType group, ReduceIDType const& id
 ) {
   auto group_iter = state_lookup_.find(group);
@@ -94,8 +89,7 @@ template <typename T>
   }
 }
 
-template <typename T>
-/*static*/ void ReduceStateHolder<T>::insert(
+void ReduceStateHolder::insert(
   GroupType group, ReduceIDType const& id, ReduceStateType&& state
 ) {
   state_lookup_[group].emplace(
@@ -105,10 +99,4 @@ template <typename T>
   );
 }
 
-template <typename T>
-/*static*/ typename ReduceStateHolder<T>::GroupLookupType
-ReduceStateHolder<T>::state_lookup_ = {};
-
 }}} /* end namespace vt::collective::reduce */
-
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H*/
