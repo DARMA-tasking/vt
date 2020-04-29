@@ -52,6 +52,28 @@ CollectiveAlg::CollectiveAlg()
     barrier::Barrier()
 { }
 
+CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
+  bool is_user_tag = true;
+  auto scope_tag = in_scope_tag;
+
+  if (scope_tag == no_tag) {
+    scope_tag = next_system_scope_++;
+    is_user_tag = false;
+  }
+
+  auto& scopes = is_user_tag ? user_scope_ : system_scope_;
+
+  auto iter = scopes.find(scope_tag);
+  vtAssert(iter == scopes.end(), "Scope must not already exist");
+  // Must construct in call to make_unique, since constructor is private
+  auto ptr = std::make_unique<detail::ScopeImpl>(
+    detail::ScopeImpl{is_user_tag, scope_tag}
+  );
+  scopes[scope_tag] = std::move(ptr);
+
+  return CollectiveScope(is_user_tag, scope_tag);
+}
+
 /*static*/ void CollectiveAlg::runCollective(CollectiveMsg* msg) {
   // We need a reentrancy counter to ensure that this is only on the scheduler
   // stack once!
@@ -66,21 +88,29 @@ CollectiveAlg::CollectiveAlg()
   reenter_counter_++;
 
   auto const this_node = theContext()->getNode();
+  TagType consensus_scope = no_tag;
   TagType consensus_tag = no_tag;
-
-  auto& planned = theCollective()->planned_collective_;
+  int consensus_is_user_tag = 0; // bool encoded as an int for MPI
 
   // The root decides the next tag and tells the remaining nodes
   if (msg->root_ == this_node) {
+    auto& scopes = msg->is_user_tag_ ?
+      theCollective()->user_scope_ :
+      theCollective()->system_scope_ ;
+
     debug_print(
       gen, node,
-      "mpiCollective: running collective associated with tag={}\n",
-      msg->tag_
+      "runCollective: is_user_tag={}, scope={}, seq={}\n",
+      msg->is_user_tag_, msg->scope_, msg->seq_
     );
 
-    auto iter = planned.find(msg->tag_);
-    vtAssert(iter != planned.end(), "Planned collective does not exist");
-    consensus_tag = msg->tag_;
+    // Make sure that is exists as it should
+    auto iter = scopes.find(msg->scope_);
+    vtAssert(iter != scopes.end(), "Collective scope does not exist");
+
+    consensus_scope = msg->scope_;
+    consensus_tag = msg->seq_;
+    consensus_is_user_tag = msg->is_user_tag_;
   }
 
   // We can not use a VT broadcast here because it involves the scheduler and
@@ -89,46 +119,77 @@ CollectiveAlg::CollectiveAlg()
 
   int const root = msg->root_;
   auto comm = theContext()->getComm();
-  MPI_Request req;
+  MPI_Request req1, req2, req3;
 
-  // Do a async broadcast of the tag we intend to execute collectively
-  MPI_Ibcast(&consensus_tag, 1, MPI_INT32_T, root, comm, &req);
+  // Do a async broadcast of the scope/seq we intend to execute collectively
+  // This potentially could be merged into one Ibcast if TagType remains 32-bits
+  MPI_Ibcast(&consensus_tag,         1, MPI_INT32_T, root, comm, &req1);
+  MPI_Ibcast(&consensus_scope,       1, MPI_INT32_T, root, comm, &req2);
+  MPI_Ibcast(&consensus_is_user_tag, 1, MPI_C_BOOL,  root, comm, &req3);
 
-  int flag = 0;
-  while (not flag) {
-    MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+  int flag1 = 0, flag2 = 0, flag3 = 0;
+  while (not flag1 or not flag2 or not flag3) {
+    if (not flag1) {
+      MPI_Test(&req1, &flag1, MPI_STATUS_IGNORE);
+    }
+    if (not flag2) {
+      MPI_Test(&req2, &flag2, MPI_STATUS_IGNORE);
+    }
+    if (not flag3) {
+      MPI_Test(&req3, &flag3, MPI_STATUS_IGNORE);
+    }
     runScheduler();
   }
 
-  vtAssert(consensus_tag != no_tag, "Selected tag must be valid");
+  vtAssert(consensus_tag   != no_tag, "Selected tag must be valid");
+  vtAssert(consensus_scope != no_tag, "Selected scope must be valid");
 
   // We need a barrier here so the root doesn't finish the broadcast first and
   // then enter the collective. We could replace the Ibcast/Ibarrier with a
   // Iallreduce, but I think this is cheaper
-  MPI_Ibarrier(comm, &req);
+  MPI_Ibarrier(comm, &req1);
 
-  flag = 0;
-  while (not flag) {
-    MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+  flag1 = 0;
+  while (not flag1) {
+    MPI_Test(&req1, &flag1, MPI_STATUS_IGNORE);
     runScheduler();
   }
 
   debug_print(
     gen, node,
-    "mpiCollective: consensus_tag={}, msg->tag_={}\n",
-    consensus_tag, msg->tag_
+    "mpiCollective: consensus_tag={}, msg->tag_={}, "
+    "consensus_scope={}, msg->scope_={}\n",
+    consensus_tag, msg->seq_,
+    consensus_scope, msg->scope_
   );
 
+  auto& scopes = consensus_is_user_tag ?
+    theCollective()->user_scope_ :
+    theCollective()->system_scope_ ;
+
   // Execute the action that the root selected
-  auto iter = planned.find(consensus_tag);
-  vtAssert(iter != planned.end(), "Planned collective does not exist");
-  auto action = iter->second.action_;
+  auto iter = scopes.find(consensus_scope);
+  vtAssert(iter != scopes.end(), "Collective scope does not exist");
+  auto impl = iter->second.get();
+
+  auto iter_seq = impl->planned_collective_.find(consensus_tag);
+  vtAssert(
+    iter_seq != impl->planned_collective_.end(),
+    "Planned collective does not exist within scope"
+  );
+  auto action = iter_seq->second.action_;
 
   // Run the collective safely
   action();
 
   // Erase the tag that was actually executed
-  planned.erase(iter);
+  impl->planned_collective_.erase(iter_seq);
+
+  // Cleanup if the CollectiveScope is destroyed and no other planned
+  // collectives exists---nothing more can be created
+  if (not impl->live_ and impl->planned_collective_.size() == 0) {
+    scopes.erase(iter);
+  }
 
   reenter_counter_--;
 
@@ -139,59 +200,6 @@ CollectiveAlg::CollectiveAlg()
     postponed.pop_back();
     runCollective(next_msg.get());
   }
-}
-
-
-TagType CollectiveAlg::mpiCollectiveAsync(ActionType action) {
-  auto tag = next_tag_++;
-
-  // Create a new collective action with the next tag
-  CollectiveInfo info(tag, action);
-
-  planned_collective_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(tag),
-    std::forward_as_tuple(info)
-  );
-
-  debug_print(
-    gen, node,
-    "mpiCollectiveAsync: new MPI collective with tag={}\n",
-    tag
-  );
-
-  // Do a reduction followed by a broadcast to trigger a collective
-  // operation. Note that in VT reductions and broadcasts can be executed out of
-  // order. This implies that runCollective might be called with different tags
-  // on different nodes. Thus, in runCollective, we will use a consensus
-  // protocol to agree on a consistent tag across all the nodes.
-  NodeType collective_root = 0;
-
-  auto cb = theCB()->makeBcast<CollectiveMsg,&runCollective>();
-
-  // Put this in a separate namespace
-  // @todo: broader issue: need to implement a better way to scope reductions
-  auto ident = 0xEFFFFFFFFFFFFFFF;
-  auto msg = makeMessage<CollectiveMsg>(tag, collective_root);
-  this->reduce<collective::None>(
-    collective_root, msg.get(), cb, tag, no_seq_id, 1, ident
-  );
-
-  return tag;
-}
-
-bool CollectiveAlg::isCollectiveDone(TagType tag) {
-  return planned_collective_.find(tag) == planned_collective_.end();
-}
-
-void CollectiveAlg::waitCollective(TagType tag) {
-  while (not isCollectiveDone(tag)) {
-    runScheduler();
-  }
-}
-
-void CollectiveAlg::mpiCollectiveWait(ActionType action) {
-  waitCollective(mpiCollectiveAsync(action));
 }
 
 }}  // end namespace vt::collective
