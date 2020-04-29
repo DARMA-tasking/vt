@@ -174,7 +174,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
   };
 
   auto op2 = [&]{
-    scope2.mpiCollectiveWait([&done,&reduce_val_out]{
+    scope2.mpiCollectiveAsync([&done,&reduce_val_out]{
       auto comm = theContext()->getComm();
       int val_in = 1;
       vt_print(barrier, "run MPI_Allreduce\n");
