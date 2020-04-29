@@ -110,8 +110,6 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
 TEST_F(TestMPICollective, test_mpi_collective_3) {
   int done = 0;
 
-  // These three collective can execute in any order, but it will always be
-  // consistent across all the nodes
   auto tag = theCollective()->mpiCollective([&done]{
     auto comm = theContext()->getComm();
     int val = 0;
