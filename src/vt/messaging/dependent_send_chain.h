@@ -88,9 +88,11 @@ struct MergedClosure {
   explicit MergedClosure(std::shared_ptr<PendingSend> shared_state)
     : shared_state_(shared_state)
   {}
+  MergedClosure(MergedClosure const&) = default;
+  MergedClosure(MergedClosure&& in) = default;
 
   void operator()() {
-    shared_state_.release();
+    shared_state_.reset();
   }
 
 private:
@@ -137,12 +139,13 @@ class DependentSendChain final {
     theTerm()->addDependency(a.last_epoch_, new_epoch);
     theTerm()->addDependency(b.last_epoch_, new_epoch);
 
-    auto closure = MergedClosure(std::make_shared<PendingSend>(std::move(link)));
+    auto c1 = MergedClosure(std::make_shared<PendingSend>(std::move(link)));
+    auto c2 = c1;
 
     // closure is intentionally copied here; basically the ref count will go down
     // when all actions are completed and execute the PendingSend
-    theTerm()->addActionUnique(a.last_epoch_, closure);
-    theTerm()->addActionUnique(b.last_epoch_, closure);
+    theTerm()->addActionUnique(a.last_epoch_, std::move(c1));
+    theTerm()->addActionUnique(b.last_epoch_, std::move(c2));
 
     a.last_epoch_ = new_epoch;
     b.last_epoch_ = new_epoch;

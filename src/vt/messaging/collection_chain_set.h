@@ -194,6 +194,32 @@ class CollectionChainSet final {
     theTerm()->finishedEpoch(epoch);
   }
 
+
+  static void mergeStepCollective(CollectionChainSet &a, CollectionChainSet &b,
+   std::function<PendingSend(Index)> step_action
+  ) {
+    mergeStepCollective( "", a, b, step_action);
+  }
+
+  static void mergeStepCollective(
+   std::string const& label,
+   CollectionChainSet &a, CollectionChainSet &b,
+   std::function<PendingSend(Index)> step_action
+  ) {
+   auto epoch = theTerm()->makeEpochCollective(label);
+   vt::theMsg()->pushEpoch(epoch);
+
+   for (auto &entry : a.chains_) {
+     auto& idx = entry.first;
+     auto& chaina = entry.second;
+     auto& chainb = b.chains_[entry.first];
+     DependentSendChain::mergeChainStep(chaina, chainb, epoch, step_action(idx));
+   }
+
+   vt::theMsg()->popEpoch(epoch);
+   theTerm()->finishedEpoch(epoch);
+  }
+
   /**
    * \brief The next collective step to execute across all resident elements
    * across all nodes.
