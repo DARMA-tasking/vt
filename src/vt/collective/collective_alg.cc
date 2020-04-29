@@ -147,6 +147,7 @@ CollectiveAlg::CollectiveAlg()
 TagType CollectiveAlg::mpiCollectiveAsync(ActionType action) {
   auto tag = next_tag_++;
 
+  // Create a new collective action with the next tag
   CollectiveInfo info(tag, action);
 
   planned_collective_.emplace(
@@ -161,6 +162,11 @@ TagType CollectiveAlg::mpiCollectiveAsync(ActionType action) {
     tag
   );
 
+  // Do a reduction followed by a broadcast to trigger a collective
+  // operation. Note that in VT reductions and broadcasts can be executed out of
+  // order. This implies that runCollective might be called with different tags
+  // on different nodes. Thus, in runCollective, we will use a consensus
+  // protocol to agree on a consistent tag across all the nodes.
   NodeType collective_root = 0;
 
   auto cb = theCB()->makeBcast<CollectiveMsg,&runCollective>();
