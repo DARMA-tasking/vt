@@ -85,10 +85,10 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
 
-  theCollective()->mpiCollective([&done,&bcast_val]{
+  theCollective()->mpiCollective([&done,&bcast_val,root]{
     auto comm = theContext()->getComm();
     vt_print(barrier, "run MPI_Bcast\n");
-    MPI_Bcast(&bcast_val, 1, MPI_INT, 0, comm);
+    MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
     done++;
   });
 
