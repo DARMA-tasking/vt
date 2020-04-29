@@ -117,28 +117,34 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
 TEST_F(TestMPICollective, test_mpi_collective_3) {
   int done = 0;
 
-  auto tag = theCollective()->mpiCollective([&done]{
+  auto this_node = theContext()->getNode();
+  int root = 0;
+  int bcast_val = this_node == root ? 29 : 0;
+
+  auto tag = theCollective()->mpiCollective([&done,&bcast_val,root]{
     auto comm = theContext()->getComm();
-    int val = 0;
     vt_print(barrier, "run MPI_Bcast\n");
-    MPI_Bcast(&val, 1, MPI_INT, 0, comm);
+    MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
     done++;
   });
 
   theCollective()->waitCollective(tag);
 
   EXPECT_EQ(done, 1);
+  EXPECT_EQ(bcast_val, 29);
 
-  theCollective()->mpiCollectiveWait([&done]{
+  int reduce_val_out = 0;
+
+  theCollective()->mpiCollectiveWait([&done,&reduce_val_out]{
     auto comm = theContext()->getComm();
     int val_in = 1;
-    int val_out = 0;
     vt_print(barrier, "run MPI_Reduce\n");
-    MPI_Reduce(&val_in, &val_out, 1, MPI_INT, MPI_SUM, 0, comm);
+    MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
     done++;
   });
 
   EXPECT_EQ(done, 2);
+  EXPECT_EQ(reduce_val_out, theContext()->getNumNodes());
 }
 
 
