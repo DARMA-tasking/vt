@@ -97,7 +97,7 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
   theCollective()->mpiCollective([&done,&reduce_val_out]{
     auto comm = theContext()->getComm();
     int val_in = 1;
-    vt_print(barrier, "run MPI_Reduce\n");
+    vt_print(barrier, "run MPI_Allreduce\n");
     MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
     done++;
   });
@@ -138,7 +138,7 @@ TEST_F(TestMPICollective, test_mpi_collective_3) {
   theCollective()->mpiCollectiveWait([&done,&reduce_val_out]{
     auto comm = theContext()->getComm();
     int val_in = 1;
-    vt_print(barrier, "run MPI_Reduce\n");
+    vt_print(barrier, "run MPI_Allreduce\n");
     MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
     done++;
   });
