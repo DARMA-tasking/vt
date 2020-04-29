@@ -52,11 +52,7 @@ namespace vt { namespace seq {
 
 struct Sequencer;
 
-//using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
-
 struct SequencerVirtual;
-
-//using SequencerVirtual = TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>;
 
 }} // end namespace vt::seq
 
