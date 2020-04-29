@@ -151,5 +151,57 @@ TEST_F(TestMPICollective, test_mpi_collective_3) {
   EXPECT_EQ(reduce_val_out, theContext()->getNumNodes());
 }
 
+TEST_F(TestMPICollective, test_mpi_collective_4) {
+  int done = 0;
+
+  auto this_node = theContext()->getNode();
+  bool is_even = this_node % 2 == 0;
+
+  auto scope1 = theCollective()->makeCollectiveScope();
+  auto scope2 = theCollective()->makeCollectiveScope();
+
+  int root = 0;
+  int bcast_val = this_node == root ? 29 : 0;
+  int reduce_val_out = 0;
+
+  auto op1 = [&]{
+    scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_Bcast\n");
+      MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
+      done++;
+    });
+  };
+
+  auto op2 = [&]{
+    scope2.mpiCollectiveWait([&done,&reduce_val_out]{
+      auto comm = theContext()->getComm();
+      int val_in = 1;
+      vt_print(barrier, "run MPI_Allreduce\n");
+      MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
+      done++;
+    });
+  };
+
+  // Execute them in different orders
+  if (is_even) {
+    op1(); op2();
+  } else {
+    op2(); op1();
+  }
+
+  theTerm()->addAction([&done,&bcast_val,&reduce_val_out]{
+    auto num_nodes = theContext()->getNumNodes();
+    EXPECT_EQ(done, 2);
+    EXPECT_EQ(bcast_val, 29);
+    EXPECT_EQ(reduce_val_out, num_nodes);
+  });
+
+  while (not vt::rt->isTerminated()) {
+    runScheduler();
+  }
+}
+
+
 
 }}} // end namespace vt::tests::unit
