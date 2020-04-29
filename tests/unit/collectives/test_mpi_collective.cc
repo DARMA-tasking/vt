@@ -188,7 +188,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
   };
 
   auto op3 = [&]{
-    scope3.mpiCollectiveAsync([&done,&reduce_val_out]{
+    scope3.mpiCollectiveAsync([&done]{
       auto comm = theContext()->getComm();
       vt_print(barrier, "run MPI_barrier\n");
       MPI_Barrier(comm);
