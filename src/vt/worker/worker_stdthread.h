@@ -67,7 +67,8 @@ struct StdThreadWorker {
   using WorkUnitContainerType = util::container::ConcurrentDeque<WorkUnitType>;
 
   StdThreadWorker(
-    WorkerIDType const& in_worker_id_, WorkerFinishedFnType finished_fn
+    WorkerIDType const& in_worker_id_, WorkerCountType const&,
+    WorkerFinishedFnType finished_fn
   );
   StdThreadWorker(StdThreadWorker const&) = delete;
 
