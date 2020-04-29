@@ -90,36 +90,44 @@ struct CollectiveAlg :
 
 public:
   /**
-   * \brief Enqueue a lambda with an embedded MPI collective invocation to
-   * execute in the future. Returns immediately, enqueuing the action for the
-   * future.
+   * \brief Enqueue a lambda with an embedded closed set of MPI collectives
+   * invocations to execute in the future. Returns immediately, enqueuing the
+   * action for the future.
    *
-   * \param[in] action the action containing an MPI collective
+   * The set of operations specified in the lambda must be closed, meaning that
+   * MPI requests must not escape the lambda. After the lambda finishes, the set
+   * of MPI collective calls should be complete.
+   *
+   * Any buffers captured in the lambda to use with MPI collective operations
+   * need to exist until \c isCollectiveDone returns \c true or \c
+   * waitCollective returns on the returned \c TagType
+   *
+   * \param[in] action the action containing a closed set of MPI collectives
    *
    * \return tag representing the collective
    */
   TagType mpiCollectiveAsync(ActionType action);
 
   /**
-   * \brief Query whether an enqueued MPI collective is complete
+   * \brief Query whether an enqueued MPI collective set is complete
    *
-   * \param[in] tag MPI collective identifier
+   * \param[in] tag MPI collective set identifier
    *
    * \return whether it has finished or not
    */
   bool isCollectiveDone(TagType tag);
 
   /**
-   * \brief Wait on an MPI collective to complete
+   * \brief Wait on an MPI collective set to complete
    *
-   * \param[in] tag MPI collective identifier
+   * \param[in] tag MPI collective set identifier
    */
   void waitCollective(TagType tag);
 
   /**
-   * \brief Enqueue a lambda with an embedded MPI collective. Spin in the VT
-   * scheduler until it completes. Ensure that all other nodes do not depend on
-   * this node to enqueue the same collective.
+   * \brief Enqueue a lambda with an embedded closed set of MPI
+   * collectives. Spin in the VT scheduler until it terminates. All other nodes
+   * must not depend on this node to enqueue a matching collective.
    *
    * \param[in] action the action containing an MPI collective
    */
