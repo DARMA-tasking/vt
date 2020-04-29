@@ -90,45 +90,45 @@ struct CollectiveAlg :
 
 public:
   /**
-   * \brief Enqueue a lambda with an embedded closed set of MPI collectives
-   * invocations to execute in the future. Returns immediately, enqueuing the
-   * action for the future.
+   * \brief Enqueue a lambda with an embedded closed set of MPI operations
+   * (including collectives) to execute in the future. Returns
+   * immediately, enqueuing the action for the future.
    *
    * The set of operations specified in the lambda must be closed, meaning that
    * MPI requests must not escape the lambda. After the lambda finishes, the set
    * of MPI collective calls should be complete.
    *
-   * Any buffers captured in the lambda to use with MPI collective operations
-   * need to exist until \c isCollectiveDone returns \c true or \c
+   * Any buffers captured in the lambda to use with the MPI operations
+   * are in use until \c isCollectiveDone returns \c true or \c
    * waitCollective returns on the returned \c TagType
    *
-   * \param[in] action the action containing a closed set of MPI collectives
+   * \param[in] action the action containing a closed set of MPI operations
    *
-   * \return tag representing the collective
+   * \return tag representing the operation set
    */
   TagType mpiCollectiveAsync(ActionType action);
 
   /**
-   * \brief Query whether an enqueued MPI collective set is complete
+   * \brief Query whether an enqueued MPI operation set is complete
    *
-   * \param[in] tag MPI collective set identifier
+   * \param[in] tag MPI operation set identifier
    *
    * \return whether it has finished or not
    */
   bool isCollectiveDone(TagType tag);
 
   /**
-   * \brief Wait on an MPI collective set to complete
+   * \brief Wait on an MPI operation set to complete
    *
    * \param[in] tag MPI collective set identifier
    */
   void waitCollective(TagType tag);
 
   /**
-   * \brief Enqueue a lambda with an embedded closed set of MPI
-   * collectives. Spin in the VT scheduler until it terminates.
+   * \brief Enqueue a lambda with an embedded closed set of MPI operations
+   * (including collectives). Spin in the VT scheduler until it terminates.
    *
-   * \param[in] action the action containing an MPI collective
+   * \param[in] action the action containing a set of MPI operations
    */
   void mpiCollectiveWait(ActionType action);
 
