@@ -52,4 +52,141 @@ CollectiveAlg::CollectiveAlg()
     barrier::Barrier()
 { }
 
+/*static*/ void CollectiveAlg::runCollective(CollectiveMsg* msg) {
+  // We need a reentrancy counter to ensure that this is only on the scheduler
+  // stack once!
+  static int reenter_counter_ = 0;
+
+  if (reenter_counter_ == 0) {
+    reenter_counter_++;
+
+    auto const this_node = theContext()->getNode();
+    TagType consensus_tag = no_tag;
+    ActionType action = no_action;
+
+    auto& planned = theCollective()->planned_collective_;
+
+    // The root decides the next tag and tells the remaining nodes
+    if (msg->root_ == this_node) {
+      debug_print(
+        gen, node,
+        "mpiCollective: running collective associated with tag={}\n",
+        msg->tag_
+      );
+
+      auto iter = planned.find(msg->tag_);
+      vtAssert(iter != planned.end(), "Planned collective does not exist");
+      consensus_tag = msg->tag_;
+      action = iter->second.action_;
+    }
+
+    // We can not use a VT broadcast here because it involves the scheduler and
+    // MPI progress and there's no safe way to guarantee that the message has been
+    // received and processed and doesn't require progress from another node
+
+    int const root = msg->root_;
+    auto comm = theContext()->getComm();
+    MPI_Request req;
+
+    // Do a async broadcast of the tag we intend to execute collectively
+    MPI_Ibcast(&consensus_tag, 1, MPI_INT32_T, root, comm, &req);
+
+    int flag = 0;
+    while (not flag) {
+      MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+      runScheduler();
+    }
+
+    // We need a barrier here so the root doesn't finish the broadcast first and
+    // then enter the collective. We could replace the Ibcast/Ibarrier with a
+    // Iallreduce, but I think this is cheaper
+    MPI_Ibarrier(comm, &req);
+
+    flag = 0;
+    while (not flag) {
+      MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+      runScheduler();
+    }
+
+    debug_print(
+      gen, node,
+      "mpiCollective: consensus_tag={}, msg->tag_={}\n",
+      consensus_tag, msg->tag_
+    );
+
+    // The root had a different collective in mind... let's do that one
+    if (msg->root_ != this_node) {
+      auto iter = planned.find(consensus_tag);
+      vtAssert(iter != planned.end(), "Planned collective does not exist");
+      action = iter->second.action_;
+    }
+
+    // Run the collective safely
+    action();
+
+    // Erase the tag that was actually executed
+    planned.erase(planned.find(consensus_tag));
+
+    reenter_counter_--;
+
+    // Recurse, running a postponed collective
+    auto& postponed = theCollective()->postponed_collectives_;
+    if (postponed.size() > 0) {
+      auto next_msg = postponed.back();
+      postponed.pop_back();
+      runCollective(next_msg.get());
+    }
+  } else {
+    // Postpone any collective while the current one resolves
+    theCollective()->postponed_collectives_.emplace_back(promoteMsg(msg));
+  }
+}
+
+
+TagType CollectiveAlg::mpiCollective(ActionType action) {
+  auto tag = next_tag_;
+  CollectiveInfo info(tag, action);
+
+  planned_collective_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(tag),
+    std::forward_as_tuple(info)
+  );
+
+  debug_print(
+    gen, node,
+    "mpiCollective: new MPI collective with tag={}\n",
+    tag
+  );
+
+  NodeType collective_root = 0;
+
+  auto cb = theCB()->makeBcast<CollectiveMsg,&runCollective>();
+
+  // Put this in a separate namespace
+  // @todo: broader issue: need to implement a better way to scope reductions
+  auto ident = 0xEFFFFFFFFFFFFFFF;
+  auto msg = makeMessage<CollectiveMsg>(tag, collective_root);
+  this->reduce<collective::None>(
+    collective_root, msg.get(), cb, tag, no_seq_id, 1, ident
+  );
+
+  next_tag_++;
+  return tag;
+}
+
+bool CollectiveAlg::isCollectiveDone(TagType tag) {
+  return planned_collective_.find(tag) == planned_collective_.end();
+}
+
+void CollectiveAlg::waitCollective(TagType tag) {
+  while (not isCollectiveDone(tag)) {
+    runScheduler();
+  }
+}
+
+void CollectiveAlg::mpiCollectiveWait(ActionType action) {
+  waitCollective(mpiCollective(action));
+}
+
 }}  // end namespace vt::collective

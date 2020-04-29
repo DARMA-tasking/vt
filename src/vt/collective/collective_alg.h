@@ -85,7 +85,72 @@ struct CollectiveAlg :
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
 
+
   std::string name() override { return "Collective"; }
+
+public:
+  /**
+   * \brief Enqueue a lambda with an embedded MPI collective invocation to
+   * execute in the future. Returns immediately, enqueuing the action for the
+   * future.
+   *
+   * \param[in] action the action containing an MPI collective
+   *
+   * \return tag representing the collective
+   */
+  TagType mpiCollective(ActionType action);
+
+  /**
+   * \brief Query whether an enqueued MPI collective is complete
+   *
+   * \param[in] tag MPI collective identifier
+   *
+   * \return whether it has finished or not
+   */
+  bool isCollectiveDone(TagType tag);
+
+  /**
+   * \brief Wait on an MPI collective to complete
+   *
+   * \param[in] tag MPI collective identifier
+   */
+  void waitCollective(TagType tag);
+
+  /**
+   * \brief Enqueue a lambda with an embedded MPI collective. Spin in the VT
+   * scheduler until it completes. Ensure that all other nodes do not depend on
+   * this node to enqueue the same collective.
+   *
+   * \param[in] action the action containing an MPI collective
+   */
+  void mpiCollectiveWait(ActionType action);
+
+private:
+  struct CollectiveMsg : vt::collective::ReduceNoneMsg {
+    CollectiveMsg(TagType in_tag, NodeType in_root)
+      : tag_(in_tag),
+        root_(in_root)
+    { }
+
+    TagType tag_ = 0;
+    NodeType root_ = uninitialized_destination;
+  };
+
+  struct CollectiveInfo {
+    CollectiveInfo(TagType in_tag, ActionType in_action)
+      : tag_(in_tag), action_(in_action)
+    { }
+
+    TagType tag_ = no_tag;
+    ActionType action_ = no_action;
+  };
+
+  static void runCollective(CollectiveMsg* msg);
+
+private:
+  TagType next_tag_ = 1;
+  std::unordered_map<TagType, CollectiveInfo> planned_collective_;
+  std::vector<MsgSharedPtr<CollectiveMsg>> postponed_collectives_;
 };
 
 using ReduceMsg = reduce::ReduceMsg;
