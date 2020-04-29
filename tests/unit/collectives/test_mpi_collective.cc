@@ -54,7 +54,7 @@ using TestMPICollective = TestParallelHarness;
 TEST_F(TestMPICollective, test_mpi_collective_1) {
   bool done = false;
 
-  theCollective()->mpiCollective([&done]{
+  theCollective()->mpiCollectiveAsync([&done]{
     auto comm = theContext()->getComm();
     MPI_Barrier(comm);
     done = true;
@@ -74,7 +74,7 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
 
   // These three collective can execute in any order, but it will always be
   // consistent across all the nodes
-  theCollective()->mpiCollective([&done]{
+  theCollective()->mpiCollectiveAsync([&done]{
     auto comm = theContext()->getComm();
     vt_print(barrier, "run MPI_Barrier\n");
     MPI_Barrier(comm);
@@ -85,7 +85,7 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
 
-  theCollective()->mpiCollective([&done,&bcast_val,root]{
+  theCollective()->mpiCollectiveAsync([&done,&bcast_val,root]{
     auto comm = theContext()->getComm();
     vt_print(barrier, "run MPI_Bcast\n");
     MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
@@ -94,7 +94,7 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
 
   int reduce_val_out = 0;
 
-  theCollective()->mpiCollective([&done,&reduce_val_out]{
+  theCollective()->mpiCollectiveAsync([&done,&reduce_val_out]{
     auto comm = theContext()->getComm();
     int val_in = 1;
     vt_print(barrier, "run MPI_Allreduce\n");
@@ -121,7 +121,7 @@ TEST_F(TestMPICollective, test_mpi_collective_3) {
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
 
-  auto tag = theCollective()->mpiCollective([&done,&bcast_val,root]{
+  auto tag = theCollective()->mpiCollectiveAsync([&done,&bcast_val,root]{
     auto comm = theContext()->getComm();
     vt_print(barrier, "run MPI_Bcast\n");
     MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);

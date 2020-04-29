@@ -93,7 +93,7 @@ public:
    *
    * \return tag representing the collective
    */
-  TagType mpiCollective(ActionType action);
+  TagType mpiCollectiveAsync(ActionType action);
 
   /**
    * \brief Query whether an enqueued MPI collective is complete
