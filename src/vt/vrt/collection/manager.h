@@ -92,7 +92,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 struct CollectionManager
-  : runtime::component::PollableComponent<CollectionManager>
+  : runtime::component::Component<CollectionManager>
 {
   template <typename ColT, typename IndexT>
   using CollectionType = typename Holder<ColT, IndexT>::Collection;
@@ -731,9 +731,6 @@ protected:
 
 private:
   void schedule(ActionType action);
-
-public:
-  int progress() override;
 
 public:
   template <typename ColT, typename IndexT>
