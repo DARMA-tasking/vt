@@ -54,7 +54,9 @@
 #include "vt/collective/scatter/scatter.h"
 #include "vt/utils/hash/hash_tuple.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/collective/collective_scope.h"
 
+#include <memory>
 #include <unordered_map>
 
 namespace vt { namespace collective {
@@ -90,73 +92,42 @@ struct CollectiveAlg :
 
 public:
   /**
-   * \brief Enqueue a lambda with an embedded closed set of MPI operations
-   * (including collectives) to execute in the future. Returns
-   * immediately, enqueuing the action for the future.
+   * \brief Create a new scope for sequenced MPI operations. Each scope has a
+   * distinct, independent collective sequence of operations.
    *
-   * The set of operations specified in the lambda must be closed, meaning that
-   * MPI requests must not escape the lambda. After the lambda finishes, the set
-   * of MPI collective calls should be complete.
+   * \param[in] tag integer identifier (default value means allocate a new
+   * system scope)
    *
-   * Any buffers captured in the lambda to use with the MPI operations
-   * are in use until \c isCollectiveDone returns \c true or \c
-   * waitCollective returns on the returned \c TagType
-   *
-   * \param[in] action the action containing a closed set of MPI operations
-   *
-   * \return tag representing the operation set
+   * \return a new collective scope with sequenced operations
    */
-  TagType mpiCollectiveAsync(ActionType action);
-
-  /**
-   * \brief Query whether an enqueued MPI operation set is complete
-   *
-   * \param[in] tag MPI operation set identifier
-   *
-   * \return whether it has finished or not
-   */
-  bool isCollectiveDone(TagType tag);
-
-  /**
-   * \brief Wait on an MPI operation set to complete
-   *
-   * \param[in] tag MPI collective set identifier
-   */
-  void waitCollective(TagType tag);
-
-  /**
-   * \brief Enqueue a lambda with an embedded closed set of MPI operations
-   * (including collectives). Spin in the VT scheduler until it terminates.
-   *
-   * \param[in] action the action containing a set of MPI operations
-   */
-  void mpiCollectiveWait(ActionType action);
+  CollectiveScope makeCollectiveScope(TagType scope_tag = no_tag);
 
 private:
+  friend struct CollectiveScope;
+
   struct CollectiveMsg : vt::collective::ReduceNoneMsg {
-    CollectiveMsg(TagType in_tag, NodeType in_root)
-      : tag_(in_tag),
+    CollectiveMsg(
+      bool in_is_user_tag, TagType in_scope, TagType in_seq, NodeType in_root
+    ) : is_user_tag_(in_is_user_tag),
+        scope_(in_scope),
+        seq_(in_seq),
         root_(in_root)
     { }
 
-    TagType tag_ = 0;
+    bool is_user_tag_ = false;
+    TagType scope_ = no_tag;
+    TagType seq_ = no_tag;
     NodeType root_ = uninitialized_destination;
-  };
-
-  struct CollectiveInfo {
-    CollectiveInfo(TagType in_tag, ActionType in_action)
-      : tag_(in_tag), action_(in_action)
-    { }
-
-    TagType tag_ = no_tag;
-    ActionType action_ = no_action;
   };
 
   static void runCollective(CollectiveMsg* msg);
 
 private:
-  TagType next_tag_ = 1;
-  std::unordered_map<TagType, CollectiveInfo> planned_collective_;
+  using ScopeMapType = std::unordered_map<TagType, std::unique_ptr<detail::ScopeImpl>>;
+
+  TagType next_system_scope_ = 1;     /**< The next system allocated scope */
+  ScopeMapType user_scope_;           /**< Live scopes with user tag */
+  ScopeMapType system_scope_;         /**< Live scopes with system tag */
   std::vector<MsgSharedPtr<CollectiveMsg>> postponed_collectives_;
 };
 
