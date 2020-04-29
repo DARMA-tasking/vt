@@ -157,8 +157,12 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
   auto this_node = theContext()->getNode();
   bool is_even = this_node % 2 == 0;
 
+  // System scope (will have generated tag=1)
   auto scope1 = theCollective()->makeCollectiveScope();
+  // System scope (will have generated tag=2)
   auto scope2 = theCollective()->makeCollectiveScope();
+  // User scope with tag=1
+  auto scope3 = theCollective()->makeCollectiveScope(1);
 
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
@@ -183,16 +187,25 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
     });
   };
 
+  auto op3 = [&]{
+    scope3.mpiCollectiveAsync([&done,&reduce_val_out]{
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_barrier\n");
+      MPI_Barrier(comm);
+      done++;
+    });
+  };
+
   // Execute them in different orders
   if (is_even) {
-    op1(); op2();
+    op1(); op2(); op3();
   } else {
-    op2(); op1();
+    op2(); op3(); op1();
   }
 
   theTerm()->addAction([&done,&bcast_val,&reduce_val_out]{
     auto num_nodes = theContext()->getNumNodes();
-    EXPECT_EQ(done, 2);
+    EXPECT_EQ(done, 3);
     EXPECT_EQ(bcast_val, 29);
     EXPECT_EQ(reduce_val_out, num_nodes);
   });
@@ -201,7 +214,5 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
     runScheduler();
   }
 }
-
-
 
 }}} // end namespace vt::tests::unit
