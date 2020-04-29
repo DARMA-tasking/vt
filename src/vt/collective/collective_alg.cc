@@ -144,7 +144,8 @@ CollectiveAlg::CollectiveAlg()
 
 
 TagType CollectiveAlg::mpiCollectiveAsync(ActionType action) {
-  auto tag = next_tag_;
+  auto tag = next_tag_++;
+
   CollectiveInfo info(tag, action);
 
   planned_collective_.emplace(
@@ -171,7 +172,6 @@ TagType CollectiveAlg::mpiCollectiveAsync(ActionType action) {
     collective_root, msg.get(), cb, tag, no_seq_id, 1, ident
   );
 
-  next_tag_++;
   return tag;
 }
 
