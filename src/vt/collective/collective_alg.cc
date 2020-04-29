@@ -67,7 +67,6 @@ CollectiveAlg::CollectiveAlg()
 
   auto const this_node = theContext()->getNode();
   TagType consensus_tag = no_tag;
-  ActionType action = no_action;
 
   auto& planned = theCollective()->planned_collective_;
 
@@ -82,7 +81,6 @@ CollectiveAlg::CollectiveAlg()
     auto iter = planned.find(msg->tag_);
     vtAssert(iter != planned.end(), "Planned collective does not exist");
     consensus_tag = msg->tag_;
-    action = iter->second.action_;
   }
 
   // We can not use a VT broadcast here because it involves the scheduler and
@@ -102,6 +100,8 @@ CollectiveAlg::CollectiveAlg()
     runScheduler();
   }
 
+  vtAssert(consensus_tag != no_tag, "Selected tag must be valid");
+
   // We need a barrier here so the root doesn't finish the broadcast first and
   // then enter the collective. We could replace the Ibcast/Ibarrier with a
   // Iallreduce, but I think this is cheaper
@@ -119,18 +119,16 @@ CollectiveAlg::CollectiveAlg()
     consensus_tag, msg->tag_
   );
 
-  // The root had a different collective in mind... let's do that one
-  if (msg->root_ != this_node) {
-    auto iter = planned.find(consensus_tag);
-    vtAssert(iter != planned.end(), "Planned collective does not exist");
-    action = iter->second.action_;
-  }
+  // Execute the action that the root selected
+  auto iter = planned.find(consensus_tag);
+  vtAssert(iter != planned.end(), "Planned collective does not exist");
+  auto action = iter->second.action_;
 
   // Run the collective safely
   action();
 
   // Erase the tag that was actually executed
-  planned.erase(planned.find(consensus_tag));
+  planned.erase(iter);
 
   reenter_counter_--;
 
