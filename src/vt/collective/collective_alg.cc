@@ -143,7 +143,7 @@ CollectiveAlg::CollectiveAlg()
 }
 
 
-TagType CollectiveAlg::mpiCollective(ActionType action) {
+TagType CollectiveAlg::mpiCollectiveAsync(ActionType action) {
   auto tag = next_tag_;
   CollectiveInfo info(tag, action);
 
@@ -155,7 +155,7 @@ TagType CollectiveAlg::mpiCollective(ActionType action) {
 
   debug_print(
     gen, node,
-    "mpiCollective: new MPI collective with tag={}\n",
+    "mpiCollectiveAsync: new MPI collective with tag={}\n",
     tag
   );
 
@@ -186,7 +186,7 @@ void CollectiveAlg::waitCollective(TagType tag) {
 }
 
 void CollectiveAlg::mpiCollectiveWait(ActionType action) {
-  waitCollective(mpiCollective(action));
+  waitCollective(mpiCollectiveAsync(action));
 }
 
 }}  // end namespace vt::collective
