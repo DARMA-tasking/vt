@@ -151,6 +151,24 @@ TEST_F(TestMPICollective, test_mpi_collective_3) {
   EXPECT_EQ(reduce_val_out, theContext()->getNumNodes());
 }
 
+/// Save the order collectives run in to verify same order across nodes
+std::array<int, 3> run_order = {{ 0, 0, 0 }};
+
+struct OrderMsg : vt::Message {
+  explicit OrderMsg(std::array<int, 3> in_order) : order_(in_order) { }
+  std::array<int, 3> order_;
+};
+
+void orderHan(OrderMsg* msg) {
+  fmt::print(
+    "{}: ran in order: {} {} {}\n",
+    theContext()->getNode(), run_order[0], run_order[1], run_order[2]
+  );
+  EXPECT_EQ(msg->order_[0], run_order[0]);
+  EXPECT_EQ(msg->order_[1], run_order[1]);
+  EXPECT_EQ(msg->order_[2], run_order[2]);
+}
+
 TEST_F(TestMPICollective, test_mpi_collective_4) {
   int done = 0;
 
@@ -168,12 +186,20 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
   int bcast_val = this_node == root ? 29 : 0;
   int reduce_val_out = 0;
 
+  // Reset run_order if the test runs multiple times
+  run_order[0] = 0;
+  run_order[1] = 0;
+  run_order[2] = 0;
+
+  auto epoch = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(epoch);
+
   auto op1 = [&]{
     scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
       auto comm = theContext()->getComm();
       vt_print(barrier, "run MPI_Bcast\n");
       MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
-      done++;
+      run_order[done++] = 1;
     });
   };
 
@@ -183,7 +209,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
       int val_in = 1;
       vt_print(barrier, "run MPI_Allreduce\n");
       MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
-      done++;
+      run_order[done++] = 2;
     });
   };
 
@@ -192,7 +218,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
       auto comm = theContext()->getComm();
       vt_print(barrier, "run MPI_barrier\n");
       MPI_Barrier(comm);
-      done++;
+      run_order[done++] = 3;
     });
   };
 
@@ -203,15 +229,27 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
     op2(); op3(); op1();
   }
 
-  theTerm()->addAction([&done,&bcast_val,&reduce_val_out]{
+  theMsg()->popEpoch(epoch);
+  theTerm()->finishedEpoch(epoch);
+
+  bool finished_spin = false;
+
+  theTerm()->addAction(epoch, [&done,&bcast_val,&reduce_val_out,&finished_spin]{
     auto num_nodes = theContext()->getNumNodes();
     EXPECT_EQ(done, 3);
     EXPECT_EQ(bcast_val, 29);
     EXPECT_EQ(reduce_val_out, num_nodes);
+    finished_spin = true;
   });
 
-  while (not vt::rt->isTerminated()) {
+  while (not finished_spin) {
     runScheduler();
+  }
+
+  // Broadcast out node 0's order to confirm with all other nodes
+  if (this_node == 0) {
+    auto msg = makeMessage<OrderMsg>(run_order);
+    theMsg()->broadcastMsg<OrderMsg,orderHan>(msg.get());
   }
 }
 
