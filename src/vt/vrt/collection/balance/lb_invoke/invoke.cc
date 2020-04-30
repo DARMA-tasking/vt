@@ -166,7 +166,7 @@ void LBManager::collectiveImpl(
     case LBType::StatsMapLB:     makeLB<lb::StatsMapLB>(msg);     break;
 #   if backend_check_enabled(zoltan)
     case LBType::ZoltanLB:       makeLB<lb::ZoltanLB>(msg);       break;
- #  endif
+#   endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
       break;
