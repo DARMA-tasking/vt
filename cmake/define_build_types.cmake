@@ -152,7 +152,7 @@ else()
   set(vt_feature_cmake_mpi_access_guards "0")
 endif()
 
-if (${vt_zoltan_enabled})
+if (vt_zoltan_enabled)
   message(STATUS "Building VT with zoltan enabled")
   set(vt_feature_cmake_zoltan "1")
 else()
