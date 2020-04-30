@@ -18,7 +18,7 @@ find_package(Perl)
 # Doxygen package
 include(cmake/load_doxygen.cmake)
 
-# Doxygen package
+# Optionally link with Zoltan
 include(cmake/load_zoltan_package.cmake)
 
 # Tests
