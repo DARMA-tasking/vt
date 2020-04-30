@@ -13,5 +13,5 @@ include(cmake/load_gtest_package.cmake)
 # Discover and load threading configuration
 include(cmake/load_threading_package.cmake)
 
-# Doxygen package
+# Optionally link with Zoltan
 include(cmake/load_zoltan_package.cmake)
