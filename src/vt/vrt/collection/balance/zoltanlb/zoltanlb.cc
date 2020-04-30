@@ -579,7 +579,6 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
       graph->num_vertices, graph->num_edges, graph->num_all_neighbors
     );
 
-
   } else {
     graph->num_edges = 0;
     graph->num_all_neighbors = 0;
