@@ -152,7 +152,7 @@ void LBManager::collectiveImpl(
     case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
 #   if backend_check_enabled(zoltan)
     case LBType::ZoltanLB:       makeLB<lb::ZoltanLB>(msg);       break;
- #  endif
+#   endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
       break;
