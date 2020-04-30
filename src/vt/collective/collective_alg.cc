@@ -66,9 +66,7 @@ CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
   auto iter = scopes.find(scope_tag);
   vtAssert(iter == scopes.end(), "Scope must not already exist");
   // Must construct in call to make_unique, since constructor is private
-  auto ptr = std::make_unique<detail::ScopeImpl>(
-    detail::ScopeImpl{is_user_tag, scope_tag}
-  );
+  auto ptr = std::make_unique<detail::ScopeImpl>(detail::ScopeImpl{});
   scopes[scope_tag] = std::move(ptr);
 
   return CollectiveScope(is_user_tag, scope_tag);
