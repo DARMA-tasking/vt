@@ -446,7 +446,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 
   static_assert(
     sizeof(ZOLTAN_ID_TYPE) == sizeof(ObjIDType),
-    "ObjIDType must fit in ZOLTAN_ID_TYPE\n"
+    "ObjIDType be exactly the same size as ZOLTAN_ID_TYPE\n"
     "Please recompile with \"-D Zoltan_ENABLE_ULLONG_IDS:Bool=ON\""
   );
 
