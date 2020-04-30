@@ -46,6 +46,7 @@
 #define INCLUDED_VT_OBJGROUP_MANAGER_H
 
 #include "vt/config.h"
+#include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -65,7 +66,7 @@
 
 namespace vt { namespace objgroup {
 
-struct ObjGroupManager {
+struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename ObjT>
   using ProxyType           = proxy::Proxy<ObjT>;
   template <typename ObjT>
@@ -80,6 +81,8 @@ struct ObjGroupManager {
   using BaseProxyListType   = std::set<ObjGroupProxyType>;
 
   ObjGroupManager() = default;
+
+  std::string name() override { return "ObjGroupManager"; }
 
   /*
    * Creation of a new object group across the distributed system. For now,
@@ -166,11 +169,6 @@ struct ObjGroupManager {
    * Dispatch to a live obj group pointer with a handler
    */
   void dispatch(MsgVirtualPtrAny msg, HandlerType han);
-
-  /*
-   * Run the progress function to push along postponed events (such as self sends)
-   */
-  bool progress();
 
   /*
    * Untyped calls for broadcasting or sending msgs to an obj group

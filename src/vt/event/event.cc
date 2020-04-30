@@ -179,7 +179,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
 /*virtual*/ AsyncEvent::~AsyncEvent() { }
 
-void AsyncEvent::cleanup() {
+void AsyncEvent::finalize() {
   while (polling_event_container_.size() > 0) {
     testEventsTrigger();
   }
@@ -187,9 +187,9 @@ void AsyncEvent::cleanup() {
   event_container_.clear();
 }
 
-bool AsyncEvent::progress() {
+int AsyncEvent::progress() {
   theEvent()->testEventsTrigger();
-  return false;
+  return 0;
 }
 
 bool AsyncEvent::isLocalTerm() {

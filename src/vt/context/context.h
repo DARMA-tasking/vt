@@ -49,6 +49,7 @@
 #include <mpi.h>
 
 #include "vt/config.h"
+#include "vt/runtime/component/component_pack.h"
 #include "vt/context/context_attorney_fwd.h"
 #include "vt/utils/tls/tls.h"
 
@@ -67,7 +68,7 @@ namespace vt {  namespace ctx {
  * the node on which a handler is executing or the number of nodes. It provides
  * functionality analogous to \c MPI_Comm_size and \c MPI_Comm_rank.
  */
-struct Context {
+struct Context : runtime::component::Component<Context> {
   /// Constructor with interop and args, not called by the user directly
   Context(int argc, char** argv, bool const interop, MPI_Comm* comm = nullptr);
 
@@ -140,6 +141,8 @@ struct Context {
 
   /// Used to manage protected access for other VT runtime components
   friend struct ContextAttorney;
+
+  std::string name() override { return "Context"; }
 
 protected:
   /// Set the number of workers through the attorney (internal)

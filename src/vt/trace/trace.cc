@@ -87,9 +87,8 @@ struct TraceEventSeqCompare {
   }
 };
 
-Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
-  : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(getCurrentTime()), log_file_(nullptr)
+Trace::Trace(std::string const& in_prog_name)
+  : prog_name_(in_prog_name), start_time_(getCurrentTime()), log_file_(nullptr)
 {
   /*
    * Incremental flush mode for zlib. Several options are available:
@@ -118,8 +117,6 @@ Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
   incremental_flush_mode = Z_SYNC_FLUSH;
 }
 
-Trace::Trace() { }
-
 /*static*/ void Trace::traceBeginIdleTrigger() {
   #if backend_check_enabled(trace_enabled)
     if (not theTrace()->inIdleEvent()) {
@@ -137,6 +134,8 @@ Trace::Trace() { }
 }
 
 void Trace::initialize() {
+  setupNames(prog_name_);
+
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginIdle, traceBeginIdleTrigger
   );
@@ -172,17 +171,15 @@ bool Trace::inIdleEvent() const {
   return idle_begun_;
 }
 
-void Trace::setupNames(
-  std::string const& in_prog_name, std::string const& in_trace_name,
-  std::string const& in_dir_name
-) {
+void Trace::setupNames(std::string const& in_prog_name) {
+  if (not ArgType::vt_trace) {
+    return;
+  }
+
   auto const node = theContext()->getNode();
 
-  prog_name_ = in_prog_name;
-  trace_name_ = in_trace_name;
-  start_time_ = getCurrentTime();
-
-  std::string dir_name = (in_dir_name.empty()) ? prog_name_ + "_trace" : in_dir_name;
+  trace_name_ = prog_name_ + "." + std::to_string(node) + ".log.gz";
+  auto dir_name = prog_name_ + "_trace";
 
   char cur_dir[1024];
   if (getcwd(cur_dir, sizeof(cur_dir)) == nullptr) {
@@ -471,8 +468,7 @@ TraceProcessingTag Trace::beginProcessing(
   );
 
   if (ArgType::vt_trace_memory_usage) {
-    auto usage = util::memory::MemoryUsage::get();
-    addMemoryEvent(usage->getFirstUsage());
+    addMemoryEvent(theMemUsage()->getFirstUsage());
   }
 
   return TraceProcessingTag{ep, loggedEvent};
@@ -530,8 +526,7 @@ void Trace::endProcessing(
   }
 
   if (ArgType::vt_trace_memory_usage) {
-    auto usage = util::memory::MemoryUsage::get();
-    addMemoryEvent(usage->getFirstUsage());
+    addMemoryEvent(theMemUsage()->getFirstUsage());
   }
 
   debug_print(

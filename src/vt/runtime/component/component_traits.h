@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  manager.cc
+//                              component_traits.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,25 +42,24 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/objgroup/manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_TRAITS_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_TRAITS_H
 
-namespace vt { namespace rdma {
+#include <type_traits>
 
-void Manager::finalize() {
-  vt::theObjGroup()->destroyCollective(proxy_);
-}
+namespace vt { namespace runtime { namespace component {
 
-void Manager::setup(ProxyType in_proxy) {
-  proxy_ = in_proxy;
-}
+template <typename T>
+struct ComponentTraits {
+  template <typename U, typename = decltype(U::construct())>
+  static std::true_type test(int);
 
-/*static*/ std::unique_ptr<Manager> Manager::construct() {
-  auto ptr = std::make_unique<Manager>();
-  auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
-  proxy.get()->setup(proxy);
-  return ptr;
-}
+  template <typename U>
+  static std::false_type test(...);
 
-}} /* end namespace vt::rdma */
+  static constexpr bool hasConstruct = decltype(test<T>(0))::value;
+};
+
+}}} /* end namespace vt::runtime::component */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_TRAITS_H*/

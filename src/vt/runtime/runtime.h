@@ -65,9 +65,7 @@ namespace vt { namespace runtime {
 
 struct Runtime {
   template <typename ComponentT>
-  using ComponentPtrType = std::unique_ptr<ComponentT>;
-  template <typename ComponentT>
-  using ObjGroupPtrType = ComponentT*;
+  using ComponentPtrType = ComponentT*;
   using ArgType = vt::arguments::ArgConfig;
 
   Runtime(
@@ -83,6 +81,8 @@ struct Runtime {
 
   virtual ~Runtime();
 
+  bool isLive() const { return p_ and p_->isLive(); }
+  int progress() { if (p_) return p_->progress(); else return 0; }
   bool isTerminated() const { return not runtime_active_; }
   bool isFinializeble() const { return initialized_ and not finalized_; }
   bool isInitialized() const { return initialized_; }
@@ -117,18 +117,13 @@ protected:
   bool tryInitialize();
   bool tryFinalize();
 
-  void initializeContext(int argc, char** argv, MPI_Comm* comm);
-  void initializeTrace();
   void initializeErrorHandlers();
   void initializeComponents();
   void initializeOptionalComponents();
   void initializeWorkers(WorkerCountType const num_workers);
   void initializeLB();
 
-  void finalizeContext();
-  void finalizeTrace();
-  void finalizeComponents();
-  void finalizeOptionalComponents();
+  void finalizeMPI();
 
   void sync();
   void setup();
@@ -166,7 +161,8 @@ public:
   ComponentPtrType<group::GroupManager> theGroup;
   ComponentPtrType<pipe::PipeManager> theCB;
   ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
-  ObjGroupPtrType<rdma::Manager> theHandleRDMA;
+  ComponentPtrType<util::memory::MemoryUsage> theMemUsage;
+  ComponentPtrType<rdma::Manager> theHandleRDMA;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;
@@ -184,9 +180,10 @@ protected:
   bool runtime_active_ = false;
   bool is_interop_ = false;
   WorkerCountType num_workers_ = no_workers;
-  MPI_Comm* communicator_ = nullptr;
+  MPI_Comm communicator_ = MPI_COMM_NULL;
   int user_argc_ = 0;
   char** user_argv_ = nullptr;
+  std::unique_ptr<component::ComponentPack> p_;
 };
 
 }} /* end namespace vt::runtime */

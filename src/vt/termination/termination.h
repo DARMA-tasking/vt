@@ -61,6 +61,7 @@
 #include "vt/configs/arguments/args.h"
 #include "vt/termination/graph/epoch_graph_reduce.h"
 #include "vt/termination/epoch_tags.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <cstdint>
 #include <unordered_map>
@@ -74,6 +75,7 @@ namespace vt { namespace term {
 using DijkstraScholtenTerm = term::ds::StateDS;
 
 struct TerminationDetector :
+  runtime::component::Component<TerminationDetector>,
   TermAction, collective::tree::Tree, DijkstraScholtenTerm, TermInterface
 {
   template <typename T>
@@ -88,6 +90,8 @@ struct TerminationDetector :
 
   TerminationDetector();
   virtual ~TerminationDetector() {}
+
+  std::string name() override { return "TerminationDetector"; }
 
   /****************************************************************************
    *

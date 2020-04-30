@@ -905,7 +905,7 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
   );
 }
 
-bool ActiveMessenger::progress() {
+int ActiveMessenger::progress() {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   processMaybeReadyHanTag();

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  manager.cc
+//                                 diagnostic.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,25 +42,22 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/objgroup/manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H
 
-namespace vt { namespace rdma {
+namespace vt { namespace runtime { namespace component {
 
-void Manager::finalize() {
-  vt::theObjGroup()->destroyCollective(proxy_);
-}
+/**
+ * \struct Diagnostic diagnostic.h vt/runtime/component/diagnostic.h
+ *
+ * \brief The abstract \c Diagnostic trait for outputting debugging state
+ * information generically across VT components
+ */
+struct Diagnostic {
+  virtual void dumpState() = 0;
+  // @todo diagnostics
+};
 
-void Manager::setup(ProxyType in_proxy) {
-  proxy_ = in_proxy;
-}
+}}} /* end namespace vt::runtime::component */
 
-/*static*/ std::unique_ptr<Manager> Manager::construct() {
-  auto ptr = std::make_unique<Manager>();
-  auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
-  proxy.get()->setup(proxy);
-  return ptr;
-}
-
-}} /* end namespace vt::rdma */
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H*/

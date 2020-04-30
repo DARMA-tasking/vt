@@ -109,10 +109,6 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   return proxy;
 }
 
-bool ObjGroupManager::progress() {
-  return false;
-}
-
 void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han) {
   debug_print(
     objgroup, node,

@@ -97,6 +97,9 @@ struct PipeManager;
 namespace objgroup {
 struct ObjGroupManager;
 }
+namespace util { namespace memory {
+struct MemoryUsage;
+}}
 
 #if backend_check_enabled(trace_enabled)
 namespace trace {

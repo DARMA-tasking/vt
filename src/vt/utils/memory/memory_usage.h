@@ -46,6 +46,7 @@
 #define INCLUDED_VT_UTILS_MEMORY_MEMORY_USAGE_H
 
 #include "vt/config.h"
+#include "vt/runtime/component/component_pack.h"
 #include "vt/utils/memory/memory_units.h"
 #include "vt/utils/memory/memory_reporter.h"
 
@@ -109,8 +110,10 @@ struct Mimalloc final : Reporter {
   std::string getName() override;
 };
 
-struct MemoryUsage {
+struct MemoryUsage : runtime::component::Component<MemoryUsage> {
   MemoryUsage();
+
+  std::string name() override { return "MemoryUsage"; }
 
   std::size_t getAverageUsage();
 
@@ -128,19 +131,17 @@ struct MemoryUsage {
 
   std::size_t convertBytesFromString(std::string const& in);
 
-  static MemoryUsage* get();
-
-  static void initialize();
-
-  static void finalize();
-
 private:
-  static std::unique_ptr<MemoryUsage> impl_;
-
   std::vector<std::unique_ptr<Reporter>> reporters_;
   int first_valid_reporter_ = -1;
 };
 
 }}} /* end namespace vt::util::memory */
+
+namespace vt {
+
+util::memory::MemoryUsage* theMemUsage();
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_VT_UTILS_MEMORY_MEMORY_USAGE_H*/

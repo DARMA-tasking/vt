@@ -52,10 +52,11 @@
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
 #include "vt/handler/handler.h"
+#include "vt/runtime/component/component.h"
 
 namespace vt { namespace registry {
 
-struct Registry {
+struct Registry : runtime::component::Component<Registry> {
   using HandlerManagerType = HandlerManager;
   using HandlerBitsType = eHandlerBits;
   using TaggerHandlerType = std::tuple<TagType, HandlerType>;
@@ -64,6 +65,8 @@ struct Registry {
   using HanTagContainerType = std::unordered_map<HandlerType, TagContainerType>;
 
   Registry() = default;
+
+  std::string name() override { return "Registry"; }
 
   HandlerType registerNewHandler(
     ActiveClosureFnType fn, TagType const& tag = no_tag,

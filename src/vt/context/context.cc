@@ -43,6 +43,7 @@
 */
 
 #include "vt/context/context.h"
+#include "vt/runtime/runtime.h"
 
 #include <string>
 #include <cstring>
@@ -66,7 +67,7 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
     MPI_Init(&argc, &argv);
   }
 
-  if (comm != nullptr) {
+  if (comm != nullptr and *comm != MPI_COMM_NULL) {
     communicator_ = *comm;
   } else {
     communicator_ = MPI_COMM_WORLD;
@@ -109,10 +110,14 @@ DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
 namespace vt { namespace debug {
 
 NodeType preNode() {
-  return ::vt::curRT != nullptr ? theContext()->getNode() : -1;
+  return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
+    theContext()->getNode() :
+    -1;
 }
 NodeType preNodes() {
-  return ::vt::curRT != nullptr ? theContext()->getNumNodes() : -1;
+  return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
+    theContext()->getNumNodes() :
+    -1;
 }
 
 }} /* end namespace vt::debug */

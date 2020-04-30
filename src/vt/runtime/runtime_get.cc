@@ -88,7 +88,7 @@ namespace vt {
 
 static runtime::Runtime* no_rt = nullptr;
 
-#define IS_COMM_THREAD curRT->theContext.get()->getWorker() == worker_id_comm_thread
+#define IS_COMM_THREAD curRT->theContext->getWorker() == worker_id_comm_thread
 #define CUR_RT_SAFE (IS_COMM_THREAD ? curRT : no_rt)
 #define CUR_RT_TS curRT
 #define CUR_RT CUR_RT_SAFE
@@ -104,31 +104,32 @@ static runtime::Runtime* no_rt = nullptr;
 using CollectionManagerType = vrt::collection::CollectionManager;
 
 // Thread-safe runtime components
-ctx::Context*               theContext()        { return CUR_RT_TS->theContext.get();        }
-pool::Pool*                 thePool()           { return CUR_RT_TS->thePool.get();           }
-vrt::VirtualContextManager* theVirtualManager() { return CUR_RT_TS->theVirtualManager.get(); }
-worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT_TS->theWorkerGrp.get();      }
+ctx::Context*               theContext()        { return CUR_RT_TS->theContext;        }
+pool::Pool*                 thePool()           { return CUR_RT_TS->thePool;           }
+vrt::VirtualContextManager* theVirtualManager() { return CUR_RT_TS->theVirtualManager; }
+worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT_TS->theWorkerGrp;      }
 
 // Non thread-safe runtime components
-collective::CollectiveAlg*  theCollective()     { return CUR_RT->theCollective.get();     }
-event::AsyncEvent*          theEvent()          { return CUR_RT->theEvent.get();          }
-messaging::ActiveMessenger* theMsg()            { return CUR_RT->theMsg.get();            }
-param::Param*               theParam()          { return CUR_RT->theParam.get();          }
-rdma::RDMAManager*          theRDMA()           { return CUR_RT->theRDMA.get();           }
-registry::Registry*         theRegistry()       { return CUR_RT->theRegistry.get();       }
-sched::Scheduler*           theSched()          { return CUR_RT->theSched.get();          }
-seq::Sequencer*             theSeq()            { return CUR_RT->theSeq.get();            }
-seq::SequencerVirtual*      theVirtualSeq()     { return CUR_RT->theVirtualSeq.get();     }
-term::TerminationDetector*  theTerm()           { return CUR_RT->theTerm.get();           }
-location::LocationManager*  theLocMan()         { return CUR_RT->theLocMan.get();         }
-CollectionManagerType*      theCollection()     { return CUR_RT->theCollection.get();     }
-group::GroupManager*        theGroup()          { return CUR_RT->theGroup.get();          }
-pipe::PipeManager*          theCB()             { return CUR_RT->theCB.get();             }
-objgroup::ObjGroupManager*  theObjGroup()       { return CUR_RT->theObjGroup.get();       }
-rdma::Manager*              theHandleRDMA()     { return CUR_RT->theHandleRDMA;           }
+collective::CollectiveAlg*  theCollective()     { return CUR_RT->theCollective;     }
+event::AsyncEvent*          theEvent()          { return CUR_RT->theEvent;          }
+messaging::ActiveMessenger* theMsg()            { return CUR_RT->theMsg;            }
+param::Param*               theParam()          { return CUR_RT->theParam;          }
+rdma::RDMAManager*          theRDMA()           { return CUR_RT->theRDMA;           }
+registry::Registry*         theRegistry()       { return CUR_RT->theRegistry;       }
+sched::Scheduler*           theSched()          { return CUR_RT->theSched;          }
+seq::Sequencer*             theSeq()            { return CUR_RT->theSeq;            }
+seq::SequencerVirtual*      theVirtualSeq()     { return CUR_RT->theVirtualSeq;     }
+term::TerminationDetector*  theTerm()           { return CUR_RT->theTerm;           }
+location::LocationManager*  theLocMan()         { return CUR_RT->theLocMan;         }
+CollectionManagerType*      theCollection()     { return CUR_RT->theCollection;     }
+group::GroupManager*        theGroup()          { return CUR_RT->theGroup;          }
+pipe::PipeManager*          theCB()             { return CUR_RT->theCB;             }
+objgroup::ObjGroupManager*  theObjGroup()       { return CUR_RT->theObjGroup;       }
+rdma::Manager*              theHandleRDMA()     { return CUR_RT->theHandleRDMA;     }
+util::memory::MemoryUsage*  theMemUsage()       { return CUR_RT->theMemUsage;       }
 
 #if backend_check_enabled(trace_enabled)
-trace::Trace*               theTrace()          { return CUR_RT->theTrace.get();          }
+trace::Trace*               theTrace()          { return CUR_RT->theTrace;          }
 #endif
 
 #undef CUR_RT

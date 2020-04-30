@@ -52,13 +52,14 @@
 #include "vt/topos/location/utility/coord.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/proxy.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <unordered_map>
 #include <functional>
 
 namespace vt { namespace location {
 
-struct LocationManager {
+struct LocationManager : runtime::component::Component<LocationManager> {
   template <typename LocType>
   using PtrType = std::unique_ptr<LocType>;
   using LocCoordPtrType = LocationCoord*;
@@ -88,6 +89,8 @@ struct LocationManager {
   LocationManager() = default;
 
   virtual ~LocationManager();
+
+  std::string name() override { return "LocationManager"; }
 
   static LocInstType cur_loc_inst;
 

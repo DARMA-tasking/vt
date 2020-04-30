@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  manager.cc
+//                            component_pack.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,25 +42,62 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/objgroup/manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_IMPL_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_IMPL_H
 
-namespace vt { namespace rdma {
+#include "vt/runtime/component/component_pack.h"
 
-void Manager::finalize() {
-  vt::theObjGroup()->destroyCollective(proxy_);
+namespace vt { namespace runtime { namespace component {
+
+template <typename T, typename... Deps, typename... Cons>
+registry::AutoHandlerType ComponentPack::registerComponent(
+  T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
+) {
+  ComponentRegistry::dependsOn<T, Deps...>();
+  auto idx = registry::makeIdx<T>();
+
+  if (registered_set_.find(idx) == registered_set_.end()) {
+    registered_set_.insert(idx);
+    registered_components_.push_back(idx);
+  }
+
+  construct_components_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(idx),
+    std::forward_as_tuple(
+      [ref,this,cons...]() mutable {
+        auto ptr = T::template staticInit<Cons...>(std::forward<Cons>(cons)...);
+
+        debug_print(
+          runtime, node,
+          "ComponentPack: constructed component={}, pollable={}\n",
+          ptr->name(), ptr->pollable()
+        );
+
+        // Set the reference for access outside
+        if (ref != nullptr) {
+          *ref = ptr.get();
+        }
+
+        // Add to pollable for the progress function to be triggered
+        if (ptr->pollable()) {
+          pollable_components_.emplace_back(ptr.get());
+        }
+
+        ptr->initialize();
+        live_components_.emplace_back(std::move(ptr));
+      }
+    )
+  );
+  return idx;
 }
 
-void Manager::setup(ProxyType in_proxy) {
-  proxy_ = in_proxy;
+template <typename T>
+void ComponentPack::add() {
+  auto idx = registry::makeIdx<T>();
+  added_components_.insert(idx);
 }
 
-/*static*/ std::unique_ptr<Manager> Manager::construct() {
-  auto ptr = std::make_unique<Manager>();
-  auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
-  proxy.get()->setup(proxy);
-  return ptr;
-}
+}}} /* end namespace vt::runtime::component */
 
-}} /* end namespace vt::rdma */
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_IMPL_H*/

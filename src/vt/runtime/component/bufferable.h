@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  manager.cc
+//                                 bufferable.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,25 +42,21 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/objgroup/manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BUFFERABLE_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_BUFFERABLE_H
 
-namespace vt { namespace rdma {
+namespace vt { namespace runtime { namespace component {
 
-void Manager::finalize() {
-  vt::theObjGroup()->destroyCollective(proxy_);
-}
+/**
+ * \struct Bufferable bufferable.h vt/runtime/component/bufferable.h
+ *
+ * \brief The abstract \c Bufferable trait for delaying operations generically
+ * across VT components
+ */
+struct Bufferable {
+  // @todo interface for buffering
+};
 
-void Manager::setup(ProxyType in_proxy) {
-  proxy_ = in_proxy;
-}
+}}} /* end namespace vt::runtime::component */
 
-/*static*/ std::unique_ptr<Manager> Manager::construct() {
-  auto ptr = std::make_unique<Manager>();
-  auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
-  proxy.get()->setup(proxy);
-  return ptr;
-}
-
-}} /* end namespace vt::rdma */
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BUFFERABLE_H*/

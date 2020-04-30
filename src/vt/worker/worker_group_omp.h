@@ -55,6 +55,7 @@
 #include "vt/worker/worker_group_counter.h"
 #include "vt/worker/worker_group_comm.h"
 #include "vt/utils/mutex/mutex.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <vector>
 #include <memory>
@@ -62,7 +63,10 @@
 
 namespace vt { namespace worker {
 
-struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
+struct WorkerGroupOMP
+  : runtime::component::PollableComponent<WorkerGroupOMP>,
+    WorkerGroupCounter, WorkerGroupComm
+{
   using WorkerType = OMPWorker;
   using WorkerStateType = WorkerType;
   using WorkerStatePtrType = std::unique_ptr<WorkerStateType>;
@@ -76,11 +80,13 @@ struct WorkerGroupOMP : WorkerGroupCounter, WorkerGroupComm {
 
   virtual ~WorkerGroupOMP();
 
-  void initialize();
+  std::string name() override { return "WorkerGroupOMP"; }
+
+  void initialize() override;
   void spawnWorkers();
   void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
-  void progress();
+  int progress() override;
   bool commScheduler();
 
   // non-thread-safe comm and worker thread enqueue

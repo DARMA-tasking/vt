@@ -58,6 +58,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/proxy/proxy_objgroup_elm.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <unordered_map>
 #include <functional>
@@ -73,13 +74,17 @@ struct FunctorTraits {
   static constexpr auto const has_no_msg_type = FunctorNoMsgType::value;
 };
 
-struct PipeManager : PipeManagerTL, PipeManagerTyped {
-
+struct PipeManager
+  : runtime::component::Component<PipeManager>,
+    PipeManagerTL, PipeManagerTyped
+{
   template <typename FunctorT>
   using GetMsgType = typename util::FunctorExtractor<FunctorT>::MessageType;
   using Void = V;
 
   PipeManager();
+
+  std::string name() override { return "PipeManager"; }
 
   template <typename MsgT, typename ContextT>
   Callback<MsgT> makeFunc(ContextT* ctx, FuncMsgCtxType<MsgT, ContextT> fn);

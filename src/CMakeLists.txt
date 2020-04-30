@@ -60,6 +60,8 @@ set(
       topos/index/dense topos/index/traits topos/index/printer
     topos/mapping
       topos/mapping/seed topos/mapping/dense
+    runtime
+      runtime/component
     vrt/base vrt/proxy vrt/context
     vrt/collection
       vrt/collection/types vrt/collection/messages vrt/collection/proxy_builder

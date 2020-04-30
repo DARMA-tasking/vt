@@ -264,11 +264,6 @@ TaggedSequencer<SeqTag, SeqTrigger>::getCurrentSeq() const {
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-bool TaggedSequencer<SeqTag, SeqTrigger>::progress() {
-  return false;
-}
-
-template <typename SeqTag, template <typename> class SeqTrigger>
 bool TaggedSequencer<SeqTag, SeqTrigger>::isLocalTerm() {
   for (auto&& live_seq : seq_lookup_) {
     if (live_seq.second.lst.size() > 0) {

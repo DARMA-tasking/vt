@@ -59,6 +59,7 @@
 #include "vt/sequence/seq_matcher.h"
 #include "vt/sequence/seq_action.h"
 #include "vt/sequence/seq_parallel.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <unordered_map>
 #include <list>
@@ -140,7 +141,6 @@ struct TaggedSequencer {
 
   void enqueueSeqList(SeqType const& seq_id);
   SeqType getCurrentSeq() const;
-  bool progress();
   bool isLocalTerm();
 
   SeqNodePtrType getNode(SeqType const& id) const;
@@ -197,7 +197,12 @@ private:
 template <typename Fn>
 bool executeSeqExpandContext(SeqType const& id, SeqNodePtrType node, Fn&& fn);
 
-using Sequencer = TaggedSequencer<SeqType, SeqMigratableTriggerType>;
+struct Sequencer
+  : runtime::component::Component<Sequencer>,
+    TaggedSequencer<SeqType, SeqMigratableTriggerType>
+{
+  std::string name() override { return "Sequencer"; }
+};
 
 #define SEQUENCE_REGISTER_HANDLER(message, handler)                     \
   static void handler(message* m) {                                     \

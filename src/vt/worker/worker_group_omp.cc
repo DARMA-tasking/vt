@@ -81,8 +81,9 @@ bool WorkerGroupOMP::commScheduler() {
   return WorkerGroupComm::schedulerComm(finished_fn_);
 }
 
-void WorkerGroupOMP::progress() {
+int WorkerGroupOMP::progress() {
   WorkerGroupCounter::progress();
+  return 0;
 }
 
 /*virtual*/ WorkerGroupOMP::~WorkerGroupOMP() {

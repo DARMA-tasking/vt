@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  manager.cc
+//                                progressable.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,25 +42,27 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/objgroup/manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_PROGRESSABLE_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_PROGRESSABLE_H
 
-namespace vt { namespace rdma {
+namespace vt { namespace runtime { namespace component {
 
-void Manager::finalize() {
-  vt::theObjGroup()->destroyCollective(proxy_);
-}
+/**
+ * \struct Progressable progressable.h vt/runtime/component/progressable.h
+ *
+ * \brief The abstract \c Progressable trait for pollable components to make
+ * progress from the scheduler
+ */
+struct Progressable {
 
-void Manager::setup(ProxyType in_proxy) {
-  proxy_ = in_proxy;
-}
+  /**
+   * \brief Progress function for incremental polling
+   *
+   * \return the number of units executed---zero if no progress was made
+   */
+  virtual int progress() = 0;
+};
 
-/*static*/ std::unique_ptr<Manager> Manager::construct() {
-  auto ptr = std::make_unique<Manager>();
-  auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
-  proxy.get()->setup(proxy);
-  return ptr;
-}
+}}} /* end namespace vt::runtime::component */
 
-}} /* end namespace vt::rdma */
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_PROGRESSABLE_H*/

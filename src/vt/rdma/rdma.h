@@ -66,12 +66,14 @@
 
 #include "vt/rdma/collection/rdma_collection_fwd.h"
 
+#include "vt/runtime/component/component_pack.h"
+
 #include <unordered_map>
 #include <cassert>
 
 namespace vt { namespace rdma {
 
-struct RDMAManager {
+struct RDMAManager : runtime::component::Component<RDMAManager> {
   using RDMA_BitsType = Bits;
   using RDMA_StateType = State;
   using RDMA_TypeType = Type;
@@ -96,6 +98,8 @@ struct RDMAManager {
   template <typename MsgType>
   using RDMA_PutTypedFunctionType =
     RDMA_StateType::RDMA_PutTypedFunctionType<MsgType>;
+
+  std::string name() override { return "RDMAManager"; }
 
   template <typename T>
   void putTypedData(

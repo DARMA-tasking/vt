@@ -51,6 +51,7 @@
 #include "vt/worker/worker_group_counter.h"
 #include "vt/worker/worker_group_comm.h"
 #include "vt/utils/atomic/atomic.h"
+#include "vt/runtime/component/component_pack.h"
 
 #if backend_check_enabled(stdthread)
   #include "vt/worker/worker_stdthread.h"
@@ -66,7 +67,10 @@ namespace vt { namespace worker {
 using ::vt::util::atomic::AtomicType;
 
 template <typename WorkerT>
-struct WorkerGroupAny : WorkerGroupCounter, WorkerGroupComm {
+struct WorkerGroupAny
+  : runtime::component::PollableComponent<WorkerGroupAny<WorkerT>>,
+  WorkerGroupCounter, WorkerGroupComm
+{
   using WorkerType = WorkerT;
   using WorkerPtrType = std::unique_ptr<WorkerT>;
   using WorkerContainerType = std::vector<WorkerPtrType>;
@@ -76,11 +80,11 @@ struct WorkerGroupAny : WorkerGroupCounter, WorkerGroupComm {
 
   virtual ~WorkerGroupAny();
 
-  void initialize();
+  void initialize() override;
   void spawnWorkers();
   void spawnWorkersBlock(WorkerCommFnType fn);
   void joinWorkers();
-  void progress();
+  int progress() override;
 
   bool commScheduler();
   void enqueueCommThread(WorkUnitType const& work_unit);
@@ -89,6 +93,8 @@ struct WorkerGroupAny : WorkerGroupCounter, WorkerGroupComm {
     WorkerIDType const& worker_id, WorkUnitType const& work_unit
   );
   void enqueueAllWorkers(WorkUnitType const& work_unit);
+
+  std::string name() override { return "WorkerGroup"; }
 
 private:
   WorkerFinishedFnType finished_fn_ = nullptr;

@@ -283,10 +283,9 @@ void LBManager::printMemoryUsage(PhaseType phase) {
       "all" == arguments::ArgConfig::vt_print_memory_node or
       std::to_string(this_node) == arguments::ArgConfig::vt_print_memory_node
     ) {
-      auto usage = util::memory::MemoryUsage::get();
-      if (usage->hasWorkingReporter()) {
+      if (theMemUsage()->hasWorkingReporter()) {
         auto memory_usage_str = fmt::format(
-          "Memory Usage: phase={}: {}\n", phase, usage->getUsageAll()
+          "Memory Usage: phase={}: {}\n", phase, theMemUsage()->getUsageAll()
         );
         vt_print(gen, memory_usage_str);
       }

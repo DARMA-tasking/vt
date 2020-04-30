@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  manager.cc
+//                               component_dep.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,25 +42,44 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/objgroup/manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_DEP_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_DEP_H
 
-namespace vt { namespace rdma {
+#include "vt/runtime/component/component_registry.h"
 
-void Manager::finalize() {
-  vt::theObjGroup()->destroyCollective(proxy_);
-}
+namespace vt { namespace runtime { namespace component {
 
-void Manager::setup(ProxyType in_proxy) {
-  proxy_ = in_proxy;
-}
+template <typename... Args>
+struct AddDep;
 
-/*static*/ std::unique_ptr<Manager> Manager::construct() {
-  auto ptr = std::make_unique<Manager>();
-  auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
-  proxy.get()->setup(proxy);
-  return ptr;
-}
+template <typename U, typename... Args>
+struct AddDep<U, Args...> {
+  static void add(registry::AutoHandlerType t) {
+    auto u = registry::makeIdx<U>();
+    registry::getIdx(t).insert(u);
+    AddDep<Args...>::add(t);
+  }
+};
 
-}} /* end namespace vt::rdma */
+template <>
+struct AddDep<> {
+  static void add(registry::AutoHandlerType t) {
+  }
+};
+
+struct ComponentRegistry {
+
+  template <typename U, typename... Args>
+  static void addDep(registry::AutoHandlerType t);
+
+  template <typename T, typename... Deps>
+  static void dependsOn() {
+    auto t = registry::makeIdx<T>();
+    AddDep<Deps...>::add(t);
+  }
+
+};
+
+}}} /* end namespace vt::runtime::component */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_DEP_H*/

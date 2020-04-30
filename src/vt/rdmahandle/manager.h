@@ -56,6 +56,7 @@
 #include "vt/pipe/pipe_manager.h"
 #include "vt/topos/mapping/dense/dense.h"
 #include "vt/rdmahandle/handle_set.h"
+#include "vt/runtime/component/component_pack.h"
 
 namespace vt { namespace rdma {
 
@@ -78,25 +79,27 @@ struct InformRDMAMsg;
  *
  * \brief RDMA Handle Manager for creation of node- or index-level handles
  */
-struct Manager {
+struct Manager : runtime::component::Component<Manager> {
   using ProxyType       = vt::objgroup::proxy::Proxy<Manager>;
   using ElemToHandle    = std::unordered_map<int64_t, RDMA_HandleType>;
   using HandleToManager = std::unordered_map<RDMA_HandleType, ObjGroupProxyType>;
 
   Manager() = default;
 
+  std::string name() override { return "HandleRDMA"; }
+
   /**
    * \brief Destroy the component, called when VT is finalized
    */
-  void destroy();
+  void finalize() override;
 
 private:
   /**
-   * \internal \brief Initialize the manager with the objgroup proxy
+   * \internal \brief Setup the manager with the objgroup proxy
    *
    * \param[in] in_proxy the manager instance's proxy
    */
-  void initialize(ProxyType in_proxy);
+  void setup(ProxyType in_proxy);
 
   /**
    * \internal \brief Finish constructing a handle after coordinating each node on
@@ -220,7 +223,7 @@ private:
   }
 
 public:
-  static ProxyType construct();
+  static std::unique_ptr<Manager> construct();
 
 private:
   /// Current collective handle for a given objgroup proxy

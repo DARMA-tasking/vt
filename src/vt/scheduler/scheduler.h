@@ -52,6 +52,7 @@
 #include "vt/scheduler/work_unit.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/timing/timing.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <cassert>
 #include <vector>
@@ -69,7 +70,7 @@ enum SchedulerEvent {
   SchedulerEventSize = 4
 };
 
-struct Scheduler {
+struct Scheduler : runtime::component::Component<Scheduler> {
   using SchedulerEventType   = SchedulerEvent;
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
@@ -82,6 +83,8 @@ struct Scheduler {
 # endif
 
   Scheduler();
+
+  std::string name() override { return "Scheduler"; }
 
   static void checkTermSingleNode();
 

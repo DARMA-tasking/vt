@@ -51,6 +51,7 @@
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/utils/static_checks/all_true.h"
 #include "vt/parameterization/param_meta.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <tuple>
 #include <utility>
@@ -127,7 +128,9 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
 #endif
 }
 
-struct Param {
+struct Param : runtime::component::Component<Param> {
+
+  std::string name() override { return "Param"; }
 
   template <typename... Args>
   void sendDataTuple(

@@ -258,7 +258,7 @@ void Pool::initWorkerPools(WorkerCountType const& num_workers) {
   #endif
 }
 
-void Pool::destroyWorkerPools() {
+void Pool::finalize() {
   #if backend_check_enabled(memory_pool)
     s_msg_worker_.clear();
     m_msg_worker_.clear();

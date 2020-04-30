@@ -46,6 +46,7 @@
 #define INCLUDED_POOL_POOL_H
 
 #include "vt/config.h"
+#include "vt/runtime/component/component_pack.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
 #include "vt/pool/header/pool_header.h"
 
@@ -56,7 +57,7 @@
 
 namespace vt { namespace pool {
 
-struct Pool {
+struct Pool : runtime::component::Component<Pool> {
   using SizeType = size_t;
   using HeaderType = Header;
   using HeaderManagerType = HeaderManager;
@@ -74,6 +75,8 @@ struct Pool {
 
   Pool();
 
+  std::string name() override { return "MemoryPool"; }
+
   void* alloc(size_t const& num_bytes, size_t oversize = 0);
   void dealloc(void* const buf);
   ePoolSize getPoolType(size_t const& num_bytes, size_t const& oversize);
@@ -82,7 +85,7 @@ struct Pool {
   bool active_env() const;
 
   void initWorkerPools(WorkerCountType const& num_workers);
-  void destroyWorkerPools();
+  void finalize() override;
 
 private:
   /*

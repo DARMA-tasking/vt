@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  manager.cc
+//                                    base.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,25 +42,65 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/objgroup/manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
 
-namespace vt { namespace rdma {
+#include "vt/runtime/component/diagnostic.h"
+#include "vt/runtime/component/bufferable.h"
+#include "vt/runtime/component/progressable.h"
 
-void Manager::finalize() {
-  vt::theObjGroup()->destroyCollective(proxy_);
-}
+#include <string>
 
-void Manager::setup(ProxyType in_proxy) {
-  proxy_ = in_proxy;
-}
+namespace vt { namespace runtime { namespace component {
 
-/*static*/ std::unique_ptr<Manager> Manager::construct() {
-  auto ptr = std::make_unique<Manager>();
-  auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
-  proxy.get()->setup(proxy);
-  return ptr;
-}
+/**
+ * \struct BaseComponent base.h vt/runtime/component/base.h
+ *
+ * \brief The abstract \c BaseComponent for VT runtime component pack
+ */
+struct BaseComponent : Diagnostic, Bufferable, Progressable {
+  /**
+   * \struct DepsPack
+   *
+   * \brief Set of component types that given component is dependent on
+   */
+  template <typename... Deps>
+  struct DepsPack { };
 
-}} /* end namespace vt::rdma */
+  /**
+   * \internal \brief Initialize the component. Invoked after the constructor
+   * fires during the startup sequence
+   */
+  virtual void initialize() = 0;
+
+  /**
+   * \internal \brief Finalize the component. Invoked before the destructor
+   * fires during the shutdown sequence
+   */
+  virtual void finalize() = 0;
+
+  /**
+   * \internal \brief Returns whether the component should be polled by the
+   * scheduler
+   *
+   * \return whether the component is pollable
+   */
+  virtual bool pollable() = 0;
+
+  /**
+   * \internal \brief Invoked after all components are constructed and the
+   * runtime is live
+   */
+  virtual void startup() = 0;
+
+  /**
+   * \internal \brief Get the name of the component
+   */
+  virtual std::string name() = 0;
+
+  virtual ~BaseComponent() { }
+};
+
+}}} /* end namespace vt::runtime::component */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/

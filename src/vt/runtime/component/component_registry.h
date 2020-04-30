@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  manager.cc
+//                             component_registry.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,25 +42,52 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/rdmahandle/manager.h"
-#include "vt/objgroup/manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REGISTRY_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REGISTRY_H
 
-namespace vt { namespace rdma {
+#include "vt/configs/types/types_type.h"
 
-void Manager::finalize() {
-  vt::theObjGroup()->destroyCollective(proxy_);
+#include <vector>
+#include <tuple>
+#include <unordered_set>
+
+namespace vt { namespace runtime { namespace component { namespace registry {
+
+using AutoHandlerType = HandlerType;
+using RegistryType = std::vector<std::tuple<int,std::unordered_set<int>>>;
+
+inline RegistryType& getRegistry() {
+  static RegistryType reg;
+  return reg;
 }
 
-void Manager::setup(ProxyType in_proxy) {
-  proxy_ = in_proxy;
+template <typename ObjT>
+struct Registrar {
+  Registrar() {
+    auto& reg = getRegistry();
+    index = reg.size();
+    reg.emplace_back(std::make_tuple(index,std::unordered_set<int>{}));
+  }
+  AutoHandlerType index;
+};
+
+template <typename ObjT>
+struct Type {
+  static AutoHandlerType const idx;
+};
+
+template <typename ObjT>
+AutoHandlerType const Type<ObjT>::idx = Registrar<ObjT>().index;
+
+inline std::unordered_set<int>& getIdx(AutoHandlerType han) {
+  return std::get<1>(getRegistry().at(han));
 }
 
-/*static*/ std::unique_ptr<Manager> Manager::construct() {
-  auto ptr = std::make_unique<Manager>();
-  auto proxy = vt::theObjGroup()->makeCollective<Manager>(ptr.get());
-  proxy.get()->setup(proxy);
-  return ptr;
+template <typename ObjT>
+inline AutoHandlerType makeIdx() {
+  return Type<ObjT>::idx;
 }
 
-}} /* end namespace vt::rdma */
+}}}} /* end namespace vt::runtime::component::registry */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REGISTRY_H*/
