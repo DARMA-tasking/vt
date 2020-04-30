@@ -59,10 +59,7 @@ namespace detail {
 struct ScopeImpl {
 
 private:
-  ScopeImpl(bool in_is_user_tag, TagType in_scope)
-    : is_user_tag_(in_is_user_tag),
-      scope_(in_scope)
-  { }
+  ScopeImpl() = default;
 
   friend collective::CollectiveScope;
   friend collective::CollectiveAlg;
@@ -79,8 +76,6 @@ private:
 
 private:
   bool live_ = true;            /**< Whether the \c CollectiveScope is live */
-  bool is_user_tag_ = false;    /**< Whether the scope is user or system tagged */
-  TagType scope_ = no_tag;      /**< The scope for this collective sequence */
   TagType next_seq_ = 1;        /**< The next sequence tag for this scope */
   std::unordered_map<TagType, CollectiveInfo> planned_collective_;
 };
