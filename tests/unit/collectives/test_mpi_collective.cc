@@ -72,7 +72,7 @@ TEST_F(TestMPICollective, test_mpi_collective_1) {
 TEST_F(TestMPICollective, test_mpi_collective_2) {
   int done = 0;
 
-  auto scope = theCollective()->makeCollectiveScope();
+  vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
 
   // These three collective can execute in any order, but it will always be
   // consistent across all the nodes
@@ -123,7 +123,7 @@ TEST_F(TestMPICollective, test_mpi_collective_3) {
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
 
-  auto scope = theCollective()->makeCollectiveScope();
+  vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
 
   auto tag = scope.mpiCollectiveAsync([&done,&bcast_val,root]{
     auto comm = theContext()->getComm();
@@ -158,11 +158,11 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
   bool is_even = this_node % 2 == 0;
 
   // System scope (will have generated tag=1)
-  auto scope1 = theCollective()->makeCollectiveScope();
+  vt::collective::CollectiveScope scope1 = theCollective()->makeCollectiveScope();
   // System scope (will have generated tag=2)
-  auto scope2 = theCollective()->makeCollectiveScope();
+  vt::collective::CollectiveScope scope2 = theCollective()->makeCollectiveScope();
   // User scope with tag=1
-  auto scope3 = theCollective()->makeCollectiveScope(1);
+  vt::collective::CollectiveScope scope3 = theCollective()->makeCollectiveScope(1);
 
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
