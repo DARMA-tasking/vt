@@ -66,8 +66,8 @@ TagType CollectiveScope::mpiCollectiveAsync(ActionType action) {
 
   debug_print(
     gen, node,
-    "mpiCollectiveAsync: scope={}: new MPI collective with tag={}\n",
-    scope_, tag
+    "mpiCollectiveAsync: is_user_tag_={}, scope={}: new MPI collective with seq tag={}\n",
+    is_user_tag_, scope_, tag
   );
 
   // Do a reduction followed by a broadcast to trigger a collective
