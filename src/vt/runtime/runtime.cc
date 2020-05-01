@@ -1157,11 +1157,12 @@ void Runtime::setup() {
   auto action = std::bind(&Runtime::terminationHandler, this);
   theTerm->addDefaultAction(action);
 
+  // wait for all nodes to start up to initialize the runtime
+  theCollective->barrier();
+
 # if backend_check_enabled(trace_enabled)
   theTrace->loadAndBroadcastSpec();
 # endif
-
-  sync();
 
   if (ArgType::vt_pause) {
     pauseForDebugger();
