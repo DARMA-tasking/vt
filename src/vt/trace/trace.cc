@@ -521,6 +521,17 @@ void Trace::endProcessing(
     "Event being closed must be on the top of the open event stack."
   );
 
+  if (ArgType::vt_trace_memory_usage) {
+    auto usage = util::memory::MemoryUsage::get();
+    addMemoryEvent(usage->getFirstUsage());
+  }
+
+  debug_print(
+    trace, node,
+    "event_stop: ep={}, event={}, time={}, from_node={}\n",
+    ep, event, time, open_events_.back().node
+  );
+
   // Final event is same as original with a few .. tweaks.
   // Always done PRIOR TO restarts.
   traces_.push(
@@ -530,36 +541,6 @@ void Trace::endProcessing(
   emitTraceForTopProcessingEvent(time, TraceConstantsType::BeginProcessing);
 
   // Unlike logEvent there is currently no flush here.
-}
-
-void Trace::endProcessing(
-  TraceEntryIDType const ep, TraceMsgLenType const len,
-  TraceEventIDType const event, NodeType const from_node, double const time,
-  uint64_t const idx1, uint64_t const idx2, uint64_t const idx3,
-  uint64_t const idx4
-) {
-  if (not checkDynamicRuntimeEnabled()) {
-    return;
-  }
-
-  if (ArgType::vt_trace_memory_usage) {
-    auto usage = util::memory::MemoryUsage::get();
-    addMemoryEvent(usage->getFirstUsage());
-  }
-
-  debug_print(
-    trace, node,
-    "event_stop: ep={}, event={}, time={}, from_node={}\n",
-    ep, event, time, from_node
-  );
-
-  auto const type = TraceConstantsType::EndProcessing;
-
-  logEvent(
-    LogType{
-      time, ep, type, event, len, from_node, idx1, idx2, idx3, idx4
-    }
-  );
 }
 
 void Trace::beginSchedulerLoop() {

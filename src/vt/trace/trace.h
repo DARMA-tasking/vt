@@ -117,20 +117,10 @@ struct Trace {
   /// Currently endProcessing MUST be called in the opposite
   /// order of beginProcessing.
   TraceProcessingTag beginProcessing(
-    TraceEntryIDType const ep, TraceMsgLenType const len,
-    TraceEventIDType const event, NodeType const from_node,
-    double const time = getCurrentTime(),
-    uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
-    uint64_t const idx4 = 0
-  ) {
-    return beginProcessing(ep, len, event, from_node, idx1, idx2, idx3, idx4, time);
-  }
-
-  TraceProcessingTag beginProcessing(
      TraceEntryIDType const ep, TraceMsgLenType const len,
      TraceEventIDType const event, NodeType const from_node,
-     uint64_t const idx1, uint64_t const idx2,
-     uint64_t const idx3, uint64_t const idx4,
+     uint64_t const idx1 = 0, uint64_t const idx2 = 0,
+     uint64_t const idx3 = 0, uint64_t const idx4 = 0,
      double const time = getCurrentTime()
   );
 
@@ -139,14 +129,6 @@ struct Trace {
   void endProcessing(
     TraceProcessingTag const& processing_tag,
     double const time = getCurrentTime()
-  );
-
-  void endProcessing(
-    TraceEntryIDType const ep, TraceMsgLenType const len,
-    TraceEventIDType const event, NodeType const from_node,
-    double const time = getCurrentTime(),
-    uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
-    uint64_t const idx4 = 0
   );
 
   void beginSchedulerLoop();
