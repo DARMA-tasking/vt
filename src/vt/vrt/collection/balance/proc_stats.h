@@ -220,19 +220,6 @@ private:
   FILE* stats_file_ = nullptr;
   /// Whether the stats directory has been created
   bool created_dir_ = false;
-
-// public:
-//   static void readRestartInfo(const std::string &fileName);
-
-//   /// \brief Returns a constant reference to the list of migrations.
-//   static const std::deque<std::vector<ElementIDType>>& getMigrationList() {
-//     return proc_move_list_;
-//   }
-
-  friend struct balance::LBManager;
-  friend struct balance::StatsRestartReader;
-  friend struct lb::StatsMapLB;
-
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
