@@ -57,16 +57,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
-
-struct StatsMapLB;
-
-}}}} /* end namespace vt::vrt::collection::lb */
-
 namespace vt { namespace vrt { namespace collection { namespace balance {
-
-struct LBManager;
-struct StatsRestartReader;
 
 struct ProcStats : runtime::component::Component<ProcStats> {
   using MigrateFnType = std::function<void(NodeType)>;
