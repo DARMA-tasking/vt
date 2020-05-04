@@ -91,8 +91,11 @@ void StatsRestartReader::clearMoveList(PhaseType phase) {
 }
 
 bool StatsRestartReader::needsLB(PhaseType phase) const {
-  vtAssert(proc_phase_runs_LB_.size() > phase, "Phase must exist");
-  return proc_phase_runs_LB_.at(phase);
+  if (proc_phase_runs_LB_.size() > phase) {
+    return proc_phase_runs_LB_.at(phase);
+  } else {
+    return false;
+  }
 }
 
 void StatsRestartReader::readStats(std::string const& fileName) {
