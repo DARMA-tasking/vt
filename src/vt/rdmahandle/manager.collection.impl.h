@@ -140,8 +140,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
       rdma, node,
       "CollectionHandle: registering LB listener\n"
     );
-    auto lb_manager = vrt::collection::balance::LBManager::getProxy();
-    lb_manager.get()->registerListenerAfterLB([=](PhaseType){
+    theLBManager()->registerListenerAfterLB([=](PhaseType){
       sub_proxy.get()->afterLB();
     });
 #   endif

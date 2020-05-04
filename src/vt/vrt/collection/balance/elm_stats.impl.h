@@ -108,7 +108,7 @@ template <typename ColT>
 
   using MsgType = InvokeReduceMsg;
 
-  auto lb_man = LBManager::getProxy();
+  auto lb_man = theLBManager()->getProxy();
 
   auto const single_node = theContext()->getNumNodes() == 1;
   auto const lb = lb_man.get()->decideLBToRun(cur_phase);

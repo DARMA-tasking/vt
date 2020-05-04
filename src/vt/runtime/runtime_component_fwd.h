@@ -91,6 +91,7 @@ struct CollectionManager;
 namespace vrt { namespace collection { namespace balance {
 struct ProcStats;
 struct StatsRestartReader;
+struct LBManager;
 }}}
 namespace group {
 struct GroupManager;

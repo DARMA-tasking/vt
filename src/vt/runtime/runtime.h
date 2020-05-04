@@ -165,6 +165,7 @@ public:
   ComponentPtrType<rdma::Manager> theHandleRDMA;
   ComponentPtrType<vrt::collection::balance::ProcStats> theProcStats;
   ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader;
+  ComponentPtrType<vrt::collection::balance::LBManager> theLBManager;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;

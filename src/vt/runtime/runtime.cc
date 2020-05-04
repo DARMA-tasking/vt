@@ -1342,12 +1342,13 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<vrt::collection::CollectionManager>(
     &theCollection, Deps<
-      ctx::Context,                       // Everything depends on theContext
-      messaging::ActiveMessenger,         // Depends on for messaging
-      group::GroupManager,                // For broadcasts
-      sched::Scheduler,                   // For scheduling work
-      location::LocationManager,          // For element location
-      vrt::collection::balance::ProcStats // For stat collection
+      ctx::Context,                        // Everything depends on theContext
+      messaging::ActiveMessenger,          // Depends on for messaging
+      group::GroupManager,                 // For broadcasts
+      sched::Scheduler,                    // For scheduling work
+      location::LocationManager,           // For element location
+      vrt::collection::balance::ProcStats, // For stat collection
+      vrt::collection::balance::LBManager  // For load balancing
     >{}
   );
 
@@ -1370,6 +1371,14 @@ void Runtime::initializeComponents() {
     &theStatsReader, Deps<
       ctx::Context,                        // Everything depends on theContext
       vrt::collection::balance::ProcStats  // Depends on proc stats for input
+    >{}
+  );
+
+  p_->registerComponent<vrt::collection::balance::LBManager>(
+    &theLBManager, Deps<
+      ctx::Context,                        // Everything depends on theContext
+      util::memory::MemoryUsage,           // Output mem usage on phase change
+      vrt::collection::balance::ProcStats  // For stat collection
     >{}
   );
 
@@ -1400,6 +1409,7 @@ void Runtime::initializeComponents() {
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
   p_->add<vrt::collection::balance::ProcStats>();
+  p_->add<vrt::collection::balance::LBManager>();
 
   if (needStatsRestartReader()) {
     p_->add<vrt::collection::balance::StatsRestartReader>();

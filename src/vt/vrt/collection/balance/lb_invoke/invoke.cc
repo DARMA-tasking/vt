@@ -60,7 +60,12 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/*static*/ objgroup::proxy::Proxy<LBManager> LBManager::proxy_;
+/*static*/ std::unique_ptr<LBManager> LBManager::construct() {
+  auto ptr = std::make_unique<LBManager>();
+  auto proxy = theObjGroup()->makeCollective<LBManager>(ptr.get());
+  proxy.get()->setProxy(proxy);
+  return ptr;
+}
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   debug_print(
@@ -188,13 +193,12 @@ void LBManager::waitLBCollective() {
   );
 }
 
-/*static*/ void LBManager::finishedRunningLB(PhaseType phase) {
+void LBManager::finishedRunningLB(PhaseType phase) {
   debug_print(
     lb, node,
     "finishedRunningLB\n"
   );
-  auto proxy = getProxy();
-  proxy.get()->releaseImpl(phase);
+  releaseImpl(phase);
 }
 
 void LBManager::releaseImpl(PhaseType phase, std::size_t num_calls) {

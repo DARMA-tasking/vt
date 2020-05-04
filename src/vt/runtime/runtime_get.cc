@@ -129,6 +129,7 @@ rdma::Manager*              theHandleRDMA()         { return CUR_RT->theHandleRD
 util::memory::MemoryUsage*  theMemUsage()           { return CUR_RT->theMemUsage;       }
 vrt::collection::balance::ProcStats* theProcStats() { return CUR_RT->theProcStats;      }
 vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->theStatsReader;      }
+vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 
 #if backend_check_enabled(trace_enabled)
 trace::Trace*               theTrace()          { return CUR_RT->theTrace;          }

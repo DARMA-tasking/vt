@@ -51,9 +51,7 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-CollectionManager::CollectionManager() {
-  balance::LBManager::init();
-}
+CollectionManager::CollectionManager() { }
 
 void CollectionManager::finalize() {
   cleanupAll<>();
@@ -65,9 +63,6 @@ void CollectionManager::finalize() {
     theProcStats()->clearStats();
   }
 #endif
-
-  // Destroy the LBManager
-  balance::LBManager::destroy();
 }
 
 /*virtual*/ CollectionManager::~CollectionManager() { }
@@ -107,8 +102,7 @@ void CollectionManager::startPhaseCollective(
     theTerm()->produce(term::any_epoch_sentinel);
     lb_continuations_.push_back(fn);
   } else {
-    auto proxy = balance::LBManager::getProxy();
-    proxy.get()->waitLBCollective();
+    theLBManager()->waitLBCollective();
   }
 #else
   if (fn != nullptr) {

@@ -269,7 +269,7 @@ void BaseLB::finalize(CountMsg* msg) {
     fflush(stdout);
   }
   theProcStats()->startIterCleanup();
-  balance::LBManager::finishedRunningLB(phase_);
+  theLBManager()->finishedRunningLB(phase_);
 }
 
 void BaseLB::migrationDone() {

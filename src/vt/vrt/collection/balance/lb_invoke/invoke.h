@@ -50,13 +50,13 @@
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/configs/arguments/args.h"
-#include "vt/objgroup/headers.h"
+#include "vt/runtime/component/component_pack.h"
 
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct LBManager {
+struct LBManager : runtime::component::Component<LBManager> {
   using ArgType        = vt::arguments::ArgConfig;
   using ListenerFnType = std::function<void(PhaseType)>;
 
@@ -65,13 +65,9 @@ struct LBManager {
   LBManager(LBManager&&) = default;
   virtual ~LBManager() {}
 
-  static void init() {
-    LBManager::proxy_ = theObjGroup()->makeCollective<LBManager>();
-  }
+  std::string name() override { return "LBManager"; }
 
-  static void destroy() {
-    theObjGroup()->destroyCollective(LBManager::proxy_);
-  }
+  static std::unique_ptr<LBManager> construct();
 
 public:
   /*
@@ -88,14 +84,23 @@ public:
   /*
    * Get the proxy for the LBManager
    */
-  static objgroup::proxy::Proxy<LBManager> getProxy() { return proxy_; }
+  objgroup::proxy::Proxy<LBManager> getProxy() const {
+    return proxy_;
+  }
 
   /*
-   * Tell the manage the LB is finished. This should *not* be called by the
+   * Setup the proxy for the LBManager
+   */
+  void setProxy(objgroup::proxy::Proxy<LBManager> proxy) {
+    proxy_ = proxy;
+  }
+
+  /*
+   * Tell the manager the LB is finished. This should *not* be called by the
    * user, only by load balancers. Not private/protected as friending every LBs
    * adds too much overhead
    */
-  static void finishedRunningLB(PhaseType phase);
+  void finishedRunningLB(PhaseType phase);
 
 protected:
   void collectiveImpl(
@@ -143,10 +148,15 @@ private:
   std::function<void()> destroy_lb_        = nullptr;
   bool synced_in_lb_                       = true;
   std::vector<ListenerFnType> listeners_   = {};
-
-  static objgroup::proxy::Proxy<LBManager> proxy_;
+  objgroup::proxy::Proxy<LBManager> proxy_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
+
+namespace vt {
+
+extern vrt::collection::balance::LBManager* theLBManager();
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H*/
