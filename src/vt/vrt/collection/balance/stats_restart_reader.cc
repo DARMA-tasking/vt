@@ -50,6 +50,8 @@
 #include "vt/objgroup/manager.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
 
+#include <cinttypes>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void StatsRestartReader::setProxy(
@@ -138,7 +140,7 @@ void StatsRestartReader::inputStatsFile(
   fpos_t pos;
   bool finished = false;
   while (!finished) {
-    if (fscanf(pFile, "%zu %c %lu %c %lf",
+    if (fscanf(pFile, "%zu %c %" PRIu64 " %c %lf",
                &phaseID, &separator, &elmID, &separator, &tval) > 0) {
       fgetpos (pFile,&pos);
       fscanf (pFile, "%c", &separator);
