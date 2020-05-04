@@ -216,36 +216,18 @@ private:
   std::vector<CommMapType> proc_comm_;
   /// The current element ID
   ElementIDType next_elm_;
+  /// The stats file name for outputting instrumentation
+  FILE* stats_file_ = nullptr;
+  /// Whether the stats directory has been created
+  bool created_dir_ = false;
 
-public:
-  static void readRestartInfo(const std::string &fileName);
+// public:
+//   static void readRestartInfo(const std::string &fileName);
 
-public:
-
-  // @todo: make these private and friend appropriate classes
-public:
-
-  /// \brief Returns a constant reference to the list of migrations.
-  static const std::deque<std::vector<ElementIDType>>& getMigrationList() {
-    return proc_move_list_;
-  }
-
-private:
-  static FILE* stats_file_;
-  static bool created_dir_;
-
-  /// \brief Queue of migrations for each iteration.
-  /// \note At each iteration, a vector of length 2 times (# of migrations)
-  /// is specified. The vector contains the "permanent" ID of the element
-  /// to migrate followed by the node ID to migrate to.
-  static std::deque<std::vector<ElementIDType>> proc_move_list_;
-
-  /// \brief Vector of booleans to indicate whether the user-specified
-  /// map migrates elements for a specific iteration.
-  static std::vector<bool> proc_phase_runs_LB_;
-
-  /// \brief Private object to migrate information from a (restart) input file
-  static StatsRestartReader *proc_reader_;
+//   /// \brief Returns a constant reference to the list of migrations.
+//   static const std::deque<std::vector<ElementIDType>>& getMigrationList() {
+//     return proc_move_list_;
+//   }
 
   friend struct balance::LBManager;
   friend struct balance::StatsRestartReader;

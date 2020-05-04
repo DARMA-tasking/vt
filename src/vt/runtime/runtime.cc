@@ -71,6 +71,7 @@
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
+#include "vt/vrt/collection/balance/stats_restart_reader.h"
 
 #include <memory>
 #include <iostream>
@@ -981,22 +982,17 @@ void Runtime::checkForArgumentErrors() {
   #endif
 }
 
-void Runtime::initializeLB() {
+bool Runtime::needStatsRestartReader() {
   #if backend_check_enabled(lblite)
     if (ArgType::vt_lb_stats) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
       if (ArgType::vt_lb_name == lbNames[mapLB]) {
-        auto const node = theContext->getNode();
-        const std::string &base_file = ArgType::vt_lb_stats_file_in;
-        const std::string &dir = ArgType::vt_lb_stats_dir_in;
-        auto const file = fmt::format("{}.{}.out", base_file, node);
-        const auto file_name =
-        static_cast<std::string>(fmt::format("{}/{}", dir, file));
-        vrt::collection::balance::ProcStats::readRestartInfo(file_name);
+        return true;
       }
     }
   #endif
+  return false;
 }
 
 bool Runtime::initialize(bool const force_now) {
@@ -1004,7 +1000,6 @@ bool Runtime::initialize(bool const force_now) {
     initializeComponents();
     initializeOptionalComponents();
     initializeErrorHandlers();
-    initializeLB();
     sync();
     if (theContext->getNode() == 0) {
       printStartupBanner();
@@ -1371,6 +1366,13 @@ void Runtime::initializeComponents() {
     >{}
   );
 
+  p_->registerComponent<vrt::collection::balance::StatsRestartReader>(
+    &theStatsReader, Deps<
+      ctx::Context,                        // Everything depends on theContext
+      vrt::collection::balance::ProcStats  // Depends on proc stats for input
+    >{}
+  );
+
   p_->add<ctx::Context>();
   p_->add<util::memory::MemoryUsage>();
   p_->add<registry::Registry>();
@@ -1398,6 +1400,10 @@ void Runtime::initializeComponents() {
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
   p_->add<vrt::collection::balance::ProcStats>();
+
+  if (needStatsRestartReader()) {
+    p_->add<vrt::collection::balance::StatsRestartReader>();
+  }
 
   bool const has_workers = num_workers_ != no_workers;
   if (has_workers) {

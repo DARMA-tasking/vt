@@ -121,7 +121,7 @@ protected:
   void initializeComponents();
   void initializeOptionalComponents();
   void initializeWorkers(WorkerCountType const num_workers);
-  void initializeLB();
+  bool needStatsRestartReader();
 
   void finalizeMPI();
 
@@ -164,6 +164,7 @@ public:
   ComponentPtrType<util::memory::MemoryUsage> theMemUsage;
   ComponentPtrType<rdma::Manager> theHandleRDMA;
   ComponentPtrType<vrt::collection::balance::ProcStats> theProcStats;
+  ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;

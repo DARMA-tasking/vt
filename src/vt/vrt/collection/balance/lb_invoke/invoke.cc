@@ -53,6 +53,7 @@
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
+#include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
@@ -83,7 +84,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 
   //--- User-specified map without any change, thus do not run
   if ((ArgType::vt_lb_name == lb_names_[LBType::StatsMapLB]) and
-      !balance::ProcStats::proc_phase_runs_LB_[phase]) {
+      not theStatsReader()->needsLB(phase)) {
     return LBType::NoLB;
   }
 

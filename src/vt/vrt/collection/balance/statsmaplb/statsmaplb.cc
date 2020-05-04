@@ -46,6 +46,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
+#include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/context/context.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
@@ -56,10 +57,9 @@ void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
 
 void StatsMapLB::runLB() {
 
-  auto epoch = startMigrationCollective();
-  theMsg()->pushEpoch(epoch);
+  startMigrationCollective();
 
-  auto &myNewList = balance::ProcStats::proc_move_list_[phase_];
+  auto const& myNewList = theStatsReader()->getMoveList(phase_);
   for (size_t in = 0; in < myNewList.size(); in += 2) {
     auto temp_id = theProcStats()->permToTemp(myNewList[in]);
 
@@ -68,11 +68,9 @@ void StatsMapLB::runLB() {
     migrateObjectTo(temp_id, myNewList[in+1]);
   }
 
-  theMsg()->popEpoch(epoch);
+  theStatsReader()->clearMoveList(phase_);
+
   finishMigrationCollective();
-
-  myNewList.clear();
-
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
