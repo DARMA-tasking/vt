@@ -55,20 +55,22 @@ CollectionManager::CollectionManager() {
   balance::LBManager::init();
 }
 
-/*virtual*/ CollectionManager::~CollectionManager() {
+void CollectionManager::finalize() {
   cleanupAll<>();
 
   // Statistics output when LB is enabled and appropriate flag is enabled
 #if backend_check_enabled(lblite)
   if (ArgType::vt_lb_stats) {
-    balance::ProcStats::outputStatsFile();
-    balance::ProcStats::clearStats();
+    theProcStats()->outputStatsFile();
+    theProcStats()->clearStats();
   }
 #endif
 
   // Destroy the LBManager
   balance::LBManager::destroy();
 }
+
+/*virtual*/ CollectionManager::~CollectionManager() { }
 
 #if backend_check_enabled(lblite)
 struct StartRootedMsg : vt::Message {

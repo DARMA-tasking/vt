@@ -163,6 +163,7 @@ public:
   ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
   ComponentPtrType<util::memory::MemoryUsage> theMemUsage;
   ComponentPtrType<rdma::Manager> theHandleRDMA;
+  ComponentPtrType<vrt::collection::balance::ProcStats> theProcStats;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;

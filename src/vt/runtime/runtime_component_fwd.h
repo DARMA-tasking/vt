@@ -88,6 +88,9 @@ struct VirtualContextManager;
 namespace vrt { namespace collection {
 struct CollectionManager;
 }}
+namespace vrt { namespace collection { namespace balance {
+struct ProcStats;
+}}}
 namespace group {
 struct GroupManager;
 }

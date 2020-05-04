@@ -67,10 +67,8 @@ void BaseLB::startLBHandler(
   phase_ = msg->getPhase();
   proxy_ = proxy;
 
-  vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase_);
-
-  auto const& in_load_stats = balance::ProcStats::proc_data_[phase_];
-  auto const& in_comm_stats = balance::ProcStats::proc_comm_[phase_];
+  auto const& in_load_stats = theProcStats()->getProcLoad(phase_);
+  auto const& in_comm_stats = theProcStats()->getProcComm(phase_);
   importProcessorData(in_load_stats, in_comm_stats);
   computeStatistics();
 }
@@ -228,10 +226,7 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
   for (auto&& elm : migrate_list) {
     auto obj_id  = std::get<0>(elm);
     auto to_node = std::get<1>(elm);
-    vtAssertExpr(
-      balance::ProcStats::proc_migrate_.find(obj_id) !=
-      balance::ProcStats::proc_migrate_.end()
-    );
+    vtAssert(theProcStats()->hasObjectToMigrate(obj_id), "Must have object");
     migrateObjectTo(obj_id, to_node);
   }
 }
@@ -239,20 +234,19 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
   auto from = objGetNode(obj_id);
   if (from != to) {
-    auto& migrator = balance::ProcStats::proc_migrate_;
-    auto iter = migrator.find(obj_id);
+    bool has_object = theProcStats()->hasObjectToMigrate(obj_id);
 
     debug_print(
       lb, node,
       "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
-      obj_id, from, to, iter != migrator.end()
+      obj_id, from, to, has_object
     );
 
-    if (iter == migrator.end()) {
-      off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
-    } else {
+    if (has_object) {
       local_migration_count_++;
-      iter->second(to);
+      theProcStats()->migrateObjTo(obj_id, to);
+    } else {
+      off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
     }
   }
 }
@@ -274,7 +268,7 @@ void BaseLB::finalize(CountMsg* msg) {
     );
     fflush(stdout);
   }
-  balance::ProcStats::startIterCleanup();
+  theProcStats()->startIterCleanup();
   balance::LBManager::finishedRunningLB(phase_);
 }
 

@@ -59,23 +59,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/*static*/
-std::vector<std::unordered_map<ElementIDType,TimeType>>
-  ProcStats::proc_data_ = {};
+void ProcStats::setProxy(objgroup::proxy::Proxy<ProcStats> in_proxy) {
+  proxy_ = in_proxy;
+}
 
-/*static*/ std::vector<CommMapType> ProcStats::proc_comm_ = {};
-
-/*static*/
-std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
-  ProcStats::proc_migrate_ = {};
-
-/*static*/ std::unordered_map<ElementIDType,ElementIDType>
-  ProcStats::proc_temp_to_perm_ =  {};
-
-/*static*/ std::unordered_map<ElementIDType,ElementIDType>
-  ProcStats::proc_perm_to_temp_ =  {};
-
-/*static*/ ElementIDType ProcStats::next_elm_ = 1;
+/*static*/ std::unique_ptr<ProcStats> ProcStats::construct() {
+  auto ptr = std::make_unique<ProcStats>();
+  auto proxy = theObjGroup()->makeCollective<ProcStats>(ptr.get());
+  proxy.get()->setProxy(proxy);
+  return ptr;
+}
 
 /*static*/ FILE* ProcStats::stats_file_ = nullptr;
 
@@ -313,7 +306,52 @@ void StatsRestartReader::scatterMsgs(VecMsg *msg) {
   ProcStats::proc_reader_->readStats(fileName);
 }
 
-/*static*/ void ProcStats::clearStats() {
+ElementIDType ProcStats::tempToPerm(ElementIDType temp_id) const {
+  auto iter = proc_temp_to_perm_.find(temp_id);
+  if (iter == proc_temp_to_perm_.end()) {
+    return no_element_id;
+  }
+  return iter->second;
+}
+
+ElementIDType ProcStats::permToTemp(ElementIDType perm_id) const {
+  auto iter = proc_perm_to_temp_.find(perm_id);
+  if (iter == proc_perm_to_temp_.end()) {
+    return no_element_id;
+  }
+  return iter->second;
+}
+
+bool ProcStats::hasObjectToMigrate(ElementIDType obj_id) const {
+  auto iter = proc_migrate_.find(obj_id);
+  return iter != proc_migrate_.end();
+}
+
+bool ProcStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
+  auto iter = proc_migrate_.find(obj_id);
+  if (iter == proc_migrate_.end()) {
+    return false;
+  }
+
+  auto migrate_fn = iter->second;
+  migrate_fn(to_node);
+
+  return true;
+}
+
+ProcStats::LoadMapType const&
+ProcStats::getProcLoad(PhaseType phase) const {
+  vtAssert(proc_data_.size() > phase, "Phase must exist in load data");
+  return proc_data_.at(phase);
+}
+
+CommMapType const& ProcStats::getProcComm(PhaseType phase) const {
+  vtAssert(proc_comm_.size() > phase, "Phase must exist in comm data");
+  return proc_comm_.at(phase);
+
+}
+
+void ProcStats::clearStats() {
   ProcStats::proc_comm_.clear();
   ProcStats::proc_data_.clear();
   ProcStats::proc_migrate_.clear();
@@ -325,7 +363,7 @@ void StatsRestartReader::scatterMsgs(VecMsg *msg) {
   delete ProcStats::proc_reader_;
 }
 
-/*static*/ void ProcStats::startIterCleanup() {
+void ProcStats::startIterCleanup() {
   // Convert the temp ID proc_data_ for the last iteration into perm ID for
   // stats output
   auto const phase = proc_data_.size() - 1;
@@ -345,20 +383,20 @@ void StatsRestartReader::scatterMsgs(VecMsg *msg) {
   ProcStats::proc_perm_to_temp_.clear();
 }
 
-/*static*/ ElementIDType ProcStats::getNextElm() {
+ElementIDType ProcStats::getNextElm() {
   auto const& this_node = theContext()->getNode();
   auto elm = next_elm_++;
   return (elm << 32) | this_node;
 }
 
-/*static*/ void ProcStats::releaseLB() {
+void ProcStats::releaseLB() {
   using MsgType = CollectionPhaseMsg;
   auto msg = makeMessage<MsgType>();
   theMsg()->broadcastMsg<MsgType,CollectionManager::releaseLBPhase>(msg.get());
   CollectionManager::releaseLBPhase(msg.get());
 }
 
-/*static*/ void ProcStats::createStatsFile() {
+void ProcStats::createStatsFile() {
   using ArgType = vt::arguments::ArgConfig;
   auto const node = theContext()->getNode();
   auto const base_file = std::string(ArgType::vt_lb_stats_file);
@@ -389,14 +427,14 @@ void StatsRestartReader::scatterMsgs(VecMsg *msg) {
   stats_file_ = fopen(file_name.c_str(), "w+");
 }
 
-/*static*/ void ProcStats::closeStatsFile() {
+void ProcStats::closeStatsFile() {
   if (stats_file_) {
     fclose(stats_file_);
     stats_file_  = nullptr;
   }
 }
 
-/*static*/ void ProcStats::outputStatsFile() {
+void ProcStats::outputStatsFile() {
   if (stats_file_ == nullptr) {
     createStatsFile();
   }

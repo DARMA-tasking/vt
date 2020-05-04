@@ -1347,10 +1347,12 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<vrt::collection::CollectionManager>(
     &theCollection, Deps<
-      ctx::Context,               // Everything depends on theContext
-      messaging::ActiveMessenger, // Depends on active messenger for messaging
-      group::GroupManager,        // For broadcasts
-      sched::Scheduler            // For scheduling work
+      ctx::Context,                       // Everything depends on theContext
+      messaging::ActiveMessenger,         // Depends on for messaging
+      group::GroupManager,                // For broadcasts
+      sched::Scheduler,                   // For scheduling work
+      location::LocationManager,          // For element location
+      vrt::collection::balance::ProcStats // For stat collection
     >{}
   );
 
@@ -1360,6 +1362,12 @@ void Runtime::initializeComponents() {
       messaging::ActiveMessenger,         // Depends on active messenger for messaging
       vrt::collection::CollectionManager, // For RDMA on collection elements
       objgroup::ObjGroupManager           // For RDMA on objgroups
+    >{}
+  );
+
+  p_->registerComponent<vrt::collection::balance::ProcStats>(
+    &theProcStats, Deps<
+      ctx::Context                        // Everything depends on theContext
     >{}
   );
 
@@ -1389,6 +1397,7 @@ void Runtime::initializeComponents() {
   p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
+  p_->add<vrt::collection::balance::ProcStats>();
 
   bool const has_workers = num_workers_ != no_workers;
   if (has_workers) {

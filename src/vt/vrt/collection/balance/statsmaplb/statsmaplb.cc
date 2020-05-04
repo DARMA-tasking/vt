@@ -61,13 +61,11 @@ void StatsMapLB::runLB() {
 
   auto &myNewList = balance::ProcStats::proc_move_list_[phase_];
   for (size_t in = 0; in < myNewList.size(); in += 2) {
-    auto iter = balance::ProcStats::proc_perm_to_temp_.find(myNewList[in]);
-    if (iter != balance::ProcStats::proc_perm_to_temp_.end()) {
-      migrateObjectTo(iter->second, myNewList[in+1]);
-    }
-    else {
-      vtAssertExpr(iter != balance::ProcStats::proc_perm_to_temp_.end());
-    }
+    auto temp_id = theProcStats()->permToTemp(myNewList[in]);
+
+    vtAssert(temp_id != balance::no_element_id, "Must have valid ID here");
+
+    migrateObjectTo(temp_id, myNewList[in+1]);
   }
 
   theMsg()->popEpoch(epoch);
