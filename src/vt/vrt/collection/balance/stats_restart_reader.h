@@ -75,6 +75,8 @@ public:
 
   std::vector<ElementIDType> const& getMoveList(PhaseType phase) const;
 
+  std::deque<std::vector<ElementIDType>> const& getMigrationList() const;
+
   void clearMoveList(PhaseType phase);
 
   bool needsLB(PhaseType phase) const;

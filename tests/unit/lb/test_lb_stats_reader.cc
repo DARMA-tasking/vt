@@ -49,6 +49,7 @@
 
 #include <vt/transport.h>
 #include <vt/vrt/collection/balance/proc_stats.h>
+#include <vt/vrt/collection/balance/stats_restart_reader.h>
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
@@ -86,7 +87,6 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   const size_t numElements = 5;
   std::vector<ElementIDType> myElemList(numElements, 0);
 
-  using Stats = vt::vrt::collection::balance::ProcStats;
   for (size_t ii = 0; ii < numElements; ++ii) {
 	//--- Shift by 1 to avoid the null permID
     myElemList[ii] = getElemPermID(ii+1, this_node);
@@ -129,7 +129,8 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
 
   //--- Start the testing
 
-  Stats::readRestartInfo(fileName);
+  auto ptr = vrt::collection::balance::StatsRestartReader::construct();
+  ptr->readStats(fileName);
 
   //--- Spin here so the test does not end before the communications complete
 
@@ -139,7 +140,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
 
   //--- Check the read values
 
-  auto const &migrationList = Stats::getMigrationList();
+  auto const &migrationList = ptr->getMigrationList();
   auto const numIters = migrationList.size();
 
   EXPECT_TRUE(numIters == iterID - 1);

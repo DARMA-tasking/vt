@@ -98,6 +98,11 @@ bool StatsRestartReader::needsLB(PhaseType phase) const {
   }
 }
 
+std::deque<std::vector<ElementIDType>> const&
+StatsRestartReader::getMigrationList() const {
+  return proc_move_list_;
+}
+
 void StatsRestartReader::readStats(std::string const& fileName) {
 
   // Read the input files
