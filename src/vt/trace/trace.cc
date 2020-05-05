@@ -538,7 +538,7 @@ void Trace::beginSchedulerLoop() {
 
 void Trace::endSchedulerLoop() {
   vtAssert(
-    event_holds_.size() > 1,
+    event_holds_.size() >= 1,
     "Too many endSchedulerLoop calls."
   );
 
