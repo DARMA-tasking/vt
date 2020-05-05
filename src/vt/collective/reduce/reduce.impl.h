@@ -87,10 +87,10 @@ template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 SequentialIDType Reduce::reduce(
   NodeType const& root, MsgT* msg, Callback<MsgT> cb, TagType const& tag,
   SequentialIDType const& seq, ReduceNumType const& num_contrib,
-  VirtualProxyType const& proxy
+  VirtualProxyType const& proxy, ObjGroupProxyType objgroup
 ) {
   msg->setCallback(cb);
-  return reduce<MsgT,f>(root,msg,tag,seq,num_contrib,proxy);
+  return reduce<MsgT,f>(root,msg,tag,seq,num_contrib,proxy,objgroup);
 }
 
 template <
