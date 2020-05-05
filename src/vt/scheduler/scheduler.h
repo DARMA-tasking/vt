@@ -133,11 +133,8 @@ private:
 
   /**
    * \brief Executes a specific work unit.
-   *
-   * Returns true if returning from the TOP LEVEL scheduler running.
-   * (Nested schedulers can be run as a result of barriers, etc.)
    */
-  bool runWorkUnit(UnitType& work);
+  void runWorkUnit(UnitType& work);
   bool progressMsgOnlyImpl();
   bool progressImpl();
 

@@ -90,7 +90,7 @@ void Scheduler::enqueue(PriorityType priority, ActionType action) {
 # endif
 }
 
-bool Scheduler::runWorkUnit(UnitType& work) {
+void Scheduler::runWorkUnit(UnitType& work) {
   bool const is_term = work.isTerm();
 
   ++action_depth_;
@@ -100,8 +100,6 @@ bool Scheduler::runWorkUnit(UnitType& work) {
   if (is_term) {
     --num_term_msgs_;
   }
-
-  return action_depth_ == 0;
 }
 
 /*private*/
