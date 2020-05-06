@@ -56,6 +56,7 @@
 #include "vt/collective/tree/tree.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/collective_ops.h"
+#include "vt/pipe/pipe_headers.h"
 
 #include <memory>
 #include <set>

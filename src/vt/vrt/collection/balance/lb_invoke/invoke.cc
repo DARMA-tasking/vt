@@ -223,7 +223,7 @@ void LBManager::releaseNow(PhaseType phase) {
   if (this_node == 0) {
     vt_print(
       lb,
-      "LBManaager::releaseNow: finished LB, phase={}, invocations={}\n",
+      "LBManager::releaseNow: finished LB, phase={}, invocations={}\n",
       phase, num_invocations_
     );
   }

@@ -50,12 +50,13 @@
 #include "vt/vrt/proxy/base_elm_proxy.h"
 #include "vt/vrt/proxy/collection_elm_proxy.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/vrt/collection/balance/elm_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 /*
- * `CollectionIndexProxy' (variant with IndexT baked into class, allowing
- * constructors to be forwarded for building indicies in line without the type.
+ * `CollectionProxy' (variant with IndexT baked into class, allowing
+ * constructors to be forwarded for building indices in line without the type.
  */
 
 template <typename ColT, typename IndexT = typename ColT::IndexType>
@@ -107,6 +108,14 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
     >::type
   >
   ElmProxyType operator()(IndexU const& idx) const;
+
+  /**
+   * Sets a subphase from which load records should be considered, in
+   * place of the summed load over the entire phase.
+   *
+   * This must be called on every process
+   */
+  void setFocusedSubPhase(balance::ElementStats::SubphaseType subphase);
 };
 
 }}} /* end namespace vt::vrt::collection */

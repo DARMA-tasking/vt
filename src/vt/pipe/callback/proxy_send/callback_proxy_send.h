@@ -51,7 +51,7 @@
 #include "vt/pipe/callback/callback_base.h"
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/vrt/proxy/collection_elm_proxy.h"
-#include "vt/vrt/collection/proxy.h"
+#include "vt/vrt/proxy/collection_proxy.h"
 
 #include <cassert>
 
