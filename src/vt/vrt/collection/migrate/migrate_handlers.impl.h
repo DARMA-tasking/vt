@@ -50,7 +50,6 @@
 #include "vt/vrt/collection/migrate/migrate_msg.h"
 #include "vt/vrt/collection/migrate/migrate_handlers.h"
 #include "vt/vrt/collection/migrate/manager_migrate_attorney.h"
-#include "vt/serialization/serialization.h"
 
 #include <memory>
 #include <functional>
@@ -81,12 +80,12 @@ template <typename ColT, typename IndexT>
   // auto const& buf_size = msg->getPutSize();
 
   // auto vc_elm_ptr = std::make_unique<ColT>();
-  // auto vc_raw_ptr = ::serialization::interface::deserialize<ColT>(
-  //   buf, buf_size, vc_elm_ptr.get()
+  // auto vc_raw_ptr = ::checkpoint::deserialize<ColT>(
+  //   buf, vc_elm_ptr.get()
   // );
   // ColT* col_t = new ColT();
-  // auto vc_raw_ptr = ::serialization::interface::deserialize<ColT>(
-  //   buf, buf_size, col_t
+  // auto vc_raw_ptr = ::checkpoint::deserialize<ColT>(
+  //   buf, col_t
   // );
   auto vc_elm_ptr = std::make_unique<ColT>(std::move(*msg->elm_));
 

@@ -50,7 +50,6 @@
 #include "vt/messaging/active.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
-#include "vt/serialization/serialization.h"
 #include "vt/runnable/general.h"
 #include "vt/serialization/messaging/serialized_data_msg.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
@@ -97,7 +96,7 @@ template <typename UserMsgT>
   auto ptr_offset =
     reinterpret_cast<char*>(sys_msg) + sizeof(SerialWrapperMsgType<UserMsgT>);
   auto user_msg = makeMessage<UserMsgT>();
-  deserializeInPlace<UserMsgT>(ptr_offset,ptr_size,user_msg.get());
+  checkpoint::deserializeInPlace<UserMsgT>(ptr_offset,user_msg.get());
   messageResetDeserdes(user_msg);
   runnable::Runnable<UserMsgT>::run(
     handler, nullptr, user_msg.get(), sys_msg->from_node
@@ -132,9 +131,8 @@ template <typename UserMsgT>
     (RDMA_GetType ptr, ActionType action){
       // be careful here not to use "msg", it is no longer valid
       auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
-      auto ptr_size = std::get<1>(ptr);
       auto msg = makeMessage<UserMsgT>();
-      deserializeInPlace<UserMsgT>(raw_ptr, ptr_size, msg.get());
+      checkpoint::deserializeInPlace<UserMsgT>(raw_ptr, msg.get());
       messageResetDeserdes(msg);
 
       debug_print(
@@ -165,8 +163,8 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   auto const handler = sys_msg->handler;
 
   auto user_msg = makeMessage<UserMsgT>();
-  deserializeInPlace<UserMsgT>(
-    sys_msg->payload.data(), sys_msg->bytes, user_msg.get()
+  checkpoint::deserializeInPlace<UserMsgT>(
+    sys_msg->payload.data(), user_msg.get()
   );
   messageResetDeserdes(user_msg);
 
@@ -377,7 +375,7 @@ template <typename MsgT, typename BaseT>
   SizeType ptr_size = 0;
   auto sys_size = sizeof(typename decltype(sys_msg)::MsgType);
 
-  auto serialized_msg = serialize(
+  auto serialized_msg = checkpoint::serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
       if (size >= serialized_msg_eager_size) {
@@ -460,7 +458,7 @@ template <typename MsgT, typename BaseT>
   SerialByteType* ptr = nullptr;
   SizeType ptr_size = 0;
 
-  auto serialized_msg = serialize(
+  auto serialized_msg = checkpoint::serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
 
@@ -520,7 +518,7 @@ template <typename MsgT, typename BaseT>
         );
       } else {
         auto user_msg = makeMessage<MsgT>();
-        deserializeInPlace<MsgT>(ptr, ptr_size, user_msg.get());
+        checkpoint::deserializeInPlace<MsgT>(ptr, user_msg.get());
         messageResetDeserdes(user_msg);
 
         debug_print(
