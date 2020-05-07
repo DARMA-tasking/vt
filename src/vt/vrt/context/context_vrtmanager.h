@@ -62,7 +62,6 @@
 #include "vt/utils/bits/bits_common.h"
 #include "vt/activefn/activefn.h"
 #include "vt/topos/mapping/mapping_function.h"
-#include "vt/serialization/serialization.h"
 
 namespace vt { namespace vrt {
 

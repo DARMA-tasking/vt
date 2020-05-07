@@ -52,11 +52,7 @@
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/vrt_common.h"
 
-#if HAS_SERIALIZATION_LIBRARY
-  #define HAS_DETECTION_COMPONENT 1
-  #include "serialization_library_headers.h"
-  #include "traits/serializable_traits.h"
-#endif
+#include <checkpoint/checkpoint.h>
 
 #include <type_traits>
 
@@ -88,7 +84,7 @@ struct ColMsgWrap : CollectionMessage<ColT,BaseMsgT> {
     typename SerializerT,
     typename T=void,
     typename = typename std::enable_if<
-      ::serdes::SerializableTraits<UserMsgT>::has_serialize_function, T
+      ::checkpoint::SerializableTraits<UserMsgT>::has_serialize_function, T
     >::type
   >
   void serialize(SerializerT& s) {

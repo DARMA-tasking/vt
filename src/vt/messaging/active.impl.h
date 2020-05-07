@@ -120,8 +120,6 @@ void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
   envelopeSetTag(msg->env, tag);
 }
 
-#if HAS_SERIALIZATION_LIBRARY
-
 template <typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   NodeType dest,
@@ -134,7 +132,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   // through use of a wrapped message which does not define serialization.
   // (Although such probably represents an opportunity for additional cleanup.)
   static_assert( // that a message is serializable.
-    ::serdes::SerializableTraits<MessageT>::is_serializable,
+    ::checkpoint::SerializableTraits<MessageT>::is_serializable,
     "Message going through serialization must meet all requirements."
   );
 
@@ -149,8 +147,6 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
     return SerializedMessenger::sendSerialMsg<MessageT>(dest,msgp,han);
   }
 }
-
-#endif
 
 template <typename MessageT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(

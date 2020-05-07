@@ -47,11 +47,10 @@
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
-#include "vt/serialization/serialization.h"
-
-using namespace ::serialization::interface;
 
 namespace vt { namespace serialization {
+
+using SizeType = std::size_t;
 
 static constexpr SizeType const serialized_msg_eager_size = 128;
 

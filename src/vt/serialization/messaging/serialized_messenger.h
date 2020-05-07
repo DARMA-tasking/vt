@@ -55,8 +55,6 @@
 #include <cstdlib>
 #include <functional>
 
-using namespace ::serialization::interface;
-
 namespace vt { namespace serialization {
 
 template <typename MsgT, typename BaseEagerMsgT>

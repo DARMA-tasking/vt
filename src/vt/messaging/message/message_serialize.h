@@ -47,13 +47,9 @@
 
 #include <type_traits>
 
-#if HAS_SERIALIZATION_LIBRARY
-
 // These should probably be .. elsewhere.
 // They are lifted for demonstration purposes.
-#define HAS_DETECTION_COMPONENT 1
-#include "serialization_library_headers.h"
-#include "traits/serializable_traits.h"
+#include <checkpoint/checkpoint.h>
 
 namespace vt { namespace messaging {
 
@@ -68,7 +64,10 @@ struct has_own_serialize_member_t : std::false_type {};
 template <typename U>
 struct has_own_serialize_member_t<U,
   std::enable_if_t<
-    std::is_same<void (U::*)(::serdes::Sizer&), decltype(&U::template serialize<::serdes::Sizer&>)>::value
+    std::is_same<
+      void (U::*)(::checkpoint::Sizer&),
+      decltype(&U::template serialize<::checkpoint::Sizer&>)
+    >::value
   >>
   : std::true_type
 {};
@@ -77,14 +76,12 @@ struct has_own_serialize_member_t<U,
 // or a serialize member is declared on the precise type.
 template <typename T>
 static constexpr auto const has_own_serialize =
-  ::serdes::SerializableTraits<T>::has_serialize_noninstrusive
+  ::checkpoint::SerializableTraits<T>::has_serialize_noninstrusive
   or has_own_serialize_member_t<T>::value;
 
 #endif
 
 }} // end vt::messaging
-
-#endif
 
 /** \file */
 
