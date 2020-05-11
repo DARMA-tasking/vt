@@ -3272,6 +3272,15 @@ IndexT CollectionManager::getRange(VirtualProxyType proxy) {
   return col_holder->max_idx;
 }
 
+template <typename IndexT>
+std::string CollectionManager::makeFilename(IndexT idx, std::string file_base) {
+  std::string idx_str = "";
+  for (int i = 0; i < idx.ndims(); i++) {
+    idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
+  }
+  return fmt::format("{}-{}", file_base, idx_str);
+}
+
 template <typename ColT, typename IndexT>
 void CollectionManager::checkpointToFile(
   CollectionProxyWrapType<ColT> proxy, std::string const& file_base
@@ -3289,29 +3298,43 @@ void CollectionManager::checkpointToFile(
   vtAssert(holder_ != nullptr, "Must have valid holder for collection");
 
   holder_->foreach([=](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
-    std::string idx_str = "";
-    for (int i = 0; i < idx.ndims(); i++) {
-      idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
-    }
-    auto name = fmt::format("{}-{}", file_base, idx_str);
+    auto const name = makeFilename(idx, file_base);
     checkpoint::serializeToFile<ColT>(*static_cast<ColT*>(elm), name);
   });
 }
 
 template <
-  typename ColT//, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+  typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
 >
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::restartFromFile(
   typename ColT::IndexType range, std::string const& file_base
 ) {
+  using IndexT = typename ColT::IndexType;
+  auto const map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
+  return restartFromFileImpl<ColT>(range, file_base, map_han);
+}
+
+template <typename ColT>
+CollectionManager::CollectionProxyWrapType<ColT>
+CollectionManager::restartFromFile(
+  typename ColT::IndexType range, std::string const& file_base
+) {
+  auto const default_map = getDefaultMap<ColT>();
+  return restartFromFileImpl<ColT>(range, file_base, default_map);
+}
+
+template <typename ColT>
+CollectionManager::CollectionProxyWrapType<ColT>
+CollectionManager::restartFromFileImpl(
+  typename ColT::IndexType range, std::string const& file_base,
+  HandlerType const map_han
+) {
   using IndexType = typename ColT::IndexType;
   using BaseIdxType      = vt::index::BaseIndex;
 
-  auto const map_han = getDefaultMap<ColT>();
-  auto token = constructInsert<ColT/*, fn*/>(range);
+  auto token = constructInsert<ColT>(range);
 
-  //auto map_han = auto_registry::makeAutoHandlerMap<IndexType, fn>();
   auto map_fn = auto_registry::getHandlerMap(map_han);
 
   auto const this_node = theContext()->getNode();
@@ -3325,13 +3348,7 @@ CollectionManager::restartFromFile(
 
     if (this_node == mapped_node) {
 
-      std::string idx_str = "";
-      for (int i = 0; i < idx.ndims(); i++) {
-        idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
-      }
-
-      auto file_name = fmt::format("{}-{}", file_base, idx_str);
-
+      auto const file_name = makeFilename(idx, file_base);
       auto uptr = checkpoint::deserializeFromFile<ColT>(file_name);
 
       token[idx].insert(std::move(*uptr));
