@@ -325,7 +325,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   auto const& num_bytes = std::get<1>(ptr);
 
   int send_tag = 0;
-  if (tag == no_tag) {
+  if (tag != no_tag) {
     send_tag = tag;
   } else {
     auto const max_tag = util::MPI_Attr::getMaxTag();
