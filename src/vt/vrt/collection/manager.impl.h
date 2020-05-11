@@ -3169,6 +3169,33 @@ CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
 }
 
+template <typename ColT, typename IndexT>
+void CollectionManager::checkpointToFile(
+  CollectionProxyWrapType<ColT> proxy, std::string const& file_base
+) {
+  auto proxy_bits = proxy.getProxy();
+
+  debug_print(
+    vrt_coll, node,
+    "checkpointToFile: proxy={:x}, file_base={}\n",
+    proxy_bits, file_base
+  );
+
+  // Get the element holder
+  auto holder_ = findElmHolder<ColT>(proxy_bits);
+  vtAssert(holder_ != nullptr, "Must have valid holder for collection");
+
+  auto this_node = theContext()->getNode();
+  holder_->foreach([=](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
+    std::string idx_str = "";
+    for (int i = 0; i < idx.ndims(); i++) {
+      idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
+    }
+    auto name = fmt::format("{}-{}-{}", file_base, this_node, idx_str);
+    checkpoint::serializeToFile(*elm, name);
+  });
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_MANAGER_IMPL_H*/
