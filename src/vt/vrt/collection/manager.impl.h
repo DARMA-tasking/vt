@@ -3202,15 +3202,58 @@ void CollectionManager::checkpointToFile(
   auto holder_ = findElmHolder<ColT>(proxy_bits);
   vtAssert(holder_ != nullptr, "Must have valid holder for collection");
 
-  auto this_node = theContext()->getNode();
   holder_->foreach([=](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
     std::string idx_str = "";
     for (int i = 0; i < idx.ndims(); i++) {
       idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
     }
-    auto name = fmt::format("{}-{}-{}", file_base, this_node, idx_str);
+    auto name = fmt::format("{}-{}", file_base, idx_str);
     checkpoint::serializeToFile(*elm, name);
   });
+}
+
+template <
+  typename ColT//, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+>
+CollectionManager::CollectionProxyWrapType<ColT>
+CollectionManager::restartFromFile(
+  typename ColT::IndexType range, std::string const& file_base
+) {
+  using IndexType = typename ColT::IndexType;
+  using BaseIdxType      = vt::index::BaseIndex;
+
+  auto const map_han = getDefaultMap<ColT>();
+  auto token = constructInsert<ColT/*, fn*/>(range);
+
+  //auto map_han = auto_registry::makeAutoHandlerMap<IndexType, fn>();
+  auto map_fn = auto_registry::getHandlerMap(map_han);
+
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+
+  range.foreach([&](IndexType idx) mutable {
+
+    auto const cur = static_cast<BaseIdxType*>(&idx);
+    auto const max = static_cast<BaseIdxType*>(&range);
+    auto mapped_node = map_fn(cur, max, num_nodes);
+
+    if (this_node == mapped_node) {
+
+      std::string idx_str = "";
+      for (int i = 0; i < idx.ndims(); i++) {
+        idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
+      }
+
+      auto file_name = fmt::format("{}-{}", file_base, idx_str);
+
+      auto uptr = checkpoint::deserializeFromFile<ColT>(file_name);
+
+      token[idx].insert(std::move(*uptr));
+    }
+
+  });
+
+  return finishedInsert(std::move(token));
 }
 
 }}} /* end namespace vt::vrt::collection */
