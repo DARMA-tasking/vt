@@ -47,7 +47,7 @@
 
 namespace vt { namespace util { namespace mpi_limits {
 
-/*static*/ int MPI_MaxTag::get() {
+/*static*/ int MPI_Attr::getMaxTag() {
 
   if (max_tag_ != 0) {
     return max_tag_;
@@ -68,6 +68,18 @@ namespace vt { namespace util { namespace mpi_limits {
   return max_tag_;
 }
 
-/*static*/ int MPI_MaxTag::max_tag_ = 0;
+/*static*/ std::tuple<int, int> MPI_Attr::getVersion() {
+  if (version_ == 0) {
+    MPI_Get_version(&version_, &subversion_);
+  }
+
+  return std::make_tuple(version_, subversion_);
+}
+
+/*static*/ int MPI_Attr::max_tag_ = 0;
+
+/*static*/ int MPI_Attr::version_ = 0;
+
+/*static*/ int MPI_Attr::subversion_ = 0;
 
 }}} /* end namespace vt::util::mpi_limits */
