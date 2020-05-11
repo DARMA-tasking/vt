@@ -852,6 +852,19 @@ public:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   IndexT getRange(VirtualProxyType proxy);
 
+  /**
+   * \brief Checkpoint the collection (collective). Must wait for termination
+   * (consistent snapshot) of work on the collection before invoking.
+   *
+   * \param[in] proxy the proxy of the collection
+   *
+   * \return the range of the collection
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void checkpointToFile(
+    CollectionProxyWrapType<ColT> proxy, std::string const& file_base
+  );
+
 private:
   template <typename MsgT>
   static EpochType getCurrentEpoch(MsgT* msg);
