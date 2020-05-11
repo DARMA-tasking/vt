@@ -869,12 +869,28 @@ public:
    * (consistent snapshot) of work on the collection before invoking.
    *
    * \param[in] proxy the proxy of the collection
+   * \param[in] file_base the base file name of the files write
    *
    * \return the range of the collection
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void checkpointToFile(
     CollectionProxyWrapType<ColT> proxy, std::string const& file_base
+  );
+
+  /**
+   * \brief Restart the collection (collective) from file.
+   *
+   * \param[in] range the range of the collection to restart
+   * \param[in] file_base the base file name for the files to read
+   *
+   * \return the range of the collection
+   */
+  template <
+    typename ColT//, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+  >
+  CollectionProxyWrapType<ColT> restartFromFile(
+    typename ColT::IndexType range, std::string const& file_base
   );
 
 private:
