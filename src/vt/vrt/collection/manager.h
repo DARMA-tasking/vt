@@ -828,6 +828,9 @@ private:
     HandlerType const& map_han
   );
 
+  template <typename IndexT>
+  std::string makeFilename(IndexT idx, std::string file_base);
+
   /**
    * \brief Checkpoint the collection (collective). Must wait for termination
    * (consistent snapshot) of work on the collection before invoking.
@@ -843,18 +846,47 @@ private:
   );
 
   /**
-   * \brief Restart the collection (collective) from file.
+   * \brief Restart the collection (collective) from file with static map
+   * function.
    *
    * \param[in] range the range of the collection to restart
    * \param[in] file_base the base file name for the files to read
    *
-   * \return the range of the collection
+   * \return proxy to the new collection
    */
   template <
-    typename ColT//, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   CollectionProxyWrapType<ColT> restartFromFile(
     typename ColT::IndexType range, std::string const& file_base
+  );
+
+  /**
+   * \brief Restart the collection (collective) from file with default map.
+   *
+   * \param[in] range the range of the collection to restart
+   * \param[in] file_base the base file name for the files to read
+   *
+   * \return proxy to the new collection
+   */
+  template <typename ColT>
+  CollectionProxyWrapType<ColT> restartFromFile(
+    typename ColT::IndexType range, std::string const& file_base
+  );
+
+  /**
+   * \internal \brief Restart the collection (collective) with registered map.
+   *
+   * \param[in] range the range of the collection to restart
+   * \param[in] file_base the base file name for the files to read
+   * \param[in] map_han registered handler for the map function
+   *
+   * \return proxy to the new collection
+   */
+  template <typename ColT>
+  CollectionProxyWrapType<ColT> restartFromFileImpl(
+    typename ColT::IndexType range, std::string const& file_base,
+    HandlerType const map_han
   );
 
 private:
