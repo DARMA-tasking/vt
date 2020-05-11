@@ -121,12 +121,9 @@ Trace::Trace(std::string const& in_prog_name)
 }
 
 void Trace::initialize() {
+#if backend_check_enabled(trace_enabled)
   setupNames(prog_name_);
 
-}
-
-void Trace::initialize() {
-#if backend_check_enabled(trace_enabled)
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginSchedulerLoop, [this]{ beginSchedulerLoop(); }
   );
