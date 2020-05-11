@@ -239,6 +239,18 @@ public:
     typename ColT::IndexType range, TagType const& tag = no_tag
   );
 
+  template <
+    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+  >
+  InsertToken<ColT> constructInsert(
+    typename ColT::IndexType range, TagType const& tag = no_tag
+  );
+
+  template <typename ColT>
+  InsertToken<ColT> constructInsertMap(
+    typename ColT::IndexType range, HandlerType const& map_han, TagType const& tag
+  );
+
   template <typename ColT>
   CollectionProxyWrapType<ColT> finishedInsert(InsertToken<ColT>&& token);
 
