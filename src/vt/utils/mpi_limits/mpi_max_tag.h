@@ -53,12 +53,13 @@
 namespace vt { namespace util { namespace mpi_limits {
 
 /**
- * \struct MPI_MaxTag
+ * \struct MPI_Attr
  *
- * \brief Get the MPI maximum value for a tag. This can vary across MPI
- * implementations, but the MPI standard dictates it be at least 32767.
+ * \brief Get MPI attributes, including the MPI maximum value for a tag. This
+ * can vary across MPI implementations, but the MPI standard dictates it be at
+ * least 32767.
  */
-struct MPI_MaxTag {
+struct MPI_Attr {
 
   /**
    * \brief Get the maximum tag for the current context communicator. VT must be
@@ -66,17 +67,26 @@ struct MPI_MaxTag {
    *
    * \return the max tag
    */
-  static int get();
+  static int getMaxTag();
+
+  /**
+   * \brief Get the MPI version and subversion.
+   *
+   * \return a tuple: (version, subversion)
+   */
+  static std::tuple<int, int> getVersion();
 
 private:
   static int max_tag_;          /**< The cached max tag used. */
+  static int version_;          /**< The cached MPI version */
+  static int subversion_;       /**< The cached MPI sub-version */
 };
 
 }}} /* end namespace vt::util::mpi_limits */
 
 namespace vt { namespace util {
 
-using MPI_MaxTag = mpi_limits::MPI_MaxTag;
+using MPI_Attr = mpi_limits::MPI_Attr;
 
 }} /* end namespace vt::util */
 
