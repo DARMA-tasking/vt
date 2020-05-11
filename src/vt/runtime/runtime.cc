@@ -70,6 +70,7 @@
 #include "vt/configs/error/pretty_print_stack.h"
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/utils/mpi_limits/mpi_max_tag.h"
 
 #include <memory>
 #include <iostream>
@@ -376,9 +377,18 @@ void Runtime::printStartupBanner() {
     dirty = red + std::string("*dirty*") + reset;
   }
 
+  auto const max_tag = util::MPI_Attr::getMaxTag();
+  auto const max_tag_str = std::to_string(max_tag);
+  auto const version_tuple = util::MPI_Attr::getVersion();
+  auto const version = std::to_string(std::get<0>(version_tuple));
+  auto const subversion = std::to_string(std::get<1>(version_tuple));
+
   auto f1 = fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
   auto f2 = fmt::format("{}Running on: {}\n", green, emph(all_node));
   auto f3 = fmt::format("{}Machine Hostname: {}\n", green, emph(hostname));
+  auto f3a = fmt::format("{}MPI Version: {}.{}\n", green, emph(version), emph(subversion));
+  auto f3b = fmt::format("{}MPI Max tag: {}\n", green, emph(max_tag_str));
+
   auto f4 = fmt::format("{}Build SHA: {}\n", green, emph(vt_git_sha1));
   auto f5 = fmt::format("{}Build Ref: {}\n", green, emph(vt_git_refspec));
   auto f6 = fmt::format("{}Description: {} {}\n", green, emph(vt_git_description), dirty);
@@ -387,6 +397,8 @@ void Runtime::printStartupBanner() {
   fmt::print("{}{}{}", vt_pre, f1, reset);
   fmt::print("{}{}{}", vt_pre, f2, reset);
   fmt::print("{}{}{}", vt_pre, f3, reset);
+  fmt::print("{}{}{}", vt_pre, f3a, reset);
+  fmt::print("{}{}{}", vt_pre, f3b, reset);
   fmt::print("{}{}{}", vt_pre, f4, reset);
   fmt::print("{}{}{}", vt_pre, f5, reset);
   fmt::print("{}{}{}", vt_pre, f6, reset);
