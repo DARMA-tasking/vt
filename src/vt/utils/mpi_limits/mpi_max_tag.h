@@ -55,15 +55,14 @@ namespace vt { namespace util { namespace mpi_limits {
 /**
  * \struct MPI_Attr
  *
- * \brief Get MPI attributes, including the MPI maximum value for a tag. This
- * can vary across MPI implementations, but the MPI standard dictates it be at
- * least 32767.
+ * \brief Get MPI attributes, including the MPI maximum value for a tag.
  */
 struct MPI_Attr {
 
   /**
    * \brief Get the maximum tag for the current context communicator. VT must be
-   * initialized for this to run correctly.
+   * initialized for this to run correctly. This can vary across MPI
+   * implementations, but the MPI standard dictates it be at least 32767.
    *
    * \return the max tag
    */
