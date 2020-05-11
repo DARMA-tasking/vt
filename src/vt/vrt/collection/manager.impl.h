@@ -1895,13 +1895,30 @@ void CollectionManager::staticInsert(
 
 }
 
+template <
+  typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+>
+InsertToken<ColT> CollectionManager::constructInsert(
+  typename ColT::IndexType range, TagType const& tag
+) {
+  using IndexT = typename ColT::IndexType;
+  auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
+  return constructInsertMap<ColT>(range, map_han, tag);
+}
+
 template <typename ColT>
 InsertToken<ColT> CollectionManager::constructInsert(
   typename ColT::IndexType range, TagType const& tag
 ) {
-  using IndexT         = typename ColT::IndexType;
-
   auto const map_han = getDefaultMap<ColT>();
+  return constructInsertMap<ColT>(range, map_han, tag);
+}
+
+template <typename ColT>
+InsertToken<ColT> CollectionManager::constructInsertMap(
+  typename ColT::IndexType range, HandlerType const& map_han, TagType const& tag
+) {
+  using IndexT         = typename ColT::IndexType;
 
   // Create a new distributed proxy, ordered wrt the input tag
   auto const& proxy = makeDistProxy<>(tag);
