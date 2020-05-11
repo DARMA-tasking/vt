@@ -3294,7 +3294,7 @@ void CollectionManager::checkpointToFile(
       idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
     }
     auto name = fmt::format("{}-{}", file_base, idx_str);
-    checkpoint::serializeToFile(*elm, name);
+    checkpoint::serializeToFile<ColT>(*static_cast<ColT*>(elm), name);
   });
 }
 
