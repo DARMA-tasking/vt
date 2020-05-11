@@ -66,6 +66,7 @@ macro(find_package_local pkg_name pkg_directory pkg_other_name)
           NO_CMAKE_BUILDS_PATH
           NO_CMAKE_SYSTEM_PATH
           NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
+          NO_SYSTEM_ENVIRONMENT_PATH
           QUIET
         )
 

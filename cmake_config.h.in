@@ -42,8 +42,6 @@
 //@HEADER
 */
 
-#define HAS_SERIALIZATION_LIBRARY @VT_HAS_SERIALIZATION_LIBRARY@
-
 #cmakedefine01 cmake_config_debug_enabled
 #define cmake_config_debug_modes @cmake_vt_debug_modes@
 #define cmake_config_modes @cmake_vt_modes@

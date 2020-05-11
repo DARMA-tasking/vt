@@ -100,7 +100,6 @@ struct TestSerialMessengerVirtual : TestParallelHarness {
   }
 };
 
-#if HAS_SERIALIZATION_LIBRARY
 TEST_F(TestSerialMessengerVirtual, test_serial_messenger_1) {
   auto const& my_node = theContext()->getNode();
 
@@ -111,6 +110,5 @@ TEST_F(TestSerialMessengerVirtual, test_serial_messenger_1) {
     theVirtualManager()->sendSerialMsg<TestCtx, DataMsg, testHandler>(proxy, msg);
   }
 }
-#endif
 
 }}} // end namespace vt::tests::unit

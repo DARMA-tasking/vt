@@ -49,7 +49,6 @@
 #include "vt/vrt/proxy/proxy_bits.h"
 #include "vt/vrt/context/context_vrt_fwd.h"
 #include "vt/messaging/message.h"
-#include "vt/serialization/serialization.h"
 
 #include <array>
 

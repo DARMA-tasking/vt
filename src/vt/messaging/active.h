@@ -295,28 +295,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     TagType tag
   );
 
-#if not HAS_SERIALIZATION_LIBRARY
-
-  // Without serialization, everything must use basic copy-able transmission.
-
-  template <
-    typename MessageT,
-    typename = void
-  >
-  inline ActiveMessenger::PendingSendType sendMsgImpl(
-    NodeType dest,
-    HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
-    ByteType msg_size,
-    TagType tag
-  ) {
-    return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
-  }
-
-#endif // not HAS_SERIALIZATION_LIBRARY
-
-#if HAS_SERIALIZATION_LIBRARY
-
   // With serialization, the correct method is resolved via SFINAE.
   // This also includes additional guards to detect ambiguity.
 
@@ -433,8 +411,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 #endif
     return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
   }
-
-#endif // HAS_SERIALIZATION_LIBRARY
 
   /**
    * \defgroup preregister Basic Active Message Send with Pre-Registered Handler

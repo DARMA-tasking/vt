@@ -71,7 +71,6 @@
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/vrt/context/context_vrtheaders.h"
 #include "vt/vrt/collection/collection_headers.h"
-#include "vt/serialization/serialization.h"
 #include "vt/standalone/vt_main.h"
 #include "vt/utils/tls/tls.h"
 #include "vt/utils/atomic/atomic.h"

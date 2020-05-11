@@ -50,7 +50,6 @@
 #include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vt/vrt/collection/types/headers.h"
 #include "vt/messaging/message.h"
-#include "vt/serialization/serialization.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 
