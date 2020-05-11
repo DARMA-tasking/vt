@@ -321,12 +321,11 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     send_tag = tag;
   } else {
     auto const max_tag = util::MPI_Attr::getMaxTag();
-    send_tag = cur_direct_buffer_tag_++;
 
-    // If max, wrap around back to the starting tag
-    if (cur_direct_buffer_tag_ >= max_tag) {
+    if (cur_direct_buffer_tag_ == max_tag) {
       cur_direct_buffer_tag_ = starting_direct_buffer_tag;
     }
+    send_tag = cur_direct_buffer_tag_++;
   }
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
