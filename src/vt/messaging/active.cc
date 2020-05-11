@@ -52,6 +52,7 @@
 #include "vt/runnable/general.h"
 #include "vt/timing/timing.h"
 #include "vt/scheduler/priority.h"
+#include "vt/utils/mpi_limits/mpi_max_tag.h"
 
 namespace vt { namespace messaging {
 
@@ -322,7 +323,19 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 ) {
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
-  auto const send_tag = tag == no_tag ? cur_direct_buffer_tag_++ : tag;
+
+  int send_tag = 0;
+  if (tag == no_tag) {
+    send_tag = tag;
+  } else {
+    auto const max_tag = util::MPI_Attr::getMaxTag();
+    send_tag = cur_direct_buffer_tag_++;
+
+    // If max, wrap around back to the starting tag
+    if (cur_direct_buffer_tag_ >= max_tag) {
+      cur_direct_buffer_tag_ = starting_direct_buffer_tag;
+    }
+  }
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
   auto& holder = theEvent()->getEventHolder(event_id);
