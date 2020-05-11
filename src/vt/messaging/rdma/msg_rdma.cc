@@ -45,14 +45,54 @@
 #include "vt/config.h"
 #include "vt/messaging/rdma/msg_rdma.h"
 #include "vt/objgroup/manager.h"
+#include "vt/rdmahandle/manager.h"
 
 namespace vt { namespace messaging { namespace rdma {
+
+MsgRDMA::MsgRDMA()
+  : current_size_(64*1024)
+{ }
 
 /*static*/ std::unique_ptr<MsgRDMA> MsgRDMA::construct() {
   auto ptr = std::make_unique<MsgRDMA>();
   auto proxy = theObjGroup()->makeCollective<MsgRDMA>(ptr.get());
   proxy.get()->setProxy(proxy);
   return ptr;
+}
+
+void MsgRDMA::startup() {
+  handle_ = proxy_.makeHandleRDMA<char>(current_size_, true);
+}
+
+std::size_t MsgRDMA::writeBytesForGet(char* ptr, std::size_t len) {
+  auto const this_node = theContext()->getNode();
+  int const offset = cur_offset_;
+  handle_.put(this_node, ptr, len, offset, vt::rdma::Lock::Exclusive);
+  cur_offset_ += static_cast<int>(len);
+  return offset;
+}
+
+void MsgRDMA::getBytes(NodeType get_node, char* ptr, int offset, std::size_t len) {
+  auto req = handle_.rget(get_node, ptr, len, offset, vt::rdma::Lock::Shared);
+  req.addAction([]{
+    fmt::print("done\n");
+  });
+  reqs_.emplace_back(std::move(req));
+}
+
+int MsgRDMA::progress() {
+  int num_completed = 0;
+  for (auto iter = reqs_.begin(); iter != reqs_.end();) {
+    if (iter->test()) {
+      // Call wait to trigger the actions
+      iter->wait();
+      iter = reqs_.erase(iter);
+      num_completed++;
+    } else {
+      ++iter;
+    }
+  }
+  return num_completed;
 }
 
 }}} /* end namespace vt::messaging::rdma */

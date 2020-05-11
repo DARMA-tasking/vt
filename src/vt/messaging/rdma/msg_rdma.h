@@ -48,12 +48,23 @@
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/rdmahandle/handle.h"
 
 namespace vt { namespace messaging { namespace rdma {
 
 struct MsgRDMA : runtime::component::PollableComponent<MsgRDMA> {
 
+  MsgRDMA();
+
+  void startup() override;
+
   std::string name() override { return "MsgRDMA"; }
+
+  std::size_t writeBytesForGet(char* ptr, std::size_t len);
+
+  void getBytes(NodeType get_node, char* ptr, int offset, std::size_t len);
+
+  int progress() override;
 
 private:
   void setProxy(objgroup::proxy::Proxy<MsgRDMA> in_proxy) {
@@ -65,6 +76,10 @@ public:
 
 private:
   objgroup::proxy::Proxy<MsgRDMA> proxy_;
+  std::size_t current_size_ = 0;
+  int cur_offset_ = 0;
+  vt::rdma::Handle<char> handle_;
+  std::list<vt::rdma::RequestHolder> reqs_;
 };
 
 }}} /* end namespace vt::messaging::rdma */
