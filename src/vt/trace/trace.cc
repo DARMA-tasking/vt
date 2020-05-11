@@ -88,8 +88,8 @@ struct TraceEventSeqCompare {
 };
 
 Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
-  : prog_name_(in_prog_name), trace_name_(in_trace_name),
-    start_time_(getCurrentTime()), log_file_(nullptr)
+  : start_time_(getCurrentTime()), prog_name_(in_prog_name),
+    trace_name_(in_trace_name), log_file_(nullptr)
 {
   /*
    * Incremental flush mode for zlib. Several options are available:
