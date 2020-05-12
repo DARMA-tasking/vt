@@ -28,7 +28,12 @@ then
     rm -Rf checkpoint
 fi
 
-git clone -b release-1.10.0 --depth 1 https://github.com/google/googletest.git
+if test -d "googletest"
+then
+    rm -Rf googletest
+fi
+
+git clone -b release-1.8.1 --depth 1 https://github.com/google/googletest.git
 export GTEST=$PWD/googletest
 export GTEST_BUILD=${build_dir}/googletest
 mkdir -p "$GTEST_BUILD"
