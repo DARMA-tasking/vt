@@ -48,7 +48,6 @@
 #include "vt/config.h"
 #include "vt/messaging/message.h"
 #include "vt/messaging/pending_send.h"
-#include "vt/serialization/serialization.h"
 #include "vt/serialization/messaging/serialized_data_msg.h"
 
 #include <tuple>
@@ -72,9 +71,6 @@ struct SerializedMessenger {
   template <typename UserMsgT>
   using SerialWrapperMsgType = SerializedDataMsg<UserMsgT>;
 
-  template <typename MsgT>
-  static void parserdesHandler(MsgT* msg);
-
   template <typename UserMsgT>
   static void serialMsgHandlerBcast(SerialWrapperMsgType<UserMsgT>* sys_msg);
 
@@ -84,44 +80,6 @@ struct SerializedMessenger {
   template <typename UserMsgT, typename BaseEagerMsgT>
   static void payloadMsgHandler(
     SerialEagerPayloadMsg<UserMsgT, BaseEagerMsgT>* sys_msg
-  );
-
-  template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static messaging::PendingSend sendParserdesMsg(NodeType dest, MsgT* msg);
-
-  template <typename FunctorT, typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend sendParserdesMsg(NodeType dest, MsgT* msg);
-
-  template <typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend sendParserdesMsgHandler(
-    NodeType dest, HandlerType const& handler, MsgT* msg
-  );
-
-  template <typename FunctorT, typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend broadcastParserdesMsg(MsgT* msg);
-
-  template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static messaging::PendingSend broadcastParserdesMsg(MsgT* msg);
-
-  template <typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend broadcastParserdesMsgHandler(
-    MsgT* msg, HandlerType const& han
-  );
-
-  template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT = Message>
-  static messaging::PendingSend parserdesMsg(
-    MsgT* msg, bool is_bcast = true, NodeType dest = uninitialized_destination
-  );
-
-  template <typename FunctorT, typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend parserdesMsg(
-    MsgT* msg, bool is_bcast = true, NodeType dest = uninitialized_destination
-  );
-
-  template <typename MsgT, typename BaseT = Message>
-  static messaging::PendingSend parserdesMsgHandler(
-    MsgT* msg, HandlerType const& handler, bool is_bcast = true,
-    NodeType dest = uninitialized_destination
   );
 
   template <typename FunctorT, typename MsgT, typename BaseT = Message>

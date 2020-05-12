@@ -55,7 +55,6 @@
 #define vt_feature_cmake_production          @vt_feature_cmake_production@
 #define vt_feature_cmake_stdthread           @vt_feature_cmake_stdthread@
 #define vt_feature_cmake_mpi_rdma            @vt_feature_cmake_mpi_rdma@
-#define vt_feature_cmake_parserdes           @vt_feature_cmake_parserdes@
 #define vt_feature_cmake_print_term_msgs     @vt_feature_cmake_print_term_msgs@
 #define vt_feature_cmake_default_threading   @vt_feature_cmake_default_threading@
 #define vt_feature_cmake_no_pool_alloc_env   @vt_feature_cmake_no_pool_alloc_env@

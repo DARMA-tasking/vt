@@ -46,9 +46,6 @@
 
 // Message sent from the callback to the callback endpoint
 struct TestMsg : vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_required(); // for string
-
   TestMsg() = default;
 
   explicit TestMsg(int in_val, std::string const& in_s = "hello")
@@ -58,7 +55,6 @@ struct TestMsg : vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
     s | val_;
     s | s_;
   }

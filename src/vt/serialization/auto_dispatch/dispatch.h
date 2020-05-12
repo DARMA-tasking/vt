@@ -48,13 +48,8 @@
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/pending_send.h"
-#include "vt/serialization/serialize_interface.h"
 
-#if HAS_SERIALIZATION_LIBRARY
-  #define HAS_DETECTION_COMPONENT 1
-  #include "serialization_library_headers.h"
-  #include "traits/serializable_traits.h"
-#endif
+#include <checkpoint/checkpoint.h>
 
 namespace vt { namespace serialization { namespace auto_dispatch {
 
@@ -106,13 +101,12 @@ struct RequiredSerialization {
   }
 };
 
-#if HAS_SERIALIZATION_LIBRARY
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 struct RequiredSerialization<
   MsgT,
   f,
   typename std::enable_if_t<
-    ::serdes::SerializableTraits<MsgT>::has_serialize_function
+    ::checkpoint::SerializableTraits<MsgT>::has_serialize_function
   >
 > {
   static messaging::PendingSend sendMsg(
@@ -126,30 +120,6 @@ struct RequiredSerialization<
     return BroadcasterSerialize<MsgT,f>::broadcastMsg(msg,tag);
   }
 };
-
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-struct RequiredSerialization<
-  MsgT,
-  f,
-  typename std::enable_if_t<
-    ::serdes::SerializableTraits<MsgT>::is_parserdes
-  >
-> {
-  static messaging::PendingSend sendMsg(
-    NodeType const& node, MsgT* msg, TagType const& tag = no_tag
-  ) {
-    return SenderSerialize<MsgT,f>::sendMsgParserdes(node,msg,tag);
-  }
-  static messaging::PendingSend broadcastMsg(
-    MsgT* msg, TagType const& tag = no_tag
-  ) {
-    return BroadcasterSerialize<MsgT,f>::broadcastMsgParserdes(
-      msg,tag
-    );
-  }
-};
-
-#endif
 
 }}} /* end namespace vt::serialization::auto_dispatch */
 

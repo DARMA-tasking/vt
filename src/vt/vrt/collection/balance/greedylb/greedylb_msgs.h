@@ -113,17 +113,10 @@ struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
     : collective::ReduceTMsg<GreedyPayload>(GreedyPayload{in_load,in_profile})
   { }
 
-  #if greedylb_use_parserdes
-    template <typename SerializerT>
-    void parserdes(SerializerT& s) {
-      s & load_;
-    }
-  #else
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      ReduceTMsg<GreedyPayload>::invokeSerialize(s);
-    }
-  #endif
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    ReduceTMsg<GreedyPayload>::invokeSerialize(s);
+  }
 
   ObjSampleType const& getLoad() const {
     return collective::ReduceTMsg<GreedyPayload>::getConstVal().getSample();

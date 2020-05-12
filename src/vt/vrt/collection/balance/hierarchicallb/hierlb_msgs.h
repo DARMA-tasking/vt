@@ -65,17 +65,10 @@ struct LBTreeUpMsg : HierLBTypes, ::vt::Message {
   { }
 
 
-  #if hierlb_use_parserdes
-    template <typename SerializerT>
-    void parserdes(SerializerT& s) {
-      s & load_;
-    }
-  #else
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      s | child_load_ | child_ | load_ | child_size_;
-    }
-  #endif
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | child_load_ | child_ | load_ | child_size_;
+  }
 
   LoadType getChildLoad() const { return child_load_; }
   NodeType getChild() const { return child_; }
@@ -99,18 +92,10 @@ struct LBTreeDownMsg : HierLBTypes, ::vt::Message {
   ) : from_(in_from), excess_(in_excess), final_child_(in_final_child)
   { }
 
-
-  #if hierlb_use_parserdes
-    template <typename SerializerT>
-    void parserdes(SerializerT& s) {
-      s & excess_;
-    }
-  #else
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      s | from_ | excess_ | final_child_;
-    }
-  #endif
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | from_ | excess_ | final_child_;
+  }
 
   NodeType getFrom() const { return from_; }
   ObjSampleType const& getExcess() const { return excess_; }

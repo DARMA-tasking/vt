@@ -163,7 +163,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     );
     auto const from_idx = getIndex().x();
     auto data_msg = vt::makeMessage<DataMsg>(data_,from_idx);
-    vt::theMsg()->sendMsg<DataMsg,SubSolveInfo::solveDataIncoming>(
+    vt::theMsg()->sendMsgAuto<DataMsg,SubSolveInfo::solveDataIncoming>(
       requesting_node, data_msg.get()
     );
   }

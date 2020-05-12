@@ -62,7 +62,7 @@ template <typename MsgT>
 struct MsgSizer<
   MsgT,
   typename std::enable_if_t<
-    ::serdes::SerializableTraits<MsgT>::has_serialize_function
+    ::checkpoint::SerializableTraits<MsgT>::has_serialize_function
   >
 > {
   static std::size_t get(MsgT* msg) {

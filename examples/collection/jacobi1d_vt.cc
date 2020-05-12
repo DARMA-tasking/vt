@@ -199,6 +199,8 @@ public:
       s | val;
     }
 
+    vt::IdxBase from_index;
+    double val = 0.0;
   };
 
 

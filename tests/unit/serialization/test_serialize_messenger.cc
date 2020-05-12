@@ -155,8 +155,6 @@ TEST_F(TestSerialMessenger, test_serial_messenger_bcast_1) {
   }
 }
 
-
-#if HAS_SERIALIZATION_LIBRARY
 TEST_F(TestSerialMessenger, test_serial_messenger_2) {
   auto const& my_node = theContext()->getNode();
 
@@ -168,6 +166,5 @@ TEST_F(TestSerialMessenger, test_serial_messenger_2) {
     }
   }
 }
-#endif
 
 }}} // end namespace vt::tests::unit

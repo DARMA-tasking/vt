@@ -65,9 +65,6 @@ using HandlerManagerType = vt::HandlerManager;
 
 template <typename Tuple>
 struct DataMsg : vt::Message {
-  using MessageParentType = vt::Message;
-  vt_msg_serialize_if_needed_by_parent_or_type1(Tuple); // by tup
-
   Tuple tup;
   HandlerType sub_han = uninitialized_handler;
 
@@ -83,7 +80,6 @@ struct DataMsg : vt::Message {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
     s | tup;
     s | sub_han;
   }
