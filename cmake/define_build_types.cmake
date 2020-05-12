@@ -184,13 +184,13 @@ foreach(loop_build_type ${VT_CONFIG_TYPES})
   # put the config file in a subdirectory corresponding to the lower case build name
   configure_file(
     ${PROJECT_BASE_DIR}/cmake_config.h.in
-    ${PROJECT_BIN_DIR}/${loop_build_type}/cmake_config.h @ONLY
+    ${PROJECT_BIN_DIR}/${loop_build_type}/vt/cmake_config.h @ONLY
   )
 
   # install the correct config file when this build is selected
   install(
-    FILES            "${PROJECT_BINARY_DIR}/${loop_build_type}/cmake_config.h"
-    DESTINATION      include
+    FILES            "${PROJECT_BINARY_DIR}/${loop_build_type}/vt/cmake_config.h"
+    DESTINATION      include/vt
     CONFIGURATIONS   ${loop_build_type}
   )
 
