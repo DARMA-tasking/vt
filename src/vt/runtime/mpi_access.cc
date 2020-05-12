@@ -50,6 +50,12 @@ namespace vt { namespace runtime {
 
 ScopedMPIAccess::ScopedMPIAccess() {
   grants_++;
+  // Strong lock-down to prevent accidental nesting.
+  vtAssert(
+    grants_ <= 1,
+    "ScopedMPIAccess should not be logically nested."
+    " Open/close a new scope over the minimal MPI operation."
+  );
 }
 
 ScopedMPIAccess::~ScopedMPIAccess() {
