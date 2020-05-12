@@ -74,9 +74,8 @@
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/termination/term_headers.h"
-#include "vt/serialization/serialization.h"
 #include "vt/serialization/auto_dispatch/dispatch.h"
-#include "vt/serialization/auto_sizing/sizing.h"
+#include "vt/serialization/sizer.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
 
@@ -769,7 +768,7 @@ template <typename ColT, typename MsgT>
   auto const pfrom = msg->getElm();
   auto const tfrom = msg->getElmTemp();
   auto& stats = col_ptr->getStats();
-  auto const msg_size = serialization::Size<MsgT>::getSize(msg);
+  auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   debug_print(
     vrt_coll, node,

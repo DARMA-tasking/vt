@@ -98,7 +98,7 @@ inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) 
 
 template <typename T, T value>
 inline HandlerType makeAutoHandlerParam() {
-  using AdapterT = FunctorAdapter<T, value>;
+  using AdapterT = FunctorAdapterParam<T, value>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;

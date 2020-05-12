@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/serialization/auto_dispatch/dispatch.h"
-#include "vt/serialization/serialize_interface.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/messaging/active.h"
 
@@ -77,30 +76,12 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
  * type traits
  */
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ messaging::PendingSend SenderSerialize<MsgT,f>::sendMsgParserdes(
-  NodeType const& node, MsgT* msg, TagType const& tag
-) {
-  vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
-  return SerializedMessenger::sendParserdesMsg<MsgT,f>(node,msg);
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ messaging::PendingSend SenderSerialize<MsgT,f>::sendMsg(
   NodeType const& node, MsgT* msg, TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   return SerializedMessenger::sendSerialMsg<MsgT,f>(node,msg);
 }
-
-
-template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-/*static*/ messaging::PendingSend BroadcasterSerialize<MsgT,f>::broadcastMsgParserdes(
-  MsgT* msg, TagType const& tag
-) {
-  vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
-  return SerializedMessenger::broadcastParserdesMsg<MsgT,f>(msg);
-}
-
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 /*static*/ messaging::PendingSend BroadcasterSerialize<MsgT,f>::broadcastMsg(

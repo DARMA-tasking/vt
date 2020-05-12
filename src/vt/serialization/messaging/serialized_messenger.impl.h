@@ -50,7 +50,6 @@
 #include "vt/messaging/active.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
-#include "vt/serialization/serialization.h"
 #include "vt/runnable/general.h"
 #include "vt/serialization/messaging/serialized_data_msg.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
@@ -61,24 +60,6 @@
 #include <cassert>
 
 namespace vt { namespace serialization {
-
-template <typename MsgT>
-/*static*/ void SerializedMessenger::parserdesHandler(MsgT* msg) {
-  auto const& msg_size = sizeof(MsgT);
-  auto const& han_size = sizeof(HandlerType);
-  auto const& size_size = sizeof(size_t);
-  auto msg_ptr = reinterpret_cast<char*>(msg);
-  auto const& user_handler = *reinterpret_cast<HandlerType*>(
-    msg_ptr + msg_size
-  );
-  auto const& ptr_size = *reinterpret_cast<size_t*>(
-    msg_ptr + msg_size + han_size
-  );
-  auto ptr_offset = msg_ptr + msg_size + han_size + size_size;
-  auto t_ptr = deserializePartial<MsgT>(ptr_offset, ptr_size, msg);
-  auto const& from_node = theMsg()->getFromNodeCurrentHandler();
-  runnable::Runnable<MsgT>::run(user_handler, nullptr, t_ptr, from_node);
-}
 
 template <typename UserMsgT>
 /*static*/ void SerializedMessenger::serialMsgHandlerBcast(
@@ -97,7 +78,7 @@ template <typename UserMsgT>
   auto ptr_offset =
     reinterpret_cast<char*>(sys_msg) + sizeof(SerialWrapperMsgType<UserMsgT>);
   auto user_msg = makeMessage<UserMsgT>();
-  deserializeInPlace<UserMsgT>(ptr_offset,ptr_size,user_msg.get());
+  checkpoint::deserializeInPlace<UserMsgT>(ptr_offset,user_msg.get());
   messageResetDeserdes(user_msg);
   runnable::Runnable<UserMsgT>::run(
     handler, nullptr, user_msg.get(), sys_msg->from_node
@@ -132,9 +113,8 @@ template <typename UserMsgT>
     (RDMA_GetType ptr, ActionType action){
       // be careful here not to use "msg", it is no longer valid
       auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
-      auto ptr_size = std::get<1>(ptr);
       auto msg = makeMessage<UserMsgT>();
-      deserializeInPlace<UserMsgT>(raw_ptr, ptr_size, msg.get());
+      checkpoint::deserializeInPlace<UserMsgT>(raw_ptr, msg.get());
       messageResetDeserdes(msg);
 
       debug_print(
@@ -165,8 +145,8 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   auto const handler = sys_msg->handler;
 
   auto user_msg = makeMessage<UserMsgT>();
-  deserializeInPlace<UserMsgT>(
-    sys_msg->payload.data(), sys_msg->bytes, user_msg.get()
+  checkpoint::deserializeInPlace<UserMsgT>(
+    sys_msg->payload.data(), user_msg.get()
   );
   messageResetDeserdes(user_msg);
 
@@ -184,135 +164,6 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   runnable::Runnable<UserMsgT>::run(
     handler, nullptr, user_msg.get(), sys_msg->from_node
   );
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsg(
-  NodeType dest, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsg<MsgT,f>(msg, false, dest);
-}
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsg(
-  NodeType dest, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: (functor) dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsg<FunctorT,MsgT>(msg, false, dest);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsgHandler(
-  NodeType dest, HandlerType const& handler, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsgHandler<MsgT>(msg, handler, false, dest);
-}
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsg: (functor) msg={}\n", print_ptr(msg)
-  );
-  return parserdesMsg<FunctorT,MsgT>(msg,true);
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsg: msg={}\n", print_ptr(msg)
-  );
-  return parserdesMsg<MsgT,f>(msg,true);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsgHandler(
-  MsgT* msg, HandlerType const& han
-) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsgHandler: msg={}, han={}\n", print_ptr(msg), han
-  );
-  return parserdesMsgHandler<MsgT>(msg,han,true);
-}
-
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsg(
-  MsgT* msg, bool is_bcast, NodeType dest
-) {
-  auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
-  return parserdesMsgHandler(msg,h,is_bcast,dest);
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsg(
-  MsgT* msg, bool is_bcast, NodeType dest
-) {
-  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
-  return parserdesMsgHandler(msg,h,is_bcast,dest);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsgHandler(
-  MsgT* msg, HandlerType const& handler, bool is_bcast, NodeType dest
-) {
-  auto const& user_handler = handler;
-  SizeType ptr_size = 0;
-  auto const& rem_size = thePool()->remainingSize(msg);
-  auto const& msg_size = sizeof(MsgT);
-  auto const& han_size = sizeof(HandlerType);
-  auto const& size_size = sizeof(size_t);
-  auto msg_ptr = reinterpret_cast<char*>(msg);
-
-  auto serialized_msg = serializePartial(
-    *msg, [&](SizeType size) -> SerialByteType* {
-      ptr_size = size;
-      if (size + han_size <= rem_size) {
-        auto ptr = msg_ptr + msg_size + han_size + size_size;
-        return ptr;
-      } else {
-        vtAssert(0, "Must fit in remaining size (current limitation)");
-        return nullptr;
-      }
-    }
-  );
-
-  debug_print(
-    serial_msg, node,
-    "parserdesMsg: ptr_size={}, rem_size={}, msg_size={}, is_bcast={}, "
-    "dest={}\n",
-    ptr_size, rem_size, msg_size, is_bcast, dest
-  );
-
-  *reinterpret_cast<HandlerType*>(msg_ptr + msg_size) = user_handler;
-  *reinterpret_cast<HandlerType*>(msg_ptr + msg_size + han_size) = ptr_size;
-
-  auto const& total_size = ptr_size + msg_size + han_size + size_size;
-  auto const& tag = no_tag;
-  if (is_bcast) {
-    return theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag);
-  } else {
-    return theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag);
-  }
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
@@ -377,7 +228,7 @@ template <typename MsgT, typename BaseT>
   SizeType ptr_size = 0;
   auto sys_size = sizeof(typename decltype(sys_msg)::MsgType);
 
-  auto serialized_msg = serialize(
+  auto serialized_msg = checkpoint::serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
       if (size >= serialized_msg_eager_size) {
@@ -460,7 +311,7 @@ template <typename MsgT, typename BaseT>
   SerialByteType* ptr = nullptr;
   SizeType ptr_size = 0;
 
-  auto serialized_msg = serialize(
+  auto serialized_msg = checkpoint::serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
 
@@ -520,7 +371,7 @@ template <typename MsgT, typename BaseT>
         );
       } else {
         auto user_msg = makeMessage<MsgT>();
-        deserializeInPlace<MsgT>(ptr, ptr_size, user_msg.get());
+        checkpoint::deserializeInPlace<MsgT>(ptr, user_msg.get());
         messageResetDeserdes(user_msg);
 
         debug_print(

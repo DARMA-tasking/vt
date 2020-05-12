@@ -106,7 +106,6 @@ public:
   template <typename ColT>
   static void syncNextPhase(PhaseMsg<ColT>* msg, ColT* col);
 
-  template <typename ColT>
   friend struct collection::Migratable;
 
 protected:
