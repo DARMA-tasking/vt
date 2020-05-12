@@ -142,6 +142,7 @@ struct TemplateExtract {
   /// Given a string like 'void (...)' (that is, the string representation of
   /// a function type.. return the argument section. As the name indicates
   /// this is somewhat limited.
+  /// Returns the original if not starting with 'void (' or ending in ')'.
   static std::string getVoidFuncStrArgs(std::string const& typestr);
 };
 

@@ -146,23 +146,28 @@ TemplateExtract::getBarename(std::string const& typestr) {
 /*static*/ std::string
 TemplateExtract::getVoidFuncStrArgs(std::string const& typestr) {
   size_t s = 0;
+
   // eat leading "void ("
   if (typestr.find("void") == 0) {
     s += 4;
+  } else {
+    return typestr;
   }
   if (s < typestr.length() and typestr[s] == ' ') {
     s += 1;
   }
   if (s < typestr.length() and typestr[s] == '(') {
     s += 1;
-  }
-  // eat trailing ")"
-  size_t e = typestr.length() - 1;
-  if (e != std::string::npos && typestr[e] == ')') {
-    e -= 1;
+  } else {
+    return typestr;
   }
 
-  return typestr.substr(s, e - s);
+  // ensure ending ")"; length > 0 due to find above.
+  if (typestr[typestr.length() - 1] not_eq ')') {
+    return typestr;
+  }
+
+  return typestr.substr(s, typestr.length() - s - 1);
 }
 
 //
