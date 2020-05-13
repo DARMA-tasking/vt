@@ -55,8 +55,7 @@ namespace vt { namespace util { namespace mpi_limits {
 
   void* p = nullptr;
   int flag = 0;
-  auto comm = theContext()->getComm();
-  MPI_Comm_get_attr(comm, MPI_TAG_UB, &p, &flag);
+  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &p, &flag);
 
   if (not flag) {
     vtAbort("Failed to obtain MPI_TAG_UB attribute");
