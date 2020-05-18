@@ -50,9 +50,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/pool/pool.h"
 
-#if HAS_SERIALIZATION_LIBRARY
-  #include "serialization_library_headers.h"
-#endif
+#include <checkpoint/checkpoint.h>
 
 namespace vt {
 
@@ -60,7 +58,7 @@ template <typename MsgT>
 void messageTypeChecks() {
   static_assert(
     std::is_trivially_destructible<MsgT>::value or
-    serdes::SerializableTraits<MsgT>::has_serialize_function,
+    checkpoint::SerializableTraits<MsgT>::has_serialize_function,
     "All messages must either be trivially destructible or "
     "have a valid serialization function associated with them"
   );

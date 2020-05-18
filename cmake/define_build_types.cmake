@@ -36,6 +36,7 @@ set(
    CatEnum::termds       | \
    CatEnum::barrier      | \
    CatEnum::pipe         | \
+   CatEnum::param        | \
    CatEnum::pool         | \
    CatEnum::reduce       | \
    CatEnum::rdma         | \
@@ -131,7 +132,6 @@ set(vt_feature_cmake_no_feature "0")
 set(vt_feature_cmake_production "0")
 
 set (vt_feature_cmake_mpi_rdma "0")
-set (vt_feature_cmake_parserdes "0")
 set (vt_feature_cmake_print_term_msgs "0")
 set (vt_feature_cmake_default_threading "1")
 set (vt_feature_cmake_no_pool_alloc_env "0")
@@ -184,13 +184,13 @@ foreach(loop_build_type ${VT_CONFIG_TYPES})
   # put the config file in a subdirectory corresponding to the lower case build name
   configure_file(
     ${PROJECT_BASE_DIR}/cmake_config.h.in
-    ${PROJECT_BIN_DIR}/${loop_build_type}/cmake_config.h @ONLY
+    ${PROJECT_BIN_DIR}/${loop_build_type}/vt/cmake_config.h @ONLY
   )
 
   # install the correct config file when this build is selected
   install(
-    FILES            "${PROJECT_BINARY_DIR}/${loop_build_type}/cmake_config.h"
-    DESTINATION      include
+    FILES            "${PROJECT_BINARY_DIR}/${loop_build_type}/vt/cmake_config.h"
+    DESTINATION      include/vt
     CONFIGURATIONS   ${loop_build_type}
   )
 

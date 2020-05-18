@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/serialization/auto_dispatch/dispatch_handler.h"
-#include "vt/serialization/serialize_interface.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/messaging/active.h"
 
@@ -71,30 +70,12 @@ template <typename MsgT>
 }
 
 template <typename MsgT>
-/*static*/ messaging::PendingSend SenderSerializeHandler<MsgT>::sendMsgParserdes(
-  NodeType const& node, HandlerType const& han, MsgT* msg,
-  TagType const& tag
-) {
-  vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
-  return SerializedMessenger::sendParserdesMsgHandler<MsgT>(node,han,msg);
-}
-
-template <typename MsgT>
 /*static*/ messaging::PendingSend SenderSerializeHandler<MsgT>::sendMsg(
   NodeType const& node, MsgT* msg, HandlerType const& handler,
   TagType const& tag
 ) {
   vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
   return SerializedMessenger::sendSerialMsgHandler<MsgT>(node,msg,handler);
-}
-
-template <typename MsgT>
-/*static*/ messaging::PendingSend
- BroadcasterSerializeHandler<MsgT>::broadcastMsgParserdes(
-   MsgT* msg, HandlerType const& handler, TagType const& tag
-) {
-  vtAssert(tag == no_tag, "Tagged messages serialized not implemented");
-  return SerializedMessenger::broadcastParserdesMsgHandler<MsgT>(msg,handler);
 }
 
 template <typename MsgT>

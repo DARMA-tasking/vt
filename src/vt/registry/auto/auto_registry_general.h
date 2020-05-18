@@ -113,6 +113,39 @@ struct FunctorAdapterArgs {
 #endif // end trace_enabled
 };
 
+// Need to provide a non-pointer overload for parameterization auto-registered
+// functions for GCC
+template <typename F, F f>
+struct FunctorAdapterParam {
+  using FunctionPtrType = F;
+  using ObjType = void;
+
+  static constexpr FunctionPtrType getFunction() { return f; }
+
+  static NumArgsType getNumArgs() {
+    return 0; // lies - see NumArgsTag, perhaps
+  }
+
+#if backend_check_enabled(trace_enabled)
+  static std::string traceGetEventType() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto ns = TE::getNamespace(TE::getValueName<F,f>());
+    if (ns.empty())
+      ns = "(none)";
+    return DU::removeSpaces(ns);
+  }
+
+  static std::string traceGetEventName() {
+    using TE = vt::util::demangle::TemplateExtract;
+    using DU = vt::util::demangle::DemanglerUtils;
+    auto barename = TE::getBarename(TE::getValueName<F,f>());
+    auto args = TE::getVoidFuncStrArgs(TE::getTypeName<F>());
+    return DU::removeSpaces(barename + "(" + args + ")");
+  }
+#endif // end trace_enabled
+};
+
 template <typename F, F* f>
 struct FunctorAdapter {
   using FunctionPtrType = F*;

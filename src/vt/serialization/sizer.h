@@ -46,13 +46,8 @@
 #define INCLUDED_VT_SERIALIZATION_SIZER_H
 
 #include "vt/config.h"
-#include "vt/serialization/serialize_interface.h"
 
-#if HAS_SERIALIZATION_LIBRARY
-  #define HAS_DETECTION_COMPONENT 1
-  #include "serialization_library_headers.h"
-  #include "traits/serializable_traits.h"
-#endif
+#include <checkpoint/checkpoint.h>
 
 namespace vt { namespace serialization {
 
@@ -63,21 +58,18 @@ struct MsgSizer {
   }
 };
 
-#if HAS_SERIALIZATION_LIBRARY
 template <typename MsgT>
 struct MsgSizer<
   MsgT,
   typename std::enable_if_t<
-    ::serdes::SerializableTraits<MsgT>::has_serialize_function
+    ::checkpoint::SerializableTraits<MsgT>::has_serialize_function
   >
 > {
   static std::size_t get(MsgT* msg) {
     auto& msg_ref = *msg;
-    return ::serialization::interface::getSize<MsgT>(msg_ref);
+    return ::checkpoint::getSize<MsgT>(msg_ref);
   }
 };
-
-#endif
 
 }} /* end namespace vt::serialization */
 
