@@ -89,6 +89,7 @@ struct ColMsg : CollectionMessage<TestCol<Args...>> {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | tup;
+    MessageParentType::serialize(s);
   }
 
   TupleType tup;
