@@ -473,9 +473,9 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
             startEpochGraphBuild();
             // After spawning the build, spin until the file gets written out so
             // vtAbort does not exit too early
-            while (not has_printed_epoch_graph or not theSched()->isIdle()) {
-              vt::runScheduler();
-            }
+            theSched()->runSchedulerWhile([this]{
+              return not has_printed_epoch_graph or not theSched()->isIdle();
+            });
           }
           vtAbort("Detected hang indicating no further progress is possible");
         }

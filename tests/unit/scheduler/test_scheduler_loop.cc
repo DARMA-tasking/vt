@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              request_holder.cc
+//                          test_scheduler_loop.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,58 +42,81 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC
-#define INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/rdmahandle/request_holder.h"
+#include "vt/transport.h"
+#include "test_parallel_harness.h"
 
-namespace vt { namespace rdma {
+namespace vt { namespace tests { namespace unit {
 
-void RequestHolder::add(std::function<void()> fn) {
-  delayed_ = fn;
-}
+struct TestSchedulerLoop : TestParallelHarness { };
 
-MPI_Request* RequestHolder::add() {
-  reqs_.emplace_back(MPI_Request{});
-  return &reqs_[reqs_.size()-1];
-}
+struct TestMsg : vt::Message {
+  int action_;
+};
 
-bool RequestHolder::test() {
-  std::vector<MPI_Request> new_reqs;
-  std::vector<MPI_Status> stats;
-  stats.resize(reqs_.size());
-  auto flags = std::make_unique<int[]>(reqs_.size());
-  MPI_Testall(reqs_.size(), &reqs_[0], &flags[0], &stats[0]);
-  for (std::size_t i = 0; i < reqs_.size(); i++) {
-    if (not flags[i]) {
-      new_reqs.push_back(reqs_[i]);
+static int last_action_completed = 0;
+static bool done = false;
+
+static std::string actions[] = {
+  "-- not used --",
+  "nested",
+  "nested",
+  "manual",
+  "manual",
+  "nested",
+  "done"
+};
+
+static void message_handler_with_nested_loop(TestMsg* msg) {
+  std::string& action = actions[msg->action_];
+
+  if ("done" == action) {
+    done = true;
+    last_action_completed = msg->action_;
+    return;
+  }
+
+  int next_depth = msg->action_ + 1;
+
+  int target_node = (theContext()->getNode() + 1) % theContext()->getNumNodes();
+
+  auto next_msg = vt::makeMessage<TestMsg>();
+  next_msg->action_ = next_depth;
+  theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, next_msg.get());
+
+  if ("nested" == action) {
+    // New auto-nesting loop (recommended)
+    theSched()->runSchedulerWhile([next_depth]{ return next_depth not_eq last_action_completed; });
+  } else if ("manual" == action) {
+    // Original manual loops (not recommended, as such will not relfect as well in trace logs)
+    while (next_depth not_eq last_action_completed) {
+      vt::runScheduler();
     }
+  } else {
+    vtAssertInfo(false, "Invalid action", action);
   }
-  reqs_ = std::move(new_reqs);
-  return new_reqs.size() == 0;
+
+  // Unwinds 5,4..1 eg.
+  last_action_completed = msg->action_;
 }
 
-void RequestHolder::wait() {
-  debug_print(
-    rdma, node,
-    "RequestHolder::wait: len={}, ptr={}\n",
-    reqs_.size(), on_done_ ? "yes" : "no"
-  );
+TEST_F(TestSchedulerLoop, test_scheduler_loop_nesting_1) {
 
-  if (delayed_ != nullptr) {
-    delayed_();
-    delayed_ = nullptr;
+  vtAssert(theContext()->getNumNodes() >= 2, "At least 2 nodes required.");
+
+  int target_node = (theContext()->getNode() + 1) % theContext()->getNumNodes();
+
+  auto msg = vt::makeMessage<TestMsg>();
+  msg->action_ = 1;
+  theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, msg.get());
+
+  done = false;
+  while (!done) {
+    vt::runScheduler();
   }
 
-  theSched()->runSchedulerWhile([this]{ return not test(); });
-
-  if (on_done_ != nullptr) {
-    on_done_->invoke();
-  }
-  on_done_ = nullptr;
+  SUCCEED();
 }
 
-}} /* end namespace vt::rdma */
-
-#endif /*INCLUDED_VT_RDMAHANDLE_REQUEST_HOLDER_CC*/
+}}} /* end namespace vt::tests::unit */

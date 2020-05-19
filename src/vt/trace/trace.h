@@ -92,7 +92,10 @@ struct Trace : runtime::component::Component<Trace> {
   using TraceConstantsType  = eTraceConstants;
   using TimeIntegerType     = int64_t;
   using TraceContainerType  = std::queue<LogType>;
-  using TraceStackType      = std::stack<LogType>;
+  // Although should be used mostly as a stack, vector is exposed to enable
+  // the use of a synthetic pop-push to maintain the stack around idle.
+  using TraceStackType      = std::vector<LogType>;
+  using EventHoldStackType  = std::vector<std::size_t>;
 
   Trace(std::string const& in_prog_name);
 
@@ -113,11 +116,11 @@ struct Trace : runtime::component::Component<Trace> {
   /// Currently endProcessing MUST be called in the opposite
   /// order of beginProcessing.
   TraceProcessingTag beginProcessing(
-    TraceEntryIDType const ep, TraceMsgLenType const len,
-    TraceEventIDType const event, NodeType const from_node,
-    double const time = getCurrentTime(),
-    uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
-    uint64_t const idx4 = 0
+     TraceEntryIDType const ep, TraceMsgLenType const len,
+     TraceEventIDType const event, NodeType const from_node,
+     uint64_t const idx1 = 0, uint64_t const idx2 = 0,
+     uint64_t const idx3 = 0, uint64_t const idx4 = 0,
+     double const time = getCurrentTime()
   );
 
   /// Finalize a paired event.
@@ -127,13 +130,8 @@ struct Trace : runtime::component::Component<Trace> {
     double const time = getCurrentTime()
   );
 
-  void endProcessing(
-    TraceEntryIDType const ep, TraceMsgLenType const len,
-    TraceEventIDType const event, NodeType const from_node,
-    double const time = getCurrentTime(),
-    uint64_t const idx1 = 0, uint64_t const idx2 = 0, uint64_t const idx3 = 0,
-    uint64_t const idx4 = 0
-  );
+  void beginSchedulerLoop();
+  void endSchedulerLoop();
 
   void beginIdle(double const time = getCurrentTime());
   void endIdle(double const time = getCurrentTime());
@@ -207,8 +205,11 @@ struct Trace : runtime::component::Component<Trace> {
 
 private:
 
-  static void traceBeginIdleTrigger();
-  static void traceEndIdleTrigger();
+  // Emit a 'stop' trace for previous open event or a '[re]start' trace
+  // for a reactivated open event. This assists with output flattening.
+  void emitTraceForTopProcessingEvent(
+    double const time, TraceConstantsType const type
+  );
 
   // Writes traces to file, optionally flushing.
   // The traces collection is modified.
@@ -249,19 +250,23 @@ private:
 private:
   TraceContainerType traces_;
   TraceStackType open_events_;
+  EventHoldStackType event_holds_;
+
   TraceEventIDType cur_event_   = 1;
-  std::string prog_name_        = "";
-  std::string trace_name_       = "";
   bool enabled_                 = true;
   bool idle_begun_              = false;
   double start_time_            = 0.0;
+  UserEventRegistry user_event_ = {};
+
+  std::string prog_name_        = "";
+  std::string trace_name_       = "";
   std::string full_trace_name_  = "";
   std::string full_sts_name_    = "";
   std::string full_dir_name_    = "";
-  UserEventRegistry user_event_ = {};
   std::unique_ptr<vt_gzFile> log_file_;
   bool wrote_sts_file_          = false;
   size_t trace_write_count_     = 0;
+
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
   bool trace_enabled_cur_phase_ = true;
   UserEventIDType flush_event_  = no_user_event_id;
