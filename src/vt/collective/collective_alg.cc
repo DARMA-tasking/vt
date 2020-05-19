@@ -126,7 +126,7 @@ CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
   MPI_Ibcast(&consensus_is_user_tag, 1, MPI_C_BOOL,  root, comm, &req3);
 
   int flag1 = 0, flag2 = 0, flag3 = 0;
-  while (not flag1 or not flag2 or not flag3) {
+  theSched()->runSchedulerWhile([&req1,&req2,&req3,&flag1,&flag2,&flag3]{
     if (not flag1) {
       MPI_Test(&req1, &flag1, MPI_STATUS_IGNORE);
     }
@@ -136,8 +136,8 @@ CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
     if (not flag3) {
       MPI_Test(&req3, &flag3, MPI_STATUS_IGNORE);
     }
-    runScheduler();
-  }
+    return not (flag1 and flag2 and flag3);
+  });
 
   vtAssert(consensus_tag   != no_tag, "Selected tag must be valid");
   vtAssert(consensus_scope != no_tag, "Selected scope must be valid");
@@ -147,11 +147,11 @@ CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
   // Iallreduce, but I think this is cheaper
   MPI_Ibarrier(comm, &req1);
 
-  flag1 = 0;
-  while (not flag1) {
-    MPI_Test(&req1, &flag1, MPI_STATUS_IGNORE);
-    runScheduler();
-  }
+  theSched()->runSchedulerWhile([&req1]{
+    int flag4 = 0;
+    MPI_Test(&req1, &flag4, MPI_STATUS_IGNORE);
+    return not flag4;
+  });
 
   debug_print(
     gen, node,

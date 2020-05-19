@@ -80,13 +80,14 @@ void RequestHolder::wait() {
     "RequestHolder::wait: len={}, ptr={}\n",
     reqs_.size(), on_done_ ? "yes" : "no"
   );
+
   if (delayed_ != nullptr) {
     delayed_();
     delayed_ = nullptr;
   }
-  while (not test()) {
-    vt::runScheduler();
-  }
+
+  theSched()->runSchedulerWhile([this]{ return not test(); });
+
   if (on_done_ != nullptr) {
     on_done_->invoke();
   }

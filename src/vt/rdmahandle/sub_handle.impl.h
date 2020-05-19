@@ -524,9 +524,7 @@ SubHandle<T,E,IndexT>::construct(
 template <typename T, HandleEnum E, typename IndexT>
 template <typename U>
 void SubHandle<T,E,IndexT>::waitForHandleReady(Handle<U,E> const& h) {
-  do {
-    vt::runScheduler();
-  } while (not h.ready());
+  theSched()->runSchedulerWhile([&h] { return not h.ready(); });
 }
 
 template <typename T, HandleEnum E, typename IndexT>
@@ -595,9 +593,10 @@ void SubHandle<T,E,IndexT>::afterLB() {
   proxy_.template reduce<collective::OrOp<bool>>(msg.get(),cb);
   theMsg()->popEpoch(epoch);
   theTerm()->finishedEpoch(epoch);
+
   bool done = false;
-  theTerm()->addAction(epoch, [&]{ done = true; });
-  do vt::runScheduler(); while (not done);
+  theTerm()->addAction(epoch, [&done]{ done = true; });
+  theSched()->runSchedulerWhile([&done]{ return not done; });
 }
 
 template <typename T, HandleEnum E, typename IndexT>
