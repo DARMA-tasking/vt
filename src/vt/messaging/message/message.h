@@ -91,6 +91,10 @@ struct ActiveMsg : BaseMsg {
    * \brief Construct an empty message; initializes the envelope state.
    */
   ActiveMsg() {
+    // This is here for legacy reasons (which current allow detection of when
+    // a message has not been created correctly). With just this base
+    // setup, a vtAssert will fail when the message is attempted to be sent.
+    // Proper initialization happens in 'makeMessage' calls.
     envelopeInitEmpty(env);
 
     debug_print(

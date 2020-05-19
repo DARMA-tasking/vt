@@ -57,6 +57,8 @@ MsgT* makeSharedMessage(Args&&... args) {
   MsgT* msg = new MsgT{std::forward<Args>(args)...};
   // n.b. do NOT actually take a ref here.
   // True ownership only starts in MsgPtr.
+  // Double-initialization of an envelope is problematic.
+  //envelopeInitEmpty(msg->env);
   envelopeSetRef(msg->env, 0);
   return msg;
 }
@@ -66,6 +68,8 @@ MsgT* makeSharedMessageSz(std::size_t size, Args&&... args) {
   MsgT* msg = new (size) MsgT{std::forward<Args>(args)...};
   // n.b. do NOT actually take a ref here.
   // True ownership only starts in MsgPtr.
+  // Double-initialization of an envelope is problematic.
+  //envelopeInitEmpty(msg->env);
   envelopeSetRef(msg->env, 0);
   return msg;
 }
