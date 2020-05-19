@@ -187,9 +187,7 @@ void GossipLB::inform() {
   auto msg = makeMessage<ReduceMsgType>();
   proxy_.reduce(msg.get(), cb);
 
-  while (not setup_done_) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
   bool inform_done = false;
   auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
