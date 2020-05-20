@@ -120,6 +120,7 @@ void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
   s | to_proxy_;
   s | bcast_proxy_;
   s | bcast_epoch_;
+  s | from_node_;
   s | member_;
   s | is_wrap_;
 
