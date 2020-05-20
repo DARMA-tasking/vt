@@ -202,6 +202,7 @@ struct ActiveMsg : BaseMsg {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     base_serialize_called_ = true;
+    s.ignore(base_serialize_called_); // Used as local state only
     // n.b. not actually used, as extracted during transmission.
     s | has_owner_;
     s | env;
