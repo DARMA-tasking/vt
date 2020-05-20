@@ -82,6 +82,8 @@ struct MigrateMsg final : ::vt::Message {
   void serialize(Serializer& s) {
     MessageParentType::serialize(s);
     s | elm_proxy_ | from_ | to_ | map_fn_ | range_;
+    s.ignore(elm_);
+    s.ignore(owns_elm_); // Local state
     if (s.isUnpacking()) {
       elm_ = new ColT{};
       owns_elm_ = true;
