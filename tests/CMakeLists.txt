@@ -37,6 +37,7 @@ set(
   lb
   trace
   rdma
+  utils
 )
 
 #
