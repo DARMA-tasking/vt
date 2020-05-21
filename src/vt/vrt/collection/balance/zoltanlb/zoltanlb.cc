@@ -289,7 +289,7 @@ void ZoltanLB::runLB() {
       &num_export,
       &export_global_ids, &export_local_ids, &export_procs, &export_to_part
     );
-    assert(partition_return == ZOLTAN_OK);
+    vtAssert(partition_return == ZOLTAN_OK, "Partition must be OK");
   });
 
   startMigrationCollective();
@@ -411,7 +411,7 @@ Zoltan_Struct* ZoltanLB::initZoltan() {
   collective_scope_.mpiCollectiveWait([this]{
     float ver = 0.0f;
     auto const ret = Zoltan_Initialize(0, nullptr, &ver);
-    assert(ret == ZOLTAN_OK);
+    vtAssert(ret == ZOLTAN_OK, "Zoltan initialize must be OK");
 
     zoltan_ = Zoltan_Create(theContext()->getComm());
   });
