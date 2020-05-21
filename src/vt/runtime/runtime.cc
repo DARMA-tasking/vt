@@ -1298,8 +1298,9 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<rdma::RDMAManager>(
     &theRDMA, Deps<
-      ctx::Context,              // Everything depends on theContext
-      messaging::ActiveMessenger // Depends on active messenger for RDMA
+      ctx::Context,                 // Everything depends on theContext
+      messaging::ActiveMessenger,   // Depends on active messenger for RDMA
+      collective::CollectiveAlg     // Depends on collective scope
     >{}
   );
 
