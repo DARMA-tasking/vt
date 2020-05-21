@@ -2280,6 +2280,52 @@ template <typename ColT, typename IndexT>
 }
 
 template <typename ColT, typename IndexT>
+void CollectionManager::startInsertCollective(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy
+) {
+  auto const untyped_proxy = proxy.getProxy();
+  auto insert_ep = theTerm()->makeEpochCollective("startInsertCollective");
+  UniversalIndexHolder<>::insertSetEpoch(untyped_proxy, insert_ep);
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::finishInsertCollective(
+  CollectionProxyWrapType<ColT,IndexT> const& proxy
+) {
+  auto const untyped_proxy = proxy.getProxy();
+
+  // Get the current insert epoch
+  auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
+  vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
+
+  // Wait on the insert epoch, ensuring that insertions are complete
+  bool done = false;
+  theTerm()->addAction(insert_epoch, [&done] { done = true; });
+  theTerm()->finishedEpoch(insert_epoch);
+  theSched()->runSchedulerWhile([&done] { return not done; });
+
+  // Reset the insert epoch to none so no insertions can be completed until \c
+  // startInsertCollective in invoked
+  UniversalIndexHolder<>::insertSetEpoch(untyped_proxy, no_epoch);
+
+  // Set the group as not ready, so nothing group-related can proceed with the
+  // old group
+  auto elm_holder = findElmHolder<ColT>(untyped_proxy);
+  vtAssert(elm_holder != nullptr, "Must have valid holder");
+  elm_holder->setGroupReady(false);
+
+  // Now, we need to create a new group because broadcasts/reductions might need
+  // to hit new nodes based on the current insert set!
+  groupConstruction<ColT>(untyped_proxy, true /* do it now! */);
+
+  // Spin until the group is ready. Don't let the user proceed. In theory this
+  // can be relaxed by buffering operations, but this is simpler for now
+  theSched()->runSchedulerWhile([&elm_holder]{
+    return not elm_holder->groupReady();
+  });
+}
+
+template <typename ColT, typename IndexT>
 void CollectionManager::finishedInserting(
   CollectionProxyWrapType<ColT,IndexT> const& proxy,
   ActionType insert_action

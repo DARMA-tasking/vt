@@ -61,6 +61,10 @@ struct InsertFinished : BaseProxyT {
   InsertFinished& operator=(InsertFinished const&) = default;
 
   void finishedInserting(ActionType action = nullptr) const;
+
+  void startInsertCollective() const;
+
+  void finishInsertCollective() const;
 };
 
 }}} /* end namespace vt::vrt::collection */

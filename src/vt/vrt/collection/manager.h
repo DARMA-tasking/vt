@@ -1669,6 +1669,26 @@ public:
   );
 
   /**
+   * \brief Starting inserting elements in a collection collectively
+   *
+   * \param[in] proxy the proxy for the collection
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void startInsertCollective(
+    CollectionProxyWrapType<ColT,IndexT> const& proxy
+  );
+
+  /**
+   * \brief Finished inserting elements in a collection collectively
+   *
+   * \param[in] proxy the proxy for the collection
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void finishInsertCollective(
+    CollectionProxyWrapType<ColT,IndexT> const& proxy
+  );
+
+  /**
    * \internal \brief Add a cleanup function for a collection after destruction
    *
    * \param[in] proxy the collection proxy bits
