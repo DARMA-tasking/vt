@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/collective/collective_scope.h"
 
 #if backend_check_enabled(zoltan)
 
@@ -62,7 +63,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 struct ZoltanLB : BaseLB {
   using ReduceMsg = collective::ReduceTMsg<int>;
 
-  ZoltanLB() = default;
+  ZoltanLB();
 
   void init(objgroup::proxy::Proxy<ZoltanLB> in_proxy);
   void runLB() override;
@@ -152,6 +153,7 @@ private:
   ElementCommType load_comm_edge_id;
   int max_edges_per_node_ = 0;
   balance::ElementIDType edge_id_ = 0;
+  collective::CollectiveScope collective_scope_;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
