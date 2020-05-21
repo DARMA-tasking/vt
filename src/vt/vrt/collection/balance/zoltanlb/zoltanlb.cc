@@ -47,12 +47,17 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
+#include "vt/collective/collective_alg.h"
 
 #if backend_check_enabled(zoltan)
 
 #include <zoltan.h>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
+
+ZoltanLB::ZoltanLB()
+  : collective_scope_(theCollective()->makeCollectiveScope())
+{ }
 
 void ZoltanLB::init(objgroup::proxy::Proxy<ZoltanLB> in_proxy) {
   proxy = in_proxy;
@@ -275,14 +280,17 @@ void ZoltanLB::runLB() {
   ZOLTAN_ID_PTR export_local_ids;
   int* import_procs = nullptr, *export_procs = nullptr;
   int* import_to_part = nullptr, *export_to_part = nullptr;
-  auto const partition_return = Zoltan_LB_Partition(
-    zoltan_, &changes, &num_gid_entries, &num_lid_entries,
-    &num_import,
-    &import_global_ids, &import_local_ids, &import_procs, &import_to_part,
-    &num_export,
-    &export_global_ids, &export_local_ids, &export_procs, &export_to_part
-  );
-  assert(partition_return == ZOLTAN_OK);
+
+  collective_scope_.mpiCollectiveWait([&]{
+    auto const partition_return = Zoltan_LB_Partition(
+      zoltan_, &changes, &num_gid_entries, &num_lid_entries,
+      &num_import,
+      &import_global_ids, &import_local_ids, &import_procs, &import_to_part,
+      &num_export,
+      &export_global_ids, &export_local_ids, &export_procs, &export_to_part
+    );
+    assert(partition_return == ZOLTAN_OK);
+  });
 
   startMigrationCollective();
 
@@ -400,16 +408,20 @@ void ZoltanLB::combineEdges() {
 }
 
 Zoltan_Struct* ZoltanLB::initZoltan() {
-  float ver = 0.0f;
-  auto const ret = Zoltan_Initialize(0, nullptr, &ver);
-  assert(ret == ZOLTAN_OK);
+  collective_scope_.mpiCollectiveWait([this]{
+    float ver = 0.0f;
+    auto const ret = Zoltan_Initialize(0, nullptr, &ver);
+    assert(ret == ZOLTAN_OK);
 
-  zoltan_ = Zoltan_Create(theContext()->getComm());
+    zoltan_ = Zoltan_Create(theContext()->getComm());
+  });
   return zoltan_;
 }
 
 void ZoltanLB::destroyZoltan() {
-  Zoltan_Destroy(&zoltan_);
+  collective_scope_.mpiCollectiveWait([this]{
+    Zoltan_Destroy(&zoltan_);
+  });
 }
 
 void ZoltanLB::setParams() {
