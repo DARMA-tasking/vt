@@ -45,8 +45,13 @@
 #include "vt/config.h"
 #include "vt/rdmahandle/manager.h"
 #include "vt/objgroup/manager.h"
+#include "vt/collective/collective_alg.h"
 
 namespace vt { namespace rdma {
+
+Manager::Manager()
+  : collective_scope_(theCollective()->makeCollectiveScope())
+{ }
 
 void Manager::finalize() {
   vt::theObjGroup()->destroyCollective(proxy_);
