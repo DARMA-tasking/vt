@@ -6,6 +6,7 @@ set(
   jacobi2d_vt
   migrate_collection
   insertable_collection
+  collective_insertable
   reduce_integral
   transpose
 )
