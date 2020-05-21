@@ -1523,17 +1523,11 @@ CollectionManager::constructCollectiveMap(
   // Initialize the typed proxy for the user interface, returned from this fn
   auto const typed_proxy = TypedProxyType{proxy};
 
-  // For now, the distributed SPMD constructed collection must be statically
-  // sized, not dynamically insertable to use this constructed methodology.
-  auto const& is_static = ColT::isStaticSized();
-  vtAssertInfo(
-    is_static, "Distributed collection construct must be statically sized",
-    is_static, tag, map_han
-  );
-
   // Invoke getCollectionLM() to create a new location manager instance for this
   // collection
   theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+
+  auto const is_static = ColT::isStaticSized();
 
   vt_debug_print(
     vrt_coll, node,
@@ -1555,73 +1549,75 @@ CollectionManager::constructCollectiveMap(
   // Get the handler function
   auto fn = auto_registry::getHandlerMap(map_han);
 
-  // Walk through the index range with the mapping function and invoke the
-  // construct function (parameter to this fn) for local elements, populating
-  // the holder
-  range.foreach([&](IndexT cur_idx) mutable {
-    using BaseIdxType      = vt::index::BaseIndex;
-    using VirtualElmPtr    = VirtualPtrType<ColT,IndexT>;
-    using IdxContextHolder = InsertContextHolder<IndexT>;
-
-    vt_debug_print_verbose(
-      vrt_coll, node,
-      "construct (dist): foreach: map: cur_idx={}, index range={}\n",
-      cur_idx.toString(), range.toString()
-    );
-
-    auto const cur = static_cast<BaseIdxType*>(&cur_idx);
-    auto const max = static_cast<BaseIdxType*>(&range);
-
-    auto mapped_node = fn(cur, max, num_nodes);
-
-    vt_debug_print_verbose(
-      vrt_coll, node,
-      "construct (dist): foreach: cur_idx={}, mapped_node={}\n",
-      cur_idx.toString(), mapped_node
-    );
-
-    if (theContext()->getNode() == mapped_node) {
-      // // Check the current context index, asserting that it's nullptr (there can
-      // // only be one live creation context at time)
-      // auto const ctx_idx = IdxContextHolder::index();
-
-      // vtAssert(ctx_idx == nullptr, "Context index must not be set");
-
-      // Set the current context index to `cur_idx`. This enables the user to
-      // query the index of their collection element in the constructor, which
-      // is often very handy
-      IdxContextHolder::set(&cur_idx,proxy);
-
-      // Invoke the user's construct function with a single argument---the index
-      // of element being constructed
-      VirtualElmPtr elm_ptr = user_construct_fn(cur_idx);
+  if (is_static) {
+    // Walk through the index range with the mapping function and invoke the
+    // construct function (parameter to this fn) for local elements, populating
+    // the holder
+    range.foreach([&](IndexT cur_idx) mutable {
+      using BaseIdxType      = vt::index::BaseIndex;
+      using VirtualElmPtr    = VirtualPtrType<ColT,IndexT>;
+      using IdxContextHolder = InsertContextHolder<IndexT>;
 
       vt_debug_print_verbose(
         vrt_coll, node,
-        "construct (dist): ptr={}\n", print_ptr(elm_ptr.get())
+        "construct (dist): foreach: map: cur_idx={}, index range={}\n",
+        cur_idx.toString(), range.toString()
       );
 
-      // Through the attorney, setup all the properties on the newly constructed
-      // collection element: index, proxy, number of elements. Note: because of
-      // how the constructor works, the index is not currently available through
-      // "getIndex"
-      CollectionTypeAttorney::setup(elm_ptr.get(), num_elms, cur_idx, proxy);
+      auto const cur = static_cast<BaseIdxType*>(&cur_idx);
+      auto const max = static_cast<BaseIdxType*>(&range);
 
-      // Insert the element into the managed holder for elements
-      insertCollectionElement<ColT>(
-        std::move(elm_ptr), cur_idx, range, map_han, proxy, true, mapped_node
-      );
-
-      // Clear the current index context
-      IdxContextHolder::clear();
+      auto mapped_node = fn(cur, max, num_nodes);
 
       vt_debug_print_verbose(
         vrt_coll, node,
-        "construct (dist): new local elm: num_elm={}, proxy={:x}, cur_idx={}\n",
-        num_elms, proxy, cur_idx.toString()
+        "construct (dist): foreach: cur_idx={}, mapped_node={}\n",
+        cur_idx.toString(), mapped_node
       );
-    }
-  });
+
+      if (theContext()->getNode() == mapped_node) {
+        // // Check the current context index, asserting that it's nullptr (there can
+        // // only be one live creation context at time)
+        // auto const ctx_idx = IdxContextHolder::index();
+
+        // vtAssert(ctx_idx == nullptr, "Context index must not be set");
+
+        // Set the current context index to `cur_idx`. This enables the user to
+        // query the index of their collection element in the constructor, which
+        // is often very handy
+        IdxContextHolder::set(&cur_idx,proxy);
+
+        // Invoke the user's construct function with a single argument---the index
+        // of element being constructed
+        VirtualElmPtr elm_ptr = user_construct_fn(cur_idx);
+
+        vt_debug_print_verbose(
+          vrt_coll, node,
+          "construct (dist): ptr={}\n", print_ptr(elm_ptr.get())
+        );
+
+        // Through the attorney, setup all the properties on the newly constructed
+        // collection element: index, proxy, number of elements. Note: because of
+        // how the constructor works, the index is not currently available through
+        // "getIndex"
+        CollectionTypeAttorney::setup(elm_ptr.get(), num_elms, cur_idx, proxy);
+
+        // Insert the element into the managed holder for elements
+        insertCollectionElement<ColT>(
+          std::move(elm_ptr), cur_idx, range, map_han, proxy, true, mapped_node
+        );
+
+        // Clear the current index context
+        IdxContextHolder::clear();
+
+        vt_debug_print_verbose(
+          vrt_coll, node,
+          "construct (dist): new local elm: num_elm={}, proxy={:x}, cur_idx={}\n",
+          num_elms, proxy, cur_idx.toString()
+        );
+      }
+    });
+  }
 
   // Insert the meta-data for this new collection
   insertMetaCollection<ColT>(proxy, map_han, range, is_static);
