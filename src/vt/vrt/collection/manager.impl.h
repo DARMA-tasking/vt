@@ -1459,9 +1459,28 @@ bool CollectionManager::insertCollectionElement(
  * user supplying the pointers to the elements.
  */
 
+template <
+  typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+>
+CollectionManager::CollectionProxyWrapType<ColT>
+CollectionManager::constructCollective(typename ColT::IndexType range) {
+  using IndexT = typename ColT::IndexType;
+  auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
+  auto cons_fn = [](typename ColT::IndexType) { return std::make_unique<ColT>(); };
+  return constructCollectiveMap<ColT>(range,cons_fn,map_han,no_tag);
+}
+
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
- CollectionManager::constructCollective(
+CollectionManager::constructCollective(typename ColT::IndexType range) {
+  auto const map_han = getDefaultMap<ColT>();
+  auto cons_fn = [](typename ColT::IndexType) { return std::make_unique<ColT>(); };
+  return constructCollectiveMap<ColT>(range,cons_fn,map_han,no_tag);
+}
+
+template <typename ColT>
+CollectionManager::CollectionProxyWrapType<ColT>
+CollectionManager::constructCollective(
   typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
   TagType const& tag
 ) {

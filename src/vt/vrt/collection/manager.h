@@ -244,6 +244,14 @@ struct CollectionManager
   template <
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
+  CollectionProxyWrapType<ColT> constructCollective(typename ColT::IndexType range);
+
+  template <typename ColT>
+  CollectionProxyWrapType<ColT> constructCollective(typename ColT::IndexType range);
+
+  template <
+    typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+  >
   CollectionProxyWrapType<ColT> constructCollective(
     typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
     TagType const& tag = no_tag
