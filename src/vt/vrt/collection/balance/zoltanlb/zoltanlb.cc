@@ -107,7 +107,7 @@ void executeInEpoch(Callable&& fn) {
   vt::theTerm()->finishedEpoch(ep);
   bool done = false;
   vt::theTerm()->addAction(ep, [&done]{ done = true; });
-  do vt::runScheduler(); while (!done);
+  theSched()->runSchedulerWhile([&done]{ return not done; });
 }
 
 void ZoltanLB::countEdges() {
