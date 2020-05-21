@@ -104,6 +104,15 @@ if (${vt_asan_enabled})
   endif()
 endif()
 
+if (vt_serialize_static_checker)
+  message(
+    STATUS
+    "Checkpoint static checks are enabled with checker: ${vt_serialize_static_checker}"
+  )
+endif()
+
+include(cmake/serialize_checker_target.cmake)
+
 # Primary VT build
 add_subdirectory(src)
 
