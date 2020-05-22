@@ -81,7 +81,7 @@ struct Aligner<T> {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Assert that \c T is included in \c Us
+/// Used to assert that \c T is included in \c Us
 template <typename T, typename... Us>
 struct MustBe;
 
@@ -97,8 +97,16 @@ struct MustBe<T> {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+// Turn a pack into a \c char and indicates order in the pack for selection
 
-/// Turn a pack into a \c char that indicates which one is active
+template <typename... Us>
+struct GetPlace {
+  static constexpr char const value = sizeof...(Us) + 1;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+/// Find the place of a given \c T inside a pack \c U, Us...
+
 template <typename T, typename U, typename... Us>
 struct Which;
 
@@ -118,12 +126,6 @@ struct WhichImpl<T, U, typename std::enable_if_t<not std::is_same<T,U>::value>, 
 template <typename T, typename U, typename... Us>
 struct Which : WhichImpl<T, U, void, Us...> { };
 
-///////////////////////////////////////////////////////////////////////////////
-
-template <typename U, typename... Us>
-struct GetPlace {
-  static constexpr char const value = sizeof...(Us) + 1;
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +134,7 @@ template <typename T, typename... Ts>
 struct Deallocate {
   template <typename U>
   static void apply(char which, U* u) {
-    if (which == static_cast<char>(sizeof...(Ts) + 1)) {
+    if (which == GetPlace<Ts...>::value) {
       u->template deallocateAs<T>();
     } else {
       Deallocate<Ts...>::apply(which, u);
@@ -158,7 +160,7 @@ struct Deallocate<T> {
 template <typename T, typename... Ts>
 struct Copy {
   static void apply(char which, char const* from, char* to) {
-    if (which == static_cast<char>(sizeof...(Ts) + 1)) {
+    if (which == GetPlace<Ts...>::value) {
       new (to) T{*reinterpret_cast<T const*>(from)};
     } else {
       Copy<Ts...>::apply(which, from, to);
@@ -183,7 +185,7 @@ struct Copy<T> {
 template <typename T, typename... Ts>
 struct Move {
   static void apply(char which, char* from, char* to) {
-    if (which == static_cast<char>(sizeof...(Ts) + 1)) {
+    if (which == GetPlace<Ts...>::value) {
       new (reinterpret_cast<T*>(to)) T{std::move(*reinterpret_cast<T*>(from))};
     } else {
       Move<Ts...>::apply(which, from, to);
