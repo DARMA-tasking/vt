@@ -204,6 +204,33 @@ struct Move<T> {
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
+/// Automatically invoke the right serializer
+template <typename T, typename... Ts>
+struct Serialize {
+  template <typename U, typename SerializerT>
+  static void apply(char which, U* u, SerializerT& s) {
+    if (which == GetPlace<Ts...>::value) {
+      u->template serializeAs<T>(s);
+    } else {
+      Serialize<Ts...>::apply(which, u, s);
+    }
+  }
+};
+
+template <typename T>
+struct Serialize<T> {
+  template <typename U, typename SerializerT>
+  static void apply(char which, U* u, SerializerT& s) {
+    if (which == static_cast<char>(1)) {
+      u->template serializeAs<T>(s);
+    } else {
+      vtAssert(false, "Invalid type; can not serialize");
+    }
+  }
+};
+
 } /* end namespace detail */
 
 /**
@@ -343,7 +370,26 @@ struct AlignedCharUnion {
    */
   char* getUnsafeRawBytes() { return static_cast<char*>(data_); }
 
+  /**
+   * \brief Serialize as the right underlying type
+   *
+   * \param[in] s the serializer
+   */
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | which_;
+    if (which_ != 0) {
+      detail::Serialize<T, Ts...>::apply(which_, this, s);
+    }
+  }
+
 private:
+  template <typename U, typename SerializerT>
+  void serializeAs(SerializerT& s) {
+    T* t = getUnsafe<U>();
+    s | *t;
+  }
+
   template <typename U>
   U* getSafe() {
     staticAssertCorrectness<U>();
