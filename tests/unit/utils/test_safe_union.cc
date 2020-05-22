@@ -86,8 +86,8 @@ TEST_F(TestSafeUnion, test_safe_union_2) {
   struct MyTest {
     struct Tag { };
     explicit MyTest(Tag) { }
-    MyTest(Test const&) = delete;
-    MyTest(Test&&) = delete;
+    MyTest(MyTest const&) = delete;
+    MyTest(MyTest&&) = delete;
     ~MyTest() { destroy_counter++; }
     int v = 0;
   };
