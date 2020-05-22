@@ -135,5 +135,88 @@ TEST_F(TestSafeUnion, test_safe_union_2) {
 
 }
 
+static int copy_counter = 0;
+static int move_counter = 0;
+static int destroy_counter_2 = 0;
+
+TEST_F(TestSafeUnion, test_safe_union_3) {
+
+  destroy_counter = destroy_counter_2 = 0;
+  copy_counter = 0;
+  move_counter = 0;
+
+  struct MyTest {
+    struct Tag { };
+    explicit MyTest(Tag) { }
+    MyTest(MyTest const& other) {
+      copy_counter++;
+      v = other.v;
+    }
+    MyTest(MyTest&& other) : v(std::move(other.v)) {
+      move_counter++;
+    }
+    ~MyTest() { destroy_counter++; }
+    int v = 0;
+  };
+
+  struct MyTest2 {
+    ~MyTest2() { destroy_counter_2++; }
+  };
+
+  vt::SafeUnion<float, int, MyTest, double, MyTest2> x;
+
+  x.init<MyTest>(MyTest::Tag{});
+
+  EXPECT_TRUE(x.is<MyTest>());
+
+  x.get<MyTest>().v = 234;
+
+  x.reset();
+  x.init<MyTest2>();
+  x.reset();
+  x.init<int>();
+  x.reset();
+  x.init<float>();
+  x.reset();
+  x.init<double>();
+  x.reset();
+
+  EXPECT_EQ(destroy_counter, 1);
+  EXPECT_EQ(destroy_counter_2, 1);
+  EXPECT_EQ(copy_counter, 0);
+
+  x.init<MyTest>(MyTest::Tag{});
+  x.get<MyTest>().v = 235;
+
+  EXPECT_EQ(x.get<MyTest>().v, 235);
+
+  vt::SafeUnion<float, int, MyTest, double, MyTest2> y(x);
+
+  //EXPECT_EQ(move_counter, 1);
+  EXPECT_EQ(copy_counter, 1);
+  EXPECT_TRUE(y.is<MyTest>());
+  EXPECT_EQ(y.get<MyTest>().v, 235);
+
+  vt::SafeUnion<float, int, MyTest, double, MyTest2> z;
+  z = y;
+
+  EXPECT_EQ(copy_counter, 2);
+
+  vt::SafeUnion<float, int, MyTest, double, MyTest2> u;
+  u = std::move(z);
+
+  EXPECT_EQ(copy_counter, 2);
+  EXPECT_EQ(move_counter, 1);
+
+  u.reset();
+  EXPECT_EQ(destroy_counter, 2);
+  y.reset();
+  EXPECT_EQ(destroy_counter, 3);
+  x.reset();
+  EXPECT_EQ(destroy_counter, 4);
+  z.reset();
+  EXPECT_EQ(destroy_counter, 5);
+}
+
 
 }}} /* end namespace vt::tests::unit */
