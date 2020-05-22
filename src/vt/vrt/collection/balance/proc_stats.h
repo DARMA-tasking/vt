@@ -52,6 +52,7 @@
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
 
 #include <string>
 #include <unordered_map>
