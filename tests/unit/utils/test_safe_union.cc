@@ -156,11 +156,13 @@ TEST_F(TestSafeUnion, test_safe_union_3) {
       move_counter++;
     }
     ~MyTest() { destroy_counter++; }
+    bool operator==(MyTest const& other) const { return v == other.v; }
     int v = 0;
   };
 
   struct MyTest2 {
     ~MyTest2() { destroy_counter_2++; }
+    bool operator==(MyTest2 const& other) const { return true; }
   };
 
   vt::SafeUnion<float, int, MyTest, double, MyTest2> x;
@@ -191,6 +193,10 @@ TEST_F(TestSafeUnion, test_safe_union_3) {
   EXPECT_EQ(x.get<MyTest>().v, 235);
 
   vt::SafeUnion<float, int, MyTest, double, MyTest2> y(x);
+
+  EXPECT_TRUE(y == x);
+  x.get<MyTest>().v = 236;
+  EXPECT_FALSE(y == x);
 
   EXPECT_EQ(copy_counter, 1);
   EXPECT_TRUE(y.is<MyTest>());
