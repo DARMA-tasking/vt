@@ -231,6 +231,34 @@ struct Serialize<T> {
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
+/// Automatically invoke the underlying comparison
+template <typename T, typename... Ts>
+struct Compare {
+  template <typename U>
+  static bool apply(char which, U const* u1, U const* u2) {
+    if (which == GetPlace<Ts...>::value) {
+      return u1->template compareAs<T>(u2);
+    } else {
+      return Compare<Ts...>::apply(which, u1, u2);
+    }
+  }
+};
+
+template <typename T>
+struct Compare<T> {
+  template <typename U>
+  static bool apply(char which, U const* u1, U const* u2) {
+    if (which == static_cast<char>(1)) {
+      return u1->template compareAs<T>(u2);
+    } else {
+      vtAssert(false, "Invalid type; can not compare");
+      return false;
+    }
+  }
+};
+
 } /* end namespace detail */
 
 /**
@@ -294,6 +322,16 @@ struct AlignedCharUnion {
   }
 
   ~AlignedCharUnion() { reset(); }
+
+  bool operator==(AlignedCharUnion const& other) const {
+    if (which_ != other.which_) {
+      return false;
+    }
+    if (which_ == 0) {
+      return true;
+    }
+    return detail::Compare<T, Ts...>::apply(which_, this, &other);
+  }
 
   /**
    * \brief Initialize as \c U with arguments to constructor \c Args
@@ -383,13 +421,21 @@ struct AlignedCharUnion {
     }
   }
 
-private:
+public:
   template <typename U, typename SerializerT>
   void serializeAs(SerializerT& s) {
     T* t = getUnsafe<U>();
     s | *t;
   }
 
+  template <typename U>
+  bool compareAs(AlignedCharUnion const* other) const {
+    U const* t1 = getUnsafe<U>();
+    U const* t2 = other->getUnsafe<U>();
+    return *t1 == *t2;
+  }
+
+private:
   template <typename U>
   U* getSafe() {
     staticAssertCorrectness<U>();
@@ -406,7 +452,13 @@ private:
   }
 
   template <typename U>
-  void staticAssertCorrectness() {
+  U const* getUnsafe() const {
+    staticAssertCorrectness<U>();
+    return reinterpret_cast<U const*>(static_cast<char const*>(data_));
+  }
+
+  template <typename U>
+  void staticAssertCorrectness() const {
     static_assert(
       detail::MustBe<U, T, Ts...>::is_same, "Must be the valid type in union"
     );
