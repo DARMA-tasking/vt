@@ -192,7 +192,6 @@ TEST_F(TestSafeUnion, test_safe_union_3) {
 
   vt::SafeUnion<float, int, MyTest, double, MyTest2> y(x);
 
-  //EXPECT_EQ(move_counter, 1);
   EXPECT_EQ(copy_counter, 1);
   EXPECT_TRUE(y.is<MyTest>());
   EXPECT_EQ(y.get<MyTest>().v, 235);
