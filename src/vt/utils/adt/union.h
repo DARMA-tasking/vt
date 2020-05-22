@@ -291,6 +291,7 @@ struct AlignedCharUnion {
    */
   template <typename U>
   bool is() {
+    staticAssertCorrectness<U>();
     return which_ == detail::Which<U, T, Ts...>::value;
   }
 
