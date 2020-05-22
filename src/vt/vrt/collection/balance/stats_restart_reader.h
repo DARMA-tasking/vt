@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/objgroup/proxy/proxy_objgroup.h"
 
 #include <deque>
 #include <map>
