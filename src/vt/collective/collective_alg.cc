@@ -44,6 +44,8 @@
 
 #include "vt/collective/collective_alg.h"
 
+#include <cstdint>
+
 namespace vt { namespace collective {
 
 CollectiveAlg::CollectiveAlg()
@@ -72,6 +74,59 @@ CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
   return CollectiveScope(is_user_tag, scope_tag);
 }
 
+// We can not use a VT broadcast here because it involves the scheduler and
+// MPI progress and there's no safe way to guarantee that the message has been
+// received and processed and doesn't require progress from another node
+static void broadcastConsensus(
+  int root, TagType& consensus_tag, TagType& consensus_scope, bool& consensus_is_user_tag
+) {
+  auto comm = theContext()->getComm();
+
+  MPI_Request req;
+
+  // MPI_INT32_T x 3
+  int32_t req_buffer[] = {
+    int32_t{consensus_tag},
+    int32_t{consensus_scope},
+    int32_t{consensus_is_user_tag}
+  };
+
+  // Do a async broadcast of the scope/seq we intend to execute collectively
+  {
+    VT_ALLOW_MPI_CALLS;
+    MPI_Ibcast(req_buffer, 3, MPI_INT32_T, root, comm, &req);
+  }
+
+  theSched()->runSchedulerWhile([&req]{
+    VT_ALLOW_MPI_CALLS;
+    int flag = 0;
+    MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+    return not flag;
+  });
+
+  consensus_tag = req_buffer[0];
+  consensus_scope = req_buffer[1];
+  consensus_is_user_tag = req_buffer[2] not_eq 0;
+
+  vtAssert(consensus_tag   != no_tag, "Selected tag must be valid");
+  vtAssert(consensus_scope != no_tag, "Selected scope must be valid");
+
+  // We need a barrier here so the root doesn't finish the broadcast first and
+  // then enter the collective. We could replace the Ibcast/Ibarrier with a
+  // Iallreduce, but I think this is cheaper
+  {
+    VT_ALLOW_MPI_CALLS;
+    MPI_Ibarrier(comm, &req);
+  }
+
+  theSched()->runSchedulerWhile([&req]{
+    VT_ALLOW_MPI_CALLS;
+    int flag = 0;
+    MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+    return not flag;
+  });
+}
+
 /*static*/ void CollectiveAlg::runCollective(CollectiveMsg* msg) {
   // We need a reentrancy counter to ensure that this is only on the scheduler
   // stack once!
@@ -88,7 +143,7 @@ CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
   auto const this_node = theContext()->getNode();
   TagType consensus_scope = no_tag;
   TagType consensus_tag = no_tag;
-  int consensus_is_user_tag = 0; // bool encoded as an int for MPI
+  bool consensus_is_user_tag = false;
 
   // The root decides the next tag and tells the remaining nodes
   if (msg->root_ == this_node) {
@@ -111,47 +166,10 @@ CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
     consensus_is_user_tag = msg->is_user_tag_;
   }
 
-  // We can not use a VT broadcast here because it involves the scheduler and
-  // MPI progress and there's no safe way to guarantee that the message has been
-  // received and processed and doesn't require progress from another node
-
-  int const root = msg->root_;
-  auto comm = theContext()->getComm();
-  MPI_Request req1, req2, req3;
-
-  // Do a async broadcast of the scope/seq we intend to execute collectively
-  // This potentially could be merged into one Ibcast if TagType remains 32-bits
-  MPI_Ibcast(&consensus_tag,         1, MPI_INT32_T, root, comm, &req1);
-  MPI_Ibcast(&consensus_scope,       1, MPI_INT32_T, root, comm, &req2);
-  MPI_Ibcast(&consensus_is_user_tag, 1, MPI_C_BOOL,  root, comm, &req3);
-
-  int flag1 = 0, flag2 = 0, flag3 = 0;
-  theSched()->runSchedulerWhile([&req1,&req2,&req3,&flag1,&flag2,&flag3]{
-    if (not flag1) {
-      MPI_Test(&req1, &flag1, MPI_STATUS_IGNORE);
-    }
-    if (not flag2) {
-      MPI_Test(&req2, &flag2, MPI_STATUS_IGNORE);
-    }
-    if (not flag3) {
-      MPI_Test(&req3, &flag3, MPI_STATUS_IGNORE);
-    }
-    return not (flag1 and flag2 and flag3);
-  });
-
-  vtAssert(consensus_tag   != no_tag, "Selected tag must be valid");
-  vtAssert(consensus_scope != no_tag, "Selected scope must be valid");
-
-  // We need a barrier here so the root doesn't finish the broadcast first and
-  // then enter the collective. We could replace the Ibcast/Ibarrier with a
-  // Iallreduce, but I think this is cheaper
-  MPI_Ibarrier(comm, &req1);
-
-  theSched()->runSchedulerWhile([&req1]{
-    int flag4 = 0;
-    MPI_Test(&req1, &flag4, MPI_STATUS_IGNORE);
-    return not flag4;
-  });
+  broadcastConsensus(
+    msg->root_,
+    consensus_scope, consensus_tag, consensus_is_user_tag // in-out refs
+  );
 
   debug_print(
     gen, node,
