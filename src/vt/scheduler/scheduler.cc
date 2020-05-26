@@ -331,7 +331,13 @@ void runScheduler() {
 }
 
 void runSchedulerThrough(EpochType epoch) {
+  // WARNING: This is to prevent global termination from spuriously
+  // thinking that the work done in this loop over the scheduler
+  // represents the entire work of the program, and thus leading to
+  // stuff being torn down
+  theTerm()->produce();
   theSched()->runSchedulerWhile([=]{ return !theTerm()->isEpochTerminated(epoch); });
+  theTerm()->consume();
 }
 
 } //end namespace vt
