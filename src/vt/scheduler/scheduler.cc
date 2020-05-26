@@ -340,4 +340,22 @@ void runSchedulerThrough(EpochType epoch) {
   theTerm()->consume();
 }
 
+void runInEpochRooted(ActionType&& fn) {
+  auto ep = theTerm()->makeEpochRooted();
+  theMsg()->pushEpoch(ep);
+  fn();
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+  runSchedulerThrough(ep);
+}
+
+void runInEpochCollective(ActionType&& fn) {
+  auto ep = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep);
+  fn();
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+  runSchedulerThrough(ep);
+}
+
 } //end namespace vt

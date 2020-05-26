@@ -180,6 +180,9 @@ namespace vt {
 void runScheduler();
 void runSchedulerThrough(EpochType epoch);
 
+void runInEpochRooted(ActionType&& fn);
+void runInEpochCollective(ActionType&& fn);
+
 extern sched::Scheduler* theSched();
 
 }  //end namespace vt
