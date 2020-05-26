@@ -811,7 +811,9 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
   TermStatusEnum status = TermStatusEnum::Pending;
   auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
 
-  if (is_rooted_epoch) {
+  if (getWindow(epoch)->isTerminated(epoch)) {
+    status = TermStatusEnum::Terminated;
+  } else if (is_rooted_epoch) {
     auto const& this_node = theContext()->getNode();
     auto const& root = epoch::EpochManip::node(epoch);
     if (root == this_node) {
