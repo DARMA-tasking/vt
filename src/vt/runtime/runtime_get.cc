@@ -104,29 +104,32 @@ static runtime::Runtime* no_rt = nullptr;
 using CollectionManagerType = vrt::collection::CollectionManager;
 
 // Thread-safe runtime components
-ctx::Context*               theContext()        { return CUR_RT_TS->theContext;        }
-pool::Pool*                 thePool()           { return CUR_RT_TS->thePool;           }
-vrt::VirtualContextManager* theVirtualManager() { return CUR_RT_TS->theVirtualManager; }
-worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT_TS->theWorkerGrp;      }
+ctx::Context*               theContext()            { return CUR_RT_TS->theContext;        }
+pool::Pool*                 thePool()               { return CUR_RT_TS->thePool;           }
+vrt::VirtualContextManager* theVirtualManager()     { return CUR_RT_TS->theVirtualManager; }
+worker::WorkerGroupType*    theWorkerGrp()          { return CUR_RT_TS->theWorkerGrp;      }
 
 // Non thread-safe runtime components
-collective::CollectiveAlg*  theCollective()     { return CUR_RT->theCollective;     }
-event::AsyncEvent*          theEvent()          { return CUR_RT->theEvent;          }
-messaging::ActiveMessenger* theMsg()            { return CUR_RT->theMsg;            }
-param::Param*               theParam()          { return CUR_RT->theParam;          }
-rdma::RDMAManager*          theRDMA()           { return CUR_RT->theRDMA;           }
-registry::Registry*         theRegistry()       { return CUR_RT->theRegistry;       }
-sched::Scheduler*           theSched()          { return CUR_RT->theSched;          }
-seq::Sequencer*             theSeq()            { return CUR_RT->theSeq;            }
-seq::SequencerVirtual*      theVirtualSeq()     { return CUR_RT->theVirtualSeq;     }
-term::TerminationDetector*  theTerm()           { return CUR_RT->theTerm;           }
-location::LocationManager*  theLocMan()         { return CUR_RT->theLocMan;         }
-CollectionManagerType*      theCollection()     { return CUR_RT->theCollection;     }
-group::GroupManager*        theGroup()          { return CUR_RT->theGroup;          }
-pipe::PipeManager*          theCB()             { return CUR_RT->theCB;             }
-objgroup::ObjGroupManager*  theObjGroup()       { return CUR_RT->theObjGroup;       }
-rdma::Manager*              theHandleRDMA()     { return CUR_RT->theHandleRDMA;     }
-util::memory::MemoryUsage*  theMemUsage()       { return CUR_RT->theMemUsage;       }
+collective::CollectiveAlg*  theCollective()         { return CUR_RT->theCollective;     }
+event::AsyncEvent*          theEvent()              { return CUR_RT->theEvent;          }
+messaging::ActiveMessenger* theMsg()                { return CUR_RT->theMsg;            }
+param::Param*               theParam()              { return CUR_RT->theParam;          }
+rdma::RDMAManager*          theRDMA()               { return CUR_RT->theRDMA;           }
+registry::Registry*         theRegistry()           { return CUR_RT->theRegistry;       }
+sched::Scheduler*           theSched()              { return CUR_RT->theSched;          }
+seq::Sequencer*             theSeq()                { return CUR_RT->theSeq;            }
+seq::SequencerVirtual*      theVirtualSeq()         { return CUR_RT->theVirtualSeq;     }
+term::TerminationDetector*  theTerm()               { return CUR_RT->theTerm;           }
+location::LocationManager*  theLocMan()             { return CUR_RT->theLocMan;         }
+CollectionManagerType*      theCollection()         { return CUR_RT->theCollection;     }
+group::GroupManager*        theGroup()              { return CUR_RT->theGroup;          }
+pipe::PipeManager*          theCB()                 { return CUR_RT->theCB;             }
+objgroup::ObjGroupManager*  theObjGroup()           { return CUR_RT->theObjGroup;       }
+rdma::Manager*              theHandleRDMA()         { return CUR_RT->theHandleRDMA;     }
+util::memory::MemoryUsage*  theMemUsage()           { return CUR_RT->theMemUsage;       }
+vrt::collection::balance::ProcStats* theProcStats() { return CUR_RT->theProcStats;      }
+vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->theStatsReader;      }
+vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 
 #if backend_check_enabled(trace_enabled)
 trace::Trace*               theTrace()          { return CUR_RT->theTrace;          }

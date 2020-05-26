@@ -93,7 +93,7 @@ template <typename ColT>
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
 
-  ProcStats::addProcStats<ColT>(elm_proxy, col, cur_phase, total_load, comm);
+  theProcStats()->addProcStats<ColT>(elm_proxy, col, cur_phase, total_load, comm);
 
   auto const before_ready = theCollection()->numReadyCollections();
   theCollection()->makeCollectionReady(untyped_proxy);
@@ -108,7 +108,7 @@ template <typename ColT>
 
   using MsgType = InvokeReduceMsg;
 
-  auto lb_man = LBManager::getProxy();
+  auto lb_man = theLBManager()->getProxy();
 
   auto const single_node = theContext()->getNumNodes() == 1;
   auto const lb = lb_man.get()->decideLBToRun(cur_phase);

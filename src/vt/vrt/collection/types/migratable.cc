@@ -49,6 +49,11 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+Migratable::Migratable()
+  : stats_elm_id_(theProcStats()->getNextElm()),
+    temp_elm_id_(theProcStats()->getNextElm())
+{ }
+
 /*virtual*/ void Migratable::destroy() {
   debug_print(
     vrt_coll, node,

@@ -45,10 +45,6 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_UTIL_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_UTIL_H
 
-#include <deque>
-#include <map>
-#include <string>
-#include <vector>
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
@@ -56,42 +52,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct StatsRestartReader {
-  /// \brief Vector counting the received messages per iteration
-  /// \note Only node 0 will use this vector.
-  std::vector<size_t> msgsReceived = {};
-
-  /// \brief Queue for storing all the migrations per iteration.
-  /// \note Only node 0 will use this queue.
-  std::deque<std::map<ElementIDType, std::pair<NodeType, NodeType>>>
-    totalMove = {};
-
-  /// \brief Proxy for communicating the migration information
-  objgroup::proxy::Proxy<StatsRestartReader> proxy = {};
-
-public:
-  StatsRestartReader() = default;
-
-  ~StatsRestartReader();
-
-  static void readStats(const std::string &fileName);
-
-private:
-  static void inputStatsFile(
-    const std::string &fileName,
-    std::deque<std::set<ElementIDType> > &element_history
-  );
-
-  static void createMigrationInfo(
-    std::deque<std::set<ElementIDType> > &element_history
-  );
-
-  using VecMsg = lb::TransferMsg<std::vector<balance::ElementIDType> >;
-  void gatherMsgs(VecMsg *msg);
-
-  void scatterMsgs(VecMsg *msg);
-
-};
 
 }}}}
 

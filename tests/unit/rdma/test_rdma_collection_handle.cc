@@ -133,9 +133,8 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
   void afterMigratePost(TestMsg*) {
     if (not triggered_lb) {
       triggered_lb = true;
-      auto lb_proxy = vt::vrt::collection::balance::LBManager::getProxy();
       //fmt::print("{}: triggering listeners\n", theContext()->getNode());
-      lb_proxy.get()->triggerListeners(0);
+      theLBManager()->triggerListeners(0);
     }
     auto proxy = this->getCollectionProxy();
     auto cb = theCB()->makeBcast<

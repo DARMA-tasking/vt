@@ -2824,7 +2824,7 @@ MigrateStatus CollectionManager::migrateIn(
   CollectionProxy<ColT, IndexT>(proxy).operator()(idx);
 
   // Always assign a new temp element ID for LB statistic tracking
-  vrt_elm_ptr->temp_elm_id_ = balance::ProcStats::getNextElm();
+  vrt_elm_ptr->temp_elm_id_ = theProcStats()->getNextElm();
 
   bool const is_static = ColT::isStaticSized();
 

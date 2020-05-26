@@ -51,24 +51,21 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-CollectionManager::CollectionManager() {
-  balance::LBManager::init();
-}
+CollectionManager::CollectionManager() { }
 
-/*virtual*/ CollectionManager::~CollectionManager() {
+void CollectionManager::finalize() {
   cleanupAll<>();
 
   // Statistics output when LB is enabled and appropriate flag is enabled
 #if backend_check_enabled(lblite)
   if (ArgType::vt_lb_stats) {
-    balance::ProcStats::outputStatsFile();
-    balance::ProcStats::clearStats();
+    theProcStats()->outputStatsFile();
+    theProcStats()->clearStats();
   }
 #endif
-
-  // Destroy the LBManager
-  balance::LBManager::destroy();
 }
+
+/*virtual*/ CollectionManager::~CollectionManager() { }
 
 #if backend_check_enabled(lblite)
 struct StartRootedMsg : vt::Message {
@@ -105,8 +102,7 @@ void CollectionManager::startPhaseCollective(
     theTerm()->produce(term::any_epoch_sentinel);
     lb_continuations_.push_back(fn);
   } else {
-    auto proxy = balance::LBManager::getProxy();
-    proxy.get()->waitLBCollective();
+    theLBManager()->waitLBCollective();
   }
 #else
   if (fn != nullptr) {

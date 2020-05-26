@@ -53,13 +53,19 @@
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
+#include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/*static*/ objgroup::proxy::Proxy<LBManager> LBManager::proxy_;
+/*static*/ std::unique_ptr<LBManager> LBManager::construct() {
+  auto ptr = std::make_unique<LBManager>();
+  auto proxy = theObjGroup()->makeCollective<LBManager>(ptr.get());
+  proxy.get()->setProxy(proxy);
+  return ptr;
+}
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   debug_print(
@@ -83,7 +89,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 
   //--- User-specified map without any change, thus do not run
   if ((ArgType::vt_lb_name == lb_names_[LBType::StatsMapLB]) and
-      !balance::ProcStats::proc_phase_runs_LB_[phase]) {
+      not theStatsReader()->needsLB(phase)) {
     return LBType::NoLB;
   }
 
@@ -187,13 +193,12 @@ void LBManager::waitLBCollective() {
   );
 }
 
-/*static*/ void LBManager::finishedRunningLB(PhaseType phase) {
+void LBManager::finishedRunningLB(PhaseType phase) {
   debug_print(
     lb, node,
     "finishedRunningLB\n"
   );
-  auto proxy = getProxy();
-  proxy.get()->releaseImpl(phase);
+  releaseImpl(phase);
 }
 
 void LBManager::releaseImpl(PhaseType phase, std::size_t num_calls) {

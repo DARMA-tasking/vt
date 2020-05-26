@@ -57,7 +57,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename ColT>
-/*static*/ ElementIDType ProcStats::addProcStats(
+ElementIDType ProcStats::addProcStats(
   VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
   PhaseType const& phase, TimeType const& time, CommMapType const& comm
 ) {
