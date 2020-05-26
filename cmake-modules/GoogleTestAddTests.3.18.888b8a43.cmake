@@ -39,13 +39,13 @@ macro(add_command NAME)
   unset(_script_len)
 endmacro()
 
-function(vt_gtest_discover_tests_impl)
+function(gtest_discover_tests_impl)
 
   cmake_parse_arguments(
     ""
     ""
-    "NO_PRETTY_TYPES;NO_PRETTY_VALUES;TEST_EXECUTABLE;TEST_WORKING_DIR;TEST_PREFIX;TEST_SUFFIX;TEST_LIST;CTEST_FILE;TEST_DISCOVERY_TIMEOUT;TEST_XML_OUTPUT_DIR"
-    "TEST_EXTRA_ARGS;TEST_PROPERTIES;TEST_EXECUTOR"
+    "NO_PRETTY_TYPES;NO_PRETTY_VALUES;TEST_EXECUTABLE;TEST_EXECUTOR;TEST_WORKING_DIR;TEST_PREFIX;TEST_SUFFIX;TEST_LIST;CTEST_FILE;TEST_DISCOVERY_TIMEOUT;TEST_XML_OUTPUT_DIR"
+    "TEST_EXTRA_ARGS;TEST_PROPERTIES"
     ${ARGN}
   )
 
@@ -66,7 +66,7 @@ function(vt_gtest_discover_tests_impl)
     )
   endif()
   execute_process(
-    COMMAND "${_TEST_EXECUTABLE}" --gtest_list_tests
+    COMMAND ${_TEST_EXECUTOR} "${_TEST_EXECUTABLE}" --gtest_list_tests
     WORKING_DIRECTORY "${_TEST_WORKING_DIR}"
     TIMEOUT ${_TEST_DISCOVERY_TIMEOUT}
     OUTPUT_VARIABLE output

@@ -1,0 +1,19 @@
+The GoogleTest*.cmake files are modified from the original.
+The base versions are also included for a diff reference.
+
+GoogleTest 3.18+ cmake features used:
+
+- 'gtest_discover_tests' (modified) to avoid source regex greps.
+
+- DISCOVER_MODE=PRE_TEST, which is used.
+
+Changes:
+
+- Using vt_ prefix to minimize confusion
+  eg. 'vt_gtest_discover_tests'.
+
+- Remove support of 'gtest_add_tests', to ensure test discovery is used.
+
+- Remove support of POST_BUILD as a DISCOVER_MODE to ensure it is not used.
+
+- Allow specifying the command to execute the test executable.
