@@ -104,19 +104,6 @@ void IterCol::iterWork(IterMsg* msg) {
   }
 }
 
-template <typename Callable>
-void executeInEpoch(Callable&& fn) {
-  auto this_node = vt::theContext()->getNode();
-  auto ep = vt::theTerm()->makeEpochCollective();
-  vt::theMsg()->pushEpoch(ep);
-  if (this_node == 0) {
-    fn();
-  }
-  vt::theMsg()->popEpoch(ep);
-  vt::theTerm()->finishedEpoch(ep);
-  vt::runSchedulerThrough(ep);
-}
-
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
@@ -151,8 +138,9 @@ int main(int argc, char** argv) {
   for (int i = 0; i < num_iter; i++) {
     auto cur_time = vt::timing::Timing::getCurrentTime();
 
-    executeInEpoch([=]{
-      proxy.broadcast<IterCol::IterMsg,&IterCol::iterWork>(10, i);
+    vt::runInEpochCollective([=]{
+        if (this_node == 0)
+          proxy.broadcast<IterCol::IterMsg,&IterCol::iterWork>(10, i);
     });
 
     auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
@@ -160,8 +148,9 @@ int main(int argc, char** argv) {
       fmt::print("iteration: iter={},time={}\n", i, total_time);
     }
 
-    executeInEpoch([=]{
-      proxy.broadcast<IterCol::EmptyMsg,&IterCol::runLB>();
+    vt::runInEpochCollective([=]{
+        if (this_node == 0)
+          proxy.broadcast<IterCol::EmptyMsg,&IterCol::runLB>();
     });
 
   }
