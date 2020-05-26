@@ -173,6 +173,27 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
   )
 endforeach()
 
+# Generate PMPI wrappers, if enabled and possible.
+if(vt_mpi_guards AND PERL_FOUND)
+  set(MPI_WRAP_GENERATED "${PROJECT_BIN_DIR}/src/vt/pmpi/generated/mpiwrap.cc")
+
+  file(MAKE_DIRECTORY "${PROJECT_BIN_DIR}/src/vt/pmpi/generated")
+
+  add_custom_command(
+    OUTPUT ${MPI_WRAP_GENERATED}
+    COMMAND ${PERL_EXECUTABLE}
+    ARGS "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/generate_mpi_wrappers.pl"
+         "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/mpi_functions.h.in"
+         "${MPI_WRAP_GENERATED}"
+  )
+
+  list(
+    APPEND
+    SOURCE_FILES
+    ${MPI_WRAP_GENERATED}
+  )
+endif()
+
 add_library(
   ${VIRTUAL_TRANSPORT_LIBRARY}
   STATIC
