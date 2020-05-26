@@ -416,6 +416,7 @@ struct MyObjGroup {
   void finishUpdate() {
     chains_->phaseDone();
     vt::theMsg()->popEpoch(epoch_);
+    vt::theTerm()->finishedEpoch(epoch_);
 
     vt::runSchedulerThrough(epoch_);
 
