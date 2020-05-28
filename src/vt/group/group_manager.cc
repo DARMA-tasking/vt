@@ -508,7 +508,9 @@ EventType GroupManager::sendGroup(
   return ret_event;
 }
 
-GroupManager::GroupManager() {
+GroupManager::GroupManager()
+  : collective_scope_(theCollective()->makeCollectiveScope())
+{
   global::DefaultGroup::setupDefaultTree();
 }
 

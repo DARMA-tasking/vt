@@ -57,6 +57,7 @@
 #include "vt/topos/mapping/dense/dense.h"
 #include "vt/rdmahandle/handle_set.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/collective/collective_scope.h"
 
 namespace vt { namespace rdma {
 
@@ -83,8 +84,9 @@ struct Manager : runtime::component::Component<Manager> {
   using ProxyType       = vt::objgroup::proxy::Proxy<Manager>;
   using ElemToHandle    = std::unordered_map<int64_t, RDMA_HandleType>;
   using HandleToManager = std::unordered_map<RDMA_HandleType, ObjGroupProxyType>;
+  using CollectiveScopeType = collective::CollectiveScope;
 
-  Manager() = default;
+  Manager();
 
   std::string name() override { return "HandleRDMA"; }
 
@@ -241,6 +243,9 @@ private:
   /// Holder for RDMA control data
   template <typename T, HandleEnum E>
   static std::unordered_map<HandleKey, Holder<T,E>> holder_;
+
+  // Collective scope for MPI operations
+  CollectiveScopeType collective_scope_;
 };
 
 template <typename T, HandleEnum E>

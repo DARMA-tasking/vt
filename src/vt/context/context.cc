@@ -73,13 +73,11 @@ Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
     communicator_ = MPI_COMM_WORLD;
   }
 
-  MPI_Barrier(communicator_);
-
   if (is_interop) {
-    MPI_Comm_split(communicator_, 0, 0, &communicator_);
+    MPI_Comm vt_comm;
+    MPI_Comm_dup(communicator_, &vt_comm);
+    communicator_ = vt_comm;
   }
-
-  MPI_Barrier(communicator_);
 
   is_comm_world_ = communicator_ == MPI_COMM_WORLD;
 

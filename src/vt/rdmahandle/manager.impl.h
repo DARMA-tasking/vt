@@ -115,10 +115,9 @@ void Manager::finishMake(impl::ConstructMsg<T, E, ProxyT>* msg) {
     key.handle_, size, count
   );
   auto& entry = getEntry<T,E>(key);
-  // Need barrier here so all nodes arrive before blocking in the MPI window
-  // creation
-  theCollective()->barrier();
-  entry.allocateDataWindow();
+  collective_scope_.mpiCollectiveWait([&entry]{
+    entry.allocateDataWindow();
+  });
 }
 
 template <typename T, HandleEnum E, typename ProxyT>

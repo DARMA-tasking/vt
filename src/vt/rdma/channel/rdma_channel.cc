@@ -43,6 +43,8 @@
 */
 
 #include "vt/rdma/channel/rdma_channel.h"
+#include "vt/rdma/rdma.h"
+#include "vt/collective/collective_alg.h"
 
 #define PRINT_RDMA_OP_TYPE(OP) ((OP) == RDMA_TypeType::Get ? "GET" : "PUT")
 
@@ -114,14 +116,16 @@ Channel::initChannelGroup() {
     group_incl_ret == MPI_SUCCESS, "MPI_Group_incl: Should be successful"
   );
 
-  auto const& comm_create_ret = MPI_Comm_create_group(
-    theContext()->getComm(), channel_group_, channel_group_tag_, &channel_comm_
-  );
+  theRDMA()->collective_scope_.mpiCollectiveWait([&]{
+    auto const& comm_create_ret = MPI_Comm_create_group(
+      theContext()->getComm(), channel_group_, channel_group_tag_, &channel_comm_
+    );
 
-  vtAssert(
-    comm_create_ret == MPI_SUCCESS,
-    "MPI_Comm_create_group: Should be successful"
-  );
+    vtAssert(
+      comm_create_ret == MPI_SUCCESS,
+      "MPI_Comm_create_group: Should be successful"
+    );
+  });
 
   debug_print(
     rdma_channel, node,
@@ -299,21 +303,23 @@ Channel::initChannelWindow() {
     "channel: create window: num_bytes={}\n", num_bytes_
   );
 
-  int win_create_ret = 0;
+  theRDMA()->collective_scope_.mpiCollectiveWait([&]{
+    int win_create_ret = 0;
 
-  if (is_target_) {
-    win_create_ret = MPI_Win_create(
-      ptr_, num_bytes_, rdma_elm_size, MPI_INFO_NULL, channel_comm_, &window_
-    );
-  } else {
-    win_create_ret = MPI_Win_create(
-      nullptr, 0, 1, MPI_INFO_NULL, channel_comm_, &window_
-    );
-  }
+    if (is_target_) {
+      win_create_ret = MPI_Win_create(
+        ptr_, num_bytes_, rdma_elm_size, MPI_INFO_NULL, channel_comm_, &window_
+      );
+    } else {
+      win_create_ret = MPI_Win_create(
+        nullptr, 0, 1, MPI_INFO_NULL, channel_comm_, &window_
+      );
+    }
 
-  vtAssert(
-    win_create_ret == MPI_SUCCESS, "MPI_Win_create: Should be successful"
-  );
+    vtAssert(
+      win_create_ret == MPI_SUCCESS, "MPI_Win_create: Should be successful"
+    );
+  });
 
   initialized_ = true;
 

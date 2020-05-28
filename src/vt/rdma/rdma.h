@@ -68,6 +68,8 @@
 
 #include "vt/runtime/component/component_pack.h"
 
+#include "vt/collective/collective_scope.h"
+
 #include <unordered_map>
 #include <cassert>
 
@@ -98,6 +100,9 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
   template <typename MsgType>
   using RDMA_PutTypedFunctionType =
     RDMA_StateType::RDMA_PutTypedFunctionType<MsgType>;
+  using CollectiveScopeType = collective::CollectiveScope;
+
+  RDMAManager();
 
   std::string name() override { return "RDMAManager"; }
 
@@ -557,6 +562,7 @@ private:
 
 public:
   friend struct RDMACollectionManager;
+  friend struct Channel;
 
 public:
   RDMA_HandlerType allocateNewRdmaHandler();
@@ -597,6 +603,9 @@ private:
 
   // Current RDMA channel tag
   TagType next_channel_tag_ = first_rdma_channel_tag;
+
+  // Collective scope for issuing MPI collective operations
+  CollectiveScopeType collective_scope_;
 };
 
 }} //end namespace vt::rdma
