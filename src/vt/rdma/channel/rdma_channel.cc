@@ -112,7 +112,8 @@ Channel::initChannelGroup() {
       world, 2, channel_group_nodes, &channel_group_
     );
     vtAssertMPISuccess(group_incl_ret, "MPI_Group_incl");
-
+  }
+  {
     theRDMA()->collective_scope_.mpiCollectiveWait([&]{
       auto const& comm_create_ret = MPI_Comm_create_group(
         theContext()->getComm(), channel_group_, channel_group_tag_, &channel_comm_
