@@ -70,7 +70,8 @@ include(cmake/check_compiler.cmake)
 
 option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+string(TOLOWER ${CMAKE_BUILD_TYPE} LOWERCASE_CMAKE_BUILD_TYPE)
+if (LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "debug")
   option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" ON)
 else()
   option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" OFF)
