@@ -55,8 +55,6 @@ TEST_F(TestMPICollective, test_mpi_collective_1) {
   bool done = false;
 
   theCollective()->makeCollectiveScope().mpiCollectiveAsync([&done]{
-    VT_ALLOW_MPI_CALLS;
-
     auto comm = theContext()->getComm();
     MPI_Barrier(comm);
     done = true;
@@ -79,8 +77,6 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
   // These three collective can execute in any order, but it will always be
   // consistent across all the nodes
   scope.mpiCollectiveAsync([&done]{
-    VT_ALLOW_MPI_CALLS;
-
     auto comm = theContext()->getComm();
     vt_print(barrier, "run MPI_Barrier\n");
     MPI_Barrier(comm);
@@ -92,8 +88,6 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
   int bcast_val = this_node == root ? 29 : 0;
 
   scope.mpiCollectiveAsync([&done,&bcast_val,root]{
-    VT_ALLOW_MPI_CALLS;
-
     auto comm = theContext()->getComm();
     vt_print(barrier, "run MPI_Bcast\n");
     MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
@@ -103,8 +97,6 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
   int reduce_val_out = 0;
 
   scope.mpiCollectiveAsync([&done,&reduce_val_out]{
-    VT_ALLOW_MPI_CALLS;
-
     auto comm = theContext()->getComm();
     int val_in = 1;
     vt_print(barrier, "run MPI_Allreduce\n");
@@ -134,8 +126,6 @@ TEST_F(TestMPICollective, test_mpi_collective_3) {
   vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
 
   auto tag = scope.mpiCollectiveAsync([&done,&bcast_val,root]{
-    VT_ALLOW_MPI_CALLS;
-
     auto comm = theContext()->getComm();
     vt_print(barrier, "run MPI_Bcast\n");
     MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
@@ -150,8 +140,6 @@ TEST_F(TestMPICollective, test_mpi_collective_3) {
   int reduce_val_out = 0;
 
   scope.mpiCollectiveWait([&done,&reduce_val_out]{
-    VT_ALLOW_MPI_CALLS;
-
     auto comm = theContext()->getComm();
     int val_in = 1;
     vt_print(barrier, "run MPI_Allreduce\n");
@@ -208,8 +196,6 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   auto op1 = [&]{
     scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
-      VT_ALLOW_MPI_CALLS;
-
       auto comm = theContext()->getComm();
       vt_print(barrier, "run MPI_Bcast\n");
       MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
@@ -219,8 +205,6 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   auto op2 = [&]{
     scope2.mpiCollectiveAsync([&done,&reduce_val_out]{
-      VT_ALLOW_MPI_CALLS;
-
       auto comm = theContext()->getComm();
       int val_in = 1;
       vt_print(barrier, "run MPI_Allreduce\n");
@@ -231,8 +215,6 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   auto op3 = [&]{
     scope3.mpiCollectiveAsync([&done]{
-      VT_ALLOW_MPI_CALLS;
-
       auto comm = theContext()->getComm();
       vt_print(barrier, "run MPI_barrier\n");
       MPI_Barrier(comm);

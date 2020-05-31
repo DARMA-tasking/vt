@@ -195,8 +195,12 @@ static void broadcastConsensus(
   );
   auto action = iter_seq->second.action_;
 
-  // Run the collective safely
-  action();
+  // Run the collective safely.
+  // The action is expected to use MPI calls; not VT calls.
+  {
+    VT_ALLOW_MPI_CALLS;
+    action();
+  }
 
   // Erase the tag that was actually executed
   impl->planned_collective_.erase(iter_seq);
