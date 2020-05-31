@@ -57,7 +57,6 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/collective_ops.h"
 #include "vt/pipe/pipe_headers.h"
-#include "vt/runtime/mpi_access.h"
 
 #include <memory>
 #include <set>
