@@ -56,11 +56,19 @@ using TestMpiAccessGuardDeathTest = TestMpiAccessGuardTest;
 using DummyMsg = vt::Message;
 
 static bool expected_to_fail_on_mpi_access = false;
+static bool explicitly_grant_access = false;
 
 static void attempt_mpi_access() {
-  // vtAssert (DEATH) if guarded; returning MPI_ERR_REQUEST otherwise due to null handle.
-  int ret = MPI_Cancel(nullptr);
-  EXPECT_TRUE(ret != 0);
+  MPI_Request req = MPI_REQUEST_NULL;
+  int flag;
+
+  if (explicitly_grant_access) {
+    VT_ALLOW_MPI_CALLS;
+     MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+  } else {
+    // Should vtAssert if guard feature enabled as access not scope-granted.
+    MPI_Test(&req, &flag, MPI_STATUS_IGNORE);
+  }
 }
 
 static void message_handler(DummyMsg* msg) {
@@ -75,24 +83,37 @@ static void message_handler(DummyMsg* msg) {
   }
 }
 
-#if backend_check_enabled(mpi_access_guards)
+void testMpiAccess(bool access_allowed, bool grant_access) {
+  expected_to_fail_on_mpi_access = not access_allowed;
+  explicitly_grant_access = grant_access;
+
+  vtAssert(theContext()->getNumNodes() >= 2, "Requires at least 2 nodes");
+
+  if (theContext()->getNode() == 0) {
+    // Sending message for common-case of attempting MPI access within
+    // a message handler; it applies to all cases through the scheduler.
+    auto msg = vt::makeMessage<DummyMsg>();
+    theMsg()->sendMsg<DummyMsg, message_handler>(1, msg.get());
+  }
+}
+
 TEST_F(TestMpiAccessGuardDeathTest, test_mpi_access_prevented) {
-  expected_to_fail_on_mpi_access = true;
-
-  if (theContext()->getNode() == 0) {
-    auto msg = vt::makeMessage<DummyMsg>();
-    theMsg()->sendMsg<DummyMsg, message_handler>(0, msg.get());
-  }
-}
+#if backend_check_enabled(mpi_access_guards)
+  testMpiAccess(false, false);
 #else
-TEST_F(TestMpiAccessGuardTest, test_mpi_access_allowed) {
-  expected_to_fail_on_mpi_access = false;
-
-  if (theContext()->getNode() == 0) {
-    auto msg = vt::makeMessage<DummyMsg>();
-    theMsg()->sendMsg<DummyMsg, message_handler>(0, msg.get());
-  }
-}
+  GTEST_SKIP(); // not applicable to 'death', covered in allowed test case
 #endif
+}
+
+TEST_F(TestMpiAccessGuardTest, test_mpi_access_allowed) {
+#if backend_check_enabled(mpi_access_guards)
+  // Only allowed with grant when feature enabled
+  testMpiAccess(true, true);
+#else
+  // Always allowed when feature is not enabled
+  testMpiAccess(true, true);
+  testMpiAccess(true, false);
+#endif
+}
 
 }}} /* end namespace vt::tests::unit */
