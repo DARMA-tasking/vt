@@ -57,12 +57,20 @@ sub extract_defs($def_file) {
 }
 
 # MPI calls that can be 'safely' used without being guarded.
-my %no_guard_calls = (
-    MPI_Comm_rank => 1,
-    MPI_Comm_size => 1,
-    MPI_Get_count => 1,
-    MPI_Wtime => 1,
+my @no_guard_patterns = qw(
+    MPI_Comm_get_.*
+    MPI_Comm_rank
+    MPI_Comm_size
+    MPI_Get_.*
+    MPI_Wtime
+    MPI_Wtick
 );
+
+sub should_guard_call($name) {
+    return not grep {
+        $name =~ m/^$_$/;
+    } @no_guard_patterns;
+}
 
 open(my $out, '>', $output_file)
     or die "Could not open file '$output_file': $!";
@@ -85,7 +93,7 @@ PROLOGUE
 # - Allow manual overrides
 
 foreach my $def (extract_defs $mpidef_file) {
-    if ($no_guard_calls{$def->{name}}) {
+    unless (should_guard_call $def->{name}) {
         next;
     }
 
