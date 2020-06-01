@@ -59,7 +59,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 template <typename ColT>
 /*static*/ ElementIDType ProcStats::addProcStats(
   VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-  PhaseType const& phase, TimeType const& time, CommMapType const& comm
+  PhaseType const& phase, TimeType const& time,
+  std::vector<TimeType> const& subphase_time, CommMapType const& comm
 ) {
   // A new temp ID gets assigned when a object is migrated into a node
 
@@ -68,8 +69,8 @@ template <typename ColT>
 
   debug_print(
     lb, node,
-    "ProcStats::addProcStats: temp_id={}, perm_id={}, phase={}, load={}\n",
-    temp_id, perm_id, phase, time
+    "ProcStats::addProcStats: temp_id={}, perm_id={}, phase={}, subphases={}, load={}\n",
+    temp_id, perm_id, phase, subphase_time.size(), time
   );
 
   proc_data_.resize(phase + 1);
@@ -79,6 +80,15 @@ template <typename ColT>
     std::piecewise_construct,
     std::forward_as_tuple(temp_id),
     std::forward_as_tuple(time)
+  );
+
+  proc_subphase_data_.resize(phase + 1);
+  auto elm_subphase_iter = proc_subphase_data_.at(phase).find(temp_id);
+  vtAssert(elm_subphase_iter == proc_subphase_data_.at(phase).end(), "Must not exist");
+  proc_subphase_data_.at(phase).emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(temp_id),
+    std::forward_as_tuple(subphase_time)
   );
 
   proc_comm_.resize(phase + 1);

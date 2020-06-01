@@ -64,7 +64,8 @@ public:
   template <typename ColT>
   static ElementIDType addProcStats(
     VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-    PhaseType const& phase, TimeType const& time, CommMapType const& comm
+    PhaseType const& phase, TimeType const& time,
+    std::vector<TimeType> const& subphase_time, CommMapType const& comm
   );
 
   static void clearStats();
