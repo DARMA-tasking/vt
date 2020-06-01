@@ -95,7 +95,7 @@ template <typename ColT>
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
 
-  ProcStats::addProcStats<ColT>(elm_proxy, col, cur_phase, total_load, subphase_loads, comm);
+  ProcStats::addProcStats(col, cur_phase, total_load, subphase_loads, comm);
 
   auto const before_ready = theCollection()->numReadyCollections();
   theCollection()->makeCollectionReady(untyped_proxy);

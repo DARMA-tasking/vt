@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/vrt/collection/types/migratable.h"
 #include "vt/timing/timing.h"
 
 #include <vector>
@@ -61,9 +62,8 @@ struct ProcStats {
   using MigrateFnType = std::function<void(NodeType)>;
 
 public:
-  template <typename ColT>
   static ElementIDType addProcStats(
-    VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
+    Migratable* col_elm,
     PhaseType const& phase, TimeType const& time,
     std::vector<TimeType> const& subphase_time, CommMapType const& comm
   );
@@ -96,7 +96,5 @@ private:
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
-
-#include "vt/vrt/collection/balance/proc_stats.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H*/
