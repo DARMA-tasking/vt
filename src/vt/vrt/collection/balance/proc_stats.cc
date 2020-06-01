@@ -80,6 +80,12 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 
 /*static*/ FILE* ProcStats::stats_file_ = nullptr;
 
+/*static */ ProcStats::SubphaseLoadMapType const&
+ProcStats::getProcSubphaseLoad(PhaseType phase) {
+  vtAssert(proc_subphase_data_.size() > phase, "Phase must exist in load data");
+  return proc_subphase_data_.at(phase);
+}
+
 /*static*/ bool ProcStats::created_dir_ = false;
 
 /*static*/ void ProcStats::clearStats() {

@@ -74,6 +74,8 @@ public:
 
   static void outputStatsFile();
 
+  static SubphaseLoadMapType const& getProcSubphaseLoad(PhaseType phase);
+
 private:
   static void createStatsFile();
   static void closeStatsFile();
