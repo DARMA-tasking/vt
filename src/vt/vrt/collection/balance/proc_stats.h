@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/vrt/collection/types/migratable.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -88,7 +89,6 @@ public:
   /**
    * \internal \brief Add processor statistics for local object
    *
-   * \param[in] elm_proxy the element proxy to the object
    * \param[in] col_elm the collection element pointer
    * \param[in] phase the current phase
    * \param[in] time the time the object took
@@ -96,9 +96,8 @@ public:
    *
    * \return the temporary ID for the object assigned for this phase
    */
-  template <typename ColT>
   ElementIDType addProcStats(
-    VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
+    Migratable* col_elm,
     PhaseType const& phase, TimeType const& time,
     std::vector<TimeType> const& subphase_time, CommMapType const& comm
   );
@@ -225,7 +224,5 @@ namespace vt {
 extern vrt::collection::balance::ProcStats* theProcStats();
 
 } /* end namespace vt */
-
-#include "vt/vrt/collection/balance/proc_stats.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H*/
