@@ -61,8 +61,9 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ProcStats : runtime::component::Component<ProcStats> {
-  using MigrateFnType = std::function<void(NodeType)>;
-  using LoadMapType   = std::unordered_map<ElementIDType,TimeType>;
+  using MigrateFnType       = std::function<void(NodeType)>;
+  using LoadMapType         = std::unordered_map<ElementIDType,TimeType>;
+  using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
 
   ProcStats() = default;
 
@@ -98,7 +99,8 @@ public:
   template <typename ColT>
   ElementIDType addProcStats(
     VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-    PhaseType const& phase, TimeType const& time, CommMapType const& comm
+    PhaseType const& phase, TimeType const& time,
+    std::vector<TimeType> const& subphase_time, CommMapType const& comm
   );
 
   /**
@@ -198,6 +200,8 @@ private:
   objgroup::proxy::Proxy<ProcStats> proxy_;
   /// Processor timings for each local object
   std::vector<LoadMapType> proc_data_;
+  /// Processor subphase timings for each local object
+  std::vector<SubphaseLoadMapType> proc_subphase_data_;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
   /// Map of temporary ID to permanent ID
