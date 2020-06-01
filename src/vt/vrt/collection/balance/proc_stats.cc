@@ -202,16 +202,29 @@ void ProcStats::outputStatsFile() {
 
   vtAssertExpr(stats_file_ != nullptr);
 
-  auto const num_iters = ProcStats::proc_data_.size();
+  auto const num_iters = proc_data_.size();
 
-  vt_print(lb, "outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
+  vt_print(lb, "ProcStats::outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
 
   for (size_t i = 0; i < num_iters; i++) {
-    for (auto&& elm : ProcStats::proc_data_.at(i)) {
-      auto obj_str = fmt::format("{},{},{}\n", i, elm.first, elm.second);
+    for (auto&& elm : proc_data_.at(i)) {
+      ElementIDType id = elm.first;
+      TimeType time = elm.second;
+      const auto& subphase_times = proc_subphase_data_.at(i)[id];
+      size_t subphases = subphase_times.size();
+
+      auto obj_str = fmt::format("{},{},{},{},[", i, id, time, subphases);
+      for (size_t s = 0; s < subphases; s++) {
+        obj_str += std::to_string(subphase_times[s]);
+        if (s != subphases - 1)
+          obj_str += ",";
+      }
+
+      obj_str += "]\n";
+
       fprintf(stats_file_, "%s", obj_str.c_str());
     }
-    for (auto&& elm : ProcStats::proc_comm_.at(i)) {
+    for (auto&& elm : proc_comm_.at(i)) {
       using E = typename std::underlying_type<CommCategory>::type;
 
       auto const& key = elm.first;
