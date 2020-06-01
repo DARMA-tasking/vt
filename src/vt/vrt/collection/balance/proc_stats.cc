@@ -109,6 +109,12 @@ ProcStats::getProcLoad(PhaseType phase) const {
   return proc_data_.at(phase);
 }
 
+ProcStats::SubphaseLoadMapType const&
+ProcStats::getProcSubphaseLoad(PhaseType phase) const {
+  vtAssert(proc_subphase_data_.size() > phase, "Phase must exist in load data");
+  return proc_subphase_data_.at(phase);
+}
+
 CommMapType const& ProcStats::getProcComm(PhaseType phase) const {
   vtAssert(proc_comm_.size() > phase, "Phase must exist in comm data");
   return proc_comm_.at(phase);

@@ -137,6 +137,15 @@ public:
   LoadMapType const& getProcLoad(PhaseType phase) const;
 
   /**
+   * \internal \brief Get object loads for the subphases of a given phase
+   *
+   * \param[in] phase the phase
+   *
+   * \return the subphase load map
+   */
+  SubphaseLoadMapType const& getProcSubphaseLoad(PhaseType phase) const;
+
+  /**
    * \internal \brief Get object comm graph for a given phase
    *
    * \param[in] phase the phase
