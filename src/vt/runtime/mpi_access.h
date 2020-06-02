@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              features_defines.h
+//                                mpi_access.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,31 +42,53 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H
-#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H
+#if !defined INCLUDED_RUNTIME_MPI_ACCESS_H
+#define INCLUDED_RUNTIME_MPI_ACCESS_H
 
-/*
- * All the defined features/options for debugging and backend enable-ifs
- */
+#if backend_check_enabled(mpi_access_guards)
+#define VT_ALLOW_MPI_CALLS vt::runtime::ScopedMPIAccess _vt_allow_scoped_mpi{};
+#else
+#define VT_ALLOW_MPI_CALLS
+#endif // backend_check_enabled(mpi_access_guards)
 
-// backend features, add any new ones to this list
-#define vt_feature_no_feature         0 || vt_feature_cmake_no_feature
-#define vt_feature_bit_check_overflow 0 || vt_feature_cmake_bit_check_overflo
-#define vt_feature_trace_enabled      0 || vt_feature_cmake_trace_enabled
-#define vt_feature_detector           0 || vt_feature_cmake_detector
-#define vt_feature_lblite             0 || vt_feature_cmake_lblite
-#define vt_feature_openmp             0 || vt_feature_cmake_openmp
-#define vt_feature_production         0 || vt_feature_cmake_production
-#define vt_feature_stdthread          0 || vt_feature_cmake_stdthread
-#define vt_feature_mpi_rdma           0 || vt_feature_cmake_mpi_rdma
-#define vt_feature_print_term_msgs    0 || vt_feature_cmake_print_term_msgs
-#define vt_feature_default_threading  0 || vt_feature_cmake_default_threading
-#define vt_feature_no_pool_alloc_env  0 || vt_feature_cmake_no_pool_alloc_env
-#define vt_feature_memory_pool        0 || vt_feature_cmake_memory_pool
-#define vt_feature_priorities         0 || vt_feature_cmake_priorities
-#define vt_feature_cons_multi_idx     0 || vt_feature_cmake_cons_multi_idx
-#define vt_feature_fcontext           0 || vt_feature_cmake_fcontext
-#define vt_feature_mimalloc           0 || vt_feature_cmake_mimalloc
-#define vt_feature_mpi_access_guards  0 || vt_feature_cmake_mpi_access_guards
+#if backend_check_enabled(mpi_access_guards)
+namespace vt { namespace runtime {
 
-#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H*/
+  /**
+   * \internal
+   * \brief RAII control to allow access to MPI_* functions.
+   *
+   * This type is expected to be used with relevant scopes.
+   * Once activated, code can call into MPI_* functions
+   */
+  struct ScopedMPIAccess {
+    ScopedMPIAccess();
+    ScopedMPIAccess(ScopedMPIAccess const&) = delete;
+    ScopedMPIAccess(ScopedMPIAccess&&) = delete;
+    ~ScopedMPIAccess();
+
+    /**
+     * \brief Enable/disable is MPI_* functions are prohibited from use.
+     *
+     * Explicitly granting access overrides the default.
+     */
+    static void prohibitByDefault(bool prohibit);
+
+    /**
+     * \brief Returns true if (scoped) access has been granted.
+     */
+    static bool isExplicitlyGranted();
+
+    /**
+     * \brief Returns true if MPI calls are allowed.
+     */
+    static bool mpiCallsAllowed();
+
+    static int grants_;
+    static bool default_prohibit_;
+  };
+
+}} // end namespace vt::runtime
+#endif // backend_check_enabled(mpi_access_guards)
+
+#endif /* INCLUDED_RUNTIME_MPI_ACCESS_H */

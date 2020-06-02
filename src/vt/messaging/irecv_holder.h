@@ -48,6 +48,9 @@
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
 
+// Unfortunate header leak for VT_ALLOW_MPI_CALLS
+#include "vt/runtime/mpi_access.h"
+
 #if backend_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
 #endif
@@ -94,6 +97,7 @@ struct IRecvHolder {
    */
   template <typename Callable>
   bool testAll(Callable c) {
+    VT_ALLOW_MPI_CALLS; // MPI_Test in loop
 
 #   if backend_check_enabled(trace_enabled)
     std::size_t const holder_size_start = holder_.size();
