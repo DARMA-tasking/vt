@@ -1528,7 +1528,7 @@ CollectionManager::constructCollectiveMap(
   // collection
   theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
 
-  auto const is_static = ColT::isStaticSized();
+  bool const is_static = ColT::isStaticSized();
 
   vt_debug_print(
     vrt_coll, node,
