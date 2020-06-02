@@ -61,7 +61,7 @@ my @no_guard_patterns = qw(
     MPI_Comm_get_.*
     MPI_Comm_rank
     MPI_Comm_size
-    MPI_Get_.*
+    MPI_Get.*(?<!_accumulate)
     MPI_Wtime
     MPI_Wtick
 );
