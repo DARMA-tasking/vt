@@ -303,6 +303,25 @@ struct CollectionManager
   );
 
 private:
+
+  /**
+   * \internal \brief Construct an element on this node
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] cur_idx the index to construct
+   * \param[in] range the range for the collection
+   * \param[in] map_han the map handler
+   * \param[in] map_fn the map function
+   * \param[in] user_construct_fn the construct function
+   */
+  template <typename ColT>
+  void constructElement(
+    VirtualProxyType proxy, typename ColT::IndexType cur_idx,
+    typename ColT::IndexType range, HandlerType map_han,
+    auto_registry::AutoActiveMapType map_fn,
+    DistribConstructFn<ColT> user_construct_fn
+  );
+
   /**
    * \internal \brief Insert into a collection on this node
    *
