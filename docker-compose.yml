@@ -92,6 +92,7 @@ x-vtopts: &vtopts
   VT_ASAN_ENABLED: ${VT_ASAN:-0}
   VT_POOL_ENABLED: ${VT_POOL:-1}
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
+  VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-0}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
