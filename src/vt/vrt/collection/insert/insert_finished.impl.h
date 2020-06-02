@@ -63,19 +63,19 @@ void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
   ActionType action
 ) const {
   auto const col_proxy = this->getProxy();
-  theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
+  theCollection()->finishedInserting<ColT>(col_proxy,action);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 void InsertFinished<ColT,IndexT,BaseProxyT>::startInsertCollective() const {
   auto const col_proxy = this->getProxy();
-  theCollection()->startInsertCollective<ColT,IndexT>(col_proxy);
+  theCollection()->startInsertCollective<ColT>(col_proxy);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 void InsertFinished<ColT,IndexT,BaseProxyT>::finishInsertCollective() const {
   auto const col_proxy = this->getProxy();
-  theCollection()->finishInsertCollective<ColT,IndexT>(col_proxy);
+  theCollection()->finishInsertCollective<ColT>(col_proxy);
 }
 
 }}} /* end namespace vt::vrt::collection */

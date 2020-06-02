@@ -1662,9 +1662,9 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] insert_action action to execute after insertions complete
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename ColT>
   void finishedInserting(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     ActionType insert_action = nullptr
   );
 
@@ -1673,9 +1673,9 @@ public:
    *
    * \param[in] proxy the proxy for the collection
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename ColT>
   void startInsertCollective(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy
+    CollectionProxyWrapType<ColT> const& proxy
   );
 
   /**
@@ -1683,9 +1683,9 @@ public:
    *
    * \param[in] proxy the proxy for the collection
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename ColT>
   void finishInsertCollective(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy
+    CollectionProxyWrapType<ColT> const& proxy
   );
 
   /**
@@ -1697,15 +1697,16 @@ public:
   void addCleanupFn(VirtualProxyType proxy);
 
 private:
+
   /**
    * \internal \brief Finish insertion epoch
    *
    * \param[in] proxy the collection proxy
    * \param[in] insert_epoch insert epoch
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename ColT>
   void finishedInsertEpoch(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     EpochType const& insert_epoch
   );
 

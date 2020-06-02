@@ -2115,7 +2115,7 @@ void CollectionManager::setupNextInsertTrigger(
       "insert finished insert trigger: epoch={}\n",
       insert_epoch
     );
-    theCollection()->finishedInsertEpoch<ColT,IndexT>(proxy,insert_epoch);
+    theCollection()->finishedInsertEpoch<ColT>(proxy,insert_epoch);
   };
   auto start_detect = [insert_epoch,finished_insert_trigger]{
     vt_debug_print(
@@ -2137,10 +2137,12 @@ void CollectionManager::setupNextInsertTrigger(
   }
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT>
 void CollectionManager::finishedInsertEpoch(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy, EpochType const& epoch
+  CollectionProxyWrapType<ColT> const& proxy, EpochType const& epoch
 ) {
+  using IndexT = typename ColT::IndexType;
+
   auto const& untyped_proxy = proxy.getProxy();
 
   vt_debug_print(
@@ -2274,24 +2276,24 @@ template <typename ColT, typename IndexT>
         ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
       >(node,smsg.get());
     };
-    return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_, send);
+    return theCollection()->finishedInserting<ColT>(msg->proxy_, send);
   } else {
-    return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_);
+    return theCollection()->finishedInserting<ColT>(msg->proxy_);
   }
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT>
 void CollectionManager::startInsertCollective(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy
+  CollectionProxyWrapType<ColT> const& proxy
 ) {
   auto const untyped_proxy = proxy.getProxy();
   auto insert_ep = theTerm()->makeEpochCollective("startInsertCollective");
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy, insert_ep);
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT>
 void CollectionManager::finishInsertCollective(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy
+  CollectionProxyWrapType<ColT> const& proxy
 ) {
   auto const untyped_proxy = proxy.getProxy();
 
@@ -2326,11 +2328,13 @@ void CollectionManager::finishInsertCollective(
   });
 }
 
-template <typename ColT, typename IndexT>
+template <typename ColT>
 void CollectionManager::finishedInserting(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy,
+  CollectionProxyWrapType<ColT> const& proxy,
   ActionType insert_action
 ) {
+  using IndexT = typename ColT::IndexType;
+
   auto const& this_node = theContext()->getNode();
   auto const& untyped_proxy = proxy.getProxy();
   /*
