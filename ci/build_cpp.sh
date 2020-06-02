@@ -78,6 +78,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
       -DMI_INTERPOSE:BOOL=ON \
       -DMI_OVERRIDE:BOOL=ON \
+      -Dvt_mpi_guards="${VT_MPI_GUARD_ENABLED:-0}" \
       -DMPI_EXTRA_FLAGS="${MPI_EXTRA_FLAGS:-}" \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DMPI_C_COMPILER="${MPICC:-mpicc}" \
