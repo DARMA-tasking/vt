@@ -452,8 +452,8 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   // Allocate space for each vertex to describe it
   graph->vertex_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_vertices);
 
-  // Allocate space for the weight of each vertex (calculated as a normalized
-  // weight representing time the overdecomposed block spent executing)
+  // Allocate space for the weight of each vertex (calculated as a weight
+  // representing time the overdecomposed block spent executing)
   graph->vertex_weight = std::make_unique<int[]>(graph->num_vertices);
 
   static_assert(
