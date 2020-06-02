@@ -62,6 +62,7 @@
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/collection_headers.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/generated/vt_git_revision.h"
 #include "vt/configs/debug/debug_colorize.h"
@@ -375,6 +376,12 @@ void Runtime::printStartupBanner() {
 #if backend_check_enabled(mpi_access_guards)
   features.push_back(vt_feature_str_mpi_access_guards);
 #endif
+#if backend_check_enabled(zoltan)
+  features.push_back(vt_feature_str_zoltan);
+#endif
+#if backend_check_enabled(mimalloc)
+  features.push_back(vt_feature_str_mimalloc);
+#endif
 
   std::string dirty = "";
   if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
@@ -511,6 +518,21 @@ void Runtime::printStartupBanner() {
         fmt::format("Load balancing interval = {}", ArgType::vt_lb_interval);
       auto a2 = opt_on("--vt_lb_interval", a1);
       fmt::print("{}\t{}{}", vt_pre, a2, reset);
+
+      // Check validity of LB passed to VT
+      bool found = false;
+      for (auto&& lb : vrt::collection::balance::lb_names_) {
+        if (ArgType::vt_lb_name == lb.second) {
+          found = true;
+          break;
+        }
+      }
+      if (not found) {
+        auto str = fmt::format(
+          "Could not find valid LB named: \"{}\"", ArgType::vt_lb_name
+        );
+        vtAbort(str);
+      }
     }
   }
 

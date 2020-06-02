@@ -54,6 +54,7 @@
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
+#include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
@@ -163,6 +164,9 @@ void LBManager::collectiveImpl(
     case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
     case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
     case LBType::StatsMapLB:     makeLB<lb::StatsMapLB>(msg);     break;
+#   if backend_check_enabled(zoltan)
+    case LBType::ZoltanLB:       makeLB<lb::ZoltanLB>(msg);       break;
+#   endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
       break;
