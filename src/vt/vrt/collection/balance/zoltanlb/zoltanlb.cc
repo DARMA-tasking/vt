@@ -263,12 +263,8 @@ void ZoltanLB::combineEdges() {
   ElementCommType load_comm_combined;
 
   for (auto&& e1 : load_comm_symm) {
-    auto from = e1.first.fromObjTemp() > e1.first.toObjTemp() ?
-      e1.first.fromObjTemp() :
-      e1.first.toObjTemp();
-    auto to = e1.first.fromObjTemp() > e1.first.toObjTemp() ?
-      e1.first.toObjTemp() :
-      e1.first.fromObjTemp();
+    auto from = std::max(e1.first.fromObjTemp(), e1.first.toObjTemp());
+    auto to = std::min(e1.first.fromObjTemp(), e1.first.toObjTemp());
 
     auto key = balance::LBCommKey{
       balance::LBCommKey::CollectionTag{},
@@ -303,7 +299,7 @@ void ZoltanLB::countEdges() {
         local_edge++;
       } else {
         // Break ties on non-local object edges based on obj ID
-        auto large_obj_id = from > to ? from : to;
+        auto large_obj_id = std::max(from, to);
         if (objGetNode(large_obj_id) == this_node) {
           remote_owned_edge++;
         }
@@ -357,7 +353,7 @@ void ZoltanLB::allocateShareEdgeGIDs() {
       );
 
     } else {
-      auto large_obj_id = from > to ? from : to;
+      auto large_obj_id = std::max(from, to);
       if (objGetNode(large_obj_id) == this_node) {
         auto offset = max_edges_per_node_ * this_node;
         auto id = 1 + offset + edge_id_++;
