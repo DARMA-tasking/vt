@@ -1460,7 +1460,8 @@ bool CollectionManager::insertCollectionElement(
  */
 
 template <
-  typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+  typename ColT,
+  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
 >
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::constructCollective(typename ColT::IndexType range) {
