@@ -55,6 +55,22 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+namespace {
+
+template <typename Callable>
+static void executeInEpoch(Callable&& fn) {
+  auto ep = vt::theTerm()->makeEpochCollective();
+  vt::theMsg()->pushEpoch(ep);
+  fn();
+  vt::theMsg()->popEpoch(ep);
+  vt::theTerm()->finishedEpoch(ep);
+  bool done = false;
+  vt::theTerm()->addAction(ep, [&done]{ done = true; });
+  theSched()->runSchedulerWhile([&done]{ return not done; });
+}
+
+} /* end anon namespace */
+
 ZoltanLB::ZoltanLB()
   : collective_scope_(theCollective()->makeCollectiveScope())
 { }
@@ -100,149 +116,6 @@ void ZoltanLB::inputParams(balance::SpecEntry* spec) {
 
   for (auto& c : zoltan_config_) {
     c.second = spec->getOrDefault<std::string>(c.first, c.second);
-  }
-}
-
-template <typename Callable>
-void executeInEpoch(Callable&& fn) {
-  auto ep = vt::theTerm()->makeEpochCollective();
-  vt::theMsg()->pushEpoch(ep);
-  fn();
-  vt::theMsg()->popEpoch(ep);
-  vt::theTerm()->finishedEpoch(ep);
-  bool done = false;
-  vt::theTerm()->addAction(ep, [&done]{ done = true; });
-  theSched()->runSchedulerWhile([&done]{ return not done; });
-}
-
-void ZoltanLB::countEdges() {
-  debug_print(lb, node, "countEdges\n");
-
-  // Count the number of local and remote edges to allocation edge GIDs
-  int local_edge = 0;
-  int remote_owned_edge = 0;
-
-  auto const this_node = theContext()->getNode();
-  for (auto&& elm : load_comm_symm) {
-    if (
-      elm.first.cat_ == balance::CommCategory::SendRecv and
-      not elm.first.selfEdge()
-    ) {
-      auto from = elm.first.fromObjTemp();
-      auto to = elm.first.toObjTemp();
-
-      auto from_node = objGetNode(from);
-      auto to_node = objGetNode(to);
-
-      if (from_node == to_node and from_node == this_node) {
-        local_edge++;
-      } else {
-        // Break ties on non-local object edges based on obj ID
-        auto large_obj_id = from > to ? from : to;
-        if (objGetNode(large_obj_id) == this_node) {
-          remote_owned_edge++;
-        }
-      }
-    }
-  }
-
-  int const total_ids = local_edge + remote_owned_edge;
-
-  debug_print(lb, node, "ZoltanLB: total_ids_={}\n", total_ids);
-
-  auto cb = theCB()->makeBcast<ZoltanLB,ReduceMsg,&ZoltanLB::reduceCount>(proxy);
-  auto msg = makeMessage<ReduceMsg>(total_ids);
-  proxy.reduce<collective::MaxOp<int>>(msg.get(),cb);
-}
-
-void ZoltanLB::reduceCount(ReduceMsg* msg) {
-  max_edges_per_node_ = msg->getVal();
-
-  debug_print(
-    lb, node,
-    "ZoltanLB: max_edges_per_node_={}\n",
-    max_edges_per_node_
-  );
-}
-
-void ZoltanLB::allocateShareEdgeGIDs() {
-  std::unordered_map<NodeType, ElementCommType> shared_edges;
-
-  auto const this_node = theContext()->getNode();
-  for (auto&& elm : load_comm_symm) {
-    auto from = elm.first.fromObjTemp();
-    auto to = elm.first.toObjTemp();
-
-    auto from_node = objGetNode(from);
-    auto to_node = objGetNode(to);
-
-    if (from_node == to_node and from_node == this_node) {
-      auto offset = max_edges_per_node_ * this_node;
-      auto id = 1 + offset + edge_id_++;
-      auto key = elm.first;
-      key.edge_id_ = id;
-      load_comm_edge_id[key] = elm.second;
-
-      debug_print(
-        lb, node,
-        "allocate: local edge_id={:x}, from={:x}, to={:x}\n",
-        key.edge_id_,
-        key.fromObjTemp(),
-        key.toObjTemp()
-      );
-
-    } else {
-      auto large_obj_id = from > to ? from : to;
-      if (objGetNode(large_obj_id) == this_node) {
-        auto offset = max_edges_per_node_ * this_node;
-        auto id = 1 + offset + edge_id_++;
-        auto key = elm.first;
-        key.edge_id_ = id;
-        load_comm_edge_id[key] = elm.second;
-
-        debug_print(
-          lb, node,
-          "allocate: remote edge_id={:x}, from={:x}, to={:x}\n",
-          key.edge_id_,
-          key.fromObjTemp(),
-          key.toObjTemp()
-        );
-
-        if (use_shared_edges_) {
-          auto other_node = from_node == this_node ? to_node : from_node;
-          shared_edges[other_node][key] = elm.second;
-        }
-      } else {
-        // If use_shared_edges_, the other node will set the ID; wait to receive
-        // it in next phase. If not shared, the other node will provide the edge
-      }
-    }
-  }
-
-  if (use_shared_edges_) {
-    for (auto&& elm : shared_edges) {
-      auto msg = makeMessage<CommMsg>(elm.second);
-      proxy[elm.first].send<CommMsg, &ZoltanLB::recvEdgeGID>(msg.get());
-    }
-  }
-}
-
-void ZoltanLB::recvEdgeGID(CommMsg* msg) {
-  auto& comm = msg->comm_;
-  for (auto&& elm : comm) {
-    vtAssert(
-      load_comm_edge_id.find(elm.first) == load_comm_edge_id.end(),
-      "Must not exists in edge ID map"
-    );
-
-    debug_print(
-      lb, node,
-      "recvEdgeGID: edge_id={:x}, from={:x}, to={:x}\n",
-      elm.first.edge_id_,
-      elm.first.fromObjTemp(),
-      elm.first.toObjTemp()
-    );
-    load_comm_edge_id[elm.first] = elm.second;
   }
 }
 
@@ -405,6 +278,137 @@ void ZoltanLB::combineEdges() {
   }
 
   load_comm_symm = std::move(load_comm_combined);
+}
+
+void ZoltanLB::countEdges() {
+  debug_print(lb, node, "countEdges\n");
+
+  // Count the number of local and remote edges to allocation edge GIDs
+  int local_edge = 0;
+  int remote_owned_edge = 0;
+
+  auto const this_node = theContext()->getNode();
+  for (auto&& elm : load_comm_symm) {
+    if (
+      elm.first.cat_ == balance::CommCategory::SendRecv and
+      not elm.first.selfEdge()
+    ) {
+      auto from = elm.first.fromObjTemp();
+      auto to = elm.first.toObjTemp();
+
+      auto from_node = objGetNode(from);
+      auto to_node = objGetNode(to);
+
+      if (from_node == to_node and from_node == this_node) {
+        local_edge++;
+      } else {
+        // Break ties on non-local object edges based on obj ID
+        auto large_obj_id = from > to ? from : to;
+        if (objGetNode(large_obj_id) == this_node) {
+          remote_owned_edge++;
+        }
+      }
+    }
+  }
+
+  int const total_ids = local_edge + remote_owned_edge;
+
+  debug_print(lb, node, "ZoltanLB: total_ids_={}\n", total_ids);
+
+  auto cb = theCB()->makeBcast<ZoltanLB,ReduceMsg,&ZoltanLB::reduceCount>(proxy);
+  auto msg = makeMessage<ReduceMsg>(total_ids);
+  proxy.reduce<collective::MaxOp<int>>(msg.get(),cb);
+}
+
+void ZoltanLB::reduceCount(ReduceMsg* msg) {
+  max_edges_per_node_ = msg->getVal();
+
+  debug_print(
+    lb, node,
+    "ZoltanLB: max_edges_per_node_={}\n",
+    max_edges_per_node_
+  );
+}
+
+void ZoltanLB::allocateShareEdgeGIDs() {
+  std::unordered_map<NodeType, ElementCommType> shared_edges;
+
+  auto const this_node = theContext()->getNode();
+  for (auto&& elm : load_comm_symm) {
+    auto from = elm.first.fromObjTemp();
+    auto to = elm.first.toObjTemp();
+
+    auto from_node = objGetNode(from);
+    auto to_node = objGetNode(to);
+
+    if (from_node == to_node and from_node == this_node) {
+      auto offset = max_edges_per_node_ * this_node;
+      auto id = 1 + offset + edge_id_++;
+      auto key = elm.first;
+      key.edge_id_ = id;
+      load_comm_edge_id[key] = elm.second;
+
+      debug_print(
+        lb, node,
+        "allocate: local edge_id={:x}, from={:x}, to={:x}\n",
+        key.edge_id_,
+        key.fromObjTemp(),
+        key.toObjTemp()
+      );
+
+    } else {
+      auto large_obj_id = from > to ? from : to;
+      if (objGetNode(large_obj_id) == this_node) {
+        auto offset = max_edges_per_node_ * this_node;
+        auto id = 1 + offset + edge_id_++;
+        auto key = elm.first;
+        key.edge_id_ = id;
+        load_comm_edge_id[key] = elm.second;
+
+        debug_print(
+          lb, node,
+          "allocate: remote edge_id={:x}, from={:x}, to={:x}\n",
+          key.edge_id_,
+          key.fromObjTemp(),
+          key.toObjTemp()
+        );
+
+        if (use_shared_edges_) {
+          auto other_node = from_node == this_node ? to_node : from_node;
+          shared_edges[other_node][key] = elm.second;
+        }
+      } else {
+        // If use_shared_edges_, the other node will set the ID; wait to receive
+        // it in next phase. If not shared, the other node will provide the edge
+      }
+    }
+  }
+
+  if (use_shared_edges_) {
+    for (auto&& elm : shared_edges) {
+      auto msg = makeMessage<CommMsg>(elm.second);
+      proxy[elm.first].send<CommMsg, &ZoltanLB::recvEdgeGID>(msg.get());
+    }
+  }
+}
+
+void ZoltanLB::recvEdgeGID(CommMsg* msg) {
+  auto& comm = msg->comm_;
+  for (auto&& elm : comm) {
+    vtAssert(
+      load_comm_edge_id.find(elm.first) == load_comm_edge_id.end(),
+      "Must not exists in edge ID map"
+    );
+
+    debug_print(
+      lb, node,
+      "recvEdgeGID: edge_id={:x}, from={:x}, to={:x}\n",
+      elm.first.edge_id_,
+      elm.first.fromObjTemp(),
+      elm.first.toObjTemp()
+    );
+    load_comm_edge_id[elm.first] = elm.second;
+  }
 }
 
 Zoltan_Struct* ZoltanLB::initZoltan() {
