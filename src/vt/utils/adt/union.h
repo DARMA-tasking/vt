@@ -101,7 +101,7 @@ struct MustBe<T> {
 
 template <typename... Us>
 struct GetPlace {
-  static constexpr char const value = sizeof...(Us) + 1;
+  static constexpr uint8_t const value = sizeof...(Us) + 1;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -115,12 +115,12 @@ struct WhichImpl;
 
 template <typename T, typename U, typename... Us>
 struct WhichImpl<T, U, typename std::enable_if_t<std::is_same<T,U>::value>, Us...> {
-  static constexpr char const value = sizeof...(Us) + 1;
+  static constexpr uint8_t const value = sizeof...(Us) + 1;
 };
 
 template <typename T, typename U, typename... Us>
 struct WhichImpl<T, U, typename std::enable_if_t<not std::is_same<T,U>::value>, Us...> {
-  static constexpr char const value = Which<T, Us...>::value;
+  static constexpr uint8_t const value = Which<T, Us...>::value;
 };
 
 template <typename T, typename U, typename... Us>
@@ -133,7 +133,7 @@ struct Which : WhichImpl<T, U, void, Us...> { };
 template <typename T, typename... Ts>
 struct Deallocate {
   template <typename U>
-  static void apply(char which, U* u) {
+  static void apply(uint8_t which, U* u) {
     if (which == GetPlace<Ts...>::value) {
       u->template deallocateAs<T>();
     } else {
@@ -145,8 +145,8 @@ struct Deallocate {
 template <typename T>
 struct Deallocate<T> {
   template <typename U>
-  static void apply(char which, U* u) {
-    if (which == static_cast<char>(1)) {
+  static void apply(uint8_t which, U* u) {
+    if (which == static_cast<uint8_t>(1)) {
       u->template deallocateAs<T>();
     } else {
       vtAssert(false, "Invalid type; can not deallocate");
@@ -159,7 +159,7 @@ struct Deallocate<T> {
 /// Automatically invoke the right copy constructor
 template <typename T, typename... Ts>
 struct Copy {
-  static void apply(char which, char const* from, char* to) {
+  static void apply(uint8_t which, char const* from, char* to) {
     if (which == GetPlace<Ts...>::value) {
       new (to) T{*reinterpret_cast<T const*>(from)};
     } else {
@@ -170,8 +170,8 @@ struct Copy {
 
 template <typename T>
 struct Copy<T> {
-  static void apply(char which, char const* from, char* to) {
-    if (which == static_cast<char>(1)) {
+  static void apply(uint8_t which, char const* from, char* to) {
+    if (which == static_cast<uint8_t>(1)) {
       new (to) T{*reinterpret_cast<T const*>(from)};
     } else {
       vtAssert(false, "Invalid type; can not copy");
@@ -184,7 +184,7 @@ struct Copy<T> {
 /// Automatically invoke the right move constructor
 template <typename T, typename... Ts>
 struct Move {
-  static void apply(char which, char* from, char* to) {
+  static void apply(uint8_t which, char* from, char* to) {
     if (which == GetPlace<Ts...>::value) {
       new (reinterpret_cast<T*>(to)) T{std::move(*reinterpret_cast<T*>(from))};
     } else {
@@ -195,8 +195,8 @@ struct Move {
 
 template <typename T>
 struct Move<T> {
-  static void apply(char which, char* from, char* to) {
-    if (which == static_cast<char>(1)) {
+  static void apply(uint8_t which, char* from, char* to) {
+    if (which == static_cast<uint8_t>(1)) {
       new (reinterpret_cast<T*>(to)) T{std::move(*reinterpret_cast<T*>(from))};
     } else {
       vtAssert(false, "Invalid type; can not move");
@@ -210,7 +210,7 @@ struct Move<T> {
 template <typename T, typename... Ts>
 struct Serialize {
   template <typename U, typename SerializerT>
-  static void apply(char which, U* u, SerializerT& s) {
+  static void apply(uint8_t which, U* u, SerializerT& s) {
     if (which == GetPlace<Ts...>::value) {
       u->template serializeAs<T>(s);
     } else {
@@ -222,8 +222,8 @@ struct Serialize {
 template <typename T>
 struct Serialize<T> {
   template <typename U, typename SerializerT>
-  static void apply(char which, U* u, SerializerT& s) {
-    if (which == static_cast<char>(1)) {
+  static void apply(uint8_t which, U* u, SerializerT& s) {
+    if (which == static_cast<uint8_t>(1)) {
       u->template serializeAs<T>(s);
     } else {
       vtAssert(false, "Invalid type; can not serialize");
@@ -237,7 +237,7 @@ struct Serialize<T> {
 template <typename T, typename... Ts>
 struct Compare {
   template <typename U>
-  static bool apply(char which, U const* u1, U const* u2) {
+  static bool apply(uint8_t which, U const* u1, U const* u2) {
     if (which == GetPlace<Ts...>::value) {
       return u1->template compareAs<T>(u2);
     } else {
@@ -249,8 +249,8 @@ struct Compare {
 template <typename T>
 struct Compare<T> {
   template <typename U>
-  static bool apply(char which, U const* u1, U const* u2) {
-    if (which == static_cast<char>(1)) {
+  static bool apply(uint8_t which, U const* u1, U const* u2) {
+    if (which == static_cast<uint8_t>(1)) {
       return u1->template compareAs<T>(u2);
     } else {
       vtAssert(false, "Invalid type; can not compare");
@@ -466,7 +466,7 @@ private:
 
 private:
   alignas(detail::Aligner<T,Ts...>) char data_[sizeof(detail::Sizer<T,Ts...>)];
-  char which_ = 0;
+  uint8_t which_ = 0;
 };
 
 }} /* end namespace vt::util */
