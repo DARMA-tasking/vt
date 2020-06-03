@@ -47,8 +47,7 @@
 
 #include "vt/config.h"
 
-namespace vt { namespace util {
-
+namespace vt { namespace util { namespace adt {
 namespace detail {
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -469,12 +468,12 @@ private:
   uint8_t which_ = 0;
 };
 
-}} /* end namespace vt::util */
+}}} /* end namespace vt::util::adt */
 
 namespace vt { namespace adt {
 
 template <typename T, typename... Ts>
-using SafeUnion = util::AlignedCharUnion<T, Ts...>;
+using SafeUnion = util::adt::AlignedCharUnion<T, Ts...>;
 
 }} /* end namespace vt::adt */
 
