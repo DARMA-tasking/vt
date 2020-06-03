@@ -125,7 +125,6 @@ struct WhichImpl<T, U, typename std::enable_if_t<not std::is_same<T,U>::value>, 
 template <typename T, typename U, typename... Us>
 struct Which : WhichImpl<T, U, void, Us...> { };
 
-
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Automatically deallocate based on active element
