@@ -96,9 +96,7 @@ void CollectiveAnyOps<instance>::scheduleThenFinalize(
   auto rt_use = has_rt ? in_rt.unsafe() : curRT;
 
   auto sched_fn = [=]{
-    while (not rt_use->isTerminated()) {
-      runScheduler();
-    }
+    theSched()->runSchedulerWhile([rt_use]{ return not rt_use->isTerminated(); });
   };
 
   if (workers == no_workers) {

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              collection.impl.h
+//                          test_scheduler_loop.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,61 +42,81 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_COLLECTION_IMPL_H
-#define INCLUDED_RUNNABLE_COLLECTION_IMPL_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/runnable/collection.h"
-#include "vt/registry/auto/auto_registry_common.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/registry/auto/collection/auto_registry_collection.h"
-#include "vt/trace/trace_common.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/active.h"
-#include "vt/serialization/sizer.h"
+#include "vt/transport.h"
+#include "test_parallel_harness.h"
 
-namespace vt { namespace runnable {
+namespace vt { namespace tests { namespace unit {
 
-template <typename MsgT, typename ElementT>
-/*static*/ void RunnableCollection<MsgT,ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from,
-  bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
-) {
-#if backend_check_enabled(trace_enabled)
-  trace::TraceProcessingTag processing_tag;
-  {
-    auto reg_enum = member ?
-      auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-      auto_registry::RegistryTypeEnum::RegVrtCollection;
-    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
-      handler, reg_enum
-    );
-    trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
-    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
-    auto const from_node = from != uninitialized_destination ? from : ctx_node;
+struct TestSchedulerLoop : TestParallelHarness { };
 
-    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
+struct TestMsg : vt::Message {
+  int action_;
+};
 
-    processing_tag = theTrace()->beginProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      idx1, idx2, idx3, idx4
-    );
+static int last_action_completed = 0;
+static bool done = false;
+
+static std::string actions[] = {
+  "-- not used --",
+  "nested",
+  "nested",
+  "manual",
+  "manual",
+  "nested",
+  "done"
+};
+
+static void message_handler_with_nested_loop(TestMsg* msg) {
+  std::string& action = actions[msg->action_];
+
+  if ("done" == action) {
+    done = true;
+    last_action_completed = msg->action_;
+    return;
   }
-#endif
 
-  if (member) {
-    auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
-    (elm->*func)(msg);
+  int next_depth = msg->action_ + 1;
+
+  int target_node = (theContext()->getNode() + 1) % theContext()->getNumNodes();
+
+  auto next_msg = vt::makeMessage<TestMsg>();
+  next_msg->action_ = next_depth;
+  theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, next_msg.get());
+
+  if ("nested" == action) {
+    // New auto-nesting loop (recommended)
+    theSched()->runSchedulerWhile([next_depth]{ return next_depth not_eq last_action_completed; });
+  } else if ("manual" == action) {
+    // Original manual loops (not recommended, as such will not relfect as well in trace logs)
+    while (next_depth not_eq last_action_completed) {
+      vt::runScheduler();
+    }
   } else {
-    auto const func = auto_registry::getAutoHandlerCollection(handler);
-    func(msg, elm);
-  };
+    vtAssertInfo(false, "Invalid action", action);
+  }
 
-#if backend_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
-#endif
+  // Unwinds 5,4..1 eg.
+  last_action_completed = msg->action_;
 }
 
-}} /* end namespace vt::runnable */
+TEST_F(TestSchedulerLoop, test_scheduler_loop_nesting_1) {
 
-#endif /*INCLUDED_RUNNABLE_COLLECTION_IMPL_H*/
+  vtAssert(theContext()->getNumNodes() >= 2, "At least 2 nodes required.");
+
+  int target_node = (theContext()->getNode() + 1) % theContext()->getNumNodes();
+
+  auto msg = vt::makeMessage<TestMsg>();
+  msg->action_ = 1;
+  theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, msg.get());
+
+  done = false;
+  while (!done) {
+    vt::runScheduler();
+  }
+
+  SUCCEED();
+}
+
+}}} /* end namespace vt::tests::unit */
