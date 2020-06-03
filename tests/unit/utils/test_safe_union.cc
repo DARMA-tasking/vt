@@ -54,10 +54,10 @@ using TestSafeUnion = TestHarness;
 
 TEST_F(TestSafeUnion, test_safe_union_1) {
 
-  vt::SafeUnion<int64_t> x1;
-  vt::SafeUnion<int64_t, int64_t> x2;
-  vt::SafeUnion<int64_t, int64_t, int64_t> x3;
-  vt::SafeUnion<int64_t, int64_t, int64_t, int64_t> x4;
+  vt::adt::SafeUnion<int64_t> x1;
+  vt::adt::SafeUnion<int64_t, int64_t> x2;
+  vt::adt::SafeUnion<int64_t, int64_t, int64_t> x3;
+  vt::adt::SafeUnion<int64_t, int64_t, int64_t, int64_t> x4;
 
   static_assert(
     sizeof(x1) == sizeof(x2) and
@@ -66,8 +66,8 @@ TEST_F(TestSafeUnion, test_safe_union_1) {
     "As a union these must all be the same size!"
   );
 
-  vt::SafeUnion<int64_t> y1;
-  vt::SafeUnion<int64_t, char> y2;
+  vt::adt::SafeUnion<int64_t> y1;
+  vt::adt::SafeUnion<int64_t, char> y2;
 
   // This makes an assertion about alignment that will hold across these two
   // types
@@ -92,7 +92,7 @@ TEST_F(TestSafeUnion, test_safe_union_2) {
     int v = 0;
   };
 
-  vt::SafeUnion<int, float, MyTest> x;
+  vt::adt::SafeUnion<int, float, MyTest> x;
 
   EXPECT_FALSE(x.is<int>());
   EXPECT_FALSE(x.is<float>());
@@ -165,7 +165,7 @@ TEST_F(TestSafeUnion, test_safe_union_3) {
     bool operator==(MyTest2 const& other) const { return true; }
   };
 
-  vt::SafeUnion<float, int, MyTest, double, MyTest2> x;
+  vt::adt::SafeUnion<float, int, MyTest, double, MyTest2> x;
 
   x.init<MyTest>(MyTest::Tag{});
 
@@ -192,7 +192,7 @@ TEST_F(TestSafeUnion, test_safe_union_3) {
 
   EXPECT_EQ(x.get<MyTest>().v, 235);
 
-  vt::SafeUnion<float, int, MyTest, double, MyTest2> y(x);
+  vt::adt::SafeUnion<float, int, MyTest, double, MyTest2> y(x);
 
   EXPECT_TRUE(y == x);
   x.get<MyTest>().v = 236;
@@ -202,12 +202,12 @@ TEST_F(TestSafeUnion, test_safe_union_3) {
   EXPECT_TRUE(y.is<MyTest>());
   EXPECT_EQ(y.get<MyTest>().v, 235);
 
-  vt::SafeUnion<float, int, MyTest, double, MyTest2> z;
+  vt::adt::SafeUnion<float, int, MyTest, double, MyTest2> z;
   z = y;
 
   EXPECT_EQ(copy_counter, 2);
 
-  vt::SafeUnion<float, int, MyTest, double, MyTest2> u;
+  vt::adt::SafeUnion<float, int, MyTest, double, MyTest2> u;
   u = std::move(z);
 
   EXPECT_EQ(copy_counter, 2);

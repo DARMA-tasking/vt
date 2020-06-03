@@ -471,11 +471,11 @@ private:
 
 }} /* end namespace vt::util */
 
-namespace vt {
+namespace vt { namespace adt {
 
 template <typename T, typename... Ts>
 using SafeUnion = util::AlignedCharUnion<T, Ts...>;
 
-} /* end namespace vt */
+}} /* end namespace vt::adt */
 
 #endif /*INCLUDED_VT_UTILS_ADT_UNION_H*/
