@@ -69,6 +69,7 @@ void ComponentPack::construct() {
 
   // Run the startup now that all components are live
   for (auto&& c : live_components_) {
+    c->component_id_ = cur_id_++;
     c->startup();
   }
 

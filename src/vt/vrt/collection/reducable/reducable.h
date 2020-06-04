@@ -51,6 +51,7 @@
 #include "vt/pipe/pipe_callback_only.h"
 #include "vt/collective/reduce/operators/functors/none_op.h"
 #include "vt/collective/reduce/operators/callback_op.h"
+#include "vt/collective/reduce/reduce_scope.h"
 
 #include <functional>
 
@@ -58,6 +59,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 struct Reducable : BaseProxyT {
+  using ReduceStamp = collective::reduce::ReduceStamp;
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
 
   Reducable() = default;
@@ -66,7 +68,6 @@ struct Reducable : BaseProxyT {
   explicit Reducable(VirtualProxyType const in_proxy);
   Reducable& operator=(Reducable const&) = default;
 
-
   template <
     typename OpT = collective::None,
     typename MsgT,
@@ -74,9 +75,8 @@ struct Reducable : BaseProxyT {
       MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
     >
   >
-  EpochType reduce(
-    MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag
+  void reduce(
+    MsgT *const msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const;
 
   template <
@@ -85,36 +85,26 @@ struct Reducable : BaseProxyT {
     typename MsgT,
     ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
   >
-  EpochType reduce(
-    MsgT *const msg, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag
-  ) const;
+  void reduce(MsgT *const msg, ReduceStamp stamp = ReduceStamp{}) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduce(
-    MsgT *const msg, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag,
+  void reduce(
+    MsgT *const msg, ReduceStamp stamp = ReduceStamp{},
     NodeType const& node = uninitialized_destination
   ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceExpr(
-    MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch = no_epoch,
-    TagType const& tag = no_tag,
+  void reduceExpr(
+    MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp = ReduceStamp{},
     NodeType const& node = uninitialized_destination
   ) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduce(
-    MsgT *const msg, EpochType const& epoch, TagType const& tag,
-    IndexT const& idx
-  ) const;
+  void reduce(MsgT *const msg, ReduceStamp stamp, IndexT const& idx) const;
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduceExpr(
-    MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch,
-    TagType const& tag,
-    IndexT const& idx
+  void reduceExpr(
+    MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, IndexT const& idx
   ) const;
 };
 

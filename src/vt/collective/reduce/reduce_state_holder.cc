@@ -47,52 +47,29 @@
 
 namespace vt { namespace collective { namespace reduce {
 
-bool ReduceStateHolder::exists(
-  GroupType group, ReduceIDType const& id
-) {
-  auto group_iter = state_lookup_.find(group);
-  if (group_iter == state_lookup_.end()) {
-    return false;
-  } else {
-    auto id_iter = group_iter->second.find(id);
-    if (id_iter == group_iter->second.end()) {
-      return false;
-    } else {
-      return true;
-    }
-  }
+bool ReduceStateHolder::exists(ReduceIDType const& id) {
+  auto iter = state_lookup_.find(id);
+  return iter != state_lookup_.end();
 }
 
 ReduceStateHolder::ReduceStateType&
-ReduceStateHolder::find(GroupType group, ReduceIDType const& id) {
-  auto group_iter = state_lookup_.find(group);
-  vtAssertExpr(group_iter != state_lookup_.end());
-  auto id_iter = group_iter->second.find(id);
-  vtAssertExpr(id_iter != group_iter->second.end());
-  return id_iter->second;
+ReduceStateHolder::find(ReduceIDType const& id) {
+  auto iter = state_lookup_.find(id);
+  vtAssertExpr(iter != state_lookup_.end());
+  return iter->second;
 }
 
 void ReduceStateHolder::erase(
-  GroupType group, ReduceIDType const& id
+  ReduceIDType const& id
 ) {
-  auto group_iter = state_lookup_.find(group);
-  if (group_iter != state_lookup_.end()) {
-    auto id_iter = group_iter->second.find(id);
-    if (id_iter == group_iter->second.end()) {
-      state_lookup_.erase(group_iter);
-    } else {
-      group_iter->second.erase(id_iter);
-      if (group_iter->second.size() == 0) {
-        state_lookup_.erase(group_iter);
-      }
-    }
+  auto iter = state_lookup_.find(id);
+  if (iter != state_lookup_.end()) {
+    state_lookup_.erase(iter);
   }
 }
 
-void ReduceStateHolder::insert(
-  GroupType group, ReduceIDType const& id, ReduceStateType&& state
-) {
-  state_lookup_[group].emplace(
+void ReduceStateHolder::insert(ReduceIDType const& id, ReduceStateType&& state) {
+  state_lookup_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(id),
     std::forward_as_tuple(std::move(state))

@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce.fwd.h"
+#include "vt/collective/reduce/reduce_scope.h"
 #include "vt/messaging/message.h"
 
 #include <cstdlib>
@@ -82,18 +83,17 @@ struct ReduceMsg : SerializeSupported<
     ReduceMsg
   >;
 
+  ReduceStamp const& stamp() const { return reduce_id_.stamp(); }
+  detail::ReduceScope const& scope() const { return reduce_id_.scope(); }
+
   NodeType reduce_root_ = uninitialized_destination;
-  TagType reduce_tag_ = no_tag;
-  SequentialIDType reduce_seq_ = no_seq_id;
-  VirtualProxyType reduce_proxy_ = no_vrt_proxy;
-  ObjGroupProxyType reduce_objgroup_ = no_obj_group;
+  detail::ReduceIDImpl reduce_id_;
   HandlerType combine_handler_ = uninitialized_handler;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     MessageParentType::serialize(s);
-    s | reduce_root_ | reduce_tag_ | reduce_seq_ | reduce_proxy_;
-    s | reduce_objgroup_;
+    s | reduce_root_ | reduce_id_;
     s | combine_handler_;
   }
 };

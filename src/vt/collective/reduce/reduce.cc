@@ -51,8 +51,10 @@
 
 namespace vt { namespace collective { namespace reduce {
 
-Reduce::Reduce()
-  : tree::Tree(tree::tree_cons_tag_t)
+Reduce::Reduce(detail::ReduceScope const& in_scope)
+  : tree::Tree(tree::tree_cons_tag_t),
+    scope_(in_scope),
+    next_seq_(1)
 {
   debug_print(
     reduce, node,
@@ -61,14 +63,24 @@ Reduce::Reduce()
   );
 }
 
-Reduce::Reduce(GroupType const& group, collective::tree::Tree* in_tree)
-  : tree::Tree(*in_tree), group_(group)
+Reduce::Reduce(
+  detail::ReduceScope const& in_scope, collective::tree::Tree* in_tree
+) : tree::Tree(*in_tree),
+    scope_(in_scope),
+    next_seq_(1)
 {
   debug_print(
     reduce, node,
-    "Reduce constructor: children={}, parent={}, group={:x}\n",
-    getNumChildren(), getParent(), group
+    "Reduce constructor: children={}, parent={}\n",
+    getNumChildren(), getParent()
   );
+}
+
+detail::ReduceStamp Reduce::generateNextID() {
+  ++next_seq_;
+  detail::ReduceStamp stamp;
+  stamp.init<detail::StrongSeq>(next_seq_);
+  return stamp;
 }
 
 }}} /* end namespace vt::collective::reduce */

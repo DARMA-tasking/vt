@@ -58,14 +58,11 @@ struct ReduceState {
   using ReduceNumType = int32_t;
   using ReduceVecType = std::vector<MsgSharedPtr<ReduceMsg>>;
 
-  ReduceState(
-    TagType in_tag_, SequentialIDType in_seq_id_, ReduceNumType in_num_contrib
-  ) : tag_(in_tag_), seq_id_(in_seq_id_), num_contrib_(in_num_contrib)
+  explicit ReduceState(ReduceNumType in_num_contrib)
+    : num_contrib_(in_num_contrib)
   { }
 
   ReduceVecType msgs               = {};
-  TagType tag_                     = no_tag;
-  SequentialIDType seq_id_         = no_seq_id;
   ReduceNumType num_contrib_       = 1;
   ReduceNumType num_local_contrib_ = 0;
   HandlerType combine_handler_     = uninitialized_handler;

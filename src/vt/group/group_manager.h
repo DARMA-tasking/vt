@@ -168,7 +168,7 @@ private:
   );
 
 public:
-  ReducePtrType groupReduce(GroupType const& group);
+  ReducePtrType groupReducer(GroupType const& group);
   NodeType groupRoot(GroupType const& group) const;
   bool groupDefault(GroupType const& group) const;
 
