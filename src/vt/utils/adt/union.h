@@ -257,7 +257,196 @@ struct Compare<T> {
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
+/// Automatically invoke the right hash
+template <typename T, typename... Ts>
+struct Hash {
+  template <typename U>
+  static std::size_t apply(uint8_t which, U const* u1) {
+    if (which == GetPlace<Ts...>::value) {
+      return u1->template hashAs<T>();
+    } else {
+      return Hash<Ts...>::apply(which, u1);
+    }
+  }
+};
+
+template <typename T>
+struct Hash<T> {
+  template <typename U>
+  static std::size_t apply(uint8_t which, U const* u1) {
+    if (which == static_cast<uint8_t>(1)) {
+      return u1->template hashAs<T>();
+    } else {
+      vtAssert(false, "Invalid type; can not compare");
+      return false;
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename T, typename... Ts>
+struct IsTriviallyDestructible {
+  static constexpr bool const value =
+    std::is_trivially_destructible<T>::value and IsTriviallyDestructible<Ts...>::value;
+};
+
+template <typename T>
+struct IsTriviallyDestructible<T> {
+  static constexpr bool const value = std::is_trivially_destructible<T>::value;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename T, typename... Ts>
+struct IsTriviallyCopyable {
+  static constexpr bool const value =
+    std::is_trivially_copyable<T>::value and IsTriviallyCopyable<Ts...>::value;
+};
+
+template <typename T>
+struct IsTriviallyCopyable<T> {
+  static constexpr bool const value = std::is_trivially_copyable<T>::value;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename... Ts>
+struct AllUnique;
+
+template <typename U, typename T, typename... Ts>
+struct AllUnique<U, T, Ts...>
+  : AllUnique<U, T>, AllUnique<U, Ts...>, AllUnique<T, Ts...> { };
+
+template <typename U, typename T>
+struct AllUnique<U, T> {
+  static_assert(not std::is_same<U, T>::value, "Types must be unique");
+};
+
 } /* end namespace detail */
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename T, typename... Ts>
+struct UnionBase {
+
+  UnionBase() = default;
+  explicit UnionBase(uint8_t in_which)
+    : which_(in_which)
+  { }
+
+protected:
+  alignas(detail::Aligner<T,Ts...>) char data_[sizeof(detail::Sizer<T,Ts...>)];
+  uint8_t which_ = 0;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename T, typename Enable, typename... Ts>
+struct UnionDestroy;
+
+template <typename T, typename... Ts>
+struct UnionDestroy<
+  T,
+  typename std::enable_if_t<detail::IsTriviallyDestructible<T, Ts...>::value>,
+  Ts...
+> : UnionBase<T, Ts...> {
+
+  UnionDestroy() = default;
+  explicit UnionDestroy(uint8_t in_which)
+    : UnionBase<T, Ts...>(in_which)
+  { }
+
+  /**
+   * \brief Reset the union, calling the appropriate destructor if one variant
+   * is active.
+   */
+  void reset() {
+    this->which_ = 0;
+  }
+};
+
+template <typename T, typename... Ts>
+struct UnionDestroy<
+  T,
+  typename std::enable_if_t<not detail::IsTriviallyDestructible<T, Ts...>::value>,
+  Ts...
+> : UnionBase<T, Ts...> {
+
+  UnionDestroy() = default;
+  explicit UnionDestroy(uint8_t in_which)
+    : UnionBase<T, Ts...>(in_which)
+  { }
+
+  /**
+   * \brief Reset the union, calling the appropriate destructor if one variant
+   * is active.
+   */
+  void reset() {
+    if (this->which_ != 0) {
+      detail::Deallocate<T, Ts...>::apply(this->which_, this);
+      this->which_ = 0;
+    }
+  }
+
+  ~UnionDestroy() { reset(); }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+template <typename T, typename Enable, typename... Ts>
+struct UnionCopy;
+
+template <typename T, typename... Ts>
+struct UnionCopy<
+  T,
+  typename std::enable_if_t<detail::IsTriviallyCopyable<T, Ts...>::value>,
+  Ts...
+> : UnionDestroy<T, void, Ts...> { };
+
+template <typename T, typename... Ts>
+struct UnionCopy<
+  T,
+  typename std::enable_if_t<not detail::IsTriviallyCopyable<T, Ts...>::value>,
+  Ts...
+> : UnionDestroy<T, void, Ts...> {
+
+  UnionCopy(UnionCopy&& other) {
+    this->which_ = std::move(other.which_);
+    if (this->which_ != 0) {
+      detail::Move<T, Ts...>::apply(this->which_, other.data_, this->data_);
+    }
+  }
+
+  UnionCopy(UnionCopy const& other) {
+    this->which_ = other.which_;
+    if (this->which_ != 0) {
+      detail::Copy<T, Ts...>::apply(this->which_, other.data_, this->data_);
+    }
+  }
+
+  UnionCopy& operator=(UnionCopy const& other) {
+    this->reset();
+    this->which_ = other.which_;
+    if (this->which_ != 0) {
+      detail::Copy<T, Ts...>::apply(this->which_, other.data_, this->data_);
+    }
+    return *this;
+  }
+
+  UnionCopy& operator=(UnionCopy&& other) {
+    this->reset();
+    this->which_ = std::move(other.which_);
+    if (this->which_ != 0) {
+      detail::Move<T, Ts...>::apply(this->which_, other.data_, this->data_);
+    }
+    return *this;
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * \struct AlignedCharUnion
@@ -281,54 +470,27 @@ struct Compare<T> {
  *
  */
 template <typename T, typename... Ts>
-struct AlignedCharUnion {
+struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
 
   AlignedCharUnion() = default;
 
-  AlignedCharUnion(AlignedCharUnion&& other)
-    : which_(std::move(other.which_))
-  {
-    if (which_ != 0) {
-      detail::Move<T, Ts...>::apply(which_, other.data_, data_);
+
+  std::size_t hash() const {
+    if (this->which_ != 0) {
+      return detail::Hash<T, Ts...>::apply(this->which_, this);
+    } else {
+      return 0;
     }
   }
-
-  AlignedCharUnion(AlignedCharUnion const& other)
-    : which_(other.which_)
-  {
-    if (which_ != 0) {
-      detail::Copy<T, Ts...>::apply(which_, other.data_, data_);
-    }
-  }
-
-  AlignedCharUnion& operator=(AlignedCharUnion const& other) {
-    reset();
-    which_ = other.which_;
-    if (which_ != 0) {
-      detail::Copy<T, Ts...>::apply(which_, other.data_, data_);
-    }
-    return *this;
-  }
-
-  AlignedCharUnion& operator=(AlignedCharUnion&& other) {
-    reset();
-    which_ = std::move(other.which_);
-    if (which_ != 0) {
-      detail::Move<T, Ts...>::apply(which_, other.data_, data_);
-    }
-    return *this;
-  }
-
-  ~AlignedCharUnion() { reset(); }
 
   bool operator==(AlignedCharUnion const& other) const {
-    if (which_ != other.which_) {
+    if (this->which_ != other.which_) {
       return false;
     }
-    if (which_ == 0) {
+    if (this->which_ == 0) {
       return true;
     }
-    return detail::Compare<T, Ts...>::apply(which_, this, &other);
+    return detail::Compare<T, Ts...>::apply(this->which_, this, &other);
   }
 
   /**
@@ -341,8 +503,8 @@ struct AlignedCharUnion {
   template <typename U, typename... Args>
   U* init(Args&&... args) {
     staticAssertCorrectness<U>();
-    vtAssert(which_ == 0, "Must be uninitialized");
-    which_ = detail::Which<U, T, Ts...>::value;
+    vtAssert(this->which_ == 0, "Must be uninitialized");
+    this->which_ = detail::Which<U, T, Ts...>::value;
     auto t = getUnsafe<U>();
     return new (t) U{std::forward<Args>(args)...};
   }
@@ -355,18 +517,7 @@ struct AlignedCharUnion {
   template <typename U>
   bool is() {
     staticAssertCorrectness<U>();
-    return which_ == detail::Which<U, T, Ts...>::value;
-  }
-
-  /**
-   * \brief Reset the union, calling the appropriate destructor if one variant
-   * is active.
-   */
-  void reset() {
-    if (which_ != 0) {
-      detail::Deallocate<T, Ts...>::apply(which_, this);
-      which_ = 0;
-    }
+    return this->which_ == detail::Which<U, T, Ts...>::value;
   }
 
   /**
@@ -376,10 +527,11 @@ struct AlignedCharUnion {
   void deallocateAs() {
     staticAssertCorrectness<U>();
     vtAssert(
-      (which_ == detail::Which<U, T, Ts...>::value), "Deallocating as wrong type"
+      (this->which_ == detail::Which<U, T, Ts...>::value),
+      "Deallocating as wrong type"
     );
     reinterpret_cast<U*>(getUnsafeRawBytes())->~U();
-    which_ = 0;
+    this->which_ = 0;
   }
 
   /**
@@ -404,7 +556,7 @@ struct AlignedCharUnion {
   /**
    * \brief Get the char* to underlying bytes
    */
-  char* getUnsafeRawBytes() { return static_cast<char*>(data_); }
+  char* getUnsafeRawBytes() { return static_cast<char*>(this->data_); }
 
   /**
    * \brief Serialize as the right underlying type
@@ -413,16 +565,16 @@ struct AlignedCharUnion {
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | which_;
-    if (which_ != 0) {
-      detail::Serialize<T, Ts...>::apply(which_, this, s);
+    s | this->which_;
+    if (this->which_ != 0) {
+      detail::Serialize<T, Ts...>::apply(this->which_, this, s);
     }
   }
 
 public:
   template <typename U, typename SerializerT>
   void serializeAs(SerializerT& s) {
-    T* t = getUnsafe<U>();
+    U* t = getUnsafe<U>();
     s | *t;
   }
 
@@ -433,12 +585,19 @@ public:
     return *t1 == *t2;
   }
 
+  template <typename U>
+  std::size_t hashAs() const {
+    U const* t1 = getUnsafe<U>();
+    return std::hash<U>()(*t1);
+  }
+
 private:
   template <typename U>
   U* getSafe() {
     staticAssertCorrectness<U>();
     vtAssert(
-      (detail::Which<U, T, Ts...>::value == which_), "Must be initialized as U"
+      (detail::Which<U, T, Ts...>::value == this->which_),
+      "Must be initialized as U"
     );
     return getUnsafe<U>();
   }
