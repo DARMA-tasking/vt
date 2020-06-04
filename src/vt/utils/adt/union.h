@@ -337,6 +337,11 @@ struct UnionBase {
     : which_(in_which)
   { }
 
+  /**
+   * \brief Get the char* to underlying bytes
+   */
+  char* getUnsafeRawBytes() { return static_cast<char*>(this->data_); }
+
 protected:
   alignas(detail::Aligner<T,Ts...>) char data_[sizeof(detail::Sizer<T,Ts...>)];
   uint8_t which_ = 0;
@@ -391,6 +396,19 @@ struct UnionDestroy<
     }
   }
 
+  /**
+   * \brief Deallocate as a certain type \c U
+   */
+  template <typename U>
+  void deallocateAs() {
+    vtAssert(
+      (this->which_ == detail::Which<U, T, Ts...>::value),
+      "Deallocating as wrong type"
+    );
+    reinterpret_cast<U*>(this->getUnsafeRawBytes())->~U();
+    this->which_ = 0;
+  }
+
   ~UnionDestroy() { reset(); }
 };
 
@@ -404,7 +422,11 @@ struct UnionCopy<
   T,
   typename std::enable_if_t<detail::IsTriviallyCopyable<T, Ts...>::value>,
   Ts...
-> : UnionDestroy<T, void, Ts...> { };
+> : UnionDestroy<T, void, Ts...> {
+
+  UnionCopy() = default;
+
+};
 
 template <typename T, typename... Ts>
 struct UnionCopy<
@@ -412,6 +434,8 @@ struct UnionCopy<
   typename std::enable_if_t<not detail::IsTriviallyCopyable<T, Ts...>::value>,
   Ts...
 > : UnionDestroy<T, void, Ts...> {
+
+  UnionCopy() = default;
 
   UnionCopy(UnionCopy&& other) {
     this->which_ = std::move(other.which_);
@@ -474,7 +498,6 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
 
   AlignedCharUnion() = default;
 
-
   std::size_t hash() const {
     if (this->which_ != 0) {
       return detail::Hash<T, Ts...>::apply(this->which_, this);
@@ -521,20 +544,6 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
   }
 
   /**
-   * \brief Deallocate as a certain type \c U
-   */
-  template <typename U>
-  void deallocateAs() {
-    staticAssertCorrectness<U>();
-    vtAssert(
-      (this->which_ == detail::Which<U, T, Ts...>::value),
-      "Deallocating as wrong type"
-    );
-    reinterpret_cast<U*>(getUnsafeRawBytes())->~U();
-    this->which_ = 0;
-  }
-
-  /**
    * \brief Get a reference as a certain type \c U
    */
   template <typename U>
@@ -561,11 +570,6 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
     staticAssertCorrectness<U>();
     return *getUnsafe<U>();
   }
-
-  /**
-   * \brief Get the char* to underlying bytes
-   */
-  char* getUnsafeRawBytes() { return static_cast<char*>(this->data_); }
 
   /**
    * \brief Serialize as the right underlying type
