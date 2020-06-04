@@ -89,7 +89,7 @@ static inline void activeMessageReduce() {
   // Get a reference to the value to set it in this reduce msg
   reduce_msg->getVal() = 50;
 
-  ::vt::theCollective()->reduce<ReduceOp,ReduceResult>(
+  ::vt::theCollective()->global()->reduce<ReduceOp,ReduceResult>(
     root_reduce_node, reduce_msg
   );
 }

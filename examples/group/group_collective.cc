@@ -87,14 +87,14 @@ int main(int argc, char** argv) {
       auto const& root_node = vt::theGroup()->groupRoot(group);
       auto const& is_default_group = vt::theGroup()->groupDefault(group);
       fmt::print(
-        "{}: Group is created: group={}, in_group={}, root={}, "
+        "{}: Group is created: group={:x}, in_group={}, root={}, "
         "is_default_group={}\n",
         this_node, group, in_group, root_node, is_default_group
       );
       if (in_group) {
         using Op = vt::collective::PlusOp<int>;
         auto msg = vt::makeMessage<ReduceMsg>(1);
-        vt::theGroup()->groupReduce(group)->reduce<Op, Print>(root, msg.get());
+        vt::theGroup()->groupReducer(group)->reduce<Op, Print>(root, msg.get());
       }
       if (this_node == 1) {
         auto msg = vt::makeMessage<HelloGroupMsg>();
