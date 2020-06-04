@@ -515,7 +515,7 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
    * \return whether \c U is active
    */
   template <typename U>
-  bool is() {
+  bool is() const {
     staticAssertCorrectness<U>();
     return this->which_ == detail::Which<U, T, Ts...>::value;
   }
@@ -539,6 +539,15 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
    */
   template <typename U>
   U& get() {
+    staticAssertCorrectness<U>();
+    return *getSafe<U>();
+  }
+
+  /**
+   * \brief Get a const reference as a certain type \c U
+   */
+  template <typename U>
+  U const& get() const {
     staticAssertCorrectness<U>();
     return *getSafe<U>();
   }
@@ -603,30 +612,50 @@ private:
   }
 
   template <typename U>
+  U const* getSafe() const {
+    staticAssertCorrectness<U>();
+    vtAssert(
+      (detail::Which<U, T, Ts...>::value == this->which_),
+      "Must be initialized as U"
+    );
+    return getUnsafe<U>();
+  }
+
+  template <typename U>
   U* getUnsafe() {
     staticAssertCorrectness<U>();
-    return reinterpret_cast<U*>(static_cast<char*>(data_));
+    return reinterpret_cast<U*>(static_cast<char*>(this->data_));
   }
 
   template <typename U>
   U const* getUnsafe() const {
     staticAssertCorrectness<U>();
-    return reinterpret_cast<U const*>(static_cast<char const*>(data_));
+    return reinterpret_cast<U const*>(static_cast<char const*>(this->data_));
   }
 
   template <typename U>
   void staticAssertCorrectness() const {
+    detail::AllUnique<T, Ts...>{};
     static_assert(
       detail::MustBe<U, T, Ts...>::is_same, "Must be the valid type in union"
     );
   }
-
-private:
-  alignas(detail::Aligner<T,Ts...>) char data_[sizeof(detail::Sizer<T,Ts...>)];
-  uint8_t which_ = 0;
 };
 
 }}} /* end namespace vt::util::adt */
+
+namespace std {
+
+template <typename T, typename... Ts>
+struct hash<vt::util::adt::AlignedCharUnion<T, Ts...>> {
+  size_t operator()(
+    vt::util::adt::AlignedCharUnion<T, Ts...> const& in
+  ) const {
+    return in.hash();
+  }
+};
+
+} /* end namespace std */
 
 namespace vt { namespace adt {
 
