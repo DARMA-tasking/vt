@@ -63,6 +63,7 @@ enum struct LBType : int8_t {
 # if backend_check_enabled(zoltan)
   , ZoltanLB         = 6
 # endif
+  , RandomLB         = 7
 };
 
 template <typename SerializerT>
