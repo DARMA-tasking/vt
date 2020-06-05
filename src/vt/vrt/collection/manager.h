@@ -867,13 +867,20 @@ public:
   /**
    * \brief Make the filename for checkpoint/restore
    *
+   * \param[in] range range for collection
    * \param[in] idx index of element
    * \param[in] file_base base file name
+   * \param[in] make_sub_dirs whether to make sub-directories for elements:
+   * useful when the number of collection elements are large
+   * \param[in] files_per_directory number of files to output for each sub-dir
    *
    * \return full path of a file for the element
    */
   template <typename IndexT>
-  std::string makeFilename(IndexT idx, std::string file_base);
+  std::string makeFilename(
+    IndexT range, IndexT idx, std::string file_base,
+    bool make_sub_dirs, int files_per_directory
+  );
 
   /**
    * \brief Make the filename for meta-data related to checkpoint/restore
@@ -883,7 +890,7 @@ public:
    * \return meta-data file name for the node
    */
   template <typename IndexT>
-  std::string makeMetaFilename(std::string file_base);
+  std::string makeMetaFilename(std::string file_base, bool make_sub_dirs);
 
   /**
    * \brief Checkpoint the collection (collective). Must wait for termination
@@ -891,12 +898,16 @@ public:
    *
    * \param[in] proxy the proxy of the collection
    * \param[in] file_base the base file name of the files write
+   * \param[in] make_sub_dirs whether to make sub-directories for elements:
+   * useful when the number of collection elements are large
+   * \param[in] files_per_directory number of files to output for each sub-dir
    *
    * \return the range of the collection
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void checkpointToFile(
-    CollectionProxyWrapType<ColT> proxy, std::string const& file_base
+    CollectionProxyWrapType<ColT> proxy, std::string const& file_base,
+    bool make_sub_dirs = true, int files_per_directory = 4
   );
 
   /**

@@ -84,6 +84,8 @@
 #include <functional>
 #include <cassert>
 #include <memory>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "fmt/format.h"
 #include "fmt/ostream.h"
@@ -3274,23 +3276,63 @@ IndexT CollectionManager::getRange(VirtualProxyType proxy) {
 }
 
 template <typename IndexT>
-std::string CollectionManager::makeMetaFilename(std::string file_base) {
+std::string CollectionManager::makeMetaFilename(
+  std::string file_base, bool make_sub_dirs
+) {
   auto this_node = theContext()->getNode();
-  return fmt::format("{}.{}.directory", file_base, this_node);
+  if (make_sub_dirs) {
+
+    auto subdir = fmt::format("{}/directory-{}", file_base, this_node);
+    int flag = mkdir(subdir.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + subdir);
+    }
+
+    return fmt::format(
+      "{}/directory-{}/{}.directory", file_base, this_node, this_node
+    );
+  } else {
+    return fmt::format("{}.{}.directory", file_base, this_node);
+  }
 }
 
 template <typename IndexT>
-std::string CollectionManager::makeFilename(IndexT idx, std::string file_base) {
+std::string CollectionManager::makeFilename(
+  IndexT range, IndexT idx, std::string file_base, bool make_sub_dirs,
+  int files_per_directory
+) {
+  vtAssert(files_per_directory >= 1, "Must be >= 1");
+
   std::string idx_str = "";
   for (int i = 0; i < idx.ndims(); i++) {
     idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
   }
-  return fmt::format("{}-{}", file_base, idx_str);
+  if (make_sub_dirs) {
+    auto lin = mapping::linearizeDenseIndexColMajor(&idx, &range);
+    auto dir_name = lin / files_per_directory;
+
+    int flag = 0;
+    flag = mkdir(file_base.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + file_base);
+    }
+
+    auto subdir = fmt::format("{}/{}", file_base, dir_name);
+    flag = mkdir(subdir.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + subdir);
+    }
+
+    return fmt::format("{}/{}/{}", file_base, dir_name, idx_str);
+  } else {
+    return fmt::format("{}-{}", file_base, idx_str);
+  }
 }
 
 template <typename ColT, typename IndexT>
 void CollectionManager::checkpointToFile(
-  CollectionProxyWrapType<ColT> proxy, std::string const& file_base
+  CollectionProxyWrapType<ColT> proxy, std::string const& file_base,
+  bool make_sub_dirs, int files_per_directory
 ) {
   auto proxy_bits = proxy.getProxy();
 
@@ -3304,10 +3346,14 @@ void CollectionManager::checkpointToFile(
   auto holder_ = findElmHolder<ColT>(proxy_bits);
   vtAssert(holder_ != nullptr, "Must have valid holder for collection");
 
+  auto range = getRange<ColT>(proxy_bits);
+
   CollectionDirectory<IndexT> directory;
 
   holder_->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
-    auto const name = makeFilename(idx, file_base);
+    auto const name = makeFilename(
+      range, idx, file_base, make_sub_dirs, files_per_directory
+    );
     auto const bytes = checkpoint::getSize(*static_cast<ColT*>(elm));
     directory.elements_.emplace_back(
       typename CollectionDirectory<IndexT>::Element{idx, name, bytes}
@@ -3316,7 +3362,7 @@ void CollectionManager::checkpointToFile(
     checkpoint::serializeToFile(*static_cast<ColT*>(elm), name);
   });
 
-  auto const directory_name = makeMetaFilename<IndexT>(file_base);
+  auto const directory_name = makeMetaFilename<IndexT>(file_base, make_sub_dirs);
   checkpoint::serializeToFile(directory, directory_name);
 }
 
@@ -3330,12 +3376,30 @@ CollectionManager::restoreFromFile(
 
   auto token = constructInsert<ColT>(range);
 
-  auto const directory_name = makeMetaFilename<IndexType>(file_base);
+  auto directory_name = makeMetaFilename<IndexType>(file_base, false);
+
+  if (access(directory_name.c_str(), F_OK) == -1) {
+    // file doesn't exist, true looking in sub-directory
+    directory_name = makeMetaFilename<IndexType>(file_base, true);
+  }
+
+  if (access(directory_name.c_str(), F_OK) == -1) {
+    throw std::runtime_error("Collection directory file cannot be found");
+  }
+
   auto directory = checkpoint::deserializeFromFile<DirectoryType>(directory_name);
 
   for (auto&& elm : directory->elements_) {
     auto idx = elm.idx_;
     auto file_name = elm.file_name_;
+
+    if (access(file_name.c_str(), F_OK) == -1) {
+      auto err = fmt::format(
+        "Collection element file cannot be found: idx={}, file={}",
+        idx, file_name
+      );
+      throw std::runtime_error(err);
+    }
 
     // @todo: error check the file read with bytes in directory
 
