@@ -45,6 +45,7 @@
 #include "vt/vrt/collection/balance/randomlb/randomlb.h"
 
 #include <random>
+#include <set>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
