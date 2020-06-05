@@ -864,8 +864,26 @@ public:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   IndexT getRange(VirtualProxyType proxy);
 
+  /**
+   * \brief Make the filename for checkpoint/restore
+   *
+   * \param[in] idx index of element
+   * \param[in] file_base base file name
+   *
+   * \return full path of a file for the element
+   */
   template <typename IndexT>
   std::string makeFilename(IndexT idx, std::string file_base);
+
+  /**
+   * \brief Make the filename for meta-data related to checkpoint/restore
+   *
+   * \param[in] file_base base file name
+   *
+   * \return meta-data file name for the node
+   */
+  template <typename IndexT>
+  std::string makeMetaFilename(std::string file_base);
 
   /**
    * \brief Checkpoint the collection (collective). Must wait for termination
@@ -882,23 +900,7 @@ public:
   );
 
   /**
-   * \brief Restore the collection (collective) from file with static map
-   * function.
-   *
-   * \param[in] range the range of the collection to restart
-   * \param[in] file_base the base file name for the files to read
-   *
-   * \return proxy to the new collection
-   */
-  template <
-    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
-  >
-  CollectionProxyWrapType<ColT> restoreFromFile(
-    typename ColT::IndexType range, std::string const& file_base
-  );
-
-  /**
-   * \brief Restore the collection (collective) from file with default map.
+   * \brief Restore the collection (collective) from file.
    *
    * \param[in] range the range of the collection to restart
    * \param[in] file_base the base file name for the files to read
@@ -908,21 +910,6 @@ public:
   template <typename ColT>
   CollectionProxyWrapType<ColT> restoreFromFile(
     typename ColT::IndexType range, std::string const& file_base
-  );
-
-  /**
-   * \internal \brief Restore the collection (collective) with registered map.
-   *
-   * \param[in] range the range of the collection to restart
-   * \param[in] file_base the base file name for the files to read
-   * \param[in] map_han registered handler for the map function
-   *
-   * \return proxy to the new collection
-   */
-  template <typename ColT>
-  CollectionProxyWrapType<ColT> restoreFromFileImpl(
-    typename ColT::IndexType range, std::string const& file_base,
-    HandlerType const map_han
   );
 
 private:

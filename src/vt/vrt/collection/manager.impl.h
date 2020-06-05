@@ -68,6 +68,7 @@
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/insert_context_holder.h"
+#include "vt/vrt/collection/collection_directory.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
@@ -3273,6 +3274,12 @@ IndexT CollectionManager::getRange(VirtualProxyType proxy) {
 }
 
 template <typename IndexT>
+std::string CollectionManager::makeMetaFilename(std::string file_base) {
+  auto this_node = theContext()->getNode();
+  return fmt::format("{}.{}.directory", file_base, this_node);
+}
+
+template <typename IndexT>
 std::string CollectionManager::makeFilename(IndexT idx, std::string file_base) {
   std::string idx_str = "";
   for (int i = 0; i < idx.ndims(); i++) {
@@ -3297,64 +3304,44 @@ void CollectionManager::checkpointToFile(
   auto holder_ = findElmHolder<ColT>(proxy_bits);
   vtAssert(holder_ != nullptr, "Must have valid holder for collection");
 
-  holder_->foreach([=](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
+  CollectionDirectory<IndexT> directory;
+
+  holder_->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
     auto const name = makeFilename(idx, file_base);
-    checkpoint::serializeToFile<ColT>(*static_cast<ColT*>(elm), name);
+    auto const bytes = checkpoint::getSize(*static_cast<ColT*>(elm));
+    directory.elements_.emplace_back(
+      typename CollectionDirectory<IndexT>::Element{idx, name, bytes}
+    );
+
+    checkpoint::serializeToFile(*static_cast<ColT*>(elm), name);
   });
-}
 
-template <
-  typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
->
-CollectionManager::CollectionProxyWrapType<ColT>
-CollectionManager::restoreFromFile(
-  typename ColT::IndexType range, std::string const& file_base
-) {
-  using IndexT = typename ColT::IndexType;
-  auto const map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return restoreFromFileImpl<ColT>(range, file_base, map_han);
+  auto const directory_name = makeMetaFilename<IndexT>(file_base);
+  checkpoint::serializeToFile(directory, directory_name);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::restoreFromFile(
   typename ColT::IndexType range, std::string const& file_base
-) {
-  auto const default_map = getDefaultMap<ColT>();
-  return restoreFromFileImpl<ColT>(range, file_base, default_map);
-}
-
-template <typename ColT>
-CollectionManager::CollectionProxyWrapType<ColT>
-CollectionManager::restoreFromFileImpl(
-  typename ColT::IndexType range, std::string const& file_base,
-  HandlerType const map_han
 ) {
   using IndexType = typename ColT::IndexType;
-  using BaseIdxType = vt::index::BaseIndex;
+  using DirectoryType = CollectionDirectory<IndexType>;
 
   auto token = constructInsert<ColT>(range);
 
-  auto map_fn = auto_registry::getHandlerMap(map_han);
+  auto const directory_name = makeMetaFilename<IndexType>(file_base);
+  auto directory = checkpoint::deserializeFromFile<DirectoryType>(directory_name);
 
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
+  for (auto&& elm : directory->elements_) {
+    auto idx = elm.idx_;
+    auto file_name = elm.file_name_;
 
-  range.foreach([&](IndexType idx) mutable {
+    // @todo: error check the file read with bytes in directory
 
-    auto const cur = static_cast<BaseIdxType*>(&idx);
-    auto const max = static_cast<BaseIdxType*>(&range);
-    auto mapped_node = map_fn(cur, max, num_nodes);
-
-    if (this_node == mapped_node) {
-
-      auto const file_name = makeFilename(idx, file_base);
-      auto uptr = checkpoint::deserializeFromFile<ColT>(file_name);
-
-      token[idx].insert(std::move(*uptr));
-    }
-
-  });
+    auto col_ptr = checkpoint::deserializeFromFile<ColT>(file_name);
+    token[idx].insert(std::move(*col_ptr));
+  }
 
   return finishedInsert(std::move(token));
 }
