@@ -846,7 +846,7 @@ private:
   );
 
   /**
-   * \brief Restart the collection (collective) from file with static map
+   * \brief Restore the collection (collective) from file with static map
    * function.
    *
    * \param[in] range the range of the collection to restart
@@ -857,12 +857,12 @@ private:
   template <
     typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
-  CollectionProxyWrapType<ColT> restartFromFile(
+  CollectionProxyWrapType<ColT> restoreFromFile(
     typename ColT::IndexType range, std::string const& file_base
   );
 
   /**
-   * \brief Restart the collection (collective) from file with default map.
+   * \brief Restore the collection (collective) from file with default map.
    *
    * \param[in] range the range of the collection to restart
    * \param[in] file_base the base file name for the files to read
@@ -870,12 +870,12 @@ private:
    * \return proxy to the new collection
    */
   template <typename ColT>
-  CollectionProxyWrapType<ColT> restartFromFile(
+  CollectionProxyWrapType<ColT> restoreFromFile(
     typename ColT::IndexType range, std::string const& file_base
   );
 
   /**
-   * \internal \brief Restart the collection (collective) with registered map.
+   * \internal \brief Restore the collection (collective) with registered map.
    *
    * \param[in] range the range of the collection to restart
    * \param[in] file_base the base file name for the files to read
@@ -884,7 +884,7 @@ private:
    * \return proxy to the new collection
    */
   template <typename ColT>
-  CollectionProxyWrapType<ColT> restartFromFileImpl(
+  CollectionProxyWrapType<ColT> restoreFromFileImpl(
     typename ColT::IndexType range, std::string const& file_base,
     HandlerType const map_han
   );

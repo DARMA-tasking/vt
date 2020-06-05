@@ -3221,31 +3221,31 @@ template <
   typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
 >
 CollectionManager::CollectionProxyWrapType<ColT>
-CollectionManager::restartFromFile(
+CollectionManager::restoreFromFile(
   typename ColT::IndexType range, std::string const& file_base
 ) {
   using IndexT = typename ColT::IndexType;
   auto const map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return restartFromFileImpl<ColT>(range, file_base, map_han);
+  return restoreFromFileImpl<ColT>(range, file_base, map_han);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
-CollectionManager::restartFromFile(
+CollectionManager::restoreFromFile(
   typename ColT::IndexType range, std::string const& file_base
 ) {
   auto const default_map = getDefaultMap<ColT>();
-  return restartFromFileImpl<ColT>(range, file_base, default_map);
+  return restoreFromFileImpl<ColT>(range, file_base, default_map);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
-CollectionManager::restartFromFileImpl(
+CollectionManager::restoreFromFileImpl(
   typename ColT::IndexType range, std::string const& file_base,
   HandlerType const map_han
 ) {
   using IndexType = typename ColT::IndexType;
-  using BaseIdxType      = vt::index::BaseIndex;
+  using BaseIdxType = vt::index::BaseIndex;
 
   auto token = constructInsert<ColT>(range);
 
