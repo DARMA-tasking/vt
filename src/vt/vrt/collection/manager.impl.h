@@ -3379,7 +3379,7 @@ CollectionManager::restoreFromFile(
   auto directory_name = makeMetaFilename<IndexType>(file_base, false);
 
   if (access(directory_name.c_str(), F_OK) == -1) {
-    // file doesn't exist, true looking in sub-directory
+    // file doesn't exist, try looking in sub-directory
     directory_name = makeMetaFilename<IndexType>(file_base, true);
   }
 
