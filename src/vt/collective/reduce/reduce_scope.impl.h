@@ -133,6 +133,11 @@ T& ReduceScopeHolder<T>::get(ComponentTag, ComponentIDType component_id) {
 }
 
 template <typename T>
+T& ReduceScopeHolder<T>::get(UserIDTag, UserIDType user_id) {
+  return getOnDemand(makeScope<StrongUserID>(user_id));
+}
+
+template <typename T>
 void ReduceScopeHolder<T>::make(ObjGroupTag, ObjGroupProxyType proxy) {
   getOnDemand(makeScope<StrongObjGroup>(proxy));
 }

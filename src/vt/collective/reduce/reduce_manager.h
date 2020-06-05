@@ -70,6 +70,8 @@ struct ReduceManager {
 
   Reduce* getReducerComponent(ComponentIDType const& cid);
 
+  Reduce* makeReducerCollective();
+
   void makeReducerGroup(GroupType const& group, collective::tree::Tree* tree);
 
   template <typename MsgT>
@@ -80,6 +82,7 @@ struct ReduceManager {
 
 private:
   ReduceScopeType reducers_;
+  detail::UserIDType cur_user_id_ = 0;
 };
 
 }}} /* end namespace vt::collective::reduce */

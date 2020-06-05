@@ -87,6 +87,10 @@ Reduce* ReduceManager::getReducerComponent(ComponentIDType const& cid) {
   return reducers_.get(typename ReduceScopeType::ComponentTag{}, cid).get();
 }
 
+Reduce* ReduceManager::makeReducerCollective() {
+  return reducers_.get(typename ReduceScopeType::UserIDTag{}, cur_user_id_++).get();
+}
+
 void ReduceManager::makeReducerGroup(
   GroupType const& group, collective::tree::Tree* tree
 ) {

@@ -57,8 +57,9 @@ namespace vt { namespace collective { namespace reduce { namespace detail {
  * proxy, virtual proxy, group ID, or component ID.
  */
 struct ReduceScope {
-  using ValueType =
-    vt::adt::SafeUnion<StrongObjGroup, StrongVrtProxy, StrongGroup, StrongCom>;
+  using ValueType = vt::adt::SafeUnion<
+    StrongObjGroup, StrongVrtProxy, StrongGroup, StrongCom, StrongUserID
+  >;
 
   ReduceScope() = default;
 
@@ -89,6 +90,8 @@ struct ReduceScope {
       return fmt::format("group[{:x}]", l0_.get<StrongGroup>().get());
     } else if (l0_.is<StrongCom>()) {
       return fmt::format("component[{}]", l0_.get<StrongCom>().get());
+    } else if (l0_.is<StrongUserID>()) {
+      return fmt::format("userID[{}]", l0_.get<StrongUserID>().get());
     } else {
       return "<unknown-type>";
     }
@@ -211,11 +214,13 @@ struct ReduceScopeHolder {
   struct VrtProxyTag { };
   struct GroupTag { };
   struct ComponentTag { };
+  struct UserIDTag { };
 
   T& get(ObjGroupTag, ObjGroupProxyType proxy);
   T& get(VrtProxyTag, VirtualProxyType proxy);
   T& get(GroupTag, GroupType group);
   T& get(ComponentTag, ComponentIDType component_id);
+  T& get(UserIDTag, UserIDType user_id);
 
   void make(ObjGroupTag, ObjGroupProxyType proxy);
   void make(GroupTag, GroupType group, DefaultCreateFunction fn);
