@@ -3376,18 +3376,20 @@ CollectionManager::restoreFromFile(
 
   auto token = constructInsert<ColT>(range);
 
-  auto directory_name = makeMetaFilename<IndexType>(file_base, false);
+  auto metadata_file_name = makeMetaFilename<IndexType>(file_base, false);
 
-  if (access(directory_name.c_str(), F_OK) == -1) {
+  if (access(metadata_file_name.c_str(), F_OK) == -1) {
     // file doesn't exist, try looking in sub-directory
-    directory_name = makeMetaFilename<IndexType>(file_base, true);
+    metadata_file_name = makeMetaFilename<IndexType>(file_base, true);
   }
 
-  if (access(directory_name.c_str(), F_OK) == -1) {
+  if (access(metadata_file_name.c_str(), F_OK) == -1) {
     throw std::runtime_error("Collection directory file cannot be found");
   }
 
-  auto directory = checkpoint::deserializeFromFile<DirectoryType>(directory_name);
+  auto directory = checkpoint::deserializeFromFile<DirectoryType>(
+    metadata_file_name
+  );
 
   for (auto&& elm : directory->elements_) {
     auto idx = elm.idx_;
