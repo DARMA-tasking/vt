@@ -62,7 +62,6 @@ struct RandomLB : BaseLB {
 private:
   int seed_ = 123456789;
   bool randomize_seed_ = false;
-  std::random_device device_;
   objgroup::proxy::Proxy<RandomLB> proxy = {};
 };
 

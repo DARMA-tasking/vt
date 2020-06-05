@@ -83,7 +83,7 @@ void RandomLB::runLB() {
 
   startMigrationCollective();
 
-  // Sort the object so we have a deterministic order over them
+  // Sort the objects so we have a deterministic order over them
   std::set<ObjIDType> objs;
   for (auto&& stat : *load_data) {
     objs.insert(stat.first);
