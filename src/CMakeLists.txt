@@ -76,6 +76,7 @@ set(
         vrt/collection/balance/rotatelb
         vrt/collection/balance/gossiplb
         vrt/collection/balance/zoltanlb
+        vrt/collection/balance/randomlb
         vrt/collection/balance/lb_invoke
         vrt/collection/balance/proxy
     lb/instrumentation
