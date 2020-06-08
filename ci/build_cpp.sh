@@ -104,6 +104,9 @@ then
     GHPAGE=$PWD/DARMA-tasking.github.io
     git clone "https://${token}@github.com/DARMA-tasking/DARMA-tasking.github.io"
     git clone https://github.com/mosra/m.css
+    cd m.css
+    git checkout 38f38806c9d19eefc293f6fd1b978020818f383b
+    cd ../
 
     "$MCSS/documentation/doxygen.py" Doxyfile-mcss
     cp  -R docs "$GHPAGE"
