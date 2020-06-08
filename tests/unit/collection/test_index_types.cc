@@ -84,11 +84,11 @@ void TestCol<IndexT>::handler(ColMsg<IndexT>* msg) {}
 
 
 template <typename CollectionT>
-struct TestCsollectionIndexTypes : TestParallelHarness {};
+struct TestCollectionIndexTypes : TestParallelHarness {};
 
-TYPED_TEST_CASE_P(TestCsollectionIndexTypes);
+TYPED_TEST_SUITE_P(TestCollectionIndexTypes);
 
-TYPED_TEST_P(TestCsollectionIndexTypes, test_collection_index_1) {
+TYPED_TEST_P(TestCollectionIndexTypes, test_collection_index_1) {
   using IndexType     = TypeParam;
   using ColType       = test_index_types_::TestCol<IndexType>;
   using MsgType       = test_index_types_::ColMsg<IndexType>;
@@ -113,7 +113,7 @@ TYPED_TEST_P(TestCsollectionIndexTypes, test_collection_index_1) {
   }
 }
 
-REGISTER_TYPED_TEST_CASE_P(TestCsollectionIndexTypes, test_collection_index_1);
+REGISTER_TYPED_TEST_SUITE_P(TestCollectionIndexTypes, test_collection_index_1);
 
 using CollectionTestTypes = testing::Types<
   ::vt::Index1D,
@@ -124,8 +124,8 @@ using CollectionTestTypes = testing::Types<
   ::vt::IdxType1D<std::size_t>
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(
-  test_collection_index, TestCsollectionIndexTypes, CollectionTestTypes
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_index_types, TestCollectionIndexTypes, CollectionTestTypes, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

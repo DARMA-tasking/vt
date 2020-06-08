@@ -506,7 +506,7 @@ struct PrintParam {
 };
 
 // Test Wave-epoch with a narrower set of parameters since large k is very slow
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   DepSendChainInputExplodeWave, TestTermDepSendChain,
   ::testing::Combine(
     ::testing::Values(false),
@@ -517,7 +517,7 @@ INSTANTIATE_TEST_CASE_P(
 );
 
 // Test DS-epoch with a broader set of parameters since it is quick
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   DepSendChainInputExplodeDS, TestTermDepSendChain,
   ::testing::Combine(
     ::testing::Values(true),

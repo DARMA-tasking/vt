@@ -108,7 +108,7 @@ struct BroadcastHandlers {
 template <typename CollectionT>
 struct TestBroadcast : TestParallelHarness {};
 
-TYPED_TEST_CASE_P(TestBroadcast);
+TYPED_TEST_SUITE_P(TestBroadcast);
 
 TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
   using ColType = TypeParam;
@@ -134,7 +134,7 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
   }
 }
 
-REGISTER_TYPED_TEST_CASE_P(TestBroadcast, test_broadcast_1);
+REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
 
 using CollectionTestTypes = testing::Types<
   bcast_col_            ::TestCol<int32_t>,
@@ -147,8 +147,8 @@ using CollectionTestTypes = testing::Types<
   bcast_col_            ::TestCol<int64_t,int64_t>
 >;
 
-INSTANTIATE_TYPED_TEST_CASE_P(
-  test_bcast, TestBroadcast, CollectionTestTypes
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_bcast, TestBroadcast, CollectionTestTypes, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

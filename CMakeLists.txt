@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
+if (POLICY CMP0082) # CMake 3.14
+  # Prevent mixing install policies from add_subdirectory;
+  # This suppresses a warning as the old behavior is deprecated-by-definition.
+  cmake_policy(SET CMP0082 NEW)
+endif()
+
 include(cmake/turn_on_warnings.cmake)
 
 include(cmake/check_system_functions.cmake)
@@ -23,7 +29,7 @@ set_darma_compiler_flags()
 # Import the linking macros for VT-related targets
 include(cmake/link_vt.cmake)
 
-# Load all the packages that are required for VT
+# Load packages that are required for core VT build
 include(cmake/load_packages.cmake)
 
 # Code coverage option of VT
@@ -72,12 +78,60 @@ endif()
 # Primary VT build
 add_subdirectory(src)
 
-add_custom_target(examples)
-add_subdirectory(examples)
+#
+# Test prep - ensures examples can be registered as tests.
+#
+option(VT_BUILD_TESTS "Build VT tests" ON)
 
-add_custom_target(unit_tests)
-add_custom_target(perf_tests)
-add_subdirectory(tests)
+if (VT_BUILD_TESTS
+   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  # CTest implies enable_testing() and defines the BUILD_TESTING option.
+  # The default of BUILD_TESTING is ON.
+  # Testing is only enabled if the actual project being built is VT.
+  include(CTest)
+endif()
+
+#
+# Examples
+#
+option(VT_BUILD_EXAMPLES "Build VT examples" ON)
+
+if (VT_BUILD_EXAMPLES)
+  message(
+    STATUS
+    "VT: building examples"
+  )
+
+  add_custom_target(examples)
+  add_subdirectory(examples)
+else()
+  message(
+    STATUS "VT: NOT building examples because VT_BUILD_EXAMPLES is not set.\
+ Examples that are not built are NOT TESTED."
+  )
+endif()
+
+#
+# Tests
+#
+
+if (BUILD_TESTING
+   AND VT_BUILD_TESTS
+   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  message(
+    STATUS
+    "VT: building tests"
+  )
+
+  add_custom_target(unit_tests)
+  add_custom_target(perf_tests)
+  add_subdirectory(tests)
+else()
+  message(
+    STATUS
+    "VT: NOT building tests because VT_BUILD_TESTS or BUILD_TESTING are not set"
+  )
+endif()
 
 # Configure file for the VT package
 configure_file(
