@@ -77,7 +77,8 @@ void RandomLB::runLB() {
     std::random_device rd;
     gen = std::mt19937{rd()};
   } else {
-    int32_t const node_seed = seed_ + static_cast<int32_t>(this_node);
+    using ResultType = std::mt19937::result_type;
+    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
     gen = std::mt19937{node_seed};
   }
   std::uniform_int_distribution<> dist(0, num_nodes-1);
