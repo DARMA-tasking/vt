@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  lb_type.cc
+//                                 randomlb.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,42 +42,69 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/randomlb/randomlb.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <random>
+#include <set>
 
-namespace balance {
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-std::unordered_map<LBType,std::string> lb_names_ = {
-  {LBType::NoLB,           std::string{"NoLB"          }},
-# if backend_check_enabled(zoltan)
-  {LBType::ZoltanLB,       std::string{"ZoltanLB"      }},
-# endif
-  {LBType::GreedyLB,       std::string{"GreedyLB"      }},
-  {LBType::HierarchicalLB, std::string{"HierarchicalLB"}},
-  {LBType::RotateLB,       std::string{"RotateLB"      }},
-  {LBType::GossipLB,       std::string{"GossipLB"      }},
-  {LBType::StatsMapLB,     std::string{"StatsMapLB"    }},
-  {LBType::RandomLB,       std::string{"RandomLB"      }},
-};
+void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
+  proxy = in_proxy;
+}
 
-} /* end namespace balance */
+void RandomLB::inputParams(balance::SpecEntry* spec) {
+  std::vector<std::string> allowed{"seed", "randomize_seed"};
+  spec->checkAllowedKeys(allowed);
+  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
+  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
+}
 
-namespace lb {
+void RandomLB::runLB() {
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 
-std::unordered_map<Statistic,std::string> lb_stat_name_ = {
-  {Statistic::P_l,         std::string{"P_l"}},
-  {Statistic::P_c,         std::string{"P_c"}},
-  {Statistic::P_t,         std::string{"P_t"}},
-  {Statistic::O_l,         std::string{"O_l"}},
-  {Statistic::O_c,         std::string{"O_c"}},
-  {Statistic::O_t,         std::string{"O_t"}},
-  {Statistic::ObjectRatio, std::string{"ObjectRatio"}},
-  {Statistic::EdgeRatio,   std::string{"EdgeRatio"}}
-};
+  if (this_node == 0) {
+    vt_print(
+      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
+      randomize_seed_, seed_
+    );
+    fflush(stdout);
+  }
 
-} /* end namespace lb */
+  std::mt19937 gen;
+  if (randomize_seed_) {
+    std::random_device rd;
+    gen = std::mt19937{rd()};
+  } else {
+    using ResultType = std::mt19937::result_type;
+    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
+    gen = std::mt19937{node_seed};
+  }
+  std::uniform_int_distribution<> dist(0, num_nodes-1);
 
-}}} /* end namespace vt::vrt::collection::balance */
+  startMigrationCollective();
+
+  // Sort the objects so we have a deterministic order over them
+  std::set<ObjIDType> objs;
+  for (auto&& stat : *load_data) {
+    objs.insert(stat.first);
+  }
+
+  for (auto&& obj : objs) {
+    auto const to_node = dist(gen);
+    if (to_node != this_node) {
+      debug_print(
+        lb, node,
+        "RandomLB: migrating obj={:x} from={} to={}\n",
+        obj, this_node, to_node
+      );
+      migrateObjectTo(obj, to_node);
+    }
+  }
+
+  finishMigrationCollective();
+}
+
+}}}} /* end namespace vt::vrt::collection::balance::lb */
+
