@@ -3189,6 +3189,12 @@ CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
 }
 
+template <typename ColT, typename IndexT>
+IndexT CollectionManager::getRange(VirtualProxyType proxy) {
+  auto col_holder = findColHolder<ColT>(proxy);
+  return col_holder->max_idx;
+}
+
 template <typename IndexT>
 std::string CollectionManager::makeMetaFilename(
   std::string file_base, bool make_sub_dirs

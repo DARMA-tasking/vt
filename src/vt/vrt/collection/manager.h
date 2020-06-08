@@ -829,6 +829,16 @@ private:
   );
 
   /**
+   * \brief Get the range that a collection was constructed with
+   *
+   * \param[in] proxy the proxy of the collection
+   *
+   * \return the range of the collection
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  IndexT getRange(VirtualProxyType proxy);
+
+  /**
    * \brief Make the filename for checkpoint/restore
    *
    * \param[in] range range for collection
