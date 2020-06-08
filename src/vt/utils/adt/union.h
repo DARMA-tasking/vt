@@ -520,16 +520,14 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
    * \brief Initialize as \c U with arguments to constructor \c Args
    *
    * \param[in] args constructor arguments
-   *
-   * \return pointer to U
    */
   template <typename U, typename... Args>
-  U* init(Args&&... args) {
+  void init(Args&&... args) {
     staticAssertCorrectness<U>();
     vtAssert(this->which_ == 0, "Must be uninitialized");
     this->which_ = detail::Which<U, T, Ts...>::value;
     auto t = getUnsafe<U>();
-    return new (t) U{std::forward<Args>(args)...};
+    new (t) U{std::forward<Args>(args)...};
   }
 
   /**
