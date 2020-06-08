@@ -31,7 +31,7 @@ management.
 
 ## Building
 
-*vt* can be built with `cmake`.
+*vt* can be built with `cmake` or built inside a `docker` container.
 
 To build *vt*, one must obtain the following dependencies:
 
@@ -39,79 +39,116 @@ To build *vt*, one must obtain the following dependencies:
 
 #### If threading is enabled:
   - OpenMP       _or_
-  - `std::thread`s (default from C++ compiler)
+  - `std::thread`s (default to from C++ compiler)
 
 #### Required:
   - detector,   (*vt* ecosystem)
   - checkpoint, (*vt* ecosystem)
-  - MPI,        (mpich/openmpi/mvapich)
+  - MPI         (mpich/openmpi/mvapich/IBM Spectrum MPI/Cray MPICH/etc.)
 
-### Automatic build
+### Automatically build dependencies
 
-The "auto" builder is located here: [git@github.com:darma-mpi-backend/vt-auto-build.git]()
-
-To learn how to use to auto builder follow the directions in the `vt-auto-build`
-repository. The options to the script can be found by executing this on the
-command line:
+Assuming MPI is installed and accessible via CC/CXX, the only other dependencies
+that are required are checkpoint and detector. The easiest way to get these
+built are to clone them inside `vt/lib`:
 
 ```bash
-$ git clone git@github.com:darma-mpi-backend/vt-auto-build.git
-$ cd vt-auto-build
-$ perl ./auto.pl --help
-  usage auto.pl <arguments>...
-  Format each argument to script as: <argname>=<argval>
-  Example: "auto.pl mode=fast"
-    <argument-name>  |  <required> | <default>           |  <value>
-    build_mode       |  true       | <no-default-value>  |  <no-default-value>
-    compiler_c       |  true       | <no-default-value>  |  <no-default-value>
-    compiler_cxx     |  true       | <no-default-value>  |  <no-default-value>
-    vt_build_mode    |  false      |                     |
-    root_dir         |  false      | <path>              |  <path>
-    build_tests      |  false      | 1                   |  1
-    kokkos           |  false      |                     |
-    build_kokkos     |  false      | 0                   |  0
-    prefix           |  false      |                     |
-    par              |  false      | 14                  |  14
-    dry_run          |  false      | 0                   |  0
-    verbose          |  false      | 0                   |  0
-    clean            |  false      | 0                   |  0
-    backend          |  false      | 0                   |  0
-    atomic           |  false      |                     |
-    mpi_cc           |  false      |                     |
-    mpi_cxx          |  false      |                     |
+$ git clone git@github.com:DARMA-tasking/vt
+$ cd vt/lib
+$ git clone git@github.com:DARMA-tasking/checkpoint
+$ git clone git@github.com:DARMA-tasking/detector
 ```
-This command may get you most of the way there:
+
+With these in `vt/lib`, cmake will automatically build them and stitch them into
+*vt*'s linking process.
+
+Instead of running `cmake`, one may invoke the `vt/ci/build_cpp.sh` script which
+will run `cmake` for *vt* with environment variables for most configuration
+parameters.
+
+#### Environment Variables
+
+| Variable                    | Default Value   | Description |
+| ------------------          | --------------- | ----------- |
+| `CMAKE_BUILD_TYPE`          | Release         | The `cmake` build type |
+| `VT_LB_ENABLED`             | ON              | Enable compile-time load balancing support |
+| `VT_TRACE_ENABLED `         | OFF             | Enable compile-time tracing support |
+| `VT_TRACE_RUNTIME_ENABLED ` | OFF             | Force tracing on at runtime (used in CI for automatically testing tracing on all tests/examples) |
+| `VT_DOXYGEN_ENABLED `       | OFF             | Enable doxygen generation |
+| `VT_MIMALLOC_ENABLED `      | OFF             | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
+| `VT_ASAN_ENABLED `          | OFF             | Enable building with address sanitizer |
+| `VT_POOL_ENABLED `          | ON              | Use memory pool in *vt* for message allocation |
+| `VT_ZOLTAN_ENABLED `        | OFF             | Build with Zoltan enabled for `ZoltanLB` support |
+| `ZOLTAN_DIR `               | (empty)         | Directory pointing to Zoltan installation |
+| `VT_MPI_GUARD_ENABLED `     | OFF             | Enable compile-time load balancing support |
+
+With these set, invoke the script with two arguments: the path to the *vt* root directory and the build path. Here's an example assuming that *vt* is cloned into `/usr/src/vt` with trace enabled in debug mode.
+
+**Usage for building:**
 
 ```bash
-$ perl ./auto.pl build_mode=debug compiler_c=clang-3.9     \
-  compiler_cxx=clang++-3.9 prefix=my-prefix-dir
+$ vt/ci/build_cpp.sh <full-path-to-vt-source> <full-path-to-build-dir>
 ```
-###  Manual Build
 
-To start out, obtain `detector` and `checkpoint` (in that
-order). Stitch them up with cmake, by passing the appropriate paths as they are
-built.
-
-Build and install them.
-
-Once all the dependencies are properly installed, point *vt* cmake to the
-install paths of each one of them. To build *vt*, the script located at
-`vt/scripts/build_pl.pl` can be run to configure `cmake` for building. The
-following is an example of how to use the script to configure with `openmpi` and
-`clang 3.9` compilers:
+**Example:**
 
 ```bash
-$ mkdir vt-build
-$ cd vt-build
-$ perl ../vt/scripts/build_vt.pl build_mode=debug compiler=clang               \
-  compiler_c=mpicc-openmpi-clang39 compiler_cxx=mpicxx-openmpi-clang39         \
-  build_tests=1 vt_install=../vt-install
+$ cd /usr/src
+$ git clone git@github.com:DARMA-tasking/vt
+$ VT_TRACE_ENABLED=1 CMAKE_BUILD_TYPE=Debug /usr/src/vt/ci/build_cpp.sh /usr/src/vt /usr/build/vt
 ```
 
-Run cmake and enjoy!
+### Building with `docker` containerization
 
-If *vt* is built with testing, `make test` can be executed to run the unit and
-integration tests. The components `detector`, and `checkpoint` can be found
-within the *vt* ecosystem. They are separate repositories but are exported as
-separate cmake packages for reusability.
+The easiest way to build *vt* is by using `docker` with the available containers that contain the proper compilers, MPI, and all other dependencies. First, install `docker` on the system. On some systems, `docker-compose` might also need to be installed.
 
+The `docker` builds are configured through `docker-compose` to use a shared, cached filesystem mount with the host for `ccache` to enable fast re-builds.
+
+For `docker-compose`, the following variables can be set to configure the build. One may configure the architecture, compiler type and version, Linux distro (ubuntu or alpine), and distro version.
+
+```
+# Variables:
+#   ARCH={amd64, arm64v8, ...}
+#   COMPILER_TYPE={gnu, clang}
+#   COMPILER={gcc-5, gcc-6, gcc-7, gcc-8, gcc-9, gcc-10,
+#             clang-3.9, clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
+#             clang-9, clang-10}
+#   REPO=lifflander1/vt
+#   UBUNTU={18.04, 20.04}
+#   ULIMIT_CORE=0
+#
+# DARMA/vt Configuration Variables:
+#   VT_LB=1              # Enable load balancing
+#   VT_TRACE=0           # Enable tracing
+#   VT_MIMALLOC=0        # Enable mimalloc memory allocator
+#   VT_DOCS=0            # Enable doxygen build
+#   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
+#   VT_ASAN=0            # Enable address sanitizer
+#   BUILD_TYPE=release   # CMake build type
+```
+
+With these set, run the following for a non-interactive build:
+
+```bash
+$ cd vt
+$ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp
+```
+
+For an interactive build, where one can build, debug, and run `valgrind`, etc:
+
+```bash
+$ cd vt
+$ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp-interactive
+$ /vt/ci/build_cpp.sh /vt /build
+$ /vt/ci/test_cpp.sh /vt /build
+```
+
+For more detailed information on configuring the docker build, read the documentation in `vt/docker-compose.yml`.
+
+## Testing
+
+After *vt* is built succesfully, one may invoke the tests several ways. One may run `make test` or `ninja test` (depending on the generator used) or `ctest`, to run all the tests. Alternatively, the tests can be run automatically from the CI script:
+
+```bash
+$ vt/ci/test_cpp.sh <full-path-to-vt-source> <full-path-to-build-dir>
+```
