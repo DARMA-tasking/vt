@@ -5,6 +5,7 @@ include(cmake/load_local_packages.cmake)
 
 # MPI package
 include(cmake/load_mpi_package.cmake)
+
 # ZLIB package
 include(cmake/load_zlib_package.cmake)
 # Google test package
@@ -15,3 +16,6 @@ include(cmake/load_threading_package.cmake)
 
 # Optionally link with Zoltan
 include(cmake/load_zoltan_package.cmake)
+
+# Perl is used to build the PMPI wrappers
+find_package(Perl)

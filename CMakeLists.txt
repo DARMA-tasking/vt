@@ -44,7 +44,14 @@ include(cmake/build_git_info.cmake)
 
 option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 
-# Add subdirectories for tests and examples
+string(TOLOWER ${CMAKE_BUILD_TYPE} LOWERCASE_CMAKE_BUILD_TYPE)
+if (LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "debug")
+  option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" ON)
+else()
+  option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" OFF)
+endif()
+
+# Bundled dependencies
 if (${vt_fcontext_enabled})
   add_subdirectory(${PROJECT_LIB_DIR}/context)
 endif()

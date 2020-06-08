@@ -32,6 +32,7 @@ set(
   atomic
   memory
   objgroup
+  runtime
   scheduler
   lb
   trace

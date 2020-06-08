@@ -54,6 +54,8 @@
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/runtime/runtime.h"
+#include "vt/runtime/mpi_access.h"
 
 namespace vt { namespace sched {
 
@@ -93,9 +95,25 @@ void Scheduler::enqueue(PriorityType priority, ActionType action) {
 void Scheduler::runWorkUnit(UnitType& work) {
   bool const is_term = work.isTerm();
 
+#if backend_check_enabled(mpi_access_guards)
+  vtAssert(
+    not vt::runtime::ScopedMPIAccess::isExplicitlyGranted(),
+    "Explicit MPI access should not be active when executing work unit."
+  );
+  if (action_depth_ == 0) { // 0 -> 1 transition before work unit executed
+    vt::runtime::ScopedMPIAccess::prohibitByDefault(true);
+  }
+#endif
+
   ++action_depth_;
   work();
   --action_depth_;
+
+#if backend_check_enabled(mpi_access_guards)
+  if (action_depth_ == 0) {
+    vt::runtime::ScopedMPIAccess::prohibitByDefault(false);
+  }
+#endif
 
   if (is_term) {
     --num_term_msgs_;

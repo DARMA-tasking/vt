@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              features_defines.h
+//                               mpi_access.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,32 +42,41 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H
-#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H
+#include "vt/config.h"
+#include "vt/runtime/mpi_access.h"
 
-/*
- * All the defined features/options for debugging and backend enable-ifs
- */
+#if backend_check_enabled(mpi_access_guards)
+namespace vt { namespace runtime {
 
-// backend features, add any new ones to this list
-#define vt_feature_no_feature         0 || vt_feature_cmake_no_feature
-#define vt_feature_bit_check_overflow 0 || vt_feature_cmake_bit_check_overflo
-#define vt_feature_trace_enabled      0 || vt_feature_cmake_trace_enabled
-#define vt_feature_detector           0 || vt_feature_cmake_detector
-#define vt_feature_lblite             0 || vt_feature_cmake_lblite
-#define vt_feature_openmp             0 || vt_feature_cmake_openmp
-#define vt_feature_production         0 || vt_feature_cmake_production
-#define vt_feature_stdthread          0 || vt_feature_cmake_stdthread
-#define vt_feature_mpi_rdma           0 || vt_feature_cmake_mpi_rdma
-#define vt_feature_print_term_msgs    0 || vt_feature_cmake_print_term_msgs
-#define vt_feature_default_threading  0 || vt_feature_cmake_default_threading
-#define vt_feature_no_pool_alloc_env  0 || vt_feature_cmake_no_pool_alloc_env
-#define vt_feature_memory_pool        0 || vt_feature_cmake_memory_pool
-#define vt_feature_priorities         0 || vt_feature_cmake_priorities
-#define vt_feature_cons_multi_idx     0 || vt_feature_cmake_cons_multi_idx
-#define vt_feature_fcontext           0 || vt_feature_cmake_fcontext
-#define vt_feature_mimalloc           0 || vt_feature_cmake_mimalloc
-#define vt_feature_zoltan             0 || vt_feature_cmake_zoltan
-#define vt_feature_mpi_access_guards  0 || vt_feature_cmake_mpi_access_guards
+ScopedMPIAccess::ScopedMPIAccess() {
+  grants_++;
+  // Strong lock-down to prevent accidental nesting.
+  vtAssert(
+    grants_ <= 1,
+    "ScopedMPIAccess should not be logically nested."
+    " Open/close a new scope over the minimal MPI operation."
+  );
+}
 
-#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H*/
+ScopedMPIAccess::~ScopedMPIAccess() {
+  assert(grants_ >= 1 && "Unbalanced access");
+  grants_--;
+}
+
+/*static*/ void ScopedMPIAccess::prohibitByDefault(bool prohibit) {
+  default_prohibit_ = prohibit;
+}
+
+/*static*/ bool ScopedMPIAccess::isExplicitlyGranted() {
+  return grants_ > 0;
+}
+
+/*static*/ bool ScopedMPIAccess::mpiCallsAllowed() {
+  return not default_prohibit_ or grants_ > 0;
+}
+
+/*static*/ int ScopedMPIAccess::grants_ = 0;
+/*static*/ bool ScopedMPIAccess::default_prohibit_ = false;
+
+}} // end namespace vt::runtime
+#endif // backend_check_enabled(mpi_access_guards)
