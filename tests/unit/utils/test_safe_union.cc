@@ -129,6 +129,9 @@ TEST_F(TestSafeUnion, test_safe_union_2) {
   x.get<MyTest>().v = 129;
 
   EXPECT_EQ(x.get<MyTest>().v, 129);
+
+  EXPECT_EQ(destroy_counter, 0);
+
   x.reset();
 
   EXPECT_EQ(destroy_counter, 1);
