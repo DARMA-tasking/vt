@@ -438,7 +438,7 @@ struct UnionCopy<
   UnionCopy() = default;
 
   UnionCopy(UnionCopy&& other) {
-    this->which_ = std::move(other.which_);
+    this->which_ = other.which_;
     if (this->which_ != 0) {
       detail::Move<T, Ts...>::apply(this->which_, other.data_, this->data_);
     }
@@ -462,7 +462,7 @@ struct UnionCopy<
 
   UnionCopy& operator=(UnionCopy&& other) {
     this->reset();
-    this->which_ = std::move(other.which_);
+    this->which_ = other.which_;
     if (this->which_ != 0) {
       detail::Move<T, Ts...>::apply(this->which_, other.data_, this->data_);
     }
