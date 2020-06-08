@@ -44,7 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/proc_stats.h"
-#include "vt/vrt/collection/balance/proc_stats.util.h"
+#include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
 #include "vt/configs/arguments/args.h"
