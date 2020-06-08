@@ -231,6 +231,18 @@ public:
     typename ColT::IndexType range, TagType const& tag = no_tag
   );
 
+  template <
+    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+  >
+  InsertToken<ColT> constructInsert(
+    typename ColT::IndexType range, TagType const& tag = no_tag
+  );
+
+  template <typename ColT>
+  InsertToken<ColT> constructInsertMap(
+    typename ColT::IndexType range, HandlerType const& map_han, TagType const& tag
+  );
+
   template <typename ColT>
   CollectionProxyWrapType<ColT> finishedInsert(InsertToken<ColT>&& token);
 
@@ -814,6 +826,65 @@ private:
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
     VirtualPtrType<ColT, IndexT> vrt_elm_ptr, IndexT const& range,
     HandlerType const& map_han
+  );
+
+  /**
+   * \brief Make the filename for checkpoint/restore
+   *
+   * \param[in] range range for collection
+   * \param[in] idx index of element
+   * \param[in] file_base base file name
+   * \param[in] make_sub_dirs whether to make sub-directories for elements:
+   * useful when the number of collection elements are large
+   * \param[in] files_per_directory number of files to output for each sub-dir
+   *
+   * \return full path of a file for the element
+   */
+  template <typename IndexT>
+  std::string makeFilename(
+    IndexT range, IndexT idx, std::string file_base,
+    bool make_sub_dirs, int files_per_directory
+  );
+
+  /**
+   * \brief Make the filename for meta-data related to checkpoint/restore
+   *
+   * \param[in] file_base base file name
+   *
+   * \return meta-data file name for the node
+   */
+  template <typename IndexT>
+  std::string makeMetaFilename(std::string file_base, bool make_sub_dirs);
+
+  /**
+   * \brief Checkpoint the collection (collective). Must wait for termination
+   * (consistent snapshot) of work on the collection before invoking.
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] file_base the base file name of the files write
+   * \param[in] make_sub_dirs whether to make sub-directories for elements:
+   * useful when the number of collection elements are large
+   * \param[in] files_per_directory number of files to output for each sub-dir
+   *
+   * \return the range of the collection
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  void checkpointToFile(
+    CollectionProxyWrapType<ColT> proxy, std::string const& file_base,
+    bool make_sub_dirs = true, int files_per_directory = 4
+  );
+
+  /**
+   * \brief Restore the collection (collective) from file.
+   *
+   * \param[in] range the range of the collection to restart
+   * \param[in] file_base the base file name for the files to read
+   *
+   * \return proxy to the new collection
+   */
+  template <typename ColT>
+  CollectionProxyWrapType<ColT> restoreFromFile(
+    typename ColT::IndexType range, std::string const& file_base
   );
 
 private:
