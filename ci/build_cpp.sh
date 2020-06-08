@@ -33,21 +33,6 @@ then
     rm -Rf googletest
 fi
 
-git clone -b release-1.8.1 --depth 1 https://github.com/google/googletest.git
-export GTEST=$PWD/googletest
-export GTEST_BUILD=${build_dir}/googletest
-mkdir -p "$GTEST_BUILD"
-cd "$GTEST_BUILD"
-mkdir build
-cd build
-cmake -G "${CMAKE_GENERATOR:-Ninja}" \
-          -DCMAKE_INSTALL_PREFIX="$GTEST_BUILD/install" \
-          "$GTEST"
-cmake --build . --target install
-
-export GTEST_ROOT="$GTEST_BUILD/install"
-
-
 if test -d "${source_dir}/lib/detector"
 then
     echo "Detector already in lib... not downloading, building, and installing"
