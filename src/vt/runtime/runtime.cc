@@ -1108,12 +1108,8 @@ void Runtime::setup() {
   auto action = std::bind(&Runtime::terminationHandler, this);
   theTerm->addDefaultAction(action);
 
-  MPI_Barrier(theContext->getComm());
-
   // wait for all nodes to start up to initialize the runtime
-  theCollective->barrierThen([this]{
-    MPI_Barrier(theContext->getComm());
-  });
+  theCollective->barrier();
 
 # if backend_check_enabled(trace_enabled)
   theTrace->loadAndBroadcastSpec();

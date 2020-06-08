@@ -95,7 +95,8 @@ struct Reduce : virtual collective::tree::Tree {
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
     TagType const& tag = no_tag, SequentialIDType const& seq = no_seq_id,
     ReduceNumType const& num_contrib = 1,
-    VirtualProxyType const& proxy = no_vrt_proxy
+    VirtualProxyType const& proxy = no_vrt_proxy,
+    ObjGroupProxyType objgroup = no_obj_group
   );
 
   template <
