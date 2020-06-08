@@ -54,11 +54,14 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 enum struct LBType : int8_t {
-  NoLB             = 0,
-  GreedyLB         = 1,
-  HierarchicalLB   = 2,
-  RotateLB         = 3,
-  GossipLB         = 4
+    NoLB             = 0
+  , GreedyLB         = 1
+  , HierarchicalLB   = 2
+  , RotateLB         = 3
+  , GossipLB         = 4
+# if backend_check_enabled(zoltan)
+  , ZoltanLB         = 6
+# endif
 };
 
 template <typename SerializerT>

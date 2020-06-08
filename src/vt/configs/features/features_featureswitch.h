@@ -65,5 +65,7 @@
 #define vt_feature_str_trace_enabled      "Tracing Projections"
 #define vt_feature_str_cons_multi_idx     "Collection Constructor Positional"
 #define vt_feature_str_priorities         "Message priorities"
+#define vt_feature_str_zoltan             "Zoltan for load balancing"
+#define vt_feature_str_mimalloc           "mimalloc memory allocator"
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/
