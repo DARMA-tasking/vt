@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/collective/collective_scope.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/pipe/pipe_headers.h"
 
 namespace vt { namespace collective {
 
