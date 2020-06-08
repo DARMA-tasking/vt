@@ -828,6 +828,7 @@ private:
     HandlerType const& map_han
   );
 
+public:
   /**
    * \brief Get the range that a collection was constructed with
    *
