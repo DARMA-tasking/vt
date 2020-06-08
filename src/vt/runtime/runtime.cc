@@ -1299,13 +1299,13 @@ void Runtime::finalizeComponents() {
   theRDMA = nullptr;
 
   // Core components
-  theCollective = nullptr;
   theTerm = nullptr;
   theSched = nullptr;
   theMsg = nullptr;
   theGroup = nullptr;
   theCB = nullptr;
   theObjGroup = nullptr;
+  theCollective = nullptr;
 
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations
