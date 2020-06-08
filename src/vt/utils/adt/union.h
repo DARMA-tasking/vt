@@ -52,6 +52,13 @@ namespace detail {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * \internal \struct Sizer
+ *
+ * \brief Union of char[sizeof(U)] all types (T, Ts...) which is never
+ * constructed but used to calculate the appropriate size of the
+ * \c AlignedCharUnion to hold any of these types.
+ */
 template <typename T, typename... Ts>
 union Sizer {
   char _cur[sizeof(T)];
@@ -65,6 +72,12 @@ union Sizer<T> {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * \internal \struct Aligner
+ *
+ * \brief Contains all the types (T, Ts...) to determine the max alignment
+ * required for them for the alignas in the \c AlignedCharUnion
+ */
 template <typename T, typename... Ts>
 struct Aligner {
   Aligner() = delete;
