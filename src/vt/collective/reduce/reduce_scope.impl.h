@@ -99,12 +99,11 @@ T& ReduceScopeHolder<T>::getOnDemand(U&& scope) {
       "Group reducers cannot be on-demand created -- needs spanning tree"
     );
 
-    scopes_.emplace(
+    iter = scopes_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(scope),
       std::forward_as_tuple(default_creator_(scope))
-    );
-    iter = scopes_.find(scope);
+    ).first;
   }
 
   vtAssert(iter != scopes_.end(), "Scope must exist");
