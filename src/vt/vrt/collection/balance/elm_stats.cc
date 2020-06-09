@@ -141,6 +141,7 @@ void ElementStats::updatePhase(PhaseType const& inc) {
 
   cur_phase_ += inc;
   phase_timings_.resize(cur_phase_ + 1);
+  subphase_timings_.resize(cur_phase_ + 1);
 }
 
 PhaseType ElementStats::getPhase() const {
