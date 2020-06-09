@@ -9,7 +9,7 @@ use lib dirname (__FILE__);
 require "args.pl";
 
 my ($build_mode,$compiler,$has_serial,$build_all_tests,$vt_install);
-my ($vt,$root,$detector,$checkpoint,$gtest);
+my ($vt,$root,$detector,$checkpoint);
 my ($compiler_cxx,$compiler_c,$mpi_cc,$mpi_cxx,$mpi_exec);
 my $libroot = "";
 my $atomic = "";
@@ -45,7 +45,6 @@ $arg->add_optional_arg("mpi_exec",    \$mpi_exec,     "");
 
 $arg->add_optional_func("detector",   \$detector,   "detector-install",   \&mk);
 $arg->add_optional_func("checkpoint", \$checkpoint, "checkpoint-install", \&mk);
-$arg->add_optional_func("gtest",      \$gtest,      "gtest-install",      \&mk);
 
 $arg->add_optional_arg("dry_run",     \$dry_run,     0);
 $arg->add_optional_arg("verbose",     \$verbose,     0);
@@ -92,7 +91,7 @@ my $build_all_str = "";
 if ($build_all_tests > 0) {
     $build_all_str = "";
 } else {
-    $build_all_str = "-DVT_NO_BUILD_TESTS=1 -DVT_NO_BUILD_EXAMPLES=1";
+    $build_all_str = "-DVT_BUILD_TESTS=0 -DVT_BUILD_EXAMPLES=0";
 }
 
 if ($atomic ne "") {
@@ -148,7 +147,6 @@ print STDERR "\tAll tests/examples=$build_all_tests\n";
 print STDERR "\tVT installation directory=$vt_install\n";
 print STDERR "\tCheckpoint=$has_serial, path=$checkpoint\n";
 print STDERR "\tDetector path=$detector\n";
-print STDERR "\tGoogle gtest path=$gtest\n";
 
 my $str =  <<CMAKESTR
 cmake $source_base_dir                                                       \\
@@ -180,8 +178,6 @@ my $finalstr = <<CMAKESTR
       ${detector_on_str}                                                     \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
       -Ddetector_DIR=$detector                                               \\
-      -Dgtest_DIR=$gtest                                                     \\
-      -DGTEST_ROOT=$gtest                                                    \\
       $fast_str                                                              \\
       $atomic                                                                \\
       ${build_all_str}
@@ -193,11 +189,3 @@ if ($dry_run eq "true") {
 } else {
     system "$finalstr 2>&1";
 }
-
-# Why is this needed in some cases?
-#
-# -DGTEST_LIBRARY=$gtest/lib64/libgtest.a                                \\
-# -DGTEST_INCLUDE_DIR=$gtest/include                                     \\
-# -DGTEST_MAIN_LIBRARY=$gtest/lib64/libgtest_main.a                      \\
-#
-#      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                   \\

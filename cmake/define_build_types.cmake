@@ -128,6 +128,26 @@ else()
   set(vt_feature_cmake_mimalloc "0")
 endif()
 
+if (vt_zoltan_enabled)
+  message(STATUS "Building VT with zoltan enabled")
+  set(vt_feature_cmake_zoltan "1")
+else()
+  message(STATUS "Building VT with zoltan disabled")
+  set(vt_feature_cmake_zoltan "0")
+endif()
+
+if (vt_mpi_guards AND PERL_FOUND)
+  message(STATUS "Building VT with user MPI prevention guards enabled")
+  set(vt_feature_cmake_mpi_access_guards "1")
+elseif (vt_mpi_guards AND NOT PERL_FOUND)
+  # No perl? Can't generate wrapper source file.
+  message(STATUS "Building VT with user MPI prevention guards disabled (requested, but perl not found)")
+  set(vt_feature_cmake_mpi_access_guards "0")
+else()
+  message(STATUS "Building VT with user MPI prevention guards disabled")
+  set(vt_feature_cmake_mpi_access_guards "0")
+endif()
+
 set(vt_feature_cmake_no_feature "0")
 set(vt_feature_cmake_production "0")
 

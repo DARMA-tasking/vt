@@ -47,4 +47,10 @@
 
 #define DEBUG_TEST_HARNESS_PRINT 0
 
+// Stub "value" to when not supplying a trailing macro variadic argument.
+// This suppresses warnings while adding a context-relevant semantic hint.
+// Usage:
+//   INSTANTIATE_TYPED_TEST_SUITE_P(test_name, test_class, test_types, DEFAULT_NAME_GEN);
+#define DEFAULT_NAME_GEN
+
 #endif /* __VIRTUAL_TRANSPORT_TEST_CONFIG__ */

@@ -52,9 +52,9 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT = typename ColT::IndexType>
 struct InsertTokenRval {
-  InsertTokenRval(VirtualProxyType const& in_proxy, IndexT&& in_idx)
+  InsertTokenRval(VirtualProxyType const& in_proxy, IndexT in_idx)
     : proxy_(in_proxy),
-      idx_(std::move(in_idx))
+      idx_(in_idx)
   { }
   InsertTokenRval(InsertTokenRval const&) = delete;
   InsertTokenRval(InsertTokenRval&&) = default;
@@ -81,14 +81,50 @@ public:
   virtual ~InsertToken() = default;
 
 public:
-  InsertTokenRval<ColT> operator[](IndexT&& idx) {
-    return InsertTokenRval<ColT>{proxy_,std::forward<IndexT>(idx)};
+  template <
+    typename Tp,
+    typename   = typename std::enable_if<
+      std::is_convertible<
+        typename IndexT::BuildIndexType, typename std::decay<Tp>::type
+      >::value, Tp
+    >::type
+  >
+  InsertTokenRval<ColT> operator[](Tp&& tp) const {
+    return InsertTokenRval<ColT>{proxy_,IndexT{std::forward<Tp>(tp)}};
   }
 
-  template <typename... IdxArgs>
-  InsertTokenRval<ColT> operator[](IdxArgs&&... args) {
-    using Base = typename IndexT::DenseIndexType;
-    return InsertTokenRval<ColT>{proxy_,IndexT(static_cast<Base>(args)...)};
+  template <
+    typename Tp, typename... Tn,
+    typename   = typename std::enable_if<
+      std::is_convertible<
+        typename IndexT::BuildIndexType, typename std::decay<Tp>::type
+      >::value, Tp
+    >::type
+  >
+  InsertTokenRval<ColT> operator()(Tp&& tp, Tn&&... tn) const {
+    return InsertTokenRval<ColT>{
+      proxy_,IndexT{std::forward<Tp>(tp),std::forward<Tn>(tn)...}
+    };
+  }
+
+  template <
+    typename IndexU,
+    typename   = typename std::enable_if<
+      std::is_same<IndexT, typename std::decay<IndexU>::type>::value, IndexU
+    >::type
+  >
+  InsertTokenRval<ColT> operator[](IndexU const& idx) const {
+    return InsertTokenRval<ColT>{proxy_,idx};
+  }
+
+  template <
+    typename IndexU,
+    typename   = typename std::enable_if<
+      std::is_same<IndexT, typename std::decay<IndexU>::type>::value, IndexU
+    >::type
+  >
+  InsertTokenRval<ColT> operator()(IndexU const& idx) const {
+    return InsertTokenRval<ColT>{proxy_,idx};
   }
 
   friend CollectionManager;

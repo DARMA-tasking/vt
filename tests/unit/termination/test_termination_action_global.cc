@@ -58,7 +58,7 @@ TEST_P(TestTermGlobal, test_term_detect_broadcast) /* NOLINT*/{
 }
 
 // routed messages
-TEST_P(TestTermGlobal, test_term_detect_routed) /* NOLINT*/{
+TEST_P(TestTermGlobal, test_term_detect_routed) {
   // there should be at least 3 nodes for this case
   if (channel::all > 2 and channel::node == channel::root) {
     //start computation
@@ -68,13 +68,13 @@ TEST_P(TestTermGlobal, test_term_detect_routed) /* NOLINT*/{
   }
 }
 
-INSTANTIATE_TEST_CASE_P /* NOLINT*/(
+INSTANTIATE_TEST_SUITE_P(
   InstantiationName, TestTermGlobal,
   ::testing::Combine(
     ::testing::Range(0, 3),
     ::testing::Values(false),
     ::testing::Values(1)
-  ),
+  )
 );
 
 }}} // end namespace vt::tests::unit

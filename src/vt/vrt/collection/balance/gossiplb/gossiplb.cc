@@ -187,9 +187,7 @@ void GossipLB::inform() {
   auto msg = makeMessage<ReduceMsgType>();
   proxy_.reduce(msg.get(), cb);
 
-  while (not setup_done_) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
   bool inform_done = false;
   auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
@@ -202,9 +200,7 @@ void GossipLB::inform() {
 
   theTerm()->finishedEpoch(propagate_epoch);
 
-  while (not inform_done) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([&inform_done]{ return not inform_done; });
 
   debug_print(
     gossiplb, node,
@@ -471,9 +467,7 @@ void GossipLB::decide() {
 
   theTerm()->finishedEpoch(lazy_epoch);
 
-  while (not decide_done) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([&decide_done]{ return not decide_done; });
 }
 
 void GossipLB::thunkMigrations() {

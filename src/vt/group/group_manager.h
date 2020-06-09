@@ -61,6 +61,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/collective/tree/tree.h"
 #include "vt/collective/reduce/reduce.h"
+#include "vt/collective/collective_scope.h"
 
 #include <memory>
 #include <unordered_map>
@@ -86,6 +87,7 @@ struct GroupManager {
   >;
   using ReduceType = collective::reduce::Reduce;
   using ReducePtrType = ReduceType*;
+  using CollectiveScopeType = collective::CollectiveScope;
 
   GroupManager();
 
@@ -187,6 +189,7 @@ private:
   RemoteOperationIDType cur_collective_id_            = 0xFFFFFFFF00000000;
   ActionContainerType   continuation_actions_         = {};
   ActionListType        cleanup_actions_              = {};
+  CollectiveScopeType   collective_scope_;
 };
 
 // This is a separate template class because Intel 18 didn't like

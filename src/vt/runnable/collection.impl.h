@@ -77,11 +77,10 @@ template <typename MsgT, typename ElementT>
 
     auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
 
-    processing_tag =
-      theTrace()->beginProcessing(
-        trace_id, msg_size, trace_event, from_node,
-        trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-      );
+    processing_tag = theTrace()->beginProcessing(
+      trace_id, msg_size, trace_event, from_node,
+      idx1, idx2, idx3, idx4
+    );
   }
 #endif
 

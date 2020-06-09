@@ -103,13 +103,14 @@ MPI_Comm InfoColl::getComm() const {
 
 void InfoColl::freeComm() {
   if (mpi_group_comm != MPI_COMM_WORLD) {
-    MPI_Comm_free(&mpi_group_comm);
-    mpi_group_comm = MPI_COMM_WORLD;
+    theGroup()->collective_scope_.mpiCollectiveWait([this]{
+      MPI_Comm_free(&mpi_group_comm);
+      mpi_group_comm = MPI_COMM_WORLD;
+    });
   }
 }
 
 void InfoColl::setupCollective() {
-  auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const& group_ = getGroupID();
 
@@ -137,9 +138,18 @@ void InfoColl::setupCollective() {
   );
 
   if (make_mpi_group_) {
-    auto const cur_comm = theContext()->getComm();
-    int32_t const group_color = in_group;
-    MPI_Comm_split(cur_comm, group_color, this_node, &mpi_group_comm);
+    // Create the MPI group, and wait for all nodes to get here. In theory, this
+    // might be overlapable with VT's group construction, but for now just wait
+    // on it here. These should be ordered within this scope, as the collective
+    // group creation is a collective invocation.
+    theGroup()->collective_scope_.mpiCollectiveWait(
+      [in_group,this]{
+        auto const this_node_impl = theContext()->getNode();
+        auto const cur_comm = theContext()->getComm();
+        int32_t const group_color = in_group;
+        MPI_Comm_split(cur_comm, group_color, this_node_impl, &mpi_group_comm);
+      }
+    );
   }
 
   up_tree_cont_       = makeCollectiveContinuation(group_);

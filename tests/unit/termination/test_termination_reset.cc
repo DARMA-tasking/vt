@@ -83,9 +83,7 @@ TEST_F(TestTermReset, test_termination_reset_1) {
     });
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
+  theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
 
   rt->reset();
 

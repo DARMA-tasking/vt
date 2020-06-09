@@ -321,8 +321,9 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
   }
 }
 
-TYPED_TEST_CASE_P(TestLocationRoute);  /* NOLINT */
-TYPED_TEST_P(TestLocationRoute, test_route_entity)  /* NOLINT */ {
+TYPED_TEST_SUITE_P(TestLocationRoute);
+
+TYPED_TEST_P(TestLocationRoute, test_route_entity) {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
@@ -441,12 +442,15 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
   }
 }
 
-REGISTER_TYPED_TEST_CASE_P /* NOLINT */ (
+REGISTER_TYPED_TEST_SUITE_P(
   TestLocationRoute,
   test_route_entity, test_entity_cache_hits, test_entity_cache_migrated_entity
 );
-INSTANTIATE_TYPED_TEST_CASE_P /* NOLINT */ (
-  Message, TestLocationRoute, location::MsgType
+
+using LocationMsgType = location::MsgType;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_location_message, TestLocationRoute, LocationMsgType, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

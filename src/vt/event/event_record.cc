@@ -44,6 +44,7 @@
 
 #include "vt/event/event.h"
 #include "vt/event/event_record.h"
+#include "vt/runtime/mpi_access.h"
 
 #include <memory>
 
@@ -56,7 +57,7 @@ EventRecord::EventRecord(EventRecordType const& type, EventType const& id)
 
   switch (type) {
   case EventRecordType::MPI_EventRecord:
-    event_union_.mpi_req = MPI_Request();
+    event_union_.mpi_req = MPI_REQUEST_NULL;
     break;
   case EventRecordType::NormalEventRecord:
     break;
@@ -83,7 +84,10 @@ bool EventRecord::testMPIEventReady() {
   MPI_Request* req = getRequest();
   MPI_Status stat;
 
-  MPI_Test(req, &flag, &stat);
+  {
+    VT_ALLOW_MPI_CALLS;
+    MPI_Test(req, &flag, &stat);
+  }
 
   bool const mpiready = flag == 1;
 

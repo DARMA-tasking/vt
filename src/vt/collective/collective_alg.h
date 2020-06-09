@@ -53,7 +53,9 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/scatter/scatter.h"
 #include "vt/utils/hash/hash_tuple.h"
+#include "vt/collective/collective_scope.h"
 
+#include <memory>
 #include <unordered_map>
 
 namespace vt { namespace collective {
@@ -83,6 +85,45 @@ struct CollectiveAlg :
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
 
+public:
+  /**
+   * \brief Create a new scope for sequenced MPI operations. Each scope has a
+   * distinct, independent collective sequence of operations.
+   *
+   * \param[in] tag integer identifier (default value means allocate a new
+   * system scope)
+   *
+   * \return a new collective scope with sequenced operations
+   */
+  CollectiveScope makeCollectiveScope(TagType scope_tag = no_tag);
+
+private:
+  friend struct CollectiveScope;
+
+  struct CollectiveMsg : vt::collective::ReduceNoneMsg {
+    CollectiveMsg(
+      bool in_is_user_tag, TagType in_scope, TagType in_seq, NodeType in_root
+    ) : is_user_tag_(in_is_user_tag),
+        scope_(in_scope),
+        seq_(in_seq),
+        root_(in_root)
+    { }
+
+    bool is_user_tag_ = false;
+    TagType scope_ = no_tag;
+    TagType seq_ = no_tag;
+    NodeType root_ = uninitialized_destination;
+  };
+
+  static void runCollective(CollectiveMsg* msg);
+
+private:
+  using ScopeMapType = std::unordered_map<TagType, std::unique_ptr<detail::ScopeImpl>>;
+
+  TagType next_system_scope_ = 1;     /**< The next system allocated scope */
+  ScopeMapType user_scope_;           /**< Live scopes with user tag */
+  ScopeMapType system_scope_;         /**< Live scopes with system tag */
+  std::vector<MsgSharedPtr<CollectiveMsg>> postponed_collectives_;
 };
 
 using ReduceMsg = reduce::ReduceMsg;

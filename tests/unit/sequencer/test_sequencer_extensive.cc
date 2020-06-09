@@ -265,9 +265,9 @@ TEST_P(TestSequencerExtensive, test_wait_1) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   test_sequencer_extensive, TestSequencerExtensive,
-  testing::ValuesIn(make_values()),
+  testing::ValuesIn(make_values())
 );
 
 }}} // end namespace vt::tests::unit

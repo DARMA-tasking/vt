@@ -14,10 +14,10 @@ macro(add_example example_name)
   add_executable(${example_name} ${EXAMPLE_FILE})
   add_dependencies(examples ${example_name})
 
-  link_target_with_vt(
-    TARGET ${example_name}
-    DEFAULT_LINK_SET
-  )
+    link_target_with_vt(
+      TARGET ${EXAMPLE_NAME}
+      DEFAULT_LINK_SET
+    )
 
   if (BUILD_TESTING)
     add_test_for_example_vt(

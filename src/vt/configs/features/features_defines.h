@@ -67,5 +67,7 @@
 #define vt_feature_cons_multi_idx     0 || vt_feature_cmake_cons_multi_idx
 #define vt_feature_fcontext           0 || vt_feature_cmake_fcontext
 #define vt_feature_mimalloc           0 || vt_feature_cmake_mimalloc
+#define vt_feature_zoltan             0 || vt_feature_cmake_zoltan
+#define vt_feature_mpi_access_guards  0 || vt_feature_cmake_mpi_access_guards
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H*/
