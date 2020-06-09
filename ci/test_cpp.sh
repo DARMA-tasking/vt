@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -exo pipefail
 
 source_dir=${1}
 build_dir=${2}
