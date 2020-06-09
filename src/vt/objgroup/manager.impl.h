@@ -287,15 +287,15 @@ void ObjGroupManager::broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
 }
 
 template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType ObjGroupManager::reduce(
-  ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg, EpochType epoch, TagType tag
+void ObjGroupManager::reduce(
+  ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg,
+  collective::reduce::ReduceStamp const& stamp
 ) {
   auto const root = 0;
-  auto const contrib = 1;
   auto const objgroup = proxy.getProxy();
-  return theCollective()->reduce<MsgT,f>(
-    root, msg.get(), tag, epoch, contrib, no_vrt_proxy, objgroup
-  );
+
+  auto r = theCollective()->getReducerObjGroup(objgroup);
+  r->template reduce<MsgT,f>(root, msg.get(), stamp);
 }
 
 template <typename ObjT>

@@ -80,16 +80,16 @@ TagType CollectiveScope::mpiCollectiveAsync(ActionType action) {
 
   using CollectiveMsg = CollectiveAlg::CollectiveMsg;
   auto cb = theCB()->makeBcast<CollectiveMsg,&CollectiveAlg::runCollective>();
-
-  // Put this in a separate namespace
-  // @todo: broader issue: need to implement a better way to scope reductions
-  auto ident = 0xEFFFFFFFFFFFFFFF;
   auto msg = makeMessage<CollectiveMsg>(is_user_tag_, scope_, tag, collective_root);
 
   // The tag for the reduce is a combination of the scope and seq tag.
-  theCollective()->reduce<collective::None>(
-    collective_root, msg.get(), cb, scope_, no_seq_id, 1, ident, tag
-  );
+  auto r = theCollective()->reducer();
+
+  using collective::reduce::makeStamp;
+  using collective::reduce::TagPair;
+
+  auto stamp = makeStamp<TagPair>(scope_, tag);
+  r->reduce<collective::None>(collective_root, msg.get(), cb, stamp);
 
   return tag;
 }

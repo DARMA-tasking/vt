@@ -47,36 +47,29 @@
 
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce_state.h"
-#include "vt/collective/reduce/reduce_hash.h"
+#include "vt/collective/reduce/reduce_scope.h"
 
 #include <unordered_map>
 
 namespace vt { namespace collective { namespace reduce {
 
-template <typename T>
 struct ReduceStateHolder {
-  using ReduceIDType    = ReduceIdentifierType;
-  using ReduceStateType = ReduceState<T>;
-  using LookupType      = std::unordered_map<ReduceIDType,ReduceStateType>;
-  using GroupLookupType = std::unordered_map<GroupType, LookupType>;
+  using ReduceIDType    = detail::ReduceStamp;
+  using ReduceStateType = ReduceState;
 
 public:
-  static bool exists(GroupType group, ReduceIDType const& id);
+  bool exists(ReduceIDType const& id);
 
-  static ReduceStateType& find(GroupType group, ReduceIDType const& id);
+  ReduceStateType& find(ReduceIDType const& id);
 
-  static void erase(GroupType group, ReduceIDType const& id);
+  void erase(ReduceIDType const& id);
 
-  static void insert(
-    GroupType group, ReduceIDType const& id, ReduceStateType&& state
-  );
+  void insert(ReduceIDType const& id, ReduceStateType&& state);
 
 private:
-  static GroupLookupType state_lookup_;
+  std::unordered_map<detail::ReduceStamp, ReduceState> state_lookup_;
 };
 
 }}} /* end namespace vt::collective::reduce */
-
-#include "vt/collective/reduce/reduce_state_holder.impl.h"
 
 #endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_H*/

@@ -51,124 +51,100 @@
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/messaging/active.h"
 #include "vt/runnable/general.h"
-#include "vt/group/group_headers.h"
 #include "vt/messaging/message.h"
 
 namespace vt { namespace collective { namespace reduce {
 
-template <typename MessageT>
-/*static*/ void Reduce::reduceUp(MessageT* msg) {
-  auto const grp = envelopeGetGroup(msg->env);
+template <typename MsgT>
+void Reduce::reduceUp(MsgT* msg) {
+  vtAssert(msg->scope() == scope_, "Must match correct scope");
+
   debug_print(
     reduce, node,
-    "reduceUp: group={:x}, tag={}, seq={}, vrt={}, msg={}\n",
-    grp, msg->reduce_tag_, msg->reduce_seq_, msg->reduce_proxy_, print_ptr(msg)
+    "reduceUp: scope={}, stamp={}, msg={}\n",
+    msg->scope().str(), detail::stringizeStamp(msg->stamp()), print_ptr(msg)
   );
-  if (grp == default_group) {
-    theCollective()->reduceAddMsg<MessageT>(msg,false);
-    theCollective()->reduceNewMsg<MessageT>(msg);
-  } else {
-    theGroup()->groupReduce(grp)->template reduceAddMsg<MessageT>(msg,false);
-    theGroup()->groupReduce(grp)->template reduceNewMsg<MessageT>(msg);
-  }
+
+  reduceAddMsg<MsgT>(msg,false);
+  reduceNewMsg<MsgT>(msg);
 }
 
-template <typename MessageT>
-/*static*/ void Reduce::reduceRootRecv(MessageT* msg) {
+template <typename MsgT>
+void Reduce::reduceRootRecv(MsgT* msg) {
   auto const& handler = msg->combine_handler_;
   msg->next_ = nullptr;
   msg->count_ = 1;
   msg->is_root_ = true;
   auto const& from_node = theMsg()->getFromNodeCurrentHandler();
-  runnable::Runnable<MessageT>::run(handler, nullptr, msg, from_node);
+  runnable::Runnable<MsgT>::run(handler, nullptr, msg, from_node);
 }
 
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-SequentialIDType Reduce::reduce(
-  NodeType const& root, MsgT* msg, Callback<MsgT> cb, TagType const& tag,
-  SequentialIDType const& seq, ReduceNumType const& num_contrib,
-  VirtualProxyType const& proxy, ObjGroupProxyType objgroup
+detail::ReduceStamp Reduce::reduce(
+  NodeType const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
+  ReduceNumType const& num_contrib
 ) {
   msg->setCallback(cb);
-  return reduce<MsgT,f>(root,msg,tag,seq,num_contrib,proxy,objgroup);
+  return reduce<MsgT,f>(root,msg,id,num_contrib);
 }
 
 template <
   typename OpT, typename FunctorT, typename MsgT, ActiveTypedFnType<MsgT> *f
 >
-SequentialIDType Reduce::reduce(
-  NodeType const& root, MsgT* msg, TagType const& tag,
-  SequentialIDType const& seq, ReduceNumType const& num_contrib,
-  VirtualProxyType const& proxy
+detail::ReduceStamp Reduce::reduce(
+  NodeType const& root, MsgT* msg, detail::ReduceStamp id,
+  ReduceNumType const& num_contrib
 ) {
-  return reduce<MsgT,f>(root,msg,tag,seq,num_contrib,proxy);
+  return reduce<MsgT,f>(root,msg,id,num_contrib);
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-SequentialIDType Reduce::reduce(
-  NodeType root, MessageT* const msg, TagType tag, SequentialIDType seq,
-  ReduceNumType num_contrib, VirtualProxyType proxy, ObjGroupProxyType objgroup
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+detail::ReduceStamp Reduce::reduce(
+  NodeType root, MsgT* const msg, detail::ReduceStamp id,
+  ReduceNumType num_contrib
 ) {
-  if (group_ != default_group) {
-    envelopeSetGroup(msg->env, group_);
+  if (scope_.get().is<detail::StrongGroup>()) {
+    envelopeSetGroup(msg->env, scope_.get().get<detail::StrongGroup>().get());
   }
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
+  auto cur_id = id == detail::ReduceStamp{} ? generateNextID() : id;
+
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>(msg);
   msg->combine_handler_ = han;
-  msg->reduce_tag_ = tag;
   msg->reduce_root_ = root;
-  msg->reduce_proxy_ = proxy;
-  msg->reduce_objgroup_ = objgroup;
+  msg->reduce_id_ = detail::ReduceIDImpl{cur_id, scope_};
+
   debug_print(
     reduce, node,
-    "reduce: group={:x}, tag={}, seq={}, vrt={}, objgrp={}, contrib={}, "
-    "msg={}, ref={}\n",
-    group_, msg->reduce_tag_, msg->reduce_seq_, msg->reduce_proxy_,
-    msg->reduce_objgroup_, num_contrib, print_ptr(msg), envelopeGetRef(msg->env)
+    "reduce: scope={}, stamp={}, contrib={}, msg={}, ref={}\n",
+    scope_.str(), detail::stringizeStamp(id), num_contrib, print_ptr(msg),
+    envelopeGetRef(msg->env)
   );
-  if (seq == no_seq_id) {
-    auto reduce_seq_lookup = std::make_tuple(proxy,tag,objgroup);
-    auto iter = next_seq_for_tag_.find(reduce_seq_lookup);
-    if (iter == next_seq_for_tag_.end()) {
-      next_seq_for_tag_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(reduce_seq_lookup),
-        std::forward_as_tuple(SequentialIDType{1})
-      );
-      iter = next_seq_for_tag_.find(reduce_seq_lookup);
-    }
-    vtAssert(iter != next_seq_for_tag_.end(), "Must exist now");
-    msg->reduce_seq_ = iter->second++;
-  } else {
-    msg->reduce_seq_ = seq;
-  }
-  reduceAddMsg<MessageT>(msg,true,num_contrib);
-  reduceNewMsg<MessageT>(msg);
-  return msg->reduce_seq_;
+
+  reduceAddMsg<MsgT>(msg,true,num_contrib);
+  reduceNewMsg<MsgT>(msg);
+
+  return cur_id;
 }
 
-template <typename MessageT>
+template <typename MsgT>
 void Reduce::reduceAddMsg(
-  MessageT* msg, bool const local, ReduceNumType num_contrib
+  MsgT* msg, bool const local, ReduceNumType num_contrib
 ) {
-  auto lookup = ReduceIdentifierType{
-    msg->reduce_tag_,
-    msg->reduce_seq_,
-    msg->reduce_proxy_,
-    msg->reduce_objgroup_
-  };
+  auto lookup = msg->stamp();
 
-  auto exists = ReduceStateHolder<MessageT>::exists(group_,lookup);
+  auto exists = state_.exists(lookup);
+
   if (not exists) {
     auto num_contrib_state = num_contrib == -1 ? 1 : num_contrib;
-    ReduceState<MessageT> state(
-      msg->reduce_tag_,msg->reduce_seq_,num_contrib_state
-    );
-    ReduceStateHolder<MessageT>::insert(group_,lookup,std::move(state));
+    ReduceState state(num_contrib_state);
+    state_.insert(lookup,std::move(state));
   }
 
-  auto& state = ReduceStateHolder<MessageT>::find(group_,lookup);
+  auto& state = state_.find(lookup);
   auto msg_ptr = promoteMsg(msg);
-  state.msgs.push_back(msg_ptr);
+
+  // Run-time cast with lasting type info to ReduceMsg for holder
+  state.msgs.push_back(msg_ptr.template to<ReduceMsg>());
   if (num_contrib != -1) {
     state.num_contrib_ = num_contrib;
   }
@@ -179,19 +155,17 @@ void Reduce::reduceAddMsg(
   state.reduce_root_ = msg->reduce_root_;
   debug_print(
     reduce, node,
-    "reduceAddMsg: group={:x}, msg={}, contrib={}, msgs.size()={}, ref={}\n",
-    group_, print_ptr(msg), state.num_contrib_,
-    state.msgs.size(), envelopeGetRef(msg->env)
+    "reduceAddMsg: scope={}, stamp={}, msg={}, contrib={}, msgs.size()={}, "
+    "ref={}\n",
+    scope_.str(), detail::stringizeStamp(lookup), print_ptr(msg),
+    state.num_contrib_, state.msgs.size(), envelopeGetRef(msg->env)
   );
 }
 
-template <typename MessageT>
-void Reduce::startReduce(
-  TagType tag, SequentialIDType seq, VirtualProxyType proxy,
-  ObjGroupProxyType objgroup, bool use_num_contrib
-) {
-  auto lookup = ReduceIdentifierType{tag,seq,proxy,objgroup};
-  auto& state = ReduceStateHolder<MessageT>::find(group_,lookup);
+template <typename MsgT>
+void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
+  auto lookup = id;
+  auto& state = state_.find(lookup);
 
   std::size_t nmsgs = state.msgs.size();
   auto const contrib =
@@ -201,10 +175,10 @@ void Reduce::startReduce(
 
   debug_print(
     reduce, node,
-    "startReduce: group={:x}, tag={}, seq={}, vrt={}, msg={}, children={}, "
+    "startReduce: scope={}, stamp={}, msg={}, children={}, "
     "contrib_={}, local_contrib_={}, nmsgs={}, ready={}\n",
-    group_, tag, seq, proxy, state.msgs.size(), getNumChildren(),
-    state.num_contrib_, state.num_local_contrib_, nmsgs, ready
+    scope_.str(), detail::stringizeStamp(id), state.msgs.size(),
+    getNumChildren(), state.num_contrib_, state.num_local_contrib_, nmsgs, ready
   );
 
   if (ready) {
@@ -213,37 +187,42 @@ void Reduce::startReduce(
       auto size = state.msgs.size();
       for (decltype(size) i = 0; i < size; i++) {
         bool const has_next = i+1 < size;
-        state.msgs[i]->next_ = has_next ? state.msgs[i+1].get() : nullptr;
-        state.msgs[i]->count_ = size - i;
-        state.msgs[i]->is_root_ = false;
+        auto typed_msg = static_cast<MsgT*>(state.msgs[i].get());
+        typed_msg->next_ = has_next ?
+          static_cast<MsgT*>(state.msgs[i+1].get()) : nullptr;
+        typed_msg->count_ = size - i;
+        typed_msg->is_root_ = false;
 
-        debug_print(
+        debug_print_verbose(
           reduce, node,
-          "i={} next={} has_next={} count={} msgs.size()={}, ref={}\n",
-          i, print_ptr(state.msgs[i]->next_), has_next, state.msgs[i]->count_,
-          size, envelopeGetRef(state.msgs[i]->env)
+          "scope={}, stamp={}: i={} next={} has_next={} count={} msgs.size()={} "
+          "ref={}\n",
+          scope_.str(), detail::stringizeStamp(id),
+          i, print_ptr(typed_msg->next_), has_next, typed_msg->count_,
+          size, envelopeGetRef(typed_msg->env)
         );
       }
 
-      debug_print(
+      debug_print_verbose(
         reduce, node,
-        "msgs.size()={}\n", size
+        "scope={}, stamp={}, msgs.size()={}\n",
+        scope_.str(), detail::stringizeStamp(id), size
       );
 
-       /*
-        *  Invoke user handler to run the functor that combines messages,
-        *  applying the reduction operator
-        */
+      /*
+       *  Invoke user handler to run the functor that combines messages,
+       *  applying the reduction operator
+       */
       auto const& handler = state.combine_handler_;
       auto const& from_node = theMsg()->getFromNodeCurrentHandler();
-      runnable::Runnable<MessageT>::run(
-        handler,nullptr,static_cast<MessageT*>(state.msgs[0].get()),from_node
+      runnable::Runnable<MsgT>::run(
+        handler,nullptr,static_cast<MsgT*>(state.msgs[0].get()),from_node
       );
     }
 
     // Send to parent
     auto msg = state.msgs[0];
-    auto typed_msg = static_cast<MessageT*>(msg.get());
+    auto typed_msg = static_cast<MsgT*>(msg.get());
     ActionType cont = nullptr;
 
     state.msgs.clear();
@@ -255,15 +234,16 @@ void Reduce::startReduce(
       if (root != this_node) {
         debug_print(
           reduce, node,
-          "reduce notify root (send): root={}, node={}\n", root, this_node
+          "reduce notify root (send): scope={}, stamp={}, root={}, node={}\n",
+          scope_.str(), detail::stringizeStamp(id), root, this_node
         );
 
-        theMsg()->sendMsg<MessageT,reduceRootRecv<MessageT>>(root,typed_msg);
+        theMsg()->sendMsg<MsgT,ReduceManager::reduceRootRecv<MsgT>>(root,typed_msg);
       } else {
         debug_print(
           reduce, node,
-          "reduce notify root (deliver directly): root={}, node={}\n",
-          root, this_node
+          "reduce notify root (direct): scope={}, stamp={}, root={}, node={}\n",
+          scope_.str(), detail::stringizeStamp(id), root, this_node
         );
         reduceRootRecv(typed_msg);
       }
@@ -271,21 +251,18 @@ void Reduce::startReduce(
       auto const& parent = getParent();
       debug_print(
         reduce, node,
-        "reduce send to parent: parent={}\n", parent
+        "reduce send to parent: scope={}, stamp={}, parent={}\n",
+        scope_.str(), detail::stringizeStamp(id), parent
       );
-      theMsg()->sendMsg<MessageT,reduceUp<MessageT>>(parent,typed_msg);
+      theMsg()->sendMsg<MsgT,ReduceManager::reduceUp<MsgT>>(parent,typed_msg);
     }
   }
 }
 
-template <typename MessageT>
-void Reduce::reduceNewMsg(MessageT* msg) {
-  return startReduce<MessageT>(
-    msg->reduce_tag_,
-    msg->reduce_seq_,
-    msg->reduce_proxy_,
-    msg->reduce_objgroup_
-  );
+template <typename MsgT>
+void Reduce::reduceNewMsg(MsgT* msg) {
+  vtAssert(msg->scope() == scope_, "Must match correct scope");
+  return startReduce<MsgT>(msg->stamp());
 }
 
 }}} /* end namespace vt::collective::reduce */

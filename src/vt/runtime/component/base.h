@@ -45,13 +45,22 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
 
+#include "vt/configs/types/types_type.h"
 #include "vt/runtime/component/diagnostic.h"
 #include "vt/runtime/component/bufferable.h"
 #include "vt/runtime/component/progressable.h"
 
 #include <string>
 
+namespace vt { namespace collective { namespace reduce {
+
+struct Reduce;
+
+}}} /* end namespace vt::collective::reduce */
+
 namespace vt { namespace runtime { namespace component {
+
+struct ComponentPack;
 
 /**
  * \struct BaseComponent base.h vt/runtime/component/base.h
@@ -99,6 +108,15 @@ struct BaseComponent : Diagnostic, Bufferable, Progressable {
   virtual std::string name() = 0;
 
   virtual ~BaseComponent() { }
+
+  friend struct ComponentPack;
+
+  ComponentIDType getComponentID() const { return component_id_; }
+
+  collective::reduce::Reduce* reducer();
+
+protected:
+  ComponentIDType component_id_ = 0;
 };
 
 }}} /* end namespace vt::runtime::component */

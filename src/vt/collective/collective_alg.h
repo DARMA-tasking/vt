@@ -50,7 +50,8 @@
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/message.h"
 #include "vt/collective/barrier/barrier.h"
-#include "vt/collective/reduce/reduce.h"
+#include "vt/collective/reduce/reduce_manager.h"
+#include "vt/collective/reduce/operators/default_msg.h"
 #include "vt/collective/scatter/scatter.h"
 #include "vt/utils/hash/hash_tuple.h"
 #include "vt/runtime/component/component_pack.h"
@@ -65,7 +66,7 @@ constexpr CollectiveAlgType const fst_collective_alg = 1;
 
 struct CollectiveAlg :
     runtime::component::Component<CollectiveAlg>,
-    virtual reduce::Reduce,
+    virtual reduce::ReduceManager,
     virtual barrier::Barrier,
     virtual scatter::Scatter
 {
@@ -141,7 +142,7 @@ extern collective::CollectiveAlg *theCollective();
 
 } //end namespace vt
 
-#include "vt/collective/reduce/reduce.impl.h"
+#include "vt/collective/reduce/reduce_manager.impl.h"
 #include "vt/collective/scatter/scatter.impl.h"
 
 #endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H*/

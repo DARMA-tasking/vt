@@ -60,8 +60,8 @@ Reducable<ColT,IndexT,BaseProxyT>::Reducable(VirtualProxyType const in_proxy)
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
-  MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch, TagType const& tag
+void Reducable<ColT,IndexT,BaseProxyT>::reduce(
+  MsgT *const msg, Callback<MsgT> cb, ReduceStamp stamp
 ) const {
   auto const proxy = this->getProxy();
   msg->setCallback(cb);
@@ -71,60 +71,53 @@ EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
     print_ptr(msg)
   );
   auto const root_node = 0;
-  return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,epoch,tag,root_node);
+  return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,stamp,root_node);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename OpT, typename FunctorT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
-  MsgT *const msg, EpochType const& epoch, TagType const& tag
+void Reducable<ColT,IndexT,BaseProxyT>::reduce(
+  MsgT *const msg, ReduceStamp stamp
 ) const {
   auto const proxy = this->getProxy();
   auto const root_node = 0;
-  return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,epoch,tag,root_node);
+  return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,stamp,root_node);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
-  MsgT *const msg, EpochType const& epoch, TagType const& tag,
-  NodeType const& node
+void Reducable<ColT,IndexT,BaseProxyT>::reduce(
+  MsgT *const msg, ReduceStamp stamp, NodeType const& node
 ) const {
   auto const proxy = this->getProxy();
-  return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,epoch,tag,node);
+  return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,stamp,node);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
-  MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch,
-  TagType const& tag, NodeType const& node
+void Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
+  MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, NodeType const& node
 ) const {
   auto const proxy = this->getProxy();
-  return theCollection()->reduceMsgExpr<ColT,MsgT,f>(
-    proxy,msg,fn,epoch,tag,node
-  );
+  return theCollection()->reduceMsgExpr<ColT,MsgT,f>(proxy,msg,fn,stamp,node);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType Reducable<ColT,IndexT,BaseProxyT>::reduce(
-  MsgT *const msg, EpochType const& epoch, TagType const& tag, IndexT const& idx
+void Reducable<ColT,IndexT,BaseProxyT>::reduce(
+  MsgT *const msg, ReduceStamp stamp, IndexT const& idx
 ) const {
   auto const proxy = this->getProxy();
-  return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,epoch,tag,idx);
+  return theCollection()->reduceMsg<ColT,MsgT,f>(proxy,msg,stamp,idx);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
-  MsgT *const msg, ReduceIdxFuncType fn, EpochType const& epoch,
-  TagType const& tag, IndexT const& idx
+void Reducable<ColT,IndexT,BaseProxyT>::reduceExpr(
+  MsgT *const msg, ReduceIdxFuncType fn, ReduceStamp stamp, IndexT const& idx
 ) const {
   auto const proxy = this->getProxy();
-  return theCollection()->reduceMsgExpr<ColT,MsgT,f>(
-    proxy,msg,fn,epoch,tag,idx
-  );
+  return theCollection()->reduceMsgExpr<ColT,MsgT,f>(proxy,msg,fn,stamp,idx);
 }
 
 }}} /* end namespace vt::vrt::collection */

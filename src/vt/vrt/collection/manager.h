@@ -103,13 +103,14 @@ struct CollectionManager
   using NoElementActionType = std::function<void()>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
+  using ReduceVirtualIDType = collective::reduce::ReduceVirtualIDType;
+  using ReduceStamp = collective::reduce::ReduceStamp;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
     VirtualProxyType, ActionContainerType
   >;
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using CollectionProxyWrapType = CollectionProxy<ColT,IndexT>;
-  using ReduceIDType = ::vt::collective::reduce::ReduceSeqLookupType;
   template <typename ColT>
   using EpochBcastType = std::unordered_map<EpochType,CollectionMessage<ColT>*>;
   template <typename ColT>
@@ -409,33 +410,31 @@ public:
    *  Reduce all elements of a collection
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  SequentialIDType reduceMsg(
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-    MsgT *const msg, SequentialIDType seq = no_seq_id,
-    TagType tag = no_tag, NodeType root_node = uninitialized_destination
-  );
-
-  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  SequentialIDType reduceMsg(
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-    MsgT *const msg, SequentialIDType seq, TagType tag,
-    typename ColT::IndexType const& idx
-  );
-
-  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  SequentialIDType reduceMsgExpr(
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-    MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-    SequentialIDType seq = no_seq_id, TagType tag = no_tag,
+  void reduceMsg(
+    CollectionProxyWrapType<ColT> const& proxy,
+    MsgT *const msg, ReduceStamp stamp = ReduceStamp{},
     NodeType root_node = uninitialized_destination
   );
 
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  SequentialIDType reduceMsgExpr(
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+  void reduceMsg(
+    CollectionProxyWrapType<ColT> const& proxy,
+    MsgT *const msg, ReduceStamp stamp, typename ColT::IndexType const& idx
+  );
+
+  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+  void reduceMsgExpr(
+    CollectionProxyWrapType<ColT> const& proxy,
     MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-    SequentialIDType seq, TagType tag,
-    typename ColT::IndexType const& idx
+    ReduceStamp stamp = ReduceStamp{},
+    NodeType root_node = uninitialized_destination
+  );
+
+  template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+  void reduceMsgExpr(
+    CollectionProxyWrapType<ColT> const& proxy,
+    MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
+    ReduceStamp stamp, typename ColT::IndexType const& idx
   );
 
   /*
@@ -944,7 +943,7 @@ private:
   BufferedActionType buffered_bcasts_;
   BufferedActionType buffered_group_;
   std::unordered_set<VirtualProxyType> constructed_;
-  std::unordered_map<ReduceIDType,SequentialIDType> reduce_cur_seq_;
+  std::unordered_map<ReduceVirtualIDType,ReduceStamp> reduce_cur_stamp_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};
   std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};

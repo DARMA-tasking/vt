@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                tutorial_1h.h
+//                                   strong.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,56 +42,65 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_SCOPING_STRONG_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_SCOPING_STRONG_H
 
-namespace vt { namespace tutorial {
+namespace vt { namespace collective { namespace reduce { namespace detail {
 
-//                       Reduce Message VT Base Class
-//                 \--------------------------------------------/
-//                  \                                          /
-//                   \                            Reduce Data /
-//                    \                          \-----------/
-//                     \                          \         /
-struct ReduceDataMsg : ::vt::collective::ReduceTMsg<int32_t> {};
+/**
+ * \internal \struct Strong
+ *
+ * \brief Used to hoist VT types (like \c vt::VirtualProxyType ) into strongly
+ * typed values that have a unique type.
+ */
+template <typename T, T initial_value, typename Tag>
+struct Strong {
+  Strong() = default;
+  explicit Strong(T v) : v_(v) { }
+  operator T() { return v_; }
+  operator T const() { return v_; }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | v_;
+  }
 
-// Functor that is the target of the reduction
-struct ReduceResult {
-  void operator()(ReduceDataMsg* msg) {
-    NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-    fmt::print("reduction value={}\n", msg->getConstVal());
-    assert(num_nodes * 50 == msg->getConstVal());
-    (void)num_nodes;  // don't warn about unused value when not debugging
+  bool operator==(Strong<T, initial_value, Tag> const& in) const {
+    return v_ == in.v_;
+  }
+
+  bool operator!=(Strong<T, initial_value, Tag> const& in) const {
+    return v_ != in.v_;
+  }
+
+  Strong<T,initial_value,Tag>& operator++() {
+    v_++;
+    return *this;
+  }
+
+  T& operator*() { return v_; }
+  T const& operator*() const { return v_; }
+
+  T& get() { return v_; }
+  T const& get() const { return v_; }
+
+private:
+  T v_ = initial_value;
+};
+
+}}}} /* end namespace vt::collective::reduce::detail */
+
+namespace std {
+
+template <typename T, T initial_value, typename Tag>
+struct hash<vt::collective::reduce::detail::Strong<T, initial_value, Tag>> {
+  size_t operator()(
+    vt::collective::reduce::detail::Strong<T, initial_value, Tag> const& in
+  ) const {
+    return std::hash<T>()(in.get());
   }
 };
 
+} /* end namespace std */
 
-// Tutorial code to demonstrate using a callback
-static inline void activeMessageReduce() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  (void)this_node;  // don't warn about unused variable
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-  (void)num_nodes;  // don't warn about unused variable
-
-  /*
-   * Perform reduction over all the nodes.
-   */
-
-  // This is the type of the reduction (uses the plus operator over the data
-  // type). Once can implement their own data type and overload the plus
-  // operator for the combine during the reduce
-  using ReduceOp = ::vt::collective::PlusOp<int32_t>;
-
-  NodeType const root_reduce_node = 0;
-
-  auto reduce_msg = ::vt::makeSharedMessage<ReduceDataMsg>();
-
-  // Get a reference to the value to set it in this reduce msg
-  reduce_msg->getVal() = 50;
-
-  ::vt::theCollective()->global()->reduce<ReduceOp,ReduceResult>(
-    root_reduce_node, reduce_msg
-  );
-}
-
-}} /* end namespace vt::tutorial */
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_SCOPING_STRONG_H*/

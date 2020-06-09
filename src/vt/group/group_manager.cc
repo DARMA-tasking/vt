@@ -128,14 +128,14 @@ bool GroupManager::inGroup(GroupType const& group) {
   return iter->second->inGroup();
 }
 
-GroupManager::ReducePtrType GroupManager::groupReduce(GroupType const& group) {
+GroupManager::ReducePtrType GroupManager::groupReducer(GroupType const& group) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& is_default_group = iter->second->isGroupDefault();
   if (!is_default_group) {
     return iter->second->getReduce();
   } else {
-    return theCollective();
+    return theCollective()->global();
   }
 }
 

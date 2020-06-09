@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                reduce_tags.h
+//                                   base.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,14 +42,14 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_TAGS_H
-#define INCLUDED_COLLECTIVE_REDUCE_TAGS_H
+#include "vt/runtime/component/base.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/collective/collective_alg.h"
 
-#include "vt/config.h"
+namespace vt { namespace runtime { namespace component {
 
-namespace vt { namespace collective { namespace reduce {
+collective::reduce::Reduce* BaseComponent::reducer() {
+  return theCollective()->getReducerComponent(component_id_);
+}
 
-static constexpr int32_t const create_group_tag = 0x0EEF0EEF;
-
-}}} /* end namespace vt::collective::reduce */
-#endif /*INCLUDED_COLLECTIVE_REDUCE_TAGS_H*/
+}}} /* end namespace vt::runtime::component */

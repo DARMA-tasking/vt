@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                tutorial_1h.h
+//                              reduce_manager.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,56 +42,64 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#include "vt/collective/reduce/reduce_manager.h"
+#include "vt/collective/reduce/reduce.h"
 
-namespace vt { namespace tutorial {
+namespace vt { namespace collective { namespace reduce {
 
-//                       Reduce Message VT Base Class
-//                 \--------------------------------------------/
-//                  \                                          /
-//                   \                            Reduce Data /
-//                    \                          \-----------/
-//                     \                          \         /
-struct ReduceDataMsg : ::vt::collective::ReduceTMsg<int32_t> {};
-
-
-// Functor that is the target of the reduction
-struct ReduceResult {
-  void operator()(ReduceDataMsg* msg) {
-    NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-    fmt::print("reduction value={}\n", msg->getConstVal());
-    assert(num_nodes * 50 == msg->getConstVal());
-    (void)num_nodes;  // don't warn about unused value when not debugging
-  }
-};
-
-
-// Tutorial code to demonstrate using a callback
-static inline void activeMessageReduce() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  (void)this_node;  // don't warn about unused variable
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-  (void)num_nodes;  // don't warn about unused variable
-
-  /*
-   * Perform reduction over all the nodes.
-   */
-
-  // This is the type of the reduction (uses the plus operator over the data
-  // type). Once can implement their own data type and overload the plus
-  // operator for the combine during the reduce
-  using ReduceOp = ::vt::collective::PlusOp<int32_t>;
-
-  NodeType const root_reduce_node = 0;
-
-  auto reduce_msg = ::vt::makeSharedMessage<ReduceDataMsg>();
-
-  // Get a reference to the value to set it in this reduce msg
-  reduce_msg->getVal() = 50;
-
-  ::vt::theCollective()->global()->reduce<ReduceOp,ReduceResult>(
-    root_reduce_node, reduce_msg
+ReduceManager::ReduceManager()
+  : reducers_( // default cons reducer for non-group
+      [](detail::ReduceScope const& scope) {
+        return std::make_unique<Reduce>(scope);
+      }
+    )
+{
+  // insert the default reducer scope
+  reducers_.make(
+    typename ReduceScopeType::GroupTag{}, default_group,
+    [](detail::ReduceScope const& scope) -> std::unique_ptr<Reduce> {
+      return std::make_unique<Reduce>(scope);
+    }
   );
 }
 
-}} /* end namespace vt::tutorial */
+Reduce* ReduceManager::global() {
+  return getReducerGroup(default_group);
+}
+
+Reduce* ReduceManager::getReducer(detail::ReduceScope const& scope) {
+  return reducers_.getOnDemand(scope).get();
+}
+
+Reduce* ReduceManager::getReducerObjGroup(ObjGroupProxyType const& proxy) {
+  return reducers_.get(typename ReduceScopeType::ObjGroupTag{}, proxy).get();
+}
+
+Reduce* ReduceManager::getReducerVrtProxy(VirtualProxyType const& proxy) {
+  return reducers_.get(typename ReduceScopeType::VrtProxyTag{}, proxy).get();
+}
+
+Reduce* ReduceManager::getReducerGroup(GroupType const& group) {
+  return reducers_.get(typename ReduceScopeType::GroupTag{}, group).get();
+}
+
+Reduce* ReduceManager::getReducerComponent(ComponentIDType const& cid) {
+  return reducers_.get(typename ReduceScopeType::ComponentTag{}, cid).get();
+}
+
+Reduce* ReduceManager::makeReducerCollective() {
+  return reducers_.get(typename ReduceScopeType::UserIDTag{}, cur_user_id_++).get();
+}
+
+void ReduceManager::makeReducerGroup(
+  GroupType const& group, collective::tree::Tree* tree
+) {
+  reducers_.make(
+    typename ReduceScopeType::GroupTag{}, group,
+    [=](detail::ReduceScope const& scope) -> std::unique_ptr<Reduce> {
+      return std::make_unique<Reduce>(scope, tree);
+    }
+  );
+}
+
+}}} /* end namespace vt::collective::reduce */

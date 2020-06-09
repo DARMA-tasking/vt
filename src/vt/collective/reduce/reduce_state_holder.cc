@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                tutorial_1h.h
+//                           reduce_state_holder.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,56 +42,38 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#include "vt/config.h"
+#include "vt/collective/reduce/reduce_state_holder.h"
 
-namespace vt { namespace tutorial {
+namespace vt { namespace collective { namespace reduce {
 
-//                       Reduce Message VT Base Class
-//                 \--------------------------------------------/
-//                  \                                          /
-//                   \                            Reduce Data /
-//                    \                          \-----------/
-//                     \                          \         /
-struct ReduceDataMsg : ::vt::collective::ReduceTMsg<int32_t> {};
+bool ReduceStateHolder::exists(ReduceIDType const& id) {
+  auto iter = state_lookup_.find(id);
+  return iter != state_lookup_.end();
+}
 
+ReduceStateHolder::ReduceStateType&
+ReduceStateHolder::find(ReduceIDType const& id) {
+  auto iter = state_lookup_.find(id);
+  vtAssertExpr(iter != state_lookup_.end());
+  return iter->second;
+}
 
-// Functor that is the target of the reduction
-struct ReduceResult {
-  void operator()(ReduceDataMsg* msg) {
-    NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-    fmt::print("reduction value={}\n", msg->getConstVal());
-    assert(num_nodes * 50 == msg->getConstVal());
-    (void)num_nodes;  // don't warn about unused value when not debugging
+void ReduceStateHolder::erase(
+  ReduceIDType const& id
+) {
+  auto iter = state_lookup_.find(id);
+  if (iter != state_lookup_.end()) {
+    state_lookup_.erase(iter);
   }
-};
+}
 
-
-// Tutorial code to demonstrate using a callback
-static inline void activeMessageReduce() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  (void)this_node;  // don't warn about unused variable
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-  (void)num_nodes;  // don't warn about unused variable
-
-  /*
-   * Perform reduction over all the nodes.
-   */
-
-  // This is the type of the reduction (uses the plus operator over the data
-  // type). Once can implement their own data type and overload the plus
-  // operator for the combine during the reduce
-  using ReduceOp = ::vt::collective::PlusOp<int32_t>;
-
-  NodeType const root_reduce_node = 0;
-
-  auto reduce_msg = ::vt::makeSharedMessage<ReduceDataMsg>();
-
-  // Get a reference to the value to set it in this reduce msg
-  reduce_msg->getVal() = 50;
-
-  ::vt::theCollective()->global()->reduce<ReduceOp,ReduceResult>(
-    root_reduce_node, reduce_msg
+void ReduceStateHolder::insert(ReduceIDType const& id, ReduceStateType&& state) {
+  state_lookup_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(id),
+    std::forward_as_tuple(std::move(state))
   );
 }
 
-}} /* end namespace vt::tutorial */
+}}} /* end namespace vt::collective::reduce */

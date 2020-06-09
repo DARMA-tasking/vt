@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                tutorial_1h.h
+//                            reduce_manager.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,56 +42,29 @@
 //@HEADER
 */
 
-#include "vt/transport.h"
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MANAGER_IMPL_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MANAGER_IMPL_H
 
-namespace vt { namespace tutorial {
+#include "vt/collective/reduce/reduce_manager.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/collective/collective_alg.h"
+#include "vt/messaging/active.h"
+#include "vt/runnable/general.h"
 
-//                       Reduce Message VT Base Class
-//                 \--------------------------------------------/
-//                  \                                          /
-//                   \                            Reduce Data /
-//                    \                          \-----------/
-//                     \                          \         /
-struct ReduceDataMsg : ::vt::collective::ReduceTMsg<int32_t> {};
+namespace vt { namespace collective { namespace reduce {
 
-
-// Functor that is the target of the reduction
-struct ReduceResult {
-  void operator()(ReduceDataMsg* msg) {
-    NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-    fmt::print("reduction value={}\n", msg->getConstVal());
-    assert(num_nodes * 50 == msg->getConstVal());
-    (void)num_nodes;  // don't warn about unused value when not debugging
-  }
-};
-
-
-// Tutorial code to demonstrate using a callback
-static inline void activeMessageReduce() {
-  NodeType const this_node = ::vt::theContext()->getNode();
-  (void)this_node;  // don't warn about unused variable
-  NodeType const num_nodes = ::vt::theContext()->getNumNodes();
-  (void)num_nodes;  // don't warn about unused variable
-
-  /*
-   * Perform reduction over all the nodes.
-   */
-
-  // This is the type of the reduction (uses the plus operator over the data
-  // type). Once can implement their own data type and overload the plus
-  // operator for the combine during the reduce
-  using ReduceOp = ::vt::collective::PlusOp<int32_t>;
-
-  NodeType const root_reduce_node = 0;
-
-  auto reduce_msg = ::vt::makeSharedMessage<ReduceDataMsg>();
-
-  // Get a reference to the value to set it in this reduce msg
-  reduce_msg->getVal() = 50;
-
-  ::vt::theCollective()->global()->reduce<ReduceOp,ReduceResult>(
-    root_reduce_node, reduce_msg
-  );
+template <typename MsgT>
+/*static*/ void ReduceManager::reduceRootRecv(MsgT* msg) {
+  // The root recv is independent of scope. Invoke the global one.
+  theCollective()->global()->template reduceRootRecv<MsgT>(msg);
 }
 
-}} /* end namespace vt::tutorial */
+template <typename MsgT>
+/*static*/ void ReduceManager::reduceUp(MsgT* msg) {
+  auto const& scope = msg->scope();
+  theCollective()->getReducer(scope)->template reduceUp<MsgT>(msg);
+}
+
+}}} /* end namespace vt::collective::reduce */
+
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MANAGER_IMPL_H*/

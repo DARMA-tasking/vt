@@ -143,8 +143,9 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    */
 
   template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-  EpochType reduce(
-    ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg, EpochType epoch, TagType tag
+  void reduce(
+    ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg,
+    collective::reduce::ReduceStamp const& stamp
   );
 
   /*

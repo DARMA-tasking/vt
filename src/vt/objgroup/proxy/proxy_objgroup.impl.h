@@ -79,13 +79,13 @@ template <typename ObjT>
 template <
   typename OpT, typename MsgPtrT, typename MsgT, ActiveTypedFnType<MsgT> *f
 >
-EpochType Proxy<ObjT>::reduce(
-  MsgPtrT inmsg, Callback<MsgT> cb, EpochType epoch, TagType tag
+void Proxy<ObjT>::reduce(
+  MsgPtrT inmsg, Callback<MsgT> cb, ReduceStamp stamp
 ) const {
   auto proxy = Proxy<ObjT>(*this);
   auto msg = promoteMsg(inmsg);
   msg->setCallback(cb);
-  return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,epoch,tag);
+  return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,stamp);
 }
 
 template <typename ObjT>
@@ -93,22 +93,18 @@ template <
   typename OpT, typename FunctorT, typename MsgPtrT, typename MsgT,
   ActiveTypedFnType<MsgT> *f
 >
-EpochType Proxy<ObjT>::reduce(
-  MsgPtrT inmsg, EpochType epoch, TagType tag
-) const {
+void Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
   auto proxy = Proxy<ObjT>(*this);
   auto msg = promoteMsg(inmsg);
-  return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,epoch,tag);
+  return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,stamp);
 }
 
 template <typename ObjT>
 template <typename MsgPtrT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-EpochType Proxy<ObjT>::reduce(
-  MsgPtrT inmsg, EpochType epoch, TagType tag
-) const {
+void Proxy<ObjT>::reduce(MsgPtrT inmsg, ReduceStamp stamp) const {
   auto proxy = Proxy<ObjT>(*this);
   auto msg = promoteMsg(inmsg);
-  return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,epoch,tag);
+  return theObjGroup()->reduce<ObjT, MsgT, f>(proxy,msg,stamp);
 }
 
 template <typename ObjT>
