@@ -66,7 +66,7 @@ struct BaseCollectionElmProxy {
   void serialize(SerializerT& s);
 
   ProxyType getCollectionProxy() const { return col_proxy_; }
-  ElementProxyType getElementProxy() const { return elm_proxy_; }
+  ElementProxyType const& getElementProxy() const { return elm_proxy_; }
 
 protected:
   ProxyType col_proxy_ = no_vrt_proxy;
