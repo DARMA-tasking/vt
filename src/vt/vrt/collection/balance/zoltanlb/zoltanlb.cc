@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/pipe/pipe_headers.h"
 
 #if backend_check_enabled(zoltan)
 
