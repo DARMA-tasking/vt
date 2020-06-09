@@ -119,6 +119,32 @@ public:
 
   /**
    * \internal \brief Output stats file based on instrumented data
+   *
+   * The contents of the file consist of a series of records separated
+   * by newlines. Each record consists of comma separated fields. The
+   * first field of each record is a decimal integer phase which the
+   * record describes.
+   *
+   * The first batch of records representing object workloads contain
+   * 5 fields. The first field is the phase, as above. The second
+   * field contains a unique object identifier, as a decimal
+   * integer. The third field contains the object's total workload
+   * during the phase, measured by elapsed time, and represented as a
+   * floating-point decimal number. The fourth field contains the
+   * number of subphases that made up the phase, as a decimal
+   * integer. The fifth field contains a "[]"-bracketed list of
+   * workloads, one decimal floating point value per subphase,
+   * separate by commas.
+   *
+   * The second batch of records representing communication graph
+   * edges contain 5 fields. The first field is the phase, as
+   * above. The second and third fields are the recipient and source
+   * of a communication, as decimal integers. The fourth field is the
+   * weight of the edge, representing the number of bytes transmitted
+   * between the end-points, as a decimal integer. The fifth field is
+   * the category of the communication, relating the sender and
+   * recipient and distinguishing point-to-point messages from
+   * broadcasts, as a decimal integer.
    */
   void outputStatsFile();
 
