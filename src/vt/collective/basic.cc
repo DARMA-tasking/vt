@@ -61,7 +61,7 @@ void output(
 }
 
 int rerror(char const* str) {
-  vt::output(std::string(str));
+  fmt::print("Error: {}\n", str);
   vt::finalize();
   return 0;
 }

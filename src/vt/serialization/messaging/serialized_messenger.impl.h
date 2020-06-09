@@ -266,11 +266,13 @@ template <typename MsgT, typename BaseT>
       );
 #   endif
 
+    auto cur_ref = envelopeGetRef(sys_msg->env);
     sys_msg->handler = traceable_han;
     sys_msg->env = msg->env;
     sys_msg->from_node = theContext()->getNode();
     sys_msg->ptr_size = ptr_size;
     envelopeSetGroup(sys_msg->env, group_);
+    envelopeSetRef(sys_msg->env, cur_ref);
 
     debug_print(
       serial_msg, node,

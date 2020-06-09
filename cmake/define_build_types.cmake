@@ -152,6 +152,7 @@ else()
   set(vt_feature_cmake_mpi_access_guards "0")
 endif()
 
+option(vt_zoltan_enabled "Build VT with Zoltan" OFF)
 if (vt_zoltan_enabled)
   message(STATUS "Building VT with zoltan enabled")
   set(vt_feature_cmake_zoltan "1")
