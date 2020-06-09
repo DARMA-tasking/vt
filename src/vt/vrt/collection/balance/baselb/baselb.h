@@ -105,7 +105,6 @@ struct BaseLB {
   int32_t getBinSize() const { return bin_size_; }
   NodeType objGetNode(ObjIDType const id) const;
 
-  EpochType getMigrationEpoch() const;
   EpochType startMigrationCollective();
   void finishMigrationCollective();
   void migrationDone();
@@ -133,7 +132,6 @@ protected:
   StatisticMapType stats                          = {};
   bool during_migration_                          = false;
   EpochType migration_epoch_                      = no_epoch;
-  TransferType off_node_migrate_                  = {};
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
   int32_t local_migration_count_                  = 0;
   PhaseType phase_                                = 0;
@@ -141,6 +139,9 @@ protected:
   bool comm_aware_                                = false;
   bool comm_collectives_                          = false;
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
+
+private:
+  TransferVecType transfers_                      = {};
 };
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */

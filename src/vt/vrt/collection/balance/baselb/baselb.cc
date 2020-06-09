@@ -186,10 +186,6 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   }
 }
 
-EpochType BaseLB::getMigrationEpoch() const {
-  return migration_epoch_;
-}
-
 EpochType BaseLB::startMigrationCollective() {
   migration_epoch_ = theTerm()->makeEpochCollective("LB migration");
   theTerm()->addAction(migration_epoch_, [this]{ this->migrationDone(); });
@@ -199,11 +195,37 @@ EpochType BaseLB::startMigrationCollective() {
 }
 
 void BaseLB::finishMigrationCollective() {
-  for (auto&& elm : off_node_migrate_) {
+  TransferType off_node_migrate;
+
+  for (auto&& elm : transfers_) {
+    auto obj_id = std::get<0>(elm);
+    auto to = std::get<1>(elm);
+    auto from = objGetNode(obj_id);
+
+    if (from != to) {
+      bool has_object = theProcStats()->hasObjectToMigrate(obj_id);
+
+      debug_print(
+                  lb, node,
+                  "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
+                  obj_id, from, to, has_object
+                  );
+
+      if (has_object) {
+        local_migration_count_++;
+        theProcStats()->migrateObjTo(obj_id, to);
+      } else {
+        off_node_migrate[from].push_back(std::make_tuple(obj_id,to));
+      }
+    }
+  }
+  transfers_.clear();
+
+  for (auto&& elm : off_node_migrate) {
     transferSend(elm.first, elm.second, migration_epoch_);
   }
 
-  off_node_migrate_.clear();
+  off_node_migrate.clear();
 
   // Re-compute the statistics with the new partition based on current
   // this_load_ values
@@ -229,29 +251,12 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
     auto obj_id  = std::get<0>(elm);
     auto to_node = std::get<1>(elm);
     vtAssert(theProcStats()->hasObjectToMigrate(obj_id), "Must have object");
-    migrateObjectTo(obj_id, to_node);
+    theProcStats()->migrateObjTo(obj_id, to_node);
   }
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  vtAssert(during_migration_, "migrateObjectTo should be called between startMigrationCollective and finishMigrationCollective");
-  auto from = objGetNode(obj_id);
-  if (from != to) {
-    bool has_object = theProcStats()->hasObjectToMigrate(obj_id);
-
-    debug_print(
-      lb, node,
-      "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
-      obj_id, from, to, has_object
-    );
-
-    if (has_object) {
-      local_migration_count_++;
-      theProcStats()->migrateObjTo(obj_id, to);
-    } else {
-      off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
-    }
-  }
+  transfers_.push_back({obj_id, to});
 }
 
 void BaseLB::finalize(CountMsg* msg) {
@@ -292,6 +297,7 @@ NodeType BaseLB::objGetNode(ObjIDType const id) const {
 
 void BaseLB::finishedStats() {
   getArgs(phase_);
+  transfers_.clear();
   this->inputParams(spec_entry_.get());
   this->runLB();
 }
