@@ -78,6 +78,7 @@
 #include "vt/serialization/sizer.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
+#include "vt/group/group_headers.h"
 
 #include <tuple>
 #include <utility>
@@ -288,9 +289,8 @@ GroupType CollectionManager::createGroupCollection(
     proxy, in_group
   );
 
-  auto const& vid = VirtualProxyBuilder::getVirtualID(proxy);
   auto const group_id = theGroup()->newGroupCollective(
-    in_group, [proxy,vid](GroupType new_group){
+    in_group, [proxy](GroupType new_group){
       auto const& group_root = theGroup()->groupRoot(new_group);
       auto const& is_group_default = theGroup()->groupDefault(new_group);
       auto const& my_in_group = theGroup()->inGroup(new_group);
@@ -311,17 +311,20 @@ GroupType CollectionManager::createGroupCollection(
       );
 
       if (!is_group_default && my_in_group) {
-        uint64_t const group_tag_mask = 0x0fff0000;
+        using collective::reduce::makeStamp;
+        using collective::reduce::StrongUserID;
+
         auto group_msg = makeMessage<CollectionGroupMsg>(proxy,new_group);
-        auto const& group_tag_id = vid | group_tag_mask;
         debug_print(
           vrt_coll, node,
           "calling group (construct) reduce: proxy={:x}\n", proxy
         );
-        theGroup()->groupReduce(new_group)->reduce<
-          CollectionGroupMsg,
-          collectionGroupReduceHan
-        >(group_root, group_msg.get(), group_tag_id);
+        auto r = theGroup()->groupReducer(new_group);
+
+        auto stamp = makeStamp<StrongUserID>(proxy);
+        r->reduce<CollectionGroupMsg, collectionGroupReduceHan>(
+          group_root, group_msg.get(), stamp
+        );
       } else if (is_group_default) {
         /*
          *  Trigger the group finished handler directly because the default
@@ -1140,10 +1143,10 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-SequentialIDType CollectionManager::reduceMsgExpr(
-  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+void CollectionManager::reduceMsgExpr(
+  CollectionProxyWrapType<ColT> const& proxy,
   MsgT *const raw_msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-  SequentialIDType seq, TagType tag, NodeType root
+  ReduceStamp stamp, NodeType root
 ) {
   using IndexT = typename ColT::IndexType;
 
@@ -1154,7 +1157,7 @@ SequentialIDType CollectionManager::reduceMsgExpr(
     "reduceMsg: msg={}\n", print_ptr(raw_msg)
   );
 
-  auto const& col_proxy = toProxy.getProxy();
+  auto const& col_proxy = proxy.getProxy();
 
   // @todo: implement the action `act' after the routing is finished
   auto found_constructed = constructed_.find(col_proxy) != constructed_.end();
@@ -1200,11 +1203,9 @@ SequentialIDType CollectionManager::reduceMsgExpr(
       );
       theTerm()->consume(term::any_epoch_sentinel);
       theCollection()->reduceMsgExpr<ColT,MsgT,f>(
-        toProxy,msg.get(),expr_fn,seq,tag,root
+        proxy,msg.get(),expr_fn,stamp,root
       );
     });
-
-    return no_seq_id;
   } else if (found_constructed && elm_holder) {
     std::size_t num_elms = 0;
 
@@ -1214,75 +1215,71 @@ SequentialIDType CollectionManager::reduceMsgExpr(
       num_elms = elm_holder->numElementsExpr(expr_fn);
     }
 
-    auto reduce_id = std::make_tuple(col_proxy,tag,no_obj_group);
-    auto seq_iter = reduce_cur_seq_.find(reduce_id);
-    SequentialIDType cur_seq = seq;
-    if (seq == no_seq_id && seq_iter != reduce_cur_seq_.end()) {
-      cur_seq = seq_iter->second;
+    ReduceVirtualIDType reduce_id = std::make_tuple(stamp,col_proxy);
+
+    auto stamp_iter = reduce_cur_stamp_.find(reduce_id);
+
+    ReduceStamp cur_stamp = stamp;
+    if (stamp == ReduceStamp{} && stamp_iter != reduce_cur_stamp_.end()) {
+      cur_stamp = stamp_iter->second;
     }
-    SequentialIDType ret_seq = no_seq_id;
 
     auto const& root_node =
       root == uninitialized_destination ? default_collection_reduce_root_node :
       root;
 
+    collective::reduce::Reduce* r = nullptr;
     if (use_group) {
-      ret_seq = theGroup()->groupReduce(group)->template reduce<MsgT,f>(
-        root_node,msg.get(),tag,cur_seq,num_elms,col_proxy
-      );
+      r = theGroup()->groupReducer(group);
     } else {
-      ret_seq = theCollective()->reduce<MsgT,f>(
-        root_node,msg.get(),tag,cur_seq,num_elms,col_proxy
-      );
-    }
-    debug_print(
-      vrt_coll, node,
-      "reduceMsg: col_proxy={:x}, seq={}, num_elms={}, tag={}\n",
-      col_proxy, cur_seq, num_elms, tag
-    );
-    if (seq_iter == reduce_cur_seq_.end()) {
-      reduce_cur_seq_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(reduce_id),
-        std::forward_as_tuple(ret_seq)
-      );
+      r = theCollective()->getReducerVrtProxy(col_proxy);
     }
 
-    return ret_seq;
+    auto ret_stamp = r->reduce<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
+
+    debug_print(
+      vrt_coll, node,
+      "reduceMsg: col_proxy={:x}, num_elms={}\n",
+      col_proxy, num_elms
+    );
+
+    if (stamp_iter == reduce_cur_stamp_.end()) {
+      reduce_cur_stamp_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(reduce_id),
+        std::forward_as_tuple(ret_stamp)
+      );
+    }
   } else {
     // @todo: implement this
     vtAssertExpr(0);
-    return no_seq_id;
   }
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-SequentialIDType CollectionManager::reduceMsg(
-  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-  MsgT *const msg, SequentialIDType seq, TagType tag,
-  NodeType root
+void CollectionManager::reduceMsg(
+  CollectionProxyWrapType<ColT> const& proxy,
+  MsgT *const msg, ReduceStamp stamp, NodeType root
 ) {
-  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,seq,tag,root);
+  return reduceMsgExpr<ColT,MsgT,f>(proxy,msg,nullptr,stamp,root);
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-SequentialIDType CollectionManager::reduceMsg(
-  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
-  MsgT *const msg, SequentialIDType seq, TagType tag,
-  typename ColT::IndexType const& idx
+void CollectionManager::reduceMsg(
+  CollectionProxyWrapType<ColT> const& proxy,
+  MsgT *const msg, ReduceStamp stamp, typename ColT::IndexType const& idx
 ) {
-  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,seq,tag,idx);
+  return reduceMsgExpr<ColT,MsgT,f>(proxy,msg,nullptr,stamp,idx);
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-SequentialIDType CollectionManager::reduceMsgExpr(
-  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& toProxy,
+void CollectionManager::reduceMsgExpr(
+  CollectionProxyWrapType<ColT> const& proxy,
   MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
-  SequentialIDType seq, TagType tag,
-  typename ColT::IndexType const& idx
+  ReduceStamp stamp, typename ColT::IndexType const& idx
 ) {
   using IndexT = typename ColT::IndexType;
-  auto const untyped_proxy = toProxy.getProxy();
+  auto const untyped_proxy = proxy.getProxy();
   auto constructed = constructed_.find(untyped_proxy) != constructed_.end();
   vtAssert(constructed, "Must be constructed");
   auto col_holder = findColHolder<ColT,IndexT>(untyped_proxy);
@@ -1305,7 +1302,7 @@ SequentialIDType CollectionManager::reduceMsgExpr(
     reinterpret_cast<vt::index::BaseIndex*>(&max_idx),
     theContext()->getNumNodes()
   );
-  return reduceMsgExpr<ColT,MsgT,f>(toProxy,msg,nullptr,seq,tag,mapped_node);
+  return reduceMsgExpr<ColT,MsgT,f>(proxy,msg,nullptr,stamp,mapped_node);
 }
 
 template <typename MsgT, typename ColT>
@@ -2080,18 +2077,19 @@ template <typename ColT>
    * on construction completing (meta-data must be available, LM initialized,
    * etc.)
    */
-  uint64_t const tag_mask_ = 0x0ff00000;
-  auto const& vid = VirtualProxyBuilder::getVirtualID(proxy);
-  auto construct_msg = makeSharedMessage<CollectionConsMsg>(proxy);
-  auto const& tag_id = vid | tag_mask_;
+  auto msg = makeMessage<CollectionConsMsg>(proxy);
   auto const& root = 0;
   debug_print(
     vrt_coll, node,
     "reduceConstruction: invoke reduce: proxy={:x}\n", proxy
   );
-  theCollective()->reduce<CollectionConsMsg,collectionConstructHan>(
-    root, construct_msg, tag_id
-  );
+
+  using collective::reduce::makeStamp;
+  using collective::reduce::StrongUserID;
+
+  auto stamp = makeStamp<StrongUserID>(proxy);
+  auto r = theCollection()->reducer();
+  r->reduce<CollectionConsMsg,collectionConstructHan>(root, msg.get(), stamp);
 }
 
 template <typename ColT>
@@ -2254,10 +2252,14 @@ template <typename ColT, typename IndexT>
    *  Contribute to reduction for update epoch
    */
   auto const& root = 0;
-  auto nmsg = makeSharedMessage<FinishedUpdateMsg>(untyped_proxy);
-  theCollective()->reduce<FinishedUpdateMsg,finishedUpdateHan>(
-    root, nmsg, msg->epoch_
-  );
+  auto nmsg = makeMessage<FinishedUpdateMsg>(untyped_proxy);
+
+  using collective::reduce::makeStamp;
+  using collective::reduce::StrongEpoch;
+
+  auto stamp = makeStamp<StrongEpoch>(msg->epoch_);
+  auto r = theCollection()->reducer();
+  r->reduce<FinishedUpdateMsg,finishedUpdateHan>(root, nmsg.get(), stamp);
 }
 
 template <typename>
@@ -2391,10 +2393,14 @@ void CollectionManager::finishedInsertEpoch(
    *  corresponding collection after are related to the new insert epoch
    */
   auto const& root = 0;
-  auto nmsg = makeSharedMessage<FinishedUpdateMsg>(untyped_proxy);
-  theCollective()->reduce<FinishedUpdateMsg,finishedUpdateHan>(
-    root, nmsg, next_insert_epoch
-  );
+  auto nmsg = makeMessage<FinishedUpdateMsg>(untyped_proxy);
+
+  using collective::reduce::makeStamp;
+  using collective::reduce::StrongEpoch;
+
+  auto stamp = makeStamp<StrongEpoch>(next_insert_epoch);
+  auto r = theCollection()->reducer();
+  r->reduce<FinishedUpdateMsg,finishedUpdateHan>(root, nmsg.get(), stamp);
 
   debug_print(
     vrt_coll, node,

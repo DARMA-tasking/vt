@@ -61,7 +61,7 @@ struct GroupCollective {
   using TreePtrType = std::unique_ptr<TreeType>;
   using NodeListType = TreeType::NodeListType;
   using ReduceType = collective::reduce::Reduce;
-  using ReducePtrType = std::unique_ptr<ReduceType>;
+  using ReducePtrType = ReduceType*;
 
   explicit GroupCollective()
     : init_span_(

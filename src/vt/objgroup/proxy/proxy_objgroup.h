@@ -54,6 +54,7 @@
 #include "vt/pipe/pipe_callback_only.h"
 #include "vt/collective/reduce/operators/functors/none_op.h"
 #include "vt/collective/reduce/operators/callback_op.h"
+#include "vt/collective/reduce/reduce_scope.h"
 #include "vt/utils/static_checks/msg_ptr.h"
 #include "vt/rdmahandle/handle.fwd.h"
 #include "vt/rdmahandle/handle_set.fwd.h"
@@ -62,6 +63,7 @@ namespace vt { namespace objgroup { namespace proxy {
 
 template <typename ObjT>
 struct Proxy {
+  using ReduceStamp = collective::reduce::ReduceStamp;
 
   Proxy() = default;
   Proxy(Proxy const&) = default;
@@ -96,9 +98,8 @@ public:
       MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
     >
   >
-  EpochType reduce(
-    MsgPtrT msg, Callback<MsgT> cb, EpochType epoch = no_epoch,
-    TagType tag = no_tag
+  void reduce(
+    MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const;
 
   template <
@@ -108,18 +109,14 @@ public:
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
     ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
   >
-  EpochType reduce(
-    MsgPtrT msg, EpochType epoch = no_epoch, TagType tag = no_tag
-  ) const;
+  void reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
 
   template <
     typename MsgPtrT,
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
     ActiveTypedFnType<MsgT> *f
   >
-  EpochType reduce(
-    MsgPtrT msg, EpochType epoch = no_epoch, TagType tag = no_tag
-  ) const;
+  void reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
 
   /*
    * Get the local pointer to this object group residing in the current node

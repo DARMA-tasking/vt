@@ -45,44 +45,27 @@
 #if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_HASH_H
 #define INCLUDED_COLLECTIVE_REDUCE_REDUCE_HASH_H
 
-#include "vt/config.h"
+#include "vt/collective/reduce/reduce_scope.h"
 
 #include <tuple>
 
 namespace vt { namespace collective { namespace reduce {
 
-using ReduceIdentifierType =
-  std::tuple<TagType,SequentialIDType,VirtualProxyType,ObjGroupProxyType>;
-using ReduceSeqLookupType =
-  std::tuple<VirtualProxyType,TagType,ObjGroupProxyType>;
+using ReduceVirtualIDType =
+  std::tuple<collective::reduce::ReduceStamp,VirtualProxyType>;
 
 }}} /* end namespace vt::collective::reduce */
 
 namespace std {
 
-using ReduceIDType = ::vt::collective::reduce::ReduceIdentifierType;
-using ReduceLookupType = ::vt::collective::reduce::ReduceSeqLookupType;
-
 template <>
-struct hash<ReduceIDType> {
-  size_t operator()(ReduceIDType const& in) const {
-    auto const& combined =
-      std::hash<vt::TagType>()(std::get<0>(in)) ^
-      std::hash<vt::SequentialIDType>()(std::get<1>(in)) ^
-      std::hash<vt::VirtualProxyType>()(std::get<2>(in)) ^
-      std::hash<vt::ObjGroupProxyType>()(std::get<3>(in));
-    return combined;
-  }
-};
-
-template <>
-struct hash<ReduceLookupType> {
-  size_t operator()(ReduceLookupType const& in) const {
-    auto const& combined =
-      std::hash<vt::VirtualProxyType>()(std::get<0>(in)) ^
-      std::hash<vt::TagType>()(std::get<1>(in)) ^
-      std::hash<vt::ObjGroupProxyType>()(std::get<2>(in));
-    return combined;
+struct hash<vt::collective::reduce::ReduceVirtualIDType> {
+  size_t operator()(
+    vt::collective::reduce::ReduceVirtualIDType const& in
+  ) const {
+    return
+      std::hash<vt::collective::reduce::ReduceStamp>()(std::get<0>(in)) ^
+      std::hash<vt::VirtualProxyType>()(std::get<1>(in));
   }
 };
 

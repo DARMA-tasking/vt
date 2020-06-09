@@ -170,6 +170,8 @@ private:
   std::vector<std::unique_ptr<BaseComponent>> live_components_;
   /// Set of non-owning pointers to pollable components for progress engine
   std::vector<Progressable*> pollable_components_;
+  /// Component ID for assigning during construction
+  ComponentIDType cur_id_ = 1;
 };
 
 template <typename... Ts>

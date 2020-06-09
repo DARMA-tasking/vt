@@ -114,6 +114,8 @@ using ObjGroupProxyType       = uint64_t;
 using PriorityType            = uint16_t;
 /// Used for hold the level for a priority of a message
 using PriorityLevelType       = uint8_t;
+/// Used for hold a unique ID for each component
+using ComponentIDType         = uint32_t;
 
 // Action types for attaching a closure to a runtime function
 /// Used for generically store an action to perform

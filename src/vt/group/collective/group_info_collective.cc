@@ -630,9 +630,10 @@ void InfoColl::newTree(NodeType const& parent) {
   collective_->span_   = std::make_unique<TreeType>(
     is_root, collective_->parent_, collective_->span_children_
   );
-  collective_->reduce_ = std::make_unique<ReduceType>(
-    group_, collective_->span_.get()
-  );
+
+  theCollective()->makeReducerGroup(group_, collective_->span_.get());
+  collective_->reduce_ = theCollective()->getReducerGroup(group_);
+
   auto const& action = getAction();
   if (action) {
     action();
@@ -706,16 +707,16 @@ void InfoColl::finalize() {
     }
 
     auto const& root = 0;
-    // use a specific tag and epoch to isolate the involved reduction
-    // from possible interference with other reductions.
-    TagType const reduce_tag = collective::reduce::create_group_tag;
-    EpochType const step_epoch = static_cast<EpochType>(group_);
 
-    auto msg = makeSharedMessage<FinishedReduceMsg>(group_);
+    using collective::reduce::makeStamp;
+    using collective::reduce::StrongUserID;
+
+    auto stamp = makeStamp<StrongUserID>(group_);
+    auto msg = makeMessage<FinishedReduceMsg>(group_);
     using OpType = collective::PlusOp<collective::NoneType>;
-    theCollective()->reduce<OpType,CollSetupFinished>(
-      root, msg, reduce_tag, step_epoch
-    );
+
+    auto r = theGroup()->reducer();
+    r->reduce<OpType,CollSetupFinished>(root, msg.get(), stamp);
   }
 }
 
@@ -760,7 +761,7 @@ void InfoColl::downTreeFinished(GroupOnlyMsg* msg) {
 }
 
 InfoColl::ReducePtrType InfoColl::getReduce() const {
-  return collective_->reduce_.get();
+  return collective_->reduce_;
 }
 
 bool InfoColl::isReady() const {

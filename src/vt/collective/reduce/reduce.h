@@ -48,7 +48,6 @@
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce.fwd.h"
 #include "vt/collective/reduce/reduce_hash.h"
-#include "vt/collective/reduce/reduce_tags.h"
 #include "vt/collective/reduce/reduce_state.h"
 #include "vt/collective/reduce/reduce_state_holder.h"
 #include "vt/collective/reduce/reduce_msg.h"
@@ -69,19 +68,22 @@
 namespace vt { namespace collective { namespace reduce {
 
 struct Reduce : virtual collective::tree::Tree {
-  template <typename T>
-  using ReduceStateType = ReduceState<T>;
-  using ReduceNumType   = typename ReduceState<void>::ReduceNumType;
+  using ReduceStateType = ReduceState;
+  using ReduceNumType   = typename ReduceStateType::ReduceNumType;
 
-  Reduce();
-  Reduce(GroupType const& group, collective::tree::Tree* in_tree);
+  explicit Reduce(detail::ReduceScope const& in_scope);
 
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-  SequentialIDType reduce(
-    NodeType root, MessageT* const msg, TagType tag = no_tag,
-    SequentialIDType seq = no_seq_id, ReduceNumType num_contrib = 1,
-    VirtualProxyType proxy = no_vrt_proxy,
-    ObjGroupProxyType obj_group = no_obj_group
+  Reduce(
+    detail::ReduceScope const& in_scope, collective::tree::Tree* in_tree
+  );
+
+  detail::ReduceStamp generateNextID();
+
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  detail::ReduceStamp reduce(
+    NodeType root, MsgT* const msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType num_contrib = 1
   );
 
   template <
@@ -91,12 +93,10 @@ struct Reduce : virtual collective::tree::Tree {
       MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
     >
   >
-  SequentialIDType reduce(
+  detail::ReduceStamp reduce(
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
-    TagType const& tag = no_tag, SequentialIDType const& seq = no_seq_id,
-    ReduceNumType const& num_contrib = 1,
-    VirtualProxyType const& proxy = no_vrt_proxy,
-    ObjGroupProxyType objgroup = no_obj_group
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
   );
 
   template <
@@ -105,40 +105,41 @@ struct Reduce : virtual collective::tree::Tree {
     typename MsgT,
     ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
   >
-  SequentialIDType reduce(
-    NodeType const& root, MsgT* msg, TagType const& tag = no_tag,
-    SequentialIDType const& seq = no_seq_id, ReduceNumType const& num_contrib = 1,
-    VirtualProxyType const& proxy = no_vrt_proxy
+  detail::ReduceStamp reduce(
+    NodeType const& root, MsgT* msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
   );
 
-  template <typename MessageT>
+  template <typename MsgT>
   void reduceAddMsg(
-    MessageT* msg, bool const local, ReduceNumType num_contrib = -1
+    MsgT* msg, bool const local, ReduceNumType num_contrib = -1
   );
 
-  template <typename MessageT>
-  void reduceNewMsg(MessageT* msg);
+  template <typename MsgT>
+  void reduceNewMsg(MsgT* msg);
 
   /*
    *  Explicitly start the reduction when the number of contributions is not
    *  known up front
    */
-  template <typename MessageT>
-  void startReduce(
-    TagType tag, SequentialIDType seq, VirtualProxyType proxy,
-    ObjGroupProxyType objgroup, bool use_num_contrib = true
-  );
+  template <typename MsgT>
+  void startReduce(detail::ReduceStamp id, bool use_num_contrib = true);
 
-  template <typename MessageT>
-  static void reduceRootRecv(MessageT* msg);
-  template <typename MessageT>
-  static void reduceUp(MessageT* msg);
+  template <typename MsgT>
+  void reduceRootRecv(MsgT* msg);
+
+  template <typename MsgT>
+  void reduceUp(MsgT* msg);
 
 private:
-  std::unordered_map<ReduceSeqLookupType,SequentialIDType> next_seq_for_tag_;
-  GroupType group_ = default_group;
+  detail::ReduceScope scope_;
+  ReduceStateHolder state_;
+  detail::StrongSeq next_seq_;
 };
 
 }}} /* end namespace vt::collective::reduce */
+
+#include "vt/collective/reduce/reduce.impl.h"
 
 #endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_H*/

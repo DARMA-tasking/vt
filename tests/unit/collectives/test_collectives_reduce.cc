@@ -154,7 +154,7 @@ TEST_F(TestReduce, test_reduce_op) {
 
   auto msg = makeMessage<MyReduceMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->num);
-  theCollective()->reduce<MyReduceMsg, reducePlus>(root, msg.get());
+  theCollective()->global()->reduce<MyReduceMsg, reducePlus>(root, msg.get());
 }
 
 TEST_F(TestReduce, test_reduce_plus_default_op) {
@@ -163,7 +163,9 @@ TEST_F(TestReduce, test_reduce_plus_default_op) {
 
   auto msg = makeMessage<SysMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->reduce<PlusOp<int>, Verify<ReduceOP::Plus>>(root, msg.get());
+  theCollective()->global()->reduce<PlusOp<int>, Verify<ReduceOP::Plus>>(
+    root, msg.get()
+  );
 }
 
 TEST_F(TestReduce, test_reduce_max_default_op) {
@@ -172,7 +174,9 @@ TEST_F(TestReduce, test_reduce_max_default_op) {
 
   auto msg = makeMessage<SysMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->reduce<MaxOp<int>, Verify<ReduceOP::Max>>(root, msg.get());
+  theCollective()->global()->reduce<MaxOp<int>, Verify<ReduceOP::Max>>(
+    root, msg.get()
+  );
 }
 
 TEST_F(TestReduce, test_reduce_min_default_op) {
@@ -181,7 +185,9 @@ TEST_F(TestReduce, test_reduce_min_default_op) {
 
   auto msg = makeMessage<SysMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->reduce<MinOp<int>, Verify<ReduceOP::Min>>(root, msg.get());
+  theCollective()->global()->reduce<MinOp<int>, Verify<ReduceOP::Min>>(
+    root, msg.get()
+  );
 }
 
 TEST_F(TestReduce, test_reduce_vec_bool_msg) {
@@ -192,7 +198,9 @@ TEST_F(TestReduce, test_reduce_vec_bool_msg) {
 
   auto const root = 0;
   auto msg = makeMessage<ReduceVecMsg<bool>>(vecOfBool);
-  theCollective()->reduce<PlusOp<std::vector<bool>>, Verify<ReduceOP::Plus>>(root, msg.get());
+  theCollective()->global()->reduce<
+    PlusOp<std::vector<bool>>, Verify<ReduceOP::Plus>
+  >(root, msg.get());
 }
 
 TEST_F(TestReduce, test_reduce_vec_int_msg) {
@@ -205,7 +213,9 @@ TEST_F(TestReduce, test_reduce_vec_int_msg) {
 
   auto const root = 0;
   auto msg = makeMessage<ReduceVecMsg<int>>(vecOfInt);
-  theCollective()->reduce<PlusOp<std::vector<int>>, Verify<ReduceOP::Plus>>(root, msg.get());
+  theCollective()->global()->reduce<
+    PlusOp<std::vector<int>>, Verify<ReduceOP::Plus>
+  >(root, msg.get());
 }
 
 }}} // end namespace vt::tests::unit

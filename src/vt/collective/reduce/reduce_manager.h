@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          reduce_state_holder.impl.h
+//                               reduce_manager.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,73 +42,49 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MANAGER_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MANAGER_H
 
-#include "vt/config.h"
+#include "vt/collective/reduce/reduce_scope.h"
+#include "vt/collective/tree/tree.h"
 
 namespace vt { namespace collective { namespace reduce {
 
-template <typename T>
-/*static*/ bool ReduceStateHolder<T>::exists(
-  GroupType group, ReduceIDType const& id
-) {
-  auto group_iter = state_lookup_.find(group);
-  if (group_iter == state_lookup_.end()) {
-    return false;
-  } else {
-    auto id_iter = group_iter->second.find(id);
-    if (id_iter == group_iter->second.end()) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-}
+struct Reduce;
 
-template <typename T>
-/*static*/ typename ReduceStateHolder<T>::ReduceStateType&
-ReduceStateHolder<T>::find(GroupType group, ReduceIDType const& id) {
-  auto group_iter = state_lookup_.find(group);
-  vtAssertExpr(group_iter != state_lookup_.end());
-  auto id_iter = group_iter->second.find(id);
-  vtAssertExpr(id_iter != group_iter->second.end());
-  return id_iter->second;
-}
+struct ReduceManager {
+  using ReducePtrType   = std::unique_ptr<Reduce>;
+  using ReduceScopeType = detail::ReduceScopeHolder<ReducePtrType>;
 
-template <typename T>
-/*static*/ void ReduceStateHolder<T>::erase(
-  GroupType group, ReduceIDType const& id
-) {
-  auto group_iter = state_lookup_.find(group);
-  if (group_iter != state_lookup_.end()) {
-    auto id_iter = group_iter->second.find(id);
-    if (id_iter == group_iter->second.end()) {
-      state_lookup_.erase(group_iter);
-    } else {
-      group_iter->second.erase(id_iter);
-      if (group_iter->second.size == 0) {
-        state_lookup_.erase(group_iter);
-      }
-    }
-  }
-}
+  ReduceManager();
 
-template <typename T>
-/*static*/ void ReduceStateHolder<T>::insert(
-  GroupType group, ReduceIDType const& id, ReduceStateType&& state
-) {
-  state_lookup_[group].emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(id),
-    std::forward_as_tuple(std::move(state))
-  );
-}
+  Reduce* global();
 
-template <typename T>
-/*static*/ typename ReduceStateHolder<T>::GroupLookupType
-ReduceStateHolder<T>::state_lookup_ = {};
+  Reduce* getReducer(detail::ReduceScope const& scope);
+
+  Reduce* getReducerObjGroup(ObjGroupProxyType const& proxy);
+
+  Reduce* getReducerVrtProxy(VirtualProxyType const& proxy);
+
+  Reduce* getReducerGroup(GroupType const& group);
+
+  Reduce* getReducerComponent(ComponentIDType const& cid);
+
+  Reduce* makeReducerCollective();
+
+  void makeReducerGroup(GroupType const& group, collective::tree::Tree* tree);
+
+  template <typename MsgT>
+  static void reduceRootRecv(MsgT* msg);
+
+  template <typename MsgT>
+  static void reduceUp(MsgT* msg);
+
+private:
+  ReduceScopeType reducers_;
+  detail::UserIDType cur_user_id_ = 0;
+};
 
 }}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_HOLDER_IMPL_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MANAGER_H*/

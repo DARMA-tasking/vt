@@ -148,9 +148,10 @@ namespace vt { namespace lb { namespace instrumentation {
 /*static*/ void CentralCollect::startReduce(LBPhaseType const& phase) {
   auto const& root = CentralCollect::collect_root_;
   auto msg = CentralCollect::collectStats(phase);
-  theCollective()->reduce<CollectMsg, CentralCollect::centralizedCollect>(
-    root, msg
-  );
+  theCollective()->global()->
+    reduce<CollectMsg, CentralCollect::centralizedCollect>(
+      root, msg
+    );
 }
 
 /*static*/ LBPhaseType CentralCollect::currentPhase() {
