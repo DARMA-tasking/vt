@@ -1,6 +1,6 @@
 
 
-set(vt_zoltan_enabled "0")
+set(vt_zoltan_found "0")
 
 # optional directory for this package
 optional_pkg_directory(zoltan "Zoltan library" 1)
@@ -12,5 +12,5 @@ if (${zoltan_DIR_FOUND})
       message(FATAL_ERROR "Zoltan library not found")
     endif()
   endif()
-  set(vt_zoltan_enabled "1")
+  set(vt_zoltan_found "1")
 endif()
