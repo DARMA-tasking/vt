@@ -52,9 +52,13 @@
 #include "vt/vrt/collection/types/migratable.fwd.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
+
+// Forward declaration for friend declaration below
+namespace balance {
+  struct ProcStats;
+}
 
 struct Migratable : MigrateHookBase {
 

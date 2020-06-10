@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/vrt/collection/types/migratable.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -61,8 +62,9 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ProcStats : runtime::component::Component<ProcStats> {
-  using MigrateFnType = std::function<void(NodeType)>;
-  using LoadMapType   = std::unordered_map<ElementIDType,TimeType>;
+  using MigrateFnType       = std::function<void(NodeType)>;
+  using LoadMapType         = std::unordered_map<ElementIDType,TimeType>;
+  using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
 
   ProcStats() = default;
 
@@ -87,7 +89,6 @@ public:
   /**
    * \internal \brief Add processor statistics for local object
    *
-   * \param[in] elm_proxy the element proxy to the object
    * \param[in] col_elm the collection element pointer
    * \param[in] phase the current phase
    * \param[in] time the time the object took
@@ -95,10 +96,10 @@ public:
    *
    * \return the temporary ID for the object assigned for this phase
    */
-  template <typename ColT>
   ElementIDType addProcStats(
-    VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-    PhaseType const& phase, TimeType const& time, CommMapType const& comm
+    Migratable* col_elm,
+    PhaseType const& phase, TimeType const& time,
+    std::vector<TimeType> const& subphase_time, CommMapType const& comm
   );
 
   /**
@@ -118,6 +119,32 @@ public:
 
   /**
    * \internal \brief Output stats file based on instrumented data
+   *
+   * The contents of the file consist of a series of records separated
+   * by newlines. Each record consists of comma separated fields. The
+   * first field of each record is a decimal integer phase which the
+   * record describes.
+   *
+   * The first batch of records representing object workloads contain
+   * 5 fields. The first field is the phase, as above. The second
+   * field contains a unique object identifier, as a decimal
+   * integer. The third field contains the object's total workload
+   * during the phase, measured by elapsed time, and represented as a
+   * floating-point decimal number. The fourth field contains the
+   * number of subphases that made up the phase, as a decimal
+   * integer. The fifth field contains a "[]"-bracketed list of
+   * workloads, one decimal floating point value per subphase,
+   * separate by commas.
+   *
+   * The second batch of records representing communication graph
+   * edges contain 5 fields. The first field is the phase, as
+   * above. The second and third fields are the recipient and source
+   * of a communication, as decimal integers. The fourth field is the
+   * weight of the edge, representing the number of bytes transmitted
+   * between the end-points, as a decimal integer. The fifth field is
+   * the category of the communication, relating the sender and
+   * recipient and distinguishing point-to-point messages from
+   * broadcasts, as a decimal integer.
    */
   void outputStatsFile();
 
@@ -134,6 +161,15 @@ public:
    * \return the load map
    */
   LoadMapType const& getProcLoad(PhaseType phase) const;
+
+  /**
+   * \internal \brief Get object loads for the subphases of a given phase
+   *
+   * \param[in] phase the phase
+   *
+   * \return the subphase load map
+   */
+  SubphaseLoadMapType const& getProcSubphaseLoad(PhaseType phase) const;
 
   /**
    * \internal \brief Get object comm graph for a given phase
@@ -198,6 +234,8 @@ private:
   objgroup::proxy::Proxy<ProcStats> proxy_;
   /// Processor timings for each local object
   std::vector<LoadMapType> proc_data_;
+  /// Processor subphase timings for each local object
+  std::vector<SubphaseLoadMapType> proc_subphase_data_;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
   /// Map of temporary ID to permanent ID
@@ -221,7 +259,5 @@ namespace vt {
 extern vrt::collection::balance::ProcStats* theProcStats();
 
 } /* end namespace vt */
-
-#include "vt/vrt/collection/balance/proc_stats.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H*/
