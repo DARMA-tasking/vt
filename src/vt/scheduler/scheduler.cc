@@ -330,4 +330,32 @@ void runScheduler() {
   theSched()->scheduler();
 }
 
+void runSchedulerThrough(EpochType epoch) {
+  // WARNING: This is to prevent global termination from spuriously
+  // thinking that the work done in this loop over the scheduler
+  // represents the entire work of the program, and thus leading to
+  // stuff being torn down
+  theTerm()->produce();
+  theSched()->runSchedulerWhile([=]{ return !theTerm()->isEpochTerminated(epoch); });
+  theTerm()->consume();
+}
+
+void runInEpochRooted(ActionType&& fn) {
+  auto ep = theTerm()->makeEpochRooted();
+  theMsg()->pushEpoch(ep);
+  fn();
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+  runSchedulerThrough(ep);
+}
+
+void runInEpochCollective(ActionType&& fn) {
+  auto ep = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep);
+  fn();
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+  runSchedulerThrough(ep);
+}
+
 } //end namespace vt

@@ -194,6 +194,7 @@ EpochType BaseLB::startMigrationCollective() {
   migration_epoch_ = theTerm()->makeEpochCollective("LB migration");
   theTerm()->addAction(migration_epoch_, [this]{ this->migrationDone(); });
   theMsg()->pushEpoch(migration_epoch_);
+  during_migration_ = true;
   return migration_epoch_;
 }
 
@@ -210,6 +211,7 @@ void BaseLB::finishMigrationCollective() {
 
   theMsg()->popEpoch(migration_epoch_);
   theTerm()->finishedEpoch(migration_epoch_);
+  during_migration_ = false;
 }
 
 void BaseLB::transferSend(
@@ -232,6 +234,7 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
+  vtAssert(during_migration_, "migrateObjectTo should be called between startMigrationCollective and finishMigrationCollective");
   auto from = objGetNode(obj_id);
   if (from != to) {
     bool has_object = theProcStats()->hasObjectToMigrate(obj_id);

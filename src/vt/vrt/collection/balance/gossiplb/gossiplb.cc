@@ -188,9 +188,7 @@ void GossipLB::inform() {
 
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
-  bool inform_done = false;
   auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
-  theTerm()->addAction(propagate_epoch, [&inform_done] { inform_done = true; });
 
   // Underloaded start the round
   if (is_underloaded_) {
@@ -199,7 +197,7 @@ void GossipLB::inform() {
 
   theTerm()->finishedEpoch(propagate_epoch);
 
-  theSched()->runSchedulerWhile([&inform_done]{ return not inform_done; });
+  vt::runSchedulerThrough(propagate_epoch);
 
   debug_print(
     gossiplb, node,
@@ -378,9 +376,7 @@ GossipLB::selectObject(
 void GossipLB::decide() {
   double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
 
-  bool decide_done = false;
   auto lazy_epoch = theTerm()->makeEpochCollective("GossipLB: decide");
-  theTerm()->addAction(lazy_epoch, [&decide_done] { decide_done = true; });
 
   if (is_overloaded_) {
     std::vector<NodeType> under = makeUnderloaded();
@@ -466,7 +462,7 @@ void GossipLB::decide() {
 
   theTerm()->finishedEpoch(lazy_epoch);
 
-  theSched()->runSchedulerWhile([&decide_done]{ return not decide_done; });
+  vt::runSchedulerThrough(lazy_epoch);
 }
 
 void GossipLB::thunkMigrations() {

@@ -269,7 +269,8 @@ public:
 public:
   // TermTerminated interface
   TermStatusEnum testEpochTerminated(EpochType epoch) override;
-  // Might return (conservatively) false if the epoch is non-local
+  // Might return (conservatively) false for some time if the epoch is
+  // non-local, but will eventually return true
   bool isEpochTerminated(EpochType epoch);
 
 public:

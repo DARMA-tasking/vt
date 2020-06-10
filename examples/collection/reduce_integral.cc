@@ -221,27 +221,28 @@ int main(int argc, char** argv) {
     }
   }
 
-  if (this_node == 0) {
-    //
-    // Create the interval decomposition into objects
-    //
-    using BaseIndexType = typename vt::Index1D::DenseIndexType;
-    auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
+  vt::runInEpochCollective([=]{
+      if (this_node == 0) {
+        //
+        // Create the interval decomposition into objects
+        //
+        using BaseIndexType = typename vt::Index1D::DenseIndexType;
+        auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
-    auto proxy = vt::theCollection()->construct<Integration1D>(range);
-    proxy.broadcast<Integration1D::InitMsg,&Integration1D::compute>(
-      num_objs, numIntPerObject
-    );
-  }
+        auto proxy = vt::theCollection()->construct<Integration1D>(range);
+        proxy.broadcast<Integration1D::InitMsg,&Integration1D::compute>
+          (
+           num_objs, numIntPerObject
+          );
+      }
+    });
 
   // Add something like this to validate the reduction.
   // Create the variable root_reduce_finished as a static variable,
   // which is only checked on one node.
-  vt::theTerm()->addAction([]{
-    if (vt::theContext()->getNode() == reduce_root_node) {
-      vtAssertExpr(root_reduce_finished == true);
-    }
-  });
+  if (vt::theContext()->getNode() == reduce_root_node) {
+    vtAssertExpr(root_reduce_finished == true);
+  }
 
   vt::finalize();
 

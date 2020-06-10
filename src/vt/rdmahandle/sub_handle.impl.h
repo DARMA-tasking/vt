@@ -594,9 +594,7 @@ void SubHandle<T,E,IndexT>::afterLB() {
   theMsg()->popEpoch(epoch);
   theTerm()->finishedEpoch(epoch);
 
-  bool done = false;
-  theTerm()->addAction(epoch, [&done]{ done = true; });
-  theSched()->runSchedulerWhile([&done]{ return not done; });
+  runSchedulerThrough(epoch);
 }
 
 template <typename T, HandleEnum E, typename IndexT>

@@ -76,7 +76,6 @@ TEST_F(TestTermCleanup, test_termination_cleanup_1) {
 
   for (int i = 0; i < num_epochs; i++) {
     EpochType const epoch = theTerm()->makeEpochCollective();
-    bool done = false;
     //fmt::print("global collective epoch {:x}\n", epoch);
 
     NodeType const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
@@ -86,8 +85,7 @@ TEST_F(TestTermCleanup, test_termination_cleanup_1) {
     theMsg()->sendMsg<TestMsgType, handler>(next, msg.get());
 
     theTerm()->finishedEpoch(epoch);
-    theTerm()->addAction(epoch, [&]{ done = true; });
-    do vt::runScheduler(); while (not done);
+    vt::runSchedulerThrough(epoch);
 
     EXPECT_LT(theTerm()->getEpochState().size(), std::size_t{2});
     EXPECT_EQ(theTerm()->getEpochWaitSet().size(), std::size_t{0});
@@ -123,9 +121,6 @@ TEST_F(TestTermCleanup, test_termination_cleanup_2) {
     EpochType const wave_epoch = theTerm()->makeEpochRootedWave(
       term::SuccessorEpochCapture{no_epoch}
     );
-    bool coll_done = false;
-    bool root_done = false;
-    bool wave_done = false;
     //fmt::print("global collective epoch {:x}\n", epoch);
 
     NodeType const next = this_node + 1 < num_nodes ? this_node + 1 : 0;
@@ -149,10 +144,9 @@ TEST_F(TestTermCleanup, test_termination_cleanup_2) {
     theTerm()->finishedEpoch(coll_epoch);
     theTerm()->finishedEpoch(root_epoch);
     theTerm()->finishedEpoch(wave_epoch);
-    theTerm()->addAction(coll_epoch, [&]{ coll_done = true; });
-    theTerm()->addAction(root_epoch, [&]{ root_done = true; });
-    theTerm()->addAction(wave_epoch, [&]{ wave_done = true; });
-    do vt::runScheduler(); while (not coll_done or not root_done or not wave_done);
+    vt::runSchedulerThrough(coll_epoch);
+    vt::runSchedulerThrough(root_epoch);
+    vt::runSchedulerThrough(wave_epoch);
   }
 
   while (not vt::rt->isTerminated() or not vt::theSched()->isIdle()) {

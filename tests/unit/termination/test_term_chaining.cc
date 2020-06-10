@@ -115,16 +115,6 @@ struct TestTermChaining : TestParallelHarness {
 
     chain.done();
   }
-
-  static void run_to_term() {
-    bool finished = false;
-
-    theTerm()->addAction(epoch, [&finished]{ finished = true; });
-
-    while (!finished) {
-      runScheduler();
-    }
-  }
 };
 
 /*static*/ int32_t TestTermChaining::handler_count = 0;
@@ -148,7 +138,7 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     theTerm()->finishedEpoch(epoch);
     theMsg()->popEpoch(epoch);
     fmt::print("before run 1\n");
-    run_to_term();
+    vt::runSchedulerThrough(epoch);
     fmt::print("after run 1\n");
 
     EXPECT_EQ(handler_count, 4);
@@ -156,7 +146,7 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     theMsg()->pushEpoch(epoch);
     theTerm()->finishedEpoch(epoch);
     theMsg()->popEpoch(epoch);
-    run_to_term();
+    vt::runSchedulerThrough(epoch);
     EXPECT_EQ(handler_count, 13);
   }
 }

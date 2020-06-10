@@ -131,6 +131,7 @@ protected:
   ElementLoadType const* load_data                = nullptr;
   ElementCommType const* comm_data                = nullptr;
   StatisticMapType stats                          = {};
+  bool during_migration_                          = false;
   EpochType migration_epoch_                      = no_epoch;
   TransferType off_node_migrate_                  = {};
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};

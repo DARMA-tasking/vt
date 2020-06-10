@@ -86,18 +86,6 @@ static void migrateToNext(ColMsg* msg, Hello* col) {
   col->migrate(next_node);
 }
 
-template <typename Callable>
-void executeInEpoch(Callable&& fn) {
-  auto ep = vt::theTerm()->makeEpochRooted();
-  vt::theMsg()->pushEpoch(ep);
-  fn();
-  vt::theMsg()->popEpoch(ep);
-  vt::theTerm()->finishedEpoch(ep);
-  bool done = false;
-  vt::theTerm()->addAction(ep, [&done]{ done = true; });
-  do vt::runScheduler(); while (!done);
-}
-
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
@@ -117,17 +105,17 @@ int main(int argc, char** argv) {
     auto range = vt::Index1D(num_elms);
     auto proxy = vt::theCollection()->construct<Hello>(range, this_node);
 
-    executeInEpoch([=]{
+    vt::runInEpochRooted([=]{
       auto msg = vt::makeMessage<ColMsg>(this_node);
       proxy.broadcast<ColMsg, doWork>(msg.get());
     });
 
-    executeInEpoch([=]{
+    vt::runInEpochRooted([=]{
       auto msg = vt::makeMessage<ColMsg>(this_node);
       proxy.broadcast<ColMsg, migrateToNext>(msg.get());
     });
 
-    executeInEpoch([=]{
+    vt::runInEpochRooted([=]{
       auto msg = vt::makeMessage<ColMsg>(this_node);
       proxy.broadcast<ColMsg, doWork>(msg.get());
     });
