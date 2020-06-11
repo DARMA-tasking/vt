@@ -65,6 +65,7 @@ namespace vt {
  * message promotion should generally not be relied upon.
  */
 template <typename MsgT, typename... Args>
+[[deprecated("Use makeMessage instead")]]
 MsgT* makeSharedMessage(Args&&... args);
 
 /**
@@ -80,10 +81,10 @@ MsgT* makeSharedMessage(Args&&... args);
  * message promotion should generally not be relied upon.
  */
 template <typename MsgT, typename... Args>
+[[deprecated("Use makeMessageSz instead")]]
 MsgT* makeSharedMessageSz(std::size_t size, Args&&... args);
 
 /**
- * \deprecated Use \c makeMesssage.
  * \brief Create a new message.
  *
  * Create a new message already wrapped in a MsgPtr.
@@ -96,7 +97,6 @@ template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessage(Args&&... args);
 
 /**
- * \deprecated Use \c makeMesssage.
  * \brief Create a new message, of a size.
  *
  * Create a new message already wrapped in a MsgPtr.
@@ -107,10 +107,6 @@ MsgPtr<MsgT> makeMessage(Args&&... args);
  */
 template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args);
-
-template <typename MsgT, typename... Args>
-[[deprecated("Use makeMessage instead")]]
-MsgPtr<MsgT> makeMsg(Args&&... args);
 
 } //end namespace vt
 

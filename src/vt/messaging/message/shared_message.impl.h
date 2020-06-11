@@ -86,12 +86,6 @@ MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
   return MsgPtr<MsgT>{makeSharedMessageSz<MsgT>(size, std::forward<Args>(args)...)};
 }
 
-template <typename MsgT, typename... Args>
-[[deprecated("Use makeMessage instead")]]
-MsgPtr<MsgT> makeMsg(Args&&... args) {
-  return makeMessage<MsgT>(std::forward<Args>(args)...);
-}
-
 } //end namespace vt
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_IMPL_H*/
