@@ -47,22 +47,30 @@
 
 // Do not pull in any VT dependencies here
 
+#include <functional>
 #include <string>
+#include <vector>
+#include <tuple>
 
 namespace vt { namespace arguments {
 
 struct ArgConfig {
 
-  static int parse(int& argc, char**& argv);
+  /// Parse the arguments into ArgConfig.
+  /// Re-assigns argc/argv to remove consumed arguments.
+  /// On success the tuple will be {-1, ""}. Otherwise the exit code
+  /// (which may be 0 if help was requested) will be returned along
+  /// with an appropriate display message.
+  static std::tuple<int, std::string> parse(int& argc, char**& argv);
 
 public:
   static bool vt_color;
   static bool vt_no_color;
   static bool vt_auto_color;
   static bool vt_quiet;
-
   // Derived from vt_*_color arguments after parsing.
   static bool colorize_output;
+
   static int32_t vt_sched_num_progress;
   static int32_t vt_sched_progress_han;
   static double vt_sched_progress_sec;
@@ -171,8 +179,22 @@ public:
   static std::string vt_user_str_2;
   static std::string vt_user_str_3;
 
+  /// Name of the program launched (excluding any path!)
+  static std::string prog_name;
+
+  /// Name of the program launched, aka argv[0].
+  /// Original char* object.
+  static char* argv_prog_name;
+
+  /// Arguments to pass to MPI Init.
+  /// Does not include argv[0]. Original char* objects.
+  static std::vector<char*> mpi_init_args;
+  /// Arguments are being ref-returend as the result of parse(..).
+  /// Does not include argv[0]. Original char* objects.
+  static std::vector<char*> passthru_args;
+
 private:
-  static bool parsed;
+  static bool parsed_;
 };
 
 inline bool user1() { return ArgConfig::vt_user_1; }

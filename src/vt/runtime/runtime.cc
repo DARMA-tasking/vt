@@ -60,13 +60,10 @@
 #include "vt/topos/location/location_headers.h"
 #include "vt/rdmahandle/manager.h"
 #include "vt/vrt/context/context_vrtmanager.h"
-#include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/worker/worker_headers.h"
-#include "vt/configs/generated/vt_git_revision.h"
 #include "vt/configs/debug/debug_colorize.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/configs/error/stack_out.h"
 #include "vt/configs/error/pretty_print_stack.h"
 #include "vt/utils/memory/memory_usage.h"
@@ -74,11 +71,16 @@
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 
+#include "vt/configs/arguments/argparse.h"
+#include "vt/configs/arguments/args.h"
+
 #include <memory>
 #include <iostream>
 #include <functional>
 #include <string>
 #include <vector>
+#include <tuple>
+
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
@@ -88,7 +90,6 @@
 
 namespace vt { namespace runtime {
 
-/*static*/ std::string Runtime::prog_name_ = "";
 /*static*/ bool volatile Runtime::sig_user_1_ = false;
 
 Runtime::Runtime(
@@ -98,18 +99,51 @@ Runtime::Runtime(
      num_workers_(in_num_workers),
      communicator_(
        in_comm == nullptr ? MPI_COMM_NULL : *in_comm
-     ),
-     user_argc_(argc),
-     user_argv_(argv)
+     )
 {
-  ArgType::parse(argc, argv);
-  if (argc > 0) {
-    prog_name_ = std::string(argv[0]);
+  // MPI_Init 'should' be called first on the original arguments,
+  // with the justification that in some environments in addition to removing
+  // special MPI arguments, it can actually ADD arguments not from argv.
+  // That is not done here and doing so moves up parts of 'initialize' logic.
+
+  // n.b. ref-update of args with pass-through arguments
+  // (pass-through arguments are neither for VT or MPI_Init)
+  std::tuple<int, std::string> result =
+    arguments::ArgParse::parse(/*out*/ argc, /*out*/ argv);
+  int exit_code = std::get<0>(result);
+
+  if (exit_code not_eq -1) {
+    // Help requested or invalid argument(s).
+    // To better honor the MPI contract, force an MPI_Init then MPI_Abort.
+    // It might be better to move up the general MPI_Init case; normally
+    // MPI_Init is called as a result of Runtime::initialize (while this is ctor).
+    MPI_Comm comm = communicator_ != MPI_COMM_NULL ? communicator_ : MPI_COMM_WORLD;
+    int rank;
+    MPI_Init(NULL, NULL);
+    MPI_Comm_rank(comm, &rank);
+
+    if (rank == 0) {
+      // Only emit output to rank 0 to minimize spam
+      std::string& msg = std::get<1>(result);
+      // exit code of 0 -> 'help'
+      std::ostream& out = exit_code == 0 ? std::cout : std::cerr;
+
+      out << "--- VT INITIALIZATION ABORT ---" << "\n\n"
+          << msg << "\n"
+          << "--- VT INITIALIZATION ABORT ---" << "\n"
+          << std::flush;
+    }
+
+    MPI_Abort(comm, exit_code);
+    std::_Exit(exit_code); // no return
   }
+
   sig_user_1_ = false;
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
+
+  setupArgs();
 }
 
 bool Runtime::hasSchedRun() const {
@@ -212,7 +246,7 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
-  std::string app_name = prog_name_ == "" ? "prog" : prog_name_;
+  std::string& app_name = ArgType::prog_name;
   std::string name = ArgType::vt_stack_file == "" ? app_name : ArgType::vt_stack_file;
   auto const& node = debug::preNode();
   std::string file = name + "." + std::to_string(node) + ".stack.out";
@@ -290,725 +324,6 @@ bool Runtime::tryFinalize() {
   return finalize_now;
 }
 
-void Runtime::printStartupBanner() {
-  // If --vt_quiet is set, immediately exit printing nothing during startup
-  if (ArgType::vt_quiet) {
-    return;
-  }
-
-  NodeType const nodes = theContext->getNumNodes();
-  WorkerCountType const workers = theContext->getNumWorkers();
-  bool const has_workers = theContext->hasWorkers();
-
-  std::string is_interop_str =
-    is_interop_ ?
-      std::string(" interop=") + std::string(is_interop_ ? "true:" : "false:") :
-      std::string("");
-  std::string init = "Runtime Initializing:" + is_interop_str;
-  std::string mode = std::string("mode: ");
-  std::string mode_type =
-    std::string(num_workers_ == no_workers ? "single" : "multi") +
-    std::string("-thread per rank");
-  std::string thd = !has_workers ? std::string("") :
-    std::string(", worker threading: ") +
-    std::string(
-      #if backend_check_enabled(openmp)
-        "OpenMP"
-      #elif backend_check_enabled(stdthread)
-        "std::thread"
-      #else
-        ""
-      #endif
-   );
-  std::string cnt = !has_workers ? std::string("") :
-    (std::string(", ") + std::to_string(workers) + std::string(" workers/node"));
-  std::string node_str = nodes == 1 ? "node" : "nodes";
-  std::string all_node = std::to_string(nodes) + " " + node_str + cnt;
-
-  char hostname[1024];
-  gethostname(hostname, 1024);
-
-  auto green    = debug::green();
-  auto red      = debug::red();
-  auto reset    = debug::reset();
-  auto bd_green = debug::bd_green();
-  auto magenta  = debug::magenta();
-  auto vt_pre   = debug::vtPre();
-  auto emph     = [=](std::string s) -> std::string { return debug::emph(s); };
-  auto reg      = [=](std::string s) -> std::string { return debug::reg(s);  };
-
-  std::vector<std::string> features;
-
-#if backend_check_enabled(bit_check_overflow)
-  features.push_back(vt_feature_str_bit_check_overflow);
-#endif
-#if backend_check_enabled(trace_enabled)
-  features.push_back(vt_feature_str_trace_enabled);
-#endif
-#if backend_check_enabled(detector)
-  features.push_back(vt_feature_str_detector);
-#endif
-#if backend_check_enabled(lblite)
-  features.push_back(vt_feature_str_lblite);
-#endif
-#if backend_check_enabled(openmp)
-  features.push_back(vt_feature_str_openmp);
-#endif
-#if backend_check_enabled(production)
-  features.push_back(vt_feature_str_production);
-#endif
-#if backend_check_enabled(priorities)
-  features.push_back(vt_feature_str_priorities);
-#endif
-#if backend_check_enabled(stdthread)
-  features.push_back(vt_feature_str_stdthread);
-#endif
-#if backend_check_enabled(mpi_rdma)
-  features.push_back(vt_feature_str_mpi_rdma);
-#endif
-#if backend_check_enabled(print_term_msgs)
-  features.push_back(vt_feature_str_print_term_msgs);
-#endif
-#if backend_check_enabled(no_pool_alloc_env)
-  features.push_back(vt_feature_str_no_pool_alloc_env);
-#endif
-#if backend_check_enabled(memory_pool)
-  features.push_back(vt_feature_str_memory_pool);
-#endif
-#if backend_check_enabled(mpi_access_guards)
-  features.push_back(vt_feature_str_mpi_access_guards);
-#endif
-#if backend_check_enabled(zoltan)
-  features.push_back(vt_feature_str_zoltan);
-#endif
-#if backend_check_enabled(mimalloc)
-  features.push_back(vt_feature_str_mimalloc);
-#endif
-
-  std::string dirty = "";
-  if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
-    dirty = red + std::string("*dirty*") + reset;
-  }
-
-  auto const max_tag = util::MPI_Attr::getMaxTag();
-  auto const max_tag_str = std::to_string(max_tag);
-  auto const version_tuple = util::MPI_Attr::getVersion();
-  auto const version = std::to_string(std::get<0>(version_tuple));
-  auto const subversion = std::to_string(std::get<1>(version_tuple));
-
-  auto f1 = fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
-  auto f2 = fmt::format("{}Running on: {}\n", green, emph(all_node));
-  auto f3 = fmt::format("{}Machine Hostname: {}\n", green, emph(hostname));
-  auto f3a = fmt::format("{}MPI Version: {}.{}\n", green, emph(version), emph(subversion));
-  auto f3b = fmt::format("{}MPI Max tag: {}\n", green, emph(max_tag_str));
-
-  auto f4 = fmt::format("{}Build SHA: {}\n", green, emph(vt_git_sha1));
-  auto f5 = fmt::format("{}Build Ref: {}\n", green, emph(vt_git_refspec));
-  auto f6 = fmt::format("{}Description: {} {}\n", green, emph(vt_git_description), dirty);
-  auto f7 = fmt::format("{}Compile-time Features Enabled:{}\n", green, reset);
-
-  fmt::print("{}{}{}", vt_pre, f1, reset);
-  fmt::print("{}{}{}", vt_pre, f2, reset);
-  fmt::print("{}{}{}", vt_pre, f3, reset);
-  fmt::print("{}{}{}", vt_pre, f3a, reset);
-  fmt::print("{}{}{}", vt_pre, f3b, reset);
-  fmt::print("{}{}{}", vt_pre, f4, reset);
-  fmt::print("{}{}{}", vt_pre, f5, reset);
-  fmt::print("{}{}{}", vt_pre, f6, reset);
-  fmt::print("{}{}{}", vt_pre, f7, reset);
-  for (size_t i = 0; i < features.size(); i++) {
-    fmt::print("{}\t{}\n", vt_pre, emph(features.at(i)));
-  }
-
-  auto warn_cr = [=](std::string opt, std::string compile) -> std::string {
-    return fmt::format(
-      "{}Warning:{} {}{}{} has no effect: compile-time"
-      " feature {}{}{} is disabled{}\n", red, reset, magenta, opt, reset,
-      magenta, compile, reset, reset
-    );
-  };
-  auto opt_on = [=](std::string opt, std::string compile) -> std::string {
-    return fmt::format(
-      "{}Option:{} flag {}{}{} on: {}{}\n",
-      green, reset, magenta, opt, reset, compile, reset
-    );
-  };
-  auto opt_off = [=](std::string opt, std::string compile) -> std::string {
-    return fmt::format(
-      "{}Option:{} flag {}{}{} not set: {}{}\n",
-      green, reset, magenta, opt, reset, compile, reset
-    );
-  };
-  auto opt_inverse = [=](std::string opt, std::string compile) -> std::string {
-    return fmt::format(
-      "{}Default:{} {}, use {}{}{} to disable{}\n",
-      green, reset, compile, magenta, opt, reset, reset
-    );
-  };
-  auto opt_to_enable = [=](std::string opt, std::string compile) -> std::string {
-    return fmt::format(
-      "{}Default:{} {}, use {}{}{} to enable{}\n",
-      green, reset, compile, magenta, opt, reset, reset
-    );
-  };
-
-  auto f8 = fmt::format("{}Runtime Configuration:{}\n", green, reset);
-  fmt::print("{}{}{}", vt_pre, f8, reset);
-
-  #if !backend_check_enabled(lblite)
-    if (ArgType::vt_lb) {
-      auto f9 = warn_cr("--vt_lb", "lblite");
-      fmt::print("{}\t{}{}", vt_pre, f9, reset);
-      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
-    }
-    if (ArgType::vt_lb_stats) {
-      auto f9 = warn_cr("--vt_lb_stats", "lblite");
-      fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    }
-  #endif
-
-  {
-    auto f11 = fmt::format(
-      "Running MPI progress {} times each invocation",
-      ArgType::vt_sched_num_progress
-    );
-    auto f12 = opt_on("--vt_sched_num_progress", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  {
-    auto f11 = fmt::format(
-      "Running MPI progress function at least every {} handler(s) executed",
-      ArgType::vt_sched_progress_han
-    );
-    auto f12 = opt_on("--vt_sched_progress_han", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_sched_progress_sec != 0.0) {
-    auto f11 = fmt::format(
-      "Running MPI progress function at least every {} seconds",
-      ArgType::vt_sched_progress_sec
-    );
-    auto f12 = opt_on("--vt_sched_progress_sec", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_lb) {
-    auto f9 = opt_on("--vt_lb", "Load balancing enabled");
-    fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    if (ArgType::vt_lb_file) {
-      if (ArgType::vt_lb_file_name == "") {
-        auto warn_lb_file = fmt::format(
-          "{}Warning:{} {}{}{} has no effect: compile-time"
-          " option {}{}{} is empty{}\n", red, reset, magenta, "--vt_lb_file",
-          reset, magenta, "--vt_lb_file_name", reset, reset
-        );
-        fmt::print("{}\t{}{}", vt_pre, warn_lb_file, reset);
-      } else {
-        auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
-        fmt::print("{}\t{}{}", vt_pre, f10, reset);
-        auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
-        auto f11 = opt_on("--vt_lb_file_name", f12);
-        fmt::print("{}\t{}{}", vt_pre, f11, reset);
-      }
-    } else {
-      auto a3 = fmt::format("Load balancer name: \"{}\"", ArgType::vt_lb_name);
-      auto a4 = opt_on("--vt_lb_name", a3);
-      fmt::print("{}\t{}{}", vt_pre, a4, reset);
-      auto a1 =
-        fmt::format("Load balancing interval = {}", ArgType::vt_lb_interval);
-      auto a2 = opt_on("--vt_lb_interval", a1);
-      fmt::print("{}\t{}{}", vt_pre, a2, reset);
-
-      // Check validity of LB passed to VT
-      bool found = false;
-      for (auto&& lb : vrt::collection::balance::lb_names_) {
-        if (ArgType::vt_lb_name == lb.second) {
-          found = true;
-          break;
-        }
-      }
-      if (not found) {
-        auto str = fmt::format(
-          "Could not find valid LB named: \"{}\"", ArgType::vt_lb_name
-        );
-        vtAbort(str);
-      }
-    }
-  }
-
-  if (ArgType::vt_lb_stats) {
-    auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
-    fmt::print("{}\t{}{}", vt_pre, f9, reset);
-
-    auto const fname = ArgType::vt_lb_stats_file;
-    if (fname != "") {
-      auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
-      auto f12 = opt_on("--vt_lb_stats_file", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-
-    auto const fdir = ArgType::vt_lb_stats_dir;
-    if (fdir != "") {
-      auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
-      auto f12 = opt_on("--vt_lb_stats_dir", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-
-    auto const fnamein = ArgType::vt_lb_stats_file_in;
-    if (fnamein != "") {
-      auto f11 = fmt::format("LB stats file name in \"{}.0.out\"", fnamein);
-      auto f12 = opt_on("--vt_lb_stats_file_in", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-
-    auto const fdirin = ArgType::vt_lb_stats_dir_in;
-    if (fdirin != "") {
-      auto f11 = fmt::format("LB stats directory in \"{}\"", fdirin);
-      auto f12 = opt_on("--vt_lb_stats_dir_in", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-  }
-
-
-  #if !backend_check_enabled(trace_enabled)
-    if (ArgType::vt_trace) {
-      auto f9 = warn_cr("--vt_trace", "trace_enabled");
-      fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    }
-  #endif
-
-  #if backend_check_enabled(trace_enabled)
-  if (ArgType::vt_trace) {
-    auto f9 = opt_on("--vt_trace", "Tracing enabled");
-    fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    if (ArgType::vt_trace_file != "") {
-      auto f11 = fmt::format("Trace file name \"{}\"", ArgType::vt_trace_file);
-      auto f12 = opt_on("--vt_trace_file", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    } else {
-      if (theTrace) {
-        auto f11 = fmt::format("Trace file \"{}\"", theTrace->getTraceName());
-        auto f12 = opt_inverse("--vt_trace_file", f11);
-        fmt::print("{}\t{}{}", vt_pre, f12, reset);
-      }
-    }
-    if (ArgType::vt_trace_dir != "") {
-      auto f11 = fmt::format("Directory \"{}\"", ArgType::vt_trace_dir);
-      auto f12 = opt_on("--vt_trace_dir", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    } else {
-      if (theTrace) {
-        auto f11 = fmt::format(
-          "Trace directory \"{}\"", theTrace->getDirectory()
-        );
-        auto f12 = opt_inverse("--vt_trace_dir", f11);
-        fmt::print("{}\t{}{}", vt_pre, f12, reset);
-      }
-    }
-    if (ArgType::vt_trace_mod != 0) {
-      auto f11 = fmt::format("Output every {} files ", ArgType::vt_trace_mod);
-      auto f12 = opt_on("--vt_trace_mod", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-    if (ArgType::vt_trace_flush_size != 0) {
-      auto f11 = fmt::format("Flush output incrementally with a buffer of,"
-                             " at least, {} record(s)",
-                             ArgType::vt_trace_flush_size);
-      auto f12 = opt_on("--vt_trace_flush_size", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    } else {
-      auto f11 = fmt::format("Flushing traces at end of run");
-      auto f12 = opt_inverse("--vt_trace_flush_size", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-    if (not ArgType::vt_trace_sys_all) {
-      if (ArgType::vt_trace_sys_term) {
-        auto f11 = fmt::format("Tracing all system termination messages");
-        auto f12 = opt_on("--vt_trace_sys_term", f11);
-        fmt::print("{}\t{}{}", vt_pre, f12, reset);
-      }
-      if (ArgType::vt_trace_sys_location) {
-        auto f11 = fmt::format("Tracing all system location messages");
-        auto f12 = opt_on("--vt_trace_sys_location", f11);
-        fmt::print("{}\t{}{}", vt_pre, f12, reset);
-      }
-      if (ArgType::vt_trace_sys_collection) {
-        auto f11 = fmt::format("Tracing all system collection messages");
-        auto f12 = opt_on("--vt_trace_sys_collection", f11);
-        fmt::print("{}\t{}{}", vt_pre, f12, reset);
-      }
-      if (ArgType::vt_trace_sys_serial_msg) {
-        auto f11 = fmt::format("Tracing all system serialization messages");
-        auto f12 = opt_on("--vt_trace_sys_serial_msg", f11);
-        fmt::print("{}\t{}{}", vt_pre, f12, reset);
-      }
-    } else {
-      auto f11 = fmt::format("Tracing all system messages");
-      auto f12 = opt_on("--vt_trace_sys_all", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-    if (ArgType::vt_trace_spec) {
-      {
-        auto f11 = fmt::format("Using trace enable specification for phases");
-        auto f12 = opt_on("--vt_trace_spec", f11);
-        fmt::print("{}\t{}{}", vt_pre, f12, reset);
-      }
-      if (ArgType::vt_trace_spec_file == "") {
-        auto warn_trace_file = fmt::format(
-          "{}Warning:{} {}{}{} has no effect: no specification file given"
-          " option {}{}{} is empty{}\n", red, reset, magenta,
-          "--vt_trace_spec",
-          reset, magenta, "--vt_trace_spec_file", reset, reset
-        );
-        fmt::print("{}\t{}{}", vt_pre, warn_trace_file, reset);
-      } else {
-        auto f11 = fmt::format(
-          "Using trace specification file \"{}\"",
-          ArgType::vt_trace_spec_file
-        );
-        auto f12 = opt_inverse("--vt_trace_spec", f11);
-        fmt::print("{}\t{}{}", vt_pre, f12, reset);
-      }
-    }
-    if (ArgType::vt_trace_memory_usage) {
-      auto f11 = fmt::format("Tracing memory usage");
-      auto f12 = opt_on("--vt_trace_memory_usage", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-    if (ArgType::vt_trace_mpi) {
-      auto f11 = fmt::format("Tracing MPI invocations");
-      auto f12 = opt_on("--vt_trace_mpi", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-    if (ArgType::vt_trace_event_polling) {
-      auto f11 = fmt::format("Tracing event polling (inc. MPI Isend requests)");
-      auto f12 = opt_on("--vt_trace_event_polling", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-    if (ArgType::vt_trace_irecv_polling) {
-      auto f11 = fmt::format("Tracing MPI Irecv polling");
-      auto f12 = opt_on("--vt_trace_irecv_polling", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-  }
-  #endif
-
-
-  if (ArgType::vt_term_rooted_use_ds) {
-    auto f11 = fmt::format("Forcing the use of Dijkstra-Scholten for rooted TD");
-    auto f12 = opt_on("--vt_term_rooted_use_ds", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_term_rooted_use_wave) {
-    auto f11 = fmt::format("Forcing the use of 4-counter wave-based for rooted TD");
-    auto f12 = opt_on("--vt_term_rooted_use_wave", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_print_no_progress) {
-    auto f11 = fmt::format("Printing warnings when progress is stalls");
-    auto f12 = opt_on("--vt_print_no_progress", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_epoch_graph_terse) {
-    auto f11 = fmt::format("Printing terse epoch graphs when hang detected");
-    auto f12 = opt_on("--vt_epoch_graph_terse", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  } else {
-    auto f11 = fmt::format("Printing verbose epoch graphs when hang detected");
-    auto f12 = opt_inverse("--vt_epoch_graph_terse", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_epoch_graph_on_hang) {
-    auto f11 = fmt::format("Epoch graph output enabled if hang detected");
-    auto f12 = opt_on("--vt_epoch_graph_on_hang", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_no_detect_hang) {
-    auto f11 = fmt::format("Disabling termination hang detection");
-    auto f12 = opt_on("--vt_no_detect_hang", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  } else {
-    auto f11 = fmt::format("Termination hang detection enabled by default");
-    auto f12 = opt_inverse("--vt_no_detect_hang", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (!ArgType::vt_no_detect_hang) {
-    if (ArgType::vt_hang_freq != 0) {
-      auto f11 = fmt::format(
-        "Printing stall warning every {} tree traversals ", ArgType::vt_hang_freq
-      );
-      auto f12 = opt_on("--vt_hang_detect", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-  }
-
-  if (ArgType::vt_no_sigint) {
-    auto f11 = fmt::format("Disabling SIGINT signal handling");
-    auto f12 = opt_on("--vt_no_SIGINT", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  } else {
-    auto f11 = fmt::format("SIGINT signal handling enabled by default");
-    auto f12 = opt_inverse("--vt_no_SIGINT", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_no_sigsegv) {
-    auto f11 = fmt::format("Disabling SIGSEGV signal handling");
-    auto f12 = opt_on("--vt_no_SIGSEGV", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  } else {
-    auto f11 = fmt::format("SIGSEGV signal handling enabled by default");
-    auto f12 = opt_inverse("--vt_no_SIGSEGV", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_no_terminate) {
-    auto f11 = fmt::format("Disabling std::terminate signal handling");
-    auto f12 = opt_on("--vt_no_terminate", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  } else {
-    auto f11 = fmt::format("std::terminate signal handling enabled by default");
-    auto f12 = opt_inverse("--vt_no_terminate", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_no_color) {
-    auto f11 = fmt::format("Color output disabled");
-    auto f12 = opt_on("--vt_no_color", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  } else {
-    auto f11 = fmt::format("Color output enabled");
-    auto f12 = opt_inverse("--vt_no_color", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_no_stack) {
-    auto f11 = fmt::format("Disabling all stack dumps");
-    auto f12 = opt_on("--vt_no_stack", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  } else {
-    auto f11 = fmt::format("Stack dumps enabled by default");
-    auto f12 = opt_inverse("--vt_no_stack", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_no_warn_stack) {
-    auto f11 = fmt::format("Disabling all stack dumps on vtWarn(..)");
-    auto f12 = opt_on("--vt_no_warn_stack", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_no_assert_stack) {
-    auto f11 = fmt::format("Disabling all stack dumps on vtAssert(..)");
-    auto f12 = opt_on("--vt_no_assert_stack", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_no_abort_stack) {
-    auto f11 = fmt::format("Disabling all stack dumps on vtAbort(..)");
-    auto f12 = opt_on("--vt_no_abort_stack", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_stack_file != "") {
-    auto f11 = fmt::format(
-      "Output stack dumps with file name {}", ArgType::vt_stack_file
-    );
-    auto f12 = opt_on("--vt_stack_file", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_stack_dir != "") {
-    auto f11 = fmt::format("Output stack dumps to {}", ArgType::vt_stack_dir);
-    auto f12 = opt_on("--vt_stack_dir", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_stack_mod != 0) {
-    auto f11 = fmt::format(
-      "Output stack dumps every {} files ", ArgType::vt_stack_mod
-    );
-    auto f12 = opt_on("--vt_stack_mod", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_pause) {
-    auto f11 = fmt::format("Enabled debug pause at startup");
-    auto f12 = opt_on("--vt_pause", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_memory_reporters != "") {
-    auto f11 = fmt::format(
-      "Memory usage checker precedence: {}",
-      ArgType::vt_memory_reporters
-    );
-    auto f12 = opt_on("--vt_memory_reporters", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-
-    auto working_reporters = theMemUsage->getWorkingReporters();
-    if (working_reporters.size() > 0) {
-      std::string working_str = "";
-      for (std::size_t i = 0; i < working_reporters.size(); i++) {
-        working_str += working_reporters[i];
-        if (i != working_reporters.size() - 1) {
-          working_str += ",";
-        }
-      }
-      auto f13 = fmt::format(
-        "{}Working memory reporters:{} {}{}{}\n",
-        green, reset, magenta, working_str, reset
-      );
-      fmt::print("{}\t{}{}", vt_pre, f13, reset);
-
-      auto all_usage_str = theMemUsage->getUsageAll();
-      if (all_usage_str != "") {
-        auto f14 = fmt::format(
-          "{}Initial memory usage:{} {}\n",
-          green, reset, all_usage_str
-        );
-        fmt::print("{}\t{}{}", vt_pre, f14, reset);
-      }
-    }
-
-    if (ArgType::vt_print_memory_each_phase) {
-      auto f15 = fmt::format("Printing memory usage each phase");
-      auto f16 = opt_on("--vt_print_memory_each_phase", f15);
-      fmt::print("{}\t{}{}", vt_pre, f16, reset);
-
-      auto f17 = fmt::format(
-        "Printing memory usage from node: {}", ArgType::vt_print_memory_node
-      );
-      auto f18 = opt_on("--vt_print_memory_node", f17);
-      fmt::print("{}\t{}{}", vt_pre, f18, reset);
-    } else {
-      auto f15 = fmt::format("Memory usage printing disabled");
-      auto f16 = opt_to_enable("--vt_print_memory_each_phase", f15);
-      fmt::print("{}\t{}{}", vt_pre, f16, reset);
-    }
-
-    if (ArgType::vt_print_memory_at_threshold) {
-      auto f15 = fmt::format("Printing memory usage at threshold increment");
-      auto f16 = opt_on("--vt_print_memory_at_threshold", f15);
-      fmt::print("{}\t{}{}", vt_pre, f16, reset);
-
-      auto f17 = fmt::format(
-        "Printing memory usage using threshold: {}",
-        ArgType::vt_print_memory_threshold
-      );
-      auto f18 = opt_on("--vt_print_memory_threshold", f17);
-      fmt::print("{}\t{}{}", vt_pre, f18, reset);
-
-      theMemUsage->convertBytesFromString(ArgType::vt_print_memory_threshold);
-
-      auto f19 = fmt::format(
-        "Polling for memory usage threshold every {} scheduler calls",
-        ArgType::vt_print_memory_sched_poll
-      );
-      auto f20 = opt_on("--vt_print_memory_sched_poll", f19);
-      fmt::print("{}\t{}{}", vt_pre, f20, reset);
-    }
-  }
-
-  if (ArgType::vt_debug_all) {
-    auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
-    auto f12 = opt_on("--vt_debug_all", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-  if (ArgType::vt_debug_print_flush) {
-    auto f11 = fmt::format("Flushing stdout after all VT prints is enabled");
-    auto f12 = opt_on("--vt_debug_print_flush", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  }
-
-#define vt_runtime_debug_warn_compile(opt)                              \
-  do {                                                                  \
-    if (!vt_backend_debug_enabled(opt) and ArgType::vt_debug_ ## opt) { \
-      auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);             \
-      fmt::print("{}\t{}{}", vt_pre, f9, reset);                        \
-    }                                                                   \
-  } while (0);
-
-  vt_runtime_debug_warn_compile(none)
-  vt_runtime_debug_warn_compile(gen)
-  vt_runtime_debug_warn_compile(runtime)
-  vt_runtime_debug_warn_compile(active)
-  vt_runtime_debug_warn_compile(term)
-  vt_runtime_debug_warn_compile(termds)
-  vt_runtime_debug_warn_compile(barrier)
-  vt_runtime_debug_warn_compile(event)
-  vt_runtime_debug_warn_compile(pipe)
-  vt_runtime_debug_warn_compile(pool)
-  vt_runtime_debug_warn_compile(reduce)
-  vt_runtime_debug_warn_compile(rdma)
-  vt_runtime_debug_warn_compile(rdma_channel)
-  vt_runtime_debug_warn_compile(rdma_state)
-  vt_runtime_debug_warn_compile(param)
-  vt_runtime_debug_warn_compile(handler)
-  vt_runtime_debug_warn_compile(hierlb)
-  vt_runtime_debug_warn_compile(gossiplb)
-  vt_runtime_debug_warn_compile(scatter)
-  vt_runtime_debug_warn_compile(sequence)
-  vt_runtime_debug_warn_compile(sequence_vrt)
-  vt_runtime_debug_warn_compile(serial_msg)
-  vt_runtime_debug_warn_compile(trace)
-  vt_runtime_debug_warn_compile(location)
-  vt_runtime_debug_warn_compile(vrt)
-  vt_runtime_debug_warn_compile(vrt_coll)
-  vt_runtime_debug_warn_compile(worker)
-  vt_runtime_debug_warn_compile(group)
-  vt_runtime_debug_warn_compile(broadcast)
-  vt_runtime_debug_warn_compile(objgroup)
-
-  //fmt::print("{}\n", reset);
-  fmt::print(reset);
-
-  // Enqueue a check for later in case arguments are modified before work
-  // actually executes
-  theSched->enqueue([this]{
-    this->checkForArgumentErrors();
-  });
-}
-
-void Runtime::printShutdownBanner(
-  term::TermCounterType const& num_units, std::size_t const coll_epochs
-) {
-  // If --vt_quiet is set, immediately exit printing nothing during startup
-  if (ArgType::vt_quiet) {
-    return;
-  }
-  auto green    = debug::green();
-  auto reset    = debug::reset();
-  auto bd_green = debug::bd_green();
-  auto magenta  = debug::magenta();
-  auto f1 = fmt::format("{}Runtime Finalizing{}", green, reset);
-  auto f2 = fmt::format("{}Total work units processed:{} ", green, reset);
-  auto f3 = fmt::format("{}Total collective epochs processed:{} ", green, reset);
-  auto vt_pre = bd_green + std::string("vt") + reset + ": ";
-  std::string fin = "";
-  std::string units = std::to_string(num_units);
-  fmt::print("{}{}{}{}{}\n", vt_pre, f3, magenta, coll_epochs, reset);
-  fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
-  fmt::print("{}{}{}\n", vt_pre, f1, reset);
-}
-
-void Runtime::checkForArgumentErrors() {
-  #if !backend_check_enabled(lblite)
-    if (ArgType::vt_lb) {
-      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
-    }
-  #endif
-}
-
 bool Runtime::needStatsRestartReader() {
   #if backend_check_enabled(lblite)
     if (ArgType::vt_lb_stats) {
@@ -1030,6 +345,11 @@ bool Runtime::initialize(bool const force_now) {
     sync();
     if (theContext->getNode() == 0) {
       printStartupBanner();
+      // Enqueue a check for later in case arguments are modified before work
+      // actually executes
+      theSched->enqueue([this]{
+        this->checkForArgumentErrors();
+      });
     }
     setup();
     sync();
@@ -1074,7 +394,7 @@ void Runtime::runScheduler() {
 }
 
 void Runtime::reset() {
-  MPI_Barrier(communicator_);
+  sync();
 
   runtime_active_ = true;
 
@@ -1082,7 +402,7 @@ void Runtime::reset() {
   theTerm->addDefaultAction(action);
   theTerm->resetGlobalTerm();
 
-  MPI_Barrier(communicator_);
+  sync();
 
   // Without workers running on the node, the termination detector should
   // assume its locally ready to propagate instead of waiting for them to
@@ -1205,8 +525,21 @@ void Runtime::setup() {
   debug_print(runtime, node, "end: setup\n");
 }
 
+void Runtime::setupArgs() {
+  std::vector<char*>& mpi_args = ArgType::mpi_init_args;
+  user_argc_ = mpi_args.size() + 1;
+  user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
+
+  int i = 0;
+  user_argv_[i++] = ArgType::argv_prog_name;
+  for (char*& arg : mpi_args) {
+    user_argv_[i++] = arg;
+  }
+  user_argv_[i++] = nullptr;
+}
+
 void Runtime::finalizeMPI() {
-  MPI_Barrier(communicator_);
+  sync();
 
   if (not is_interop_) {
     MPI_Finalize();
@@ -1223,7 +556,7 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<ctx::Context>(
     &theContext, Deps<>{},
-    user_argc_, user_argv_, is_interop_, &communicator_
+    user_argc_, &user_argv_[0], is_interop_, &communicator_
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
@@ -1251,7 +584,7 @@ void Runtime::initializeComponents() {
       ctx::Context,    // Everything depends on theContext
       sched::Scheduler // Depends on scheduler for triggers
     >{},
-    user_argc_ == 0 ? "prog" : user_argv_[0]
+    ArgType::prog_name
   );
 # endif
 
