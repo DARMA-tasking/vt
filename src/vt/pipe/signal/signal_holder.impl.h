@@ -93,7 +93,7 @@ template <typename SignalT>
 void SignalHolder<SignalT>::clearAll() {
   listeners_.clear();
   listener_count_.clear();
-  listeners_.clear();
+  pending_holder_.clear();
 }
 
 template <typename SignalT>
