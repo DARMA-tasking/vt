@@ -687,6 +687,14 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
     args_to_parse.push_back(*it);
   }
 
+  // Allow a input config file
+  app.set_config(
+    "--vt_input_config",
+    "", // no default file name
+    "Read in an ini config file for VT",
+    false // not required
+  );
+
   try {
     app.parse(args_to_parse);
   } catch (CLI::Error &ex) {
