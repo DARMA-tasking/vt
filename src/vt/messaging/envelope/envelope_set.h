@@ -197,6 +197,15 @@ template <typename Env>
 inline void envelopeSetTraceRuntimeEnabled(Env& env, bool is_trace_enabled);
 #endif
 
+/**
+ * \brief Set whether this message's base serializer has been called.
+ *
+ * \param[in,out] env the envelope
+ * \param[in] has_been_serialized value indicating message is serialized
+ */
+template <typename Env>
+inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized);
+
 } /* end namespace vt */
 
 #include "vt/messaging/envelope/envelope_set.impl.h"

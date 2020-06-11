@@ -435,16 +435,16 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     );
 
     if (not is_root) {
-      auto msg = makeSharedMessage<TermCounterMsg>(
+      auto msg = makeMessage<TermCounterMsg>(
         state.getEpoch(), state.g_prod1, state.g_cons1
       );
       theMsg()->markAsTermMessage(msg);
-      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent, msg);
+      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent, msg.get());
 
       debug_print_verbose(
         term, node,
         "propagateEpoch: sending to parent: {}, msg={}, epoch={:x}, wave={}\n",
-        parent, print_ptr(msg), state.getEpoch(), state.getCurWave()
+        parent, print_ptr(msg.get()), state.getEpoch(), state.getCurWave()
       );
     } else /*if (is_root) */ {
       is_term =
@@ -482,9 +482,9 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       }
 
       if (is_term) {
-        auto msg = makeSharedMessage<TermMsg>(state.getEpoch());
+        auto msg = makeMessage<TermMsg>(state.getEpoch());
         theMsg()->markAsTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg);
+        theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg.get());
 
         state.setTerminated();
 
@@ -511,9 +511,9 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
           state.getEpoch(), state.getCurWave()
         );
 
-        auto msg = makeSharedMessage<TermMsg>(state.getEpoch(), state.getCurWave());
+        auto msg = makeMessage<TermMsg>(state.getEpoch(), state.getCurWave());
         theMsg()->markAsTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(msg);
+        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(msg.get());
       }
     }
 
@@ -988,9 +988,9 @@ EpochType TerminationDetector::makeEpochRootedWave(
    *  Broadcast new rooted epoch to all other nodes to start processing this
    *  epoch
    */
-  auto msg = makeSharedMessage<TermMsg>(epoch);
+  auto msg = makeMessage<TermMsg>(epoch);
   theMsg()->markAsTermMessage(msg);
-  theMsg()->broadcastMsg<TermMsg,makeRootedHandler>(msg);
+  theMsg()->broadcastMsg<TermMsg,makeRootedHandler>(msg.get());
 
   /*
    *  Setup the new rooted epoch locally on the root node (this node)

@@ -170,12 +170,12 @@ void EntityLocationCoord<EntityID>::registerEntity(
       );
 
       auto const& ask_node = uninitialized_destination;
-      auto msg = makeSharedMessage<LocMsgType>(
+      auto msg = makeMessage<LocMsgType>(
         this_inst, id, no_location_event_id, ask_node, home
       );
       msg->setResolvedNode(this_node);
       theMsg()->markAsLocationMessage(msg);
-      theMsg()->sendMsg<LocMsgType, updateLocation>(home, msg);
+      theMsg()->sendMsg<LocMsgType, updateLocation>(home, msg.get());
     }
   }
 }
@@ -366,11 +366,11 @@ void EntityLocationCoord<EntityID>::getLocation(
     if (not rec_exists) {
       if (home_node != this_node) {
         auto const& event_id = fst_location_event_id++;
-        auto msg = makeSharedMessage<LocMsgType>(
+        auto msg = makeMessage<LocMsgType>(
           this_inst, id, event_id, this_node, home_node
         );
         theMsg()->markAsLocationMessage(msg);
-        theMsg()->sendMsg<LocMsgType, getLocationHandler>(home_node, msg);
+        theMsg()->sendMsg<LocMsgType, getLocationHandler>(home_node, msg.get());
         // save a pending action when information about location arrives
         pending_actions_.emplace(
           std::piecewise_construct,
@@ -811,12 +811,12 @@ template <typename EntityID>
           event_id, epoch
         );
 
-        auto msg2 = makeSharedMessage<LocMsgType>(
+        auto msg2 = makeMessage<LocMsgType>(
           inst, entity, event_id, ask_node, home_node
         );
         msg2->setResolvedNode(node);
         theMsg()->markAsLocationMessage(msg2);
-        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
+        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2.get());
       });
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);

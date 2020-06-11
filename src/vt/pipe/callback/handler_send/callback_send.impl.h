@@ -91,8 +91,8 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   if (this_node == send_node_) {
     runnable::RunnableVoid::run(handler_,this_node);
   } else {
-    auto msg = makeSharedMessage<CallbackMsg>(pid);
-    theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);
+    auto msg = makeMessage<CallbackMsg>(pid);
+    theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg.get());
   }
 }
 

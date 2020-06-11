@@ -64,9 +64,9 @@ namespace vt { namespace term { namespace ds {
   );
   auto const node = theContext()->getNode();
   vtAssertExpr(successor != node);
-  auto msg = makeSharedMessage<AckMsg>(epoch,node,successor,count);
+  auto msg = makeMessage<AckMsg>(epoch,node,successor,count);
   theMsg()->markAsTermMessage(msg);
-  theMsg()->sendMsg<AckMsg,requestAckHan>(successor,msg);
+  theMsg()->sendMsg<AckMsg,requestAckHan>(successor,msg.get());
 }
 
 /*static*/ void StateDS::acknowledge(
@@ -79,9 +79,9 @@ namespace vt { namespace term { namespace ds {
   );
   auto const node = theContext()->getNode();
   vtAssertExpr(predecessor != node);
-  auto msg = makeSharedMessage<AckMsg>(epoch,node,predecessor,count);
+  auto msg = makeMessage<AckMsg>(epoch,node,predecessor,count);
   theMsg()->markAsTermMessage(msg);
-  theMsg()->sendMsg<AckMsg,acknowledgeHan>(predecessor,msg);
+  theMsg()->sendMsg<AckMsg,acknowledgeHan>(predecessor,msg.get());
 }
 
 /*static*/ void StateDS::rootTerminated(EpochType epoch) {

@@ -53,6 +53,9 @@
 
 namespace vt { namespace messaging {
 
+// Envelope type requirements:
+// - All envelopes must have an 'ActiveEnvelope env' field as the FIRST field.
+
 /** \file */
 
 /**
@@ -69,7 +72,7 @@ struct EpochActiveEnvelope {
 };
 
 /**
- * \struct EpochActiveEnvelope
+ * \struct TagActiveEnvelope
  *
  * \brief Extended envelope that holds a tag, contains all of \c ActiveEnvelope
  */
@@ -81,7 +84,7 @@ struct TagActiveEnvelope {
 };
 
 /**
- * \struct EpochActiveEnvelope
+ * \struct EpochTagActiveEnvelope
  *
  * \brief Extended envelope that holds an epoch and tag, contains all of \c
  * ActiveEnvelope

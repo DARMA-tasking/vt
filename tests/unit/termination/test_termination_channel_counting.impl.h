@@ -63,24 +63,24 @@ void sendMsg(vt::NodeType dst, int count, vt::EpochType ep) {
   vtAssert(dst != vt::uninitialized_destination, "Invalid destination");
   vtAssert(dst != node, "Invalid destination");
 
-  auto msg = makeSharedMessage<Msg>(node, dst, count, ep);
+  auto msg = makeMessage<Msg>(node, dst, count, ep);
   if (ep != vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
   }
-  vt::theMsg()->sendMsg<Msg,handler>(dst,msg);
+  vt::theMsg()->sendMsg<Msg,handler>(dst,msg.get());
 }
 
 // note: only for basic messages,
 // but different handlers may be used.
 template<vt::ActiveTypedFnType<BasicMsg>* handler>
 void broadcast(int count, vt::EpochType ep) {
-  auto msg = makeSharedMessage<BasicMsg>(
+  auto msg = makeMessage<BasicMsg>(
     node, vt::uninitialized_destination, count, ep
   );
   if (ep != vt::no_epoch) {
     vt::envelopeSetEpoch(msg->env,ep);
   }
-  vt::theMsg()->broadcastMsg<BasicMsg,handler>(msg);
+  vt::theMsg()->broadcastMsg<BasicMsg,handler>(msg.get());
 
   for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;

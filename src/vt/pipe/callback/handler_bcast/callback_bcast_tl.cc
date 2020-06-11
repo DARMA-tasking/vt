@@ -67,8 +67,8 @@ void CallbackBcastTypeless::triggerVoid(PipeType const& pipe) {
     "include_sender_={}\n",
     pipe, this_node, include_sender_
   );
-  auto msg = makeSharedMessage<CallbackMsg>(pipe);
-  theMsg()->broadcastMsg<CallbackMsg>(handler_,msg);
+  auto msg = makeMessage<CallbackMsg>(pipe);
+  theMsg()->broadcastMsg<CallbackMsg>(handler_,msg.get());
   if (include_sender_) {
     runnable::RunnableVoid::run(handler_,this_node);
   }

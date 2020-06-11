@@ -107,12 +107,12 @@ TYPED_TEST_P(TestCollectionIndexTypes, test_collection_index_1) {
     auto range = IndexType(static_cast<BaseIndexType>(col_size));
     auto proxy = theCollection()->construct<ColType>(range);
     for (BaseIndexType i = 0; i < static_cast<BaseIndexType>(col_size); i++) {
-      auto msg = makeSharedMessage<MsgType>(34);
+      auto msg = makeMessage<MsgType>(34);
       if (i % 2 == 0) {
-        proxy[i].template send<MsgType,&ColType::handler>(msg);
+        proxy[i].template send<MsgType,&ColType::handler>(msg.get());
       } else {
         theCollection()->sendMsg<MsgType,&ColType::handler>(
-          proxy[i], msg
+          proxy[i], msg.get()
         );
       }
     }

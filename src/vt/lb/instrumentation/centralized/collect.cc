@@ -107,9 +107,11 @@ namespace vt { namespace lb { namespace instrumentation {
   return startReduce(phase);
 }
 
-/*static*/ CollectMsg* CentralCollect::collectStats(LBPhaseType const& phase) {
+/*static*/ MsgSharedPtr<CollectMsg> CentralCollect::collectStats(
+  LBPhaseType const& phase
+) {
   auto const& node = theContext()->getNode();
-  auto msg = makeSharedMessage<CollectMsg>(phase);
+  auto msg = makeMessage<CollectMsg>(phase);
   auto node_cont_iter = msg->entries_.find(node);
   vtAssert(
     node_cont_iter == msg->entries_.end(),
@@ -150,7 +152,7 @@ namespace vt { namespace lb { namespace instrumentation {
   auto msg = CentralCollect::collectStats(phase);
   theCollective()->global()->
     reduce<CollectMsg, CentralCollect::centralizedCollect>(
-      root, msg
+      root, msg.get()
     );
 }
 

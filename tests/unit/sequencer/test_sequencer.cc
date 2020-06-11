@@ -163,7 +163,8 @@ TEST_F(TestSequencer, test_single_wait) {
   #endif
 
   if (my_node == 1) {
-    theMsg()->sendMsg<TestMsg, testSeqHan>(0, makeSharedMessage<TestMsg>());
+    auto msg = makeMessage<TestMsg>();
+    theMsg()->sendMsg<TestMsg, testSeqHan>(0, msg.get());
   }
 
   if (my_node == 0) {
@@ -187,8 +188,9 @@ TEST_F(TestSequencer, test_single_wait_tagged) {
       testSingleTaggedWaitFn(-1);
     });
   } else if (my_node == 1) {
+    auto msg = makeMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, testSeqTaggedHan>(
-      0, makeSharedMessage<TestMsg>(), single_tag
+      0, msg.get(), single_tag
     );
   }
 }
@@ -204,11 +206,13 @@ TEST_F(TestSequencer, test_multi_wait) {
       testMultiWaitFn(-1);
     });
   } else if (my_node == 1) {
+    auto msg1 = makeMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
-      0, makeSharedMessage<TestMsg>()
+      0, msg1.get()
     );
+    auto msg2 = makeMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
-      0, makeSharedMessage<TestMsg>()
+      0, msg2.get()
     );
   }
 }
@@ -224,11 +228,13 @@ TEST_F(TestSequencer, test_multi_wait_tagged) {
       testMultiTaggedWaitFn(-1);
     });
   } else if (my_node == 1) {
+    auto msg1 = makeMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
-      0, makeSharedMessage<TestMsg>(), single_tag
+      0, msg1.get(), single_tag
     );
+    auto msg2 = makeMessage<TestMsg>();
     theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
-      0, makeSharedMessage<TestMsg>(), single_tag_2
+      0, msg2.get(), single_tag_2
     );
   }
 }

@@ -130,6 +130,11 @@ inline void envelopeSetTraceRuntimeEnabled(Env& env, bool is_trace_enabled) {
 }
 #endif
 
+template <typename Env>
+inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized) {
+  reinterpret_cast<Envelope*>(&env)->has_been_serialized = has_been_serialized;
+}
+
 } /* end namespace vt */
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SET_IMPL_H*/

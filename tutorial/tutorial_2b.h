@@ -94,13 +94,13 @@ void ReduceCol::reduceHandler(ColRedMsg* msg) {
   using ReduceOp = vt::collective::PlusOp<int32_t>;
 
   auto proxy = getCollectionProxy();
-  auto reduce_msg = makeSharedMessage<ReduceMsg>();
+  auto reduce_msg = makeMessage<ReduceMsg>();
 
   // Get a reference to the value to set it in this reduce msg
   reduce_msg->getVal() = 100;
 
   // Invoke the reduce!
-  proxy.reduce<ReduceOp,PrintReduceResult>(reduce_msg);
+  proxy.reduce<ReduceOp,PrintReduceResult>(reduce_msg.get());
 }
 
 // Tutorial code to demonstrate reducing a collection
@@ -122,8 +122,8 @@ static inline void collectionReduce() {
 
     // Broadcast a message to the entire collection. The reduceHandler will be
     // invoked on every element to the collection
-    auto msg = ::vt::makeSharedMessage<ColRedMsg>();
-    proxy.broadcast<ColRedMsg,&ReduceCol::reduceHandler>(msg);
+    auto msg = ::vt::makeMessage<ColRedMsg>();
+    proxy.broadcast<ColRedMsg,&ReduceCol::reduceHandler>(msg.get());
   }
 }
 

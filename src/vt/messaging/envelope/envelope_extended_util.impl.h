@@ -99,20 +99,23 @@ inline void envelopeSetTag(Env& env, TagType const& tag) {
 inline void envelopeInitEmpty(EpochEnvelope& env) {
   envelopeInit(env);
   setEpochType(env);
+
   envelopeSetEpoch(env, no_epoch);
 }
 
 inline void envelopeInitEmpty(TagEnvelope& env) {
   envelopeInit(env);
   setTagType(env);
+
   envelopeSetTag(env, no_tag);
 }
 
 inline void envelopeInitEmpty(EpochTagEnvelope& env) {
   envelopeInit(env);
   setEpochType(env);
-  envelopeSetEpoch(env, no_epoch);
   setTagType(env);
+
+  envelopeSetEpoch(env, no_epoch);
   envelopeSetTag(env, no_tag);
 }
 

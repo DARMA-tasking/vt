@@ -76,9 +76,9 @@ static inline void activeMessageTerm() {
   auto const new_epoch = theTerm()->makeEpochCollective();
 
   if (this_node == 0) {
-    auto msg = vt::makeSharedMessage<ExampleMsg>(8);
+    auto msg = vt::makeMessage<ExampleMsg>(8);
     envelopeSetEpoch(msg->env, new_epoch);
-    vt::theMsg()->sendMsg<ExampleMsg,recurHandler>(this_node+1,msg);
+    vt::theMsg()->sendMsg<ExampleMsg,recurHandler>(this_node+1,msg.get());
   }
 
   // Any node that wishes to have a notification on termination for a given
@@ -115,8 +115,8 @@ static void recurHandler(ExampleMsg* msg) {
         this_node, i, next_node, num_send
       );
 
-      auto msg_send = vt::makeSharedMessage<ExampleMsg>(msg->ttl);
-      vt::theMsg()->sendMsg<ExampleMsg,recurHandler>(next_node,msg_send);
+      auto msg_send = vt::makeMessage<ExampleMsg>(msg->ttl);
+      vt::theMsg()->sendMsg<ExampleMsg,recurHandler>(next_node,msg_send.get());
     }
   }
 }

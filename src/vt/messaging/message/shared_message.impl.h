@@ -50,70 +50,79 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/pool/pool.h"
 
-#include <checkpoint/checkpoint.h>
-
 namespace vt {
 
-template <typename MsgT>
-void messageTypeChecks() {
-  static_assert(
-    std::is_trivially_destructible<MsgT>::value or
-    checkpoint::SerializableTraits<MsgT>::has_serialize_function,
-    "All messages must either be trivially destructible or "
-    "have a valid serialization function associated with them"
-  );
+namespace detail {
+
+/**
+ * \internal \brief Create a bare message. Only the system should ever call this
+ * function.
+ *
+ * \param[in] args forwarded message arguments for constructor
+ *
+ * \return base message pointer
+ */
+template <typename MsgT, typename... Args>
+MsgT* makeMessageImpl(Args&&... args) {
+  MsgT* msg = new MsgT{std::forward<Args>(args)...};
+  // n.b. do NOT actually take a ref here.
+  // True ownership only starts in MsgPtr.
+  envelopeSetRef(msg->env, 0);
+  return msg;
 }
+
+/**
+ * \internal \brief Create a bare message with defined size (used when extra
+ * bytes are requested). Only the system should ever call this function.
+ *
+ * \param[in] size extra requested size at the end of message
+ * \param[in] args forwarded message arguments for constructor
+ *
+ * \return bare message pointer with \c size extra bytes on the end
+ */
+template <typename MsgT, typename... Args>
+MsgT* makeMessageSzImpl(std::size_t size, Args&&... args) {
+  MsgT* msg = new (size) MsgT{std::forward<Args>(args)...};
+  // n.b. do NOT actually take a ref here.
+  // True ownership only starts in MsgPtr.
+  envelopeSetRef(msg->env, 0);
+  return msg;
+}
+
+} /* end detail namespace */
 
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessage(Args&&... args) {
-  messageTypeChecks<MsgT>();
   MsgT* msg = new MsgT{std::forward<Args>(args)...};
-  envelopeSetRef(msg->env, 1);
-  msg->has_owner_ = false;
+  // n.b. do NOT actually take a ref here.
+  // True ownership only starts in MsgPtr.
+  // Double-initialization of an envelope is problematic.
+  //envelopeInitEmpty(msg->env);
+  envelopeSetRef(msg->env, 0);
   return msg;
 }
 
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessageSz(std::size_t size, Args&&... args) {
   MsgT* msg = new (size) MsgT{std::forward<Args>(args)...};
-  envelopeSetRef(msg->env, 1);
-  msg->has_owner_ = false;
+  // n.b. do NOT actually take a ref here.
+  // True ownership only starts in MsgPtr.
+  // Double-initialization of an envelope is problematic.
+  //envelopeInitEmpty(msg->env);
+  envelopeSetRef(msg->env, 0);
   return msg;
 }
 
 template <typename MsgT, typename... Args>
-MsgSharedPtr<MsgT> makeMessage(Args&&... args) {
-  messageTypeChecks<MsgT>();
-  MsgT* msg = makeSharedMessage<MsgT>(std::forward<Args>(args)...);
-  return promoteMsgOwner<MsgT>(msg);
+MsgPtr<MsgT> makeMessage(Args&&... args) {
+  // RVO / copy-elision guaranteed
+  return MsgPtr<MsgT>{detail::makeMessageImpl<MsgT>(std::forward<Args>(args)...)};
 }
 
 template <typename MsgT, typename... Args>
-MsgSharedPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
-  MsgT* msg = makeSharedMessageSz<MsgT>(size,std::forward<Args>(args)...);
-  return promoteMsgOwner<MsgT>(msg);
-}
-
-///[obsolete] Use makeMessage instead.
-template <typename MsgT, typename... Args>
-MsgSharedPtr<MsgT> makeMsg(Args&&... args) {
-  return makeMessage<MsgT>(std::forward<Args>(args)...);
-}
-
-template <typename MsgT>
-void messageConvertToShared(MsgT* msg) {
-  envelopeSetRef(msg->env, 1);
-}
-
-template <typename MsgT>
-void messageSetUnmanaged(MsgT* msg) {
-  envelopeSetRef(msg->env, not_shared_message);
-}
-
-template <typename MsgT>
-void messageResetDeserdes(MsgSharedPtr<MsgT> const& msg) {
-  envelopeSetRef(msg->env, 1);
-  msg->has_owner_ = true;
+MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
+  // RVO / copy-elision guaranteed
+  return MsgPtr<MsgT>{detail::makeMessageSzImpl<MsgT>(size, std::forward<Args>(args)...)};
 }
 
 } //end namespace vt

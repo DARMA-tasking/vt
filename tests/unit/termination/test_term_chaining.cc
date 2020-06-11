@@ -69,8 +69,8 @@ struct TestTermChaining : TestParallelHarness {
     handler_count = 12;
 
     EXPECT_EQ(theContext()->getNode(), 1);
-    auto msg2 = makeSharedMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, test_handler_response>(0, msg2);
+    auto msg2 = makeMessage<TestMsg>();
+    theMsg()->sendMsg<TestMsg, test_handler_response>(0, msg2.get());
   }
 
   static void test_handler_response(TestMsg* msg) {
@@ -86,8 +86,8 @@ struct TestTermChaining : TestParallelHarness {
 
     EXPECT_EQ(handler_count, 12);
     handler_count++;
-    auto msg2 = makeSharedMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2);
+    auto msg2 = makeMessage<TestMsg>();
+    theMsg()->sendMsg<TestMsg, test_handler_chained>(0, msg2.get());
   }
 
   static void test_handler_chained(TestMsg* msg) {
@@ -101,15 +101,19 @@ struct TestTermChaining : TestParallelHarness {
   static void start_chain() {
     EpochType epoch1 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch1);
-    auto msg = makeSharedMessage<TestMsg>();
-    chain.add(epoch1, theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg));
+    auto msg = makeMessage<TestMsg>();
+    chain.add(
+      epoch1, theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg.get())
+    );
     vt::theMsg()->popEpoch(epoch1);
     vt::theTerm()->finishedEpoch(epoch1);
 
     EpochType epoch2 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch2);
-    auto msg2 = makeSharedMessage<TestMsg>();
-    chain.add(epoch2, theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2));
+    auto msg2 = makeMessage<TestMsg>();
+    chain.add(
+      epoch2, theMsg()->sendMsg<TestMsg, test_handler_chainer>(1, msg2.get())
+    );
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 

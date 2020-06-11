@@ -170,8 +170,8 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
     auto proxy = theCollection()->construct<InsertTest>(range);
     for (auto i = 0; i < range.x(); i++) {
       proxy[i].insert((this_node + 1) % num_nodes);
-      auto msg = makeSharedMessage<WorkMsg>();
-      proxy[i].send<WorkMsg,&InsertTest::work>(msg);
+      auto msg = makeMessage<WorkMsg>();
+      proxy[i].send<WorkMsg,&InsertTest::work>(msg.get());
       // ::fmt::print("sending to {}\n", i);
     }
   }
@@ -195,8 +195,8 @@ TEST_F(TestInsert, test_insert_send_sparse_node_1) {
     auto proxy = theCollection()->construct<InsertTest>(range);
     for (auto i = 0; i < range.x(); i+=16) {
       proxy[i].insert((this_node + 1) % num_nodes);
-      auto msg = makeSharedMessage<WorkMsg>();
-      proxy[i].send<WorkMsg,&InsertTest::work>(msg);
+      auto msg = makeMessage<WorkMsg>();
+      proxy[i].send<WorkMsg,&InsertTest::work>(msg.get());
     }
   }
   theTerm()->addAction([=]{

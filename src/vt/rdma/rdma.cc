@@ -81,7 +81,7 @@ RDMAManager::RDMAManager()
       // auto const& data_ptr = std::get<0>(data);
       // auto const& num_bytes = std::get<1>(data);
 
-      auto new_msg = makeSharedMessage<GetBackMessage>(
+      auto new_msg = makeMessage<GetBackMessage>(
         op_id, std::get<1>(data), 0u, no_tag, handle, my_node
       );
 
@@ -96,7 +96,7 @@ RDMAManager::RDMAManager()
       };
 
       theMsg()->sendMsg<GetBackMessage, getRecvMsg>(
-        recv_node, new_msg, send_payload
+        recv_node, new_msg.get(), send_payload
       );
 
       debug_print(
@@ -183,8 +183,8 @@ RDMAManager::RDMAManager()
           "put_data: after put trigger: send_back={}\n", send_back
         );
         if (send_back != uninitialized_destination) {
-          auto new_msg = makeSharedMessage<PutBackMessage>(op_id);
-          theMsg()->sendMsg<PutBackMessage, putBackMsg>(send_back, new_msg);
+          auto new_msg = makeMessage<PutBackMessage>(op_id);
+          theMsg()->sendMsg<PutBackMessage, putBackMsg>(send_back, new_msg.get());
         }
       }, false, recv_node
     );
@@ -223,9 +223,9 @@ RDMAManager::RDMAManager()
                 "put_data: after put trigger: send_back={}\n", send_back
               );
               if (send_back != uninitialized_destination) {
-                auto new_msg = makeSharedMessage<PutBackMessage>(op_id);
+                auto new_msg = makeMessage<PutBackMessage>(op_id);
                 theMsg()->sendMsg<PutBackMessage, putBackMsg>(
-                  send_back, new_msg
+                  send_back, new_msg.get()
                 );
               }
               deleter();
@@ -245,9 +245,9 @@ RDMAManager::RDMAManager()
             offset
           );
           if (send_back) {
-            auto new_msg = makeSharedMessage<PutBackMessage>(op_id);
+            auto new_msg = makeMessage<PutBackMessage>(op_id);
             theMsg()->sendMsg<PutBackMessage, putBackMsg>(
-              send_back, new_msg
+              send_back, new_msg.get()
             );
           }
         }
@@ -640,9 +640,9 @@ void RDMAManager::putData(
         bool direct_put_pack = direct_message_send || num_bytes < 64;
 
         if (direct_put_pack) {
-          PutMessage* msg = nullptr;
+          MsgSharedPtr<PutMessage> msg = nullptr;
           if (direct_message_send) {
-            msg = reinterpret_cast<PutMessage*>(ptr);
+            msg = promoteMsg(reinterpret_cast<PutMessage*>(ptr));
             msg->send_back =
               action_after_put ? this_node : uninitialized_destination;
             msg->rdma_handle = han;
@@ -652,12 +652,12 @@ void RDMAManager::putData(
             msg->offset = offset;
             msg->packed_direct = true;
           } else {
-            msg = makeSharedMessageSz<PutMessage>(
+            msg = makeMessageSz<PutMessage>(
               num_bytes, new_op, num_bytes, offset, no_tag, han,
               action_after_put ? this_node : uninitialized_destination,
               this_node, direct_put_pack
             );
-            auto msg_ptr = reinterpret_cast<char*>(msg) + sizeof(PutMessage);
+            auto msg_ptr = reinterpret_cast<char*>(msg.get()) + sizeof(PutMessage);
             std::memcpy(msg_ptr, ptr, num_bytes);
           }
 
@@ -666,7 +666,7 @@ void RDMAManager::putData(
           }
 
           theMsg()->sendMsgSz<PutMessage,putRecvMsg>(
-            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag
+            put_node, msg.get(), sizeof(PutMessage) + num_bytes, no_tag
           );
 
           debug_print(
@@ -677,7 +677,7 @@ void RDMAManager::putData(
           );
 
         } else {
-          auto msg = makeSharedMessage<PutMessage>(
+          auto msg = makeMessage<PutMessage>(
             new_op, num_bytes, offset, no_tag, han,
             action_after_put ? this_node : uninitialized_destination,
             this_node
@@ -700,7 +700,7 @@ void RDMAManager::putData(
           );
 
           theMsg()->sendMsg<PutMessage, putRecvMsg>(
-            put_node, msg, send_payload
+            put_node, msg.get(), send_payload
           );
 
           debug_print(
@@ -953,13 +953,13 @@ void RDMAManager::getDataIntoBuf(
       } else {
         RDMA_OpType const new_op = cur_op_++;
 
-        auto msg = makeSharedMessage<GetMessage>(
+        auto msg = makeMessage<GetMessage>(
           new_op, this_node, han, num_bytes, offset
         );
         if (tag != no_tag) {
           envelopeSetTag(msg->env, tag);
         }
-        theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg);
+        theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg.get());
 
         pending_ops_.emplace(
           std::piecewise_construct,
@@ -990,13 +990,13 @@ void RDMAManager::getData(
   if (getNode != this_node) {
     RDMA_OpType const new_op = cur_op_++;
 
-    auto msg = makeSharedMessage<GetMessage>(
+    auto msg = makeMessage<GetMessage>(
       new_op, this_node, han, num_bytes, offset
     );
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
-    theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg);
+    theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg.get());
 
     pending_ops_.emplace(
       std::piecewise_construct,

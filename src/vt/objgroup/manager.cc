@@ -56,7 +56,7 @@ ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
   return proxy;
 }
 
-void ObjGroupManager::dispatch(MsgVirtualPtrAny msg, HandlerType han) {
+void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   // Extract the control-bit sequence from the handler
   auto const ctrl = HandlerManager::getHandlerControl(han);
   auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
@@ -109,7 +109,7 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
   return proxy;
 }
 
-void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han) {
+void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   debug_print(
     objgroup, node,
     "dispatchObjGroup: han={:x}\n", han
@@ -117,7 +117,9 @@ void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han) {
   return theObjGroup()->dispatch(msg,han);
 }
 
-void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch) {
+void scheduleMsg(
+  MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
+) {
   // Produce here, consume when the dispatcher actually runs---it might be
   // delayed
   theTerm()->produce(epoch);

@@ -63,11 +63,11 @@ void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
   auto const& this_node = theContext()->getNode();
   auto info = iter->second.get();
   if (info->known_root_node_ != this_node) {
-    auto nmsg = makeSharedMessage<GroupOnlyMsg>(
+    auto nmsg = makeMessage<GroupOnlyMsg>(
       msg->getGroup(),info->new_tree_cont_
     );
     theMsg()->sendMsg<GroupOnlyMsg,InfoColl::newTreeHan>(
-      info->known_root_node_,nmsg
+      info->known_root_node_,nmsg.get()
     );
   } else {
     info->newTree(-1);

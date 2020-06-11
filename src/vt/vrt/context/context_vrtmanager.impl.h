@@ -104,11 +104,11 @@ template <typename SysMsgT>
     auto const& request_id = info.req_id;
 
     new_proxy = theVirtualManager()->generateNewProxy();
-    auto send_msg = makeSharedMessage<VirtualProxyRequestMsg>(
+    auto send_msg = makeMessage<VirtualProxyRequestMsg>(
       cons_node, req_node, request_id, new_proxy
     );
     theMsg()->sendMsg<VirtualProxyRequestMsg, sendBackVirtualProxyHan>(
-      req_node, send_msg
+      req_node, send_msg.get()
     );
   }
 
@@ -138,6 +138,9 @@ template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
 messaging::PendingSend VirtualContextManager::sendSerialMsg(
   VirtualProxyType const& toProxy, MsgT *const msg
 ) {
+  auto base_msg = promoteMsg(msg).template to<BaseMsgType>();
+  ByteType msg_sz = sizeof(MsgT);
+
   if (theContext()->getWorker() == worker_id_comm_thread) {
     NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
     // register the user's handler
@@ -155,9 +158,8 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
     using SerialMsgT = SerializedEagerMsg<MsgT, VirtualMessage>;
 
     // route the message to the destination using the location manager
-    auto promoted_msg = promoteMsg(msg);
     messaging::PendingSend pending(
-      promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
+      base_msg, msg_sz, [=](MsgPtr<BaseMsgType> mymsg){
         // Uses special implementation overload not exposed in theMsg..
         MsgT* typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
         auto sendSerialHan = auto_registry::makeAutoHandler<MsgT,virtualTypedMsgHandler<MsgT>>(nullptr);
@@ -185,9 +187,8 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
     );
     return pending;
   } else {
-    auto promoted_msg = promoteMsg(msg);
     return messaging::PendingSend(
-      promoted_msg, [=](MsgVirtualPtr<BaseMsgType> mymsg) {
+      base_msg, msg_sz, [=](MsgPtr<BaseMsgType> mymsg) {
         theWorkerGrp()->enqueueCommThread([=]{
           auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
           theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, typed_msg);
@@ -204,8 +205,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
   using MsgType = VrtConstructMsg<RemoteVrtInfo, ArgsTupleType, VrtContextT>;
 
-  auto sys_msg =
-    makeSharedMessage<MsgType>(ArgsTupleType{std::forward<Args>(args)...});
+  auto sys_msg = makeMessage<MsgType>(ArgsTupleType{std::forward<Args>(args)...});
 
   auto const& this_node = theContext()->getNode();
   std::unique_ptr<RemoteVrtInfo> info = nullptr;
@@ -232,7 +232,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
 
   sys_msg->info = *info.get();
 
-  theMsg()->sendMsg<MsgType,remoteConstructVrt<MsgType>>(dest, sys_msg);
+  theMsg()->sendMsg<MsgType,remoteConstructVrt<MsgType>>(dest, sys_msg.get());
 
   return return_proxy;
 }
@@ -325,12 +325,15 @@ messaging::PendingSend VirtualContextManager::sendMsg(
     print_ptr(msg.get()), han, home_node
   );
 
-  return messaging::PendingSend(
-    msg, [=](MsgVirtualPtr<BaseMsgType> mymsg){
-    // route the message to the destination using the location manager
+  auto base_msg = msg.template to<BaseMsgType>();
+  ByteType msg_sz = sizeof(MsgT);
+  return messaging::PendingSend(base_msg, msg_sz,
+    [=](MsgPtr<BaseMsgType> mymsg){
+      // route the message to the destination using the location manager
       auto msg_shared = promoteMsg(reinterpret_cast<MsgT*>(mymsg.get()));
       theLocMan()->vrtContextLoc->routeMsg(toProxy, home_node, msg_shared);
-  });
+    }
+  );
 }
 
 }}  // end namespace vt::vrt

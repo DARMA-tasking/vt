@@ -75,8 +75,8 @@ private:
   void trigger_(SignalDataType* data) override {
     theMsg()->broadcastMsg<MsgT,f>(data);
     if (include_root_) {
-      auto nmsg = makeSharedMessage<SignalDataType*>(*data);
-      f(nmsg);
+      auto nmsg = makeMessage<SignalDataType*>(*data);
+      f(nmsg.get());
     }
   }
 

@@ -213,7 +213,7 @@ void Barrier::barrierUp(
 
   if (is_ready) {
     if (not is_root) {
-      auto msg = makeSharedMessage<BarrierMsg>(is_named, barrier, is_wait);
+      auto msg = makeMessage<BarrierMsg>(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
       if (skip_term) {
         theMsg()->markAsTermMessage(msg);
@@ -222,9 +222,9 @@ void Barrier::barrierUp(
         barrier, node,
         "barrierUp: barrier={}\n", barrier
       );
-      theMsg()->sendMsg<BarrierMsg, barrierUp>(parent, msg);
+      theMsg()->sendMsg<BarrierMsg, barrierUp>(parent, msg.get());
     } else {
-      auto msg = makeSharedMessage<BarrierMsg>(is_named, barrier, is_wait);
+      auto msg = makeMessage<BarrierMsg>(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
       if (skip_term) {
         theMsg()->markAsTermMessage(msg);
@@ -233,7 +233,7 @@ void Barrier::barrierUp(
         barrier, node,
         "barrierDown: barrier={}\n", barrier
       );
-      theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg);
+      theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg.get());
       barrierDown(is_named, is_wait, barrier);
     }
   }

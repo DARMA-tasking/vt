@@ -75,8 +75,8 @@ TEST_F(TestTermReset, test_termination_reset_1) {
   }
 
   if (this_node == 0) {
-    auto msg = makeSharedMessage<TestMsg>();
-    theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
+    auto msg = makeMessage<TestMsg>();
+    theMsg()->broadcastMsg<TestMsg, test_handler>(msg.get());
   } else if (this_node == 1) {
     theTerm()->addAction([=]{
       EXPECT_EQ(handler_count, 10);
@@ -91,8 +91,8 @@ TEST_F(TestTermReset, test_termination_reset_1) {
   theCollective()->barrier();
 
   if (this_node == 1) {
-    auto msg = makeSharedMessage<TestMsg>();
-    theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
+    auto msg = makeMessage<TestMsg>();
+    theMsg()->broadcastMsg<TestMsg, test_handler>(msg.get());
   } else if (this_node == 0) {
     theTerm()->addAction([=]{
       EXPECT_EQ(handler_count, 10);

@@ -116,8 +116,8 @@ static inline void activeMessageNode() {
 
   if (this_node == 0) {
     NodeType const to_node = 1;
-    auto msg = ::vt::makeSharedMessage<MyMsg>(29,32);
-    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(to_node, msg);
+    auto msg = ::vt::makeMessage<MyMsg>(29,32);
+    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(to_node, msg.get());
   }
 }
 
@@ -142,8 +142,8 @@ static void msgHandlerA(MyMsg* msg) {
    * invocation uses the functor style send.
    */
   NodeType const to_node = 0;
-  auto msg2 = ::vt::makeSharedMessage<MyMsg>(10,20);
-  ::vt::theMsg()->sendMsg<MsgHandlerB>(to_node, msg2);
+  auto msg2 = ::vt::makeMessage<MyMsg>(10,20);
+  ::vt::theMsg()->sendMsg<MsgHandlerB>(to_node, msg2.get());
 }
 
 void MsgHandlerB::operator()(MyMsg* msg) {

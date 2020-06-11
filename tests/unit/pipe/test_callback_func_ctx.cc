@@ -87,8 +87,8 @@ static int32_t called = 0;
 struct TestCallbackFuncCtx : TestParallelHarness {
   static void test_handler(CallbackDataMsg* msg) {
     auto const& n = theContext()->getNode();
-    auto nmsg = makeSharedMessage<DataMsg>(n+1,n+2,n+3);
-    msg->cb_.send(nmsg);
+    auto nmsg = makeMessage<DataMsg>(n+1,n+2,n+3);
+    msg->cb_.send(nmsg.get());
   }
 };
 
@@ -130,8 +130,8 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
     }
   );
   //fmt::print("{}: next={}\n", this_node, next);
-  auto msg = makeSharedMessage<CallbackDataMsg>(cb);
-  theMsg()->sendMsg<CallbackDataMsg, test_handler>(next, msg);
+  auto msg = makeMessage<CallbackDataMsg>(cb);
+  theMsg()->sendMsg<CallbackDataMsg, test_handler>(next, msg.get());
 
   theTerm()->addAction([=]{
     //fmt::print("{}: called={}\n", this_node, called);

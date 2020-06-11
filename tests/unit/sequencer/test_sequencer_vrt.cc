@@ -192,8 +192,9 @@ TEST_F(TestSequencerVirtual, test_seq_vc_1) {
 
     theVirtualSeq()->sequenced(seq_id, testSeqFn1);
 
+    auto msg = makeMessage<TestMsg>();
     theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan1>(
-      proxy, makeSharedMessage<TestMsg>()
+      proxy, msg.get()
     );
 
     theTerm()->addAction([=]{
@@ -215,8 +216,9 @@ TEST_F(TestSequencerVirtual, test_seq_vc_2) {
     theVirtualSeq()->sequenced(seq_id, testSeqFn2);
 
     for (int i = 0; i < 2; i++) {
+      auto msg = makeMessage<TestMsg>();
       theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan2>(
-        proxy, makeSharedMessage<TestMsg>()
+        proxy, msg.get()
       );
     }
 
@@ -243,11 +245,13 @@ TEST_F(TestSequencerVirtual, test_seq_vc_distinct_inst_3) {
     theVirtualSeq()->sequenced(seq_id_a, testSeqFn3a);
     theVirtualSeq()->sequenced(seq_id_b, testSeqFn3b);
 
+    auto msg1 = makeMessage<TestMsg>();
     theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan3>(
-      proxy_a, makeSharedMessage<TestMsg>()
+      proxy_a, msg1.get()
     );
+    auto msg2 = makeMessage<TestMsg>();
     theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan3>(
-      proxy_b, makeSharedMessage<TestMsg>()
+      proxy_b, msg2.get()
     );
 
     // @todo: fix this it is getting triggered early (a termination detector

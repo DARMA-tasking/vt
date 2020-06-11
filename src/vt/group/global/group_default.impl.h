@@ -64,9 +64,9 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* handler>
     envelopeSetTag(msg.get()->env, phase);
     handler(msg.get());
   } else {
-    auto msg = makeSharedMessage<MsgT>();
+    auto msg = makeMessage<MsgT>();
     envelopeSetTag(msg->env, phase);
-    theMsg()->sendMsg<MsgT, handler>(node, msg);
+    theMsg()->sendMsg<MsgT, handler>(node, msg.get());
   }
 }
 

@@ -88,11 +88,6 @@ void messageDeref(MsgT* msg) {
   }
 }
 
-template <typename MsgT>
-bool isSharedMessage(MsgT* msg) {
-  return envelopeGetRef(msg->env) != not_shared_message;
-}
-
 } /* end namespace vt */
 
 #endif /*INCLUDED_MESSAGING_MESSAGE_REFS_IMPL_H*/

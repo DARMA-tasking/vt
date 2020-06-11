@@ -137,8 +137,8 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: i={}\n", my_node, i);
       #endif
-      auto msg = makeSharedMessage<TestMsg>();
-      theMsg()->sendMsg<TestMsg, test_handler>(1, msg);
+      auto msg = makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, test_handler>(1, msg.get());
     }
   } else if (my_node == to_node) {
     theTerm()->addAction([=]{
@@ -163,13 +163,13 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
 
   if (my_node == from_node) {
     for (int i = 0; i < num_msg_sent; i++) {
-      auto msg = makeSharedMessage<PutTestMessage>();
+      auto msg = makeMessage<PutTestMessage>();
       msg->setPut(&test_vec[0], sizeof(int)*test_vec.size());
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
       theMsg()->sendMsg<PutTestMessage, test_handler_2>(
-        1, msg
+        1, msg.get()
       );
     }
   }
@@ -191,13 +191,13 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
 
   if (my_node == from_node) {
     for (int i = 0; i < num_msg_sent; i++) {
-      auto msg = makeSharedMessage<PutTestMessage>();
+      auto msg = makeMessage<PutTestMessage>();
       msg->setPut(&test_vec_2[0], sizeof(int)*test_vec_2.size());
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
       theMsg()->sendMsg<PutTestMessage, test_handler_3>(
-        1, msg
+        1, msg.get()
       );
     }
   }

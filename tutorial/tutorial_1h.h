@@ -84,13 +84,13 @@ static inline void activeMessageReduce() {
 
   NodeType const root_reduce_node = 0;
 
-  auto reduce_msg = ::vt::makeSharedMessage<ReduceDataMsg>();
+  auto reduce_msg = ::vt::makeMessage<ReduceDataMsg>();
 
   // Get a reference to the value to set it in this reduce msg
   reduce_msg->getVal() = 50;
 
   ::vt::theCollective()->global()->reduce<ReduceOp,ReduceResult>(
-    root_reduce_node, reduce_msg
+    root_reduce_node, reduce_msg.get()
   );
 }
 

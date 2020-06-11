@@ -80,8 +80,8 @@ static int32_t called = 0;
 
 struct TestCallbackSend : TestParallelHarness {
   static void testHandler(CallbackDataMsg* msg) {
-    auto nmsg = makeSharedMessage<DataMsg>(1,2,3);
-    msg->cb_.send(nmsg);
+    auto nmsg = makeMessage<DataMsg>(1,2,3);
+    msg->cb_.send(nmsg.get());
   }
   static void testHandlerEmpty(CallbackMsg* msg) {
     msg->cb_.send();
@@ -115,8 +115,8 @@ TEST_F(TestCallbackSend, test_callback_send_1) {
 
   called = 0;
   auto cb = theCB()->makeSend<DataMsg,callbackFn>(this_node);
-  auto nmsg = makeSharedMessage<DataMsg>(1,2,3);
-  cb.send(nmsg);
+  auto nmsg = makeMessage<DataMsg>(1,2,3);
+  cb.send(nmsg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 100);
@@ -127,8 +127,8 @@ TEST_F(TestCallbackSend, test_callback_send_2) {
   auto const& this_node = theContext()->getNode();
   called = 0;
   auto cb = theCB()->makeSend<CallbackFunctor>(this_node);
-  auto nmsg = makeSharedMessage<DataMsg>(1,2,3);
-  cb.send(nmsg);
+  auto nmsg = makeMessage<DataMsg>(1,2,3);
+  cb.send(nmsg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 200);
@@ -153,8 +153,8 @@ TEST_F(TestCallbackSend, test_callback_send_remote_1) {
   called = 0;
   auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
   auto cb = theCB()->makeSend<DataMsg,callbackFn>(this_node);
-  auto msg = makeSharedMessage<CallbackDataMsg>(cb);
-  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+  auto msg = makeMessage<CallbackDataMsg>(cb);
+  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 100);
@@ -168,8 +168,8 @@ TEST_F(TestCallbackSend, test_callback_send_remote_2) {
   called = 0;
   auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
   auto cb = theCB()->makeSend<CallbackFunctor>(this_node);
-  auto msg = makeSharedMessage<CallbackDataMsg>(cb);
-  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+  auto msg = makeMessage<CallbackDataMsg>(cb);
+  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 200);
@@ -183,8 +183,8 @@ TEST_F(TestCallbackSend, test_callback_send_remote_3) {
   called = 0;
   auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
   auto cb = theCB()->makeSend<CallbackFunctorEmpty>(this_node);
-  auto msg = makeSharedMessage<CallbackMsg>(cb);
-  theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg);
+  auto msg = makeMessage<CallbackMsg>(cb);
+  theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 300);
