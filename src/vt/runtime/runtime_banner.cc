@@ -46,6 +46,10 @@
 
 #include "vt/config.h"
 #include "vt/configs/generated/vt_git_revision.h"
+#include "vt/utils/mpi_limits/mpi_max_tag.h"
+#include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/utils/memory/memory_usage.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <memory>
 #include <iostream>
@@ -54,6 +58,8 @@
 #include <vector>
 #include <sstream>
 #include <unistd.h>
+
+#include <mpi.h>
 
 namespace vt { namespace runtime {
 

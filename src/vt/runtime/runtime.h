@@ -185,7 +185,7 @@ protected:
   WorkerCountType num_workers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_NULL;
   int user_argc_ = 0;
-  std::unique_ptr<char[][]> user_argv_ = nullptr;
+  std::unique_ptr<char*[]> user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;
 };
 

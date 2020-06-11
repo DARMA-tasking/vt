@@ -60,7 +60,6 @@
 #include "vt/topos/location/location_headers.h"
 #include "vt/rdmahandle/manager.h"
 #include "vt/vrt/context/context_vrtmanager.h"
-#include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/collection_headers.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/worker/worker_headers.h"
@@ -118,7 +117,7 @@ Runtime::Runtime(
     // To better honor the MPI contract, force an MPI_Init then MPI_Abort.
     // It might be better to move up the general MPI_Init case; normally
     // MPI_Init is called as a result of Runtime::initialize (while this is ctor).
-    MPI_Comm comm = communicator_ ? *communicator_ : MPI_COMM_WORLD;
+    MPI_Comm comm = communicator_ != MPI_COMM_NULL ? communicator_ : MPI_COMM_WORLD;
     int rank;
     MPI_Init(NULL, NULL);
     MPI_Comm_rank(comm, &rank);
@@ -529,7 +528,7 @@ void Runtime::setup() {
 void Runtime::setupArgs() {
   std::vector<char*>& mpi_args = ArgType::mpi_init_args;
   user_argc_ = mpi_args.size() + 1;
-  user_argv_ = std::make_unique<char[][]>(argc + 1);
+  user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
 
   int i = 0;
   user_argv_[i++] = ArgType::argv_prog_name;
@@ -557,7 +556,7 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<ctx::Context>(
     &theContext, Deps<>{},
-    user_argc_, user_argv_.get(), is_interop_, &communicator_
+    user_argc_, &user_argv_[0], is_interop_, &communicator_
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<

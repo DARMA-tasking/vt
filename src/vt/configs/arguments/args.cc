@@ -218,13 +218,13 @@ void addMemUsageArgs(CLI::App& app) {
   auto mem_at_thresh = "Print memory usage from scheduler when reaches a threshold increment";
   auto mem_thresh    = "The threshold increments to print memory usage: \"<value> {GiB,MiB,KiB,B}\"";
   auto mem_sched     = "The frequency to query the memory threshold check (some memory reporters might be expensive)";
-  auto mm = app.add_option("--vt_memory_reporters", vt_memory_reporters, mem_desc, true);
-  auto mn = app.add_flag("--vt_print_memory_each_phase", vt_print_memory_each_phase, mem_phase);
-  auto mo = app.add_option("--vt_print_memory_node", vt_print_memory_node, mem_node, true);
-  auto mp = app.add_flag("--vt_allow_memory_report_with_ps", vt_allow_memory_report_with_ps, mem_ps);
-  auto mq = app.add_flag("--vt_print_memory_at_threshold", vt_print_memory_at_threshold, mem_at_thresh);
-  auto mr = app.add_option("--vt_print_memory_threshold", vt_print_memory_threshold, mem_thresh, true);
-  auto ms = app.add_option("--vt_print_memory_sched_poll", vt_print_memory_sched_poll, mem_sched, true);
+  auto mm = app.add_option("--vt_memory_reporters",          ArgConfig::vt_memory_reporters, mem_desc, true);
+  auto mn = app.add_flag("--vt_print_memory_each_phase",     ArgConfig::vt_print_memory_each_phase, mem_phase);
+  auto mo = app.add_option("--vt_print_memory_node",         ArgConfig::vt_print_memory_node, mem_node, true);
+  auto mp = app.add_flag("--vt_allow_memory_report_with_ps", ArgConfig::vt_allow_memory_report_with_ps, mem_ps);
+  auto mq = app.add_flag("--vt_print_memory_at_threshold",   ArgConfig::vt_print_memory_at_threshold, mem_at_thresh);
+  auto mr = app.add_option("--vt_print_memory_threshold",    ArgConfig::vt_print_memory_threshold, mem_thresh, true);
+  auto ms = app.add_option("--vt_print_memory_sched_poll",   ArgConfig::vt_print_memory_sched_poll, mem_sched, true);
   auto memoryGroup = "Memory Usage Reporting";
   mm->group(memoryGroup);
   mn->group(memoryGroup);
@@ -427,7 +427,7 @@ void addDebugPrintArgs(CLI::App& app) {
   db->group(debugGroup);
 
   auto dbq = "Always flush VT runtime prints";
-  auto eb  = app.add_flag("--vt_debug_print_flush", vt_debug_print_flush, dbq);
+  auto eb  = app.add_flag("--vt_debug_print_flush", ArgConfig::vt_debug_print_flush, dbq);
   eb->group(debugGroup);
 }
 
@@ -687,7 +687,6 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   if (l not_eq std::string::npos and l + 1 < prog_name.size()) {
     prog_name = prog_name.substr(l + 1, std::string::npos);
   }
-  std::reverse(ret_idx.begin(), ret_idx.end());
 
   ArgConfig::prog_name = prog_name;
   ArgConfig::argv_prog_name = argv[0];
@@ -712,7 +711,7 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
 
   // Set them back with all vt (and MPI) arguments elided
   argc = new_argc;
-  argv = new_argv.get();
+  argv = new_argv;
 
   return std::make_tuple(-1, std::string{});
 }
