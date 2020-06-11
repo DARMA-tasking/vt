@@ -234,7 +234,7 @@ namespace vt {
 
 /**
  * \internal
- * \obsolete Use \c MsgPtr<T>, for which is is an alias.
+ * \obsolete Use \c MsgPtr<T>, for which this is an alias.
  */
 template <typename T>
 using MsgVirtualPtr = messaging::MsgSharedPtr<T>;
@@ -247,7 +247,7 @@ using MsgVirtualPtrAny = messaging::MsgSharedPtr<ShortMessage>;
 
 /**
  * \internal
- * \obsolete Use \c MsgPtr<T>, for which is is an alias.
+ * \obsolete Use \c MsgPtr<T>, for which this is an alias.
  */
 template <typename T>
 using MsgSharedPtr = messaging::MsgSharedPtr<T>;
