@@ -100,17 +100,17 @@ RemoteContainer<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
     "RemoteContainer: (typed) invoke trigger: pipe={:x}, multi={}, ptr={}\n",
     pid, multi_callback, print_ptr(data)
   );
-  MsgSharedPtr<MsgT> cur_msg = promoteMsg(data);
 
-  /*
-   *  Make a copy of the message for each callback trigger because the callback
-   *  trigger may send/bcast messages, thus a copy must be made
-   */
   if (multi_callback) {
-    cur_msg = makeMessage<MsgT>(*data);
+    /*
+     *  Make a copy of the message for each callback trigger because the callback
+     *  trigger may send/bcast messages, thus a copy must be made
+     */
+    auto cur_msg = makeMessage<MsgT>(*data);
+    cb.trigger(cur_msg.get(),pid);
+  } else {
+    cb.trigger(data,pid);
   }
-
-  cb.trigger(cur_msg.get(),pid);
 }
 
 template <typename MsgT, typename TupleT>
