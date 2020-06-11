@@ -44,6 +44,10 @@
 
 #include <vt/transport.h>
 
+#define VT_COMPILE_PARAM_EXAMPLE 0
+
+#if VT_COMPILE_PARAM_EXAMPLE
+
 static void fnTest(int a, int b, bool x) {
   fmt::print("fn: a={}, b={}, x={}\n", a, b, x ? "true" : "false");
 }
@@ -62,15 +66,19 @@ struct FunctorTest1 {
   }
 };
 
+#endif
+
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
     return vt::rerror("requires at least 2 nodes");
   }
+
+#if VT_COMPILE_PARAM_EXAMPLE
+  vt::NodeType this_node = vt::theContext()->getNode();
 
   if (this_node == 0) {
     vt::theParam()->sendData(1, vt::buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
@@ -85,6 +93,7 @@ int main(int argc, char** argv) {
     vt::theParam()->sendData<FunctorTest1>(1, 20, 100.0);
     vt::theParam()->sendData<FunctorTest1>(1, vt::buildData(10, 70.0));
   }
+#endif
 
   vt::finalize();
 
