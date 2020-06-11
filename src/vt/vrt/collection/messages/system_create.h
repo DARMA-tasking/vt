@@ -83,8 +83,8 @@ struct CollectionCreateMsg : ::vt::Message {
   }
 };
 
-struct CollectionConsMsg : ::vt::collective::reduce::ReduceMsg {
-  using MessageParentType = ::vt::collective::reduce::ReduceMsg;
+struct CollectionConsMsg : ::vt::collective::ReduceNoneMsg {
+  using MessageParentType = ::vt::collective::ReduceNoneMsg;
   vt_msg_serialize_prohibited();
 
   CollectionConsMsg() = default;

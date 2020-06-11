@@ -77,6 +77,7 @@
 #include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/vrt/collection/op_buffer.h"
 
 #include <memory>
 #include <vector>
@@ -580,8 +581,6 @@ public:
   template <typename ColT, typename IndexT, typename MsgT>
   static void broadcastRootHandler(MsgT* msg);
   template <typename=void>
-  static void collectionConstructHan(CollectionConsMsg* msg);
-  template <typename=void>
   static void collectionFinishedHan(CollectionConsMsg* msg);
   template <typename=void>
   static void collectionGroupReduceHan(CollectionGroupMsg* msg);
@@ -744,6 +743,11 @@ protected:
 
 private:
   void schedule(ActionType action);
+
+  template <typename MsgT>
+  messaging::PendingSend schedule(
+    MsgT msg, bool execute_now, EpochType cur_epoch, ActionType action
+  );
 
 public:
   template <typename ColT, typename IndexT>
@@ -938,10 +942,130 @@ private:
     balance::ElementIDType elm_perm, balance::ElementIDType elm_temp
   );
 
+private:
+  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  NodeType getMapped(VirtualProxyType proxy, IdxT cur) {
+    auto map_han = UniversalIndexHolder<>::getMap(proxy);
+    auto max = getRange<ColT>(proxy);
+    return getMapped<ColT>(map_han, cur, max);
+  }
+
+  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  NodeType getMapped(VirtualProxyType proxy, HandlerType map_han, IdxT cur) {
+    auto max = getRange<ColT>(proxy);
+    return getMapped<ColT>(map_han, cur, max);
+  }
+
+  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  NodeType getMapped(HandlerType map_han, IdxT cur, IdxT max) {
+    auto fn = auto_registry::getHandlerMap(map_han);
+    auto const cur_base = static_cast<vt::index::BaseIndex*>(&cur);
+    auto const max_base = static_cast<vt::index::BaseIndex*>(&max);
+    return fn(cur_base, max_base, theContext()->getNumNodes());
+  }
+
+private:
+  using ActionPendingType = std::function<messaging::PendingSend(void)>;
+
+  /**
+   * \brief Add to the current buffer-release state of a proxy
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] release the state to | into the bits
+   */
+  void addToState(VirtualProxyType proxy, BufferReleaseEnum release) {
+    proxy_state_[proxy] =
+      static_cast<BufferReleaseEnum>(proxy_state_[proxy] | release);
+  }
+
+  /**
+   * \brief Get the current release state bits from the collection
+   *
+   * \param[in] proxy the proxy of the collection
+   *
+   * \return the current state
+   */
+  BufferReleaseEnum getState(VirtualProxyType proxy) {
+    auto iter = proxy_state_.find(proxy);
+    return iter != proxy_state_.end() ? iter->second : BufferReleaseEnum::Unreleased;
+  }
+
+  /**
+   * \brief Get ready bits AND'ed with the required release bits
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] release the bits to check
+   *
+   * \return the current state & release
+   */
+  BufferReleaseEnum getReadyBits(
+    VirtualProxyType proxy, BufferReleaseEnum release
+  );
+
+  /**
+   * \brief Check if the collection is past the stages of setup requested in
+   * release
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] release the bits to check
+   *
+   * \return whether it is ready
+   */
+  bool checkReady(VirtualProxyType proxy, BufferReleaseEnum release);
+
+  /**
+   * \brief Buffer an operation until release bits are true
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] type the type of operation
+   * \param[in] release the release state required to execute this operation
+   * \param[in] epoch the epoch associated with the operation
+   * \param[in] action the action to execute when ready
+   *
+   * \return a pending send
+   */
+  template <typename ColT>
+  messaging::PendingSend bufferOp(
+    VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
+    EpochType epoch, ActionPendingType action
+  );
+
+  /**
+   * \brief Buffer an operation until release bits are true. Execute it if the
+   * release bits are set properly immediately.
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] type the type of operation
+   * \param[in] release the release state required to execute this operation
+   * \param[in] epoch the epoch associated with the operation
+   * \param[in] action the action to execute when ready
+   *
+   * \return a pending send
+   */
+  template <typename ColT>
+  messaging::PendingSend bufferOpOrExecute(
+    VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
+    EpochType epoch, ActionPendingType action
+  );
+
+  /**
+   * \brief Trigger ready operation for a certain type
+   *
+   * \param[in] proxy the proxy of the collection
+   * \param[in] type the type of operation to release
+   */
+  void triggerReadyOps(VirtualProxyType proxy, BufferTypeEnum type);
+
+  using ActionPendingVecType = std::vector<ActionPendingType>;
+  using ReleaseToAction = std::unordered_map<BufferReleaseEnum, ActionPendingVecType>;
+  using BufferToRelease = std::unordered_map<BufferTypeEnum, ReleaseToAction>;
+  using ProxyToBuffer = std::unordered_map<VirtualProxyType, BufferToRelease>;
+  using ProxyToState = std::unordered_map<VirtualProxyType, BufferReleaseEnum>;
+
+  ProxyToBuffer buffers_;
+  ProxyToState proxy_state_;
+
   CleanupListFnType cleanup_fns_;
-  BufferedActionType buffered_sends_;
-  BufferedActionType buffered_bcasts_;
-  BufferedActionType buffered_group_;
   std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<ReduceVirtualIDType,ReduceStamp> reduce_cur_stamp_;
   std::vector<ActionFinishedLBType> lb_continuations_ = {};
