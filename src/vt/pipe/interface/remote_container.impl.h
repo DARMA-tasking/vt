@@ -100,7 +100,7 @@ RemoteContainer<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
     "RemoteContainer: (typed) invoke trigger: pipe={:x}, multi={}, ptr={}\n",
     pid, multi_callback, print_ptr(data)
   );
-  MsgT* cur_msg = data;
+  MsgSharedPtr<MsgT> cur_msg = promoteMsg(data);
 
   /*
    *  Make a copy of the message for each callback trigger because the callback
