@@ -195,7 +195,10 @@ void addColorArgs(CLI::App& app) {
   a->group(outputGroup);
   b->group(outputGroup);
   a1->group(outputGroup);
-  b->excludes(a);
+  // Do not exclude 'a' from 'b' here because when inputting/outputting a
+  // config, both will be written out causing an error when reading a written
+  // input file with defaults
+  // b->excludes(a);
 }
 
 void addSignalArgs(CLI::App& app) {
