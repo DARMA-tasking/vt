@@ -71,7 +71,6 @@ struct FunctorTest1 {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   if (num_nodes == 1) {
@@ -79,6 +78,8 @@ int main(int argc, char** argv) {
   }
 
 #if VT_COMPILE_PARAM_EXAMPLE
+  vt::NodeType this_node = vt::theContext()->getNode();
+
   if (this_node == 0) {
     vt::theParam()->sendData(1, vt::buildData(10, 20, false), PARAM_FUNCTION_RHS(fnTest));
     vt::theParam()->sendData(1, PARAM_FUNCTION_RHS(fnTest), 50, 29, false);
