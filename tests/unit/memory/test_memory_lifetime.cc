@@ -172,14 +172,12 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_1) {
     auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<NormalTestMsg>();
-      envelopeRef(msg->env);
       theMsg()->sendMsg<NormalTestMsg, normalHan>(next_node, msg.get());
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
         theEvent()->finalize();
         EXPECT_EQ(envelopeGetRef(msg->env), 1);
-        envelopeDeref(msg->env);
       });
     }
 
@@ -224,14 +222,12 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_1) {
   if (num_nodes > 1) {
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<NormalTestMsg>();
-      envelopeRef(msg->env);
       theMsg()->broadcastMsg<NormalTestMsg, normalHan>(msg.get());
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
         theEvent()->finalize();
         EXPECT_EQ(envelopeGetRef(msg->env), 1);
-        envelopeDeref(msg->env);
       });
     }
 
