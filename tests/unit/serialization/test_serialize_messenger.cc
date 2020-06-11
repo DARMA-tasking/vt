@@ -105,10 +105,10 @@ TEST_F(TestSerialMessenger, test_serial_messenger_1) {
 
   if (theContext()->getNumNodes() > 1) {
     if (my_node == 0) {
-      auto msg = makeSharedMessage<MyDataMsg>();
+      auto msg = makeMessage<MyDataMsg>();
       msg->init();
       auto han = auto_registry::makeAutoHandler<MyDataMsg,myDataMsgHan>(nullptr);
-      SerializedMessenger::sendSerialMsg<MyDataMsg>(1, msg, han);
+      SerializedMessenger::sendSerialMsg<MyDataMsg>(1, msg.get(), han);
     }
   }
 }
@@ -118,10 +118,10 @@ TEST_F(TestSerialMessenger, test_serial_messenger_bcast_1) {
 
   if (theContext()->getNumNodes() > 1) {
     if (my_node == 0) {
-      auto msg = makeSharedMessage<MyDataMsg>();
+      auto msg = makeMessage<MyDataMsg>();
       msg->init();
       auto han = auto_registry::makeAutoHandler<MyDataMsg,myDataMsgHan>(nullptr);
-      SerializedMessenger::broadcastSerialMsg<MyDataMsg>(msg, han);
+      SerializedMessenger::broadcastSerialMsg<MyDataMsg>(msg.get(), han);
     }
   }
 }

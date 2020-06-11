@@ -61,7 +61,7 @@ void colHanBasic(ColMsg* msg, MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = vt::makeSharedMessage<MyReduceMsg>(idx.x());
+  auto reduce_msg = vt::makeMessage<MyReduceMsg>(idx.x());
   auto proxy = col->getProxy();
   debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
 
@@ -69,7 +69,7 @@ void colHanBasic(ColMsg* msg, MyCol* col) {
 
   vt::theCollection()->reduceMsg<
     MyCol, MyReduceMsg, reducePlus<expected>
-  >(proxy, reduce_msg);
+  >(proxy, reduce_msg.get());
 }
 
 void colHanVec(ColMsg* msg, MyCol* col) {
@@ -80,7 +80,7 @@ void colHanVec(ColMsg* msg, MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = vt::makeSharedMessage<SysMsgVec>(static_cast<double>(idx.x()));
+  auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
   auto proxy = col->getProxy();
   debug_print(
     reduce, node,
@@ -91,7 +91,7 @@ void colHanVec(ColMsg* msg, MyCol* col) {
     MyCol,
     SysMsgVec,
     SysMsgVec::msgHandler<SysMsgVec, vt::collective::PlusOp<VectorPayload>, CheckVec>
-  >(proxy, reduce_msg);
+  >(proxy, reduce_msg.get());
 }
 
 void colHanVecProxy(ColMsg* msg, MyCol* col) {
@@ -102,13 +102,13 @@ void colHanVecProxy(ColMsg* msg, MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = vt::makeSharedMessage<SysMsgVec>(static_cast<double>(idx.x()));
+  auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
   auto proxy = col->getCollectionProxy();
   debug_print(
     reduce, node,
     "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
   );
-  proxy.reduce<vt::collective::PlusOp<VectorPayload>, CheckVec>(reduce_msg);
+  proxy.reduce<vt::collective::PlusOp<VectorPayload>, CheckVec>(reduce_msg.get());
 }
 
 void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
@@ -119,7 +119,7 @@ void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = vt::makeSharedMessage<SysMsgVec>(static_cast<double>(idx.x()));
+  auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
   auto proxy = col->getCollectionProxy();
   debug_print(
     reduce, node,
@@ -128,7 +128,7 @@ void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
 
   auto cb = vt::theCB()->makeSend<CheckVec>(0);
   vtAssertExpr(cb.valid());
-  proxy.reduce<vt::collective::PlusOp<VectorPayload>>(reduce_msg,cb);
+  proxy.reduce<vt::collective::PlusOp<VectorPayload>>(reduce_msg.get(),cb);
 }
 
 void colHanNoneCB(ColMsg* msg, MyCol* col) {
@@ -158,7 +158,7 @@ void colHanPartial(ColMsg* msg, MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
+  auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
   auto proxy = col->getProxy();
   debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
 
@@ -167,7 +167,7 @@ void colHanPartial(ColMsg* msg, MyCol* col) {
   theCollection()->reduceMsgExpr<
     MyCol, MyReduceMsg, reducePlus<expected>
   >(
-    proxy,reduce_msg, [](Index1D const idx) -> bool {
+    proxy,reduce_msg.get(), [](Index1D const idx) -> bool {
       return idx.x() < index_tresh;
     }
   );
@@ -183,7 +183,7 @@ void colHanPartialMulti(ColMsg* msg, MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
+  auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
   auto proxy = col->getProxy();
   debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
 
@@ -199,7 +199,7 @@ void colHanPartialMulti(ColMsg* msg, MyCol* col) {
   theCollection()->reduceMsgExpr<
     MyCol, MyReduceMsg, reducePlus<collect_size,false>
   >(
-    proxy,reduce_msg, [=](Index1D const idx) -> bool {
+    proxy,reduce_msg.get(), [=](Index1D const idx) -> bool {
       return idx.x() % index_tresh == grouping;
     }, no_epoch, grouping
   );
@@ -214,12 +214,12 @@ void colHanPartialProxy(ColMsg* msg, MyCol* col) {
     print_ptr(col), idx.x(), col->getIndex().x()
   );
 
-  auto reduce_msg = makeSharedMessage<MyReduceMsg>(idx.x());
+  auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
   auto proxy = col->getCollectionProxy();
   debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
 
   proxy.reduceExpr< MyReduceMsg, reducePlus<index_tresh> >(
-    reduce_msg, [](Index1D const& idx) -> bool {
+    reduce_msg.get(), [](Index1D const& idx) -> bool {
       return idx.x() < index_tresh;
     }
   );

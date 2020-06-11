@@ -76,9 +76,9 @@ static inline void activeMessageGroupRoot() {
     // message will arrive on the set of nodes included in the group
     auto id = theGroup()->newGroup(std::move(range), [](GroupType group_id){
       fmt::print("Group is created: id={:x}\n", group_id);
-      auto msg = makeSharedMessage<MySimpleMsg>();
+      auto msg = makeMessage<MySimpleMsg>();
       envelopeSetGroup(msg->env, group_id);
-      theMsg()->broadcastMsg<MySimpleMsg,msgHandlerGroupA>(msg);
+      theMsg()->broadcastMsg<MySimpleMsg,msgHandlerGroupA>(msg.get());
     });
     // The `id' that is returned from the newGroup invocation, can be used
     // anywhere in the system to broadcast (multicast) to this group.

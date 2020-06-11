@@ -105,9 +105,11 @@ TEST_F(TestSerialMessengerVirtual, test_serial_messenger_1) {
 
   if (my_node == 0) {
     auto proxy = theVirtualManager()->makeVirtual<TestCtx>();
-    auto msg = makeSharedMessage<DataMsg>();
+    auto msg = makeMessage<DataMsg>();
     msg->init();
-    theVirtualManager()->sendSerialMsg<TestCtx, DataMsg, testHandler>(proxy, msg);
+    theVirtualManager()->sendSerialMsg<TestCtx, DataMsg, testHandler>(
+      proxy, msg.get()
+    );
   }
 }
 

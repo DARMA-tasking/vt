@@ -150,13 +150,13 @@ TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
     TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = theCollection()->construct<ColType>(range);
     for (int i = 0; i < col_size; i++) {
-      auto msg = makeSharedMessage<MsgType>(args);
+      auto msg = makeMessage<MsgType>(args);
       //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
       if (i % 2 == 0) {
-        proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
+        proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg.get());
       } else {
         theCollection()->sendMsg<MsgType,SendHandlers<ColType>::handler>(
-          proxy[i], msg
+          proxy[i], msg.get()
         );
       }
     }
@@ -175,13 +175,13 @@ TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
     TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = theCollection()->construct<ColType>(range);
     for (int i = 0; i < col_size; i++) {
-      auto msg = makeSharedMessage<MsgType>(args);
+      auto msg = makeMessage<MsgType>(args);
       //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
       if (i % 2 == 0) {
-        proxy[i].template send<MsgType,&ColType::handler>(msg);
+        proxy[i].template send<MsgType,&ColType::handler>(msg.get());
       } else {
         theCollection()->sendMsg<MsgType,&ColType::handler>(
-          proxy[i], msg
+          proxy[i], msg.get()
         );
       }
     }

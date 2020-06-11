@@ -78,8 +78,8 @@ struct CallbackDataMsg : vt::Message {
 
 struct TestCallbackBcastCollection : TestParallelHarness {
   static void testHandler(CallbackDataMsg* msg) {
-    auto nmsg = makeSharedMessage<DataMsg>(8,9,10);
-    msg->cb_.send(nmsg);
+    auto nmsg = makeMessage<DataMsg>(8,9,10);
+    msg->cb_.send(nmsg.get());
   }
   static void testHandlerEmpty(CallbackMsg* msg) {
     msg->cb_.send();
@@ -135,8 +135,8 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
     auto const& range = Index1D(32);
     auto proxy = theCollection()->construct<TestCol>(range);
     auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb1>(proxy);
-    auto nmsg = makeSharedMessage<DataMsg>(8,9,10);
-    cb.send(nmsg);
+    auto nmsg = makeMessage<DataMsg>(8,9,10);
+    cb.send(nmsg.get());
 
     theTerm()->addAction([=]{
       proxy.destroy();
@@ -157,8 +157,8 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
     auto proxy = theCollection()->construct<TestCol>(range);
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb2>(proxy);
-    auto msg = makeSharedMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+    auto msg = makeMessage<CallbackDataMsg>(cb);
+    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
 
     theTerm()->addAction([=]{
       proxy.destroy();
@@ -179,8 +179,8 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
     auto proxy = theCollection()->construct<TestCol>(range);
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeBcast<TestCol,DataMsg,cb3>(proxy);
-    auto msg = makeSharedMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+    auto msg = makeMessage<CallbackDataMsg>(cb);
+    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
 
     theTerm()->addAction([=]{
       proxy.destroy();

@@ -92,14 +92,14 @@ struct FinishedWork {
 /*static*/ void DestroyTest::work(WorkMsg* msg, DestroyTest* col) {
   auto proxy = col->getCollectionProxy();
   // ::fmt::print("work idx={}, proxy={:x}\n", col->getIndex(), proxy.getProxy());
-  auto reduce_msg = makeSharedMessage<CollReduceMsg>(proxy);
+  auto reduce_msg = makeMessage<CollReduceMsg>(proxy);
   theCollection()->reduceMsg<
     DestroyTest,
     CollReduceMsg,
     CollReduceMsg::template msgHandler<
       CollReduceMsg, collective::PlusOp<collective::NoneType>, FinishedWork
     >
-  >(proxy,reduce_msg);
+  >(proxy,reduce_msg.get());
 }
 
 struct TestDestroy : TestParallelHarness { };
@@ -112,9 +112,9 @@ TEST_F(TestDestroy, test_destroy_1) {
   if (this_node == 0) {
     auto const& range = Index1D(num_nodes * num_elms_per_node);
     auto proxy = theCollection()->construct<DestroyTest>(range);
-    auto msg = makeSharedMessage<WorkMsg>();
+    auto msg = makeMessage<WorkMsg>();
     // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());
-    proxy.broadcast<WorkMsg,DestroyTest::work>(msg);
+    proxy.broadcast<WorkMsg,DestroyTest::work>(msg.get());
   }
   theTerm()->addAction([]{
     // ::fmt::print("num destroyed={}\n", num_destroyed);

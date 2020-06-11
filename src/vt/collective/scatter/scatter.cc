@@ -93,7 +93,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
   Tree::foreachChild([&](NodeType child) {
     auto const& num_children = getNumTotalChildren(child) + 1;
     auto const& child_bytes_size = num_children * elm_size;
-    auto child_msg = makeSharedMessageSz<ScatterMsg>(
+    auto child_msg = makeMessageSz<ScatterMsg>(
       child_bytes_size, child_bytes_size, elm_size
     );
     debug_print(
@@ -102,10 +102,10 @@ void Scatter::scatterIn(ScatterMsg* msg) {
       child, num_children, child_bytes_size
     );
     auto const child_remaining_size = thePool()->remainingSize(
-      reinterpret_cast<void*>(child_msg)
+      reinterpret_cast<void*>(child_msg.get())
     );
     child_msg->user_han = user_handler;
-    auto ptr = reinterpret_cast<char*>(child_msg) + sizeof(ScatterMsg);
+    auto ptr = reinterpret_cast<char*>(child_msg.get()) + sizeof(ScatterMsg);
     debug_print(
       scatter, node,
       "Scatter::scatterIn: child={}, num_children={}, elm_size={}, "
@@ -116,7 +116,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     std::memcpy(ptr, in_ptr, child_bytes_size);
     in_ptr += child_bytes_size;
     theMsg()->sendMsgSz<ScatterMsg,scatterHandler>(
-      child, child_msg, sizeof(ScatterMsg) + child_bytes_size
+      child, child_msg.get(), sizeof(ScatterMsg) + child_bytes_size
     );
   });
   auto active_fn = auto_registry::getAutoHandler(user_handler);

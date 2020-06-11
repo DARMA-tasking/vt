@@ -123,8 +123,8 @@ TEST_F(TestMemoryLifetime, test_active_send_serial_lifetime_1) {
   if (num_nodes > 1) {
     auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
     for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeSharedMessage<SerialTestMsg>();
-      theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg);
+      auto msg = makeMessage<SerialTestMsg>();
+      theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg.get());
     }
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<SerialTestMsg>();
@@ -146,8 +146,8 @@ TEST_F(TestMemoryLifetime, test_active_bcast_serial_lifetime_1) {
 
   if (num_nodes > 1) {
     for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeSharedMessage<SerialTestMsg>();
-      theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg);
+      auto msg = makeMessage<SerialTestMsg>();
+      theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg.get());
     }
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<SerialTestMsg>();
@@ -171,9 +171,9 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_1) {
   if (num_nodes > 1) {
     auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
     for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeSharedMessage<NormalTestMsg>();
+      auto msg = makeMessage<NormalTestMsg>();
       envelopeRef(msg->env);
-      theMsg()->sendMsg<NormalTestMsg, normalHan>(next_node, msg);
+      theMsg()->sendMsg<NormalTestMsg, normalHan>(next_node, msg.get());
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear
@@ -223,9 +223,9 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_1) {
 
   if (num_nodes > 1) {
     for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeSharedMessage<NormalTestMsg>();
+      auto msg = makeMessage<NormalTestMsg>();
       envelopeRef(msg->env);
-      theMsg()->broadcastMsg<NormalTestMsg, normalHan>(msg);
+      theMsg()->broadcastMsg<NormalTestMsg, normalHan>(msg.get());
 
       theTerm()->addAction([msg]{
         // Call event cleanup all pending MPI requests to clear

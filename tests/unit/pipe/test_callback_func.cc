@@ -90,8 +90,8 @@ TEST_F(TestCallbackFunc, test_callback_func_2) {
 
   if (this_node == 0) {
     auto cb = theCB()->makeFunc([]{ called = 400; });
-    auto msg = makeSharedMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<CallbackMsg, test_handler>(1, msg);
+    auto msg = makeMessage<CallbackMsg>(cb);
+    theMsg()->sendMsg<CallbackMsg, test_handler>(1, msg.get());
 
     theTerm()->addAction([=]{
       EXPECT_EQ(called, 400);

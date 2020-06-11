@@ -676,9 +676,11 @@ template <typename>
     msg->proxy, msg->isRoot(), msg->getGroup()
   );
   if (msg->isRoot()) {
-    auto nmsg = makeSharedMessage<CollectionGroupMsg>(*msg);
+    auto nmsg = makeMessage<CollectionGroupMsg>(*msg);
     theMsg()->markAsCollectionMessage(nmsg);
-    theMsg()->broadcastMsg<CollectionGroupMsg,collectionGroupFinishedHan>(nmsg);
+    theMsg()->broadcastMsg<CollectionGroupMsg,collectionGroupFinishedHan>(
+      nmsg.get()
+    );
   }
 }
 
@@ -2347,13 +2349,13 @@ void CollectionManager::finishedInsertEpoch(
   theTerm()->finishNoActivateEpoch(next_insert_epoch);
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,next_insert_epoch);
 
-  auto msg = makeSharedMessage<UpdateInsertMsg<ColT,IndexT>>(
+  auto msg = makeMessage<UpdateInsertMsg<ColT,IndexT>>(
     proxy,next_insert_epoch
   );
   theMsg()->markAsCollectionMessage(msg);
   theMsg()->broadcastMsg<
     UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
-  >(msg);
+  >(msg.get());
 
   /*
    *  Start building the a new group for broadcasts and reductions over the
@@ -2453,11 +2455,11 @@ template <typename ColT, typename IndexT>
 
   if (node != uninitialized_destination) {
     auto send = [untyped_proxy,node]{
-      auto smsg = makeSharedMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
+      auto smsg = makeMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
       theMsg()->markAsCollectionMessage(smsg);
       theMsg()->sendMsg<
         ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
-      >(node,smsg);
+      >(node,smsg.get());
     };
     return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_, send);
   } else {
@@ -2508,10 +2510,10 @@ void CollectionManager::finishedInserting(
     }
   } else {
     auto node = insert_action ? this_node : uninitialized_destination;
-    auto msg = makeSharedMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
+    auto msg = makeMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
     theMsg()->markAsCollectionMessage(msg);
     theMsg()->sendMsg<DoneInsertMsg<ColT,IndexT>,doneInsertHandler<ColT,IndexT>>(
-      cons_node,msg
+      cons_node,msg.get()
     );
   }
 }
@@ -2643,14 +2645,14 @@ void CollectionManager::insert(
       IdxContextHolder::clear();
     } else {
       auto const& cur_epoch = theMsg()->getEpoch();
-      auto msg = makeSharedMessage<InsertMsg<ColT,IndexT>>(
+      auto msg = makeMessage<InsertMsg<ColT,IndexT>>(
         proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
       );
       theTerm()->produce(insert_epoch,1,insert_node);
       theTerm()->produce(cur_epoch,1,insert_node);
       theMsg()->markAsCollectionMessage(msg);
       theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
-        insert_node,msg
+        insert_node,msg.get()
       );
     }
   } else {
@@ -2784,13 +2786,13 @@ MigrateStatus CollectionManager::migrateOut(
 
    using MigrateMsgType = MigrateMsg<ColT, IndexT>;
 
-   auto msg = makeSharedMessage<MigrateMsgType>(
+   auto msg = makeMessage<MigrateMsgType>(
      proxy, this_node, dest, map_fn, range, &typed_col_ref
    );
 
    theMsg()->sendMsg<
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
-   >(dest, msg);
+   >(dest, msg.get());
 
    theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityMigrated(
      proxy, dest
@@ -3169,7 +3171,7 @@ void CollectionManager::nextPhase(
 ) {
   using namespace balance;
   using MsgType = PhaseMsg<ColT>;
-  auto msg = makeSharedMessage<MsgType>(cur_phase, proxy, true, false);
+  auto msg = makeMessage<MsgType>(cur_phase, proxy, true, false);
   auto const instrument = false;
 
   debug_print(
@@ -3214,7 +3216,7 @@ void CollectionManager::nextPhase(
   #endif
 
   theCollection()->broadcastMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
-    proxy, msg, instrument
+    proxy, msg.get(), instrument
   );
 }
 

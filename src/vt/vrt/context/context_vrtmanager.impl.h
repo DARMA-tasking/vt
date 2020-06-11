@@ -104,11 +104,11 @@ template <typename SysMsgT>
     auto const& request_id = info.req_id;
 
     new_proxy = theVirtualManager()->generateNewProxy();
-    auto send_msg = makeSharedMessage<VirtualProxyRequestMsg>(
+    auto send_msg = makeMessage<VirtualProxyRequestMsg>(
       cons_node, req_node, request_id, new_proxy
     );
     theMsg()->sendMsg<VirtualProxyRequestMsg, sendBackVirtualProxyHan>(
-      req_node, send_msg
+      req_node, send_msg.get()
     );
   }
 
@@ -205,8 +205,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
   using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
   using MsgType = VrtConstructMsg<RemoteVrtInfo, ArgsTupleType, VrtContextT>;
 
-  auto sys_msg =
-    makeSharedMessage<MsgType>(ArgsTupleType{std::forward<Args>(args)...});
+  auto sys_msg = makeMessage<MsgType>(ArgsTupleType{std::forward<Args>(args)...});
 
   auto const& this_node = theContext()->getNode();
   std::unique_ptr<RemoteVrtInfo> info = nullptr;
@@ -233,7 +232,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
 
   sys_msg->info = *info.get();
 
-  theMsg()->sendMsg<MsgType,remoteConstructVrt<MsgType>>(dest, sys_msg);
+  theMsg()->sendMsg<MsgType,remoteConstructVrt<MsgType>>(dest, sys_msg.get());
 
   return return_proxy;
 }

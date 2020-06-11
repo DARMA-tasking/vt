@@ -112,29 +112,29 @@ static inline void activeMessageCallback() {
     // Example of a void lambda callback
     {
       auto cb = ::vt::theCB()->makeFunc(void_fn);
-      auto msg = ::vt::makeSharedMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg);
+      auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
+      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg.get());
     }
 
     // Example of active message handler callback with send node
     {
       auto cb = ::vt::theCB()->makeSend<DataMsg,callbackHandler>(cb_node);
-      auto msg = ::vt::makeSharedMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg);
+      auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
+      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg.get());
     }
 
     // Example of active message handler callback with broadcast
     {
       auto cb = ::vt::theCB()->makeBcast<DataMsg,callbackBcastHandler>();
-      auto msg = ::vt::makeSharedMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg);
+      auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
+      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg.get());
     }
 
     // Example of context callback
     {
       auto cb = ::vt::theCB()->makeFunc<DataMsg,MyContext>(&ctx, callbackCtx);
-      auto msg = ::vt::makeSharedMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg);
+      auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
+      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg.get());
     }
   }
 }
@@ -145,9 +145,9 @@ static void getCallbackHandler(MsgWithCallback* msg) {
   ::fmt::print("getCallbackHandler: triggered on node={}\n", cur_node);
 
   // Create a msg to trigger to callback
-  auto data_msg = ::vt::makeSharedMessage<DataMsg>();
+  auto data_msg = ::vt::makeMessage<DataMsg>();
   // Send the callback with the message
-  msg->cb.send(data_msg);
+  msg->cb.send(data_msg.get());
 }
 
 }} /* end namespace vt::tutorial */

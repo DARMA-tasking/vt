@@ -80,8 +80,8 @@ static inline void activeMessageBroadcast() {
    */
 
   if (this_node == 0) {
-    auto msg = ::vt::makeSharedMessage<MyDataMsg>(1.0,2.0,3.0);
-    ::vt::theMsg()->broadcastMsg<MyDataMsg,msgHandlerX>(msg);
+    auto msg = ::vt::makeMessage<MyDataMsg>(1.0,2.0,3.0);
+    ::vt::theMsg()->broadcastMsg<MyDataMsg,msgHandlerX>(msg.get());
   }
 }
 

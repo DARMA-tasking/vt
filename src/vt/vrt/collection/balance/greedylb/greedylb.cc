@@ -149,8 +149,8 @@ void GreedyLB::reduceCollect() {
   );
   using MsgType = GreedyCollectMsg;
   auto cb = vt::theCB()->makeSend<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy[0]);
-  auto msg = makeSharedMessage<MsgType>(load_over,this_load);
-  proxy.template reduce<collective::PlusOp<GreedyPayload>>(msg,cb);
+  auto msg = makeMessage<MsgType>(load_over,this_load);
+  proxy.template reduce<collective::PlusOp<GreedyPayload>>(msg.get(),cb);
 }
 
 void GreedyLB::runBalancer(

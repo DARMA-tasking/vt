@@ -134,10 +134,10 @@ static inline void activeMessageSerialization() {
 
   if (this_node == 0) {
     NodeType const to_node = 1;
-    auto msg = ::vt::makeSharedMessage<ParticleMsg>(1,2,3);
+    auto msg = ::vt::makeMessage<ParticleMsg>(1,2,3);
     msg->particles.push_back(Particle{10,11,12});
     msg->particles.push_back(Particle{13,14,15});
-    ::vt::theMsg()->sendMsg<ParticleMsg,msgSerialA>(to_node, msg);
+    ::vt::theMsg()->sendMsg<ParticleMsg,msgSerialA>(to_node, msg.get());
   }
 }
 

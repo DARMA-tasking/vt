@@ -64,11 +64,11 @@ namespace vt { namespace serialization {
 
 template <typename MsgT>
 static MsgPtr<MsgT> deserializeFullMessage(SerialByteType* source) {
-  auto msg = makeSharedMessage<MsgT>();
-  checkpoint::deserializeInPlace<MsgT>(source, msg);
+  auto msg = makeMessage<MsgT>();
+  checkpoint::deserializeInPlace<MsgT>(source, msg.get());
   // Reset ref-count to 0 (don't accept any deserialized value)
   envelopeSetRef(msg->env, 0);
-  return promoteMsg(msg);
+  return msg;
 }
 
 template <typename UserMsgT>

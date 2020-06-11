@@ -80,8 +80,8 @@ static int32_t called = 0;
 
 struct TestCallbackBcast : TestParallelHarness {
   static void testHandler(CallbackDataMsg* msg) {
-    auto nmsg = makeSharedMessage<DataMsg>(1,2,3);
-    msg->cb_.send(nmsg);
+    auto nmsg = makeMessage<DataMsg>(1,2,3);
+    msg->cb_.send(nmsg.get());
   }
   static void testHandlerEmpty(CallbackMsg* msg) {
     msg->cb_.send();
@@ -116,8 +116,8 @@ TEST_F(TestCallbackBcast, test_callback_bcast_1) {
   theCollective()->barrier();
 
   auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
-  auto nmsg = makeSharedMessage<DataMsg>(1,2,3);
-  cb.send(nmsg);
+  auto nmsg = makeMessage<DataMsg>(1,2,3);
+  cb.send(nmsg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 100 * theContext()->getNumNodes());
@@ -130,8 +130,8 @@ TEST_F(TestCallbackBcast, test_callback_bcast_2) {
   theCollective()->barrier();
 
   auto cb = theCB()->makeBcast<CallbackFunctor>();
-  auto nmsg = makeSharedMessage<DataMsg>(1,2,3);
-  cb.send(nmsg);
+  auto nmsg = makeMessage<DataMsg>(1,2,3);
+  cb.send(nmsg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 200 * theContext()->getNumNodes());
@@ -161,8 +161,8 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_1) {
 
   auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
   auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
-  auto msg = makeSharedMessage<CallbackDataMsg>(cb);
-  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+  auto msg = makeMessage<CallbackDataMsg>(cb);
+  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 100 * theContext()->getNumNodes());
@@ -179,8 +179,8 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_2) {
 
   auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
   auto cb = theCB()->makeBcast<CallbackFunctor>();
-  auto msg = makeSharedMessage<CallbackDataMsg>(cb);
-  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
+  auto msg = makeMessage<CallbackDataMsg>(cb);
+  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 200 * theContext()->getNumNodes());
@@ -197,8 +197,8 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_3) {
 
   auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
   auto cb = theCB()->makeBcast<CallbackFunctorEmpty>();
-  auto msg = makeSharedMessage<CallbackMsg>(cb);
-  theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg);
+  auto msg = makeMessage<CallbackMsg>(cb);
+  theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg.get());
 
   theTerm()->addAction([=]{
     EXPECT_EQ(called, 300 * theContext()->getNumNodes());

@@ -437,8 +437,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *     // collective invocation across nodes
    *     HandlerType const han = registerNewHandler(my_handler);
    *
-   *     MyMsg* msg = makeSharedMessage<MyMsg>(156);
-   *     theMsg()->sendMsg(29, han, msg);
+   *     auto msg = makeMessage<MyMsg>(156);
+   *     theMsg()->sendMsg(29, han, msg.get());
    *   }
    * \endcode
    * @{

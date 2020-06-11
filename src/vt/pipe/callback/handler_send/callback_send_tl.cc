@@ -69,8 +69,8 @@ void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
   if (this_node == send_node_) {
     runnable::RunnableVoid::run(handler_,this_node);
   } else {
-    auto msg = makeSharedMessage<CallbackMsg>(pipe);
-    theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);
+    auto msg = makeMessage<CallbackMsg>(pipe);
+    theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg.get());
   }
 }
 

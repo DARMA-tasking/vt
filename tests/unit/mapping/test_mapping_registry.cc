@@ -111,13 +111,13 @@ TEST_F(TestMappingRegistry, test_mapping_block_1d_registry) {
 
   if (my_node == 0) {
     auto map_han = auto_registry::makeAutoHandlerMap<Index1D, map_fn>();
-    auto msg = makeSharedMessage<TestMsg>(map_han);
+    auto msg = makeMessage<TestMsg>(map_han);
     msg->is_block = true;
-    theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
+    theMsg()->broadcastMsg<TestMsg, test_handler>(msg.get());
 
     auto map_han2 = auto_registry::makeAutoHandlerMap<Index1D, map_fn2>();
-    auto msg2 = makeSharedMessage<TestMsg>(map_han2);
-    theMsg()->broadcastMsg<TestMsg, test_handler>(msg2);
+    auto msg2 = makeMessage<TestMsg>(map_han2);
+    theMsg()->broadcastMsg<TestMsg, test_handler>(msg2.get());
   }
 }
 

@@ -87,10 +87,11 @@ TEST_F(TestVirtualContextMessage, Construction_and_API) {
   auto const& my_node = theContext()->getNode();
 
   auto vrtc1 = theVirtualManager()->makeVirtual<HelloVirtualContext>(10);
-  MyHelloMsg* msg = new MyHelloMsg(my_node);
 
-  theVirtualManager()->sendMsg<HelloVirtualContext, MyHelloMsg, myWorkHandler>
-    (my_node, makeSharedMessage<MyHelloMsg>());
+  auto in_msg = makeMessage<MyHelloMsg>();
+  theVirtualManager()->sendMsg<HelloVirtualContext, MyHelloMsg, myWorkHandler>(
+    my_node, in_msg.get()
+  );
 
 
   EXPECT_EQ(theVirtualManager()->getCurrentIdent(), 1);

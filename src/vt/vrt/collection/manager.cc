@@ -83,8 +83,8 @@ void CollectionManager::startPhaseRooted(
   ActionFinishedLBType fn, PhaseType lb_phase
 ) {
 #if backend_check_enabled(lblite)
-  auto msg = makeSharedMessage<StartRootedMsg>(lb_phase);
-  theMsg()->broadcastMsg<StartRootedMsg, startRootedBroadcast>(msg);
+  auto msg = makeMessage<StartRootedMsg>(lb_phase);
+  theMsg()->broadcastMsg<StartRootedMsg, startRootedBroadcast>(msg.get());
   startPhaseCollective(fn, lb_phase);
 #else
   if (fn != nullptr) {

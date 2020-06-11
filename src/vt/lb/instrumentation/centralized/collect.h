@@ -56,7 +56,7 @@ namespace vt { namespace lb { namespace instrumentation {
 struct CentralCollect {
   static void startReduce(LBPhaseType const& phase);
   static void reduceCurrentPhase();
-  static CollectMsg* collectStats(LBPhaseType const& phase);
+  static MsgSharedPtr<CollectMsg> collectStats(LBPhaseType const& phase);
   static void collectFinished(
     LBPhaseType const& phase, ProcContainerType const& entries
   );

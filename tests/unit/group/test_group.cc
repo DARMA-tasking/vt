@@ -79,9 +79,9 @@ TEST_F(TestGroup, test_group_range_construct_1) {
     theGroup()->newGroup(
       std::move(list), [](GroupType group){
         fmt::print("Group is created: group={:x}\n", group);
-        auto msg = makeSharedMessage<TestMsg>();
+        auto msg = makeMessage<TestMsg>();
         envelopeSetGroup(msg->env, group);
-        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg);
+        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
       }
     );
   }
@@ -106,9 +106,9 @@ TEST_F(TestGroup, test_group_range_construct_2) {
     theGroup()->newGroup(
       std::move(list), [](GroupType group){
         fmt::print("Group is created: group={:x}\n", group);
-        auto msg = makeSharedMessage<TestMsg>();
+        auto msg = makeMessage<TestMsg>();
         envelopeSetGroup(msg->env, group);
-        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg);
+        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
       }
     );
   }
@@ -132,9 +132,9 @@ TEST_F(TestGroup, test_group_collective_construct_1) {
       auto const& is_default_group = theGroup()->groupDefault(group);
       EXPECT_EQ(in_group, node_filter);
       EXPECT_EQ(is_default_group, false);
-      auto msg = makeSharedMessage<TestMsg>();
+      auto msg = makeMessage<TestMsg>();
       envelopeSetGroup(msg->env, group);
-      theMsg()->broadcastMsg<TestMsg,groupHandler>(msg);
+      theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
     }
   );
   theTerm()->addAction([=]{
@@ -158,9 +158,9 @@ TEST_F(TestGroup, test_group_collective_construct_1) {
 //       ::fmt::print("{}: new group collective lambda\n", this_node);
 //       EXPECT_EQ(in_group, node_filter);
 //       EXPECT_EQ(is_default_group, false);
-//       auto msg = makeSharedMessage<TestMsg>();
+//       auto msg = makeMessage<TestMsg>();
 //       envelopeSetGroup(msg->env, group);
-//       theMsg()->broadcastMsg<TestMsg,groupHandler>(msg);
+//       theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
 //     }
 //   );
 //   theTerm()->addAction([=]{

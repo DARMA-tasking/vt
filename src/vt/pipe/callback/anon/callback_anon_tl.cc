@@ -65,9 +65,9 @@ void CallbackAnonTypeless::triggerVoid(PipeType const& pipe) {
   if (this_node == pipe_node) {
     theCB()->triggerPipe(pipe);
   } else {
-    auto msg = makeSharedMessage<CallbackMsg>(pipe,true);
+    auto msg = makeMessage<CallbackMsg>(pipe,true);
     theMsg()->sendMsg<CallbackMsg,PipeManager::triggerCallbackHan>(
-      pipe_node, msg
+      pipe_node, msg.get()
     );
   }
 }

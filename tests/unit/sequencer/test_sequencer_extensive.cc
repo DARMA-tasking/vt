@@ -109,15 +109,16 @@ static constexpr CountType const max_seq_depth = 8;
       CountType in[param_size] = {                                      \
         wait_cnt, wait_pre, wait_post, seg_cnt, depth                   \
       };                                                                \
-      auto msg = makeSharedMessage<NumWaitsMsg>(in);                    \
+      auto msg = makeMessage<NumWaitsMsg>(in);                          \
       theMsg()->sendMsg<NumWaitsMsg, numWaitHan>(                       \
-        (NODE), msg                                                     \
+        (NODE), msg.get()                                               \
       );                                                                \
       auto const total = (wait_cnt * seg_cnt) + wait_pre + wait_post;   \
       for (CountType i = 0; i < total; i++) {                           \
         TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
+        auto nmsg = makeMessage<MSG_TYPE>();                            \
         theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                           \
-          (NODE), makeSharedMessage<MSG_TYPE>(), tag                    \
+          (NODE), nmsg.get(), tag                                       \
         );                                                              \
       }                                                                 \
     }                                                                   \

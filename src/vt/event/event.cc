@@ -105,7 +105,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     holder.attachAction(trigger);
 
     auto const& owning_node = getOwningNode(event);
-    auto msg = makeSharedMessage<EventCheckFinishedMsg>(
+    auto msg = makeMessage<EventCheckFinishedMsg>(
       event, this_node, event_id
     );
 
@@ -116,7 +116,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     );
 
     theMsg()->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
-      owning_node, msg
+      owning_node, msg.get()
     );
   }
     break;
@@ -148,11 +148,11 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   );
 
   auto send_back_fun = [=]{
-    auto msg_send = makeSharedMessage<EventFinishedMsg>(event, msg->event_back_);
+    auto msg_send = makeMessage<EventFinishedMsg>(event, msg->event_back_);
     auto send_back = theEvent()->getOwningNode(msg->event_back_);
     vtAssertExpr(send_back == msg->sent_from_node_);
     theMsg()->sendMsg<EventFinishedMsg, eventFinished>(
-      send_back, msg_send
+      send_back, msg_send.get()
     );
   };
 

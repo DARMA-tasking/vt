@@ -59,19 +59,19 @@ TEST_P(TestReduceCollection, test_reduce_op) {
     auto size = (reduce_case == 5 ? collect_size * 4 : collect_size);
     auto const& range = Index1D(size);
     auto proxy = theCollection()->construct<MyCol>(range);
-    auto msg = makeSharedMessage<ColMsg>(my_node);
+    auto msg = makeMessage<ColMsg>(my_node);
 
     switch (reduce_case) {
-      case 0: proxy.broadcast<ColMsg, colHanBasic>(msg); break;
-      case 1: proxy.broadcast<ColMsg, colHanVec>(msg); break;
-      case 2: proxy.broadcast<ColMsg, colHanVecProxy>(msg); break;
-      case 3: proxy.broadcast<ColMsg, colHanVecProxyCB>(msg); break;
-      case 4: proxy.broadcast<ColMsg, colHanNoneCB>(msg); break;
+    case 0: proxy.broadcast<ColMsg, colHanBasic>(msg.get()); break;
+    case 1: proxy.broadcast<ColMsg, colHanVec>(msg.get()); break;
+    case 2: proxy.broadcast<ColMsg, colHanVecProxy>(msg.get()); break;
+    case 3: proxy.broadcast<ColMsg, colHanVecProxyCB>(msg.get()); break;
+    case 4: proxy.broadcast<ColMsg, colHanNoneCB>(msg.get()); break;
 
       #if ENABLE_REDUCE_EXPR_CALLBACK
-        case 5: proxy.broadcast<ColMsg, colHanPartial>(msg); break;
-        case 6: proxy.broadcast<ColMsg, colHanPartialMulti>(msg); break;
-        case 7: proxy.broadcast<ColMsg, colHanPartialProxy>(msg); break;
+    case 5: proxy.broadcast<ColMsg, colHanPartial>(msg.get()); break;
+    case 6: proxy.broadcast<ColMsg, colHanPartialMulti>(msg.get()); break;
+    case 7: proxy.broadcast<ColMsg, colHanPartialProxy>(msg.get()); break;
       #endif
       default: vtAbort("Failure: should not be reached");
     }

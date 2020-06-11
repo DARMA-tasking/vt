@@ -76,9 +76,10 @@ void TestPool::testPoolFun(TestMsg<num_bytes>* prev_msg) {
     fmt::print("testPoolFun: num_bytes={}\n", num_bytes);
   #endif
 
-  auto msg = makeSharedMessage<TestMsg<num_bytes * 2>>();
-  testPoolFun<num_bytes * 2>(msg);
-  delete msg;
+  {
+    auto msg = makeMessage<TestMsg<num_bytes * 2>>();
+    testPoolFun<num_bytes * 2>(msg.get());
+  }
 }
 
 template <>
@@ -90,9 +91,10 @@ TEST_F(TestPool, pool_message_alloc) {
   auto const& my_node = theContext()->getNode();
 
   if (my_node == 0) {
-    auto msg = makeSharedMessage<TestMsg<min_bytes>>();
-    testPoolFun<min_bytes>(msg);
-    delete msg;
+    {
+      auto msg = makeMessage<TestMsg<min_bytes>>();
+      testPoolFun<min_bytes>(msg.get());
+    }
   }
 }
 

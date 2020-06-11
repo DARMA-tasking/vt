@@ -80,9 +80,9 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   if (this_node == pipe_node) {
     triggerPipe(pid);
   } else {
-    auto msg = makeSharedMessage<CallbackMsg>(pid);
+    auto msg = makeMessage<CallbackMsg>(pid);
     theMsg()->sendMsg<CallbackMsg,triggerCallbackHan>(
-      pipe_node, msg
+      pipe_node, msg.get()
     );
   }
 }

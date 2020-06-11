@@ -107,15 +107,10 @@ RemoteContainer<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
    *  trigger may send/bcast messages, thus a copy must be made
    */
   if (multi_callback) {
-    cur_msg = makeSharedMessage<MsgT>(*data);
-    messageRef(cur_msg);
+    cur_msg = makeMessage<MsgT>(*data);
   }
 
-  cb.trigger(cur_msg,pid);
-
-  if (multi_callback) {
-    messageDeref(cur_msg);
-  }
+  cb.trigger(cur_msg.get(),pid);
 }
 
 template <typename MsgT, typename TupleT>

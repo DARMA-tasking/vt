@@ -155,22 +155,22 @@ struct FinishedIter {
     col->assertValues();
   }
   auto proxy = col->getCollectionProxy();
-  auto reduce_msg = makeSharedMessage<IterReduceMsg>(proxy,iter);
+  auto reduce_msg = makeMessage<IterReduceMsg>(proxy,iter);
   theCollection()->reduceMsg<
     LBTest,
     IterReduceMsg,
     IterReduceMsg::template msgHandler<
       IterReduceMsg, collective::PlusOp<collective::NoneType>, FinishedIter
     >
-  >(proxy, reduce_msg);
+  >(proxy, reduce_msg.get());
 }
 
 static void startIter(int32_t const iter, ColProxyType proxy) {
   ::fmt::print(
     "startIter: iter={}, cur_iter={}\n", iter, iter
   );
-  auto msg = makeSharedMessage<IterMsg>(iter);
-  proxy.broadcast<IterMsg,LBTest::iterWork>(msg);
+  auto msg = makeMessage<IterMsg>(iter);
+  proxy.broadcast<IterMsg,LBTest::iterWork>(msg.get());
 }
 
 struct TestLB : TestParallelHarness { };
