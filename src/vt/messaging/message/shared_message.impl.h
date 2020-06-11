@@ -52,7 +52,7 @@
 
 namespace vt {
 
-namespace {
+namespace detail {
 
 /**
  * \internal \brief Create a bare message. Only the system should ever call this
@@ -89,7 +89,7 @@ MsgT* makeMessageSzImpl(std::size_t size, Args&&... args) {
   return msg;
 }
 
-} /* end anon namespace */
+} /* end detail namespace */
 
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessage(Args&&... args) {
@@ -116,13 +116,13 @@ MsgT* makeSharedMessageSz(std::size_t size, Args&&... args) {
 template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessage(Args&&... args) {
   // RVO / copy-elision guaranteed
-  return MsgPtr<MsgT>{makeMessageImpl<MsgT>(std::forward<Args>(args)...)};
+  return MsgPtr<MsgT>{detail::makeMessageImpl<MsgT>(std::forward<Args>(args)...)};
 }
 
 template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
   // RVO / copy-elision guaranteed
-  return MsgPtr<MsgT>{makeMessageSzImpl<MsgT>(size, std::forward<Args>(args)...)};
+  return MsgPtr<MsgT>{detail::makeMessageSzImpl<MsgT>(size, std::forward<Args>(args)...)};
 }
 
 } //end namespace vt
