@@ -79,6 +79,7 @@
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
 #include "vt/group/group_headers.h"
+#include "vt/pipe/pipe_headers.h"
 
 #include <tuple>
 #include <utility>
@@ -1065,7 +1066,7 @@ void CollectionManager::reduceMsgExpr(
     "reduceMsg: msg={}\n", print_ptr(raw_msg)
   );
 
-  auto const col_proxy = toProxy.getProxy();
+  auto const col_proxy = proxy.getProxy();
   auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
 
   bufferOpOrExecute<ColT>(
@@ -1130,8 +1131,8 @@ void CollectionManager::reduceMsgExpr(
 
       debug_print(
         vrt_coll, node,
-        "reduceMsg: col_proxy={:x}, seq={}, num_elms={}, tag={}\n",
-        col_proxy, cur_seq, num_elms, tag
+        "reduceMsg: col_proxy={:x}, num_elms={}\n",
+        col_proxy, num_elms
       );
 
       return messaging::PendingSend{nullptr};
@@ -1877,6 +1878,7 @@ template <typename ColT>
    * etc.)
    */
   auto msg = makeMessage<CollectionConsMsg>(proxy);
+  theMsg()->markAsCollectionMessage(msg);
   auto const& root = 0;
   debug_print(
     vrt_coll, node,
