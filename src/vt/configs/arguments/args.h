@@ -179,6 +179,10 @@ public:
   static std::string vt_user_str_2;
   static std::string vt_user_str_3;
 
+  static bool vt_output_config;
+  static std::string vt_output_config_file;
+  static std::string vt_output_config_str;
+
   /// Name of the program launched (excluding any path!)
   static std::string prog_name;
 

@@ -80,6 +80,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <fstream>
 
 #include <cstdio>
 #include <cstdint>
@@ -350,6 +351,14 @@ bool Runtime::initialize(bool const force_now) {
       theSched->enqueue([this]{
         this->checkForArgumentErrors();
       });
+
+      // If the user specified to output a configuration file, write it to the
+      // specified file on rank 0
+      if (ArgType::vt_output_config) {
+        std::ofstream out(ArgType::vt_output_config_file);
+        out << ArgType::vt_output_config_str;
+        out.close();
+      }
     }
     setup();
     sync();
