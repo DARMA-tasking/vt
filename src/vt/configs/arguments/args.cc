@@ -700,7 +700,10 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   // number of arguments is always less. As currently allocated here,
   // ownership of the new object is ill-defined.
   int new_argc = passthru_args.size() + 1; // does not include argv[0]
-  char** const new_argv = new char*[new_argc + 1];
+
+  static std::unique_ptr<char*[]> new_argv = nullptr;
+
+  new_argv = std::make_unique<char*[]>(new_argc + 1);
 
   int i = 0;
   new_argv[i++] = argv[0];
@@ -711,7 +714,7 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
 
   // Set them back with all vt (and MPI) arguments elided
   argc = new_argc;
-  argv = new_argv;
+  argv = &new_argv[0];
 
   return std::make_tuple(-1, std::string{});
 }
