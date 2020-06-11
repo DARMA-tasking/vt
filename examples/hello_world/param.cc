@@ -46,6 +46,8 @@
 
 #define VT_COMPILE_PARAM_EXAMPLE 0
 
+#if VT_COMPILE_PARAM_EXAMPLE
+
 static void fnTest(int a, int b, bool x) {
   fmt::print("fn: a={}, b={}, x={}\n", a, b, x ? "true" : "false");
 }
@@ -63,6 +65,8 @@ struct FunctorTest1 {
     fmt::print("FunctorTest1: x={},y={}\n",x,y);
   }
 };
+
+#endif
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
