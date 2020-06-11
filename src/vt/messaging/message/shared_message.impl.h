@@ -75,7 +75,7 @@ MsgT* makeMessageImpl(Args&&... args) {
  * \internal \brief Create a bare message with defined size (used when extra
  * bytes are requested). Only the system should ever call this function.
  *
- * \param[in] size requested size
+ * \param[in] size extra requested size at the end of message
  * \param[in] args forwarded message arguments for constructor
  *
  * \return bare message pointer with \c size extra bytes on the end

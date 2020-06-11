@@ -63,6 +63,10 @@ namespace vt {
  * The returned pointer represents a leaked object until 'promoted' to a MsgPtr.
  * While \c theMsg send API will automatically perform a promotion, automatic
  * message promotion should generally not be relied upon.
+ *
+ * \param[in] args forwarded message arguments for constructor
+ *
+ * \return a bare message pointer
  */
 template <typename MsgT, typename... Args>
 [[deprecated("Use makeMessage instead")]]
@@ -79,6 +83,11 @@ MsgT* makeSharedMessage(Args&&... args);
  * The returned pointer represents a leaked object until 'promoted' to a MsgPtr.
  * While \c theMsg send API will automatically perform a promotion, automatic
  * message promotion should generally not be relied upon.
+ *
+ * \param[in] size extra requested size at the end of message
+ * \param[in] args forwarded message arguments for constructor
+ *
+ * \return a bare message pointer
  */
 template <typename MsgT, typename... Args>
 [[deprecated("Use makeMessageSz instead")]]
@@ -92,6 +101,10 @@ MsgT* makeSharedMessageSz(std::size_t size, Args&&... args);
  *
  * The lifetime of the message is controlled by MsgPtr and will be destroyed
  * when the returned MsgPtr (and all copies of such) are destroyed.
+ *
+ * \param[in] args forwarded message arguments for constructor
+ *
+ * \return a shared message pointer
  */
 template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessage(Args&&... args);
@@ -104,6 +117,11 @@ MsgPtr<MsgT> makeMessage(Args&&... args);
  *
  * The lifetime of the message is controlled by MsgPtr and will be destroyed
  * when the returned MsgPtr (and all copies of such) are destroyed.
+ *
+ * \param[in] size extra requested size at the end of message
+ * \param[in] args forwarded message arguments for constructor
+ *
+ * \return a shared message pointer
  */
 template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args);
