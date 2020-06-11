@@ -160,7 +160,7 @@ public:
    *
    * \return the load map
    */
-  LoadMapType const& getProcLoad(PhaseType phase) const;
+  LoadMapType const& getProcLoad(PhaseType phase);
 
   /**
    * \internal \brief Get object loads for the subphases of a given phase
@@ -169,7 +169,7 @@ public:
    *
    * \return the subphase load map
    */
-  SubphaseLoadMapType const& getProcSubphaseLoad(PhaseType phase) const;
+  SubphaseLoadMapType const& getProcSubphaseLoad(PhaseType phase);
 
   /**
    * \internal \brief Get object comm graph for a given phase
@@ -178,7 +178,7 @@ public:
    *
    * \return the load map
    */
-  CommMapType const& getProcComm(PhaseType phase) const;
+  CommMapType const& getProcComm(PhaseType phase);
 
   /**
    * \internal \brief Test if this processor has an object to migrate
