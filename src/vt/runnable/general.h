@@ -53,7 +53,9 @@ namespace vt {
 
 namespace objgroup {
 
-void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch);
+void scheduleMsg(
+  MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
+);
 
 } /* end namespace objgroup */
 
@@ -70,7 +72,9 @@ struct Runnable {
     TagType in_tag = no_tag
   );
 
-  friend void objgroup::scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch);
+  friend void objgroup::scheduleMsg(
+    MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
+  );
 
 private:
   // Dispatch for object groups: handler with node-local object ptr

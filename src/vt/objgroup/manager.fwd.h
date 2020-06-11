@@ -52,13 +52,15 @@ namespace vt { namespace objgroup {
 
 struct ObjGroupManager;
 
-void dispatchObjGroup(MsgVirtualPtrAny msg, HandlerType han);
+void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
 template <typename MsgT>
 void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
 template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
-void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType epoch);
+void scheduleMsg(
+  MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
+);
 
 }} /* end namespace vt::objgroup */
 

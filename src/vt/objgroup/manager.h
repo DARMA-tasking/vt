@@ -77,7 +77,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using HolderBasePtrType   = std::unique_ptr<HolderBaseType>;
   using DispatchBaseType    = dispatch::DispatchBase;
   using DispatchBasePtrType = std::unique_ptr<DispatchBaseType>;
-  using MsgContainerType    = std::vector<MsgVirtualPtrAny>;
+  using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
   using BaseProxyListType   = std::set<ObjGroupProxyType>;
 
   ObjGroupManager() = default;
@@ -169,7 +169,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   /*
    * Dispatch to a live obj group pointer with a handler
    */
-  void dispatch(MsgVirtualPtrAny msg, HandlerType han);
+  void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
   /*
    * Untyped calls for broadcasting or sending msgs to an obj group
@@ -190,7 +190,9 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   void registerBaseCollective(ProxyType<ObjT> proxy);
   ObjGroupProxyType getProxy(ObjGroupProxyType proxy);
 
-  friend void scheduleMsg(MsgVirtualPtrAny msg, HandlerType han, EpochType ep);
+  friend void scheduleMsg(
+    MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType ep
+  );
 
 private:
   ObjGroupProxyType makeCollectiveImpl(
