@@ -52,6 +52,45 @@
 
 namespace vt {
 
+namespace {
+
+/**
+ * \internal \brief Create a bare message. Only the system should ever call this
+ * function.
+ *
+ * \param[in] args forwarded message arguments for constructor
+ *
+ * \return base message pointer
+ */
+template <typename MsgT, typename... Args>
+MsgT* makeMessageImpl(Args&&... args) {
+  MsgT* msg = new MsgT{std::forward<Args>(args)...};
+  // n.b. do NOT actually take a ref here.
+  // True ownership only starts in MsgPtr.
+  envelopeSetRef(msg->env, 0);
+  return msg;
+}
+
+/**
+ * \internal \brief Create a bare message with defined size (used when extra
+ * bytes are requested). Only the system should ever call this function.
+ *
+ * \param[in] size requested size
+ * \param[in] args forwarded message arguments for constructor
+ *
+ * \return bare message pointer with \c size extra bytes on the end
+ */
+template <typename MsgT, typename... Args>
+MsgT* makeMessageSzImpl(std::size_t size, Args&&... args) {
+  MsgT* msg = new (size) MsgT{std::forward<Args>(args)...};
+  // n.b. do NOT actually take a ref here.
+  // True ownership only starts in MsgPtr.
+  envelopeSetRef(msg->env, 0);
+  return msg;
+}
+
+} /* end anon namespace */
+
 template <typename MsgT, typename... Args>
 MsgT* makeSharedMessage(Args&&... args) {
   MsgT* msg = new MsgT{std::forward<Args>(args)...};
@@ -77,13 +116,13 @@ MsgT* makeSharedMessageSz(std::size_t size, Args&&... args) {
 template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessage(Args&&... args) {
   // RVO / copy-elision guaranteed
-  return MsgPtr<MsgT>{makeSharedMessage<MsgT>(std::forward<Args>(args)...)};
+  return MsgPtr<MsgT>{makeMessageImpl<MsgT>(std::forward<Args>(args)...)};
 }
 
 template <typename MsgT, typename... Args>
 MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args) {
   // RVO / copy-elision guaranteed
-  return MsgPtr<MsgT>{makeSharedMessageSz<MsgT>(size, std::forward<Args>(args)...)};
+  return MsgPtr<MsgT>{makeMessageSzImpl<MsgT>(size, std::forward<Args>(args)...)};
 }
 
 } //end namespace vt
