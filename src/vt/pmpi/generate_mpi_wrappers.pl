@@ -2,12 +2,9 @@
 
 # Usage: autogen.pl mpi_functions.h.in mpiwrap.cc
 
-use 5.20.0;
+use 5.16.3;
 use strict;
 use warnings;
-
-use feature 'signatures';
-no warnings qw(experimental::signatures);
 
 my $mpidef_file = $ARGV[0];
 my $output_file = $ARGV[1];
@@ -19,7 +16,8 @@ if (not $mpidef_file or not $output_file) {
 
 # Extract MPI function definitions.
 # It's a very rudimentary extractor that relies on definitions being on one line.
-sub extract_defs($def_file) {
+sub extract_defs {
+    my ($def_file) = @_;
     use autodie;
 
     open my $handle, '<', $def_file;
@@ -66,7 +64,8 @@ my @no_guard_patterns = qw(
     MPI_Wtick
 );
 
-sub should_guard_call($name) {
+sub should_guard_call {
+    my ($name) = @_;
     return not grep {
         $name =~ m/^$_$/;
     } @no_guard_patterns;
