@@ -74,6 +74,18 @@ Scheduler::Scheduler() {
   progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
 }
 
+/*virtual*/ void Scheduler::startup() /*override*/ {
+  // Depends on theTrace
+  between_sched_event_type_ = trace::registerEventHashed(
+    "Between VT schedulers"
+  );
+}
+
+/*virtual*/ void Scheduler::finalize() /*override*/ {
+  // Complete any event between last runSchedulerWhile and vt::finalize.
+  between_sched_event_ = nullptr;
+}
+
 void Scheduler::enqueue(ActionType action) {
   bool const is_term = false;
 # if backend_check_enabled(priorities)
@@ -279,28 +291,44 @@ void Scheduler::scheduler(bool msg_only) {
 }
 
 void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
+  // This loop construct can run either in a top-level or nested context.
+  // 1. In a top-level context the idle time will encompass the time not
+  //    processing any actions when the work queue is empty. Leaving starts
+  //    a 'between scheduler' event which will only complete on the next call.
+  // 2. In a nested context, idle is always exited at the end
+  //    as the parent context is "not idle". Likewise, no 'between scheduler'
+  //    event is started.
+
   vtAssert(
     action_depth_ == 0 or not is_idle,
     "Nested schedulers never expected from idle context"
   );
 
+  if (action_depth_ == 0) {
+    between_sched_event_ = nullptr;
+  }
+
   triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 
   while (cond()) {
-    runScheduler();
+    scheduler();
   }
 
   // At the end of a nested scheduler context, always ensure to enter into
-  // a non-idle state as the outer work resumes, even if the scheduler
-  // work queue is itself empty. That is, a nested scheduler should
-  // ONLY trigger an idle state during the duration of the scheduling loop.
-  // The opposite does not hold: idle is only entered when there is no work.
+  // a non-idle state as the outer work resumes.
   if (action_depth_ > 0 and is_idle) {
     is_idle = false;
     triggerEvent(SchedulerEventType::EndIdle);
   }
 
   triggerEvent(SchedulerEventType::EndSchedulerLoop);
+
+  if (action_depth_ == 0) {
+    // Start an event representing time outside of top-level scheduler.
+    between_sched_event_ = std::make_unique<trace::TraceScopedEvent>(
+      between_sched_event_type_
+    );
+  }
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
