@@ -11,13 +11,22 @@ my ($release_branch, $feature_branch) = @ARGV;
 
 print "release=$release_branch, feature=$feature_branch";
 
-`git checkout $release_branch`;
-`git checkout $feature_branch`;
-`git branch 1.0.0-$feature_branch`;
-`git checkout 1.0.0-$feature_branch`;
-`git rebase -i $release_branch`;
+sub execute {
+    my $cmd = shift;
+    `$cmd`;
+    if ($?) {
+        warn "failed to run command: $cmd";
+        exit $? >> 8;
+    }
+}
 
-`git checkout $release_branch`;
-`git merge --no-ff 1.0.0-$feature_branch`;
-`git checkout $release_branch`;
+execute("git checkout $release_branch");
+execute("git checkout $feature_branch");
+execute("git branch 1.0.0-$feature_branch");
+execute("git checkout 1.0.0-$feature_branch");
+execute("git rebase -i $release_branch");
+
+execute("git checkout $release_branch");
+execute("git merge --no-ff 1.0.0-$feature_branch");
+execute("git checkout $release_branch");
 
