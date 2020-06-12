@@ -53,6 +53,8 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/trace/trace.h"
+#include "vt/trace/trace_user.h"
 
 #include <cassert>
 #include <vector>
@@ -88,6 +90,9 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   Scheduler();
 
   std::string name() override { return "Scheduler"; }
+
+  virtual void startup() override;
+  virtual void finalize() override;
 
   static void checkTermSingleNode();
 
@@ -149,11 +154,16 @@ private:
   Queue<UnitType> work_queue_;
 # endif
 
+  trace::UserEventIDType between_sched_event_type_ = trace::no_user_event_id;
+
   bool has_executed_      = false;
   bool is_idle            = true;
   bool is_idle_minus_term = true;
   // The depth of work action currently executing.
   unsigned int action_depth_ = 0;
+
+  // User event for tracking between top-level VT scheduler loops.
+  std::unique_ptr<trace::TraceScopedEvent> between_sched_event_ = nullptr;
 
   // The number of termination messages currently in the queue---they weakly
   // imply idleness for the stake of termination
