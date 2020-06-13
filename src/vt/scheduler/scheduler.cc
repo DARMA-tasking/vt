@@ -290,9 +290,7 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
     "Nested schedulers never expected from idle context"
   );
 
-  if (action_depth_ == 0) {
-    between_sched_event_ = nullptr;
-  }
+  between_sched_event_ = nullptr;
 
   triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 
@@ -369,6 +367,8 @@ void runSchedulerThrough(EpochType epoch) {
 }
 
 void runInEpochRooted(ActionType&& fn) {
+  theSched()->between_sched_event_ = nullptr; // loop will be entered
+
   auto ep = theTerm()->makeEpochRooted();
   theMsg()->pushEpoch(ep);
   fn();
@@ -378,6 +378,8 @@ void runInEpochRooted(ActionType&& fn) {
 }
 
 void runInEpochCollective(ActionType&& fn) {
+  theSched()->between_sched_event_ = nullptr; // loop will be entered
+
   auto ep = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(ep);
   fn();
