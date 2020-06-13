@@ -61,6 +61,14 @@
 #include <functional>
 #include <memory>
 
+namespace vt {
+  void runScheduler();
+  void runSchedulerThrough(EpochType epoch);
+
+  void runInEpochRooted(ActionType&& fn);
+  void runInEpochCollective(ActionType&& fn);
+}
+
 namespace vt { namespace sched {
 
 enum SchedulerEvent {
@@ -176,6 +184,10 @@ private:
   std::size_t last_threshold_memory_usage_ = 0;
   std::size_t threshold_memory_usage_ = 0;
   std::size_t last_memory_usage_poll_ = 0;
+
+  // Access to between_sched_event_
+  friend void vt::runInEpochRooted(ActionType&& fn);
+  friend void vt::runInEpochCollective(ActionType&& fn);
 };
 
 }} //end namespace vt::sched
@@ -183,8 +195,6 @@ private:
 #include "vt/scheduler/scheduler.impl.h"
 
 namespace vt {
-
-void runScheduler();
 
 extern sched::Scheduler* theSched();
 

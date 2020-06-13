@@ -304,9 +304,7 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
     "Nested schedulers never expected from idle context"
   );
 
-  if (action_depth_ == 0) {
-    between_sched_event_ = nullptr;
-  }
+  between_sched_event_ = nullptr;
 
   triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 
@@ -371,5 +369,9 @@ namespace vt {
 void runScheduler() {
   theSched()->scheduler();
 }
+
+  theSched()->between_sched_event_ = nullptr; // loop will be entered
+
+  theSched()->between_sched_event_ = nullptr; // loop will be entered
 
 } //end namespace vt
