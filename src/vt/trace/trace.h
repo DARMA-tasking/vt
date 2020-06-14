@@ -110,6 +110,8 @@ struct Trace : runtime::component::Component<Trace> {
   std::string getDirectory() const { return full_dir_name_;   }
 
   void initialize() override;
+  void startup() override;
+
   void setupNames(std::string const& in_prog_name);
 
   /// Initiate a paired event.

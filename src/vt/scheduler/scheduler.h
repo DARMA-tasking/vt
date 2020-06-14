@@ -99,8 +99,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
 
   std::string name() override { return "Scheduler"; }
 
-  virtual void startup() override;
-  virtual void finalize() override;
+  void startup() override;
+  void finalize() override;
 
   static void checkTermSingleNode();
 

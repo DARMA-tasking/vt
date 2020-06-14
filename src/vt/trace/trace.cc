@@ -120,10 +120,18 @@ Trace::Trace(std::string const& in_prog_name)
   event_holds_.push_back(0);
 }
 
-void Trace::initialize() {
+void Trace::initialize() /*override*/ {
 #if backend_check_enabled(trace_enabled)
   setupNames(prog_name_);
 
+  // Register a trace user event to demarcate flushes that occur
+  flush_event_ = vt::trace::registerEventCollective("trace_flush");
+#endif
+}
+
+void Trace::startup() /*override*/ {
+#if backend_check_enabled(trace_enabled)
+  // Trace is a dependency of the Scheduler (co-dependency).
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginSchedulerLoop, [this]{ beginSchedulerLoop(); }
   );
@@ -136,9 +144,6 @@ void Trace::initialize() {
   theSched()->registerTrigger(
     sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
   );
-
-  // Register a trace user event to demarcate flushes that occur
-  flush_event_ = vt::trace::registerEventCollective("trace_flush");
 #endif
 }
 

@@ -74,14 +74,14 @@ Scheduler::Scheduler() {
   progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
 }
 
-/*virtual*/ void Scheduler::startup() /*override*/ {
+void Scheduler::startup() /*override*/ {
   // Depends on theTrace
   between_sched_event_type_ = trace::registerEventHashed(
     "Between VT schedulers"
   );
 }
 
-/*virtual*/ void Scheduler::finalize() /*override*/ {
+void Scheduler::finalize() /*override*/ {
   // Complete any event between last runSchedulerWhile and vt::finalize.
   between_sched_event_ = nullptr;
 }
