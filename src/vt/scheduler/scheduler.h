@@ -159,7 +159,7 @@ private:
   Queue<UnitType> work_queue_;
 # endif
 
-  trace::UserEventIDType between_sched_event_type_ = trace::no_user_event_id;
+  trace::TraceEntryIDType between_sched_event_type_ = trace::no_trace_entry_id;
 
   bool has_executed_      = false;
   bool is_idle            = true;
@@ -167,8 +167,8 @@ private:
   // The depth of work action currently executing.
   unsigned int action_depth_ = 0;
 
-  // User event for tracking between top-level VT scheduler loops.
-  std::unique_ptr<trace::TraceScopedEvent> between_sched_event_ = nullptr;
+  // Event to track time between top-level VT scheduler loops.
+  trace::TraceProcessingTag between_sched_event_;
 
   // The number of termination messages currently in the queue---they weakly
   // imply idleness for the stake of termination
@@ -185,7 +185,7 @@ private:
   std::size_t threshold_memory_usage_ = 0;
   std::size_t last_memory_usage_poll_ = 0;
 
-  // Access to between_sched_event_
+  // Access to endBetweenLoopEvent()
   friend void vt::runInEpochRooted(ActionType&& fn);
   friend void vt::runInEpochCollective(ActionType&& fn);
 };
