@@ -265,10 +265,6 @@ void Scheduler::scheduler(bool msg_only) {
       is_idle = true;
       triggerEvent(SchedulerEventType::BeginIdle);
     }
-
-  } else {
-    // n.b. Work queue is empty - however, if a trace event was written WITHOUT
-    // new work being queued then the trace state may be in a non-idle state.
   }
 
   if (not msg_only) {
@@ -294,13 +290,21 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
 
   triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 
+  // When resuming a top-level scheduler, ensure to immediately enter
+  // an idle state if such applies.
+  if (not is_idle and work_queue_.empty()) {
+    is_idle = true;
+    triggerEvent(SchedulerEventType::BeginIdle);
+  }
+
   while (cond()) {
     scheduler();
   }
 
-  // At the end of a nested scheduler context, always ensure to enter into
-  // a non-idle state as the outer work resumes.
-  if (action_depth_ > 0 and is_idle) {
+  // After running the scheduler ensure to exit idle state.
+  // For nested schedulers the outside scheduler has work to do.
+  // Between top-level schedulers, non-idle indicates lack of scheduling.
+  if (is_idle) {
     is_idle = false;
     triggerEvent(SchedulerEventType::EndIdle);
   }
