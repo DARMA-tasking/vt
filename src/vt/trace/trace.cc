@@ -124,14 +124,20 @@ void Trace::initialize() /*override*/ {
 #if backend_check_enabled(trace_enabled)
   setupNames(prog_name_);
 
+  between_sched_event_type_ = trace::TraceRegistry::registerEventHashed(
+    "Scheduler", "Between_Schedulers"
+  );
+
   // Register a trace user event to demarcate flushes that occur
-  flush_event_ = vt::trace::registerEventCollective("trace_flush");
+  flush_event_ = trace::registerEventCollective("trace_flush");
 #endif
 }
 
 void Trace::startup() /*override*/ {
 #if backend_check_enabled(trace_enabled)
-  // Trace is a dependency of the Scheduler (co-dependency).
+  theSched()->registerTrigger(
+    sched::SchedulerEvent::PendingSchedulerLoop, [this]{ pendingSchedulerLoop(); }
+  );
   theSched()->registerTrigger(
     sched::SchedulerEvent::BeginSchedulerLoop, [this]{ beginSchedulerLoop(); }
   );
@@ -145,6 +151,12 @@ void Trace::startup() /*override*/ {
     sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
   );
 #endif
+}
+
+void Trace::finalize() /*override*/ {
+  // Always end any between-loop event left open.
+  endProcessing(between_sched_event_);
+  between_sched_event_ = TraceProcessingTag{};
 }
 
 void Trace::loadAndBroadcastSpec() {
@@ -535,7 +547,17 @@ void Trace::endProcessing(
   // Unlike logEvent there is currently no flush here.
 }
 
+void Trace::pendingSchedulerLoop() {
+  // Always end between-loop event.
+  endProcessing(between_sched_event_);
+  between_sched_event_ = TraceProcessingTag{};
+}
+
 void Trace::beginSchedulerLoop() {
+  // Always end between-loop event. The pending case is not always triggered.
+  endProcessing(between_sched_event_);
+  between_sched_event_ = TraceProcessingTag{};
+
   // Capture the current open event depth.
   event_holds_.push_back(open_events_.size());
 }
@@ -552,6 +574,13 @@ void Trace::endSchedulerLoop() {
   );
 
   event_holds_.pop_back();
+
+  // Start an event representing time outside of top-level scheduler.
+  if (event_holds_.size() == 1) {
+    between_sched_event_ = beginProcessing(
+      between_sched_event_type_, 0, trace::no_trace_event, 0
+    );
+  }
 }
 
 void Trace::beginIdle(double const time) {

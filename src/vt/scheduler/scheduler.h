@@ -53,8 +53,6 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
-#include "vt/trace/trace.h"
-#include "vt/trace/trace_user.h"
 
 #include <cassert>
 #include <vector>
@@ -73,14 +71,15 @@ namespace vt {
 namespace vt { namespace sched {
 
 enum SchedulerEvent {
-  BeginIdle          = 0,
-  EndIdle            = 1,
-  BeginIdleMinusTerm = 2,
-  EndIdleMinusTerm   = 3,
-  BeginSchedulerLoop = 4,
-  EndSchedulerLoop   = 5,
+  BeginIdle            = 0,
+  EndIdle              = 1,
+  BeginIdleMinusTerm   = 2,
+  EndIdleMinusTerm     = 3,
+  BeginSchedulerLoop   = 4,
+  EndSchedulerLoop     = 5,
+  PendingSchedulerLoop = 6,
 
-  LastSchedulerEvent = 5,
+  LastSchedulerEvent   = 6,
 };
 
 struct Scheduler : runtime::component::Component<Scheduler> {
@@ -98,9 +97,6 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   Scheduler();
 
   std::string name() override { return "Scheduler"; }
-
-  void startup() override;
-  void finalize() override;
 
   static void checkTermSingleNode();
 
@@ -162,16 +158,11 @@ private:
   Queue<UnitType> work_queue_;
 # endif
 
-  trace::TraceEntryIDType between_sched_event_type_ = trace::no_trace_entry_id;
-
   bool has_executed_      = false;
   bool is_idle            = true;
   bool is_idle_minus_term = true;
   // The depth of work action currently executing.
   unsigned int action_depth_ = 0;
-
-  // Event to track time between top-level VT scheduler loops.
-  trace::TraceProcessingTag between_sched_event_;
 
   // The number of termination messages currently in the queue---they weakly
   // imply idleness for the stake of termination
@@ -188,7 +179,7 @@ private:
   std::size_t threshold_memory_usage_ = 0;
   std::size_t last_memory_usage_poll_ = 0;
 
-  // Access to endBetweenLoopEvent()
+  // Access to triggerEvent.
   friend void vt::runInEpochRooted(ActionType&& fn);
   friend void vt::runInEpochCollective(ActionType&& fn);
 };

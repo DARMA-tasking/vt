@@ -74,21 +74,6 @@ Scheduler::Scheduler() {
   progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
 }
 
-void Scheduler::startup() /*override*/ {
-#if backend_check_enabled(trace_enabled)
-  between_sched_event_type_ = trace::TraceRegistry::registerEventHashed(
-    "Scheduler", "Between_Schedulers"
-  );
-#else
-  between_sched_event_type_ = trace::no_trace_entry_id;
-#endif
-}
-
-void Scheduler::finalize() /*override*/ {
-  // Complete any event between last runSchedulerWhile and vt::finalize.
-  endBetweenLoopEvent();
-}
-
 void Scheduler::enqueue(ActionType action) {
   bool const is_term = false;
 # if backend_check_enabled(priorities)
@@ -289,8 +274,6 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
     "Nested schedulers never expected from idle context"
   );
 
-  endBetweenLoopEvent();
-
   triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 
   // When resuming a top-level scheduler, ensure to immediately enter
@@ -313,22 +296,6 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
   }
 
   triggerEvent(SchedulerEventType::EndSchedulerLoop);
-
-#if backend_check_enabled(trace_enabled)
-  if (action_depth_ == 0) {
-    // Start an event representing time outside of top-level scheduler.
-    between_sched_event_ = theTrace()->beginProcessing(
-      between_sched_event_type_, 0, trace::no_trace_event, 0
-    );
-  }
-#endif
-}
-
-void Scheduler::endBetweenLoopEvent() {
-#if backend_check_enabled(trace_enabled)
-  theTrace()->endProcessing(between_sched_event_);
-  between_sched_event_ = trace::TraceProcessingTag{};
-#endif
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
@@ -383,7 +350,7 @@ void runSchedulerThrough(EpochType epoch) {
 }
 
 void runInEpochRooted(ActionType&& fn) {
-  theSched()->endBetweenLoopEvent(); // loop will be entered
+  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
 
   auto ep = theTerm()->makeEpochRooted();
   theMsg()->pushEpoch(ep);
@@ -394,7 +361,7 @@ void runInEpochRooted(ActionType&& fn) {
 }
 
 void runInEpochCollective(ActionType&& fn) {
-  theSched()->endBetweenLoopEvent(); // loop will be entered
+  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
 
   auto ep = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(ep);
