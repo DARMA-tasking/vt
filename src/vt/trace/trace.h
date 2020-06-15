@@ -107,7 +107,9 @@ struct Trace {
   std::string getSTSName()   const { return full_sts_name_;   }
   std::string getDirectory() const { return full_dir_name_;   }
 
-  void initialize();
+  void initialize() override;
+  void startup() override;
+
   void setupNames(
     std::string const& in_prog_name, std::string const& in_trace_name,
     std::string const& in_dir_name = ""
@@ -131,6 +133,7 @@ struct Trace {
     double const time = getCurrentTime()
   );
 
+  void pendingSchedulerLoop();
   void beginSchedulerLoop();
   void endSchedulerLoop();
 
@@ -273,6 +276,10 @@ private:
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
   bool trace_enabled_cur_phase_ = true;
   UserEventIDType flush_event_  = no_user_event_id;
+
+  // Processing event between top-level loops.
+  TraceEntryIDType between_sched_event_type_ = no_trace_entry_id;
+  TraceProcessingTag between_sched_event_;
 };
 
 }} //end namespace vt::trace
