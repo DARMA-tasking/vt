@@ -94,7 +94,7 @@ struct BaseLB {
 
   virtual ~BaseLB() = default;
 
-  void startLBHandler(balance::StartLBMsg* msg, objgroup::proxy::Proxy<BaseLB> proxy);
+  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::ProcStats::LoadMapType const& in_load_stats, ElementCommType const& in_comm_stats);
   void computeStatistics();
   void importProcessorData(ElementLoadType const& ld, ElementCommType const& cm);
   void statsHandler(StatsMsgType* msg);
@@ -133,7 +133,6 @@ protected:
   bool during_migration_                          = false;
   EpochType migration_epoch_                      = no_epoch;
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
-  int32_t local_migration_count_                  = 0;
   PhaseType phase_                                = 0;
   int32_t num_reduce_stats_                       = 0;
   bool comm_aware_                                = false;
@@ -142,6 +141,8 @@ protected:
 
 private:
   TransferVecType transfers_                      = {};
+  TransferType off_node_migrate_                  = {};
+  int32_t local_migration_count_                  = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */

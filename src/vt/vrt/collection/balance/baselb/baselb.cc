@@ -60,15 +60,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void BaseLB::startLBHandler(
-  balance::StartLBMsg* msg, objgroup::proxy::Proxy<BaseLB> proxy
+void BaseLB::startLB(
+  PhaseType phase,
+  objgroup::proxy::Proxy<BaseLB> proxy,
+  balance::ProcStats::LoadMapType const& in_load_stats,
+  ElementCommType const& in_comm_stats
 ) {
   start_time_ = timing::Timing::getCurrentTime();
-  phase_ = msg->getPhase();
+  phase_ = phase;
   proxy_ = proxy;
 
-  auto const& in_load_stats = theProcStats()->getProcLoad(phase_);
-  auto const& in_comm_stats = theProcStats()->getProcComm(phase_);
   importProcessorData(in_load_stats, in_comm_stats);
   computeStatistics();
 }

@@ -128,7 +128,8 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto proxy = theObjGroup()->makeCollective<LB>();
   proxy.get()->init(proxy);
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
-  proxy.get()->startLBHandler(msg.get(), base_proxy);
+  auto phase = msg->getPhase();
+  proxy.get()->startLB(phase, base_proxy, theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
   return proxy;
 }
