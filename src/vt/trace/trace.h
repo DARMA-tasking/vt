@@ -185,7 +185,7 @@ struct Trace : runtime::component::Component<Trace> {
   /// Events already logged may still be written to the trace log.
   void disableTracing();
 
-  bool checkDynamicRuntimeEnabled();
+  bool checkDynamicRuntimeEnabled(bool is_end_event = false);
 
   void loadAndBroadcastSpec();
   void setTraceEnabledCurrentPhase(PhaseType cur_phase);
