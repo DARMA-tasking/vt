@@ -66,7 +66,7 @@ namespace vt { namespace event {
 /** \file */
 
 /**
- * \brief State of an event that may be local or remote
+ * \internal \brief State of an event that may be local or remote
  *
  * Tracks the state of a distributed event
  */
