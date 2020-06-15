@@ -154,7 +154,6 @@ cmake $source_base_dir                                                       \\
       -DCMAKE_BUILD_TYPE=$build_mode                                         \\
       -DCMAKE_VERBOSE_MAKEFILE:BOOL=$verbose                                 \\
       -DCMAKE_CXX_COMPILER=$cxx                                              \\
-      -Dvt_doxygen_enabled:BOOL=true\\
       -DCMAKE_C_COMPILER=$cc                                                 \\
       ${mpi_str}
 CMAKESTR
