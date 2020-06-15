@@ -47,7 +47,7 @@
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/base/base.h"
 #include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 
 namespace vt { namespace vrt { namespace collection {
 

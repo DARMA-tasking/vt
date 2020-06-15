@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  invoke.cc
+//                                  lb_manager.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,7 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/context/context.h"
-#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"

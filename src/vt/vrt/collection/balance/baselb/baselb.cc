@@ -50,7 +50,7 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
-#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/timing/timing.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"

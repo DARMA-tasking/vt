@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   invoke.h
+//                                   lb_manager.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
