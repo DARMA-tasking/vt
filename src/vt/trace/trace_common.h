@@ -56,7 +56,7 @@ using TraceEntryIDType    = size_t; // uint32_t, maybe..
 using TraceEntrySeqType   = uint32_t;
 
 static constexpr TraceEntryIDType const no_trace_entry_id = 0;
-static constexpr TraceEntrySeqType const no_trace_entry_seq = -1;
+static constexpr TraceEntrySeqType const no_trace_entry_seq = ~0;
 
 // user traces
 using TraceEventIDType    = uint32_t;
