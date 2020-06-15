@@ -496,7 +496,9 @@ void Trace::endProcessing(
   TraceProcessingTag const& processing_tag,
   double const time
 ) {
-  if (not checkDynamicRuntimeEnabled()) {
+  // End event honored even if tracing is disabled in this phase.
+  // This ensures proper stack unwinding in all contexts.
+  if (not checkDynamicRuntimeEnabled(true)) {
     return;
   }
 
@@ -652,7 +654,7 @@ TraceEventIDType Trace::messageRecv(
   );
 }
 
-bool Trace::checkDynamicRuntimeEnabled() {
+bool Trace::checkDynamicRuntimeEnabled(bool is_end_event) {
   /*
    * enabled_ -> this is the dynamic check that can be disabled at any point via
    * the application
@@ -667,7 +669,7 @@ bool Trace::checkDynamicRuntimeEnabled() {
   return
     enabled_ and
     traceWritingEnabled(theContext()->getNode()) and
-    trace_enabled_cur_phase_;
+    (trace_enabled_cur_phase_ or is_end_event);
 }
 
 void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
@@ -678,15 +680,9 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
     bool ret = proxy.get()->checkTraceEnabled(spec_index);
 
     if (trace_enabled_cur_phase_ != ret) {
-      auto time = getCurrentTime();
-      // Close and pop everything, we are disabling traces at this point
-      std::size_t hold_at = event_holds_.back();
-      while (open_events_.size() > hold_at) {
-        traces_.push(
-          LogType{open_events_.back(), time, TraceConstantsType::EndProcessing}
-        );
-        open_events_.pop_back();
-      }
+      // N.B. Future endProcessing calls are required to close the current
+      // open event stack, even after the tracing is disabled for the phase.
+      // This ensures valid stack unwinding in all cases.
 
       // Go ahead and perform a trace flush when tracing is disabled (and was
       // previously enabled) to reduce memory footprint.
@@ -730,24 +726,7 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
     open_events_.push_back(log /* copy, not forwarding rv-ref */);
     break;
   }
-  case TraceConstantsType::EndProcessing: {
-    // Ideal route is to call endProcessing(tag) directly as all
-    // data should be on the beginProcessing event and not changed after.
-    // This case remains for compatibility.
-
-    vtAssert(
-      open_events_.back().ep == log.ep and
-      open_events_.back().type == TraceConstantsType::BeginProcessing,
-      "Top event should be correct type and event"
-    );
-
-    // Steal top event information
-    LogType const& top = open_events_.back();
-    TraceProcessingTag processing_tag{top.ep, top.event};
-    endProcessing(processing_tag);
-
-    return trace::no_trace_event; // n.b. pushed eagerly
-  }
+  // TraceConstantsType::EndProcessing must be through endProcessing(tag).
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:
   case TraceConstantsType::MessageRecv:
