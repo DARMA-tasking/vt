@@ -75,15 +75,18 @@ Scheduler::Scheduler() {
 }
 
 void Scheduler::startup() /*override*/ {
-  // Depends on theTrace
-  between_sched_event_type_ = trace::registerEventHashed(
-    "Between VT schedulers"
+#if backend_check_enabled(trace_enabled)
+  between_sched_event_type_ = trace::TraceRegistry::registerEventHashed(
+    "Scheduler", "Between_Schedulers"
   );
+#else
+  between_sched_event_type_ = trace::no_trace_entry_id;
+#endif
 }
 
 void Scheduler::finalize() /*override*/ {
   // Complete any event between last runSchedulerWhile and vt::finalize.
-  between_sched_event_ = nullptr;
+  endBetweenLoopEvent();
 }
 
 void Scheduler::enqueue(ActionType action) {
@@ -286,7 +289,7 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
     "Nested schedulers never expected from idle context"
   );
 
-  between_sched_event_ = nullptr;
+  endBetweenLoopEvent();
 
   triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 
@@ -311,12 +314,21 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
 
   triggerEvent(SchedulerEventType::EndSchedulerLoop);
 
+#if backend_check_enabled(trace_enabled)
   if (action_depth_ == 0) {
     // Start an event representing time outside of top-level scheduler.
-    between_sched_event_ = std::make_unique<trace::TraceScopedEvent>(
-      between_sched_event_type_
+    between_sched_event_ = theTrace()->beginProcessing(
+      between_sched_event_type_, 0, trace::no_trace_event, 0
     );
   }
+#endif
+}
+
+void Scheduler::endBetweenLoopEvent() {
+#if backend_check_enabled(trace_enabled)
+  theTrace()->endProcessing(between_sched_event_);
+  between_sched_event_ = trace::TraceProcessingTag{};
+#endif
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
@@ -371,7 +383,7 @@ void runSchedulerThrough(EpochType epoch) {
 }
 
 void runInEpochRooted(ActionType&& fn) {
-  theSched()->between_sched_event_ = nullptr; // loop will be entered
+  theSched()->endBetweenLoopEvent(); // loop will be entered
 
   auto ep = theTerm()->makeEpochRooted();
   theMsg()->pushEpoch(ep);
@@ -382,7 +394,7 @@ void runInEpochRooted(ActionType&& fn) {
 }
 
 void runInEpochCollective(ActionType&& fn) {
-  theSched()->between_sched_event_ = nullptr; // loop will be entered
+  theSched()->endBetweenLoopEvent(); // loop will be entered
 
   auto ep = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(ep);
