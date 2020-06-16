@@ -134,7 +134,6 @@ protected:
   EpochType migration_epoch_                      = no_epoch;
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
   PhaseType phase_                                = 0;
-  int32_t num_reduce_stats_                       = 0;
   bool comm_aware_                                = false;
   bool comm_collectives_                          = false;
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;

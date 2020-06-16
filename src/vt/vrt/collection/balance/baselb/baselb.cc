@@ -71,7 +71,15 @@ void BaseLB::startLB(
   proxy_ = proxy;
 
   importProcessorData(in_load_stats, in_comm_stats);
+
+  EpochType stats_epoch = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(stats_epoch);
   computeStatistics();
+  theMsg()->popEpoch(stats_epoch);
+  theTerm()->finishedEpoch(stats_epoch);
+  theTerm()->addAction(stats_epoch, [this] {
+      finishedStats();
+    });
 }
 
 BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) const {
@@ -164,26 +172,17 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   stats[the_stat][lb::StatisticQuantity::skw] = skew;
   stats[the_stat][lb::StatisticQuantity::kur] = krte;
 
-  bool is_before = migration_epoch_ == no_epoch;
-
   if (theContext()->getNode() == 0) {
     vt_print(
       lb,
       "BaseLB: Statistic={}: "
       " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
       " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
-      " npr={}, imb={:.2f}, num_stats={}, before={}\n",
+      " npr={}, imb={:.2f}, num_stats={}\n",
       lb_stat_name_[the_stat],
       max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
-      stats.size(), is_before
+      stats.size()
     );
-  }
-
-  // If the migration_epoch_ is valid, then we are in the post-process stats
-  if (is_before) {
-    if (stats.size() == static_cast<std::size_t>(num_reduce_stats_)) {
-      finishedStats();
-    }
   }
 }
 
@@ -341,8 +340,6 @@ bool BaseLB::isCollectiveComm(balance::CommCategory cat) const {
 
 void BaseLB::computeStatisticsOver(Statistic stat) {
   using ReduceOp = collective::PlusOp<balance::LoadData>;
-
-  num_reduce_stats_++;
 
   auto cb = vt::theCB()->makeBcast<BaseLB, StatsMsgType, &BaseLB::statsHandler>(proxy_);
 
