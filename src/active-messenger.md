@@ -21,4 +21,72 @@ scheduler polls the active messenger to make progress on any incoming messages.
 \section am-simple-example Sending a message
 
 \code{.cpp}
+#include <vt/transport.h>
+
+#include <vector>
+
+// Declare a serializable message
+struct MyMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required(); // for vector
+
+  MyMsg() = default; // default constructor for de-serialize
+  MyMsg(int in_val, std::vector<double> const& in_vec)
+    : val(in_val),
+      my_vec(in_vec)
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | val;
+    s | my_vec;
+  }
+
+  int val = 0;
+  std::vector<double> my_vec;
+};
+
+// Active function pointer
+void myHandler(MyMsg* m) {
+  vt::NodeType this_node = vt::theContext()->getNode();
+  fmt::print("{}: val={}, vec size={}\n", this_node, m->val, m->my_vec.size());
+}
+
+// Active functor
+struct MyFunctor {
+  void operator()(MyMsg* m) {
+    vt::NodeType this_node = vt::theContext()->getNode();
+    fmt::print("{}: val={}, vec size={}\n", this_node, m->val, m->my_vec.size());
+  }
+};
+
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+
+  vt::NodeType this_node = vt::theContext()->getNode();
+
+  if (this_node == 0) {
+    std::vector<double> vec_to_send;
+    vec_to_send.push_back(29.);
+    vec_to_send.push_back(54.);
+
+    auto msg = vt::makeMessage<MyMsg>(10, vec_to_send);
+    vt::theMsg()->sendMsg<MyMsg, myHandler>(1, msg.get()); // send to node 1
+
+    auto msg2 = vt::makeMessage<MyMsg>(11, vec_to_send);
+    vt::theMsg()->sendMsg<MyFunctor>(1, msg2.get());  // send to node 1
+  }
+
+  vt::finalize(); // spins in scheduler until termination
+  return 0;
+}
+
+\endcode
+
+Program output:
+
+\code{.shell-session}
+1: val=10, vec size=2
+1: val=11, vec size=2
 \endcode
