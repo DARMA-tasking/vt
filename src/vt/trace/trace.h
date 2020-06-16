@@ -110,6 +110,9 @@ struct Trace : runtime::component::Component<Trace> {
   std::string getDirectory() const { return full_dir_name_;   }
 
   void initialize() override;
+  void startup() override;
+  void finalize() override;
+
   void setupNames(std::string const& in_prog_name);
 
   /// Initiate a paired event.
@@ -130,6 +133,7 @@ struct Trace : runtime::component::Component<Trace> {
     double const time = getCurrentTime()
   );
 
+  void pendingSchedulerLoop();
   void beginSchedulerLoop();
   void endSchedulerLoop();
 
@@ -183,7 +187,7 @@ struct Trace : runtime::component::Component<Trace> {
   /// Events already logged may still be written to the trace log.
   void disableTracing();
 
-  bool checkDynamicRuntimeEnabled();
+  bool checkDynamicRuntimeEnabled(bool is_end_event = false);
 
   void loadAndBroadcastSpec();
   void setTraceEnabledCurrentPhase(PhaseType cur_phase);
@@ -270,6 +274,10 @@ private:
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
   bool trace_enabled_cur_phase_ = true;
   UserEventIDType flush_event_  = no_user_event_id;
+
+  // Processing event between top-level loops.
+  TraceEntryIDType between_sched_event_type_ = no_trace_entry_id;
+  TraceProcessingTag between_sched_event_;
 };
 
 }} //end namespace vt::trace

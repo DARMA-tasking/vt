@@ -253,10 +253,6 @@ void Scheduler::scheduler(bool msg_only) {
       is_idle = true;
       triggerEvent(SchedulerEventType::BeginIdle);
     }
-
-  } else {
-    // n.b. Work queue is empty - however, if a trace event was written WITHOUT
-    // new work being queued then the trace state may be in a non-idle state.
   }
 
   if (not msg_only) {
@@ -265,6 +261,14 @@ void Scheduler::scheduler(bool msg_only) {
 }
 
 void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
+  // This loop construct can run either in a top-level or nested context.
+  // 1. In a top-level context the idle time will encompass the time not
+  //    processing any actions when the work queue is empty. Leaving starts
+  //    a 'between scheduler' event which will only complete on the next call.
+  // 2. In a nested context, idle is always exited at the end
+  //    as the parent context is "not idle". Likewise, no 'between scheduler'
+  //    event is started.
+
   vtAssert(
     action_depth_ == 0 or not is_idle,
     "Nested schedulers never expected from idle context"
@@ -272,16 +276,21 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
 
   triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 
-  while (cond()) {
-    runScheduler();
+  // When resuming a top-level scheduler, ensure to immediately enter
+  // an idle state if such applies.
+  if (not is_idle and work_queue_.empty()) {
+    is_idle = true;
+    triggerEvent(SchedulerEventType::BeginIdle);
   }
 
-  // At the end of a nested scheduler context, always ensure to enter into
-  // a non-idle state as the outer work resumes, even if the scheduler
-  // work queue is itself empty. That is, a nested scheduler should
-  // ONLY trigger an idle state during the duration of the scheduling loop.
-  // The opposite does not hold: idle is only entered when there is no work.
-  if (action_depth_ > 0 and is_idle) {
+  while (cond()) {
+    scheduler();
+  }
+
+  // After running the scheduler ensure to exit idle state.
+  // For nested schedulers the outside scheduler has work to do.
+  // Between top-level schedulers, non-idle indicates lack of scheduling.
+  if (is_idle) {
     is_idle = false;
     triggerEvent(SchedulerEventType::EndIdle);
   }
@@ -341,6 +350,8 @@ void runSchedulerThrough(EpochType epoch) {
 }
 
 void runInEpochRooted(ActionType&& fn) {
+  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
+
   auto ep = theTerm()->makeEpochRooted();
   theMsg()->pushEpoch(ep);
   fn();
@@ -350,6 +361,8 @@ void runInEpochRooted(ActionType&& fn) {
 }
 
 void runInEpochCollective(ActionType&& fn) {
+  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
+
   auto ep = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(ep);
   fn();

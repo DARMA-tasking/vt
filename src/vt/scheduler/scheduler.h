@@ -60,17 +60,26 @@
 #include <functional>
 #include <memory>
 
+namespace vt {
+  void runScheduler();
+  void runSchedulerThrough(EpochType epoch);
+
+  void runInEpochRooted(ActionType&& fn);
+  void runInEpochCollective(ActionType&& fn);
+}
+
 namespace vt { namespace sched {
 
 enum SchedulerEvent {
-  BeginIdle          = 0,
-  EndIdle            = 1,
-  BeginIdleMinusTerm = 2,
-  EndIdleMinusTerm   = 3,
-  BeginSchedulerLoop = 4,
-  EndSchedulerLoop   = 5,
+  BeginIdle            = 0,
+  EndIdle              = 1,
+  BeginIdleMinusTerm   = 2,
+  EndIdleMinusTerm     = 3,
+  BeginSchedulerLoop   = 4,
+  EndSchedulerLoop     = 5,
+  PendingSchedulerLoop = 6,
 
-  LastSchedulerEvent = 5,
+  LastSchedulerEvent   = 6,
 };
 
 struct Scheduler : runtime::component::Component<Scheduler> {
@@ -169,6 +178,10 @@ private:
   std::size_t last_threshold_memory_usage_ = 0;
   std::size_t threshold_memory_usage_ = 0;
   std::size_t last_memory_usage_poll_ = 0;
+
+  // Access to triggerEvent.
+  friend void vt::runInEpochRooted(ActionType&& fn);
+  friend void vt::runInEpochCollective(ActionType&& fn);
 };
 
 }} //end namespace vt::sched
@@ -176,12 +189,6 @@ private:
 #include "vt/scheduler/scheduler.impl.h"
 
 namespace vt {
-
-void runScheduler();
-void runSchedulerThrough(EpochType epoch);
-
-void runInEpochRooted(ActionType&& fn);
-void runInEpochCollective(ActionType&& fn);
 
 extern sched::Scheduler* theSched();
 

@@ -589,9 +589,10 @@ void Runtime::initializeComponents() {
   >{});
 
 # if backend_check_enabled(trace_enabled)
+  // The Trace and Scheduler components have a co-dependency. However,
+  // the lifetime of theTrace should be longer than that of theSched.
   p_->registerComponent<trace::Trace>(&theTrace, Deps<
-      ctx::Context,    // Everything depends on theContext
-      sched::Scheduler // Depends on scheduler for triggers
+      ctx::Context  // Everything depends on theContext
     >{},
     ArgType::prog_name
   );
@@ -618,6 +619,9 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<sched::Scheduler>(
     &theSched, Deps<
+#     if backend_check_enabled(trace_enabled)
+      trace::Trace,             // For scheduler-related trace events
+#     endif
       ctx::Context,             // Everything depends on theContext
       util::memory::MemoryUsage // Depends on memory usage for output
     >{}
