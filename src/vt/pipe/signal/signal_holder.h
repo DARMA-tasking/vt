@@ -58,6 +58,10 @@
 
 namespace vt { namespace pipe { namespace signal {
 
+/// Used to assign a ID to each signal holder instance to generate unique
+/// cleanup lambdas
+static unsigned signal_holder_next_id_ = 1;
+
 template <typename SignalT>
 struct SignalHolder {
   using DataType             = typename SignalT::DataType;
@@ -73,6 +77,10 @@ struct SignalHolder {
   using SignalMapType        = std::unordered_map<PipeType,SignalListType>;
   using CountMapType         = std::unordered_map<PipeType,SigCountType>;
   using ListenerMapIterType  = typename ListenerMapType::iterator;
+
+  SignalHolder()
+    : id_(signal_holder_next_id_++)
+  { }
 
   void addSignal(PipeType const& pid, DataPtrType in_data);
   void removeListener(PipeType const& pid, ListenerPtrType listener);
@@ -91,11 +99,14 @@ struct SignalHolder {
   );
   bool finished(ListenerPtrType listener) const;
   bool exists(PipeType const& pipe) const;
+  unsigned getID() const { return id_; }
+  void clearAll();
 
 private:
   SignalMapType pending_holder_;
   CountMapType listener_count_;
   ListenerMapType listeners_;
+  unsigned id_ = 0;
 };
 
 }}} /* end namespace vt::pipe::signal */

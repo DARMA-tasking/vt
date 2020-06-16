@@ -90,6 +90,13 @@ void SignalHolder<SignalT>::removeListener(
 }
 
 template <typename SignalT>
+void SignalHolder<SignalT>::clearAll() {
+  listeners_.clear();
+  listener_count_.clear();
+  pending_holder_.clear();
+}
+
+template <typename SignalT>
 void SignalHolder<SignalT>::clearAllListeners(PipeType const& pid) {
   auto iter = listeners_.find(pid);
   if (iter != listeners_.end()) {

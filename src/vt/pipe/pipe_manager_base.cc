@@ -63,6 +63,13 @@
 
 namespace vt { namespace pipe {
 
+/*virtual*/ PipeManagerBase::~PipeManagerBase() {
+  // Run all the cleanup lambdas to clear signal holders
+  for (auto&& elm : signal_cleanup_fns_) {
+    elm.second();
+  }
+}
+
 void PipeManagerBase::newPipeState(
   PipeType const& pipe, bool persist, bool typeless, RefType num_signals,
   RefType num_listeners, RefType num_reg_listeners, DispatchFuncType fn
