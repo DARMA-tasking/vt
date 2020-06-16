@@ -64,6 +64,15 @@ namespace vt { namespace collective {
 
 constexpr CollectiveAlgType const fst_collective_alg = 1;
 
+/**
+ * \struct CollectiveAlg
+ *
+ * \brief Perform asynchronous collectives within VT
+ *
+ * CollectiveAlg is a core VT component that provides the ability to perform
+ * reductions, scatters, barriers, and safe MPI (collective) operations while
+ * inside a VT handler.
+ */
 struct CollectiveAlg :
     runtime::component::Component<CollectiveAlg>,
     virtual reduce::ReduceManager,
