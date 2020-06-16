@@ -43,6 +43,7 @@ management.
 | \subpage context            | `vt::theContext()`    | \copybrief context          |
 | \subpage active-messenger   | `vt::theMsg()`        | \copybrief active-messenger |
 | \subpage collective         | `vt::theCollective()` | \copybrief collective       |
+| \subpage event              | `vt::theEvent()`      | \copybrief event            |
 
 \section vt-hello-world Example
 
