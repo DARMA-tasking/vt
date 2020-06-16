@@ -52,37 +52,117 @@ namespace vt { namespace collective { namespace reduce {
 
 struct Reduce;
 
+/**
+ * \struct ReduceManager
+ *
+ * \brief Manage distinct scopes for reductions
+ *
+ * Manages distinct reducers with an associated scope to orchestrate
+ * asynchronous multiple sequences of reduce operations.
+ */
 struct ReduceManager {
   using ReducePtrType   = std::unique_ptr<Reduce>;
   using ReduceScopeType = detail::ReduceScopeHolder<ReducePtrType>;
 
   ReduceManager();
 
+  /**
+   * \brief Get the global reducer
+   *
+   * \warning Using the global reducer is not recommended because it might
+   * conflict with other reductions in the global context. To create a new
+   * scope, one may call \c makeReducerCollective to collectively create a new
+   * reducer scope.
+   *
+   * \return the reducer
+   */
   Reduce* global();
 
+  /**
+   * \brief Get the reducer for a given scope
+   *
+   * \param[in] scope the scope
+   *
+   * \return the reducer
+   */
   Reduce* getReducer(detail::ReduceScope const& scope);
 
+  /**
+   * \internal \brief Get the reducer for an objgroup
+   *
+   * \param[in] proxy the objgroup proxy
+   *
+   * \return the reducer
+   */
   Reduce* getReducerObjGroup(ObjGroupProxyType const& proxy);
 
+  /**
+   * \internal \brief Get the reducer for a collection
+   *
+   * \param[in] proxy the collection proxy
+   *
+   * \return the reducer
+   */
   Reduce* getReducerVrtProxy(VirtualProxyType const& proxy);
 
+  /**
+   * \internal \brief Get the reducer for a group
+   *
+   * \param[in] group the group ID
+   *
+   * \return the reducer
+   */
   Reduce* getReducerGroup(GroupType const& group);
 
+  /**
+   * \internal \brief Get the reducer for a VT component
+   *
+   * Each VT component that inherits from \c runtime::component::Component<T>
+   * gets its own scope.
+   *
+   * \param[in] cid the component ID
+   *
+   * \return the reducer
+   */
   Reduce* getReducerComponent(ComponentIDType const& cid);
 
+  /**
+   * \brief Collectively make a new reduction scope
+   *
+   * \return the reducer
+   */
   Reduce* makeReducerCollective();
 
+  /**
+   * \internal \brief Create the reducer for a group when a custom (or
+   * non-global) spanning tree is required (cannot be created on demand)
+   *
+   * \param[in] group the group ID
+   * \param[in] tree the associated spanning tree for the group
+   */
   void makeReducerGroup(GroupType const& group, collective::tree::Tree* tree);
 
+  /**
+   * \internal \brief Active function when a message reaches the root of the
+   * spanning tree and the reduction is complete
+   *
+   * \param[in] msg the reduce message
+   */
   template <typename MsgT>
   static void reduceRootRecv(MsgT* msg);
 
+  /**
+   * \internal \brief Active function when a message arrives for a given scope
+   * at some level in the spanning tree
+   *
+   * \param[in] msg the reduce message
+   */
   template <typename MsgT>
   static void reduceUp(MsgT* msg);
 
 private:
-  ReduceScopeType reducers_;
-  detail::UserIDType cur_user_id_ = 0;
+  ReduceScopeType reducers_;            /**< Live reducers by scope */
+  detail::UserIDType cur_user_id_ = 0;  /**< The next user ID for a scope */
 };
 
 }}} /* end namespace vt::collective::reduce */
