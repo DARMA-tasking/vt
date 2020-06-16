@@ -577,7 +577,6 @@ void addConfigFileArgs(CLI::App& app) {
   a2->group(configGroup);
 }
 
-
 class VtFormatter : public CLI::Formatter {
 public:
   std::string make_usage(const CLI::App *, std::string name) const override {
