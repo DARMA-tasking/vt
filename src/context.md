@@ -2,11 +2,11 @@
 \page context Context
 \brief Node-aware context
 
-The context component, accessed via `vt::theContext()`, provides context-aware
-querying of the current node (analogous to MPI's \c MPI_Comm_rank), number of
-nodes (analogous to MPI's \c MPI_Comm_size), and kernel threading/ULT
-information if worker threads are enabled. The context also provides the MPI
-communicator that an instance of \vt is currently using.
+The context component `vt::ctx::Context`, accessed via `vt::theContext()`,
+provides context-aware querying of the current node (analogous to MPI's \c
+MPI_Comm_rank), number of nodes (analogous to MPI's \c MPI_Comm_size), and
+kernel threading/ULT information if worker threads are enabled. The context also
+provides the MPI communicator that an instance of \vt is currently using.
 
 \copybrief vt::ctx::Context
 \copydetails vt::ctx::Context
