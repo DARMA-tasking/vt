@@ -1,4 +1,3 @@
-
 \page introduction Introduction to DARMA/vt
 \brief Overview of functionality in \vt
 
@@ -21,21 +20,21 @@ management.
 
 \section vt-features Features in vt
 
-- Active messaging to type-safe handlers across nodes
-- Groups for scalable construction of node subsets
-- Optional serialization of messages
-- Termination detection across entire or subset of DAG with \e epochs
-- Opaque callbacks/pipes to generalized endpoints
-- Efficient memory pooling for message allocation
-- RDMA using MPI one-sided for data transfer
-- Asynchronous Collectives across nodes/groups (scatter, async barrier, reduce, ...)
-- General scheduler with prioritization
-- Built-in interoperability with MPI and threading libraries (Kokkos, OpenMP, ...)
-- Object groups for node-level encapsulation
-- Virtual contexts for migratable virtualization and dispatch
-- Abstractions for multi-dimensional indices, mapping, and linearization
-- Virtual collections (dense, sparse, dynamic insertable) for decomposing domains
-- Fully distributed load balancer for virtual entities
+-  Active messaging to type-safe handlers across nodes
+-  Groups for scalable construction of node subsets
+-  Optional serialization of messages
+-  Termination detection across entire or subset of DAG with \e epochs
+-  Opaque callbacks/pipes to generalized endpoints
+-  Efficient memory pooling for message allocation
+-  RDMA using MPI one-sided for data transfer
+-  Asynchronous Collectives across nodes/groups (scatter, async barrier, reduce, ...)
+-  General scheduler with prioritization
+-  Built-in interoperability with MPI and threading libraries (Kokkos, OpenMP, ...)
+-  Object groups for node-level encapsulation
+-  Virtual contexts for migratable virtualization and dispatch
+-  Abstractions for multi-dimensional indices, mapping, and linearization
+-  Virtual collections (dense, sparse, dynamic insertable) for decomposing domains
+-  Fully distributed load balancer for virtual entities
 
 \section vt-components Components in vt
 
