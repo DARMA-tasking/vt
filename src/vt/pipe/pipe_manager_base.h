@@ -164,7 +164,7 @@ private:
   // the pipe state for pipes that have a send back
   std::unordered_map<PipeType,PipeStateType> pipe_state_;
   // ID -> type-erased SignalHolder<T> cleanup lambda
-  std::unordered_map<int, std::function<void()>> signal_cleanup_fns_;
+  std::unordered_map<unsigned, std::function<void()>> signal_cleanup_fns_;
 };
 
 }} /* end namespace vt::pipe */

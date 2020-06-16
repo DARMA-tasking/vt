@@ -60,7 +60,7 @@ namespace vt { namespace pipe { namespace signal {
 
 /// Used to assign a ID to each signal holder instance to generate unique
 /// cleanup lambdas
-static int signal_holder_next_id_ = 1;
+static unsigned signal_holder_next_id_ = 1;
 
 template <typename SignalT>
 struct SignalHolder {
@@ -99,14 +99,14 @@ struct SignalHolder {
   );
   bool finished(ListenerPtrType listener) const;
   bool exists(PipeType const& pipe) const;
-  int getID() const { return id_; }
+  unsigned getID() const { return id_; }
   void clearAll();
 
 private:
   SignalMapType pending_holder_;
   CountMapType listener_count_;
   ListenerMapType listeners_;
-  int id_ = -1;
+  unsigned id_ = 0;
 };
 
 }}} /* end namespace vt::pipe::signal */

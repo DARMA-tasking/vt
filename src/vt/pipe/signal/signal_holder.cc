@@ -44,6 +44,6 @@
 
 namespace vt { namespace pipe { namespace signal {
 
-/*static*/ int signal_holder_next_id_ = 1;
+/*static*/ unsigned signal_holder_next_id_ = 1;
 
 }}} /* end namespace vt::pipe::signal */
