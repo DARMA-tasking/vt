@@ -45,6 +45,7 @@ management.
 | \subpage collective         | `vt::theCollective()` | \copybrief collective       |
 | \subpage event              | `vt::theEvent()`      | \copybrief event            |
 | \subpage group              | `vt::theGroup()`      | \copybrief group            |
+| \subpage objgroup           | `vt::theObjGroup()`   | \copybrief objgroup         |
 
 \section vt-hello-world Example
 

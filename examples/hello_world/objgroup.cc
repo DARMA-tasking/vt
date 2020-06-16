@@ -44,6 +44,7 @@
 
 #include <vt/transport.h>
 
+/// [Object group creation]
 struct MyMsg : vt::Message {
   MyMsg(int in_a, int in_b) : a(in_a), b(in_b) { }
   int a = 0, b = 0;
@@ -76,3 +77,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+/// [Object group creation]
