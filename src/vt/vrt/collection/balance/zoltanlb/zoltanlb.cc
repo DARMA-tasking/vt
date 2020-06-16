@@ -55,22 +55,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-namespace {
-
-template <typename Callable>
-static void executeInEpoch(Callable&& fn) {
-  auto ep = vt::theTerm()->makeEpochCollective();
-  vt::theMsg()->pushEpoch(ep);
-  fn();
-  vt::theMsg()->popEpoch(ep);
-  vt::theTerm()->finishedEpoch(ep);
-  bool done = false;
-  vt::theTerm()->addAction(ep, [&done]{ done = true; });
-  theSched()->runSchedulerWhile([&done]{ return not done; });
-}
-
-} /* end anon namespace */
-
 ZoltanLB::ZoltanLB()
   : collective_scope_(theCollective()->makeCollectiveScope())
 { }
@@ -128,10 +112,10 @@ void ZoltanLB::runLB() {
   }
 
   if (do_edges_) {
-    executeInEpoch([this]{ makeGraphSymmetric();    });
-    executeInEpoch([this]{ combineEdges();          });
-    executeInEpoch([this]{ countEdges();            });
-    executeInEpoch([this]{ allocateShareEdgeGIDs(); });
+    runInEpochCollective([this]{ makeGraphSymmetric();    });
+    runInEpochCollective([this]{ combineEdges();          });
+    runInEpochCollective([this]{ countEdges();            });
+    runInEpochCollective([this]{ allocateShareEdgeGIDs(); });
   }
 
   initZoltan();
