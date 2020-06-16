@@ -61,6 +61,17 @@
 
 namespace vt { namespace objgroup { namespace proxy {
 
+/**
+ * \struct Proxy
+ *
+ * \brief A indexable proxy to object instances on all nodes that are tied
+ * together with a common ID
+ *
+ * After creating an objgroup, a Proxy<ObjT> is returned which can be used to
+ * perform distributed operations on that object instance across all nodes.
+ *
+ * Proxies are very inexpensive to copy and move around the system.
+ */
 template <typename ObjT>
 struct Proxy {
   using ReduceStamp = collective::reduce::ReduceStamp;
@@ -70,26 +81,52 @@ struct Proxy {
   Proxy(Proxy&&) = default;
   Proxy& operator=(Proxy const&) = default;
 
+  /**
+   * \internal \brief Create a new proxy, called by the system.
+   *
+   * \param[in] in_proxy the proxy ID
+   */
   explicit Proxy(ObjGroupProxyType in_proxy)
     : proxy_(in_proxy)
   { }
 
 public:
 
-  /*
-   * Broadcast a msg to this object group with a handler
+  /**
+   * \brief Broadcast a message to all nodes to be delivered to the local object
+   * instance
+   *
+   * \param[in] msg raw pointer to the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void broadcast(MsgT* msg) const;
+
+  /**
+   * \brief Broadcast a message to all nodes to be delivered to the local object
+   * instance
+   *
+   * \param[in] msg managed pointer to the message
+   */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void broadcast(MsgPtr<MsgT> msg) const;
+
+  /**
+   * \brief Broadcast a message to all nodes to be delivered to the local object
+   * instance
+   *
+   * \param[in] args args to pass to the message constructor
+   */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   void broadcast(Args&&... args) const;
 
-  /*
-   * Reduce over the objgroup
+  /**
+   * \brief Reduce over the objgroup instances on each node with a callback
+   * target.
+   *
+   * \param[in] msg the reduction message
+   * \param[in] cb the callback to trigger after the reduction is finished
+   * \param[in] stamp the stamp to identify the reduction
    */
-
   template <
     typename OpT = collective::None,
     typename MsgPtrT,
@@ -102,6 +139,13 @@ public:
     MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const;
 
+  /**
+   * \brief Reduce over the objgroup instances on each node with a functor
+   * target.
+   *
+   * \param[in] msg the reduction message
+   * \param[in] stamp the stamp to identify the reduction
+   */
   template <
     typename OpT = collective::None,
     typename FunctorT,
@@ -111,6 +155,13 @@ public:
   >
   void reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
 
+  /**
+   * \brief Reduce over the objgroup instance on each node with target specified
+   * in reduction message type.
+   *
+   * \param[in] msg the reduction message
+   * \param[in] stamp the stamp to identify the reduction
+   */
   template <
     typename MsgPtrT,
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
@@ -118,29 +169,58 @@ public:
   >
   void reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
 
-  /*
-   * Get the local pointer to this object group residing in the current node
-   * context
+  /**
+   * \brief Get raw pointer to the local object instance residing on the current
+   * node.
+   *
+   * \warning Do not hold this raw pointer longer than the object group
+   * lifetime. Once the object group is destroyed the pointer will no longer be
+   * valid.
+   *
+   * \return raw pointer to the object
    */
   ObjT* get() const;
 
-  /*
-   * Get the underlying proxy bits that are used to identify the objgroup
+  /**
+   * \brief Get the underlying proxy bits that are used to identify the objgroup
+   *
+   * \return the proxy ID
    */
   ObjGroupProxyType getProxy() const;
 
-  /*
-   * Up- and down-cast the proxy---important due to type registration
+  /**
+   * \brief Register the base class type for this objgroup, returning a valid
+   * proxy to operate on the base.
+   *
+   * \return base class proxy
    */
   template <typename BaseT>
   Proxy<BaseT> registerBaseCollective() const;
+
+  /**
+   * \brief Downcast the proxy to a base
+   *
+   * \warning In most cases this should not be called by users. It can have
+   * dangerous behavior depending on how its used.
+   *
+   * \return the typed proxy to the base
+   */
   template <typename BaseT>
   Proxy<BaseT> downcast() const;
+
+  /**
+   * \brief Upcast the proxy to a derived class
+   *
+   * \warning In most cases this should not be called by users. It can have
+   * dangerous behavior depending on how its used.
+   *
+   * \return the typed proxy to the derived
+   */
   template <typename DerivedT>
   Proxy<DerivedT> upcast() const;
 
-  /*
-   * Destruct the objgroup collectively
+  /**
+   * \brief Collective destroy this objgroup instance on all nodes
    */
   void destroyCollective() const;
 
@@ -209,14 +289,26 @@ public:
 
 public:
 
-  /*
-   * Index the object group to get an element; can use operator[] or operator()
+  /**
+   * \brief Index the proxy to get the element proxy for a particular node
+   *
+   * \param[in] node the desired node
+   *
+   * \return an indexed proxy to that node
    */
   ProxyElm<ObjT> operator[](NodeType node) const;
+
+  /**
+   * \brief Index the proxy to get the element proxy for a particular node
+   *
+   * \param[in] node the desired node
+   *
+   * \return an indexed proxy to that node
+   */
   ProxyElm<ObjT> operator()(NodeType node) const;
 
 private:
-  ObjGroupProxyType proxy_ = no_obj_group;
+  ObjGroupProxyType proxy_ = no_obj_group; /**< The raw proxy ID bits */
 };
 
 }}} /* end namespace vt::objgroup::proxy */
