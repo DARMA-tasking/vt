@@ -107,6 +107,7 @@ struct BaseLB {
 
   EpochType startMigrationCollective();
   void finishMigrationCollective();
+  void applyMigrations();
   void migrationDone();
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
   void transferSend(NodeType from, TransferVecType const& transfer, EpochType ep);
@@ -115,6 +116,8 @@ struct BaseLB {
 
   virtual void inputParams(balance::SpecEntry* spec) = 0;
   virtual void runLB() = 0;
+
+  TransferVecType& getTransfers() { return transfers_; }
 
 protected:
   balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;

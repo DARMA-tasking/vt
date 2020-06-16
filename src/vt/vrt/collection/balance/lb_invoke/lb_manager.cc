@@ -129,7 +129,28 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   proxy.get()->init(proxy);
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   auto phase = msg->getPhase();
+
+  EpochType balance_epoch = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(balance_epoch);
   proxy.get()->startLB(phase, base_proxy, theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
+  theMsg()->popEpoch(balance_epoch);
+  theTerm()->finishedEpoch(balance_epoch);
+
+  EpochType migrate_epoch = theTerm()->makeEpochCollective();
+
+  theTerm()->addAction(balance_epoch,
+		       [=] {
+			 theMsg()->pushEpoch(migrate_epoch);
+			 proxy.get()->applyMigrations();
+			 theMsg()->popEpoch(migrate_epoch);
+			 theTerm()->finishedEpoch(migrate_epoch);
+		       });
+
+  theTerm()->addAction(migrate_epoch,
+		       [=] {
+			 proxy.get()->migrationDone();
+		       });
+
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
   return proxy;
 }

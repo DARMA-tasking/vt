@@ -183,13 +183,14 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
 }
 
 EpochType BaseLB::startMigrationCollective() {
-  migration_epoch_ = theTerm()->makeEpochCollective("LB migration");
-  theTerm()->addAction(migration_epoch_, [this]{ this->migrationDone(); });
-  theMsg()->pushEpoch(migration_epoch_);
-  return migration_epoch_;
+  return no_epoch;
 }
 
 void BaseLB::finishMigrationCollective() {
+  // no-op
+}
+
+void BaseLB::applyMigrations() {
   TransferType off_node_migrate;
 
   for (auto&& elm : transfers_) {
@@ -225,9 +226,6 @@ void BaseLB::finishMigrationCollective() {
   // Re-compute the statistics with the new partition based on current
   // this_load_ values
   computeStatistics();
-
-  theMsg()->popEpoch(migration_epoch_);
-  theTerm()->finishedEpoch(migration_epoch_);
 }
 
 void BaseLB::transferSend(
