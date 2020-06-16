@@ -46,6 +46,7 @@ management.
 | \subpage event              | `vt::theEvent()`      | \copybrief event            |
 | \subpage group              | `vt::theGroup()`      | \copybrief group            |
 | \subpage objgroup           | `vt::theObjGroup()`   | \copybrief objgroup         |
+| \subpage pipe               | `vt::theCB()`         | \copybrief pipe             |
 
 \section vt-hello-world Example
 
