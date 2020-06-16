@@ -712,7 +712,7 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   // If the user specified to output the full configuration, save it in a string
   // so node 0 can output in the runtime once MPI is init'ed
   if (ArgConfig::vt_output_config) {
-    ArgConfig::vt_output_config_str = app.config_to_str(true,true);
+    ArgConfig::vt_output_config_str = app.config_to_str(true, true);
   }
 
   // Get the clean prog name; don't allow path bleed in usages.
