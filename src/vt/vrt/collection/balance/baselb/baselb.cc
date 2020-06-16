@@ -186,7 +186,6 @@ EpochType BaseLB::startMigrationCollective() {
   migration_epoch_ = theTerm()->makeEpochCollective("LB migration");
   theTerm()->addAction(migration_epoch_, [this]{ this->migrationDone(); });
   theMsg()->pushEpoch(migration_epoch_);
-  during_migration_ = true;
   return migration_epoch_;
 }
 
@@ -229,7 +228,6 @@ void BaseLB::finishMigrationCollective() {
 
   theMsg()->popEpoch(migration_epoch_);
   theTerm()->finishedEpoch(migration_epoch_);
-  during_migration_ = false;
 }
 
 void BaseLB::transferSend(
