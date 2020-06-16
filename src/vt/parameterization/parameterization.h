@@ -128,6 +128,16 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
 #endif
 }
 
+/**
+ * \struct Param
+ *
+ * \brief A experimental component for parameterizing handlers.
+ *
+ * Clean support for parameterization does not exist until C++17. This component
+ * is an attempt at parameterizing for C++14 with non-type templates.
+ *
+ * \warning This is an experimental component.
+ */
 struct Param : runtime::component::Component<Param> {
 
   std::string name() override { return "Param"; }
