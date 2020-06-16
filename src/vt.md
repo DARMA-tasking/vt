@@ -38,10 +38,11 @@ management.
 
 \section vt-components Components in vt
 
-| Component                   | Singleton           | Details                     |
-| --------------------------- | ------------------- | --------------------------- |
-| \subpage context            | `vt::theContext()`  | \copybrief context          |
-| \subpage active-messenger   | `vt::theMsg()`      | \copybrief active-messenger |
+| Component                   | Singleton             | Details                     |
+| --------------------------- | --------------------- | --------------------------- |
+| \subpage context            | `vt::theContext()`    | \copybrief context          |
+| \subpage active-messenger   | `vt::theMsg()`        | \copybrief active-messenger |
+| \subpage collective         | `vt::theCollective()` | \copybrief collective       |
 
 \section vt-hello-world Example
 
