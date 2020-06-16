@@ -16,32 +16,4 @@ can be accessed once the group has finished construction.
 
 \section collective-group-example Example creating a collective group
 
-\code{.cpp}
-int main(int argc, char** argv) {
-  vt::initialize(argc, argv);
-
-  vt::NodeType this_node = vt::theContext()->getNode();
-
-  bool odd_node_filter = this_node % 2 == 1;
-
-  vt::GroupType new_group = vt::theGroup()->newGroupCollective(
-    odd_node_filter, [=](vt::GroupType group){
-      auto const& root = 0;
-      auto const& in_group = vt::theGroup()->inGroup(group);
-      auto const& root_node = vt::theGroup()->groupRoot(group);
-      auto const& is_default_group = vt::theGroup()->groupDefault(group);
-      fmt::print(
-        "{}: Group is created: group={:x}, in_group={}, root={}, "
-        "is_default_group={}\n",
-        this_node, group, in_group, root_node, is_default_group
-      );
-    }
-  );
-
-  fmt::print("{}: Created new collective group={:x}\n", this_node, new_group);
-
-  vt::finalize();
-
-  return 0;
-}
-\endcode
+\snippet examples/group/group_collective.cc Collective group creation
