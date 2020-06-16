@@ -209,7 +209,7 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
   }
 
   for (auto&& elm : off_node_migrate) {
-    transferSend(elm.first, elm.second, migration_epoch_);
+    transferSend(elm.first, elm.second);
   }
 
   off_node_migrate.clear();
@@ -219,12 +219,9 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
   computeStatistics();
 }
 
-void BaseLB::transferSend(
-  NodeType from, TransferVecType const& transfer, EpochType epoch
-) {
+void BaseLB::transferSend(NodeType from, TransferVecType const& transfer) {
   using MsgType = TransferMsg<TransferVecType>;
   auto msg = makeMessage<MsgType>(transfer);
-  envelopeSetEpoch(msg->env, epoch);
   proxy_[from].template send<MsgType,&BaseLB::transferMigrations>(msg);
 }
 

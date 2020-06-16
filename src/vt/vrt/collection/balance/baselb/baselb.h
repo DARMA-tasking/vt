@@ -108,7 +108,7 @@ struct BaseLB {
   void applyMigrations(TransferVecType const& transfers);
   void migrationDone();
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
-  void transferSend(NodeType from, TransferVecType const& transfer, EpochType ep);
+  void transferSend(NodeType from, TransferVecType const& transfer);
   void transferMigrations(TransferMsg<TransferVecType>* msg);
   void finalize(CountMsg* msg);
 
@@ -131,7 +131,6 @@ protected:
   ElementLoadType const* load_data                = nullptr;
   ElementCommType const* comm_data                = nullptr;
   StatisticMapType stats                          = {};
-  EpochType migration_epoch_                      = no_epoch;
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
   PhaseType phase_                                = 0;
   bool comm_aware_                                = false;
