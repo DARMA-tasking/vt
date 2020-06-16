@@ -239,7 +239,7 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  transfers_.push_back({obj_id, to});
+  transfers_.push_back(TransferDestType{obj_id, to});
 }
 
 void BaseLB::finalize(CountMsg* msg) {
