@@ -182,14 +182,6 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   }
 }
 
-EpochType BaseLB::startMigrationCollective() {
-  return no_epoch;
-}
-
-void BaseLB::finishMigrationCollective() {
-  // no-op
-}
-
 void BaseLB::applyMigrations(TransferVecType const &transfers) {
   TransferType off_node_migrate;
 

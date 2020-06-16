@@ -165,8 +165,6 @@ void ZoltanLB::runLB() {
     vtAssert(partition_return == ZOLTAN_OK, "Partition must be OK");
   });
 
-  startMigrationCollective();
-
   debug_print(
     lb, node,
     "ZoltanLB: num_export={}, num_import={}\n",
@@ -184,8 +182,6 @@ void ZoltanLB::runLB() {
 
     migrateObjectTo(export_global_ids[i], static_cast<NodeType>(to_node));
   }
-
-  finishMigrationCollective();
 
   Zoltan_LB_Free_Part(
     &import_global_ids, &import_local_ids, &import_procs, &import_to_part

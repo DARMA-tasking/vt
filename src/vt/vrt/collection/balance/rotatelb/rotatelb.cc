@@ -70,8 +70,6 @@ void RotateLB::runLB() {
     fflush(stdout);
   }
 
-  startMigrationCollective();
-
   for (auto&& stat : *load_data) {
     auto const& obj = stat.first;
     auto const& load = stat.second;
@@ -82,8 +80,6 @@ void RotateLB::runLB() {
     );
     migrateObjectTo(obj, next_node);
   }
-
-  finishMigrationCollective();
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

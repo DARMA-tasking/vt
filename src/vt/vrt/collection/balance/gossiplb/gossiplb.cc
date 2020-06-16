@@ -107,8 +107,6 @@ void GossipLB::runLB() {
 
   if (should_lb) {
     doLBStages();
-  } else {
-    migrationDone();
   }
 }
 
@@ -472,15 +470,11 @@ void GossipLB::thunkMigrations() {
     cur_objs_.size()
   );
 
-  startMigrationCollective();
-
   auto this_node = theContext()->getNode();
   for (auto elm : cur_objs_) {
     auto obj = elm.first;
     migrateObjectTo(obj, this_node);
   }
-
-  finishMigrationCollective();
 }
 
 void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {

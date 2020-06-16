@@ -105,8 +105,6 @@ struct BaseLB {
   int32_t getBinSize() const { return bin_size_; }
   NodeType objGetNode(ObjIDType const id) const;
 
-  EpochType startMigrationCollective();
-  void finishMigrationCollective();
   void applyMigrations(TransferVecType const& transfers);
   void migrationDone();
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
