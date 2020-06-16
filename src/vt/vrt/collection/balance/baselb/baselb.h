@@ -107,7 +107,7 @@ struct BaseLB {
 
   EpochType startMigrationCollective();
   void finishMigrationCollective();
-  void applyMigrations();
+  void applyMigrations(TransferVecType const& transfers);
   void migrationDone();
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
   void transferSend(NodeType from, TransferVecType const& transfer, EpochType ep);

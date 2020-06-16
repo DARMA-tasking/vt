@@ -190,10 +190,10 @@ void BaseLB::finishMigrationCollective() {
   // no-op
 }
 
-void BaseLB::applyMigrations() {
+void BaseLB::applyMigrations(TransferVecType const &transfers) {
   TransferType off_node_migrate;
 
-  for (auto&& elm : transfers_) {
+  for (auto&& elm : transfers) {
     auto obj_id = std::get<0>(elm);
     auto to = std::get<1>(elm);
     auto from = objGetNode(obj_id);
@@ -215,7 +215,6 @@ void BaseLB::applyMigrations() {
       }
     }
   }
-  transfers_.clear();
 
   for (auto&& elm : off_node_migrate) {
     transferSend(elm.first, elm.second, migration_epoch_);

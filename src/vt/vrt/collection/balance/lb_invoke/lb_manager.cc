@@ -140,8 +140,9 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 
   theTerm()->addAction(balance_epoch,
 		       [=] {
+			 auto strat = proxy.get();
 			 theMsg()->pushEpoch(migrate_epoch);
-			 proxy.get()->applyMigrations();
+			 strat->applyMigrations(strat->getTransfers());
 			 theMsg()->popEpoch(migrate_epoch);
 			 theTerm()->finishedEpoch(migrate_epoch);
 		       });
