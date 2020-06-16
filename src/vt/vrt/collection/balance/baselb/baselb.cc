@@ -72,14 +72,10 @@ void BaseLB::startLB(
 
   importProcessorData(in_load_stats, in_comm_stats);
 
-  EpochType stats_epoch = theTerm()->makeEpochCollective();
-  theMsg()->pushEpoch(stats_epoch);
-  computeStatistics();
-  theMsg()->popEpoch(stats_epoch);
-  theTerm()->finishedEpoch(stats_epoch);
-  theTerm()->addAction(stats_epoch, [this] {
-      finishedStats();
-    });
+  term::TerminationDetector::Scoped::collective(
+    [this] { computeStatistics(); },
+    [this] { finishedStats(); }
+  );
 }
 
 BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) const {
