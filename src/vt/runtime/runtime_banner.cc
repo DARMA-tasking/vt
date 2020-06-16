@@ -622,6 +622,20 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_output_config) {
+    auto f11 = fmt::format("Enabled configuration output");
+    auto f12 = opt_on("--vt_output_config", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+
+    if (ArgType::vt_output_config_file != "") {
+      auto f13 = fmt::format(
+        "Config file name \"{}\"", ArgType::vt_output_config_file
+      );
+      auto f14 = opt_on("--vt_output_config_file", f13);
+      fmt::print("{}\t{}{}", vt_pre, f14, reset);
+    }
+  }
+
   if (ArgType::vt_memory_reporters != "") {
     auto f11 = fmt::format(
       "Memory usage checker precedence: {}",

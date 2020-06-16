@@ -172,6 +172,10 @@ namespace vt { namespace arguments {
 /*static*/ std::string ArgConfig::vt_user_str_2         = "";
 /*static*/ std::string ArgConfig::vt_user_str_3         = "";
 
+/*static*/ bool        ArgConfig::vt_output_config      = false;
+/*static*/ std::string ArgConfig::vt_output_config_file = "vt_config.ini";
+/*static*/ std::string ArgConfig::vt_output_config_str  = "";
+
 /*static*/ std::string ArgConfig::prog_name     {"vt_unknown"};
 /*static*/ char*       ArgConfig::argv_prog_name{const_cast<char*>("vt_unknown")};
 
@@ -191,7 +195,10 @@ void addColorArgs(CLI::App& app) {
   a->group(outputGroup);
   b->group(outputGroup);
   a1->group(outputGroup);
-  b->excludes(a);
+  // Do not exclude 'a' from 'b' here because when inputting/outputting a
+  // config, both will be written out causing an error when reading a written
+  // input file with defaults
+  // b->excludes(a);
 }
 
 void addSignalArgs(CLI::App& app) {
@@ -558,6 +565,18 @@ void addSchedulerArgs(CLI::App& app) {
   kca->group(schedulerGroup);
 }
 
+void addConfigFileArgs(CLI::App& app) {
+  auto doconfig   = "Output all VT args to configuration file";
+  auto configname = "Name of configuration file to output";
+
+  auto a1 = app.add_flag("--vt_output_config",        ArgConfig::vt_output_config, doconfig);
+  auto a2 = app.add_option("--vt_output_config_file", ArgConfig::vt_output_config_file, configname, true);
+
+  auto configGroup = "Configuration File";
+  a1->group(configGroup);
+  a2->group(configGroup);
+}
+
 class VtFormatter : public CLI::Formatter {
 public:
   std::string make_usage(const CLI::App *, std::string name) const override {
@@ -611,6 +630,7 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   addDebuggerArgs(app);
   addUserArgs(app);
   addSchedulerArgs(app);
+  addConfigFileArgs(app);
 
   std::tuple<int, std::string> result = parseArguments(app, /*out*/ argc, /*out*/ argv);
   if (std::get<0>(result) not_eq -1) {
@@ -669,6 +689,14 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
     args_to_parse.push_back(*it);
   }
 
+  // Allow a input config file
+  app.set_config(
+    "--vt_input_config",
+    "", // no default file name
+    "Read in an ini config file for VT",
+    false // not required
+  );
+
   try {
     app.parse(args_to_parse);
   } catch (CLI::Error &ex) {
@@ -678,6 +706,12 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
     int result = app.exit(ex, message_stream, message_stream);
 
     return std::make_tuple(result, message_stream.str());
+  }
+
+  // If the user specified to output the full configuration, save it in a string
+  // so node 0 can output in the runtime once MPI is init'ed
+  if (ArgConfig::vt_output_config) {
+    ArgConfig::vt_output_config_str = app.config_to_str(true, true);
   }
 
   // Get the clean prog name; don't allow path bleed in usages.
