@@ -125,7 +125,7 @@ void PipeManagerBase::registerCallback(
    *  Save the new listener in the typed signal holder container for delivery
    *  when a signal arrives
    */
-  holder.addListener(pipe,std::move(listener));
+  holder.addListener(pipe, std::move(listener));
   /*
    *  Update the number of registered listeners in the pipe state
    */
