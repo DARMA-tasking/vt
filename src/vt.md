@@ -44,6 +44,7 @@ management.
 | \subpage active-messenger   | `vt::theMsg()`        | \copybrief active-messenger |
 | \subpage collective         | `vt::theCollective()` | \copybrief collective       |
 | \subpage event              | `vt::theEvent()`      | \copybrief event            |
+| \subpage group              | `vt::theGroup()`      | \copybrief group            |
 
 \section vt-hello-world Example
 
