@@ -57,6 +57,15 @@
 
 namespace vt { namespace pool {
 
+/**
+ * \struct Pool
+ *
+ * \brief A core VT component that manages efficient pools of memory for quick
+ * allocation/deallocation.
+ *
+ * Highly efficient memory pool that is not thread-safe. Utilizes fixed-size
+ * buckets with free-list to quickly allocate and de-allocate.
+ */
 struct Pool : runtime::component::Component<Pool> {
   using SizeType = size_t;
   using HeaderType = Header;
@@ -66,47 +75,150 @@ struct Pool : runtime::component::Component<Pool> {
   template <int64_t num_bytes_t>
   using MemoryPoolPtrType = std::unique_ptr<MemoryPoolType<num_bytes_t>>;
 
+  /**
+   * \brief Different pool sizes: small, medium, large, and the backup malloc
+   */
   enum struct ePoolSize {
-    Small = 1,
-    Medium = 2,
-    Large = 3,
-    Malloc = 4
+    Small = 1,                  /**< Small bucket */
+    Medium = 2,                 /**< Medium bucket */
+    Large = 3,                  /**< Large bucket */
+    Malloc = 4                  /**< Backup malloc allocation */
   };
 
+  /**
+   * \internal \brief System construction of the pool component
+   */
   Pool();
 
   std::string name() override { return "MemoryPool"; }
 
+  /**
+   * \brief Allocate some number of bytes plus extra size at the end
+   *
+   * \param[in] num_bytes main payload
+   * \param[in] oversize extra bytes
+   *
+   * \return pointer to new allocation
+   */
   void* alloc(size_t const& num_bytes, size_t oversize = 0);
+
+  /**
+   * \brief De-allocate a pool-allocated buffer
+   *
+   * \param[in] buf the buffer to deallocate
+   */
   void dealloc(void* const buf);
+
+  /**
+   * \internal \brief Decided which pool bucket to target based on size
+   *
+   * \param[in] num_bytes main payload
+   * \param[in] oversize extra bytes
+   *
+   * \return enum \c ePoolSize of which pool to target
+   */
   ePoolSize getPoolType(size_t const& num_bytes, size_t const& oversize);
+
+  /**
+   * \internal \brief Get remaining bytes for a pool allocation
+   *
+   * When using the memory pool, often extra bytes are at the end of the
+   * allocation because the user did not request the whole block assigned. Some
+   * components use this extra memory to pack in extra meta-data (or send
+   * serialized data) when sending a message.
+   *
+   * \param[in] buf the buffer allocated from the pool
+   *
+   * \return number of extra bytes
+   */
   SizeType remainingSize(void* const buf);
+
+  /**
+   * \brief Whether the pool is enabled at compile-time
+   *
+   * \return whether its enabled
+   */
   bool active() const;
+
+  /**
+   * \brief Whether the pool is enabled at compile-time and used as the default
+   * allocator for messages
+   *
+   * \return whether its enabled
+   */
   bool active_env() const;
 
+  /**
+   * \brief Initialize worker-specific pools due to the lack of thread-safety of
+   * the memory allocator. This will create distinct memory pool instances for
+   * each worker thread to access
+   *
+   * \param[in] num_workers number of workers on this node
+   */
   void initWorkerPools(WorkerCountType const& num_workers);
+
+  /**
+   * \brief Cleanup/free the memory pools
+   */
   void finalize() override;
 
 private:
-  /*
-   * Attempt allocation via pooled and fall back to default allocation if it
-   * fails
+  /**
+   * \internal \brief Attempt allocation via pooled allocator and fall back to
+   * standard allocation if it fails
+   *
+   * \param[in] num_bytes main payload size
+   * \param[in] oversize extra size requested
+   *
+   * \return a pointer to memory if succeeds
    */
   void* tryPooledAlloc(size_t const& num_bytes, size_t const& oversize);
+
+  /**
+   * \internal \brief Attempt to de-allocate a buffer
+   *
+   * \param[in] buf buffer to deallocate
+   *
+   * \return whether it succeeded or wasn't allocated by the pool
+   */
   bool tryPooledDealloc(void* const buf);
 
-  /*
-   * Allocate memory from a specific local memory pool, indicated by `pool'
+  /**
+   * \internal \brief Allocate memory from a specific pool
+   *
+   * \param[in] num_bytes main payload size
+   * \param[in] oversize extra size requested
+   * \param[in] pool_type the pool to target of sufficient size
+   *
+   * \return the buffer allocated
    */
   void* pooledAlloc(
     size_t const& num_bytes, size_t const& oversize, ePoolSize const pool_type
   );
+
+  /**
+   * \internal \brief De-allocate memory from pool
+   *
+   * \param[in] buf the buffer
+   * \param[in] pool_type which pool to target
+   */
   void poolDealloc(void* const buf, ePoolSize const pool_type);
 
-  /*
-   * Allocate from the default system allocator (std::malloc)
+  /**
+   * \internal \brief Allocate from standard allocator
+   *
+   * \param[in] num_bytes main payload size
+   * \param[in] oversize extra size requested
+   *
+   * \return the allocated buffer
    */
   void* defaultAlloc(size_t const& num_bytes, size_t const& oversize);
+
+  /**
+   * \internal \brief De-allocate from standard allocator
+   *
+   * \param[in] ptr buffer to deallocate
+   */
   void defaultDealloc(void* const ptr);
 
 private:
