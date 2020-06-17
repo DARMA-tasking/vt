@@ -179,7 +179,6 @@ struct BufferedActiveMsg {
 };
 
 /**
- * \internal
  * \struct ActiveMessenger active.h vt/messaging/active.h
  *
  * \brief Core component of VT used to send messages.
