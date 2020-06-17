@@ -130,13 +130,13 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   auto phase = msg->getPhase();
 
-  EpochType balance_epoch = theTerm()->makeEpochCollective();
+  EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
   theMsg()->pushEpoch(balance_epoch);
   proxy.get()->startLB(phase, base_proxy, theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
   theMsg()->popEpoch(balance_epoch);
   theTerm()->finishedEpoch(balance_epoch);
 
-  EpochType migrate_epoch = theTerm()->makeEpochCollective();
+  EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
 
   theTerm()->addAction(balance_epoch,
 		       [=] {
