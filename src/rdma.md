@@ -1,5 +1,5 @@
 \page rdma RDMA Manager
-\brief Node-level RDMA (Experimental)
+\brief Node-level RDMA @m_span{m-text m-warning} (experimental) @m_endspan
 
 The RDMA manager component `vt::rdma::RDMAManager`, accessed via `vt::theRDMA()`
 is an experimental component that sends pure data to registered RDMA handlers or
