@@ -94,6 +94,18 @@ struct BaseLB {
 
   virtual ~BaseLB() = default;
 
+  /**
+   * This will calculate global statistics over the individual
+   * processor and object work and communication data passed in, and
+   * then invoke the particular strategy implementations through
+   * virtual methods `initParams` and `runLB`
+   *
+   * This expects to be run within a collective epoch. When that epoch
+   * is complete, the concrete strategy implementation should have
+   * recorded a complete set of intended migrations in `transfers_`
+   * through calls to `migrateObjectTo`. Callers can then access that
+   * set using `getTransfers` and apply it using `applyMigrations`.
+   */
   void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::ProcStats::LoadMapType const& in_load_stats, ElementCommType const& in_comm_stats);
   void computeStatistics();
   void importProcessorData(ElementLoadType const& ld, ElementCommType const& cm);
