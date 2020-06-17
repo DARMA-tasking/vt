@@ -217,6 +217,7 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
   // Re-compute the statistics with the new partition based on current
   // this_load_ values
   computeStatistics();
+  migrationDone();
 }
 
 void BaseLB::transferSend(NodeType from, TransferVecType const& transfer) {
@@ -242,11 +243,6 @@ void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
 void BaseLB::finalize(CountMsg* msg) {
   auto global_count = msg->getVal();
   auto const& this_node = theContext()->getNode();
-  debug_print(
-    lb, node,
-    "BaseLB::finalize: finished migrations: local migration count={}\n",
-    local_migration_count_
-  );
   if (this_node == 0) {
     auto const total_time = timing::Timing::getCurrentTime() - start_time_;
     vt_print(
@@ -256,14 +252,12 @@ void BaseLB::finalize(CountMsg* msg) {
     );
     fflush(stdout);
   }
-  theProcStats()->startIterCleanup();
-  theLBManager()->finishedRunningLB(phase_);
 }
 
 void BaseLB::migrationDone() {
   debug_print(
     lb, node,
-    "BaseLB::migrationDone: start reduce local migration count={}\n",
+    "BaseLB::migrationDone: local migration count={}\n",
     local_migration_count_
   );
   auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);

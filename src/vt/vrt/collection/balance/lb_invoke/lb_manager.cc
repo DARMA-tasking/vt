@@ -126,13 +126,14 @@ template <typename LB>
 objgroup::proxy::Proxy<LB>
 LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto proxy = theObjGroup()->makeCollective<LB>();
-  proxy.get()->init(proxy);
+  auto strat = proxy.get();
+  strat->init(proxy);
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   auto phase = msg->getPhase();
 
   EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
   theMsg()->pushEpoch(balance_epoch);
-  proxy.get()->startLB(phase, base_proxy, theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
+  strat->startLB(phase, base_proxy, theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
   theMsg()->popEpoch(balance_epoch);
   theTerm()->finishedEpoch(balance_epoch);
 
@@ -140,7 +141,10 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 
   theTerm()->addAction(balance_epoch,
 		       [=] {
-			 auto strat = proxy.get();
+			 debug_print(
+				     lb, node,
+				     "LBManager: starting migrations\n"
+				     );
 			 theMsg()->pushEpoch(migrate_epoch);
 			 strat->applyMigrations(strat->getTransfers());
 			 theMsg()->popEpoch(migrate_epoch);
@@ -149,7 +153,12 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 
   theTerm()->addAction(migrate_epoch,
 		       [=] {
-			 proxy.get()->migrationDone();
+			 debug_print(
+				     lb, node,
+				     "LBManager: finished migrations\n"
+				     );
+			 theProcStats()->startIterCleanup();
+			 this->finishedRunningLB(phase);
 		       });
 
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
