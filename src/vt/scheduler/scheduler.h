@@ -82,6 +82,15 @@ enum SchedulerEvent {
   LastSchedulerEvent   = 6,
 };
 
+/**
+ * \struct Scheduler
+ *
+ * \brief A core VT component that schedules work generated from other
+ * components with priorities.
+ *
+ * Tracks work to be completed, orders it by priority, and executes it. Polls
+ * components for incoming work.
+ */
 struct Scheduler : runtime::component::Component<Scheduler> {
   using SchedulerEventType   = SchedulerEvent;
   using TriggerType          = std::function<void()>;
@@ -98,13 +107,38 @@ struct Scheduler : runtime::component::Component<Scheduler> {
 
   std::string name() override { return "Scheduler"; }
 
+  /**
+   * \internal \brief Check for termination when running on a since node
+   */
   static void checkTermSingleNode();
 
+  /**
+   * \internal \brief Check if progress function needs to be called
+   *
+   * \param[in] processed_since_last_progress number of units processed since
+   * last progress
+   * \param[in] time_since_last_progress time since last progress
+   *
+   * \return whether progress needs to be called
+   */
   bool shouldCallProgress(
     int32_t processed_since_last_progress, TimeType time_since_last_progress
   ) const;
 
+  /**
+   * \brief Turn the scheduler
+   *
+   * \param[in] msg_only whether to only make progress on the core active
+   * messenger
+   */
   void scheduler(bool msg_only = false);
+
+  /**
+   * \brief Run the progress function
+   *
+   * \param[in] msg_only whether to only make progress on the core active
+   * messenger
+   */
   void runProgress(bool msg_only = false);
 
   /**
@@ -114,40 +148,132 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * This form SHOULD be used instead of "while (..) { runScheduler(..) }"
    * in all cases of nested scheduler loops, such as during a barrier,
    * in order to ensure proper event unwinding and idle time tracking.
+   *
+   * \param[in] cond condition to turn scheduler until met
    */
   void runSchedulerWhile(std::function<bool()> cond);
 
+  /**
+   * \brief Register a trigger with the scheduler
+   *
+   * \param[in] event event to trigger on
+   * \param[in] trigger function to trigger
+   */
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
+
+  /**
+   * \brief Register a trigger once with the scheduler
+   *
+   * \param[in] event event to trigger on
+   * \param[in] trigger function to trigger
+   */
   void registerTriggerOnce(
     SchedulerEventType const& event, TriggerType trigger
   );
+
+  /**
+   * \internal \brief Trigger an event
+   *
+   * \param[in] event the event to trigger
+   */
   void triggerEvent(SchedulerEventType const& event);
 
+  /**
+   * \internal \brief Check if the scheduler has run
+   *
+   * \return whether it has run
+   */
   bool hasSchedRun() const { return has_executed_; }
 
+  /**
+   * \brief Enqueue an action to execute later
+   *
+   * \param[in] action action to execute
+   */
   void enqueue(ActionType action);
+
+  /**
+   * \brief Enqueue an action with a priority to execute later
+   *
+   * \param[in] priority the priority of the action
+   * \param[in] action the action to execute later
+   */
   void enqueue(PriorityType priority, ActionType action);
 
+  /**
+   * \brief Print current memory usage
+   */
   void printMemoryUsage();
 
+  /**
+   * \brief Enqueue a action associated with a prioritized message. The action
+   * will be enqueued with the priority found on the message.
+   *
+   * \param[in] msg the message
+   * \param[in] action the action to execute later
+   */
   template <typename MsgT>
   void enqueue(MsgT* msg, ActionType action);
+
+  /**
+   * \brief Enqueue a action associated with a prioritized message. The action
+   * will be enqueued with the priority found on the message.
+   *
+   * \param[in] msg the message
+   * \param[in] action the action to execute later
+   */
   template <typename MsgT>
   void enqueue(MsgSharedPtr<MsgT> msg, ActionType action);
 
+  /**
+   * \brief Get the work queue size
+   *
+   * \return how many units in the queue
+   */
   std::size_t workQueueSize() const { return work_queue_.size(); }
+
+  /**
+   * \brief Query if the work queue is empty
+   *
+   * \return whether it is empty
+   */
   bool workQueueEmpty() const { return work_queue_.empty(); }
 
+  /**
+   * \brief Check if the scheduler is idle
+   *
+   * \return whether this scheduler is idle
+   */
   bool isIdle() const { return work_queue_.empty(); }
+
+  /**
+   * \brief Check if the scheduler is idle minus termination messages
+   *
+   * \return whether this scheduler is idle
+   */
   bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
 
 private:
 
   /**
-   * \brief Executes a specific work unit.
+   * \internal \brief Executes a specific work unit.
+   *
+   * \param[in] work work unit to execute
    */
   void runWorkUnit(UnitType& work);
+
+  /**
+   * \internal \brief Make progress on active message only
+   *
+   * \return whether progress was made
+   */
   bool progressMsgOnlyImpl();
+
+  /**
+   * \internal \brief Make progress
+   *
+   * \return whether progress was made
+   */
   bool progressImpl();
 
 private:
