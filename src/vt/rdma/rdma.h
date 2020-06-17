@@ -171,7 +171,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
   /**
    * \brief Put raw data to registered RDMA handle
    *
-   * \param[in] han the registered RDMA handle
+   * \param[in] rdma_handle the registered RDMA handle
    * \param[in] ptr pointer to put
    * \param[in] num_bytes number of bytes to put
    * \param[in] action_after_put action to execute after put completes locally
@@ -237,7 +237,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] num_bytes number of bytes
    * \param[in] elm_size size of each element
    * \param[in] offset offset to put
-   * \param[in] action_after_put action to execute after put completes locally
+   * \param[in] after_put_action action to execute after put completes locally
    */
   void putDataIntoBufCollective(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
@@ -280,7 +280,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] rdma_handle the registered RDMA handle
    * \param[in] ptr buffer to get into
    * \param[in] region region to get
-   * \param[in] action_after_put action to execute after put completes locally
+   * \param[in] after_put_action action to execute after put completes locally
    */
   void putRegionTypeless(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
@@ -481,8 +481,8 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
   /**
    * \brief Unregister a RDMA handler
    *
-   * \param[in] handle the handler
-   * \param[in] type type of handlers (GET or PUT)
+   * \param[in] handle the RDMA handle
+   * \param[in] handler the RDMA handler
    * \param[in] tag the handler tag
    */
   void unregisterRdmaHandler(
