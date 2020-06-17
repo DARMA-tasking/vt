@@ -51,6 +51,10 @@ management.
 | \subpage pool               | `vt::thePool()`       | \copybrief pool             |
 | \subpage rdma               | `vt::theRDMA()`       | \copybrief rdma             |
 | \subpage rdmahandle         | `vt::theHandleRDMA()` | \copybrief rdmahandle       |
+| \subpage registry           | `vt::theRegistry()`   | \copybrief registry         |
+| \subpage scheduler          | `vt::theSched()`      | \copybrief scheduler        |
+| \subpage seq                | `vt::theSeq()`        | \copybrief seq              |
+| \subpage vrtseq             | `vt::theVirtualSeq()` | \copybrief vrtseq           |
 
 \section vt-hello-world Example
 
