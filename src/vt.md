@@ -46,8 +46,10 @@ management.
 | \subpage event              | `vt::theEvent()`      | \copybrief event            |
 | \subpage group              | `vt::theGroup()`      | \copybrief group            |
 | \subpage objgroup           | `vt::theObjGroup()`   | \copybrief objgroup         |
+| \subpage param              | `vt::theParam()`      | \copybrief param            |
 | \subpage pipe               | `vt::theCB()`         | \copybrief pipe             |
 | \subpage pool               | `vt::thePool()`       | \copybrief pool             |
+| \subpage rdma               | `vt::theRDMA()`       | \copybrief rdma             |
 
 \section vt-hello-world Example
 
