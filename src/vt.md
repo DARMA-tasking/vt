@@ -50,6 +50,7 @@ management.
 | \subpage pipe               | `vt::theCB()`         | \copybrief pipe             |
 | \subpage pool               | `vt::thePool()`       | \copybrief pool             |
 | \subpage rdma               | `vt::theRDMA()`       | \copybrief rdma             |
+| \subpage rdmahandle         | `vt::theHandleRDMA()` | \copybrief rdmahandle       |
 
 \section vt-hello-world Example
 
