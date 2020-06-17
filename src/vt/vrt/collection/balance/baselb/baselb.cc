@@ -212,8 +212,6 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
     transferSend(elm.first, elm.second);
   }
 
-  off_node_migrate.clear();
-
   // Re-compute the statistics with the new partition based on current
   // this_load_ values
   computeStatistics();
@@ -271,7 +269,6 @@ NodeType BaseLB::objGetNode(ObjIDType const id) const {
 
 void BaseLB::finishedStats() {
   getArgs(phase_);
-  transfers_.clear();
   this->inputParams(spec_entry_.get());
   this->runLB();
 }
