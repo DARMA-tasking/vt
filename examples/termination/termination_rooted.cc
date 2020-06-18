@@ -44,6 +44,7 @@
 
 #include "vt/transport.h"
 
+/// [Rooted termination example]
 using TestMsg = vt::Message;
 
 vt::NodeType nextNode() {
@@ -96,4 +97,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
-
+/// [Rooted termination example]
