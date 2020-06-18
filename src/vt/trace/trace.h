@@ -87,6 +87,22 @@ private:
   TraceEventIDType event_ = trace::no_trace_event;
 };
 
+/**
+ * \struct Trace
+ *
+ * \brief A optional VT component that traces execution on multiple node for
+ * performance analysis.
+ *
+ * Traces distributed execution on every node for registered handlers, user
+ * events, and MPI invocations, to produce traces that can be analyzed after the
+ * program terminates. Tracks dependencies between handlers for later
+ * analysis. VT handlers are automatically traced through registration and
+ * dispatch from the scheduler. Through the PMPI interface, MPI events can be
+ * traced while VT is not running.
+ *
+ * Outputs Projections log and sts files, which can be examined by the
+ * java Projections tool.
+ */
 struct Trace : runtime::component::Component<Trace> {
   using LogType             = Log;
   using TraceConstantsType  = eTraceConstants;
@@ -97,6 +113,11 @@ struct Trace : runtime::component::Component<Trace> {
   using TraceStackType      = std::vector<LogType>;
   using EventHoldStackType  = std::vector<std::size_t>;
 
+  /**
+   * \internal \brief System call to construct the trace component
+   *
+   * \param[in] in_prog_name the program name
+   */
   Trace(std::string const& in_prog_name);
 
   virtual ~Trace();
@@ -105,19 +126,56 @@ struct Trace : runtime::component::Component<Trace> {
 
   friend struct Log;
 
+  /**
+   * \brief Get the trace file name for this node
+   *
+   * \return the file name
+   */
   std::string getTraceName() const { return full_trace_name_; }
+
+  /**
+   * \brief Get the sts file name that holds meta-data
+   *
+   * \return the sts file name
+   */
   std::string getSTSName()   const { return full_sts_name_;   }
+
+  /**
+   * \brief Get the trace directory for output
+   *
+   * \return the directory path
+   */
   std::string getDirectory() const { return full_dir_name_;   }
 
   void initialize() override;
   void startup() override;
   void finalize() override;
 
+  /**
+   * \internal \brief Setup the file names for output
+   *
+   * \param[in] in_prog_name the program name
+   */
   void setupNames(std::string const& in_prog_name);
 
-  /// Initiate a paired event.
-  /// Currently endProcessing MUST be called in the opposite
-  /// order of beginProcessing.
+  /**
+   * \brief Initiate a paired progressing event.
+   *
+   * Currently \c endProcessing MUST be called in the opposite order of
+   * \c beginProcessing
+   *
+   * \param[in] ep the entry point (registered handler ID)
+   * \param[in] len size of message in bytes
+   * \param[in] event the associated trace event
+   * \param[in] from_node which node instigated this progressing
+   * \param[in] idx1 (optional) if collection, dimension 1
+   * \param[in] idx2 (optional) if collection, dimension 2
+   * \param[in] idx3 (optional) if collection, dimension 3
+   * \param[in] idx4 (optional) if collection, dimension 4
+   * \param[in] time the time this occurred
+   *
+   * \return a tag to close this progressing event
+   */
   TraceProcessingTag beginProcessing(
      TraceEntryIDType const ep, TraceMsgLenType const len,
      TraceEventIDType const event, NodeType const from_node,
@@ -126,81 +184,312 @@ struct Trace : runtime::component::Component<Trace> {
      double const time = getCurrentTime()
   );
 
-  /// Finalize a paired event.
-  /// The processing_tag value comes from beginProcessing.
+  /**
+   * \brief Finalize a paired event.
+   *
+   * The \c processing_tag value comes from \c beginProcessing.
+   *
+   * \param[in] processing_tag the matching tag from \c beginProcessing
+   * \param[in] time the time this occurred
+   */
   void endProcessing(
     TraceProcessingTag const& processing_tag,
     double const time = getCurrentTime()
   );
 
+  /**
+   * \brief Scheduler trigger for \c sched::SchedulerEvent::PendingSchedulerLoop
+   */
   void pendingSchedulerLoop();
+
+  /**
+   * \brief Scheduler trigger for \c sched::SchedulerEvent::BeginSchedulerLoop
+   */
   void beginSchedulerLoop();
+
+  /**
+   * \brief Scheduler trigger for \c sched::SchedulerEvent::EndSchedulerLoop
+   */
   void endSchedulerLoop();
 
+  /**
+   * \brief Scheduler trigger for \c sched::SchedulerEvent::BeginIdle
+   *
+   * \param[in] time time it begins idle
+   */
   void beginIdle(double const time = getCurrentTime());
+
+  /**
+   * \brief Scheduler trigger for \c sched::SchedulerEvent::EndIdle
+   *
+   * \param[in] time time it ends idle
+   */
   void endIdle(double const time = getCurrentTime());
 
+  /**
+   * \brief Collectively register a user event
+   *
+   * \note For users, it is recommended that the free function be called
+   * \c registerEventCollective
+   *
+   * \param[in] name name for the user event
+   *
+   * \return the user event ID
+   */
   UserEventIDType registerUserEventColl(std::string const& name);
+
+  /**
+   * \brief Register a user event rooted on a single node
+   *
+   * \note For users, it is recommended that the free function be called
+   * \c registerEventRooted
+   *
+   * \param[in] name name for the user event
+   *
+   * \return the user event ID
+   */
   UserEventIDType registerUserEventRoot(std::string const& name);
+
+  /**
+   * \brief Idempotent registration of a user event using a hash of its name
+   *
+   * \note For users, it is recommended that the free function be called
+   * \c registerEventHashed
+   *
+   * \warning This call can be dangerous because while it does allow impromptu
+   * user event creation, any collisions in the hash will cause multiple events
+   * to be conflated to the same event
+   *
+   * \param[in] name name for the user event
+   *
+   * \return the user event ID
+   */
   UserEventIDType registerUserEventHash(std::string const& name);
+
+  /**
+   * \brief Manually register a user event, directly passing the ID for the sts
+   * file
+   *
+   * \warning This call may be dangerous unless all user events IDs are managed
+   * by for a given program
+   *
+   * \param[in] name name for the user event
+   * \param[in] id the ID for the sts file
+   */
   void registerUserEventManual(std::string const& name, UserSpecEventIDType id);
 
+  /**
+   * \brief Log a user event
+   *
+   * \param[in] event the event ID
+   */
   void addUserEvent(UserEventIDType event);
+
+  /**
+   * \brief Log a user event generated manually
+   *
+   * \param[in] event the event ID
+   */
   void addUserEventManual(UserSpecEventIDType event);
+
+  /**
+   * \brief Log a bracketed user event with start and end time
+   *
+   * \param[in] event the ID for the sts file
+   * \param[in] begin the begin time
+   * \param[in] end the end time
+   */
   void addUserEventBracketed(UserEventIDType event, double begin, double end);
+
+  /**
+   * \brief Log a bracketed user event manually with start and end time
+   *
+   * \param[in] event the ID for the sts file
+   * \param[in] begin the begin time
+   * \param[in] end the end time
+   */
   void addUserEventBracketedManual(
     UserSpecEventIDType event, double begin, double end
   );
+
+  /**
+   * \brief Log the start of a user event that is bracketed
+   *
+   * \param[in] event the event ID
+   */
   void addUserEventBracketedBegin(UserEventIDType event);
+
+  /**
+   * \brief Log the end of a user event that is bracketed
+   *
+   * \param[in] event the event ID
+   */
   void addUserEventBracketedEnd(UserEventIDType event);
+
+  /**
+   * \brief Log the start of a manual user event that is bracketed
+   *
+   * \param[in] event  the ID for the sts file
+   */
   void addUserEventBracketedManualBegin(UserSpecEventIDType event);
+
+  /**
+   * \brief Log the end of a manual user event that is bracketed
+   *
+   * \param[in] event  the ID for the sts file
+   */
   void addUserEventBracketedManualEnd(UserSpecEventIDType event);
+
+  /**
+   * \brief Log a user note
+   *
+   * \param[in] note the note to add
+   */
   void addUserNote(std::string const& note);
+
+  /**
+   * \brief Log a user note with an integer
+   *
+   * \param[in] data the integer to add
+   */
   void addUserData(int32_t data);
+
+  /**
+   * \brief Log a user bracketed event with a note
+   *
+   * \param[in] begin the begin time
+   * \param[in] end the end time
+   * \param[in] note the note to log
+   * \param[in] event the event ID
+   */
   void addUserBracketedNote(
     double const begin, double const end, std::string const& note,
     TraceEventIDType const event = no_trace_event
   );
 
+  /**
+   * \brief Log a memory usage event
+   *
+   * \param[in] memory the amount of memory used
+   * \param[in] time the time it occurred
+   */
   void addMemoryEvent(
     std::size_t memory,
     double const time = getCurrentTime()
   );
 
+  /**
+   * \brief Log a message send
+   *
+   * \param[in] ep the handler ID
+   * \param[in] len the size of the message in bytes
+   * \param[in] time the time is was sent
+   *
+   * \return the trace event ID
+   */
   TraceEventIDType messageCreation(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     double const time = getCurrentTime()
   );
+
+  /**
+   * \brief Log a message broadcast
+   *
+   * \param[in] ep the handler ID
+   * \param[in] len the size of the message in bytes
+   * \param[in] time the time is was sent
+   *
+   * \return the trace event ID
+   */
   TraceEventIDType messageCreationBcast(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     double const time = getCurrentTime()
   );
+
+  /**
+   * \brief Log a received message
+   *
+   * \param[in] ep the handler ID
+   * \param[in] len the size of the message in bytes
+   * \param[in] from_node node that sent the message
+   * \param[in] time the time is was sent
+   *
+   * \return the trace event ID
+   */
   TraceEventIDType messageRecv(
     TraceEntryIDType const ep, TraceMsgLenType const len,
     NodeType const from_node, double const time = getCurrentTime()
   );
 
-  /// Enable logging of events.
+  /**
+   * \brief Enable logging of events at runtime
+   */
   void enableTracing();
 
-  /// Disable logging of events.
-  /// Events already logged may still be written to the trace log.
+  /**
+   * \brief Disable logging of events.
+   *
+   * \note Events already logged may still be written to the trace log.
+   */
   void disableTracing();
 
+  /**
+   * \internal \brief Check if tracing is enabled
+   *
+   * \param[in] is_end_event whether the event is an end event that need closing
+   *
+   * \return whether tracing is enabled
+   */
   bool checkDynamicRuntimeEnabled(bool is_end_event = false);
 
+  /**
+   * \internal \brief Load and broadcast the trace specification file
+   */
   void loadAndBroadcastSpec();
+
+  /**
+   * \internal \brief Tell tracing that a new phase has been reached so tracing
+   * can be enabled/disabled based on a specification file.
+   *
+   * \param[in] cur_phase the phase
+   */
   void setTraceEnabledCurrentPhase(PhaseType cur_phase);
 
+  /**
+   * \\brief Flush traces to file
+   *
+   * \param[in] useGlobalSync whether a global sync should be used here
+   */
   void flushTracesFile(bool useGlobalSync);
+
+  /**
+   * \internal \brief Cleanup traces data, write to disk and close
+   */
   void cleanupTracesFile();
 
+  /**
+   * \brief Check if trace is in a idle event
+   *
+   * \return whether in an idle eveent
+   */
   bool inIdleEvent() const;
 
+  /**
+   * \brief Get the current time
+   *
+   * \return query the VT time, which fetches from \c MPI_Wtime
+   */
   static inline double getCurrentTime() {
     return ::vt::timing::Timing::getCurrentTime();
   }
 
+  /**
+   * \brief Convert time in seconds to integer in microseconds
+   *
+   * \param[in] time the time in seconds as double
+   *
+   * \return time in microsecond as integer
+   */
   static inline TimeIntegerType timeToInt(double const time) {
     return static_cast<TimeIntegerType>(time * 1e6);
   }
@@ -208,38 +497,102 @@ struct Trace : runtime::component::Component<Trace> {
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 private:
-
-  // Emit a 'stop' trace for previous open event or a '[re]start' trace
-  // for a reactivated open event. This assists with output flattening.
+  /**
+   * \brief Emit a 'stop' trace for previous open event or a '[re]start' trace
+   * for a reactivated open event. This assists with output flattening.
+   *
+   * \param[in] time the time
+   * \param[in] type type of event to emit
+   */
   void emitTraceForTopProcessingEvent(
     double const time, TraceConstantsType const type
   );
 
-  // Writes traces to file, optionally flushing.
-  // The traces collection is modified.
+  /**
+   * \brief Writes traces to file, optionally flushing. The traces collection is
+   * modified.
+   *
+   * \param[in] file the gzip file to write to
+   * \param[in] traces the container of collected traces
+   * \param[in] start_time the start time
+   * \param[in] flush the flush mode
+   */
   static void outputTraces(
     vt_gzFile* file, TraceContainerType& traces,
     double start_time, int flush
   );
+
+  /**
+   * \brief Output the tracing header
+   *
+   * \param[in] file the gzip file
+   * \param[in] node the node outputting on
+   * \param[in] start the start time
+   */
   static void outputHeader(
     vt_gzFile* file, NodeType const node, double const start
   );
+
+  /**
+   * \brief Output the tracing footer
+   *
+   * \param[in] file the gzip file
+   * \param[in] node the node outputting on
+   * \param[in] start the start time
+   */
   static void outputFooter(
     vt_gzFile* file, NodeType const node, double const start
   );
 
+  /**
+   * \brief Write traces to file
+   *
+   * \param[in] flush the flush mode
+   * \param[in] is_incremental_flush whether this is an incremental flush
+   */
   void writeTracesFile(int flush, bool is_incremental_flush);
 
+  /**
+   * \brief Output the sts (control) file
+   *
+   * \param[in] file the file
+   */
   void outputControlFile(std::ofstream& file);
 
+  /**
+   * \brief Check if tracing is enabled on a certain node
+   *
+   * \param[in] node the node
+   *
+   * \return whether it is enabled
+   */
   static bool traceWritingEnabled(NodeType node);
+
+  /**
+   * \brief Check if a node will output the sts file
+   *
+   * \param[in] node the node
+   *
+   * \return whether it will output
+   */
   static bool isStsOutputNode(NodeType node);
 
-  /// Log an event, returning a trace event ID if accepted
-  /// or no_trace_event if not accepted (eg. no tracing on node).
-  /// The log object is invalidated after the call.
+  /**
+   * \brief Log an event, returning a trace event ID if accepted
+   * or \c no_trace_event if not accepted (eg. no tracing on node).
+   * The log object is invalidated after the call.
+   *
+   * \param[in] log the entity to log
+   *
+   * \return the trace event ID for that new log
+   */
   TraceEventIDType logEvent(LogType&& log);
 
+  /**
+   * \brief Get the current traces size
+   *
+   * \return computed bytes used for tracing (lower bound)
+   */
   std::size_t getTracesSize() const {
     return traces_.size() * sizeof(Log);
   }

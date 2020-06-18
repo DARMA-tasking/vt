@@ -52,25 +52,123 @@
 
 namespace vt { namespace trace {
 
+/**
+ * \brief Register a user event collectively
+ *
+ * \param[in] name the name of the event
+ *
+ * \return the user event ID for logging
+ */
 UserEventIDType registerEventCollective(std::string const& name);
+
+/**
+ * \brief Register a user event (rooted) on a single node
+ *
+ * \param[in] name the name of the event
+ *
+ * \return the user event ID for logging
+ */
 UserEventIDType registerEventRooted(std::string const& name);
+
+/**
+ * \brief Idempotent registration of a user event on a single node
+ *
+ * \warning This call can be dangerous because while it does allow impromptu
+ * user event creation, any collisions in the hash will cause multiple events
+ * to be conflated to the same event
+ *
+ * \param[in] name the name of the event
+ *
+ * \return the user event ID for logging
+ */
 UserEventIDType registerEventHashed(std::string const& name);
 
+/**
+ * \brief Log a user event
+ *
+ * \param[in] event the event ID to log
+ */
 void addUserEvent(UserEventIDType event);
+
+/**
+ * \brief Log a bracketed user event
+ *
+ * \note See \c TraceScopedEvent for a safer scope-based logging mechanism for
+ * bracketed user events.
+ *
+ * \param[in] event the event ID to log
+ * \param[in] begin the begin time
+ * \param[in] end the end time
+ */
 void addUserEventBracketed(UserEventIDType event, double begin, double end);
+
+/**
+ * \brief Log a user note
+ *
+ * \param[in] note the note to log
+ */
 void addUserNote(std::string const& note);
+
+/**
+ * \brief Log user data as an integer
+ *
+ * \param[in] data the integer to log
+ */
 void addUserData(int32_t data);
+
+/**
+ * \brief Log a bracketed user event with a note
+ *
+ * \note See \c TraceScopedNote for a safer scope-based logging mechanism for
+ * bracketed user events with a note.
+ *
+ * \param[in] begin the begin time
+ * \param[in] end the end time
+ * \param[in] note the note to log
+ * \param[in] event the event ID to log
+ */
 void addUserBracketedNote(
   double const begin, double const end, std::string const& note,
   TraceEventIDType const event = no_trace_event
 );
 
+/**
+ * \brief Log the start for a bracketed user event with a note
+ *
+ * \param[in] note the note
+ * \param[in] event the event ID
+ */
 void addUserNotePre(std::string const& note, TraceEventIDType const event);
+
+/**
+ * \brief Log the end for a bracketed user event with a note
+ *
+ * \param[in] note the note
+ * \param[in] event the event ID
+ */
 void addUserNoteEpi(std::string const& note, TraceEventIDType const event);
 
 #if backend_check_enabled(trace_enabled)
 
+/**
+ * \struct TraceScopedEventHash
+ *
+ * \brief A scoped user event using a hash
+ *
+ * This is safer that manually starting and stopping the logged event because it
+ * automatically closes when the scope ends, timing that portion of the program
+ * for the logged bracketed region.
+ *
+ * \warning This call can be dangerous because while it does allow impromptu
+ * user event creation, any collisions in the hash will cause multiple events
+ * to be conflated to the same event
+ */
 struct TraceScopedEventHash final {
+  /**
+   * \brief Construct the hashed event
+   *
+   * \param[in] in_str the name of the event
+   */
   explicit TraceScopedEventHash(std::string const& in_str)
     : begin_(Trace::getCurrentTime()),
       str_(in_str)
@@ -82,6 +180,9 @@ struct TraceScopedEventHash final {
 
   ~TraceScopedEventHash() { end(); }
 
+  /**
+   * \brief Manually end the scoped event early (before it goes out of scope)
+   */
   void end() {
     if (event_ != no_user_event_id) {
       double end = Trace::getCurrentTime();
@@ -97,7 +198,22 @@ private:
   UserEventIDType event_ = no_user_event_id;
 };
 
+/**
+ * \struct TraceScopedEvent
+ *
+ * \brief A scoped user event with a pre-registered user event ID
+ *
+ * This is safer that manually starting and stopping the logged event because it
+ * automatically closes when the scope ends, timing that portion of the program
+ * for the logged bracketed region.
+ */
 struct TraceScopedEvent final {
+  /**
+   * \brief Construct the trace scoped event, recording the start time
+   *
+   * \param[in] event the user event to log (e.g., may be obtained from
+   * \c registerEventCollective )
+   */
   explicit TraceScopedEvent(UserEventIDType event)
     : begin_(Trace::getCurrentTime()),
       event_(event)
@@ -107,6 +223,9 @@ struct TraceScopedEvent final {
 
   ~TraceScopedEvent() { end(); }
 
+  /**
+   * \brief Manually end the scoped event early (before it goes out of scope)
+   */
   void end() {
     if (event_ != no_user_event_id) {
       double end = Trace::getCurrentTime();
@@ -121,7 +240,23 @@ private:
   UserEventIDType event_ = no_user_event_id;
 };
 
+/**
+ * \struct TraceScopedNote
+ *
+ * \brief A scoped user event from a pre-registered user event ID with a note
+ *
+ * This is safer that manually starting and stopping the logged event because it
+ * automatically closes when the scope ends, timing that portion of the program
+ * for the logged bracketed region.
+ */
 struct TraceScopedNote final {
+  /**
+   * \brief Construct a scoped event with a note
+   *
+   * \param[in] in_note the user note to record
+   * \param[in] event the user event to log (e.g., may be obtained from
+   * \c registerEventCollective )
+   */
   TraceScopedNote(
     std::string const& in_note, TraceEventIDType const in_event = no_trace_event
   ) : begin_(Trace::getCurrentTime()),
@@ -133,6 +268,9 @@ struct TraceScopedNote final {
 
   ~TraceScopedNote() { end(); }
 
+  /**
+   * \brief Manually end the scoped event early (before it goes out of scope)
+   */
   void end() {
     if (event_ != no_user_event_id) {
       double end = Trace::getCurrentTime();
