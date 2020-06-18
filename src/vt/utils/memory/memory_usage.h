@@ -110,25 +110,77 @@ struct Mimalloc final : Reporter {
   std::string getName() override;
 };
 
+/**
+ * \struct MemoryUsage
+ *
+ * \brief A optional VT component that records memory usage for tracing and
+ * general profiling.
+ *
+ * The memory usage component is backed by a list of memory reporters that can
+ * be selected from depending on the platform and accuracy needed.
+ */
 struct MemoryUsage : runtime::component::Component<MemoryUsage> {
+  /**
+   * \internal \brief Construct a memory usage component
+   */
   MemoryUsage();
 
   std::string name() override { return "MemoryUsage"; }
 
+  /**
+   * \brief Get mean usage in bytes over all working reporters
+   *
+   * \return average usage in bytes
+   */
   std::size_t getAverageUsage();
 
+  /**
+   * \brief Get usage from first working reporter
+   *
+   * \return usage in bytes
+   */
   std::size_t getFirstUsage();
 
+  /**
+   * \brief Get the first working reporter name
+   *
+   * \return the name
+   */
   std::string getFirstReporter();
 
+  /**
+   * \brief Get string of (optionally pretty-printed) usage from all reporters
+   *
+   * \param[in] pretty whether to pretty-print
+   * \param[in] unit unit requested for usage
+   *
+   * \return string output of usage
+   */
   std::string getUsageAll(
     bool pretty = true, MemoryUnitEnum unit = MemoryUnitEnum::Megabytes
   );
 
+  /**
+   * \brief Check if there exists a working reporter
+   *
+   * \return whether there is a working reporter
+   */
   bool hasWorkingReporter() const;
 
+  /**
+   * \brief Get list of working reporters
+   *
+   * \return working reporters
+   */
   std::vector<std::string> getWorkingReporters();
 
+  /**
+   * \brief Convert bytes to string
+   *
+   * \param[in] in string with bytes
+   *
+   * \return number of bytes
+   */
   std::size_t convertBytesFromString(std::string const& in);
 
 private:
