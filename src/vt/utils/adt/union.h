@@ -493,6 +493,7 @@ struct UnionCopy<
  *
  * Example of use:
  *
+ * \code{.cpp}
  *    struct Test1 {
  *      Test1(int in_a) : a_(in_a) {}
  *      int a_;
@@ -504,7 +505,7 @@ struct UnionCopy<
  *    x.reset();
  *    x.init<int>();
  *    x.get<int> = 10;
- *
+ * \endcode
  */
 template <typename T, typename... Ts>
 struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
