@@ -1,4 +1,4 @@
-\page pipe PipeManager
+\page pipe Pipe Manager
 \brief Create opaque callback endpoints
 
 The pipe manager component `vt::pipe::PipeManager`, accessed via `vt::theCB()`

@@ -1,4 +1,4 @@
-\page introduction Introduction to DARMA/vt
+\page introduction Introduction
 \brief Overview of functionality in \vt
 
 \tableofcontents
@@ -20,43 +20,57 @@ management.
 
 \section vt-features Features in vt
 
--  Active messaging to type-safe handlers across nodes
--  Groups for scalable construction of node subsets
--  Optional serialization of messages
--  Termination detection across entire or subset of DAG with \e epochs
--  Opaque callbacks/pipes to generalized endpoints
--  Efficient memory pooling for message allocation
--  RDMA using MPI one-sided for data transfer
--  Asynchronous Collectives across nodes/groups (scatter, async barrier, reduce, ...)
--  General scheduler with prioritization
--  Built-in interoperability with MPI and threading libraries (Kokkos, OpenMP, ...)
--  Object groups for node-level encapsulation
--  Virtual contexts for migratable virtualization and dispatch
--  Abstractions for multi-dimensional indices, mapping, and linearization
--  Virtual collections (dense, sparse, dynamic insertable) for decomposing domains
--  Fully distributed load balancer for virtual entities
+  - Active messaging to type-safe handlers across nodes
+  - Groups for scalable construction of node subsets
+  - Optional serialization of messages
+  - Termination detection across entire or subset of DAG with \e epochs
+  - Opaque callbacks/pipes to generalized endpoints
+  - Efficient memory pooling for message allocation
+  - RDMA using MPI one-sided for data transfer
+  - Asynchronous Collectives across nodes/groups (scatter, async barrier, reduce, ...)
+  - General scheduler with prioritization
+  - Built-in interoperability with MPI and threading libraries (Kokkos, OpenMP, ...)
+  - Object groups for node-level encapsulation
+  - Virtual contexts for migratable virtualization and dispatch
+  - Abstractions for multi-dimensional indices, mapping, and linearization
+  - Virtual collections (dense, sparse, dynamic insertable) for decomposing domains
+  - Fully distributed load balancer for virtual entities
 
 \section vt-components Components in vt
 
-| Component                   | Singleton             | Details                     |
-| --------------------------- | --------------------- | --------------------------- |
-| \subpage context            | `vt::theContext()`    | \copybrief context          |
-| \subpage active-messenger   | `vt::theMsg()`        | \copybrief active-messenger |
-| \subpage collective         | `vt::theCollective()` | \copybrief collective       |
-| \subpage event              | `vt::theEvent()`      | \copybrief event            |
-| \subpage group              | `vt::theGroup()`      | \copybrief group            |
-| \subpage objgroup           | `vt::theObjGroup()`   | \copybrief objgroup         |
-| \subpage param              | `vt::theParam()`      | \copybrief param            |
-| \subpage pipe               | `vt::theCB()`         | \copybrief pipe             |
-| \subpage pool               | `vt::thePool()`       | \copybrief pool             |
-| \subpage rdma               | `vt::theRDMA()`       | \copybrief rdma             |
-| \subpage rdmahandle         | `vt::theHandleRDMA()` | \copybrief rdmahandle       |
-| \subpage registry           | `vt::theRegistry()`   | \copybrief registry         |
-| \subpage scheduler          | `vt::theSched()`      | \copybrief scheduler        |
-| \subpage seq                | `vt::theSeq()`        | \copybrief seq              |
-| \subpage vrtseq             | `vt::theVirtualSeq()` | \copybrief vrtseq           |
+| Component                   | Singleton              | Details                     | Type                                           |
+| --------------------------- | ---------------------- | --------------------------- | ---------------------------------------------- |
+| \subpage context            | `vt::theContext()`     | \copybrief context          | @m_class{m-label m-success} **Core**           |
+| \subpage active-messenger   | `vt::theMsg()`         | \copybrief active-messenger | @m_class{m-label m-success} **Core**           |
+| \subpage collection         | `vt::theCollection()`  | \copybrief collection       | @m_class{m-label m-success} **Core**           |
+| \subpage collective         | `vt::theCollective()`  | \copybrief collective       | @m_class{m-label m-success} **Core**           |
+| \subpage event              | `vt::theEvent()`       | \copybrief event            | @m_class{m-label m-success} **Core**           |
+| \subpage group              | `vt::theGroup()`       | \copybrief group            | @m_class{m-label m-success} **Core**           |
+| \subpage lb-manager         | `vt::theLBManager()`   | \copybrief lb-manager       | @m_class{m-label m-warning} **Optional**       |
+| \subpage location           | `vt::theLocMan()`      | \copybrief location         | @m_class{m-label m-success} **Core**           |
+| \subpage mem-usage          | `vt::theMemUsage()`    | \copybrief mem-usage        | @m_class{m-label m-warning} **Optional**       |
+| \subpage objgroup           | `vt::theObjGroup()`    | \copybrief objgroup         | @m_class{m-label m-success} **Core**           |
+| \subpage param              | `vt::theParam()`       | \copybrief param            | @m_class{m-label m-danger} **Experimental**    |
+| \subpage pipe               | `vt::theCB()`          | \copybrief pipe             | @m_class{m-label m-success} **Core**           |
+| \subpage proc-stats         | `vt::theProcStats()`   | \copybrief proc-stats       | @m_class{m-label m-warning} **Optional**       |
+| \subpage pool               | `vt::thePool()`        | \copybrief pool             | @m_class{m-label m-success} **Core**           |
+| \subpage rdma               | `vt::theRDMA()`        | \copybrief rdma             | @m_class{m-label m-danger} **Experimental**    |
+| \subpage rdmahandle         | `vt::theHandleRDMA()`  | \copybrief rdmahandle       | @m_class{m-label m-warning} **Optional**       |
+| \subpage registry           | `vt::theRegistry()`    | \copybrief registry         | @m_class{m-label m-success} **Core**           |
+| \subpage scheduler          | `vt::theSched()`       | \copybrief scheduler        | @m_class{m-label m-success} **Core**           |
+| \subpage seq                | `vt::theSeq()`         | \copybrief seq              | @m_class{m-label m-danger} **Experimental**    |
+| \subpage vrtseq             | `vt::theVirtualSeq()`  | \copybrief vrtseq           | @m_class{m-label m-danger} **Experimental**    |
+| \subpage term               | `vt::theTerm()`        | \copybrief term             | @m_class{m-label m-success} **Core**           |
+| \subpage trace              | `vt::theTrace()`       | \copybrief trace            | @m_class{m-label m-warning} **Optional**       |
+| \subpage stats-reader       | `vt::theStatsReader()` | \copybrief stats-reader     | @m_class{m-label m-warning} **Optional**       |
 
-\section vt-hello-world Example
+
+\section how-to-build-intro How to build
+
+\vt can be built with cmake or inside a docker container. Learn \subpage
+vt-build
+
+\section vt-hello-world Hello World Example
 
 \m_class{m-block m-success}
 \parblock
@@ -108,7 +122,9 @@ the sender (root of the broadcast).
 
 \section License
 
-@m_class{m-note m-dim m-text-center} @parblock
+@m_class{m-note m-dim}
+
+@parblock
 Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
 (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 Government retains certain rights in this software.

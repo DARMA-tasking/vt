@@ -1,5 +1,7 @@
-\page param Param
-\brief Handler parameterization @m_span{m-text m-warning} (experimental) @m_endspan
+\page param Parameterization
+\brief Handler parameterization
+
+@m_class{m-label m-danger} **Experimental**
 
 The parameterization component `vt::param::Param`, accessed via `vt::theParam()`
 is an experimental component for parameterizing arguments into active function

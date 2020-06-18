@@ -1,4 +1,4 @@
-\page mem-usage Memory usage tracker
+\page mem-usage Memory Usage Tracker
 \brief Track memory usage
 
 The memory usage component `vt::util::memory::MemoryUsage`, accessed via

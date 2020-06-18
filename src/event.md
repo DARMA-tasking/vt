@@ -1,4 +1,4 @@
-\page event AsyncEvent
+\page event Event Manager
 \brief Manage asynchronous events
 
 The async event component `vt::event::AsyncEvent`, accessed via `vt::theEvent()`

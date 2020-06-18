@@ -1,5 +1,5 @@
-\page vt-build Build
-\brief How to build
+\page vt-build How to Build
+\brief Building DARMA/vt with cmake
 
 \vt can be built with `cmake` or built inside a `docker` container. Most of the
 external dependencies come bundled with \vt for ease of compiling.

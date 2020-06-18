@@ -1,4 +1,4 @@
-\page pool Pool
+\page pool Memory Pool
 \brief Memory pool for efficient allocation
 
 The memory pool component `vt::pool::Pool`, accessed via `vt::thePool()`

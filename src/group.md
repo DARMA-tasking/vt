@@ -1,4 +1,4 @@
-\page group GroupManager
+\page group Group Manager
 \brief Create a grouping of nodes
 
 The group manager component `vt::group::GroupManager`, accessed via

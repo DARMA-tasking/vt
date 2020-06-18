@@ -1,4 +1,4 @@
-\page objgroup ObjGroupManager
+\page objgroup Object Group Manager
 \brief Create object instances across nodes
 
 The object group manager component `vt::objgroup::ObjGroupManager`, accessed via

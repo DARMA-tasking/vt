@@ -16,17 +16,13 @@ instrumented data to the \subpage lb-manager component to apply load balancing
 strategies.
 
 \section rooted-hello-world-collection Hello World 1D Dense Collection (Rooted)
-
 \snippet  examples/hello_world/hello_world_collection.cc Hello world collection
 
 \section collective-hello-world-collection Hello World 1D Dense Collection (Collective)
-
 \snippet  examples/hello_world/hello_world_collection_collective.cc Hello world collective collection
 
 \section reduce-hello-world-collection Hello World 1D Collection Reduce
-
 \snippet  examples/hello_world/hello_world_collection_reduce.cc Hello world reduce collection
 
 \section staged-insert--hello-world-collection Hello World 1D Collection Staged Insert
-
 \snippet  examples/hello_world/hello_world_collection_staged_insert.cc Hello world staged insert collection
