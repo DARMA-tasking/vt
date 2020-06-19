@@ -1,6 +1,37 @@
 \page tutorial Tutorial
 \brief Tutorial of how to use \vt
 
+\section tutorial-init-finalize-vt Initializing/Finalizing
+
+To initialize \vt all you must do is invoke the `vt::initialize` call with the
+program arguments, which creates and initializes a new \vt runtime. The
+initialize call reads the \vt arguments and removes them, leaving the remaining
+for the program.
+
+\code{.cpp}
+int main(int argc, char** argv) {
+  vt::initialize(argc, argv);
+   // program here
+  vt::finalize();
+}
+\endcode
+
+If you are already using MPI in your program already, you don't want to call
+initialize like this because \vt will initialize MPI itself. Instead, you should
+pass a pointer to the live MPI communicator to \vt for it to clone, as so:
+
+\code{.cpp}
+int main(int argc, char** argv) {
+  MPI_Init(&argc, &argv);
+  vt::initialize(argc, argv, &MPI_COMM_WORLD);
+   // program here
+  vt::finalize();
+  MPI_Finalize();
+}
+\endcode
+
+\section tutorial-walkthrough Tutorial Code Snippets
+
 This page walks through the tutorial that exists in the source code. See
 `vt/tutorial/*.h` for the tutorial pieces in the repository. The main tutorial
 example code that stitches the pieces together is located in example:

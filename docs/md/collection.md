@@ -24,5 +24,5 @@ strategies.
 \section reduce-hello-world-collection Hello World 1D Collection Reduce
 \snippet  examples/hello_world/hello_world_collection_reduce.cc Hello world reduce collection
 
-\section staged-insert--hello-world-collection Hello World 1D Collection Staged Insert
+\section staged-insert-hello-world-collection Hello World 1D Collection Staged Insert
 \snippet  examples/hello_world/hello_world_collection_staged_insert.cc Hello world staged insert collection
