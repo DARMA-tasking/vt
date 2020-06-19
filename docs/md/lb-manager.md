@@ -15,11 +15,29 @@ The run a load balancer at runtime:
   - Pass `--vt_lb --vt_lb_name=<LB>` as a command line argument
   - Write a LB specification file `--vt_lb --vt_lb_file --vt_lb_file_name=<FILE>`
 
+\section lb-specification-file LB Specification File
+
 The LB specification file allows users to specify which load balance along with
-which LB-specific configuration parameters are passed for any given phase. Here
-is an example LB specification. Starting with a mod controls which phases will
-match each specification line. The order in the file disambiguates lines with
-precedence lines that might conflict.
+which LB-specific configuration parameters are passed to the load balancer
+instance for any given phase. The order of the LB phase specficiation lines in
+the file disambiguates lines---higher precedence for earlier lines.
+
+The format of the LB specification file is:
+
+\code
+[%] <$phase> <$lbname> [$LB-specific-arg-1] ... [$LB-specfic-arg-N]
+\endcode
+
+If a `%` is present, the line matches phases where:
+`current phase % $phase == 0`. Phase-specific lines (ones that specify a load
+balancer without a `%`) always always have precedence over `%` lines. The next
+token after the optional `%` and `$phase` is the name of the load balancer to
+invoke on that phase. After the load balancer name, `N` arguments to the load
+balancer are allowed to customize how the load balancer is run with the format
+of `key=value`. These arguments are the equivalent of passing
+`--vt_lb_args="A=test B=test2"` on the command line.
+
+The following is an example LB specification:
 
 \code
 %10 GossipLB c=1 k=5 f=2 i=10
