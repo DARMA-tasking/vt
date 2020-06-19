@@ -14,7 +14,7 @@ arrives. Sending a message entails setting up the envelope, optionally
 serializing the message (depending on whether the serialize overload is
 present), and then using `MPI_Isend` to asynchronously transfer the bytes to the
 destination node. On the receive side, the active messenger is always probing
-for a incoming message and begins a transfer when it discovers one. The \vt
+for an incoming message and begins a transfer when it discovers one. The \vt
 \subpage{scheduler} polls the active messenger to make progress on any incoming
 messages.
 
