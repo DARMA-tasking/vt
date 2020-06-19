@@ -43,20 +43,19 @@ build configuration:
 
 | CMake Variable                  | Default Value   | Description |
 | ------------------              | --------------- | ----------- |
-| `vt_detector_disabled`          | 0               | Disable DARMA/detector support |
-| `vt_lb_enabled`                 | 0               | Enable compile-time load balancing support |
-| `vt_trace_enabled`              | 0               | Enable compile-time tracing support |
-| `vt_test_trace_runtime_enabled` | 0               | Force tracing on at runtime for testing |
+| `vt_lb_enabled`                 | 0               | Compile with support for runtime load balancing |
+| `vt_trace_enabled`              | 0               | Compile with support for runtime tracing (Projections-format) |
+| `vt_test_trace_runtime_enabled` | 0               | Force tracing on at runtime for VT tests |
 | `vt_doxygen_enabled`            | 0               | Enable doxygen generation |
 | `vt_mimalloc_enabled`           | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
 | `vt_asan_enabled`               | 0               | Enable building with address sanitizer |
 | `vt_pool_enabled`               | 1               | Use memory pool in *vt* for message allocation |
 | `vt_zoltan_enabled`             | 0               | Build with Zoltan enabled for `ZoltanLB` support |
-| `vt_mpi_guards`                 | 0               | Enable compile-time PMPI guards |
+| `vt_mpi_guards`                 | 0               | Guards against mis-use of MPI calls in code using *vt* |
 | `vt_fcontext_enabled`           | 0               | Enable user-level threads through boost fcontext |
 | `vt_priorities_enabled`         | 1               | Enable prioritization of work (adds bits in envelope) |
 | `vt_priority_bits_per_level`    | 3               | Number of bits per level of priority in envelope |
-| `CDOE_COVERAGE`                 | 0               | Enable code coverage |
+| `CODE_COVERAGE`                 | 0               | Enable code coverage for VT examples/tests |
 | `VT_BUILD_TESTS`                | 1               | Build all VT tests |
 | `VT_BUILD_EXAMPLES`             | 1               | Build all VT examples |
 
@@ -72,8 +71,8 @@ parameters.
 | Variable                    | Default Value   | Description |
 | ------------------          | --------------- | ----------- |
 | `CMAKE_BUILD_TYPE`          | Release         | The `cmake` build type |
-| `VT_LB_ENABLED`             | ON              | Enable compile-time load balancing support |
-| `VT_TRACE_ENABLED `         | OFF             | Enable compile-time tracing support |
+| `VT_LB_ENABLED`             | ON              | Compile with support for runtime load balancing |
+| `VT_TRACE_ENABLED `         | OFF             | Compile with support for runtime tracing (Projections-format) |
 | `VT_TRACE_RUNTIME_ENABLED ` | OFF             | Force tracing on at runtime (used in CI for automatically testing tracing on all tests/examples) |
 | `VT_DOXYGEN_ENABLED `       | OFF             | Enable doxygen generation |
 | `VT_MIMALLOC_ENABLED `      | OFF             | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
@@ -81,7 +80,7 @@ parameters.
 | `VT_POOL_ENABLED `          | ON              | Use memory pool in *vt* for message allocation |
 | `VT_ZOLTAN_ENABLED `        | OFF             | Build with Zoltan enabled for `ZoltanLB` support |
 | `ZOLTAN_DIR `               | (empty)         | Directory pointing to Zoltan installation |
-| `VT_MPI_GUARD_ENABLED `     | OFF             | Enable compile-time load balancing support |
+| `VT_MPI_GUARD_ENABLED `     | OFF             | Guards against mis-use of MPI calls in code using *vt* |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned
@@ -115,6 +114,9 @@ For `docker-compose`, the following variables can be set to configure the
 build. One may configure the architecture, compiler type and version, Linux
 distro (ubuntu or alpine), and distro version.
 
+The default set of the docker configuration options is located in `vt/.env`,
+which `docker-compose` will read.
+
 ```
 # Variables:
 #   ARCH={amd64, arm64v8, ...}
@@ -136,21 +138,32 @@ distro (ubuntu or alpine), and distro version.
 #   BUILD_TYPE=release   # CMake build type
 ```
 
-With these set, run the following for a non-interactive build:
+With these set, run the following for a non-interactive build with ubuntu:
 
 ```bash
 $ cd vt
 $ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp
 ```
 
-For an interactive build, where one can build, debug, and run `valgrind`, etc:
+Or, alternatively, run a non-interactive build with alpine:
+
+```bash
+$ cd vt
+$ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 alpine-cpp
+```
+
+For an interactive build with ubuntu, where one can build, debug, and run
+`valgrind`, etc:
 
 ```bash
 $ cd vt
 $ docker-compose run -e BUILD_TYPE=debug -e VT_TRACE=1 ubuntu-cpp-interactive
-$ /vt/ci/build_cpp.sh /vt /build
-$ /vt/ci/test_cpp.sh /vt /build
+# /vt/ci/build_cpp.sh /vt /build
+# /vt/ci/test_cpp.sh /vt /build
 ```
+
+The same call applies to alpine distro builds if you swap
+`ubuntu-cpp-interactive` for `alpine-cpp-interactive`.
 
 For more detailed information on configuring the docker build, read the
 documentation in `vt/docker-compose.yml`.
