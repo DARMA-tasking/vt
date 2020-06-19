@@ -3,7 +3,8 @@
 
 The memory pool component `vt::pool::Pool`, accessed via `vt::thePool()`
 provides a highly efficient memory pool for fixed sized allocations in three
-sizes: small, medium, and large.
+sizes: small (`vt::pool::memory_size_small`), medium
+(`vt::pool::memory_size_medium`), and large (currently unimplemented).
 
 All message allocation (on the send and receive side) is overloaded with
 new/delete overloads to allocate message memory through the \vt memory pool. The
