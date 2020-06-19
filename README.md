@@ -29,6 +29,14 @@ they can be automatically migrated and thereby executed on varying hardware
 resources without explicit programmer mapping, location, and communication
 management.
 
+## Read the documentation
+
+To learn *vt*, read the [full
+documentation](https://darma-tasking.github.io/docs/html/index.html) that is
+automatically generated whenever a push occurs to "develop". It includes a
+walk-though of the tutorial and a overview of the components that make up a *vt*
+runtime.
+
 ## Building
 
 *vt* can be built with `cmake` or built inside a `docker` container.
