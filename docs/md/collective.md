@@ -7,7 +7,28 @@ over the \vt runtime. It performs asynchronous reductions, scatters, barriers,
 and allows one to safely use MPI interspersed through \vt code, while running in
 a handler.
 
-\section collective-reduce-example A Simple Reduction
+\section collective-reductions Reductions
+
+\vt comes with several reduction operators built in that can operate over types
+where the operator already applies (like integers, doubles, etc.) or
+user-defined overloaded operators. These operators also have specializations for
+`std::vector<T>` and `std::array<T>`.
+
+| Operator      | Reference                  |
+| ------------- | -------------------------- |
+| `operator&&`  | `vt::collective::AndOp`    |
+| `operator||`  | `vt::collective::OrOp`     |
+| `operator+`   | `vt::collective::PlusOp`   |
+| `operator+`   | `vt::collective::PlusOp`   |
+| `std::min`    | `vt::collective::MinOp`    |
+| `std::max`    | `vt::collective::MaxOp`    |
+| `std::max`    | `vt::collective::MaxOp`    |
+| `operator&`   | `vt::collective::BitAndOp` |
+| `operator|`   | `vt::collective::BitOrOp`  |
+| `operator^`   | `vt::collective::BitXorOp` |
+| <no-operator> | `vt::collective::NoneOp`   |
+
+\subsection collective-reduce-example A Simple Reduction
 
 \code{.cpp}
 #include <vt/transport.h>
