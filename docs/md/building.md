@@ -6,8 +6,7 @@ external dependencies come bundled with \vt for ease of compiling.
 
 \section how-to-build Building
 
- To build
-\vt, one must obtain the following dependencies:
+To build \vt, one must obtain the following dependencies:
 
 \subsection optional-deps Optional (if threading enabled)
 
@@ -36,11 +35,40 @@ $ git clone git@github.com:DARMA-tasking/detector
 With these in `vt/lib`, cmake will automatically build them and stitch them into
 *vt*'s linking process.
 
+\subsection use-cmake-directly-vars Using cmake directly
+
+One may use `cmake` as normal on *vt*, with checkpoint and detector cloned in
+`vt/lib` to compile them all together as explained above. The following are some
+custom configuration build options that can be provided to `cmake` to change the
+build configuration:
+
+| CMake Variable                  | Default Value   | Description |
+| ------------------              | --------------- | ----------- |
+| `vt_detector_disabled`          | 0               | Disable DARMA/detector support |
+| `vt_lb_enabled`                 | 0               | Enable compile-time load balancing support |
+| `vt_trace_enabled`              | 0               | Enable compile-time tracing support |
+| `vt_test_trace_runtime_enabled` | 0               | Force tracing on at runtime for testing |
+| `vt_doxygen_enabled`            | 0               | Enable doxygen generation |
+| `vt_mimalloc_enabled`           | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
+| `vt_asan_enabled`               | 0               | Enable building with address sanitizer |
+| `vt_pool_enabled`               | 1               | Use memory pool in *vt* for message allocation |
+| `vt_zoltan_enabled`             | 0               | Build with Zoltan enabled for `ZoltanLB` support |
+| `vt_mpi_guards`                 | 0               | Enable compile-time PMPI guards |
+| `vt_fcontext_enabled`           | 0               | Enable user-level threads through boost fcontext |
+| `vt_priorities_enabled`         | 1               | Enable prioritization of work (adds bits in envelope) |
+| `vt_priority_bits_per_level`    | 3               | Number of bits per level of priority in envelope |
+| `CDOE_COVERAGE`                 | 0               | Enable code coverage |
+| `VT_BUILD_TESTS`                | 1               | Build all VT tests |
+| `VT_BUILD_EXAMPLES`             | 1               | Build all VT examples |
+
+
+\subsection Using the Build Script
+
 Instead of running `cmake`, one may invoke the `vt/ci/build_cpp.sh` script which
 will run `cmake` for *vt* with environment variables for most configuration
 parameters.
 
-\subsubsection building-environment-variables Environment Variables
+\subsubsection building-environment-variables Build Script Environment Variables
 
 | Variable                    | Default Value   | Description |
 | ------------------          | --------------- | ----------- |
