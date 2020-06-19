@@ -86,22 +86,24 @@ int main(int argc, char** argv) {
     num_elms = atoi(argv[1]);
   }
 
-  auto range = vt::Index1D(num_elms);
-  auto proxy = vt::theCollection()->constructCollective<InsertCol>(range);
+  vt::runInEpochCollective([&]{
+    auto range = vt::Index1D(num_elms);
+    auto proxy = vt::theCollection()->constructCollective<InsertCol>(range);
 
-  proxy.startInsertCollective();
+    proxy.startInsertCollective();
 
-  for (int i = 0; i < 32; i++) {
-    if (i < range.x() and i % num_nodes == this_node) {
-      proxy(i).insert();
+    for (int i = 0; i < 32; i++) {
+      if (i < range.x() and i % num_nodes == this_node) {
+        proxy(i).insert();
+      }
     }
-  }
 
-  proxy.finishInsertCollective();
+    proxy.finishInsertCollective();
 
-  if (this_node == 0) {
-    proxy.broadcast<InsertCol::Msg,&InsertCol::doWork>();
-  }
+    if (this_node == 0) {
+      proxy.broadcast<InsertCol::Msg,&InsertCol::doWork>();
+    }
+  });
 
   vt::finalize();
 
