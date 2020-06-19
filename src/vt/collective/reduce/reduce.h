@@ -71,10 +71,11 @@ namespace vt { namespace collective { namespace reduce {
  * \struct Reduce
  *
  * \brief A specific, isolated reducer instance for a given scope that sequences
- * via the reduction stamp within that scope.
+ * reduce operations via the reduction stamp within that scope.
  *
- * Holds the state as a reduction makes it up the tree until it reaches the
- * root. Combines messages with the reduction operator as they move up the tree.
+ * Holds the state as a reduction makes it up the spanning tree until it reaches
+ * the root. Combines messages with the user-specified reduction operator as
+ * they move up the spanning tree.
  */
 struct Reduce : virtual collective::tree::Tree {
   using ReduceStateType = ReduceState;
