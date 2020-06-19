@@ -62,7 +62,7 @@ build configuration:
 | `VT_BUILD_EXAMPLES`             | 1               | Build all VT examples |
 
 
-\subsection Using the Build Script
+\subsection using-the-build-script Using the Build Script
 
 Instead of running `cmake`, one may invoke the `vt/ci/build_cpp.sh` script which
 will run `cmake` for *vt* with environment variables for most configuration
