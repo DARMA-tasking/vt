@@ -13,7 +13,11 @@ a handler.
 #include <vt/transport.h>
 
 // Reduce ints
-struct ReduceDataMsg : ::vt::collective::ReduceTMsg<int> {};
+struct ReduceDataMsg : vt::collective::ReduceTMsg<int> {
+  explicit ReduceDataMsg(int val)
+    : vt::collective::ReduceTMsg<int>(val)
+  { }
+};
 
 // Handler to target for reduction
 struct ReduceResult {
@@ -28,8 +32,7 @@ struct ReduceResult {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  auto reduce_msg = vt::makeMessage<ReduceDataMsg>();
-  reduce_msg->getVal() = 50;
+  auto reduce_msg = vt::makeMessage<ReduceDataMsg>(50);
 
   NodeType const root_reduce_node = 0;
   vt::theCollective()->global()->reduce<vt::collective::PlusOp<int>,ReduceResult>(
