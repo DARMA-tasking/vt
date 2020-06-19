@@ -8,16 +8,15 @@ external dependencies come bundled with \vt for ease of compiling.
 
 To build \vt, one must obtain the following dependencies:
 
-\subsection optional-deps Optional (if threading enabled)
-
-  - OpenMP       _or_
-  - `std::thread`s (default to from C++ compiler)
-
 \subsection required-deps Required
   - detector,   (*vt* ecosystem)
   - checkpoint, (*vt* ecosystem)
   - MPI         (mpich/openmpi/mvapich/IBM Spectrum MPI/Cray MPICH/etc.)
 
+\subsection optional-deps Optional (if threading enabled)
+
+  - OpenMP       _or_
+  - Default to `std::thread`
 
 \subsection automatic-build-deps Automatically build dependencies
 
