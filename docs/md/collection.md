@@ -3,17 +3,17 @@
 
 The virtual context collection component
 `vt::vrt::collection::CollectionManager`, accessed via `vt::theCollection()` is
-a core VT component that manages multi-dimensional collection of virtual context
-elements. It manages the creation, deletion, and messaging across element at
-runtime supporting dense, sparse, on-demand, and staged insert modes. It
-utilizes the \subpage location to manage the location of these elements to
-efficiently deliver messages. It also utilizes the \subpage group to build a
-spanning tree across the nodes that the collection is currently mapped to. This
-group makes broadcasts efficient and allows reductions to make progress without
-waiting for nodes that do not have collection elements. The \subpage proc-stats
-component stores the statistics for live collections that then passes the
-instrumented data to the \subpage lb-manager component to apply load balancing
-strategies.
+a core VT component that manages multi-dimensional collections of *virtual
+context* (or a migratable C++ object registered with \vt) elements. It manages
+the creation, deletion, and messaging across elements at runtime supporting
+dense, sparse, on-demand, and staged insert modes. It utilizes the \subpage
+location to manage the location of these elements to efficiently deliver
+messages. It also utilizes the \subpage group to build a spanning tree across
+the nodes that the collection is currently mapped to. This group makes
+broadcasts efficient and allows reductions to make progress without waiting for
+nodes that do not have collection elements. The \subpage proc-stats component
+stores the statistics for live collections that then passes the instrumented
+data to the \subpage lb-manager component to apply load balancing strategies.
 
 \section rooted-hello-world-collection Hello World 1D Dense Collection (Rooted)
 \snippet  examples/hello_world/hello_world_collection.cc Hello world collection
