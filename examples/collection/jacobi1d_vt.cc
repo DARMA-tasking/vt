@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+/// [Jacobi1D example]
 
 //
 // This code applies a few steps of the Jacobi iteration to
@@ -383,4 +384,4 @@ int main(int argc, char** argv) {
   return 0;
 
 }
-
+/// [Jacobi1D example]

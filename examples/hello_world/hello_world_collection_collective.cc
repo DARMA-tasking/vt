@@ -44,6 +44,7 @@
 
 #include <vt/transport.h>
 
+/// [Hello world collective collection]
 struct Hello : vt::Collection<Hello, vt::Index1D> {
   Hello() = default;
 
@@ -83,3 +84,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+/// [Hello world collective collection]

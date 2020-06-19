@@ -44,6 +44,7 @@
 
 #include <vt/transport.h>
 
+/// [Hello world reduce collection]
 struct Hello : vt::Collection<Hello, vt::Index1D> {
   using ReduceMsg = vt::collective::ReduceTMsg<int>;
 
@@ -88,3 +89,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+/// [Hello world reduce collection]

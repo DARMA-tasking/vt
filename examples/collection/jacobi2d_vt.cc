@@ -48,6 +48,7 @@
 #include <cassert>
 #include <iostream>
 
+/// [Jacobi2D example]
 
 //
 // This code applies a few steps of the Jacobi iteration to
@@ -516,3 +517,4 @@ int main(int argc, char** argv) {
   return 0;
 
 }
+/// [Jacobi2D example]

@@ -44,6 +44,7 @@
 
 #include <vt/transport.h>
 
+/// [Migrate collection example]
 static constexpr int32_t const default_num_elms = 16;
 
 struct Hello : vt::Collection<Hello, vt::Index1D> {
@@ -125,3 +126,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+/// [Migrate collection example]

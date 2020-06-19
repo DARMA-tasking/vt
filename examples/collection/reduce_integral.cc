@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+/// [Reduce integral example]
 
 //
 // This code computes a composite trapezoidal rule for the integral
@@ -249,4 +250,4 @@ int main(int argc, char** argv) {
   return 0;
 
 }
-
+/// [Reduce integral example]
