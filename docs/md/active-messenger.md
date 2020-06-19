@@ -67,18 +67,21 @@ int main(int argc, char** argv) {
   vt::NodeType this_node = vt::theContext()->getNode();
 
   if (this_node == 0) {
-    std::vector<double> vec_to_send;
-    vec_to_send.push_back(29.);
-    vec_to_send.push_back(54.);
+    // spins in scheduler until termination of the enclosing work
+    vt::runInEpochRooted([=]{
+      std::vector<double> vec_to_send;
+      vec_to_send.push_back(29.);
+      vec_to_send.push_back(54.);
 
-    auto msg = vt::makeMessage<MyMsg>(10, vec_to_send);
-    vt::theMsg()->sendMsg<MyMsg, myHandler>(1, msg.get()); // send to node 1
+      auto msg = vt::makeMessage<MyMsg>(10, vec_to_send);
+      vt::theMsg()->sendMsg<MyMsg, myHandler>(1, msg.get()); // send to node 1
 
-    auto msg2 = vt::makeMessage<MyMsg>(11, vec_to_send);
-    vt::theMsg()->sendMsg<MyFunctor>(1, msg2.get());  // send to node 1
+      auto msg2 = vt::makeMessage<MyMsg>(11, vec_to_send);
+      vt::theMsg()->sendMsg<MyFunctor>(1, msg2.get());  // send to node 1
+    });
   }
 
-  vt::finalize(); // spins in scheduler until termination
+  vt::finalize();
   return 0;
 }
 
