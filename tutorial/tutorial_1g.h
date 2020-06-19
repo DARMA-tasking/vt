@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial1G]
 //              VT Base Message
 //             \----------------/
 //              \              /
@@ -149,5 +150,6 @@ static void getCallbackHandler(MsgWithCallback* msg) {
   // Send the callback with the message
   msg->cb.send(data_msg.get());
 }
+/// [Tutorial1G]
 
 }} /* end namespace vt::tutorial */

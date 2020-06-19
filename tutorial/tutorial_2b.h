@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial2B]
 // Forward declaration for message
 struct ColRedMsg;
 
@@ -126,5 +127,6 @@ static inline void collectionReduce() {
     proxy.broadcast<ColRedMsg,&ReduceCol::reduceHandler>(msg.get());
   }
 }
+/// [Tutorial2B]
 
 }} /* end namespace vt::tutorial */

@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial1B]
 /*
  * This is a user-defined message that can be sent to a node via VT's active
  * message interface. A message in VT must be derived from the type
@@ -153,5 +154,6 @@ void MsgHandlerB::operator()(MyMsg* msg) {
   vtAssert(cur_node == 0, "This handler should execute on node 0");
   ::fmt::print("msgHandlerB: triggered on node={}\n", cur_node);
 }
+/// [Tutorial1B]
 
 }} /* end namespace vt::tutorial */

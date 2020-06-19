@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial1E]
 //                  VT Base Message
 //                 \----------------/
 //                  \              /
@@ -93,5 +94,6 @@ static void msgHandlerGroupA(MySimpleMsg* msg) {
 
   ::fmt::print("msgHandlerGroupA: triggered on node={}\n", cur_node);
 }
+/// [Tutorial1E]
 
 }} /* end namespace vt::tutorial */
