@@ -73,9 +73,10 @@ constexpr BarrierType const fst_coll_barrier = 0x8000000000000001;
  * when the barrier is reached. It only ensures that the node reaches that
  * point. Thus, messages sent or work enqueued for the scheduler might not be
  * done when a barrier is reached. For ensuring that work is complete, use the
- * create an epoch for the \c TerminationDetector component. Second, barriers
- * may limit the concurrency in a program; in many causes only a reduction is
- * necessary for correctness.
+ * \c TerminationDetector component to create an epoch that groups the piece of
+ * work (see \c vt::runInEpochRooted and \c vt::runInEpochCollective ). Second,
+ * barriers may limit the concurrency in a program; in many cases only a
+ * reduction is necessary for correctness.
  */
 struct Barrier : virtual collective::tree::Tree {
   using BarrierStateType = BarrierState;
