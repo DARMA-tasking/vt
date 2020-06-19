@@ -16,16 +16,14 @@ user-defined overloaded operators. These operators also have specializations for
 
 | Operator      | Reference                  |
 | ------------- | -------------------------- |
-| `operator&&`  | `vt::collective::AndOp`    |
-| `operator||`  | `vt::collective::OrOp`     |
-| `operator+`   | `vt::collective::PlusOp`   |
-| `operator+`   | `vt::collective::PlusOp`   |
-| `std::min`    | `vt::collective::MinOp`    |
-| `std::max`    | `vt::collective::MaxOp`    |
-| `std::max`    | `vt::collective::MaxOp`    |
-| `operator&`   | `vt::collective::BitAndOp` |
-| `operator|`   | `vt::collective::BitOrOp`  |
-| `operator^`   | `vt::collective::BitXorOp` |
+| operator&&    | `vt::collective::AndOp`    |
+| operator\|\|  | `vt::collective::OrOp`     |
+| operator+     | `vt::collective::PlusOp`   |
+| std::min      | `vt::collective::MinOp`    |
+| std::max      | `vt::collective::MaxOp`    |
+| operator&     | `vt::collective::BitAndOp` |
+| operator\|    | `vt::collective::BitOrOp`  |
+| operator^     | `vt::collective::BitXorOp` |
 | <no-operator> | `vt::collective::NoneOp`   |
 
 \subsection collective-reduce-example A Simple Reduction
