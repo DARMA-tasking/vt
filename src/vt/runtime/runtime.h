@@ -63,11 +63,34 @@
 
 namespace vt { namespace runtime {
 
+/**
+ * \struct Runtime
+ *
+ * \brief The VT runtime that manages startup/shutdown and pointers to all the
+ * live components for a runtime instance.
+ *
+ * The runtime contains an instance of VT that is initialized/finalized. It
+ * performs the sequence of operations for correct initialization and
+ * finalization of all the components that make up a runtime.
+ *
+ * The runtime can be configured to catch signals when errors occur and dump a
+ * stack trace.
+ */
 struct Runtime {
   template <typename ComponentT>
   using ComponentPtrType = ComponentT*;
   using ArgType = vt::arguments::ArgConfig;
 
+  /**
+   * \internal \brief Initialize a VT runtime
+   *
+   * \param[in] argc argument count (modified after VT extracts)
+   * \param[in] argv arguments  (modified after VT extracts)
+   * \param[in] in_num_workers number of worker threads to initialize
+   * \param[in] interop_mode whether running in interoperability mode
+   * \param[in] in_comm the MPI communicator (if in interoperability mode)
+   * \param[in] in_instance the runtime instance to set
+   */
   Runtime(
     int& argc, char**& argv,
     WorkerCountType in_num_workers = no_workers, bool const interop_mode = false,
@@ -81,65 +104,264 @@ struct Runtime {
 
   virtual ~Runtime();
 
+  /**
+   * \brief Check if runtime is live
+   *
+   * \return whether it is initialized or not
+   */
   bool isLive() const { return p_ and p_->isLive(); }
+
+  /**
+   * \brief Invoke all the progress functions
+   *
+   * \return currently always zero
+   */
   int progress() { if (p_) return p_->progress(); else return 0; }
+
+  /**
+   * \brief Check if runtime has terminated
+   *
+   * \return whether it has terminated
+   */
   bool isTerminated() const { return not runtime_active_; }
+
+  /**
+   * \brief Check if runtime is finalizable
+   *
+   * \return whether it is finalizable
+   */
   bool isFinializeble() const { return initialized_ and not finalized_; }
+
+  /**
+   * \brief Check if runtime is initialized
+   *
+   * \return whether it is initialized
+   */
   bool isInitialized() const { return initialized_; }
+
+  /**
+   * \brief Check if runtime is finalized
+   *
+   * \return whether it is finalized
+   */
   bool isFinalized() const { return finalized_; }
+
+  /**
+   * \brief Check if scheduler has run
+   *
+   * \return whether it has run
+   */
   bool hasSchedRun() const;
 
+  /**
+   * \brief Reset the runtime after termination is reached to use it again
+   */
   void reset();
+
+  /**
+   * \internal \brief Initialize the runtime
+   *
+   * \param[in] force_now whether to force it now
+   *
+   * \return whether it initialized or not
+   */
   bool initialize(bool const force_now = false);
+
+  /**
+   * \internal \brief Finalize the runtime
+   *
+   * \param[in] force_now whether to force it now
+   *
+   * \return whether it finalized or not
+   */
   bool finalize(bool const force_now = false);
+
+  /**
+   * \brief Run the scheduler once
+   */
   void runScheduler();
+
+  /**
+   * \brief Abort--die immediately after spitting out error message
+   *
+   * \param[in] abort_str the error message
+   * \param[in] code the error code to output
+   */
   void abort(std::string const abort_str, ErrorCodeType const code);
+
+  /**
+   * \brief Output a message a possibly die
+   *
+   * \param[in] abort_str the message
+   * \param[in] code the code to throw
+   * \param[in] error whether it's a fatal error
+   * \param[in] decorate whether to decorate the message
+   * \param[in] formatted whether it's already formatted or not
+   */
   void output(
     std::string const abort_str, ErrorCodeType const code, bool error = false,
     bool decorate = true, bool formatted = true
   );
 
+  /**
+   * \internal \brief Get runtime instance ID
+   *
+   * \return the instance ID
+   */
   RuntimeInstType getInstanceID() const { return instance_; }
 
+  /**
+   * \internal \brief Do a sync
+   */
   void systemSync() { sync(); }
 
 public:
+  /**
+   * \internal \brief Check for input argument errors
+   */
   void checkForArgumentErrors();
 
 private:
   RuntimeInstType const instance_;
 
+  /**
+   * \internal \brief Check if this node should dump during stack output
+   *
+   * \return whether this node is allowed to write
+   */
   static bool nodeStackWrite();
+
+  /**
+   * \internal \brief Write a stack trace out of a file
+   *
+   * \param[in] str the stack to output to file
+   */
   static void writeToFile(std::string const& str);
 
 protected:
+  /**
+   * \internal \brief Try to initialize
+   *
+   * \return whether it succeeded
+   */
   bool tryInitialize();
+
+  /**
+   * \internal \brief Try to finalize
+   *
+   * \return whether it succeeded
+   */
   bool tryFinalize();
 
+  /**
+   * \internal \brief Setup argument input
+   */
   void setupArgs();
+
+  /**
+   * \internal \brief Initialize error handlers
+   */
   void initializeErrorHandlers();
+
+  /**
+   * \internal \brief Initialize all the VT components
+   */
   void initializeComponents();
+
+  /**
+   * \internal \brief Initialize optional components, like workers
+   */
   void initializeOptionalComponents();
+
+  /**
+   * \internal \brief Initialize workers
+   *
+   * \param[in] num_workers number of workers to create
+   */
   void initializeWorkers(WorkerCountType const num_workers);
+
+  /**
+   * \internal \brief Check if we should create a stats restart reader component
+   *
+   * \return whether we should create it
+   */
   bool needStatsRestartReader();
 
+  /**
+   * \internal \brief Finalize MPI
+   */
   void finalizeMPI();
 
+  /**
+   * \internal \brief Perform a synchronization during startup/shutdown using an
+   * \c MPI_Barrier
+   */
   void sync();
+
+  /**
+   * \internal \brief Perform setup actions, such as registering a termination
+   * detector action for detecting global termination
+   */
   void setup();
+
+  /**
+   * \internal \brief Handler when global termination is reached
+   */
   void terminationHandler();
+
+  /**
+   * \internal \brief Print a very informative startup banner
+   */
   void printStartupBanner();
+
+  /**
+   * \internal \brief Print the shutdown banner
+   *
+   * \param[in] num_units total number of units processed
+   * \param[in] coll_epochs total number of collective epochs processed
+   */
   void printShutdownBanner(
     term::TermCounterType const& num_units, std::size_t const coll_epochs
   );
 
+  /**
+   * \internal \brief Pause for debugger at startup
+   */
   void pauseForDebugger();
+
+  /**
+   * \internal \brief Setup the SIGSEGV and SIGUSR1 signal handler
+   */
   void setupSignalHandler();
+
+  /**
+   * \internal \brief Setup the SIGINT signal handler
+   */
   void setupSignalHandlerINT();
+
+  /**
+   * \internal \brief Setup the std::terminate handler
+   */
   void setupTerminateHandler();
+
+  /**
+   * \internal \brief SIGSEGV signal handler
+   */
   static void sigHandler(int sig);
+
+  /**
+   * \internal \brief SIGUSR1 signal handler
+   */
   static void sigHandlerUsr1(int sig);
+
+  /**
+   * \internal \brief SIGINT signal handler
+   */
   static void sigHandlerINT(int sig);
+
+  /**
+   * \internal \brief std::terminate handler
+   */
   static void termHandler();
 
 public:
