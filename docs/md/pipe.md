@@ -5,9 +5,9 @@ The pipe manager component `vt::pipe::PipeManager`, accessed via `vt::theCB()`
 allows the creation of general pipes and callbacks between opaque endpoints that
 are not revealed through the type. Callbacks allow one to supply a general
 endpoint that accepts a type of data without revealing the actual endpoint
-instance. For example, one may callback that triggers a handler invocation on a
-certain node, broadcasts to a handler, sends to a collection or objgroup,
-or broadcasts to a collection or objgroup, etc.
+instance. For example, one may create a callback that triggers a handler
+invocation on a certain node, broadcasts to a handler, sends to a collection or
+objgroup, or broadcasts to a collection or objgroup, etc.
 
 The pipe manager supports more complex use cases of multi-listener endpoints if
 one wants to trigger multiple endpoints on potentially different nodes. The

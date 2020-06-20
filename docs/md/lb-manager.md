@@ -9,15 +9,15 @@ file to determine which load balancer to run.
 
 To enable load balancing, the cmake flag \code{.cmake} -Dvt_lb_enabled=1
 \endcode should be passed during building. This also enables automatic
-instrumentation of collections.
+instrumentation of work and communication performed by collection elements.
 
-The run a load balancer at runtime:
+To run a load balancer at runtime:
   - Pass `--vt_lb --vt_lb_name=<LB>` as a command line argument
   - Write a LB specification file `--vt_lb --vt_lb_file --vt_lb_file_name=<FILE>`
 
 \section lb-specification-file LB Specification File
 
-The LB specification file allows users to specify which load balance along with
+The LB specification file allows users to specify which load balancer along with
 which LB-specific configuration parameters are passed to the load balancer
 instance for any given phase. The order of the LB phase specficiation lines in
 the file disambiguates lines---higher precedence for earlier lines.
