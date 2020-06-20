@@ -91,8 +91,9 @@ private:
  * that get orchestrated across nodes using a consensus algorithm so all nodes
  * agree on a particular operation to execute in the sequence.
  *
- * This enables one to execute blocking MPI collectives inside VT handlers
- * without causing progress to halt due to asynchrony.
+ * An example use case is running a blocking MPI collective (like a
+ * \c * MPI_Allreduce) inside VT handlers without causing progress to halt due
+ * to asynchrony in VT.
  */
 struct CollectiveScope {
 
