@@ -56,7 +56,7 @@ namespace vt { namespace vrt { namespace collection {
  *
  * \brief Holds meta-data for the entire collection
  *
- * Manages the meta-date for a collection including the registered map function,
+ * Manages the meta-data for a collection including the registered map function,
  * index range, and holder for the actual elements mapped to this node. Provides
  * the virtual overloaded function for running LB and destroying the collection
  * from a type-erased base class.
