@@ -76,6 +76,8 @@ vt-build
 \parblock
     \m_class{m-code-figure} \parblock
         \code{.cpp}
+        bool done = false;
+
         struct HelloMsg : vt::Message {
           HelloMsg(vt::NodeType in_from) : from(in_from) { }
           vt::NodeType from = 0;
@@ -84,6 +86,7 @@ vt-build
         void hello_world(HelloMsg* msg) {
           vt::NodeType this_node = vt::theContext()->getNode();
           fmt::print("{}: Hello from node {}\n", this_node, msg->from);
+          done = true;
         }
 
         int main(int argc, char** argv) {
@@ -95,7 +98,11 @@ vt-build
           if (this_node == 0) {
             auto msg = vt::makeMessage<HelloMsg>(this_node);
             vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg.get());
+            done = true;
           }
+
+          // Run the scheduler until all nodes are done
+          vt::runSchedulerWhile([]{ return !done; });
 
           vt::finalize();
           return 0;
