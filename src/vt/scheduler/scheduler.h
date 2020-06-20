@@ -86,7 +86,8 @@ enum SchedulerEvent {
  * \struct Scheduler
  *
  * \brief A core VT component that schedules work generated from other
- * components with priorities.
+ * components. The pieces of work waiting to execute may be prioritized, see
+ * src/vt/scheduler/priority.h
  *
  * Tracks work to be completed, orders it by priority, and executes it. Polls
  * components for incoming work.
