@@ -136,7 +136,14 @@ struct Holder {
   bool isDestroyed() const;
 
   /**
-   * \brief Cleanup delayed deleted elements
+   * \brief Cleanup deleted elements that were delayed
+   *
+   * \todo Rename this method
+   *
+   * When deleting elements from a handler, it might not be safe to delete them
+   * from the holder right away due to a reference/iterator to the element being
+   * held while deletion occurs. This method cleans up an elements that are
+   * marked as erased.
    */
   void cleanupExists();
 
