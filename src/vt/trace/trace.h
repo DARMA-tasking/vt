@@ -477,7 +477,7 @@ struct Trace : runtime::component::Component<Trace> {
   /**
    * \brief Get the current time
    *
-   * \return query the VT time, which fetches from \c MPI_Wtime
+   * \return query the current clock time
    */
   static inline double getCurrentTime() {
     return ::vt::timing::Timing::getCurrentTime();
