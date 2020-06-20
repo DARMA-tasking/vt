@@ -11,12 +11,12 @@ termination of all events causally related to a subset of messages in the
 system.
 
 The termination detector comes with two different detection algorithms: (1)
-4-counter wave-based termination for large collective epochs across the whole
-system; and, (2) Dijkstra-Scholten parental responsibility termination for
-rooted epochs. Epochs are allowed to have other epochs nested within them, thus
-forming a graph. The detector tracks the relation between epochs, only making
-progress on epochs that do not have a dependency on another epoch terminating
-first.
+4-counter wave-based termination for large collective or large rooted epochs
+across the whole system; and, (2) Dijkstra-Scholten parental responsibility
+termination for rooted epochs. Epochs are allowed to have other epochs nested
+within them, thus forming a graph. The detector tracks the relation between
+epochs, only making progress on epochs that do not have a dependency on another
+epoch terminating first.
 
 The termination detector also comes with hang detection to detect causes where
 no progress can be made due to bugs in an application's code or the runtime
