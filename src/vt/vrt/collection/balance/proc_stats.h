@@ -64,12 +64,16 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /**
  * \struct ProcStats
  *
- * \brief A VT component that instruments virtual entities, such as the
- * collection manager, to provide data to the load balancing framework.
+ * \brief A VT component that backs the instrumentation of virtualized entities
+ * on each node, such as the objects that the collection manager orchestrates,
+ * to provide data to the load balancing framework. The actual instrumentation
+ * occurs in \c vt::vrt:collection::balance::ElementStats which is composed into
+ * the elements of a collection.
  *
  * Collects statistics/timings on active function/methods for objects and
- * communication between them. After collection, passes this data to the load
- * balancing framework.
+ * communication between them on each node. After collecting this data, passes
+ * it to the load balancing framework, specifically the
+ * \c * vt::vrt::collection::balance::LBManager
  */
 struct ProcStats : runtime::component::Component<ProcStats> {
   using MigrateFnType       = std::function<void(NodeType)>;
