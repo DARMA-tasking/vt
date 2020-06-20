@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
   vt::NodeType this_node = vt::theContext()->getNode();
 
   if (this_node == 0) {
-    // spins in scheduler until termination of the enclosing work
+    // spins in scheduler until termination of the enclosed work
     vt::runInEpochRooted([=]{
       std::vector<double> vec_to_send;
       vec_to_send.push_back(29.);
