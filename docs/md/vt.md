@@ -23,7 +23,7 @@ management.
   - Active messaging to type-safe handlers across nodes
   - Groups for scalable construction of node subsets
   - Optional serialization of messages
-  - Termination detection across entire or subset of DAG with \e epochs
+  - Termination detection across all work or subsets of work with \e epochs
   - Opaque callbacks/pipes to generalized endpoints
   - Efficient memory pooling for message allocation
   - RDMA using MPI one-sided for data transfer
