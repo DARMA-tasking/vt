@@ -152,7 +152,7 @@ struct Holder {
    *
    * \param[in] fn apply function for each element
    *
-   * \return whether it succeeded
+   * \return whether it succeeded (always true)
    */
   bool foreach(FuncApplyType fn);
 
