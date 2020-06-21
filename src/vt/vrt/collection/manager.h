@@ -745,7 +745,10 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the reduce message
    * \param[in] stamp the reduce stamp
-   * \param[in] root_node the root node
+   * \param[in] root_node node to receive the ultimately reduced message and run
+   * the associated handler (if a callback is specified on a particular node,
+   * the root will run the handler that triggers the callback at the appropriate
+   * location)
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
   void reduceMsg(
@@ -775,7 +778,10 @@ public:
    * \param[in] msg the reduce message
    * \param[in] expr_fn expression function to pick indices
    * \param[in] stamp the reduce stamp
-   * \param[in] root_node the root node
+   * \param[in] root_node node to receive the ultimately reduced message and run
+   * the associated handler (if a callback is specified on a particular node,
+   * the root will run the handler that triggers the callback at the appropriate
+   * location)
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
   void reduceMsgExpr(
