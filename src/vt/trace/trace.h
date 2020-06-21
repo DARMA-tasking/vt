@@ -159,7 +159,7 @@ struct Trace : runtime::component::Component<Trace> {
   void setupNames(std::string const& in_prog_name);
 
   /**
-   * \brief Initiate a paired progressing event.
+   * \brief Initiate a paired processing event.
    *
    * Currently \c endProcessing MUST be called in the opposite order of
    * \c beginProcessing
@@ -167,14 +167,14 @@ struct Trace : runtime::component::Component<Trace> {
    * \param[in] ep the entry point (registered handler ID)
    * \param[in] len size of message in bytes
    * \param[in] event the associated trace event
-   * \param[in] from_node which node instigated this progressing
+   * \param[in] from_node which node instigated this processing
    * \param[in] idx1 (optional) if collection, dimension 1
    * \param[in] idx2 (optional) if collection, dimension 2
    * \param[in] idx3 (optional) if collection, dimension 3
    * \param[in] idx4 (optional) if collection, dimension 4
    * \param[in] time the time this occurred
    *
-   * \return a tag to close this progressing event
+   * \return a tag to close this processing event
    */
   TraceProcessingTag beginProcessing(
      TraceEntryIDType const ep, TraceMsgLenType const len,
