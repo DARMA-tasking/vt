@@ -250,7 +250,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   bool isIdle() const { return work_queue_.empty(); }
 
   /**
-   * \brief Check if the scheduler is idle minus termination messages
+   * \internal \brief Check if the scheduler is idle minus termination messages
    *
    * \return whether this scheduler is idle
    */
