@@ -456,7 +456,7 @@ public:
 
   /**
    * \internal \brief Perform asynchronous reduction after construction of a
-   * collection to determine its fully constructed across all nodes.
+   * collection to determine it's fully constructed across all nodes.
    *
    * \param[in] proxy the collection proxy
    */
