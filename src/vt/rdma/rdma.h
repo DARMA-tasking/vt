@@ -198,7 +198,8 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] elm_size size of an element
    * \param[in] action_after_put action to execute after put completes locally
    * \param[in] collective_node node to target
-   * \param[in] direct_message_send whether it's a direct send
+   * \param[in] direct_message_send whether the \c ptr provided has an envelope
+   * with it
    */
   void putData(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
