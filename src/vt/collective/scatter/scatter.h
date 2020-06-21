@@ -62,8 +62,7 @@ namespace vt { namespace collective { namespace scatter {
  * \brief Scatter data across all nodes from a single origin
  *
  * Performs an asynchronous scatter over all the nodes in the
- * communicator/runtime. Recursively bisect the data as we move down the
- * spanning tree.
+ * communicator/runtime.
  */
 struct Scatter : virtual collective::tree::Tree {
   using FuncSizeType = std::function<std::size_t(NodeType)>;
