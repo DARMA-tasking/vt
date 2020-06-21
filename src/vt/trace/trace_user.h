@@ -136,7 +136,7 @@ void addUserBracketedNote(
  * \brief Log the start for a bracketed user event with a note
  *
  * \param[in] note the note
- * \param[in] event the event ID
+ * \param[in] event the pre-registered user event ID
  */
 void addUserNotePre(std::string const& note, TraceEventIDType const event);
 
@@ -144,7 +144,7 @@ void addUserNotePre(std::string const& note, TraceEventIDType const event);
  * \brief Log the end for a bracketed user event with a note
  *
  * \param[in] note the note
- * \param[in] event the event ID
+ * \param[in] event the pre-registered user event ID
  */
 void addUserNoteEpi(std::string const& note, TraceEventIDType const event);
 
