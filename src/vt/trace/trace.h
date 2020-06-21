@@ -257,8 +257,8 @@ struct Trace : runtime::component::Component<Trace> {
    * \c registerEventHashed
    *
    * \warning This call can be dangerous because while it does allow impromptu
-   * user event creation, any collisions in the hash will cause multiple events
-   * to be conflated to the same event
+   * user event type creation, any collisions in the hash will cause multiple
+   * events to be conflated to the same event type
    *
    * \param[in] name name for the user event
    *
@@ -271,7 +271,7 @@ struct Trace : runtime::component::Component<Trace> {
    * file
    *
    * \warning This call may be dangerous unless all user events IDs are managed
-   * by for a given program
+   * for a given program
    *
    * \param[in] name name for the user event
    * \param[in] id the ID for the sts file
