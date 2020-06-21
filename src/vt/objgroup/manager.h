@@ -262,7 +262,8 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   ObjT* get(ProxyElmType<ObjT> proxy);
 
   /**
-   * \brief Get the proxy from a object instance pointer
+   * \brief Get the proxy from a object instance pointer. Assert that object
+   * pointer is part of a valid object group.
    *
    * \param[in] obj the raw pointer to an object
    *
