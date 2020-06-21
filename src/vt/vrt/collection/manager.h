@@ -731,7 +731,11 @@ public:
   static void collectionMsgTypedHandler(MsgT* msg);
 
   /**
-   * \internal \brief Record statistics for collection message handler
+   * \internal \brief Record statistics for collection message handler when a
+   * message arrives for the element.
+   *
+   * Records where the message came from, size of message, and type of
+   * communication (e.g., broadcast or send)
    *
    * \param[in] col_ptr the collection element pointer
    * \param[in] msg the message to deliver
