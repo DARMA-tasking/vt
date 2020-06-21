@@ -776,7 +776,8 @@ public:
   );
 
   /**
-   * \internal \brief Reduce over a collection with matching expression
+   * \internal \brief Reduce over the whole collection or a subset of a
+   * collection, based on their indices matching an expression
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the reduce message
@@ -796,7 +797,8 @@ public:
   );
 
   /**
-   * \internal \brief Reduce over a collection with matching expression
+   * \internal \brief Reduce over the whole collection or a subset of a
+   * collection, based on their indices matching an expression
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the reduce message
