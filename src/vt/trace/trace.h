@@ -460,7 +460,8 @@ struct Trace : runtime::component::Component<Trace> {
   /**
    * \brief Flush traces to file
    *
-   * \param[in] useGlobalSync whether a global sync should be used here
+   * \param[in] useGlobalSync whether a global sync should be invoked before
+   * flushing output
    */
   void flushTracesFile(bool useGlobalSync);
 
