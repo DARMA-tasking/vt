@@ -180,9 +180,10 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void triggerEvent(SchedulerEventType const& event);
 
   /**
-   * \internal \brief Check if the scheduler has run
+   * \internal \brief Check if the scheduler has run, polling all components at
+   * least once
    *
-   * \return whether it has run
+   * \return whether the scheduler has advanced
    */
   bool hasSchedRun() const { return has_executed_; }
 
