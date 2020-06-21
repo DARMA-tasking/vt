@@ -203,7 +203,7 @@ private:
  *
  * \brief A scoped user event with a pre-registered user event ID
  *
- * This is safer that manually starting and stopping the logged event because it
+ * This is safer than manually starting and stopping the logged event because it
  * automatically closes when the scope ends, timing that portion of the program
  * for the logged bracketed region.
  */
@@ -245,7 +245,7 @@ private:
  *
  * \brief A scoped user event from a pre-registered user event ID with a note
  *
- * This is safer that manually starting and stopping the logged event because it
+ * This is safer than manually starting and stopping the logged event because it
  * automatically closes when the scope ends, timing that portion of the program
  * for the logged bracketed region.
  */
