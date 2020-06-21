@@ -486,7 +486,9 @@ public:
    * \param[in] msg the message
    * \param[in] handler the handler to run
    * \param[in] member whether its a member handler (or active function)
-   * \param[in] imm_context whether in an immediate context (running a handler)
+   * \param[in] imm_context whether in an immediate context (running a
+   * collection element handler vs. directly in the scheduler)--- if in a
+   * handler, local delivery must be postponed
    *
    * \return a pending send
    */
