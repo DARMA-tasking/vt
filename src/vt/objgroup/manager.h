@@ -213,9 +213,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
-  /*
-   * Set the tracing name for objgroup
-   */
   /**
    * \brief Change the traced name of the object group
    *
