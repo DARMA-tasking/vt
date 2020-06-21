@@ -278,7 +278,7 @@ struct EntityLocationCoord : LocationCoord {
    *
    * \param[in] event_id the event ID waiting on the location
    * \param[in] id the entity ID
-   * \param[in] resolved_node the node discovered to have the entity
+   * \param[in] resolved_node the node reported to have the entity
    * \param[in] home_node the home node for the entity
    */
   void updatePendingRequest(
