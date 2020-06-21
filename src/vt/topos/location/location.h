@@ -160,8 +160,6 @@ struct EntityLocationCoord : LocationCoord {
    */
   void entityMigrated(EntityID const& id, NodeType const& new_node);
 
-  /*
-   */
   /**
    * \brief Register a migrated entity on new node
    *
