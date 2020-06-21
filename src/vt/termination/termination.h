@@ -216,7 +216,8 @@ public:
      * \brief Run closure in rooted epoch to detect termination of all its work
      *
      * \param[in] use_ds whether to use DS algorithm or not
-     * \param[in] closure the closure to wait for termination
+     * \param[in] closure The action to generate the initial work, from which
+     * all transitively generated work will be part of the return epoch
      *
      * \return the epoch created for it
      */
@@ -226,7 +227,8 @@ public:
      * \brief Run closure in rooted epoch to detect termination of all its work
      *
      * \param[in] use_ds whether to use DS algorithm or not
-     * \param[in] closure the closure to wait for termination
+     * \param[in] closure The action to generate the initial work, from which
+     * all transitively generated work will be part of the return epoch
      * \param[in] action action to execute after closure terminates
      *
      * \return the epoch created for it
@@ -237,7 +239,8 @@ public:
      * \brief Collectively run closure in collective epoch to detect termination
      * of all its work
      *
-     * \param[in] closure the closure to wait for termination
+     * \param[in] closure The action to generate the initial work, from which
+     * all transitively generated work will be part of the return epoch
      *
      * \return the epoch created for it
      */
@@ -247,7 +250,8 @@ public:
      * \brief Collectively run closure in collective epoch to detect termination
      * of all its work
      *
-     * \param[in] closure the closure to wait for termination
+     * \param[in] closure The action to generate the initial work, from which
+     * all transitively generated work will be part of the return epoch
      * \param[in] action action to execute after closure terminates
      *
      * \return the epoch created for it
