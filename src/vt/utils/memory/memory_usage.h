@@ -113,7 +113,7 @@ struct Mimalloc final : Reporter {
 /**
  * \struct MemoryUsage
  *
- * \brief A optional VT component that records memory usage for tracing and
+ * \brief An optional VT component that records memory usage for tracing and
  * general profiling.
  *
  * The memory usage component is backed by a list of memory reporters that can
