@@ -458,7 +458,7 @@ struct Trace : runtime::component::Component<Trace> {
   void setTraceEnabledCurrentPhase(PhaseType cur_phase);
 
   /**
-   * \\brief Flush traces to file
+   * \brief Flush traces to file
    *
    * \param[in] useGlobalSync whether a global sync should be used here
    */
