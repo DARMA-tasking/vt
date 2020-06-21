@@ -313,7 +313,10 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
   /**
-   * \brief Downcast a proxy to a base class type
+   * \brief Downcast a proxy
+   *
+   * \warning Do not call these. Use \c registerBaseCollective to get a proxy
+   * to the base.
    *
    * \param[in] proxy proxy to downcast
    */
@@ -321,7 +324,10 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   void downcast(ProxyType<ObjT> proxy);
 
   /**
-   * \brief Upcast a proxy to the derived class type
+   * \brief Upcast a proxy
+   *
+   * \warning Do not call this---unimplemented.  Use \c registerBaseCollective
+   * to get a proxy to the base.
    *
    * \param[in] proxy proxy to upcast
    */
