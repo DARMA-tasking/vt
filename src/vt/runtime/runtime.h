@@ -212,6 +212,10 @@ struct Runtime {
 
   /**
    * \internal \brief Do a sync
+   *
+   * \warning Do not call this. It does an unsafe \c MPI_Barrier
+   *
+   * \todo Remove this and fix the single one callsite in \c ProcStats
    */
   void systemSync() { sync(); }
 
