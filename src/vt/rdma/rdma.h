@@ -130,7 +130,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] rdma_handle the registered RDMA handle
    * \param[in] ptr pointer to put
    * \param[in] num_elems number of elements to put from the pointer start
-   * \param[in] offset offset from point start to put
+   * \param[in] offset offset---number of typed elements from start
    * \param[in] tag tag to identify put
    * \param[in] action_after_put action to execute after put completes locally
    */
@@ -154,7 +154,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] han the registered RDMA handle
    * \param[in] ptr pointer to put
    * \param[in] num_elems number of elements to put from the pointer start
-   * \param[in] offset offset from point start to put
+   * \param[in] offset offset---number of typed elements from start
    * \param[in] action_after_put action to execute after put completes locally
    */
   template <typename T>
@@ -313,7 +313,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] rdma_handle the registered RDMA handle
    * \param[in] ptr destination for data
    * \param[in] num_elems number of elements
-   * \param[in] elm_offset remote offset
+   * \param[in] elm_offset offset---number of typed elements from start
    * \param[in] tag tag to identify get
    * \param[in] next_action action when get completes
    */
