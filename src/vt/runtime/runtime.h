@@ -130,7 +130,7 @@ struct Runtime {
    *
    * \return whether it is finalizable
    */
-  bool isFinializeble() const { return initialized_ and not finalized_; }
+  bool isFinalizable() const { return initialized_ and not finalized_; }
 
   /**
    * \brief Check if runtime is initialized
