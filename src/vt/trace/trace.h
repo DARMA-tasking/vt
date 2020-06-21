@@ -436,7 +436,9 @@ struct Trace : runtime::component::Component<Trace> {
   /**
    * \internal \brief Check if tracing is enabled
    *
-   * \param[in] is_end_event whether the event is an end event that need closing
+   * \param[in] is_end_event whether the event that is being considering to
+   * write out in the calling context is actually an end event that needs to be
+   * closed
    *
    * \return whether tracing is enabled
    */
