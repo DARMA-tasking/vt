@@ -188,7 +188,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   bool hasSchedRun() const { return has_executed_; }
 
   /**
-   * \brief Enqueue an action to execute later
+   * \brief Enqueue an action to execute later with the default priority
+   * \c default_priority
    *
    * \param[in] action action to execute
    */
