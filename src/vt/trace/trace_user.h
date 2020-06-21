@@ -160,8 +160,8 @@ void addUserNoteEpi(std::string const& note, TraceEventIDType const event);
  * for the logged bracketed region.
  *
  * \warning This call can be dangerous because while it does allow impromptu
- * user event creation, any collisions in the hash will cause multiple events
- * to be conflated to the same event
+ * user event type creation, any collisions in the hash will cause multiple
+ * events to be conflated to the same event type.
  */
 struct TraceScopedEventHash final {
   /**
