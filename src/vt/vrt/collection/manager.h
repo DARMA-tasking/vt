@@ -1513,7 +1513,7 @@ private:
 
   /**
    * \internal \brief Schedule an action with an associated message for delivery
-   * later
+   * later unless \c execute_now is set; in that case, run it right away.
    *
    * \param[in] msg the message
    * \param[in] execute_now whether to execute now
