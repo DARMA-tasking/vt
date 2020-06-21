@@ -22,7 +22,7 @@ location is already in cache.
 The variable `vt::location::small_msg_max_size` controls whether a message is
 routed with an eager or rendezvous protocol. If the message is under that size
 limit, the message is routed eagerly---forwarded to the "home node" for
-resolution if the location is in cache.
+resolution if the location is not in the cache.
 
 If the size of the message is greater than `vt::location::small_msg_max_size`,
 the location coordinator will inquire with a control message to resolve the
