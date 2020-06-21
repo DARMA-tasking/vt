@@ -305,7 +305,7 @@ private:
    * \param[in] from sender node
    * \param[in] size number of bytes of the message being sent
    * \param[in] is_root whether this node is the root
-   * \param[in] deliver whether the caller should deliver locally
+   * \param[out] deliver whether the caller should deliver locally
    *
    * \return the event ID for any generated events (like MPI_Requests)
    */
@@ -322,7 +322,7 @@ private:
    * \param[in] from sender node
    * \param[in] size number of bytes of the message being sent
    * \param[in] is_root whether this node is the root
-   * \param[in] deliver whether the caller should deliver locally
+   * \param[out] deliver whether the caller should deliver locally
    *
    * \return the event ID for any generated events (like MPI_Requests)
    */
@@ -384,7 +384,7 @@ private:
    * \param[in] from sender node
    * \param[in] size number of bytes of the message being sent
    * \param[in] is_root whether this node is the root
-   * \param[in] deliver whether the caller should deliver locally
+   * \param[out] deliver whether the caller should deliver locally
    *
    * \return the event ID for any generated events (like MPI_Requests)
    */
