@@ -58,7 +58,7 @@ struct Reduce;
  * \brief Manage distinct scopes for reductions
  *
  * Manages distinct reducers with an associated scope to orchestrate
- * asynchronous multiple sequences of reduce operations.
+ *  multiple asynchronous sequences of reduce operations.
  */
 struct ReduceManager {
   using ReducePtrType   = std::unique_ptr<Reduce>;
