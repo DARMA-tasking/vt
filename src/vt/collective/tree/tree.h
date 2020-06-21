@@ -138,7 +138,7 @@ struct Tree {
   NodeListType const& getChildren() const;
 
   /**
-   * \internal \brief Get the list of children
+   * \internal \brief Get the list of children for a particular node in the tree
    *
    * \return list of children
    */
