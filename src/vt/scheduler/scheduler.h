@@ -209,7 +209,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void printMemoryUsage();
 
   /**
-   * \brief Enqueue a action associated with a prioritized message. The action
+   * \brief Enqueue an action associated with a prioritized message. The action
    * will be enqueued with the priority found on the message.
    *
    * \param[in] msg the message
