@@ -1346,7 +1346,7 @@ public:
    *
    * \param[in] proxy the collection element proxy
    * \param[in] phase the phase that is finished
-   * \param[in] msg LB message
+   * \param[in] msg message passed by the user to deliver after LB finishes
    * \param[in] do_sync whether LB should do a sync
    */
   template <
