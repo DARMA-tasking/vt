@@ -1818,7 +1818,7 @@ public:
 
 private:
   /**
-   * \brief Current proxy identifier
+   * \brief Next proxy identifier for assignment of virtual proxy IDs
    */
   template <typename=void>
   static VirtualIDType curIdent_;
