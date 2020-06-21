@@ -199,7 +199,7 @@ private:
   /**
    * \internal \brief System call to create a new collective group
    *
-   * \param[in] in_region list of nodes to include
+   * \param[in] in_group whether the node is in the group
    * \param[in] is_static whether the group is static after creation
    * \param[in] action action to execute when group is finished construction
    * \param[in] make_mpi_group whether VT should create an underlying MPI group
