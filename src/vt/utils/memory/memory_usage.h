@@ -128,14 +128,14 @@ struct MemoryUsage : runtime::component::Component<MemoryUsage> {
   std::string name() override { return "MemoryUsage"; }
 
   /**
-   * \brief Get mean usage in bytes over all working reporters
+   * \brief Get mean current usage in bytes over all working reporters
    *
    * \return average usage in bytes
    */
   std::size_t getAverageUsage();
 
   /**
-   * \brief Get usage from first working reporter
+   * \brief Get current usage from first working reporter
    *
    * \return usage in bytes
    */
