@@ -73,7 +73,7 @@ namespace vt { namespace objgroup {
  *
  * Create a "object group" with one instance of that group on each node. An
  * instantiated object group has once instance on each node that can be
- * collectively referred to with a singular proxy. This proxy allows
+ * collectively referred to with a single proxy. This proxy allows
  * sends/broadcasts/reduces over the object group.
  *
  * Object groups create a clean isolation of a instance of some functionality
