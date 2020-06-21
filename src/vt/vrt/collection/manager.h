@@ -767,7 +767,7 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the reduce message
    * \param[in] stamp the reduce stamp
-   * \param[in] idx the index being reduced
+   * \param[in] idx the index of collection element being reduced
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
   void reduceMsg(
@@ -802,7 +802,7 @@ public:
    * \param[in] msg the reduce message
    * \param[in] expr_fn expression function to pick indices
    * \param[in] stamp the reduce stamp
-   * \param[in] idx the index being reduced
+   * \param[in] idx the index of collection element being reduced
    */
   template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
   void reduceMsgExpr(
