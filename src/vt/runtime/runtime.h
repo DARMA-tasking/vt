@@ -190,7 +190,7 @@ struct Runtime {
   void abort(std::string const abort_str, ErrorCodeType const code);
 
   /**
-   * \brief Output a message a possibly die
+   * \brief Output a message and possibly die
    *
    * \param[in] abort_str the message
    * \param[in] code the code to throw
