@@ -168,11 +168,12 @@ struct Tree {
   void foreachChild(NumLevelsType level, OperationType op) const;
 
   /**
-   * \internal \brief Get total children for a particular node in the tree
+   * \internal \brief Get total number of descendants for a particular node in
+   * the tree
    *
    * \param[in] child the node
    *
-   * \return number of children
+   * \return number of descendants
    */
   std::size_t getNumTotalChildren(NodeType child) const;
 
