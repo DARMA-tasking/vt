@@ -181,7 +181,8 @@ struct GroupManager : runtime::component::Component<GroupManager> {
    *
    * \param[in] group_id the group ID
    *
-   * \return the MPI_Comm associated with the group
+   * \return the MPI_Comm associated with the group; returns \c MPI_COMM_WORLD
+   * if group was created without a communicator
    */
   MPI_Comm getGroupComm(GroupType const& group_id);
 
