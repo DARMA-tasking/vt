@@ -87,9 +87,9 @@ struct collection_lm_tag_t {};
  * The \c registerEntity method allows an external component to locally register
  * an entity as existing on this node. If the entity is deleted, \c
  * unregisterEntity should be called; if the entity is migrated, \c
- * entityMigrated should be invoked on the node where the entity is migrating
- * from. A message may arrive for the entity by a location coordinator calling
- * \c routeMsg to the associated entity.
+ * entityMigrated should be invoked on the node from which the entity is
+ * emigrating. A message may arrive for the entity by a location coordinator
+ * calling \c routeMsg to the associated entity.
  *
  */
 template <typename EntityID>
@@ -164,6 +164,8 @@ struct EntityLocationCoord : LocationCoord {
    */
   /**
    * \brief Register a migrated entity on new node
+   *
+   * \todo Rename this \c entityEmigrated
    *
    * This should be called after the entity is migrated when it arrived on the
    * new node: order of operations:
