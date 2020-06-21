@@ -485,7 +485,7 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to run
-   * \param[in] member whether its a member handler (or active function)
+   * \param[in] member whether it's a member handler (or active function)
    * \param[in] imm_context whether in an immediate context (running a
    * collection element handler vs. directly in the scheduler)--- if in a
    * handler, local delivery must be postponed
@@ -513,7 +513,7 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to run
-   * \param[in] member whether its a member handler (or active function)
+   * \param[in] member whether it's a member handler (or active function)
    */
   template <typename MsgT, typename ColT>
   IsNotColMsgType<MsgT> sendMsgWithHan(
@@ -530,7 +530,7 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to run
-   * \param[in] member whether its a member handler (or active function)
+   * \param[in] member whether it's a member handler (or active function)
    */
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> sendMsgWithHan(
@@ -545,7 +545,7 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to run
-   * \param[in] member whether its a member handler (or active function)
+   * \param[in] member whether it's a member handler (or active function)
    *
    * \return the pending send
    */
@@ -1093,7 +1093,7 @@ public:
    * \param[in] msg the message
    * \param[in] col the collection element pointer
    * \param[in] han the handler to invoke
-   * \param[in] member whether its a member handler
+   * \param[in] member whether it's a member handler
    * \param[in] from the node that sent it
    * \param[in] event the associated trace event
    */
@@ -1110,7 +1110,7 @@ public:
    * \param[in] msg the message
    * \param[in] col the collection element pointer
    * \param[in] han the handler to invoke
-   * \param[in] member whether its a member handler
+   * \param[in] member whether it's a member handler
    * \param[in] from the node that sent it
    * \param[in] event the associated trace event
    */
