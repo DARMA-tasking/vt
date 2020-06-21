@@ -239,7 +239,8 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   );
 
   /**
-   * \brief Get a pointer to the local objgroup instance
+   * \brief Get a pointer to the local objgroup instance. Returns null if the
+   * object doesn't exist.
    *
    * \param[in] proxy proxy to the object group
    *
@@ -249,7 +250,8 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   ObjT* get(ProxyType<ObjT> proxy);
 
   /**
-   * \brief Get a pointer to the local objgroup instance
+   * \brief Get a pointer to the local objgroup instance. Returns null if the
+   * object doesn't exist.
    *
    * \param[in] proxy indexed proxy to the object group (must be the current
    * node)
