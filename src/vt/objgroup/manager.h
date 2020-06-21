@@ -175,10 +175,6 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename ObjT>
   void destroyCollective(ProxyType<ObjT> proxy);
 
-  /*
-   * Update a live object; swap in a new object with args to delete and
-   * reconstruct the object
-   */
   /**
    * \brief Locally update the underlying object group instance. Swap the
    * current object group locally for a new instance.
