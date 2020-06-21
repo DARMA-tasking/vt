@@ -84,6 +84,15 @@ using DijkstraScholtenTerm = term::ds::StateDS;
  * algorithms: 4-counter wave-based termination for large collective epochs;
  * and, Dijkstra-Scholten parental responsibility termination for rooted
  * epochs. Epochs may have other epochs nested within them, forming a graph.
+ *
+ * The termination detector detects termination of a transitive closure of a
+ * piece of work---either starting collectively with all node or starting on a
+ * particular node.
+ *
+ * In order to track work on the distributed system, work is "produced" and
+ * "consumed". Produce and consume are separate counters that are tracked
+ * on each node. When the global produce and consume counts (sum across
+ * all nodes) are equal, termination is reached.
  */
 struct TerminationDetector :
   runtime::component::Component<TerminationDetector>,
@@ -116,7 +125,7 @@ struct TerminationDetector :
    ***************************************************************************/
 
   /**
-   * \brief Produce on an epoch
+   * \brief Produce on an epoch---increase the produce counter
    *
    * \param[in] epoch the epoch to produce; if empty, produce on global epoch
    * \param[in] num_units number of units to produce
@@ -128,7 +137,7 @@ struct TerminationDetector :
   );
 
   /**
-   * \brief Consume on an epoch
+   * \brief Consume on an epoch---increase the consume counter
    *
    * \param[in] epoch the epoch to consume; if empty, consume on global epoch
    * \param[in] num_units number of units to consume
