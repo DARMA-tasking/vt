@@ -1512,7 +1512,7 @@ private:
   void schedule(ActionType action);
 
   /**
-   * \internal \brief Scheduler a action with an associated message for delivery
+   * \internal \brief Schedule an action with an associated message for delivery
    * later
    *
    * \param[in] msg the message
