@@ -326,7 +326,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   /**
    * \brief Upcast a proxy
    *
-   * \warning Do not call this---unimplemented.  Use \c registerBaseCollective
+   * \warning Do not call this---unimplemented. Use \c registerBaseCollective
    * to get a proxy to the base.
    *
    * \param[in] proxy proxy to upcast

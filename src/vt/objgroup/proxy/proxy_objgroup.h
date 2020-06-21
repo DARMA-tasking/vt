@@ -198,10 +198,11 @@ public:
   Proxy<BaseT> registerBaseCollective() const;
 
   /**
-   * \brief Downcast the proxy to a base
+   * \brief Downcast the proxy
    *
    * \warning In most cases this should not be called by users. It can have
-   * dangerous behavior depending on how its used.
+   * dangerous behavior depending on how its used. Use \c registerBaseCollective
+   * to get a proxy to the base.
    *
    * \return the typed proxy to the base
    */
@@ -209,10 +210,11 @@ public:
   Proxy<BaseT> downcast() const;
 
   /**
-   * \brief Upcast the proxy to a derived class
+   * \brief Upcast the proxy
    *
    * \warning In most cases this should not be called by users. It can have
-   * dangerous behavior depending on how its used.
+   * dangerous behavior depending on how its used. Use \c registerBaseCollective
+   * to get a proxy to the base.
    *
    * \return the typed proxy to the derived
    */
