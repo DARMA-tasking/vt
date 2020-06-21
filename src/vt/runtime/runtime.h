@@ -114,7 +114,7 @@ struct Runtime {
   /**
    * \brief Invoke all the progress functions
    *
-   * \return currently always zero
+   * \return returns an unspecified value
    */
   int progress() { if (p_) return p_->progress(); else return 0; }
 
