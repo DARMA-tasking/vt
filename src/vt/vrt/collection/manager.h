@@ -1475,7 +1475,8 @@ private:
   void incomingDestroy(CollectionProxyWrapType<ColT,IndexT> const& proxy);
 
   /**
-   * \internal \brief Destroy all matching elements for a proxy
+   * \internal \brief Destroy all elements and related meta-data for a proxy
+   * across all system data structures
    *
    * \param[in] proxy the collection proxy
    */
