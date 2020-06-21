@@ -820,7 +820,8 @@ public:
    * \param[in] msg the message
    * \param[in] handler the handler to invoke
    * \param[in] member whether it's a member handler
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    */
   template <typename MsgT, typename ColT>
   IsNotColMsgType<MsgT> broadcastMsgWithHan(
@@ -836,7 +837,8 @@ public:
    * \param[in] msg the message
    * \param[in] handler the handler to invoke
    * \param[in] member whether it's a member handler
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    */
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> broadcastMsgWithHan(
@@ -852,7 +854,8 @@ public:
    * \param[in] msg the message
    * \param[in] handler the handler to invoke
    * \param[in] member whether it's a member handler
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -870,7 +873,8 @@ public:
    * \param[in] msg the message
    * \param[in] handler the handler to invoke
    * \param[in] member whether it's a member handler
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -886,7 +890,8 @@ public:
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -904,7 +909,8 @@ public:
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -923,7 +929,8 @@ public:
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -939,7 +946,8 @@ public:
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -955,7 +963,8 @@ public:
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -975,7 +984,8 @@ public:
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -994,7 +1004,8 @@ public:
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
@@ -1009,7 +1020,8 @@ public:
    *
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
-   * \param[in] instrument whether to instrument the broadcast
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
    *
    * \return a pending send
    */
