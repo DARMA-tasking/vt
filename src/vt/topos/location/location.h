@@ -241,7 +241,7 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] home_node home node for the entity
    * \param[in] msg pointer to the message
    * \param[in] serialize whether it should be serialized (optional)
-   * \param[in] from_node the node it coming from (optional)
+   * \param[in] from_node the sending node (optional)
    */
   template <typename MessageT>
   void routeMsg(
