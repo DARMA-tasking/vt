@@ -292,7 +292,7 @@ struct EntityLocationCoord : LocationCoord {
   void printCurrentCache() const;
 
   /**
-   * \internal \brief Check if an entity is cached
+   * \internal \brief Check if the purported location of an entity is cached
    *
    * \param[in] id the entity ID
    *
