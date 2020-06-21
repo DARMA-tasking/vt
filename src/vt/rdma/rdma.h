@@ -216,7 +216,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
    * \param[in] rdma_handle the registered RDMA handle
    * \param[in] ptr destination for data
    * \param[in] num_bytes number of bytes
-   * \param[in] offset remote offset
+   * \param[in] offset offset on the remote node, relative to \c rdma_handle
    * \param[in] tag tag to identify get
    * \param[in] next_action action when get completes
    * \param[in] elm_size size of each element
