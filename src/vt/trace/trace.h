@@ -493,7 +493,7 @@ struct Trace : runtime::component::Component<Trace> {
    *
    * \return time in microsecond as integer
    */
-  static inline TimeIntegerType timeToInt(double const time) {
+  static inline TimeIntegerType timeToMicros(double const time) {
     return static_cast<TimeIntegerType>(time * 1e6);
   }
 
