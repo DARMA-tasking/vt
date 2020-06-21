@@ -1818,16 +1818,6 @@ public:
 
 private:
   /**
-   * \brief Get the current epoch for a message
-   *
-   * \param[in] msg the message
-   *
-   * \return the epoch
-   */
-  template <typename MsgT>
-  static EpochType getCurrentEpoch(MsgT* msg);
-
-  /**
    * \brief Current proxy identifier
    */
   template <typename=void>
