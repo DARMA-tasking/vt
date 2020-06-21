@@ -161,7 +161,7 @@ struct Runtime {
   /**
    * \internal \brief Initialize the runtime
    *
-   * \param[in] force_now whether to force it now
+   * \param[in] force_now whether to force initialization regardless of state
    *
    * \return whether it initialized or not
    */
@@ -170,7 +170,7 @@ struct Runtime {
   /**
    * \internal \brief Finalize the runtime
    *
-   * \param[in] force_now whether to force it now
+   * \param[in] force_now whether to force finalization regardless of state
    *
    * \return whether it finalized or not
    */
