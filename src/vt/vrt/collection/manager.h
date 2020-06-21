@@ -1087,7 +1087,7 @@ private:
   );
 
   /**
-   * \internal \brief Clear all buffered broadcasted for a given collection
+   * \internal \brief Clear all buffered broadcasts for a given collection
    *
    * \param[in] proxy the collection proxy bits
    * \param[in] epoch the bcast epoch (sequence number)
