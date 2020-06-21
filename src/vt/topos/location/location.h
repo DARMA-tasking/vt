@@ -193,15 +193,14 @@ struct EntityLocationCoord : LocationCoord {
    * location the method uses the following algorithm:
    *
    *   1) Check locally for the entity's existence
-   *.  2) If not local, search for a cache entry with location info
+   *   2) If not local, search for a cache entry with location info
    *   3) If no cache information available, send resolution message to home node.
    *     a) The home node applies the same algorithm, starting with (1)
-   *. .  b) On step 3, if no information is known, the manager buffers the
-   *.       request, waiting to the entity to be registered in the future.
+   *     b) On step 3, if no information is known, the manager buffers the
+   *        request, waiting to the entity to be registered in the future.
    *
-   * Note: migrations may make this information inaccurate; the node delivered
+   * \note Migrations may make this information inaccurate; the node delivered
    * to `action' reflects the current known state, which may be remote.
-   *
    *
    * \param[in] id the entity ID
    * \param[in] home_node the home node for the entity
