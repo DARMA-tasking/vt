@@ -106,7 +106,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
    * \brief Create a new event
    *
    * \param[in] type the type of event to create
-   * \param[in] node the node that embedded in the event bit field
+   * \param[in] node the node that's embedded in the event bit field
    *
    * \return a new event identifier
    */
