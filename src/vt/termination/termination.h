@@ -551,10 +551,25 @@ public:
   std::size_t getNumTerminatedCollectiveEpochs() const;
 
 public:
-  // TermTerminated interface
+  /**
+   * \brief Test if an epoch as terminated or not
+   *
+   * \param[in] epoch the epoch to test
+   *
+   * \return status enum indicating the known state
+   */
   TermStatusEnum testEpochTerminated(EpochType epoch) override;
-  // Might return (conservatively) false for some time if the epoch is
-  // non-local, but will eventually return true
+
+  /**
+   * \brief Check if an epoch has terminated
+   *
+   * \note Might return (conservatively) false for some time if the epoch is
+   * non-local, but will eventually return true
+   *
+   * \param[in] epoch the epoch to test
+   *
+   * \return whether it is known to be terminated
+   */
   bool isEpochTerminated(EpochType epoch);
 
 public:
