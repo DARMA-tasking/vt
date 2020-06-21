@@ -340,7 +340,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   void registerBaseCollective(ProxyType<ObjT> proxy);
 
   /**
-   * \internal \brief Get the proxy
+   * \internal \brief Get the proxy, identity function
    *
    * \param[in] proxy the proxy to the objgroup
    *
