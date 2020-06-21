@@ -1584,8 +1584,8 @@ public:
   /**
    * \brief Try to get a pointer to a collection element
    *
-   * \warning This pointer may not be valid as soon as a migration occurs. It is
-   * not recommended to hold the pointer obtained.
+   * \warning Migration may invalidate this pointer. It is not recommended to
+   * hold the pointer obtained.
    *
    * \param[in] proxy the collection proxy
    * \param[in] idx the index
