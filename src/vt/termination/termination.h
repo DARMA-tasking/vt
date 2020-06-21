@@ -343,8 +343,8 @@ public:
   );
 
   /**
-   * \brief Tell the termination detector that all work has been enqueued for a
-   * given epoch
+   * \brief Tell the termination detector that all initial work has been
+   * enqueued for a given epoch on this node
    *
    * \param[in] epoch the finished epoch
    */
@@ -358,7 +358,8 @@ public:
   void activateEpoch(EpochType const& epoch);
 
   /**
-   * \internal \brief Finish an epoch without activation it
+   * \internal \brief Finish an epoch without activating it (starting the work
+   * of detecting its termination)
    *
    * \param[in] epoch the epoch that is finished
    */
