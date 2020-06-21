@@ -107,7 +107,7 @@ struct Runtime {
   /**
    * \brief Check if runtime is live
    *
-   * \return whether it is initialized or not
+   * \return has been initialized and not subsequently finalized
    */
   bool isLive() const { return p_ and p_->isLive(); }
 
