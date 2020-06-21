@@ -369,7 +369,7 @@ private:
   static void updateLocation(LocMsgType *msg);
 
   /**
-   * \internal \brief Receive a eager location update
+   * \internal \brief Receive an eager location update
    *
    * \param[in] msg the location update message
    */
