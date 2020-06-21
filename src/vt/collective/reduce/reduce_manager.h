@@ -127,9 +127,10 @@ struct ReduceManager {
   Reduce* getReducerComponent(ComponentIDType const& cid);
 
   /**
-   * \brief Collectively make a new reduction scope
+   * \brief Collectively make a new reducer that creates a unique reduction
+   * scope
    *
-   * \return the reducer
+   * \return the reducer with a new scope
    */
   Reduce* makeReducerCollective();
 
