@@ -107,8 +107,8 @@ struct Trace {
   std::string getSTSName()   const { return full_sts_name_;   }
   std::string getDirectory() const { return full_dir_name_;   }
 
-  void initialize() override;
-  void startup() override;
+  virtual void initialize(); // override in 1.1 with Component deps.
+  virtual void startup();    // override in 1.1 with Component deps.
 
   void setupNames(
     std::string const& in_prog_name, std::string const& in_trace_name,

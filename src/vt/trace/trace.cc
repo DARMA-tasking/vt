@@ -87,9 +87,8 @@ struct TraceEventSeqCompare {
   }
 };
 
-Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
-  : start_time_(getCurrentTime()), prog_name_(in_prog_name),
-    trace_name_(in_trace_name), log_file_(nullptr)
+Trace::Trace()
+  : start_time_(getCurrentTime()), log_file_(nullptr)
 {
   /*
    * Incremental flush mode for zlib. Several options are available:
@@ -123,14 +122,14 @@ Trace::Trace(std::string const& in_prog_name, std::string const& in_trace_name)
 
 void Trace::initialize() /*override*/ {
 #if backend_check_enabled(trace_enabled)
-  setupNames(prog_name_);
-
   between_sched_event_type_ = trace::TraceRegistry::registerEventHashed(
     "Scheduler", "Between_Schedulers"
   );
 
   // Register a trace user event to demarcate flushes that occur
   flush_event_ = trace::registerEventCollective("trace_flush");
+
+  startup();    // remove in 1.1 with Component deps.
 #endif
 }
 
@@ -152,12 +151,6 @@ void Trace::startup() /*override*/ {
     sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
   );
 #endif
-}
-
-void Trace::finalize() /*override*/ {
-  // Always end any between-loop event left open.
-  endProcessing(between_sched_event_);
-  between_sched_event_ = TraceProcessingTag{};
 }
 
 void Trace::loadAndBroadcastSpec() {
@@ -236,13 +229,19 @@ void Trace::setupNames(
 }
 
 /*virtual*/ Trace::~Trace() {
+  // Always end any between-loop event left open.
+  // The traces file might already be closed.
+  endProcessing(between_sched_event_);
+  between_sched_event_ = TraceProcessingTag{};
+
+  // cleanupTracesFile is odd quasi-destructor. Cleaned in 1.1 Component defs.
+  cleanupTracesFile();
+
   // Not good - not much to do in late destruction.
   vtWarnIf(
     not open_events_.empty(),
     "Trying to dump traces with open events?"
   );
-
-  cleanupTracesFile();
 }
 
 void Trace::addUserNote(std::string const& note) {

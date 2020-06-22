@@ -74,21 +74,6 @@ Scheduler::Scheduler() {
   progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
 }
 
-/*virtual*/ void Scheduler::startup() /*override*/ {
-#if backend_check_enabled(trace_enabled)
-  between_sched_event_type_ = trace::TraceRegistry::registerEventHashed(
-    "Scheduler", "Between_Schedulers"
-  );
-#else
-  between_sched_event_type_ = trace::no_trace_entry_id;
-#endif
-}
-
-/*virtual*/ void Scheduler::finalize() /*override*/ {
-  // Complete any event between last runSchedulerWhile and vt::finalize.
-  endBetweenLoopEvent();
-}
-
 void Scheduler::enqueue(ActionType action) {
   bool const is_term = false;
 # if backend_check_enabled(priorities)
@@ -367,9 +352,5 @@ namespace vt {
 void runScheduler() {
   theSched()->scheduler();
 }
-
-  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
-
-  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
 
 } //end namespace vt

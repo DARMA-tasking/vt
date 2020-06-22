@@ -95,8 +95,6 @@ struct Scheduler {
 
   Scheduler();
 
-  virtual void startup() override;
-  virtual void finalize() override;
   static void checkTermSingleNode();
 
   bool shouldCallProgress(
