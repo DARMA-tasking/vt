@@ -85,14 +85,14 @@ using DijkstraScholtenTerm = term::ds::StateDS;
  * and, Dijkstra-Scholten parental responsibility termination for rooted
  * epochs. Epochs may have other epochs nested within them, forming a graph.
  *
- * The termination detector detects termination of a transitive closure of a
- * piece of work---either starting collectively with all node or starting on a
- * particular node.
+ * The termination detector detects termination of the transitive closure of a
+ * piece of work---either starting collectively with all nodes or starting on a
+ * particular node (rooted).
  *
  * In order to track work on the distributed system, work is "produced" and
- * "consumed". Produce and consume are separate counters that are tracked
- * on each node. When the global produce and consume counts (sum across
- * all nodes) are equal, termination is reached.
+ * "consumed". Produce and consume are separate counters that are tracked on
+ * each node for each epoch. When the global produce and consume counts (sum
+ * across all nodes) are equal, termination is reached.
  */
 struct TerminationDetector :
   runtime::component::Component<TerminationDetector>,
