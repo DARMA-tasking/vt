@@ -552,7 +552,7 @@ public:
 
 public:
   /**
-   * \brief Test if an epoch as terminated or not
+   * \brief Test if an epoch has terminated or not
    *
    * \param[in] epoch the epoch to test
    *
