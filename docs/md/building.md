@@ -71,16 +71,16 @@ parameters.
 | Variable                    | Default Value   | Description |
 | ------------------          | --------------- | ----------- |
 | `CMAKE_BUILD_TYPE`          | Release         | The `cmake` build type |
-| `VT_LB_ENABLED`             | ON              | Compile with support for runtime load balancing |
-| `VT_TRACE_ENABLED `         | OFF             | Compile with support for runtime tracing (Projections-format) |
-| `VT_TRACE_RUNTIME_ENABLED ` | OFF             | Force tracing on at runtime (used in CI for automatically testing tracing on all tests/examples) |
-| `VT_DOXYGEN_ENABLED `       | OFF             | Enable doxygen generation |
-| `VT_MIMALLOC_ENABLED `      | OFF             | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
-| `VT_ASAN_ENABLED `          | OFF             | Enable building with address sanitizer |
-| `VT_POOL_ENABLED `          | ON              | Use memory pool in *vt* for message allocation |
-| `VT_ZOLTAN_ENABLED `        | OFF             | Build with Zoltan enabled for `ZoltanLB` support |
-| `ZOLTAN_DIR `               | (empty)         | Directory pointing to Zoltan installation |
-| `VT_MPI_GUARD_ENABLED `     | OFF             | Guards against mis-use of MPI calls in code using *vt* |
+| `VT_LB_ENABLED`             | 1               | Compile with support for runtime load balancing |
+| `VT_TRACE_ENABLED `         | 0               | Compile with support for runtime tracing (Projections-format) |
+| `VT_TRACE_RUNTIME_ENABLED ` | 0               | Force tracing on at runtime (used in CI for automatically testing tracing on all tests/examples) |
+| `VT_DOXYGEN_ENABLED `       | 0               | Enable doxygen generation |
+| `VT_MIMALLOC_ENABLED `      | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
+| `VT_ASAN_ENABLED `          | 0               | Enable building with address sanitizer |
+| `VT_POOL_ENABLED `          | 1               | Use memory pool in *vt* for message allocation |
+| `VT_ZOLTAN_ENABLED `        | 0               | Build with Zoltan enabled for `ZoltanLB` support |
+| `ZOLTAN_DIR `               | <empty>         | Directory pointing to Zoltan installation |
+| `VT_MPI_GUARD_ENABLED `     | 0               | Guards against mis-use of MPI calls in code using *vt* |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned
