@@ -1569,7 +1569,7 @@ public:
   /**
    * \internal \brief Dynamically insert an element or send a message to mapped
    * node to insert. If the \c node parameter is set, ignore the mapped node and
-   * insert whether specified by the user
+   * insert wherever specified by the user
    *
    * \param[in] proxy the collection proxy
    * \param[in] idx the index to insert
