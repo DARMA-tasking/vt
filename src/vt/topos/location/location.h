@@ -336,7 +336,7 @@ struct EntityLocationCoord : LocationCoord {
    * even if the location is stale or unknown (to the home node). The rendezvous
    * protocol, typically used for large messages, will send a control message to
    * determine the location of the entity before sending the actual data. The
-   * threshold between these two node is controlled by \c small_msg_max_size
+   * threshold between these two modes is controlled by \c small_msg_max_size
    *
    * \param[in] msg the message to check
    *
