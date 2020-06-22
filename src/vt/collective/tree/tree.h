@@ -169,7 +169,9 @@ struct Tree {
 
   /**
    * \internal \brief Get total number of descendants for a particular node in
-   * the tree
+   * the tree.
+   *
+   * The returned count does not include the node passed---only its descendants.
    *
    * \param[in] child the node
    *
