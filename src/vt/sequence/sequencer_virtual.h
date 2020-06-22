@@ -55,6 +55,14 @@
 
 namespace vt { namespace seq {
 
+/**
+ * \struct TaggedSequencerVrt
+ *
+ * \brief An experimental VT component for sequencing operations on virtual
+ * entities.
+ *
+ * \warning This component is experimental and is not ready for production use.
+ */
 template <typename SeqTag, template <typename> class SeqTrigger>
 struct TaggedSequencerVrt : TaggedSequencer<SeqTag, SeqTrigger> {
   using SeqType = SeqTag;

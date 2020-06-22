@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial1H]
 //                       Reduce Message VT Base Class
 //                 \--------------------------------------------/
 //                  \                                          /
@@ -93,5 +94,6 @@ static inline void activeMessageReduce() {
     root_reduce_node, reduce_msg.get()
   );
 }
+/// [Tutorial1H]
 
 }} /* end namespace vt::tutorial */

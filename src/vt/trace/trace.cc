@@ -912,7 +912,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
   while (not traces.empty()) {
     LogType const& log = traces.front();
 
-    auto const& converted_time = timeToInt(log.time - start_time);
+    auto const& converted_time = timeToMicros(log.time - start_time);
     auto const type = static_cast<
       std::underlying_type<decltype(log.type)>::type
     >(log.type);
@@ -1061,7 +1061,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
     }
     case TraceConstantsType::UserSuppliedBracketedNote: {
       auto const& udata = log.user_data();
-      auto const converted_end_time = timeToInt(log.end_time - start_time);
+      auto const converted_end_time = timeToMicros(log.end_time - start_time);
       gzprintf(
         gzfile,
         "%d %lld %lld %d %zu %s\n",
@@ -1209,7 +1209,7 @@ void Trace::outputControlFile(std::ofstream& file) {
   gzFile gzfile = file->file_type;
   // Output footer for projections file,
   // '7' means COMPUTATION_END to Projections
-  gzprintf(gzfile, "7 %lld\n", timeToInt(getCurrentTime() - start));
+  gzprintf(gzfile, "7 %lld\n", timeToMicros(getCurrentTime() - start));
 }
 
 }} //end namespace vt::trace

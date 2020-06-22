@@ -59,29 +59,131 @@ namespace vt { namespace collective { namespace tree {
 static struct DefaultTreeConstructTag { } tree_cons_tag_t { };
 #pragma GCC diagnostic pop
 
+/**
+ * \internal \struct Tree
+ *
+ * \brief General interface for storing a spanning tree
+ *
+ * Holds the portion of a spanning tree on each node. Does not do any parallel
+ * coordination. Higher-level components must keep track of the pieces of the
+ * tree on each node.
+ */
 struct Tree {
   using NodeListType = std::vector<NodeType>;
   using OperationType = std::function<void(NodeType)>;
   using NumLevelsType = int32_t;
 
+  /**
+   * \internal \brief Construct the default spanning tree across the whole
+   * communicator.
+   *
+   * \param[in] DefaultTreeConstructTag constructor tag
+   */
   explicit Tree(DefaultTreeConstructTag);
+
+  /**
+   * \internal \brief Construct a spanning tree with a list of children nodes on
+   * the root node
+   *
+   * \warning This should only be called on the root.
+   *
+   * \param[in] in_children the list of children
+   */
   explicit Tree(NodeListType const& in_children);
 
+  /**
+   * \internal \brief Construct a spanning tree with a list of children nodes,
+   * parent node, and whether this is the root.
+   *
+   * \param[in] in_is_root if this is the root node
+   * \param[in] parent the node's parent in the tree
+   * \param[in] in_children the list of children
+   */
   Tree(
     bool const in_is_root, NodeType const& parent,
     NodeListType const& in_children
   );
 
+  /**
+   * \internal \brief Setup the default (binomial) tree
+   */
   void setupTree();
+
+  /**
+   * \internal \brief Get the parent node in the tree
+   *
+   * \return the parent node
+   */
   NodeType getParent() const;
+
+  /**
+   * \internal \brief Get the number of children nodes
+   *
+   * \return the number of children nodes
+   */
   NodeType getNumChildren() const;
+
+  /**
+   * \internal \brief Get whether this node is the root
+   *
+   * \return whether this node is the root
+   */
   bool isRoot() const;
+
+  /**
+   * \internal \brief Get the (const) list of children
+   *
+   * \return (const) list of children
+   */
   NodeListType const& getChildren() const;
+
+  /**
+   * \internal \brief Get the list of children for a particular node in the tree
+   *
+   * \return list of children
+   */
   NodeListType getChildren(NodeType node) const;
+
+  /**
+   * \internal \brief Apply function (foreach) across all children
+   *
+   * \param[in] op action to apply, passed the node
+   */
   void foreachChild(OperationType op) const;
+
+  /**
+   * \internal \brief Get number of levels in the tree
+   *
+   * \return number of levels
+   */
   NumLevelsType numLevels() const;
+
+  /**
+   * \internal \brief Apply function (foreach) across all children with number
+   * of levels passed to apply function.
+   *
+   * \param[in] level number of levels in spanning tree
+   * \param[in] op action to apply, passed levels and node
+   */
   void foreachChild(NumLevelsType level, OperationType op) const;
+
+  /**
+   * \internal \brief Get total number of descendants for a particular node in
+   * the tree.
+   *
+   * The returned count does not include the node passed---only its descendants.
+   *
+   * \param[in] child the node
+   *
+   * \return number of descendants
+   */
   std::size_t getNumTotalChildren(NodeType child) const;
+
+  /**
+   * \internal \brief Get total children in tree
+   *
+   * \return number of children
+   */
   std::size_t getNumTotalChildren() const;
 
 private:

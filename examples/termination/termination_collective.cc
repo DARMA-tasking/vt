@@ -44,6 +44,7 @@
 
 #include "vt/transport.h"
 
+/// [Collective termination example]
 using TestMsg = vt::Message;
 
 vt::NodeType nextNode() {
@@ -98,3 +99,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+/// [Collective termination example]

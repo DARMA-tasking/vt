@@ -56,6 +56,11 @@
 
 namespace vt { namespace registry {
 
+/**
+ * \struct Registry
+ *
+ * \brief A VT component that manages registered active handlers.
+ */
 struct Registry : runtime::component::Component<Registry> {
   using HandlerManagerType = HandlerManager;
   using HandlerBitsType = eHandlerBits;
@@ -64,27 +69,79 @@ struct Registry : runtime::component::Component<Registry> {
   using TagContainerType = std::unordered_map<TagType, ActiveClosureFnType>;
   using HanTagContainerType = std::unordered_map<HandlerType, TagContainerType>;
 
+  /**
+   * \internal \brief System call to construct a registry
+   */
   Registry() = default;
 
   std::string name() override { return "Registry"; }
 
+  /**
+   * \brief Register a new handler
+   *
+   * \param[in] fn the active function pointer
+   * \param[in] tag relevant message tag for delivery
+   * \param[in] is_collective whether it's a collective registration
+   *
+   * \return the handler ID
+   */
   HandlerType registerNewHandler(
     ActiveClosureFnType fn, TagType const& tag = no_tag,
     bool const& is_collective = false
   );
 
+  /**
+   * \brief Unregister a handler
+   *
+   * \param[in] han the handler ID
+   * \param[in] tag relevant message tag for delivery
+   */
   void unregisterHandlerFn(
     HandlerType const& han, TagType const& tag = no_tag
   );
+
+  /**
+   * \brief Swap underlying handler out for registered handler ID
+   *
+   * \param[in] han the handler ID
+   * \param[in] fn the active function to attach
+   * \param[in] tag tag to associate
+   */
   void swapHandler(
     HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
+
+  /**
+   * \brief Registry an active handler
+   *
+   * \param[in] fn the active handler
+   * \param[in] tag relevant message tag
+   *
+   * \return the handler ID
+   */
   HandlerType registerActiveHandler(
     ActiveClosureFnType fn, TagType const& tag = no_tag
   );
+
+  /**
+   * \brief Get active function for handler
+   *
+   * \param[in] han the handler ID
+   * \param[in] tag the relevant tag
+   *
+   * \return the active function
+   */
   ActiveClosureFnType getHandler(
     HandlerType const& han, TagType const& tag = no_tag
   );
+
+  /**
+   * \brief Get active function for handler
+   *
+   * \param[in] han the handler ID
+   *
+   * \return the active function
+   */
   ActiveClosureFnType getHandlerNoTag(HandlerType const& han);
 
 private:

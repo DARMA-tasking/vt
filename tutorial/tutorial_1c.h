@@ -48,6 +48,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial1C]
 /*
  * Some user defined data structures
  */
@@ -154,5 +155,6 @@ static void msgSerialA(ParticleMsg* msg) {
 
   ::fmt::print("msgSerialA: triggered on node={}\n", cur_node);
 }
+/// [Tutorial1C]
 
 }} /* end namespace vt::tutorial */

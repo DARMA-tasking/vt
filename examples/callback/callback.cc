@@ -44,6 +44,7 @@
 
 #include <vt/transport.h>
 
+/// [Callback examples]
 // Message sent from the callback to the callback endpoint
 struct TestMsg : vt::Message {
   using MessageParentType = ::vt::Message;
@@ -161,3 +162,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+/// [Callback examples]

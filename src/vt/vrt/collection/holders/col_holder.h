@@ -51,23 +51,49 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+/**
+ * \struct CollectionHolder
+ *
+ * \brief Holds meta-data for the entire collection
+ *
+ * Manages the meta-data for a collection including the registered map function,
+ * index range, and holder for the actual elements mapped to this node. Provides
+ * the virtual overloaded function for running LB and destroying the collection
+ * from a type-erased base class.
+ */
 template <typename ColT, typename IndexT>
 struct CollectionHolder : BaseHolder {
 
- public:
+public:
+  /**
+   * \internal \brief Construct a collection holder for meta-data
+   *
+   * \param[in] in_map_fn the map function
+   * \param[in] idx the index range
+   * \param[in] in_is_static whether the collection is static
+   */
   CollectionHolder(
     HandlerType const& in_map_fn, IndexT const& idx, bool const in_is_static
   );
   virtual ~CollectionHolder() {}
 
- public:
+public:
+  /**
+   * \internal \brief Destroy the collection
+   */
   void destroy() override;
+
+  /**
+   * \internal \brief Run LB continuations on all collection elements
+   *
+   * \param[in] phase the phase
+   */
   void runLB(PhaseType phase) override;
 
-  bool is_static_ = false;
-  HandlerType map_fn = uninitialized_handler;
-  IndexT max_idx;
-  Holder<ColT,IndexT> holder_;
+  bool is_static_ = false;                    /**< Whether is static sized */
+  HandlerType map_fn = uninitialized_handler; /**< The map function */
+  IndexT max_idx;                             /**< Index range for collection */
+  Holder<ColT,IndexT> holder_;                /**< Inner holder of elements */
 };
 
 }}} /* end namespace vt::vrt::collection */

@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial1D]
 //                  VT Base Message
 //                 \----------------/
 //                  \              /
@@ -95,5 +96,6 @@ static void msgHandlerX(MyDataMsg* msg) {
   auto const cur_node = ::vt::theContext()->getNode();
   ::fmt::print("msgHandlerX: triggered on node={}\n", cur_node);
 }
+/// [Tutorial1D]
 
 }} /* end namespace vt::tutorial */

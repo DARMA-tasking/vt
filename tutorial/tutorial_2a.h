@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial2A]
 // Forward declaration for message
 struct MyCollMsg;
 
@@ -100,5 +101,6 @@ static inline void collection() {
     proxy[5].send<MyCollMsg,&MyCol::msgHandler>(msg2.get());
   }
 }
+/// [Tutorial2A]
 
 }} /* end namespace vt::tutorial */

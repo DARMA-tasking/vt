@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial1A]
 static inline void context() {
   /*
    *  ::vt::theContext() can be used to obtain the node and number of nodes:
@@ -67,5 +68,6 @@ static inline void context() {
   // it because the headers are included by default
   ::fmt::print("this_node={}, num_ndoes={}\n", this_node, num_nodes);
 }
+/// [Tutorial1A]
 
 }} /* end namespace vt::tutorial */

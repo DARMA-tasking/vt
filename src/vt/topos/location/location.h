@@ -70,6 +70,28 @@ namespace vt { namespace location {
 
 struct collection_lm_tag_t {};
 
+/**
+ * \struct EntityLocationCoord
+ *
+ * \brief Part of a core VT component that manages the distributed location of
+ * virtual entities.
+ *
+ * Allows general registration of an \c EntityID that is tracked across the
+ * system as it migrates. Routes messages to the appropriate node by inheriting
+ * from \c EntityMsg and sending it through the routing algorithm. Manages a
+ * distributed table of entities and their location allowing an entity to be
+ * found anywhere in the system. Caches locations to speed up resolution once a
+ * location is known. Allows migration of an entity at any time; forwards
+ * messages if they miss in the cache.
+ *
+ * The \c registerEntity method allows an external component to locally register
+ * an entity as existing on this node. If the entity is deleted, \c
+ * unregisterEntity should be called; if the entity is migrated, \c
+ * entityMigrated should be invoked on the node from which the entity is
+ * emigrating. A message may arrive for the entity by a location coordinator
+ * calling \c routeMsg to the associated entity.
+ *
+ */
 template <typename EntityID>
 struct EntityLocationCoord : LocationCoord {
   using LocRecType = LocRecord<EntityID>;
@@ -87,36 +109,74 @@ struct EntityLocationCoord : LocationCoord {
   template <typename MessageT>
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
 
+  /**
+   * \internal \brief System call to construct a new entity coordinator
+   */
   EntityLocationCoord();
+
+  /**
+   * \internal \brief System call to construct a new entity coordinator for
+   * collections
+   *
+   * \param[in] collection_lm_tag_t tag
+   * \param[in] identifier the entity class identifier
+   */
   EntityLocationCoord(collection_lm_tag_t, LocInstType identifier);
+
+  /**
+   * \internal \brief System call to construct a new entity coordinator
+   *
+   * \param[in] identifier the entity class identifier
+   */
   explicit EntityLocationCoord(LocInstType const identifier);
 
   virtual ~EntityLocationCoord();
 
-  /*
-   * The `registerEntity' method allows an external component to locally
-   * register an entity as existing on this node. If the entity is deleted,
-   * `unregisterEntity' should be called; if the entity is migrated,
-   * `entityMigrated' should be invoked on the node where the entity is
-   * migrating from. The function `msg_action' gets triggered when a message
-   * arrives that is designated for the entity `id' that is registered. A
-   * message may arrive for the entity by a location coordinator calling
-   * `routeMsg' to the associated entity.
+  /**
+   * \brief Register a new entity
+   *
+   * \param[in] id the entity ID
+   * \param[in] home the home node for this entity
+   * \param[in] msg_action function to trigger when message arrives for it
+   * \param[in] migrated whether it migrated in: \c entityMigrated is preferred
    */
   void registerEntity(
     EntityID const& id, NodeType const& home,
     LocMsgActionType msg_action = nullptr, bool const& migrated = false
   );
+
+  /**
+   * \brief Unregister an entity
+   *
+   * \param[in] id the entity ID
+   */
   void unregisterEntity(EntityID const& id);
+
+  /**
+   * \brief Tell coordinator that the entity has migrated to another node
+   *
+   * \todo Rename this \c entityEmigrated
+   *
+   * \param[in] id the entity ID
+   * \param[in] new_node the node it was migrated to
+   */
   void entityMigrated(EntityID const& id, NodeType const& new_node);
 
-  /*
-   * Should be called after the entity is migrated when it arrived on the new
-   * node: order of operations:
+  /**
+   * \brief Register a migrated entity on new node
+   *
+   * \todo Rename this \c entityImmigrated
+   *
+   * This should be called after the entity is migrated when it arrived on the
+   * new node: order of operations:
    *
    *   1) Node 0: registerEntity(my_id, ...);
    *   2) Node 0: entityMigrated(my_id, 1);
    *   3) Node 1: registerEntityMigrated(my_id, <home>, 0, ...);
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node for the entity
+   * \param[in] msg_action function to trigger when message arrives for it
    */
   void registerEntityMigrated(
     EntityID const& id, NodeType const& home_node,
@@ -124,36 +184,65 @@ struct EntityLocationCoord : LocationCoord {
     LocMsgActionType msg_action = nullptr
   );
 
-  /*
+  /**
+   * \brief Get the location of an entity
+   *
    * Get the location of a entity: the `action' is triggered when the location
    * of the entity is resolved. This is an asynchronous call that may send
    * messages to discover the location of the entity `id'. To resolve the
    * location the method uses the following algorithm:
    *
    *   1) Check locally for the entity's existence
-   *.  2) If not local, search for a cache entry with location info
+   *   2) If not local, search for a cache entry with location info
    *   3) If no cache information available, send resolution message to home node.
    *     a) The home node applies the same algorithm, starting with (1)
-   *. .  b) On step 3, if no information is known, the manager buffers the
-   *.       request, waiting to the entity to be registered in the future.
+   *     b) On step 3, if no information is known, the manager buffers the
+   *        request, waiting to the entity to be registered in the future.
    *
-   * Note: migrations may make this information inaccurate; the node delivered
+   * \note Migrations may make this information inaccurate; the node delivered
    * to `action' reflects the current known state, which may be remote.
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node for the entity
+   * \param[in] action the action to trigger with the discovered location
    */
   void getLocation(
     EntityID const& id, NodeType const& home_node, NodeActionType const& action
   );
 
+  /**
+   * \brief Route a message with a custom handler
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node home node for entity
+   * \param[in] m pointer to the message
+   */
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgHandler(
     EntityID const& id, NodeType const& home_node, MessageT *m
   );
 
+  /**
+   * \brief Route a serialized message with a custom handler
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node home node for entity
+   * \param[in] msg pointer to the message
+   */
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgSerializeHandler(
     EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
   );
 
+  /**
+   * \brief Route a message to the default handler
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node home node for the entity
+   * \param[in] msg pointer to the message
+   * \param[in] serialize whether it should be serialized (optional)
+   * \param[in] from_node the sending node (optional)
+   */
   template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
@@ -161,57 +250,177 @@ struct EntityLocationCoord : LocationCoord {
     NodeType from_node = uninitialized_destination
   );
 
+  /**
+   * \brief  Route a message to the default handler
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node home node for the entity
+   * \param[in] msg pointer to the message
+   */
   template <typename MessageT>
   void routeMsgSerialize(
     EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
   );
 
+  /**
+   * \internal \brief Route a message with non-eager protocol
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node home node for the entity
+   * \param[in] action action once entity is found
+   */
   void routeNonEagerAction(
     EntityID const& id, NodeType const& home_node, ActionNodeType action
   );
 
+  /**
+   * \internal \brief Update location
+   *
+   * \param[in] event_id the event ID waiting on the location
+   * \param[in] id the entity ID
+   * \param[in] resolved_node the node reported to have the entity
+   * \param[in] home_node the home node for the entity
+   */
   void updatePendingRequest(
     LocEventID const& event_id, EntityID const& id,
     NodeType const& resolved_node, NodeType const& home_node
   );
+
+  /**
+   * \internal \brief Output the current cache state
+   */
   void printCurrentCache() const;
 
+  /**
+   * \internal \brief Check if the purported location of an entity is cached
+   *
+   * \param[in] id the entity ID
+   *
+   * \return whether it is cached
+   */
   bool isCached(EntityID const& id) const;
+
+  /**
+   * \internal \brief Clear the cache
+   */
   void clearCache();
 
+  /**
+   * \internal \brief Send back an eager update on a discovered location
+   *
+   * \param[in] id the entity ID
+   * \param[in] ask_node the asking node
+   * \param[in] home_node the home node
+   * \param[in] deliver_node the node discovered which delivered the message
+   */
   void sendEagerUpdate(
     EntityID const& id, NodeType ask_node, NodeType home_node,
     NodeType deliver_node
   );
+
+  /**
+   * \internal \brief Update cache on eager update received
+   *
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node
+   * \param[in] deliver_node the node discovered which delivered the message
+   */
   void handleEagerUpdate(
     EntityID const& id, NodeType home_node, NodeType deliver_node
   );
 
+  /**
+   * \internal \brief Check if the eager or rendezvous protocol should be used
+   *
+   * The eager protocol, typically used for small messages, forwards the message
+   * even if the location is stale or unknown (to the home node). The rendezvous
+   * protocol, typically used for large messages, will send a control message to
+   * determine the location of the entity before sending the actual data. The
+   * threshold between these two modes is controlled by \c small_msg_max_size
+   *
+   * \param[in] msg the message to check
+   *
+   * \return whether it is of eager size
+   */
   template <typename MessageT>
   bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const;
 
 private:
+  /**
+   * \internal \brief General message handler for forwarding messages
+   *
+   * \param[in] msg the message
+   */
   template <typename MessageT>
   static void msgHandler(MessageT *msg);
+
+  /**
+   * \internal \brief Request location handler from this node
+   *
+   * \param[in] msg the location request message
+   */
   static void getLocationHandler(LocMsgType *msg);
+
+  /**
+   * \internal \brief Update the location on this node
+   *
+   * \param[in] msg the location update message
+   */
   static void updateLocation(LocMsgType *msg);
+
+  /**
+   * \internal \brief Receive an eager location update
+   *
+   * \param[in] msg the location update message
+   */
   static void recvEagerUpdate(LocMsgType *msg);
 
+  /**
+   * \internal \brief Route a message to destination with eager protocol
+   *
+   * \param[in] serialize whether it is serialized
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node
+   * \param[in] msg the message to route
+   */
   template <typename MessageT>
   void routeMsgEager(
     bool const serialize, EntityID const& id, NodeType const& home_node,
     MsgSharedPtr<MessageT> msg
   );
 
+  /**
+   * \internal \brief Route a message to destination with rendezvous protocol
+   *
+   * \param[in] serialize whether it is serialized
+   * \param[in] id the entity ID
+   * \param[in] home_node the home node
+   * \param[in] to_node destination node
+   * \param[in] msg the message to route
+   */
   template <typename MessageT>
   void routeMsgNode(
     bool const serialize, EntityID const& id, NodeType const& home_node,
     NodeType const& to_node, MsgSharedPtr<MessageT> msg
   );
 
+  /**
+   * \internal \brief Insert a pending entity action
+   *
+   * Add actions that are waiting on an entity to be registered on this
+   * node. Once \c registerEntity is called, these actions will get triggered.
+   *
+   * \param[in] id the entity ID
+   * \param[in] action action to execute
+   */
   void insertPendingEntityAction(EntityID const& id, NodeActionType action);
 
 public:
+  /**
+   * \internal \brief Get the instance identifier for this location manager
+   *
+   * \return the instance ID
+   */
   LocInstType getInst() const;
 
 private:

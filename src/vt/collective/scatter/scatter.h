@@ -56,12 +56,34 @@
 
 namespace vt { namespace collective { namespace scatter {
 
+/**
+ * \struct Scatter
+ *
+ * \brief Scatter data across all nodes from a single origin
+ *
+ * Performs an asynchronous scatter over all the nodes in the
+ * communicator/runtime.
+ */
 struct Scatter : virtual collective::tree::Tree {
   using FuncSizeType = std::function<std::size_t(NodeType)>;
   using FuncDataType = std::function<void(NodeType, void*)>;
 
+  /**
+   * \internal \brief Construct a scatter manager
+   */
   Scatter();
 
+  /**
+   * \brief Scatter data to all nodes
+   *
+   * The functions passed to scatter through the arguments \c size_fn and
+   * \c data_fn will not be retained after this call returns.
+   *
+   * \param[in] total_size total size of data to scatter
+   * \param[in] max_proc_size max data to be scattered to any node
+   * \param[in] size_fn callback to get size for each node
+   * \param[in] data_fn callback to get data for each node
+   */
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void scatter(
     std::size_t const& total_size, std::size_t const& max_proc_size,
@@ -69,13 +91,35 @@ struct Scatter : virtual collective::tree::Tree {
   );
 
 protected:
+  /**
+   * \internal \brief Receive scattered data down the spanning tree
+   *
+   * \param[in] msg the scatter message
+   */
   void scatterIn(ScatterMsg* msg);
 
 private:
+  /**
+   * \internal \brief Helper function to scatter data
+   *
+   * \param[in] node the current code
+   * \param[in] ptr pointer to raw data
+   * \param[in] elm_size bytes per element of raw data
+   * \param[in] size_fn callback to get size for each node
+   * \param[in] data_fn callback to get data for each node
+   *
+   * \return incremented point after scatter is complete
+   */
   char* applyScatterRecur(
     NodeType node, char* ptr, std::size_t elm_size, FuncSizeType size_fn,
     FuncDataType data_fn
   );
+
+  /**
+   * \internal \brief Active function to receive scattered data
+   *
+   * \param[in] msg the scatter message
+   */
   static void scatterHandler(ScatterMsg* msg);
 };
 

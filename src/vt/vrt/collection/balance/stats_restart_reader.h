@@ -58,6 +58,17 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/**
+ * \struct StatsRestartReader
+ *
+ * \brief A VT component for reading a user-input mapping file for object to
+ * node.
+ *
+ * A common flow is for the LBAF (Load Balancing Analysis Framework) to generate
+ * a new load distribution offline, producing LB stats file, which are then read
+ * by this component to follow the LB distribution described in those mapping
+ * files.
+ */
 struct StatsRestartReader : runtime::component::Component<StatsRestartReader> {
   using VecMsg = lb::TransferMsg<std::vector<balance::ElementIDType> >;
 

@@ -44,6 +44,7 @@
 
 #include <vt/transport.h>
 
+/// [Hello world staged insert collection]
 struct Hello : vt::Collection<Hello, vt::Index1D> {
 
   // Default constructor for migration
@@ -107,3 +108,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+/// [Hello world staged insert collection]

@@ -61,11 +61,28 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/**
+ * \struct ProcStats
+ *
+ * \brief A VT component that backs the instrumentation of virtualized entities
+ * on each node, such as the objects that the collection manager orchestrates,
+ * to provide data to the load balancing framework. The actual instrumentation
+ * occurs in \c vt::vrt:collection::balance::ElementStats which is composed into
+ * the elements of a collection.
+ *
+ * Collects statistics/timings on active function/methods for objects and
+ * communication between them on each node. After collecting this data, passes
+ * it to the load balancing framework, specifically the
+ * \c * vt::vrt::collection::balance::LBManager
+ */
 struct ProcStats : runtime::component::Component<ProcStats> {
   using MigrateFnType       = std::function<void(NodeType)>;
   using LoadMapType         = std::unordered_map<ElementIDType,TimeType>;
   using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
 
+  /**
+   * \internal \brief System call to construct \c ProcStats
+   */
   ProcStats() = default;
 
   std::string name() override { return "ProcStats"; }

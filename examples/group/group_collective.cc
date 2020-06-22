@@ -44,14 +44,7 @@
 
 #include <vt/transport.h>
 
-struct HelloMsg : vt::Message {
-  int from;
-
-  explicit HelloMsg(int const& in_from)
-    : from(in_from)
-  { }
-};
-
+/// [Collective group creation]
 struct HelloGroupMsg : vt::Message { };
 
 static void hello_group_handler(HelloGroupMsg* msg) {
@@ -110,3 +103,4 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+/// [Collective group creation]

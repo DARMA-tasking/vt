@@ -75,6 +75,21 @@
 
 namespace vt { namespace rdma {
 
+/**
+ * \struct RDMAManager
+ *
+ * \brief Core component of VT used to send pure data to registered RDMA
+ * handlers or memory locations.
+ *
+ * Allows the registration of RDMA handlers and registered memory locations. The
+ * registered handlers trigger a function when the data arrives (GET) or is sent
+ * (PUT). If registered memory locations are used directly, one may create a
+ * RDMA channel which backs the GET/PUT by MPI_Get/MPI_Put.
+ *
+ * \warning The RDMA manager is experimental and does not operate on
+ * over-decomposed entities. See \c vt::HandleRDMA for the production version of
+ * RDMA.
+ */
 struct RDMAManager : runtime::component::Component<RDMAManager> {
   using RDMA_BitsType = Bits;
   using RDMA_StateType = State;
@@ -102,10 +117,23 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     RDMA_StateType::RDMA_PutTypedFunctionType<MsgType>;
   using CollectiveScopeType = collective::CollectiveScope;
 
+  /**
+   * \internal \brief Construct the RDMAManager
+   */
   RDMAManager();
 
   std::string name() override { return "RDMAManager"; }
 
+  /**
+   * \brief Put typed data to registered RDMA handle
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr pointer to put
+   * \param[in] num_elems number of elements to put from the pointer start
+   * \param[in] offset offset---number of typed elements from start
+   * \param[in] tag tag to identify put
+   * \param[in] action_after_put action to execute after put completes locally
+   */
   template <typename T>
   void putTypedData(
     RDMA_HandleType const& rdma_handle, T ptr,
@@ -120,6 +148,15 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     );
   }
 
+  /**
+   * \brief Put typed data to registered RDMA handle
+   *
+   * \param[in] han the registered RDMA handle
+   * \param[in] ptr pointer to put
+   * \param[in] num_elems number of elements to put from the pointer start
+   * \param[in] offset offset---number of typed elements from start
+   * \param[in] action_after_put action to execute after put completes locally
+   */
   template <typename T>
   void putTypedData(
     RDMA_HandleType const& han, T ptr, ByteType const& num_elems = no_byte,
@@ -131,6 +168,14 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     );
   }
 
+  /**
+   * \brief Put raw data to registered RDMA handle
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr pointer to put
+   * \param[in] num_bytes number of bytes to put
+   * \param[in] action_after_put action to execute after put completes locally
+   */
   void putData(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes,
@@ -142,6 +187,20 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     );
   }
 
+  /**
+   * \brief Put raw data to registered RDMA handle
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr pointer to put
+   * \param[in] num_bytes number of bytes to put
+   * \param[in] offset offset from point start to put
+   * \param[in] tag tag to identify put
+   * \param[in] elm_size size of an element
+   * \param[in] action_after_put action to execute after put completes locally
+   * \param[in] collective_node node to target
+   * \param[in] direct_message_send whether the \c ptr provided has an envelope
+   * with it
+   */
   void putData(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& offset, TagType const& tag,
@@ -151,6 +210,18 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     bool const direct_message_send = false
   );
 
+  /**
+   * \brief Get data into user buffer
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr destination for data
+   * \param[in] num_bytes number of bytes
+   * \param[in] offset offset on the remote node, relative to \c rdma_handle
+   * \param[in] tag tag to identify get
+   * \param[in] next_action action when get completes
+   * \param[in] elm_size size of each element
+   * \param[in] collective_node node to target
+   */
   void getDataIntoBuf(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& offset,
@@ -159,28 +230,72 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     NodeType const& collective_node = uninitialized_destination
   );
 
+  /**
+   * \brief Collectively put data into a buffer
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr data to put
+   * \param[in] num_bytes number of bytes
+   * \param[in] elm_size size of each element
+   * \param[in] offset offset to put
+   * \param[in] after_put_action action to execute after put completes locally
+   */
   void putDataIntoBufCollective(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& elm_size, ByteType const& offset,
     ActionType after_put_action = no_action
   );
 
+  /**
+   * \brief Collectively get data into buffer
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr buffer to get into
+   * \param[in] num_bytes number of bytes
+   * \param[in] elm_size size of each element
+   * \param[in] offset offset to get
+   * \param[in] next_action action to execute after get completes
+   */
   void getDataIntoBufCollective(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     ByteType const& num_bytes, ByteType const& elm_size, ByteType const& offset,
     ActionType next_action = no_action
   );
 
+  /**
+   * \brief Get a dimensional region
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr buffer to get into
+   * \param[in] region region to get
+   * \param[in] next_action action to execute after get completes
+   */
   void getRegionTypeless(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     RDMA_RegionType const& region, ActionType next_action
   );
 
+  /**
+   * \brief Put a dimensional region
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr buffer to get into
+   * \param[in] region region to get
+   * \param[in] after_put_action action to execute after put completes locally
+   */
   void putRegionTypeless(
     RDMA_HandleType const& rdma_handle, RDMA_PtrType const& ptr,
     RDMA_RegionType const& region, ActionType after_put_action
   );
 
+  /**
+   * \brief Get a region with typed data
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr buffer to get into
+   * \param[in] region region to get
+   * \param[in] next_action action to execute after get completes
+   */
   template <typename T>
   void getRegion(
     RDMA_HandleType const& rdma_handle, T ptr, RDMA_RegionType const& region,
@@ -193,6 +308,16 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     return getRegionTypeless(rdma_handle, ptr, new_region, next_action);
   }
 
+  /**
+   * \brief Get typed data into buffer
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr destination for data
+   * \param[in] num_elems number of elements
+   * \param[in] elm_offset offset---number of typed elements from start
+   * \param[in] tag tag to identify get
+   * \param[in] next_action action when get completes
+   */
   template <typename T>
   void getTypedDataInfoBuf(
     RDMA_HandleType const& rdma_handle, T ptr, ByteType const& num_elems,
@@ -208,6 +333,14 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     );
   }
 
+  /**
+   * \brief Get typed data into buffer
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] ptr buffer to get into
+   * \param[in] num_elems number of elements
+   * \param[in] na action to execute after get
+   */
   template <typename T>
   void getTypedDataInfoBuf(
     RDMA_HandleType const& rdma_handle, T ptr, ByteType const& num_elems,
@@ -218,15 +351,38 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     );
   }
 
+  /**
+   * \brief Get data with continuation
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] cont continuation with data and length
+   */
   void getData(RDMA_HandleType const& rdma_handle, RDMA_RecvType cont) {
     return getData(rdma_handle, no_tag, no_byte, no_byte, cont);
   }
 
+  /**
+   * \brief Get data with continuation
+   *
+   * \param[in] rdma_handle the registered RDMA handle
+   * \param[in] tag tag for get
+   * \param[in] num_bytes number of bytes
+   * \param[in] offset offset to get
+   * \param[in] cont continuation with data and length
+   */
   void getData(
     RDMA_HandleType const& rdma_handle, TagType const& tag, ByteType const& num_bytes,
     ByteType const& offset, RDMA_RecvType cont
   );
 
+  /**
+   * \brief Register a new typed RDMA handler
+   *
+   * \param[in] ptr pointer to data to register
+   * \param[in] num_elems number of elements
+   *
+   * \return the RDMA handle
+   */
   template <typename T>
   RDMA_HandleType registerNewTypedRdmaHandler(T ptr, ByteType const& num_elems) {
     ByteType const num_bytes = sizeof(T)*num_elems;
@@ -240,17 +396,46 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     );
   }
 
+  /**
+   * \brief Register a typeless RDMA handler
+   *
+   * \param[in] use_default use default handler
+   * \param[in] ptr point to data to register
+   * \param[in] num_bytes number of bytes
+   * \param[in] is_collective whether it's a collective registration
+   *
+   * \return the RDMA handle
+   */
   RDMA_HandleType registerNewRdmaHandler(
     bool const& use_default = false, RDMA_PtrType const& ptr = nullptr,
     ByteType const& num_bytes = no_byte, bool const& is_collective = false
   );
 
+  /**
+   * \brief Collectively register a typeless RDMA handler
+   *
+   * \param[in] use_default use default handler
+   * \param[in] ptr point to data to register
+   * \param[in] num_bytes number of bytes
+   *
+   * \return the RDMA handle
+   */
   RDMA_HandleType collectiveRegisterRdmaHandler(
     bool const& use_default, RDMA_PtrType const& ptr, ByteType const& num_bytes
   ) {
     return registerNewRdmaHandler(use_default, ptr, num_bytes, true);
   }
 
+  /**
+   * \brief Collectively register a new typed RDMA handler
+   *
+   * \param[in] ptr pointer to data to register
+   * \param[in] num_total_elems total number of elements
+   * \param[in] num_elems element size
+   * \param[in] map map for data to node
+   *
+   * \return the RDMA handle
+   */
   template <typename T>
   RDMA_HandleType registerCollectiveTyped(
     T ptr, ByteType const& num_total_elems, ByteType const& num_elems,
@@ -263,22 +448,60 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     );
   }
 
+  /**
+   * \brief Collectively register a new typeless RDMA handler
+   *
+   * \param[in] use_default whether to use default handler
+   * \param[in] ptr buffer to register
+   * \param[in] num_bytes number of bytes
+   * \param[in] num_total_bytes total bytes for across all nodes
+   * \param[in] elm_size size of an element
+   * \param[in] map map for data to node
+   *
+   * \return the RDMA handle
+   */
   RDMA_HandleType registerNewCollective(
     bool const& use_default, RDMA_PtrType const& ptr, ByteType const& num_bytes,
     ByteType const& num_total_bytes, ByteType const& elm_size = rdma_default_byte_size,
     RDMA_MapType const& map = default_map
   );
 
+  /**
+   * \brief Unregister a RDMA handler
+   *
+   * \param[in] handle the handler
+   * \param[in] type type of handlers (GET or PUT)
+   * \param[in] tag the handler tag
+   * \param[in] use_default whether it's a default handler
+   */
   void unregisterRdmaHandler(
     RDMA_HandleType const& handle, RDMA_TypeType const& type = RDMA_TypeType::GetOrPut,
     TagType const& tag = no_tag, bool const& use_default = false
   );
 
+  /**
+   * \brief Unregister a RDMA handler
+   *
+   * \param[in] handle the RDMA handle
+   * \param[in] handler the RDMA handler
+   * \param[in] tag the handler tag
+   */
   void unregisterRdmaHandler(
     RDMA_HandleType const& handle, RDMA_HandlerType const& handler,
     TagType const& tag = no_tag
   );
 
+  /**
+   * \brief Associate a get function handler with a RDMA handle
+   *
+   * \param[in] msg the message passed on handler
+   * \param[in] han the RDMA handle
+   * \param[in] fn the active function
+   * \param[in] any_tag whether any tag triggers this handler
+   * \param[in] tag the specific tag to match
+   *
+   * \return the RDMA handler
+   */
   template <typename MsgType = BaseMessage, ActiveTypedRDMAGetFnType<MsgType>* f>
   RDMA_HandlerType associateGetFunction(
     MsgType* msg, RDMA_HandleType const& han,
@@ -290,6 +513,17 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     >(msg,han,fn,any_tag,tag);
   }
 
+  /**
+   * \brief Associate a put function handler with a RDMA handle
+   *
+   * \param[in] msg the message passed on handler
+   * \param[in] han the RDMA handle
+   * \param[in] fn the active function
+   * \param[in] any_tag whether any tag triggers this handler
+   * \param[in] tag the specific tag to match
+   *
+   * \return the RDMA handler
+   */
   template <typename MsgType = BaseMessage, ActiveTypedRDMAPutFnType<MsgType>* f>
   RDMA_HandlerType associatePutFunction(
     MsgType* msg, RDMA_HandleType const& han,
@@ -301,11 +535,28 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     >(msg,han,fn,any_tag,tag);
   }
 
+  /**
+   * \brief Create a new RDMA channel
+   *
+   * \param[in] type the type of channel (GET/PUT)
+   * \param[in] han the RDMA handle
+   * \param[in] target target node
+   * \param[in] non_target non-target node
+   * \param[in] action action when complete
+   */
   void newChannel(
     RDMA_TypeType const& type, RDMA_HandleType const& han, NodeType const& target,
     NodeType const& non_target, ActionType const& action
   );
 
+  /**
+   * \brief Create a new GET RDMA channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] target target node
+   * \param[in] non_target non-target node
+   * \param[in] action action when complete
+   */
   void newGetChannel(
     RDMA_HandleType const& han, RDMA_EndpointType const& target,
     RDMA_EndpointType const& non_target, ActionType const& action = nullptr
@@ -315,6 +566,14 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     );
   }
 
+  /**
+   * \brief Create a new GET RDMA channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] target target node
+   * \param[in] non_target non-target node
+   * \param[in] action action when complete
+   */
   void newGetChannel(
     RDMA_HandleType const& han, NodeType const& target,
     NodeType const& non_target, ActionType const& action = nullptr
@@ -328,6 +587,14 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     #endif
   }
 
+  /**
+   * \brief Create a new PUT RDMA channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] target target node
+   * \param[in] non_target non-target node
+   * \param[in] action action when complete
+   */
   void newPutChannel(
     RDMA_HandleType const& han, NodeType const& target,
     NodeType const& non_target, ActionType const& action = nullptr
@@ -342,12 +609,25 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     #endif
   }
 
+  /**
+   * \brief Sync locally a GET channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] action action when sync completes
+   */
   void syncLocalGetChannel(
     RDMA_HandleType const& han, ActionType const& action
   ) {
     return syncLocalGetChannel(han, uninitialized_destination, action);
   }
 
+  /**
+   * \brief Sync locally on a GET channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] in_target the target
+   * \param[in] action action when sync completes
+   */
   void syncLocalGetChannel(
     RDMA_HandleType const& han, NodeType const& in_target,
     ActionType const& action = nullptr
@@ -361,12 +641,27 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     return syncChannel(is_local, han, RDMA_TypeType::Get, target, this_node, action);
   }
 
+  /**
+   * \brief Sync locally on a PUT channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] dest the target
+   * \param[in] action action when sync completes
+   */
   void syncLocalPutChannel(
     RDMA_HandleType const& han, NodeType const& dest, ActionType const& action = nullptr
   ) {
     return syncLocalPutChannel(han, dest, uninitialized_destination, action);
   }
 
+  /**
+   * \brief Sync locally on a PUT channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] dest destination node
+   * \param[in] in_target the target
+   * \param[in] action action when sync completes
+   */
   void syncLocalPutChannel(
     RDMA_HandleType const& han, NodeType const& dest,
     NodeType const& in_target, ActionType const& action = nullptr
@@ -376,6 +671,13 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     return syncChannel(is_local, han, RDMA_TypeType::Put, target, dest, action);
   }
 
+  /**
+   * \brief Remotely sync GET on channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] in_target target
+   * \param[in] action action after completion
+   */
   void syncRemoteGetChannel(
     RDMA_HandleType const& han, NodeType const& in_target = uninitialized_destination,
     ActionType const& action = nullptr
@@ -389,12 +691,25 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     return syncChannel(is_local, han, RDMA_TypeType::Get, target, this_node, action);
   }
 
+  /**
+   * \brief Remotely sync PUT on channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] action action after completion
+   */
   void syncRemotePutChannel(
     RDMA_HandleType const& han, ActionType const& action
   ) {
     return syncRemotePutChannel(han, uninitialized_destination, action);
   }
 
+  /**
+   * \brief Remotely sync PUT on channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] in_target target
+   * \param[in] action action after completion
+   */
   void syncRemotePutChannel(
     RDMA_HandleType const& han, NodeType const& in_target,
     ActionType const& action = nullptr
@@ -408,6 +723,13 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     return syncChannel(is_local, han, RDMA_TypeType::Put, target, this_node, action);
   }
 
+  /**
+   * \brief Remove channel
+   *
+   * \param[in] han the RDMA handle
+   * \param[in] override_target the target
+   * \param[in] action action after removal
+   */
   void removeDirectChannel(
     RDMA_HandleType const& han, NodeType const& override_target = uninitialized_destination,
     ActionType const& action = nullptr

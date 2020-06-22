@@ -66,6 +66,20 @@
 
 namespace vt { namespace objgroup {
 
+/**
+ * \struct ObjGroupManager
+ *
+ * \brief A core VT component that can create groups with one object per node
+ *
+ * Create a "object group" with one instance of that group on each node. An
+ * instantiated object group has once instance on each node that can be
+ * collectively referred to with a single proxy. This proxy allows
+ * sends/broadcasts/reduces over the object group.
+ *
+ * Object groups create a clean isolation of a instance of some functionality
+ * that has distributed behavior. Some of the newer VT components are
+ * implemented as object groups, such as the load balancers.
+ */
 struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   template <typename ObjT>
   using ProxyType           = proxy::Proxy<ObjT>;
@@ -80,6 +94,9 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   using MsgContainerType    = std::vector<MsgSharedPtr<ShortMessage>>;
   using BaseProxyListType   = std::set<ObjGroupProxyType>;
 
+  /**
+   * \internal \brief Construct the ObjGroupManager
+   */
   ObjGroupManager() = default;
 
   std::string name() override { return "ObjGroupManager"; }
@@ -90,104 +107,251 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    * communicator
    */
 
-  // Make obj group with the constructor args to the obj
+  /**
+   * \brief Collectively construct a new object group. Allocates and constructs
+   * the object on each node by forwarding constructor arguments.
+   *
+   * \param[in] args args to pass to the object's constructor on each node
+   *
+   * \return proxy to the object group
+   */
   template <typename ObjT, typename... Args>
   ProxyType<ObjT> makeCollective(Args&&... args);
-  // Make obj group with a std::unique_ptr to the obj
+
+  /**
+   * \brief Collectively construct a new object group from a existing unique
+   * pointer to the local object
+   *
+   * \param[in] obj the std::unique_ptr<ObjT> to the local object
+   *
+   * \return proxy to the object group
+   */
   template <typename ObjT>
   ProxyType<ObjT> makeCollective(std::unique_ptr<ObjT> obj);
-  // Make obj group with fn for creating the obj
+
+  /**
+   * \brief Collectively construct a new object group with a callback to provide
+   * a unique pointer on each node.
+   *
+   * \param[in] fn callback function to construct
+   *
+   * \return proxy to the object group
+   */
   template <typename ObjT>
   ProxyType<ObjT> makeCollective(MakeFnType<ObjT> fn);
-  // Make obj group with non-owning ptr to the object
+
+  /**
+   * \brief Collectively construct a new object group from a raw pointer to the
+   * object.
+   *
+   * \warning This overload requires the caller to manage the lifetime of the
+   * object. Do not allow the object to be deallocated before the object group
+   * is destroyed.
+   *
+   * \param[in] obj raw pointer to the object
+   *
+   * \return proxy to the object group
+   */
   template <typename ObjT>
   ProxyType<ObjT> makeCollective(ObjT* obj);
-  // Make obj group with specialized smart ptr (e.g., RCP, shared_ptr, etc.)
+
+  /**
+   * \brief Collectively construct a new object group from a smart-pointer-like
+   * handle.
+   *
+   * \param[in] obj the smart-pointer-like handle that the system holds until
+   * destruction
+   *
+   * \return proxy to the object group
+   */
   template <template <typename> class UserPtr, typename ObjT>
   ProxyType<ObjT> makeCollective(UserPtr<ObjT> obj);
 
-  /*
-   * Deletion of a live object group across the system
+  /**
+   * \brief Collectively destroy an object group across the whole system
+   *
+   * \param[in] proxy proxy to the object group
    */
   template <typename ObjT>
   void destroyCollective(ProxyType<ObjT> proxy);
 
-  /*
-   * Update a live object; swap in a new object with args to delete and
-   * reconstruct the object
+  /**
+   * \brief Locally update the underlying object group instance. Swap the
+   * current object group locally for a new instance.
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] args args to reconstruct the object group instance
    */
   template <typename ObjT, typename... Args>
   void update(ProxyElmType<ObjT> proxy, Args&&... args);
+
+  /**
+   * \brief Collectively update the underlying object group instance. Swap the
+   * current object group for a new instance.
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] args args to reconstruct the object group instance
+   */
   template <typename ObjT, typename... Args>
   void update(ProxyType<ObjT> proxy, Args&&... args);
 
-  /*
-   * Send/broadcast messages to obj group handlers
+  /**
+   * \internal \brief Send a message to an element of the object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message to send
    */
-
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
+
+  /**
+   * \internal \brief Broadcast a message to all nodes in object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message to send
+   */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
-  /*
-   * Set the tracing name for objgroup
+  /**
+   * \brief Change the traced name of the object group
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] name the new active method name for the object group in traces
+   * \param[in] parent the new object function name
    */
   template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void setTraceName(
     ProxyType<ObjT> proxy, std::string const& name, std::string const& parent = ""
   );
 
-  /*
-   * Reduce over an obj group
+  /**
+   * \brief Perform a reduction over an objgroup
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg reduction message
+   * \param[in] stamp stamp to identify reduction across nodes
    */
-
   template <typename ObjT, typename MsgT, ActiveTypedFnType<MsgT> *f>
   void reduce(
     ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg,
     collective::reduce::ReduceStamp const& stamp
   );
 
-  /*
-   * Get access to the local instance of a particular object group
+  /**
+   * \brief Get a pointer to the local objgroup instance. Returns null if the
+   * object doesn't exist.
+   *
+   * \param[in] proxy proxy to the object group
+   *
+   * \return raw pointer to the object instance on this node
    */
-
   template <typename ObjT>
   ObjT* get(ProxyType<ObjT> proxy);
+
+  /**
+   * \brief Get a pointer to the local objgroup instance. Returns null if the
+   * object doesn't exist.
+   *
+   * \param[in] proxy indexed proxy to the object group (must be the current
+   * node)
+   *
+   * \return raw pointer to the object instance on this node
+   */
   template <typename ObjT>
   ObjT* get(ProxyElmType<ObjT> proxy);
 
-  /*
-   * Get the proxy to an obj group from a pointer to the object
+  /**
+   * \brief Get the proxy from a object instance pointer. Assert that object
+   * pointer is part of a valid object group.
+   *
+   * \param[in] obj the raw pointer to an object
+   *
+   * \return proxy to the object group
    */
-
   template <typename ObjT>
   ProxyType<ObjT> getProxy(ObjT* obj);
+
+  /**
+   * \brief Get the element proxy from a object instance pointer
+   *
+   * \param[in] obj the raw pointer to an object
+   *
+   * \return indexed proxy to the object group
+   */
   template <typename ObjT>
   ProxyElmType<ObjT> proxyElm(ObjT* obj);
 
   /*
    * Dispatch to a live obj group pointer with a handler
    */
+  /**
+   * \internal \brief Dispatch message to objgroup
+   *
+   * \param[in] msg the message
+   * \param[in] han the handler to invoke
+   */
   void dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han);
 
-  /*
-   * Untyped calls for broadcasting or sending msgs to an obj group
+  /**
+   * \internal \brief Send a message to an objgroup
+   *
+   * \param[in] msg message to send
+   * \param[in] han handler to invoke
+   * \param[in] node node to send message
    */
   template <typename MsgT>
   void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+
+  /**
+   * \internal \brief Broadcast message to an objgroup
+   *
+   * \param[in] msg message to broadcast
+   * \param[in] han handler to invoke
+   */
   template <typename MsgT>
   void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han);
 
-  /*
-   * Run the scheduler to push along postponed events (such as self sends)
+  /**
+   * \brief Downcast a proxy
+   *
+   * \warning Do not call these. Use \c registerBaseCollective to get a proxy
+   * to the base.
+   *
+   * \param[in] proxy proxy to downcast
    */
   template <typename ObjT, typename BaseT>
   void downcast(ProxyType<ObjT> proxy);
+
+  /**
+   * \brief Upcast a proxy
+   *
+   * \warning Do not call this---unimplemented. Use \c registerBaseCollective
+   * to get a proxy to the base.
+   *
+   * \param[in] proxy proxy to upcast
+   */
   template <typename ObjT, typename DerivedT>
   void upcast(ProxyType<ObjT> proxy);
+
+  /**
+   * \brief Register the base class for a live objgroup
+   *
+   * If one wants messages delivered to a base class pointer, register the base
+   * class.
+   *
+   * \param[in] proxy the current, derived proxy
+   */
   template <typename ObjT, typename BaseT>
   void registerBaseCollective(ProxyType<ObjT> proxy);
+
+  /**
+   * \internal \brief Get the proxy, identity function
+   *
+   * \param[in] proxy the proxy to the objgroup
+   *
+   * \return the proxy
+   */
   ObjGroupProxyType getProxy(ObjGroupProxyType proxy);
 
   friend void scheduleMsg(
@@ -195,28 +359,51 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   );
 
 private:
+  /**
+   * \internal \brief Untyped system call to make a new collective objgroup
+   *
+   * \param[in] b the base holder
+   * \param[in] idx registered type idx for the objgroup
+   * \param[in] obj_ptr type-erased pointer to the object
+   *
+   * \return a new untyped proxy
+   */
   ObjGroupProxyType makeCollectiveImpl(
     HolderBasePtrType b, ObjTypeIdxType idx, void* obj_ptr
   );
 
+  /**
+   * \internal \brief Typed system class to make a new collective objgroup
+   *
+   * \param[in] obj pointer to the object instance
+   * \param[in] base_holder the base holder
+   *
+   * \return the new typed proxy
+   */
   template <typename ObjT>
   ProxyType<ObjT> makeCollectiveObj(ObjT* obj, HolderBasePtrType base_holder);
 
+  /**
+   * \internal \brief Register a new objgroup with proxy
+   *
+   * \param[in] obj pointer to the object instance
+   * \param[in] proxy the proxy
+   */
   template <typename ObjT>
   void regObjProxy(ObjT* obj, ObjGroupProxyType proxy);
 
 private:
-  // The current obj ID, sequential on each node for collective construction
+  /// The current obj ID, sequential on each node for collective construction
   std::unordered_map<ObjTypeIdxType,ObjGroupIDType> cur_obj_id_;
-  // Function to dispatch to the base class for type-erasure to run handler
+  /// Function to dispatch to the base class for type-erasure to run handler
   std::unordered_map<ObjGroupProxyType,DispatchBasePtrType> dispatch_;
-  // Type-erased pointers to the objects held on this node
+  /// Type-erased pointers to the objects held on this node
   std::unordered_map<ObjGroupProxyType,HolderBasePtrType> objs_;
-  // Reverse lookup map from an object pointer to the proxy
+  /// Reverse lookup map from an object pointer to the proxy
   std::unordered_map<void*,ObjGroupProxyType> obj_to_proxy_;
-  // Messages that are pending creation for delivery
+  /// Messages that are pending creation for delivery
   std::unordered_map<ObjGroupProxyType,MsgContainerType> pending_;
-  // Map from base class type proxies to registered derived proxy
+  /// Map from base class type proxies to registered derived proxy
   std::unordered_map<ObjGroupProxyType,BaseProxyListType> derived_to_bases_;
 };
 

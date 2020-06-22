@@ -67,18 +67,55 @@
 
 namespace vt { namespace collective { namespace reduce {
 
+/**
+ * \struct Reduce
+ *
+ * \brief A specific, isolated reducer instance for a given scope that sequences
+ * reduce operations via the reduction stamp within that scope.
+ *
+ * Holds the state as a reduction makes it up the spanning tree until it reaches
+ * the root. Combines messages with the user-specified reduction operator as
+ * they move up the spanning tree.
+ */
 struct Reduce : virtual collective::tree::Tree {
   using ReduceStateType = ReduceState;
   using ReduceNumType   = typename ReduceStateType::ReduceNumType;
 
+  /**
+   * \internal \brief Construct a new reducer instance
+   *
+   * \param[in] in_scope the scope for the reducer
+   */
   explicit Reduce(detail::ReduceScope const& in_scope);
 
+  /**
+   * \internal \brief Construct a new reducer instance with a custom
+   * (or non-global) spanning tree
+   *
+   * \param[in] in_scope the scope for the reducer
+   * \param[in] in_tree the spanning tree
+   */
   Reduce(
     detail::ReduceScope const& in_scope, collective::tree::Tree* in_tree
   );
 
+  /**
+   * \internal \brief Generate the next reduction stamp
+   *
+   * \return the stamp
+   */
   detail::ReduceStamp generateNextID();
 
+  /**
+   * \brief Reduce a message up the tree
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   detail::ReduceStamp reduce(
     NodeType root, MsgT* const msg,
@@ -86,6 +123,17 @@ struct Reduce : virtual collective::tree::Tree {
     ReduceNumType num_contrib = 1
   );
 
+  /**
+   * \brief Reduce a message up the tree
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] cb the callback to trigger on the root node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
   template <
     typename OpT,
     typename MsgT,
@@ -99,6 +147,16 @@ struct Reduce : virtual collective::tree::Tree {
     ReduceNumType const& num_contrib = 1
   );
 
+  /**
+   * \brief Reduce a message up the tree with a target function on the root node
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
   template <
     typename OpT,
     typename FunctorT,
@@ -111,31 +169,58 @@ struct Reduce : virtual collective::tree::Tree {
     ReduceNumType const& num_contrib = 1
   );
 
+  /**
+   * \internal \brief Combine in a new message for a given reduction
+   *
+   * \param[in] msg the message to combine with the operator
+   * \param[in] local was this called locally or from an incoming handler
+   * \param[in] num_contrib the number of expected local contributions
+   */
   template <typename MsgT>
   void reduceAddMsg(
     MsgT* msg, bool const local, ReduceNumType num_contrib = -1
   );
 
+  /**
+   * \internal \brief Combine and send up the tree if ready
+   *
+   * \param[in] msg the message to reduce
+   */
   template <typename MsgT>
   void reduceNewMsg(MsgT* msg);
 
-  /*
-   *  Explicitly start the reduction when the number of contributions is not
-   *  known up front
+  /**
+   * \internal \brief Explicitly start the reduction when the number of
+   *  contributions is not known up front
+   *
+   * \param[in] id the reduce stamp to start
+   * \param[in] use_num_contrib whether to use the cached # of contributions
    */
   template <typename MsgT>
   void startReduce(detail::ReduceStamp id, bool use_num_contrib = true);
 
+  /**
+   * \internal \brief Active function when a message reaches the root of the
+   * spanning tree and the reduction is complete
+   *
+   * \param[in] msg the reduce message
+   */
   template <typename MsgT>
   void reduceRootRecv(MsgT* msg);
 
+  /**
+   * \internal \brief Active function when a message arrives for a given scope
+   * at some level in the spanning tree
+   *
+   * \param[in] msg the reduce message
+   */
   template <typename MsgT>
   void reduceUp(MsgT* msg);
 
 private:
-  detail::ReduceScope scope_;
-  ReduceStateHolder state_;
-  detail::StrongSeq next_seq_;
+  detail::ReduceScope scope_;   /**< The reduce scope for this reducer */
+  ReduceStateHolder state_;     /**< Reduce state, holds messages, etc. */
+  detail::StrongSeq next_seq_;  /**< The next reduce stamp */
 };
 
 }}} /* end namespace vt::collective::reduce */

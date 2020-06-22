@@ -58,6 +58,15 @@ namespace vt { namespace objgroup { namespace proxy {
 static struct ObjGroupReconstructTagType { } ObjGroupReconstructTag { };
 #pragma GCC diagnostic pop
 
+/**
+ * \struct ProxyElm
+ *
+ * \brief A indexed proxy to a object instance on a particular node
+ *
+ * A \c Proxy<ObjT> can be indexed to select a particular node, returning this
+ * class. Once indexed, one can send a message to the particular node that has
+ * been selected.
+ */
 template <typename ObjT>
 struct ProxyElm {
 
@@ -66,35 +75,94 @@ struct ProxyElm {
   ProxyElm(ProxyElm&&) = default;
   ProxyElm& operator=(ProxyElm const&) = default;
 
+  /**
+   * \internal \brief Create a new element proxy, called by the system
+   *
+   * \param[in] in_proxy the proxy ID
+   * \param[in] in_node the node selected
+   */
   ProxyElm(ObjGroupProxyType in_proxy, NodeType in_node)
     : proxy_(in_proxy), node_(in_node)
   { }
 
-  /*
-   * Send a msg an object in this group with a handler
+  /**
+   * \brief Send a message to the node/element indexed by this proxy to be
+   * delivered to the local object instance
+   *
+   * \param[in] msg raw pointer to the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void send(MsgT* msg) const;
+
+  /**
+   * \brief Send a message to the node/element indexed by this proxy to be
+   * delivered to the local object instance
+   *
+   * \param[in] msg managed pointer to the message
+   */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
   void send(MsgSharedPtr<MsgT> msg) const;
+
+  /**
+   * \brief Send a message to the node/element indexed by this proxy to be
+   * delivered to the local object instance
+   *
+   * \param[in] args args to pass to the message constructor
+   */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
   void send(Args&&... args) const;
 
+  /**
+   * \brief Update the local object instance pointer on this node. Must be run
+   * on local node.
+   *
+   * \param[in] ObjGroupReconstructTagType tag to select overload
+   * \param[in] args args to pass the object constructor
+   */
   template <typename... Args>
   void update(ObjGroupReconstructTagType, Args&&... args) const;
 
+  /**
+   * \brief Get raw pointer to the local object instance residing on the
+   * selected node.
+   *
+   * \warning If this is called on a non-local node it will return nullptr since
+   * that object instance is not accessible.
+   *
+   * \warning Do not hold this raw pointer longer than the object group
+   * lifetime. Once the object group is destroyed the pointer will no longer be
+   * valid.
+   *
+   * \return raw pointer to the object
+   */
   ObjT* get() const;
 
+  /**
+   * \brief Get the underlying proxy bits that are used to identify the objgroup
+   *
+   * \return the proxy ID
+   */
   ObjGroupProxyType getProxy() const { return proxy_; }
+
+  /**
+   * \brief Get the node this element proxy is holding
+   *
+   * \return the node indexed
+   */
   NodeType getNode() const { return node_; }
 
 public:
+  /**
+   * \brief Serialize the element proxy
+   *
+   * \param[in] s serializer
+   */
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
 private:
-  ObjGroupProxyType proxy_ = no_obj_group;
-  NodeType node_           = uninitialized_destination;
+  ObjGroupProxyType proxy_ = no_obj_group;              /**< The raw proxy ID bits */
+  NodeType node_           = uninitialized_destination; /**< The indexed node */
 };
 
 }}} /* end namespace vt::objgroup::proxy */

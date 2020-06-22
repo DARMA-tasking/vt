@@ -46,6 +46,7 @@
 
 namespace vt { namespace tutorial {
 
+/// [Tutorial3A]
 //              VT Base Message
 //             \----------------/
 //              \              /
@@ -120,5 +121,6 @@ static void recurHandler(ExampleMsg* msg) {
     }
   }
 }
+/// [Tutorial3A]
 
 }} /* end namespace vt::tutorial */
