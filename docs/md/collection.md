@@ -6,14 +6,14 @@ The virtual context collection component
 a core VT component that manages multi-dimensional collections of *virtual
 context* (or a migratable C++ object registered with \vt) elements. It manages
 the creation, deletion, and messaging across elements at runtime supporting
-dense, sparse, on-demand, and staged insert modes. It utilizes the \subpage
+dense, sparse, on-demand, and staged insert modes. It utilizes the \ref
 location to manage the location of these elements to efficiently deliver
-messages. It also utilizes the \subpage group to build a spanning tree across
+messages. It also utilizes the \ref group to build a spanning tree across
 the nodes that the collection is currently mapped to. This group makes
 broadcasts efficient and allows reductions to make progress without waiting for
-nodes that do not have collection elements. The \subpage proc-stats component
+nodes that do not have collection elements. The \ref proc-stats component
 stores the statistics for live collections that then passes the instrumented
-data to the \subpage lb-manager component to apply load balancing strategies.
+data to the \ref lb-manager component to apply load balancing strategies.
 
 \section rooted-hello-world-collection Hello World 1D Dense Collection (Rooted)
 \snippet  examples/hello_world/hello_world_collection.cc Hello world collection

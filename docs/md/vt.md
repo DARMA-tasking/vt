@@ -67,8 +67,7 @@ management.
 
 \section how-to-build-intro How to build
 
-\vt can be built with cmake or inside a docker container. Learn \subpage
-vt-build
+\vt can be built with cmake or inside a docker container. Learn \ref vt-build
 
 \section vt-hello-world Hello World Example
 

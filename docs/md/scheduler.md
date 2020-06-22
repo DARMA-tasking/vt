@@ -26,7 +26,7 @@ conditions) is met, it is recommended that `runSchedulerWhile` be invoked:
 
 \section higher-level-calls Higher-level Calls to Wait for Completion
 
-If work is enclosed in an "epoch", the \subpage term can be used to track its
+If work is enclosed in an "epoch", the \ref term can be used to track its
 distributed completion. In this case, instead of calling the scheduler directly,
 built-in higher-level functions can be used to advance the scheduler until this
 work is complete/terminated.
