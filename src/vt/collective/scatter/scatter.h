@@ -77,7 +77,7 @@ struct Scatter : virtual collective::tree::Tree {
    * \brief Scatter data to all nodes
    *
    * The functions passed to scatter through the arguments \c size_fn and
-   * \c data_fn will only be not be retained after this call completes.
+   * \c data_fn will not be retained after this call returns.
    *
    * \param[in] total_size total size of data to scatter
    * \param[in] max_proc_size max data to be scattered to any node
