@@ -45,6 +45,7 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_VALUE_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_VALUE_H
 
+#include "vt/config.h"
 #include "vt/runtime/component/diagnostic_types.h"
 #include "vt/runtime/component/diagnostic_string.h"
 #include "vt/runtime/component/diagnostic_value_base.h"
@@ -288,10 +289,19 @@ struct DiagnosticValue : DiagnosticBase {
     case DiagnosticUpdate::Replace:
       value_.update(val);
       break;
+    case DiagnosticUpdate::Min:
+      value_.update(std::min(value_.getRawValue(), val));
+      break;
+    case DiagnosticUpdate::Max:
+      value_.update(std::max(value_.getRawValue(), val));
+      break;
     case DiagnosticUpdate::Avg:
       value_.incrementN();
     case DiagnosticUpdate::Sum:
       value_.update(value_.getRawValue() + val);
+      break;
+    default:
+      vtAssert(false, "Unknown DiagnosticUpdate---should be unreachable");
       break;
     }
   }

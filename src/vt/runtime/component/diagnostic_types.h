@@ -47,13 +47,20 @@
 
 namespace vt { namespace runtime { namespace component {
 
+/**
+ * \brief The type of diagnostic (the category)
+ */
 enum struct DiagnosticTypeEnum : int8_t {
-  PerformanceDiagnostic,
-  DebugDiagnostic
+  PerformanceDiagnostic,        /**< A performance diagnostic */
+  DebugDiagnostic               /**< A debugging diagnostic */
 };
 
 enum struct DiagnosticUpdate : int8_t {
-  Sum, Avg, Replace
+  Sum,                          /**< Sum diagnostic values during update */
+  Avg,                          /**< Avg diagnostic values during update */
+  Replace,                      /**< Replace diagnostic value during update */
+  Min,                          /**< Min diagnostic value during update */
+  Max                           /**< Max diagnostic value during update */
 };
 
 }}} /* end namespace vt::runtime::component */
