@@ -139,27 +139,25 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 
   EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
 
-  theTerm()->addAction(balance_epoch,
-		       [=] {
-			 debug_print(
-				     lb, node,
-				     "LBManager: starting migrations\n"
-				     );
-			 theMsg()->pushEpoch(migrate_epoch);
-			 strat->applyMigrations(strat->getTransfers());
-			 theMsg()->popEpoch(migrate_epoch);
-			 theTerm()->finishedEpoch(migrate_epoch);
-		       });
+  theTerm()->addAction(balance_epoch, [=] {
+    debug_print(
+      lb, node,
+      "LBManager: starting migrations\n"
+    );
+    theMsg()->pushEpoch(migrate_epoch);
+    strat->applyMigrations(strat->getTransfers());
+    theMsg()->popEpoch(migrate_epoch);
+    theTerm()->finishedEpoch(migrate_epoch);
+  });
 
-  theTerm()->addAction(migrate_epoch,
-		       [=] {
-			 debug_print(
-				     lb, node,
-				     "LBManager: finished migrations\n"
-				     );
-			 theProcStats()->startIterCleanup();
-			 this->finishedRunningLB(phase);
-		       });
+  theTerm()->addAction(migrate_epoch, [=] {
+    debug_print(
+      lb, node,
+      "LBManager: finished migrations\n"
+    );
+    theProcStats()->startIterCleanup();
+    this->finishedRunningLB(phase);
+  });
 
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
   return proxy;
