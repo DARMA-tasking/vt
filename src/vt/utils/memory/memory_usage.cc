@@ -45,6 +45,7 @@
 #include "vt/config.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/context/context.h"
 
 #include <vector>
 #include <memory>
