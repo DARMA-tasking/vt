@@ -194,10 +194,10 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
       bool has_object = theProcStats()->hasObjectToMigrate(obj_id);
 
       debug_print(
-                  lb, node,
-                  "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
-                  obj_id, from, to, has_object
-                  );
+        lb, node,
+        "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
+        obj_id, from, to, has_object
+      );
 
       if (has_object) {
         local_migration_count_++;
