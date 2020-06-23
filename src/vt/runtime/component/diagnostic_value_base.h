@@ -82,6 +82,8 @@ struct DiagnosticBase {
       desc_(in_desc)
   { }
 
+  virtual ~DiagnosticBase() { }
+
   /**
    * \internal \brief Get the diagnostic value key
    *
