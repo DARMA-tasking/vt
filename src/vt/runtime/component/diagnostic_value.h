@@ -268,14 +268,15 @@ struct DiagnosticValue : DiagnosticBase {
    * \param[in] in_key the key for the value
    * \param[in] in_desc the full description
    * \param[in] in_update the update type for the underlying value
+   * \param[in] in_unit the unit type for this diagnostic
    * \param[in] in_type the diagnostic type
    * \param[in] in_initial_value the initial value
    */
   explicit DiagnosticValue(
     std::string const& in_key, std::string const& in_desc,
-    DiagnosticUpdate in_update, DiagnosticTypeEnum in_type,
-    T in_initial_value = {}
-  ) : DiagnosticBase(in_key, in_desc, in_update, in_type),
+    DiagnosticUpdate in_update, DiagnosticUnit in_unit,
+    DiagnosticTypeEnum in_type, T in_initial_value = {}
+  ) : DiagnosticBase(in_key, in_desc, in_update, in_unit, in_type),
       value_(DiagnosticValueWrapper<T>{in_initial_value})
   { }
 

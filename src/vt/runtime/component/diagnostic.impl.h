@@ -56,7 +56,7 @@ namespace vt { namespace runtime { namespace component {
 template <typename T>
 void Diagnostic::registerDiagnostic(
   std::string const& key, std::string const& desc, DiagnosticUpdate update,
-  DiagnosticTypeEnum type, T initial_value
+  DiagnosticUnit unit, DiagnosticTypeEnum type, T initial_value
 ) {
   vtAssert(values_.find(key) == values_.end(), "Key must not exist");
   values_.emplace(
@@ -64,7 +64,7 @@ void Diagnostic::registerDiagnostic(
     std::forward_as_tuple(key),
     std::forward_as_tuple(
       std::make_unique<detail::DiagnosticValue<T>>(
-        key, desc, update, type, initial_value
+        key, desc, update, unit, type, initial_value
       )
     )
   );

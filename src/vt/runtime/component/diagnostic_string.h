@@ -63,6 +63,7 @@ struct DiagnosticString {
   std::string avg_value_;
   std::string std_value_;
   std::string var_value_;
+  std::string base_unit_;
 };
 
 }}} /* end namespace vt::runtime::component */

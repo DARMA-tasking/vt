@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             diagnostic_value.cc
+//                              diagnostic_units.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,71 +42,27 @@
 //@HEADER
 */
 
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/diagnostic_value_format.h"
-#include "vt/messaging/message.h"
-#include "vt/collective/reduce/operators/default_msg.h"
-#include "vt/collective/reduce/reduce.h"
-#include "vt/pipe/pipe_manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_UNITS_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_UNITS_H
 
-namespace vt { namespace runtime { namespace component { namespace detail {
+namespace vt { namespace runtime { namespace component {
 
-namespace {
+/** \brief Unit type for a diagnostic value */
+enum struct DiagnosticUnit : int8_t {
+  Bytes,
+  Units,
+  UnitsPerSecond
+};
 
-template <typename T>
-void reduceHelper(
-  Diagnostic* diagnostic, DiagnosticString* out, T val, DiagnosticUnit unit
-) {
-  using ValueType = DiagnosticValueWrapper<T>;
-  using ReduceMsgType = collective::ReduceTMsg<ValueType>;
+/** \brief Multipliers for basic units */
+enum struct UnitMultiplier : int8_t {
+  Base = 0,               /**< Multiplier = 1 */
+  Thousands = 1,          /**< Multiplier = 1,000 */
+  Millions = 2,           /**< Multiplier = 1,000,000 */
+  Billions = 3,           /**< Multiplier = 1,000,000,000 */
+  Trillions = 4           /**< Multiplier = 1,000,000,000,000 */
+};
 
-  // Get the reducer from the component
-  auto r = diagnostic->reducer();
-  auto msg = makeMessage<ReduceMsgType>(
-    ValueType{typename ValueType::ReduceTag{}, val}
-  );
-  auto cb = theCB()->makeFunc<ReduceMsgType>([=](ReduceMsgType* m) {
-    auto reduced_val = m->getConstVal();
-    *out = DiagnosticStringizer<T>::get(reduced_val, unit);
-  });
-  r->reduce<collective::PlusOp<ValueType>>(0, msg.get(), cb);
-}
+}}} /* end namespace vt::runtime::component */
 
-} /* end anon namespace */
-
-template <>
-void DiagnosticValue<int64_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
-
-template <>
-void DiagnosticValue<int32_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
-
-template <>
-void DiagnosticValue<int16_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
-
-template <>
-void DiagnosticValue<double>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
-
-template <>
-void DiagnosticValue<float>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
-
-}}}} /* end namespace vt::runtime::component::detail */
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_UNITS_H*/

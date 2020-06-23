@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             diagnostic_value.cc
+//                          diagnostic_enum_format.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,71 +42,63 @@
 //@HEADER
 */
 
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/diagnostic_value_format.h"
-#include "vt/messaging/message.h"
-#include "vt/collective/reduce/operators/default_msg.h"
-#include "vt/collective/reduce/reduce.h"
-#include "vt/pipe/pipe_manager.h"
+#include "vt/config.h"
+#include "vt/runtime/component/diagnostic_enum_format.h"
 
-namespace vt { namespace runtime { namespace component { namespace detail {
+namespace vt { namespace runtime { namespace component {
 
-namespace {
-
-template <typename T>
-void reduceHelper(
-  Diagnostic* diagnostic, DiagnosticString* out, T val, DiagnosticUnit unit
-) {
-  using ValueType = DiagnosticValueWrapper<T>;
-  using ReduceMsgType = collective::ReduceTMsg<ValueType>;
-
-  // Get the reducer from the component
-  auto r = diagnostic->reducer();
-  auto msg = makeMessage<ReduceMsgType>(
-    ValueType{typename ValueType::ReduceTag{}, val}
-  );
-  auto cb = theCB()->makeFunc<ReduceMsgType>([=](ReduceMsgType* m) {
-    auto reduced_val = m->getConstVal();
-    *out = DiagnosticStringizer<T>::get(reduced_val, unit);
-  });
-  r->reduce<collective::PlusOp<ValueType>>(0, msg.get(), cb);
+std::string diagnosticUpdateTypeString(DiagnosticUpdate update) {
+  switch (update) {
+  case DiagnosticUpdate::Sum:     return "SUM";       break;
+  case DiagnosticUpdate::Avg:     return "MEAN";      break;
+  case DiagnosticUpdate::Replace: return "REPLACE";   break;
+  case DiagnosticUpdate::Min:     return "MIN";       break;
+  case DiagnosticUpdate::Max:     return "MAX";       break;
+  default:                        return "<unknown>"; break;
+  }
+  return "";
 }
 
-} /* end anon namespace */
-
-template <>
-void DiagnosticValue<int64_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
+bool diagnosticShowTotal(DiagnosticUpdate update) {
+  switch (update) {
+  case DiagnosticUpdate::Sum:
+  case DiagnosticUpdate::Avg:
+  case DiagnosticUpdate::Replace:
+    return true;
+    break;
+  // for Min/Max types, showing the total across nodes does not make sense
+  case DiagnosticUpdate::Min:
+  case DiagnosticUpdate::Max:
+    return false;
+    break;
+  default:
+    return true;
+    break;
+  }
+  return true;
 }
 
-template <>
-void DiagnosticValue<int32_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
+std::string diagnosticUnitTypeString(DiagnosticUnit unit) {
+  switch (unit) {
+  case DiagnosticUnit::Bytes:          return "bytes";       break;
+  case DiagnosticUnit::Units:          return "units";       break;
+  case DiagnosticUnit::UnitsPerSecond: return "units/sec";   break;
+  default:                             return "<unknown>"; break;
+  }
+  return "";
 }
 
-template <>
-void DiagnosticValue<int16_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
+std::string diagnosticMultiplierString(UnitMultiplier multiplier) {
+  switch (multiplier) {
+  case UnitMultiplier::Base:       return "";          break;
+  case UnitMultiplier::Thousands:  return "K";         break;
+  case UnitMultiplier::Millions:   return "M";         break;
+  case UnitMultiplier::Billions:   return "B";         break;
+  case UnitMultiplier::Trillions:  return "T";         break;
+  default:                         return "<unknown>"; break;
+  }
+  return "";
 }
 
-template <>
-void DiagnosticValue<double>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
 
-template <>
-void DiagnosticValue<float>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
-
-}}}} /* end namespace vt::runtime::component::detail */
+}}} /* end namespace vt::runtime::component */

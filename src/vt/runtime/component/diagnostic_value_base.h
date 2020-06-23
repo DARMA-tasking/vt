@@ -46,6 +46,7 @@
 #define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_VALUE_BASE_H
 
 #include "vt/runtime/component/diagnostic_types.h"
+#include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_string.h"
 
 #include <string>
@@ -71,13 +72,16 @@ struct DiagnosticBase {
    * \param[in] in_key key for the diagnostic value lookup
    * \param[in] in_desc the long description of the diagnostic form
    * \param[in] in_update the type of update to use for the underlying value
+   * \param[in] in_unit the unit type for this diagnostic
    * \param[in] in_type the type of diagnostic
    */
   DiagnosticBase(
     std::string const& in_key, std::string const& in_desc,
-    DiagnosticUpdate in_update, DiagnosticTypeEnum in_type
+    DiagnosticUpdate in_update, DiagnosticUnit in_unit,
+    DiagnosticTypeEnum in_type
   ) : type_(in_type),
       update_(in_update),
+      unit_(in_unit),
       key_(in_key),
       desc_(in_desc)
   { }
@@ -113,6 +117,13 @@ struct DiagnosticBase {
   DiagnosticUpdate getUpdateType() const { return update_; }
 
   /**
+   * \internal \brief Get the type of unit for this value
+   *
+   * \return the type of diagnostic unit
+   */
+  DiagnosticUnit getUnit() const { return unit_; }
+
+  /**
    * \internal \brief Reduce over this value to compute stats over all the nodes
    * for this particular diagnostic value
    *
@@ -124,6 +135,7 @@ struct DiagnosticBase {
 protected:
   DiagnosticTypeEnum const type_; /**< The diagnostic type */
   DiagnosticUpdate const update_; /**< The diagnostic value update type */
+  DiagnosticUnit const unit_;     /**< The diagnostic unit type for this value */
   std::string const key_;         /**< Key for looking up the value */
   std::string const desc_;        /**< Long description of the value */
 };

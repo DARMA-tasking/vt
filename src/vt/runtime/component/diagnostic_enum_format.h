@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             diagnostic_value.cc
+//                           diagnostic_enum_format.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,71 +42,56 @@
 //@HEADER
 */
 
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/diagnostic_value_format.h"
-#include "vt/messaging/message.h"
-#include "vt/collective/reduce/operators/default_msg.h"
-#include "vt/collective/reduce/reduce.h"
-#include "vt/pipe/pipe_manager.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_ENUM_FORMAT_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_ENUM_FORMAT_H
 
-namespace vt { namespace runtime { namespace component { namespace detail {
+#include "vt/runtime/component/diagnostic_units.h"
+#include "vt/runtime/component/diagnostic_types.h"
 
-namespace {
+#include <string>
 
-template <typename T>
-void reduceHelper(
-  Diagnostic* diagnostic, DiagnosticString* out, T val, DiagnosticUnit unit
-) {
-  using ValueType = DiagnosticValueWrapper<T>;
-  using ReduceMsgType = collective::ReduceTMsg<ValueType>;
+namespace vt { namespace runtime { namespace component {
 
-  // Get the reducer from the component
-  auto r = diagnostic->reducer();
-  auto msg = makeMessage<ReduceMsgType>(
-    ValueType{typename ValueType::ReduceTag{}, val}
-  );
-  auto cb = theCB()->makeFunc<ReduceMsgType>([=](ReduceMsgType* m) {
-    auto reduced_val = m->getConstVal();
-    *out = DiagnosticStringizer<T>::get(reduced_val, unit);
-  });
-  r->reduce<collective::PlusOp<ValueType>>(0, msg.get(), cb);
-}
+/**
+ * \brief Convert a diagnostic update enum to a human-readable string
+ *
+ * \param[in] update the update type
+ *
+ * \return a string for printing
+ */
+std::string diagnosticUpdateTypeString(DiagnosticUpdate update);
 
-} /* end anon namespace */
+/**
+ * \internal \brief Whether to print the total (or sum across processors) of a
+ * given type of update
+ *
+ * For example, a \c DiagnosticUpdate::Max value updater does not make sense to
+ * print the total across nodes.
+ *
+ * \param[in] update the update type
+ *
+ * \return whether to print the total
+ */
+bool diagnosticShowTotal(DiagnosticUpdate update);
 
-template <>
-void DiagnosticValue<int64_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
+/**
+ * \brief Convert a diagnostic unit type to a human-readable string
+ *
+ * \param[in] unit the unit
+ *
+ * \return a string for printing
+ */
+std::string diagnosticUnitTypeString(DiagnosticUnit unit);
 
-template <>
-void DiagnosticValue<int32_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
+/**
+ * \brief Convert a diagnostic unit multiplier to a human-readable string
+ *
+ * \param[in] multiplier the multiplier type
+ *
+ * \return a string for printing
+ */
+std::string diagnosticMultiplierString(UnitMultiplier multiplier);
 
-template <>
-void DiagnosticValue<int16_t>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
+}}} /* end namespace vt::runtime::component */
 
-template <>
-void DiagnosticValue<double>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
-
-template <>
-void DiagnosticValue<float>::reduceOver(
-  Diagnostic* diagnostic, DiagnosticString* out
-) {
-  reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit());
-}
-
-}}}} /* end namespace vt::runtime::component::detail */
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_ENUM_FORMAT_H*/

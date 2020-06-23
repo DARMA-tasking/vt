@@ -48,6 +48,7 @@
 #include "vt/runtime/component/component_name.h"
 #include "vt/runtime/component/component_reduce.h"
 #include "vt/runtime/component/diagnostic_types.h"
+#include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_value.h"
 
 #include <string>
@@ -66,6 +67,7 @@ namespace vt { namespace runtime { namespace component {
 struct Diagnostic : ComponentName, ComponentReducer {
   using DiagnosticBasePtrType = std::unique_ptr<detail::DiagnosticBase>;
   using UpdateType = DiagnosticUpdate;
+  using UnitType = DiagnosticUnit;
 
   virtual void dumpState() = 0;
 
@@ -83,12 +85,16 @@ protected:
    *
    * \param[in] key unique key for diagnostic, should match across nodes
    * \param[in] desc description of the diagnostic value
+   * \param[in] update the update operator that is applied for
+   * \c updateDiagnostic
+   * \param[in] unit the unit type for this diagnostic
    * \param[in] type the type of diagnostic being registered
    * \param[in] initial_value the initial value for the diagnostic
    */
   template <typename T>
   void registerDiagnostic(
     std::string const& key, std::string const& desc, DiagnosticUpdate update,
+    DiagnosticUnit unit = DiagnosticUnit::Units,
     DiagnosticTypeEnum type = DiagnosticTypeEnum::PerformanceDiagnostic,
     T initial_value = {}
   );
