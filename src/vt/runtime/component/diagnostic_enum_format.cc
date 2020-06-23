@@ -62,11 +62,11 @@ std::string diagnosticUpdateTypeString(DiagnosticUpdate update) {
 bool diagnosticShowTotal(DiagnosticUpdate update) {
   switch (update) {
   case DiagnosticUpdate::Sum:
-  case DiagnosticUpdate::Avg:
   case DiagnosticUpdate::Replace:
     return true;
     break;
-  // for Min/Max types, showing the total across nodes does not make sense
+  // for Avg/Min/Max types, showing the total across nodes does not make sense
+  case DiagnosticUpdate::Avg:
   case DiagnosticUpdate::Min:
   case DiagnosticUpdate::Max:
     return false;
