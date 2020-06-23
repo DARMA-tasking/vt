@@ -76,6 +76,34 @@ ActiveMessenger::ActiveMessenger()
    * stack during execution until the AM's destructor is invoked
    */
   pushEpoch(term::any_epoch_sentinel);
+
+  auto sum_type = runtime::component::DiagnosticUpdate::Sum;
+  registerDiagnostic<int64_t>("AM_sent", "active messages sent", sum_type);
+  registerDiagnostic<int64_t>("DM_sent", "data messages sent", sum_type);
+  registerDiagnostic<int64_t>("AM_sent_bytes", "active message bytes sent", sum_type);
+  registerDiagnostic<int64_t>("DM_sent_bytes", "active message bytes sent", sum_type);
+
+  registerDiagnostic<int64_t>("AM_recv", "active messages received", sum_type);
+  registerDiagnostic<int64_t>("DM_recv", "data messages received", sum_type);
+  registerDiagnostic<int64_t>("AM_recv_bytes", "active message bytes received", sum_type);
+  registerDiagnostic<int64_t>("DM_recv_bytes", "active message bytes received", sum_type);
+
+  registerDiagnostic<int64_t>("AM_recv_posted", "active messages irecv posted", sum_type);
+  registerDiagnostic<int64_t>("AM_recv_posted_bytes", "active messages irecv posted bytes", sum_type);
+  registerDiagnostic<int64_t>("DM_recv_posted", "data messages  irecv posted", sum_type);
+  registerDiagnostic<int64_t>("DM_recv_posted_bytes", "data messages irecv posted bytes", sum_type);
+
+  registerDiagnostic<int64_t>("AM_handlers", "active message handlers", sum_type);
+  registerDiagnostic<int64_t>("bcasts", "active message broadcasts", sum_type);
+
+  registerDiagnostic<int64_t>("AM_polls", "active message polls", sum_type);
+  registerDiagnostic<int64_t>("DM_polls", "data message polls", sum_type);
+
+  registerDiagnostic<int64_t>("TD_sent", "termination messages sent", sum_type);
+  registerDiagnostic<int64_t>("TD_recv", "termination messages received", sum_type);
+
+  registerDiagnostic<int64_t>("AM_forwarded", "messages forwarded (and not delivered)", sum_type);
+  registerDiagnostic<int64_t>("AM_forwarded_bytes", "messages forwarded (and not delivered)", sum_type);
 }
 
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {
@@ -218,6 +246,15 @@ EventType ActiveMessenger::sendMsgBytes(
         tr_begin = vt::timing::Timing::getCurrentTime();
       }
     #endif
+
+    if (is_bcast) {
+      updateDiagnostic<int64_t>("bcasts", 1);
+    }
+    if (is_term) {
+      updateDiagnostic<int64_t>("TD_sent", 1);
+    }
+    updateDiagnostic<int64_t>("AM_sent", 1);
+    updateDiagnostic<int64_t>("AM_sent_bytes", msg_size);
 
     const int ret = MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -365,6 +402,9 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
       }
     #endif
 
+    updateDiagnostic<int64_t>("DM_sent", 1);
+    updateDiagnostic<int64_t>("DM_sent_bytes", num_bytes);
+
     const int ret = MPI_Isend(
       data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
       mpi_event->getRequest()
@@ -490,6 +530,9 @@ bool ActiveMessenger::recvDataMsgBuffer(
         );
         vtAssertMPISuccess(recv_ret, "MPI_Irecv");
 
+        updateDiagnostic<int64_t>("DM_recv_posted", 1);
+        updateDiagnostic<int64_t>("DM_recv_posted_bytes", num_probe_bytes);
+
         #if vt_check_enabled(trace_enabled)
           if (theConfig()->vt_trace_mpi) {
             auto tr_end = vt::timing::Timing::getCurrentTime();
@@ -506,6 +549,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
         buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
         priority
       };
+
+      updateDiagnostic<int64_t>("DM_polls", 1);
 
       int recv_flag = 0;
       {
@@ -556,6 +601,9 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     trace::addUserNote(tr_note);
   }
 # endif
+
+  updateDiagnostic<int64_t>("DM_recv", 1);
+  updateDiagnostic<int64_t>("DM_recv_bytes", num_probe_bytes);
 
   auto dealloc_buf = [=]{
     vt_debug_print(
@@ -643,6 +691,9 @@ bool ActiveMessenger::processActiveMsg(
   if (deliver) {
     return deliverActiveMsg(base,from,insert,cont);
   } else {
+    updateDiagnostic<int64_t>("AM_forwarded", 1);
+    updateDiagnostic<int64_t>("AM_forwarded_bytes", size);
+
     if (cont != nullptr) {
       cont();
     }
@@ -734,6 +785,11 @@ bool ActiveMessenger::deliverActiveMsg(
       ep_stack_size = epochPreludeHandler(cur_epoch);
     }
 
+    if (is_term) {
+      updateDiagnostic<int64_t>("TD_recv", 1);
+    }
+    updateDiagnostic<int64_t>("AM_handlers", 1);
+
     runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
 
     // unset current handler
@@ -820,6 +876,9 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
         theContext()->getComm(), &req
       );
 
+      updateDiagnostic<int64_t>("AM_recv_posted", 1);
+      updateDiagnostic<int64_t>("AM_recv_posted_bytes", num_probe_bytes);
+
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
           auto tr_end = vt::timing::Timing::getCurrentTime();
@@ -833,6 +892,8 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     }
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
+
+    updateDiagnostic<int64_t>("AM_polls", 1);
 
     int recv_flag = 0;
     MPI_Status recv_stat;
@@ -853,6 +914,9 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   char* buf = irecv->buf;
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
+
+  updateDiagnostic<int64_t>("AM_recv", 1);
+  updateDiagnostic<int64_t>("AM_recv_bytes", num_probe_bytes);
 
 # if vt_check_enabled(trace_enabled)
   if (theConfig()->vt_trace_mpi) {
@@ -917,19 +981,27 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 }
 
 bool ActiveMessenger::testPendingActiveMsgAsyncRecv() {
-  return in_progress_active_msg_irecv.testAll(
+  int num_mpi_tests = 0;
+  bool const ret = in_progress_active_msg_irecv.testAll(
     [](InProgressIRecv* e){
       theMsg()->finishPendingActiveMsgAsyncRecv(e);
-    }
+    },
+    num_mpi_tests
   );
+  updateDiagnostic<int64_t>("AM_polls", num_mpi_tests);
+  return ret;
 }
 
 bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
-  return in_progress_data_irecv.testAll(
+  int num_mpi_tests = 0;
+  bool const ret = in_progress_data_irecv.testAll(
     [](InProgressDataIRecv* e){
       theMsg()->finishPendingDataMsgAsyncRecv(e);
-    }
+    },
+    num_mpi_tests
   );
+  updateDiagnostic<int64_t>("DM_polls", num_mpi_tests);
+  return ret;
 }
 
 int ActiveMessenger::progress() {
