@@ -62,9 +62,6 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ElementStats {
-  using PhaseType       = uint64_t;
-  using SubphaseType    = uint16_t;
-
   ElementStats() = default;
   ElementStats(ElementStats const&) = default;
   ElementStats(ElementStats&&) = default;

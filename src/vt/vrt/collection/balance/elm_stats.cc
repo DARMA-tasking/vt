@@ -210,7 +210,7 @@ void ElementStats::setFocusedSubPhase(VirtualProxyType collection, SubphaseType 
 }
 
 /*static*/
-ElementStats::SubphaseType ElementStats::getFocusedSubPhase(VirtualProxyType collection) {
+SubphaseType ElementStats::getFocusedSubPhase(VirtualProxyType collection) {
   auto i = focused_subphase_.find(collection);
   if (i != focused_subphase_.end())
     return i->second;
@@ -218,6 +218,6 @@ ElementStats::SubphaseType ElementStats::getFocusedSubPhase(VirtualProxyType col
     return no_subphase;
 }
 
-/*static*/ std::unordered_map<VirtualProxyType,ElementStats::SubphaseType> ElementStats::focused_subphase_;
+/*static*/ std::unordered_map<VirtualProxyType,SubphaseType> ElementStats::focused_subphase_;
 
 }}}} /* end namespace vt::vrt::collection::balance */
