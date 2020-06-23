@@ -65,6 +65,7 @@ namespace vt { namespace runtime { namespace component {
  */
 struct Diagnostic : ComponentName, ComponentReducer {
   using DiagnosticBasePtrType = std::unique_ptr<detail::DiagnosticBase>;
+  using UpdateType = DiagnosticUpdate;
 
   virtual void dumpState() = 0;
 
