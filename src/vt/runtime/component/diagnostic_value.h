@@ -237,6 +237,16 @@ struct DiagnosticValueWrapper {
    */
   void update(T new_val) { value_ = new_val; }
 
+  /**
+   * \internal \brief Serialize this class
+   *
+   * \param[in] s the serializer
+   */
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | value_ | N_ | min_ | max_ | sum_ | avg_ | M2_ | M3_ | M4_;
+  }
+
 private:
   T value_;                     /**< The raw value */
   std::size_t N_ = 0;           /**< The cardinality */
