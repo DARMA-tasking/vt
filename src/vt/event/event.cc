@@ -68,6 +68,19 @@ void AsyncEvent::initialize() {
     );
   }
 # endif
+
+  // Number of polls for outgoing messages and parents to complete
+  registerDiagnostic<int64_t>(
+    "event_polls", "message send/event polls", UpdateType::Sum
+  );
+
+  // Average/max events in container
+  registerDiagnostic<int64_t>(
+    "avg_events_size", "mean event container length (non-zero)", UpdateType::Avg
+  );
+  registerDiagnostic<int64_t>(
+    "max_events_size", "max event container length", UpdateType::Max
+  );
 }
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
@@ -304,10 +317,19 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
 
   int cur = 0;
   auto& cont = polling_event_container_;
+
+  if (cont.size() > 0) {
+    updateDiagnostic<int64_t>("avg_events_size", cont.size());
+  }
+  updateDiagnostic<int64_t>("max_events_size", cont.size());
+
   for (auto iter = cont.begin(); iter != cont.end(); ) {
     auto& holder = *iter;
     auto event = holder.get_event();
     auto id = event->getEventID();
+
+    updateDiagnostic<int64_t>("event_polls", 1);
+
     if (event->testReady()) {
       holder.executeActions();
       iter = polling_event_container_.erase(iter);
