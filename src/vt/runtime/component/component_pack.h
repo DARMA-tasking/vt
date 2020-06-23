@@ -74,7 +74,7 @@ public:
    * must be added subsequently to be enabled. It simply declares its existence
    * and connectivity with other components.
    *
-   * \param[in] ref dumb pointer for access outside
+   * \param[out] ref dumb pointer for access outside
    * \param[in] cons constructor arguments for the component---bound at
    * registration time
    *
