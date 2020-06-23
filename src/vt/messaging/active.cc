@@ -77,33 +77,35 @@ ActiveMessenger::ActiveMessenger()
    */
   pushEpoch(term::any_epoch_sentinel);
 
-  auto sum_type = runtime::component::DiagnosticUpdate::Sum;
-  registerDiagnostic<int64_t>("AM_sent", "active messages sent", sum_type);
-  registerDiagnostic<int64_t>("DM_sent", "data messages sent", sum_type);
-  registerDiagnostic<int64_t>("AM_sent_bytes", "active message bytes sent", sum_type);
-  registerDiagnostic<int64_t>("DM_sent_bytes", "active message bytes sent", sum_type);
+  registerDiagnostic<int64_t>("AM_sent", "active messages sent", UpdateType::Sum);
+  registerDiagnostic<int64_t>("DM_sent", "data messages sent", UpdateType::Sum);
+  registerDiagnostic<int64_t>("AM_sent_bytes", "active message bytes sent", UpdateType::Sum);
+  registerDiagnostic<int64_t>("DM_sent_bytes", "active message bytes sent", UpdateType::Sum);
 
-  registerDiagnostic<int64_t>("AM_recv", "active messages received", sum_type);
-  registerDiagnostic<int64_t>("DM_recv", "data messages received", sum_type);
-  registerDiagnostic<int64_t>("AM_recv_bytes", "active message bytes received", sum_type);
-  registerDiagnostic<int64_t>("DM_recv_bytes", "active message bytes received", sum_type);
+  registerDiagnostic<int64_t>("AM_max_size", "active message max size", UpdateType::Max);
+  registerDiagnostic<int64_t>("DM_max_size", "data message max size", UpdateType::Max);
 
-  registerDiagnostic<int64_t>("AM_recv_posted", "active messages irecv posted", sum_type);
-  registerDiagnostic<int64_t>("AM_recv_posted_bytes", "active messages irecv posted bytes", sum_type);
-  registerDiagnostic<int64_t>("DM_recv_posted", "data messages  irecv posted", sum_type);
-  registerDiagnostic<int64_t>("DM_recv_posted_bytes", "data messages irecv posted bytes", sum_type);
+  registerDiagnostic<int64_t>("AM_recv", "active messages received", UpdateType::Sum);
+  registerDiagnostic<int64_t>("DM_recv", "data messages received", UpdateType::Sum);
+  registerDiagnostic<int64_t>("AM_recv_bytes", "active message bytes received", UpdateType::Sum);
+  registerDiagnostic<int64_t>("DM_recv_bytes", "active message bytes received", UpdateType::Sum);
 
-  registerDiagnostic<int64_t>("AM_handlers", "active message handlers", sum_type);
-  registerDiagnostic<int64_t>("bcasts", "active message broadcasts", sum_type);
+  registerDiagnostic<int64_t>("AM_recv_posted", "active message irecvs posted", UpdateType::Sum);
+  registerDiagnostic<int64_t>("AM_recv_posted_bytes", "active message irecv posted bytes", UpdateType::Sum);
+  registerDiagnostic<int64_t>("DM_recv_posted", "data message irecvs posted", UpdateType::Sum);
+  registerDiagnostic<int64_t>("DM_recv_posted_bytes", "data message irecv posted bytes", UpdateType::Sum);
 
-  registerDiagnostic<int64_t>("AM_polls", "active message polls", sum_type);
-  registerDiagnostic<int64_t>("DM_polls", "data message polls", sum_type);
+  registerDiagnostic<int64_t>("AM_handlers", "active message handlers", UpdateType::Sum);
+  registerDiagnostic<int64_t>("bcasts", "active message broadcasts", UpdateType::Sum);
 
-  registerDiagnostic<int64_t>("TD_sent", "termination messages sent", sum_type);
-  registerDiagnostic<int64_t>("TD_recv", "termination messages received", sum_type);
+  registerDiagnostic<int64_t>("AM_polls", "active message polls", UpdateType::Sum);
+  registerDiagnostic<int64_t>("DM_polls", "data message polls", UpdateType::Sum);
 
-  registerDiagnostic<int64_t>("AM_forwarded", "messages forwarded (and not delivered)", sum_type);
-  registerDiagnostic<int64_t>("AM_forwarded_bytes", "messages forwarded (and not delivered)", sum_type);
+  registerDiagnostic<int64_t>("TD_sent", "termination messages sent", UpdateType::Sum);
+  registerDiagnostic<int64_t>("TD_recv", "termination messages received", UpdateType::Sum);
+
+  registerDiagnostic<int64_t>("AM_forwarded", "messages forwarded (and not delivered)", UpdateType::Sum);
+  registerDiagnostic<int64_t>("AM_forwarded_bytes", "messages forwarded (and not delivered)", UpdateType::Sum);
 }
 
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {
@@ -255,6 +257,7 @@ EventType ActiveMessenger::sendMsgBytes(
     }
     updateDiagnostic<int64_t>("AM_sent", 1);
     updateDiagnostic<int64_t>("AM_sent_bytes", msg_size);
+    updateDiagnostic<int64_t>("AM_max_size", msg_size);
 
     const int ret = MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -404,6 +407,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
     updateDiagnostic<int64_t>("DM_sent", 1);
     updateDiagnostic<int64_t>("DM_sent_bytes", num_bytes);
+    updateDiagnostic<int64_t>("DM_max_size", num_bytes);
 
     const int ret = MPI_Isend(
       data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
