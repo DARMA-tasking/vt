@@ -52,6 +52,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <functional>
 
 namespace vt { namespace runtime { namespace component {
 
@@ -126,6 +127,13 @@ public:
    */
   template <typename T>
   std::unique_ptr<T> extractComponent(std::string const& name);
+
+  /**
+   * \internal \brief Apply a function to each live component in the pack
+   *
+   * \param[in] apply function that takes a \c BaseComponent to apply over pack
+   */
+  void foreach(std::function<void(BaseComponent*)> apply);
 
 private:
   /**
