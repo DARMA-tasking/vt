@@ -48,6 +48,8 @@
 #include "vt/collective/reduce/scoping/strong_types.h"
 #include "vt/utils/adt/union.h"
 
+#include <unordered_map>
+
 namespace vt { namespace collective { namespace reduce { namespace detail {
 
 /**
