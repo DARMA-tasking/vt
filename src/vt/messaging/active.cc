@@ -77,35 +77,96 @@ ActiveMessenger::ActiveMessenger()
    */
   pushEpoch(term::any_epoch_sentinel);
 
-  registerDiagnostic<int64_t>("AM_sent", "active messages sent", UpdateType::Sum);
-  registerDiagnostic<int64_t>("DM_sent", "data messages sent", UpdateType::Sum);
-  registerDiagnostic<int64_t>("AM_sent_bytes", "active message bytes sent", UpdateType::Sum);
-  registerDiagnostic<int64_t>("DM_sent_bytes", "active message bytes sent", UpdateType::Sum);
+  // Register counters for AM/DM message sends and number of bytes
+  registerDiagnostic<int64_t>(
+    "AM_sent", "active messages sent", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "DM_sent", "data messages sent", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "AM_sent_bytes", "active message bytes sent", UpdateType::Sum, UnitType::Bytes
+  );
+  registerDiagnostic<int64_t>(
+    "DM_sent_bytes", "active message bytes sent", UpdateType::Sum, UnitType::Bytes
+  );
 
-  registerDiagnostic<int64_t>("AM_max_size", "active message max size", UpdateType::Max);
-  registerDiagnostic<int64_t>("DM_max_size", "data message max size", UpdateType::Max);
+  // Register max counters for AM/DM message number of bytes
+  registerDiagnostic<int64_t>(
+    "AM_max_size", "active message max size", UpdateType::Max, UnitType::Bytes
+  );
+  registerDiagnostic<int64_t>(
+    "DM_max_size", "data message max size", UpdateType::Max, UnitType::Bytes
+  );
 
-  registerDiagnostic<int64_t>("AM_recv", "active messages received", UpdateType::Sum);
-  registerDiagnostic<int64_t>("DM_recv", "data messages received", UpdateType::Sum);
-  registerDiagnostic<int64_t>("AM_recv_bytes", "active message bytes received", UpdateType::Sum);
-  registerDiagnostic<int64_t>("DM_recv_bytes", "active message bytes received", UpdateType::Sum);
+  // Register counters for AM/DM message receives and number of bytes
+  registerDiagnostic<int64_t>(
+    "AM_recv", "active messages received", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "DM_recv", "data messages received", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "AM_recv_bytes", "active message bytes received", UpdateType::Sum,
+    UnitType::Bytes
+  );
+  registerDiagnostic<int64_t>(
+    "DM_recv_bytes", "active message bytes received", UpdateType::Sum,
+    UnitType::Bytes
+  );
 
-  registerDiagnostic<int64_t>("AM_recv_posted", "active message irecvs posted", UpdateType::Sum);
-  registerDiagnostic<int64_t>("AM_recv_posted_bytes", "active message irecv posted bytes", UpdateType::Sum);
-  registerDiagnostic<int64_t>("DM_recv_posted", "data message irecvs posted", UpdateType::Sum);
-  registerDiagnostic<int64_t>("DM_recv_posted_bytes", "data message irecv posted bytes", UpdateType::Sum);
+  // Register counters for AM/DM message MPI_Irecv posts This is useful as a
+  // debugging diagnostic if the program hangs. Checking this against AM_recv,
+  // etc will inform whether if there are outstanding posted receives
+  registerDiagnostic<int64_t>(
+    "AM_recv_posted", "active message irecvs posted", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "AM_recv_posted_bytes", "active message irecv posted bytes", UpdateType::Sum,
+    UnitType::Bytes
+  );
+  registerDiagnostic<int64_t>(
+    "DM_recv_posted", "data message irecvs posted", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "DM_recv_posted_bytes", "data message irecv posted bytes", UpdateType::Sum,
+    UnitType::Bytes
+  );
 
-  registerDiagnostic<int64_t>("AM_handlers", "active message handlers", UpdateType::Sum);
-  registerDiagnostic<int64_t>("bcasts", "active message broadcasts", UpdateType::Sum);
+  // Number of AM handlers executed
+  registerDiagnostic<int64_t>(
+    "AM_handlers", "active message handlers", UpdateType::Sum
+  );
 
-  registerDiagnostic<int64_t>("AM_polls", "active message polls", UpdateType::Sum);
-  registerDiagnostic<int64_t>("DM_polls", "data message polls", UpdateType::Sum);
+  // Number of broadcast messages that hit this node
+  registerDiagnostic<int64_t>(
+    "bcasts", "active message broadcasts", UpdateType::Sum
+  );
 
-  registerDiagnostic<int64_t>("TD_sent", "termination messages sent", UpdateType::Sum);
-  registerDiagnostic<int64_t>("TD_recv", "termination messages received", UpdateType::Sum);
+  // Number of MPI_Test polls for AM/DM
+  registerDiagnostic<int64_t>(
+    "AM_polls", "active message polls", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "DM_polls", "data message polls", UpdateType::Sum
+  );
 
-  registerDiagnostic<int64_t>("AM_forwarded", "messages forwarded (and not delivered)", UpdateType::Sum);
-  registerDiagnostic<int64_t>("AM_forwarded_bytes", "messages forwarded (and not delivered)", UpdateType::Sum);
+  // Number of termination message sent/received
+  registerDiagnostic<int64_t>(
+    "TD_sent", "termination messages sent", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "TD_recv", "termination messages received", UpdateType::Sum
+  );
+
+  // Number of messages that were purely forwarded to another node by this AM
+  registerDiagnostic<int64_t>(
+    "AM_forwarded", "messages forwarded (and not delivered)", UpdateType::Sum
+  );
+  registerDiagnostic<int64_t>(
+    "AM_forwarded_bytes", "messages forwarded (and not delivered)",
+    UpdateType::Sum, UnitType::Bytes
+  );
 }
 
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {
