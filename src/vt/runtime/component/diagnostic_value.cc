@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                             diagnostic_value.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,63 +42,69 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-
-#include "vt/configs/types/types_type.h"
 #include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/bufferable.h"
-#include "vt/runtime/component/progressable.h"
+#include "vt/runtime/component/diagnostic_value_format.h"
+#include "vt/messaging/message.h"
+#include "vt/collective/reduce/operators/default_msg.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/pipe/pipe_manager.h"
 
-namespace vt { namespace runtime { namespace component {
+namespace vt { namespace runtime { namespace component { namespace detail {
 
-struct ComponentPack;
+namespace {
 
-/**
- * \struct BaseComponent base.h vt/runtime/component/base.h
- *
- * \brief The abstract \c BaseComponent for VT runtime component pack
- */
-struct BaseComponent : Diagnostic, Bufferable, Progressable {
-  /**
-   * \struct DepsPack
-   *
-   * \brief Set of component types that given component is dependent on
-   */
-  template <typename... Deps>
-  struct DepsPack { };
+template <typename T>
+void reduceHelper(Diagnostic* diagnostic, DiagnosticString* out, T val) {
+  using ValueType = DiagnosticValueWrapper<T>;
+  using ReduceMsgType = collective::ReduceTMsg<ValueType>;
 
-  /**
-   * \internal \brief Initialize the component. Invoked after the constructor
-   * fires during the startup sequence
-   */
-  virtual void initialize() = 0;
+  // Get the reducer from the component
+  auto r = diagnostic->reducer();
+  auto msg = makeMessage<ReduceMsgType>(
+    ValueType{typename ValueType::ReduceTag{}, val}
+  );
+  auto cb = theCB()->makeFunc<ReduceMsgType>([=](ReduceMsgType* m) {
+    auto reduced_val = m->getConstVal();
+    *out = DiagnosticStringizer<T>::get(reduced_val);
+  });
+  r->reduce<collective::PlusOp<ValueType>>(0, msg.get(), cb);
+}
 
-  /**
-   * \internal \brief Finalize the component. Invoked before the destructor
-   * fires during the shutdown sequence
-   */
-  virtual void finalize() = 0;
+} /* end anon namespace */
 
-  /**
-   * \internal \brief Returns whether the component should be polled by the
-   * scheduler
-   *
-   * \return whether the component is pollable
-   */
-  virtual bool pollable() = 0;
+template <>
+void DiagnosticValue<int64_t>::reduceOver(
+  Diagnostic* diagnostic, DiagnosticString* out
+) {
+  reduceHelper(diagnostic, out, value_.getComputedValue());
+}
 
-  /**
-   * \internal \brief Invoked after all components are constructed and the
-   * runtime is live
-   */
-  virtual void startup() = 0;
+template <>
+void DiagnosticValue<int32_t>::reduceOver(
+  Diagnostic* diagnostic, DiagnosticString* out
+) {
+  reduceHelper(diagnostic, out, value_.getComputedValue());
+}
 
-  virtual ~BaseComponent() { }
+template <>
+void DiagnosticValue<int16_t>::reduceOver(
+  Diagnostic* diagnostic, DiagnosticString* out
+) {
+  reduceHelper(diagnostic, out, value_.getComputedValue());
+}
 
-  friend struct ComponentPack;
-};
+template <>
+void DiagnosticValue<double>::reduceOver(
+  Diagnostic* diagnostic, DiagnosticString* out
+) {
+  reduceHelper(diagnostic, out, value_.getComputedValue());
+}
 
-}}} /* end namespace vt::runtime::component */
+template <>
+void DiagnosticValue<float>::reduceOver(
+  Diagnostic* diagnostic, DiagnosticString* out
+) {
+  reduceHelper(diagnostic, out, value_.getComputedValue());
+}
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/
+}}}} /* end namespace vt::runtime::component::detail */

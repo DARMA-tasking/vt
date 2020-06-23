@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                              diagnostic.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,63 +42,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_IMPL_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_IMPL_H
 
-#include "vt/configs/types/types_type.h"
+#include "vt/config.h"
 #include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/bufferable.h"
-#include "vt/runtime/component/progressable.h"
+#include "vt/runtime/component/diagnostic_value.h"
+
+#include <memory>
 
 namespace vt { namespace runtime { namespace component {
 
-struct ComponentPack;
+template <typename T>
+void Diagnostic::registerDiagnostic(
+  std::string const& key, std::string const& desc, DiagnosticUpdate update,
+  DiagnosticTypeEnum type, T initial_value
+) {
+  vtAssert(values_.find(key) == values_.end(), "Key must not exist");
+  values_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(key),
+    std::forward_as_tuple(
+      std::make_unique<detail::DiagnosticValue<T>>(
+        key, desc, update, type, initial_value
+      )
+    )
+  );
+}
 
-/**
- * \struct BaseComponent base.h vt/runtime/component/base.h
- *
- * \brief The abstract \c BaseComponent for VT runtime component pack
- */
-struct BaseComponent : Diagnostic, Bufferable, Progressable {
-  /**
-   * \struct DepsPack
-   *
-   * \brief Set of component types that given component is dependent on
-   */
-  template <typename... Deps>
-  struct DepsPack { };
-
-  /**
-   * \internal \brief Initialize the component. Invoked after the constructor
-   * fires during the startup sequence
-   */
-  virtual void initialize() = 0;
-
-  /**
-   * \internal \brief Finalize the component. Invoked before the destructor
-   * fires during the shutdown sequence
-   */
-  virtual void finalize() = 0;
-
-  /**
-   * \internal \brief Returns whether the component should be polled by the
-   * scheduler
-   *
-   * \return whether the component is pollable
-   */
-  virtual bool pollable() = 0;
-
-  /**
-   * \internal \brief Invoked after all components are constructed and the
-   * runtime is live
-   */
-  virtual void startup() = 0;
-
-  virtual ~BaseComponent() { }
-
-  friend struct ComponentPack;
-};
+template <typename T>
+void Diagnostic::updateDiagnostic(std::string const& key, T value) {
+  auto iter = values_.find(key);
+  vtAssert(iter != values_.end(), "Diagnostic key must exist");
+  return (static_cast<detail::DiagnosticValue<T>*>(iter->second.get()))->
+    update(value);
+}
 
 }}} /* end namespace vt::runtime::component */
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_IMPL_H*/

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                          diagnostic_value_format.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,63 +42,54 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_VALUE_FORMAT_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_VALUE_FORMAT_H
 
-#include "vt/configs/types/types_type.h"
-#include "vt/runtime/component/diagnostic.h"
-#include "vt/runtime/component/bufferable.h"
-#include "vt/runtime/component/progressable.h"
+#include "vt/runtime/component/diagnostic_value.h"
 
-namespace vt { namespace runtime { namespace component {
+#include <fmt/format.h>
 
-struct ComponentPack;
+namespace vt { namespace runtime { namespace component { namespace detail {
 
-/**
- * \struct BaseComponent base.h vt/runtime/component/base.h
- *
- * \brief The abstract \c BaseComponent for VT runtime component pack
- */
-struct BaseComponent : Diagnostic, Bufferable, Progressable {
-  /**
-   * \struct DepsPack
-   *
-   * \brief Set of component types that given component is dependent on
-   */
-  template <typename... Deps>
-  struct DepsPack { };
+template <typename T, typename _Enable = void>
+struct DiagnosticValueFormatter;
 
-  /**
-   * \internal \brief Initialize the component. Invoked after the constructor
-   * fires during the startup sequence
-   */
-  virtual void initialize() = 0;
-
-  /**
-   * \internal \brief Finalize the component. Invoked before the destructor
-   * fires during the shutdown sequence
-   */
-  virtual void finalize() = 0;
-
-  /**
-   * \internal \brief Returns whether the component should be polled by the
-   * scheduler
-   *
-   * \return whether the component is pollable
-   */
-  virtual bool pollable() = 0;
-
-  /**
-   * \internal \brief Invoked after all components are constructed and the
-   * runtime is live
-   */
-  virtual void startup() = 0;
-
-  virtual ~BaseComponent() { }
-
-  friend struct ComponentPack;
+template <typename T>
+struct DiagnosticValueFormatter<
+  T, typename std::enable_if_t<
+       std::is_same<T, double>::value or std::is_same<T, float>::value
+     >
+> {
+  static constexpr char const* format = "{:.2f}";
 };
 
-}}} /* end namespace vt::runtime::component */
+template <typename T>
+struct DiagnosticValueFormatter<
+  T, typename std::enable_if_t<
+       not (std::is_same<T, double>::value or std::is_same<T, float>::value)
+     >
+> {
+  static constexpr char const* format = "{}";
+};
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_BASE_H*/
+template <typename T>
+struct DiagnosticStringizer {
+
+  static DiagnosticString get(DiagnosticValueWrapper<T> wrapper) {
+    std::string const spec = DiagnosticValueFormatter<T>::format;
+
+    DiagnosticString dstr;
+    dstr.min_value_ = fmt::format(spec, wrapper.min());
+    dstr.max_value_ = fmt::format(spec, wrapper.max());
+    dstr.sum_value_ = fmt::format(spec, wrapper.sum());
+    dstr.avg_value_ = fmt::format("{:.2f}", wrapper.avg());
+    dstr.std_value_ = fmt::format("{:.2f}", wrapper.stdv());
+    dstr.var_value_ = fmt::format("{:.2f}", wrapper.var());
+    return dstr;
+  }
+
+};
+
+}}}} /* end namespace vt::runtime::component::detail */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_VALUE_FORMAT_H*/

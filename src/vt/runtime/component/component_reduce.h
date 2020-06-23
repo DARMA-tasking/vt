@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   base.cc
+//                              component_reduce.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,14 +42,49 @@
 //@HEADER
 */
 
-#include "vt/runtime/component/base.h"
-#include "vt/collective/reduce/reduce.h"
-#include "vt/collective/collective_alg.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REDUCE_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REDUCE_H
+
+#include "vt/configs/types/types_type.h"
+
+namespace vt { namespace collective { namespace reduce {
+
+struct Reduce;
+
+}}} /* end namespace vt::collective::reduce */
 
 namespace vt { namespace runtime { namespace component {
 
-collective::reduce::Reduce* BaseComponent::reducer() {
-  return theCollective()->getReducerComponent(component_id_);
-}
+/**
+ * \struct ComponentReducer
+ *
+ * \brief Trait class for the component that composes in the unique reducer for
+ * each component
+ */
+struct ComponentReducer {
+
+  /**
+   * \internal \brief Get the reducer associated with the component that has a
+   * unique scope for this component
+   *
+   * \return the reducer with unique scope
+   */
+  collective::reduce::Reduce* reducer();
+
+  /**
+   * \internal \brief Get the unique identifier for the component
+   *
+   * This component ID is assigned uniquely by the component pack and then used
+   * to generate a unique reducer scope for the component.
+   *
+   * \return the component ID
+   */
+  ComponentIDType getComponentID() const { return component_id_; }
+
+protected:
+  ComponentIDType component_id_ = 0; /**< The component's unique ID */
+};
 
 }}} /* end namespace vt::runtime::component */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_REDUCE_H*/
