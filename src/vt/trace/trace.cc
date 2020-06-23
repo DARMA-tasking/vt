@@ -690,9 +690,9 @@ bool Trace::checkDynamicRuntimeEnabled(bool is_end_event) {
    * specification file
    */
   return
-    enabled_ and
-    traceWritingEnabled(theContext()->getNode()) and
-    (trace_enabled_cur_phase_ or is_end_event);
+    traceWritingEnabled(theContext()->getNode())
+    and (is_end_event
+         or (enabled_ and trace_enabled_cur_phase_));
 }
 
 void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
