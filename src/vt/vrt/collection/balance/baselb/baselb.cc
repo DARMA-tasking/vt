@@ -50,7 +50,7 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
-#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/timing/timing.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
@@ -60,17 +60,22 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void BaseLB::startLBHandler(
-  balance::StartLBMsg* msg, objgroup::proxy::Proxy<BaseLB> proxy
+void BaseLB::startLB(
+  PhaseType phase,
+  objgroup::proxy::Proxy<BaseLB> proxy,
+  balance::ProcStats::LoadMapType const& in_load_stats,
+  ElementCommType const& in_comm_stats
 ) {
   start_time_ = timing::Timing::getCurrentTime();
-  phase_ = msg->getPhase();
+  phase_ = phase;
   proxy_ = proxy;
 
-  auto const& in_load_stats = theProcStats()->getProcLoad(phase_);
-  auto const& in_comm_stats = theProcStats()->getProcComm(phase_);
   importProcessorData(in_load_stats, in_comm_stats);
-  computeStatistics();
+
+  term::TerminationDetector::Scoped::collective(
+    [this] { computeStatistics(); },
+    [this] { finishedStats(); }
+  );
 }
 
 BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) const {
@@ -163,63 +168,59 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   stats[the_stat][lb::StatisticQuantity::skw] = skew;
   stats[the_stat][lb::StatisticQuantity::kur] = krte;
 
-  bool is_before = migration_epoch_ == no_epoch;
-
   if (theContext()->getNode() == 0) {
     vt_print(
       lb,
       "BaseLB: Statistic={}: "
       " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
       " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
-      " npr={}, imb={:.2f}, num_stats={}, before={}\n",
+      " npr={}, imb={:.2f}, num_stats={}\n",
       lb_stat_name_[the_stat],
       max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
-      stats.size(), is_before
+      stats.size()
     );
   }
+}
 
-  // If the migration_epoch_ is valid, then we are in the post-process stats
-  if (is_before) {
-    if (stats.size() == static_cast<std::size_t>(num_reduce_stats_)) {
-      finishedStats();
+void BaseLB::applyMigrations(TransferVecType const &transfers) {
+  TransferType off_node_migrate;
+
+  for (auto&& elm : transfers) {
+    auto obj_id = std::get<0>(elm);
+    auto to = std::get<1>(elm);
+    auto from = objGetNode(obj_id);
+
+    if (from != to) {
+      bool has_object = theProcStats()->hasObjectToMigrate(obj_id);
+
+      debug_print(
+        lb, node,
+        "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
+        obj_id, from, to, has_object
+      );
+
+      if (has_object) {
+        local_migration_count_++;
+        theProcStats()->migrateObjTo(obj_id, to);
+      } else {
+        off_node_migrate[from].push_back(std::make_tuple(obj_id,to));
+      }
     }
   }
-}
 
-EpochType BaseLB::getMigrationEpoch() const {
-  return migration_epoch_;
-}
-
-EpochType BaseLB::startMigrationCollective() {
-  migration_epoch_ = theTerm()->makeEpochCollective("LB migration");
-  theTerm()->addAction(migration_epoch_, [this]{ this->migrationDone(); });
-  theMsg()->pushEpoch(migration_epoch_);
-  during_migration_ = true;
-  return migration_epoch_;
-}
-
-void BaseLB::finishMigrationCollective() {
-  for (auto&& elm : off_node_migrate_) {
-    transferSend(elm.first, elm.second, migration_epoch_);
+  for (auto&& elm : off_node_migrate) {
+    transferSend(elm.first, elm.second);
   }
-
-  off_node_migrate_.clear();
 
   // Re-compute the statistics with the new partition based on current
   // this_load_ values
   computeStatistics();
-
-  theMsg()->popEpoch(migration_epoch_);
-  theTerm()->finishedEpoch(migration_epoch_);
-  during_migration_ = false;
+  migrationDone();
 }
 
-void BaseLB::transferSend(
-  NodeType from, TransferVecType const& transfer, EpochType epoch
-) {
+void BaseLB::transferSend(NodeType from, TransferVecType const& transfer) {
   using MsgType = TransferMsg<TransferVecType>;
   auto msg = makeMessage<MsgType>(transfer);
-  envelopeSetEpoch(msg->env, epoch);
   proxy_[from].template send<MsgType,&BaseLB::transferMigrations>(msg);
 }
 
@@ -229,39 +230,17 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
     auto obj_id  = std::get<0>(elm);
     auto to_node = std::get<1>(elm);
     vtAssert(theProcStats()->hasObjectToMigrate(obj_id), "Must have object");
-    migrateObjectTo(obj_id, to_node);
+    theProcStats()->migrateObjTo(obj_id, to_node);
   }
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
-  vtAssert(during_migration_, "migrateObjectTo should be called between startMigrationCollective and finishMigrationCollective");
-  auto from = objGetNode(obj_id);
-  if (from != to) {
-    bool has_object = theProcStats()->hasObjectToMigrate(obj_id);
-
-    debug_print(
-      lb, node,
-      "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
-      obj_id, from, to, has_object
-    );
-
-    if (has_object) {
-      local_migration_count_++;
-      theProcStats()->migrateObjTo(obj_id, to);
-    } else {
-      off_node_migrate_[from].push_back(std::make_tuple(obj_id,to));
-    }
-  }
+  transfers_.push_back(TransferDestType{obj_id, to});
 }
 
 void BaseLB::finalize(CountMsg* msg) {
   auto global_count = msg->getVal();
   auto const& this_node = theContext()->getNode();
-  debug_print(
-    lb, node,
-    "BaseLB::finalize: finished migrations: local migration count={}\n",
-    local_migration_count_
-  );
   if (this_node == 0) {
     auto const total_time = timing::Timing::getCurrentTime() - start_time_;
     vt_print(
@@ -271,14 +250,12 @@ void BaseLB::finalize(CountMsg* msg) {
     );
     fflush(stdout);
   }
-  theProcStats()->startIterCleanup();
-  theLBManager()->finishedRunningLB(phase_);
 }
 
 void BaseLB::migrationDone() {
   debug_print(
     lb, node,
-    "BaseLB::migrationDone: start reduce local migration count={}\n",
+    "BaseLB::migrationDone: local migration count={}\n",
     local_migration_count_
   );
   auto cb = vt::theCB()->makeBcast<BaseLB, CountMsg, &BaseLB::finalize>(proxy_);
@@ -334,8 +311,6 @@ bool BaseLB::isCollectiveComm(balance::CommCategory cat) const {
 
 void BaseLB::computeStatisticsOver(Statistic stat) {
   using ReduceOp = collective::PlusOp<balance::LoadData>;
-
-  num_reduce_stats_++;
 
   auto cb = vt::theCB()->makeBcast<BaseLB, StatsMsgType, &BaseLB::statsHandler>(proxy_);
 

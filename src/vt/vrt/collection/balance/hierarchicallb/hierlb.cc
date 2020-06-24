@@ -230,9 +230,6 @@ void HierarchicalLB::loadStats() {
         total_size
       );
     }
-  } else {
-    // release continuation for next iteration
-    migrationDone();
   }
 }
 
@@ -328,8 +325,6 @@ void HierarchicalLB::startMigrations() {
     "startMigrations\n"
   );
 
-  startMigrationCollective();
-
   auto const this_node = theContext()->getNode();
 
   for (auto&& bin : taken_objs) {
@@ -337,8 +332,6 @@ void HierarchicalLB::startMigrations() {
       migrateObjectTo(obj_id, this_node);
     }
   }
-
-  finishMigrationCollective();
 }
 
 void HierarchicalLB::downTreeSend(

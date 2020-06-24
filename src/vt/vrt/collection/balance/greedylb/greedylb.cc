@@ -115,9 +115,6 @@ void GreedyLB::loadStats() {
   if (should_lb) {
     calcLoadOver();
     reduceCollect();
-  } else {
-    // release continuation for next iteration
-    migrationDone();
   }
 }
 
@@ -226,8 +223,6 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     "recvObjsDirect: num_recs={}\n", num_recs
   );
 
-  startMigrationCollective();
-
   for (decltype(+num_recs) i = 0; i < num_recs; i++) {
     auto const to_node = objGetNode(recs[i]);
     auto const new_obj_id = objSetNode(this_node,recs[i]);
@@ -241,8 +236,6 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
 
     migrateObjectTo(new_obj_id, to_node);
   }
-
-  finishMigrationCollective();
 }
 
 /*static*/ void GreedyLB::recvObjsHan(GreedyLBTypes::ObjIDType* objs) {

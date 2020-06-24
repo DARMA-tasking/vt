@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  invoke.cc
+//                                  lb_manager.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,7 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/context/context.h"
-#include "vt/vrt/collection/balance/lb_invoke/invoke.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
@@ -126,10 +126,43 @@ template <typename LB>
 objgroup::proxy::Proxy<LB>
 LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto proxy = theObjGroup()->makeCollective<LB>();
-  proxy.get()->init(proxy);
+  auto strat = proxy.get();
+  strat->init(proxy);
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
-  proxy.get()->startLBHandler(msg.get(), base_proxy);
+  auto phase = msg->getPhase();
+
+  EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
+  theMsg()->pushEpoch(balance_epoch);
+  strat->startLB(phase, base_proxy, theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
+  theMsg()->popEpoch(balance_epoch);
+  theTerm()->finishedEpoch(balance_epoch);
+
+  EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
+
+  theTerm()->addAction(balance_epoch, [=] {
+    debug_print(
+      lb, node,
+      "LBManager: starting migrations\n"
+    );
+    theMsg()->pushEpoch(migrate_epoch);
+    strat->applyMigrations(strat->getTransfers());
+    theMsg()->popEpoch(migrate_epoch);
+    theTerm()->finishedEpoch(migrate_epoch);
+  });
+
+  theTerm()->addAction(migrate_epoch, [=] {
+    debug_print(
+      lb, node,
+      "LBManager: finished migrations\n"
+    );
+    theProcStats()->startIterCleanup();
+    this->finishedRunningLB(phase);
+  });
+
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
+
+  runSchedulerThrough(migrate_epoch);
+
   return proxy;
 }
 

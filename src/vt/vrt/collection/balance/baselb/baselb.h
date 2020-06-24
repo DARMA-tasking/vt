@@ -94,7 +94,19 @@ struct BaseLB {
 
   virtual ~BaseLB() = default;
 
-  void startLBHandler(balance::StartLBMsg* msg, objgroup::proxy::Proxy<BaseLB> proxy);
+  /**
+   * This will calculate global statistics over the individual
+   * processor and object work and communication data passed in, and
+   * then invoke the particular strategy implementations through
+   * virtual methods `initParams` and `runLB`
+   *
+   * This expects to be run within a collective epoch. When that epoch
+   * is complete, the concrete strategy implementation should have
+   * recorded a complete set of intended migrations in `transfers_`
+   * through calls to `migrateObjectTo`. Callers can then access that
+   * set using `getTransfers` and apply it using `applyMigrations`.
+   */
+  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::ProcStats::LoadMapType const& in_load_stats, ElementCommType const& in_comm_stats);
   void computeStatistics();
   void importProcessorData(ElementLoadType const& ld, ElementCommType const& cm);
   void statsHandler(StatsMsgType* msg);
@@ -105,17 +117,17 @@ struct BaseLB {
   int32_t getBinSize() const { return bin_size_; }
   NodeType objGetNode(ObjIDType const id) const;
 
-  EpochType getMigrationEpoch() const;
-  EpochType startMigrationCollective();
-  void finishMigrationCollective();
+  void applyMigrations(TransferVecType const& transfers);
   void migrationDone();
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
-  void transferSend(NodeType from, TransferVecType const& transfer, EpochType ep);
+  void transferSend(NodeType from, TransferVecType const& transfer);
   void transferMigrations(TransferMsg<TransferVecType>* msg);
   void finalize(CountMsg* msg);
 
   virtual void inputParams(balance::SpecEntry* spec) = 0;
   virtual void runLB() = 0;
+
+  TransferVecType& getTransfers() { return transfers_; }
 
 protected:
   balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;
@@ -131,16 +143,16 @@ protected:
   ElementLoadType const* load_data                = nullptr;
   ElementCommType const* comm_data                = nullptr;
   StatisticMapType stats                          = {};
-  bool during_migration_                          = false;
-  EpochType migration_epoch_                      = no_epoch;
-  TransferType off_node_migrate_                  = {};
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
-  int32_t local_migration_count_                  = 0;
   PhaseType phase_                                = 0;
-  int32_t num_reduce_stats_                       = 0;
   bool comm_aware_                                = false;
   bool comm_collectives_                          = false;
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
+
+private:
+  TransferVecType transfers_                      = {};
+  TransferType off_node_migrate_                  = {};
+  int32_t local_migration_count_                  = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */

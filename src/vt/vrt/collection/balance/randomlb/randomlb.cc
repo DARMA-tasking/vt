@@ -83,8 +83,6 @@ void RandomLB::runLB() {
   }
   std::uniform_int_distribution<> dist(0, num_nodes-1);
 
-  startMigrationCollective();
-
   // Sort the objects so we have a deterministic order over them
   std::set<ObjIDType> objs;
   for (auto&& stat : *load_data) {
@@ -102,8 +100,6 @@ void RandomLB::runLB() {
       migrateObjectTo(obj, to_node);
     }
   }
-
-  finishMigrationCollective();
 }
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */
