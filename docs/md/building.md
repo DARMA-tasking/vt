@@ -54,6 +54,7 @@ build configuration:
 | `vt_mpi_guards`                 | 0               | Guards against mis-use of MPI calls in code using *vt* |
 | `vt_fcontext_enabled`           | 0               | Enable user-level threads through boost fcontext |
 | `vt_priorities_enabled`         | 1               | Enable prioritization of work (adds bits in envelope) |
+| `vt_diagnostic_enabled`         | 1               | Enable VT component diagnostics for performance analysis |
 | `vt_priority_bits_per_level`    | 3               | Number of bits per level of priority in envelope |
 | `vt_build_extended_tests`       | 1               | Build with full, extended testing |
 | `vt_unity_build_enabled`        | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
