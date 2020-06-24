@@ -58,6 +58,7 @@ void Diagnostic::registerDiagnostic(
   std::string const& key, std::string const& desc, DiagnosticUpdate update,
   DiagnosticUnit unit, DiagnosticTypeEnum type, T initial_value
 ) {
+# if backend_check_enabled(diagnostics)
   vtAssert(values_.find(key) == values_.end(), "Key must not exist");
   values_.emplace(
     std::piecewise_construct,
@@ -68,14 +69,21 @@ void Diagnostic::registerDiagnostic(
       )
     )
   );
+# else
+  debug::useVars(key, desc, update, unit, type, initial_value);
+# endif
 }
 
 template <typename T>
 void Diagnostic::updateDiagnostic(std::string const& key, T value) {
+# if backend_check_enabled(diagnostics)
   auto iter = values_.find(key);
   vtAssert(iter != values_.end(), "Diagnostic key must exist");
   return (static_cast<detail::DiagnosticValue<T>*>(iter->second.get()))->
     update(value);
+# else
+  debug::useVars(key, value);
+# endif
 }
 
 }}} /* end namespace vt::runtime::component */
