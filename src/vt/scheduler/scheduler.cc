@@ -67,11 +67,98 @@ namespace vt { namespace sched {
 }
 
 Scheduler::Scheduler() {
+  startup_time_ = timing::Timing::getCurrentTime();
+
   auto event_count = SchedulerEventType::LastSchedulerEvent + 1;
   event_triggers.resize(event_count);
   event_triggers_once.resize(event_count);
 
   progress_time_enabled_ = theConfig()->vt_sched_progress_sec != 0.0;
+
+  // Number of times the progress function is called to poll components
+  registerDiagnostic<int64_t>(
+    "num_progress", "progress function calls", UpdateType::Sum
+  );
+
+  // Number of work units enqueued
+  registerDiagnostic<int64_t>(
+    "num_work_units", "work unit count", UpdateType::Sum
+  );
+
+  // Max/avg of work units enqueued
+  registerDiagnostic<int64_t>(
+    "max_queue_size", "max queue size", UpdateType::Max
+  );
+  registerDiagnostic<int64_t>(
+    "avg_queue_size", "mean queue size", UpdateType::Avg
+  );
+
+  // Time scheduler
+  registerDiagnostic<double>(
+    "init_time", "duration VT was initialized", UpdateType::Replace,
+    runtime::component::DiagnosticUnit::Seconds
+  );
+  registerDiagnostic<double>(
+    "sched_loop", "inside scheduler loop", UpdateType::Sum,
+    runtime::component::DiagnosticUnit::Seconds
+  );
+  registerDiagnostic<double>(
+    "idle_time", "idle time (inc. TD)", UpdateType::Sum,
+    runtime::component::DiagnosticUnit::Seconds
+  );
+  registerDiagnostic<double>(
+    "idle_time_term", "idle time minus TD", UpdateType::Sum,
+    runtime::component::DiagnosticUnit::Seconds
+  );
+
+  // Explicitly define these out when diagnostics are disabled---they might be
+  // expensive
+# if backend_check_enabled(diagnostics)
+  using timing::Timing;
+
+  // Triggers to get the in-scheduler-loop time added to diagnostics
+  registerTrigger(
+    BeginSchedulerLoop, [this]{ begin_loop_time_ = Timing::getCurrentTime(); }
+  );
+  registerTrigger(
+    EndSchedulerLoop, [this]{
+      auto duration = Timing::getCurrentTime() - begin_loop_time_;
+      updateDiagnostic<double>("sched_loop", duration);
+    }
+  );
+
+  // Triggers to get idle time in diagnostics
+  registerTrigger(
+    BeginIdle, [this]{ begin_idle_time_ = Timing::getCurrentTime(); }
+  );
+  registerTrigger(
+    EndIdle, [this]{
+      if (begin_idle_time_ != 0.) {
+        auto duration = Timing::getCurrentTime() - begin_idle_time_;
+        updateDiagnostic<double>("idle_time", duration);
+      }
+      begin_idle_time_ = 0.;
+    }
+  );
+
+  registerTrigger(
+    BeginIdleMinusTerm, [this]{ begin_idle_time_term_ = Timing::getCurrentTime(); }
+  );
+  registerTrigger(
+    EndIdleMinusTerm, [this]{
+      if (begin_idle_time_term_ != 0.) {
+        auto duration = Timing::getCurrentTime() - begin_idle_time_term_;
+        updateDiagnostic<double>("idle_time_term", duration);
+      }
+      begin_idle_time_term_ = 0.;
+    }
+  );
+# endif
+}
+
+void Scheduler::preDiagnostic() {
+  auto total_time = timing::Timing::getCurrentTime() - startup_time_;
+  updateDiagnostic<double>("init_time", total_time);
 }
 
 void Scheduler::enqueue(ActionType action) {
@@ -81,6 +168,8 @@ void Scheduler::enqueue(ActionType action) {
 # else
   work_queue_.emplace(UnitType(is_term, action));
 # endif
+
+  updateDiagnostic<int64_t>("max_queue_size", work_queue_.size());
 }
 
 void Scheduler::enqueue(PriorityType priority, ActionType action) {
@@ -90,6 +179,8 @@ void Scheduler::enqueue(PriorityType priority, ActionType action) {
 # else
   work_queue_.emplace(UnitType(is_term, action));
 # endif
+
+  updateDiagnostic<int64_t>("max_queue_size", work_queue_.size());
 }
 
 void Scheduler::runWorkUnit(UnitType& work) {
@@ -104,6 +195,8 @@ void Scheduler::runWorkUnit(UnitType& work) {
     vt::runtime::ScopedMPIAccess::prohibitByDefault(true);
   }
 #endif
+
+  updateDiagnostic<int64_t>("num_work_units", 1);
 
   ++action_depth_;
   work();
@@ -200,6 +293,7 @@ void Scheduler::runProgress(bool msg_only) {
     } else {
       progressImpl();
     }
+    updateDiagnostic<int64_t>("num_progress", 1);
   }
 
   if (theConfig()->vt_print_memory_at_threshold) {
@@ -221,6 +315,8 @@ void Scheduler::scheduler(bool msg_only) {
   ) {
     runProgress(msg_only);
   }
+
+  updateDiagnostic<int64_t>("avg_queue_size", work_queue_.size());
 
   if (not work_queue_.empty()) {
     processed_after_last_progress_++;
