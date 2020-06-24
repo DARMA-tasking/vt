@@ -160,6 +160,9 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   });
 
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
+
+  runSchedulerThrough(migrate_epoch);
+
   return proxy;
 }
 
