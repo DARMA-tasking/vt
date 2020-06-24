@@ -172,6 +172,15 @@ endif()
 
 message(STATUS "CI_BUILD = ${vt_feature_cmake_ci_build}")
 
+option(vt_diagnostic_enabled "Build VT with diagnostics" ON)
+if (vt_diagnostic_enabled)
+  message(STATUS "Building VT with diagnostics enabled")
+  set(vt_feature_cmake_diagnostics "1")
+else()
+  message(STATUS "Building VT with diagnostics disabled")
+  set(vt_feature_cmake_diagnostics "0")
+endif()
+
 set(vt_feature_cmake_no_feature "0")
 set(vt_feature_cmake_production "0")
 
