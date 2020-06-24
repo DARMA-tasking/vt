@@ -2970,11 +2970,11 @@ void CollectionManager::nextPhase(
   }
 
   #if backend_check_enabled(lblite)
-    msg->setLBLiteInstrument(instrument);
-    debug_print(
-      vrt_coll, node,
-      "nextPhase: broadcasting: instrument={}, cur_phase={}\n",
-      msg->lbLiteInstrument(), cur_phase
+  msg->setLBLiteInstrument(instrument);
+  debug_print(
+  vrt_coll, node,
+    "nextPhase: broadcasting: instrument={}, cur_phase={}\n",
+    msg->lbLiteInstrument(), cur_phase
     );
   #endif
 
