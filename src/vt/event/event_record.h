@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/messaging/message.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/timing/timing_type.h"
 
 #include <memory>
 #include <vector>
@@ -92,6 +93,16 @@ struct EventRecord {
   EventListPtrType getEventList() const;
   void setManagedMessage(MsgSharedPtr<ShortMessage> in_msg);
 
+  /**
+   * \internal \brief Get the creation time stamp for this record---when it was
+   * constructed
+   *
+   * \return creation time
+   */
+  TimeType getCreateTime() const {
+    return creation_time_stamp_;
+  }
+
 private:
   bool ready = false;
 
@@ -105,6 +116,9 @@ private:
 
   // the type of the event record to access the union properly
   EventRecordType type_ = EventRecordType::Invalid;
+
+  /// the time this event record was created
+  TimeType creation_time_stamp_ = 0.;
 };
 
 }} //end namespace vt::event

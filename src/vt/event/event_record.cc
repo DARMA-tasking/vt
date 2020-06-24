@@ -45,6 +45,7 @@
 #include "vt/event/event.h"
 #include "vt/event/event_record.h"
 #include "vt/runtime/mpi_access.h"
+#include "vt/timing/timing.h"
 
 #include <memory>
 
@@ -53,7 +54,10 @@
 namespace vt { namespace event {
 
 EventRecord::EventRecord(EventRecordType const& type, EventType const& id)
-  : event_id_(id), type_(type) {
+  : event_id_(id), type_(type)
+{
+
+  creation_time_stamp_ = timing::Timing::getCurrentTime();
 
   switch (type) {
   case EventRecordType::MPI_EventRecord:

@@ -81,6 +81,19 @@ void AsyncEvent::initialize() {
   registerDiagnostic<int64_t>(
     "max_events_size", "max event container length", UpdateType::Max
   );
+
+  // Average/max time that an MPI_Request sits in the queue waiting for it to
+  // test as complete
+  registerDiagnostic<double>(
+    "avg_mpi_event_wait", "mean MPI send request duration",
+    UpdateType::Avg, UnitType::Seconds
+  );
+
+  registerDiagnostic<double>(
+    "max_mpi_event_wait", "max MPI send request duration",
+    UpdateType::Max, UnitType::Seconds
+  );
+
 }
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
@@ -331,6 +344,10 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
     updateDiagnostic<int64_t>("event_polls", 1);
 
     if (event->testReady()) {
+      auto duration = timing::Timing::getCurrentTime() - event->getCreateTime();
+      updateDiagnostic<double>("avg_mpi_event_wait", duration);
+      updateDiagnostic<double>("max_mpi_event_wait", duration);
+
       holder.executeActions();
       iter = polling_event_container_.erase(iter);
       lookup_container_.erase(id);
