@@ -49,9 +49,10 @@ namespace vt { namespace runtime { namespace component {
 
 /** \brief Unit type for a diagnostic value */
 enum struct DiagnosticUnit : int8_t {
-  Bytes,
-  Units,
-  UnitsPerSecond
+  Bytes,                        /**< Memory units as bytes */
+  Units,                        /**< Units of some entity */
+  UnitsPerSecond,               /**< Units per second */
+  Seconds                       /**< Time units as seconds */
 };
 
 /** \brief Multipliers for basic units */
@@ -61,6 +62,14 @@ enum struct UnitMultiplier : int8_t {
   Millions = 2,           /**< Multiplier = 1,000,000 */
   Billions = 3,           /**< Multiplier = 1,000,000,000 */
   Trillions = 4           /**< Multiplier = 1,000,000,000,000 */
+};
+
+/** \brief Time multipliers for DiagnosticUnit::Seconds */
+enum struct TimeMultiplier : int8_t {
+  Seconds = 0,             /**< Multiplier = 1 */
+  Milliseconds = -1,       /**< Multiplier = 0.001 */
+  Microseconds = -2,       /**< Multiplier = 0.000001 */
+  Nanoseconds = -3,        /**< Multiplier = 0.000000001 */
 };
 
 }}} /* end namespace vt::runtime::component */

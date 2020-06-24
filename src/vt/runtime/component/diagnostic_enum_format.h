@@ -92,6 +92,15 @@ std::string diagnosticUnitTypeString(DiagnosticUnit unit);
  */
 std::string diagnosticMultiplierString(UnitMultiplier multiplier);
 
+/**
+ * \brief Convert a time unit multiplier to a human-readable string
+ *
+ * \param[in] time the time unit
+ *
+ * \return a string for printing
+ */
+std::string diagnosticTimeMultiplierString(TimeMultiplier time);
+
 }}} /* end namespace vt::runtime::component */
 
 #endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_ENUM_FORMAT_H*/

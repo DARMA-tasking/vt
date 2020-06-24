@@ -83,6 +83,7 @@ std::string diagnosticUnitTypeString(DiagnosticUnit unit) {
   case DiagnosticUnit::Bytes:          return "bytes";       break;
   case DiagnosticUnit::Units:          return "units";       break;
   case DiagnosticUnit::UnitsPerSecond: return "units/sec";   break;
+  case DiagnosticUnit::Seconds:        return "sec";         break;
   default:                             return "<unknown>"; break;
   }
   return "";
@@ -100,5 +101,15 @@ std::string diagnosticMultiplierString(UnitMultiplier multiplier) {
   return "";
 }
 
+std::string diagnosticTimeMultiplierString(TimeMultiplier time) {
+  switch (time) {
+  case TimeMultiplier::Seconds:       return "sec";       break;
+  case TimeMultiplier::Milliseconds:  return "ms";        break;
+  case TimeMultiplier::Microseconds:  return "μs";        break;
+  case TimeMultiplier::Nanoseconds:   return "ns";        break;
+  default:                            return "<unknown>"; break;
+  }
+  return "";
+}
 
 }}} /* end namespace vt::runtime::component */

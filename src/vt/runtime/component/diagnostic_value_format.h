@@ -192,6 +192,51 @@ private:
 
       break;
     }
+    case DiagnosticUnit::Seconds: {
+
+      // Start with the largest unit, testing if its appropriate for the value,
+      // and if not, downgrade it until we find one that works
+      auto multiplier = static_cast<int8_t>(TimeMultiplier::Nanoseconds);
+      for ( ; multiplier < 0; multiplier++) {
+        auto value_tmp = static_cast<double>(val);
+        for (int8_t i = static_cast<int8_t>(multiplier); i < 0; i++) {
+          value_tmp *= 1000.0;
+        }
+        if (value_tmp < 1000.) {
+          goto found_appropiate_time_multiplier;
+        }
+      }
+
+      // We found a multiplier that results in a value over 1.0, use it
+      found_appropiate_time_multiplier:
+      vtAssert(
+        multiplier >= static_cast<int8_t>(TimeMultiplier::Nanoseconds) and
+        multiplier <= 0,
+        "Must be a valid unit multiplier"
+      );
+
+      auto unit_name =
+        diagnosticTimeMultiplierString(static_cast<TimeMultiplier>(multiplier));
+
+      // Use the default spec if we have base units (multiplier of 1)---this
+      // means that integer types won't have a decimal place (as desired)
+      // Otherwise, add decimal places since we used a multiplier
+
+      if (multiplier == 0) {
+        return fmt::format(default_spec + " {}", val, unitFormat(unit_name));
+      } else {
+        // Compute the new value with multiplier as a double
+        auto new_value = static_cast<double>(val);
+        for (int8_t i = static_cast<int8_t>(multiplier); i < 0; i++) {
+          new_value *= 1000.0;
+        }
+
+        auto decimal = std::string{decimal_format};
+        return fmt::format(decimal + " {}", new_value, unitFormat(unit_name));
+      }
+
+      break;
+    }
     case DiagnosticUnit::UnitsPerSecond:
     default:
       return fmt::format(default_spec, val);
