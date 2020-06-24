@@ -93,6 +93,7 @@ struct EventRecord {
   EventListPtrType getEventList() const;
   void setManagedMessage(MsgSharedPtr<ShortMessage> in_msg);
 
+# if backend_check_enabled(diagnostics)
   /**
    * \internal \brief Get the creation time stamp for this record---when it was
    * constructed
@@ -102,6 +103,7 @@ struct EventRecord {
   TimeType getCreateTime() const {
     return creation_time_stamp_;
   }
+# endif
 
 private:
   bool ready = false;
@@ -117,8 +119,10 @@ private:
   // the type of the event record to access the union properly
   EventRecordType type_ = EventRecordType::Invalid;
 
+# if backend_check_enabled(diagnostics)
   /// the time this event record was created
   TimeType creation_time_stamp_ = 0.;
+# endif
 };
 
 }} //end namespace vt::event

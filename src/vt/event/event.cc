@@ -344,9 +344,12 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
     updateDiagnostic<int64_t>("event_polls", 1);
 
     if (event->testReady()) {
+
+#     if backend_check_enabled(diagnostics)
       auto duration = timing::Timing::getCurrentTime() - event->getCreateTime();
       updateDiagnostic<double>("avg_mpi_event_wait", duration);
       updateDiagnostic<double>("max_mpi_event_wait", duration);
+#     endif
 
       holder.executeActions();
       iter = polling_event_container_.erase(iter);
