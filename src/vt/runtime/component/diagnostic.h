@@ -79,6 +79,18 @@ struct Diagnostic : ComponentName, ComponentReducer {
    */
   void foreachDiagnostic(std::function<void(detail::DiagnosticBase*)> apply);
 
+  /**
+   * \internal \brief Pre-diagnostic hook; this fires before finalize but after
+   * all work is done and the system is about to shut down.
+   *
+   * This is typically used to compute some final timings that the system might
+   * use to output time-based diagnostic metrics
+   *
+   * \note Components can rely on this being called exactly once in the
+   * lifecycle
+   */
+  virtual void preDiagnostic() { }
+
 protected:
   /**
    * \internal \brief Register a new diagnostic
