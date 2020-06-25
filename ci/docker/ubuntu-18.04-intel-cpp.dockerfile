@@ -28,12 +28,12 @@ RUN apt-get update -y -q && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ln -s \
-    /opt/intel/system_studio_2018/bin/icpc \
-    /opt/intel/system_studio_2018/bin/g++
+    /opt/intel/install/bin/icpc \
+    /opt/intel/install/bin/g++
 
 RUN ln -s \
-    /opt/intel/system_studio_2018/bin/icc \
-    /opt/intel/system_studio_2018/bin/gcc
+    /opt/intel/install/bin/icc \
+    /opt/intel/install/bin/gcc
 
 RUN wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz && \
     tar xzf mpich-3.3.2.tar.gz && \
@@ -53,12 +53,12 @@ RUN wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz && \
     cd - && \
     rm -rf mpich-3.3.2
 
-ENV CC=/opt/intel/system_studio_2018/bin/icc \
-    CXX=/opt/intel/system_studio_2018/bin/icpc
+ENV CC=/opt/intel/install/bin/icc \
+    CXX=/opt/intel/install/bin/icpc
 
 ENV MPI_EXTRA_FLAGS="" \
     PATH=/usr/lib/ccache/:$PATH \
-    LD_LIBRARY_PATH=/opt/intel/system_studio_2018/compilers_and_libraries_2018.4.253/linux/compiler/lib/intel64_lin/
+    LD_LIBRARY_PATH=/opt/intel/ld_library_path
 
 FROM base as build
 COPY . /vt
