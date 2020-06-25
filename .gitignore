@@ -5,6 +5,7 @@ lib/*-build
 lib/checkpoint
 lib/detector
 .emacs.desktop
+.vscode/
 project/*
 balance.in
 CMakeSettings.json
