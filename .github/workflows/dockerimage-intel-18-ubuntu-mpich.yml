@@ -19,7 +19,7 @@ jobs:
       UBUNTU: 18.04
       COMPILER_TYPE: intel
       COMPILER: icc-18
-      BUILD_TYPE: debug
+      BUILD_TYPE: release
       ULIMIT_CORE: 0
       VT_LB: 1
       VT_TRACE: 1
