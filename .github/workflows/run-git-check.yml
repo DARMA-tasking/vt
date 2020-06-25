@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Display base sha
         shell: bash
-        run: echo "${{ github.context.pull_request.base.sha }}"
+        run: echo "${{ github.base_ref }}"
       - uses: joel-coffman/action-git-diff-check@0.1
         with:
-          revision: ${{ github.context.pull_request.base.sha }}
+          revision: ${{ github.base_ref }}
