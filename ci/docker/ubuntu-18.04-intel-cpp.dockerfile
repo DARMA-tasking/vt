@@ -1,8 +1,8 @@
 
-FROM lifflander1/icc:18.03 as base
+ARG compiler=icc-18
+FROM lifflander1/${compiler} as base
 
 ARG proxy=""
-ARG compiler=icc-18
 
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
