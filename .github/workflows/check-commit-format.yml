@@ -1,0 +1,13 @@
+name: PR checks (commit format)
+
+on: pull_request
+
+jobs:
+  check:
+    name: Check commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: DARMA-tasking/check-commit-format@master
+        with:
+          revision: ${{ github.event.pull_request.base.sha }}
