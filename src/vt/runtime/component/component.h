@@ -56,6 +56,36 @@
 namespace vt { namespace runtime { namespace component {
 
 /**
+ * \struct ComponentConstructor
+ *
+ * \brief Construct a component with either a regular \c std::make_unqiue or
+ * through the specialized static \c construct method, which is used to create
+ * the objgroup if the component is implemented as one
+ */
+template <typename T, typename _Enable=void>
+struct ComponentConstructor;
+
+template <typename T>
+struct ComponentConstructor<
+  T, typename std::enable_if_t<ComponentTraits<T>::hasConstruct>
+> {
+  template <typename... Args>
+  static std::unique_ptr<T> apply(Args&&... args) {
+    return T::construct(std::forward<Args>(args)...);
+  }
+};
+
+template <typename T>
+struct ComponentConstructor<
+  T, typename std::enable_if_t<not ComponentTraits<T>::hasConstruct>
+> {
+  template <typename... Args>
+  static std::unique_ptr<T> apply(Args&&... args) {
+    return std::make_unique<T>(std::forward<Args>(args)...);
+  }
+};
+
+/**
  * \struct Component component.h vt/runtime/component/component.h
  *
  * \brief \c Component class for a generic VT runtime module, CRTP'ed over the
@@ -80,37 +110,17 @@ struct Component : BaseComponent {
     ComponentRegistry::dependsOn<T, Deps...>();
   }
 
-  /// Trait for components that have a specialized static construct method (used
-  /// for objgroups)
-  template <typename U>
-  using hasCons = typename std::enable_if<ComponentTraits<U>::hasConstruct, T>::type;
-
-  /// Trait for components that do not have a specialized static construct method
-  template <typename U>
-  using hasNoCons = typename std::enable_if<not ComponentTraits<U>::hasConstruct, T>::type;
-
   /**
-   * \brief Construct the component with the specialized construct method
+   * \brief Construct the component with the specialized construct method or the
+   * normal component constructor depending on the type trait
    *
    * \param[in] args the arguments to forward to the component's constructor
    *
    * \return unique pointer to the the component
    */
-  template <typename... Args, typename U = T>
-  static std::unique_ptr<T> staticInit(Args&&... args, hasCons<U>* = nullptr) {
-    return T::construct(std::forward<Args>(args)...);
-  }
-
-  /**
-   * \brief Construct the component with normal component constructor
-   *
-   * \param[in] args the arguments to forward to the component's constructor
-   *
-   * \return unique pointer to the the component
-   */
-  template <typename... Args, typename U = T>
-  static std::unique_ptr<T> staticInit(Args&&... args, hasNoCons<U>* = nullptr) {
-    return std::make_unique<T>(std::forward<Args>(args)...);
+  template <typename... Args>
+  static std::unique_ptr<T> staticInit(Args&&... args) {
+    return ComponentConstructor<T>::apply(std::forward<Args>(args)...);
   }
 
   /**
