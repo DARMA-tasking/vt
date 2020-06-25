@@ -57,7 +57,8 @@ ENV CC=/opt/intel/system_studio_2018/bin/icc \
     CXX=/opt/intel/system_studio_2018/bin/icpc
 
 ENV MPI_EXTRA_FLAGS="" \
-    PATH=/usr/lib/ccache/:$PATH
+    PATH=/usr/lib/ccache/:$PATH \
+    LD_LIBRARY_PATH=/opt/intel/system_studio_2018/compilers_and_libraries_2018.4.253/linux/compiler/lib/intel64_lin/
 
 FROM base as build
 COPY . /vt
