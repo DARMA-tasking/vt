@@ -2,3 +2,4 @@ exclude_paths:
   - 'tests/extern/**'
   - 'lib/**/*'
   - 'docs/**/*'
+  - 'ci/docker/**/*'
