@@ -33,10 +33,11 @@ stages:
             REPO=lifflander1/vt
             ARCH=amd64
             UBUNTU=18.04
-            COMPILER_TYPE=gnu
-            COMPILER=gcc-5
-            BUILD_TYPE=release
+            COMPILER_TYPE=intel
+            COMPILER=icc-18
+            BUILD_TYPE=debug
             VT_LB=1
+            VT_TRACE=1
           action: 'Run a Docker Compose command'
           dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp'
       - task: DockerCompose@0
@@ -47,9 +48,10 @@ stages:
             REPO=lifflander1/vt
             ARCH=amd64
             UBUNTU=18.04
-            COMPILER_TYPE=gnu
-            COMPILER=gcc-5
-            BUILD_TYPE=release
+            COMPILER_TYPE=intel
+            COMPILER=icc-18
+            BUILD_TYPE=debug
             VT_LB=1
+            VT_TRACE=1
           action: 'Run a Docker Compose command'
           dockerComposeCommand: 'run ubuntu-cpp'
