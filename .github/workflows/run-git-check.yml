@@ -11,6 +11,6 @@ jobs:
       - name: Display base sha
         shell: bash
         run: echo "${{ github.context.pull_request.base.sha }}"
-      - uses: actions/git-diff-check@v1
+      - uses: joel-coffman/action-git-diff-check@0.1
         with:
           revision: ${{ github.context.pull_request.base.sha }}
