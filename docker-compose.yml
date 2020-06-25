@@ -54,6 +54,9 @@ volumes:
   amd64-ubuntu-18.04-gcc-8-cache:
   amd64-ubuntu-20.04-gcc-9-cache:
   amd64-ubuntu-20.04-gcc-10-cache:
+  amd64-ubuntu-18.04-icc-18-cache:
+  amd64-ubuntu-18.04-icc-19-cache:
+  amd64-ubuntu-18.04-icc-20-cache:
   amd64-alpine-clang-3.9-cache:
   amd64-alpine-clang-4.0-cache:
   amd64-alpine-clang-5.0-cache:
@@ -68,6 +71,9 @@ volumes:
   amd64-alpine-gcc-8-cache:
   amd64-alpine-gcc-9-cache:
   amd64-alpine-gcc-10-cache:
+  amd64-alpine-icc-18-cache:
+  amd64-alpine-icc-19-cache:
+  amd64-alpine-icc-20-cache:
   arm64v8-ubuntu-18.04-gcc-7-cache:
   arm64v8-alpine-gcc-7-cache:
 
