@@ -286,7 +286,7 @@ struct CollectionManager
    * \param[in] map_han the registered map function
    * \param[in] tag tag for out-or-order creation
    *
-   * \return 
+   * \return proxy to new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollectiveMap(
@@ -1312,8 +1312,8 @@ public:
    * collections. The LB starts immediately after collecting statistics and the
    * continuation executes at completion
    *
-   * \param[in] fn 
-   * \param[in] lb_phase 
+   * \param[in] fn action to trigger when LB is finished
+   * \param[in] lb_phase (optional) the LB phase
    */
   void startPhaseCollective(
     ActionFinishedLBType fn, PhaseType lb_phase = no_lb_phase

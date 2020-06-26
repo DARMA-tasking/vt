@@ -1,0 +1,21 @@
+name: PR checks (commit format)
+
+on: pull_request
+
+jobs:
+  check:
+    name: Check commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Fetch base_ref HEAD
+        run: git fetch origin +refs/heads/${{github.base_ref}}:refs/remotes/origin/${{github.base_ref}}
+      - name: Display base sha
+        shell: bash
+        run: echo "${{ github.event.pull_request.base.sha }}"
+      - uses: DARMA-tasking/check-commit-format@master
+        with:
+          revision: ${{ github.event.pull_request.base.sha }}

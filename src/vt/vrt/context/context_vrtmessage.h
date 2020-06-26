@@ -62,7 +62,7 @@ struct VirtualMessage : RoutedMessageType<vt::Message>
 {
   using MessageParentType = RoutedMessageType<vt::Message>;
   vt_msg_serialize_supported();
-  
+
   // By default, the `VirtualMessage' is byte copyable for serialization, but
   // derived classes may not be. The serialization::ByteCopyTrait specifies this
   // property

@@ -1,0 +1,13 @@
+name: PR checks (trailing whitespace)
+
+on: pull_request
+
+jobs:
+  check:
+    name: Find Trailing Whitespace
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: DARMA-tasking/find-trailing-whitespace@master
+        with:
+          exclude: "sketches;lib"
