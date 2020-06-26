@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/read_lb.h"
