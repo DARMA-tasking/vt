@@ -181,7 +181,7 @@ std::string EpochGraph::outputDOT(bool verbose) {
     NodeType node = std::get<1>(elm.second);
     bool collective = std::get<2>(elm.second);
     std::string str = std::get<3>(elm.second);
-    if (not arguments::ArgConfig::vt_epoch_graph_terse or verbose) {
+    if (not theArgConfig()->vt_epoch_graph_terse or verbose) {
       if (collective) {
         builder += fmt::format(
           "\t{} [shape=record height=1"

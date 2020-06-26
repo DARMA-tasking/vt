@@ -76,8 +76,6 @@ struct vt_gzFile {
   vt_gzFile(gzFile pS) : file_type(pS) { }
 };
 
-using ArgType = vt::arguments::ArgConfig;
-
 using LogType = Trace::LogType;
 
 template <typename EventT>
@@ -160,7 +158,7 @@ void Trace::finalize() /*override*/ {
 }
 
 void Trace::loadAndBroadcastSpec() {
-  if (ArgType::vt_trace_spec) {
+  if (theArgConfig()->vt_trace_spec) {
     auto spec_proxy = file_spec::TraceSpec::construct();
 
     theTerm()->produce();
@@ -186,7 +184,7 @@ bool Trace::inIdleEvent() const {
 }
 
 void Trace::setupNames(std::string const& in_prog_name) {
-  if (not ArgType::vt_trace) {
+  if (not theArgConfig()->vt_trace) {
     return;
   }
 
@@ -200,11 +198,11 @@ void Trace::setupNames(std::string const& in_prog_name) {
     vtAssert(false, "Must have current directory");
   }
 
-  if (ArgType::vt_trace_dir.empty()) {
+  if (theArgConfig()->vt_trace_dir.empty()) {
     full_dir_name_ = std::string(cur_dir) + "/" + dir_name;
   }
   else {
-    full_dir_name_ = ArgType::vt_trace_dir;
+    full_dir_name_ = theArgConfig()->vt_trace_dir;
   }
 
   if (full_dir_name_[full_dir_name_.size() - 1] != '/')
@@ -223,12 +221,12 @@ void Trace::setupNames(std::string const& in_prog_name) {
   auto const prog_name = pc[pc.size()-1];
 
   auto const node_str = "." + std::to_string(node) + ".log.gz";
-  if (ArgType::vt_trace_file.empty()) {
+  if (theArgConfig()->vt_trace_file.empty()) {
     full_trace_name_ = full_dir_name_ + trace_name;
     full_sts_name_   = full_dir_name_ + prog_name + ".sts";
   } else {
-    full_trace_name_ = full_dir_name_ + ArgType::vt_trace_file + node_str;
-    full_sts_name_   = full_dir_name_ + ArgType::vt_trace_file + ".sts";
+    full_trace_name_ = full_dir_name_ + theArgConfig()->vt_trace_file + node_str;
+    full_sts_name_   = full_dir_name_ + theArgConfig()->vt_trace_file + ".sts";
   }
 }
 
@@ -488,7 +486,7 @@ TraceProcessingTag Trace::beginProcessing(
     }
   );
 
-  if (ArgType::vt_trace_memory_usage) {
+  if (theArgConfig()->vt_trace_memory_usage) {
     addMemoryEvent(theMemUsage()->getFirstUsage());
   }
 
@@ -526,7 +524,7 @@ void Trace::endProcessing(
     "Event being closed must be on the top of the open event stack."
   );
 
-  if (ArgType::vt_trace_memory_usage) {
+  if (theArgConfig()->vt_trace_memory_usage) {
     addMemoryEvent(theMemUsage()->getFirstUsage());
   }
 
@@ -705,7 +703,7 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
 
       // Go ahead and perform a trace flush when tracing is disabled (and was
       // previously enabled) to reduce memory footprint.
-      if (not ret and ArgType::vt_trace_flush_size != 0) {
+      if (not ret and theArgConfig()->vt_trace_flush_size != 0) {
         writeTracesFile(incremental_flush_mode, true);
       }
     }
@@ -795,13 +793,13 @@ void Trace::emitTraceForTopProcessingEvent(
 }
 
 /*static*/ bool Trace::traceWritingEnabled(NodeType node) {
-  return (ArgType::vt_trace
-          and (ArgType::vt_trace_mod == 0
-               or (node % ArgType::vt_trace_mod == 0)));
+  return (theArgConfig()->vt_trace
+          and (theArgConfig()->vt_trace_mod == 0
+               or (node % theArgConfig()->vt_trace_mod == 0)));
 }
 
 /*static*/ bool Trace::isStsOutputNode(NodeType node) {
-  return (ArgType::vt_trace
+  return (theArgConfig()->vt_trace
           and node == designated_root_node);
 }
 
@@ -835,7 +833,7 @@ void Trace::cleanupTracesFile() {
 }
 
 void Trace::flushTracesFile(bool useGlobalSync) {
-  if (ArgType::vt_trace_flush_size == 0) {
+  if (theArgConfig()->vt_trace_flush_size == 0) {
     // Flush the traces at the end only
     return;
   }
@@ -844,7 +842,7 @@ void Trace::flushTracesFile(bool useGlobalSync) {
     // (Consider pushing out: barrier usages are probably domain-specific.)
     theCollective()->barrier();
   }
-  if (traces_.size() >= static_cast<std::size_t>(ArgType::vt_trace_flush_size)) {
+  if (traces_.size() >= static_cast<std::size_t>(theArgConfig()->vt_trace_flush_size)) {
     writeTracesFile(incremental_flush_mode, true);
   }
 }

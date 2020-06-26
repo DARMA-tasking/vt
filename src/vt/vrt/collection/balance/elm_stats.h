@@ -53,7 +53,6 @@
 #include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/timing/timing.h"
 #include "vt/vrt/collection/types/migratable.fwd.h"
-#include "vt/configs/arguments/args.h"
 
 #include <cstdint>
 #include <vector>
@@ -65,7 +64,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct ElementStats {
   using PhaseType       = uint64_t;
   using SubphaseType    = uint16_t;
-  using ArgType         = vt::arguments::ArgConfig;
 
   ElementStats() = default;
   ElementStats(ElementStats const&) = default;

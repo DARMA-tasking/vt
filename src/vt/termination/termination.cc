@@ -461,15 +461,15 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         state.g_cons2, is_term
       );
 
-      if (not ArgType::vt_no_detect_hang) {
+      if (not theArgConfig()->vt_no_detect_hang) {
         // Hang detection has confirmed a fatal hang---abort!
         if (is_term and state.getEpoch() == no_epoch) {
           vt_print(
             term,
             "Detected hang: write graph to file={}\n",
-            arguments::ArgConfig::vt_epoch_graph_on_hang
+            theArgConfig()->vt_epoch_graph_on_hang
           );
-          if (arguments::ArgConfig::vt_epoch_graph_on_hang) {
+          if (theArgConfig()->vt_epoch_graph_on_hang) {
             startEpochGraphBuild();
             // After spawning the build, spin until the file gets written out so
             // vtAbort does not exit too early
@@ -534,7 +534,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 }
 
 void TerminationDetector::countsConstant(TermStateType& state) {
-  bool enter = not ArgType::vt_no_detect_hang or ArgType::vt_print_no_progress;
+  bool enter = not theArgConfig()->vt_no_detect_hang or theArgConfig()->vt_print_no_progress;
   if (enter) {
     bool is_global_epoch = state.getEpoch() == any_epoch_sentinel;
     bool is_hang_detector = state.getEpoch() == no_epoch;
@@ -554,8 +554,8 @@ void TerminationDetector::countsConstant(TermStateType& state) {
     }
 
     if (
-      state.constant_count >= ArgType::vt_hang_freq and
-      state.constant_count %  ArgType::vt_hang_freq == 0
+      state.constant_count >= theArgConfig()->vt_hang_freq and
+      state.constant_count %  theArgConfig()->vt_hang_freq == 0
     ) {
       if (
         state.num_print_constant == 0 or
@@ -568,7 +568,7 @@ void TerminationDetector::countsConstant(TermStateType& state) {
           state.getEpoch(), state.constant_count
         );
 
-        if (ArgType::vt_print_no_progress) {
+        if (theArgConfig()->vt_print_no_progress) {
           auto const current  = state.getEpoch();
           bool const is_rooted = epoch::EpochManip::isRooted(current);
           bool const has_categ = epoch::EpochManip::hasCategory(current);
@@ -591,7 +591,7 @@ void TerminationDetector::countsConstant(TermStateType& state) {
         if (state.num_print_constant == 10) {
           if (is_global_epoch) {
             // Start running final check to see if we are hung for sure
-            if (not ArgType::vt_no_detect_hang) {
+            if (not theArgConfig()->vt_no_detect_hang) {
               auto msg = makeMessage<HangCheckMsg>();
               theMsg()->markAsTermMessage(msg.get());
               theMsg()->broadcastMsg<HangCheckMsg, hangCheckHandler>(msg.get());
@@ -608,7 +608,7 @@ void TerminationDetector::countsConstant(TermStateType& state) {
 void TerminationDetector::startEpochGraphBuild() {
   // Broadcast to build local EpochGraph(s), merge the graphs, and output to
   // file
-  if (arguments::ArgConfig::vt_epoch_graph_on_hang) {
+  if (theArgConfig()->vt_epoch_graph_on_hang) {
     auto msg = makeMessage<BuildGraphMsg>();
     theMsg()->markAsTermMessage(msg.get());
     theMsg()->broadcastMsg<BuildGraphMsg, buildLocalGraphHandler>(msg.get());
@@ -1053,8 +1053,8 @@ EpochType TerminationDetector::makeEpochRooted(
     theContext()->getNode(), use_ds, successor, label
   );
 
-  bool const force_use_ds = vt::arguments::ArgConfig::vt_term_rooted_use_ds;
-  bool const force_use_wave = vt::arguments::ArgConfig::vt_term_rooted_use_wave;
+  bool const force_use_ds = vt::theArgConfig()->vt_term_rooted_use_ds;
+  bool const force_use_wave = vt::theArgConfig()->vt_term_rooted_use_wave;
 
   // Both force options should never be turned on
   vtAssertExpr(not (force_use_ds and force_use_wave));

@@ -461,8 +461,8 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
   auto const k = std::get<1>(tup);
   auto const migrate = std::get<2>(tup);
 
-  vt::arguments::ArgConfig::vt_term_rooted_use_wave = !use_ds;
-  vt::arguments::ArgConfig::vt_term_rooted_use_ds = use_ds;
+  vt::theArgConfig()->vt_term_rooted_use_wave = !use_ds;
+  vt::theArgConfig()->vt_term_rooted_use_ds = use_ds;
 
   auto local = std::make_unique<MyObjGroup>();
   local->startup();

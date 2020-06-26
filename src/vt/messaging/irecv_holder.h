@@ -46,7 +46,6 @@
 #define INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
 
 #include "vt/config.h"
-#include "vt/configs/arguments/args.h"
 
 // Unfortunate header leak for VT_ALLOW_MPI_CALLS
 #include "vt/runtime/mpi_access.h"
@@ -68,7 +67,6 @@ namespace vt { namespace messaging {
  */
 template <typename T>
 struct IRecvHolder {
-  using ArgType = vt::arguments::ArgConfig;
 
 # if vt_check_enabled(trace_enabled)
   explicit IRecvHolder(trace::UserEventIDType in_trace_user_event)
@@ -102,7 +100,7 @@ struct IRecvHolder {
 #   if vt_check_enabled(trace_enabled)
     std::size_t const holder_size_start = holder_.size();
     TimeType tr_begin = 0.0;
-    if (ArgType::vt_trace_irecv_polling) {
+    if (theArgConfig()->vt_trace_irecv_polling) {
       tr_begin = vt::timing::Timing::getCurrentTime();
     }
 #   endif
@@ -134,7 +132,7 @@ struct IRecvHolder {
     }
 
 #   if vt_check_enabled(trace_enabled)
-    if (ArgType::vt_trace_irecv_polling) {
+    if (theArgConfig()->vt_trace_irecv_polling) {
        if (holder_size_start > 0) {
          auto tr_end = vt::timing::Timing::getCurrentTime();
          auto tr_note = fmt::format(

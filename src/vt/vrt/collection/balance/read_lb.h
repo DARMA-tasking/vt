@@ -175,7 +175,6 @@ private:
  */
 
 struct ReadLBSpec {
-  using ArgType      = vt::arguments::ArgConfig;
   using SpecMapType  = std::unordered_map<SpecIndex,SpecEntry>;
   using ParamMapType = std::unordered_map<std::string, std::string>;
 

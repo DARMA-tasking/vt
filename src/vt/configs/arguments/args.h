@@ -65,7 +65,7 @@ struct ArgConfig {
 
 public:
   inline bool user1() { return vt_user_1; }
-  inline bool user2() { return vt_user_2; } 
+  inline bool user2() { return vt_user_2; }
   inline bool user3() { return vt_user_3; }
 
   inline bool traceTerm() {
@@ -230,7 +230,7 @@ private:
 }} /* end namespace vt::arguments */
 
 namespace vt {
-  
+
 arguments::ArgConfig* theArgConfig();
 
 } /* end namespace vt */

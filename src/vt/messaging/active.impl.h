@@ -65,29 +65,29 @@ void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
   envelopeSetPriority(msg->env, sys_min_priority);
 #endif
 #if vt_check_enabled(trace_enabled)
-  //fmt::print("arguments::traceTerm()={}\n",arguments::traceTerm());
-  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceTerm());
+  //fmt::print("theArgConfig()->traceTerm()={}\n",theArgConfig()->traceTerm());
+  envelopeSetTraceRuntimeEnabled(msg->env, theArgConfig()->traceTerm());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsLocationMessage(MsgPtrT const msg) {
 #if vt_check_enabled(trace_enabled)
-  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceLocation());
+  envelopeSetTraceRuntimeEnabled(msg->env, theArgConfig()->traceLocation());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsSerialMsgMessage(MsgPtrT const msg) {
 #if vt_check_enabled(trace_enabled)
-  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceSerialMsg());
+  envelopeSetTraceRuntimeEnabled(msg->env, theArgConfig()->traceSerialMsg());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsCollectionMessage(MsgPtrT const msg) {
 #if vt_check_enabled(trace_enabled)
-  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceCollection());
+  envelopeSetTraceRuntimeEnabled(msg->env, theArgConfig()->traceCollection());
 #endif
 }
 

@@ -118,7 +118,7 @@ std::string Sbrk::getName() {
 
 std::size_t PS::getUsage() {
 # if defined(vt_has_popen) && defined(vt_has_pclose) && defined(vt_has_getpid)
-    if (arguments::ArgConfig::vt_allow_memory_report_with_ps) {
+    if (theArgConfig()->vt_allow_memory_report_with_ps) {
       auto cmd = fmt::format("/bin/ps -o vsz= -p {}", getpid());
       FILE* p = popen(cmd.c_str(), "r");
       std::size_t vsz = 0;
@@ -318,7 +318,7 @@ MemoryUsage::MemoryUsage() {
   all_reporters.emplace_back(std::make_unique<Getrusage>());
   all_reporters.emplace_back(std::make_unique<PS>());
 
-  std::string pred = arguments::ArgConfig::vt_memory_reporters;
+  std::string pred = theArgConfig()->vt_memory_reporters;
   std::istringstream iss(pred);
   std::vector<std::string> results(
     std::istream_iterator<CommaDelimit>{iss},

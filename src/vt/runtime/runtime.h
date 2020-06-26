@@ -81,7 +81,6 @@ namespace vt { namespace runtime {
 struct Runtime {
   template <typename ComponentT>
   using ComponentPtrType = ComponentT*;
-  using ArgType = vt::arguments::ArgConfig;
 
   /**
    * \internal \brief Initialize a VT runtime

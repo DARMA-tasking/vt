@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/configs/arguments/args.h"
 #include "vt/runtime/runtime.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/base/base.h"
@@ -58,7 +59,7 @@ void CollectionManager::finalize() {
 
   // Statistics output when LB is enabled and appropriate flag is enabled
 #if vt_check_enabled(lblite)
-  if (ArgType::vt_lb_stats) {
+  if (theArgConfig()->vt_lb_stats) {
     theNodeStats()->outputStatsFile();
     theNodeStats()->clearStats();
   }

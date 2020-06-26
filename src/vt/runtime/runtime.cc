@@ -153,7 +153,7 @@ bool Runtime::hasSchedRun() const {
 }
 
 void Runtime::pauseForDebugger() {
-  if (ArgType::vt_pause) {
+  if (vt::theArgConfig()->vt_pause) {
     char node_str[256];
     auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
     sprintf(node_str, "prog-%d.pid", node);
@@ -182,7 +182,7 @@ void Runtime::pauseForDebugger() {
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-    if (ArgType::vt_stack_file != "") {
+    if (vt::theArgConfig()->vt_stack_file != "") {
       Runtime::writeToFile(stack_pretty);
     } else {
       ::fmt::print("{}", stack_pretty);
@@ -208,7 +208,7 @@ void Runtime::pauseForDebugger() {
 # endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (ArgType::vt_stack_file.empty()) {
+    if (vt::theArgConfig()->vt_stack_file.empty()) {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
       ::fmt::print("\n");
     } else {
@@ -224,7 +224,7 @@ void Runtime::pauseForDebugger() {
   ::fmt::print("{}Caught std::terminate \n", vt_pre);
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (ArgType::vt_stack_file != "") {
+    if (vt::theArgConfig()->vt_stack_file != "") {
       Runtime::writeToFile(std::get<0>(stack));
     } else {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
@@ -238,9 +238,9 @@ void Runtime::pauseForDebugger() {
   auto const& node = debug::preNode();
   if (node == uninitialized_destination) {
     return true;
-  } else if (ArgType::vt_stack_mod == 0) {
+  } else if (vt::theArgConfig()->vt_stack_mod == 0) {
     return true;
-  } else if (node % ArgType::vt_stack_mod == 0) {
+  } else if (node % vt::theArgConfig()->vt_stack_mod == 0) {
     return true;
   } else {
     return false;
@@ -248,11 +248,11 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
-  std::string& app_name = ArgType::prog_name;
-  std::string name = ArgType::vt_stack_file == "" ? app_name : ArgType::vt_stack_file;
+  std::string& app_name = vt::theArgConfig()->prog_name;
+  std::string name = vt::theArgConfig()->vt_stack_file == "" ? app_name : vt::theArgConfig()->vt_stack_file;
   auto const& node = debug::preNode();
   std::string file = name + "." + std::to_string(node) + ".stack.out";
-  std::string dir  = ArgType::vt_stack_dir == "" ? "" : ArgType::vt_stack_dir + "/";
+  std::string dir  = vt::theArgConfig()->vt_stack_dir == "" ? "" : vt::theArgConfig()->vt_stack_dir + "/";
   std::string path = dir + file;
   FILE* f = fopen(path.c_str(), "w+");
   fprintf(f, "%s", str.c_str());
@@ -260,20 +260,20 @@ void Runtime::pauseForDebugger() {
 }
 
 void Runtime::setupSignalHandler() {
-  if (!ArgType::vt_no_sigsegv) {
+  if (!vt::theArgConfig()->vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
   }
   signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }
 
 void Runtime::setupSignalHandlerINT() {
-  if (!ArgType::vt_no_sigint) {
+  if (!vt::theArgConfig()->vt_no_sigint) {
     signal(SIGINT, Runtime::sigHandlerINT);
   }
 }
 
 void Runtime::setupTerminateHandler() {
-  if (!ArgType::vt_no_terminate) {
+  if (!vt::theArgConfig()->vt_no_terminate) {
     std::set_terminate(termHandler);
   }
 }
@@ -328,10 +328,10 @@ bool Runtime::tryFinalize() {
 
 bool Runtime::needStatsRestartReader() {
   #if vt_check_enabled(lblite)
-    if (ArgType::vt_lb_stats) {
+    if (vt::theArgConfig()->vt_lb_stats) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
-      if (ArgType::vt_lb_name == lbNames[mapLB]) {
+      if (vt::theArgConfig()->vt_lb_name == lbNames[mapLB]) {
         return true;
       }
     }
@@ -355,9 +355,9 @@ bool Runtime::initialize(bool const force_now) {
 
       // If the user specified to output a configuration file, write it to the
       // specified file on rank 0
-      if (ArgType::vt_output_config) {
-        std::ofstream out(ArgType::vt_output_config_file);
-        out << ArgType::vt_output_config_str;
+      if (vt::theArgConfig()->vt_output_config) {
+        std::ofstream out(vt::theArgConfig()->vt_output_config_file);
+        out << vt::theArgConfig()->vt_output_config_str;
         out.close();
       }
     }
@@ -479,15 +479,15 @@ void Runtime::output(
     fmt::print(stderr, "{}\n", prefix);
   }
 
-  if (!ArgType::vt_no_stack) {
-    bool const on_abort = !ArgType::vt_no_abort_stack;
-    bool const on_warn = !ArgType::vt_no_warn_stack;
+  if (!vt::theArgConfig()->vt_no_stack) {
+    bool const on_abort = !vt::theArgConfig()->vt_no_abort_stack;
+    bool const on_warn = !vt::theArgConfig()->vt_no_warn_stack;
     bool const dump = (error && on_abort) || (!error && on_warn);
     if (dump) {
       if (Runtime::nodeStackWrite()) {
         auto stack = debug::stack::dumpStack();
         auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-        if (ArgType::vt_stack_file != "") {
+        if (vt::theArgConfig()->vt_stack_file != "") {
           Runtime::writeToFile(stack_pretty);
         } else {
           fmt::print("{}", stack_pretty);
@@ -528,7 +528,7 @@ void Runtime::setup() {
   theTrace->loadAndBroadcastSpec();
 # endif
 
-  if (ArgType::vt_pause) {
+  if (vt::theArgConfig()->vt_pause) {
     pauseForDebugger();
   }
 
@@ -536,12 +536,12 @@ void Runtime::setup() {
 }
 
 void Runtime::setupArgs() {
-  std::vector<char*>& mpi_args = ArgType::mpi_init_args;
+  std::vector<char*>& mpi_args = vt::theArgConfig()->mpi_init_args;
   user_argc_ = mpi_args.size() + 1;
   user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
 
   int i = 0;
-  user_argv_[i++] = ArgType::argv_prog_name;
+  user_argv_[i++] = vt::theArgConfig()->argv_prog_name;
   for (char*& arg : mpi_args) {
     user_argv_[i++] = arg;
   }
@@ -595,7 +595,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<trace::Trace>(&theTrace, Deps<
       ctx::Context  // Everything depends on theContext
     >{},
-    ArgType::prog_name
+    vt::theArgConfig()->prog_name
   );
 # endif
 
