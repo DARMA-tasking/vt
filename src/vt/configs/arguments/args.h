@@ -61,168 +61,178 @@ struct ArgConfig {
   /// On success the tuple will be {-1, ""}. Otherwise the exit code
   /// (which may be 0 if help was requested) will be returned along
   /// with an appropriate display message.
-  static std::tuple<int, std::string> parse(int& argc, char**& argv);
+  std::tuple<int, std::string> parse(int& argc, char**& argv);
 
 public:
-  static bool vt_color;
-  static bool vt_no_color;
-  static bool vt_auto_color;
-  static bool vt_quiet;
+  inline bool user1() { return vt_user_1; }
+  inline bool user2() { return vt_user_2; } 
+  inline bool user3() { return vt_user_3; }
+
+  inline bool traceTerm() {
+    return vt_trace_sys_term or vt_trace_sys_all;
+  }
+  inline bool traceLocation() {
+    return vt_trace_sys_location or vt_trace_sys_all;
+  }
+  inline bool traceCollection() {
+    return vt_trace_sys_collection or vt_trace_sys_all;
+  }
+  inline bool traceSerialMsg() {
+    return vt_trace_sys_serial_msg or vt_trace_sys_all;
+  }
+
+  inline bool alwaysFlush() {
+    return vt_debug_print_flush;
+  }
+
+  bool vt_color      = true;
+  bool vt_no_color   = false;
+  bool vt_auto_color = false;
+  bool vt_quiet      = false;
   // Derived from vt_*_color arguments after parsing.
-  static bool colorize_output;
+  bool colorize_output;
 
-  static int32_t vt_sched_num_progress;
-  static int32_t vt_sched_progress_han;
-  static double vt_sched_progress_sec;
-  static bool vt_no_sigint;
-  static bool vt_no_sigsegv;
-  static bool vt_no_terminate;
-  static std::string vt_memory_reporters;
-  static bool vt_print_memory_each_phase;
-  static std::string vt_print_memory_node;
-  static bool vt_allow_memory_report_with_ps;
-  static bool vt_print_memory_at_threshold;
-  static std::string vt_print_memory_threshold;
-  static int32_t vt_print_memory_sched_poll;
+  int32_t vt_sched_num_progress = 2;
+  int32_t vt_sched_progress_han = 0;
+  double vt_sched_progress_sec  = 0.0;
+  bool vt_no_sigint    = false;
+  bool vt_no_sigsegv   = false;
+  bool vt_no_terminate = false;
+  std::string vt_memory_reporters =
+  # if vt_check_enabled(mimalloc)
+  "mimalloc,"
+# endif
+  "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
+  bool vt_print_memory_each_phase  = false;
+  std::string vt_print_memory_node = "0";
+  bool vt_allow_memory_report_with_ps = false;
+  bool vt_print_memory_at_threshold   = false;
+  std::string vt_print_memory_threshold = "1 GiB";
+  int32_t vt_print_memory_sched_poll    = 100;
 
-  static bool vt_no_warn_stack;
-  static bool vt_no_assert_stack;
-  static bool vt_no_abort_stack;
-  static bool vt_no_stack;
-  static std::string vt_stack_file;
-  static std::string vt_stack_dir;
-  static int32_t vt_stack_mod;
+  bool vt_no_warn_stack     = false;
+  bool vt_no_assert_stack   = false;
+  bool vt_no_abort_stack    = false;
+  bool vt_no_stack          = false;
+  std::string vt_stack_file = "";
+  std::string vt_stack_dir  = "";
+  int32_t vt_stack_mod      = 0;
 
-  static bool vt_trace;
-  static bool vt_trace_mpi;
-  static bool vt_trace_pmpi;
-  static bool vt_trace_sys_all;
-  static bool vt_trace_sys_term;
-  static bool vt_trace_sys_location;
-  static bool vt_trace_sys_collection;
-  static bool vt_trace_sys_serial_msg;
-  static std::string vt_trace_file;
-  static std::string vt_trace_dir;
-  static int32_t vt_trace_mod;
-  static int32_t vt_trace_flush_size;
-  static bool vt_trace_spec;
-  static std::string vt_trace_spec_file;
-  static bool vt_trace_memory_usage;
-  static bool vt_trace_event_polling;
-  static bool vt_trace_irecv_polling;
+  bool vt_trace                  = false;
+  bool vt_trace_mpi              = false;
+  bool vt_trace_pmpi             = false;
+  bool vt_trace_sys_all          = false;
+  bool vt_trace_sys_term         = false;
+  bool vt_trace_sys_location     = false;
+  bool vt_trace_sys_collection   = false;
+  bool vt_trace_sys_serial_msg   = false;
+  std::string vt_trace_file      = "";
+  std::string vt_trace_dir       = "";
+  int32_t vt_trace_mod           = 0;
+  int32_t vt_trace_flush_size    = 0;
+  bool vt_trace_spec             = false;
+  std::string vt_trace_spec_file = "";
+  bool vt_trace_memory_usage     = false;
+  bool vt_trace_event_polling    = false;
+  bool vt_trace_irecv_polling    = false;
 
-  static bool vt_lb;
-  static bool vt_lb_file;
-  static bool vt_lb_quiet;
-  static std::string vt_lb_file_name;
-  static std::string vt_lb_name;
-  static std::string vt_lb_args;
-  static int32_t vt_lb_interval;
-  static bool vt_lb_stats;
-  static std::string vt_lb_stats_dir;
-  static std::string vt_lb_stats_file;
-  static std::string vt_lb_stats_dir_in;
-  static std::string vt_lb_stats_file_in;
+  bool vt_lb                  = false;
+  bool vt_lb_file             = false;
+  bool vt_lb_quiet            = false;
+  std::string vt_lb_file_name = "";
+  std::string vt_lb_name      = "NoLB";
+  std::string vt_lb_args      = "";
+  int32_t vt_lb_interval      = 1;
+  bool vt_lb_stats            = false;
+  std::string vt_lb_stats_dir     = "vt_lb_stats";
+  std::string vt_lb_stats_file    = "stats";
+  std::string vt_lb_stats_dir_in  = "vt_lb_stats_in";
+  std::string vt_lb_stats_file_in = "stats_in";
 
-  static bool vt_no_detect_hang;
-  static bool vt_print_no_progress;
-  static bool vt_epoch_graph_on_hang;
-  static bool vt_epoch_graph_terse;
-  static bool vt_term_rooted_use_ds;
-  static bool vt_term_rooted_use_wave;
-  static int64_t vt_hang_freq;
+  bool vt_no_detect_hang       = false;
+  bool vt_print_no_progress    = true;
+  bool vt_epoch_graph_on_hang  = true;
+  bool vt_epoch_graph_terse    = false;
+  bool vt_term_rooted_use_ds   = false;
+  bool vt_term_rooted_use_wave = false;
+  int64_t vt_hang_freq         = 1024;
 
-  static bool vt_pause;
+  bool vt_pause = false;
 
-  static bool vt_debug_all;
-  static bool vt_debug_verbose;
-  static bool vt_debug_none;
-  static bool vt_debug_gen;
-  static bool vt_debug_runtime;
-  static bool vt_debug_active;
-  static bool vt_debug_term;
-  static bool vt_debug_termds;
-  static bool vt_debug_barrier;
-  static bool vt_debug_event;
-  static bool vt_debug_pipe;
-  static bool vt_debug_pool;
-  static bool vt_debug_reduce;
-  static bool vt_debug_rdma;
-  static bool vt_debug_rdma_channel;
-  static bool vt_debug_rdma_state;
-  static bool vt_debug_param;
-  static bool vt_debug_handler;
-  static bool vt_debug_hierlb;
-  static bool vt_debug_gossiplb;
-  static bool vt_debug_scatter;
-  static bool vt_debug_sequence;
-  static bool vt_debug_sequence_vrt;
-  static bool vt_debug_serial_msg;
-  static bool vt_debug_trace;
-  static bool vt_debug_location;
-  static bool vt_debug_lb;
-  static bool vt_debug_vrt;
-  static bool vt_debug_vrt_coll;
-  static bool vt_debug_worker;
-  static bool vt_debug_group;
-  static bool vt_debug_broadcast;
-  static bool vt_debug_objgroup;
+  bool vt_debug_all          = false;
+  bool vt_debug_verbose      = false;
+  bool vt_debug_none         = false;
+  bool vt_debug_gen          = false;
+  bool vt_debug_runtime      = false;
+  bool vt_debug_active       = false;
+  bool vt_debug_term         = false;
+  bool vt_debug_termds       = false;
+  bool vt_debug_barrier      = false;
+  bool vt_debug_event        = false;
+  bool vt_debug_pipe         = false;
+  bool vt_debug_pool         = false;
+  bool vt_debug_reduce       = false;
+  bool vt_debug_rdma         = false;
+  bool vt_debug_rdma_channel = false;
+  bool vt_debug_rdma_state   = false;
+  bool vt_debug_param        = false;
+  bool vt_debug_handler      = false;
+  bool vt_debug_hierlb       = false;
+  bool vt_debug_gossiplb     = false;
+  bool vt_debug_scatter      = false;
+  bool vt_debug_sequence     = false;
+  bool vt_debug_sequence_vrt = false;
+  bool vt_debug_serial_msg   = false;
+  bool vt_debug_trace        = false;
+  bool vt_debug_location     = false;
+  bool vt_debug_lb           = false;
+  bool vt_debug_vrt          = false;
+  bool vt_debug_vrt_coll     = false;
+  bool vt_debug_worker       = false;
+  bool vt_debug_group        = false;
+  bool vt_debug_broadcast    = false;
+  bool vt_debug_objgroup     = false;
 
-  static bool vt_debug_print_flush;
+  bool vt_debug_print_flush = false;
 
-  static bool vt_user_1;
-  static bool vt_user_2;
-  static bool vt_user_3;
-  static int32_t vt_user_int_1;
-  static int32_t vt_user_int_2;
-  static int32_t vt_user_int_3;
-  static std::string vt_user_str_1;
-  static std::string vt_user_str_2;
-  static std::string vt_user_str_3;
+  bool vt_user_1 = false;
+  bool vt_user_2 = false;
+  bool vt_user_3 = false;
+  int32_t vt_user_int_1 = 0;
+  int32_t vt_user_int_2 = 0;
+  int32_t vt_user_int_3 = 0;
+  std::string vt_user_str_1 = "";
+  std::string vt_user_str_2 = "";
+  std::string vt_user_str_3 = "";
 
-  static bool vt_output_config;
-  static std::string vt_output_config_file;
-  static std::string vt_output_config_str;
+  bool vt_output_config   = false;
+  std::string vt_output_config_file = "vt_config.ini";
+  std::string vt_output_config_str  = "";
 
   /// Name of the program launched (excluding any path!)
-  static std::string prog_name;
+  std::string prog_name {"vt_unknown"};
 
   /// Name of the program launched, aka argv[0].
   /// Original char* object.
-  static char* argv_prog_name;
+  char* argv_prog_name {const_cast<char*>("vt_unknown")};
 
   /// Arguments to pass to MPI Init.
   /// Does not include argv[0]. Original char* objects.
-  static std::vector<char*> mpi_init_args;
+  std::vector<char*> mpi_init_args;
   /// Arguments are being ref-returend as the result of parse(..).
   /// Does not include argv[0]. Original char* objects.
-  static std::vector<char*> passthru_args;
+  std::vector<char*> passthru_args;
 
 private:
-  static bool parsed_;
+  bool parsed_ = false;
 };
 
-inline bool user1() { return ArgConfig::vt_user_1; }
-inline bool user2() { return ArgConfig::vt_user_2; }
-inline bool user3() { return ArgConfig::vt_user_3; }
-
-inline bool traceTerm() {
-  return ArgConfig::vt_trace_sys_term or ArgConfig::vt_trace_sys_all;
-}
-inline bool traceLocation() {
-  return ArgConfig::vt_trace_sys_location or ArgConfig::vt_trace_sys_all;
-}
-inline bool traceCollection() {
-  return ArgConfig::vt_trace_sys_collection or ArgConfig::vt_trace_sys_all;
-}
-inline bool traceSerialMsg() {
-  return ArgConfig::vt_trace_sys_serial_msg or ArgConfig::vt_trace_sys_all;
-}
-
-inline bool alwaysFlush() {
-  return ArgConfig::vt_debug_print_flush;
-}
-
 }} /* end namespace vt::arguments */
+
+namespace vt {
+  
+arguments::ArgConfig* theArgConfig();
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H*/
