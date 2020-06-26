@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -232,6 +233,13 @@ public:
    */
   void triggerListeners(PhaseType phase);
 
+  /**
+   * \brief Set a model of expected object loads to use in place of
+   * naive persistence
+   *
+   */
+  void setLoadModel(std::unique_ptr<LoadModel> model) { model_ = std::move(model); }
+
 protected:
   /**
    * \internal \brief Collectively construct a new load balancer
@@ -252,6 +260,7 @@ private:
   bool synced_in_lb_                       = true;
   std::vector<ListenerFnType> listeners_   = {};
   objgroup::proxy::Proxy<LBManager> proxy_;
+  std::unique_ptr<LoadModel> model_        = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

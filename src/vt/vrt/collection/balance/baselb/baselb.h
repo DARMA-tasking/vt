@@ -108,7 +108,7 @@ struct BaseLB {
    * through calls to `migrateObjectTo`. Callers can then access that
    * set using `getTransfers` and apply it using `applyMigrations`.
    */
-  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::ProcStats::LoadMapType const& in_load_stats, ElementCommType const& in_comm_stats);
+  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::LoadModel *model, balance::ProcStats::LoadMapType const& in_load_stats, ElementCommType const& in_comm_stats);
   void computeStatistics();
   void importProcessorData(ElementLoadType const& ld, ElementCommType const& cm);
   void statsHandler(StatsMsgType* msg);
@@ -150,7 +150,8 @@ protected:
   bool comm_aware_                                = false;
   bool comm_collectives_                          = false;
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
-  std::unique_ptr<balance::LoadModel> load_model_ = nullptr;
+  // Observer only - LBManager owns the instance
+  balance::LoadModel* load_model_                 = nullptr;
 
 private:
   TransferVecType transfers_                      = {};
