@@ -55,7 +55,6 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/model/naive_persistence.h"
 
 #include <tuple>
 
@@ -64,12 +63,14 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 void BaseLB::startLB(
   PhaseType phase,
   objgroup::proxy::Proxy<BaseLB> proxy,
+  balance::LoadModel* model,
   balance::ProcStats::LoadMapType const& in_load_stats,
   ElementCommType const& in_comm_stats
 ) {
   start_time_ = timing::Timing::getCurrentTime();
   phase_ = phase;
   proxy_ = proxy;
+  load_model_ = model;
 
   importProcessorData(in_load_stats, in_comm_stats);
 
@@ -119,9 +120,6 @@ void BaseLB::importProcessorData(
 
   load_data_ = &load_in;
   comm_data = &comm_in;
-
-  if (load_model_ == nullptr)
-    load_model_.reset(new balance::NaivePersistence(load_data_, comm_data));
 }
 
 void BaseLB::getArgs(PhaseType phase) {

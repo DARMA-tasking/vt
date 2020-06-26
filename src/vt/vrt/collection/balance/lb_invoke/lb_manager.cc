@@ -59,6 +59,7 @@
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/vrt/collection/balance/model/naive_persistence.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -131,9 +132,12 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   auto phase = msg->getPhase();
 
+  if (model_ == nullptr)
+    model_.reset(new balance::NaivePersistence(&theProcStats()->getProcLoad(phase), &theProcStats()->getProcComm(phase)));
+
   EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
   theMsg()->pushEpoch(balance_epoch);
-  strat->startLB(phase, base_proxy, theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
+  strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
   theMsg()->popEpoch(balance_epoch);
   theTerm()->finishedEpoch(balance_epoch);
 
