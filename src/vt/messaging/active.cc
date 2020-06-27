@@ -442,11 +442,14 @@ bool ActiveMessenger::recvDataMsgBuffer(
     MPI_Status stat;
     int flag;
 
-    const int probe_ret = MPI_Iprobe(
-      node == uninitialized_destination ? MPI_ANY_SOURCE : node,
-      tag, theContext()->getComm(), &flag, &stat
-    );
-    vtAssertMPISuccess(probe_ret, "MPI_Iprobe");
+    {
+      VT_ALLOW_MPI_CALLS;
+      const int probe_ret = MPI_Iprobe(
+        node == uninitialized_destination ? MPI_ANY_SOURCE : node,
+        tag, theContext()->getComm(), &flag, &stat
+      );
+      vtAssertMPISuccess(probe_ret, "MPI_Iprobe");
+    }
 
     if (flag == 1) {
       MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
@@ -500,8 +503,12 @@ bool ActiveMessenger::recvDataMsgBuffer(
       };
 
       int recv_flag = 0;
-      MPI_Status recv_stat;
-      MPI_Test(&recv_holder.req, &recv_flag, &recv_stat);
+      {
+        VT_ALLOW_MPI_CALLS;
+        MPI_Status recv_stat;
+        MPI_Test(&recv_holder.req, &recv_flag, &recv_stat);
+      }
+
       if (recv_flag == 1) {
         finishPendingDataMsgAsyncRecv(&recv_holder);
       } else {
