@@ -88,7 +88,7 @@ ActiveMessenger::ActiveMessenger()
     "AM_sent_bytes", "active message bytes sent", UpdateType::Sum, UnitType::Bytes
   );
   registerDiagnostic<int64_t>(
-    "DM_sent_bytes", "active message bytes sent", UpdateType::Sum, UnitType::Bytes
+    "DM_sent_bytes", "data message bytes sent", UpdateType::Sum, UnitType::Bytes
   );
 
   // Register max counters for AM/DM message number of bytes
@@ -111,7 +111,7 @@ ActiveMessenger::ActiveMessenger()
     UnitType::Bytes
   );
   registerDiagnostic<int64_t>(
-    "DM_recv_bytes", "active message bytes received", UpdateType::Sum,
+    "DM_recv_bytes", "data message bytes received", UpdateType::Sum,
     UnitType::Bytes
   );
 
