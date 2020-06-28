@@ -45,7 +45,8 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
-// Do not pull in any VT dependencies here
+// Do not pull in any other VT dependencies here
+#include "vt/runtime/component/component.h"
 
 #include <functional>
 #include <string>
@@ -54,7 +55,7 @@
 
 namespace vt { namespace arguments {
 
-struct ArgConfig {
+struct ArgConfig : runtime::component::Component<ArgConfig> {
 
   /// Parse the arguments into ArgConfig.
   /// Re-assigns argc/argv to remove consumed arguments.
@@ -62,6 +63,8 @@ struct ArgConfig {
   /// (which may be 0 if help was requested) will be returned along
   /// with an appropriate display message.
   std::tuple<int, std::string> parse(int& argc, char**& argv);
+
+  std::string name() override { return "ArgConfig"; }
 
 public:
   inline bool user1() { return vt_user_1; }
@@ -231,7 +234,7 @@ private:
 
 namespace vt {
 
-arguments::ArgConfig* theArgConfig();
+extern arguments::ArgConfig* theArgConfig();
 
 } /* end namespace vt */
 

@@ -564,8 +564,11 @@ void Runtime::initializeComponents() {
 
   p_ = std::make_unique<ComponentPack>();
 
+  p_->registerComponent<arguments::ArgConfig>(&theArgConfig, Deps<>{});
+
   p_->registerComponent<ctx::Context>(
-    &theContext, Deps<>{},
+    &theContext,
+    Deps<arguments::ArgConfig>{},
     user_argc_, &user_argv_[0], is_interop_, &communicator_
   );
 
@@ -774,6 +777,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
+  p_->add<arguments::ArgConfig>();
   p_->add<ctx::Context>();
   p_->add<util::memory::MemoryUsage>();
   p_->add<registry::Registry>();

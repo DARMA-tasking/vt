@@ -52,7 +52,7 @@
 namespace vt { namespace debug {
 
 inline bool colorizeOutput() {
-  return theArgConfig()->colorize_output;
+  return vt::theArgConfig()->colorize_output;
 }
 
 inline std::string green()    { return colorizeOutput() ? "\033[32m"   : ""; }
@@ -92,6 +92,5 @@ inline std::string proc(vt::NodeType const& node)  {
 // }
 
 }} /* end namespace vt::debug */
-
 
 #endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_COLORIZE_H*/

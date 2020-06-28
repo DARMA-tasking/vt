@@ -45,7 +45,6 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_H
 
-#include "vt/configs/error/hard_error.h"
 #include "vt/runtime/component/component_registry.h"
 #include "vt/runtime/component/component_dep.h"
 #include "vt/runtime/component/component_traits.h"
@@ -187,13 +186,20 @@ struct PollableComponent : Component<T> {
    *
    * \return number of units processed---zero
    */
-  virtual int progress() override {
-    vtAbort("PollableComponent should override the empty progress function");
-    return 0;
-  }
+  virtual int progress() override;
 
 };
 
 }}} /* end namespace vt::runtime::component */
+
+#include "vt/configs/error/hard_error.h"
+
+namespace vt { namespace runtime { namespace component {
+  template <typename T>
+  int PollableComponent<T>::progress() {
+    vtAbort("PollableComponent should override the empty progress function");
+    return 0;
+  }
+}}}
 
 #endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_H*/

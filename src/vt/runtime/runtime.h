@@ -370,6 +370,7 @@ protected:
   static void termHandler();
 
 public:
+  ComponentPtrType<arguments::ArgConfig> theArgConfig;
   ComponentPtrType<registry::Registry> theRegistry;
   ComponentPtrType<messaging::ActiveMessenger> theMsg;
   ComponentPtrType<ctx::Context> theContext;

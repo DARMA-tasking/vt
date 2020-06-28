@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/configs/arguments/args.h"
 #include "vt/utils/memory/memory_usage.h"
 
 #include <vector>
