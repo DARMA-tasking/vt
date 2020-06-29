@@ -50,6 +50,7 @@
 #include "vt/runtime/component/diagnostic_types.h"
 #include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_value.h"
+#include "vt/runtime/component/diagnostic_meter.h"
 
 #include <string>
 #include <memory>
@@ -93,6 +94,36 @@ struct Diagnostic : ComponentName, ComponentReducer {
 
 protected:
   /**
+   * \internal \brief Register a new diagnostic counter
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the counter
+   */
+  template <typename T>
+  Counter<T> registerCounter(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Units
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic gauge
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the counter
+   */
+  template <typename T>
+  Gauge<T> registerGauge(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Units
+  );
+
+  /**
    * \internal \brief Register a new diagnostic
    *
    * \param[in] key unique key for diagnostic, should match across nodes
@@ -102,9 +133,11 @@ protected:
    * \param[in] unit the unit type for this diagnostic
    * \param[in] type the type of diagnostic being registered
    * \param[in] initial_value the initial value for the diagnostic
+   *
+   * \return the underlying diagnostic value
    */
   template <typename T>
-  void registerDiagnostic(
+  detail::DiagnosticValue<T>* registerDiagnostic(
     std::string const& key, std::string const& desc, DiagnosticUpdate update,
     DiagnosticUnit unit = DiagnosticUnit::Units,
     DiagnosticTypeEnum type = DiagnosticTypeEnum::PerformanceDiagnostic,

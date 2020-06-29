@@ -50,11 +50,46 @@
 #include "vt/runtime/component/diagnostic_value.h"
 
 #include <memory>
+#include <limits>
 
 namespace vt { namespace runtime { namespace component {
 
 template <typename T>
-void Diagnostic::registerDiagnostic(
+Counter<T> Diagnostic::registerCounter(
+  std::string const& key, std::string const& desc, DiagnosticUnit unit
+) {
+  auto val = registerDiagnostic<T>(
+    key, desc, DiagnosticUpdate::Sum, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, 0
+  );
+  return Counter<T>{val};
+}
+
+template <typename T>
+Gauge<T> Diagnostic::registerGauge(
+  std::string const& key, std::string const& desc, DiagnosticUnit unit
+) {
+  auto sum = registerDiagnostic<T>(
+    key + " (sum)", desc, DiagnosticUpdate::Sum, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, 0
+  );
+  auto min = registerDiagnostic<T>(
+    key + " (min)", desc, DiagnosticUpdate::Min, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, std::numeric_limits<T>::max()
+  );
+  auto max = registerDiagnostic<T>(
+    key + " (max)", desc, DiagnosticUpdate::Max, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, 0
+  );
+  auto avg = registerDiagnostic<T>(
+    key + " (avg)", desc, DiagnosticUpdate::Avg, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, 0
+  );
+  return Gauge<T>{sum, avg, max, min};
+}
+
+template <typename T>
+detail::DiagnosticValue<T>* Diagnostic::registerDiagnostic(
   std::string const& key, std::string const& desc, DiagnosticUpdate update,
   DiagnosticUnit unit, DiagnosticTypeEnum type, T initial_value
 ) {
@@ -69,8 +104,12 @@ void Diagnostic::registerDiagnostic(
       )
     )
   );
+  auto iter = values_.find(key);
+  vtAssert(iter != values_.end(), "Diagnostic key must exist");
+  return static_cast<detail::DiagnosticValue<T>*>(iter->second.get());
 # else
   debug::useVars(key, desc, update, unit, type, initial_value);
+  return nullptr;
 # endif
 }
 
