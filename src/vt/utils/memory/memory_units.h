@@ -55,7 +55,9 @@ enum struct MemoryUnitEnum : int8_t {
   Bytes     = 0,
   Kilobytes = 1,
   Megabytes = 2,
-  Gigabytes = 3
+  Gigabytes = 3,
+  Terabytes = 4,
+  Petabytes = 5
 };
 
 std::string getMemoryUnitName(MemoryUnitEnum unit);

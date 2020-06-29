@@ -53,7 +53,9 @@ std::unordered_map<MemoryUnitEnum, std::string> memory_unit_names = {
   {MemoryUnitEnum::Bytes,     std::string{"B"}},
   {MemoryUnitEnum::Kilobytes, std::string{"KiB"}},
   {MemoryUnitEnum::Megabytes, std::string{"MiB"}},
-  {MemoryUnitEnum::Gigabytes, std::string{"GiB"}}
+  {MemoryUnitEnum::Gigabytes, std::string{"GiB"}},
+  {MemoryUnitEnum::Terabytes, std::string{"TiB"}},
+  {MemoryUnitEnum::Petabytes, std::string{"PiB"}}
 };
 
 std::string getMemoryUnitName(MemoryUnitEnum unit) {
