@@ -103,6 +103,15 @@ void Runtime::computeAndPrintDiagnostics() {
         auto diag = diag_elm.first;
         auto& str = diag_elm.second;
 
+        // skip invalid/sentinel values unless it's a Sum, which might be useful
+        // for analysis to inform that the value is zero
+        if (
+          not str->is_valid_value_ and
+          not (str->update_ == component::DiagnosticUpdate::Sum)
+        ) {
+          continue;
+        }
+
         if (first) {
           table[table.cur_row()][0].set_cell_content_fg_color(fort::color::red);
           table << comp;
