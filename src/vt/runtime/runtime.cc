@@ -431,6 +431,9 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
 
     auto const is_zero = theContext->getNode() == 0;
     auto const num_units = theTerm->getNumUnits();
+
+    computeAndPrintDiagnostics();
+
     auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
     MPI_Barrier(comm);
     fflush(stdout);
