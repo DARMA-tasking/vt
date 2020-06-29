@@ -32,6 +32,7 @@ function(link_target_with_vt)
     LINK_CLI11
     LINK_DL
     LINK_ZOLTAN
+    LINK_FORT
   )
   set(
     multiValueArg
@@ -47,6 +48,14 @@ function(link_target_with_vt)
     message(STATUS "link_target_with_vt(..): argc=${ARGC}")
     message(STATUS "link_target_with_vt: target=${ARG_TARGET}")
     message(STATUS "link_target_with_vt: default link=${ARG_DEFAULT_LINK_SET}")
+  endif()
+
+  if (NOT DEFINED ARG_LINK_FORT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FORT)
+    if (vt_fort_enabled)
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FORT_LIBRARY}
+      )
+    endif()
   endif()
 
   if (NOT DEFINED ARG_LINK_ZOLTAN AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ZOLTAN)

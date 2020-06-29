@@ -111,6 +111,12 @@ if (${vt_mimalloc_enabled})
   endif()
 endif()
 
+option(vt_fort_enabled "Build VT with fort" ON)
+if (vt_fort_enabled)
+  add_subdirectory(${PROJECT_LIB_DIR}/libfort)
+  set(FORT_LIBRARY fort)
+endif()
+
 option(vt_asan_enabled "Build VT with address sanitizer" OFF)
 if (${vt_asan_enabled})
   if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR
