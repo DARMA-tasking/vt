@@ -113,6 +113,7 @@ endif()
 
 option(vt_fort_enabled "Build VT with fort" ON)
 if (vt_fort_enabled)
+  set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
   add_subdirectory(${PROJECT_LIB_DIR}/libfort)
   set(FORT_LIBRARY fort)
 endif()
