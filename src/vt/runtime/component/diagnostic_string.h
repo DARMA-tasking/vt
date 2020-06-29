@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_STRING_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_STRING_H
 
+#include "vt/runtime/component/diagnostic_types.h"
+
 #include <string>
 
 namespace vt { namespace runtime { namespace component {
@@ -64,6 +66,8 @@ struct DiagnosticString {
   std::string std_value_;
   std::string var_value_;
   std::string base_unit_;
+  DiagnosticUpdate update_;
+  bool is_valid_value_;
 };
 
 }}} /* end namespace vt::runtime::component */

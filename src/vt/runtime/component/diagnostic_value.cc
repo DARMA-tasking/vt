@@ -49,13 +49,16 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/pipe/pipe_manager.h"
 
+#include <limits>
+
 namespace vt { namespace runtime { namespace component { namespace detail {
 
 namespace {
 
 template <typename T>
 void reduceHelper(
-  Diagnostic* diagnostic, DiagnosticString* out, T val, DiagnosticUnit unit
+  Diagnostic* diagnostic, DiagnosticString* out, T val, DiagnosticUnit unit,
+  DiagnosticUpdate update
 ) {
   using ValueType = DiagnosticValueWrapper<T>;
   using ReduceMsgType = collective::ReduceTMsg<ValueType>;
@@ -68,6 +71,12 @@ void reduceHelper(
   auto cb = theCB()->makeFunc<ReduceMsgType>([=](ReduceMsgType* m) {
     auto reduced_val = m->getConstVal();
     *out = DiagnosticStringizer<T>::get(reduced_val, unit);
+    out->update_ = update;
+    if (update == DiagnosticUpdate::Min) {
+      out->is_valid_value_ = reduced_val.min() != std::numeric_limits<T>::max();
+    } else {
+      out->is_valid_value_ = reduced_val.sum() != 0;
+    }
   });
   r->reduce<collective::PlusOp<ValueType>>(0, msg.get(), cb);
 }
@@ -85,7 +94,10 @@ void reduceHelper(
   void DiagnosticValue<TYPE>::reduceOver(                               \
     Diagnostic* diagnostic, DiagnosticString* out                       \
   ) {                                                                   \
-    reduceHelper(diagnostic, out, value_.getComputedValue(), getUnit()); \
+    reduceHelper(                                                       \
+      diagnostic, out, value_.getComputedValue(), getUnit(),            \
+      getUpdateType()                                                   \
+    );                                                                  \
   }                                                                     \
 
 
