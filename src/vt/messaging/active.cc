@@ -78,94 +78,69 @@ ActiveMessenger::ActiveMessenger()
   pushEpoch(term::any_epoch_sentinel);
 
   // Register counters for AM/DM message sends and number of bytes
-  registerDiagnostic<int64_t>(
-    "AM_sent", "active messages sent", UpdateType::Sum
-  );
-  registerDiagnostic<int64_t>(
-    "DM_sent", "data messages sent", UpdateType::Sum
-  );
-  registerDiagnostic<int64_t>(
-    "AM_sent_bytes", "active message bytes sent", UpdateType::Sum, UnitType::Bytes
-  );
-  registerDiagnostic<int64_t>(
-    "DM_sent_bytes", "data message bytes sent", UpdateType::Sum, UnitType::Bytes
-  );
+  amSentCount = registerCounter<int64_t>("AM_sent", "active messages sent");
+  dmSentCount = registerCounter<int64_t>("DM_sent", "data messages sent");
 
-  // Register max counters for AM/DM message number of bytes
-  registerDiagnostic<int64_t>(
-    "AM_max_size", "active message max size", UpdateType::Max, UnitType::Bytes
+  amSentBytesGauge = registerGauge<int64_t>(
+    "AM_sent_bytes", "active messages bytes sent", UnitType::Bytes
   );
-  registerDiagnostic<int64_t>(
-    "DM_max_size", "data message max size", UpdateType::Max, UnitType::Bytes
+  dmSentBytesGauge = registerGauge<int64_t>(
+    "DM_sent_bytes", "data messages bytes sent", UnitType::Bytes
   );
 
   // Register counters for AM/DM message receives and number of bytes
-  registerDiagnostic<int64_t>(
-    "AM_recv", "active messages received", UpdateType::Sum
+  amRecvCount = registerCounter<int64_t>("AM_recv", "active messages received");
+  dmRecvCount = registerCounter<int64_t>("DM_recv", "data messages received");
+
+  amRecvBytesGauge = registerGauge<int64_t>(
+    "AM_recv_bytes", "active message bytes received", UnitType::Bytes
   );
-  registerDiagnostic<int64_t>(
-    "DM_recv", "data messages received", UpdateType::Sum
-  );
-  registerDiagnostic<int64_t>(
-    "AM_recv_bytes", "active message bytes received", UpdateType::Sum,
-    UnitType::Bytes
-  );
-  registerDiagnostic<int64_t>(
-    "DM_recv_bytes", "data message bytes received", UpdateType::Sum,
-    UnitType::Bytes
+  dmRecvBytesGauge = registerGauge<int64_t>(
+    "DM_recv_bytes", "data message bytes received", UnitType::Bytes
   );
 
   // Register counters for AM/DM message MPI_Irecv posts This is useful as a
   // debugging diagnostic if the program hangs. Checking this against AM_recv,
   // etc will inform whether if there are outstanding posted receives
-  registerDiagnostic<int64_t>(
-    "AM_recv_posted", "active message irecvs posted", UpdateType::Sum
+  amPostedCount = registerCounter<int64_t>(
+    "AM_recv_posted", "active message irecvs posted"
   );
-  registerDiagnostic<int64_t>(
-    "AM_recv_posted_bytes", "active message irecv posted bytes", UpdateType::Sum,
-    UnitType::Bytes
+  dmPostedCount = registerCounter<int64_t>(
+    "DM_recv_posted", "data message irecvs posted"
   );
-  registerDiagnostic<int64_t>(
-    "DM_recv_posted", "data message irecvs posted", UpdateType::Sum
+
+  amPostedBytesGauge = registerGauge<int64_t>(
+    "AM_recv_posted_bytes", "active message irecv posted bytes", UnitType::Bytes
   );
-  registerDiagnostic<int64_t>(
-    "DM_recv_posted_bytes", "data message irecv posted bytes", UpdateType::Sum,
-    UnitType::Bytes
+  dmPostedBytesGauge = registerGauge<int64_t>(
+    "DM_recv_posted_bytes", "data message irecv posted bytes", UnitType::Bytes
   );
 
   // Number of AM handlers executed
-  registerDiagnostic<int64_t>(
-    "AM_handlers", "active message handlers", UpdateType::Sum
+  amHandlerCount = registerCounter<int64_t>(
+    "AM_handlers", "active message handlers"
   );
 
-  // Number of broadcast messages that hit this node
-  registerDiagnostic<int64_t>(
-    "bcasts", "active message broadcasts", UpdateType::Sum
+  // Number of broadcast messages that this node sent
+  bcastsSentCount = registerCounter<int64_t>(
+    "bcasts_sent", "active message broadcasts sent"
   );
 
   // Number of MPI_Test polls for AM/DM
-  registerDiagnostic<int64_t>(
-    "AM_polls", "active message polls", UpdateType::Sum
-  );
-  registerDiagnostic<int64_t>(
-    "DM_polls", "data message polls", UpdateType::Sum
-  );
+  amPollCount = registerCounter<int64_t>("AM_polls", "active message polls");
+  dmPollCount = registerCounter<int64_t>("DM_polls", "data message polls");
 
   // Number of termination message sent/received
-  registerDiagnostic<int64_t>(
-    "TD_sent", "termination messages sent", UpdateType::Sum
-  );
-  registerDiagnostic<int64_t>(
-    "TD_recv", "termination messages received", UpdateType::Sum
-  );
+  tdSentCount = registerCounter<int64_t>("TD_sent", "termination messages sent");
+  tdRecvCount = registerCounter<int64_t>("TD_recv", "termination messages recv");
 
   // Number of messages that were purely forwarded to another node by this AM
-  registerDiagnostic<int64_t>(
-    "AM_forwarded", "messages forwarded (and not delivered)", UpdateType::Sum
+  amForwardCount = registerCounter<int64_t>(
+    "AM_forwarded", "messages forwarded (and not delivered)"
   );
-  registerDiagnostic<int64_t>(
+  amForwardBytesGauge = registerGauge<int64_t>(
     "AM_forwarded_bytes", "messages forwarded (and not delivered)",
-    UpdateType::Sum, UnitType::Bytes
+    UnitType::Bytes
   );
 }
 
@@ -311,14 +286,13 @@ EventType ActiveMessenger::sendMsgBytes(
     #endif
 
     if (is_bcast) {
-      updateDiagnostic<int64_t>("bcasts", 1);
+      bcastsSentCount++;
     }
     if (is_term) {
-      updateDiagnostic<int64_t>("TD_sent", 1);
+      tdSentCount++;
     }
-    updateDiagnostic<int64_t>("AM_sent", 1);
-    updateDiagnostic<int64_t>("AM_sent_bytes", msg_size);
-    updateDiagnostic<int64_t>("AM_max_size", msg_size);
+    amSentCount++;
+    amSentBytesGauge += msg_size;
 
     const int ret = MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -466,9 +440,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
       }
     #endif
 
-    updateDiagnostic<int64_t>("DM_sent", 1);
-    updateDiagnostic<int64_t>("DM_sent_bytes", num_bytes);
-    updateDiagnostic<int64_t>("DM_max_size", num_bytes);
+    dmSentCount++;
+    dmSentBytesGauge += num_bytes;
 
     const int ret = MPI_Isend(
       data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -595,8 +568,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
         );
         vtAssertMPISuccess(recv_ret, "MPI_Irecv");
 
-        updateDiagnostic<int64_t>("DM_recv_posted", 1);
-        updateDiagnostic<int64_t>("DM_recv_posted_bytes", num_probe_bytes);
+        dmPostedCount++;
+        dmPostedBytesGauge += num_probe_bytes;
 
         #if vt_check_enabled(trace_enabled)
           if (theConfig()->vt_trace_mpi) {
@@ -615,7 +588,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         priority
       };
 
-      updateDiagnostic<int64_t>("DM_polls", 1);
+      dmPollCount++;
 
       int recv_flag = 0;
       {
@@ -667,8 +640,8 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   }
 # endif
 
-  updateDiagnostic<int64_t>("DM_recv", 1);
-  updateDiagnostic<int64_t>("DM_recv_bytes", num_probe_bytes);
+  dmRecvCount++;
+  dmRecvBytesGauge += num_probe_bytes;
 
   auto dealloc_buf = [=]{
     vt_debug_print(
@@ -756,8 +729,8 @@ bool ActiveMessenger::processActiveMsg(
   if (deliver) {
     return deliverActiveMsg(base,from,insert,cont);
   } else {
-    updateDiagnostic<int64_t>("AM_forwarded", 1);
-    updateDiagnostic<int64_t>("AM_forwarded_bytes", size);
+    amForwardCount++;
+    amForwardBytesGauge += size;
 
     if (cont != nullptr) {
       cont();
@@ -851,9 +824,9 @@ bool ActiveMessenger::deliverActiveMsg(
     }
 
     if (is_term) {
-      updateDiagnostic<int64_t>("TD_recv", 1);
+      tdRecvCount++;
     }
-    updateDiagnostic<int64_t>("AM_handlers", 1);
+    amHandlerCount++;
 
     runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
 
@@ -941,8 +914,8 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
         theContext()->getComm(), &req
       );
 
-      updateDiagnostic<int64_t>("AM_recv_posted", 1);
-      updateDiagnostic<int64_t>("AM_recv_posted_bytes", num_probe_bytes);
+      amPostedCount++;
+      amPostedBytesGauge += num_probe_bytes;
 
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
@@ -958,7 +931,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
 
-    updateDiagnostic<int64_t>("AM_polls", 1);
+    amPollCount++;
 
     int recv_flag = 0;
     MPI_Status recv_stat;
@@ -980,8 +953,8 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
-  updateDiagnostic<int64_t>("AM_recv", 1);
-  updateDiagnostic<int64_t>("AM_recv_bytes", num_probe_bytes);
+  amRecvCount++;
+  amRecvBytesGauge += num_probe_bytes;
 
 # if vt_check_enabled(trace_enabled)
   if (theConfig()->vt_trace_mpi) {
@@ -1053,7 +1026,7 @@ bool ActiveMessenger::testPendingActiveMsgAsyncRecv() {
     },
     num_mpi_tests
   );
-  updateDiagnostic<int64_t>("AM_polls", num_mpi_tests);
+  amPollCount += num_mpi_tests;
   return ret;
 }
 
@@ -1065,7 +1038,7 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
     },
     num_mpi_tests
   );
-  updateDiagnostic<int64_t>("DM_polls", num_mpi_tests);
+  dmPollCount += num_mpi_tests;
   return ret;
 }
 

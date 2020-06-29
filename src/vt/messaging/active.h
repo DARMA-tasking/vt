@@ -1553,6 +1553,38 @@ private:
   IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv;
   IRecvHolder<InProgressDataIRecv> in_progress_data_irecv;
   NodeType this_node_                                     = uninitialized_destination;
+
+private:
+  // Diagnostic counters for sent counts/bytes
+  diagnostic::Counter<int64_t> amSentCount;
+  diagnostic::Counter<int64_t> dmSentCount;
+  diagnostic::Gauge<int64_t> amSentBytesGauge;
+  diagnostic::Gauge<int64_t> dmSentBytesGauge;
+
+  // Diagnostic counters for recv counts/bytes
+  diagnostic::Counter<int64_t> amRecvCount;
+  diagnostic::Counter<int64_t> dmRecvCount;
+  diagnostic::Gauge<int64_t> amRecvBytesGauge;
+  diagnostic::Gauge<int64_t> dmRecvBytesGauge;
+
+  // Diagnostic counters for posted irecv counts/bytes
+  diagnostic::Counter<int64_t> amPostedCount;
+  diagnostic::Counter<int64_t> dmPostedCount;
+  diagnostic::Gauge<int64_t> amPostedBytesGauge;
+  diagnostic::Gauge<int64_t> dmPostedBytesGauge;
+
+  // Diagnostic counters for counting various actions
+  diagnostic::Counter<int64_t> amHandlerCount;
+  diagnostic::Counter<int64_t> bcastsSentCount;
+  diagnostic::Counter<int64_t> amPollCount;
+  diagnostic::Counter<int64_t> dmPollCount;
+  diagnostic::Counter<int64_t> tdSentCount;
+  diagnostic::Counter<int64_t> tdRecvCount;
+
+  // Diagnostic counters for counting forwarded messages
+  diagnostic::Counter<int64_t> amForwardCount;
+  diagnostic::Gauge<int64_t> amForwardBytesGauge;
+
 };
 
 }} // end namespace vt::messaging
