@@ -53,7 +53,11 @@
 namespace vt { namespace trace {
 
 /**
- * \brief Register a user event collectively
+ * \brief Register a user event collectively.
+ *
+ * \note All collectively registered events \b MUST be registered
+ * on all nodes in the same sequence. This guarantees valid unique IDs
+ * and avoids the necessity to send event registration messages.
  *
  * \param[in] name the name of the event
  *

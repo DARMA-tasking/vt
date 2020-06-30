@@ -229,6 +229,10 @@ struct Trace : runtime::component::Component<Trace> {
   /**
    * \brief Collectively register a user event
    *
+   * \note All collectively registered events \b MUST be registered
+   * on all nodes in the same sequence. This guarantees valid unique IDs
+   * and avoids the necessity to send event registration messages.
+   *
    * \note For users, it is recommended that the free function be called
    * \c registerEventCollective
    *

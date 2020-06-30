@@ -108,8 +108,11 @@ UserEventIDType UserEventRegistry::newEventImpl(
 
   // Ensure newly inserted events are passed to rank 0 if requested.
   if (inserted and report_up and node not_eq 0) {
-    auto msg = makeMessage<NewUserEventMsg>(user, event, in_event);
-    theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
+    // Enqueue work, as this can be called from within PMPI wrappers.
+    theSched()->enqueue([user, event, in_event]{
+      auto msg = makeMessage<NewUserEventMsg>(user, event, in_event);
+      theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
+    });
   }
 
   return event;
