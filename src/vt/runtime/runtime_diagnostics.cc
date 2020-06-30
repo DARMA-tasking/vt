@@ -45,6 +45,9 @@
 #include "vt/runtime/runtime.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/runtime/component/diagnostic_enum_format.h"
+#include "vt/runtime/component/diagnostic_value_format.h"
+#include "vt/runtime/component/diagnostic_units.h"
+#include "vt/runtime/component/diagnostic_erased_value.h"
 
 #include <fort.hpp>
 
@@ -55,11 +58,57 @@
 
 namespace vt { namespace runtime {
 
+namespace {
+
+std::string valueFormatHelper(double val, component::DiagnosticUnit unit) {
+  using DF = component::detail::DiagnosticFormatter;
+  using component::detail::decimal_format;
+  return DF::getValueWithUnits(val, unit, decimal_format);
+}
+
+template <typename T>
+struct FormatHelper {
+  std::string operator()(
+    typename component::DiagnosticErasedValue::UnionValueType eval,
+    component::DiagnosticUnit unit
+  ) {
+    using DF = component::detail::DiagnosticFormatter;
+    using component::detail::decimal_format;
+
+    bool const is_decimal =
+      std::is_same<T, float>::value or std::is_same<T, double>::value;
+
+    std::string default_format = is_decimal ? decimal_format : std::string{"{}"};
+
+    return DF::getValueWithUnits(eval.get<T>(), unit, default_format);
+  }
+};
+
+template <>
+struct FormatHelper<void> {
+  std::string operator()(
+    typename component::DiagnosticErasedValue::UnionValueType,
+    component::DiagnosticUnit
+  ) {
+    vtAssert(false, "Failed to extract type from union");
+    return "";
+  }
+};
+
+std::string valueFormatHelper(
+  typename component::DiagnosticErasedValue::UnionValueType eval,
+  component::DiagnosticUnit unit
+) {
+  return eval.template switchOn<FormatHelper>(eval, unit);
+}
+
+} /* end anon namespace */
+
 void Runtime::computeAndPrintDiagnostics() {
 
   using ComponentDiagnosticMap = std::map<
     component::detail::DiagnosticBase*,
-    std::unique_ptr<component::DiagnosticString>
+    std::unique_ptr<component::DiagnosticErasedValue>
   >;
 
   std::map<std::string, ComponentDiagnosticMap> component_vals;
@@ -68,7 +117,9 @@ void Runtime::computeAndPrintDiagnostics() {
       // Run the pre-diagnostic hook
       c->preDiagnostic();
       c->foreachDiagnostic([&](component::detail::DiagnosticBase* d) {
-        component_vals[c->name()][d] = std::make_unique<component::DiagnosticString>();
+        component_vals[c->name()][d] = std::make_unique<
+          component::DiagnosticErasedValue
+        >();
         d->reduceOver(c, component_vals[c->name()][d].get(), 0);
       });
     });
@@ -138,11 +189,12 @@ void Runtime::computeAndPrintDiagnostics() {
           << diag->getKey()
           << diag->getDescription()
           << diagnosticUpdateTypeString(update)
-          << (diagnosticShowTotal(update) ? str->sum_value_ : std::string("--"))
-          << str->avg_value_
-          << str->min_value_
-          << str->max_value_
-          << str->std_value_
+          << (diagnosticShowTotal(update) ?
+              valueFormatHelper(str->sum_, str->unit_) : std::string("--"))
+          << valueFormatHelper(str->avg_, str->unit_)
+          << valueFormatHelper(str->min_, str->unit_)
+          << valueFormatHelper(str->max_, str->unit_)
+          << valueFormatHelper(str->std_, str->unit_)
           << fort::endr;
         //fmt::print("component={}; name={}; value={}\n", comp, diag->getKey(), str->avg_value_);
 

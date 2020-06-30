@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/runtime/component/diagnostic_types.h"
-#include "vt/runtime/component/diagnostic_string.h"
+#include "vt/runtime/component/diagnostic_erased_value.h"
 #include "vt/runtime/component/diagnostic_value_base.h"
 
 #include <string>
@@ -408,7 +408,7 @@ struct DiagnosticValue : DiagnosticBase {
    * \param[in] snapshot the time snapshot to reduce over (0 is entire runtime)
    */
   void reduceOver(
-    Diagnostic* diagnostic, DiagnosticString* out, int snapshot
+    Diagnostic* diagnostic, DiagnosticErasedValue* out, int snapshot
   ) override;
 
 private:

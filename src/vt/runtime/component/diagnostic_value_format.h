@@ -77,25 +77,49 @@ struct DiagnosticValueFormatter<
   static constexpr char const* format = "{}";
 };
 
+/**
+ * \internal \struct DiagnosticEraser
+ *
+ * \brief Erase the types from a \c DiagnosticValue<T> for holding in a general
+ * container
+ */
 template <typename T>
-struct DiagnosticStringizer {
+struct DiagnosticEraser {
 
-  static DiagnosticString get(
-    DiagnosticValueWrapper<T> wrapper, DiagnosticUnit unit
-  ) {
-    std::string const spec = DiagnosticValueFormatter<T>::format;
-    std::string const double_spec = std::string{decimal_format};
-
-    DiagnosticString dstr;
-    dstr.min_value_ = getValueWithUnits(wrapper.min(), unit, spec);
-    dstr.max_value_ = getValueWithUnits(wrapper.max(), unit, spec);
-    dstr.sum_value_ = getValueWithUnits(wrapper.sum(), unit, spec);
-    dstr.avg_value_ = getValueWithUnits(wrapper.avg(), unit, double_spec);
-    dstr.std_value_ = getValueWithUnits(wrapper.stdv(), unit, double_spec);
-    return dstr;
+  /**
+   * \internal \brief Erase the \c T from the value wrapper and output the
+   * type-erased value
+   *
+   * \param[in] wrapper the value with its wrapper
+   *
+   * \return the type-erased value
+   */
+  static DiagnosticErasedValue get(DiagnosticValueWrapper<T> wrapper) {
+    DiagnosticErasedValue eval;
+    eval.min_.template init<T>(wrapper.min());
+    eval.max_.template init<T>(wrapper.max());
+    eval.sum_.template init<T>(wrapper.sum());
+    eval.avg_ = wrapper.avg();
+    eval.std_ = wrapper.stdv();
+    return eval;
   }
+};
 
-private:
+/**
+ * \internal \struct DiagnosticFormatter
+ *
+ * \brief Pretty-print a value with appropriately scaled units
+ */
+struct DiagnosticFormatter {
+  /**
+   * \brief Format a value to a \c std::string with units
+   *
+   * \param[in] val the value
+   * \param[in] unit units for the value
+   * \param[in] default_spec default \c fmt::format spec for outputting
+   *
+   * \return the pretty-printed \c std::string
+   */
   template <typename U>
   static std::string getValueWithUnits(
     U val, DiagnosticUnit unit, std::string default_spec
@@ -244,6 +268,7 @@ private:
     return "";
   }
 
+private:
   static std::string unitFormat(std::string unit_name) {
     return fmt::format("{:<3}", unit_name);
   }

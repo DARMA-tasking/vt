@@ -63,8 +63,8 @@ struct DiagnosticErasedValue {
   /// \c DiagnosticValue<T> get turned into this union for saving the value.
   using UnionValueType = vt::adt::SafeUnion<
     double, float,
-    int8_t,  int32_t,  int64_t,
-    uint8_t, uint32_t, uint64_t
+    int8_t,  int16_t,  int32_t,  int64_t,
+    uint8_t, uint16_t, uint32_t, uint64_t
   >;
 
   // The trio (min, max, sum) save the actual type with the value to print it
@@ -80,6 +80,9 @@ struct DiagnosticErasedValue {
 
   /// The updater type (SUM, MIN, MAX, REPLACE, AVG, etc.)
   DiagnosticUpdate update_ = DiagnosticUpdate::Sum;
+
+  /// The value's unit type: Bytes, Seconds, Units, etc.
+  DiagnosticUnit unit_ = DiagnosticUnit::Units;
 
   /// Whether the value turned out to be valid (i.e., if a MIN updater ends up
   /// with the sentinel value \c std::numeric_limits<T>::min() after reduction,
