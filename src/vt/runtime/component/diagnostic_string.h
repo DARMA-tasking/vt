@@ -58,14 +58,11 @@ namespace vt { namespace runtime { namespace component {
  * after being formatted
  */
 struct DiagnosticString {
-  std::string value_;
   std::string min_value_;
   std::string max_value_;
   std::string sum_value_;
   std::string avg_value_;
   std::string std_value_;
-  std::string var_value_;
-  std::string base_unit_;
   DiagnosticUpdate update_;
   bool is_valid_value_;
 };

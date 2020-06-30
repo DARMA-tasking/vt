@@ -92,7 +92,6 @@ struct DiagnosticStringizer {
     dstr.sum_value_ = getValueWithUnits(wrapper.sum(), unit, spec);
     dstr.avg_value_ = getValueWithUnits(wrapper.avg(), unit, double_spec);
     dstr.std_value_ = getValueWithUnits(wrapper.stdv(), unit, double_spec);
-    dstr.var_value_ = getValueWithUnits(wrapper.var(), unit, double_spec);
     return dstr;
   }
 

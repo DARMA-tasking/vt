@@ -86,7 +86,6 @@ void Runtime::computeAndPrintDiagnostics() {
           << "Mean"
           << "Min"
           << "Max"
-          << "Var"
           << "Std"
           << fort::endr;
     //table.row(0).set_cell_content_text_style(fort::text_style::underlined);
@@ -143,7 +142,6 @@ void Runtime::computeAndPrintDiagnostics() {
           << str->avg_value_
           << str->min_value_
           << str->max_value_
-          << str->var_value_
           << str->std_value_
           << fort::endr;
         //fmt::print("component={}; name={}; value={}\n", comp, diag->getKey(), str->avg_value_);
