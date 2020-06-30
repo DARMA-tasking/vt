@@ -124,6 +124,21 @@ protected:
   );
 
   /**
+   * \internal \brief Register a new diagnostic timer
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the counter
+   */
+  template <typename T>
+  Timer<T> registerTimer(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Seconds
+  );
+
+  /**
    * \internal \brief Register a new diagnostic
    *
    * \param[in] key unique key for diagnostic, should match across nodes

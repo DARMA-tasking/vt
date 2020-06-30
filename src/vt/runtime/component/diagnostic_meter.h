@@ -54,12 +54,65 @@ struct Diagnostic;
 struct DiagnosticMeter {};
 
 /**
+ * \internal \struct DiagnosticStatsPack
+ *
+ * \brief Pack of statistic-based diagnostics intended to back diagnostic types
+ * where basic statistics should be applied
+ */
+template <typename T>
+struct DiagnosticStatsPack : DiagnosticMeter {
+
+  /**
+   * \internal \brief Default constructor so diagnostics meters can be in
+   * component classes and initialized later
+   */
+  DiagnosticStatsPack() = default;
+
+  /**
+   * \internal \brief Construct a new stats pack
+   *
+   * \param[in] in_sum the sum statistic
+   * \param[in] in_avg the mean statistic
+   * \param[in] in_max the max statistic
+   * \param[in] in_min the min statistic
+   */
+  DiagnosticStatsPack(
+    detail::DiagnosticValue<T>* in_sum,
+    detail::DiagnosticValue<T>* in_avg,
+    detail::DiagnosticValue<T>* in_max,
+    detail::DiagnosticValue<T>* in_min
+  ) : sum_(in_sum),
+      avg_(in_avg),
+      max_(in_max),
+      min_(in_min)
+  { }
+
+  /**
+   * \internal \brief Update the underlying stats pack
+   *
+   * \param[in] updated_val the updated value
+   */
+  void updateStats(T updated_val) {
+    sum_->update(updated_val);
+    avg_->update(updated_val);
+    max_->update(updated_val);
+    min_->update(updated_val);
+  }
+
+protected:
+  detail::DiagnosticValue<T>* sum_ = nullptr; /**< Sum of all update values */
+  detail::DiagnosticValue<T>* avg_ = nullptr; /**< Avg of all update values */
+  detail::DiagnosticValue<T>* max_ = nullptr; /**< Max of all update values */
+  detail::DiagnosticValue<T>* min_ = nullptr; /**< Min of all update values */
+};
+
+/**
  * \struct Gauge
  *
  * \brief Diagnostic that records some value over time.
  */
 template <typename T>
-struct Gauge : DiagnosticMeter {
+struct Gauge : DiagnosticStatsPack<T> {
 
   /**
    * \brief Default constructor available for ease of putting this type in a
@@ -69,15 +122,12 @@ struct Gauge : DiagnosticMeter {
   Gauge() = default;
 
 private:
-  explicit Gauge(
+  Gauge(
     detail::DiagnosticValue<T>* in_sum,
     detail::DiagnosticValue<T>* in_avg,
     detail::DiagnosticValue<T>* in_max,
     detail::DiagnosticValue<T>* in_min
-  ) : sum_(in_sum),
-      avg_(in_avg),
-      max_(in_max),
-      min_(in_min)
+  ) : DiagnosticStatsPack<T>(in_sum, in_avg, in_max, in_min)
   { }
 
   friend struct Diagnostic;
@@ -99,18 +149,9 @@ public:
    * \param[in] val the new value
    */
   Gauge<T>& operator+=(T val) {
-    sum_->update(val);
-    avg_->update(val);
-    min_->update(val);
-    max_->update(val);
+    this->updateStats(val);
     return *this;
   }
-
-private:
-  detail::DiagnosticValue<T>* sum_ = nullptr; /**< Sum of all gauge values */
-  detail::DiagnosticValue<T>* avg_ = nullptr; /**< Avg of all gauge values */
-  detail::DiagnosticValue<T>* max_ = nullptr; /**< Max of all gauge values */
-  detail::DiagnosticValue<T>* min_ = nullptr; /**< Min of all gauge values */
 };
 
 /**
@@ -119,7 +160,7 @@ private:
  * \brief Diagnostic that times some operation over time
  */
 template <typename T>
-struct Timer : DiagnosticMeter {
+struct Timer : DiagnosticStatsPack<T> {
 
   /**
    * \brief Default constructor available for ease of putting this type in a
@@ -129,20 +170,28 @@ struct Timer : DiagnosticMeter {
   Timer() = default;
 
 private:
-  explicit Timer(detail::DiagnosticValue<T>* in_impl)
-    : impl_(in_impl)
+  Timer(
+    detail::DiagnosticValue<T>* in_sum,
+    detail::DiagnosticValue<T>* in_avg,
+    detail::DiagnosticValue<T>* in_max,
+    detail::DiagnosticValue<T>* in_min
+  ) : DiagnosticStatsPack<T>(in_sum, in_avg, in_max, in_min)
   { }
 
   friend struct Diagnostic;
 
 public:
 
+  /**
+   * \brief Add a new timer range to the timer diagnostic
+   *
+   * \param[in] begin begin time of event being tracked
+   * \param[in] end end time of event being tracked
+   */
   void update(T begin, T end) {
     auto const duration = end - begin;
+    this->updateStats(duration);
   }
-
-private:
-  detail::DiagnosticValue<T>* impl_ = nullptr;
 };
 
 /**

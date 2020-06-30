@@ -89,6 +89,29 @@ Gauge<T> Diagnostic::registerGauge(
 }
 
 template <typename T>
+Timer<T> Diagnostic::registerTimer(
+  std::string const& key, std::string const& desc, DiagnosticUnit unit
+) {
+  auto sum = registerDiagnostic<T>(
+    key + " (sum)", desc, DiagnosticUpdate::Sum, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, 0
+  );
+  auto min = registerDiagnostic<T>(
+    key + " (min)", desc, DiagnosticUpdate::Min, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, std::numeric_limits<T>::max()
+  );
+  auto max = registerDiagnostic<T>(
+    key + " (max)", desc, DiagnosticUpdate::Max, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, 0
+  );
+  auto avg = registerDiagnostic<T>(
+    key + " (avg)", desc, DiagnosticUpdate::Avg, unit,
+    DiagnosticTypeEnum::PerformanceDiagnostic, 0
+  );
+  return Timer<T>{sum, avg, max, min};
+}
+
+template <typename T>
 detail::DiagnosticValue<T>* Diagnostic::registerDiagnostic(
   std::string const& key, std::string const& desc, DiagnosticUpdate update,
   DiagnosticUnit unit, DiagnosticTypeEnum type, T initial_value
