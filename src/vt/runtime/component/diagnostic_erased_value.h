@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             diagnostic_string.h
+//                          diagnostic_erased_value.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,31 +42,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_STRING_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_STRING_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_ERASED_VALUE_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_ERASED_VALUE_H
 
 #include "vt/runtime/component/diagnostic_types.h"
+#include "vt/utils/adt/union.h"
 
 #include <string>
 
 namespace vt { namespace runtime { namespace component {
 
 /**
- * \struct DiagnosticString
+ * \struct DiagnosticErasedValue
  *
  * \brief Typed-erased, diagnostic values as strings for outputting to user
  * after being formatted
  */
-struct DiagnosticString {
-  std::string min_value_;
-  std::string max_value_;
-  std::string sum_value_;
-  std::string avg_value_;
-  std::string std_value_;
-  DiagnosticUpdate update_;
-  bool is_valid_value_;
+struct DiagnosticErasedValue {
+  /// These are the set of valid diagnostic value types after being erased from
+  /// \c DiagnosticValue<T> get turned into this union for saving the value.
+  using UnionValueType = vt::adt::SafeUnion<
+    double, float,
+    int8_t,  int32_t,  int64_t,
+    uint8_t, uint32_t, uint64_t
+  >;
+
+  // The trio (min, max, sum) save the actual type with the value to print it
+  // correctly
+  UnionValueType min_; /// min over all nodes
+  UnionValueType max_; /// max over all nodes
+  UnionValueType sum_; /// sum total over all nodes
+
+  // The remainder (avg, std) are always converted to doubles since they are
+  // stats derived from the underlying value type
+  double avg_ = 0.; /// mean over all nodes
+  double std_ = 0.; /// standard deviation over all nodes
+
+  /// The updater type (SUM, MIN, MAX, REPLACE, AVG, etc.)
+  DiagnosticUpdate update_ = DiagnosticUpdate::Sum;
+
+  /// Whether the value turned out to be valid (i.e., if a MIN updater ends up
+  /// with the sentinel value \c std::numeric_limits<T>::min() after reduction,
+  /// it was never updated and \c is_valid_value_ will be false)
+  bool is_valid_value_ = false;
 };
 
 }}} /* end namespace vt::runtime::component */
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_STRING_H*/
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_ERASED_VALUE_H*/
