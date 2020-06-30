@@ -92,10 +92,10 @@ void reduceHelper(
 #define DIAGNOSIC_VALUE_INSTANCE(TYPE)                                  \
   template <>                                                           \
   void DiagnosticValue<TYPE>::reduceOver(                               \
-    Diagnostic* diagnostic, DiagnosticString* out                       \
+    Diagnostic* diagnostic, DiagnosticString* out, int snapshot         \
   ) {                                                                   \
     reduceHelper(                                                       \
-      diagnostic, out, value_.getComputedValue(), getUnit(),            \
+      diagnostic, out, values_[snapshot].getComputedValue(), getUnit(), \
       getUpdateType()                                                   \
     );                                                                  \
   }                                                                     \

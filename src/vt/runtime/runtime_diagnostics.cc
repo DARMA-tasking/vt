@@ -69,7 +69,7 @@ void Runtime::computeAndPrintDiagnostics() {
       c->preDiagnostic();
       c->foreachDiagnostic([&](component::detail::DiagnosticBase* d) {
         component_vals[c->name()][d] = std::make_unique<component::DiagnosticString>();
-        d->reduceOver(c, component_vals[c->name()][d].get());
+        d->reduceOver(c, component_vals[c->name()][d].get(), 0);
       });
     });
   });

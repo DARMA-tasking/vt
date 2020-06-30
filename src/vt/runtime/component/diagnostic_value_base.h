@@ -129,8 +129,11 @@ struct DiagnosticBase {
    *
    * \param[in] diagnostic the component with the \c Diagnostic trait to reduce
    * \param[in] out type-erased values output from reduction over all nodes
+   * \param[in] snapshot the time snapshot to reduce over (0 is entire runtime)
    */
-  virtual void reduceOver(Diagnostic* diagnostic, DiagnosticString* out) = 0;
+  virtual void reduceOver(
+    Diagnostic* diagnostic, DiagnosticString* out, int snapshot
+  ) = 0;
 
 protected:
   DiagnosticTypeEnum const type_; /**< The diagnostic type */

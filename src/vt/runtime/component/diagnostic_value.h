@@ -215,7 +215,7 @@ struct DiagnosticValueWrapper {
   /**
    * \internal \brief Get raw underlying value
    */
-  T getRawValue() { return value_; }
+  T getRawValue() const { return value_; }
 
   /**
    * \internal \brief Get the computed value (based on update type)
@@ -223,7 +223,7 @@ struct DiagnosticValueWrapper {
    * \note Either returns the mean (when a average update type is applied) or
    * the current value
    */
-  T getComputedValue() {
+  T getComputedValue() const {
     if (N_ > 0) {
       return value_ / N_;
     } else {
@@ -256,6 +256,110 @@ private:
 };
 
 /**
+ * \struct DiagnosticSnapshotValues
+ *
+ * \brief A list of diagnostic values that apply over a certain timeframe for a
+ * given snapshot
+ */
+template <typename T>
+struct DiagnosticSnapshotValues {
+
+  /**
+   * \internal \brief Construct a set of value snapshots
+   *
+   * \param[in] n_snapshots the number of snapshots
+   * \param[in] in_initial_value the initial value for a snapshot
+   */
+  DiagnosticSnapshotValues(int n_snapshots, T in_initial_value)
+    : initial_value_(in_initial_value)
+  {
+    for (int i = 0; i < n_snapshots; i++) {
+      snapshots_.emplace_back(DiagnosticValueWrapper<T>{in_initial_value});
+    }
+  }
+
+  /**
+   * \internal \brief Update the value
+   *
+   * \param[in] val new value, updated based on type of \c DiagnosticUpdate
+   */
+  void update(T val, DiagnosticUpdate updater) {
+    for (auto& v : snapshots_) {
+      switch (updater) {
+      case DiagnosticUpdate::Replace:
+        v.update(val);
+        break;
+      case DiagnosticUpdate::Min:
+        v.update(std::min(v.getRawValue(), val));
+        break;
+      case DiagnosticUpdate::Max:
+        v.update(std::max(v.getRawValue(), val));
+        break;
+      case DiagnosticUpdate::Avg:
+        v.incrementN();
+        // no break to include update for Avg after increment
+      case DiagnosticUpdate::Sum:
+        v.update(v.getRawValue() + val);
+        break;
+      default:
+        vtAssert(false, "Unknown DiagnosticUpdate---should be unreachable");
+        break;
+      }
+    }
+  }
+
+  /**
+   * \internal \brief Get a value for a given snapshot
+   *
+   * \param[in] snapshot the snapshot index
+   *
+   * \return the value wrapper
+   */
+  DiagnosticValueWrapper<T>& operator[](int snapshot) {
+    vtAssert(
+      snapshots_.size() > static_cast<std::size_t>(snapshot),
+      "Must be valid snapshot index"
+    );
+    return snapshots_.at(snapshot);
+  }
+
+  /**
+   * \internal \brief Get a value as const for a given snapshot
+   *
+   * \param[in] snapshot the snapshot index
+   *
+   * \return the const value wrapper
+   */
+  DiagnosticValueWrapper<T> const& operator[](int snapshot) const {
+    vtAssert(
+      snapshots_.size() > static_cast<std::size_t>(snapshot),
+      "Must be valid snapshot index"
+    );
+    return snapshots_.at(snapshot);
+  }
+
+  /**
+   * \internal \brief Reset a snapshot.
+   *
+   * This is typically invoked when a snapshot's timeframe expires and it needs
+   * to be reset for computing the value for the next snapshot.
+   *
+   * \param[in] snapshot the snapshot index
+   */
+  void reset(int snapshot) {
+    vtAssert(
+      snapshots_.size() > static_cast<std::size_t>(snapshot),
+      "Must be valid snapshot index"
+    );
+    snapshots_.at(snapshot) = DiagnosticValueWrapper<T>{initial_value_};
+  }
+
+protected:
+  T initial_value_;                                  /**< Save for later reset */
+  std::vector<DiagnosticValueWrapper<T>> snapshots_; /**< Value time snapshots */
+};
+
+/**
  * \struct DiagnosticValue
  *
  * \brief A keyed diagnostic value of some type \c T
@@ -272,12 +376,12 @@ struct DiagnosticValue : DiagnosticBase {
    * \param[in] in_type the diagnostic type
    * \param[in] in_initial_value the initial value
    */
-  explicit DiagnosticValue(
+  DiagnosticValue(
     std::string const& in_key, std::string const& in_desc,
     DiagnosticUpdate in_update, DiagnosticUnit in_unit,
     DiagnosticTypeEnum in_type, T in_initial_value = {}
   ) : DiagnosticBase(in_key, in_desc, in_update, in_unit, in_type),
-      value_(DiagnosticValueWrapper<T>{in_initial_value})
+      values_(DiagnosticSnapshotValues<T>{1, in_initial_value})
   { }
 
   /**
@@ -286,25 +390,7 @@ struct DiagnosticValue : DiagnosticBase {
    * \param[in] val new value, updated based on type of \c DiagnosticUpdate
    */
   void update(T val) {
-    switch (update_) {
-    case DiagnosticUpdate::Replace:
-      value_.update(val);
-      break;
-    case DiagnosticUpdate::Min:
-      value_.update(std::min(value_.getRawValue(), val));
-      break;
-    case DiagnosticUpdate::Max:
-      value_.update(std::max(value_.getRawValue(), val));
-      break;
-    case DiagnosticUpdate::Avg:
-      value_.incrementN();
-    case DiagnosticUpdate::Sum:
-      value_.update(value_.getRawValue() + val);
-      break;
-    default:
-      vtAssert(false, "Unknown DiagnosticUpdate---should be unreachable");
-      break;
-    }
+    values_.update(val, getUpdateType());
   }
 
   /**
@@ -312,12 +398,21 @@ struct DiagnosticValue : DiagnosticBase {
    *
    * \return the value
    */
-  T get() const { return value_.getComputedValue(); }
+  T get(int snapshot) const { return values_[snapshot].getComputedValue(); }
 
-  void reduceOver(Diagnostic* diagnostic, DiagnosticString* out) override;
+  /**
+   * \internal \brief Implementation of the concrete reduction over \c T
+   *
+   * \param[in] diagnostic the diagnostic component (for the reducer)
+   * \param[out] out the type-erased output
+   * \param[in] snapshot the time snapshot to reduce over (0 is entire runtime)
+   */
+  void reduceOver(
+    Diagnostic* diagnostic, DiagnosticString* out, int snapshot
+  ) override;
 
 private:
-  DiagnosticValueWrapper<T> value_; /**< The wrapper for the value */
+  DiagnosticSnapshotValues<T> values_; /**< The value snapshots */
 };
 
 }}}} /* end namespace vt::runtime::component::detail */
