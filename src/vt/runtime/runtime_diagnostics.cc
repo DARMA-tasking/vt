@@ -60,12 +60,6 @@ namespace vt { namespace runtime {
 
 namespace {
 
-std::string valueFormatHelper(double val, component::DiagnosticUnit unit) {
-  using DF = component::detail::DiagnosticFormatter;
-  using component::detail::decimal_format;
-  return DF::getValueWithUnits(val, unit, decimal_format);
-}
-
 template <typename T>
 struct FormatHelper {
   std::string operator()(
@@ -100,6 +94,12 @@ std::string valueFormatHelper(
   component::DiagnosticUnit unit
 ) {
   return eval.template switchOn<FormatHelper>(eval, unit);
+}
+
+std::string valueFormatHelper(double val, component::DiagnosticUnit unit) {
+  using DF = component::detail::DiagnosticFormatter;
+  using component::detail::decimal_format;
+  return DF::getValueWithUnits(val, unit, decimal_format);
 }
 
 } /* end anon namespace */
