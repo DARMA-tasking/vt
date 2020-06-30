@@ -117,9 +117,9 @@ struct UserEventRegistry {
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 private:
-  std::tuple<UserEventIDType, bool> newEventImpl(
+  UserEventIDType newEventImpl(
     bool user, bool rooted, std::string const& in_event, UserSpecEventIDType id,
-    bool hash = false
+    bool hash, bool report_up
   );
 
   bool insertEvent(UserEventIDType event, std::string const& name);

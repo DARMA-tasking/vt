@@ -75,56 +75,44 @@ UserEventIDType UserEventRegistry::createEvent(
 UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
   auto id_hash = static_cast<uint16_t>(std::hash<std::string>{}(in_event_name));
   id_hash = id_hash & 0x0FFF;
-  auto ret = newEventImpl(false, false, in_event_name, id_hash, true);
-  auto id = std::get<0>(ret);
-  auto inserted = std::get<1>(ret);
-  if (inserted) {
-    auto const node  = theContext()->getNode();
-    if (node != 0) {
-      auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
-      theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
-    }
-  }
-  return id;
+  const bool report_up = true;
+  return newEventImpl(false, false, in_event_name, id_hash, true, report_up);
 }
 
 UserEventIDType UserEventRegistry::collective(std::string const& in_event_name) {
-  auto ret = newEventImpl(false, false, in_event_name, cur_coll_event_++);
-  return std::get<0>(ret);
+  const bool report_up = false;
+  const int seq = cur_coll_event_++;
+  return newEventImpl(false, false, in_event_name, seq, false, report_up);
 }
 
 UserEventIDType UserEventRegistry::rooted(std::string const& in_event_name) {
-  auto ret = newEventImpl(false, true, in_event_name, cur_root_event_++);
-  auto id = std::get<0>(ret);
-  auto const node  = theContext()->getNode();
-  if (node != 0) {
-    auto msg = makeMessage<NewUserEventMsg>(false, id, in_event_name);
-    theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
-  }
-  return id;
+  const bool report_up = true;
+  const int seq = cur_root_event_++;
+  return newEventImpl(false, true, in_event_name, seq, false, report_up);
 }
 
 UserEventIDType UserEventRegistry::user(
   std::string const& in_event_name, UserSpecEventIDType seq
 ) {
-  auto ret = newEventImpl(true, false, in_event_name, seq);
-  auto id = std::get<0>(ret);
-  auto const node  = theContext()->getNode();
-  if (node != 0) {
-    auto msg = makeMessage<NewUserEventMsg>(true, id, in_event_name);
-    theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
-  }
-  return id;
+  const bool report_up = true;
+  return newEventImpl(true, false, in_event_name, seq, false, report_up);
 }
 
-std::tuple<UserEventIDType, bool> UserEventRegistry::newEventImpl(
+UserEventIDType UserEventRegistry::newEventImpl(
   bool user, bool rooted, std::string const& in_event, UserSpecEventIDType id,
-  bool hash
+  bool hash, bool report_up
 ) {
-  auto const node  = theContext()->getNode();
-  auto const event = createEvent(user, rooted, node, id, hash);
-  auto const inserted = insertEvent(event, in_event);
-  return std::make_tuple(event, inserted);
+  const NodeType node  = theContext()->getNode();
+  const UserEventIDType event = createEvent(user, rooted, node, id, hash);
+  const bool inserted = insertEvent(event, in_event);
+
+  // Ensure newly inserted events are passed to rank 0 if requested.
+  if (inserted and report_up and node not_eq 0) {
+    auto msg = makeMessage<NewUserEventMsg>(user, event, in_event);
+    theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg.get());
+  }
+
+  return event;
 }
 
 bool UserEventRegistry::insertEvent(
