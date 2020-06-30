@@ -91,12 +91,14 @@ std::string diagnosticUnitTypeString(DiagnosticUnit unit) {
 
 std::string diagnosticMultiplierString(UnitMultiplier multiplier) {
   switch (multiplier) {
-  case UnitMultiplier::Base:       return "";          break;
-  case UnitMultiplier::Thousands:  return "K";         break;
-  case UnitMultiplier::Millions:   return "M";         break;
-  case UnitMultiplier::Billions:   return "B";         break;
-  case UnitMultiplier::Trillions:  return "T";         break;
-  default:                         return "<unknown>"; break;
+  case UnitMultiplier::Base:         return "";          break;
+  case UnitMultiplier::Thousands:    return "K";         break;
+  case UnitMultiplier::Millions:     return "M";         break;
+  case UnitMultiplier::Billions:     return "B";         break;
+  case UnitMultiplier::Trillions:    return "t";         break;
+  case UnitMultiplier::Quadrillions: return "q";         break;
+  case UnitMultiplier::Quintillions: return "Q";         break;
+  default:                           return "<unknown>"; break;
   }
   return "";
 }

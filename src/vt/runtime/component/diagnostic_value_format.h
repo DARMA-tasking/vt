@@ -151,7 +151,7 @@ private:
 
       // Start with the largest unit, testing if its appropriate for the value,
       // and if not, downgrade it until we find one that works
-      auto multiplier = static_cast<int8_t>(UnitMultiplier::Trillions);
+      auto multiplier = static_cast<int8_t>(UnitMultiplier::Quintillions);
       for ( ; multiplier > 0; multiplier--) {
         auto value_tmp = static_cast<double>(val);
         for (int8_t i = 0; i < static_cast<int8_t>(multiplier); i++) {
@@ -165,7 +165,7 @@ private:
       // We found a multiplier that results in a value over 1.0, use it
       found_appropiate_unit_multiplier:
       vtAssert(
-        multiplier <= static_cast<int8_t>(UnitMultiplier::Trillions) and
+        multiplier <= static_cast<int8_t>(UnitMultiplier::Quintillions) and
         multiplier >= 0,
         "Must be a valid unit multiplier"
       );

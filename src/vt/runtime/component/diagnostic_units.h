@@ -61,7 +61,9 @@ enum struct UnitMultiplier : int8_t {
   Thousands = 1,          /**< Multiplier = 1,000 */
   Millions = 2,           /**< Multiplier = 1,000,000 */
   Billions = 3,           /**< Multiplier = 1,000,000,000 */
-  Trillions = 4           /**< Multiplier = 1,000,000,000,000 */
+  Trillions = 4,          /**< Multiplier = 1,000,000,000,000 */
+  Quadrillions = 5,       /**< Multiplier = 1,000,000,000,000,000 */
+  Quintillions = 6,       /**< Multiplier = 1,000,000,000,000,000,000 */
 };
 
 /** \brief Time multipliers for DiagnosticUnit::Seconds */
