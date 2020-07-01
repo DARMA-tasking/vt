@@ -152,6 +152,7 @@ struct Centroid {
   void serialize(SerializerT& s) {
     s | value_;
     s | count_;
+    s | exact_;
   }
 
 private:
