@@ -138,6 +138,7 @@ void Runtime::computeAndPrintDiagnostics() {
           << "Min"
           << "Max"
           << "Std"
+          << "Histogram"
           << fort::endr;
     //table.row(0).set_cell_content_text_style(fort::text_style::underlined);
 
@@ -185,6 +186,18 @@ void Runtime::computeAndPrintDiagnostics() {
           table[table.cur_row()][4].set_cell_text_align(fort::text_align::center);
         }
 
+        auto& h = str->hist_;
+        auto buckets = h.computeFixedBuckets(8);
+        std::string hist_out = fmt::format("<");
+        for (std::size_t i = 0; i < buckets.size(); i++) {
+          hist_out += fmt::format("{}", buckets[i]);
+          if (i == buckets.size() - 1) {
+            hist_out += ">";
+          } else {
+            hist_out += ", ";
+          }
+        }
+
         table
           << diag->getKey()
           << diag->getDescription()
@@ -195,6 +208,7 @@ void Runtime::computeAndPrintDiagnostics() {
           << valueFormatHelper(str->min_, str->unit_)
           << valueFormatHelper(str->max_, str->unit_)
           << valueFormatHelper(str->std_, str->unit_)
+          << hist_out
           << fort::endr;
         //fmt::print("component={}; name={}; value={}\n", comp, diag->getKey(), str->avg_value_);
 

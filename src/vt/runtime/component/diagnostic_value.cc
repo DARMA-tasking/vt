@@ -69,8 +69,9 @@ void reduceHelper(
     ValueType{typename ValueType::ReduceTag{}, val}
   );
   auto cb = theCB()->makeFunc<ReduceMsgType>([=](ReduceMsgType* m) {
-    auto reduced_val = m->getConstVal();
+    auto& reduced_val = m->getConstVal();
     *out = DiagnosticEraser<T>::get(reduced_val);
+    out->hist_ = reduced_val.getHistogram();
     out->update_ = update;
     out->unit_ = unit;
     if (update == DiagnosticUpdate::Min) {

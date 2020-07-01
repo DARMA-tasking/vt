@@ -49,6 +49,7 @@
 #include "vt/runtime/component/diagnostic_types.h"
 #include "vt/runtime/component/diagnostic_erased_value.h"
 #include "vt/runtime/component/diagnostic_value_base.h"
+#include "vt/utils/adt/histogram_approx.h"
 
 #include <string>
 #include <cmath>
@@ -97,8 +98,12 @@ struct DiagnosticValueWrapper {
       avg_(in_value),
       M2_(0.),
       M3_(0.),
-      M4_(0.)
-  { }
+      M4_(0.),
+      hist_(16)
+  {
+    // add to histogram when starting the reduction
+    hist_.add(value_);
+  }
 
   /**
    * \internal \brief Get reference to the underlying value
@@ -155,6 +160,7 @@ struct DiagnosticValueWrapper {
     d1.max_  = std::max(d1.max_, d2.max_);
     d1.sum_ += d2.sum_;
 
+    d1.hist_.mergeIn(d2.hist_);
     return d1;
   }
 
@@ -245,7 +251,16 @@ struct DiagnosticValueWrapper {
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | value_ | N_ | min_ | max_ | sum_ | avg_ | M2_ | M3_ | M4_;
+    s | value_ | N_ | min_ | max_ | sum_ | avg_ | M2_ | M3_ | M4_ | hist_;
+  }
+
+  /**
+   * \internal \brief Get the histogram after reducing
+   *
+   * \return the histogram over nodes
+   */
+  adt::HistogramApprox<double, int64_t> const& getHistogram() const {
+    return hist_;
   }
 
 private:
@@ -253,6 +268,7 @@ private:
   std::size_t N_ = 0;           /**< The cardinality */
   T min_, max_, sum_;           /**< The min/max/sum for reduction */
   double avg_, M2_, M3_, M4_;   /**< The avg and 2/3/4 moments for reduction */
+  adt::HistogramApprox<double, int64_t> hist_; /**< Histogram values for reduce */
 };
 
 /**

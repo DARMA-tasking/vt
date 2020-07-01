@@ -47,6 +47,7 @@
 
 #include "vt/runtime/component/diagnostic_types.h"
 #include "vt/utils/adt/union.h"
+#include "vt/utils/adt/histogram_approx.h"
 
 #include <string>
 
@@ -88,6 +89,9 @@ struct DiagnosticErasedValue {
   /// with the sentinel value \c std::numeric_limits<T>::min() after reduction,
   /// it was never updated and \c is_valid_value_ will be false)
   bool is_valid_value_ = false;
+
+  // Histogram of values across all nodes
+  adt::HistogramApprox<double, int64_t> hist_;
 };
 
 }}} /* end namespace vt::runtime::component */
