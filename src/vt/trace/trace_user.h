@@ -78,22 +78,23 @@ struct TraceScopedEventHash final {
     event_ = registerEventHashed(str_);
   }
 
+  TraceScopedEventHash& operator=(TraceScopedEventHash const&) = delete;
+
   ~TraceScopedEventHash() { end(); }
 
   void end() {
-    if (not ended_ and event_ != no_user_event_id) {
-      end_ = Trace::getCurrentTime();
-      ended_ = true;
-      theTrace()->addUserEventBracketed(event_, begin_, end_);
+    if (event_ != no_user_event_id) {
+      double end = Trace::getCurrentTime();
+      theTrace()->addUserEventBracketed(event_, begin_, end);
+
+      event_ = no_user_event_id;
     }
   }
 
 private:
   double begin_          = 0.0;
-  double end_            = 0.0;
   std::string str_       = "";
   UserEventIDType event_ = no_user_event_id;
-  bool ended_            = false;
 };
 
 struct TraceScopedEvent final {
@@ -102,21 +103,22 @@ struct TraceScopedEvent final {
       event_(event)
   { }
 
+  TraceScopedEvent& operator=(TraceScopedEvent const&) = delete;
+
   ~TraceScopedEvent() { end(); }
 
   void end() {
-    if (not ended_ and event_ != no_user_event_id) {
-      end_ = Trace::getCurrentTime();
-      ended_ = true;
-      theTrace()->addUserEventBracketed(event_, begin_, end_);
+    if (event_ != no_user_event_id) {
+      double end = Trace::getCurrentTime();
+      theTrace()->addUserEventBracketed(event_, begin_, end);
+
+      event_ = no_user_event_id;
     }
   }
 
 private:
   double begin_          = 0.0;
-  double end_            = 0.0;
   UserEventIDType event_ = no_user_event_id;
-  bool ended_            = false;
 };
 
 struct TraceScopedNote final {
@@ -127,15 +129,17 @@ struct TraceScopedNote final {
       note_(in_note)
   { }
 
-  ~TraceScopedNote() {
-    if (event_ != no_user_event_id) {
-      end_ = Trace::getCurrentTime();
-      theTrace()->addUserBracketedNote(begin_, end_, note_, event_);
-    }
-  }
+  TraceScopedNote& operator=(TraceScopedNote const&) = delete;
+
+  ~TraceScopedNote() { end(); }
 
   void end() {
-    end_ = Trace::getCurrentTime();
+    if (event_ != no_user_event_id) {
+      double end = Trace::getCurrentTime();
+      theTrace()->addUserBracketedNote(begin_, end, note_, event_);
+
+      event_ = no_user_event_id;
+    }
   }
 
   void setEvent(TraceEventIDType const in_event) {
@@ -144,7 +148,6 @@ struct TraceScopedNote final {
 
 private:
   double begin_           = 0.0;
-  double end_             = 0.0;
   TraceEventIDType event_ = no_trace_event;
   std::string note_       = "";
 };
