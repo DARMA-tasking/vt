@@ -414,7 +414,7 @@ struct HistogramApprox {
     // some optimization we can apply here since we know all of them, but for
     // now just add them incrementally.
     for (auto&& c : in_cs) {
-      add(c->getValue(), c->getCount());
+      add(c.getValue(), c.getCount());
     }
   }
 
