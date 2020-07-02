@@ -69,7 +69,7 @@ RUN git clone https://github.com/kokkos/nvcc_wrapper.git && \
     cd nvcc_wrapper && \
     mkdir build && \
     cd build && \
-    cmake ../ \
+    cmake ../
 
 ENV MPI_EXTRA_FLAGS="" \
     CXX=/nvcc_wrapper/build/nvcc_wrapper \
