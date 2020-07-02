@@ -54,7 +54,11 @@ sub extract_defs {
     return @deflines;
 }
 
-# MPI calls that can be 'safely' used without being guarded.
+# MPI calls that can be 'safely' used without being guarded
+# or are otherwise excluded due to minimal benefit, compatibility issues, etc.
+# - Common idempotent 'get' calls
+# - MPI_Aint_(add|diff) - in OpenMPI 1.10 as macros
+# - MPI_File_(iwrite|iread)_(all|at_all) - missing in OpenMPI 1.10
 my @no_guard_patterns = qw(
     MPI_Comm_get_.*
     MPI_Comm_rank
@@ -62,6 +66,8 @@ my @no_guard_patterns = qw(
     MPI_Get.*(?<!_accumulate)
     MPI_Wtime
     MPI_Wtick
+    MPI_Aint_(add|diff)
+    MPI_File_(iwrite|iread)_(all|at_all)
 );
 
 sub should_guard_call {
