@@ -55,10 +55,11 @@ struct TestMsg : vt::Message {
   int action_;
 };
 
-static int last_action_completed = 0;
 static bool done = false;
 
-static std::string actions[] = {
+const int action_count = 7;
+
+static std::string actions[action_count] = {
   "-- not used --",
   "nested",
   "nested",
@@ -68,53 +69,58 @@ static std::string actions[] = {
   "done"
 };
 
+static bool ack[action_count] = {false};
+
 static void message_handler_with_nested_loop(TestMsg* msg) {
-  std::string& action = actions[msg->action_];
+  int depth = msg->action_;
+  std::string& action = actions[depth];
+
+  ack[depth] = true;
 
   if ("done" == action) {
     done = true;
-    last_action_completed = msg->action_;
     return;
   }
 
-  int next_depth = msg->action_ + 1;
-
-  int target_node = (theContext()->getNode() + 1) % theContext()->getNumNodes();
+  // Pass message around the ring..
+  NodeType target_node = (theContext()->getNode() + 1) % theContext()->getNumNodes();
+  int next_depth = depth + 1;
 
   auto next_msg = vt::makeMessage<TestMsg>();
   next_msg->action_ = next_depth;
   theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, next_msg.get());
 
+  // ..run scheduler until someone also passed us the message.
   if ("nested" == action) {
-    // New auto-nesting loop (recommended)
-    theSched()->runSchedulerWhile([next_depth]{ return next_depth not_eq last_action_completed; });
+    // New auto-nesting loop (recommended).
+    // This also includes the time between the scheduler loops as an event.
+    theSched()->runSchedulerWhile([next_depth]{
+      return not ack[next_depth];
+    });
   } else if ("manual" == action) {
-    // Original manual loops (not recommended, as such will not relfect as well in trace logs)
-    while (next_depth not_eq last_action_completed) {
+    // Original manual loops.
+    // Not recommended as scheduler event generation is less consistent.
+    while (not ack[next_depth]) {
       vt::runScheduler();
     }
   } else {
     vtAssertInfo(false, "Invalid action", action);
   }
-
-  // Unwinds 5,4..1 eg.
-  last_action_completed = msg->action_;
 }
 
 TEST_F(TestSchedulerLoop, test_scheduler_loop_nesting_1) {
 
   vtAssert(theContext()->getNumNodes() >= 2, "At least 2 nodes required.");
 
-  int target_node = (theContext()->getNode() + 1) % theContext()->getNumNodes();
+  NodeType node = theContext()->getNode();
+  NodeType target_node = (node + 1) % theContext()->getNumNodes();
 
   auto msg = vt::makeMessage<TestMsg>();
   msg->action_ = 1;
   theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, msg.get());
 
   done = false;
-  while (!done) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([]{ return not done; });
 
   SUCCEED();
 }
