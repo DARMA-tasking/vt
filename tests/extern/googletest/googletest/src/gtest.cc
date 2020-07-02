@@ -35,7 +35,7 @@
 #include "gtest/gtest-spi.h"
 
 #include <ctype.h>
-#include <math.h>
+#include <cmath>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
