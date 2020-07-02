@@ -113,8 +113,9 @@ The `docker` builds are configured through `docker-compose` to use a shared,
 cached filesystem mount with the host for `ccache` to enable fast re-builds.
 
 For `docker-compose`, the following variables can be set to configure the
-build. One may configure the architecture, compiler type and version, Linux
-distro (ubuntu or alpine), and distro version.
+build. One may configure the architecture, compiler type (GNU, Clang, Intel,
+NVidia) and compiler version, Linux distro (ubuntu or alpine), and distro
+version.
 
 The default set of the docker configuration options is located in `vt/.env`,
 which `docker-compose` will read.
@@ -122,10 +123,12 @@ which `docker-compose` will read.
 ```
 # Variables:
 #   ARCH={amd64, arm64v8, ...}
-#   COMPILER_TYPE={gnu, clang, intel}
+#   COMPILER_TYPE={gnu, clang, intel, nvidia}
 #   COMPILER={gcc-5, gcc-6, gcc-7, gcc-8, gcc-9, gcc-10,
 #             clang-3.9, clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
-#             clang-9, clang-10, icc-18}
+#             clang-9, clang-10,
+#             icc-18, icc-19,
+#             nvcc-10}
 #   REPO=lifflander1/vt
 #   UBUNTU={18.04, 20.04}
 #   ULIMIT_CORE=0
