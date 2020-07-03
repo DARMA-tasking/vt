@@ -49,14 +49,10 @@
 
 namespace vt { namespace rdma {
 
-/**
- * \brief Convenience using for when U is a vt::NodeType
- */
-template <typename U>
-using isIdx = typename std::enable_if_t<not std::is_same<U,vt::NodeType>::value>;
-
 template <typename T, HandleEnum E, typename I>
-bool Handle<T,E,I,isIdx<I>>::ready() const {
+bool Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::ready() const {
   if (proxy_ != no_obj_group) {
     auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
     return proxy.get()->ready();
@@ -66,7 +62,9 @@ bool Handle<T,E,I,isIdx<I>>::ready() const {
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::readExclusive(
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::readExclusive(
   std::function<void(T const*, std::size_t count)> fn
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -74,7 +72,9 @@ void Handle<T,E,I,isIdx<I>>::readExclusive(
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::readShared(
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::readShared(
   std::function<void(T const*, std::size_t count)> fn
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -82,7 +82,9 @@ void Handle<T,E,I,isIdx<I>>::readShared(
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::modifyExclusive(
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::modifyExclusive(
   std::function<void(T*, std::size_t count)> fn
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -90,7 +92,9 @@ void Handle<T,E,I,isIdx<I>>::modifyExclusive(
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::modifyShared(
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::modifyShared(
   std::function<void(T*, std::size_t count)> fn
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -98,17 +102,23 @@ void Handle<T,E,I,isIdx<I>>::modifyShared(
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::lock(Lock l, I const& index) {
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::lock(Lock l, I const& index) {
   //@todo: implement this
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::unlock() {
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::unlock() {
   this->lock_ = nullptr;
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::get(
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::get(
   I const& index, T* ptr, std::size_t len, int offset, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -116,8 +126,12 @@ void Handle<T,E,I,isIdx<I>>::get(
 }
 
 template <typename T, HandleEnum E, typename I>
-typename Handle<T,E,I,isIdx<I>>::RequestType
-Handle<T,E,I,isIdx<I>>::rget(
+typename Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::RequestType
+Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::rget(
   I const& index, T* ptr, std::size_t len, int offset, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -125,7 +139,9 @@ Handle<T,E,I,isIdx<I>>::rget(
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::get(
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::get(
   I const& index, std::size_t len, int offset, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -133,8 +149,12 @@ void Handle<T,E,I,isIdx<I>>::get(
 }
 
 template <typename T, HandleEnum E, typename I>
-typename Handle<T,E,I,isIdx<I>>::RequestType
-Handle<T,E,I,isIdx<I>>::rget(
+typename Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::RequestType
+Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::rget(
   I const& index, std::size_t len, int offset, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -163,7 +183,9 @@ Handle<T,E,I,isIdx<I>>::rget(
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::put(
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::put(
   I const& index, T* ptr, std::size_t len, int offset, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -171,8 +193,12 @@ void Handle<T,E,I,isIdx<I>>::put(
 }
 
 template <typename T, HandleEnum E, typename I>
-typename Handle<T,E,I,isIdx<I>>::RequestType
-Handle<T,E,I,isIdx<I>>::rput(
+typename Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::RequestType
+Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::rput(
   I const& index, T* ptr, std::size_t len, int offset, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -180,7 +206,9 @@ Handle<T,E,I,isIdx<I>>::rput(
 }
 
 template <typename T, HandleEnum E, typename I>
-void Handle<T,E,I,isIdx<I>>::accum(
+void Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::accum(
   I const& index, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -188,8 +216,12 @@ void Handle<T,E,I,isIdx<I>>::accum(
 }
 
 template <typename T, HandleEnum E, typename I>
-typename Handle<T,E,I,isIdx<I>>::RequestType
-Handle<T,E,I,isIdx<I>>::raccum(
+typename Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::RequestType
+Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::raccum(
   I const& index, T* ptr, std::size_t len, int offset, MPI_Op op, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -197,7 +229,9 @@ Handle<T,E,I,isIdx<I>>::raccum(
 }
 
 template <typename T, HandleEnum E, typename I>
-T Handle<T,E,I,isIdx<I>>::fetchOp(
+T Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::fetchOp(
   I const& index, T ptr, int offset, MPI_Op op, Lock l
 ) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
@@ -205,7 +239,9 @@ T Handle<T,E,I,isIdx<I>>::fetchOp(
 }
 
 template <typename T, HandleEnum E, typename I>
-std::size_t Handle<T,E,I,isIdx<I>>::getCount(I const& index) {
+std::size_t Handle<
+  T,E,I,typename std::enable_if_t<not std::is_same<I,vt::NodeType>::value>
+>::getCount(I const& index) {
   auto proxy = vt::objgroup::proxy::Proxy<SubHandle<T,E,I>>(proxy_);
   if (proxy.get()->isUniform()) {
     return this->count();
