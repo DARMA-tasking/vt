@@ -187,6 +187,9 @@ if(vt_mpi_guards AND PERL_FOUND)
     ARGS "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/generate_mpi_wrappers.pl"
          "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/mpi_functions.h.in"
          "${MPI_WRAP_GENERATED}"
+    DEPENDS
+         "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/generate_mpi_wrappers.pl"
+         "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/mpi_functions.h.in"
   )
 
   list(
