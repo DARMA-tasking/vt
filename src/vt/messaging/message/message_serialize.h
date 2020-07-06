@@ -77,7 +77,11 @@ struct has_own_serialize_member_t<U,
 template <typename T>
 static constexpr auto const has_own_serialize =
   ::checkpoint::SerializableTraits<T>::has_serialize_noninstrusive
-  or has_own_serialize_member_t<T>::value;
+  or (
+    std::is_member_function_pointer<
+      decltype(&T::template serialize<::checkpoint::Sizer&>)
+    >::value
+    and has_own_serialize_member_t<T>::value);
 
 #endif
 
