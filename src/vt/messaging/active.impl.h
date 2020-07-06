@@ -55,7 +55,7 @@
 
 namespace vt { namespace messaging {
 
-constexpr ByteType msgsize_not_specified = -1;
+constexpr ByteType msgsize_not_specified = static_cast<ByteType>(-1);
 constexpr NodeType broadcast_dest = uninitialized_destination;
 
 template <typename MsgPtrT>
