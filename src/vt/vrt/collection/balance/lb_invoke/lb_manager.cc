@@ -140,17 +140,28 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   auto phase = msg->getPhase();
 
+  EpochType model_epoch = theTerm()->makeEpochCollective("LBManager::model_epoch");
+  EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
+  EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
+
   if (model_ == nullptr)
     setLoadModel(std::make_unique<balance::NaivePersistence>());
+
+  theMsg()->pushEpoch(model_epoch);
   model_->updateLoads(phase);
+  theMsg()->popEpoch(model_epoch);
+  theTerm()->finishedEpoch(model_epoch);
 
-  EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
-  theMsg()->pushEpoch(balance_epoch);
-  strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcLoad()->back(), theProcStats()->getProcComm()->back());
-  theMsg()->popEpoch(balance_epoch);
-  theTerm()->finishedEpoch(balance_epoch);
-
-  EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
+  theTerm()->addAction(model_epoch, [=] {
+    vt_debug_print(
+      lb, node,
+      "LBManager: running strategy\n"
+    );
+    theMsg()->pushEpoch(balance_epoch);
+    strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcLoad()->back(), theProcStats()->getProcComm()->back());
+    theMsg()->popEpoch(balance_epoch);
+    theTerm()->finishedEpoch(balance_epoch);
+  });
 
   theTerm()->addAction(balance_epoch, [=] {
     vt_debug_print(
