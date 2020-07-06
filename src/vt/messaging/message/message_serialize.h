@@ -53,10 +53,37 @@
 
 namespace vt { namespace messaging {
 
+// C++17 port. ref. https://en.cppreference.com/w/cpp/types/conjunction
+template<class...> struct cxx14_conjunction : std::true_type { };
+template<class B1> struct cxx14_conjunction<B1> : B1 { };
+template<class B1, class... Bn>
+struct cxx14_conjunction<B1, Bn...>
+  : std::conditional_t<bool(B1::value), cxx14_conjunction<Bn...>, B1> {};
+
+// C++17 port. ref. https://en.cppreference.com/w/cpp/types/void_t
+template<typename... Ts>
+struct cxx14_make_void { typedef void type;};
+template<typename... Ts>
+using cxx14_void_t = typename cxx14_make_void<Ts...>::type;
+
 // Only some compilers can directly check for a serialization method
 // because to do so requires declval on a templated member WITHOUT
 // causing templated instantiation (which will fail).
 #ifndef vt_quirked_serialize_method_detection
+
+using SerializeSizerType = ::checkpoint::Sizer;
+
+// Covering case work-about for NVCC (CUDA 10.1). See usage site.
+template <class T>
+struct has_any_serialize_member_t
+{
+  template <typename U>
+  static auto test(U* u) -> decltype(
+      u->template serialize<SerializeSizerType>(std::declval<SerializeSizerType&>())
+      , char(0)) { return char(0); }
+  static double test(...) { return 0; }
+  static const bool value = (sizeof(test((T*)0)) == 1);
+};
 
 template <typename U, typename = void>
 struct has_own_serialize_member_t : std::false_type {};
@@ -66,7 +93,7 @@ struct has_own_serialize_member_t<U,
   std::enable_if_t<
     std::is_same<
       void (U::*)(::checkpoint::Sizer&),
-      decltype(&U::template serialize<::checkpoint::Sizer&>)
+      decltype(&U::template serialize<SerializeSizerType>)
     >::value
   >>
   : std::true_type
@@ -77,7 +104,14 @@ struct has_own_serialize_member_t<U,
 template <typename T>
 static constexpr auto const has_own_serialize =
   ::checkpoint::SerializableTraits<T>::has_serialize_noninstrusive
-  or has_own_serialize_member_t<T>::value;
+  // NVCC (CUDA 10.1 and 11) has SFINAE issues with decltype above,
+  // and possible fallout with lazy evaluation of 'and'.
+  // While this compiles, NVCC incorrectly detects some types
+  // as requiring serialization. See #949.
+  or cxx14_conjunction<
+    has_any_serialize_member_t<T>,
+    has_own_serialize_member_t<T>
+  >::value;
 
 #endif
 
@@ -222,19 +256,6 @@ struct is_byte_copyable_t {
   constexpr static bool value = std::is_trivially_destructible<T>::value and not std::is_pointer<T>::value;
 };
 #endif
-
-// C++17 port. ref. https://en.cppreference.com/w/cpp/types/conjunction
-template<class...> struct cxx14_conjunction : std::true_type { };
-template<class B1> struct cxx14_conjunction<B1> : B1 { };
-template<class B1, class... Bn>
-struct cxx14_conjunction<B1, Bn...>
-  : std::conditional_t<bool(B1::value), cxx14_conjunction<Bn...>, B1> {};
-
-// C++17 port. ref. https://en.cppreference.com/w/cpp/types/void_t
-template<typename... Ts>
-struct cxx14_make_void { typedef void type;};
-template<typename... Ts>
-using cxx14_void_t = typename cxx14_make_void<Ts...>::type;
 
 // Foward-declare
 struct BaseMsg;
