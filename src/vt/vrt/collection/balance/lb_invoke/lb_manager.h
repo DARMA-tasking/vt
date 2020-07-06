@@ -49,7 +49,6 @@
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
@@ -57,6 +56,8 @@
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
+
+class LoadModel;
 
 /**
  * \struct LBManager
@@ -77,7 +78,7 @@ struct LBManager : runtime::component::Component<LBManager> {
   LBManager() = default;
   LBManager(LBManager const&) = delete;
   LBManager(LBManager&&) = default;
-  virtual ~LBManager() {}
+  virtual ~LBManager();
 
   std::string name() override { return "LBManager"; }
 
@@ -264,7 +265,7 @@ private:
   bool synced_in_lb_                       = true;
   std::vector<ListenerFnType> listeners_   = {};
   objgroup::proxy::Proxy<LBManager> proxy_;
-  std::unique_ptr<LoadModel> model_        = nullptr;
+  std::unique_ptr<LoadModel> model_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
