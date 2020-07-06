@@ -130,8 +130,8 @@ void LBManager::setLoadModel(std::unique_ptr<LoadModel> model) {
   model_ = std::move(model);
   auto stats = theProcStats();
   model_->setLoads(stats->getProcLoad(),
-		   stats->getProcSubphaseLoad(),
-		   stats->getProcComm());
+                   stats->getProcSubphaseLoad(),
+                   stats->getProcComm());
 }
 
 template <typename LB>
