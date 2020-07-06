@@ -64,7 +64,6 @@ void BaseLB::startLB(
   PhaseType phase,
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
-  balance::LoadMapType const& in_load_stats,
   ElementCommType const& in_comm_stats
 ) {
   start_time_ = timing::Timing::getCurrentTime();
@@ -72,7 +71,7 @@ void BaseLB::startLB(
   proxy_ = proxy;
   load_model_ = model;
 
-  importProcessorData(in_load_stats, in_comm_stats);
+  importProcessorData(in_comm_stats);
 
   term::TerminationDetector::Scoped::collective(
     [this] { computeStatistics(); },
@@ -94,13 +93,13 @@ BaseLB::ObjBinType BaseLB::histogramSample(LoadType const& load) const {
 }
 
 void BaseLB::importProcessorData(
-  ElementLoadType const& load_in, ElementCommType const& comm_in
+  ElementCommType const& comm_in
 ) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
     lb, node,
     "{}: importProcessorData: load stats size={}, load comm size={}\n",
-    this_node, load_in.size(), comm_in.size()
+    this_node, load_model_->getNumObjects(), comm_in.size()
   );
   for (auto obj : *load_model_) {
     auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
@@ -117,7 +116,6 @@ void BaseLB::importProcessorData(
     );
   }
 
-  load_data_ = &load_in;
   comm_data = &comm_in;
 }
 
