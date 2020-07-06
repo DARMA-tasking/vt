@@ -59,6 +59,7 @@
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/naive_persistence.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -69,6 +70,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   proxy.get()->setProxy(proxy);
   return ptr;
 }
+
+LBManager::~LBManager() = default;
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   vt_debug_print(
