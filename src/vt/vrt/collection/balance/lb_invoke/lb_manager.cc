@@ -161,7 +161,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
       "LBManager: running strategy\n"
     );
     theMsg()->pushEpoch(balance_epoch);
-    strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcLoad()->back(), theProcStats()->getProcComm()->back());
+    strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcComm()->back());
     theMsg()->popEpoch(balance_epoch);
     theTerm()->finishedEpoch(balance_epoch);
   });

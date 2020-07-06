@@ -60,15 +60,21 @@ struct PhaseOffset {
 };
 
 class ObjectIterator {
-  using iterator_type = LoadMapType::const_iterator;
+  using difference_type = std::ptrdiff_t;
   using value_type = LoadMapType::key_type;
-  iterator_type i;
+  using pointer = value_type*;
+  using reference = value_type&;
+
+  using map_iterator_type = LoadMapType::const_iterator;
+  using iterator_category = std::iterator_traits<map_iterator_type>::iterator_category;
+  map_iterator_type i;
 
 public:
-  ObjectIterator(iterator_type in) : i(in) { }
+  ObjectIterator(map_iterator_type in) : i(in) { }
   void operator++() { ++i; }
   value_type operator*() { return i->first; }
   bool operator!=(ObjectIterator rhs) { return i != rhs.i; }
+  difference_type operator-(ObjectIterator rhs) { return std::distance(rhs.i, i); }
 };
 
 class LoadModel
@@ -116,6 +122,8 @@ public:
   // Object enumeration, to abstract away access to the underlying structures from ProcStats
   ObjectIterator begin() { return ObjectIterator(proc_load_->back().begin()); }
   ObjectIterator end()   { return ObjectIterator(proc_load_->back().end()); }
+
+  int getNumObjects() { return end() - begin(); }
 
 protected:
   // Observer pointers to the underlying data. In operation, these would be owned by ProcStats

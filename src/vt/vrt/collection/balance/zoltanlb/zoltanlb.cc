@@ -427,7 +427,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   auto graph = std::make_unique<Graph>();
 
   // Number of local vertices (overdecomposed blocks) on this node
-  graph->num_vertices = static_cast<int>(std::distance(load_model_->begin(), load_model_->end()));
+  graph->num_vertices = load_model_->getNumObjects();
 
   // Allocate space for each vertex to describe it
   graph->vertex_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_vertices);
