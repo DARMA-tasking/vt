@@ -85,8 +85,8 @@ void RandomLB::runLB() {
 
   // Sort the objects so we have a deterministic order over them
   std::set<ObjIDType> objs;
-  for (auto&& stat : *load_data_) {
-    objs.insert(stat.first);
+  for (auto obj : *load_model_) {
+    objs.insert(obj);
   }
 
   for (auto&& obj : objs) {
