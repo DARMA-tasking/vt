@@ -51,19 +51,9 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-class NaivePersistence : public LoadModel {
-  using LoadType = double;
-  using ObjIDType = balance::ElementIDType;
-  using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
-  using ElementCommType = balance::CommMapType;
-
-public:
-  NaivePersistence(const ElementLoadType *loads, const ElementCommType *comms);
+struct NaivePersistence : public LoadModel {
+  NaivePersistence();
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
-
-private:
-  ElementLoadType loads_;
-  const ElementCommType* comms_;
 }; // class NaivePersistence
 
 }}}} // end namespace

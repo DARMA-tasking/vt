@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/timing/timing_type.h"
+#include "vt/vrt/collection/balance/lb_comm.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -64,8 +64,46 @@ class LoadModel
 public:
   LoadModel() {}
 
+  /**
+   * \internal \brief Initialize the model instance with pointers to the measured load data
+   *
+   * This would typically be called by LBManager when the user has
+   * passed a new model instance for a collection
+   */
+  void setLoads(std::vector<LoadMapType> const* proc_load,
+		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+		std::vector<CommMapType> const* proc_comm)
+  {
+    proc_load_ = proc_load;
+    proc_subphase_load_ = proc_subphase_load;
+    proc_comm_ = proc_comm;
+  }
+
+  /**
+   * \brief Signals that load data for a new phase is available
+   *
+   * For models that want to do pre-computation based on measured
+   * loads before being asked to provide predictions from them
+   *
+   * This would typically be called by LBManager
+   */
+  virtual void updateLoads(PhaseType last_completed_phase) { }
+
+  /**
+   * \brief Provide a prediction of the given object's load during a future interval
+   *
+   * \param[in] object The object whose load is desired
+   * \param[in] when The future interval in which the predicted load is desired
+   *
+   * \return How much computation time the object is expected to require
+   */
   virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
 
+protected:
+  // Observer pointers to the underlying data. In operation, these would be owned by ProcStats
+  std::vector<LoadMapType>         const* proc_load_;
+  std::vector<SubphaseLoadMapType> const* proc_subphase_load_;
+  std::vector<CommMapType>         const* proc_comm_;
 }; // class LoadModel
 
 }}}} // namespaces

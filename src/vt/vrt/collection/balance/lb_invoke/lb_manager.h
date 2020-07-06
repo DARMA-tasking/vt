@@ -238,7 +238,7 @@ public:
    * naive persistence
    *
    */
-  void setLoadModel(std::unique_ptr<LoadModel> model) { model_ = std::move(model); }
+  void setLoadModel(std::unique_ptr<LoadModel> model);
 
 protected:
   /**
