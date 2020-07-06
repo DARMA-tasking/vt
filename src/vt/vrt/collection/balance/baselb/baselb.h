@@ -108,7 +108,7 @@ struct BaseLB {
    * through calls to `migrateObjectTo`. Callers can then access that
    * set using `getTransfers` and apply it using `applyMigrations`.
    */
-  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::LoadModel *model, balance::ProcStats::LoadMapType const& in_load_stats, ElementCommType const& in_comm_stats);
+  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::LoadModel *model, balance::LoadMapType const& in_load_stats, ElementCommType const& in_comm_stats);
   void computeStatistics();
   void importProcessorData(ElementLoadType const& ld, ElementCommType const& cm);
   void statsHandler(StatsMsgType* msg);

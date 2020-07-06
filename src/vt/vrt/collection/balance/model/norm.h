@@ -57,22 +57,17 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * subphases
  */
 class Norm : public LoadModel {
-  using LoadType = double;
-  using ObjIDType = balance::ElementIDType;
-  using LoadMapType = ProcStats::SubphaseLoadMapType;
 
 public:
   /**
    * \brief Constructor
    *
-   * \param[in] loads The collection of subphase load data from ProcStats
    * \param[in] power The power to use in computing the norms
    */
-  Norm(const LoadMapType *loads, double power);
+  Norm(double power);
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
-  const LoadMapType loads_;
   const double power_;
 }; // class Norm
 

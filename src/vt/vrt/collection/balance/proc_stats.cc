@@ -103,22 +103,18 @@ bool ProcStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
   return true;
 }
 
-ProcStats::LoadMapType const&
-ProcStats::getProcLoad(PhaseType phase) const {
-  vtAssert(proc_data_.size() > phase, "Phase must exist in load data");
-  return proc_data_.at(phase);
+std::vector<LoadMapType> const*
+ProcStats::getProcLoad() const {
+  return &proc_data_;
 }
 
-ProcStats::SubphaseLoadMapType const&
-ProcStats::getProcSubphaseLoad(PhaseType phase) const {
-  vtAssert(proc_subphase_data_.size() > phase, "Phase must exist in load data");
-  return proc_subphase_data_.at(phase);
+std::vector<SubphaseLoadMapType> const*
+ProcStats::getProcSubphaseLoad() const {
+  return &proc_subphase_data_;
 }
 
-CommMapType const& ProcStats::getProcComm(PhaseType phase) const {
-  vtAssert(proc_comm_.size() > phase, "Phase must exist in comm data");
-  return proc_comm_.at(phase);
-
+std::vector<CommMapType> const* ProcStats::getProcComm() const {
+  return &proc_comm_;
 }
 
 void ProcStats::clearStats() {

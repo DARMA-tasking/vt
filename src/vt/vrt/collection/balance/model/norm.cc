@@ -48,18 +48,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-Norm::Norm(const LoadMapType *loads, double power)
-  : loads_(*loads), power_(power)
+Norm::Norm(double power)
+  : power_(power)
 {
-  if (!loads) vtAbort("Need loads");
-
   vtAssert(not std::isnan(power), "Power must have a real value");
   vtAssert(power >= 0.0, "Reciprocal loads make no sense");
 }
 
 TimeType Norm::getWork(ElementIDType object, PhaseOffset /*ignored*/)
 {
-  auto const& subphase_loads = loads_.at(object);
+  auto const& subphase_loads = proc_subphase_load_->back().at(object);
 
   if (std::isfinite(power_)) {
     double sum = 0.0;

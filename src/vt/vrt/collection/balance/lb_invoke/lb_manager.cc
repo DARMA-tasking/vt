@@ -123,6 +123,14 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   return the_lb;
 }
 
+void LBManager::setLoadModel(std::unique_ptr<LoadModel> model) {
+  model_ = std::move(model);
+  auto stats = theProcStats();
+  model_->setLoads(stats->getProcLoad(),
+		   stats->getProcSubphaseLoad(),
+		   stats->getProcComm());
+}
+
 template <typename LB>
 objgroup::proxy::Proxy<LB>
 LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
@@ -133,11 +141,12 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto phase = msg->getPhase();
 
   if (model_ == nullptr)
-    model_.reset(new balance::NaivePersistence(&theProcStats()->getProcLoad(phase), &theProcStats()->getProcComm(phase)));
+    setLoadModel(std::make_unique<balance::NaivePersistence>());
+  model_->updateLoads(phase);
 
   EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
   theMsg()->pushEpoch(balance_epoch);
-  strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
+  strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcLoad()->back(), theProcStats()->getProcComm()->back());
   theMsg()->popEpoch(balance_epoch);
   theTerm()->finishedEpoch(balance_epoch);
 

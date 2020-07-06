@@ -46,6 +46,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H
 
 #include "vt/config.h"
+#include "vt/timing/timing_type.h"
 
 #include <cstdlib>
 #include <unordered_map>
@@ -57,6 +58,8 @@ using ElementIDType = uint64_t;
 
 static constexpr ElementIDType const no_element_id = 0;
 
+using LoadMapType         = std::unordered_map<ElementIDType,TimeType>;
+using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
 } /* end namespace balance */
 
 namespace lb {

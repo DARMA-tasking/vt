@@ -64,7 +64,7 @@ void BaseLB::startLB(
   PhaseType phase,
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
-  balance::ProcStats::LoadMapType const& in_load_stats,
+  balance::LoadMapType const& in_load_stats,
   ElementCommType const& in_comm_stats
 ) {
   start_time_ = timing::Timing::getCurrentTime();
