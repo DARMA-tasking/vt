@@ -237,6 +237,10 @@ public:
    * \brief Set a model of expected object loads to use in place of
    * naive persistence
    *
+   * \param[in] model the model to apply
+   *
+   * This should be called with a similarly-constructed model instance
+   * on every node
    */
   void setLoadModel(std::unique_ptr<LoadModel> model);
 

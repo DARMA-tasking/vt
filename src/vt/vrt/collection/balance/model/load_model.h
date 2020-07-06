@@ -85,7 +85,9 @@ public:
    * For models that want to do pre-computation based on measured
    * loads before being asked to provide predictions from them
    *
-   * This would typically be called by LBManager
+   * This would typically be called by LBManager collectively inside
+   * an epoch that can be used for global communication in advance of
+   * any calls to getWork()
    */
   virtual void updateLoads(PhaseType last_completed_phase) { }
 
