@@ -102,9 +102,8 @@ void BaseLB::importProcessorData(
     "{}: importProcessorData: load stats size={}, load comm size={}\n",
     this_node, load_in.size(), comm_in.size()
   );
-  for (auto&& stat : load_in) {
-    auto const& obj = stat.first;
-    auto const& load = stat.second;
+  for (auto obj : *load_model_) {
+    auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     auto const& load_milli = loadMilli(load);
     auto const& bin = histogramSample(load_milli);
     this_load += load_milli;
@@ -356,8 +355,8 @@ void BaseLB::computeStatisticsOver(Statistic stat) {
   case Statistic::O_l: {
     // Perform the reduction for O_l -> object load only
     std::vector<balance::LoadData> lds;
-    for (auto&& elm : *load_data_) {
-      lds.emplace_back(load_model_->getWork(elm.first, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
+    for (auto elm : *load_model_) {
+      lds.emplace_back(load_model_->getWork(elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
     }
     auto msg = makeMessage<StatsMsgType>(Statistic::O_l, reduceVec(std::move(lds)));
     proxy_.template reduce<ReduceOp>(msg,cb);

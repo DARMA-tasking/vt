@@ -59,6 +59,18 @@ struct PhaseOffset {
   static constexpr unsigned int WHOLE_PHASE = 0;
 };
 
+class ObjectIterator {
+  using iterator_type = LoadMapType::const_iterator;
+  using value_type = LoadMapType::key_type;
+  iterator_type i;
+
+public:
+  ObjectIterator(iterator_type in) : i(in) { }
+  void operator++() { ++i; }
+  value_type operator*() { return i->first; }
+  bool operator!=(ObjectIterator rhs) { return i != rhs.i; }
+};
+
 class LoadModel
 {
 public:
@@ -100,6 +112,10 @@ public:
    * \return How much computation time the object is expected to require
    */
   virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
+
+  // Object enumeration, to abstract away access to the underlying structures from ProcStats
+  ObjectIterator begin() { return ObjectIterator(proc_load_->back().begin()); }
+  ObjectIterator end()   { return ObjectIterator(proc_load_->back().end()); }
 
 protected:
   // Observer pointers to the underlying data. In operation, these would be owned by ProcStats
