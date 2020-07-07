@@ -14,7 +14,7 @@
 #             clang-3.9, clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
 #             clang-9, clang-10,
 #             icc-18, icc-19,
-#             nvcc-10}
+#             nvcc-10, nvcc-11}
 #   REPO=lifflander1/vt
 #   UBUNTU={18.04, 20.04}
 #   ULIMIT_CORE=0
@@ -31,9 +31,24 @@
 #   BUILD_TYPE=release   # CMake build type
 #   CODE_COVERAGE=0      # Enable generation of code coverage reports
 #
-# Examples:
+# In order to run in the container, there are two stages. First, one must build
+# or pull the base container with the variables exported (or using the defaults
+# in `vt/.env` that configure it:
 #
-#  $ COMPILER=gcc-8 docker-compose build ubuntu-cpp
+# For instance, if you want an interactive intel build with icc-18 that enables
+# VT tracing, run the following commands:
+#
+# $ export COMPILER_TYPE=intel
+# $ export COMPILER=icc-18
+# $ export VT_TRACE=1
+# $ docker-compose pull ubuntu-cpp-interactive
+# $ docker-compose run ubuntu-cpp-interactive
+# # /vt/ci/build_cpp.sh /vt /build
+#
+# For a non-interactive build with gcc-8, since gnu is the default compiler
+# type, one may do the following:
+#
+#  $ COMPILER=gcc-8 docker-compose pull ubuntu-cpp
 #  $ COMPILER=gcc-8 docker-compose run ubuntu-cpp
 #
 
@@ -63,6 +78,7 @@ volumes:
   amd64-ubuntu-18.04-icc-19-cache:
   amd64-ubuntu-18.04-icc-20-cache:
   amd64-ubuntu-18.04-nvcc-10-cache:
+  amd64-ubuntu-18.04-nvcc-11-cache:
   amd64-alpine-clang-3.9-cache:
   amd64-alpine-clang-4.0-cache:
   amd64-alpine-clang-5.0-cache:
@@ -81,6 +97,7 @@ volumes:
   amd64-alpine-icc-19-cache:
   amd64-alpine-icc-20-cache:
   amd64-alpine-nvcc-10-cache:
+  amd64-alpine-nvcc-11-cache:
   arm64v8-ubuntu-18.04-gcc-7-cache:
   arm64v8-alpine-gcc-7-cache:
 
