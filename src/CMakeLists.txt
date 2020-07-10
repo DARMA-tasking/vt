@@ -268,6 +268,7 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif()
 
+include(../cmake/set_linker_flags.cmake)
 
 install(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
