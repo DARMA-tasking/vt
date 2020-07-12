@@ -5,6 +5,10 @@ set -ex
 source_dir=${1}
 build_dir=${2}
 
+# Dependency versions, when fetched via git.
+detector_rev=master
+checkpoint_rev=develop
+
 if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
 then
     token=${3}
@@ -32,7 +36,7 @@ if test -d "${source_dir}/lib/detector"
 then
     echo "Detector already in lib... not downloading, building, and installing"
 else
-    git clone -b master --depth 1 https://github.com/DARMA-tasking/detector.git
+    git clone -b "${detector_rev}" --depth 1 https://github.com/DARMA-tasking/detector.git
     export DETECTOR=$PWD/detector
     export DETECTOR_BUILD=${build_dir}/detector
     mkdir -p "$DETECTOR_BUILD"
@@ -49,7 +53,7 @@ if test -d "${source_dir}/lib/checkpoint"
 then
     echo "Checkpoint already in lib... not downloading, building, and installing"
 else
-    git clone -b develop --depth 1 https://github.com/DARMA-tasking/checkpoint.git
+    git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
     export CHECKPOINT=$PWD/checkpoint
     export CHECKPOINT_BUILD=${build_dir}/checkpoint
     mkdir -p "$CHECKPOINT_BUILD"
