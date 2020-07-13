@@ -186,7 +186,7 @@ private:
 template <typename T, typename CountT>
 struct HistogramApprox {
   using CountType = CountT;
-  using CentroidType = detail::Centroid<T, CountT>;
+  using CentroidType = detail::Centroid<T, CountType>;
 
   HistogramApprox() = default; // for serialization
 
@@ -394,7 +394,7 @@ struct HistogramApprox {
    *
    * \param[in] in_hist the histogram to merge in
    */
-  void mergeIn(HistogramApprox<T, CountT> const& in_hist) {
+  void mergeIn(HistogramApprox<T, CountType> const& in_hist) {
     auto const& in_cs = in_hist.getCentroids();
 
     // These are sorted, so just walk through and add them. There is probably
@@ -419,7 +419,7 @@ struct HistogramApprox {
    *
    * \param[in] n_buckets the number of buckets
    */
-  std::vector<CountT> computeFixedBuckets(int n_buckets) {
+  std::vector<CountType> computeFixedBuckets(int n_buckets) {
     auto const r = getMax() - getMin();
     auto const bucket_size = r / n_buckets;
 
@@ -431,7 +431,7 @@ struct HistogramApprox {
       buckets.push_back(n_vals);
     }
 
-    std::vector<CountT> segments;
+    std::vector<CountType> segments;
     segments.resize(n_buckets);
     for (auto i = n_buckets - 1; i >= 0; i--) {
       if (i == 0) {
@@ -543,7 +543,7 @@ private:
 
 private:
   CountType max_centroids_ = 0;              /**< Max centroids allowed */
-  CountT total_count_ = 0;                   /**< Total number of values added */
+  CountType total_count_ = 0;                /**< Total number of values added */
   T min_ = std::numeric_limits<T>::max();    /**< Smallest value added */
   T max_ = std::numeric_limits<T>::lowest(); /**< Largest value added */
   std::vector<CentroidType> cs_;             /**< Array of centroids */
