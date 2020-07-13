@@ -256,17 +256,8 @@ struct HistogramApprox {
       return;
     }
 
-    // find the best candidate for merging two centroids since we are over the
-    // space limit
-    auto min_idx = findMinimumCentroidPair();
-    // merge them
-    cs_[min_idx].merge(cs_[min_idx+1]);
-    // shift centroids in place
-    for (auto j = min_idx + 1; j < cs_.size() - 1; j++) {
-      cs_[j] = cs_[j+1];
-    }
-    // remove the last element, now dead
-    cs_.pop_back();
+    // remove a centroid by merging the optimal pick
+    removeOneCentroid();
   }
 
   /**
@@ -397,12 +388,26 @@ struct HistogramApprox {
   void mergeIn(HistogramApprox<T, CountType> const& in_hist) {
     auto const& in_cs = in_hist.getCentroids();
 
-    // These are sorted, so just walk through and add them. There is probably
-    // some optimization we can apply here since we know all of them, but for
-    // now just add them incrementally.
+    // Max/used centroids for the histogram
+    auto const cur_max_centroids = getMaxCentroids();
+    auto const cur_used_centroids = getNumCentroids();
+
+    // Number of centroids used for input histogram; worst case we will need
+    // this many to insert without any merges
+    auto in_num_centroids = in_hist.getNumCentroids();
+
+    // Resize to: this->max + in_hist.used
+    if (cur_max_centroids - cur_used_centroids < in_num_centroids) {
+      setMaxCentroids(cur_max_centroids + in_num_centroids);
+    }
+
+    // Add in all the centroids from the input histogram
     for (auto&& c : in_cs) {
       add(c.getValue(), c.getCount());
     }
+
+    // Pare the histogram down to the allowed size
+    pareToNewMaxCentroids(cur_max_centroids);
   }
 
   /**
@@ -496,7 +501,72 @@ struct HistogramApprox {
     s | cs_;
   }
 
+  /**
+   * \brief Get the max number of centroids
+   *
+   * \return the max centroids allowed
+   */
+  CountType getMaxCentroids() const {
+    return max_centroids_;
+  }
+
+  /**
+   * \brief Get the number of centroids that are actually used
+   *
+   * \return the number of centroids being used
+   */
+  CountType getNumCentroids() const {
+    return cs_.size();
+  }
+
 private:
+  /**
+   * \internal \brief Modify the max centroids allows
+   *
+   * In the implementation, this is used for increasing the max centroids
+   * temporarily during a merge with another histogram so optimal merges can be
+   * applied
+   *
+   * \param[in] in_max_centroids new max for centroids
+   */
+  void setMaxCentroids(CountType in_max_centroids) {
+    max_centroids_ = in_max_centroids;
+  }
+
+  /**
+   * \internal \brief Reduce the number of centroids to a new maximum
+   *
+   * \param[in] in_max_centroids the new max number of centroids
+   */
+  void pareToNewMaxCentroids(CountType in_max_centroids) {
+    // Keep removing the best centroid until we pare down to the new max
+    while (cs_.size() > in_max_centroids) {
+      removeOneCentroid();
+    }
+
+    // Finally, set the max
+    setMaxCentroids(in_max_centroids);
+  }
+
+  /**
+   * \internal \brief Reduce number of centroids by one centroid
+   *
+   * Merge the best candidate to reduce the number of centroids
+   */
+  void removeOneCentroid() {
+    // find the best candidate for merging two centroids since we are over the
+    // space limit
+    auto min_idx = findMinimumCentroidPair();
+    // merge them
+    cs_[min_idx].merge(cs_[min_idx+1]);
+    // shift centroids in place
+    for (auto j = min_idx + 1; j < cs_.size() - 1; j++) {
+      cs_[j] = cs_[j+1];
+    }
+    // remove the last element, now dead
+    cs_.pop_back();
+  }
+
   /**
    * \internal \brief Find the best candidate for merging two neighboring
    * centroids in the histogram
