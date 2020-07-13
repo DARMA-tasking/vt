@@ -153,7 +153,7 @@ TEST_F(TestHistogramApprox, test_histogram_sum_4) {
     auto e = exact.estimateNumValues(elm);
     auto rel_error = std::fabs((a - e)/e);
     fmt::print("elm={}: a={}, e={}: error={}\n", elm, a, e, rel_error);
-    EXPECT_LT(rel_error, 0.1);
+    EXPECT_LT(rel_error, 0.2);
   }
 }
 
@@ -215,7 +215,7 @@ TEST_F(TestHistogramApprox, test_histogram_quantile_6) {
     auto e = exact.quantile(elm);
     auto rel_error = std::fabs((a - e)/e);
     fmt::print("quantile: elm={}: a={}, e={}: error={}\n", elm, a, e, rel_error);
-    EXPECT_LT(rel_error, 0.1);
+    EXPECT_LT(rel_error, 0.2);
   }
 }
 
