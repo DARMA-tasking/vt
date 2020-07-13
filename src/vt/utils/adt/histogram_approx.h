@@ -249,17 +249,9 @@ struct HistogramApprox {
       }
     }
 
-    // append element at the end
-    cs_.resize(cs_.size() + 1);
-
-    // shift over to make room (maybe I should be using a linked list or
-    // \c std::map ?)
-    for (auto i = cs_.size() - 1; i > k; i--) {
-      cs_[i] = cs_[i-1];
-    }
-
-    // insert new centroid here
-    cs_[k] = CentroidType{value, num_times};
+    // insert an element right before current position
+    auto iter = cs_.begin() + k;
+    cs_.insert(iter, CentroidType{value, num_times});
 
     // add \c num_times to total count
     total_count_ += num_times;
