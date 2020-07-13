@@ -53,6 +53,9 @@ namespace vt { namespace rdma {
 namespace impl {
 
 struct HandleData {
+  // #949. NVCC shim: Ensure type is compatible with serialization.
+  using isByteCopyable = std::true_type;
+
   HandleData();
   HandleData(HandleKey in_key, std::size_t in_size, int in_count)
     : key_(in_key),
