@@ -233,8 +233,6 @@ TEST_F(TestHistogramApprox, test_histogram_merge_7) {
   h1.add(6.);
   h1.add(7.);
 
-  auto h1p = h1;
-
   vt::adt::HistogramApprox<double, int64_t> h2{8};
 
   std::array<double, 3> arr = { 7.6, 8.2, 7.7 };
