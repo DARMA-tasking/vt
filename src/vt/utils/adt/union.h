@@ -338,6 +338,35 @@ struct AllUnique<U, T> {
   static_assert(not std::is_same<U, T>::value, "Types must be unique");
 };
 
+///////////////////////////////////////////////////////////////////////////////
+/// Statically dispatch switch statement on typed functor
+
+template <typename T, typename... Ts>
+struct Switch {
+  template <template <typename> class Functor, typename... Args>
+  static auto apply(uint8_t which, Args&&... args) {
+    if (which == GetPlace<Ts...>::value) {
+      return Functor<T>()(std::forward<Args>(args)...);
+    } else {
+      return Switch<Ts...>::template apply<Functor, Args...>(
+        which, std::forward<Args>(args)...
+      );
+    }
+  }
+};
+
+template <typename T>
+struct Switch<T> {
+  template <template <typename> class Functor, typename... Args>
+  static auto apply(uint8_t which, Args&&... args) {
+    if (which == static_cast<uint8_t>(1)) {
+      return Functor<T>()(std::forward<Args>(args)...);
+    } else {
+      return Functor<void>()(std::forward<Args>(args)...);
+    }
+  }
+};
+
 } /* end namespace detail */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -594,6 +623,19 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
     if (this->which_ != 0) {
       detail::Serialize<T, Ts...>::apply(this->which_, this, s);
     }
+  }
+
+  /**
+   * \brief Apply a static template switch over the types in the union
+   * dynamically dispatched based on the current active type
+   *
+   * \param[in] args args to forward to functor
+   */
+  template <template <typename U> class Functor, typename... Args>
+  auto switchOn(Args&&... args) {
+    return detail::Switch<T, Ts...>::template apply<Functor, Args...>(
+      this->which_, std::forward<Args>(args)...
+    );
   }
 
 public:
