@@ -540,7 +540,7 @@ private:
    */
   void pareToNewMaxCentroids(CountType in_max_centroids) {
     // Keep removing the best centroid until we pare down to the new max
-    while (cs_.size() > in_max_centroids) {
+    while (cs_.size() > static_cast<std::size_t>(in_max_centroids)) {
       removeOneCentroid();
     }
 
