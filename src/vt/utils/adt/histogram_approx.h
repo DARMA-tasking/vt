@@ -236,19 +236,15 @@ struct HistogramApprox {
     // add \c num_times to total count
     total_count_ += num_times;
 
-    // @todo: Might be implemented more efficiently as a binary search---the
-    // underlying data is already sorted. Probably should invoke something like
-    // \c std::lower_bound to find a greater value and check for equality of the
-    // previous item.
-    std::size_t k = 0;
-    for ( ; k < cs_.size(); k++) {
-      if (cs_[k].getValue() == value) {
-        cs_[k].addCount(num_times);
-        return;
-      } else if (cs_[k].getValue() > value) {
-        // we found the insertion point
-        break;
-      }
+    // Find an index k such that value_k <= value < value_{k+1} using a binary
+    // search on the underlying centroids
+    auto it = std::lower_bound(cs_.begin(), cs_.end(), value);
+    std::size_t k = it - cs_.begin();
+
+    // If we found a valid value and it's exactly equal, we are done!
+    if (k < cs_.size() and cs_[k].getValue() == value) {
+      cs_[k].addCount(num_times);
+      return;
     }
 
     // insert an element right before current position
