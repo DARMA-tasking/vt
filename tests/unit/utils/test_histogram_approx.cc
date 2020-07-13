@@ -219,5 +219,46 @@ TEST_F(TestHistogramApprox, test_histogram_quantile_6) {
   }
 }
 
+TEST_F(TestHistogramApprox, test_histogram_merge_7) {
+  // Test that merging two histogram results in an optimal histogram by merging
+  // the closest centroids across both histograms
+
+  vt::adt::HistogramApprox<double, int64_t> h1{8};
+
+  h1.add(1.);
+  h1.add(2.);
+  h1.add(3.);
+  h1.add(4.);
+  h1.add(5.);
+  h1.add(6.);
+  h1.add(7.);
+
+  auto h1p = h1;
+
+  vt::adt::HistogramApprox<double, int64_t> h2{8};
+
+  std::array<double, 3> arr = { 7.6, 8.2, 7.7 };
+
+  for (auto&& elm : arr) {
+    h2.add(elm);
+  }
+
+  h1.mergeIn(h2);
+
+  auto centroids = h1.getCentroids();
+
+  // Must be 8 centroids if merge/max was applied correctly
+  EXPECT_EQ(centroids.size(), 8);
+
+  // We should have all the original centroids, except the last one, which
+  // should be a single combined centroids of the last three values if optimal
+  // centroids were created
+  for (int i = 0; i < 7; i++) {
+    EXPECT_EQ(centroids[i].getCount(), 1);
+  }
+
+  EXPECT_EQ(centroids[7].getCount(), 3);
+}
+
 
 }}} /* end namespace vt::tests::unit */
