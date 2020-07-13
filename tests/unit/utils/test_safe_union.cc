@@ -226,5 +226,75 @@ TEST_F(TestSafeUnion, test_safe_union_3) {
   EXPECT_EQ(destroy_counter, 5);
 }
 
+struct MyTest4 { };
+
+template <typename T>
+struct TestFunctor;
+
+template <>
+struct TestFunctor<float> {
+  int operator()(vt::adt::SafeUnion<float, int, MyTest4>& in) {
+    EXPECT_FALSE(in.template is<int>());
+    EXPECT_FALSE(in.template is<MyTest4>());
+
+    EXPECT_TRUE(in.template is<float>());
+    EXPECT_GT(in.template get<float>(), 29.3);
+    EXPECT_LT(in.template get<float>(), 29.5);
+    return 1;
+  }
+};
+
+
+template <>
+struct TestFunctor<int> {
+  int operator()(vt::adt::SafeUnion<float, int, MyTest4>& in) {
+    EXPECT_FALSE(in.template is<float>());
+    EXPECT_FALSE(in.template is<MyTest4>());
+
+    EXPECT_TRUE(in.template is<int>());
+    EXPECT_EQ(in.template get<int>(), 10);
+    return 2;
+  }
+};
+
+template <>
+struct TestFunctor<MyTest4> {
+  int operator()(vt::adt::SafeUnion<float, int, MyTest4>& in) {
+    // never should happen
+    EXPECT_FALSE(true);
+    return 3;
+  }
+};
+
+// this gets triggered when no type is selected
+template <>
+struct TestFunctor<void> {
+  int operator()(vt::adt::SafeUnion<float, int, MyTest4>& in) {
+    EXPECT_FALSE(in.template is<float>());
+    EXPECT_FALSE(in.template is<int>());
+    EXPECT_FALSE(in.template is<MyTest4>());
+    return 0;
+  }
+};
+
+
+TEST_F(TestSafeUnion, test_safe_union_switch_4) {
+
+  vt::adt::SafeUnion<float, int, MyTest4> x;
+
+  EXPECT_EQ(x.template switchOn<TestFunctor>(x), 0);
+
+  x.init<int>();
+  x.get<int>() = 10;
+
+  EXPECT_EQ(x.template switchOn<TestFunctor>(x), 2);
+
+  x.reset();
+
+  x.init<float>();
+  x.get<float>() = 29.4;
+
+  EXPECT_EQ(x.template switchOn<TestFunctor>(x), 1);
+}
 
 }}} /* end namespace vt::tests::unit */
