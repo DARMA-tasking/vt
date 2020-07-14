@@ -76,7 +76,7 @@ set_target_properties(gtest_main PROPERTIES FOLDER extern)
 
 include(GoogleTest)
 
-macro(add_unit_test sub_dir unit_test_file)
+function(add_unit_test sub_dir unit_test_file)
   GET_FILENAME_COMPONENT(
     UNIT_TEST
     ${unit_test_file}
@@ -145,7 +145,7 @@ macro(add_unit_test sub_dir unit_test_file)
       PASS_REGULAR_EXPRESSION "PASSED"
     )
   endforeach()
-endmacro()
+endfunction()
 
 #
 # Unit Tests
