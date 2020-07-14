@@ -253,8 +253,7 @@ struct HistogramApprox {
     }
 
     // insert an element right before current position
-    auto iter = cs_.begin() + k;
-    cs_.insert(iter, CentroidType{value, num_times});
+    cs_.insert(it, CentroidType{value, num_times});
 
     if (cs_.size() <= static_cast<std::size_t>(max_centroids_)) {
       // not at capacity, nothing to merge
