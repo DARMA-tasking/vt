@@ -46,107 +46,11 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_collectives_reduce.h"
 
 #include "vt/transport.h"
 
 namespace vt { namespace tests { namespace unit {
-
-using namespace vt;
-using namespace vt::collective;
-using namespace vt::tests::unit;
-
-enum struct ReduceOP : int {
-  Plus = 0,
-  Max  = 1,
-  Min  = 2
-};
-
-struct MyReduceMsg : ReduceMsg {
-  MyReduceMsg(int in_num)
-    : num(in_num)
-  {}
-
-  int num = 0;
-};
-
-struct SysMsg : ReduceTMsg<int> {
-  explicit SysMsg(int in_num)
-    : ReduceTMsg<int>(in_num)
-  {}
-};
-
-struct TestReduce : TestParallelHarness {
-  using TestMsg = TestStaticBytesShortMsg<4>;
-
-  static void reducePlus(MyReduceMsg* msg) {
-    debug_print(
-      reduce, node,
-      "cur={}: is_root={}, count={}, next={}, num={}\n",
-      print_ptr(msg), print_bool(msg->isRoot()), msg->getCount(),
-      print_ptr(msg->getNext<MyReduceMsg>()), msg->num
-    );
-
-    if (msg->isRoot()) {
-      debug_print(reduce, node, "final value={}\n", msg->num);
-      auto n = vt::theContext()->getNumNodes();
-      // check expected result
-      EXPECT_EQ(msg->num, n * (n - 1)/2);
-    } else {
-      auto fst_msg = msg;
-      auto cur_msg = msg->getNext<MyReduceMsg>();
-
-      while (cur_msg not_eq nullptr) {
-        debug_print(
-          reduce, node,
-          "while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
-          print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
-          cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()),
-          cur_msg->num
-        );
-
-        fst_msg->num += cur_msg->num;
-        cur_msg = cur_msg->getNext<MyReduceMsg>();
-      }
-    }
-  }
-};
-
-template <ReduceOP oper>
-struct Verify {
-
-  void operator()(SysMsg* msg) {
-    // print value
-    auto value = msg->getConstVal();
-    debug_print(reduce, node, "final value={}\n", value);
-
-    // check result
-    auto n = vt::theContext()->getNumNodes();
-
-    switch (oper) {
-      case ReduceOP::Plus: EXPECT_EQ(value, n * (n - 1)/2); break;
-      case ReduceOP::Min:  EXPECT_EQ(value, 0); break;
-      case ReduceOP::Max:  EXPECT_EQ(value, n - 1); break;
-      default: vtAbort("Failure: should not be reached"); break;
-    }
-  }
-  void operator()(ReduceVecMsg<bool>* msg) {
-    auto value = msg->getConstVal();
-
-    EXPECT_EQ(value.size(), static_cast<std::size_t>(2));
-    EXPECT_EQ(value[0], false);
-    EXPECT_EQ(value[1], true);
-  }
-
-  void operator()(ReduceVecMsg<int>* msg) {
-    auto value = msg->getConstVal();
-
-    auto n = vt::theContext()->getNumNodes();
-
-    for (std::size_t i = 0; i < value.size(); ++i) {
-      EXPECT_EQ(value[i], static_cast<int>(i * n));
-    }
-  }
-};
 
 TEST_F(TestReduce, test_reduce_op) {
   auto const my_node = theContext()->getNode();
@@ -155,67 +59,6 @@ TEST_F(TestReduce, test_reduce_op) {
   auto msg = makeMessage<MyReduceMsg>(my_node);
   debug_print(reduce, node, "msg->num={}\n", msg->num);
   theCollective()->global()->reduce<MyReduceMsg, reducePlus>(root, msg.get());
-}
-
-TEST_F(TestReduce, test_reduce_plus_default_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  auto msg = makeMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->global()->reduce<PlusOp<int>, Verify<ReduceOP::Plus>>(
-    root, msg.get()
-  );
-}
-
-TEST_F(TestReduce, test_reduce_max_default_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  auto msg = makeMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->global()->reduce<MaxOp<int>, Verify<ReduceOP::Max>>(
-    root, msg.get()
-  );
-}
-
-TEST_F(TestReduce, test_reduce_min_default_op) {
-  auto const my_node = theContext()->getNode();
-  auto const root = 0;
-
-  auto msg = makeMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
-  theCollective()->global()->reduce<MinOp<int>, Verify<ReduceOP::Min>>(
-    root, msg.get()
-  );
-}
-
-TEST_F(TestReduce, test_reduce_vec_bool_msg) {
-
-  std::vector<bool> vecOfBool;
-  vecOfBool.push_back(false);
-  vecOfBool.push_back(true);
-
-  auto const root = 0;
-  auto msg = makeMessage<ReduceVecMsg<bool>>(vecOfBool);
-  theCollective()->global()->reduce<
-    PlusOp<std::vector<bool>>, Verify<ReduceOP::Plus>
-  >(root, msg.get());
-}
-
-TEST_F(TestReduce, test_reduce_vec_int_msg) {
-
-  std::vector<int> vecOfInt;
-  vecOfInt.push_back(0);
-  vecOfInt.push_back(1);
-  vecOfInt.push_back(2);
-  vecOfInt.push_back(3);
-
-  auto const root = 0;
-  auto msg = makeMessage<ReduceVecMsg<int>>(vecOfInt);
-  theCollective()->global()->reduce<
-    PlusOp<std::vector<int>>, Verify<ReduceOP::Plus>
-  >(root, msg.get());
 }
 
 }}} // end namespace vt::tests::unit

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                  test_termination_action_callable.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,27 +42,67 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#include "test_termination_action_common.h"
 
-#include "test_parallel_harness.h"
-#include "test_collection_common.h"
-#include "data_message.h"
-#include "test_broadcast.h"
-
-#include "vt/transport.h"
-
-#include <cstdint>
+#if !defined INCLUDED_TERMINATION_ACTION_CALLABLE_H
+#define INCLUDED_TERMINATION_ACTION_CALLABLE_H
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+static bool finished[2] = {false, false};
+static int num = 0;
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
->;
+// no need for a parameterized fixture
+struct TestTermCallable : action::SimpleFixture {
 
-INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
-);
+  void verify(int cur) {
+    int const nxt = (cur + 1) % 2;
+    EXPECT_FALSE(finished[cur]);
+    EXPECT_TRUE(not finished[nxt] or num == 1);
+    finished[cur] = true;
+    num++;
+  }
+};
 
-}}} // end namespace vt::tests::unit
+TEST_F(TestTermCallable, test_add_action_unique) /*NOLINT*/{
+
+  finished[0] = finished[1] = false;
+  num = 0;
+
+  vt::theCollective()->barrier();
+
+  // create an epoch and a related termination flag
+  auto epoch = ::vt::theTerm()->makeEpochCollective();
+
+  // assign an arbitrary action to be triggered at
+  // the end of the epoch and toggle the previous flag.
+  ::vt::theTerm()->addActionEpoch(epoch, [=]{
+    debug_print(
+      term, node,
+      "current epoch:{:x} finished\n",
+      epoch
+    );
+    verify(0);
+  });
+
+  // assign a callable to be triggered after
+  // the action submitted for the given epoch.
+  ::vt::theTerm()->addActionUnique(epoch, [=]{
+    debug_print(
+      term, node,
+      "trigger callable for epoch:{:x}\n",
+      epoch
+    );
+    verify(1);
+  });
+
+  if (channel::node == channel::root) {
+    action::compute(epoch);
+  }
+
+  ::vt::theTerm()->finishedEpoch(epoch);
+}
+
+}}} // namespace vt::tests::unit::action
+
+#endif /*INCLUDED_TERMINATION_ACTION_CALLABLE_H*/
