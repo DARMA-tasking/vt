@@ -122,6 +122,11 @@ struct Centroid {
    * \param[in] in the other centroid to merge
    */
   void merge(Centroid<T, CountT> const& in) {
+    vtAssert(
+      in.count_ <= std::numeric_limits<CountT>::max() - count_,
+      "Histogram count will overflow as result of this merge"
+    );
+
     auto const new_count = count_ + in.count_;
     auto const new_value = ((value_*count_) + (in.value_*in.count_))/new_count;
     count_ = new_count;
