@@ -88,6 +88,7 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::vt_trace              = false;
 /*static*/ bool        ArgConfig::vt_trace_mpi          = false;
+/*static*/ bool        ArgConfig::vt_trace_pmpi         = false;
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
@@ -276,8 +277,10 @@ void addTraceArgs(CLI::App& app) {
    * Flags to control tracing output
    */
   auto trace     = "Enable tracing (must be compiled with trace_enabled)";
-  auto trace_mpi = "Enable tracing of MPI calls (must be compiled with "
-    "trace_enabled)";
+  auto trace_mpi = "Enable tracing of select internal MPI calls"
+    " (must be compiled with trace_enabled)";
+  auto trace_pmpi = "Enable tracing of external PMPI calls"
+    " (must be compiled with trace_enabled)";
   auto tfile     = "Name of trace files";
   auto tdir      = "Name of directory for trace files";
   auto tmod      = "Output trace file if (node % vt_stack_mod) == 0";
@@ -294,6 +297,7 @@ void addTraceArgs(CLI::App& app) {
   auto tirecv     = "Trace MPI_Irecv request polling";
   auto n  = app.add_flag("--vt_trace",              ArgConfig::vt_trace,           trace);
   auto nm = app.add_flag("--vt_trace_mpi",          ArgConfig::vt_trace_mpi,       trace_mpi);
+  auto no = app.add_flag("--vt_trace_pmpi",         ArgConfig::vt_trace_pmpi,      trace_pmpi);
   auto o  = app.add_option("--vt_trace_file",       ArgConfig::vt_trace_file,      tfile, "");
   auto p  = app.add_option("--vt_trace_dir",        ArgConfig::vt_trace_dir,       tdir,  "");
   auto q  = app.add_option("--vt_trace_mod",        ArgConfig::vt_trace_mod,       tmod,  1);
@@ -312,6 +316,7 @@ void addTraceArgs(CLI::App& app) {
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
+  no->group(traceGroup);
   o->group(traceGroup);
   p->group(traceGroup);
   q->group(traceGroup);

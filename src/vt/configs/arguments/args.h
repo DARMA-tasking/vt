@@ -95,6 +95,7 @@ public:
 
   static bool vt_trace;
   static bool vt_trace_mpi;
+  static bool vt_trace_pmpi;
   static bool vt_trace_sys_all;
   static bool vt_trace_sys_term;
   static bool vt_trace_sys_location;

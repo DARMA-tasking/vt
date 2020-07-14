@@ -454,7 +454,12 @@ void Runtime::printStartupBanner() {
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
     if (ArgType::vt_trace_mpi) {
-      auto f11 = fmt::format("Tracing MPI invocations");
+      auto f11 = fmt::format("Tracing MPI invocations (select internal calls)");
+      auto f12 = opt_on("--vt_trace_mpi", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_pmpi) {
+      auto f11 = fmt::format("Tracing PMPI invocations (external calls)");
       auto f12 = opt_on("--vt_trace_mpi", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
