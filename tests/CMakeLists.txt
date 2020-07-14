@@ -2,6 +2,13 @@
 #                              CMake for gtests                                #
 ################################################################################
 
+option(vt_build_extended_tests "Build the extended testing for VT" ON)
+
+if(vt_build_extended_tests)
+  message(STATUS "Building VT with extended testing")
+else()
+  message(STATUS "Building VT without extended testing")
+endif()
 
 set(PROJECT_TEST_UNIT_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 set(PROJECT_TEST_PERF_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/perf)
@@ -69,99 +76,124 @@ set_target_properties(gtest_main PROPERTIES FOLDER extern)
 
 include(GoogleTest)
 
+macro(add_unit_test sub_dir unit_test_file)
+  GET_FILENAME_COMPONENT(
+    UNIT_TEST
+    ${unit_test_file}
+    NAME_WE
+  )
+
+  GET_FILENAME_COMPONENT(
+    UNIT_TEST_FULL_EXTENSION
+    ${unit_test_file}
+    EXT
+  )
+
+  # Extended tests are designated with an particular extension: *.extended.cc
+  if(UNIT_TEST_FULL_EXTENSION STREQUAL ".extended.cc")
+    # message(
+    #   STATUS "found extended test >>>> ${UNIT_TEST_FULL_EXTENSION}"
+    # )
+
+    set(UNIT_TEST "${UNIT_TEST}_extended")
+
+    # Drop out if we are not supposed to build the extended testing
+    if (NOT vt_build_extended_tests)
+      return()
+    endif()
+  else()
+    set(UNIT_TEST "${UNIT_TEST}_basic")
+  endif()
+
+  # message(
+  #  STATUS "Building unit test >>>> dir=${sub_dir} test=${UNIT_TEST}, "
+  #  "path=${unit_test_file}"
+  # )
+
+  add_executable(
+    ${UNIT_TEST}
+    ${TEST_SOURCE_FILES}
+    ${TEST_HEADER_FILES}
+    ${PROJECT_TEST_UNIT_DIR}/${unit_test_file}
+  )
+
+  add_dependencies(unit_tests ${UNIT_TEST})
+
+  target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_TEST_UNIT_DIR})
+  target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_GTEST_INCLUDE_DIR})
+
+  link_target_with_vt(
+    TARGET ${UNIT_TEST}
+    DEFAULT_LINK_SET
+    LINK_GTEST ON
+  )
+
+  foreach(PROC ${PROC_TEST_LIST})
+    gtest_add_tests(
+      TARGET                 ${UNIT_TEST}
+      WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
+      TEST_SUFFIX            _proc_${PROC}
+      TEST_PREFIX            vt:
+      TEST_LIST              ${CUR_TEST_LIST}
+      EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS} ${MPI_NUMPROC_FLAG} ${PROC}
+    )
+
+    set_tests_properties(
+      ${${CUR_TEST_LIST}}
+      PROPERTIES TIMEOUT 60
+      FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
+      PASS_REGULAR_EXPRESSION "PASSED"
+    )
+  endforeach()
+endmacro()
+
 #
 # Unit Tests
 #
 
-  set(
-    TEST_HEADER_FILES
-    ${PROJECT_TEST_UNIT_DIR}/test_harness.h
+set(
+  TEST_HEADER_FILES
+  ${PROJECT_TEST_UNIT_DIR}/test_harness.h
+)
+
+set(
+  TEST_SOURCE_FILES
+  ${PROJECT_TEST_UNIT_DIR}/main.cc
+)
+
+foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
+  file(
+    GLOB
+    "${SUB_DIR}_UNIT_TEST_SOURCE_FILES"
+    RELATIVE
+    "${PROJECT_TEST_UNIT_DIR}"
+    "${PROJECT_TEST_UNIT_DIR}/${SUB_DIR}/*.cc"
   )
 
-  set(
-    TEST_SOURCE_FILES
-    ${PROJECT_TEST_UNIT_DIR}/main.cc
-  )
+  set(CUR_TEST_LIST "${SUB_DIR}_test_list")
 
-  foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
-    file(
-      GLOB
-      "${SUB_DIR}_UNIT_TEST_SOURCE_FILES"
-      RELATIVE
-      "${PROJECT_TEST_UNIT_DIR}"
-      "${PROJECT_TEST_UNIT_DIR}/${SUB_DIR}/*.cc"
-    )
-
-    set(CUR_TEST_LIST "${SUB_DIR}_test_list")
-
-    foreach (UNIT_TEST_FILE ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
-      # message(
-      #  STATUS "Building unit test >>>> dir=${SUB_DIR} test=${UNIT_TEST}, "
-      #  "path=${UNIT_TEST_FILE}"
-      # )
-
-      GET_FILENAME_COMPONENT(
-        UNIT_TEST
-        ${UNIT_TEST_FILE}
-        NAME_WE
-      )
-
-      add_executable(
-        ${UNIT_TEST}
-        ${TEST_SOURCE_FILES}
-        ${TEST_HEADER_FILES}
-        ${PROJECT_TEST_UNIT_DIR}/${UNIT_TEST_FILE}
-      )
-
-      add_dependencies(unit_tests ${UNIT_TEST})
-
-      target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_TEST_UNIT_DIR})
-      target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_GTEST_INCLUDE_DIR})
-
-      link_target_with_vt(
-        TARGET ${UNIT_TEST}
-        DEFAULT_LINK_SET
-        LINK_GTEST ON
-      )
-
-      foreach(PROC ${PROC_TEST_LIST})
-        gtest_add_tests(
-          TARGET                 ${UNIT_TEST}
-          WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
-          TEST_SUFFIX            _proc_${PROC}
-          TEST_PREFIX            vt:
-          TEST_LIST              ${CUR_TEST_LIST}
-          EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS} ${MPI_NUMPROC_FLAG} ${PROC}
-        )
-
-        set_tests_properties(
-          ${${CUR_TEST_LIST}}
-          PROPERTIES TIMEOUT 60
-          FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
-          PASS_REGULAR_EXPRESSION "PASSED"
-        )
-      endforeach()
-    endforeach()
-
+  foreach (unit_test_file ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
+    add_unit_test(${SUB_DIR} ${unit_test_file})
   endforeach()
+endforeach()
 
 #
 # Performance Tests
 #
 
-  foreach(PERF_TEST ${PROJECT_PERF_TESTS})
-    add_executable(${PERF_TEST} ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc)
-    add_dependencies(perf_tests ${PERF_TEST})
+foreach(PERF_TEST ${PROJECT_PERF_TESTS})
+  add_executable(${PERF_TEST} ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc)
+  add_dependencies(perf_tests ${PERF_TEST})
 
-    link_target_with_vt(
-      TARGET ${PERF_TEST}
-      DEFAULT_LINK_SET
-      LINK_GTEST ON
-    )
+  link_target_with_vt(
+    TARGET ${PERF_TEST}
+    DEFAULT_LINK_SET
+    LINK_GTEST ON
+  )
 
-    add_test_for_example_vt(
-      ${PERF_TEST}
-      ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
-      perf_tests
-    )
-  endforeach()
+  add_test_for_example_vt(
+    ${PERF_TEST}
+    ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
+    perf_tests
+  )
+endforeach()
