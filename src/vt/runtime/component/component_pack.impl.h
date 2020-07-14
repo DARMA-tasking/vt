@@ -91,11 +91,11 @@ registry::AutoHandlerType ComponentPack::registerComponent(
     [ref, this, tup = std::move(cons_tuple)]() mutable {
       auto ptr = tupleCons<T>(std::move(tup));
 
-      vt_debug_print(
-        runtime, node,
-        "ComponentPack: constructed component={}, pollable={}\n",
-        ptr->name(), ptr->pollable()
-      );
+      // vt_debug_print(
+      //   runtime, node,
+      //   "ComponentPack: constructed component={}, pollable={}\n",
+      //   ptr->name(), ptr->pollable()
+      // );
 
       // Set the reference for access outside
       if (ref != nullptr) {

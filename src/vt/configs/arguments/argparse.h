@@ -52,13 +52,6 @@ namespace vt { namespace arguments {
 
 struct ArgParse {
 
-  /// Parse the arguments into ArgConfig.
-  /// Re-assigns argc/argv to remove consumed arguments.
-  /// On success the tuple will be {-1, ""}. Otherwise the exit code
-  /// (which may be 0 if help was requested) will be returned along
-  /// with an appropriate display message.
-  static std::tuple<int, std::string> parse(int& argc, char**& argv);
-
 private:
   static bool parsed_;
 };

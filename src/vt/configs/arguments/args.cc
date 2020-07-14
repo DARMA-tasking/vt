@@ -61,13 +61,13 @@ namespace {
   std::vector<std::string> arg_trace_mpi;
 }
 
-void addColorArgs(CLI::App& app) {
+void ArgConfig::addColorArgs(CLI::App& app) {
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";
   auto never  = "Do not colorize output (overrides --vt_color)";
-  auto a  = app.add_flag("--vt_color",    theArgConfig()->vt_color,      always);
-  auto b  = app.add_flag("--vt_no_color", theArgConfig()->vt_no_color,   never);
-  auto a1 = app.add_flag("--vt_quiet",    theArgConfig()->vt_quiet,      quiet);
+  auto a  = app.add_flag("--vt_color",    vt_color,      always);
+  auto b  = app.add_flag("--vt_no_color", vt_no_color,   never);
+  auto a1 = app.add_flag("--vt_quiet",    vt_quiet,      quiet);
   auto outputGroup = "Output Control";
   a->group(outputGroup);
   b->group(outputGroup);
@@ -78,20 +78,20 @@ void addColorArgs(CLI::App& app) {
   // b->excludes(a);
 }
 
-void addSignalArgs(CLI::App& app) {
+void ArgConfig::addSignalArgs(CLI::App& app) {
   auto no_sigint      = "Do not register signal handler for SIGINT";
   auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
   auto no_terminate   = "Do not register handler for std::terminate";
-  auto d = app.add_flag("--vt_no_SIGINT",    theArgConfig()->vt_no_sigint,    no_sigint);
-  auto e = app.add_flag("--vt_no_SIGSEGV",   theArgConfig()->vt_no_sigsegv,   no_sigsegv);
-  auto f = app.add_flag("--vt_no_terminate", theArgConfig()->vt_no_terminate, no_terminate);
+  auto d = app.add_flag("--vt_no_SIGINT",    vt_no_sigint,    no_sigint);
+  auto e = app.add_flag("--vt_no_SIGSEGV",   vt_no_sigsegv,   no_sigsegv);
+  auto f = app.add_flag("--vt_no_terminate", vt_no_terminate, no_terminate);
   auto signalGroup = "Signal Handling";
   d->group(signalGroup);
   e->group(signalGroup);
   f->group(signalGroup);
 }
 
-void addMemUsageArgs(CLI::App& app) {
+void ArgConfig::addMemUsageArgs(CLI::App& app) {
   /*
    * Flags for controlling memory usage reporting
    */
@@ -102,13 +102,13 @@ void addMemUsageArgs(CLI::App& app) {
   auto mem_at_thresh = "Print memory usage from scheduler when reaches a threshold increment";
   auto mem_thresh    = "The threshold increments to print memory usage: \"<value> {GiB,MiB,KiB,B}\"";
   auto mem_sched     = "The frequency to query the memory threshold check (some memory reporters might be expensive)";
-  auto mm = app.add_option("--vt_memory_reporters",          theArgConfig()->vt_memory_reporters, mem_desc, true);
-  auto mn = app.add_flag("--vt_print_memory_each_phase",     theArgConfig()->vt_print_memory_each_phase, mem_phase);
-  auto mo = app.add_option("--vt_print_memory_node",         theArgConfig()->vt_print_memory_node, mem_node, true);
-  auto mp = app.add_flag("--vt_allow_memory_report_with_ps", theArgConfig()->vt_allow_memory_report_with_ps, mem_ps);
-  auto mq = app.add_flag("--vt_print_memory_at_threshold",   theArgConfig()->vt_print_memory_at_threshold, mem_at_thresh);
-  auto mr = app.add_option("--vt_print_memory_threshold",    theArgConfig()->vt_print_memory_threshold, mem_thresh, true);
-  auto ms = app.add_option("--vt_print_memory_sched_poll",   theArgConfig()->vt_print_memory_sched_poll, mem_sched, true);
+  auto mm = app.add_option("--vt_memory_reporters",          vt_memory_reporters, mem_desc, true);
+  auto mn = app.add_flag("--vt_print_memory_each_phase",     vt_print_memory_each_phase, mem_phase);
+  auto mo = app.add_option("--vt_print_memory_node",         vt_print_memory_node, mem_node, true);
+  auto mp = app.add_flag("--vt_allow_memory_report_with_ps", vt_allow_memory_report_with_ps, mem_ps);
+  auto mq = app.add_flag("--vt_print_memory_at_threshold",   vt_print_memory_at_threshold, mem_at_thresh);
+  auto mr = app.add_option("--vt_print_memory_threshold",    vt_print_memory_threshold, mem_thresh, true);
+  auto ms = app.add_option("--vt_print_memory_sched_poll",   vt_print_memory_sched_poll, mem_sched, true);
   auto memoryGroup = "Memory Usage Reporting";
   mm->group(memoryGroup);
   mn->group(memoryGroup);
@@ -120,7 +120,7 @@ void addMemUsageArgs(CLI::App& app) {
 }
 
 
-void addStackDumpArgs(CLI::App& app) {
+void ArgConfig::addStackDumpArgs(CLI::App& app) {
   /*
    * Flags to control stack dumping
    */
@@ -131,13 +131,13 @@ void addStackDumpArgs(CLI::App& app) {
   auto file   = "Dump stack traces to file instead of stdout";
   auto dir    = "Name of directory to write stack files";
   auto mod    = "Write stack dump if (node % vt_stack_mod) == 0";
-  auto g = app.add_flag("--vt_no_warn_stack",   theArgConfig()->vt_no_warn_stack,   warn);
-  auto h = app.add_flag("--vt_no_assert_stack", theArgConfig()->vt_no_assert_stack, assert);
-  auto i = app.add_flag("--vt_no_abort_stack",  theArgConfig()->vt_no_abort_stack,  abort);
-  auto j = app.add_flag("--vt_no_stack",        theArgConfig()->vt_no_stack,        stack);
-  auto k = app.add_option("--vt_stack_file",    theArgConfig()->vt_stack_file,      file, "");
-  auto l = app.add_option("--vt_stack_dir",     theArgConfig()->vt_stack_dir,       dir,  "");
-  auto m = app.add_option("--vt_stack_mod",     theArgConfig()->vt_stack_mod,       mod,  1);
+  auto g = app.add_flag("--vt_no_warn_stack",   vt_no_warn_stack,   warn);
+  auto h = app.add_flag("--vt_no_assert_stack", vt_no_assert_stack, assert);
+  auto i = app.add_flag("--vt_no_abort_stack",  vt_no_abort_stack,  abort);
+  auto j = app.add_flag("--vt_no_stack",        vt_no_stack,        stack);
+  auto k = app.add_option("--vt_stack_file",    vt_stack_file,      file, "");
+  auto l = app.add_option("--vt_stack_dir",     vt_stack_dir,       dir,  "");
+  auto m = app.add_option("--vt_stack_mod",     vt_stack_mod,       mod,  1);
   auto stackGroup = "Dump Stack Backtrace";
   g->group(stackGroup);
   h->group(stackGroup);
@@ -148,7 +148,7 @@ void addStackDumpArgs(CLI::App& app) {
   m->group(stackGroup);
 }
 
-void addTraceArgs(CLI::App& app) {
+void ArgConfig::addTraceArgs(CLI::App& app) {
   /*
    * Flags to control tracing output
    */
@@ -169,24 +169,24 @@ void addTraceArgs(CLI::App& app) {
   auto tmemusage = "Trace memory usage using first memory reporter";
   auto tpolled   = "Trace AsyncEvent component polling (inc. MPI_Isend requests)";
   auto tirecv     = "Trace MPI_Irecv request polling";
-  auto n  = app.add_flag("--vt_trace",              theArgConfig()->vt_trace,           trace);
+  auto n  = app.add_flag("--vt_trace",              vt_trace,           trace);
   auto nm = app.add_option("--vt_trace_mpi",        arg_trace_mpi,                 trace_mpi)
     ->check(CLI::IsMember({"internal", "external"}));
-  auto o  = app.add_option("--vt_trace_file",       theArgConfig()->vt_trace_file,      tfile, "");
-  auto p  = app.add_option("--vt_trace_dir",        theArgConfig()->vt_trace_dir,       tdir,  "");
-  auto q  = app.add_option("--vt_trace_mod",        theArgConfig()->vt_trace_mod,       tmod,  1);
-  auto qf = app.add_option("--vt_trace_flush_size", theArgConfig()->vt_trace_flush_size,tflushmod,
+  auto o  = app.add_option("--vt_trace_file",       vt_trace_file,      tfile, "");
+  auto p  = app.add_option("--vt_trace_dir",        vt_trace_dir,       tdir,  "");
+  auto q  = app.add_option("--vt_trace_mod",        vt_trace_mod,       tmod,  1);
+  auto qf = app.add_option("--vt_trace_flush_size", vt_trace_flush_size,tflushmod,
     0);
-  auto qt = app.add_flag("--vt_trace_sys_all",        theArgConfig()->vt_trace_sys_all,        tsysall);
-  auto qw = app.add_flag("--vt_trace_sys_term",       theArgConfig()->vt_trace_sys_term,       tsysTD);
-  auto qx = app.add_flag("--vt_trace_sys_location",   theArgConfig()->vt_trace_sys_location,   tsysloc);
-  auto qy = app.add_flag("--vt_trace_sys_collection", theArgConfig()->vt_trace_sys_collection, tsyscoll);
-  auto qz = app.add_flag("--vt_trace_sys_serial_msg", theArgConfig()->vt_trace_sys_serial_msg, tsyssmsg);
-  auto qza = app.add_flag("--vt_trace_spec",          theArgConfig()->vt_trace_spec,           tspec);
-  auto qzb = app.add_option("--vt_trace_spec_file",   theArgConfig()->vt_trace_spec_file,      tspecfile, "");
-  auto qzc = app.add_flag("--vt_trace_memory_usage",  theArgConfig()->vt_trace_memory_usage,   tmemusage);
-  auto qzd = app.add_flag("--vt_trace_event_polling", theArgConfig()->vt_trace_event_polling,  tpolled);
-  auto qze = app.add_flag("--vt_trace_irecv_polling", theArgConfig()->vt_trace_irecv_polling,  tirecv);
+  auto qt = app.add_flag("--vt_trace_sys_all",        vt_trace_sys_all,        tsysall);
+  auto qw = app.add_flag("--vt_trace_sys_term",       vt_trace_sys_term,       tsysTD);
+  auto qx = app.add_flag("--vt_trace_sys_location",   vt_trace_sys_location,   tsysloc);
+  auto qy = app.add_flag("--vt_trace_sys_collection", vt_trace_sys_collection, tsyscoll);
+  auto qz = app.add_flag("--vt_trace_sys_serial_msg", vt_trace_sys_serial_msg, tsyssmsg);
+  auto qza = app.add_flag("--vt_trace_spec",          vt_trace_spec,           tspec);
+  auto qzb = app.add_option("--vt_trace_spec_file",   vt_trace_spec_file,      tspecfile, "");
+  auto qzc = app.add_flag("--vt_trace_memory_usage",  vt_trace_memory_usage,   tmemusage);
+  auto qzd = app.add_flag("--vt_trace_event_polling", vt_trace_event_polling,  tpolled);
+  auto qze = app.add_flag("--vt_trace_irecv_polling", vt_trace_irecv_polling,  tirecv);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
@@ -206,7 +206,7 @@ void addTraceArgs(CLI::App& app) {
   qze->group(traceGroup);
 }
 
-void addDebugPrintArgs(CLI::App& app) {
+void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   #define debug_pp(opt) +std::string(vt::config::PrettyPrintCat<config::opt>::str)+
 
   auto rp  = "Enable all debug prints";
@@ -243,39 +243,39 @@ void addDebugPrintArgs(CLI::App& app) {
   auto cbp = "Enable debug_broadcast    = \"" debug_pp(broadcast)    "\"";
   auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
 
-  auto r  = app.add_flag("--vt_debug_all",          theArgConfig()->vt_debug_all,          rp);
-  auto r1 = app.add_flag("--vt_debug_verbose",      theArgConfig()->vt_debug_verbose,      rq);
-  auto aa = app.add_flag("--vt_debug_none",         theArgConfig()->vt_debug_none,         aap);
-  auto ba = app.add_flag("--vt_debug_gen",          theArgConfig()->vt_debug_gen,          bap);
-  auto ca = app.add_flag("--vt_debug_runtime",      theArgConfig()->vt_debug_runtime,      cap);
-  auto da = app.add_flag("--vt_debug_active",       theArgConfig()->vt_debug_active,       dap);
-  auto ea = app.add_flag("--vt_debug_term",         theArgConfig()->vt_debug_term,         eap);
-  auto fa = app.add_flag("--vt_debug_termds",       theArgConfig()->vt_debug_termds,       fap);
-  auto ga = app.add_flag("--vt_debug_barrier",      theArgConfig()->vt_debug_barrier,      gap);
-  auto ha = app.add_flag("--vt_debug_event",        theArgConfig()->vt_debug_event,        hap);
-  auto ia = app.add_flag("--vt_debug_pipe",         theArgConfig()->vt_debug_pipe,         iap);
-  auto ja = app.add_flag("--vt_debug_pool",         theArgConfig()->vt_debug_pool,         jap);
-  auto ka = app.add_flag("--vt_debug_reduce",       theArgConfig()->vt_debug_reduce,       kap);
-  auto la = app.add_flag("--vt_debug_rdma",         theArgConfig()->vt_debug_rdma,         lap);
-  auto ma = app.add_flag("--vt_debug_rdma_channel", theArgConfig()->vt_debug_rdma_channel, map);
-  auto na = app.add_flag("--vt_debug_rdma_state",   theArgConfig()->vt_debug_rdma_state,   nap);
-  auto oa = app.add_flag("--vt_debug_param",        theArgConfig()->vt_debug_param,        oap);
-  auto pa = app.add_flag("--vt_debug_handler",      theArgConfig()->vt_debug_handler,      pap);
-  auto qa = app.add_flag("--vt_debug_hierlb",       theArgConfig()->vt_debug_hierlb,       qap);
-  auto qb = app.add_flag("--vt_debug_gossiplb",     theArgConfig()->vt_debug_gossiplb,     qbp);
-  auto ra = app.add_flag("--vt_debug_scatter",      theArgConfig()->vt_debug_scatter,      rap);
-  auto sa = app.add_flag("--vt_debug_sequence",     theArgConfig()->vt_debug_sequence,     sap);
-  auto ta = app.add_flag("--vt_debug_sequence_vrt", theArgConfig()->vt_debug_sequence_vrt, tap);
-  auto ua = app.add_flag("--vt_debug_serial_msg",   theArgConfig()->vt_debug_serial_msg,   uap);
-  auto va = app.add_flag("--vt_debug_trace",        theArgConfig()->vt_debug_trace,        vap);
-  auto wa = app.add_flag("--vt_debug_location",     theArgConfig()->vt_debug_location,     wap);
-  auto xa = app.add_flag("--vt_debug_lb",           theArgConfig()->vt_debug_lb,           xap);
-  auto ya = app.add_flag("--vt_debug_vrt",          theArgConfig()->vt_debug_vrt,          yap);
-  auto za = app.add_flag("--vt_debug_vrt_coll",     theArgConfig()->vt_debug_vrt_coll,     zap);
-  auto ab = app.add_flag("--vt_debug_worker",       theArgConfig()->vt_debug_worker,       abp);
-  auto bb = app.add_flag("--vt_debug_group",        theArgConfig()->vt_debug_group,        bbp);
-  auto cb = app.add_flag("--vt_debug_broadcast",    theArgConfig()->vt_debug_broadcast,    cbp);
-  auto db = app.add_flag("--vt_debug_objgroup",     theArgConfig()->vt_debug_objgroup,     dbp);
+  auto r  = app.add_flag("--vt_debug_all",          vt_debug_all,          rp);
+  auto r1 = app.add_flag("--vt_debug_verbose",      vt_debug_verbose,      rq);
+  auto aa = app.add_flag("--vt_debug_none",         vt_debug_none,         aap);
+  auto ba = app.add_flag("--vt_debug_gen",          vt_debug_gen,          bap);
+  auto ca = app.add_flag("--vt_debug_runtime",      vt_debug_runtime,      cap);
+  auto da = app.add_flag("--vt_debug_active",       vt_debug_active,       dap);
+  auto ea = app.add_flag("--vt_debug_term",         vt_debug_term,         eap);
+  auto fa = app.add_flag("--vt_debug_termds",       vt_debug_termds,       fap);
+  auto ga = app.add_flag("--vt_debug_barrier",      vt_debug_barrier,      gap);
+  auto ha = app.add_flag("--vt_debug_event",        vt_debug_event,        hap);
+  auto ia = app.add_flag("--vt_debug_pipe",         vt_debug_pipe,         iap);
+  auto ja = app.add_flag("--vt_debug_pool",         vt_debug_pool,         jap);
+  auto ka = app.add_flag("--vt_debug_reduce",       vt_debug_reduce,       kap);
+  auto la = app.add_flag("--vt_debug_rdma",         vt_debug_rdma,         lap);
+  auto ma = app.add_flag("--vt_debug_rdma_channel", vt_debug_rdma_channel, map);
+  auto na = app.add_flag("--vt_debug_rdma_state",   vt_debug_rdma_state,   nap);
+  auto oa = app.add_flag("--vt_debug_param",        vt_debug_param,        oap);
+  auto pa = app.add_flag("--vt_debug_handler",      vt_debug_handler,      pap);
+  auto qa = app.add_flag("--vt_debug_hierlb",       vt_debug_hierlb,       qap);
+  auto qb = app.add_flag("--vt_debug_gossiplb",     vt_debug_gossiplb,     qbp);
+  auto ra = app.add_flag("--vt_debug_scatter",      vt_debug_scatter,      rap);
+  auto sa = app.add_flag("--vt_debug_sequence",     vt_debug_sequence,     sap);
+  auto ta = app.add_flag("--vt_debug_sequence_vrt", vt_debug_sequence_vrt, tap);
+  auto ua = app.add_flag("--vt_debug_serial_msg",   vt_debug_serial_msg,   uap);
+  auto va = app.add_flag("--vt_debug_trace",        vt_debug_trace,        vap);
+  auto wa = app.add_flag("--vt_debug_location",     vt_debug_location,     wap);
+  auto xa = app.add_flag("--vt_debug_lb",           vt_debug_lb,           xap);
+  auto ya = app.add_flag("--vt_debug_vrt",          vt_debug_vrt,          yap);
+  auto za = app.add_flag("--vt_debug_vrt_coll",     vt_debug_vrt_coll,     zap);
+  auto ab = app.add_flag("--vt_debug_worker",       vt_debug_worker,       abp);
+  auto bb = app.add_flag("--vt_debug_group",        vt_debug_group,        bbp);
+  auto cb = app.add_flag("--vt_debug_broadcast",    vt_debug_broadcast,    cbp);
+  auto db = app.add_flag("--vt_debug_objgroup",     vt_debug_objgroup,     dbp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
   r1->group(debugGroup);
@@ -312,11 +312,11 @@ void addDebugPrintArgs(CLI::App& app) {
   db->group(debugGroup);
 
   auto dbq = "Always flush VT runtime prints";
-  auto eb  = app.add_flag("--vt_debug_print_flush", theArgConfig()->vt_debug_print_flush, dbq);
+  auto eb  = app.add_flag("--vt_debug_print_flush", vt_debug_print_flush, dbq);
   eb->group(debugGroup);
 }
 
-void addLbArgs(CLI::App& app) {
+void ArgConfig::addLbArgs(CLI::App& app) {
   /*
    * Flags for enabling load balancing and configuring it
    */
@@ -338,18 +338,18 @@ void addLbArgs(CLI::App& app) {
   auto lbd = "vt_lb_stats";
   auto lbs = "stats";
   auto lba = "";
-  auto s  = app.add_flag("--vt_lb",              theArgConfig()->vt_lb,             lb);
-  auto t  = app.add_flag("--vt_lb_file",         theArgConfig()->vt_lb_file,        lb_file);
-  auto t1 = app.add_flag("--vt_lb_quiet",        theArgConfig()->vt_lb_quiet,       lb_quiet);
-  auto u  = app.add_option("--vt_lb_file_name",  theArgConfig()->vt_lb_file_name,   lb_file_name, lbf);
-  auto v  = app.add_option("--vt_lb_name",       theArgConfig()->vt_lb_name,        lb_name,      lbn);
-  auto v1 = app.add_option("--vt_lb_args",       theArgConfig()->vt_lb_args,        lb_args,      lba);
-  auto w  = app.add_option("--vt_lb_interval",   theArgConfig()->vt_lb_interval,    lb_interval,  lbi);
-  auto ww = app.add_flag("--vt_lb_stats",        theArgConfig()->vt_lb_stats,       lb_stats);
-  auto wx = app.add_option("--vt_lb_stats_dir",  theArgConfig()->vt_lb_stats_dir,   lb_stats_dir, lbd);
-  auto wy = app.add_option("--vt_lb_stats_file", theArgConfig()->vt_lb_stats_file,  lb_stats_file,lbs);
-  auto xx = app.add_option("--vt_lb_stats_dir_in",  theArgConfig()->vt_lb_stats_dir_in,  lb_stats_dir_in, lbd);
-  auto xy = app.add_option("--vt_lb_stats_file_in", theArgConfig()->vt_lb_stats_file_in, lb_stats_file_in,lbs);
+  auto s  = app.add_flag("--vt_lb",              vt_lb,             lb);
+  auto t  = app.add_flag("--vt_lb_file",         vt_lb_file,        lb_file);
+  auto t1 = app.add_flag("--vt_lb_quiet",        vt_lb_quiet,       lb_quiet);
+  auto u  = app.add_option("--vt_lb_file_name",  vt_lb_file_name,   lb_file_name, lbf);
+  auto v  = app.add_option("--vt_lb_name",       vt_lb_name,        lb_name,      lbn);
+  auto v1 = app.add_option("--vt_lb_args",       vt_lb_args,        lb_args,      lba);
+  auto w  = app.add_option("--vt_lb_interval",   vt_lb_interval,    lb_interval,  lbi);
+  auto ww = app.add_flag("--vt_lb_stats",        vt_lb_stats,       lb_stats);
+  auto wx = app.add_option("--vt_lb_stats_dir",  vt_lb_stats_dir,   lb_stats_dir, lbd);
+  auto wy = app.add_option("--vt_lb_stats_file", vt_lb_stats_file,  lb_stats_file,lbs);
+  auto xx = app.add_option("--vt_lb_stats_dir_in",  vt_lb_stats_dir_in,  lb_stats_dir_in, lbd);
+  auto xy = app.add_option("--vt_lb_stats_file_in", vt_lb_stats_file_in, lb_stats_file_in,lbs);
 
   auto debugLB = "Load Balancing";
   s->group(debugLB);
@@ -366,7 +366,7 @@ void addLbArgs(CLI::App& app) {
   xy->group(debugLB);
 }
 
-void addTerminationArgs(CLI::App& app) {
+void ArgConfig::addTerminationArgs(CLI::App& app) {
   auto hang         = "Disable termination hang detection";
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
@@ -375,13 +375,13 @@ void addTerminationArgs(CLI::App& app) {
   auto terse        = "Output epoch graph to file in terse mode";
   auto progress     = "Print termination counts when progress is stalled";
   auto hfd          = 1024;
-  auto x  = app.add_flag("--vt_no_detect_hang",        theArgConfig()->vt_no_detect_hang,       hang);
-  auto x1 = app.add_flag("--vt_term_rooted_use_ds",    theArgConfig()->vt_term_rooted_use_ds,   ds);
-  auto x2 = app.add_flag("--vt_term_rooted_use_wave",  theArgConfig()->vt_term_rooted_use_wave, wave);
-  auto x3 = app.add_option("--vt_epoch_graph_on_hang", theArgConfig()->vt_epoch_graph_on_hang,  graph_on, true);
-  auto x4 = app.add_flag("--vt_epoch_graph_terse",     theArgConfig()->vt_epoch_graph_terse,    terse);
-  auto x5 = app.add_option("--vt_print_no_progress",   theArgConfig()->vt_print_no_progress,    progress, true);
-  auto y = app.add_option("--vt_hang_freq",            theArgConfig()->vt_hang_freq,      hang_freq, hfd);
+  auto x  = app.add_flag("--vt_no_detect_hang",        vt_no_detect_hang,       hang);
+  auto x1 = app.add_flag("--vt_term_rooted_use_ds",    vt_term_rooted_use_ds,   ds);
+  auto x2 = app.add_flag("--vt_term_rooted_use_wave",  vt_term_rooted_use_wave, wave);
+  auto x3 = app.add_option("--vt_epoch_graph_on_hang", vt_epoch_graph_on_hang,  graph_on, true);
+  auto x4 = app.add_flag("--vt_epoch_graph_terse",     vt_epoch_graph_terse,    terse);
+  auto x5 = app.add_option("--vt_print_no_progress",   vt_print_no_progress,    progress, true);
+  auto y = app.add_option("--vt_hang_freq",            vt_hang_freq,      hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
   x1->group(debugTerm);
@@ -392,14 +392,14 @@ void addTerminationArgs(CLI::App& app) {
   y->group(debugTerm);
 }
 
-void addDebuggerArgs(CLI::App& app) {
+void ArgConfig::addDebuggerArgs(CLI::App& app) {
   auto pause        = "Pause at startup so GDB/LLDB can be attached";
-  auto z = app.add_flag("--vt_pause", theArgConfig()->vt_pause, pause);
+  auto z = app.add_flag("--vt_pause", vt_pause, pause);
   auto launchTerm = "Debugging/Launch";
   z->group(launchTerm);
 }
 
-void addUserArgs(CLI::App& app) {
+void ArgConfig::addUserArgs(CLI::App& app) {
   auto user1    = "User Option 1a (boolean)";
   auto user2    = "User Option 2a (boolean)";
   auto user3    = "User Option 3a (boolean)";
@@ -409,15 +409,15 @@ void addUserArgs(CLI::App& app) {
   auto userstr1 = "User Option 1c (std::string)";
   auto userstr2 = "User Option 2c (std::string)";
   auto userstr3 = "User Option 3c (std::string)";
-  auto u1  = app.add_flag("--vt_user_1",       theArgConfig()->vt_user_1, user1);
-  auto u2  = app.add_flag("--vt_user_2",       theArgConfig()->vt_user_2, user2);
-  auto u3  = app.add_flag("--vt_user_3",       theArgConfig()->vt_user_3, user3);
-  auto ui1 = app.add_option("--vt_user_int_1", theArgConfig()->vt_user_int_1, userint1, 0);
-  auto ui2 = app.add_option("--vt_user_int_2", theArgConfig()->vt_user_int_2, userint2, 0);
-  auto ui3 = app.add_option("--vt_user_int_3", theArgConfig()->vt_user_int_3, userint3, 0);
-  auto us1 = app.add_option("--vt_user_str_1", theArgConfig()->vt_user_str_1, userstr1, "");
-  auto us2 = app.add_option("--vt_user_str_2", theArgConfig()->vt_user_str_2, userstr2, "");
-  auto us3 = app.add_option("--vt_user_str_3", theArgConfig()->vt_user_str_3, userstr3, "");
+  auto u1  = app.add_flag("--vt_user_1",       vt_user_1, user1);
+  auto u2  = app.add_flag("--vt_user_2",       vt_user_2, user2);
+  auto u3  = app.add_flag("--vt_user_3",       vt_user_3, user3);
+  auto ui1 = app.add_option("--vt_user_int_1", vt_user_int_1, userint1, 0);
+  auto ui2 = app.add_option("--vt_user_int_2", vt_user_int_2, userint2, 0);
+  auto ui3 = app.add_option("--vt_user_int_3", vt_user_int_3, userint3, 0);
+  auto us1 = app.add_option("--vt_user_str_1", vt_user_str_1, userstr1, "");
+  auto us2 = app.add_option("--vt_user_str_2", vt_user_str_2, userstr2, "");
+  auto us3 = app.add_option("--vt_user_str_3", vt_user_str_3, userstr3, "");
   auto userOpts = "User Options";
   u1->group(userOpts);
   u2->group(userOpts);
@@ -430,25 +430,25 @@ void addUserArgs(CLI::App& app) {
   us3->group(userOpts);
 }
 
-void addSchedulerArgs(CLI::App& app) {
+void ArgConfig::addSchedulerArgs(CLI::App& app) {
   auto nsched = "Number of times to run the progress function in scheduler";
   auto ksched = "Run the MPI progress function at least every k handlers that run";
   auto ssched = "Run the MPI progress function at least every s seconds";
-  auto sca = app.add_option("--vt_sched_num_progress", theArgConfig()->vt_sched_num_progress, nsched, 2);
-  auto hca = app.add_option("--vt_sched_progress_han", theArgConfig()->vt_sched_progress_han, ksched, 0);
-  auto kca = app.add_option("--vt_sched_progress_sec", theArgConfig()->vt_sched_progress_sec, ssched, 0.0);
+  auto sca = app.add_option("--vt_sched_num_progress", vt_sched_num_progress, nsched, 2);
+  auto hca = app.add_option("--vt_sched_progress_han", vt_sched_progress_han, ksched, 0);
+  auto kca = app.add_option("--vt_sched_progress_sec", vt_sched_progress_sec, ssched, 0.0);
   auto schedulerGroup = "Scheduler Configuration";
   sca->group(schedulerGroup);
   hca->group(schedulerGroup);
   kca->group(schedulerGroup);
 }
 
-void addConfigFileArgs(CLI::App& app) {
+void ArgConfig::addConfigFileArgs(CLI::App& app) {
   auto doconfig   = "Output all VT args to configuration file";
   auto configname = "Name of configuration file to output";
 
-  auto a1 = app.add_flag("--vt_output_config",        theArgConfig()->vt_output_config, doconfig);
-  auto a2 = app.add_option("--vt_output_config_file", theArgConfig()->vt_output_config_file, configname, true);
+  auto a1 = app.add_flag("--vt_output_config",        vt_output_config, doconfig);
+  auto a2 = app.add_option("--vt_output_config_file", vt_output_config_file, configname, true);
 
   auto configGroup = "Configuration File";
   a1->group(configGroup);
@@ -483,11 +483,9 @@ public:
   }
 };
 
-std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
-
 /*static*/ bool ArgParse::parsed_;
 
-/*static*/ std::tuple<int, std::string> ArgParse::parse(int& argc, char**& argv) {
+std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
   if (parsed_ || argc == 0 || argv == nullptr) {
     // Odd case.. pretend nothing bad happened.
     return std::make_tuple(-1, std::string{});
@@ -519,12 +517,12 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   }
 
   // Determine the final colorization setting.
-  if (theArgConfig()->vt_no_color) {
-    theArgConfig()->colorize_output = false;
+  if (vt_no_color) {
+    colorize_output = false;
   } else {
     // Otherwise, colorize.
     // (Within MPI there is no good method to auto-detect.)
-    theArgConfig()->colorize_output = true;
+    colorize_output = true;
   }
 
   parsed_ = true;
@@ -536,20 +534,19 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
  * \internal
  * Application specific cleanup and mapping to actual app args.
  */
-void postParseTransform() {
+void ArgConfig::postParseTransform() {
   auto contains = [](std::vector<std::string> &v, std::string str){
     return std::find(v.begin(), v.end(), str) not_eq v.end();
   };
 
-  ArgConfig::vt_trace_mpi = contains(arg_trace_mpi, "internal");
-  ArgConfig::vt_trace_pmpi = contains(arg_trace_mpi, "external");
+  vt_trace_mpi = contains(arg_trace_mpi, "internal");
+  vt_trace_pmpi = contains(arg_trace_mpi, "external");
 }
 
-std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv) {
+std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc, char**& argv) {
 
   std::vector<char*> vt_args;
   std::vector<char*> mpi_args;
-  std::vector<char*> passthru_args;
 
   // Load up vectors (has curious ability to altnerate vt/mpi/passthru)
   std::vector<char*>* rargs = nullptr;
@@ -603,22 +600,21 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
 
   // If the user specified to output the full configuration, save it in a string
   // so node 0 can output in the runtime once MPI is init'ed
-  if (theArgConfig()->vt_output_config) {
-    theArgConfig()->vt_output_config_str = app.config_to_str(true, true);
+  if (vt_output_config) {
+    vt_output_config_str = app.config_to_str(true, true);
   }
 
   // Get the clean prog name; don't allow path bleed in usages.
   // std::filesystem is C++17.
-  std::string prog_name = argv[0];
-  size_t l = prog_name.find_last_of("/\\");
-  if (l not_eq std::string::npos and l + 1 < prog_name.size()) {
-    prog_name = prog_name.substr(l + 1, std::string::npos);
+  std::string clean_prog_name = argv[0];
+  size_t l = clean_prog_name.find_last_of("/\\");
+  if (l not_eq std::string::npos and l + 1 < clean_prog_name.size()) {
+    clean_prog_name = clean_prog_name.substr(l + 1, std::string::npos);
   }
 
-  theArgConfig()->prog_name = prog_name;
-  theArgConfig()->argv_prog_name = argv[0];
-  theArgConfig()->mpi_init_args = mpi_args;
-  theArgConfig()->passthru_args = passthru_args;
+  prog_name = clean_prog_name;
+  argv_prog_name = argv[0];
+  mpi_init_args = mpi_args;
 
   postParseTransform();
 

@@ -53,6 +53,10 @@
 #include <vector>
 #include <tuple>
 
+namespace CLI {
+class App;
+}
+
 namespace vt { namespace arguments {
 
 struct ArgConfig : runtime::component::Component<ArgConfig> {
@@ -63,10 +67,24 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
   /// (which may be 0 if help was requested) will be returned along
   /// with an appropriate display message.
   std::tuple<int, std::string> parse(int& argc, char**& argv);
+  std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
 
   std::string name() override { return "ArgConfig"; }
 
 public:
+  void addColorArgs(CLI::App& app);
+  void addSignalArgs(CLI::App& app);
+  void addMemUsageArgs(CLI::App& app);
+  void addStackDumpArgs(CLI::App& app);
+  void addTraceArgs(CLI::App& app);
+  void addDebugPrintArgs(CLI::App& app);
+  void addLbArgs(CLI::App& app);
+  void addTerminationArgs(CLI::App& app);
+  void addDebuggerArgs(CLI::App& app);
+  void addUserArgs(CLI::App& app);
+  void addSchedulerArgs(CLI::App& app);
+  void addConfigFileArgs(CLI::App& app);
+
   inline bool user1() { return vt_user_1; }
   inline bool user2() { return vt_user_2; }
   inline bool user3() { return vt_user_3; }
@@ -227,6 +245,8 @@ public:
   std::vector<char*> passthru_args;
 
 private:
+  void postParseTransform();
+
   bool parsed_ = false;
 };
 
