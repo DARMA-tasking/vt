@@ -598,6 +598,16 @@ void Runtime::initializeComponents() {
   );
 # endif
 
+# if vt_check_enabled(mpi_access_guards)
+  p_->registerComponent<pmpi::PMPIComponent>(&thePMPI, Deps<
+#   if vt_check_enabled(trace_enabled)
+    trace::Trace,  // For PMPI tracing, if tracing is enabled.
+#   endif
+    ctx::Context   // Everything depends on theContext
+    >{}
+  );
+#endif
+
   p_->registerComponent<objgroup::ObjGroupManager>(
     &theObjGroup, Deps<
       ctx::Context,              // Everything depends on theContext
@@ -764,6 +774,9 @@ void Runtime::initializeComponents() {
   p_->add<pool::Pool>();
 # if vt_check_enabled(trace_enabled)
   p_->add<trace::Trace>();
+# endif
+# if vt_check_enabled(mpi_access_guards)
+  p_->add<pmpi::PMPIComponent>();
 # endif
   p_->add<objgroup::ObjGroupManager>();
   p_->add<messaging::ActiveMessenger>();

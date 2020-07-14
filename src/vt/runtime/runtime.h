@@ -51,9 +51,11 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/arguments/args.h"
 
+// Optional components
 #if vt_check_enabled(trace_enabled)
 #include "vt/trace/trace.h"
 #endif
+#include "vt/pmpi/pmpi_component.h"
 
 #include <memory>
 #include <functional>
@@ -399,6 +401,9 @@ public:
   // Optional components
   #if vt_check_enabled(trace_enabled)
     ComponentPtrType<trace::Trace> theTrace = nullptr;
+  #endif
+  #if vt_check_enabled(mpi_access_guards)
+    ComponentPtrType<pmpi::PMPIComponent> thePMPI = nullptr;
   #endif
 
   static bool volatile sig_user_1_;

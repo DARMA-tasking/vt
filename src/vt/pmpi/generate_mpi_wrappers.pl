@@ -91,6 +91,13 @@ say <<PROLOGUE;
 #define AUTOGEN
 
 #if vt_check_enabled(mpi_access_guards)
+
+#include "vt/pmpi/pmpi_component.h"
+
+void vt::pmpi::PMPIComponent::registerEventHandlers() {
+  // TODO
+}
+
 PROLOGUE
 
 # TODO:

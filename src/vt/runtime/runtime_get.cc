@@ -132,7 +132,10 @@ vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->
 vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 
 #if vt_check_enabled(trace_enabled)
-trace::Trace*               theTrace()          { return CUR_RT->theTrace;          }
+trace::Trace*               theTrace()              { return CUR_RT->theTrace;          }
+#endif
+#if vt_check_enabled(mpi_access_guards)
+pmpi::PMPIComponent*        thePMPI()               { return CUR_RT->thePMPI;           }
 #endif
 
 #undef CUR_RT
