@@ -241,7 +241,7 @@ struct HistogramApprox {
     // add \c num_times to total count
     total_count_ += num_times;
 
-    // Find an index k such that value_k <= value < value_{k+1} using a binary
+    // Find an index k such that value_k <= value < value_{k+1} using a O(lg n)
     // search on the underlying centroids
     auto it = std::lower_bound(cs_.begin(), cs_.end(), value);
     std::size_t k = it - cs_.begin();
