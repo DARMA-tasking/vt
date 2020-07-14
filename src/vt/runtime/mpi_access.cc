@@ -75,6 +75,11 @@ ScopedMPIAccess::~ScopedMPIAccess() {
   return not default_prohibit_ or grants_ > 0;
 }
 
+/*static*/ bool ScopedMPIAccess::mpiCallsTraced() {
+  // ~> outside of top-level scheduler.
+  return not default_prohibit_ and grants_ == 0;
+}
+
 /*static*/ int ScopedMPIAccess::grants_ = 0;
 /*static*/ bool ScopedMPIAccess::default_prohibit_ = false;
 

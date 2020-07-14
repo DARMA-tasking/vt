@@ -50,6 +50,7 @@
 #if vt_check_enabled(mpi_access_guards)
 
 #include "vt/runtime/component/component_pack.h"
+#include "vt/runtime/mpi_access.h"
 
 namespace vt { namespace pmpi {
 
@@ -76,8 +77,8 @@ struct PMPIComponent : runtime::component::Component<PMPIComponent> {
    * \internal
    * \brief Return true iff a PMPI call should be logged in the current context.
    */
-  bool shouldLogCall() {
-    return true;
+  static bool shouldLogCall() {
+    return runtime::ScopedMPIAccess::mpiCallsTraced();
   }
 
 private:
