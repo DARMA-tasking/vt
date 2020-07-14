@@ -215,7 +215,7 @@ struct TraceScopedEvent final {
    * \c registerEventCollective )
    */
   explicit TraceScopedEvent(UserEventIDType event)
-    : begin_(Trace::getCurrentTime()),
+    : begin_(event != no_user_event_id ? Trace::getCurrentTime() : 0),
       event_(event)
   { }
 
@@ -259,7 +259,7 @@ struct TraceScopedNote final {
    */
   TraceScopedNote(
     std::string const& in_note, TraceEventIDType const in_event = no_trace_event
-  ) : begin_(Trace::getCurrentTime()),
+  ) : begin_(in_event != no_trace_event ? Trace::getCurrentTime() : 0),
       event_(in_event),
       note_(in_note)
   { }
