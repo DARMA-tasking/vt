@@ -24,6 +24,7 @@
 #   VT_DOCS=0            # Enable doxygen build
 #   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
 #   VT_ASAN=0            # Enable address sanitizer
+#   VT_EXTENDED_TESTS=1  # Build all the extended testing
 #   BUILD_TYPE=release   # CMake build type
 #
 # Examples:
@@ -100,6 +101,7 @@ x-vtopts: &vtopts
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
+  VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
 
