@@ -18,4 +18,6 @@ if(NOT hasParent)
   enable_cxx_compiler_flag_if_supported("-Wshadow")
   enable_cxx_compiler_flag_if_supported("-Wno-unknown-pragmas")
   enable_cxx_compiler_flag_if_supported("-Wsign-compare")
+  # Not really a warning, is still diagnostic related..
+  enable_cxx_compiler_flag_if_supported("-ftemplate-backtrace-limit=100")
 endif()
