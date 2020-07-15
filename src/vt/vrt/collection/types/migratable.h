@@ -62,10 +62,7 @@ namespace balance {
 
 struct Migratable : MigrateHookBase {
 
-  Migratable()
-    : stats_elm_id_(balance::ProcStats::getNextElm()),
-      temp_elm_id_(balance::ProcStats::getNextElm())
-  { }
+  Migratable();
 
   /*
    * The user or runtime system can invoke this method at any time (when a valid
