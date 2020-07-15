@@ -81,6 +81,9 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 
 /*static*/ FILE* ProcStats::stats_file_ = nullptr;
 
+/*static*/ std::vector<ProcStats::SubphaseLoadMapType>
+ ProcStats::proc_subphase_data_ = {};
+
 /*static */ ProcStats::SubphaseLoadMapType const&
 ProcStats::getProcSubphaseLoad(PhaseType phase) {
   vtAssert(proc_subphase_data_.size() > phase, "Phase must exist in load data");

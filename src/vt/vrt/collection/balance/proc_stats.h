@@ -93,6 +93,7 @@ public:
   static std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
   static std::vector<CommMapType> proc_comm_;
+  static std::vector<SubphaseLoadMapType> proc_subphase_data_;
 private:
   static FILE* stats_file_;
   static bool created_dir_;
