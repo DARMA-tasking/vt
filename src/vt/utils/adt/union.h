@@ -649,6 +649,11 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
    *     // triggered when `in` is storing an float
    *   }
    *
+   *   template <>
+   *   void MyFunctor::apply<void>(vt::adt::SafeUnion<int, float>& in) {
+   *     // triggered when `in` does not have a type selected
+   *   }
+   *
    *   void func() {
    *     vt::adt::SafeUnion<int, float> x;
    *     x.init<int>();
