@@ -60,11 +60,14 @@ namespace vt { namespace runtime {
 
 namespace {
 
-template <typename T>
 struct FormatHelper {
-  std::string operator()(
-    typename component::DiagnosticErasedValue::UnionValueType eval,
-    component::DiagnosticUnit unit
+  explicit FormatHelper(component::DiagnosticUnit in_unit)
+    : unit_(in_unit)
+  { }
+
+  template <typename T>
+  std::string apply(
+    typename component::DiagnosticErasedValue::UnionValueType eval
   ) {
     using DF = component::detail::DiagnosticFormatter;
     using component::detail::decimal_format;
@@ -74,26 +77,26 @@ struct FormatHelper {
 
     std::string default_format = is_decimal ? decimal_format : std::string{"{}"};
 
-    return DF::getValueWithUnits(eval.get<T>(), unit, default_format);
+    return DF::getValueWithUnits(eval.get<T>(), unit_, default_format);
   }
+
+  component::DiagnosticUnit unit_;
 };
 
 template <>
-struct FormatHelper<void> {
-  std::string operator()(
-    typename component::DiagnosticErasedValue::UnionValueType,
-    component::DiagnosticUnit
-  ) {
-    vtAssert(false, "Failed to extract type from union");
-    return "";
-  }
-};
+std::string FormatHelper::apply<void>(
+  typename component::DiagnosticErasedValue::UnionValueType
+) {
+  vtAssert(false, "Failed to extract type from union");
+  return "";
+}
 
 std::string valueFormatHelper(
   typename component::DiagnosticErasedValue::UnionValueType eval,
   component::DiagnosticUnit unit
 ) {
-  return eval.template switchOn<FormatHelper>(eval, unit);
+  FormatHelper fn(unit);
+  return eval.switchOn(fn);
 }
 
 std::string valueFormatHelper(double val, component::DiagnosticUnit unit) {
