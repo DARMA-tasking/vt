@@ -131,29 +131,30 @@ TEST_F(TestHistogramApprox, test_histogram_sum_4) {
 
   constexpr int len = 10000;
 
-  vt::adt::HistogramApprox<double, int64_t> exact{len};
-  vt::adt::HistogramApprox<double, int64_t> approx{16};
+  for (typename std::mt19937::result_type seed = 10; seed < 20; seed++) {
+    vt::adt::HistogramApprox<double, int64_t> exact{len};
+    vt::adt::HistogramApprox<double, int64_t> approx{16};
 
-  typename std::mt19937::result_type seed = 10;
-  std::mt19937 mt{seed};
-  std::normal_distribution<> dist{};
+    std::mt19937 mt{seed};
+    std::normal_distribution<> dist{};
 
-  for (int i = 0; i < len; i++) {
-    auto sample = dist(mt);
-    exact.add(sample);
-    approx.add(sample);
-  }
+    for (int i = 0; i < len; i++) {
+      auto sample = dist(mt);
+      exact.add(sample);
+      approx.add(sample);
+    }
 
-  fmt::print("{}\n",approx.buildContainerString());
+    fmt::print("{}\n",approx.buildContainerString());
 
-  std::array<double, 5> test_vals = {-2.0, -1.0, 0.0, 1.0, 2.0 };
+    std::array<double, 5> test_vals = {-2.0, -1.0, 0.0, 1.0, 2.0 };
 
-  for (auto&& elm : test_vals) {
-    auto a = approx.estimateNumValues(elm);
-    auto e = exact.estimateNumValues(elm);
-    auto rel_error = std::fabs((a - e)/e);
-    fmt::print("elm={}: a={}, e={}: error={}\n", elm, a, e, rel_error);
-    EXPECT_LT(rel_error, 0.2);
+    for (auto&& elm : test_vals) {
+      auto a = approx.estimateNumValues(elm);
+      auto e = exact.estimateNumValues(elm);
+      auto rel_error = std::fabs((a - e)/e);
+      fmt::print("elm={}: a={}, e={}: error={}\n", elm, a, e, rel_error);
+      EXPECT_LT(rel_error, 0.2);
+    }
   }
 }
 
@@ -191,31 +192,32 @@ TEST_F(TestHistogramApprox, test_histogram_quantile_6) {
 
   constexpr int len = 10000;
 
-  vt::adt::HistogramApprox<double, int64_t> exact{len};
-  vt::adt::HistogramApprox<double, int64_t> approx{16};
+  for (typename std::mt19937::result_type seed = 10; seed < 20; seed++) {
+    vt::adt::HistogramApprox<double, int64_t> exact{len};
+    vt::adt::HistogramApprox<double, int64_t> approx{16};
 
-  typename std::mt19937::result_type seed = 10;
-  std::mt19937 mt{seed};
-  std::normal_distribution<> dist{};
+    std::mt19937 mt{seed};
+    std::normal_distribution<> dist{};
 
-  for (int i = 0; i < len; i++) {
-    auto sample = dist(mt);
-    exact.add(sample);
-    approx.add(sample);
-  }
+    for (int i = 0; i < len; i++) {
+      auto sample = dist(mt);
+      exact.add(sample);
+      approx.add(sample);
+    }
 
-  fmt::print("{}\n",approx.buildContainerString());
+    fmt::print("{}\n",approx.buildContainerString());
 
-  std::array<double, 12> test_vals = {
-    0.0001, 0.001, 0.01, 0.1, 0.25, 0.35, 0.65, 0.75, 0.9, 0.99, 0.999, 0.9999
-  };
+    std::array<double, 12> test_vals = {
+      0.0001, 0.001, 0.01, 0.1, 0.25, 0.35, 0.65, 0.75, 0.9, 0.99, 0.999, 0.9999
+    };
 
-  for (auto&& elm : test_vals) {
-    auto a = approx.quantile(elm);
-    auto e = exact.quantile(elm);
-    auto rel_error = std::fabs((a - e)/e);
-    fmt::print("quantile: elm={}: a={}, e={}: error={}\n", elm, a, e, rel_error);
-    EXPECT_LT(rel_error, 0.2);
+    for (auto&& elm : test_vals) {
+      auto a = approx.quantile(elm);
+      auto e = exact.quantile(elm);
+      auto rel_error = std::fabs((a - e)/e);
+      fmt::print("quantile: elm={}: a={}, e={}: error={}\n", elm, a, e, rel_error);
+      EXPECT_LT(rel_error, 0.2);
+    }
   }
 }
 
