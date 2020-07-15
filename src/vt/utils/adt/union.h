@@ -338,6 +338,33 @@ struct AllUnique<U, T> {
   static_assert(not std::is_same<U, T>::value, "Types must be unique");
 };
 
+///////////////////////////////////////////////////////////////////////////////
+/// Statically dispatch switch statement on typed functor
+
+template <typename T, typename... Ts>
+struct Switch {
+  template <typename U, typename Functor>
+  static auto apply(uint8_t which, U* u, Functor& fn) {
+    if (which == GetPlace<Ts...>::value) {
+      return fn.template apply<T>(*u);
+    } else {
+      return Switch<Ts...>::template apply(which, u, fn);
+    }
+  }
+};
+
+template <typename T>
+struct Switch<T> {
+  template <typename U, typename Functor>
+  static auto apply(uint8_t which, U* u, Functor& fn) {
+    if (which == static_cast<uint8_t>(1)) {
+      return fn.template apply<T>(*u);
+    } else {
+      return fn.template apply<void>(*u);
+    }
+  }
+};
+
 } /* end namespace detail */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -594,6 +621,53 @@ struct AlignedCharUnion : UnionCopy<T, void, Ts...> {
     if (this->which_ != 0) {
       detail::Serialize<T, Ts...>::apply(this->which_, this, s);
     }
+  }
+
+  /**
+   * \brief Apply a static template switch over the types in the union
+   * dynamically dispatched based on the current active type
+   *
+   * The \c Functor passed to the function will be invoked with the \c apply
+   * method templated on the \c T that is currently selected in the union. If no
+   * type is currently selected, the \c apply method will be applied with
+   * \c void
+   *
+   * Example:
+   * \code{.cpp}
+   *   struct MyFunctor {
+   *     template <typename T>
+   *     void apply(vt::adt::SafeUnion<int, float>& in);
+   *   };
+   *
+   *   template <>
+   *   void MyFunctor::apply<int>(vt::adt::SafeUnion<int, float>& in) {
+   *     // triggered when `in` is storing an int
+   *   }
+   *
+   *   template <>
+   *   void MyFunctor::apply<float>(vt::adt::SafeUnion<int, float>& in) {
+   *     // triggered when `in` is storing an float
+   *   }
+   *
+   *   template <>
+   *   void MyFunctor::apply<void>(vt::adt::SafeUnion<int, float>& in) {
+   *     // triggered when `in` does not have a type selected
+   *   }
+   *
+   *   void func() {
+   *     vt::adt::SafeUnion<int, float> x;
+   *     x.init<int>();
+   *
+   *     MyFunctor my_functor;
+   *     x.switchOn(my_functor); // dispatches to `int` overload
+   *   }
+   * \endcode
+   *
+   * \param[in] args args to forward to functor
+   */
+  template <typename Functor>
+  auto switchOn(Functor& fn) {
+    return detail::Switch<T, Ts...>::template apply(this->which_, this, fn);
   }
 
 public:
