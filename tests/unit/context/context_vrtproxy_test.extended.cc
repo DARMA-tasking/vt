@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                      context_vrtproxy_test.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,25 +44,60 @@
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
-#include "test_collection_common.h"
-#include "data_message.h"
-#include "test_broadcast.h"
-
-#include "vt/transport.h"
-
-#include <cstdint>
+#include "test_harness.h"
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+class TestVrtContextProxy : public TestHarness {
+  virtual void SetUp() {
+    TestHarness::SetUp();
+  }
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
->;
+  virtual void TearDown() {
+    TestHarness::TearDown();
+  }
+};
 
-INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
-);
+TEST_F(TestVrtContextProxy, Construction_AND_API) {
+  using namespace vt;
+  using namespace vt::vrt;
+
+  VrtContext_ProxyType proxy1 = VrtContextProxy::createProxy(200, 20);
+  EXPECT_EQ(VrtContextProxy::isCollection(proxy1), false);
+  EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), false);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 20);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 200);
+
+  VrtContextProxy::setIsCollection(proxy1, true);
+  EXPECT_EQ(VrtContextProxy::isCollection(proxy1), true);
+
+  VrtContextProxy::setIsMigratable(proxy1, true);
+  EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), true);
+
+  VrtContextProxy::setVrtContextNode(proxy1, 2000);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 2000);
+
+  VrtContextProxy::setVrtContextId(proxy1, 3000);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 3000);
+
+  EXPECT_EQ(VrtContextProxy::isCollection(proxy1), true);
+  EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), true);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 2000);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 3000);
+
+  VrtContext_ProxyType proxy2
+      = VrtContextProxy::createProxy(200, 20, true);
+  EXPECT_EQ(VrtContextProxy::isCollection(proxy2), true);
+  EXPECT_EQ(VrtContextProxy::isMigratable(proxy2), false);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy2), 20);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy2), 200);
+
+  VrtContext_ProxyType proxy3 =
+      VrtContextProxy::createProxy(200, 20, true, true);
+  EXPECT_EQ(VrtContextProxy::isCollection(proxy3), true);
+  EXPECT_EQ(VrtContextProxy::isMigratable(proxy3), true);
+  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy3), 20);
+  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy3), 200);
+}
 
 }}} // end namespace vt::tests::unit

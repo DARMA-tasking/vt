@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                        test_sequencer_for.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,25 +44,77 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
+
 #include "test_parallel_harness.h"
-#include "test_collection_common.h"
 #include "data_message.h"
-#include "test_broadcast.h"
 
 #include "vt/transport.h"
 
-#include <cstdint>
-
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+using namespace vt;
+using namespace vt::tests::unit;
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
->;
+static constexpr vt::seq::ForIndex const end_range = 10;
 
-INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
-);
+struct TestSequencerFor : TestParallelHarness {
+  using TestMsg = TestStaticBytesNormalMsg<4>;
+  using OrderType = uint32_t;
+
+  SEQUENCE_REGISTER_HANDLER(TestSequencerFor::TestMsg, testSeqForHan);
+
+  static void testSeqForFn(SeqType const& seq_id) {
+    static std::atomic<OrderType> seq_ordering_{};
+
+    #if DEBUG_TEST_HARNESS_PRINT
+      fmt::print("testSeqForFn seq_id={}\n", seq_id);
+    #endif
+
+    if (seq_id == -1) {
+      EXPECT_EQ(seq_ordering_++, 11U);
+      return;
+    }
+
+    EXPECT_EQ(seq_ordering_++, 0U);
+
+    theSeq()->for_loop(0, end_range, 1, [](vt::seq::ForIndex i) {
+      theSeq()->wait_closure<TestMsg, testSeqForHan>(no_tag, [=](TestMsg* msg){
+        #if DEBUG_TEST_HARNESS_PRINT
+          fmt::print("testSeqForFn running wait\n");
+        #endif
+
+        EXPECT_EQ(seq_ordering_++, static_cast<size_t>(i+1));
+      });
+    });
+  }
+};
+
+TEST_F(TestSequencerFor, test_for) {
+  auto const& my_node = theContext()->getNode();
+
+  #if DEBUG_TEST_HARNESS_PRINT
+    fmt::print("test_seq_handler: node={}\n", my_node);
+  #endif
+
+  SeqType const& seq_id = theSeq()->nextSeq();
+
+  if (my_node == 0) {
+    theSeq()->sequenced(seq_id, testSeqForFn);
+  }
+
+  for (int i = 0; i < end_range; i++) {
+    if (my_node == 1) {
+      auto msg = makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, testSeqForHan>(0, msg.get());
+    }
+  }
+
+  if (my_node == 0) {
+    theTerm()->addAction([=]{
+      testSeqForFn(-1);
+    });
+  }
+}
 
 }}} // end namespace vt::tests::unit

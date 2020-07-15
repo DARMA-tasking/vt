@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                            test_send.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -47,22 +47,35 @@
 #include "test_parallel_harness.h"
 #include "test_collection_common.h"
 #include "data_message.h"
-#include "test_broadcast.h"
+#include "test_send.h"
 
 #include "vt/transport.h"
 
 #include <cstdint>
+#include <tuple>
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+REGISTER_TYPED_TEST_SUITE_P(TestCollectionSend, test_collection_send_1);
+REGISTER_TYPED_TEST_SUITE_P(TestCollectionSendMem, test_collection_send_ptm_1);
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
+using CollectionTestTypesExtended = testing::Types<
+  send_col_            ::TestCol<int64_t>,
+  send_col_            ::TestCol<std::string>,
+  send_col_            ::TestCol<test_data::A>,
+  send_col_            ::TestCol<test_data::B>,
+  send_col_            ::TestCol<test_data::C>,
+  send_col_            ::TestCol<int32_t,int32_t>,
+  send_col_            ::TestCol<int64_t,int64_t>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
+  test_collection_send_extended, TestCollectionSend,
+  CollectionTestTypesExtended, DEFAULT_NAME_GEN
+);
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_collection_send_mem_extended, TestCollectionSendMem,
+  CollectionTestTypesExtended, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

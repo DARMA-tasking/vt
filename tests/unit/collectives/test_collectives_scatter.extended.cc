@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                      test_collectives_scatter.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -45,24 +45,58 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
-#include "test_collection_common.h"
 #include "data_message.h"
-#include "test_broadcast.h"
 
 #include "vt/transport.h"
 
-#include <cstdint>
+#define DEBUG_SCATTER 0
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+using namespace vt;
+using namespace vt::collective;
+using namespace vt::tests::unit;
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
->;
+static constexpr std::size_t const num_elms = 4;
 
-INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
-);
+struct TestScatter : TestParallelHarness {
+  static void scatterHan(int* msg) {
+    auto const& this_node = theContext()->getNode();
+    int* int_ptr = reinterpret_cast<int*>(msg);
+    #if DEBUG_SCATTER
+      ::fmt::print(
+        "ptr={}, *ptr={}\n", print_ptr(int_ptr), *int_ptr
+      );
+    #endif
+    for (std::size_t i = 0; i < num_elms; i++) {
+      #if DEBUG_SCATTER
+        ::fmt::print(
+          "i={}: this_node={}: val={}, expected={}\n",
+          i, this_node, int_ptr[i], this_node * 10 + i
+        );
+      #endif
+      EXPECT_EQ(static_cast<std::size_t>(int_ptr[i]), this_node * 10 + i);
+    }
+  }
+};
+
+TEST_F(TestScatter, test_scatter_1) {
+  auto const& this_node = theContext()->getNode();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  if (this_node == 0) {
+    auto const& elm_size = sizeof(int) * num_elms;
+    auto const& total_size = elm_size * num_nodes;
+    theCollective()->scatter<int,scatterHan>(
+      total_size,elm_size,nullptr,[](NodeType node, void* ptr){
+        auto ptr_out = reinterpret_cast<int*>(ptr);
+        for (std::size_t i = 0; i < num_elms; i++) {
+          *(ptr_out + i) = node * 10 + i;
+        }
+      }
+    );
+  }
+}
+
 
 }}} // end namespace vt::tests::unit

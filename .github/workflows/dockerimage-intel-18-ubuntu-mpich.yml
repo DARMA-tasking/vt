@@ -28,6 +28,7 @@ jobs:
       VT_DOCS: 0
       VT_ASAN: 0
       VT_POOL: 0
+      VT_EXTENDED_TESTS: ${{ github.event_name != 'pull_request' }}
       CACHE: ~/.local/cache/
 
     steps:

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                         test_rdma_handle.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,25 +44,36 @@
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
-#include "test_collection_common.h"
-#include "data_message.h"
-#include "test_broadcast.h"
-
 #include "vt/transport.h"
-
-#include <cstdint>
+#include "test_parallel_harness.h"
+#include "test_rdma_common.h"
+#include "test_rdma_handle.h"
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
-
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
+using RDMATestTypesExtended = testing::Types<
+  double,
+  float,
+  int32_t,
+  int64_t,
+  uint64_t,
+  int64_t,
+  int16_t,
+  uint16_t
 >;
 
-INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
+REGISTER_TYPED_TEST_SUITE_P(
+  TestRDMAHandle,
+  test_rdma_handle_1,
+  test_rdma_handle_2,
+  test_rdma_handle_3,
+  test_rdma_handle_4,
+  test_rdma_handle_5
 );
 
-}}} // end namespace vt::tests::unit
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_rdma_handle_extended, TestRDMAHandle, RDMATestTypesExtended,
+  DEFAULT_NAME_GEN
+);
+
+}}} /* end namespace vt::tests::unit */

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                      test_collectives_reduce.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -45,24 +45,72 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
-#include "test_collection_common.h"
 #include "data_message.h"
-#include "test_broadcast.h"
+#include "test_collectives_reduce.h"
 
 #include "vt/transport.h"
 
-#include <cstdint>
-
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+TEST_F(TestReduce, test_reduce_plus_default_op) {
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
->;
+  auto msg = makeMessage<SysMsg>(my_node);
+  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
+  theCollective()->global()->reduce<PlusOp<int>, Verify<ReduceOP::Plus>>(
+    root, msg.get()
+  );
+}
 
-INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
-);
+TEST_F(TestReduce, test_reduce_max_default_op) {
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
+
+  auto msg = makeMessage<SysMsg>(my_node);
+  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
+  theCollective()->global()->reduce<MaxOp<int>, Verify<ReduceOP::Max>>(
+    root, msg.get()
+  );
+}
+
+TEST_F(TestReduce, test_reduce_min_default_op) {
+  auto const my_node = theContext()->getNode();
+  auto const root = 0;
+
+  auto msg = makeMessage<SysMsg>(my_node);
+  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
+  theCollective()->global()->reduce<MinOp<int>, Verify<ReduceOP::Min>>(
+    root, msg.get()
+  );
+}
+
+TEST_F(TestReduce, test_reduce_vec_bool_msg) {
+
+  std::vector<bool> vecOfBool;
+  vecOfBool.push_back(false);
+  vecOfBool.push_back(true);
+
+  auto const root = 0;
+  auto msg = makeMessage<ReduceVecMsg<bool>>(vecOfBool);
+  theCollective()->global()->reduce<
+    PlusOp<std::vector<bool>>, Verify<ReduceOP::Plus>
+  >(root, msg.get());
+}
+
+TEST_F(TestReduce, test_reduce_vec_int_msg) {
+
+  std::vector<int> vecOfInt;
+  vecOfInt.push_back(0);
+  vecOfInt.push_back(1);
+  vecOfInt.push_back(2);
+  vecOfInt.push_back(3);
+
+  auto const root = 0;
+  auto msg = makeMessage<ReduceVecMsg<int>>(vecOfInt);
+  theCollective()->global()->reduce<
+    PlusOp<std::vector<int>>, Verify<ReduceOP::Plus>
+  >(root, msg.get());
+}
 
 }}} // end namespace vt::tests::unit

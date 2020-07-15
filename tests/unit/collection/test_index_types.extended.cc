@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                         test_index_types.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -45,24 +45,93 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
-#include "test_collection_common.h"
 #include "data_message.h"
-#include "test_broadcast.h"
 
 #include "vt/transport.h"
 
 #include <cstdint>
+#include <tuple>
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+using namespace vt;
+using namespace vt::tests::unit;
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
+namespace test_index_types_ {
+template <typename IndexT> struct ColMsg;
+template <typename IndexT>
+struct TestCol : Collection<TestCol<IndexT>,IndexT> {
+  using MsgType = ColMsg<IndexT>;
+  TestCol() = default;
+  void handler(ColMsg<IndexT>* msg);
+};
+
+template <typename IndexT>
+struct ColMsg : CollectionMessage<TestCol<IndexT>> {
+  using MessageParentType = CollectionMessage<TestCol<IndexT>>;
+  vt_msg_serialize_if_needed_by_parent();
+
+  ColMsg() = default;
+  explicit ColMsg(int in_data) : data_(in_data) {}
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | data_;
+  }
+
+  int data_;
+};
+
+template <typename IndexT>
+void TestCol<IndexT>::handler(ColMsg<IndexT>* msg) {}
+
+} /* end namespace test_index_types_ */
+
+
+template <typename CollectionT>
+struct TestCollectionIndexTypes : TestParallelHarness {};
+
+TYPED_TEST_SUITE_P(TestCollectionIndexTypes);
+
+TYPED_TEST_P(TestCollectionIndexTypes, test_collection_index_1) {
+  using IndexType     = TypeParam;
+  using ColType       = test_index_types_::TestCol<IndexType>;
+  using MsgType       = test_index_types_::ColMsg<IndexType>;
+  using BaseIndexType = typename IndexType::DenseIndexType;
+
+  auto const& this_node = theContext()->getNode();
+
+  if (this_node == 0) {
+    auto const& col_size = 32;
+    auto range = IndexType(static_cast<BaseIndexType>(col_size));
+    auto proxy = theCollection()->construct<ColType>(range);
+    for (BaseIndexType i = 0; i < static_cast<BaseIndexType>(col_size); i++) {
+      auto msg = makeMessage<MsgType>(34);
+      if (i % 2 == 0) {
+        proxy[i].template send<MsgType,&ColType::handler>(msg.get());
+      } else {
+        theCollection()->sendMsg<MsgType,&ColType::handler>(
+          proxy[i], msg.get()
+        );
+      }
+    }
+  }
+}
+
+REGISTER_TYPED_TEST_SUITE_P(TestCollectionIndexTypes, test_collection_index_1);
+
+using CollectionTestTypes = testing::Types<
+  ::vt::Index1D,
+  ::vt::IdxType1D<int32_t>,
+  ::vt::IdxType1D<int16_t>,
+  ::vt::IdxType1D<int8_t>,
+  ::vt::IdxType1D<int64_t>,
+  ::vt::IdxType1D<std::size_t>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
+  test_index_types, TestCollectionIndexTypes, CollectionTestTypes, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                      test_collection_group.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -47,7 +47,6 @@
 #include "test_parallel_harness.h"
 #include "test_collection_common.h"
 #include "data_message.h"
-#include "test_broadcast.h"
 
 #include "vt/transport.h"
 
@@ -55,14 +54,46 @@
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+struct MyReduceMsg : collective::ReduceTMsg<int> {
+  explicit MyReduceMsg(int const in_num)
+    : collective::ReduceTMsg<int>(in_num)
+  { }
+};
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
->;
+struct ColA : Collection<ColA,Index1D> {
+  struct TestMsg : CollectionMessage<ColA> { };
 
-INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
-);
+  void finishedReduce(MyReduceMsg* m) {
+    fmt::print("at root: final num={}\n", m->getVal());
+    finished = true;
+  }
+
+  void doReduce(TestMsg* msg) {
+    auto const proxy = getCollectionProxy();
+    auto cb = theCB()->makeBcast<ColA, MyReduceMsg, &ColA::finishedReduce>(proxy);
+    auto reduce_msg = makeMessage<MyReduceMsg>(getIndex().x());
+    proxy.reduce<collective::PlusOp<int>>(reduce_msg.get(),cb);
+  }
+
+  virtual ~ColA() {
+    EXPECT_TRUE(finished);
+  }
+
+private:
+  bool finished = false;
+};
+
+struct TestCollectionGroup : TestParallelHarness { };
+
+
+TEST_F(TestCollectionGroup, test_collection_group_1) {
+  auto const my_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  if (my_node == 0) {
+    auto const range = Index1D(std::max(num_nodes / 2, 1));
+    auto const proxy = theCollection()->construct<ColA>(range);
+    proxy.broadcast<ColA::TestMsg,&ColA::doReduce>();
+  }
+}
 
 }}} // end namespace vt::tests::unit

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                          test_broadcast.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -57,12 +57,19 @@ namespace vt { namespace tests { namespace unit {
 
 REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
+using CollectionTestTypesExtended = testing::Types<
+  bcast_col_            ::TestCol<int64_t>,
+  bcast_col_            ::TestCol<std::string>,
+  bcast_col_            ::TestCol<test_data::A>,
+  bcast_col_            ::TestCol<test_data::B>,
+  bcast_col_            ::TestCol<test_data::C>,
+  bcast_col_            ::TestCol<int32_t,int32_t>,
+  bcast_col_            ::TestCol<int64_t,int64_t>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
+  test_bcast_extended, TestBroadcast, CollectionTestTypesExtended,
+  DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

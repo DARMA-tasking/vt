@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                       test_construct_no_idx.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,25 +44,53 @@
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
 #include "test_collection_common.h"
-#include "data_message.h"
-#include "test_broadcast.h"
-
-#include "vt/transport.h"
+#include "test_collection_construct_common.h"
 
 #include <cstdint>
+#include <tuple>
+#include <string>
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+namespace multi_param_no_idx_ {
+template <typename... Args> struct ColMsg;
+template <typename... Args>
+struct TestCol : Collection<TestCol<Args...>,TestIndex>, BaseCol {
+  using MsgType = ColMsg<Args...>;
+  using ParamType = std::tuple<Args...>;
+  TestCol() = default;
+  TestCol(Args... args)
+    : Collection<TestCol, TestIndex>(),
+      BaseCol(true)
+  {
+    #if PRINT_CONSTRUCTOR_VALUES
+      ConstructTuple<ParamType>::print(std::make_tuple(args...));
+    #endif
+    ConstructTuple<ParamType>::isCorrect(std::make_tuple(args...));
+  }
+};
+template <typename... Args>
+struct ColMsg : CollectionMessage<TestCol<Args...>> {};
+} /* end namespace multi_param_no_idx_ */
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
+using CollectionTestTypes = testing::Types<
+  multi_param_no_idx_            ::TestCol<int32_t>,
+  multi_param_no_idx_            ::TestCol<int64_t>,
+  multi_param_no_idx_            ::TestCol<std::string>,
+  multi_param_no_idx_            ::TestCol<test_data::A>,
+  multi_param_no_idx_            ::TestCol<test_data::B>,
+  multi_param_no_idx_            ::TestCol<test_data::C>,
+  multi_param_no_idx_            ::TestCol<int32_t,int32_t>,
+  multi_param_no_idx_            ::TestCol<int64_t,int64_t>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
+  test_construct_no_idx, TestConstruct, CollectionTestTypes, DEFAULT_NAME_GEN
+);
+
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_construct_no_idx_dist, TestConstructDist, CollectionTestTypes, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

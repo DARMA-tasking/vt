@@ -55,6 +55,7 @@ build configuration:
 | `vt_fcontext_enabled`           | 0               | Enable user-level threads through boost fcontext |
 | `vt_priorities_enabled`         | 1               | Enable prioritization of work (adds bits in envelope) |
 | `vt_priority_bits_per_level`    | 3               | Number of bits per level of priority in envelope |
+| `vt_build_extended_tests`       | 1               | Build with full, extended testing |
 | `CODE_COVERAGE`                 | 0               | Enable code coverage for VT examples/tests |
 | `VT_BUILD_TESTS`                | 1               | Build all VT tests |
 | `VT_BUILD_EXAMPLES`             | 1               | Build all VT examples |
@@ -81,6 +82,7 @@ parameters.
 | `VT_ZOLTAN_ENABLED `        | 0               | Build with Zoltan enabled for `ZoltanLB` support |
 | `ZOLTAN_DIR `               | <empty>         | Directory pointing to Zoltan installation |
 | `VT_MPI_GUARD_ENABLED `     | 0               | Guards against mis-use of MPI calls in code using *vt* |
+| `VT_EXTENDED_TESTS_ENABLED` | 1               | Build with full, extended testing |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned
@@ -135,6 +137,7 @@ which `docker-compose` will read.
 #   VT_DOCS=0            # Enable doxygen build
 #   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
 #   VT_ASAN=0            # Enable address sanitizer
+#   VT_EXTENDED_TESTS=1  # Build all the extended testing
 #   BUILD_TYPE=release   # CMake build type
 ```
 

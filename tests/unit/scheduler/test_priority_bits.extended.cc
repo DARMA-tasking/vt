@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_broadcast.cc
+//                        test_priority_bits.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,25 +44,26 @@
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
-#include "test_collection_common.h"
-#include "data_message.h"
-#include "test_broadcast.h"
-
 #include "vt/transport.h"
-
-#include <cstdint>
+#include "test_parallel_harness.h"
 
 namespace vt { namespace tests { namespace unit {
 
-REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
+struct TestPriorityBits : TestParallelHarness { };
 
-using CollectionTestTypesBasic = testing::Types<
-  bcast_col_            ::TestCol<int32_t>
->;
+TEST_F(TestPriorityBits, test_priority_bits_1) {
+  using namespace vt::sched;
 
-INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_bcast_basic, TestBroadcast, CollectionTestTypesBasic, DEFAULT_NAME_GEN
-);
+#if vt_feature_cmake_priority_bits_level == 3
+  if (sizeof(PriorityType) == 2) {
+    auto default_mask = DefaultMask<vt::priority_num_bits, 0x0>::value;
+    EXPECT_EQ(0x6db6, default_mask);
+    auto level_mask = LevelMask<vt::priority_num_bits, 0x0, 2>::value;
+    EXPECT_EQ(0x6c00, level_mask);
+    EXPECT_EQ(0x3, priority_midpoint);
+    EXPECT_EQ(0x5, priority_num_levels);
+  }
+#endif
+}
 
-}}} // end namespace vt::tests::unit
+}}} /* end namespace vt::tests::unit */
