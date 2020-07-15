@@ -47,12 +47,6 @@
 
 namespace vt { namespace messaging {
 
-PendingSend::PendingSend(
-  MsgSharedPtr<BaseMsgType> const& in_msg, ByteType const& in_msg_size)
-  : msg_(in_msg.toVirtual<BaseMsgType>()), msg_size_(in_msg_size) {
-  produceMsg();
-}
-
 PendingSend::PendingSend(EpochType ep, EpochActionType const& in_action)
   : epoch_action_{in_action}, epoch_produced_(ep) {
   if (epoch_produced_ != no_epoch) {

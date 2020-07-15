@@ -157,26 +157,26 @@ struct TestTermChaining : TestParallelHarness {
     if (0 == node) {
       EpochType epoch1 = theTerm()->makeEpochRooted();
       vt::theMsg()->pushEpoch(epoch1);
-      auto msg = makeSharedMessage<TestMsg>();
+      auto msg = makeMessage<TestMsg>();
       chain.add(
-        epoch1, theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg));
+        epoch1, theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg.get()));
       vt::theMsg()->popEpoch(epoch1);
       vt::theTerm()->finishedEpoch(epoch1);
     }
 
     EpochType epoch2 = theTerm()->makeEpochCollective();
     vt::theMsg()->pushEpoch(epoch2);
-    auto msg2 = makeSharedMessage<ChainReduceMsg>(theContext()->getNode());
-    chain.add(epoch2, theCollective()->reduce<ChainReduceMsg, test_handler_reduce>(0, msg2));
+    auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
+    chain.add(epoch2, theCollective()->global()->reduce<ChainReduceMsg, test_handler_reduce>(0, msg2.get()));
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
     // Broadcast from both nodes, bcast wont send to itself
     EpochType epoch3 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch3);
-    auto msg3 = makeSharedMessage<TestMsg>();
+    auto msg3 = makeMessage<TestMsg>();
     chain.add(
-      epoch3, theMsg()->broadcastMsg<TestMsg, test_handler_bcast>(msg3));
+      epoch3, theMsg()->broadcastMsg<TestMsg, test_handler_bcast>(msg3.get()));
     vt::theMsg()->popEpoch(epoch3);
     vt::theTerm()->finishedEpoch(epoch3);
 
@@ -188,15 +188,15 @@ struct TestTermChaining : TestParallelHarness {
 
     EpochType epoch2 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch2);
-    auto msg2 = makeSharedMessage<ChainReduceMsg>(theContext()->getNode());
-    chain.add(epoch2, theCollective()->reduce<ChainReduceMsg, test_handler_reduce>(0, msg2));
+    auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
+    chain.add(epoch2, theCollective()->global()->reduce<ChainReduceMsg, test_handler_reduce>(0, msg2.get()));
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
     EpochType epoch3 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch3);
-    auto msg3 = makeSharedMessage<TestMsg>();
-    chain.add(epoch3, theMsg()->broadcastMsg<TestMsg, test_handler_bcast>(msg3));
+    auto msg3 = makeMessage<TestMsg>();
+    chain.add(epoch3, theMsg()->broadcastMsg<TestMsg, test_handler_bcast>(msg3.get()));
     vt::theMsg()->popEpoch(epoch3);
     vt::theTerm()->finishedEpoch(epoch3);
 

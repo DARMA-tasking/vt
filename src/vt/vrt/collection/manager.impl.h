@@ -1054,7 +1054,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-void CollectionManager::reduceMsgExpr(
+messaging::PendingSend CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT> const& proxy,
   MsgT *const raw_msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
   ReduceStamp stamp, NodeType root
@@ -1071,7 +1071,7 @@ void CollectionManager::reduceMsgExpr(
   auto const col_proxy = proxy.getProxy();
   auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
 
-  bufferOpOrExecute<ColT>(
+  return bufferOpOrExecute<ColT>(
     col_proxy,
     BufferTypeEnum::Reduce,
     static_cast<BufferReleaseEnum>(
@@ -1115,7 +1115,7 @@ void CollectionManager::reduceMsgExpr(
         r = theCollective()->getReducerVrtProxy(col_proxy);
       }
 
-      auto ret_stamp = r->reduce<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
+      auto ret_stamp = r->reduceImmediate<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
 
       vt_debug_print(
         vrt_coll, node,
@@ -1143,7 +1143,7 @@ void CollectionManager::reduceMsgExpr(
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-void CollectionManager::reduceMsg(
+messaging::PendingSend CollectionManager::reduceMsg(
   CollectionProxyWrapType<ColT> const& proxy,
   MsgT *const msg, ReduceStamp stamp, NodeType root
 ) {
@@ -1151,7 +1151,7 @@ void CollectionManager::reduceMsg(
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-void CollectionManager::reduceMsg(
+messaging::PendingSend CollectionManager::reduceMsg(
   CollectionProxyWrapType<ColT> const& proxy,
   MsgT *const msg, ReduceStamp stamp, typename ColT::IndexType const& idx
 ) {
@@ -1159,7 +1159,7 @@ void CollectionManager::reduceMsg(
 }
 
 template <typename ColT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-void CollectionManager::reduceMsgExpr(
+messaging::PendingSend CollectionManager::reduceMsgExpr(
   CollectionProxyWrapType<ColT> const& proxy,
   MsgT *const msg, ReduceIdxFuncType<typename ColT::IndexType> expr_fn,
   ReduceStamp stamp, typename ColT::IndexType const& idx

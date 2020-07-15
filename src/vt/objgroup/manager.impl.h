@@ -295,7 +295,7 @@ ObjGroupManager::PendingSendType ObjGroupManager::reduce(
   auto const objgroup = proxy.getProxy();
 
   auto r = theCollective()->getReducerObjGroup(objgroup);
-  r->template reduce<MsgT,f>(root, msg.get(), stamp);
+  return r->template reduce<MsgT,f>(root, msg.get(), stamp);
 }
 
 template <typename ObjT>
