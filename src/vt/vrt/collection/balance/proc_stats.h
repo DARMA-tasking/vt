@@ -59,6 +59,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ProcStats {
+  using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
   using MigrateFnType = std::function<void(NodeType)>;
 
 public:
