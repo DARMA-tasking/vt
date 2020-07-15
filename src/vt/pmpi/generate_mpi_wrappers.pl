@@ -104,8 +104,8 @@ foreach my $def (extract_defs $mpidef_file) {
 
     say "AUTOGEN EXTERN $def->{ret} $def->{name}($def->{sigargs}) {";
     say <<MPI_GUARD;
-  vtAssert(
-    vt::runtime::ScopedMPIAccess::mpiCallsAllowed(),
+  vtAbortIf (
+    not vt::runtime::ScopedMPIAccess::mpiCallsAllowed(),
     "The MPI function '$def->{name}' was called from a VT handler."
     " MPI functions should not used inside user code invoked from VT handlers."
   );
