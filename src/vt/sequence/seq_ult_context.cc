@@ -51,7 +51,7 @@
 
 namespace vt { namespace seq {
 
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
 void seq_context_fn(fcontext::ContextFuncTransfer t) {
   void* data = t.data;
   SeqULTContext* ctx = reinterpret_cast<SeqULTContext*>(data);
@@ -61,7 +61,7 @@ void seq_context_fn(fcontext::ContextFuncTransfer t) {
 }
 #endif
 
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   SeqULTContext::SeqULTContext(SeqULTConstTag)
     : stack(fcontext::createStack())
   { }
@@ -71,7 +71,7 @@ void seq_context_fn(fcontext::ContextFuncTransfer t) {
   }
 #endif
 
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
 void SeqULTContext::initialize(ULTContextFuncType func) {
   context_initialized = true;
   fctx = fcontext::makeContext(stack, func);
@@ -112,7 +112,7 @@ void SeqULTContext::clearCurTransferState() {
 #endif
 
 void SeqULTContext::start() {
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   debug_print_force(
     sequence, node,
     "SeqULTContext: start\n"
@@ -125,7 +125,7 @@ void SeqULTContext::start() {
 }
 
 void SeqULTContext::suspend() {
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   vtAssert(cur_transfer_main_state_ != nullptr, "Must have valid state");
   has_valid_context_state_ = true;
 
@@ -141,14 +141,14 @@ void SeqULTContext::suspend() {
 }
 
 void SeqULTContext::resume() {
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   vtAssert(has_valid_context_state_, "Must have valid context state");
   transfer_holder_ctx_ = fcontext::jumpContext(transfer_holder_ctx_.transfer);
 #endif
 }
 
 void SeqULTContext::finish() {
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   vtAssert(has_valid_context_state_, "Must have valid context state");
   has_valid_context_state_ = false;
   cur_transfer_main_state_ = nullptr;

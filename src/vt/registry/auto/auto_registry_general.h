@@ -91,7 +91,7 @@ struct FunctorAdapterArgs {
     return sizeof...(ArgsT);
   }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
@@ -126,7 +126,7 @@ struct FunctorAdapterParam {
     return 0; // lies - see NumArgsTag, perhaps
   }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
@@ -157,7 +157,7 @@ struct FunctorAdapter {
     return 0; // lies - see NumArgsTag, perhaps
   }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;
@@ -188,7 +188,7 @@ struct FunctorAdapterMember {
     return 0; // lies - see NumArgsTag, perhaps
   }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   static std::string traceGetEventType() {
     using TE = vt::util::demangle::TemplateExtract;
     using DU = vt::util::demangle::DemanglerUtils;

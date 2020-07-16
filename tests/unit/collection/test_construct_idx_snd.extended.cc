@@ -87,12 +87,12 @@ using CollectionTestTypes = testing::Types<
 
 // Only enable this test if the detector is enabled since they depend on
 // detecting constructor index
-#if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
+#if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
 
   INSTANTIATE_TYPED_TEST_SUITE_P(
     test_construct_idx_snd, TestConstruct, CollectionTestTypes
   );
 
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
 }}} // end namespace vt::tests::unit

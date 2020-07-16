@@ -173,7 +173,7 @@ void Runtime::pauseForDebugger() {
     ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
   }
   // Try to flush out all logs before dying
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   if (vt::theTrace()) {
     vt::theTrace()->cleanupTracesFile();
   }
@@ -200,7 +200,7 @@ void Runtime::pauseForDebugger() {
   auto bred      = debug::bred();
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
   // Try to flush out all logs before dying
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   if (vt::theTrace()) {
     vt::theTrace()->cleanupTracesFile();
   }
@@ -326,7 +326,7 @@ bool Runtime::tryFinalize() {
 }
 
 bool Runtime::needStatsRestartReader() {
-  #if backend_check_enabled(lblite)
+  #if vt_check_enabled(lblite)
     if (ArgType::vt_lb_stats) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
@@ -523,7 +523,7 @@ void Runtime::setup() {
   // wait for all nodes to start up to initialize the runtime
   theCollective->barrier();
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   theTrace->loadAndBroadcastSpec();
 # endif
 
@@ -581,14 +581,14 @@ void Runtime::initializeComponents() {
   >{});
 
   p_->registerComponent<event::AsyncEvent>(&theEvent, Deps<
-#   if backend_check_enabled(trace_enabled)
+#   if vt_check_enabled(trace_enabled)
     trace::Trace,  // For trace user event registrations
 #   endif
     ctx::Context,  // Everything depends on theContext
     pool::Pool     // For memory allocations
   >{});
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   // The Trace and Scheduler components have a co-dependency. However,
   // the lifetime of theTrace should be longer than that of theSched.
   p_->registerComponent<trace::Trace>(&theTrace, Deps<
@@ -607,7 +607,7 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<messaging::ActiveMessenger>(
     &theMsg, Deps<
-#     if backend_check_enabled(trace_enabled)
+#     if vt_check_enabled(trace_enabled)
       trace::Trace,      // For trace user event registrations
 #     endif
       ctx::Context,      // Everything depends on theContext
@@ -619,7 +619,7 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<sched::Scheduler>(
     &theSched, Deps<
-#     if backend_check_enabled(trace_enabled)
+#     if vt_check_enabled(trace_enabled)
       trace::Trace,             // For scheduler-related trace events
 #     endif
       ctx::Context,             // Everything depends on theContext
@@ -762,7 +762,7 @@ void Runtime::initializeComponents() {
   p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   p_->add<trace::Trace>();
 # endif
   p_->add<objgroup::ObjGroupManager>();

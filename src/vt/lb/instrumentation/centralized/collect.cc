@@ -64,7 +64,7 @@ namespace vt { namespace lb { namespace instrumentation {
   vtAssert(msg1->phase_ == msg2->phase_, "Phases must be identical");
 
   // Runtime validity check to ensure that nodes are unique
-  #if backend_check_enabled(runtime_checks) || 1
+  #if vt_check_enabled(runtime_checks) || 1
   for (auto&& elm1 : msg1->entries_) {
     for (auto&& elm2 : msg2->entries_) {
       vtAssert(

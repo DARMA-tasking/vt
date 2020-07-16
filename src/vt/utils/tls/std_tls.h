@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(stdthread)
+#if vt_check_enabled(stdthread)
 
 namespace vt { namespace util { namespace tls {
 
@@ -77,6 +77,6 @@ thread_local T ThreadLocalSTD<T,tag>::value_;
 
 }}} /* end namespace vt::util::tls */
 
-#endif /*backend_check_enabled(stdthread)*/
+#endif /*vt_check_enabled(stdthread)*/
 
 #endif /*INCLUDED_UTILS_TLS_STD_TLS_H*/

@@ -95,7 +95,7 @@ inline GroupType envelopeGetGroup(Env& env);
 template <typename Env>
 inline RefType envelopeGetRef(Env& env);
 
-#if backend_check_enabled(priorities)
+#if vt_check_enabled(priorities)
 /**
  * \brief Get the priority level on an envelope
  *
@@ -117,7 +117,7 @@ template <typename Env>
 inline PriorityLevelType envelopeGetPriorityLevel(Env& env);
 #endif
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 /**
  * \brief Get the trace event on an envelope
  *

@@ -47,11 +47,11 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "detector_headers.h"
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
 
 namespace vt { namespace util { namespace mutex {
 
@@ -88,6 +88,6 @@ struct MutexTraits {
 
 }}} /* end namespace vt::util::mutex */
 
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H*/

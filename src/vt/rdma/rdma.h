@@ -578,7 +578,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     RDMA_HandleType const& han, NodeType const& target,
     NodeType const& non_target, ActionType const& action = nullptr
   ) {
-    #if backend_check_enabled(mpi_rdma)
+    #if vt_check_enabled(mpi_rdma)
       return newChannel(
         RDMA_TypeType::Get, han, target, non_target, action
       );
@@ -600,7 +600,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
     NodeType const& non_target, ActionType const& action = nullptr
   ) {
 
-    #if backend_check_enabled(mpi_rdma)
+    #if vt_check_enabled(mpi_rdma)
       return newChannel(
         RDMA_TypeType::Put, han, target, non_target, action
       );

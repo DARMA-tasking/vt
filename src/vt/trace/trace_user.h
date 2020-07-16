@@ -148,7 +148,7 @@ void addUserNotePre(std::string const& note, TraceEventIDType const event);
  */
 void addUserNoteEpi(std::string const& note, TraceEventIDType const event);
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 
 /**
  * \struct TraceScopedEventHash

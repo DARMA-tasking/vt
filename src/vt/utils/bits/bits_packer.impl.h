@@ -97,7 +97,7 @@ template <typename BitType, typename BitField>
 template <FieldType start, FieldType len, typename BitType, typename BitField>
 /*static*/ inline void
 BitPacker::setField(BitField& field, BitType const& segment) {
-  #if backend_check_enabled(bit_check_overflow)
+  #if vt_check_enabled(bit_check_overflow)
     auto const& seg_msb_bit = get_msb_bit(segment);
     //fmt::print("size={}, high bit={}\n", sizeof(BitType)*8, seg_msb_bit);
     vtAssert(

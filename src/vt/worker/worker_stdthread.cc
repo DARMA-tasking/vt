@@ -44,7 +44,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(stdthread)
+#if vt_check_enabled(stdthread)
 
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
@@ -124,4 +124,4 @@ void StdThreadWorker::dispatch(WorkerFunType fun) {
 
 }} /* end namespace vt::worker */
 
-#endif /*backend_check_enabled(stdthread)*/
+#endif /*vt_check_enabled(stdthread)*/

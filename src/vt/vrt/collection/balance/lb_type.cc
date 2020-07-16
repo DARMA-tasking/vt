@@ -52,7 +52,7 @@ namespace balance {
 
 std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::NoLB,           std::string{"NoLB"          }},
-# if backend_check_enabled(zoltan)
+# if vt_check_enabled(zoltan)
   {LBType::ZoltanLB,       std::string{"ZoltanLB"      }},
 # endif
   {LBType::GreedyLB,       std::string{"GreedyLB"      }},

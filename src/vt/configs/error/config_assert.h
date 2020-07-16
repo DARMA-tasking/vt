@@ -105,7 +105,7 @@
 #define vt_make_list_strings(a) #a,
 #define argsToString(...) vt_applyxn(vt_make_list_strings,__VA_ARGS__)
 
-#if backend_check_enabled(production)
+#if vt_check_enabled(production)
   #define vtAssert(cond,str)            vt_force_use(cond)
   #define vtAssertInfo(cond,str,...)    vt_force_use(cond,__VA_ARGS__)
   #define vtAssertNot(cond,str)         vt_force_use(cond)
@@ -152,7 +152,7 @@
   #define vtAssertExprArgImpl(fail,cond,...)                            \
     vtAssertArgImpl(fail,cond,#cond,__VA_ARGS__)
 
-  #if backend_check_enabled(assert_no_fail)
+  #if vt_check_enabled(assert_no_fail)
     #define vtAssert(cond,str)         vtAssertImpl(false,cond,str)
     #define vtAssertInfo(cond,str,...) vtAssertArgImpl(false,cond,str,__VA_ARGS__)
     #define vtAssertExpr(cond)         vtAssertExprImpl(false,cond)

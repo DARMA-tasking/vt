@@ -251,7 +251,7 @@ void State::getData(
       tag == no_tag or get_any_tag ? rdma_get_fn :
       std::get<0>(get_tag_holder.find(tag)->second);
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
     trace::TraceProcessingTag processing_tag;
     {
       ::vt::HandlerType const reg_han =
@@ -282,7 +282,7 @@ void State::getData(
       }
     }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
     theTrace()->endProcessing(processing_tag);
 #endif
   } else {
@@ -320,7 +320,7 @@ void State::putData(
       tag == no_tag or put_any_tag ? rdma_put_fn :
       std::get<0>(put_tag_holder.find(tag)->second);
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
     trace::TraceProcessingTag processing_tag;
     {
       ::vt::HandlerType const reg_han =
@@ -350,7 +350,7 @@ void State::putData(
       info.cont_action();
     }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
     theTrace()->endProcessing(processing_tag);
 #endif
   } else {

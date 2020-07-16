@@ -60,7 +60,7 @@ template <typename MsgT, typename ElementT>
 /*static*/ void RunnableVrt<MsgT,ElementT>::run(
   HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node
 ) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
   {
     trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
@@ -77,7 +77,7 @@ template <typename MsgT, typename ElementT>
   auto const func = auto_registry::getAutoHandlerVC(handler);
   func(msg, elm);
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->endProcessing(processing_tag);
 #endif
 }

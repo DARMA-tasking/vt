@@ -49,11 +49,11 @@
 #include "vt/worker/worker_common.h"
 #include "vt/worker/worker_types.h"
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "detector_headers.h"
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
 
 namespace vt { namespace worker {
 
@@ -146,6 +146,6 @@ struct WorkerGroupTraits {
 
 }} /* end namespace vt::worker */
 
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_WORKER_WORKER_GROUP_TRAITS_H*/

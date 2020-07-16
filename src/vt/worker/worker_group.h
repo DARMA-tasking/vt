@@ -53,7 +53,7 @@
 #include "vt/utils/atomic/atomic.h"
 #include "vt/runtime/component/component_pack.h"
 
-#if backend_check_enabled(stdthread)
+#if vt_check_enabled(stdthread)
   #include "vt/worker/worker_stdthread.h"
 #elif backend_no_threading
   #include "vt/worker/worker_seq.h"
@@ -103,15 +103,15 @@ private:
   WorkerContainerType workers_;
 };
 
-#if backend_check_enabled(stdthread)
+#if vt_check_enabled(stdthread)
   using WorkerGroupSTD = WorkerGroupAny<StdThreadWorker>;
 #elif backend_no_threading
   using WorkerGroupSeq = WorkerGroupAny<WorkerSeq>;
-#endif /*backend_check_enabled(stdthread)*/
+#endif /*vt_check_enabled(stdthread)*/
 
 }} /* end namespace vt::worker */
 
-#if backend_check_enabled(detector) && backend_check_enabled(stdthread)
+#if vt_check_enabled(detector) && vt_check_enabled(stdthread)
   #include "vt/worker/worker_group_traits.h"
 
   namespace vt { namespace worker {
@@ -122,7 +122,7 @@ private:
   );
 
   }} /* end namespace vt::worker */
-#endif /*backend_check_enabled(detector) && backend_check_enabled(stdthread)*/
+#endif /*vt_check_enabled(detector) && vt_check_enabled(stdthread)*/
 
 #include "vt/worker/worker_group.impl.h"
 

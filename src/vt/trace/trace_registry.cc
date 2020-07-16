@@ -81,7 +81,7 @@ TraceRegistry::registerEventHashed(
 TraceRegistry::setTraceName(
   TraceEntryIDType id, std::string const& name, std::string const& type_name
 ) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   auto* events = TraceContainers::getEventContainer();
   auto event_iter = events->find(id);
   // TODO, increase guard here perhaps:

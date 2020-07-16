@@ -53,7 +53,7 @@
 namespace vt { namespace trace {
 
 UserEventIDType registerEventCollective(std::string const& name) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   return theTrace()->registerUserEventColl(name);
 #else
   return 0;
@@ -61,7 +61,7 @@ UserEventIDType registerEventCollective(std::string const& name) {
 }
 
 UserEventIDType registerEventRooted(std::string const& name) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   return theTrace()->registerUserEventRoot(name);
 #else
   return 0;
@@ -69,7 +69,7 @@ UserEventIDType registerEventRooted(std::string const& name) {
 }
 
 UserEventIDType registerEventHashed(std::string const& name) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   return theTrace()->registerUserEventHash(name);
 #else
   return 0;
@@ -77,25 +77,25 @@ UserEventIDType registerEventHashed(std::string const& name) {
 }
 
 void addUserEvent(UserEventIDType event) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->addUserEvent(event);
 #endif
 }
 
 void addUserEventBracketed(UserEventIDType event, double begin, double end) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->addUserEventBracketed(event, begin, end);
 #endif
 }
 
 void addUserNote(std::string const& note) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->addUserNote(note);
 #endif
 }
 
 void addUserData(int32_t data) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->addUserData(data);
 #endif
 }
@@ -104,12 +104,12 @@ void addUserBracketedNote(
   double const begin, double const end, std::string const& note,
   TraceEventIDType const event
 ) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->addUserBracketedNote(begin, end, note, event);
 #endif
 }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 struct UserSplitHolder final {
   static std::unordered_map<std::string, double> split_;
 };
@@ -118,7 +118,7 @@ struct UserSplitHolder final {
 #endif
 
 void addUserNotePre(std::string const& note, TraceEventIDType const) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   auto iter = UserSplitHolder::split_.find(note);
   vtAssertExpr(iter == UserSplitHolder::split_.end());
   UserSplitHolder::split_.emplace(
@@ -130,7 +130,7 @@ void addUserNotePre(std::string const& note, TraceEventIDType const) {
 }
 
 void addUserNoteEpi(std::string const& in_note, TraceEventIDType const event) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   auto iter = UserSplitHolder::split_.find(in_note);
   vtAssertExpr(iter != UserSplitHolder::split_.end());
   auto begin = iter->second;

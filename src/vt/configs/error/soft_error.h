@@ -127,7 +127,7 @@ inline void warning(
 
 } /* end namespace vt */
 
-#if backend_check_enabled(production)
+#if vt_check_enabled(production)
   #define vtWarn(str)
   #define vtWarnCode(error,str)
   #define vtWarnIf(cond,str)           vt_force_use(cond)

@@ -49,9 +49,9 @@
 
 #define backend_null_tls 1
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   #include "vt/utils/tls/omp_tls.h"
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
   #include "vt/utils/tls/std_tls.h"
 #elif backend_no_threading
   #include "vt/utils/tls/null_tls.h"
@@ -65,13 +65,13 @@
 
 namespace vt { namespace util { namespace tls {
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   template <typename T, char const* tag>
   using ThreadLocalType = ThreadLocalOMP<T,tag>;
 
   template <typename T, char const* tag, T val>
   using ThreadLocalInitType = ThreadLocalInitOMP<T,tag,val>;
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
   template <typename T, char const* tag>
   using ThreadLocalType = ThreadLocalSTD<T,tag>;
 

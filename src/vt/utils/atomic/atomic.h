@@ -47,9 +47,9 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   #include "vt/utils/atomic/omp_atomic.h"
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
   #include "vt/utils/atomic/std_atomic.h"
 #elif backend_no_threading
   #include "vt/utils/atomic/null_atomic.h"
@@ -59,10 +59,10 @@
 
 namespace vt { namespace util { namespace atomic {
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   template <typename T>
   using AtomicType = AtomicOMP<T>;
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
   template <typename T>
   using AtomicType = AtomicSTD<T>;
 #elif backend_no_threading

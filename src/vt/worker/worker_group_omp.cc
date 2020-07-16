@@ -47,7 +47,7 @@
 #include "vt/context/context_attorney.h"
 #include "vt/collective/collective_ops.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
 
 #include "vt/worker/worker_common.h"
 #include "vt/worker/worker_group_omp.h"

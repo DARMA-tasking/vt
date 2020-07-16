@@ -51,7 +51,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/collective/collective_scope.h"
 
-#if backend_check_enabled(zoltan)
+#if vt_check_enabled(zoltan)
 
 #include <zoltan.h>
 
@@ -158,6 +158,6 @@ private:
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*backend_check_enabled(zoltan)*/
+#endif /*vt_check_enabled(zoltan)*/
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ZOLTANLB_ZOLTANLB_H*/

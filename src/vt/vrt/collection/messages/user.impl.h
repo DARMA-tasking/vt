@@ -123,14 +123,14 @@ void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
   s | member_;
   s | is_wrap_;
 
-  #if backend_check_enabled(lblite)
+  #if vt_check_enabled(lblite)
     s | lb_lite_instrument_;
     s | elm_perm_;
     s | elm_temp_;
     s | cat_;
   #endif
 
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     s | trace_event_;
   #endif
 }
@@ -155,7 +155,7 @@ void CollectionMessage<ColT,BaseMsgT>::setWrap(bool const& wrap) {
   is_wrap_ = wrap;
 }
 
-#if backend_check_enabled(lblite)
+#if vt_check_enabled(lblite)
 template <typename ColT, typename BaseMsgT>
 bool CollectionMessage<ColT, BaseMsgT>::lbLiteInstrument() const {
   return lb_lite_instrument_;
@@ -197,7 +197,7 @@ void CollectionMessage<ColT, BaseMsgT>::setCat(balance::CommCategory cat) {
 
 #endif
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 
 template <typename ColT, typename BaseMsgT>
 trace::TraceEventIDType

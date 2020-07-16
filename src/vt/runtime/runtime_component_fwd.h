@@ -106,7 +106,7 @@ namespace util { namespace memory {
 struct MemoryUsage;
 }}
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 namespace trace {
 struct Trace;
 }

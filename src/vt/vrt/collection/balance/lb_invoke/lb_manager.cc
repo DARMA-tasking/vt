@@ -199,7 +199,7 @@ void LBManager::collectiveImpl(
     case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
     case LBType::StatsMapLB:     makeLB<lb::StatsMapLB>(msg);     break;
     case LBType::RandomLB:       makeLB<lb::RandomLB>(msg);       break;
-#   if backend_check_enabled(zoltan)
+#   if vt_check_enabled(zoltan)
     case LBType::ZoltanLB:       makeLB<lb::ZoltanLB>(msg);       break;
 #   endif
     case LBType::NoLB:
@@ -287,13 +287,13 @@ void LBManager::releaseNow(PhaseType phase) {
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
   // Set if tracing is enabled for this next phase. Do this immediately before
   // LB runs so LB is always instrumented as the beginning of the next phase
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->setTraceEnabledCurrentPhase(phase + 1);
 # endif
 }
 
 void LBManager::flushTraceNextPhase() {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->flushTracesFile(false);
 # endif
 }

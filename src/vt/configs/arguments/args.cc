@@ -67,7 +67,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
 /*static*/ std::string ArgConfig::vt_memory_reporters   =
-# if backend_check_enabled(mimalloc)
+# if vt_check_enabled(mimalloc)
   "mimalloc,"
 # endif
   "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";

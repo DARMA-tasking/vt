@@ -59,7 +59,7 @@ namespace vt { namespace messaging {
 
 ActiveMessenger::ActiveMessenger()
   :
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   trace_irecv(trace::registerEventCollective("MPI_Irecv")),
   trace_isend(trace::registerEventCollective("MPI_Isend")),
   trace_irecv_polling_am(trace::registerEventCollective("IRecv: Active Msg poll")),
@@ -113,7 +113,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   auto const& is_put = envelopeIsPut(msg->env);
   auto const& is_put_packed = envelopeIsPackedPutType(msg->env);
 
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
+  if (!is_term || vt_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       "sendMsgBytesWithPut: size={}, dest={}, is_put={}, is_put_packed={}\n",
@@ -142,7 +142,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     vtAssert(
       (!(put_size != 0) || put_ptr), "Must have valid ptr if size > 0"
     );
-    if (!is_term || backend_check_enabled(print_term_msgs)) {
+    if (!is_term || vt_check_enabled(print_term_msgs)) {
       debug_print(
         active, node,
         "sendMsgBytesWithPut: (put) put_ptr={}, size:[msg={},put={},rem={}],"
@@ -192,7 +192,7 @@ EventType ActiveMessenger::sendMsgBytes(
   auto& holder = theEvent()->getEventHolder(event_id);
   auto mpi_event = holder.get_event();
 
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
+  if (!is_term || vt_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       "sendMsgBytes: size={}, dest={}\n", msg_size, dest
@@ -211,7 +211,7 @@ EventType ActiveMessenger::sendMsgBytes(
 
   {
     VT_ALLOW_MPI_CALLS;
-    #if backend_check_enabled(trace_enabled)
+    #if vt_check_enabled(trace_enabled)
       double tr_begin = 0;
       if (ArgType::vt_trace_mpi) {
         tr_begin = vt::timing::Timing::getCurrentTime();
@@ -224,7 +224,7 @@ EventType ActiveMessenger::sendMsgBytes(
     );
     vtAssertMPISuccess(ret, "MPI_Isend");
 
-    #if backend_check_enabled(trace_enabled)
+    #if vt_check_enabled(trace_enabled)
       if (ArgType::vt_trace_mpi) {
         auto tr_end = vt::timing::Timing::getCurrentTime();
         auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
@@ -245,7 +245,7 @@ EventType ActiveMessenger::sendMsgBytes(
   return event_id;
 }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
   return current_trace_context_;
 }
@@ -263,7 +263,7 @@ EventType ActiveMessenger::doMessageSend(
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_epoch = envelopeIsEpochType(msg->env);
 
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     // We are not allowed to hold a ref to anything in the envelope, get this,
     // modify it and put it back
     auto handler = envelopeGetHandler(msg->env);
@@ -292,7 +292,7 @@ EventType ActiveMessenger::doMessageSend(
     }
   #endif
 
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
+  if (!is_term || vt_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       "doMessageSend: dest={}, handler={:x}, is_bcast={}, is_put={}\n",
@@ -358,7 +358,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   {
     VT_ALLOW_MPI_CALLS;
-    #if backend_check_enabled(trace_enabled)
+    #if vt_check_enabled(trace_enabled)
       double tr_begin = 0;
       if (ArgType::vt_trace_mpi) {
         tr_begin = vt::timing::Timing::getCurrentTime();
@@ -371,7 +371,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     );
     vtAssertMPISuccess(ret, "MPI_Isend");
 
-    #if backend_check_enabled(trace_enabled)
+    #if vt_check_enabled(trace_enabled)
       if (ArgType::vt_trace_mpi) {
         auto tr_end = vt::timing::Timing::getCurrentTime();
         auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, num_bytes);
@@ -462,7 +462,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       char* buf =
         user_buf == nullptr ?
 
-    #if backend_check_enabled(memory_pool)
+    #if vt_check_enabled(memory_pool)
         static_cast<char*>(thePool()->alloc(num_probe_bytes)) :
     #else
         static_cast<char*>(std::malloc(num_probe_bytes))      :
@@ -477,7 +477,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       {
         VT_ALLOW_MPI_CALLS;
 
-        #if backend_check_enabled(trace_enabled)
+        #if vt_check_enabled(trace_enabled)
           double tr_begin = 0;
           if (ArgType::vt_trace_mpi) {
             tr_begin = vt::timing::Timing::getCurrentTime();
@@ -490,7 +490,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         );
         vtAssertMPISuccess(recv_ret, "MPI_Irecv");
 
-        #if backend_check_enabled(trace_enabled)
+        #if vt_check_enabled(trace_enabled)
           if (ArgType::vt_trace_mpi) {
             auto tr_end = vt::timing::Timing::getCurrentTime();
             auto tr_note = fmt::format(
@@ -550,7 +550,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   auto dealloc_user_buf = irecv->dealloc_user_buf;
   auto next = irecv->next;
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   if (ArgType::vt_trace_mpi) {
     auto tr_note = fmt::format("DM Irecv completed: from={}", irecv->sender);
     trace::addUserNote(tr_note);
@@ -565,7 +565,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     );
 
     if (user_buf == nullptr) {
-      #if backend_check_enabled(memory_pool)
+      #if vt_check_enabled(memory_pool)
         thePool()->dealloc(buf);
       #else
         std::free(buf);
@@ -632,7 +632,7 @@ bool ActiveMessenger::processActiveMsg(
 
   auto const is_term = envelopeIsTerm(msg->env);
 
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
+  if (!is_term || vt_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       "processActiveMsg: msg={}, ref={}, deliver={}\n",
@@ -674,7 +674,7 @@ bool ActiveMessenger::deliverActiveMsg(
   bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
   bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
+  if (!is_term || vt_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       "deliverActiveMsg: msg={}, ref={}, is_bcast={}, epoch={:x}\n",
@@ -696,7 +696,7 @@ bool ActiveMessenger::deliverActiveMsg(
 
   bool const has_handler = active_fun != no_action or has_ex_handler or is_obj;
 
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
+  if (!is_term || vt_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       "deliverActiveMsg: msg={}, handler={:x}, tag={}, is_auto={}, "
@@ -721,12 +721,12 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = from_node;
     current_epoch_context_    = cur_epoch;
 
-    #if backend_check_enabled(priorities)
+    #if vt_check_enabled(priorities)
       current_priority_context_       = envelopeGetPriority(msg->env);
       current_priority_level_context_ = envelopeGetPriorityLevel(msg->env);
     #endif
 
-    #if backend_check_enabled(trace_enabled)
+    #if vt_check_enabled(trace_enabled)
       current_trace_context_  = envelopeGetTraceEvent(msg->env);
     #endif
 
@@ -741,11 +741,11 @@ bool ActiveMessenger::deliverActiveMsg(
     current_node_context_     = uninitialized_destination;
     current_epoch_context_    = no_epoch;
 
-    #if backend_check_enabled(trace_enabled)
+    #if vt_check_enabled(trace_enabled)
       current_trace_context_  = trace::no_trace_event;
     #endif
 
-    #if backend_check_enabled(priorities)
+    #if vt_check_enabled(priorities)
       current_priority_context_       = no_priority;
       current_priority_level_context_ = no_priority_level;
     #endif
@@ -797,7 +797,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
 
-    #if backend_check_enabled(memory_pool)
+    #if vt_check_enabled(memory_pool)
       char* buf = static_cast<char*>(thePool()->alloc(num_probe_bytes));
     #else
       char* buf = static_cast<char*>(std::malloc(num_probe_bytes));
@@ -808,7 +808,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     MPI_Request req;
 
     {
-      #if backend_check_enabled(trace_enabled)
+      #if vt_check_enabled(trace_enabled)
         double tr_begin = 0;
         if (ArgType::vt_trace_mpi) {
           tr_begin = vt::timing::Timing::getCurrentTime();
@@ -820,7 +820,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
         theContext()->getComm(), &req
       );
 
-      #if backend_check_enabled(trace_enabled)
+      #if vt_check_enabled(trace_enabled)
         if (ArgType::vt_trace_mpi) {
           auto tr_end = vt::timing::Timing::getCurrentTime();
           auto tr_note = fmt::format(
@@ -854,7 +854,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   if (ArgType::vt_trace_mpi) {
     auto tr_note = fmt::format("AM Irecv completed: from={}", irecv->sender);
     trace::addUserNote(tr_note);
@@ -873,7 +873,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   auto const is_put = envelopeIsPut(msg->env);
   bool put_finished = false;
 
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
+  if (!is_term || vt_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       "finishPendingActiveMsgAsyncRecv: msg_size={}, sender={}, is_put={}, "
@@ -893,7 +893,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
       char* put_ptr = buf + msg_size;
       msg_bytes = msg_size;
 
-      if (!is_term || backend_check_enabled(print_term_msgs)) {
+      if (!is_term || vt_check_enabled(print_term_msgs)) {
         debug_print(
           active, node,
           "finishPendingActiveMsgAsyncRecv: packed put: ptr={}, msg_size={}, "

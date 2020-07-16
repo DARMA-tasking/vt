@@ -77,7 +77,7 @@
 # include <inttypes.h>
 #endif
 
-#if backend_check_enabled(mimalloc)
+#if vt_check_enabled(mimalloc)
 # include <mimalloc.h>
 #endif
 
@@ -143,7 +143,7 @@ std::string PS::getName() {
 }
 
 std::size_t Mallinfo::getUsage() {
-# if defined(vt_has_mallinfo) && defined(vt_has_malloc_h) && !backend_check_enabled(mimalloc)
+# if defined(vt_has_mallinfo) && defined(vt_has_malloc_h) && !vt_check_enabled(mimalloc)
     struct mallinfo mi = mallinfo();
     unsigned int blocks = mi.uordblks;
     return static_cast<std::size_t>(blocks);
@@ -283,7 +283,7 @@ std::string StatM::getName() {
 }
 
 std::size_t Mimalloc::getUsage() {
-# if backend_check_enabled(mimalloc)
+# if vt_check_enabled(mimalloc)
   auto total_size = mi_get_allocated_size();
   return total_size;
 # else
@@ -306,7 +306,7 @@ MemoryUsage::MemoryUsage() {
   std::vector<std::unique_ptr<Reporter>> all_reporters;
 
   // Register all the memory reporters
-# if backend_check_enabled(mimalloc)
+# if vt_check_enabled(mimalloc)
   all_reporters.emplace_back(std::make_unique<Mimalloc>());
 # endif
   all_reporters.emplace_back(std::make_unique<Mstats>());

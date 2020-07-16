@@ -98,7 +98,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
     "dataMessageHandler: id={}\n", msg->sub_han
   );
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
   {
     trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
@@ -123,7 +123,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
     invokeCallableTuple(msg->tup, fn, false);
   }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->endProcessing(processing_tag);
 #endif
 }

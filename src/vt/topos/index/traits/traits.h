@@ -51,11 +51,11 @@
 #include <functional>
 #include <string>
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "detector_headers.h"
-#endif /* backend_check_enabled(detector) */
+#endif /* vt_check_enabled(detector) */
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
 
 namespace vt { namespace index {
 
@@ -180,6 +180,6 @@ struct IndexTraits {
 
 }}  // end namespace vt::index
 
-#endif  /*backend_check_enabled(detector)*/
+#endif  /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H*/

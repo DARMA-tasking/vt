@@ -175,7 +175,7 @@ void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
 
   void* ret = nullptr;
 
-  #if backend_check_enabled(memory_pool)
+  #if vt_check_enabled(memory_pool)
     ret = tryPooledAlloc(num_bytes, oversize);
   #endif
 
@@ -220,7 +220,7 @@ void Pool::dealloc(void* const buf) {
 
   bool success = false;
 
-  #if backend_check_enabled(memory_pool)
+  #if vt_check_enabled(memory_pool)
     success = tryPooledDealloc(buf);
   #endif
 
@@ -230,7 +230,7 @@ void Pool::dealloc(void* const buf) {
 }
 
 Pool::SizeType Pool::remainingSize(void* const buf) {
-  #if backend_check_enabled(memory_pool)
+  #if vt_check_enabled(memory_pool)
     auto buf_char = static_cast<char*>(buf);
     auto const& actual_alloc_size = HeaderManagerType::getHeaderBytes(buf_char);
     auto const& oversize = HeaderManagerType::getHeaderOversizeBytes(buf_char);
@@ -250,7 +250,7 @@ Pool::SizeType Pool::remainingSize(void* const buf) {
 }
 
 void Pool::initWorkerPools(WorkerCountType const& num_workers) {
-  #if backend_check_enabled(memory_pool)
+  #if vt_check_enabled(memory_pool)
     for (auto i = 0; i < num_workers; i++) {
       s_msg_worker_.emplace_back(initSPool());
       m_msg_worker_.emplace_back(initMPool());
@@ -259,19 +259,19 @@ void Pool::initWorkerPools(WorkerCountType const& num_workers) {
 }
 
 void Pool::finalize() {
-  #if backend_check_enabled(memory_pool)
+  #if vt_check_enabled(memory_pool)
     s_msg_worker_.clear();
     m_msg_worker_.clear();
   #endif
 }
 
 bool Pool::active() const {
-  return backend_check_enabled(memory_pool);
+  return vt_check_enabled(memory_pool);
 }
 
  bool Pool::active_env() const {
-  return backend_check_enabled(memory_pool) &&
-    !backend_check_enabled(no_pool_alloc_env);
+  return vt_check_enabled(memory_pool) &&
+    !vt_check_enabled(no_pool_alloc_env);
 }
 
 }} //end namespace vt::pool

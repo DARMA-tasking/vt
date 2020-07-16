@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 # include "vt/trace/trace_common.h"
 #endif
 

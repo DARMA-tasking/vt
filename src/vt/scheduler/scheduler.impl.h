@@ -57,7 +57,7 @@ void Scheduler::enqueue(MsgT* msg, ActionType action) {
     num_term_msgs_++;
   }
 
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   auto priority = envelopeGetPriority(msg->env);
   work_queue_.emplace(UnitType(is_term, priority, action));
 # else

@@ -52,7 +52,7 @@
   static_assert(false, "Configuration error: This should be unreachable");
 
 
-#define backend_check_enabled(test_option) (vt_feature_ ## test_option != 0)
+#define vt_check_enabled(test_option) (vt_feature_ ## test_option != 0)
 
 #define vt_backend_debug_enabled(test_option)                                \
   ((vt::config::DefaultConfig::category & vt::config::CatEnum::test_option) != 0)
@@ -65,7 +65,7 @@
 
 #define backend_enable_if_impl(feature, eit, eif)         \
   do {                                                    \
-    if (backend_check_enabled(feature)) {                 \
+    if (vt_check_enabled(feature)) {                 \
       eit                                                 \
     } else {                                              \
       eif                                                 \

@@ -90,7 +90,7 @@ say <<PROLOGUE;
 #define EXTERN extern "C"
 #define AUTOGEN
 
-#if backend_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards)
 PROLOGUE
 
 # TODO:
@@ -119,5 +119,5 @@ MPI_GUARD
 }
 
 say <<EPILOG;
-#endif // backend_check_enabled(mpi_access_guards)
+#endif // vt_check_enabled(mpi_access_guards)
 EPILOG

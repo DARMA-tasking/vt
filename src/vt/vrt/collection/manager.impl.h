@@ -219,7 +219,7 @@ template <typename SysMsgT>
         // is often very handy
         IdxContextHolder::set(&cur_idx,proxy);
 
-        #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
+        #if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
           auto new_vc = DerefCons::derefTuple<ColT, IndexT, decltype(msg->tup)>(
             num_elms, cur_idx, &msg->tup
           );
@@ -453,7 +453,7 @@ template <typename ColT, typename IndexT, typename MsgT>
       vtAssert(base != nullptr, "Must be valid pointer");
       base->cur_bcast_epoch_++;
 
-      #if backend_check_enabled(lblite)
+      #if vt_check_enabled(lblite)
         debug_print(
           vrt_coll, node,
           "broadcast: apply to element: instrument={}\n",
@@ -495,14 +495,14 @@ template <typename ColT, typename IndexT, typename MsgT>
       // message because it might have migrated out and be invalid
       auto const from = col_msg->getFromNode();
       trace::TraceEventIDType trace_event = trace::no_trace_event;
-      #if backend_check_enabled(trace_enabled)
+      #if vt_check_enabled(trace_enabled)
         trace_event = col_msg->getFromTraceEvent();
       #endif
       collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
         msg,base,handler,member,from,trace_event
       );
 
-      #if backend_check_enabled(lblite)
+      #if vt_check_enabled(lblite)
         theMsg()->clearListeners();
 
         // Unset the element ID context
@@ -679,7 +679,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   );
 
 
-  #if backend_check_enabled(lblite)
+  #if vt_check_enabled(lblite)
     debug_print(
       vrt_coll, node,
       "collectionMsgTypedHandler: receive msg: instrument={}\n",
@@ -722,7 +722,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   auto const from = col_msg->getFromNode();
 
   trace::TraceEventIDType trace_event = trace::no_trace_event;
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     trace_event = col_msg->getFromTraceEvent();
   #endif
   collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
@@ -730,7 +730,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   );
   theMsg()->popEpoch(cur_epoch);
 
-  #if backend_check_enabled(lblite)
+  #if vt_check_enabled(lblite)
     theMsg()->clearListeners();
 
     theCollection()->setCurrentContext(perm_prev_elm, temp_prev_elm);
@@ -986,7 +986,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   msg->setBcastProxy(col_proxy);
   msg->setMember(member);
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   // Create the trace creation event for the broadcast here to connect it a
   // higher semantic level
   auto reg_type = member ?
@@ -999,7 +999,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   msg->setFromTraceEvent(event);
 # endif
 
-# if backend_check_enabled(lblite)
+# if vt_check_enabled(lblite)
   msg->setLBLiteInstrument(instrument);
   auto const temp_elm_id = getCurrentContextTemp();
   auto const perm_elm_id = getCurrentContextPerm();
@@ -1313,7 +1313,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
   auto msg = promoteMsg(raw_msg);
 
-# if backend_check_enabled(lblite)
+# if vt_check_enabled(lblite)
   msg->setLBLiteInstrument(true);
 
   auto const temp_elm_id = getCurrentContextTemp();
@@ -1333,7 +1333,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   }
 # endif
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   // Create the trace creation event here to connect it a higher semantic
   // level. Do it in the imm_context so we see the send event when the user
   // actually invokes send on the proxy (not outside the event that actually
@@ -1706,7 +1706,7 @@ void CollectionManager::staticInsert(
   auto const max = static_cast<BaseIdxType*>(&range);
   auto const& home_node = fn(cur, max, num_nodes);
 
-  #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
+  #if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
     auto elm_ptr = DerefCons::derefTuple<ColT, IndexT, decltype(tuple)>(
       num_elms, idx, &tuple
     );
@@ -2416,7 +2416,7 @@ void CollectionManager::insert(
         // index during the constructor
         IdxContextHolder::set(&cur_idx,untyped_proxy);
 
-#       if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
+#       if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
         auto new_vc = DerefCons::derefTuple<ColT,IndexT,std::tuple<>>(
           num_elms, cur_idx, &tup
         );
@@ -2504,7 +2504,7 @@ MigrateStatus CollectionManager::migrateOut(
      elm_holder != nullptr, "Element must be registered here"
    );
 
-   #if backend_check_enabled(runtime_checks)
+   #if vt_check_enabled(runtime_checks)
    {
      bool const exists = elm_holder->exists(idx);
      vtAssert(
@@ -2585,7 +2585,7 @@ MigrateStatus CollectionManager::migrateOut(
 
    return MigrateStatus::MigratedToRemote;
  } else {
-   #if backend_check_enabled(runtime_checks)
+   #if vt_check_enabled(runtime_checks)
      vtAssert(
        false, "Migration should only be called when to_node is != this_node"
      );
@@ -2795,7 +2795,7 @@ void CollectionManager::elmReadyLB(
   auto lb_han = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
   auto pmsg = promoteMsg(msg);
 
-#if !backend_check_enabled(lblite)
+#if !vt_check_enabled(lblite)
   theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
   return;
 #endif
@@ -2845,7 +2845,7 @@ void CollectionManager::elmReadyLB(
     proxy.getElementProxy().getIndex(), do_sync, in_phase
   );
 
-#if !backend_check_enabled(lblite)
+#if !vt_check_enabled(lblite)
   cont();
   return;
 #endif
@@ -2911,7 +2911,7 @@ void CollectionManager::elmReadyLB(
     using MsgType = PhaseMsg<ColT>;
     auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync, false);
 
-#if backend_check_enabled(lblite)
+#if vt_check_enabled(lblite)
     msg->setLBLiteInstrument(false);
 #endif
 
@@ -2969,7 +2969,7 @@ void CollectionManager::nextPhase(
     }
   }
 
-  #if backend_check_enabled(lblite)
+  #if vt_check_enabled(lblite)
   msg->setLBLiteInstrument(instrument);
   debug_print(
   vrt_coll, node,

@@ -135,7 +135,7 @@ void CollectiveAnyOps<instance>::abort(
   auto tls_rt = curRT;
   auto myrt = tls_rt ? tls_rt : ::vt::rt;
   if (myrt) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
     //--- Try to flush most of the traces before aborting
     myrt->theTrace->cleanupTracesFile();
 #endif

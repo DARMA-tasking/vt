@@ -51,7 +51,7 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/arguments/args.h"
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 #include "vt/trace/trace.h"
 #endif
 
@@ -397,7 +397,7 @@ public:
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;
 
   // Optional components
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     ComponentPtrType<trace::Trace> theTrace = nullptr;
   #endif
 

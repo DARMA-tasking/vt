@@ -102,7 +102,7 @@ struct ExampleIndex {
 
 }} // end namespace vt::index
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "vt/topos/index/traits/traits.h"
 
   namespace vt { namespace index {

@@ -58,7 +58,7 @@
 #include <tuple>
 #include <type_traits>
 
-#if backend_check_enabled(production)
+#if vt_check_enabled(production)
   #define vtAbort(str)                                                \
     ::vt::error::display(str,1);
   #define vtAbortCode(xy,str)                                         \

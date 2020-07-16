@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/manager.h"
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -82,6 +82,6 @@ DerefCons::expandSeq(
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_IMPL_H*/

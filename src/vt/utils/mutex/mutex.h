@@ -51,9 +51,9 @@
 
 #include <mutex>
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   #include "vt/utils/mutex/omp_mutex.h"
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
   #include "vt/utils/mutex/std_mutex.h"
 #elif backend_no_threading
   #include "vt/utils/mutex/null_mutex.h"
@@ -63,9 +63,9 @@
 
 namespace vt { namespace util { namespace mutex {
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   using MutexType = OMPMutex;
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
   using MutexType = STDMutex;
 #elif backend_no_threading
   using MutexType = NullMutex;

@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
 
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
 #  include <context/context.h>
 #endif
 
@@ -61,18 +61,18 @@ namespace vt { namespace seq {
 static struct SeqULTConstTag { } seq_ult_cons_tag_t { };
 #pragma GCC diagnostic pop
 
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   void seq_context_fn(fcontext::ContextFuncTransfer t);
 #endif
 
 struct SeqULTContext {
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   using ULTContextFuncType = fcontext::ContextFunctionParam;
 #endif
 
   using ULTContextStatefulFnType = std::function<void()>;
 
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   fcontext::ULTContextType stack;
   fcontext::Context fctx;
 #endif
@@ -81,7 +81,7 @@ struct SeqULTContext {
 
   SeqULTContext() : SeqULTContext(seq_ult_cons_tag_t) { }
 
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   void initialize(ULTContextFuncType func);
   void initialize(ULTContextStatefulFnType stateful_func);
   bool initialized() const;
@@ -97,7 +97,7 @@ struct SeqULTContext {
   void finish();
 
 private:
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
   bool has_valid_context_state_ = false;
 
   fcontext::ContextTransfer transfer_holder_main_;

@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
 
 #include "vt/worker/worker_common.h"
 #include "vt/worker/worker_types.h"
@@ -87,7 +87,7 @@ private:
 
 }} /* end namespace vt::worker */
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "vt/worker/worker_traits.h"
 
   namespace vt { namespace worker {
@@ -98,8 +98,8 @@ private:
   );
 
   }} /* end namespace vt::worker */
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
-#endif /*backend_check_enabled(openmp)*/
+#endif /*vt_check_enabled(openmp)*/
 
 #endif /*INCLUDED_WORKER_WORKER_OPENMP_H*/

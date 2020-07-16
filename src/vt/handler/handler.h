@@ -111,7 +111,7 @@ struct HandlerManager {
   static bool isHandlerAuto(HandlerType han);
   static bool isHandlerFunctor(HandlerType han);
   static bool isHandlerObjGroup(HandlerType han);
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   static void setHandlerTrace(HandlerType& han, bool is_trace);
   static bool isHandlerTrace(HandlerType han);
 #endif

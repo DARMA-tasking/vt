@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
 
 #include <atomic>
 #include <omp.h>
@@ -170,6 +170,6 @@ private:
 
 }}} /* end namespace vt::util::atomic */
 
-#endif /*backend_check_enabled(openmp)*/
+#endif /*vt_check_enabled(openmp)*/
 
 #endif /*INCLUDED_UTILS_ATOMIC_OMP_ATOMIC_H*/

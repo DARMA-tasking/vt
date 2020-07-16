@@ -45,7 +45,7 @@
 #include "vt/config.h"
 #include "vt/runtime/mpi_access.h"
 
-#if backend_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards)
 namespace vt { namespace runtime {
 
 ScopedMPIAccess::ScopedMPIAccess() {
@@ -79,4 +79,4 @@ ScopedMPIAccess::~ScopedMPIAccess() {
 /*static*/ bool ScopedMPIAccess::default_prohibit_ = false;
 
 }} // end namespace vt::runtime
-#endif // backend_check_enabled(mpi_access_guards)
+#endif // vt_check_enabled(mpi_access_guards)

@@ -95,7 +95,7 @@ private:
 
 }} /* end namespace vt::worker */
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "vt/worker/worker_traits.h"
 
   namespace vt { namespace worker {
@@ -106,7 +106,7 @@ private:
   );
 
   }} /* end namespace vt::worker */
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
 #endif /*backend_no_threading*/
 

@@ -52,7 +52,7 @@
 
 #include "vt/transport.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   #include <omp.h>
 #else
   #include <thread>
@@ -240,7 +240,7 @@ static void testTLSMulti(
   }
 }
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
 
 TEST_F(TestTLS, basic_tls_noinit_multi_thd_openmp) {
   using namespace vt::util::tls;
@@ -296,7 +296,7 @@ TEST_F(TestTLS, basic_tls_init_class_multi_thd_openmp) {
   }
 }
 
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
 
 static void testTLSMultiNoInit() { testTLSMulti(false, false, false); }
 static void testTLSMultiInit() { testTLSMulti(false, true, false); }
