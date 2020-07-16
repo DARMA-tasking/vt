@@ -140,17 +140,7 @@ public:
    * \param[in] val the new value
    */
   void update(T val) {
-    operator+=(val);
-  }
-
-  /**
-   * \brief Update with a new value
-   *
-   * \param[in] val the new value
-   */
-  Gauge<T>& operator+=(T val) {
     this->updateStats(val);
-    return *this;
   }
 };
 
@@ -230,56 +220,6 @@ public:
    * \param[in] val amount to decrement
    */
   void decrement(T val = 1) { impl_->update(-val); }
-
-  /**
-   * \brief Convenience method for incrementing---prefix operator
-   */
-  Counter<T>& operator++() {
-    impl_->update(1);
-    return *this;
-  }
-
-  /**
-   * \brief Convenience method for incrementing---postfix operator
-   */
-  Counter<T> operator++(int) {
-    Counter<T> tmp(*this);
-    operator++();
-    return tmp;
-  }
-
-  /**
-   * \brief Convenience method for decrementing---prefix operator
-   */
-  Counter<T>& operator--() {
-    impl_->update(-1);
-    return *this;
-  }
-
-  /**
-   * \brief Convenience method for decrementing---postfix operator
-   */
-  Counter<T> operator--(int) {
-    Counter<T> tmp(*this);
-    operator--();
-    return tmp;
-  }
-
-  /**
-   * \brief Convenience method for incrementing by some value
-   */
-  Counter<T>& operator+=(T val) {
-    impl_->update(val);
-    return *this;
-  }
-
-  /**
-   * \brief Convenience method for decrementing by some value
-   */
-  Counter<T>& operator-=(T val) {
-    impl_->update(-val);
-    return *this;
-  }
 
 private:
   detail::DiagnosticValue<T>* impl_ = nullptr; /**< The actual underlying value */
