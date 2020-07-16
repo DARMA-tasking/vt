@@ -59,7 +59,7 @@ template <typename MsgT>
 void Reduce::reduceUp(MsgT* msg) {
   vtAssert(msg->scope() == scope_, "Must match correct scope");
 
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "reduceUp: scope={}, stamp={}, msg={}\n",
     msg->scope().str(), detail::stringizeStamp(msg->stamp()), print_ptr(msg)
@@ -113,7 +113,7 @@ detail::ReduceStamp Reduce::reduce(
   msg->reduce_root_ = root;
   msg->reduce_id_ = detail::ReduceIDImpl{cur_id, scope_};
 
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "reduce: scope={}, stamp={}, contrib={}, msg={}, ref={}\n",
     scope_.str(), detail::stringizeStamp(id), num_contrib, print_ptr(msg),
@@ -153,7 +153,7 @@ void Reduce::reduceAddMsg(
   }
   state.combine_handler_ = msg->combine_handler_;
   state.reduce_root_ = msg->reduce_root_;
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "reduceAddMsg: scope={}, stamp={}, msg={}, contrib={}, msgs.size()={}, "
     "ref={}\n",
@@ -173,7 +173,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
   std::size_t total = getNumChildren() + contrib;
   bool ready = nmsgs == total;
 
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "startReduce: scope={}, stamp={}, msg={}, children={}, "
     "contrib_={}, local_contrib_={}, nmsgs={}, ready={}\n",
@@ -193,7 +193,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         typed_msg->count_ = size - i;
         typed_msg->is_root_ = false;
 
-        debug_print_verbose(
+        vt_debug_print_verbose(
           reduce, node,
           "scope={}, stamp={}: i={} next={} has_next={} count={} msgs.size()={} "
           "ref={}\n",
@@ -203,7 +203,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         );
       }
 
-      debug_print_verbose(
+      vt_debug_print_verbose(
         reduce, node,
         "scope={}, stamp={}, msgs.size()={}\n",
         scope_.str(), detail::stringizeStamp(id), size
@@ -232,7 +232,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       auto const& root = state.reduce_root_;
       auto const& this_node = theContext()->getNode();
       if (root != this_node) {
-        debug_print(
+        vt_debug_print(
           reduce, node,
           "reduce notify root (send): scope={}, stamp={}, root={}, node={}\n",
           scope_.str(), detail::stringizeStamp(id), root, this_node
@@ -240,7 +240,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
 
         theMsg()->sendMsg<MsgT,ReduceManager::reduceRootRecv<MsgT>>(root,typed_msg);
       } else {
-        debug_print(
+        vt_debug_print(
           reduce, node,
           "reduce notify root (direct): scope={}, stamp={}, root={}, node={}\n",
           scope_.str(), detail::stringizeStamp(id), root, this_node
@@ -249,7 +249,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       }
     } else {
       auto const& parent = getParent();
-      debug_print(
+      vt_debug_print(
         reduce, node,
         "reduce send to parent: scope={}, stamp={}, parent={}\n",
         scope_.str(), detail::stringizeStamp(id), parent

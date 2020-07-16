@@ -86,7 +86,7 @@ template <typename MsgT>
 
   auto new_size = group_size - 1;
 
-  debug_print(
+  vt_debug_print(
     group, node,
     "Info::groupSetupHandler: group size={}, group_total_size={}, "
     "new_size={}, min_spanning_tree_size={}\n",
@@ -94,7 +94,7 @@ template <typename MsgT>
   );
 
   if (new_size < min_spanning_tree_size) {
-    debug_print(
+    vt_debug_print(
       group, node,
       "Info::groupSetupHandler: create leaf node: size={}\n",
       new_size
@@ -107,7 +107,7 @@ template <typename MsgT>
       group, std::move(owning_region), is_static, group_total_size
     );
 
-    debug_print(
+    vt_debug_print(
       group, node,
       "Info::groupSetupHandler: op={}, parent={}\n",
       op_id, parent
@@ -121,7 +121,7 @@ template <typename MsgT>
       );
     }
   } else {
-    debug_print(
+    vt_debug_print(
       group, node,
       "Info::groupSetupHandler: split and send to children: size={}\n",
       new_size
@@ -136,7 +136,7 @@ template <typename MsgT>
       vtAssertExpr(iter != theGroup()->remote_group_info_.end());
       auto info = iter->second.get();
 
-      debug_print(
+      vt_debug_print(
         group, node,
         "Info::parent continuation: wait_count_={}, parent={}\n",
         info->wait_count_, parent
@@ -144,7 +144,7 @@ template <typename MsgT>
 
       info->wait_count_--;
       if (info->wait_count_ == 0 && parent != uninitialized_destination) {
-        debug_print(
+        vt_debug_print(
           group, node,
           "Info::parent continuation: sending to parent={}, op_id={}\n",
           parent, op_id
@@ -167,7 +167,7 @@ template <typename MsgT>
 
       local_nodes.push_back(c);
 
-      debug_print(
+      vt_debug_print(
         group, node,
         "Info::groupSetupHandler: child c={}, c_size={}\n", c, c_size
       );

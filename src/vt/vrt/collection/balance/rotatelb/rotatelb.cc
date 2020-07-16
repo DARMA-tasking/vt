@@ -73,7 +73,7 @@ void RotateLB::runLB() {
   for (auto&& stat : *load_data) {
     auto const& obj = stat.first;
     auto const& load = stat.second;
-    debug_print(
+    vt_debug_print(
       lb, node,
       "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",
       obj, load, next_node

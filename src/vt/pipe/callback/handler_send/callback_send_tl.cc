@@ -60,7 +60,7 @@ CallbackSendTypeless::CallbackSendTypeless(
 
 void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackSendTypeless: (void) trigger_: pipe={:x}, this_node={}, "
     "send_node_={}\n",

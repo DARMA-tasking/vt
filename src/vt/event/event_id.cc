@@ -54,7 +54,7 @@ namespace vt { namespace event {
   EventIDManager::setEventNode(new_event_id, node);
   EventIDManager::setEventIdentifier(new_event_id, id);
 
-  debug_print(
+  vt_debug_print(
     event, node,
     "EventIDManager::makeEvent: id={}, node={}\n", id, node
   );

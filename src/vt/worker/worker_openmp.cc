@@ -78,7 +78,7 @@ void OMPWorker::scheduler() {
   do {
     if (work_queue_.size() > 0) {
       #if DEBUG_OMP_WORKER_SCHEDULER
-      debug_print(
+      vt_debug_print(
         worker, node,
         "OMPWorker: scheduler: size={}\n", work_queue_.size()
       );
@@ -98,11 +98,11 @@ void OMPWorker::sendTerminateSignal() {
   #pragma omp atomic write
   should_terminate_ = true;
 
-  debug_print(worker, node, "OMPWorker: sendTerminateSignal\n");
+  vt_debug_print(worker, node, "OMPWorker: sendTerminateSignal\n");
 }
 
 void OMPWorker::spawn() {
-  debug_print(
+  vt_debug_print(
     worker, node,
     "OMPWorker: spawn: spawning worker: id={}\n", worker_id_
   );
@@ -111,7 +111,7 @@ void OMPWorker::spawn() {
 }
 
 void OMPWorker::join() {
-  debug_print(
+  vt_debug_print(
     worker, node,
     "OMPWorker: join: spawning worker: id={}\n", worker_id_
   );

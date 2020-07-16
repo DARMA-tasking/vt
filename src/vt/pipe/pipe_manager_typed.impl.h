@@ -72,7 +72,7 @@ PipeManagerTyped::makeCallbackSingleAnonTyped(
   auto const& new_pipe_id = makeCallbackFunc<MsgT>(persist,fn);
   auto container = CallbackAnonType<MsgT>{new_pipe_id};
 
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "makeCallbackSingleAnonTyped: persist={}, pipe={:x}\n",
     persist, new_pipe_id
@@ -89,7 +89,7 @@ PipeManagerTyped::makeCallbackSingleAnonVoidTyped(
   auto const& new_pipe_id = makeCallbackFuncVoid(persist,fn);
   auto container = CallbackAnonVoidType{new_pipe_id};
 
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "makeCallbackSingleAnonVoidTyped: persist={}, pipe={:x}\n",
     persist, new_pipe_id

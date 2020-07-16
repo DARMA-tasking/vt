@@ -102,7 +102,7 @@ void sendPing(vt::NodeType dst, int count, vt::EpochType ep) {
 }
 
 void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
-  debug_print(
+  vt_debug_print(
     term, node,
     "rank:{} echo::dst {}\n",
     node, dst
@@ -161,7 +161,7 @@ void echoHandler(CtrlMsg* msg) {
   nb_ack = msg->count_;
   degree--;
 
-  debug_print(
+  vt_debug_print(
     term, node,
     "rank {}: echoHandler: in={}, ack={}, degree={}\n",
     node,nb_in, nb_ack, degree
@@ -192,7 +192,7 @@ void pingHandler(CtrlMsg* msg) {
   auto const& nb = data[ep].count_[src];
   auto& activator = data[ep].activator_;
 
-  debug_print(
+  vt_debug_print(
     term, node,
     "{}: pingHandler: in={}, src={}, degree={}\n",
     node,nb.in_,src,degree
@@ -217,7 +217,7 @@ void trigger(vt::EpochType ep) {
     auto const& dst = active.first;
 
     if (dst != node) {
-      debug_print(
+      vt_debug_print(
         term, node,
         "rank:{} trigger dst {}\n",
         node, dst
@@ -243,7 +243,7 @@ void propagate(vt::EpochType ep) {
       auto& degree = data[ep].degree_;
       // confirmation missing
       if (nb.out_ != nb.ack_) {
-        debug_print(
+        vt_debug_print(
           term, node,
           "rank {}: propagate: sendPing to {}, out={}, degree={}\n",
           node, dst, nb.out_, degree+1

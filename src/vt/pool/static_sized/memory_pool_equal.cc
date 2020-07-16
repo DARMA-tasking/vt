@@ -61,13 +61,13 @@ MemoryPoolEqual<num_bytes_t>::MemoryPoolEqual(SlotType const in_pool_size)
 
 template <int64_t num_bytes_t>
 /*virtual*/ MemoryPoolEqual<num_bytes_t>::~MemoryPoolEqual() {
-  debug_print(
+  vt_debug_print(
     pool, node,
     "cur_slot_={}\n", cur_slot_
   );
 
   // for (auto i = 0; i < cur_slot_; i++) {
-  //   debug_print_force(
+  //   vt_debug_print_force(
   //     pool, node,
   //     "alloc never freed: ptr={}, cur_slot_={}\n", holder_.at(i), i
   //   );
@@ -97,7 +97,7 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
     sz, oversize, static_cast<char*>(ptr)
   );
 
-  debug_print(
+  vt_debug_print(
     pool, node,
     "alloc: ptr={}, ptr_ret={} cur_slot={}, sz={}, oversize={}\n",
     ptr, ptr_ret, cur_slot_, sz, oversize
@@ -110,7 +110,7 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
 
 template <int64_t num_bytes_t>
 void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
-  debug_print(
+  vt_debug_print(
     pool, node,
     "dealloc t={}, cur_slot={}\n", t, cur_slot_
   );

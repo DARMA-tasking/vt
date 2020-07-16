@@ -57,7 +57,7 @@ TEST_F(TestReduce, test_reduce_plus_default_op) {
   auto const root = 0;
 
   auto msg = makeMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
+  vt_debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
   theCollective()->global()->reduce<PlusOp<int>, Verify<ReduceOP::Plus>>(
     root, msg.get()
   );
@@ -68,7 +68,7 @@ TEST_F(TestReduce, test_reduce_max_default_op) {
   auto const root = 0;
 
   auto msg = makeMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
+  vt_debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
   theCollective()->global()->reduce<MaxOp<int>, Verify<ReduceOP::Max>>(
     root, msg.get()
   );
@@ -79,7 +79,7 @@ TEST_F(TestReduce, test_reduce_min_default_op) {
   auto const root = 0;
 
   auto msg = makeMessage<SysMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
+  vt_debug_print(reduce, node, "msg->num={}\n", msg->getConstVal());
   theCollective()->global()->reduce<MinOp<int>, Verify<ReduceOP::Min>>(
     root, msg.get()
   );

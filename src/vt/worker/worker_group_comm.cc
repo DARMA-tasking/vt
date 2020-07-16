@@ -50,7 +50,7 @@
 namespace vt { namespace worker {
 
 void WorkerGroupComm::enqueueComm(WorkUnitType const& work_unit) {
-  debug_print(
+  vt_debug_print(
     worker, node,
     "WorkerGroupComm: enqueue comm thread size={}\n", comm_work_deque_.size()
   );
@@ -61,7 +61,7 @@ void WorkerGroupComm::enqueueComm(WorkUnitType const& work_unit) {
 bool WorkerGroupComm::schedulerComm(WorkerFinishedFnType finished_fn) {
   bool found = false;
   if (comm_work_deque_.size() > 0) {
-    debug_print(
+    vt_debug_print(
       worker, node,
       "WorkerGroupComm: scheduler executing size={}\n", comm_work_deque_.size()
     );

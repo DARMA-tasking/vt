@@ -166,7 +166,7 @@ void PipeManagerBase::triggerPipe(PipeType const& pipe) {
 
   auto const& exists = signal_holder_<SignalType>.exists(pipe);
 
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "PipeManagerBase: triggerPipe: pipe={:x}, exists={}: delivering\n",
     pipe, exists
@@ -184,7 +184,7 @@ void PipeManagerBase::triggerPipe(PipeType const& pipe) {
 /*static*/ void PipeManagerBase::triggerCallbackHan(CallbackMsg* msg) {
   auto const& pid = msg->getPipe();
 
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "PipeManagerBase: triggerCallbackHan pipe={:x}\n",
     pid

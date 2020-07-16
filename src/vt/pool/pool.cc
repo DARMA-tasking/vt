@@ -109,7 +109,7 @@ void* Pool::pooledAlloc(
   bool const comm_thread = worker == worker_id_comm_thread;
   void* ret = nullptr;
 
-  debug_print(
+  vt_debug_print(
     pool, node,
     "Pool::pooled_alloc of size={}, type={}, ret={}, worker={}\n",
     num_bytes, print_pool_type(pool_type), ret, worker
@@ -138,7 +138,7 @@ void* Pool::pooledAlloc(
 }
 
 void Pool::poolDealloc(void* const buf, ePoolSize const pool_type) {
-  debug_print(
+  vt_debug_print(
     pool, node,
     "Pool::pooled_dealloc of ptr={}, type={}\n",
     print_ptr(buf), print_pool_type(pool_type)
@@ -185,7 +185,7 @@ void* Pool::alloc(size_t const& num_bytes, size_t oversize) {
     ret = defaultAlloc(num_bytes, oversize);
   }
 
-  debug_print(
+  vt_debug_print(
     pool, node,
     "Pool::alloc of size={}, ret={}\n",
     num_bytes, ret
@@ -204,7 +204,7 @@ void Pool::dealloc(void* const buf) {
 
   ePoolSize const pool_type = getPoolType(actual_alloc_size, oversize);
 
-  debug_print(
+  vt_debug_print(
     pool, node,
     "Pool::dealloc of buf={}, type={}, alloc_size={}, worker={}, ptr={}\n",
     buf, print_pool_type(pool_type), actual_alloc_size, alloc_worker,

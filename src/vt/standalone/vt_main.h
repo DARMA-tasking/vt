@@ -62,13 +62,13 @@ static constexpr WorkerCountType const default_vt_num_workers = 4;
 template <typename VrtContextT>
 inline void vrLaunchMainContext() {
   if (theContext()->getNode() == main_node) {
-    debug_print(gen, node, "vrLaunchMainContext: launching main context\n");
+    vt_debug_print(gen, node, "vrLaunchMainContext: launching main context\n");
     theVirtualManager()->makeVirtual<VrtContextT>();
   }
 }
 
 inline void vtMainScheduler() {
-  debug_print(gen, node, "vtMainScheduler: running main scheduler\n");
+  vt_debug_print(gen, node, "vtMainScheduler: running main scheduler\n");
 
   while (!rt->isTerminated()) {
     rt->runScheduler();
@@ -87,7 +87,7 @@ int vt_main(
   //default_vt_num_workers
 ) {
   auto rt = CollectiveOps::initialize(argc, argv, workers);
-  debug_print(gen, node, "vt_main: initialized workers={}\n", workers);
+  vt_debug_print(gen, node, "vt_main: initialized workers={}\n", workers);
 
   auto comm_fn = vrCommThreadWork<VrtContextT>;
 
@@ -98,7 +98,7 @@ int vt_main(
     theWorkerGrp()->spawnWorkersBlock(comm_fn);
   }
 
-  debug_print(gen, node, "vt_main: auto finalize workers={}\n", workers);
+  vt_debug_print(gen, node, "vt_main: auto finalize workers={}\n", workers);
   return 0;
 }
 

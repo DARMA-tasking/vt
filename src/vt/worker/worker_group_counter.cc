@@ -85,7 +85,7 @@ void WorkerGroupCounter::enqueuedComm(WorkUnitCountType num) {
 
 void WorkerGroupCounter::finished(WorkerIDType id, WorkUnitCountType num) {
   #if WORKER_COUNTER_VERBOSE
-  debug_print(
+  vt_debug_print(
     worker, node,
     "WorkerGroupCounter: completed: id={}, num={}\n", id, num
   );
@@ -128,7 +128,7 @@ void WorkerGroupCounter::progress() {
     bool const is_idle = cur_finished == cur_enqueued;
 
     #if WORKER_COUNTER_VERBOSE
-    debug_print(
+    vt_debug_print(
       worker, node,
       "WorkerGroupCounter: progress: fin={}, enq={}, is_idle={}, "
       "last_event={}, last_event_idle={}\n",
@@ -158,7 +158,7 @@ void WorkerGroupCounter::updateConsumedTerm() {
 
   num_consumed_ += num_to_consume;
 
-  debug_print(
+  vt_debug_print(
     worker, node,
     "WorkerGroupCounter: updating: num_fin={}, num_con={}, num_sub={}\n",
     cur_finished, cur_consumed, num_to_consume
@@ -169,7 +169,7 @@ void WorkerGroupCounter::updateConsumedTerm() {
 
 void WorkerGroupCounter::triggerListeners(eWorkerGroupEvent event) {
   #if WORKER_COUNTER_VERBOSE
-  debug_print(
+  vt_debug_print(
     worker, node,
     "WorkerGroupCounter: triggering listeners: event={}\n",
     WORKER_GROUP_EVENT_STR(event)

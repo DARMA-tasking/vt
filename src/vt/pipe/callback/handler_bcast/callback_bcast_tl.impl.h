@@ -65,7 +65,7 @@ void CallbackBcastTypeless::serialize(SerializerT& s) {
 template <typename MsgT>
 void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackBcast: trigger_: pipe={:x}, this_node={}, include_sender_={}\n",
     pipe, this_node, include_sender_

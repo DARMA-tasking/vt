@@ -100,7 +100,7 @@ template <typename KeyT, typename ValueT>
 void LocationCache<KeyT, ValueT>::insert(KeyT const& key, ValueT const& value) {
   auto iter = lookup_.find(key);
 
-  debug_print(
+  vt_debug_print(
     location, node,
     "location cache: insert: found={}, size={}\n",
     print_bool(iter != lookup_.end()), lookup_.size()
@@ -145,7 +145,7 @@ void LocationCache<KeyT, ValueT>::printCache() const {
            << "\n";
   }
 
-  debug_print(
+  vt_debug_print(
     location, node,
     "printing cache: {}", stream.str().c_str()
   );

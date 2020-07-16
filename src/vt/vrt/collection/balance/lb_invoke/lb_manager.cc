@@ -70,7 +70,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 }
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
-  debug_print(
+  vt_debug_print(
     lb, node,
     "LBManager::decideLBToRun: phase={}, try_file={}, cached_phase_={}, lb={}\n",
     phase, try_file, cached_phase_, lb_names_[cached_lb_]
@@ -112,7 +112,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
     }
   }
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "LBManager::decidedLBToRun: phase={}, return lb_={}\n",
     phase, lb_names_[the_lb]
@@ -140,7 +140,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
 
   theTerm()->addAction(balance_epoch, [=] {
-    debug_print(
+    vt_debug_print(
       lb, node,
       "LBManager: starting migrations\n"
     );
@@ -151,7 +151,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   });
 
   theTerm()->addAction(migrate_epoch, [=] {
-    debug_print(
+    vt_debug_print(
       lb, node,
       "LBManager: finished migrations\n"
     );
@@ -169,7 +169,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 void LBManager::collectiveImpl(
   PhaseType phase, LBType lb, bool manual, std::size_t num_calls
 ) {
-  debug_print(
+  vt_debug_print(
     lb, node,
     "collectiveImpl: phase={}, manual={}, num_invocations_={}, num_calls={}, "
     "num_release={}\n",
@@ -182,7 +182,7 @@ void LBManager::collectiveImpl(
     auto const& this_node = theContext()->getNode();
 
     if (this_node == 0 and not ArgType::vt_lb_quiet) {
-      debug_print(
+      vt_debug_print(
         lb, node,
         "LBManager::collectiveImpl: phase={}, balancer={}, name={}\n",
         phase,
@@ -213,7 +213,7 @@ void LBManager::collectiveImpl(
 }
 
 void LBManager::waitLBCollective() {
-  debug_print(
+  vt_debug_print(
     lb, node,
     "waitLBCollective (begin)\n"
   );
@@ -226,14 +226,14 @@ void LBManager::waitLBCollective() {
   synced_in_lb_ = true;
   theTerm()->consume();
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "waitLBCollective (end)\n"
   );
 }
 
 void LBManager::finishedRunningLB(PhaseType phase) {
-  debug_print(
+  vt_debug_print(
     lb, node,
     "finishedRunningLB\n"
   );
@@ -241,7 +241,7 @@ void LBManager::finishedRunningLB(PhaseType phase) {
 }
 
 void LBManager::releaseImpl(PhaseType phase, std::size_t num_calls) {
-  debug_print(
+  vt_debug_print(
     lb, node,
     "releaseImpl: phase={}, num_invocations_={}, num_calls={}, num_release={}\n",
     phase, num_invocations_, num_calls, num_release_
@@ -258,7 +258,7 @@ void LBManager::releaseImpl(PhaseType phase, std::size_t num_calls) {
 }
 
 void LBManager::releaseNow(PhaseType phase) {
-  debug_print(lb, node, "releaseNow\n");
+  vt_debug_print(lb, node, "releaseNow\n");
 
   auto this_node = theContext()->getNode();
 

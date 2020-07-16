@@ -55,7 +55,7 @@ template <typename MsgT>
 void messageRef(MsgT* msg) {
   envelopeRef(msg->env);
 
-  debug_print(
+  vt_debug_print(
     pool, node,
     "messageRef msg={}, refs={}\n",
     print_ptr(msg), envelopeGetRef(msg->env)
@@ -66,7 +66,7 @@ template <typename MsgT>
 void messageDeref(MsgT* msg) {
   RefType refcount = envelopeDeref(msg->env);
 
-  debug_print(
+  vt_debug_print(
     pool, node,
     "messageDeref msg={}, refs={}\n",
     print_ptr(msg), refcount

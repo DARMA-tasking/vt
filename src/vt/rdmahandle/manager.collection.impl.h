@@ -92,7 +92,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     next_handle = ++cur_handle_collection_[proxy_bits][lin];
   }
 
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "CollectionHandle: next_handle={}, idx={}, range={}\n",
     next_handle, idx, range
@@ -136,7 +136,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
 
     // If LB is enabled then we need to register an afterLB listener
 #   if vt_check_enabled(lblite)
-    debug_print(
+    vt_debug_print(
       rdma, node,
       "CollectionHandle: registering LB listener\n"
     );
@@ -180,7 +180,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     auto expected = sub_proxy.get()->getCollectionExpected();
     auto current = sub_proxy.get()->getNumHandles();
 
-    debug_print(
+    vt_debug_print(
       rdma, node,
       "CollectionHandle: expected={}, current={}\n", expected, current
     );

@@ -346,7 +346,7 @@ PipeManagerTL::makeCallbackSingleAnonVoid(FuncVoidType fn) {
   auto const& new_pipe_id = makeCallbackFuncVoid(true,fn,true);
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "makeCallbackSingleAnonVoid: persist={}, pipe={:x}\n",
     true, new_pipe_id
@@ -360,7 +360,7 @@ CallbackT
 PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncCtxType<C> fn) {
   auto fn_closure = [ctx,fn] { fn(ctx); };
 
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "makeCallbackSingleAnon: created closure\n"
   );
@@ -373,7 +373,7 @@ CallbackT
 PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncMsgCtxType<MsgT, C> fn) {
   auto fn_closure = [ctx,fn](MsgT* msg) { fn(msg, ctx); };
 
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "makeCallbackSingleAnon: created closure\n"
   );
@@ -387,7 +387,7 @@ PipeManagerTL::makeCallbackSingleAnon(FuncMsgType<MsgT> fn) {
   auto const& new_pipe_id = makeCallbackFunc<MsgT>(true,fn,true);
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "makeCallbackSingleAnon: persist={}, pipe={:x}\n",
     true, new_pipe_id

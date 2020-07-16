@@ -258,7 +258,7 @@ void GroupManager::initializeLocalGroup(
     auto const& is_bcast = envelopeIsBcast(msg->env);
     auto const& dest = envelopeGetDest(msg->env);
 
-    debug_print(
+    vt_debug_print(
       group, node,
       "GroupManager::groupHandler: size={}, root={}, from={}, group={:x}, "
       "bcast={}, dest={}\n",
@@ -321,7 +321,7 @@ EventType GroupManager::sendGroupCollective(
 
     vtAssert(is_group_collective, "This must be a collective group");
 
-    debug_print(
+    vt_debug_print(
       group, node,
       "GroupManager::sendGroupCollective: group={:x}, collective={}, "
       "in_group={}, group root={}, is_root={}, dest={}, from={}, is_bcast={}\n",
@@ -333,7 +333,7 @@ EventType GroupManager::sendGroupCollective(
     auto const& tree = info.getTree();
     auto const& num_children = tree->getNumChildren();
 
-    debug_print(
+    vt_debug_print(
       group, node,
       "GroupManager::sendGroupCollective: group={:x}, collective={}, "
       "num_children={}\n",
@@ -344,7 +344,7 @@ EventType GroupManager::sendGroupCollective(
       info.getTree()->foreachChild([&](NodeType child){
         bool const& send = child != dest;
 
-        debug_print(
+        vt_debug_print(
           broadcast, node,
           "GroupManager::sendGroupCollective *send* size={}, from={}, child={}, "
           "send={}, msg={}\n",
@@ -416,7 +416,7 @@ EventType GroupManager::sendGroup(
   auto const& this_node_dest = dest == this_node;
   auto const& first_send = from == uninitialized_destination;
 
-  debug_print(
+  vt_debug_print(
     group, node,
     "GroupManager::sendGroup: group={}, is_root={}\n",
     group, is_root
@@ -459,7 +459,7 @@ EventType GroupManager::sendGroup(
     } else {
       auto remote_iter = remote_group_info_.find(group);
 
-      debug_print(
+      vt_debug_print(
         broadcast, node,
         "GroupManager::sendGroup: *send* remote size={}, from={}, found={}, "
         "dest={}, group={:x}, is_root={} \n",
@@ -482,7 +482,7 @@ EventType GroupManager::sendGroup(
         // Send to child nodes in the group's spanning tree
         if (num_children > 0) {
           info.default_spanning_tree_->foreachChild([&](NodeType child) {
-            debug_print(
+            vt_debug_print(
               broadcast, node,
               "GroupManager::sendGroup: *send* size={}, from={}, child={}\n",
               size, from, child

@@ -149,7 +149,7 @@ void ZoltanLB::runLB() {
     vtAssert(partition_return == ZOLTAN_OK, "Partition must be OK");
   });
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ZoltanLB: num_export={}, num_import={}\n",
     num_export, num_import
@@ -158,7 +158,7 @@ void ZoltanLB::runLB() {
   for (int i = 0; i < num_export; i++) {
     int to_node = export_procs[i];
 
-    debug_print(
+    vt_debug_print(
       lb, node,
       "migrateObjTo: to_node={} gid={:x}\n",
       to_node, export_global_ids[i]
@@ -200,7 +200,7 @@ void ZoltanLB::makeGraphSymmetric() {
         "One node must involve this node"
       );
 
-      debug_print(
+      vt_debug_print(
         lb, node,
         "makeGraphSymmetric: from={:x}, to={:x}\n",
         from, to
@@ -227,7 +227,7 @@ void ZoltanLB::makeGraphSymmetric() {
 void ZoltanLB::recvSharedEdges(CommMsg* msg) {
   auto& comm = msg->comm_;
   for (auto&& elm : comm) {
-    debug_print(
+    vt_debug_print(
       lb, node,
       "recv shared edge: from={:x}, to={:x}\n",
       elm.first.fromObjTemp(), elm.first.toObjTemp()
@@ -257,7 +257,7 @@ void ZoltanLB::combineEdges() {
 }
 
 void ZoltanLB::countEdges() {
-  debug_print(lb, node, "countEdges\n");
+  vt_debug_print(lb, node, "countEdges\n");
 
   // Count the number of local and remote edges to allocation edge GIDs
   int local_edge = 0;
@@ -289,7 +289,7 @@ void ZoltanLB::countEdges() {
 
   int const total_ids = local_edge + remote_owned_edge;
 
-  debug_print(lb, node, "ZoltanLB: total_ids_={}\n", total_ids);
+  vt_debug_print(lb, node, "ZoltanLB: total_ids_={}\n", total_ids);
 
   auto cb = theCB()->makeBcast<ZoltanLB,ReduceMsg,&ZoltanLB::reduceCount>(proxy);
   auto msg = makeMessage<ReduceMsg>(total_ids);
@@ -299,7 +299,7 @@ void ZoltanLB::countEdges() {
 void ZoltanLB::reduceCount(ReduceMsg* msg) {
   max_edges_per_node_ = msg->getVal();
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ZoltanLB: max_edges_per_node_={}\n",
     max_edges_per_node_
@@ -324,7 +324,7 @@ void ZoltanLB::allocateShareEdgeGIDs() {
       key.edge_id_ = id;
       load_comm_edge_id[key] = elm.second;
 
-      debug_print(
+      vt_debug_print(
         lb, node,
         "allocate: local edge_id={:x}, from={:x}, to={:x}\n",
         key.edge_id_,
@@ -341,7 +341,7 @@ void ZoltanLB::allocateShareEdgeGIDs() {
         key.edge_id_ = id;
         load_comm_edge_id[key] = elm.second;
 
-        debug_print(
+        vt_debug_print(
           lb, node,
           "allocate: remote edge_id={:x}, from={:x}, to={:x}\n",
           key.edge_id_,
@@ -376,7 +376,7 @@ void ZoltanLB::recvEdgeGID(CommMsg* msg) {
       "Must not exists in edge ID map"
     );
 
-    debug_print(
+    vt_debug_print(
       lb, node,
       "recvEdgeGID: edge_id={:x}, from={:x}, to={:x}\n",
       elm.first.edge_id_,
@@ -455,7 +455,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
     for (auto&& obj : load_objs) {
       graph->vertex_gid[idx++] = obj;
 
-      debug_print(
+      vt_debug_print(
         lb, node,
         "makeVertexGraph: vertex_id={}: obj={:x}\n",
         idx - 1, obj
@@ -519,7 +519,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
         graph->edge_gid[edge_idx] = iter->first.edge_id_;
         graph->edge_weight[edge_idx] = bytes;
 
-        debug_print(
+        vt_debug_print(
           lb, node,
           "makeEdgeGraph: edge_id={}: edge_idx={}, neighbor_idx={}\n",
           iter->first.edge_id_,
@@ -532,7 +532,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 
         // Set up the links between communicating GIDs
         if ((use_shared_edges_ and from_node == this_node) or not use_shared_edges_) {
-          debug_print(
+          vt_debug_print(
             lb, node,
             "makeEdgeGraph: \t edge_id={}: edge_idx={}, obj={:x}\n",
             iter->first.edge_id_, edge_idx, iter->first.fromObjTemp()
@@ -541,7 +541,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
           graph->neighbor_gid[neighbor_idx++] = iter->first.fromObjTemp();
         }
         if ((use_shared_edges_ and to_node == this_node) or not use_shared_edges_) {
-          debug_print(
+          vt_debug_print(
             lb, node,
             "makeEdgeGraph: \t edge_id={}: edge_idx={}, obj={:x}\n",
             iter->first.edge_id_, edge_idx, iter->first.toObjTemp()
@@ -553,7 +553,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
         // This edge begins at neighbor_idx
         graph->neighbor_idx[edge_idx + 1] = neighbor_idx;
 
-        debug_print(
+        vt_debug_print(
           lb, node,
           "edge_id={:x} from={:x}, to={:x}\n",
           iter->first.edge_id_,
@@ -565,7 +565,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
       graph->num_all_neighbors = neighbor_idx;
     }
 
-    debug_print(
+    vt_debug_print(
       lb, node,
       "ZoltanLB: number of vertices={} edges={}, neighbors={}\n",
       graph->num_vertices, graph->num_edges, graph->num_all_neighbors

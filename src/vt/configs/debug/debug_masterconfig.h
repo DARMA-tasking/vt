@@ -52,15 +52,15 @@
  * partially defined with cmake options
  */
 
-#define debug_enabled cmake_config_debug_enabled
-#define debug_force_enabled 0
+#define vt_debug_enabled cmake_config_debug_enabled
+#define vt_debug_force_enabled 0
 
 #include "vt/configs/debug/debug_config.h"
 #include "vt/configs/debug/debug_print.h"
 
 namespace vt { namespace config {
 
-#if !debug_enabled
+#if !vt_debug_enabled
 using DefaultConfig = Configuration<
   static_cast<CatEnum>(CatEnum::none),
   static_cast<CtxEnum>(0ull),

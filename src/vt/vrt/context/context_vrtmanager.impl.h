@@ -149,7 +149,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
     msg->setVrtHandler(han);
     msg->setProxy(toProxy);
 
-    debug_print(
+    vt_debug_print(
       vrt, node,
       "sending serialized msg to VC: msg={}, han={}, home_node={}, toProxy={}\n",
       print_ptr(msg), han, home_node, toProxy
@@ -264,7 +264,7 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
   HandlerType core_map_handle = uninitialized_handler;
   bool const& has_workers = theContext()->hasWorkers();
 
-  debug_print(
+  vt_debug_print(
     vrt, node,
     "makeVirtualMap: has_workers={}\n", print_bool(has_workers)
   );
@@ -276,7 +276,7 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
     auto const& num_workers = theContext()->getNumWorkers();
     auto const& mapped_core = fn(next_seed, num_workers);
 
-    debug_print(
+    vt_debug_print(
       vrt, node,
       "seed={}, mapped_core={}, num_workers={}\n",
       next_seed, mapped_core, num_workers
@@ -319,7 +319,7 @@ messaging::PendingSend VirtualContextManager::sendMsg(
   msg->setVrtHandler(han);
   msg->setProxy(toProxy);
 
-  debug_print(
+  vt_debug_print(
     vrt, node,
     "sending msg to VC: msg={}, han={}, home_node={}\n",
     print_ptr(msg.get()), han, home_node

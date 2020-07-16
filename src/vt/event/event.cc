@@ -82,7 +82,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   auto const& event_state = testEventComplete(event);
   auto const& this_event_owning_node = getOwningNode(event_id);
 
-  debug_print(
+  vt_debug_print(
     event, node,
     "theEvent: event={}, newevent={}, state={}, "
     "newevent_owning_node={}, this_node={}\n",
@@ -109,7 +109,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
       event, this_node, event_id
     );
 
-    debug_print(
+    vt_debug_print(
       event, node,
       "theEvent: event={}, newevent={}, state={} sending msg, node={}\n",
       event, event_id, static_cast<int>(event_state), this_node
@@ -158,7 +158,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
 
   auto const& is_complete = theEvent()->testEventComplete(event);
 
-  debug_print(
+  vt_debug_print(
     event, node,
     "checkEventFinishedHan:: event={}, node={}, "
     "this_node={}, complete={}, sent_from_node={}\n",
@@ -246,7 +246,7 @@ void AsyncEvent::removeEventID(EventType const& event) {
 AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) {
   auto const& owning_node = getOwningNode(event);
 
-  debug_print(
+  vt_debug_print(
     event, node,
     "theEvent: theEventHolder: node={}, event={}, owning_node={}\n",
     theContext()->getNode(), event, owning_node

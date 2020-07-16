@@ -61,7 +61,7 @@ CallbackBcastTypeless::CallbackBcastTypeless(
 
 void CallbackBcastTypeless::triggerVoid(PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackBcast: (void) trigger_: pipe={:x}, this_node={}, "
     "include_sender_={}\n",

@@ -291,7 +291,7 @@ void Runtime::setupTerminateHandler() {
 bool Runtime::tryInitialize() {
   bool const init_now = !initialized_ && !finalized_;
 
-  debug_print(
+  vt_debug_print(
     runtime, unknown,
     "Runtime: tryInitialize: initialized_={}, finalized_={}, init_now={}\n",
     print_bool(initialized_), print_bool(finalized_), print_bool(init_now)
@@ -308,7 +308,7 @@ bool Runtime::tryFinalize() {
   bool const has_run_sched = hasSchedRun();
   bool const finalize_now = rt_live && has_run_sched;
 
-  debug_print(
+  vt_debug_print(
     runtime, unknown,
     "Runtime: tryFinalize: initialized_={}, finalized_={}, rt_live={}, sched={}, "
     "finalize_now={}\n",
@@ -500,7 +500,7 @@ void Runtime::output(
 }
 
 void Runtime::terminationHandler() {
-  debug_print(
+  vt_debug_print(
     runtime, node,
     "Runtime: executing registered termination handler\n"
   );
@@ -513,7 +513,7 @@ void Runtime::terminationHandler() {
 }
 
 void Runtime::setup() {
-  debug_print(runtime, node, "begin: setup\n");
+  vt_debug_print(runtime, node, "begin: setup\n");
 
   runtime_active_ = true;
 
@@ -531,7 +531,7 @@ void Runtime::setup() {
     pauseForDebugger();
   }
 
-  debug_print(runtime, node, "end: setup\n");
+  vt_debug_print(runtime, node, "end: setup\n");
 }
 
 void Runtime::setupArgs() {
@@ -556,7 +556,7 @@ void Runtime::finalizeMPI() {
 }
 
 void Runtime::initializeComponents() {
-  debug_print(runtime, node, "begin: initializeComponents\n");
+  vt_debug_print(runtime, node, "begin: initializeComponents\n");
 
   using component::ComponentPack;
   using component::Deps;
@@ -801,7 +801,7 @@ void Runtime::initializeComponents() {
     communicator_ = theContext->getComm();
   }
 
-  debug_print(runtime, node, "end: initializeComponents\n");
+  vt_debug_print(runtime, node, "end: initializeComponents\n");
 }
 
 namespace {
@@ -832,17 +832,17 @@ void Runtime::initializeErrorHandlers() {
 }
 
 void Runtime::initializeOptionalComponents() {
-  debug_print(runtime, node, "begin: initializeOptionalComponents\n");
+  vt_debug_print(runtime, node, "begin: initializeOptionalComponents\n");
 
   initializeWorkers(num_workers_);
 
-  debug_print(runtime, node, "end: initializeOptionalComponents\n");
+  vt_debug_print(runtime, node, "end: initializeOptionalComponents\n");
 }
 
 void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   using ::vt::ctx::ContextAttorney;
 
-  debug_print(
+  vt_debug_print(
     runtime, node, "begin: initializeWorkers: workers={}\n", num_workers
   );
 
@@ -869,7 +869,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     // scheduler; register listeners to activate/deactivate that epoch
     theSched->registerTrigger(
       sched::SchedulerEvent::BeginIdleMinusTerm, []{
-        debug_print(
+        vt_debug_print(
           runtime, node,
           "setLocalTerminated: BeginIdle: true\n"
         );
@@ -878,7 +878,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     );
     theSched->registerTrigger(
       sched::SchedulerEvent::EndIdleMinusTerm, []{
-        debug_print(
+        vt_debug_print(
           runtime, node,
           "setLocalTerminated: EndIdle: false\n"
         );
@@ -887,7 +887,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     );
   }
 
-  debug_print(runtime, node, "end: initializeWorkers\n");
+  vt_debug_print(runtime, node, "end: initializeWorkers\n");
 }
 
 }} //end namespace vt::runtime

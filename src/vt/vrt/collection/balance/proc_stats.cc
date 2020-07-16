@@ -171,7 +171,7 @@ void ProcStats::createStatsFile() {
   auto const file = fmt::format("{}.{}.out", base_file, node);
   auto const file_name = fmt::format("{}/{}", dir, file);
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ProcStats: createStatsFile file={}\n", file_name
   );
@@ -281,7 +281,7 @@ ElementIDType ProcStats::addProcStats(
   auto const temp_id = col_elm->temp_elm_id_;
   auto const perm_id = col_elm->stats_elm_id_;
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ProcStats::addProcStats: temp_id={}, perm_id={}, phase={}, subphases={}, load={}\n",
     temp_id, perm_id, phase, subphase_time.size(), time

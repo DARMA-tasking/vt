@@ -57,7 +57,7 @@ TEST_F(TestReduce, test_reduce_op) {
   auto const root = 0;
 
   auto msg = makeMessage<MyReduceMsg>(my_node);
-  debug_print(reduce, node, "msg->num={}\n", msg->num);
+  vt_debug_print(reduce, node, "msg->num={}\n", msg->num);
   theCollective()->global()->reduce<MyReduceMsg, reducePlus>(root, msg.get());
 }
 

@@ -71,7 +71,7 @@ void CallbackSendHandler<MsgT,f>::serialize(SerializerT& s) {
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 void CallbackSendHandler<MsgT,f>::trigger_(SignalDataType* data) {
   auto const& this_node = theContext()->getNode();
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackSendHandler: trigger_: this_node={}, send_node_={}\n",
     this_node, send_node_

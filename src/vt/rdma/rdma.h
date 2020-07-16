@@ -386,7 +386,7 @@ struct RDMAManager : runtime::component::Component<RDMAManager> {
   template <typename T>
   RDMA_HandleType registerNewTypedRdmaHandler(T ptr, ByteType const& num_elems) {
     ByteType const num_bytes = sizeof(T)*num_elems;
-    debug_print(
+    vt_debug_print(
       rdma, node,
       "registerNewTypedRdmaHandler ptr={}, bytes={}\n",
       print_ptr(ptr), num_bytes

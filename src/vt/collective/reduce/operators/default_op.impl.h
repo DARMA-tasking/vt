@@ -55,7 +55,7 @@ template <typename MsgT, typename Op, typename ActOp>
 /*static*/ void ReduceCombine<T>::msgHandler(MsgT* msg) {
   if (msg->isRoot()) {
     auto cb = msg->getCallback();
-    debug_print(
+    vt_debug_print(
 
       reduce, node,
       "ROOT: reduce root: valid={}, ptr={}\n", cb.valid(), print_ptr(msg)
@@ -68,7 +68,7 @@ template <typename MsgT, typename Op, typename ActOp>
   } else {
     MsgT* fst_msg = msg;
     MsgT* cur_msg = msg->template getNext<MsgT>();
-    debug_print(
+    vt_debug_print(
       reduce, node,
       "leaf: fst valid={}, ptr={}\n", fst_msg->getCallback().valid(),
       print_ptr(fst_msg)

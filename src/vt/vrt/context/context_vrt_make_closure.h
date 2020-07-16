@@ -81,7 +81,7 @@ struct VirtualMakeClosure {
   VirtualMakeClosure(VirtualMakeClosure&&) = default;
 
   void make() {
-    debug_print(
+    vt_debug_print(
       vrt, node,
       "VirtualMakeClosure: calling make()\n"
     );

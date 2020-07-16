@@ -84,7 +84,7 @@ void ComponentPack::destruct() {
   live_ = false;
   pollable_components_.clear();
   while (live_components_.size() > 0) {
-    debug_print(
+    vt_debug_print(
       runtime, node,
       "ComponentPack: finalizing component={}\n",
       live_components_.back()->name()

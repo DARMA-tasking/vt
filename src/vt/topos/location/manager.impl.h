@@ -85,7 +85,7 @@ LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
   auto loc_iter = collectionLoc.find(proxy);
   auto const& found = loc_iter != collectionLoc.end();
 
-  debug_print(
+  vt_debug_print(
     location, node,
     "getCollectionLM: proxy={}, found={}\n",
     proxy, print_bool(found)

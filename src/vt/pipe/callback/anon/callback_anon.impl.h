@@ -72,7 +72,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   // Overload when the signal is void
   auto const& this_node = theContext()->getNode();
   auto const& pipe_node = PipeIDBuilder::getNode(pid);
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackAnon: (void signal) trigger_: pipe_={:x}, pipe_node={}\n",
     pid, pipe_node
@@ -94,7 +94,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   // Overload when the signal is non-void
   auto const& this_node = theContext()->getNode();
   auto const& pipe_node = PipeIDBuilder::getNode(pid);
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackAnon: (T signal) trigger_: pipe_={:x}, pipe_node={}\n",
     pid, pipe_node

@@ -58,7 +58,7 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_1) {
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
-    debug_print(
+    vt_debug_print(
       gen, node,
       "term: order={}, expected={}, total={}\n",
       order, expected, total
@@ -91,7 +91,7 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_2) {
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
-    debug_print(
+    vt_debug_print(
       gen, node,
       "term: order={}, expected={}, total={}\n",
       order, expected, total
@@ -133,7 +133,7 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_3) {
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
-    debug_print(
+    vt_debug_print(
       gen, node,
       "term: order={}, expected={}, total={}\n",
       order, expected, total
@@ -197,7 +197,7 @@ struct ObjGroup {
     auto const priority = envelopeGetPriority(msg->env);
     auto const level    = envelopeGetPriorityLevel(msg->env);
 
-    debug_print(
+    vt_debug_print(
       gen, node,
       "enqueue: priority={:x} vs {:x}, level={:x} vs {:x}, num={}\n",
       msg->priority, priority, msg->priority_level, level,
@@ -220,7 +220,7 @@ struct ObjGroup {
       auto np = vt::envelopeGetPriority(new_msg->env);
       auto npl = vt::envelopeGetPriorityLevel(new_msg->env);
 
-      debug_print(
+      vt_debug_print(
         gen, node,
         "NEW enqueue: priority={:x}, level={:x}\n", np, npl
       );

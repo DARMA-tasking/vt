@@ -247,7 +247,7 @@ void Trace::addUserNote(std::string const& note) {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserNote: note={}\n",
     note
@@ -266,7 +266,7 @@ void Trace::addUserData(int32_t data) {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserData: data={}\n",
     data
@@ -288,7 +288,7 @@ void Trace::addUserBracketedNote(
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n",
     begin, end, note, event
@@ -330,7 +330,7 @@ void Trace::addUserEvent(UserEventIDType event) {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserEvent: event={:x}\n",
     event
@@ -350,7 +350,7 @@ void Trace::addUserEventManual(UserSpecEventIDType event) {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserEventManual: event={:x}\n",
     event
@@ -365,7 +365,7 @@ void Trace::addUserEventBracketed(UserEventIDType event, double begin, double en
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserEventBracketed: event={:x}, begin={}, end={}\n",
     event, begin, end
@@ -387,7 +387,7 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserEventBracketedBegin: event={:x}\n",
     event
@@ -407,7 +407,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserEventBracketedEnd: event={:x}\n",
     event
@@ -447,7 +447,7 @@ void Trace::addUserEventBracketedManual(
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "Trace::addUserEventBracketedManual: event={:x}, begin={}, end={}\n",
     event, begin, end
@@ -473,7 +473,7 @@ TraceProcessingTag Trace::beginProcessing(
     return TraceProcessingTag{};
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "event_start: ep={}, event={}, time={}, from={}\n",
     ep, event, time, from_node
@@ -530,7 +530,7 @@ void Trace::endProcessing(
     addMemoryEvent(theMemUsage()->getFirstUsage());
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node,
     "event_stop: ep={}, event={}, time={}, from_node={}\n",
     ep, event, time, open_events_.back().node
@@ -591,7 +591,7 @@ void Trace::beginIdle(double const time) {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node, "begin_idle: time={}\n", time
   );
 
@@ -613,7 +613,7 @@ void Trace::endIdle(double const time) {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     trace, node, "end_idle: time={}\n", time
   );
 
@@ -712,7 +712,7 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
 
     trace_enabled_cur_phase_ = ret;
 
-    debug_print(
+    vt_debug_print(
       gen, node,
       "setTraceEnabledCurrentPhase: phase={}, enabled={}\n",
       cur_phase,
@@ -861,7 +861,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       outputHeader(log_file_.get(), node, start_time_);
     }
 
-    debug_print(
+    vt_debug_print(
       trace, node,
       "write_traces_file: to_write={}, already_written={}, "
       "event_parents_types={}, event_types={}\n",

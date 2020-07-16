@@ -26,7 +26,7 @@ TraceRegistry::registerEventHashed(
   // of templates from the auto-registy.
   // This occurs BEFORE the underling 'go' flags are enabled in VT.
   // Not printing ANYTHING for the most consistent NOTHING.
-  // debug_print(
+  // vt_debug_print(
   //   trace, node,
   //   "register_event_hashed: event_type_name={}, event_name={}, "
   //   "event_type_count={} event_count={}\n",

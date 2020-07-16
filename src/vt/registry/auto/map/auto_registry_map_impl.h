@@ -72,7 +72,7 @@ inline HandlerType makeAutoHandlerFunctorMap() {
     FunctorT, ContainerType, RegInfoType, FuncType, true, Args...
   >;
   auto const& han = HandlerManagerType::makeHandler(true, true, RunnableT::idx);
-  debug_print(
+  vt_debug_print(
     handler, node,
     "makeAutoHandlerFunctorMap: handler={}\n", han
   );
@@ -87,7 +87,7 @@ inline AutoActiveMapFunctorType getAutoHandlerFunctorMap(
   bool const& is_auto = HandlerManagerType::isHandlerAuto(han);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
 
-  debug_print(
+  vt_debug_print(
     handler, node,
     "getAutoHandlerFunctorMap: handler={}, id={}, is_auto={}, is_functor={}\n",
     han, id, print_bool(is_auto), print_bool(is_functor)
@@ -112,7 +112,7 @@ inline HandlerType makeAutoHandlerMap() {
   using FuncType = ActiveMapFnPtrType;
   auto id = RunnableGen<FunctorType, ContainerType, RegInfoType, FuncType>::idx;
   auto const& han = HandlerManagerType::makeHandler(true,false,id);
-  debug_print(
+  vt_debug_print(
     handler, node,
     "makeAutoHandlerMap: id={}, han={}\n", id, han
   );
@@ -122,7 +122,7 @@ inline HandlerType makeAutoHandlerMap() {
 inline AutoActiveMapType getAutoHandlerMap(HandlerType const& handler) {
   using ContainerType = AutoActiveMapContainerType;
   auto const& id = HandlerManagerType::getHandlerIdentifier(handler);
-  debug_print(
+  vt_debug_print(
     handler, node,
     "getAutoHandlerMap: id={}, handler={}\n", id, handler
   );
@@ -137,7 +137,7 @@ inline HandlerType makeAutoHandlerSeedMap() {
   using FuncType = ActiveSeedMapFnPtrType;
   auto id = RunnableGen<FunctorType, ContainerType, RegInfoType, FuncType>::idx;
   auto const& han = HandlerManagerType::makeHandler(true,false,id);
-  debug_print(
+  vt_debug_print(
     handler, node,
     "makeAutoHandlerMap: id={}, han={}\n", id, han
   );
@@ -148,7 +148,7 @@ inline HandlerType makeAutoHandlerSeedMap() {
 inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const& handler) {
   using ContainerType = AutoActiveSeedMapContainerType;
   auto const& id = HandlerManagerType::getHandlerIdentifier(handler);
-  debug_print(
+  vt_debug_print(
     handler, node,
     "getAutoHandlerSeedMap: id={}, handler={}\n", id, handler
   );

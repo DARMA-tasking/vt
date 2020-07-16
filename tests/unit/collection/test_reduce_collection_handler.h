@@ -55,7 +55,7 @@ namespace vt { namespace tests { namespace unit { namespace reduce {
 void colHanBasic(ColMsg* msg, MyCol* col) {
 
   auto const& idx = col->getIndex();
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "colHan: received: ptr={}, idx={}, getIndex={}\n",
     print_ptr(col), idx.x(), col->getIndex().x()
@@ -63,7 +63,7 @@ void colHanBasic(ColMsg* msg, MyCol* col) {
 
   auto reduce_msg = vt::makeMessage<MyReduceMsg>(idx.x());
   auto proxy = col->getProxy();
-  debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
+  vt_debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
 
   int const expected = collect_size * (collect_size - 1) / 2;
 
@@ -74,7 +74,7 @@ void colHanBasic(ColMsg* msg, MyCol* col) {
 
 void colHanVec(ColMsg* msg, MyCol* col) {
   auto const& idx = col->getIndex();
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "colHanPartialProxy: received: ptr={}, idx={}, getIndex={}\n",
     print_ptr(col), idx.x(), col->getIndex().x()
@@ -82,7 +82,7 @@ void colHanVec(ColMsg* msg, MyCol* col) {
 
   auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
   auto proxy = col->getProxy();
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
   );
@@ -96,7 +96,7 @@ void colHanVec(ColMsg* msg, MyCol* col) {
 
 void colHanVecProxy(ColMsg* msg, MyCol* col) {
   auto const& idx = col->getIndex();
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "colHanVecProxy: received: ptr={}, idx={}, getIndex={}\n",
     print_ptr(col), idx.x(), col->getIndex().x()
@@ -104,7 +104,7 @@ void colHanVecProxy(ColMsg* msg, MyCol* col) {
 
   auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
   auto proxy = col->getCollectionProxy();
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
   );
@@ -113,7 +113,7 @@ void colHanVecProxy(ColMsg* msg, MyCol* col) {
 
 void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
   auto const& idx = col->getIndex();
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "colHanVecProxyCB: received: ptr={}, idx={}, getIndex={}\n",
     print_ptr(col), idx.x(), col->getIndex().x()
@@ -121,7 +121,7 @@ void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
 
   auto reduce_msg = vt::makeMessage<SysMsgVec>(static_cast<double>(idx.x()));
   auto proxy = col->getCollectionProxy();
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "msg->vec.size={}\n", reduce_msg->getConstVal().vec.size()
   );
@@ -133,7 +133,7 @@ void colHanVecProxyCB(ColMsg* msg, MyCol* col) {
 
 void colHanNoneCB(ColMsg* msg, MyCol* col) {
   auto const& idx = col->getIndex();
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "colHanNoneCB: received: ptr={}, idx={}, getIndex={}\n",
     print_ptr(col), idx.x(), col->getIndex().x()
@@ -152,7 +152,7 @@ void colHanNoneCB(ColMsg* msg, MyCol* col) {
 void colHanPartial(ColMsg* msg, MyCol* col) {
   auto const& idx = col->getIndex();
 
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "colHanPartial: received: ptr={}, idx={}, getIndex={}\n",
     print_ptr(col), idx.x(), col->getIndex().x()
@@ -160,7 +160,7 @@ void colHanPartial(ColMsg* msg, MyCol* col) {
 
   auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
   auto proxy = col->getProxy();
-  debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
+  vt_debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
 
   int const expected = index_tresh * (index_tresh - 1) / 2;
 
@@ -177,7 +177,7 @@ void colHanPartialMulti(ColMsg* msg, MyCol* col) {
   auto const& idx = col->getIndex();
   auto const& grouping = idx.x() % index_tresh;
 
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "colHanPartialMulti: received: ptr={}, idx={}, getIndex={}\n",
     print_ptr(col), idx.x(), col->getIndex().x()
@@ -185,7 +185,7 @@ void colHanPartialMulti(ColMsg* msg, MyCol* col) {
 
   auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
   auto proxy = col->getProxy();
-  debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
+  vt_debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
 
 //  template parameters deduction fails within 'reduceMsgExpr'
 //  if 'expected' is not resolved at compile-time.
@@ -208,7 +208,7 @@ void colHanPartialMulti(ColMsg* msg, MyCol* col) {
 void colHanPartialProxy(ColMsg* msg, MyCol* col) {
   auto const& idx = col->getIndex();
 
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "colHanPartialProxy: received: ptr={}, idx={}, getIndex={}\n",
     print_ptr(col), idx.x(), col->getIndex().x()
@@ -216,7 +216,7 @@ void colHanPartialProxy(ColMsg* msg, MyCol* col) {
 
   auto reduce_msg = makeMessage<MyReduceMsg>(idx.x());
   auto proxy = col->getCollectionProxy();
-  debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
+  vt_debug_print(reduce, node, "msg->num={}\n", reduce_msg->num);
 
   proxy.reduceExpr< MyReduceMsg, reducePlus<index_tresh> >(
     reduce_msg.get(), [](Index1D const& idx) -> bool {

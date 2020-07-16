@@ -79,7 +79,7 @@ template <typename UserMsgT>
   auto const& ptr_size = sys_msg->ptr_size;
   auto const& group_ = envelopeGetGroup(sys_msg->env);
 
-  debug_print(
+  vt_debug_print(
     serial_msg, node,
     "serialMsgHandlerBcast: group_={:x}, handler={}, ptr_size={}\n",
     group_, handler, ptr_size
@@ -103,7 +103,7 @@ template <typename UserMsgT>
   auto const& recv_tag = sys_msg->data_recv_tag;
   auto const epoch = envelopeGetEpoch(sys_msg->env);
 
-  debug_print(
+  vt_debug_print(
     serial_msg, node,
     "serialMsgHandler: non-eager, recvDataMsg: msg={}, handler={}, "
     "recv_tag={}, epoch={}\n",
@@ -125,7 +125,7 @@ template <typename UserMsgT>
       auto msg_data = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
       auto msg = deserializeFullMessage<UserMsgT>(msg_data);
 
-      debug_print(
+      vt_debug_print(
         serial_msg, node,
         "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
         "epoch={}\n",
@@ -157,7 +157,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
 
   auto const& group_ = envelopeGetGroup(sys_msg->env);
 
-  debug_print(
+  vt_debug_print(
     serial_msg, node,
     "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}, "
     "user ref={}, sys ref={}, user_msg={}, epoch={}\n",
@@ -246,7 +246,7 @@ template <typename MsgT, typename BaseT>
     envelopeSetGroup(payload_msg->env, group_);
     envelopeSetRef(payload_msg->env, cur_ref);
 
-    debug_print(
+    vt_debug_print(
       serial_msg, node,
       "broadcastSerialMsg (eager): han={}, size={}, "
       "serialized_msg_eager_size={}, group={:x}\n",
@@ -278,7 +278,7 @@ template <typename MsgT, typename BaseT>
     envelopeSetGroup(sys_msg->env, group_);
     envelopeSetRef(sys_msg->env, cur_ref);
 
-    debug_print(
+    vt_debug_print(
       serial_msg, node,
       "broadcastSerialMsg (non-eager): container: han={}, sys_size={}, "
       "ptr_size={}, total_size={}, group={:x}\n",
@@ -347,7 +347,7 @@ template <typename MsgT, typename BaseT>
 
   //fmt::print("ptr_size={}\n", ptr_size);
 
-  debug_print(
+  vt_debug_print(
     serial_msg, node,
     "sendSerialMsgHandler: ptr_size={}, han={}, eager={}, epoch={}\n",
     ptr_size, typed_handler, ptr_size <= serialized_msg_eager_size,
@@ -355,7 +355,7 @@ template <typename MsgT, typename BaseT>
   );
 
   if (ptr_size > serialized_msg_eager_size) {
-    debug_print(
+    vt_debug_print(
       serial_msg, node,
       "sendSerialMsg: non-eager: ptr_size={}\n", ptr_size
     );
@@ -378,7 +378,7 @@ template <typename MsgT, typename BaseT>
         sys_msg->from_node = theContext()->getNode();
         envelopeSetRef(sys_msg->env, cur_ref);
 
-        debug_print(
+        vt_debug_print(
           serial_msg, node,
           "sendSerialMsg: non-eager: dest={}, sys_msg={}, handler={}\n",
           dest, print_ptr(sys_msg.get()), typed_handler
@@ -392,7 +392,7 @@ template <typename MsgT, typename BaseT>
         auto msg_data = ptr;
         auto user_msg = deserializeFullMessage<MsgT>(msg_data);
 
-        debug_print(
+        vt_debug_print(
           serial_msg, node,
           "serialMsgHandler: local msg: handler={}\n", typed_handler
         );
@@ -407,7 +407,7 @@ template <typename MsgT, typename BaseT>
 
     return data_sender(send_data);
   } else {
-    debug_print(
+    vt_debug_print(
       serial_msg, node,
       "sendSerialMsg: eager: ptr_size={}\n", ptr_size
     );
