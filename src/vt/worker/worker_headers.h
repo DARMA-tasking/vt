@@ -56,7 +56,7 @@
 #elif backend_no_threading
   #include "vt/worker/worker_group.h"
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 namespace vt { namespace worker {
@@ -68,7 +68,7 @@ namespace vt { namespace worker {
 #elif backend_no_threading
   using WorkerGroupType = WorkerGroupSeq;
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 #if vt_check_enabled(openmp)
@@ -78,7 +78,7 @@ namespace vt { namespace worker {
 #elif backend_no_threading
   using WorkerType = WorkerSeq;
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 }} /* end namespace vt::worker */

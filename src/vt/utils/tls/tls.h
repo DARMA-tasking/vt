@@ -56,7 +56,7 @@
 #elif backend_no_threading
   #include "vt/utils/tls/null_tls.h"
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 #if backend_null_tls
@@ -84,7 +84,7 @@ namespace vt { namespace util { namespace tls {
   template <typename T, char const* tag, T val>
   using ThreadLocalInitType = ThreadLocalInitNull<T,tag,val>;
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 #if backend_null_tls

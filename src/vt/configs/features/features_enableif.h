@@ -48,7 +48,7 @@
 #include "vt/configs/features/features_featureswitch.h"
 #include "vt/configs/features/features_defines.h"
 
-#define backend_static_assert_unreachable                                  \
+#define vt_backend_static_assert_unreachable                                  \
   static_assert(false, "Configuration error: This should be unreachable");
 
 

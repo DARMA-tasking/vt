@@ -54,7 +54,7 @@
 #elif backend_no_threading
   #include "vt/utils/atomic/null_atomic.h"
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 namespace vt { namespace util { namespace atomic {
@@ -69,7 +69,7 @@ namespace vt { namespace util { namespace atomic {
   template <typename T>
   using AtomicType = AtomicNull<T>;
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 }}} /* end namespace vt::util::atomic */

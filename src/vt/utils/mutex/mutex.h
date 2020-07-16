@@ -58,7 +58,7 @@
 #elif backend_no_threading
   #include "vt/utils/mutex/null_mutex.h"
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 namespace vt { namespace util { namespace mutex {
@@ -70,7 +70,7 @@ namespace vt { namespace util { namespace mutex {
 #elif backend_no_threading
   using MutexType = NullMutex;
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 using NullMutexType = NullMutex;
