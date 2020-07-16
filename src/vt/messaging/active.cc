@@ -286,13 +286,13 @@ EventType ActiveMessenger::sendMsgBytes(
     #endif
 
     if (is_bcast) {
-      bcastsSentCount++;
+      bcastsSentCount.increment(1);
     }
     if (is_term) {
-      tdSentCount++;
+      tdSentCount.increment(1);
     }
-    amSentCount++;
-    amSentBytesGauge += msg_size;
+    amSentCount.increment(1);
+    amSentBytesGauge.update(msg_size);
 
     const int ret = MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -440,8 +440,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
       }
     #endif
 
-    dmSentCount++;
-    dmSentBytesGauge += num_bytes;
+    dmSentCount.increment(1);
+    dmSentBytesGauge.update(num_bytes);
 
     const int ret = MPI_Isend(
       data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -568,8 +568,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
         );
         vtAssertMPISuccess(recv_ret, "MPI_Irecv");
 
-        dmPostedCount++;
-        dmPostedBytesGauge += num_probe_bytes;
+        dmPostedCount.increment(1);
+        dmPostedBytesGauge.update(num_probe_bytes);
 
         #if vt_check_enabled(trace_enabled)
           if (theConfig()->vt_trace_mpi) {
@@ -588,7 +588,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
         priority
       };
 
-      dmPollCount++;
+      dmPollCount.increment(1);
 
       int recv_flag = 0;
       {
@@ -640,8 +640,8 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   }
 # endif
 
-  dmRecvCount++;
-  dmRecvBytesGauge += num_probe_bytes;
+  dmRecvCount.increment(1);
+  dmRecvBytesGauge.update(num_probe_bytes);
 
   auto dealloc_buf = [=]{
     vt_debug_print(
@@ -729,8 +729,8 @@ bool ActiveMessenger::processActiveMsg(
   if (deliver) {
     return deliverActiveMsg(base,from,insert,cont);
   } else {
-    amForwardCount++;
-    amForwardBytesGauge += size;
+    amForwardCount.increment(1);
+    amForwardBytesGauge.update(size);
 
     if (cont != nullptr) {
       cont();
@@ -824,9 +824,9 @@ bool ActiveMessenger::deliverActiveMsg(
     }
 
     if (is_term) {
-      tdRecvCount++;
+      tdRecvCount.increment(1);
     }
-    amHandlerCount++;
+    amHandlerCount.increment(1);
 
     runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
 
@@ -914,8 +914,8 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
         theContext()->getComm(), &req
       );
 
-      amPostedCount++;
-      amPostedBytesGauge += num_probe_bytes;
+      amPostedCount.increment(1);
+      amPostedBytesGauge.update(num_probe_bytes);
 
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
@@ -931,7 +931,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
 
-    amPollCount++;
+    amPollCount.increment(1);
 
     int recv_flag = 0;
     MPI_Status recv_stat;
@@ -953,8 +953,8 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
 
-  amRecvCount++;
-  amRecvBytesGauge += num_probe_bytes;
+  amRecvCount.increment(1);
+  amRecvBytesGauge.update(num_probe_bytes);
 
 # if vt_check_enabled(trace_enabled)
   if (theConfig()->vt_trace_mpi) {
@@ -1026,7 +1026,7 @@ bool ActiveMessenger::testPendingActiveMsgAsyncRecv() {
     },
     num_mpi_tests
   );
-  amPollCount += num_mpi_tests;
+  amPollCount.increment(num_mpi_tests);
   return ret;
 }
 
@@ -1038,7 +1038,7 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
     },
     num_mpi_tests
   );
-  dmPollCount += num_mpi_tests;
+  dmPollCount.increment(num_mpi_tests);
   return ret;
 }
 

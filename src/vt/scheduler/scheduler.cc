@@ -169,7 +169,7 @@ void Scheduler::runWorkUnit(UnitType& work) {
   }
 #endif
 
-  workUnitCount++;
+  workUnitCount.increment(1);
 
   ++action_depth_;
   work();
@@ -266,7 +266,7 @@ void Scheduler::runProgress(bool msg_only) {
     } else {
       progressImpl();
     }
-    progressCount++;
+    progressCount.increment(1);
   }
 
   if (theConfig()->vt_print_memory_at_threshold) {
@@ -290,7 +290,7 @@ void Scheduler::scheduler(bool msg_only) {
   }
 
   if (not work_queue_.empty()) {
-    queueSizeGauge += work_queue_.size();
+    queueSizeGauge.update(work_queue_.size());
 
     processed_after_last_progress_++;
 

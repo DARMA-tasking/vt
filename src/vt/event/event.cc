@@ -320,7 +320,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
   auto& cont = polling_event_container_;
 
   if (cont.size() > 0) {
-    eventSizeGauge += cont.size();
+    eventSizeGauge.update(cont.size());
   }
 
   for (auto iter = cont.begin(); iter != cont.end(); ) {
@@ -328,7 +328,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
     auto event = holder.get_event();
     auto id = event->getEventID();
 
-    eventPollCount++;
+    eventPollCount.increment(1);
 
     if (event->testReady()) {
 
