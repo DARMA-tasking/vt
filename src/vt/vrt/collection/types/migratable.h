@@ -52,16 +52,17 @@
 #include "vt/vrt/collection/types/migratable.fwd.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
 
+// Forward declaration for friend declaration below
+namespace balance {
+  struct ProcStats;
+}
+
 struct Migratable : MigrateHookBase {
 
-  Migratable()
-    : stats_elm_id_(balance::ProcStats::getNextElm()),
-      temp_elm_id_(balance::ProcStats::getNextElm())
-  { }
+  Migratable();
 
   /*
    * The user or runtime system can invoke this method at any time (when a valid
