@@ -1,3 +1,7 @@
+###############################################################################
+############## Warning this is a generated file---do not modify ###############
+###############################################################################
+
 name: PR tests (clang-8, alpine, mpich)
 
 on: [pull_request]
@@ -6,11 +10,13 @@ jobs:
 
   build:
 
+
     runs-on: ubuntu-latest
 
     env:
       REPO: lifflander1/vt
       ARCH: amd64
+
       COMPILER_TYPE: clang
       COMPILER: clang-8
       BUILD_TYPE: release
@@ -21,6 +27,8 @@ jobs:
       VT_MIMALLOC: 0
       VT_DOCS: 0
       VT_ASAN: 0
+      VT_POOL: 1
+      VT_EXTENDED_TESTS: 1
       CACHE: ~/.local/cache/
 
     steps:
