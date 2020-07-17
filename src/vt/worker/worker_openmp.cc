@@ -44,7 +44,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
 
 #include "vt/context/context.h"
 #include "vt/worker/worker_common.h"
@@ -126,4 +126,4 @@ void OMPWorker::dispatch(WorkerFunType fun) {
 
 }} /* end namespace vt::worker */
 
-#endif /*backend_check_enabled(openmp)*/
+#endif /*vt_check_enabled(openmp)*/

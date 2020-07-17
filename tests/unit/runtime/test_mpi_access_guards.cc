@@ -98,7 +98,7 @@ void testMpiAccess(bool access_allowed, bool grant_access) {
 }
 
 TEST_F(TestMpiAccessGuardDeathTest, test_mpi_access_prevented) {
-#if backend_check_enabled(mpi_access_guards) && !backend_check_enabled(production)
+#if vt_check_enabled(mpi_access_guards) && !vt_check_enabled(production)
   testMpiAccess(false, false);
 #else
   // Not applicable to 'death' / failure. Covered in allowed test case:
@@ -109,7 +109,7 @@ TEST_F(TestMpiAccessGuardDeathTest, test_mpi_access_prevented) {
 }
 
 TEST_F(TestMpiAccessGuardTest, test_mpi_access_allowed) {
-#if backend_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards)
   // Only allowed with grant when feature enabled
   testMpiAccess(true, true);
 #else

@@ -57,7 +57,7 @@ namespace vt {
   HandlerManager::setHandlerFunctor(new_han, is_functor);
   HandlerManager::setHandlerIdentifier(new_han, id);
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   HandlerManager::setHandlerTrace(new_han, is_trace);
 #endif
 
@@ -135,7 +135,7 @@ namespace vt {
   return BitPackerType::boolGetField<HandlerBitsType::ObjGroup>(han);
 }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 /*static*/ bool HandlerManager::isHandlerTrace(HandlerType han) {
   return BitPackerType::boolGetField<HandlerBitsType::Trace>(han);
 }

@@ -61,7 +61,7 @@
 #include <initializer_list>
 #include <iosfwd>
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "vt/topos/index/traits/traits.h"
 #endif
 
@@ -153,7 +153,7 @@ private:
   std::array<IndexType, ndim> dims = {};
 };
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   static_assert(
     vt::index::IndexTraits<DenseIndexArray<int, 10>>::is_index,
     "DenseIndexArray must follow the index concept"

@@ -64,7 +64,7 @@
 #include "vt/utils/static_checks/functor.h"
 #include "vt/runtime/component/component_pack.h"
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
 #endif
 
@@ -1232,7 +1232,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   EpochType getCurrentEpoch() const;
 
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     /**
      * \internal
      * \brief Get the trace event on the handler running
@@ -1503,7 +1503,7 @@ private:
   );
 
 private:
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
   trace::UserEventIDType trace_irecv             = trace::no_user_event_id;
   trace::UserEventIDType trace_isend             = trace::no_user_event_id;

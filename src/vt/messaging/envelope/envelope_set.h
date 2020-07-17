@@ -157,7 +157,7 @@ inline void envelopeSetRef(Env& env, RefType const& ref = 0);
 template <typename Env>
 inline void envelopeSetGroup(Env& env, GroupType const& group = default_group);
 
-#if backend_check_enabled(priorities)
+#if vt_check_enabled(priorities)
 /**
  * \brief Set priority
  *
@@ -177,7 +177,7 @@ template <typename Env>
 inline void envelopeSetPriorityLevel(Env& env, PriorityLevelType priority_level);
 #endif
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 /**
  * \brief Set trace event
  *

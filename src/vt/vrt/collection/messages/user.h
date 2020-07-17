@@ -110,12 +110,12 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
   bool getWrap() const;
   void setWrap(bool const& wrap);
 
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     trace::TraceEventIDType getFromTraceEvent() const;
     void setFromTraceEvent(trace::TraceEventIDType in_event);
   #endif
 
-  #if backend_check_enabled(lblite)
+  #if vt_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
     balance::ElementIDType getElm() const;
@@ -139,7 +139,7 @@ private:
   bool member_ = false;
   bool is_wrap_ = false;
 
-  #if backend_check_enabled(lblite)
+  #if vt_check_enabled(lblite)
     /*
      * By default this is off so system messages do not all get
      * instrumented. When the user sends a message through theCollection
@@ -151,7 +151,7 @@ private:
     balance::CommCategory cat_ = balance::CommCategory::SendRecv;
   #endif
 
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     trace::TraceEventIDType trace_event_ = trace::no_trace_event;
   #endif
 };

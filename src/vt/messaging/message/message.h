@@ -104,8 +104,8 @@ struct ActiveMsg : BaseMsg {
     );
   }
 
-  #if backend_check_enabled(memory_pool) && \
-     !backend_check_enabled(no_pool_alloc_env)
+  #if vt_check_enabled(memory_pool) && \
+     !vt_check_enabled(no_pool_alloc_env)
   /**
    * \brief Overload of the new operator to use the memory pool to construct a
    * new message

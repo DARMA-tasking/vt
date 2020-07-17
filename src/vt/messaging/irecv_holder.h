@@ -51,7 +51,7 @@
 // Unfortunate header leak for VT_ALLOW_MPI_CALLS
 #include "vt/runtime/mpi_access.h"
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   #include "vt/trace/trace_headers.h"
 #endif
 
@@ -70,7 +70,7 @@ template <typename T>
 struct IRecvHolder {
   using ArgType = vt::arguments::ArgConfig;
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   explicit IRecvHolder(trace::UserEventIDType in_trace_user_event)
     : trace_user_event_(in_trace_user_event)
   { }
@@ -99,7 +99,7 @@ struct IRecvHolder {
   bool testAll(Callable c) {
     VT_ALLOW_MPI_CALLS; // MPI_Test in loop
 
-#   if backend_check_enabled(trace_enabled)
+#   if vt_check_enabled(trace_enabled)
     std::size_t const holder_size_start = holder_.size();
     TimeType tr_begin = 0.0;
     if (ArgType::vt_trace_irecv_polling) {
@@ -133,7 +133,7 @@ struct IRecvHolder {
       holder_.pop_back();
     }
 
-#   if backend_check_enabled(trace_enabled)
+#   if vt_check_enabled(trace_enabled)
     if (ArgType::vt_trace_irecv_polling) {
        if (holder_size_start > 0) {
          auto tr_end = vt::timing::Timing::getCurrentTime();
@@ -153,7 +153,7 @@ struct IRecvHolder {
 private:
   std::vector<T> holder_;
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   trace::UserEventIDType trace_user_event_ = trace::no_user_event_id;
 # endif
 };

@@ -76,7 +76,7 @@ Scheduler::Scheduler() {
 
 void Scheduler::enqueue(ActionType action) {
   bool const is_term = false;
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   work_queue_.emplace(UnitType(is_term, default_priority, action));
 # else
   work_queue_.emplace(UnitType(is_term, action));
@@ -85,7 +85,7 @@ void Scheduler::enqueue(ActionType action) {
 
 void Scheduler::enqueue(PriorityType priority, ActionType action) {
   bool const is_term = false;
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   work_queue_.emplace(UnitType(is_term, priority, action));
 # else
   work_queue_.emplace(UnitType(is_term, action));
@@ -95,7 +95,7 @@ void Scheduler::enqueue(PriorityType priority, ActionType action) {
 void Scheduler::runWorkUnit(UnitType& work) {
   bool const is_term = work.isTerm();
 
-#if backend_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards)
   vtAssert(
     not vt::runtime::ScopedMPIAccess::isExplicitlyGranted(),
     "Explicit MPI access should not be active when executing work unit."
@@ -109,7 +109,7 @@ void Scheduler::runWorkUnit(UnitType& work) {
   work();
   --action_depth_;
 
-#if backend_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards)
   if (action_depth_ == 0) {
     vt::runtime::ScopedMPIAccess::prohibitByDefault(false);
   }

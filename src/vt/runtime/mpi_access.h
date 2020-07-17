@@ -45,13 +45,13 @@
 #if !defined INCLUDED_RUNTIME_MPI_ACCESS_H
 #define INCLUDED_RUNTIME_MPI_ACCESS_H
 
-#if backend_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards)
 #define VT_ALLOW_MPI_CALLS vt::runtime::ScopedMPIAccess _vt_allow_scoped_mpi{};
 #else
 #define VT_ALLOW_MPI_CALLS
-#endif // backend_check_enabled(mpi_access_guards)
+#endif // vt_check_enabled(mpi_access_guards)
 
-#if backend_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards)
 namespace vt { namespace runtime {
 
   /**
@@ -89,6 +89,6 @@ namespace vt { namespace runtime {
   };
 
 }} // end namespace vt::runtime
-#endif // backend_check_enabled(mpi_access_guards)
+#endif // vt_check_enabled(mpi_access_guards)
 
 #endif /* INCLUDED_RUNTIME_MPI_ACCESS_H */

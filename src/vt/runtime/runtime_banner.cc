@@ -85,9 +85,9 @@ void Runtime::printStartupBanner() {
   std::string thd = !has_workers ? std::string("") :
     std::string(", worker threading: ") +
     std::string(
-      #if backend_check_enabled(openmp)
+      #if vt_check_enabled(openmp)
         "OpenMP"
-      #elif backend_check_enabled(stdthread)
+      #elif vt_check_enabled(stdthread)
         "std::thread"
       #else
         ""
@@ -112,49 +112,49 @@ void Runtime::printStartupBanner() {
 
   std::vector<std::string> features;
 
-#if backend_check_enabled(bit_check_overflow)
+#if vt_check_enabled(bit_check_overflow)
   features.push_back(vt_feature_str_bit_check_overflow);
 #endif
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   features.push_back(vt_feature_str_trace_enabled);
 #endif
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   features.push_back(vt_feature_str_detector);
 #endif
-#if backend_check_enabled(lblite)
+#if vt_check_enabled(lblite)
   features.push_back(vt_feature_str_lblite);
 #endif
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   features.push_back(vt_feature_str_openmp);
 #endif
-#if backend_check_enabled(production)
+#if vt_check_enabled(production)
   features.push_back(vt_feature_str_production);
 #endif
-#if backend_check_enabled(priorities)
+#if vt_check_enabled(priorities)
   features.push_back(vt_feature_str_priorities);
 #endif
-#if backend_check_enabled(stdthread)
+#if vt_check_enabled(stdthread)
   features.push_back(vt_feature_str_stdthread);
 #endif
-#if backend_check_enabled(mpi_rdma)
+#if vt_check_enabled(mpi_rdma)
   features.push_back(vt_feature_str_mpi_rdma);
 #endif
-#if backend_check_enabled(print_term_msgs)
+#if vt_check_enabled(print_term_msgs)
   features.push_back(vt_feature_str_print_term_msgs);
 #endif
-#if backend_check_enabled(no_pool_alloc_env)
+#if vt_check_enabled(no_pool_alloc_env)
   features.push_back(vt_feature_str_no_pool_alloc_env);
 #endif
-#if backend_check_enabled(memory_pool)
+#if vt_check_enabled(memory_pool)
   features.push_back(vt_feature_str_memory_pool);
 #endif
-#if backend_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards)
   features.push_back(vt_feature_str_mpi_access_guards);
 #endif
-#if backend_check_enabled(zoltan)
+#if vt_check_enabled(zoltan)
   features.push_back(vt_feature_str_zoltan);
 #endif
-#if backend_check_enabled(mimalloc)
+#if vt_check_enabled(mimalloc)
   features.push_back(vt_feature_str_mimalloc);
 #endif
 
@@ -231,7 +231,7 @@ void Runtime::printStartupBanner() {
   auto f8 = fmt::format("{}Runtime Configuration:{}\n", green, reset);
   fmt::print("{}{}{}", vt_pre, f8, reset);
 
-  #if !backend_check_enabled(lblite)
+  #if !vt_check_enabled(lblite)
     if (ArgType::vt_lb) {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
@@ -348,14 +348,14 @@ void Runtime::printStartupBanner() {
   }
 
 
-  #if !backend_check_enabled(trace_enabled)
+  #if !vt_check_enabled(trace_enabled)
     if (ArgType::vt_trace) {
       auto f9 = warn_cr("--vt_trace", "trace_enabled");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
   #endif
 
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
   if (ArgType::vt_trace) {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
@@ -827,7 +827,7 @@ void Runtime::printShutdownBanner(
 }
 
 void Runtime::checkForArgumentErrors() {
-  #if !backend_check_enabled(lblite)
+  #if !vt_check_enabled(lblite)
     if (ArgType::vt_lb) {
       vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
     }

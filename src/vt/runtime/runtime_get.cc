@@ -131,7 +131,7 @@ vrt::collection::balance::ProcStats* theProcStats() { return CUR_RT->theProcStat
 vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->theStatsReader;      }
 vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
 trace::Trace*               theTrace()          { return CUR_RT->theTrace;          }
 #endif
 

@@ -53,7 +53,7 @@
 #include <list>
 #include <memory>
 
-#if backend_check_enabled(fcontext)
+#if vt_check_enabled(fcontext)
 #  include <context/context_wrapper.h>
 #endif
 

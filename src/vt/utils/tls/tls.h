@@ -49,14 +49,14 @@
 
 #define backend_null_tls 1
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   #include "vt/utils/tls/omp_tls.h"
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
   #include "vt/utils/tls/std_tls.h"
 #elif backend_no_threading
   #include "vt/utils/tls/null_tls.h"
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 #if backend_null_tls
@@ -65,13 +65,13 @@
 
 namespace vt { namespace util { namespace tls {
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   template <typename T, char const* tag>
   using ThreadLocalType = ThreadLocalOMP<T,tag>;
 
   template <typename T, char const* tag, T val>
   using ThreadLocalInitType = ThreadLocalInitOMP<T,tag,val>;
-#elif backend_check_enabled(stdthread)
+#elif vt_check_enabled(stdthread)
   template <typename T, char const* tag>
   using ThreadLocalType = ThreadLocalSTD<T,tag>;
 
@@ -84,7 +84,7 @@ namespace vt { namespace util { namespace tls {
   template <typename T, char const* tag, T val>
   using ThreadLocalInitType = ThreadLocalInitNull<T,tag,val>;
 #else
-  backend_static_assert_unreachable
+  vt_backend_static_assert_unreachable
 #endif
 
 #if backend_null_tls

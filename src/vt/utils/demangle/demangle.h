@@ -65,7 +65,7 @@ struct TemplateExtract {
   /// There should probably be a cmake check..
   template <class T>
   static constexpr char const* prettyFunctionForType() {
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     return __PRETTY_FUNCTION__;
   #else
     assert(false && "Can only be used for a trace_enabled build.");
@@ -77,7 +77,7 @@ struct TemplateExtract {
   /// in the template parameterization, and not the type..
   template <class T, T PF_VALUE_NAME>
   static constexpr char const* prettyFunctionForValue() {
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     return __PRETTY_FUNCTION__;
   #else
     assert(false && "Can only be used for a trace_enabled build.");
@@ -88,7 +88,7 @@ struct TemplateExtract {
   // T,T* 'overload' for GCC
   template <class T, T* PF_VALUE_NAME>
   static constexpr char const* prettyFunctionForValuePtr() {
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     return __PRETTY_FUNCTION__;
   #else
     assert(false && "Can only be used for a trace_enabled build.");

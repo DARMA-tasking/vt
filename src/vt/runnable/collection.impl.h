@@ -63,7 +63,7 @@ template <typename MsgT, typename ElementT>
   bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4,
   trace::TraceEventIDType in_trace_event
 ) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
   {
     auto reg_enum = member ?
@@ -93,7 +93,7 @@ template <typename MsgT, typename ElementT>
     func(msg, elm);
   };
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->endProcessing(processing_tag);
 #endif
 }

@@ -61,10 +61,10 @@ constexpr NodeType broadcast_dest = uninitialized_destination;
 template <typename MsgPtrT>
 void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
   setTermType(msg->env);
-#if backend_check_enabled(priorities)
+#if vt_check_enabled(priorities)
   envelopeSetPriority(msg->env, sys_min_priority);
 #endif
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   //fmt::print("arguments::traceTerm()={}\n",arguments::traceTerm());
   envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceTerm());
 #endif
@@ -72,21 +72,21 @@ void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsLocationMessage(MsgPtrT const msg) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceLocation());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsSerialMsgMessage(MsgPtrT const msg) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceSerialMsg());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsCollectionMessage(MsgPtrT const msg) {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceCollection());
 #endif
 }
@@ -106,7 +106,7 @@ trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
   MsgSizeType msg_size, bool is_bcast
 ) {
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
     trace::TraceEventIDType event = trace::no_trace_event;
     if (not is_bcast) {
@@ -169,7 +169,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
 
   bool is_term = envelopeIsTerm(rawMsg->env);
 
-  if (!is_term || backend_check_enabled(print_term_msgs)) {
+  if (!is_term || vt_check_enabled(print_term_msgs)) {
     debug_print(
       active, node,
       dest == broadcast_dest

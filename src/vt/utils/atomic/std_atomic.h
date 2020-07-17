@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(stdthread)
+#if vt_check_enabled(stdthread)
 #include <atomic>
 
 namespace vt { namespace util { namespace atomic {
@@ -57,6 +57,6 @@ using AtomicSTD = std::atomic<T>;
 
 }}} /* end namespace vt::util::atomic */
 
-#endif /*backend_check_enabled(stdthread)*/
+#endif /*vt_check_enabled(stdthread)*/
 
 #endif /*INCLUDED_UTILS_ATOMIC_STD_ATOMIC_H*/

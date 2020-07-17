@@ -262,7 +262,7 @@ template <typename MsgT, typename BaseT>
 
     auto traceable_han = han;
 
-#   if backend_check_enabled(trace_enabled)
+#   if vt_check_enabled(trace_enabled)
       // Since we aren't sending the message (just packing it into a buffer, we
       // need to transfer whether the handler should be traced on that message
       auto_registry::HandlerManagerType::setHandlerTrace(

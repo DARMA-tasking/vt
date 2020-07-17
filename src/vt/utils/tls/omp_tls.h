@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
 #include <omp.h>
 
 namespace vt { namespace util { namespace tls {
@@ -96,5 +96,5 @@ private:
 
 }}} /* end namespace vt::util::tls */
 
-#endif /*backend_check_enabled(openmp)*/
+#endif /*vt_check_enabled(openmp)*/
 #endif /*INCLUDED_UTILS_TLS_OMP_TLS_H*/

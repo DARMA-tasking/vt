@@ -60,7 +60,7 @@ enum struct LBType : int8_t {
   , RotateLB         = 3
   , GossipLB         = 4
   , StatsMapLB       = 5
-# if backend_check_enabled(zoltan)
+# if vt_check_enabled(zoltan)
   , ZoltanLB         = 6
 # endif
   , RandomLB         = 7

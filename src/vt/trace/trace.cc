@@ -121,7 +121,7 @@ Trace::Trace(std::string const& in_prog_name)
 }
 
 void Trace::initialize() /*override*/ {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   setupNames(prog_name_);
 
   between_sched_event_type_ = trace::TraceRegistry::registerEventHashed(
@@ -134,7 +134,7 @@ void Trace::initialize() /*override*/ {
 }
 
 void Trace::startup() /*override*/ {
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theSched()->registerTrigger(
     sched::SchedulerEvent::PendingSchedulerLoop, [this]{ pendingSchedulerLoop(); }
   );
@@ -320,7 +320,7 @@ void Trace::registerUserEventManual(
 }
 
 void insertNewUserEvent(UserEventIDType event, std::string const& name) {
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     theTrace()->user_event_.insertEvent(event, name);
   #endif
 }

@@ -141,7 +141,7 @@ struct AutoRegInfo {
   AutoHandlerType obj_idx_ = -1;
   RegistrarGenInfo gen_obj_idx_;
 
-  #if backend_check_enabled(trace_enabled)
+  #if vt_check_enabled(trace_enabled)
     trace::TraceEntryIDType event_id;
     AutoRegInfo(
       FnT const& in_active_fun_t,

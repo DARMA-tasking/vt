@@ -52,7 +52,7 @@
 
 #include "vt/transport.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
   #include <omp.h>
 #else
   #include <thread>
@@ -150,10 +150,10 @@ static void testAtomicMultiCAS() {
 TEST_F(TestAtomic, basic_atomic_fetch_add_multi_thd) {
   count.resize(num_workers);
 
-  #if backend_check_enabled(openmp)
+  #if vt_check_enabled(openmp)
     #pragma omp parallel num_threads(num_workers)
     testAtomicMulti();
-  #elif backend_check_enabled(stdthread)
+  #elif vt_check_enabled(stdthread)
     std::vector<std::thread> thds;
     for (auto i = 0; i < num_workers; i++) {
       thds.emplace_back(std::thread(testAtomicMulti));
@@ -177,10 +177,10 @@ TEST_F(TestAtomic, basic_atomic_fetch_add_multi_thd) {
 TEST_F(TestAtomic, basic_atomic_cas_multi_thd) {
   count.resize(num_workers);
 
-  #if backend_check_enabled(openmp)
+  #if vt_check_enabled(openmp)
     #pragma omp parallel num_threads(num_workers)
     testAtomicMultiCAS();
-  #elif backend_check_enabled(stdthread)
+  #elif vt_check_enabled(stdthread)
     std::vector<std::thread> thds;
     for (auto i = 0; i < num_workers; i++) {
       thds.emplace_back(std::thread(testAtomicMultiCAS));

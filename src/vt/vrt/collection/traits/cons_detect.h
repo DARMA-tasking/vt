@@ -47,13 +47,13 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "detector_headers.h"
-#endif /* backend_check_enabled(detector) */
+#endif /* vt_check_enabled(detector) */
 
 #include <functional>
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -84,6 +84,6 @@ struct ConstructorType {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*backend_check_enabled(detector)*/
+#endif /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_VRT_COLLECTION_CONS_DETECT_H*/

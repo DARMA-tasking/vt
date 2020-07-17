@@ -200,7 +200,7 @@ private:
   // container to lookup events by EventType
   EventContainerType lookup_container_;
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   vt::trace::UserEventIDType trace_event_polling = 0;
 # endif
 };

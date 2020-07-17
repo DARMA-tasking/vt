@@ -61,7 +61,7 @@ namespace vt { namespace event {
 // }
 
 void AsyncEvent::initialize() {
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   if (vt::arguments::ArgConfig::vt_trace_event_polling) {
     trace_event_polling = trace::registerEventCollective(
       "AsyncEvent::testEventsTrigger"
@@ -287,7 +287,7 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
 }
 
 void AsyncEvent::testEventsTrigger(int const& num_events) {
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   int32_t num_completed  = 0;
   TimeType tr_begin = 0.0;
 
@@ -307,7 +307,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
       iter = polling_event_container_.erase(iter);
       lookup_container_.erase(id);
 
-#     if backend_check_enabled(trace_enabled)
+#     if vt_check_enabled(trace_enabled)
       if (arguments::ArgConfig::vt_trace_event_polling) {
         ++num_completed;
       }
@@ -323,7 +323,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
     }
   }
 
-# if backend_check_enabled(trace_enabled)
+# if vt_check_enabled(trace_enabled)
   if (arguments::ArgConfig::vt_trace_event_polling) {
     if (num_completed > 0) {
       TimeType tr_end = timing::Timing::getCurrentTime();

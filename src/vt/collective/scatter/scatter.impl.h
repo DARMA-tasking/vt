@@ -68,7 +68,7 @@ void Scatter::scatter(
   );
   vtAssert(total_size == combined_size, "Sizes must be consistent");
   auto ptr = reinterpret_cast<char*>(scatter_msg.get()) + sizeof(ScatterMsg);
-#if backend_check_enabled(memory_pool)
+#if vt_check_enabled(memory_pool)
   auto remaining_size = thePool()->remainingSize(
     reinterpret_cast<void*>(scatter_msg.get())
   );

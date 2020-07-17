@@ -98,7 +98,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
 
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   using UnitType             = PriorityUnit;
 # else
   using UnitType             = Unit;
@@ -281,7 +281,7 @@ private:
 
 private:
 
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   PriorityQueue<UnitType> work_queue_;
 # else
   Queue<UnitType> work_queue_;

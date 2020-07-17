@@ -54,7 +54,7 @@ namespace vt { namespace tests { namespace unit {
 struct TestSchedPriorities : TestParallelHarness { };
 
 TEST_F(TestSchedPriorities, test_scheduler_priorities_1) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
@@ -87,7 +87,7 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_1) {
 }
 
 TEST_F(TestSchedPriorities, test_scheduler_priorities_2) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
@@ -129,7 +129,7 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_2) {
 }
 
 TEST_F(TestSchedPriorities, test_scheduler_priorities_3) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   int order = 0, total = 0;
 
   auto ordering_fn = [&](int expected) {
@@ -234,7 +234,7 @@ private:
 };
 
 TEST_F(TestSchedPriorities, test_scheduler_priorities_4) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
 
   auto proxy = vt::theObjGroup()->makeCollective<ObjGroup>();
 

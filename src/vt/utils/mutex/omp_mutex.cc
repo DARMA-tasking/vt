@@ -45,7 +45,7 @@
 #include "vt/config.h"
 #include "vt/utils/mutex/omp_mutex.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
 
 #include <omp.h>
 

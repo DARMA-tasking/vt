@@ -57,7 +57,7 @@ void CollectionManager::finalize() {
   cleanupAll<>();
 
   // Statistics output when LB is enabled and appropriate flag is enabled
-#if backend_check_enabled(lblite)
+#if vt_check_enabled(lblite)
   if (ArgType::vt_lb_stats) {
     theProcStats()->outputStatsFile();
     theProcStats()->clearStats();
@@ -67,7 +67,7 @@ void CollectionManager::finalize() {
 
 /*virtual*/ CollectionManager::~CollectionManager() { }
 
-#if backend_check_enabled(lblite)
+#if vt_check_enabled(lblite)
 struct StartRootedMsg : vt::Message {
   StartRootedMsg() = default;
   explicit StartRootedMsg(PhaseType in_phase) : phase_(in_phase) { }
@@ -82,7 +82,7 @@ static void startRootedBroadcast(StartRootedMsg* msg) {
 void CollectionManager::startPhaseRooted(
   ActionFinishedLBType fn, PhaseType lb_phase
 ) {
-#if backend_check_enabled(lblite)
+#if vt_check_enabled(lblite)
   auto msg = makeMessage<StartRootedMsg>(lb_phase);
   theMsg()->broadcastMsg<StartRootedMsg, startRootedBroadcast>(msg.get());
   startPhaseCollective(fn, lb_phase);
@@ -96,7 +96,7 @@ void CollectionManager::startPhaseRooted(
 void CollectionManager::startPhaseCollective(
   ActionFinishedLBType fn, PhaseType lb_phase
 ) {
-#if backend_check_enabled(lblite)
+#if vt_check_enabled(lblite)
   UniversalIndexHolder<>::runLB(lb_phase);
   if (fn != nullptr) {
     theTerm()->produce(term::any_epoch_sentinel);

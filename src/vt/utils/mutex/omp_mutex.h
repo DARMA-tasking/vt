@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 
-#if backend_check_enabled(openmp)
+#if vt_check_enabled(openmp)
 
 #include <omp.h>
 
@@ -68,7 +68,7 @@ struct OMPMutex {
 
 }}} /* end namespace vt::util::mutex */
 
-#if backend_check_enabled(detector)
+#if vt_check_enabled(detector)
   #include "vt/utils/mutex/mutex_traits.h"
 
   namespace vt { namespace util { namespace mutex {

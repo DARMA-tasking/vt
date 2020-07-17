@@ -74,7 +74,7 @@ template <typename MsgT>
     return runObj(handler, msg, from_node);
   }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
   bool is_traced = HandlerManagerType::isHandlerTrace(handler);
   if (is_traced) {
@@ -123,7 +123,7 @@ template <typename MsgT>
     func(msg);
   }
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   if (is_traced) {
     theTrace()->endProcessing(processing_tag);
   }
@@ -136,7 +136,7 @@ template <typename MsgT>
 ) {
   using HandlerManagerType = HandlerManager;
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
   {
     trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
@@ -158,7 +158,7 @@ template <typename MsgT>
   auto pmsg = promoteMsg(msg);
   objgroup::dispatchObjGroup(pmsg.template toVirtual<ShortMessage>(),handler);
 
-#if backend_check_enabled(trace_enabled)
+#if vt_check_enabled(trace_enabled)
   theTrace()->endProcessing(processing_tag);
 #endif
 }

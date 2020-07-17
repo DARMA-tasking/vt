@@ -51,21 +51,21 @@ namespace vt { namespace messaging {
 
 template <typename MsgT>
 void msgSetPriorityLevel(MsgT ptr, PriorityLevelType level) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   envelopeSetPriorityLevel(ptr->env, level);
 # endif
 }
 
 template <typename MsgT>
 void msgSetPriorityAllLevels(MsgT ptr, PriorityType priority) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   envelopeSetPriority(ptr->env, priority);
 # endif
 }
 
 template <typename MsgT, typename MsgU>
 bool msgIncPriorityLevel(MsgT old_msg, MsgU new_msg) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   auto const level = envelopeGetPriorityLevel(old_msg->env);
   if (level + 1 < sched::priority_num_levels) {
     envelopeSetPriorityLevel(new_msg->env, level + 1);
@@ -78,7 +78,7 @@ bool msgIncPriorityLevel(MsgT old_msg, MsgU new_msg) {
 
 template <typename MsgU>
 void msgSetPriority(MsgU new_msg, PriorityType priority, bool increment_level) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   PriorityLevelType const level = increment_level ? 1 : 0;
   PriorityType old_priority = vt::min_priority;
   return msgSetPriorityImpl<MsgU>(new_msg, priority, old_priority, level);
@@ -90,7 +90,7 @@ void msgSetPriorityImpl(
   MsgU new_msg, PriorityType new_priority, PriorityType old_priority,
   PriorityLevelType level
 ) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
 
   bool const is_breadth_first = new_priority == sched::Priority::BreadthFirst;
   debug_print(
@@ -116,7 +116,7 @@ template <typename MsgT, typename MsgU>
 void msgSetPriorityFrom(
   MsgT old_msg, MsgU new_msg, PriorityType priority, bool increment_level
 ) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   vtAssert(old_msg != nullptr, "Must have a valid message");
   vtAssert(new_msg != nullptr, "Must have a valid message");
   PriorityLevelType level = envelopeGetPriorityLevel(old_msg->env);
@@ -130,7 +130,7 @@ void msgSetPriorityFrom(
 
 template <typename MsgT>
 void msgSystemSetPriority(MsgT ptr, PriorityType priority) {
-# if backend_check_enabled(priorities)
+# if vt_check_enabled(priorities)
   PriorityType prior = no_priority;
   envelopeSetPriorityLevel(ptr->env, 0);
   sched::PriorityManip::setPriority(prior, 0, priority);
