@@ -59,11 +59,6 @@ Norm::Norm(std::shared_ptr<balance::LoadModel> base, double power)
 void Norm::setLoads(std::vector<LoadMapType> const* proc_load,
 		    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
 		    std::vector<CommMapType> const* proc_comm) {
-  const auto& last_phase = proc_subphase_load->back();
-  const auto& an_object = *last_phase.begin();
-  const auto& subphases = an_object.second;
-  num_subphases_ = subphases.size();
-
   ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
 }
 
@@ -75,7 +70,7 @@ TimeType Norm::getWork(ElementIDType object, PhaseOffset offset)
   if (std::isfinite(power_)) {
     double sum = 0.0;
 
-    for (int i = 0; i < num_subphases_; ++i) {
+    for (int i = 0; i < getNumSubphases(); ++i) {
       auto t = ComposedModel::getWork(object, offset);
       sum += std::pow(t, power_);
     }
@@ -85,7 +80,7 @@ TimeType Norm::getWork(ElementIDType object, PhaseOffset offset)
     // l-infinity implies a max norm
     double max = 0.0;
 
-    for (int i = 0; i < num_subphases_; ++i) {
+    for (int i = 0; i < getNumSubphases(); ++i) {
       auto t = ComposedModel::getWork(object, offset);
       max = std::max(max, t);
     }

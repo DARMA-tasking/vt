@@ -64,6 +64,7 @@ struct RawData : public LoadModel {
   ObjectIterator end() override { return ObjectIterator(proc_load_->back().end()); }
 
   int getNumObjects() override { return end() - begin(); }
+  int getNumSubphases() override;
 
   // Observer pointers to the underlying data. In operation, these would be owned by ProcStats
   std::vector<LoadMapType>         const* proc_load_;

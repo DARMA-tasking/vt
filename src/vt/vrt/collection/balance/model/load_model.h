@@ -128,6 +128,7 @@ public:
   virtual ObjectIterator end() = 0;
 
   virtual int getNumObjects() = 0;
+  virtual int getNumSubphases() = 0;
 }; // class LoadModel
 
 }}}} // namespaces

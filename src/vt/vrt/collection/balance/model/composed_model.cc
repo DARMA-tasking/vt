@@ -72,4 +72,8 @@ int ComposedModel::getNumObjects() {
   return base_->getNumObjects();
 }
 
+int ComposedModel::getNumSubphases() {
+  return base_->getNumSubphases();
+}
+
 }}}}

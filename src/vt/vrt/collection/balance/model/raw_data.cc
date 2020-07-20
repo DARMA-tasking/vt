@@ -60,6 +60,13 @@ void RawData::setLoads(std::vector<LoadMapType> const* proc_load,
   proc_comm_ = proc_comm;
 }
 
+int RawData::getNumSubphases() {
+  const auto& last_phase = proc_subphase_load_->back();
+  const auto& an_object = *last_phase.begin();
+  const auto& subphases = an_object.second;
+  return subphases.size();
+}
+
 TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
 {
   vtAssert(offset.phases < 0,
