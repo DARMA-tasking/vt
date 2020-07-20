@@ -62,7 +62,7 @@ public:
    *
    * \param[in] power The power to use in computing the norms
    */
-  Norm(balance::LoadModel *base, double power);
+  Norm(std::shared_ptr<balance::LoadModel> base, double power);
   void setLoads(std::vector<LoadMapType> const* proc_load,
 		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
 		std::vector<CommMapType> const* proc_comm) override;

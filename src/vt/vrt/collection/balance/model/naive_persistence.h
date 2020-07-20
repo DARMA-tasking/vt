@@ -51,7 +51,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct NaivePersistence : public ComposedModel {
-  NaivePersistence(balance::LoadModel *base);
+  NaivePersistence(std::shared_ptr<balance::LoadModel> base);
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 }; // class NaivePersistence
 

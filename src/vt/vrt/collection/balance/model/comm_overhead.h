@@ -51,7 +51,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct CommOverhead : public ComposedModel {
-  CommOverhead(balance::LoadModel *base);
+  CommOverhead(std::shared_ptr<balance::LoadModel> base);
   void setLoads(std::vector<LoadMapType> const* proc_load,
 		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
 		std::vector<CommMapType> const* proc_comm) override;

@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-Norm::Norm(balance::LoadModel *base, double power)
+Norm::Norm(std::shared_ptr<balance::LoadModel> base, double power)
   : ComposedModel(base)
   , power_(power)
 {

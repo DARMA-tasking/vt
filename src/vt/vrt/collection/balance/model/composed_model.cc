@@ -49,27 +49,27 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 void ComposedModel::setLoads(std::vector<LoadMapType> const* proc_load,
 			     std::vector<SubphaseLoadMapType> const* proc_subphase_load,
 			     std::vector<CommMapType> const* proc_comm) {
-  base_.setLoads(proc_load, proc_subphase_load, proc_comm);
+  base_->setLoads(proc_load, proc_subphase_load, proc_comm);
 }
 
 void ComposedModel::updateLoads(PhaseType last_completed_phase) {
-  base_.updateLoads(last_completed_phase);
+  base_->updateLoads(last_completed_phase);
 }
 
 TimeType ComposedModel::getWork(ElementIDType object, PhaseOffset when) {
-  return base_.getWork(object, when);
+  return base_->getWork(object, when);
 }
 
 ObjectIterator ComposedModel::begin() {
-  return base_.begin();
+  return base_->begin();
 }
 
 ObjectIterator ComposedModel::end() {
-  return base_.end();
+  return base_->end();
 }
 
 int ComposedModel::getNumObjects() {
-  return base_.getNumObjects();
+  return base_->getNumObjects();
 }
 
 }}}}
