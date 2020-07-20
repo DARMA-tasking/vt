@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 norm.cc
+//                                 composed_model.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,57 +42,37 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VRT_COLLECTION_BALANCE_COMPOSED_MODEL_H
+#define INCLUDED_VRT_COLLECTION_BALANCE_COMPOSED_MODEL_H
 
-#include "vt/vrt/collection/balance/model/norm.h"
-#include <cmath>
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-Norm::Norm(balance::LoadModel *base, double power)
-  : ComposedModel(base)
-  , power_(power)
+class ComposedModel : public LoadModel
 {
-  vtAssert(not std::isnan(power), "Power must have a real value");
-  vtAssert(power >= 0.0, "Reciprocal loads make no sense");
-}
+public:
+  // \param[in] base must not be null
+  ComposedModel(LoadModel *base) : base_(*base) {}
 
-void Norm::setLoads(std::vector<LoadMapType> const* proc_load,
-		    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		    std::vector<CommMapType> const* proc_comm) {
-  const auto& last_phase = proc_subphase_load->back();
-  const auto& an_object = *last_phase.begin();
-  const auto& subphases = an_object.second;
-  num_subphases_ = subphases.size();
+  void setLoads(std::vector<LoadMapType> const* proc_load,
+			std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+			std::vector<CommMapType> const* proc_comm) override;
 
-  ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
-}
+  void updateLoads(PhaseType last_completed_phase) override;
 
-TimeType Norm::getWork(ElementIDType object, PhaseOffset offset)
-{
-  if (offset.subphase != PhaseOffset::WHOLE_PHASE)
-    return ComposedModel::getWork(object, offset);
+  TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  if (std::isfinite(power_)) {
-    double sum = 0.0;
+  ObjectIterator begin() override;
+  ObjectIterator end() override;
 
-    for (int i = 0; i < num_subphases_; ++i) {
-      auto t = ComposedModel::getWork(object, offset);
-      sum += std::pow(t, power_);
-    }
+  int getNumObjects() override;
 
-    return std::pow(sum, 1.0/power_);
-  } else {
-    // l-infinity implies a max norm
-    double max = 0.0;
+private:
+  LoadModel &base_;
+}; // class ComposedModel
 
-    for (int i = 0; i < num_subphases_; ++i) {
-      auto t = ComposedModel::getWork(object, offset);
-      max = std::max(max, t);
-    }
+}}}} // namespaces
 
-    return max;
-  }
-}
-
-
-}}}}
+#endif

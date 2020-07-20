@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 norm.cc
+//                           raw_data.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -43,56 +43,33 @@
 */
 
 
-#include "vt/vrt/collection/balance/model/norm.h"
-#include <cmath>
+#include "vt/vrt/collection/balance/model/raw_data.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-Norm::Norm(balance::LoadModel *base, double power)
-  : ComposedModel(base)
-  , power_(power)
+RawData::RawData()
 {
-  vtAssert(not std::isnan(power), "Power must have a real value");
-  vtAssert(power >= 0.0, "Reciprocal loads make no sense");
 }
 
-void Norm::setLoads(std::vector<LoadMapType> const* proc_load,
-		    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		    std::vector<CommMapType> const* proc_comm) {
-  const auto& last_phase = proc_subphase_load->back();
-  const auto& an_object = *last_phase.begin();
-  const auto& subphases = an_object.second;
-  num_subphases_ = subphases.size();
-
-  ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
-}
-
-TimeType Norm::getWork(ElementIDType object, PhaseOffset offset)
+void RawData::setLoads(std::vector<LoadMapType> const* proc_load,
+		       std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+		       std::vector<CommMapType> const* proc_comm)
 {
-  if (offset.subphase != PhaseOffset::WHOLE_PHASE)
-    return ComposedModel::getWork(object, offset);
-
-  if (std::isfinite(power_)) {
-    double sum = 0.0;
-
-    for (int i = 0; i < num_subphases_; ++i) {
-      auto t = ComposedModel::getWork(object, offset);
-      sum += std::pow(t, power_);
-    }
-
-    return std::pow(sum, 1.0/power_);
-  } else {
-    // l-infinity implies a max norm
-    double max = 0.0;
-
-    for (int i = 0; i < num_subphases_; ++i) {
-      auto t = ComposedModel::getWork(object, offset);
-      max = std::max(max, t);
-    }
-
-    return max;
-  }
+  proc_load_ = proc_load;
+  proc_subphase_load_ = proc_subphase_load;
+  proc_comm_ = proc_comm;
 }
 
+TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
+{
+  vtAssert(offset.phases < 0,
+	   "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
+
+  auto phase = proc_load_->size() - offset.phases;
+  if (offset.subphase == PhaseOffset::WHOLE_PHASE)
+    return proc_load_->at(phase).at(object);
+  else
+    return proc_subphase_load_->at(phase).at(object).at(offset.subphase);
+}
 
 }}}}

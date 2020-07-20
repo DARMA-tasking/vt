@@ -61,6 +61,7 @@
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/naive_persistence.h"
+#include "vt/vrt/collection/balance/model/raw_data.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -148,7 +149,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
 
   if (model_ == nullptr)
-    setLoadModel(std::make_unique<balance::NaivePersistence>());
+    setLoadModel(std::make_unique<balance::NaivePersistence>(new balance::RawData));
 
   theMsg()->pushEpoch(model_epoch);
   model_->updateLoads(phase);

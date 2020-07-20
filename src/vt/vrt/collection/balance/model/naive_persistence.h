@@ -45,14 +45,13 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
 
-#include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/vrt/collection/balance/model/composed_model.h"
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct NaivePersistence : public LoadModel {
-  NaivePersistence();
+struct NaivePersistence : public ComposedModel {
+  NaivePersistence(balance::LoadModel *base);
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 }; // class NaivePersistence
 

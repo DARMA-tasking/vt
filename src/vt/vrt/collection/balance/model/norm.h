@@ -45,9 +45,7 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
 
-#include "vt/vrt/collection/balance/model/load_model.h"
-#include "vt/vrt/collection/balance/lb_comm.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/model/composed_model.h"
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -56,7 +54,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * \brief A load model that computes an l-norm of a given power across
  * subphases
  */
-class Norm : public LoadModel {
+class Norm : public ComposedModel {
 
 public:
   /**
@@ -64,10 +62,14 @@ public:
    *
    * \param[in] power The power to use in computing the norms
    */
-  Norm(double power);
+  Norm(balance::LoadModel *base, double power);
+  void setLoads(std::vector<LoadMapType> const* proc_load,
+		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+		std::vector<CommMapType> const* proc_comm) override;
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
+  int num_subphases_;
   const double power_;
 }; // class Norm
 
