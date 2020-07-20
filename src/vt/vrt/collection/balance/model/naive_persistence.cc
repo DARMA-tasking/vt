@@ -47,7 +47,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-NaivePersistence::NaivePersistence(balance::LoadModel *base)
+NaivePersistence::NaivePersistence(std::shared_ptr<balance::LoadModel> base)
   : ComposedModel(base)
 { }
 

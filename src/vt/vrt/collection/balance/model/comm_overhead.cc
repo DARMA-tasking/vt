@@ -47,7 +47,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-CommOverhead::CommOverhead(balance::LoadModel *base)
+CommOverhead::CommOverhead(std::shared_ptr<balance::LoadModel> base)
   : ComposedModel(base)
 {
 }

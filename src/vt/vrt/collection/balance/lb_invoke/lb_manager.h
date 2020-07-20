@@ -236,14 +236,23 @@ public:
 
   /**
    * \brief Set a model of expected object loads to use in place of
-   * naive persistence
+   * the current installed model
    *
    * \param[in] model the model to apply
    *
    * This should be called with a similarly-constructed model instance
    * on every node
    */
-  void setLoadModel(std::unique_ptr<LoadModel> model);
+  void setLoadModel(std::shared_ptr<LoadModel> model);
+
+  /**
+   * \brief Get the system-set basic model of object load
+   */
+  std::shared_ptr<LoadModel> getBaseLoadModel() { return base_model_; }
+  /**
+   * \brief Get the currently installed model of object load
+   */
+  std::shared_ptr<LoadModel> getLoadModel() { return model_; }
 
 protected:
   /**
@@ -265,7 +274,8 @@ private:
   bool synced_in_lb_                       = true;
   std::vector<ListenerFnType> listeners_   = {};
   objgroup::proxy::Proxy<LBManager> proxy_;
-  std::unique_ptr<LoadModel> model_;
+  std::shared_ptr<LoadModel> base_model_;
+  std::shared_ptr<LoadModel> model_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

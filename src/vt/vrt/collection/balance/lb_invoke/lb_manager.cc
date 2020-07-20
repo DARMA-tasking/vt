@@ -69,6 +69,10 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   auto ptr = std::make_unique<LBManager>();
   auto proxy = theObjGroup()->makeCollective<LBManager>(ptr.get());
   proxy.get()->setProxy(proxy);
+
+  ptr->base_model_ = std::make_shared<balance::NaivePersistence>(std::make_shared<balance::RawData>());
+  ptr->setLoadModel(ptr->base_model_);
+
   return ptr;
 }
 
@@ -127,8 +131,8 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   return the_lb;
 }
 
-void LBManager::setLoadModel(std::unique_ptr<LoadModel> model) {
-  model_ = std::move(model);
+void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
+  model_ = model;
   auto stats = theProcStats();
   model_->setLoads(stats->getProcLoad(),
                    stats->getProcSubphaseLoad(),
@@ -147,9 +151,6 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   EpochType model_epoch = theTerm()->makeEpochCollective("LBManager::model_epoch");
   EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
   EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
-
-  if (model_ == nullptr)
-    setLoadModel(std::make_unique<balance::NaivePersistence>(new balance::RawData));
 
   theMsg()->pushEpoch(model_epoch);
   model_->updateLoads(phase);
