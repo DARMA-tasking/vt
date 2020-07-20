@@ -51,12 +51,20 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/**
+ * \brief A description of the interval of interest for a modeled load query
+ *
+ * The value of `phases` can be in the past or future. Negative values
+ * represent a distance into the past, in which -1 is most recent. A
+ * value of 0 represents the immediate upcoming phase. Positive values
+ * represent more distant future phases.
+ */
 struct PhaseOffset {
-  unsigned int phases;
+  int phases;
   static constexpr unsigned int NEXT_PHASE = 0;
 
   unsigned int subphase;
-  static constexpr unsigned int WHOLE_PHASE = 0;
+  static constexpr unsigned int WHOLE_PHASE = ~0u;
 };
 
 class ObjectIterator {
@@ -110,12 +118,12 @@ public:
   virtual void updateLoads(PhaseType last_completed_phase) { }
 
   /**
-   * \brief Provide a prediction of the given object's load during a future interval
+   * \brief Provide an estimate of the given object's load during a specified interval
    *
    * \param[in] object The object whose load is desired
-   * \param[in] when The future interval in which the predicted load is desired
+   * \param[in] when The interval in which the estimated load is desired
    *
-   * \return How much computation time the object is expected to require
+   * \return How much computation time the object is estimated to require
    */
   virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
 
