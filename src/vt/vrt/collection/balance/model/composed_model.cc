@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 norm.cc
+//                           composed_model.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,57 +42,34 @@
 //@HEADER
 */
 
-
-#include "vt/vrt/collection/balance/model/norm.h"
-#include <cmath>
+#include "vt/vrt/collection/balance/model/composed_model.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-Norm::Norm(balance::LoadModel *base, double power)
-  : ComposedModel(base)
-  , power_(power)
-{
-  vtAssert(not std::isnan(power), "Power must have a real value");
-  vtAssert(power >= 0.0, "Reciprocal loads make no sense");
+void ComposedModel::setLoads(std::vector<LoadMapType> const* proc_load,
+			     std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+			     std::vector<CommMapType> const* proc_comm) {
+  base_.setLoads(proc_load, proc_subphase_load, proc_comm);
 }
 
-void Norm::setLoads(std::vector<LoadMapType> const* proc_load,
-		    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		    std::vector<CommMapType> const* proc_comm) {
-  const auto& last_phase = proc_subphase_load->back();
-  const auto& an_object = *last_phase.begin();
-  const auto& subphases = an_object.second;
-  num_subphases_ = subphases.size();
-
-  ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
+void ComposedModel::updateLoads(PhaseType last_completed_phase) {
+  base_.updateLoads(last_completed_phase);
 }
 
-TimeType Norm::getWork(ElementIDType object, PhaseOffset offset)
-{
-  if (offset.subphase != PhaseOffset::WHOLE_PHASE)
-    return ComposedModel::getWork(object, offset);
-
-  if (std::isfinite(power_)) {
-    double sum = 0.0;
-
-    for (int i = 0; i < num_subphases_; ++i) {
-      auto t = ComposedModel::getWork(object, offset);
-      sum += std::pow(t, power_);
-    }
-
-    return std::pow(sum, 1.0/power_);
-  } else {
-    // l-infinity implies a max norm
-    double max = 0.0;
-
-    for (int i = 0; i < num_subphases_; ++i) {
-      auto t = ComposedModel::getWork(object, offset);
-      max = std::max(max, t);
-    }
-
-    return max;
-  }
+TimeType ComposedModel::getWork(ElementIDType object, PhaseOffset when) {
+  return base_.getWork(object, when);
 }
 
+ObjectIterator ComposedModel::begin() {
+  return base_.begin();
+}
+
+ObjectIterator ComposedModel::end() {
+  return base_.end();
+}
+
+int ComposedModel::getNumObjects() {
+  return base_.getNumObjects();
+}
 
 }}}}

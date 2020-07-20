@@ -88,7 +88,8 @@ public:
 class LoadModel
 {
 public:
-  LoadModel() {}
+  LoadModel() = default;
+  virtual ~LoadModel() = default;
 
   /**
    * \internal \brief Initialize the model instance with pointers to the measured load data
@@ -96,14 +97,9 @@ public:
    * This would typically be called by LBManager when the user has
    * passed a new model instance for a collection
    */
-  void setLoads(std::vector<LoadMapType> const* proc_load,
-		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		std::vector<CommMapType> const* proc_comm)
-  {
-    proc_load_ = proc_load;
-    proc_subphase_load_ = proc_subphase_load;
-    proc_comm_ = proc_comm;
-  }
+  virtual void setLoads(std::vector<LoadMapType> const* proc_load,
+			std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+			std::vector<CommMapType> const* proc_comm) = 0;
 
   /**
    * \brief Signals that load data for a new phase is available
@@ -115,7 +111,7 @@ public:
    * an epoch that can be used for global communication in advance of
    * any calls to getWork()
    */
-  virtual void updateLoads(PhaseType last_completed_phase) { }
+  virtual void updateLoads(PhaseType last_completed_phase) = 0;
 
   /**
    * \brief Provide an estimate of the given object's load during a specified interval
@@ -128,16 +124,10 @@ public:
   virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
 
   // Object enumeration, to abstract away access to the underlying structures from ProcStats
-  ObjectIterator begin() { return ObjectIterator(proc_load_->back().begin()); }
-  ObjectIterator end()   { return ObjectIterator(proc_load_->back().end()); }
+  virtual ObjectIterator begin() = 0;
+  virtual ObjectIterator end() = 0;
 
-  int getNumObjects() { return end() - begin(); }
-
-protected:
-  // Observer pointers to the underlying data. In operation, these would be owned by ProcStats
-  std::vector<LoadMapType>         const* proc_load_;
-  std::vector<SubphaseLoadMapType> const* proc_subphase_load_;
-  std::vector<CommMapType>         const* proc_comm_;
+  virtual int getNumObjects() = 0;
 }; // class LoadModel
 
 }}}} // namespaces

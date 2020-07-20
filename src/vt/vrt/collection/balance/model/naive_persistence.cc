@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           naive_persistence.cpp
+//                           naive_persistence.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -47,22 +47,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-NaivePersistence::NaivePersistence()
-{
-  /*
-// Add a bit of overhead for each off-node received message per object
-  for (auto &&comm : *comms_) {
-    auto obj = loads_.find(comm.first.toObj());
-    if (obj != loads_.end())
-      obj->second += 0.001 * comm.second.messages;
-  }
-  */
-}
+NaivePersistence::NaivePersistence(balance::LoadModel *base)
+  : ComposedModel(base)
+{ }
 
-TimeType NaivePersistence::getWork(ElementIDType object, PhaseOffset /*ignored*/)
+TimeType NaivePersistence::getWork(ElementIDType object, PhaseOffset offset)
 {
-  return proc_load_->back().at(object);
-}
+  if (offset.phases >= 0)
+    offset.phases = -1;
 
+  return ComposedModel::getWork(object, offset);
+}
 
 }}}}
