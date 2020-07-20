@@ -68,6 +68,7 @@ public:
   ObjectIterator end() override;
 
   int getNumObjects() override;
+  int getNumSubphases() override;
 
 private:
   std::shared_ptr<LoadModel> base_;
