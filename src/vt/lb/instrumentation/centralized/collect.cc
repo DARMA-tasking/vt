@@ -81,7 +81,7 @@ namespace vt { namespace lb { namespace instrumentation {
 /*static*/ void CentralCollect::collectFinished(
   LBPhaseType const& phase, ProcContainerType const& entries
 ) {
-  debug_print(
+  vt_debug_print(
     lb, node,
     "collectFinished: phase={}, size={}\n", phase, entries.size()
   );

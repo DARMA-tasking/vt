@@ -65,7 +65,7 @@ void Reducable<ColT,IndexT,BaseProxyT>::reduce(
 ) const {
   auto const proxy = this->getProxy();
   msg->setCallback(cb);
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "Reducable: valid={} {}, ptr={}\n", cb.valid(), msg->getCallback().valid(),
     print_ptr(msg)

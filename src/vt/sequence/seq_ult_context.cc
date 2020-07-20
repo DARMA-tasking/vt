@@ -92,7 +92,7 @@ bool SeqULTContext::isContextActive() const {
 }
 
 void SeqULTContext::runStateFunc(fcontext::ContextFuncTransfer* state) {
-  debug_print_force(
+  vt_debug_print_force(
     sequence, node,
     "SeqULTContext: runStateFunc: state={}\n", print_ptr(state)
   );
@@ -113,7 +113,7 @@ void SeqULTContext::clearCurTransferState() {
 
 void SeqULTContext::start() {
 #if vt_check_enabled(fcontext)
-  debug_print_force(
+  vt_debug_print_force(
     sequence, node,
     "SeqULTContext: start\n"
   );
@@ -129,7 +129,7 @@ void SeqULTContext::suspend() {
   vtAssert(cur_transfer_main_state_ != nullptr, "Must have valid state");
   has_valid_context_state_ = true;
 
-  debug_print_force(
+  vt_debug_print_force(
     sequence, node,
     "SeqULTContext: suspend: cur_transfer_main_state={}\n",
     print_ptr(cur_transfer_main_state_)

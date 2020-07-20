@@ -109,7 +109,7 @@ void Manager::finishMake(impl::ConstructMsg<T, E, ProxyT>* msg) {
   auto const& key = msg->getVal().key_;
   auto const& size = msg->getVal().size_;
   auto const& count = msg->getVal().count_;
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "finishMake: handle={:x}, size={}, count={}\n",
     key.handle_, size, count
@@ -190,7 +190,7 @@ void Manager::deleteHandleCollection(Handle<T,E,IndexT>& han) {
   using SubType = SubHandle<T,E,IndexT>;
   auto proxy = objgroup::proxy::Proxy<SubType>{han.proxy_};
   proxy.get()->deleteHandle();
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "deleteHandleCollection: num deleted={}, num active={}\n",
     proxy.get()->getNumDeletedHandles(),
@@ -199,7 +199,7 @@ void Manager::deleteHandleCollection(Handle<T,E,IndexT>& han) {
   // If all of the handles mapped here are deleted, destroy the sub-handle
   // manager
   if (proxy.get()->getNumDeletedHandles() == proxy.get()->getNumActiveHandles()) {
-    debug_print(
+    vt_debug_print(
       rdma, node,
       "deleteHandleCollection: deleting handle collection: num={}\n",
       proxy.get()->getNumDeletedHandles()

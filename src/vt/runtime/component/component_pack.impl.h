@@ -68,7 +68,7 @@ registry::AutoHandlerType ComponentPack::registerComponent(
       [ref,this,cons...]() mutable {
         auto ptr = T::template staticInit<Cons...>(std::forward<Cons>(cons)...);
 
-        debug_print(
+        vt_debug_print(
           runtime, node,
           "ComponentPack: constructed component={}, pollable={}\n",
           ptr->name(), ptr->pollable()

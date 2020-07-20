@@ -68,7 +68,7 @@ template <typename MsgT>
 void CallbackProxyBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
   auto const& pipe_node = PipeIDBuilder::getNode(pipe);
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackProxyBcastTypeless: trigger_: pipe={:x}, this_node={}\n",
     pipe, this_node
@@ -98,7 +98,7 @@ template <typename MsgT>
 void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
   auto const& pipe_node = PipeIDBuilder::getNode(pipe);
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackProxyBcastDirect: trigger_: pipe={:x}, this_node={}, "
     "handler={}, vrt_handler={}\n",

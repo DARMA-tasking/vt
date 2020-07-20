@@ -83,7 +83,7 @@ void compute(vt::EpochType const& epoch) {
   std::uniform_int_distribution<int> dist_round(1, 10);
 
   if(epoch != vt::no_epoch){
-    debug_print(
+    vt_debug_print(
       term, node,
       "rank:{}, epoch:{:x}, is_rooted ? {}\n",
       channel::node, epoch, epoch::EpochManip::isRooted(epoch)
@@ -117,7 +117,7 @@ void finish(vt::EpochType const& epoch) {
  */
 void finalize(vt::EpochType const& epoch, int order) {
 
-  debug_print(
+  vt_debug_print(
     term, node,
     "finalize: epoch={:x}, order={}, rooted={}\n",
     epoch, order, epoch_manip::isRooted(epoch)
@@ -150,7 +150,7 @@ void add(vt::EpochType const& epoch, int order){
   if (channel::node == channel::root) {
     if (epoch == vt::no_epoch) {
       vt::theTerm()->addAction([=]{
-        debug_print(
+        vt_debug_print(
           term, node,
           "rank:{}: global epoch completed [order={}]\n",
           channel::node, order
@@ -160,7 +160,7 @@ void add(vt::EpochType const& epoch, int order){
       });
     } else {
       vt::theTerm()->addAction(epoch, [=]{
-        debug_print(
+        vt_debug_print(
           term, node,
           "rank:{}: epoch={:x} completed [order={}, rooted={}]\n",
           channel::node, epoch, order, epoch_manip::isRooted(epoch)

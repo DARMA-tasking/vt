@@ -19,14 +19,14 @@ else()
 endif()
 list(REMOVE_DUPLICATES VT_CONFIG_TYPES)
 
-# to speedup compiling, we can disable debug_print
+# to speedup compiling, we can disable vt_debug_print
 if (${VT_DEBUG_FAST})
   set(VT_DEBUG_MODE_ON 0)
 else()
   set(VT_DEBUG_MODE_ON 1)
 endif()
 
-# all debug_print and vt_print categories we can potentially compile in
+# all vt_debug_print and vt_print categories we can potentially compile in
 set(
   cmake_vt_debug_modes_all
   "CatEnum::gen          | \
@@ -219,7 +219,8 @@ foreach(loop_build_type ${VT_CONFIG_TYPES})
     set(vt_feature_cmake_production "1")
   endif()
 
-  # use the debug_print configuration specified for this build type before the loop
+  # use the vt_debug_print configuration specified for this build type before
+  # the loop
   set(
     cmake_config_debug_enabled
     ${cmake_config_debug_enabled_${loop_build_type}}

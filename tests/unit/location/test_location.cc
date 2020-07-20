@@ -297,7 +297,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
           success = true;
           check_sum++;
 
-          debug_print(
+          vt_debug_print(
             location, node,
             "TestLocation: get loc migrated entity={}: found={}, expected={}\n",
             location::default_entity + i, found, expected
@@ -338,7 +338,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
       entity, my_node, [&msg_count](vt::BaseMessage* raw_msg) {
         // count the number of routed messages received by the home node
         auto msg = static_cast<TypeParam*>(raw_msg);
-        debug_print(
+        vt_debug_print(
           location, node,
           "TestLocationRoute: message arrived for entity={}\n", msg->entity_
         );
@@ -355,7 +355,7 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
 
     while (msg_count < nb_nodes - 1) { vt::runScheduler(); }
 
-    debug_print(
+    vt_debug_print(
       location, node,
       "TestLocationRoute: all messages have been arrived\n"
     );
@@ -418,7 +418,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
       // receive migrated entity: register it and keep in cache
       vt::theLocMan()->virtual_loc->registerEntityMigrated(
         entity, home, my_node, [entity,&nb_received](vt::BaseMessage* in_msg) {
-          debug_print(
+          vt_debug_print(
             location, node,
             "TestLocationRoute: message arrived to me for a migrated entity={}\n",
             entity

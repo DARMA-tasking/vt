@@ -94,7 +94,7 @@ ActiveMessenger::ActiveMessenger()
 void ActiveMessenger::packMsg(
   MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
 ) {
-  debug_print(
+  vt_debug_print(
     active, node,
     "packMsg: msg_size={}, put_size={}, ptr={}\n",
     size, ptr_bytes, print_ptr(ptr)
@@ -114,7 +114,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   auto const& is_put_packed = envelopeIsPackedPutType(msg->env);
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    debug_print(
+    vt_debug_print(
       active, node,
       "sendMsgBytesWithPut: size={}, dest={}, is_put={}, is_put_packed={}\n",
       msg_size, dest, print_bool(is_put), print_bool(is_put_packed)
@@ -142,8 +142,9 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     vtAssert(
       (!(put_size != 0) || put_ptr), "Must have valid ptr if size > 0"
     );
+
     if (!is_term || vt_check_enabled(print_term_msgs)) {
-      debug_print(
+      vt_debug_print(
         active, node,
         "sendMsgBytesWithPut: (put) put_ptr={}, size:[msg={},put={},rem={}],"
         "dest={}, max_pack_size={}, direct_buf_pack={}\n",
@@ -193,7 +194,7 @@ EventType ActiveMessenger::sendMsgBytes(
   auto mpi_event = holder.get_event();
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    debug_print(
+    vt_debug_print(
       active, node,
       "sendMsgBytes: size={}, dest={}\n", msg_size, dest
     );
@@ -293,7 +294,7 @@ EventType ActiveMessenger::doMessageSend(
   #endif
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    debug_print(
+    vt_debug_print(
       active, node,
       "doMessageSend: dest={}, handler={:x}, is_bcast={}, is_put={}\n",
       dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
@@ -341,7 +342,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   auto mpi_event = holder.get_event();
 
-  debug_print(
+  vt_debug_print(
     active, node,
     "sendData: ptr={}, num_bytes={} dest={}, tag={}, send_tag={}\n",
     data_ptr, num_bytes, dest, tag, send_tag
@@ -525,7 +526,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       return false;
     }
   } else {
-    debug_print(
+    vt_debug_print(
       active, node,
       "recvDataMsgBuffer: node={}, tag={}, enqueue={}, priority={:x}\n",
       node, tag, print_bool(enqueue), priority
@@ -558,7 +559,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
 # endif
 
   auto dealloc_buf = [=]{
-    debug_print(
+    vt_debug_print(
       active, node,
       "finishPendingDataMsgAsyncRecv: continuation user_buf={}, buf={}\n",
       user_buf, buf
@@ -607,7 +608,7 @@ void ActiveMessenger::scheduleActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
   MsgSizeType const& size, bool insert, ActionType cont
 ) {
-  debug_print_verbose(
+  vt_debug_print_verbose(
     active, node,
     "scheduleActiveMsg: msg={}, from={}, size={}, insert={}\n",
     print_ptr(base.get()), from, size, insert
@@ -633,7 +634,7 @@ bool ActiveMessenger::processActiveMsg(
   auto const is_term = envelopeIsTerm(msg->env);
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    debug_print(
+    vt_debug_print(
       active, node,
       "processActiveMsg: msg={}, ref={}, deliver={}\n",
       print_ptr(msg), envelopeGetRef(msg->env), print_bool(deliver)
@@ -675,7 +676,7 @@ bool ActiveMessenger::deliverActiveMsg(
   bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    debug_print(
+    vt_debug_print(
       active, node,
       "deliverActiveMsg: msg={}, ref={}, is_bcast={}, epoch={:x}\n",
       print_ptr(msg), envelopeGetRef(msg->env), print_bool(is_bcast),
@@ -697,7 +698,7 @@ bool ActiveMessenger::deliverActiveMsg(
   bool const has_handler = active_fun != no_action or has_ex_handler or is_obj;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    debug_print(
+    vt_debug_print(
       active, node,
       "deliverActiveMsg: msg={}, handler={:x}, tag={}, is_auto={}, "
       "is_functor={}, is_obj_group={}, has_handler={}, insert={}\n",
@@ -874,7 +875,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   bool put_finished = false;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    debug_print(
+    vt_debug_print(
       active, node,
       "finishPendingActiveMsgAsyncRecv: msg_size={}, sender={}, is_put={}, "
       "is_bcast={}, handler={}\n",
@@ -894,7 +895,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
       msg_bytes = msg_size;
 
       if (!is_term || vt_check_enabled(print_term_msgs)) {
-        debug_print(
+        vt_debug_print(
           active, node,
           "finishPendingActiveMsgAsyncRecv: packed put: ptr={}, msg_size={}, "
           "put_size={}\n",
@@ -972,7 +973,7 @@ HandlerType ActiveMessenger::collectiveRegisterHandler(
 void ActiveMessenger::swapHandlerFn(
   HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
 ) {
-  debug_print(
+  vt_debug_print(
     active, node,
     "swapHandlerFn: han={}, tag={}\n", han, tag
   );
@@ -987,7 +988,7 @@ void ActiveMessenger::swapHandlerFn(
 void ActiveMessenger::deliverPendingMsgsHandler(
   HandlerType const& han, TagType const& tag
 ) {
-  debug_print(
+  vt_debug_print(
     active, node,
     "deliverPendingMsgsHandler: han={}, tag={}\n", han, tag
   );
@@ -995,7 +996,7 @@ void ActiveMessenger::deliverPendingMsgsHandler(
   if (iter != pending_handler_msgs_.end()) {
     if (iter->second.size() > 0) {
       for (auto cur = iter->second.begin(); cur != iter->second.end(); ) {
-        debug_print(
+        vt_debug_print(
           active, node,
           "deliverPendingMsgsHandler: msg={}, from={}\n",
           print_ptr(cur->buffered_msg.get()), cur->from_node
@@ -1017,7 +1018,7 @@ void ActiveMessenger::deliverPendingMsgsHandler(
 void ActiveMessenger::registerHandlerFn(
   HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
 ) {
-  debug_print(
+  vt_debug_print(
     active, node,
     "registerHandlerFn: han={}, tag={}\n", han, tag
   );
@@ -1032,7 +1033,7 @@ void ActiveMessenger::registerHandlerFn(
 void ActiveMessenger::unregisterHandlerFn(
   HandlerType const& han, TagType const& tag
 ) {
-  debug_print(
+  vt_debug_print(
     active, node,
     "unregisterHandlerFn: han={}, tag={}\n", han, tag
   );

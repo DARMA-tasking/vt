@@ -125,7 +125,7 @@ void Barrier::waitBarrier(
 
   auto& barrier_state = insertFindBarrier(is_named, is_wait, barrier);
 
-  debug_print(
+  vt_debug_print(
     barrier, node,
     "waitBarrier: named={}, barrier={}\n", is_named, barrier
   );
@@ -140,7 +140,7 @@ void Barrier::waitBarrier(
     return cond;
   });
 
-  debug_print(
+  vt_debug_print(
     barrier, node,
     "waitBarrier: released: named={}, barrier={}\n", is_named, barrier
   );
@@ -151,7 +151,7 @@ void Barrier::waitBarrier(
 void Barrier::contBarrier(
   ActionType fn, BarrierType const& named, bool const skip_term
 ) {
-  debug_print(
+  vt_debug_print(
     barrier, node,
     "contBarrier: named_barrier={}, skip_term={}\n", named, skip_term
   );
@@ -163,7 +163,7 @@ void Barrier::contBarrier(
 
   insertFindBarrier(is_named, is_wait, barrier, fn);
 
-  debug_print(
+  vt_debug_print(
     barrier, node,
     "contBarrier: named={}, barrier={}\n", is_named, barrier
   );
@@ -176,7 +176,7 @@ void Barrier::barrierDown(
 ) {
   auto& barrier_state = insertFindBarrier(is_named, is_wait, barrier);
 
-  debug_print(
+  vt_debug_print(
     barrier, node,
     "barrierUp: invoking: named={}, wait={}, barrier={}\n",
     is_named, is_wait, barrier
@@ -205,7 +205,7 @@ void Barrier::barrierUp(
 
   bool const is_ready = barrier_state.recv_event_count == num_children + 1;
 
-  debug_print(
+  vt_debug_print(
     barrier, node,
     "barrierUp: invoking: named={}, wait={}, ready={}, events={}, barrier={}\n",
     is_named, is_wait, is_ready, barrier_state.recv_event_count, barrier
@@ -218,7 +218,7 @@ void Barrier::barrierUp(
       if (skip_term) {
         theMsg()->markAsTermMessage(msg);
       }
-      debug_print(
+      vt_debug_print(
         barrier, node,
         "barrierUp: barrier={}\n", barrier
       );
@@ -229,7 +229,7 @@ void Barrier::barrierUp(
       if (skip_term) {
         theMsg()->markAsTermMessage(msg);
       }
-      debug_print(
+      vt_debug_print(
         barrier, node,
         "barrierDown: barrier={}\n", barrier
       );

@@ -81,27 +81,27 @@
 #define vt_proc_print_colorize(proc)                                    \
   vt_print_colorize_impl(::vt::debug::blue(), "[" + std::to_string(proc) + "]", "")
 
-#define debug_argument_option(opt)                                      \
+#define vt_debug_argument_option(opt)                                   \
   ::vt::arguments::ArgConfig::vt_debug_ ## opt
 
-#define debug_all_option ::vt::arguments::ArgConfig::vt_debug_all
+#define vt_debug_all_option ::vt::arguments::ArgConfig::vt_debug_all
 
-#define debug_print_impl(force, inconfig, inmode, cat, ctx, ...)        \
+#define vt_debug_print_impl(force, inconfig, inmode, cat, ctx, ...)     \
   vt::config::ApplyOp<                                                  \
     vt::config::DebugPrintOp,                                           \
     inconfig,                                                           \
     vt::config::CatEnum::cat,                                           \
     vt::config::CtxEnum::ctx,                                           \
     vt::config::ModeEnum::inmode                                        \
-  >::apply(debug_argument_option(cat) or force, __VA_ARGS__)
+  >::apply(vt_debug_argument_option(cat) or force, __VA_ARGS__)
 
-#define debug_print(feature, ctx, ...)                                  \
-  debug_print_impl(                                                     \
+#define vt_debug_print(feature, ctx, ...)                               \
+  vt_debug_print_impl(                                                  \
     false, vt::config::DefaultConfig, normal, feature, ctx, __VA_ARGS__ \
   )
 
-#define debug_print_verbose(feature, ctx, ...)                          \
-  debug_print_impl(                                                     \
+#define vt_debug_print_verbose(feature, ctx, ...)                       \
+  vt_debug_print_impl(                                                  \
     false, vt::config::DefaultConfig, verbose, feature, ctx, __VA_ARGS__ \
   )
 
@@ -114,27 +114,27 @@
     vt::config::cftype::mode                                             \
   >
 
-#define config_print_force_impl(cftype, feature, ctx, ...)              \
-  debug_print_impl(                                                     \
+#define vt_config_print_force_impl(cftype, feature, ctx, ...)           \
+  vt_debug_print_impl(                                                  \
     true, vt_make_config(feature, cftype), normal, feature, ctx,        \
     __VA_ARGS__                                                         \
   )
 
 #define vt_print_force_impl(feature, ctx, ...)                          \
-  config_print_force_impl(VTPrintConfig, feature, ctx, __VA_ARGS__)
+  vt_config_print_force_impl(VTPrintConfig, feature, ctx, __VA_ARGS__)
 
-#define debug_print_force_impl(feature, ctx, ...)                       \
-  config_print_force_impl(DefaultConfig, feature, ctx, __VA_ARGS__)
+#define vt_debug_print_force_impl(feature, ctx, ...)                    \
+  vt_config_print_force_impl(DefaultConfig, feature, ctx, __VA_ARGS__)
 
-#if debug_force_enabled
+#if vt_debug_force_enabled
   //#warning "Debug force is enabled"
-  #define debug_print_force(feature, ctx, ...)                          \
-    debug_print_force_impl(                                             \
+  #define vt_debug_print_force(feature, ctx, ...)                       \
+    vt_debug_print_force_impl(                                          \
       feature, ctx, __VA_ARGS__                                         \
     )
 #else
   //#warning "Debug force is not enabled"
-  #define debug_print_force debug_print
+  #define vt_debug_print_force vt_debug_print
 #endif
 
 #define vt_print(feature, ...)                                          \
@@ -143,8 +143,6 @@
       vt_print_force_impl(feature, node, __VA_ARGS__);                  \
     }                                                                   \
   } while(0);
-
-#define backend_debug_print debug_print
 
 #define vt_option_check_enabled(mode, bit) ((mode & bit) not_eq 0)
 

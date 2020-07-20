@@ -163,7 +163,7 @@ TEST_F(TestObjGroup, test_proxy_update) {
   // should normally have two distinct instances
   auto const obj2 = proxy.get();
 
-  debug_print(
+  vt_debug_print(
     objgroup, node,
     "test_proxy_update: obj1->id_:{}, obj2->id_:{}",
     obj1_id, obj2->id_
@@ -183,14 +183,14 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
   proxy.broadcast<MyMsg, &MyObjA::handler>();
 
   auto obj = proxy.get();
-  debug_print(
+  vt_debug_print(
     objgroup, node,
     "obj->recv:{} before term\n", obj->recv_
   );
 
   // wait for term and check state to ensure all expected events executed
   theTerm()->addAction([=]{
-    debug_print(
+    vt_debug_print(
       objgroup, node,
       "obj->recv:{} after term\n", obj->recv_
     );

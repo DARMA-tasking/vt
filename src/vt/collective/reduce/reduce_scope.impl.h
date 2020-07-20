@@ -78,7 +78,7 @@ inline std::string stringizeStamp(ReduceStamp const& stamp) {
 
 template <typename T>
 T& ReduceScopeHolder<T>::get(ReduceScope const& scope) {
-  debug_print(
+  vt_debug_print(
     reduce, node,
     "ReduceScopeHolder get scope={}\n",
     scope.str()

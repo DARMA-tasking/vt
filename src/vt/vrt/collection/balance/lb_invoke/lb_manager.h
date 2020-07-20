@@ -186,7 +186,7 @@ public:
    */
   template <typename MsgT>
   void sysLB(MsgT* msg) {
-    debug_print(lb, node, "sysLB\n");
+    vt_debug_print(lb, node, "sysLB\n");
     printMemoryUsage(msg->phase_);
     flushTraceNextPhase();
     setTraceEnabledNextPhase(msg->phase_);
@@ -201,7 +201,7 @@ public:
    */
   template <typename MsgT>
   void sysReleaseLB(MsgT* msg) {
-    debug_print(lb, node, "sysReleaseLB\n");
+    vt_debug_print(lb, node, "sysReleaseLB\n");
     printMemoryUsage(msg->phase_);
     flushTraceNextPhase();
     setTraceEnabledNextPhase(msg->phase_);

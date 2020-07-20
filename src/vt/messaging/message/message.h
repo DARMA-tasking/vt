@@ -97,7 +97,7 @@ struct ActiveMsg : BaseMsg {
     // Proper initialization happens in 'makeMessage' calls.
     envelopeInitEmpty(env);
 
-    debug_print(
+    vt_debug_print(
       pool, node,
       "Message::constructor of ptr={}, type={}\n",
       print_ptr(this), typeid(this).name()
@@ -117,7 +117,7 @@ struct ActiveMsg : BaseMsg {
   static void* operator new(std::size_t sz) {
     auto const& ptr = thePool()->alloc(sz);
 
-    debug_print(
+    vt_debug_print(
       pool, node,
       "Message::new of size={}, ptr={}\n", sz, print_ptr(ptr)
     );
@@ -137,7 +137,7 @@ struct ActiveMsg : BaseMsg {
   static void* operator new(std::size_t sz, std::size_t oversize) {
     auto const& ptr = thePool()->alloc(sz, oversize);
 
-    debug_print(
+    vt_debug_print(
       pool, node,
       "Message::new (special sized) of size={}, oversize={}, ptr={}\n",
       sz, oversize, print_ptr(ptr)
@@ -152,7 +152,7 @@ struct ActiveMsg : BaseMsg {
    * \param[in] ptr the pointer to deallocate
    */
   static void operator delete(void* ptr) {
-    debug_print(
+    vt_debug_print(
       pool, node,
       "Message::delete of ptr={}\n", print_ptr(ptr)
     );

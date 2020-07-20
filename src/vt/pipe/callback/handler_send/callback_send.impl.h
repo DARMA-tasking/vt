@@ -83,7 +83,7 @@ template <typename T>
 typename CallbackSend<MsgT>::template IsVoidType<T>
 CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackSend: (void) trigger_: this_node={}, send_node_={}\n",
     this_node, send_node_
@@ -101,7 +101,7 @@ template <typename T>
 typename CallbackSend<MsgT>::template IsNotVoidType<T>
 CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
-  debug_print(
+  vt_debug_print(
     pipe, node,
     "CallbackSend: trigger_: this_node={}, send_node_={}\n",
     this_node, send_node_

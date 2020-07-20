@@ -64,7 +64,7 @@ template <typename WorkerT>
 WorkerGroupAny<WorkerT>::WorkerGroupAny(WorkerCountType const& in_num_workers)
   : num_workers_(in_num_workers)
 {
-  debug_print(
+  vt_debug_print(
     worker, node,
     "WorkerGroup: constructing with default: num_workers_={}\n",
     num_workers_
@@ -146,7 +146,7 @@ int WorkerGroupAny<WorkerT>::progress() {
 
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::spawnWorkersBlock(WorkerCommFnType comm_fn) {
-  debug_print(
+  vt_debug_print(
     worker, node,
     "WorkerGroup: spawnWorkersBlock: num_workers_={}\n", num_workers_
   );
@@ -162,7 +162,7 @@ template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::spawnWorkers() {
   using namespace std::placeholders;
 
-  debug_print(
+  vt_debug_print(
     worker, node,
     "WorkerGroup: spawnWorkers: num_workers_={}\n", num_workers_
   );
@@ -192,7 +192,7 @@ void WorkerGroupAny<WorkerT>::spawnWorkers() {
 
 template <typename WorkerT>
 void WorkerGroupAny<WorkerT>::joinWorkers() {
-  debug_print(
+  vt_debug_print(
     worker, node,
     "WorkerGroup: joinWorkers: num_workers_={}\n", num_workers_
   );

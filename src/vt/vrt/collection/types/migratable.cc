@@ -55,7 +55,7 @@ Migratable::Migratable()
 { }
 
 /*virtual*/ void Migratable::destroy() {
-  debug_print(
+  vt_debug_print(
     vrt_coll, node,
     "Migratable::destroy(): this={}\n", print_ptr(this)
   );

@@ -170,7 +170,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   bool is_term = envelopeIsTerm(rawMsg->env);
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
-    debug_print(
+    vt_debug_print(
       active, node,
       dest == broadcast_dest
         ? "broadcastMsg of ptr={}, type={}\n"
@@ -447,7 +447,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
 
 inline ActiveMessenger::EpochStackSizeType
 ActiveMessenger::epochPreludeHandler(EpochType const& cur_epoch) {
-  debug_print(
+  vt_debug_print(
     active, node,
     "epochPreludeHandler: top={:x}, cur_epoch={:x}, size={}\n",
     epoch_stack_.size() > 0 ? epoch_stack_.top(): no_epoch, cur_epoch,
@@ -463,7 +463,7 @@ inline void ActiveMessenger::epochEpilogHandler(
 ) {
   EpochStackSizeType cur_stack_size = epoch_stack_.size();
 
-  debug_print(
+  vt_debug_print(
     active, node,
     "epochEpilogHandler: top={:x}, size={}\n",
     epoch_stack_.size() > 0 ? epoch_stack_.top(): no_epoch,

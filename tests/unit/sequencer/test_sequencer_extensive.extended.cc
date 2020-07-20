@@ -63,11 +63,11 @@ using namespace vt::tests::unit;
       (LABEL), seq_id, (ORDER).load(), (CUR)                            \
     );                                                                  \
   } while (false);
-#define DEBUG_PRINT(str, ...)                                           \
+#define VT_DEBUG_PRINT(str, ...)                                           \
   do { fmt::print(str, __VA_ARGS__); } while (false);
 #else
 #define DEBUG_PRINT_SEQ(ORDER, CUR, LABEL)
-#define DEBUG_PRINT(str, ...)
+#define VT_DEBUG_PRINT(str, ...)
 #endif
 
 namespace vt { namespace tests { namespace unit {
@@ -137,7 +137,7 @@ static constexpr CountType const max_seq_depth = 8;
                                                                         \
     if (seq_id == FinalizeAtomicValue || seq_id == ResetAtomicValue) {  \
       if (seq_id == FinalizeAtomicValue) {                              \
-        DEBUG_PRINT(                                                    \
+        VT_DEBUG_PRINT(                                                    \
           "num_waits+1={},seq_ordering_={}\n",                          \
           num_waits+1,seq_ordering_.load()                              \
         );                                                              \
@@ -164,7 +164,7 @@ static constexpr CountType const max_seq_depth = 8;
         depth = m->info[4];                                             \
       }                                                                 \
     );                                                                  \
-    DEBUG_PRINT("before pre sequence {}\n", seq_ordering_);             \
+    VT_DEBUG_PRINT("before pre sequence {}\n", seq_ordering_);             \
                                                                         \
     theSeq()->sequenced([=]{                                            \
       for (uint32_t wb = 0; wb < nwaits_pre; wb++) {                    \
@@ -176,13 +176,13 @@ static constexpr CountType const max_seq_depth = 8;
           }                                                             \
         );                                                              \
       }                                                                 \
-      DEBUG_PRINT("after pre sequence {}\n", seq_ordering_);            \
-      DEBUG_PRINT("before mid sequence {}\n", seq_ordering_);           \
+      VT_DEBUG_PRINT("after pre sequence {}\n", seq_ordering_);            \
+      VT_DEBUG_PRINT("before mid sequence {}\n", seq_ordering_);           \
                                                                         \
       for (uint32_t nseg = 0; nseg < num_segs; nseg++) {                \
         theSeq()->sequenced([=]{                                        \
-          DEBUG_PRINT("inside mid sequence:nseg={},depth={}\n",nseg,depth); \
-          DEBUG_PRINT("nseg={}:num_waits={}\n",nseg,num_waits);         \
+          VT_DEBUG_PRINT("inside mid sequence:nseg={},depth={}\n",nseg,depth); \
+          VT_DEBUG_PRINT("nseg={}:num_waits={}\n",nseg,num_waits);         \
           DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");         \
           seqDepth(depth, [=]{                                          \
             for (uint32_t w = 0; w < num_waits; w++) {                  \
@@ -200,8 +200,8 @@ static constexpr CountType const max_seq_depth = 8;
         });                                                             \
       }                                                                 \
                                                                         \
-      DEBUG_PRINT("after mid sequence {}\n", seq_ordering_);            \
-      DEBUG_PRINT("before post sequence {}\n", seq_ordering_);          \
+      VT_DEBUG_PRINT("after mid sequence {}\n", seq_ordering_);            \
+      VT_DEBUG_PRINT("before post sequence {}\n", seq_ordering_);          \
                                                                         \
       for (uint32_t wa = 0; wa < nwaits_post; wa++) {                   \
         theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
@@ -214,7 +214,7 @@ static constexpr CountType const max_seq_depth = 8;
         );                                                              \
       }                                                                 \
     });                                                                 \
-    DEBUG_PRINT("after post sequence {}\n", seq_ordering_);             \
+    VT_DEBUG_PRINT("after post sequence {}\n", seq_ordering_);             \
   }                                                                     \
 
 

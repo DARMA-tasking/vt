@@ -67,7 +67,7 @@ SeqParallel::SeqFuncLen SeqParallel::getSize() const {
 }
 
 SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
-  debug_print(
+  vt_debug_print(
     sequence, node,
     "SeqParallel: expandParallelNode: funcs={}, skip_queue={}, node={}\n",
     num_funcs_, print_bool(seq_skip_queue), PRINT_SEQ_NODE_PTR(this_node)
@@ -81,7 +81,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
   theTerm()->produce(term::any_epoch_sentinel, par_funcs_.size());
 
   for (auto&& par_fn : par_funcs_) {
-    debug_print(
+    vt_debug_print(
       sequence, node,
       "SeqParallel: expandParallelNode: num_funcs_={}, expanding\n", num_funcs_
     );
@@ -93,7 +93,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
       }
     } else {
       auto defer_work = [=]{
-        debug_print(
+        vt_debug_print(
           sequence, node,
           "SeqParallel: parallel node: expand deferred: id={}\n", seq_id_
         );
@@ -114,7 +114,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
 bool SeqParallel::join() {
   auto const& old_val = num_funcs_completed_.fetch_add(1);
 
-  debug_print(
+  vt_debug_print(
     sequence, node,
     "SeqParallel: join: old_val={}, num_funcs={}\n", old_val, num_funcs_
   );

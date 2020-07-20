@@ -122,7 +122,7 @@ namespace vt { namespace group { namespace global {
 
   auto const& count = default_group_->spanning_tree_->getNumChildren() + 1;
 
-  debug_print(
+  vt_debug_print(
     group, node,
     "sendUpTree: count={}, default_group_->sync_count_[{}]={}, is_root={}, "
     "phase={}\n",
@@ -135,7 +135,7 @@ namespace vt { namespace group { namespace global {
       auto const& parent = default_group_->spanning_tree_->getParent();
       DefaultGroup::sendPhaseMsg<GroupSyncMsg, syncHandler>(phase, parent);
     } else {
-      debug_print(
+      vt_debug_print(
         group, node,
         "DefaultGroup::sendUpTree: root node: phase={}, num_phase={}\n",
         phase, num_phases
@@ -161,7 +161,7 @@ namespace vt { namespace group { namespace global {
   bool const& send_to_root = is_root && node != root_node;
   EventType event = no_event;
 
-  debug_print(
+  vt_debug_print(
     broadcast, node,
     "DefaultGroup::broadcast msg={}, size={}, from={}, dest={}, is_root={}\n",
     print_ptr(base.get()), size, from, dest, print_bool(is_root)
@@ -177,7 +177,7 @@ namespace vt { namespace group { namespace global {
       default_group_->spanning_tree_->foreachChild([&](NodeType child) {
         bool const& send = child != dest;
 
-        debug_print(
+        vt_debug_print(
           broadcast, node,
           "DefaultGroup::broadcast *send* size={}, from={}, child={}, send={}, "
           "msg={}\n",
@@ -193,7 +193,7 @@ namespace vt { namespace group { namespace global {
     // If not the root of the spanning tree, send to the root to propagate to
     // the rest of the tree
     if (send_to_root) {
-      debug_print(
+      vt_debug_print(
         broadcast, node,
         "DefaultGroup::broadcast *send* is_root={}, root_node={}, dest={}, "
         "msg={}\n",

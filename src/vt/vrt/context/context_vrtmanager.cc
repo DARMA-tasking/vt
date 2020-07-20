@@ -80,7 +80,7 @@ void VirtualContextManager::insertVirtualContext(
     VirtualContextAttorney::setProxy(new_vc.get(), proxy);
   }
 
-  debug_print(
+  vt_debug_print(
     vrt, node,
     "inserting new VC into holder_: id={}, proxy={}, construct={}, ptr={}\n",
     id, proxy, print_bool(is_constructed),
@@ -127,7 +127,7 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
     vc_info != nullptr, "A virtual context must exist to invoke user handler"
   );
 
-  debug_print(
+  vt_debug_print(
     vrt, node,
     "virtualMsgHandler: msg={}, entity_proxy={}\n",
     print_ptr(msg), entity_proxy
@@ -143,7 +143,7 @@ VirtualRemoteIDType VirtualContextManager::generateNewRemoteID(
   auto const& req_node = msg->request_node;
   auto const& request_id = msg->request_id;
 
-  debug_print(
+  vt_debug_print(
     vrt, node,
     "sendBackVirtualProxy: send back cons_node={}, req_node={}, id={}\n",
     cons_node, req_node, request_id

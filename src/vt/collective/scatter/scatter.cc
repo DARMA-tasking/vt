@@ -60,7 +60,7 @@ char* Scatter::applyScatterRecur(
   // pre-order k-ary tree traversal for data layout
   auto children = Tree::getChildren(node);
   char* cur_ptr = ptr;
-  debug_print(
+  vt_debug_print(
     scatter, node,
     "Scatter::applyScatterRecur: elm_size={}, ptr={}, node={}\n",
     elm_size, print_ptr(ptr), node
@@ -68,7 +68,7 @@ char* Scatter::applyScatterRecur(
   data_fn(node, reinterpret_cast<void*>(cur_ptr));
   cur_ptr += elm_size;
   for (auto&& child : children) {
-    debug_print(
+    vt_debug_print(
       scatter, node,
       "Scatter::applyScatterRecur: child={}\n", child
     );
@@ -84,7 +84,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
   auto in_base_ptr = reinterpret_cast<char*>(msg) + sizeof(ScatterMsg);
   auto in_ptr = in_base_ptr + elm_size;
   auto const& user_handler = msg->user_han;
-  debug_print(
+  vt_debug_print(
     scatter, node,
     "Scatter::scatterIn: handler={}, total_size={}, elm_size={}, offset={}, "
     "parent children={}\n",
@@ -96,7 +96,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     auto child_msg = makeMessageSz<ScatterMsg>(
       child_bytes_size, child_bytes_size, elm_size
     );
-    debug_print(
+    vt_debug_print(
       scatter, node,
       "Scatter::scatterIn: child={}, num_children={}, child_bytes_size={}\n",
       child, num_children, child_bytes_size
@@ -106,7 +106,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     );
     child_msg->user_han = user_handler;
     auto ptr = reinterpret_cast<char*>(child_msg.get()) + sizeof(ScatterMsg);
-    debug_print(
+    vt_debug_print(
       scatter, node,
       "Scatter::scatterIn: child={}, num_children={}, elm_size={}, "
       "offset={}, child_remaining={}, parent size={}, child_bytes_size={}\n",

@@ -80,7 +80,7 @@ void Scatter::scatter(
 #else
   auto remaining_size = elm_size;
 #endif
-  debug_print(
+  vt_debug_print(
     scatter, node,
     "Scatter::scatter: total_size={}, elm_size={}, ScatterMsg={}, msg-ptr={}, "
     "ptr={}, remaining_size={}\n",
@@ -89,7 +89,7 @@ void Scatter::scatter(
   );
   auto const& root_node = 0;
   auto nptr = applyScatterRecur(root_node, ptr, elm_size, size_fn, data_fn);
-  debug_print(
+  vt_debug_print(
     scatter, node,
     "Scatter::scatter: incremented size={}\n",
     nptr-ptr

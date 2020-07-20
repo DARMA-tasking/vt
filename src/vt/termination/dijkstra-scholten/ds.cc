@@ -64,7 +64,7 @@ TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)
 
 template <typename CommType>
 void TermDS<CommType>::terminated() {
-  debug_print(
+  vt_debug_print(
     termds, node,
     "terminated: epoch={:x}\n", epoch_
   );
@@ -75,7 +75,7 @@ void TermDS<CommType>::terminated() {
 
 template <typename CommType>
 void TermDS<CommType>::disengaged() {
-  debug_print(
+  vt_debug_print(
     termds, node,
     "disengaged: epoch={:x}\n", epoch_
   );
@@ -106,7 +106,7 @@ void TermDS<CommType>::msgSent(NodeType successor, CountType count) {
     D += count;
   }
 
-  debug_print(
+  vt_debug_print(
     termds, node,
     "msgSent: epoch={:x}, to={}, count={}, C={}, D={}, lC={}, lD={}\n",
     epoch_, successor, count, C, D, lC, lD
@@ -122,7 +122,7 @@ void TermDS<CommType>::gotAck(CountType count) {
     parent
   );
   D -= count;
-  debug_print(
+  vt_debug_print(
     termds, node,
     "gotAck: epoch={:x}, count={}, parent={}, C={}, D={}, lC={}, lD={}\n",
     epoch_, count, parent, C, D, lC, lD
@@ -153,7 +153,7 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
 
   bool const self_pred = predecessor == self;
 
-  debug_print_verbose(
+  vt_debug_print_verbose(
     termds, node,
     "msgProcessed: (pre) epoch={:x}, from={}, count={}, "
     "parent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
@@ -172,7 +172,7 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
     processedSum += count;
   }
 
-  debug_print(
+  vt_debug_print(
     termds, node,
     "msgProcessed: epoch={:x}, from={}, count={}, "
     "parent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
@@ -181,7 +181,7 @@ void TermDS<CommType>::msgProcessed(NodeType predecessor, CountType count) {
   );
 
   if (outstanding.size() == 0 and not self_pred) {
-    debug_print(
+    vt_debug_print(
       termds, node,
       "msgProcessed: engagement with new parent={}, epoch={:x}, count={}, "
       "C={}, D={}, lC={}, lD={}\n",
@@ -231,7 +231,7 @@ void TermDS<CommType>::tryAck() {
     return;
   }
 
-  debug_print(
+  vt_debug_print(
     termds, node,
     "tryAck: epoch={:x}, parent={}, emc={}, reqedParent={}, "
     "ackedParent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
@@ -259,7 +259,7 @@ bool TermDS<CommType>::hasParent() {
 
 template <typename CommType>
 void TermDS<CommType>::tryLast() {
-  debug_print(
+  vt_debug_print(
     termds, node,
     "tryLast: epoch={:x}, parent={}, emc={}, reqedParent={}, "
     "ackedParent={}, outstanding.size()={}, C={}, D={}, lC={}, lD={}\n",
@@ -273,7 +273,7 @@ void TermDS<CommType>::tryLast() {
 
   auto const engageEq = reqedParent - ackedParent == engagementMessageCount;
 
-  debug_print(
+  vt_debug_print(
     termds, node,
     "tryLast: parent={}, D={}, C={}, emc={}, reqedParent={}, "
     "ackedParent={}, engageEq={}\n",
@@ -292,7 +292,7 @@ void TermDS<CommType>::tryLast() {
       parent
     );
 
-    debug_print(
+    vt_debug_print(
       termds, node,
       "successful tryLast: parent={}, emc={}, a.pred={}\n",
       parent, engagementMessageCount, a.pred

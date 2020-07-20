@@ -95,7 +95,7 @@ namespace vt { namespace rdma {
   auto const& handle_getNode = RDMA_HandleManagerType::getRdmaNode(rdma_handle);
   auto const& is_collective = RDMA_HandleManagerType::isCollective(rdma_handle);
 
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "getElement: han={}, is_collective={}, getNode={}\n",
     rdma_handle,print_bool(is_collective),handle_getNode
@@ -111,7 +111,7 @@ namespace vt { namespace rdma {
 
   auto const& default_node = group->findDefaultNode(elm);
 
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "elm={}, default_node={}\n", elm, default_node
   );
@@ -160,7 +160,7 @@ namespace vt { namespace rdma {
   auto const& handle_getNode = RDMA_HandleManagerType::getRdmaNode(rdma_handle);
   auto const& is_collective = RDMA_HandleManagerType::isCollective(rdma_handle);
 
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "putElement: han={}, is_collective={}, getNode={}\n",
     rdma_handle,print_bool(is_collective),handle_getNode
@@ -176,7 +176,7 @@ namespace vt { namespace rdma {
 
   auto const& put_node = group->findDefaultNode(elm);
 
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "putElement: elm={}, default_node={}\n",
     elm, put_node
@@ -219,7 +219,7 @@ namespace vt { namespace rdma {
     // Local put
     theRDMA()->triggerPutRecvData(
       rdma_handle, tag, ptr, static_cast<ByteType>(local_rdma_op_tag), elm, [=](){
-        debug_print(
+        vt_debug_print(
           rdma, node, "putElement: local data is put\n"
         );
         if (action_after_put) {

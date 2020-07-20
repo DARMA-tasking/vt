@@ -106,13 +106,13 @@ public:
       refs_--;
       triggered_++;
     }
-    debug_print(
+    vt_debug_print(
       pipe, node,
       "CallbackBase: (before) invoke trigger_: pipe={:x}\n",
       pipe_id
     );
     trigger_(data,pipe_id);
-    debug_print(
+    vt_debug_print(
       pipe, node,
       "CallbackBase: (after) invoke trigger_: pipe={:x}\n",
       pipe_id

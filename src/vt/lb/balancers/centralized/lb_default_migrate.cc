@@ -78,14 +78,14 @@ namespace vt { namespace lb { namespace centralized {
 }
 
 /*virtual*/ void CentralMigrate::finishedMigrations() {
-  debug_print(
+  vt_debug_print(
     lb, node,
     "CentralMigrate::finishedMigrations: before sync\n"
   );
 
   sync();
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "CentralMigrate::finishedMigrations: after sync\n"
   );

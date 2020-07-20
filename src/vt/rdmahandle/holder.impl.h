@@ -65,7 +65,7 @@ void Holder<T,E>::addHandle(
 template <typename T, HandleEnum E>
 void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
   std::size_t len = in_len == 0 ? count_ : in_len;
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "allocate: len={}, in_len={}, count_={}\n", len, in_len, count_
   );
@@ -87,7 +87,7 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
       LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_);
       auto mpi_type = TypeMPI<uint64_t>::getType();
       MPI_Put(&count_, 1, mpi_type, this_node, 0, 1, mpi_type, control_window_);
-      debug_print_verbose(
+      vt_debug_print_verbose(
         rdma, node,
         "setting allocate size: size={}, window={}\n",
         count_, print_ptr(&control_window_)
@@ -106,7 +106,7 @@ std::size_t Holder<T,E>::getCount(vt::NodeType node, Lock l) {
     LockMPI _scope_lock(l, node, control_window_);
     MPI_Get(&result, 1, mpi_type, node, 0, 1, mpi_type, control_window_);
   }
-  debug_print_verbose(
+  vt_debug_print_verbose(
     rdma, node,
     "getCount: node={}, result={}, window={}\n",
     node, result, print_ptr(&control_window_)
@@ -150,7 +150,7 @@ RequestHolder Holder<T,E>::rget(
   if (mpi2_) {
     r.add([=]{
       LockMPI _scope_lock(l, node, data_window_);
-      debug_print_verbose(
+      vt_debug_print_verbose(
         rdma, node,
         "MPI_Get({}, {}, {}, {}, {}, {}, {}, window);\n",
         print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
@@ -159,7 +159,7 @@ RequestHolder Holder<T,E>::rget(
     });
   } else {
     LockMPI _scope_lock(l, node, data_window_);
-    debug_print_verbose(
+    vt_debug_print_verbose(
       rdma, node,
       "MPI_Rget({}, {}, {}, {}, {}, {}, {}, window);\n",
       print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
@@ -186,7 +186,7 @@ RequestHolder Holder<T,E>::rput(
   if (mpi2_) {
     r.add([=]{
       LockMPI _scope_lock(l, node, data_window_);
-      debug_print_verbose(
+      vt_debug_print_verbose(
         rdma, node,
         "MPI_Put({}, {}, {}, {}, {}, {}, {}, window);\n",
         print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
@@ -195,7 +195,7 @@ RequestHolder Holder<T,E>::rput(
     });
   } else {
     LockMPI _scope_lock(l, node, data_window_);
-    debug_print_verbose(
+    vt_debug_print_verbose(
       rdma, node,
       "MPI_Rput({}, {}, {}, {}, {}, {}, {}, window);\n",
       print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
@@ -219,7 +219,7 @@ T Holder<T,E>::fetchOp(vt::NodeType node, Lock l, T in, int offset, MPI_Op op) {
   T out;
   {
     LockMPI _scope_lock(l, node, data_window_);
-    debug_print_verbose(
+    vt_debug_print_verbose(
       rdma, node,
       "MPI_Fetch_and_op({}, {}, {}, {}, {}, window);\n",
       in, print_ptr(&out), mpi_type_str, node, offset
@@ -240,7 +240,7 @@ RequestHolder Holder<T,E>::raccum(
   if (mpi2_) {
     r.add([=]{
       LockMPI _scope_lock(l, node, data_window_);
-      debug_print_verbose(
+      vt_debug_print_verbose(
         rdma, node,
         "MPI_Accumulate({}, {}, {}, {}, {}, {}, {}, window);\n",
         print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
@@ -251,7 +251,7 @@ RequestHolder Holder<T,E>::raccum(
     });
   } else {
     LockMPI _scope_lock(l, node, data_window_);
-    debug_print_verbose(
+    vt_debug_print_verbose(
       rdma, node,
       "MPI_Raccumulate({}, {}, {}, {}, {}, {}, {}, window);\n",
       print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str

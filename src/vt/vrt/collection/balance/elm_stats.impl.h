@@ -75,7 +75,7 @@ template <typename ColT>
 /*static*/ void ElementStats::syncNextPhase(PhaseMsg<ColT>* msg, ColT* col) {
   auto& stats = col->stats_;
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
     "msg->getPhase()={}\n",
@@ -101,7 +101,7 @@ template <typename ColT>
   auto const after_ready = theCollection()->numReadyCollections();
   auto const ready = theCollection()->readyNextPhase();
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ElementStats: syncNextPhase: before_ready={}, after_ready={}, ready={}\n",
     before_ready, after_ready, ready

@@ -69,7 +69,7 @@ void InfoRooted::setupRooted() {
   auto const& group_ = getGroupID();
   auto const& finished_setup_action_ = getAction();
   auto const& size = region_->getSize();
-  debug_print(
+  vt_debug_print(
     group, node,
     "Info::setupRooted: group size={}, is_remote={}\n",
     size, is_remote_
@@ -106,7 +106,7 @@ void InfoRooted::setupRooted() {
           finished_setup_action_();
         }
       } else {
-        debug_print(
+        vt_debug_print(
           group, node,
           "Info::setupRooted: sending as list\n"
         );
@@ -131,7 +131,7 @@ void InfoRooted::setupRooted() {
         }
       }
     } else {
-      debug_print(
+      vt_debug_print(
         group, node,
         "Info::setup: sending as range\n"
       );

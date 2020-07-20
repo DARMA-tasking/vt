@@ -75,7 +75,7 @@ bool RequestHolder::test() {
 }
 
 void RequestHolder::wait() {
-  debug_print(
+  vt_debug_print(
     rdma, node,
     "RequestHolder::wait: len={}, ptr={}\n",
     reqs_.size(), on_done_ ? "yes" : "no"

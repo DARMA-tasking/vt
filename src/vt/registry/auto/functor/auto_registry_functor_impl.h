@@ -103,7 +103,7 @@ inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& han) {
   bool const& is_auto = HandlerManagerType::isHandlerAuto(han);
   bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
 
-  debug_print(
+  vt_debug_print(
     handler, node,
     "getAutoHandlerFunctor: handler={}, id={}, is_auto={}, is_functor={}\n",
     han, id, print_bool(is_auto), print_bool(is_functor)

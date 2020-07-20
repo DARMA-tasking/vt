@@ -65,7 +65,7 @@ namespace vt {
     HandlerManager::setHandlerControl(new_han, control);
   }
 
-  debug_print(
+  vt_debug_print(
     handler, node,
     "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={},"
     " id={:x}, control={:x}, han={:x}, is_trace={}\n",

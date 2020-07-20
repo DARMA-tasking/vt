@@ -51,12 +51,12 @@ namespace vt { namespace term {
 
 void EpochDependency::addSuccessor(EpochType const in_successor) {
   if (is_ds_) {
-    debug_print(
+    vt_debug_print(
       termds, node,
       "addSuccessor: epoch_={:x}, successor={:x}\n", epoch_, in_successor
     );
   } else {
-    debug_print(
+    vt_debug_print(
       term, node,
       "addSuccessor: epoch_={:x}, successor={:x}\n", epoch_, in_successor
     );
@@ -101,13 +101,13 @@ void EpochDependency::addIntersectingSuccessors(SuccessorBagType successors) {
 
 void EpochDependency::clearSuccessors() {
   if (is_ds_) {
-    debug_print(
+    vt_debug_print(
       termds, node,
       "clearSuccessors: epoch={:x}, successors_.size()={}\n", epoch_,
       successors_.size()
     );
   } else {
-    debug_print(
+    vt_debug_print(
       term, node,
       "clearSuccessors: epoch={:x}, successors_.size()={}\n", epoch_,
 
@@ -117,12 +117,12 @@ void EpochDependency::clearSuccessors() {
 
   for (auto&& successor : successors_) {
     if (is_ds_) {
-      debug_print(
+      vt_debug_print(
         termds, node,
         "clearSuccessors: epoch={:x}, successor={:x}\n", epoch_, successor
       );
     } else {
-      debug_print(
+      vt_debug_print(
         term, node,
         "clearSuccessors: epoch={:x}, successor={:x}\n", epoch_,successor
       );

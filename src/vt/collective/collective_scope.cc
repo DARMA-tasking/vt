@@ -65,7 +65,7 @@ TagType CollectiveScope::mpiCollectiveAsync(ActionType action) {
     std::forward_as_tuple(info)
   );
 
-  debug_print(
+  vt_debug_print(
     gen, node,
     "mpiCollectiveAsync: is_user_tag_={}, scope={}: new MPI collective with seq tag={}\n",
     is_user_tag_, scope_, tag

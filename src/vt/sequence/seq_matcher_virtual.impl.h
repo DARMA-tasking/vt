@@ -189,7 +189,7 @@ template <typename FnT>
 /*static*/ void SeqMatcherVirtual<VcT, MsgT, f>::bufferUnmatchedAction(
   FnT action, SeqType const& seq_id, TagType const& tag
 ) {
-  debug_print(
+  vt_debug_print(
     sequence, node,
     "SeqMatcher: buffering action: seq={}, tag={}\n", seq_id, tag
   );

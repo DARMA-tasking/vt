@@ -71,7 +71,7 @@ TEST_P(TestTermRooted, test_term_detect_rooted_epoch) /* NOLINT */{
     auto&& sequence = action::generateEpochs(5, true, useDS_);
 
     for (auto&& epoch : sequence) {
-      debug_print(
+      vt_debug_print(
         term, node,
         "epoch={:x}, order_={}, useDS_={}\n",
         epoch, order_, useDS_

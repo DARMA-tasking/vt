@@ -151,7 +151,7 @@ static void broadcastConsensus(
       theCollective()->user_scope_ :
       theCollective()->system_scope_ ;
 
-    debug_print(
+    vt_debug_print(
       gen, node,
       "runCollective: is_user_tag={}, scope={}, seq={}\n",
       msg->is_user_tag_, msg->scope_, msg->seq_
@@ -171,7 +171,7 @@ static void broadcastConsensus(
     consensus_scope, consensus_tag, consensus_is_user_tag // in-out refs
   );
 
-  debug_print(
+  vt_debug_print(
     gen, node,
     "mpiCollective: consensus_tag={}, msg->tag_={}, "
     "consensus_scope={}, msg->scope_={}\n",

@@ -52,7 +52,7 @@
 namespace vt { namespace group {
 
 void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
-  debug_print_verbose(
+  vt_debug_print_verbose(
     group, node,
     "CollSetupFinished: group={:x}\n", msg->getGroup()
   );

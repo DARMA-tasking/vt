@@ -55,7 +55,7 @@ void ElementStats::startTime() {
   cur_time_ = start_time;
   cur_time_started_ = true;
 
-  debug_print_verbose(
+  vt_debug_print_verbose(
     lb, node,
     "ElementStats: startTime: time={}\n",
     start_time
@@ -72,7 +72,7 @@ void ElementStats::stopTime() {
     addTime(total_time);
   }
 
-  debug_print_verbose(
+  vt_debug_print_verbose(
     lb, node,
     "ElementStats: stopTime: time={}, total={}, started={}\n",
     stop_time, total_time, started
@@ -110,7 +110,7 @@ void ElementStats::setModelWeight(TimeType const& time) {
   cur_time_started_ = false;
   addTime(time);
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ElementStats: setModelWeight: time={}, cur_load={}\n",
     time, phase_timings_.at(cur_phase_)
@@ -125,7 +125,7 @@ void ElementStats::addTime(TimeType const& time) {
   subphase_timings_.at(cur_phase_).resize(cur_subphase_ + 1);
   subphase_timings_.at(cur_phase_).at(cur_subphase_) += time;
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ElementStats: addTime: time={}, cur_load={}\n",
     time, phase_timings_.at(cur_phase_)
@@ -133,7 +133,7 @@ void ElementStats::addTime(TimeType const& time) {
 }
 
 void ElementStats::updatePhase(PhaseType const& inc) {
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ElementStats: updatePhase: cur_phase_={}, inc={}\n",
     cur_phase_, inc
@@ -153,7 +153,7 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
 
   auto const& total_load = phase_timings_.at(phase);
 
-  debug_print(
+  vt_debug_print(
               lb, node,
               "ElementStats: getLoad: load={}, phase={}, size={}\n",
               total_load, phase, phase_timings_.size()
@@ -172,7 +172,7 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   vtAssert(subphase_loads.size() > subphase, "Must have subphase");
   auto total_load = subphase_loads.at(subphase);
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ElementStats: getLoad: load={}, phase={}, subphase={}\n",
     total_load, phase, subphase
@@ -186,7 +186,7 @@ ElementStats::getComm(PhaseType const& phase) {
   comm_.resize(phase + 1);
   auto const& phase_comm = comm_[phase];
 
-  debug_print(
+  vt_debug_print(
     lb, node,
     "ElementStats: getComm: comm size={}, phase={}\n",
     phase_comm.size(), phase

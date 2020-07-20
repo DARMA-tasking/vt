@@ -56,7 +56,7 @@ SeqContext::SeqContext(
   SeqType const& in_seq_id, SeqNodePtrType in_node, bool is_suspendable
 ) : suspendable_(is_suspendable), node_(in_node), seq_id(in_seq_id)
 {
-  debug_print(
+  vt_debug_print(
     sequence, node,
     "SeqContext: construct: node={}, id={}, suspendable={}\n",
     PRINT_SEQ_NODE_PTR(node_), seq_id, print_bool(suspendable_)
@@ -87,7 +87,7 @@ SeqNodePtrType SeqContext::getNode() const {
 }
 
 void SeqContext::setNode(SeqNodePtrType node) {
-  debug_print(
+  vt_debug_print(
     sequence, node,
     "SeqContext: setNode: node={}, id={}\n", PRINT_SEQ_NODE_PTR(node), seq_id
   );
