@@ -66,8 +66,8 @@ public:
   ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
 
   void setLoads(std::vector<LoadMapType> const* proc_load,
-			std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-			std::vector<CommMapType> const* proc_comm) override;
+                std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+                std::vector<CommMapType> const* proc_comm) override;
 
   void updateLoads(PhaseType last_completed_phase) override;
 
