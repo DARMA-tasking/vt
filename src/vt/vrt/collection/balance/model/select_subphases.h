@@ -50,10 +50,23 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/**
+ * \brief A load model to direct consideration to load data relating
+ * to a specific set of subphases, rather than the entire set.
+ *
+ * This may be useful, for example, to select only subphases that are
+ * substantially imbalanced, or to exclude subphases in which loads
+ * are unpredictable.
+ */
 class SelectSubphases : public ComposedModel
 {
 public:
-  // \param[in] base must not be null
+  /**
+   * \brief Constructor taking an enumeration of the relevant subphases
+   *
+   * \param[in] base: The source of underlying load numbers to return; must not be null
+   * \param[in] subphases: The set of subphases to expose to callers
+   */
   SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<unsigned int> subphases);
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;

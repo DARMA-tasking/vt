@@ -62,7 +62,7 @@ SelectSubphases::SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<un
 
 TimeType SelectSubphases::getWork(ElementIDType object, PhaseOffset when) {
   if (when.subphase == PhaseOffset::WHOLE_PHASE) {
-    // sum up the selected subphases
+    // Sum up the selected subphases as if they represent the entire phase
     TimeType sum = 0.0;
     for (auto s : subphases_) {
       PhaseOffset p{when.phases, s};
