@@ -57,3 +57,54 @@ The following is an example LB specification:
 | HierarchicalLB | Hierarchical            | Build tree to move objects nodes               | `vt::vrt::collection::lb::HierarchicalLB` |
 | ZotltanLB      | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB           | `vt::vrt::collection::lb::ZoltanLB` |
 | StatsMapLB     | User-specified          | Read file to determine mapping                 | `vt::vrt::collection::lb::StatsMapLB` |
+
+\section load-models Object Load Models
+
+The performance-oriented load balancers described in the preceding
+section require a prediction of the loads each object will represent
+during the phases between one load balancing invocation and the
+next. These predictions are provided by load models, which are
+implementations of the `vt::vrt:collection::balance::LoadModel`
+interface. There are a number of general-purpose load model
+implementations provided by vt.
+
+By default, vt uses a load model that predicts each object's work load
+for all future phases will match its workload in the most recent past
+phase. The system also provides an interface for applications and
+users to arrange use of a non-default load model where that may be
+desirable for reasons such as performance experimentation,
+specialization to application details, or execution environment
+considerations.
+
+Most provided load models are designed as composable filters inherited
+from the `vt::vrt:collection::balance::ComposedModel` class. This
+allows them to form a 'model stack' in which each class makes a
+particular adjustment to the predictions generated, and relies on
+others above and below to refine them further. One exception is the
+`vt::vrt:collection::balance::RawData` model, which directly returns
+past values recorded in the instrumented statistics structures that
+`LBManager` provides.
+
+To illustrate the design concept, the default model is implemented as
+a stack of two other components. At the base of the stack is a
+`RawData` model that will refer to the instrumented object load
+timings recorded by the system during preceding execution. Layered on
+that is a `vt::vrt:collection::balance::NaivePersistence` model that
+queries the underlying `RawData` model for the times taken in the most
+recent phase, and returns those same times as its prediction of the
+times those objects will take in all future phases.
+
+The full set of load model classes provided with vt is as follows
+
+| Load Model         | Description                                         | Reference |
+| -------------------|-----------------------------------------------------|---------- |
+| LoadModel          | Pure virtual interface class, which the following implement | `vt::vrt:collection::balance::LoadModel` |
+| RawData            | Returns historical data only, from the measured times | `vt::vrt:collection::balance::RawData` |
+| NaivePersistence   | Passes through historical queries, and maps all future queries to the most recent past phase | `vt::vrt:collection::balance::NaivePersistence` |
+| PersistenceMedianLastN | Similar to NaivePersistence, except that it predicts based on a median over the N most recent phases | `vt::vrt:collection::balance::PersistenceMedianLastN` |
+| Norm               | When asked for a `WHOLE_PHASE` value, computes a specified l-norm over all subphases | `vt::vrt:collection::balance::Norm` |
+| SelectSubphases    | Filters and remaps the subphases with data present in the underlying model | `vt::vrt:collection::balance::SelectSubphases` |
+| CommOverhead +     | Adds a specified amount of imputed 'system overhead' time to each object's work based on the number of messages receives | `vt::vrt:collection::balance::CommOverhead` |
+| PerCollection +    | Maintains a set of load models associated with different collection instances, and passes queries for an object through to the model corresponding to its collection | `vt::vrt:collection::balance::PerCollection` |
+
++: This model is not yet implemented
