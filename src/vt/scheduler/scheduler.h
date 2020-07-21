@@ -59,14 +59,26 @@
 #include <functional>
 #include <memory>
 
+namespace vt {
+  void runScheduler();
+  void runSchedulerThrough(EpochType epoch);
+
+  void runInEpochRooted(ActionType&& fn);
+  void runInEpochCollective(ActionType&& fn);
+}
+
 namespace vt { namespace sched {
 
 enum SchedulerEvent {
-  BeginIdle          = 0,
-  EndIdle            = 1,
-  BeginIdleMinusTerm = 2,
-  EndIdleMinusTerm   = 3,
-  SchedulerEventSize = 4
+  BeginIdle            = 0,
+  EndIdle              = 1,
+  BeginIdleMinusTerm   = 2,
+  EndIdleMinusTerm     = 3,
+  BeginSchedulerLoop   = 4,
+  EndSchedulerLoop     = 5,
+  PendingSchedulerLoop = 6,
+
+  LastSchedulerEvent   = 6,
 };
 
 struct Scheduler {
@@ -89,17 +101,25 @@ struct Scheduler {
     int32_t processed_since_last_progress, TimeType time_since_last_progress
   ) const;
 
-  bool runNextUnit();
-  bool progressMsgOnlyImpl();
   void scheduler(bool msg_only = false);
   void runProgress(bool msg_only = false);
-  bool progressImpl();
-  void schedulerForever();
+
+  /**
+   * \brief Runs the scheduler until a condition is met.
+   *
+   * Runs the scheduler until a condition is met.
+   * This form SHOULD be used instead of "while (..) { runScheduler(..) }"
+   * in all cases of nested scheduler loops, such as during a barrier,
+   * in order to ensure proper event unwinding and idle time tracking.
+   */
+  void runSchedulerWhile(std::function<bool()> cond);
+
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
     SchedulerEventType const& event, TriggerType trigger
   );
   void triggerEvent(SchedulerEventType const& event);
+
   bool hasSchedRun() const { return has_executed_; }
 
   void enqueue(ActionType action);
@@ -120,6 +140,15 @@ struct Scheduler {
 
 private:
 
+  /**
+   * \brief Executes a specific work unit.
+   */
+  void runWorkUnit(UnitType& work);
+  bool progressMsgOnlyImpl();
+  bool progressImpl();
+
+private:
+
 # if backend_check_enabled(priorities)
   PriorityQueue<UnitType> work_queue_;
 # else
@@ -129,6 +158,8 @@ private:
   bool has_executed_      = false;
   bool is_idle            = true;
   bool is_idle_minus_term = true;
+  // The depth of work action currently executing.
+  unsigned int action_depth_ = 0;
 
   // The number of termination messages currently in the queue---they weakly
   // imply idleness for the stake of termination
@@ -144,15 +175,17 @@ private:
   std::size_t last_threshold_memory_usage_ = 0;
   std::size_t threshold_memory_usage_ = 0;
   std::size_t last_memory_usage_poll_ = 0;
+
+  // Access to triggerEvent.
+  friend void vt::runInEpochRooted(ActionType&& fn);
+  friend void vt::runInEpochCollective(ActionType&& fn);
 };
 
-}} //end namespace vt::scheduler
+}} //end namespace vt::sched
 
 #include "vt/scheduler/scheduler.impl.h"
 
 namespace vt {
-
-void runScheduler();
 
 extern sched::Scheduler* theSched();
 

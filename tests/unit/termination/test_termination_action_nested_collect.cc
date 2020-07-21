@@ -67,17 +67,17 @@ struct TestTermNestedCollect : action::BaseFixture {
   }
 };
 
-TEST_P(TestTermNestedCollect, test_term_detect_nested_collect_epoch)/*NOLINT*/{
+TEST_P(TestTermNestedCollect, test_term_detect_nested_collect_epoch) {
   kernel(depth_, no_epoch);
 }
 
-INSTANTIATE_TEST_CASE_P /* NOLINT */(
+INSTANTIATE_TEST_SUITE_P(
   InstantiationName, TestTermNestedCollect,
   ::testing::Combine(
     ::testing::Range(0, 3),
     ::testing::Values(false),
     ::testing::Range(2, 10, 2)
-  ),
+  )
 );
 
 }}} // end namespace vt::tests::unit

@@ -65,9 +65,9 @@ namespace vt { namespace term {
   closure();
   theMsg()->popEpoch();
   theTerm()->finishedEpoch(epoch);
-  while (!term_finished) {
-    runScheduler();
-  }
+
+  theSched()->runSchedulerWhile([&term_finished]{ return !term_finished; });
+
   return epoch;
 }
 
@@ -97,9 +97,9 @@ namespace vt { namespace term {
   closure();
   theMsg()->popEpoch();
   theTerm()->finishedEpoch(epoch);
-  while (!term_finished) {
-    runScheduler();
-  }
+
+  theSched()->runSchedulerWhile([&term_finished]{ return !term_finished; });
+
   return epoch;
 }
 

@@ -137,8 +137,8 @@ protected:
   bool constructed_ = false;
 };
 
-TYPED_TEST_CASE_P(TestConstruct);
-TYPED_TEST_CASE_P(TestConstructDist);
+TYPED_TEST_SUITE_P(TestConstruct);
+TYPED_TEST_SUITE_P(TestConstructDist);
 
 TYPED_TEST_P(TestConstruct, test_construct_1) {
   using ColType   = TypeParam;
@@ -177,8 +177,8 @@ TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
   >(msg);
 }
 
-REGISTER_TYPED_TEST_CASE_P(TestConstruct,     test_construct_1);
-REGISTER_TYPED_TEST_CASE_P(TestConstructDist, test_construct_distributed_1);
+REGISTER_TYPED_TEST_SUITE_P(TestConstruct,     test_construct_1);
+REGISTER_TYPED_TEST_SUITE_P(TestConstructDist, test_construct_distributed_1);
 
 }}} // end namespace vt::tests::unit
 

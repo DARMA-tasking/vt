@@ -114,6 +114,14 @@
   #define vtAssertExpr(cond)            vt_force_use(cond)
   #define vtAssertExprInfo(cond,...)    vt_force_use(cond,__VA_ARGS__)
   #define vtWarnInfo(cond,str,...)      vt_force_use(cond,__VA_ARGS__)
+/**
+ * \internal
+ * Assert that the MPI call's return code is MPI_SUCCESS (0).
+ *
+ * The failure assert contains the MPI call name (eg. "MPI_Iprobe"),
+ * short summary (eg. "failed"), and the actual return value.
+ */
+  #define vtAssertMPISuccess(ret,mpi_name)   vt_force_use(ret)
 #else
   #define vtAssertImpl(fail,cond,str)                                   \
     do {                                                                \
@@ -160,8 +168,12 @@
 
   #define vtAssertNot(cond,str)        vtAssert(INVERT_COND(cond),str)
   #define vtAssertNotExpr(cond)        vtAssertExpr(INVERT_COND(cond))
-  #define vtAssertNotInfo(cond,str,...)                              \
+  #define vtAssertNotInfo(cond,str,...)                                 \
     vtAssertInfo(INVERT_COND(cond),str,__VA_ARGS__)
+
+  #define vtAssertMPISuccess(ret,mpi_name)  vtAssertInfo(               \
+    (ret == 0), "MPI call '" mpi_name "' failed.", ret                  \
+  )
 #endif
 
 #endif /*INCLUDED_CONFIGS_ERROR_CONFIG_ASSERT_H*/

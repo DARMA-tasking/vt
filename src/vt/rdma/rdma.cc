@@ -45,10 +45,15 @@
 #include "vt/rdma/rdma.h"
 #include "vt/messaging/active.h"
 #include "vt/pipe/pipe_headers.h"
+#include "vt/collective/collective_alg.h"
 
 #include <cstring>
 
 namespace vt { namespace rdma {
+
+RDMAManager::RDMAManager()
+  : collective_scope_(theCollective()->makeCollectiveScope())
+{ }
 
 /*static*/ void RDMAManager::getRDMAMsg(GetMessage* msg) {
   auto const msg_tag = envelopeGetTag(msg->env);

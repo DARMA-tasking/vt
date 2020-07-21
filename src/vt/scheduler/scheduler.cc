@@ -54,6 +54,8 @@
 #include "vt/objgroup/manager.fwd.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/runtime/runtime.h"
+#include "vt/runtime/mpi_access.h"
 
 namespace vt { namespace sched {
 
@@ -65,8 +67,10 @@ namespace vt { namespace sched {
 }
 
 Scheduler::Scheduler() {
-  event_triggers.resize(SchedulerEventType::SchedulerEventSize + 1);
-  event_triggers_once.resize(SchedulerEventType::SchedulerEventSize + 1);
+  auto event_count = SchedulerEventType::LastSchedulerEvent + 1;
+  event_triggers.resize(event_count);
+  event_triggers_once.resize(event_count);
+
   progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
 }
 
@@ -88,20 +92,35 @@ void Scheduler::enqueue(PriorityType priority, ActionType action) {
 # endif
 }
 
-bool Scheduler::runNextUnit() {
-  if (not work_queue_.empty()) {
-    auto elm = work_queue_.pop();
-    bool const is_term = elm.isTerm();
-    elm();
-    if (is_term) {
-      num_term_msgs_--;
-    }
-    return true;
-  } else {
-    return false;
+void Scheduler::runWorkUnit(UnitType& work) {
+  bool const is_term = work.isTerm();
+
+#if backend_check_enabled(mpi_access_guards)
+  vtAssert(
+    not vt::runtime::ScopedMPIAccess::isExplicitlyGranted(),
+    "Explicit MPI access should not be active when executing work unit."
+  );
+  if (action_depth_ == 0) { // 0 -> 1 transition before work unit executed
+    vt::runtime::ScopedMPIAccess::prohibitByDefault(true);
+  }
+#endif
+
+  ++action_depth_;
+  work();
+  --action_depth_;
+
+#if backend_check_enabled(mpi_access_guards)
+  if (action_depth_ == 0) {
+    vt::runtime::ScopedMPIAccess::prohibitByDefault(false);
+  }
+#endif
+
+  if (is_term) {
+    --num_term_msgs_;
   }
 }
 
+/*private*/
 bool Scheduler::progressImpl() {
   bool const msg_sch = theMsg()->progress();
   bool const evt_sch = theEvent()->progress();
@@ -124,6 +143,7 @@ bool Scheduler::progressImpl() {
   return scheduled_work;
 }
 
+/*private*/
 bool Scheduler::progressMsgOnlyImpl() {
   return theMsg()->progress() or theEvent()->progress();
 }
@@ -217,50 +237,79 @@ void Scheduler::scheduler(bool msg_only) {
     runProgress(msg_only);
   }
 
-  /*
-   * Handle cases when the system goes from term-idle to non-term-idle; trigger
-   * user registered listeners
-   */
-  if (num_term_msgs_ == work_queue_.size()) {
-    if (not is_idle_minus_term) {
-      is_idle_minus_term = true;
-      triggerEvent(SchedulerEventType::BeginIdleMinusTerm);
-    }
-  } else {
-    if (is_idle_minus_term) {
-      is_idle_minus_term = false;
-      triggerEvent(SchedulerEventType::EndIdleMinusTerm);
-    }
-  }
+  if (not work_queue_.empty()) {
+    processed_after_last_progress_++;
 
-  /*
-   * Handle cases when the system goes from completely idle or not; trigger user
-   * registered listeners
-   */
-  if (work_queue_.empty()) {
-    if (not is_idle) {
-      is_idle = true;
-      // Trigger any registered listeners on idle
-      triggerEvent(SchedulerEventType::BeginIdle);
-    }
-  } else {
+    // Leave idle states are before any potential processing.
+    // True-idle must be the outer state to enter/leave to collect more
+    // accurate time and ensure that events are not emited while in idle.
     if (is_idle) {
       is_idle = false;
       triggerEvent(SchedulerEventType::EndIdle);
     }
-  }
+    if (is_idle_minus_term and num_term_msgs_ not_eq work_queue_.size()) {
+      is_idle_minus_term = false;
+      triggerEvent(SchedulerEventType::EndIdleMinusTerm);
+    }
 
-  /*
-   * Run a work unit!
-   */
-  if (not work_queue_.empty()) {
-    processed_after_last_progress_++;
-    runNextUnit();
+    /*
+     * Run a work unit!
+     */
+    UnitType work = work_queue_.pop();
+    runWorkUnit(work);
+
+    // Enter idle state immediately after processing if relevant.
+    if (not is_idle_minus_term and num_term_msgs_ == work_queue_.size()) {
+      is_idle_minus_term = true;
+      triggerEvent(SchedulerEventType::BeginIdleMinusTerm);
+    }
+    if (not is_idle and work_queue_.empty()) {
+      is_idle = true;
+      triggerEvent(SchedulerEventType::BeginIdle);
+    }
   }
 
   if (not msg_only) {
     has_executed_ = true;
   }
+}
+
+void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
+  // This loop construct can run either in a top-level or nested context.
+  // 1. In a top-level context the idle time will encompass the time not
+  //    processing any actions when the work queue is empty. Leaving starts
+  //    a 'between scheduler' event which will only complete on the next call.
+  // 2. In a nested context, idle is always exited at the end
+  //    as the parent context is "not idle". Likewise, no 'between scheduler'
+  //    event is started.
+
+  vtAssert(
+    action_depth_ == 0 or not is_idle,
+    "Nested schedulers never expected from idle context"
+  );
+
+  triggerEvent(SchedulerEventType::BeginSchedulerLoop);
+
+  // When resuming a top-level scheduler, ensure to immediately enter
+  // an idle state if such applies.
+  if (not is_idle and work_queue_.empty()) {
+    is_idle = true;
+    triggerEvent(SchedulerEventType::BeginIdle);
+  }
+
+  while (cond()) {
+    scheduler();
+  }
+
+  // After running the scheduler ensure to exit idle state.
+  // For nested schedulers the outside scheduler has work to do.
+  // Between top-level schedulers, non-idle indicates lack of scheduling.
+  if (is_idle) {
+    is_idle = false;
+    triggerEvent(SchedulerEventType::EndIdle);
+  }
+
+  triggerEvent(SchedulerEventType::EndSchedulerLoop);
 }
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
@@ -296,13 +345,7 @@ void Scheduler::registerTriggerOnce(
   event_triggers_once[event].push_back(trigger);
 }
 
-void Scheduler::schedulerForever() {
-  while (true) {
-    scheduler();
-  }
-}
-
-}} //end namespace vt::scheduler
+}} //end namespace vt::sched
 
 namespace vt {
 

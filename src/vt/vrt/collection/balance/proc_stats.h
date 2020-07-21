@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
+#include "vt/vrt/collection/types/migratable.h"
 #include "vt/timing/timing.h"
 
 #include <vector>
@@ -58,13 +59,14 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ProcStats {
+  using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
   using MigrateFnType = std::function<void(NodeType)>;
 
 public:
-  template <typename ColT>
   static ElementIDType addProcStats(
-    VirtualElmProxyType<ColT> const& elm_proxy, ColT* col_elm,
-    PhaseType const& phase, TimeType const& time, CommMapType const& comm
+    Migratable* col_elm,
+    PhaseType const& phase, TimeType const& time,
+    std::vector<TimeType> const& subphase_time, CommMapType const& comm
   );
 
   static void clearStats();
@@ -72,6 +74,8 @@ public:
   static void releaseLB();
 
   static void outputStatsFile();
+
+  static SubphaseLoadMapType const& getProcSubphaseLoad(PhaseType phase);
 
 private:
   static void createStatsFile();
@@ -89,13 +93,12 @@ public:
   static std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
   static std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
   static std::vector<CommMapType> proc_comm_;
+  static std::vector<SubphaseLoadMapType> proc_subphase_data_;
 private:
   static FILE* stats_file_;
   static bool created_dir_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
-
-#include "vt/vrt/collection/balance/proc_stats.impl.h"
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H*/

@@ -52,6 +52,8 @@
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
+#include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
+#include "vt/vrt/collection/balance/randomlb/randomlb.h"
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
@@ -149,6 +151,10 @@ void LBManager::collectiveImpl(
     case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
     case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
     case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
+    case LBType::RandomLB:       makeLB<lb::RandomLB>(msg);       break;
+#   if backend_check_enabled(zoltan)
+    case LBType::ZoltanLB:       makeLB<lb::ZoltanLB>(msg);       break;
+#   endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
       break;
@@ -169,9 +175,7 @@ void LBManager::waitLBCollective() {
   // The invocation should only happen collectively across the whole all nodes.
   //
   theTerm()->produce();
-  while (synced_in_lb_) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([this]{ return synced_in_lb_; });
   synced_in_lb_ = true;
   theTerm()->consume();
 
@@ -215,7 +219,7 @@ void LBManager::releaseNow(PhaseType phase) {
   if (this_node == 0) {
     vt_print(
       lb,
-      "LBManaager::releaseNow: finished LB, phase={}, invocations={}\n",
+      "LBManager::releaseNow: finished LB, phase={}, invocations={}\n",
       phase, num_invocations_
     );
   }

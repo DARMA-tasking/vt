@@ -62,6 +62,7 @@
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/collection_headers.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/generated/vt_git_revision.h"
 #include "vt/configs/debug/debug_colorize.h"
@@ -236,8 +237,10 @@ void Runtime::setupTerminateHandler() {
 }
 
 /*virtual*/ Runtime::~Runtime() {
-  while (runtime_active_ && !aborted_) {
-    runScheduler();
+  if (runtime_active_ && !aborted_) {
+    theSched->runSchedulerWhile([this]{
+      return runtime_active_ && !aborted_;
+    });
   }
   if (!aborted_) {
     finalize();
@@ -365,6 +368,15 @@ void Runtime::printStartupBanner() {
 #endif
 #if backend_check_enabled(memory_pool)
   features.push_back(vt_feature_str_memory_pool);
+#endif
+#if backend_check_enabled(zoltan)
+  features.push_back(vt_feature_str_zoltan);
+#endif
+#if backend_check_enabled(mimalloc)
+  features.push_back(vt_feature_str_mimalloc);
+#endif
+#if backend_check_enabled(mpi_access_guards)
+  features.push_back(vt_feature_str_mpi_access_guards);
 #endif
 
   std::string dirty = "";
@@ -502,6 +514,21 @@ void Runtime::printStartupBanner() {
         fmt::format("Load balancing interval = {}", ArgType::vt_lb_interval);
       auto a2 = opt_on("--vt_lb_interval", a1);
       fmt::print("{}\t{}{}", vt_pre, a2, reset);
+
+      // Check validity of LB passed to VT
+      bool found = false;
+      for (auto&& lb : vrt::collection::balance::lb_names_) {
+        if (ArgType::vt_lb_name == lb.second) {
+          found = true;
+          break;
+        }
+      }
+      if (not found) {
+        auto str = fmt::format(
+          "Could not find valid LB named: \"{}\"", ArgType::vt_lb_name
+        );
+        vtAbort(str);
+      }
     }
   }
 
@@ -1108,12 +1135,8 @@ void Runtime::setup() {
   auto action = std::bind(&Runtime::terminationHandler, this);
   theTerm->addDefaultAction(action);
 
-  MPI_Barrier(theContext->getComm());
-
   // wait for all nodes to start up to initialize the runtime
-  theCollective->barrierThen([this]{
-    MPI_Barrier(theContext->getComm());
-  });
+  theCollective->barrier();
 
 # if backend_check_enabled(trace_enabled)
   theTrace->loadAndBroadcastSpec();
@@ -1303,13 +1326,13 @@ void Runtime::finalizeComponents() {
   theRDMA = nullptr;
 
   // Core components
-  theCollective = nullptr;
   theTerm = nullptr;
   theSched = nullptr;
   theMsg = nullptr;
   theGroup = nullptr;
   theCB = nullptr;
   theObjGroup = nullptr;
+  theCollective = nullptr;
 
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations
