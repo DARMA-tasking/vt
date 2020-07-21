@@ -50,6 +50,15 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/**
+ * \brief Utility class to support implementation of composable load
+ * modeling components
+ *
+ * All model implementations meant to compose with arbitrary other
+ * models should inherit from this class. It implements all methods by
+ * calling the same method on the underlying model passed at
+ * construction.
+ */
 class ComposedModel : public LoadModel
 {
 public:
