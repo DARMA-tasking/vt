@@ -47,10 +47,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-RawData::RawData()
-{
-}
-
 void RawData::setLoads(std::vector<LoadMapType> const* proc_load,
 		       std::vector<SubphaseLoadMapType> const* proc_subphase_load,
 		       std::vector<CommMapType> const* proc_comm)

@@ -51,8 +51,14 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/**
+ * \brief A strictly retrospective view of the recorded object timings
+ *
+ * For use with load balancers, this must typically be stacked beneath
+ * a model that predicts future loads, such as NaivePersistence
+ */
 struct RawData : public LoadModel {
-  RawData();
+  RawData() = default;
   void updateLoads(PhaseType last_completed_phase) override { }
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
