@@ -60,7 +60,8 @@ public:
   /**
    * \brief Constructor
    *
-   * \param[in] power The power to use in computing the norms
+   * \param[in] power The power to use in computing the norms. Must be
+   * >0. Pass +infinity for a `max` over subphases
    */
   Norm(std::shared_ptr<balance::LoadModel> base, double power);
   void setLoads(std::vector<LoadMapType> const* proc_load,
