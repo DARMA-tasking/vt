@@ -50,7 +50,17 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/**
+ * \brief Add some implied, unaccounted work time for communication activity
+ *
+ * Not yet implemented - will abort at runtime
+ */
 struct CommOverhead : public ComposedModel {
+  /**
+   * \brief Constructor
+   *
+   * \param[in] base: the underlying source of object work loads
+   */
   CommOverhead(std::shared_ptr<balance::LoadModel> base);
   void setLoads(std::vector<LoadMapType> const* proc_load,
 		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
