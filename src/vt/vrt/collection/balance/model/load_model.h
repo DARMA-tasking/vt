@@ -85,6 +85,11 @@ public:
   difference_type operator-(ObjectIterator rhs) { return std::distance(rhs.i, i); }
 };
 
+/**
+ * \brief Interface for transforming measurements of past object loads
+ * into predictions of future object load for load balancing
+ * strategies
+ */
 class LoadModel
 {
 public:
@@ -92,7 +97,7 @@ public:
   virtual ~LoadModel() = default;
 
   /**
-   * \internal \brief Initialize the model instance with pointers to the measured load data
+   * \brief Initialize the model instance with pointers to the measured load data
    *
    * This would typically be called by LBManager when the user has
    * passed a new model instance for a collection
