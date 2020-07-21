@@ -50,7 +50,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/**
+ * \brief Predicts future object loads as exactly matching their load
+ * in the last phase
+ */
 struct NaivePersistence : public ComposedModel {
+  /**
+   * \brief Constructor
+   *
+   * \param[in] base: The source of underlying load numbers to return; must not be null
+   */
   NaivePersistence(std::shared_ptr<balance::LoadModel> base);
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 }; // class NaivePersistence
