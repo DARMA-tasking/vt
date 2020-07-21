@@ -19,13 +19,13 @@ To run a load balancer at runtime:
 
 The LB specification file allows users to specify which load balancer along with
 which LB-specific configuration parameters are passed to the load balancer
-instance for any given phase. The order of the LB phase specficiation lines in
+instance for any given phase. The order of the LB phase specification lines in
 the file disambiguates lines---higher precedence for earlier lines.
 
 The format of the LB specification file is:
 
 \code
-[%] <$phase> <$lbname> [$LB-specific-arg-1] ... [$LB-specfic-arg-N]
+[%] <$phase> <$lbname> [$LB-specific-arg-1] ... [$LB-specific-arg-N]
 \endcode
 
 If a `%` is present, the line matches phases where:
