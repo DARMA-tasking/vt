@@ -80,8 +80,9 @@ TimeType CommOverhead::getWork(ElementIDType object, PhaseOffset offset) {
   if (offset.subphase == PhaseOffset::WHOLE_PHASE) {
     return work + overhead;
   } else {
-    // @todo: we don't record comm costs for each subphase---split it evenly
-    return work + overhead / getNumSubphases();
+    // @todo: we don't record comm costs for each subphase---split it proportionally
+    auto whole_phase_work = ComposedModel::getWork(object, PhaseOffset{offset.phases, PhaseOffset::WHOLE_PHASE});
+    return work + overhead * ( static_cast<double>(work)/whole_phase_work );
   }
 }
 
