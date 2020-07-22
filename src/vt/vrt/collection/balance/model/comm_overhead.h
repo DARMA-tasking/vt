@@ -52,22 +52,30 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
  * \brief Add some implied, unaccounted work time for communication activity
- *
- * Not yet implemented - will abort at runtime
  */
 struct CommOverhead : public ComposedModel {
   /**
    * \brief Constructor
    *
    * \param[in] base: the underlying source of object work loads
+   * \param[in] in_per_msg_weight weight to add per message received
+   * \param[in] in_per_byte_weight weight to add per byte received
    */
-  explicit CommOverhead(std::shared_ptr<balance::LoadModel> base);
+  explicit CommOverhead(
+    std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight,
+    TimeType in_per_byte_weight
+  );
+
   void setLoads(std::vector<LoadMapType> const* proc_load,
 		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
 		std::vector<CommMapType> const* proc_comm) override;
+
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  std::vector<CommMapType> const* proc_comm_;
+private:
+  std::vector<CommMapType> const* proc_comm_; /**< Underlying comm data */
+  TimeType per_msg_weight_ = 0.001;           /**< Cost per message */
+  TimeType per_byte_weight_ = 0.000001;       /**< Cost per bytes */
 }; // class CommOverhead
 
 }}}} // end namespace

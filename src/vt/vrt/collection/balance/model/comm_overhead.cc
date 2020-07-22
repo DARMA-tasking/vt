@@ -47,10 +47,13 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-CommOverhead::CommOverhead(std::shared_ptr<balance::LoadModel> base)
-  : ComposedModel(base)
-{
-}
+CommOverhead::CommOverhead(
+  std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight,
+  TimeType in_per_byte_weight
+) : ComposedModel(base),
+    per_msg_weight_(in_per_msg_weight),
+    per_byte_weight_(in_per_byte_weight)
+{ }
 
 void CommOverhead::setLoads(std::vector<LoadMapType> const* proc_load,
 			    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
@@ -59,21 +62,27 @@ void CommOverhead::setLoads(std::vector<LoadMapType> const* proc_load,
   ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
 }
 
-TimeType CommOverhead::getWork(ElementIDType object, PhaseOffset offset)
-{
+TimeType CommOverhead::getWork(ElementIDType object, PhaseOffset offset) {
   auto work = ComposedModel::getWork(object, offset);
 
-  vtAbort("Not fully implemented yet");
-#if 0
-  // Add a bit of overhead for each off-node received message per object
-  for (auto &&comm : *comms_) {
-    auto obj = loads_.find(comm.first.toObj());
-    if (obj != loads_.end())
-      work += 0.001 * comm.second.messages;
-  }
-#endif
+  auto phase = proc_comm_->size() - offset.phases;
+  auto& comm = proc_comm_->at(phase);
 
-  return work;
+  TimeType overhead = 0.;
+  for (auto&& c : comm) {
+    // find messages that go off-node and are sent to this object
+    if (c.first.offNode() and c.first.toObjTemp() == object) {
+      overhead += per_msg_weight_ * c.second.messages;
+      overhead += per_byte_weight_ * c.second.bytes;
+    }
+  }
+
+  if (offset.subphase == PhaseOffset::WHOLE_PHASE) {
+    return work + overhead;
+  } else {
+    // @todo: we don't record comm costs for each subphase---split it evenly
+    return work + overhead / getNumSubphases();
+  }
 }
 
 
