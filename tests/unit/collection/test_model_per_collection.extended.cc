@@ -152,6 +152,9 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
     vt::theCollection()->startPhaseCollective(nullptr);
   });
 
+  // LB control flow means that there will be no recorded phase for
+  // this to even look up objects in, causing failure
+#if vt_check_enabled(lblite)
   // Test the model, which should be per-collection and return the proxy.
   auto model = theLBManager()->getLoadModel();
   for (auto&& obj : *model) {
@@ -159,7 +162,7 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
     EXPECT_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
     //fmt::print("{:x} {}\n", obj, work_val);
   }
-
+#endif
 }
 
 }}} // end namespace vt::tests::unit
