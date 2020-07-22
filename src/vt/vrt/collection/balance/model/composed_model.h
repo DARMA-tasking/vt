@@ -63,7 +63,7 @@ class ComposedModel : public LoadModel
 {
 public:
   // \param[in] base must not be null
-  ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
+  explicit ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
 
   void setLoads(std::vector<LoadMapType> const* proc_load,
                 std::vector<SubphaseLoadMapType> const* proc_subphase_load,

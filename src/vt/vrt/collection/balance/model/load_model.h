@@ -78,7 +78,7 @@ class ObjectIterator {
   map_iterator_type i;
 
 public:
-  ObjectIterator(map_iterator_type in) : i(in) { }
+  explicit ObjectIterator(map_iterator_type in) : i(in) { }
   void operator++() { ++i; }
   value_type operator*() { return i->first; }
   bool operator!=(ObjectIterator rhs) { return i != rhs.i; }

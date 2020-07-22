@@ -61,7 +61,7 @@ struct CommOverhead : public ComposedModel {
    *
    * \param[in] base: the underlying source of object work loads
    */
-  CommOverhead(std::shared_ptr<balance::LoadModel> base);
+  explicit CommOverhead(std::shared_ptr<balance::LoadModel> base);
   void setLoads(std::vector<LoadMapType> const* proc_load,
 		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
 		std::vector<CommMapType> const* proc_comm) override;

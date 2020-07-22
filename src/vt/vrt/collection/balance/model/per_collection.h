@@ -64,7 +64,7 @@ struct PerCollection : public ComposedModel
    * for objects in unspecified collections, and for object and
    * subphase enumeration
    */
-  PerCollection(std::shared_ptr<LoadModel> base);
+  explicit PerCollection(std::shared_ptr<LoadModel> base);
 
   /**
    * \brief Add a model for objects in a specific collection
