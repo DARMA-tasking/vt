@@ -64,9 +64,7 @@ public:
    * >0. Pass +infinity for a `max` over subphases
    */
   Norm(std::shared_ptr<balance::LoadModel> base, double power);
-  void setLoads(std::vector<LoadMapType> const* proc_load,
-		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		std::vector<CommMapType> const* proc_comm) override;
+
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
