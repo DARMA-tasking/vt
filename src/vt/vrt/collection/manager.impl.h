@@ -69,6 +69,7 @@
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/insert_context_holder.h"
 #include "vt/vrt/collection/collection_directory.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
