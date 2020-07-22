@@ -42,6 +42,8 @@
 //@HEADER
 */
 
+/// [Collective insertable example]
+
 #include <vt/transport.h>
 
 static constexpr int32_t const default_num_elms = 64;
@@ -109,3 +111,5 @@ int main(int argc, char** argv) {
 
   return 0;
 }
+
+/// [Collective insertable example]

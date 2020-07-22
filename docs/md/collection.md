@@ -15,6 +15,11 @@ nodes that do not have collection elements. The \ref proc-stats component
 stores the statistics for live collections that then passes the instrumented
 data to the \ref lb-manager component to apply load balancing strategies.
 
+\section insertable Insertable Collections
+
+The \vt runtime supports collections that are dynamically insertable at
+runtime. Learn about \subpage insertable-collections
+
 \section rooted-hello-world-collection Hello World 1D Dense Collection (Rooted)
 \snippet  examples/hello_world/hello_world_collection.cc Hello world collection
 
