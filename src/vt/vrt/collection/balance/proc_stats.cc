@@ -144,6 +144,7 @@ void ProcStats::startIterCleanup() {
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
+  proc_collection_lookup_.clear();
 }
 
 ElementIDType ProcStats::getNextElm() {
@@ -319,7 +320,21 @@ ElementIDType ProcStats::addProcStats(
       })
     );
   }
+
+  auto const col_proxy = col_elm->getProxy();
+  proc_collection_lookup_[temp_id] = col_proxy;
+
   return temp_id;
+}
+
+VirtualProxyType ProcStats::getCollectionProxyForElement(
+  ElementIDType temp_id
+) const {
+  auto iter = proc_collection_lookup_.find(temp_id);
+  if (iter == proc_collection_lookup_.end()) {
+    return no_vrt_proxy;
+  }
+  return iter->second;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
