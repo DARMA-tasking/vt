@@ -66,9 +66,9 @@ during the phases between one load balancing invocation and the
 next. These predictions are provided by load models, which are
 implementations of the `vt::vrt:collection::balance::LoadModel`
 interface. There are a number of general-purpose load model
-implementations provided by vt.
+implementations provided by \vt.
 
-By default, vt uses a load model that predicts each object's work load
+By default, \vt uses a load model that predicts each object's work load
 for all future phases will match its workload in the most recent past
 phase. The system also provides an interface for applications and
 users to arrange use of a non-default load model where that may be
@@ -94,7 +94,7 @@ queries the underlying `RawData` model for the times taken in the most
 recent phase, and returns those same times as its prediction of the
 times those objects will take in all future phases.
 
-The full set of load model classes provided with vt is as follows
+The full set of load model classes provided with \vt is as follows
 
 | Load Model         | Description                                         | Reference |
 | -------------------|-----------------------------------------------------|---------- |
