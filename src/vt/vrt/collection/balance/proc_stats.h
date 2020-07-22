@@ -227,6 +227,16 @@ public:
    */
   ElementIDType permToTemp(ElementIDType perm_id) const;
 
+  /**
+   * \internal \brief Get the collection proxy for a given element ID
+   *
+   * \param[in] temp_id the temporary ID for the element for a given phase
+   *
+   * \return the virtual proxy if the element is part of the collection;
+   * otherwise \c no_vrt_proxy
+   */
+  VirtualProxyType getCollectionProxyForElement(ElementIDType temp_id) const;
+
 private:
   /**
    * \internal \brief Create the stats file
@@ -251,6 +261,8 @@ private:
   std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
   /// Map of permanent ID to temporary ID
   std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
+  /// Map from element ID to the collection's virtual proxy (untyped)
+  std::unordered_map<ElementIDType,VirtualProxyType> proc_collection_lookup_;
   /// Processor communication graph for each local object
   std::vector<CommMapType> proc_comm_;
   /// The current element ID
