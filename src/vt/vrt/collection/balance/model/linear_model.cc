@@ -49,20 +49,12 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void LinearModel::setLoads(
-  std::vector<LoadMapType> const* proc_load,
-  std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-  std::vector<CommMapType> const* proc_comm
-) {
-  ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
-
-  // Make sure the past length isn't too large for the number of phases we
-  // actually have
-  past_len_ = std::min(past_len_, static_cast<int>(proc_load->size()));
-}
-
 TimeType LinearModel::getWork(ElementIDType object, PhaseOffset when) {
   using util::stats::LinearRegression;
+
+  // Retrospective queries don't call for a prediction
+  if (when.phases < 0)
+    return ComposedModel::getWork(object, when);
 
   std::vector<double> x;
   std::vector<double> y;
@@ -70,7 +62,7 @@ TimeType LinearModel::getWork(ElementIDType object, PhaseOffset when) {
   PhaseOffset past_phase{when};
 
   // Number values on X-axis based on a PhaseOffset
-  for (int i = -past_len_; i < 0; i++) {
+  for (int i = -1 * getNumCompletedPhases(); i < 0; i++) {
     x.emplace_back(i);
     past_phase.phases = i;
     y.emplace_back(ComposedModel::getWork(object, past_phase));
