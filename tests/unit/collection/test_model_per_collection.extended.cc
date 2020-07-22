@@ -55,9 +55,6 @@
 
 namespace vt { namespace tests { namespace unit {
 
-static constexpr std::size_t data1_len = 1024;
-static constexpr std::size_t data2_len = 64;
-
 struct TestCol1 : vt::Collection<TestCol1,vt::Index1D> { };
 struct TestCol2 : vt::Collection<TestCol2,vt::Index1D> { };
 
