@@ -1507,77 +1507,48 @@ template <typename ColT>
 void CollectionManager::constructElement(
   VirtualProxyType proxy, typename ColT::IndexType cur_idx,
   typename ColT::IndexType range, HandlerType map_han,
-  auto_registry::AutoActiveMapType map_fn,
-  DistribConstructFn<ColT> user_construct_fn
+  DistribConstructFn<ColT> user_construct_fn, NodeType mapped_node
 ) {
   using IndexT           = typename ColT::IndexType;
-  using BaseIdxType      = vt::index::BaseIndex;
   using VirtualElmPtr    = VirtualPtrType<ColT,IndexT>;
   using IdxContextHolder = InsertContextHolder<IndexT>;
 
-  vt_debug_print_verbose(
-    vrt_coll, node,
-    "constructElement: foreach: map: cur_idx={}, index range={}\n",
-    cur_idx.toString(), range.toString()
-  );
+  // Set the current context index to `cur_idx`. This enables the user to
+  // query the index of their collection element in the constructor, which
+  // is often very handy
+  IdxContextHolder::set(&cur_idx,proxy);
 
-  auto const num_nodes = theContext()->getNumNodes();
-
-  auto const cur = static_cast<BaseIdxType*>(&cur_idx);
-  auto const max = static_cast<BaseIdxType*>(&range);
-
-  auto mapped_node = map_fn(cur, max, num_nodes);
+  // Invoke the user's construct function with a single argument---the index
+  // of element being constructed
+  VirtualElmPtr elm_ptr = user_construct_fn(cur_idx);
 
   vt_debug_print_verbose(
     vrt_coll, node,
-    "constructElement: foreach: cur_idx={}, mapped_node={}\n",
-    cur_idx.toString(), mapped_node
+    "constructElement: ptr={}\n", print_ptr(elm_ptr.get())
   );
 
-  if (theContext()->getNode() == mapped_node) {
-    // // Check the current context index, asserting that it's nullptr (there can
-    // // only be one live creation context at time)
-    // auto const ctx_idx = IdxContextHolder::index();
+  // Total count across the statically sized collection
+  auto const num_elms = range.getSize();
 
-    // vtAssert(ctx_idx == nullptr, "Context index must not be set");
+  // Through the attorney, setup all the properties on the newly constructed
+  // collection element: index, proxy, number of elements. Note: because of
+  // how the constructor works, the index is not currently available through
+  // "getIndex"
+  CollectionTypeAttorney::setup(elm_ptr.get(), num_elms, cur_idx, proxy);
 
-    // Set the current context index to `cur_idx`. This enables the user to
-    // query the index of their collection element in the constructor, which
-    // is often very handy
-    IdxContextHolder::set(&cur_idx,proxy);
+  // Insert the element into the managed holder for elements
+  insertCollectionElement<ColT>(
+    std::move(elm_ptr), cur_idx, range, map_han, proxy, true, mapped_node
+  );
 
-    // Invoke the user's construct function with a single argument---the index
-    // of element being constructed
-    VirtualElmPtr elm_ptr = user_construct_fn(cur_idx);
+  // Clear the current index context
+  IdxContextHolder::clear();
 
-    vt_debug_print_verbose(
-      vrt_coll, node,
-      "constructElement: ptr={}\n", print_ptr(elm_ptr.get())
-    );
-
-    // Total count across the statically sized collection
-    auto const num_elms = range.getSize();
-
-    // Through the attorney, setup all the properties on the newly constructed
-    // collection element: index, proxy, number of elements. Note: because of
-    // how the constructor works, the index is not currently available through
-    // "getIndex"
-    CollectionTypeAttorney::setup(elm_ptr.get(), num_elms, cur_idx, proxy);
-
-    // Insert the element into the managed holder for elements
-    insertCollectionElement<ColT>(
-      std::move(elm_ptr), cur_idx, range, map_han, proxy, true, mapped_node
-    );
-
-    // Clear the current index context
-    IdxContextHolder::clear();
-
-    vt_debug_print_verbose(
-      vrt_coll, node,
-      "constructElement: new local elm: num_elm={}, proxy={:x}, cur_idx={}\n",
-      num_elms, proxy, cur_idx.toString()
-    );
-  }
+  vt_debug_print_verbose(
+    vrt_coll, node,
+    "constructElement: new local elm: num_elm={}, proxy={:x}, cur_idx={}\n",
+    num_elms, proxy, cur_idx.toString()
+  );
 }
 
 template <typename ColT>
@@ -1627,7 +1598,32 @@ CollectionManager::constructCollectiveMap(
     // the holder
     range.foreach(
       [&proxy,&range,&map_han,&fn,&user_construct_fn,this](IndexT cur_idx) mutable {
-        constructElement<ColT>(proxy, cur_idx, range, map_han, fn, user_construct_fn);
+        using BaseIdxType = vt::index::BaseIndex;
+
+        vt_debug_print_verbose(
+          vrt_coll, node,
+          "constructCollectiveMap: foreach: map: cur_idx={}, index range={}\n",
+          cur_idx.toString(), range.toString()
+        );
+
+        auto const num_nodes = theContext()->getNumNodes();
+
+        auto const cur = static_cast<BaseIdxType*>(&cur_idx);
+        auto const max = static_cast<BaseIdxType*>(&range);
+
+        auto mapped_node = fn(cur, max, num_nodes);
+
+        vt_debug_print_verbose(
+          vrt_coll, node,
+          "constructCollectiveMap: foreach: cur_idx={}, mapped_node={}\n",
+          cur_idx.toString(), mapped_node
+        );
+
+        if (theContext()->getNode() == mapped_node) {
+          constructElement<ColT>(
+            proxy, cur_idx, range, map_han, user_construct_fn, mapped_node
+          );
+        }
       }
     );
   }
