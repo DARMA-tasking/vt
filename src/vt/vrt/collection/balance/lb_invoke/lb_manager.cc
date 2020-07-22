@@ -48,6 +48,7 @@
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
