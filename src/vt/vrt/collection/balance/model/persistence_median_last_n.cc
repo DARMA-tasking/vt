@@ -61,7 +61,7 @@ TimeType PersistenceMedianLastN::getWork(ElementIDType object, PhaseOffset when)
   if (when.phases < 0)
     return ComposedModel::getWork(object, when);
 
-  int phases = std::min(n_, completed_phases_);
+  int phases = std::min(n_, getNumCompletedPhases());
   std::vector<TimeType> times(phases);
   for (int i = 1; i <= phases; ++i) {
     PhaseOffset p{-1*i, when.subphase};

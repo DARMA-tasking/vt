@@ -77,6 +77,7 @@ public:
   ObjectIterator end() override;
 
   int getNumObjects() override;
+  int getNumCompletedPhases() override;
   int getNumSubphases() override;
 
 private:

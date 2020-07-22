@@ -70,6 +70,7 @@ struct RawData : public LoadModel {
   ObjectIterator end() override { return ObjectIterator(proc_load_->back().end()); }
 
   int getNumObjects() override { return end() - begin(); }
+  int getNumCompletedPhases() override { return proc_load_->size(); }
   int getNumSubphases() override;
 
   // Observer pointers to the underlying data. In operation, these would be owned by ProcStats

@@ -66,14 +66,10 @@ struct PersistenceMedianLastN : public ComposedModel
    */
   PersistenceMedianLastN(std::shared_ptr<LoadModel> base, int n);
 
-  void updateLoads(PhaseType last_completed_phase) override
-  { completed_phases_ = last_completed_phase; }
-
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
-  int n_;
-  int completed_phases_;
+  const int n_;
 }; // class PersistenceMedianLastN
 
 }}}} // namespaces

@@ -70,12 +70,6 @@ struct LinearModel : ComposedModel {
       past_len_(in_past_len)
   { }
 
-  void setLoads(
-    std::vector<LoadMapType> const* proc_load,
-    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-    std::vector<CommMapType> const* proc_comm
-  ) override;
-
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
