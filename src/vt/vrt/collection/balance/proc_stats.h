@@ -261,7 +261,7 @@ private:
   std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
   /// Map of permanent ID to temporary ID
   std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
-  /// Map from element ID to the collection's virtual proxy (untyped)
+  /// Map from element temporary ID to the collection's virtual proxy (untyped)
   std::unordered_map<ElementIDType,VirtualProxyType> proc_collection_lookup_;
   /// Processor communication graph for each local object
   std::vector<CommMapType> proc_comm_;
