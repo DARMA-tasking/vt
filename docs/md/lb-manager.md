@@ -105,6 +105,6 @@ The full set of load model classes provided with \vt is as follows
 | Norm               | When asked for a `WHOLE_PHASE` value, computes a specified l-norm over all subphases | `vt::vrt:collection::balance::Norm` |
 | SelectSubphases    | Filters and remaps the subphases with data present in the underlying model | `vt::vrt:collection::balance::SelectSubphases` |
 | CommOverhead +     | Adds a specified amount of imputed 'system overhead' time to each object's work based on the number of messages received | `vt::vrt:collection::balance::CommOverhead` |
-| PerCollection +    | Maintains a set of load models associated with different collection instances, and passes queries for an object through to the model corresponding to its collection | `vt::vrt:collection::balance::PerCollection` |
+| PerCollection      | Maintains a set of load models associated with different collection instances, and passes queries for an object through to the model corresponding to its collection | `vt::vrt:collection::balance::PerCollection` |
 
 +: This model is not yet implemented
