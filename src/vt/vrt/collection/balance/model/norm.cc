@@ -56,12 +56,6 @@ Norm::Norm(std::shared_ptr<balance::LoadModel> base, double power)
   vtAssert(power >= 0.0, "Reciprocal loads make no sense");
 }
 
-void Norm::setLoads(std::vector<LoadMapType> const* proc_load,
-		    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		    std::vector<CommMapType> const* proc_comm) {
-  ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
-}
-
 TimeType Norm::getWork(ElementIDType object, PhaseOffset offset)
 {
   if (offset.subphase != PhaseOffset::WHOLE_PHASE)
