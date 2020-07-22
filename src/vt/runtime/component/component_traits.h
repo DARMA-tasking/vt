@@ -49,9 +49,9 @@
 
 namespace vt { namespace runtime { namespace component {
 
-template <typename T>
+template <typename T, typename... Us>
 struct ComponentTraits {
-  template <typename U, typename = decltype(U::construct())>
+  template <typename U, typename = decltype(U::construct(std::declval<Us>()...))>
   static std::true_type test(int);
 
   template <typename U>

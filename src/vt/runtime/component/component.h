@@ -62,12 +62,12 @@ namespace vt { namespace runtime { namespace component {
  * through the specialized static \c construct method, which is used to create
  * the objgroup if the component is implemented as one
  */
-template <typename T, typename _Enable=void>
+template <typename T, typename _Enable=void, typename... Us>
 struct ComponentConstructor;
 
-template <typename T>
+template <typename T, typename... Us>
 struct ComponentConstructor<
-  T, typename std::enable_if_t<ComponentTraits<T>::hasConstruct>
+  T, typename std::enable_if_t<ComponentTraits<T, Us...>::hasConstruct>, Us...
 > {
   template <typename... Args>
   static std::unique_ptr<T> apply(Args&&... args) {
@@ -75,9 +75,9 @@ struct ComponentConstructor<
   }
 };
 
-template <typename T>
+template <typename T, typename... Us>
 struct ComponentConstructor<
-  T, typename std::enable_if_t<not ComponentTraits<T>::hasConstruct>
+  T, typename std::enable_if_t<not ComponentTraits<T, Us...>::hasConstruct>, Us...
 > {
   template <typename... Args>
   static std::unique_ptr<T> apply(Args&&... args) {
@@ -120,7 +120,7 @@ struct Component : BaseComponent {
    */
   template <typename... Args>
   static std::unique_ptr<T> staticInit(Args&&... args) {
-    return ComponentConstructor<T>::apply(std::forward<Args>(args)...);
+    return ComponentConstructor<T, void, Args...>::apply(std::forward<Args>(args)...);
   }
 
   /**
