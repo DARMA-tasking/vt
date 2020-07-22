@@ -57,7 +57,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct PerCollection : public ComposedModel
 {
-  using CollectionID = int;
+  using CollectionID = VirtualProxyType;
 
   /**
    * \param[in] base The underlying default model. Used to give loads
@@ -68,8 +68,11 @@ struct PerCollection : public ComposedModel
 
   /**
    * \brief Add a model for objects in a specific collection
+   *
+   * \param[in] proxy the virtual proxy of the collection
+   * \param[in] model the associated model for the particular collection
    */
-  void addModel(CollectionID collection, std::shared_ptr<LoadModel> model);
+  void addModel(CollectionID proxy, std::shared_ptr<LoadModel> model);
 
   void setLoads(std::vector<LoadMapType> const* proc_load,
 		std::vector<SubphaseLoadMapType> const* proc_subphase_load,

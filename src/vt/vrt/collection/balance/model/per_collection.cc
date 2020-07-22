@@ -43,6 +43,7 @@
 */
 
 #include "vt/vrt/collection/balance/model/per_collection.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -50,9 +51,9 @@ PerCollection::PerCollection(std::shared_ptr<LoadModel> base)
   : ComposedModel(base)
 { }
 
-void PerCollection::addModel(CollectionID collection, std::shared_ptr<LoadModel> model)
+void PerCollection::addModel(CollectionID proxy, std::shared_ptr<LoadModel> model)
 {
-  models_[collection] = model;
+  models_[proxy] = model;
 }
 
 void PerCollection::setLoads(std::vector<LoadMapType> const* proc_load,
@@ -70,12 +71,10 @@ void PerCollection::updateLoads(PhaseType last_completed_phase) {
 }
 
 TimeType PerCollection::getWork(ElementIDType object, PhaseOffset when) {
-#if 0
   // See if some specific model has been given for the object in question
-  auto mi = models_.find(getCollectionID(object));
+  auto mi = models_.find(theProcStats()->getCollectionProxyForElement(object));
   if (mi != models_.end())
     return mi->second->getWork(object, when);
-#endif
 
   // Otherwise, default to the given base model
   return ComposedModel::getWork(object, when);
