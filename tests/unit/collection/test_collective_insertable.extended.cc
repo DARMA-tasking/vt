@@ -80,8 +80,11 @@ TEST_F(TestCollectiveInsertable, test_collective_insertable_1) {
     proxy = vt::theCollection()->constructCollective<MyCol, &myMap>(range);
   });
 
-  // No elements should be created at this point
-  EXPECT_EQ(inserted_indices.size(), 0);
+  // No elements should be created at this point; this must be in a collective
+  // epoch so it doesn't race with future insert messages
+  vt::runInEpochCollective([&]{
+    EXPECT_EQ(inserted_indices.size(), 0);
+  });
 
   auto num_nodes = vt::theContext()->getNumNodes();
   auto this_node = vt::theContext()->getNode();
