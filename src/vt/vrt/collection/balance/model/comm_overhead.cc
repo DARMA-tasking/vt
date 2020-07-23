@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 randomlb.cc
+//                           comm_overhead.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,49 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/randomlb/randomlb.h"
 
-#include <random>
-#include <set>
+#include "vt/vrt/collection/balance/model/comm_overhead.h"
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
-  proxy = in_proxy;
+CommOverhead::CommOverhead(
+  std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight,
+  TimeType in_per_byte_weight
+) : ComposedModel(base),
+    per_msg_weight_(in_per_msg_weight),
+    per_byte_weight_(in_per_byte_weight)
+{ }
+
+void CommOverhead::setLoads(std::vector<LoadMapType> const* proc_load,
+			    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+			    std::vector<CommMapType> const* proc_comm) {
+  proc_comm_ = proc_comm;
+  ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
 }
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
-}
+TimeType CommOverhead::getWork(ElementIDType object, PhaseOffset offset) {
+  auto work = ComposedModel::getWork(object, offset);
 
-void RandomLB::runLB() {
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+  auto phase = proc_comm_->size() - offset.phases;
+  auto& comm = proc_comm_->at(phase);
 
-  if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
-      randomize_seed_, seed_
-    );
-    fflush(stdout);
-  }
-
-  std::mt19937 gen;
-  if (randomize_seed_) {
-    std::random_device rd;
-    gen = std::mt19937{rd()};
-  } else {
-    using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
-  }
-  std::uniform_int_distribution<> dist(0, num_nodes-1);
-
-  // Sort the objects so we have a deterministic order over them
-  std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
-  }
-
-  for (auto&& obj : objs) {
-    auto const to_node = dist(gen);
-    if (to_node != this_node) {
-      vt_debug_print(
-        lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
-      );
-      migrateObjectTo(obj, to_node);
+  TimeType overhead = 0.;
+  for (auto&& c : comm) {
+    // find messages that go off-node and are sent to this object
+    if (c.first.offNode() and c.first.toObjTemp() == object) {
+      overhead += per_msg_weight_ * c.second.messages;
+      overhead += per_byte_weight_ * c.second.bytes;
     }
   }
+
+  if (offset.subphase == PhaseOffset::WHOLE_PHASE) {
+    return work + overhead;
+  } else {
+    // @todo: we don't record comm costs for each subphase---split it proportionally
+    auto whole_phase_work = ComposedModel::getWork(object, PhaseOffset{offset.phases, PhaseOffset::WHOLE_PHASE});
+    return work + overhead * ( static_cast<double>(work)/whole_phase_work );
+  }
 }
 
-}}}} /* end namespace vt::vrt::collection::balance::lb */
 
+}}}}

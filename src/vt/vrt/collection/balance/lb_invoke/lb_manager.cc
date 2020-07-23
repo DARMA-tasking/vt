@@ -48,6 +48,7 @@
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
@@ -59,6 +60,9 @@
 #include "vt/vrt/collection/messages/system_create.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
+#include "vt/vrt/collection/balance/model/naive_persistence.h"
+#include "vt/vrt/collection/balance/model/raw_data.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -66,8 +70,14 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
   auto ptr = std::make_unique<LBManager>();
   auto proxy = theObjGroup()->makeCollective<LBManager>(ptr.get());
   proxy.get()->setProxy(proxy);
+
+  ptr->base_model_ = std::make_shared<balance::NaivePersistence>(std::make_shared<balance::RawData>());
+  ptr->setLoadModel(ptr->base_model_);
+
   return ptr;
 }
+
+LBManager::~LBManager() = default;
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   vt_debug_print(
@@ -122,6 +132,14 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   return the_lb;
 }
 
+void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
+  model_ = model;
+  auto stats = theProcStats();
+  model_->setLoads(stats->getProcLoad(),
+                   stats->getProcSubphaseLoad(),
+                   stats->getProcComm());
+}
+
 template <typename LB>
 objgroup::proxy::Proxy<LB>
 LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
@@ -131,13 +149,25 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   auto phase = msg->getPhase();
 
+  EpochType model_epoch = theTerm()->makeEpochCollective("LBManager::model_epoch");
   EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
-  theMsg()->pushEpoch(balance_epoch);
-  strat->startLB(phase, base_proxy, theProcStats()->getProcLoad(phase), theProcStats()->getProcComm(phase));
-  theMsg()->popEpoch(balance_epoch);
-  theTerm()->finishedEpoch(balance_epoch);
-
   EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
+
+  theMsg()->pushEpoch(model_epoch);
+  model_->updateLoads(phase);
+  theMsg()->popEpoch(model_epoch);
+  theTerm()->finishedEpoch(model_epoch);
+
+  theTerm()->addAction(model_epoch, [=] {
+    vt_debug_print(
+      lb, node,
+      "LBManager: running strategy\n"
+    );
+    theMsg()->pushEpoch(balance_epoch);
+    strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcComm()->back());
+    theMsg()->popEpoch(balance_epoch);
+    theTerm()->finishedEpoch(balance_epoch);
+  });
 
   theTerm()->addAction(balance_epoch, [=] {
     vt_debug_print(

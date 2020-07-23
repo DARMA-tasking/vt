@@ -77,8 +77,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct ProcStats : runtime::component::Component<ProcStats> {
   using MigrateFnType       = std::function<void(NodeType)>;
-  using LoadMapType         = std::unordered_map<ElementIDType,TimeType>;
-  using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
 
   /**
    * \internal \brief System call to construct \c ProcStats
@@ -171,31 +169,25 @@ public:
   ElementIDType getNextElm();
 
   /**
-   * \internal \brief Get object loads for a given phase
+   * \internal \brief Get stored object loads
    *
-   * \param[in] phase the phase
-   *
-   * \return the load map
+   * \return an observer pointer to the load map
    */
-  LoadMapType const& getProcLoad(PhaseType phase) const;
+  std::vector<LoadMapType> const* getProcLoad() const;
 
   /**
-   * \internal \brief Get object loads for the subphases of a given phase
+   * \internal \brief Get stored object loads for individual subphases
    *
-   * \param[in] phase the phase
-   *
-   * \return the subphase load map
+   * \return an observer pointer to the subphase load map
    */
-  SubphaseLoadMapType const& getProcSubphaseLoad(PhaseType phase) const;
+  std::vector<SubphaseLoadMapType> const* getProcSubphaseLoad() const;
 
   /**
-   * \internal \brief Get object comm graph for a given phase
+   * \internal \brief Get stored object comm graph
    *
-   * \param[in] phase the phase
-   *
-   * \return the load map
+   * \return an observer pointer to the comm graph
    */
-  CommMapType const& getProcComm(PhaseType phase) const;
+  std::vector<CommMapType> const* getProcComm() const;
 
   /**
    * \internal \brief Test if this processor has an object to migrate
@@ -235,6 +227,16 @@ public:
    */
   ElementIDType permToTemp(ElementIDType perm_id) const;
 
+  /**
+   * \internal \brief Get the collection proxy for a given element ID
+   *
+   * \param[in] temp_id the temporary ID for the element for a given phase
+   *
+   * \return the virtual proxy if the element is part of the collection;
+   * otherwise \c no_vrt_proxy
+   */
+  VirtualProxyType getCollectionProxyForElement(ElementIDType temp_id) const;
+
 private:
   /**
    * \internal \brief Create the stats file
@@ -259,6 +261,8 @@ private:
   std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
   /// Map of permanent ID to temporary ID
   std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
+  /// Map from element temporary ID to the collection's virtual proxy (untyped)
+  std::unordered_map<ElementIDType,VirtualProxyType> proc_collection_lookup_;
   /// Processor communication graph for each local object
   std::vector<CommMapType> proc_comm_;
   /// The current element ID

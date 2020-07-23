@@ -427,7 +427,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   auto graph = std::make_unique<Graph>();
 
   // Number of local vertices (overdecomposed blocks) on this node
-  graph->num_vertices = static_cast<int>(load_data->size());
+  graph->num_vertices = load_model_->getNumObjects();
 
   // Allocate space for each vertex to describe it
   graph->vertex_gid = std::make_unique<ZOLTAN_ID_TYPE[]>(graph->num_vertices);
@@ -445,8 +445,8 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   // Insert local load objs into a std::set to get a deterministic order to
   // traverse them for building the graph consistenly
   std::set<ObjIDType> load_objs;
-  for (auto&& elm : *load_data) {
-    load_objs.insert(elm.first);
+  for (auto obj : *load_model_) {
+    load_objs.insert(obj);
   }
 
   // Initialize all the local vertices with global id
@@ -468,8 +468,8 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
   {
     int idx = 0;
     for (auto&& obj : load_objs) {
-      auto iter = load_data->find(obj);
-      auto time = static_cast<int>(loadMilli(iter->second));
+      auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+      auto time = static_cast<int>(loadMilli(load));
       graph->vertex_weight[idx++] = time;
     }
   }

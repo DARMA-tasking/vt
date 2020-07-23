@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 randomlb.cc
+//                           select_subphases.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,41 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/randomlb/randomlb.h"
+#include "vt/vrt/collection/balance/model/select_subphases.h"
 
-#include <random>
-#include <set>
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
-
-void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
-  proxy = in_proxy;
+SelectSubphases::SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<unsigned int> subphases)
+  : ComposedModel(base)
+  , subphases_(subphases)
+{
+  unsigned int base_subphases = ComposedModel::getNumSubphases();
+  for (auto s : subphases) {
+    vtAssert(s != PhaseOffset::WHOLE_PHASE, "Selecting WHOLE_PHASE as a subphase makes no sense");
+    vtAssert(s < base_subphases, "Selected subphase must be within range of base's known subphases");
+  }
+  // Don't check that the 'select' subphases are a smaller set than
+  // the base - allow multiple counting or other potential cleverness
+  //vtAssert(subphases_.size() < base_subphases, "...");
 }
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
-}
-
-void RandomLB::runLB() {
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
-
-  if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
-      randomize_seed_, seed_
-    );
-    fflush(stdout);
-  }
-
-  std::mt19937 gen;
-  if (randomize_seed_) {
-    std::random_device rd;
-    gen = std::mt19937{rd()};
-  } else {
-    using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
-  }
-  std::uniform_int_distribution<> dist(0, num_nodes-1);
-
-  // Sort the objects so we have a deterministic order over them
-  std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
-  }
-
-  for (auto&& obj : objs) {
-    auto const to_node = dist(gen);
-    if (to_node != this_node) {
-      vt_debug_print(
-        lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
-      );
-      migrateObjectTo(obj, to_node);
+TimeType SelectSubphases::getWork(ElementIDType object, PhaseOffset when) {
+  if (when.subphase == PhaseOffset::WHOLE_PHASE) {
+    // Sum up the selected subphases as if they represent the entire phase
+    TimeType sum = 0.0;
+    for (auto s : subphases_) {
+      PhaseOffset p{when.phases, s};
+      sum += ComposedModel::getWork(object, p);
     }
+    return sum;
+  } else {
+    when.subphase = subphases_.at(when.subphase);
+    return ComposedModel::getWork(object, when);
   }
 }
 
-}}}} /* end namespace vt::vrt::collection::balance::lb */
+int SelectSubphases::getNumSubphases() {
+  return subphases_.size();
+}
 
+}}}}

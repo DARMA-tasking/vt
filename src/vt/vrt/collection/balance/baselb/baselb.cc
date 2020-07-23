@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/timing/timing.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
@@ -63,14 +64,15 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 void BaseLB::startLB(
   PhaseType phase,
   objgroup::proxy::Proxy<BaseLB> proxy,
-  balance::ProcStats::LoadMapType const& in_load_stats,
+  balance::LoadModel* model,
   ElementCommType const& in_comm_stats
 ) {
   start_time_ = timing::Timing::getCurrentTime();
   phase_ = phase;
   proxy_ = proxy;
+  load_model_ = model;
 
-  importProcessorData(in_load_stats, in_comm_stats);
+  importProcessorData(in_comm_stats);
 
   term::TerminationDetector::Scoped::collective(
     [this] { computeStatistics(); },
@@ -92,17 +94,16 @@ BaseLB::ObjBinType BaseLB::histogramSample(LoadType const& load) const {
 }
 
 void BaseLB::importProcessorData(
-  ElementLoadType const& load_in, ElementCommType const& comm_in
+  ElementCommType const& comm_in
 ) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
     lb, node,
     "{}: importProcessorData: load stats size={}, load comm size={}\n",
-    this_node, load_in.size(), comm_in.size()
+    this_node, load_model_->getNumObjects(), comm_in.size()
   );
-  for (auto&& stat : load_in) {
-    auto const& obj = stat.first;
-    auto const& load = stat.second;
+  for (auto obj : *load_model_) {
+    auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     auto const& load_milli = loadMilli(load);
     auto const& bin = histogramSample(load_milli);
     this_load += load_milli;
@@ -116,7 +117,6 @@ void BaseLB::importProcessorData(
     );
   }
 
-  load_data = &load_in;
   comm_data = &comm_in;
 }
 
@@ -331,8 +331,8 @@ void BaseLB::computeStatisticsOver(Statistic stat) {
       if (elm.first.onNode() or elm.first.selfEdge()) {
         continue;
       }
-      //vt_print(lb, "comm_load={}, elm={}\n", comm_load, elm.second);
-      comm_load += elm.second;
+      //vt_print(lb, "comm_load={}, elm={}\n", comm_load, elm.second.bytes);
+      comm_load += elm.second.bytes;
     }
     auto msg = makeMessage<StatsMsgType>(Statistic::P_c, comm_load);
     proxy_.template reduce<ReduceOp>(msg,cb);
@@ -344,7 +344,7 @@ void BaseLB::computeStatisticsOver(Statistic stat) {
     for (auto&& elm : *comm_data) {
       // Only count object-to-object direct edges in the O_c statistics
       if (elm.first.cat_ == balance::CommCategory::SendRecv and not elm.first.selfEdge()) {
-        lds.emplace_back(balance::LoadData(elm.second));
+        lds.emplace_back(balance::LoadData(elm.second.bytes));
       }
     }
     auto msg = makeMessage<StatsMsgType>(Statistic::O_c, reduceVec(std::move(lds)));
@@ -354,8 +354,8 @@ void BaseLB::computeStatisticsOver(Statistic stat) {
   case Statistic::O_l: {
     // Perform the reduction for O_l -> object load only
     std::vector<balance::LoadData> lds;
-    for (auto&& elm : *load_data) {
-      lds.emplace_back(balance::LoadData(elm.second));
+    for (auto elm : *load_model_) {
+      lds.emplace_back(load_model_->getWork(elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
     }
     auto msg = makeMessage<StatsMsgType>(Statistic::O_l, reduceVec(std::move(lds)));
     proxy_.template reduce<ReduceOp>(msg,cb);

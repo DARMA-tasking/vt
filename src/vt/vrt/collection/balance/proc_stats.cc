@@ -103,22 +103,18 @@ bool ProcStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
   return true;
 }
 
-ProcStats::LoadMapType const&
-ProcStats::getProcLoad(PhaseType phase) const {
-  vtAssert(proc_data_.size() > phase, "Phase must exist in load data");
-  return proc_data_.at(phase);
+std::vector<LoadMapType> const*
+ProcStats::getProcLoad() const {
+  return &proc_data_;
 }
 
-ProcStats::SubphaseLoadMapType const&
-ProcStats::getProcSubphaseLoad(PhaseType phase) const {
-  vtAssert(proc_subphase_data_.size() > phase, "Phase must exist in load data");
-  return proc_subphase_data_.at(phase);
+std::vector<SubphaseLoadMapType> const*
+ProcStats::getProcSubphaseLoad() const {
+  return &proc_subphase_data_;
 }
 
-CommMapType const& ProcStats::getProcComm(PhaseType phase) const {
-  vtAssert(proc_comm_.size() > phase, "Phase must exist in comm data");
-  return proc_comm_.at(phase);
-
+std::vector<CommMapType> const* ProcStats::getProcComm() const {
+  return &proc_comm_;
 }
 
 void ProcStats::clearStats() {
@@ -148,6 +144,7 @@ void ProcStats::startIterCleanup() {
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
+  proc_collection_lookup_.clear();
 }
 
 ElementIDType ProcStats::getNextElm() {
@@ -243,7 +240,7 @@ void ProcStats::outputStatsFile() {
       ) {
         auto const to   = key.toObj();
         auto const from = key.fromObj();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
         fprintf(stats_file_, "%s", obj_str.c_str());
       } else if (
         key.cat_ == CommCategory::NodeToCollection or
@@ -251,7 +248,7 @@ void ProcStats::outputStatsFile() {
       ) {
         auto const to   = key.toObj();
         auto const from = key.fromNode();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
         fprintf(stats_file_, "%s", obj_str.c_str());
       } else if (
         key.cat_ == CommCategory::CollectionToNode or
@@ -259,7 +256,7 @@ void ProcStats::outputStatsFile() {
       ) {
         auto const to   = key.toNode();
         auto const from = key.fromObj();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
+        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
         fprintf(stats_file_, "%s", obj_str.c_str());
       } else {
         vtAssert(false, "Invalid balance::CommCategory enum value");
@@ -323,7 +320,21 @@ ElementIDType ProcStats::addProcStats(
       })
     );
   }
+
+  auto const col_proxy = col_elm->getProxy();
+  proc_collection_lookup_[temp_id] = col_proxy;
+
   return temp_id;
+}
+
+VirtualProxyType ProcStats::getCollectionProxyForElement(
+  ElementIDType temp_id
+) const {
+  auto iter = proc_collection_lookup_.find(temp_id);
+  if (iter == proc_collection_lookup_.end()) {
+    return no_vrt_proxy;
+  }
+  return iter->second;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

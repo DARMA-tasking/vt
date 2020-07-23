@@ -49,7 +49,6 @@
 #include "vt/vrt/collection/balance/elm_stats.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
 #include "vt/vrt/collection/balance/stats_msg.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 randomlb.cc
+//                                 norm.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,36 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/randomlb/randomlb.h"
+#if !defined INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
+#define INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
 
-#include <random>
-#include <set>
+#include "vt/vrt/collection/balance/model/composed_model.h"
+#include <unordered_map>
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
-  proxy = in_proxy;
-}
+/**
+ * \brief A load model that computes an l-norm of a given power across
+ * subphases
+ */
+class Norm : public ComposedModel {
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
-}
+public:
+  /**
+   * \brief Constructor
+   *
+   * \param[in] power The power to use in computing the norms. Must be
+   * >0. Pass +infinity for a `max` over subphases
+   */
+  Norm(std::shared_ptr<balance::LoadModel> base, double power);
 
-void RandomLB::runLB() {
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+  TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
-      randomize_seed_, seed_
-    );
-    fflush(stdout);
-  }
+private:
+  int num_subphases_;
+  const double power_;
+}; // class Norm
 
-  std::mt19937 gen;
-  if (randomize_seed_) {
-    std::random_device rd;
-    gen = std::mt19937{rd()};
-  } else {
-    using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
-  }
-  std::uniform_int_distribution<> dist(0, num_nodes-1);
+}}}} // end namespace
 
-  // Sort the objects so we have a deterministic order over them
-  std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
-  }
-
-  for (auto&& obj : objs) {
-    auto const to_node = dist(gen);
-    if (to_node != this_node) {
-      vt_debug_print(
-        lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
-      );
-      migrateObjectTo(obj, to_node);
-    }
-  }
-}
-
-}}}} /* end namespace vt::vrt::collection::balance::lb */
-
+#endif

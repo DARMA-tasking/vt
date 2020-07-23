@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 randomlb.cc
+//                          persistence_median_last_n.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,39 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/randomlb/randomlb.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/model/persistence_median_last_n.h"
+#include <utility>
 
-#include <random>
-#include <set>
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
-
-void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
-  proxy = in_proxy;
+PersistenceMedianLastN::PersistenceMedianLastN(std::shared_ptr<LoadModel> base, int n)
+  : ComposedModel(base)
+  , n_(n)
+{
+  vtAssert(n > 0, "Cannot take a median over no phases");
 }
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
+TimeType PersistenceMedianLastN::getWork(ElementIDType object, PhaseOffset when)
+{
+  // Retrospective queries don't call for a prospective calculation
+  if (when.phases < 0)
+    return ComposedModel::getWork(object, when);
+
+  int phases = std::min(n_, getNumCompletedPhases());
+  std::vector<TimeType> times(phases);
+  for (int i = 1; i <= phases; ++i) {
+    PhaseOffset p{-1*i, when.subphase};
+    TimeType t = ComposedModel::getWork(object, p);
+    times[i-1] = t;
+  }
+
+  std::sort(times.begin(), times.end());
+
+  if (phases % 2 == 1)
+    return times[phases / 2 + 1];
+  else
+    return (times[phases / 2] + times[phases / 2 + 1]) / 2;
 }
 
-void RandomLB::runLB() {
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
-
-  if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
-      randomize_seed_, seed_
-    );
-    fflush(stdout);
-  }
-
-  std::mt19937 gen;
-  if (randomize_seed_) {
-    std::random_device rd;
-    gen = std::mt19937{rd()};
-  } else {
-    using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
-  }
-  std::uniform_int_distribution<> dist(0, num_nodes-1);
-
-  // Sort the objects so we have a deterministic order over them
-  std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
-  }
-
-  for (auto&& obj : objs) {
-    auto const to_node = dist(gen);
-    if (to_node != this_node) {
-      vt_debug_print(
-        lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
-      );
-      migrateObjectTo(obj, to_node);
-    }
-  }
-}
-
-}}}} /* end namespace vt::vrt::collection::balance::lb */
-
+}}}}

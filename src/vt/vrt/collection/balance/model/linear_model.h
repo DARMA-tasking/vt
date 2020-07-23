@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 randomlb.cc
+//                                linear_model.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,40 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/randomlb/randomlb.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_LINEAR_MODEL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_LINEAR_MODEL_H
 
-#include <random>
-#include <set>
+#include "vt/vrt/collection/balance/model/composed_model.h"
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
-  proxy = in_proxy;
-}
+/**
+ * \struct LinearModel
+ *
+ * \brief Predict an object's load with a linear regression model
+ */
+struct LinearModel : ComposedModel {
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
-}
+  static constexpr int default_past_len = 5;
 
-void RandomLB::runLB() {
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+  /**
+   * \brief Construct a linear model predictor
+   *
+   * \param[in] base the base model
+   * \param[in] in_past_len (optional) the past number of phases for prediction
+   */
+  explicit LinearModel(
+    std::shared_ptr<balance::LoadModel> base, int in_past_len = default_past_len
+  ) : ComposedModel(base),
+      past_len_(in_past_len)
+  { }
 
-  if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
-      randomize_seed_, seed_
-    );
-    fflush(stdout);
-  }
+  TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  std::mt19937 gen;
-  if (randomize_seed_) {
-    std::random_device rd;
-    gen = std::mt19937{rd()};
-  } else {
-    using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
-  }
-  std::uniform_int_distribution<> dist(0, num_nodes-1);
+private:
+  int past_len_ = 0;
+};
 
-  // Sort the objects so we have a deterministic order over them
-  std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
-  }
+}}}} /* end namespace vt::vrt::collection::balance */
 
-  for (auto&& obj : objs) {
-    auto const to_node = dist(gen);
-    if (to_node != this_node) {
-      vt_debug_print(
-        lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
-      );
-      migrateObjectTo(obj, to_node);
-    }
-  }
-}
-
-}}}} /* end namespace vt::vrt::collection::balance::lb */
-
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_LINEAR_MODEL_H*/

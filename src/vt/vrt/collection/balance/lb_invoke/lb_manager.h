@@ -57,6 +57,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+class LoadModel;
+
 /**
  * \struct LBManager
  *
@@ -76,7 +78,7 @@ struct LBManager : runtime::component::Component<LBManager> {
   LBManager() = default;
   LBManager(LBManager const&) = delete;
   LBManager(LBManager&&) = default;
-  virtual ~LBManager() {}
+  virtual ~LBManager();
 
   std::string name() override { return "LBManager"; }
 
@@ -232,6 +234,26 @@ public:
    */
   void triggerListeners(PhaseType phase);
 
+  /**
+   * \brief Set a model of expected object loads to use in place of
+   * the current installed model
+   *
+   * \param[in] model the model to apply
+   *
+   * This should be called with a similarly-constructed model instance
+   * on every node
+   */
+  void setLoadModel(std::shared_ptr<LoadModel> model);
+
+  /**
+   * \brief Get the system-set basic model of object load
+   */
+  std::shared_ptr<LoadModel> getBaseLoadModel() { return base_model_; }
+  /**
+   * \brief Get the currently installed model of object load
+   */
+  std::shared_ptr<LoadModel> getLoadModel() { return model_; }
+
 protected:
   /**
    * \internal \brief Collectively construct a new load balancer
@@ -252,6 +274,8 @@ private:
   bool synced_in_lb_                       = true;
   std::vector<ListenerFnType> listeners_   = {};
   objgroup::proxy::Proxy<LBManager> proxy_;
+  std::shared_ptr<LoadModel> base_model_;
+  std::shared_ptr<LoadModel> model_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -49,10 +49,11 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/objgroup/headers.h"
+#include "vt/vrt/collection/balance/model/load_model.h"
 
 #include <set>
 #include <map>
@@ -106,9 +107,9 @@ struct BaseLB {
    * through calls to `migrateObjectTo`. Callers can then access that
    * set using `getTransfers` and apply it using `applyMigrations`.
    */
-  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::ProcStats::LoadMapType const& in_load_stats, ElementCommType const& in_comm_stats);
+  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::LoadModel *model, ElementCommType const& in_comm_stats);
   void computeStatistics();
-  void importProcessorData(ElementLoadType const& ld, ElementCommType const& cm);
+  void importProcessorData(ElementCommType const& cm);
   void statsHandler(StatsMsgType* msg);
   void finishedStats();
 
@@ -140,7 +141,6 @@ protected:
   int32_t bin_size_                               = 10;
   ObjSampleType obj_sample                        = {};
   LoadType this_load                              = 0.0f;
-  ElementLoadType const* load_data                = nullptr;
   ElementCommType const* comm_data                = nullptr;
   StatisticMapType stats                          = {};
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
@@ -148,6 +148,8 @@ protected:
   bool comm_aware_                                = false;
   bool comm_collectives_                          = false;
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
+  // Observer only - LBManager owns the instance
+  balance::LoadModel* load_model_                 = nullptr;
 
 private:
   TransferVecType transfers_                      = {};

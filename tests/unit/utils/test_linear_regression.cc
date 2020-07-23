@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 randomlb.cc
+//                          test_linear_regression.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,34 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/randomlb/randomlb.h"
+#include <gtest/gtest.h>
 
-#include <random>
-#include <set>
+#include <vt/utils/stats/linear_regression.h>
+#include "test_harness.h"
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+#include <vector>
 
-void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
-  proxy = in_proxy;
+namespace vt { namespace tests { namespace unit {
+
+using TestLinearRegression = TestHarness;
+
+TEST_F(TestLinearRegression, test_linear_regression_1) {
+  std::vector<double> x, y;
+
+  double slope = 0.5;
+  double intercept = 2;
+
+  for (int i = 1; i < 5; i++) {
+    x.emplace_back(i);
+    y.emplace_back(intercept + slope * i);
+  }
+
+  vt::util::stats::LinearRegression lin{x, y};
+  lin.compute();
+
+  EXPECT_EQ(lin.getSlope(), slope);
+  EXPECT_EQ(lin.getIntercept(), intercept);
+  EXPECT_EQ(lin.predict(5), intercept + slope * 5);
 }
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
-}
-
-void RandomLB::runLB() {
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
-
-  if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
-      randomize_seed_, seed_
-    );
-    fflush(stdout);
-  }
-
-  std::mt19937 gen;
-  if (randomize_seed_) {
-    std::random_device rd;
-    gen = std::mt19937{rd()};
-  } else {
-    using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
-  }
-  std::uniform_int_distribution<> dist(0, num_nodes-1);
-
-  // Sort the objects so we have a deterministic order over them
-  std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
-  }
-
-  for (auto&& obj : objs) {
-    auto const to_node = dist(gen);
-    if (to_node != this_node) {
-      vt_debug_print(
-        lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
-      );
-      migrateObjectTo(obj, to_node);
-    }
-  }
-}
-
-}}}} /* end namespace vt::vrt::collection::balance::lb */
-
+}}} /* end namespace vt::tests::unit */

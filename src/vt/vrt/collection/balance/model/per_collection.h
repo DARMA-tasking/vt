@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 randomlb.cc
+//                                 per_collection.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,50 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/randomlb/randomlb.h"
+#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PER_COLLECTION_H
+#define INCLUDED_VRT_COLLECTION_BALANCE_PER_COLLECTION_H
 
-#include <random>
-#include <set>
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/model/composed_model.h"
+#include <unordered_map>
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
-  proxy = in_proxy;
-}
+/**
+ * \brief Selects an underlying model to call corresponding to the
+ * collection containing the queried object
+ */
+struct PerCollection : public ComposedModel
+{
+  using CollectionID = VirtualProxyType;
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
-}
+  /**
+   * \param[in] base The underlying default model. Used to give loads
+   * for objects in unspecified collections, and for object and
+   * subphase enumeration
+   */
+  explicit PerCollection(std::shared_ptr<LoadModel> base);
 
-void RandomLB::runLB() {
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+  /**
+   * \brief Add a model for objects in a specific collection
+   *
+   * \param[in] proxy the virtual proxy of the collection
+   * \param[in] model the associated model for the particular collection
+   */
+  void addModel(CollectionID proxy, std::shared_ptr<LoadModel> model);
 
-  if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
-      randomize_seed_, seed_
-    );
-    fflush(stdout);
-  }
+  void setLoads(std::vector<LoadMapType> const* proc_load,
+		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+		std::vector<CommMapType> const* proc_comm) override;
 
-  std::mt19937 gen;
-  if (randomize_seed_) {
-    std::random_device rd;
-    gen = std::mt19937{rd()};
-  } else {
-    using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
-  }
-  std::uniform_int_distribution<> dist(0, num_nodes-1);
+  void updateLoads(PhaseType last_completed_phase) override;
 
-  // Sort the objects so we have a deterministic order over them
-  std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
-  }
+  TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  for (auto&& obj : objs) {
-    auto const to_node = dist(gen);
-    if (to_node != this_node) {
-      vt_debug_print(
-        lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
-      );
-      migrateObjectTo(obj, to_node);
-    }
-  }
-}
+private:
+  std::unordered_map<CollectionID, std::shared_ptr<LoadModel>> models_;
+}; // class PerCollection
 
-}}}} /* end namespace vt::vrt::collection::balance::lb */
+}}}} // namespaces
 
+#endif

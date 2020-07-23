@@ -70,9 +70,8 @@ void RotateLB::runLB() {
     fflush(stdout);
   }
 
-  for (auto&& stat : *load_data) {
-    auto const& obj = stat.first;
-    auto const& load = stat.second;
+  for (auto obj : *load_model_) {
+    auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     vt_debug_print(
       lb, node,
       "\t RotateLB::migrating object to: obj={}, load={}, to_node={}\n",

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 randomlb.cc
+//                           raw_data.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,37 @@
 //@HEADER
 */
 
-#include "vt/vrt/collection/balance/randomlb/randomlb.h"
 
-#include <random>
-#include <set>
+#include "vt/vrt/collection/balance/model/raw_data.h"
 
-namespace vt { namespace vrt { namespace collection { namespace lb {
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void RandomLB::init(objgroup::proxy::Proxy<RandomLB> in_proxy) {
-  proxy = in_proxy;
+void RawData::setLoads(std::vector<LoadMapType> const* proc_load,
+		       std::vector<SubphaseLoadMapType> const* proc_subphase_load,
+		       std::vector<CommMapType> const* proc_comm)
+{
+  proc_load_ = proc_load;
+  proc_subphase_load_ = proc_subphase_load;
+  proc_comm_ = proc_comm;
 }
 
-void RandomLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"seed", "randomize_seed"};
-  spec->checkAllowedKeys(allowed);
-  seed_ = spec->getOrDefault<int32_t>("seed", seed_);
-  randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
+int RawData::getNumSubphases() {
+  const auto& last_phase = proc_subphase_load_->back();
+  const auto& an_object = *last_phase.begin();
+  const auto& subphases = an_object.second;
+  return subphases.size();
 }
 
-void RandomLB::runLB() {
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
+{
+  vtAssert(offset.phases < 0,
+	   "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
-  if (this_node == 0) {
-    vt_print(
-      lb, "RandomLB: runLB: randomize_seed={}, seed={}\n",
-      randomize_seed_, seed_
-    );
-    fflush(stdout);
-  }
-
-  std::mt19937 gen;
-  if (randomize_seed_) {
-    std::random_device rd;
-    gen = std::mt19937{rd()};
-  } else {
-    using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
-  }
-  std::uniform_int_distribution<> dist(0, num_nodes-1);
-
-  // Sort the objects so we have a deterministic order over them
-  std::set<ObjIDType> objs;
-  for (auto obj : *load_model_) {
-    objs.insert(obj);
-  }
-
-  for (auto&& obj : objs) {
-    auto const to_node = dist(gen);
-    if (to_node != this_node) {
-      vt_debug_print(
-        lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
-      );
-      migrateObjectTo(obj, to_node);
-    }
-  }
+  auto phase = proc_load_->size() - offset.phases;
+  if (offset.subphase == PhaseOffset::WHOLE_PHASE)
+    return proc_load_->at(phase).at(object);
+  else
+    return proc_subphase_load_->at(phase).at(object).at(offset.subphase);
 }
 
-}}}} /* end namespace vt::vrt::collection::balance::lb */
-
+}}}}
