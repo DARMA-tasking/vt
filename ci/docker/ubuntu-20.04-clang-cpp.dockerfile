@@ -35,23 +35,8 @@ RUN ln -s \
 ENV CC=${compiler} \
     CXX=clang++
 
-RUN wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz && \
-    tar xzf mpich-3.3.2.tar.gz && \
-    rm mpich-3.3.2.tar.gz && \
-    cd mpich-3.3.2 && \
-    ./configure \
-        --enable-static=false \
-        --enable-alloca=true \
-        --disable-long-double \
-        --enable-threads=single \
-        --enable-fortran=no \
-        --enable-fast=all \
-        --enable-g=none \
-        --enable-timing=none && \
-    make -j4 && \
-    make install && \
-    cd - && \
-    rm -rf mpich-3.3.2
+COPY ./ci/deps/mpich.sh mpich.sh
+RUN ./mpich.sh 3.3.2 -j4
 
 ENV MPI_EXTRA_FLAGS="" \
     CMAKE_PREFIX_PATH="/lib/x86_64-linux-gnu/" \
