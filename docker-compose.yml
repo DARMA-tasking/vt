@@ -27,6 +27,7 @@
 #   VT_EXTENDED_TESTS=1  # Build all the extended testing
 #   VT_ZOLTAN=0          # Build with Zoltan enabled
 #   BUILD_TYPE=release   # CMake build type
+#   CODE_COVERAGE=0      # Enable generation of code coverage reports
 #
 # Examples:
 #
@@ -103,6 +104,7 @@ x-vtopts: &vtopts
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
+  CODE_COVERAGE: ${CODE_COVERAGE:-0}
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
 
