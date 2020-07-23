@@ -236,6 +236,28 @@ services:
         /vt/ci/build_cpp.sh /vt /build ${TOKEN}"
 
   ##############################################################################
+  # Interactive build documentation for VT in the container on ubuntu platform
+  # from container baseline.
+  ubuntu-docs-interactive:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-docs
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-docs.dockerfile
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
+      args:
+        <<: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *ccache
+      VT_LB_ENABLED: ${VT_LB:-1}
+      VT_TRACE_ENABLED:  ${VT_TRACE:-1}
+      VT_DOXYGEN_ENABLED: 1
+      CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
+    volumes: *ubuntu-volumes
+
+  ##############################################################################
   # C++ build of VT within an alpine linux container (limited to clang
   # compilers)
   alpine-cpp:
