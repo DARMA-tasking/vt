@@ -2310,10 +2310,8 @@ void CollectionManager::finishInsertCollective(
   vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
 
   // Wait on the insert epoch, ensuring that insertions are complete
-  bool done = false;
-  theTerm()->addAction(insert_epoch, [&done] { done = true; });
   theTerm()->finishedEpoch(insert_epoch);
-  theSched()->runSchedulerWhile([&done] { return not done; });
+  vt::runSchedulerThrough(insert_epoch);
 
   // Reset the insert epoch to none so no insertions can be completed until \c
   // startInsertCollective in invoked
