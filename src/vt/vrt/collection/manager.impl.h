@@ -2043,7 +2043,7 @@ template <typename ColT, typename IndexT>
   auto const& epoch = msg->epoch_;
   auto const& g_epoch = msg->g_epoch_;
   theCollection()->insert<ColT,IndexT>(
-    msg->proxy_,msg->idx_,msg->construct_node_
+    msg->proxy_,msg->idx_,msg->construct_node_,msg->epoch_
   );
   theTerm()->consume(epoch,1,from);
   theTerm()->consume(g_epoch,1,from);
@@ -2451,13 +2451,19 @@ ColT* CollectionManager::tryGetLocalPtr(
 template <typename ColT, typename IndexT>
 void CollectionManager::insert(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
-  NodeType const& node
+  NodeType const& node, EpochType msg_insert_epoch
 ) {
   using IdxContextHolder = InsertContextHolder<IndexT>;
 
   auto const untyped_proxy = proxy.getProxy();
   auto const cur_epoch = theMsg()->getEpoch();
   auto insert_epoch = UniversalIndexHolder<>::insertGetEpoch(untyped_proxy);
+
+  // be careful here, an insertion message from another node might race with
+  // startInsertCollective being called on this node
+  if (insert_epoch == no_epoch) {
+    insert_epoch = msg_insert_epoch;
+  }
   vtAssert(insert_epoch != no_epoch, "Epoch should be valid");
 
   vt_debug_print(

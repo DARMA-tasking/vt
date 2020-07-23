@@ -1600,11 +1600,13 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] idx the index to insert
    * \param[in] node the node to insert on
+   * \param[in] msg_insert_epoch the insert epoch on the message
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void insert(
     CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
-    NodeType const& node = uninitialized_destination
+    NodeType const& node = uninitialized_destination,
+    EpochType msg_insert_epoch = no_epoch
   );
 
   /**
