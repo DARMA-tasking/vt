@@ -68,13 +68,18 @@ implementations of the `vt::vrt:collection::balance::LoadModel`
 interface. There are a number of general-purpose load model
 implementations provided by \vt.
 
-By default, \vt uses a load model that predicts each object's work load
-for all future phases will match its workload in the most recent past
-phase. The system also provides an interface for applications and
+By default, \vt uses a load model that predicts each object's work
+load for all future phases will match its workload in the most recent
+past phase. The system also provides an interface for applications and
 users to arrange use of a non-default load model where that may be
 desirable for reasons such as performance experimentation,
 specialization to application details, or execution environment
-considerations.
+considerations. To install a custom load model, application code
+should call `vt::theLBManager()->setLoadModel(user_model)`. To
+simplify implementation of custom load models, and allow them to
+benefit from future system-level improvements, we recommend that
+custom load models be composed atop the default model, which can be
+obtained by calling `vt::theLBManager()->getBaseLoadModel()`.
 
 Most provided load models are designed as composable filters inherited
 from the `vt::vrt:collection::balance::ComposedModel` class. This
@@ -111,3 +116,8 @@ The full set of load model classes provided with \vt is as follows
 | NaivePersistence   | Passes through historical queries, and maps all future queries to the most recent past phase | `vt::vrt:collection::balance::NaivePersistence` |
 | PersistenceMedianLastN | Similar to NaivePersistence, except that it predicts based on a median over the N most recent phases | `vt::vrt:collection::balance::PersistenceMedianLastN` |
 | LinearModel        | Computes a linear regression over on object's loads from a number of recent phases | `vt::vrt:collection::balance::LinearModel` |
+
+All of the provided load balancers described in the previous section
+require that the installed load model provide responses to future
+phase queries for at least `PhaseOffset::NEXT_PHASE` (i.e. `0`), as
+the **Predictors** described above do.
