@@ -188,6 +188,47 @@ services:
     volumes: *ubuntu-volumes
 
   ##############################################################################
+  # C++ build/test/clean target for VT using OpenMPI instead of the default
+  # mpich.
+  #
+  # Note: This is a separate target because it requires a different image and
+  # modifying all the other container/image names to be parameterized over
+  # MPI requires a lot of changes.
+  ubuntu-cpp-clean-openmpi:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+      args: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *ccache
+      <<: *vtopts
+    volumes: *ubuntu-volumes
+    command: *vt-build-test-clean-cpp-command
+
+  ##############################################################################
+  # Interactive C++ setup of VT on ubuntu platform from container baseline for
+  # OpenMPI.
+  ubuntu-cpp-interactive-openmpi:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+      args: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *ccache
+      <<: *vtopts
+    volumes: *ubuntu-volumes
+
+  ##############################################################################
   # Build C++ container with VT installed in the container on ubuntu platform
   # from container baseline.
   ubuntu-vt:
