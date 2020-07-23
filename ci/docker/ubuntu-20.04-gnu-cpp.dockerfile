@@ -10,12 +10,15 @@ ENV https_proxy=${proxy} \
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ARG zoltan_enabled
+
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
     g++-$(echo ${compiler} | cut -d- -f2) \
     ca-certificates \
     less \
     curl \
+    ${zoltan_enabled:+gfortran-$(echo ${compiler} | cut -d- -f2)} \
     cmake \
     git \
     wget \
@@ -38,6 +41,12 @@ RUN ln -s \
     "$(which gcc-$(echo ${compiler}  | cut -d- -f2))" \
     /usr/bin/gcc
 
+RUN if test ${zoltan_enabled} -eq 1; then \
+      ln -s \
+      "$(which gfortran-$(echo ${compiler}  | cut -d- -f2))" \
+      /usr/bin/gfortran; \
+    fi
+
 ENV CC=gcc \
     CXX=g++
 
@@ -46,6 +55,14 @@ RUN ./mpich.sh 3.3.2 -j4
 
 ENV MPI_EXTRA_FLAGS="" \
     PATH=/usr/lib/ccache/:$PATH
+
+ARG ZOLTAN_INSTALL_DIR=/trilinos-install
+ENV ZOLTAN_DIR=${ZOLTAN_INSTALL_DIR}
+
+COPY ./ci/deps/zoltan.sh zoltan.sh
+RUN if test ${zoltan_enabled} -eq 1; then \
+      ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
+    fi
 
 FROM base as build
 COPY . /vt
@@ -57,6 +74,7 @@ ARG VT_MIMALLOC_ENABLED
 ARG VT_DOXYGEN_ENABLED
 ARG VT_ASAN_ENABLED
 ARG VT_POOL_ENABLED
+ARG VT_ZOLTAN_ENABLED
 ARG CMAKE_BUILD_TYPE
 ARG VT_EXTENDED_TESTS_ENABLED
 
@@ -68,6 +86,7 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
     VT_ASAN_ENABLED=${VT_ASAN_ENABLED} \
     VT_POOL_ENABLED=${VT_POOL_ENABLED} \
     VT_MPI_GUARD_ENABLED=${VT_MPI_GUARD_ENABLED} \
+    VT_ZOLTAN_ENABLED=${VT_ZOLTAN_ENABLED} \
     VT_EXTENDED_TESTS_ENABLED=${VT_EXTENDED_TESTS_ENABLED} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
