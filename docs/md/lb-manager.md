@@ -116,6 +116,7 @@ The full set of load model classes provided with \vt is as follows
 | NaivePersistence   | Passes through historical queries, and maps all future queries to the most recent past phase | `vt::vrt:collection::balance::NaivePersistence` |
 | PersistenceMedianLastN | Similar to NaivePersistence, except that it predicts based on a median over the N most recent phases | `vt::vrt:collection::balance::PersistenceMedianLastN` |
 | LinearModel        | Computes a linear regression over on object's loads from a number of recent phases | `vt::vrt:collection::balance::LinearModel` |
+| MultiplePhases     | Computes values for future phases based on sums of the underlying model's predictions for N corresponding future phases |  `vt::vrt:collection::balance::MultiplePhases` |
 
 All of the provided load balancers described in the previous section
 require that the installed load model provide responses to future
