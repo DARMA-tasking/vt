@@ -2482,6 +2482,12 @@ void CollectionManager::insert(
       auto const this_node = theContext()->getNode();
       auto cur_idx = idx;
 
+      vt_debug_print(
+        vrt_coll, node,
+        "insert: proxy={:x}, insert_node={}\n",
+        untyped_proxy, insert_node
+      );
+
       if (insert_node == this_node) {
         auto const& num_elms = max_idx.getSize();
         std::tuple<> tup;
@@ -2514,6 +2520,12 @@ void CollectionManager::insert(
         // Clear the current index context
         IdxContextHolder::clear();
       } else {
+        vtAssertInfo(
+          insert_node >= 0 and insert_node < theContext()->getNumNodes(),
+          "Invalid insert node",
+          insert_node
+        );
+
         auto msg = makeMessage<InsertMsg<ColT,IndexT>>(
           proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
         );
