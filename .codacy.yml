@@ -3,3 +3,4 @@ exclude_paths:
   - 'lib/**/*'
   - 'docs/**/*'
   - 'ci/docker/*'
+  - 'ci/deps/*'
