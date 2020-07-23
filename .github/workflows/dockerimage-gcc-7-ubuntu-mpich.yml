@@ -26,6 +26,7 @@ jobs:
       COMPILER: gcc-7
       BUILD_TYPE: release
       ULIMIT_CORE: 0
+      CODE_COVERAGE: 1
       VT_LB: 1
       VT_TRACE: 1
       VT_TRACE_RT: 1
