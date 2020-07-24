@@ -509,7 +509,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 
       for (auto&& elm : comm_objs) {
         auto iter = load_comm_edge_id.find(elm);
-        auto bytes = iter->second;
+        auto comm = iter->second;
 
         vtAssert(
           iter->first.edge_id_ != balance::no_element_id,
@@ -517,7 +517,7 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
         );
 
         graph->edge_gid[edge_idx] = iter->first.edge_id_;
-        graph->edge_weight[edge_idx] = bytes;
+        graph->edge_weight[edge_idx] = comm.bytes;
 
         vt_debug_print(
           lb, node,
