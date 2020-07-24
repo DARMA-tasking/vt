@@ -25,7 +25,9 @@
 #   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
 #   VT_ASAN=0            # Enable address sanitizer
 #   VT_EXTENDED_TESTS=1  # Build all the extended testing
+#   VT_ZOLTAN=0          # Build with Zoltan enabled
 #   BUILD_TYPE=release   # CMake build type
+#   CODE_COVERAGE=0      # Enable generation of code coverage reports
 #
 # Examples:
 #
@@ -102,6 +104,7 @@ x-vtopts: &vtopts
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
+  CODE_COVERAGE: ${CODE_COVERAGE:-0}
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
 
@@ -179,6 +182,47 @@ services:
       dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cpp
+      args: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *ccache
+      <<: *vtopts
+    volumes: *ubuntu-volumes
+
+  ##############################################################################
+  # C++ build/test/clean target for VT using OpenMPI instead of the default
+  # mpich.
+  #
+  # Note: This is a separate target because it requires a different image and
+  # modifying all the other container/image names to be parameterized over
+  # MPI requires a lot of changes.
+  ubuntu-cpp-clean-openmpi:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+      args: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *ccache
+      <<: *vtopts
+    volumes: *ubuntu-volumes
+    command: *vt-build-test-clean-cpp-command
+
+  ##############################################################################
+  # Interactive C++ setup of VT on ubuntu platform from container baseline for
+  # OpenMPI.
+  ubuntu-cpp-interactive-openmpi:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
       args: *default-args
     ulimits: *ulimits
     environment:

@@ -24,6 +24,7 @@ jobs:
       COMPILER: icc-18
       BUILD_TYPE: release
       ULIMIT_CORE: 0
+      CODE_COVERAGE: 0
       VT_LB: 1
       VT_TRACE: 1
       VT_TRACE_RT: 0
@@ -32,6 +33,7 @@ jobs:
       VT_ASAN: 0
       VT_POOL: 0
       VT_EXTENDED_TESTS: 1
+      VT_ZOLTAN: 0
       CACHE: ~/.local/cache/
 
     steps:

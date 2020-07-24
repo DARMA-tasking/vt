@@ -19,6 +19,7 @@ jobs:
       COMPILER: [% compiler %]
       BUILD_TYPE: [% build_type %]
       ULIMIT_CORE: [% ulimit_core %]
+      CODE_COVERAGE: [% code_coverage %]
       VT_LB: [% vt_lb %]
       VT_TRACE: [% vt_trace %]
       VT_TRACE_RT: [% vt_trace_rt %]
@@ -27,6 +28,7 @@ jobs:
       VT_ASAN: [% vt_asan %]
       VT_POOL: [% vt_pool %]
       VT_EXTENDED_TESTS: [% vt_extended_tests %]
+      VT_ZOLTAN: [% vt_zoltan %]
       CACHE: [% cache_dir %]
 
     steps:
