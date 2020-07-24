@@ -65,7 +65,7 @@ void CommOverhead::setLoads(std::vector<LoadMapType> const* proc_load,
 TimeType CommOverhead::getWork(ElementIDType object, PhaseOffset offset) {
   auto work = ComposedModel::getWork(object, offset);
 
-  auto phase = proc_comm_->size() - offset.phases;
+  auto phase = proc_comm_->size() + offset.phases;
   auto& comm = proc_comm_->at(phase);
 
   TimeType overhead = 0.;

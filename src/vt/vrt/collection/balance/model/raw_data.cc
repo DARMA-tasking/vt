@@ -68,7 +68,7 @@ TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
   vtAssert(offset.phases < 0,
 	   "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
-  auto phase = proc_load_->size() - offset.phases;
+  auto phase = proc_load_->size() + offset.phases;
   if (offset.subphase == PhaseOffset::WHOLE_PHASE)
     return proc_load_->at(phase).at(object);
   else
