@@ -123,6 +123,9 @@ INSTANTIATE_TEST_SUITE_P(
     "HierarchicalLB",
     "GossipLB",
     "GreedyLB"
+#   if vt_check_enabled(zoltan)
+    , "ZoltanLB"
+#   endif
   )
 );
 
