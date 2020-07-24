@@ -29,7 +29,6 @@ RUN apt-get update -y -q && \
     valgrind \
     make-guile \
     libomp5 \
-    lcov \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -64,6 +63,12 @@ COPY ./ci/deps/zoltan.sh zoltan.sh
 RUN if test ${zoltan_enabled} -eq 1; then \
       ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
     fi
+
+RUN apt-get update -y -q && \
+    apt-get install -y -q --no-install-recommends \
+    lcov && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 FROM base as build
 COPY . /vt
