@@ -29,6 +29,7 @@ RUN apt-get update -y -q && \
     valgrind \
     make-guile \
     libomp5 \
+    lcov \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
