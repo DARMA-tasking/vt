@@ -17,7 +17,9 @@ then
     lcov --capture --directory . --output-file coverage.info
     lcov --remove coverage.info '/usr/*' --output-file coverage.info
     lcov --list coverage.info
-    bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+    pushd "$VT"
+    bash <(curl -s https://codecov.io/bash) -f "${VT_BUILD}/coverage.info" || echo "Codecov did not collect coverage reports"
+    popd
 fi
 
 popd
