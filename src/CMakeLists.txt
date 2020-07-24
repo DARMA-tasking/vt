@@ -258,7 +258,7 @@ target_include_directories(
 if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   message(STATUS "VT: enabling code coverage generation")
   # Add required flags (GCC & LLVM/Clang)
-  target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE
+  target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
     -O0        # no optimization
     -g         # generate debug info
     --coverage # sets all required flags
