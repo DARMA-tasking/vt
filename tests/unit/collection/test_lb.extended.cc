@@ -124,7 +124,7 @@ INSTANTIATE_TEST_SUITE_P(
     "RandomLB",
     "RotateLB",
     "HierarchicalLB",
-    "GossipLB",
+    //"GossipLB",
     "GreedyLB"
 #   if vt_check_enabled(zoltan)
     , "ZoltanLB"
