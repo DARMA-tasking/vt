@@ -85,6 +85,9 @@ TEST_P(TestLoadBalancer, test_load_balancer_1) {
 
   vt::arguments::ArgConfig::vt_lb = true;
   vt::arguments::ArgConfig::vt_lb_name = lb_name;
+  if (vt::theContext()->getNode() == 0) {
+    fmt::print("Testing lb {}\n", lb_name);
+  }
 
   vt::theCollective()->barrier();
 
