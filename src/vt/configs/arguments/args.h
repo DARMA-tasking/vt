@@ -49,6 +49,7 @@
 #include "vt/runtime/component/component.h"
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 #include <tuple>
@@ -69,6 +70,7 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
   std::tuple<int, std::string> parse(int& argc, char**& argv);
   std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
 
+  static std::unique_ptr<ArgConfig> construct(std::unique_ptr<ArgConfig> arg);
   std::string name() override { return "ArgConfig"; }
 
 public:

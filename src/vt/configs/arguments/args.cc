@@ -61,6 +61,10 @@ namespace {
   std::vector<std::string> arg_trace_mpi;
 }
 
+/*static*/ std::unique_ptr<ArgConfig> ArgConfig::construct(std::unique_ptr<ArgConfig> arg) {
+  return arg;
+}
+
 void ArgConfig::addColorArgs(CLI::App& app) {
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";

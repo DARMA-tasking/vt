@@ -111,9 +111,8 @@ Runtime::Runtime(
   // n.b. ref-update of args with pass-through arguments
   // (pass-through arguments are neither for VT or MPI_Init)
 
-  theArgConfig = new arguments::ArgConfig(); // FIXME! use unique_ptr instead of new, use construct(...) to move this in place and manage lifetime properly
   std::tuple<int, std::string> result =
-    theArgConfig->parse(/*out*/ argc, /*out*/ argv);
+    argConfig_->parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);
 
   if (exit_code not_eq -1) {
@@ -262,20 +261,20 @@ void Runtime::pauseForDebugger() {
 }
 
 void Runtime::setupSignalHandler() {
-  if (!theArgConfig->vt_no_sigsegv) {
+  if (!argConfig_->vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
   }
   signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }
 
 void Runtime::setupSignalHandlerINT() {
-  if (!theArgConfig->vt_no_sigint) {
+  if (!argConfig_->vt_no_sigint) {
     signal(SIGINT, Runtime::sigHandlerINT);
   }
 }
 
 void Runtime::setupTerminateHandler() {
-  if (!theArgConfig->vt_no_terminate) {
+  if (!argConfig_->vt_no_terminate) {
     std::set_terminate(termHandler);
   }
 }
@@ -330,10 +329,10 @@ bool Runtime::tryFinalize() {
 
 bool Runtime::needStatsRestartReader() {
   #if vt_check_enabled(lblite)
-    if (theArgConfig->vt_lb_stats) {
+    if (argConfig_->vt_lb_stats) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
-      if (theArgConfig->vt_lb_name == lbNames[mapLB]) {
+      if (argConfig_->vt_lb_name == lbNames[mapLB]) {
         return true;
       }
     }
@@ -538,12 +537,12 @@ void Runtime::setup() {
 }
 
 void Runtime::setupArgs() {
-  std::vector<char*>& mpi_args = theArgConfig->mpi_init_args;
+  std::vector<char*>& mpi_args = argConfig_->mpi_init_args;
   user_argc_ = mpi_args.size() + 1;
   user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
 
   int i = 0;
-  user_argv_[i++] = theArgConfig->argv_prog_name;
+  user_argv_[i++] = argConfig_->argv_prog_name;
   for (char*& arg : mpi_args) {
     user_argv_[i++] = arg;
   }
@@ -566,7 +565,11 @@ void Runtime::initializeComponents() {
 
   p_ = std::make_unique<ComponentPack>();
 
-  p_->registerComponent<arguments::ArgConfig>(&theArgConfig, Deps<>{});
+  p_->registerComponent<arguments::ArgConfig>(
+    &theArgConfig,
+    Deps<>{},
+    std::move(argConfig_)
+  );
 
   p_->registerComponent<ctx::Context>(
     &theContext,
