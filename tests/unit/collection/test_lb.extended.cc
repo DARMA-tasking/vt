@@ -118,9 +118,7 @@ TEST_P(TestLoadBalancer, test_load_balancer_1) {
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(
-  LoadBalancerExplode, TestLoadBalancer,
-  ::testing::Values(
+auto balancers = ::testing::Values(
     "RandomLB",
     "RotateLB",
     "HierarchicalLB",
@@ -129,7 +127,10 @@ INSTANTIATE_TEST_SUITE_P(
 #   if vt_check_enabled(zoltan)
     , "ZoltanLB"
 #   endif
-  )
+);
+
+INSTANTIATE_TEST_SUITE_P(
+  LoadBalancerExplode, TestLoadBalancer, balancers
 );
 
 }}} // end namespace vt::tests::unit
