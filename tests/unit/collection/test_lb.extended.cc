@@ -54,7 +54,7 @@
 
 namespace vt { namespace tests { namespace unit {
 
-static constexpr int const num_elms = 1024;
+static constexpr int const num_elms = 64;
 static constexpr int const num_phases = 10;
 
 struct MyCol : vt::Collection<MyCol,vt::Index1D> {
