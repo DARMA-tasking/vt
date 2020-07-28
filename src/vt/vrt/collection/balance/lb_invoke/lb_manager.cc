@@ -141,7 +141,7 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
 }
 
 template <typename LB>
-objgroup::proxy::Proxy<LB>
+void
 LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto proxy = theObjGroup()->makeCollective<LB>();
   auto strat = proxy.get();
@@ -192,8 +192,6 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   });
 
   runSchedulerThrough(migrate_epoch);
-
-  return proxy;
 }
 
 void LBManager::collectiveImpl(
