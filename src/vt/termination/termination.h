@@ -694,6 +694,5 @@ private:
 }} // end namespace vt::term
 
 #include "vt/termination/termination.impl.h"
-#include "vt/termination/term_scope.impl.h"
 
 #endif /*INCLUDED_TERMINATION_TERMINATION_H*/
