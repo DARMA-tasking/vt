@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  build:
+  build_optional:
 
     if: github.event.label.name == 'runextendedtests'
     runs-on: ubuntu-latest
