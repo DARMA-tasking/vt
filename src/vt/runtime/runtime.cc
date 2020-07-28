@@ -564,6 +564,9 @@ void Runtime::initializeComponents() {
   using component::Deps;
 
   p_ = std::make_unique<ComponentPack>();
+# if vt_check_enabled(trace_enabled)
+    std::string const prog_name = argConfig_->prog_name;
+# endif
 
   p_->registerComponent<arguments::ArgConfig>(
     &theArgConfig,
@@ -603,7 +606,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<trace::Trace>(&theTrace, Deps<
       ctx::Context  // Everything depends on theContext
     >{},
-    theArgConfig->prog_name
+    prog_name
   );
 # endif
 
