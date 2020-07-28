@@ -84,7 +84,17 @@ private:
   PendingSend pending_; /**< The \c PendingSend to be released */
 };
 
+/**
+ * \struct MergedClosure dependent_send_chain.h vt/messaging/dependent_send_chain.h
+ *
+ * \brief A copyable closure that holds a \c PendingSend that will be released
+ * when all shared instances of this closure are destroyed.
+ */
 struct MergedClosure {
+  /**
+   * \brief Construct from a shared pointer to a \c PendingSend
+   * \param[in] shared_state the \c PendingSend that will be released
+   */
   explicit MergedClosure(std::shared_ptr<PendingSend> shared_state)
     : shared_state_(shared_state)
   {}
@@ -131,6 +141,14 @@ class DependentSendChain final {
     last_epoch_ = new_epoch;
   }
 
+  /**
+   * \brief Add a task that is dependent on two DependentSendChain instances
+   *
+   * \param[in] a the first DependentSendChain
+   * \param[in] b the second DependentSendChain
+   * \param[in] new_epoch the epoch the task is being added to
+   * \param[in] link the \c PendingSend to release when complete
+   */
   static void mergeChainStep(DependentSendChain &a, DependentSendChain &b,
     EpochType new_epoch, PendingSend&& link) {
     a.checkInit();
