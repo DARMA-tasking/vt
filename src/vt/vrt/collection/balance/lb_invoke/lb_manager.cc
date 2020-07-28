@@ -151,38 +151,27 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
 
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
 
-  EpochType model_epoch = theTerm()->makeEpochCollective("LBManager::model_epoch");
-  EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
-  EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
+  runInEpochCollective([=] {
+    model_->updateLoads(phase);
+  });
 
-  theMsg()->pushEpoch(model_epoch);
-  model_->updateLoads(phase);
-  theMsg()->popEpoch(model_epoch);
-  theTerm()->finishedEpoch(model_epoch);
-
-  theTerm()->addAction(model_epoch, [=] {
+  runInEpochCollective([=] {
     vt_debug_print(
       lb, node,
       "LBManager: running strategy\n"
     );
-    theMsg()->pushEpoch(balance_epoch);
     strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcComm()->back());
-    theMsg()->popEpoch(balance_epoch);
-    theTerm()->finishedEpoch(balance_epoch);
   });
 
-  theTerm()->addAction(balance_epoch, [=] {
+  runInEpochCollective([=] {
     vt_debug_print(
       lb, node,
       "LBManager: starting migrations\n"
     );
-    theMsg()->pushEpoch(migrate_epoch);
     strat->applyMigrations(strat->getTransfers());
-    theMsg()->popEpoch(migrate_epoch);
-    theTerm()->finishedEpoch(migrate_epoch);
   });
 
-  theTerm()->addAction(migrate_epoch, [=] {
+  runInEpochCollective([=] {
     vt_debug_print(
       lb, node,
       "LBManager: finished migrations\n"
@@ -190,8 +179,6 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
     theProcStats()->startIterCleanup();
     this->finishedRunningLB(phase);
   });
-
-  runSchedulerThrough(migrate_epoch);
 }
 
 void LBManager::collectiveImpl(
