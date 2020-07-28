@@ -81,6 +81,7 @@
 #include "vt/runnable/collection.h"
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <tuple>
 #include <utility>

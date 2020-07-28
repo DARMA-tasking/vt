@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
 #include "vt/sequence/sequencer_headers.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace seq {
 

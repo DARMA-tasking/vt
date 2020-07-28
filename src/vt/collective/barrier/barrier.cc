@@ -45,6 +45,7 @@
 #include "vt/collective/barrier/barrier.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace collective { namespace barrier {
 

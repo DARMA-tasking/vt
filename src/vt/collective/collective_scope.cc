@@ -49,6 +49,7 @@
 #include "vt/collective/collective_scope.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace collective {
 

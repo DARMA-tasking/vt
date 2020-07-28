@@ -51,6 +51,7 @@
 #include "vt/termination/dijkstra-scholten/ds.h"
 #include "vt/messaging/active.h"
 #include "vt/context/context.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace term { namespace ds {
 
