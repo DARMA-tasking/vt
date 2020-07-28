@@ -122,7 +122,7 @@ auto balancers = ::testing::Values(
     "RandomLB",
     "RotateLB",
     "HierarchicalLB",
-    //"GossipLB",
+    "GossipLB",
     "GreedyLB"
 #   if vt_check_enabled(zoltan)
     , "ZoltanLB"

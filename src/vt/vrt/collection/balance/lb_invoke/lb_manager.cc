@@ -211,7 +211,7 @@ void LBManager::collectiveImpl(
     case LBType::HierarchicalLB: makeLB<lb::HierarchicalLB>(msg); break;
     case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
     case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
-    case LBType::GossipLB:       vtAbort("GossipLB is currently broken"); makeLB<lb::GossipLB>(msg);       break;
+    case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
     case LBType::StatsMapLB:     makeLB<lb::StatsMapLB>(msg);     break;
     case LBType::RandomLB:       makeLB<lb::RandomLB>(msg);       break;
 #   if vt_check_enabled(zoltan)
