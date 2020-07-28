@@ -193,13 +193,6 @@ struct TestTermChaining : TestParallelHarness {
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
-    EpochType epoch3 = theTerm()->makeEpochRooted();
-    vt::theMsg()->pushEpoch(epoch3);
-    auto msg3 = makeMessage<TestMsg>();
-    chain.add(epoch3, theMsg()->broadcastMsg<TestMsg, test_handler_bcast>(msg3.get()));
-    vt::theMsg()->popEpoch(epoch3);
-    vt::theTerm()->finishedEpoch(epoch3);
-
     chain.done();
   }
 };
@@ -267,7 +260,7 @@ TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
     theTerm()->finishedEpoch(epoch);
     theMsg()->popEpoch(epoch);
     vt::runSchedulerThrough(epoch);
-    // EXPECT_EQ(handler_count, 3);
+    EXPECT_EQ(handler_count, 2);
   }
 }
 
