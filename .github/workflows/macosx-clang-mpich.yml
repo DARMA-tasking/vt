@@ -32,7 +32,7 @@ jobs:
           ${{ runner.os }}-macosx-clang-8-ccache-
     - name: Install Dependencies
       shell: bash
-      run: brew bundle --file=ci/Brewfile
+      run: brew install && brew bundle --file=ci/Brewfile
     - name: Modify hosts file
       shell: bash
       run: echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
