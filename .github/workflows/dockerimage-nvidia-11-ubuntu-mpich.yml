@@ -1,3 +1,7 @@
+###############################################################################
+############## Warning this is a generated file---do not modify ###############
+###############################################################################
+
 name: PR tests (nvidia cuda 11.0, ubuntu, mpich)
 
 on:
@@ -11,6 +15,7 @@ jobs:
 
   build:
 
+
     runs-on: ubuntu-latest
 
     env:
@@ -21,6 +26,7 @@ jobs:
       COMPILER: nvcc-11
       BUILD_TYPE: release
       ULIMIT_CORE: 0
+      CODE_COVERAGE: 0
       VT_LB: 1
       VT_TRACE: 1
       VT_TRACE_RT: 0
@@ -28,6 +34,8 @@ jobs:
       VT_DOCS: 0
       VT_ASAN: 0
       VT_POOL: 0
+      VT_EXTENDED_TESTS: ${{ github.event_name != 'pull_request' }}
+      VT_ZOLTAN: 0
       CACHE: ~/.local/cache/
 
     steps:
