@@ -62,7 +62,7 @@ if (not $mpidef_file or not $output_file) {
 
 # MPI definitions that should always be ignored.
 # The most reasonable reason for being in this list is that they do
-# not exist on all platforms or are inconsitently implemented as macros, etc.
+# not exist on all platforms or are inconsistently implemented as macros, etc.
 # - MPI_Aint_(add|diff) - in OpenMPI 1.10 as macros
 # - MPI_File_(iwrite|iread)_(all|at_all) - missing in OpenMPI 1.10
 # - MPI_Wtime/Wtick/Get_address - trivially non-interesting infrastructure.
@@ -120,12 +120,13 @@ sub extract_defs {
 }
 
 # MPI calls that can be 'safely' used without being guarded.
-# - Common idempotent 'get' calls
+# - Common idempotent 'get' calls.
+#   (MPI_Get and MPI_Get_accumulate are guarded.)
 my @no_guard_patterns = qw(
     MPI_Comm_get_.*
     MPI_Comm_rank
     MPI_Comm_size
-    MPI_Get.*(?<!_accumulate)
+    MPI_Get_.*(?<!accumulate)
 );
 
 sub should_guard_call {
