@@ -194,12 +194,43 @@ class CollectionChainSet final {
     theTerm()->finishedEpoch(epoch);
   }
 
+  /**
+   * \brief The next collective step of both CollectionChainSets
+   * to execute across all resident elements across all nodes.
+   *
+   * This function ensures that the step is dependent on the previous step
+   * of both chainsets a and b. Additionally any additional steps in each
+   * chainset will occur after the merged step.
+   *
+   * \pre Each index in CollectionChainset a must exist in CollectionHainset b
+   *
+   * \param[in] a the first chainset
+   * \param[in] b the second chainset
+   * \param[in] step_action the next step to be executed, dependent on the
+   *            previous step of chainsets a and b
+   */
   static void mergeStepCollective(CollectionChainSet &a, CollectionChainSet &b,
    std::function<PendingSend(Index)> step_action
   ) {
     mergeStepCollective( "", a, b, step_action);
   }
 
+  /**
+   * \brief The next collective step of both CollectionChainSets
+   * to execute across all resident elements across all nodes.
+   *
+   * This function ensures that the step is dependent on the previous step
+   * of both chainsets a and b. Additionally any additional steps in each
+   * chainset will occur after the merged step.
+   *
+   * \pre Each index in CollectionChainset a must exist in CollectionHainset b
+   *
+   * \param[in] label the label for the step
+   * \param[in] a the first chainset
+   * \param[in] b the second chainset
+   * \param[in] step_action the next step to be executed, dependent on the
+   *            previous step of chainsets a and b
+   */
   static void mergeStepCollective(
    std::string const& label,
    CollectionChainSet &a, CollectionChainSet &b,
