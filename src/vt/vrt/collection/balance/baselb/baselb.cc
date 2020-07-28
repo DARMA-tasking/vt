@@ -74,10 +74,8 @@ void BaseLB::startLB(
 
   importProcessorData(in_comm_stats);
 
-  term::TerminationDetector::Scoped::collective(
-    [this] { computeStatistics(); },
-    [this] { finishedStats(); }
-  );
+  runInEpochCollective([this] { computeStatistics(); });
+  runInEpochCollective([this] { finishedStats();     });
 }
 
 BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) const {
