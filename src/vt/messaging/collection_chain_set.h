@@ -202,7 +202,7 @@ class CollectionChainSet final {
    * of both chainsets a and b. Additionally any additional steps in each
    * chainset will occur after the merged step.
    *
-   * \pre Each index in CollectionChainset a must exist in CollectionHainset b
+   * \pre Each index in CollectionChainset a must exist in CollectionChainset b
    *
    * \param[in] a the first chainset
    * \param[in] b the second chainset
@@ -223,7 +223,7 @@ class CollectionChainSet final {
    * of both chainsets a and b. Additionally any additional steps in each
    * chainset will occur after the merged step.
    *
-   * \pre Each index in CollectionChainset a must exist in CollectionHainset b
+   * \pre Each index in CollectionChainset a must exist in CollectionChainset b
    *
    * \param[in] label the label for the step
    * \param[in] a the first chainset
