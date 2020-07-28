@@ -194,7 +194,6 @@ class CollectionChainSet final {
     theTerm()->finishedEpoch(epoch);
   }
 
-
   static void mergeStepCollective(CollectionChainSet &a, CollectionChainSet &b,
    std::function<PendingSend(Index)> step_action
   ) {
@@ -206,18 +205,21 @@ class CollectionChainSet final {
    CollectionChainSet &a, CollectionChainSet &b,
    std::function<PendingSend(Index)> step_action
   ) {
-   auto epoch = theTerm()->makeEpochCollective(label);
-   vt::theMsg()->pushEpoch(epoch);
+    auto epoch = theTerm()->makeEpochCollective(label);
+    vt::theMsg()->pushEpoch(epoch);
 
-   for (auto &entry : a.chains_) {
+    for (auto &entry : a.chains_) {
      auto& idx = entry.first;
      auto& chaina = entry.second;
-     auto& chainb = b.chains_[entry.first];
-     DependentSendChain::mergeChainStep(chaina, chainb, epoch, step_action(idx));
-   }
+     auto chainb_pos = b.chains_.find(entry.first);
+     vtAssert(chainb_pos != b.chains_.end(), fmt::format("index {} must be present in chainset b", entry.first));
 
-   vt::theMsg()->popEpoch(epoch);
-   theTerm()->finishedEpoch(epoch);
+     auto& chainb = chainb_pos->second;
+     DependentSendChain::mergeChainStep(chaina, chainb, epoch, step_action(idx));
+    }
+
+    vt::theMsg()->popEpoch(epoch);
+    theTerm()->finishedEpoch(epoch);
   }
 
   /**
