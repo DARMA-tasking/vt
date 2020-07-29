@@ -1555,23 +1555,17 @@ private:
   NodeType this_node_                                     = uninitialized_destination;
 
 private:
-  // Diagnostic counters for sent counts/bytes
-  diagnostic::Counter amSentCount;
-  diagnostic::Counter dmSentCount;
-  diagnostic::Gauge amSentBytesGauge;
-  diagnostic::Gauge dmSentBytesGauge;
+  // Diagnostic counter gauge combos for sent counts/bytes
+  diagnostic::CounterGauge amSentCounterGauge;
+  diagnostic::CounterGauge dmSentCounterGauge;
 
   // Diagnostic counters for recv counts/bytes
-  diagnostic::Counter amRecvCount;
-  diagnostic::Counter dmRecvCount;
-  diagnostic::Gauge amRecvBytesGauge;
-  diagnostic::Gauge dmRecvBytesGauge;
+  diagnostic::CounterGauge amRecvCounterGauge;
+  diagnostic::CounterGauge dmRecvCounterGauge;
 
   // Diagnostic counters for posted irecv counts/bytes
-  diagnostic::Counter amPostedCount;
-  diagnostic::Counter dmPostedCount;
-  diagnostic::Gauge amPostedBytesGauge;
-  diagnostic::Gauge dmPostedBytesGauge;
+  diagnostic::CounterGauge amPostedCounterGauge;
+  diagnostic::CounterGauge dmPostedCounterGauge;
 
   // Diagnostic counters for counting various actions
   diagnostic::Counter amHandlerCount;
@@ -1582,9 +1576,7 @@ private:
   diagnostic::Counter tdRecvCount;
 
   // Diagnostic counters for counting forwarded messages
-  diagnostic::Counter amForwardCount;
-  diagnostic::Gauge amForwardBytesGauge;
-
+  diagnostic::CounterGauge amForwardCounterGauge;
 };
 
 }} // end namespace vt::messaging
