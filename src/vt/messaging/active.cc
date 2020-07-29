@@ -78,67 +78,67 @@ ActiveMessenger::ActiveMessenger()
   pushEpoch(term::any_epoch_sentinel);
 
   // Register counters for AM/DM message sends and number of bytes
-  amSentCount = registerCounter<int64_t>("AM_sent", "active messages sent");
-  dmSentCount = registerCounter<int64_t>("DM_sent", "data messages sent");
+  amSentCount = registerCounter("AM_sent", "active messages sent");
+  dmSentCount = registerCounter("DM_sent", "data messages sent");
 
-  amSentBytesGauge = registerGauge<int64_t>(
+  amSentBytesGauge = registerGauge(
     "AM_sent_bytes", "active messages bytes sent", UnitType::Bytes
   );
-  dmSentBytesGauge = registerGauge<int64_t>(
+  dmSentBytesGauge = registerGauge(
     "DM_sent_bytes", "data messages bytes sent", UnitType::Bytes
   );
 
   // Register counters for AM/DM message receives and number of bytes
-  amRecvCount = registerCounter<int64_t>("AM_recv", "active messages received");
-  dmRecvCount = registerCounter<int64_t>("DM_recv", "data messages received");
+  amRecvCount = registerCounter("AM_recv", "active messages received");
+  dmRecvCount = registerCounter("DM_recv", "data messages received");
 
-  amRecvBytesGauge = registerGauge<int64_t>(
+  amRecvBytesGauge = registerGauge(
     "AM_recv_bytes", "active message bytes received", UnitType::Bytes
   );
-  dmRecvBytesGauge = registerGauge<int64_t>(
+  dmRecvBytesGauge = registerGauge(
     "DM_recv_bytes", "data message bytes received", UnitType::Bytes
   );
 
   // Register counters for AM/DM message MPI_Irecv posts This is useful as a
   // debugging diagnostic if the program hangs. Checking this against AM_recv,
   // etc will inform whether if there are outstanding posted receives
-  amPostedCount = registerCounter<int64_t>(
+  amPostedCount = registerCounter(
     "AM_recv_posted", "active message irecvs posted"
   );
-  dmPostedCount = registerCounter<int64_t>(
+  dmPostedCount = registerCounter(
     "DM_recv_posted", "data message irecvs posted"
   );
 
-  amPostedBytesGauge = registerGauge<int64_t>(
+  amPostedBytesGauge = registerGauge(
     "AM_recv_posted_bytes", "active message irecv posted bytes", UnitType::Bytes
   );
-  dmPostedBytesGauge = registerGauge<int64_t>(
+  dmPostedBytesGauge = registerGauge(
     "DM_recv_posted_bytes", "data message irecv posted bytes", UnitType::Bytes
   );
 
   // Number of AM handlers executed
-  amHandlerCount = registerCounter<int64_t>(
+  amHandlerCount = registerCounter(
     "AM_handlers", "active message handlers"
   );
 
   // Number of broadcast messages that this node sent
-  bcastsSentCount = registerCounter<int64_t>(
+  bcastsSentCount = registerCounter(
     "bcasts_sent", "active message broadcasts sent"
   );
 
   // Number of MPI_Test polls for AM/DM
-  amPollCount = registerCounter<int64_t>("AM_polls", "active message polls");
-  dmPollCount = registerCounter<int64_t>("DM_polls", "data message polls");
+  amPollCount = registerCounter("AM_polls", "active message polls");
+  dmPollCount = registerCounter("DM_polls", "data message polls");
 
   // Number of termination message sent/received
-  tdSentCount = registerCounter<int64_t>("TD_sent", "termination messages sent");
-  tdRecvCount = registerCounter<int64_t>("TD_recv", "termination messages recv");
+  tdSentCount = registerCounter("TD_sent", "termination messages sent");
+  tdRecvCount = registerCounter("TD_recv", "termination messages recv");
 
   // Number of messages that were purely forwarded to another node by this AM
-  amForwardCount = registerCounter<int64_t>(
+  amForwardCount = registerCounter(
     "AM_forwarded", "messages forwarded (and not delivered)"
   );
-  amForwardBytesGauge = registerGauge<int64_t>(
+  amForwardBytesGauge = registerGauge(
     "AM_forwarded_bytes", "messages forwarded (and not delivered)",
     UnitType::Bytes
   );

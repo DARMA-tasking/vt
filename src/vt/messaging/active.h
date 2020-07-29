@@ -1556,34 +1556,34 @@ private:
 
 private:
   // Diagnostic counters for sent counts/bytes
-  diagnostic::Counter<int64_t> amSentCount;
-  diagnostic::Counter<int64_t> dmSentCount;
-  diagnostic::Gauge<int64_t> amSentBytesGauge;
-  diagnostic::Gauge<int64_t> dmSentBytesGauge;
+  diagnostic::Counter amSentCount;
+  diagnostic::Counter dmSentCount;
+  diagnostic::Gauge amSentBytesGauge;
+  diagnostic::Gauge dmSentBytesGauge;
 
   // Diagnostic counters for recv counts/bytes
-  diagnostic::Counter<int64_t> amRecvCount;
-  diagnostic::Counter<int64_t> dmRecvCount;
-  diagnostic::Gauge<int64_t> amRecvBytesGauge;
-  diagnostic::Gauge<int64_t> dmRecvBytesGauge;
+  diagnostic::Counter amRecvCount;
+  diagnostic::Counter dmRecvCount;
+  diagnostic::Gauge amRecvBytesGauge;
+  diagnostic::Gauge dmRecvBytesGauge;
 
   // Diagnostic counters for posted irecv counts/bytes
-  diagnostic::Counter<int64_t> amPostedCount;
-  diagnostic::Counter<int64_t> dmPostedCount;
-  diagnostic::Gauge<int64_t> amPostedBytesGauge;
-  diagnostic::Gauge<int64_t> dmPostedBytesGauge;
+  diagnostic::Counter amPostedCount;
+  diagnostic::Counter dmPostedCount;
+  diagnostic::Gauge amPostedBytesGauge;
+  diagnostic::Gauge dmPostedBytesGauge;
 
   // Diagnostic counters for counting various actions
-  diagnostic::Counter<int64_t> amHandlerCount;
-  diagnostic::Counter<int64_t> bcastsSentCount;
-  diagnostic::Counter<int64_t> amPollCount;
-  diagnostic::Counter<int64_t> dmPollCount;
-  diagnostic::Counter<int64_t> tdSentCount;
-  diagnostic::Counter<int64_t> tdRecvCount;
+  diagnostic::Counter amHandlerCount;
+  diagnostic::Counter bcastsSentCount;
+  diagnostic::Counter amPollCount;
+  diagnostic::Counter dmPollCount;
+  diagnostic::Counter tdSentCount;
+  diagnostic::Counter tdRecvCount;
 
   // Diagnostic counters for counting forwarded messages
-  diagnostic::Counter<int64_t> amForwardCount;
-  diagnostic::Gauge<int64_t> amForwardBytesGauge;
+  diagnostic::Counter amForwardCount;
+  diagnostic::Gauge amForwardBytesGauge;
 
 };
 
