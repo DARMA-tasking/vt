@@ -68,7 +68,6 @@ public:
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
 private:
-  int num_subphases_;
   const double power_;
 }; // class Norm
 
