@@ -128,7 +128,7 @@ which `docker-compose` will read.
 #             clang-3.9, clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
 #             clang-9, clang-10,
 #             icc-18, icc-19,
-#             nvcc-10}
+#             nvcc-10, nvcc-11}
 #   REPO=lifflander1/vt
 #   UBUNTU={18.04, 20.04}
 #   ULIMIT_CORE=0
@@ -141,10 +141,14 @@ which `docker-compose` will read.
 #   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
 #   VT_ASAN=0            # Enable address sanitizer
 #   VT_EXTENDED_TESTS=1  # Build all the extended testing
+#   VT_ZOLTAN=0          # Build with Zoltan enabled
 #   BUILD_TYPE=release   # CMake build type
+#   CODE_COVERAGE=0      # Enable generation of code coverage reports
 ```
 
-With these set, run the following for a non-interactive build with ubuntu:
+With these set, one may run the following for a non-interactive build with
+ubuntu. Or, to speed up the build process, the base container can be pulled for
+many of the common configurations: `docker-compose pull ubuntu-cpp`.
 
 ```bash
 $ cd vt
