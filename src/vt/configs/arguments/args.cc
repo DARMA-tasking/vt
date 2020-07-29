@@ -370,6 +370,26 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   xy->group(debugLB);
 }
 
+void ArgConfig::addDiagnosticArgs(CLI::App& app) {
+  /*
+   * Flags for controlling diagnostic collection and output
+   */
+  auto diag = "Disable diagnostic collection";
+  auto sum  = "Print diagnostic summary table to stdout at finalization";
+  auto file = "Output diagnostic summary table to text file";
+  auto csv  = "Output diagnostic summary table to a comma-separated file";
+  auto a = app.add_flag("--vt_diag_disable",            ArgConfig::vt_diag_disable,          diag);
+  auto b = app.add_flag("--vt_diag_print_summary",      ArgConfig::vt_diag_print_summary,    sum);
+  auto c = app.add_option("--vt_diag_summary_file",     ArgConfig::vt_diag_summary_file,     file);
+  auto d = app.add_option("--vt_diag_summary_csv_file", ArgConfig::vt_diag_summary_csv_file, csv);
+
+  auto diagnosticGroup = "Diagnostics";
+  a->group(diagnosticGroup);
+  b->group(diagnosticGroup);
+  c->group(diagnosticGroup);
+  d->group(diagnosticGroup);
+}
+
 void ArgConfig::addTerminationArgs(CLI::App& app) {
   auto hang         = "Disable termination hang detection";
   auto hang_freq    = "The number of tree traversals before a hang is detected";
@@ -505,6 +525,7 @@ std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
   addTraceArgs(app);
   addDebugPrintArgs(app);
   addLbArgs(app);
+  addDiagnosticArgs(app);
   addTerminationArgs(app);
   addDebuggerArgs(app);
   addUserArgs(app);
