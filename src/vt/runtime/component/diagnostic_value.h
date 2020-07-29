@@ -165,9 +165,9 @@ struct DiagnosticValueWrapper {
   }
 
   /**
-   * \internal \brief Get min value (use after reduction)
+   * \internal \brief Get max value (use after reduction)
    *
-   * \return the min value
+   * \return the max value
    */
   T max() const { return max_; }
 
