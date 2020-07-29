@@ -54,6 +54,7 @@
 #include "vt/scheduler/priority.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
 #include "vt/runtime/mpi_access.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace messaging {
 

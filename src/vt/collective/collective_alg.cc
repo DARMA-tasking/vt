@@ -43,6 +43,7 @@
 */
 
 #include "vt/collective/collective_alg.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <cstdint>
 

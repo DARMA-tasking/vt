@@ -263,7 +263,7 @@ protected:
    * \return objgroup proxy to the new load balancer
    */
   template <typename LB>
-  objgroup::proxy::Proxy<LB> makeLB(MsgSharedPtr<StartLBMsg> msg);
+  void makeLB(MsgSharedPtr<StartLBMsg> msg);
 
 private:
   std::size_t num_invocations_             = 0;

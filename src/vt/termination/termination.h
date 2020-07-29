@@ -205,70 +205,6 @@ struct TerminationDetector :
   void freeEpoch(EpochType const& epoch);
 
 public:
-  /**
-   * \struct Scoped
-   *
-   * \brief Interface for scoped epochs using C++ lexical scopes to encapsulate
-   * epoch regimes
-   */
-  struct Scoped {
-    /**
-     * \brief Run closure in rooted epoch to detect termination of all its work
-     *
-     * \param[in] use_ds whether to use DS algorithm or not
-     * \param[in] closure The action to generate the initial work, from which
-     * all transitively generated work will be part of the return epoch
-     *
-     * \return the epoch created for it
-     */
-    static EpochType rooted(bool use_ds, ActionType closure);
-
-    /**
-     * \brief Run closure in rooted epoch to detect termination of all its work
-     *
-     * \param[in] use_ds whether to use DS algorithm or not
-     * \param[in] closure The action to generate the initial work, from which
-     * all transitively generated work will be part of the return epoch
-     * \param[in] action action to execute after closure terminates
-     *
-     * \return the epoch created for it
-     */
-    static EpochType rooted(bool use_ds, ActionType closure, ActionType action);
-
-    /**
-     * \brief Collectively run closure in collective epoch to detect termination
-     * of all its work
-     *
-     * \param[in] closure The action to generate the initial work, from which
-     * all transitively generated work will be part of the return epoch
-     *
-     * \return the epoch created for it
-     */
-    static EpochType collective(ActionType closure);
-
-    /**
-     * \brief Collectively run closure in collective epoch to detect termination
-     * of all its work
-     *
-     * \param[in] closure The action to generate the initial work, from which
-     * all transitively generated work will be part of the return epoch
-     * \param[in] action action to execute after closure terminates
-     *
-     * \return the epoch created for it
-     */
-    static EpochType collective(ActionType closure, ActionType action);
-
-    /**
-     * \brief Run a rooted sequence of actions with termination in-between them
-     *
-     * \param[in] use_ds whether to use DS
-     * \param[in] closures pack of closures to sequence
-     */
-    template <typename... Actions>
-    static void rootedSeq(bool use_ds, Actions... closures);
-  } scope;
-
-public:
   /*
    * Interface for creating new epochs for termination detection
    */
@@ -758,6 +694,5 @@ private:
 }} // end namespace vt::term
 
 #include "vt/termination/termination.impl.h"
-#include "vt/termination/term_scope.impl.h"
 
 #endif /*INCLUDED_TERMINATION_TERMINATION_H*/

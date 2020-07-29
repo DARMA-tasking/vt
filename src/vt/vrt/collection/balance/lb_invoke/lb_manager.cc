@@ -141,7 +141,7 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
 }
 
 template <typename LB>
-objgroup::proxy::Proxy<LB>
+void
 LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto proxy = theObjGroup()->makeCollective<LB>();
   auto strat = proxy.get();
@@ -149,38 +149,29 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
   auto phase = msg->getPhase();
 
-  EpochType model_epoch = theTerm()->makeEpochCollective("LBManager::model_epoch");
-  EpochType balance_epoch = theTerm()->makeEpochCollective("LBManager::balance_epoch");
-  EpochType migrate_epoch = theTerm()->makeEpochCollective("LBManager::migrate_epoch");
+  destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
 
-  theMsg()->pushEpoch(model_epoch);
-  model_->updateLoads(phase);
-  theMsg()->popEpoch(model_epoch);
-  theTerm()->finishedEpoch(model_epoch);
+  runInEpochCollective([=] {
+    model_->updateLoads(phase);
+  });
 
-  theTerm()->addAction(model_epoch, [=] {
+  runInEpochCollective([=] {
     vt_debug_print(
       lb, node,
       "LBManager: running strategy\n"
     );
-    theMsg()->pushEpoch(balance_epoch);
     strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcComm()->back());
-    theMsg()->popEpoch(balance_epoch);
-    theTerm()->finishedEpoch(balance_epoch);
   });
 
-  theTerm()->addAction(balance_epoch, [=] {
+  runInEpochCollective([=] {
     vt_debug_print(
       lb, node,
       "LBManager: starting migrations\n"
     );
-    theMsg()->pushEpoch(migrate_epoch);
     strat->applyMigrations(strat->getTransfers());
-    theMsg()->popEpoch(migrate_epoch);
-    theTerm()->finishedEpoch(migrate_epoch);
   });
 
-  theTerm()->addAction(migrate_epoch, [=] {
+  runInEpochCollective([=] {
     vt_debug_print(
       lb, node,
       "LBManager: finished migrations\n"
@@ -188,12 +179,6 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
     theProcStats()->startIterCleanup();
     this->finishedRunningLB(phase);
   });
-
-  destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
-
-  runSchedulerThrough(migrate_epoch);
-
-  return proxy;
 }
 
 void LBManager::collectiveImpl(
@@ -226,7 +211,7 @@ void LBManager::collectiveImpl(
     case LBType::HierarchicalLB: makeLB<lb::HierarchicalLB>(msg); break;
     case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
     case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
-    case LBType::GossipLB:       vtAbort("GossipLB is currently broken"); makeLB<lb::GossipLB>(msg);       break;
+    case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
     case LBType::StatsMapLB:     makeLB<lb::StatsMapLB>(msg);     break;
     case LBType::RandomLB:       makeLB<lb::RandomLB>(msg);       break;
 #   if vt_check_enabled(zoltan)

@@ -121,19 +121,19 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
   }
 
   if (root < num_nodes) {
-    if (my_node == root) {
-      for (int i = 0; i < num_msg_sent; i++) {
-        auto msg = makeMessage<PutTestMessage>();
-        msg->setPut(&put_payload[0], put_size * sizeof(int));
-        theMsg()->broadcastMsg<PutTestMessage, test_handler>(msg.get());
-      }
-    }
-
-    theTerm()->addAction([=]{
-      if (my_node != root) {
-        ASSERT_TRUE(handler_count == num_msg_sent);
+    runInEpochCollective([&]{
+      if (my_node == root) {
+        for (int i = 0; i < num_msg_sent; i++) {
+          auto msg = makeMessage<PutTestMessage>();
+          msg->setPut(&put_payload[0], put_size * sizeof(int));
+          theMsg()->broadcastMsg<PutTestMessage, test_handler>(msg.get());
+        }
       }
     });
+
+    if (my_node != root) {
+      ASSERT_TRUE(handler_count == num_msg_sent);
+    }
   }
 
   // Spin here so test_vec does not go out of scope before the send completes

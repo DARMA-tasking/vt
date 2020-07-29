@@ -49,6 +49,7 @@
 #include "vt/messaging/message.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/collective/tree/tree.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <memory>
 #include <cassert>
