@@ -55,6 +55,7 @@
 
 #include <map>
 #include <string>
+#include <fstream>
 
 namespace vt { namespace runtime {
 
@@ -128,98 +129,114 @@ void Runtime::computeAndPrintDiagnostics() {
     });
   });
 
-  if (theContext->getNode() == 0) {
-    fort::utf8_table table;
-    table.set_border_style(FT_BOLD_STYLE); //FT_BOLD2_STYLE
-    table << fort::header
-          << "Component"
-          << "Metric"
-          << "Description"
-          << "Type"
-          << "Total"
-          << "Mean"
-          << "Min"
-          << "Max"
-          << "Std"
-          << "Histogram"
-          << fort::endr;
-    //table.row(0).set_cell_content_text_style(fort::text_style::underlined);
+  using Arg = arguments::ArgConfig;
 
-    table.row(0).set_cell_content_text_style(fort::text_style::bold);
-    table.row(0).set_cell_text_align(fort::text_align::center);
-    table.column(0).set_cell_text_align(fort::text_align::center);
+  if (Arg::vt_diag_print_summary or Arg::vt_diag_summary_file != "") {
+    if (theContext->getNode() == 0) {
+      fort::utf8_table table;
+      table.set_border_style(FT_BOLD_STYLE); //FT_BOLD2_STYLE
+      table << fort::header
+            << "Component"
+            << "Metric"
+            << "Description"
+            << "Type"
+            << "Total"
+            << "Mean"
+            << "Min"
+            << "Max"
+            << "Std"
+            << "Histogram"
+            << fort::endr;
+      //table.row(0).set_cell_content_text_style(fort::text_style::underlined);
 
-    for (auto&& elm : component_vals) {
-      auto comp = elm.first;
-      auto& map = elm.second;
-      bool first = true;
-      for (auto&& diag_elm : map) {
-        auto diag = diag_elm.first;
-        auto& str = diag_elm.second;
+      table.row(0).set_cell_content_text_style(fort::text_style::bold);
+      table.row(0).set_cell_text_align(fort::text_align::center);
+      table.column(0).set_cell_text_align(fort::text_align::center);
 
-        // skip invalid/sentinel values unless it's a Sum, which might be useful
-        // for analysis to inform that the value is zero
-        if (
-          not str->is_valid_value_ and
-          not (str->update_ == component::DiagnosticUpdate::Sum)
-        ) {
-          continue;
-        }
+      for (auto&& elm : component_vals) {
+        auto comp = elm.first;
+        auto& map = elm.second;
+        bool first = true;
+        for (auto&& diag_elm : map) {
+          auto diag = diag_elm.first;
+          auto& str = diag_elm.second;
 
-        if (first) {
-          table[table.cur_row()][0].set_cell_content_fg_color(fort::color::red);
-          table << comp;
-        } else {
-          table << "";
-        }
-        first = false;
-
-        table[table.cur_row()][1].set_cell_content_fg_color(fort::color::green);
-        table[table.cur_row()][2].set_cell_content_fg_color(fort::color::blue);
-
-        // Right-align the number cells
-        for (int i = 4; i <= 9; i++) {
-          table[table.cur_row()][i].set_cell_text_align(fort::text_align::right);
-        }
-
-        auto update = diag->getUpdateType();
-
-        // If not displaying a value in the column, center the spacer
-        if (not diagnosticShowTotal(update)) {
-          table[table.cur_row()][4].set_cell_text_align(fort::text_align::center);
-        }
-
-        auto& h = str->hist_;
-        auto buckets = h.computeFixedBuckets(8);
-        std::string hist_out = fmt::format("<");
-        for (std::size_t i = 0; i < buckets.size(); i++) {
-          hist_out += fmt::format("{}", buckets[i]);
-          if (i == buckets.size() - 1) {
-            hist_out += ">";
-          } else {
-            hist_out += ", ";
+          // skip invalid/sentinel values unless it's a Sum, which might be useful
+          // for analysis to inform that the value is zero
+          if (
+            not str->is_valid_value_ and
+            not (str->update_ == component::DiagnosticUpdate::Sum)
+          ) {
+            continue;
           }
+
+          if (first) {
+            table[table.cur_row()][0].set_cell_content_fg_color(fort::color::red);
+            table << comp;
+          } else {
+            table << "";
+          }
+          first = false;
+
+          table[table.cur_row()][1].set_cell_content_fg_color(fort::color::green);
+          table[table.cur_row()][2].set_cell_content_fg_color(fort::color::blue);
+
+          // Right-align the number cells
+          for (int i = 4; i <= 9; i++) {
+            table[table.cur_row()][i].set_cell_text_align(fort::text_align::right);
+          }
+
+          auto update = diag->getUpdateType();
+
+          // If not displaying a value in the column, center the spacer
+          if (not diagnosticShowTotal(update)) {
+            table[table.cur_row()][4].set_cell_text_align(fort::text_align::center);
+          }
+
+          auto& h = str->hist_;
+          auto buckets = h.computeFixedBuckets(8);
+          std::string hist_out = fmt::format("<");
+          for (std::size_t i = 0; i < buckets.size(); i++) {
+            hist_out += fmt::format("{}", buckets[i]);
+            if (i == buckets.size() - 1) {
+              hist_out += ">";
+            } else {
+              hist_out += ", ";
+            }
+          }
+
+          table
+            << diag->getKey()
+            << diag->getDescription()
+            << diagnosticUpdateTypeString(update)
+            << (diagnosticShowTotal(update) ?
+                valueFormatHelper(str->sum_, str->unit_) : std::string("--"))
+            << valueFormatHelper(str->avg_, str->unit_)
+            << valueFormatHelper(str->min_, str->unit_)
+            << valueFormatHelper(str->max_, str->unit_)
+            << valueFormatHelper(str->std_, str->unit_)
+            << hist_out
+            << fort::endr;
+          //fmt::print("component={}; name={}; value={}\n", comp, diag->getKey(), str->avg_value_);
+
         }
-
-        table
-          << diag->getKey()
-          << diag->getDescription()
-          << diagnosticUpdateTypeString(update)
-          << (diagnosticShowTotal(update) ?
-              valueFormatHelper(str->sum_, str->unit_) : std::string("--"))
-          << valueFormatHelper(str->avg_, str->unit_)
-          << valueFormatHelper(str->min_, str->unit_)
-          << valueFormatHelper(str->max_, str->unit_)
-          << valueFormatHelper(str->std_, str->unit_)
-          << hist_out
-          << fort::endr;
-        //fmt::print("component={}; name={}; value={}\n", comp, diag->getKey(), str->avg_value_);
-
+        table << fort::separator;
       }
-      table << fort::separator;
-    }
 
-    fmt::print("{}", table.to_string());
+      auto out = fmt::format("{}", table.to_string());
+
+      if (Arg::vt_diag_print_summary) {
+        fmt::print(out);
+      }
+
+      if (Arg::vt_diag_summary_file != "") {
+        std::ofstream fout;
+        fout.open(Arg::vt_diag_summary_file, std::ios::out | std::ios::binary);
+        vtAssert(fout.good(), "Must be a valid file");
+        fout << out;
+        fout.close();
+      }
+    }
   }
 }
 
