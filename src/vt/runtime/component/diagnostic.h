@@ -115,7 +115,7 @@ protected:
    * \param[in] desc description of the diagnostic value
    * \param[in] unit the unit type for this diagnostic
    *
-   * \return the counter
+   * \return the gauge
    */
   template <typename T>
   meter::Gauge<T> registerGauge(
@@ -130,7 +130,7 @@ protected:
    * \param[in] desc description of the diagnostic value
    * \param[in] unit the unit type for this diagnostic
    *
-   * \return the counter
+   * \return the timer
    */
   template <typename T>
   meter::Timer<T> registerTimer(
