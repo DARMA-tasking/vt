@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests extended (intel 18.03, ubuntu, mpich)
+name: PR tests extended (nvidia cuda 10.1, ubuntu, mpich)
 
 on:
   pull_request:
@@ -20,8 +20,8 @@ jobs:
       REPO: lifflander1/vt
       ARCH: amd64
       UBUNTU: 18.04
-      COMPILER_TYPE: intel
-      COMPILER: icc-18
+      COMPILER_TYPE: nvidia
+      COMPILER: nvcc-10
       BUILD_TYPE: release
       ULIMIT_CORE: 0
       CODE_COVERAGE: 0
@@ -49,7 +49,7 @@ jobs:
         message("::set-output name=timestamp::${current_date}")
     - uses: actions/cache@v1
       env:
-        cache-name: ubuntu-intel-18-cache
+        cache-name: ubuntu-nvidia-10-cache
       with:
         path: ${{ env.BUILD_ROOT }}/ccache
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.cache_ts.outputs.timestamp }}

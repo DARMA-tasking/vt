@@ -2,26 +2,28 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests extended (intel 18.03, ubuntu, mpich)
+name: PR tests (nvidia cuda 10.1, ubuntu, mpich)
 
 on:
+  push:
+    branches:
+      - develop
+      - 1.*
   pull_request:
-    types:
-      - labeled
 
 jobs:
 
   build_optional:
 
-    if: github.event.label.name == 'runextendedtests'
+
     runs-on: ubuntu-latest
 
     env:
       REPO: lifflander1/vt
       ARCH: amd64
       UBUNTU: 18.04
-      COMPILER_TYPE: intel
-      COMPILER: icc-18
+      COMPILER_TYPE: nvidia
+      COMPILER: nvcc-10
       BUILD_TYPE: release
       ULIMIT_CORE: 0
       CODE_COVERAGE: 0
@@ -32,7 +34,7 @@ jobs:
       VT_DOCS: 0
       VT_ASAN: 0
       VT_POOL: 0
-      VT_EXTENDED_TESTS: 1
+      VT_EXTENDED_TESTS: ${{ github.event_name != 'pull_request' }}
       VT_ZOLTAN: 0
       CACHE: ~/.local/cache/
 
@@ -49,7 +51,7 @@ jobs:
         message("::set-output name=timestamp::${current_date}")
     - uses: actions/cache@v1
       env:
-        cache-name: ubuntu-intel-18-cache
+        cache-name: ubuntu-nvidia-10-cache
       with:
         path: ${{ env.BUILD_ROOT }}/ccache
         key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.cache_ts.outputs.timestamp }}
