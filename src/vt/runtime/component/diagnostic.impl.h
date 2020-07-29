@@ -54,27 +54,6 @@
 
 namespace vt { namespace runtime { namespace component {
 
-diagnostic::Counter Diagnostic::registerCounter(
-  std::string const& key, std::string const& desc, DiagnosticUnit unit
-) {
-  using diagnostic::CounterDefaultType;
-  return registerCounterT<CounterDefaultType>(key, desc, unit);
-}
-
-diagnostic::Gauge Diagnostic::registerGauge(
-  std::string const& key, std::string const& desc, DiagnosticUnit unit
-) {
-  using diagnostic::GaugeDefaultType;
-  return registerGaugeT<GaugeDefaultType>(key, desc, unit);
-}
-
-diagnostic::Timer Diagnostic::registerTimer(
-  std::string const& key, std::string const& desc, DiagnosticUnit unit
-) {
-  using diagnostic::TimerDefaultType;
-  return registerTimerT<TimerDefaultType>(key, desc, unit);
-}
-
 template <typename T>
 meter::Counter<T> Diagnostic::registerCounterT(
   std::string const& key, std::string const& desc, DiagnosticUnit unit

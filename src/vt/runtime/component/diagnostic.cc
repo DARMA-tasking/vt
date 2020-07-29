@@ -65,6 +65,27 @@ void Diagnostic::foreachDiagnostic(
   }
 }
 
+diagnostic::Counter Diagnostic::registerCounter(
+  std::string const& key, std::string const& desc, DiagnosticUnit unit
+) {
+  using diagnostic::CounterDefaultType;
+  return registerCounterT<CounterDefaultType>(key, desc, unit);
+}
+
+diagnostic::Gauge Diagnostic::registerGauge(
+  std::string const& key, std::string const& desc, DiagnosticUnit unit
+) {
+  using diagnostic::GaugeDefaultType;
+  return registerGaugeT<GaugeDefaultType>(key, desc, unit);
+}
+
+diagnostic::Timer Diagnostic::registerTimer(
+  std::string const& key, std::string const& desc, DiagnosticUnit unit
+) {
+  using diagnostic::TimerDefaultType;
+  return registerTimerT<TimerDefaultType>(key, desc, unit);
+}
+
 }}} /* end namespace vt::runtime::component */
 
 #endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_CC*/
