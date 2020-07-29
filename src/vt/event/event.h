@@ -205,9 +205,9 @@ private:
 # endif
 
 private:
-  diagnostic::Counter<int64_t> eventPollCount;
-  diagnostic::Gauge<int64_t> eventSizeGauge;
-  diagnostic::Timer<double> mpiEventWaitTime;
+  diagnostic::Counter eventPollCount;
+  diagnostic::Gauge eventSizeGauge;
+  diagnostic::Timer mpiEventWaitTime;
 };
 
 }} //end namespace vt::event

@@ -70,18 +70,14 @@ void AsyncEvent::initialize() {
 # endif
 
   // Number of polls for outgoing messages and parents to complete
-  eventPollCount = registerCounter<int64_t>(
-    "event_polls", "message send/event polls"
-  );
+  eventPollCount = registerCounter("event_polls", "message send/event polls");
 
   // Average/max events in container
-  eventSizeGauge = registerGauge<int64_t>("events_size", "event container length");
+  eventSizeGauge = registerGauge("events_size", "event container length");
 
   // Average/max time that an MPI_Request sits in the queue waiting for it to
   // test as complete
-  mpiEventWaitTime = registerTimer<double>(
-    "mpi_event_wait", "MPI send request duration"
-  );
+  mpiEventWaitTime = registerTimer("mpi_event_wait", "MPI send request duration");
 }
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
