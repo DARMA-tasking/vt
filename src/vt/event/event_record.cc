@@ -57,7 +57,7 @@ EventRecord::EventRecord(EventRecordType const& type, EventType const& id)
   : event_id_(id), type_(type)
 {
 
-# if backend_check_enabled(diagnostics)
+# if vt_check_enabled(diagnostics)
   creation_time_stamp_ = timing::Timing::getCurrentTime();
 # endif
 

@@ -94,7 +94,7 @@ Scheduler::Scheduler() {
 
   // Explicitly define these out when diagnostics are disabled---they might be
   // expensive
-# if backend_check_enabled(diagnostics)
+# if vt_check_enabled(diagnostics)
   using timing::Timing;
 
   // Triggers to get the in-scheduler-loop time added to diagnostics

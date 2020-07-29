@@ -332,7 +332,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
 
     if (event->testReady()) {
 
-#     if backend_check_enabled(diagnostics)
+#     if vt_check_enabled(diagnostics)
       mpiEventWaitTime.update(
         event->getCreateTime(), timing::Timing::getCurrentTime()
       );

@@ -159,7 +159,7 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(mimalloc)
   features.push_back(vt_feature_str_mimalloc);
 #endif
-#if backend_check_enabled(diagnostics)
+#if vt_check_enabled(diagnostics)
   features.push_back(vt_feature_str_diagnostics);
 #endif
 
