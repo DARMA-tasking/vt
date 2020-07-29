@@ -323,13 +323,13 @@ private:
   friend void vt::runInEpochCollective(ActionType&& fn);
 
 private:
-  diagnostic::Counter<int64_t> progressCount;
-  diagnostic::Counter<int64_t> workUnitCount;
-  diagnostic::Gauge<int64_t> queueSizeGauge;
-  diagnostic::Timer<double> vtLiveTime;
-  diagnostic::Timer<double> schedLoopTime;
-  diagnostic::Timer<double> idleTime;
-  diagnostic::Timer<double> idleTimeMinusTerm;
+  diagnostic::Counter progressCount;
+  diagnostic::Counter workUnitCount;
+  diagnostic::Gauge queueSizeGauge;
+  diagnostic::Timer vtLiveTime;
+  diagnostic::Timer schedLoopTime;
+  diagnostic::Timer idleTime;
+  diagnostic::Timer idleTimeMinusTerm;
 };
 
 }} //end namespace vt::sched

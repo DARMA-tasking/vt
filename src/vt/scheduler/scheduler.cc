@@ -76,21 +76,19 @@ Scheduler::Scheduler() {
   progress_time_enabled_ = theConfig()->vt_sched_progress_sec != 0.0;
 
   // Number of times the progress function is called to poll components
-  progressCount = registerCounter<int64_t>(
-    "num_progress", "progress function calls"
-  );
+  progressCount = registerCounter("num_progress", "progress function calls");
 
   // Number of work units enqueued
-  workUnitCount = registerCounter<int64_t>("num_work_units", "work unit count");
+  workUnitCount = registerCounter("num_work_units", "work unit count");
 
   // Max/avg of work units enqueued
-  queueSizeGauge = registerGauge<int64_t>("queue_size", "work queue size");
+  queueSizeGauge = registerGauge("queue_size", "work queue size");
 
   // Time scheduler
-  vtLiveTime = registerTimer<double>("init_time", "duration VT was initialized");
-  schedLoopTime = registerTimer<double>("sched_loop", "inside scheduler loop");
-  idleTime = registerTimer<double>("idle_time", "idle time (inc. TD)");
-  idleTimeMinusTerm = registerTimer<double>("idle_time_term", "idle time - TD");
+  vtLiveTime = registerTimer("init_time", "duration VT was initialized");
+  schedLoopTime = registerTimer("sched_loop", "inside scheduler loop");
+  idleTime = registerTimer("idle_time", "idle time (inc. TD)");
+  idleTimeMinusTerm = registerTimer("idle_time_term", "idle time - TD");
 
   // Explicitly define these out when diagnostics are disabled---they might be
   // expensive
