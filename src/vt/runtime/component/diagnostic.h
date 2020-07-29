@@ -94,6 +94,48 @@ struct Diagnostic : ComponentName, ComponentReducer {
 
 protected:
   /**
+   * \internal \brief Register a new diagnostic counter with default type
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the counter
+   */
+  diagnostic::Counter registerCounter(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Units
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic gauge with default type
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the gauge
+   */
+  diagnostic::Gauge registerGauge(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Units
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic timer with default type
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the timer
+   */
+  diagnostic::Timer registerTimer(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Seconds
+  );
+
+  /**
    * \internal \brief Register a new diagnostic counter
    *
    * \param[in] key unique key for diagnostic, should match across nodes
@@ -103,7 +145,7 @@ protected:
    * \return the counter
    */
   template <typename T>
-  meter::Counter<T> registerCounter(
+  meter::Counter<T> registerCounterT(
     std::string const& key, std::string const& desc,
     DiagnosticUnit unit = DiagnosticUnit::Units
   );
@@ -118,7 +160,7 @@ protected:
    * \return the gauge
    */
   template <typename T>
-  meter::Gauge<T> registerGauge(
+  meter::Gauge<T> registerGaugeT(
     std::string const& key, std::string const& desc,
     DiagnosticUnit unit = DiagnosticUnit::Units
   );
@@ -133,7 +175,7 @@ protected:
    * \return the timer
    */
   template <typename T>
-  meter::Timer<T> registerTimer(
+  meter::Timer<T> registerTimerT(
     std::string const& key, std::string const& desc,
     DiagnosticUnit unit = DiagnosticUnit::Seconds
   );

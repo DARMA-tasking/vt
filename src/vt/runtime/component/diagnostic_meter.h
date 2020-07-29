@@ -48,17 +48,71 @@
 #include "vt/runtime/component/meter/counter.h"
 #include "vt/runtime/component/meter/gauge.h"
 #include "vt/runtime/component/meter/timer.h"
+#include "vt/runtime/component/meter/counter_gauge.h"
+#include "vt/timing/timing_type.h"
 
 namespace vt { namespace diagnostic {
 
-template <typename T>
-using Counter = runtime::component::meter::Counter<T>;
+///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * \brief Typed diagnostic counter for counting a value over time
+ */
 template <typename T>
-using Gauge = runtime::component::meter::Gauge<T>;
+using CounterT = runtime::component::meter::Counter<T>;
 
+/**
+ * \brief Typed diagnostic gauge for measuring a value over time
+ */
 template <typename T>
-using Timer = runtime::component::meter::Timer<T>;
+using GaugeT = runtime::component::meter::Gauge<T>;
+
+/**
+ * \brief Typed diagnostic gauge for timing an event over time
+ */
+template <typename T>
+using TimerT = runtime::component::meter::Timer<T>;
+
+/**
+ * \brief Typed diagnostic counter/gauge combo
+ */
+template <typename T, typename U>
+using CounterGaugeT = runtime::component::meter::CounterGauge<T, U>;
+
+///////////////////////////////////////////////////////////////////////////////
+
+/// Default type for counters
+using CounterDefaultType = int64_t;
+
+/// Default type for gauges
+using GaugeDefaultType = int64_t;
+
+/// Default type for timers
+using TimerDefaultType = TimeType;
+
+/**
+ * \brief Default diagnostic counter for counting a value over time
+ */
+using Counter = runtime::component::meter::Counter<CounterDefaultType>;
+
+/**
+ * \brief Default diagnostic gauge for measuring a value over time
+ */
+using Gauge = runtime::component::meter::Gauge<GaugeDefaultType>;
+
+/**
+ * \brief Default diagnostic gauge for timing an event over time
+ */
+using Timer = runtime::component::meter::Timer<TimerDefaultType>;
+
+/**
+ * \brief Default diagnostic counter/gauge combo
+ */
+using CounterGauge = runtime::component::meter::CounterGauge<
+  CounterDefaultType, GaugeDefaultType
+>;
+
+///////////////////////////////////////////////////////////////////////////////
 
 }} /* end namespace vt;:diagnostic */
 
