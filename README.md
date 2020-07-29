@@ -14,6 +14,8 @@
 ![clang-5, ubuntu, mpich, trace](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(clang-5.0,%20ubuntu,%20mpich,%20trace)/badge.svg?branch=develop)
 ![apple clang, macosx, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(clang-8,%20macosx,%20mpich)/badge.svg?branch=develop)
 ![intel 18.03, ubuntu, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(intel%2018.03,%20ubuntu,%20mpich)/badge.svg?branch=develop)
+![nvidia cuda 10.1, ubuntu, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(nvidia%20cuda%2010.1,%20ubuntu,%20mpich)/badge.svg?branch=develop)
+![nvidia cuda 11.0, ubuntu, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(nvidia%20cuda%2011.0,%20ubuntu,%20mpich)/badge.svg?branch=develop)
 ![Build Documentation](https://github.com/DARMA-tasking/vt/workflows/Build%20Documentation/badge.svg?branch=develop)
 
 ## Introduction : What is *vt*?
