@@ -64,6 +64,7 @@ set(
       topos/mapping/seed topos/mapping/dense
     runtime
       runtime/component
+      runtime/component/meter
     vrt/base vrt/proxy vrt/context
     vrt/collection
       vrt/collection/types vrt/collection/messages vrt/collection/proxy_builder

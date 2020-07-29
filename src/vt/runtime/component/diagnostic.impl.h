@@ -55,18 +55,18 @@
 namespace vt { namespace runtime { namespace component {
 
 template <typename T>
-Counter<T> Diagnostic::registerCounter(
+meter::Counter<T> Diagnostic::registerCounter(
   std::string const& key, std::string const& desc, DiagnosticUnit unit
 ) {
   auto val = registerDiagnostic<T>(
     key, desc, DiagnosticUpdate::Sum, unit,
     DiagnosticTypeEnum::PerformanceDiagnostic, 0
   );
-  return Counter<T>{val};
+  return meter::Counter<T>{val};
 }
 
 template <typename T>
-Gauge<T> Diagnostic::registerGauge(
+meter::Gauge<T> Diagnostic::registerGauge(
   std::string const& key, std::string const& desc, DiagnosticUnit unit
 ) {
   auto sum = registerDiagnostic<T>(
@@ -85,11 +85,11 @@ Gauge<T> Diagnostic::registerGauge(
     key + " [avg]", desc, DiagnosticUpdate::Avg, unit,
     DiagnosticTypeEnum::PerformanceDiagnostic, 0
   );
-  return Gauge<T>{sum, avg, max, min};
+  return meter::Gauge<T>{sum, avg, max, min};
 }
 
 template <typename T>
-Timer<T> Diagnostic::registerTimer(
+meter::Timer<T> Diagnostic::registerTimer(
   std::string const& key, std::string const& desc, DiagnosticUnit unit
 ) {
   auto sum = registerDiagnostic<T>(
@@ -108,7 +108,7 @@ Timer<T> Diagnostic::registerTimer(
     key + " [avg]", desc, DiagnosticUpdate::Avg, unit,
     DiagnosticTypeEnum::PerformanceDiagnostic, 0
   );
-  return Timer<T>{sum, avg, max, min};
+  return meter::Timer<T>{sum, avg, max, min};
 }
 
 template <typename T>

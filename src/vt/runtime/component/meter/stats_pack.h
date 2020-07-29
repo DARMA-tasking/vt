@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              diagnostic_meter.h
+//                                 stats_pack.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,24 +42,70 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_METER_STATS_PACK_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_METER_STATS_PACK_H
 
-#include "vt/runtime/component/meter/counter.h"
-#include "vt/runtime/component/meter/gauge.h"
-#include "vt/runtime/component/meter/timer.h"
+#include "vt/config.h"
 
-namespace vt { namespace diagnostic {
+namespace vt { namespace runtime { namespace component { namespace meter {
 
+struct Diagnostic;
+
+struct DiagnosticMeter {};
+
+/**
+ * \internal \struct DiagnosticStatsPack
+ *
+ * \brief Pack of statistic-based diagnostics intended to back diagnostic types
+ * where basic statistics should be applied
+ */
 template <typename T>
-using Counter = runtime::component::meter::Counter<T>;
+struct DiagnosticStatsPack : DiagnosticMeter {
 
-template <typename T>
-using Gauge = runtime::component::meter::Gauge<T>;
+  /**
+   * \internal \brief Default constructor so diagnostics meters can be in
+   * component classes and initialized later
+   */
+  DiagnosticStatsPack() = default;
 
-template <typename T>
-using Timer = runtime::component::meter::Timer<T>;
+  /**
+   * \internal \brief Construct a new stats pack
+   *
+   * \param[in] in_sum the sum statistic
+   * \param[in] in_avg the mean statistic
+   * \param[in] in_max the max statistic
+   * \param[in] in_min the min statistic
+   */
+  DiagnosticStatsPack(
+    detail::DiagnosticValue<T>* in_sum,
+    detail::DiagnosticValue<T>* in_avg,
+    detail::DiagnosticValue<T>* in_max,
+    detail::DiagnosticValue<T>* in_min
+  ) : sum_(in_sum),
+      avg_(in_avg),
+      max_(in_max),
+      min_(in_min)
+  { }
 
-}} /* end namespace vt;:diagnostic */
+  /**
+   * \internal \brief Update the underlying stats pack
+   *
+   * \param[in] updated_val the updated value
+   */
+  void updateStats(T updated_val) {
+    sum_->update(updated_val);
+    avg_->update(updated_val);
+    max_->update(updated_val);
+    min_->update(updated_val);
+  }
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H*/
+protected:
+  detail::DiagnosticValue<T>* sum_ = nullptr; /**< Sum of all update values */
+  detail::DiagnosticValue<T>* avg_ = nullptr; /**< Avg of all update values */
+  detail::DiagnosticValue<T>* max_ = nullptr; /**< Max of all update values */
+  detail::DiagnosticValue<T>* min_ = nullptr; /**< Min of all update values */
+};
+
+}}}} /* end namespace vt::runtime::component::meter */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_METER_STATS_PACK_H*/

@@ -103,7 +103,7 @@ protected:
    * \return the counter
    */
   template <typename T>
-  Counter<T> registerCounter(
+  meter::Counter<T> registerCounter(
     std::string const& key, std::string const& desc,
     DiagnosticUnit unit = DiagnosticUnit::Units
   );
@@ -118,7 +118,7 @@ protected:
    * \return the counter
    */
   template <typename T>
-  Gauge<T> registerGauge(
+  meter::Gauge<T> registerGauge(
     std::string const& key, std::string const& desc,
     DiagnosticUnit unit = DiagnosticUnit::Units
   );
@@ -133,7 +133,7 @@ protected:
    * \return the counter
    */
   template <typename T>
-  Timer<T> registerTimer(
+  meter::Timer<T> registerTimer(
     std::string const& key, std::string const& desc,
     DiagnosticUnit unit = DiagnosticUnit::Seconds
   );

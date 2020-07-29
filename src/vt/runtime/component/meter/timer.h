@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              diagnostic_meter.h
+//                                   timer.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,24 +42,56 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_METER_TIMER_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_METER_TIMER_H
 
-#include "vt/runtime/component/meter/counter.h"
-#include "vt/runtime/component/meter/gauge.h"
-#include "vt/runtime/component/meter/timer.h"
+#include "vt/config.h"
+#include "vt/runtime/component/meter/stats_pack.h"
 
-namespace vt { namespace diagnostic {
+namespace vt { namespace runtime { namespace component { namespace meter {
 
+/**
+ * \struct Timer
+ *
+ * \brief Diagnostic that times some operation over time
+ */
 template <typename T>
-using Counter = runtime::component::meter::Counter<T>;
+struct Timer : DiagnosticStatsPack<T> {
 
-template <typename T>
-using Gauge = runtime::component::meter::Gauge<T>;
+  /**
+   * \brief Default constructor available for ease of putting this type in a
+   * class. But, all valid ways to construction involve the factory methods in
+   * the \c Diagnostic base class for component
+   */
+  Timer() = default;
 
-template <typename T>
-using Timer = runtime::component::meter::Timer<T>;
+private:
+  Timer(
+    detail::DiagnosticValue<T>* in_sum,
+    detail::DiagnosticValue<T>* in_avg,
+    detail::DiagnosticValue<T>* in_max,
+    detail::DiagnosticValue<T>* in_min
+  ) : DiagnosticStatsPack<T>(in_sum, in_avg, in_max, in_min)
+  { }
 
-}} /* end namespace vt;:diagnostic */
+  friend struct component::Diagnostic;
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H*/
+public:
+
+  /**
+   * \brief Add a new timer range to the timer diagnostic
+   *
+   * \param[in] begin begin time of event being tracked
+   * \param[in] end end time of event being tracked
+   */
+  void update(T begin, T end) {
+#   if vt_check_enabled(diagnostics)
+    auto const duration = end - begin;
+    this->updateStats(duration);
+#   endif
+  }
+};
+
+}}}} /* end namespace vt::runtime::component::meter */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_METER_TIMER_H*/

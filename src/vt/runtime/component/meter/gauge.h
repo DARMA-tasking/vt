@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              diagnostic_meter.h
+//                                   gauge.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,24 +42,54 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_METER_GAUGE_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_METER_GAUGE_H
 
-#include "vt/runtime/component/meter/counter.h"
-#include "vt/runtime/component/meter/gauge.h"
-#include "vt/runtime/component/meter/timer.h"
+#include "vt/config.h"
+#include "vt/runtime/component/meter/stats_pack.h"
 
-namespace vt { namespace diagnostic {
+namespace vt { namespace runtime { namespace component { namespace meter {
 
+/**
+ * \struct Gauge
+ *
+ * \brief Diagnostic that records some value over time.
+ */
 template <typename T>
-using Counter = runtime::component::meter::Counter<T>;
+struct Gauge : DiagnosticStatsPack<T> {
 
-template <typename T>
-using Gauge = runtime::component::meter::Gauge<T>;
+  /**
+   * \brief Default constructor available for ease of putting this type in a
+   * class. But, all valid ways to construction involve the factory methods in
+   * the \c Diagnostic base class for component
+   */
+  Gauge() = default;
 
-template <typename T>
-using Timer = runtime::component::meter::Timer<T>;
+private:
+  Gauge(
+    detail::DiagnosticValue<T>* in_sum,
+    detail::DiagnosticValue<T>* in_avg,
+    detail::DiagnosticValue<T>* in_max,
+    detail::DiagnosticValue<T>* in_min
+  ) : DiagnosticStatsPack<T>(in_sum, in_avg, in_max, in_min)
+  { }
 
-}} /* end namespace vt;:diagnostic */
+  friend struct component::Diagnostic;
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H*/
+public:
+
+  /**
+   * \brief Update with a new value
+   *
+   * \param[in] val the new value
+   */
+  void update(T val) {
+#   if vt_check_enabled(diagnostics)
+    this->updateStats(val);
+#   endif
+  }
+};
+
+}}}} /* end namespace vt::runtime::component::meter */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_METER_GAUGE_H*/

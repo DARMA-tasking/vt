@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              diagnostic_meter.h
+//                                  counter.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,24 +42,63 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H
-#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_METER_COUNTER_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_METER_COUNTER_H
 
-#include "vt/runtime/component/meter/counter.h"
-#include "vt/runtime/component/meter/gauge.h"
-#include "vt/runtime/component/meter/timer.h"
+#include "vt/config.h"
+#include "vt/runtime/component/meter/stats_pack.h"
 
-namespace vt { namespace diagnostic {
+namespace vt { namespace runtime { namespace component { namespace meter {
 
+/**
+ * \struct Counter
+ *
+ * \brief Diagnostic that counts some quantity over time.
+ */
 template <typename T>
-using Counter = runtime::component::meter::Counter<T>;
+struct Counter : DiagnosticMeter {
 
-template <typename T>
-using Gauge = runtime::component::meter::Gauge<T>;
+  /**
+   * \brief Default constructor available for ease of putting this type in a
+   * class. But, all valid ways to construction involve the factory methods in
+   * the \c Diagnostic base class for component
+   */
+  Counter() = default;
 
-template <typename T>
-using Timer = runtime::component::meter::Timer<T>;
+private:
+  explicit Counter(detail::DiagnosticValue<T>* in_impl)
+    : impl_(in_impl)
+  { }
 
-}} /* end namespace vt;:diagnostic */
+  friend struct component::Diagnostic;
 
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_METER_H*/
+public:
+  /**
+   * \brief Increment the counter
+   *
+   * \param[in] val amount to increment
+   */
+  void increment(T val = 1) {
+#   if vt_check_enabled(diagnostics)
+    impl_->update(val);
+#   endif
+  }
+
+  /**
+   * \brief Decrement the counter
+   *
+   * \param[in] val amount to decrement
+   */
+  void decrement(T val = 1) {
+#   if vt_check_enabled(diagnostics)
+    impl_->update(-val);
+#   endif
+  }
+
+private:
+  detail::DiagnosticValue<T>* impl_ = nullptr; /**< The actual underlying value */
+};
+
+}}}} /* end namespace vt::runtime::component::meter */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_METER_COUNTER_H*/
