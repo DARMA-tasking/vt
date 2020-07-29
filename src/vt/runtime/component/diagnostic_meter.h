@@ -140,7 +140,9 @@ public:
    * \param[in] val the new value
    */
   void update(T val) {
+#   if vt_check_enabled(diagnostics)
     this->updateStats(val);
+#   endif
   }
 };
 
@@ -179,8 +181,10 @@ public:
    * \param[in] end end time of event being tracked
    */
   void update(T begin, T end) {
+#   if vt_check_enabled(diagnostics)
     auto const duration = end - begin;
     this->updateStats(duration);
+#   endif
   }
 };
 
@@ -212,14 +216,22 @@ public:
    *
    * \param[in] val amount to increment
    */
-  void increment(T val = 1) { impl_->update(val); }
+  void increment(T val = 1) {
+#   if vt_check_enabled(diagnostics)
+    impl_->update(val);
+#   endif
+  }
 
   /**
    * \brief Decrement the counter
    *
    * \param[in] val amount to decrement
    */
-  void decrement(T val = 1) { impl_->update(-val); }
+  void decrement(T val = 1) {
+#   if vt_check_enabled(diagnostics)
+    impl_->update(-val);
+#   endif
+  }
 
 private:
   detail::DiagnosticValue<T>* impl_ = nullptr; /**< The actual underlying value */
