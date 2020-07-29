@@ -114,7 +114,7 @@ cached filesystem mount with the host for `ccache` to enable fast re-builds.
 
 For `docker-compose`, the following variables can be set to configure the
 build. One may configure the architecture, compiler type (GNU, Clang, Intel,
-NVidia) and compiler version, Linux distro (ubuntu or alpine), and distro
+Nvidia) and compiler version, Linux distro (ubuntu or alpine), and distro
 version.
 
 The default set of the docker configuration options is located in `vt/.env`,
