@@ -88,7 +88,7 @@ Scheduler::Scheduler() {
   vtLiveTime = registerTimer("init_time", "duration VT was initialized");
   schedLoopTime = registerTimer("sched_loop", "inside scheduler loop");
   idleTime = registerTimer("idle_time", "idle time (inc. TD)");
-  idleTimeMinusTerm = registerTimer("idle_time_term", "idle time (exc. TD");
+  idleTimeMinusTerm = registerTimer("idle_time_term", "idle time (exc. TD)");
 
   // Explicitly define these out when diagnostics are disabled---they might be
   // expensive
