@@ -117,7 +117,7 @@ template <typename MsgT>
       // Send back message
       auto retmsg = makeMessage<GroupOnlyMsg>(group, op_id);
       theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
-        parent, retmsg.get()
+        parent, retmsg
       );
     }
   } else {
@@ -153,7 +153,7 @@ template <typename MsgT>
         auto contmsg = makeMessage<GroupOnlyMsg>(group, op_id);
         if (parent != this_node) {
           theMsg()->sendMsg<GroupOnlyMsg, Info::groupTriggerHandler>(
-            parent, contmsg.get()
+            parent, contmsg
           );
         } else {
           Info::groupTriggerHandler(contmsg.get());
@@ -178,7 +178,7 @@ template <typename MsgT>
         c, c_size, group, op1, group_total_size, this_node, l1
       );
       if (c != this_node) {
-        theMsg()->sendMsg<MsgT, groupSetupHandler>(c, c_msg.get());
+        theMsg()->sendMsg<MsgT, groupSetupHandler>(c, c_msg);
       } else {
         groupSetupHandler(c_msg.get());
       }

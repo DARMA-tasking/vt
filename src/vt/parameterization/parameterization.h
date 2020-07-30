@@ -153,7 +153,7 @@ struct Param : runtime::component::Component<Param> {
     auto m = makeMessage<DataMsg<TupleType>>(
       han, std::forward<std::tuple<Args...>>(tup)
     );
-    theMsg()->sendMsg<DataMsg<TupleType>, dataMessageHandler>(dest, m.get());
+    theMsg()->sendMsg<DataMsg<TupleType>, dataMessageHandler>(dest, m);
   }
 
   template <typename... Args>
@@ -171,7 +171,8 @@ struct Param : runtime::component::Component<Param> {
     NodeType const& dest, HandlerType const& __attribute__((unused)) han,
     MsgSharedPtr<DataMsg> m
   ) {
-    theMsg()->sendMsg<DataMsg, dataMessageHandler>(dest, m.get());
+    auto pmsg = promoteMsg(m.get());
+    theMsg()->sendMsg<DataMsg, dataMessageHandler>(dest, pmsg);
   }
 
   template <typename T, T value, typename Tuple>

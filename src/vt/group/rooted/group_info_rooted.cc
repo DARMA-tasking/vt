@@ -123,9 +123,7 @@ void InfoRooted::setupRooted() {
         is_forward_ = true;
         forward_node_ = low_node;
         if (this_node != low_node) {
-          theMsg()->sendMsg<GroupListMsg, Info::groupSetupHandler>(
-            low_node, msg.get()
-          );
+          theMsg()->sendMsg<GroupListMsg, Info::groupSetupHandler>(low_node, msg);
         } else {
           Info::groupSetupHandler(msg.get());
         }
@@ -148,9 +146,7 @@ void InfoRooted::setupRooted() {
       is_forward_ = true;
       forward_node_ = low_node;
       if (this_node != low_node) {
-        theMsg()->sendMsg<GroupRangeMsg, Info::groupSetupHandler>(
-          low_node, msg.get()
-        );
+        theMsg()->sendMsg<GroupRangeMsg, Info::groupSetupHandler>(low_node, msg);
       } else {
         Info::groupSetupHandler(msg.get());
       }

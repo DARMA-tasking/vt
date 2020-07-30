@@ -175,7 +175,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
       );
       msg->setResolvedNode(this_node);
       theMsg()->markAsLocationMessage(msg);
-      theMsg()->sendMsg<LocMsgType, updateLocation>(home, msg.get());
+      theMsg()->sendMsg<LocMsgType, updateLocation>(home, msg);
     }
   }
 }
@@ -370,7 +370,7 @@ void EntityLocationCoord<EntityID>::getLocation(
           this_inst, id, event_id, this_node, home_node
         );
         theMsg()->markAsLocationMessage(msg);
-        theMsg()->sendMsg<LocMsgType, getLocationHandler>(home_node, msg.get());
+        theMsg()->sendMsg<LocMsgType, getLocationHandler>(home_node, msg);
         // save a pending action when information about location arrives
         pending_actions_.emplace(
           std::piecewise_construct,
@@ -443,7 +443,7 @@ void EntityLocationCoord<EntityID>::sendEagerUpdate(
     auto msg = makeMessage<LocMsgType>(
       this_inst, id, ask_node, home_node, deliver_node
     );
-    theMsg()->sendMsg<LocMsgType, recvEagerUpdate>(ask_node, msg.get());
+    theMsg()->sendMsg<LocMsgType, recvEagerUpdate>(ask_node, msg);
   }
 }
 
@@ -482,7 +482,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     msg->setLocInst(this_inst);
 
     // send to the node discovered by the location manager
-    theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg.get());
+    theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg);
   } else {
     vt_debug_print(
       location, node,
@@ -816,7 +816,7 @@ template <typename EntityID>
         );
         msg2->setResolvedNode(node);
         theMsg()->markAsLocationMessage(msg2);
-        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2.get());
+        theMsg()->sendMsg<LocMsgType, updateLocation>(ask_node, msg2);
       });
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);

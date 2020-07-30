@@ -164,8 +164,10 @@ ElementIDType NodeStats::getNextElm() {
 void NodeStats::releaseLB() {
   using MsgType = CollectionPhaseMsg;
   auto msg = makeMessage<MsgType>();
-  theMsg()->broadcastMsg<MsgType,CollectionManager::releaseLBPhase>(msg.get());
-  CollectionManager::releaseLBPhase(msg.get());
+  auto msg_hold = promoteMsg(msg.get());
+  theMsg()->broadcastMsg<MsgType,CollectionManager::releaseLBPhase>(msg);
+
+  CollectionManager::releaseLBPhase(msg_hold.get());
 }
 
 void NodeStats::createStatsFile() {
