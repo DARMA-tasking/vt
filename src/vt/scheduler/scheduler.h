@@ -50,6 +50,7 @@
 #include "vt/scheduler/priority_queue.h"
 #include "vt/scheduler/prioritized_work_unit.h"
 #include "vt/scheduler/work_unit.h"
+#include "vt/scheduler/time_trigger.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
@@ -59,6 +60,7 @@
 #include <list>
 #include <functional>
 #include <memory>
+#include <map>
 
 namespace vt {
   void runScheduler();
@@ -97,6 +99,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
+  using Milliseconds         = typename TimeTrigger::Milliseconds;
+  using TimeTriggerType      = std::map<Milliseconds, TimeTrigger>;
 
 # if vt_check_enabled(priorities)
   using UnitType             = PriorityUnit;
@@ -171,6 +175,29 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void registerTriggerOnce(
     SchedulerEventType const& event, TriggerType trigger
   );
+
+  /**
+   * \brief Make progress on time-based triggers
+   */
+  void progressTimeTriggers();
+
+  /**
+   * \brief Register a time-based trigger with a specific period
+   *
+   * \param[in] period the period in milliseconds
+   * \param[in] trigger the trigger to execute
+   *
+   * \return the trigger ID (can be used for removal)
+   */
+  int registerTimeTrigger(Milliseconds period, TriggerType trigger);
+
+  /**
+   * \brief Unregister a time-based trigger
+   *
+   * \param[in] period the period of the trigger ID to remove
+   * \param[in] handle the trigger ID to remove
+   */
+  void unregisterTimeTrigger(Milliseconds period, int handle);
 
   /**
    * \internal \brief Trigger an event
@@ -299,6 +326,8 @@ private:
 
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;
+  TimeTriggerType time_triggers_;
+  TimeType next_trigger_time_ = 0;
 
   TimeType last_progress_time_ = 0.0;
   bool progress_time_enabled_ = false;
