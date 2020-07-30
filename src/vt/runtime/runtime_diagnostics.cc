@@ -65,9 +65,10 @@ namespace vt { namespace runtime {
 namespace {
 
 struct FormatHelper {
-  FormatHelper(component::DiagnosticUnit in_unit, bool in_align)
+  FormatHelper(component::DiagnosticUnit in_unit, bool in_align, bool in_base)
     : unit_(in_unit),
-      align(in_align)
+      align_(in_align),
+      base_(in_base)
   { }
 
   template <typename T>
@@ -82,11 +83,16 @@ struct FormatHelper {
 
     std::string default_format = is_decimal ? decimal_format : std::string{"{}"};
 
-    return DF::getValueWithUnits(eval.get<T>(), unit_, default_format, align);
+    if (base_) {
+      return fmt::format(default_format, eval.get<T>());
+    } else {
+      return DF::getValueWithUnits(eval.get<T>(), unit_, default_format, align_);
+    }
   }
 
   component::DiagnosticUnit unit_;
-  bool align = true;
+  bool align_ = true;
+  bool base_ = false;
 };
 
 template <>
@@ -100,18 +106,25 @@ std::string FormatHelper::apply<void>(
 std::string valueFormatHelper(
   typename component::DiagnosticErasedValue::UnionValueType eval,
   component::DiagnosticUnit unit,
-  bool align = true
+  bool align = true,
+  bool base = false
 ) {
-  FormatHelper fn(unit, align);
+  FormatHelper fn(unit, align, base);
   return eval.switchOn(fn);
 }
 
 std::string valueFormatHelper(
-  double val, component::DiagnosticUnit unit, bool align = true
+  double val, component::DiagnosticUnit unit, bool align = true,
+  bool base = false
 ) {
   using DF = component::detail::DiagnosticFormatter;
   using component::detail::decimal_format;
-  return DF::getValueWithUnits(val, unit, decimal_format, align);
+
+  if (base) {
+    return fmt::format(decimal_format, val);
+  } else {
+    return DF::getValueWithUnits(val, unit, decimal_format, align);
+  }
 }
 
 } /* end anon namespace */
@@ -301,8 +314,9 @@ void Runtime::computeAndPrintDiagnostics() {
         component::DiagnosticErasedValue* str
       ) {
         auto hist_out = make_hist(str->hist_, ';');
-
         auto update = diag->getUpdateType();
+        auto base = Arg::vt_diag_csv_base_units;
+
         out += fmt::format(
           "{},{},{},{},{},{},{},{},{},{}\n",
           comp,
@@ -310,11 +324,11 @@ void Runtime::computeAndPrintDiagnostics() {
           diag->getDescription(),
           diagnosticUpdateTypeString(update),
           (diagnosticShowTotal(update) ?
-           valueFormatHelper(str->sum_, str->unit_, false) : std::string("--")),
-          valueFormatHelper(str->avg_, str->unit_, false),
-          valueFormatHelper(str->min_, str->unit_, false),
-          valueFormatHelper(str->max_, str->unit_, false),
-          valueFormatHelper(str->std_, str->unit_, false),
+           valueFormatHelper(str->sum_, str->unit_, false, base) : std::string("--")),
+          valueFormatHelper(str->avg_, str->unit_, false, base),
+          valueFormatHelper(str->min_, str->unit_, false, base),
+          valueFormatHelper(str->max_, str->unit_, false, base),
+          valueFormatHelper(str->std_, str->unit_, false, base),
           hist_out
         );
       }
