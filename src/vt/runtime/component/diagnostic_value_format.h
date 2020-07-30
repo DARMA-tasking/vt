@@ -117,12 +117,13 @@ struct DiagnosticFormatter {
    * \param[in] val the value
    * \param[in] unit units for the value
    * \param[in] default_spec default \c fmt::format spec for outputting
+   * \param[in] align whether to add alignment to value for table printing
    *
    * \return the pretty-printed \c std::string
    */
   template <typename U>
   static std::string getValueWithUnits(
-    U val, DiagnosticUnit unit, std::string default_spec
+    U val, DiagnosticUnit unit, std::string default_spec, bool align
   ) {
     using util::memory::MemoryUnitEnum;
     using util::memory::getMemoryUnitName;
@@ -157,7 +158,9 @@ struct DiagnosticFormatter {
       // Otherwise, add decimal places since we used a multiplier
 
       if (multiplier == 0) {
-        return fmt::format(default_spec + " {}", val, unitFormat(unit_name));
+        return fmt::format(
+          default_spec + " {}", val, unitFormat(unit_name, align)
+        );
       } else {
         // Compute the new value with multiplier as a double
         auto new_value = static_cast<double>(val);
@@ -166,7 +169,9 @@ struct DiagnosticFormatter {
         }
 
         auto decimal = std::string{decimal_format};
-        return fmt::format(decimal + " {}", new_value, unitFormat(unit_name));
+        return fmt::format(
+          decimal + " {}", new_value, unitFormat(unit_name, align)
+        );
       }
       break;
     }
@@ -201,7 +206,9 @@ struct DiagnosticFormatter {
       // Otherwise, add decimal places since we used a multiplier
 
       if (multiplier == 0) {
-        return fmt::format(default_spec + " {}", val, unitFormat(unit_name));
+        return fmt::format(
+          default_spec + " {}", val, unitFormat(unit_name, align)
+        );
       } else {
         // Compute the new value with multiplier as a double
         auto new_value = static_cast<double>(val);
@@ -210,7 +217,9 @@ struct DiagnosticFormatter {
         }
 
         auto decimal = std::string{decimal_format};
-        return fmt::format(decimal + " {}", new_value, unitFormat(unit_name));
+        return fmt::format(
+          decimal + " {}", new_value, unitFormat(unit_name, align)
+        );
       }
 
       break;
@@ -246,7 +255,9 @@ struct DiagnosticFormatter {
       // Otherwise, add decimal places since we used a multiplier
 
       if (multiplier == 0) {
-        return fmt::format(default_spec + " {}", val, unitFormat(unit_name));
+        return fmt::format(
+          default_spec + " {}", val, unitFormat(unit_name, align)
+        );
       } else {
         // Compute the new value with multiplier as a double
         auto new_value = static_cast<double>(val);
@@ -255,7 +266,9 @@ struct DiagnosticFormatter {
         }
 
         auto decimal = std::string{decimal_format};
-        return fmt::format(decimal + " {}", new_value, unitFormat(unit_name));
+        return fmt::format(
+          decimal + " {}", new_value, unitFormat(unit_name, align)
+        );
       }
 
       break;
@@ -269,8 +282,12 @@ struct DiagnosticFormatter {
   }
 
 private:
-  static std::string unitFormat(std::string unit_name) {
-    return fmt::format("{:<3}", unit_name);
+  static std::string unitFormat(std::string unit_name, bool align) {
+    if (align) {
+      return fmt::format("{:<3}", unit_name);
+    } else {
+      return fmt::format("{}", unit_name);
+    }
   }
 
 };
