@@ -720,6 +720,36 @@ void Runtime::printStartupBanner() {
     }
   }
 
+#if vt_check_enabled(diagnostics)
+  if (getAppConfig()->vt_diag_disable) {
+    auto f11 = fmt::format("Diagnostics are disabled");
+    auto f12 = opt_on("--vt_diag_disable", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("Diagnostics are enabled by default");
+    auto f12 = opt_inverse("--vt_diag_disable", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+
+    if (getAppConfig()->vt_diag_summary_file != "") {
+      auto f13 = fmt::format(
+        "Outputting diagnostics summary file \"{}\"",
+        getAppConfig()->vt_diag_summary_file
+      );
+      auto f14 = opt_on("--vt_diag_summary_file", f13);
+      fmt::print("{}\t{}{}", vt_pre, f14, reset);
+    }
+
+    if (getAppConfig()->vt_diag_summary_csv_file != "") {
+      auto f13 = fmt::format(
+        "Outputting CSV diagnostics summary file \"{}\"",
+        getAppConfig()->vt_diag_summary_csv_file
+      );
+      auto f14 = opt_on("--vt_diag_summary_csv_file", f13);
+      fmt::print("{}\t{}{}", vt_pre, f14, reset);
+    }
+  }
+#endif
+
   if (getAppConfig()->vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
     auto f12 = opt_on("--vt_debug_all", f11);
