@@ -58,7 +58,7 @@ namespace {
 template <typename T>
 void reduceHelper(
   Diagnostic* diagnostic, DiagnosticErasedValue* out, T val, DiagnosticUnit unit,
-  DiagnosticUpdate update
+  DiagnosticUpdate update, bool updated
 ) {
   using ValueType = DiagnosticValueWrapper<T>;
   using ReduceMsgType = collective::ReduceTMsg<ValueType>;
@@ -66,7 +66,7 @@ void reduceHelper(
   // Get the reducer from the component
   auto r = diagnostic->reducer();
   auto msg = makeMessage<ReduceMsgType>(
-    ValueType{typename ValueType::ReduceTag{}, val}
+    ValueType{typename ValueType::ReduceTag{}, val, updated}
   );
   auto cb = theCB()->makeFunc<ReduceMsgType>([=](ReduceMsgType* m) {
     auto& reduced_val = m->getConstVal();
@@ -98,7 +98,7 @@ void reduceHelper(
   ) {                                                                   \
     reduceHelper(                                                       \
       diagnostic, out, values_[snapshot].getComputedValue(), getUnit(), \
-      getUpdateType()                                                   \
+      getUpdateType(), values_[snapshot].isUpdated()                    \
     );                                                                  \
   }                                                                     \
 

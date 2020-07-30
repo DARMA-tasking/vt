@@ -89,13 +89,13 @@ struct DiagnosticValueWrapper {
    * \param[in] ReduceTag reduce tag to distinguish it
    * \param[in] in_value the starting value for the reduction
    */
-  DiagnosticValueWrapper(ReduceTag, T in_value)
+  DiagnosticValueWrapper(ReduceTag, T in_value, bool updated)
     : value_(in_value),
-      N_(1),
-      min_(in_value),
-      max_(in_value),
-      sum_(in_value),
-      avg_(in_value),
+      N_(updated ? 1 : 0),
+      min_(updated ? in_value : std::numeric_limits<T>::max()),
+      max_(updated ? in_value : std::numeric_limits<T>::lowest()),
+      sum_(updated ? in_value : 0),
+      avg_(updated ? in_value : 0),
       M2_(0.),
       M3_(0.),
       M4_(0.),
@@ -169,7 +169,7 @@ struct DiagnosticValueWrapper {
    *
    * \return the max value
    */
-  T max() const { return max_; }
+  T max() const { return N_ == 0 ? 0 : max_; }
 
   /**
    * \internal \brief Get sum of values (use after reduction)
@@ -183,14 +183,14 @@ struct DiagnosticValueWrapper {
    *
    * \return the min value
    */
-  T min() const { return min_; }
+  T min() const { return N_ == 0 ? 0 : min_; }
 
   /**
    * \internal \brief Get the mean value (use after reduction)
    *
    * \return the mean value
    */
-  double avg() const { return avg_; }
+  double avg() const { return N_ == 0 ? 0 : avg_; }
 
   /**
    * \internal \brief Get the variance (use after reduction)
@@ -211,7 +211,7 @@ struct DiagnosticValueWrapper {
    *
    * \return the standard deviation
    */
-  double stdv() const { return std::sqrt(var()); }
+  double stdv() const { return N_ == 0 ? 0 : std::sqrt(var()); }
 
   /**
    * \internal \brief Increment the cardinality
@@ -242,7 +242,7 @@ struct DiagnosticValueWrapper {
    *
    * \param[in] new_val the new value
    */
-  void update(T new_val) { value_ = new_val; }
+  void update(T new_val) { value_ = new_val; updated_ = true; }
 
   /**
    * \internal \brief Serialize this class
@@ -252,6 +252,7 @@ struct DiagnosticValueWrapper {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | value_ | N_ | min_ | max_ | sum_ | avg_ | M2_ | M3_ | M4_ | hist_;
+    s | updated_;
   }
 
   /**
@@ -263,12 +264,20 @@ struct DiagnosticValueWrapper {
     return hist_;
   }
 
+  /**
+   * \internal \brief Return if the value was ever updated
+   *
+   * \return if it was updated
+   */
+  bool isUpdated() const { return updated_; }
+
 private:
   T value_;                     /**< The raw value */
   std::size_t N_ = 0;           /**< The cardinality */
   T min_, max_, sum_;           /**< The min/max/sum for reduction */
   double avg_, M2_, M3_, M4_;   /**< The avg and 2/3/4 moments for reduction */
   adt::HistogramApprox<double, int64_t> hist_; /**< Histogram values for reduce */
+  bool updated_ = false;        /**< Whether value has changed from initial */
 };
 
 /**
