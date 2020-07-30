@@ -639,7 +639,7 @@ template <typename>
     auto nmsg = makeMessage<CollectionGroupMsg>(*msg);
     theMsg()->markAsCollectionMessage(nmsg);
     theMsg()->broadcastMsg<CollectionGroupMsg,collectionGroupFinishedHan>(
-      nmsg.get()
+      nmsg
     );
   }
 }
@@ -834,11 +834,13 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   }
 
   theMsg()->markAsCollectionMessage(msg);
+  auto msg_hold = promoteMsg(msg.get()); // keep after bcast
   auto ret = theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT>>(
-    msg.get()
+    msg
   );
+
   if (!send_group) {
-    collectionBcastHandler<ColT,IndexT,MsgT>(msg.get());
+    collectionBcastHandler<ColT,IndexT,MsgT>(msg_hold.get());
   }
 
   theMsg()->popEpoch(cur_epoch);
@@ -1038,8 +1040,10 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
           col_proxy, bnode, handler, cur_epoch
         );
         theMsg()->markAsCollectionMessage(msg);
-        return theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT>>(
-          bnode,msg.get()
+
+        auto pmsg = std::move(msg); // sendMsg needs non-const variable
+        return theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT,MsgT>>(
+          bnode, pmsg
         );
       } else {
         vt_debug_print(
@@ -2004,7 +2008,7 @@ CollectionManager::constructMap(
   );
 
   theMsg()->broadcastMsg<MsgType,distConstruct<MsgType>>(
-    create_msg.get()
+    create_msg
   );
 
   auto create_msg_local = makeMessage<MsgType>(
@@ -2171,7 +2175,7 @@ void CollectionManager::finishedInsertEpoch(
   theMsg()->markAsCollectionMessage(msg);
   theMsg()->broadcastMsg<
     UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
-  >(msg.get());
+  >(msg);
 
   /*
    *  Start building the a new group for broadcasts and reductions over the
@@ -2275,7 +2279,7 @@ template <typename ColT, typename IndexT>
       theMsg()->markAsCollectionMessage(smsg);
       theMsg()->sendMsg<
         ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
-      >(node,smsg.get());
+      >(node, smsg);
     };
     return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_, send);
   } else {
@@ -2329,7 +2333,7 @@ void CollectionManager::finishedInserting(
     auto msg = makeMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
     theMsg()->markAsCollectionMessage(msg);
     theMsg()->sendMsg<DoneInsertMsg<ColT,IndexT>,doneInsertHandler<ColT,IndexT>>(
-      cons_node,msg.get()
+      cons_node, msg
     );
   }
 }
@@ -2466,7 +2470,7 @@ void CollectionManager::insert(
         theTerm()->produce(cur_epoch,1,insert_node);
         theMsg()->markAsCollectionMessage(msg);
         theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
-          insert_node,msg.get()
+          insert_node, msg
         );
       }
 
@@ -2574,7 +2578,7 @@ MigrateStatus CollectionManager::migrateOut(
 
    theMsg()->sendMsg<
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
-   >(dest, msg.get());
+   >(dest, msg);
 
    theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityMigrated(
      proxy, dest
@@ -2671,10 +2675,13 @@ void CollectionManager::destroy(
 ) {
   using DestroyMsgType = DestroyMsg<ColT, IndexT>;
   auto const& this_node = theContext()->getNode();
+
   auto msg = makeMessage<DestroyMsgType>(proxy, this_node);
   theMsg()->markAsCollectionMessage(msg);
-  theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg.get());
-  DestroyHandlers::destroyNow(msg.get());
+  auto msg_hold = promoteMsg(msg.get()); // keep after bcast
+  theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
+
+  DestroyHandlers::destroyNow(msg_hold.get());
 }
 
 template <typename ColT, typename IndexT>
@@ -2815,7 +2822,7 @@ void CollectionManager::elmReadyLB(
   auto pmsg = promoteMsg(msg);
 
 #if !vt_check_enabled(lblite)
-  theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
+  theCollection()->sendMsgUntypedHandler<MsgT>(proxy, pmsg.get(), lb_han,true);
   return;
 #endif
 

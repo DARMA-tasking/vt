@@ -79,7 +79,7 @@ void CallbackSendHandler<MsgT,f>::trigger_(SignalDataType* data) {
   if (this_node == send_node_) {
     f(data);
   } else {
-    theMsg()->sendMsg<MsgT,f>(send_node_,data);
+    theMsg()->sendMsg<MsgT,f>(send_node_, data);
   }
 }
 

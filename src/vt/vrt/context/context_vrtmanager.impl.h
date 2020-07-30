@@ -108,7 +108,7 @@ template <typename SysMsgT>
       cons_node, req_node, request_id, new_proxy
     );
     theMsg()->sendMsg<VirtualProxyRequestMsg, sendBackVirtualProxyHan>(
-      req_node, send_msg.get()
+      req_node, send_msg
     );
   }
 
@@ -232,7 +232,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
 
   sys_msg->info = *info.get();
 
-  theMsg()->sendMsg<MsgType,remoteConstructVrt<MsgType>>(dest, sys_msg.get());
+  theMsg()->sendMsg<MsgType,remoteConstructVrt<MsgType>>(dest, sys_msg);
 
   return return_proxy;
 }

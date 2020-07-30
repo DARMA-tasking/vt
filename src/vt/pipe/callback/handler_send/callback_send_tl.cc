@@ -70,7 +70,7 @@ void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
     runnable::RunnableVoid::run(handler_,this_node);
   } else {
     auto msg = makeMessage<CallbackMsg>(pipe);
-    theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg.get());
+    theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);
   }
 }
 

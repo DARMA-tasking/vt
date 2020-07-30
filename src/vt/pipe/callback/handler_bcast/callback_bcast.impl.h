@@ -92,7 +92,7 @@ CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) 
     this_node, include_sender_
   );
   auto msg = makeMessage<CallbackMsg>(pid);
-  theMsg()->broadcastMsg<CallbackMsg>(handler_,msg.get());
+  theMsg()->broadcastMsg<CallbackMsg>(handler_, msg);
   if (include_sender_) {
     runnable::RunnableVoid::run(handler_,this_node);
   }

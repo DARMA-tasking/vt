@@ -100,7 +100,7 @@ void Scatter::scatter(
   scatter_msg->user_han = handler;
   if (this_node != root_node) {
     theMsg()->sendMsgSz<ScatterMsg,scatterHandler>(
-      root_node, scatter_msg.get(), sizeof(ScatterMsg) + combined_size
+      root_node, scatter_msg, sizeof(ScatterMsg) + combined_size
     );
   } else {
     scatterIn(scatter_msg.get());

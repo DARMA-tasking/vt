@@ -116,10 +116,10 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     );
 
     theMsg()->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
-      owning_node, msg.get()
+      owning_node, msg
     );
-  }
     break;
+  }
   default:
     vtAssert(0, "This should be unreachable");
     break;
@@ -148,11 +148,12 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   );
 
   auto send_back_fun = [=]{
-    auto msg_send = makeMessage<EventFinishedMsg>(event, msg->event_back_);
     auto send_back = theEvent()->getOwningNode(msg->event_back_);
     vtAssertExpr(send_back == msg->sent_from_node_);
+
+    auto msg_send = makeMessage<EventFinishedMsg>(event, msg->event_back_);
     theMsg()->sendMsg<EventFinishedMsg, eventFinished>(
-      send_back, msg_send.get()
+      send_back, msg_send
     );
   };
 

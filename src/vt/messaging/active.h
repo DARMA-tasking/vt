@@ -186,6 +186,7 @@ struct BufferedActiveMsg {
 template <typename MsgT>
 struct TransferMsg {
   // TODO: This should 'go away' when direct 'msg.get()' usages are replaced with 'msg'
+  // [[deprecated]]
   /*implicit*/ TransferMsg(MsgT const* msgPtr) : msg_(promoteMsg<MsgT>(const_cast<MsgT*>(msgPtr))) {
   }
 
@@ -454,7 +455,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *     HandlerType const han = registerNewHandler(my_handler);
    *
    *     auto msg = makeMessage<MyMsg>(156);
-   *     theMsg()->sendMsg(29, han, msg.get());
+   *     theMsg()->sendMsg(29, han, msg);
    *   }
    * \endcode
    * @{
