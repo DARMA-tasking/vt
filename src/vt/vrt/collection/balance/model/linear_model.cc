@@ -61,8 +61,9 @@ TimeType LinearModel::getWork(ElementIDType object, PhaseOffset when) {
 
   PhaseOffset past_phase{when};
 
+  int phases = std::min(past_len_, getNumCompletedPhases());
   // Number values on X-axis based on a PhaseOffset
-  for (int i = -1 * getNumCompletedPhases(); i < 0; i++) {
+  for (int i = -1 * phases; i < 0; i++) {
     x.emplace_back(i);
     past_phase.phases = i;
     y.emplace_back(ComposedModel::getWork(object, past_phase));
