@@ -102,7 +102,7 @@ meter::Timer<T> Diagnostic::registerTimerT(
   );
   auto max = registerDiagnostic<T>(
     key + " [max]", desc, DiagnosticUpdate::Max, unit,
-    DiagnosticTypeEnum::PerformanceDiagnostic, 0
+    DiagnosticTypeEnum::PerformanceDiagnostic, std::numeric_limits<T>::lowest()
   );
   auto avg = registerDiagnostic<T>(
     key + " [avg]", desc, DiagnosticUpdate::Avg, unit,
