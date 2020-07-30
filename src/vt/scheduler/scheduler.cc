@@ -105,7 +105,7 @@ Scheduler::Scheduler() {
     }
   );
 
-  // Triggers to get idle time in diagnostics
+  // Triggers to get true idle time (including TD messages) in diagnostics
   registerTrigger(
     BeginIdle, [this]{ begin_idle_time_ = Timing::getCurrentTime(); }
   );
@@ -118,6 +118,7 @@ Scheduler::Scheduler() {
     }
   );
 
+  // Triggers to get non-term idle time (excluding TD messages) in diagnostics
   registerTrigger(
     BeginIdleMinusTerm, [this]{ begin_idle_time_term_ = Timing::getCurrentTime(); }
   );
