@@ -378,16 +378,19 @@ void ArgConfig::addDiagnosticArgs(CLI::App& app) {
   auto sum  = "Print diagnostic summary table to stdout at finalization";
   auto file = "Output diagnostic summary table to text file";
   auto csv  = "Output diagnostic summary table to a comma-separated file";
-  auto a = app.add_flag("--vt_diag_disable",            ArgConfig::vt_diag_disable,          diag);
-  auto b = app.add_flag("--vt_diag_print_summary",      ArgConfig::vt_diag_print_summary,    sum);
-  auto c = app.add_option("--vt_diag_summary_file",     ArgConfig::vt_diag_summary_file,     file);
-  auto d = app.add_option("--vt_diag_summary_csv_file", ArgConfig::vt_diag_summary_csv_file, csv);
+  auto base = "Use base units (seconds, units, etc.) for CSV file output";
+  auto a = app.add_flag("--vt_diag_disable",            config_.vt_diag_disable,          diag);
+  auto b = app.add_flag("--vt_diag_print_summary",      config_.vt_diag_print_summary,    sum);
+  auto c = app.add_option("--vt_diag_summary_file",     config_.vt_diag_summary_file,     file);
+  auto d = app.add_option("--vt_diag_summary_csv_file", config_.vt_diag_summary_csv_file, csv);
+  auto e = app.add_flag("--vt_diag_csv_base_units",     config_.vt_diag_csv_base_units,   base);
 
   auto diagnosticGroup = "Diagnostics";
   a->group(diagnosticGroup);
   b->group(diagnosticGroup);
   c->group(diagnosticGroup);
   d->group(diagnosticGroup);
+  e->group(diagnosticGroup);
 }
 
 void ArgConfig::addTerminationArgs(CLI::App& app) {

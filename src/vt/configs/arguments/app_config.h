@@ -154,6 +154,7 @@ struct AppConfig {
   bool vt_diag_print_summary = false;
   std::string vt_diag_summary_csv_file = "";
   std::string vt_diag_summary_file = "vtdiag.txt";
+  bool vt_diag_csv_base_units = false;
 
   bool vt_pause = false;
 
