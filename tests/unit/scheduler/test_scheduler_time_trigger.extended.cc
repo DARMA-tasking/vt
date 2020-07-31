@@ -72,7 +72,7 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
   auto cur_time = vt::timing::Timing::getCurrentTime();
 
   // register a trigger every 100 milliseconds
-  testSched->registerTimeTrigger(trigger_period, [&]{
+  auto id = testSched->registerTimeTrigger(trigger_period, [&]{
     triggered++;
     time_offset.push_back(vt::timing::Timing::getCurrentTime() - cur_time);
   });
@@ -100,6 +100,18 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
     fmt::print("duration={}\n", duration_ms);
     iter++;
   }
+
+  // test unregisteration of triggers
+
+  auto prev_triggered = triggered;
+  testSched->unregisterTimeTrigger(trigger_period, id);
+
+  sleep_for(110ms);
+  testSched->scheduler();
+  testSched->scheduler();
+
+  // should not have been triggered again!
+  EXPECT_EQ(prev_triggered, triggered);
 }
 
 TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
