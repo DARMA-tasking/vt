@@ -103,10 +103,6 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
 }
 
 TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
-  using namespace std::this_thread;
-  using namespace std::chrono;
-  using namespace std::chrono_literals;
-
   int trigger_period[3] = {100, 10, 1000};
   double total_time = 3000;
 
