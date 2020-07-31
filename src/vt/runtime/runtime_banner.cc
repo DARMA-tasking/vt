@@ -209,6 +209,12 @@ void Runtime::printStartupBanner() {
       green, reset, magenta, opt, reset, compile, reset
     );
   };
+  auto opt_on_value = [=](std::string opt, std::string val, std::string compile) -> std::string {
+    return fmt::format(
+      "{}Option:{} flag {}{}{} on with value \"{}\": {}{}\n",
+      green, reset, magenta, opt, reset, val, compile, reset
+    );
+  };
   auto opt_off = [=](std::string opt, std::string compile) -> std::string {
     return fmt::format(
       "{}Option:{} flag {}{}{} not set: {}{}\n",
@@ -455,12 +461,12 @@ void Runtime::printStartupBanner() {
     }
     if (ArgType::vt_trace_mpi) {
       auto f11 = fmt::format("Tracing MPI invocations (select internal calls)");
-      auto f12 = opt_on("--vt_trace_mpi", f11);
+      auto f12 = opt_on_value("--vt_trace_mpi", "internal", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
     if (ArgType::vt_trace_pmpi) {
-      auto f11 = fmt::format("Tracing PMPI invocations (external calls)");
-      auto f12 = opt_on("--vt_trace_mpi", f11);
+      auto f11 = fmt::format("Tracing MPI invocations (external calls)");
+      auto f12 = opt_on_value("--vt_trace_mpi", "external", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
     if (ArgType::vt_trace_event_polling) {

@@ -185,6 +185,11 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgParse::parsed_                = false;
 
+// Temporary variables used only for parsing artifacts.
+namespace {
+  std::vector<std::string> arg_trace_mpi;
+}
+
 void addColorArgs(CLI::App& app) {
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";
@@ -277,9 +282,7 @@ void addTraceArgs(CLI::App& app) {
    * Flags to control tracing output
    */
   auto trace     = "Enable tracing (must be compiled with trace_enabled)";
-  auto trace_mpi = "Enable tracing of select internal MPI calls"
-    " (must be compiled with trace_enabled)";
-  auto trace_pmpi = "Enable tracing of external PMPI calls"
+  auto trace_mpi = "Enable tracing of MPI calls"
     " (must be compiled with trace_enabled)";
   auto tfile     = "Name of trace files";
   auto tdir      = "Name of directory for trace files";
@@ -296,8 +299,8 @@ void addTraceArgs(CLI::App& app) {
   auto tpolled   = "Trace AsyncEvent component polling (inc. MPI_Isend requests)";
   auto tirecv     = "Trace MPI_Irecv request polling";
   auto n  = app.add_flag("--vt_trace",              ArgConfig::vt_trace,           trace);
-  auto nm = app.add_flag("--vt_trace_mpi",          ArgConfig::vt_trace_mpi,       trace_mpi);
-  auto no = app.add_flag("--vt_trace_pmpi",         ArgConfig::vt_trace_pmpi,      trace_pmpi);
+  auto nm = app.add_option("--vt_trace_mpi",        arg_trace_mpi,                 trace_mpi)
+    ->check(CLI::IsMember({"internal", "external"}));
   auto o  = app.add_option("--vt_trace_file",       ArgConfig::vt_trace_file,      tfile, "");
   auto p  = app.add_option("--vt_trace_dir",        ArgConfig::vt_trace_dir,       tdir,  "");
   auto q  = app.add_option("--vt_trace_mod",        ArgConfig::vt_trace_mod,       tmod,  1);
@@ -316,7 +319,6 @@ void addTraceArgs(CLI::App& app) {
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
-  no->group(traceGroup);
   o->group(traceGroup);
   p->group(traceGroup);
   q->group(traceGroup);
@@ -657,6 +659,19 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   return result;
 }
 
+/**
+ * \internal
+ * Application specific cleanup and mapping to actual app args.
+ */
+void postParseTransform() {
+  auto contains = [](std::vector<std::string> &v, std::string str){
+    return std::find(v.begin(), v.end(), str) not_eq v.end();
+  };
+
+  ArgConfig::vt_trace_mpi = contains(arg_trace_mpi, "internal");
+  ArgConfig::vt_trace_pmpi = contains(arg_trace_mpi, "external");
+}
+
 std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv) {
 
   std::vector<char*> vt_args;
@@ -731,6 +746,8 @@ std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& ar
   ArgConfig::argv_prog_name = argv[0];
   ArgConfig::mpi_init_args = mpi_args;
   ArgConfig::passthru_args = passthru_args;
+
+  postParseTransform();
 
   // Rebuild passthru into ref-returned argc/argv
   // (only pass-through, not MPI_Init-bound)

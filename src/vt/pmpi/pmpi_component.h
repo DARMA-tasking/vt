@@ -66,8 +66,7 @@ struct PMPIComponent : runtime::component::Component<PMPIComponent> {
 
   using ArgType = vt::arguments::ArgConfig;
 
-  PMPIComponent() {
-  }
+  PMPIComponent() = default;
 
   std::string name() override { return "PMPI"; }
 
