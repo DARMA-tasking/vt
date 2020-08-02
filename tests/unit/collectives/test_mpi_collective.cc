@@ -60,7 +60,7 @@ TEST_F(TestMPICollective, test_mpi_collective_1) {
     done = true;
   });
 
-  theTerm()->addAction([&done]{
+  runInEpochCollective([&done]{
     EXPECT_TRUE(done);
   });
 
@@ -104,7 +104,7 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
     done++;
   });
 
-  theTerm()->addAction([&done,&bcast_val,&reduce_val_out]{
+  runInEpochCollective([&done,&bcast_val,&reduce_val_out]{
     auto num_nodes = theContext()->getNumNodes();
     EXPECT_EQ(done, 3);
     EXPECT_EQ(bcast_val, 29);
@@ -234,7 +234,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   bool finished_spin = false;
 
-  theTerm()->addAction(epoch, [&done,&bcast_val,&reduce_val_out,&finished_spin]{
+  runInEpochCollective(epoch, [&done,&bcast_val,&reduce_val_out,&finished_spin]{
     auto num_nodes = theContext()->getNumNodes();
     EXPECT_EQ(done, 3);
     EXPECT_EQ(bcast_val, 29);

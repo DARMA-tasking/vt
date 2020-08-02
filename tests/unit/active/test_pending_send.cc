@@ -92,7 +92,7 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   EXPECT_EQ(envelopeGetEpoch(msg_hold->env), ep);
 
   theMsg()->popEpoch(ep);
-  theTerm()->addAction(ep, [&done] { done = true; });
+  runInEpochCollective(ep, [&done] { done = true; });
   theTerm()->finishedEpoch(ep);
 
   // It should not break out of this loop because of `done`, thus `k` is used to

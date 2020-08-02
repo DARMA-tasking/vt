@@ -116,7 +116,7 @@ TEST_F(TestDestroy, test_destroy_1) {
     // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());
     proxy.broadcast<WorkMsg,DestroyTest::work>(msg.get());
   }
-  theTerm()->addAction([]{
+  runInEpochCollective([]{
     // ::fmt::print("num destroyed={}\n", num_destroyed);
     // Relies on default mapping equally distributing
     EXPECT_EQ(num_destroyed, num_elms_per_node);

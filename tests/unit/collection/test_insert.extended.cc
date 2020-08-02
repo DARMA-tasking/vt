@@ -114,7 +114,7 @@ TEST_F(TestInsert, test_insert_sparse_1) {
       proxy[i].insert();
     }
   }
-  theTerm()->addAction([]{
+  runInEpochCollective([]{
     /// ::fmt::print("num inserted={}\n", num_inserted);
     // Relies on default mapping equally distributing
     EXPECT_EQ(num_inserted, num_elms_per_node);
