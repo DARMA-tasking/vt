@@ -132,7 +132,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
     fmt::print("test_type_safe_active_fn_send: node={}\n", my_node);
   #endif
 
-  runInEpochCollective([=]{
+  vt::runInEpochCollective([=]{
     if (my_node == from_node) {
       for (int i = 0; i < num_msg_sent; i++) {
         #if DEBUG_TEST_HARNESS_PRINT

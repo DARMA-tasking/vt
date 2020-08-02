@@ -60,7 +60,7 @@ TEST_F(TestMPICollective, test_mpi_collective_1) {
     done = true;
   });
 
-  runInEpochCollective([&done]{
+  vt::runInEpochCollective([&done]{
     EXPECT_TRUE(done);
   });
 
@@ -104,7 +104,7 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
     done++;
   });
 
-  runInEpochCollective([&done,&bcast_val,&reduce_val_out]{
+  vt::runInEpochCollective([&done,&bcast_val,&reduce_val_out]{
     auto num_nodes = theContext()->getNumNodes();
     EXPECT_EQ(done, 3);
     EXPECT_EQ(bcast_val, 29);
@@ -234,7 +234,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   bool finished_spin = false;
 
-  runInEpochCollective(epoch, [&done,&bcast_val,&reduce_val_out,&finished_spin]{
+  vt::runInEpochCollective([&done,&bcast_val,&reduce_val_out,&finished_spin]{
     auto num_nodes = theContext()->getNumNodes();
     EXPECT_EQ(done, 3);
     EXPECT_EQ(bcast_val, 29);

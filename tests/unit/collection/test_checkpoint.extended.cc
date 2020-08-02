@@ -156,7 +156,7 @@ static void runInEpoch(std::function<void()> fn) {
   vt::theMsg()->popEpoch(ep);
   vt::theTerm()->finishedEpoch(ep);
   bool done = false;
-  runInEpochCollective(ep, [&]{ done = true; });
+  vt::runInEpochCollective([&]{ done = true; });
   vt::theSched()->runSchedulerWhile([&] { return not done; });
 }
 
