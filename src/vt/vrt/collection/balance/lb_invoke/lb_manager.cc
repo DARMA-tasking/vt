@@ -144,15 +144,25 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
 }
 
 template <typename LB>
-void
-LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
+objgroup::proxy::Proxy<lb::BaseLB>
+LBManager::makeLB() {
   auto proxy = theObjGroup()->makeCollective<LB>();
   auto strat = proxy.get();
   strat->init(proxy);
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
-  auto phase = msg->getPhase();
 
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
+
+  return base_proxy;
+}
+
+template <typename LB>
+void
+LBManager::runLB(MsgSharedPtr<StartLBMsg> msg) {
+  auto base_proxy = makeLB<LB>();
+  auto phase = msg->getPhase();
+
+  lb::BaseLB* strat = base_proxy.get();
 
   runInEpochCollective([=] {
     model_->updateLoads(phase);
@@ -211,14 +221,14 @@ void LBManager::collectiveImpl(
 
     auto msg = makeMessage<StartLBMsg>(phase);
     switch (lb) {
-    case LBType::HierarchicalLB: makeLB<lb::HierarchicalLB>(msg); break;
-    case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
-    case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
-    case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
-    case LBType::StatsMapLB:     makeLB<lb::StatsMapLB>(msg);     break;
-    case LBType::RandomLB:       makeLB<lb::RandomLB>(msg);       break;
+    case LBType::HierarchicalLB: runLB<lb::HierarchicalLB>(msg); break;
+    case LBType::GreedyLB:       runLB<lb::GreedyLB>(msg);       break;
+    case LBType::RotateLB:       runLB<lb::RotateLB>(msg);       break;
+    case LBType::GossipLB:       runLB<lb::GossipLB>(msg);       break;
+    case LBType::StatsMapLB:     runLB<lb::StatsMapLB>(msg);     break;
+    case LBType::RandomLB:       runLB<lb::RandomLB>(msg);       break;
 #   if vt_check_enabled(zoltan)
-    case LBType::ZoltanLB:       makeLB<lb::ZoltanLB>(msg);       break;
+    case LBType::ZoltanLB:       runLB<lb::ZoltanLB>(msg);       break;
 #   endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
