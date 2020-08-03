@@ -60,7 +60,7 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
   using namespace std::chrono;
   using namespace std::chrono_literals;
 
-  int trigger_period = 100;
+  std::chrono::milliseconds trigger_period = 100ms;
   double total_time = 2000;
 
   int triggered = 0;
@@ -85,8 +85,8 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
   int tolerance = 3;
 
   // Allow for some error tolerance in the number of triggers given the period
-  EXPECT_LE(triggered, (total_time / trigger_period) + tolerance);
-  EXPECT_GE(triggered, (total_time / trigger_period) - tolerance);
+  EXPECT_LE(triggered, (total_time / trigger_period.count()) + tolerance);
+  EXPECT_GE(triggered, (total_time / trigger_period.count()) - tolerance);
 
   fmt::print("triggered={}\n", triggered);
 
@@ -95,8 +95,8 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
   iter++;
   while (iter != time_offset.end()) {
     auto duration_ms = ((*iter) - *(iter-1))*1000;
-    EXPECT_LE(duration_ms, trigger_period*1.3);
-    EXPECT_GE(duration_ms, trigger_period*0.7);
+    EXPECT_LE(duration_ms, trigger_period.count()*1.3);
+    EXPECT_GE(duration_ms, trigger_period.count()*0.7);
     fmt::print("duration={}\n", duration_ms);
     iter++;
   }
@@ -104,7 +104,7 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
   // test unregisteration of triggers
 
   auto prev_triggered = triggered;
-  testSched->unregisterTimeTrigger(trigger_period, id);
+  testSched->unregisterTimeTrigger(id);
 
   sleep_for(110ms);
   testSched->scheduler();
@@ -115,10 +115,12 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
 }
 
 TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
-  int trigger_period[3] = {100, 10, 1000};
+  using namespace std::chrono_literals;
+
+  std::chrono::milliseconds trigger_period[3] = {100ms, 10ms, 1000ms};
   double total_time = 3000;
 
-  int triggered[3] = { 0, 0, 0};
+  int triggered[3] = { 0, 0, 0 };
   std::vector<std::vector<double>> time_offset;
   time_offset.resize(3);
 
@@ -144,12 +146,12 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
 
   // Allow for some error tolerance in the number of triggers given the period
   for (int i = 0; i < 3; i++) {
-    EXPECT_LE(triggered[i], (total_time / trigger_period[i]) + tolerance);
-    EXPECT_GE(triggered[i], (total_time / trigger_period[i]) - tolerance);
+    EXPECT_LE(triggered[i], (total_time / trigger_period[i].count()) + tolerance);
+    EXPECT_GE(triggered[i], (total_time / trigger_period[i].count()) - tolerance);
   }
 
   for (int i = 0; i < 3; i++) {
-    fmt::print("{}: triggered={}\n", trigger_period[i], triggered[i]);
+    fmt::print("{}: triggered={}\n", trigger_period[i].count(), triggered[i]);
   }
 
   for (int i = 0; i < 3; i++) {
@@ -158,8 +160,8 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
     iter++;
     while (iter != time_offset[i].end()) {
       auto duration_ms = ((*iter) - *(iter-1))*1000;
-      EXPECT_LE(duration_ms, trigger_period[i]*1.3);
-      EXPECT_GE(duration_ms, trigger_period[i]*0.7);
+      EXPECT_LE(duration_ms, trigger_period[i].count()*1.3);
+      EXPECT_GE(duration_ms, trigger_period[i].count()*0.7);
       fmt::print("duration={}\n", duration_ms);
       iter++;
     }

@@ -99,8 +99,6 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
-  using Milliseconds         = typename TimeTrigger::Milliseconds;
-  using TimeTriggerType      = std::map<Milliseconds, TimeTrigger>;
 
 # if vt_check_enabled(priorities)
   using UnitType             = PriorityUnit;
@@ -189,15 +187,14 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    *
    * \return the trigger ID (can be used for removal)
    */
-  int registerTimeTrigger(Milliseconds period, TriggerType trigger);
+  int registerTimeTrigger(std::chrono::milliseconds period, TriggerType trigger);
 
   /**
    * \brief Unregister a time-based trigger
    *
-   * \param[in] period the period of the trigger ID to remove
    * \param[in] handle the trigger ID to remove
    */
-  void unregisterTimeTrigger(Milliseconds period, int handle);
+  void unregisterTimeTrigger(int handle);
 
   /**
    * \internal \brief Trigger an event
@@ -326,8 +323,7 @@ private:
 
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;
-  TimeTriggerType time_triggers_;
-  TimeType next_trigger_time_ = 0;
+  TimeTriggerList time_triggers_;
 
   TimeType last_progress_time_ = 0.0;
   bool progress_time_enabled_ = false;

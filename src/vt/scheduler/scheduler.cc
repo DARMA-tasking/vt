@@ -189,26 +189,7 @@ void Scheduler::printMemoryUsage() {
 
 void Scheduler::progressTimeTriggers() {
   auto const cur_time = timing::Timing::getCurrentTime();
-
-  // Check if the soonest next trigger is ready
-  if (cur_time < next_trigger_time_ and next_trigger_time_ != 0) {
-    return;
-  }
-
-  next_trigger_time_ = std::numeric_limits<TimeType>::max();
-
-  auto iter = time_triggers_.begin();
-  while (iter != time_triggers_.end()) {
-    bool should_trigger = iter->second.shouldTrigger(cur_time);
-    if (should_trigger) {
-      iter->second.trigger(cur_time);
-    }
-    next_trigger_time_ = std::min(
-      next_trigger_time_,
-      iter->second.getLastTriggerTime() + static_cast<TimeType>(iter->first) / 1000
-    );
-    iter++;
-  }
+  time_triggers_.triggerReady(cur_time);
 }
 
 void Scheduler::runProgress(bool msg_only) {
@@ -231,9 +212,7 @@ void Scheduler::runProgress(bool msg_only) {
     printMemoryUsage();
   }
 
-  if (time_triggers_.size() > 0) {
-    progressTimeTriggers();
-  }
+  progressTimeTriggers();
 
   // Reset count of processed handlers since the last time progress was invoked
   processed_after_last_progress_ = 0;
@@ -359,27 +338,14 @@ void Scheduler::registerTriggerOnce(
   event_triggers_once[event].push_back(trigger);
 }
 
-int Scheduler::registerTimeTrigger(Milliseconds period, TriggerType trigger) {
-  auto iter = time_triggers_.find(period);
-  if (iter == time_triggers_.end()) {
-    time_triggers_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(period),
-      std::forward_as_tuple(TimeTrigger{period})
-    );
-    iter = time_triggers_.find(period);
-  }
-  return iter->second.addTrigger(trigger);
+int Scheduler::registerTimeTrigger(
+  std::chrono::milliseconds period, TriggerType trigger
+) {
+  return time_triggers_.addTrigger(period, trigger);
 }
 
-void Scheduler::unregisterTimeTrigger(Milliseconds period, int handle) {
-  auto iter = time_triggers_.lower_bound(period);
-  if (iter != time_triggers_.end() and iter->first == period) {
-    iter->second.removeTrigger(handle);
-    if (iter->second.numTriggers() == 0) {
-      time_triggers_.erase(iter);
-    }
-  }
+void Scheduler::unregisterTimeTrigger(int handle) {
+  time_triggers_.removeTrigger(handle);
 }
 
 }} //end namespace vt::sched
