@@ -57,7 +57,7 @@ namespace vt { namespace vrt { namespace collection {
 
 // Forward declaration for friend declaration below
 namespace balance {
-  struct ProcStats;
+  struct NodeStats;
 }
 
 struct Migratable : MigrateHookBase {
@@ -108,7 +108,7 @@ protected:
 
 protected:
   friend struct balance::ElementStats;
-  friend struct balance::ProcStats;
+  friend struct balance::NodeStats;
   balance::ElementStats stats_;
 public:
   balance::ElementStats& getStats() { return stats_; }

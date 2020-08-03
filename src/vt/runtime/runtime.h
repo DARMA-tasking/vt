@@ -215,7 +215,7 @@ struct Runtime {
    *
    * \warning Do not call this. It does an unsafe \c MPI_Barrier
    *
-   * \todo Remove this and fix the single one callsite in \c ProcStats
+   * \todo Remove this and fix the single one callsite in \c NodeStats
    */
   void systemSync() { sync(); }
 
@@ -389,7 +389,7 @@ public:
   ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
   ComponentPtrType<util::memory::MemoryUsage> theMemUsage;
   ComponentPtrType<rdma::Manager> theHandleRDMA;
-  ComponentPtrType<vrt::collection::balance::ProcStats> theProcStats;
+  ComponentPtrType<vrt::collection::balance::NodeStats> theNodeStats;
   ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader;
   ComponentPtrType<vrt::collection::balance::LBManager> theLBManager;
 

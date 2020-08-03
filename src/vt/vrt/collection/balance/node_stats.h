@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 proc_stats.h
+//                                 node_stats.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H
+#if !defined INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H
+#define INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
@@ -62,7 +62,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
- * \struct ProcStats
+ * \struct NodeStats
  *
  * \brief A VT component that backs the instrumentation of virtualized entities
  * on each node, such as the objects that the collection manager orchestrates,
@@ -75,34 +75,34 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * it to the load balancing framework, specifically the
  * \c * vt::vrt::collection::balance::LBManager
  */
-struct ProcStats : runtime::component::Component<ProcStats> {
+struct NodeStats : runtime::component::Component<NodeStats> {
   using MigrateFnType       = std::function<void(NodeType)>;
 
   /**
-   * \internal \brief System call to construct \c ProcStats
+   * \internal \brief System call to construct \c NodeStats
    */
-  ProcStats() = default;
+  NodeStats() = default;
 
-  std::string name() override { return "ProcStats"; }
+  std::string name() override { return "NodeStats"; }
 
 private:
   /**
-   * \internal \brief Setup the proxy for \c ProcStats
+   * \internal \brief Setup the proxy for \c NodeStats
    *
    * \param[in] in_proxy the objgroup proxy
    */
-  void setProxy(objgroup::proxy::Proxy<ProcStats> in_proxy);
+  void setProxy(objgroup::proxy::Proxy<NodeStats> in_proxy);
 
 public:
   /**
-   * \internal \brief Construct the ProcStats component
+   * \internal \brief Construct the NodeStats component
    *
    * \return pointer to the component
    */
-  static std::unique_ptr<ProcStats> construct();
+  static std::unique_ptr<NodeStats> construct();
 
   /**
-   * \internal \brief Add processor statistics for local object
+   * \internal \brief Add node statistics for local object
    *
    * \param[in] col_elm the collection element pointer
    * \param[in] phase the current phase
@@ -111,14 +111,14 @@ public:
    *
    * \return the temporary ID for the object assigned for this phase
    */
-  ElementIDType addProcStats(
+  ElementIDType addNodeStats(
     Migratable* col_elm,
     PhaseType const& phase, TimeType const& time,
     std::vector<TimeType> const& subphase_time, CommMapType const& comm
   );
 
   /**
-   * \internal \brief Clear/reset all statistics and IDs on this processor
+   * \internal \brief Clear/reset all statistics and IDs on this node
    */
   void clearStats();
 
@@ -173,28 +173,28 @@ public:
    *
    * \return an observer pointer to the load map
    */
-  std::vector<LoadMapType> const* getProcLoad() const;
+  std::vector<LoadMapType> const* getNodeLoad() const;
 
   /**
    * \internal \brief Get stored object loads for individual subphases
    *
    * \return an observer pointer to the subphase load map
    */
-  std::vector<SubphaseLoadMapType> const* getProcSubphaseLoad() const;
+  std::vector<SubphaseLoadMapType> const* getNodeSubphaseLoad() const;
 
   /**
    * \internal \brief Get stored object comm graph
    *
    * \return an observer pointer to the comm graph
    */
-  std::vector<CommMapType> const* getProcComm() const;
+  std::vector<CommMapType> const* getNodeComm() const;
 
   /**
-   * \internal \brief Test if this processor has an object to migrate
+   * \internal \brief Test if this node has an object to migrate
    *
    * \param[in] obj_id the object temporary ID
    *
-   * \return whether this processor has the object
+   * \return whether this node has the object
    */
   bool hasObjectToMigrate(ElementIDType obj_id) const;
 
@@ -204,7 +204,7 @@ public:
    * \param[in] obj_id the object temporary ID
    * \param[in] to_node the node to migrate to
    *
-   * \return whether this processor has the object
+   * \return whether this node has the object
    */
   bool migrateObjTo(ElementIDType obj_id, NodeType to_node);
 
@@ -250,21 +250,21 @@ private:
 
 private:
   /// Local proxy to objgroup
-  objgroup::proxy::Proxy<ProcStats> proxy_;
-  /// Processor timings for each local object
-  std::vector<LoadMapType> proc_data_;
-  /// Processor subphase timings for each local object
-  std::vector<SubphaseLoadMapType> proc_subphase_data_;
+  objgroup::proxy::Proxy<NodeStats> proxy_;
+  /// Node timings for each local object
+  std::vector<LoadMapType> node_data_;
+  /// Node subphase timings for each local object
+  std::vector<SubphaseLoadMapType> node_subphase_data_;
   /// Local migration type-free lambdas for each object
-  std::unordered_map<ElementIDType,MigrateFnType> proc_migrate_;
+  std::unordered_map<ElementIDType,MigrateFnType> node_migrate_;
   /// Map of temporary ID to permanent ID
-  std::unordered_map<ElementIDType,ElementIDType> proc_temp_to_perm_;
+  std::unordered_map<ElementIDType,ElementIDType> node_temp_to_perm_;
   /// Map of permanent ID to temporary ID
-  std::unordered_map<ElementIDType,ElementIDType> proc_perm_to_temp_;
+  std::unordered_map<ElementIDType,ElementIDType> node_perm_to_temp_;
   /// Map from element temporary ID to the collection's virtual proxy (untyped)
-  std::unordered_map<ElementIDType,VirtualProxyType> proc_collection_lookup_;
-  /// Processor communication graph for each local object
-  std::vector<CommMapType> proc_comm_;
+  std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
+  /// Node communication graph for each local object
+  std::vector<CommMapType> node_comm_;
   /// The current element ID
   ElementIDType next_elm_;
   /// The stats file name for outputting instrumentation
@@ -277,8 +277,8 @@ private:
 
 namespace vt {
 
-extern vrt::collection::balance::ProcStats* theProcStats();
+extern vrt::collection::balance::NodeStats* theNodeStats();
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_PROC_STATS_H*/
+#endif /*INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H*/

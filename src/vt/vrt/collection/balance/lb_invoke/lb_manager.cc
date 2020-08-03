@@ -48,7 +48,7 @@
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
@@ -134,10 +134,10 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 
 void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_ = model;
-  auto stats = theProcStats();
-  model_->setLoads(stats->getProcLoad(),
-                   stats->getProcSubphaseLoad(),
-                   stats->getProcComm());
+  auto stats = theNodeStats();
+  model_->setLoads(stats->getNodeLoad(),
+                   stats->getNodeSubphaseLoad(),
+                   stats->getNodeComm());
 }
 
 template <typename LB>
@@ -160,7 +160,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
       lb, node,
       "LBManager: running strategy\n"
     );
-    strat->startLB(phase, base_proxy, model_.get(), theProcStats()->getProcComm()->back());
+    strat->startLB(phase, base_proxy, model_.get(), theNodeStats()->getNodeComm()->back());
   });
 
   runInEpochCollective([=] {
@@ -176,7 +176,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
       lb, node,
       "LBManager: finished migrations\n"
     );
-    theProcStats()->startIterCleanup();
+    theNodeStats()->startIterCleanup();
     this->finishedRunningLB(phase);
   });
 }

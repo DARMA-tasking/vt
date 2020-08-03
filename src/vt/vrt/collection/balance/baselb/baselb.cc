@@ -51,7 +51,7 @@
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/timing/timing.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
@@ -189,7 +189,7 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
     auto from = objGetNode(obj_id);
 
     if (from != to) {
-      bool has_object = theProcStats()->hasObjectToMigrate(obj_id);
+      bool has_object = theNodeStats()->hasObjectToMigrate(obj_id);
 
       vt_debug_print(
         lb, node,
@@ -199,7 +199,7 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
 
       if (has_object) {
         local_migration_count_++;
-        theProcStats()->migrateObjTo(obj_id, to);
+        theNodeStats()->migrateObjTo(obj_id, to);
       } else {
         off_node_migrate[from].push_back(std::make_tuple(obj_id,to));
       }
@@ -227,8 +227,8 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
   for (auto&& elm : migrate_list) {
     auto obj_id  = std::get<0>(elm);
     auto to_node = std::get<1>(elm);
-    vtAssert(theProcStats()->hasObjectToMigrate(obj_id), "Must have object");
-    theProcStats()->migrateObjTo(obj_id, to_node);
+    vtAssert(theNodeStats()->hasObjectToMigrate(obj_id), "Must have object");
+    theNodeStats()->migrateObjTo(obj_id, to_node);
   }
 }
 
