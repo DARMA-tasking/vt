@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 
 #include <functional>
 
@@ -261,7 +262,10 @@ protected:
    * \return objgroup proxy to the new load balancer
    */
   template <typename LB>
-  void makeLB(MsgSharedPtr<StartLBMsg> msg);
+  void runLB(MsgSharedPtr<StartLBMsg> msg);
+
+  template <typename LB>
+  objgroup::proxy::Proxy<lb::BaseLB> makeLB();
 
 private:
   std::size_t num_invocations_             = 0;
