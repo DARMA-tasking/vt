@@ -95,8 +95,8 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
   iter++;
   while (iter != time_offset.end()) {
     auto duration_ms = ((*iter) - *(iter-1))*1000;
-    EXPECT_LE(duration_ms, trigger_period.count()*1.3);
-    EXPECT_GE(duration_ms, trigger_period.count()*0.7);
+    EXPECT_LE(duration_ms, trigger_period.count()*1.8);
+    EXPECT_GE(duration_ms, trigger_period.count()*0.2);
     fmt::print("duration={}\n", duration_ms);
     iter++;
   }
@@ -160,8 +160,8 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
     iter++;
     while (iter != time_offset[i].end()) {
       auto duration_ms = ((*iter) - *(iter-1))*1000;
-      EXPECT_LE(duration_ms, trigger_period[i].count()*1.3);
-      EXPECT_GE(duration_ms, trigger_period[i].count()*0.7);
+      EXPECT_LE(duration_ms, trigger_period[i].count()*1.8);
+      EXPECT_GE(duration_ms, trigger_period[i].count()*0.2);
       fmt::print("duration={}\n", duration_ms);
       iter++;
     }
