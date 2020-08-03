@@ -261,8 +261,7 @@ protected:
    *
    * \return objgroup proxy to the new load balancer
    */
-  template <typename LB>
-  void runLB(MsgSharedPtr<StartLBMsg> msg);
+  void runLB(objgroup::proxy::Proxy<lb::BaseLB> base_proxy, MsgSharedPtr<StartLBMsg> msg);
 
   template <typename LB>
   objgroup::proxy::Proxy<lb::BaseLB> makeLB();
