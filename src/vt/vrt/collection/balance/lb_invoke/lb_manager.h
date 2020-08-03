@@ -278,6 +278,7 @@ private:
   objgroup::proxy::Proxy<LBManager> proxy_;
   std::shared_ptr<LoadModel> base_model_;
   std::shared_ptr<LoadModel> model_;
+  std::unordered_map<std::string, LBProxyType> lb_instances_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

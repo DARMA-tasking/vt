@@ -215,16 +215,15 @@ void LBManager::collectiveImpl(
       );
     }
 
-    LBProxyType base_proxy;
     switch (lb) {
-    case LBType::HierarchicalLB: base_proxy = makeLB<lb::HierarchicalLB>(); break;
-    case LBType::GreedyLB:       base_proxy = makeLB<lb::GreedyLB>();       break;
-    case LBType::RotateLB:       base_proxy = makeLB<lb::RotateLB>();       break;
-    case LBType::GossipLB:       base_proxy = makeLB<lb::GossipLB>();       break;
-    case LBType::StatsMapLB:     base_proxy = makeLB<lb::StatsMapLB>();     break;
-    case LBType::RandomLB:       base_proxy = makeLB<lb::RandomLB>();       break;
+    case LBType::HierarchicalLB: lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(); break;
+    case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
+    case LBType::RotateLB:       lb_instances_["chosen"] = makeLB<lb::RotateLB>();       break;
+    case LBType::GossipLB:       lb_instances_["chosen"] = makeLB<lb::GossipLB>();       break;
+    case LBType::StatsMapLB:     lb_instances_["chosen"] = makeLB<lb::StatsMapLB>();     break;
+    case LBType::RandomLB:       lb_instances_["chosen"] = makeLB<lb::RandomLB>();       break;
 #   if vt_check_enabled(zoltan)
-    case LBType::ZoltanLB:       base_proxy = makeLB<lb::ZoltanLB>();       break;
+    case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
 #   endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
@@ -233,6 +232,8 @@ void LBManager::collectiveImpl(
       vtAssert(false, "A valid LB must be passed to collectiveImpl");
       break;
     }
+
+    LBProxyType base_proxy = lb_instances_["chosen"];
 
     runLB(base_proxy, phase);
   }
