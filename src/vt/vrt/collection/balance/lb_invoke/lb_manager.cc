@@ -144,7 +144,7 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
 }
 
 template <typename LB>
-objgroup::proxy::Proxy<lb::BaseLB>
+LBManager::LBProxyType
 LBManager::makeLB() {
   auto proxy = theObjGroup()->makeCollective<LB>();
   auto strat = proxy.get();
@@ -157,9 +157,7 @@ LBManager::makeLB() {
 }
 
 void
-LBManager::runLB(objgroup::proxy::Proxy<lb::BaseLB> base_proxy, MsgSharedPtr<StartLBMsg> msg) {
-  auto phase = msg->getPhase();
-
+LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
   lb::BaseLB* strat = base_proxy.get();
 
   runInEpochCollective([=] {
@@ -217,7 +215,7 @@ void LBManager::collectiveImpl(
       );
     }
 
-    objgroup::proxy::Proxy<lb::BaseLB> base_proxy;
+    LBProxyType base_proxy;
     switch (lb) {
     case LBType::HierarchicalLB: base_proxy = makeLB<lb::HierarchicalLB>(); break;
     case LBType::GreedyLB:       base_proxy = makeLB<lb::GreedyLB>();       break;
@@ -236,8 +234,7 @@ void LBManager::collectiveImpl(
       break;
     }
 
-    auto msg = makeMessage<StartLBMsg>(phase);
-    runLB(base_proxy, msg);
+    runLB(base_proxy, phase);
   }
 }
 

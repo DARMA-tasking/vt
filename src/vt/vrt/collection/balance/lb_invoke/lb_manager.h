@@ -70,6 +70,7 @@ class LoadModel;
  */
 struct LBManager : runtime::component::Component<LBManager> {
   using ListenerFnType = std::function<void(PhaseType)>;
+  using LBProxyType    = objgroup::proxy::Proxy<lb::BaseLB>;
 
   /**
    * \internal \brief System call to construct a \c LBManager
@@ -257,14 +258,14 @@ protected:
   /**
    * \internal \brief Collectively construct a new load balancer
    *
-   * \param[in] msg the start LB message
+   * \param[in] LB the type of strategy to instantiate
    *
    * \return objgroup proxy to the new load balancer
    */
-  void runLB(objgroup::proxy::Proxy<lb::BaseLB> base_proxy, MsgSharedPtr<StartLBMsg> msg);
-
   template <typename LB>
-  objgroup::proxy::Proxy<lb::BaseLB> makeLB();
+  LBProxyType makeLB();
+
+  void runLB(LBProxyType base_proxy, PhaseType phase);
 
 private:
   std::size_t num_invocations_             = 0;
