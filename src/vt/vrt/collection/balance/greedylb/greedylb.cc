@@ -299,12 +299,6 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   auto const threshold = this_threshold * avg_load;
   auto const obj_id = bin_list.back();
 
-  if (load_over.find(bin) == load_over.end()) {
-    load_over_size += sizeof(std::size_t) * 4;
-    load_over_size += sizeof(ObjBinType);
-  }
-  load_over_size += sizeof(ObjIDType);
-
   load_over[bin].push_back(obj_id);
   bin_list.pop_back();
 
