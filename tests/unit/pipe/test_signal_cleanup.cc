@@ -89,12 +89,11 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
   // run until termination
   do vt::runScheduler(); while (not vt::rt->isTerminated());
 
-  // explicitly finalize runtime to destroy and reset components---and force it
-  // now!
-  vt::rt->finalize(true);
+  // explicitly finalize runtime to destroy and reset components
+  vt::finalize();
 
-  // re-init runtime, fresh state---force it now!
-  vt::rt->initialize(true);
+  // re-init runtime, fresh state
+  vt::initialize();
 
   // Create another callback with the same template signature, meaning it will
   // target the same signal holder. The old callback from the previous init
