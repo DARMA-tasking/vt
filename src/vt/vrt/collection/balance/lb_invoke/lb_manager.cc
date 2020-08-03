@@ -156,10 +156,8 @@ LBManager::makeLB() {
   return base_proxy;
 }
 
-template <typename LB>
 void
-LBManager::runLB(MsgSharedPtr<StartLBMsg> msg) {
-  auto base_proxy = makeLB<LB>();
+LBManager::runLB(objgroup::proxy::Proxy<lb::BaseLB> base_proxy, MsgSharedPtr<StartLBMsg> msg) {
   auto phase = msg->getPhase();
 
   lb::BaseLB* strat = base_proxy.get();
@@ -219,16 +217,16 @@ void LBManager::collectiveImpl(
       );
     }
 
-    auto msg = makeMessage<StartLBMsg>(phase);
+    objgroup::proxy::Proxy<lb::BaseLB> base_proxy;
     switch (lb) {
-    case LBType::HierarchicalLB: runLB<lb::HierarchicalLB>(msg); break;
-    case LBType::GreedyLB:       runLB<lb::GreedyLB>(msg);       break;
-    case LBType::RotateLB:       runLB<lb::RotateLB>(msg);       break;
-    case LBType::GossipLB:       runLB<lb::GossipLB>(msg);       break;
-    case LBType::StatsMapLB:     runLB<lb::StatsMapLB>(msg);     break;
-    case LBType::RandomLB:       runLB<lb::RandomLB>(msg);       break;
+    case LBType::HierarchicalLB: base_proxy = makeLB<lb::HierarchicalLB>(); break;
+    case LBType::GreedyLB:       base_proxy = makeLB<lb::GreedyLB>();       break;
+    case LBType::RotateLB:       base_proxy = makeLB<lb::RotateLB>();       break;
+    case LBType::GossipLB:       base_proxy = makeLB<lb::GossipLB>();       break;
+    case LBType::StatsMapLB:     base_proxy = makeLB<lb::StatsMapLB>();     break;
+    case LBType::RandomLB:       base_proxy = makeLB<lb::RandomLB>();       break;
 #   if vt_check_enabled(zoltan)
-    case LBType::ZoltanLB:       runLB<lb::ZoltanLB>(msg);       break;
+    case LBType::ZoltanLB:       base_proxy = makeLB<lb::ZoltanLB>();       break;
 #   endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
@@ -237,6 +235,9 @@ void LBManager::collectiveImpl(
       vtAssert(false, "A valid LB must be passed to collectiveImpl");
       break;
     }
+
+    auto msg = makeMessage<StartLBMsg>(phase);
+    runLB(base_proxy, msg);
   }
 }
 
