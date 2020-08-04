@@ -154,26 +154,6 @@ class CollectionChainSet final {
     return nextStep("", step_action);
   }
 
-#if 0
-  void nextStep(std::function<Action(Index)> step_action) {
-    for (auto &entry : chains_) {
-      auto& idx = entry.first;
-      auto& chain = entry.second;
-      chain.add(step_action(idx));
-    }
-  }
-
-  void nextStepConcurrent(std::vector<std::function<PendingSend(Index)>> step_actions) {
-    for (auto &entry : chains_) {
-      auto& idx = entry.first;
-      auto& chain = entry.second;
-      chain.add(step_actions[0](idx));
-      for (int i = 1; i < step_actions.size(); ++i)
-        chain.addConcurrent(step_actions[i](idx));
-    }
-  }
-#endif
-
   /**
    * \brief The next collective step to execute for each index that is added
    * to the CollectionChainSet on each node.
