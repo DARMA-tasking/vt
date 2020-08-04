@@ -70,6 +70,7 @@ struct RotateLB : BaseLB {
   void init(objgroup::proxy::Proxy<RotateLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
+  void cleanup() override;
 
 private:
   objgroup::proxy::Proxy<RotateLB> proxy = {};

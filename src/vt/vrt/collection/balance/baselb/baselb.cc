@@ -71,6 +71,7 @@ void BaseLB::startLB(
   phase_ = phase;
   proxy_ = proxy;
   load_model_ = model;
+  transfers_.clear();
 
   importProcessorData(in_comm_stats);
 
@@ -100,6 +101,10 @@ void BaseLB::importProcessorData(
     "{}: importProcessorData: load stats size={}, load comm size={}\n",
     this_node, load_model_->getNumObjects(), comm_in.size()
   );
+
+  obj_sample.clear();
+  this_load = 0;
+
   for (auto obj : *load_model_) {
     auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     auto const& load_milli = loadMilli(load);
@@ -181,6 +186,7 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
 
 void BaseLB::applyMigrations(TransferVecType const &transfers) {
   TransferType off_node_migrate;
+  local_migration_count_ = 0;
 
   for (auto&& elm : transfers) {
     auto obj_id = std::get<0>(elm);

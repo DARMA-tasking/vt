@@ -95,22 +95,14 @@ void HierarchicalLB::inputParams(balance::SpecEntry* spec) {
   }
 }
 
-void HierarchicalLB::setupTree(double const threshold) {
-  vtAssert(
-    tree_setup == false,
-    "Tree must not already be set up when is this called"
-  );
+void HierarchicalLB::setupTree() {
+  if (tree_setup)
+    return;
+
+  tree_setup = true;
 
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-
-  this_threshold = threshold;
-
-  vt_debug_print(
-    hierlb, node,
-    "HierarchicalLB: setupTree: threshold={}\n",
-    threshold
-  );
 
   for (NodeType node = 0; node < hierlb_nary; node++) {
     NodeType const child = this_node * hierlb_nary + node + 1;
@@ -697,7 +689,14 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
 }
 
 void HierarchicalLB::runLB() {
-  setupTree(min_threshold);
+  this_threshold = min_threshold;
+  vt_debug_print(
+    hierlb, node,
+    "HierarchicalLB: threshold={}\n",
+    this_threshold
+  );
+
+  setupTree();
 
   auto cb = vt::theCB()->makeBcast<
     HierarchicalLB, SetupDoneMsg, &HierarchicalLB::setupDone
@@ -708,6 +707,12 @@ void HierarchicalLB::runLB() {
 
 void HierarchicalLB::setupDone(SetupDoneMsg* msg) {
   loadStats();
+}
+
+void HierarchicalLB::cleanup() {
+  load_over.clear();
+  given_objs.clear();
+  taken_objs.clear();
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

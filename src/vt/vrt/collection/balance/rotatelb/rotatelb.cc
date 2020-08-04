@@ -81,5 +81,9 @@ void RotateLB::runLB() {
   }
 }
 
+void RotateLB::cleanup() {
+  // Nothing to clean up from one use to the next
+}
+
 }}}} /* end namespace vt::vrt::collection::lb */
 

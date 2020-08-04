@@ -62,6 +62,7 @@ struct StatsMapLB : BaseLB {
   void init(objgroup::proxy::Proxy<StatsMapLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override { }
+  void cleanup() override;
 
 private:
   objgroup::proxy::Proxy<StatsMapLB> proxy_ = {};

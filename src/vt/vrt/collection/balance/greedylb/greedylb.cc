@@ -341,6 +341,10 @@ void GreedyLB::calcLoadOver() {
   }
 }
 
+void GreedyLB::cleanup() {
+  load_over.clear();
+}
+
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC*/

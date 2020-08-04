@@ -183,6 +183,15 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
   runInEpochCollective([=] {
     vt_debug_print(
       lb, node,
+      "LBManager: cleaning up strategy\n"
+    );
+    // Should actually be done asynchronously, and awaited before *next* use of the chosen strategy instance
+    strat->cleanup();
+  });
+
+  runInEpochCollective([=] {
+    vt_debug_print(
+      lb, node,
       "LBManager: finished migrations\n"
     );
     theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());

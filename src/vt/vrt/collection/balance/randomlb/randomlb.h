@@ -58,6 +58,7 @@ struct RandomLB : BaseLB {
   void init(objgroup::proxy::Proxy<RandomLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
+  void cleanup() override;
 
 private:
   int seed_ = 123456789;

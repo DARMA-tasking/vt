@@ -72,6 +72,7 @@ public:
   void init(objgroup::proxy::Proxy<GossipLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
+  void cleanup() override;
 
 protected:
   void doLBStages();
