@@ -161,7 +161,7 @@ class CollectionChainSet final {
    * Should be used for steps with internal recursive communication and global
    * inter-dependence. Creates a global (on the communicator), collective epoch
    * to track all the casually related messages and collectively wait for
-   * termination of all of the recursive sends..
+   * termination of all of the recursive sends.
    *
    * \param[in] label Label for the epoch created for debugging
    * \param[in] step_action the next step to execute, returning a \c PendingSend
@@ -188,7 +188,7 @@ class CollectionChainSet final {
    * Should be used for steps with internal recursive communication and global
    * inter-dependence. Creates a global (on the communicator), collective epoch
    * to track all the casually related messages and collectively wait for
-   * termination of all of the recursive sends..
+   * termination of all of the recursive sends.
    *
    * \param[in] step_action the next step to execute, returning a \c PendingSend
    */
