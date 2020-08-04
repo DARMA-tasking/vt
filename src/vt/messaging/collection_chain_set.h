@@ -68,7 +68,7 @@ namespace vt { namespace messaging {
  */
 template <class Index>
 class CollectionChainSet final {
- public:
+  public:
   CollectionChainSet() = default;
   CollectionChainSet(const CollectionChainSet&) = delete;
   CollectionChainSet(CollectionChainSet&&) = delete;
@@ -81,7 +81,9 @@ class CollectionChainSet final {
    * \param[in] idx the index to add
    */
   void addIndex(Index idx) {
-    vtAssert(chains_.find(idx) == chains_.end(), "Cannot add an already-present chain");
+    vtAssert(
+      chains_.find(idx) == chains_.end(),
+      "Cannot add an already-present chain");
     chains_[idx] = DependentSendChain();
   }
 
@@ -98,7 +100,8 @@ class CollectionChainSet final {
   void removeIndex(Index idx) {
     auto iter = chains_.find(idx);
     vtAssert(iter != chains_.end(), "Cannot remove a non-present chain");
-    vtAssert(iter->second.isTerminated(), "Cannot remove a chain with pending work");
+    vtAssert(
+      iter->second.isTerminated(), "Cannot remove a chain with pending work");
 
     chains_.erase(iter);
   }
@@ -117,15 +120,15 @@ class CollectionChainSet final {
    * \c PendingSend
    */
   void nextStep(
-    std::string const& label, std::function<PendingSend(Index)> step_action
-  ) {
-    for (auto &entry : chains_) {
+    std::string const& label, std::function<PendingSend(Index)> step_action) {
+    for (auto& entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
 
       // The parameter `true` here tells VT to use an efficient rooted DS-epoch
       // by default. This can still be overridden by command-line flags
-      EpochType new_epoch = theTerm()->makeEpochRooted(label, term::UseDS{true});
+      EpochType new_epoch =
+        theTerm()->makeEpochRooted(label, term::UseDS{true});
       vt::theMsg()->pushEpoch(new_epoch);
 
       chain.add(new_epoch, step_action(idx));
@@ -179,12 +182,11 @@ class CollectionChainSet final {
    * \param[in] step_action the next step to execute, returning a \c PendingSend
    */
   void nextStepCollective(
-    std::string const& label, std::function<PendingSend(Index)> step_action
-  ) {
+    std::string const& label, std::function<PendingSend(Index)> step_action) {
     auto epoch = theTerm()->makeEpochCollective(label);
     vt::theMsg()->pushEpoch(epoch);
 
-    for (auto &entry : chains_) {
+    for (auto& entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
       chain.add(epoch, step_action(idx));
@@ -209,10 +211,10 @@ class CollectionChainSet final {
    * \param[in] step_action the next step to be executed, dependent on the
    *            previous step of chainsets a and b
    */
-  static void mergeStepCollective(CollectionChainSet &a, CollectionChainSet &b,
-   std::function<PendingSend(Index)> step_action
-  ) {
-    mergeStepCollective( "", a, b, step_action);
+  static void mergeStepCollective(
+    CollectionChainSet& a, CollectionChainSet& b,
+    std::function<PendingSend(Index)> step_action) {
+    mergeStepCollective("", a, b, step_action);
   }
 
   /**
@@ -232,21 +234,22 @@ class CollectionChainSet final {
    *            previous step of chainsets a and b
    */
   static void mergeStepCollective(
-   std::string const& label,
-   CollectionChainSet &a, CollectionChainSet &b,
-   std::function<PendingSend(Index)> step_action
-  ) {
+    std::string const& label, CollectionChainSet& a, CollectionChainSet& b,
+    std::function<PendingSend(Index)> step_action) {
     auto epoch = theTerm()->makeEpochCollective(label);
     vt::theMsg()->pushEpoch(epoch);
 
-    for (auto &entry : a.chains_) {
-     auto& idx = entry.first;
-     auto& chaina = entry.second;
-     auto chainb_pos = b.chains_.find(entry.first);
-     vtAssert(chainb_pos != b.chains_.end(), fmt::format("index {} must be present in chainset b", entry.first));
+    for (auto& entry : a.chains_) {
+      auto& idx = entry.first;
+      auto& chaina = entry.second;
+      auto chainb_pos = b.chains_.find(entry.first);
+      vtAssert(
+        chainb_pos != b.chains_.end(),
+        fmt::format("index {} must be present in chainset b", entry.first));
 
-     auto& chainb = chainb_pos->second;
-     DependentSendChain::mergeChainStep(chaina, chainb, epoch, step_action(idx));
+      auto& chainb = chainb_pos->second;
+      DependentSendChain::mergeChainStep(
+        chaina, chainb, epoch, step_action(idx));
     }
 
     vt::theMsg()->popEpoch(epoch);
@@ -268,7 +271,7 @@ class CollectionChainSet final {
    * each \c DependentSendChain
    */
   void phaseDone() {
-    for (auto &entry : chains_) {
+    for (auto& entry : chains_) {
       entry.second.done();
     }
   }
@@ -278,7 +281,7 @@ class CollectionChainSet final {
    */
   std::unordered_set<Index> getSet() {
     std::unordered_set<Index> index_set;
-    for (auto &entry : chains_) {
+    for (auto& entry : chains_) {
       index_set.emplace(entry.first);
     }
     return index_set;
@@ -287,13 +290,13 @@ class CollectionChainSet final {
   /**
    * \brief Run a lambda immediately on each element in the index set
    */
-  void foreach(std::function<void(Index)> fn) {
-    for (auto &entry : chains_) {
+  void foreach (std::function<void(Index)> fn) {
+    for (auto& entry : chains_) {
       fn(entry.first);
     }
   }
 
- private:
+  private:
   std::unordered_map<Index, DependentSendChain> chains_;
 };
 
