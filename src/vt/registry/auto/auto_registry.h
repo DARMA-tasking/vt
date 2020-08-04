@@ -73,6 +73,9 @@ HandlerType makeAutoHandlerObjGroup(HandlerControlType control);
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 HandlerType makeAutoHandler(MsgT* const msg);
 
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+HandlerType makeAutoHandler();
+
 template <typename T, T value>
 HandlerType makeAutoHandlerParam();
 

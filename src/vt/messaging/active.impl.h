@@ -119,11 +119,11 @@ trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   #endif
 }
 
-template <typename MessageT>
+template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   NodeType dest,
   HandlerType han,
-  MsgSharedPtr<MessageT>& msg,
+  MsgSharedPtr<MsgT>& msg,
   ByteType msg_size,
   TagType tag
 ) {
@@ -131,7 +131,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   // through use of a wrapped message which does not define serialization.
   // (Although such probably represents an opportunity for additional cleanup.)
   static_assert( // that a message is serializable.
-    ::checkpoint::SerializableTraits<MessageT>::is_serializable,
+    ::checkpoint::SerializableTraits<MsgT>::is_serializable,
     "Message going through serialization must meet all requirements."
   );
 
@@ -139,32 +139,32 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
     tag == no_tag,
     "Tagged messages serialization not implemented."
   );
-  MessageT* msgp = msg.get();
+  MsgT* msgp = msg.get();
   if (dest == broadcast_dest) {
-    return SerializedMessenger::broadcastSerialMsg<MessageT>(msgp,han);
+    return SerializedMessenger::broadcastSerialMsg<MsgT>(msgp,han);
   } else {
-    return SerializedMessenger::sendSerialMsg<MessageT>(dest,msgp,han);
+    return SerializedMessenger::sendSerialMsg<MsgT>(dest,msgp,han);
   }
 }
 
-template <typename MessageT>
+template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   NodeType dest,
   HandlerType han,
-  MsgSharedPtr<MessageT>& msg,
+  MsgSharedPtr<MsgT>& msg,
   ByteType msg_size,
   TagType tag
 ) {
   static_assert(
-    vt::messaging::is_byte_copyable_t<MessageT>::value,
+    vt::messaging::is_byte_copyable_t<MsgT>::value,
     "Message sent without serialization must be byte-copyable."
   );
   static_assert(
-    std::is_trivially_destructible<MessageT>::value,
+    std::is_trivially_destructible<MsgT>::value,
     "Message sent without serialization must be trivially destructible."
   );
 
-  MessageT* rawMsg = msg.get();
+  MsgT* rawMsg = msg.get();
 
   bool is_term = envelopeIsTerm(rawMsg->env);
 
@@ -174,7 +174,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
       dest == broadcast_dest
         ? "broadcastMsg of ptr={}, type={}\n"
         : "sendMsg of ptr={}, type={}\n",
-      print_ptr(rawMsg), typeid(MessageT).name()
+      print_ptr(rawMsg), typeid(MsgT).name()
     );
   }
 
@@ -183,7 +183,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
     setBroadcastType(rawMsg->env);
   }
   if (msg_size == msgsize_not_specified) {
-    msg_size = sizeof(MessageT);
+    msg_size = sizeof(MsgT);
   }
   if (tag != no_tag) {
     envelopeSetTag(rawMsg->env, tag);
@@ -199,191 +199,181 @@ template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
   HandlerType han,
-  MsgSharedPtr<MsgT>& msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  return sendMsgImpl<MsgT>(dest, han, msg, msgsize_not_specified, tag);
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
-template <typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
-  NodeType dest,
-  HandlerType han,
-  MessageT* msg,
-  TagType tag
-) {
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
-}
-
-template <typename MessageT>
+template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   NodeType dest,
   HandlerType han,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   ByteType msg_size,
   TagType tag
 ) {
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msg_size, tag);
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msg_size, tag);
 }
 
-template <typename MessageT>
+template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   NodeType dest,
   HandlerType han,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   ByteType msg_size,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(
     broadcast_dest, han, msgptr, msg_size, tag
   );
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(
     broadcast_dest, han, msgptr, msgsize_not_specified, tag
   );
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   NodeType dest,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   ByteType msg_size,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msg_size, tag);
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msg_size, tag);
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   NodeType dest,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(
     broadcast_dest, han, msgptr, msgsize_not_specified, tag
   );
 }
 
-template <ActiveFnType* f, typename MessageT>
+template <ActiveFnType* f, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(
     broadcast_dest, han, msgptr, msgsize_not_specified, tag
   );
 }
 
-template <ActiveFnType* f, typename MessageT>
+template <ActiveFnType* f, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
-template <typename FunctorT, typename MessageT>
+template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MessageT*>();
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(
     broadcast_dest, han, msgptr, msgsize_not_specified, tag
   );
 }
 
-template <typename FunctorT, typename MessageT>
+template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MessageT*>();
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
-template <typename FunctorT, typename MessageT>
+template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MessageT*>();
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(
     broadcast_dest, han, msgptr, msgsize_not_specified, tag
   );
 }
 
-template <typename FunctorT, typename MessageT>
+template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   NodeType dest,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MessageT*>();
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
+  auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
-template <typename MessageT>
+template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
   HandlerType han,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   UserSendFnType send_payload_fn
 ) {
   namespace ph = std::placeholders;
@@ -394,52 +384,41 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   );
   send_payload_fn(f);
 
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
   auto tag = no_tag;
-  return sendMsgImpl<MessageT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
 }
 
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   UserSendFnType send_payload_fn
 ) {
-  auto const han = auto_registry::makeAutoHandler<MessageT,f>(msg);
-  return sendMsg<MessageT>(dest, han, msg, send_payload_fn);
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
+  return sendMsg<MsgT>(dest, han, msg, send_payload_fn);
 }
 
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   HandlerType han,
-  MsgSharedPtr<MsgT>& msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msg, msgsize_not_specified, tag
-  );
-}
-
-template <typename MessageT>
-ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  HandlerType han,
-  MessageT* msg,
-  TagType tag
-) {
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(
     broadcast_dest, han, msgptr, msgsize_not_specified, tag
   );
 }
 
-template <typename MessageT>
+template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   HandlerType han,
-  MessageT* msg,
+  TransferMsg<MsgT> msg,
   TagType tag
 ) {
-  MsgSharedPtr<MessageT> msgptr = promoteMsg(msg);
-  return sendMsgImpl<MessageT>(
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  return sendMsgImpl<MsgT>(
     broadcast_dest, han, msgptr, msgsize_not_specified, tag
   );
 }

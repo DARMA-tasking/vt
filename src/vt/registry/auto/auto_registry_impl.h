@@ -96,6 +96,17 @@ inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) 
   return HandlerManagerType::makeHandler(true, false, RunType::idx);
 }
 
+template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+inline HandlerType makeAutoHandler() {
+  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
+  using ContainerType = AutoActiveContainerType;
+  using RegInfoType = AutoRegInfoType<AutoActiveType>;
+  using FuncType = ActiveFnPtrType;
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
+  return HandlerManagerType::makeHandler(true, false, RunType::idx);
+}
+
 template <typename T, T value>
 inline HandlerType makeAutoHandlerParam() {
   using AdapterT = FunctorAdapterParam<T, value>;
