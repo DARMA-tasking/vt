@@ -48,7 +48,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
+#include "vt/configs/arguments/args.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"

@@ -46,7 +46,6 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/context/context.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/node_stats.h"

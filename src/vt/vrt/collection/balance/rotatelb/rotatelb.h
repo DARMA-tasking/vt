@@ -48,7 +48,6 @@
 #include "vt/config.h"
 #include "vt/messaging/message.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/timing/timing.h"
 
