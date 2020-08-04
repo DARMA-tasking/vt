@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/messages/user.h"
 #include "vt/collective/reduce/reduce.h"
 #include "vt/messaging/message.h"
