@@ -73,6 +73,7 @@ struct GreedyLB : BaseLB {
   void init(objgroup::proxy::Proxy<GreedyLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
+  void cleanup() override;
 
 private:
   double getAvgLoad() const;

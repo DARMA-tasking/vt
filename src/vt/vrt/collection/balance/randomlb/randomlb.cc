@@ -102,5 +102,9 @@ void RandomLB::runLB() {
   }
 }
 
+void RandomLB::cleanup() {
+  // Nothing to clean up from one use to the next
+}
+
 }}}} /* end namespace vt::vrt::collection::balance::lb */
 

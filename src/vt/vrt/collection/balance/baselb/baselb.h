@@ -126,6 +126,11 @@ struct BaseLB {
 
   virtual void inputParams(balance::SpecEntry* spec) = 0;
   virtual void runLB() = 0;
+  /**
+   * \brief Clear out any transient state from invocation, in
+   * preparation for a later call
+   */
+  virtual void cleanup() = 0;
 
   TransferVecType& getTransfers() { return transfers_; }
 
@@ -136,23 +141,24 @@ protected:
   void getArgs(PhaseType phase);
 
 protected:
+  PhaseType phase_                                = 0;
+  objgroup::proxy::Proxy<BaseLB> proxy_           = {};
+  // Observer only - LBManager owns the instance
+  balance::LoadModel* load_model_                 = nullptr;
+  ElementCommType const* comm_data                = nullptr;
   double start_time_                              = 0.0f;
+
   int32_t bin_size_                               = 10;
+
   ObjSampleType obj_sample                        = {};
   LoadType this_load                              = 0.0f;
-  ElementCommType const* comm_data                = nullptr;
   StatisticMapType stats                          = {};
-  objgroup::proxy::Proxy<BaseLB> proxy_           = {};
-  PhaseType phase_                                = 0;
   bool comm_aware_                                = false;
   bool comm_collectives_                          = false;
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
-  // Observer only - LBManager owns the instance
-  balance::LoadModel* load_model_                 = nullptr;
 
 private:
   TransferVecType transfers_                      = {};
-  TransferType off_node_migrate_                  = {};
   int32_t local_migration_count_                  = 0;
 };
 

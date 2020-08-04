@@ -67,6 +67,7 @@ struct ZoltanLB : BaseLB {
   void init(objgroup::proxy::Proxy<ZoltanLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
+  void cleanup() override;
 
 private:
   struct Graph {

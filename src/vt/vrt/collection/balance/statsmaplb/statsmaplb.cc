@@ -68,4 +68,8 @@ void StatsMapLB::runLB() {
   theStatsReader()->clearMoveList(phase_);
 }
 
+void StatsMapLB::cleanup() {
+  // Nothing to clean up from one use to the next
+}
+
 }}}} /* end namespace vt::vrt::collection::lb */

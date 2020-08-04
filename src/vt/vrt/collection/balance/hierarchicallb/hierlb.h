@@ -76,8 +76,9 @@ struct HierarchicalLB : BaseLB {
   void init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
+  void cleanup() override;
 
-  void setupTree(double const threshold);
+  void setupTree();
   void calcLoadOver(HeapExtractEnum const extract);
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void procDataIn(ElementLoadType const& data_in);
@@ -120,21 +121,25 @@ private:
   void loadStats();
 
 private:
-  double this_threshold = 0.0f;
+  objgroup::proxy::Proxy<HierarchicalLB> proxy = {};
+
+  // Tree structure members
   bool tree_setup = false;
   NodeType parent = uninitialized_destination;
   NodeType bottom_parent = uninitialized_destination;
   NodeType agg_node_size = 0, child_msgs = 0;
   ChildMapType children;
-  LoadType this_load_begin = 0.0f;
-  ObjSampleType load_over, given_objs, taken_objs;
-  int64_t migrates_expected = 0, transfer_count = 0;
-  TransferType transfers;
-  objgroup::proxy::Proxy<HierarchicalLB> proxy = {};
+
+  // Input parameters from LB spec
   double max_threshold = 0.0f;
   double min_threshold = 0.0f;
   bool auto_threshold = true;
   HeapExtractEnum extract_strategy = HeapExtractEnum::LoadOverLessThan;
+
+  // Per-invocation state
+  double this_threshold = 0.0f;
+  LoadType this_load_begin = 0.0f;
+  ObjSampleType load_over, given_objs, taken_objs;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
