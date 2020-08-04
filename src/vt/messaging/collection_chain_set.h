@@ -107,10 +107,10 @@ class CollectionChainSet final {
   }
 
   /**
-   * \brief The next step to execute on all the chains resident in this
+   * \brief The next step to execute on all the chain indices in this
    * collection chain set
    *
-   * Goes through every resident chain and enqueues the action at the end of the
+   * Goes through every chain index and enqueues the action at the end of the
    * current chain when the preceding steps terminate. Creates a new rooted
    * epoch for this step to contain/track completion of all the causally related
    * messages.
@@ -139,8 +139,13 @@ class CollectionChainSet final {
   }
 
   /**
-   * \brief The next step to execute on all the chains resident in this
+   * \brief The next step to execute on all the chain indices in this
    * collection chain set
+   *
+   * Goes through every chain index and enqueues the action at the end of the
+   * current chain when the preceding steps terminate. Creates a new rooted
+   * epoch for this step to contain/track completion of all the causally related
+   * messages.
    *
    * \param[in] step_action The action to perform as a function that returns a
    * \c PendingSend
@@ -170,8 +175,8 @@ class CollectionChainSet final {
 #endif
 
   /**
-   * \brief The next collective step to execute across all resident elements
-   * across all nodes.
+   * \brief The next collective step to execute for each index that is added
+   * to the CollectionChainSet on each node.
    *
    * Should be used for steps with internal recursive communication and global
    * inter-dependence. Creates a global (on the communicator), collective epoch
@@ -197,8 +202,24 @@ class CollectionChainSet final {
   }
 
   /**
+   * \brief The next collective step to execute for each index that is added
+   * to the CollectionChainSet on each node.
+   *
+   * Should be used for steps with internal recursive communication and global
+   * inter-dependence. Creates a global (on the communicator), collective epoch
+   * to track all the casually related messages and collectively wait for
+   * termination of all of the recursive sends..
+   *
+   * \param[in] step_action the next step to execute, returning a \c PendingSend
+   */
+  void nextStepCollective(std::function<PendingSend(Index)> step_action) {
+    return nextStepCollective("", step_action);
+  }
+
+  /**
    * \brief The next collective step of both CollectionChainSets
-   * to execute across all resident elements across all nodes.
+   * to execute over all shared indices of the CollectionChainSets over all
+   * nodes.
    *
    * This function ensures that the step is dependent on the previous step
    * of both chainsets a and b. Additionally any additional steps in each
@@ -219,7 +240,8 @@ class CollectionChainSet final {
 
   /**
    * \brief The next collective step of both CollectionChainSets
-   * to execute across all resident elements across all nodes.
+   * to execute over all shared indices of the CollectionChainSets over all
+   * nodes.
    *
    * This function ensures that the step is dependent on the previous step
    * of both chainsets a and b. Additionally any additional steps in each
@@ -254,16 +276,6 @@ class CollectionChainSet final {
 
     vt::theMsg()->popEpoch(epoch);
     theTerm()->finishedEpoch(epoch);
-  }
-
-  /**
-   * \brief The next collective step to execute across all resident elements
-   * across all nodes.
-   *
-   * \param[in] step_action the next step to execute, returning a \c PendingSend
-   */
-  void nextStepCollective(std::function<PendingSend(Index)> step_action) {
-    return nextStepCollective("", step_action);
   }
 
   /**
