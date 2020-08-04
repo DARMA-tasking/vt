@@ -178,6 +178,31 @@ struct BufferedActiveMsg {
 };
 
 /**
+ * \brief Used to transfer messages/lifetime into sendMsg.
+ *
+ * This type is not intented to be used directly.
+ * Instead, it supports implicit transforms which are used.
+ */
+template <typename MsgT>
+struct TransferMsg {
+  // TODO: This should 'go away' when direct 'msg.get()' usages are replaced with 'msg'
+  /*implicit*/ TransferMsg(MsgT const* msgPtr) : msg_(promoteMsg<MsgT>(const_cast<MsgT*>(msgPtr))) {
+  }
+
+  // n.b. invalidates the msg*
+  /*implicit*/ TransferMsg(MsgT*& msgPtr) : msg_(promoteMsg<MsgT>(msgPtr)) {
+    // Guaranteed way to make broadcast code fail:
+    // msgPtr = nullptr;
+  }
+
+  // n.b. invalidates msg
+  /*implicit*/ TransferMsg(MsgPtr<MsgT>& msg) : msg_(std::move(msg)) {
+  }
+
+  MsgPtr<MsgT> msg_;
+};
+
+/**
  * \struct ActiveMessenger active.h vt/messaging/active.h
  *
  * \brief Core component of VT used to send messages.
@@ -291,11 +316,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   // With serialization, the correct method is resolved via SFINAE.
   // This also includes additional guards to detect ambiguity.
 
-  template <typename MessageT>
+  template <typename MsgT>
   ActiveMessenger::PendingSendType sendMsgSerializableImpl(
     NodeType dest,
     HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
+    MsgSharedPtr<MsgT>& msg,
     ByteType msg_size,
     TagType tag
   );
@@ -306,110 +331,110 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   // messages directly inheriting from ActiveMsg. ActivMsg implements
   // a serialize function which is implictly inherited..
   template <
-    typename MessageT,
+    typename MsgT,
     std::enable_if_t<true
-      and not ::vt::messaging::msg_defines_serialize_mode<MessageT>::value,
+      and not ::vt::messaging::msg_defines_serialize_mode<MsgT>::value,
       int
     > = 0
   >
   inline ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
     HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
+    MsgSharedPtr<MsgT>& msg,
     ByteType msg_size,
     TagType tag
   ) {
 #ifndef vt_quirked_serialize_method_detection
     static_assert(
-      not ::vt::messaging::has_own_serialize<MessageT>,
+      not ::vt::messaging::has_own_serialize<MsgT>,
       "Message prohibiting serialization must not have a serialization function."
     );
 #endif
-    return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
+    return sendMsgCopyableImpl<MsgT>(dest, han, msg, msg_size, tag);
   }
 
   // Serializable and serialization required on this type.
   template <
-    typename MessageT,
+    typename MsgT,
     std::enable_if_t<true
-      and ::vt::messaging::msg_defines_serialize_mode<MessageT>::value
-      and ::vt::messaging::msg_serialization_mode<MessageT>::required,
+      and ::vt::messaging::msg_defines_serialize_mode<MsgT>::value
+      and ::vt::messaging::msg_serialization_mode<MsgT>::required,
       int
     > = 0
   >
   inline ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
     HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
+    MsgSharedPtr<MsgT>& msg,
     ByteType msg_size,
     TagType tag
   ) {
 #ifndef vt_quirked_serialize_method_detection
     static_assert(
-      ::vt::messaging::has_own_serialize<MessageT>,
+      ::vt::messaging::has_own_serialize<MsgT>,
       "Message requiring serialization must have a serialization function."
     );
 #endif
-    return sendMsgSerializableImpl<MessageT>(dest, han, msg, msg_size, tag);
+    return sendMsgSerializableImpl<MsgT>(dest, han, msg, msg_size, tag);
   }
 
   // Serializable, but support is only for derived types.
   // This type will still be sent using byte-copy serialization.
   template <
-    typename MessageT,
+    typename MsgT,
     std::enable_if_t<true
-      and ::vt::messaging::msg_defines_serialize_mode<MessageT>::value
-      and ::vt::messaging::msg_serialization_mode<MessageT>::supported,
+      and ::vt::messaging::msg_defines_serialize_mode<MsgT>::value
+      and ::vt::messaging::msg_serialization_mode<MsgT>::supported,
       int
     > = 0
   >
   inline ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
     HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
+    MsgSharedPtr<MsgT>& msg,
     ByteType msg_size,
     TagType tag
   ) {
 #ifndef vt_quirked_serialize_method_detection
     static_assert(
-       ::vt::messaging::has_own_serialize<MessageT>,
+       ::vt::messaging::has_own_serialize<MsgT>,
        "Message supporting serialization must have a serialization function."
      );
 #endif
-    return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
+    return sendMsgCopyableImpl<MsgT>(dest, han, msg, msg_size, tag);
   }
 
   // Messaged marked as prohibiting serialization cannot define
   // a serialization function and must be sent via byte-transmission.
   template <
-    typename MessageT,
+    typename MsgT,
     std::enable_if_t<true
-      and ::vt::messaging::msg_defines_serialize_mode<MessageT>::value
-      and ::vt::messaging::msg_serialization_mode<MessageT>::prohibited,
+      and ::vt::messaging::msg_defines_serialize_mode<MsgT>::value
+      and ::vt::messaging::msg_serialization_mode<MsgT>::prohibited,
       int
     > = 0
   >
   inline ActiveMessenger::PendingSendType sendMsgImpl(
     NodeType dest,
     HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
+    MsgSharedPtr<MsgT>& msg,
     ByteType msg_size,
     TagType tag
   ) {
 #ifndef vt_quirked_serialize_method_detection
     static_assert(
-      not ::vt::messaging::has_own_serialize<MessageT>,
+      not ::vt::messaging::has_own_serialize<MsgT>,
       "Message prohibiting serialization must not have a serialization function."
     );
 #endif
-    return sendMsgCopyableImpl<MessageT>(dest, han, msg, msg_size, tag);
+    return sendMsgCopyableImpl<MsgT>(dest, han, msg, msg_size, tag);
   }
 
-  template <typename MessageT>
+  template <typename MsgT>
   ActiveMessenger::PendingSendType sendMsgCopyableImpl(
     NodeType dest,
     HandlerType han,
-    MsgSharedPtr<MessageT>& msg,
+    MsgSharedPtr<MsgT>& msg,
     ByteType msg_size,
     TagType tag
   );
@@ -455,30 +480,12 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT>
+  template <typename MsgT>
   PendingSendType sendMsgSz(
     NodeType dest,
     HandlerType han,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     ByteType msg_size,
-    TagType tag = no_tag
-  );
-
-  /**
-   * \brief Send a message with a pre-registered handler.
-   *
-   * \param[in] dest node to send the message to
-   * \param[in] han handler to send the message to
-   * \param[in] msg the message to send
-   * \param[in] tag the tag to put on the message
-   *
-   * \return the \c PendingSend for the send
-   */
-  template <typename MessageT>
-  PendingSendType sendMsg(
-    NodeType dest,
-    HandlerType han,
-    MessageT* msg,
     TagType tag = no_tag
   );
 
@@ -496,7 +503,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType sendMsg(
     NodeType dest,
     HandlerType han,
-    MsgSharedPtr<MsgT>& msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -512,11 +519,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT>
+  template <typename MsgT>
   PendingSendType sendMsgAuto(
     NodeType dest,
     HandlerType han,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -566,9 +573,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the sent message
    */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType broadcastMsgSz(
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     ByteType msg_size,
     TagType tag = no_tag
   );
@@ -581,9 +588,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the sent message
    */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType broadcastMsg(
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -596,10 +603,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the sent message
    */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsg(
     NodeType dest,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -617,10 +624,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsgSz(
     NodeType dest,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     ByteType msg_size,
     TagType tag = no_tag
   );
@@ -635,9 +642,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType broadcastMsgAuto(
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -652,10 +659,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsgAuto(
     NodeType dest,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -707,9 +714,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the broadcast
    */
-  template <ActiveFnType* f, typename MessageT>
+  template <ActiveFnType* f, typename MsgT>
   PendingSendType broadcastMsg(
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -722,10 +729,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the broadcast
    */
-  template <ActiveFnType* f, typename MessageT>
+  template <ActiveFnType* f, typename MsgT>
   PendingSendType sendMsg(
     NodeType dest,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -776,10 +783,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <
     typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+    typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsg(
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -795,10 +802,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <
     typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+    typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsgAuto(
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -813,11 +820,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <
     typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+    typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType sendMsg(
     NodeType dest,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -834,11 +841,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <
     typename FunctorT,
-    typename MessageT = typename util::FunctorExtractor<FunctorT>::MessageType
+    typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType sendMsgAuto(
     NodeType dest,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -899,26 +906,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT>
-  PendingSendType broadcastMsg(
-    HandlerType han,
-    MessageT* msg,
-    TagType tag = no_tag
-  );
-
-  /**
-   * \brief Broadcast a message.
-   *
-   * \param[in] han the handler to invoke
-   * \param[in] msg the message to broadcast
-   * \param[in] tag the optional tag to put on the message
-   *
-   * \return the \c PendingSend for the send
-   */
   template <typename MsgT>
   PendingSendType broadcastMsg(
     HandlerType han,
-    MsgSharedPtr<MsgT>& msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -932,11 +923,11 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT>
+  template <typename MsgT>
   PendingSendType sendMsg(
     NodeType dest,
     HandlerType han,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     UserSendFnType send_payload_fn
   );
 
@@ -949,10 +940,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT, ActiveTypedFnType<MessageT>* f>
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsg(
     NodeType dest,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     UserSendFnType send_payload_fn
   );
 
@@ -967,10 +958,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <typename MessageT>
+  template <typename MsgT>
   PendingSendType broadcastMsgAuto(
     HandlerType han,
-    MessageT* msg,
+    TransferMsg<MsgT> msg,
     TagType tag = no_tag
   );
 
