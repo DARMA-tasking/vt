@@ -63,7 +63,7 @@ struct TestTermChaining : TestParallelHarness {
   static vt::messaging::DependentSendChain chain;
   static vt::EpochType epoch;
 
-  struct ChainReduceMsg : collective::ReduceMsg {
+  struct ChainReduceMsg : vt::collective::ReduceNoneMsg {
     ChainReduceMsg(int in_num)
       : num(in_num)
     {}
@@ -111,13 +111,11 @@ struct TestTermChaining : TestParallelHarness {
   }
 
   static void test_handler_reduce(ChainReduceMsg *msg) {
-    if (msg->isRoot()) {
-      EXPECT_EQ(theContext()->getNode(), 0);
-      EXPECT_EQ(handler_count, 1);
-      auto n = theContext()->getNumNodes();
-      EXPECT_EQ(msg->num, n * (n - 1)/2);
-      handler_count = 2;
-    }
+    EXPECT_EQ(theContext()->getNode(), 0);
+    EXPECT_EQ(handler_count, 1);
+    auto n = theContext()->getNumNodes();
+    EXPECT_EQ(msg->num, n * (n - 1)/2);
+    handler_count = 2;
   }
 
   static void test_handler_bcast(TestMsg* msg) {
@@ -167,7 +165,8 @@ struct TestTermChaining : TestParallelHarness {
     EpochType epoch2 = theTerm()->makeEpochCollective();
     vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
-    chain.add(epoch2, theCollective()->global()->reduce<ChainReduceMsg, test_handler_reduce>(0, msg2.get()));
+    auto cb = vt::theCB()->makeFunc<ChainReduceMsg>( &test_handler_reduce );
+    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(0, msg2.get(), cb));
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
@@ -189,7 +188,8 @@ struct TestTermChaining : TestParallelHarness {
     EpochType epoch2 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
-    chain.add(epoch2, theCollective()->global()->reduce<ChainReduceMsg, test_handler_reduce>(0, msg2.get()));
+    auto cb = vt::theCB()->makeFunc<ChainReduceMsg>( &test_handler_reduce );
+    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(0, msg2.get(), cb));
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
