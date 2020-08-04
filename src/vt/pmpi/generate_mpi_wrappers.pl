@@ -78,9 +78,9 @@ my @never_include_patterns = qw(
 # It's a very rudimentary extractor that relies on definitions being on one line.
 sub extract_defs {
     my ($def_file) = @_;
-    use autodie;
 
-    open my $handle, '<', $def_file;
+    open my $handle, '<', $def_file
+        or die "$0: could not open definition file '$def_file': $!";
     my @deflines = <$handle>;
     close $handle;
 
@@ -214,7 +214,7 @@ sub invoke_action_for_all_defs {
 }
 
 open(my $out, '>', $output_file)
-    or die "Could not open file '$output_file': $!";
+    or die "$0: could not open output file '$output_file': $!";
 select $out;
 
 
