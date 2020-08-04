@@ -126,14 +126,14 @@ void GossipLB::doLBStages() {
       for (auto obj : *load_model_)
         cur_objs_[obj] = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
       this_new_load_ = this_load;
-    } else {
-      // Clear out data structures from previous iteration
-      selected_.clear();
-      underloaded_.clear();
-      load_info_.clear();
-      k_cur_ = 0;
-      is_overloaded_ = is_underloaded_ = false;
     }
+
+    // Clear out data structures from previous phase or iteration
+    selected_.clear();
+    underloaded_.clear();
+    load_info_.clear();
+    k_cur_ = 0;
+    is_overloaded_ = is_underloaded_ = false;
 
     if (isOverloaded(this_new_load_)) {
       is_overloaded_ = true;
@@ -500,6 +500,10 @@ void GossipLB::lazyMigrateObjsTo(
 
 void GossipLB::migrate() {
   vtAssertExpr(false);
+}
+
+void GossipLB::cleanup() {
+  // Nothing to clean up from one use to the next
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
