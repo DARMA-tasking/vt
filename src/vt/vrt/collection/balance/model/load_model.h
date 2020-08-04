@@ -128,7 +128,7 @@ public:
    */
   virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
 
-  // Object enumeration, to abstract away access to the underlying structures from ProcStats
+  // Object enumeration, to abstract away access to the underlying structures from NodeStats
   virtual ObjectIterator begin() = 0;
   virtual ObjectIterator end() = 0;
 

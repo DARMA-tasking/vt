@@ -48,7 +48,7 @@
 #include <vector>
 
 #include <vt/transport.h>
-#include <vt/vrt/collection/balance/proc_stats.h>
+#include <vt/vrt/collection/balance/node_stats.h>
 #include <vt/vrt/collection/balance/stats_restart_reader.h>
 
 #include "test_parallel_harness.h"

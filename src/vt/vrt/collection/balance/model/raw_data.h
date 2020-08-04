@@ -73,7 +73,7 @@ struct RawData : public LoadModel {
   int getNumCompletedPhases() override { return proc_load_->size(); }
   int getNumSubphases() override;
 
-  // Observer pointers to the underlying data. In operation, these would be owned by ProcStats
+  // Observer pointers to the underlying data. In operation, these would be owned by NodeStats
   std::vector<LoadMapType>         const* proc_load_;
   std::vector<SubphaseLoadMapType> const* proc_subphase_load_;
   std::vector<CommMapType>         const* proc_comm_;

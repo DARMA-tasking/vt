@@ -1,14 +1,14 @@
-\page proc-stats Processor Statistics
+\page node-stats Node Statistics
 \brief Manager object profiling data
 
-The processor statistics manager component
-`vt::vrt::collection::balance::ProcStats`, accessed via `vt::theProcStats()`
+The node statistics manager component
+`vt::vrt::collection::balance::NodeStats`, accessed via `vt::theNodeStats()`
 manages instrumentation data from objects in a collection. It holds data per
 node on the timing of these objects and communication between them demarcated by
 phase and subphase.
 
-When LB is invoked in \vt, the \ref lb-manager passes the processor
-statistics to the various LB strategies to run the load balancer. The processor
+When LB is invoked in \vt, the \ref lb-manager passes the node
+statistics to the various LB strategies to run the load balancer. The node
 statistics component can also dump the statistic data it holds to files, which
 can be read externally. The LBAF (Load Balancing Analysis Framework) can also
 then read this data to analyze the quality of the load distribution at any phase
@@ -16,7 +16,7 @@ in the file.
 
 \section export-lb-stats-file Exporting LB Statistic Files (VOM)
 
-The `ProcStats` component, after collecting statistics from the running program,
+The `NodeStats` component, after collecting statistics from the running program,
 can dump these to files in a VOM file (Virtual Object Map). As indicated by the
 name, the VOM file specifies the mapping of object to node for each phase along
 with statistics for each object (computation time and communication load).

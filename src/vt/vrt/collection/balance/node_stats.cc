@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                proc_stats.cc
+//                                node_stats.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -43,7 +43,7 @@
 */
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
@@ -59,41 +59,41 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void ProcStats::setProxy(objgroup::proxy::Proxy<ProcStats> in_proxy) {
+void NodeStats::setProxy(objgroup::proxy::Proxy<NodeStats> in_proxy) {
   proxy_ = in_proxy;
 }
 
-/*static*/ std::unique_ptr<ProcStats> ProcStats::construct() {
-  auto ptr = std::make_unique<ProcStats>();
-  auto proxy = theObjGroup()->makeCollective<ProcStats>(ptr.get());
+/*static*/ std::unique_ptr<NodeStats> NodeStats::construct() {
+  auto ptr = std::make_unique<NodeStats>();
+  auto proxy = theObjGroup()->makeCollective<NodeStats>(ptr.get());
   proxy.get()->setProxy(proxy);
   return ptr;
 }
 
-ElementIDType ProcStats::tempToPerm(ElementIDType temp_id) const {
-  auto iter = proc_temp_to_perm_.find(temp_id);
-  if (iter == proc_temp_to_perm_.end()) {
+ElementIDType NodeStats::tempToPerm(ElementIDType temp_id) const {
+  auto iter = node_temp_to_perm_.find(temp_id);
+  if (iter == node_temp_to_perm_.end()) {
     return no_element_id;
   }
   return iter->second;
 }
 
-ElementIDType ProcStats::permToTemp(ElementIDType perm_id) const {
-  auto iter = proc_perm_to_temp_.find(perm_id);
-  if (iter == proc_perm_to_temp_.end()) {
+ElementIDType NodeStats::permToTemp(ElementIDType perm_id) const {
+  auto iter = node_perm_to_temp_.find(perm_id);
+  if (iter == node_perm_to_temp_.end()) {
     return no_element_id;
   }
   return iter->second;
 }
 
-bool ProcStats::hasObjectToMigrate(ElementIDType obj_id) const {
-  auto iter = proc_migrate_.find(obj_id);
-  return iter != proc_migrate_.end();
+bool NodeStats::hasObjectToMigrate(ElementIDType obj_id) const {
+  auto iter = node_migrate_.find(obj_id);
+  return iter != node_migrate_.end();
 }
 
-bool ProcStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
-  auto iter = proc_migrate_.find(obj_id);
-  if (iter == proc_migrate_.end()) {
+bool NodeStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
+  auto iter = node_migrate_.find(obj_id);
+  if (iter == node_migrate_.end()) {
     return false;
   }
 
@@ -104,63 +104,63 @@ bool ProcStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
 }
 
 std::vector<LoadMapType> const*
-ProcStats::getProcLoad() const {
-  return &proc_data_;
+NodeStats::getNodeLoad() const {
+  return &node_data_;
 }
 
 std::vector<SubphaseLoadMapType> const*
-ProcStats::getProcSubphaseLoad() const {
-  return &proc_subphase_data_;
+NodeStats::getNodeSubphaseLoad() const {
+  return &node_subphase_data_;
 }
 
-std::vector<CommMapType> const* ProcStats::getProcComm() const {
-  return &proc_comm_;
+std::vector<CommMapType> const* NodeStats::getNodeComm() const {
+  return &node_comm_;
 }
 
-void ProcStats::clearStats() {
-  ProcStats::proc_comm_.clear();
-  ProcStats::proc_data_.clear();
-  ProcStats::proc_migrate_.clear();
-  ProcStats::proc_temp_to_perm_.clear();
-  ProcStats::proc_perm_to_temp_.clear();
+void NodeStats::clearStats() {
+  NodeStats::node_comm_.clear();
+  NodeStats::node_data_.clear();
+  NodeStats::node_migrate_.clear();
+  NodeStats::node_temp_to_perm_.clear();
+  NodeStats::node_perm_to_temp_.clear();
   next_elm_ = 1;
 }
 
-void ProcStats::startIterCleanup() {
-  // Convert the temp ID proc_data_ for the last iteration into perm ID for
+void NodeStats::startIterCleanup() {
+  // Convert the temp ID node_data_ for the last iteration into perm ID for
   // stats output
-  auto const phase = proc_data_.size() - 1;
-  auto const prev_data = std::move(proc_data_[phase]);
+  auto const phase = node_data_.size() - 1;
+  auto const prev_data = std::move(node_data_[phase]);
   std::unordered_map<ElementIDType,TimeType> new_data;
   for (auto& elm : prev_data) {
-    auto iter = proc_temp_to_perm_.find(elm.first);
-    vtAssert(iter != proc_temp_to_perm_.end(), "Temp ID must exist");
+    auto iter = node_temp_to_perm_.find(elm.first);
+    vtAssert(iter != node_temp_to_perm_.end(), "Temp ID must exist");
     auto perm_id = iter->second;
     new_data[perm_id] = elm.second;
   }
-  proc_data_[phase] = std::move(new_data);
+  node_data_[phase] = std::move(new_data);
 
   // Create migrate lambdas and temp to perm map since LB is complete
-  ProcStats::proc_migrate_.clear();
-  ProcStats::proc_temp_to_perm_.clear();
-  ProcStats::proc_perm_to_temp_.clear();
-  proc_collection_lookup_.clear();
+  NodeStats::node_migrate_.clear();
+  NodeStats::node_temp_to_perm_.clear();
+  NodeStats::node_perm_to_temp_.clear();
+  node_collection_lookup_.clear();
 }
 
-ElementIDType ProcStats::getNextElm() {
+ElementIDType NodeStats::getNextElm() {
   auto const& this_node = theContext()->getNode();
   auto elm = next_elm_++;
   return (elm << 32) | this_node;
 }
 
-void ProcStats::releaseLB() {
+void NodeStats::releaseLB() {
   using MsgType = CollectionPhaseMsg;
   auto msg = makeMessage<MsgType>();
   theMsg()->broadcastMsg<MsgType,CollectionManager::releaseLBPhase>(msg.get());
   CollectionManager::releaseLBPhase(msg.get());
 }
 
-void ProcStats::createStatsFile() {
+void NodeStats::createStatsFile() {
   using ArgType = vt::arguments::ArgConfig;
   auto const node = theContext()->getNode();
   auto const base_file = std::string(ArgType::vt_lb_stats_file);
@@ -170,7 +170,7 @@ void ProcStats::createStatsFile() {
 
   vt_debug_print(
     lb, node,
-    "ProcStats: createStatsFile file={}\n", file_name
+    "NodeStats: createStatsFile file={}\n", file_name
   );
 
   // Node 0 creates the directory
@@ -191,29 +191,29 @@ void ProcStats::createStatsFile() {
   stats_file_ = fopen(file_name.c_str(), "w+");
 }
 
-void ProcStats::closeStatsFile() {
+void NodeStats::closeStatsFile() {
   if (stats_file_) {
     fclose(stats_file_);
     stats_file_  = nullptr;
   }
 }
 
-void ProcStats::outputStatsFile() {
+void NodeStats::outputStatsFile() {
   if (stats_file_ == nullptr) {
     createStatsFile();
   }
 
   vtAssertExpr(stats_file_ != nullptr);
 
-  auto const num_iters = proc_data_.size();
+  auto const num_iters = node_data_.size();
 
-  vt_print(lb, "ProcStats::outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
+  vt_print(lb, "NodeStats::outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
 
   for (size_t i = 0; i < num_iters; i++) {
-    for (auto&& elm : proc_data_.at(i)) {
+    for (auto&& elm : node_data_.at(i)) {
       ElementIDType id = elm.first;
       TimeType time = elm.second;
-      const auto& subphase_times = proc_subphase_data_.at(i)[id];
+      const auto& subphase_times = node_subphase_data_.at(i)[id];
       size_t subphases = subphase_times.size();
 
       auto obj_str = fmt::format("{},{},{},{},[", i, id, time, subphases);
@@ -227,7 +227,7 @@ void ProcStats::outputStatsFile() {
 
       fprintf(stats_file_, "%s", obj_str.c_str());
     }
-    for (auto&& elm : proc_comm_.at(i)) {
+    for (auto&& elm : node_comm_.at(i)) {
       using E = typename std::underlying_type<CommCategory>::type;
 
       auto const& key = elm.first;
@@ -268,7 +268,7 @@ void ProcStats::outputStatsFile() {
   closeStatsFile();
 }
 
-ElementIDType ProcStats::addProcStats(
+ElementIDType NodeStats::addNodeStats(
   Migratable* col_elm,
   PhaseType const& phase, TimeType const& time,
   std::vector<TimeType> const& subphase_time, CommMapType const& comm
@@ -280,39 +280,39 @@ ElementIDType ProcStats::addProcStats(
 
   vt_debug_print(
     lb, node,
-    "ProcStats::addProcStats: temp_id={}, perm_id={}, phase={}, subphases={}, load={}\n",
+    "NodeStats::addNodeStats: temp_id={}, perm_id={}, phase={}, subphases={}, load={}\n",
     temp_id, perm_id, phase, subphase_time.size(), time
   );
 
-  proc_data_.resize(phase + 1);
-  auto elm_iter = proc_data_.at(phase).find(temp_id);
-  vtAssert(elm_iter == proc_data_.at(phase).end(), "Must not exist");
-  proc_data_.at(phase).emplace(
+  node_data_.resize(phase + 1);
+  auto elm_iter = node_data_.at(phase).find(temp_id);
+  vtAssert(elm_iter == node_data_.at(phase).end(), "Must not exist");
+  node_data_.at(phase).emplace(
     std::piecewise_construct,
     std::forward_as_tuple(temp_id),
     std::forward_as_tuple(time)
   );
 
-  proc_subphase_data_.resize(phase + 1);
-  auto elm_subphase_iter = proc_subphase_data_.at(phase).find(temp_id);
-  vtAssert(elm_subphase_iter == proc_subphase_data_.at(phase).end(), "Must not exist");
-  proc_subphase_data_.at(phase).emplace(
+  node_subphase_data_.resize(phase + 1);
+  auto elm_subphase_iter = node_subphase_data_.at(phase).find(temp_id);
+  vtAssert(elm_subphase_iter == node_subphase_data_.at(phase).end(), "Must not exist");
+  node_subphase_data_.at(phase).emplace(
     std::piecewise_construct,
     std::forward_as_tuple(temp_id),
     std::forward_as_tuple(subphase_time)
   );
 
-  proc_comm_.resize(phase + 1);
+  node_comm_.resize(phase + 1);
   for (auto&& c : comm) {
-    proc_comm_.at(phase)[c.first] += c.second;
+    node_comm_.at(phase)[c.first] += c.second;
   }
 
-  proc_temp_to_perm_[temp_id] = perm_id;
-  proc_perm_to_temp_[perm_id] = temp_id;
+  node_temp_to_perm_[temp_id] = perm_id;
+  node_perm_to_temp_[perm_id] = temp_id;
 
-  auto migrate_iter = proc_migrate_.find(temp_id);
-  if (migrate_iter == proc_migrate_.end()) {
-    proc_migrate_.emplace(
+  auto migrate_iter = node_migrate_.find(temp_id);
+  if (migrate_iter == node_migrate_.end()) {
+    node_migrate_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(temp_id),
       std::forward_as_tuple([col_elm](NodeType node){
@@ -322,16 +322,16 @@ ElementIDType ProcStats::addProcStats(
   }
 
   auto const col_proxy = col_elm->getProxy();
-  proc_collection_lookup_[temp_id] = col_proxy;
+  node_collection_lookup_[temp_id] = col_proxy;
 
   return temp_id;
 }
 
-VirtualProxyType ProcStats::getCollectionProxyForElement(
+VirtualProxyType NodeStats::getCollectionProxyForElement(
   ElementIDType temp_id
 ) const {
-  auto iter = proc_collection_lookup_.find(temp_id);
-  if (iter == proc_collection_lookup_.end()) {
+  auto iter = node_collection_lookup_.find(temp_id);
+  if (iter == node_collection_lookup_.end()) {
     return no_vrt_proxy;
   }
   return iter->second;

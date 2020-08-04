@@ -43,7 +43,7 @@
 */
 
 #include "vt/vrt/collection/balance/model/per_collection.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/node_stats.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -72,7 +72,7 @@ void PerCollection::updateLoads(PhaseType last_completed_phase) {
 
 TimeType PerCollection::getWork(ElementIDType object, PhaseOffset when) {
   // See if some specific model has been given for the object in question
-  auto mi = models_.find(theProcStats()->getCollectionProxyForElement(object));
+  auto mi = models_.find(theNodeStats()->getCollectionProxyForElement(object));
   if (mi != models_.end())
     return mi->second->getWork(object, when);
 

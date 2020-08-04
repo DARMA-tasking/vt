@@ -159,22 +159,22 @@ static_assert(
   "Must be trivially copyable to avoid serialization."
 );
 
-struct ProcStatsMsg : NonSerialized<
+struct NodeStatsMsg : NonSerialized<
   collective::ReduceTMsg<LoadData>,
-  ProcStatsMsg
+  NodeStatsMsg
 >
 {
   using MessageParentType = NonSerialized<
     collective::ReduceTMsg<LoadData>,
-    ProcStatsMsg
+    NodeStatsMsg
   >;
 
-  ProcStatsMsg() = default;
-  ProcStatsMsg(lb::Statistic in_stat, TimeType const in_total_load)
+  NodeStatsMsg() = default;
+  NodeStatsMsg(lb::Statistic in_stat, TimeType const in_total_load)
     : MessageParentType(LoadData(in_total_load)),
       stat_(in_stat)
   { }
-  ProcStatsMsg(lb::Statistic in_stat, LoadData&& ld)
+  NodeStatsMsg(lb::Statistic in_stat, LoadData&& ld)
     : MessageParentType(std::move(ld)),
       stat_(in_stat)
   { }

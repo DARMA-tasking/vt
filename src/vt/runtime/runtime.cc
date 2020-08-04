@@ -721,7 +721,7 @@ void Runtime::initializeComponents() {
       group::GroupManager,                 // For broadcasts
       sched::Scheduler,                    // For scheduling work
       location::LocationManager,           // For element location
-      vrt::collection::balance::ProcStats, // For stat collection
+      vrt::collection::balance::NodeStats, // For stat collection
       vrt::collection::balance::LBManager  // For load balancing
     >{}
   );
@@ -736,8 +736,8 @@ void Runtime::initializeComponents() {
     >{}
   );
 
-  p_->registerComponent<vrt::collection::balance::ProcStats>(
-    &theProcStats, Deps<
+  p_->registerComponent<vrt::collection::balance::NodeStats>(
+    &theNodeStats, Deps<
       ctx::Context                        // Everything depends on theContext
     >{}
   );
@@ -745,7 +745,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<vrt::collection::balance::StatsRestartReader>(
     &theStatsReader, Deps<
       ctx::Context,                        // Everything depends on theContext
-      vrt::collection::balance::ProcStats  // Depends on proc stats for input
+      vrt::collection::balance::NodeStats  // Depends on node stats for input
     >{}
   );
 
@@ -753,7 +753,7 @@ void Runtime::initializeComponents() {
     &theLBManager, Deps<
       ctx::Context,                        // Everything depends on theContext
       util::memory::MemoryUsage,           // Output mem usage on phase change
-      vrt::collection::balance::ProcStats  // For stat collection
+      vrt::collection::balance::NodeStats  // For stat collection
     >{}
   );
 
@@ -783,7 +783,7 @@ void Runtime::initializeComponents() {
   p_->add<registry::Registry>();
   p_->add<event::AsyncEvent>();
   p_->add<pool::Pool>();
-  p_->add<vrt::collection::balance::ProcStats>();
+  p_->add<vrt::collection::balance::NodeStats>();
   p_->add<vrt::collection::balance::LBManager>();
 
   if (needStatsRestartReader()) {

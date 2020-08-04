@@ -71,7 +71,7 @@ struct BaseLB {
   using ObjSampleType    = std::map<ObjBinType, ObjBinListType>;
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
   using ElementCommType  = balance::CommMapType;
-  using StatsMsgType     = balance::ProcStatsMsg;
+  using StatsMsgType     = balance::NodeStatsMsg;
   using TransferDestType = std::tuple<ObjIDType,NodeType>;
   using TransferVecType  = std::vector<TransferDestType>;
   using TransferType     = std::map<NodeType, TransferVecType>;

@@ -69,7 +69,7 @@
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/insert_context_holder.h"
 #include "vt/vrt/collection/collection_directory.h"
-#include "vt/vrt/collection/balance/proc_stats.h"
+#include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
@@ -2620,7 +2620,7 @@ MigrateStatus CollectionManager::migrateIn(
   CollectionProxy<ColT, IndexT>(proxy).operator()(idx);
 
   // Always assign a new temp element ID for LB statistic tracking
-  vrt_elm_ptr->temp_elm_id_ = theProcStats()->getNextElm();
+  vrt_elm_ptr->temp_elm_id_ = theNodeStats()->getNextElm();
 
   bool const is_static = ColT::isStaticSized();
 
