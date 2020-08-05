@@ -46,10 +46,12 @@
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_H
 
 #include "vt/runtime/component/component.h"
+#include "vt/runtime/component/movable_fn.h"
 
 #include <list>
 #include <unordered_map>
 #include <unordered_set>
+#include <memory>
 
 namespace vt { namespace runtime { namespace component {
 
@@ -60,6 +62,7 @@ namespace vt { namespace runtime { namespace component {
  * make up a coherent inter-dependent runtime
  */
 struct ComponentPack {
+  using Callable = std::unique_ptr<MovableFn>;
 
   ComponentPack() = default;
 
@@ -165,7 +168,7 @@ private:
   /// Set of added components to be constructed
   std::unordered_set<registry::AutoHandlerType> added_components_;
   /// Bound constructors for components
-  std::unordered_map<registry::AutoHandlerType, ActionType> construct_components_;
+  std::unordered_map<registry::AutoHandlerType, Callable> construct_components_;
   /// Set of owning pointers to live components
   std::vector<std::unique_ptr<BaseComponent>> live_components_;
   /// Set of non-owning pointers to pollable components for progress engine

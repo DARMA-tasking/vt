@@ -61,7 +61,7 @@ void ComponentPack::construct() {
 
     auto iter = construct_components_.find(next);
     if (iter != construct_components_.end()) {
-      iter->second();
+      iter->second->invoke();
     } else {
       vtAbort("Could not find component to construct");
     }

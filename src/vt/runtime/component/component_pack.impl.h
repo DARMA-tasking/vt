@@ -49,6 +49,27 @@
 
 namespace vt { namespace runtime { namespace component {
 
+namespace {
+
+template <typename T, typename Tuple, size_t... I>
+std::unique_ptr<T> tupleConsImpl(Tuple&& tup, std::index_sequence<I...> seq) {
+  return T::template staticInit(std::get<I>(std::forward<Tuple>(tup))...);
+}
+
+template <typename T, typename Tuple>
+std::unique_ptr<T> tupleCons(Tuple&& tup) {
+  static constexpr auto size = std::tuple_size<std::decay_t<Tuple>>::value;
+  using Indices = std::make_index_sequence<size>;
+  return tupleConsImpl<T>(std::forward<Tuple>(tup), Indices());
+}
+
+template <typename Callable>
+std::unique_ptr<MovableFn> makeCallable(Callable&& c) {
+  return std::make_unique<MovableFnTyped<Callable>>(std::move(c));
+}
+
+} /* end anon namespace */
+
 template <typename T, typename... Deps, typename... Cons>
 registry::AutoHandlerType ComponentPack::registerComponent(
   T** ref, typename BaseComponent::DepsPack<Deps...>, Cons&&... cons
@@ -61,33 +82,37 @@ registry::AutoHandlerType ComponentPack::registerComponent(
     registered_components_.push_back(idx);
   }
 
+  auto cons_tuple = std::make_tuple(std::forward<Cons>(cons)...);
+
+  auto fn = makeCallable(
+    [ref, this, tup = std::move(cons_tuple)]() mutable {
+      auto ptr = tupleCons<T>(std::move(tup));
+
+      vt_debug_print(
+        runtime, node,
+        "ComponentPack: constructed component={}, pollable={}\n",
+        ptr->name(), ptr->pollable()
+      );
+
+      // Set the reference for access outside
+      if (ref != nullptr) {
+        *ref = ptr.get();
+      }
+
+      // Add to pollable for the progress function to be triggered
+      if (ptr->pollable()) {
+        pollable_components_.emplace_back(ptr.get());
+      }
+
+      ptr->initialize();
+      live_components_.emplace_back(std::move(ptr));
+    }
+  );
+
   construct_components_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(idx),
-    std::forward_as_tuple(
-      [ref,this,cons...]() mutable {
-        auto ptr = T::template staticInit<Cons...>(std::forward<Cons>(cons)...);
-
-        vt_debug_print(
-          runtime, node,
-          "ComponentPack: constructed component={}, pollable={}\n",
-          ptr->name(), ptr->pollable()
-        );
-
-        // Set the reference for access outside
-        if (ref != nullptr) {
-          *ref = ptr.get();
-        }
-
-        // Add to pollable for the progress function to be triggered
-        if (ptr->pollable()) {
-          pollable_components_.emplace_back(ptr.get());
-        }
-
-        ptr->initialize();
-        live_components_.emplace_back(std::move(ptr));
-      }
-    )
+    std::forward_as_tuple(std::move(fn))
   );
   return idx;
 }
