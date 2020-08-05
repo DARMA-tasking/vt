@@ -187,11 +187,6 @@ void Scheduler::printMemoryUsage() {
   }
 }
 
-void Scheduler::progressTimeTriggers() {
-  auto const cur_time = timing::Timing::getCurrentTime();
-  time_triggers_.triggerReady(cur_time);
-}
-
 void Scheduler::runProgress(bool msg_only) {
   /*
    * Run through the progress functions `num_iter` times, making forward
@@ -211,8 +206,6 @@ void Scheduler::runProgress(bool msg_only) {
   if (arguments::ArgConfig::vt_print_memory_at_threshold) {
     printMemoryUsage();
   }
-
-  progressTimeTriggers();
 
   // Reset count of processed handlers since the last time progress was invoked
   processed_after_last_progress_ = 0;
@@ -336,16 +329,6 @@ void Scheduler::registerTriggerOnce(
     event_triggers.size() >= event, "Must be large enough to hold this event"
   );
   event_triggers_once[event].push_back(trigger);
-}
-
-int Scheduler::registerTimeTrigger(
-  std::chrono::milliseconds period, TriggerType trigger
-) {
-  return time_triggers_.addTrigger(period, trigger);
-}
-
-void Scheduler::unregisterTimeTrigger(int handle) {
-  time_triggers_.removeTrigger(handle);
 }
 
 }} //end namespace vt::sched

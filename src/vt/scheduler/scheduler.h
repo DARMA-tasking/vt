@@ -50,7 +50,6 @@
 #include "vt/scheduler/priority_queue.h"
 #include "vt/scheduler/prioritized_work_unit.h"
 #include "vt/scheduler/work_unit.h"
-#include "vt/scheduler/time_trigger.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
@@ -60,7 +59,6 @@
 #include <list>
 #include <functional>
 #include <memory>
-#include <map>
 
 namespace vt {
   void runScheduler();
@@ -173,28 +171,6 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void registerTriggerOnce(
     SchedulerEventType const& event, TriggerType trigger
   );
-
-  /**
-   * \brief Make progress on time-based triggers
-   */
-  void progressTimeTriggers();
-
-  /**
-   * \brief Register a time-based trigger with a specific period
-   *
-   * \param[in] period the period in milliseconds
-   * \param[in] trigger the trigger to execute
-   *
-   * \return the trigger ID (can be used for removal)
-   */
-  int registerTimeTrigger(std::chrono::milliseconds period, TriggerType trigger);
-
-  /**
-   * \brief Unregister a time-based trigger
-   *
-   * \param[in] handle the trigger ID to remove
-   */
-  void unregisterTimeTrigger(int handle);
 
   /**
    * \internal \brief Trigger an event
@@ -323,7 +299,6 @@ private:
 
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;
-  TimeTriggerList time_triggers_;
 
   TimeType last_progress_time_ = 0.0;
   bool progress_time_enabled_ = false;

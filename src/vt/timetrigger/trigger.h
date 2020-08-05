@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                time_trigger.h
+//                                  trigger.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,24 +42,23 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SCHEDULER_TIME_TRIGGER_H
-#define INCLUDED_VT_SCHEDULER_TIME_TRIGGER_H
+#if !defined INCLUDED_VT_TIMETRIGGER_TRIGGER_H
+#define INCLUDED_VT_TIMETRIGGER_TRIGGER_H
 
+#include "vt/configs/types/types_type.h"
 #include "vt/timing/timing_type.h"
 #include "vt/timing/timing.h"
 
 #include <chrono>
-#include <queue>
-#include <unordered_set>
 
-namespace vt { namespace sched {
+namespace vt { namespace timetrigger {
 
 /**
- * \struct TimeTrigger
+ * \internal \struct Trigger
  *
- * \brief A time-based trigger
+ * \brief A time-based trigger that fires with some time period
  */
-struct TimeTrigger {
+struct Trigger {
   /**
    * \internal \brief Create a new time-based trigger
    *
@@ -67,7 +66,7 @@ struct TimeTrigger {
    * \param[in] in_trigger the action
    * \param[in] in_id the id for the trigger
    */
-  TimeTrigger(
+  Trigger(
     std::chrono::milliseconds in_period, ActionType in_trigger, int in_id
   ) : period_(in_period),
       trigger_(in_trigger),
@@ -105,7 +104,7 @@ struct TimeTrigger {
    */
   int getID() const { return id_; }
 
-  friend bool operator<(TimeTrigger const& lhs, TimeTrigger const& rhs) {
+  friend bool operator<(Trigger const& lhs, Trigger const& rhs) {
     return lhs.nextTriggerTime() > rhs.nextTriggerTime();
   }
 
@@ -116,74 +115,6 @@ private:
   int id_ = -1;                        /**< The trigger's id */
 };
 
-/**
- * \struct TimeTriggerList
- *
- * \internal \brief A time-based set of triggers with a given period
- */
-struct TimeTriggerList {
+}} /* end namespace vt::timetrigger */
 
-  using QueueType = std::priority_queue<TimeTrigger, std::vector<TimeTrigger>>;
-
-  TimeTriggerList() = default;
-
-  /**
-   * \brief Add a new trigger
-   *
-   * \param[in] period time period to trigger action
-   * \param[in] action action to trigger
-   *
-   * \return id to trigger for removal
-   */
-  int addTrigger(std::chrono::milliseconds period, ActionType action) {
-    auto const cur_id = next_trigger_id_++;
-    TimeTrigger trigger{period, action, cur_id};
-    trigger.runAction();
-    queue_.push(trigger);
-    return cur_id;
-  }
-
-  /**
-   * \brief Remove a trigger
-   *
-   * \param[in] id the \c id to remove
-   */
-  void removeTrigger(int id) {
-    removed_.insert(id);
-  }
-
-  /**
-   * \brief Trigger any read time-based triggers
-   *
-   * \param[in] cur_time the current time
-   */
-  void triggerReady(TimeType cur_time) {
-    while (not queue_.empty()) {
-      auto iter = removed_.find(queue_.top().getID());
-      if (iter != removed_.end()) {
-        queue_.pop();
-        removed_.erase(iter);
-        continue;
-      }
-
-      if (queue_.top().nextTriggerTime() < cur_time) {
-        auto t = queue_.top();
-        queue_.pop();
-        t.runAction();
-        queue_.push(t);
-      } else {
-        // all other triggers will not be ready if this one isn't
-        break;
-      }
-    }
-  }
-
-private:
-  QueueType queue_;                     /**< Priority queue of time triggers */
-  int next_trigger_id_ = 0;             /**< Next trigger id */
-  std::unordered_set<int> removed_;     /**< Set of delayed removed triggers  */
-};
-
-}} /* end namespace vt::sched */
-
-#endif /*INCLUDED_VT_SCHEDULER_TIME_TRIGGER_H*/
+#endif /*INCLUDED_VT_TIMETRIGGER_TRIGGER_H*/

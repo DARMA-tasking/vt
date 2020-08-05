@@ -70,6 +70,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
+#include "vt/timetrigger/time_trigger_manager.h"
 
 #include "vt/configs/arguments/argparse.h"
 #include "vt/configs/arguments/args.h"
@@ -767,6 +768,12 @@ void Runtime::initializeComponents() {
     >{}
   );
 
+  p_->registerComponent<timetrigger::TimeTriggerManager>(
+    &theTimeTrigger, Deps<
+      ctx::Context                         // Everything depends on theContext
+    >{}
+  );
+
   p_->add<ctx::Context>();
   p_->add<util::memory::MemoryUsage>();
   p_->add<registry::Registry>();
@@ -798,6 +805,7 @@ void Runtime::initializeComponents() {
   p_->add<pool::Pool>();
   p_->add<vrt::collection::balance::NodeStats>();
   p_->add<vrt::collection::balance::LBManager>();
+  p_->add<timetrigger::TimeTriggerManager>();
 
   if (needStatsRestartReader()) {
     p_->add<vrt::collection::balance::StatsRestartReader>();

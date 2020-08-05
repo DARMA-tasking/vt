@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                    test_scheduler_time_trigger.extended.cc
+//                        test_time_trigger.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,7 +44,9 @@
 
 #include <gtest/gtest.h>
 
-#include "vt/transport.h"
+#include <vt/transport.h>
+#include <vt/timetrigger/time_trigger_manager.h>
+
 #include "test_parallel_harness.h"
 
 #include <memory>
@@ -53,9 +55,9 @@
 
 namespace vt { namespace tests { namespace unit {
 
-using TestSchedTimeTrigger = TestParallelHarness;
+using TestTimeTrigger = TestParallelHarness;
 
-TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
+TEST_F(TestTimeTrigger, test_time_trigger_1) {
   using namespace std::this_thread;
   using namespace std::chrono;
   using namespace std::chrono_literals;
@@ -66,19 +68,19 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
   int triggered = 0;
   std::vector<double> time_offset;
 
-  auto testSched = std::make_unique<vt::sched::Scheduler>();
-  testSched->runProgress();
+  auto testTime = std::make_unique<vt::timetrigger::TimeTrigger>();
+  testTime->runProgress();
 
   auto cur_time = vt::timing::Timing::getCurrentTime();
 
   // register a trigger every 100 milliseconds
-  auto id = testSched->registerTimeTrigger(trigger_period, [&]{
+  auto id = testTime->registerTimeTrigger(trigger_period, [&]{
     triggered++;
     time_offset.push_back(vt::timing::Timing::getCurrentTime() - cur_time);
   });
 
   do {
-    testSched->scheduler();
+    testTime->scheduler();
     sleep_for(5ms);
   } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
 
@@ -104,17 +106,17 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_1) {
   // test unregisteration of triggers
 
   auto prev_triggered = triggered;
-  testSched->unregisterTimeTrigger(id);
+  testTime->unregisterTimeTrigger(id);
 
   sleep_for(110ms);
-  testSched->scheduler();
-  testSched->scheduler();
+  testTime->scheduler();
+  testTime->scheduler();
 
   // should not have been triggered again!
   EXPECT_EQ(prev_triggered, triggered);
 }
 
-TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
+TEST_F(TestTimeTrigger, test_time_trigger_2) {
   using namespace std::chrono_literals;
 
   std::chrono::milliseconds trigger_period[3] = {100ms, 10ms, 1000ms};
@@ -124,13 +126,13 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
   std::vector<std::vector<double>> time_offset;
   time_offset.resize(3);
 
-  auto testSched = std::make_unique<vt::sched::Scheduler>();
-  testSched->runProgress();
+  auto testTime = std::make_unique<vt::timetrigger::TimeTrigger>();
+  testTime->runProgress();
 
   auto cur_time = vt::timing::Timing::getCurrentTime();
 
   for (int i = 0; i < 3; i++) {
-    testSched->registerTimeTrigger(
+    testTime->registerTimeTrigger(
       trigger_period[i], [&triggered,&time_offset,i,&cur_time]{
         triggered[i]++;
         time_offset[i].push_back(vt::timing::Timing::getCurrentTime() - cur_time);
@@ -139,7 +141,7 @@ TEST_F(TestSchedTimeTrigger, test_scheduler_time_trigger_2) {
   }
 
   do {
-    testSched->scheduler();
+    testTime->scheduler();
   } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
 
   int tolerance = 1;

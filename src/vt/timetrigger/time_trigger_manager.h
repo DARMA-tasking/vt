@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           runtime_component_fwd.h
+//                            time_trigger_manager.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,84 +42,73 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H
-#define INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H
+#if !defined INCLUDED_VT_TIMETRIGGER_TIME_TRIGGER_MANAGER_H
+#define INCLUDED_VT_TIMETRIGGER_TIME_TRIGGER_MANAGER_H
 
-#include "vt/config.h"
-#include "vt/termination/term_common.h"
-#include "vt/sequence/sequencer_fwd.h"
+#include "vt/timetrigger/trigger.h"
+#include "vt/runtime/component/component.h"
+
+#include <chrono>
+#include <queue>
+#include <unordered_set>
+#include <vector>
+
+namespace vt { namespace timetrigger {
+
+/**
+ * \struct TimeTriggerManager
+ *
+ * \brief A time-based manager of triggers that each have an associated time
+ * period that get triggered from the progress function.
+ */
+struct TimeTriggerManager
+  : runtime::component::PollableComponent<TimeTriggerManager>
+{
+  /// A queue prioritized by the earliest next trigger to execute
+  using QueueType = std::priority_queue<Trigger, std::vector<Trigger>>;
+
+  TimeTriggerManager() = default;
+
+  std::string name() override { return "TimeTriggerManager"; }
+
+  int progress() override;
+
+  /**
+   * \brief Register a time-based trigger with a specific period
+   *
+   * \param[in] period time period to trigger action
+   * \param[in] action action to trigger
+   *
+   * \return the trigger id (can be used for removal)
+   */
+  int addTrigger(std::chrono::milliseconds period, ActionType action);
+
+  /**
+   * \brief Unregister a time-based trigger
+   *
+   * \param[in] id the \c id to remove
+   */
+  void removeTrigger(int id);
+
+  /**
+   * \brief Trigger any read time-based triggers
+   *
+   * \param[in] cur_time the current time
+   */
+  void triggerReady(TimeType cur_time);
+
+private:
+  QueueType queue_;                     /**< Priority queue of time triggers */
+  int next_trigger_id_ = 0;             /**< Next trigger id */
+  std::unordered_set<int> removed_;     /**< Set of delayed removed triggers  */
+};
+
+}} /* end namespace vt::timetrigger */
 
 namespace vt {
 
-namespace registry {
-struct Registry;
-}
-namespace messaging {
-struct ActiveMessenger;
-}
-namespace ctx {
-struct Context;
-}
-namespace event {
-struct AsyncEvent;
-}
-namespace collective {
-struct CollectiveAlg;
-}
-namespace pool {
-struct Pool;
-}
-namespace rdma {
-struct RDMAManager;
-struct Manager;
-}
-namespace param {
-struct Param;
-}
-namespace sched {
-struct Scheduler;
-}
-namespace location {
-struct LocationManager;
-}
-namespace vrt {
-struct VirtualContextManager;
-}
-namespace vrt { namespace collection {
-struct CollectionManager;
-}}
-namespace vrt { namespace collection { namespace balance {
-struct NodeStats;
-struct StatsRestartReader;
-struct LBManager;
-}}}
-namespace group {
-struct GroupManager;
-}
-namespace pipe {
-struct PipeManager;
-}
-namespace objgroup {
-struct ObjGroupManager;
-}
-namespace util { namespace memory {
-struct MemoryUsage;
-}}
-namespace timetrigger {
-struct TimeTriggerManager;
-}
+extern timetrigger::TimeTriggerManager* theTimeTrigger();
 
-#if vt_check_enabled(trace_enabled)
-namespace trace {
-struct Trace;
-}
-#endif
-#if vt_check_enabled(mpi_access_guards)
-namespace pmpi {
-struct PMPIComponent;
-}
-#endif
+}  //end namespace vt
 
-} /* end namespace vt */
-
-#endif /*INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H*/
+#endif /*INCLUDED_VT_TIMETRIGGER_TIME_TRIGGER_MANAGER_H*/
