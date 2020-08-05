@@ -105,9 +105,15 @@ int ComponentPack::progress() {
 
 std::list<int> ComponentPack::topoSort() {
   std::list<int> order;
+
+  registry::AutoHandlerType max_idx = 0;
+  for (auto&& r : registered_components_) {
+    max_idx = std::max(r, max_idx);
+  }
+
+  auto visited = std::make_unique<bool[]>(max_idx);
   //fmt::print("added size={}\n", added_components_.size());
-  auto visited = std::make_unique<bool[]>(registered_components_.size());
-  for (std::size_t i = 0; i < registered_components_.size(); i++) {
+  for (auto&& i : registered_components_) {
     auto added_iter = added_components_.find(i);
     if (added_iter != added_components_.end()) {
       if (visited[i] == false) {
