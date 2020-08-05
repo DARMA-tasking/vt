@@ -84,6 +84,11 @@ namespace vt { namespace runtime {
      */
     static bool mpiCallsAllowed();
 
+    /**
+     * \brief Returns true if MPI calls should be traced.
+     */
+    static bool mpiCallsTraced();
+
     static int grants_;
     static bool default_prohibit_;
   };
