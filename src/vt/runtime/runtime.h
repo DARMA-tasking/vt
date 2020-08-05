@@ -394,6 +394,7 @@ public:
   ComponentPtrType<vrt::collection::balance::NodeStats> theNodeStats;
   ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader;
   ComponentPtrType<vrt::collection::balance::LBManager> theLBManager;
+  ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;

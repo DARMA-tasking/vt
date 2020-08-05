@@ -66,6 +66,7 @@
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
 #include "vt/objgroup/headers.h"
+#include "vt/timetrigger/time_trigger_manager.h"
 
 #include <cassert>
 
@@ -130,6 +131,7 @@ util::memory::MemoryUsage*  theMemUsage()           { return CUR_RT->theMemUsage
 vrt::collection::balance::NodeStats* theNodeStats() { return CUR_RT->theNodeStats;      }
 vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->theStatsReader;      }
 vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
+timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }
 
 #if vt_check_enabled(trace_enabled)
 trace::Trace*               theTrace()              { return CUR_RT->theTrace;          }

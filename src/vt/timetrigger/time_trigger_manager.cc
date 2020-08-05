@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           runtime_component_fwd.h
+//                           time_trigger_manager.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,84 +42,55 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H
-#define INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H
+#include "vt/timetrigger/time_trigger_manager.h"
+#include "vt/timing/timing.h"
 
-#include "vt/config.h"
-#include "vt/termination/term_common.h"
-#include "vt/sequence/sequencer_fwd.h"
+namespace vt { namespace timetrigger {
 
-namespace vt {
-
-namespace registry {
-struct Registry;
-}
-namespace messaging {
-struct ActiveMessenger;
-}
-namespace ctx {
-struct Context;
-}
-namespace event {
-struct AsyncEvent;
-}
-namespace collective {
-struct CollectiveAlg;
-}
-namespace pool {
-struct Pool;
-}
-namespace rdma {
-struct RDMAManager;
-struct Manager;
-}
-namespace param {
-struct Param;
-}
-namespace sched {
-struct Scheduler;
-}
-namespace location {
-struct LocationManager;
-}
-namespace vrt {
-struct VirtualContextManager;
-}
-namespace vrt { namespace collection {
-struct CollectionManager;
-}}
-namespace vrt { namespace collection { namespace balance {
-struct NodeStats;
-struct StatsRestartReader;
-struct LBManager;
-}}}
-namespace group {
-struct GroupManager;
-}
-namespace pipe {
-struct PipeManager;
-}
-namespace objgroup {
-struct ObjGroupManager;
-}
-namespace util { namespace memory {
-struct MemoryUsage;
-}}
-namespace timetrigger {
-struct TimeTriggerManager;
+int TimeTriggerManager::addTrigger(
+  std::chrono::milliseconds period, ActionType action, bool fire_immediately
+) {
+  int const cur_id = next_trigger_id_++;
+  Trigger trigger{period, action, cur_id};
+  if (fire_immediately) {
+    trigger.runAction();
+  } else {
+    trigger.setLastTriggerTime(timing::Timing::getCurrentTime());
+  }
+  queue_.push(trigger);
+  return cur_id;
 }
 
-#if vt_check_enabled(trace_enabled)
-namespace trace {
-struct Trace;
+void TimeTriggerManager::removeTrigger(int id) {
+  removed_.insert(id);
 }
-#endif
-#if vt_check_enabled(mpi_access_guards)
-namespace pmpi {
-struct PMPIComponent;
+
+void TimeTriggerManager::triggerReady(TimeType cur_time) {
+  while (not queue_.empty()) {
+    if (queue_.top().nextTriggerTime() < cur_time) {
+      auto t = queue_.top();
+
+      auto iter = removed_.find(t.getID());
+      if (iter != removed_.end()) {
+        queue_.pop();
+        removed_.erase(iter);
+        continue;
+      }
+
+      queue_.pop();
+      t.runAction();
+      queue_.push(t);
+    } else {
+      // all other triggers will not be ready if this one isn't
+      break;
+    }
+  }
 }
-#endif
 
-} /* end namespace vt */
+int TimeTriggerManager::progress() {
+  auto const cur_time = timing::Timing::getCurrentTime();
+  triggerReady(cur_time);
+  return 0;
+}
 
-#endif /*INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H*/
+}} /* end namespace vt::timetrigger */

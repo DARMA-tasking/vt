@@ -37,6 +37,7 @@ set(
   serialization
   pipe
   tls
+  timetrigger
   atomic
   memory
   objgroup

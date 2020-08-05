@@ -44,6 +44,7 @@ set(
       pipe/callback/objgroup_bcast
       pipe/callback/anon
       pipe/callback/cb_union
+    timetrigger
     termination
       termination/dijkstra-scholten
       termination/interval
