@@ -77,7 +77,7 @@ TEST_F(TestTimeTrigger, test_time_trigger_1) {
   auto id = testTime->addTrigger(trigger_period, [&]{
     triggered++;
     time_offset.push_back(vt::timing::Timing::getCurrentTime() - cur_time);
-  });
+  }, true);
 
   do {
     testTime->progress();
@@ -136,7 +136,8 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
       trigger_period[i], [&triggered,&time_offset,i,&cur_time]{
         triggered[i]++;
         time_offset[i].push_back(vt::timing::Timing::getCurrentTime() - cur_time);
-      }
+      },
+      true
     );
   }
 
