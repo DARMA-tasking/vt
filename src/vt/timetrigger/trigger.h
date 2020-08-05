@@ -104,6 +104,16 @@ struct Trigger {
    */
   int getID() const { return id_; }
 
+  /**
+   * \internal \brief Update last trigger time---used the first time to set up
+   * the trigger
+   *
+   * \param[in] trigger_time the last trigger time
+   */
+  void setLastTriggerTime(TimeType trigger_time) {
+    last_trigger_time_ = trigger_time;
+  }
+
   friend bool operator<(Trigger const& lhs, Trigger const& rhs) {
     return lhs.nextTriggerTime() > rhs.nextTriggerTime();
   }

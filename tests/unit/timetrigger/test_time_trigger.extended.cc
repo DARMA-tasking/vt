@@ -68,19 +68,19 @@ TEST_F(TestTimeTrigger, test_time_trigger_1) {
   int triggered = 0;
   std::vector<double> time_offset;
 
-  auto testTime = std::make_unique<vt::timetrigger::TimeTrigger>();
-  testTime->runProgress();
+  auto testTime = std::make_unique<vt::timetrigger::TimeTriggerManager>();
+  testTime->progress();
 
   auto cur_time = vt::timing::Timing::getCurrentTime();
 
   // register a trigger every 100 milliseconds
-  auto id = testTime->registerTimeTrigger(trigger_period, [&]{
+  auto id = testTime->addTrigger(trigger_period, [&]{
     triggered++;
     time_offset.push_back(vt::timing::Timing::getCurrentTime() - cur_time);
   });
 
   do {
-    testTime->scheduler();
+    testTime->progress();
     sleep_for(5ms);
   } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
 
@@ -106,11 +106,11 @@ TEST_F(TestTimeTrigger, test_time_trigger_1) {
   // test unregisteration of triggers
 
   auto prev_triggered = triggered;
-  testTime->unregisterTimeTrigger(id);
+  testTime->removeTrigger(id);
 
   sleep_for(110ms);
-  testTime->scheduler();
-  testTime->scheduler();
+  testTime->progress();
+  testTime->progress();
 
   // should not have been triggered again!
   EXPECT_EQ(prev_triggered, triggered);
@@ -126,13 +126,13 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
   std::vector<std::vector<double>> time_offset;
   time_offset.resize(3);
 
-  auto testTime = std::make_unique<vt::timetrigger::TimeTrigger>();
-  testTime->runProgress();
+  auto testTime = std::make_unique<vt::timetrigger::TimeTriggerManager>();
+  testTime->progress();
 
   auto cur_time = vt::timing::Timing::getCurrentTime();
 
   for (int i = 0; i < 3; i++) {
-    testTime->registerTimeTrigger(
+    testTime->addTrigger(
       trigger_period[i], [&triggered,&time_offset,i,&cur_time]{
         triggered[i]++;
         time_offset[i].push_back(vt::timing::Timing::getCurrentTime() - cur_time);
@@ -141,7 +141,7 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
   }
 
   do {
-    testTime->scheduler();
+    testTime->progress();
   } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
 
   int tolerance = 1;

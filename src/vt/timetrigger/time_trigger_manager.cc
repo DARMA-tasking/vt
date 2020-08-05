@@ -48,11 +48,15 @@
 namespace vt { namespace timetrigger {
 
 int TimeTriggerManager::addTrigger(
-  std::chrono::milliseconds period, ActionType action
+  std::chrono::milliseconds period, ActionType action, bool fire_immediately
 ) {
   auto const cur_id = next_trigger_id_++;
   Trigger trigger{period, action, cur_id};
-  trigger.runAction();
+  if (fire_immediately) {
+    trigger.runAction();
+  } else {
+    trigger.setLastTriggerTime(timing::Timing::getCurrentTime());
+  }
   queue_.push(trigger);
   return cur_id;
 }
