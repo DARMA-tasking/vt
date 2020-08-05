@@ -111,7 +111,7 @@ std::list<int> ComponentPack::topoSort() {
     max_idx = std::max(r, max_idx);
   }
 
-  auto visited = std::make_unique<bool[]>(max_idx);
+  auto visited = std::make_unique<bool[]>(max_idx + 1);
   //fmt::print("added size={}\n", added_components_.size());
   for (auto&& i : registered_components_) {
     auto added_iter = added_components_.find(i);
