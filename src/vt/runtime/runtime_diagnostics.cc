@@ -142,7 +142,7 @@ using ComponentDiagnosticMap = std::map<
 
 void foreachDiagnosticValue(
   std::map<std::string, ComponentDiagnosticMap> const& vals,
-  std::function<void()> sep,
+  std::function<void(bool first, std::string const& conponent)> sep,
   std::function<void(
     std::string const& component, component::detail::DiagnosticBase*,
     component::DiagnosticErasedValue*
@@ -151,6 +151,7 @@ void foreachDiagnosticValue(
   for (auto&& elm : vals) {
     auto comp = elm.first;
     auto& map = elm.second;
+    bool first = true;
     for (auto&& diag_elm : map) {
       auto diag = diag_elm.first;
       auto& str = diag_elm.second;
@@ -164,10 +165,15 @@ void foreachDiagnosticValue(
         continue;
       }
 
+      if (sep) {
+        sep(first, comp);
+      }
+      if (first) {
+        first = false;
+      }
+
       fn(comp, diag, str.get());
     }
-
-    if (sep) sep();
   }
 }
 
@@ -233,24 +239,22 @@ void Runtime::computeAndPrintDiagnostics() {
     table.row(0).set_cell_text_align(fort::text_align::center);
     table.column(0).set_cell_text_align(fort::text_align::center);
 
-    bool first = true;
     foreachDiagnosticValue(
       component_vals,
-      [&]{
-        table << fort::separator;
+      [&](bool first, std::string const& comp){
+        if (first) {
+          table << fort::separator;
+          table[table.cur_row()][0].set_cell_content_fg_color(fort::color::red);
+          table << comp;
+        } else {
+          table[table.cur_row()][0].set_cell_content_fg_color(fort::color::red);
+          table << "";
+        }
       },
       [&](
         std::string const& comp, component::detail::DiagnosticBase* diag,
         component::DiagnosticErasedValue* str
       ) {
-        if (first) {
-          table[table.cur_row()][0].set_cell_content_fg_color(fort::color::red);
-          table << comp;
-        } else {
-          table << "";
-        }
-        first = false;
-
         table[table.cur_row()][1].set_cell_content_fg_color(fort::color::green);
         table[table.cur_row()][2].set_cell_content_fg_color(fort::color::blue);
 
