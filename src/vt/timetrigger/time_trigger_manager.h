@@ -60,6 +60,9 @@ namespace vt { namespace timetrigger {
  *
  * \brief A time-based manager of triggers that each have an associated time
  * period that get triggered from the progress function.
+ *
+ * Timed triggers are "drifting", meaning that they approximate the associated
+ * time period but are not absolutely fixed in time.
  */
 struct TimeTriggerManager
   : runtime::component::PollableComponent<TimeTriggerManager>
