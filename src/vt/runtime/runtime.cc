@@ -564,6 +564,7 @@ void Runtime::initializeComponents() {
   using component::Deps;
 
   p_ = std::make_unique<ComponentPack>();
+  bool addStatsRestartReader = needStatsRestartReader();
 # if vt_check_enabled(trace_enabled)
     std::string const prog_name = argConfig_->prog_name;
 # endif
@@ -819,7 +820,7 @@ void Runtime::initializeComponents() {
   p_->add<vrt::collection::balance::LBManager>();
   p_->add<timetrigger::TimeTriggerManager>();
 
-  if (needStatsRestartReader()) {
+  if (addStatsRestartReader) {
     p_->add<vrt::collection::balance::StatsRestartReader>();
   }
 
