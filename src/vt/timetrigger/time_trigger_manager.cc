@@ -67,16 +67,16 @@ void TimeTriggerManager::removeTrigger(int id) {
 
 void TimeTriggerManager::triggerReady(TimeType cur_time) {
   while (not queue_.empty()) {
-    auto t = queue_.top();
+    if (queue_.top().nextTriggerTime() < cur_time) {
+      auto t = queue_.top();
 
-    auto iter = removed_.find(t.getID());
-    if (iter != removed_.end()) {
-      queue_.pop();
-      removed_.erase(iter);
-      continue;
-    }
+      auto iter = removed_.find(t.getID());
+      if (iter != removed_.end()) {
+        queue_.pop();
+        removed_.erase(iter);
+        continue;
+      }
 
-    if (t.nextTriggerTime() < cur_time) {
       queue_.pop();
       t.runAction();
       queue_.push(t);
