@@ -82,7 +82,10 @@ registry::AutoHandlerType ComponentPack::registerComponent(
     registered_components_.push_back(idx);
   }
 
-  auto cons_tuple = std::make_tuple(std::forward<Cons>(cons)...);
+  // Be very careful here. Don't use std::make_tuple or we loose l-val refs
+  // (which initially was a "feature", but I realized later was probably not
+  // ideal)
+  std::tuple<Cons...> cons_tuple{std::forward<Cons>(cons)...};
 
   auto fn = makeCallable(
     [ref, this, tup = std::move(cons_tuple)]() mutable {
