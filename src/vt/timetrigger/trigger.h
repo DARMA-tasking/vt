@@ -86,7 +86,7 @@ struct Trigger {
    * \return the next time this should be triggered
    */
   TimeType nextTriggerTime() const {
-    return (last_trigger_time_*1000. + period_.count())/1000.;
+    return (last_trigger_time_*1000.0 + period_.count())/1000.0;
   }
 
   /**
