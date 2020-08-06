@@ -43,9 +43,7 @@
 */
 
 #include "vt/config.h"
-#include "vt/configs/arguments/argparse.h"
 #include "vt/configs/arguments/args.h"
-//#include "vt/objgroup/manager.h"
 
 #include <string>
 #include <vector>
@@ -486,8 +484,6 @@ public:
     return u.str();
   }
 };
-
-/*static*/ bool ArgParse::parsed_;
 
 std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
   if (parsed_ || argc == 0 || argv == nullptr) {

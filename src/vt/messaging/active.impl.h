@@ -65,7 +65,6 @@ void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
   envelopeSetPriority(msg->env, sys_min_priority);
 #endif
 #if vt_check_enabled(trace_enabled)
-  //fmt::print("theArgConfig()->traceTerm()={}\n",theArgConfig()->traceTerm());
   envelopeSetTraceRuntimeEnabled(msg->env, theArgConfig()->traceTerm());
 #endif
 }

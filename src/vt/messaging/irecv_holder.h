@@ -46,6 +46,7 @@
 #define INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
 
 #include "vt/config.h"
+#include "vt/configs/arguments/args.h"
 
 // Unfortunate header leak for VT_ALLOW_MPI_CALLS
 #include "vt/runtime/mpi_access.h"

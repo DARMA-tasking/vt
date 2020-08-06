@@ -66,7 +66,7 @@ namespace vt { namespace runtime {
 
 void Runtime::printStartupBanner() {
   // If --vt_quiet is set, immediately exit printing nothing during startup
-  if (vt::theArgConfig()->vt_quiet) {
+  if (theArgConfig->vt_quiet) {
     return;
   }
 
@@ -172,7 +172,7 @@ void Runtime::printStartupBanner() {
 
   auto f1 = fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
   auto f2a = fmt::format("{}Program: {} ({})\n", green,
-                         emph(vt::theArgConfig()->prog_name), emph(vt::theArgConfig()->argv_prog_name));
+                         emph(theArgConfig->prog_name), emph(theArgConfig->argv_prog_name));
   auto f2b = fmt::format("{}Running on: {}\n", green, emph(all_node));
   auto f3 = fmt::format("{}Machine Hostname: {}\n", green, emph(hostname));
   auto f3a = fmt::format("{}MPI Version: {}.{}\n", green, emph(version), emph(subversion));
@@ -239,12 +239,12 @@ void Runtime::printStartupBanner() {
   fmt::print("{}{}{}", vt_pre, f8, reset);
 
   #if !vt_check_enabled(lblite)
-    if (vt::theArgConfig()->vt_lb) {
+    if (theArgConfig->vt_lb) {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
       vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
     }
-    if (vt::theArgConfig()->vt_lb_stats) {
+    if (theArgConfig->vt_lb_stats) {
       auto f9 = warn_cr("--vt_lb_stats", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
@@ -253,7 +253,7 @@ void Runtime::printStartupBanner() {
   {
     auto f11 = fmt::format(
       "Running MPI progress {} times each invocation",
-      vt::theArgConfig()->vt_sched_num_progress
+      theArgConfig->vt_sched_num_progress
     );
     auto f12 = opt_on("--vt_sched_num_progress", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -262,26 +262,26 @@ void Runtime::printStartupBanner() {
   {
     auto f11 = fmt::format(
       "Running MPI progress function at least every {} handler(s) executed",
-      vt::theArgConfig()->vt_sched_progress_han
+      theArgConfig->vt_sched_progress_han
     );
     auto f12 = opt_on("--vt_sched_progress_han", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_sched_progress_sec != 0.0) {
+  if (theArgConfig->vt_sched_progress_sec != 0.0) {
     auto f11 = fmt::format(
       "Running MPI progress function at least every {} seconds",
-      vt::theArgConfig()->vt_sched_progress_sec
+      theArgConfig->vt_sched_progress_sec
     );
     auto f12 = opt_on("--vt_sched_progress_sec", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_lb) {
+  if (theArgConfig->vt_lb) {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    if (vt::theArgConfig()->vt_lb_file) {
-      if (vt::theArgConfig()->vt_lb_file_name == "") {
+    if (theArgConfig->vt_lb_file) {
+      if (theArgConfig->vt_lb_file_name == "") {
         auto warn_lb_file = fmt::format(
           "{}Warning:{} {}{}{} has no effect: compile-time"
           " option {}{}{} is empty{}\n", red, reset, magenta, "--vt_lb_file",
@@ -291,62 +291,62 @@ void Runtime::printStartupBanner() {
       } else {
         auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
         fmt::print("{}\t{}{}", vt_pre, f10, reset);
-        auto f12 = fmt::format("Reading file \"{}\"", vt::theArgConfig()->vt_lb_file_name);
+        auto f12 = fmt::format("Reading file \"{}\"", theArgConfig->vt_lb_file_name);
         auto f11 = opt_on("--vt_lb_file_name", f12);
         fmt::print("{}\t{}{}", vt_pre, f11, reset);
       }
     } else {
-      auto a3 = fmt::format("Load balancer name: \"{}\"", vt::theArgConfig()->vt_lb_name);
+      auto a3 = fmt::format("Load balancer name: \"{}\"", theArgConfig->vt_lb_name);
       auto a4 = opt_on("--vt_lb_name", a3);
       fmt::print("{}\t{}{}", vt_pre, a4, reset);
       auto a1 =
-        fmt::format("Load balancing interval = {}", vt::theArgConfig()->vt_lb_interval);
+        fmt::format("Load balancing interval = {}", theArgConfig->vt_lb_interval);
       auto a2 = opt_on("--vt_lb_interval", a1);
       fmt::print("{}\t{}{}", vt_pre, a2, reset);
 
       // Check validity of LB passed to VT
       bool found = false;
       for (auto&& lb : vrt::collection::balance::lb_names_) {
-        if (vt::theArgConfig()->vt_lb_name == lb.second) {
+        if (theArgConfig->vt_lb_name == lb.second) {
           found = true;
           break;
         }
       }
       if (not found) {
         auto str = fmt::format(
-          "Could not find valid LB named: \"{}\"", vt::theArgConfig()->vt_lb_name
+          "Could not find valid LB named: \"{}\"", theArgConfig->vt_lb_name
         );
         vtAbort(str);
       }
     }
   }
 
-  if (vt::theArgConfig()->vt_lb_stats) {
+  if (theArgConfig->vt_lb_stats) {
     auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
-    auto const fname = vt::theArgConfig()->vt_lb_stats_file;
+    auto const fname = theArgConfig->vt_lb_stats_file;
     if (fname != "") {
       auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
       auto f12 = opt_on("--vt_lb_stats_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fdir = vt::theArgConfig()->vt_lb_stats_dir;
+    auto const fdir = theArgConfig->vt_lb_stats_dir;
     if (fdir != "") {
       auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
       auto f12 = opt_on("--vt_lb_stats_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fnamein = vt::theArgConfig()->vt_lb_stats_file_in;
+    auto const fnamein = theArgConfig->vt_lb_stats_file_in;
     if (fnamein != "") {
       auto f11 = fmt::format("LB stats file name in \"{}.0.out\"", fnamein);
       auto f12 = opt_on("--vt_lb_stats_file_in", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
 
-    auto const fdirin = vt::theArgConfig()->vt_lb_stats_dir_in;
+    auto const fdirin = theArgConfig->vt_lb_stats_dir_in;
     if (fdirin != "") {
       auto f11 = fmt::format("LB stats directory in \"{}\"", fdirin);
       auto f12 = opt_on("--vt_lb_stats_dir_in", f11);
@@ -356,18 +356,18 @@ void Runtime::printStartupBanner() {
 
 
   #if !vt_check_enabled(trace_enabled)
-    if (vt::theArgConfig()->vt_trace) {
+    if (theArgConfig->vt_trace) {
       auto f9 = warn_cr("--vt_trace", "trace_enabled");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
     }
   #endif
 
   #if vt_check_enabled(trace_enabled)
-  if (vt::theArgConfig()->vt_trace) {
+  if (theArgConfig->vt_trace) {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    if (vt::theArgConfig()->vt_trace_file != "") {
-      auto f11 = fmt::format("Trace file name \"{}\"", vt::theArgConfig()->vt_trace_file);
+    if (theArgConfig->vt_trace_file != "") {
+      auto f11 = fmt::format("Trace file name \"{}\"", theArgConfig->vt_trace_file);
       auto f12 = opt_on("--vt_trace_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {
@@ -377,8 +377,8 @@ void Runtime::printStartupBanner() {
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
     }
-    if (vt::theArgConfig()->vt_trace_dir != "") {
-      auto f11 = fmt::format("Directory \"{}\"", vt::theArgConfig()->vt_trace_dir);
+    if (theArgConfig->vt_trace_dir != "") {
+      auto f11 = fmt::format("Directory \"{}\"", theArgConfig->vt_trace_dir);
       auto f12 = opt_on("--vt_trace_dir", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {
@@ -390,15 +390,15 @@ void Runtime::printStartupBanner() {
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
     }
-    if (vt::theArgConfig()->vt_trace_mod != 0) {
-      auto f11 = fmt::format("Output every {} files ", vt::theArgConfig()->vt_trace_mod);
+    if (theArgConfig->vt_trace_mod != 0) {
+      auto f11 = fmt::format("Output every {} files ", theArgConfig->vt_trace_mod);
       auto f12 = opt_on("--vt_trace_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
-    if (vt::theArgConfig()->vt_trace_flush_size != 0) {
+    if (theArgConfig->vt_trace_flush_size != 0) {
       auto f11 = fmt::format("Flush output incrementally with a buffer of,"
                              " at least, {} record(s)",
-                             vt::theArgConfig()->vt_trace_flush_size);
+                             theArgConfig->vt_trace_flush_size);
       auto f12 = opt_on("--vt_trace_flush_size", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {
@@ -406,23 +406,23 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_inverse("--vt_trace_flush_size", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
-    if (not vt::theArgConfig()->vt_trace_sys_all) {
-      if (vt::theArgConfig()->vt_trace_sys_term) {
+    if (not theArgConfig->vt_trace_sys_all) {
+      if (theArgConfig->vt_trace_sys_term) {
         auto f11 = fmt::format("Tracing all system termination messages");
         auto f12 = opt_on("--vt_trace_sys_term", f11);
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
-      if (vt::theArgConfig()->vt_trace_sys_location) {
+      if (theArgConfig->vt_trace_sys_location) {
         auto f11 = fmt::format("Tracing all system location messages");
         auto f12 = opt_on("--vt_trace_sys_location", f11);
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
-      if (vt::theArgConfig()->vt_trace_sys_collection) {
+      if (theArgConfig->vt_trace_sys_collection) {
         auto f11 = fmt::format("Tracing all system collection messages");
         auto f12 = opt_on("--vt_trace_sys_collection", f11);
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
-      if (vt::theArgConfig()->vt_trace_sys_serial_msg) {
+      if (theArgConfig->vt_trace_sys_serial_msg) {
         auto f11 = fmt::format("Tracing all system serialization messages");
         auto f12 = opt_on("--vt_trace_sys_serial_msg", f11);
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -432,13 +432,13 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_trace_sys_all", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
-    if (vt::theArgConfig()->vt_trace_spec) {
+    if (theArgConfig->vt_trace_spec) {
       {
         auto f11 = fmt::format("Using trace enable specification for phases");
         auto f12 = opt_on("--vt_trace_spec", f11);
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
-      if (vt::theArgConfig()->vt_trace_spec_file == "") {
+      if (theArgConfig->vt_trace_spec_file == "") {
         auto warn_trace_file = fmt::format(
           "{}Warning:{} {}{}{} has no effect: no specification file given"
           " option {}{}{} is empty{}\n", red, reset, magenta,
@@ -449,33 +449,33 @@ void Runtime::printStartupBanner() {
       } else {
         auto f11 = fmt::format(
           "Using trace specification file \"{}\"",
-          vt::theArgConfig()->vt_trace_spec_file
+          theArgConfig->vt_trace_spec_file
         );
         auto f12 = opt_inverse("--vt_trace_spec", f11);
         fmt::print("{}\t{}{}", vt_pre, f12, reset);
       }
     }
-    if (vt::theArgConfig()->vt_trace_memory_usage) {
+    if (theArgConfig->vt_trace_memory_usage) {
       auto f11 = fmt::format("Tracing memory usage");
       auto f12 = opt_on("--vt_trace_memory_usage", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
-    if (vt::theArgConfig()->vt_trace_mpi) {
+    if (theArgConfig->vt_trace_mpi) {
       auto f11 = fmt::format("Tracing MPI invocations (select internal calls)");
       auto f12 = opt_on_value("--vt_trace_mpi", "internal", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
-    if (vt::theArgConfig()->vt_trace_pmpi) {
+    if (theArgConfig->vt_trace_pmpi) {
       auto f11 = fmt::format("Tracing MPI invocations (external calls)");
       auto f12 = opt_on_value("--vt_trace_mpi", "external", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
-    if (vt::theArgConfig()->vt_trace_event_polling) {
+    if (theArgConfig->vt_trace_event_polling) {
       auto f11 = fmt::format("Tracing event polling (inc. MPI Isend requests)");
       auto f12 = opt_on("--vt_trace_event_polling", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
-    if (vt::theArgConfig()->vt_trace_irecv_polling) {
+    if (theArgConfig->vt_trace_irecv_polling) {
       auto f11 = fmt::format("Tracing MPI Irecv polling");
       auto f12 = opt_on("--vt_trace_irecv_polling", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -484,25 +484,25 @@ void Runtime::printStartupBanner() {
   #endif
 
 
-  if (vt::theArgConfig()->vt_term_rooted_use_ds) {
+  if (theArgConfig->vt_term_rooted_use_ds) {
     auto f11 = fmt::format("Forcing the use of Dijkstra-Scholten for rooted TD");
     auto f12 = opt_on("--vt_term_rooted_use_ds", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_term_rooted_use_wave) {
+  if (theArgConfig->vt_term_rooted_use_wave) {
     auto f11 = fmt::format("Forcing the use of 4-counter wave-based for rooted TD");
     auto f12 = opt_on("--vt_term_rooted_use_wave", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_print_no_progress) {
+  if (theArgConfig->vt_print_no_progress) {
     auto f11 = fmt::format("Printing warnings when progress is stalls");
     auto f12 = opt_on("--vt_print_no_progress", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_epoch_graph_terse) {
+  if (theArgConfig->vt_epoch_graph_terse) {
     auto f11 = fmt::format("Printing terse epoch graphs when hang detected");
     auto f12 = opt_on("--vt_epoch_graph_terse", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -512,13 +512,13 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_epoch_graph_on_hang) {
+  if (theArgConfig->vt_epoch_graph_on_hang) {
     auto f11 = fmt::format("Epoch graph output enabled if hang detected");
     auto f12 = opt_on("--vt_epoch_graph_on_hang", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_no_detect_hang) {
+  if (theArgConfig->vt_no_detect_hang) {
     auto f11 = fmt::format("Disabling termination hang detection");
     auto f12 = opt_on("--vt_no_detect_hang", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -528,17 +528,17 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (!vt::theArgConfig()->vt_no_detect_hang) {
-    if (vt::theArgConfig()->vt_hang_freq != 0) {
+  if (!theArgConfig->vt_no_detect_hang) {
+    if (theArgConfig->vt_hang_freq != 0) {
       auto f11 = fmt::format(
-        "Printing stall warning every {} tree traversals ", vt::theArgConfig()->vt_hang_freq
+        "Printing stall warning every {} tree traversals ", theArgConfig->vt_hang_freq
       );
       auto f12 = opt_on("--vt_hang_detect", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
   }
 
-  if (vt::theArgConfig()->vt_no_sigint) {
+  if (theArgConfig->vt_no_sigint) {
     auto f11 = fmt::format("Disabling SIGINT signal handling");
     auto f12 = opt_on("--vt_no_SIGINT", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -548,7 +548,7 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_no_sigsegv) {
+  if (theArgConfig->vt_no_sigsegv) {
     auto f11 = fmt::format("Disabling SIGSEGV signal handling");
     auto f12 = opt_on("--vt_no_SIGSEGV", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -558,7 +558,7 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_no_terminate) {
+  if (theArgConfig->vt_no_terminate) {
     auto f11 = fmt::format("Disabling std::terminate signal handling");
     auto f12 = opt_on("--vt_no_terminate", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -568,7 +568,7 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_no_color) {
+  if (theArgConfig->vt_no_color) {
     auto f11 = fmt::format("Color output disabled");
     auto f12 = opt_on("--vt_no_color", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -578,7 +578,7 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_no_stack) {
+  if (theArgConfig->vt_no_stack) {
     auto f11 = fmt::format("Disabling all stack dumps");
     auto f12 = opt_on("--vt_no_stack", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -588,70 +588,70 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_no_warn_stack) {
+  if (theArgConfig->vt_no_warn_stack) {
     auto f11 = fmt::format("Disabling all stack dumps on vtWarn(..)");
     auto f12 = opt_on("--vt_no_warn_stack", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_no_assert_stack) {
+  if (theArgConfig->vt_no_assert_stack) {
     auto f11 = fmt::format("Disabling all stack dumps on vtAssert(..)");
     auto f12 = opt_on("--vt_no_assert_stack", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_no_abort_stack) {
+  if (theArgConfig->vt_no_abort_stack) {
     auto f11 = fmt::format("Disabling all stack dumps on vtAbort(..)");
     auto f12 = opt_on("--vt_no_abort_stack", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_stack_file != "") {
+  if (theArgConfig->vt_stack_file != "") {
     auto f11 = fmt::format(
-      "Output stack dumps with file name {}", vt::theArgConfig()->vt_stack_file
+      "Output stack dumps with file name {}", theArgConfig->vt_stack_file
     );
     auto f12 = opt_on("--vt_stack_file", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_stack_dir != "") {
-    auto f11 = fmt::format("Output stack dumps to {}", vt::theArgConfig()->vt_stack_dir);
+  if (theArgConfig->vt_stack_dir != "") {
+    auto f11 = fmt::format("Output stack dumps to {}", theArgConfig->vt_stack_dir);
     auto f12 = opt_on("--vt_stack_dir", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_stack_mod != 0) {
+  if (theArgConfig->vt_stack_mod != 0) {
     auto f11 = fmt::format(
-      "Output stack dumps every {} files ", vt::theArgConfig()->vt_stack_mod
+      "Output stack dumps every {} files ", theArgConfig->vt_stack_mod
     );
     auto f12 = opt_on("--vt_stack_mod", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_pause) {
+  if (theArgConfig->vt_pause) {
     auto f11 = fmt::format("Enabled debug pause at startup");
     auto f12 = opt_on("--vt_pause", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_output_config) {
+  if (theArgConfig->vt_output_config) {
     auto f11 = fmt::format("Enabled configuration output");
     auto f12 = opt_on("--vt_output_config", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
 
-    if (vt::theArgConfig()->vt_output_config_file != "") {
+    if (theArgConfig->vt_output_config_file != "") {
       auto f13 = fmt::format(
-        "Config file name \"{}\"", vt::theArgConfig()->vt_output_config_file
+        "Config file name \"{}\"", theArgConfig->vt_output_config_file
       );
       auto f14 = opt_on("--vt_output_config_file", f13);
       fmt::print("{}\t{}{}", vt_pre, f14, reset);
     }
   }
 
-  if (vt::theArgConfig()->vt_memory_reporters != "") {
+  if (theArgConfig->vt_memory_reporters != "") {
     auto f11 = fmt::format(
       "Memory usage checker precedence: {}",
-      vt::theArgConfig()->vt_memory_reporters
+      theArgConfig->vt_memory_reporters
     );
     auto f12 = opt_on("--vt_memory_reporters", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -681,13 +681,13 @@ void Runtime::printStartupBanner() {
       }
     }
 
-    if (vt::theArgConfig()->vt_print_memory_each_phase) {
+    if (theArgConfig->vt_print_memory_each_phase) {
       auto f15 = fmt::format("Printing memory usage each phase");
       auto f16 = opt_on("--vt_print_memory_each_phase", f15);
       fmt::print("{}\t{}{}", vt_pre, f16, reset);
 
       auto f17 = fmt::format(
-        "Printing memory usage from node: {}", vt::theArgConfig()->vt_print_memory_node
+        "Printing memory usage from node: {}", theArgConfig->vt_print_memory_node
       );
       auto f18 = opt_on("--vt_print_memory_node", f17);
       fmt::print("{}\t{}{}", vt_pre, f18, reset);
@@ -697,36 +697,36 @@ void Runtime::printStartupBanner() {
       fmt::print("{}\t{}{}", vt_pre, f16, reset);
     }
 
-    if (vt::theArgConfig()->vt_print_memory_at_threshold) {
+    if (theArgConfig->vt_print_memory_at_threshold) {
       auto f15 = fmt::format("Printing memory usage at threshold increment");
       auto f16 = opt_on("--vt_print_memory_at_threshold", f15);
       fmt::print("{}\t{}{}", vt_pre, f16, reset);
 
       auto f17 = fmt::format(
         "Printing memory usage using threshold: {}",
-        vt::theArgConfig()->vt_print_memory_threshold
+        theArgConfig->vt_print_memory_threshold
       );
       auto f18 = opt_on("--vt_print_memory_threshold", f17);
       fmt::print("{}\t{}{}", vt_pre, f18, reset);
 
-      theMemUsage->convertBytesFromString(vt::theArgConfig()->vt_print_memory_threshold);
+      theMemUsage->convertBytesFromString(theArgConfig->vt_print_memory_threshold);
 
       auto f19 = fmt::format(
         "Polling for memory usage threshold every {} scheduler calls",
-        vt::theArgConfig()->vt_print_memory_sched_poll
+        theArgConfig->vt_print_memory_sched_poll
       );
       auto f20 = opt_on("--vt_print_memory_sched_poll", f19);
       fmt::print("{}\t{}{}", vt_pre, f20, reset);
     }
   }
 
-  if (vt::theArgConfig()->vt_debug_all) {
+  if (theArgConfig->vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
     auto f12 = opt_on("--vt_debug_all", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
-  if (vt::theArgConfig()->vt_debug_print_flush) {
+  if (theArgConfig->vt_debug_print_flush) {
     auto f11 = fmt::format("Flushing stdout after all VT prints is enabled");
     auto f12 = opt_on("--vt_debug_print_flush", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -734,7 +734,7 @@ void Runtime::printStartupBanner() {
 
 #define vt_runtime_debug_warn_compile(opt)                              \
   do {                                                                  \
-    if (!vt_backend_debug_enabled(opt) and vt::theArgConfig()->vt_debug_ ## opt) { \
+    if (!vt_backend_debug_enabled(opt) and theArgConfig->vt_debug_ ## opt) { \
       auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);             \
       fmt::print("{}\t{}{}", vt_pre, f9, reset);                        \
     }                                                                   \
@@ -783,8 +783,8 @@ void Runtime::printStartupBanner() {
   auto f88 = fmt::format("{}Pass-through Arguments:{}\n", green, reset);
   fmt::print("{}{}{}", vt_pre, f88, reset);
 
-  std::vector<char*>& mpi_args = vt::theArgConfig()->mpi_init_args;
-  std::vector<char*>& passthru_args = vt::theArgConfig()->passthru_args;
+  std::vector<char*>& mpi_args = theArgConfig->mpi_init_args;
+  std::vector<char*>& passthru_args = theArgConfig->passthru_args;
 
   if (mpi_args.empty() and passthru_args.empty()) {
     auto f11 = fmt::format("None. All arguments handled.\n");
@@ -820,7 +820,7 @@ void Runtime::printShutdownBanner(
   term::TermCounterType const& num_units, std::size_t const coll_epochs
 ) {
   // If --vt_quiet is set, immediately exit printing nothing during shutdown
-  if (vt::theArgConfig()->vt_quiet) {
+  if (theArgConfig->vt_quiet) {
     return;
   }
   auto green    = debug::green();
@@ -840,7 +840,7 @@ void Runtime::printShutdownBanner(
 
 void Runtime::checkForArgumentErrors() {
   #if !vt_check_enabled(lblite)
-    if (vt::theArgConfig()->vt_lb) {
+    if (theArgConfig->vt_lb) {
       vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
     }
   #endif

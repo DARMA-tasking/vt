@@ -43,7 +43,6 @@
 */
 
 #include "vt/config.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
 #include "vt/timing/timing.h"
 

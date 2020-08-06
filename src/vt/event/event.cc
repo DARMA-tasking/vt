@@ -62,7 +62,7 @@ namespace vt { namespace event {
 
 void AsyncEvent::initialize() {
 # if vt_check_enabled(trace_enabled)
-  if (vt::theArgConfig()->vt_trace_event_polling) {
+  if (theArgConfig()->vt_trace_event_polling) {
     trace_event_polling = trace::registerEventCollective(
       "AsyncEvent::testEventsTrigger"
     );
