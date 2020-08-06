@@ -380,14 +380,14 @@ bool Runtime::finalize(bool const force_now) {
     fflush(stdout);
     fflush(stderr);
     sync();
+    if (is_zero) {
+      printShutdownBanner(num_units, coll_epochs);
+    }
     // This destroys and finalizes all components in proper reverse
     // initialization order
     p_.reset(nullptr);
     sync();
     sync();
-    if (is_zero) {
-      printShutdownBanner(num_units, coll_epochs);
-    }
     finalizeMPI();
     finalized_ = true;
     return true;

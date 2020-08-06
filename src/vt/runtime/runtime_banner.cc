@@ -819,7 +819,7 @@ void Runtime::printStartupBanner() {
 void Runtime::printShutdownBanner(
   term::TermCounterType const& num_units, std::size_t const coll_epochs
 ) {
-  // If --vt_quiet is set, immediately exit printing nothing during startup
+  // If --vt_quiet is set, immediately exit printing nothing during shutdown
   if (vt::theArgConfig()->vt_quiet) {
     return;
   }
