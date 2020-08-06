@@ -635,7 +635,7 @@ std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc,
   new_argv = std::make_unique<char*[]>(new_argc + 1);
 
   int i = 0;
-  new_argv[i++] = argv[0];
+  new_argv[i++] = argv_prog_name;
   for (auto&& arg : passthru_args) {
     new_argv[i++] = arg;
   }
