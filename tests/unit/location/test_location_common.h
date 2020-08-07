@@ -151,18 +151,13 @@ void verifyCacheConsistency(
     // perform the checks only at the end of the epoch
     // to ensure that all entity messages have been
     // correctly delivered before.
-    auto epoch = vt::theTerm()->makeEpochCollective();
+    runInEpochCollective([&]{
+      // create an entity message to route
+      auto msg = vt::makeMessage<MsgT>(entity, my_node);
+      // check if should be serialized or not
+      bool serialize = msg->getSerialize();
 
-    // create an entity message to route
-    auto msg = vt::makeMessage<MsgT>(entity, my_node);
-    // check if should be serialized or not
-    bool serialize = msg->getSerialize();
-
-    bool finished = false;
-
-    vt::theTerm()->addAction(epoch, [=,&finished]{
       if (my_node not_eq home) {
-
         // check the routing protocol to be used by the manager.
         bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
 
@@ -193,20 +188,12 @@ void verifyCacheConsistency(
         // regardless of the protocol (eager or not)
         EXPECT_TRUE(isCached(entity));
       }
-      finished = true;
+
+      if (my_node not_eq home) {
+        // route entity message
+        vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg, serialize);
+      }
     });
-
-    if (my_node not_eq home) {
-      // route entity message
-      vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg, serialize);
-    }
-    // wait for all ranks and finish the epoch
-    vt::theCollective()->barrier();
-    vt::theTerm()->finishedEpoch(epoch);
-
-    while (not finished) {
-      vt::runScheduler();
-    }
   }
 }
 

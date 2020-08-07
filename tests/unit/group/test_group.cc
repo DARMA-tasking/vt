@@ -74,25 +74,27 @@ TEST_F(TestGroup, test_group_range_construct_1) {
   auto const& num_nodes = theContext()->getNumNodes();
   NodeType const lo = 0;
   NodeType const hi = num_nodes / 2;
-  if (this_node == 0) {
-    auto list = std::make_unique<region::Range>(lo,hi);
-    theGroup()->newGroup(
-      std::move(list), [](GroupType group){
-        fmt::print("Group is created: group={:x}\n", group);
-        auto msg = makeMessage<TestMsg>();
-        envelopeSetGroup(msg->env, group);
-        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
-      }
-    );
-  }
-  theTerm()->addAction([=]{
-    if (this_node >= lo && this_node < hi) {
-      EXPECT_EQ(num_recv, 1);
-    } else {
-      EXPECT_EQ(num_recv, 0);
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto list = std::make_unique<region::Range>(lo,hi);
+      theGroup()->newGroup(
+        std::move(list), [](GroupType group){
+          fmt::print("Group is created: group={:x}\n", group);
+          auto msg = makeMessage<TestMsg>();
+          envelopeSetGroup(msg->env, group);
+          theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
+        }
+      );
     }
-    num_recv = 0;
   });
+
+  if (this_node >= lo && this_node < hi) {
+    EXPECT_EQ(num_recv, 1);
+  } else {
+    EXPECT_EQ(num_recv, 0);
+  }
+  num_recv = 0;
 }
 
 TEST_F(TestGroup, test_group_range_construct_2) {
@@ -101,76 +103,55 @@ TEST_F(TestGroup, test_group_range_construct_2) {
   NodeType const lo = 1;
   NodeType const max_val = 5;
   NodeType const hi = std::min<NodeType>(num_nodes,max_val);
-  if (this_node == 0) {
-    auto list = std::make_unique<region::Range>(lo,hi);
-    theGroup()->newGroup(
-      std::move(list), [](GroupType group){
-        fmt::print("Group is created: group={:x}\n", group);
-        auto msg = makeMessage<TestMsg>();
-        envelopeSetGroup(msg->env, group);
-        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
-      }
-    );
-  }
-  theTerm()->addAction([=]{
-    if (this_node >= lo && this_node < hi) {
-      EXPECT_EQ(num_recv, 1);
-    } else {
-      EXPECT_EQ(num_recv, 0);
+
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto list = std::make_unique<region::Range>(lo,hi);
+      theGroup()->newGroup(
+        std::move(list), [](GroupType group){
+          fmt::print("Group is created: group={:x}\n", group);
+          auto msg = makeMessage<TestMsg>();
+          envelopeSetGroup(msg->env, group);
+          theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
+        }
+      );
     }
-    num_recv = 0;
   });
+
+  if (this_node >= lo && this_node < hi) {
+    EXPECT_EQ(num_recv, 1);
+  } else {
+    EXPECT_EQ(num_recv, 0);
+  }
+  num_recv = 0;
 }
 
 TEST_F(TestGroup, test_group_collective_construct_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   bool const node_filter = this_node % 2 == 0;
-  theGroup()->newGroupCollective(
-    node_filter, [=](GroupType group) {
-      auto const& in_group = theGroup()->inGroup(group);
-      auto const& is_default_group = theGroup()->groupDefault(group);
-      EXPECT_EQ(in_group, node_filter);
-      EXPECT_EQ(is_default_group, false);
-      auto msg = makeMessage<TestMsg>();
-      envelopeSetGroup(msg->env, group);
-      theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
-    }
-  );
-  theTerm()->addAction([=]{
-    if (node_filter) {
-      EXPECT_EQ(num_recv, num_nodes);
-    } else {
-      EXPECT_EQ(num_recv, 0);
-    }
-    num_recv = 0;
-  });
-}
 
-// TEST_F(TestGroup, test_group_collective_construct_2) {
-//   auto const& this_node = theContext()->getNode();
-//   auto const& num_nodes = theContext()->getNumNodes();
-//   auto const& node_filter = this_node % 2 == 1;
-//   theGroup()->newGroupCollective(
-//     node_filter, [=](GroupType group) {
-//       auto const& in_group = theGroup()->inGroup(group);
-//       auto const& is_default_group = theGroup()->groupDefault(group);
-//       ::fmt::print("{}: new group collective lambda\n", this_node);
-//       EXPECT_EQ(in_group, node_filter);
-//       EXPECT_EQ(is_default_group, false);
-//       auto msg = makeMessage<TestMsg>();
-//       envelopeSetGroup(msg->env, group);
-//       theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
-//     }
-//   );
-//   theTerm()->addAction([=]{
-//     if (node_filter) {
-//       EXPECT_EQ(num_recv, num_nodes);
-//     } else {
-//       EXPECT_EQ(num_recv, 0);
-//     }
-//     num_recv = 0;
-//   });
-// }
+  runInEpochCollective([&]{
+    theGroup()->newGroupCollective(
+      node_filter, [=](GroupType group) {
+        auto const& in_group = theGroup()->inGroup(group);
+        auto const& is_default_group = theGroup()->groupDefault(group);
+        EXPECT_EQ(in_group, node_filter);
+        EXPECT_EQ(is_default_group, false);
+        auto msg = makeMessage<TestMsg>();
+        envelopeSetGroup(msg->env, group);
+        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
+      }
+    );
+  });
+
+  if (node_filter) {
+    EXPECT_EQ(num_recv, num_nodes);
+  } else {
+    EXPECT_EQ(num_recv, 0);
+  }
+  num_recv = 0;
+}
 
 }}} // end namespace vt::tests::unit
