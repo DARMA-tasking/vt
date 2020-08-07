@@ -73,6 +73,7 @@
 #include "vt/timetrigger/time_trigger_manager.h"
 
 #include "vt/configs/arguments/app_config.h"
+#include "vt/configs/arguments/args.h"
 
 #include <memory>
 #include <iostream>
@@ -100,7 +101,8 @@ Runtime::Runtime(
      num_workers_(in_num_workers),
      communicator_(
        in_comm == nullptr ? MPI_COMM_NULL : *in_comm
-     )
+     ),
+     argConfig_(std::make_unique<arguments::ArgConfig>())
 {
   // MPI_Init 'should' be called first on the original arguments,
   // with the justification that in some environments in addition to removing
@@ -109,7 +111,6 @@ Runtime::Runtime(
 
   // n.b. ref-update of args with pass-through arguments
   // (pass-through arguments are neither for VT or MPI_Init)
-
   std::tuple<int, std::string> result =
     argConfig_->parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);

@@ -49,7 +49,6 @@
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
 #include "vt/worker/worker_headers.h"
-#include "vt/configs/arguments/args.h"
 
 // Optional components
 #if vt_check_enabled(trace_enabled)
@@ -419,7 +418,7 @@ protected:
   int user_argc_ = 0;
   std::unique_ptr<char*[]> user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;
-  std::unique_ptr<arguments::ArgConfig> argConfig_ = std::make_unique<arguments::ArgConfig>();
+  std::unique_ptr<arguments::ArgConfig> argConfig_;
 };
 
 }} /* end namespace vt::runtime */
