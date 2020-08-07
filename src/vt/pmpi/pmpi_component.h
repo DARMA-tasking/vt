@@ -72,7 +72,7 @@ struct PMPIComponent : runtime::component::Component<PMPIComponent> {
   void startup() override {
     registerEventHandlers();
 
-    trace_pmpi = theArgConfig()->vt_trace_pmpi;
+    trace_pmpi = theConfig()->vt_trace_pmpi;
   }
 
   void finalize() override {

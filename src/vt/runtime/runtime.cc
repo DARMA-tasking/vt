@@ -182,7 +182,7 @@ void Runtime::pauseForDebugger() {
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-    if (vt::theArgConfig()->vt_stack_file != "") {
+    if (vt::theConfig()->vt_stack_file != "") {
       Runtime::writeToFile(stack_pretty);
     } else {
       ::fmt::print("{}", stack_pretty);
@@ -208,7 +208,7 @@ void Runtime::pauseForDebugger() {
 # endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (vt::theArgConfig()->vt_stack_file.empty()) {
+    if (vt::theConfig()->vt_stack_file.empty()) {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
       ::fmt::print("\n");
     } else {
@@ -224,7 +224,7 @@ void Runtime::pauseForDebugger() {
   ::fmt::print("{}Caught std::terminate \n", vt_pre);
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (vt::theArgConfig()->vt_stack_file != "") {
+    if (vt::theConfig()->vt_stack_file != "") {
       Runtime::writeToFile(std::get<0>(stack));
     } else {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
@@ -238,9 +238,9 @@ void Runtime::pauseForDebugger() {
   auto const& node = debug::preNode();
   if (node == uninitialized_destination) {
     return true;
-  } else if (vt::theArgConfig()->vt_stack_mod == 0) {
+  } else if (vt::theConfig()->vt_stack_mod == 0) {
     return true;
-  } else if (node % vt::theArgConfig()->vt_stack_mod == 0) {
+  } else if (node % vt::theConfig()->vt_stack_mod == 0) {
     return true;
   } else {
     return false;
@@ -248,11 +248,11 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
-  std::string& app_name = vt::theArgConfig()->prog_name;
-  std::string name = vt::theArgConfig()->vt_stack_file == "" ? app_name : vt::theArgConfig()->vt_stack_file;
+  std::string& app_name = vt::theConfig()->prog_name;
+  std::string name = vt::theConfig()->vt_stack_file == "" ? app_name : vt::theConfig()->vt_stack_file;
   auto const& node = debug::preNode();
   std::string file = name + "." + std::to_string(node) + ".stack.out";
-  std::string dir  = vt::theArgConfig()->vt_stack_dir == "" ? "" : vt::theArgConfig()->vt_stack_dir + "/";
+  std::string dir  = vt::theConfig()->vt_stack_dir == "" ? "" : vt::theConfig()->vt_stack_dir + "/";
   std::string path = dir + file;
   FILE* f = fopen(path.c_str(), "w+");
   fprintf(f, "%s", str.c_str());

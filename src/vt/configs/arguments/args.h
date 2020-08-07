@@ -122,7 +122,7 @@ public:
   bool vt_no_sigsegv   = false;
   bool vt_no_terminate = false;
   std::string vt_memory_reporters =
-  # if vt_check_enabled(mimalloc)
+# if vt_check_enabled(mimalloc)
   "mimalloc,"
 # endif
   "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
@@ -256,7 +256,7 @@ private:
 
 namespace vt {
 
-extern arguments::ArgConfig* theArgConfig();
+extern arguments::ArgConfig* theConfig();
 
 } /* end namespace vt */
 

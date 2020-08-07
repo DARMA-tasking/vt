@@ -59,7 +59,7 @@ void CollectionManager::finalize() {
 
   // Statistics output when LB is enabled and appropriate flag is enabled
 #if vt_check_enabled(lblite)
-  if (theArgConfig()->vt_lb_stats) {
+  if (theConfig()->vt_lb_stats) {
     theNodeStats()->outputStatsFile();
     theNodeStats()->clearStats();
   }

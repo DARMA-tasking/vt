@@ -69,8 +69,8 @@ void StatsRestartReader::setProxy(
 
 void StatsRestartReader::startup() {
   auto const node = theContext()->getNode();
-  std::string const& base_file = theArgConfig()->vt_lb_stats_file_in;
-  std::string const& dir = theArgConfig()->vt_lb_stats_dir_in;
+  std::string const& base_file = theConfig()->vt_lb_stats_file_in;
+  std::string const& dir = theConfig()->vt_lb_stats_dir_in;
   auto const file = fmt::format("{}.{}.out", base_file, node);
   auto const file_name = fmt::format("{}/{}", dir, file);
   readStats(file_name);

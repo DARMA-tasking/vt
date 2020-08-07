@@ -101,7 +101,7 @@ struct IRecvHolder {
 #   if vt_check_enabled(trace_enabled)
     std::size_t const holder_size_start = holder_.size();
     TimeType tr_begin = 0.0;
-    if (theArgConfig()->vt_trace_irecv_polling) {
+    if (theConfig()->vt_trace_irecv_polling) {
       tr_begin = vt::timing::Timing::getCurrentTime();
     }
 #   endif
@@ -133,7 +133,7 @@ struct IRecvHolder {
     }
 
 #   if vt_check_enabled(trace_enabled)
-    if (theArgConfig()->vt_trace_irecv_polling) {
+    if (theConfig()->vt_trace_irecv_polling) {
        if (holder_size_start > 0) {
          auto tr_end = vt::timing::Timing::getCurrentTime();
          auto tr_note = fmt::format(

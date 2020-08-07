@@ -96,26 +96,26 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   LBType the_lb = LBType::NoLB;
 
   // --vt_lb is not enabled, thus do not run the load balancer
-  if (not theArgConfig()->vt_lb) {
+  if (not theConfig()->vt_lb) {
     return the_lb;
   }
 
   //--- User-specified map without any change, thus do not run
-  if ((theArgConfig()->vt_lb_name == lb_names_[LBType::StatsMapLB]) and
+  if ((theConfig()->vt_lb_name == lb_names_[LBType::StatsMapLB]) and
       not theStatsReader()->needsLB(phase)) {
     return LBType::NoLB;
   }
 
-  if (theArgConfig()->vt_lb_file and try_file) {
+  if (theConfig()->vt_lb_file and try_file) {
     bool const has_spec = ReadLBSpec::hasSpec();
     if (has_spec) {
       the_lb = ReadLBSpec::getLB(phase);
     }
   } else {
-    vtAssert(theArgConfig()->vt_lb_interval != 0, "LB Interval must not be 0");
-    if (phase % theArgConfig()->vt_lb_interval == 0) {
+    vtAssert(theConfig()->vt_lb_interval != 0, "LB Interval must not be 0");
+    if (phase % theConfig()->vt_lb_interval == 0) {
       for (auto&& elm : lb_names_) {
-        if (elm.second == theArgConfig()->vt_lb_name) {
+        if (elm.second == theConfig()->vt_lb_name) {
           the_lb = elm.first;
           break;
         }
@@ -197,7 +197,7 @@ void LBManager::collectiveImpl(
   if (num_invocations_ == num_calls) {
     auto const& this_node = theContext()->getNode();
 
-    if (this_node == 0 and not theArgConfig()->vt_lb_quiet) {
+    if (this_node == 0 and not theConfig()->vt_lb_quiet) {
       vt_debug_print(
         lb, node,
         "LBManager::collectiveImpl: phase={}, balancer={}, name={}\n",
@@ -327,11 +327,11 @@ void LBManager::unregisterListenerAfterLB(int element) {
 }
 
 void LBManager::printMemoryUsage(PhaseType phase) {
-  if (theArgConfig()->vt_print_memory_each_phase) {
+  if (theConfig()->vt_print_memory_each_phase) {
     auto this_node = theContext()->getNode();
     if (
-      "all" == theArgConfig()->vt_print_memory_node or
-      std::to_string(this_node) == theArgConfig()->vt_print_memory_node
+      "all" == theConfig()->vt_print_memory_node or
+      std::to_string(this_node) == theConfig()->vt_print_memory_node
     ) {
       if (theMemUsage()->hasWorkingReporter()) {
         auto memory_usage_str = fmt::format(

@@ -52,7 +52,7 @@
 namespace vt { namespace debug {
 
 inline bool colorizeOutput() {
-  return vt::theArgConfig()->colorize_output;
+  return vt::theConfig()->colorize_output;
 }
 
 inline std::string green()    { return colorizeOutput() ? "\033[32m"   : ""; }

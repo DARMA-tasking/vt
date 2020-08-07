@@ -132,7 +132,7 @@ vrt::collection::balance::NodeStats* theNodeStats() { return CUR_RT->theNodeStat
 vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->theStatsReader;      }
 vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }
-vt::arguments::ArgConfig*   theArgConfig()          { return CUR_RT->theArgConfig;      }
+vt::arguments::ArgConfig*   theConfig()          { return CUR_RT->theArgConfig;      }
 
 
 #if vt_check_enabled(trace_enabled)

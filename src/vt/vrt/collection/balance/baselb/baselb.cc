@@ -130,7 +130,7 @@ void BaseLB::getArgs(PhaseType phase) {
       vtAssert(false, "Error no spec found, which must exist");
     }
   } else {
-    auto const args = theArgConfig()->vt_lb_args;
+    auto const args = theConfig()->vt_lb_args;
     spec_entry_ = std::make_unique<SpecEntry>(
       ReadLBSpec::makeSpecFromParams(args)
     );

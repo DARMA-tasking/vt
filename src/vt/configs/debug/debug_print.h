@@ -83,9 +83,9 @@
   vt_print_colorize_impl(::vt::debug::blue(), "[" + std::to_string(proc) + "]", "")
 
 #define vt_debug_argument_option(opt)                                      \
-  ::vt::theArgConfig()->vt_debug_ ## opt
+  ::vt::theConfig()->vt_debug_ ## opt
 
-#define vt_debug_all_option ::vt::theArgConfig()->vt_debug_all
+#define vt_debug_all_option ::vt::theConfig()->vt_debug_all
 
 #define vt_debug_print_impl(force, inconfig, inmode, cat, ctx, ...)     \
   vt::config::ApplyOp<                                                  \
@@ -140,7 +140,7 @@
 
 #define vt_print(feature, ...)                                          \
   do {                                                                  \
-    if (!::vt::theArgConfig()->vt_quiet) {                        \
+    if (!::vt::theConfig()->vt_quiet) {                        \
       vt_print_force_impl(feature, node, __VA_ARGS__);                  \
     }                                                                   \
   } while(0);
@@ -167,7 +167,7 @@ struct DebugPrintOp;
 template <CatEnum cat, ModeEnum mod, typename Arg, typename... Args>
 static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
   bool const verb = vt_option_check_enabled(mod, ModeEnum::verbose);
-  if ((verb and ::vt::theArgConfig()->vt_debug_verbose) or not verb) {
+  if ((verb and ::vt::theConfig()->vt_debug_verbose) or not verb) {
     auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
     fmt::print(
       "{} {} {} {}",
@@ -176,7 +176,7 @@ static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
       vt_print_colorize_impl(::vt::debug::green(), PrettyPrintCat<cat>::print(), ":"),
       user
     );
-    if (vt_option_check_enabled(mod, ModeEnum::flush) or ::vt::theArgConfig()->alwaysFlush()) {
+    if (vt_option_check_enabled(mod, ModeEnum::flush) or ::vt::theConfig()->alwaysFlush()) {
       fflush(stdout);
     }
   }
@@ -186,7 +186,7 @@ template <CatEnum cat, ModeEnum mod>
 struct DebugPrintOp<cat, CtxEnum::node, mod> {
   template <typename Arg, typename... Args>
   void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
-    if (rt_option or vt::theArgConfig()->vt_debug_all) {
+    if (rt_option or vt::theConfig()->vt_debug_all) {
       auto no_node = static_cast<NodeType>(-1);
       auto node = vt::curRT != nullptr ? vt::debug::preNode() : no_node;
       debugPrintImpl<cat,mod>(node,std::forward<Arg>(arg),std::forward<Args>(args)...);
@@ -198,7 +198,7 @@ template <CatEnum cat, ModeEnum mod>
 struct DebugPrintOp<cat, CtxEnum::unknown, mod> {
   template <typename Arg, typename... Args>
   void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
-    if (rt_option or vt::theArgConfig()->vt_debug_all) {
+    if (rt_option or vt::theConfig()->vt_debug_all) {
       debugPrintImpl<cat,mod>(-1,std::forward<Arg>(arg),std::forward<Args>(args)...);
     }
   }

@@ -162,8 +162,8 @@ void NodeStats::releaseLB() {
 
 void NodeStats::createStatsFile() {
   auto const node = theContext()->getNode();
-  auto const base_file = std::string(theArgConfig()->vt_lb_stats_file);
-  auto const dir = std::string(theArgConfig()->vt_lb_stats_dir);
+  auto const base_file = std::string(theConfig()->vt_lb_stats_file);
+  auto const dir = std::string(theConfig()->vt_lb_stats_dir);
   auto const file = fmt::format("{}.{}.out", base_file, node);
   auto const file_name = fmt::format("{}/{}", dir, file);
 
