@@ -46,6 +46,7 @@
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_CC
 
 #include "vt/runtime/component/component_pack.h"
+#include "vt/runtime/component/diagnostic_manager.h"
 
 namespace vt { namespace runtime { namespace component {
 
@@ -172,6 +173,14 @@ void ComponentPack::detectCyclesImpl(std::list<int>& stack, int dep) {
     detectCyclesImpl(stack, vp);
   }
   stack.pop_back();
+}
+
+void ComponentPack::setupDiagnosticManager() {
+  diagnostic_manager_ = std::make_unique<DiagnosticManager>(this);
+}
+
+DiagnosticManager* ComponentPack::getDiagnosticManager() {
+  return diagnostic_manager_.get();
 }
 
 }}} /* end namespace vt::runtime::component */

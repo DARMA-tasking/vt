@@ -135,6 +135,13 @@ struct DiagnosticBase {
     Diagnostic* diagnostic, DiagnosticErasedValue* out, int snapshot
   ) = 0;
 
+  /**
+   * \internal \brief Clone a diagnostic value without knowing the type
+   *
+   * \return a clone of the diagnostic value
+   */
+  virtual std::unique_ptr<DiagnosticBase> clone() = 0;
+
 protected:
   DiagnosticTypeEnum const type_; /**< The diagnostic type */
   DiagnosticUpdate const update_; /**< The diagnostic value update type */

@@ -416,6 +416,9 @@ bool Runtime::initialize(bool const force_now) {
     }
 
     MPI_Barrier(comm);
+
+    p_->setupDiagnosticManager();
+
     initialized_ = true;
     return true;
   } else {

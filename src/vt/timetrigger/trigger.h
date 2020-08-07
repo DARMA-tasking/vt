@@ -94,9 +94,9 @@ struct Trigger {
    *
    * \param[in] current_time current time
    */
-  void runAction(TimeType current_time) {
+  void runAction() {
+    last_trigger_time_ = timing::Timing::getCurrentTime();
     trigger_();
-    last_trigger_time_ = current_time;
   }
 
   /**

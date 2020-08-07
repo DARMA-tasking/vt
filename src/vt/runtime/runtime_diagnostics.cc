@@ -344,6 +344,25 @@ void Runtime::computeAndPrintDiagnostics() {
     fout << out;
     fout.close();
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Compute snapshots
+  //////////////////////////////////////////////////////////////////////////////
+
+  auto dman = p_->getDiagnosticManager();
+  if (dman != nullptr) {
+    auto& data = dman->getData();
+    for (std::size_t i = 1; i < data.size(); i++) {
+      auto& snapshots = data.at(i);
+      auto len = snapshots.size();
+
+      // auto cb = theCB()->makeBcast<LenMsg>([](LenMsg* msg) {
+      //   auto reduced_len = msg->getVal();
+      //   len = std::min(reduced_len, len);
+      // });
+      //theCollective()->global()->reduce<collective::MinOp<std::size_t>>(msg.get(), cb);
+    }
+  }
 }
 
 }} /* end namespace vt::runtime */
