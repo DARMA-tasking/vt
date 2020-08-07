@@ -47,7 +47,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/runtime.h"
 
 #include <vector>

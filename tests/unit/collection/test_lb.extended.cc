@@ -83,8 +83,8 @@ struct TestLoadBalancer : TestParallelHarnessParam<std::string> { };
 TEST_P(TestLoadBalancer, test_load_balancer_1) {
   auto lb_name = GetParam();
 
-  vt::theArgConfig()->vt_lb = true;
-  vt::theArgConfig()->vt_lb_name = lb_name;
+  vt::theConfig()->vt_lb = true;
+  vt::theConfig()->vt_lb_name = lb_name;
   if (vt::theContext()->getNode() == 0) {
     fmt::print("Testing lb {}\n", lb_name);
   }

@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_COLORIZE_H
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_COLORIZE_H
 
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 
 #include <string>
 

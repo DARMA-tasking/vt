@@ -44,7 +44,7 @@
 
 
 #include "vt/config.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/messaging/active.h"
 #include "vt/messaging/envelope.h"
 #include "vt/messaging/message/smart_ptr.h"

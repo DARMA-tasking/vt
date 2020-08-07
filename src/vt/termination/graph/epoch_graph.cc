@@ -46,7 +46,7 @@
 #include "vt/termination/graph/epoch_graph.h"
 #include "vt/termination/term_common.h"
 #include "vt/epoch/epoch_headers.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 
 #include <sys/stat.h>
 #include <cstdio>

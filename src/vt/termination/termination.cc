@@ -54,7 +54,7 @@
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
 #include "vt/termination/dijkstra-scholten/comm.h"
 #include "vt/termination/dijkstra-scholten/ds.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/pipe/pipe_headers.h"

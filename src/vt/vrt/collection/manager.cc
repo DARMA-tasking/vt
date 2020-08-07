@@ -43,7 +43,7 @@
 */
 
 #include "vt/config.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/runtime.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/base/base.h"

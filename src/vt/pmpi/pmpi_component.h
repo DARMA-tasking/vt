@@ -49,7 +49,7 @@
 
 #if vt_check_enabled(mpi_access_guards)
 
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/runtime/mpi_access.h"
 

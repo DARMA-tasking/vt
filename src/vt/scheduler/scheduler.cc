@@ -52,7 +52,7 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/objgroup/manager.fwd.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/mpi_access.h"

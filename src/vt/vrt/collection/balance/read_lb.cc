@@ -46,7 +46,7 @@
 #include "vt/context/context.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 
 #include <string>
 #include <fstream>

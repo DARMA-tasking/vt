@@ -50,7 +50,7 @@
 #include "vt/termination/term_headers.h"
 #include "vt/messaging/message/message_priority.impl.h"
 #include "vt/scheduler/priority.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 
 namespace vt { namespace messaging {

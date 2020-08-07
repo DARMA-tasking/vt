@@ -72,7 +72,7 @@
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/timetrigger/time_trigger_manager.h"
 
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 
 #include <memory>
 #include <iostream>
@@ -153,7 +153,7 @@ bool Runtime::hasSchedRun() const {
 }
 
 void Runtime::pauseForDebugger() {
-  if (theArgConfig->vt_pause) {
+  if (theConfig()->vt_pause) {
     char node_str[256];
     auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
     sprintf(node_str, "prog-%d.pid", node);
@@ -260,20 +260,20 @@ void Runtime::pauseForDebugger() {
 }
 
 void Runtime::setupSignalHandler() {
-  if (!argConfig_->vt_no_sigsegv) {
+  if (!argConfig_->config_.vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
   }
   signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }
 
 void Runtime::setupSignalHandlerINT() {
-  if (!argConfig_->vt_no_sigint) {
+  if (!argConfig_->config_.vt_no_sigint) {
     signal(SIGINT, Runtime::sigHandlerINT);
   }
 }
 
 void Runtime::setupTerminateHandler() {
-  if (!argConfig_->vt_no_terminate) {
+  if (!argConfig_->config_.vt_no_terminate) {
     std::set_terminate(termHandler);
   }
 }
@@ -329,10 +329,10 @@ bool Runtime::tryFinalize() {
 
 bool Runtime::needStatsRestartReader() {
   #if vt_check_enabled(lblite)
-    if (argConfig_->vt_lb_stats) {
+    if (argConfig_->config_.vt_lb_stats) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
-      if (argConfig_->vt_lb_name == lbNames[mapLB]) {
+      if (argConfig_->config_.vt_lb_name == lbNames[mapLB]) {
         return true;
       }
     }
@@ -356,9 +356,9 @@ bool Runtime::initialize(bool const force_now) {
 
       // If the user specified to output a configuration file, write it to the
       // specified file on rank 0
-      if (theArgConfig->vt_output_config) {
-        std::ofstream out(theArgConfig->vt_output_config_file);
-        out << theArgConfig->vt_output_config_str;
+      if (theConfig()->vt_output_config) {
+        std::ofstream out(theConfig()->vt_output_config_file);
+        out << theConfig()->vt_output_config_str;
         out.close();
       }
     }
@@ -480,15 +480,15 @@ void Runtime::output(
     fmt::print(stderr, "{}\n", prefix);
   }
 
-  if (!theArgConfig->vt_no_stack) {
-    bool const on_abort = !theArgConfig->vt_no_abort_stack;
-    bool const on_warn = !theArgConfig->vt_no_warn_stack;
+  if (!theConfig()->vt_no_stack) {
+    bool const on_abort = !theConfig()->vt_no_abort_stack;
+    bool const on_warn = !theConfig()->vt_no_warn_stack;
     bool const dump = (error && on_abort) || (!error && on_warn);
     if (dump) {
       if (Runtime::nodeStackWrite()) {
         auto stack = debug::stack::dumpStack();
         auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-        if (theArgConfig->vt_stack_file != "") {
+        if (theConfig()->vt_stack_file != "") {
           Runtime::writeToFile(stack_pretty);
         } else {
           fmt::print("{}", stack_pretty);
@@ -529,7 +529,7 @@ void Runtime::setup() {
   theTrace->loadAndBroadcastSpec();
 # endif
 
-  if (theArgConfig->vt_pause) {
+  if (theConfig()->vt_pause) {
     pauseForDebugger();
   }
 
@@ -537,12 +537,12 @@ void Runtime::setup() {
 }
 
 void Runtime::setupArgs() {
-  std::vector<char*>& mpi_args = argConfig_->mpi_init_args;
+  std::vector<char*>& mpi_args = argConfig_->config_.mpi_init_args;
   user_argc_ = mpi_args.size() + 1;
   user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
 
   int i = 0;
-  user_argv_[i++] = argConfig_->argv_prog_name;
+  user_argv_[i++] = argConfig_->config_.argv_prog_name;
   for (char*& arg : mpi_args) {
     user_argv_[i++] = arg;
   }
@@ -568,7 +568,7 @@ void Runtime::initializeComponents() {
   p_ = std::make_unique<ComponentPack>();
   bool addStatsRestartReader = needStatsRestartReader();
 # if vt_check_enabled(trace_enabled)
-  std::string const prog_name = argConfig_->prog_name;
+  std::string const prog_name = argConfig_->config_.prog_name;
 # endif
 
   p_->registerComponent<arguments::ArgConfig>(
