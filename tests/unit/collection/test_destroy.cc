@@ -109,18 +109,19 @@ static constexpr int32_t const num_elms_per_node = 8;
 TEST_F(TestDestroy, test_destroy_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  if (this_node == 0) {
-    auto const& range = Index1D(num_nodes * num_elms_per_node);
-    auto proxy = theCollection()->construct<DestroyTest>(range);
-    auto msg = makeMessage<WorkMsg>();
-    // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());
-    proxy.broadcast<WorkMsg,DestroyTest::work>(msg.get());
-  }
-  vt::runInEpochCollective([]{
+  
+  vt::runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto const& range = Index1D(num_nodes * num_elms_per_node);
+      auto proxy = theCollection()->construct<DestroyTest>(range);
+      auto msg = makeMessage<WorkMsg>();
+      // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());
+      proxy.broadcast<WorkMsg,DestroyTest::work>(msg.get());
+    }
+  });
     // ::fmt::print("num destroyed={}\n", num_destroyed);
     // Relies on default mapping equally distributing
-    EXPECT_EQ(num_destroyed, num_elms_per_node);
-  });
+  EXPECT_EQ(num_destroyed, num_elms_per_node);
 }
 
 }}} // end namespace vt::tests::unit

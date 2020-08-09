@@ -54,15 +54,14 @@ using TestMPICollective = TestParallelHarness;
 TEST_F(TestMPICollective, test_mpi_collective_1) {
   bool done = false;
 
-  theCollective()->makeCollectiveScope().mpiCollectiveAsync([&done]{
-    auto comm = theContext()->getComm();
-    MPI_Barrier(comm);
-    done = true;
+  vt::runInEpochCollective([&]{
+    theCollective()->makeCollectiveScope().mpiCollectiveAsync([&done]{
+      auto comm = theContext()->getComm();
+      MPI_Barrier(comm);
+      done = true;
+    });
   });
-
-  vt::runInEpochCollective([&done]{
-    EXPECT_TRUE(done);
-  });
+  EXPECT_TRUE(done);
 
   while (not vt::rt->isTerminated()) {
     runScheduler();
@@ -76,40 +75,41 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
 
   // These three collective can execute in any order, but it will always be
   // consistent across all the nodes
-  scope.mpiCollectiveAsync([&done]{
-    auto comm = theContext()->getComm();
-    vt_print(barrier, "run MPI_Barrier\n");
-    MPI_Barrier(comm);
-    done++;
-  });
-
   auto this_node = theContext()->getNode();
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
 
-  scope.mpiCollectiveAsync([&done,&bcast_val,root]{
-    auto comm = theContext()->getComm();
-    vt_print(barrier, "run MPI_Bcast\n");
-    MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
-    done++;
-  });
+  int reduce_val_out = 0;  
+  
+  vt::runInEpochCollective([&]{
+    scope.mpiCollectiveAsync([&done]{
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_Barrier\n");
+      MPI_Barrier(comm);
+      done++;
+    });
 
-  int reduce_val_out = 0;
+    scope.mpiCollectiveAsync([&done,&bcast_val,root]{
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_Bcast\n");
+      MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
+      done++;
+    });
 
-  scope.mpiCollectiveAsync([&done,&reduce_val_out]{
-    auto comm = theContext()->getComm();
-    int val_in = 1;
-    vt_print(barrier, "run MPI_Allreduce\n");
-    MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
-    done++;
+    scope.mpiCollectiveAsync([&done,&reduce_val_out]{
+      auto comm = theContext()->getComm();
+      int val_in = 1;
+      vt_print(barrier, "run MPI_Allreduce\n");
+      MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
+      done++;
+    });
   });
-
-  vt::runInEpochCollective([&done,&bcast_val,&reduce_val_out]{
-    auto num_nodes = theContext()->getNumNodes();
-    EXPECT_EQ(done, 3);
-    EXPECT_EQ(bcast_val, 29);
-    EXPECT_EQ(reduce_val_out, num_nodes);
-  });
+  
+  auto num_nodes = theContext()->getNumNodes();
+  
+  EXPECT_EQ(done, 3);
+  EXPECT_EQ(bcast_val, 29);
+  EXPECT_EQ(reduce_val_out, num_nodes);
 
   while (not vt::rt->isTerminated()) {
     runScheduler();
@@ -193,54 +193,54 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   auto epoch = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(epoch);
+  
+  vt::runInEpochCollective([&]{
+    auto op1 = [&]{
+      scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
+        auto comm = theContext()->getComm();
+        vt_print(barrier, "run MPI_Bcast\n");
+        MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
+        run_order[done++] = 1;
+      });
+    };
 
-  auto op1 = [&]{
-    scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
-      auto comm = theContext()->getComm();
-      vt_print(barrier, "run MPI_Bcast\n");
-      MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
-      run_order[done++] = 1;
-    });
-  };
+    auto op2 = [&]{
+      scope2.mpiCollectiveAsync([&done,&reduce_val_out]{
+        auto comm = theContext()->getComm();
+        int val_in = 1;
+        vt_print(barrier, "run MPI_Allreduce\n");
+        MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
+        run_order[done++] = 2;
+      });
+    };
 
-  auto op2 = [&]{
-    scope2.mpiCollectiveAsync([&done,&reduce_val_out]{
-      auto comm = theContext()->getComm();
-      int val_in = 1;
-      vt_print(barrier, "run MPI_Allreduce\n");
-      MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
-      run_order[done++] = 2;
-    });
-  };
-
-  auto op3 = [&]{
-    scope3.mpiCollectiveAsync([&done]{
-      auto comm = theContext()->getComm();
-      vt_print(barrier, "run MPI_barrier\n");
-      MPI_Barrier(comm);
-      run_order[done++] = 3;
-    });
-  };
+    auto op3 = [&]{
+      scope3.mpiCollectiveAsync([&done]{
+        auto comm = theContext()->getComm();
+        vt_print(barrier, "run MPI_barrier\n");
+        MPI_Barrier(comm);
+        run_order[done++] = 3;
+      });
+    };
 
   // Execute them in different orders
-  if (is_even) {
-    op1(); op2(); op3();
-  } else {
-    op2(); op3(); op1();
-  }
-
+    if (is_even) {
+      op1(); op2(); op3();
+    } else {
+      op2(); op3(); op1();
+    }
+  });
+  
   theMsg()->popEpoch(epoch);
   theTerm()->finishedEpoch(epoch);
 
   bool finished_spin = false;
-
-  vt::runInEpochCollective([&done,&bcast_val,&reduce_val_out,&finished_spin]{
-    auto num_nodes = theContext()->getNumNodes();
-    EXPECT_EQ(done, 3);
-    EXPECT_EQ(bcast_val, 29);
-    EXPECT_EQ(reduce_val_out, num_nodes);
-    finished_spin = true;
-  });
+  
+  auto num_nodes = theContext()->getNumNodes();
+  EXPECT_EQ(done, 3);
+  EXPECT_EQ(bcast_val, 29);
+  EXPECT_EQ(reduce_val_out, num_nodes);
+  finished_spin = true;
 
   while (not finished_spin) {
     runScheduler();
