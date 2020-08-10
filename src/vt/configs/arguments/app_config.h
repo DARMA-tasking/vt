@@ -57,24 +57,24 @@ namespace vt { namespace arguments {
  * \brief Configuration parameters for a VT instance
  */
 struct AppConfig {
-  inline bool user1() { return vt_user_1; }
-  inline bool user2() { return vt_user_2; }
-  inline bool user3() { return vt_user_3; }
+  inline bool user1() const { return vt_user_1; }
+  inline bool user2() const { return vt_user_2; }
+  inline bool user3() const { return vt_user_3; }
 
-  inline bool traceTerm() {
+  inline bool traceTerm() const {
     return vt_trace_sys_term or vt_trace_sys_all;
   }
-  inline bool traceLocation() {
+  inline bool traceLocation() const {
     return vt_trace_sys_location or vt_trace_sys_all;
   }
-  inline bool traceCollection() {
+  inline bool traceCollection() const {
     return vt_trace_sys_collection or vt_trace_sys_all;
   }
-  inline bool traceSerialMsg() {
+  inline bool traceSerialMsg() const {
     return vt_trace_sys_serial_msg or vt_trace_sys_all;
   }
 
-  inline bool alwaysFlush() {
+  inline bool alwaysFlush() const {
     return vt_debug_print_flush;
   }
 
