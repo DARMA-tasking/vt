@@ -73,7 +73,9 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
   static std::unique_ptr<ArgConfig> construct(std::unique_ptr<ArgConfig> arg);
   std::string name() override { return "ArgConfig"; }
 
-public:
+  AppConfig config_;
+
+private:
   void addColorArgs(CLI::App& app);
   void addSignalArgs(CLI::App& app);
   void addMemUsageArgs(CLI::App& app);
@@ -87,9 +89,6 @@ public:
   void addSchedulerArgs(CLI::App& app);
   void addConfigFileArgs(CLI::App& app);
 
-  AppConfig config_;
-
-private:
   void postParseTransform();
 
   bool parsed_ = false;
