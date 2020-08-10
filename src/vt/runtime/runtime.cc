@@ -105,6 +105,33 @@ Runtime::Runtime(
      arg_config_(std::make_unique<arguments::ArgConfig>()),
      app_config_(&arg_config_->config_)
 {
+  /// =========================================================================
+  /// Notes on lifecycle for the ArgConfig/AppConfig
+  /// =========================================================================
+  ///
+  /// - After \c vt::Runtime is constructed, the ArgConfig lives in
+  ///   \c arg_config_ and \c app_config_ contains a pointer to the internals.
+  ///
+  /// - After the pack registers the ArgConfig component, \c arg_config_ is no
+  ///   longer valid. The config is in a tuple awaiting construction---thus, we
+  ///   can't easily access it. app_config_ remains valid during this time
+  ///
+  /// - After construction, the \c arg_config_ is in the component
+  ///   \c theConfig() and can be accessed normally
+  ///
+  /// - After \c Runtime::finalize() is called but before the pack is destroyed,
+  ///   we extract the \c ArgConfig from the component and put it back in
+  ///   \c arg_config_ for use after.
+  ///
+  /// - From then on, until the \c vt::Runtime is destroyed or VT is
+  ///   re-initialized \c arg_config_ will contain the configuration.
+  ///
+  ///  For this to all work correctly, the \c vt_debug_print infrastructure
+  ///  calls \c vt::config::getConfig() which always grabs the correct app
+  ///  config, either from the component singleton or the \c vt::Runtime
+  ///
+  /// =========================================================================
+
   // MPI_Init 'should' be called first on the original arguments,
   // with the justification that in some environments in addition to removing
   // special MPI arguments, it can actually ADD arguments not from argv.
