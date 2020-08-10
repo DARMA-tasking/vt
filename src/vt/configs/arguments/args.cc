@@ -56,10 +56,11 @@ namespace vt { namespace arguments {
 
 // Temporary variables used only for parsing artifacts.
 namespace {
-  std::vector<std::string> arg_trace_mpi;
-}
+std::vector<std::string> arg_trace_mpi;
+} /* end anon namespace */
 
-/*static*/ std::unique_ptr<ArgConfig> ArgConfig::construct(std::unique_ptr<ArgConfig> arg) {
+/*static*/ std::unique_ptr<ArgConfig>
+ArgConfig::construct(std::unique_ptr<ArgConfig> arg) {
   return arg;
 }
 
