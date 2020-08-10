@@ -102,7 +102,8 @@ Runtime::Runtime(
      communicator_(
        in_comm == nullptr ? MPI_COMM_NULL : *in_comm
      ),
-     arg_config_(std::make_unique<arguments::ArgConfig>())
+     arg_config_(std::make_unique<arguments::ArgConfig>()),
+     app_config_(&arg_config_->config_)
 {
   // MPI_Init 'should' be called first on the original arguments,
   // with the justification that in some environments in addition to removing
@@ -914,6 +915,10 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   }
 
   vt_debug_print(runtime, node, "end: initializeWorkers\n");
+}
+
+arguments::AppConfig const* Runtime::getAppConfig() const {
+  return app_config_;
 }
 
 }} //end namespace vt::runtime

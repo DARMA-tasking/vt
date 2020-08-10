@@ -142,6 +142,31 @@ trace::Trace*               theTrace()              { return CUR_RT->theTrace;  
 pmpi::PMPIComponent*        thePMPI()               { return CUR_RT->thePMPI;           }
 #endif
 
+namespace runtime {
+
+/**
+ * \brief Test if the runtime configuration is available at this point in
+ * startup. Convenience function for use in debug printing without including VT
+ * runtime headers.
+ *
+ * \return whether `theConfig()` is available
+ */
+bool configLive() {
+  return curRT->theArgConfig != nullptr;
+}
+
+/**
+ * \brief Get the runtime config before VT is fully initialized. Convenience
+ * function for use in debug printing without including VT runtime headers.
+ *
+ * \return the app config
+ */
+arguments::AppConfig const* getRuntimeConfig() {
+  return curRT->getAppConfig();
+}
+
+} /* end namespace runtime */
+
 #undef CUR_RT
 #undef CUR_RT_SAFE
 #undef IS_COMM_THREAD

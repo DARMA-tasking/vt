@@ -369,6 +369,18 @@ protected:
   static void termHandler();
 
 public:
+  /**
+   * \brief Get the app config before the runtime has setup all the components
+   * and VT is fully initialized.
+   *
+   * \note This should always return a valid pointer if the runtime is
+   * constructed.
+   *
+   * \return the app config
+   */
+  arguments::AppConfig const* getAppConfig() const;
+
+public:
   ComponentPtrType<arguments::ArgConfig> theArgConfig;
   ComponentPtrType<registry::Registry> theRegistry;
   ComponentPtrType<messaging::ActiveMessenger> theMsg;
@@ -419,6 +431,7 @@ protected:
   std::unique_ptr<char*[]> user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;
   std::unique_ptr<arguments::ArgConfig> arg_config_;
+  arguments::AppConfig const* app_config_;   /**< App config during startup */
 };
 
 }} /* end namespace vt::runtime */

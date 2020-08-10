@@ -49,10 +49,16 @@
 
 #include <string>
 
+namespace vt { namespace config {
+
+inline arguments::AppConfig const* getConfig();
+
+}} /* end namespace vt::config */
+
 namespace vt { namespace debug {
 
 inline bool colorizeOutput() {
-  return vt::theConfig()->colorize_output;
+  return vt::config::getConfig()->colorize_output;
 }
 
 inline std::string green()    { return colorizeOutput() ? "\033[32m"   : ""; }
