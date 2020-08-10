@@ -57,16 +57,6 @@
 
 #include "fmt/format.h"
 
-namespace vt { namespace debug {
-
-std::string stringizeMessage(
-  std::string const& msg, std::string const& reason, std::string const& cond,
-  std::string const& file, int const line, std::string const& func,
-  ErrorCodeType error
-);
-
-}} /* end namespace vt::debug */
-
 namespace vt { namespace error {
 
 template <typename... Args>
