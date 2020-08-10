@@ -381,34 +381,34 @@ public:
   arguments::AppConfig const* getAppConfig() const;
 
 public:
-  ComponentPtrType<arguments::ArgConfig> theArgConfig;
-  ComponentPtrType<registry::Registry> theRegistry;
-  ComponentPtrType<messaging::ActiveMessenger> theMsg;
-  ComponentPtrType<ctx::Context> theContext;
-  ComponentPtrType<event::AsyncEvent> theEvent;
-  ComponentPtrType<term::TerminationDetector> theTerm;
-  ComponentPtrType<collective::CollectiveAlg> theCollective;
-  ComponentPtrType<pool::Pool> thePool;
-  ComponentPtrType<rdma::RDMAManager> theRDMA;
-  ComponentPtrType<param::Param> theParam;
-  ComponentPtrType<seq::Sequencer> theSeq;
-  ComponentPtrType<seq::SequencerVirtual> theVirtualSeq;
-  ComponentPtrType<sched::Scheduler> theSched;
-  ComponentPtrType<location::LocationManager> theLocMan;
-  ComponentPtrType<vrt::VirtualContextManager> theVirtualManager;
-  ComponentPtrType<vrt::collection::CollectionManager> theCollection;
-  ComponentPtrType<group::GroupManager> theGroup;
-  ComponentPtrType<pipe::PipeManager> theCB;
-  ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
-  ComponentPtrType<util::memory::MemoryUsage> theMemUsage;
-  ComponentPtrType<rdma::Manager> theHandleRDMA;
-  ComponentPtrType<vrt::collection::balance::NodeStats> theNodeStats;
-  ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader;
-  ComponentPtrType<vrt::collection::balance::LBManager> theLBManager;
-  ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger;
+  ComponentPtrType<arguments::ArgConfig> theArgConfig = nullptr;
+  ComponentPtrType<registry::Registry> theRegistry = nullptr;
+  ComponentPtrType<messaging::ActiveMessenger> theMsg = nullptr;
+  ComponentPtrType<ctx::Context> theContext = nullptr;
+  ComponentPtrType<event::AsyncEvent> theEvent = nullptr;
+  ComponentPtrType<term::TerminationDetector> theTerm = nullptr;
+  ComponentPtrType<collective::CollectiveAlg> theCollective = nullptr;
+  ComponentPtrType<pool::Pool> thePool = nullptr;
+  ComponentPtrType<rdma::RDMAManager> theRDMA = nullptr;
+  ComponentPtrType<param::Param> theParam = nullptr;
+  ComponentPtrType<seq::Sequencer> theSeq = nullptr;
+  ComponentPtrType<seq::SequencerVirtual> theVirtualSeq = nullptr;
+  ComponentPtrType<sched::Scheduler> theSched = nullptr;
+  ComponentPtrType<location::LocationManager> theLocMan = nullptr;
+  ComponentPtrType<vrt::VirtualContextManager> theVirtualManager = nullptr;
+  ComponentPtrType<vrt::collection::CollectionManager> theCollection = nullptr;
+  ComponentPtrType<group::GroupManager> theGroup = nullptr;
+  ComponentPtrType<pipe::PipeManager> theCB = nullptr;
+  ComponentPtrType<objgroup::ObjGroupManager> theObjGroup = nullptr;
+  ComponentPtrType<util::memory::MemoryUsage> theMemUsage = nullptr;
+  ComponentPtrType<rdma::Manager> theHandleRDMA = nullptr;
+  ComponentPtrType<vrt::collection::balance::NodeStats> theNodeStats = nullptr;
+  ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader = nullptr;
+  ComponentPtrType<vrt::collection::balance::LBManager> theLBManager = nullptr;
+  ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger = nullptr;
 
   // Node-level worker-based components for vt (these are optional)
-  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;
+  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp = nullptr;
 
   // Optional components
   #if vt_check_enabled(trace_enabled)
