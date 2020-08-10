@@ -418,7 +418,7 @@ protected:
   int user_argc_ = 0;
   std::unique_ptr<char*[]> user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;
-  std::unique_ptr<arguments::ArgConfig> argConfig_;
+  std::unique_ptr<arguments::ArgConfig> arg_config_;
 };
 
 }} /* end namespace vt::runtime */

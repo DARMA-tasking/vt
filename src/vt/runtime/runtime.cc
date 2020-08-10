@@ -102,7 +102,7 @@ Runtime::Runtime(
      communicator_(
        in_comm == nullptr ? MPI_COMM_NULL : *in_comm
      ),
-     argConfig_(std::make_unique<arguments::ArgConfig>())
+     arg_config_(std::make_unique<arguments::ArgConfig>())
 {
   // MPI_Init 'should' be called first on the original arguments,
   // with the justification that in some environments in addition to removing
@@ -112,7 +112,7 @@ Runtime::Runtime(
   // n.b. ref-update of args with pass-through arguments
   // (pass-through arguments are neither for VT or MPI_Init)
   std::tuple<int, std::string> result =
-    argConfig_->parse(/*out*/ argc, /*out*/ argv);
+    arg_config_->parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);
 
   if (exit_code not_eq -1) {
@@ -261,20 +261,20 @@ void Runtime::pauseForDebugger() {
 }
 
 void Runtime::setupSignalHandler() {
-  if (!argConfig_->config_.vt_no_sigsegv) {
+  if (!arg_config_->config_.vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
   }
   signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }
 
 void Runtime::setupSignalHandlerINT() {
-  if (!argConfig_->config_.vt_no_sigint) {
+  if (!arg_config_->config_.vt_no_sigint) {
     signal(SIGINT, Runtime::sigHandlerINT);
   }
 }
 
 void Runtime::setupTerminateHandler() {
-  if (!argConfig_->config_.vt_no_terminate) {
+  if (!arg_config_->config_.vt_no_terminate) {
     std::set_terminate(termHandler);
   }
 }
@@ -323,10 +323,10 @@ bool Runtime::tryFinalize() {
 
 bool Runtime::needStatsRestartReader() {
   #if vt_check_enabled(lblite)
-    if (argConfig_->config_.vt_lb_stats) {
+    if (arg_config_->config_.vt_lb_stats) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
-      if (argConfig_->config_.vt_lb_name == lbNames[mapLB]) {
+      if (arg_config_->config_.vt_lb_name == lbNames[mapLB]) {
         return true;
       }
     }
@@ -531,12 +531,12 @@ void Runtime::setup() {
 }
 
 void Runtime::setupArgs() {
-  std::vector<char*>& mpi_args = argConfig_->config_.mpi_init_args;
+  std::vector<char*>& mpi_args = arg_config_->config_.mpi_init_args;
   user_argc_ = mpi_args.size() + 1;
   user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
 
   int i = 0;
-  user_argv_[i++] = argConfig_->config_.argv_prog_name;
+  user_argv_[i++] = arg_config_->config_.argv_prog_name;
   for (char*& arg : mpi_args) {
     user_argv_[i++] = arg;
   }
@@ -558,13 +558,13 @@ void Runtime::initializeComponents() {
   p_ = std::make_unique<ComponentPack>();
   bool addStatsRestartReader = needStatsRestartReader();
 # if vt_check_enabled(trace_enabled)
-  std::string const prog_name = argConfig_->config_.prog_name;
+  std::string const prog_name = arg_config_->config_.prog_name;
 # endif
 
   p_->registerComponent<arguments::ArgConfig>(
     &theArgConfig,
     Deps<>{},
-    std::move(argConfig_)
+    std::move(arg_config_)
   );
 
   p_->registerComponent<ctx::Context>(
