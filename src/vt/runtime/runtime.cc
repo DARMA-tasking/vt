@@ -401,6 +401,8 @@ bool Runtime::initialize(bool const force_now) {
 
 bool Runtime::finalize(bool const force_now) {
   if (force_now) {
+    using component::BaseComponent;
+
     auto const& is_zero = theContext->getNode() == 0;
     auto const& num_units = theTerm->getNumUnits();
     auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
@@ -408,14 +410,26 @@ bool Runtime::finalize(bool const force_now) {
     fflush(stdout);
     fflush(stderr);
     sync();
-    if (is_zero) {
-      printShutdownBanner(num_units, coll_epochs);
-    }
+
+    // Extract the ArgConfig component by name from the pack for use after VT is
+    // finalized
+    auto ptr = p_->extractComponent("ArgConfig");
+    std::unique_ptr<arguments::ArgConfig> arg_ptr(
+      static_cast<arguments::ArgConfig*>(ptr.release())
+    );
+    // Move it back into the runtime holder
+    arg_config_ = std::move(arg_ptr);
+
     // This destroys and finalizes all components in proper reverse
     // initialization order
     p_.reset(nullptr);
     sync();
     sync();
+
+    if (is_zero) {
+      printShutdownBanner(num_units, coll_epochs);
+    }
+
     finalizeMPI();
     finalized_ = true;
     return true;

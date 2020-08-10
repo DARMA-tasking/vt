@@ -114,6 +114,16 @@ public:
    */
   int progress();
 
+  /**
+   * \internal \brief Extract the first component from a running pack that
+   * matches \c name
+   *
+   * \param[in] name the name of the component to remove
+   *
+   * \return pointer to the component to extract
+   */
+  std::unique_ptr<BaseComponent> extractComponent(std::string const& name);
+
 private:
   /**
    * \internal \brief Topologically sort all the registered components to find a
