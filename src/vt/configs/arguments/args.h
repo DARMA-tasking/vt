@@ -60,6 +60,12 @@ class App;
 
 namespace vt { namespace arguments {
 
+/**
+ * \struct ArgConfig
+ *
+ * \brief Component that manages the configuration for a VT instance, parsed
+ * through the command-line arguments.
+ */
 struct ArgConfig : runtime::component::Component<ArgConfig> {
 
   /// Parse the arguments into ArgConfig.
@@ -71,6 +77,7 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
   std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
 
   static std::unique_ptr<ArgConfig> construct(std::unique_ptr<ArgConfig> arg);
+
   std::string name() override { return "ArgConfig"; }
 
   AppConfig config_;

@@ -51,6 +51,11 @@
 
 namespace vt { namespace arguments {
 
+/**
+ * \struct AppConfig
+ *
+ * \brief Configuration parameters for a VT instance
+ */
 struct AppConfig {
   inline bool user1() { return vt_user_1; }
   inline bool user2() { return vt_user_2; }
