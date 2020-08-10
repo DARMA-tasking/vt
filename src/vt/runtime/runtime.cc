@@ -293,13 +293,6 @@ void Runtime::setupTerminateHandler() {
 bool Runtime::tryInitialize() {
   bool const init_now = !initialized_ && !finalized_;
 
-  #if DEBUG_VT_COMPONENTS
-    fmt::print(
-      "Runtime: tryInitialize: initialized_={}, finalized_={}, init_now={}\n",
-      print_bool(initialized_), print_bool(finalized_), print_bool(init_now)
-    );
-  #endif
-
   if (init_now) {
     initialize(true);
   }
@@ -559,10 +552,6 @@ void Runtime::finalizeMPI() {
 }
 
 void Runtime::initializeComponents() {
-  #if DEBUG_VT_COMPONENTS
-    fmt::print("Runtime begin: initializeComponents\n");
-  #endif
-
   using component::ComponentPack;
   using component::Deps;
 

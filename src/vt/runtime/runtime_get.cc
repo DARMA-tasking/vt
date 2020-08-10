@@ -135,7 +135,6 @@ vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManage
 timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }
 vt::arguments::AppConfig*   theConfig()             { return &CUR_RT->theArgConfig->config_;      }
 
-
 #if vt_check_enabled(trace_enabled)
 trace::Trace*               theTrace()              { return CUR_RT->theTrace;          }
 #endif

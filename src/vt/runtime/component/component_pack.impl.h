@@ -47,10 +47,6 @@
 
 #include "vt/runtime/component/component_pack.h"
 
-// for when we cannot use the normal debug_print macros before the components
-// are constructed
-#define DEBUG_VT_COMPONENTS 0
-
 namespace vt { namespace runtime { namespace component {
 
 namespace {
@@ -94,13 +90,6 @@ registry::AutoHandlerType ComponentPack::registerComponent(
   auto fn = makeCallable(
     [ref, this, tup = std::move(cons_tuple)]() mutable {
       auto ptr = tupleCons<T>(std::move(tup));
-
-      #if DEBUG_VT_COMPONENTS
-        fmt::print(
-          "ComponentPack: constructed component={}, pollable={}\n",
-          ptr->name(), ptr->pollable()
-        );
-      #endif
 
       // Set the reference for access outside
       if (ref != nullptr) {
