@@ -56,7 +56,7 @@
 
 namespace CLI {
 class App;
-}
+} /* end namespace CLI */
 
 namespace vt { namespace arguments {
 
