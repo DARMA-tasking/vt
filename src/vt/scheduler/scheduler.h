@@ -129,6 +129,9 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   /**
    * \brief Turn the scheduler
    *
+   * Polls every component that might generate or complete work, and
+   * potentially runs one piece of available work.
+   *
    * \param[in] msg_only whether to only make progress on the core active
    * messenger
    */
