@@ -121,20 +121,20 @@ TEST_F(TestMemoryLifetime, test_active_send_serial_lifetime_1) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes > 1) {
-    auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
-    for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeMessage<SerialTestMsg>();
-      theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg.get());
-    }
-    for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeMessage<SerialTestMsg>();
-      theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg.get());
-    }
-
-    theTerm()->addAction([=]{
-      EXPECT_EQ(SerialTrackMsg::alloc_count, 0);
-      EXPECT_EQ(local_count, num_msgs_sent*2);
+    runInEpochCollective([&]{
+      auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
+      for (int i = 0; i < num_msgs_sent; i++) {
+        auto msg = makeMessage<SerialTestMsg>();
+        theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg.get());
+      }
+      for (int i = 0; i < num_msgs_sent; i++) {
+        auto msg = makeMessage<SerialTestMsg>();
+        theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg.get());
+      }
     });
+
+    EXPECT_EQ(SerialTrackMsg::alloc_count, 0);
+    EXPECT_EQ(local_count, num_msgs_sent*2);
   }
 }
 
@@ -145,19 +145,19 @@ TEST_F(TestMemoryLifetime, test_active_bcast_serial_lifetime_1) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes > 1) {
-    for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeMessage<SerialTestMsg>();
-      theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg.get());
-    }
-    for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeMessage<SerialTestMsg>();
-      theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg.get());
-    }
-
-    theTerm()->addAction([=]{
-      EXPECT_EQ(SerialTrackMsg::alloc_count, 0);
-      EXPECT_EQ(local_count, num_msgs_sent*(num_nodes-1)*2);
+    runInEpochCollective([&]{
+      for (int i = 0; i < num_msgs_sent; i++) {
+        auto msg = makeMessage<SerialTestMsg>();
+        theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg.get());
+      }
+      for (int i = 0; i < num_msgs_sent; i++) {
+        auto msg = makeMessage<SerialTestMsg>();
+        theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg.get());
+      }
     });
+
+    EXPECT_EQ(SerialTrackMsg::alloc_count, 0);
+    EXPECT_EQ(local_count, num_msgs_sent*(num_nodes-1)*2);
   }
 }
 
