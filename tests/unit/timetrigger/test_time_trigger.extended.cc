@@ -66,7 +66,6 @@ TEST_F(TestTimeTrigger, test_time_trigger_1) {
   double total_time = 2000;
 
   int triggered = 0;
-  std::vector<double> time_offset;
 
   auto testTime = std::make_unique<vt::timetrigger::TimeTriggerManager>();
   testTime->progress();
@@ -76,7 +75,6 @@ TEST_F(TestTimeTrigger, test_time_trigger_1) {
   // register a trigger every 100 milliseconds
   auto id = testTime->addTrigger(trigger_period, [&]{
     triggered++;
-    time_offset.push_back(vt::timing::Timing::getCurrentTime() - cur_time);
   }, true);
 
   do {
@@ -84,24 +82,13 @@ TEST_F(TestTimeTrigger, test_time_trigger_1) {
     sleep_for(5ms);
   } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
 
-  int tolerance = 3;
+  int tolerance = 5;
 
   // Allow for some error tolerance in the number of triggers given the period
   EXPECT_LE(triggered, (total_time / trigger_period.count()) + tolerance);
   EXPECT_GE(triggered, (total_time / trigger_period.count()) - tolerance);
 
   fmt::print("triggered={}\n", triggered);
-
-  auto iter = time_offset.begin();
-  EXPECT_NE(iter, time_offset.end());
-  iter++;
-  while (iter != time_offset.end()) {
-    auto duration_ms = ((*iter) - *(iter-1))*1000;
-    EXPECT_LE(duration_ms, trigger_period.count()*1.8);
-    EXPECT_GE(duration_ms, trigger_period.count()*0.2);
-    fmt::print("duration={}\n", duration_ms);
-    iter++;
-  }
 
   // test unregisteration of triggers
 
@@ -123,8 +110,6 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
   double total_time = 3000;
 
   int triggered[3] = { 0, 0, 0 };
-  std::vector<std::vector<double>> time_offset;
-  time_offset.resize(3);
 
   auto testTime = std::make_unique<vt::timetrigger::TimeTriggerManager>();
   testTime->progress();
@@ -133,9 +118,8 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
 
   for (int i = 0; i < 3; i++) {
     testTime->addTrigger(
-      trigger_period[i], [&triggered,&time_offset,i,&cur_time]{
+      trigger_period[i], [&triggered,i,&cur_time]{
         triggered[i]++;
-        time_offset[i].push_back(vt::timing::Timing::getCurrentTime() - cur_time);
       },
       true
     );
@@ -145,7 +129,7 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
     testTime->progress();
   } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
 
-  int tolerance = 1;
+  int tolerance = 5;
 
   // Allow for some error tolerance in the number of triggers given the period
   for (int i = 0; i < 3; i++) {
@@ -155,19 +139,6 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
 
   for (int i = 0; i < 3; i++) {
     fmt::print("{}: triggered={}\n", trigger_period[i].count(), triggered[i]);
-  }
-
-  for (int i = 0; i < 3; i++) {
-    auto iter = time_offset[i].begin();
-    EXPECT_NE(iter, time_offset[i].end());
-    iter++;
-    while (iter != time_offset[i].end()) {
-      auto duration_ms = ((*iter) - *(iter-1))*1000;
-      EXPECT_LE(duration_ms, trigger_period[i].count()*1.8);
-      EXPECT_GE(duration_ms, trigger_period[i].count()*0.2);
-      fmt::print("duration={}\n", duration_ms);
-      iter++;
-    }
   }
 }
 
