@@ -45,183 +45,61 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
-// Do not pull in any VT dependencies here
+#include "vt/configs/arguments/app_config.h"
+#include "vt/runtime/component/component.h"
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 #include <tuple>
 
+namespace CLI {
+class App;
+} /* end namespace CLI */
+
 namespace vt { namespace arguments {
 
-struct ArgConfig {
+/**
+ * \struct ArgConfig
+ *
+ * \brief Component that manages the configuration for a VT instance, parsed
+ * through the command-line arguments.
+ */
+struct ArgConfig : runtime::component::Component<ArgConfig> {
 
   /// Parse the arguments into ArgConfig.
   /// Re-assigns argc/argv to remove consumed arguments.
   /// On success the tuple will be {-1, ""}. Otherwise the exit code
   /// (which may be 0 if help was requested) will be returned along
   /// with an appropriate display message.
-  static std::tuple<int, std::string> parse(int& argc, char**& argv);
+  std::tuple<int, std::string> parse(int& argc, char**& argv);
+  std::tuple<int, std::string> parseArguments(CLI::App& app, int& argc, char**& argv);
 
-public:
-  static bool vt_color;
-  static bool vt_no_color;
-  static bool vt_auto_color;
-  static bool vt_quiet;
-  // Derived from vt_*_color arguments after parsing.
-  static bool colorize_output;
+  static std::unique_ptr<ArgConfig> construct(std::unique_ptr<ArgConfig> arg);
 
-  static int32_t vt_sched_num_progress;
-  static int32_t vt_sched_progress_han;
-  static double vt_sched_progress_sec;
-  static bool vt_no_sigint;
-  static bool vt_no_sigsegv;
-  static bool vt_no_terminate;
-  static std::string vt_memory_reporters;
-  static bool vt_print_memory_each_phase;
-  static std::string vt_print_memory_node;
-  static bool vt_allow_memory_report_with_ps;
-  static bool vt_print_memory_at_threshold;
-  static std::string vt_print_memory_threshold;
-  static int32_t vt_print_memory_sched_poll;
+  std::string name() override { return "ArgConfig"; }
 
-  static bool vt_no_warn_stack;
-  static bool vt_no_assert_stack;
-  static bool vt_no_abort_stack;
-  static bool vt_no_stack;
-  static std::string vt_stack_file;
-  static std::string vt_stack_dir;
-  static int32_t vt_stack_mod;
-
-  static bool vt_trace;
-  static bool vt_trace_mpi;
-  static bool vt_trace_pmpi;
-  static bool vt_trace_sys_all;
-  static bool vt_trace_sys_term;
-  static bool vt_trace_sys_location;
-  static bool vt_trace_sys_collection;
-  static bool vt_trace_sys_serial_msg;
-  static std::string vt_trace_file;
-  static std::string vt_trace_dir;
-  static int32_t vt_trace_mod;
-  static int32_t vt_trace_flush_size;
-  static bool vt_trace_spec;
-  static std::string vt_trace_spec_file;
-  static bool vt_trace_memory_usage;
-  static bool vt_trace_event_polling;
-  static bool vt_trace_irecv_polling;
-
-  static bool vt_lb;
-  static bool vt_lb_file;
-  static bool vt_lb_quiet;
-  static std::string vt_lb_file_name;
-  static std::string vt_lb_name;
-  static std::string vt_lb_args;
-  static int32_t vt_lb_interval;
-  static bool vt_lb_stats;
-  static std::string vt_lb_stats_dir;
-  static std::string vt_lb_stats_file;
-  static std::string vt_lb_stats_dir_in;
-  static std::string vt_lb_stats_file_in;
-
-  static bool vt_no_detect_hang;
-  static bool vt_print_no_progress;
-  static bool vt_epoch_graph_on_hang;
-  static bool vt_epoch_graph_terse;
-  static bool vt_term_rooted_use_ds;
-  static bool vt_term_rooted_use_wave;
-  static int64_t vt_hang_freq;
-
-  static bool vt_pause;
-
-  static bool vt_debug_all;
-  static bool vt_debug_verbose;
-  static bool vt_debug_none;
-  static bool vt_debug_gen;
-  static bool vt_debug_runtime;
-  static bool vt_debug_active;
-  static bool vt_debug_term;
-  static bool vt_debug_termds;
-  static bool vt_debug_barrier;
-  static bool vt_debug_event;
-  static bool vt_debug_pipe;
-  static bool vt_debug_pool;
-  static bool vt_debug_reduce;
-  static bool vt_debug_rdma;
-  static bool vt_debug_rdma_channel;
-  static bool vt_debug_rdma_state;
-  static bool vt_debug_param;
-  static bool vt_debug_handler;
-  static bool vt_debug_hierlb;
-  static bool vt_debug_gossiplb;
-  static bool vt_debug_scatter;
-  static bool vt_debug_sequence;
-  static bool vt_debug_sequence_vrt;
-  static bool vt_debug_serial_msg;
-  static bool vt_debug_trace;
-  static bool vt_debug_location;
-  static bool vt_debug_lb;
-  static bool vt_debug_vrt;
-  static bool vt_debug_vrt_coll;
-  static bool vt_debug_worker;
-  static bool vt_debug_group;
-  static bool vt_debug_broadcast;
-  static bool vt_debug_objgroup;
-
-  static bool vt_debug_print_flush;
-
-  static bool vt_user_1;
-  static bool vt_user_2;
-  static bool vt_user_3;
-  static int32_t vt_user_int_1;
-  static int32_t vt_user_int_2;
-  static int32_t vt_user_int_3;
-  static std::string vt_user_str_1;
-  static std::string vt_user_str_2;
-  static std::string vt_user_str_3;
-
-  static bool vt_output_config;
-  static std::string vt_output_config_file;
-  static std::string vt_output_config_str;
-
-  /// Name of the program launched (excluding any path!)
-  static std::string prog_name;
-
-  /// Name of the program launched, aka argv[0].
-  /// Original char* object.
-  static char* argv_prog_name;
-
-  /// Arguments to pass to MPI Init.
-  /// Does not include argv[0]. Original char* objects.
-  static std::vector<char*> mpi_init_args;
-  /// Arguments are being ref-returend as the result of parse(..).
-  /// Does not include argv[0]. Original char* objects.
-  static std::vector<char*> passthru_args;
+  AppConfig config_;
 
 private:
-  static bool parsed_;
+  void addColorArgs(CLI::App& app);
+  void addSignalArgs(CLI::App& app);
+  void addMemUsageArgs(CLI::App& app);
+  void addStackDumpArgs(CLI::App& app);
+  void addTraceArgs(CLI::App& app);
+  void addDebugPrintArgs(CLI::App& app);
+  void addLbArgs(CLI::App& app);
+  void addTerminationArgs(CLI::App& app);
+  void addDebuggerArgs(CLI::App& app);
+  void addUserArgs(CLI::App& app);
+  void addSchedulerArgs(CLI::App& app);
+  void addConfigFileArgs(CLI::App& app);
+
+  void postParseTransform();
+
+  bool parsed_ = false;
 };
-
-inline bool user1() { return ArgConfig::vt_user_1; }
-inline bool user2() { return ArgConfig::vt_user_2; }
-inline bool user3() { return ArgConfig::vt_user_3; }
-
-inline bool traceTerm() {
-  return ArgConfig::vt_trace_sys_term or ArgConfig::vt_trace_sys_all;
-}
-inline bool traceLocation() {
-  return ArgConfig::vt_trace_sys_location or ArgConfig::vt_trace_sys_all;
-}
-inline bool traceCollection() {
-  return ArgConfig::vt_trace_sys_collection or ArgConfig::vt_trace_sys_all;
-}
-inline bool traceSerialMsg() {
-  return ArgConfig::vt_trace_sys_serial_msg or ArgConfig::vt_trace_sys_all;
-}
-
-inline bool alwaysFlush() {
-  return ArgConfig::vt_debug_print_flush;
-}
 
 }} /* end namespace vt::arguments */
 

@@ -55,7 +55,6 @@ using TestTraceSpec = TestParallelHarness;
 
 TEST_F(TestTraceSpec, test_trace_spec_1) {
   using Spec = vt::trace::file_spec::TraceSpec;
-  using Arg = vt::arguments::ArgConfig;
 
   std::string file_name = "test_trace_spec_1.txt";
   if (theContext()->getNode() == 0) {
@@ -67,8 +66,8 @@ TEST_F(TestTraceSpec, test_trace_spec_1) {
   }
   theCollective()->barrier();
 
-  Arg::vt_trace_spec = true;
-  Arg::vt_trace_spec_file = file_name;
+  theConfig()->vt_trace_spec = true;
+  theConfig()->vt_trace_spec_file = file_name;
 
   auto proxy = Spec::construct();
   theTerm()->produce();
@@ -87,7 +86,6 @@ TEST_F(TestTraceSpec, test_trace_spec_1) {
 
 TEST_F(TestTraceSpec, test_trace_spec_2) {
   using Spec = vt::trace::file_spec::TraceSpec;
-  using Arg = vt::arguments::ArgConfig;
 
   std::string file_name = "test_trace_spec_2.txt";
   if (theContext()->getNode() == 0) {
@@ -102,8 +100,8 @@ TEST_F(TestTraceSpec, test_trace_spec_2) {
   }
   theCollective()->barrier();
 
-  Arg::vt_trace_spec = true;
-  Arg::vt_trace_spec_file = file_name;
+  theConfig()->vt_trace_spec = true;
+  theConfig()->vt_trace_spec_file = file_name;
 
   auto proxy = Spec::construct();
   theTerm()->produce();
@@ -122,7 +120,6 @@ TEST_F(TestTraceSpec, test_trace_spec_2) {
 
 TEST_F(TestTraceSpec, test_trace_spec_3) {
   using Spec = vt::trace::file_spec::TraceSpec;
-  using Arg = vt::arguments::ArgConfig;
 
   std::string file_name = "test_trace_spec_3.txt";
   if (theContext()->getNode() == 0) {
@@ -139,8 +136,8 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
   }
   theCollective()->barrier();
 
-  Arg::vt_trace_spec = true;
-  Arg::vt_trace_spec_file = file_name;
+  theConfig()->vt_trace_spec = true;
+  theConfig()->vt_trace_spec_file = file_name;
 
   auto proxy = Spec::construct();
   theTerm()->produce();
@@ -165,7 +162,6 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
 
 TEST_F(TestTraceSpec, test_trace_spec_4) {
   using Spec = vt::trace::file_spec::TraceSpec;
-  using Arg = vt::arguments::ArgConfig;
 
   std::string file_name = "test_trace_spec_4.txt";
   if (theContext()->getNode() == 0) {
@@ -181,8 +177,8 @@ TEST_F(TestTraceSpec, test_trace_spec_4) {
   }
   theCollective()->barrier();
 
-  Arg::vt_trace_spec = true;
-  Arg::vt_trace_spec_file = file_name;
+  theConfig()->vt_trace_spec = true;
+  theConfig()->vt_trace_spec_file = file_name;
 
   auto proxy = Spec::construct();
   theTerm()->produce();

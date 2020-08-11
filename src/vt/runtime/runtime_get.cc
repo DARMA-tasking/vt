@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/configs/arguments/args.h"
 #include "vt/context/context.h"
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/runtime_inst.h"
@@ -132,6 +133,7 @@ vrt::collection::balance::NodeStats* theNodeStats() { return CUR_RT->theNodeStat
 vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->theStatsReader;      }
 vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }
+vt::arguments::AppConfig*   theConfig()             { return &CUR_RT->theArgConfig->config_;      }
 
 #if vt_check_enabled(trace_enabled)
 trace::Trace*               theTrace()              { return CUR_RT->theTrace;          }
@@ -139,6 +141,31 @@ trace::Trace*               theTrace()              { return CUR_RT->theTrace;  
 #if vt_check_enabled(mpi_access_guards)
 pmpi::PMPIComponent*        thePMPI()               { return CUR_RT->thePMPI;           }
 #endif
+
+namespace runtime {
+
+/**
+ * \brief Test if the runtime configuration is available at this point in
+ * startup. Convenience function for use in debug printing without including VT
+ * runtime headers.
+ *
+ * \return whether `theConfig()` is available
+ */
+bool configLive() {
+  return curRT->theArgConfig != nullptr;
+}
+
+/**
+ * \brief Get the runtime config before VT is fully initialized. Convenience
+ * function for use in debug printing without including VT runtime headers.
+ *
+ * \return the app config
+ */
+arguments::AppConfig const* getRuntimeConfig() {
+  return curRT->getAppConfig();
+}
+
+} /* end namespace runtime */
 
 #undef CUR_RT
 #undef CUR_RT_SAFE

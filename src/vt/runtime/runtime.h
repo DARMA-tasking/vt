@@ -49,7 +49,6 @@
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_component_fwd.h"
 #include "vt/worker/worker_headers.h"
-#include "vt/configs/arguments/args.h"
 
 // Optional components
 #if vt_check_enabled(trace_enabled)
@@ -81,7 +80,6 @@ namespace vt { namespace runtime {
 struct Runtime {
   template <typename ComponentT>
   using ComponentPtrType = ComponentT*;
-  using ArgType = vt::arguments::ArgConfig;
 
   /**
    * \internal \brief Initialize a VT runtime
@@ -371,33 +369,46 @@ protected:
   static void termHandler();
 
 public:
-  ComponentPtrType<registry::Registry> theRegistry;
-  ComponentPtrType<messaging::ActiveMessenger> theMsg;
-  ComponentPtrType<ctx::Context> theContext;
-  ComponentPtrType<event::AsyncEvent> theEvent;
-  ComponentPtrType<term::TerminationDetector> theTerm;
-  ComponentPtrType<collective::CollectiveAlg> theCollective;
-  ComponentPtrType<pool::Pool> thePool;
-  ComponentPtrType<rdma::RDMAManager> theRDMA;
-  ComponentPtrType<param::Param> theParam;
-  ComponentPtrType<seq::Sequencer> theSeq;
-  ComponentPtrType<seq::SequencerVirtual> theVirtualSeq;
-  ComponentPtrType<sched::Scheduler> theSched;
-  ComponentPtrType<location::LocationManager> theLocMan;
-  ComponentPtrType<vrt::VirtualContextManager> theVirtualManager;
-  ComponentPtrType<vrt::collection::CollectionManager> theCollection;
-  ComponentPtrType<group::GroupManager> theGroup;
-  ComponentPtrType<pipe::PipeManager> theCB;
-  ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
-  ComponentPtrType<util::memory::MemoryUsage> theMemUsage;
-  ComponentPtrType<rdma::Manager> theHandleRDMA;
-  ComponentPtrType<vrt::collection::balance::NodeStats> theNodeStats;
-  ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader;
-  ComponentPtrType<vrt::collection::balance::LBManager> theLBManager;
-  ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger;
+  /**
+   * \brief Get the app config before the runtime has setup all the components
+   * and VT is fully initialized.
+   *
+   * \note This should always return a valid pointer if the runtime is
+   * constructed.
+   *
+   * \return the app config
+   */
+  arguments::AppConfig const* getAppConfig() const;
+
+public:
+  ComponentPtrType<arguments::ArgConfig> theArgConfig = nullptr;
+  ComponentPtrType<registry::Registry> theRegistry = nullptr;
+  ComponentPtrType<messaging::ActiveMessenger> theMsg = nullptr;
+  ComponentPtrType<ctx::Context> theContext = nullptr;
+  ComponentPtrType<event::AsyncEvent> theEvent = nullptr;
+  ComponentPtrType<term::TerminationDetector> theTerm = nullptr;
+  ComponentPtrType<collective::CollectiveAlg> theCollective = nullptr;
+  ComponentPtrType<pool::Pool> thePool = nullptr;
+  ComponentPtrType<rdma::RDMAManager> theRDMA = nullptr;
+  ComponentPtrType<param::Param> theParam = nullptr;
+  ComponentPtrType<seq::Sequencer> theSeq = nullptr;
+  ComponentPtrType<seq::SequencerVirtual> theVirtualSeq = nullptr;
+  ComponentPtrType<sched::Scheduler> theSched = nullptr;
+  ComponentPtrType<location::LocationManager> theLocMan = nullptr;
+  ComponentPtrType<vrt::VirtualContextManager> theVirtualManager = nullptr;
+  ComponentPtrType<vrt::collection::CollectionManager> theCollection = nullptr;
+  ComponentPtrType<group::GroupManager> theGroup = nullptr;
+  ComponentPtrType<pipe::PipeManager> theCB = nullptr;
+  ComponentPtrType<objgroup::ObjGroupManager> theObjGroup = nullptr;
+  ComponentPtrType<util::memory::MemoryUsage> theMemUsage = nullptr;
+  ComponentPtrType<rdma::Manager> theHandleRDMA = nullptr;
+  ComponentPtrType<vrt::collection::balance::NodeStats> theNodeStats = nullptr;
+  ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader = nullptr;
+  ComponentPtrType<vrt::collection::balance::LBManager> theLBManager = nullptr;
+  ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger = nullptr;
 
   // Node-level worker-based components for vt (these are optional)
-  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;
+  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp = nullptr;
 
   // Optional components
   #if vt_check_enabled(trace_enabled)
@@ -419,6 +430,8 @@ protected:
   int user_argc_ = 0;
   std::unique_ptr<char*[]> user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;
+  std::unique_ptr<arguments::ArgConfig> arg_config_;
+  arguments::AppConfig const* app_config_;   /**< App config during startup */
 };
 
 }} /* end namespace vt::runtime */

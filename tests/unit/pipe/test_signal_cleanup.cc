@@ -89,8 +89,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
   // run until termination
   do vt::runScheduler(); while (not vt::rt->isTerminated());
 
-  // explicitly finalize runtime to destroy and reset components---and force it
-  // now!
+  // explicitly finalize runtime to destroy and reset components
   vt::rt->finalize(true);
 
   // re-init runtime, fresh state---force it now!

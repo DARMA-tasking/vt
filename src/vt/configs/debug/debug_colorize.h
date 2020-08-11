@@ -45,14 +45,20 @@
 #if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_COLORIZE_H
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_COLORIZE_H
 
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 
 #include <string>
+
+namespace vt { namespace config {
+
+inline arguments::AppConfig const* getConfig();
+
+}} /* end namespace vt::config */
 
 namespace vt { namespace debug {
 
 inline bool colorizeOutput() {
-  return arguments::ArgConfig::colorize_output;
+  return vt::config::getConfig()->colorize_output;
 }
 
 inline std::string green()    { return colorizeOutput() ? "\033[32m"   : ""; }
@@ -92,6 +98,5 @@ inline std::string proc(vt::NodeType const& node)  {
 // }
 
 }} /* end namespace vt::debug */
-
 
 #endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_COLORIZE_H*/

@@ -46,7 +46,7 @@
 #include "vt/context/context.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 
 #include <string>
 #include <fstream>
@@ -64,13 +64,13 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /*static*/ bool ReadLBSpec::read_complete_ = false;
 
 /*static*/ bool ReadLBSpec::hasSpec() {
-  if (not ArgType::vt_lb_file) {
+  if (not theConfig()->vt_lb_file) {
     return false;
   }
   if (read_complete_) {
     return true;
   } else {
-    auto const file_name = ArgType::vt_lb_file_name;
+    auto const file_name = theConfig()->vt_lb_file_name;
     if (file_name == "") {
       vtAbort(
         "--vt_lb_file enabled but no file name is specified: --vt_lb_file_name"

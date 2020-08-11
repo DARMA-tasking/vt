@@ -58,7 +58,6 @@
 #include "vt/epoch/epoch.h"
 #include "vt/activefn/activefn.h"
 #include "vt/collective/tree/tree.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/termination/graph/epoch_graph_reduce.h"
 #include "vt/termination/epoch_tags.h"
 #include "vt/runtime/component/component_pack.h"
@@ -103,7 +102,6 @@ struct TerminationDetector :
   using TermStateType      = TermState;
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
   using WindowType         = std::unique_ptr<EpochWindow>;
-  using ArgType            = vt::arguments::ArgConfig;
   using SuccessorBagType   = EpochDependency::SuccessorBagType;
   using EpochGraph         = termination::graph::EpochGraph;
   using EpochGraphMsg      = termination::graph::EpochGraphMsg<EpochGraph>;

@@ -47,7 +47,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/timing/timing.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/runtime.h"
 
 #include <vector>
@@ -161,10 +161,9 @@ void NodeStats::releaseLB() {
 }
 
 void NodeStats::createStatsFile() {
-  using ArgType = vt::arguments::ArgConfig;
   auto const node = theContext()->getNode();
-  auto const base_file = std::string(ArgType::vt_lb_stats_file);
-  auto const dir = std::string(ArgType::vt_lb_stats_dir);
+  auto const base_file = std::string(theConfig()->vt_lb_stats_file);
+  auto const dir = std::string(theConfig()->vt_lb_stats_dir);
   auto const file = fmt::format("{}.{}.out", base_file, node);
   auto const file_name = fmt::format("{}/{}", dir, file);
 

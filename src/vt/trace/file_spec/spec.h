@@ -96,7 +96,6 @@ namespace vt { namespace trace { namespace file_spec {
  */
 struct TraceSpec {
   using ProxyType    = vt::objgroup::proxy::Proxy<TraceSpec>;
-  using ArgType      = vt::arguments::ArgConfig;
   using SpecIndex    = int64_t;
   using DoneMsg      = collective::ReduceNoneMsg;
 

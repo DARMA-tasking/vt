@@ -51,6 +51,9 @@
 
 namespace vt {
 
+namespace arguments {
+struct ArgConfig;
+}
 namespace registry {
 struct Registry;
 }

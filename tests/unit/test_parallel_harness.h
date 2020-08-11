@@ -97,7 +97,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     CollectiveOps::initialize(test_argc, test_argv, no_workers, true);
 
 #   if vt_feature_cmake_test_trace_on
-    vt::arguments::ArgConfig::vt_trace = true;
+    vt::theConfig()->vt_trace = true;
 #   endif
 
     #if DEBUG_TEST_HARNESS_PRINT

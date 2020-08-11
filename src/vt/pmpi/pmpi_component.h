@@ -49,6 +49,7 @@
 
 #if vt_check_enabled(mpi_access_guards)
 
+#include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/runtime/mpi_access.h"
 
@@ -64,8 +65,6 @@ namespace vt { namespace pmpi {
  */
 struct PMPIComponent : runtime::component::Component<PMPIComponent> {
 
-  using ArgType = vt::arguments::ArgConfig;
-
   PMPIComponent() = default;
 
   std::string name() override { return "PMPI"; }
@@ -73,7 +72,7 @@ struct PMPIComponent : runtime::component::Component<PMPIComponent> {
   void startup() override {
     registerEventHandlers();
 
-    trace_pmpi = ArgType::vt_trace_pmpi;
+    trace_pmpi = theConfig()->vt_trace_pmpi;
   }
 
   void finalize() override {

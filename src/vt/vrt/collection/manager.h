@@ -73,7 +73,6 @@
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/collective/reduce/reduce_hash.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/vrt/collection/op_buffer.h"
@@ -133,7 +132,6 @@ struct CollectionManager
   using CleanupListFnType = std::unordered_map<VirtualProxyType,std::list<CleanupFnType>>;
   using DispatchHandlerType = auto_registry::AutoHandlerType;
   using ActionVecType = std::vector<ActionType>;
-  using ArgType = vt::arguments::ArgConfig;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;

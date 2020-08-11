@@ -62,7 +62,7 @@ namespace vt { namespace event {
 
 void AsyncEvent::initialize() {
 # if vt_check_enabled(trace_enabled)
-  if (vt::arguments::ArgConfig::vt_trace_event_polling) {
+  if (theConfig()->vt_trace_event_polling) {
     trace_event_polling = trace::registerEventCollective(
       "AsyncEvent::testEventsTrigger"
     );
@@ -291,7 +291,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
   int32_t num_completed  = 0;
   TimeType tr_begin = 0.0;
 
-  if (arguments::ArgConfig::vt_trace_event_polling) {
+  if (theConfig()->vt_trace_event_polling) {
     tr_begin = timing::Timing::getCurrentTime();
   }
 # endif
@@ -308,7 +308,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
       lookup_container_.erase(id);
 
 #     if vt_check_enabled(trace_enabled)
-      if (arguments::ArgConfig::vt_trace_event_polling) {
+      if (theConfig()->vt_trace_event_polling) {
         ++num_completed;
       }
 #     endif
@@ -324,7 +324,7 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
   }
 
 # if vt_check_enabled(trace_enabled)
-  if (arguments::ArgConfig::vt_trace_event_polling) {
+  if (theConfig()->vt_trace_event_polling) {
     if (num_completed > 0) {
       TimeType tr_end = timing::Timing::getCurrentTime();
       auto tr_note = fmt::format("completed {} of {}", num_completed, cur);

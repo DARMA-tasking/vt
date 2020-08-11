@@ -84,15 +84,30 @@ void ComponentPack::destruct() {
   live_ = false;
   pollable_components_.clear();
   while (live_components_.size() > 0) {
-    vt_debug_print(
-      runtime, node,
-      "ComponentPack: finalizing component={}\n",
-      live_components_.back()->name()
-    );
+    if (live_components_.back() != nullptr) {
+      vt_debug_print(
+        runtime, node,
+        "ComponentPack: finalizing component={}\n",
+        live_components_.back()->name()
+      );
 
-    live_components_.back()->finalize();
+      live_components_.back()->finalize();
+    }
     live_components_.pop_back();
   }
+}
+
+std::unique_ptr<BaseComponent>
+ComponentPack::extractComponent(std::string const& name) {
+  std::unique_ptr<BaseComponent> ret = nullptr;
+  for (auto iter = live_components_.begin(); iter != live_components_.end(); ++iter) {
+    if ((*iter) != nullptr and (*iter)->name() == name) {
+      ret = std::move(*iter);
+      *iter = nullptr;
+      break;
+    }
+  }
+  return ret;
 }
 
 int ComponentPack::progress() {

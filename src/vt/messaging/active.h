@@ -50,7 +50,6 @@
 #include <mpi.h>
 
 #include "vt/config.h"
-#include "vt/configs/arguments/args.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/active.fwd.h"
 #include "vt/messaging/message/smart_ptr.h"
@@ -214,7 +213,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   using EpochStackType       = std::stack<EpochType>;
   using PendingSendType      = PendingSend;
   using ListenerType         = std::unique_ptr<Listener>;
-  using ArgType              = vt::arguments::ArgConfig;
 
   /**
    * \internal

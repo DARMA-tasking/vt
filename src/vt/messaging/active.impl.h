@@ -50,7 +50,7 @@
 #include "vt/termination/term_headers.h"
 #include "vt/messaging/message/message_priority.impl.h"
 #include "vt/scheduler/priority.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 
 namespace vt { namespace messaging {
@@ -65,29 +65,28 @@ void ActiveMessenger::markAsTermMessage(MsgPtrT const msg) {
   envelopeSetPriority(msg->env, sys_min_priority);
 #endif
 #if vt_check_enabled(trace_enabled)
-  //fmt::print("arguments::traceTerm()={}\n",arguments::traceTerm());
-  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceTerm());
+  envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceTerm());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsLocationMessage(MsgPtrT const msg) {
 #if vt_check_enabled(trace_enabled)
-  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceLocation());
+  envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceLocation());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsSerialMsgMessage(MsgPtrT const msg) {
 #if vt_check_enabled(trace_enabled)
-  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceSerialMsg());
+  envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceSerialMsg());
 #endif
 }
 
 template <typename MsgPtrT>
 void ActiveMessenger::markAsCollectionMessage(MsgPtrT const msg) {
 #if vt_check_enabled(trace_enabled)
-  envelopeSetTraceRuntimeEnabled(msg->env, arguments::traceCollection());
+  envelopeSetTraceRuntimeEnabled(msg->env, theConfig()->traceCollection());
 #endif
 }
 

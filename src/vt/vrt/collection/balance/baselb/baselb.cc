@@ -119,7 +119,6 @@ void BaseLB::importProcessorData(
 }
 
 void BaseLB::getArgs(PhaseType phase) {
-  using ArgType = vt::arguments::ArgConfig;
   using namespace balance;
 
   bool has_spec = ReadLBSpec::hasSpec();
@@ -131,7 +130,7 @@ void BaseLB::getArgs(PhaseType phase) {
       vtAssert(false, "Error no spec found, which must exist");
     }
   } else {
-    auto const args = ArgType::vt_lb_args;
+    auto const args = theConfig()->vt_lb_args;
     spec_entry_ = std::make_unique<SpecEntry>(
       ReadLBSpec::makeSpecFromParams(args)
     );

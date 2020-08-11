@@ -72,7 +72,7 @@
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/timetrigger/time_trigger_manager.h"
 
-#include "vt/configs/arguments/argparse.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/configs/arguments/args.h"
 
 #include <memory>
@@ -101,8 +101,37 @@ Runtime::Runtime(
      num_workers_(in_num_workers),
      communicator_(
        in_comm == nullptr ? MPI_COMM_NULL : *in_comm
-     )
+     ),
+     arg_config_(std::make_unique<arguments::ArgConfig>()),
+     app_config_(&arg_config_->config_)
 {
+  /// =========================================================================
+  /// Notes on lifecycle for the ArgConfig/AppConfig
+  /// =========================================================================
+  ///
+  /// - After \c vt::Runtime is constructed, the ArgConfig lives in
+  ///   \c arg_config_ and \c app_config_ contains a pointer to the internals.
+  ///
+  /// - After the pack registers the ArgConfig component, \c arg_config_ is no
+  ///   longer valid. The config is in a tuple awaiting construction---thus, we
+  ///   can't easily access it. app_config_ remains valid during this time
+  ///
+  /// - After construction, the \c arg_config_ is in the component
+  ///   \c theConfig() and can be accessed normally
+  ///
+  /// - After \c Runtime::finalize() is called but before the pack is destroyed,
+  ///   we extract the \c ArgConfig from the component and put it back in
+  ///   \c arg_config_ for use after.
+  ///
+  /// - From then on, until the \c vt::Runtime is destroyed or VT is
+  ///   re-initialized \c arg_config_ will contain the configuration.
+  ///
+  ///  For this to all work correctly, the \c vt_debug_print infrastructure
+  ///  calls \c vt::config::getConfig() which always grabs the correct app
+  ///  config, either from the component singleton or the \c vt::Runtime
+  ///
+  /// =========================================================================
+
   // MPI_Init 'should' be called first on the original arguments,
   // with the justification that in some environments in addition to removing
   // special MPI arguments, it can actually ADD arguments not from argv.
@@ -111,7 +140,7 @@ Runtime::Runtime(
   // n.b. ref-update of args with pass-through arguments
   // (pass-through arguments are neither for VT or MPI_Init)
   std::tuple<int, std::string> result =
-    arguments::ArgParse::parse(/*out*/ argc, /*out*/ argv);
+    arg_config_->parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);
 
   if (exit_code not_eq -1) {
@@ -153,7 +182,7 @@ bool Runtime::hasSchedRun() const {
 }
 
 void Runtime::pauseForDebugger() {
-  if (ArgType::vt_pause) {
+  if (theConfig()->vt_pause) {
     char node_str[256];
     auto node = vt::theContext() ? vt::theContext()->getNode() : -1;
     sprintf(node_str, "prog-%d.pid", node);
@@ -182,7 +211,7 @@ void Runtime::pauseForDebugger() {
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-    if (ArgType::vt_stack_file != "") {
+    if (vt::theConfig()->vt_stack_file != "") {
       Runtime::writeToFile(stack_pretty);
     } else {
       ::fmt::print("{}", stack_pretty);
@@ -208,7 +237,7 @@ void Runtime::pauseForDebugger() {
 # endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (ArgType::vt_stack_file.empty()) {
+    if (vt::theConfig()->vt_stack_file.empty()) {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
       ::fmt::print("\n");
     } else {
@@ -224,7 +253,7 @@ void Runtime::pauseForDebugger() {
   ::fmt::print("{}Caught std::terminate \n", vt_pre);
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
-    if (ArgType::vt_stack_file != "") {
+    if (vt::theConfig()->vt_stack_file != "") {
       Runtime::writeToFile(std::get<0>(stack));
     } else {
       ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
@@ -238,9 +267,9 @@ void Runtime::pauseForDebugger() {
   auto const& node = debug::preNode();
   if (node == uninitialized_destination) {
     return true;
-  } else if (ArgType::vt_stack_mod == 0) {
+  } else if (vt::theConfig()->vt_stack_mod == 0) {
     return true;
-  } else if (node % ArgType::vt_stack_mod == 0) {
+  } else if (node % vt::theConfig()->vt_stack_mod == 0) {
     return true;
   } else {
     return false;
@@ -248,11 +277,11 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::writeToFile(std::string const& str) {
-  std::string& app_name = ArgType::prog_name;
-  std::string name = ArgType::vt_stack_file == "" ? app_name : ArgType::vt_stack_file;
+  std::string& app_name = vt::theConfig()->prog_name;
+  std::string name = vt::theConfig()->vt_stack_file == "" ? app_name : vt::theConfig()->vt_stack_file;
   auto const& node = debug::preNode();
   std::string file = name + "." + std::to_string(node) + ".stack.out";
-  std::string dir  = ArgType::vt_stack_dir == "" ? "" : ArgType::vt_stack_dir + "/";
+  std::string dir  = vt::theConfig()->vt_stack_dir == "" ? "" : vt::theConfig()->vt_stack_dir + "/";
   std::string path = dir + file;
   FILE* f = fopen(path.c_str(), "w+");
   fprintf(f, "%s", str.c_str());
@@ -260,20 +289,20 @@ void Runtime::pauseForDebugger() {
 }
 
 void Runtime::setupSignalHandler() {
-  if (!ArgType::vt_no_sigsegv) {
+  if (!arg_config_->config_.vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
   }
   signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }
 
 void Runtime::setupSignalHandlerINT() {
-  if (!ArgType::vt_no_sigint) {
+  if (!arg_config_->config_.vt_no_sigint) {
     signal(SIGINT, Runtime::sigHandlerINT);
   }
 }
 
 void Runtime::setupTerminateHandler() {
-  if (!ArgType::vt_no_terminate) {
+  if (!arg_config_->config_.vt_no_terminate) {
     std::set_terminate(termHandler);
   }
 }
@@ -328,10 +357,10 @@ bool Runtime::tryFinalize() {
 
 bool Runtime::needStatsRestartReader() {
   #if vt_check_enabled(lblite)
-    if (ArgType::vt_lb_stats) {
+    if (arg_config_->config_.vt_lb_stats) {
       auto lbNames = vrt::collection::balance::lb_names_;
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
-      if (ArgType::vt_lb_name == lbNames[mapLB]) {
+      if (arg_config_->config_.vt_lb_name == lbNames[mapLB]) {
         return true;
       }
     }
@@ -355,9 +384,9 @@ bool Runtime::initialize(bool const force_now) {
 
       // If the user specified to output a configuration file, write it to the
       // specified file on rank 0
-      if (ArgType::vt_output_config) {
-        std::ofstream out(ArgType::vt_output_config_file);
-        out << ArgType::vt_output_config_str;
+      if (theConfig()->vt_output_config) {
+        std::ofstream out(theConfig()->vt_output_config_file);
+        out << theConfig()->vt_output_config_str;
         out.close();
       }
     }
@@ -372,6 +401,8 @@ bool Runtime::initialize(bool const force_now) {
 
 bool Runtime::finalize(bool const force_now) {
   if (force_now) {
+    using component::BaseComponent;
+
     auto const& is_zero = theContext->getNode() == 0;
     auto const& num_units = theTerm->getNumUnits();
     auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
@@ -379,14 +410,26 @@ bool Runtime::finalize(bool const force_now) {
     fflush(stdout);
     fflush(stderr);
     sync();
+
+    // Extract the ArgConfig component by name from the pack for use after VT is
+    // finalized
+    auto ptr = p_->extractComponent("ArgConfig");
+    std::unique_ptr<arguments::ArgConfig> arg_ptr(
+      static_cast<arguments::ArgConfig*>(ptr.release())
+    );
+    // Move it back into the runtime holder
+    arg_config_ = std::move(arg_ptr);
+
     // This destroys and finalizes all components in proper reverse
     // initialization order
     p_.reset(nullptr);
     sync();
     sync();
+
     if (is_zero) {
       printShutdownBanner(num_units, coll_epochs);
     }
+
     finalizeMPI();
     finalized_ = true;
     return true;
@@ -479,15 +522,15 @@ void Runtime::output(
     fmt::print(stderr, "{}\n", prefix);
   }
 
-  if (!ArgType::vt_no_stack) {
-    bool const on_abort = !ArgType::vt_no_abort_stack;
-    bool const on_warn = !ArgType::vt_no_warn_stack;
+  if (!theConfig()->vt_no_stack) {
+    bool const on_abort = !theConfig()->vt_no_abort_stack;
+    bool const on_warn = !theConfig()->vt_no_warn_stack;
     bool const dump = (error && on_abort) || (!error && on_warn);
     if (dump) {
       if (Runtime::nodeStackWrite()) {
         auto stack = debug::stack::dumpStack();
         auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
-        if (ArgType::vt_stack_file != "") {
+        if (theConfig()->vt_stack_file != "") {
           Runtime::writeToFile(stack_pretty);
         } else {
           fmt::print("{}", stack_pretty);
@@ -528,7 +571,7 @@ void Runtime::setup() {
   theTrace->loadAndBroadcastSpec();
 # endif
 
-  if (ArgType::vt_pause) {
+  if (theConfig()->vt_pause) {
     pauseForDebugger();
   }
 
@@ -536,12 +579,12 @@ void Runtime::setup() {
 }
 
 void Runtime::setupArgs() {
-  std::vector<char*>& mpi_args = ArgType::mpi_init_args;
+  std::vector<char*>& mpi_args = arg_config_->config_.mpi_init_args;
   user_argc_ = mpi_args.size() + 1;
   user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
 
   int i = 0;
-  user_argv_[i++] = ArgType::argv_prog_name;
+  user_argv_[i++] = arg_config_->config_.argv_prog_name;
   for (char*& arg : mpi_args) {
     user_argv_[i++] = arg;
   }
@@ -563,9 +606,20 @@ void Runtime::initializeComponents() {
   using component::Deps;
 
   p_ = std::make_unique<ComponentPack>();
+  bool addStatsRestartReader = needStatsRestartReader();
+# if vt_check_enabled(trace_enabled)
+  std::string const prog_name = arg_config_->config_.prog_name;
+# endif
+
+  p_->registerComponent<arguments::ArgConfig>(
+    &theArgConfig,
+    Deps<>{},
+    std::move(arg_config_)
+  );
 
   p_->registerComponent<ctx::Context>(
-    &theContext, Deps<>{},
+    &theContext,
+    Deps<arguments::ArgConfig>{},
     user_argc_, &user_argv_[0], is_interop_, &communicator_
   );
 
@@ -595,7 +649,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<trace::Trace>(&theTrace, Deps<
       ctx::Context  // Everything depends on theContext
     >{},
-    ArgType::prog_name
+    prog_name
   );
 # endif
 
@@ -774,6 +828,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
+  p_->add<arguments::ArgConfig>();
   p_->add<ctx::Context>();
   p_->add<util::memory::MemoryUsage>();
   p_->add<registry::Registry>();
@@ -807,7 +862,7 @@ void Runtime::initializeComponents() {
   p_->add<vrt::collection::balance::LBManager>();
   p_->add<timetrigger::TimeTriggerManager>();
 
-  if (needStatsRestartReader()) {
+  if (addStatsRestartReader) {
     p_->add<vrt::collection::balance::StatsRestartReader>();
   }
 
@@ -909,6 +964,10 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   }
 
   vt_debug_print(runtime, node, "end: initializeWorkers\n");
+}
+
+arguments::AppConfig const* Runtime::getAppConfig() const {
+  return app_config_;
 }
 
 }} //end namespace vt::runtime

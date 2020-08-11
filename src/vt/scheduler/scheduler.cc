@@ -52,7 +52,7 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/objgroup/manager.fwd.h"
-#include "vt/configs/arguments/args.h"
+#include "vt/configs/arguments/app_config.h"
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/mpi_access.h"
@@ -71,7 +71,7 @@ Scheduler::Scheduler() {
   event_triggers.resize(event_count);
   event_triggers_once.resize(event_count);
 
-  progress_time_enabled_ = arguments::ArgConfig::vt_sched_progress_sec != 0.0;
+  progress_time_enabled_ = theConfig()->vt_sched_progress_sec != 0.0;
 }
 
 void Scheduler::enqueue(ActionType action) {
@@ -137,17 +137,16 @@ bool Scheduler::progressMsgOnlyImpl() {
 bool Scheduler::shouldCallProgress(
   int32_t processed_since_last_progress, TimeType time_since_last_progress
 ) const {
-  using ArgType   = arguments::ArgConfig;
 
   // By default, `vt_sched_progress_han` is 0 and will happen every time we go
   // through the scheduler
-  bool k_handler_enabled = ArgType::vt_sched_progress_han != 0;
+  bool k_handler_enabled = theConfig()->vt_sched_progress_han != 0;
   bool k_handlers_executed =
     k_handler_enabled and
-    processed_since_last_progress >= ArgType::vt_sched_progress_han;
+    processed_since_last_progress >= theConfig()->vt_sched_progress_han;
   bool enough_time_passed =
     progress_time_enabled_ and
-    time_since_last_progress > ArgType::vt_sched_progress_sec;
+    time_since_last_progress > theConfig()->vt_sched_progress_sec;
 
   return
     (not progress_time_enabled_ and not k_handler_enabled) or
@@ -157,14 +156,14 @@ bool Scheduler::shouldCallProgress(
 void Scheduler::printMemoryUsage() {
   if (
     last_memory_usage_poll_ >=
-    static_cast<std::size_t>(arguments::ArgConfig::vt_print_memory_sched_poll)
+    static_cast<std::size_t>(theConfig()->vt_print_memory_sched_poll)
   ) {
     auto usage = theMemUsage();
 
     if (usage != nullptr) {
       if (threshold_memory_usage_ == 0) {
         threshold_memory_usage_ = usage->convertBytesFromString(
-          arguments::ArgConfig::vt_print_memory_threshold
+          theConfig()->vt_print_memory_threshold
         );
       }
 
@@ -192,7 +191,7 @@ void Scheduler::runProgress(bool msg_only) {
    * Run through the progress functions `num_iter` times, making forward
    * progress on MPI
    */
-  auto const num_iter = std::max(1, arguments::ArgConfig::vt_sched_num_progress);
+  auto const num_iter = std::max(1, theConfig()->vt_sched_num_progress);
   for (int i = 0; i < num_iter; i++) {
     if (msg_only) {
       // This is a special case used only during startup when other components
@@ -203,7 +202,7 @@ void Scheduler::runProgress(bool msg_only) {
     }
   }
 
-  if (arguments::ArgConfig::vt_print_memory_at_threshold) {
+  if (theConfig()->vt_print_memory_at_threshold) {
     printMemoryUsage();
   }
 
