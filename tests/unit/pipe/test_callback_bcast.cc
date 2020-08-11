@@ -115,13 +115,13 @@ TEST_F(TestCallbackBcast, test_callback_bcast_1) {
 
   theCollective()->barrier();
 
-  auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
-  auto nmsg = makeMessage<DataMsg>(1,2,3);
-  cb.send(nmsg.get());
-
-  theTerm()->addAction([=]{
-    EXPECT_EQ(called, 100 * theContext()->getNumNodes());
+  runInEpochCollective([&]{
+    auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
+    auto nmsg = makeMessage<DataMsg>(1,2,3);
+    cb.send(nmsg.get());
   });
+
+  EXPECT_EQ(called, 100 * theContext()->getNumNodes());
 }
 
 TEST_F(TestCallbackBcast, test_callback_bcast_2) {
@@ -129,13 +129,13 @@ TEST_F(TestCallbackBcast, test_callback_bcast_2) {
 
   theCollective()->barrier();
 
-  auto cb = theCB()->makeBcast<CallbackFunctor>();
-  auto nmsg = makeMessage<DataMsg>(1,2,3);
-  cb.send(nmsg.get());
-
-  theTerm()->addAction([=]{
-    EXPECT_EQ(called, 200 * theContext()->getNumNodes());
+  runInEpochCollective([&]{
+    auto cb = theCB()->makeBcast<CallbackFunctor>();
+    auto nmsg = makeMessage<DataMsg>(1,2,3);
+    cb.send(nmsg.get());
   });
+
+  EXPECT_EQ(called, 200 * theContext()->getNumNodes());
 }
 
 TEST_F(TestCallbackBcast, test_callback_bcast_3) {
@@ -143,12 +143,12 @@ TEST_F(TestCallbackBcast, test_callback_bcast_3) {
 
   theCollective()->barrier();
 
-  auto cb = theCB()->makeBcast<CallbackFunctorEmpty>();
-  cb.send();
-
-  theTerm()->addAction([=]{
-    EXPECT_EQ(called, 300 * theContext()->getNumNodes());
+  runInEpochCollective([&]{
+    auto cb = theCB()->makeBcast<CallbackFunctorEmpty>();
+    cb.send();
   });
+
+  EXPECT_EQ(called, 300 * theContext()->getNumNodes());
 }
 
 TEST_F(TestCallbackBcast, test_callback_bcast_remote_1) {
@@ -159,14 +159,14 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_1) {
 
   theCollective()->barrier();
 
-  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-  auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
-  auto msg = makeMessage<CallbackDataMsg>(cb);
-  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
-
-  theTerm()->addAction([=]{
-    EXPECT_EQ(called, 100 * theContext()->getNumNodes());
+  runInEpochCollective([&]{
+    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
+    auto msg = makeMessage<CallbackDataMsg>(cb);
+    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
   });
+
+  EXPECT_EQ(called, 100 * theContext()->getNumNodes());
 }
 
 TEST_F(TestCallbackBcast, test_callback_bcast_remote_2) {
@@ -177,14 +177,14 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_2) {
 
   theCollective()->barrier();
 
-  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-  auto cb = theCB()->makeBcast<CallbackFunctor>();
-  auto msg = makeMessage<CallbackDataMsg>(cb);
-  theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
-
-  theTerm()->addAction([=]{
-    EXPECT_EQ(called, 200 * theContext()->getNumNodes());
+  runInEpochCollective([&]{
+    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<CallbackFunctor>();
+    auto msg = makeMessage<CallbackDataMsg>(cb);
+    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
   });
+
+  EXPECT_EQ(called, 200 * theContext()->getNumNodes());
 }
 
 TEST_F(TestCallbackBcast, test_callback_bcast_remote_3) {
@@ -195,14 +195,14 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_3) {
 
   theCollective()->barrier();
 
-  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-  auto cb = theCB()->makeBcast<CallbackFunctorEmpty>();
-  auto msg = makeMessage<CallbackMsg>(cb);
-  theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg.get());
-
-  theTerm()->addAction([=]{
-    EXPECT_EQ(called, 300 * theContext()->getNumNodes());
+  runInEpochCollective([&]{
+    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeBcast<CallbackFunctorEmpty>();
+    auto msg = makeMessage<CallbackMsg>(cb);
+    theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg.get());
   });
+
+  EXPECT_EQ(called, 300 * theContext()->getNumNodes());
 }
 
 
