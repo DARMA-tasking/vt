@@ -95,19 +95,19 @@ Tree::NodeListType Tree::getChildren(NodeType node) const {
   return children;
 }
 
-std::size_t Tree::getNumTotalChildren(NodeType child) const {
+std::size_t Tree::getNumDescendants(NodeType child) const {
   std::size_t total = 0;
   auto children = getChildren(child);
   for (auto&& elm : children) {
-    total += getNumTotalChildren(elm);
+    total += getNumDescendants(elm);
   }
   return total + children.size();
 }
 
-std::size_t Tree::getNumTotalChildren() const {
+std::size_t Tree::getNumDescendants() const {
   auto total_size = 0;
   foreachChild([this,&total_size](NodeType child){
-    total_size += getNumTotalChildren(child);
+    total_size += getNumDescendants(child);
   });
   return total_size;
 }

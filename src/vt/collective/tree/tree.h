@@ -177,14 +177,14 @@ struct Tree {
    *
    * \return number of descendants
    */
-  std::size_t getNumTotalChildren(NodeType child) const;
+  std::size_t getNumDescendants(NodeType child) const;
 
   /**
-   * \internal \brief Get total children in tree
+   * \internal \brief Get total number of descendants in the tree.
    *
-   * \return number of children
+   * \return number of descendants
    */
-  std::size_t getNumTotalChildren() const;
+  std::size_t getNumDescendants() const;
 
 private:
   bool set_up_tree_ = false;

@@ -78,7 +78,7 @@ char* Scatter::applyScatterRecur(
 }
 
 void Scatter::scatterIn(ScatterMsg* msg) {
-  auto const& total_children = getNumTotalChildren();
+  auto const& total_children = getNumDescendants();
   auto const& elm_size = msg->elm_bytes_;
   auto const& total_size = msg->total_bytes_;
   auto in_base_ptr = reinterpret_cast<char*>(msg) + sizeof(ScatterMsg);
@@ -91,7 +91,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     user_handler, total_size, elm_size, in_ptr - in_base_ptr, total_children
   );
   Tree::foreachChild([&](NodeType child) {
-    auto const& num_children = getNumTotalChildren(child) + 1;
+    auto const& num_children = getNumDescendants(child) + 1;
     auto const& child_bytes_size = num_children * elm_size;
     auto child_msg = makeMessageSz<ScatterMsg>(
       child_bytes_size, child_bytes_size, elm_size
