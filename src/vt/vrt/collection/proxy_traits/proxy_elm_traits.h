@@ -59,7 +59,7 @@ namespace vt { namespace vrt { namespace collection {
 namespace elm_proxy {
 
 template <typename ColT, typename IndexT>
-using Chain4 = LBable<ColT,IndexT,BaseCollectionElmProxy<ColT,IndexT>>;
+using Chain4 = LBable<ColT,IndexT,BaseCollectionElmProxy<IndexT>>;
 
 template <typename ColT, typename IndexT>
 using Chain3 = Gettable<ColT,IndexT,Chain4<ColT,IndexT>>;

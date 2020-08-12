@@ -51,15 +51,15 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-BaseCollectionElmProxy<ColT, IndexT>::BaseCollectionElmProxy(
+template <typename IndexT>
+BaseCollectionElmProxy<IndexT>::BaseCollectionElmProxy(
   ProxyType const& in_col_proxy, ElementProxyType const& in_elm_proxy
 ) : col_proxy_(in_col_proxy), elm_proxy_(in_elm_proxy)
 { }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 template <typename SerializerT>
-void BaseCollectionElmProxy<ColT, IndexT>::serialize(SerializerT& s) {
+void BaseCollectionElmProxy<IndexT>::serialize(SerializerT& s) {
   s | col_proxy_ | elm_proxy_;
 }
 

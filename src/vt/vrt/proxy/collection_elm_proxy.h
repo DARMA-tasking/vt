@@ -65,7 +65,7 @@ struct VrtElmProxy : ProxyCollectionElmTraits<ColT, IndexT> {
 
   VrtElmProxy(
     VirtualProxyType const& in_col_proxy,
-    BaseElmProxy<ColT, IndexT> const& in_elm_proxy
+    BaseElmProxy<IndexT> const& in_elm_proxy
   ) : ProxyCollectionElmTraits<ColT, IndexT>(in_col_proxy, in_elm_proxy)
   { }
 

@@ -50,12 +50,11 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct BaseCollectionElmProxy {
-  using CollectionType = ColT;
   using IndexType = IndexT;
   using ProxyType = VirtualProxyType;
-  using ElementProxyType = BaseElmProxy<ColT, IndexT>;
+  using ElementProxyType = BaseElmProxy<IndexT>;
 
   BaseCollectionElmProxy() = default;
   BaseCollectionElmProxy(

@@ -58,7 +58,7 @@ namespace vt { namespace vrt { namespace collection {
 template <typename ColT, typename IndexT>
 CollectionUntypedProxy::ElmProxyType<ColT, IndexT>
 CollectionUntypedProxy::index(IndexT const& idx) const {
-  return ElmProxyType<ColT, IndexT>{proxy_,BaseElmProxy<ColT,IndexT>{idx}};
+  return ElmProxyType<ColT, IndexT>{proxy_,BaseElmProxy<IndexT>{idx}};
 }
 
 template <typename ColT, typename IndexT>
