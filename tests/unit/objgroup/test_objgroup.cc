@@ -172,65 +172,66 @@ TEST_F(TestObjGroup, test_proxy_update) {
 }
 
 TEST_F(TestObjGroup, test_proxy_schedule) {
-
-  // create a proxy to a object group
-  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
-
-  // self-send a message and then broadcast
   auto my_node = vt::theContext()->getNode();
   auto num_nodes = vt::theContext()->getNumNodes();
-  proxy[my_node].send<MyMsg, &MyObjA::handler>();
-  proxy.broadcast<MyMsg, &MyObjA::handler>();
+  // create a proxy to a object group
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  MyObjA *obj = nullptr;
 
-  auto obj = proxy.get();
-  vt_debug_print(
-    objgroup, node,
-    "obj->recv:{} before term\n", obj->recv_
-  );
+  runInEpochCollective([&]{
+    // self-send a message and then broadcast
+    proxy[my_node].send<MyMsg, &MyObjA::handler>();
+    proxy.broadcast<MyMsg, &MyObjA::handler>();
 
-  // wait for term and check state to ensure all expected events executed
-  theTerm()->addAction([=]{
+    obj = proxy.get();
     vt_debug_print(
       objgroup, node,
-      "obj->recv:{} after term\n", obj->recv_
+      "obj->recv:{} before term\n", obj->recv_
     );
-    EXPECT_EQ(obj->recv_, num_nodes + 1);
   });
+
+  // check state to ensure all expected events executed
+  vt_debug_print(
+    objgroup, node,
+    "obj->recv:{} after term\n", obj->recv_
+  );
+  EXPECT_EQ(obj->recv_, num_nodes + 1);
 }
 
 TEST_F(TestObjGroup, test_proxy_callbacks) {
-
   auto const my_node = vt::theContext()->getNode();
+  MyObjA* obj1 = nullptr;
+  MyObjB* obj2 = nullptr;
+  MyObjA* obj3 = nullptr;
 
-  // create object groups and retrieve proxies
-  auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
-  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(1);
-  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
+  runInEpochCollective([&]{
+    // create object groups and retrieve proxies
+    auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
+    auto proxy2 = vt::theObjGroup()->makeCollective<MyObjB>(1);
+    auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
 
-  if (my_node == 0) {
-    proxy1[0].send<MyMsg, &MyObjA::handler>();
-    proxy1[0].send<MyMsg, &MyObjA::handler>();
-    proxy1[1].send<MyMsg, &MyObjA::handler>();
-  } else if (my_node == 1) {
-    proxy2.broadcast<MyMsg, &MyObjB::handler>();
-    proxy3[0].send<MyMsg, &MyObjA::handler>();
-  }
-
-  // wait for term and check state to ensure all expected events executed
-  theTerm()->addAction([=]{
-    // check received messages for each group
-    auto obj1 = proxy1.get();
-    auto obj2 = proxy2.get();
-    auto obj3 = proxy3.get();
-
-    switch (my_node) {
-    case 0:  EXPECT_EQ(obj1->recv_, 2); break;
-    case 1:  EXPECT_EQ(obj1->recv_, 1); break;
-    default: EXPECT_EQ(obj1->recv_, 0); break;
+    if (my_node == 0) {
+      proxy1[0].send<MyMsg, &MyObjA::handler>();
+      proxy1[0].send<MyMsg, &MyObjA::handler>();
+      proxy1[1].send<MyMsg, &MyObjA::handler>();
+    } else if (my_node == 1) {
+      proxy2.broadcast<MyMsg, &MyObjB::handler>();
+      proxy3[0].send<MyMsg, &MyObjA::handler>();
     }
-    EXPECT_EQ(obj2->recv_, 1);
-    EXPECT_EQ(obj3->recv_, my_node == 0 ? 1 : 0);
+
+    // check received messages for each group
+    obj1 = proxy1.get();
+    obj2 = proxy2.get();
+    obj3 = proxy3.get();
   });
+
+  switch (my_node) {
+  case 0:  EXPECT_EQ(obj1->recv_, 2); break;
+  case 1:  EXPECT_EQ(obj1->recv_, 1); break;
+  default: EXPECT_EQ(obj1->recv_, 0); break;
+  }
+  EXPECT_EQ(obj2->recv_, 1);
+  EXPECT_EQ(obj3->recv_, my_node == 0 ? 1 : 0);
 }
 
 TEST_F(TestObjGroup, test_proxy_reduce) {
@@ -240,34 +241,34 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
 
   vt::theCollective()->barrier();
 
-  // create four proxy instances of a same object group type
-  auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
-  auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>();
-  auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
-  auto proxy4 = vt::theObjGroup()->makeCollective<MyObjA>();
+  runInEpochCollective([&]{
+    // create four proxy instances of a same object group type
+    auto proxy1 = vt::theObjGroup()->makeCollective<MyObjA>();
+    auto proxy2 = vt::theObjGroup()->makeCollective<MyObjA>();
+    auto proxy3 = vt::theObjGroup()->makeCollective<MyObjA>();
+    auto proxy4 = vt::theObjGroup()->makeCollective<MyObjA>();
 
-  auto msg1 = vt::makeMessage<SysMsg>(my_node);
-  auto msg2 = vt::makeMessage<SysMsg>(4);
-  auto msg3 = vt::makeMessage<SysMsg>(my_node);
-  auto msg4 = vt::makeMessage<VecMsg>(my_node);
+    auto msg1 = vt::makeMessage<SysMsg>(my_node);
+    auto msg2 = vt::makeMessage<SysMsg>(4);
+    auto msg3 = vt::makeMessage<SysMsg>(my_node);
+    auto msg4 = vt::makeMessage<VecMsg>(my_node);
 
-  // Multiple reductions should not interfere each other, even if
-  // performed by the same subset of nodes within the same epoch.
-  // Proxies should be able to do perform reduction
-  // on any valid operator and data type.
-  using namespace vt::collective;
+    // Multiple reductions should not interfere each other, even if
+    // performed by the same subset of nodes within the same epoch.
+    // Proxies should be able to do perform reduction
+    // on any valid operator and data type.
+    using namespace vt::collective;
 
-  proxy1.reduce<PlusOp<int>, Verify<1>>(msg1);
-  proxy2.reduce<PlusOp<int>, Verify<2>>(msg2);
-  proxy3.reduce< MaxOp<int>, Verify<3>>(msg3);
-  proxy4.reduce<PlusOp<VectorPayload>, Verify<4>>(msg4);
-
-  theTerm()->addAction([=]{
-    auto const root_node = 0;
-    if (my_node == root_node) {
-      EXPECT_EQ(TestObjGroup::total_verify_expected_, 4);
-    }
+    proxy1.reduce<PlusOp<int>, Verify<1>>(msg1);
+    proxy2.reduce<PlusOp<int>, Verify<2>>(msg2);
+    proxy3.reduce< MaxOp<int>, Verify<3>>(msg3);
+    proxy4.reduce<PlusOp<VectorPayload>, Verify<4>>(msg4);
   });
+
+  auto const root_node = 0;
+  if (my_node == root_node) {
+    EXPECT_EQ(TestObjGroup::total_verify_expected_, 4);
+  }
 }
 
 }}} // end namespace vt::tests::unit
