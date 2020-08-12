@@ -118,7 +118,7 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
 
   for (int i = 0; i < 3; i++) {
     testTime->addTrigger(
-      trigger_period[i], [&triggered,i,&cur_time]{
+      trigger_period[i], [&triggered,i]{
         triggered[i]++;
       },
       true
