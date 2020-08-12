@@ -189,12 +189,6 @@ struct TransferMsg {
   /*implicit*/ TransferMsg(MsgT const* msgPtr) : msg_(promoteMsg<MsgT>(const_cast<MsgT*>(msgPtr))) {
   }
 
-  // n.b. invalidates the msg*
-  /*implicit*/ TransferMsg(MsgT*& msgPtr) : msg_(promoteMsg<MsgT>(msgPtr)) {
-    // Guaranteed way to make broadcast code fail:
-    // msgPtr = nullptr;
-  }
-
   // n.b. invalidates msg
   /*implicit*/ TransferMsg(MsgPtr<MsgT>& msg) : msg_(std::move(msg)) {
   }
