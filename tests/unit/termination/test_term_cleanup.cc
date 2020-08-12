@@ -82,7 +82,7 @@ TEST_F(TestTermCleanup, test_termination_cleanup_1) {
 
     auto msg = makeMessage<TestMsgType>();
     envelopeSetEpoch(msg->env, epoch);
-    theMsg()->sendMsg<TestMsgType, handler>(next, msg.get());
+    theMsg()->sendMsg<TestMsgType, handler>(next, msg);
 
     theTerm()->finishedEpoch(epoch);
     vt::runSchedulerThrough(epoch);
@@ -128,17 +128,17 @@ TEST_F(TestTermCleanup, test_termination_cleanup_2) {
     for (int j = 0; j < 5; j++) {
       auto msg = makeMessage<TestMsgType>();
       envelopeSetEpoch(msg->env, coll_epoch);
-      theMsg()->sendMsg<TestMsgType, handler>(next, msg.get());
+      theMsg()->sendMsg<TestMsgType, handler>(next, msg);
     }
     for (int j = 0; j < 5; j++) {
       auto msg = makeMessage<TestMsgType>();
       envelopeSetEpoch(msg->env, root_epoch);
-      theMsg()->sendMsg<TestMsgType, handler>(next, msg.get());
+      theMsg()->sendMsg<TestMsgType, handler>(next, msg);
     }
     for (int j = 0; j < 5; j++) {
       auto msg = makeMessage<TestMsgType>();
       envelopeSetEpoch(msg->env, wave_epoch);
-      theMsg()->sendMsg<TestMsgType, handler>(next, msg.get());
+      theMsg()->sendMsg<TestMsgType, handler>(next, msg);
     }
 
     theTerm()->finishedEpoch(coll_epoch);

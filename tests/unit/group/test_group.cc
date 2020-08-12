@@ -83,7 +83,7 @@ TEST_F(TestGroup, test_group_range_construct_1) {
           fmt::print("Group is created: group={:x}\n", group);
           auto msg = makeMessage<TestMsg>();
           envelopeSetGroup(msg->env, group);
-          theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
+          theMsg()->broadcastMsg<TestMsg,groupHandler>(msg);
         }
       );
     }
@@ -113,7 +113,7 @@ TEST_F(TestGroup, test_group_range_construct_2) {
           fmt::print("Group is created: group={:x}\n", group);
           auto msg = makeMessage<TestMsg>();
           envelopeSetGroup(msg->env, group);
-          theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
+          theMsg()->broadcastMsg<TestMsg,groupHandler>(msg);
         }
       );
     }
@@ -141,7 +141,7 @@ TEST_F(TestGroup, test_group_collective_construct_1) {
         EXPECT_EQ(is_default_group, false);
         auto msg = makeMessage<TestMsg>();
         envelopeSetGroup(msg->env, group);
-        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg.get());
+        theMsg()->broadcastMsg<TestMsg,groupHandler>(msg);
       }
     );
   });

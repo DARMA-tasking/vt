@@ -99,7 +99,7 @@ TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
       if (my_node == root) {
         for (int i = 0; i < num_msg_sent; i++) {
           auto msg = makeMessage<TestMsg>();
-          theMsg()->broadcastMsg<TestMsg, test_handler>(msg.get());
+          theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
         }
       }
     });

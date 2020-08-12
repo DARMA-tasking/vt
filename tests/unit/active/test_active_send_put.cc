@@ -112,7 +112,7 @@ TEST_P(TestActiveSendPut, test_active_fn_send_put_param) {
     #if DEBUG_TEST_HARNESS_PRINT
       fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
     #endif
-    theMsg()->sendMsg<PutTestMessage, test_handler>(1, msg.get());
+    theMsg()->sendMsg<PutTestMessage, test_handler>(1, msg);
   }
 
   // Spin here so test_vec does not go out of scope before the send completes

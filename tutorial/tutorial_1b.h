@@ -118,7 +118,7 @@ static inline void activeMessageNode() {
   if (this_node == 0) {
     NodeType const to_node = 1;
     auto msg = ::vt::makeMessage<MyMsg>(29,32);
-    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(to_node, msg.get());
+    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(to_node, msg);
   }
 }
 
@@ -144,7 +144,7 @@ static void msgHandlerA(MyMsg* msg) {
    */
   NodeType const to_node = 0;
   auto msg2 = ::vt::makeMessage<MyMsg>(10,20);
-  ::vt::theMsg()->sendMsg<MsgHandlerB, MyMsg>(to_node, msg2.get());
+  ::vt::theMsg()->sendMsg<MsgHandlerB, MyMsg>(to_node, msg2);
 }
 
 void MsgHandlerB::operator()(MyMsg* msg) {

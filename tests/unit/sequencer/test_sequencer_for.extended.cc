@@ -107,7 +107,7 @@ TEST_F(TestSequencerFor, test_for) {
     for (int i = 0; i < end_range; i++) {
       if (my_node == 1) {
         auto msg = makeMessage<TestMsg>();
-        theMsg()->sendMsg<TestMsg, testSeqForHan>(0, msg.get());
+        theMsg()->sendMsg<TestMsg, testSeqForHan>(0, msg);
       }
     }
   });

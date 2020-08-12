@@ -138,7 +138,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
         fmt::print("{}: sendMsg: i={}\n", my_node, i);
       #endif
       auto msg = makeMessage<TestMsg>();
-      theMsg()->sendMsg<TestMsg, test_handler>(1, msg.get());
+      theMsg()->sendMsg<TestMsg, test_handler>(to_node, msg);
     }
   } else if (my_node == to_node) {
     theTerm()->addAction([=]{
@@ -168,9 +168,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
-      theMsg()->sendMsg<PutTestMessage, test_handler_2>(
-        1, msg.get()
-      );
+      theMsg()->sendMsg<PutTestMessage, test_handler_2>(to_node, msg);
     }
   }
 
@@ -196,9 +194,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
-      theMsg()->sendMsg<PutTestMessage, test_handler_3>(
-        1, msg.get()
-      );
+      theMsg()->sendMsg<PutTestMessage, test_handler_3>(to_node, msg);
     }
   }
 

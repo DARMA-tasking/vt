@@ -83,7 +83,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
       fmt::print("called A");
     });
     auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<CallbackMsg, bounce>(1, msg.get());
+    theMsg()->sendMsg<CallbackMsg, bounce>(1, msg);
   }
 
   // run until termination
@@ -108,7 +108,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
       fmt::print("called B");
     });
     auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<CallbackMsg, bounce>(1, msg.get());
+    theMsg()->sendMsg<CallbackMsg, bounce>(1, msg);
   }
 
   // run until termination

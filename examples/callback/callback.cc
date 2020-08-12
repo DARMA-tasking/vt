@@ -118,7 +118,7 @@ void colHan(TestMsg* msg, MyCol* col) {
 
 void bounceCallback(vt::Callback<TestMsg> cb) {
   auto msg = vt::makeMessage<HelloMsg>(cb);
-  vt::theMsg()->sendMsg<HelloMsg, hello_world>(1, msg.get());
+  vt::theMsg()->sendMsg<HelloMsg, hello_world>(1, msg);
 }
 
 int main(int argc, char** argv) {

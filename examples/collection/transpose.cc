@@ -168,7 +168,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     auto const from_idx = getIndex().x();
     auto data_msg = vt::makeMessage<DataMsg>(data_,from_idx);
     vt::theMsg()->sendMsg<DataMsg,SubSolveInfo::solveDataIncoming>(
-      requesting_node, data_msg.get()
+      requesting_node, data_msg
     );
   }
 
@@ -176,7 +176,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     if (getIndex().x() == 0) {
       auto proxy = this->getCollectionProxy();
       auto proxy_msg = vt::makeMessage<ProxyMsg>(proxy.getProxy());
-      vt::theMsg()->broadcastMsg<SetupGroup,ProxyMsg>(proxy_msg.get());
+      vt::theMsg()->broadcastMsg<SetupGroup,ProxyMsg>(proxy_msg);
       // Invoke it locally: broadcast sends to all other nodes
       auto proxy_msg_local = vt::makeMessage<ProxyMsg>(proxy.getProxy());
       SetupGroup()(proxy_msg_local.get());
@@ -319,7 +319,7 @@ static void solveGroupSetup(vt::NodeType this_node, vt::VirtualProxyType coll_pr
       if (this_node == 1) {
         auto msg = vt::makeMessage<SubSolveMsg>(coll_proxy);
         vt::envelopeSetGroup(msg->env, group_id);
-        vt::theMsg()->broadcastMsg<SubSolveMsg,SubSolveInfo::subSolveHandler>(msg.get());
+        vt::theMsg()->broadcastMsg<SubSolveMsg,SubSolveInfo::subSolveHandler>(msg);
       }
     }, true
   );

@@ -249,7 +249,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
   // Broadcast out node 0's order to confirm with all other nodes
   if (this_node == 0) {
     auto msg = makeMessage<OrderMsg>(run_order);
-    theMsg()->broadcastMsg<OrderMsg,orderHan>(msg.get());
+    theMsg()->broadcastMsg<OrderMsg,orderHan>(msg);
   }
 }
 

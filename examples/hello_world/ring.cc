@@ -76,7 +76,7 @@ static void sendToNext() {
   vt::NodeType next_node = this_node + 1 >= num_nodes ? 0 : this_node + 1;
 
   auto msg = vt::makeMessage<RingMsg>(this_node);
-  vt::theMsg()->sendMsg<RingMsg, ring>(next_node, msg.get());
+  vt::theMsg()->sendMsg<RingMsg, ring>(next_node, msg);
 }
 
 int main(int argc, char** argv) {

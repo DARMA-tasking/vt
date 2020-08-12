@@ -74,10 +74,10 @@ int main(int argc, char** argv) {
       vec_to_send.push_back(54.);
 
       auto msg = vt::makeMessage<MyMsg>(10, vec_to_send);
-      vt::theMsg()->sendMsg<MyMsg, myHandler>(1, msg.get()); // send to node 1
+      vt::theMsg()->sendMsg<MyMsg, myHandler>(1, msg); // send to node 1
 
       auto msg2 = vt::makeMessage<MyMsg>(11, vec_to_send);
-      vt::theMsg()->sendMsg<MyFunctor>(1, msg2.get());  // send to node 1
+      vt::theMsg()->sendMsg<MyFunctor>(1, msg2);  // send to node 1
     });
   }
 

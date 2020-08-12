@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
 
     // send out the proxy to all the nodes
     auto msg = vt::makeMessage<HelloMsg>(proxy);
-    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg.get());
+    vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
   }
 
   vt::finalize();
