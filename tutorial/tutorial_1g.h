@@ -114,28 +114,28 @@ static inline void activeMessageCallback() {
     {
       auto cb = ::vt::theCB()->makeFunc(void_fn);
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg.get());
+      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node, msg);
     }
 
     // Example of active message handler callback with send node
     {
       auto cb = ::vt::theCB()->makeSend<DataMsg,callbackHandler>(cb_node);
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg.get());
+      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node, msg);
     }
 
     // Example of active message handler callback with broadcast
     {
       auto cb = ::vt::theCB()->makeBcast<DataMsg,callbackBcastHandler>();
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg.get());
+      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node, msg);
     }
 
     // Example of context callback
     {
       auto cb = ::vt::theCB()->makeFunc<DataMsg,MyContext>(&ctx, callbackCtx);
       auto msg = ::vt::makeMessage<MsgWithCallback>(cb);
-      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg.get());
+      ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node, msg);
     }
   }
 }

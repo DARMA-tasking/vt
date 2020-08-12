@@ -163,7 +163,7 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_1) {
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeBcast<DataMsg,callbackFn>();
     auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
   });
 
   EXPECT_EQ(called, 100 * theContext()->getNumNodes());
@@ -181,7 +181,7 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_2) {
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeBcast<CallbackFunctor>();
     auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg);
   });
 
   EXPECT_EQ(called, 200 * theContext()->getNumNodes());
@@ -199,7 +199,7 @@ TEST_F(TestCallbackBcast, test_callback_bcast_remote_3) {
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeBcast<CallbackFunctorEmpty>();
     auto msg = makeMessage<CallbackMsg>(cb);
-    theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg.get());
+    theMsg()->sendMsg<CallbackMsg, testHandlerEmpty>(next, msg);
   });
 
   EXPECT_EQ(called, 300 * theContext()->getNumNodes());

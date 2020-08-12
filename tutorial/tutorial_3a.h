@@ -79,7 +79,7 @@ static inline void activeMessageTerm() {
   if (this_node == 0) {
     auto msg = vt::makeMessage<ExampleMsg>(8);
     envelopeSetEpoch(msg->env, new_epoch);
-    vt::theMsg()->sendMsg<ExampleMsg,recurHandler>(this_node+1,msg.get());
+    vt::theMsg()->sendMsg<ExampleMsg,recurHandler>(this_node+1, msg);
   }
 
   // Any node that wishes to have a notification on termination for a given
@@ -117,7 +117,7 @@ static void recurHandler(ExampleMsg* msg) {
       );
 
       auto msg_send = vt::makeMessage<ExampleMsg>(msg->ttl);
-      vt::theMsg()->sendMsg<ExampleMsg,recurHandler>(next_node,msg_send.get());
+      vt::theMsg()->sendMsg<ExampleMsg,recurHandler>(next_node, msg_send);
     }
   }
 }

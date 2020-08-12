@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 
     auto msg = vt::makeMessage<HandleMsg>(this_node);
     msg->han = my_handle;
-    vt::theMsg()->broadcastMsg<HandleMsg, tell_handle>(msg.get());
+    vt::theMsg()->broadcastMsg<HandleMsg, tell_handle>(msg);
   }
 
   vt::finalize();

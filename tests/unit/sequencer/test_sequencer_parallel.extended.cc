@@ -158,7 +158,7 @@ TEST_P(TestSequencerParallelParam, test_seq_parallel_param) {
     for (CountType i = 0; i < par_count; i++) {
       if (node == 1) {
         auto msg = makeMessage<TestMsg>();
-        theMsg()->sendMsg<TestMsg, seqParHanN>(0, msg.get());
+        theMsg()->sendMsg<TestMsg, seqParHanN>(0, msg);
       }
     }
   });
@@ -325,7 +325,7 @@ struct TestSequencerParallel : TestParallelHarness {
         if ((NODE) == 1) {                                            \
           auto msg = makeMessage<MSG_TYPE>();                         \
           theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                       \
-            0, msg.get(), tag                                         \
+            0, msg, tag                                               \
           );                                                          \
         }                                                             \
       }                                                               \

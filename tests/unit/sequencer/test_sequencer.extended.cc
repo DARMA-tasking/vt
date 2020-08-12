@@ -165,7 +165,7 @@ TEST_F(TestSequencer, test_single_wait) {
   runInEpochCollective([my_node]{
     if (my_node == 1) {
       auto msg = makeMessage<TestMsg>();
-      theMsg()->sendMsg<TestMsg, testSeqHan>(0, msg.get());
+      theMsg()->sendMsg<TestMsg, testSeqHan>(0, msg);
     }
 
     if (my_node == 0) {

@@ -103,12 +103,12 @@ void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
   if (count < max_test_count) {
     auto msg = makeMessage<TestMsg<num_bytes>>();
     theMsg()->sendMsg<TestMsg<num_bytes>, testPoolFun<num_bytes>>(
-      next, msg.get()
+      next, msg
     );
   } else {
     auto msg = makeMessage<TestMsg<num_bytes * 2>>();
     theMsg()->sendMsg<TestMsg<num_bytes * 2>, testPoolFun<num_bytes * 2>>(
-      next, msg.get()
+      next, msg
     );
     count = 0;
   }
@@ -125,7 +125,7 @@ TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
   if (my_node == 0) {
     auto msg = makeMessage<TestMsg<min_bytes>>();
     theMsg()->sendMsg<TestMsg<min_bytes>, testPoolFun>(
-      to_node, msg.get()
+      to_node, msg
     );
   }
 }
