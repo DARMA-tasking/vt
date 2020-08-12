@@ -82,7 +82,7 @@ TEST_F(TestTimeTrigger, test_time_trigger_1) {
     sleep_for(5ms);
   } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
 
-  int tolerance = 5;
+  int tolerance = 15;
 
   // Allow for some error tolerance in the number of triggers given the period
   EXPECT_LE(triggered, (total_time / trigger_period.count()) + tolerance);
@@ -118,7 +118,7 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
 
   for (int i = 0; i < 3; i++) {
     testTime->addTrigger(
-      trigger_period[i], [&triggered,i,&cur_time]{
+      trigger_period[i], [&triggered,i]{
         triggered[i]++;
       },
       true
@@ -129,12 +129,19 @@ TEST_F(TestTimeTrigger, test_time_trigger_2) {
     testTime->progress();
   } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
 
-  int tolerance = 5;
+  // tolerance of 80% of expected triggers
+  double tolerance = 0.8;
 
   // Allow for some error tolerance in the number of triggers given the period
   for (int i = 0; i < 3; i++) {
-    EXPECT_LE(triggered[i], (total_time / trigger_period[i].count()) + tolerance);
-    EXPECT_GE(triggered[i], (total_time / trigger_period[i].count()) - tolerance);
+    EXPECT_LE(
+      triggered[i],
+      (total_time / trigger_period[i].count()) + triggered[i] * tolerance
+    );
+    EXPECT_GE(
+      triggered[i],
+      (total_time / trigger_period[i].count()) - triggered[i] * tolerance
+    );
   }
 
   for (int i = 0; i < 3; i++) {
