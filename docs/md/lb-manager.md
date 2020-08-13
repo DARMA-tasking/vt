@@ -46,6 +46,8 @@ The following is an example LB specification:
 120 GreedyLB c=0 k=2 f=3 i=3
 \endcode
 
+To print LB specification during startup, use `--vt_lb_print_file` command line flag.
+
 \section load-balancers Load balancers
 
 | Load Balancer  | Type                    | Description                                    | Reference |

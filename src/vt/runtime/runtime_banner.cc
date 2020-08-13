@@ -295,6 +295,9 @@ void Runtime::printStartupBanner() {
         auto f11 = opt_on("--vt_lb_file_name", f12);
         fmt::print("{}\t{}{}", vt_pre, f11, reset);
       }
+      if (getAppConfig()->vt_lb_print_file) {
+        fmt::print("Print LB configuration file here\n");
+      }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", getAppConfig()->vt_lb_name);
       auto a4 = opt_on("--vt_lb_name", a3);

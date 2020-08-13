@@ -325,6 +325,7 @@ void ArgConfig::addLbArgs(CLI::App& app) {
    */
   auto lb            = "Enable load balancing";
   auto lb_file       = "Enable reading LB configuration from file";
+  auto lb_print_file = "Print LB configuration file";
   auto lb_args       = "Arguments pass to LB: \"x=0 y=1 test=2\"";
   auto lb_quiet      = "Silence load balancing output";
   auto lb_file_name  = "LB configuration file to read";
@@ -343,8 +344,10 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   auto lba = "";
   auto s  = app.add_flag("--vt_lb",              config_.vt_lb,             lb);
   auto t  = app.add_flag("--vt_lb_file",         config_.vt_lb_file,        lb_file);
+  auto tp = app.add_flag("--vt_lb_print_file",   config_.vt_lb_print_file,  lb_print_file);
   auto t1 = app.add_flag("--vt_lb_quiet",        config_.vt_lb_quiet,       lb_quiet);
-  auto u  = app.add_option("--vt_lb_file_name",  config_.vt_lb_file_name,   lb_file_name, lbf);
+  auto u  = app.add_option("--vt_lb_file_name",  config_.vt_lb_file_name,   lb_file_name, lbf)
+    ->check(CLI::ExistingFile);
   auto v  = app.add_option("--vt_lb_name",       config_.vt_lb_name,        lb_name,      lbn);
   auto v1 = app.add_option("--vt_lb_args",       config_.vt_lb_args,        lb_args,      lba);
   auto w  = app.add_option("--vt_lb_interval",   config_.vt_lb_interval,    lb_interval,  lbi);
@@ -357,6 +360,7 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   auto debugLB = "Load Balancing";
   s->group(debugLB);
   t->group(debugLB);
+  tp->group(debugLB);
   t1->group(debugLB);
   u->group(debugLB);
   v->group(debugLB);
