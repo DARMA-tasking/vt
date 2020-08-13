@@ -1,7 +1,7 @@
 \page scheduler Scheduler
 \brief General scheduling of work
 
-The scheduler component `vt::sched::Scheduler`, accessed via `vt::theSched()`
+The scheduler component `vt::sched::Scheduler`, accessed via `vt::theSched()`,
 holds pieces of work to execute later that may be prioritized. The scheduler
 polls the \vt components to make progress and collect new pieces of work. The
 scheduler allows registration of callbacks when the system is idle.
@@ -17,12 +17,14 @@ vt::theSched()->scheduler();
 This polls every component that might generate or complete work, and potentially
 runs one piece of available work.
 
-\copydoc vt::sched::Scheduler::scheduler(bool)
-
 However, if the scheduler needs to be run until a condition (or set of
 conditions) is met, it is recommended that `runSchedulerWhile` be invoked:
 
-\copydoc vt::sched::Scheduler::runSchedulerWhile(std::function<bool()>)
+\code{.cpp}
+vt::theSched()->runSchedulerWhile(/*std::function<bool()> cond*/);
+\endcode
+
+\copydetails vt::sched::Scheduler::runSchedulerWhile(std::function<bool()>)
 
 \section higher-level-calls Higher-level Calls to Wait for Completion
 

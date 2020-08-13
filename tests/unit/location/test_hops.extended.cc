@@ -139,21 +139,6 @@ struct TestColl : Collection<TestColl,vt::Index2D> {
   std::vector<double> vec;
 };
 
-template <typename Callable>
-void executeInEpoch(Callable&& fn) {
-  auto this_node = theContext()->getNode();
-  auto ep = vt::theTerm()->makeEpochCollective();
-  vt::theMsg()->pushEpoch(ep);
-  if (this_node == 0) {
-    fn();
-  }
-  vt::theMsg()->popEpoch(ep);
-  vt::theTerm()->finishedEpoch(ep);
-  bool done = false;
-  vt::theTerm()->addAction(ep, [&done]{ done = true; });
-  do vt::runScheduler(); while (!done);
-}
-
 TEST_F(TestHops, test_hops_1) {
   auto num_nodes = theContext()->getNumNodes();
   auto this_node = theContext()->getNode();
@@ -169,7 +154,7 @@ TEST_F(TestHops, test_hops_1) {
     if (this_node == 0) {
       vt_print(gen, "Doing work stage 1 for iter={}\n", i);
     }
-    executeInEpoch([=]{
+    runInEpochCollective([&]{
       if (this_node == 0) {
         proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(false);
       }
@@ -177,7 +162,7 @@ TEST_F(TestHops, test_hops_1) {
     if (this_node == 0) {
       vt_print(gen, "Doing work stage 2 for iter={}\n", i);
     }
-    executeInEpoch([=]{
+    runInEpochCollective([&]{
       if (this_node == 0) {
         proxy.broadcast<TestColl::TestMsg,&TestColl::doWork>(true);
       }
@@ -185,7 +170,7 @@ TEST_F(TestHops, test_hops_1) {
     if (this_node == 0) {
       vt_print(gen, "Running LB for iter={}\n", i);
     }
-    executeInEpoch([=]{
+    runInEpochCollective([&]{
       if (this_node == 0) {
         proxy.broadcast<TestColl::TestMsg,&TestColl::dolb>();
       }
