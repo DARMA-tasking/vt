@@ -13,7 +13,7 @@ instrumentation of work and communication performed by collection elements.
 
 To run a load balancer at runtime:
   - Pass `--vt_lb --vt_lb_name=<LB>` as a command line argument
-  - Write a LB specification file `--vt_lb --vt_lb_file --vt_lb_file_name=<FILE>`
+  - Write a LB specification file `--vt_lb --vt_lb_file_name=<FILE>`
 
 \section lb-specification-file LB Specification File
 

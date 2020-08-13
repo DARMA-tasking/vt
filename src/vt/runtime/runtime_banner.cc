@@ -49,6 +49,7 @@
 #include "vt/configs/generated/vt_git_revision.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
 #include "vt/vrt/collection/balance/lb_type.h"
+#include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/scheduler/scheduler.h"
 
@@ -61,6 +62,32 @@
 #include <unistd.h>
 
 #include <mpi.h>
+
+void printLBConfig(std::string const& filename) {
+  using Spec = vt::vrt::collection::balance::ReadLBSpec;
+
+  Spec::openFile(filename);
+  Spec::readFile();
+
+  for (auto const& exact_entry : Spec::getExactEntries()) {
+    std::string formatted_params;
+    for (auto const& param : exact_entry.second.getParams()) {
+      formatted_params += fmt::format("{}={} ", param.first, param.second);
+    }
+
+    fmt::print("Run `{}` on phase {} with arguments `{}`\n", exact_entry.second.getName(), exact_entry.second.getIdx(), formatted_params);
+  }
+  for (auto const& mod_entry : Spec::getModEntries()) {
+        std::string formatted_params;
+    for (auto const& param : mod_entry.second.getParams()) {
+      formatted_params += fmt::format("{}={} ", param.first, param.second);
+    }
+
+    fmt::print("Run `{}` every {} phases with arguments `{}`\n", mod_entry.second.getName(), mod_entry.second.getIdx(), formatted_params);
+  }
+
+  return;
+}
 
 namespace vt { namespace runtime {
 
@@ -280,23 +307,15 @@ void Runtime::printStartupBanner() {
   if (getAppConfig()->vt_lb) {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
-    if (getAppConfig()->vt_lb_file) {
-      if (getAppConfig()->vt_lb_file_name == "") {
-        auto warn_lb_file = fmt::format(
-          "{}Warning:{} {}{}{} has no effect: compile-time"
-          " option {}{}{} is empty{}\n", red, reset, magenta, "--vt_lb_file",
-          reset, magenta, "--vt_lb_file_name", reset, reset
-        );
-        fmt::print("{}\t{}{}", vt_pre, warn_lb_file, reset);
-      } else {
-        auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
-        fmt::print("{}\t{}{}", vt_pre, f10, reset);
-        auto f12 = fmt::format("Reading file \"{}\"", getAppConfig()->vt_lb_file_name);
-        auto f11 = opt_on("--vt_lb_file_name", f12);
-        fmt::print("{}\t{}{}", vt_pre, f11, reset);
-      }
+    if (getAppConfig()->vt_lb_file_name != "") {
+      auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
+      fmt::print("{}\t{}{}", vt_pre, f10, reset);
+      auto f12 = fmt::format("Reading file \"{}\"", getAppConfig()->vt_lb_file_name);
+      auto f11 = opt_on("--vt_lb_file_name", f12);
+      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+
       if (getAppConfig()->vt_lb_print_file) {
-        fmt::print("Print LB configuration file here\n");
+        printLBConfig(getAppConfig()->vt_lb_file_name);
       }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", getAppConfig()->vt_lb_name);

@@ -68,6 +68,7 @@ TEST_F(TestLBReader, test_lb_read_1) {
   Spec::openFile(file_name);
   Spec::readFile();
 
+  EXPECT_EQ(Spec::numEntries(), 3);
   for (SpecIdx i = 0; i < 21; i++) {
     auto entry = Spec::entry(i);
     switch (i) {
@@ -109,6 +110,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
   Spec::openFile(file_name);
   Spec::readFile();
 
+  EXPECT_EQ(Spec::numEntries(), 5);
   for (SpecIdx i = 0; i < 121; i++) {
     auto entry = Spec::entry(i);
     switch (i) {

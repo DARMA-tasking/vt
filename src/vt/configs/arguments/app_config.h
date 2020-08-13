@@ -130,7 +130,6 @@ struct AppConfig {
   bool vt_trace_irecv_polling    = false;
 
   bool vt_lb                  = false;
-  bool vt_lb_file             = false;
   bool vt_lb_print_file       = false;
   bool vt_lb_quiet            = false;
   std::string vt_lb_file_name = "";

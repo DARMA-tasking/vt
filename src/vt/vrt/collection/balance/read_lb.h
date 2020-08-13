@@ -117,6 +117,7 @@ struct SpecEntry {
 
   SpecIndex getIdx() const { return idx_; }
   std::string getName() const { return lb_name_; }
+  std::unordered_map<std::string, std::string> getParams() const { return params_; }
   LBType getLB() const {
     for (auto&& elm : lb_names_) {
       if (lb_name_ == elm.second) {
@@ -182,9 +183,11 @@ struct ReadLBSpec {
   static void readFile();
 
   static bool hasSpec();
-  static SpecIndex numEntries() { return num_entries_; }
+  static SpecIndex numEntries() { return spec_mod_.size() + spec_exact_.size(); }
   static SpecEntry* entry(SpecIndex const& idx);
   static LBType getLB(SpecIndex const& idx);
+  static SpecMapType getModEntries() { return spec_mod_; };
+  static SpecMapType getExactEntries() {return spec_exact_; };
   static ParamMapType parseParams(std::vector<std::string> params);
   static SpecEntry makeSpecFromParams(std::string params);
   static void clear();
@@ -192,7 +195,6 @@ struct ReadLBSpec {
 private:
   static bool read_complete_;
   static std::string filename;
-  static SpecIndex num_entries_;
   static SpecMapType spec_mod_;
   static SpecMapType spec_exact_;
   static std::vector<SpecIndex> spec_prec_;

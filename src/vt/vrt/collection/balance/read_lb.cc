@@ -57,35 +57,28 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/ std::string ReadLBSpec::filename = {};
-/*static*/ SpecIndex ReadLBSpec::num_entries_ = 0;
 /*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_mod_ = {};
 /*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_exact_ = {};
 /*static*/ std::vector<SpecIndex> ReadLBSpec::spec_prec_ = {};
 /*static*/ bool ReadLBSpec::read_complete_ = false;
 
 /*static*/ bool ReadLBSpec::hasSpec() {
-  if (not theConfig()->vt_lb_file) {
-    return false;
-  }
   if (read_complete_) {
     return true;
-  } else {
-    auto const file_name = theConfig()->vt_lb_file_name;
-    if (file_name == "") {
-      vtAbort(
-        "--vt_lb_file enabled but no file name is specified: --vt_lb_file_name"
-      );
-      return false;
-    } else {
-      bool good = openFile(file_name);
-      if (not good) {
-        auto str =
-          fmt::format("--vt_lb_file_name={} is not a valid file", file_name);
-        vtAbort(str);
-      }
-      return good;
-    }
   }
+
+  auto const file_name = theConfig()->vt_lb_file_name;
+  if (file_name == "") {
+    return false;
+  }
+
+  bool good = openFile(file_name);
+  if (not good) {
+    auto str =
+      fmt::format("--vt_lb_file_name={} is not a valid file", file_name);
+    vtAbort(str);
+  }
+  return good;
 }
 
 /*static*/ bool ReadLBSpec::openFile(std::string const name) {
@@ -252,7 +245,6 @@ int eatWhitespace(std::ifstream& file) {
 /*static*/ void ReadLBSpec::clear() {
   read_complete_ = false;
   filename = "";
-  num_entries_ = 0;
   spec_mod_.clear();
   spec_exact_.clear();
   spec_prec_.clear();
