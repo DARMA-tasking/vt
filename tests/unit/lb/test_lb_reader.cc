@@ -65,20 +65,25 @@ TEST_F(TestLBReader, test_lb_read_1) {
   using SpecIdx    = vt::vrt::collection::balance::SpecIndex;
   using SpecLBType = vt::vrt::collection::balance::LBType;
   Spec::clear();
-  Spec::openFile(file_name);
+  EXPECT_EQ(Spec::openFile(file_name), true);
   Spec::readFile();
 
   EXPECT_EQ(Spec::numEntries(), 3);
+  EXPECT_EQ(Spec::getExactEntries().size(), 2);
+  EXPECT_EQ(Spec::getModEntries().size(), 1);
+
   for (SpecIdx i = 0; i < 21; i++) {
     auto entry = Spec::entry(i);
     switch (i) {
     case 0:
       EXPECT_TRUE(entry != nullptr);
       EXPECT_TRUE(entry->getLB() == SpecLBType::NoLB);
+      EXPECT_EQ(entry->getName(), "NoLB");
       break;
     case 1:
       EXPECT_TRUE(entry != nullptr);
       EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      EXPECT_EQ(entry->getName(), "HierarchicalLB");
       break;
     case 10:
     case 20:
@@ -117,6 +122,8 @@ TEST_F(TestLBReader, test_lb_read_2) {
     case 0:
       EXPECT_TRUE(entry != nullptr);
       EXPECT_TRUE(entry->getLB() == SpecLBType::NoLB);
+      EXPECT_TRUE(entry->getParams().empty());
+      EXPECT_EQ(entry->getIdx(), 0);
       break;
     case 1:
       EXPECT_TRUE(entry != nullptr);
@@ -124,6 +131,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
       EXPECT_TRUE(entry->getOrDefault<double>("min", 0.) == 0.9);
       EXPECT_TRUE(entry->getOrDefault<double>("max", 0.) == 1.1);
       EXPECT_TRUE(entry->getOrDefault<bool>("auto", true) == false);
+      EXPECT_EQ(entry->getIdx(), 1);
       break;
     case 10:
     case 20:
@@ -142,6 +150,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
       EXPECT_TRUE(entry->getOrDefault<int32_t>("k", 0) == 5);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("f", 0) == 2);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("i", 0) == 10);
+      EXPECT_EQ(entry->getIdx(), 10);
       break;
     case 5:
     case 15:
@@ -158,6 +167,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
       EXPECT_TRUE(entry != nullptr);
       EXPECT_TRUE(entry->getLB() == SpecLBType::GreedyLB);
       EXPECT_TRUE(entry->getOrDefault<double>("min", 0.) == 1.0);
+      EXPECT_EQ(entry->getParams().at("min"), "1.0");
       break;
     case 120:
       EXPECT_TRUE(entry != nullptr);
