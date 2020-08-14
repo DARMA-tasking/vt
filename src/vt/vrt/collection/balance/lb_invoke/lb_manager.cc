@@ -270,7 +270,6 @@ void LBManager::finishedRunningLB(PhaseType phase) {
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
     triggerListeners(phase);
-    destroy_lb_();
     printMemoryUsage(phase);
     destroy_lb_ = nullptr;
   }
