@@ -199,7 +199,7 @@ template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
   HandlerType han,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
@@ -210,7 +210,7 @@ template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   NodeType dest,
   HandlerType han,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   ByteType msg_size,
   TagType tag
 ) {
@@ -222,7 +222,7 @@ template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   NodeType dest,
   HandlerType han,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
@@ -231,7 +231,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   ByteType msg_size,
   TagType tag
 ) {
@@ -244,7 +244,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
@@ -257,7 +257,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
@@ -268,7 +268,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   NodeType dest,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   ByteType msg_size,
   TagType tag
 ) {
@@ -280,7 +280,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   NodeType dest,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
@@ -290,7 +290,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
@@ -302,7 +302,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
 
 template <ActiveFnType* f, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
@@ -315,7 +315,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 template <ActiveFnType* f, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
@@ -325,7 +325,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
@@ -338,7 +338,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
@@ -348,7 +348,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
@@ -361,7 +361,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   NodeType dest,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
@@ -373,7 +373,7 @@ template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
   HandlerType han,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   UserSendFnType send_payload_fn
 ) {
   namespace ph = std::placeholders;
@@ -392,7 +392,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   UserSendFnType send_payload_fn
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
@@ -402,7 +402,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   HandlerType han,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
@@ -414,7 +414,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   HandlerType han,
-  TransferMsg<MsgT> msg,
+  MsgPtrThief<MsgT> msg,
   TagType tag
 ) {
   MsgSharedPtr<MsgT> msgptr = msg.msg_;

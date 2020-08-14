@@ -178,26 +178,6 @@ struct BufferedActiveMsg {
 };
 
 /**
- * \brief Used to transfer messages/lifetime into sendMsg.
- *
- * This type is not intented to be used directly.
- * Instead, it supports implicit transforms which are used.
- */
-template <typename MsgT>
-struct TransferMsg {
-  // TODO: This should 'go away' when direct 'msg.get()' usages are replaced with 'msg'
-  // [[deprecated]]
-  /*implicit*/ TransferMsg(MsgT const* msgPtr) : msg_(promoteMsg<MsgT>(const_cast<MsgT*>(msgPtr))) {
-  }
-
-  // n.b. invalidates msg
-  /*implicit*/ TransferMsg(MsgPtr<MsgT>& msg) : msg_(std::move(msg)) {
-  }
-
-  MsgPtr<MsgT> msg_;
-};
-
-/**
  * \struct ActiveMessenger active.h vt/messaging/active.h
  *
  * \brief Core component of VT used to send messages.
@@ -479,7 +459,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType sendMsgSz(
     NodeType dest,
     HandlerType han,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     ByteType msg_size,
     TagType tag = no_tag
   );
@@ -498,7 +478,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType sendMsg(
     NodeType dest,
     HandlerType han,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -518,7 +498,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType sendMsgAuto(
     NodeType dest,
     HandlerType han,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -570,7 +550,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType broadcastMsgSz(
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     ByteType msg_size,
     TagType tag = no_tag
   );
@@ -585,7 +565,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType broadcastMsg(
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -601,7 +581,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsg(
     NodeType dest,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -622,7 +602,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsgSz(
     NodeType dest,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     ByteType msg_size,
     TagType tag = no_tag
   );
@@ -639,7 +619,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType broadcastMsgAuto(
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -657,7 +637,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsgAuto(
     NodeType dest,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -711,7 +691,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <ActiveFnType* f, typename MsgT>
   PendingSendType broadcastMsg(
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -727,7 +707,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <ActiveFnType* f, typename MsgT>
   PendingSendType sendMsg(
     NodeType dest,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -781,7 +761,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsg(
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -800,7 +780,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsgAuto(
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -819,7 +799,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   >
   PendingSendType sendMsg(
     NodeType dest,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -840,7 +820,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   >
   PendingSendType sendMsgAuto(
     NodeType dest,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -904,7 +884,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT>
   PendingSendType broadcastMsg(
     HandlerType han,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -922,7 +902,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType sendMsg(
     NodeType dest,
     HandlerType han,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     UserSendFnType send_payload_fn
   );
 
@@ -938,7 +918,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType sendMsg(
     NodeType dest,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     UserSendFnType send_payload_fn
   );
 
@@ -956,7 +936,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT>
   PendingSendType broadcastMsgAuto(
     HandlerType han,
-    TransferMsg<MsgT> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
