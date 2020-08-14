@@ -50,6 +50,7 @@
 
 #include <string>
 #include <fstream>
+#include <map>
 #include <unordered_map>
 #include <cstdlib>
 
@@ -109,6 +110,8 @@ struct Converter<std::string> {
 };
 
 struct SpecEntry {
+  using ParamMapType = std::unordered_map<std::string, std::string>;
+
   SpecEntry(
     SpecIndex const in_idx, std::string const in_name,
     std::unordered_map<std::string, std::string> in_params
@@ -117,7 +120,7 @@ struct SpecEntry {
 
   SpecIndex getIdx() const { return idx_; }
   std::string getName() const { return lb_name_; }
-  std::unordered_map<std::string, std::string> getParams() const { return params_; }
+  ParamMapType getParams() const { return params_; }
   LBType getLB() const {
     for (auto&& elm : lb_names_) {
       if (lb_name_ == elm.second) {
@@ -162,7 +165,7 @@ struct SpecEntry {
 private:
   SpecIndex idx_;
   std::string lb_name_;
-  std::unordered_map<std::string, std::string> params_;
+  ParamMapType params_;
 };
 
 /*
@@ -176,7 +179,7 @@ private:
  */
 
 struct ReadLBSpec {
-  using SpecMapType  = std::unordered_map<SpecIndex,SpecEntry>;
+  using SpecMapType  = std::map<SpecIndex,SpecEntry>;
   using ParamMapType = std::unordered_map<std::string, std::string>;
 
   static bool openFile(std::string const name = "");

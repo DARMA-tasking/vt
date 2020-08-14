@@ -327,7 +327,7 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   auto lb_args       = "Arguments pass to LB: \"x=0 y=1 test=2\"";
   auto lb_quiet      = "Silence load balancing output";
   auto lb_file_name  = "LB specification file to read";
-  auto lb_print_file = "Print LB specification file during startup";
+  auto lb_show_spec  = "Show LB specification during startup";
   auto lb_name       = "Name of the load balancer to use";
   auto lb_interval   = "Load balancing interval";
   auto lb_stats      = "Enable load balancing statistics";
@@ -345,7 +345,7 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   auto t1 = app.add_flag("--vt_lb_quiet",        config_.vt_lb_quiet,       lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name",  config_.vt_lb_file_name,   lb_file_name, lbf)
     ->check(CLI::ExistingFile);
-  auto u1 = app.add_flag("--vt_lb_print_file",    config_.vt_lb_print_file,  lb_print_file);
+  auto u1 = app.add_flag("--vt_lb_show_spec",    config_.vt_lb_show_spec,   lb_show_spec);
   auto v  = app.add_option("--vt_lb_name",       config_.vt_lb_name,        lb_name,      lbn);
   auto v1 = app.add_option("--vt_lb_args",       config_.vt_lb_args,        lb_args,      lba);
   auto w  = app.add_option("--vt_lb_interval",   config_.vt_lb_interval,    lb_interval,  lbi);
