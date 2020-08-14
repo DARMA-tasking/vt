@@ -51,7 +51,6 @@
 #include <string>
 #include <fstream>
 #include <map>
-#include <unordered_map>
 #include <cstdlib>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -110,11 +109,11 @@ struct Converter<std::string> {
 };
 
 struct SpecEntry {
-  using ParamMapType = std::unordered_map<std::string, std::string>;
+  using ParamMapType = std::map<std::string, std::string>;
 
   SpecEntry(
     SpecIndex const in_idx, std::string const in_name,
-    std::unordered_map<std::string, std::string> in_params
+    ParamMapType in_params
   ) : idx_(in_idx), lb_name_(in_name), params_(in_params)
   {}
 
@@ -180,7 +179,7 @@ private:
 
 struct ReadLBSpec {
   using SpecMapType  = std::map<SpecIndex,SpecEntry>;
-  using ParamMapType = std::unordered_map<std::string, std::string>;
+  using ParamMapType = std::map<std::string, std::string>;
 
   static bool openFile(std::string const name = "");
   static void readFile();
@@ -194,6 +193,7 @@ struct ReadLBSpec {
   static ParamMapType parseParams(std::vector<std::string> params);
   static SpecEntry makeSpecFromParams(std::string params);
   static void clear();
+  static std::string toString();
 
 private:
   static bool read_complete_;

@@ -45,11 +45,11 @@
 #include <vt/transport.h>
 #include <vt/vrt/collection/balance/read_lb.h>
 
-#include "test_harness.h"
+#include "test_parallel_harness.h"
 
 namespace vt { namespace tests { namespace unit {
 
-using TestLBReader = TestHarness;
+using TestLBReader = TestParallelHarness;
 
 TEST_F(TestLBReader, test_lb_read_1) {
 
@@ -94,6 +94,15 @@ TEST_F(TestLBReader, test_lb_read_1) {
       EXPECT_TRUE(entry == nullptr);
     }
   }
+
+  theConfig()->colorize_output = false;
+  std::string expected_spec =
+    "vt: \tExact specification lines:\n"
+    "vt: \tRun `NoLB` on phase 0\n"
+    "vt: \tRun `HierarchicalLB` on phase 1\n"
+    "vt: \tMod (%) specification lines:\n"
+    "vt: \tRun `HierarchicalLB` every 10 phases\n";
+  EXPECT_EQ(Spec::toString(), expected_spec);
 }
 
 TEST_F(TestLBReader, test_lb_read_2) {
@@ -178,6 +187,17 @@ TEST_F(TestLBReader, test_lb_read_2) {
       EXPECT_TRUE(entry == nullptr);
     }
   }
+
+  theConfig()->colorize_output = false;
+  std::string expected_spec =
+    "vt: \tExact specification lines:\n"
+    "vt: \tRun `NoLB` on phase 0\n"
+    "vt: \tRun `HierarchicalLB` on phase 1 with arguments `auto=false max=1.1 min=0.9`\n"
+    "vt: \tRun `HierarchicalLB` on phase 120 with arguments `test_xyz=3`\n"
+    "vt: \tMod (%) specification lines:\n"
+    "vt: \tRun `GreedyLB` every 5 phases with arguments `min=1.0` excluding phases 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120\n"
+    "vt: \tRun `GossipLB` every 10 phases with arguments `c=1 f=2 i=10 k=5` excluding phases 120\n";
+  EXPECT_EQ(Spec::toString(), expected_spec);
 }
 
 }}} // end namespace vt::tests::unit

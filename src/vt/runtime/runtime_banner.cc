@@ -63,50 +63,6 @@
 
 #include <mpi.h>
 
-auto param_str = [](
-  std::unordered_map<std::string,std::string> const& params
-) -> std::string {
-  std::stringstream ss;
-  for (auto&& param : params) {
-    ss << fmt::format("{}={} ",
-      vt::debug::emph(param.first),
-      vt::debug::emph(param.second));
-  }
-  std::string s = ss.str();
-  return s.empty() ? s : s.substr(0, s.size() - 1);
-};
-
-void printLBSpec(std::string const& filename) {
-  using Spec = vt::vrt::collection::balance::ReadLBSpec;
-
-  Spec::openFile(filename);
-  Spec::readFile();
-
-  if (not Spec::getExactEntries().empty()) {
-    fmt::print("{}\tExact specification lines:\n", vt::debug::vtPre());
-  }
-  for (auto const& exact_entry : Spec::getExactEntries()) {
-    fmt::print("{}\tRun `{}` on phase {} with arguments `{}`\n",
-      vt::debug::vtPre(),
-      vt::debug::emph(exact_entry.second.getName()),
-      vt::debug::emph(std::to_string(exact_entry.second.getIdx())),
-      param_str(exact_entry.second.getParams()));
-  }
-
-  if (not Spec::getModEntries().empty()) {
-    fmt::print("{}\tMod (%) specification lines:\n", vt::debug::vtPre());
-  }
-  for (auto const& mod_entry : Spec::getModEntries()) {
-    fmt::print("{}\tRun `{}` every {} phases with arguments `{}`\n",
-      vt::debug::vtPre(),
-      vt::debug::emph(mod_entry.second.getName()),
-      vt::debug::emph(std::to_string(mod_entry.second.getIdx())),
-      param_str(mod_entry.second.getParams()));
-  }
-
-  return;
-}
-
 namespace vt { namespace runtime {
 
 void Runtime::printStartupBanner() {
@@ -334,7 +290,7 @@ void Runtime::printStartupBanner() {
       if (getAppConfig()->vt_lb_show_spec) {
         auto s = opt_on("--vt_lb_show_spec", "Showing LB specification");
         fmt::print("{}\t{}", vt_pre, s);
-        printLBSpec(getAppConfig()->vt_lb_file_name);
+        fmt::print(vrt::collection::balance::ReadLBSpec::toString());
       }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", getAppConfig()->vt_lb_name);
