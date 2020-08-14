@@ -168,7 +168,10 @@ struct MsgSharedPtr final {
   inline T* operator->() const { return get(); }
   inline T& operator*() const { return *ptr_; }
   inline T* get() const {
-    return ptr_ ? reinterpret_cast<T*>(ptr_) : nullptr;
+    vtAssert(
+      ptr_, "Access attempted of invalid MsgPtr."
+    );
+    return reinterpret_cast<T*>(ptr_);
   }
 
   friend std::ostream& operator<<(std::ostream&os, MsgSharedPtr<T> const& m) {
@@ -185,7 +188,10 @@ private:
   /// Should probably be called every constructor; must ONLY be
   /// called from fresh (zero-init member) or clear() state.
   void init(T* msgPtr, MsgPtrImplBase* impl) {
-    assert("given message" && msgPtr);
+    vtAssert(
+      msgPtr,
+      "MsgPtr cannot wrap 'null' messages."
+    );
     assert("not initialized" && not ptr_);
     assert("given impl" && impl);
 
