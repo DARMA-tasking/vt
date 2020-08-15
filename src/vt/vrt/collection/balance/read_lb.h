@@ -50,7 +50,7 @@
 
 #include <string>
 #include <fstream>
-#include <unordered_map>
+#include <map>
 #include <cstdlib>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -109,14 +109,17 @@ struct Converter<std::string> {
 };
 
 struct SpecEntry {
+  using ParamMapType = std::map<std::string, std::string>;
+
   SpecEntry(
     SpecIndex const in_idx, std::string const in_name,
-    std::unordered_map<std::string, std::string> in_params
+    ParamMapType in_params
   ) : idx_(in_idx), lb_name_(in_name), params_(in_params)
   {}
 
   SpecIndex getIdx() const { return idx_; }
   std::string getName() const { return lb_name_; }
+  ParamMapType getParams() const { return params_; }
   LBType getLB() const {
     for (auto&& elm : lb_names_) {
       if (lb_name_ == elm.second) {
@@ -161,7 +164,7 @@ struct SpecEntry {
 private:
   SpecIndex idx_;
   std::string lb_name_;
-  std::unordered_map<std::string, std::string> params_;
+  ParamMapType params_;
 };
 
 /*
@@ -175,24 +178,26 @@ private:
  */
 
 struct ReadLBSpec {
-  using SpecMapType  = std::unordered_map<SpecIndex,SpecEntry>;
-  using ParamMapType = std::unordered_map<std::string, std::string>;
+  using SpecMapType  = std::map<SpecIndex,SpecEntry>;
+  using ParamMapType = std::map<std::string, std::string>;
 
   static bool openFile(std::string const name = "");
   static void readFile();
 
   static bool hasSpec();
-  static SpecIndex numEntries() { return num_entries_; }
+  static SpecIndex numEntries() { return spec_mod_.size() + spec_exact_.size(); }
   static SpecEntry* entry(SpecIndex const& idx);
   static LBType getLB(SpecIndex const& idx);
+  static SpecMapType getModEntries() { return spec_mod_; };
+  static SpecMapType getExactEntries() {return spec_exact_; };
   static ParamMapType parseParams(std::vector<std::string> params);
   static SpecEntry makeSpecFromParams(std::string params);
   static void clear();
+  static std::string toString();
 
 private:
   static bool read_complete_;
   static std::string filename;
-  static SpecIndex num_entries_;
   static SpecMapType spec_mod_;
   static SpecMapType spec_exact_;
   static std::vector<SpecIndex> spec_prec_;

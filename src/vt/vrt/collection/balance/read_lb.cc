@@ -48,6 +48,7 @@
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/configs/arguments/app_config.h"
 
+#include <sstream>
 #include <string>
 #include <fstream>
 #include <cassert>
@@ -57,35 +58,28 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/ std::string ReadLBSpec::filename = {};
-/*static*/ SpecIndex ReadLBSpec::num_entries_ = 0;
 /*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_mod_ = {};
 /*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_exact_ = {};
 /*static*/ std::vector<SpecIndex> ReadLBSpec::spec_prec_ = {};
 /*static*/ bool ReadLBSpec::read_complete_ = false;
 
 /*static*/ bool ReadLBSpec::hasSpec() {
-  if (not theConfig()->vt_lb_file) {
-    return false;
-  }
   if (read_complete_) {
     return true;
-  } else {
-    auto const file_name = theConfig()->vt_lb_file_name;
-    if (file_name == "") {
-      vtAbort(
-        "--vt_lb_file enabled but no file name is specified: --vt_lb_file_name"
-      );
-      return false;
-    } else {
-      bool good = openFile(file_name);
-      if (not good) {
-        auto str =
-          fmt::format("--vt_lb_file_name={} is not a valid file", file_name);
-        vtAbort(str);
-      }
-      return good;
-    }
   }
+
+  auto const file_name = theConfig()->vt_lb_file_name;
+  if (file_name == "") {
+    return false;
+  }
+
+  bool good = openFile(file_name);
+  if (not good) {
+    auto str =
+      fmt::format("--vt_lb_file_name={} is not a valid file", file_name);
+    vtAbort(str);
+  }
+  return good;
 }
 
 /*static*/ bool ReadLBSpec::openFile(std::string const name) {
@@ -252,7 +246,6 @@ int eatWhitespace(std::ifstream& file) {
 /*static*/ void ReadLBSpec::clear() {
   read_complete_ = false;
   filename = "";
-  num_entries_ = 0;
   spec_mod_.clear();
   spec_exact_.clear();
   spec_prec_.clear();
@@ -300,6 +293,79 @@ ReadLBSpec::parseParams(std::vector<std::string> params) {
   auto param_map = parseParams(params);
 
   return SpecEntry{0, "", param_map};
+}
+
+auto param_str = [](
+  std::map<std::string,std::string> const& params
+) -> std::string {
+  if (params.empty()) {
+    return "";
+  }
+
+  std::stringstream ss;
+  ss << " with arguments `";
+  for (auto const& param : params) {
+    ss << fmt::format("{}={} ",
+      vt::debug::emph(param.first),
+      vt::debug::emph(param.second));
+  }
+  ss.seekp(-1, ss.cur);
+  ss << '`';
+  return ss.str();
+};
+
+auto excluded_str = [](SpecIndex idx) -> std::string {
+  std::stringstream ss;
+  auto exact_entries = ReadLBSpec::getExactEntries();
+  auto max_idx = exact_entries.empty() ? 0 : exact_entries.rbegin()->first;
+
+  for (auto k = 1; k*idx <= max_idx; k++) {
+    auto next_entry = ReadLBSpec::entry(k*idx);
+    if (next_entry != nullptr and next_entry->getIdx() != idx) {
+      ss << fmt::format("{}, ", debug::emph(std::to_string(k*idx)));
+    }
+  }
+  std::string s = ss.str();
+  return s.empty() ? s : s.substr(0, s.size() - 2);
+};
+
+/*static*/ std::string ReadLBSpec::toString() {
+  std::stringstream ss;
+
+  ReadLBSpec::openFile(theConfig()->vt_lb_file_name);
+  ReadLBSpec::readFile();
+
+  if (not ReadLBSpec::getExactEntries().empty()) {
+    ss << fmt::format("{}\tExact specification lines:\n", vt::debug::vtPre());
+  }
+  for (auto const& exact_entry : ReadLBSpec::getExactEntries()) {
+    ss << fmt::format("{}\tRun `{}` on phase {}{}",
+      vt::debug::vtPre(),
+      vt::debug::emph(exact_entry.second.getName()),
+      vt::debug::emph(std::to_string(exact_entry.first)),
+      param_str(exact_entry.second.getParams()));
+    ss << '\n';
+  }
+
+  if (not ReadLBSpec::getModEntries().empty()) {
+    ss << fmt::format(
+      "{}\tMod (%) specification lines:\n", vt::debug::vtPre()
+    );
+  }
+  for (auto const& mod_entry : ReadLBSpec::getModEntries()) {
+    ss << fmt::format("{}\tRun `{}` every {} phases{}",
+      vt::debug::vtPre(),
+      vt::debug::emph(mod_entry.second.getName()),
+      vt::debug::emph(std::to_string(mod_entry.first)),
+      param_str(mod_entry.second.getParams()));
+
+    auto excluded_phases = excluded_str(mod_entry.first);
+    if (not excluded_phases.empty()) {
+      ss << " excluding phases " << excluded_phases;
+    }
+    ss << '\n';
+  }
+  return ss.str();
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

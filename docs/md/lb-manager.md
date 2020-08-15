@@ -13,7 +13,7 @@ instrumentation of work and communication performed by collection elements.
 
 To run a load balancer at runtime:
   - Pass `--vt_lb --vt_lb_name=<LB>` as a command line argument
-  - Write a LB specification file `--vt_lb --vt_lb_file --vt_lb_file_name=<FILE>`
+  - Write a LB specification file `--vt_lb --vt_lb_file_name=<FILE>`
 
 \section lb-specification-file LB Specification File
 
@@ -45,6 +45,8 @@ The following is an example LB specification:
 % 5 GreedyLB min=1.0
 120 GreedyLB c=0 k=2 f=3 i=3
 \endcode
+
+To print LB specification during startup, use `--vt_lb_show_spec` command line flag.
 
 \section load-balancers Load balancers
 
