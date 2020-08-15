@@ -87,15 +87,15 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   pending.emplace_back(
     theMsg()->sendMsg<TestMsg, handlerPing>(next, msg)
   );
-  
+
   // Must be stamped with the current epoch
   EXPECT_EQ(envelopeGetEpoch(msg_hold->env), ep);
 
   theMsg()->popEpoch(ep);
-  // theTerm->addAction([&done] { done = true; });
   theTerm()->finishedEpoch(ep);
 
-  // It should not break out of this loop because of `done`, thus `k` is used to
+  // It should not break out of this loop because of
+  // !theTerm()->isEpochTermianted(ep), thus `k` is used to
   // break out
   int k = 0;
   while (!theTerm()->isEpochTerminated(ep)) {
@@ -113,7 +113,6 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   // Now we send the message off!
   pending.clear();
 
-  // do vt::runScheduler(); while (not done);
   vt::runSchedulerThrough(ep);
 
   EXPECT_EQ(theTerm()->isEpochTerminated(ep), true);
