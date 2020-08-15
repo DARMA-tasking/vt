@@ -76,7 +76,6 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   delivered = false;
 
   std::vector<messaging::PendingSend> pending;
-  bool done = false;
   auto ep = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(ep);
 

@@ -149,6 +149,17 @@ struct TestCol : vt::Collection<TestCol,vt::Index3D> {
   std::shared_ptr<int> token;
 };
 
+static void runInEpoch(std::function<void()> fn) {
+  vt::EpochType ep = vt::theTerm()->makeEpochCollective();
+  vt::theMsg()->pushEpoch(ep);
+  fn();
+  vt::theMsg()->popEpoch(ep);
+  vt::theTerm()->finishedEpoch(ep);
+  bool done = false;
+  vt::runInEpochCollective([&]{ done = true; });
+  vt::theSched()->runSchedulerWhile([&] { return not done; });
+}
+
 using TestCheckpoint = TestParallelHarness;
 
 static constexpr int32_t const num_elms = 8;
@@ -160,21 +171,25 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
   auto range = vt::Index3D(num_nodes, num_elms, 4);
   auto checkpoint_name = "test_checkpoint_dir";
 
-  vt::runInEpochCollective([&]{
+  {
     auto proxy = vt::theCollection()->constructCollective<TestCol>(
       range, [](vt::Index3D){
         return std::make_unique<TestCol>();
       }
     );
 
-		if (this_node == 0) {
-			proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
-		}
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
+      }
+    });
 
     for (int i = 0; i < 5; i++) {
+      runInEpoch([&]{
         if (this_node == 0) {
           proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
         }
+      });
     }
 
     vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
@@ -183,15 +198,18 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     vt::theCollective()->barrier();
 
     // Null the token to ensure we don't end up getting the same instance
-		if (this_node == 0) {
-			proxy.broadcast<TestCol::NullMsg,&TestCol::nullToken>();
-		}
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.broadcast<TestCol::NullMsg,&TestCol::nullToken>();
+      }
+    });
 
     // Destroy the collection
-
-		if (this_node == 0) {
-			proxy.destroy();
-		}
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.destroy();
+      }
+    });
 
     vt::theCollective()->barrier();
 
