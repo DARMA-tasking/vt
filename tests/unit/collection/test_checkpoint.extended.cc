@@ -149,6 +149,17 @@ struct TestCol : vt::Collection<TestCol,vt::Index3D> {
   std::shared_ptr<int> token;
 };
 
+static void runInEpoch(std::function<void()> fn) {
+  vt::EpochType ep = vt::theTerm()->makeEpochCollective();
+  vt::theMsg()->pushEpoch(ep);
+  fn();
+  vt::theMsg()->popEpoch(ep);
+  vt::theTerm()->finishedEpoch(ep);
+  bool done = false;
+  vt::runInEpochCollective([&]{ done = true; });
+  vt::theSched()->runSchedulerWhile([&] { return not done; });
+}
+
 using TestCheckpoint = TestParallelHarness;
 
 static constexpr int32_t const num_elms = 8;
@@ -174,7 +185,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     });
 
     for (int i = 0; i < 5; i++) {
-      vt::runInEpochCollective([&]{
+      runInEpoch([&]{
         if (this_node == 0) {
           proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
         }
