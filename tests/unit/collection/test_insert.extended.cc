@@ -75,7 +75,7 @@ struct InsertTest : InsertableCollection<InsertTest,Index1D> {
 };
 
 void InsertTest::work(WorkMsg* msg) {
-  // ::fmt::print("node={}: num_work={}\n", theContext()->getNode(), num_work);
+  //::fmt::print("node={}: num_work={}\n", theContext()->getNode(), num_work);
   num_work++;
 }
 
@@ -89,7 +89,7 @@ static constexpr int32_t const num_elms_per_node = 8;
 TEST_F(TestInsert, test_insert_dense_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  
+
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
       auto const& range = Index1D(num_nodes * num_elms_per_node);
@@ -108,7 +108,7 @@ TEST_F(TestInsert, test_insert_dense_1) {
 TEST_F(TestInsert, test_insert_sparse_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  
+
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
       auto const& range = Index1D(num_nodes * num_elms_per_node * 16);
@@ -127,7 +127,7 @@ TEST_F(TestInsert, test_insert_sparse_1) {
 TEST_F(TestInsert, test_insert_dense_node_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  
+
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
       auto const& range = Index1D(num_nodes * num_elms_per_node);
@@ -148,7 +148,7 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
 TEST_F(TestInsert, test_insert_sparse_node_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  
+
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
       auto const& range = Index1D(num_nodes * num_elms_per_node * 16);
@@ -169,7 +169,7 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
 TEST_F(TestInsert, test_insert_send_dense_node_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  
+
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
       auto const& range = Index1D(num_nodes * num_elms_per_node);
@@ -195,7 +195,7 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
 TEST_F(TestInsert, test_insert_send_sparse_node_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  
+
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
       auto const& range = Index1D(num_nodes * num_elms_per_node * 16);

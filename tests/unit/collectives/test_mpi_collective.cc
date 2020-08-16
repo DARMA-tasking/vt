@@ -75,8 +75,8 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
 
-  int reduce_val_out = 0;  
-  
+  int reduce_val_out = 0;
+
   vt::runInEpochCollective([&]{
     scope.mpiCollectiveAsync([&done]{
       auto comm = theContext()->getComm();
@@ -100,9 +100,9 @@ TEST_F(TestMPICollective, test_mpi_collective_2) {
       done++;
     });
   });
-  
+
   auto num_nodes = theContext()->getNumNodes();
-  
+
   EXPECT_EQ(done, 3);
   EXPECT_EQ(bcast_val, 29);
   EXPECT_EQ(reduce_val_out, num_nodes);
@@ -185,20 +185,20 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   auto op1 = [&]{
     scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
-  	  auto comm = theContext()->getComm();
-  	  vt_print(barrier, "run MPI_Bcast\n");
-	  MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
-	  run_order[done++] = 1;
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_Bcast\n");
+    MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
+    run_order[done++] = 1;
     });
   };
 
   auto op2 = [&]{
     scope2.mpiCollectiveAsync([&done,&reduce_val_out]{
-	  auto comm = theContext()->getComm();
+    auto comm = theContext()->getComm();
       int val_in = 1;
-	  vt_print(barrier, "run MPI_Allreduce\n");
-	  MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
-	  run_order[done++] = 2;
+    vt_print(barrier, "run MPI_Allreduce\n");
+    MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
+    run_order[done++] = 2;
     });
   };
 
@@ -220,7 +220,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
     }
 	runScheduler();
   });
-  
+
   auto num_nodes = theContext()->getNumNodes();
   EXPECT_EQ(done, 3);
   EXPECT_EQ(bcast_val, 29);
