@@ -182,85 +182,84 @@ struct TestSequencerVirtual : TestParallelHarness {
 TEST_F(TestSequencerVirtual, test_seq_vc_1) {
   auto const& my_node = theContext()->getNode();
 
+  runInEpochCollective([=] {
+    if (my_node == 0) {
+      auto proxy = theVirtualManager()->makeVirtual<VirtualType>(29);
+      SeqType const& seq_id = theVirtualSeq()->createVirtualSeq(proxy);
+      auto vrt_ptr = theVirtualManager()->getVirtualByProxy(proxy);
+
+      test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
+      // fmt::print("vrt ptr={}\n", test_vrt_ptr);
+
+      theVirtualSeq()->sequenced(seq_id, testSeqFn1);
+
+      auto msg = makeMessage<TestMsg>();
+      theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan1>(
+        proxy, msg.get());
+    }
+  });
+
   if (my_node == 0) {
-    auto proxy = theVirtualManager()->makeVirtual<VirtualType>(29);
-    SeqType const& seq_id = theVirtualSeq()->createVirtualSeq(proxy);
-    auto vrt_ptr = theVirtualManager()->getVirtualByProxy(proxy);
-
-    test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
-    //fmt::print("vrt ptr={}\n", test_vrt_ptr);
-
-    theVirtualSeq()->sequenced(seq_id, testSeqFn1);
-
-    auto msg = makeMessage<TestMsg>();
-    theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan1>(
-      proxy, msg.get()
-    );
-
-    theTerm()->addAction([=]{
-      testSeqFn1(FinalizeAtomicValue);
-    });
+    testSeqFn1(FinalizeAtomicValue);
   }
 }
 
 TEST_F(TestSequencerVirtual, test_seq_vc_2) {
   auto const& my_node = theContext()->getNode();
 
-  if (my_node == 0) {
-    auto proxy = theVirtualManager()->makeVirtual<VirtualType>(85);
-    SeqType const& seq_id = theVirtualSeq()->createVirtualSeq(proxy);
-    auto vrt_ptr = theVirtualManager()->getVirtualByProxy(proxy);
+  runInEpochCollective([=] {
+    if (my_node == 0) {
+      auto proxy = theVirtualManager()->makeVirtual<VirtualType>(85);
+      SeqType const& seq_id = theVirtualSeq()->createVirtualSeq(proxy);
+      auto vrt_ptr = theVirtualManager()->getVirtualByProxy(proxy);
 
-    test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
+      test_vrt_ptr = static_cast<VirtualType*>(vrt_ptr);
 
-    theVirtualSeq()->sequenced(seq_id, testSeqFn2);
+      theVirtualSeq()->sequenced(seq_id, testSeqFn2);
 
-    for (int i = 0; i < 2; i++) {
-      auto msg = makeMessage<TestMsg>();
-      theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan2>(
-        proxy, msg.get()
-      );
+      for (int i = 0; i < 2; i++) {
+        auto msg = makeMessage<TestMsg>();
+        theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan2>(
+          proxy, msg.get());
+      }
     }
+  });
 
-    theTerm()->addAction([=]{
-      testSeqFn2(FinalizeAtomicValue);
-    });
+  if (my_node == 0) {
+    testSeqFn2(FinalizeAtomicValue);
   }
 }
 
 TEST_F(TestSequencerVirtual, test_seq_vc_distinct_inst_3) {
   auto const& my_node = theContext()->getNode();
 
+  runInEpochCollective([=] {
+    if (my_node == 0) {
+      auto proxy_a = theVirtualManager()->makeVirtual<VirtualType>(85);
+      SeqType const& seq_id_a = theVirtualSeq()->createVirtualSeq(proxy_a);
+      auto vrt_ptr_a = theVirtualManager()->getVirtualByProxy(proxy_a);
+      test_vrt_ptr_a = static_cast<VirtualType*>(vrt_ptr_a);
+
+      auto proxy_b = theVirtualManager()->makeVirtual<VirtualType>(23);
+      SeqType const& seq_id_b = theVirtualSeq()->createVirtualSeq(proxy_b);
+      auto vrt_ptr_b = theVirtualManager()->getVirtualByProxy(proxy_b);
+      test_vrt_ptr_b = static_cast<VirtualType*>(vrt_ptr_b);
+
+      theVirtualSeq()->sequenced(seq_id_a, testSeqFn3a);
+      theVirtualSeq()->sequenced(seq_id_b, testSeqFn3b);
+
+      auto msg1 = makeMessage<TestMsg>();
+      theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan3>(
+        proxy_a, msg1.get());
+      auto msg2 = makeMessage<TestMsg>();
+      theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan3>(
+        proxy_b, msg2.get());
+    }
+  });
+
   if (my_node == 0) {
-    auto proxy_a = theVirtualManager()->makeVirtual<VirtualType>(85);
-    SeqType const& seq_id_a = theVirtualSeq()->createVirtualSeq(proxy_a);
-    auto vrt_ptr_a = theVirtualManager()->getVirtualByProxy(proxy_a);
-    test_vrt_ptr_a = static_cast<VirtualType*>(vrt_ptr_a);
-
-    auto proxy_b = theVirtualManager()->makeVirtual<VirtualType>(23);
-    SeqType const& seq_id_b = theVirtualSeq()->createVirtualSeq(proxy_b);
-    auto vrt_ptr_b = theVirtualManager()->getVirtualByProxy(proxy_b);
-    test_vrt_ptr_b = static_cast<VirtualType*>(vrt_ptr_b);
-
-    theVirtualSeq()->sequenced(seq_id_a, testSeqFn3a);
-    theVirtualSeq()->sequenced(seq_id_b, testSeqFn3b);
-
-    auto msg1 = makeMessage<TestMsg>();
-    theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan3>(
-      proxy_a, msg1.get()
-    );
-    auto msg2 = makeMessage<TestMsg>();
-    theVirtualManager()->sendMsg<VirtualType, TestMsg, testSeqHan3>(
-      proxy_b, msg2.get()
-    );
-
-    // @todo: fix this it is getting triggered early (a termination detector
-    // bug?)
-    theTerm()->addAction([=]{
-      // testSeqFn3a(FinalizeAtomicValue);
-      // testSeqFn3b(FinalizeAtomicValue);
-    });
+    testSeqFn3a(FinalizeAtomicValue);
+    testSeqFn3b(FinalizeAtomicValue);
   }
 }
-
 }}} // end namespace vt::tests::unit

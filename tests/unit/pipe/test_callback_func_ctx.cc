@@ -115,28 +115,27 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
     return;
   }
 
-  ctx = std::make_unique<Context>();
-  ctx->val = this_node;
+  runInEpochCollective([=] {
+    ctx = std::make_unique<Context>();
+    ctx->val = this_node;
 
-  auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-  auto cb = theCB()->makeFunc<DataMsg,Context>(
-    ctx.get(), [next](DataMsg* msg, Context* my_ctx){
-      called = 500;
-      EXPECT_EQ(my_ctx->val, theContext()->getNode());
-      //fmt::print("{}: a={},b={},c={}\n",n,msg->a,msg->b,msg->c);
-      EXPECT_EQ(msg->a, next+1);
-      EXPECT_EQ(msg->b, next+2);
-      EXPECT_EQ(msg->c, next+3);
-    }
-  );
-  //fmt::print("{}: next={}\n", this_node, next);
-  auto msg = makeMessage<CallbackDataMsg>(cb);
-  theMsg()->sendMsg<CallbackDataMsg, test_handler>(next, msg.get());
-
-  theTerm()->addAction([=]{
-    //fmt::print("{}: called={}\n", this_node, called);
-    EXPECT_EQ(called, 500);
+    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+    auto cb = theCB()->makeFunc<DataMsg, Context>(
+      ctx.get(), [next](DataMsg* msg, Context* my_ctx) {
+        called = 500;
+        EXPECT_EQ(my_ctx->val, theContext()->getNode());
+        // fmt::print("{}: a={},b={},c={}\n",n,msg->a,msg->b,msg->c);
+        EXPECT_EQ(msg->a, next + 1);
+        EXPECT_EQ(msg->b, next + 2);
+        EXPECT_EQ(msg->c, next + 3);
+      });
+    // fmt::print("{}: next={}\n", this_node, next);
+    auto msg = makeMessage<CallbackDataMsg>(cb);
+    theMsg()->sendMsg<CallbackDataMsg, test_handler>(next, msg.get());
   });
+
+  // fmt::print("{}: called={}\n", this_node, called);
+  EXPECT_EQ(called, 500);
 }
 
 }}} // end namespace vt::tests::unit

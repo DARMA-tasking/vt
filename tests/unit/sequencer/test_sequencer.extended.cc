@@ -158,84 +158,88 @@ struct TestSequencer : TestParallelHarness {
 TEST_F(TestSequencer, test_single_wait) {
   auto const& my_node = theContext()->getNode();
 
-  #if DEBUG_TEST_HARNESS_PRINT
-    fmt::print("test_seq_handler: node={}\n", my_node);
-  #endif
+#if DEBUG_TEST_HARNESS_PRINT
+  fmt::print("test_seq_handler: node={}\n", my_node);
+#endif
 
-  if (my_node == 1) {
-    auto msg = makeMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, testSeqHan>(0, msg.get());
-  }
+  runInEpochCollective([=] {
+    if (my_node == 1) {
+      auto msg = makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, testSeqHan>(0, msg.get());
+    }
+
+    if (my_node == 0) {
+
+      SeqType const& seq_id = theSeq()->nextSeq();
+      theSeq()->sequenced(seq_id, testSingleWaitFn);
+    }
+  });
 
   if (my_node == 0) {
-    SeqType const& seq_id = theSeq()->nextSeq();
-    theSeq()->sequenced(seq_id, testSingleWaitFn);
-
-    theTerm()->addAction([=]{
-      testSingleWaitFn(-1);
-    });
+    testSingleWaitFn(-1);
   }
 }
 
 TEST_F(TestSequencer, test_single_wait_tagged) {
   auto const& my_node = theContext()->getNode();
 
-  if (my_node == 0) {
-    SeqType const& seq_id = theSeq()->nextSeq();
-    theSeq()->sequenced(seq_id, testSingleTaggedWaitFn);
+  runInEpochCollective([=] {
+    if (my_node == 0) {
+      SeqType const& seq_id = theSeq()->nextSeq();
+      theSeq()->sequenced(seq_id, testSingleTaggedWaitFn);
+    } else if (my_node == 1) {
+      auto msg = makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, testSeqTaggedHan>(
+        0, msg.get(), single_tag);
+    }
+  });
 
-    theTerm()->addAction([=]{
-      testSingleTaggedWaitFn(-1);
-    });
-  } else if (my_node == 1) {
-    auto msg = makeMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, testSeqTaggedHan>(
-      0, msg.get(), single_tag
-    );
+  if (my_node == 0) {
+    testSingleTaggedWaitFn(-1);
   }
 }
 
 TEST_F(TestSequencer, test_multi_wait) {
   auto const& my_node = theContext()->getNode();
 
-  if (my_node == 0) {
-    SeqType const& seq_id = theSeq()->nextSeq();
-    theSeq()->sequenced(seq_id, testMultiWaitFn);
+  runInEpochCollective([=] {
+    if (my_node == 0) {
+      SeqType const& seq_id = theSeq()->nextSeq();
+      theSeq()->sequenced(seq_id, testMultiWaitFn);
+    } else if (my_node == 1) {
+      auto msg1 = makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
+        0, msg1.get());
+      auto msg2 = makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
+        0, msg2.get());
+    }
+  });
 
-    theTerm()->addAction([=]{
-      testMultiWaitFn(-1);
-    });
-  } else if (my_node == 1) {
-    auto msg1 = makeMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
-      0, msg1.get()
-    );
-    auto msg2 = makeMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, testSeqMultiHan>(
-      0, msg2.get()
-    );
+  if (my_node == 0) {
+    testMultiWaitFn(-1);
   }
 }
 
 TEST_F(TestSequencer, test_multi_wait_tagged) {
   auto const& my_node = theContext()->getNode();
 
-  if (my_node == 0) {
-    SeqType const& seq_id = theSeq()->nextSeq();
-    theSeq()->sequenced(seq_id, testMultiTaggedWaitFn);
+  runInEpochCollective([=] {
+    if (my_node == 0) {
+      SeqType const& seq_id = theSeq()->nextSeq();
+      theSeq()->sequenced(seq_id, testMultiTaggedWaitFn);
+    } else if (my_node == 1) {
+      auto msg1 = makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
+        0, msg1.get(), single_tag);
+      auto msg2 = makeMessage<TestMsg>();
+      theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
+        0, msg2.get(), single_tag_2);
+    }
+  });
 
-    theTerm()->addAction([=]{
-      testMultiTaggedWaitFn(-1);
-    });
-  } else if (my_node == 1) {
-    auto msg1 = makeMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
-      0, msg1.get(), single_tag
-    );
-    auto msg2 = makeMessage<TestMsg>();
-    theMsg()->sendMsg<TestMsg, testSeqMultiTaggedHan>(
-      0, msg2.get(), single_tag_2
-    );
+  if (my_node == 0) {
+    testMultiTaggedWaitFn(-1);
   }
 }
 

@@ -128,25 +128,29 @@ static void cb3(DataMsg* msg, TestCol* col) {
 TEST_F(TestCallbackSendCollection, test_callback_send_collection_1) {
   auto const& this_node = theContext()->getNode();
 
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<TestCol>(range);
+  runInEpochCollective([=] {
+    if (this_node == 0) {
+      auto const& range = Index1D(32);
+      auto proxy = theCollection()->construct<TestCol>(range);
 
-    for (auto i = 0; i < 32; i++) {
-      if (i % 2 == 0) {
-        auto cb = theCB()->makeSend<TestCol,DataMsg,&TestCol::cb1>(proxy(i));
-        auto nmsg = makeMessage<DataMsg>(8,9,10);
-        cb.send(nmsg.get());
-      } else {
-        auto cb = theCB()->makeSend<TestCol,DataMsg,&TestCol::cb2>(proxy(i));
-        auto nmsg = makeMessage<DataMsg>(8,9,10);
-        cb.send(nmsg.get());
+      for (auto i = 0; i < 32; i++) {
+        if (i % 2 == 0) {
+          auto cb =
+            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
+          auto nmsg = makeMessage<DataMsg>(8, 9, 10);
+          cb.send(nmsg.get());
+        } else {
+          auto cb =
+            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb2>(proxy(i));
+          auto nmsg = makeMessage<DataMsg>(8, 9, 10);
+          cb.send(nmsg.get());
+        }
       }
     }
+  });
 
-    theTerm()->addAction([=]{
-      proxy.destroy();
-    });
+  if (this_node == 0) {
+    theCollection()->destroyCollections();
   }
 }
 
@@ -158,52 +162,58 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_2) {
     return;
   }
 
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<TestCol>(range);
+  runInEpochCollective([=] {
+    if (this_node == 0) {
+      auto const& range = Index1D(32);
+      auto proxy = theCollection()->construct<TestCol>(range);
 
-    for (auto i = 0; i < 32; i++) {
-      auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-      if (i % 2 == 0) {
-        auto cb = theCB()->makeSend<TestCol,DataMsg,&TestCol::cb1>(proxy(i));
-        auto msg = makeMessage<CallbackDataMsg>(cb);
-        theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
-      } else {
-        auto cb = theCB()->makeSend<TestCol,DataMsg,&TestCol::cb2>(proxy(i));
-        auto msg = makeMessage<CallbackDataMsg>(cb);
-        theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+      for (auto i = 0; i < 32; i++) {
+        auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+        if (i % 2 == 0) {
+          auto cb =
+            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
+          auto msg = makeMessage<CallbackDataMsg>(cb);
+          theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+        } else {
+          auto cb =
+            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb2>(proxy(i));
+          auto msg = makeMessage<CallbackDataMsg>(cb);
+          theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+        }
       }
     }
+  });
 
-    theTerm()->addAction([=]{
-      proxy.destroy();
-    });
+  if (this_node == 0) {
+    theCollection()->destroyCollections();
   }
-
 }
 
 TEST_F(TestCallbackSendCollection, test_callback_send_collection_3) {
   auto const& this_node = theContext()->getNode();
 
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<TestCol>(range);
+  runInEpochCollective([=] {
+    if (this_node == 0) {
+      auto const& range = Index1D(32);
+      auto proxy = theCollection()->construct<TestCol>(range);
 
-    for (auto i = 0; i < 32; i++) {
-      if (i % 2 == 0) {
-        auto cb = theCB()->makeSend<TestCol,DataMsg,&TestCol::cb1>(proxy(i));
-        auto nmsg = makeMessage<DataMsg>(8,9,10);
-        cb.send(nmsg.get());
-      } else {
-        auto cb = theCB()->makeSend<TestCol,DataMsg,cb3>(proxy(i));
-        auto nmsg = makeMessage<DataMsg>(8,9,10);
-        cb.send(nmsg.get());
+      for (auto i = 0; i < 32; i++) {
+        if (i % 2 == 0) {
+          auto cb =
+            theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
+          auto nmsg = makeMessage<DataMsg>(8, 9, 10);
+          cb.send(nmsg.get());
+        } else {
+          auto cb = theCB()->makeSend<TestCol, DataMsg, cb3>(proxy(i));
+          auto nmsg = makeMessage<DataMsg>(8, 9, 10);
+          cb.send(nmsg.get());
+        }
       }
     }
+  });
 
-    theTerm()->addAction([=]{
-      proxy.destroy();
-    });
+  if (this_node == 0) {
+    theCollection()->destroyCollections();
   }
 }
 
