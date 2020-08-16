@@ -218,7 +218,7 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
     } else {
       op2(); op3(); op1();
     }
-	runScheduler();
+	  runScheduler();
   });
 
   auto num_nodes = theContext()->getNumNodes();
