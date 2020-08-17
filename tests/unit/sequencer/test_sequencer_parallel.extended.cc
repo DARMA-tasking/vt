@@ -149,7 +149,7 @@ TEST_P(TestSequencerParallelParam, test_seq_parallel_param) {
   SeqType const& seq_id = theSeq()->nextSeq();
   auto seq_par_cnt_fn = std::bind(seqParFnN, _1, par_count);
 
-  runInEpochCollective([=] {
+  runInEpochCollective([=]{
     if (node == 0) {
       seq_par_cnt_fn(SeqParResetAtomicValue);
       theSeq()->sequenced(seq_id, seq_par_cnt_fn);

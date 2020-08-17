@@ -88,9 +88,9 @@ TEST_F(TestCallbackFunc, test_callback_func_2) {
 
   called = 0;
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node]{
     if (this_node == 0) {
-      auto cb = theCB()->makeFunc([] { called = 400; });
+      auto cb = theCB()->makeFunc([]{ called = 400; });
       auto msg = makeMessage<CallbackMsg>(cb);
       theMsg()->sendMsg<CallbackMsg, test_handler>(1, msg.get());
     }

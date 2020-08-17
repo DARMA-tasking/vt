@@ -202,14 +202,14 @@ TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
     }
   );
 
-  runInEpochCollective([=] {
+  runInEpochCollective([proxy]{
     if (theContext()->getNode() == 0) {
       proxy.template broadcast<
         typename TestCol<T>::TestMsg, &TestCol<T>::initialize>();
     }
   });
 
-  runInEpochCollective([=] {
+  runInEpochCollective([proxy]{
     if (theContext()->getNode() == 0) {
       proxy.template broadcast<
         typename TestCol<T>::TestMsg, &TestCol<T>::afterMigrate>();

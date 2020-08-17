@@ -128,7 +128,7 @@ static void cb3(DataMsg* msg, TestCol* col) {
 TEST_F(TestCallbackSendCollection, test_callback_send_collection_1) {
   auto const& this_node = theContext()->getNode();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node]{
     if (this_node == 0) {
       auto const& range = Index1D(32);
       auto proxy = theCollection()->construct<TestCol>(range);
@@ -162,7 +162,7 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_2) {
     return;
   }
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node, num_nodes]{
     if (this_node == 0) {
       auto const& range = Index1D(32);
       auto proxy = theCollection()->construct<TestCol>(range);
@@ -192,7 +192,7 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_2) {
 TEST_F(TestCallbackSendCollection, test_callback_send_collection_3) {
   auto const& this_node = theContext()->getNode();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node]{
     if (this_node == 0) {
       auto const& range = Index1D(32);
       auto proxy = theCollection()->construct<TestCol>(range);

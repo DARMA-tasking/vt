@@ -99,7 +99,7 @@ TEST_F(TestSequencerFor, test_for) {
 
   SeqType const& seq_id = theSeq()->nextSeq();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([seq_id, my_node]{
     if (my_node == 0) {
       theSeq()->sequenced(seq_id, testSeqForFn);
     }

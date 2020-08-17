@@ -115,7 +115,7 @@ TEST_F(TestCallbackSend, test_callback_send_1) {
 
   called = 0;
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node]{
     auto cb = theCB()->makeSend<DataMsg, callbackFn>(this_node);
     auto nmsg = makeMessage<DataMsg>(1, 2, 3);
     cb.send(nmsg.get());
@@ -128,7 +128,7 @@ TEST_F(TestCallbackSend, test_callback_send_2) {
   auto const& this_node = theContext()->getNode();
   called = 0;
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node]{
     auto cb = theCB()->makeSend<CallbackFunctor>(this_node);
     auto nmsg = makeMessage<DataMsg>(1, 2, 3);
     cb.send(nmsg.get());
@@ -141,7 +141,7 @@ TEST_F(TestCallbackSend, test_callback_send_3) {
   auto const& this_node = theContext()->getNode();
   called = 0;
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node]{
     auto cb = theCB()->makeSend<CallbackFunctorEmpty>(this_node);
     cb.send();
   });
@@ -155,7 +155,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_1) {
 
   called = 0;
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node, num_nodes]{
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<DataMsg, callbackFn>(this_node);
     auto msg = makeMessage<CallbackDataMsg>(cb);
@@ -171,7 +171,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_2) {
 
   called = 0;
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node, num_nodes]{
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<CallbackFunctor>(this_node);
     auto msg = makeMessage<CallbackDataMsg>(cb);
@@ -187,7 +187,7 @@ TEST_F(TestCallbackSend, test_callback_send_remote_3) {
 
   called = 0;
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node, num_nodes]{
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeSend<CallbackFunctorEmpty>(this_node);
     auto msg = makeMessage<CallbackMsg>(cb);

@@ -162,7 +162,7 @@ TEST_F(TestSequencer, test_single_wait) {
   fmt::print("test_seq_handler: node={}\n", my_node);
 #endif
 
-  runInEpochCollective([=] {
+  runInEpochCollective([my_node]{
     if (my_node == 1) {
       auto msg = makeMessage<TestMsg>();
       theMsg()->sendMsg<TestMsg, testSeqHan>(0, msg.get());
@@ -183,7 +183,7 @@ TEST_F(TestSequencer, test_single_wait) {
 TEST_F(TestSequencer, test_single_wait_tagged) {
   auto const& my_node = theContext()->getNode();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([my_node]{
     if (my_node == 0) {
       SeqType const& seq_id = theSeq()->nextSeq();
       theSeq()->sequenced(seq_id, testSingleTaggedWaitFn);
@@ -202,7 +202,7 @@ TEST_F(TestSequencer, test_single_wait_tagged) {
 TEST_F(TestSequencer, test_multi_wait) {
   auto const& my_node = theContext()->getNode();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([my_node]{
     if (my_node == 0) {
       SeqType const& seq_id = theSeq()->nextSeq();
       theSeq()->sequenced(seq_id, testMultiWaitFn);
@@ -224,7 +224,7 @@ TEST_F(TestSequencer, test_multi_wait) {
 TEST_F(TestSequencer, test_multi_wait_tagged) {
   auto const& my_node = theContext()->getNode();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([my_node]{
     if (my_node == 0) {
       SeqType const& seq_id = theSeq()->nextSeq();
       theSeq()->sequenced(seq_id, testMultiTaggedWaitFn);

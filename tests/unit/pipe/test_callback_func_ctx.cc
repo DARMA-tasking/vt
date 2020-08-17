@@ -115,7 +115,7 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
     return;
   }
 
-  runInEpochCollective([=] {
+  runInEpochCollective([this_node, num_nodes]{
     ctx = std::make_unique<Context>();
     ctx->val = this_node;
 

@@ -182,7 +182,7 @@ struct TestSequencerVirtual : TestParallelHarness {
 TEST_F(TestSequencerVirtual, test_seq_vc_1) {
   auto const& my_node = theContext()->getNode();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([my_node]{
     if (my_node == 0) {
       auto proxy = theVirtualManager()->makeVirtual<VirtualType>(29);
       SeqType const& seq_id = theVirtualSeq()->createVirtualSeq(proxy);
@@ -207,7 +207,7 @@ TEST_F(TestSequencerVirtual, test_seq_vc_1) {
 TEST_F(TestSequencerVirtual, test_seq_vc_2) {
   auto const& my_node = theContext()->getNode();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([my_node]{
     if (my_node == 0) {
       auto proxy = theVirtualManager()->makeVirtual<VirtualType>(85);
       SeqType const& seq_id = theVirtualSeq()->createVirtualSeq(proxy);
@@ -233,7 +233,7 @@ TEST_F(TestSequencerVirtual, test_seq_vc_2) {
 TEST_F(TestSequencerVirtual, test_seq_vc_distinct_inst_3) {
   auto const& my_node = theContext()->getNode();
 
-  runInEpochCollective([=] {
+  runInEpochCollective([my_node]{
     if (my_node == 0) {
       auto proxy_a = theVirtualManager()->makeVirtual<VirtualType>(85);
       SeqType const& seq_id_a = theVirtualSeq()->createVirtualSeq(proxy_a);
