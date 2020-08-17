@@ -204,10 +204,10 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   auto op3 = [&]{
     scope3.mpiCollectiveAsync([&done]{
-      auto comm = theContext()->getComm();
-	  vt_print(barrier, "run MPI_barrier\n");
-	  MPI_Barrier(comm);
-	  run_order[done++] = 3;
+			auto comm = theContext()->getComm();
+			vt_print(barrier, "run MPI_barrier\n");
+			MPI_Barrier(comm);
+			run_order[done++] = 3;
     });
   };
 
@@ -218,7 +218,6 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
     } else {
       op2(); op3(); op1();
     }
-	  runScheduler();
   });
 
   auto num_nodes = theContext()->getNumNodes();
