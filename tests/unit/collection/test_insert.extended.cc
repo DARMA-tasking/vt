@@ -99,8 +99,6 @@ TEST_F(TestInsert, test_insert_dense_1) {
       }
     }
   });
-  /// ::fmt::print("num inserted={}\n", num_inserted);
-  // Relies on default mapping equally distributing
   EXPECT_EQ(num_inserted, num_elms_per_node);
   num_inserted = 0;
 }
