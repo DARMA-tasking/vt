@@ -83,7 +83,7 @@ CollectionProxy<ColT, IndexT>::operator()(Tp&& tp, Tn&&... tn) const {
 template <typename ColT, typename IndexT>
 typename CollectionProxy<ColT, IndexT>::ElmProxyType
 CollectionProxy<ColT, IndexT>::index(IndexT const& idx) const {
-  return ElmProxyType{this->proxy_,BaseElmProxy<ColT, IndexT>{idx}};
+  return ElmProxyType{this->proxy_,BaseElmProxy<IndexT>{idx}};
 }
 
 template <typename ColT, typename IndexT>

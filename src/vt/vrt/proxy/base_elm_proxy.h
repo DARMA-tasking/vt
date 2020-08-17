@@ -58,10 +58,9 @@ namespace vt { namespace vrt { namespace collection {
 static struct virtual_proxy_elm_empty { } virtual_proxy_elm_empty_tag { };
 #pragma GCC diagnostic pop
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct BaseElmProxy {
   using IndexType = IndexT;
-  using CollectionType = ColT;
 
   explicit BaseElmProxy(IndexT const& in_idx)
     : idx_(in_idx)
@@ -90,14 +89,14 @@ protected:
 
 }}} /* end namespace vt::vrt::collection */
 
-template <typename ColT, typename IndexT>
-using ElmType = ::vt::vrt::collection::BaseElmProxy<ColT,IndexT>;
+template <typename IndexT>
+using ElmType = ::vt::vrt::collection::BaseElmProxy<IndexT>;
 
 namespace std {
-  template <typename ColT, typename IndexT>
-  struct hash<ElmType<ColT,IndexT>> {
-    size_t operator()(ElmType<ColT,IndexT> const& in) const {
-      return std::hash<typename ElmType<ColT,IndexT>::IndexType>()(
+  template <typename IndexT>
+  struct hash<ElmType<IndexT>> {
+    size_t operator()(ElmType<IndexT> const& in) const {
+      return std::hash<typename ElmType<IndexT>::IndexType>()(
         in.getIndex()
       );
     }
