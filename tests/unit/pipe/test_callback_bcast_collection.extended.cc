@@ -56,6 +56,8 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
+struct TestColMsg;
+
 struct CallbackMsg : vt::Message {
   CallbackMsg() = default;
   explicit CallbackMsg(Callback<> in_cb) : cb_(in_cb) { }
@@ -91,7 +93,7 @@ struct TestCol : vt::Collection<TestCol, vt::Index1D> {
 
   virtual ~TestCol() = default;
 
-  void check(DataMsg* msg) {
+  void check(TestColMsg* msg) {
     if (other) {
       EXPECT_EQ(val, 29);
     } else {
@@ -126,6 +128,8 @@ static void cb3(DataMsg* msg, TestCol* col) {
   col->val = 13;
 }
 
+struct TestColMsg : ::vt::CollectionMessage<TestCol> {};
+
 TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
   auto const& this_node = theContext()->getNode();
   auto const& range = Index1D(32);
@@ -141,9 +145,8 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::check>(proxy);
-      auto nmsg = makeMessage<DataMsg>();
-      cb.send(nmsg.get());
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }
@@ -170,9 +173,8 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::check>(proxy);
-      auto nmsg = makeMessage<DataMsg>();
-      cb.send(nmsg.get());
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }
@@ -199,9 +201,8 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
 
   runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::check>(proxy);
-      auto nmsg = makeMessage<DataMsg>();
-      cb.send(nmsg.get());
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }
