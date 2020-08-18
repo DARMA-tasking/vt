@@ -56,6 +56,8 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
+struct TestColMsg;
+
 struct CallbackMsg : vt::Message {
   CallbackMsg() = default;
   explicit CallbackMsg(Callback<> in_cb) : cb_(in_cb) { }
@@ -90,7 +92,7 @@ struct TestCol : vt::Collection<TestCol, vt::Index1D> {
   TestCol() = default;
   virtual ~TestCol() = default;
 
-  void check(DataMsg* msg) {
+  void check(TestColMsg* msg) {
     if (this->getIndex().x() % 2 == 0) {
       EXPECT_EQ(val, 29);
     } else {
@@ -123,6 +125,8 @@ static void cb3(DataMsg* msg, TestCol* col) {
   col->val = 13;
 }
 
+struct TestColMsg : ::vt::CollectionMessage<TestCol> {};
+
 TEST_F(TestCallbackSendCollection, test_callback_send_collection_1) {
   auto const& this_node = theContext()->getNode();
   auto const& range = Index1D(32);
@@ -146,14 +150,10 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_1) {
     }
   });
 
-  runInEpochCollective([this_node, proxy] {
+  runInEpochCollective([this_node, proxy]{
     if (this_node == 0) {
-      for (auto i = 0; i < 32; i++) {
-        auto cb =
-          theCB()->makeSend<TestCol, DataMsg, &TestCol::check>(proxy(i));
-        auto nmsg = makeMessage<DataMsg>();
-        cb.send(nmsg.get());
-      }
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }
@@ -190,12 +190,8 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_2) {
 
   runInEpochCollective([this_node, proxy]{
     if (this_node == 0) {
-      for (auto i = 0; i < 32; i++) {
-        auto cb =
-          theCB()->makeSend<TestCol, DataMsg, &TestCol::check>(proxy(i));
-        auto nmsg = makeMessage<DataMsg>();
-        cb.send(nmsg.get());
-      }
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }
@@ -224,12 +220,8 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_3) {
 
   runInEpochCollective([this_node, proxy]{
     if (this_node == 0) {
-      for (auto i = 0; i < 32; i++) {
-        auto cb =
-          theCB()->makeSend<TestCol, DataMsg, &TestCol::check>(proxy(i));
-        auto nmsg = makeMessage<DataMsg>();
-        cb.send(nmsg.get());
-      }
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }
