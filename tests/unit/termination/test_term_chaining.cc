@@ -236,12 +236,11 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
 TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
   auto const& num_nodes = theContext()->getNumNodes();
 
+  chain = vt::messaging::DependentSendChain{};
+  handler_count = 0;
+
   if (num_nodes == 2) {
-
-    chain = vt::messaging::DependentSendChain{};
     epoch = theTerm()->makeEpochCollective();
-
-    handler_count = 0;
 
     theMsg()->pushEpoch(epoch);
     chain_reduce();
@@ -250,10 +249,7 @@ TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
     vt::runSchedulerThrough(epoch);
     EXPECT_EQ(handler_count, 3);
   } else if (num_nodes == 1) {
-    chain = vt::messaging::DependentSendChain{};
     epoch = theTerm()->makeEpochCollective();
-
-    handler_count = 0;
 
     theMsg()->pushEpoch(epoch);
     chain_reduce_single();
