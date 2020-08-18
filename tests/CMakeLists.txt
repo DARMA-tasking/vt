@@ -91,7 +91,7 @@ function(add_unit_test sub_dir unit_test_file)
   )
 
   # Extended tests are designated with an particular extension: *.extended.cc
-  if(UNIT_TEST_FULL_EXTENSION STREQUAL ".extended.cc")
+  if(UNIT_TEST_FULL_EXTENSION MATCHES "[.]extended[.]")
     # message(
     #   STATUS "found extended test >>>> ${UNIT_TEST_FULL_EXTENSION}"
     # )
@@ -104,6 +104,13 @@ function(add_unit_test sub_dir unit_test_file)
     endif()
   else()
     set(UNIT_TEST "${UNIT_TEST}_basic")
+  endif()
+
+  # Does this test bypass MPI?
+  set(USES_MPI ON)
+  if(UNIT_TEST_FULL_EXTENSION MATCHES "[.]nompi[.]")
+    set(USES_MPI OFF)
+    set(UNIT_TEST "${UNIT_TEST}_nompi")
   endif()
 
   # message(
@@ -129,23 +136,35 @@ function(add_unit_test sub_dir unit_test_file)
     LINK_GTEST ON
   )
 
-  foreach(PROC ${PROC_TEST_LIST})
+  if(USES_MPI)
+    foreach(PROC ${PROC_TEST_LIST})
+      gtest_add_tests(
+        TARGET                 ${UNIT_TEST}
+        WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
+        TEST_SUFFIX            _proc_${PROC}
+        TEST_PREFIX            vt:
+        TEST_LIST              ${CUR_TEST_LIST}
+        EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS} ${MPI_NUMPROC_FLAG} ${PROC}
+      )
+
+      set_tests_properties(
+        ${${CUR_TEST_LIST}}
+        PROPERTIES TIMEOUT 60
+        FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
+        PASS_REGULAR_EXPRESSION "PASSED"
+      )
+    endforeach()
+  else()
     gtest_add_tests(
       TARGET                 ${UNIT_TEST}
       WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
-      TEST_SUFFIX            _proc_${PROC}
+      TEST_SUFFIX            _no_mpi
       TEST_PREFIX            vt:
       TEST_LIST              ${CUR_TEST_LIST}
-      EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS} ${MPI_NUMPROC_FLAG} ${PROC}
+      EXECUTE_COMMAND        ${PROC}
     )
+  endif()
 
-    set_tests_properties(
-      ${${CUR_TEST_LIST}}
-      PROPERTIES TIMEOUT 60
-      FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
-      PASS_REGULAR_EXPRESSION "PASSED"
-    )
-  endforeach()
 endfunction()
 
 #
