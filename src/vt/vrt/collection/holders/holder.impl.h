@@ -152,7 +152,7 @@ void Holder<ColT, IndexT>::cleanupExists() {
 }
 
 template <typename ColT, typename IndexT>
-bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
+void Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   static uint64_t num_reentrant = 0;
 
   num_reentrant++;
@@ -162,7 +162,7 @@ bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
       auto const& idx = elm.first;
       auto const& holder = elm.second;
       auto const col_ptr = holder.getCollection();
-      fn(idx,col_ptr);
+      fn(idx, col_ptr);
     }
   }
   num_reentrant--;
@@ -170,7 +170,6 @@ bool Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
   if (num_reentrant == 0) {
     cleanupExists();
   }
-  return true;
 }
 
 template <typename ColT, typename IndexT>
