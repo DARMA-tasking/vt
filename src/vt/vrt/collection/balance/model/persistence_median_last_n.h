@@ -67,6 +67,7 @@ struct PersistenceMedianLastN : public ComposedModel
   PersistenceMedianLastN(std::shared_ptr<LoadModel> base, int n);
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
+  int getNumPastPhasesNeeded(int look_back) override;
 
 private:
   const int n_;

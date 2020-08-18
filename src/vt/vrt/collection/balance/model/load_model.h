@@ -128,6 +128,18 @@ public:
    */
   virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
 
+  /**
+   * \brief Compute how many phases of past load statistics need to be
+   * kept availble for the model to use
+   *
+   * \param[in] look_back How many phases into the past the caller
+   * intends to query
+   *
+   * \return How many phases of past load statistics will be needed to
+   * satisfy the requested history
+   */
+  virtual int getNumPastPhasesNeeded(int look_back = 0) = 0;
+
   // Object enumeration, to abstract away access to the underlying structures from NodeStats
   virtual ObjectIterator begin() = 0;
   virtual ObjectIterator end() = 0;

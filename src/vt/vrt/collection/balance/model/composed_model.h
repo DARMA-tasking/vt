@@ -72,6 +72,7 @@ public:
   void updateLoads(PhaseType last_completed_phase) override;
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
+  int getNumPastPhasesNeeded(int look_back) override;
 
   ObjectIterator begin() override;
   ObjectIterator end() override;

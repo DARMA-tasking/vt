@@ -59,4 +59,9 @@ TimeType NaivePersistence::getWork(ElementIDType object, PhaseOffset offset)
   return ComposedModel::getWork(object, offset);
 }
 
+int NaivePersistence::getNumPastPhasesNeeded(int look_back)
+{
+  return ComposedModel::getNumPastPhasesNeeded(std::max(1, look_back));
+}
+
 }}}}

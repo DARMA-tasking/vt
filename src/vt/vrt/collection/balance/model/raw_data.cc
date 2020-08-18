@@ -75,4 +75,9 @@ TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
     return proc_subphase_load_->at(phase).at(object).at(offset.subphase);
 }
 
+int RawData::getNumPastPhasesNeeded(int look_back)
+{
+  return look_back;
+}
+
 }}}}

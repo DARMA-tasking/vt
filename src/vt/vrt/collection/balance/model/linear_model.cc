@@ -74,4 +74,9 @@ TimeType LinearModel::getWork(ElementIDType object, PhaseOffset when) {
   return regression.predict(when.phases);
 }
 
+int LinearModel::getNumPastPhasesNeeded(int look_back)
+{
+  return ComposedModel::getNumPastPhasesNeeded(std::max(past_len_, look_back));
+}
+
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -60,6 +60,11 @@ TimeType ComposedModel::getWork(ElementIDType object, PhaseOffset when) {
   return base_->getWork(object, when);
 }
 
+int ComposedModel::getNumPastPhasesNeeded(int look_back)
+{
+  return base_->getNumPastPhasesNeeded(look_back);
+}
+
 ObjectIterator ComposedModel::begin() {
   return base_->begin();
 }

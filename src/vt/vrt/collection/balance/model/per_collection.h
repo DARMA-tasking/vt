@@ -81,6 +81,7 @@ struct PerCollection : public ComposedModel
   void updateLoads(PhaseType last_completed_phase) override;
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
+  int getNumPastPhasesNeeded(int look_back) override;
 
 private:
   std::unordered_map<CollectionID, std::shared_ptr<LoadModel>> models_;

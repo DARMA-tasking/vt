@@ -80,4 +80,12 @@ TimeType PerCollection::getWork(ElementIDType object, PhaseOffset when) {
   return ComposedModel::getWork(object, when);
 }
 
+int PerCollection::getNumPastPhasesNeeded(int look_back)
+{
+  int needed = ComposedModel::getNumPastPhasesNeeded(look_back);
+  for (auto& m : models_)
+    needed = std::max(needed, m.second->getNumPastPhasesNeeded(look_back));
+  return needed;
+}
+
 }}}}
