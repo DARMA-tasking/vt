@@ -240,22 +240,11 @@ TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
   handler_count = 0;
 
   if (num_nodes == 2) {
-    epoch = theTerm()->makeEpochCollective();
-
-    theMsg()->pushEpoch(epoch);
-    chain_reduce();
-    theTerm()->finishedEpoch(epoch);
-    theMsg()->popEpoch(epoch);
-    vt::runSchedulerThrough(epoch);
+    vt::runInEpochCollective( chain_reduce );
     EXPECT_EQ(handler_count, 3);
   } else if (num_nodes == 1) {
+    vt::runInEpochCollective( chain_reduce_single );
     epoch = theTerm()->makeEpochCollective();
-
-    theMsg()->pushEpoch(epoch);
-    chain_reduce_single();
-    theTerm()->finishedEpoch(epoch);
-    theMsg()->popEpoch(epoch);
-    vt::runSchedulerThrough(epoch);
     EXPECT_EQ(handler_count, 2);
   }
 }
