@@ -55,9 +55,11 @@ namespace vt { namespace collective {
 TagType CollectiveScope::mpiCollectiveAsync(ActionType action) {
   auto impl = getScope();
   auto tag = impl->next_seq_++;
+  auto epoch = theMsg()->getEpoch();
 
   // Create a new collective action with the next tag
-  detail::ScopeImpl::CollectiveInfo info(tag, action);
+  detail::ScopeImpl::CollectiveInfo info(tag, action, epoch);
+  theTerm()->produce(epoch);
 
   impl->planned_collective_.emplace(
     std::piecewise_construct,
