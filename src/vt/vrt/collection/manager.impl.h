@@ -1992,7 +1992,6 @@ template <typename ColT>
    */
   auto msg = makeMessage<CollectionConsMsg>(proxy);
   theMsg()->markAsCollectionMessage(msg);
-  auto const& root = 0;
   vt_debug_print(
     vrt_coll, node,
     "reduceConstruction: invoke reduce: proxy={:x}\n", proxy
@@ -2004,7 +2003,7 @@ template <typename ColT>
   auto stamp = makeStamp<StrongUserID>(proxy);
   auto r = theCollection()->reducer();
   auto cb = theCB()->makeBcast<CollectionConsMsg, collectionFinishedHan<void>>();
-  r->reduce<collective::None>(root, msg.get(), cb, stamp);
+  r->reduce<collective::None>(msg.get(), cb, stamp);
 }
 
 template <typename ColT>

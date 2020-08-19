@@ -93,7 +93,7 @@ TagType CollectiveScope::mpiCollectiveAsync(ActionType action) {
   using collective::reduce::TagPair;
 
   auto stamp = makeStamp<TagPair>(scope_, tag);
-  r->reduce<collective::None>(collective_root, msg.get(), cb, stamp);
+  r->reduce<collective::None>(msg.get(), cb, stamp);
 
   return tag;
 }

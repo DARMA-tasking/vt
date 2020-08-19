@@ -113,4 +113,17 @@ TEST_F(TestReduce, test_reduce_vec_int_msg) {
   >(root, msg.get());
 }
 
+TEST_F(TestReduce, test_reduce_none_op_cb) {
+  called = 0;
+
+  runInEpochCollective([]{
+    auto msg = makeMessage<ReduceNoneMsg>();
+    auto cb = theCB()->makeSend<ReduceNoneMsg, callbackFn>(0);
+
+    theCollective()->global()->reduce<None>(msg.get(), cb);
+  });
+
+  EXPECT_EQ(called, theContext()->getNumNodes());
+}
+
 }}} // end namespace vt::tests::unit
