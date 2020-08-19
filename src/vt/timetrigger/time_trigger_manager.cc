@@ -53,7 +53,7 @@ int TimeTriggerManager::addTrigger(
   int const cur_id = next_trigger_id_++;
   Trigger trigger{period, action, cur_id};
   if (fire_immediately) {
-    trigger.runAction();
+    trigger.runAction(timing::Timing::getCurrentTime());
   } else {
     trigger.setLastTriggerTime(timing::Timing::getCurrentTime());
   }
@@ -78,7 +78,7 @@ void TimeTriggerManager::triggerReady(TimeType cur_time) {
       }
 
       queue_.pop();
-      t.runAction();
+      t.runAction(cur_time);
       queue_.push(t);
     } else {
       // all other triggers will not be ready if this one isn't

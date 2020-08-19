@@ -92,9 +92,9 @@ struct Trigger {
   /**
    * \brief Run the trigger
    */
-  void runAction() {
+  void runAction(TimeType current_time) {
     trigger_();
-    last_trigger_time_ = timing::Timing::getCurrentTime();
+    last_trigger_time_ = current_time;
   }
 
   /**

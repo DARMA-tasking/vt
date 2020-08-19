@@ -57,7 +57,30 @@ namespace vt { namespace tests { namespace unit {
 
 using TestTimeTrigger = TestParallelHarness;
 
-TEST_F(TestTimeTrigger, test_time_trigger_1) {
+TEST_F(TestTimeTrigger, test_time_trigger) {
+  using namespace std::chrono_literals;
+
+  std::chrono::milliseconds trigger_period = 100ms;
+  int trigger_id = 42;
+  int triggered = 0;
+
+  vt::timetrigger::Trigger trigger{trigger_period, [&](){
+    triggered++;
+  }, trigger_id};
+
+  EXPECT_EQ(trigger.getID(), trigger_id);
+  EXPECT_EQ(trigger.getLastTriggerTime(), 0.);
+  EXPECT_EQ(trigger.nextTriggerTime(), 0.1);
+  EXPECT_EQ(triggered, 0);
+
+  trigger.runAction(4.);
+
+  EXPECT_EQ(trigger.getLastTriggerTime(), 4.);
+  EXPECT_EQ(trigger.nextTriggerTime(), 4.1);
+  EXPECT_EQ(triggered, 1);
+}
+
+TEST_F(TestTimeTrigger, test_time_trigger_manager_1) {
   using namespace std::this_thread;
   using namespace std::chrono;
   using namespace std::chrono_literals;
@@ -103,7 +126,7 @@ TEST_F(TestTimeTrigger, test_time_trigger_1) {
   EXPECT_EQ(prev_triggered, triggered);
 }
 
-TEST_F(TestTimeTrigger, test_time_trigger_2) {
+TEST_F(TestTimeTrigger, test_time_trigger_manager_2) {
   using namespace std::chrono_literals;
 
   std::chrono::milliseconds trigger_period[3] = {100ms, 10ms, 1000ms};
