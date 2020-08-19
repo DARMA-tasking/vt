@@ -147,65 +147,50 @@ void verifyCacheConsistency(
 ) {
 
   for (int iter = 0; iter < nb_rounds; ++iter) {
-    // create an epoch for the current round, and
-    // perform the checks only at the end of the epoch
-    // to ensure that all entity messages have been
-    // correctly delivered before.
-    auto epoch = vt::theTerm()->makeEpochCollective();
-
     // create an entity message to route
     auto msg = vt::makeMessage<MsgT>(entity, my_node);
     // check if should be serialized or not
     bool serialize = msg->getSerialize();
 
-    bool finished = false;
-
-    vt::theTerm()->addAction(epoch, [=,&finished]{
+    // perform the checks only after all entity messages have been
+    // correctly delivered
+    runInEpochCollective([&]{
       if (my_node not_eq home) {
-
-        // check the routing protocol to be used by the manager.
-        bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
-
-        // check for cache updates
-        bool is_entity_cached = isCached(entity);
-
-        vt_debug_print(
-          location, node,
-          "verifyCacheConsistency: iter={}, entityID={}, home={}, bytes={}, "
-          "in cache={}, serialize={}\n",
-          iter, entity, msg->from_, sizeof(*msg), is_entity_cached, serialize
-        );
-
-        if (not is_eager) {
-          // On non eager case: the location is first explicitly resolved
-          // and then the message is routed and the cache updated.
-          // Hence, the entity is not yet registered in cache after the
-          // first send, but will be for next ones.
-          EXPECT_TRUE(iter < 1 or is_entity_cached);
-        } else if(my_node not_eq new_home) {
-          // On eager case: the message is directly routed to the
-          // implicitly resolved location.
-          // Thus the cache is not updated in this case.
-          EXPECT_FALSE(is_entity_cached);
-        }
-      } else /* my_node == home */ {
-        // The entity should be registered in the cache of the home node,
-        // regardless of the protocol (eager or not)
-        EXPECT_TRUE(isCached(entity));
+        // route entity message
+        vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg, serialize);
       }
-      finished = true;
     });
 
     if (my_node not_eq home) {
-      // route entity message
-      vt::theLocMan()->virtual_loc->routeMsg<MsgT>(entity, home, msg, serialize);
-    }
-    // wait for all ranks and finish the epoch
-    vt::theCollective()->barrier();
-    vt::theTerm()->finishedEpoch(epoch);
+      // check the routing protocol to be used by the manager.
+      bool is_eager = theLocMan()->virtual_loc->useEagerProtocol(msg);
 
-    while (not finished) {
-      vt::runScheduler();
+      // check for cache updates
+      bool is_entity_cached = isCached(entity);
+
+      vt_debug_print(
+        location, node,
+        "verifyCacheConsistency: iter={}, entityID={}, home={}, bytes={}, "
+        "in cache={}, serialize={}\n",
+        iter, entity, msg->from_, sizeof(*msg), is_entity_cached, serialize
+      );
+
+      if (not is_eager) {
+        // On non eager case: the location is first explicitly resolved
+        // and then the message is routed and the cache updated.
+        // Hence, the entity is not yet registered in cache after the
+        // first send, but will be for next ones.
+        EXPECT_TRUE(iter < 1 or is_entity_cached);
+      } else if(my_node not_eq new_home) {
+        // On eager case: the message is directly routed to the
+        // implicitly resolved location.
+        // Thus the cache is not updated in this case.
+        EXPECT_FALSE(is_entity_cached);
+      }
+    } else /* my_node == home */ {
+      // The entity should be registered in the cache of the home node,
+      // regardless of the protocol (eager or not)
+      EXPECT_TRUE(isCached(entity));
     }
   }
 }
