@@ -88,10 +88,11 @@ void Reduce::reduceRootRecv(MsgT* msg) {
 
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
 Reduce::PendingSendType Reduce::reduce(
-  NodeType const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
+  MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
   ReduceNumType const& num_contrib
 ) {
   msg->setCallback(cb);
+  NodeType root = 0;
   return reduce<MsgT,f>(root,msg,id,num_contrib);
 }
 

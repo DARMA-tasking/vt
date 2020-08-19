@@ -175,7 +175,7 @@ struct TestTermChaining : TestParallelHarness {
     vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
     auto cb = vt::theCB()->makeSend<ChainReduceMsg, test_handler_reduce>( 0 );
-    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(0, msg2.get(), cb));
+    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(msg2.get(), cb));
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
@@ -197,7 +197,7 @@ struct TestTermChaining : TestParallelHarness {
     vt::theMsg()->pushEpoch(epoch2);
     auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
     auto cb = vt::theCB()->makeSend<ChainReduceMsg, test_handler_reduce>( 0 );
-    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(0, msg2.get(), cb));
+    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(msg2.get(), cb));
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 

@@ -76,8 +76,14 @@ struct SysMsg : ReduceTMsg<int> {
   {}
 };
 
+static int32_t called = 0;
+
 struct TestReduce : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
+
+  static void callbackFn(ReduceNoneMsg* msg) {
+    called += 1;
+  }
 
   static void reducePlus(MyReduceMsg* msg) {
     vt_debug_print(

@@ -661,7 +661,7 @@ void TerminationDetector::startEpochGraphBuild() {
   auto cb = vt::theCB()->makeSend<MsgType, epochGraphBuiltHandler>(root);
 
   auto r = theTerm()->reducer();
-  r->reduce<ReduceOp>(root, msg.get(), cb);
+  r->reduce<ReduceOp>(msg.get(), cb);
 
   if (theContext()->getNode() != root) {
     theTerm()->has_printed_epoch_graph = true;

@@ -168,7 +168,6 @@ struct Reduce : virtual collective::tree::Tree {
   /**
    * \brief Reduce a message up the tree
    *
-   * \param[in] root the root node where the final handler provides the result
    * \param[in] msg the message to reduce on this node
    * \param[in] cb the callback to trigger on the root node
    * \param[in] id the reduction stamp (optional), provided if out-of-order
@@ -182,7 +181,7 @@ struct Reduce : virtual collective::tree::Tree {
     ActiveTypedFnType<MsgT> *f
   >
   PendingSendType reduce(
-    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    MsgT* msg, Callback<MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
