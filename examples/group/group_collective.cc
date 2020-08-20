@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
       auto const& root = 0;
       auto const& in_group = vt::theGroup()->inGroup(group);
       auto const& root_node = vt::theGroup()->groupRoot(group);
-      auto const& is_default_group = vt::theGroup()->groupDefault(group);
+      auto const& is_default_group = vt::theGroup()->isGroupDefault(group);
       fmt::print(
         "{}: Group is created: group={:x}, in_group={}, root={}, "
         "is_default_group={}\n",

@@ -295,7 +295,7 @@ GroupType CollectionManager::createGroupCollection(
   auto const group_id = theGroup()->newGroupCollective(
     in_group, [proxy](GroupType new_group){
       auto const& group_root = theGroup()->groupRoot(new_group);
-      auto const& is_group_default = theGroup()->groupDefault(new_group);
+      auto const& is_group_default = theGroup()->isGroupDefault(new_group);
       auto const& my_in_group = theGroup()->inGroup(new_group);
       auto elm_holder = theCollection()->findElmHolder<ColT,IndexT>(proxy);
       elm_holder->setGroup(new_group);

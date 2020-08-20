@@ -147,7 +147,7 @@ NodeType GroupManager::groupRoot(GroupType const& group) const {
   return root;
 }
 
-bool GroupManager::groupDefault(GroupType const& group) const {
+bool GroupManager::isGroupDefault(GroupType const& group) const {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& def = iter->second->isGroupDefault();

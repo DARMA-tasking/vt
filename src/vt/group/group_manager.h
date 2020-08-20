@@ -359,7 +359,7 @@ public:
    *
    * \return whether it is the default group
    */
-  bool groupDefault(GroupType const& group) const;
+  bool isGroupDefault(GroupType const& group) const;
 
   /**
    * \internal \brief Add a cleanup action
