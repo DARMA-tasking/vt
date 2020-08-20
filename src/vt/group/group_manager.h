@@ -124,15 +124,13 @@ struct GroupManager : runtime::component::Component<GroupManager> {
    * \brief Create a new rooted group.
    *
    * \param[in] in_region list of nodes to include
-   * \param[in] is_collective whether it's collective, which must be false
    * \param[in] is_static whether the group is static after creation
    * \param[in] action action to execute when group is finished construction
    *
    * \return the group ID
    */
   GroupType newGroup(
-    RegionPtrType in_region, bool const& is_collective,
-    bool const& is_static, ActionGroupType action
+    RegionPtrType in_region, bool const& is_static, ActionGroupType action
   );
 
   /**

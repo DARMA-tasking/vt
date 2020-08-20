@@ -59,10 +59,8 @@
 namespace vt { namespace group {
 
 GroupType GroupManager::newGroup(
-  RegionPtrType in_region, bool const& is_collective, bool const& is_static,
-  ActionGroupType action
+  RegionPtrType in_region, bool const& is_static, ActionGroupType action
 ) {
-  vtAssert(!is_collective, "Must not be collective");
   return newLocalGroup(std::move(in_region), is_static, action);
 }
 
@@ -70,8 +68,7 @@ GroupType GroupManager::newGroup(
   RegionPtrType in_region, ActionGroupType action
 ) {
   bool const is_static = true;
-  bool const is_collective = false;
-  return newGroup(std::move(in_region), is_collective, is_static, action);
+  return newGroup(std::move(in_region), is_static, action);
 }
 
 GroupType GroupManager::newGroupCollective(
