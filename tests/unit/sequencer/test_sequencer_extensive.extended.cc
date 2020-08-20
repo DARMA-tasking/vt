@@ -98,31 +98,33 @@ static constexpr CountType const max_seq_depth = 8;
     CountType const& wait_post = std::get<2>(param);                    \
     CountType const& seg_cnt = std::get<3>(param);                      \
     CountType const& depth = std::get<4>(param);                        \
-    if (node == (NODE)) {                                               \
-      SeqType const& seq_id = theSeq()->nextSeq();                      \
-      SEQ_FN(ResetAtomicValue);                                         \
-      theSeq()->sequenced(seq_id, (SEQ_FN));                            \
-      theTerm()->addAction([=]{                                         \
-        SEQ_FN(FinalizeAtomicValue);                                    \
-      });                                                               \
-    } else if (node == 1) {                                             \
-      CountType in[param_size] = {                                      \
-        wait_cnt, wait_pre, wait_post, seg_cnt, depth                   \
-      };                                                                \
-      auto msg = makeMessage<NumWaitsMsg>(in);                          \
-      theMsg()->sendMsg<NumWaitsMsg, numWaitHan>(                       \
-        (NODE), msg.get()                                               \
-      );                                                                \
-      auto const total = (wait_cnt * seg_cnt) + wait_pre + wait_post;   \
-      for (CountType i = 0; i < total; i++) {                           \
-        TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
-        auto nmsg = makeMessage<MSG_TYPE>();                            \
-        theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                           \
-          (NODE), nmsg.get(), tag                                       \
+    runInEpochCollective([=]{                                           \
+      if (node == (NODE)) {                                             \
+        SeqType const& seq_id = theSeq()->nextSeq();                    \
+        SEQ_FN(ResetAtomicValue);                                       \
+        theSeq()->sequenced(seq_id, (SEQ_FN));                          \
+      } else if (node == 1) {                                           \
+        CountType in[param_size] = {                                    \
+          wait_cnt, wait_pre, wait_post, seg_cnt, depth                 \
+        };                                                              \
+        auto msg = makeMessage<NumWaitsMsg>(in);                        \
+        theMsg()->sendMsg<NumWaitsMsg, numWaitHan>(                     \
+          (NODE), msg.get()                                             \
         );                                                              \
+        auto const total = (wait_cnt * seg_cnt) + wait_pre + wait_post; \
+        for (CountType i = 0; i < total; i++) {                         \
+          TagType const tag = (IS_TAG) ? i+1 : no_tag;                  \
+          auto nmsg = makeMessage<MSG_TYPE>();                          \
+          theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                         \
+            (NODE), nmsg.get(), tag                                     \
+          );                                                            \
+        }                                                               \
       }                                                                 \
+    });                                                                 \
+    if (node == (NODE)) {                                               \
+      SEQ_FN(FinalizeAtomicValue);                                      \
     }                                                                   \
-  } while (false);
+  } while (false);                                                      \
 
 #define FN_APPLY(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, ___, IS_TAG)          \
   static void SEQ_FN(SeqType const& seq_id) {                           \

@@ -202,21 +202,19 @@ TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
     }
   );
 
-  auto migrate_epoch = theTerm()->makeEpochCollective();
-  if (theContext()->getNode() == 0) {
-    theTerm()->produce(migrate_epoch);
-    proxy.template broadcast<
-      typename TestCol<T>::TestMsg, &TestCol<T>::initialize
-    >(migrate_epoch);
-    theTerm()->addAction(migrate_epoch,[=]{
+  runInEpochCollective([proxy]{
+    if (theContext()->getNode() == 0) {
       proxy.template broadcast<
-        typename TestCol<T>::TestMsg, &TestCol<T>::afterMigrate
-      >();
-    });
-  }
-  theTerm()->finishedEpoch(migrate_epoch);
+        typename TestCol<T>::TestMsg, &TestCol<T>::initialize>();
+    }
+  });
 
-  do vt::runScheduler(); while (not vt::rt->isTerminated());
+  runInEpochCollective([proxy]{
+    if (theContext()->getNode() == 0) {
+      proxy.template broadcast<
+        typename TestCol<T>::TestMsg, &TestCol<T>::afterMigrate>();
+    }
+  });
 }
 
 using RDMACollectionTestTypes = testing::Types<

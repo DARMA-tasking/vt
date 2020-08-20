@@ -149,24 +149,23 @@ TEST_P(TestSequencerParallelParam, test_seq_parallel_param) {
   SeqType const& seq_id = theSeq()->nextSeq();
   auto seq_par_cnt_fn = std::bind(seqParFnN, _1, par_count);
 
-  if (node == 0) {
-    seq_par_cnt_fn(SeqParResetAtomicValue);
-    theSeq()->sequenced(seq_id, seq_par_cnt_fn);
-  }
-
-  for (CountType i = 0; i < par_count; i++) {
-    if (node == 1) {
-      auto msg = makeMessage<TestMsg>();
-      theMsg()->sendMsg<TestMsg, seqParHanN>(0, msg.get());
+  runInEpochCollective([=]{
+    if (node == 0) {
+      seq_par_cnt_fn(SeqParResetAtomicValue);
+      theSeq()->sequenced(seq_id, seq_par_cnt_fn);
     }
-  }
+
+    for (CountType i = 0; i < par_count; i++) {
+      if (node == 1) {
+        auto msg = makeMessage<TestMsg>();
+        theMsg()->sendMsg<TestMsg, seqParHanN>(0, msg.get());
+      }
+    }
+  });
 
   if (node == 0) {
-    theTerm()->addAction([=]{
-      seq_par_cnt_fn(SeqParFinalizeAtomicValue);
-    });
+    seq_par_cnt_fn(SeqParFinalizeAtomicValue);
   }
-
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -317,22 +316,22 @@ struct TestSequencerParallel : TestParallelHarness {
 #define PAR_EXPAND(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, NUM_MSGS, IS_TAG) \
   do {                                                                \
     SeqType const& seq_id = theSeq()->nextSeq();                      \
-    if ((NODE) == 0) {                                                \
-      theSeq()->sequenced(seq_id, (SEQ_FN));                          \
-    }                                                                 \
-    for (int i = 0; i < (NUM_MSGS); i++) {                            \
-      TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
-      if ((NODE) == 1) {                                              \
-      auto msg = makeMessage<MSG_TYPE>();                             \
-        theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                         \
-          0, msg.get(), tag                                           \
-        );                                                            \
+    runInEpochCollective([=]{                                         \
+      if ((NODE) == 0) {                                              \
+        theSeq()->sequenced(seq_id, (SEQ_FN));                        \
       }                                                               \
-    }                                                                 \
+      for (int i = 0; i < (NUM_MSGS); i++) {                          \
+        TagType const tag = (IS_TAG) ? i+1 : no_tag;                  \
+        if ((NODE) == 1) {                                            \
+          auto msg = makeMessage<MSG_TYPE>();                         \
+          theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                       \
+            0, msg.get(), tag                                         \
+          );                                                          \
+        }                                                             \
+      }                                                               \
+    });                                                               \
     if ((NODE) == 0) {                                                \
-      theTerm()->addAction([=]{                                       \
         SEQ_FN(-1);                                                   \
-      });                                                             \
     }                                                                 \
   } while (false);
 

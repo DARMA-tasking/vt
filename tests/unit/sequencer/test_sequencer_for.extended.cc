@@ -99,21 +99,21 @@ TEST_F(TestSequencerFor, test_for) {
 
   SeqType const& seq_id = theSeq()->nextSeq();
 
-  if (my_node == 0) {
-    theSeq()->sequenced(seq_id, testSeqForFn);
-  }
-
-  for (int i = 0; i < end_range; i++) {
-    if (my_node == 1) {
-      auto msg = makeMessage<TestMsg>();
-      theMsg()->sendMsg<TestMsg, testSeqForHan>(0, msg.get());
+  runInEpochCollective([seq_id, my_node]{
+    if (my_node == 0) {
+      theSeq()->sequenced(seq_id, testSeqForFn);
     }
-  }
+
+    for (int i = 0; i < end_range; i++) {
+      if (my_node == 1) {
+        auto msg = makeMessage<TestMsg>();
+        theMsg()->sendMsg<TestMsg, testSeqForHan>(0, msg.get());
+      }
+    }
+  });
 
   if (my_node == 0) {
-    theTerm()->addAction([=]{
-      testSeqForFn(-1);
-    });
+    testSeqForFn(-1);
   }
 }
 

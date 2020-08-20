@@ -264,22 +264,23 @@ struct TestSequencerNested : TestParallelHarness {
 #define SEQ_EXPAND(SEQ_HAN, SEQ_FN, NODE, MSG_TYPE, NUM_MSGS, IS_TAG)   \
   do {                                                                  \
     SeqType const& seq_id = theSeq()->nextSeq();                        \
-    if ((NODE) == 0) {                                                  \
-      theSeq()->sequenced(seq_id, (SEQ_FN));                            \
-    }                                                                   \
-    for (int i = 0; i < (NUM_MSGS); i++) {                              \
-      TagType const tag = (IS_TAG) ? i+1 : no_tag;                      \
-      if ((NODE) == 1) {                                                \
-        auto msg = makeMessage<MSG_TYPE>();                             \
-        theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                           \
-          0, msg.get(), tag                                             \
-        );                                                              \
+                                                                        \
+    runInEpochCollective([=]{                                           \
+      if ((NODE) == 0) {                                                \
+        theSeq()->sequenced(seq_id, (SEQ_FN));                          \
       }                                                                 \
-    }                                                                   \
+      for (int i = 0; i < (NUM_MSGS); i++) {                            \
+        TagType const tag = (IS_TAG) ? i+1 : no_tag;                    \
+        if ((NODE) == 1) {                                              \
+          auto msg = makeMessage<MSG_TYPE>();                           \
+          theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                         \
+            0, msg.get(), tag                                           \
+          );                                                            \
+        }                                                               \
+      }                                                                 \
+    });                                                                 \
     if ((NODE) == 0) {                                                  \
-      theTerm()->addAction([=]{                                         \
         SEQ_FN(-1);                                                     \
-      });                                                               \
     }                                                                   \
   } while (false);
 
