@@ -83,6 +83,8 @@ struct Trigger {
   /**
    * \brief Get the next trigger time
    *
+   * \param[in] current_time current time
+   *
    * \return the next time this should be triggered
    */
   TimeType nextTriggerTime() const {
@@ -91,6 +93,8 @@ struct Trigger {
 
   /**
    * \brief Run the trigger
+   *
+   * \param[in] current_time current time
    */
   void runAction(TimeType current_time) {
     trigger_();
@@ -103,6 +107,15 @@ struct Trigger {
    * \return the ID
    */
   int getID() const { return id_; }
+
+  /**
+   * \brief Check if the trigger is ready to be fired
+   *
+   * \return whether the trigger can be run already
+   */
+  bool ready(TimeType current_time) const {
+    return nextTriggerTime() < current_time;
+  }
 
   /**
    * \internal \brief Update last trigger time---used the first time to set up
