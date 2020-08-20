@@ -82,7 +82,7 @@ template <typename T>
 RemoteOperationIDType GroupManagerT<T>::registerContinuationT(ActionTType act) {
   pushCleanupAction();
 
-  RemoteOperationIDType next_id = theGroup()->getNextID();
+  RemoteOperationIDType next_id = theGroup()->getNextOpID();
   continuation_actions_t_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(next_id),

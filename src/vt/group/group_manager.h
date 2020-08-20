@@ -373,7 +373,7 @@ public:
    *
    * \return the operation ID
    */
-  RemoteOperationIDType getNextID();
+  RemoteOperationIDType getNextOpID();
 
 private:
   /**

@@ -518,7 +518,7 @@ void GroupManager::addCleanupAction(ActionType action) {
   cleanup_actions_.push_back(action);
 }
 
-RemoteOperationIDType GroupManager::getNextID(){
+RemoteOperationIDType GroupManager::getNextOpID(){
   return cur_id_++;
 }
 
