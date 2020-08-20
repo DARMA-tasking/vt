@@ -61,6 +61,8 @@ TEST_F(TestTimeTrigger, test_time_trigger) {
   using namespace std::chrono_literals;
 
   std::chrono::milliseconds trigger_period = 100ms;
+  double trigger_period_s =
+    std::chrono::duration<double>(trigger_period).count();
   int trigger_id = 42;
   int triggered = 0;
 
@@ -69,14 +71,15 @@ TEST_F(TestTimeTrigger, test_time_trigger) {
   }, trigger_id};
 
   EXPECT_EQ(trigger.getID(), trigger_id);
-  EXPECT_EQ(trigger.getLastTriggerTime(), 0.);
-  EXPECT_EQ(trigger.nextTriggerTime(), 0.1);
+  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime(), 0.0);
+  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime(), 0.0 + trigger_period_s);
   EXPECT_EQ(triggered, 0);
 
-  trigger.runAction(4.);
+  auto start_time = 4.0;
+  trigger.runAction(start_time);
 
-  EXPECT_EQ(trigger.getLastTriggerTime(), 4.);
-  EXPECT_EQ(trigger.nextTriggerTime(), 4.1);
+  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime(), start_time);
+  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime(), start_time + trigger_period_s);
   EXPECT_EQ(triggered, 1);
 }
 
