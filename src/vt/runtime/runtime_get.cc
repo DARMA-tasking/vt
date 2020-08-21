@@ -142,33 +142,32 @@ trace::Trace*               theTrace()              { return CUR_RT->theTrace;  
 pmpi::PMPIComponent*        thePMPI()               { return CUR_RT->thePMPI;           }
 #endif
 
-namespace runtime {
-
-/**
- * \brief Test if the runtime configuration is available at this point in
- * startup. Convenience function for use in debug printing without including VT
- * runtime headers.
- *
- * \return whether `theConfig()` is available
- */
-bool configLive() {
-  return curRT->theArgConfig != nullptr;
-}
-
-/**
- * \brief Get the runtime config before VT is fully initialized. Convenience
- * function for use in debug printing without including VT runtime headers.
- *
- * \return the app config
- */
-arguments::AppConfig const* getRuntimeConfig() {
-  return curRT->getAppConfig();
-}
-
-} /* end namespace runtime */
-
 #undef CUR_RT
 #undef CUR_RT_SAFE
 #undef IS_COMM_THREAD
 
 } /* end namespace vt */
+
+namespace vt { namespace debug {
+
+// Dummy config that applies outside of RT initialization, much like preNode.
+static arguments::AppConfig preInitAppConfig{};
+
+/**
+ * \internal
+ * \brief Returns the config, accessible OUTSIDE of VT initialization.
+ *
+ * Much as preNode, this can be accessed safely in debug* methods.
+ * This allows such methods to be used in code that is unit-test OK.
+ *
+ * \return A configuration; possible a default configuration.
+ */
+arguments::AppConfig const* preConfig() {
+  auto const rt = curRT;
+  if (not rt)
+    return &preInitAppConfig;
+  auto const* config = rt->theArgConfig;
+  return config not_eq nullptr ? &config->config_ : rt->getAppConfig();
+}
+
+}} /* end namespace vt::debug */

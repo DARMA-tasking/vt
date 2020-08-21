@@ -95,7 +95,6 @@ TEST_F(TestLBReader, test_lb_read_1) {
     }
   }
 
-  theConfig()->colorize_output = false;
   std::string expected_spec =
     "vt: \tExact specification lines:\n"
     "vt: \tRun `NoLB` on phase 0\n"
@@ -187,7 +186,6 @@ TEST_F(TestLBReader, test_lb_read_2) {
     }
   }
 
-  theConfig()->colorize_output = false;
   std::string expected_spec =
     "vt: \tExact specification lines:\n"
     "vt: \tRun `NoLB` on phase 0\n"
