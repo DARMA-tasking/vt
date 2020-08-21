@@ -108,130 +108,37 @@ TEST_F(TestTimeTrigger, test_time_trigger_manager_add_trigger) {
   EXPECT_EQ(triggered, 1);
 }
 
-TEST_F(TestTimeTrigger, test_time_trigger_manager_progress) {
+TEST_F(TestTimeTrigger, test_time_trigger_manager_trigger_ready) {
   using namespace std::chrono;
   using namespace std::chrono_literals;
-  using namespace std::this_thread;
 
+  TimeType current_time = 5.2;
   auto trigger_period_ms = 100ms;
+  auto trigger_period_s = duration<TimeType>(trigger_period_ms).count();
   int triggered = 0;
 
   auto trigger_manager =
     std::make_unique<vt::timetrigger::TimeTriggerManager>();
 
-  // register a trigger every 100 milliseconds
-  auto id = trigger_manager->addTrigger(
-    vt::timing::Timing::getCurrentTime(), trigger_period_ms, [&triggered]{
-      triggered++;
-    });
-  EXPECT_EQ(triggered, 0);
-
-  sleep_for(trigger_period_ms + 10ms);
-  trigger_manager->progress();
+  // trigger every 100 milliseconds, fire immediately
+  auto id = trigger_manager->addTrigger(current_time, trigger_period_ms, [&]{
+    triggered++;
+  }, true);
   EXPECT_EQ(triggered, 1);
+
+  trigger_manager->triggerReady(current_time + trigger_period_s);
+  EXPECT_EQ(triggered, 1);
+
+  trigger_manager->triggerReady(current_time + trigger_period_s + 0.01);
+  EXPECT_EQ(triggered, 2);
 
   // test unregisteration of triggers
   auto prev_triggered = triggered;
   trigger_manager->removeTrigger(id);
-
-  sleep_for(trigger_period_ms);
-  trigger_manager->progress();
-  trigger_manager->progress();
+  trigger_manager->triggerReady(current_time + trigger_period_s + 0.01);
 
   // should not have been triggered again!
   EXPECT_EQ(prev_triggered, triggered);
 }
-
-TEST_F(TestTimeTrigger, test_time_trigger_manager_1) {
-  using namespace std::this_thread;
-  using namespace std::chrono;
-  using namespace std::chrono_literals;
-
-  std::chrono::milliseconds trigger_period = 100ms;
-  double total_time = 2000;
-
-  int triggered = 0;
-
-  auto testTime = std::make_unique<vt::timetrigger::TimeTriggerManager>();
-
-  auto cur_time = vt::timing::Timing::getCurrentTime();
-
-  // register a trigger every 100 milliseconds
-  auto id = testTime->addTrigger(cur_time, trigger_period, [&]{
-    triggered++;
-  }, true);
-
-  do {
-    testTime->progress();
-    sleep_for(5ms);
-  } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
-
-  int tolerance = 15;
-
-  // Allow for some error tolerance in the number of triggers given the period
-  EXPECT_LE(triggered, (total_time / trigger_period.count()) + tolerance);
-  EXPECT_GE(triggered, (total_time / trigger_period.count()) - tolerance);
-
-  fmt::print("triggered={}\n", triggered);
-
-  // test unregisteration of triggers
-
-  auto prev_triggered = triggered;
-  testTime->removeTrigger(id);
-
-  sleep_for(110ms);
-  testTime->progress();
-  testTime->progress();
-
-  // should not have been triggered again!
-  EXPECT_EQ(prev_triggered, triggered);
-}
-
-TEST_F(TestTimeTrigger, test_time_trigger_manager_2) {
-  using namespace std::chrono_literals;
-
-  std::chrono::milliseconds trigger_period[3] = {100ms, 10ms, 1000ms};
-  double total_time = 3000;
-
-  int triggered[3] = { 0, 0, 0 };
-
-  auto testTime = std::make_unique<vt::timetrigger::TimeTriggerManager>();
-  testTime->progress();
-
-  auto cur_time = vt::timing::Timing::getCurrentTime();
-
-  for (int i = 0; i < 3; i++) {
-    testTime->addTrigger(
-      cur_time, trigger_period[i], [&triggered,i]{
-        triggered[i]++;
-      },
-      true
-    );
-  }
-
-  do {
-    testTime->progress();
-  } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
-
-  // tolerance of 80% of expected triggers
-  double tolerance = 0.8;
-
-  // Allow for some error tolerance in the number of triggers given the period
-  for (int i = 0; i < 3; i++) {
-    EXPECT_LE(
-      triggered[i],
-      (total_time / trigger_period[i].count()) + triggered[i] * tolerance
-    );
-    EXPECT_GE(
-      triggered[i],
-      (total_time / trigger_period[i].count()) - triggered[i] * tolerance
-    );
-  }
-
-  for (int i = 0; i < 3; i++) {
-    fmt::print("{}: triggered={}\n", trigger_period[i].count(), triggered[i]);
-  }
-}
-
 
 }}} /* end namespace vt::tests::unit */

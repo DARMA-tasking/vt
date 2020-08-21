@@ -79,7 +79,7 @@ void TimeTriggerManager::triggerReady(TimeType cur_time) {
       }
 
       queue_.pop();
-      t.runAction(timing::Timing::getCurrentTime());
+      t.runAction(cur_time);
       queue_.push(t);
     } else {
       // all other triggers will not be ready if this one isn't

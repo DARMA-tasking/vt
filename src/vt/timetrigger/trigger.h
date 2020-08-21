@@ -83,8 +83,6 @@ struct Trigger {
   /**
    * \brief Get the next trigger time
    *
-   * \param[in] current_time current time
-   *
    * \return the next time this should be triggered
    */
   TimeType nextTriggerTime() const {
