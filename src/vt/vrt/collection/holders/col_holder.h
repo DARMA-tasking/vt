@@ -93,7 +93,7 @@ public:
   bool is_static_ = false;                    /**< Whether is static sized */
   HandlerType map_fn = uninitialized_handler; /**< The map function */
   IndexT max_idx;                             /**< Index range for collection */
-  Holder<ColT,IndexT> holder_;                /**< Inner holder of elements */
+  Holder<ColT, IndexT> holder_;               /**< Inner holder of elements */
 };
 
 }}} /* end namespace vt::vrt::collection */

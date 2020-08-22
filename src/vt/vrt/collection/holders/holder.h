@@ -151,10 +151,8 @@ struct Holder {
    * \brief Perform apply action over all collection elements
    *
    * \param[in] fn apply function for each element
-   *
-   * \return whether it succeeded (always true)
    */
-  bool foreach(FuncApplyType fn);
+  void foreach(FuncApplyType fn);
 
   /**
    * \brief Count number of elements
