@@ -127,15 +127,10 @@ TEST_F(TestMemoryLifetime, test_active_send_serial_lifetime) {
         auto msg = makeMessage<SerialTestMsg>();
         theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, msg);
       }
-      for (int i = 0; i < num_msgs_sent; i++) {
-        auto msg = makeMessage<SerialTestMsg>();
-        auto* rawptr = msg.get();
-        theMsg()->sendMsg<SerialTestMsg, serialHan>(next_node, rawptr);
-      }
     });
 
     EXPECT_EQ(SerialTrackMsg::alloc_count, 0);
-    EXPECT_EQ(local_count, num_msgs_sent*2);
+    EXPECT_EQ(local_count, num_msgs_sent);
   }
 }
 
@@ -151,42 +146,10 @@ TEST_F(TestMemoryLifetime, test_active_bcast_serial_lifetime) {
         auto msg = makeMessage<SerialTestMsg>();
         theMsg()->broadcastMsg<SerialTestMsg, serialHan>(msg);
       }
-      for (int i = 0; i < num_msgs_sent; i++) {
-        auto msg = makeMessage<SerialTestMsg>();
-        auto* rawptr = msg.get();
-        theMsg()->broadcastMsg<SerialTestMsg, serialHan>(rawptr);
-      }
     });
 
     EXPECT_EQ(SerialTrackMsg::alloc_count, 0);
-    EXPECT_EQ(local_count, num_msgs_sent*(num_nodes-1)*2);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Active message send, non-serialized, MsgT*
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_rawptr) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  if (num_nodes > 1) {
-    auto const next_node = this_node + 1 < num_nodes ? this_node + 1 : 0;
-    for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeMessage<NormalTestMsg>();
-      auto* rawptr = msg.get();
-      theMsg()->sendMsg<NormalTestMsg, normalHan>(next_node, rawptr);
-
-      theTerm()->addAction([msg]{
-        // Call event cleanup all pending MPI requests to clear
-        theEvent()->finalize();
-        EXPECT_EQ(envelopeGetRef(msg->env), 1);
-      });
-    }
-
-    theTerm()->addAction([=]{
-      EXPECT_EQ(local_count, num_msgs_sent);
-    });
+    EXPECT_EQ(local_count, num_msgs_sent*(num_nodes-1));
   }
 }
 
@@ -218,31 +181,6 @@ TEST_F(TestMemoryLifetime, test_active_send_normal_lifetime_msgptr) {
 
     theTerm()->addAction([=]{
       EXPECT_EQ(local_count, num_msgs_sent);
-    });
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Active message broadcast, non-serialized, MsgT*
-////////////////////////////////////////////////////////////////////////////////
-TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_rawptr) {
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  if (num_nodes > 1) {
-    for (int i = 0; i < num_msgs_sent; i++) {
-      auto msg = makeMessage<NormalTestMsg>();
-      auto* rawptr = msg.get();
-      theMsg()->broadcastMsg<NormalTestMsg, normalHan>(rawptr);
-
-      theTerm()->addAction([msg]{
-        // Call event cleanup all pending MPI requests to clear
-        theEvent()->finalize();
-        EXPECT_EQ(envelopeGetRef(msg->env), 1);
-      });
-    }
-
-    theTerm()->addAction([=]{
-      EXPECT_EQ(local_count, num_msgs_sent*(num_nodes-1));
     });
   }
 }
