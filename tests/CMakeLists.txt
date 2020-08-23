@@ -14,39 +14,29 @@ set(PROJECT_TEST_UNIT_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 set(PROJECT_TEST_PERF_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/perf)
 set(PROJECT_GTEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/googletest/googletest/include)
 
-set(
-  PROJECT_PERF_TESTS
-  ping_pong
-  memory_checker
-  comm_cost_curve
+function(subdirlist result curdir)
+  file(
+    GLOB children
+    LIST_DIRECTORIES true
+    RELATIVE ${curdir} ${curdir}/*
+  )
+  set(dirlist "")
+  foreach(child ${children})
+    if(IS_DIRECTORY ${curdir}/${child})
+      list(APPEND dirlist ${child})
+    endif()
+  endforeach()
+  set(${result} ${dirlist} PARENT_SCOPE)
+endfunction()
+
+subdirlist(
+  UNIT_TEST_SUBDIRS_LIST
+  ${PROJECT_TEST_UNIT_DIR}
 )
 
-set(
-  UNIT_TEST_SUBDIRS_LIST
-  index
-  active
-  collection
-  collectives
-  epoch
-  pool
-  location
-  sequencer
-  termination
-  mapping
-  group
-  serialization
-  pipe
-  tls
-  timetrigger
-  atomic
-  memory
-  objgroup
-  runtime
-  scheduler
-  lb
-  trace
-  rdma
-  utils
+subdirlist(
+  PROJECT_PERF_TESTS
+  ${PROJECT_TEST_PERF_DIR}
 )
 
 #
