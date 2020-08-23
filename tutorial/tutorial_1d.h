@@ -78,6 +78,11 @@ static inline void activeMessageBroadcast() {
    * system. Every node will include all the nodes that VT has depending on the
    * MPI communicator passed in or the size attained (number of ranks) when
    * executing MPI init directly in non-interoperability mode.
+   *
+   * -- Message Ownership --
+   * As with sendMsg, sending with broadcastMsg relinquishes ownership of
+   * the message. Most calls to VT that supply a message are expected
+   * to relinquish ownership.
    */
 
   if (this_node == 0) {
