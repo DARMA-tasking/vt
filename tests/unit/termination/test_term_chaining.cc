@@ -244,7 +244,6 @@ TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
     EXPECT_EQ(handler_count, 3);
   } else if (num_nodes == 1) {
     vt::runInEpochCollective( chain_reduce_single );
-    epoch = theTerm()->makeEpochCollective();
     EXPECT_EQ(handler_count, 2);
   }
 }
