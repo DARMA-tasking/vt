@@ -95,7 +95,7 @@ void Scatter::scatter(
     nptr-ptr
   );
   vtAssert(nptr == ptr + combined_size, "nptr must match size");
-  auto const& handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
+  auto const& handler = auto_registry::makeAutoHandler<MessageT,f>();
   auto const& this_node = theContext()->getNode();
   scatter_msg->user_han = handler;
   if (this_node != root_node) {

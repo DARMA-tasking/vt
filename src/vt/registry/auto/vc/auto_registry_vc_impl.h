@@ -56,7 +56,7 @@ namespace vt { namespace auto_registry {
 using namespace vrt;
 
 template <typename VrtT, typename MsgT, ActiveVrtTypedFnType<MsgT, VrtT>* f>
-inline HandlerType makeAutoHandlerVC(MsgT* const __attribute__((unused)) msg) {
+inline HandlerType makeAutoHandlerVC() {
   using FunctorT = FunctorAdapter<ActiveVrtTypedFnType<MsgT, VrtT>, f>;
   using ContainerType = AutoActiveVCContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveVCType>;

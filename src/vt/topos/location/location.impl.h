@@ -600,7 +600,7 @@ void EntityLocationCoord<EntityID>::routeMsgHandler(
 ) {
   using auto_registry::HandlerManagerType;
 
-  auto handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
+  auto handler = auto_registry::makeAutoHandler<MessageT,f>();
 
 # if vt_check_enabled(trace_enabled)
   HandlerManagerType::setHandlerTrace(
@@ -620,7 +620,7 @@ void EntityLocationCoord<EntityID>::routeMsgSerializeHandler(
 ) {
   using auto_registry::HandlerManagerType;
 
-  auto handler = auto_registry::makeAutoHandler<MessageT,f>(nullptr);
+  auto handler = auto_registry::makeAutoHandler<MessageT,f>();
 
 # if vt_check_enabled(trace_enabled)
   HandlerManagerType::setHandlerTrace(

@@ -886,7 +886,7 @@ CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::broadcastMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, bool instrument
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,false,instrument);
 }
 
@@ -912,7 +912,7 @@ CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::broadcastMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, bool instrument
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,true,instrument);
 }
 
@@ -925,7 +925,7 @@ messaging::PendingSend CollectionManager::broadcastMsgImpl(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, bool inst
 ) {
   // register the user's handler
-  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,true,inst);
 }
 
@@ -934,7 +934,7 @@ messaging::PendingSend CollectionManager::broadcastMsgImpl(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, bool inst
 ) {
   // register the user's handler
-  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,false,inst);
 }
 
@@ -1259,7 +1259,7 @@ CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::sendMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   return sendNormalMsg<MsgT,ColT>(proxy,msg,h,false);
 }
 
@@ -1284,7 +1284,7 @@ CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::sendMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   return sendNormalMsg<MsgT,ColT>(proxy,msg,h,true);
 }
 
@@ -1292,7 +1292,7 @@ template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 messaging::PendingSend CollectionManager::sendMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   return sendMsgUntypedHandler<MsgT>(proxy,msg,h,false);
 }
 
@@ -1304,7 +1304,7 @@ template <
 messaging::PendingSend CollectionManager::sendMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   return sendMsgUntypedHandler<MsgT>(proxy,msg,h,true);
 }
 
@@ -2818,7 +2818,7 @@ void CollectionManager::elmReadyLB(
   VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
   bool do_sync
 ) {
-  auto lb_han = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto lb_han = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   auto pmsg = promoteMsg(msg);
 
 #if !vt_check_enabled(lblite)

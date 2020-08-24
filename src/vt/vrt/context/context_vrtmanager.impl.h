@@ -144,7 +144,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
   if (theContext()->getWorker() == worker_id_comm_thread) {
     NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
     // register the user's handler
-    HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg);
+    HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>();
     // save the user's handler in the message
     msg->setVrtHandler(han);
     msg->setProxy(toProxy);
@@ -162,7 +162,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
       base_msg, msg_sz, [=](MsgPtr<BaseMsgType> mymsg){
         // Uses special implementation overload not exposed in theMsg..
         MsgT* typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
-        auto sendSerialHan = auto_registry::makeAutoHandler<MsgT,virtualTypedMsgHandler<MsgT>>(nullptr);
+        auto sendSerialHan = auto_registry::makeAutoHandler<MsgT,virtualTypedMsgHandler<MsgT>>();
         SerializedMessenger::sendSerialMsgSendImpl<MsgT, VirtualMessage>(
           typed_msg,
           sendSerialHan,
@@ -314,7 +314,7 @@ messaging::PendingSend VirtualContextManager::sendMsg(
 
   auto const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
   // register the user's handler
-  auto const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>(msg.get());
+  auto const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>();
   // save the user's handler in the message
   msg->setVrtHandler(han);
   msg->setProxy(toProxy);

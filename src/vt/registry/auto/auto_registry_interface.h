@@ -52,7 +52,7 @@
 namespace vt { namespace auto_registry {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-HandlerType makeAutoHandler(MsgT* const msg);
+HandlerType makeAutoHandler();
 
 template <typename T, T value>
 HandlerType makeAutoHandlerParam();

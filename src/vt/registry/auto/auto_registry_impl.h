@@ -86,17 +86,6 @@ inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
 }
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
-inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) {
-  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
-  using ContainerType = AutoActiveContainerType;
-  using RegInfoType = AutoRegInfoType<AutoActiveType>;
-  using FuncType = ActiveFnPtrType;
-  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
-
-  return HandlerManagerType::makeHandler(true, false, RunType::idx);
-}
-
-template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 inline HandlerType makeAutoHandler() {
   using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
   using ContainerType = AutoActiveContainerType;
@@ -150,7 +139,7 @@ void setHandlerTraceNameObjGroup(
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if vt_check_enabled(trace_enabled)
-  auto const handler = makeAutoHandler<MsgT,f>(nullptr);
+  auto const handler = makeAutoHandler<MsgT,f>();
   auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
   trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif

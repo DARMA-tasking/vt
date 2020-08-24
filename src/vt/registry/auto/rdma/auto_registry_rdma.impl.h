@@ -58,7 +58,7 @@ inline AutoActiveRDMAPutType getAutoHandlerRDMAPut(HandlerType const& handler) {
 }
 
 template <typename MsgT, ActiveTypedRDMAPutFnType<MsgT>* f>
-inline HandlerType makeAutoHandlerRDMAPut(MsgT* const msg) {
+inline HandlerType makeAutoHandlerRDMAPut() {
   using FunctorT = FunctorAdapter<ActiveTypedRDMAPutFnType<MsgT>, f>;
   using ContainerType = AutoActiveRDMAPutContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveRDMAPutType>;
@@ -72,7 +72,7 @@ inline AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const& handler) {
 }
 
 template <typename MsgT, ActiveTypedRDMAGetFnType<MsgT>* f>
-inline HandlerType makeAutoHandlerRDMAGet(MsgT* const msg) {
+inline HandlerType makeAutoHandlerRDMAGet() {
   using FunctorT = FunctorAdapter<ActiveTypedRDMAGetFnType<MsgT>, f>;
   using ContainerType = AutoActiveRDMAGetContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveRDMAGetType>;
