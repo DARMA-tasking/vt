@@ -138,7 +138,7 @@ detail::ReduceStamp Reduce::reduceImmediate(
   }
   auto cur_id = id == detail::ReduceStamp{} ? generateNextID() : id;
 
-  auto const han = auto_registry::makeAutoHandler<MsgT,f>(msg);
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
   msg->combine_handler_ = han;
   msg->reduce_root_ = root;
   msg->reduce_id_ = detail::ReduceIDImpl{cur_id, scope_};

@@ -107,7 +107,7 @@ TEST_F(TestSerialMessenger, test_serial_messenger_1) {
     if (my_node == 0) {
       auto msg = makeMessage<MyDataMsg>();
       msg->init();
-      auto han = auto_registry::makeAutoHandler<MyDataMsg,myDataMsgHan>(nullptr);
+      auto han = auto_registry::makeAutoHandler<MyDataMsg,myDataMsgHan>();
       SerializedMessenger::sendSerialMsg<MyDataMsg>(1, msg.get(), han);
     }
   }
@@ -120,7 +120,7 @@ TEST_F(TestSerialMessenger, test_serial_messenger_bcast_1) {
     if (my_node == 0) {
       auto msg = makeMessage<MyDataMsg>();
       msg->init();
-      auto han = auto_registry::makeAutoHandler<MyDataMsg,myDataMsgHan>(nullptr);
+      auto han = auto_registry::makeAutoHandler<MyDataMsg,myDataMsgHan>();
       SerializedMessenger::broadcastSerialMsg<MyDataMsg>(msg.get(), han);
     }
   }

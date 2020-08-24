@@ -66,7 +66,7 @@ RDMA_HandlerType State::setRDMAGetFn(
 
   RDMA_HandlerType const handler = makeRdmaHandler(RDMA_TypeType::Get);
 
-  auto const reg_han = auto_registry::makeAutoHandlerRDMAGet<MsgT,f>(nullptr);
+  auto const reg_han = auto_registry::makeAutoHandlerRDMAGet<MsgT,f>();
 
   if (any_tag) {
     vtAssert(
@@ -102,7 +102,7 @@ RDMA_HandlerType State::setRDMAPutFn(
     tag, handle, print_bool(any_tag)
   );
 
-  auto const reg_han = auto_registry::makeAutoHandlerRDMAPut<MsgT,f>(nullptr);
+  auto const reg_han = auto_registry::makeAutoHandlerRDMAPut<MsgT,f>();
 
   if (any_tag) {
     vtAssert(

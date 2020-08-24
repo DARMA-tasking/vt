@@ -59,7 +59,7 @@ using namespace ::vt::vrt::collection;
 AutoActiveCollectionType getAutoHandlerCollection(HandlerType const& handler);
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
-HandlerType makeAutoHandlerCollection(MsgT* const msg);
+HandlerType makeAutoHandlerCollection();
 
 AutoActiveCollectionMemType getAutoHandlerCollectionMem(
   HandlerType const& handler
@@ -68,7 +68,7 @@ AutoActiveCollectionMemType getAutoHandlerCollectionMem(
 template <
   typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
 >
-HandlerType makeAutoHandlerCollectionMem(MsgT* const msg);
+HandlerType makeAutoHandlerCollectionMem();
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 void setHandlerTraceNameColl(std::string const& name, std::string const& parent = "");

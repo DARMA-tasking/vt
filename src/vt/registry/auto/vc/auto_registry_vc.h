@@ -59,7 +59,7 @@ using namespace vrt;
 AutoActiveVCType getAutoHandlerVC(HandlerType const& handler);
 
 template <typename VrtT, typename MsgT, ActiveVrtTypedFnType<MsgT, VrtT>* f>
-HandlerType makeAutoHandlerVC(MsgT* const msg);
+HandlerType makeAutoHandlerVC();
 
 }} // end namespace vt::auto_registry
 

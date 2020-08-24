@@ -58,10 +58,10 @@ AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const& handler);
 AutoActiveRDMAPutType getAutoHandlerRDMAPut(HandlerType const& handler);
 
 template <typename MsgT, ActiveTypedRDMAPutFnType<MsgT>* f>
-HandlerType makeAutoHandlerRDMAPut(MsgT* const msg);
+HandlerType makeAutoHandlerRDMAPut();
 
 template <typename MsgT, ActiveTypedRDMAGetFnType<MsgT>* f>
-HandlerType makeAutoHandlerRDMAGet(MsgT* const msg);
+HandlerType makeAutoHandlerRDMAGet();
 
 }} /* end namespace vt::auto_registry */
 
