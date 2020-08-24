@@ -48,14 +48,15 @@
 namespace vt { namespace timetrigger {
 
 int TimeTriggerManager::addTrigger(
-  std::chrono::milliseconds period, ActionType action, bool fire_immediately
+  TimeType current_time, std::chrono::milliseconds period,
+  ActionType action, bool fire_immediately
 ) {
   int const cur_id = next_trigger_id_++;
   Trigger trigger{period, action, cur_id};
   if (fire_immediately) {
-    trigger.runAction();
+    trigger.runAction(current_time);
   } else {
-    trigger.setLastTriggerTime(timing::Timing::getCurrentTime());
+    trigger.setLastTriggerTime(current_time);
   }
   queue_.push(trigger);
   return cur_id;
@@ -67,7 +68,7 @@ void TimeTriggerManager::removeTrigger(int id) {
 
 void TimeTriggerManager::triggerReady(TimeType cur_time) {
   while (not queue_.empty()) {
-    if (queue_.top().nextTriggerTime() < cur_time) {
+    if (queue_.top().ready(cur_time)) {
       auto t = queue_.top();
 
       auto iter = removed_.find(t.getID());
@@ -78,7 +79,7 @@ void TimeTriggerManager::triggerReady(TimeType cur_time) {
       }
 
       queue_.pop();
-      t.runAction();
+      t.runAction(cur_time);
       queue_.push(t);
     } else {
       // all other triggers will not be ready if this one isn't

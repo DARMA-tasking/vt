@@ -57,97 +57,88 @@ namespace vt { namespace tests { namespace unit {
 
 using TestTimeTrigger = TestParallelHarness;
 
-TEST_F(TestTimeTrigger, test_time_trigger_1) {
-  using namespace std::this_thread;
+TEST_F(TestTimeTrigger, test_time_trigger) {
   using namespace std::chrono;
   using namespace std::chrono_literals;
 
-  std::chrono::milliseconds trigger_period = 100ms;
-  double total_time = 2000;
-
+  auto trigger_period_ms = 100ms;
+  auto trigger_period_s = duration<TimeType>(trigger_period_ms).count();
+  int trigger_id = 42;
   int triggered = 0;
 
-  auto testTime = std::make_unique<vt::timetrigger::TimeTriggerManager>();
-  testTime->progress();
+  vt::timetrigger::Trigger trigger{trigger_period_ms, [&triggered](){
+    triggered++;
+  }, trigger_id};
 
-  auto cur_time = vt::timing::Timing::getCurrentTime();
+  EXPECT_EQ(trigger.getID(), trigger_id);
+  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime(), 0.0);
+  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime(), 0.0 + trigger_period_s);
+  EXPECT_EQ(triggered, 0);
 
-  // register a trigger every 100 milliseconds
-  auto id = testTime->addTrigger(trigger_period, [&]{
+  TimeType start_time = 4.0;
+  trigger.runAction(start_time);
+
+  EXPECT_DOUBLE_EQ(trigger.getLastTriggerTime(), start_time);
+  EXPECT_DOUBLE_EQ(trigger.nextTriggerTime(), start_time + trigger_period_s);
+  EXPECT_EQ(trigger.ready(start_time + trigger_period_s), false);
+  EXPECT_EQ(trigger.ready(start_time + trigger_period_s + 0.001), true);
+  EXPECT_EQ(triggered, 1);
+}
+
+TEST_F(TestTimeTrigger, test_time_trigger_manager_add_trigger) {
+  using namespace std::chrono_literals;
+
+  TimeType current_time = 5.2;
+  auto trigger_period_ms = 100ms;
+  int triggered = 0;
+
+  auto trigger_manager =
+    std::make_unique<vt::timetrigger::TimeTriggerManager>();
+
+  // trigger every 100 milliseconds
+  trigger_manager->addTrigger(current_time, trigger_period_ms, [&]{
+    triggered++;
+  });
+  EXPECT_EQ(triggered, 0);
+
+  // trigger every 100 milliseconds, fire immediately
+  trigger_manager->addTrigger(current_time, trigger_period_ms, [&]{
     triggered++;
   }, true);
+  EXPECT_EQ(triggered, 1);
+}
 
-  do {
-    testTime->progress();
-    sleep_for(5ms);
-  } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
+TEST_F(TestTimeTrigger, test_time_trigger_manager_trigger_ready) {
+  using namespace std::chrono;
+  using namespace std::chrono_literals;
 
-  int tolerance = 15;
+  TimeType current_time = 5.2;
+  auto trigger_period_ms = 100ms;
+  auto trigger_period_s = duration<TimeType>(trigger_period_ms).count();
+  int triggered = 0;
 
-  // Allow for some error tolerance in the number of triggers given the period
-  EXPECT_LE(triggered, (total_time / trigger_period.count()) + tolerance);
-  EXPECT_GE(triggered, (total_time / trigger_period.count()) - tolerance);
+  auto trigger_manager =
+    std::make_unique<vt::timetrigger::TimeTriggerManager>();
 
-  fmt::print("triggered={}\n", triggered);
+  // trigger every 100 milliseconds, fire immediately
+  auto id = trigger_manager->addTrigger(current_time, trigger_period_ms, [&]{
+    triggered++;
+  }, true);
+  EXPECT_EQ(triggered, 1);
+
+  trigger_manager->triggerReady(current_time + trigger_period_s);
+  EXPECT_EQ(triggered, 1);
+
+  trigger_manager->triggerReady(current_time + trigger_period_s + 0.01);
+  EXPECT_EQ(triggered, 2);
 
   // test unregisteration of triggers
-
   auto prev_triggered = triggered;
-  testTime->removeTrigger(id);
-
-  sleep_for(110ms);
-  testTime->progress();
-  testTime->progress();
+  trigger_manager->removeTrigger(id);
+  trigger_manager->triggerReady(current_time + trigger_period_s + 0.01);
 
   // should not have been triggered again!
   EXPECT_EQ(prev_triggered, triggered);
 }
-
-TEST_F(TestTimeTrigger, test_time_trigger_2) {
-  using namespace std::chrono_literals;
-
-  std::chrono::milliseconds trigger_period[3] = {100ms, 10ms, 1000ms};
-  double total_time = 3000;
-
-  int triggered[3] = { 0, 0, 0 };
-
-  auto testTime = std::make_unique<vt::timetrigger::TimeTriggerManager>();
-  testTime->progress();
-
-  auto cur_time = vt::timing::Timing::getCurrentTime();
-
-  for (int i = 0; i < 3; i++) {
-    testTime->addTrigger(
-      trigger_period[i], [&triggered,i]{
-        triggered[i]++;
-      },
-      true
-    );
-  }
-
-  do {
-    testTime->progress();
-  } while (vt::timing::Timing::getCurrentTime() - cur_time < total_time/1000);
-
-  // tolerance of 80% of expected triggers
-  double tolerance = 0.8;
-
-  // Allow for some error tolerance in the number of triggers given the period
-  for (int i = 0; i < 3; i++) {
-    EXPECT_LE(
-      triggered[i],
-      (total_time / trigger_period[i].count()) + triggered[i] * tolerance
-    );
-    EXPECT_GE(
-      triggered[i],
-      (total_time / trigger_period[i].count()) - triggered[i] * tolerance
-    );
-  }
-
-  for (int i = 0; i < 3; i++) {
-    fmt::print("{}: triggered={}\n", trigger_period[i].count(), triggered[i]);
-  }
-}
-
 
 }}} /* end namespace vt::tests::unit */

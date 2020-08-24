@@ -79,6 +79,7 @@ struct TimeTriggerManager
   /**
    * \brief Register a time-based trigger with a specific period
    *
+   * \param[in] current_time current time
    * \param[in] period time period to trigger action
    * \param[in] action action to trigger
    * \param[in] fire_immediately whether to wait the period before triggering
@@ -87,8 +88,8 @@ struct TimeTriggerManager
    * \return the trigger id (can be used for removal)
    */
   int addTrigger(
-    std::chrono::milliseconds period, ActionType action,
-    bool fire_immediately = false
+    TimeType current_time, std::chrono::milliseconds period,
+    ActionType action, bool fire_immediately = false
   );
 
   /**
