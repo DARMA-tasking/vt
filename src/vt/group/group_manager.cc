@@ -111,10 +111,9 @@ GroupType GroupManager::newLocalGroup(
   auto const& group = GroupIDBuilder::createGroupID(
     new_id, this_node, is_collective, is_static
   );
-  auto const& size = in_region->getSize();
   auto group_action = std::bind(action, group);
   initializeLocalGroup(
-    group, std::move(in_region), is_static, group_action, size
+    group, std::move(in_region), is_static, group_action
   );
   return group;
 }
@@ -228,9 +227,10 @@ void GroupManager::initializeLocalGroupCollective(
 }
 
 void GroupManager::initializeLocalGroup(
-  GroupType const& group, RegionPtrType in_region, bool const& is_static,
-  ActionType action, RegionType::SizeType const& group_size
+  GroupType const& group, RegionPtrType in_region, bool const& is_static, ActionType action
 ) {
+
+  auto const& group_size = in_region->getSize();
   auto group_info = std::make_unique<GroupInfoType>(
     info_rooted_local_cons, std::move(in_region), action, group, group_size
   );

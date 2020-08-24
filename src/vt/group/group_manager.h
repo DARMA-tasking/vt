@@ -243,11 +243,9 @@ private:
    * \param[in] in_region list of nodes in group
    * \param[in] is_static whether the group is static after creation
    * \param[in] action action to execute when group is finished construction
-   * \param[in] group_size the number of nodes in the group
    */
   void initializeLocalGroup(
-    GroupType const& group, RegionPtrType in_region, bool const& is_static,
-    ActionType action, RegionType::SizeType const& group_size
+    GroupType const& group, RegionPtrType in_region, bool const& is_static, ActionType action
   );
 
   /**
