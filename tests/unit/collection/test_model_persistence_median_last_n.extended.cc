@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                 test_model_persistence_median_last_n.extended
+//                     test_model_persistence_median_last_n
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -56,7 +56,7 @@ namespace vt { namespace tests { namespace unit {
 
 using TestModelPersistenceMedianLastN = TestHarness;
 
-static constexpr int32_t const num_phases = 4;
+static int32_t num_phases = 1;
 
 using vt::vrt::collection::balance::ElementIDType;
 using vt::vrt::collection::balance::LoadModel;
@@ -83,7 +83,9 @@ struct StubModel : LoadModel {
 
   TimeType getWork(ElementIDType id, PhaseOffset phase) override {
     const auto index = -1 * phase.phases - 1;
-    return proc_load_->at(index).at(id);
+
+    // Most recent phase will be at the end of vector
+    return (proc_load_->rbegin() + index)->at(id);
   }
 
   virtual ObjectIterator begin() override {
@@ -102,24 +104,54 @@ private:
 };
 
 TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) {
-  std::vector<LoadMapType> proc_loads = {
+  constexpr int32_t num_total_phases = 7;
+
+  auto test_model =
+    std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), 4);
+
+  std::vector<LoadMapType> proc_loads(num_total_phases);
+
+  test_model->setLoads(&proc_loads, nullptr, nullptr);
+
+  // Work loads to be added in each test iteration
+  std::vector<LoadMapType> load_holder{
     LoadMapType{
       {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}},
     LoadMapType{
       {ElementIDType{1}, TimeType{4}}, {ElementIDType{2}, TimeType{10}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{50}}},
+      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{100}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{100}}}};
+      {ElementIDType{1}, TimeType{50}}, {ElementIDType{2}, TimeType{40}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{2}}, {ElementIDType{2}, TimeType{50}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{20}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{100}}, {ElementIDType{2}, TimeType{10}}},
+  };
 
-  auto test_model =
-    std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), num_phases);
+  std::array<std::pair<TimeType, TimeType>, num_total_phases> expected_medians{
+    std::make_pair(TimeType{10}, TimeType{40}), // iter 0 results
+    std::make_pair(TimeType{7},  TimeType{25}), // iter 1 results
+    std::make_pair(TimeType{10}, TimeType{40}), // iter 2 results
+    std::make_pair(TimeType{15}, TimeType{40}), // iter 3 results
+    std::make_pair(TimeType{12}, TimeType{40}), // iter 4 results
+    std::make_pair(TimeType{10}, TimeType{40}), // iter 5 results
+    std::make_pair(TimeType{55}, TimeType{30})  // iter 6 results
+  };
 
-  test_model->setLoads(&proc_loads, nullptr, nullptr);
+  for (auto iter = 0; iter < num_total_phases; ++iter) {
+    proc_loads[iter] = load_holder[iter];
+    ++num_phases;
 
-  for (auto&& obj : *test_model) {
-    auto work_val = test_model->getWork(obj, PhaseOffset{});
-    EXPECT_EQ(work_val, obj == 1 ? TimeType{15} : TimeType{45});
+    for (const auto& obj : *test_model) {
+      auto work_val = test_model->getWork(obj, PhaseOffset{});
+      EXPECT_EQ(
+        work_val,
+        obj == 1 ? expected_medians[iter].first : expected_medians[iter].second)
+        << fmt::format("Test failed on iteration {}", iter);
+    }
   }
 }
 
