@@ -56,7 +56,7 @@ namespace vt { namespace tests { namespace unit {
 
 using TestModelPersistenceMedianLastN = TestHarness;
 
-static int32_t num_phases = 1;
+static int32_t num_phases = 0;
 
 using vt::vrt::collection::balance::ElementIDType;
 using vt::vrt::collection::balance::LoadModel;
