@@ -43,7 +43,6 @@
 */
 
 #include <vt/transport.h>
-#include <vt/vrt/collection/balance/model/composed_model.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
 #include <vt/vrt/collection/balance/model/naive_persistence.h>
 
@@ -55,61 +54,79 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestCol : vt::Collection<TestCol, vt::Index1D> {};
-
 using TestModelNaivePersistence = TestParallelHarness;
 
-static constexpr int32_t const num_elms = 64;
-static constexpr TimeType const expected_work_val = 10;
-
-using vt::vrt::collection::balance::ComposedModel;
 using vt::vrt::collection::balance::ElementIDType;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::NaivePersistence;
 using vt::vrt::collection::balance::PhaseOffset;
+using vt::vrt::collection::balance::LoadMapType;
+using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::CommMapType;
+using vt::vrt::collection::balance::ObjectIterator;
 
-struct ConstantTestModel : ComposedModel {
+static int32_t getIndexFromPhase(int32_t phase) {
+  return std::max(0, -1 * phase - 1);
+}
 
-  ConstantTestModel(std::shared_ptr<LoadModel> in_base)
-    : vt::vrt::collection::balance::ComposedModel(in_base) {}
+struct StubModel : LoadModel {
 
-  TimeType getWork(ElementIDType, PhaseOffset) override { return expected_work_val; }
+  StubModel() = default;
+  virtual ~StubModel() = default;
+
+  void setLoads(
+    std::vector<LoadMapType> const* proc_load,
+    std::vector<SubphaseLoadMapType> const*,
+    std::vector<CommMapType> const*) override {
+    proc_load_ = proc_load;
+  }
+
+  void updateLoads(PhaseType) override {}
+
+  TimeType getWork(ElementIDType id, PhaseOffset phase) override {
+    EXPECT_LE(phase.phases, -1);
+    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id);
+  }
+
+  virtual ObjectIterator begin() override {
+    return ObjectIterator(proc_load_->back().begin());
+  }
+  virtual ObjectIterator end() override {
+    return ObjectIterator(proc_load_->back().end());
+  }
+
+  // Not used in this test
+  virtual int getNumObjects() override { return 1; }
+  virtual int getNumCompletedPhases() override { return 1; }
+  virtual int getNumSubphases() override { return 1; }
+
+private:
+  std::vector<LoadMapType> const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
-  // We must have more or equal number of elements than nodes for this test to
-  // work properly
-  EXPECT_GE(num_elms, vt::theContext()->getNumNodes());
+    std::vector<LoadMapType> proc_loads = {
+    LoadMapType{
+      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{4}}, {ElementIDType{2}, TimeType{10}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{50}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{100}}}};
 
-  auto range = vt::Index1D(num_elms);
-  auto proxy = vt::theCollection()->constructCollective<TestCol>(
-    range, [](vt::Index1D){ return std::make_unique<TestCol>(); });
+  auto base_model = std::make_shared<StubModel>();
+  base_model->setLoads(&proc_loads, nullptr, nullptr);
 
-  // Get the base model, assert it's valid
-  auto base = theLBManager()->getBaseLoadModel();
-  EXPECT_NE(base, nullptr);
+  auto test_model =
+    std::make_shared<NaivePersistence>(base_model);
 
-  // Create a new NaivePersistence model
-  auto test_model = std::make_shared<NaivePersistence>(
-    std::make_shared<ConstantTestModel>(base));
-
-  // Set the new model
-  theLBManager()->setLoadModel(test_model);
-
-  // Go to the next phase.
-  runInEpochCollective(
-    []{ vt::theCollection()->startPhaseCollective(nullptr); });
-
-  // LB control flow means that there will be no recorded phase for
-  // this to even look up objects in, causing failure
-#if vt_check_enabled(lblite)
-  auto model = theLBManager()->getLoadModel();
-  EXPECT_NE(model, nullptr);
-  for (auto&& obj : *model) {
-    auto work_val = model->getWork(obj, PhaseOffset{});
-    EXPECT_EQ(work_val, expected_work_val);
+  for (auto&& obj : *test_model) {
+    for (auto phase : {0, -1, -2, -3, -4}) {
+      auto work_val = test_model->getWork(obj, PhaseOffset{phase, 1});
+      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj));
+    }
   }
-#endif
 }
 
 }}} // end namespace vt::tests::unit
