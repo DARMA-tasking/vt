@@ -56,6 +56,8 @@ namespace vt { namespace tests { namespace unit {
 using namespace vt;
 using namespace vt::tests::unit;
 
+struct TestColMsg;
+
 struct CallbackMsg : vt::Message {
   CallbackMsg() = default;
   explicit CallbackMsg(Callback<> in_cb) : cb_(in_cb) { }
@@ -89,11 +91,9 @@ struct TestCallbackBcastCollection : TestParallelHarness {
 struct TestCol : vt::Collection<TestCol, vt::Index1D> {
   TestCol() = default;
 
-  virtual ~TestCol() {
-    // fmt::print(
-    //   "{}: destroying {}: val={}\n",
-    //   theContext()->getNode(), this->getIndex(), val
-    // );
+  virtual ~TestCol() = default;
+
+  void check(TestColMsg* msg) {
     if (other) {
       EXPECT_EQ(val, 29);
     } else {
@@ -128,20 +128,27 @@ static void cb3(DataMsg* msg, TestCol* col) {
   col->val = 13;
 }
 
+struct TestColMsg : ::vt::CollectionMessage<TestCol> {};
+
 TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
   auto const& this_node = theContext()->getNode();
+  auto const& range = Index1D(32);
+  auto proxy = theCollection()->construct<TestCol>(range);
 
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<TestCol>(range);
-    auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb1>(proxy);
-    auto nmsg = makeMessage<DataMsg>(8,9,10);
-    cb.send(nmsg.get());
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb1>(proxy);
+      auto nmsg = makeMessage<DataMsg>(8,9,10);
+      cb.send(nmsg.get());
+    }
+  });
 
-    theTerm()->addAction([=]{
-      proxy.destroy();
-    });
-  }
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
+    }
+  });
 }
 
 TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
@@ -152,18 +159,24 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
     return;
   }
 
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<TestCol>(range);
-    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-    auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb2>(proxy);
-    auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+  auto const& range = Index1D(32);
+  auto proxy = theCollection()->construct<TestCol>(range);
 
-    theTerm()->addAction([=]{
-      proxy.destroy();
-    });
-  }
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+      auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb2>(proxy);
+      auto msg = makeMessage<CallbackDataMsg>(cb);
+      theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+    }
+  });
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
+    }
+  });
 }
 
 TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
@@ -174,18 +187,24 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
     return;
   }
 
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<TestCol>(range);
-    auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
-    auto cb = theCB()->makeBcast<TestCol,DataMsg,cb3>(proxy);
-    auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+  auto const& range = Index1D(32);
+  auto proxy = theCollection()->construct<TestCol>(range);
 
-    theTerm()->addAction([=]{
-      proxy.destroy();
-    });
-  }
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
+      auto cb = theCB()->makeBcast<TestCol,DataMsg,cb3>(proxy);
+      auto msg = makeMessage<CallbackDataMsg>(cb);
+      theMsg()->sendMsg<CallbackDataMsg, testHandler>(next, msg.get());
+    }
+  });
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      auto msg = makeMessage<TestColMsg>();
+      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
+    }
+  });
 }
 
 }}} // end namespace vt::tests::unit
