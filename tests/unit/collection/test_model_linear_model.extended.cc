@@ -54,7 +54,7 @@
 
 namespace vt { namespace tests { namespace unit {
 
-using TestLinearModel = TestParallelHarness;
+using TestLinearModel = TestHarness;
 
 static constexpr int32_t const num_phases = 4;
 

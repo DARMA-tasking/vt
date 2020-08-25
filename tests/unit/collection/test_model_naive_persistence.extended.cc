@@ -54,7 +54,7 @@
 
 namespace vt { namespace tests { namespace unit {
 
-using TestModelNaivePersistence = TestParallelHarness;
+using TestModelNaivePersistence = TestHarness;
 
 using vt::vrt::collection::balance::ElementIDType;
 using vt::vrt::collection::balance::LoadModel;
