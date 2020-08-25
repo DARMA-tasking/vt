@@ -182,10 +182,16 @@ struct ReadLBSpec {
   using ParamMapType = std::map<std::string, std::string>;
 
   /**
-   * \brief Prepare the spec for reading, if it exists.
+   * \brief Opens and reads the spec file, if it exists.
    *
-   * This will also ensure the spec is loaded.
-   * This method MUST be called before the other methods.
+   * This method MUST be called before the other access methods.
+   *
+   * \param[in] filename The path to the file to read.
+   *
+   * \pre A different spec file is not currently open.
+   * \pre The filename refers to a valid spec file.
+   *
+   * \return True if the spec was opened and can be used.
    */
   static bool openSpec(std::string const& filename);
 

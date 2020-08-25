@@ -64,14 +64,14 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /*static*/ bool ReadLBSpec::read_complete_ = false;
 
 /*static*/ bool ReadLBSpec::openSpec(std::string const& filename) {
-  // Ignore attempt to open same spec.
-  if (not open_filename_.empty() and open_filename_ == filename) {
-    return true;
-  }
-
   // No-op if no file specified. Can't be used to clear.
   if (filename.empty()) {
     return false;
+  }
+
+  // Ignore attempt to open same spec.
+  if (not open_filename_.empty() and open_filename_ == filename) {
+    return true;
   }
 
   vtAssert(
@@ -332,7 +332,7 @@ auto excluded_str = [](SpecIndex idx) -> std::string {
   std::stringstream ss;
 
   if (open_filename_.empty()) {
-    return "";
+    return "[No LB Spec open]";
   }
 
   if (not ReadLBSpec::getExactEntries().empty()) {
