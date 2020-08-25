@@ -49,16 +49,14 @@
 
 #include <string>
 
-namespace vt { namespace config {
-
-inline arguments::AppConfig const* getConfig();
-
-}} /* end namespace vt::config */
+namespace vt { namespace debug {
+arguments::AppConfig const* preConfig();
+}} /* end namespace vt::debug */
 
 namespace vt { namespace debug {
 
 inline bool colorizeOutput() {
-  return vt::config::getConfig()->colorize_output;
+  return vt::debug::preConfig()->colorize_output;
 }
 
 inline std::string green()    { return colorizeOutput() ? "\033[32m"   : ""; }
@@ -86,16 +84,6 @@ inline std::string vtPre() {
 inline std::string proc(vt::NodeType const& node)  {
   return blue() + "[" + std::to_string(node) + "]" + reset();
 }
-
-// static bool ttyi(FILE* stream) {
-//   struct stat stream_stat;
-//   if (fstat(fileno(stream), &stream_stat) == 0) {
-//     if (stream_stat.st_mode & S_IFREG) {
-//       return true;
-//     }
-//   }
-//   return false;
-// }
 
 }} /* end namespace vt::debug */
 

@@ -57,41 +57,44 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/*static*/ std::string ReadLBSpec::filename = {};
+/*static*/ std::string ReadLBSpec::open_filename_ = {};
 /*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_mod_ = {};
 /*static*/ typename ReadLBSpec::SpecMapType ReadLBSpec::spec_exact_ = {};
 /*static*/ std::vector<SpecIndex> ReadLBSpec::spec_prec_ = {};
 /*static*/ bool ReadLBSpec::read_complete_ = false;
 
-/*static*/ bool ReadLBSpec::hasSpec() {
-  if (read_complete_) {
-    return true;
-  }
-
-  auto const file_name = theConfig()->vt_lb_file_name;
-  if (file_name == "") {
+/*static*/ bool ReadLBSpec::openSpec(std::string const& filename) {
+  // No-op if no file specified. Can't be used to clear.
+  if (filename.empty()) {
     return false;
   }
 
-  bool good = openFile(file_name);
-  if (not good) {
-    auto str =
-      fmt::format("--vt_lb_file_name={} is not a valid file", file_name);
+  // Ignore attempt to open same spec.
+  if (not open_filename_.empty() and open_filename_ == filename) {
+    return true;
+  }
+
+  vtAssert(
+    open_filename_.empty(),
+    "Spec already opened. Use clear first to load again."
+  );
+
+  // Ensure file can be opened.
+  std::ifstream file(filename);
+  if (not file.good()) {
+    auto str = fmt::format("Unable to open spec file: {}", filename);
     vtAbort(str);
   }
-  return good;
-}
 
-/*static*/ bool ReadLBSpec::openFile(std::string const name) {
-  std::ifstream file(name);
-  filename = name;
-  return file.good();
+  // Remember loaded file - multiple calls to same file are idempotent.
+  open_filename_ = filename;
+
+  readFile(filename);
+
+  return true;
 }
 
 /*static*/ LBType ReadLBSpec::getLB(SpecIndex const& idx) {
-  if (not read_complete_) {
-    readFile();
-  }
   auto const lb = entry(idx);
   if (lb) {
     return lb->getLB();
@@ -133,11 +136,7 @@ int eatWhitespace(std::ifstream& file) {
   return file.eof() ? 0 : file.peek();
 }
 
-/*static*/ void ReadLBSpec::readFile() {
-  if (read_complete_) {
-    return;
-  }
-
+/*static*/ void ReadLBSpec::readFile(std::string const& filename) {
   std::ifstream file(filename);
   vtAssert(file.good(), "must be valid");
 
@@ -245,7 +244,7 @@ int eatWhitespace(std::ifstream& file) {
 
 /*static*/ void ReadLBSpec::clear() {
   read_complete_ = false;
-  filename = "";
+  open_filename_ = "";
   spec_mod_.clear();
   spec_exact_.clear();
   spec_prec_.clear();
@@ -332,8 +331,9 @@ auto excluded_str = [](SpecIndex idx) -> std::string {
 /*static*/ std::string ReadLBSpec::toString() {
   std::stringstream ss;
 
-  ReadLBSpec::openFile(theConfig()->vt_lb_file_name);
-  ReadLBSpec::readFile();
+  if (open_filename_.empty()) {
+    return "[No LB Spec open]";
+  }
 
   if (not ReadLBSpec::getExactEntries().empty()) {
     ss << fmt::format("{}\tExact specification lines:\n", vt::debug::vtPre());

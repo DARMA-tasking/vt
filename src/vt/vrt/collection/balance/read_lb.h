@@ -181,10 +181,20 @@ struct ReadLBSpec {
   using SpecMapType  = std::map<SpecIndex,SpecEntry>;
   using ParamMapType = std::map<std::string, std::string>;
 
-  static bool openFile(std::string const name = "");
-  static void readFile();
+  /**
+   * \brief Opens and reads the spec file, if it exists.
+   *
+   * This method MUST be called before the other access methods.
+   *
+   * \param[in] filename The path to the file to read.
+   *
+   * \pre A different spec file is not currently open.
+   * \pre The filename refers to a valid spec file.
+   *
+   * \return True if the spec was opened and can be used.
+   */
+  static bool openSpec(std::string const& filename);
 
-  static bool hasSpec();
   static SpecIndex numEntries() { return spec_mod_.size() + spec_exact_.size(); }
   static SpecEntry* entry(SpecIndex const& idx);
   static LBType getLB(SpecIndex const& idx);
@@ -192,12 +202,14 @@ struct ReadLBSpec {
   static SpecMapType getExactEntries() {return spec_exact_; };
   static ParamMapType parseParams(std::vector<std::string> params);
   static SpecEntry makeSpecFromParams(std::string params);
-  static void clear();
   static std::string toString();
+  static void clear();
 
 private:
+  static void readFile(std::string const& filename);
+
   static bool read_complete_;
-  static std::string filename;
+  static std::string open_filename_;
   static SpecMapType spec_mod_;
   static SpecMapType spec_exact_;
   static std::vector<SpecIndex> spec_prec_;

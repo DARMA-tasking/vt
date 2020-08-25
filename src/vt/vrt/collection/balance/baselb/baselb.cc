@@ -121,7 +121,7 @@ void BaseLB::importProcessorData(
 void BaseLB::getArgs(PhaseType phase) {
   using namespace balance;
 
-  bool has_spec = ReadLBSpec::hasSpec();
+  bool has_spec = ReadLBSpec::openSpec(theConfig()->vt_lb_file_name);
   if (has_spec) {
     auto spec = ReadLBSpec::entry(phase);
     if (spec) {

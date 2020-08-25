@@ -45,11 +45,11 @@
 #include <vt/transport.h>
 #include <vt/vrt/collection/balance/read_lb.h>
 
-#include "test_parallel_harness.h"
+#include "test_harness.h"
 
 namespace vt { namespace tests { namespace unit {
 
-using TestLBReader = TestParallelHarness;
+using TestLBReader = TestHarness;
 
 TEST_F(TestLBReader, test_lb_read_1) {
 
@@ -64,9 +64,9 @@ TEST_F(TestLBReader, test_lb_read_1) {
   using Spec       = vt::vrt::collection::balance::ReadLBSpec;
   using SpecIdx    = vt::vrt::collection::balance::SpecIndex;
   using SpecLBType = vt::vrt::collection::balance::LBType;
+
   Spec::clear();
-  EXPECT_EQ(Spec::openFile(file_name), true);
-  Spec::readFile();
+  Spec::openSpec(file_name);
 
   EXPECT_EQ(Spec::numEntries(), 3);
   EXPECT_EQ(Spec::getExactEntries().size(), 2);
@@ -95,7 +95,6 @@ TEST_F(TestLBReader, test_lb_read_1) {
     }
   }
 
-  theConfig()->colorize_output = false;
   std::string expected_spec =
     "vt: \tExact specification lines:\n"
     "vt: \tRun `NoLB` on phase 0\n"
@@ -121,8 +120,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
   using SpecIdx    = vt::vrt::collection::balance::SpecIndex;
   using SpecLBType = vt::vrt::collection::balance::LBType;
   Spec::clear();
-  Spec::openFile(file_name);
-  Spec::readFile();
+  Spec::openSpec(file_name);
 
   EXPECT_EQ(Spec::numEntries(), 5);
   for (SpecIdx i = 0; i < 121; i++) {
@@ -188,7 +186,6 @@ TEST_F(TestLBReader, test_lb_read_2) {
     }
   }
 
-  theConfig()->colorize_output = false;
   std::string expected_spec =
     "vt: \tExact specification lines:\n"
     "vt: \tRun `NoLB` on phase 0\n"
