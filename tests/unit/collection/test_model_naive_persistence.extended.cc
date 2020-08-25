@@ -115,11 +115,10 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
     LoadMapType{
       {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{100}}}};
 
-  auto base_model = std::make_shared<StubModel>();
-  base_model->setLoads(&proc_loads, nullptr, nullptr);
-
   auto test_model =
-    std::make_shared<NaivePersistence>(base_model);
+    std::make_shared<NaivePersistence>(std::make_shared<StubModel>());
+
+  test_model->setLoads(&proc_loads, nullptr, nullptr);
 
   for (auto&& obj : *test_model) {
     for (auto phase : {0, -1, -2, -3, -4}) {

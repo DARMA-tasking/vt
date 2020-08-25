@@ -112,11 +112,10 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
     LoadMapType{
       {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{10}}}};
 
-  auto base_model = std::make_shared<StubModel>();
-  base_model->setLoads(&proc_loads, nullptr, nullptr);
-
   auto test_model =
-    std::make_shared<LinearModel>(base_model, num_phases);
+    std::make_shared<LinearModel>(std::make_shared<StubModel>(), num_phases);
+
+  test_model->setLoads(&proc_loads, nullptr, nullptr);
 
   for (auto&& obj : *test_model) {
     auto work_val = test_model->getWork(obj, PhaseOffset{});

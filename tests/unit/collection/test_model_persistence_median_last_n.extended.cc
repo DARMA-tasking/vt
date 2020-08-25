@@ -112,11 +112,10 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
     LoadMapType{
       {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{100}}}};
 
-  auto base_model = std::make_shared<StubModel>();
-  base_model->setLoads(&proc_loads, nullptr, nullptr);
-
   auto test_model =
-    std::make_shared<PersistenceMedianLastN>(base_model, num_phases);
+    std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), num_phases);
+
+  test_model->setLoads(&proc_loads, nullptr, nullptr);
 
   for (auto&& obj : *test_model) {
     auto work_val = test_model->getWork(obj, PhaseOffset{});

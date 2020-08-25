@@ -112,11 +112,10 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
     LoadMapType{
       {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{5}}}};
 
-  auto base_model = std::make_shared<StubModel>();
-  base_model->setLoads(&proc_loads, nullptr, nullptr);
-
   auto test_model =
-    std::make_shared<MultiplePhases>(base_model, 4);
+    std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);
+
+  test_model->setLoads(&proc_loads, nullptr, nullptr);
 
   for (auto&& obj : *test_model) {
     auto work_val = test_model->getWork(obj, PhaseOffset{});
