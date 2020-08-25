@@ -43,7 +43,6 @@
 */
 
 #include <vt/transport.h>
-#include <vt/vrt/collection/balance/model/composed_model.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
 #include <vt/vrt/collection/balance/model/persistence_median_last_n.h>
 
@@ -55,68 +54,74 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestCol : vt::Collection<TestCol, vt::Index1D> {};
-
 using TestModelPersistenceMedianLastN = TestParallelHarness;
 
-static constexpr int32_t const num_elms = 64;
-static constexpr int32_t const num_iter = 4;
-static constexpr std::array<TimeType, num_iter> const work_arr = {
-  10, 4, 20, 10};
+static constexpr int32_t const num_phases = 4;
 
-using vt::vrt::collection::balance::ComposedModel;
 using vt::vrt::collection::balance::ElementIDType;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::PersistenceMedianLastN;
 using vt::vrt::collection::balance::PhaseOffset;
+using vt::vrt::collection::balance::LoadMapType;
+using vt::vrt::collection::balance::SubphaseLoadMapType;
+using vt::vrt::collection::balance::CommMapType;
+using vt::vrt::collection::balance::ObjectIterator;
 
-struct ConstantTestModel : ComposedModel {
+struct StubModel : LoadModel {
 
-  ConstantTestModel(std::shared_ptr<LoadModel> in_base)
-    : vt::vrt::collection::balance::ComposedModel(in_base) {}
+  StubModel() = default;
+  virtual ~StubModel() = default;
+
+  void setLoads(
+    std::vector<LoadMapType> const* proc_load,
+    std::vector<SubphaseLoadMapType> const*,
+    std::vector<CommMapType> const*) override {
+    proc_load_ = proc_load;
+  }
+
+  void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDType id, PhaseOffset phase) override {
-    return work_arr.at(-1 * phase.phases - 1);
+    const auto index = -1 * phase.phases - 1;
+    return proc_load_->at(index).at(id);
   }
+
+  virtual ObjectIterator begin() override {
+    return ObjectIterator(proc_load_->back().begin());
+  }
+  virtual ObjectIterator end() override {
+    return ObjectIterator(proc_load_->back().end());
+  }
+
+  virtual int getNumObjects() override { return 2; }
+  virtual int getNumCompletedPhases() override { return num_phases; }
+  virtual int getNumSubphases() override { return 1; }
+
+private:
+  std::vector<LoadMapType> const* proc_load_ = nullptr;
 };
 
-TEST_F(
-  TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) {
-  // We must have more or equal number of elements than nodes for this test to
-  // work properly
-  EXPECT_GE(num_elms, vt::theContext()->getNumNodes());
+TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) {
+  std::vector<LoadMapType> proc_loads = {
+    LoadMapType{
+      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{4}}, {ElementIDType{2}, TimeType{10}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{50}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{100}}}};
 
-  auto range = vt::Index1D(num_elms);
-  auto proxy = vt::theCollection()->constructCollective<TestCol>(
-    range, [](vt::Index1D){ return std::make_unique<TestCol>(); });
+  auto base_model = std::make_shared<StubModel>();
+  base_model->setLoads(&proc_loads, nullptr, nullptr);
 
-  // Get the base model, assert it's valid
-  auto base = theLBManager()->getBaseLoadModel();
-  EXPECT_NE(base, nullptr);
+  auto test_model =
+    std::make_shared<PersistenceMedianLastN>(base_model, num_phases);
 
-  // Create a new PersistenceMedianLastN model
-  auto test_model = std::make_shared<PersistenceMedianLastN>(
-    std::make_shared<ConstantTestModel>(base), num_iter);
-
-  // Set the new model
-  theLBManager()->setLoadModel(test_model);
-
-  // Generate 'num_iter' phases
-  runInEpochCollective([phases = num_iter]{
-    for (int i = 0; i < phases; ++i)
-      vt::theCollection()->startPhaseCollective(nullptr);
-  });
-
-  // LB control flow means that there will be no recorded phase for
-  // this to even look up objects in, causing failure
-#if vt_check_enabled(lblite)
-  auto model = theLBManager()->getLoadModel();
-  EXPECT_NE(model, nullptr);
-  for (auto&& obj : *model) {
-    auto work_val = model->getWork(obj, PhaseOffset{});
-    EXPECT_EQ(work_val, TimeType{10});
+  for (auto&& obj : *test_model) {
+    auto work_val = test_model->getWork(obj, PhaseOffset{});
+    EXPECT_EQ(work_val, obj == 1 ? TimeType{15} : TimeType{45});
   }
-#endif
 }
 
 }}} // end namespace vt::tests::unit
