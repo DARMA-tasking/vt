@@ -508,6 +508,184 @@ struct PrintParam {
   }
 };
 
+struct MergeCol : vt::Collection<MergeCol,vt::Index2D> {
+  MergeCol() = default;
+  MergeCol(NodeType num, double off) : offset( off ) {
+    idx = getIndex();
+  }
+
+  struct DataMsg : vt::CollectionMessage<MergeCol> {
+    DataMsg() = default;
+    explicit DataMsg(double x_) : x(x_) { }
+    double x = 0.0;
+  };
+
+  struct GhostMsg : vt::CollectionMessage<MergeCol > {
+    GhostMsg() = default;
+    explicit GhostMsg(vt::CollectionProxy<MergeCol, vt::Index2D> proxy_)
+      : proxy(proxy_)
+    {}
+    vt::CollectionProxy<MergeCol, vt::Index2D> proxy;
+  };
+
+  void initData(DataMsg* msg) {
+    EXPECT_EQ(msg->x, calcVal(1,idx));
+    data = msg->x + offset;
+  }
+
+  void ghost(GhostMsg* msg) {
+    msg->proxy(getIndex()).template send<DataMsg, &MergeCol::interact>(data);
+  }
+
+  void interact(DataMsg* msg ) {
+    data *= msg->x;
+  }
+
+  void check(DataMsg *msg) {
+    EXPECT_EQ(msg->x, data);
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    vt::Collection<MergeCol,vt::Index2D>::serialize(s);
+    s | idx | offset | data;
+  }
+
+private:
+
+  vt::Index2D idx;
+  double offset = 0;
+  double data = 0.0;
+};
+
+struct MergeObjGroup
+{
+  MergeObjGroup() = default;
+
+  void startup() {
+    // Produce on global epoch so on a single node it does not terminate early
+    vt::theTerm()->produce(vt::term::any_epoch_sentinel);
+  }
+
+  void shutdown() {
+    // Consume on global epoch to match the startup produce
+    vt::theTerm()->consume(vt::term::any_epoch_sentinel);
+  }
+
+  void makeVT() {
+    frontend_proxy = vt::theObjGroup()->makeCollective(this);
+  }
+
+  void makeColl(NodeType num_nodes, int k, double offset) {
+    auto const node = theContext()->getNode();
+    auto range = vt::Index2D(static_cast<int>(num_nodes),k);
+    backend_proxy = vt::theCollection()->constructCollective<MergeCol>(
+      range, [=](vt::Index2D idx) {
+        return std::make_unique<MergeCol>(num_nodes, offset);
+      }
+    );
+
+    chains_ = std::make_unique<vt::messaging::CollectionChainSet<vt::Index2D>>();
+
+    for (int i = 0; i < k; ++i) {
+      chains_->addIndex(vt::Index2D(static_cast<int>(node), i));
+    }
+  }
+
+  void startUpdate() {
+    epoch_ = vt::theTerm()->makeEpochCollective();
+    vt::theMsg()->pushEpoch(epoch_);
+  }
+
+  void initData() {
+    chains_->nextStep("initData", [=](vt::Index2D idx) {
+      auto x = calcVal(1,idx);
+      return backend_proxy(idx).template send<MergeCol::DataMsg, &MergeCol::initData>(x);
+    });
+  }
+
+  void interact( MergeObjGroup &other ) {
+    auto other_proxy = other.backend_proxy;
+    vt::messaging::CollectionChainSet<vt::Index2D>::mergeStepCollective( "interact",
+                                                                        *chains_,
+                                                                        *other.chains_,
+                                                           [=]( vt::Index2D idx) {
+      return backend_proxy(idx).template send<MergeCol::GhostMsg, &MergeCol::ghost>(other_proxy);
+    });
+  }
+
+  void check( double offset, double other_offset, bool is_left ) {
+    chains_->nextStep("initData", [=](vt::Index2D idx) {
+      auto x = calcVal(1,idx) + offset;
+      if ( !is_left )
+        x *= calcVal(1,idx) + other_offset;
+      return backend_proxy(idx).template send<MergeCol::DataMsg, &MergeCol::check>(x);
+    });
+  }
+
+  void finishUpdate() {
+    chains_->phaseDone();
+    vt::theMsg()->popEpoch(epoch_);
+    vt::theTerm()->finishedEpoch(epoch_);
+
+    vt::runSchedulerThrough(epoch_);
+  }
+
+  private:
+
+  // The current epoch for a given update
+  vt::EpochType epoch_ = vt::no_epoch;
+  // The backend collection proxy for managing the over decomposed workers
+  vt::CollectionProxy<MergeCol, vt::Index2D> backend_proxy = {};
+  // The proxy for this objgroup
+  vt::objgroup::proxy::Proxy<MergeObjGroup> frontend_proxy = {};
+  // The current collection chains that are being managed here
+  std::unique_ptr<vt::messaging::CollectionChainSet<vt::Index2D>> chains_ = nullptr;
+};
+
+TEST_P(TestTermDepSendChain, test_term_dep_send_chain_merge) {
+  auto const& num_nodes = theContext()->getNumNodes();
+  auto const iter = 50;
+  auto const& tup = GetParam();
+  auto const use_ds = std::get<0>(tup);
+  auto const k = std::get<1>(tup);
+
+  vt::theConfig()->vt_term_rooted_use_wave = !use_ds;
+  vt::theConfig()->vt_term_rooted_use_ds = use_ds;
+
+  auto obj_a = std::make_unique<MergeObjGroup>();
+  obj_a->startup();
+  obj_a->makeVT();
+  obj_a->makeColl(num_nodes,k, 0.0);
+
+  auto obj_b = std::make_unique<MergeObjGroup>();
+  obj_b->startup();
+  obj_b->makeVT();
+  obj_b->makeColl(num_nodes,k, 1000.0);
+
+  // Must have barrier here so op4Impl does not bounce early (invalid proxy)!
+  vt::theCollective()->barrier();
+
+  for (int t = 0; t < iter; t++) {
+    obj_a->startUpdate();
+    obj_a->initData();
+
+    obj_b->startUpdate();
+    obj_b->initData();
+
+    obj_a->interact( *obj_b );
+
+    obj_a->check(0.0, 1000.0, true);
+    obj_b->check(0.0, 1000.0, false);
+
+    obj_b->finishUpdate();
+    obj_a->finishUpdate();
+  }
+
+  obj_a->shutdown();
+  obj_b->shutdown();
+}
+
 // Test Wave-epoch with a narrower set of parameters since large k is very slow
 INSTANTIATE_TEST_SUITE_P(
   DepSendChainInputExplodeWave, TestTermDepSendChain,

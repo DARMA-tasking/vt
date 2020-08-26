@@ -68,7 +68,7 @@ namespace vt { namespace messaging {
  */
 template <class Index>
 class CollectionChainSet final {
- public:
+  public:
   CollectionChainSet() = default;
   CollectionChainSet(const CollectionChainSet&) = delete;
   CollectionChainSet(CollectionChainSet&&) = delete;
@@ -81,7 +81,9 @@ class CollectionChainSet final {
    * \param[in] idx the index to add
    */
   void addIndex(Index idx) {
-    vtAssert(chains_.find(idx) == chains_.end(), "Cannot add an already-present chain");
+    vtAssert(
+      chains_.find(idx) == chains_.end(),
+      "Cannot add an already-present chain");
     chains_[idx] = DependentSendChain();
   }
 
@@ -98,16 +100,17 @@ class CollectionChainSet final {
   void removeIndex(Index idx) {
     auto iter = chains_.find(idx);
     vtAssert(iter != chains_.end(), "Cannot remove a non-present chain");
-    vtAssert(iter->second.isTerminated(), "Cannot remove a chain with pending work");
+    vtAssert(
+      iter->second.isTerminated(), "Cannot remove a chain with pending work");
 
     chains_.erase(iter);
   }
 
   /**
-   * \brief The next step to execute on all the chains resident in this
+   * \brief The next step to execute on all the chain indices in this
    * collection chain set
    *
-   * Goes through every resident chain and enqueues the action at the end of the
+   * Goes through every chain index and enqueues the action at the end of the
    * current chain when the preceding steps terminate. Creates a new rooted
    * epoch for this step to contain/track completion of all the causally related
    * messages.
@@ -117,15 +120,15 @@ class CollectionChainSet final {
    * \c PendingSend
    */
   void nextStep(
-    std::string const& label, std::function<PendingSend(Index)> step_action
-  ) {
-    for (auto &entry : chains_) {
+    std::string const& label, std::function<PendingSend(Index)> step_action) {
+    for (auto& entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
 
       // The parameter `true` here tells VT to use an efficient rooted DS-epoch
       // by default. This can still be overridden by command-line flags
-      EpochType new_epoch = theTerm()->makeEpochRooted(label, term::UseDS{true});
+      EpochType new_epoch =
+        theTerm()->makeEpochRooted(label, term::UseDS{true});
       vt::theMsg()->pushEpoch(new_epoch);
 
       chain.add(new_epoch, step_action(idx));
@@ -136,8 +139,13 @@ class CollectionChainSet final {
   }
 
   /**
-   * \brief The next step to execute on all the chains resident in this
+   * \brief The next step to execute on all the chain indices in this
    * collection chain set
+   *
+   * Goes through every chain index and enqueues the action at the end of the
+   * current chain when the preceding steps terminate. Creates a new rooted
+   * epoch for this step to contain/track completion of all the causally related
+   * messages.
    *
    * \param[in] step_action The action to perform as a function that returns a
    * \c PendingSend
@@ -146,45 +154,24 @@ class CollectionChainSet final {
     return nextStep("", step_action);
   }
 
-#if 0
-  void nextStep(std::function<Action(Index)> step_action) {
-    for (auto &entry : chains_) {
-      auto& idx = entry.first;
-      auto& chain = entry.second;
-      chain.add(step_action(idx));
-    }
-  }
-
-  void nextStepConcurrent(std::vector<std::function<PendingSend(Index)>> step_actions) {
-    for (auto &entry : chains_) {
-      auto& idx = entry.first;
-      auto& chain = entry.second;
-      chain.add(step_actions[0](idx));
-      for (int i = 1; i < step_actions.size(); ++i)
-        chain.addConcurrent(step_actions[i](idx));
-    }
-  }
-#endif
-
   /**
-   * \brief The next collective step to execute across all resident elements
-   * across all nodes.
+   * \brief The next collective step to execute for each index that is added
+   * to the CollectionChainSet on each node.
    *
    * Should be used for steps with internal recursive communication and global
    * inter-dependence. Creates a global (on the communicator), collective epoch
    * to track all the casually related messages and collectively wait for
-   * termination of all of the recursive sends..
+   * termination of all of the recursive sends.
    *
    * \param[in] label Label for the epoch created for debugging
    * \param[in] step_action the next step to execute, returning a \c PendingSend
    */
   void nextStepCollective(
-    std::string const& label, std::function<PendingSend(Index)> step_action
-  ) {
+    std::string const& label, std::function<PendingSend(Index)> step_action) {
     auto epoch = theTerm()->makeEpochCollective(label);
     vt::theMsg()->pushEpoch(epoch);
 
-    for (auto &entry : chains_) {
+    for (auto& entry : chains_) {
       auto& idx = entry.first;
       auto& chain = entry.second;
       chain.add(epoch, step_action(idx));
@@ -195,8 +182,13 @@ class CollectionChainSet final {
   }
 
   /**
-   * \brief The next collective step to execute across all resident elements
-   * across all nodes.
+   * \brief The next collective step to execute for each index that is added
+   * to the CollectionChainSet on each node.
+   *
+   * Should be used for steps with internal recursive communication and global
+   * inter-dependence. Creates a global (on the communicator), collective epoch
+   * to track all the casually related messages and collectively wait for
+   * termination of all of the recursive sends.
    *
    * \param[in] step_action the next step to execute, returning a \c PendingSend
    */
@@ -205,11 +197,73 @@ class CollectionChainSet final {
   }
 
   /**
+   * \brief The next collective step of both CollectionChainSets
+   * to execute over all shared indices of the CollectionChainSets over all
+   * nodes.
+   *
+   * This function ensures that the step is dependent on the previous step
+   * of both chainsets a and b. Additionally any additional steps in each
+   * chainset will occur after the merged step.
+   *
+   * \pre Each index in CollectionChainset a must exist in CollectionChainset b
+   *
+   * \param[in] a the first chainset
+   * \param[in] b the second chainset
+   * \param[in] step_action the next step to be executed, dependent on the
+   *            previous step of chainsets a and b
+   */
+  static void mergeStepCollective(
+    CollectionChainSet& a, CollectionChainSet& b,
+    std::function<PendingSend(Index)> step_action) {
+    mergeStepCollective("", a, b, step_action);
+  }
+
+  /**
+   * \brief The next collective step of both CollectionChainSets
+   * to execute over all shared indices of the CollectionChainSets over all
+   * nodes.
+   *
+   * This function ensures that the step is dependent on the previous step
+   * of both chainsets a and b. Additionally any additional steps in each
+   * chainset will occur after the merged step.
+   *
+   * \pre Each index in CollectionChainset a must exist in CollectionChainset b
+   *
+   * \param[in] label the label for the step
+   * \param[in] a the first chainset
+   * \param[in] b the second chainset
+   * \param[in] step_action the next step to be executed, dependent on the
+   *            previous step of chainsets a and b
+   */
+  static void mergeStepCollective(
+    std::string const& label, CollectionChainSet& a, CollectionChainSet& b,
+    std::function<PendingSend(Index)> step_action) {
+    auto epoch = theTerm()->makeEpochCollective(label);
+    vt::theMsg()->pushEpoch(epoch);
+
+    for (auto& entry : a.chains_) {
+      auto& idx = entry.first;
+      auto& chaina = entry.second;
+      auto chainb_pos = b.chains_.find(entry.first);
+      vtAssert(
+        chainb_pos != b.chains_.end(),
+        fmt::format("index {} must be present in chainset b", entry.first));
+
+      auto& chainb = chainb_pos->second;
+      DependentSendChain::mergeChainStep(
+        chaina, chainb, epoch, step_action(idx));
+    }
+
+    vt::theMsg()->popEpoch(epoch);
+    theTerm()->finishedEpoch(epoch);
+  }
+
+  /**
    * \brief Indicate that the current phase is complete. Resets the state on
    * each \c DependentSendChain
    */
   void phaseDone() {
-    for (auto &entry : chains_) {
+    for (auto& entry : chains_) {
       entry.second.done();
     }
   }
@@ -219,7 +273,7 @@ class CollectionChainSet final {
    */
   std::unordered_set<Index> getSet() {
     std::unordered_set<Index> index_set;
-    for (auto &entry : chains_) {
+    for (auto& entry : chains_) {
       index_set.emplace(entry.first);
     }
     return index_set;
@@ -228,13 +282,13 @@ class CollectionChainSet final {
   /**
    * \brief Run a lambda immediately on each element in the index set
    */
-  void foreach(std::function<void(Index)> fn) {
-    for (auto &entry : chains_) {
+  void foreach (std::function<void(Index)> fn) {
+    for (auto& entry : chains_) {
       fn(entry.first);
     }
   }
 
- private:
+  private:
   std::unordered_map<Index, DependentSendChain> chains_;
 };
 

@@ -59,6 +59,7 @@
 #include "vt/messaging/message.h"
 #include "vt/collective/tree/tree.h"
 #include "vt/utils/hash/hash_tuple.h"
+#include "vt/messaging/pending_send.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -80,6 +81,7 @@ namespace vt { namespace collective { namespace reduce {
 struct Reduce : virtual collective::tree::Tree {
   using ReduceStateType = ReduceState;
   using ReduceNumType   = typename ReduceStateType::ReduceNumType;
+  using PendingSendType = messaging::PendingSend;
 
   /**
    * \internal \brief Construct a new reducer instance
@@ -107,6 +109,23 @@ struct Reduce : virtual collective::tree::Tree {
   detail::ReduceStamp generateNextID();
 
   /**
+   * \brief Reduce a message up the tree, possibly delayed through a pending send
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the pending send corresponding to the reduce
+   */
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  PendingSendType reduce(
+    NodeType root, MsgT* const msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType num_contrib = 1
+  );
+
+  /**
    * \brief Reduce a message up the tree
    *
    * \param[in] root the root node where the final handler provides the result
@@ -117,7 +136,7 @@ struct Reduce : virtual collective::tree::Tree {
    * \return the next reduction stamp
    */
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-  detail::ReduceStamp reduce(
+  detail::ReduceStamp reduceImmediate(
     NodeType root, MsgT* const msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType num_contrib = 1
@@ -141,7 +160,31 @@ struct Reduce : virtual collective::tree::Tree {
       MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
     >
   >
-  detail::ReduceStamp reduce(
+  PendingSendType reduce(
+    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  );
+
+  /**
+   * \brief Reduce a message up the tree
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] cb the callback to trigger on the root node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
+  template <
+    typename OpT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
+      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
+    >
+  >
+  detail::ReduceStamp reduceImmediate(
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
@@ -163,7 +206,29 @@ struct Reduce : virtual collective::tree::Tree {
     typename MsgT,
     ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
   >
-  detail::ReduceStamp reduce(
+  PendingSendType reduce(
+    NodeType const& root, MsgT* msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  );
+
+  /**
+   * \brief Reduce a message up the tree with a target function on the root node
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   * \param[in] id the reduction stamp (optional), provided if out-of-order
+   * \param[in] num_contrib number of expected contributions from this node
+   *
+   * \return the next reduction stamp
+   */
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+  >
+  detail::ReduceStamp reduceImmediate(
     NodeType const& root, MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1

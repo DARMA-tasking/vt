@@ -63,6 +63,14 @@ struct TestTermChaining : TestParallelHarness {
   static vt::messaging::DependentSendChain chain;
   static vt::EpochType epoch;
 
+  struct ChainReduceMsg : vt::collective::ReduceNoneMsg {
+    ChainReduceMsg(int in_num)
+      : num(in_num)
+    {}
+
+    int num = 0;
+  };
+
   static void test_handler_reflector(TestMsg* msg) {
     fmt::print("reflector run\n");
 
@@ -98,6 +106,27 @@ struct TestTermChaining : TestParallelHarness {
     handler_count = 4;
   }
 
+  static void test_handler_set(TestMsg* msg) {
+    handler_count = 1;
+  }
+
+  static void test_handler_reduce(ChainReduceMsg *msg) {
+    EXPECT_EQ(theContext()->getNode(), 0);
+    EXPECT_EQ(handler_count, 1);
+    auto n = theContext()->getNumNodes();
+    EXPECT_EQ(msg->num, n * (n - 1)/2);
+    handler_count = 2;
+  }
+
+  static void test_handler_bcast(TestMsg* msg) {
+    if (theContext()->getNode() == 0) {
+      EXPECT_EQ(handler_count, 2);
+    } else {
+      EXPECT_EQ(handler_count, 12);
+    }
+    handler_count = 3;
+  }
+
   static void start_chain() {
     EpochType epoch1 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch1);
@@ -119,6 +148,53 @@ struct TestTermChaining : TestParallelHarness {
 
     chain.done();
   }
+
+  static void chain_reduce() {
+    auto node = theContext()->getNode();
+
+    if (0 == node) {
+      EpochType epoch1 = theTerm()->makeEpochRooted();
+      vt::theMsg()->pushEpoch(epoch1);
+      auto msg = makeMessage<TestMsg>();
+      chain.add(
+        epoch1, theMsg()->sendMsg<TestMsg, test_handler_reflector>(1, msg.get()));
+      vt::theMsg()->popEpoch(epoch1);
+      vt::theTerm()->finishedEpoch(epoch1);
+    }
+
+    EpochType epoch2 = theTerm()->makeEpochCollective();
+    vt::theMsg()->pushEpoch(epoch2);
+    auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
+    auto cb = vt::theCB()->makeSend<ChainReduceMsg, test_handler_reduce>( 0 );
+    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(0, msg2.get(), cb));
+    vt::theMsg()->popEpoch(epoch2);
+    vt::theTerm()->finishedEpoch(epoch2);
+
+    // Broadcast from both nodes, bcast wont send to itself
+    EpochType epoch3 = theTerm()->makeEpochRooted();
+    vt::theMsg()->pushEpoch(epoch3);
+    auto msg3 = makeMessage<TestMsg>();
+    chain.add(
+      epoch3, theMsg()->broadcastMsg<TestMsg, test_handler_bcast>(msg3.get()));
+    vt::theMsg()->popEpoch(epoch3);
+    vt::theTerm()->finishedEpoch(epoch3);
+
+    chain.done();
+  }
+
+  static void chain_reduce_single() {
+    handler_count = 1;
+
+    EpochType epoch2 = theTerm()->makeEpochRooted();
+    vt::theMsg()->pushEpoch(epoch2);
+    auto msg2 = makeMessage<ChainReduceMsg>(theContext()->getNode());
+    auto cb = vt::theCB()->makeSend<ChainReduceMsg, test_handler_reduce>( 0 );
+    chain.add(epoch2, theCollective()->global()->reduce< vt::collective::None >(0, msg2.get(), cb));
+    vt::theMsg()->popEpoch(epoch2);
+    vt::theTerm()->finishedEpoch(epoch2);
+
+    chain.done();
+  }
 };
 
 /*static*/ int32_t TestTermChaining::handler_count = 0;
@@ -133,6 +209,8 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     return;
 
   epoch = theTerm()->makeEpochCollective();
+
+  handler_count = 0;
 
   fmt::print("global collective epoch {:x}\n", epoch);
 
@@ -152,6 +230,21 @@ TEST_F(TestTermChaining, test_termination_chaining_1) {
     theMsg()->popEpoch(epoch);
     vt::runSchedulerThrough(epoch);
     EXPECT_EQ(handler_count, 13);
+  }
+}
+
+TEST_F(TestTermChaining, test_termination_chaining_collective_1) {
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  chain = vt::messaging::DependentSendChain{};
+  handler_count = 0;
+
+  if (num_nodes == 2) {
+    vt::runInEpochCollective( chain_reduce );
+    EXPECT_EQ(handler_count, 3);
+  } else if (num_nodes == 1) {
+    vt::runInEpochCollective( chain_reduce_single );
+    EXPECT_EQ(handler_count, 2);
   }
 }
 

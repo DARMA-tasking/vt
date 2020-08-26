@@ -20,7 +20,7 @@ set(TOP_LEVEL_SUBDIRS
   activefn
   # Add single-directory components
   context event handler parameterization sequence termination
-  scheduler worker standalone runtime trace timing demangle
+  scheduler worker standalone runtime trace timing demangle rdmahandle
 )
 set(
   PROJECT_SUBDIRS_LIST

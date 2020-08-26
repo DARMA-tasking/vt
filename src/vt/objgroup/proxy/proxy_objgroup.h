@@ -58,6 +58,7 @@
 #include "vt/utils/static_checks/msg_ptr.h"
 #include "vt/rdmahandle/handle.fwd.h"
 #include "vt/rdmahandle/handle_set.fwd.h"
+#include "vt/messaging/pending_send.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -75,6 +76,8 @@ namespace vt { namespace objgroup { namespace proxy {
 template <typename ObjT>
 struct Proxy {
   using ReduceStamp = collective::reduce::ReduceStamp;
+
+  using PendingSendType = messaging::PendingSend;
 
   Proxy() = default;
   Proxy(Proxy const&) = default;
@@ -126,6 +129,8 @@ public:
    * \param[in] msg the reduction message
    * \param[in] cb the callback to trigger after the reduction is finished
    * \param[in] stamp the stamp to identify the reduction
+   *
+   * \return the PendingSend associated with the reduce
    */
   template <
     typename OpT = collective::None,
@@ -135,7 +140,7 @@ public:
       MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
     >
   >
-  void reduce(
+  PendingSendType reduce(
     MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
   ) const;
 
@@ -145,6 +150,8 @@ public:
    *
    * \param[in] msg the reduction message
    * \param[in] stamp the stamp to identify the reduction
+   *
+   * \return the PendingSend associated with the reduce
    */
   template <
     typename OpT = collective::None,
@@ -153,7 +160,7 @@ public:
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
     ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
   >
-  void reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
+  PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
 
   /**
    * \brief Reduce over the objgroup instance on each node with target specified
@@ -161,13 +168,15 @@ public:
    *
    * \param[in] msg the reduction message
    * \param[in] stamp the stamp to identify the reduction
+   *
+   * \return the PendingSend associated with the reduce
    */
   template <
     typename MsgPtrT,
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
     ActiveTypedFnType<MsgT> *f
   >
-  void reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
+  PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
 
   /**
    * \brief Get raw pointer to the local object instance residing on the current

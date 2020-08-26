@@ -47,6 +47,22 @@
 
 namespace vt { namespace messaging {
 
+PendingSend::PendingSend(EpochType ep, EpochActionType const& in_action)
+  : epoch_action_{in_action}, epoch_produced_(ep) {
+  if (epoch_produced_ != no_epoch) {
+    theTerm()->produce(epoch_produced_, 1);
+  }
+}
+
+PendingSend::PendingSend(PendingSend&& in) noexcept
+  : msg_size_(std::move(in.msg_size_)),
+    epoch_produced_(std::move(in.epoch_produced_))
+{
+  std::swap(msg_, in.msg_);
+  std::swap(epoch_action_, in.epoch_action_);
+  std::swap(send_action_, in.send_action_);
+}
+
 void PendingSend::sendMsg() {
   if (send_action_ == nullptr) {
     theMsg()->doMessageSend(msg_, msg_size_);
@@ -58,7 +74,7 @@ void PendingSend::sendMsg() {
   send_action_ = nullptr;
 }
 
-EpochType PendingSend::getProduceEpoch() const {
+EpochType PendingSend::getProduceEpochFromMsg() const {
   if (msg_ == nullptr or envelopeIsTerm(msg_->env) or
       not envelopeIsEpochType(msg_->env)) {
     return no_epoch;
@@ -67,9 +83,8 @@ EpochType PendingSend::getProduceEpoch() const {
   return envelopeGetEpoch(msg_->env);
 }
 
-
 void PendingSend::produceMsg() {
-  epoch_produced_ = getProduceEpoch();
+  epoch_produced_ = getProduceEpochFromMsg();
   if (epoch_produced_ != no_epoch) {
     theTerm()->produce(epoch_produced_, 1);
   }
@@ -78,6 +93,18 @@ void PendingSend::produceMsg() {
 void PendingSend::consumeMsg() {
   if (epoch_produced_ != no_epoch) {
     theTerm()->consume(epoch_produced_, 1);
+  }
+}
+
+void PendingSend::release() {
+  bool send_msg = msg_ != nullptr || send_action_ != nullptr;
+  vtAssert(!send_msg || !epoch_action_, "cannot have both a message and epoch action");
+  if (send_msg) {
+    sendMsg();
+  } else if ( epoch_action_ ) {
+    epoch_action_();
+    epoch_action_ = {};
+    consumeMsg();
   }
 }
 

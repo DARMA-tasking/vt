@@ -80,7 +80,7 @@ void Reduce::reduceRootRecv(MsgT* msg) {
 }
 
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
-detail::ReduceStamp Reduce::reduce(
+Reduce::PendingSendType Reduce::reduce(
   NodeType const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
   ReduceNumType const& num_contrib
 ) {
@@ -88,18 +88,48 @@ detail::ReduceStamp Reduce::reduce(
   return reduce<MsgT,f>(root,msg,id,num_contrib);
 }
 
+template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
+detail::ReduceStamp Reduce::reduceImmediate(
+  NodeType const& root, MsgT* msg, Callback<MsgT> cb, detail::ReduceStamp id,
+  ReduceNumType const& num_contrib
+) {
+  msg->setCallback(cb);
+  return reduceImmediate<MsgT,f>(root,msg,id,num_contrib);
+}
+
 template <
   typename OpT, typename FunctorT, typename MsgT, ActiveTypedFnType<MsgT> *f
 >
-detail::ReduceStamp Reduce::reduce(
+Reduce::PendingSendType Reduce::reduce(
   NodeType const& root, MsgT* msg, detail::ReduceStamp id,
   ReduceNumType const& num_contrib
 ) {
   return reduce<MsgT,f>(root,msg,id,num_contrib);
 }
 
+template <
+  typename OpT, typename FunctorT, typename MsgT, ActiveTypedFnType<MsgT> *f
+>
+detail::ReduceStamp Reduce::reduceImmediate(
+  NodeType const& root, MsgT* msg, detail::ReduceStamp id,
+  ReduceNumType const& num_contrib
+) {
+  return reduceImmediate<MsgT,f>(root,msg,id,num_contrib);
+}
+
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
-detail::ReduceStamp Reduce::reduce(
+Reduce::PendingSendType Reduce::reduce(
+  NodeType root, MsgT* const msg, detail::ReduceStamp id,
+  ReduceNumType num_contrib
+) {
+  auto msg_ptr = promoteMsg(msg);
+  return PendingSendType{theMsg()->getEpochContextMsg(msg_ptr), [=](){
+                           reduceImmediate<MsgT, f>(root, msg_ptr.get(), id, num_contrib);
+                         } };
+}
+
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+detail::ReduceStamp Reduce::reduceImmediate(
   NodeType root, MsgT* const msg, detail::ReduceStamp id,
   ReduceNumType num_contrib
 ) {
