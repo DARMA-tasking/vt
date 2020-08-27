@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                     test_model_persistence_median_last_n
+//                  test_model_persistence_median_last_n.nompi
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -48,7 +48,7 @@
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
+#include "test_harness.h"
 
 #include <memory>
 

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                     test_model_multiple_phases.extended
+//                    test_model_naive_persistence.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,26 +44,30 @@
 
 #include <vt/transport.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
-#include <vt/vrt/collection/balance/model/multiple_phases.h>
+#include <vt/vrt/collection/balance/model/naive_persistence.h>
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
+#include "test_harness.h"
 
 #include <memory>
 
 namespace vt { namespace tests { namespace unit {
 
-using TestModelMultiplePhases = TestHarness;
+using TestModelNaivePersistence = TestHarness;
 
 using vt::vrt::collection::balance::ElementIDType;
 using vt::vrt::collection::balance::LoadModel;
-using vt::vrt::collection::balance::MultiplePhases;
+using vt::vrt::collection::balance::NaivePersistence;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::ObjectIterator;
+
+static int32_t getIndexFromPhase(int32_t phase) {
+  return std::max(0, -1 * phase - 1);
+}
 
 struct StubModel : LoadModel {
 
@@ -80,9 +84,8 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDType id, PhaseOffset phase) override {
-    // Here we return predicted loads for future phases
-    // For the sake of the test we use values from the past phases
-    return proc_load_->at(phase.phases).at(id);
+    EXPECT_LE(phase.phases, -1);
+    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id);
   }
 
   virtual ObjectIterator begin() override {
@@ -92,34 +95,36 @@ struct StubModel : LoadModel {
     return ObjectIterator(proc_load_->back().end());
   }
 
-  // Not used by this test
-  virtual int getNumObjects() override { return 0; }
-  virtual int getNumCompletedPhases() override { return 0; }
-  virtual int getNumSubphases() override { return 0; }
+  // Not used in this test
+  virtual int getNumObjects() override { return 1; }
+  virtual int getNumCompletedPhases() override { return 1; }
+  virtual int getNumSubphases() override { return 1; }
 
 private:
   std::vector<LoadMapType> const* proc_load_ = nullptr;
 };
 
-TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
-  std::vector<LoadMapType> proc_loads = {
+TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
+    std::vector<LoadMapType> proc_loads = {
     LoadMapType{
       {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{30}}},
+      {ElementIDType{1}, TimeType{4}}, {ElementIDType{2}, TimeType{10}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{10}}},
+      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{50}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{5}}}};
+      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{100}}}};
 
   auto test_model =
-    std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);
+    std::make_shared<NaivePersistence>(std::make_shared<StubModel>());
 
   test_model->setLoads(&proc_loads, nullptr, nullptr);
 
   for (auto&& obj : *test_model) {
-    auto work_val = test_model->getWork(obj, PhaseOffset{});
-    EXPECT_EQ(work_val, obj == 1 ? TimeType{100} : TimeType{85});
+    for (auto phase : {0, -1, -2, -3, -4}) {
+      auto work_val = test_model->getWork(obj, PhaseOffset{phase, 1});
+      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj));
+    }
   }
 }
 
