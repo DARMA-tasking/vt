@@ -62,6 +62,8 @@ struct InsertTokenRval {
   template <typename... Args>
   void insert(Args&&... args);
 
+  void insertPtr(std::unique_ptr<ColT> ptr);
+
   friend CollectionManager;
 
 private:
