@@ -234,8 +234,6 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
       }
     });
 
-    vt::theCollective()->barrier();
-
     // Ensure that all elements were properly destroyed
     EXPECT_EQ(counter, 0);
   }
