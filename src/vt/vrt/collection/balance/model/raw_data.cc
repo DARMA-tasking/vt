@@ -47,6 +47,10 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+void RawData::updateLoads(PhaseType last_completed_phase) {
+  completed_phases_ = last_completed_phase;
+}
+
 void RawData::setLoads(std::vector<LoadMapType> const* proc_load,
 		       std::vector<SubphaseLoadMapType> const* proc_subphase_load,
 		       std::vector<CommMapType> const* proc_comm)

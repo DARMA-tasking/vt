@@ -59,7 +59,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct RawData : public LoadModel {
   RawData() = default;
-  void updateLoads(PhaseType last_completed_phase) override { }
+  void updateLoads(PhaseType last_completed_phase) override;
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
   void setLoads(std::vector<LoadMapType> const* proc_load,
@@ -70,7 +70,7 @@ struct RawData : public LoadModel {
   ObjectIterator end() override { return ObjectIterator(proc_load_->back().end()); }
 
   int getNumObjects() override { return end() - begin(); }
-  int getNumCompletedPhases() override { return proc_load_->size(); }
+  int getNumCompletedPhases() override { return completed_phases_; }
   int getNumSubphases() override;
   int getNumPastPhasesNeeded(int look_back) override;
 
@@ -78,6 +78,7 @@ struct RawData : public LoadModel {
   std::vector<LoadMapType>         const* proc_load_;
   std::vector<SubphaseLoadMapType> const* proc_subphase_load_;
   std::vector<CommMapType>         const* proc_comm_;
+  PhaseType completed_phases_ = 0;
 }; // class RawData
 
 }}}} // end namespace
