@@ -48,7 +48,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void RawData::updateLoads(PhaseType last_completed_phase) {
-  completed_phases_ = last_completed_phase;
+  completed_phases_ = last_completed_phase + 1;
 }
 
 void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
@@ -72,7 +72,7 @@ TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
   vtAssert(offset.phases < 0,
 	   "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
-  auto phase = proc_load_->size() + offset.phases;
+  auto phase = getNumCompletedPhases() + offset.phases;
   if (offset.subphase == PhaseOffset::WHOLE_PHASE)
     return proc_load_->at(phase).at(object);
   else
