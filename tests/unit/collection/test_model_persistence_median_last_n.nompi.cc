@@ -73,9 +73,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    std::vector<LoadMapType> const* proc_load,
-    std::vector<SubphaseLoadMapType> const*,
-    std::vector<CommMapType> const*) override {
+    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
+    std::unordered_map<PhaseType, CommMapType> const*) override {
     proc_load_ = proc_load;
   }
 
@@ -87,18 +87,19 @@ struct StubModel : LoadModel {
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->back().cbegin());
+    return ObjectIterator(proc_load_->at(num_phases-1).begin());
   }
   virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->back().cend());
+    return ObjectIterator(proc_load_->at(num_phases-1).end());
   }
 
   virtual int getNumObjects() override { return 2; }
   virtual int getNumCompletedPhases() override { return num_phases; }
   virtual int getNumSubphases() override { return 1; }
+  int getNumPastPhasesNeeded(int look_back = 0) override { return look_back; }
 
 private:
-  std::vector<LoadMapType> const* proc_load_ = nullptr;
+  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) {
@@ -107,7 +108,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
   auto test_model =
     std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), 4);
 
-  std::vector<LoadMapType> proc_loads;
+  std::unordered_map<PhaseType, LoadMapType> proc_loads(num_total_phases);
 
   test_model->setLoads(&proc_loads, nullptr, nullptr);
 
@@ -140,7 +141,8 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
   };
 
   for (auto iter = 0; iter < num_total_phases; ++iter) {
-    proc_loads.push_back(load_holder[iter]);
+    proc_loads[iter] = load_holder[iter];
+    test_model->updateLoads(iter);
     ++num_phases;
 
     for (auto&& obj : *test_model) {
