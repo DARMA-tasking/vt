@@ -125,7 +125,7 @@ public:
   /**
    * \internal \brief Cleanup after LB runs; convert temporary to permanent IDs
    */
-  void startIterCleanup();
+  void startIterCleanup(PhaseType phase, int look_back);
 
   /**
    * \internal \brief Release collection after LB runs for this phase

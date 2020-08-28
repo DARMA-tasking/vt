@@ -126,10 +126,11 @@ void NodeStats::clearStats() {
   next_elm_ = 1;
 }
 
-void NodeStats::startIterCleanup() {
+void NodeStats::startIterCleanup(PhaseType phase, int look_back) {
+  // TODO: Add in subphase support here too
+
   // Convert the temp ID node_data_ for the last iteration into perm ID for
   // stats output
-  auto const phase = node_data_.size() - 1;
   auto const prev_data = std::move(node_data_[phase]);
   std::unordered_map<ElementIDType,TimeType> new_data;
   for (auto& elm : prev_data) {
@@ -139,6 +140,12 @@ void NodeStats::startIterCleanup() {
     new_data[perm_id] = elm.second;
   }
   node_data_[phase] = std::move(new_data);
+
+  if (phase - look_back >= 0) {
+    node_data_.erase(phase - look_back);
+    node_subphase_data_.erase(phase - look_back);
+    node_comm_.erase(phase - look_back);
+  }
 
   // Create migrate lambdas and temp to perm map since LB is complete
   NodeStats::node_migrate_.clear();

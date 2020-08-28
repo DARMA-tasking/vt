@@ -178,7 +178,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
       lb, node,
       "LBManager: finished migrations\n"
     );
-    theNodeStats()->startIterCleanup();
+    theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
     this->finishedRunningLB(phase);
   });
 }
