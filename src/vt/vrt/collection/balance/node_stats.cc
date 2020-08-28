@@ -120,6 +120,7 @@ std::unordered_map<PhaseType, CommMapType> const* NodeStats::getNodeComm() const
 void NodeStats::clearStats() {
   NodeStats::node_comm_.clear();
   NodeStats::node_data_.clear();
+  NodeStats::node_subphase_data_.clear();
   NodeStats::node_migrate_.clear();
   NodeStats::node_temp_to_perm_.clear();
   NodeStats::node_perm_to_temp_.clear();
