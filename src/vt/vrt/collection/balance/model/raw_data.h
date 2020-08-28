@@ -62,12 +62,12 @@ struct RawData : public LoadModel {
   void updateLoads(PhaseType last_completed_phase) override;
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  void setLoads(std::vector<LoadMapType> const* proc_load,
-		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		std::vector<CommMapType> const* proc_comm) override;
+  void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
-  ObjectIterator begin() override { return ObjectIterator(proc_load_->back().begin()); }
-  ObjectIterator end() override { return ObjectIterator(proc_load_->back().end()); }
+  ObjectIterator begin() override { return ObjectIterator(proc_load_->at(completed_phases_).cbegin()); }
+  ObjectIterator end() override { return ObjectIterator(proc_load_->at(completed_phases_).cend()); }
 
   int getNumObjects() override { return end() - begin(); }
   int getNumCompletedPhases() override { return completed_phases_; }
@@ -75,9 +75,9 @@ struct RawData : public LoadModel {
   int getNumPastPhasesNeeded(int look_back) override;
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeStats
-  std::vector<LoadMapType>         const* proc_load_;
-  std::vector<SubphaseLoadMapType> const* proc_subphase_load_;
-  std::vector<CommMapType>         const* proc_comm_;
+  std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;
+  std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load_;
+  std::unordered_map<PhaseType, CommMapType>         const* proc_comm_;
   PhaseType completed_phases_ = 0;
 }; // class RawData
 

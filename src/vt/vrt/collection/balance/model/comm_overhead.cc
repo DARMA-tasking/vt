@@ -55,9 +55,9 @@ CommOverhead::CommOverhead(
     per_byte_weight_(in_per_byte_weight)
 { }
 
-void CommOverhead::setLoads(std::vector<LoadMapType> const* proc_load,
-			    std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-			    std::vector<CommMapType> const* proc_comm) {
+void CommOverhead::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                            std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                            std::unordered_map<PhaseType, CommMapType> const* proc_comm) {
   proc_comm_ = proc_comm;
   ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
 }

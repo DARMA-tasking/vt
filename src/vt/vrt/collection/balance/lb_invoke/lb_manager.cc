@@ -162,7 +162,7 @@ LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
       lb, node,
       "LBManager: running strategy\n"
     );
-    strat->startLB(phase, base_proxy, model_.get(), theNodeStats()->getNodeComm()->back());
+    strat->startLB(phase, base_proxy, model_.get(), theNodeStats()->getNodeComm()->at(phase));
   });
 
   runInEpochCollective([=] {

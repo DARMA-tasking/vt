@@ -74,9 +74,9 @@ struct PerCollection : public ComposedModel
    */
   void addModel(CollectionID proxy, std::shared_ptr<LoadModel> model);
 
-  void setLoads(std::vector<LoadMapType> const* proc_load,
-		std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		std::vector<CommMapType> const* proc_comm) override;
+  void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
   void updateLoads(PhaseType last_completed_phase) override;
 

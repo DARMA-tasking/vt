@@ -102,9 +102,9 @@ public:
    * This would typically be called by LBManager when the user has
    * passed a new model instance for a collection
    */
-  virtual void setLoads(std::vector<LoadMapType> const* proc_load,
-                        std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-                        std::vector<CommMapType> const* proc_comm) = 0;
+  virtual void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                        std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                        std::unordered_map<PhaseType, CommMapType> const* proc_comm) = 0;
 
   /**
    * \brief Signals that load data for a new phase is available

@@ -173,21 +173,21 @@ public:
    *
    * \return an observer pointer to the load map
    */
-  std::vector<LoadMapType> const* getNodeLoad() const;
+  std::unordered_map<PhaseType, LoadMapType> const* getNodeLoad() const;
 
   /**
    * \internal \brief Get stored object loads for individual subphases
    *
    * \return an observer pointer to the subphase load map
    */
-  std::vector<SubphaseLoadMapType> const* getNodeSubphaseLoad() const;
+  std::unordered_map<PhaseType, SubphaseLoadMapType> const* getNodeSubphaseLoad() const;
 
   /**
    * \internal \brief Get stored object comm graph
    *
    * \return an observer pointer to the comm graph
    */
-  std::vector<CommMapType> const* getNodeComm() const;
+  std::unordered_map<PhaseType, CommMapType> const* getNodeComm() const;
 
   /**
    * \internal \brief Test if this node has an object to migrate
@@ -252,9 +252,9 @@ private:
   /// Local proxy to objgroup
   objgroup::proxy::Proxy<NodeStats> proxy_;
   /// Node timings for each local object
-  std::vector<LoadMapType> node_data_;
+  std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node subphase timings for each local object
-  std::vector<SubphaseLoadMapType> node_subphase_data_;
+  std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDType,MigrateFnType> node_migrate_;
   /// Map of temporary ID to permanent ID
@@ -264,7 +264,7 @@ private:
   /// Map from element temporary ID to the collection's virtual proxy (untyped)
   std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
   /// Node communication graph for each local object
-  std::vector<CommMapType> node_comm_;
+  std::unordered_map<PhaseType, CommMapType> node_comm_;
   /// The current element ID
   ElementIDType next_elm_;
   /// The stats file name for outputting instrumentation

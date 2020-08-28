@@ -56,9 +56,9 @@ void PerCollection::addModel(CollectionID proxy, std::shared_ptr<LoadModel> mode
   models_[proxy] = model;
 }
 
-void PerCollection::setLoads(std::vector<LoadMapType> const* proc_load,
-			     std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-			     std::vector<CommMapType> const* proc_comm) {
+void PerCollection::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                             std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                             std::unordered_map<PhaseType, CommMapType> const* proc_comm) {
   for (auto& m : models_)
     m.second->setLoads(proc_load, proc_subphase_load, proc_comm);
   ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);

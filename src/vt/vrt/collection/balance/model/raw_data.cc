@@ -51,9 +51,9 @@ void RawData::updateLoads(PhaseType last_completed_phase) {
   completed_phases_ = last_completed_phase;
 }
 
-void RawData::setLoads(std::vector<LoadMapType> const* proc_load,
-		       std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		       std::vector<CommMapType> const* proc_comm)
+void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                       std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                       std::unordered_map<PhaseType, CommMapType> const* proc_comm)
 {
   proc_load_ = proc_load;
   proc_subphase_load_ = proc_subphase_load;
@@ -61,7 +61,7 @@ void RawData::setLoads(std::vector<LoadMapType> const* proc_load,
 }
 
 int RawData::getNumSubphases() {
-  const auto& last_phase = proc_subphase_load_->back();
+  const auto& last_phase = proc_subphase_load_->at(completed_phases_);
   const auto& an_object = *last_phase.begin();
   const auto& subphases = an_object.second;
   return subphases.size();
