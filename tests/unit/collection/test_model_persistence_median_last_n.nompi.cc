@@ -82,17 +82,15 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDType id, PhaseOffset phase) override {
-    const auto index = -1 * phase.phases - 1;
-
     // Most recent phase will be at the end of vector
-    return (proc_load_->rbegin() + index)->at(id);
+    return proc_load_->at(num_phases + phase.phases).at(id);
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->back().begin());
+    return ObjectIterator(proc_load_->back().cbegin());
   }
   virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->back().end());
+    return ObjectIterator(proc_load_->back().cend());
   }
 
   virtual int getNumObjects() override { return 2; }
@@ -109,7 +107,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
   auto test_model =
     std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), 4);
 
-  std::vector<LoadMapType> proc_loads(num_total_phases);
+  std::vector<LoadMapType> proc_loads;
 
   test_model->setLoads(&proc_loads, nullptr, nullptr);
 
@@ -136,16 +134,16 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
     std::make_pair(TimeType{7},  TimeType{25}), // iter 1 results
     std::make_pair(TimeType{10}, TimeType{40}), // iter 2 results
     std::make_pair(TimeType{15}, TimeType{40}), // iter 3 results
-    std::make_pair(TimeType{12}, TimeType{40}), // iter 4 results
-    std::make_pair(TimeType{10}, TimeType{40}), // iter 5 results
+    std::make_pair(TimeType{12}, TimeType{45}), // iter 4 results
+    std::make_pair(TimeType{35}, TimeType{45}), // iter 5 results
     std::make_pair(TimeType{55}, TimeType{30})  // iter 6 results
   };
 
   for (auto iter = 0; iter < num_total_phases; ++iter) {
-    proc_loads[iter] = load_holder[iter];
+    proc_loads.push_back(load_holder[iter]);
     ++num_phases;
 
-    for (const auto& obj : *test_model) {
+    for (auto&& obj : *test_model) {
       auto work_val = test_model->getWork(obj, PhaseOffset{});
       EXPECT_EQ(
         work_val,
