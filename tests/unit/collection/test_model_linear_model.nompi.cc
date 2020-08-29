@@ -56,16 +56,16 @@ namespace vt { namespace tests { namespace unit {
 
 using TestLinearModel = TestHarness;
 
-static constexpr int32_t const num_phases = 4;
+static int32_t num_phases = 1;
 
-using vt::vrt::collection::balance::ElementIDType;
-using vt::vrt::collection::balance::LoadModel;
-using vt::vrt::collection::balance::LinearModel;
-using vt::vrt::collection::balance::PhaseOffset;
-using vt::vrt::collection::balance::LoadMapType;
-using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::CommMapType;
+using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::LinearModel;
+using vt::vrt::collection::balance::LoadMapType;
+using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
+using vt::vrt::collection::balance::PhaseOffset;
+using vt::vrt::collection::balance::SubphaseLoadMapType;
 
 struct StubModel : LoadModel {
 
@@ -82,8 +82,8 @@ struct StubModel : LoadModel {
   void updateLoads(PhaseType) override {}
 
   TimeType getWork(ElementIDType id, PhaseOffset phase) override {
-    const auto index = -1 * phase.phases - 1;
-    return proc_load_->at(index).at(id);
+    // Most recent phase will be at the end of vector
+    return proc_load_->at(num_phases + phase.phases).at(id);
   }
 
   virtual ObjectIterator begin() override {
@@ -102,24 +102,53 @@ private:
 };
 
 TEST_F(TestLinearModel, test_model_linear_model_1) {
-  std::vector<LoadMapType> proc_loads = {
-    LoadMapType{
-      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{30}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{20}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{10}}}};
+  constexpr int32_t num_test_interations = 6;
 
   auto test_model =
-    std::make_shared<LinearModel>(std::make_shared<StubModel>(), num_phases);
+    std::make_shared<LinearModel>(std::make_shared<StubModel>(), 4);
 
+  // For linear regression there needs to be at least 2 phases completed
+  // so we begin with 1 phase already done
+  std::vector<LoadMapType> proc_loads{LoadMapType{
+    {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}}};
   test_model->setLoads(&proc_loads, nullptr, nullptr);
 
-  for (auto&& obj : *test_model) {
-    auto work_val = test_model->getWork(obj, PhaseOffset{});
-    EXPECT_EQ(work_val, obj == 1 ? TimeType{0} : TimeType{50});
+  // Work loads to be added in each test iteration
+  std::vector<LoadMapType> load_holder{
+    LoadMapType{
+      {ElementIDType{1}, TimeType{5}}, {ElementIDType{2}, TimeType{10}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{100}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{50}}, {ElementIDType{2}, TimeType{40}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{2}}, {ElementIDType{2}, TimeType{50}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{20}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{100}}, {ElementIDType{2}, TimeType{10}}},
+  };
+
+  std::array<std::pair<TimeType, TimeType>, num_test_interations> expected_data{
+    std::make_pair(TimeType{0}, TimeType{-20}),   // iter 0 results
+    std::make_pair(TimeType{35}, TimeType{110}),  // iter 1 results
+    std::make_pair(TimeType{60}, TimeType{70}),   // iter 2 results
+    std::make_pair(TimeType{24.5}, TimeType{65}), // iter 3 results
+    std::make_pair(TimeType{46}, TimeType{-5}),   // iter 4 results
+    std::make_pair(TimeType{105}, TimeType{0})    // iter 5 results
+  };
+
+  for (auto iter = 0; iter < num_test_interations; ++iter) {
+    proc_loads.push_back(load_holder[iter]);
+    ++num_phases;
+
+    for (auto&& obj : *test_model) {
+      auto work_val = test_model->getWork(obj, PhaseOffset{});
+      EXPECT_EQ(
+        work_val,
+        obj == 1 ? expected_data[iter].first : expected_data[iter].second)
+        << fmt::format("Test failed on iteration {}", iter);
+    }
   }
 }
 
