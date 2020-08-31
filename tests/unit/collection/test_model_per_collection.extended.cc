@@ -157,6 +157,10 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
 #if vt_check_enabled(lblite)
   // Test the model, which should be per-collection and return the proxy.
   auto model = theLBManager()->getLoadModel();
+  // Call updateLoads manually, since it won't be called by the LB
+  // infrastructure when the LB hasn't run, and we need this for the
+  // model to function
+  model->updateLoads(0);
   for (auto&& obj : *model) {
     auto work_val = model->getWork(obj, PhaseOffset{});
     EXPECT_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
