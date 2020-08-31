@@ -73,7 +73,7 @@ int ComposedModel::getNumObjects() {
 }
 
 int ComposedModel::getNumCompletedPhases() {
-  return base_->getNumSubphases();
+  return base_->getNumCompletedPhases();
 }
 
 int ComposedModel::getNumSubphases() {

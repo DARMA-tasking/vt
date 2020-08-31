@@ -72,9 +72,9 @@ TimeType PersistenceMedianLastN::getWork(ElementIDType object, PhaseOffset when)
   std::sort(times.begin(), times.end());
 
   if (phases % 2 == 1)
-    return times[phases / 2 + 1];
+    return times[phases / 2];
   else
-    return (times[phases / 2] + times[phases / 2 + 1]) / 2;
+    return (times[phases / 2 - 1] + times[phases / 2]) / 2;
 }
 
 }}}}
