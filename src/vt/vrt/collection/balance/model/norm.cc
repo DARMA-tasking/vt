@@ -65,6 +65,7 @@ TimeType Norm::getWork(ElementIDType object, PhaseOffset offset)
     double sum = 0.0;
 
     for (int i = 0; i < getNumSubphases(); ++i) {
+      offset.subphase = i;
       auto t = ComposedModel::getWork(object, offset);
       sum += std::pow(t, power_);
     }
@@ -75,6 +76,7 @@ TimeType Norm::getWork(ElementIDType object, PhaseOffset offset)
     double max = 0.0;
 
     for (int i = 0; i < getNumSubphases(); ++i) {
+      offset.subphase = i;
       auto t = ComposedModel::getWork(object, offset);
       max = std::max(max, t);
     }
