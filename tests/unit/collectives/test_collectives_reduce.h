@@ -82,6 +82,11 @@ struct TestReduce : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
   static void callbackFn(ReduceNoneMsg* msg) {
+    vt_debug_print(
+      reduce, node,
+      "callbackFn: cur={}: is_root={}, count={}\n",
+      print_ptr(msg), print_bool(msg->isRoot()), msg->getCount()
+    );
     called += 1;
   }
 

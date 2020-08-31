@@ -129,4 +129,26 @@ TEST_F(TestReduce, test_reduce_none_op_cb) {
   EXPECT_EQ(called, theContext()->getNumNodes());
 }
 
+// TEST_F(TestReduce, test_reduce_none_op_lambda_cb) {
+//   called = 0;
+
+//   runInEpochCollective([&]{
+//     auto msg = makeMessage<ReduceNoneMsg>();
+//     auto cb = theCB()->makeSend<ReduceNoneMsg>(
+//       [&](ReduceNoneMsg* in_msg) {
+//         vt_debug_print(
+//           reduce, node,
+//           "lambda callback: cur={}: is_root={}, count={}\n",
+//           print_ptr(in_msg), print_bool(in_msg->isRoot()), in_msg->getCount()
+//         );
+//         called += 1;
+//       }, 0
+//     );
+
+//     theCollective()->global()->reduce<None>(msg.get(), cb);
+//   });
+
+//   EXPECT_EQ(called, theContext()->getNumNodes());
+// }
+
 }}} // end namespace vt::tests::unit

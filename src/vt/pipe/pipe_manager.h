@@ -233,6 +233,18 @@ struct PipeManager
   Callback<MsgT> makeSend(NodeType const& node);
 
   /**
+   * \brief Make a callback to a lambda to be invoked on a certain node with
+   * a message.
+   *
+   * \param[in] fn endpoint function that takes a message
+   * \param[in] node node to invoke callback on
+   *
+   * \return the new callback if node is current node, empty callback otherwise
+   */
+  template <typename MsgT>
+  Callback<MsgT> makeSend(FuncMsgType<MsgT> fn, NodeType const& node);
+
+  /**
    * \brief Make a callback to a functor handler to be invoked on a certain
    * node with a message.
    *
