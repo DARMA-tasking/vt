@@ -66,11 +66,11 @@ struct RawData : public LoadModel {
                 std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
-  ObjectIterator begin() override { return ObjectIterator(proc_load_->at(completed_phases_-1).cbegin()); }
-  ObjectIterator end() override { return ObjectIterator(proc_load_->at(completed_phases_-1).cend()); }
+  ObjectIterator begin() override;
+  ObjectIterator end() override;
 
-  int getNumObjects() override { return end() - begin(); }
-  int getNumCompletedPhases() override { return completed_phases_; }
+  int getNumObjects() override;
+  int getNumCompletedPhases() override;
   int getNumSubphases() override;
   int getNumPastPhasesNeeded(int look_back) override;
 

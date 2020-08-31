@@ -60,6 +60,22 @@ void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_lo
   proc_comm_ = proc_comm;
 }
 
+ObjectIterator RawData::begin() {
+  return ObjectIterator(proc_load_->at(completed_phases_ - 1).cbegin());
+}
+
+ObjectIterator RawData::end() {
+  return ObjectIterator(proc_load_->at(completed_phases_ - 1).cend());
+}
+
+int RawData::getNumObjects() {
+  return end() - begin();
+}
+
+int RawData::getNumCompletedPhases() {
+  return completed_phases_;
+}
+
 int RawData::getNumSubphases() {
   const auto& last_phase = proc_subphase_load_->at(completed_phases_ - 1);
   const auto& an_object = *last_phase.begin();
