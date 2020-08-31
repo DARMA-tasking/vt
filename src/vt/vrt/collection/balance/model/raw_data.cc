@@ -48,7 +48,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 void RawData::updateLoads(PhaseType last_completed_phase) {
-  completed_phases_ = last_completed_phase + 1;
+  last_completed_phase_ = last_completed_phase;
 }
 
 void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
@@ -61,11 +61,11 @@ void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_lo
 }
 
 ObjectIterator RawData::begin() {
-  return ObjectIterator(proc_load_->at(completed_phases_ - 1).cbegin());
+  return ObjectIterator(proc_load_->at(last_completed_phase_).cbegin());
 }
 
 ObjectIterator RawData::end() {
-  return ObjectIterator(proc_load_->at(completed_phases_ - 1).cend());
+  return ObjectIterator(proc_load_->at(last_completed_phase_).cend());
 }
 
 int RawData::getNumObjects() {
@@ -73,11 +73,11 @@ int RawData::getNumObjects() {
 }
 
 int RawData::getNumCompletedPhases() {
-  return completed_phases_;
+  return last_completed_phase_ + 1;
 }
 
 int RawData::getNumSubphases() {
-  const auto& last_phase = proc_subphase_load_->at(completed_phases_ - 1);
+  const auto& last_phase = proc_subphase_load_->at(last_completed_phase_);
   const auto& an_object = *last_phase.begin();
   const auto& subphases = an_object.second;
   return subphases.size();

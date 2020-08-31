@@ -78,7 +78,7 @@ struct RawData : public LoadModel {
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;
   std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load_;
   std::unordered_map<PhaseType, CommMapType>         const* proc_comm_;
-  PhaseType completed_phases_ = 0;
+  PhaseType last_completed_phase_ = -1;
 }; // class RawData
 
 }}}} // end namespace
