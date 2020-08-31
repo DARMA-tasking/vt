@@ -1679,20 +1679,46 @@ VirtualProxyType CollectionManager::makeDistProxy(TagType const& tag) {
 /* end SPMD distributed collection support */
 
 
+template <typename ColT>
+void CollectionManager::staticInsertColPtr(
+  VirtualProxyType proxy, typename ColT::IndexType idx,
+  std::unique_ptr<ColT> ptr
+) {
+  using IndexT = typename ColT::IndexType;
+  using BaseIdxType = vt::index::BaseIndex;
+
+  auto map_han = UniversalIndexHolder<>::getMap(proxy);
+  auto holder = findColHolder<ColT, IndexT>(proxy);
+  auto range = holder->max_idx;
+  auto const num_elms = range.getSize();
+  auto fn = auto_registry::getHandlerMap(map_han);
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const cur = static_cast<BaseIdxType*>(&idx);
+  auto const max = static_cast<BaseIdxType*>(&range);
+  auto const home_node = fn(cur, max, num_nodes);
+
+  // Through the attorney, setup all the properties on the newly constructed
+  // collection element: index, proxy, number of elements. Note: because of
+  // how the constructor works, the index is not currently available through
+  // "getIndex"
+  CollectionTypeAttorney::setup(ptr.get(), num_elms, idx, proxy);
+
+  VirtualPtrType<ColT, IndexT> col_ptr(
+    static_cast<CollectionBase<ColT, IndexT>*>(ptr.release())
+  );
+
+  // Insert the element into the managed holder for elements
+  insertCollectionElement<ColT>(
+    std::move(col_ptr), idx, range, map_han, proxy, true, home_node
+  );
+}
+
 template <typename ColT, typename... Args>
 void CollectionManager::staticInsert(
   VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
 ) {
   using IndexT           = typename ColT::IndexType;
   using IdxContextHolder = InsertContextHolder<IndexT>;
-  using BaseIdxType      = vt::index::BaseIndex;
-
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  auto map_han = UniversalIndexHolder<>::getMap(proxy);
-
-  // Set the current context index to `idx`
-  IdxContextHolder::set(&idx,proxy);
 
   auto tuple = std::make_tuple(std::forward<Args>(args)...);
 
@@ -1701,12 +1727,8 @@ void CollectionManager::staticInsert(
   auto range = holder->max_idx;
   auto const num_elms = range.getSize();
 
-  // Get the handler function
-  auto fn = auto_registry::getHandlerMap(map_han);
-
-  auto const cur = static_cast<BaseIdxType*>(&idx);
-  auto const max = static_cast<BaseIdxType*>(&range);
-  auto const& home_node = fn(cur, max, num_nodes);
+  // Set the current context index to `idx`
+  IdxContextHolder::set(&idx,proxy);
 
   #if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
     auto elm_ptr = DerefCons::derefTuple<ColT, IndexT, decltype(tuple)>(
@@ -1719,25 +1741,17 @@ void CollectionManager::staticInsert(
     );
   #endif
 
+  // Clear the current index context
+  IdxContextHolder::clear();
+
   vt_debug_print_verbose(
     vrt_coll, node,
     "construct (staticInsert): ptr={}\n", print_ptr(elm_ptr.get())
   );
 
-  // Through the attorney, setup all the properties on the newly constructed
-  // collection element: index, proxy, number of elements. Note: because of
-  // how the constructor works, the index is not currently available through
-  // "getIndex"
-  CollectionTypeAttorney::setup(elm_ptr.get(), num_elms, idx, proxy);
+  std::unique_ptr<ColT> col_ptr(static_cast<ColT*>(elm_ptr.release()));
 
-  // Insert the element into the managed holder for elements
-  insertCollectionElement<ColT>(
-    std::move(elm_ptr), idx, range, map_han, proxy, true, home_node
-  );
-
-  // Clear the current index context
-  IdxContextHolder::clear();
-
+  staticInsertColPtr<ColT>(proxy, idx, std::move(col_ptr));
 }
 
 template <
@@ -1787,6 +1801,9 @@ InsertToken<ColT> CollectionManager::constructInsertMap(
 
   // Insert the meta-data for this new collection
   insertMetaCollection<ColT>(proxy, map_han, range, is_static);
+
+  // Insert action on cleanup for this collection
+  theCollection()->addCleanupFn<ColT>(proxy);
 
   return InsertToken<ColT>{proxy};
 }
@@ -3182,7 +3199,7 @@ CollectionManager::restoreFromFile(
     // @todo: error check the file read with bytes in directory
 
     auto col_ptr = checkpoint::deserializeFromFile<ColT>(file_name);
-    token[idx].insert(std::move(*col_ptr));
+    token[idx].insertPtr(std::move(col_ptr));
   }
 
   return finishedInsert(std::move(token));
