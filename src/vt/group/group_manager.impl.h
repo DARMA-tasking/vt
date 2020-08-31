@@ -82,7 +82,7 @@ template <typename T>
 RemoteOperationIDType GroupManagerT<T>::registerContinuationT(ActionTType act) {
   pushCleanupAction();
 
-  RemoteOperationIDType next_id = theGroup()->getNextID();
+  RemoteOperationIDType next_id = theGroup()->getNextOpID();
   continuation_actions_t_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(next_id),
@@ -100,7 +100,7 @@ RemoteOperationIDType GroupManagerT<T>::registerContinuationT(ActionTType act) {
 
 template <typename T>
 void GroupManagerT<T>::registerContinuationT(
-  RemoteOperationIDType const& op, ActionTType action
+  RemoteOperationIDType const op, ActionTType action
 ) {
   vt_debug_print_verbose(
     group, node,
@@ -121,7 +121,7 @@ void GroupManagerT<T>::registerContinuationT(
 
 template <typename T>
 void GroupManagerT<T>::triggerContinuationT(
-  RemoteOperationIDType const& op, T t
+  RemoteOperationIDType const op, T t
 ) {
   auto iter = continuation_actions_t_.find(op);
   auto const& found = iter != continuation_actions_t_.end();

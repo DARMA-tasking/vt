@@ -136,7 +136,7 @@ TEST_F(TestGroup, test_group_collective_construct_1) {
     theGroup()->newGroupCollective(
       node_filter, [=](GroupType group) {
         auto const& in_group = theGroup()->inGroup(group);
-        auto const& is_default_group = theGroup()->groupDefault(group);
+        auto const& is_default_group = theGroup()->isGroupDefault(group);
         EXPECT_EQ(in_group, node_filter);
         EXPECT_EQ(is_default_group, false);
         auto msg = makeMessage<TestMsg>();

@@ -59,10 +59,8 @@
 namespace vt { namespace group {
 
 GroupType GroupManager::newGroup(
-  RegionPtrType in_region, bool const& is_collective, bool const& is_static,
-  ActionGroupType action
+  RegionPtrType in_region, bool const is_static, ActionGroupType action
 ) {
-  vtAssert(!is_collective, "Must not be collective");
   return newLocalGroup(std::move(in_region), is_static, action);
 }
 
@@ -70,8 +68,7 @@ GroupType GroupManager::newGroup(
   RegionPtrType in_region, ActionGroupType action
 ) {
   bool const is_static = true;
-  bool const is_collective = false;
-  return newGroup(std::move(in_region), is_collective, is_static, action);
+  return newGroup(std::move(in_region), is_static, action);
 }
 
 GroupType GroupManager::newGroupCollective(
@@ -89,7 +86,7 @@ GroupType GroupManager::newGroupCollectiveLabel(GroupCollectiveLabelTagType) {
 }
 
 GroupType GroupManager::newCollectiveGroup(
-  bool const& is_in_group, bool const& is_static, ActionGroupType action,
+  bool const is_in_group, bool const is_static, ActionGroupType action,
   bool make_mpi_group
 ) {
   auto const& this_node = theContext()->getNode();
@@ -106,7 +103,7 @@ GroupType GroupManager::newCollectiveGroup(
 }
 
 GroupType GroupManager::newLocalGroup(
-  RegionPtrType in_region, bool const& is_static, ActionGroupType action
+  RegionPtrType in_region, bool const is_static, ActionGroupType action
 ) {
   auto const& this_node = theContext()->getNode();
   auto new_id = next_group_id_++;
@@ -114,21 +111,20 @@ GroupType GroupManager::newLocalGroup(
   auto const& group = GroupIDBuilder::createGroupID(
     new_id, this_node, is_collective, is_static
   );
-  auto const& size = in_region->getSize();
   auto group_action = std::bind(action, group);
   initializeLocalGroup(
-    group, std::move(in_region), is_static, group_action, size
+    group, std::move(in_region), is_static, group_action
   );
   return group;
 }
 
-bool GroupManager::inGroup(GroupType const& group) {
+bool GroupManager::inGroup(GroupType const group) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   return iter->second->inGroup();
 }
 
-GroupManager::ReducePtrType GroupManager::groupReducer(GroupType const& group) {
+GroupManager::ReducePtrType GroupManager::groupReducer(GroupType const group) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& is_default_group = iter->second->isGroupDefault();
@@ -139,7 +135,7 @@ GroupManager::ReducePtrType GroupManager::groupReducer(GroupType const& group) {
   }
 }
 
-NodeType GroupManager::groupRoot(GroupType const& group) const {
+NodeType GroupManager::groupRoot(GroupType const group) const {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& root = iter->second->getRoot();
@@ -147,7 +143,7 @@ NodeType GroupManager::groupRoot(GroupType const& group) const {
   return root;
 }
 
-bool GroupManager::groupDefault(GroupType const& group) const {
+bool GroupManager::isGroupDefault(GroupType const group) const {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& def = iter->second->isGroupDefault();
@@ -165,12 +161,12 @@ RemoteOperationIDType GroupManager::registerContinuation(ActionType action) {
 }
 
 void GroupManager::registerContinuation(
-  RemoteOperationIDType const& op, ActionType action
+  RemoteOperationIDType const op, ActionType action
 ) {
   continuation_actions_[op].push_back(action);
 }
 
-void GroupManager::triggerContinuation(RemoteOperationIDType const& op) {
+void GroupManager::triggerContinuation(RemoteOperationIDType const op) {
   auto iter = continuation_actions_.find(op);
   if (iter != continuation_actions_.end()) {
     for (auto&& elm : iter->second) {
@@ -181,8 +177,8 @@ void GroupManager::triggerContinuation(RemoteOperationIDType const& op) {
 }
 
 void GroupManager::initializeRemoteGroup(
-  GroupType const& group, RegionPtrType in_region, bool const& is_static,
-  RegionType::SizeType const& group_size
+  GroupType const group, RegionPtrType in_region, bool const is_static,
+  RegionType::SizeType const group_size
 ) {
   auto group_info = std::make_unique<GroupInfoType>(
     info_rooted_remote_cons, std::move(in_region), group, group_size
@@ -196,7 +192,7 @@ void GroupManager::initializeRemoteGroup(
   group_ptr->setup();
 }
 
-MPI_Comm GroupManager::getGroupComm(GroupType const& group_id) {
+MPI_Comm GroupManager::getGroupComm(GroupType const group_id) {
   auto iter = local_collective_group_info_.find(group_id);
   vtAssert(
     iter != local_collective_group_info_.end(),
@@ -215,7 +211,7 @@ MPI_Comm GroupManager::getGroupComm(GroupType const& group_id) {
 }
 
 void GroupManager::initializeLocalGroupCollective(
-  GroupType const& group, bool const& is_static, ActionType action,
+  GroupType const group, bool const is_static, ActionType action,
   bool const in_group, bool make_mpi_group
 ) {
   auto group_info = std::make_unique<GroupInfoType>(
@@ -231,9 +227,10 @@ void GroupManager::initializeLocalGroupCollective(
 }
 
 void GroupManager::initializeLocalGroup(
-  GroupType const& group, RegionPtrType in_region, bool const& is_static,
-  ActionType action, RegionType::SizeType const& group_size
+  GroupType const group, RegionPtrType in_region, bool const is_static, ActionType action
 ) {
+
+  auto const group_size = in_region->getSize();
   auto group_info = std::make_unique<GroupInfoType>(
     info_rooted_local_cons, std::move(in_region), action, group, group_size
   );
@@ -247,8 +244,8 @@ void GroupManager::initializeLocalGroup(
 }
 
 /*static*/ EventType GroupManager::groupHandler(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const root, bool* const deliver
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+  MsgSizeType const size, bool const root, bool* const deliver
 ) {
   auto const& msg = reinterpret_cast<ShortMessage*>(base.get());
   auto const& is_pipe = envelopeIsPipe(msg->env);
@@ -294,8 +291,8 @@ void GroupManager::initializeLocalGroup(
 }
 
 EventType GroupManager::sendGroupCollective(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root,
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+  MsgSizeType const size, bool const is_root,
   bool* const deliver
 ) {
   auto const& send_tag = static_cast<messaging::MPI_TagType>(
@@ -405,8 +402,8 @@ EventType GroupManager::sendGroupCollective(
 }
 
 EventType GroupManager::sendGroup(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root,
+  MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+  MsgSizeType const size, bool const is_root,
   bool* const deliver
 ) {
   auto const& this_node = theContext()->getNode();
@@ -518,7 +515,7 @@ void GroupManager::addCleanupAction(ActionType action) {
   cleanup_actions_.push_back(action);
 }
 
-RemoteOperationIDType GroupManager::getNextID(){
+RemoteOperationIDType GroupManager::getNextOpID(){
   return cur_id_++;
 }
 

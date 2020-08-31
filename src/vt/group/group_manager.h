@@ -124,15 +124,13 @@ struct GroupManager : runtime::component::Component<GroupManager> {
    * \brief Create a new rooted group.
    *
    * \param[in] in_region list of nodes to include
-   * \param[in] is_collective whether it's collective, which must be false
    * \param[in] is_static whether the group is static after creation
    * \param[in] action action to execute when group is finished construction
    *
    * \return the group ID
    */
   GroupType newGroup(
-    RegionPtrType in_region, bool const& is_collective,
-    bool const& is_static, ActionGroupType action
+    RegionPtrType in_region, bool const is_static, ActionGroupType action
   );
 
   /**
@@ -174,7 +172,7 @@ struct GroupManager : runtime::component::Component<GroupManager> {
    *
    * \return whether this node is included
    */
-  bool inGroup(GroupType const& group);
+  bool inGroup(GroupType const group);
 
   /**
    * \brief Get MPI_Comm from VT group
@@ -184,10 +182,10 @@ struct GroupManager : runtime::component::Component<GroupManager> {
    * \return the MPI_Comm associated with the group; returns \c MPI_COMM_WORLD
    * if group was created without a communicator
    */
-  MPI_Comm getGroupComm(GroupType const& group_id);
+  MPI_Comm getGroupComm(GroupType const group_id);
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
-  void sendMsg(GroupType const& group, MsgT* msg);
+  void sendMsg(GroupType const group, MsgT* msg);
 
   friend struct Info;
   friend struct InfoColl;
@@ -207,7 +205,7 @@ private:
    * \return the group ID
    */
   GroupType newCollectiveGroup(
-    bool const& in_group, bool const& is_static, ActionGroupType action,
+    bool const in_group, bool const is_static, ActionGroupType action,
     bool make_mpi_group = false
   );
 
@@ -221,7 +219,7 @@ private:
    * \return the group ID
    */
   GroupType newLocalGroup(
-    RegionPtrType in_region, bool const& is_static, ActionGroupType action
+    RegionPtrType in_region, bool const is_static, ActionGroupType action
   );
 
   /**
@@ -234,7 +232,7 @@ private:
    * \param[in] make_mpi_group whether VT should create an underlying MPI group
    */
   void initializeLocalGroupCollective(
-    GroupType const& group, bool const& is_static, ActionType action,
+    GroupType const group, bool const is_static, ActionType action,
     bool const in_group, bool make_mpi_group
   );
 
@@ -245,11 +243,9 @@ private:
    * \param[in] in_region list of nodes in group
    * \param[in] is_static whether the group is static after creation
    * \param[in] action action to execute when group is finished construction
-   * \param[in] group_size the number of nodes in the group
    */
   void initializeLocalGroup(
-    GroupType const& group, RegionPtrType in_region, bool const& is_static,
-    ActionType action, RegionType::SizeType const& group_size
+    GroupType const group, RegionPtrType in_region, bool const is_static, ActionType action
   );
 
   /**
@@ -261,8 +257,8 @@ private:
    * \param[in] group_size the number of nodes in the group
    */
   void initializeRemoteGroup(
-    GroupType const& group, RegionPtrType in_region, bool const& is_static,
-    RegionType::SizeType const& group_size
+    GroupType const group, RegionPtrType in_region, bool const is_static,
+    RegionType::SizeType const group_size
   );
 
   /**
@@ -288,7 +284,7 @@ private:
    * \param[in] action the continuation
    */
   void registerContinuation(
-    RemoteOperationIDType const& op, ActionType action
+    RemoteOperationIDType const op, ActionType action
   );
 
   /**
@@ -296,7 +292,7 @@ private:
    *
    * \param[in] op the operation ID
    */
-  void triggerContinuation(RemoteOperationIDType const& op);
+  void triggerContinuation(RemoteOperationIDType const op);
 
   /**
    * \internal \brief Send message to a rooted group
@@ -310,8 +306,8 @@ private:
    * \return the event ID for any generated events (like MPI_Requests)
    */
   EventType sendGroup(
-    MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-    MsgSizeType const& size, bool const is_root,
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+    MsgSizeType const size, bool const is_root,
     bool* const deliver
   );
 
@@ -327,8 +323,8 @@ private:
    * \return the event ID for any generated events (like MPI_Requests)
    */
   EventType sendGroupCollective(
-    MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-    MsgSizeType const& size, bool const is_root,
+    MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
+    MsgSizeType const size, bool const is_root,
     bool* const deliver
   );
 
@@ -340,7 +336,7 @@ public:
    *
    * \return pointer to the reducer
    */
-  ReducePtrType groupReducer(GroupType const& group);
+  ReducePtrType groupReducer(GroupType const group);
 
   /**
    * \brief Get the root node for a group
@@ -349,7 +345,7 @@ public:
    *
    * \return the root node
    */
-  NodeType groupRoot(GroupType const& group) const;
+  NodeType groupRoot(GroupType const group) const;
 
   /**
    * \brief Check if a group is the default group (all nodes, default spanning
@@ -359,7 +355,7 @@ public:
    *
    * \return whether it is the default group
    */
-  bool groupDefault(GroupType const& group) const;
+  bool isGroupDefault(GroupType const group) const;
 
   /**
    * \internal \brief Add a cleanup action
@@ -373,7 +369,7 @@ public:
    *
    * \return the operation ID
    */
-  RemoteOperationIDType getNextID();
+  RemoteOperationIDType getNextOpID();
 
 private:
   /**
@@ -389,8 +385,8 @@ private:
    * \return the event ID for any generated events (like MPI_Requests)
    */
   static EventType groupHandler(
-    MsgSharedPtr<BaseMsgType> const& msg, NodeType const& from,
-    MsgSizeType const& msg_size, bool const is_root,
+    MsgSharedPtr<BaseMsgType> const& msg, NodeType const from,
+    MsgSizeType const msg_size, bool const is_root,
     bool* const deliver
   );
 
@@ -430,8 +426,8 @@ struct GroupManagerT : public GroupManager
 
   static void pushCleanupAction();
   static RemoteOperationIDType registerContinuationT(ActionTType action);
-  static void registerContinuationT(RemoteOperationIDType const& op, ActionTType a);
-  static void triggerContinuationT(RemoteOperationIDType const& op, T t);
+  static void registerContinuationT(RemoteOperationIDType const op, ActionTType a);
+  static void triggerContinuationT(RemoteOperationIDType const op, T t);
 
 private:
   static ActionContainerTType continuation_actions_t_;
