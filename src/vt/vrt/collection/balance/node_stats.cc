@@ -106,8 +106,6 @@ void NodeStats::clearStats() {
   NodeStats::node_data_.clear();
   NodeStats::node_subphase_data_.clear();
   NodeStats::node_migrate_.clear();
-  NodeStats::node_temp_to_perm_.clear();
-  NodeStats::node_perm_to_temp_.clear();
   next_elm_ = 1;
 }
 
@@ -120,10 +118,8 @@ void NodeStats::startIterCleanup(PhaseType phase, int look_back) {
     node_comm_.erase(phase - look_back);
   }
 
-  // Create migrate lambdas and temp to perm map since LB is complete
+  // Create migrate lambdas since LB is complete
   NodeStats::node_migrate_.clear();
-  NodeStats::node_temp_to_perm_.clear();
-  NodeStats::node_perm_to_temp_.clear();
   node_collection_lookup_.clear();
 }
 
@@ -285,9 +281,6 @@ void NodeStats::addNodeStats(
   for (auto&& c : comm) {
     comm_data[c.first] += c.second;
   }
-
-  node_temp_to_perm_[temp_id] = perm_id;
-  node_perm_to_temp_[perm_id] = temp_id;
 
   auto migrate_iter = node_migrate_.find(perm_id);
   if (migrate_iter == node_migrate_.end()) {

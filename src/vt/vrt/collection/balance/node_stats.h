@@ -243,11 +243,6 @@ private:
   /// Map from element permanent ID to the collection's virtual proxy (untyped)
   std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
 
-  /// Map of temporary ID to permanent ID
-  std::unordered_map<ElementIDType,ElementIDType> node_temp_to_perm_;
-  /// Map of permanent ID to temporary ID
-  std::unordered_map<ElementIDType,ElementIDType> node_perm_to_temp_;
-
   /// Local proxy to objgroup
   objgroup::proxy::Proxy<NodeStats> proxy_;
   /// The current element ID
