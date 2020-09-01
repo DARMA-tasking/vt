@@ -283,15 +283,10 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
   //    as the parent context is "not idle". Likewise, no 'between scheduler'
   //    event is started.
 
-  vtAssert(
-    action_depth_ == 0 or not is_idle,
-    "Nested schedulers never expected from idle context"
-  );
-
   triggerEvent(SchedulerEventType::BeginSchedulerLoop);
 
-  // When resuming a top-level scheduler, ensure to immediately enter
-  // an idle state if such applies.
+  // Ensure to immediately enter an idle state if such applies.
+  // The scheduler call ends idle as picking up work.
   if (not is_idle and work_queue_.empty()) {
     is_idle = true;
     triggerEvent(SchedulerEventType::BeginIdle);
