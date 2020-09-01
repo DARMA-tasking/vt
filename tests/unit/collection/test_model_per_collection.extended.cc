@@ -90,9 +90,9 @@ std::unordered_map<ElementIDType, VirtualProxyType> id_proxy_map;
 
 template <typename ColT>
 void colHandler(MyMsg<ColT>*, ColT* col) {
-  // do nothing, except setting up our map using the temp ID, which will hit
+  // do nothing, except setting up our map using the object ID, which will hit
   // every node
-  id_proxy_map[col->getTempID()] = col->getProxy();
+  id_proxy_map[col->getElmID()] = col->getProxy();
 }
 
 TEST_F(TestModelPerCollection, test_model_per_collection_1) {
