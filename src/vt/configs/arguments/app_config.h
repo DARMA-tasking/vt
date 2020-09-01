@@ -92,7 +92,7 @@ struct AppConfig {
   bool vt_no_sigsegv   = false;
   bool vt_no_terminate = false;
   std::string vt_memory_reporters =
-# if vt_check_enabled(mimalloc)
+# if (vt_feature_mimalloc != 0)
   "mimalloc,"
 # endif
   "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
@@ -224,6 +224,138 @@ struct AppConfig {
   /// Arguments are being ref-returend as the result of parse(..).
   /// Does not include argv[0]. Original char* objects.
   std::vector<char*> passthru_args;
+
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | vt_color
+      | vt_no_color
+      | vt_auto_color
+      | vt_quiet
+      | colorize_output
+
+      | vt_sched_num_progress
+      | vt_sched_progress_han
+      | vt_sched_progress_sec
+
+      | vt_no_sigint
+      | vt_no_sigsegv
+      | vt_no_terminate
+
+      | vt_memory_reporters
+      | vt_print_memory_each_phase
+      | vt_print_memory_node
+      | vt_allow_memory_report_with_ps
+      | vt_print_memory_at_threshold
+      | vt_print_memory_threshold
+      | vt_print_memory_sched_poll
+
+      | vt_no_warn_stack
+      | vt_no_assert_stack
+      | vt_no_abort_stack
+      | vt_no_stack
+      | vt_stack_file
+      | vt_stack_dir
+      | vt_stack_mod
+
+      | vt_trace
+      | vt_trace_mpi
+      | vt_trace_pmpi
+      | vt_trace_sys_all
+      | vt_trace_sys_term
+      | vt_trace_sys_location
+      | vt_trace_sys_collection
+      | vt_trace_sys_serial_msg
+      | vt_trace_file
+      | vt_trace_dir
+      | vt_trace_mod
+      | vt_trace_flush_size
+      | vt_trace_spec
+      | vt_trace_spec_file
+      | vt_trace_memory_usage
+      | vt_trace_event_polling
+      | vt_trace_irecv_polling
+
+      | vt_lb
+      | vt_lb_show_spec
+      | vt_lb_quiet
+      | vt_lb_file_name
+      | vt_lb_name
+      | vt_lb_args
+      | vt_lb_interval
+      | vt_lb_stats
+      | vt_lb_stats_dir
+      | vt_lb_stats_file
+      | vt_lb_stats_dir_in
+      | vt_lb_stats_file_in
+
+      | vt_no_detect_hang
+      | vt_print_no_progress
+      | vt_epoch_graph_on_hang
+      | vt_epoch_graph_terse
+      | vt_term_rooted_use_ds
+      | vt_term_rooted_use_wave
+      | vt_hang_freq
+
+      | vt_pause
+
+      | vt_debug_all
+      | vt_debug_verbose
+      | vt_debug_none
+      | vt_debug_gen
+      | vt_debug_runtime
+      | vt_debug_active
+      | vt_debug_term
+      | vt_debug_termds
+      | vt_debug_barrier
+      | vt_debug_event
+      | vt_debug_pipe
+      | vt_debug_pool
+      | vt_debug_reduce
+      | vt_debug_rdma
+      | vt_debug_rdma_channel
+      | vt_debug_rdma_state
+      | vt_debug_param
+      | vt_debug_handler
+      | vt_debug_hierlb
+      | vt_debug_gossiplb
+      | vt_debug_scatter
+      | vt_debug_sequence
+      | vt_debug_sequence_vrt
+      | vt_debug_serial_msg
+      | vt_debug_trace
+      | vt_debug_location
+      | vt_debug_lb
+      | vt_debug_vrt
+      | vt_debug_vrt_coll
+      | vt_debug_worker
+      | vt_debug_group
+      | vt_debug_broadcast
+      | vt_debug_objgroup
+
+      | vt_debug_print_flush
+
+      | vt_user_1
+      | vt_user_2
+      | vt_user_3
+      | vt_user_int_1
+      | vt_user_int_2
+      | vt_user_int_3
+      | vt_user_str_1
+      | vt_user_str_2
+      | vt_user_str_3
+
+      | vt_output_config
+      | vt_output_config_file
+      | vt_output_config_str
+
+      | prog_name
+
+      | argv_prog_name
+
+      | mpi_init_args
+      | passthru_args;
+  }
 };
 
 }} /* end namespace vt::arguments */

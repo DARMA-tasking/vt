@@ -80,6 +80,12 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
 
   std::string name() override { return "ArgConfig"; }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | config_
+      | parsed_;
+  }
+
   AppConfig config_;
 
 private:
