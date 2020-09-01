@@ -56,9 +56,9 @@ void PerCollection::addModel(CollectionID proxy, std::shared_ptr<LoadModel> mode
   models_[proxy] = model;
 }
 
-void PerCollection::setLoads(std::vector<LoadMapType> const* proc_load,
-			     std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-			     std::vector<CommMapType> const* proc_comm) {
+void PerCollection::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                             std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                             std::unordered_map<PhaseType, CommMapType> const* proc_comm) {
   for (auto& m : models_)
     m.second->setLoads(proc_load, proc_subphase_load, proc_comm);
   ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
@@ -78,6 +78,14 @@ TimeType PerCollection::getWork(ElementIDType object, PhaseOffset when) {
 
   // Otherwise, default to the given base model
   return ComposedModel::getWork(object, when);
+}
+
+int PerCollection::getNumPastPhasesNeeded(int look_back)
+{
+  int needed = ComposedModel::getNumPastPhasesNeeded(look_back);
+  for (auto& m : models_)
+    needed = std::max(needed, m.second->getNumPastPhasesNeeded(look_back));
+  return needed;
 }
 
 }}}}

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                    test_model_naive_persistence.nompi.cc
+//                        test_model_raw_data.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,7 +44,7 @@
 
 #include <vt/transport.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
-#include <vt/vrt/collection/balance/model/naive_persistence.h>
+#include <vt/vrt/collection/balance/model/raw_data.h>
 
 #include <gtest/gtest.h>
 
@@ -54,78 +54,59 @@
 
 namespace vt { namespace tests { namespace unit {
 
-using TestModelNaivePersistence = TestHarness;
+using TestRawData = TestHarness;
 
-using vt::vrt::collection::balance::ElementIDType;
-using vt::vrt::collection::balance::LoadModel;
-using vt::vrt::collection::balance::NaivePersistence;
-using vt::vrt::collection::balance::PhaseOffset;
-using vt::vrt::collection::balance::LoadMapType;
-using vt::vrt::collection::balance::SubphaseLoadMapType;
 using vt::vrt::collection::balance::CommMapType;
+using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::RawData;
+using vt::vrt::collection::balance::LoadMapType;
+using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
+using vt::vrt::collection::balance::PhaseOffset;
+using vt::vrt::collection::balance::SubphaseLoadMapType;
 
-static int32_t getIndexFromPhase(int32_t phase) {
-  return std::max(0, -1 * phase - 1);
-}
-
-struct StubModel : LoadModel {
-
-  StubModel() = default;
-  virtual ~StubModel() = default;
-
-  void setLoads(
-    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
-    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
-    std::unordered_map<PhaseType, CommMapType> const*) override {
-    proc_load_ = proc_load;
-  }
-
-  void updateLoads(PhaseType) override {}
-
-  TimeType getWork(ElementIDType id, PhaseOffset phase) override {
-    EXPECT_LE(phase.phases, -1);
-    return proc_load_->at(getIndexFromPhase(phase.phases)).at(id);
-  }
-
-  virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->at(3).begin());
-  }
-  virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->at(3).end());
-  }
-
-  // Not used in this test
-  virtual int getNumObjects() override { return 1; }
-  virtual int getNumCompletedPhases() override { return 1; }
-  virtual int getNumSubphases() override { return 1; }
-  int getNumPastPhasesNeeded(int look_back = 0) override { return look_back; }
-
-private:
-  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
-};
-
-TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
-    std::unordered_map<PhaseType, LoadMapType> proc_loads = {
-    {0, LoadMapType{
-      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}}},
-    {1, LoadMapType{
-      {ElementIDType{1}, TimeType{4}}, {ElementIDType{2}, TimeType{10}}}},
-    {2, LoadMapType{
-      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{50}}}},
-    {3, LoadMapType{
-      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{100}}}}};
-
+TEST_F(TestRawData, test_model_raw_data_scalar) {
   auto test_model =
-    std::make_shared<NaivePersistence>(std::make_shared<StubModel>());
+    std::make_shared<RawData>();
 
+  std::unordered_map<PhaseType, LoadMapType> proc_loads;
   test_model->setLoads(&proc_loads, nullptr, nullptr);
 
-  for (auto&& obj : *test_model) {
-    for (auto phase : {0, -1, -2, -3, -4}) {
-      auto work_val = test_model->getWork(obj, PhaseOffset{phase, 1});
-      EXPECT_EQ(work_val, proc_loads.at(getIndexFromPhase(phase)).at(obj));
+  // Work loads to be added in each test iteration
+  std::vector<LoadMapType> load_holder{
+    LoadMapType{
+      {ElementIDType{1}, TimeType{5}}, {ElementIDType{2}, TimeType{10}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{100}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{50}}, {ElementIDType{2}, TimeType{40}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{2}}, {ElementIDType{2}, TimeType{50}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{20}}},
+    LoadMapType{
+      {ElementIDType{1}, TimeType{100}}, {ElementIDType{2}, TimeType{10}}},
+  };
+
+  for (size_t iter = 0; iter < load_holder.size(); ++iter) {
+    proc_loads[iter] = load_holder[iter];
+    test_model->updateLoads(iter);
+
+    EXPECT_EQ(test_model->getNumObjects(), 2);
+    EXPECT_EQ(test_model->getNumCompletedPhases(), iter+1);
+
+    EXPECT_EQ(test_model->getNumPastPhasesNeeded(iter), iter);
+    EXPECT_EQ(test_model->getNumPastPhasesNeeded(2*iter), 2*iter);
+
+    int objects_seen = 0;
+    for (auto&& obj : *test_model) {
+      EXPECT_TRUE(obj == 1 || obj == 2);
+      objects_seen++;
+
+      auto work_val = test_model->getWork(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});
+      EXPECT_EQ(work_val, load_holder[iter][obj]);
     }
+    EXPECT_EQ(objects_seen, 2);
   }
 }
 

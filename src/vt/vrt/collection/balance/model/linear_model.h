@@ -71,6 +71,7 @@ struct LinearModel : ComposedModel {
   { }
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
+  int getNumPastPhasesNeeded(int look_back) override;
 
 private:
   int past_len_ = 0;

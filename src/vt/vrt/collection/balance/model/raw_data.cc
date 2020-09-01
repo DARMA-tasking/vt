@@ -47,17 +47,37 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-void RawData::setLoads(std::vector<LoadMapType> const* proc_load,
-		       std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-		       std::vector<CommMapType> const* proc_comm)
+void RawData::updateLoads(PhaseType last_completed_phase) {
+  last_completed_phase_ = last_completed_phase;
+}
+
+void RawData::setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                       std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                       std::unordered_map<PhaseType, CommMapType> const* proc_comm)
 {
   proc_load_ = proc_load;
   proc_subphase_load_ = proc_subphase_load;
   proc_comm_ = proc_comm;
 }
 
+ObjectIterator RawData::begin() {
+  return ObjectIterator(proc_load_->at(last_completed_phase_).cbegin());
+}
+
+ObjectIterator RawData::end() {
+  return ObjectIterator(proc_load_->at(last_completed_phase_).cend());
+}
+
+int RawData::getNumObjects() {
+  return end() - begin();
+}
+
+int RawData::getNumCompletedPhases() {
+  return last_completed_phase_ + 1;
+}
+
 int RawData::getNumSubphases() {
-  const auto& last_phase = proc_subphase_load_->back();
+  const auto& last_phase = proc_subphase_load_->at(last_completed_phase_);
   const auto& an_object = *last_phase.begin();
   const auto& subphases = an_object.second;
   return subphases.size();
@@ -68,11 +88,16 @@ TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
   vtAssert(offset.phases < 0,
 	   "RawData makes no predictions. Compose with NaivePersistence or some longer-range forecasting model as needed");
 
-  auto phase = proc_load_->size() + offset.phases;
+  auto phase = getNumCompletedPhases() + offset.phases;
   if (offset.subphase == PhaseOffset::WHOLE_PHASE)
     return proc_load_->at(phase).at(object);
   else
     return proc_subphase_load_->at(phase).at(object).at(offset.subphase);
+}
+
+int RawData::getNumPastPhasesNeeded(int look_back)
+{
+  return look_back;
 }
 
 }}}}

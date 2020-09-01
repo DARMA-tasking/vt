@@ -102,9 +102,9 @@ public:
    * This would typically be called by LBManager when the user has
    * passed a new model instance for a collection
    */
-  virtual void setLoads(std::vector<LoadMapType> const* proc_load,
-                        std::vector<SubphaseLoadMapType> const* proc_subphase_load,
-                        std::vector<CommMapType> const* proc_comm) = 0;
+  virtual void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+                        std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
+                        std::unordered_map<PhaseType, CommMapType> const* proc_comm) = 0;
 
   /**
    * \brief Signals that load data for a new phase is available
@@ -127,6 +127,18 @@ public:
    * \return How much computation time the object is estimated to require
    */
   virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
+
+  /**
+   * \brief Compute how many phases of past load statistics need to be
+   * kept availble for the model to use
+   *
+   * \param[in] look_back How many phases into the past the caller
+   * intends to query
+   *
+   * \return How many phases of past load statistics will be needed to
+   * satisfy the requested history
+   */
+  virtual int getNumPastPhasesNeeded(int look_back = 0) = 0;
 
   // Object enumeration, to abstract away access to the underlying structures from NodeStats
   virtual ObjectIterator begin() = 0;

@@ -71,9 +71,9 @@ struct StubModel : LoadModel {
   virtual ~StubModel() = default;
 
   void setLoads(
-    std::vector<LoadMapType> const* proc_load,
-    std::vector<SubphaseLoadMapType> const*,
-    std::vector<CommMapType> const*) override {
+    std::unordered_map<PhaseType, LoadMapType> const* proc_load,
+    std::unordered_map<PhaseType, SubphaseLoadMapType> const*,
+    std::unordered_map<PhaseType, CommMapType> const*) override {
     proc_load_ = proc_load;
   }
 
@@ -86,31 +86,32 @@ struct StubModel : LoadModel {
   }
 
   virtual ObjectIterator begin() override {
-    return ObjectIterator(proc_load_->back().begin());
+    return ObjectIterator(proc_load_->at(3).begin());
   }
   virtual ObjectIterator end() override {
-    return ObjectIterator(proc_load_->back().end());
+    return ObjectIterator(proc_load_->at(3).end());
   }
 
   // Not used by this test
   virtual int getNumObjects() override { return 0; }
   virtual int getNumCompletedPhases() override { return 0; }
   virtual int getNumSubphases() override { return 0; }
+  int getNumPastPhasesNeeded(int look_back = 0) override { return look_back; }
 
 private:
-  std::vector<LoadMapType> const* proc_load_ = nullptr;
+  std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;
 };
 
 TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
-  std::vector<LoadMapType> proc_loads = {
-    LoadMapType{
-      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{30}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{10}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{5}}}};
+  std::unordered_map<PhaseType, LoadMapType> proc_loads = {
+    {0, LoadMapType{
+      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}}},
+    {1, LoadMapType{
+      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{30}}}},
+    {2, LoadMapType{
+      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{10}}}},
+    {3, LoadMapType{
+      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{5}}}}};
 
   auto test_model =
     std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);

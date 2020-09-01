@@ -77,4 +77,9 @@ TimeType PersistenceMedianLastN::getWork(ElementIDType object, PhaseOffset when)
     return (times[phases / 2 - 1] + times[phases / 2]) / 2;
 }
 
+int PersistenceMedianLastN::getNumPastPhasesNeeded(int look_back)
+{
+  return ComposedModel::getNumPastPhasesNeeded(std::max(n_, look_back));
+}
+
 }}}}
