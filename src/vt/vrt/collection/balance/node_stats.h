@@ -255,13 +255,13 @@ private:
   std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node subphase timings for each local object
   std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
-  /// Local migration type-free lambdas for each object
+  /// Local migration type-free lambdas for each object (from perm ID)
   std::unordered_map<ElementIDType,MigrateFnType> node_migrate_;
   /// Map of temporary ID to permanent ID
   std::unordered_map<ElementIDType,ElementIDType> node_temp_to_perm_;
   /// Map of permanent ID to temporary ID
   std::unordered_map<ElementIDType,ElementIDType> node_perm_to_temp_;
-  /// Map from element temporary ID to the collection's virtual proxy (untyped)
+  /// Map from element permanent ID to the collection's virtual proxy (untyped)
   std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
   /// Node communication graph for each local object
   std::unordered_map<PhaseType, CommMapType> node_comm_;

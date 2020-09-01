@@ -87,12 +87,12 @@ ElementIDType NodeStats::permToTemp(ElementIDType perm_id) const {
 }
 
 bool NodeStats::hasObjectToMigrate(ElementIDType obj_id) const {
-  auto iter = node_migrate_.find(obj_id);
+  auto iter = node_migrate_.find(tempToPerm(obj_id));
   return iter != node_migrate_.end();
 }
 
 bool NodeStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
-  auto iter = node_migrate_.find(obj_id);
+  auto iter = node_migrate_.find(tempToPerm(obj_id));
   if (iter == node_migrate_.end()) {
     return false;
   }
@@ -317,11 +317,11 @@ ElementIDType NodeStats::addNodeStats(
   node_temp_to_perm_[temp_id] = perm_id;
   node_perm_to_temp_[perm_id] = temp_id;
 
-  auto migrate_iter = node_migrate_.find(temp_id);
+  auto migrate_iter = node_migrate_.find(perm_id);
   if (migrate_iter == node_migrate_.end()) {
     node_migrate_.emplace(
       std::piecewise_construct,
-      std::forward_as_tuple(temp_id),
+      std::forward_as_tuple(perm_id),
       std::forward_as_tuple([col_elm](NodeType node){
         col_elm->migrate(node);
       })
@@ -329,7 +329,7 @@ ElementIDType NodeStats::addNodeStats(
   }
 
   auto const col_proxy = col_elm->getProxy();
-  node_collection_lookup_[temp_id] = col_proxy;
+  node_collection_lookup_[perm_id] = col_proxy;
 
   return temp_id;
 }
@@ -337,7 +337,7 @@ ElementIDType NodeStats::addNodeStats(
 VirtualProxyType NodeStats::getCollectionProxyForElement(
   ElementIDType temp_id
 ) const {
-  auto iter = node_collection_lookup_.find(temp_id);
+  auto iter = node_collection_lookup_.find(tempToPerm(temp_id));
   if (iter == node_collection_lookup_.end()) {
     return no_vrt_proxy;
   }
