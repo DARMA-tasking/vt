@@ -173,12 +173,12 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
       }
     });
 
-		vt::runInEpochCollective([&]{
-			for (int i = 0; i < 5; i++) {
-				if (this_node == 0) {
-					proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
-				}
-			}
+    vt::runInEpochCollective([&]{
+      for (int i = 0; i < 5; i++) {
+        if (this_node == 0) {
+          proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+        }
+      }
     });
 
     vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
@@ -201,7 +201,9 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     });
 
     vt::theCollective()->barrier();
+  }
 
+  {
     auto proxy = vt::theCollection()->restoreFromFile<TestCol>(
       range, checkpoint_name
     );
