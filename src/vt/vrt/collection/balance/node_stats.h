@@ -192,7 +192,7 @@ public:
   /**
    * \internal \brief Test if this node has an object to migrate
    *
-   * \param[in] obj_id the object temporary ID
+   * \param[in] obj_id the object permanent ID
    *
    * \return whether this node has the object
    */
@@ -201,7 +201,7 @@ public:
   /**
    * \internal \brief Migrate an local object to another node
    *
-   * \param[in] obj_id the object temporary ID
+   * \param[in] obj_id the object permanent ID
    * \param[in] to_node the node to migrate to
    *
    * \return whether this node has the object
@@ -209,33 +209,14 @@ public:
   bool migrateObjTo(ElementIDType obj_id, NodeType to_node);
 
   /**
-   * \internal \brief Convert temporary element ID to permanent Returns
-   * \c no_element_id if not found.
-   * \param[in] temp_id temporary ID
-   *
-   * \return permanent ID
-   */
-  ElementIDType tempToPerm(ElementIDType temp_id) const;
-
-  /**
-   * \internal \brief Convert permanent element ID to temporary. Returns
-   * \c no_element_id if not found.
-   *
-   * \param[in] perm_id permanent ID
-   *
-   * \return temporary ID
-   */
-  ElementIDType permToTemp(ElementIDType perm_id) const;
-
-  /**
    * \internal \brief Get the collection proxy for a given element ID
    *
-   * \param[in] temp_id the temporary ID for the element for a given phase
+   * \param[in] perm_id the temporary ID for the element for a given phase
    *
    * \return the virtual proxy if the element is part of the collection;
    * otherwise \c no_vrt_proxy
    */
-  VirtualProxyType getCollectionProxyForElement(ElementIDType temp_id) const;
+  VirtualProxyType getCollectionProxyForElement(ElementIDType perm_id) const;
 
 private:
   /**
@@ -249,22 +230,26 @@ private:
   void closeStatsFile();
 
 private:
-  /// Local proxy to objgroup
-  objgroup::proxy::Proxy<NodeStats> proxy_;
+
   /// Node timings for each local object
   std::unordered_map<PhaseType, LoadMapType> node_data_;
   /// Node subphase timings for each local object
   std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
+  /// Node communication graph for each local object
+  std::unordered_map<PhaseType, CommMapType> node_comm_;
+
   /// Local migration type-free lambdas for each object (from perm ID)
   std::unordered_map<ElementIDType,MigrateFnType> node_migrate_;
+  /// Map from element permanent ID to the collection's virtual proxy (untyped)
+  std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
+
   /// Map of temporary ID to permanent ID
   std::unordered_map<ElementIDType,ElementIDType> node_temp_to_perm_;
   /// Map of permanent ID to temporary ID
   std::unordered_map<ElementIDType,ElementIDType> node_perm_to_temp_;
-  /// Map from element permanent ID to the collection's virtual proxy (untyped)
-  std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
-  /// Node communication graph for each local object
-  std::unordered_map<PhaseType, CommMapType> node_comm_;
+
+  /// Local proxy to objgroup
+  objgroup::proxy::Proxy<NodeStats> proxy_;
   /// The current element ID
   ElementIDType next_elm_;
   /// The stats file name for outputting instrumentation

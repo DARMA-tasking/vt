@@ -58,11 +58,11 @@ void StatsMapLB::init(objgroup::proxy::Proxy<StatsMapLB> in_proxy) {
 void StatsMapLB::runLB() {
   auto const& myNewList = theStatsReader()->getMoveList(phase_);
   for (size_t in = 0; in < myNewList.size(); in += 2) {
-    auto temp_id = theNodeStats()->permToTemp(myNewList[in]);
+    auto perm_id = myNewList[in];
 
-    vtAssert(temp_id != balance::no_element_id, "Must have valid ID here");
+    vtAssert(perm_id != balance::no_element_id, "Must have valid ID here");
 
-    migrateObjectTo(temp_id, myNewList[in+1]);
+    migrateObjectTo(perm_id, myNewList[in+1]);
   }
 
   theStatsReader()->clearMoveList(phase_);

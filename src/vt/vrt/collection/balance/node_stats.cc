@@ -70,29 +70,13 @@ void NodeStats::setProxy(objgroup::proxy::Proxy<NodeStats> in_proxy) {
   return ptr;
 }
 
-ElementIDType NodeStats::tempToPerm(ElementIDType temp_id) const {
-  auto iter = node_temp_to_perm_.find(temp_id);
-  if (iter == node_temp_to_perm_.end()) {
-    return no_element_id;
-  }
-  return iter->second;
-}
-
-ElementIDType NodeStats::permToTemp(ElementIDType perm_id) const {
-  auto iter = node_perm_to_temp_.find(perm_id);
-  if (iter == node_perm_to_temp_.end()) {
-    return no_element_id;
-  }
-  return iter->second;
-}
-
 bool NodeStats::hasObjectToMigrate(ElementIDType obj_id) const {
-  auto iter = node_migrate_.find(tempToPerm(obj_id));
+  auto iter = node_migrate_.find(obj_id);
   return iter != node_migrate_.end();
 }
 
 bool NodeStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
-  auto iter = node_migrate_.find(tempToPerm(obj_id));
+  auto iter = node_migrate_.find(obj_id);
   if (iter == node_migrate_.end()) {
     return false;
   }
@@ -129,18 +113,6 @@ void NodeStats::clearStats() {
 
 void NodeStats::startIterCleanup(PhaseType phase, int look_back) {
   // TODO: Add in subphase support here too
-
-  // Convert the temp ID node_data_ for the last iteration into perm ID for
-  // stats output
-  auto const prev_data = std::move(node_data_[phase]);
-  std::unordered_map<ElementIDType,TimeType> new_data;
-  for (auto& elm : prev_data) {
-    auto iter = node_temp_to_perm_.find(elm.first);
-    vtAssert(iter != node_temp_to_perm_.end(), "Temp ID must exist");
-    auto perm_id = iter->second;
-    new_data[perm_id] = elm.second;
-  }
-  node_data_[phase] = std::move(new_data);
 
   if (phase - look_back >= 0) {
     node_data_.erase(phase - look_back);
@@ -292,20 +264,20 @@ void NodeStats::addNodeStats(
   );
 
   auto &phase_data = node_data_[phase];
-  auto elm_iter = phase_data.find(temp_id);
+  auto elm_iter = phase_data.find(perm_id);
   vtAssert(elm_iter == phase_data.end(), "Must not exist");
   phase_data.emplace(
     std::piecewise_construct,
-    std::forward_as_tuple(temp_id),
+    std::forward_as_tuple(perm_id),
     std::forward_as_tuple(time)
   );
 
   auto subphase_data = node_subphase_data_[phase];
-  auto elm_subphase_iter = subphase_data.find(temp_id);
+  auto elm_subphase_iter = subphase_data.find(perm_id);
   vtAssert(elm_subphase_iter == subphase_data.end(), "Must not exist");
   subphase_data.emplace(
     std::piecewise_construct,
-    std::forward_as_tuple(temp_id),
+    std::forward_as_tuple(perm_id),
     std::forward_as_tuple(subphase_time)
   );
 
@@ -333,9 +305,9 @@ void NodeStats::addNodeStats(
 }
 
 VirtualProxyType NodeStats::getCollectionProxyForElement(
-  ElementIDType temp_id
+  ElementIDType perm_id
 ) const {
-  auto iter = node_collection_lookup_.find(tempToPerm(temp_id));
+  auto iter = node_collection_lookup_.find(perm_id);
   if (iter == node_collection_lookup_.end()) {
     return no_vrt_proxy;
   }
