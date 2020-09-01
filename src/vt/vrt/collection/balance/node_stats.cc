@@ -275,7 +275,7 @@ void NodeStats::outputStatsFile() {
   closeStatsFile();
 }
 
-ElementIDType NodeStats::addNodeStats(
+void NodeStats::addNodeStats(
   Migratable* col_elm,
   PhaseType const& phase, TimeType const& time,
   std::vector<TimeType> const& subphase_time, CommMapType const& comm
@@ -330,8 +330,6 @@ ElementIDType NodeStats::addNodeStats(
 
   auto const col_proxy = col_elm->getProxy();
   node_collection_lookup_[perm_id] = col_proxy;
-
-  return temp_id;
 }
 
 VirtualProxyType NodeStats::getCollectionProxyForElement(

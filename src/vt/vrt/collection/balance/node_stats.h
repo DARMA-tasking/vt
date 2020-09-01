@@ -111,7 +111,7 @@ public:
    *
    * \return the temporary ID for the object assigned for this phase
    */
-  ElementIDType addNodeStats(
+  void addNodeStats(
     Migratable* col_elm,
     PhaseType const& phase, TimeType const& time,
     std::vector<TimeType> const& subphase_time, CommMapType const& comm
