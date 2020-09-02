@@ -241,7 +241,11 @@ EventType AsyncEvent::createParentEvent(NodeType const& node) {
 }
 
 void AsyncEvent::removeEventID(EventType const& event) {
-  lookup_container_.erase(event);
+  auto iter = lookup_container_.find(event);
+  if (iter != lookup_container_.end()) {
+    event_container_.erase(iter->second);
+    lookup_container_.erase(event);
+  }
 }
 
 AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) {
