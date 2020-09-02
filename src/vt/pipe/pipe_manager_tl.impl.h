@@ -254,9 +254,7 @@ CallbackT
 PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   bool const persist = true;
   bool const send_back = false;
-  bool const dispatch = true;
   auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
     nullptr
   );
@@ -265,12 +263,6 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   auto cb = CallbackT(
     callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
     proxy.getProxy()
-  );
-  addListenerAny<MsgT>(
-    cb.getPipe(),
-    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(
-      handler,proxy,member
-    )
   );
   return cb;
 }
@@ -283,9 +275,7 @@ CallbackT
 PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   bool const persist = true;
   bool const send_back = false;
-  bool const dispatch = true;
   auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const& handler =
     auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(nullptr);
   auto const& vrt_handler = vrt::collection::makeVrtDispatch<MsgT,ColT>();
@@ -293,12 +283,6 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   auto cb = CallbackT(
     callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
     proxy.getProxy()
-  );
-  addListenerAny<MsgT>(
-    cb.getPipe(),
-    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(
-      handler,proxy,member
-    )
   );
   return cb;
 }
