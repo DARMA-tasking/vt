@@ -193,9 +193,7 @@ CallbackT
 PipeManagerTL::makeCallbackObjGrpSend(objgroup::proxy::ProxyElm<ObjT> proxy) {
   bool const persist = true;
   bool const send_back = false;
-  bool const dispatch = true;
   auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const proxy_bits = proxy.getProxy();
   auto const dest_node = proxy.getNode();
   auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
@@ -214,9 +212,7 @@ CallbackT
 PipeManagerTL::makeCallbackObjGrpBcast(objgroup::proxy::Proxy<ObjT> proxy) {
   bool const persist = true;
   bool const send_back = false;
-  bool const dispatch = true;
   auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const proxy_bits = proxy.getProxy();
   auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
