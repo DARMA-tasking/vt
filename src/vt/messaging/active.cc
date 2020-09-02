@@ -122,8 +122,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     );
   }
 
-  EventType new_event = theEvent()->createParentEvent(this_node_);
-
   MsgSizeType new_msg_size = msg_size;
 
   if (is_put && !is_put_packed) {
@@ -176,7 +174,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
 
   sendMsgBytes(dest, base, new_msg_size, send_tag);
 
-  return new_event;
+  return no_event;
 }
 
 EventType ActiveMessenger::sendMsgBytes(
