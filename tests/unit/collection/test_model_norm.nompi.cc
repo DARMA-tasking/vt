@@ -50,7 +50,7 @@
 
 #include "test_harness.h"
 
-#include <cmath>
+#include <limits>
 #include <memory>
 
 namespace vt { namespace tests { namespace unit {
@@ -185,8 +185,8 @@ TEST_F(TestModelNorm, test_model_norm_3) {
        {ElementIDType{2}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
 
   // infinite 'power' value
-  auto test_model =
-    std::make_shared<Norm>(std::make_shared<StubModel>(), std::exp(800));
+  auto test_model = std::make_shared<Norm>(
+    std::make_shared<StubModel>(), std::numeric_limits<double>::infinity());
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
 
   std::array<TimeType, 2> expected_norms = {TimeType{30}, TimeType{60}};
