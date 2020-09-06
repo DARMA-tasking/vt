@@ -155,8 +155,6 @@ struct EntityLocationCoord : LocationCoord {
   /**
    * \brief Tell coordinator that the entity has migrated to another node
    *
-   * \todo Rename this \c entityEmigrated
-	 * changed from entityMigrated
    *
    * \param[in] id the entity ID
    * \param[in] new_node the node it was migrated to
@@ -166,8 +164,6 @@ struct EntityLocationCoord : LocationCoord {
   /**
    * \brief Register a migrated entity on new node
    *
-   * \todo Rename this \c entityImmigrated
-	 * changed from registerEntityMigrated
    *
    * This should be called after the entity is migrated when it arrived on the
    * new node: order of operations:
