@@ -179,9 +179,9 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
     vt::theCollective()->barrier();
 
     if (my_node == old_home) {
-      vt::theLocMan()->virtual_loc->entityMigrated(entity, new_home);
+      vt::theLocMan()->virtual_loc->entityEmigrated(entity, new_home);
     } else if (my_node == new_home) {
-      vt::theLocMan()->virtual_loc->registerEntityMigrated(
+      vt::theLocMan()->virtual_loc->entityImmigrated(
         entity, old_home, my_node
       );
     }
@@ -219,9 +219,9 @@ TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
     vt::theCollective()->barrier();
 
     if (my_node == home_node) {
-      vt::theLocMan()->virtual_loc->entityMigrated(entity, migrate_to_node);
+      vt::theLocMan()->virtual_loc->entityEmigrated(entity, migrate_to_node);
     } else if (my_node == migrate_to_node) {
-      vt::theLocMan()->virtual_loc->registerEntityMigrated(
+      vt::theLocMan()->virtual_loc->entityImmigrated(
         entity, home_node, migrate_to_node
       );
     }
@@ -270,14 +270,14 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
     vt::theCollective()->barrier();
 
     // shift entity node to the right (modulo nb_nodes)
-    vt::theLocMan()->virtual_loc->entityMigrated(entity, next_node);
+    vt::theLocMan()->virtual_loc->entityEmigrated(entity, next_node);
 
     auto prev_node = (
       my_node == 0 ?
       location::default_entity + nb_nodes - 1 :
       location::default_entity + my_node - 1
     );
-    vt::theLocMan()->virtual_loc->registerEntityMigrated(
+    vt::theLocMan()->virtual_loc->entityImmigrated(
       prev_node, prev_home, my_node
     );
     vt::theCollective()->barrier();
@@ -412,11 +412,11 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
 
     if (my_node == home) {
       // migrate entity: unregister it but keep its id in cache
-      vt::theLocMan()->virtual_loc->entityMigrated(entity, new_home);
+      vt::theLocMan()->virtual_loc->entityEmigrated(entity, new_home);
       EXPECT_TRUE(location::isCached(entity));
     } else if (my_node == new_home) {
       // receive migrated entity: register it and keep in cache
-      vt::theLocMan()->virtual_loc->registerEntityMigrated(
+      vt::theLocMan()->virtual_loc->entityImmigrated(
         entity, home, my_node, [entity,&nb_received](vt::BaseMessage* in_msg) {
           vt_debug_print(
             location, node,

@@ -208,12 +208,12 @@ void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
 }
 
 template <typename EntityID>
-void EntityLocationCoord<EntityID>::entityMigrated(
+void EntityLocationCoord<EntityID>::entityEmigrated(
   EntityID const& id, NodeType const& new_node
 ) {
   vt_debug_print(
     location, node,
-    "EntityLocationCoord: entityMigrated: id={}, new_node={}\n",
+    "EntityLocationCoord: entityEmigrated: id={}, new_node={}\n",
     id, new_node
   );
 
@@ -227,7 +227,7 @@ void EntityLocationCoord<EntityID>::entityMigrated(
 }
 
 template <typename EntityID>
-void EntityLocationCoord<EntityID>::registerEntityMigrated(
+void EntityLocationCoord<EntityID>::entityImmigrated(
   EntityID const& id, NodeType const& home_node, NodeType const& from,
   LocMsgActionType msg_action
 ) {
