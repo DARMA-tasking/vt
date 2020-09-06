@@ -96,7 +96,11 @@ struct PendingSend final {
   }
 
   /**
-   * \brief Construct a pending send from a message and complex action.
+   * \brief Construct a pending send that invokes a callback.
+   *
+   * \note This form does not implictly send a message. The callback
+   * action is responsible for all further work. It is a useful
+   * construct to delay the callback and ensure an epoch is produced.
    *
    * This constructor is for a complex \c PendingSend that holds a \c
    * std::function for performing the send (e.g., sending to a collection
@@ -107,9 +111,10 @@ struct PendingSend final {
    * \param[in] in_action the "send" action to run
    */
   template <typename MsgT>
-  //  [[deprecated("Should not used by internal VT code")]]
-  PendingSend(MsgSharedPtr<MsgT>& in_msg, SendActionType in_action)
-    : msg_(in_msg.template toVirtual<BaseMsgType>())
+  PendingSend(
+    MsgSharedPtr<MsgT>& in_msg,
+    SendActionType in_action
+  ) : msg_(in_msg.template toVirtual<BaseMsgType>())
     , msg_size_(sizeof(MsgT))
     , send_action_(in_action)
   {
@@ -117,27 +122,13 @@ struct PendingSend final {
   }
 
   /**
-   * \deprecated Use constructor that accepts non-const in_msg.
-   * \brief Construct a pending send from a message and complex action.
+   * \brief Construct a pending send to push an epoch.
    *
-   * This constructor is for a complex \c PendingSend that holds a \c
-   * std::function for performing the send (e.g., sending to a collection
-   * element). When released, it will run the \c in_action of type \c
-   * SendActionType.
+   * \note This form does not implictly send a message.
    *
    * \param[in] in_msg the message to send
    * \param[in] in_action the "send" action to run
    */
-  template <typename MsgT>
-  [[deprecated("Use constructor that accepts non-const in_msg")]]
-  PendingSend(MsgSharedPtr<MsgT> const& in_msg, SendActionType in_action)
-    : msg_(in_msg.template toVirtual<BaseMsgType>())
-    , msg_size_(sizeof(MsgT))
-    , send_action_(in_action)
-  {
-    produceMsg();
-  }
-
   PendingSend(EpochType ep, EpochActionType const& in_action);
 
   explicit PendingSend(std::nullptr_t) { }
