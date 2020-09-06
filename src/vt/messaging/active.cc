@@ -262,7 +262,6 @@ EventType ActiveMessenger::doMessageSend(
   auto const dest = envelopeGetDest(msg->env);
   auto const is_bcast = envelopeIsBcast(msg->env);
   auto const is_term = envelopeIsTerm(msg->env);
-  auto const is_epoch = envelopeIsEpochType(msg->env);
 
   #if vt_check_enabled(trace_enabled)
     // We are not allowed to hold a ref to anything in the envelope, get this,
@@ -300,10 +299,6 @@ EventType ActiveMessenger::doMessageSend(
       dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
       print_bool(envelopeIsPut(msg->env))
     );
-  }
-
-  if (is_epoch) {
-    setupEpochMsg(msg);
   }
 
   bool deliver = false;
