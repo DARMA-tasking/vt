@@ -333,7 +333,7 @@ bool Runtime::tryInitialize() {
   return init_now;
 }
 
-bool Runtime::tryFinalize() {
+bool Runtime::tryFinalize(bool const disable_sig) {
   bool const rt_live = !finalized_ && initialized_;
   bool const has_run_sched = hasSchedRun();
   bool const finalize_now = rt_live && has_run_sched;
@@ -347,7 +347,7 @@ bool Runtime::tryFinalize() {
   );
 
   if (finalize_now) {
-    finalize(true);
+    finalize(true, disable_sig);
   } else {
     finalize_on_term_ = true;
   }
@@ -399,7 +399,7 @@ bool Runtime::initialize(bool const force_now) {
   }
 }
 
-bool Runtime::finalize(bool const force_now) {
+bool Runtime::finalize(bool const force_now, bool const disable_sig) {
   if (force_now) {
     using component::BaseComponent;
 
@@ -431,10 +431,17 @@ bool Runtime::finalize(bool const force_now) {
     }
 
     finalizeMPI();
+
+    if (disable_sig) {
+      signal(SIGSEGV, SIG_DFL);
+      signal(SIGUSR1, SIG_DFL);
+      signal(SIGINT, SIG_DFL);
+    }
+
     finalized_ = true;
     return true;
   } else {
-    return tryFinalize();
+    return tryFinalize(disable_sig);
   }
 }
 
