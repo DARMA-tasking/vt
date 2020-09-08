@@ -56,12 +56,14 @@
 namespace vt { namespace collective { namespace reduce {
 
 template <typename MsgT>
-void Reduce::reduceUp(MsgT* msg) {
+void Reduce::reduceUpHan(MsgT* msg) {
+  envelopeSetIsLocked(msg->env, false);
+
   vtAssert(msg->scope() == scope_, "Must match correct scope");
 
   vt_debug_print(
     reduce, node,
-    "reduceUp: scope={}, stamp={}, msg={}\n",
+    "reduceUpHan: scope={}, stamp={}, msg={}\n",
     msg->scope().str(), detail::stringizeStamp(msg->stamp()), print_ptr(msg)
   );
 
@@ -292,7 +294,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         scope_.str(), detail::stringizeStamp(id), parent
       );
 
-      theMsg()->sendMsg<MsgT,ReduceManager::reduceUp<MsgT>>(parent, typed_msg);
+      theMsg()->sendMsg<MsgT,ReduceManager::reduceUpHan<MsgT>>(parent, typed_msg);
     }
   }
 }

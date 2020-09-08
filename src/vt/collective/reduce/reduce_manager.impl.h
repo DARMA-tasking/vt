@@ -60,9 +60,9 @@ template <typename MsgT>
 }
 
 template <typename MsgT>
-/*static*/ void ReduceManager::reduceUp(MsgT* msg) {
+/*static*/ void ReduceManager::reduceUpHan(MsgT* msg) {
   auto const& scope = msg->scope();
-  theCollective()->getReducer(scope)->template reduceUp<MsgT>(msg);
+  theCollective()->getReducer(scope)->template reduceUpHan<MsgT>(msg);
 }
 
 }}} /* end namespace vt::collective::reduce */

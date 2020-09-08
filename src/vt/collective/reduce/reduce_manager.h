@@ -159,7 +159,7 @@ struct ReduceManager {
    * \param[in] msg the reduce message
    */
   template <typename MsgT>
-  static void reduceUp(MsgT* msg);
+  static void reduceUpHan(MsgT* msg);
 
 private:
   ReduceScopeType reducers_;            /**< Live reducers by scope */

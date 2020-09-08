@@ -61,6 +61,7 @@ inline void envelopeSetup(
 
 template <typename Env>
 inline void envelopeInit(Env& env) {
+  envelopeSetIsLocked(env, false);
   setNormalType(env);
   envelopeSetDest(env, uninitialized_destination);
   envelopeSetHandler(env, uninitialized_handler);
@@ -75,7 +76,6 @@ inline void envelopeInit(Env& env) {
   envelopeSetTraceEvent(env, trace::no_trace_event);
 #endif
   envelopeSetHasBeenSerialized(env, false);
-  envelopeSetIsLocked(env, false);
 }
 
 inline void envelopeInitEmpty(Envelope& env) {

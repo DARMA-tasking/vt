@@ -238,13 +238,15 @@ template <typename MsgT, typename BaseT>
       "Must be smaller for eager protocol"
     );
 
-    // move serialized msg envelope to system envelope to preserve info
-    auto cur_ref = envelopeGetRef(payload_msg->env);
-    payload_msg->env = msg->env;
+    // wrap metadata
     payload_msg->handler = han;
     payload_msg->from_node = theContext()->getNode();
-    envelopeSetGroup(payload_msg->env, group_);
+    // setup envelope
+    auto cur_ref = envelopeGetRef(payload_msg->env);
+    payload_msg->env = msg->env;
     envelopeSetRef(payload_msg->env, cur_ref);
+    envelopeSetIsLocked(payload_msg->env, false);
+    envelopeSetGroup(payload_msg->env, group_);
 
     vt_debug_print(
       serial_msg, node,
@@ -268,13 +270,16 @@ template <typename MsgT, typename BaseT>
       );
 #   endif
 
-    auto cur_ref = envelopeGetRef(sys_msg->env);
+    // wrap metadata
     sys_msg->handler = traceable_han;
-    sys_msg->env = msg->env;
     sys_msg->from_node = theContext()->getNode();
     sys_msg->ptr_size = ptr_size;
-    envelopeSetGroup(sys_msg->env, group_);
+    // setup envelope
+    auto cur_ref = envelopeGetRef(sys_msg->env);
+    sys_msg->env = msg->env;
     envelopeSetRef(sys_msg->env, cur_ref);
+    envelopeSetIsLocked(sys_msg->env, false);
+    envelopeSetGroup(sys_msg->env, group_);
 
     vt_debug_print(
       serial_msg, node,
@@ -370,11 +375,15 @@ template <typename MsgT, typename BaseT>
           theEvent()->attachAction(event, [=]{ std::free(ptr); });
           sys_msg->data_recv_tag = std::get<1>(ret);
         };
-        auto cur_ref = envelopeGetRef(sys_msg->env);
-        sys_msg->env = msg->env;
+
+        // wrap metadata
         sys_msg->handler = typed_handler;
         sys_msg->from_node = theContext()->getNode();
+        // setup envelope
+        auto cur_ref = envelopeGetRef(sys_msg->env);
+        sys_msg->env = msg->env;
         envelopeSetRef(sys_msg->env, cur_ref);
+        envelopeSetIsLocked(sys_msg->env, false);
 
         vt_debug_print(
           serial_msg, node,
@@ -388,6 +397,7 @@ template <typename MsgT, typename BaseT>
           dest, sys_msg_send, send_serialized
         );
       } else {
+        // Dest is current node, still runs through serialization; no send.
         auto msg_data = ptr;
         auto user_msg = deserializeFullMessage<MsgT>(msg_data);
 
@@ -413,12 +423,14 @@ template <typename MsgT, typename BaseT>
 
     vtAssertExpr(payload_msg != nullptr && eager_sender != nullptr);
 
-    // move serialized msg envelope to system envelope to preserve info
-    auto cur_ref = envelopeGetRef(payload_msg->env);
-    payload_msg->env = msg->env;
+    // wrap metadata
     payload_msg->handler = typed_handler;
     payload_msg->from_node = theContext()->getNode();
+    // setup envelope
+    auto cur_ref = envelopeGetRef(payload_msg->env);
+    payload_msg->env = msg->env;
     envelopeSetRef(payload_msg->env, cur_ref);
+    envelopeSetIsLocked(payload_msg->env, false);
 
     return eager_sender(payload_msg);
   }
