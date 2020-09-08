@@ -98,6 +98,7 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_1) {
   ctx->val = this_node;
 
   auto cb = theCB()->makeFunc<Context>(
+    vt::pipe::LifetimeEnum::Once,
     ctx.get(), [](Context* my_ctx){
       called = 200;
       EXPECT_EQ(my_ctx->val, theContext()->getNode());
@@ -121,6 +122,7 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
 
     auto next = this_node + 1 < num_nodes ? this_node + 1 : 0;
     auto cb = theCB()->makeFunc<DataMsg, Context>(
+      vt::pipe::LifetimeEnum::Once,
       ctx.get(), [next](DataMsg* msg, Context* my_ctx) {
         called = 500;
         EXPECT_EQ(my_ctx->val, theContext()->getNode());

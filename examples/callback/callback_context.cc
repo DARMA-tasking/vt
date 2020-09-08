@@ -105,7 +105,9 @@ int main(int argc, char** argv) {
     my_global_ctx.x = 1283;
 
     // Make a callback that triggers the callback with a context
-    auto cb = vt::theCB()->makeFunc<DataMsg,MyContext>(&my_global_ctx, callbackFn);
+    auto cb = vt::theCB()->makeFunc<DataMsg,MyContext>(
+      vt::pipe::LifetimeEnum::Once, &my_global_ctx, callbackFn
+    );
     auto msg = vt::makeMessage<CallbackMsg>(cb);
     vt::theMsg()->sendMsg<CallbackMsg,handler>(1, msg);
   }

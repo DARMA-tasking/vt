@@ -234,7 +234,9 @@ TEST_F(TestMemoryLifetime, test_active_send_callback_lifetime_1) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes > 1) {
-    auto cb = theCB()->makeFunc<NormalTestMsg>([](NormalTestMsg* msg){ });
+    auto cb = theCB()->makeFunc<NormalTestMsg>(
+      vt::pipe::LifetimeEnum::Indefinite, [](NormalTestMsg* msg){ }
+    );
 
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<CallbackMsg<NormalTestMsg>>(cb);
@@ -268,7 +270,9 @@ TEST_F(TestMemoryLifetime, test_active_serial_callback_lifetime_1) {
   auto const& num_nodes = theContext()->getNumNodes();
 
   if (num_nodes > 1) {
-    auto cb = theCB()->makeFunc<SerialTestMsg>([](SerialTestMsg* msg){ });
+    auto cb = theCB()->makeFunc<SerialTestMsg>(
+      vt::pipe::LifetimeEnum::Indefinite, [](SerialTestMsg* msg){ }
+    );
 
     for (int i = 0; i < num_msgs_sent; i++) {
       auto msg = makeMessage<CallbackMsg<SerialTestMsg>>(cb);
