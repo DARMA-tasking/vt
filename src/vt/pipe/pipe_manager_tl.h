@@ -49,6 +49,7 @@
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/pipe_manager_base.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/pipe/pipe_lifetime.h"
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/collection/active/active_funcs.h"
 #include "vt/vrt/proxy/collection_proxy.h"
@@ -123,16 +124,16 @@ struct PipeManagerTL : virtual PipeManagerBase {
 
   // Single active message anon func-handler
   template <typename CbkT = DefType<V>>
-  CbkT makeCallbackSingleAnonVoid(FuncVoidType fn);
+  CbkT makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn);
 
   template <typename T, typename CbkT = DefType<T>>
-  CbkT makeCallbackSingleAnon(FuncMsgType<T> fn);
+  CbkT makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<T> fn);
 
   template <typename T, typename U, typename CbkT = DefType<T>>
-  CbkT makeCallbackSingleAnon(U* u, FuncMsgCtxType<T, U> fn);
+  CbkT makeCallbackSingleAnon(LifetimeEnum life, U* u, FuncMsgCtxType<T, U> fn);
 
   template <typename U, typename CbkT = DefType<V>>
-  CbkT makeCallbackSingleAnon(U* u, FuncCtxType<U> fn);
+  CbkT makeCallbackSingleAnon(LifetimeEnum life, U* u, FuncCtxType<U> fn);
 
   // Single active message collection proxy send
   template <

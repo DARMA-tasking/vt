@@ -55,6 +55,7 @@
 #include "vt/pipe/signal/signal_holder.h"
 #include "vt/pipe/callback/anon/callback_anon.fwd.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/pipe/pipe_lifetime.h"
 #include "vt/activefn/activefn.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/proxy/proxy_objgroup_elm.h"
@@ -82,12 +83,16 @@ struct PipeManager : PipeManagerTL, PipeManagerTyped {
   PipeManager();
 
   template <typename MsgT, typename ContextT>
-  Callback<MsgT> makeFunc(ContextT* ctx, FuncMsgCtxType<MsgT, ContextT> fn);
+  Callback<MsgT> makeFunc(
+    LifetimeEnum life, ContextT* ctx, FuncMsgCtxType<MsgT, ContextT> fn
+  );
   template <typename ContextT>
-  Callback<Void> makeFunc(ContextT* ctx, FuncCtxType<ContextT> fn);
+  Callback<Void> makeFunc(
+    LifetimeEnum life, ContextT* ctx, FuncCtxType<ContextT> fn
+  );
   template <typename MsgT>
-  Callback<MsgT> makeFunc(FuncMsgType<MsgT> fn);
-  Callback<Void> makeFunc(FuncVoidType fn);
+  Callback<MsgT> makeFunc(LifetimeEnum life, FuncMsgType<MsgT> fn);
+  Callback<Void> makeFunc(LifetimeEnum life, FuncVoidType fn);
 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   Callback<MsgT> makeSend(NodeType const& node);
