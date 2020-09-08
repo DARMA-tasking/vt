@@ -78,18 +78,22 @@ void PipeManager::triggerSendBack(PipeType const& pipe, MsgT* data) {
 }
 
 template <typename C>
-Callback<PipeManager::Void> PipeManager::makeFunc(C* ctx, FuncCtxType<C> fn) {
-  return makeCallbackSingleAnon<C,Callback<Void>>(ctx,fn);
+Callback<PipeManager::Void> PipeManager::makeFunc(
+  LifetimeEnum life, C* ctx, FuncCtxType<C> fn
+) {
+  return makeCallbackSingleAnon<C,Callback<Void>>(life,ctx,fn);
 }
 
 template <typename MsgT, typename C>
-Callback<MsgT> PipeManager::makeFunc(C* ctx, FuncMsgCtxType<MsgT, C> fn) {
-  return makeCallbackSingleAnon<MsgT,C,Callback<MsgT>>(ctx,fn);
+Callback<MsgT> PipeManager::makeFunc(
+  LifetimeEnum life, C* ctx, FuncMsgCtxType<MsgT, C> fn
+) {
+  return makeCallbackSingleAnon<MsgT,C,Callback<MsgT>>(life,ctx,fn);
 }
 
 template <typename MsgT>
-Callback<MsgT> PipeManager::makeFunc(FuncMsgType<MsgT> fn) {
-  return makeCallbackSingleAnon<MsgT,Callback<MsgT>>(fn);
+Callback<MsgT> PipeManager::makeFunc(LifetimeEnum life, FuncMsgType<MsgT> fn) {
+  return makeCallbackSingleAnon<MsgT,Callback<MsgT>>(life,fn);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
