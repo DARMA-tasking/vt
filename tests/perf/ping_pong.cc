@@ -106,7 +106,7 @@ static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
   if (num_bytes != max_bytes) {
     auto pmsg = makeMessage<PingMsg<num_bytes * 2>>();
     theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong<num_bytes * 2>>(
-      pong_node, pmsg.get()
+      pong_node, pmsg
     );
   }
 }
@@ -134,7 +134,7 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
   if (cnt >= num_pings) {
     auto msg = makeMessage<FinishedPingMsg<num_bytes>>(num_bytes);
     theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing<num_bytes>>(
-      0, msg.get()
+      0, msg
     );
   } else {
     NodeType const next =
@@ -146,7 +146,7 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
       );
     #else
       auto m = makeMessage<PingMsg<num_bytes>>(cnt + 1);
-      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(next, m.get());
+      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(next, m);
     #endif
   }
 }
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     auto m = makeMessage<PingMsg<min_bytes>>();
-    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong<min_bytes>>(pong_node, m.get());
+    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong<min_bytes>>(pong_node, m);
   }
 
   while (!rt->isTerminated()) {

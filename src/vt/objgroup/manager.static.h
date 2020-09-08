@@ -57,7 +57,7 @@ void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
   auto const this_node = theContext()->getNode();
   vtAssert(dest_node < num_nodes, "Invalid node (must be < num_nodes)");
   if (dest_node != this_node) {
-    theMsg()->sendMsg<MsgT>(dest_node,han,msg.get(),no_tag);
+    theMsg()->sendMsg<MsgT>(dest_node, han,msg, no_tag);
   } else {
   // Get the current epoch for the message
     auto const cur_epoch = theMsg()->setupEpochMsg(msg);
@@ -71,9 +71,10 @@ void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
   // Get the current epoch for the message
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
   // Broadcast the message
-  theMsg()->broadcastMsg<MsgT>(han,msg.get(),no_tag);
+  auto msg_hold = promoteMsg(msg.get()); // for scheduling
+  theMsg()->broadcastMsg<MsgT>(han, msg, no_tag);
   // Schedule delivery on this node for the objgroup
-  scheduleMsg(msg.template toVirtual<ShortMessage>(),han,cur_epoch);
+  scheduleMsg(msg_hold.template toVirtual<ShortMessage>(), han, cur_epoch);
 }
 
 }} /* end namespace vt::objgroup */

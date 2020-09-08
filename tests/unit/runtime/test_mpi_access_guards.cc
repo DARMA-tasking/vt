@@ -93,7 +93,7 @@ void testMpiAccess(bool access_allowed, bool grant_access) {
     // Sending message for common-case of attempting MPI access within
     // a message handler; it applies to all cases through the scheduler.
     auto msg = vt::makeMessage<DummyMsg>();
-    theMsg()->sendMsg<DummyMsg, message_handler>(1, msg.get());
+    theMsg()->sendMsg<DummyMsg, message_handler>(1, msg);
   }
 }
 

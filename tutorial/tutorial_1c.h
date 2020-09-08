@@ -138,7 +138,7 @@ static inline void activeMessageSerialization() {
     auto msg = ::vt::makeMessage<ParticleMsg>(1,2,3);
     msg->particles.push_back(Particle{10,11,12});
     msg->particles.push_back(Particle{13,14,15});
-    ::vt::theMsg()->sendMsg<ParticleMsg,msgSerialA>(to_node, msg.get());
+    ::vt::theMsg()->sendMsg<ParticleMsg,msgSerialA>(to_node, msg);
   }
 }
 

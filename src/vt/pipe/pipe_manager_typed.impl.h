@@ -104,7 +104,7 @@ PipeManagerTyped::makeCallbackSingleSendTyped(
   bool const is_persist, NodeType const& send_to_node
 ) {
   auto const& new_pipe_id = makePipeID(is_persist,false);
-  auto const& handler = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  auto const& handler = auto_registry::makeAutoHandler<MsgT,f>();
   auto container = CallbackSendType<MsgT>(
     new_pipe_id,handler,send_to_node
   );
@@ -138,7 +138,7 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 PipeManagerTyped::CallbackBcastType<MsgT>
 PipeManagerTyped::makeCallbackSingleBcastTyped(bool const inc) {
   auto const& new_pipe_id = makePipeID(true,false);
-  auto const& handler = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  auto const& handler = auto_registry::makeAutoHandler<MsgT,f>();
   auto container = CallbackBcastType<MsgT>(
     new_pipe_id,handler,inc
   );
@@ -227,7 +227,7 @@ PipeManagerTyped::makeCallbackMultiSendTyped(
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
 auto PipeManagerTyped::pushTargetBcast(CallbackT in, bool const& inc) {
-  auto const& han = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  auto const& han = auto_registry::makeAutoHandler<MsgT,f>();
   return std::tuple_cat(
     std::make_tuple(callback::CallbackBcast<MsgT>(han,inc)), in
   );
@@ -235,13 +235,13 @@ auto PipeManagerTyped::pushTargetBcast(CallbackT in, bool const& inc) {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 auto PipeManagerTyped::pushTargetBcast(bool const& inc) {
-  auto const& han = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  auto const& han = auto_registry::makeAutoHandler<MsgT,f>();
   return std::make_tuple(callback::CallbackBcast<MsgT>(han,inc));
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
 auto PipeManagerTyped::pushTarget(CallbackT in, NodeType const& send_to_node) {
-  auto const& han = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  auto const& han = auto_registry::makeAutoHandler<MsgT,f>();
   return std::tuple_cat(
     std::make_tuple(callback::CallbackSend<MsgT>(han,send_to_node)), in
   );
@@ -249,7 +249,7 @@ auto PipeManagerTyped::pushTarget(CallbackT in, NodeType const& send_to_node) {
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 auto PipeManagerTyped::pushTarget(NodeType const& send_to_node) {
-  auto const& han = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
+  auto const& han = auto_registry::makeAutoHandler<MsgT,f>();
   return std::make_tuple(callback::CallbackSend<MsgT>(han,send_to_node));
 }
 

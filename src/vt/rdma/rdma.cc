@@ -95,8 +95,9 @@ RDMAManager::RDMAManager()
         );
       };
 
+      auto msg_send = promoteMsg(new_msg.get()); // new_msg in payload fn
       theMsg()->sendMsg<GetBackMessage, getRecvMsg>(
-        recv_node, new_msg.get(), send_payload
+        recv_node, msg_send, send_payload
       );
 
       vt_debug_print(
@@ -184,7 +185,7 @@ RDMAManager::RDMAManager()
         );
         if (send_back != uninitialized_destination) {
           auto new_msg = makeMessage<PutBackMessage>(op_id);
-          theMsg()->sendMsg<PutBackMessage, putBackMsg>(send_back, new_msg.get());
+          theMsg()->sendMsg<PutBackMessage, putBackMsg>(send_back, new_msg);
         }
       }, false, recv_node
     );
@@ -225,7 +226,7 @@ RDMAManager::RDMAManager()
               if (send_back != uninitialized_destination) {
                 auto new_msg = makeMessage<PutBackMessage>(op_id);
                 theMsg()->sendMsg<PutBackMessage, putBackMsg>(
-                  send_back, new_msg.get()
+                  send_back, new_msg
                 );
               }
               deleter();
@@ -247,7 +248,7 @@ RDMAManager::RDMAManager()
           if (send_back) {
             auto new_msg = makeMessage<PutBackMessage>(op_id);
             theMsg()->sendMsg<PutBackMessage, putBackMsg>(
-              send_back, new_msg.get()
+              send_back, new_msg
             );
           }
         }
@@ -666,7 +667,7 @@ void RDMAManager::putData(
           }
 
           theMsg()->sendMsgSz<PutMessage,putRecvMsg>(
-            put_node, msg.get(), sizeof(PutMessage) + num_bytes, no_tag
+            put_node, msg, sizeof(PutMessage) + num_bytes, no_tag
           );
 
           vt_debug_print(
@@ -692,21 +693,22 @@ void RDMAManager::putData(
             envelopeSetTag(msg->env, tag);
           }
 
-	  vt_debug_print(
-	    rdma, node,
-	    "putData: recvData before: put_node={}, ptr={}, num_bytes={}, "
-	    "send_tag={}, offset={}\n",
-	    put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
+          vt_debug_print(
+            rdma, node,
+            "putData: recvData before: put_node={}, ptr={}, num_bytes={}, "
+            "send_tag={}, offset={}\n",
+            put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
           );
 
+          auto msg_send = promoteMsg(msg.get()); // msg in payload fn
           theMsg()->sendMsg<PutMessage, putRecvMsg>(
-            put_node, msg.get(), send_payload
+            put_node, msg_send, send_payload
           );
 
           vt_debug_print(
             rdma, node,
             "putData: recvData after: put_node={}, ptr={}, num_bytes={}, "
-	    "send_tag={}, offset={}\n",
+            "send_tag={}, offset={}\n",
             put_node, ptr, num_bytes, msg->mpi_tag_to_recv, offset
           );
         }
@@ -959,7 +961,7 @@ void RDMAManager::getDataIntoBuf(
         if (tag != no_tag) {
           envelopeSetTag(msg->env, tag);
         }
-        theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg.get());
+        theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg);
 
         pending_ops_.emplace(
           std::piecewise_construct,
@@ -996,7 +998,7 @@ void RDMAManager::getData(
     if (tag != no_tag) {
       envelopeSetTag(msg->env, tag);
     }
-    theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg.get());
+    theMsg()->sendMsg<GetMessage, getRDMAMsg>(getNode, msg);
 
     pending_ops_.emplace(
       std::piecewise_construct,
@@ -1086,11 +1088,11 @@ void RDMAManager::setupChannelWithRemote(
     );
 
     auto cb = theCB()->makeFunc(action);
+
     auto msg = makeMessage<ChannelMessage>(
       type, han, num_bytes, tag, cb, dest, override_target
     );
-
-    theMsg()->sendMsg<ChannelMessage, remoteChannel>(other_node, msg.get());
+    theMsg()->sendMsg<ChannelMessage, remoteChannel>(other_node, msg);
 
     return createDirectChannelInternal(
       type, han, dest, nullptr, target, tag, num_bytes
@@ -1285,11 +1287,11 @@ void RDMAManager::createDirectChannelInternal(
         override_target
       );
     });
+
     auto msg = makeMessage<CreateChannel>(
       type, han, unique_channel_tag, target, this_node, cb
     );
-
-    theMsg()->sendMsg<CreateChannel, setupChannel>(target, msg.get());
+    theMsg()->sendMsg<CreateChannel, setupChannel>(target, msg);
   } else {
     return createDirectChannelFinish(
       type, han, non_target, action, channel_tag, is_target, num_bytes,
@@ -1327,10 +1329,11 @@ void RDMAManager::removeDirectChannel(
         action();
       }
     });
+
     auto msg = makeMessage<DestroyChannel>(
       RDMA_TypeType::Get, han, no_byte, no_tag, cb
     );
-    theMsg()->sendMsg<DestroyChannel, removeChannel>(target, msg.get());
+    theMsg()->sendMsg<DestroyChannel, removeChannel>(target, msg);
   } else {
     auto iter = channels_.find(
       makeChannelLookup(han,RDMA_TypeType::Get,target,this_node)

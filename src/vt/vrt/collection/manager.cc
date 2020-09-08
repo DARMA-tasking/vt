@@ -85,7 +85,7 @@ void CollectionManager::startPhaseRooted(
 ) {
 #if vt_check_enabled(lblite)
   auto msg = makeMessage<StartRootedMsg>(lb_phase);
-  theMsg()->broadcastMsg<StartRootedMsg, startRootedBroadcast>(msg.get());
+  theMsg()->broadcastMsg<StartRootedMsg, startRootedBroadcast>(msg);
   startPhaseCollective(fn, lb_phase);
 #else
   if (fn != nullptr) {

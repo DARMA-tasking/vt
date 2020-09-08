@@ -131,7 +131,7 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
       });
     // fmt::print("{}: next={}\n", this_node, next);
     auto msg = makeMessage<CallbackDataMsg>(cb);
-    theMsg()->sendMsg<CallbackDataMsg, test_handler>(next, msg.get());
+    theMsg()->sendMsg<CallbackDataMsg, test_handler>(next, msg);
   });
 
   // fmt::print("{}: called={}\n", this_node, called);

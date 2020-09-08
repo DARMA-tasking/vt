@@ -165,10 +165,46 @@ struct MsgSharedPtr final {
   bool operator==(std::nullptr_t) const           { return ptr_ == nullptr; }
   bool operator!=(std::nullptr_t) const           { return ptr_ != nullptr; }
 
+  /**
+   * \brief Implicit access to MsgT*
+   *
+   * Asserts ownership: invalid to use after a std::move or implicit thief.
+   *
+   * \return the owned message, never null
+   */
   inline T* operator->() const { return get(); }
+
+  /**
+   * \brief Implicit access to MsgT&
+   *
+   * Asserts ownership: invalid to use after a std::move or implicit thief.
+   *
+   * \return ref to the owned message
+   */
   inline T& operator*() const { return *ptr_; }
+
+  /**
+   * \brief Explicit access to MsgT*
+   *
+   * Asserts ownership: invalid to use after a std::move or implicit thief.
+   *
+   * \return the owned message, never null
+   */
   inline T* get() const {
-    return ptr_ ? reinterpret_cast<T*>(ptr_) : nullptr;
+    vtAssert(
+      ptr_, "Access attempted of invalid MsgPtr."
+    );
+    return reinterpret_cast<T*>(ptr_);
+  }
+
+  /**
+   * \internal
+   * \brief Checks to see if a message is owned.
+   *
+   * \return \c true if a message is owned or \c false after std::move.
+   */
+  bool ownsMessage() const {
+    return ptr_ not_eq nullptr;
   }
 
   friend std::ostream& operator<<(std::ostream&os, MsgSharedPtr<T> const& m) {
@@ -185,7 +221,10 @@ private:
   /// Should probably be called every constructor; must ONLY be
   /// called from fresh (zero-init member) or clear() state.
   void init(T* msgPtr, MsgPtrImplBase* impl) {
-    assert("given message" && msgPtr);
+    vtAssert(
+      msgPtr,
+      "MsgPtr cannot wrap 'null' messages."
+    );
     assert("not initialized" && not ptr_);
     assert("given impl" && impl);
 
@@ -224,6 +263,48 @@ private:
   // Type-erased implementation support.
   // Object has a STATIC LIFETIME / is not owned / should not be deleted.
   MsgPtrImplBase* impl_ = nullptr;
+};
+
+/**
+ * \brief Helper to unify 'stealing' message ownership.
+ *
+ * This type is not intented to be used directly. It uses implicit conversion
+ * construtors to perform a 'std::move' on a \c MsgPtr<MsgT>&.
+ *
+ * If a normal \c MsgT* is supplied, it is promoted without stealing.
+ */
+template <typename MsgT>
+struct MsgPtrThief {
+  /**
+   * \brief Promote a \c MsgT*
+   * \deprecated Use \c MsgPtr<MsgT>& to pass ownership of messages.
+   *
+   * The message is promoted without any implicit stealing.
+   * It is generally assumed the caller did not 'own' this message anyway.
+   */
+  // If this method is removed then this type will no longer able to work in
+  // a transitory nature, which is very handy when converting some API.
+  // [[deprecated]]
+  /*implicit*/ MsgPtrThief(MsgT const* msgPtr) : msg_(MsgSharedPtr<MsgT>{const_cast<MsgT*>(msgPtr)}) {
+  }
+
+  /**
+   * \brief Moves (steals) the incoming MsgPtr.
+   *
+   * As though \c std::move(msg) was used, the \c msg is invalidated.
+   */
+  /*implicit*/ MsgPtrThief(MsgSharedPtr<MsgT>& msg) : msg_(std::move(msg)) {
+  }
+
+  /**
+   * \brief Moves (steals) the incoming MsgPtr.
+   *
+   * This form allows code to explicitly use \c std::move as desired.
+   */
+  /*implicit*/ MsgPtrThief(MsgSharedPtr<MsgT>&& msg) : msg_(std::move(msg)) {
+  }
+
+  MsgSharedPtr<MsgT> msg_;
 };
 
 }} /* end namespace vt::messaging */
@@ -291,6 +372,9 @@ template <typename T>
 inline MsgPtr<T> promoteMsg(T* msg) {
   return MsgPtr<T>{msg};
 }
+
+template <typename T>
+using MsgPtr = messaging::MsgSharedPtr<T>;
 
 } /* end namespace vt */
 

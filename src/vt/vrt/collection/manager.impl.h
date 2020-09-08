@@ -639,7 +639,7 @@ template <typename>
     auto nmsg = makeMessage<CollectionGroupMsg>(*msg);
     theMsg()->markAsCollectionMessage(nmsg);
     theMsg()->broadcastMsg<CollectionGroupMsg,collectionGroupFinishedHan>(
-      nmsg.get()
+      nmsg
     );
   }
 }
@@ -834,11 +834,13 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   }
 
   theMsg()->markAsCollectionMessage(msg);
+  auto msg_hold = promoteMsg(msg.get()); // keep after bcast
   auto ret = theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT>>(
-    msg.get()
+    msg
   );
+
   if (!send_group) {
-    collectionBcastHandler<ColT,IndexT,MsgT>(msg.get());
+    collectionBcastHandler<ColT,IndexT,MsgT>(msg_hold.get());
   }
 
   theMsg()->popEpoch(cur_epoch);
@@ -884,7 +886,7 @@ CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::broadcastMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, bool instrument
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,false,instrument);
 }
 
@@ -910,7 +912,7 @@ CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::broadcastMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *msg, bool instrument
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   return broadcastNormalMsg<MsgT,ColT>(proxy,msg,h,true,instrument);
 }
 
@@ -923,7 +925,7 @@ messaging::PendingSend CollectionManager::broadcastMsgImpl(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, bool inst
 ) {
   // register the user's handler
-  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,true,inst);
 }
 
@@ -932,7 +934,7 @@ messaging::PendingSend CollectionManager::broadcastMsgImpl(
   CollectionProxyWrapType<ColT> const& proxy, MsgT *const msg, bool inst
 ) {
   // register the user's handler
-  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   return broadcastMsgUntypedHandler<MsgT>(proxy,msg,h,false,inst);
 }
 
@@ -1038,8 +1040,10 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
           col_proxy, bnode, handler, cur_epoch
         );
         theMsg()->markAsCollectionMessage(msg);
-        return theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT>>(
-          bnode,msg.get()
+
+        auto pmsg = std::move(msg); // sendMsg needs non-const variable
+        return theMsg()->sendMsg<MsgT,broadcastRootHandler<ColT,IdxT,MsgT>>(
+          bnode, pmsg
         );
       } else {
         vt_debug_print(
@@ -1255,7 +1259,7 @@ CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::sendMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   return sendNormalMsg<MsgT,ColT>(proxy,msg,h,false);
 }
 
@@ -1280,7 +1284,7 @@ CollectionManager::IsNotColMsgType<MsgT>
 CollectionManager::sendMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   return sendNormalMsg<MsgT,ColT>(proxy,msg,h,true);
 }
 
@@ -1288,7 +1292,7 @@ template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
 messaging::PendingSend CollectionManager::sendMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   return sendMsgUntypedHandler<MsgT>(proxy,msg,h,false);
 }
 
@@ -1300,7 +1304,7 @@ template <
 messaging::PendingSend CollectionManager::sendMsgImpl(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg
 ) {
-  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto const& h = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   return sendMsgUntypedHandler<MsgT>(proxy,msg,h,true);
 }
 
@@ -2004,7 +2008,7 @@ CollectionManager::constructMap(
   );
 
   theMsg()->broadcastMsg<MsgType,distConstruct<MsgType>>(
-    create_msg.get()
+    create_msg
   );
 
   auto create_msg_local = makeMessage<MsgType>(
@@ -2171,7 +2175,7 @@ void CollectionManager::finishedInsertEpoch(
   theMsg()->markAsCollectionMessage(msg);
   theMsg()->broadcastMsg<
     UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
-  >(msg.get());
+  >(msg);
 
   /*
    *  Start building the a new group for broadcasts and reductions over the
@@ -2275,7 +2279,7 @@ template <typename ColT, typename IndexT>
       theMsg()->markAsCollectionMessage(smsg);
       theMsg()->sendMsg<
         ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
-      >(node,smsg.get());
+      >(node, smsg);
     };
     return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_, send);
   } else {
@@ -2329,7 +2333,7 @@ void CollectionManager::finishedInserting(
     auto msg = makeMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
     theMsg()->markAsCollectionMessage(msg);
     theMsg()->sendMsg<DoneInsertMsg<ColT,IndexT>,doneInsertHandler<ColT,IndexT>>(
-      cons_node,msg.get()
+      cons_node, msg
     );
   }
 }
@@ -2466,7 +2470,7 @@ void CollectionManager::insert(
         theTerm()->produce(cur_epoch,1,insert_node);
         theMsg()->markAsCollectionMessage(msg);
         theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
-          insert_node,msg.get()
+          insert_node, msg
         );
       }
 
@@ -2574,7 +2578,7 @@ MigrateStatus CollectionManager::migrateOut(
 
    theMsg()->sendMsg<
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
-   >(dest, msg.get());
+   >(dest, msg);
 
    theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityMigrated(
      proxy, dest
@@ -2671,10 +2675,13 @@ void CollectionManager::destroy(
 ) {
   using DestroyMsgType = DestroyMsg<ColT, IndexT>;
   auto const& this_node = theContext()->getNode();
+
   auto msg = makeMessage<DestroyMsgType>(proxy, this_node);
   theMsg()->markAsCollectionMessage(msg);
-  theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg.get());
-  DestroyHandlers::destroyNow(msg.get());
+  auto msg_hold = promoteMsg(msg.get()); // keep after bcast
+  theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
+
+  DestroyHandlers::destroyNow(msg_hold.get());
 }
 
 template <typename ColT, typename IndexT>
@@ -2811,11 +2818,11 @@ void CollectionManager::elmReadyLB(
   VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
   bool do_sync
 ) {
-  auto lb_han = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(msg);
+  auto lb_han = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   auto pmsg = promoteMsg(msg);
 
 #if !vt_check_enabled(lblite)
-  theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
+  theCollection()->sendMsgUntypedHandler<MsgT>(proxy, pmsg.get(), lb_han,true);
   return;
 #endif
 

@@ -127,7 +127,7 @@ namespace vt { namespace rdma {
       envelopeSetTag(msg->env, tag);
     }
     theMsg()->sendMsg<GetMessage, RDMAManager::getRDMAMsg>(
-      default_node, msg.get()
+      default_node, msg
     );
 
     rdma->pending_ops_.emplace(
@@ -204,8 +204,9 @@ namespace vt { namespace rdma {
       envelopeSetTag(msg->env, tag);
     }
 
+    auto msg_send = promoteMsg(msg.get()); // msg in payload fn
     theMsg()->sendMsg<PutMessage, RDMAManager::putRecvMsg>(
-      put_node, msg.get(), send_payload
+      put_node, msg_send, send_payload
     );
 
     if (action_after_put != nullptr) {

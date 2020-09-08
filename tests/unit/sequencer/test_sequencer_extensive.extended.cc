@@ -109,14 +109,14 @@ static constexpr CountType const max_seq_depth = 8;
         };                                                              \
         auto msg = makeMessage<NumWaitsMsg>(in);                        \
         theMsg()->sendMsg<NumWaitsMsg, numWaitHan>(                     \
-          (NODE), msg.get()                                             \
+          (NODE), msg                                                   \
         );                                                              \
         auto const total = (wait_cnt * seg_cnt) + wait_pre + wait_post; \
         for (CountType i = 0; i < total; i++) {                         \
           TagType const tag = (IS_TAG) ? i+1 : no_tag;                  \
           auto nmsg = makeMessage<MSG_TYPE>();                          \
           theMsg()->sendMsg<MSG_TYPE, SEQ_HAN>(                         \
-            (NODE), nmsg.get(), tag                                     \
+            (NODE), nmsg, tag                                           \
           );                                                            \
         }                                                               \
       }                                                                 \

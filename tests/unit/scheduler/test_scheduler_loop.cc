@@ -88,7 +88,7 @@ static void message_handler_with_nested_loop(TestMsg* msg) {
 
   auto next_msg = vt::makeMessage<TestMsg>();
   next_msg->action_ = next_depth;
-  theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, next_msg.get());
+  theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, next_msg);
 
   // ..run scheduler until someone also passed us the message.
   if ("nested" == action) {
@@ -117,7 +117,7 @@ TEST_F(TestSchedulerLoop, test_scheduler_loop_nesting_1) {
 
   auto msg = vt::makeMessage<TestMsg>();
   msg->action_ = 1;
-  theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, msg.get());
+  theMsg()->sendMsg<TestMsg, message_handler_with_nested_loop>(target_node, msg);
 
   done = false;
   theSched()->runSchedulerWhile([]{ return not done; });

@@ -116,7 +116,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     std::memcpy(ptr, in_ptr, child_bytes_size);
     in_ptr += child_bytes_size;
     theMsg()->sendMsgSz<ScatterMsg,scatterHandler>(
-      child, child_msg.get(), sizeof(ScatterMsg) + child_bytes_size
+      child, child_msg, sizeof(ScatterMsg) + child_bytes_size
     );
   });
   auto active_fn = auto_registry::getAutoHandler(user_handler);

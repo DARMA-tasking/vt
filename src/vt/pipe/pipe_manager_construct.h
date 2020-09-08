@@ -125,7 +125,7 @@ ConstructCallbacksImpl<cur,T,ConsT,U,N,fcur,f...>::make(ConsT const& ct)  {
   return std::tuple_cat(
     std::make_tuple(
       build<size,T>(
-        auto_registry::makeAutoHandler<U,fcur>(nullptr), std::get<cur>(ct)
+        auto_registry::makeAutoHandler<U,fcur>(), std::get<cur>(ct)
       )
     ),
     ConstructCallbacksImpl<cur+1,T,ConsT,U,N,f...>::make(ct)

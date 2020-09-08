@@ -439,13 +439,14 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         state.getEpoch(), state.g_prod1, state.g_cons1
       );
       theMsg()->markAsTermMessage(msg);
-      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent, msg.get());
 
       vt_debug_print_verbose(
         term, node,
         "propagateEpoch: sending to parent: {}, msg={}, epoch={:x}, wave={}\n",
         parent, print_ptr(msg.get()), state.getEpoch(), state.getCurWave()
       );
+
+      theMsg()->sendMsg<TermCounterMsg, propagateEpochHandler>(parent, msg);
     } else /*if (is_root) */ {
       is_term =
         state.g_prod1 == state.g_cons1 and
@@ -484,7 +485,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       if (is_term) {
         auto msg = makeMessage<TermMsg>(state.getEpoch());
         theMsg()->markAsTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg.get());
+        theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg);
 
         state.setTerminated();
 
@@ -513,7 +514,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         auto msg = makeMessage<TermMsg>(state.getEpoch(), state.getCurWave());
         theMsg()->markAsTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(msg.get());
+        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(msg);
       }
     }
 
@@ -594,7 +595,7 @@ void TerminationDetector::countsConstant(TermStateType& state) {
             if (not theConfig()->vt_no_detect_hang) {
               auto msg = makeMessage<HangCheckMsg>();
               theMsg()->markAsTermMessage(msg.get());
-              theMsg()->broadcastMsg<HangCheckMsg, hangCheckHandler>(msg.get());
+              theMsg()->broadcastMsg<HangCheckMsg, hangCheckHandler>(msg);
               hangCheckHandler(nullptr);
             }
           }
@@ -611,7 +612,7 @@ void TerminationDetector::startEpochGraphBuild() {
   if (theConfig()->vt_epoch_graph_on_hang) {
     auto msg = makeMessage<BuildGraphMsg>();
     theMsg()->markAsTermMessage(msg.get());
-    theMsg()->broadcastMsg<BuildGraphMsg, buildLocalGraphHandler>(msg.get());
+    theMsg()->broadcastMsg<BuildGraphMsg, buildLocalGraphHandler>(msg);
     buildLocalGraphHandler(nullptr);
   }
 }
@@ -767,7 +768,7 @@ void TerminationDetector::inquireTerminated(
 
     bool const is_ready = true;
     auto msg = makeMessage<TermTerminatedReplyMsg>(epoch,is_ready);
-    theMsg()->sendMsg<TermTerminatedReplyMsg,replyEpochTerminated>(from,msg.get());
+    theMsg()->sendMsg<TermTerminatedReplyMsg,replyEpochTerminated>(from, msg);
   });
 }
 
@@ -834,7 +835,7 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
          * terminated or not
          */
         auto msg = makeMessage<TermTerminatedMsg>(epoch,this_node);
-        theMsg()->sendMsg<TermTerminatedMsg,inquireEpochTerminated>(root,msg.get());
+        theMsg()->sendMsg<TermTerminatedMsg,inquireEpochTerminated>(root, msg);
         epoch_wait_status_.insert(epoch);
       }
       status = TermStatusEnum::Remote;
@@ -990,7 +991,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
    */
   auto msg = makeMessage<TermMsg>(epoch);
   theMsg()->markAsTermMessage(msg);
-  theMsg()->broadcastMsg<TermMsg,makeRootedHandler>(msg.get());
+  theMsg()->broadcastMsg<TermMsg,makeRootedHandler>(msg);
 
   /*
    *  Setup the new rooted epoch locally on the root node (this node)

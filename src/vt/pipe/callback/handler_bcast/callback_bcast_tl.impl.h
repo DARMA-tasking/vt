@@ -65,17 +65,21 @@ void CallbackBcastTypeless::serialize(SerializerT& s) {
 template <typename MsgT>
 void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
+
   vt_debug_print(
     pipe, node,
     "CallbackBcast: trigger_: pipe={:x}, this_node={}, include_sender_={}\n",
     pipe, this_node, include_sender_
   );
-  theMsg()->broadcastMsg<MsgT>(handler_, msg);
+
+  auto pmsg = promoteMsg(msg);
+  theMsg()->broadcastMsg<MsgT>(handler_, pmsg);
+
   auto msg_group = envelopeGetGroup(msg->env);
   bool const is_default = msg_group == default_group;
   if (include_sender_ and is_default) {
-    auto nmsg = makeMessage<MsgT>(*msg);
-    runnable::Runnable<MsgT>::run(handler_,nullptr,nmsg.get(),this_node);
+    auto nmsg = makeMessage<MsgT>(*msg); // create copy (?)
+    runnable::Runnable<MsgT>::run(handler_, nullptr, nmsg.get(), this_node);
   }
 }
 

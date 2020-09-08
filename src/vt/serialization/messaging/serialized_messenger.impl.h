@@ -180,7 +180,7 @@ template <typename MsgT, typename BaseT>
     [=](MsgSharedPtr<SerializedEagerMsg<MsgT,BaseT>> m) -> messaging::PendingSend {
     using MsgType = SerialEagerPayloadMsg<MsgT,BaseT>;
     theMsg()->markAsSerialMsgMessage(m);
-    return theMsg()->sendMsg<MsgType,payloadMsgHandler>(dest,m.get());
+    return theMsg()->sendMsg<MsgType,payloadMsgHandler>(dest, m);
   };
   auto eager = eager_sender ? eager_sender : eager_default_send;
   return sendSerialMsgSendImpl<MsgT,BaseT>(
@@ -254,9 +254,7 @@ template <typename MsgT, typename BaseT>
     );
 
     theMsg()->markAsSerialMsgMessage(payload_msg);
-    return theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(
-      payload_msg.get()
-    );
+    return theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg);
   } else {
     auto const& total_size = ptr_size + sys_size;
 
@@ -288,7 +286,7 @@ template <typename MsgT, typename BaseT>
     using MsgType = SerialWrapperMsgType<MsgT>;
     theMsg()->markAsSerialMsgMessage(sys_msg);
     return theMsg()->broadcastMsgSz<MsgType,serialMsgHandlerBcast>(
-      sys_msg.get(), total_size, no_tag
+      sys_msg, total_size, no_tag
     );
   }
 }
@@ -385,8 +383,9 @@ template <typename MsgT, typename BaseT>
         );
 
         theMsg()->markAsSerialMsgMessage(sys_msg);
+        auto sys_msg_send = promoteMsg(sys_msg.get()); // payload fn
         return theMsg()->sendMsg<SerialWrapperMsgType<MsgT>, serialMsgHandler>(
-          dest, sys_msg.get(), send_serialized
+          dest, sys_msg_send, send_serialized
         );
       } else {
         auto msg_data = ptr;

@@ -138,7 +138,7 @@ detail::ReduceStamp Reduce::reduceImmediate(
   }
   auto cur_id = id == detail::ReduceStamp{} ? generateNextID() : id;
 
-  auto const han = auto_registry::makeAutoHandler<MsgT,f>(msg);
+  auto const han = auto_registry::makeAutoHandler<MsgT,f>();
   msg->combine_handler_ = han;
   msg->reduce_root_ = root;
   msg->reduce_id_ = detail::ReduceIDImpl{cur_id, scope_};
@@ -217,9 +217,13 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       auto size = state.msgs.size();
       for (decltype(size) i = 0; i < size; i++) {
         bool const has_next = i+1 < size;
+        // Collection is of MsgPtr<ReduceMsg>
         auto typed_msg = static_cast<MsgT*>(state.msgs[i].get());
-        typed_msg->next_ = has_next ?
-          static_cast<MsgT*>(state.msgs[i+1].get()) : nullptr;
+        if (has_next) {
+          typed_msg->next_ = static_cast<MsgT*>(state.msgs[i+1].get());
+        } else {
+          typed_msg->next_ = nullptr;
+        }
         typed_msg->count_ = size - i;
         typed_msg->is_root_ = false;
 
@@ -251,10 +255,9 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
     }
 
     // Send to parent
+    // Collection is of MsgPtr<ReduceMsg>, re-type and drop collection owner.
     auto msg = state.msgs[0];
-    auto typed_msg = static_cast<MsgT*>(msg.get());
-    ActionType cont = nullptr;
-
+    MsgPtr<MsgT> typed_msg = msg.template to<MsgT>();
     state.msgs.clear();
     state.num_contrib_ = 1;
 
@@ -268,14 +271,14 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
           scope_.str(), detail::stringizeStamp(id), root, this_node
         );
 
-        theMsg()->sendMsg<MsgT,ReduceManager::reduceRootRecv<MsgT>>(root,typed_msg);
+        theMsg()->sendMsg<MsgT,ReduceManager::reduceRootRecv<MsgT>>(root, typed_msg);
       } else {
         vt_debug_print(
           reduce, node,
           "reduce notify root (direct): scope={}, stamp={}, root={}, node={}\n",
           scope_.str(), detail::stringizeStamp(id), root, this_node
         );
-        reduceRootRecv(typed_msg);
+        reduceRootRecv(typed_msg.get());
       }
     } else {
       auto const& parent = getParent();
@@ -284,7 +287,8 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         "reduce send to parent: scope={}, stamp={}, parent={}\n",
         scope_.str(), detail::stringizeStamp(id), parent
       );
-      theMsg()->sendMsg<MsgT,ReduceManager::reduceUp<MsgT>>(parent,typed_msg);
+
+      theMsg()->sendMsg<MsgT,ReduceManager::reduceUp<MsgT>>(parent, typed_msg);
     }
   }
 }

@@ -118,7 +118,7 @@ static inline void activeMessageNode() {
   if (this_node == 0) {
     NodeType const to_node = 1;
     auto msg = ::vt::makeMessage<MyMsg>(29,32);
-    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(to_node, msg.get());
+    ::vt::theMsg()->sendMsg<MyMsg,msgHandlerA>(to_node, msg);
   }
 }
 
@@ -141,10 +141,27 @@ static void msgHandlerA(MyMsg* msg) {
   /*
    * In response to this message, node 1 sends a message back to node 0. This
    * invocation uses the functor style send.
+   *
+   * -- Message Ownsership --
+   * When an API that 'sends a message' is called, ownership is relinquished.
+   *
+   * The loss of ownership is the same as using std::move and the MsgPtr object
+   * supplied becomes invalid for later use. This use includes attempting
+   * to send the same message twice. std::move can be used explicit if desired.
+   *
+   * A vtAssert will be raised if such an invalid use is detected.
    */
   NodeType const to_node = 0;
   auto msg2 = ::vt::makeMessage<MyMsg>(10,20);
-  ::vt::theMsg()->sendMsg<MsgHandlerB>(to_node, msg2.get());
+
+  ::vt::theMsg()->sendMsg<MsgHandlerB, MyMsg>(to_node, msg2);
+
+  // Alternate/equivalent form with explicit (and optional) std::move:
+  //
+  //   ::vt::theMsg()->sendMsg<MsgHandlerB, MyMsg>(to_node, std::move(msg2));
+  //
+  // In both cases it is invalid to attempt to use msg2 here as the ownership
+  // of the message has been relinquished/lost when making the call.
 }
 
 void MsgHandlerB::operator()(MyMsg* msg) {

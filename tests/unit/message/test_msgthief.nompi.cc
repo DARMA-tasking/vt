@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                      context_vrtproxy_test.extended.cc
+//                              test_msgthief.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,60 +44,61 @@
 
 #include <gtest/gtest.h>
 
-#include "test_harness.h"
+// TODO: change to pure unit after #990
+#include "test_parallel_harness.h"
+
+#include "vt/transport.h"
 
 namespace vt { namespace tests { namespace unit {
 
-class TestVrtContextProxy : public TestHarness {
-  virtual void SetUp() {
-    TestHarness::SetUp();
-  }
+using namespace vt;
+using namespace vt::tests::unit;
 
-  virtual void TearDown() {
-    TestHarness::TearDown();
+struct TestMsg : ::vt::Message { };
+
+struct TestMsgThief : TestParallelHarness {
+  int callWithMsgThief(messaging::MsgPtrThief<TestMsg> msg) {
+    // What's the ref-count here, before ownership is relinquished?
+    auto& stolen = msg.msg_;
+    return envelopeGetRef(stolen->env);
   }
 };
 
-TEST_F(TestVrtContextProxy, Construction_AND_API) {
-  using namespace vt;
-  using namespace vt::vrt;
+TEST_F(TestMsgThief, test_msgthief_deprecated_rawptr) {
+  auto msg = makeMessage<TestMsg>();
+  EXPECT_EQ(msg.ownsMessage(), true);
+  EXPECT_EQ(envelopeGetRef(msg->env), 1);
 
-  VrtContext_ProxyType proxy1 = VrtContextProxy::createProxy(200, 20);
-  EXPECT_EQ(VrtContextProxy::isCollection(proxy1), false);
-  EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), false);
-  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 20);
-  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 200);
+  // The obsolete API is expected to be used as a migration shim.
+  // It is forced to take a NEW ref.
+  auto* rawptr = msg.get();
+  int internalRef = callWithMsgThief(rawptr); // T*
+  EXPECT_EQ(internalRef, 2) << "message accepted (increases ref)";
 
-  VrtContextProxy::setIsCollection(proxy1, true);
-  EXPECT_EQ(VrtContextProxy::isCollection(proxy1), true);
+  EXPECT_EQ(msg.ownsMessage(), true) << "original MsgPtr remains valid";
+  EXPECT_EQ(envelopeGetRef(msg->env), 1);
+}
 
-  VrtContextProxy::setIsMigratable(proxy1, true);
-  EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), true);
+TEST_F(TestMsgThief, test_msgthief_implicit_stealing) {
+  auto msg = makeMessage<TestMsg>();
+  EXPECT_EQ(msg.ownsMessage(), true);
+  EXPECT_EQ(envelopeGetRef(msg->env), 1);
 
-  VrtContextProxy::setVrtContextNode(proxy1, 2000);
-  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 2000);
+  int internalRef = callWithMsgThief(msg); // MsgPtr<T>&
+  EXPECT_EQ(internalRef, 1) << "message stolen (same ref count)";
 
-  VrtContextProxy::setVrtContextId(proxy1, 3000);
-  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 3000);
+  EXPECT_EQ(msg.ownsMessage(), false) << "MsgPtr invalidated";
+}
 
-  EXPECT_EQ(VrtContextProxy::isCollection(proxy1), true);
-  EXPECT_EQ(VrtContextProxy::isMigratable(proxy1), true);
-  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy1), 2000);
-  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy1), 3000);
+TEST_F(TestMsgThief, test_msgthief_explicit_stdmove) {
+  auto msg = makeMessage<TestMsg>();
+  EXPECT_EQ(msg.ownsMessage(), true);
+  EXPECT_EQ(envelopeGetRef(msg->env), 1);
 
-  VrtContext_ProxyType proxy2
-      = VrtContextProxy::createProxy(200, 20, true);
-  EXPECT_EQ(VrtContextProxy::isCollection(proxy2), true);
-  EXPECT_EQ(VrtContextProxy::isMigratable(proxy2), false);
-  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy2), 20);
-  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy2), 200);
+  int internalRef = callWithMsgThief(std::move(msg)); // MsgPtr<T>&&
+  EXPECT_EQ(internalRef, 1) << "message stolen (same ref count)";
 
-  VrtContext_ProxyType proxy3 =
-      VrtContextProxy::createProxy(200, 20, true, true);
-  EXPECT_EQ(VrtContextProxy::isCollection(proxy3), true);
-  EXPECT_EQ(VrtContextProxy::isMigratable(proxy3), true);
-  EXPECT_EQ(VrtContextProxy::getVirtualNode(proxy3), 20);
-  EXPECT_EQ(VrtContextProxy::getVirtualID(proxy3), 200);
+  EXPECT_EQ(msg.ownsMessage(), false) << "MsgPtr invalidated";
 }
 
 }}} // end namespace vt::tests::unit

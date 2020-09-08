@@ -79,7 +79,7 @@ static inline void activeMessageGroupRoot() {
       fmt::print("Group is created: id={:x}\n", group_id);
       auto msg = makeMessage<MySimpleMsg>();
       envelopeSetGroup(msg->env, group_id);
-      theMsg()->broadcastMsg<MySimpleMsg,msgHandlerGroupA>(msg.get());
+      theMsg()->broadcastMsg<MySimpleMsg,msgHandlerGroupA>(msg);
     });
     // The `id' that is returned from the newGroup invocation, can be used
     // anywhere in the system to broadcast (multicast) to this group.

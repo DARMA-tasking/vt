@@ -223,7 +223,7 @@ void Barrier::barrierUp(
         barrier, node,
         "barrierUp: barrier={}\n", barrier
       );
-      theMsg()->sendMsg<BarrierMsg, barrierUp>(parent, msg.get());
+      theMsg()->sendMsg<BarrierMsg, barrierUp>(parent, msg);
     } else {
       auto msg = makeMessage<BarrierMsg>(is_named, barrier, is_wait);
       // system-level barriers can choose to skip the termination protocol
@@ -234,7 +234,7 @@ void Barrier::barrierUp(
         barrier, node,
         "barrierDown: barrier={}\n", barrier
       );
-      theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg.get());
+      theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg);
       barrierDown(is_named, is_wait, barrier);
     }
   }
