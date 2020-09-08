@@ -139,6 +139,11 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
     tag == no_tag,
     "Tagged messages serialization not implemented."
   );
+
+  // Original message is locked even though it is not the actual message sent.
+  // This is for consistency with sending non-serialized messages.
+  envelopeSetIsLocked(msg->env, true);
+
   MsgT* msgp = msg.get();
   if (dest == broadcast_dest) {
     return SerializedMessenger::broadcastSerialMsg<MsgT>(msgp,han);
@@ -190,6 +195,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   }
   envelopeSetup(rawMsg->env, dest, han);
   setupEpochMsg(rawMsg);
+
+  envelopeSetIsLocked(rawMsg->env, true);
 
   auto base = msg.template to<BaseMsgType>();
   return PendingSendType(base, msg_size);

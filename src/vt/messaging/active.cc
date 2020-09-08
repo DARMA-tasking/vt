@@ -264,6 +264,8 @@ EventType ActiveMessenger::doMessageSend(
   auto const is_term = envelopeIsTerm(msg->env);
 
   #if vt_check_enabled(trace_enabled)
+    envelopeSetIsLocked(msg->env, false);
+
     // We are not allowed to hold a ref to anything in the envelope, get this,
     // modify it and put it back
     auto handler = envelopeGetHandler(msg->env);
@@ -290,6 +292,8 @@ EventType ActiveMessenger::doMessageSend(
       );
       envelopeSetTraceEvent(msg->env, event);
     }
+
+    envelopeSetIsLocked(msg->env, true);
   #endif
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {

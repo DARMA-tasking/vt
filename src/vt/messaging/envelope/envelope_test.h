@@ -128,6 +128,14 @@ inline bool envelopeIsTagType(Env const& env);
 template <typename Env>
 inline bool envelopeHasBeenSerialized(Env& env);
 
+/**
+ * \brief Test if the message's envelope has been locked.
+ *
+ * \param[in] env the envelope
+ */
+template <typename Env>
+inline bool envelopeIsLocked(Env& env);
+
 }} //end namespace vt::messaging
 
 #include "vt/messaging/envelope/envelope_test.impl.h"

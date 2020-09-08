@@ -75,6 +75,7 @@ inline void envelopeInit(Env& env) {
   envelopeSetTraceEvent(env, trace::no_trace_event);
 #endif
   envelopeSetHasBeenSerialized(env, false);
+  envelopeSetIsLocked(env, false);
 }
 
 inline void envelopeInitEmpty(Envelope& env) {

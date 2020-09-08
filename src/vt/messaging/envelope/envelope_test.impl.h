@@ -93,6 +93,11 @@ inline bool envelopeHasBeenSerialized(Env& env) {
   return reinterpret_cast<Envelope const*>(&env)->has_been_serialized;
 }
 
+template <typename Env>
+inline bool envelopeIsLocked(Env& env) {
+  return reinterpret_cast<Envelope const*>(&env)->is_locked;
+}
+
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TEST_IMPL_H*/
