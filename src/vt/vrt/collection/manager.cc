@@ -56,14 +56,6 @@ CollectionManager::CollectionManager() { }
 
 void CollectionManager::finalize() {
   cleanupAll<>();
-
-  // Statistics output when LB is enabled and appropriate flag is enabled
-#if vt_check_enabled(lblite)
-  if (theConfig()->vt_lb_stats) {
-    theNodeStats()->outputStatsFile();
-    theNodeStats()->clearStats();
-  }
-#endif
 }
 
 /*virtual*/ CollectionManager::~CollectionManager() { }

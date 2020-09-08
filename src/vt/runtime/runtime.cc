@@ -456,7 +456,15 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
 }
 
 void Runtime::sync() {
-  MPI_Barrier(communicator_);
+  MPI_Comm comm = communicator_;
+  if (comm == MPI_COMM_NULL and theContext != nullptr) {
+    comm = theContext->getComm();
+  }
+  if (comm == MPI_COMM_NULL) {
+    vtAbort("Trying to sync runtime while the communicator is not available");
+  } else {
+    MPI_Barrier(comm);
+  }
 }
 
 void Runtime::runScheduler() {

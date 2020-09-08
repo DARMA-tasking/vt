@@ -170,16 +170,24 @@ void NodeStats::releaseLB() {
   CollectionManager::releaseLBPhase(msg_hold.get());
 }
 
+void NodeStats::initialize() {
+#if vt_check_enabled(lblite)
+  if (theConfig()->vt_lb_stats) {
+    theNodeStats()->createStatsFile();
+  }
+#endif
+}
+
 void NodeStats::createStatsFile() {
   auto const node = theContext()->getNode();
-  auto const base_file = std::string(theConfig()->vt_lb_stats_file);
-  auto const dir = std::string(theConfig()->vt_lb_stats_dir);
+  auto const base_file = theConfig()->vt_lb_stats_file;
+  auto const dir = theConfig()->vt_lb_stats_dir;
   auto const file = fmt::format("{}.{}.out", base_file, node);
   auto const file_name = fmt::format("{}/{}", dir, file);
 
   vt_debug_print(
     lb, node,
-    "NodeStats: createStatsFile file={}\n", file_name
+    "NodeStats::createStatsFile: file={}\n", file_name
   );
 
   // Node 0 creates the directory
@@ -198,83 +206,91 @@ void NodeStats::createStatsFile() {
   }
 
   stats_file_ = fopen(file_name.c_str(), "w+");
+  vtAssertExpr(stats_file_ != nullptr);
+}
+
+void NodeStats::finalize() {
+  // If statistics are enabled, close output file and clear stats
+#if vt_check_enabled(lblite)
+  if (theConfig()->vt_lb_stats) {
+    closeStatsFile();
+    clearStats();
+  }
+#endif
 }
 
 void NodeStats::closeStatsFile() {
   if (stats_file_) {
     fclose(stats_file_);
-    stats_file_  = nullptr;
+    stats_file_ = nullptr;
   }
 }
 
-void NodeStats::outputStatsFile() {
-  if (stats_file_ == nullptr) {
-    createStatsFile();
+std::pair<ElementIDType, ElementIDType>
+getRecvSendDirection(CommKeyType const& comm) {
+  switch (comm.cat_) {
+  case CommCategory::SendRecv:
+  case CommCategory::Broadcast:
+    return std::make_pair(comm.toObj(), comm.fromObj());
+
+  case CommCategory::NodeToCollection:
+  case CommCategory::NodeToCollectionBcast:
+    return std::make_pair(comm.toObj(), comm.fromNode());
+
+  case CommCategory::CollectionToNode:
+  case CommCategory::CollectionToNodeBcast:
+    return std::make_pair(comm.toNode(), comm.fromObj());
+  }
+
+  vtAssert(false, "Invalid balance::CommCategory enum value");
+  return std::make_pair(ElementIDType{}, ElementIDType{});
+}
+
+void NodeStats::outputStatsForPhase(PhaseType phase) {
+  // Statistics output when LB is enabled and appropriate flag is enabled
+  if (!theConfig()->vt_lb_stats) {
+    return;
   }
 
   vtAssertExpr(stats_file_ != nullptr);
 
-  auto const num_iters = node_data_.size();
+  vt_print(lb, "NodeStats::outputStatsForPhase: phase={}\n", phase);
 
-  vt_print(lb, "NodeStats::outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
+  for (auto&& elm : node_data_.at(phase)) {
+    ElementIDType id = elm.first;
+    TimeType time = elm.second;
+    const auto& subphase_times = node_subphase_data_.at(phase)[id];
+    size_t subphases = subphase_times.size();
 
-  for (size_t i = 0; i < num_iters; i++) {
-    for (auto&& elm : node_data_.at(i)) {
-      ElementIDType id = elm.first;
-      TimeType time = elm.second;
-      const auto& subphase_times = node_subphase_data_.at(i)[id];
-      size_t subphases = subphase_times.size();
+    auto obj_str = fmt::format("{},{},{},{},[", phase, id, time, subphases);
 
-      auto obj_str = fmt::format("{},{},{},{},[", i, id, time, subphases);
-      for (size_t s = 0; s < subphases; s++) {
-        obj_str += std::to_string(subphase_times[s]);
-        if (s != subphases - 1)
-          obj_str += ",";
+    for (size_t s = 0; s < subphases; s++) {
+      if (s > 0) {
+        obj_str += ",";
       }
 
-      obj_str += "]\n";
-
-      fprintf(stats_file_, "%s", obj_str.c_str());
+      obj_str += std::to_string(subphase_times[s]);
     }
-    for (auto&& elm : node_comm_.at(i)) {
-      using E = typename std::underlying_type<CommCategory>::type;
 
-      auto const& key = elm.first;
-      auto const& val = elm.second;
-      auto const cat = static_cast<E>(key.cat_);
+    obj_str += "]\n";
 
-      if (
-        key.cat_ == CommCategory::SendRecv or
-        key.cat_ == CommCategory::Broadcast
-      ) {
-        auto const to   = key.toObj();
-        auto const from = key.fromObj();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
-        fprintf(stats_file_, "%s", obj_str.c_str());
-      } else if (
-        key.cat_ == CommCategory::NodeToCollection or
-        key.cat_ == CommCategory::NodeToCollectionBcast
-      ) {
-        auto const to   = key.toObj();
-        auto const from = key.fromNode();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
-        fprintf(stats_file_, "%s", obj_str.c_str());
-      } else if (
-        key.cat_ == CommCategory::CollectionToNode or
-        key.cat_ == CommCategory::CollectionToNodeBcast
-      ) {
-        auto const to   = key.toNode();
-        auto const from = key.fromObj();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val.bytes, cat);
-        fprintf(stats_file_, "%s", obj_str.c_str());
-      } else {
-        vtAssert(false, "Invalid balance::CommCategory enum value");
-      }
-    }
+    fprintf(stats_file_, "%s", obj_str.c_str());
   }
-  fflush(stats_file_);
 
-  closeStatsFile();
+  for (auto&& elm : node_comm_.at(phase)) {
+    using E = typename std::underlying_type<CommCategory>::type;
+
+    auto const& comm = elm.first;
+    auto const recvSend = getRecvSendDirection(comm);
+    auto const cat = static_cast<E>(comm.cat_);
+    auto obj_str = fmt::format(
+      "{},{},{},{},{}\n", phase, recvSend.first, recvSend.second,
+      elm.second.bytes, cat
+    );
+    fprintf(stats_file_, "%s", obj_str.c_str());
+  }
+
+  fflush(stats_file_);
 }
 
 ElementIDType NodeStats::addNodeStats(

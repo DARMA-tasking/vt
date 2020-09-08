@@ -133,7 +133,7 @@ public:
   void releaseLB();
 
   /**
-   * \internal \brief Output stats file based on instrumented data
+   * \internal \brief Output stats file for given phase based on instrumented data
    *
    * The contents of the file consist of a series of records separated
    * by newlines. Each record consists of comma separated fields. The
@@ -161,7 +161,7 @@ public:
    * recipient and distinguishing point-to-point messages from
    * broadcasts, as a decimal integer.
    */
-  void outputStatsFile();
+  void outputStatsForPhase(PhaseType phase);
 
   /**
    * \internal \brief Generate the next object element ID for LB
@@ -236,6 +236,9 @@ public:
    * otherwise \c no_vrt_proxy
    */
   VirtualProxyType getCollectionProxyForElement(ElementIDType temp_id) const;
+
+  void initialize() override;
+  void finalize() override;
 
 private:
   /**
