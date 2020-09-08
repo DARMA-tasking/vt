@@ -194,14 +194,18 @@ static void broadcastConsensus(
     "Planned collective does not exist within scope"
   );
   auto action = iter_seq->second.action_;
+  auto epoch = iter_seq->second.epoch_;
 
   // Run the collective safely.
   // The action is expected to use MPI calls; not VT calls.
   {
     VT_ALLOW_MPI_CALLS;
+    theMsg()->pushEpoch(epoch);
     action();
+    theMsg()->popEpoch(epoch);
   }
 
+  theTerm()->consume(epoch);
   // Erase the tag that was actually executed
   impl->planned_collective_.erase(iter_seq);
 
