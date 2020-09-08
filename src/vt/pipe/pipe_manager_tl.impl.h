@@ -316,8 +316,13 @@ PipeManagerTL::makeCallbackSingleBcast(bool const& inc) {
 
 template <typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleAnonVoid(FuncVoidType fn) {
-  auto const& new_pipe_id = makeCallbackFuncVoid(true,fn,true);
+PipeManagerTL::makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn) {
+  PipeType new_pipe_id = no_pipe;
+  if (life == LifetimeEnum::Once) {
+    new_pipe_id = makeCallbackFuncVoid(false,fn,true,1,1);
+  } else {
+    new_pipe_id = makeCallbackFuncVoid(true,fn,true);
+  }
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
   vt_debug_print(
@@ -331,7 +336,9 @@ PipeManagerTL::makeCallbackSingleAnonVoid(FuncVoidType fn) {
 
 template <typename C, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncCtxType<C> fn) {
+PipeManagerTL::makeCallbackSingleAnon(
+  LifetimeEnum life, C* ctx, FuncCtxType<C> fn
+) {
   auto fn_closure = [ctx,fn] { fn(ctx); };
 
   vt_debug_print(
@@ -339,12 +346,14 @@ PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncCtxType<C> fn) {
     "makeCallbackSingleAnon: created closure\n"
   );
 
-  return makeCallbackSingleAnonVoid(fn_closure);
+  return makeCallbackSingleAnonVoid(life,fn_closure);
 }
 
 template <typename MsgT, typename C, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncMsgCtxType<MsgT, C> fn) {
+PipeManagerTL::makeCallbackSingleAnon(
+  LifetimeEnum life, C* ctx, FuncMsgCtxType<MsgT, C> fn
+) {
   auto fn_closure = [ctx,fn](MsgT* msg) { fn(msg, ctx); };
 
   vt_debug_print(
@@ -352,13 +361,19 @@ PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncMsgCtxType<MsgT, C> fn) {
     "makeCallbackSingleAnon: created closure\n"
   );
 
-  return makeCallbackSingleAnon<MsgT,CallbackT>(fn_closure);
+  return makeCallbackSingleAnon<MsgT,CallbackT>(life,fn_closure);
 }
 
 template <typename MsgT, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleAnon(FuncMsgType<MsgT> fn) {
-  auto const& new_pipe_id = makeCallbackFunc<MsgT>(true,fn,true);
+PipeManagerTL::makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<MsgT> fn) {
+  PipeType new_pipe_id = no_pipe;
+  if (life == LifetimeEnum::Once) {
+    new_pipe_id = makeCallbackFunc<MsgT>(false,fn,true,1,1);
+  } else {
+    new_pipe_id = makeCallbackFunc<MsgT>(true,fn,true);
+  }
+
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
   vt_debug_print(

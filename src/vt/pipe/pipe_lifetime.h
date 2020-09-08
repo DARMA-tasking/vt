@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               pipe_manager.cc
+//                               pipe_lifetime.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,34 +42,23 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_PIPE_PIPE_LIFETIME_H
+#define INCLUDED_VT_PIPE_PIPE_LIFETIME_H
+
 #include "vt/config.h"
-#include "vt/pipe/pipe_common.h"
-#include "vt/pipe/pipe_manager.h"
-#include "vt/pipe/pipe_manager.fwd.h"
-#include "vt/group/group_common.h"
-#include "vt/group/group_manager.h"
 
 namespace vt { namespace pipe {
 
-PipeManager::PipeManager() {
-  group_id_ = theGroup()->newGroupCollectiveLabel(
-    group::GroupCollectiveLabelTag
-  );
-}
-
-Callback<PipeManager::Void> PipeManager::makeFunc(
-  LifetimeEnum life, FuncVoidType fn
-) {
-  return makeCallbackSingleAnonVoid<Callback<Void>>(life,fn);
-}
-
-// Functions pulled out of PipeManager for header deps, forward to manager
-void triggerPipe(PipeType const& pipe) {
-  return theCB()->triggerPipe(pipe);
-}
-
-void triggerCallbackHan(CallbackMsg* msg) {
-  return PipeManager::triggerCallbackHan(msg);
-}
+/**
+ * \brief Set the default lifetime for a callback. Once implies a callback can
+ * only be invoked once before it is deallocated. Indefinite means the callback
+ * can be used until the creator deletes it.
+ */
+enum struct LifetimeEnum : int8_t {
+  Once,
+  Indefinite
+};
 
 }} /* end namespace vt::pipe */
+
+#endif /*INCLUDED_VT_PIPE_PIPE_LIFETIME_H*/
