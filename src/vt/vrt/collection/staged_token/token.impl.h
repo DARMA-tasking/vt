@@ -59,6 +59,11 @@ void InsertTokenRval<ColT,IndexT>::insert(Args&&... args) {
   return theCollection()->staticInsert<ColT>(proxy_,idx_,args...);
 }
 
+template <typename ColT, typename IndexT>
+void InsertTokenRval<ColT,IndexT>::insertPtr(std::unique_ptr<ColT> ptr) {
+  return theCollection()->staticInsertColPtr<ColT>(proxy_,idx_,std::move(ptr));
+}
+
 // /*virtual*/ InsertToken::~InsertToken() {
 //   theCollection()->finishedStaticInsert<ColT>(proxy_);
 // }

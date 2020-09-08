@@ -216,4 +216,10 @@ ElementStats::SubphaseType ElementStats::getFocusedSubPhase(VirtualProxyType col
 
 /*static*/ std::unordered_map<VirtualProxyType,ElementStats::SubphaseType> ElementStats::focused_subphase_;
 
+void ElementStats::clear() {
+  phase_timings_.clear();
+  comm_.clear();
+  subphase_timings_.clear();
+}
+
 }}}} /* end namespace vt::vrt::collection::balance */
