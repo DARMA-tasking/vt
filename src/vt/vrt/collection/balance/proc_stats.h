@@ -74,8 +74,10 @@ public:
   static void clearStats();
   static void startIterCleanup();
   static void releaseLB();
+  static void initialize();
+  static void finalize();
 
-  static void outputStatsFile();
+  static void outputStatsForPhase(PhaseType phase);
 
   static SubphaseLoadMapType const& getProcSubphaseLoad(PhaseType phase);
 

@@ -237,6 +237,7 @@ void LBManager::releaseNow(PhaseType phase) {
     );
   }
 
+  balance::ProcStats::outputStatsForPhase(phase);
   balance::ProcStats::startIterCleanup();
   balance::ProcStats::clearStats();
 
