@@ -117,6 +117,7 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
     std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);
 
   test_model->setLoads(&proc_loads, nullptr, nullptr);
+  test_model->updateLoads(3);
 
   for (auto&& obj : *test_model) {
     auto work_val = test_model->getWork(obj, PhaseOffset{});
