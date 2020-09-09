@@ -72,23 +72,20 @@ void AsyncEvent::initialize() {
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
   auto const& this_node = theContext()->getNode();
-  auto const& event_id = createNormalEvent(this_node);
-  auto& holder = getEventHolder(event_id);
 
   auto trigger = [=]{
     callable();
   };
 
   auto const& event_state = testEventComplete(event);
-  auto const& this_event_owning_node = getOwningNode(event_id);
 
   debug_print(
     event, node,
-    "theEvent: event={}, newevent={}, state={}, "
-    "newevent_owning_node={}, this_node={}\n",
-    event, event_id, static_cast<int>(event_state), this_event_owning_node,
-    this_node
+    "event={}, state={}\n",
+    event, static_cast<int>(event_state)
   );
+
+  EventType ret_event = no_event;
 
   switch (event_state) {
   case EventStateType::EventReady:
@@ -98,9 +95,11 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     this->getEventHolder(event).attachAction(
       trigger
     );
-    holder.makeReadyTrigger();
     break;
   case EventStateType::EventRemote: {
+    auto const& event_id = createNormalEvent(this_node);
+    auto& holder = getEventHolder(event_id);
+
     // attach event to new id
     holder.attachAction(trigger);
 
@@ -118,13 +117,15 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     theMsg()->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
       owning_node, msg
     );
+
+    ret_event = event_id;
   }
     break;
   default:
     vtAssert(0, "This should be unreachable");
     break;
   }
-  return event_id;
+  return ret_event;
 }
 
 /*static*/ void AsyncEvent::eventFinished(EventFinishedMsg* msg) {
@@ -240,7 +241,11 @@ EventType AsyncEvent::createParentEvent(NodeType const& node) {
 }
 
 void AsyncEvent::removeEventID(EventType const& event) {
-  lookup_container_.erase(event);
+  auto iter = lookup_container_.find(event);
+  if (iter != lookup_container_.end()) {
+    event_container_.erase(iter->second);
+    lookup_container_.erase(event);
+  }
 }
 
 AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) {

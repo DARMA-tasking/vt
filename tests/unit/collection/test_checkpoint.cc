@@ -54,9 +54,37 @@ namespace vt { namespace tests { namespace unit {
 static constexpr std::size_t data1_len = 1024;
 static constexpr std::size_t data2_len = 64;
 
+static std::size_t counter = 0;
+
 struct TestCol : vt::Collection<TestCol,vt::Index3D> {
 
-  TestCol() = default;
+  TestCol() {
+    // fmt::print("{} ctor\n", theContext()->getNode());
+    counter++;
+  }
+  TestCol(TestCol&& other)
+    : iter(other.iter),
+      data1(std::move(other.data1)),
+      data2(std::move(other.data2)),
+      token(other.token)
+  {
+    // fmt::print("{} move ctor\n", theContext()->getNode());
+    counter++;
+  }
+  TestCol(TestCol const& other)
+    : iter(other.iter),
+      data1(other.data1),
+      data2(other.data2),
+      token(other.token)
+  {
+    // fmt::print("{} copy ctor\n", theContext()->getNode());
+    counter++;
+  }
+
+  virtual ~TestCol() {
+    // fmt::print("{} destroying\n", theContext()->getNode());
+    counter--;
+  }
 
   struct NullMsg : vt::CollectionMessage<TestCol> {};
 
@@ -194,11 +222,20 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     // Restoration should be done now
     vt::theCollective()->barrier();
 
-    runInEpoch([&]{
+    runInEpochCollective([&]{
       if (this_node == 0) {
         proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
       }
     });
+
+    runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.destroy();
+      }
+    });
+
+    // Ensure that all elements were properly destroyed
+    EXPECT_EQ(counter, 0);
   }
 
 }

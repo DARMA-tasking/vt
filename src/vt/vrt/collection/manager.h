@@ -224,6 +224,19 @@ private:
     VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
   );
 
+  /**
+   * \internal \brief Insert into a collection on this node with a pointer to
+   * the collection element to insert
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] idx the index to insert
+   * \param[in] ptr unique ptr to insert for the collection
+   */
+  template <typename ColT>
+  void staticInsertColPtr(
+    VirtualProxyType proxy, typename ColT::IndexType idx,
+    std::unique_ptr<ColT> ptr
+  );
 
 public:
   template <typename ColT>

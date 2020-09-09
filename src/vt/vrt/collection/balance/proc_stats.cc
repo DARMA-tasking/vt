@@ -98,7 +98,7 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
-  next_elm_ = 1;
+  ProcStats::proc_subphase_data_.clear();
 }
 
 /*static*/ void ProcStats::startIterCleanup() {
@@ -119,6 +119,7 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
+  clearStats();
 }
 
 /*static*/ ElementIDType ProcStats::getNextElm() {

@@ -102,6 +102,8 @@ struct ElementStats {
   template <typename Serializer>
   void serialize(Serializer& s);
 
+  void clear();
+
 public:
   template <typename ColT>
   static void syncNextPhase(PhaseMsg<ColT>* msg, ColT* col);

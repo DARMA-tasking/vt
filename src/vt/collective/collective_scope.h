@@ -66,12 +66,13 @@ private:
 
 private:
   struct CollectiveInfo {
-    CollectiveInfo(TagType in_seq, ActionType in_action)
-      : seq_(in_seq), action_(in_action)
+    CollectiveInfo(TagType in_seq, ActionType in_action, EpochType in_epoch)
+      : seq_(in_seq), action_(in_action), epoch_(in_epoch)
     { }
 
     TagType seq_ = no_tag;
     ActionType action_ = no_action;
+    EpochType epoch_ = no_epoch;
   };
 
 private:
@@ -119,6 +120,9 @@ public:
    * Any buffers captured in the lambda to use with the MPI operations
    * are in use until \c isCollectiveDone returns \c true or \c
    * waitCollective returns on the returned \c TagType
+   *
+   * The operation is counted as activity in the active termination
+   * detection epoch
    *
    * \param[in] action the action containing a closed set of MPI operations
    *

@@ -97,6 +97,8 @@ template <typename ColT>
 
   ProcStats::addProcStats(col, cur_phase, total_load, subphase_loads, comm);
 
+  col->getStats().clear();
+
   auto const before_ready = theCollection()->numReadyCollections();
   theCollection()->makeCollectionReady(untyped_proxy);
   auto const after_ready = theCollection()->numReadyCollections();
