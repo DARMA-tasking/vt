@@ -50,13 +50,12 @@ SelectSubphases::SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<un
   : ComposedModel(base)
   , subphases_(subphases)
 {
-  unsigned int base_subphases = ComposedModel::getNumSubphases();
   for (auto s : subphases) {
     vtAssert(s != PhaseOffset::WHOLE_PHASE, "Selecting WHOLE_PHASE as a subphase makes no sense");
-    vtAssert(s < base_subphases, "Selected subphase must be within range of base's known subphases");
   }
   // Don't check that the 'select' subphases are a smaller set than
   // the base - allow multiple counting or other potential cleverness
+  //unsigned int base_subphases = ComposedModel::getNumSubphases(); // too early - before updateLoads
   //vtAssert(subphases_.size() < base_subphases, "...");
 }
 
