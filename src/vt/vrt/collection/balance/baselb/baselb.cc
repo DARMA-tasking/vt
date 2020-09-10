@@ -68,8 +68,6 @@ void BaseLB::startLBHandler(
   phase_ = msg->getPhase();
   proxy_ = proxy;
 
-  vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase_);
-
   auto const& in_load_stats = balance::ProcStats::proc_data_[phase_];
   auto const& in_comm_stats = balance::ProcStats::proc_comm_[phase_];
   importProcessorData(in_load_stats, in_comm_stats);
