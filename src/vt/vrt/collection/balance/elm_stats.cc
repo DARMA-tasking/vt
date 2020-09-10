@@ -83,27 +83,24 @@ void ElementStats::recvObjData(
   ElementIDType pto, ElementIDType tto,
   ElementIDType pfrom, ElementIDType tfrom, double bytes, bool bcast
 ) {
-  comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::CollectionTag{}, pfrom, tfrom, pto, tto, bcast);
-  comm_.at(cur_phase_)[key] += bytes;
+  comm_[cur_phase_][key] += bytes;
 }
 
 void ElementStats::recvFromNode(
   ElementIDType pto, ElementIDType tto, NodeType from,
   double bytes, bool bcast
 ) {
-  comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, pto, tto, bcast);
-  comm_.at(cur_phase_)[key] += bytes;
+  comm_[cur_phase_][key] += bytes;
 }
 
 void ElementStats::recvToNode(
   NodeType to, ElementIDType pfrom, ElementIDType tfrom,
   double bytes, bool bcast
 ) {
-  comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::CollectionToNodeTag{}, pfrom, tfrom, to, bcast);
-  comm_.at(cur_phase_)[key] += bytes;
+  comm_[cur_phase_][key] += bytes;
 }
 
 void ElementStats::setModelWeight(TimeType const& time) {
@@ -113,17 +110,15 @@ void ElementStats::setModelWeight(TimeType const& time) {
   debug_print(
     lb, node,
     "ElementStats: setModelWeight: time={}, cur_load={}\n",
-    time, phase_timings_.at(cur_phase_)
+    time, phase_timings_[cur_phase_]
   );
 }
 
 void ElementStats::addTime(TimeType const& time) {
-  phase_timings_.resize(cur_phase_ + 1);
-  phase_timings_.at(cur_phase_) += time;
+  phase_timings_[cur_phase_] += time;
 
-  subphase_timings_.resize(cur_phase_ + 1);
-  subphase_timings_.at(cur_phase_).resize(cur_subphase_ + 1);
-  subphase_timings_.at(cur_phase_).at(cur_subphase_) += time;
+  subphase_timings_[cur_phase_].resize(cur_subphase_ + 1);
+  subphase_timings_[cur_phase_].at(cur_subphase_) += time;
 
   debug_print(
     lb, node,
@@ -140,8 +135,6 @@ void ElementStats::updatePhase(PhaseType const& inc) {
   );
 
   cur_phase_ += inc;
-  phase_timings_.resize(cur_phase_ + 1);
-  subphase_timings_.resize(cur_phase_ + 1);
 }
 
 PhaseType ElementStats::getPhase() const {
@@ -149,41 +142,44 @@ PhaseType ElementStats::getPhase() const {
 }
 
 TimeType ElementStats::getLoad(PhaseType const& phase) const {
-  vtAssert(phase_timings_.size() > phase, "Must have phase");
+  auto iter = phase_timings_.find(phase);
+  if (iter != phase_timings_.end()) {
+    debug_print(
+      lb, node,
+      "ElementStats: getLoad: load={}, phase={}, size={}\n",
+      iter->second, phase, phase_timings_.size()
+    );
 
-  auto const& total_load = phase_timings_.at(phase);
-
-  debug_print(
-              lb, node,
-              "ElementStats: getLoad: load={}, phase={}, size={}\n",
-              total_load, phase, phase_timings_.size()
-              );
-
-  return total_load;
+    return iter->second;
+  } else {
+    return 0.;
+  }
 }
 
 TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
     return getLoad(phase);
 
-  vtAssert(phase_timings_.size() > phase, "Must have phase");
-  auto const& subphase_loads = subphase_timings_.at(phase);
+  auto iter = subphase_timings_.find(phase);
+  if (iter != subphase_timings_.end()) {
+    auto const& subphase_loads = iter->second;
 
-  vtAssert(subphase_loads.size() > subphase, "Must have subphase");
-  auto total_load = subphase_loads.at(subphase);
+    auto total_load = subphase_loads.at(subphase);
 
-  debug_print(
-    lb, node,
-    "ElementStats: getLoad: load={}, phase={}, subphase={}\n",
-    total_load, phase, subphase
-  );
+    debug_print(
+      lb, node,
+      "ElementStats: getLoad: load={}, phase={}, subphase={}\n",
+      total_load, phase, subphase
+    );
 
-  return total_load;
+    return total_load;
+  } else {
+    return 0.;
+  }
 }
 
 CommMapType const&
 ElementStats::getComm(PhaseType const& phase) {
-  comm_.resize(phase + 1);
   auto const& phase_comm = comm_[phase];
 
   debug_print(
