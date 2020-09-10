@@ -391,6 +391,14 @@ bool Runtime::initialize(bool const force_now) {
       }
     }
     setup();
+
+    // Runtime component is being re-initialized
+    // Setup signal handlers based on AppConfig
+    if (finalized_) {
+      setupSignalHandler();
+      setupSignalHandlerINT();
+    }
+
     sync();
     initialized_ = true;
     return true;
