@@ -427,6 +427,7 @@ protected:
   bool initialized_ = false, finalized_ = false, aborted_ = false;
   bool runtime_active_ = false;
   bool is_interop_ = false;
+  bool sig_handlers_disabled_ = false;
   WorkerCountType num_workers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_NULL;
   int user_argc_ = 0;

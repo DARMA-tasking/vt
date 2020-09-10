@@ -394,9 +394,10 @@ bool Runtime::initialize(bool const force_now) {
 
     // Runtime component is being re-initialized
     // Setup signal handlers based on AppConfig
-    if (finalized_) {
+    if (finalized_ && sig_handlers_disabled_) {
       setupSignalHandler();
       setupSignalHandlerINT();
+      sig_handlers_disabled_ = false;
     }
 
     sync();
@@ -444,6 +445,7 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
       signal(SIGSEGV, SIG_DFL);
       signal(SIGUSR1, SIG_DFL);
       signal(SIGINT, SIG_DFL);
+      sig_handlers_disabled_ = true;
     }
 
     finalized_ = true;
