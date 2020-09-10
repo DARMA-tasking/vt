@@ -127,6 +127,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_1) {
   EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
 
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->updateLoads(0);
 
   std::unordered_map<ElementIDType, std::vector<TimeType>> expected_values = {
     {1,
@@ -174,6 +175,7 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   EXPECT_EQ(test_model->getNumSubphases(), subphases.size());
 
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->updateLoads(0);
 
   std::unordered_map<ElementIDType, TimeType> expected_values = {
     {1, TimeType{50}}, {2, TimeType{110}}};

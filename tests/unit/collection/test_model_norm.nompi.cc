@@ -123,6 +123,7 @@ TEST_F(TestModelNorm, test_model_norm_1) {
 
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->updateLoads(0);
 
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
     int objects_seen = 0;
@@ -155,6 +156,7 @@ TEST_F(TestModelNorm, test_model_norm_2) {
   // finite 'power' value
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->updateLoads(0);
 
   std::array<TimeType, 2> expected_norms = {
     TimeType{33.019}, TimeType{73.986}};
@@ -188,6 +190,7 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   auto test_model = std::make_shared<Norm>(
     std::make_shared<StubModel>(), std::numeric_limits<double>::infinity());
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
+  test_model->updateLoads(0);
 
   std::array<TimeType, 2> expected_norms = {TimeType{30}, TimeType{60}};
 

@@ -164,7 +164,9 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
     {1, {TimeType{16.6}, TimeType{280}, TimeType{23}}}};
 
   for (; num_phases < 2; ++num_phases) {
+    test_model->updateLoads(num_phases);
     int objects_seen = 0;
+
     for (auto&& obj : *test_model) {
       EXPECT_TRUE(obj == 1 || obj == 2 || obj == 3);
       ++objects_seen;
