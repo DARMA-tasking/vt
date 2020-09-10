@@ -94,6 +94,7 @@ struct ElementStats {
 
   CommMapType const& getComm(PhaseType const& phase);
   void setSubPhase(SubphaseType subphase);
+  SubphaseType getSubPhase() const;
 
   static const constexpr SubphaseType no_subphase = std::numeric_limits<SubphaseType>::max();
   static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
