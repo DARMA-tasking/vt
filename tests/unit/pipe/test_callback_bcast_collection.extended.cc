@@ -133,7 +133,12 @@ struct TestColMsg : ::vt::CollectionMessage<TestCol> {};
 TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
   auto const& this_node = theContext()->getNode();
   auto const& range = Index1D(32);
-  auto proxy = theCollection()->construct<TestCol>(range);
+
+  vt::CollectionProxy<TestCol, vt::Index1D> proxy;
+
+  if (this_node == 0) {
+    proxy = theCollection()->construct<TestCol>(range);
+  }
 
   runInEpochCollective([&]{
     if (this_node == 0) {
@@ -160,7 +165,12 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
   }
 
   auto const& range = Index1D(32);
-  auto proxy = theCollection()->construct<TestCol>(range);
+
+  vt::CollectionProxy<TestCol, vt::Index1D> proxy;
+
+  if (this_node == 0) {
+    proxy = theCollection()->construct<TestCol>(range);
+  }
 
   runInEpochCollective([&]{
     if (this_node == 0) {
@@ -188,7 +198,12 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
   }
 
   auto const& range = Index1D(32);
-  auto proxy = theCollection()->construct<TestCol>(range);
+
+  vt::CollectionProxy<TestCol, vt::Index1D> proxy;
+
+  if (this_node == 0) {
+    proxy = theCollection()->construct<TestCol>(range);
+  }
 
   runInEpochCollective([&]{
     if (this_node == 0) {
