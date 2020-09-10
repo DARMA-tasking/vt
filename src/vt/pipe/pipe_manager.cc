@@ -57,8 +57,10 @@ PipeManager::PipeManager() {
   );
 }
 
-Callback<PipeManager::Void> PipeManager::makeFunc(FuncVoidType fn) {
-  return makeCallbackSingleAnonVoid<Callback<Void>>(fn);
+Callback<PipeManager::Void> PipeManager::makeFunc(
+  LifetimeEnum life, FuncVoidType fn
+) {
+  return makeCallbackSingleAnonVoid<Callback<Void>>(life,fn);
 }
 
 // Functions pulled out of PipeManager for header deps, forward to manager

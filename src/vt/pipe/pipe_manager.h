@@ -55,6 +55,7 @@
 #include "vt/pipe/signal/signal_holder.h"
 #include "vt/pipe/callback/anon/callback_anon.fwd.h"
 #include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/pipe/pipe_lifetime.h"
 #include "vt/activefn/activefn.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/objgroup/proxy/proxy_objgroup_elm.h"
@@ -129,13 +130,16 @@ struct PipeManager
    *  }
    * \endcode
    *
+   * \param[in] life the lifetime for this callback
    * \param[in] ctx pointer to the object context passed to callback function
    * \param[in] fn endpoint function that takes a message and context pointer
    *
    * \return a new callback
    */
   template <typename MsgT, typename ContextT>
-  Callback<MsgT> makeFunc(ContextT* ctx, FuncMsgCtxType<MsgT, ContextT> fn);
+  Callback<MsgT> makeFunc(
+    LifetimeEnum life, ContextT* ctx, FuncMsgCtxType<MsgT, ContextT> fn
+  );
 
   /**
    * \brief Make a void callback to a function (including lambdas) with a
@@ -160,13 +164,16 @@ struct PipeManager
    *  }
    * \endcode
    *
+   * \param[in] life the lifetime for this callback
    * \param[in] ctx pointer to the object context passed to callback function
    * \param[in] fn endpoint function that takes a context pointer
    *
    * \return a new callback
    */
   template <typename ContextT>
-  Callback<Void> makeFunc(ContextT* ctx, FuncCtxType<ContextT> fn);
+  Callback<Void> makeFunc(
+    LifetimeEnum life, ContextT* ctx, FuncCtxType<ContextT> fn
+  );
 
   /**
    * \brief Make a callback to a function (including lambdas) on this node with
@@ -187,12 +194,13 @@ struct PipeManager
    *  }
    * \endcode
    *
+   * \param[in] life the lifetime for this callback
    * \param[in] fn endpoint function that takes a message
    *
    * \return the new callback
    */
   template <typename MsgT>
-  Callback<MsgT> makeFunc(FuncMsgType<MsgT> fn);
+  Callback<MsgT> makeFunc(LifetimeEnum life, FuncMsgType<MsgT> fn);
 
   /**
    * \brief Make a void callback to a function (including lambdas) on this node.
@@ -208,11 +216,12 @@ struct PipeManager
    *  }
    * \endcode
    *
+   * \param[in] life the lifetime for this callback
    * \param[in] fn void endpoint function
    *
    * \return the new callback
    */
-  Callback<Void> makeFunc(FuncVoidType fn);
+  Callback<Void> makeFunc(LifetimeEnum life, FuncVoidType fn);
 
   /**
    * \brief Make a callback to a active message handler to be invoked on a

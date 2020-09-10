@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            test_callback_func.cc
+//                               pipe_lifetime.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,23 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#if !defined INCLUDED_VT_PIPE_PIPE_LIFETIME_H
+#define INCLUDED_VT_PIPE_PIPE_LIFETIME_H
 
-#include "test_parallel_harness.h"
-#include "data_message.h"
+#include "vt/config.h"
 
-#include "vt/transport.h"
+namespace vt { namespace pipe {
 
-namespace vt { namespace tests { namespace unit {
-
-using namespace vt;
-using namespace vt::tests::unit;
-
-struct CallbackMsg : vt::Message {
-  CallbackMsg() = default;
-  explicit CallbackMsg(Callback<> in_cb) : cb_(in_cb) { }
-
-  Callback<> cb_;
+/**
+ * \brief Set the default lifetime for a callback. Once implies a callback can
+ * only be invoked once before it is deallocated. Indefinite means the callback
+ * can be used until the creator deletes it.
+ */
+enum struct LifetimeEnum : int8_t {
+  Once,
+  Indefinite
 };
 
-static int32_t called = 0;
+}} /* end namespace vt::pipe */
 
-struct TestCallbackFunc : TestParallelHarness {
-  static void test_handler(CallbackMsg* msg) {
-    //auto const& this_node = theContext()->getNode();
-    //fmt::print("{}: test_handler\n", this_node);
-    msg->cb_.send();
-  }
-};
-
-TEST_F(TestCallbackFunc, test_callback_func_1) {
-  called = 0;
-  auto cb = theCB()->makeFunc(vt::pipe::LifetimeEnum::Once, []{ called = 900; });
-  cb.send();
-  EXPECT_EQ(called, 900);
-}
-
-TEST_F(TestCallbackFunc, test_callback_func_2) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  if (num_nodes < 2) {
-    return;
-  }
-
-  called = 0;
-
-  runInEpochCollective([this_node]{
-    if (this_node == 0) {
-      auto cb = theCB()->makeFunc(
-        vt::pipe::LifetimeEnum::Once, []{ called = 400; }
-      );
-      auto msg = makeMessage<CallbackMsg>(cb);
-      theMsg()->sendMsg<CallbackMsg, test_handler>(1, msg);
-    }
-  });
-
-  if (this_node == 0) {
-    EXPECT_EQ(called, 400);
-  }
-}
-
-}}} // end namespace vt::tests::unit
+#endif /*INCLUDED_VT_PIPE_PIPE_LIFETIME_H*/
