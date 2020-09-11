@@ -77,6 +77,29 @@ namespace vt { namespace collective { namespace reduce {
  * Holds the state as a reduction makes it up the spanning tree until it reaches
  * the root. Combines messages with the user-specified reduction operator as
  * they move up the spanning tree.
+ *
+ * The interaction between the reduction implementation's message
+ * buffering and termination detection may be unintuitive. It is
+ * believed and demonstrated to operate as intended, based on the
+ * following reasoning.
+ * - There is some epoch `reduce_epoch`
+ * - We assume all contributions to a given reduction (via `reduce()`
+ *   calls) occur in `reduce_epoch`
+ * - Proposition: The result of the reduction will be delivered in
+ *   `reduce_epoch`, and `reduce_epoch` will not terminate before that
+ *   result is delivered.
+ *
+ * - On any given node, some local contribution to the reduction will
+ *   be the last. That last contribution runs in `reduce_epoch`, which
+ *   cannot have terminated before it runs.
+ * - On a leaf node, the reduction message up the spanning tree will
+     be produced and sent in `reduce_epoch`.
+ * - At every interior node in the spanning tree, all reduction
+     messages will be received and processed in `reduce_epoch`.
+ * - The reduction message passed up the spanning tree from every node
+     will thus be produced and sent in `reduce_epoch`.
+ * - The root of the spanning tree will receive and process the last
+     reduction message in `reduce_epoch`, passing it to the callback.
  */
 struct Reduce : virtual collective::tree::Tree {
   using ReduceStateType = ReduceState;
