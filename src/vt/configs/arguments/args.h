@@ -48,6 +48,7 @@
 // Do not pull in any VT dependencies here
 
 #include <string>
+#include <memory>
 
 namespace vt { namespace arguments {
 
