@@ -178,43 +178,21 @@ inline bool alwaysFlush() {
 
 struct ArgAdapatorTag {};
 
+#define vt_adapt_argument(arg) decltype(ArgConfig::arg)& arg = ArgConfig::arg
+
 struct ArgAdaptor {
-  explicit ArgAdaptor(ArgAdapatorTag)
-    : vt_lb(ArgConfig::vt_lb),
-      vt_lb_file(ArgConfig::vt_lb_file),
-      vt_lb_quiet(ArgConfig::vt_lb_quiet),
-      vt_lb_file_name(ArgConfig::vt_lb_file_name),
-      vt_lb_name(ArgConfig::vt_lb_name),
-      vt_lb_args(ArgConfig::vt_lb_args),
-      vt_lb_interval(ArgConfig::vt_lb_interval),
-      vt_lb_stats(ArgConfig::vt_lb_stats),
-      vt_lb_stats_dir(ArgConfig::vt_lb_stats_dir),
-      vt_lb_stats_file(ArgConfig::vt_lb_stats_file)
-  { }
+  explicit ArgAdaptor(ArgAdapatorTag) { }
 
-  ~ArgAdaptor() {
-    ArgConfig::vt_lb = vt_lb;
-    ArgConfig::vt_lb_file = vt_lb_file;
-    ArgConfig::vt_lb_quiet = vt_lb_quiet;
-    ArgConfig::vt_lb_file_name = vt_lb_file_name;
-    ArgConfig::vt_lb_name = vt_lb_name;
-    ArgConfig::vt_lb_args = vt_lb_args;
-    ArgConfig::vt_lb_interval = vt_lb_interval;
-    ArgConfig::vt_lb_stats = vt_lb_stats;
-    ArgConfig::vt_lb_stats_dir = vt_lb_stats_dir;
-    ArgConfig::vt_lb_stats_file = vt_lb_stats_file;
-  }
-
-  bool vt_lb;
-  bool vt_lb_file;
-  bool vt_lb_quiet;
-  std::string vt_lb_file_name;
-  std::string vt_lb_name;
-  std::string vt_lb_args;
-  int32_t vt_lb_interval;
-  bool vt_lb_stats;
-  std::string vt_lb_stats_dir;
-  std::string vt_lb_stats_file;
+  vt_adapt_argument(vt_lb);
+  vt_adapt_argument(vt_lb_file);
+  vt_adapt_argument(vt_lb_quiet);
+  vt_adapt_argument(vt_lb_file_name);
+  vt_adapt_argument(vt_lb_name);
+  vt_adapt_argument(vt_lb_args);
+  vt_adapt_argument(vt_lb_interval);
+  vt_adapt_argument(vt_lb_stats);
+  vt_adapt_argument(vt_lb_stats_dir);
+  vt_adapt_argument(vt_lb_stats_file);
 };
 
 }} /* end namespace vt::arguments */
