@@ -257,7 +257,7 @@ protected:
    *
    * \return whether it succeeded
    */
-  bool tryFinalize(bool const disable_sig);
+  bool tryFinalize(bool const disable_sig = true);
 
   /**
    * \internal \brief Setup argument input
