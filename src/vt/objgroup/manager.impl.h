@@ -140,6 +140,7 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
         dispatch_.erase(iter);
       }
     }
+    derived_to_bases_.erase(derived_iter);
   }
   auto iter = dispatch_.find(proxy_bits);
   if (iter != dispatch_.end()) {
