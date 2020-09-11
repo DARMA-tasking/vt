@@ -120,6 +120,7 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
     std::make_shared<NaivePersistence>(std::make_shared<StubModel>());
 
   test_model->setLoads(&proc_loads, nullptr, nullptr);
+  test_model->updateLoads(3);
 
   for (auto&& obj : *test_model) {
     for (auto phase : {0, -1, -2, -3, -4}) {

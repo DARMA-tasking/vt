@@ -115,6 +115,9 @@ public:
    * This would typically be called by LBManager collectively inside
    * an epoch that can be used for global communication in advance of
    * any calls to getWork()
+   *
+   * The `setLoads` method must have been called before any call to
+   * this.
    */
   virtual void updateLoads(PhaseType last_completed_phase) = 0;
 
@@ -125,6 +128,9 @@ public:
    * \param[in] when The interval in which the estimated load is desired
    *
    * \return How much computation time the object is estimated to require
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
    */
   virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
 
@@ -140,12 +146,44 @@ public:
    */
   virtual int getNumPastPhasesNeeded(int look_back = 0) = 0;
 
-  // Object enumeration, to abstract away access to the underlying structures from NodeStats
+  /**
+   * Object enumeration, to abstract away access to the underlying structures from NodeStats
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
+   */
   virtual ObjectIterator begin() = 0;
+  /**
+   * Object enumeration, to abstract away access to the underlying structures from NodeStats
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
+   */
   virtual ObjectIterator end() = 0;
 
+  /**
+   * Object enumeration, to abstract away access to the underlying structures from NodeStats
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
+   */
   virtual int getNumObjects() = 0;
+
+  /**
+   * Returns the number of phases of history available
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
+   */
   virtual int getNumCompletedPhases() = 0;
+
+  /**
+   * Returns the number of subphases recorded in the most recent
+   * completed phase
+   *
+   * The `updateLoads` method must have been called before any call to
+   * this.
+   */
   virtual int getNumSubphases() = 0;
 }; // class LoadModel
 

@@ -144,6 +144,7 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
 
   for (auto iter = 0; iter < num_test_interations; ++iter) {
     proc_loads[num_phases] = load_holder[iter];
+    test_model->updateLoads(num_phases);
     ++num_phases;
 
     for (auto&& obj : *test_model) {
