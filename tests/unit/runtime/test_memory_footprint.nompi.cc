@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/vrt/collection/balance/node_stats.h"
+#include "vt/utils/memory/memory_usage.h"
 
 #include "test_harness.h"
 
@@ -89,5 +90,11 @@ TEST_F(TestMemoryFootprinting, test_node_stats) {
   vt::vrt::collection::balance::NodeStats stats;
   printMemoryFootprint(stats);
 }
+
+// FIXME: segfaults, requires 'vt_memory_reporters' from theConfig
+// TEST_F(TestMemoryFootprinting, test_memory_usage) {
+//   vt::util::memory::MemoryUsage mem_usage;
+//   printMemoryFootprint(mem_usage);
+// }
 
 }}} /* end namespace vt::tests::unit */
