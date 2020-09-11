@@ -164,6 +164,22 @@ public:
    */
   std::shared_ptr<LoadModel> getLoadModel() { return model_; }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | num_invocations_
+      | num_release_
+      | cached_phase_
+      // ambiguous: hasNoninSerialize, isEnum
+      //| cached_lb_
+      | destroy_lb_
+      | synced_in_lb_
+      | listeners_
+      | proxy_;
+      // LoadModel is pure abstract interface
+      // | base_model_
+      // | model_;
+  }
+
 protected:
   /**
    * \internal \brief Collectively construct a new load balancer

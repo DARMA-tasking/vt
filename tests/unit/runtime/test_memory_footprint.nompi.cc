@@ -47,6 +47,7 @@
 #include <checkpoint/checkpoint.h>
 #include "vt/configs/arguments/args.h"
 #include "vt/timetrigger/time_trigger_manager.h"
+#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 
 #include "test_harness.h"
 
@@ -68,6 +69,14 @@ TEST_F(TestMemoryFootprinting, test_time_trigger_manager) {
   fmt::print("sizeof instance: {}\n", sizeof(trigger_manager));
 
   auto size = checkpoint::getMemoryFootprint<timetrigger::TimeTriggerManager>(trigger_manager);
+  fmt::print("getMemoryFootprint: {}\n", size);
+}
+
+TEST_F(TestMemoryFootprinting, test_lb_manager) {
+  vt::vrt::collection::balance::LBManager lb_manager;
+  fmt::print("sizeof instance: {}\n", sizeof(lb_manager));
+
+  auto size = checkpoint::getMemoryFootprint<vt::vrt::collection::balance::LBManager>(lb_manager);
   fmt::print("getMemoryFootprint: {}\n", size);
 }
 
