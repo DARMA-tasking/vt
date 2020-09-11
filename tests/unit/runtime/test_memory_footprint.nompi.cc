@@ -49,6 +49,7 @@
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
+#include "vt/vrt/collection/balance/node_stats.h"
 
 #include "test_harness.h"
 
@@ -82,6 +83,11 @@ TEST_F(TestMemoryFootprinting, test_lb_manager) {
 TEST_F(TestMemoryFootprinting, test_stats_restart_reader) {
   vt::vrt::collection::balance::StatsRestartReader reader;
   printMemoryFootprint(reader);
+}
+
+TEST_F(TestMemoryFootprinting, test_node_stats) {
+  vt::vrt::collection::balance::NodeStats stats;
+  printMemoryFootprint(stats);
 }
 
 }}} /* end namespace vt::tests::unit */
