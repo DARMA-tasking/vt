@@ -196,6 +196,8 @@ struct ArgAdaptor {
   vt_adapt_argument(vt_lb_stats_file);
 };
 
+#undef vt_adapt_argument
+
 }} /* end namespace vt::arguments */
 
 namespace vt {
