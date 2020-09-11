@@ -87,7 +87,7 @@ template <typename T>
       state_lookup_.erase(group_iter);
     } else {
       group_iter->second.erase(id_iter);
-      if (group_iter->second.size == 0) {
+      if (group_iter->second.size() == 0) {
         state_lookup_.erase(group_iter);
       }
     }

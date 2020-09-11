@@ -279,6 +279,7 @@ void Reduce::startReduce(
       );
       theMsg()->sendMsgAuto<MessageT,reduceUp<MessageT>>(parent,typed_msg);
     }
+    ReduceStateHolder<MessageT>::erase(group_,lookup);
   }
 }
 
