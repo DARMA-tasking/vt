@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/rdmahandle/manager.h"
 
 #include "test_harness.h"
 
@@ -95,6 +96,12 @@ TEST_F(TestMemoryFootprinting, test_node_stats) {
 // TEST_F(TestMemoryFootprinting, test_memory_usage) {
 //   vt::util::memory::MemoryUsage mem_usage;
 //   printMemoryFootprint(mem_usage);
+// }
+
+// FIXME: segfaults, requires theCollective
+// TEST_F(TestMemoryFootprinting, test_rdma_manager) {
+//   vt::rdma::Manager manager;
+//   printMemoryFootprint(manager);
 // }
 
 }}} /* end namespace vt::tests::unit */
