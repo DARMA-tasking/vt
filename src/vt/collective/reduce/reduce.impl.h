@@ -291,6 +291,8 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       theMsg()->sendMsg<MsgT,ReduceManager::reduceUp<MsgT>>(parent, typed_msg);
     }
   }
+
+  state_.erase(lookup);
 }
 
 template <typename MsgT>
