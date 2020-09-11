@@ -48,6 +48,7 @@
 // Do not pull in any VT dependencies here
 
 #include <string>
+#include <memory>
 
 namespace vt { namespace arguments {
 
@@ -176,6 +177,39 @@ inline bool alwaysFlush() {
   return ArgConfig::vt_debug_print_flush;
 }
 
+struct ArgAdapatorTag {};
+
+#define vt_adapt_argument(arg) decltype(ArgConfig::arg)& arg = ArgConfig::arg
+
+struct ArgAdaptor {
+  explicit ArgAdaptor(ArgAdapatorTag) { }
+
+  vt_adapt_argument(vt_lb);
+  vt_adapt_argument(vt_lb_file);
+  vt_adapt_argument(vt_lb_quiet);
+  vt_adapt_argument(vt_lb_file_name);
+  vt_adapt_argument(vt_lb_name);
+  vt_adapt_argument(vt_lb_args);
+  vt_adapt_argument(vt_lb_interval);
+  vt_adapt_argument(vt_lb_stats);
+  vt_adapt_argument(vt_lb_stats_dir);
+  vt_adapt_argument(vt_lb_stats_file);
+};
+
+#undef vt_adapt_argument
+
 }} /* end namespace vt::arguments */
+
+namespace vt {
+
+inline std::unique_ptr<arguments::ArgAdaptor> theConfig() {
+  // initialize with current values
+  auto adaptor = std::make_unique<arguments::ArgAdaptor>(
+    arguments::ArgAdapatorTag{}
+  );
+  return adaptor;
+}
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H*/
