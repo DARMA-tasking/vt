@@ -93,6 +93,15 @@ public:
 
   bool needsLB(PhaseType phase) const;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | msgsReceived
+      | totalMove
+      | proxy_
+      | proc_move_list_
+      | proc_phase_runs_LB_;
+  }
+
 private:
   void inputStatsFile(
     std::string const& fileName,

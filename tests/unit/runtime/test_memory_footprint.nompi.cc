@@ -48,6 +48,7 @@
 #include "vt/configs/arguments/args.h"
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
+#include "vt/vrt/collection/balance/stats_restart_reader.h"
 
 #include "test_harness.h"
 
@@ -55,29 +56,32 @@ namespace vt { namespace tests { namespace unit {
 
 using TestMemoryFootprinting = TestHarness;
 
+template<typename T>
+void printMemoryFootprint(T& obj) {
+  fmt::print("sizeof(obj):\t{}\n", sizeof(obj));
+
+  auto size = checkpoint::getMemoryFootprint<T>(obj);
+  fmt::print("footprint(obj):\t{}\n", size);
+}
+
 TEST_F(TestMemoryFootprinting, test_arg_config) {
   arguments::ArgConfig args;
-
-  fmt::print("sizeof instance: {}\n", sizeof(args));
-
-  auto size = checkpoint::getMemoryFootprint<arguments::ArgConfig>(args);
-  fmt::print("getMemoryFootprint: {}\n", size);
+  printMemoryFootprint(args);
 }
 
 TEST_F(TestMemoryFootprinting, test_time_trigger_manager) {
   timetrigger::TimeTriggerManager trigger_manager;
-  fmt::print("sizeof instance: {}\n", sizeof(trigger_manager));
-
-  auto size = checkpoint::getMemoryFootprint<timetrigger::TimeTriggerManager>(trigger_manager);
-  fmt::print("getMemoryFootprint: {}\n", size);
+  printMemoryFootprint(trigger_manager);
 }
 
 TEST_F(TestMemoryFootprinting, test_lb_manager) {
   vt::vrt::collection::balance::LBManager lb_manager;
-  fmt::print("sizeof instance: {}\n", sizeof(lb_manager));
+  printMemoryFootprint(lb_manager);
+}
 
-  auto size = checkpoint::getMemoryFootprint<vt::vrt::collection::balance::LBManager>(lb_manager);
-  fmt::print("getMemoryFootprint: {}\n", size);
+TEST_F(TestMemoryFootprinting, test_stats_restart_reader) {
+  vt::vrt::collection::balance::StatsRestartReader reader;
+  printMemoryFootprint(reader);
 }
 
 }}} /* end namespace vt::tests::unit */
