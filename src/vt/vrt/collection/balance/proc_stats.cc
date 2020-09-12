@@ -62,10 +62,10 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /*static*/
-std::vector<std::unordered_map<ElementIDType,TimeType>>
+typename ProcStats::SparseMapType<std::unordered_map<ElementIDType,TimeType>>
   ProcStats::proc_data_ = {};
 
-/*static*/ std::vector<CommMapType> ProcStats::proc_comm_ = {};
+/*static*/ typename ProcStats::SparseMapType<CommMapType> ProcStats::proc_comm_ = {};
 
 /*static*/
 std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
@@ -81,13 +81,12 @@ std::unordered_map<ElementIDType,ProcStats::MigrateFnType>
 
 /*static*/ FILE* ProcStats::stats_file_ = nullptr;
 
-/*static*/ std::vector<ProcStats::SubphaseLoadMapType>
+/*static*/ typename ProcStats::SparseMapType<ProcStats::SubphaseLoadMapType>
  ProcStats::proc_subphase_data_ = {};
 
 /*static */ ProcStats::SubphaseLoadMapType const&
 ProcStats::getProcSubphaseLoad(PhaseType phase) {
-  vtAssert(proc_subphase_data_.size() > phase, "Phase must exist in load data");
-  return proc_subphase_data_.at(phase);
+  return proc_subphase_data_[phase];
 }
 
 /*static*/ bool ProcStats::created_dir_ = false;
@@ -185,10 +184,10 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
   vt_print(lb, "ProcStats::outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
 
   for (size_t i = 0; i < num_iters; i++) {
-    for (auto&& elm : proc_data_.at(i)) {
+    for (auto&& elm : proc_data_[i]) {
       ElementIDType id = elm.first;
       TimeType time = elm.second;
-      const auto& subphase_times = proc_subphase_data_.at(i)[id];
+      const auto& subphase_times = proc_subphase_data_[i][id];
       size_t subphases = subphase_times.size();
 
       auto obj_str = fmt::format("{},{},{},{},[", i, id, time, subphases);
@@ -202,7 +201,7 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
 
       fprintf(stats_file_, "%s", obj_str.c_str());
     }
-    for (auto&& elm : proc_comm_.at(i)) {
+    for (auto&& elm : proc_comm_[i]) {
       using E = typename std::underlying_type<CommCategory>::type;
 
       auto const& key = elm.first;
@@ -259,27 +258,24 @@ ElementIDType ProcStats::addProcStats(
     temp_id, perm_id, phase, subphase_time.size(), time
   );
 
-  proc_data_.resize(phase + 1);
-  auto elm_iter = proc_data_.at(phase).find(temp_id);
-  vtAssert(elm_iter == proc_data_.at(phase).end(), "Must not exist");
-  proc_data_.at(phase).emplace(
+  auto elm_iter = proc_data_[phase].find(temp_id);
+  vtAssert(elm_iter == proc_data_[phase].end(), "Must not exist");
+  proc_data_[phase].emplace(
     std::piecewise_construct,
     std::forward_as_tuple(temp_id),
     std::forward_as_tuple(time)
   );
 
-  proc_subphase_data_.resize(phase + 1);
-  auto elm_subphase_iter = proc_subphase_data_.at(phase).find(temp_id);
-  vtAssert(elm_subphase_iter == proc_subphase_data_.at(phase).end(), "Must not exist");
-  proc_subphase_data_.at(phase).emplace(
+  auto elm_subphase_iter = proc_subphase_data_[phase].find(temp_id);
+  vtAssert(elm_subphase_iter == proc_subphase_data_[phase].end(), "Must not exist");
+  proc_subphase_data_[phase].emplace(
     std::piecewise_construct,
     std::forward_as_tuple(temp_id),
     std::forward_as_tuple(subphase_time)
   );
 
-  proc_comm_.resize(phase + 1);
   for (auto&& c : comm) {
-    proc_comm_.at(phase)[c.first] += c.second;
+    proc_comm_[phase][c.first] += c.second;
   }
 
   proc_temp_to_perm_[temp_id] = perm_id;

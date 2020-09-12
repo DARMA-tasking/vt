@@ -73,7 +73,7 @@ struct TestCallbackFunc : TestParallelHarness {
 
 TEST_F(TestCallbackFunc, test_callback_func_1) {
   called = 0;
-  auto cb = theCB()->makeFunc([]{ called = 900; });
+  auto cb = theCB()->makeFunc(vt::pipe::LifetimeEnum::Once, []{ called = 900; });
   cb.send();
   EXPECT_EQ(called, 900);
 }
@@ -89,7 +89,9 @@ TEST_F(TestCallbackFunc, test_callback_func_2) {
   called = 0;
 
   if (this_node == 0) {
-    auto cb = theCB()->makeFunc([]{ called = 400; });
+    auto cb = theCB()->makeFunc(
+      vt::pipe::LifetimeEnum::Once, []{ called = 400; }
+    );
     auto msg = makeSharedMessage<CallbackMsg>(cb);
     theMsg()->sendMsg<CallbackMsg, test_handler>(1, msg);
 

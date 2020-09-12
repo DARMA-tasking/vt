@@ -1085,7 +1085,7 @@ void RDMAManager::setupChannelWithRemote(
       han, dest, override_target, target
     );
 
-    auto cb = theCB()->makeFunc(action);
+    auto cb = theCB()->makeFunc(pipe::LifetimeEnum::Once, action);
     auto msg = makeMessage<ChannelMessage>(
       type, han, num_bytes, tag, cb, dest, override_target
     );
@@ -1278,13 +1278,15 @@ void RDMAManager::createDirectChannelInternal(
       "Should not have a tag assigned at this point"
     );
 
-    auto cb = theCB()->makeFunc<GetInfoChannel>([=](GetInfoChannel* msg){
-      auto const& my_num_bytes = msg->num_bytes;
-      createDirectChannelFinish(
-        type, han, non_target, action, unique_channel_tag, is_target, my_num_bytes,
-        override_target
-      );
-    });
+    auto cb = theCB()->makeFunc<GetInfoChannel>(
+      pipe::LifetimeEnum::Once, [=](GetInfoChannel* msg){
+        auto const& my_num_bytes = msg->num_bytes;
+        createDirectChannelFinish(
+          type, han, non_target, action, unique_channel_tag, is_target, my_num_bytes,
+          override_target
+        );
+      }
+    );
     auto msg = makeMessage<CreateChannel>(
       type, han, unique_channel_tag, target, this_node, cb
     );
@@ -1315,7 +1317,7 @@ void RDMAManager::removeDirectChannel(
   auto const target = getTarget(han, override_target);
 
   if (this_node != target) {
-    auto cb = theCB()->makeFunc([=]{
+    auto cb = theCB()->makeFunc(pipe::LifetimeEnum::Once, [=]{
       auto iter = channels_.find(
         makeChannelLookup(han,RDMA_TypeType::Put,target,this_node)
       );

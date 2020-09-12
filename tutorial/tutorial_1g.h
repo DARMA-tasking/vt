@@ -111,7 +111,7 @@ static inline void activeMessageCallback() {
 
     // Example of a void lambda callback
     {
-      auto cb = ::vt::theCB()->makeFunc(void_fn);
+      auto cb = ::vt::theCB()->makeFunc(vt::pipe::LifetimeEnum::Once, void_fn);
       auto msg = ::vt::makeSharedMessage<MsgWithCallback>(cb);
       ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg);
     }
@@ -132,7 +132,9 @@ static inline void activeMessageCallback() {
 
     // Example of context callback
     {
-      auto cb = ::vt::theCB()->makeFunc<DataMsg,MyContext>(&ctx, callbackCtx);
+      auto cb = ::vt::theCB()->makeFunc<DataMsg,MyContext>(
+        vt::pipe::LifetimeEnum::Once, &ctx, callbackCtx
+      );
       auto msg = ::vt::makeSharedMessage<MsgWithCallback>(cb);
       ::vt::theMsg()->sendMsg<MsgWithCallback,getCallbackHandler>(to_node,msg);
     }
