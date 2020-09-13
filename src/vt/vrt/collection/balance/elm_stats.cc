@@ -200,6 +200,10 @@ void ElementStats::setSubPhase(SubphaseType subphase) {
   cur_subphase_ = subphase;
 }
 
+typename ElementStats::SubphaseType ElementStats::getSubPhase() const {
+  return cur_subphase_;
+}
+
 /*static*/
 void ElementStats::setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase) {
   focused_subphase_[collection] = subphase;
