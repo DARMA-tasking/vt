@@ -194,20 +194,20 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   auto op2 = [&]{
     scope2.mpiCollectiveAsync([&done,&reduce_val_out]{
-			auto comm = theContext()->getComm();
-			int val_in = 1;
-			vt_print(barrier, "run MPI_Allreduce\n");
-			MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
-			run_order[done++] = 2;
+      auto comm = theContext()->getComm();
+      int val_in = 1;
+      vt_print(barrier, "run MPI_Allreduce\n");
+      MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
+      run_order[done++] = 2;
     });
   };
 
   auto op3 = [&]{
     scope3.mpiCollectiveAsync([&done]{
-			auto comm = theContext()->getComm();
-			vt_print(barrier, "run MPI_barrier\n");
-			MPI_Barrier(comm);
-			run_order[done++] = 3;
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_barrier\n");
+      MPI_Barrier(comm);
+      run_order[done++] = 3;
     });
   };
 
