@@ -260,9 +260,13 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
     MsgPtr<MsgT> typed_msg = msg.template to<MsgT>();
     state.msgs.clear();
     state.num_contrib_ = 1;
+    NodeType const root = state.reduce_root_;
+
+    // Must erase this before invoking the root function/callback because it
+    // might be re-entrant
+    state_.erase(lookup);
 
     if (isRoot()) {
-      auto const& root = state.reduce_root_;
       auto const& this_node = theContext()->getNode();
       if (root != this_node) {
         vt_debug_print(
@@ -290,8 +294,6 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
 
       theMsg()->sendMsg<MsgT,ReduceManager::reduceUp<MsgT>>(parent, typed_msg);
     }
-
-    state_.erase(lookup);
   }
 }
 
