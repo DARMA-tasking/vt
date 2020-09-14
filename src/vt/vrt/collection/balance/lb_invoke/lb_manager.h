@@ -186,8 +186,7 @@ public:
    *
    * \param[in] msg the LB message
    */
-  template <typename MsgT>
-  void sysLB(MsgT* msg) {
+  void sysLB(InvokeMsg* msg) {
     vt_debug_print(lb, node, "sysLB\n");
     printMemoryUsage(msg->phase_);
     flushTraceNextPhase();
@@ -201,8 +200,7 @@ public:
    *
    * \param[in] msg the LB message
    */
-  template <typename MsgT>
-  void sysReleaseLB(MsgT* msg) {
+  void sysReleaseLB(InvokeMsg* msg) {
     vt_debug_print(lb, node, "sysReleaseLB\n");
     printMemoryUsage(msg->phase_);
     flushTraceNextPhase();

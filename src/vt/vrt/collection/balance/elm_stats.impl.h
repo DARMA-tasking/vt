@@ -106,8 +106,6 @@ template <typename ColT>
     before_ready, after_ready, ready
   );
 
-  using MsgType = InvokeReduceMsg;
-
   auto lb_man = theLBManager()->getProxy();
 
   auto const single_node = theContext()->getNumNodes() == 1;
@@ -115,10 +113,10 @@ template <typename ColT>
   bool const must_run_lb = lb != LBType::NoLB and not single_node;
   auto const num_collections = theCollection()->numCollections<>();
   auto const do_sync = msg->doSync();
-  auto nmsg = makeMessage<MsgType>(cur_phase,lb,msg->manual(),num_collections);
+  auto nmsg = makeMessage<InvokeMsg>(cur_phase,lb,msg->manual(),num_collections);
 
   if (must_run_lb) {
-    auto cb = theCB()->makeBcast<LBManager,MsgType,&LBManager::sysLB<MsgType>>(lb_man);
+    auto cb = theCB()->makeBcast<LBManager,InvokeMsg,&LBManager::sysLB>(lb_man);
     proxy.reduce(nmsg.get(),cb);
   } else {
 
@@ -129,7 +127,7 @@ template <typename ColT>
       theCollection()->elmFinishedLB(elm_proxy,cur_phase);
     }
 
-    auto cb = theCB()->makeBcast<LBManager,MsgType,&LBManager::sysReleaseLB<MsgType>>(lb_man);
+    auto cb = theCB()->makeBcast<LBManager,InvokeMsg,&LBManager::sysReleaseLB>(lb_man);
     proxy.reduce(nmsg.get(),cb);
   }
 }
