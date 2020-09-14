@@ -310,6 +310,22 @@ void LBManager::releaseNow(PhaseType phase) {
   num_invocations_ = num_release_ = 0;
 }
 
+void LBManager::sysLB(InvokeMsg* msg) {
+  vt_debug_print(lb, node, "sysLB\n");
+  printMemoryUsage(msg->phase_);
+  flushTraceNextPhase();
+  setTraceEnabledNextPhase(msg->phase_);
+  return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
+}
+
+void LBManager::sysReleaseLB(InvokeMsg* msg) {
+  vt_debug_print(lb, node, "sysReleaseLB\n");
+  printMemoryUsage(msg->phase_);
+  flushTraceNextPhase();
+  setTraceEnabledNextPhase(msg->phase_);
+  return releaseImpl(msg->phase_, msg->num_collections_);
+}
+
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
   // Set if tracing is enabled for this next phase. Do this immediately before
   // LB runs so LB is always instrumented as the beginning of the next phase
