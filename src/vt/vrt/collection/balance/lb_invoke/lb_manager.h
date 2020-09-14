@@ -186,13 +186,7 @@ public:
    *
    * \param[in] msg the LB message
    */
-  void sysLB(InvokeMsg* msg) {
-    vt_debug_print(lb, node, "sysLB\n");
-    printMemoryUsage(msg->phase_);
-    flushTraceNextPhase();
-    setTraceEnabledNextPhase(msg->phase_);
-    return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
-  }
+  void sysLB(InvokeMsg* msg);
 
   /**
    * \internal \brief Tell the manager that a collection has hit \c nextPhase,
@@ -200,13 +194,7 @@ public:
    *
    * \param[in] msg the LB message
    */
-  void sysReleaseLB(InvokeMsg* msg) {
-    vt_debug_print(lb, node, "sysReleaseLB\n");
-    printMemoryUsage(msg->phase_);
-    flushTraceNextPhase();
-    setTraceEnabledNextPhase(msg->phase_);
-    return releaseImpl(msg->phase_, msg->num_collections_);
-  }
+  void sysReleaseLB(InvokeMsg* msg);
 
 public:
   /**
