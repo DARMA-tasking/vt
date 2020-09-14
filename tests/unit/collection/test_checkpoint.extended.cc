@@ -173,13 +173,13 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
       }
     });
 
-    vt::runInEpochCollective([&]{
-      for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++) {
+      vt::runInEpochCollective([&]{
         if (this_node == 0) {
           proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
         }
-      }
-    });
+      });
+    }
 
     vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
 
