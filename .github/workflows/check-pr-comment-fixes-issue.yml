@@ -1,0 +1,16 @@
+name: PR checks (PR description format)
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+jobs:
+  check:
+    name: Check PR description
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DARMA-tasking/check-pr-fixes-issue@master
+        with:
+          pr_branch: ${{ github.head_ref }}
+          pr_title: ${{ github.event.pull_request.title }}
+          pr_description: ${{ github.event.pull_request.body }}
