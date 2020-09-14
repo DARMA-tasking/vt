@@ -187,8 +187,8 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
     scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
       auto comm = theContext()->getComm();
       vt_print(barrier, "run MPI_Bcast\n");
-    MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
-    run_order[done++] = 1;
+      MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
+      run_order[done++] = 1;
     });
   };
 
