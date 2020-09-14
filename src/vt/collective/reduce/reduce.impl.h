@@ -245,12 +245,14 @@ void Reduce::startReduce(
     auto msg = state.msgs[0];
     auto typed_msg = static_cast<MessageT*>(msg.get());
     ActionType cont = nullptr;
-
     state.msgs.clear();
     state.num_contrib_ = 1;
+    NodeType const root = state.reduce_root_;
+
+    // Must clear this here due to potential re-entrancy problems
+    ReduceStateHolder<MessageT>::erase(group_,lookup);
 
     if (isRoot()) {
-      auto const& root = state.reduce_root_;
       auto const& this_node = theContext()->getNode();
       if (root != this_node) {
         debug_print(
@@ -279,7 +281,6 @@ void Reduce::startReduce(
       );
       theMsg()->sendMsgAuto<MessageT,reduceUp<MessageT>>(parent,typed_msg);
     }
-    ReduceStateHolder<MessageT>::erase(group_,lookup);
   }
 }
 
