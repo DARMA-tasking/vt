@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              epoch_manip_make.h
+//                              epoch_manip_make.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,9 +42,6 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EPOCH_EPOCH_MANIP_MAKE_H
-#define INCLUDED_EPOCH_EPOCH_MANIP_MAKE_H
-
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 #include "vt/epoch/epoch_manip.h"
@@ -54,7 +51,7 @@
 
 namespace vt { namespace epoch {
 
-/*static*/ inline EpochType EpochManip::makeEpoch(
+/*static*/ EpochType EpochManip::makeEpoch(
   EpochType const& seq, bool const& is_rooted, NodeType const& root_node,
   bool const& is_user, eEpochCategory const& category
 ) {
@@ -74,7 +71,7 @@ namespace vt { namespace epoch {
   return new_epoch;
 }
 
-/*static*/ inline EpochType EpochManip::makeNewEpoch(
+EpochType EpochManip::makeNewEpoch(
   bool const& is_rooted, NodeType const& root_node,
   bool const& is_user, eEpochCategory const& category
 ) {
@@ -92,14 +89,14 @@ namespace vt { namespace epoch {
   }
 }
 
-/*static*/ inline EpochType EpochManip::makeRootedEpoch(
+/*static*/ EpochType EpochManip::makeRootedEpoch(
   EpochType const& seq, bool const& is_user, eEpochCategory const& category
 ) {
   auto const& root_node = theContext()->getNode();
   return EpochManip::makeEpoch(seq,true,root_node,is_user,category);
 }
 
-/*static*/ inline EpochType EpochManip::makeNewRootedEpoch(
+EpochType EpochManip::makeNewRootedEpoch(
   bool const& is_user, eEpochCategory const& category
 ) {
   auto const& root_node = theContext()->getNode();
@@ -114,5 +111,3 @@ namespace vt { namespace epoch {
 }
 
 }} /* end namespace vt::epoch */
-
-#endif /*INCLUDED_EPOCH_EPOCH_MANIP_MAKE_H*/
