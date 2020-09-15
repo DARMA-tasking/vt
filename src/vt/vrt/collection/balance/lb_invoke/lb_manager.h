@@ -135,12 +135,11 @@ protected:
    * \internal \brief Collectively start load balancing
    *
    * \param[in] phase the phase
-   * \param[in] lb the load balancer to run
    * \param[in] manual whether it's manual or invoked from a collection
    * \param[in] num_calls number of calls required to start
    */
   void collectiveImpl(
-    PhaseType phase, LBType lb, bool manual, std::size_t num_calls = 1
+    PhaseType phase, bool manual, std::size_t num_calls = 1
   );
 
   /**
@@ -187,14 +186,6 @@ public:
    * \param[in] msg the LB message
    */
   void sysLB(InvokeMsg* msg);
-
-  /**
-   * \internal \brief Tell the manager that a collection has hit \c nextPhase,
-   * choosing to skip load balancing
-   *
-   * \param[in] msg the LB message
-   */
-  void sysReleaseLB(InvokeMsg* msg);
 
 public:
   /**

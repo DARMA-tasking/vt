@@ -187,19 +187,10 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     // Should actually be done asynchronously, and awaited before *next* use of the chosen strategy instance
     strat->cleanup();
   });
-
-  runInEpochCollective([=] {
-    vt_debug_print(
-      lb, node,
-      "LBManager: finished migrations\n"
-    );
-    theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
-    this->finishedRunningLB(phase);
-  });
 }
 
 void LBManager::collectiveImpl(
-  PhaseType phase, LBType lb, bool manual, std::size_t num_calls
+  PhaseType phase, bool manual, std::size_t num_calls
 ) {
   vt_debug_print(
     lb, node,
@@ -212,6 +203,7 @@ void LBManager::collectiveImpl(
 
   if (num_invocations_ == num_calls) {
     auto const& this_node = theContext()->getNode();
+    auto const lb = decideLBToRun(phase);
 
     if (this_node == 0 and not theConfig()->vt_lb_quiet) {
       vt_debug_print(
@@ -234,16 +226,26 @@ void LBManager::collectiveImpl(
     case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
 #   endif
     case LBType::NoLB:
-      vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
+      // Nothing to do
       break;
     default:
-      vtAssert(false, "A valid LB must be passed to collectiveImpl");
+      vtAbort("A valid LB must be passed to collectiveImpl");
       break;
     }
 
-    LBProxyType base_proxy = lb_instances_["chosen"];
+    if (lb != LBType::NoLB) {
+      LBProxyType base_proxy = lb_instances_["chosen"];
+      runLB(base_proxy, phase);
+    }
 
-    runLB(base_proxy, phase);
+    runInEpochCollective([=] {
+      vt_debug_print(
+                     lb, node,
+                     "LBManager: finished LB\n"
+                     );
+      theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
+      this->finishedRunningLB(phase);
+    });
   }
 }
 
@@ -324,15 +326,8 @@ void LBManager::sysLB(InvokeMsg* msg) {
   printMemoryUsage(msg->phase_);
   flushTraceNextPhase();
   setTraceEnabledNextPhase(msg->phase_);
-  return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
-}
 
-void LBManager::sysReleaseLB(InvokeMsg* msg) {
-  vt_debug_print(lb, node, "sysReleaseLB\n");
-  printMemoryUsage(msg->phase_);
-  flushTraceNextPhase();
-  setTraceEnabledNextPhase(msg->phase_);
-  return releaseImpl(msg->phase_, msg->num_collections_);
+  collectiveImpl(msg->phase_, msg->manual_, msg->num_collections_);
 }
 
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
