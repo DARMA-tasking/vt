@@ -55,21 +55,6 @@ namespace vt { namespace epoch {
 
 /** \file */
 
-/// The default epoch node used for non-rooted epochs
-static constexpr NodeType const default_epoch_node = uninitialized_destination;
-/// The default epoch category
-static constexpr eEpochCategory const default_epoch_category =
-  eEpochCategory::NoCategoryEpoch;
-
-/// Holds a epoch scope ID (collectively generated)
-using EpochScopeType = uint64_t;
-
-/// The default, global epoch scope
-static constexpr EpochScopeType const global_epoch_scope = 0;
-
-/// The limit on number of live scopes at a given time
-static constexpr EpochScopeType const scope_limit = 1<<5;
-
 /**
  * \struct EpochManip epoch_manip.h vt/epoch/epoch_manip.h
  *
