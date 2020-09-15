@@ -277,6 +277,38 @@ public:
   );
 
   /**
+   * \brief Setup a collective epoch with the epoch already generated
+   *
+   * \param[in] epoch the collective epoch already generated
+   * \param[in] label epoch label for debugging purposes
+   * \param[in] successor successor epoch that waits for this new epoch
+   *
+   * \return the new epoch
+   */
+  void makeEpochCollectiveWithEpoch(
+    EpochType const epoch,
+    std::string const& label,
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
+  );
+
+  /**
+   * \brief Setup a new rooted epoch with the epoch already generated
+   *
+   * \param[in] epoch the collective epoch already generated
+   * \param[in] label epoch label for debugging purposes
+   * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
+   * \param[in] successor successor epoch that waits for this new epoch
+   *
+   * \return the new epoch
+   */
+  void makeEpochRootedWithEpoch(
+    EpochType const epoch,
+    std::string const& label,
+    UseDS use_ds = UseDS{false},
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
+  );
+
+  /**
    * \brief Tell the termination detector that all initial work has been
    * enqueued for a given epoch on this node
    *
@@ -326,6 +358,34 @@ public:
    */
   EpochType makeEpochRootedDS(
     ParentEpochCapture successor, std::string const& label = ""
+  );
+
+  /**
+   * \brief Setup a new rooted epoch that uses the 4-counter wave algorithm with
+   * an epoch already generated
+   *
+   * \param[in] epoch the wave epoch already generated
+   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] label epoch label for debugging purposes
+   *
+   * \return the new epoch
+   */
+  void makeEpochRootedWaveWithEpoch(
+    EpochType const epoch, SuccessorEpochCapture successor,
+    std::string const& label = ""
+  );
+
+  /**
+   * \brief Setup a new rooted epoch that uses the DS algorithm with the epoch
+   * already generated
+   *
+   * \param[in] epoch the DS epoch already generated
+   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] label epoch label for debugging purposes
+   */
+  void makeEpochRootedDSWithEpoch(
+    EpochType const epoch, SuccessorEpochCapture successor,
+    std::string const& label = ""
   );
 
 private:
