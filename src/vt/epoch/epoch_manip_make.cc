@@ -49,7 +49,13 @@
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
 
+#include <fmt/ostream.h>
+
 namespace vt { namespace epoch {
+
+EpochManip::EpochManip()
+  : live_scopes_(~0ull)
+{ }
 
 /*static*/ EpochType EpochManip::makeEpoch(
   EpochType const& seq, bool const& is_rooted, NodeType const& root_node,
@@ -126,8 +132,53 @@ EpochType EpochManip::nextSeq(EpochScopeType scope, bool is_collective) {
   auto const seq = scope_map[scope];
   scope_map[scope]++;
   return seq;
-
 }
 
+EpochCollectiveScope EpochManip::makeScopeCollective() {
+  // We have \c scope_limit scopes available, not including the global scope
+  vtAssert(live_scopes_.size() < scope_limit, "Must have space for new scope");
+
+  static constexpr EpochScopeType const first_scope = 0;
+
+  // if empty, go with the first scope
+  EpochScopeType next = first_scope;
+
+  if (not live_scopes_.empty()) {
+    if (live_scopes_.upper() < scope_limit - 1) {
+      next = live_scopes_.upper() + 1;
+    } else if (live_scopes_.lower() > 0) {
+      next = live_scopes_.lower() - 1;
+    } else {
+      // fall back to just searching the integral set for one that is not live
+      EpochScopeType s = first_scope;
+      do {
+        if (not live_scopes_.exists(s)) {
+          next = s;
+          break;
+        }
+        s++;
+      } while (s < scope_limit);
+    }
+  }
+
+  vtAssert(next >= 0, "Scope must be greater than 0");
+  vtAssert(next < scope_limit, "Scope must be less than the scope limit");
+  vtAssert(not live_scopes_.exists(next), "Scope must not already exist");
+
+  // insert the scope to track it
+  live_scopes_.insert(next);
+
+  EpochCollectiveScope scope{next};
+  return scope;
+}
+
+void EpochManip::destroyScope(EpochScopeType scope) {
+  vtAssert(live_scopes_.exists(scope), "Scope must exist to destroy");
+  live_scopes_.erase(scope);
+  // Very important: explicitly don't clear the scope map (\c scope_collective_
+  // or \c scope_rooted_) because if we did we would have to wait for
+  // termination of all epochs within the scope before it could be
+  // destroyed. Thus, scopes can be quickly created and destroyed by the user.
+}
 
 }} /* end namespace vt::epoch */
