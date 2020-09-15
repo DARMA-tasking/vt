@@ -55,13 +55,12 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct InvokeMsg : collective::ReduceNoneMsg {
   InvokeMsg() = default;
   InvokeMsg(
-    PhaseType in_phase, LBType in_lb, bool manual, std::size_t in_num_colls = 1
-  ) : phase_(in_phase), lb_(in_lb), manual_(manual),
+    PhaseType in_phase, bool manual, std::size_t in_num_colls = 1
+  ) : phase_(in_phase), manual_(manual),
       num_collections_(in_num_colls)
   { }
 
   PhaseType phase_             = 0;
-  LBType lb_                   = LBType::NoLB;
   bool manual_                 = false;
   std::size_t num_collections_ = 0;
 };
