@@ -63,16 +63,12 @@ TEST_F(TestEpoch, basic_test_first_epoch_unrooted_1) {
   auto const has_category = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq      = epoch::EpochManip::seq(epoch);
   auto const ep_node      = epoch::EpochManip::node(epoch);
-  auto const next         = epoch::EpochManip::next(epoch);
-  auto const next_seq     = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(!is_rooted);
   EXPECT_TRUE(!is_user);
   EXPECT_TRUE(!has_category);
   EXPECT_EQ(get_seq, 1U);
   EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next, 2U);
-  EXPECT_EQ(next_seq, 2U);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_unrooted_1) {
@@ -83,15 +79,12 @@ TEST_P(TestEpochParam, basic_test_epoch_unrooted_1) {
   auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
   auto const ep_node         = epoch::EpochManip::node(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(!is_rooted);
   EXPECT_TRUE(!is_user);
   EXPECT_TRUE(!has_category);
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next_seq, start_seq + 1);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_rooted_1) {
@@ -103,15 +96,12 @@ TEST_P(TestEpochParam, basic_test_epoch_rooted_1) {
   auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
   auto const ep_node         = epoch::EpochManip::node(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(is_rooted);
   EXPECT_TRUE(!is_user);
   EXPECT_TRUE(!has_category);
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, n);
-  EXPECT_EQ(next_seq, start_seq + 1);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_user_1) {
@@ -124,15 +114,12 @@ TEST_P(TestEpochParam, basic_test_epoch_user_1) {
   auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
   auto const ep_node         = epoch::EpochManip::node(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(!is_rooted);
   EXPECT_TRUE(is_user);
   EXPECT_TRUE(!has_category);
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next_seq, start_seq + 1);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_category_1) {
@@ -147,15 +134,12 @@ TEST_P(TestEpochParam, basic_test_epoch_category_1) {
   auto const get_seq         = epoch::EpochManip::seq(epoch);
   auto const ep_node         = epoch::EpochManip::node(epoch);
   auto const cat             = epoch::EpochManip::category(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(!is_rooted);
   EXPECT_TRUE(!is_user);
   EXPECT_TRUE(has_category);
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next_seq, start_seq + 1);
   EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
 }
 
@@ -171,15 +155,12 @@ TEST_P(TestEpochParam, basic_test_epoch_all_1) {
   auto const get_seq         = epoch::EpochManip::seq(epoch);
   auto const ep_node         = epoch::EpochManip::node(epoch);
   auto const cat             = epoch::EpochManip::category(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(is_rooted);
   EXPECT_TRUE(is_user);
   EXPECT_TRUE(has_category);
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, n);
-  EXPECT_EQ(next_seq, start_seq + 1);
   EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
 }
 
