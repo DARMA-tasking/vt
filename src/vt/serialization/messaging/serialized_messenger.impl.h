@@ -242,10 +242,7 @@ template <typename MsgT, typename BaseT>
     payload_msg->handler = han;
     payload_msg->from_node = theContext()->getNode();
     // setup envelope
-    auto cur_ref = envelopeGetRef(payload_msg->env);
-    payload_msg->env = msg->env;
-    envelopeSetRef(payload_msg->env, cur_ref);
-    envelopeSetIsLocked(payload_msg->env, false);
+    envelopeInitCopy(payload_msg->env, msg->env);
     envelopeSetGroup(payload_msg->env, group_);
 
     vt_debug_print(
@@ -275,10 +272,7 @@ template <typename MsgT, typename BaseT>
     sys_msg->from_node = theContext()->getNode();
     sys_msg->ptr_size = ptr_size;
     // setup envelope
-    auto cur_ref = envelopeGetRef(sys_msg->env);
-    sys_msg->env = msg->env;
-    envelopeSetRef(sys_msg->env, cur_ref);
-    envelopeSetIsLocked(sys_msg->env, false);
+    envelopeInitCopy(sys_msg->env, msg->env);
     envelopeSetGroup(sys_msg->env, group_);
 
     vt_debug_print(
@@ -380,10 +374,7 @@ template <typename MsgT, typename BaseT>
         sys_msg->handler = typed_handler;
         sys_msg->from_node = theContext()->getNode();
         // setup envelope
-        auto cur_ref = envelopeGetRef(sys_msg->env);
-        sys_msg->env = msg->env;
-        envelopeSetRef(sys_msg->env, cur_ref);
-        envelopeSetIsLocked(sys_msg->env, false);
+        envelopeInitCopy(sys_msg->env, msg->env);
 
         vt_debug_print(
           serial_msg, node,
@@ -427,10 +418,7 @@ template <typename MsgT, typename BaseT>
     payload_msg->handler = typed_handler;
     payload_msg->from_node = theContext()->getNode();
     // setup envelope
-    auto cur_ref = envelopeGetRef(payload_msg->env);
-    payload_msg->env = msg->env;
-    envelopeSetRef(payload_msg->env, cur_ref);
-    envelopeSetIsLocked(payload_msg->env, false);
+    envelopeInitCopy(payload_msg->env, msg->env);
 
     return eager_sender(payload_msg);
   }

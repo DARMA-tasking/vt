@@ -82,6 +82,14 @@ inline void envelopeInitEmpty(Envelope& env) {
   envelopeInit(env);
 }
 
+template <typename Env>
+inline void envelopeInitCopy(Env& env, Env const& src_env) {
+  auto cur_ref = envelopeGetRef(env);
+  env = src_env;
+  envelopeSetRef(env, cur_ref);
+  envelopeSetIsLocked(env, false);
+}
+
 } /* end namespace vt */
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H*/

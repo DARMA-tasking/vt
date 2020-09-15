@@ -80,6 +80,19 @@ inline void envelopeInit(Env& env);
  */
 inline void envelopeInitEmpty(Envelope& env);
 
+/**
+ * \brief Initialize an envelope via a copy.
+ *
+ * \notes
+ * Some properties of the target envelope are preserved.
+ * The target envelope is left unlocked.
+ *
+ * \param[in,out] env the target envelope to init
+ * \param[in] env the original envelope to use as a copy
+ */
+template <typename Env>
+inline void envelopeInitCopy(Env& env, Env const& src_env);
+
 } /* end namespace vt */
 
 #include "vt/messaging/envelope/envelope_setup.impl.h"
