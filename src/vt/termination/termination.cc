@@ -976,7 +976,7 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 EpochType TerminationDetector::makeEpochRootedWave(
   SuccessorEpochCapture successor, std::string const& label
 ) {
-  auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
+  auto const epoch = theEpoch()->makeNewRootedEpoch();
 
   vt_debug_print(
     term, node,
@@ -1010,7 +1010,7 @@ EpochType TerminationDetector::makeEpochRootedDS(
   SuccessorEpochCapture successor, std::string const& label
 ) {
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
-  auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, ds_cat);
+  auto const epoch = theEpoch()->makeNewRootedEpoch(false, ds_cat);
 
   vtAssert(term_.find(epoch) == term_.end(), "New epoch must not exist");
 
@@ -1081,7 +1081,7 @@ EpochType TerminationDetector::makeEpochCollective(
 EpochType TerminationDetector::makeEpochCollective(
   std::string const& label, SuccessorEpochCapture successor
 ) {
-  auto const epoch = epoch::EpochManip::makeNewEpoch();
+  auto const epoch = theEpoch()->makeNewEpoch();
 
   vt_debug_print(
     term, node,
