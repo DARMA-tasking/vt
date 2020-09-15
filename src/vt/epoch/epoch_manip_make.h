@@ -113,21 +113,6 @@ namespace vt { namespace epoch {
   return next_rooted_epoch;
 }
 
-/*static*/ inline EpochType EpochManip::next(EpochType const& epoch) {
-  return EpochManip::nextFast(epoch);
-}
-
-/*static*/ inline EpochType EpochManip::nextSlow(EpochType const& epoch) {
-  EpochType new_epoch = epoch;
-  auto const& this_seq = EpochManip::seq(epoch);
-  EpochManip::setSeq(new_epoch, this_seq + 1);
-  return new_epoch;
-}
-
-/*static*/ inline EpochType EpochManip::nextFast(EpochType const& epoch) {
-  return epoch + 1;
-}
-
 }} /* end namespace vt::epoch */
 
 #endif /*INCLUDED_EPOCH_EPOCH_MANIP_MAKE_H*/
