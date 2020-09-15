@@ -61,6 +61,15 @@ static constexpr NodeType const default_epoch_node = uninitialized_destination;
 static constexpr eEpochCategory const default_epoch_category =
   eEpochCategory::NoCategoryEpoch;
 
+/// Holds a epoch scope ID (collectively generated)
+using EpochScopeType = uint64_t;
+
+/// The default, global epoch scope
+static constexpr EpochScopeType const global_epoch_scope = 0;
+
+/// The limit on number of live scopes at a given time
+static constexpr EpochScopeType const scope_limit = 1<<5;
+
 /**
  * \struct EpochManip epoch_manip.h vt/epoch/epoch_manip.h
  *
@@ -99,14 +108,14 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   static bool hasCategory(EpochType const& epoch);
 
   /**
-   * \brief Gets whether the epoch is a user epoch (specifically a
-   * user-customized dispatched epoch)
+   * \brief Gets whether the epoch is a scoped epoch (specifically a
+   * epoch that is part of a collective scope)
    *
    * \param[in] epoch the epoch to operate on
    *
-   * \return whether the \c epoch is a user epoch
+   * \return whether the \c epoch is a scoped epoch
    */
-  static bool isUser(EpochType const& epoch);
+  static bool isScope(EpochType const& epoch);
 
   /**
    * \brief Gets the \c eEpochCategory of a given epoch
@@ -159,9 +168,9 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \brief Set whether the \c epoch is a user epoch or not
    *
    * \param[in,out] epoch the epoch to modify
-   * \param[in] is_user whether to set the epoch as user or not
+   * \param[in] is_scoped whether to set the epoch as scoped or not
    */
-  static void setIsUser(EpochType& epoch, bool const is_user);
+  static void setIsScope(EpochType& epoch, bool const is_scoped);
 
   /**
    * \brief Set the category for the \c epoch
@@ -196,14 +205,14 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \brief Make a rooted epoch with a given sequential ID
    *
    * \param[in] seq the sequential ID for the epoch
-   * \param[in] is_user whether the epoch is a user epoch or not
+   * \param[in] scope the epoch's scope
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
   static EpochType makeRootedEpoch(
     EpochType      const& seq,
-    bool           const& is_user    = false,
+    EpochScopeType const& scope      = global_epoch_scope,
     eEpochCategory const& category   = default_epoch_category
   );
 
@@ -213,7 +222,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \param[in] seq the sequential ID for the epoch
    * \param[in] is_rooted if the epoch should be rooted or not
    * \param[in] root_node the root node for the epoch if \c is_rooted
-   * \param[in] is_user whether the epoch is a user epoch or not
+   * \param[in] scope the epoch's scope
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
@@ -222,21 +231,26 @@ struct EpochManip : runtime::component::Component<EpochManip> {
     EpochType      const& seq,
     bool           const& is_rooted  = false,
     NodeType       const& root_node  = default_epoch_node,
-    bool           const& is_user    = false,
+    EpochScopeType const& scope      = global_epoch_scope,
     eEpochCategory const& category   = default_epoch_category
   );
+
+  /*
+   * Stateful methods for generating a new epoch with certain properties
+   * using the next sequence number available
+   */
 
   /**
    * \brief Create the next rooted epoch, stateful
    *
-   * \param[in] is_user whether the epoch is a user epoch or not
    * \param[in] category the category for the epoch
+   * \param[in] scope the epoch's scope
    *
    * \return the newly created epoch
    */
-  static EpochType makeNewRootedEpoch(
-    bool           const& is_user    = false,
-    eEpochCategory const& category   = default_epoch_category
+  EpochType makeNewRootedEpoch(
+    eEpochCategory const& category   = default_epoch_category,
+    EpochScopeType const scope       = global_epoch_scope
   );
 
   /**
@@ -244,21 +258,28 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \param[in] is_rooted if the epoch should be rooted or not
    * \param[in] root_node the root node for the epoch if \c is_rooted
-   * \param[in] is_user whether the epoch is a user epoch or not
+   * \param[in] scope the epoch's scope
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
-  static EpochType makeNewEpoch(
+  EpochType makeNewEpoch(
     bool           const& is_rooted  = false,
     NodeType       const& root_node  = default_epoch_node,
-    bool           const& is_user    = false,
+    EpochScopeType const scope       = global_epoch_scope,
     eEpochCategory const& category   = default_epoch_category
   );
 
 private:
-  static EpochType cur_rooted_;     /**< The current rooted sequential ID  */
-  static EpochType cur_non_rooted_; /**< The current non-rooted sequential ID */
+  EpochType nextSeqRooted(EpochScopeType scope = global_epoch_scope);
+  EpochType nextSeqCollective(EpochScopeType scope = global_epoch_scope);
+  EpochType nextSeq(EpochScopeType scope, bool is_collective);
+
+private:
+  /// The current rooted sequential ID per scope
+  std::unordered_map<EpochType, EpochType> scope_rooted_;
+  /// The current collective sequential ID per scope
+  std::unordered_map<EpochType, EpochType> scope_collective_;
 };
 
 }} /* end namespace vt::epoch */

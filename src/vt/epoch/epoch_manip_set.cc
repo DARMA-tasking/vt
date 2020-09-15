@@ -63,9 +63,9 @@ void EpochManip::setHasCategory(EpochType& epoch, bool const has_cat) {
 }
 
 /*static*/
-void EpochManip::setIsUser(EpochType& epoch, bool const is_user) {
-  BitPackerType::boolSetField<eEpochLayout::EpochUser,1,EpochType>(
-    epoch,is_user
+void EpochManip::setIsScope(EpochType& epoch, bool const is_scoped) {
+  BitPackerType::boolSetField<eEpochLayout::EpochScope,1,EpochType>(
+    epoch,is_scoped
   );
 }
 
