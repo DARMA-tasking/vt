@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              epoch_manip_get.h
+//                              epoch_manip_set.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,9 +42,6 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EPOCH_EPOCH_MANIP_GET_H
-#define INCLUDED_EPOCH_EPOCH_MANIP_GET_H
-
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 #include "vt/epoch/epoch_manip.h"
@@ -53,38 +50,42 @@
 
 namespace vt { namespace epoch {
 
-/*static*/ inline bool EpochManip::isRooted(EpochType const& epoch) {
-  constexpr BitPackerType::FieldType field = eEpochLayout::EpochIsRooted;
-  constexpr BitPackerType::FieldType size = 1;
-  return BitPackerType::boolGetField<field,size,EpochType>(epoch);
+/*static*/
+void EpochManip::setIsRooted(EpochType& epoch, bool const is_rooted) {
+  BitPackerType::boolSetField<eEpochLayout::EpochIsRooted,1,EpochType>(epoch,is_rooted);
 }
 
-/*static*/ inline bool EpochManip::hasCategory(EpochType const& epoch) {
-  return BitPackerType::boolGetField<eEpochLayout::EpochHasCategory>(epoch);
+/*static*/
+void EpochManip::setHasCategory(EpochType& epoch, bool const has_cat) {
+  BitPackerType::boolSetField<eEpochLayout::EpochHasCategory,1,EpochType>(
+    epoch,has_cat
+  );
 }
 
-/*static*/ inline bool EpochManip::isUser(EpochType const& epoch) {
-  return BitPackerType::boolGetField<eEpochLayout::EpochUser>(epoch);
+/*static*/
+void EpochManip::setIsUser(EpochType& epoch, bool const is_user) {
+  BitPackerType::boolSetField<eEpochLayout::EpochUser,1,EpochType>(
+    epoch,is_user
+  );
 }
 
-/*static*/ inline eEpochCategory EpochManip::category(EpochType const& epoch) {
-  return BitPackerType::getField<
-    eEpochLayout::EpochCategory, epoch_category_num_bits, eEpochCategory
-  >(epoch);
+/*static*/
+void EpochManip::setCategory(EpochType& epoch, eEpochCategory const cat) {
+  BitPackerType::setField<
+    eEpochLayout::EpochCategory, epoch_category_num_bits
+  >(epoch,cat);
 }
 
-/*static*/ inline NodeType EpochManip::node(EpochType const& epoch) {
-  return BitPackerType::getField<
-    eEpochLayout::EpochNode, node_num_bits, NodeType
-  >(epoch);
+/*static*/
+void EpochManip::setNode(EpochType& epoch, NodeType const node) {
+  BitPackerType::setField<eEpochLayout::EpochNode, node_num_bits>(epoch,node);
 }
 
-/*static*/ inline EpochType EpochManip::seq(EpochType const& epoch) {
-  return BitPackerType::getField<
-    eEpochLayout::EpochSequential, epoch_seq_num_bits, EpochType
-  >(epoch);
+/*static*/
+void EpochManip::setSeq(EpochType& epoch, EpochType const seq) {
+  BitPackerType::setField<
+    eEpochLayout::EpochSequential, epoch_seq_num_bits
+  >(epoch,seq);
 }
 
 }} /* end namespace vt::epoch */
-
-#endif /*INCLUDED_EPOCH_EPOCH_MANIP_GET_H*/
