@@ -49,6 +49,7 @@
 #include "vt/epoch/epoch.h"
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
+#include "vt/runtime/component/component.h"
 
 namespace vt { namespace epoch {
 
@@ -70,7 +71,10 @@ static constexpr eEpochCategory const default_epoch_category =
  * how to set the appropriate bits to change the static type of an \c EpochType
  * by setting the bit pattern.
  */
-struct EpochManip {
+struct EpochManip : runtime::component::Component<EpochManip> {
+
+  std::string name() override { return "EpochManip"; }
+
   /*
    *  Epoch getters to check type and state of EpochType
    */
@@ -258,6 +262,12 @@ private:
 };
 
 }} /* end namespace vt::epoch */
+
+namespace vt {
+
+extern epoch::EpochManip* theEpoch();
+
+}  //end namespace vt
 
 #include "vt/epoch/epoch_manip_get.h"
 #include "vt/epoch/epoch_manip_set.h"
