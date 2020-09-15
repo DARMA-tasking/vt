@@ -47,9 +47,13 @@
 
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
+#include "vt/epoch/epoch_scope.h"
+#include "vt/termination/interval/integral_set.h"
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
 #include "vt/runtime/component/component.h"
+
+#include <unordered_map>
 
 namespace vt { namespace epoch {
 
@@ -66,6 +70,8 @@ namespace vt { namespace epoch {
  * by setting the bit pattern.
  */
 struct EpochManip : runtime::component::Component<EpochManip> {
+
+  EpochManip();
 
   std::string name() override { return "EpochManip"; }
 
@@ -255,6 +261,21 @@ struct EpochManip : runtime::component::Component<EpochManip> {
     eEpochCategory const& category   = default_epoch_category
   );
 
+  /**
+   * \brief Make a new collective epoch scope for ordering epoch creation
+   *
+   * \return a new scope
+   */
+  EpochCollectiveScope makeScopeCollective();
+
+private:
+  /**
+   * \internal \brief Destroy an eopch scope by removing it
+   *
+   * \param[in] scope the scope to destroy
+   */
+  void destroyScope(EpochScopeType scope);
+
 private:
   EpochType nextSeqRooted(EpochScopeType scope = global_epoch_scope);
   EpochType nextSeqCollective(EpochScopeType scope = global_epoch_scope);
@@ -265,6 +286,8 @@ private:
   std::unordered_map<EpochType, EpochType> scope_rooted_;
   /// The current collective sequential ID per scope
   std::unordered_map<EpochType, EpochType> scope_collective_;
+  /// The current live epoch scopes
+  vt::IntegralSet<EpochScopeType> live_scopes_;
 };
 
 }} /* end namespace vt::epoch */
