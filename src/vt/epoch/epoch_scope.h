@@ -46,6 +46,8 @@
 #define INCLUDED_VT_EPOCH_EPOCH_SCOPE_H
 
 #include "vt/epoch/epoch.h"
+#include "vt/epoch/epoch_parameterized.h"
+#include "vt/termination/epoch_tags.h"
 
 namespace vt { namespace epoch {
 
@@ -90,6 +92,14 @@ public:
    * \return the next collective epoch
    */
   EpochType makeEpochCollective();
+
+  /**
+   * \brief Ask for a new rooted epoch within this scope, created collectively
+   * for matching dependency structure
+   *
+   * \return the parameterized, rooted epoch
+   */
+  RootedEpoch makeEpochRooted(term::UseDS use_ds = term::UseDS{false});
 
 private:
   EpochScopeType const scope_ = global_epoch_scope;

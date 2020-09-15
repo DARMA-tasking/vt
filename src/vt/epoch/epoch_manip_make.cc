@@ -103,6 +103,13 @@ EpochType EpochManip::makeNewRootedEpoch(
   eEpochCategory const& category, EpochScopeType const scope
 ) {
   auto const& root_node = theContext()->getNode();
+  return makeNewRootedEpoch(category, scope, root_node);
+}
+
+EpochType EpochManip::makeNewRootedEpoch(
+  eEpochCategory const& category, EpochScopeType const scope,
+  NodeType const root_node
+) {
   auto const& next_rooted_epoch = EpochManip::makeEpoch(
     nextSeqRooted(scope),true,root_node,scope,category
   );

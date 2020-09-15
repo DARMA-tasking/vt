@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                epoch_scope.cc
+//                            epoch_parameterized.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,32 +42,16 @@
 //@HEADER
 */
 
-#include "vt/epoch/epoch_scope.h"
+#include "vt/epoch/epoch_parameterized.h"
 #include "vt/epoch/epoch_manip.h"
 
 namespace vt { namespace epoch {
 
-EpochCollectiveScope::~EpochCollectiveScope() {
-  theEpoch()->destroyScope(scope_);
-}
-
-EpochType EpochCollectiveScope::makeEpochCollective() {
-  return theEpoch()->makeNewEpoch(false, default_epoch_node, scope_);
-}
-
-RootedEpoch EpochCollectiveScope::makeEpochRooted(term::UseDS use_ds) {
-  // Set the parameterized node to the sentinel to make this blatantly obvious
-  // that the node is invalid in the epoch bits
-  NodeType const param_node = uninitialized_destination;
-
-  epoch::eEpochCategory cat = epoch::eEpochCategory::NoCategoryEpoch;
-
-  if (use_ds) {
-    cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
-  }
-  auto const epoch = theEpoch()->makeNewRootedEpoch(cat, scope_, param_node);
-
-  return RootedEpoch{epoch};
+EpochType RootedEpoch::get(NodeType node) const {
+  EpochType ep = nodeless_rooted_epoch_;
+  EpochManip::setNode(ep, node);
+  vtAssert(EpochManip::node(ep) == node, "Node must be set correctly");
+  return ep;
 }
 
 }} /* end namespace vt::epoch */
