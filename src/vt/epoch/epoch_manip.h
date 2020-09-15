@@ -82,7 +82,7 @@ struct EpochManip {
    *
    * \return whether the \c epoch is rooted
    */
-  static bool           isRooted   (EpochType const& epoch);
+  static bool isRooted(EpochType const& epoch);
 
   /**
    * \brief Gets whether the epoch has a category or not
@@ -92,7 +92,7 @@ struct EpochManip {
    * \return whether \c epoch has a category---
    *         not \c eEpochCategory::NoCategoryEpoch
    */
-  static bool           hasCategory(EpochType const& epoch);
+  static bool hasCategory(EpochType const& epoch);
 
   /**
    * \brief Gets whether the epoch is a user epoch (specifically a
@@ -102,7 +102,7 @@ struct EpochManip {
    *
    * \return whether the \c epoch is a user epoch
    */
-  static bool           isUser     (EpochType const& epoch);
+  static bool isUser(EpochType const& epoch);
 
   /**
    * \brief Gets the \c eEpochCategory of a given epoch
@@ -111,7 +111,7 @@ struct EpochManip {
    *
    * \return the category of the \c epoch
    */
-  static eEpochCategory category   (EpochType const& epoch);
+  static eEpochCategory category(EpochType const& epoch);
 
   /**
    * \brief Gets the node for the epoch (only relevant for rooted)
@@ -120,7 +120,7 @@ struct EpochManip {
    *
    * \return the node (arbitrator) for the \c epoch
    */
-  static NodeType       node       (EpochType const& epoch);
+  static NodeType node(EpochType const& epoch);
 
   /**
    * \brief Gets the sequential ID for an epoch
@@ -129,7 +129,7 @@ struct EpochManip {
    *
    * \return the sequential number for an \c epoch
    */
-  static EpochType      seq        (EpochType const& epoch);
+  static EpochType seq(EpochType const& epoch);
 
   /*
    *  Epoch setters to manipulate the type and state of EpochType
@@ -141,7 +141,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] is_rooted whether to set the epoch as rooted or not
    */
-  static void setIsRooted   (EpochType& epoch, bool           const is_rooted);
+  static void setIsRooted(EpochType& epoch, bool const is_rooted);
 
   /**
    * \brief Set whether the \c epoch has a category or not
@@ -149,7 +149,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] has_cat whether to the epoch has a category
    */
-  static void setHasCategory(EpochType& epoch, bool           const has_cat  );
+  static void setHasCategory(EpochType& epoch, bool const has_cat  );
 
   /**
    * \brief Set whether the \c epoch is a user epoch or not
@@ -157,7 +157,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] is_user whether to set the epoch as user or not
    */
-  static void setIsUser     (EpochType& epoch, bool           const is_user  );
+  static void setIsUser(EpochType& epoch, bool const is_user);
 
   /**
    * \brief Set the category for the \c epoch
@@ -165,7 +165,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] cat whether to set the epoch as rooted or not
    */
-  static void setCategory   (EpochType& epoch, eEpochCategory const cat      );
+  static void setCategory(EpochType& epoch, eEpochCategory const cat);
 
   /**
    * \brief Set the node for a rooted \c epoch
@@ -173,7 +173,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] node whether to set the epoch as rooted or not
    */
-  static void setNode       (EpochType& epoch, NodeType       const node     );
+  static void setNode(EpochType& epoch, NodeType const node);
 
   /**
    * \brief Set the sequential ID for an \c epoch
@@ -181,7 +181,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] seq the sequential ID to set on the epoch
    */
-  static void setSeq        (EpochType& epoch, EpochType      const seq      );
+  static void setSeq(EpochType& epoch, EpochType const seq);
 
   /*
    * General (stateless) methods for creating a epoch with certain properties
