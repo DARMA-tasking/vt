@@ -90,6 +90,17 @@ inline void envelopeInitCopy(Env& env, Env const& src_env) {
   envelopeSetIsLocked(env, false);
 }
 
+template <typename Env>
+inline void envelopeInitRecv(Env& env) {
+  // Reset the local ref-count. The sender ref-count is not relevant.
+  envelopeSetRef(env, 0);
+  // Ensure locked; implies all received messages are also locked.
+  vtAssert(
+    envelopeIsLocked(env),
+    "Envelope is not locked. It should have been locked for sending."
+  );
+}
+
 } /* end namespace vt */
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H*/

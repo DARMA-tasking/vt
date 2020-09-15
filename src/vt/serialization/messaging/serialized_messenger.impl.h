@@ -64,11 +64,11 @@ namespace vt { namespace serialization {
 
 template <typename MsgT>
 static MsgPtr<MsgT> deserializeFullMessage(SerialByteType* source) {
-  auto msg = detail::makeMessageImpl<MsgT>();
+  MsgT* msg = detail::makeMessageImpl<MsgT>();
   checkpoint::deserializeInPlace<MsgT>(source, msg);
-  // Reset ref-count to 0 (don't accept any deserialized value)
-  envelopeSetRef(msg->env, 0);
-  return promoteMsg(msg);
+
+  envelopeInitRecv(msg->env);
+  return MsgPtr<MsgT>(msg);
 }
 
 template <typename UserMsgT>
@@ -202,6 +202,7 @@ template <typename MsgT, typename BaseT>
   SizeType ptr_size = 0;
   auto sys_size = sizeof(typename decltype(sys_msg)::MsgType);
 
+  envelopeSetIsLocked(msg->env, true); // implies locked on deserialize
   envelopeSetHasBeenSerialized(msg->env, false);
 
   auto serialized_msg = checkpoint::serialize(
@@ -309,6 +310,7 @@ template <typename MsgT, typename BaseT>
   SerialByteType* ptr = nullptr;
   SizeType ptr_size = 0;
 
+  envelopeSetIsLocked(msg->env, true); // implies locked on deserialize
   envelopeSetHasBeenSerialized(msg->env, false);
 
   auto serialized_msg = checkpoint::serialize(

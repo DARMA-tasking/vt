@@ -862,11 +862,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 # endif
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
-  // Reset envelope to avoid ref-count=not_shared_msg if the data
-  // comes from a 'new RecvMsgType(..)'.
-  // The MsgPtr will then acquire a ref-count itself.
-  // TODO: Maybe envelope ref-count should be 0 on initialize?
-  envelopeSetRef(msg->env, 0);
+  envelopeInitRecv(msg->env);
   MsgPtr<MessageType> base = MsgPtr<MessageType>{msg};
 
   auto const is_term = envelopeIsTerm(msg->env);

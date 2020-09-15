@@ -83,7 +83,6 @@ inline void envelopeInitEmpty(Envelope& env);
 /**
  * \brief Initialize an envelope via a copy.
  *
- * \notes
  * Some properties of the target envelope are preserved.
  * The target envelope is left unlocked.
  *
@@ -92,6 +91,16 @@ inline void envelopeInitEmpty(Envelope& env);
  */
 template <typename Env>
 inline void envelopeInitCopy(Env& env, Env const& src_env);
+
+/**
+ * \brief Initialize/validate an envelope that has been received.
+ *
+ * The ref-count is set to zero.
+ *
+ * \param[in,out] env the envelope
+ */
+template <typename Env>
+inline void envelopeInitRecv(Env& env);
 
 } /* end namespace vt */
 

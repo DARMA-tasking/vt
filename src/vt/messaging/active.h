@@ -1511,7 +1511,15 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 private:
   bool testPendingActiveMsgAsyncRecv();
   bool testPendingDataMsgAsyncRecv();
+
+  /**
+   * \brief Called when a VT-MPI message has been received.
+   */
   void finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv);
+
+  /**
+   * \brief Called when a VT-MPI message has been received.
+   */
   void finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv);
 
 private:
