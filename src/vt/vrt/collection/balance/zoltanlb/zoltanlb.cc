@@ -63,6 +63,11 @@ void ZoltanLB::init(objgroup::proxy::Proxy<ZoltanLB> in_proxy) {
   proxy = in_proxy;
 }
 
+void ZoltanLB::cleanup() {
+  if (theContext()->getNode() == 0)
+    fmt::print("WARNING - CLEANUP OF ZOLTANLB IS NOT YET IMPLEMENTED");
+}
+
 void ZoltanLB::inputParams(balance::SpecEntry* spec) {
   zoltan_config_ = {
     {"LB_APPROACH",                   "REPARTITION" },
