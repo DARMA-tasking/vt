@@ -232,7 +232,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    */
 
   /**
-   * \brief Create the next rooted epoch, stateful
+   * \brief Stateful method to create the next rooted epoch
    *
    * \param[in] category the category for the epoch
    * \param[in] scope the epoch's scope
@@ -242,6 +242,21 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   EpochType makeNewRootedEpoch(
     eEpochCategory const& category   = default_epoch_category,
     EpochScopeType const scope       = global_epoch_scope
+  );
+
+  /**
+   * \brief Stateful method to create the next rooted epoch with a particular
+   * node embedded in the bits
+   *
+   * \param[in] category the category for the epoch
+   * \param[in] scope the epoch's scope
+   * \param[in] root_node the root node for the epoch
+   *
+   * \return the newly created epoch
+   */
+  EpochType makeNewRootedEpoch(
+    eEpochCategory const& category, EpochScopeType const scope,
+    NodeType const root_node
   );
 
   /**
@@ -275,6 +290,8 @@ private:
    * \param[in] scope the scope to destroy
    */
   void destroyScope(EpochScopeType scope);
+
+  friend struct EpochCollectiveScope;
 
 private:
   EpochType nextSeqRooted(EpochScopeType scope = global_epoch_scope);

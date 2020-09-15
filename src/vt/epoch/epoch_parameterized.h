@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                epoch_scope.cc
+//                            epoch_parameterized.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,32 +42,50 @@
 //@HEADER
 */
 
-#include "vt/epoch/epoch_scope.h"
-#include "vt/epoch/epoch_manip.h"
+#if !defined INCLUDED_VT_EPOCH_EPOCH_PARAMETERIZED_H
+#define INCLUDED_VT_EPOCH_EPOCH_PARAMETERIZED_H
+
+#include "vt/epoch/epoch.h"
 
 namespace vt { namespace epoch {
 
-EpochCollectiveScope::~EpochCollectiveScope() {
-  theEpoch()->destroyScope(scope_);
-}
+struct EpochCollectiveScope;
 
-EpochType EpochCollectiveScope::makeEpochCollective() {
-  return theEpoch()->makeNewEpoch(false, default_epoch_node, scope_);
-}
+/**
+ * \struct RootedEpoch
+ *
+ * \brief A parameterized, rooted epoch that is collectively created for
+ * dependency management which can be concretized for any specific node.
+ */
+struct RootedEpoch {
 
-RootedEpoch EpochCollectiveScope::makeEpochRooted(term::UseDS use_ds) {
-  // Set the parameterized node to the sentinel to make this blatantly obvious
-  // that the node is invalid in the epoch bits
-  NodeType const param_node = uninitialized_destination;
+private:
+  /**
+   * \internal \brief Create a new parameterized, rooted epoch---called by the
+   * system in scoped context.
+   *
+   * \param[in] in_epoch the epoch that does not contain a node yet
+   */
+  explicit RootedEpoch(EpochType in_epoch)
+    : nodeless_rooted_epoch_(in_epoch)
+  { }
 
-  epoch::eEpochCategory cat = epoch::eEpochCategory::NoCategoryEpoch;
+  friend struct EpochCollectiveScope;
 
-  if (use_ds) {
-    cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
-  }
-  auto const epoch = theEpoch()->makeNewRootedEpoch(cat, scope_, param_node);
+public:
+  /**
+   * \brief Get the rooted epoch for a particular node
+   *
+   * \param[in] node the node
+   *
+   * \return the rooted epoch for that node
+   */
+  EpochType get(NodeType node) const;
 
-  return RootedEpoch{epoch};
-}
+private:
+  EpochType nodeless_rooted_epoch_ = no_epoch; /**< The epoch without a node */
+};
 
 }} /* end namespace vt::epoch */
+
+#endif /*INCLUDED_VT_EPOCH_EPOCH_PARAMETERIZED_H*/
