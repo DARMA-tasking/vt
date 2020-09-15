@@ -77,12 +77,11 @@ template <typename UserMsgT>
 ) {
   auto const& handler = sys_msg->handler;
   auto const& ptr_size = sys_msg->ptr_size;
-  auto const& group_ = envelopeGetGroup(sys_msg->env);
 
   vt_debug_print(
     serial_msg, node,
     "serialMsgHandlerBcast: group_={:x}, handler={}, ptr_size={}\n",
-    group_, handler, ptr_size
+    envelopeGetGroup(sys_msg->env), handler, ptr_size
   );
 
   auto ptr_offset = reinterpret_cast<char*>(sys_msg)
@@ -155,13 +154,11 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   auto msg_data = sys_msg->payload.data();
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
-  auto const& group_ = envelopeGetGroup(sys_msg->env);
-
   vt_debug_print(
     serial_msg, node,
     "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}, "
     "user ref={}, sys ref={}, user_msg={}, epoch={}\n",
-    group_, print_ptr(sys_msg), handler, sys_msg->bytes,
+    envelopeGetGroup(sys_msg->env), print_ptr(sys_msg), handler, sys_msg->bytes,
     envelopeGetRef(user_msg->env), envelopeGetRef(sys_msg->env),
     print_ptr(user_msg.get()), envelopeGetEpoch(sys_msg->env)
   );
@@ -230,8 +227,6 @@ template <typename MsgT, typename BaseT>
     typeid(MsgT).name()
   );
 
-  auto const& group_ = envelopeGetGroup(msg->env);
-
   if (ptr_size < serialized_msg_eager_size) {
     vtAssert(
       ptr_size < serialized_msg_eager_size,
@@ -243,13 +238,12 @@ template <typename MsgT, typename BaseT>
     payload_msg->from_node = theContext()->getNode();
     // setup envelope
     envelopeInitCopy(payload_msg->env, msg->env);
-    envelopeSetGroup(payload_msg->env, group_);
 
     vt_debug_print(
       serial_msg, node,
       "broadcastSerialMsg (eager): han={}, size={}, "
       "serialized_msg_eager_size={}, group={:x}\n",
-      han, ptr_size, serialized_msg_eager_size, group_
+      han, ptr_size, serialized_msg_eager_size, envelopeGetGroup(msg->env)
     );
 
     theMsg()->markAsSerialMsgMessage(payload_msg);
@@ -273,13 +267,12 @@ template <typename MsgT, typename BaseT>
     sys_msg->ptr_size = ptr_size;
     // setup envelope
     envelopeInitCopy(sys_msg->env, msg->env);
-    envelopeSetGroup(sys_msg->env, group_);
 
     vt_debug_print(
       serial_msg, node,
       "broadcastSerialMsg (non-eager): container: han={}, sys_size={}, "
       "ptr_size={}, total_size={}, group={:x}\n",
-      traceable_han, sys_size, ptr_size, total_size, group_
+      traceable_han, sys_size, ptr_size, total_size, envelopeGetGroup(msg->env)
     );
 
     using MsgType = SerialWrapperMsgType<MsgT>;
