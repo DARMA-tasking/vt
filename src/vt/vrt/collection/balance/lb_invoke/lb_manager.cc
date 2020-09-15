@@ -274,35 +274,13 @@ void LBManager::finishedRunningLB(PhaseType phase) {
     lb, node,
     "finishedRunningLB\n"
   );
-  releaseImpl(phase);
-}
-
-void LBManager::releaseImpl(PhaseType phase, std::size_t num_calls) {
-  vt_debug_print(
-    lb, node,
-    "releaseImpl: phase={}, num_invocations_={}, num_calls={}, num_release={}\n",
-    phase, num_invocations_, num_calls, num_release_
-  );
-
-  vtAssert(
-    num_calls != 0 or
-    num_invocations_ > 0, "Must be automatically invoked to releaseImpl"
-  );
-  num_release_++;
-  if (num_release_ == num_calls or num_release_ == num_invocations_) {
-    releaseNow(phase);
-  }
-}
-
-void LBManager::releaseNow(PhaseType phase) {
-  vt_debug_print(lb, node, "releaseNow\n");
 
   auto this_node = theContext()->getNode();
 
   if (this_node == 0) {
     vt_print(
       lb,
-      "LBManager::releaseNow: finished LB, phase={}, invocations={}\n",
+      "LBManager::finishedRunningLB: finished LB, phase={}, invocations={}\n",
       phase, num_invocations_
     );
   }

@@ -119,18 +119,14 @@ public:
     proxy_ = proxy;
   }
 
+protected:
   /**
    * \internal \brief Tell the manager the LB is finished.
    *
-   * \warning This should *not* be called by the
-   * user, only by load balancers. Not private/protected as friending every LBs
-   * adds too much overhead
-
    * \param[in] phase the phase that is finished
    */
   void finishedRunningLB(PhaseType phase);
 
-protected:
   /**
    * \internal \brief Collectively start load balancing
    *
@@ -141,21 +137,6 @@ protected:
   void collectiveImpl(
     PhaseType phase, bool manual, std::size_t num_calls = 1
   );
-
-  /**
-   * \internal \brief Release control back to user
-   *
-   * \param[in] phase the phase
-   * \param[in] num_calls number of calls required to start
-   */
-  void releaseImpl(PhaseType phase, std::size_t num_calls = 0);
-
-  /**
-   * \internal \brief Release control back to user now (without counting down)
-   *
-   * \param[in] phase the phase
-   */
-  void releaseNow(PhaseType phase);
 
 public:
   /**
