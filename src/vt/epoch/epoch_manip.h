@@ -252,24 +252,6 @@ struct EpochManip {
     eEpochCategory const& category   = default_epoch_category
   );
 
-  /*
-   * Stateful methods for creating a epoch based on epochs that have already
-   * been created in the past
-   */
-
-  /**
-   * \brief The next epoch given an epoch, increments the sequential ID
-   *
-   * \param[in] epoch the epoch to start from
-   *
-   * \return the newly created epoch
-   */
-  static EpochType next(EpochType const& epoch);
-
-private:
-  static EpochType nextSlow(EpochType const& epoch);
-  static EpochType nextFast(EpochType const& epoch);
-
 private:
   static EpochType cur_rooted_;     /**< The current rooted sequential ID  */
   static EpochType cur_non_rooted_; /**< The current non-rooted sequential ID */
