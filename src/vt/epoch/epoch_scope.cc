@@ -44,6 +44,7 @@
 
 #include "vt/epoch/epoch_scope.h"
 #include "vt/epoch/epoch_manip.h"
+#include "vt/termination/termination.h"
 
 namespace vt { namespace epoch {
 
@@ -51,11 +52,18 @@ EpochCollectiveScope::~EpochCollectiveScope() {
   theEpoch()->destroyScope(scope_);
 }
 
-EpochType EpochCollectiveScope::makeEpochCollective() {
-  return theEpoch()->makeNewEpoch(false, default_epoch_node, scope_);
+EpochType EpochCollectiveScope::makeEpochCollective(
+  std::string const& label, term::SuccessorEpochCapture successor
+) {
+  auto const epoch = theEpoch()->makeNewEpoch(false, default_epoch_node, scope_);
+  theTerm()->makeEpochCollectiveWithEpoch(epoch, label, successor);
+  return epoch;
 }
 
-RootedEpoch EpochCollectiveScope::makeEpochRooted(term::UseDS use_ds) {
+RootedEpoch EpochCollectiveScope::makeEpochRooted(
+  std::string const& label, term::UseDS use_ds,
+  term::SuccessorEpochCapture successor
+) {
   // Set the parameterized node to the sentinel to make this blatantly obvious
   // that the node is invalid in the epoch bits
   NodeType const param_node = uninitialized_destination;
@@ -66,7 +74,7 @@ RootedEpoch EpochCollectiveScope::makeEpochRooted(term::UseDS use_ds) {
     cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
   }
   auto const epoch = theEpoch()->makeNewRootedEpoch(cat, scope_, param_node);
-
+  theTerm()->makeEpochRootedWithEpoch(epoch, label, use_ds, successor);
   return RootedEpoch{epoch};
 }
 

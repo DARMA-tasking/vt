@@ -977,7 +977,15 @@ EpochType TerminationDetector::makeEpochRootedWave(
   SuccessorEpochCapture successor, std::string const& label
 ) {
   auto const epoch = theEpoch()->makeNewRootedEpoch();
+  makeEpochRootedWaveWithEpoch(epoch, successor, label);
+  return epoch;
 
+}
+
+void TerminationDetector::makeEpochRootedWaveWithEpoch(
+  EpochType const epoch, SuccessorEpochCapture successor,
+  std::string const& label
+) {
   vt_debug_print(
     term, node,
     "makeEpochRootedWave: root={}, epoch={:x}, successor={:x},"
@@ -1001,9 +1009,6 @@ EpochType TerminationDetector::makeEpochRootedWave(
   if (successor.valid()) {
     addDependency(epoch, successor);
   }
-
-  return epoch;
-
 }
 
 EpochType TerminationDetector::makeEpochRootedDS(
@@ -1011,7 +1016,14 @@ EpochType TerminationDetector::makeEpochRootedDS(
 ) {
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
   auto const epoch = theEpoch()->makeNewRootedEpoch(ds_cat);
+  makeEpochRootedDSWithEpoch(epoch, successor, label);
+  return epoch;
+}
 
+void TerminationDetector::makeEpochRootedDSWithEpoch(
+  EpochType const epoch, SuccessorEpochCapture successor,
+  std::string const& label
+) {
   vtAssert(term_.find(epoch) == term_.end(), "New epoch must not exist");
 
   // Create DS term where this node is the root
@@ -1029,8 +1041,6 @@ EpochType TerminationDetector::makeEpochRootedDS(
     "makeEpochRootedDS: successor={:x}, epoch={:x}, label={}\n",
     successor, epoch, label
   );
-
-  return epoch;
 }
 
 EpochType TerminationDetector::makeEpochRooted(
@@ -1067,6 +1077,17 @@ EpochType TerminationDetector::makeEpochRooted(
   }
 }
 
+void TerminationDetector::makeEpochRootedWithEpoch(
+  EpochType const epoch, std::string const& label, UseDS use_ds,
+  SuccessorEpochCapture successor
+) {
+  if (use_ds) {
+    makeEpochRootedDSWithEpoch(epoch, successor, label);
+  } else {
+    makeEpochRootedWaveWithEpoch(epoch, successor, label);
+  }
+}
+
 EpochType TerminationDetector::makeEpochCollective(
   SuccessorEpochCapture successor
 ) {
@@ -1082,7 +1103,14 @@ EpochType TerminationDetector::makeEpochCollective(
   std::string const& label, SuccessorEpochCapture successor
 ) {
   auto const epoch = theEpoch()->makeNewEpoch();
+  makeEpochCollectiveWithEpoch(epoch, label, successor);
+  return epoch;
+}
 
+void TerminationDetector::makeEpochCollectiveWithEpoch(
+  EpochType const epoch, std::string const& label,
+  SuccessorEpochCapture successor
+) {
   vt_debug_print(
     term, node,
     "makeEpochCollective: epoch={:x}, successor={:x}, label={}\n",
@@ -1096,8 +1124,6 @@ EpochType TerminationDetector::makeEpochCollective(
   if (successor.valid()) {
     addDependency(epoch, successor);
   }
-
-  return epoch;
 }
 
 EpochType TerminationDetector::makeEpoch(

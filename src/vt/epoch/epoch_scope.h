@@ -91,7 +91,10 @@ public:
    *
    * \return the next collective epoch
    */
-  EpochType makeEpochCollective();
+  EpochType makeEpochCollective(
+    std::string const& label,
+    term::SuccessorEpochCapture successor = term::SuccessorEpochCapture{}
+  );
 
   /**
    * \brief Ask for a new rooted epoch within this scope, created collectively
@@ -99,7 +102,11 @@ public:
    *
    * \return the parameterized, rooted epoch
    */
-  RootedEpoch makeEpochRooted(term::UseDS use_ds = term::UseDS{false});
+  RootedEpoch makeEpochRooted(
+    std::string const& label,
+    term::UseDS use_ds = term::UseDS{false},
+    term::SuccessorEpochCapture successor = term::SuccessorEpochCapture{}
+  );
 
 private:
   EpochScopeType const scope_ = global_epoch_scope;
