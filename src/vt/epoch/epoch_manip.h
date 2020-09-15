@@ -269,8 +269,4 @@ extern epoch::EpochManip* theEpoch();
 
 }  //end namespace vt
 
-#include "vt/epoch/epoch_manip_get.h"
-#include "vt/epoch/epoch_manip_set.h"
-#include "vt/epoch/epoch_manip_make.h"
-
 #endif /*INCLUDED_EPOCH_EPOCH_MANIP_H*/
