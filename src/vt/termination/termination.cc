@@ -1018,7 +1018,7 @@ EpochType TerminationDetector::makeEpochRootedDS(
   ParentEpochCapture successor, std::string const& label
 ) {
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
-  auto const epoch = theEpoch()->makeNewRootedEpoch(false, ds_cat);
+  auto const epoch = theEpoch()->makeNewRootedEpoch(ds_cat);
 
   vtAssert(term_.find(epoch) == term_.end(), "New epoch must not exist");
 

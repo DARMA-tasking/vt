@@ -60,8 +60,8 @@ namespace vt { namespace epoch {
   return BitPackerType::boolGetField<eEpochLayout::EpochHasCategory>(epoch);
 }
 
-/*static*/ bool EpochManip::isUser(EpochType const& epoch) {
-  return BitPackerType::boolGetField<eEpochLayout::EpochUser>(epoch);
+/*static*/ bool EpochManip::isScope(EpochType const& epoch) {
+  return BitPackerType::boolGetField<eEpochLayout::EpochScope>(epoch);
 }
 
 /*static*/ eEpochCategory EpochManip::category(EpochType const& epoch) {

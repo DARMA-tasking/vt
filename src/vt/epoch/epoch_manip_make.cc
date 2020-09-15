@@ -53,12 +53,12 @@ namespace vt { namespace epoch {
 
 /*static*/ EpochType EpochManip::makeEpoch(
   EpochType const& seq, bool const& is_rooted, NodeType const& root_node,
-  bool const& is_user, eEpochCategory const& category
+  EpochScopeType const& scope, eEpochCategory const& category
 ) {
   EpochType new_epoch = 0;
   bool const& has_category = category != eEpochCategory::NoCategoryEpoch;
   EpochManip::setIsRooted(new_epoch, is_rooted);
-  EpochManip::setIsUser(new_epoch, is_user);
+  EpochManip::setIsScope(new_epoch, scope != global_epoch_scope);
   EpochManip::setHasCategory(new_epoch, has_category);
   if (is_rooted) {
     vtAssertExpr(root_node != uninitialized_destination);
@@ -71,43 +71,63 @@ namespace vt { namespace epoch {
   return new_epoch;
 }
 
+/*static*/ EpochType EpochManip::makeRootedEpoch(
+  EpochType const& seq, EpochScopeType const& scope,
+  eEpochCategory const& category
+) {
+  auto const& root_node = theContext()->getNode();
+  return EpochManip::makeEpoch(seq,true,root_node,scope,category);
+}
+
 EpochType EpochManip::makeNewEpoch(
   bool const& is_rooted, NodeType const& root_node,
-  bool const& is_user, eEpochCategory const& category
+  EpochScopeType const scope, eEpochCategory const& category
 ) {
   if (is_rooted) {
-    return makeNewRootedEpoch(is_user,category);
+    return makeNewRootedEpoch(category,scope);
   } else {
-    if (cur_non_rooted_ == no_epoch) {
-      cur_non_rooted_ = first_epoch;
-    }
     auto const new_epoch = makeEpoch(
-      cur_non_rooted_,false,uninitialized_destination,is_user,category
+      nextSeqCollective(scope),false,uninitialized_destination,scope,category
     );
-    cur_non_rooted_++;
     return new_epoch;
   }
 }
 
-/*static*/ EpochType EpochManip::makeRootedEpoch(
-  EpochType const& seq, bool const& is_user, eEpochCategory const& category
-) {
-  auto const& root_node = theContext()->getNode();
-  return EpochManip::makeEpoch(seq,true,root_node,is_user,category);
-}
-
 EpochType EpochManip::makeNewRootedEpoch(
-  bool const& is_user, eEpochCategory const& category
+  eEpochCategory const& category, EpochScopeType const scope
 ) {
   auto const& root_node = theContext()->getNode();
-  if (cur_rooted_ == no_epoch) {
-    cur_rooted_ = first_epoch;
-  }
   auto const& next_rooted_epoch = EpochManip::makeEpoch(
-    cur_rooted_,true,root_node,is_user,category
+    nextSeqRooted(scope),true,root_node,scope,category
   );
-  cur_rooted_++;
   return next_rooted_epoch;
 }
+
+EpochType EpochManip::nextSeqRooted(EpochScopeType scope) {
+  return nextSeq(scope, false);
+}
+
+EpochType EpochManip::nextSeqCollective(EpochScopeType scope) {
+  return nextSeq(scope, true);
+}
+
+EpochType EpochManip::nextSeq(EpochScopeType scope, bool is_collective) {
+  auto& scope_map = is_collective ? scope_collective_ : scope_rooted_;
+  if (scope_map.find(scope) == scope_map.end()) {
+    EpochType new_ep = first_epoch;
+    // Compose in the high bits of the sequence epoch ID a scope (only actually
+    // impacts the value if not global scope). Use the \c scope_limit to
+    // determine how many bits are reserved.
+    constexpr EpochScopeType scope_offset = epoch_seq_num_bits - scope_limit;
+    BitPackerType::setField<scope_offset, scope_limit>(new_ep, scope);
+    vtAssertExpr(scope != global_epoch_scope || new_ep == first_epoch);
+    scope_map[scope] = new_ep;
+  }
+  auto const seq = scope_map[scope];
+  scope_map[scope]++;
+  return seq;
+
+}
+
 
 }} /* end namespace vt::epoch */

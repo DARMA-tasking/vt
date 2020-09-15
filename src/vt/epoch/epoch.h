@@ -71,7 +71,7 @@ namespace vt { namespace epoch {
  *
  *  +++++++++++++++++++++++++++++++++++++++++++  Rooted Extended Layout ++
  *
- *   <EpochHeader>   = <IsRooted> <HasCategory> <IsUser>
+ *   <EpochHeader>   = <IsRooted> <HasCategory> <IsScoped>
  *   ....3 bits...   = ..bit 1..   ...bit 2...  ..bit 3..
  *
  * =======================================================================
@@ -84,15 +84,15 @@ namespace vt { namespace epoch {
 enum struct eEpochHeader : int8_t {
   RootedEpoch   = 1,
   CategoryEpoch = 2,
-  UserEpoch     = 3
+  ScopedEpoch   = 3
 };
 
 /// Number of bits for root flag
 static constexpr BitCountType const epoch_root_num_bits = 1;
 /// Number of bits for category flag
 static constexpr BitCountType const epoch_hcat_num_bits = 1;
-/// Number of bits for user flag
-static constexpr BitCountType const epoch_user_num_bits = 1;
+/// Number of bits for scope flag
+static constexpr BitCountType const epoch_scop_num_bits = 1;
 
 /**
  *  Important: if you add new types of epoch headers to the preceding enum, you
@@ -130,7 +130,7 @@ static constexpr BitCountType const epoch_category_num_bits = 2;
 /// The total number of bits remaining the sequential part of the \c EpochType
 static constexpr BitCountType const epoch_seq_num_bits = sizeof(EpochType) * 8 -
   (epoch_root_num_bits     +
-   epoch_hcat_num_bits     + epoch_user_num_bits +
+   epoch_hcat_num_bits     + epoch_scop_num_bits +
    epoch_category_num_bits + node_num_bits);
 
 /**
@@ -143,8 +143,8 @@ enum eEpochLayout {
   EpochSequential   = 0,
   EpochNode         = eEpochLayout::EpochSequential  + epoch_seq_num_bits,
   EpochCategory     = eEpochLayout::EpochNode        + node_num_bits,
-  EpochUser         = eEpochLayout::EpochCategory    + epoch_category_num_bits,
-  EpochHasCategory  = eEpochLayout::EpochUser        + epoch_user_num_bits,
+  EpochScope        = eEpochLayout::EpochCategory    + epoch_category_num_bits,
+  EpochHasCategory  = eEpochLayout::EpochScope       + epoch_scop_num_bits,
   EpochIsRooted     = eEpochLayout::EpochHasCategory + epoch_hcat_num_bits,
   EpochSentinelEnd  = eEpochLayout::EpochIsRooted
 };
