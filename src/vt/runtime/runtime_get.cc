@@ -69,6 +69,7 @@
 #include "vt/objgroup/headers.h"
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/phase/phase_manager.h"
+#include "vt/epoch/epoch_manip.h"
 
 #include <cassert>
 
@@ -138,6 +139,7 @@ vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManage
 timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }
 vt::arguments::AppConfig*   theConfig()             { return &CUR_RT->theArgConfig->config_;      }
 vt::phase::PhaseManager*   thePhase()               { return CUR_RT->thePhase;          }
+epoch::EpochManip*          theEpoch()              { return CUR_RT->theEpoch;          }
 
 #if vt_check_enabled(trace_enabled)
 trace::Trace*               theTrace()              { return CUR_RT->theTrace;          }

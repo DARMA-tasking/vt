@@ -113,6 +113,8 @@ struct TimeTriggerManager;
 }
 namespace phase {
 struct PhaseManager;
+namespace epoch {
+struct EpochManip;
 }
 
 #if vt_check_enabled(trace_enabled)

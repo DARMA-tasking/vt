@@ -72,6 +72,7 @@
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/timetrigger/time_trigger_manager.h"
 #include "vt/phase/phase_manager.h"
+#include "vt/epoch/epoch_manip.h"
 
 #include "vt/configs/arguments/app_config.h"
 #include "vt/configs/arguments/args.h"
@@ -729,11 +730,18 @@ void Runtime::initializeComponents() {
     >{}
   );
 
+  p_->registerComponent<epoch::EpochManip>(
+    &theEpoch, Deps<
+      ctx::Context                // Everything depends on theContext
+    >{}
+  );
+
   p_->registerComponent<term::TerminationDetector>(
     &theTerm, Deps<
       ctx::Context,               // Everything depends on theContext
       messaging::ActiveMessenger, // Depends on active messenger to send term msgs
-      sched::Scheduler            // Depends on scheduler for idle checks
+      sched::Scheduler,           // Depends on scheduler for idle checks
+      epoch::EpochManip           // Depends on for generating epochs
     >{}
   );
 
