@@ -38,3 +38,5 @@ CMakeSettings.json
 *.exe
 *.out
 *.app
+
+.dir-locals.el
