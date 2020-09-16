@@ -54,61 +54,52 @@
 #include "vt/rdmahandle/manager.h"
 #include "vt/collective/collective_alg.h"
 
-#include "test_harness.h"
+#include "test_parallel_harness.h"
 
 namespace vt { namespace tests { namespace unit {
 
-using TestMemoryFootprinting = TestHarness;
+using TestMemoryFootprinting = TestParallelHarness;
 
 template<typename T>
-void printMemoryFootprint(T& obj) {
-  fmt::print("sizeof(obj):\t{}\n", sizeof(obj));
+void printMemoryFootprint(T* obj) {
+  fmt::print("sizeof(obj):\t{}\n", sizeof(*obj));
 
-  auto size = checkpoint::getMemoryFootprint<T>(obj);
+  auto size = checkpoint::getMemoryFootprint<T>(*obj);
   fmt::print("footprint(obj):\t{}\n", size);
 }
 
 TEST_F(TestMemoryFootprinting, test_arg_config) {
-  arguments::ArgConfig args;
-  printMemoryFootprint(args);
+  printMemoryFootprint(theConfig());
 }
 
 TEST_F(TestMemoryFootprinting, test_time_trigger_manager) {
-  timetrigger::TimeTriggerManager trigger_manager;
-  printMemoryFootprint(trigger_manager);
+  printMemoryFootprint(theTimeTrigger());
 }
 
 TEST_F(TestMemoryFootprinting, test_lb_manager) {
-  vt::vrt::collection::balance::LBManager lb_manager;
-  printMemoryFootprint(lb_manager);
+  printMemoryFootprint(theLBManager());
 }
 
 TEST_F(TestMemoryFootprinting, test_stats_restart_reader) {
   vt::vrt::collection::balance::StatsRestartReader reader;
-  printMemoryFootprint(reader);
+  printMemoryFootprint(&reader);
 }
 
 TEST_F(TestMemoryFootprinting, test_node_stats) {
   vt::vrt::collection::balance::NodeStats stats;
-  printMemoryFootprint(stats);
+  printMemoryFootprint(theNodeStats());
 }
 
-// FIXME: segfaults, requires 'vt_memory_reporters' from theConfig
-// TEST_F(TestMemoryFootprinting, test_memory_usage) {
-//   vt::util::memory::MemoryUsage mem_usage;
-//   printMemoryFootprint(mem_usage);
-// }
+TEST_F(TestMemoryFootprinting, test_memory_usage) {
+  printMemoryFootprint(theMemUsage());
+}
 
-// FIXME: segfaults, requires theCollective
-// TEST_F(TestMemoryFootprinting, test_rdma_manager) {
-//   vt::rdma::Manager manager;
-//   printMemoryFootprint(manager);
-// }
+TEST_F(TestMemoryFootprinting, test_rdma_manager) {
+  printMemoryFootprint(theHandleRDMA());
+}
 
-// FIXME: segfaults, requires theContext
-// TEST_F(TestMemoryFootprinting, test_collective_alg) {
-//   vt::collective::CollectiveAlg colective;
-//   printMemoryFootprint(colective);
-// }
+TEST_F(TestMemoryFootprinting, test_collective_alg) {
+  printMemoryFootprint(theCollective());
+}
 
 }}} /* end namespace vt::tests::unit */
