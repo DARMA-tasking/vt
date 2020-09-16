@@ -162,7 +162,7 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
   // model to function
   model->updateLoads(0);
   for (auto&& obj : *model) {
-    auto work_val = model->getWork(obj, PhaseOffset{});
+    auto work_val = model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
     EXPECT_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
     //fmt::print("{:x} {}\n", obj, work_val);
   }
