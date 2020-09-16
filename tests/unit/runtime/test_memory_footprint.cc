@@ -102,4 +102,8 @@ TEST_F(TestMemoryFootprinting, test_collective_alg) {
   printMemoryFootprint(theCollective());
 }
 
+TEST_F(TestMemoryFootprinting, test_obj_group_manager) {
+  printMemoryFootprint(theObjGroup());
+}
+
 }}} /* end namespace vt::tests::unit */

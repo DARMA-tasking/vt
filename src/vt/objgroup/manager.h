@@ -362,6 +362,16 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
     MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType ep
   );
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | cur_obj_id_
+      // | dispatch_
+      // | objs_
+      // | obj_to_proxy_ // void*
+      // | pending_
+      | derived_to_bases_;
+  }
+
 private:
   /**
    * \internal \brief Untyped system call to make a new collective objgroup
