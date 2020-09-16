@@ -133,14 +133,19 @@ void NodeStats::startIterCleanup(PhaseType phase, int look_back) {
   // Convert the temp ID node_data_ for the last iteration into perm ID for
   // stats output
   auto const prev_data = std::move(node_data_[phase]);
-  std::unordered_map<ElementIDType,TimeType> new_data;
+  std::unordered_map<ElementIDType,TimeType> new_node_data;
+  std::unordered_map<ElementIDType,VirtualProxyType> new_collection_lookup;
   for (auto& elm : prev_data) {
-    auto iter = node_temp_to_perm_.find(elm.first);
+    auto temp_id = elm.first;
+    auto iter = node_temp_to_perm_.find(temp_id);
     vtAssert(iter != node_temp_to_perm_.end(), "Temp ID must exist");
     auto perm_id = iter->second;
-    new_data[perm_id] = elm.second;
+
+    new_node_data[perm_id] = elm.second;
+    new_collection_lookup[perm_id] = node_collection_lookup_[temp_id];
   }
-  node_data_[phase] = std::move(new_data);
+  node_data_[phase] = std::move(new_node_data);
+  node_collection_lookup_ = std::move(new_collection_lookup);
 
   if (phase >= look_back) {
     node_data_.erase(phase - look_back);
@@ -152,7 +157,6 @@ void NodeStats::startIterCleanup(PhaseType phase, int look_back) {
   NodeStats::node_migrate_.clear();
   NodeStats::node_temp_to_perm_.clear();
   NodeStats::node_perm_to_temp_.clear();
-  node_collection_lookup_.clear();
 }
 
 ElementIDType NodeStats::getNextElm() {
@@ -289,7 +293,7 @@ ElementIDType NodeStats::addNodeStats(
 
   vt_debug_print(
     lb, node,
-    "NodeStats::addNodeStats: temp_id={}, perm_id={}, phase={}, subphases={}, load={}\n",
+    "NodeStats::addNodeStats: temp_id={:x}, perm_id={:x}, phase={}, subphases={}, load={}\n",
     temp_id, perm_id, phase, subphase_time.size(), time
   );
 
