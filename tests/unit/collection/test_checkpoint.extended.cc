@@ -149,17 +149,6 @@ struct TestCol : vt::Collection<TestCol,vt::Index3D> {
   std::shared_ptr<int> token;
 };
 
-static void runInEpoch(std::function<void()> fn) {
-  vt::EpochType ep = vt::theTerm()->makeEpochCollective();
-  vt::theMsg()->pushEpoch(ep);
-  fn();
-  vt::theMsg()->popEpoch(ep);
-  vt::theTerm()->finishedEpoch(ep);
-  bool done = false;
-  vt::theTerm()->addAction(ep, [&]{ done = true; });
-  vt::theSched()->runSchedulerWhile([&] { return not done; });
-}
-
 using TestCheckpoint = TestParallelHarness;
 
 static constexpr int32_t const num_elms = 8;
@@ -178,14 +167,14 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
       }
     );
 
-    runInEpoch([&]{
+    vt::runInEpochCollective([&]{
       if (this_node == 0) {
         proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
       }
     });
 
     for (int i = 0; i < 5; i++) {
-      runInEpoch([&]{
+      vt::runInEpochCollective([&]{
         if (this_node == 0) {
           proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
         }
@@ -198,14 +187,14 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     vt::theCollective()->barrier();
 
     // Null the token to ensure we don't end up getting the same instance
-    runInEpoch([&]{
+    vt::runInEpochCollective([&]{
       if (this_node == 0) {
         proxy.broadcast<TestCol::NullMsg,&TestCol::nullToken>();
       }
     });
 
     // Destroy the collection
-    runInEpoch([&]{
+    vt::runInEpochCollective([&]{
       if (this_node == 0) {
         proxy.destroy();
       }
