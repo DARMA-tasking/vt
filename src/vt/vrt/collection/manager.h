@@ -948,6 +948,13 @@ public:
     bool instrument
   );
 
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f>
+  messaging::PendingSend broadcastMsgCollective(
+    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    MsgT* msg, bool instrument = true);
+
   /**
    * \brief Broadcast a message with action function handler
    *

@@ -849,6 +849,47 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   return ret;
 }
 
+
+template <
+  typename MsgT,
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f>
+messaging::PendingSend CollectionManager::broadcastMsgCollective(
+  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+  MsgT* msg, bool instrument) {
+
+  using ColT = typename MsgT::CollectionType;
+  using IndexT = typename ColT::IndexType;
+
+  auto promoMsg = promoteMsg(msg);
+
+  return messaging::PendingSend(
+    promoMsg, [proxy](MsgSharedPtr<BaseMsgType>& msgIn) {
+      auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(proxy);
+      auto const node = theContext()->getNode();
+
+      auto col_msg = reinterpret_cast<MsgT*>(msgIn.get());
+      auto handler =
+        auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>();
+      col_msg->setVrtHandler(handler);
+
+      theMsg()->markAsCollectionMessage(col_msg);
+
+      if (elm_holder) {
+        elm_holder->foreach (
+          [node, msgIn, col_msg,
+           elm_holder](IndexT const& idx, CollectionBase<ColT, IndexT>* base) {
+            auto const from = col_msg->getFromNode();
+            auto trace_event = trace::no_trace_event;
+            auto const hand = col_msg->getVrtHandler();
+
+            collectionAutoMsgDeliver<
+              ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
+              col_msg, base, hand, true, from, trace_event);
+          });
+      }
+    });
+}
+
 template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f

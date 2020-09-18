@@ -79,6 +79,15 @@ struct Broadcastable : BaseProxyT {
     typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
   >
   messaging::PendingSend broadcast(Args&&... args) const;
+
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+  messaging::PendingSend broadcastCollective(MsgT* msg) const;
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+  messaging::PendingSend broadcastCollective(MsgSharedPtr<MsgT> msg) const;
+  template <
+    typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
+  >
+  messaging::PendingSend broadcastCollective(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

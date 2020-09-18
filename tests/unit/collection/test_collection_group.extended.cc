@@ -54,6 +54,8 @@
 
 namespace vt { namespace tests { namespace unit {
 
+static int32_t elemCounter = 0;
+
 struct MyReduceMsg : collective::ReduceTMsg<int> {
   explicit MyReduceMsg(int const in_num)
     : collective::ReduceTMsg<int>(in_num)
@@ -62,6 +64,12 @@ struct MyReduceMsg : collective::ReduceTMsg<int> {
 
 struct ColA : Collection<ColA,Index1D> {
   struct TestMsg : CollectionMessage<ColA> { };
+
+  struct TestDataMsg : CollectionMessage<ColA> {
+    TestDataMsg(int32_t value) : value_(value) {}
+
+    int32_t value_ = -1;
+  };
 
   void finishedReduce(MyReduceMsg* m) {
     fmt::print("at root: final num={}\n", m->getVal());
@@ -73,6 +81,12 @@ struct ColA : Collection<ColA,Index1D> {
     auto cb = theCB()->makeBcast<ColA, MyReduceMsg, &ColA::finishedReduce>(proxy);
     auto reduce_msg = makeMessage<MyReduceMsg>(getIndex().x());
     proxy.reduce<collective::PlusOp<int>>(reduce_msg.get(),cb);
+  }
+
+  void memberHanlder(TestDataMsg* msg) {
+    EXPECT_EQ(msg->value_, theContext()->getNode());
+    --elemCounter;
+    finished = true;
   }
 
   virtual ~ColA() {
@@ -94,6 +108,22 @@ TEST_F(TestCollectionGroup, test_collection_group_1) {
     auto const proxy = theCollection()->construct<ColA>(range);
     proxy.broadcast<ColA::TestMsg,&ColA::doReduce>();
   }
+}
+
+TEST_F(TestCollectionGroup, test_collection_group_2){
+  auto const my_node = theContext()->getNode();
+
+  auto const range = Index1D(8);
+  auto const proxy = theCollection()->constructCollective<ColA>(
+    range, [](vt::Index1D idx) {
+      ++elemCounter;
+      return std::make_unique<ColA>();
+    });
+
+  auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
+  proxy.broadcastCollective<ColA::TestDataMsg, &ColA::memberHanlder>(msg.get());
+
+  EXPECT_EQ(elemCounter, 0);
 }
 
 }}} // end namespace vt::tests::unit
