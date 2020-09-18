@@ -302,7 +302,7 @@ ElementIDType NodeStats::addNodeStats(
     std::forward_as_tuple(time)
   );
 
-  auto subphase_data = node_subphase_data_[phase];
+  auto &subphase_data = node_subphase_data_[phase];
   auto elm_subphase_iter = subphase_data.find(temp_id);
   vtAssert(elm_subphase_iter == subphase_data.end(), "Must not exist");
   subphase_data.emplace(
