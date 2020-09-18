@@ -68,18 +68,21 @@ void reduceHelper(
   auto msg = makeMessage<ReduceMsgType>(
     ValueType{typename ValueType::ReduceTag{}, val, updated}
   );
-  auto cb = theCB()->makeFunc<ReduceMsgType>([=](ReduceMsgType* m) {
-    auto& reduced_val = m->getConstVal();
-    *out = DiagnosticEraser<T>::get(reduced_val);
-    out->hist_ = reduced_val.getHistogram();
-    out->update_ = update;
-    out->unit_ = unit;
-    if (update == DiagnosticUpdate::Min) {
-      out->is_valid_value_ = reduced_val.min() != std::numeric_limits<T>::max();
-    } else {
-      out->is_valid_value_ = reduced_val.sum() != 0;
+  auto cb = theCB()->makeFunc<ReduceMsgType>(
+    pipe::LifetimeEnum::Once,
+    [=](ReduceMsgType* m) {
+      auto& reduced_val = m->getConstVal();
+      *out = DiagnosticEraser<T>::get(reduced_val);
+      out->hist_ = reduced_val.getHistogram();
+      out->update_ = update;
+      out->unit_ = unit;
+      if (update == DiagnosticUpdate::Min) {
+        out->is_valid_value_ = reduced_val.min() != std::numeric_limits<T>::max();
+      } else {
+        out->is_valid_value_ = reduced_val.sum() != 0;
+      }
     }
-  });
+  );
   r->reduce<collective::PlusOp<ValueType>>(0, msg.get(), cb);
 }
 
