@@ -406,7 +406,7 @@ struct DiagnosticValue : DiagnosticBase {
     DiagnosticUpdate in_update, DiagnosticUnit in_unit,
     DiagnosticTypeEnum in_type, T in_initial_value = {}
   ) : DiagnosticBase(in_key, in_desc, in_update, in_unit, in_type),
-      values_(DiagnosticSnapshotValues<T>{2, in_initial_value})
+      values_(DiagnosticSnapshotValues<T>{1, in_initial_value})
   { }
 
   /**
@@ -435,15 +435,6 @@ struct DiagnosticValue : DiagnosticBase {
   void reduceOver(
     Diagnostic* diagnostic, DiagnosticErasedValue* out, int snapshot
   ) override;
-
-  /**
-   * \internal \brief Clone a diagnostic value without knowing the type
-   *
-   * \return a clone of the diagnostic value
-   */
-  std::unique_ptr<DiagnosticBase> clone() override {
-    return std::make_unique<DiagnosticValue<T>>(*this);
-  }
 
 private:
   DiagnosticSnapshotValues<T> values_; /**< The value snapshots */

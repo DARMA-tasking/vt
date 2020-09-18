@@ -46,7 +46,6 @@
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_IMPL_H
 
 #include "vt/runtime/component/component_pack.h"
-#include "vt/runtime/component/diagnostic_manager.h"
 
 namespace vt { namespace runtime { namespace component {
 

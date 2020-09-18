@@ -47,7 +47,6 @@
 
 #include "vt/runtime/component/component.h"
 #include "vt/runtime/component/movable_fn.h"
-#include "vt/runtime/component/diagnostic_manager.fwd.h"
 
 #include <list>
 #include <unordered_map>
@@ -136,18 +135,6 @@ public:
    */
   void foreach(std::function<void(BaseComponent*)> apply);
 
-  /**
-   * \brief Setup a diagnostic manager for snapshots
-   */
-  void setupDiagnosticManager();
-
-  /**
-   * \brief Get the diagnostic manager instance
-   *
-   * \return non-owning pointer to the active diagnostic manager
-   */
-  DiagnosticManager* getDiagnosticManager();
-
 private:
   /**
    * \internal \brief Topologically sort all the registered components to find a
@@ -209,8 +196,6 @@ private:
   std::vector<Progressable*> pollable_components_;
   /// Component ID for assigning during construction
   ComponentIDType cur_id_ = 1;
-  /// Diagnostic manager for coordinating snapshots
-  std::unique_ptr<DiagnosticManager> diagnostic_manager_ = nullptr;
 };
 
 template <typename... Ts>
