@@ -200,8 +200,6 @@ void Runtime::computeAndPrintDiagnostics() {
     return;
   }
 
-  using Arg = arguments::ArgConfig;
-
   /// Builder function for making a histogram for output
   auto make_hist =
     [](adt::HistogramApprox<double, int64_t>& h, char delim) -> std::string {
@@ -218,7 +216,10 @@ void Runtime::computeAndPrintDiagnostics() {
       return hist_out;
     };
 
-  if (Arg::vt_diag_print_summary or Arg::vt_diag_summary_file != "") {
+  if (
+    theConfig()->vt_diag_print_summary or
+    theConfig()->vt_diag_summary_file != ""
+  ) {
     fort::utf8_table table;
     table.set_border_style(FT_BOLD_STYLE); //FT_BOLD2_STYLE
     table << fort::header
@@ -291,23 +292,34 @@ void Runtime::computeAndPrintDiagnostics() {
 
     auto out = fmt::format("{}", table.to_string());
 
-    if (Arg::vt_diag_print_summary) {
+    if (theConfig()->vt_diag_print_summary) {
       fmt::print(out);
     }
 
-    if (Arg::vt_diag_summary_file != "") {
+    if (theConfig()->vt_diag_summary_file != "") {
       std::ofstream fout;
-      fout.open(Arg::vt_diag_summary_file, std::ios::out | std::ios::binary);
+      fout.open(
+        theConfig()->vt_diag_summary_file, std::ios::out | std::ios::binary
+      );
       vtAssert(fout.good(), "Must be a valid file");
       fout << out;
       fout.close();
     }
   }
 
-  if (Arg::vt_diag_summary_csv_file != "") {
+  if (theConfig()->vt_diag_summary_csv_file != "") {
     std::string out;
     out += fmt::format(
-      "Component, Metric, Description, Type, Total, Mean, Min, Max, Std, Histogram\n"
+      "Component, "
+      "Metric, "
+      "Description, "
+      "Type, "
+      "Total, "
+      "Mean, "
+      "Min, "
+      "Max, "
+      "Std, "
+      "Histogram\n"
     );
 
     foreachDiagnosticValue(
@@ -319,7 +331,7 @@ void Runtime::computeAndPrintDiagnostics() {
       ) {
         auto hist_out = make_hist(str->hist_, ';');
         auto update = diag->getUpdateType();
-        auto base = Arg::vt_diag_csv_base_units;
+        auto base = theConfig()->vt_diag_csv_base_units;
 
         out += fmt::format(
           "{},{},{},{},{},{},{},{},{},{}\n",
@@ -328,7 +340,9 @@ void Runtime::computeAndPrintDiagnostics() {
           diag->getDescription(),
           diagnosticUpdateTypeString(update),
           (diagnosticShowTotal(update) ?
-           valueFormatHelper(str->sum_, str->unit_, false, base) : std::string("--")),
+           valueFormatHelper(str->sum_, str->unit_, false, base) :
+           std::string("--")
+          ),
           valueFormatHelper(str->avg_, str->unit_, false, base),
           valueFormatHelper(str->min_, str->unit_, false, base),
           valueFormatHelper(str->max_, str->unit_, false, base),
@@ -339,7 +353,9 @@ void Runtime::computeAndPrintDiagnostics() {
     );
 
     std::ofstream fout;
-    fout.open(Arg::vt_diag_summary_csv_file, std::ios::out | std::ios::binary);
+    fout.open(
+      theConfig()->vt_diag_summary_csv_file, std::ios::out | std::ios::binary
+    );
     vtAssert(fout.good(), "Must be a valid file");
     fout << out;
     fout.close();
