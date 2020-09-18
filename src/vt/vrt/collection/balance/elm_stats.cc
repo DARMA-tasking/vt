@@ -200,7 +200,7 @@ void ElementStats::setSubPhase(SubphaseType subphase) {
   cur_subphase_ = subphase;
 }
 
-typename ElementStats::SubphaseType ElementStats::getSubPhase() const {
+SubphaseType ElementStats::getSubPhase() const {
   return cur_subphase_;
 }
 
