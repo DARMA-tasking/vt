@@ -172,12 +172,13 @@ endif()
 
 message(STATUS "CI_BUILD = ${vt_feature_cmake_ci_build}")
 
-option(vt_diagnostic_enabled "Build VT with diagnostics" ON)
+option(vt_diagnostic_enabled "Build VT with performance metrics/stats" ON)
+
 if (vt_diagnostic_enabled)
-  message(STATUS "Building VT with diagnostics enabled")
+  message(STATUS "Building VT with diagnostics (performance stats) enabled")
   set(vt_feature_cmake_diagnostics "1")
 else()
-  message(STATUS "Building VT with diagnostics disabled")
+  message(STATUS "Building VT with diagnostics (performance stats) disabled")
   set(vt_feature_cmake_diagnostics "0")
 endif()
 
