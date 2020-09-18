@@ -171,10 +171,11 @@ struct Runtime {
    * \internal \brief Finalize the runtime
    *
    * \param[in] force_now whether to force finalization regardless of state
+   * \param[in] disable_sig whether to disable signal handlers
    *
    * \return whether it finalized or not
    */
-  bool finalize(bool const force_now = false);
+  bool finalize(bool const force_now = false, bool const disable_sig = true);
 
   /**
    * \brief Run the scheduler once
@@ -252,10 +253,11 @@ protected:
 
   /**
    * \internal \brief Try to finalize
+   * \param[in] disable_sig whether to disable signal handlers
    *
    * \return whether it succeeded
    */
-  bool tryFinalize();
+  bool tryFinalize(bool const disable_sig = true);
 
   /**
    * \internal \brief Setup argument input
@@ -425,6 +427,7 @@ protected:
   bool initialized_ = false, finalized_ = false, aborted_ = false;
   bool runtime_active_ = false;
   bool is_interop_ = false;
+  bool sig_handlers_disabled_ = false;
   WorkerCountType num_workers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_NULL;
   int user_argc_ = 0;
