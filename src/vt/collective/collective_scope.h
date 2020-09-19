@@ -192,6 +192,12 @@ public:
    */
   TagType getScopeBits() const { return scope_; }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | is_user_tag_
+      | scope_;
+  }
+
 private:
 
   /**

@@ -371,6 +371,20 @@ public:
    */
   RemoteOperationIDType getNextOpID();
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | next_group_id_
+      | next_collective_group_id_
+      // | local_collective_group_info_
+      // | local_group_info_
+      // | remote_group_info_
+      | cur_id_
+      | cur_collective_id_
+      | continuation_actions_
+      | cleanup_actions_
+      | collective_scope_;
+  }
+
 private:
   /**
    * \internal \brief Execute necessary actions for deliver to a group when a

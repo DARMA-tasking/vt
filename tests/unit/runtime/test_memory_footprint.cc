@@ -54,6 +54,7 @@
 #include "vt/rdmahandle/manager.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/group/group_manager.h"
 
 #include "test_parallel_harness.h"
 
@@ -109,6 +110,10 @@ TEST_F(TestMemoryFootprinting, test_obj_group_manager) {
 
 TEST_F(TestMemoryFootprinting, test_pipe_manager) {
   printMemoryFootprint(theCB());
+}
+
+TEST_F(TestMemoryFootprinting, test_group_manager) {
+  printMemoryFootprint(theGroup());
 }
 
 }}} /* end namespace vt::tests::unit */
