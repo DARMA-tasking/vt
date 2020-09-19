@@ -53,6 +53,7 @@
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/rdmahandle/manager.h"
 #include "vt/collective/collective_alg.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include "test_parallel_harness.h"
 
@@ -104,6 +105,10 @@ TEST_F(TestMemoryFootprinting, test_collective_alg) {
 
 TEST_F(TestMemoryFootprinting, test_obj_group_manager) {
   printMemoryFootprint(theObjGroup());
+}
+
+TEST_F(TestMemoryFootprinting, test_pipe_manager) {
+  printMemoryFootprint(theCB());
 }
 
 }}} /* end namespace vt::tests::unit */
