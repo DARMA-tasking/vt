@@ -54,7 +54,7 @@
 
 namespace vt { namespace tests { namespace unit {
 
-static int32_t elemCounter = 0;
+static int32_t elem_counter = 0;
 
 struct MyReduceMsg : collective::ReduceTMsg<int> {
   explicit MyReduceMsg(int const in_num)
@@ -81,21 +81,29 @@ struct ColA : Collection<ColA,Index1D> {
     auto cb = theCB()->makeBcast<ColA, MyReduceMsg, &ColA::finishedReduce>(proxy);
     auto reduce_msg = makeMessage<MyReduceMsg>(getIndex().x());
     proxy.reduce<collective::PlusOp<int>>(reduce_msg.get(),cb);
+    reduce_test = true;
   }
 
   void memberHanlder(TestDataMsg* msg) {
     EXPECT_EQ(msg->value_, theContext()->getNode());
-    --elemCounter;
-    finished = true;
+    --elem_counter;
   }
 
   virtual ~ColA() {
-    EXPECT_TRUE(finished);
+    if (reduce_test) {
+      EXPECT_TRUE(finished);
+    }
   }
 
-private:
+  private:
   bool finished = false;
+  bool reduce_test = false;
 };
+
+void colHanlder(
+  ColA::TestDataMsg* msg, typename ColA::TestDataMsg::CollectionType* type) {
+  --elem_counter;
+}
 
 struct TestCollectionGroup : TestParallelHarness { };
 
@@ -114,16 +122,49 @@ TEST_F(TestCollectionGroup, test_collection_group_2){
   auto const my_node = theContext()->getNode();
 
   auto const range = Index1D(8);
-  auto const proxy = theCollection()->constructCollective<ColA>(
-    range, [](vt::Index1D idx) {
-      ++elemCounter;
+  auto const proxy =
+    theCollection()->constructCollective<ColA>(range, [](vt::Index1D idx) {
+      ++elem_counter;
       return std::make_unique<ColA>();
     });
 
+  const auto numElems = elem_counter;
   auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
-  proxy.broadcastCollective<ColA::TestDataMsg, &ColA::memberHanlder>(msg.get());
 
-  EXPECT_EQ(elemCounter, 0);
+  proxy.broadcastCollective<ColA::TestDataMsg, &ColA::memberHanlder>(msg.get());
+  EXPECT_EQ(elem_counter, 0);
+
+  proxy.broadcastCollective<ColA::TestDataMsg, &ColA::memberHanlder>(msg);
+  EXPECT_EQ(elem_counter, -numElems);
+
+  proxy.broadcastCollective<
+    ColA::TestDataMsg, &ColA::memberHanlder, ColA::TestDataMsg>(my_node);
+  EXPECT_EQ(elem_counter, -2 * numElems);
+}
+
+TEST_F(TestCollectionGroup, test_collection_group_3){
+  elem_counter = 0;
+  auto const my_node = theContext()->getNode();
+
+  auto const range = Index1D(8);
+  auto const proxy =
+    theCollection()->constructCollective<ColA>(range, [](vt::Index1D idx) {
+      ++elem_counter;
+      return std::make_unique<ColA>();
+    });
+
+  const auto numElems = elem_counter;
+  auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
+
+  proxy.broadcastCollective<ColA::TestDataMsg, colHanlder>(msg.get());
+  EXPECT_EQ(elem_counter, 0);
+
+  proxy.broadcastCollective<ColA::TestDataMsg, &ColA::memberHanlder>(msg);
+  EXPECT_EQ(elem_counter, -numElems);
+
+  proxy.broadcastCollective<
+    ColA::TestDataMsg, &ColA::memberHanlder, ColA::TestDataMsg>(my_node);
+  EXPECT_EQ(elem_counter, -2 * numElems);
 }
 
 }}} // end namespace vt::tests::unit

@@ -849,17 +849,43 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   return ret;
 }
 
+template <
+  typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
+>
+messaging::PendingSend CollectionManager::broadcastMsgCollective(
+  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+  MsgT* msg, bool instrument
+) {
+  using ColT = typename MsgT::CollectionType;
+
+  msg->setVrtHandler(auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>());
+  msg->setMember(false);
+
+  return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msg);
+}
 
 template <
   typename MsgT,
-  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f>
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+>
 messaging::PendingSend CollectionManager::broadcastMsgCollective(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-  MsgT* msg, bool instrument) {
-
+  MsgT* msg, bool instrument
+) {
   using ColT = typename MsgT::CollectionType;
-  using IndexT = typename ColT::IndexType;
 
+  msg->setVrtHandler(
+    auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>());
+  msg->setMember(true);
+
+  return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msg);
+}
+
+template <typename MsgT, typename ColT>
+messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
+  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg
+) {
+  using IndexT = typename ColT::IndexType;
   auto promoMsg = promoteMsg(msg);
 
   return messaging::PendingSend(
@@ -868,23 +894,21 @@ messaging::PendingSend CollectionManager::broadcastMsgCollective(
       auto const node = theContext()->getNode();
 
       auto col_msg = reinterpret_cast<MsgT*>(msgIn.get());
-      auto handler =
-        auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>();
-      col_msg->setVrtHandler(handler);
 
       theMsg()->markAsCollectionMessage(col_msg);
 
       if (elm_holder) {
         elm_holder->foreach (
-          [node, msgIn, col_msg,
-           elm_holder](IndexT const& idx, CollectionBase<ColT, IndexT>* base) {
+          [node,
+           col_msg](IndexT const& idx, CollectionBase<ColT, IndexT>* base) {
             auto const from = col_msg->getFromNode();
             auto trace_event = trace::no_trace_event;
             auto const hand = col_msg->getVrtHandler();
+            auto const member = col_msg->getMember();
 
             collectionAutoMsgDeliver<
               ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
-              col_msg, base, hand, true, from, trace_event);
+              col_msg, base, hand, member, from, trace_event);
           });
       }
     });

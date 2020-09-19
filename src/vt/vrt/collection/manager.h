@@ -950,10 +950,21 @@ public:
 
   template <
     typename MsgT,
+    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f>
+  messaging::PendingSend broadcastMsgCollective(
+    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    MsgT* msg, bool instrument = true);
+
+  template <
+    typename MsgT,
     ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f>
   messaging::PendingSend broadcastMsgCollective(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT* msg, bool instrument = true);
+
+  template <typename MsgT, typename ColT>
+  messaging::PendingSend broadcastMsgCollectiveImpl(
+    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg);
 
   /**
    * \brief Broadcast a message with action function handler
