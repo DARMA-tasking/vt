@@ -948,6 +948,16 @@ public:
     bool instrument
   );
 
+  /**
+   * \brief Broadcast collective a message with action function handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   *
+   * \return a pending send
+   */
   template <
     typename MsgT,
     ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f>
@@ -955,6 +965,16 @@ public:
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT* msg, bool instrument = true);
 
+  /**
+   * \brief Broadcast collective a message with action member handler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   *
+   * \return a pending send
+   */
   template <
     typename MsgT,
     ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f>
@@ -962,9 +982,20 @@ public:
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT* msg, bool instrument = true);
 
+  /**
+   * \internal \brief Broadcast collective a message
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   *
+   * \return a pending send
+   */
   template <typename MsgT, typename ColT>
   messaging::PendingSend broadcastMsgCollectiveImpl(
-    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg);
+    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
+    bool instrument = true);
 
   /**
    * \brief Broadcast a message with action function handler
