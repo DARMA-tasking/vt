@@ -159,11 +159,11 @@ TEST_F(TestCollectionGroup, test_collection_group_3){
   proxy.broadcastCollective<ColA::TestDataMsg, colHanlder>(msg.get());
   EXPECT_EQ(elem_counter, 0);
 
-  proxy.broadcastCollective<ColA::TestDataMsg, &ColA::memberHanlder>(msg);
+  proxy.broadcastCollective<ColA::TestDataMsg, colHanlder>(msg);
   EXPECT_EQ(elem_counter, -numElems);
 
   proxy.broadcastCollective<
-    ColA::TestDataMsg, &ColA::memberHanlder, ColA::TestDataMsg>(my_node);
+    ColA::TestDataMsg, colHanlder, ColA::TestDataMsg>(my_node);
   EXPECT_EQ(elem_counter, -2 * numElems);
 }
 
