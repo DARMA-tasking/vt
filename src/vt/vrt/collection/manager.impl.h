@@ -898,8 +898,8 @@ messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
     auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
     auto_registry::RegistryTypeEnum::RegVrtCollection;
   auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
-  auto event =
-    theMsg()->makeTraceCreationSend(msg, handler, reg_type, msg_size, true);
+  auto event = theMsg()->makeTraceCreationSend(
+    msg, msg->getVrtHandler(), reg_type, msg_size, true);
   msg->setFromTraceEvent(event);
 #endif
 
@@ -908,7 +908,7 @@ messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
   msg->setCat(balance::CommCategory::NodeToCollection);
 #endif
 
-  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
+  theMsg()->setupEpochMsg(msg);
 
   return messaging::PendingSend(
     msg, [proxy](MsgSharedPtr<BaseMsgType>& msgIn) {
