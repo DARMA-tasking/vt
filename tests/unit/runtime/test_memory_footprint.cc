@@ -60,7 +60,7 @@
 #include "vt/termination/termination.h"
 #include "vt/sequence/sequencer_headers.h"
 #include "vt/scheduler/scheduler.h"
-
+#include "vt/rdma/rdma.h"
 #include "test_parallel_harness.h"
 
 namespace vt { namespace tests { namespace unit {
@@ -101,7 +101,7 @@ TEST_F(TestMemoryFootprinting, test_memory_usage) {
   printMemoryFootprint(theMemUsage());
 }
 
-TEST_F(TestMemoryFootprinting, test_rdma_manager) {
+TEST_F(TestMemoryFootprinting, test_rdma_manager_handle) {
   printMemoryFootprint(theHandleRDMA());
 }
 
@@ -147,6 +147,10 @@ TEST_F(TestMemoryFootprinting, test_scheduler) {
 
 TEST_F(TestMemoryFootprinting, test_registry) {
   printMemoryFootprint(theRegistry());
+}
+
+TEST_F(TestMemoryFootprinting, test_rdma_manager) {
+  printMemoryFootprint(theRDMA());
 }
 
 }}} /* end namespace vt::tests::unit */

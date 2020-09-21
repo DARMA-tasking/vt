@@ -901,6 +901,19 @@ public:
   static void remoteChannel(ChannelMessage* msg);
   static void getInfoChannel(GetInfoChannel* msg);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | cur_rdma_handler_
+      | cur_ident_
+      | cur_collective_ident_
+      // | holder_
+      | cur_op_
+      // | pending_ops_
+      // | channels_
+      | next_channel_tag_
+      | collective_scope_;
+  }
+
 private:
   // next local rdma handler (used by State)
   RDMA_HandlerType cur_rdma_handler_ = first_rdma_handler;
