@@ -70,6 +70,11 @@ struct PriorityQueue {
 
   bool empty() const { return impl_.empty(); }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | impl_;
+  }
+
 private:
   std::priority_queue<T, std::vector<T>> impl_;
 };

@@ -59,6 +59,7 @@
 #include "vt/topos/location/manager.h"
 #include "vt/termination/termination.h"
 #include "vt/sequence/sequencer_headers.h"
+#include "vt/scheduler/scheduler.h"
 
 #include "test_parallel_harness.h"
 
@@ -138,6 +139,10 @@ TEST_F(TestMemoryFootprinting, test_sequencer_virtual) {
 
 TEST_F(TestMemoryFootprinting, test_sequencer) {
   printMemoryFootprint(theSeq());
+}
+
+TEST_F(TestMemoryFootprinting, test_scheduler) {
+  printMemoryFootprint(theSched());
 }
 
 }}} /* end namespace vt::tests::unit */

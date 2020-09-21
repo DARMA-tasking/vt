@@ -69,6 +69,11 @@ struct Queue {
 
   bool empty() const { return impl_.empty(); }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | impl_;
+  }
+
 private:
   std::queue<T, std::deque<T>> impl_;
 };
