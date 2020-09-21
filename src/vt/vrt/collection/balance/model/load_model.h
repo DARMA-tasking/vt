@@ -60,6 +60,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * represent more distant future phases.
  */
 struct PhaseOffset {
+  PhaseOffset() = delete;
+
   int phases;
   static constexpr unsigned int NEXT_PHASE = 0;
 

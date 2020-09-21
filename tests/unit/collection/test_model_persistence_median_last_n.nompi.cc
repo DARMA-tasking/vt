@@ -146,7 +146,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
     ++num_phases;
 
     for (auto&& obj : *test_model) {
-      auto work_val = test_model->getWork(obj, PhaseOffset{});
+      auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(
         work_val,
         obj == 1 ? expected_medians[iter].first : expected_medians[iter].second)
