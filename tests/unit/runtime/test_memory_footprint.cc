@@ -61,6 +61,8 @@
 #include "vt/sequence/sequencer_headers.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/rdma/rdma.h"
+#include "vt/parameterization/parameterization.h"
+
 #include "test_parallel_harness.h"
 
 namespace vt { namespace tests { namespace unit {
@@ -151,6 +153,10 @@ TEST_F(TestMemoryFootprinting, test_registry) {
 
 TEST_F(TestMemoryFootprinting, test_rdma_manager) {
   printMemoryFootprint(theRDMA());
+}
+
+TEST_F(TestMemoryFootprinting, test_param) {
+  printMemoryFootprint(theParam());
 }
 
 }}} /* end namespace vt::tests::unit */
