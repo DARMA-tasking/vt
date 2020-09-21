@@ -64,6 +64,11 @@ struct OMPMutex {
   void lock();
   void unlock();
   bool try_lock();
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | omp_lock;
+  }
 };
 
 }}} /* end namespace vt::util::mutex */

@@ -97,6 +97,16 @@ struct WorkerGroupOMP
   );
   void enqueueAllWorkers(WorkUnitType const& work_unit);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | finished_fn_
+      | ready_
+      | initialized_
+      | num_workers_;
+      // | worker_state_
+      // | enqueue_worker_mutex_; // omp_lock_t
+  }
+
 private:
   WorkerFinishedFnType finished_fn_ = nullptr;
   AtomicType<WorkerCountType> ready_ = {0};

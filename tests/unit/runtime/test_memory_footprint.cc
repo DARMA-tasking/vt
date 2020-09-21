@@ -169,4 +169,9 @@ TEST_F(TestMemoryFootprinting, test_async_event) {
   printMemoryFootprint(theEvent());
 }
 
+TEST_F(TestMemoryFootprinting, test_worker_group_type) {
+  // FIXME: handle different configurations
+  // printMemoryFootprint(theWorkerGrp());
+}
+
 }}} /* end namespace vt::tests::unit */

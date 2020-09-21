@@ -75,6 +75,15 @@ struct OMPWorker {
   void sendTerminateSignal();
   void progress();
 
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | should_terminate_
+      | worker_id_
+      | work_queue_
+      | finished_fn_;
+  }
+
 private:
   void scheduler();
 
