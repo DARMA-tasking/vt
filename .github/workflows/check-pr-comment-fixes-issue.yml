@@ -1,8 +1,6 @@
 name: PR checks (PR description format)
 
-on:
-  pull_request:
-    types: [opened, edited, reopened]
+on: pull_request
 
 jobs:
   check:
