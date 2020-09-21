@@ -56,6 +56,7 @@
 #include "vt/pipe/pipe_manager.h"
 #include "vt/group/group_manager.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/topos/location/manager.h"
 
 #include "test_parallel_harness.h"
 
@@ -119,6 +120,10 @@ TEST_F(TestMemoryFootprinting, test_group_manager) {
 
 TEST_F(TestMemoryFootprinting, test_collection_manager) {
   printMemoryFootprint(theCollection());
+}
+
+TEST_F(TestMemoryFootprinting, test_location_manager) {
+  printMemoryFootprint(theLocMan());
 }
 
 }}} /* end namespace vt::tests::unit */

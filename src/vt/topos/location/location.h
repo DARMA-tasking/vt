@@ -421,6 +421,17 @@ public:
    */
   LocInstType getInst() const;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | this_inst
+      | local_registered_msg_han_
+      | local_registered_
+      | recs_
+      | pending_actions_
+      | pending_lookups_
+      | loc_asks_;
+  }
+
 private:
   LocInstType this_inst = no_loc_inst;
 
