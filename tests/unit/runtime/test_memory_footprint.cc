@@ -68,6 +68,7 @@
 #include "vt/pool/pool.h"
 #include "vt/context/context.h"
 #include "vt/trace/trace.h"
+#include "vt/pmpi/pmpi_component.h"
 
 #include "test_parallel_harness.h"
 
@@ -193,6 +194,12 @@ TEST_F(TestMemoryFootprinting, test_context) {
 #if vt_check_enabled(trace_enabled)
 TEST_F(TestMemoryFootprinting, test_trace) {
   printMemoryFootprint(theTrace());
+}
+#endif
+
+#if vt_check_enabled(mpi_access_guards)
+TEST_F(TestMemoryFootprinting, test_pmpi_component) {
+  printMemoryFootprint(thePMPI());
 }
 #endif
 
