@@ -145,4 +145,8 @@ TEST_F(TestMemoryFootprinting, test_scheduler) {
   printMemoryFootprint(theSched());
 }
 
+TEST_F(TestMemoryFootprinting, test_registry) {
+  printMemoryFootprint(theRegistry());
+}
+
 }}} /* end namespace vt::tests::unit */
