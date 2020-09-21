@@ -143,6 +143,15 @@ struct Context : runtime::component::Component<Context> {
 
   std::string name() override { return "Context"; }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | thisNode_
+      | numNodes_
+      | numWorkers_
+      | is_comm_world_;
+      // | communicator_; // ompi_communicator_t
+  }
+
 protected:
   /// Set the number of workers through the attorney (internal)
   void setNumWorkers(WorkerCountType const worker_count) {

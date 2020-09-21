@@ -66,6 +66,7 @@
 #include "vt/event/event.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/pool/pool.h"
+#include "vt/context/context.h"
 
 #include "test_parallel_harness.h"
 
@@ -182,6 +183,10 @@ TEST_F(TestMemoryFootprinting, test_virtual_context_manager) {
 
 TEST_F(TestMemoryFootprinting, test_pool) {
   printMemoryFootprint(thePool());
+}
+
+TEST_F(TestMemoryFootprinting, test_context) {
+  printMemoryFootprint(theContext());
 }
 
 }}} /* end namespace vt::tests::unit */
