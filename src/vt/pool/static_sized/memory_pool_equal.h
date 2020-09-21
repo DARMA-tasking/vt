@@ -84,6 +84,15 @@ struct MemoryPoolEqual {
   void resizePool();
   SlotType getNumBytes();
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | num_bytes_
+      | num_full_bytes_
+      | pool_size_
+      | cur_slot_
+      | holder_;
+  }
+
 private:
   SlotType const num_bytes_ = num_bytes_t;
   SlotType const num_full_bytes_ = num_bytes_t + sizeof(Header);
