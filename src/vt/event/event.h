@@ -187,6 +187,18 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
 
   std::string name() override { return "AsyncEvent"; }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | cur_event_;
+      // | event_container_
+      // | polling_event_container_
+      // | lookup_container_; // std::_List_iterator<vt::event::EventHolder>
+
+  # if vt_check_enabled(trace_enabled)
+    s | trace_event_polling;
+  # endif
+  }
+
 private:
   // next event id
   EventType cur_event_ = 0;

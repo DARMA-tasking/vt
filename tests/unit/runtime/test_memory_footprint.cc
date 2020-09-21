@@ -63,6 +63,7 @@
 #include "vt/rdma/rdma.h"
 #include "vt/parameterization/parameterization.h"
 #include "vt/messaging/active.h"
+#include "vt/event/event.h"
 
 #include "test_parallel_harness.h"
 
@@ -162,6 +163,10 @@ TEST_F(TestMemoryFootprinting, test_param) {
 
 TEST_F(TestMemoryFootprinting, test_active_messenger) {
   printMemoryFootprint(theMsg());
+}
+
+TEST_F(TestMemoryFootprinting, test_async_event) {
+  printMemoryFootprint(theEvent());
 }
 
 }}} /* end namespace vt::tests::unit */
