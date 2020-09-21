@@ -136,4 +136,8 @@ TEST_F(TestMemoryFootprinting, test_sequencer_virtual) {
   printMemoryFootprint(theVirtualSeq());
 }
 
+TEST_F(TestMemoryFootprinting, test_sequencer) {
+  printMemoryFootprint(theSeq());
+}
+
 }}} /* end namespace vt::tests::unit */
