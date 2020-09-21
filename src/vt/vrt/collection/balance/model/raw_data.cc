@@ -91,8 +91,13 @@ TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
   auto phase = getNumCompletedPhases() + offset.phases;
   if (offset.subphase == PhaseOffset::WHOLE_PHASE)
     return proc_load_->at(phase).at(object);
-  else
-    return proc_subphase_load_->at(phase).at(object).at(offset.subphase);
+  else {
+    auto &phase_data = proc_subphase_load_->at(phase);
+    auto &object_data = phase_data.at(object);
+    auto retval = object_data.at(offset.subphase);
+
+    return retval;
+  }
 }
 
 int RawData::getNumPastPhasesNeeded(int look_back)

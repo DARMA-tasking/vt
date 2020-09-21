@@ -70,7 +70,8 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
     std::make_shared<RawData>();
 
   std::unordered_map<PhaseType, LoadMapType> proc_loads;
-  test_model->setLoads(&proc_loads, nullptr, nullptr);
+  std::unordered_map<PhaseType, SubphaseLoadMapType> subphase_loads;
+  test_model->setLoads(&proc_loads, &subphase_loads, nullptr);
 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
@@ -90,10 +91,13 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
 
   for (size_t iter = 0; iter < load_holder.size(); ++iter) {
     proc_loads[iter] = load_holder[iter];
+    subphase_loads[iter][1] = {load_holder[iter][1]};
+    subphase_loads[iter][2] = {load_holder[iter][2]};
     test_model->updateLoads(iter);
 
     EXPECT_EQ(test_model->getNumObjects(), 2);
     EXPECT_EQ(test_model->getNumCompletedPhases(), iter+1);
+    EXPECT_EQ(test_model->getNumSubphases(), 1);
 
     EXPECT_EQ(test_model->getNumPastPhasesNeeded(iter), iter);
     EXPECT_EQ(test_model->getNumPastPhasesNeeded(2*iter), 2*iter);
@@ -105,6 +109,9 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
 
       auto work_val = test_model->getWork(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(work_val, load_holder[iter][obj]);
+
+      auto sub_work_val = test_model->getWork(obj, PhaseOffset{-1, 0});
+      EXPECT_EQ(sub_work_val, load_holder[iter][obj]);
     }
     EXPECT_EQ(objects_seen, 2);
   }
