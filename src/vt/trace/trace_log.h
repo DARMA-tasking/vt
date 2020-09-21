@@ -311,6 +311,17 @@ struct Log final {
     return data.sys;
   }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | time
+      | end_time
+      | type
+      | ep
+      | event
+      | node
+      | data;
+  }
+
 public:
 
   // Excluding sys/user-specific data, expected ~24 bytes

@@ -67,6 +67,7 @@
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/pool/pool.h"
 #include "vt/context/context.h"
+#include "vt/trace/trace.h"
 
 #include "test_parallel_harness.h"
 
@@ -188,5 +189,11 @@ TEST_F(TestMemoryFootprinting, test_pool) {
 TEST_F(TestMemoryFootprinting, test_context) {
   printMemoryFootprint(theContext());
 }
+
+#if vt_check_enabled(trace_enabled)
+TEST_F(TestMemoryFootprinting, test_trace) {
+  printMemoryFootprint(theTrace());
+}
+#endif
 
 }}} /* end namespace vt::tests::unit */

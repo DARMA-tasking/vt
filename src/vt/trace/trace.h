@@ -76,6 +76,12 @@ struct TraceProcessingTag {
 
   friend struct Trace;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | ep_
+      | event_;
+  }
+
 private:
 
   TraceProcessingTag(
@@ -498,6 +504,32 @@ struct Trace : runtime::component::Component<Trace> {
   }
 
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | incremental_flush_mode
+      | traces_
+      // | open_events_
+      | event_holds_
+      | cur_event_
+      | enabled_
+      | idle_begun_
+      | start_time_
+      | user_event_
+      | prog_name_
+      | trace_name_
+      | full_trace_name_
+      | full_sts_name_
+      | full_dir_name_
+      // | log_file_
+      | wrote_sts_file_
+      | trace_write_count_
+      | spec_proxy_
+      | trace_enabled_cur_phase_
+      | flush_event_
+      | between_sched_event_type_
+      | between_sched_event_;
+  }
 
 private:
   /**

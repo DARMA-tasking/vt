@@ -116,6 +116,13 @@ struct UserEventRegistry {
 
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | cur_root_event_
+      | cur_coll_event_
+      | user_event_;
+  }
+
 private:
   std::tuple<UserEventIDType, bool> newEventImpl(
     bool user, bool rooted, std::string const& in_event, UserSpecEventIDType id,
