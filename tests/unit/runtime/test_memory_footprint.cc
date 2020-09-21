@@ -58,6 +58,7 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/topos/location/manager.h"
 #include "vt/termination/termination.h"
+#include "vt/sequence/sequencer_headers.h"
 
 #include "test_parallel_harness.h"
 
@@ -129,6 +130,10 @@ TEST_F(TestMemoryFootprinting, test_location_manager) {
 
 TEST_F(TestMemoryFootprinting, test_termination_detector) {
   printMemoryFootprint(theTerm());
+}
+
+TEST_F(TestMemoryFootprinting, test_sequencer_virtual) {
+  printMemoryFootprint(theVirtualSeq());
 }
 
 }}} /* end namespace vt::tests::unit */

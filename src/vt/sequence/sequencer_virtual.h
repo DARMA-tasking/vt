@@ -95,6 +95,11 @@ struct TaggedSequencerVrt : TaggedSequencer<SeqTag, SeqTrigger> {
   template <typename VcT, typename MsgT, ActiveVrtTypedFnType<MsgT, VcT> *f>
   void wait_on_trigger(TagType const& tag, SeqActionType<MsgT, VcT> action);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | seq_vrt_lookup_;
+  }
+
 private:
   typename Base::template SeqIDContainerType<VirtualInfoType> seq_vrt_lookup_;
 };
@@ -109,6 +114,9 @@ struct SequencerVirtual
     TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>
 {
   std::string name() override { return "VirtualSequencer"; }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 };
 
 }} //end namespace vt::seq
