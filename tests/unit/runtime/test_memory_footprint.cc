@@ -64,6 +64,7 @@
 #include "vt/parameterization/parameterization.h"
 #include "vt/messaging/active.h"
 #include "vt/event/event.h"
+#include "vt/vrt/context/context_vrtmanager.h"
 
 #include "test_parallel_harness.h"
 
@@ -172,6 +173,10 @@ TEST_F(TestMemoryFootprinting, test_async_event) {
 TEST_F(TestMemoryFootprinting, test_worker_group_type) {
   // FIXME: handle different configurations
   // printMemoryFootprint(theWorkerGrp());
+}
+
+TEST_F(TestMemoryFootprinting, test_virtual_context_manager) {
+  printMemoryFootprint(theVirtualManager());
 }
 
 }}} /* end namespace vt::tests::unit */

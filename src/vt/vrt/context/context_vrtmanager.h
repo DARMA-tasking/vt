@@ -116,6 +116,18 @@ struct VirtualContextManager
     VirtualProxyType const& toProxy, MsgT *const msg
   );
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s // | holder_
+      // | remote_holder_
+      | cur_seed_
+      | curIdent_
+      | curRemoteID_
+      | myNode_
+      | cur_request_id;
+      // | pending_request_;
+  }
+
 private:
   // For delayed construction, e.g., when the virtual context is mapped to a
   // different core, create a proxy as a placeholder and delay construction
