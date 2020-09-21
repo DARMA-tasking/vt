@@ -62,6 +62,7 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/rdma/rdma.h"
 #include "vt/parameterization/parameterization.h"
+#include "vt/messaging/active.h"
 
 #include "test_parallel_harness.h"
 
@@ -157,6 +158,10 @@ TEST_F(TestMemoryFootprinting, test_rdma_manager) {
 
 TEST_F(TestMemoryFootprinting, test_param) {
   printMemoryFootprint(theParam());
+}
+
+TEST_F(TestMemoryFootprinting, test_active_messenger) {
+  printMemoryFootprint(theMsg());
 }
 
 }}} /* end namespace vt::tests::unit */

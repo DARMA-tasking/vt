@@ -139,6 +139,15 @@ struct InProgressBase {
       valid(true)
   { }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | buf
+      | probe_bytes
+      | sender
+      | req
+      | valid;
+  }
+
   char* buf = nullptr;
   MsgSizeType probe_bytes = 0;
   NodeType sender = uninitialized_destination;
@@ -207,7 +216,17 @@ struct InProgressDataIRecv : InProgressBase {
     return true;
   }
 
-public:
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | user_buf
+      | dealloc_user_buf
+      | next
+      | priority
+      | cur;
+
+    s.countBytes(reqs);
+  }
+
   void* user_buf = nullptr;
   ActionType dealloc_user_buf = nullptr;
   ContinuationDeleterType next = nullptr;
@@ -1638,6 +1657,32 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   void clearListeners() {
     send_listen_.clear();
+  }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | current_handler_context_
+      | current_node_context_
+      | current_epoch_context_
+      | current_priority_context_
+      | current_priority_level_context_
+      | maybe_ready_tag_han_
+      // | pending_handler_msgs_
+      // | pending_recvs_
+      | cur_direct_buffer_tag_
+      // | epoch_stack_ // std::stack
+      // | send_listen_
+      // | in_progress_active_msg_irecv
+      // | in_progress_data_irecv
+      | this_node_;
+
+  # if vt_check_enabled(trace_enabled)
+    s | current_trace_context_
+      | trace_irecv
+      | trace_isend
+      | trace_irecv_polling_am
+      | trace_irecv_polling_dm;
+  # endif
   }
 
 private:
