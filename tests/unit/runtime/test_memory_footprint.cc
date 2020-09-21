@@ -57,6 +57,7 @@
 #include "vt/group/group_manager.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/topos/location/manager.h"
+#include "vt/termination/termination.h"
 
 #include "test_parallel_harness.h"
 
@@ -124,6 +125,10 @@ TEST_F(TestMemoryFootprinting, test_collection_manager) {
 
 TEST_F(TestMemoryFootprinting, test_location_manager) {
   printMemoryFootprint(theLocMan());
+}
+
+TEST_F(TestMemoryFootprinting, test_termination_detector) {
+  printMemoryFootprint(theTerm());
 }
 
 }}} /* end namespace vt::tests::unit */

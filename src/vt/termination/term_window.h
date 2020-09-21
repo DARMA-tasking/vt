@@ -110,6 +110,13 @@ public:
    */
   std::size_t getSize() const { return terminated_epochs_.size(); }
 
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | archetype_epoch_
+      | terminated_epochs_;
+  }
+
 private:
   // The archetypical epoch for this window container (category,rooted,user,..)
   EpochType archetype_epoch_              = no_epoch;
