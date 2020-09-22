@@ -98,13 +98,14 @@ void CollectionManager::startPhaseCollective(
   ActionFinishedLBType fn, PhaseType lb_phase
 ) {
 #if vt_check_enabled(lblite)
-  UniversalIndexHolder<>::runLB(lb_phase);
   if (fn != nullptr) {
     theTerm()->produce(term::any_epoch_sentinel);
     lb_continuations_.push_back(fn);
-  } else {
-    theLBManager()->waitLBCollective();
   }
+  runInEpochCollective([lb_phase]
+    {
+      UniversalIndexHolder<>::runLB(lb_phase);
+    });
 #else
   if (fn != nullptr) {
     fn();
