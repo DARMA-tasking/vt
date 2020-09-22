@@ -96,12 +96,6 @@ public:
   LBType decideLBToRun(PhaseType phase, bool try_file = true);
 
   /**
-   * \internal \brief Collectively wait for LB, used to invoke without
-   * consideration of readiness of the state of live collections
-   */
-  void waitLBCollective();
-
-  /**
    * \internal \brief Get the proxy for the LBManager
    *
    * \return proxy to the \c LBManager
@@ -231,7 +225,6 @@ private:
   PhaseType cached_phase_                  = no_lb_phase;
   LBType cached_lb_                        = LBType::NoLB;
   std::function<void()> destroy_lb_        = nullptr;
-  bool synced_in_lb_                       = true;
   std::vector<ListenerFnType> listeners_   = {};
   objgroup::proxy::Proxy<LBManager> proxy_;
   std::shared_ptr<LoadModel> base_model_;

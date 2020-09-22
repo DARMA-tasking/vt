@@ -249,26 +249,6 @@ void LBManager::collectiveImpl(
   }
 }
 
-void LBManager::waitLBCollective() {
-  vt_debug_print(
-    lb, node,
-    "waitLBCollective (begin)\n"
-  );
-
-  //
-  // The invocation should only happen collectively across the whole all nodes.
-  //
-  theTerm()->produce();
-  theSched()->runSchedulerWhile([this]{ return synced_in_lb_; });
-  synced_in_lb_ = true;
-  theTerm()->consume();
-
-  vt_debug_print(
-    lb, node,
-    "waitLBCollective (end)\n"
-  );
-}
-
 void LBManager::finishedRunningLB(PhaseType phase) {
   vt_debug_print(
     lb, node,
@@ -295,7 +275,6 @@ void LBManager::finishedRunningLB(PhaseType phase) {
     destroy_lb_ = nullptr;
   }
   releaseLBPhase(msg.get());
-  synced_in_lb_ = false;
   num_invocations_ = num_release_ = 0;
 }
 
