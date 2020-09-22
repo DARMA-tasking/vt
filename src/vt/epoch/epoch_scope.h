@@ -95,7 +95,19 @@ public:
     term::SuccessorEpochCapture successor = term::SuccessorEpochCapture{}
   );
 
+  /**
+   * \brief Get the bits associated with this epoch scope
+   *
+   * \note Primarily, for testing purposes
+   *
+   * \return the epoch scope bits
+   */
+  EpochScopeType getScope() const {
+    return scope_;
+  }
+
 private:
+  /// The identifying scope bits for this collective epoch scope
   EpochScopeType const scope_ = global_epoch_scope;
 };
 
