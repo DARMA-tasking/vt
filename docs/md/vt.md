@@ -62,6 +62,7 @@ management.
 | \subpage seq                | `vt::theSeq()`         | \copybrief seq              | @m_class{m-label m-danger} **Experimental**    |
 | \subpage vrtseq             | `vt::theVirtualSeq()`  | \copybrief vrtseq           | @m_class{m-label m-danger} **Experimental**    |
 | \subpage term               | `vt::theTerm()`        | \copybrief term             | @m_class{m-label m-success} **Core**           |
+| \subpage epoch              | `vt::theEpoch()`       | \copybrief epoch            | @m_class{m-label m-success} **Core**           |
 | \subpage time-trigger       | `vt::theTimeTrigger()` | \copybrief time-trigger     | @m_class{m-label m-warning} **Optional**       |
 | \subpage trace              | `vt::theTrace()`       | \copybrief trace            | @m_class{m-label m-warning} **Optional**       |
 | \subpage stats-reader       | `vt::theStatsReader()` | \copybrief stats-reader     | @m_class{m-label m-warning} **Optional**       |
