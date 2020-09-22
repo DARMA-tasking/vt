@@ -590,6 +590,8 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
 }
 
 /*static*/ void InfoColl::upHan(GroupCollectiveMsg* msg) {
+  envelopeSetIsLocked(msg->env, false);
+
   vt_debug_print(
     group, node,
     "InfoColl::upHan: group={:x}, op={:x}, child={}, extra={}\n",

@@ -206,6 +206,22 @@ inline void envelopeSetTraceRuntimeEnabled(Env& env, bool is_trace_enabled);
 template <typename Env>
 inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized);
 
+/**
+ * \brief Set whether this message's envelope is locked.
+ *
+ * A locked message will prevent key parts of the envelope from being updated
+ * with a guard assert. This is to prevent accidental edge-cases such as
+ * sending a message twice.
+ *
+ * A message is locked when it is sent and recieved. Unlocking messages
+ * should be reserved for special cases as done in some core code.
+ *
+ * \param[in,out] env the envelope
+ * \param[in] is_locked value indicating if message is locked
+ */
+template <typename Env>
+inline void envelopeSetIsLocked(Env& env, bool is_locked);
+
 } /* end namespace vt */
 
 #include "vt/messaging/envelope/envelope_set.impl.h"

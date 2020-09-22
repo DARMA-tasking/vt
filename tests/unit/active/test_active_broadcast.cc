@@ -72,6 +72,8 @@ struct TestActiveBroadcast : TestParameterHarnessNode {
   }
 
   static void test_handler(TestMsg* msg) {
+    EXPECT_TRUE(envelopeIsLocked(msg->env)) << "Should be locked on recv";
+
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
       fmt::print("{}: test_handler: cnt={}\n", this_node, ack_count);
@@ -99,7 +101,10 @@ TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
       if (my_node == root) {
         for (int i = 0; i < num_msg_sent; i++) {
           auto msg = makeMessage<TestMsg>();
+          auto msg_hold = promoteMsg(msg.get());
+
           theMsg()->broadcastMsg<TestMsg, test_handler>(msg);
+          EXPECT_TRUE(envelopeIsLocked(msg_hold->env)) << "Should be locked on send";
         }
       }
     });

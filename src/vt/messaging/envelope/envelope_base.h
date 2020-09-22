@@ -94,6 +94,10 @@ struct ActiveEnvelope {
 
   /// True iff serialization is performed (through to base type).
   bool has_been_serialized : 1;
+
+  /// True iff the message is considered locked.
+  /// If locked, changes to the envelope will result in failure.
+  bool is_locked : 1;
 };
 
 }} /* end namespace vt::messaging */

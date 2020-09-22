@@ -61,6 +61,7 @@ inline void envelopeSetup(
 
 template <typename Env>
 inline void envelopeInit(Env& env) {
+  envelopeSetIsLocked(env, false);
   setNormalType(env);
   envelopeSetDest(env, uninitialized_destination);
   envelopeSetHandler(env, uninitialized_handler);
@@ -79,6 +80,25 @@ inline void envelopeInit(Env& env) {
 
 inline void envelopeInitEmpty(Envelope& env) {
   envelopeInit(env);
+}
+
+template <typename Env>
+inline void envelopeInitCopy(Env& env, Env const& src_env) {
+  auto cur_ref = envelopeGetRef(env);
+  env = src_env;
+  envelopeSetRef(env, cur_ref);
+  envelopeSetIsLocked(env, false);
+}
+
+template <typename Env>
+inline void envelopeInitRecv(Env& env) {
+  // Reset the local ref-count. The sender ref-count is not relevant.
+  envelopeSetRef(env, 0);
+  // Ensure locked; implies all received messages are also locked.
+  vtAssert(
+    envelopeIsLocked(env),
+    "Envelope is not locked. It should have been locked for sending."
+  );
 }
 
 } /* end namespace vt */

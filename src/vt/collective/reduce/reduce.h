@@ -303,7 +303,7 @@ struct Reduce : virtual collective::tree::Tree {
    * \param[in] msg the reduce message
    */
   template <typename MsgT>
-  void reduceUp(MsgT* msg);
+  void reduceUpHan(MsgT* msg);
 
 private:
   detail::ReduceScope scope_;   /**< The reduce scope for this reducer */

@@ -77,13 +77,13 @@ struct TestActiveSend : TestParallelHarness {
     to_node = 1;
   }
 
-  static void test_handler_2(PutTestMessage* msg) {
+  static void test_handler_small_put(PutTestMessage* msg) {
     auto ptr = static_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
       fmt::print(
-        "{}: test_handler_2: size={}, ptr={}\n", this_node, size, print_ptr(ptr)
+        "{}: test_handler_small_put: size={}, ptr={}\n", this_node, size, print_ptr(ptr)
       );
     #endif
     EXPECT_EQ(2 * sizeof(int), size);
@@ -92,13 +92,13 @@ struct TestActiveSend : TestParallelHarness {
     }
   }
 
-  static void test_handler_3(PutTestMessage* msg) {
+  static void test_handler_large_put(PutTestMessage* msg) {
     auto ptr = static_cast<int*>(msg->getPut());
     auto size = msg->getPutSize();
     #if DEBUG_TEST_HARNESS_PRINT
       auto const& this_node = theContext()->getNode();
       fmt::print(
-        "{}: test_handler_3: size={}, ptr={}\n", this_node, size, print_ptr(ptr)
+        "{}: test_handler_large_put: size={}, ptr={}\n", this_node, size, print_ptr(ptr)
       );
     #endif
     EXPECT_EQ(10 * sizeof(int), size);
@@ -108,6 +108,8 @@ struct TestActiveSend : TestParallelHarness {
   }
 
   static void test_handler(TestMsg* msg) {
+    EXPECT_TRUE(envelopeIsLocked(msg->env)) << "Should be locked on recv";
+
     auto const& this_node = theContext()->getNode();
 
     #if DEBUG_TEST_HARNESS_PRINT
@@ -138,8 +140,12 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
         #if DEBUG_TEST_HARNESS_PRINT
           fmt::print("{}: sendMsg: i={}\n", my_node, i);
         #endif
+
         auto msg = makeMessage<TestMsg>();
-        theMsg()->sendMsg<TestMsg, test_handler>(1, msg);
+        auto msg_hold = promoteMsg(msg.get());
+
+        theMsg()->sendMsg<TestMsg, test_handler>(to_node, msg);
+        EXPECT_TRUE(envelopeIsLocked(msg_hold->env)) << "Should be locked on send";
       }
     }
   });
@@ -170,7 +176,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
-      theMsg()->sendMsg<PutTestMessage, test_handler_2>(to_node, msg);
+      theMsg()->sendMsg<PutTestMessage, test_handler_small_put>(to_node, msg);
     }
   }
 
@@ -196,7 +202,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
       #if DEBUG_TEST_HARNESS_PRINT
         fmt::print("{}: sendMsg: (put) i={}\n", my_node, i);
       #endif
-      theMsg()->sendMsg<PutTestMessage, test_handler_3>(to_node, msg);
+      theMsg()->sendMsg<PutTestMessage, test_handler_large_put>(to_node, msg);
     }
   }
 

@@ -262,9 +262,10 @@ EventType ActiveMessenger::doMessageSend(
   auto const dest = envelopeGetDest(msg->env);
   auto const is_bcast = envelopeIsBcast(msg->env);
   auto const is_term = envelopeIsTerm(msg->env);
-  auto const is_epoch = envelopeIsEpochType(msg->env);
 
   #if vt_check_enabled(trace_enabled)
+    envelopeSetIsLocked(msg->env, false);
+
     // We are not allowed to hold a ref to anything in the envelope, get this,
     // modify it and put it back
     auto handler = envelopeGetHandler(msg->env);
@@ -291,6 +292,8 @@ EventType ActiveMessenger::doMessageSend(
       );
       envelopeSetTraceEvent(msg->env, event);
     }
+
+    envelopeSetIsLocked(msg->env, true);
   #endif
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
@@ -300,10 +303,6 @@ EventType ActiveMessenger::doMessageSend(
       dest, envelopeGetHandler(msg->env), print_bool(is_bcast),
       print_bool(envelopeIsPut(msg->env))
     );
-  }
-
-  if (is_epoch) {
-    setupEpochMsg(msg);
   }
 
   bool deliver = false;
@@ -863,11 +862,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 # endif
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
-  // Reset envelope to avoid ref-count=not_shared_msg if the data
-  // comes from a 'new RecvMsgType(..)'.
-  // The MsgPtr will then acquire a ref-count itself.
-  // TODO: Maybe envelope ref-count should be 0 on initialize?
-  envelopeSetRef(msg->env, 0);
+  envelopeInitRecv(msg->env);
   MsgPtr<MessageType> base = MsgPtr<MessageType>{msg};
 
   auto const is_term = envelopeIsTerm(msg->env);

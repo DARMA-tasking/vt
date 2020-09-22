@@ -787,6 +787,7 @@ template <typename ColT, typename IndexT>
 
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::broadcastRootHandler(MsgT* msg) {
+  envelopeSetIsLocked(msg->env, false);
   theCollection()->broadcastFromRoot<ColT,IndexT,MsgT>(msg);
 }
 

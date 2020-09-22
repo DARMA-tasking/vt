@@ -53,67 +53,80 @@ namespace vt {
 // Set the type of Envelope
 template <typename Env>
 inline void setNormalType(Env& env) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->type = 0;
 }
 
 template <typename Env>
 inline void setPipeType(Env& env) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvPipe;
 }
 
 template <typename Env>
 inline void setPutType(Env& env) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvPut;
 }
 
 template <typename Env>
 inline void setTermType(Env& env) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvTerm;
 }
 
 template <typename Env>
 inline void setBroadcastType(Env& env) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvBroadcast;
 }
 
 template <typename Env>
 inline void setEpochType(Env& env) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvEpochType;
 }
 
 template <typename Env>
 inline void setTagType(Env& env) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvTagType;
 }
 
 template <typename Env>
 inline void envelopeSetHandler(Env& env, HandlerType const& handler) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->han = handler;
 }
 
 template <typename Env>
 inline void envelopeSetDest(Env& env, NodeType const& dest) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->dest = dest;
 }
 
 template <typename Env>
 inline void envelopeSetRef(Env& env, RefType const& ref) {
+  // nb. lock not checked
   reinterpret_cast<Envelope*>(&env)->ref = ref;
 }
 
 template <typename Env>
 inline void envelopeSetGroup(Env& env, GroupType const& group) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->group = group;
 }
 
 #if vt_check_enabled(priorities)
 template <typename Env>
 inline void envelopeSetPriority(Env& env, PriorityType priority) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->priority = priority;
 }
 
 template <typename Env>
 inline void envelopeSetPriorityLevel(Env& env, PriorityLevelType priority_level) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->priority_level = priority_level;
 }
 #endif
@@ -121,18 +134,26 @@ inline void envelopeSetPriorityLevel(Env& env, PriorityLevelType priority_level)
 #if vt_check_enabled(trace_enabled)
 template <typename Env>
 inline void envelopeSetTraceEvent(Env& env, trace::TraceEventIDType const& evt) {
+  vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->trace_event = evt;
 }
 
 template <typename Env>
 inline void envelopeSetTraceRuntimeEnabled(Env& env, bool is_trace_enabled) {
+  // nb. lock not checked
   reinterpret_cast<Envelope*>(&env)->trace_rt_enabled = is_trace_enabled;
 }
 #endif
 
 template <typename Env>
 inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized) {
+  // nb. lock not checked
   reinterpret_cast<Envelope*>(&env)->has_been_serialized = has_been_serialized;
+}
+
+template <typename Env>
+inline void envelopeSetIsLocked(Env& env, bool is_locked) {
+  reinterpret_cast<Envelope*>(&env)->is_locked = is_locked;
 }
 
 } /* end namespace vt */

@@ -92,6 +92,9 @@ struct MyDataMsg : Message {
 };
 
 static void myDataMsgHan(MyDataMsg* msg) {
+  // checks the lock is carried through serialization
+  EXPECT_TRUE(envelopeIsLocked(msg->env)) << "Should be locked on recv";
+
   fmt::print("myDataMsgHandler: calling check\n");
   msg->check();
 }
