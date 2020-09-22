@@ -875,7 +875,8 @@ messaging::PendingSend CollectionManager::broadcastMsgCollective(
   using ColT = typename MsgT::CollectionType;
 
   msg->setVrtHandler(
-    auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>());
+    auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>()
+  );
   msg->setMember(true);
 
   return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msg, instrument);
@@ -899,7 +900,8 @@ messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
     auto_registry::RegistryTypeEnum::RegVrtCollection;
   auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   auto event = theMsg()->makeTraceCreationSend(
-    msg, msg->getVrtHandler(), reg_type, msg_size, true);
+    msg, msg->getVrtHandler(), reg_type, msg_size, true
+  );
   msg->setFromTraceEvent(event);
 #endif
 
@@ -911,7 +913,7 @@ messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
   theMsg()->setupEpochMsg(msg);
 
   return messaging::PendingSend(
-    msg, [proxy](MsgSharedPtr<BaseMsgType>& msgIn) {
+    msg, [proxy](MsgSharedPtr<BaseMsgType>& msgIn){
       auto col_msg = reinterpret_cast<MsgT*>(msgIn.get());
 
       auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(proxy);
@@ -921,7 +923,8 @@ messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
       theMsg()->markAsCollectionMessage(col_msg);
 
       collectionBcastHandler<ColT, IndexT, MsgT>(col_msg);
-    });
+    }
+  );
 }
 
 template <

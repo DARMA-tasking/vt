@@ -960,7 +960,8 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f>
+    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+  >
   messaging::PendingSend broadcastMsgCollective(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT* msg, bool instrument = true);
@@ -977,7 +978,8 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f>
+    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+  >
   messaging::PendingSend broadcastMsgCollective(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
     MsgT* msg, bool instrument = true);

@@ -113,7 +113,8 @@ Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(MsgSharedPtr<MsgT> 
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <
-  typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args>
+  typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
+>
 messaging::PendingSend
 Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Args&&... args) const {
   return broadcastCollective<MsgT, f>(makeMessage<MsgT>(std::forward<Args>(args)...));
@@ -136,7 +137,8 @@ Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(MsgSharedPtr<MsgT> 
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <
-  typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args>
+  typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
+>
 messaging::PendingSend
 Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Args&&... args) const {
   return broadcastCollective<MsgT, f>(makeMessage<MsgT>(std::forward<Args>(args)...));
