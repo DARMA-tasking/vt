@@ -196,8 +196,8 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
         obj_id, from, to, has_object
       );
 
+      local_migration_count_++;
       if (has_object) {
-        local_migration_count_++;
         theNodeStats()->migrateObjTo(obj_id, to);
       } else {
         off_node_migrate[from].push_back(std::make_tuple(obj_id,to));
