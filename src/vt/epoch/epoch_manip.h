@@ -62,11 +62,11 @@ namespace vt { namespace epoch {
 /**
  * \struct EpochManip epoch_manip.h vt/epoch/epoch_manip.h
  *
- * \brief Class used to manipulate the bits in a \c EpochType and manage the
- * current sequential IDs for allocating epochs
+ * \brief Component for managing epoch ID allocation/deallocation, manipulating
+ * the bits inside an epoch identifier, and managing distinct epoch scopes.
  *
  * Used by the system mostly to manage the bits inside an \c EpochType. It knows
- * how to set the appropriate bits to change the static type of an \c EpochType
+ * how to set the appropriate bits to change the type bits of an \c EpochType
  * by setting the bit pattern.
  */
 struct EpochManip : runtime::component::Component<EpochManip> {
