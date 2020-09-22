@@ -46,7 +46,6 @@
 #define INCLUDED_VT_EPOCH_EPOCH_SCOPE_H
 
 #include "vt/epoch/epoch.h"
-#include "vt/epoch/epoch_parameterized.h"
 #include "vt/termination/epoch_tags.h"
 
 namespace vt { namespace epoch {
@@ -93,18 +92,6 @@ public:
    */
   EpochType makeEpochCollective(
     std::string const& label,
-    term::SuccessorEpochCapture successor = term::SuccessorEpochCapture{}
-  );
-
-  /**
-   * \brief Ask for a new rooted epoch within this scope, created collectively
-   * for matching dependency structure
-   *
-   * \return the parameterized, rooted epoch
-   */
-  RootedEpoch makeEpochRooted(
-    std::string const& label,
-    term::UseDS use_ds = term::UseDS{false},
     term::SuccessorEpochCapture successor = term::SuccessorEpochCapture{}
   );
 
