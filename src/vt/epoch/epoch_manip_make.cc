@@ -125,25 +125,32 @@ EpochType EpochManip::nextSeqCollective(EpochScopeType scope) {
 }
 
 EpochType EpochManip::nextSeq(EpochScopeType scope, bool is_collective) {
-  auto& scope_map = is_collective ? scope_collective_ : scope_rooted_;
-  if (scope_map.find(scope) == scope_map.end()) {
-    EpochType new_ep = first_epoch;
-    // Compose in the high bits of the sequence epoch ID a scope (only actually
-    // impacts the value if not global scope). Use the \c scope_limit to
-    // determine how many bits are reserved.
-    constexpr EpochScopeType scope_offset = epoch_seq_num_bits - scope_limit;
-    BitPackerType::setField<scope_offset, scope_limit>(new_ep, scope);
-    vtAssertExpr(scope != global_epoch_scope || new_ep == first_epoch);
-    scope_map[scope] = new_ep;
+  if (is_collective) {
+    auto& scope_map = scope_collective_;
+    if (scope_map.find(scope) == scope_map.end()) {
+      EpochType new_ep = first_epoch;
+      // Compose in the high bits of the sequence epoch ID a scope (only actually
+      // impacts the value if not global scope). Use the \c scope_limit to
+      // determine how many bits are reserved.
+      constexpr EpochScopeType scope_offset = epoch_seq_num_bits - scope_limit;
+      BitPackerType::setField<scope_offset, scope_limit>(new_ep, scope);
+      vtAssertExpr(scope != global_epoch_scope || new_ep == first_epoch);
+      scope_map[scope] = new_ep;
+    }
+    auto const seq = scope_map[scope];
+    scope_map[scope]++;
+    return seq;
+  } else {
+    // for rooted, it's simple: get the next one and return it.
+    auto const seq = next_rooted_;
+    next_rooted_++;
+    return seq;
   }
-  auto const seq = scope_map[scope];
-  scope_map[scope]++;
-  return seq;
 }
 
 EpochCollectiveScope EpochManip::makeScopeCollective() {
   // We have \c scope_limit scopes available, not including the global scope
-  vtAssert(live_scopes_.size() < scope_limit, "Must have space for new scope");
+  vtAbortIf(live_scopes_.size() >= scope_limit, "Must have space for new scope");
 
   static constexpr EpochScopeType const first_scope = 0;
 
@@ -182,10 +189,10 @@ EpochCollectiveScope EpochManip::makeScopeCollective() {
 void EpochManip::destroyScope(EpochScopeType scope) {
   vtAssert(live_scopes_.exists(scope), "Scope must exist to destroy");
   live_scopes_.erase(scope);
-  // Very important: explicitly don't clear the scope map (\c scope_collective_
-  // or \c scope_rooted_) because if we did we would have to wait for
-  // termination of all epochs within the scope before it could be
-  // destroyed. Thus, scopes can be quickly created and destroyed by the user.
+  // Very important: explicitly don't clear the scope map (\c scope_collective_)
+  // because if we did we would have to wait for termination of all epochs
+  // within the scope before it could be destroyed. Thus, scopes can be quickly
+  // created and destroyed by the user.
 }
 
 }} /* end namespace vt::epoch */

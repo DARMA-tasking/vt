@@ -300,10 +300,10 @@ private:
   EpochType nextSeq(EpochScopeType scope, bool is_collective);
 
 private:
-  /// The current rooted sequential ID per scope
-  std::unordered_map<EpochType, EpochType> scope_rooted_;
+  /// The current rooted sequential ID per node
+  EpochType next_rooted_ = first_epoch;
   /// The current collective sequential ID per scope
-  std::unordered_map<EpochType, EpochType> scope_collective_;
+  std::unordered_map<EpochScopeType, EpochType> scope_collective_;
   /// The current live epoch scopes
   vt::IntegralSet<EpochScopeType> live_scopes_;
 };
