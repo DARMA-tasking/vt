@@ -145,15 +145,15 @@ EpochCollectiveScope EpochManip::makeScopeCollective() {
   // We have \c scope_limit scopes available, not including the global scope
   vtAbortIf(live_scopes_.size() >= scope_limit, "Must have space for new scope");
 
-  static constexpr EpochScopeType const first_scope = 0;
+  static constexpr EpochScopeType const first_scope = 1;
 
   // if empty, go with the first scope
   EpochScopeType next = first_scope;
 
   if (not live_scopes_.empty()) {
-    if (live_scopes_.upper() < scope_limit - 1) {
+    if (live_scopes_.upper() < scope_limit) {
       next = live_scopes_.upper() + 1;
-    } else if (live_scopes_.lower() > 0) {
+    } else if (live_scopes_.lower() > 1) {
       next = live_scopes_.lower() - 1;
     } else {
       // fall back to just searching the integral set for one that is not live
@@ -168,8 +168,8 @@ EpochCollectiveScope EpochManip::makeScopeCollective() {
     }
   }
 
-  vtAssert(next >= 0, "Scope must be greater than 0");
-  vtAssert(next < scope_limit, "Scope must be less than the scope limit");
+  vtAssert(next >= 1, "Scope must be greater than 0");
+  vtAssert(next < scope_limit + 1, "Scope must be less than the scope limit");
   vtAssert(not live_scopes_.exists(next), "Scope must not already exist");
 
   // insert the scope to track it

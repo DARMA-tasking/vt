@@ -137,8 +137,9 @@ static constexpr EpochScopeType const global_epoch_scope = 0;
 /// The number of bits assigned for epoch scopes
 static constexpr EpochScopeType const scope_bits = 5;
 
-/// The limit on number of live scopes at a given time
-static constexpr EpochScopeType const scope_limit = 1<<scope_bits;
+/// The limit on number of live scopes at a given time;
+/// Scope 0 is the default scope so that is excluded as a valid scope
+static constexpr EpochScopeType const scope_limit = (1<<scope_bits) - 1;
 
 /// The scope sentinel
 static constexpr EpochScopeType const no_scope = ~0ull;
