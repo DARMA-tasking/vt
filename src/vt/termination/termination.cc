@@ -985,12 +985,12 @@ EpochType TerminationDetector::makeEpochRootedWave(
   ParentEpochCapture successor, std::string const& label
 ) {
   auto const epoch = theEpoch()->getNextRootedEpoch();
-  makeEpochRootedWaveWithEpoch(epoch, successor, label);
+  initializeRootedWaveEpoch(epoch, successor, label);
   return epoch;
 
 }
 
-void TerminationDetector::makeEpochRootedWaveWithEpoch(
+void TerminationDetector::initializeRootedWaveEpoch(
   EpochType const epoch, SuccessorEpochCapture successor,
   std::string const& label
 ) {
@@ -1024,11 +1024,11 @@ EpochType TerminationDetector::makeEpochRootedDS(
 ) {
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
   auto const epoch = theEpoch()->getNextRootedEpoch(ds_cat);
-  makeEpochRootedDSWithEpoch(epoch, successor, label);
+  initializeRootedDSEpoch(epoch, successor, label);
   return epoch;
 }
 
-void TerminationDetector::makeEpochRootedDSWithEpoch(
+void TerminationDetector::initializeRootedDSEpoch(
   EpochType const epoch, SuccessorEpochCapture successor,
   std::string const& label
 ) {
@@ -1085,14 +1085,14 @@ EpochType TerminationDetector::makeEpochRooted(
   }
 }
 
-void TerminationDetector::makeEpochRootedWithEpoch(
+void TerminationDetector::initializeRootedEpoch(
   EpochType const epoch, std::string const& label, UseDS use_ds,
   SuccessorEpochCapture successor
 ) {
   if (use_ds) {
-    makeEpochRootedDSWithEpoch(epoch, successor, label);
+    initializeRootedDSEpoch(epoch, successor, label);
   } else {
-    makeEpochRootedWaveWithEpoch(epoch, successor, label);
+    initializeRootedWaveEpoch(epoch, successor, label);
   }
 }
 
@@ -1111,11 +1111,11 @@ EpochType TerminationDetector::makeEpochCollective(
   std::string const& label, ParentEpochCapture successor
 ) {
   auto const epoch = theEpoch()->getNextEpoch();
-  makeEpochCollectiveWithEpoch(epoch, label, successor);
+  initializeCollectiveEpoch(epoch, label, successor);
   return epoch;
 }
 
-void TerminationDetector::makeEpochCollectiveWithEpoch(
+void TerminationDetector::initializeCollectiveEpoch(
   EpochType const epoch, std::string const& label,
   SuccessorEpochCapture successor
 ) {
