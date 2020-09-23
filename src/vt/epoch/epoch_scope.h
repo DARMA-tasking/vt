@@ -108,7 +108,7 @@ public:
 
 private:
   /// The identifying scope bits for this collective epoch scope
-  EpochScopeType const scope_ = global_epoch_scope;
+  EpochScopeType scope_ = no_scope;
 };
 
 }} /* end namespace vt::epoch */
