@@ -193,7 +193,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    */
 
   /**
-   * \brief Make a rooted epoch with a given sequential ID
+   * \brief Generate a rooted epoch with a given sequential ID
    *
    * \param[in] seq the sequential ID for the epoch
    * \param[in] scope the epoch's scope
@@ -201,14 +201,15 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \return the newly created epoch
    */
-  static EpochType makeRootedEpoch(
+  static EpochType generateRootedEpoch(
     EpochType      const& seq,
     EpochScopeType const& scope      = global_epoch_scope,
     eEpochCategory const& category   = default_epoch_category
   );
 
   /**
-   * \brief Make a new epoch (rooted or collective) with a given sequential ID
+   * \brief Generate a new epoch (rooted or collective) with a given sequential
+   * ID
    *
    * \param[in] seq the sequential ID for the epoch
    * \param[in] is_rooted if the epoch should be rooted or not
@@ -218,7 +219,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \return the newly created epoch
    */
-  static EpochType makeEpoch(
+  static EpochType generateEpoch(
     EpochType      const& seq,
     bool           const& is_rooted  = false,
     NodeType       const& root_node  = default_epoch_node,
@@ -239,7 +240,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \return the newly created epoch
    */
-  EpochType makeNewRootedEpoch(
+  EpochType getNextRootedEpoch(
     eEpochCategory const& category   = default_epoch_category,
     EpochScopeType const scope       = global_epoch_scope
   );
@@ -254,7 +255,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \return the newly created epoch
    */
-  EpochType makeNewRootedEpoch(
+  EpochType getNextRootedEpoch(
     eEpochCategory const& category, EpochScopeType const scope,
     NodeType const root_node
   );
@@ -269,7 +270,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \return the newly created epoch
    */
-  EpochType makeNewEpoch(
+  EpochType getNextEpoch(
     bool           const& is_rooted  = false,
     NodeType       const& root_node  = default_epoch_node,
     EpochScopeType const scope       = global_epoch_scope,
