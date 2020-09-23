@@ -1439,7 +1439,7 @@ bool CollectionManager::insertCollectionElement(
     });
 
     if (is_migrated_in) {
-      theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntityMigrated(
+      theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->entityImmigrated(
         VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
@@ -2581,7 +2581,7 @@ MigrateStatus CollectionManager::migrateOut(
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
    >(dest, msg);
 
-   theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityMigrated(
+   theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityEmigrated(
      proxy, dest
    );
 
