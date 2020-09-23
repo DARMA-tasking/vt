@@ -78,7 +78,11 @@ private:
   friend struct EpochManip;
 
 public:
-  EpochCollectiveScope(EpochCollectiveScope&&) = default;
+  EpochCollectiveScope(EpochCollectiveScope&& other)
+    : scope_(other.scope_)
+  {
+    other.scope_ = no_scope;
+  }
   EpochCollectiveScope(EpochCollectiveScope const&) = delete;
   EpochCollectiveScope& operator=(EpochCollectiveScope const&) = delete;
   EpochCollectiveScope& operator=(EpochCollectiveScope&&) = delete;
