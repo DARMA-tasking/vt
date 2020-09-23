@@ -173,4 +173,13 @@ TEST_F(TestIntegralSet, test_interval_set_2) {
   );
 }
 
+TEST_F(TestIntegralSet, test_interval_set_3) {
+  vt::IntegralSet<int> i{~0};
+
+  i.insert(0);
+
+  EXPECT_FALSE(i.empty());
+  EXPECT_EQ(i.size(), 1);
+}
+
 }}} // end namespace vt::tests::unit
