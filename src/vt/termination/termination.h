@@ -282,8 +282,6 @@ public:
    * \param[in] epoch the collective epoch already generated
    * \param[in] label epoch label for debugging purposes
    * \param[in] successor successor epoch that waits for this new epoch
-   *
-   * \return the new epoch
    */
   void initializeCollectiveEpoch(
     EpochType const epoch,
@@ -298,8 +296,6 @@ public:
    * \param[in] label epoch label for debugging purposes
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
    * \param[in] successor successor epoch that waits for this new epoch
-   *
-   * \return the new epoch
    */
   void initializeRootedEpoch(
     EpochType const epoch,
@@ -367,8 +363,6 @@ public:
    * \param[in] epoch the wave epoch already generated
    * \param[in] successor successor epoch that waits for this new epoch
    * \param[in] label epoch label for debugging purposes
-   *
-   * \return the new epoch
    */
   void initializeRootedWaveEpoch(
     EpochType const epoch, SuccessorEpochCapture successor,
