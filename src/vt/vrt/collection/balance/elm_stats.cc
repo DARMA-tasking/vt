@@ -148,23 +148,21 @@ PhaseType ElementStats::getPhase() const {
   return cur_phase_;
 }
 
-TimeType ElementStats::getLoad(PhaseType const& phase
-  SubphaseType const& subphase) const {
+TimeType ElementStats::getLoad(PhaseType const& phase) const {
   vtAssert(phase_timings_.size() > phase, "Must have phase");
 
   auto const& total_load = phase_timings_.at(phase);
 
   vt_debug_print(
               lb, node,
-              "ElementStats: getLoad: load={}, phase={}, subphase={}, size={}\n",
-              total_load, phase, subphase, phase_timings_.size()
+              "ElementStats: getLoad: load={}, phase={}, size={}\n",
+              total_load, phase, phase_timings_.size()
               );
 
   return total_load;
 }
 
-TimeType ElementStats::getLoad(PhaseType phase,
-  SubphaseType const& subphase) const {
+TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
     return getLoad(phase);
 
@@ -184,8 +182,7 @@ TimeType ElementStats::getLoad(PhaseType phase,
 }
 
 CommMapType const&
-ElementStats::getComm(PhaseType const& phase,
-  SubphaseType const& subphase) {
+ElementStats::getComm(PhaseType const& phase, SubphaseType const& subphase) {
   comm_.resize(phase + 1);
   auto const& phase_comm = comm_[phase];
 
