@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 #include "vt/epoch/epoch_scope.h"
+#include "vt/termination/epoch_tags.h"
 #include "vt/termination/interval/integral_set.h"
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
@@ -70,6 +71,7 @@ namespace vt { namespace epoch {
  * by setting the bit pattern.
  */
 struct EpochManip : runtime::component::Component<EpochManip> {
+  using CapturedContextType = term::SuccessorEpochCapture;
 
   EpochManip();
 
@@ -99,16 +101,6 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   static bool hasCategory(EpochType const& epoch);
 
   /**
-   * \brief Gets whether the epoch is a scoped epoch (specifically a
-   * epoch that is part of a collective scope)
-   *
-   * \param[in] epoch the epoch to operate on
-   *
-   * \return whether the \c epoch is a scoped epoch
-   */
-  static bool isScope(EpochType const& epoch);
-
-  /**
    * \brief Gets the \c eEpochCategory of a given epoch
    *
    * \param[in] epoch the epoch to operate on
@@ -131,9 +123,21 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \param[in] epoch the epoch to operate on
    *
+   * \note This will include the scope bits which are composed at the top of the
+   * sequence ID bit field.
+   *
    * \return the sequential number for an \c epoch
    */
   static EpochType seq(EpochType const& epoch);
+
+  /**
+   * \brief Gets the scope for an epoch
+   *
+   * \param[in] epoch the epoch to operate on
+   *
+   * \return the epoch's scope
+   */
+  static EpochScopeType getScope(EpochType const& epoch);
 
   /*
    *  Epoch setters to manipulate the type and state of EpochType
@@ -154,14 +158,6 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \param[in] has_cat whether to the epoch has a category
    */
   static void setHasCategory(EpochType& epoch, bool const has_cat  );
-
-  /**
-   * \brief Set whether the \c epoch is a user epoch or not
-   *
-   * \param[in,out] epoch the epoch to modify
-   * \param[in] is_scoped whether to set the epoch as scoped or not
-   */
-  static void setIsScope(EpochType& epoch, bool const is_scoped);
 
   /**
    * \brief Set the category for the \c epoch
@@ -186,6 +182,14 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \param[in] seq the sequential ID to set on the epoch
    */
   static void setSeq(EpochType& epoch, EpochType const seq);
+
+  /**
+   * \brief Set the scope for an \c epoch
+   *
+   * \param[in,out] epoch the epoch to modify
+   * \param[in] scope the scope to set on the epoch
+   */
+  static void setScope(EpochType& epoch, EpochScopeType const scope);
 
   /*
    * General (stateless) methods for creating a epoch with certain properties
