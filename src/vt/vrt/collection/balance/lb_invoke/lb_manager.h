@@ -169,8 +169,7 @@ public:
     s | num_invocations_
       | num_release_
       | cached_phase_
-      // ambiguous: hasNoninSerialize, isEnum
-      //| cached_lb_
+      | cached_lb_
       | destroy_lb_
       | synced_in_lb_
       | listeners_
