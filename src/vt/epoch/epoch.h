@@ -140,6 +140,9 @@ static constexpr EpochScopeType const scope_bits = 5;
 /// The limit on number of live scopes at a given time
 static constexpr EpochScopeType const scope_limit = 1<<scope_bits;
 
+/// The scope sentinel
+static constexpr EpochScopeType const no_scope = ~0ull;
+
 /// The total number of bits remaining the sequential part of the \c EpochType
 static constexpr BitCountType const epoch_seq_num_bits = sizeof(EpochType) * 8 -
   (epoch_root_num_bits     +
