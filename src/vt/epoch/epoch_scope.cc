@@ -49,7 +49,9 @@
 namespace vt { namespace epoch {
 
 EpochCollectiveScope::~EpochCollectiveScope() {
-  theEpoch()->destroyScope(scope_);
+  if (scope_ != no_scope) {
+    theEpoch()->destroyScope(scope_);
+  }
 }
 
 EpochType EpochCollectiveScope::makeEpochCollective(
