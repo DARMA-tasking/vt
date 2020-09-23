@@ -175,8 +175,7 @@ EpochCollectiveScope EpochManip::makeScopeCollective() {
   // insert the scope to track it
   live_scopes_.insert(next);
 
-  EpochCollectiveScope scope{next};
-  return scope;
+  return EpochCollectiveScope{next};
 }
 
 void EpochManip::destroyScope(EpochScopeType scope) {
