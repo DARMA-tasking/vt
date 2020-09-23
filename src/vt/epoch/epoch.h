@@ -178,7 +178,13 @@ static constexpr NodeType const default_epoch_node = uninitialized_destination;
 static constexpr eEpochCategory const default_epoch_category =
   eEpochCategory::NoCategoryEpoch;
 
-
 }} //end namespace vt::epoch
+
+namespace vt {
+
+/// Type for epoch scope bits embedded in an \c EpochType
+using EpochScopeType = epoch::EpochScopeType;
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_EPOCH_EPOCH_H*/
