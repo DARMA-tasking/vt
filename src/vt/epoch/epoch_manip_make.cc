@@ -57,7 +57,7 @@ EpochManip::EpochManip()
   : live_scopes_(~0ull)
 { }
 
-/*static*/ EpochType EpochManip::makeEpoch(
+/*static*/ EpochType EpochManip::generateEpoch(
   EpochType const& seq, bool const& is_rooted, NodeType const& root_node,
   EpochScopeType const& scope, eEpochCategory const& category
 ) {
@@ -77,40 +77,40 @@ EpochManip::EpochManip()
   return new_epoch;
 }
 
-/*static*/ EpochType EpochManip::makeRootedEpoch(
+/*static*/ EpochType EpochManip::generateRootedEpoch(
   EpochType const& seq, EpochScopeType const& scope,
   eEpochCategory const& category
 ) {
   auto const& root_node = theContext()->getNode();
-  return EpochManip::makeEpoch(seq,true,root_node,scope,category);
+  return EpochManip::generateEpoch(seq,true,root_node,scope,category);
 }
 
-EpochType EpochManip::makeNewEpoch(
+EpochType EpochManip::getNextEpoch(
   bool const& is_rooted, NodeType const& root_node,
   EpochScopeType const scope, eEpochCategory const& category
 ) {
   if (is_rooted) {
-    return makeNewRootedEpoch(category,scope);
+    return getNextRootedEpoch(category,scope);
   } else {
-    auto const new_epoch = makeEpoch(
+    auto const new_epoch = generateEpoch(
       nextSeqCollective(scope),false,uninitialized_destination,scope,category
     );
     return new_epoch;
   }
 }
 
-EpochType EpochManip::makeNewRootedEpoch(
+EpochType EpochManip::getNextRootedEpoch(
   eEpochCategory const& category, EpochScopeType const scope
 ) {
   auto const& root_node = theContext()->getNode();
-  return makeNewRootedEpoch(category, scope, root_node);
+  return getNextRootedEpoch(category, scope, root_node);
 }
 
-EpochType EpochManip::makeNewRootedEpoch(
+EpochType EpochManip::getNextRootedEpoch(
   eEpochCategory const& category, EpochScopeType const scope,
   NodeType const root_node
 ) {
-  auto const& next_rooted_epoch = EpochManip::makeEpoch(
+  auto const& next_rooted_epoch = EpochManip::generateEpoch(
     nextSeqRooted(scope),true,root_node,scope,category
   );
   return next_rooted_epoch;
