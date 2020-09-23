@@ -980,7 +980,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
 ) {
   auto scope = epoch::global_epoch_scope;
   if (successor != no_epoch and successor != any_epoch_sentinel) {
-    scope = epoch::EpochManip::getScope(scope);
+    scope = epoch::EpochManip::getScope(successor);
   }
   auto const no_cat = epoch::eEpochCategory::NoCategoryEpoch;
   auto const epoch = theEpoch()->getNextRootedEpoch(no_cat, scope);
@@ -1023,7 +1023,7 @@ EpochType TerminationDetector::makeEpochRootedDS(
 ) {
   auto scope = epoch::global_epoch_scope;
   if (successor != no_epoch and successor != any_epoch_sentinel) {
-    scope = epoch::EpochManip::getScope(scope);
+    scope = epoch::EpochManip::getScope(successor);
   }
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
   auto const epoch = theEpoch()->getNextRootedEpoch(ds_cat, scope);
@@ -1115,7 +1115,7 @@ EpochType TerminationDetector::makeEpochCollective(
 ) {
   auto scope = epoch::global_epoch_scope;
   if (successor != no_epoch and successor != any_epoch_sentinel) {
-    scope = epoch::EpochManip::getScope(scope);
+    scope = epoch::EpochManip::getScope(successor);
   }
   auto const epoch = theEpoch()->getNextCollectiveEpoch(scope);
   initializeCollectiveEpoch(epoch, label, successor);
