@@ -109,7 +109,9 @@ EpochType TerminationDetector::getArchetype(EpochType const& epoch) const {
 
 EpochWindow* TerminationDetector::getWindow(EpochType const& epoch) {
   auto const is_rooted = epoch::EpochManip::isRooted(epoch);
-  if (is_rooted) {
+  auto const scope = epoch::EpochManip::getScope(epoch);
+  auto const is_scoped = scope != epoch::global_epoch_scope;
+  if (is_rooted or is_scoped) {
     auto const& arch_epoch = getArchetype(epoch);
     auto iter = epoch_arch_.find(arch_epoch);
     if (iter == epoch_arch_.end()) {
