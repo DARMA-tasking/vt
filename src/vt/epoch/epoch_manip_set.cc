@@ -63,10 +63,8 @@ void EpochManip::setHasCategory(EpochType& epoch, bool const has_cat) {
 }
 
 /*static*/
-void EpochManip::setIsScope(EpochType& epoch, bool const is_scoped) {
-  BitPackerType::boolSetField<eEpochLayout::EpochScope,1,EpochType>(
-    epoch,is_scoped
-  );
+void EpochManip::setScope(EpochType& epoch, EpochScopeType const scope) {
+  BitPackerType::setField<eEpochLayout::EpochScope,scope_bits>(epoch,scope);
 }
 
 /*static*/

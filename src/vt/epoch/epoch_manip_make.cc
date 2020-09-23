@@ -64,7 +64,12 @@ EpochManip::EpochManip()
   EpochType new_epoch = 0;
   bool const& has_category = category != eEpochCategory::NoCategoryEpoch;
   EpochManip::setIsRooted(new_epoch, is_rooted);
-  EpochManip::setIsScope(new_epoch, scope != global_epoch_scope);
+
+  // Compose in the high bits of the sequence epoch ID a scope (only actually
+  // impacts the value if not global scope). Use the \c scope_limit to
+  // determine how many bits are reserved.
+  EpochManip::setScope(new_epoch, scope);
+
   EpochManip::setHasCategory(new_epoch, has_category);
   if (is_rooted) {
     vtAssertExpr(root_node != uninitialized_destination);
@@ -123,14 +128,7 @@ EpochType EpochManip::nextSeq(EpochScopeType scope, bool is_collective) {
   if (is_collective) {
     auto& scope_map = scope_collective_;
     if (scope_map.find(scope) == scope_map.end()) {
-      EpochType new_ep = first_epoch;
-      // Compose in the high bits of the sequence epoch ID a scope (only actually
-      // impacts the value if not global scope). Use the \c scope_limit to
-      // determine how many bits are reserved.
-      constexpr EpochScopeType scope_offset = epoch_seq_num_bits - scope_limit;
-      BitPackerType::setField<scope_offset, scope_limit>(new_ep, scope);
-      vtAssertExpr(scope != global_epoch_scope || new_ep == first_epoch);
-      scope_map[scope] = new_ep;
+      scope_map[scope] = first_epoch;
     }
     auto const seq = scope_map[scope];
     scope_map[scope]++;

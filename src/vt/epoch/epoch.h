@@ -61,18 +61,22 @@ namespace vt { namespace epoch {
  *
  *   w-1 .............. w-h-1 ...............w-h-c-1 ....................0
  *   | <EpochHeader> ... | <EpochCategory> ... | <Sequential Epoch ID>   |
- *
- *      *where*    h = epoch_header_num_bits,
- *                 c = epoch_category_num_bits,
- *                 w = sizeof(EpochType) * 8
- *                 n = sizeof(NodeType)        ^             ^           ^
- *                                             | .... n .... | ..........|
- *                                               <NodeType>  <SeqEpochID>
+ *                                             |                          \
+ *      *where*    h = epoch_header_num_bits,  |                           \
+ *                 c = epoch_category_num_bits,|                            \
+ *                 w = sizeof(EpochType) * 8   |                             \
+ *                 n = sizeof(NodeType)        ^  16  ^ 5 ^   [remainder]     ^
+ *                                            /                               |
+ *                                           /                                |
+ *                                   _______                                  |
+ *                                  /                                          \
+ *                                  | .... n .... | ... scope ... | ...........|
+ *                                    <NodeType>   <EpochScopeType> <SeqEpochID>
  *
  *  +++++++++++++++++++++++++++++++++++++++++++  Rooted Extended Layout ++
  *
- *   <EpochHeader>   = <IsRooted> <HasCategory> <IsScoped>
- *   ....3 bits...   = ..bit 1..   ...bit 2...  ..bit 3..
+ *   <EpochHeader>   = <IsRooted> <HasCategory>
+ *   ....3 bits...   = ..bit 1..   ...bit 2...
  *
  * =======================================================================
  * \endverbatim
@@ -83,16 +87,13 @@ namespace vt { namespace epoch {
  */
 enum struct eEpochHeader : int8_t {
   RootedEpoch   = 1,
-  CategoryEpoch = 2,
-  ScopedEpoch   = 3
+  CategoryEpoch = 2
 };
 
 /// Number of bits for root flag
 static constexpr BitCountType const epoch_root_num_bits = 1;
 /// Number of bits for category flag
 static constexpr BitCountType const epoch_hcat_num_bits = 1;
-/// Number of bits for scope flag
-static constexpr BitCountType const epoch_scop_num_bits = 1;
 
 /**
  *  Important: if you add new types of epoch headers to the preceding enum, you
@@ -127,11 +128,25 @@ inline std::ostream& operator<<(std::ostream& os, eEpochCategory const& cat) {
  */
 static constexpr BitCountType const epoch_category_num_bits = 2;
 
+/// Holds a epoch scope ID (collectively generated)
+using EpochScopeType = uint64_t;
+
+/// The default, global epoch scope
+static constexpr EpochScopeType const global_epoch_scope = 0;
+
+/// The number of bits assigned for epoch scopes
+static constexpr EpochScopeType const scope_bits = 5;
+
+/// The limit on number of live scopes at a given time
+static constexpr EpochScopeType const scope_limit = 1<<scope_bits;
+
 /// The total number of bits remaining the sequential part of the \c EpochType
 static constexpr BitCountType const epoch_seq_num_bits = sizeof(EpochType) * 8 -
   (epoch_root_num_bits     +
-   epoch_hcat_num_bits     + epoch_scop_num_bits +
-   epoch_category_num_bits + node_num_bits);
+   epoch_hcat_num_bits     +
+   epoch_category_num_bits +
+   node_num_bits           +
+   scope_bits);
 
 /**
  *  \brief Epoch layout enum to help with manipuating the bits
@@ -141,10 +156,10 @@ static constexpr BitCountType const epoch_seq_num_bits = sizeof(EpochType) * 8 -
  */
 enum eEpochLayout {
   EpochSequential   = 0,
-  EpochNode         = eEpochLayout::EpochSequential  + epoch_seq_num_bits,
+  EpochScope        = eEpochLayout::EpochSequential  + epoch_seq_num_bits,
+  EpochNode         = eEpochLayout::EpochScope       + scope_bits,
   EpochCategory     = eEpochLayout::EpochNode        + node_num_bits,
-  EpochScope        = eEpochLayout::EpochCategory    + epoch_category_num_bits,
-  EpochHasCategory  = eEpochLayout::EpochScope       + epoch_scop_num_bits,
+  EpochHasCategory  = eEpochLayout::EpochCategory    + epoch_category_num_bits,
   EpochIsRooted     = eEpochLayout::EpochHasCategory + epoch_hcat_num_bits,
   EpochSentinelEnd  = eEpochLayout::EpochIsRooted
 };
@@ -159,14 +174,6 @@ static constexpr NodeType const default_epoch_node = uninitialized_destination;
 static constexpr eEpochCategory const default_epoch_category =
   eEpochCategory::NoCategoryEpoch;
 
-/// Holds a epoch scope ID (collectively generated)
-using EpochScopeType = uint64_t;
-
-/// The default, global epoch scope
-static constexpr EpochScopeType const global_epoch_scope = 0;
-
-/// The limit on number of live scopes at a given time
-static constexpr EpochScopeType const scope_limit = 1<<5;
 
 }} //end namespace vt::epoch
 

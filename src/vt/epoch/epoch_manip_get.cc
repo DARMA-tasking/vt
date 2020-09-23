@@ -60,10 +60,6 @@ namespace vt { namespace epoch {
   return BitPackerType::boolGetField<eEpochLayout::EpochHasCategory>(epoch);
 }
 
-/*static*/ bool EpochManip::isScope(EpochType const& epoch) {
-  return BitPackerType::boolGetField<eEpochLayout::EpochScope>(epoch);
-}
-
 /*static*/ eEpochCategory EpochManip::category(EpochType const& epoch) {
   return BitPackerType::getField<
     eEpochLayout::EpochCategory, epoch_category_num_bits, eEpochCategory
@@ -79,6 +75,13 @@ namespace vt { namespace epoch {
 /*static*/ EpochType EpochManip::seq(EpochType const& epoch) {
   return BitPackerType::getField<
     eEpochLayout::EpochSequential, epoch_seq_num_bits, EpochType
+  >(epoch);
+}
+
+/*static*/ EpochScopeType EpochManip::getScope(EpochType const& epoch) {
+  // constexpr EpochScopeType offset = epoch_seq_num_bits - scope_limit;
+  return BitPackerType::getField<
+    eEpochLayout::EpochScope, scope_bits, EpochScopeType
   >(epoch);
 }
 
