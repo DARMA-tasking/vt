@@ -142,7 +142,7 @@ void NodeStats::startIterCleanup(PhaseType phase, int look_back) {
   }
   node_data_[phase] = std::move(new_data);
 
-  if (phase - look_back >= 0) {
+  if (phase >= look_back) {
     node_data_.erase(phase - look_back);
     node_subphase_data_.erase(phase - look_back);
     node_comm_.erase(phase - look_back);
