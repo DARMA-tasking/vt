@@ -54,7 +54,7 @@
 namespace vt { namespace epoch {
 
 EpochManip::EpochManip()
-  : live_scopes_(~0ull)
+  : live_scopes_(no_scope)
 { }
 
 /*static*/ EpochType EpochManip::generateEpoch(
