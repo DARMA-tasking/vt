@@ -182,16 +182,7 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
 }
 
 CommMapType const&
-<<<<<<< HEAD
-<<<<<<< HEAD
 ElementStats::getComm(PhaseType const& phase, SubphaseType const& subphase) {
-=======
-ElementStats::getComm(PhaseType const& phase,
-  SubphaseType const& subphase) {
->>>>>>> 96c99bec... 941: added subphases to function arguments and vt_debug calls
-=======
-ElementStats::getComm(PhaseType const& phase, SubphaseType const& subphase) {
->>>>>>> 61159789... 941: made some corrections and addressed prototypes
   comm_.resize(phase + 1);
   auto const& phase_comm = comm_[phase];
 
