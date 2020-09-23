@@ -111,7 +111,7 @@ EpochWindow* TerminationDetector::getWindow(EpochType const& epoch) {
   auto const is_rooted = epoch::EpochManip::isRooted(epoch);
   auto const scope = epoch::EpochManip::getScope(epoch);
   auto const is_scoped = scope != epoch::global_epoch_scope;
-  if (is_rooted or is_scoped) {
+  if ((is_rooted or is_scoped) and epoch != any_epoch_sentinel) {
     auto const& arch_epoch = getArchetype(epoch);
     auto iter = epoch_arch_.find(arch_epoch);
     if (iter == epoch_arch_.end()) {
@@ -987,7 +987,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
   ParentEpochCapture successor, std::string const& label
 ) {
   auto scope = epoch::global_epoch_scope;
-  if (successor != no_epoch) {
+  if (successor != no_epoch and successor != any_epoch_sentinel) {
     scope = epoch::EpochManip::getScope(scope);
   }
   auto const no_cat = epoch::eEpochCategory::NoCategoryEpoch;
@@ -1030,7 +1030,7 @@ EpochType TerminationDetector::makeEpochRootedDS(
   ParentEpochCapture successor, std::string const& label
 ) {
   auto scope = epoch::global_epoch_scope;
-  if (successor != no_epoch) {
+  if (successor != no_epoch and successor != any_epoch_sentinel) {
     scope = epoch::EpochManip::getScope(scope);
   }
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
@@ -1122,7 +1122,7 @@ EpochType TerminationDetector::makeEpochCollective(
   std::string const& label, ParentEpochCapture successor
 ) {
   auto scope = epoch::global_epoch_scope;
-  if (successor != no_epoch) {
+  if (successor != no_epoch and successor != any_epoch_sentinel) {
     scope = epoch::EpochManip::getScope(scope);
   }
   auto const epoch = theEpoch()->getNextCollectiveEpoch(scope);
