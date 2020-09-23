@@ -56,7 +56,7 @@ EpochType EpochCollectiveScope::makeEpochCollective(
   std::string const& label, term::SuccessorEpochCapture successor
 ) {
   auto const epoch = theEpoch()->getNextEpoch(false, default_epoch_node, scope_);
-  theTerm()->makeEpochCollectiveWithEpoch(epoch, label, successor);
+  theTerm()->initializeCollectiveEpoch(epoch, label, successor);
   return epoch;
 }
 

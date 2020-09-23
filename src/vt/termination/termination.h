@@ -285,7 +285,7 @@ public:
    *
    * \return the new epoch
    */
-  void makeEpochCollectiveWithEpoch(
+  void initializeCollectiveEpoch(
     EpochType const epoch,
     std::string const& label,
     SuccessorEpochCapture successor = SuccessorEpochCapture{}
@@ -301,7 +301,7 @@ public:
    *
    * \return the new epoch
    */
-  void makeEpochRootedWithEpoch(
+  void initializeRootedEpoch(
     EpochType const epoch,
     std::string const& label,
     UseDS use_ds = UseDS{false},
@@ -370,7 +370,7 @@ public:
    *
    * \return the new epoch
    */
-  void makeEpochRootedWaveWithEpoch(
+  void initializeRootedWaveEpoch(
     EpochType const epoch, SuccessorEpochCapture successor,
     std::string const& label = ""
   );
@@ -383,7 +383,7 @@ public:
    * \param[in] successor successor epoch that waits for this new epoch
    * \param[in] label epoch label for debugging purposes
    */
-  void makeEpochRootedDSWithEpoch(
+  void initializeRootedDSEpoch(
     EpochType const epoch, SuccessorEpochCapture successor,
     std::string const& label = ""
   );
