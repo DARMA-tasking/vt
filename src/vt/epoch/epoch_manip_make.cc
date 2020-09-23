@@ -85,18 +85,13 @@ EpochManip::EpochManip()
   return EpochManip::generateEpoch(seq,true,root_node,scope,category);
 }
 
-EpochType EpochManip::getNextEpoch(
-  bool const& is_rooted, NodeType const& root_node,
+EpochType EpochManip::getNextCollectiveEpoch(
   EpochScopeType const scope, eEpochCategory const& category
 ) {
-  if (is_rooted) {
-    return getNextRootedEpoch(category,scope);
-  } else {
-    auto const new_epoch = generateEpoch(
-      nextSeqCollective(scope),false,uninitialized_destination,scope,category
-    );
-    return new_epoch;
-  }
+  auto const new_epoch = generateEpoch(
+    nextSeqCollective(scope),false,uninitialized_destination,scope,category
+  );
+  return new_epoch;
 }
 
 EpochType EpochManip::getNextRootedEpoch(

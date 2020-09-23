@@ -261,18 +261,14 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   );
 
   /**
-   * \brief Create the next epoch (rooted or collective), stateful
+   * \brief Stateful method to create the next collective epoch
    *
-   * \param[in] is_rooted if the epoch should be rooted or not
-   * \param[in] root_node the root node for the epoch if \c is_rooted
    * \param[in] scope the epoch's scope
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
-  EpochType getNextEpoch(
-    bool           const& is_rooted  = false,
-    NodeType       const& root_node  = default_epoch_node,
+  EpochType getNextCollectiveEpoch(
     EpochScopeType const scope       = global_epoch_scope,
     eEpochCategory const& category   = default_epoch_category
   );

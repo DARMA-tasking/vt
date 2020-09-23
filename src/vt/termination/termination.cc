@@ -1102,7 +1102,7 @@ EpochType TerminationDetector::makeEpochCollective(
 EpochType TerminationDetector::makeEpochCollective(
   std::string const& label, SuccessorEpochCapture successor
 ) {
-  auto const epoch = theEpoch()->getNextEpoch();
+  auto const epoch = theEpoch()->getNextCollectiveEpoch();
   initializeCollectiveEpoch(epoch, label, successor);
   return epoch;
 }
