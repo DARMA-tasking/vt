@@ -57,6 +57,7 @@ EpochCollectiveScope::~EpochCollectiveScope() {
 EpochType EpochCollectiveScope::makeEpochCollective(
   std::string const& label, term::SuccessorEpochCapture successor
 ) {
+  vtAssert(scope_ != no_scope, "Must have valid scope");
   auto const epoch = theEpoch()->getNextCollectiveEpoch(scope_);
   theTerm()->initializeCollectiveEpoch(epoch, label, successor);
   return epoch;
