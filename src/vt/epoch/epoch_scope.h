@@ -95,7 +95,7 @@ public:
    * \return the next collective epoch
    */
   EpochType makeEpochCollective(
-    std::string const& label,
+    std::string const& label = "",
     term::SuccessorEpochCapture successor = term::SuccessorEpochCapture{}
   );
 
