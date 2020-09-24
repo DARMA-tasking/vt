@@ -854,14 +854,15 @@ template <
 >
 messaging::PendingSend CollectionManager::broadcastMsgCollective(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-  MsgT* msg, bool instrument
+  messaging::MsgPtrThief<MsgT> msg, bool instrument
 ) {
   using ColT = typename MsgT::CollectionType;
 
-  msg->setVrtHandler(auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>());
-  msg->setMember(false);
+  auto& msgPtr = msg.msg_;
+  msgPtr->setVrtHandler(auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>());
+  msgPtr->setMember(false);
 
-  return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msg, instrument);
+  return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msgPtr, instrument);
 }
 
 template <
@@ -870,24 +871,24 @@ template <
 >
 messaging::PendingSend CollectionManager::broadcastMsgCollective(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-  MsgT* msg, bool instrument
+  messaging::MsgPtrThief<MsgT> msg, bool instrument
 ) {
   using ColT = typename MsgT::CollectionType;
 
-  msg->setVrtHandler(
+  auto& msgPtr = msg.msg_;
+  msgPtr->setVrtHandler(
     auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>()
   );
-  msg->setMember(true);
+  msgPtr->setMember(true);
 
-  return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msg, instrument);
+  return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msgPtr, instrument);
 }
 
 template <typename MsgT, typename ColT>
 messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT* raw_msg, bool instrument
+  CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg, bool instrument
 ) {
   using IndexT = typename ColT::IndexType;
-  auto msg = promoteMsg(raw_msg);
 
   msg->setFromNode(theContext()->getNode());
   msg->setBcastProxy(proxy.getProxy());
@@ -910,20 +911,17 @@ messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
   msg->setCat(balance::CommCategory::NodeToCollection);
 #endif
 
-  theMsg()->setupEpochMsg(msg);
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
 
-  return messaging::PendingSend(
-    msg, [proxy](MsgSharedPtr<BaseMsgType>& msgIn){
-      auto col_msg = reinterpret_cast<MsgT*>(msgIn.get());
+  return schedule(msg, false, cur_epoch, [proxy, msg] {
+    auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(proxy);
+    auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
+    msg->setBcastEpoch(bcast_epoch);
 
-      auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(proxy);
-      auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
-      col_msg->setBcastEpoch(bcast_epoch);
+    theMsg()->markAsCollectionMessage(msg);
 
-      theMsg()->markAsCollectionMessage(col_msg);
-
-      collectionBcastHandler<ColT, IndexT, MsgT>(col_msg);
-    }
+    collectionBcastHandler<ColT, IndexT, MsgT>(msg.get());
+  }
   );
 }
 

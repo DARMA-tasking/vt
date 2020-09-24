@@ -964,7 +964,7 @@ public:
   >
   messaging::PendingSend broadcastMsgCollective(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT* msg, bool instrument = true);
+    messaging::MsgPtrThief<MsgT> msg, bool instrument = true);
 
   /**
    * \brief Broadcast collective a message with action member handler
@@ -982,7 +982,7 @@ public:
   >
   messaging::PendingSend broadcastMsgCollective(
     CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
-    MsgT* msg, bool instrument = true);
+    messaging::MsgPtrThief<MsgT> msg, bool instrument = true);
 
   /**
    * \internal \brief Broadcast collective a message
@@ -996,8 +996,8 @@ public:
    */
   template <typename MsgT, typename ColT>
   messaging::PendingSend broadcastMsgCollectiveImpl(
-    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
-    bool instrument = true);
+    CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg,
+    bool instrument);
 
   /**
    * \brief Broadcast a message with action function handler
