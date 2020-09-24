@@ -253,7 +253,7 @@ static void rootedHandler(TestMsg* msg) {
     this_node, coll_ep, cur_scope, coll_scope
   );
 
-  // Scope must immediately transfer onto the new rooted epoch
+  // Scope must immediately transfer onto the new collective epoch
   EXPECT_EQ(coll_scope, cur_scope);
   theMsg()->pushEpoch(coll_ep);
 
