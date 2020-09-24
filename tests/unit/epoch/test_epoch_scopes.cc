@@ -135,6 +135,65 @@ struct TestMsg : vt::Message {
 
 static void rootedHandler(TestMsg* msg);
 static void finalHandler(TestMsg* msg);
+static void shiftRightHandler(TestMsg* msg);
+
+TEST_F(TestEpochScopes, test_epoch_scope_2) {
+  // Test creating epochs from a scope
+
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+
+  // Must have at least 2 nodes to run this test
+  if (num_nodes < 2) {
+    return;
+  }
+
+  static constexpr epoch::EpochScopeType const num = 3;
+
+  std::vector<epoch::EpochCollectiveScope> scopes;
+
+  // All nodes construct epoch scopes in the same order and push them
+  for (epoch::EpochScopeType i = 0; i < num; i++) {
+    scopes.push_back(vt::theEpoch()->makeScopeCollective());
+  }
+
+  for (auto&& s : scopes) {
+    fmt::print("scope={:x}\n", s.getScope());
+  }
+
+  auto send_from_scope = [&](epoch::EpochCollectiveScope& s) {
+    auto ep = s.makeEpochCollective("test");
+    auto scope = s.getScope();
+    theMsg()->pushEpoch(ep);
+
+    fmt::print("{}: epoch={:x} scope={:x}\n", this_node, ep, scope);
+
+    EXPECT_EQ(scope, epoch::EpochManip::getScope(ep));
+
+    auto next_node = (this_node + 1) % num_nodes;
+    auto msg = makeMessage<TestMsg>(scope);
+    theMsg()->sendMsg<TestMsg, shiftRightHandler>(next_node, msg);
+
+    theMsg()->popEpoch(ep);
+    vt::theTerm()->finishedEpoch(ep);
+  };
+
+  // Create epochs in different orders
+  if (this_node < num_nodes/2) {
+    for (epoch::EpochScopeType i = 0; i < num; i++) {
+      send_from_scope(scopes[i]);
+    }
+  } else {
+    for (epoch::EpochScopeType v = scopes.size(); v > 0; v--) {
+      auto const i = v-1;
+      send_from_scope(scopes[i]);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Handlers for test 2
+///////////////////////////////////////////////////////////////////////////////
 
 static void shiftRightHandler(TestMsg* msg) {
   auto const this_node = theContext()->getNode();
@@ -219,58 +278,6 @@ static void finalHandler(TestMsg* msg) {
   EXPECT_EQ(msg->scope_, cur_scope);
 }
 
-TEST_F(TestEpochScopes, test_epoch_scope_2) {
-  // Test creating epochs from a scope
-
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
-
-  // Must have at least 2 nodes to run this test
-  if (num_nodes < 2) {
-    return;
-  }
-
-  static constexpr epoch::EpochScopeType const num = 3;
-
-  std::vector<epoch::EpochCollectiveScope> scopes;
-
-  // All nodes construct epoch scopes in the same order and push them
-  for (epoch::EpochScopeType i = 0; i < num; i++) {
-    scopes.push_back(vt::theEpoch()->makeScopeCollective());
-  }
-
-  for (auto&& s : scopes) {
-    fmt::print("scope={:x}\n", s.getScope());
-  }
-
-  auto send_from_scope = [&](epoch::EpochCollectiveScope& s) {
-    auto ep = s.makeEpochCollective("test");
-    auto scope = s.getScope();
-    theMsg()->pushEpoch(ep);
-
-    fmt::print("{}: epoch={:x} scope={:x}\n", this_node, ep, scope);
-
-    EXPECT_EQ(scope, epoch::EpochManip::getScope(ep));
-
-    auto next_node = (this_node + 1) % num_nodes;
-    auto msg = makeMessage<TestMsg>(scope);
-    theMsg()->sendMsg<TestMsg, shiftRightHandler>(next_node, msg);
-
-    theMsg()->popEpoch(ep);
-    vt::theTerm()->finishedEpoch(ep);
-  };
-
-  // Create epochs in different orders
-  if (this_node < num_nodes/2) {
-    for (epoch::EpochScopeType i = 0; i < num; i++) {
-      send_from_scope(scopes[i]);
-    }
-  } else {
-    for (epoch::EpochScopeType v = scopes.size(); v > 0; v--) {
-      auto const i = v-1;
-      send_from_scope(scopes[i]);
-    }
-  }
-}
+///////////////////////////////////////////////////////////////////////////////
 
 }}} // end namespace vt::tests::unit
