@@ -55,6 +55,7 @@
 namespace vt { namespace tests { namespace unit {
 
 static int32_t elem_counter = 0;
+static bool handler_executed = false;
 
 struct MyReduceMsg : collective::ReduceTMsg<int> {
   explicit MyReduceMsg(int const in_num)
@@ -87,6 +88,7 @@ struct ColA : Collection<ColA,Index1D> {
   void memberHanlder(TestDataMsg* msg) {
     EXPECT_EQ(msg->value_, theContext()->getNode());
     --elem_counter;
+    handler_executed = true;
   }
 
   virtual ~ColA() {
@@ -103,10 +105,20 @@ struct ColA : Collection<ColA,Index1D> {
 void colHanlder(
   ColA::TestDataMsg* msg, typename ColA::TestDataMsg::CollectionType* type) {
   --elem_counter;
+  handler_executed = true;
+}
+
+template <typename f>
+void runBcastTestHelper(f&& func)
+{
+  handler_executed = false;
+  func();
+
+  // spin the scheduler until the handler is called
+  theSched()->runSchedulerWhile([]{ return not handler_executed; });
 }
 
 struct TestCollectionGroup : TestParallelHarness { };
-
 
 TEST_F(TestCollectionGroup, test_collection_group_1) {
   auto const my_node = theContext()->getNode();
@@ -118,52 +130,83 @@ TEST_F(TestCollectionGroup, test_collection_group_1) {
   }
 }
 
-TEST_F(TestCollectionGroup, test_collection_group_2){
+TEST_F(TestCollectionGroup, test_collection_group_2) {
   auto const my_node = theContext()->getNode();
 
   auto const range = Index1D(8);
   auto const proxy =
-    theCollection()->constructCollective<ColA>(range, [](vt::Index1D idx) {
+    theCollection()->constructCollective<ColA>(range, [](vt::Index1D idx){
       ++elem_counter;
       return std::make_unique<ColA>();
-    });
+    }
+  );
 
-  const auto numElems = elem_counter;
-  auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
+  auto const numElems = elem_counter;
 
-  proxy.broadcastCollective<ColA::TestDataMsg, &ColA::memberHanlder>(msg.get());
+  // raw msg pointer case
+  runBcastTestHelper([proxy, my_node]{
+    auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
+    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, &ColA::memberHanlder>(
+      msg.get()
+    );
+  });
+
   EXPECT_EQ(elem_counter, 0);
 
-  proxy.broadcastCollective<ColA::TestDataMsg, &ColA::memberHanlder>(msg);
+  // smart msg pointer case
+  runBcastTestHelper([proxy, my_node]{
+    auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
+    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, &ColA::memberHanlder>(msg);
+  });
+
   EXPECT_EQ(elem_counter, -numElems);
 
-  proxy.broadcastCollective<
-    ColA::TestDataMsg, &ColA::memberHanlder, ColA::TestDataMsg>(my_node);
+  // msg constructed on the fly case
+  runBcastTestHelper([proxy, my_node] {
+    proxy.broadcastCollective<
+      ColA::TestDataMsg, &ColA::memberHanlder, ColA::TestDataMsg>(my_node);
+  });
+
   EXPECT_EQ(elem_counter, -2 * numElems);
 }
 
-TEST_F(TestCollectionGroup, test_collection_group_3){
+TEST_F(TestCollectionGroup, test_collection_group_3) {
   elem_counter = 0;
   auto const my_node = theContext()->getNode();
 
   auto const range = Index1D(8);
   auto const proxy =
-    theCollection()->constructCollective<ColA>(range, [](vt::Index1D idx) {
+    theCollection()->constructCollective<ColA>(range, [](vt::Index1D idx){
       ++elem_counter;
       return std::make_unique<ColA>();
-    });
+    }
+  );
 
-  const auto numElems = elem_counter;
-  auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
+  auto const numElems = elem_counter;
 
-  proxy.broadcastCollective<ColA::TestDataMsg, colHanlder>(msg.get());
+  // raw msg pointer case
+  runBcastTestHelper([proxy, my_node]{
+    auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
+    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, colHanlder>(msg.get());
+  });
+
   EXPECT_EQ(elem_counter, 0);
 
-  proxy.broadcastCollective<ColA::TestDataMsg, colHanlder>(msg);
+  // smart msg pointer case
+  runBcastTestHelper([proxy, my_node]{
+    auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
+    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, colHanlder>(msg);
+  });
+
   EXPECT_EQ(elem_counter, -numElems);
 
-  proxy.broadcastCollective<
-    ColA::TestDataMsg, colHanlder, ColA::TestDataMsg>(my_node);
+  // msg constructed on the fly case
+  runBcastTestHelper([proxy, my_node]{
+    proxy.broadcastCollective<ColA::TestDataMsg, colHanlder, ColA::TestDataMsg>(
+      my_node
+    );
+  });
+
   EXPECT_EQ(elem_counter, -2 * numElems);
 }
 
