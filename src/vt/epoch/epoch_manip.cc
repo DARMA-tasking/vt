@@ -164,7 +164,7 @@ EpochCollectiveScope EpochManip::makeScopeCollective() {
           break;
         }
         s++;
-      } while (s < scope_limit);
+      } while (s <= scope_limit);
     }
   }
 
