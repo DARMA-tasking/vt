@@ -134,6 +134,7 @@ struct TestMsg : vt::Message {
 };
 
 static void rootedHandler(TestMsg* msg);
+static void finalHandler(TestMsg* msg);
 
 static void shiftRightHandler(TestMsg* msg) {
   auto const this_node = theContext()->getNode();
@@ -163,7 +164,7 @@ static void shiftRightHandler(TestMsg* msg) {
   theMsg()->pushEpoch(rooted_ep);
 
   auto next_node = (this_node + 1) % num_nodes;
-  auto nmsg = makeMessage<TestMsg>(cur_scope);
+  auto nmsg = makeMessage<TestMsg>(msg->scope_);
   theMsg()->sendMsg<TestMsg, rootedHandler>(next_node, nmsg);
 
   theMsg()->popEpoch(rooted_ep);
@@ -172,12 +173,47 @@ static void shiftRightHandler(TestMsg* msg) {
 
 static void rootedHandler(TestMsg* msg) {
   auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
 
   // Check that the rooted scope is correct in the handler
   auto ep = theMsg()->getEpoch();
   auto cur_scope = epoch::EpochManip::getScope(ep);
   fmt::print(
     "{}: ROOTED ep={:x} cur_scope={:x} msg->scope_={:x}\n",
+    this_node, ep, cur_scope, msg->scope_
+  );
+  EXPECT_EQ(msg->scope_, cur_scope);
+
+  /// Now, create the final collective epoch from the rooted one to see if the
+  /// scope correctly transfers/propagates to it
+  auto coll_ep = theTerm()->makeEpochCollective();
+  auto coll_scope = epoch::EpochManip::getScope(coll_ep);
+
+  fmt::print(
+    "{}: coll_ep={:x} cur_scope={:x} coll_scope={:x}\n",
+    this_node, coll_ep, cur_scope, coll_scope
+  );
+
+  // Scope must immediately transfer onto the new rooted epoch
+  EXPECT_EQ(coll_scope, cur_scope);
+  theMsg()->pushEpoch(coll_ep);
+
+  auto next_node = (this_node + 1) % num_nodes;
+  auto nmsg = makeMessage<TestMsg>(msg->scope_);
+  theMsg()->sendMsg<TestMsg, finalHandler>(next_node, nmsg);
+
+  theMsg()->popEpoch(coll_ep);
+  theTerm()->finishedEpoch(coll_ep);
+}
+
+static void finalHandler(TestMsg* msg) {
+  auto const this_node = theContext()->getNode();
+
+  // Check that the nested collective scope is correct in the handler
+  auto ep = theMsg()->getEpoch();
+  auto cur_scope = epoch::EpochManip::getScope(ep);
+  fmt::print(
+    "{}: COLLECTIVE ep={:x} cur_scope={:x} msg->scope_={:x}\n",
     this_node, ep, cur_scope, msg->scope_
   );
   EXPECT_EQ(msg->scope_, cur_scope);
