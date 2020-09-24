@@ -53,18 +53,25 @@ if test -d "${source_dir}/lib/checkpoint"
 then
     echo "Checkpoint already in lib... not downloading, building, and installing"
 else
-    git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
-    export CHECKPOINT=$PWD/checkpoint
-    export CHECKPOINT_BUILD=${build_dir}/checkpoint
-    mkdir -p "$CHECKPOINT_BUILD"
-    cd "$CHECKPOINT_BUILD"
-    mkdir build
-    cd build
-    cmake -G "${CMAKE_GENERATOR:-Ninja}" \
-          -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
-          -Ddetector_DIR="$DETECTOR_BUILD/install" \
-          "$CHECKPOINT"
-    cmake --build . --target install
+    if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
+    then
+        cd "${source_dir}/lib"
+        git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
+        cd ../../
+    else
+        git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
+        export CHECKPOINT=$PWD/checkpoint
+        export CHECKPOINT_BUILD=${build_dir}/checkpoint
+        mkdir -p "$CHECKPOINT_BUILD"
+        cd "$CHECKPOINT_BUILD"
+        mkdir build
+        cd build
+        cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+              -DCMAKE_INSTALL_PREFIX="$CHECKPOINT_BUILD/install" \
+              -Ddetector_DIR="$DETECTOR_BUILD/install" \
+              "$CHECKPOINT"
+        cmake --build . --target install
+    fi
 fi
 
 if test ${VT_ZOLTAN_ENABLED:-0} -eq 1
