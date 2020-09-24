@@ -72,6 +72,11 @@ struct DispatchCollectionBase {
   template <typename=void>
   void setDefaultProxy(VirtualProxyType const& in_proxy);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | default_proxy_;
+  }
+
 private:
   VirtualProxyType default_proxy_ = no_vrt_proxy;
 };
