@@ -66,8 +66,15 @@ struct PersistenceMedianLastN : public ComposedModel
    */
   PersistenceMedianLastN(std::shared_ptr<LoadModel> base, unsigned int n);
 
+  checkpoint_virtual_serialize_derived(PersistenceMedianLastN, ComposedModel)
+
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | n_;
+  }
 
 private:
   const unsigned int n_;

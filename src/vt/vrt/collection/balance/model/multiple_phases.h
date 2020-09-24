@@ -80,7 +80,14 @@ struct MultiplePhases : ComposedModel {
     , future_phase_block_size_(in_future_phase_block_size)
   { }
 
+  checkpoint_virtual_serialize_derived(MultiplePhases, ComposedModel)
+
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | future_phase_block_size_;
+  }
 
 private:
   int future_phase_block_size_ = 0;

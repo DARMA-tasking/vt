@@ -66,6 +66,8 @@ struct PerCollection : public ComposedModel
    */
   explicit PerCollection(std::shared_ptr<LoadModel> base);
 
+  checkpoint_virtual_serialize_derived(PerCollection, ComposedModel)
+
   /**
    * \brief Add a model for objects in a specific collection
    *
@@ -82,6 +84,11 @@ struct PerCollection : public ComposedModel
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | models_;
+  }
 
 private:
   std::unordered_map<CollectionID, std::shared_ptr<LoadModel>> models_;

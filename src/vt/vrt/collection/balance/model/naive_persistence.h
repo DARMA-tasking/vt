@@ -61,8 +61,14 @@ struct NaivePersistence : public ComposedModel {
    * \param[in] base: The source of underlying load numbers to return; must not be null
    */
   explicit NaivePersistence(std::shared_ptr<balance::LoadModel> base);
+
+  checkpoint_virtual_serialize_derived(NaivePersistence, ComposedModel)
+
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 }; // class NaivePersistence
 
 }}}} // end namespace

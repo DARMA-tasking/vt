@@ -59,6 +59,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct RawData : public LoadModel {
   RawData() = default;
+
+  checkpoint_virtual_serialize_derived(RawData, LoadModel)
+
   void updateLoads(PhaseType last_completed_phase) override;
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
@@ -73,6 +76,14 @@ struct RawData : public LoadModel {
   unsigned int getNumCompletedPhases() override;
   int getNumSubphases() override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | proc_load_
+      | proc_subphase_load_
+      | proc_comm_
+      | last_completed_phase_;
+  }
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeStats
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;

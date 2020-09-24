@@ -66,11 +66,20 @@ struct CommOverhead : public ComposedModel {
     TimeType in_per_byte_weight
   );
 
+  checkpoint_virtual_serialize_derived(CommOverhead, ComposedModel)
+
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | proc_comm_
+      | per_msg_weight_
+      | per_byte_weight_;
+  }
 
 private:
   std::unordered_map<PhaseType, CommMapType> const* proc_comm_; /**< Underlying comm data */

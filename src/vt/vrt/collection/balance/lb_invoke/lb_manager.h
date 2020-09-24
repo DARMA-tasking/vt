@@ -173,10 +173,9 @@ public:
       | destroy_lb_
       | synced_in_lb_
       | listeners_
-      | proxy_;
-      // LoadModel is pure abstract interface
-      // | base_model_
-      // | model_;
+      | proxy_
+      | base_model_
+      | model_;
   }
 
 protected:
