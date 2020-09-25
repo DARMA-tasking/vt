@@ -6,7 +6,7 @@ macro(set_darma_compiler_flags)
 set(CXX_STANDARD_FLAGS)
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   # 4.9.3 complains about std::min not being constexpr
-  set(CXX_STANDARD_FLAGS -std=c++1y)
+  set(CXX_STANDARD_FLAGS -std=c++14)
   if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 5))
     message("${PROJECT_NAME} currently requires g++ 5 or greater.  If you need it to work with 4.9, please complain.")
   endif ()
