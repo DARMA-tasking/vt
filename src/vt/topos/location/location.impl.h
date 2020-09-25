@@ -746,6 +746,9 @@ LocInstType EntityLocationCoord<EntityID>::getInst() const {
 template <typename EntityID>
 template <typename MessageT>
 /*static*/ void EntityLocationCoord<EntityID>::routedHandler(MessageT *raw_msg) {
+  // Message may be re-routed (and sent) again from subsequent routeMsg.
+  envelopeUnlockForForwarding(raw_msg->env);
+
   auto msg = promoteMsg(raw_msg);
   auto const entity_id = msg->getEntity();
   auto const home_node = msg->getHomeNode();
@@ -763,9 +766,6 @@ template <typename MessageT>
     print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
     from_node, epoch, msg->getHops(), msg->getAskNode()
   );
-
-  // Message may be re-routed (and sent) again from subsequent routeMsg.
-  envelopeSetIsLocked(msg->env, false);
 
   theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(

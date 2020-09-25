@@ -222,6 +222,21 @@ inline void envelopeSetHasBeenSerialized(Env& env, bool has_been_serialized);
 template <typename Env>
 inline void envelopeSetIsLocked(Env& env, bool is_locked);
 
+/**
+ * \brief Unlock an envelope, denoting the use is a proxy handler.
+ *
+ * A received message is normally locked to discourage the
+ * re-usage of messages supplied to handlers. However, some
+ * proxy/forwarding handlers re-use the original message.
+ *
+ * This is equivalent to calling \c envelopeSetIsLocked with false
+ * and should generally be set inside the message handler itself.
+ *
+ * \param[in,out] env the envelope
+ */
+template <typename Env>
+inline void envelopeUnlockForForwarding(Env& env);
+
 } /* end namespace vt */
 
 #include "vt/messaging/envelope/envelope_set.impl.h"
