@@ -219,15 +219,13 @@ void HierarchicalLB::loadStats() {
     calcLoadOver(extract_strategy);
 
     lbTreeUpSend(
-      bottom_parent, this_load, this_node, load_over, 1, load_over_size
+      bottom_parent, this_load, this_node, load_over, 1
     );
 
     if (children.size() == 0) {
-      auto const& total_size = sizeof(std::size_t) * 4;
       ObjSampleType empty_obj{};
       lbTreeUpSend(
-        parent, hierlb_no_load_sentinel, this_node, empty_obj, agg_node_size,
-        total_size
+        parent, hierlb_no_load_sentinel, this_node, empty_obj, agg_node_size
       );
     }
   }
@@ -236,12 +234,6 @@ void HierarchicalLB::loadStats() {
 void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   auto const threshold = this_threshold * getAvgLoad();
   auto const obj_id = bin_list.back();
-
-  if (load_over.find(bin) == load_over.end()) {
-    load_over_size += sizeof(std::size_t) * 4;
-    load_over_size += sizeof(ObjBinType);
-  }
-  load_over_size += sizeof(ObjIDType);
 
   load_over[bin].push_back(obj_id);
   bin_list.pop_back();
@@ -391,8 +383,7 @@ std::size_t HierarchicalLB::getSize(ObjSampleType const& sample) {
 
 void HierarchicalLB::lbTreeUpSend(
   NodeType const node, LoadType const child_load, NodeType const child,
-  ObjSampleType const& load, NodeType const child_size,
-  std::size_t const& load_size_approx
+  ObjSampleType const& load, NodeType const child_size
 ) {
   auto msg = makeMessage<LBTreeUpMsg>(child_load,child,load,child_size);
   proxy[node].template send<LBTreeUpMsg,&HierarchicalLB::lbTreeUpHandler>(msg);
@@ -683,31 +674,26 @@ void HierarchicalLB::distributeAmoungChildren() {
     }
   }
 
-  auto const& data_size = clearObj(given_objs);
+  clearObj(given_objs);
   lbTreeUpSend(
-    parent, total_child_load, this_node, given_objs, total_size, data_size
+    parent, total_child_load, this_node, given_objs, total_size
   );
 
   given_objs.clear();
 }
 
-std::size_t HierarchicalLB::clearObj(ObjSampleType& objs) {
-  std::size_t total_size = 0;
+void HierarchicalLB::clearObj(ObjSampleType& objs) {
   std::vector<int> to_remove{};
   for (auto&& bin : objs) {
     if (bin.second.size() == 0) {
       to_remove.push_back(bin.first);
     }
-    total_size += bin.second.size() * sizeof(ObjIDType);
-    total_size += sizeof(ObjBinType);
-    total_size += sizeof(std::size_t) * 4;
   }
   for (auto&& r : to_remove) {
     auto giter = objs.find(r);
     vtAssert(giter != objs.end(), "Must exist");
     objs.erase(giter);
   }
-  return total_size;
 }
 
 void HierarchicalLB::runLB() {

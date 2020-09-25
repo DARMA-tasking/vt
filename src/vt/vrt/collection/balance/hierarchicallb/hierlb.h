@@ -52,7 +52,6 @@
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_strat.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/headers.h"
 
@@ -98,8 +97,7 @@ private:
   );
   void lbTreeUpSend(
     NodeType const node, LoadType const child_load, NodeType const child,
-    ObjSampleType const& load, NodeType const child_size,
-    std::size_t const& load_size_approx
+    ObjSampleType const& load, NodeType const child_size
   );
   void downTree(
     NodeType const from, ObjSampleType excess, bool const final_child
@@ -111,7 +109,7 @@ private:
 
   void sendDownTree();
   void distributeAmoungChildren();
-  std::size_t clearObj(ObjSampleType& objs);
+  void clearObj(ObjSampleType& objs);
   HierLBChild* findMinChild();
   void startMigrations();
 
@@ -130,7 +128,6 @@ private:
   ChildMapType children;
   LoadType this_load_begin = 0.0f;
   ObjSampleType load_over, given_objs, taken_objs;
-  std::size_t load_over_size = 0;
   int64_t migrates_expected = 0, transfer_count = 0;
   TransferType transfers;
   objgroup::proxy::Proxy<HierarchicalLB> proxy = {};

@@ -48,9 +48,10 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
+#include "vt/configs/arguments/args.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/vrt/collection/balance/baselb/baselb.h"
 
 #include <functional>
 
@@ -69,6 +70,7 @@ class LoadModel;
  */
 struct LBManager : runtime::component::Component<LBManager> {
   using ListenerFnType = std::function<void(PhaseType)>;
+  using LBProxyType    = objgroup::proxy::Proxy<lb::BaseLB>;
 
   /**
    * \internal \brief System call to construct a \c LBManager
@@ -184,14 +186,7 @@ public:
    *
    * \param[in] msg the LB message
    */
-  template <typename MsgT>
-  void sysLB(MsgT* msg) {
-    vt_debug_print(lb, node, "sysLB\n");
-    printMemoryUsage(msg->phase_);
-    flushTraceNextPhase();
-    setTraceEnabledNextPhase(msg->phase_);
-    return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
-  }
+  void sysLB(InvokeMsg* msg);
 
   /**
    * \internal \brief Tell the manager that a collection has hit \c nextPhase,
@@ -199,14 +194,7 @@ public:
    *
    * \param[in] msg the LB message
    */
-  template <typename MsgT>
-  void sysReleaseLB(MsgT* msg) {
-    vt_debug_print(lb, node, "sysReleaseLB\n");
-    printMemoryUsage(msg->phase_);
-    flushTraceNextPhase();
-    setTraceEnabledNextPhase(msg->phase_);
-    return releaseImpl(msg->phase_, msg->num_collections_);
-  }
+  void sysReleaseLB(InvokeMsg* msg);
 
 public:
   /**
@@ -256,12 +244,14 @@ protected:
   /**
    * \internal \brief Collectively construct a new load balancer
    *
-   * \param[in] msg the start LB message
+   * \param[in] LB the type of strategy to instantiate
    *
    * \return objgroup proxy to the new load balancer
    */
   template <typename LB>
-  void makeLB(MsgSharedPtr<StartLBMsg> msg);
+  LBProxyType makeLB();
+
+  void runLB(LBProxyType base_proxy, PhaseType phase);
 
 private:
   std::size_t num_invocations_             = 0;
@@ -274,6 +264,7 @@ private:
   objgroup::proxy::Proxy<LBManager> proxy_;
   std::shared_ptr<LoadModel> base_model_;
   std::shared_ptr<LoadModel> model_;
+  std::unordered_map<std::string, LBProxyType> lb_instances_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

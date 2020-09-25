@@ -46,7 +46,6 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/context/context.h"
 #include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/vrt/collection/balance/lb_invoke/start_lb_msg.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/node_stats.h"
@@ -144,15 +143,21 @@ void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
 }
 
 template <typename LB>
-void
-LBManager::makeLB(MsgSharedPtr<StartLBMsg> msg) {
+LBManager::LBProxyType
+LBManager::makeLB() {
   auto proxy = theObjGroup()->makeCollective<LB>();
   auto strat = proxy.get();
   strat->init(proxy);
   auto base_proxy = proxy.template registerBaseCollective<lb::BaseLB>();
-  auto phase = msg->getPhase();
 
   destroy_lb_ = [proxy]{ proxy.destroyCollective(); };
+
+  return base_proxy;
+}
+
+void
+LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
+  lb::BaseLB* strat = base_proxy.get();
 
   runInEpochCollective([=] {
     model_->updateLoads(phase);
@@ -209,16 +214,15 @@ void LBManager::collectiveImpl(
       );
     }
 
-    auto msg = makeMessage<StartLBMsg>(phase);
     switch (lb) {
-    case LBType::HierarchicalLB: makeLB<lb::HierarchicalLB>(msg); break;
-    case LBType::GreedyLB:       makeLB<lb::GreedyLB>(msg);       break;
-    case LBType::RotateLB:       makeLB<lb::RotateLB>(msg);       break;
-    case LBType::GossipLB:       makeLB<lb::GossipLB>(msg);       break;
-    case LBType::StatsMapLB:     makeLB<lb::StatsMapLB>(msg);     break;
-    case LBType::RandomLB:       makeLB<lb::RandomLB>(msg);       break;
+    case LBType::HierarchicalLB: lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(); break;
+    case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
+    case LBType::RotateLB:       lb_instances_["chosen"] = makeLB<lb::RotateLB>();       break;
+    case LBType::GossipLB:       lb_instances_["chosen"] = makeLB<lb::GossipLB>();       break;
+    case LBType::StatsMapLB:     lb_instances_["chosen"] = makeLB<lb::StatsMapLB>();     break;
+    case LBType::RandomLB:       lb_instances_["chosen"] = makeLB<lb::RandomLB>();       break;
 #   if vt_check_enabled(zoltan)
-    case LBType::ZoltanLB:       makeLB<lb::ZoltanLB>(msg);       break;
+    case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
 #   endif
     case LBType::NoLB:
       vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
@@ -227,6 +231,10 @@ void LBManager::collectiveImpl(
       vtAssert(false, "A valid LB must be passed to collectiveImpl");
       break;
     }
+
+    LBProxyType base_proxy = lb_instances_["chosen"];
+
+    runLB(base_proxy, phase);
   }
 }
 
@@ -300,6 +308,22 @@ void LBManager::releaseNow(PhaseType phase) {
   releaseLBPhase(msg.get());
   synced_in_lb_ = false;
   num_invocations_ = num_release_ = 0;
+}
+
+void LBManager::sysLB(InvokeMsg* msg) {
+  vt_debug_print(lb, node, "sysLB\n");
+  printMemoryUsage(msg->phase_);
+  flushTraceNextPhase();
+  setTraceEnabledNextPhase(msg->phase_);
+  return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
+}
+
+void LBManager::sysReleaseLB(InvokeMsg* msg) {
+  vt_debug_print(lb, node, "sysReleaseLB\n");
+  printMemoryUsage(msg->phase_);
+  flushTraceNextPhase();
+  setTraceEnabledNextPhase(msg->phase_);
+  return releaseImpl(msg->phase_, msg->num_collections_);
 }
 
 void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
