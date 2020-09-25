@@ -482,7 +482,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
     msg->setLocInst(this_inst);
 
     // send to the node discovered by the location manager
-    theMsg()->sendMsg<MessageT, msgHandler>(to_node, msg);
+    theMsg()->sendMsg<MessageT, routedHandler>(to_node, msg);
   } else {
     vt_debug_print(
       location, node,
@@ -745,24 +745,27 @@ LocInstType EntityLocationCoord<EntityID>::getInst() const {
 
 template <typename EntityID>
 template <typename MessageT>
-/*static*/ void EntityLocationCoord<EntityID>::msgHandler(MessageT *raw_msg) {
+/*static*/ void EntityLocationCoord<EntityID>::routedHandler(MessageT *raw_msg) {
   auto msg = promoteMsg(raw_msg);
-  auto const& entity_id = msg->getEntity();
-  auto const& home_node = msg->getHomeNode();
-  auto const& inst = msg->getLocInst();
-  auto const& serialize = msg->getSerialize();
-  auto const& from_node = msg->getLocFromNode();
+  auto const entity_id = msg->getEntity();
+  auto const home_node = msg->getHomeNode();
+  auto const inst = msg->getLocInst();
+  auto const serialize = msg->getSerialize();
+  auto const from_node = msg->getLocFromNode();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
   msg->incHops();
 
   vt_debug_print(
     location, node,
-    "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}, "
+    "routedHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}, "
     "epoch={:x}, hops={}, ask={}\n",
     print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
     from_node, epoch, msg->getHops(), msg->getAskNode()
   );
+
+  // Message may be re-routed (and sent) again from subsequent routeMsg.
+  envelopeSetIsLocked(msg->env, false);
 
   theTerm()->produce(epoch);
   LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
