@@ -156,6 +156,11 @@ inline void envelopeSetIsLocked(Env& env, bool is_locked) {
   reinterpret_cast<Envelope*>(&env)->is_locked = is_locked;
 }
 
+template <typename Env>
+inline void envelopeUnlockForForwarding(Env& env) {
+  reinterpret_cast<Envelope*>(&env)->is_locked = false;
+}
+
 } /* end namespace vt */
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SET_IMPL_H*/

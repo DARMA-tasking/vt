@@ -345,12 +345,12 @@ struct EntityLocationCoord : LocationCoord {
 
 private:
   /**
-   * \internal \brief General message handler for forwarding messages
+   * \internal \brief Handle relocation on different node.
    *
    * \param[in] msg the message
    */
   template <typename MessageT>
-  static void msgHandler(MessageT *msg);
+  static void routedHandler(MessageT *msg);
 
   /**
    * \internal \brief Request location handler from this node

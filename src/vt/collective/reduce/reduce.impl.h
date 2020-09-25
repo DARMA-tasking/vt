@@ -57,7 +57,7 @@ namespace vt { namespace collective { namespace reduce {
 
 template <typename MsgT>
 void Reduce::reduceUpHan(MsgT* msg) {
-  envelopeSetIsLocked(msg->env, false);
+  envelopeUnlockForForwarding(msg->env);
 
   vtAssert(msg->scope() == scope_, "Must match correct scope");
 
