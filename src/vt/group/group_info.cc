@@ -65,6 +65,7 @@ const bool IsInGroup = true;
 const bool MakeMpiGroup = true;
 
 Info::Info(
+  MPI_Comm comm,
   bool const& in_is_collective, ActionType in_action, GroupType const in_group,
   bool const& in_is_remote, bool const& in_is_in_group, RegionPtrType in_region,
   RegionType::SizeType const& in_total_size, bool make_mpi_group
@@ -72,35 +73,39 @@ Info::Info(
       in_is_remote, in_region ? std::move(in_region) : nullptr, in_total_size
     ),
     InfoColl(
-      in_is_in_group, make_mpi_group
+      in_is_in_group, comm, make_mpi_group
     ),
     group_(in_group), is_collective_(in_is_collective),
     finished_setup_action_(in_action)
 { }
 
 Info::Info(
-  InfoRootedLocalConsType, RegionPtrType in_region, ActionType in_action,
+  InfoRootedLocalConsType,
+  MPI_Comm comm, RegionPtrType in_region, ActionType in_action,
   GroupType const in_group, RegionType::SizeType const& in_total_size
 ) : Info(
-      not InCollective, in_action, in_group, not IsRemote, not IsInGroup,
+      comm, not InCollective, in_action, in_group, not IsRemote, not IsInGroup,
       std::move(in_region), in_total_size, not MakeMpiGroup
     )
 { }
 
 Info::Info(
-  InfoRootedRemoteConsType, RegionPtrType in_region, GroupType const in_group,
+  InfoRootedRemoteConsType,
+  MPI_Comm comm, RegionPtrType in_region, GroupType const in_group,
   RegionType::SizeType const& in_total_size
 ) : Info(
-      not InCollective, nullptr, in_group, IsRemote, not IsInGroup,
+      comm, not InCollective, nullptr, in_group, IsRemote, not IsInGroup,
       std::move(in_region), in_total_size, not MakeMpiGroup
     )
 { }
 
 Info::Info(
-  InfoCollectiveConsType, ActionType in_action, GroupType const in_group,
+  InfoCollectiveConsType,
+  MPI_Comm comm,
+  ActionType in_action, GroupType const in_group,
   bool const in_is_in_group, bool make_mpi_group
 ) : Info(
-      InCollective, in_action, in_group, not IsRemote, in_is_in_group,
+      comm, InCollective, in_action, in_group, not IsRemote, in_is_in_group,
       nullptr, 0, make_mpi_group
     )
 { }

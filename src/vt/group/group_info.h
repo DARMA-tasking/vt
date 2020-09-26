@@ -79,6 +79,7 @@ struct Info : InfoRooted, InfoColl {
 
 protected:
   Info(
+    MPI_Comm comm,
     bool const& in_is_collective, ActionType in_action,
     GroupType const in_group, bool const& in_is_remote,
     bool const& in_is_in_group, RegionPtrType in_region,
@@ -87,17 +88,20 @@ protected:
 
 public:
   Info(
-    InfoRootedLocalConsType, RegionPtrType in_region, ActionType in_action,
+    InfoRootedLocalConsType,
+    MPI_Comm comm, RegionPtrType in_region, ActionType in_action,
     GroupType const in_group, RegionType::SizeType const& total_size
   );
 
   Info(
-    InfoRootedRemoteConsType, RegionPtrType in_region, GroupType const in_group,
+    InfoRootedRemoteConsType,
+    MPI_Comm comm, RegionPtrType in_region, GroupType const in_group,
     RegionType::SizeType const& total_size
   );
 
   Info(
-    InfoCollectiveConsType, ActionType in_action, GroupType const in_group,
+    InfoCollectiveConsType,
+    MPI_Comm comm, ActionType in_action, GroupType const in_group,
     bool const in_is_in_group, bool make_mpi_group
   );
 
