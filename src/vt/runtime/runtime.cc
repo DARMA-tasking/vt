@@ -145,13 +145,17 @@ Runtime::Runtime(
 
   if (exit_code not_eq -1) {
     // Help requested or invalid argument(s).
-    // To better honor the MPI contract, force an MPI_Init then MPI_Abort.
-    // It might be better to move up the general MPI_Init case; normally
-    // MPI_Init is called as a result of Runtime::initialize (while this is ctor).
-    MPI_Comm comm = communicator_ != MPI_COMM_NULL ? communicator_ : MPI_COMM_WORLD;
-    int rank;
-    MPI_Init(NULL, NULL);
-    MPI_Comm_rank(comm, &rank);
+    // To better honor MPI, force an MPI_Init then MPI_Abort as relevant.
+    MPI_Comm comm = communicator_;
+
+    if (not is_interop_) {
+      MPI_Init(NULL, NULL);
+    }
+
+    int rank = 0;
+    if (comm not_eq MPI_COMM_NULL) {
+      MPI_Comm_rank(comm, &rank);
+    }
 
     if (rank == 0) {
       // Only emit output to rank 0 to minimize spam
@@ -165,7 +169,11 @@ Runtime::Runtime(
           << std::flush;
     }
 
-    MPI_Abort(comm, exit_code);
+    // Even in interop mode, still abort MPI.
+    if (comm not_eq MPI_COMM_NULL) {
+      MPI_Abort(comm, exit_code);
+    }
+
     std::_Exit(exit_code); // no return
   }
 
