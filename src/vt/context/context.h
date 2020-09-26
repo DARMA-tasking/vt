@@ -80,6 +80,8 @@ struct Context : runtime::component::Component<Context> {
    */
   Context(bool const interop, MPI_Comm comm);
 
+  ~Context();
+
   /**
    * \brief Gets the current node (analagous to MPI's rank) currently being
    * used.
@@ -106,14 +108,6 @@ struct Context : runtime::component::Component<Context> {
    * \return the \c MPI_Comm being used by VT for communication
    */
   inline MPI_Comm getComm() const { return communicator_; }
-
-  /**
-   * \brief Informs whether the MPI_Comm being used by the runtime is
-   * \c MPI_COMM_WORLD
-   *
-   * \return whether \c MPI_COMM_WORLD is being used
-   */
-  inline bool isCommWorld() const { return is_comm_world_; }
 
   /**
    * \brief Relevant only in threaded mode (e.g., \c std::thread, or OpenMP
@@ -167,7 +161,6 @@ private:
   NodeType thisNode_ = uninitialized_destination;
   NodeType numNodes_ = uninitialized_destination;
   WorkerCountType numWorkers_ = no_workers;
-  bool is_comm_world_ = true;
   MPI_Comm communicator_ = MPI_COMM_WORLD;
   DeclareClassInsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
 };

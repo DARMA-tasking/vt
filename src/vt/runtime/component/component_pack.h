@@ -116,13 +116,16 @@ public:
 
   /**
    * \internal \brief Extract the first component from a running pack that
-   * matches \c name
+   * matches \c name.
+   *
+   * The component will be cast to the specified component type \c T.
    *
    * \param[in] name the name of the component to remove
    *
    * \return pointer to the component to extract
    */
-  std::unique_ptr<BaseComponent> extractComponent(std::string const& name);
+  template <typename T>
+  std::unique_ptr<T> extractComponent(std::string const& name);
 
 private:
   /**

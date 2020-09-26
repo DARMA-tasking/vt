@@ -97,19 +97,6 @@ void ComponentPack::destruct() {
   }
 }
 
-std::unique_ptr<BaseComponent>
-ComponentPack::extractComponent(std::string const& name) {
-  std::unique_ptr<BaseComponent> ret = nullptr;
-  for (auto iter = live_components_.begin(); iter != live_components_.end(); ++iter) {
-    if ((*iter) != nullptr and (*iter)->name() == name) {
-      ret = std::move(*iter);
-      *iter = nullptr;
-      break;
-    }
-  }
-  return ret;
-}
-
 int ComponentPack::progress() {
   int total = 0;
   for (auto&& pollable : pollable_components_) {

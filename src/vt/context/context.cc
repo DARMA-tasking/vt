@@ -63,11 +63,8 @@ Context::Context(bool const is_interop, MPI_Comm comm) {
     );
   #endif
 
-  is_comm_world_ = comm == MPI_COMM_WORLD;
-
-  if (is_interop) {
-    MPI_Comm_dup(comm, &comm);
-  }
+  // Always duplicate, which may be MPI_COMM_WORLD.
+  MPI_Comm_dup(comm, &comm);
 
   int numNodesLocal = uninitialized_destination;
   int thisNodeLocal = uninitialized_destination;
@@ -80,6 +77,10 @@ Context::Context(bool const is_interop, MPI_Comm comm) {
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
 
   setDefaultWorker();
+}
+
+Context::~Context() {
+  MPI_Comm_free(&communicator_);
 }
 
 void Context::setDefaultWorker() {

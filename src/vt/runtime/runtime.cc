@@ -99,7 +99,7 @@ Runtime::Runtime(
   bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers),
-     communicator_(in_comm),
+     initial_communicator_(in_comm),
      arg_config_(std::make_unique<arguments::ArgConfig>()),
      app_config_(&arg_config_->config_)
 {
@@ -154,7 +154,7 @@ Runtime::Runtime(
 
   if (exit_code not_eq -1) {
     // Help requested or invalid argument(s).
-    MPI_Comm comm = communicator_;
+    MPI_Comm comm = initial_communicator_;
 
     int rank = 0;
     MPI_Comm_rank(comm, &rank);
@@ -385,7 +385,10 @@ bool Runtime::initialize(bool const force_now) {
     initializeComponents();
     initializeOptionalComponents();
     initializeErrorHandlers();
-    sync();
+
+    MPI_Comm comm = theContext->getComm();
+
+    sync(comm);
     if (theContext->getNode() == 0) {
       printStartupBanner();
       // Enqueue a check for later in case arguments are modified before work
@@ -412,7 +415,7 @@ bool Runtime::initialize(bool const force_now) {
       sig_handlers_disabled_ = false;
     }
 
-    sync();
+    sync(comm);
     initialized_ = true;
     return true;
   } else {
@@ -424,28 +427,27 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
   if (force_now) {
     using component::BaseComponent;
 
-    auto const& is_zero = theContext->getNode() == 0;
-    auto const& num_units = theTerm->getNumUnits();
+    MPI_Comm comm = theContext->getComm();
+
+    auto const is_zero = theContext->getNode() == 0;
+    auto const num_units = theTerm->getNumUnits();
     auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
-    sync();
+    sync(comm);
     fflush(stdout);
     fflush(stderr);
-    sync();
+    sync(comm);
 
-    // Extract the ArgConfig component by name from the pack for use after VT is
-    // finalized
-    auto ptr = p_->extractComponent("ArgConfig");
-    std::unique_ptr<arguments::ArgConfig> arg_ptr(
-      static_cast<arguments::ArgConfig*>(ptr.release())
-    );
-    // Move it back into the runtime holder
-    arg_config_ = std::move(arg_ptr);
+    // Extract ArgConfig and keep it for use after VT is finalized
+    arg_config_ = p_->extractComponent<vt::arguments::ArgConfig>("ArgConfig");
 
-    // This destroys and finalizes all components in proper reverse
-    // initialization order
+    // Context free's communicator in destructor; keep it around momentarily
+    // so the communicator can be used for synchronization until the end.
+    std::unique_ptr<vt::ctx::Context> context = p_->extractComponent<vt::ctx::Context>("Context");
+
+    // Destroys and finalizes the remaining components in reverse initialization order
     p_.reset(nullptr);
-    sync();
-    sync();
+    sync(comm);
+    sync(comm);
 
     if (is_zero) {
       printShutdownBanner(num_units, coll_epochs);
@@ -458,7 +460,11 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
       sig_handlers_disabled_ = true;
     }
 
-    sync();
+    sync(comm);
+
+    theContext = nullptr; // used in some state checks
+    context = nullptr;    // "use" to avoid warning
+
     finalized_ = true;
     return true;
   } else {
@@ -466,16 +472,13 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
   }
 }
 
-void Runtime::sync() {
-  MPI_Comm comm = communicator_;
-  if (comm == MPI_COMM_NULL and theContext != nullptr) {
-    comm = theContext->getComm();
-  }
-  if (comm == MPI_COMM_NULL) {
-    vtAbort("Trying to sync runtime while the communicator is not available");
-  } else {
-    MPI_Barrier(comm);
-  }
+void Runtime::systemSync() {
+  // nb. suspected to be used outside of an initialized VT.
+  MPI_Comm comm = theContext != nullptr
+    ? theContext->getComm()
+    : initial_communicator_;
+
+  MPI_Barrier(comm);
 }
 
 void Runtime::runScheduler() {
@@ -483,7 +486,8 @@ void Runtime::runScheduler() {
 }
 
 void Runtime::reset() {
-  sync();
+  MPI_Comm comm = theContext->getComm();
+  sync(comm);
 
   runtime_active_ = true;
 
@@ -491,7 +495,7 @@ void Runtime::reset() {
   theTerm->addDefaultAction(action);
   theTerm->resetGlobalTerm();
 
-  sync();
+  sync(comm);
 
   // Without workers running on the node, the termination detector should
   // assume its locally ready to propagate instead of waiting for them to
@@ -635,7 +639,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<ctx::Context>(
     &theContext,
     Deps<arguments::ArgConfig>{},
-    is_interop_, communicator_
+    is_interop_, initial_communicator_
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
@@ -887,10 +891,6 @@ void Runtime::initializeComponents() {
   }
 
   p_->construct();
-
-  if (communicator_ == MPI_COMM_NULL) {
-    communicator_ = theContext->getComm();
-  }
 
   vt_debug_print(runtime, node, "end: initializeComponents\n");
 }

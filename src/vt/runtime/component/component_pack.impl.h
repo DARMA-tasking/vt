@@ -126,6 +126,19 @@ void ComponentPack::add() {
   added_components_.insert(idx);
 }
 
+template <typename T>
+std::unique_ptr<T>
+ComponentPack::extractComponent(std::string const& name) {
+  for (auto iter = live_components_.begin(); iter != live_components_.end(); ++iter) {
+    if ((*iter) != nullptr and (*iter)->name() == name) {
+      T* raw = static_cast<T*>((*iter).release());
+      *iter = nullptr;
+      return std::unique_ptr<T>(raw);
+    }
+  }
+  return std::unique_ptr<T>(nullptr);
+}
+
 }}} /* end namespace vt::runtime::component */
 
 #endif /*INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_IMPL_H*/
