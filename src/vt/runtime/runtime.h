@@ -267,11 +267,6 @@ protected:
   bool tryFinalize(bool const disable_sig = true);
 
   /**
-   * \internal \brief Setup argument input
-   */
-  void setupArgs();
-
-  /**
    * \internal \brief Initialize error handlers
    */
   void initializeErrorHandlers();
@@ -432,8 +427,6 @@ protected:
   bool sig_handlers_disabled_ = false;
   WorkerCountType num_workers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_NULL;
-  int user_argc_ = 0;
-  std::unique_ptr<char*[]> user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;
   std::unique_ptr<arguments::ArgConfig> arg_config_;
   arguments::AppConfig const* app_config_;   /**< App config during startup */

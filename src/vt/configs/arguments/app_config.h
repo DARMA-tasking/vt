@@ -209,9 +209,6 @@ struct AppConfig {
   /// Original char* object.
   char* argv_prog_name {const_cast<char*>("vt_unknown")};
 
-  /// Arguments to pass to MPI Init.
-  /// Does not include argv[0]. Original char* objects.
-  std::vector<char*> mpi_init_args;
   /// Arguments are being ref-returend as the result of parse(..).
   /// Does not include argv[0]. Original char* objects.
   std::vector<char*> passthru_args;

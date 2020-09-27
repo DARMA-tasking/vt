@@ -125,8 +125,9 @@ Runtime::Runtime(
   ///   re-initialized \c arg_config_ will contain the configuration.
   ///
   ///  For this to all work correctly, the \c vt_debug_print infrastructure
-  ///  calls \c vt::config::getConfig() which always grabs the correct app
-  ///  config, either from the component singleton or the \c vt::Runtime
+  ///  calls \c vt::config::preConfig() which always grabs the correct app
+  ///  config, from the component singleton or the \c vt::Runtime,
+  ///  or provides stubbed arguments as a fallback.
   ///
   /// =========================================================================
 
@@ -171,8 +172,6 @@ Runtime::Runtime(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
-
-  setupArgs();
 }
 
 bool Runtime::hasSchedRun() const {
@@ -605,17 +604,6 @@ void Runtime::setup() {
   vt_debug_print(runtime, node, "end: setup\n");
 }
 
-void Runtime::setupArgs() {
-  std::vector<char*>& mpi_args = arg_config_->config_.mpi_init_args;
-  user_argc_ = mpi_args.size() + 1;
-  user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
-
-  int i = 0;
-  user_argv_[i++] = arg_config_->config_.argv_prog_name;
-  for (char*& arg : mpi_args) {
-    user_argv_[i++] = arg;
-  }
-  user_argv_[i++] = nullptr;
 void Runtime::initializeComponents() {
   vt_debug_print(runtime, node, "begin: initializeComponents\n");
 

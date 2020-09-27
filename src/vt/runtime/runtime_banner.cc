@@ -780,20 +780,12 @@ void Runtime::printStartupBanner() {
   auto f88 = fmt::format("{}Pass-through Arguments:{}\n", green, reset);
   fmt::print("{}{}{}", vt_pre, f88, reset);
 
-  std::vector<char*> const& mpi_args = getAppConfig()->mpi_init_args;
   std::vector<char*> const& passthru_args = getAppConfig()->passthru_args;
 
-  if (mpi_args.empty() and passthru_args.empty()) {
+  if (passthru_args.empty()) {
     auto f11 = fmt::format("None. All arguments handled.\n");
     fmt::print("{}\t{}{}", vt_pre, f11, reset);
   } else {
-    if (not mpi_args.empty()) {
-      auto f11 = fmt::format(
-        "MPI Init args: [{}]\n",
-        arg_str(mpi_args)
-      );
-      fmt::print("{}\t{}{}", vt_pre, f11, reset);
-    }
     if (not passthru_args.empty()) {
       auto f11 = fmt::format(
         "Application args: [{}]\n",
