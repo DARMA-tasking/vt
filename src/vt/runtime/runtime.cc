@@ -388,7 +388,7 @@ bool Runtime::initialize(bool const force_now) {
 
     MPI_Comm comm = theContext->getComm();
 
-    sync(comm);
+    MPI_Barrier(comm);
     if (theContext->getNode() == 0) {
       printStartupBanner();
       // Enqueue a check for later in case arguments are modified before work
@@ -415,7 +415,7 @@ bool Runtime::initialize(bool const force_now) {
       sig_handlers_disabled_ = false;
     }
 
-    sync(comm);
+    MPI_Barrier(comm);
     initialized_ = true;
     return true;
   } else {
@@ -432,10 +432,10 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
     auto const is_zero = theContext->getNode() == 0;
     auto const num_units = theTerm->getNumUnits();
     auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
-    sync(comm);
+    MPI_Barrier(comm);
     fflush(stdout);
     fflush(stderr);
-    sync(comm);
+    MPI_Barrier(comm);
 
     // Extract ArgConfig and keep it for use after VT is finalized
     arg_config_ = p_->extractComponent<vt::arguments::ArgConfig>("ArgConfig");
@@ -446,8 +446,8 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
 
     // Destroys and finalizes the remaining components in reverse initialization order
     p_.reset(nullptr);
-    sync(comm);
-    sync(comm);
+    MPI_Barrier(comm);
+    MPI_Barrier(comm);
 
     if (is_zero) {
       printShutdownBanner(num_units, coll_epochs);
@@ -460,7 +460,7 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
       sig_handlers_disabled_ = true;
     }
 
-    sync(comm);
+    MPI_Barrier(comm);
 
     theContext = nullptr; // used in some state checks
     context = nullptr;    // "use" to avoid warning
@@ -487,7 +487,7 @@ void Runtime::runScheduler() {
 
 void Runtime::reset() {
   MPI_Comm comm = theContext->getComm();
-  sync(comm);
+  MPI_Barrier(comm);
 
   runtime_active_ = true;
 
@@ -495,7 +495,7 @@ void Runtime::reset() {
   theTerm->addDefaultAction(action);
   theTerm->resetGlobalTerm();
 
-  sync(comm);
+  MPI_Barrier(comm);
 
   // Without workers running on the node, the termination detector should
   // assume its locally ready to propagate instead of waiting for them to

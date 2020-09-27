@@ -296,13 +296,6 @@ protected:
   bool needStatsRestartReader();
 
   /**
-   * \internal \brief Perform a synchronization during startup/shutdown.
-   *
-   * \param[in] comm the communicator to use
-   */
-  void sync(MPI_Comm comm);
-
-  /**
    * \internal \brief Perform setup actions, such as registering a termination
    * detector action for detecting global termination
    */
