@@ -56,46 +56,31 @@
 
 namespace vt { namespace ctx {
 
-Context::Context(int argc, char** argv, bool const is_interop, MPI_Comm* comm) {
+Context::Context(bool const is_interop, MPI_Comm comm) {
   #if DEBUG_VT_CONTEXT
     fmt::print(
       "Context::Context is_interop={}, comm={}\n", print_bool(is_interop), comm
     );
   #endif
 
-  if (not is_interop) {
-    MPI_Init(&argc, &argv);
-  }
-
-  if (comm != nullptr and *comm != MPI_COMM_NULL) {
-    communicator_ = *comm;
-  } else {
-    communicator_ = MPI_COMM_WORLD;
-  }
+  is_comm_world_ = comm == MPI_COMM_WORLD;
 
   if (is_interop) {
-    MPI_Comm vt_comm;
-    MPI_Comm_dup(communicator_, &vt_comm);
-    communicator_ = vt_comm;
+    MPI_Comm_dup(comm, &comm);
   }
-
-  is_comm_world_ = communicator_ == MPI_COMM_WORLD;
 
   int numNodesLocal = uninitialized_destination;
   int thisNodeLocal = uninitialized_destination;
 
-  MPI_Comm_size(communicator_, &numNodesLocal);
-  MPI_Comm_rank(communicator_, &thisNodeLocal);
+  MPI_Comm_size(comm, &numNodesLocal);
+  MPI_Comm_rank(comm, &thisNodeLocal);
 
+  communicator_ = comm;
   numNodes_ = static_cast<NodeType>(numNodesLocal);
   thisNode_ = static_cast<NodeType>(thisNodeLocal);
 
   setDefaultWorker();
 }
-
-Context::Context(bool const interop, MPI_Comm* comm)
-  : Context(0, nullptr, interop, comm)
-{ }
 
 void Context::setDefaultWorker() {
   setWorker(worker_id_comm_thread);

@@ -96,12 +96,10 @@ namespace vt { namespace runtime {
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
+  bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers),
-     communicator_(
-       in_comm == nullptr ? MPI_COMM_NULL : *in_comm
-     ),
+     communicator_(in_comm),
      arg_config_(std::make_unique<arguments::ArgConfig>()),
      app_config_(&arg_config_->config_)
 {
@@ -132,30 +130,23 @@ Runtime::Runtime(
   ///
   /// =========================================================================
 
-  // MPI_Init 'should' be called first on the original arguments,
-  // with the justification that in some environments in addition to removing
-  // special MPI arguments, it can actually ADD arguments not from argv.
-  // That is not done here and doing so moves up parts of 'initialize' logic.
+  // Always initialize MPI first, before handling arguments.
+  // This also allows MPI a first-stab at dealing with arguments.
+  if (not is_interop_) {
+    MPI_Init(&argc, &argv);
+  }
 
   // n.b. ref-update of args with pass-through arguments
-  // (pass-through arguments are neither for VT or MPI_Init)
   std::tuple<int, std::string> result =
     arg_config_->parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);
 
   if (exit_code not_eq -1) {
     // Help requested or invalid argument(s).
-    // To better honor MPI, force an MPI_Init then MPI_Abort as relevant.
     MPI_Comm comm = communicator_;
 
-    if (not is_interop_) {
-      MPI_Init(NULL, NULL);
-    }
-
     int rank = 0;
-    if (comm not_eq MPI_COMM_NULL) {
-      MPI_Comm_rank(comm, &rank);
-    }
+    MPI_Comm_rank(comm, &rank);
 
     if (rank == 0) {
       // Only emit output to rank 0 to minimize spam
@@ -169,10 +160,9 @@ Runtime::Runtime(
           << std::flush;
     }
 
-    // Even in interop mode, still abort MPI.
-    if (comm not_eq MPI_COMM_NULL) {
-      MPI_Abort(comm, exit_code);
-    }
+    // Even in interop mode, still abort MPI on bad args.
+    MPI_Abort(comm, exit_code);
+    MPI_Finalize();
 
     std::_Exit(exit_code); // no return
   }
@@ -321,8 +311,13 @@ void Runtime::setupTerminateHandler() {
       return runtime_active_ && !aborted_;
     });
   }
+
   if (!aborted_) {
     finalize();
+  }
+
+  if (not is_interop_) {
+    MPI_Finalize();
   }
 }
 
@@ -447,8 +442,6 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
       printShutdownBanner(num_units, coll_epochs);
     }
 
-    finalizeMPI();
-
     if (disable_sig) {
       signal(SIGSEGV, SIG_DFL);
       signal(SIGUSR1, SIG_DFL);
@@ -456,6 +449,7 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
       sig_handlers_disabled_ = true;
     }
 
+    sync();
     finalized_ = true;
     return true;
   } else {
@@ -622,16 +616,6 @@ void Runtime::setupArgs() {
     user_argv_[i++] = arg;
   }
   user_argv_[i++] = nullptr;
-}
-
-void Runtime::finalizeMPI() {
-  sync();
-
-  if (not is_interop_) {
-    MPI_Finalize();
-  }
-}
-
 void Runtime::initializeComponents() {
   vt_debug_print(runtime, node, "begin: initializeComponents\n");
 
@@ -653,7 +637,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<ctx::Context>(
     &theContext,
     Deps<arguments::ArgConfig>{},
-    user_argc_, &user_argv_[0], is_interop_, &communicator_
+    is_interop_, communicator_
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<

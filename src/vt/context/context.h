@@ -69,11 +69,16 @@ namespace vt {  namespace ctx {
  * functionality analogous to \c MPI_Comm_size and \c MPI_Comm_rank.
  */
 struct Context : runtime::component::Component<Context> {
-  /// Constructor with interop and args, not called by the user directly
-  Context(int argc, char** argv, bool const interop, MPI_Comm* comm = nullptr);
-
-  /// Constructor with only interop, not called by the user directly
-  Context(bool const interop, MPI_Comm* comm = nullptr);
+  /**
+   * \internal
+   * \brief Construct the context.
+   *
+   * \note MPI must already have been appropriately initialized.
+   *
+   * \param[in] interop running in interop mode?
+   * \param[in] comm the communicator
+   */
+  Context(bool const interop, MPI_Comm comm);
 
   /**
    * \brief Gets the current node (analagous to MPI's rank) currently being

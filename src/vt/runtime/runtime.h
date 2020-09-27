@@ -87,6 +87,9 @@ struct Runtime {
    * Under interop mode, MPI is not initialized or finalized by the runtime.
    * This can be used to embed VT into a larger context.
    *
+   * When not running in interop mode, MPI is initialized in the constructor
+   * and finalized in the destructor.
+   *
    * \param[in] argc argument count (modified after VT extracts)
    * \param[in] argv arguments  (modified after VT extracts)
    * \param[in] in_num_workers number of worker threads to initialize
@@ -98,7 +101,7 @@ struct Runtime {
     int& argc, char**& argv,
     WorkerCountType in_num_workers = no_workers,
     bool const interop_mode = false,
-    MPI_Comm* in_comm = nullptr,
+    MPI_Comm in_comm = MPI_COMM_WORLD,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
 
@@ -296,11 +299,6 @@ protected:
    * \return whether we should create it
    */
   bool needStatsRestartReader();
-
-  /**
-   * \internal \brief Finalize MPI
-   */
-  void finalizeMPI();
 
   /**
    * \internal \brief Perform a synchronization during startup/shutdown using an
