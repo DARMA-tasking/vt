@@ -59,6 +59,11 @@
 
 namespace vt { namespace group {
 
+const bool InCollective = true;
+const bool IsRemote = true;
+const bool IsInGroup = true;
+const bool MakeMpiGroup = true;
+
 Info::Info(
   bool const& in_is_collective, ActionType in_action, GroupType const in_group,
   bool const& in_is_remote, bool const& in_is_in_group, RegionPtrType in_region,
@@ -74,21 +79,11 @@ Info::Info(
 { }
 
 Info::Info(
-  InfoRootedConsType, RegionPtrType in_region, ActionType in_action,
-  GroupType const in_group, RegionType::SizeType const& in_total_size,
-  bool const& in_is_remote
-) : Info(
-      false, in_action, in_group, in_is_remote, false, std::move(in_region),
-      in_total_size, false
-    )
-{ }
-
-Info::Info(
   InfoRootedLocalConsType, RegionPtrType in_region, ActionType in_action,
   GroupType const in_group, RegionType::SizeType const& in_total_size
 ) : Info(
-      info_rooted_cons, std::move(in_region), in_action, in_group,
-      in_total_size, false
+      not InCollective, in_action, in_group, not IsRemote, not IsInGroup,
+      std::move(in_region), in_total_size, not MakeMpiGroup
     )
 { }
 
@@ -96,15 +91,18 @@ Info::Info(
   InfoRootedRemoteConsType, RegionPtrType in_region, GroupType const in_group,
   RegionType::SizeType const& in_total_size
 ) : Info(
-      info_rooted_cons, std::move(in_region), nullptr, in_group,
-      in_total_size, true
+      not InCollective, nullptr, in_group, IsRemote, not IsInGroup,
+      std::move(in_region), in_total_size, not MakeMpiGroup
     )
 { }
 
 Info::Info(
   InfoCollectiveConsType, ActionType in_action, GroupType const in_group,
-  bool const in_is_in_group, bool mpi
-) : Info(true, in_action, in_group, false, in_is_in_group, nullptr, 0, mpi)
+  bool const in_is_in_group, bool make_mpi_group
+) : Info(
+      InCollective, in_action, in_group, not IsRemote, in_is_in_group,
+      nullptr, 0, make_mpi_group
+    )
 { }
 
 void Info::setup() {

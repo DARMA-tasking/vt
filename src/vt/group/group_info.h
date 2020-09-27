@@ -68,7 +68,6 @@ static constexpr size_t const max_region_list_size = 4;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
-static struct InfoRootedConsType {} info_rooted_cons {};
 static struct InfoRootedLocalConsType {} info_rooted_local_cons {};
 static struct InfoRootedRemoteConsType {} info_rooted_remote_cons {};
 static struct InfoCollectiveConsType {} info_collective_cons {};
@@ -84,12 +83,6 @@ protected:
     GroupType const in_group, bool const& in_is_remote,
     bool const& in_is_in_group, RegionPtrType in_region,
     RegionType::SizeType const& in_total_size, bool make_mpi_group
-  );
-
-  Info(
-    InfoRootedConsType, RegionPtrType in_region, ActionType in_action,
-    GroupType const in_group, RegionType::SizeType const& total_size,
-    bool const& in_is_remote
   );
 
 public:
