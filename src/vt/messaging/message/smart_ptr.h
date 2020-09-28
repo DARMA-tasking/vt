@@ -215,6 +215,12 @@ struct MsgSharedPtr final {
               << ")";
   }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    // s | impl_
+    //   | ptr_;
+  }
+
 private:
 
   /// Performs state-ownership, always taking an additional message ref.

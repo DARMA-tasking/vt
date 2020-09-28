@@ -171,7 +171,8 @@ TEST_F(TestMemoryFootprinting, test_active_messenger) {
 }
 
 TEST_F(TestMemoryFootprinting, test_async_event) {
-  printMemoryFootprint(theEvent());
+  vt::event::AsyncEvent event;
+  printMemoryFootprint(&event);
 }
 
 TEST_F(TestMemoryFootprinting, test_worker_group_type) {

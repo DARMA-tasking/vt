@@ -189,10 +189,11 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | cur_event_;
-      // | event_container_
-      // | polling_event_container_
-      // | lookup_container_; // std::_List_iterator<vt::event::EventHolder>
+    s | cur_event_
+      | event_container_
+      | polling_event_container_;
+
+    s.countBytes(lookup_container_);
 
   # if vt_check_enabled(trace_enabled)
     s | trace_event_polling;
