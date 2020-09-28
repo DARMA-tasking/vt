@@ -296,8 +296,6 @@ TEST_F(TestMPICollective, test_mpi_collective_5) {
     is_user_scope = scope2.isUserTag();
     scope_bits = scope2.getScopeBits();
 
-    // These three collective can execute in any order, but it will always be
-    // consistent across all the nodes
     vt::runInEpochCollective([&]{
       scope2.mpiCollectiveAsync([&done]{
         auto comm = theContext()->getComm();
