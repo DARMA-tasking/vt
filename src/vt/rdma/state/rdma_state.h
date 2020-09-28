@@ -90,6 +90,8 @@ struct State {
   RDMA_PtrType ptr = no_rdma_ptr;
   ByteType num_bytes = no_byte;
 
+  State() = default;
+
   State(
     RDMA_HandleType const& in_handle, RDMA_PtrType const& in_ptr = no_rdma_ptr,
     ByteType const& in_num_bytes = no_byte,
@@ -143,6 +145,27 @@ struct State {
     StateMessage<State>* msg, RDMA_PtrType in_ptr, ByteType in_num_bytes,
     ByteType req_offset, TagType tag, bool is_local
   );
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | using_default_put_handler
+      | using_default_get_handler
+      | group_info
+      | this_rdma_get_handler
+      | this_rdma_put_handler
+      | this_get_handler
+      | this_put_handler
+      | get_any_tag
+      | put_any_tag
+      | rdma_get_fn
+      | rdma_put_fn
+      | get_tag_holder
+      | put_tag_holder
+      | pending_tag_gets
+      | pending_tag_puts
+      | user_state_get_msg_
+      | user_state_put_msg_;
+  }
 
   bool using_default_put_handler = false;
   bool using_default_get_handler = false;

@@ -906,10 +906,10 @@ public:
     s | cur_rdma_handler_
       | cur_ident_
       | cur_collective_ident_
-      // | holder_
+      | holder_
       | cur_op_
-      // | pending_ops_
-      // | channels_
+      | pending_ops_
+      | channels_
       | next_channel_tag_
       | collective_scope_;
   }

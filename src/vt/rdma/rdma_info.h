@@ -65,6 +65,8 @@ struct Info {
   ByteType offset = no_byte;
   bool is_local = false;
 
+  Info() = default;
+
   Info(
     RDMA_TypeType const& in_rdma_type, ByteType const& in_num_bytes = no_byte,
     ByteType const& in_offset = no_byte, TagType const& in_tag = no_tag,
@@ -74,6 +76,18 @@ struct Info {
       data_ptr(in_data_ptr), cont(in_cont), cont_action(in_cont_action),
       offset(in_offset), is_local(in_is_local)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | rdma_type
+      | num_bytes
+      | tag
+      | data_ptr
+      | cont
+      | cont_action
+      | offset
+      | is_local;
+  }
 };
 
 }} //end namespace vt::rdma

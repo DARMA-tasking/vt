@@ -58,6 +58,8 @@ struct ChannelLookup {
   NodeType target = uninitialized_destination;
   NodeType non_target = uninitialized_destination;
 
+  ChannelLookup() = default;
+
   ChannelLookup(
     RDMA_HandleType const& han, NodeType const& in_target,
     NodeType const& in_non_target
@@ -69,6 +71,12 @@ struct ChannelLookup {
 
   ChannelLookup(ChannelLookup const&) = default;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | handle
+      | target
+      | non_target;
+  }
 };
 
 inline bool

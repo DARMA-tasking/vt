@@ -67,6 +67,8 @@ struct Channel {
 
   static constexpr RDMA_GroupPosType const no_group_pos = -1;
 
+  Channel() = default;
+
   Channel(
     RDMA_HandleType const& in_rdma_handle, RDMA_TypeType const& in_op_type,
     NodeType const& in_target, TagType const& in_channel_group_tag,
@@ -89,6 +91,25 @@ struct Channel {
 
   NodeType getTarget() const;
   NodeType getNonTarget() const;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | is_target_
+      | initialized_
+      | locked_
+      | rdma_handle_
+      | target_pos_
+      | non_target_pos_
+      | target_
+      | non_target_
+      | num_bytes_
+      | ptr_
+      | op_type_
+      | channel_group_tag_
+      | window_
+      | channel_group_
+      | channel_comm_;
+  }
 
 private:
   void initChannelWindow();
