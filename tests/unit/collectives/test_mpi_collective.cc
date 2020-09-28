@@ -282,4 +282,34 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
   }
 }
 
+TEST_F(TestMPICollective, test_mpi_collective_5) {
+  // Test std::move for a scope ensuring that de-allocation still works properly
+
+  int done = 0;
+  bool is_user_scope = false;
+  TagType scope_bits;
+
+  {
+    vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
+    vt::collective::CollectiveScope scope2{std::move(scope)};
+
+    is_user_scope = scope2.isUserTag();
+    scope_bits = scope2.getScopeBits();
+
+    // These three collective can execute in any order, but it will always be
+    // consistent across all the nodes
+    vt::runInEpochCollective([&]{
+      scope2.mpiCollectiveAsync([&done]{
+        auto comm = theContext()->getComm();
+        vt_print(barrier, "run MPI_Barrier\n");
+        MPI_Barrier(comm);
+        done++;
+      });
+    });
+  }
+
+  EXPECT_TRUE(theCollective()->isDeallocated(is_user_scope, scope_bits));
+  EXPECT_EQ(done, 1);
+}
+
 }}} // end namespace vt::tests::unit
