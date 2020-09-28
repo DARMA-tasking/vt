@@ -100,7 +100,14 @@ private:
   friend struct CollectiveAlg;
 
 public:
-  CollectiveScope(CollectiveScope&&) = default;
+  CollectiveScope(CollectiveScope&& other)
+    : is_user_tag_(other.is_user_tag_),
+      scope_(other.scope_)
+  {
+    // invalidate scope for deallocation
+    other.scope_ = no_tag;
+  }
+
   CollectiveScope(CollectiveScope const&) = delete;
   CollectiveScope& operator=(CollectiveScope&&) = delete;
   CollectiveScope& operator=(CollectiveScope const&) = delete;
