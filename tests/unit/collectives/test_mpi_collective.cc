@@ -70,45 +70,52 @@ TEST_F(TestMPICollective, test_mpi_collective_1) {
 }
 
 TEST_F(TestMPICollective, test_mpi_collective_2) {
-  int done = 0;
-
-  vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
-
-  // These three collective can execute in any order, but it will always be
-  // consistent across all the nodes
-  scope.mpiCollectiveAsync([&done]{
-    auto comm = theContext()->getComm();
-    vt_print(barrier, "run MPI_Barrier\n");
-    MPI_Barrier(comm);
-    done++;
-  });
-
   auto this_node = theContext()->getNode();
+  int done = 0;
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
-
-  scope.mpiCollectiveAsync([&done,&bcast_val,root]{
-    auto comm = theContext()->getComm();
-    vt_print(barrier, "run MPI_Bcast\n");
-    MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
-    done++;
-  });
-
   int reduce_val_out = 0;
+  bool is_user_scope = false;
+  TagType scope_bits;
 
-  scope.mpiCollectiveAsync([&done,&reduce_val_out]{
-    auto comm = theContext()->getComm();
-    int val_in = 1;
-    vt_print(barrier, "run MPI_Allreduce\n");
-    MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
-    done++;
-  });
+  {
+    vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
 
-  theTerm()->addAction([&done,&bcast_val,&reduce_val_out]{
+    is_user_scope = scope.isUserTag();
+    scope_bits = scope.getScopeBits();
+
+    // These three collective can execute in any order, but it will always be
+    // consistent across all the nodes
+    scope.mpiCollectiveAsync([&done]{
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_Barrier\n");
+      MPI_Barrier(comm);
+      done++;
+    });
+
+    scope.mpiCollectiveAsync([&done,&bcast_val,root]{
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_Bcast\n");
+      MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
+      done++;
+    });
+
+    scope.mpiCollectiveAsync([&done,&reduce_val_out]{
+      auto comm = theContext()->getComm();
+      int val_in = 1;
+      vt_print(barrier, "run MPI_Allreduce\n");
+      MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
+      done++;
+    });
+  }
+
+  theTerm()->addAction([&]{
     auto num_nodes = theContext()->getNumNodes();
     EXPECT_EQ(done, 3);
     EXPECT_EQ(bcast_val, 29);
     EXPECT_EQ(reduce_val_out, num_nodes);
+
+    EXPECT_TRUE(theCollective()->isDeallocated(is_user_scope, scope_bits));
   });
 
   while (not vt::rt->isTerminated()) {
@@ -122,30 +129,38 @@ TEST_F(TestMPICollective, test_mpi_collective_3) {
   auto this_node = theContext()->getNode();
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
-
-  vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
-
-  auto tag = scope.mpiCollectiveAsync([&done,&bcast_val,root]{
-    auto comm = theContext()->getComm();
-    vt_print(barrier, "run MPI_Bcast\n");
-    MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
-    done++;
-  });
-
-  scope.waitCollective(tag);
-
-  EXPECT_EQ(done, 1);
-  EXPECT_EQ(bcast_val, 29);
-
   int reduce_val_out = 0;
+  bool is_user_scope = false;
+  TagType scope_bits;
 
-  scope.mpiCollectiveWait([&done,&reduce_val_out]{
-    auto comm = theContext()->getComm();
-    int val_in = 1;
-    vt_print(barrier, "run MPI_Allreduce\n");
-    MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
-    done++;
-  });
+  {
+    vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
+
+    is_user_scope = scope.isUserTag();
+    scope_bits = scope.getScopeBits();
+
+    auto tag = scope.mpiCollectiveAsync([&done,&bcast_val,root]{
+      auto comm = theContext()->getComm();
+      vt_print(barrier, "run MPI_Bcast\n");
+      MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
+      done++;
+    });
+
+    scope.waitCollective(tag);
+
+    EXPECT_EQ(done, 1);
+    EXPECT_EQ(bcast_val, 29);
+
+    scope.mpiCollectiveWait([&done,&reduce_val_out]{
+      auto comm = theContext()->getComm();
+      int val_in = 1;
+      vt_print(barrier, "run MPI_Allreduce\n");
+      MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
+      done++;
+    });
+  }
+
+  EXPECT_TRUE(theCollective()->isDeallocated(is_user_scope, scope_bits));
 
   EXPECT_EQ(done, 2);
   EXPECT_EQ(reduce_val_out, theContext()->getNumNodes());
@@ -171,62 +186,71 @@ void orderHan(OrderMsg* msg) {
 
 TEST_F(TestMPICollective, test_mpi_collective_4) {
   int done = 0;
-
   auto this_node = theContext()->getNode();
   bool is_even = this_node % 2 == 0;
-
-  // System scope (will have generated tag=1)
-  vt::collective::CollectiveScope scope1 = theCollective()->makeCollectiveScope();
-  // System scope (will have generated tag=2)
-  vt::collective::CollectiveScope scope2 = theCollective()->makeCollectiveScope();
-  // User scope with tag=1
-  vt::collective::CollectiveScope scope3 = theCollective()->makeCollectiveScope(1);
-
   int root = 0;
   int bcast_val = this_node == root ? 29 : 0;
   int reduce_val_out = 0;
+  bool is_user_scope[3] = { false, false, false };
+  TagType scope_bits[3];
 
-  // Reset run_order if the test runs multiple times
-  run_order[0] = 0;
-  run_order[1] = 0;
-  run_order[2] = 0;
-
-  auto epoch = theTerm()->makeEpochCollective();
+  auto const epoch = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(epoch);
+  {
+    // System scope (will have generated tag=1)
+    vt::collective::CollectiveScope scope1 = theCollective()->makeCollectiveScope();
+    // System scope (will have generated tag=2)
+    vt::collective::CollectiveScope scope2 = theCollective()->makeCollectiveScope();
+    // User scope with tag=1
+    vt::collective::CollectiveScope scope3 = theCollective()->makeCollectiveScope(1);
 
-  auto op1 = [&]{
-    scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
-      auto comm = theContext()->getComm();
-      vt_print(barrier, "run MPI_Bcast\n");
-      MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
-      run_order[done++] = 1;
-    });
-  };
+    is_user_scope[0] = scope1.isUserTag();
+    is_user_scope[1] = scope2.isUserTag();
+    is_user_scope[2] = scope3.isUserTag();
 
-  auto op2 = [&]{
-    scope2.mpiCollectiveAsync([&done,&reduce_val_out]{
-      auto comm = theContext()->getComm();
-      int val_in = 1;
-      vt_print(barrier, "run MPI_Allreduce\n");
-      MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
-      run_order[done++] = 2;
-    });
-  };
+    scope_bits[0] = scope1.getScopeBits();
+    scope_bits[1] = scope2.getScopeBits();
+    scope_bits[2] = scope3.getScopeBits();
 
-  auto op3 = [&]{
-    scope3.mpiCollectiveAsync([&done]{
-      auto comm = theContext()->getComm();
-      vt_print(barrier, "run MPI_barrier\n");
-      MPI_Barrier(comm);
-      run_order[done++] = 3;
-    });
-  };
+    // Reset run_order if the test runs multiple times
+    run_order[0] = 0;
+    run_order[1] = 0;
+    run_order[2] = 0;
 
-  // Execute them in different orders
-  if (is_even) {
-    op1(); op2(); op3();
-  } else {
-    op2(); op3(); op1();
+    auto op1 = [&]{
+      scope1.mpiCollectiveAsync([&done,&bcast_val,root]{
+        auto comm = theContext()->getComm();
+        vt_print(barrier, "run MPI_Bcast\n");
+        MPI_Bcast(&bcast_val, 1, MPI_INT, root, comm);
+        run_order[done++] = 1;
+      });
+    };
+
+    auto op2 = [&]{
+      scope2.mpiCollectiveAsync([&done,&reduce_val_out]{
+        auto comm = theContext()->getComm();
+        int val_in = 1;
+        vt_print(barrier, "run MPI_Allreduce\n");
+        MPI_Allreduce(&val_in, &reduce_val_out, 1, MPI_INT, MPI_SUM, comm);
+        run_order[done++] = 2;
+      });
+    };
+
+    auto op3 = [&]{
+      scope3.mpiCollectiveAsync([&done]{
+        auto comm = theContext()->getComm();
+        vt_print(barrier, "run MPI_barrier\n");
+        MPI_Barrier(comm);
+        run_order[done++] = 3;
+      });
+    };
+
+    // Execute them in different orders
+    if (is_even) {
+      op1(); op2(); op3();
+    } else {
+      op2(); op3(); op1();
+    }
   }
 
   theMsg()->popEpoch(epoch);
@@ -234,11 +258,16 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
 
   bool finished_spin = false;
 
-  theTerm()->addAction(epoch, [&done,&bcast_val,&reduce_val_out,&finished_spin]{
+  theTerm()->addAction(epoch, [&]{
     auto num_nodes = theContext()->getNumNodes();
     EXPECT_EQ(done, 3);
     EXPECT_EQ(bcast_val, 29);
     EXPECT_EQ(reduce_val_out, num_nodes);
+
+    EXPECT_TRUE(theCollective()->isDeallocated(is_user_scope[0], scope_bits[0]));
+    EXPECT_TRUE(theCollective()->isDeallocated(is_user_scope[1], scope_bits[1]));
+    EXPECT_TRUE(theCollective()->isDeallocated(is_user_scope[2], scope_bits[2]));
+
     finished_spin = true;
   });
 
@@ -251,6 +280,34 @@ TEST_F(TestMPICollective, test_mpi_collective_4) {
     auto msg = makeMessage<OrderMsg>(run_order);
     theMsg()->broadcastMsg<OrderMsg,orderHan>(msg.get());
   }
+}
+
+TEST_F(TestMPICollective, test_mpi_collective_5) {
+  // Test std::move for a scope ensuring that de-allocation still works properly
+
+  int done = 0;
+  bool is_user_scope = false;
+  TagType scope_bits;
+
+  {
+    vt::collective::CollectiveScope scope = theCollective()->makeCollectiveScope();
+    vt::collective::CollectiveScope scope2{std::move(scope)};
+
+    is_user_scope = scope2.isUserTag();
+    scope_bits = scope2.getScopeBits();
+
+    vt::runInEpochCollective([&]{
+      scope2.mpiCollectiveAsync([&done]{
+        auto comm = theContext()->getComm();
+        vt_print(barrier, "run MPI_Barrier\n");
+        MPI_Barrier(comm);
+        done++;
+      });
+    });
+  }
+
+  EXPECT_TRUE(theCollective()->isDeallocated(is_user_scope, scope_bits));
+  EXPECT_EQ(done, 1);
 }
 
 }}} // end namespace vt::tests::unit
