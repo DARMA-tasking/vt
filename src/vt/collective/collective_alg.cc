@@ -75,6 +75,12 @@ CollectiveScope CollectiveAlg::makeCollectiveScope(TagType in_scope_tag) {
   return CollectiveScope(is_user_tag, scope_tag);
 }
 
+bool CollectiveAlg::isDeallocated(bool is_user_tag, TagType scope_bits) const {
+  auto const& scopes = is_user_tag ? user_scope_ : system_scope_ ;
+  auto iter = scopes.find(scope_bits);
+  return iter == scopes.end();
+}
+
 // We can not use a VT broadcast here because it involves the scheduler and
 // MPI progress and there's no safe way to guarantee that the message has been
 // received and processed and doesn't require progress from another node

@@ -132,6 +132,19 @@ private:
 
   static void runCollective(CollectiveMsg* msg);
 
+public:
+  /**
+   * \internal \brief Check if a scope has been deallocated
+   *
+   * \note Used for testing purposes
+   *
+   * \param[in] is_user_tag whether it's a user-tagged scope
+   * \param[in] scope_bits the scope bits
+   *
+   * \return whether it is deallocated
+   */
+  bool isDeallocated(bool is_user_tag, TagType scope_bits) const;
+
 private:
   using ScopeMapType = std::unordered_map<TagType, std::unique_ptr<detail::ScopeImpl>>;
 
