@@ -164,10 +164,10 @@ struct Pool : runtime::component::Component<Pool> {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    // s | small_msg // missing support for void*
-    //   | medium_msg
-    //   | s_msg_worker_
-    //   | m_msg_worker_;
+    s | small_msg
+      | medium_msg
+      | s_msg_worker_
+      | m_msg_worker_;
   }
 
 private:
