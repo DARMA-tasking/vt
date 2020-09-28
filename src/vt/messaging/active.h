@@ -117,6 +117,8 @@ struct PendingRecv {
   PriorityType priority = no_priority;
   bool is_user_buf = false;
 
+  PendingRecv() = default;
+
   PendingRecv(
     int in_nchunks, void* in_user_buf, ContinuationDeleterType in_cont,
     ActionType in_dealloc_user_buf, NodeType node,
@@ -125,6 +127,15 @@ struct PendingRecv {
       dealloc_user_buf(in_dealloc_user_buf), sender(node),
       priority(in_priority), is_user_buf(in_is_user_buf)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | user_buf
+      | cont
+      | dealloc_user_buf
+      | recv_node
+      | priority;
+  }
 };
 
 /**
@@ -249,11 +260,20 @@ struct BufferedActiveMsg {
   NodeType from_node;
   ActionType cont;
 
+  BufferedActiveMsg() : buffered_msg(nullptr) {}
+
   BufferedActiveMsg(
     MessageType const& in_buffered_msg, NodeType const& in_from_node,
     ActionType in_cont
   ) : buffered_msg(in_buffered_msg), from_node(in_from_node), cont(in_cont)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | buffered_msg
+      | from_node
+      | cont;
+  }
 };
 
 // forward-declare for header
@@ -1667,13 +1687,13 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       | current_priority_context_
       | current_priority_level_context_
       | maybe_ready_tag_han_
-      // | pending_handler_msgs_
-      // | pending_recvs_
+      | pending_handler_msgs_
+      | pending_recvs_
       | cur_direct_buffer_tag_
-      // | epoch_stack_ // std::stack
-      // | send_listen_
-      // | in_progress_active_msg_irecv
-      // | in_progress_data_irecv
+      | epoch_stack_
+      | send_listen_
+      | in_progress_active_msg_irecv
+      | in_progress_data_irecv
       | this_node_;
 
   # if vt_check_enabled(trace_enabled)
