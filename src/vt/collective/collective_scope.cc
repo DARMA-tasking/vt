@@ -124,6 +124,17 @@ detail::ScopeImpl* CollectiveScope::getScope() {
 CollectiveScope::~CollectiveScope() {
   auto impl = getScope();
   impl->live_ = false;
+
+  if (impl->planned_collective_.size() == 0) {
+    auto& scopes = is_user_tag_ ?
+      theCollective()->user_scope_ :
+      theCollective()->system_scope_;
+
+    auto scope_iter = scopes.find(scope_);
+    if (scope_iter != scopes.end()) {
+      scopes.erase(scope_iter);
+    }
+  }
 }
 
 }} /* end namespace vt::collective */
