@@ -154,6 +154,24 @@ public:
    */
   void mpiCollectiveWait(ActionType action);
 
+  /**
+   * \internal \brief Get whether this scope is a user-tagged scope
+   *
+   * \note Used for testing purposes
+   *
+   * \return whether this scope is a user tag
+   */
+  bool isUserTag() const { return is_user_tag_; }
+
+  /**
+   * \internal \brief Get the scope tag bits
+   *
+   * \note Used for testing purposes
+   *
+   * \return the scope bits
+   */
+  TagType getScopeBits() const { return scope_; }
+
 private:
 
   /**
