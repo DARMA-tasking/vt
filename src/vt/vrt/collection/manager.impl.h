@@ -852,7 +852,7 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
 template <
   typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
 >
-messaging::PendingSend CollectionManager::broadcastMsgCollective(
+messaging::PendingSend CollectionManager::broadcastCollectiveMsg(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
   messaging::MsgPtrThief<MsgT> msg, bool instrument
 ) {
@@ -862,14 +862,14 @@ messaging::PendingSend CollectionManager::broadcastMsgCollective(
   msgPtr->setVrtHandler(auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>());
   msgPtr->setMember(false);
 
-  return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msgPtr, instrument);
+  return broadcastCollectiveMsgImpl<MsgT, ColT>(proxy, msgPtr, instrument);
 }
 
 template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
 >
-messaging::PendingSend CollectionManager::broadcastMsgCollective(
+messaging::PendingSend CollectionManager::broadcastCollectiveMsg(
   CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
   messaging::MsgPtrThief<MsgT> msg, bool instrument
 ) {
@@ -881,11 +881,11 @@ messaging::PendingSend CollectionManager::broadcastMsgCollective(
   );
   msgPtr->setMember(true);
 
-  return broadcastMsgCollectiveImpl<MsgT, ColT>(proxy, msgPtr, instrument);
+  return broadcastCollectiveMsgImpl<MsgT, ColT>(proxy, msgPtr, instrument);
 }
 
 template <typename MsgT, typename ColT>
-messaging::PendingSend CollectionManager::broadcastMsgCollectiveImpl(
+messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
   CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg, bool instrument
 ) {
   using IndexT = typename ColT::IndexType;

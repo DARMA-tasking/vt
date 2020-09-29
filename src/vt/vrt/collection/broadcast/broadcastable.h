@@ -63,32 +63,108 @@ struct Broadcastable : BaseProxyT {
   Broadcastable& operator=(Broadcastable const&) = default;
 
   template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+  [[deprecated("Use broadcastMsg instead")]]
   messaging::PendingSend broadcast(MsgT* msg) const;
   template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+  [[deprecated("Use broadcastMsg instead")]]
   messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
+
+  /**
+   * \brief Rooted broadcast with action function handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+  messaging::PendingSend broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const;
+
+  /**
+   * \brief Rooted broadcast with action function handler
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
   template <
     typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
   >
   messaging::PendingSend broadcast(Args&&... args) const;
 
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+  [[deprecated("Use broadcastMsg instead")]]
   messaging::PendingSend broadcast(MsgT* msg) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+  [[deprecated("Use broadcastMsg instead")]]
   messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
+
+  /**
+   * \brief Rooted broadcast with action member handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+  messaging::PendingSend broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const;
+
+  /**
+   * \brief Rooted broadcast with action member handler
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
   template <
     typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
   >
   messaging::PendingSend broadcast(Args&&... args) const;
 
+  /**
+   * \brief Collective broadcast with action function handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
   template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
   messaging::PendingSend broadcastCollectiveMsg(messaging::MsgPtrThief<MsgT> msg) const;
+
+  /**
+   * \brief Create message (with action function handler) and broadcast it in a
+   * collective manner to the collection
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
   template <
     typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
   >
   messaging::PendingSend broadcastCollective(Args&&... args) const;
 
+  /**
+   * \brief Collective broadcast with action member handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   *
+   * \return a pending send
+   */
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
   messaging::PendingSend broadcastCollectiveMsg(messaging::MsgPtrThief<MsgT> msg) const;
+
+  /**
+   * \brief Create message (with action member handler) and broadcast it in a
+   * collective manner to the collection
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
   template <
     typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
   >

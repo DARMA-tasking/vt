@@ -78,7 +78,16 @@ template <
   typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f, typename... Args
 >
 messaging::PendingSend Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&... args) const {
-  return broadcast<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  return broadcastMsg<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
+messaging::PendingSend
+Broadcastable<ColT, IndexT, BaseProxyT>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const {
+  auto proxy = this->getProxy();
+
+  return theCollection()->broadcastMsg<MsgT, f>(proxy, msg.msg_.get());
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -94,7 +103,15 @@ template <
   typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
 >
 messaging::PendingSend Broadcastable<ColT,IndexT,BaseProxyT>::broadcast(Args&&... args) const {
-  return broadcast<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  return broadcastMsg<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+messaging::PendingSend
+Broadcastable<ColT, IndexT, BaseProxyT>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const {
+  auto proxy = this->getProxy();
+  return theCollection()->broadcastMsg<MsgT, f>(proxy, msg.msg_.get());
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -109,7 +126,7 @@ template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
 messaging::PendingSend
 Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollectiveMsg(messaging::MsgPtrThief<MsgT> msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsgCollective<MsgT, f>(proxy, msg);
+  return theCollection()->broadcastCollectiveMsg<MsgT, f>(proxy, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -126,7 +143,7 @@ template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
 messaging::PendingSend
 Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollectiveMsg(messaging::MsgPtrThief<MsgT> msg) const {
   auto proxy = this->getProxy();
-  return theCollection()->broadcastMsgCollective<MsgT, f>(proxy, msg);
+  return theCollection()->broadcastCollectiveMsg<MsgT, f>(proxy, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
