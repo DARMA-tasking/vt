@@ -87,6 +87,11 @@ protected:
   );
 
 public:
+  Info() :
+    InfoRooted(false, nullptr, 0),
+    InfoColl(false, false),
+    group_(0) {}
+
   Info(
     InfoRootedLocalConsType,
     MPI_Comm comm, RegionPtrType in_region, ActionType in_action,
@@ -112,6 +117,13 @@ public:
   template <typename MsgT>
   static void groupSetupHandler(MsgT* msg);
   static void groupTriggerHandler(GroupOnlyMsg* msg);
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | group_
+      | is_collective_
+      | finished_setup_action_;
+  }
 
 protected:
   GroupType getGroupID() const override { return group_;                 }
