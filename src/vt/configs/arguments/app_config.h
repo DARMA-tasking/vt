@@ -150,7 +150,11 @@ struct AppConfig {
   bool vt_term_rooted_use_wave = false;
   int64_t vt_hang_freq         = 1024;
 
-  bool vt_diag_disable = false;
+#if vt_check_enabled(diagnostic_runtime)
+  bool vt_diag_enable = true;
+#else
+  bool vt_diag_enable = false;
+#endif
   bool vt_diag_print_summary = false;
   std::string vt_diag_summary_csv_file = "";
   std::string vt_diag_summary_file = "vtdiag.txt";
