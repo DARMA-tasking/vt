@@ -607,9 +607,9 @@ public:
   void serialize(Serializer& s) {
     s | any_epoch_state_
       | hang_
-      // | epoch_state_
-      // | epoch_arch_
-      // | epoch_coll_
+      | epoch_state_
+      | epoch_arch_
+      | epoch_coll_
       | epoch_ready_
       | epoch_wait_status_
       | has_printed_epoch_graph;

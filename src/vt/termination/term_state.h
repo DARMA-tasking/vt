@@ -77,6 +77,8 @@ struct TermState : EpochDependency, EpochLabel {
   void incrementDependency();
   TermCounterType decrementDependency();
 
+  TermState() : EpochDependency(0, false) {}
+
   TermState(
     EpochType const& in_epoch, bool const in_local_terminated, bool const active,
     NodeType const& children
