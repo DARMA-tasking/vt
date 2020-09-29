@@ -93,10 +93,12 @@ struct DiagnosticStatsPack : DiagnosticMeter {
    * \param[in] updated_val the updated value
    */
   void updateStats(T updated_val) {
-    sum_->update(updated_val);
-    avg_->update(updated_val);
-    max_->update(updated_val);
-    min_->update(updated_val);
+    if (sum_ and avg_ and max_ and min_) {
+      sum_->update(updated_val);
+      avg_->update(updated_val);
+      max_->update(updated_val);
+      min_->update(updated_val);
+    }
   }
 
 protected:

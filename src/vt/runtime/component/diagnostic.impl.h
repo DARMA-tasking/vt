@@ -117,6 +117,11 @@ detail::DiagnosticValue<T>* Diagnostic::registerDiagnostic(
   DiagnosticUnit unit, DiagnosticTypeEnum type, T initial_value
 ) {
 # if vt_check_enabled(diagnostics)
+  // If diagnostics are runtime disabled, return a null value
+  if (not theConfig()->vt_diag_enable) {
+    return nullptr;
+  }
+
   vtAssert(values_.find(key) == values_.end(), "Key must not exist");
   values_.emplace(
     std::piecewise_construct,
@@ -139,6 +144,11 @@ detail::DiagnosticValue<T>* Diagnostic::registerDiagnostic(
 template <typename T>
 void Diagnostic::updateDiagnostic(std::string const& key, T value) {
 # if vt_check_enabled(diagnostics)
+  // Skip if diagnostics are not runtime enabled
+  if (not theConfig()->vt_diag_enable) {
+    return;
+  }
+
   auto iter = values_.find(key);
   vtAssert(iter != values_.end(), "Diagnostic key must exist");
   return (static_cast<detail::DiagnosticValue<T>*>(iter->second.get()))->

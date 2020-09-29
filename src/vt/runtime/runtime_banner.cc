@@ -721,13 +721,13 @@ void Runtime::printStartupBanner() {
   }
 
 #if vt_check_enabled(diagnostics)
-  if (getAppConfig()->vt_diag_disable) {
-    auto f11 = fmt::format("Diagnostics are disabled");
-    auto f12 = opt_on("--vt_diag_disable", f11);
-    fmt::print("{}\t{}{}", vt_pre, f12, reset);
-  } else {
+  if (getAppConfig()->vt_diag_enable) {
+#   if vt_check_enabled(diagnostics_runtime)
     auto f11 = fmt::format("Diagnostics are enabled by default");
-    auto f12 = opt_inverse("--vt_diag_disable", f11);
+#   else
+    auto f11 = fmt::format("Diagnostics are enabled");
+#   endif
+    auto f12 = opt_on("--vt_diag_enable", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
 
     if (getAppConfig()->vt_diag_summary_file != "") {
@@ -747,6 +747,14 @@ void Runtime::printStartupBanner() {
       auto f14 = opt_on("--vt_diag_summary_csv_file", f13);
       fmt::print("{}\t{}{}", vt_pre, f14, reset);
     }
+  } else {
+#   if vt_check_enabled(diagnostics_runtime)
+    auto f11 = fmt::format("Diagnostics are disabled");
+#   else
+    auto f11 = fmt::format("Diagnostics are disabled by default");
+#   endif
+    auto f12 = opt_to_enable("--vt_diag_enable", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 #endif
 

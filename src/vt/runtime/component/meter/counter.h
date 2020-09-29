@@ -80,7 +80,9 @@ public:
    */
   void increment(T val = 1) {
 #   if vt_check_enabled(diagnostics)
-    impl_->update(val);
+    if (impl_) {
+      impl_->update(val);
+    }
 #   endif
   }
 
@@ -91,7 +93,9 @@ public:
    */
   void decrement(T val = 1) {
 #   if vt_check_enabled(diagnostics)
-    impl_->update(-val);
+    if (impl_) {
+      impl_->update(-val);
+    }
 #   endif
   }
 
