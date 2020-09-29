@@ -69,6 +69,7 @@
 #define vt_feature_cmake_zoltan              @vt_feature_cmake_zoltan@
 #define vt_feature_cmake_ci_build            @vt_feature_cmake_ci_build@
 #define vt_feature_cmake_diagnostics         @vt_feature_cmake_diagnostics@
+#define vt_feature_cmake_diagnostics_runtime @vt_feature_cmake_diagnostics_runtime@
 
 #cmakedefine vt_quirked_trivially_copyable_on_msg
 #cmakedefine vt_quirked_serialize_method_detection
