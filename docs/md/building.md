@@ -140,18 +140,19 @@ which `docker-compose` will read.
 #   ULIMIT_CORE=0
 #
 # DARMA/vt Configuration Variables:
-#   VT_LB=1              # Enable load balancing
-#   VT_TRACE=0           # Enable tracing
-#   VT_MIMALLOC=0        # Enable mimalloc memory allocator
-#   VT_DOCS=0            # Enable doxygen build
-#   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
-#   VT_ASAN=0            # Enable address sanitizer
-#   VT_EXTENDED_TESTS=1  # Build all the extended testing
-#   VT_ZOLTAN=0          # Build with Zoltan enabled
-#   VT_UNITY_BUILD=0     # Build with Unity/Jumbo mode enabled
-#   VT_DIAGNOSTICS=1     # Build with diagnostics enabled
-#   BUILD_TYPE=release   # CMake build type
-#   CODE_COVERAGE=0      # Enable generation of code coverage reports
+#   VT_LB=1                   # Enable load balancing
+#   VT_TRACE=0                # Enable tracing
+#   VT_MIMALLOC=0             # Enable mimalloc memory allocator
+#   VT_DOCS=0                 # Enable doxygen build
+#   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
+#   VT_ASAN=0                 # Enable address sanitizer
+#   VT_EXTENDED_TESTS=1       # Build all the extended testing
+#   VT_ZOLTAN=0               # Build with Zoltan enabled
+#   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
+#   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
+#   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics at runtime by default
+#   BUILD_TYPE=release        # CMake build type
+#   CODE_COVERAGE=0           # Enable generation of code coverage reports
 ```
 
 With these set, one may run the following for a non-interactive build with
