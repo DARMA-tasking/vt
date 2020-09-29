@@ -31,6 +31,7 @@ jobs:
       VT_UNITY_BUILD: [% vt_unity_build %]
       VT_ZOLTAN: [% vt_zoltan %]
       VT_CI_BUILD: [% vt_ci_build %]
+      VT_DIAGNOSTICS:  [% vt_diagnostics %]
       CACHE: [% cache_dir %]
 
     steps:

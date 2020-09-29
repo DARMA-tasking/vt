@@ -38,6 +38,7 @@ jobs:
       VT_UNITY_BUILD: 1
       VT_ZOLTAN: 0
       VT_CI_BUILD: 1
+      VT_DIAGNOSTICS:  0
       CACHE: ~/.local/cache/
 
     steps:
