@@ -56,6 +56,7 @@ template <typename EntityID>
 struct LocRecord {
   using LocStateType = eLocState;
 
+  LocRecord() = default;
   LocRecord(
     EntityID const& in_id, LocStateType const& in_state,
     NodeType const& in_node
@@ -69,6 +70,13 @@ struct LocRecord {
 
   template <typename U>
   friend std::ostream& operator<<(std::ostream& os, LocRecord<U> const& rec);
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | id_
+      | state_
+      | cur_node_;
+  }
 
 private:
   EntityID id_;

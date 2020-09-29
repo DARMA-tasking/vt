@@ -65,6 +65,11 @@ struct Directory {
   void remove(KeyT const& key);
   void insert(KeyT const& key, ValueT const& value);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | dir_;
+  }
+
 private:
   DirectoryMapType dir_;
 };

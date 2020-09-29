@@ -171,11 +171,11 @@ public:
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s // | collectionLoc
-      | cur_loc_inst;
-      // | loc_insts
-      // | virtual_loc
-      // | vrtContextLoc;
+    s | collectionLoc
+      | cur_loc_inst
+      | loc_insts
+      | virtual_loc
+      | vrtContextLoc;
   }
 
 protected:
