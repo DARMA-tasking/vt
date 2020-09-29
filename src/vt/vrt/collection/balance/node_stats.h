@@ -77,6 +77,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct NodeStats : runtime::component::Component<NodeStats> {
   using MigrateFnType       = std::function<void(NodeType)>;
+  using PhaseType           = uint64_t;
+  using SubphaseType        = uint16_t;
 
   /**
    * \internal \brief System call to construct \c NodeStats
