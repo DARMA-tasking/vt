@@ -149,7 +149,8 @@ struct Context : runtime::component::Component<Context> {
       | numNodes_
       | numWorkers_
       | is_comm_world_;
-      // | communicator_; // ompi_communicator_t
+
+    s.countBytes(communicator_);
   }
 
 protected:
