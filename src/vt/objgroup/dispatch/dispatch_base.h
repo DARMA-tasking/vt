@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_BASE_H
 #define INCLUDED_VT_OBJGROUP_DISPATCH_DISPATCH_BASE_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/messaging/message/smart_ptr.h"
@@ -63,6 +65,8 @@ struct DispatchBase {
   { }
 
   virtual ~DispatchBase() = default;
+
+  checkpoint_virtual_serialize_base(DispatchBase)
 
   /*
    * Dispatch to the handler; the base is closed around the proper object

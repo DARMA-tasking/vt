@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASE_H
 #define INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASE_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 
@@ -53,12 +55,22 @@ namespace vt { namespace objgroup { namespace holder {
 struct HolderBase {
   virtual ~HolderBase() = default;
   virtual bool exists() = 0;
+
+  checkpoint_virtual_serialize_base(HolderBase)
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 };
 
 template <typename ObjT>
 struct HolderObjBase : HolderBase {
   virtual ~HolderObjBase() = default;
   virtual ObjT* get() = 0;
+
+  checkpoint_virtual_serialize_derived(HolderObjBase, HolderBase)
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 };
 
 }}} /* end namespace vt::objgroup::holder */
