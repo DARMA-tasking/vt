@@ -304,6 +304,17 @@ void Runtime::computeAndPrintDiagnostics() {
       vtAssert(fout.good(), "Must be a valid file");
       fout << out;
       fout.close();
+
+      auto green    = debug::green();
+      auto reset    = debug::reset();
+      auto bd_green = debug::bd_green();
+      auto magenta  = debug::magenta();
+      auto f1 = fmt::format("{}Diagnostic table written out to: {}", green, reset);
+      auto vt_pre = bd_green + std::string("vt") + reset + ": ";
+      fmt::print(
+        "{}{}{}{}{}\n",
+        vt_pre, f1, magenta, theConfig()->vt_diag_summary_file, reset
+      );
     }
   }
 
@@ -359,6 +370,17 @@ void Runtime::computeAndPrintDiagnostics() {
     vtAssert(fout.good(), "Must be a valid file");
     fout << out;
     fout.close();
+
+    auto green    = debug::green();
+    auto reset    = debug::reset();
+    auto bd_green = debug::bd_green();
+    auto magenta  = debug::magenta();
+    auto f1 = fmt::format("{}Diagnostic CSV written out to: {}", green, reset);
+    auto vt_pre = bd_green + std::string("vt") + reset + ": ";
+    fmt::print(
+      "{}{}{}{}{}\n",
+      vt_pre, f1, magenta, theConfig()->vt_diag_summary_csv_file, reset
+    );
   }
 }
 
