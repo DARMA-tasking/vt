@@ -155,8 +155,9 @@ struct InProgressBase {
     s | buf
       | probe_bytes
       | sender
-      | req
       | valid;
+
+    s.countBytes(req);
   }
 
   char* buf = nullptr;
