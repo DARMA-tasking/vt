@@ -172,11 +172,30 @@ endif()
 
 message(STATUS "CI_BUILD = ${vt_feature_cmake_ci_build}")
 
-option(vt_diagnostic_enabled "Build VT with performance metrics/stats" ON)
+option(vt_diagnostics_enabled "Build VT with performance metrics/stats" ON)
+option(
+  vt_diagnostic_runtime_enabled
+  "Build VT with performance metrics/stats enabled at runtime by default" OFF
+)
 
-if (vt_diagnostic_enabled)
+if (vt_diagnostics_enabled)
   message(STATUS "Building VT with diagnostics (performance stats) enabled")
   set(vt_feature_cmake_diagnostics "1")
+
+  if (vt_diagnostic_runtime_enabled)
+    message(
+      STATUS
+      "Building VT with diagnostics (performance stats) enabled at runtime by default"
+    )
+    set(vt_feature_cmake_diagnostics_runtime "1")
+  else()
+    message(
+      STATUS
+      "Building VT with diagnostics (performance stats) disabled at runtime by default"
+    )
+    set(vt_feature_cmake_diagnostics_runtime "0")
+  endif()
+
 else()
   message(STATUS "Building VT with diagnostics (performance stats) disabled")
   set(vt_feature_cmake_diagnostics "0")
