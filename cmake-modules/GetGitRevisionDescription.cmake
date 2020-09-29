@@ -45,6 +45,39 @@ set(__get_git_revision_description YES)
 # to find the path to this module rather than the path to a calling list file
 get_filename_component(_gitdescmoddir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
+function(git_hash_info _headfile _git_dir _git_data _ref _hash)
+	set(HEAD_HASH)
+
+	file(READ "${_headfile}" HEAD_CONTENTS LIMIT 1024)
+
+	string(STRIP "${HEAD_CONTENTS}" HEAD_CONTENTS)
+	if(HEAD_CONTENTS MATCHES "ref")
+		# named branch
+		string(REPLACE "ref: " "" HEAD_REF "${HEAD_CONTENTS}")
+		if(EXISTS "${_git_dir}/${HEAD_REF}")
+			configure_file("${_git_dir}/${HEAD_REF}" "${_git_data}/head-ref" COPYONLY)
+		else()
+			configure_file("${_git_dir}/packed-refs" "${_git_data}/packed-refs" COPYONLY)
+			file(READ "${_git_data}/packed-refs" PACKED_REFS)
+			if(${PACKED_REFS} MATCHES "([0-9a-z]*) ${HEAD_REF}")
+				set(HEAD_HASH "${CMAKE_MATCH_1}")
+			endif()
+		endif()
+	else()
+		# detached HEAD
+		configure_file("${_git_dir}/HEAD" "${_git_data}/head-ref" COPYONLY)
+	endif()
+
+	if(NOT HEAD_HASH)
+		file(READ "${_git_data}/head-ref" HEAD_HASH LIMIT 1024)
+		string(STRIP "${HEAD_HASH}" HEAD_HASH)
+	endif()
+
+	set(${_ref} "${HEAD_REF}" PARENT_SCOPE)
+	set(${_hash} "${HEAD_HASH}" PARENT_SCOPE)
+endfunction()
+
+
 function(get_git_head_revision _refspecvar _hashvar)
 	set(GIT_PARENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 	set(GIT_DIR "${GIT_PARENT_DIR}/.git")
@@ -77,10 +110,7 @@ function(get_git_head_revision _refspecvar _hashvar)
 	set(HEAD_FILE "${GIT_DATA}/HEAD")
 	configure_file("${GIT_DIR}/HEAD" "${HEAD_FILE}" COPYONLY)
 
-	configure_file("${_gitdescmoddir}/GetGitRevisionDescription.cmake.in"
-		"${GIT_DATA}/grabRef.cmake"
-		@ONLY)
-	include("${GIT_DATA}/grabRef.cmake")
+	git_hash_info("${HEAD_FILE}" "${GIT_DIR}" "${GIT_DATA}" HEAD_REF HEAD_HASH)
 
 	set(${_refspecvar} "${HEAD_REF}" PARENT_SCOPE)
 	set(${_hashvar} "${HEAD_HASH}" PARENT_SCOPE)
