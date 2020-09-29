@@ -70,9 +70,9 @@ struct RawData : public LoadModel {
   ObjectIterator end() override;
 
   int getNumObjects() override;
-  int getNumCompletedPhases() override;
+  unsigned int getNumCompletedPhases() override;
   int getNumSubphases() override;
-  int getNumPastPhasesNeeded(int look_back) override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeStats
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;

@@ -100,8 +100,8 @@ struct StubModel : LoadModel {
 
   // Not used in this test
   int getNumObjects() override { return 0; }
-  int getNumCompletedPhases() override { return 0; }
-  int getNumPastPhasesNeeded(int look_back = 0) override { return look_back; }
+  unsigned int getNumCompletedPhases() override { return 0; }
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
 
 private:
   ProcLoadMap const* proc_load_ = nullptr;

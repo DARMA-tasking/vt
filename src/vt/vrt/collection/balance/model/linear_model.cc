@@ -61,7 +61,7 @@ TimeType LinearModel::getWork(ElementIDType object, PhaseOffset when) {
 
   PhaseOffset past_phase{when};
 
-  int phases = std::min(past_len_, getNumCompletedPhases());
+  unsigned int phases = std::min(past_len_, getNumCompletedPhases());
   // Number values on X-axis based on a PhaseOffset
   for (int i = -1 * phases; i < 0; i++) {
     x.emplace_back(i);
@@ -74,7 +74,7 @@ TimeType LinearModel::getWork(ElementIDType object, PhaseOffset when) {
   return regression.predict(when.phases);
 }
 
-int LinearModel::getNumPastPhasesNeeded(int look_back)
+unsigned int LinearModel::getNumPastPhasesNeeded(unsigned int look_back)
 {
   return ComposedModel::getNumPastPhasesNeeded(std::max(past_len_, look_back));
 }

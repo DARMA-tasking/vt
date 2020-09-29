@@ -146,7 +146,7 @@ public:
    * \return How many phases of past load statistics will be needed to
    * satisfy the requested history
    */
-  virtual int getNumPastPhasesNeeded(int look_back = 0) = 0;
+  virtual unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) = 0;
 
   /**
    * Object enumeration, to abstract away access to the underlying structures from NodeStats
@@ -177,7 +177,7 @@ public:
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual int getNumCompletedPhases() = 0;
+  virtual unsigned int getNumCompletedPhases() = 0;
 
   /**
    * Returns the number of subphases recorded in the most recent

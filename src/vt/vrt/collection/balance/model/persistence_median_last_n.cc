@@ -48,7 +48,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-PersistenceMedianLastN::PersistenceMedianLastN(std::shared_ptr<LoadModel> base, int n)
+PersistenceMedianLastN::PersistenceMedianLastN(std::shared_ptr<LoadModel> base, unsigned int n)
   : ComposedModel(base)
   , n_(n)
 {
@@ -61,10 +61,10 @@ TimeType PersistenceMedianLastN::getWork(ElementIDType object, PhaseOffset when)
   if (when.phases < 0)
     return ComposedModel::getWork(object, when);
 
-  int phases = std::min(n_, getNumCompletedPhases());
+  unsigned int phases = std::min(n_, getNumCompletedPhases());
   std::vector<TimeType> times(phases);
-  for (int i = 1; i <= phases; ++i) {
-    PhaseOffset p{-1*i, when.subphase};
+  for (unsigned int i = 1; i <= phases; ++i) {
+    PhaseOffset p{-1*static_cast<int>(i), when.subphase};
     TimeType t = ComposedModel::getWork(object, p);
     times[i-1] = t;
   }
@@ -77,7 +77,7 @@ TimeType PersistenceMedianLastN::getWork(ElementIDType object, PhaseOffset when)
     return (times[phases / 2 - 1] + times[phases / 2]) / 2;
 }
 
-int PersistenceMedianLastN::getNumPastPhasesNeeded(int look_back)
+unsigned int PersistenceMedianLastN::getNumPastPhasesNeeded(unsigned int look_back)
 {
   return ComposedModel::getNumPastPhasesNeeded(std::max(n_, look_back));
 }
