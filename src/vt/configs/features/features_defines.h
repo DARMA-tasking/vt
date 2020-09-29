@@ -50,26 +50,27 @@
  */
 
 // backend features, add any new ones to this list
-#define vt_feature_no_feature         0 || vt_feature_cmake_no_feature
-#define vt_feature_bit_check_overflow 0 || vt_feature_cmake_bit_check_overflo
-#define vt_feature_trace_enabled      0 || vt_feature_cmake_trace_enabled
-#define vt_feature_detector           0 || vt_feature_cmake_detector
-#define vt_feature_lblite             0 || vt_feature_cmake_lblite
-#define vt_feature_openmp             0 || vt_feature_cmake_openmp
-#define vt_feature_production         0 || vt_feature_cmake_production
-#define vt_feature_stdthread          0 || vt_feature_cmake_stdthread
-#define vt_feature_mpi_rdma           0 || vt_feature_cmake_mpi_rdma
-#define vt_feature_print_term_msgs    0 || vt_feature_cmake_print_term_msgs
-#define vt_feature_default_threading  0 || vt_feature_cmake_default_threading
-#define vt_feature_no_pool_alloc_env  0 || vt_feature_cmake_no_pool_alloc_env
-#define vt_feature_memory_pool        0 || vt_feature_cmake_memory_pool
-#define vt_feature_priorities         0 || vt_feature_cmake_priorities
-#define vt_feature_cons_multi_idx     0 || vt_feature_cmake_cons_multi_idx
-#define vt_feature_fcontext           0 || vt_feature_cmake_fcontext
-#define vt_feature_mimalloc           0 || vt_feature_cmake_mimalloc
-#define vt_feature_mpi_access_guards  0 || vt_feature_cmake_mpi_access_guards
-#define vt_feature_zoltan             0 || vt_feature_cmake_zoltan
-#define vt_feature_ci_build           0 || vt_feature_cmake_ci_build
-#define vt_feature_diagnostics        0 || vt_feature_cmake_diagnostics
+#define vt_feature_no_feature          0 || vt_feature_cmake_no_feature
+#define vt_feature_bit_check_overflow  0 || vt_feature_cmake_bit_check_overflo
+#define vt_feature_trace_enabled       0 || vt_feature_cmake_trace_enabled
+#define vt_feature_detector            0 || vt_feature_cmake_detector
+#define vt_feature_lblite              0 || vt_feature_cmake_lblite
+#define vt_feature_openmp              0 || vt_feature_cmake_openmp
+#define vt_feature_production          0 || vt_feature_cmake_production
+#define vt_feature_stdthread           0 || vt_feature_cmake_stdthread
+#define vt_feature_mpi_rdma            0 || vt_feature_cmake_mpi_rdma
+#define vt_feature_print_term_msgs     0 || vt_feature_cmake_print_term_msgs
+#define vt_feature_default_threading   0 || vt_feature_cmake_default_threading
+#define vt_feature_no_pool_alloc_env   0 || vt_feature_cmake_no_pool_alloc_env
+#define vt_feature_memory_pool         0 || vt_feature_cmake_memory_pool
+#define vt_feature_priorities          0 || vt_feature_cmake_priorities
+#define vt_feature_cons_multi_idx      0 || vt_feature_cmake_cons_multi_idx
+#define vt_feature_fcontext            0 || vt_feature_cmake_fcontext
+#define vt_feature_mimalloc            0 || vt_feature_cmake_mimalloc
+#define vt_feature_mpi_access_guards   0 || vt_feature_cmake_mpi_access_guards
+#define vt_feature_zoltan              0 || vt_feature_cmake_zoltan
+#define vt_feature_ci_build            0 || vt_feature_cmake_ci_build
+#define vt_feature_diagnostics         0 || vt_feature_cmake_diagnostics
+#define vt_feature_diagnostics_runtime 0 || vt_feature_cmake_diagnostics_runtime
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H*/
