@@ -140,6 +140,13 @@ else()
   set(vt_feature_cmake_mimalloc "0")
 endif()
 
+string(TOLOWER ${CMAKE_BUILD_TYPE} LOWERCASE_CMAKE_BUILD_TYPE)
+if (LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "debug")
+  option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" ON)
+else()
+  option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" OFF)
+endif()
+
 if (vt_mpi_guards AND PERL_FOUND)
   message(STATUS "Building VT with user MPI prevention guards enabled")
   set(vt_feature_cmake_mpi_access_guards "1")

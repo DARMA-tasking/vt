@@ -85,13 +85,6 @@ endif()
 
 option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 
-string(TOLOWER ${CMAKE_BUILD_TYPE} LOWERCASE_CMAKE_BUILD_TYPE)
-if (LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "debug")
-  option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" ON)
-else()
-  option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" OFF)
-endif()
-
 # Bundled dependencies
 
 if (${vt_fcontext_enabled})
