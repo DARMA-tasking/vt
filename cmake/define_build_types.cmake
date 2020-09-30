@@ -204,6 +204,7 @@ if (vt_diagnostics_enabled)
 else()
   message(STATUS "Building VT with diagnostics (performance stats) disabled")
   set(vt_feature_cmake_diagnostics "0")
+  set(vt_feature_cmake_diagnostics_runtime "0")
 endif()
 
 if (vt_libfort_enabled)
