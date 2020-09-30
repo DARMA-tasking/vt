@@ -91,9 +91,9 @@ option(vt_diagnostics_enabled "Build VT with performance metrics/stats" ON)
 
 if (vt_diagnostics_enabled)
   # Default libfort ON if diagnostics are enabled
-  option(vt_fort_enabled "Build VT with fort library enabled" ON)
+  option(vt_libfort_enabled "Build VT with fort library enabled" ON)
 else()
-  option(vt_fort_enabled "Build VT with fort library enabled" OFF)
+  option(vt_libfort_enabled "Build VT with fort library enabled" OFF)
 endif()
 
 option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)

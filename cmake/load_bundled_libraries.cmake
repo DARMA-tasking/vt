@@ -2,7 +2,7 @@
 # Bundled dependencies
 
 # Optionally include libfort which is used by diagnostics
-if (vt_fort_enabled)
+if (vt_libfort_enabled)
   set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
   add_subdirectory(${PROJECT_LIB_DIR}/libfort)
   set(FORT_LIBRARY fort)

@@ -42,6 +42,10 @@
 //@HEADER
 */
 
+#include "vt/config.h"
+
+#if vt_check_enabled(diagnostics)
+
 #include "vt/runtime/runtime.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/runtime/component/diagnostic_enum_format.h"
@@ -49,7 +53,9 @@
 #include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_erased_value.h"
 
+#if vt_check_enabled(libfort)
 #include <fort.hpp>
+#endif /*vt_check_enabled(libfort)*/
 
 #include <fmt/format.h>
 
@@ -216,6 +222,7 @@ void Runtime::computeAndPrintDiagnostics() {
       return hist_out;
     };
 
+# if vt_check_enabled(libfort)
   if (
     theConfig()->vt_diag_print_summary or
     theConfig()->vt_diag_summary_file != ""
@@ -317,6 +324,7 @@ void Runtime::computeAndPrintDiagnostics() {
       );
     }
   }
+# endif /*vt_check_enabled(libfort)*/
 
   if (theConfig()->vt_diag_summary_csv_file != "") {
     std::string out;
@@ -385,3 +393,5 @@ void Runtime::computeAndPrintDiagnostics() {
 }
 
 }} /* end namespace vt::runtime */
+
+#endif /* vt_check_enabled(diagnostics) */

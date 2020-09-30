@@ -51,7 +51,7 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_FORT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FORT)
-    if (vt_fort_enabled)
+    if (vt_libfort_enabled)
       target_link_libraries(
         ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FORT_LIBRARY}
       )
