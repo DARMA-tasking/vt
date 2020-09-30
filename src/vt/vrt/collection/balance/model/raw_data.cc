@@ -72,7 +72,7 @@ int RawData::getNumObjects() {
   return end() - begin();
 }
 
-int RawData::getNumCompletedPhases() {
+unsigned int RawData::getNumCompletedPhases() {
   return last_completed_phase_ + 1;
 }
 
@@ -100,7 +100,7 @@ TimeType RawData::getWork(ElementIDType object, PhaseOffset offset)
   }
 }
 
-int RawData::getNumPastPhasesNeeded(int look_back)
+unsigned int RawData::getNumPastPhasesNeeded(unsigned int look_back)
 {
   return look_back;
 }

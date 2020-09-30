@@ -64,13 +64,13 @@ struct PersistenceMedianLastN : public ComposedModel
    * \param[in] base The underlying model
    * \param[in] n the number of preceding phases to use in making a prediction
    */
-  PersistenceMedianLastN(std::shared_ptr<LoadModel> base, int n);
+  PersistenceMedianLastN(std::shared_ptr<LoadModel> base, unsigned int n);
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
-  int getNumPastPhasesNeeded(int look_back) override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
 private:
-  const int n_;
+  const unsigned int n_;
 }; // class PersistenceMedianLastN
 
 }}}} // namespaces

@@ -127,7 +127,7 @@ void NodeStats::clearStats() {
   next_elm_ = 1;
 }
 
-void NodeStats::startIterCleanup(PhaseType phase, int look_back) {
+void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
   // TODO: Add in subphase support here too
 
   // Convert the temp ID node_data_ for the last iteration into perm ID for

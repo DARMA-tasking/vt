@@ -94,9 +94,9 @@ struct StubModel : LoadModel {
 
   // Not used by this test
   virtual int getNumObjects() override { return 0; }
-  virtual int getNumCompletedPhases() override { return 0; }
+  virtual unsigned int getNumCompletedPhases() override { return 0; }
   virtual int getNumSubphases() override { return 0; }
-  int getNumPastPhasesNeeded(int look_back = 0) override { return look_back; }
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back = 0) override { return look_back; }
 
 private:
   std::unordered_map<PhaseType, LoadMapType> const* proc_load_ = nullptr;

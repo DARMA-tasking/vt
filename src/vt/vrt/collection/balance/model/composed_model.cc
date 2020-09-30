@@ -60,7 +60,7 @@ TimeType ComposedModel::getWork(ElementIDType object, PhaseOffset when) {
   return base_->getWork(object, when);
 }
 
-int ComposedModel::getNumPastPhasesNeeded(int look_back)
+unsigned int ComposedModel::getNumPastPhasesNeeded(unsigned int look_back)
 {
   return base_->getNumPastPhasesNeeded(look_back);
 }
@@ -77,7 +77,7 @@ int ComposedModel::getNumObjects() {
   return base_->getNumObjects();
 }
 
-int ComposedModel::getNumCompletedPhases() {
+unsigned int ComposedModel::getNumCompletedPhases() {
   return base_->getNumCompletedPhases();
 }
 

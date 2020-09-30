@@ -56,7 +56,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct LinearModel : ComposedModel {
 
-  static constexpr int default_past_len = 5;
+  static constexpr unsigned int default_past_len = 5;
 
   /**
    * \brief Construct a linear model predictor
@@ -65,16 +65,16 @@ struct LinearModel : ComposedModel {
    * \param[in] in_past_len (optional) the past number of phases for prediction
    */
   explicit LinearModel(
-    std::shared_ptr<balance::LoadModel> base, int in_past_len = default_past_len
+    std::shared_ptr<balance::LoadModel> base, unsigned int in_past_len = default_past_len
   ) : ComposedModel(base),
       past_len_(in_past_len)
   { }
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
-  int getNumPastPhasesNeeded(int look_back) override;
+  unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
 private:
-  int past_len_ = 0;
+  const unsigned int past_len_ = 0;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
