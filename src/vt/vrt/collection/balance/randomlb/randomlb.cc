@@ -79,7 +79,7 @@ void RandomLB::runLB() {
   } else {
     using ResultType = std::mt19937::result_type;
     auto const node_seed = seed_ + this->phase_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
+    gen = std::mt19937{static_cast<ResultType>(node_seed)};
   }
   std::uniform_int_distribution<> dist(0, num_nodes-1);
 
