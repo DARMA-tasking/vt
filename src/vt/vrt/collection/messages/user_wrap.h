@@ -84,7 +84,7 @@ struct ColMsgWrap : CollectionMessage<ColT,BaseMsgT> {
     typename SerializerT,
     typename T=void,
     typename = typename std::enable_if<
-      ::checkpoint::SerializableTraits<UserMsgT>::has_serialize_function, T
+      ::checkpoint::SerializableTraits<UserMsgT, SerializerT>::has_serialize_function, T
     >::type
   >
   void serialize(SerializerT& s) {

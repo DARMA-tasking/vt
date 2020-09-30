@@ -77,8 +77,16 @@ struct RawData : public LoadModel {
   int getNumSubphases() override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<
+        SerializerT,
+        checkpoint::Footprinter
+      >::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | proc_load_
       | proc_subphase_load_
       | proc_comm_
