@@ -131,7 +131,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   // through use of a wrapped message which does not define serialization.
   // (Although such probably represents an opportunity for additional cleanup.)
   static_assert( // that a message is serializable.
-    ::checkpoint::SerializableTraits<MsgT, ::checkpoint::Serializer>::is_serializable,
+    ::checkpoint::SerializableTraits<MsgT>::is_serializable,
     "Message going through serialization must meet all requirements."
   );
 
