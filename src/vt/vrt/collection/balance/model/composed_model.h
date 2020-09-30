@@ -64,6 +64,7 @@ class ComposedModel : public LoadModel
 public:
   // \param[in] base must not be null
   explicit ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
+  explicit ComposedModel(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
 
   checkpoint_virtual_serialize_derived(ComposedModel, LoadModel)
 
