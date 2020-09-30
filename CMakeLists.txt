@@ -85,46 +85,23 @@ endif()
 
 option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 
-# Bundled dependencies
+# Option included here, handled in define_build_modes.cmake so libfort can be
+# included correspondingly
+option(vt_diagnostics_enabled "Build VT with performance metrics/stats" ON)
 
-if (${vt_fcontext_enabled})
-  add_subdirectory(${PROJECT_LIB_DIR}/context)
+if (vt_diagnostics_enabled)
+  # Default libfort ON if diagnostics are enabled
+  option(vt_fort_enabled "Build VT with fort library enabled" ON)
+else()
+  option(vt_fort_enabled "Build VT with fort library enabled" OFF)
 endif()
-add_subdirectory(${PROJECT_LIB_DIR}/CLI)
-add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 
+option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
 option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
-if (${vt_mimalloc_enabled})
-  add_subdirectory(${PROJECT_LIB_DIR}/mimalloc)
-  if (${vt_mimalloc_static})
-    set(MIMALLOC_LIBRARY mimalloc-static)
-  else()
-    set(MIMALLOC_LIBRARY mimalloc)
-  endif()
-endif()
-
-option(vt_fort_enabled "Build VT with fort" ON)
-if (vt_fort_enabled)
-  set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
-  add_subdirectory(${PROJECT_LIB_DIR}/libfort)
-  set(FORT_LIBRARY fort)
-endif()
-
 option(vt_asan_enabled "Build VT with address sanitizer" OFF)
-if (${vt_asan_enabled})
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR
-     CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
-     (CMAKE_CXX_COMPILER_ID
-       STREQUAL
-       "GNU"
-       AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.8"))
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -DADDRESS_SANITIZER")
-    message(STATUS "Building with address sanitizer enabled")
-  else()
-    message(SEND_ERROR "Cannot use ASAN without clang or gcc >= 4.8")
-  endif()
-endif()
+
+include(cmake/load_bundled_libraries.cmake)
 
 # Primary VT build
 add_subdirectory(src)
