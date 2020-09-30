@@ -170,7 +170,7 @@ static void startIter(int32_t const iter, ColProxyType proxy) {
     "startIter: iter={}, cur_iter={}\n", iter, iter
   );
   auto msg = makeMessage<IterMsg>(iter);
-  proxy.broadcast<IterMsg,LBTest::iterWork>(msg.get());
+  proxy.broadcastMsg<IterMsg,LBTest::iterWork>(msg.get());
 }
 
 struct TestLB : TestParallelHarness { };

@@ -116,7 +116,7 @@ TEST_F(TestDestroy, test_destroy_1) {
       auto proxy = theCollection()->construct<DestroyTest>(range);
       auto msg = makeMessage<WorkMsg>();
       // ::fmt::print("broadcasting proxy={:x}\n", proxy.getProxy());
-      proxy.broadcast<WorkMsg,DestroyTest::work>(msg.get());
+      proxy.broadcastMsg<WorkMsg,DestroyTest::work>(msg.get());
     }
   });
     // ::fmt::print("num destroyed={}\n", num_destroyed);

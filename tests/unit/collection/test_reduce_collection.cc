@@ -62,16 +62,16 @@ TEST_P(TestReduceCollection, test_reduce_op) {
     auto msg = makeMessage<ColMsg>(my_node);
 
     switch (reduce_case) {
-    case 0: proxy.broadcast<ColMsg, colHanBasic>(msg.get()); break;
-    case 1: proxy.broadcast<ColMsg, colHanVec>(msg.get()); break;
-    case 2: proxy.broadcast<ColMsg, colHanVecProxy>(msg.get()); break;
-    case 3: proxy.broadcast<ColMsg, colHanVecProxyCB>(msg.get()); break;
-    case 4: proxy.broadcast<ColMsg, colHanNoneCB>(msg.get()); break;
+    case 0: proxy.broadcastMsg<ColMsg, colHanBasic>(msg.get()); break;
+    case 1: proxy.broadcastMsg<ColMsg, colHanVec>(msg.get()); break;
+    case 2: proxy.broadcastMsg<ColMsg, colHanVecProxy>(msg.get()); break;
+    case 3: proxy.broadcastMsg<ColMsg, colHanVecProxyCB>(msg.get()); break;
+    case 4: proxy.broadcastMsg<ColMsg, colHanNoneCB>(msg.get()); break;
 
       #if ENABLE_REDUCE_EXPR_CALLBACK
-    case 5: proxy.broadcast<ColMsg, colHanPartial>(msg.get()); break;
-    case 6: proxy.broadcast<ColMsg, colHanPartialMulti>(msg.get()); break;
-    case 7: proxy.broadcast<ColMsg, colHanPartialProxy>(msg.get()); break;
+    case 5: proxy.broadcastMsg<ColMsg, colHanPartial>(msg.get()); break;
+    case 6: proxy.broadcastMsg<ColMsg, colHanPartialMulti>(msg.get()); break;
+    case 7: proxy.broadcastMsg<ColMsg, colHanPartialProxy>(msg.get()); break;
       #endif
       default: vtAbort("Failure: should not be reached");
     }

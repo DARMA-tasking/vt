@@ -132,7 +132,7 @@ public:
       //
       auto proxy = getCollectionProxy();
       auto loopMsg = vt::makeMessage<BlankMsg>();
-      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg.get());
+      proxy.broadcastMsg<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg.get());
     }
     else if (iter > maxIter) {
       fmt::print("\n Maximum Number of Iterations Reached. \n\n");
@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
     auto rootMsg = vt::makeMessage<LinearPb1DJacobi::LPMsg>(
       num_objs, numRowsPerObject, maxIter
     );
-    proxy.broadcast<LinearPb1DJacobi::LPMsg,&LinearPb1DJacobi::solve>(rootMsg.get());
+    proxy.broadcastMsg<LinearPb1DJacobi::LPMsg,&LinearPb1DJacobi::solve>(rootMsg.get());
 
   }
 

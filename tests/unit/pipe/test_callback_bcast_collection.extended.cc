@@ -151,7 +151,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
   runInEpochCollective([&]{
     if (this_node == 0) {
       auto msg = makeMessage<TestColMsg>();
-      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
+      proxy.broadcastMsg<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }
@@ -184,7 +184,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_2) {
   runInEpochCollective([&]{
     if (this_node == 0) {
       auto msg = makeMessage<TestColMsg>();
-      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
+      proxy.broadcastMsg<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }
@@ -217,7 +217,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
   runInEpochCollective([&]{
     if (this_node == 0) {
       auto msg = makeMessage<TestColMsg>();
-      proxy.broadcast<TestColMsg, &TestCol::check>(msg.get());
+      proxy.broadcastMsg<TestColMsg, &TestCol::check>(msg.get());
     }
   });
 }

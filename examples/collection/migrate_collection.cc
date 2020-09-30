@@ -108,17 +108,17 @@ int main(int argc, char** argv) {
 
     vt::runInEpochRooted([=]{
       auto msg = vt::makeMessage<ColMsg>(this_node);
-      proxy.broadcast<ColMsg, doWork>(msg.get());
+      proxy.broadcastMsg<ColMsg, doWork>(msg.get());
     });
 
     vt::runInEpochRooted([=]{
       auto msg = vt::makeMessage<ColMsg>(this_node);
-      proxy.broadcast<ColMsg, migrateToNext>(msg.get());
+      proxy.broadcastMsg<ColMsg, migrateToNext>(msg.get());
     });
 
     vt::runInEpochRooted([=]{
       auto msg = vt::makeMessage<ColMsg>(this_node);
-      proxy.broadcast<ColMsg, doWork>(msg.get());
+      proxy.broadcastMsg<ColMsg, doWork>(msg.get());
     });
   }
 

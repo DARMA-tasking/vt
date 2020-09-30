@@ -94,7 +94,7 @@ static inline void collection() {
     // Broadcast a message to the entire collection. The msgHandler will be
     // invoked on every element to the collection
     auto msg = ::vt::makeMessage<MyCollMsg>();
-    proxy.broadcast<MyCollMsg,&MyCol::msgHandler>(msg.get());
+    proxy.broadcastMsg<MyCollMsg,&MyCol::msgHandler>(msg.get());
 
     // Send a message to the 5th element of the collection
     auto msg2 = ::vt::makeMessage<MyCollMsg>();

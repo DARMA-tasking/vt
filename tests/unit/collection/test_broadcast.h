@@ -129,7 +129,7 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
     TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = theCollection()->construct<ColType>(range);
     auto msg = makeMessage<MsgType>(args);
-    proxy.template broadcast<
+    proxy.template broadcastMsg<
       MsgType,
       BroadcastHandlers<ColType>::handler
     >(msg.get());
