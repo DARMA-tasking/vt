@@ -327,7 +327,7 @@ struct DiagnosticSnapshotValues {
         v.update(v.getRawValue() + val);
         break;
       default:
-        vtAssert(false, "Unknown DiagnosticUpdate---should be unreachable");
+        vtAbort("Unknown DiagnosticUpdate---should be unreachable");
         break;
       }
     }
