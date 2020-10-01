@@ -341,10 +341,6 @@ struct DiagnosticSnapshotValues {
    * \return the value wrapper
    */
   DiagnosticValueWrapper<T>& operator[](int snapshot) {
-    vtAssert(
-      snapshots_.size() > static_cast<std::size_t>(snapshot),
-      "Must be valid snapshot index"
-    );
     return snapshots_.at(snapshot);
   }
 
@@ -356,10 +352,6 @@ struct DiagnosticSnapshotValues {
    * \return the const value wrapper
    */
   DiagnosticValueWrapper<T> const& operator[](int snapshot) const {
-    vtAssert(
-      snapshots_.size() > static_cast<std::size_t>(snapshot),
-      "Must be valid snapshot index"
-    );
     return snapshots_.at(snapshot);
   }
 
@@ -372,10 +364,6 @@ struct DiagnosticSnapshotValues {
    * \param[in] snapshot the snapshot index
    */
   void reset(int snapshot) {
-    vtAssert(
-      snapshots_.size() > static_cast<std::size_t>(snapshot),
-      "Must be valid snapshot index"
-    );
     snapshots_.at(snapshot) = DiagnosticValueWrapper<T>{initial_value_};
   }
 
