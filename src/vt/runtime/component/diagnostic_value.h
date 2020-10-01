@@ -197,7 +197,7 @@ struct DiagnosticValueWrapper {
    *
    * \return the variance
    */
-  double var() const { return M2_ * (1.0f / N_); }
+  double var() const { return N_ == 0 ? 0 : (M2_ * (1.0f / N_)); }
 
   /**
    * \internal \brief Get I---imbalance metric (use after reduction)
