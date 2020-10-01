@@ -98,7 +98,7 @@ static inline void collection() {
 
     // Send a message to the 5th element of the collection
     auto msg2 = ::vt::makeMessage<MyCollMsg>();
-    proxy[5].send<MyCollMsg,&MyCol::msgHandler>(msg2.get());
+    proxy[5].sendMsg<MyCollMsg,&MyCol::msgHandler>(msg2.get());
   }
 }
 /// [Tutorial2A]

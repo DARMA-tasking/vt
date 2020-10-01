@@ -313,7 +313,7 @@ public:
       for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
         tcopy[jy] = told_[1 + jy * (numRowsPerObject_ + 2)];
       auto leftX = vt::makeMessage<VecMsg>(idx, tcopy);
-      proxy(x-1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(leftX.get());
+      proxy(x-1, y).sendMsg<VecMsg, &LinearPb2DJacobi::exchange>(leftX.get());
     }
 
     if (y > 0) {
@@ -321,7 +321,7 @@ public:
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + (numRowsPerObject_ + 2)];
       auto bottomY = vt::makeMessage<VecMsg>(idx, tcopy);
-      proxy(x, y-1).send<VecMsg, &LinearPb2DJacobi::exchange>(bottomY.get());
+      proxy(x, y-1).sendMsg<VecMsg, &LinearPb2DJacobi::exchange>(bottomY.get());
     }
 
     if (size_t(x) < numObjsX_ - 1) {
@@ -331,7 +331,7 @@ public:
                           jy * (numRowsPerObject_ + 2)];
       }
       auto rightX = vt::makeMessage<VecMsg>(idx, tcopy);
-      proxy(x+1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(rightX.get());
+      proxy(x+1, y).sendMsg<VecMsg, &LinearPb2DJacobi::exchange>(rightX.get());
     }
 
     if (size_t(y) < numObjsY_ - 1) {
@@ -339,7 +339,7 @@ public:
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + numRowsPerObject_ * (numRowsPerObject_ + 2)];
       auto topY = vt::makeMessage<VecMsg>(idx, tcopy);
-      proxy(x, y+1).send<VecMsg, &LinearPb2DJacobi::exchange>(topY.get());
+      proxy(x, y+1).sendMsg<VecMsg, &LinearPb2DJacobi::exchange>(topY.get());
     }
 
   }

@@ -260,13 +260,13 @@ public:
     auto proxy = this->getCollectionProxy();
     if (myIdx > 0) {
       auto leftMsg = vt::makeMessage<VecMsg>(myIdx, told_[1]);
-      proxy[myIdx-1].send<VecMsg, &LinearPb1DJacobi::exchange>(leftMsg.get());
+      proxy[myIdx-1].sendMsg<VecMsg, &LinearPb1DJacobi::exchange>(leftMsg.get());
     }
 
     //--- Send values to the right
     if (size_t(myIdx) < numObjs_ - 1) {
       auto rightMsg = vt::makeMessage<VecMsg>(myIdx, told_[numRowsPerObject_]);
-      proxy[myIdx+1].send<VecMsg, &LinearPb1DJacobi::exchange>(rightMsg.get());
+      proxy[myIdx+1].sendMsg<VecMsg, &LinearPb1DJacobi::exchange>(rightMsg.get());
     }
   }
 

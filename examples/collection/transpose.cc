@@ -264,7 +264,7 @@ vt::NodeType my_map(IndexT* idx, IndexT* max_idx, vt::NodeType num_nodes) {
       // Here we will send "this_node" to indicate which nod it should come back
       // to.  Eventually, I will implement a "sub_rank" in VT which can use the
       // sub-rank instead of the global node id.
-      proxy[block_id].send<RequestDataMsg<Block>,&Block::dataRequest>(msg2.get());
+      proxy[block_id].sendMsg<RequestDataMsg<Block>,&Block::dataRequest>(msg2.get());
     }
   }
 
