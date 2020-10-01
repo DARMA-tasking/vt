@@ -30,7 +30,7 @@
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
 #   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
 #   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
-#   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics at runtime by default
+#   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics collection at runtime by default
 #   BUILD_TYPE=release        # CMake build type
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
 #
