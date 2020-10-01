@@ -52,12 +52,15 @@
 namespace vt { namespace util { namespace memory {
 
 enum struct MemoryUnitEnum : int8_t {
-  Bytes     = 0,
-  Kilobytes = 1,
-  Megabytes = 2,
-  Gigabytes = 3,
-  Terabytes = 4,
-  Petabytes = 5
+  Bytes      = 0,
+  Kilobytes  = 1,
+  Megabytes  = 2,
+  Gigabytes  = 3,
+  Terabytes  = 4,
+  Petabytes  = 5,
+  Exabytes   = 6,
+  Zettabytes = 7,
+  Yottabytes = 8
 };
 
 std::string getMemoryUnitName(MemoryUnitEnum unit);
