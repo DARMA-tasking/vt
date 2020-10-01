@@ -233,7 +233,7 @@ struct DiagnosticValueWrapper {
   /**
    * \internal \brief Get the computed value (based on update type)
    *
-   * \note Either returns the mean (when a average update type is applied) or
+   * \note Either returns the mean (when an average update type is applied) or
    * the current value
    */
   T getComputedValue() const {
