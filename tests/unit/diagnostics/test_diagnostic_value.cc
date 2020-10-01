@@ -114,11 +114,8 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_1) {
     EXPECT_EQ(out.min_.template get<ValueType>(), cur_value);
     EXPECT_EQ(out.max_.template get<ValueType>(), cur_value);
     EXPECT_EQ(out.sum_.template get<ValueType>(), cur_value * num_nodes);
-    EXPECT_TRUE(
-      out.avg_ < static_cast<double>(cur_value) + 0.000000001 and
-      out.avg_ > static_cast<double>(cur_value) - 0.000000001
-    );
-    EXPECT_TRUE(out.std_ < 0.000000001 and out.std_ > -0.000000001);
+    EXPECT_DOUBLE_EQ(out.avg_, static_cast<double>(cur_value));
+    EXPECT_DOUBLE_EQ(out.std_, 0.0);
     EXPECT_EQ(out.update_, DiagnosticUpdate::Sum);
     EXPECT_EQ(out.unit_, DiagnosticUnit::Units);
     EXPECT_TRUE(out.is_valid_value_);
