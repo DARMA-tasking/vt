@@ -313,11 +313,6 @@ private:
   std::size_t threshold_memory_usage_ = 0;
   std::size_t last_memory_usage_poll_ = 0;
 
-  TimeType startup_time_ = 0.;         /**< Begin time for this component */
-  TimeType begin_loop_time_ = 0.;      /**< Time entered the scheduler loop */
-  TimeType begin_idle_time_ = 0.;      /**< Time when "idle" */
-  TimeType begin_idle_time_term_ = 0.; /**< Time when idle minus term */
-
   // Access to triggerEvent.
   friend void vt::runInEpochRooted(ActionType&& fn);
   friend void vt::runInEpochCollective(ActionType&& fn);

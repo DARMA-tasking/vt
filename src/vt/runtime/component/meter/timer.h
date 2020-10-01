@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/runtime/component/meter/stats_pack.h"
+#include "vt/timing/timing.h"
 
 namespace vt { namespace runtime { namespace component { namespace meter {
 
@@ -90,6 +91,26 @@ public:
     this->updateStats(duration);
 #   endif
   }
+
+  /**
+   * \brief Start the timer for an event being tracked
+   */
+  void start() {
+    start_time_ = timing::Timing::getCurrentTime();
+  }
+
+  /**
+   * \brief Stop the timer and record the interval
+   */
+  void stop() {
+    if (start_time_ != 0) {
+      update(start_time_, timing::Timing::getCurrentTime());
+      start_time_ = 0;
+    }
+  }
+
+private:
+  T start_time_ = 0;
 };
 
 }}}} /* end namespace vt::runtime::component::meter */

@@ -67,8 +67,6 @@ namespace vt { namespace sched {
 }
 
 Scheduler::Scheduler() {
-  startup_time_ = timing::Timing::getCurrentTime();
-
   auto event_count = SchedulerEventType::LastSchedulerEvent + 1;
   event_triggers.resize(event_count);
   event_triggers_once.resize(event_count);
@@ -96,45 +94,23 @@ Scheduler::Scheduler() {
   using timing::Timing;
 
   // Triggers to get the in-scheduler-loop time added to diagnostics
-  registerTrigger(
-    BeginSchedulerLoop, [this]{ begin_loop_time_ = Timing::getCurrentTime(); }
-  );
-  registerTrigger(
-    EndSchedulerLoop, [this]{
-      schedLoopTime.update(begin_loop_time_, Timing::getCurrentTime());
-    }
-  );
+  registerTrigger(BeginSchedulerLoop, [this]{ schedLoopTime.start(); });
+  registerTrigger(EndSchedulerLoop, [this]{ schedLoopTime.stop(); });
 
   // Triggers to get true idle time (including TD messages) in diagnostics
-  registerTrigger(
-    BeginIdle, [this]{ begin_idle_time_ = Timing::getCurrentTime(); }
-  );
-  registerTrigger(
-    EndIdle, [this]{
-      if (begin_idle_time_ != 0.) {
-        idleTime.update(begin_idle_time_, Timing::getCurrentTime());
-      }
-      begin_idle_time_ = 0.;
-    }
-  );
+  registerTrigger(BeginIdle, [this]{ idleTime.start(); });
+  registerTrigger(EndIdle, [this]{ idleTime.stop(); });
 
   // Triggers to get non-term idle time (excluding TD messages) in diagnostics
-  registerTrigger(
-    BeginIdleMinusTerm, [this]{ begin_idle_time_term_ = Timing::getCurrentTime(); }
-  );
-  registerTrigger(
-    EndIdleMinusTerm, [this]{
-      if (begin_idle_time_term_ != 0.) {
-        idleTimeMinusTerm.update(begin_idle_time_term_, Timing::getCurrentTime());
-      }
-      begin_idle_time_term_ = 0.;
-    }
-  );
+  registerTrigger(BeginIdleMinusTerm, [this]{ idleTimeMinusTerm.start(); });
+  registerTrigger(EndIdleMinusTerm, [this]{ idleTimeMinusTerm.stop(); });
+
+  vtLiveTime.start();
 # endif
 }
 
 void Scheduler::preDiagnostic() {
-  vtLiveTime.update(startup_time_, timing::Timing::getCurrentTime());
+  vtLiveTime.stop();
 }
 
 void Scheduler::enqueue(ActionType action) {
