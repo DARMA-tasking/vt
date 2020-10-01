@@ -122,6 +122,61 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_1) {
   }
 }
 
+TEST_F(TestDiagnosticValue, test_diagnostic_value_2) {
+  using vt::runtime::component::DiagnosticUpdate;
+  using vt::runtime::component::DiagnosticUnit;
+  using vt::runtime::component::DiagnosticTypeEnum;
+  using vt::runtime::component::DiagnosticErasedValue;
+  using vt::runtime::component::detail::DiagnosticValue;
+
+  using ValueType = double;
+
+  std::string test_key = "my-test-key";
+  std::string test_desc = "my test description";
+  ValueType snapshot = 0;
+
+  auto this_node = theContext()->getNode();
+
+  double num_to_set = this_node == 0 ? 100 : 175;
+
+  DiagnosticValue<ValueType> val{
+    test_key,
+    test_desc,
+    DiagnosticUpdate::Avg,
+    DiagnosticUnit::Units,
+    DiagnosticTypeEnum::PerformanceDiagnostic,
+    0
+  };
+
+  if (this_node < 2) {
+    for (int i = 0; i < 100 * (this_node + 1); i++) {
+      val.update(num_to_set);
+      EXPECT_DOUBLE_EQ(val.get(snapshot), num_to_set);
+    }
+  }
+
+  auto diag = std::make_unique<TestDiagnostic>();
+
+  DiagnosticErasedValue out;
+
+  runInEpochCollective([&]{
+    val.reduceOver(diag.get(), &out, snapshot);
+  });
+
+  if (this_node == 0) {
+    EXPECT_TRUE(out.min_.template is<ValueType>());
+    EXPECT_TRUE(out.max_.template is<ValueType>());
+    EXPECT_TRUE(out.sum_.template is<ValueType>());
+
+    EXPECT_DOUBLE_EQ(out.min_.template get<ValueType>(), 100);
+    EXPECT_DOUBLE_EQ(out.max_.template get<ValueType>(), 175);
+    EXPECT_DOUBLE_EQ(out.avg_, 150); // check properly weighted average
+    EXPECT_EQ(out.update_, DiagnosticUpdate::Avg);
+    EXPECT_EQ(out.unit_, DiagnosticUnit::Units);
+    EXPECT_TRUE(out.is_valid_value_);
+  }
+}
+
 }}} // end namespace vt::tests::unit
 
 #endif /*vt_check_enabled(diagnostics)*/
