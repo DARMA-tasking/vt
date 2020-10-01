@@ -80,9 +80,20 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgSharedPtr<MsgT>
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
+messaging::PendingSend Sendable<ColT, IndexT, BaseProxyT>::sendMsg(
+  messaging::MsgPtrThief<MsgT> msg
+) const {
+  auto col_proxy = this->getCollectionProxy();
+  auto elm_proxy = this->getElementProxy();
+  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy, elm_proxy);
+  return theCollection()->sendMsg<MsgT, f>(proxy, msg.msg_.get());
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f, typename... Args>
 messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
-  return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  return sendMsg<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -101,11 +112,22 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgSharedPtr<MsgT>
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
+messaging::PendingSend Sendable<ColT, IndexT, BaseProxyT>::sendMsg(
+  messaging::MsgPtrThief<MsgT> msg
+) const {
+  auto col_proxy = this->getCollectionProxy();
+  auto elm_proxy = this->getElementProxy();
+  auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy, elm_proxy);
+  return theCollection()->sendMsg<MsgT, f>(proxy, msg.msg_.get());
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
 template <
   typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
 >
 messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) const {
-  return send<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  return sendMsg<MsgT,f>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
 
