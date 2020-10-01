@@ -50,6 +50,8 @@
 
 #include <vt/transport.h>
 
+#include <dirent.h>
+
 #if vt_check_enabled(lblite)
 
 namespace vt { namespace tests { namespace unit {
@@ -131,6 +133,145 @@ auto balancers = ::testing::Values(
 
 INSTANTIATE_TEST_SUITE_P(
   LoadBalancerExplode, TestLoadBalancer, balancers
+);
+
+struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
+  virtual void addAdditionalArgs() override {
+    static char vt_lb_stats[]{"--vt_lb_stats"};
+    static char vt_lb_stats_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
+    static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile"};
+
+    addArgs(vt_lb_stats, vt_lb_stats_dir, vt_lb_stats_file);
+  }
+};
+
+struct TestNodeStatsDumper : TestParallelHarnessWithStatsDumping {};
+
+void closeNodeStatsFile(char const* file_path);
+int countCreatedStatsFiles(char const* path);
+void removeStatsOutputDir(char const* path);
+std::map<int, int> getPhasesFromStatsFile(const char* file_path);
+
+TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
+  vt::theConfig()->vt_lb = true;
+  vt::theConfig()->vt_lb_name = "GreedyLB";
+  vt::theConfig()->vt_lb_interval = GetParam();
+
+  if (vt::theContext()->getNode() == 0) {
+    fmt::print(
+      "Testing dumping Node Stats with LB interval {}\n",
+      vt::theConfig()->vt_lb_interval
+    );
+  }
+
+  vt::vrt::collection::CollectionProxy<MyCol> proxy;
+  auto const range = vt::Index1D(num_elms);
+
+  // Construct a collection
+  runInEpochCollective([&] {
+    proxy = vt::theCollection()->constructCollective<MyCol>(
+      range, [](vt::Index1D) { return std::make_unique<MyCol>(); }
+    );
+  });
+
+  for (int phase = 0; phase < num_phases; phase++) {
+    // Do some work
+    runInEpochCollective([&] {
+      if (vt::theContext()->getNode() == 0) {
+        proxy.broadcast<MyMsg, colHandler>();
+      }
+    });
+
+    // Go to the next phase
+    runInEpochCollective(
+      [&] { vt::theCollection()->startPhaseCollective(nullptr); });
+  }
+
+  auto const file_name = fmt::format(
+    "{}.{}.out", theConfig()->vt_lb_stats_file, vt::theContext()->getNode()
+  );
+  auto const file_path =
+    fmt::format("{}/{}", theConfig()->vt_lb_stats_dir, file_name);
+  auto const readPhases = getPhasesFromStatsFile(file_path.c_str());
+  EXPECT_EQ(readPhases.size(), num_phases);
+
+  vt::theCollective()->barrier();
+
+  if (vt::theContext()->getNode() == 0) {
+    removeStatsOutputDir(vt::theConfig()->vt_lb_stats_dir.c_str());
+  }
+
+  // Prevent NodeStats from closing files during finalize()
+  // All the tmp files are removed already
+  vt::theConfig()->vt_lb_stats = false;
+}
+
+int countCreatedStatsFiles(char const* path) {
+  int files_counter = 0;
+  if (auto* dir = opendir(path)) {
+    while (auto* dir_ent = readdir(dir)) {
+      if (
+        strcmp(dir_ent->d_name, ".") == 0 ||
+        strcmp(dir_ent->d_name, "..") == 0
+      ) {
+        continue;
+      }
+
+      std::string file_path = std::string{path} + '/' + dir_ent->d_name;
+      struct stat stat_buf;
+      if (stat(file_path.c_str(), &stat_buf) == 0 && stat_buf.st_size > 0) {
+        ++files_counter;
+      }
+    }
+
+    closedir(dir);
+  }
+
+  return files_counter;
+}
+
+void removeStatsOutputDir(char const* path) {
+  if (auto* dir = opendir(path)) {
+    while (auto* dir_ent = readdir(dir)) {
+      if (
+        strcmp(dir_ent->d_name, ".") == 0 ||
+        strcmp(dir_ent->d_name, "..") == 0
+      ) {
+        continue;
+      }
+
+      std::string file_path = std::string{path} + '/' + dir_ent->d_name;
+      auto const* path_cstr = file_path.c_str();
+      unlink(path_cstr);
+    }
+
+    rmdir(path);
+  }
+}
+
+std::map<int, int> getPhasesFromStatsFile(const char* file_path) {
+  std::ifstream stats_file{file_path};
+  std::string line;
+
+  std::map<int, int> phases;
+
+  while (std::getline(stats_file, line)) {
+    std::istringstream iss{line};
+    int phase_num;
+    if (!(iss >> phase_num)) {
+      break;
+    }
+
+    phases[phase_num]++;
+  }
+
+  return phases;
+}
+
+auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+INSTANTIATE_TEST_SUITE_P(
+  NodeStatsDumperExplode, TestNodeStatsDumper, intervals
 );
 
 }}} // end namespace vt::tests::unit

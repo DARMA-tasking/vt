@@ -296,6 +296,8 @@ void LBManager::releaseNow(PhaseType phase) {
     );
   }
 
+  theNodeStats()->outputStatsForPhase(phase);
+
   auto msg = makeMessage<CollectionPhaseMsg>();
 
   // Destruct the objgroup that was used for LB
