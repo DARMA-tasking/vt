@@ -58,15 +58,17 @@ namespace {
 template <typename T>
 void reduceHelper(
   Diagnostic* diagnostic, DiagnosticErasedValue* out, T val, DiagnosticUnit unit,
-  DiagnosticUpdate update, bool updated
+  DiagnosticUpdate update, bool updated, std::size_t cardinality
 ) {
   using ValueType = DiagnosticValueWrapper<T>;
   using ReduceMsgType = collective::ReduceTMsg<ValueType>;
 
   // Get the reducer from the component
   auto r = diagnostic->reducer();
+  std::size_t N =
+    update == DiagnosticUpdate::Avg ? cardinality : (updated ? 1ull : 0ull);
   auto msg = makeMessage<ReduceMsgType>(
-    ValueType{typename ValueType::ReduceTag{}, val, updated}
+    ValueType{typename ValueType::ReduceTag{}, val, updated, N}
   );
   auto cb = theCB()->makeFunc<ReduceMsgType>(
     pipe::LifetimeEnum::Once,
@@ -101,7 +103,8 @@ void reduceHelper(
   ) {                                                                   \
     reduceHelper(                                                       \
       diagnostic, out, values_[snapshot].getComputedValue(), getUnit(), \
-      getUpdateType(), values_[snapshot].isUpdated()                    \
+      getUpdateType(), values_[snapshot].isUpdated(),                   \
+      values_[snapshot].getN()                                          \
     );                                                                  \
   }                                                                     \
 

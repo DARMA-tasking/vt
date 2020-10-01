@@ -89,9 +89,9 @@ struct DiagnosticValueWrapper {
    * \param[in] ReduceTag reduce tag to distinguish it
    * \param[in] in_value the starting value for the reduction
    */
-  DiagnosticValueWrapper(ReduceTag, T in_value, bool updated)
+  DiagnosticValueWrapper(ReduceTag, T in_value, bool updated, std::size_t in_N)
     : value_(in_value),
-      N_(updated ? 1 : 0),
+      N_(in_N),
       min_(updated ? in_value : std::numeric_limits<T>::max()),
       max_(updated ? in_value : std::numeric_limits<T>::lowest()),
       sum_(updated ? in_value : 0),
@@ -217,6 +217,13 @@ struct DiagnosticValueWrapper {
    * \internal \brief Increment the cardinality
    */
   void incrementN() { N_++; }
+
+  /**
+   * \internal \brief Get \c N_ the cardinality of the value
+   *
+   * \return \c N_
+   */
+  std::size_t getN() const { return N_; }
 
   /**
    * \internal \brief Get raw underlying value
