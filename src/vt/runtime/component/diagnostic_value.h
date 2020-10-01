@@ -186,7 +186,7 @@ struct DiagnosticValueWrapper {
   T min() const { return N_ == 0 ? 0 : min_; }
 
   /**
-   * \internal \brief Get the mean value (use after reduction)
+   * \internal \brief Get the arithmetic mean value (use after reduction)
    *
    * \return the mean value
    */
