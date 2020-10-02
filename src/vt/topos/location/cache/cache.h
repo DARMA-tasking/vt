@@ -78,9 +78,10 @@ struct LocationCache {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | lookup_
-      | cache_
+    s | cache_
       | max_size_;
+
+    s.countBytes(lookup_);
   }
 
  private:
