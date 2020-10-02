@@ -225,7 +225,7 @@ struct ObjGroup {
         "NEW enqueue: priority={:x}, level={:x}\n", np, npl
       );
 
-      proxy[0].send<TestMsg,&ObjGroup::enqueue>(new_msg);
+      proxy[0].sendMsg<TestMsg,&ObjGroup::enqueue>(new_msg);
     }
   }
 

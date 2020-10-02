@@ -262,7 +262,7 @@ void GossipLB::propagateRound(EpochType epoch) {
       envelopeSetEpoch(msg->env, epoch);
     }
     msg->addNodeLoad(this_node, this_new_load_);
-    proxy_[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
+    proxy_[random_node].sendMsg<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
   }
 }
 
@@ -495,7 +495,7 @@ void GossipLB::lazyMigrateObjsTo(
   using LazyMsg = balance::LazyMigrationMsg;
   auto msg = makeMessage<LazyMsg>(node, objs);
   envelopeSetEpoch(msg->env, epoch);
-  proxy_[node].send<LazyMsg, &GossipLB::inLazyMigrations>(msg);
+  proxy_[node].sendMsg<LazyMsg, &GossipLB::inLazyMigrations>(msg);
 }
 
 void GossipLB::migrate() {

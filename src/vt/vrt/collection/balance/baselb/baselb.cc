@@ -217,7 +217,7 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
 void BaseLB::transferSend(NodeType from, TransferVecType const& transfer) {
   using MsgType = TransferMsg<TransferVecType>;
   auto msg = makeMessage<MsgType>(transfer);
-  proxy_[from].template send<MsgType,&BaseLB::transferMigrations>(msg);
+  proxy_[from].template sendMsg<MsgType,&BaseLB::transferMigrations>(msg);
 }
 
 void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {

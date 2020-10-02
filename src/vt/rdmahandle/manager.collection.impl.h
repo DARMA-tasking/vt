@@ -162,7 +162,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
       auto msg = makeMessage<impl::InformRDMAMsg<ProxyT,IndexT>>(
         collection_proxy, next_handle, uniform_size, map_han, range
       );
-      proxy_.template broadcast<
+      proxy_.template broadcastMsg<
         impl::InformRDMAMsg<ProxyT,IndexT>,
         &Manager::informCollectionRDMA<T,E,ProxyT,ColT>
       >(msg.get());
