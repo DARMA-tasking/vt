@@ -90,8 +90,6 @@ struct State {
   RDMA_PtrType ptr = no_rdma_ptr;
   ByteType num_bytes = no_byte;
 
-  State() = default;
-
   State(
     RDMA_HandleType const& in_handle, RDMA_PtrType const& in_ptr = no_rdma_ptr,
     ByteType const& in_num_bytes = no_byte,

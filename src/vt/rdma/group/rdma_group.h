@@ -57,8 +57,6 @@ struct Group {
   using RDMA_MapType = Map;
   using RDMA_RegionType = Region;
 
-  Group() = default;
-
   Group(
     RDMA_MapType const& in_map, RDMA_ElmType const& in_total_elms,
     RDMA_BlockType const& in_num_blocks, ByteType const& in_elm_size,

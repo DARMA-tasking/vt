@@ -65,8 +65,6 @@ struct EpochWindow {
    * in the integral set before using it.
    */
 
-  EpochWindow() = default;
-
   explicit EpochWindow(EpochType const& in_epoch);
 
 private:

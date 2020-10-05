@@ -117,8 +117,6 @@ struct PendingRecv {
   PriorityType priority = no_priority;
   bool is_user_buf = false;
 
-  PendingRecv() = default;
-
   PendingRecv(
     int in_nchunks, void* in_user_buf, ContinuationDeleterType in_cont,
     ActionType in_dealloc_user_buf, NodeType node,
@@ -260,8 +258,6 @@ struct BufferedActiveMsg {
   MessageType buffered_msg;
   NodeType from_node;
   ActionType cont;
-
-  BufferedActiveMsg() : buffered_msg(nullptr) {}
 
   BufferedActiveMsg(
     MessageType const& in_buffered_msg, NodeType const& in_from_node,

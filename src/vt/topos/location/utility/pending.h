@@ -53,7 +53,6 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 struct PendingLocationLookup {
-  PendingLocationLookup() = default;
   PendingLocationLookup(EntityID const& in_entity, NodeActionType const& in_act)
     : entity_(in_entity), action_(in_act)
   { }

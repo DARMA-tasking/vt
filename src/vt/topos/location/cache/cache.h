@@ -62,7 +62,6 @@ struct LocationCache {
   using ValueIter = typename CacheOrderedType::iterator;
   using LookupContainerType = std::unordered_map<KeyT, ValueIter>;
 
-  LocationCache() = default;
   explicit LocationCache(LocationSizeType const& in_max_size);
 
   LocationCache(LocationCache const&) = delete;

@@ -67,8 +67,6 @@ struct Channel {
 
   static constexpr RDMA_GroupPosType const no_group_pos = -1;
 
-  Channel() = default;
-
   Channel(
     RDMA_HandleType const& in_rdma_handle, RDMA_TypeType const& in_op_type,
     NodeType const& in_target, TagType const& in_channel_group_tag,

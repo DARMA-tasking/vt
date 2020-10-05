@@ -262,9 +262,7 @@ struct Param : runtime::component::Component<Param> {
   }
 
   template <typename Serializer>
-  void serialize(Serializer&) {
-    //
-  }
+  void serialize(Serializer&) {}
 };
 
 }} //end namespace vt::param

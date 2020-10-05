@@ -65,8 +65,6 @@ struct Info {
   ByteType offset = no_byte;
   bool is_local = false;
 
-  Info() = default;
-
   Info(
     RDMA_TypeType const& in_rdma_type, ByteType const& in_num_bytes = no_byte,
     ByteType const& in_offset = no_byte, TagType const& in_tag = no_tag,

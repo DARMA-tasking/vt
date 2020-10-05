@@ -56,8 +56,6 @@ struct Pending {
   ActionType cont2 = nullptr;
   RDMA_PtrType data_ptr = nullptr;
 
-  Pending() = default;
-
   explicit Pending(RDMA_RecvType in_cont)
     : cont(in_cont)
   { }

@@ -87,11 +87,6 @@ protected:
   );
 
 public:
-  Info() :
-    InfoRooted(false, nullptr, 0),
-    InfoColl(false, false),
-    group_(0) {}
-
   Info(
     InfoRootedLocalConsType,
     MPI_Comm comm, RegionPtrType in_region, ActionType in_action,

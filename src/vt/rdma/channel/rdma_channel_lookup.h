@@ -58,8 +58,6 @@ struct ChannelLookup {
   NodeType target = uninitialized_destination;
   NodeType non_target = uninitialized_destination;
 
-  ChannelLookup() = default;
-
   ChannelLookup(
     RDMA_HandleType const& han, NodeType const& in_target,
     NodeType const& in_non_target

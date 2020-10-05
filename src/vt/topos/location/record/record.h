@@ -56,7 +56,6 @@ template <typename EntityID>
 struct LocRecord {
   using LocStateType = eLocState;
 
-  LocRecord() = default;
   LocRecord(
     EntityID const& in_id, LocStateType const& in_state,
     NodeType const& in_node

@@ -54,8 +54,6 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 struct LocEntity {
-  LocEntity() = default;
-
   LocEntity(EntityID const& in_entity, LocMsgActionType in_msg_action)
     : entity_(in_entity), msg_action_(in_msg_action)
   { }
