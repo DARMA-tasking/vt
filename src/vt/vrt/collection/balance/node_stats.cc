@@ -240,6 +240,11 @@ getRecvSendDirection(CommKeyType const& comm) {
   case CommCategory::CollectionToNode:
   case CommCategory::CollectionToNodeBcast:
     return std::make_pair(comm.toNode(), comm.fromObj());
+
+  // Comm stats are not recorded for collective bcast
+  // this case is just to avoid warning of not handled enum
+  case CommCategory::CollectiveNodeToCollectionEdges:
+    return std::make_pair(ElementIDType{}, ElementIDType{});
   }
 
   vtAssert(false, "Invalid balance::CommCategory enum value");
