@@ -466,18 +466,17 @@ public:
     u << "\n"
 "Usage:"
 "\n"
-"[APP-ARGS..] [VT-ARGS] [--vt_mpi_args MPI-ARGS..] [-- APP-ARGS..]\n"
+"[APP-ARGS..] [VT-ARGS] [-- APP-ARGS..]\n"
 "\n"
 "Arguments up until the first '--vt_*' are treated as application arguments.\n"
 "\n"
 "After the first '--vt_*', additional arguments are treated as VT arguments\n"
-"unless '--vt_mpi_args' or '--' are used to switch the argument mode.\n"
+"unless '--' is used to switch the argument mode back to application args.\n"
 "The '--vt_args' flag can be used to switch back into VT argument mode.\n"
 "Modes can be switched indefinitely.\n"
 "\n"
 "Application pass-through arguments are supplied to the host program\n"
 "for further processing and are not used by VT for any configuration.\n"
-"MPI (and only MPI) arguments are given directly to MPI_Init.\n"
 "\n"
 "It is an error if an unexpected argument is encountered in VT argument mode.\n"
 "The currently recognized VT arguments are listed below; availability varies\n"
@@ -548,7 +547,6 @@ void ArgConfig::postParseTransform() {
 std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc, char**& argv) {
 
   std::vector<char*> vt_args;
-  std::vector<char*> mpi_args;
 
   // Load up vectors (has curious ability to altnerate vt/mpi/passthru)
   std::vector<char*>* rargs = nullptr;
@@ -556,8 +554,6 @@ std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc,
     char* c = argv[i];
     if (0 == strcmp(c, "--vt_args")) {
       rargs = &vt_args;
-    } else if (0 == strcmp(c, "--vt_mpi_args")) {
-      rargs = &mpi_args;
     } else if (0 == strcmp(c, "--")) {
       rargs = &config_.passthru_args;
     } else if (rargs) {
@@ -616,12 +612,10 @@ std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc,
 
   config_.prog_name = clean_prog_name;
   config_.argv_prog_name = argv[0];
-  config_.mpi_init_args = mpi_args;
 
   postParseTransform();
 
   // Rebuild passthru into ref-returned argc/argv
-  // (only pass-through, not MPI_Init-bound)
 
   // It should be possible to modify the original argv as the outgoing
   // number of arguments is always less. As currently allocated here,

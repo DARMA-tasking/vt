@@ -63,9 +63,11 @@ RuntimePtrType CollectiveAnyOps<instance>::initialize(
   using vt::runtime::Runtime;
   using vt::runtime::eRuntimeInstance;
 
+  MPI_Comm resolved_comm = comm not_eq nullptr ? *comm : MPI_COMM_WORLD;
+
 #pragma sst global rt
   RuntimeInst<instance>::rt = std::make_unique<Runtime>(
-    argc, argv, num_workers, is_interop, comm
+    argc, argv, num_workers, is_interop, resolved_comm
   );
 
 #pragma sst global rt

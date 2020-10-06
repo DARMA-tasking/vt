@@ -84,6 +84,12 @@ struct Runtime {
   /**
    * \internal \brief Initialize a VT runtime
    *
+   * Under interop mode, MPI is not initialized or finalized by the runtime.
+   * This can be used to embed VT into a larger context.
+   *
+   * When not running in interop mode, MPI is initialized in the constructor
+   * and finalized in the destructor.
+   *
    * \param[in] argc argument count (modified after VT extracts)
    * \param[in] argv arguments  (modified after VT extracts)
    * \param[in] in_num_workers number of worker threads to initialize
@@ -93,8 +99,9 @@ struct Runtime {
    */
   Runtime(
     int& argc, char**& argv,
-    WorkerCountType in_num_workers = no_workers, bool const interop_mode = false,
-    MPI_Comm* in_comm = nullptr,
+    WorkerCountType in_num_workers = no_workers,
+    bool const interop_mode = false,
+    MPI_Comm in_comm = MPI_COMM_WORLD,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
 
@@ -260,11 +267,6 @@ protected:
   bool tryFinalize(bool const disable_sig = true);
 
   /**
-   * \internal \brief Setup argument input
-   */
-  void setupArgs();
-
-  /**
    * \internal \brief Initialize error handlers
    */
   void initializeErrorHandlers();
@@ -292,11 +294,6 @@ protected:
    * \return whether we should create it
    */
   bool needStatsRestartReader();
-
-  /**
-   * \internal \brief Finalize MPI
-   */
-  void finalizeMPI();
 
   /**
    * \internal \brief Perform a synchronization during startup/shutdown using an
@@ -430,8 +427,6 @@ protected:
   bool sig_handlers_disabled_ = false;
   WorkerCountType num_workers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_NULL;
-  int user_argc_ = 0;
-  std::unique_ptr<char*[]> user_argv_ = nullptr;
   std::unique_ptr<component::ComponentPack> p_;
   std::unique_ptr<arguments::ArgConfig> arg_config_;
   arguments::AppConfig const* app_config_;   /**< App config during startup */

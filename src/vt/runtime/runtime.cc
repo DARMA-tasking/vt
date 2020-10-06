@@ -96,12 +96,10 @@ namespace vt { namespace runtime {
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
+  bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers),
-     communicator_(
-       in_comm == nullptr ? MPI_COMM_NULL : *in_comm
-     ),
+     communicator_(in_comm),
      arg_config_(std::make_unique<arguments::ArgConfig>()),
      app_config_(&arg_config_->config_)
 {
@@ -127,30 +125,38 @@ Runtime::Runtime(
   ///   re-initialized \c arg_config_ will contain the configuration.
   ///
   ///  For this to all work correctly, the \c vt_debug_print infrastructure
-  ///  calls \c vt::config::getConfig() which always grabs the correct app
-  ///  config, either from the component singleton or the \c vt::Runtime
+  ///  calls \c vt::config::preConfig() which always grabs the correct app
+  ///  config, from the component singleton or the \c vt::Runtime,
+  ///  or provides stubbed arguments as a fallback.
   ///
   /// =========================================================================
 
-  // MPI_Init 'should' be called first on the original arguments,
-  // with the justification that in some environments in addition to removing
-  // special MPI arguments, it can actually ADD arguments not from argv.
-  // That is not done here and doing so moves up parts of 'initialize' logic.
+  int prev_initialized;
+  MPI_Initialized(&prev_initialized);
+
+  if (not is_interop_) {
+    vtAbortIf(
+      prev_initialized, "MPI is already initialzed. Run VT under interop-mode?"
+    );
+    // Always initialize MPI first, before handling arguments.
+    // This also allows MPI a first-stab at dealing with arguments.
+    MPI_Init(&argc, &argv);
+  } else {
+    vtAbortIf(
+      not prev_initialized, "MPI must be already initialized in VT interop-mode."
+    );
+  }
 
   // n.b. ref-update of args with pass-through arguments
-  // (pass-through arguments are neither for VT or MPI_Init)
   std::tuple<int, std::string> result =
     arg_config_->parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);
 
   if (exit_code not_eq -1) {
     // Help requested or invalid argument(s).
-    // To better honor the MPI contract, force an MPI_Init then MPI_Abort.
-    // It might be better to move up the general MPI_Init case; normally
-    // MPI_Init is called as a result of Runtime::initialize (while this is ctor).
-    MPI_Comm comm = communicator_ != MPI_COMM_NULL ? communicator_ : MPI_COMM_WORLD;
-    int rank;
-    MPI_Init(NULL, NULL);
+    MPI_Comm comm = communicator_;
+
+    int rank = 0;
     MPI_Comm_rank(comm, &rank);
 
     if (rank == 0) {
@@ -165,7 +171,10 @@ Runtime::Runtime(
           << std::flush;
     }
 
+    // Even in interop mode, still abort MPI on bad args.
     MPI_Abort(comm, exit_code);
+    MPI_Finalize();
+
     std::_Exit(exit_code); // no return
   }
 
@@ -173,8 +182,6 @@ Runtime::Runtime(
   setupSignalHandler();
   setupSignalHandlerINT();
   setupTerminateHandler();
-
-  setupArgs();
 }
 
 bool Runtime::hasSchedRun() const {
@@ -313,8 +320,13 @@ void Runtime::setupTerminateHandler() {
       return runtime_active_ && !aborted_;
     });
   }
+
   if (!aborted_) {
     finalize();
+  }
+
+  if (not is_interop_) {
+    MPI_Finalize();
   }
 }
 
@@ -439,8 +451,6 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
       printShutdownBanner(num_units, coll_epochs);
     }
 
-    finalizeMPI();
-
     if (disable_sig) {
       signal(SIGSEGV, SIG_DFL);
       signal(SIGUSR1, SIG_DFL);
@@ -448,6 +458,7 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
       sig_handlers_disabled_ = true;
     }
 
+    sync();
     finalized_ = true;
     return true;
   } else {
@@ -603,27 +614,6 @@ void Runtime::setup() {
   vt_debug_print(runtime, node, "end: setup\n");
 }
 
-void Runtime::setupArgs() {
-  std::vector<char*>& mpi_args = arg_config_->config_.mpi_init_args;
-  user_argc_ = mpi_args.size() + 1;
-  user_argv_ = std::make_unique<char*[]>(user_argc_ + 1);
-
-  int i = 0;
-  user_argv_[i++] = arg_config_->config_.argv_prog_name;
-  for (char*& arg : mpi_args) {
-    user_argv_[i++] = arg;
-  }
-  user_argv_[i++] = nullptr;
-}
-
-void Runtime::finalizeMPI() {
-  sync();
-
-  if (not is_interop_) {
-    MPI_Finalize();
-  }
-}
-
 void Runtime::initializeComponents() {
   vt_debug_print(runtime, node, "begin: initializeComponents\n");
 
@@ -645,7 +635,7 @@ void Runtime::initializeComponents() {
   p_->registerComponent<ctx::Context>(
     &theContext,
     Deps<arguments::ArgConfig>{},
-    user_argc_, &user_argv_[0], is_interop_, &communicator_
+    is_interop_, communicator_
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
