@@ -58,6 +58,10 @@ struct VirtualContext : VrtBase {
   VirtualContext(bool const in_is_main) { }
 
   friend struct VirtualContextAttorney;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
+
 };
 
 struct MainVirtualContext : VirtualContext {

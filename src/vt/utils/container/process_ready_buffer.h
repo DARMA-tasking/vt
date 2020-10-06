@@ -82,6 +82,16 @@ struct ProcessBuffer {
 
   inline void progress() { progressEngine(false); }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | buffer_
+      | needs_lock_
+      | worker_
+      | process_fn_;
+
+    s.countBytes(mutex_);
+  }
+
 private:
   void apply(ProcessFnType fn, bool locked) {
     bool found = true;

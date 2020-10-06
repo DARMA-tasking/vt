@@ -100,8 +100,9 @@ struct WorkerGroupAny
   void serialize(Serializer& s) {
     s | finished_fn_
       | initialized_
-      | num_workers_
-      | workers_;
+      | num_workers_;
+
+    s.countBytes(workers_);
   }
 
 private:

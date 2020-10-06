@@ -76,6 +76,12 @@ struct PendingRequest {
     VirtualRequestIDType const& in_req_id, ActionProxyType in_action
   ) : req_id(in_req_id), action(in_action)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | req_id
+      | action;
+  }
 };
 
 struct VirtualContextManager
@@ -118,14 +124,14 @@ struct VirtualContextManager
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s // | holder_
-      // | remote_holder_
+    s | holder_
+      | remote_holder_
       | cur_seed_
       | curIdent_
       | curRemoteID_
       | myNode_
-      | cur_request_id;
-      // | pending_request_;
+      | cur_request_id
+      | pending_request_;
   }
 
 private:
