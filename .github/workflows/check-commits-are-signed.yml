@@ -1,0 +1,15 @@
+name: PR checks (unsigned commits)
+
+on:
+  pull_request
+
+jobs:
+  check:
+    name: Check if there are unsigned commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: DARMA-tasking/find-unsigned-commits@master
+        with:
+          repo_owner: ${{ github.event.repository.owner.login }}
+          repo_name: ${{ github.event.repository.name }}
+          pr_number: ${{ github.event.pull_request.number }}
