@@ -109,12 +109,8 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
 
   // Construct two collections
   runInEpochCollective([&]{
-    proxy1 = vt::theCollection()->constructCollective<TestCol1>(
-      range, [](vt::Index1D){ return std::make_unique<TestCol1>(); }
-    );
-    proxy2 = vt::theCollection()->constructCollective<TestCol2>(
-      range, [](vt::Index1D){ return std::make_unique<TestCol2>(); }
-    );
+    proxy1 = vt::theCollection()->constructCollective<TestCol1>(range);
+    proxy2 = vt::theCollection()->constructCollective<TestCol2>(range);
   });
 
   // Get the base model, assert it's valid

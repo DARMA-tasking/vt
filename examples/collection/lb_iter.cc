@@ -129,11 +129,7 @@ int main(int argc, char** argv) {
   }
 
   auto range = vt::Index1D(num_elms);
-  auto proxy = vt::theCollection()->constructCollective<IterCol>(
-    range, [](vt::Index1D){
-      return std::make_unique<IterCol>();
-    }
-  );
+  auto proxy = vt::theCollection()->constructCollective<IterCol>(range);
 
   for (int i = 0; i < num_iter; i++) {
     auto cur_time = vt::timing::Timing::getCurrentTime();

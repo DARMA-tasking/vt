@@ -141,6 +141,11 @@ struct CollectionManager
   template <typename T, typename U=void>
   using IsNotColMsgType = std::enable_if_t<!ColMsgTraits<T>::is_coll_msg, messaging::PendingSend>;
 
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  using IsDefaultConstructableType = std::enable_if_t<
+    std::is_default_constructible<ColT>::value, CollectionProxyWrapType<ColT, IndexT>
+  >;
+
   template <typename ColT, typename UserMsgT, typename T, typename U=void>
   using IsWrapType = std::enable_if_t<
     std::is_same<T,ColMsgWrap<ColT,UserMsgT>>::value,U
@@ -228,6 +233,26 @@ struct CollectionManager
    *
    *  Construct virtual context collection with an explicit map. This construct
    *  method enables distributed SPMD construction of the virtual context
+   *  collection where each index is mapped with the \c MapFnT.
+   *
+   * \param[in] range index range for the collection
+   * \param[in] tag tag for out-or-order creation
+   *
+   * \return proxy to the new collection
+   */
+  template <
+    typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+  >
+  IsDefaultConstructableType<ColT> constructCollective(
+    typename ColT::IndexType range, TagType const& tag = no_tag
+  );
+
+  /**
+   * \brief Collectively construct a new virtual context collection with
+   * templated map
+   *
+   *  Construct virtual context collection with an explicit map. This construct
+   *  method enables distributed SPMD construction of the virtual context
    *  collection using the \c DistribConstructFn. The system will invoke that
    *  function for every index in the system based on the where each index is
    *  mapped with the \c MapFnT.
@@ -252,6 +277,24 @@ struct CollectionManager
    *
    *  Construct virtual context collection with the default map. This construct
    *  method enables distributed SPMD construction of the virtual context
+   *  collection where each index is mapped with the default mapping function.
+   *
+   * \param[in] range index range for the collection
+   * \param[in] tag tag for out-or-order creation
+   *
+   * \return proxy to the new collection
+   */
+  template <typename ColT>
+  IsDefaultConstructableType<ColT> constructCollective(
+    typename ColT::IndexType range, TagType const& tag = no_tag
+  );
+
+  /**
+   * \brief Collectively construct a new virtual context collection with
+   * the default map.
+   *
+   *  Construct virtual context collection with the default map. This construct
+   *  method enables distributed SPMD construction of the virtual context
    *  collection using the \c DistribConstructFn. The system will invoke that
    *  function for every index in the system based on the where each index is
    *  mapped with the default mapping function for this index type selected.
@@ -264,7 +307,8 @@ struct CollectionManager
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
+    typename ColT::IndexType range,
+    DistribConstructFn<ColT> cons_fn,
     TagType const& tag = no_tag
   );
 

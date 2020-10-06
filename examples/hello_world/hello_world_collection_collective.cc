@@ -73,9 +73,7 @@ int main(int argc, char** argv) {
   }
 
   auto range = vt::Index1D(num_elms);
-  auto proxy = vt::theCollection()->constructCollective<Hello>(
-    range, [](vt::Index1D){ return std::make_unique<Hello>(); }
-  );
+  auto proxy = vt::theCollection()->constructCollective<Hello>(range);
 
   // All nodes send a broadcast to all elements
   proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
