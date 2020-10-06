@@ -243,7 +243,7 @@ getRecvSendDirection(CommKeyType const& comm) {
 
   // Comm stats are not recorded for collective bcast
   // this case is just to avoid warning of not handled enum
-  case CommCategory::CollectiveNodeToCollectionEdges:
+  case CommCategory::CollectiveToCollectionBcast:
     return std::make_pair(ElementIDType{}, ElementIDType{});
   }
 

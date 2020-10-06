@@ -55,7 +55,7 @@ the code.
 | 4     | `CommCategory::Broadcast` | A broadcast from a collection element to a whole collection (receive-side) |
 | 5     | `CommCategory::CollectionToNodeBcast` | A broadcast from a collection element to all nodes (receive-side) |
 | 6     | `CommCategory::NodeToCollectionBcast` | A broadcast from a node to a whole collection (receive-side) |
-| 7     | `CommCategory::CollectiveNodeToCollectionEdges` | Collective broadcast from a node to all its edges (receive-side) |
+| 7     | `CommCategory::CollectiveToCollectionBcast` | Collective 'broadcast' from every node to the local collection elements (receive-side) |
 
 For all the broadcast-like edges, the communication logging will occur on the
 receive of the broadcast side (one entry per broadcast recipient).

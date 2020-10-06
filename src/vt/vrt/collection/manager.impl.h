@@ -908,7 +908,7 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
 
 #if vt_check_enabled(lblite)
   msg->setLBLiteInstrument(instrument);
-  msg->setCat(balance::CommCategory::NodeToCollectionBcast);
+  msg->setCat(balance::CommCategory::CollectiveToCollectionBcast);
 #endif
 
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
