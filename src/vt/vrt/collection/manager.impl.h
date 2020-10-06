@@ -1468,8 +1468,8 @@ bool CollectionManager::insertCollectionElement(
 
 template <typename ColT>
 CollectionManager::IsDefaultConstructableType<ColT>
- CollectionManager::constructCollective(
-  typename ColT::IndexType range,  TagType const& tag
+CollectionManager::constructCollective(
+  typename ColT::IndexType range, TagType const& tag
 ) {
   auto const map_han = getDefaultMap<ColT>();
   auto cons_fn = [](typename ColT::IndexType){return std::make_unique<ColT>();};
@@ -1478,7 +1478,7 @@ CollectionManager::IsDefaultConstructableType<ColT>
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
- CollectionManager::constructCollective(
+CollectionManager::constructCollective(
   typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
   TagType const& tag
 ) {
