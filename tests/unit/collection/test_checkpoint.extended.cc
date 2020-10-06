@@ -161,11 +161,7 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
   auto checkpoint_name = "test_checkpoint_dir";
 
   {
-    auto proxy = vt::theCollection()->constructCollective<TestCol>(
-      range, [](vt::Index3D){
-        return std::make_unique<TestCol>();
-      }
-    );
+    auto proxy = vt::theCollection()->constructCollective<TestCol>(range);
 
     vt::runInEpochCollective([&]{
       if (this_node == 0) {

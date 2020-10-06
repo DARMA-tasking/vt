@@ -99,9 +99,7 @@ TEST_P(TestLoadBalancer, test_load_balancer_1) {
 
   // Construct a collection
   runInEpochCollective([&]{
-    proxy = vt::theCollection()->constructCollective<MyCol>(
-      range, [](vt::Index1D){ return std::make_unique<MyCol>(); }
-    );
+    proxy = vt::theCollection()->constructCollective<MyCol>(range);
   });
 
   for (int phase = 0; phase < num_phases; phase++) {
@@ -169,9 +167,7 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
 
   // Construct a collection
   runInEpochCollective([&] {
-    proxy = vt::theCollection()->constructCollective<MyCol>(
-      range, [](vt::Index1D) { return std::make_unique<MyCol>(); }
-    );
+    proxy = vt::theCollection()->constructCollective<MyCol>(range);
   });
 
   for (int phase = 0; phase < num_phases; phase++) {

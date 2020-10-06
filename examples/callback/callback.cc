@@ -132,9 +132,7 @@ int main(int argc, char** argv) {
   }
 
   auto obj = vt::theObjGroup()->makeCollective<MyObj>();
-  auto col = vt::theCollection()->constructCollective<MyCol>(
-    vt::Index1D(8), [](vt::Index1D){ return std::make_unique<MyCol>(); }
-  );
+  auto col = vt::theCollection()->constructCollective<MyCol>(vt::Index1D(8));
 
   if (this_node == 0) {
     vt::NodeType dest = num_nodes > 2 ? 2 : 0;

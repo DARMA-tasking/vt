@@ -196,11 +196,7 @@ TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
   triggered_lb = false;
 
   auto range = vt::Index2D(8,8);
-  auto proxy = theCollection()->constructCollective<TestCol<T>>(
-    range, [](vt::Index2D idx){
-      return std::make_unique<TestCol<T>>();
-    }
-  );
+  auto proxy = theCollection()->constructCollective<TestCol<T>>(range);
 
   runInEpochCollective([proxy]{
     if (theContext()->getNode() == 0) {
