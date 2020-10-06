@@ -81,6 +81,16 @@ struct Log final {
       uint64_t idx3;
       uint64_t idx4;
 
+      template <typename Serializer>
+      void serialize(Serializer& s) {
+        s | data_type
+          | msg_len
+          | idx1
+          | idx2
+          | idx3
+          | idx4;
+      }
+
     private:
       friend struct Log;
 
@@ -112,6 +122,15 @@ struct Log final {
       UserDataType user_data;
       UserEventIDType user_event;
       bool user_start;
+
+      template <typename Serializer>
+      void serialize(Serializer& s) {
+        s | data_type
+          | user_note
+          | user_data
+          | user_event
+          | user_start;
+      }
 
     private:
       // All except for direct property access via either
@@ -169,6 +188,12 @@ struct Log final {
     ~Data() {
       reset();
     }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | sys
+      | user;
+  }
 
   private:
 

@@ -509,7 +509,7 @@ struct Trace : runtime::component::Component<Trace> {
   void serialize(Serializer& s) {
     s | incremental_flush_mode
       | traces_
-      // | open_events_
+      | open_events_
       | event_holds_
       | cur_event_
       | enabled_
@@ -521,7 +521,6 @@ struct Trace : runtime::component::Component<Trace> {
       | full_trace_name_
       | full_sts_name_
       | full_dir_name_
-      // | log_file_
       | wrote_sts_file_
       | trace_write_count_
       | spec_proxy_
