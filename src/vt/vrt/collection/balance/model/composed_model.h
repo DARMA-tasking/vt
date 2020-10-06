@@ -84,8 +84,15 @@ public:
   unsigned int getNumCompletedPhases() override;
   int getNumSubphases() override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {}
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
+    s | base_;
+  }
 
 private:
   std::shared_ptr<LoadModel> base_;
