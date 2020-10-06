@@ -87,10 +87,11 @@ struct RawData : public LoadModel {
     >
   >
   void serialize(SerializerT& s) {
-    s | proc_load_
-      | proc_subphase_load_
-      | proc_comm_
-      | last_completed_phase_;
+    s | last_completed_phase_;
+
+    s.countBytes(proc_load_);
+    s.countBytes(proc_subphase_load_);
+    s.countBytes(proc_comm_);
   }
 
   // Observer pointers to the underlying data. In operation, these would be owned by NodeStats
