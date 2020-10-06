@@ -131,10 +131,20 @@ Runtime::Runtime(
   ///
   /// =========================================================================
 
-  // Always initialize MPI first, before handling arguments.
-  // This also allows MPI a first-stab at dealing with arguments.
+  int prev_initialized;
+  MPI_Initialized(&prev_initialized);
+
   if (not is_interop_) {
+    vtAbortIf(
+      prev_initialized, "MPI is already initialzed. Run VT under interop-mode?"
+    );
+    // Always initialize MPI first, before handling arguments.
+    // This also allows MPI a first-stab at dealing with arguments.
     MPI_Init(&argc, &argv);
+  } else {
+    vtAbortIf(
+      not prev_initialized, "MPI must be already initialized in VT interop-mode."
+    );
   }
 
   // n.b. ref-update of args with pass-through arguments
