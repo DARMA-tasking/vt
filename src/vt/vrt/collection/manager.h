@@ -236,7 +236,6 @@ struct CollectionManager
    *  collection where each index is mapped with the \c MapFnT.
    *
    * \param[in] range index range for the collection
-   * \param[in] cons_fn construct function to create an element on each node
    * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
