@@ -176,8 +176,8 @@ TEST_F(TestMemoryFootprinting, test_async_event) {
 }
 
 TEST_F(TestMemoryFootprinting, test_worker_group_type) {
-  // FIXME: handle different configurations
-  // printMemoryFootprint(theWorkerGrp());
+  vt::worker::WorkerGroupType workerGroup;
+  printMemoryFootprint(&workerGroup);
 }
 
 TEST_F(TestMemoryFootprinting, test_virtual_context_manager) {

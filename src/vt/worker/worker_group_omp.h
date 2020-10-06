@@ -102,9 +102,10 @@ struct WorkerGroupOMP
     s | finished_fn_
       | ready_
       | initialized_
-      | num_workers_;
-      // | worker_state_
-      // | enqueue_worker_mutex_; // omp_lock_t
+      | num_workers_
+      | worker_state_;
+
+    s.countBytes(enqueue_worker_mutex_);
   }
 
 private:
