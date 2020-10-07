@@ -69,6 +69,7 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
+  void recvComm(LBCommKey key, double bytes);
   void recvObjData(
     ElementIDType to_perm, ElementIDType to_temp,
     ElementIDType from_perm, ElementIDType from_temp, double bytes, bool bcast
@@ -88,6 +89,7 @@ struct ElementStats {
   TimeType getLoad(PhaseType phase, SubphaseType subphase) const;
 
   CommMapType const& getComm(PhaseType const& phase, SubphaseType const& subphase);
+  CommMapType const& getSubphaseComm(PhaseType phase);
   void setSubPhase(SubphaseType subphase);
   SubphaseType getSubPhase() const;
 
@@ -113,6 +115,7 @@ protected:
 
   SubphaseType cur_subphase_ = 0;
   std::vector<std::vector<TimeType>> subphase_timings_ = {};
+  std::vector<std::vector<CommMapType>> subphase_comm_ = {};
 
   static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
 };

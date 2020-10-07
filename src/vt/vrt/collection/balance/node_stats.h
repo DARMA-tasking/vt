@@ -116,7 +116,8 @@ public:
   ElementIDType addNodeStats(
     Migratable* col_elm,
     PhaseType const& phase, TimeType const& time,
-    std::vector<TimeType> const& subphase_time, CommMapType const& comm
+    std::vector<TimeType> const& subphase_time,
+    CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
   );
 
   /**
@@ -270,8 +271,8 @@ private:
   std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
   /// Node communication graph for each local object
   std::unordered_map<PhaseType, CommMapType> node_comm_;
-	/// Node communication graph for each subphase
-	std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_comm_s_;
+  /// Node communication graph for each subphase
+  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_comm_s_;
   /// The current element ID
   ElementIDType next_elm_;
   /// The stats file name for outputting instrumentation
