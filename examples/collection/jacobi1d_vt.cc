@@ -265,7 +265,6 @@ public:
 
     //--- Send values to the right
     if (size_t(myIdx) < numObjs_ - 1) {
-      auto rightMsg = vt::makeMessage<VecMsg>();
       proxy[myIdx + 1].send<VecMsg, &LinearPb1DJacobi::exchange>(
         myIdx, told_[numRowsPerObject_]
       );
