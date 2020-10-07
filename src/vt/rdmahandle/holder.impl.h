@@ -70,17 +70,18 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
     "allocate: len={}, in_len={}, count_={}\n", len, in_len, count_
   );
   // Allocate data window
+  MPI_Comm comm = theContext()->getComm();
   MPI_Alloc_mem(len * sizeof(T), MPI_INFO_NULL, &data_base_);
   MPI_Win_create(
-    data_base_, len * sizeof(T), sizeof(T), MPI_INFO_NULL, MPI_COMM_WORLD,
+    data_base_, len * sizeof(T), sizeof(T), MPI_INFO_NULL, comm,
     &data_window_
   );
   if (not uniform_size_) {
     // Allocate control window
     MPI_Alloc_mem(sizeof(uint64_t), MPI_INFO_NULL, &control_base_);
     MPI_Win_create(
-      control_base_, sizeof(uint64_t), sizeof(uint64_t), MPI_INFO_NULL,
-      MPI_COMM_WORLD, &control_window_
+      control_base_, sizeof(uint64_t), sizeof(uint64_t), MPI_INFO_NULL, comm,
+      &control_window_
     );
     {
       auto this_node = theContext()->getNode();
@@ -92,7 +93,6 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
         "setting allocate size: size={}, window={}\n",
         count_, print_ptr(&control_window_)
       );
-
     }
   }
   ready_ = true;

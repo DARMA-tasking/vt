@@ -68,9 +68,13 @@ struct InfoColl : virtual InfoBase {
   using ReducePtrType          = ReduceType*;
   using GroupCollMsgPtrType    = MsgSharedPtr<GroupCollectiveMsg>;
 
-  explicit InfoColl(bool const in_is_in_group, bool make_mpi_group)
-    : is_in_group(in_is_in_group), make_mpi_group_(make_mpi_group)
-  { }
+  explicit InfoColl(bool const in_is_in_group, MPI_Comm default_comm, bool make_mpi_group)
+    : is_in_group(in_is_in_group),
+      default_comm_(default_comm),
+      mpi_group_comm_(default_comm),
+      make_mpi_group_(make_mpi_group)
+  {
+  }
 
 private:
   /*
@@ -147,8 +151,10 @@ private:
   std::list<ActionType> pending_ready_actions_ = {};
 
 private:
-  MPI_Comm mpi_group_comm = MPI_COMM_WORLD;
-  bool make_mpi_group_    = false;
+  //< Default, NON-OWNED, communicator.
+  MPI_Comm default_comm_   = MPI_COMM_NULL;
+  MPI_Comm mpi_group_comm_ = MPI_COMM_NULL;
+  bool make_mpi_group_     = false;
 };
 
 }} /* end namespace vt::group */

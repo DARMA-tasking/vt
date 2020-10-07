@@ -76,6 +76,9 @@ struct MPISingletonMultiTest {
     MPI_Finalize();
   }
 
+public:
+  const MPI_Comm getComm() { return comm_; }
+
 private:
   MPI_Comm comm_;
 };
@@ -95,10 +98,12 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
         std::make_unique<MPISingletonMultiTest>(test_argc, test_argv);
     }
 
+    // communicator is duplicated.
+    MPI_Comm comm = mpi_singleton->getComm();
     auto const new_args = injectAdditionalArgs(test_argc, test_argv);
     auto custom_argc = new_args.first;
     auto custom_argv = new_args.second;
-    CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true);
+    CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true, &comm);
 
 #if vt_feature_cmake_test_trace_on
     vt::theConfig()->vt_trace = true;

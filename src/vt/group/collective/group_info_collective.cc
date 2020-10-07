@@ -98,14 +98,14 @@ void InfoColl::setupCollectiveSingular() {
 }
 
 MPI_Comm InfoColl::getComm() const {
-  return mpi_group_comm;
+  return mpi_group_comm_;
 }
 
 void InfoColl::freeComm() {
-  if (mpi_group_comm != MPI_COMM_WORLD) {
+  if (mpi_group_comm_ not_eq default_comm_) {
     theGroup()->collective_scope_.mpiCollectiveWait([this]{
-      MPI_Comm_free(&mpi_group_comm);
-      mpi_group_comm = MPI_COMM_WORLD;
+      MPI_Comm_free(&mpi_group_comm_);
+      mpi_group_comm_ = default_comm_;
     });
   }
 }
@@ -147,7 +147,7 @@ void InfoColl::setupCollective() {
         auto const this_node_impl = theContext()->getNode();
         auto const cur_comm = theContext()->getComm();
         int32_t const group_color = in_group;
-        MPI_Comm_split(cur_comm, group_color, this_node_impl, &mpi_group_comm);
+        MPI_Comm_split(cur_comm, group_color, this_node_impl, &mpi_group_comm_);
       }
     );
   }

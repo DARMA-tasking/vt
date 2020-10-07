@@ -68,7 +68,6 @@ static constexpr size_t const max_region_list_size = 4;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
-static struct InfoRootedConsType {} info_rooted_cons {};
 static struct InfoRootedLocalConsType {} info_rooted_local_cons {};
 static struct InfoRootedRemoteConsType {} info_rooted_remote_cons {};
 static struct InfoCollectiveConsType {} info_collective_cons {};
@@ -80,31 +79,29 @@ struct Info : InfoRooted, InfoColl {
 
 protected:
   Info(
+    MPI_Comm comm,
     bool const& in_is_collective, ActionType in_action,
     GroupType const in_group, bool const& in_is_remote,
     bool const& in_is_in_group, RegionPtrType in_region,
     RegionType::SizeType const& in_total_size, bool make_mpi_group
   );
 
-  Info(
-    InfoRootedConsType, RegionPtrType in_region, ActionType in_action,
-    GroupType const in_group, RegionType::SizeType const& total_size,
-    bool const& in_is_remote
-  );
-
 public:
   Info(
-    InfoRootedLocalConsType, RegionPtrType in_region, ActionType in_action,
+    InfoRootedLocalConsType,
+    MPI_Comm comm, RegionPtrType in_region, ActionType in_action,
     GroupType const in_group, RegionType::SizeType const& total_size
   );
 
   Info(
-    InfoRootedRemoteConsType, RegionPtrType in_region, GroupType const in_group,
+    InfoRootedRemoteConsType,
+    MPI_Comm comm, RegionPtrType in_region, GroupType const in_group,
     RegionType::SizeType const& total_size
   );
 
   Info(
-    InfoCollectiveConsType, ActionType in_action, GroupType const in_group,
+    InfoCollectiveConsType,
+    MPI_Comm comm, ActionType in_action, GroupType const in_group,
     bool const in_is_in_group, bool make_mpi_group
   );
 

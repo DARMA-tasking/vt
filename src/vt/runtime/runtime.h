@@ -225,7 +225,7 @@ struct Runtime {
    *
    * \todo Remove this and fix the single one callsite in \c NodeStats
    */
-  void systemSync() { sync(); }
+  void systemSync();
 
 public:
   /**
@@ -294,12 +294,6 @@ protected:
    * \return whether we should create it
    */
   bool needStatsRestartReader();
-
-  /**
-   * \internal \brief Perform a synchronization during startup/shutdown using an
-   * \c MPI_Barrier
-   */
-  void sync();
 
   /**
    * \internal \brief Perform setup actions, such as registering a termination
@@ -426,7 +420,8 @@ protected:
   bool is_interop_ = false;
   bool sig_handlers_disabled_ = false;
   WorkerCountType num_workers_ = no_workers;
-  MPI_Comm communicator_ = MPI_COMM_NULL;
+  //< Communicator to be given to theContext creation; don't use otherwise.
+  MPI_Comm initial_communicator_ = MPI_COMM_NULL;
   std::unique_ptr<component::ComponentPack> p_;
   std::unique_ptr<arguments::ArgConfig> arg_config_;
   arguments::AppConfig const* app_config_;   /**< App config during startup */

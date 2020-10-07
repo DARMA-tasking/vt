@@ -181,7 +181,8 @@ void GroupManager::initializeRemoteGroup(
   RegionType::SizeType const group_size
 ) {
   auto group_info = std::make_unique<GroupInfoType>(
-    info_rooted_remote_cons, std::move(in_region), group, group_size
+    info_rooted_remote_cons, default_comm_,
+    std::move(in_region), group, group_size
   );
   auto group_ptr = group_info.get();
   remote_group_info_.emplace(
@@ -206,7 +207,7 @@ MPI_Comm GroupManager::getGroupComm(GroupType const group_id) {
   if (iter != local_collective_group_info_.end()) {
     return iter->second->getComm();
   } else {
-    return MPI_COMM_WORLD;
+    return default_comm_;
   }
 }
 
@@ -215,7 +216,8 @@ void GroupManager::initializeLocalGroupCollective(
   bool const in_group, bool make_mpi_group
 ) {
   auto group_info = std::make_unique<GroupInfoType>(
-    info_collective_cons, action, group, in_group, make_mpi_group
+    info_collective_cons, default_comm_,
+    action, group, in_group, make_mpi_group
   );
   auto group_ptr = group_info.get();
   local_collective_group_info_.emplace(
@@ -232,7 +234,8 @@ void GroupManager::initializeLocalGroup(
 
   auto const group_size = in_region->getSize();
   auto group_info = std::make_unique<GroupInfoType>(
-    info_rooted_local_cons, std::move(in_region), action, group, group_size
+    info_rooted_local_cons, default_comm_,
+    std::move(in_region), action, group, group_size
   );
   auto group_ptr = group_info.get();
   local_group_info_.emplace(
@@ -506,7 +509,8 @@ EventType GroupManager::sendGroup(
 }
 
 GroupManager::GroupManager()
-  : collective_scope_(theCollective()->makeCollectiveScope())
+  : default_comm_(theContext()->getComm()),
+    collective_scope_(theCollective()->makeCollectiveScope())
 {
   global::DefaultGroup::setupDefaultTree();
 }
