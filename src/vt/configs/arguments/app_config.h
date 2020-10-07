@@ -353,7 +353,6 @@ struct AppConfig {
 
       | argv_prog_name
 
-      | mpi_init_args
       | passthru_args;
   }
 };
