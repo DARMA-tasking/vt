@@ -92,7 +92,8 @@ struct ProxyElm {
    * \param[in] msg raw pointer to the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  [[deprecated("Use sendMsg instead")]]
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   void send(MsgT* msg) const;
 
   /**
@@ -102,7 +103,8 @@ struct ProxyElm {
    * \param[in] msg managed pointer to the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  [[deprecated("Use sendMsg instead")]]
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   void send(MsgSharedPtr<MsgT> msg) const;
 
   /**

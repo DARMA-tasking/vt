@@ -63,10 +63,12 @@ struct Broadcastable : BaseProxyT {
   Broadcastable& operator=(Broadcastable const&) = default;
 
   template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-  [[deprecated("Use broadcastMsg instead")]]
+  [[deprecated("For simple create and broadcast message use broadcast(Args...),\
+   otherwise use broadcastMsg(MsgPtrThief)")]]
   messaging::PendingSend broadcast(MsgT* msg) const;
   template <typename MsgT, ActiveColTypedFnType<MsgT, ColT> *f>
-  [[deprecated("Use broadcastMsg instead")]]
+  [[deprecated("For simple create and broadcast message use broadcast(Args...),\
+   otherwise use broadcastMsg(MsgPtrThief)")]]
   messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
 
   /**
@@ -93,10 +95,12 @@ struct Broadcastable : BaseProxyT {
   messaging::PendingSend broadcast(Args&&... args) const;
 
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-  [[deprecated("Use broadcastMsg instead")]]
+  [[deprecated("For simple create and broadcast message use broadcast(Args...),\
+   otherwise use broadcastMsg(MsgPtrThief)")]]
   messaging::PendingSend broadcast(MsgT* msg) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f>
-  [[deprecated("Use broadcastMsg instead")]]
+  [[deprecated("For simple create and broadcast message use broadcast(Args...),\
+   otherwise use broadcastMsg(MsgPtrThief)")]]
   messaging::PendingSend broadcast(MsgSharedPtr<MsgT> msg) const;
 
   /**

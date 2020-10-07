@@ -64,10 +64,12 @@ struct Sendable : BaseProxyT {
   void serialize(SerializerT& s);
 
   template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
-  [[deprecated("Use sendMsg instead")]]
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   messaging::PendingSend send(MsgT* msg) const;
   template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
-  [[deprecated("Use sendMsg instead")]]
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   messaging::PendingSend send(MsgSharedPtr<MsgT> msg) const;
 
   /**
@@ -91,10 +93,12 @@ struct Sendable : BaseProxyT {
   messaging::PendingSend send(Args&&... args) const;
 
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
-  [[deprecated("Use sendMsg instead")]]
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   messaging::PendingSend send(MsgT* msg) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
-  [[deprecated("Use sendMsg instead")]]
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   messaging::PendingSend send(MsgSharedPtr<MsgT> msg) const;
 
   /**

@@ -102,7 +102,8 @@ public:
    * \param[in] msg raw pointer to the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  [[deprecated("Use broadcastMsg instead")]]
+  [[deprecated("For simple create and broadcast message use broadcast(Args...),\
+   otherwise use broadcastMsg(MsgPtrThief)")]]
   void broadcast(MsgT* msg) const;
 
   /**
@@ -112,7 +113,8 @@ public:
    * \param[in] msg managed pointer to the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-  [[deprecated("Use broadcastMsg instead")]]
+  [[deprecated("For simple create and broadcast message use broadcast(Args...),\
+   otherwise use broadcastMsg(MsgPtrThief)")]]
   void broadcast(MsgPtr<MsgT> msg) const;
 
   /**
