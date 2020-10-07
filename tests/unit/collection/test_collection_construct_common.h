@@ -151,11 +151,10 @@ TYPED_TEST_P(TestConstruct, test_construct_1) {
     auto rng = TestIndex(col_size);
     TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = ConstructParams<ColType,TestParamType>::constructTup(rng,args);
-    auto msg = makeMessage<MsgType>();
-    proxy.template broadcastMsg<
+    proxy.template broadcast<
       MsgType,
       ConstructHandlers::handler<ColType,MsgType>
-    >(msg.get());
+    >();
   }
 }
 
@@ -170,11 +169,10 @@ TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
   auto proxy = ConstructParams<ColType,TestParamType>::constructTupCollective(
     rng,args
   );
-  auto msg = makeMessage<MsgType>();
-  proxy.template broadcastMsg<
+  proxy.template broadcast<
     MsgType,
     ConstructHandlers::handler<ColType,MsgType>
-  >(msg.get());
+  >();
 }
 
 REGISTER_TYPED_TEST_SUITE_P(TestConstruct,     test_construct_1);

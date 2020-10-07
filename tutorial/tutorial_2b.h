@@ -123,8 +123,7 @@ static inline void collectionReduce() {
 
     // Broadcast a message to the entire collection. The reduceHandler will be
     // invoked on every element to the collection
-    auto msg = ::vt::makeMessage<ColRedMsg>();
-    proxy.broadcastMsg<ColRedMsg,&ReduceCol::reduceHandler>(msg.get());
+    proxy.broadcast<ColRedMsg,&ReduceCol::reduceHandler>();
   }
 }
 /// [Tutorial2B]

@@ -106,20 +106,13 @@ int main(int argc, char** argv) {
     auto range = vt::Index1D(num_elms);
     auto proxy = vt::theCollection()->construct<Hello>(range, this_node);
 
-    vt::runInEpochRooted([=]{
-      auto msg = vt::makeMessage<ColMsg>(this_node);
-      proxy.broadcastMsg<ColMsg, doWork>(msg.get());
-    });
+    vt::runInEpochRooted([=] { proxy.broadcast<ColMsg, doWork>(this_node); });
 
-    vt::runInEpochRooted([=]{
-      auto msg = vt::makeMessage<ColMsg>(this_node);
-      proxy.broadcastMsg<ColMsg, migrateToNext>(msg.get());
-    });
+    vt::runInEpochRooted(
+      [=] { proxy.broadcast<ColMsg, migrateToNext>(this_node); }
+    );
 
-    vt::runInEpochRooted([=]{
-      auto msg = vt::makeMessage<ColMsg>(this_node);
-      proxy.broadcastMsg<ColMsg, doWork>(msg.get());
-    });
+    vt::runInEpochRooted([=] { proxy.broadcast<ColMsg, doWork>(this_node); });
   }
 
   vt::finalize();

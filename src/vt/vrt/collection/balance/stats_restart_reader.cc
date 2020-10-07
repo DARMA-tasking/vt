@@ -212,8 +212,7 @@ void StatsRestartReader::createMigrationInfo(
     //
     // Create a message storing the vector
     //
-    auto msg = makeMessage<VecMsg>(myList);
-    proxy_[0].sendMsg<VecMsg, &StatsRestartReader::gatherMsgs>(msg.get());
+    proxy_[0].send<VecMsg, &StatsRestartReader::gatherMsgs>(myList);
     //
     // Clear old distribution of elements
     //
@@ -272,8 +271,7 @@ void StatsRestartReader::gatherMsgs(VecMsg *msg) {
       }
     }
     if (in > 0) {
-      auto msg2 = makeMessage<VecMsg>(toMove);
-      proxy_[in].sendMsg<VecMsg, &StatsRestartReader::scatterMsgs>(msg2.get());
+      proxy_[in].send<VecMsg, &StatsRestartReader::scatterMsgs>(toMove);
     } else {
       proc_phase_runs_LB_[phaseID] = (!migrate.empty());
       auto& myList = proc_move_list_[phaseID];

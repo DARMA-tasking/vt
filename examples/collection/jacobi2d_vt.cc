@@ -144,8 +144,7 @@ public:
       // Start a new iteration
       //
       auto proxy = getCollectionProxy();
-      auto loopMsg = vt::makeMessage<BlankMsg>();
-      proxy.broadcastMsg<BlankMsg, &LinearPb2DJacobi::sendInfo>(loopMsg.get());
+      proxy.broadcast<BlankMsg, &LinearPb2DJacobi::sendInfo>();
     }
     else if (iter > maxIter) {
       fmt::print("\n Maximum Number of Iterations Reached. \n\n");
@@ -312,16 +311,14 @@ public:
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jy = 1; jy <= numRowsPerObject_; ++jy)
         tcopy[jy] = told_[1 + jy * (numRowsPerObject_ + 2)];
-      auto leftX = vt::makeMessage<VecMsg>(idx, tcopy);
-      proxy(x-1, y).sendMsg<VecMsg, &LinearPb2DJacobi::exchange>(leftX.get());
+      proxy(x-1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(idx, tcopy);
     }
 
     if (y > 0) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + (numRowsPerObject_ + 2)];
-      auto bottomY = vt::makeMessage<VecMsg>(idx, tcopy);
-      proxy(x, y-1).sendMsg<VecMsg, &LinearPb2DJacobi::exchange>(bottomY.get());
+      proxy(x, y-1).send<VecMsg, &LinearPb2DJacobi::exchange>(idx, tcopy);
     }
 
     if (size_t(x) < numObjsX_ - 1) {
@@ -330,16 +327,14 @@ public:
         tcopy[jy] = told_[numRowsPerObject_ +
                           jy * (numRowsPerObject_ + 2)];
       }
-      auto rightX = vt::makeMessage<VecMsg>(idx, tcopy);
-      proxy(x+1, y).sendMsg<VecMsg, &LinearPb2DJacobi::exchange>(rightX.get());
+      proxy(x+1, y).send<VecMsg, &LinearPb2DJacobi::exchange>(idx, tcopy);
     }
 
     if (size_t(y) < numObjsY_ - 1) {
       std::vector<double> tcopy(numRowsPerObject_ + 2, 0.0);
       for (size_t jx = 1; jx <= numRowsPerObject_; ++jx)
         tcopy[jx] = told_[jx + numRowsPerObject_ * (numRowsPerObject_ + 2)];
-      auto topY = vt::makeMessage<VecMsg>(idx, tcopy);
-      proxy(x, y+1).sendMsg<VecMsg, &LinearPb2DJacobi::exchange>(topY.get());
+      proxy(x, y+1).send<VecMsg, &LinearPb2DJacobi::exchange>(idx, tcopy);
     }
 
   }
@@ -503,13 +498,9 @@ int main(int argc, char** argv) {
       static_cast<BaseIndexType>(numY_objs)
     );
     auto proxy = vt::theCollection()->construct<LinearPb2DJacobi>(range);
-    auto rootMsg = vt::makeMessage<LinearPb2DJacobi::LPMsg>(
-      numX_objs,
-      numY_objs,
-      maxIter
+    proxy.broadcast<LinearPb2DJacobi::LPMsg, &LinearPb2DJacobi::solve>(
+      numX_objs, numY_objs, maxIter
     );
-    proxy.broadcastMsg<LinearPb2DJacobi::LPMsg,&LinearPb2DJacobi::solve>(rootMsg.get());
-
   }
 
   vt::finalize();
