@@ -205,13 +205,13 @@ ElementStats::getComm(PhaseType const& phase, SubphaseType const& subphase) {
 CommMapType const& ElementStats::getSubphaseComm(PhaseType phase) {
   subphase_comm_.resize(phase + 1);
   auto const& subphase_comm = subphase_comm_[phase];
-  
+
   vt_debug_print(
     lb, node,
     "ElementStats: getSubphaseComm: comm size={}, phase={}\n",
     subphase_comm.size(), phase
   );
-  
+
   return subphase_comm;
 }
 
