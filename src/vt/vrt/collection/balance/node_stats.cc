@@ -337,7 +337,7 @@ ElementIDType NodeStats::addNodeStats(
   for (auto&& c : comm) {
     comm_data[c.first] += c.second;
   }
-  
+
   // subphase node comm vector per phase of commmaptypes
   auto subphase_comm_data = subphase_node_comm_[phase];
   for (auto&& spc : subphase_comm) {
