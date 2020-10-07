@@ -89,7 +89,7 @@ struct ElementStats {
   TimeType getLoad(PhaseType phase, SubphaseType subphase) const;
 
   CommMapType const& getComm(PhaseType const& phase, SubphaseType const& subphase);
-  CommMapType const& getSubphaseComm(PhaseType phase);
+  std::vector<CommMapType> const& getSubphaseComm(PhaseType phase);
   void setSubPhase(SubphaseType subphase);
   SubphaseType getSubPhase() const;
 

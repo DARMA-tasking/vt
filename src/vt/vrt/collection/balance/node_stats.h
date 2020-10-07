@@ -113,8 +113,8 @@ public:
    */
   ElementIDType addNodeStats(
     Migratable* col_elm,
-    PhaseType const& phase, SubphaseType const& subphase,
-    TimeType const& time, std::vector<TimeType> const& subphase_time,
+    PhaseType const& phase, TimeType const& time,
+    std::vector<TimeType> const& subphase_time,
     CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
   );
 
@@ -189,6 +189,13 @@ public:
    * \return an observer pointer to the comm graph
    */
   std::unordered_map<PhaseType, CommMapType> const* getNodeComm() const;
+
+  /**
+   * \internal \brief Get stored object comm subphase graph
+   *
+   * \return an observer pointer to the comm subphase graph
+   */
+  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
 
   /**
    * \internal \brief Test if this node has an object to migrate

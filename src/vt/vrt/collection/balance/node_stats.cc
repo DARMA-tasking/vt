@@ -304,8 +304,8 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
 
 ElementIDType NodeStats::addNodeStats(
   Migratable* col_elm,
-  PhaseType const& phase, SubphaseType const& subphase,
-  TimeType const& time, std::vector<TimeType> const& subphase_time,
+  PhaseType const& phase, TimeType const& time,
+  std::vector<TimeType> const& subphase_time,
   CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
 ) {
   // A new temp ID gets assigned when a object is migrated into a node
@@ -343,7 +343,7 @@ ElementIDType NodeStats::addNodeStats(
   }
 
   auto &subphase_comm_data = node_subphase_comm_[phase];
-  for (int i = 0; i < subphase_comm.size(); i++) {
+  for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
     for (auto& sp : subphase_comm[i]) {
       subphase_comm_data[i][sp.first] += sp.second;
     }

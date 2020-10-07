@@ -202,9 +202,9 @@ ElementStats::getComm(PhaseType const& phase, SubphaseType const& subphase) {
   return phase_comm;
 }
 
-CommMapType const& ElementStats::getSubphaseComm(PhaseType phase) {
+std::vector<CommMapType> const& ElementStats::getSubphaseComm(PhaseType phase) {
   subphase_comm_.resize(phase + 1);
-  auto const& subphase_comm = subphase_comm_[phase][phase];
+  auto const& subphase_comm = subphase_comm_[phase];
 
   vt_debug_print(
     lb, node,
