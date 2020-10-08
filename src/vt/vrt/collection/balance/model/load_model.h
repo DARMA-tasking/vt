@@ -100,7 +100,7 @@ public:
   LoadModel() = default;
   virtual ~LoadModel() = default;
 
-  checkpoint_virtual_serialize_base(LoadModel)
+  checkpoint_virtual_serialize_root()
 
   /**
    * \brief Initialize the model instance with pointers to the measured load data

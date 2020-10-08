@@ -66,7 +66,7 @@ struct PerCollection : public ComposedModel
    */
   explicit PerCollection(std::shared_ptr<LoadModel> base);
 
-  checkpoint_virtual_serialize_derived(PerCollection, ComposedModel)
+  checkpoint_virtual_serialize_derived_from(ComposedModel)
 
   /**
    * \brief Add a model for objects in a specific collection

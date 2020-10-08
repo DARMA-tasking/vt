@@ -66,7 +66,7 @@ struct DispatchBase {
 
   virtual ~DispatchBase() = default;
 
-  checkpoint_virtual_serialize_base(DispatchBase)
+  checkpoint_virtual_serialize_root()
 
   /*
    * Dispatch to the handler; the base is closed around the proper object

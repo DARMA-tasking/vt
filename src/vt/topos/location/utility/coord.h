@@ -55,7 +55,7 @@ namespace vt { namespace location {
 // General base class for the location coords to erase templated types
 struct LocationCoord {
 
-  checkpoint_virtual_serialize_base(LocationCoord)
+  checkpoint_virtual_serialize_root()
 
   int data;
 

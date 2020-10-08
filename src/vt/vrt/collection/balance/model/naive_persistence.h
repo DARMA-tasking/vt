@@ -63,7 +63,7 @@ struct NaivePersistence : public ComposedModel {
   explicit NaivePersistence(std::shared_ptr<balance::LoadModel> base);
   explicit NaivePersistence(checkpoint::SERIALIZE_CONSTRUCT_TAG tag) : ComposedModel(tag) {}
 
-  checkpoint_virtual_serialize_derived(NaivePersistence, ComposedModel)
+  checkpoint_virtual_serialize_derived_from(ComposedModel)
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;

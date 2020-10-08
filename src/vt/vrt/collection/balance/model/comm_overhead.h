@@ -66,7 +66,7 @@ struct CommOverhead : public ComposedModel {
     TimeType in_per_byte_weight
   );
 
-  checkpoint_virtual_serialize_derived(CommOverhead, ComposedModel)
+  checkpoint_virtual_serialize_derived_from(ComposedModel)
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,

@@ -69,7 +69,7 @@ public:
    */
   SelectSubphases(std::shared_ptr<LoadModel> base, std::vector<unsigned int> subphases);
 
-  checkpoint_virtual_serialize_derived(SelectSubphases, ComposedModel)
+  checkpoint_virtual_serialize_derived_from(ComposedModel)
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   int getNumSubphases() override;

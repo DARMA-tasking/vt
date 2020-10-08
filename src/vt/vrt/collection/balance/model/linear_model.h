@@ -70,7 +70,7 @@ struct LinearModel : ComposedModel {
       past_len_(in_past_len)
   { }
 
-  checkpoint_virtual_serialize_derived(LinearModel, ComposedModel)
+  checkpoint_virtual_serialize_derived_from(ComposedModel)
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;

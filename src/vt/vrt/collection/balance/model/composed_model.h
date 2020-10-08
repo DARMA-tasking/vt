@@ -66,7 +66,7 @@ public:
   explicit ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
   explicit ComposedModel(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
 
-  checkpoint_virtual_serialize_derived(ComposedModel, LoadModel)
+  checkpoint_virtual_serialize_derived_from(LoadModel)
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,

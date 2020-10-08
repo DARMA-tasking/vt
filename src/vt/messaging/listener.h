@@ -62,7 +62,7 @@ namespace vt { namespace messaging {
 struct Listener {
   virtual ~Listener() {}
 
-  checkpoint_virtual_serialize_base(Listener)
+  checkpoint_virtual_serialize_root()
 
   /**
    * \brief The pure virtual method for listening to all message sends while
