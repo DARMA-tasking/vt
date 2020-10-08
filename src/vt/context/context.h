@@ -147,8 +147,7 @@ struct Context : runtime::component::Component<Context> {
   void serialize(Serializer& s) {
     s | thisNode_
       | numNodes_
-      | numWorkers_
-      | is_comm_world_;
+      | numWorkers_;
 
     s.countBytes(communicator_);
   }
