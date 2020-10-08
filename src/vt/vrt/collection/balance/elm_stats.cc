@@ -189,14 +189,14 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
 }
 
 CommMapType const&
-ElementStats::getComm(PhaseType const& phase, SubphaseType const& subphase) {
+ElementStats::getComm(PhaseType const& phase) {
   comm_.resize(phase + 1);
   auto const& phase_comm = comm_[phase];
 
   vt_debug_print(
     lb, node,
-    "ElementStats: getComm: comm size={}, phase={}, subphase={}\n",
-    phase_comm.size(), phase, subphase
+    "ElementStats: getComm: comm size={}, phase={}\n",
+    phase_comm.size(), phase
   );
 
   return phase_comm;
