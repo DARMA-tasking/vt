@@ -1001,6 +1001,10 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   vt_debug_print(runtime, node, "end: initializeWorkers\n");
 }
 
+void Runtime::printMemoryFootprint() const {
+  p_->printMemoryFootprint();
+}
+
 arguments::AppConfig const* Runtime::getAppConfig() const {
   return app_config_;
 }

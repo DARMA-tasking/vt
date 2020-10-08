@@ -239,6 +239,11 @@ public:
    */
   void checkForArgumentErrors();
 
+  /**
+   * \internal \brief Print memory footprint of components
+   */
+  void printMemoryFootprint() const;
+
 private:
   RuntimeInstType const instance_;
 

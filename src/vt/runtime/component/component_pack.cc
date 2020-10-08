@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_CC
 #define INCLUDED_VT_RUNTIME_COMPONENT_COMPONENT_PACK_CC
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/runtime/component/component_pack.h"
 
 namespace vt { namespace runtime { namespace component {
@@ -172,6 +174,15 @@ void ComponentPack::detectCyclesImpl(std::list<int>& stack, int dep) {
     detectCyclesImpl(stack, vp);
   }
   stack.pop_back();
+}
+
+void ComponentPack::printMemoryFootprint() const {
+  for (auto&& c : live_components_) {
+    fmt::print("sizeof:\t{}\n", sizeof(*c));
+
+    auto footprint = checkpoint::getMemoryFootprint(*c);
+    fmt::print("footprint:\t{}\n", footprint);
+  }
 }
 
 }}} /* end namespace vt::runtime::component */

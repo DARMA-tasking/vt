@@ -76,6 +76,10 @@ namespace vt { namespace tests { namespace unit {
 
 using TestMemoryFootprinting = TestParallelHarness;
 
+TEST_F(TestMemoryFootprinting, test_live_components) {
+  // vt::rt->printMemoryFootprint();
+}
+
 template<typename T>
 void printMemoryFootprint(T* obj) {
   fmt::print("sizeof(obj):\t{}\n", sizeof(*obj));
