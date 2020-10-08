@@ -850,6 +850,82 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
 }
 
 template <
+  typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
+>
+messaging::PendingSend CollectionManager::broadcastCollectiveMsg(
+  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+  messaging::MsgPtrThief<MsgT> msg, bool instrument
+) {
+  using ColT = typename MsgT::CollectionType;
+
+  auto& msgPtr = msg.msg_;
+  msgPtr->setVrtHandler(auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>());
+  msgPtr->setMember(false);
+
+  return broadcastCollectiveMsgImpl<MsgT, ColT>(proxy, msgPtr, instrument);
+}
+
+template <
+  typename MsgT,
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+>
+messaging::PendingSend CollectionManager::broadcastCollectiveMsg(
+  CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+  messaging::MsgPtrThief<MsgT> msg, bool instrument
+) {
+  using ColT = typename MsgT::CollectionType;
+
+  auto& msgPtr = msg.msg_;
+  msgPtr->setVrtHandler(
+    auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>()
+  );
+  msgPtr->setMember(true);
+
+  return broadcastCollectiveMsgImpl<MsgT, ColT>(proxy, msgPtr, instrument);
+}
+
+template <typename MsgT, typename ColT>
+messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
+  CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg, bool instrument
+) {
+  using IndexT = typename ColT::IndexType;
+
+  msg->setFromNode(theContext()->getNode());
+  msg->setBcastProxy(proxy.getProxy());
+
+#if vt_check_enabled(trace_enabled)
+  // Create the trace creation event for the broadcast here to connect it a
+  // higher semantic level
+  auto reg_type = msg->getMember() ?
+    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+    auto_registry::RegistryTypeEnum::RegVrtCollection;
+  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
+  auto event = theMsg()->makeTraceCreationSend(
+    msg, msg->getVrtHandler(), reg_type, msg_size, true
+  );
+  msg->setFromTraceEvent(event);
+#endif
+
+#if vt_check_enabled(lblite)
+  msg->setLBLiteInstrument(instrument);
+  msg->setCat(balance::CommCategory::CollectiveToCollectionBcast);
+#endif
+
+  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
+
+  return schedule(msg, false, cur_epoch, [proxy, msg] {
+    auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(proxy);
+    auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
+    msg->setBcastEpoch(bcast_epoch);
+
+    theMsg()->markAsCollectionMessage(msg);
+
+    collectionBcastHandler<ColT, IndexT, MsgT>(msg.get());
+  }
+  );
+}
+
+template <
   typename MsgT,
   ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
 >

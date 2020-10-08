@@ -66,9 +66,16 @@ void ProxyElm<ObjT>::send(MsgSharedPtr<MsgT> msg) const {
 }
 
 template <typename ObjT>
+template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+void ProxyElm<ObjT>::sendMsg(messaging::MsgPtrThief<MsgT> msg) const {
+  auto proxy = ProxyElm<ObjT>(*this);
+  theObjGroup()->send<ObjT,MsgT,fn>(proxy,msg.msg_);
+}
+
+template <typename ObjT>
 template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
 void ProxyElm<ObjT>::send(Args&&... args) const {
-  return send<MsgT,fn>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  return sendMsg<MsgT,fn>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
 template <typename ObjT>

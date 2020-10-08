@@ -153,7 +153,7 @@ TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
       auto msg = makeMessage<MsgType>(args);
       //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
       if (i % 2 == 0) {
-        proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg.get());
+        proxy[i].template sendMsg<MsgType,SendHandlers<ColType>::handler>(msg.get());
       } else {
         theCollection()->sendMsg<MsgType,SendHandlers<ColType>::handler>(
           proxy[i], msg.get()
@@ -178,7 +178,7 @@ TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
       auto msg = makeMessage<MsgType>(args);
       //proxy[i].template send<MsgType,SendHandlers<ColType>::handler>(msg);
       if (i % 2 == 0) {
-        proxy[i].template send<MsgType,&ColType::handler>(msg.get());
+        proxy[i].template sendMsg<MsgType,&ColType::handler>(msg.get());
       } else {
         theCollection()->sendMsg<MsgType,&ColType::handler>(
           proxy[i], msg.get()

@@ -199,8 +199,9 @@ void TraceSpec::parse() {
 
 void TraceSpec::broadcastSpec() {
   auto root = theContext()->getNode();
-  auto msg = makeMessage<SpecMsg>(spec_mod_, spec_exact_, root);
-  proxy_.template broadcast<SpecMsg, &TraceSpec::transferSpec>(msg.get());
+  proxy_.template broadcast<SpecMsg, &TraceSpec::transferSpec>(
+    spec_mod_, spec_exact_, root
+  );
 }
 
 void TraceSpec::transferSpec(SpecMsg* msg) {

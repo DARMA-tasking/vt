@@ -64,16 +64,60 @@ struct Sendable : BaseProxyT {
   void serialize(SerializerT& s);
 
   template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   messaging::PendingSend send(MsgT* msg) const;
   template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   messaging::PendingSend send(MsgSharedPtr<MsgT> msg) const;
+
+  /**
+   * \brief Create message (with action function handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f>
+  messaging::PendingSend sendMsg(messaging::MsgPtrThief<MsgT> msg) const;
+
+  /**
+   * \brief Create message (with action function handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
   template <typename MsgT, ActiveColTypedFnType<MsgT,ColT> *f, typename... Args>
   messaging::PendingSend send(Args&&... args) const;
 
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   messaging::PendingSend send(MsgT* msg) const;
   template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  [[deprecated("For simple create and send message use send(Args...),\
+   otherwise use sendMsg(MsgPtrThief)")]]
   messaging::PendingSend send(MsgSharedPtr<MsgT> msg) const;
+
+  /**
+   * \brief Create message (with action member handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
+  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
+  messaging::PendingSend sendMsg(messaging::MsgPtrThief<MsgT> msg) const;
+
+  /**
+   * \brief Create message (with action member handler) and send to collection element
+   *
+   * \param[in] args arguments needed for creteating the message
+   *
+   * \return a pending send
+   */
   template <
     typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
   >

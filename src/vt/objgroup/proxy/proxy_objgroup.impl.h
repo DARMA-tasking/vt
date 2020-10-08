@@ -71,9 +71,16 @@ void Proxy<ObjT>::broadcast(MsgPtr<MsgT> msg) const {
 }
 
 template <typename ObjT>
+template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+void Proxy<ObjT>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const {
+  auto proxy = Proxy<ObjT>(*this);
+  theObjGroup()->broadcast<ObjT,MsgT,fn>(proxy,msg.msg_);
+}
+
+template <typename ObjT>
 template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
 void Proxy<ObjT>::broadcast(Args&&... args) const {
-  return broadcast<MsgT,fn>(makeMessage<MsgT>(std::forward<Args>(args)...));
+  return broadcastMsg<MsgT,fn>(makeMessage<MsgT>(std::forward<Args>(args)...));
 }
 
 template <typename ObjT>

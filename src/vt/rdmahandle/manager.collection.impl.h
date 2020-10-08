@@ -159,13 +159,10 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     // ObjGroup and all nodes might not have a collection element mapped to
     // them.
     if (this_node == min_node_mapped and in_next_handle == no_rdma_handle) {
-      auto msg = makeMessage<impl::InformRDMAMsg<ProxyT,IndexT>>(
-        collection_proxy, next_handle, uniform_size, map_han, range
-      );
       proxy_.template broadcast<
         impl::InformRDMAMsg<ProxyT,IndexT>,
         &Manager::informCollectionRDMA<T,E,ProxyT,ColT>
-      >(msg.get());
+      >(collection_proxy, next_handle, uniform_size, map_han, range);
     }
   } else {
     auto sub_proxy_bits = iter->second;

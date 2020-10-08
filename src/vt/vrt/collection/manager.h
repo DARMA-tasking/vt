@@ -949,6 +949,59 @@ public:
   );
 
   /**
+   * \brief Broadcast collective a message with action function handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   *
+   * \return a pending send
+   */
+  template <
+    typename MsgT,
+    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+  >
+  messaging::PendingSend broadcastCollectiveMsg(
+    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    messaging::MsgPtrThief<MsgT> msg, bool instrument = true);
+
+  /**
+   * \brief Broadcast collective a message with action member handler
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   *
+   * \return a pending send
+   */
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+  >
+  messaging::PendingSend broadcastCollectiveMsg(
+    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    messaging::MsgPtrThief<MsgT> msg, bool instrument = true);
+
+  /**
+   * \internal \brief Broadcast collective a message
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   *
+   * \return a pending send
+   */
+  template <typename MsgT, typename ColT>
+  messaging::PendingSend broadcastCollectiveMsgImpl(
+    CollectionProxyWrapType<ColT> const& proxy, MsgPtr<MsgT>& msg,
+    bool instrument);
+
+  /**
    * \brief Broadcast a message with action function handler
    *
    * \param[in] proxy the collection proxy

@@ -169,8 +169,8 @@ static void startIter(int32_t const iter, ColProxyType proxy) {
   ::fmt::print(
     "startIter: iter={}, cur_iter={}\n", iter, iter
   );
-  auto msg = makeMessage<IterMsg>(iter);
-  proxy.broadcast<IterMsg,LBTest::iterWork>(msg.get());
+
+  proxy.broadcast<IterMsg,LBTest::iterWork>(iter);
 }
 
 struct TestLB : TestParallelHarness { };

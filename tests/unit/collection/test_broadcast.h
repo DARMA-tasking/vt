@@ -128,16 +128,16 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
     auto range = TestIndex(col_size);
     TestParamType args = ConstructTuple<TestParamType>::construct();
     auto proxy = theCollection()->construct<ColType>(range);
-    auto msg = makeMessage<MsgType>(args);
+
     proxy.template broadcast<
       MsgType,
       BroadcastHandlers<ColType>::handler
-    >(msg.get());
+    >(args);
 
-    auto msg2 = makeMessage<MsgType>(args);
+    auto msg = makeMessage<MsgType>(args);
     theCollection()->broadcastMsg<
       MsgType,BroadcastHandlers<ColType>::handler
-    >(proxy, msg2.get());
+    >(proxy, msg.get());
   }
 }
 

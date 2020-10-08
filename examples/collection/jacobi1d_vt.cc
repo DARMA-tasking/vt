@@ -131,8 +131,7 @@ public:
       // Start a new iteration
       //
       auto proxy = getCollectionProxy();
-      auto loopMsg = vt::makeMessage<BlankMsg>();
-      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>(loopMsg.get());
+      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::sendInfo>();
     }
     else if (iter > maxIter) {
       fmt::print("\n Maximum Number of Iterations Reached. \n\n");
@@ -259,14 +258,16 @@ public:
     //--- Send the values to the left
     auto proxy = this->getCollectionProxy();
     if (myIdx > 0) {
-      auto leftMsg = vt::makeMessage<VecMsg>(myIdx, told_[1]);
-      proxy[myIdx-1].send<VecMsg, &LinearPb1DJacobi::exchange>(leftMsg.get());
+      proxy[myIdx - 1].send<VecMsg, &LinearPb1DJacobi::exchange>(
+        myIdx, told_[1]
+      );
     }
 
     //--- Send values to the right
     if (size_t(myIdx) < numObjs_ - 1) {
-      auto rightMsg = vt::makeMessage<VecMsg>(myIdx, told_[numRowsPerObject_]);
-      proxy[myIdx+1].send<VecMsg, &LinearPb1DJacobi::exchange>(rightMsg.get());
+      proxy[myIdx + 1].send<VecMsg, &LinearPb1DJacobi::exchange>(
+        myIdx, told_[numRowsPerObject_]
+      );
     }
   }
 
@@ -372,11 +373,9 @@ int main(int argc, char** argv) {
     auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
     auto proxy = vt::theCollection()->construct<LinearPb1DJacobi>(range);
-    auto rootMsg = vt::makeMessage<LinearPb1DJacobi::LPMsg>(
+    proxy.broadcast<LinearPb1DJacobi::LPMsg, &LinearPb1DJacobi::solve>(
       num_objs, numRowsPerObject, maxIter
     );
-    proxy.broadcast<LinearPb1DJacobi::LPMsg,&LinearPb1DJacobi::solve>(rootMsg.get());
-
   }
 
   vt::finalize();

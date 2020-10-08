@@ -109,7 +109,7 @@ TYPED_TEST_P(TestCollectionIndexTypes, test_collection_index_1) {
     for (BaseIndexType i = 0; i < static_cast<BaseIndexType>(col_size); i++) {
       auto msg = makeMessage<MsgType>(34);
       if (i % 2 == 0) {
-        proxy[i].template send<MsgType,&ColType::handler>(msg.get());
+        proxy[i].template sendMsg<MsgType,&ColType::handler>(msg.get());
       } else {
         theCollection()->sendMsg<MsgType,&ColType::handler>(
           proxy[i], msg.get()

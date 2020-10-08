@@ -102,6 +102,8 @@ public:
    * \param[in] msg raw pointer to the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  [[deprecated("For simple create and broadcast message use broadcast(Args...),\
+   otherwise use broadcastMsg(MsgPtrThief)")]]
   void broadcast(MsgT* msg) const;
 
   /**
@@ -111,7 +113,19 @@ public:
    * \param[in] msg managed pointer to the message
    */
   template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  [[deprecated("For simple create and broadcast message use broadcast(Args...),\
+   otherwise use broadcastMsg(MsgPtrThief)")]]
   void broadcast(MsgPtr<MsgT> msg) const;
+
+  /**
+   * \brief Broadcast a message to all nodes to be delivered to the local object
+   * instance
+   * \note Takes ownership of the supplied message
+   *
+   * \param[in] msg the message
+   */
+  template <typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  void broadcastMsg(messaging::MsgPtrThief<MsgT> msg) const;
 
   /**
    * \brief Broadcast a message to all nodes to be delivered to the local object
