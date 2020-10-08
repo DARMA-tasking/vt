@@ -100,7 +100,14 @@ private:
   friend struct CollectiveAlg;
 
 public:
-  CollectiveScope(CollectiveScope&&) = default;
+  CollectiveScope(CollectiveScope&& other)
+    : is_user_tag_(other.is_user_tag_),
+      scope_(other.scope_)
+  {
+    // invalidate scope for deallocation
+    other.scope_ = no_tag;
+  }
+
   CollectiveScope(CollectiveScope const&) = delete;
   CollectiveScope& operator=(CollectiveScope&&) = delete;
   CollectiveScope& operator=(CollectiveScope const&) = delete;
@@ -153,6 +160,24 @@ public:
    * \param[in] action the action containing a set of MPI operations
    */
   void mpiCollectiveWait(ActionType action);
+
+  /**
+   * \internal \brief Get whether this scope is a user-tagged scope
+   *
+   * \note Used for testing purposes
+   *
+   * \return whether this scope is a user tag
+   */
+  bool isUserTag() const { return is_user_tag_; }
+
+  /**
+   * \internal \brief Get the scope tag bits
+   *
+   * \note Used for testing purposes
+   *
+   * \return the scope bits
+   */
+  TagType getScopeBits() const { return scope_; }
 
 private:
 

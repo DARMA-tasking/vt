@@ -78,8 +78,8 @@ void RandomLB::runLB() {
     gen = std::mt19937{rd()};
   } else {
     using ResultType = std::mt19937::result_type;
-    auto const node_seed = seed_ + static_cast<ResultType>(this_node);
-    gen = std::mt19937{node_seed};
+    auto const node_seed = seed_ + this->phase_ + static_cast<ResultType>(this_node);
+    gen = std::mt19937{static_cast<ResultType>(node_seed)};
   }
   std::uniform_int_distribution<> dist(0, num_nodes-1);
 
@@ -91,15 +91,16 @@ void RandomLB::runLB() {
     objs.insert(stat.first);
   }
 
-  for (auto&& obj : objs) {
+  // we skip the first object to be certain we never end up with zero objects
+  for (auto it = ++objs.begin(); it != objs.end(); ++it) {
     auto const to_node = dist(gen);
     if (to_node != this_node) {
       debug_print(
         lb, node,
         "RandomLB: migrating obj={:x} from={} to={}\n",
-        obj, this_node, to_node
+        *it, this_node, to_node
       );
-      migrateObjectTo(obj, to_node);
+      migrateObjectTo(*it, to_node);
     }
   }
 
