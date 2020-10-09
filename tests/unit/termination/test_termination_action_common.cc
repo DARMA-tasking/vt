@@ -54,4 +54,3 @@ vt::NodeType all  = vt::uninitialized_destination;
 std::unordered_map<vt::EpochType,Data> data;
 
 }}}} /* end namespace vt::tests::unit::channel */
-
