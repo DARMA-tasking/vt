@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 norm.h
+//                                    norm.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_NORM_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_NORM_H
 
 #include "vt/vrt/collection/balance/model/composed_model.h"
 #include <unordered_map>
@@ -73,4 +73,4 @@ private:
 
 }}}} // end namespace
 
-#endif
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_NORM_H*/
