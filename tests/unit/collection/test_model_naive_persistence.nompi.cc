@@ -52,7 +52,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace naive {
 
 using TestModelNaivePersistence = TestHarness;
 
@@ -130,4 +130,4 @@ TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::naive

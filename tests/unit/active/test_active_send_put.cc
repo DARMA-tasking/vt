@@ -49,7 +49,7 @@
 
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace send_put {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -126,4 +126,4 @@ INSTANTIATE_TEST_SUITE_P(
   ::testing::Range(static_cast<NodeType>(2), static_cast<NodeType>(512), 4)
 );
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::send_put

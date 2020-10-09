@@ -52,7 +52,7 @@
 
 #include <cstdint>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace insert {
 
 using namespace vt;
 using namespace vt::collective;
@@ -213,4 +213,4 @@ TEST_F(TestInsert, test_insert_send_sparse_node_1) {
   num_work = 0;
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::insert

@@ -53,7 +53,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace comm {
 
 using TestModelCommOverhead = TestHarness;
 
@@ -181,4 +181,4 @@ TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::comm

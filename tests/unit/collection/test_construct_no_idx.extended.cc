@@ -51,7 +51,7 @@
 #include <tuple>
 #include <string>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace no_idx {
 
 namespace multi_param_no_idx_ {
 template <typename... Args> struct ColMsg;
@@ -93,4 +93,4 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
   test_construct_no_idx_dist, TestConstructDist, CollectionTestTypes, DEFAULT_NAME_GEN
 );
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::no_idx

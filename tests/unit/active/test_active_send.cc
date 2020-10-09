@@ -49,7 +49,7 @@
 
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace send {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -213,4 +213,4 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
 }
 
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::send

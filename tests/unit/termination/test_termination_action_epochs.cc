@@ -44,7 +44,7 @@
 
 #include "test_termination_action_common.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace epochs {
 
 struct TestTermCollect : action::BaseFixture {};
 struct TestTermRooted  : action::BaseFixture {};
@@ -101,4 +101,4 @@ INSTANTIATE_TEST_SUITE_P(
   )
 );
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::epochs

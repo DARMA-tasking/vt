@@ -52,7 +52,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace select {
 
 using TestModelSelectSubphases = TestHarness;
 
@@ -194,4 +194,4 @@ TEST_F(TestModelSelectSubphases, test_model_select_subphases_2) {
   EXPECT_EQ(objects_seen, 2);
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::select

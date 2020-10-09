@@ -53,7 +53,7 @@
 #include <cstdint>
 #include <tuple>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace send {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -188,4 +188,4 @@ TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::send

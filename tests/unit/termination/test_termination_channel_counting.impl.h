@@ -47,17 +47,6 @@
 
 namespace vt { namespace tests { namespace unit { namespace channel {
 
-Data::Data()
-  : degree_(0),
-    activator_(0)
-{
-  for (vt::NodeType dst = 0; dst < all; ++dst) {
-    count_[dst] = {0, 0, 0};
-  }
-}
-
-Data::~Data() { count_.clear(); }
-
 template<typename Msg, vt::ActiveTypedFnType<Msg>* handler>
 void sendMsg(vt::NodeType dst, int count, vt::EpochType ep) {
   vtAssert(dst != vt::uninitialized_destination, "Invalid destination");
@@ -91,17 +80,17 @@ void broadcast(int count, vt::EpochType ep) {
   }
 }
 
-void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep) {
+inline void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep) {
   sendMsg<BasicMsg,routedHandler>(dst, ttl, ep);
   // increment outgoing message counter
   data[ep].count_[dst].out_++;
 }
 
-void sendPing(vt::NodeType dst, int count, vt::EpochType ep) {
+inline void sendPing(vt::NodeType dst, int count, vt::EpochType ep) {
   sendMsg<CtrlMsg,pingHandler>(dst, count, ep);
 }
 
-void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
+inline void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
   vt_debug_print(
     term, node,
     "rank:{} echo::dst {}\n",
@@ -117,7 +106,7 @@ void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
 // on receipt of a basic message.
 // note: msg->dst is uninitialized on broadcast,
 // thus related assertion was removed.
-void basicHandler(BasicMsg* msg) {
+inline void basicHandler(BasicMsg* msg) {
   auto const& src = msg->src_;
   // avoid self sending case
   if (node != src) {
@@ -126,7 +115,7 @@ void basicHandler(BasicMsg* msg) {
   }
 }
 
-void routedHandler(BasicMsg* msg) {
+inline void routedHandler(BasicMsg* msg) {
   vtAssert(node != root, "Cannot route from root");
   basicHandler(msg);
 
@@ -147,7 +136,7 @@ void routedHandler(BasicMsg* msg) {
 }
 
 // on receipt of an echo message echo<m> from Pi
-void echoHandler(CtrlMsg* msg) {
+inline void echoHandler(CtrlMsg* msg) {
   vtAssert(node == msg->dst_, "Invalid destination");
 
   // shortcuts for readability
@@ -183,7 +172,7 @@ void echoHandler(CtrlMsg* msg) {
 }
 
 // on receipt of a control message test<m> from Pi
-void pingHandler(CtrlMsg* msg) {
+inline void pingHandler(CtrlMsg* msg) {
   vtAssert(node == msg->dst_, "Invalid destination");
 
   auto const& src = msg->src_;
@@ -210,7 +199,7 @@ void pingHandler(CtrlMsg* msg) {
 
 
 // trigger termination detection by root
-void trigger(vt::EpochType ep) {
+inline void trigger(vt::EpochType ep) {
   vtAssert(node == root, "Only root may trigger termination check");
 
   for (auto&& active : data[ep].count_) {
@@ -235,7 +224,7 @@ void trigger(vt::EpochType ep) {
 }
 
 // propagate check on current subtree
-void propagate(vt::EpochType ep) {
+inline void propagate(vt::EpochType ep) {
   for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
     if (dst != node) {
@@ -258,7 +247,7 @@ void propagate(vt::EpochType ep) {
 }
 
 // check local termination, i.e if Cij^+ == Cij^-
-bool hasEnded(vt::EpochType ep) {
+inline bool hasEnded(vt::EpochType ep) {
   for (auto&& active : data[ep].count_) {
     auto const& dst = active.first;
     if (dst != node) {

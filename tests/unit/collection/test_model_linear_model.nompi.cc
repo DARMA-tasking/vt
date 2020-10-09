@@ -52,7 +52,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace linear {
 
 using TestLinearModel = TestHarness;
 
@@ -157,4 +157,4 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::linear

@@ -51,7 +51,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace func_ctx {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -140,4 +140,4 @@ TEST_F(TestCallbackFuncCtx, test_callback_func_ctx_2) {
   EXPECT_EQ(called, 500);
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::func_ctx

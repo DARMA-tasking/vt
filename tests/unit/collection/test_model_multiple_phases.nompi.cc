@@ -52,7 +52,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace multiple {
 
 using TestModelMultiplePhases = TestHarness;
 
@@ -125,4 +125,4 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::multiple

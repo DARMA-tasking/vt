@@ -52,7 +52,7 @@
 
 #include <cstdint>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace query {
 
 struct TestQueryContext : TestParallelHarness { };
 
@@ -97,4 +97,4 @@ TEST_F(TestQueryContext, test_query_context_send_1) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::query

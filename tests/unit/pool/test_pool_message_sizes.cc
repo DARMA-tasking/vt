@@ -52,7 +52,7 @@
 
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace msg_size {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -130,4 +130,4 @@ TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::msg_size

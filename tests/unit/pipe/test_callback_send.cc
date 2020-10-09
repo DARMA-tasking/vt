@@ -51,7 +51,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace send {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -198,4 +198,4 @@ TEST_F(TestCallbackSend, test_callback_send_remote_3) {
 }
 
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::send

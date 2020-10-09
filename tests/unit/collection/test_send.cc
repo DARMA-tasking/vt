@@ -54,7 +54,7 @@
 #include <cstdint>
 #include <tuple>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace send {
 
 REGISTER_TYPED_TEST_SUITE_P(TestCollectionSend, test_collection_send_1);
 REGISTER_TYPED_TEST_SUITE_P(TestCollectionSendMem, test_collection_send_ptm_1);
@@ -72,4 +72,4 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
   DEFAULT_NAME_GEN
 );
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::send

@@ -49,7 +49,7 @@
 
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace func {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -103,4 +103,4 @@ TEST_F(TestCallbackFunc, test_callback_func_2) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::func
