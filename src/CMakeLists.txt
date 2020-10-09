@@ -254,6 +254,10 @@ if (vt_gold_linker_enabled)
   endif()
 endif()
 
+if (vt_unity_build_enabled)
+  set_target_properties(${VIRTUAL_TRANSPORT_LIBRARY} PROPERTIES UNITY_BUILD ON)
+endif()
+
 link_target_with_vt(
   TARGET ${VIRTUAL_TRANSPORT_LIBRARY}
   LINK_VT_LIB
