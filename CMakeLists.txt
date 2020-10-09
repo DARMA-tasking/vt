@@ -68,6 +68,8 @@ include(cmake/build_git_info.cmake)
 
 include(cmake/check_compiler.cmake)
 
+option(vt_gold_linker_enabled "Build VT using the `gold' linker" ON)
+
 option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} LOWERCASE_CMAKE_BUILD_TYPE)

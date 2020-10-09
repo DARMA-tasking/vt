@@ -234,6 +234,26 @@ target_compile_features(
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
 target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${VT_TARGET_CXX_FLAGS})
 
+if (vt_gold_linker_enabled)
+  if (UNIX AND NOT APPLE)
+    execute_process(
+      COMMAND
+        ${CMAKE_C_COMPILER}
+        -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE ld_version
+    )
+    if ("${ld_version}" MATCHES "GNU gold")
+      set(
+        CMAKE_EXE_LINKER_FLAGS
+        "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags"
+      )
+      set(
+        CMAKE_SHARED_LINKER_FLAGS
+        "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags"
+      )
+    endif()
+  endif()
+endif()
+
 link_target_with_vt(
   TARGET ${VIRTUAL_TRANSPORT_LIBRARY}
   LINK_VT_LIB
