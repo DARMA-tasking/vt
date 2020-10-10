@@ -56,6 +56,11 @@
  */
 namespace vt { namespace tests { namespace unit { namespace channel {
 
+// ranks
+extern vt::NodeType node;
+extern vt::NodeType root;
+extern vt::NodeType all;
+
 // data per rank and epoch
 struct Data {
   struct Counters {
@@ -64,13 +69,24 @@ struct Data {
     int ack_ = 0; // acknowledged
   };
 
-  Data();
-  ~Data();
+  Data()
+    : degree_(0),
+      activator_(0)
+  {
+    for (vt::NodeType dst = 0; dst < all; ++dst) {
+      count_[dst] = {0, 0, 0};
+    }
+  }
+
+  ~Data() { count_.clear(); }
 
   int degree_ = 0;
   vt::NodeType activator_ = 0;
   std::unordered_map<vt::NodeType,Counters> count_;
 };
+
+// channel counters per epoch and per rank
+extern std::unordered_map<vt::EpochType,Data> data;
 
 // send any kind of message
 template <typename Msg, vt::ActiveTypedFnType<Msg>* handler>
@@ -80,28 +96,21 @@ template <vt::ActiveTypedFnType<BasicMsg>* handler>
 void broadcast(int count, vt::EpochType ep);
 
 // route basic message, send control messages
-void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep);
-void sendPing(vt::NodeType dst, int count, vt::EpochType ep);
-void sendEcho(vt::NodeType dst, int count, vt::EpochType ep);
+inline void routeBasic(vt::NodeType dst, int ttl, vt::EpochType ep);
+inline void sendPing(vt::NodeType dst, int count, vt::EpochType ep);
+inline void sendEcho(vt::NodeType dst, int count, vt::EpochType ep);
 
 // on receipt of a basic message.
-void basicHandler(BasicMsg* msg);
-void routedHandler(BasicMsg* msg);
-void echoHandler(CtrlMsg* msg);
-void pingHandler(CtrlMsg* msg);
+inline void basicHandler(BasicMsg* msg);
+inline void routedHandler(BasicMsg* msg);
+inline void echoHandler(CtrlMsg* msg);
+inline void pingHandler(CtrlMsg* msg);
 
 // trigger, propagate and check
 // termination of an epoch
-void trigger(vt::EpochType ep);
-void propagate(vt::EpochType ep);
-bool hasEnded(vt::EpochType ep);
-
-// ranks
-extern vt::NodeType node;
-extern vt::NodeType root;
-extern vt::NodeType all;
-// channel counters per epoch and per rank
-extern std::unordered_map<vt::EpochType,Data> data;
+inline void trigger(vt::EpochType ep);
+inline void propagate(vt::EpochType ep);
+inline bool hasEnded(vt::EpochType ep);
 
 }}}} // end namespace vt::tests::unit::channel
 

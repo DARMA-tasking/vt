@@ -68,6 +68,21 @@ include(cmake/build_git_info.cmake)
 
 include(cmake/check_compiler.cmake)
 
+option(vt_gold_linker_enabled "Build VT using the `gold' linker" ON)
+
+option(vt_unity_build_enabled "Build VT with Unity/Jumbo mode enabled" OFF)
+
+if (vt_unity_build_enabled)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16)
+    message(STATUS "Building VT in Unity/Jumbo build mode")
+  else()
+    message(
+      STATUS
+      "Could *not* build VT in Unity/Jumbo mode---version of CMake ${CMAKE_VERSION} < 3.16"
+    )
+  endif()
+endif()
+
 option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} LOWERCASE_CMAKE_BUILD_TYPE)

@@ -70,7 +70,7 @@ using namespace vt::tests::unit;
 #define VT_DEBUG_PRINT(str, ...)
 #endif
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace extensive {
 
 static constexpr SeqType const FinalizeAtomicValue = -1;
 static constexpr SeqType const ResetAtomicValue = -2;
@@ -273,4 +273,4 @@ INSTANTIATE_TEST_SUITE_P(
   testing::ValuesIn(make_values())
 );
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::extensive

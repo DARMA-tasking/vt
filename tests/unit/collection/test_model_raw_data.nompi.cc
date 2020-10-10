@@ -52,7 +52,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace raw {
 
 using TestRawData = TestHarness;
 
@@ -117,4 +117,4 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::raw

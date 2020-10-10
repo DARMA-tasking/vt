@@ -52,7 +52,7 @@
 
 #include <cstdint>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace bcast {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -141,4 +141,4 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::bcast

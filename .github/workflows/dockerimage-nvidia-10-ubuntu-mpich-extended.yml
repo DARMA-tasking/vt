@@ -33,6 +33,7 @@ jobs:
       VT_ASAN: 0
       VT_POOL: 0
       VT_EXTENDED_TESTS: 1
+      VT_UNITY_BUILD: 1
       VT_ZOLTAN: 0
       CACHE: ~/.local/cache/
 

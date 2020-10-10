@@ -51,7 +51,7 @@
 
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace vrt {
 
 using namespace vt;
 using namespace vt::vrt;
@@ -262,4 +262,5 @@ TEST_F(TestSequencerVirtual, test_seq_vc_distinct_inst_3) {
     testSeqFn3b(FinalizeAtomicValue);
   }
 }
-}}} // end namespace vt::tests::unit
+
+}}}} // end namespace vt::tests::unit::vrt

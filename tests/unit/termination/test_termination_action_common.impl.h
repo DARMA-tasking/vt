@@ -48,7 +48,7 @@
 namespace vt { namespace tests { namespace unit { namespace action {
 
 // epoch sequence creation [rooted,collect]
-std::vector<vt::EpochType> generateEpochs(int nb, bool rooted, bool useDS) {
+inline std::vector<vt::EpochType> generateEpochs(int nb, bool rooted, bool useDS) {
   vtAssert(nb > 0, "Invalid epoch sequence size");
   // the epoch sequence to be generated
   std::vector<vt::EpochType> sequence(nb);
@@ -74,7 +74,7 @@ std::vector<vt::EpochType> generateEpochs(int nb, bool rooted, bool useDS) {
 }
 
 // fictive distributed computation of a given epoch
-void compute(vt::EpochType const& epoch) {
+inline void compute(vt::EpochType const& epoch) {
 
   std::random_device device;
   std::mt19937 engine(device());
@@ -103,7 +103,7 @@ void compute(vt::EpochType const& epoch) {
   }
 }
 
-void finish(vt::EpochType const& epoch) {
+inline void finish(vt::EpochType const& epoch) {
   if (epoch != vt::no_epoch) {
     vt::theTerm()->finishedEpoch(epoch);
   }
@@ -115,7 +115,7 @@ void finish(vt::EpochType const& epoch) {
  * - trigger termination detection
  * - finish epoch
  */
-void finalize(vt::EpochType const& epoch, int order) {
+inline void finalize(vt::EpochType const& epoch, int order) {
 
   vt_debug_print(
     term, node,
@@ -142,11 +142,11 @@ void finalize(vt::EpochType const& epoch, int order) {
     finish(epoch);
     vt::theCollective()->barrier();
     // spin until termination of the epoch
-    while (not ok) { vt::rt->runScheduler(); }
+    while (not channel::ok) { vt::rt->runScheduler(); }
   }
 }
 
-void add(vt::EpochType const& epoch, int order){
+inline void add(vt::EpochType const& epoch, int order){
   if (channel::node == channel::root) {
     if (epoch == vt::no_epoch) {
       vt::theTerm()->addAction([=]{
@@ -167,7 +167,7 @@ void add(vt::EpochType const& epoch, int order){
         );
         // check channel counters
         EXPECT_TRUE(channel::hasEnded(epoch));
-        ok = true;
+        channel::ok = true;
         auto msg = vt::makeMessage<vt::Message>();
         vt::theMsg()->broadcastMsg<vt::Message, &setOk>(msg);
       });

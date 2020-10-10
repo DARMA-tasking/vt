@@ -48,19 +48,11 @@
 
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace linear {
 
-class TestIndex : public TestHarness {
-  virtual void SetUp() {
-    TestHarness::SetUp();
-  }
+struct TestIndexLinear : TestHarness { };
 
-  virtual void TearDown() {
-    TestHarness::TearDown();
-  }
-};
-
-TEST_F(TestIndex, test_index_1d_linearization) {
+TEST_F(TestIndexLinear, test_index_1d_linearization) {
   using namespace vt;
 
   static constexpr int const dim1 = 92;
@@ -103,7 +95,7 @@ TEST_F(TestIndex, test_index_1d_linearization) {
   #endif
 }
 
-TEST_F(TestIndex, test_index_2d_linearization) {
+TEST_F(TestIndexLinear, test_index_2d_linearization) {
   using namespace vt;
 
   static constexpr int const dim1 = 10, dim2 = 12;
@@ -164,7 +156,7 @@ TEST_F(TestIndex, test_index_2d_linearization) {
   #endif
 }
 
-TEST_F(TestIndex, test_index_3d_linearization) {
+TEST_F(TestIndexLinear, test_index_3d_linearization) {
   using namespace vt;
 
   static constexpr int const dim1 = 3, dim2 = 9, dim3 = 23;
@@ -231,4 +223,4 @@ TEST_F(TestIndex, test_index_3d_linearization) {
   #endif
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::linear

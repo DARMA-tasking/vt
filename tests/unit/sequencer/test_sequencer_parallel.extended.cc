@@ -56,7 +56,7 @@
 
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace parallel {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -356,4 +356,4 @@ TEST_F(TestSequencerParallel, test_parallel_4) {
   PAR_EXPAND(seqParHan4, seqParFn4, node, TestMsg, 4, false);
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::parallel

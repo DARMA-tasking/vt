@@ -44,7 +44,7 @@
 
 #include "test_termination_action_common.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace epochs {
 
 struct TestTermCollect : action::BaseFixture {};
 struct TestTermRooted  : action::BaseFixture {};
@@ -54,7 +54,7 @@ TEST_P(TestTermCollect, test_term_detect_collect_epoch) /* NOLINT */{
   auto&& sequence = action::generateEpochs(5);
 
   for (auto&& epoch : sequence) {
-    action::ok = false;
+    channel::ok = false;
     if (channel::node == channel::root) {
       action::compute(epoch);
       channel::trigger(epoch);
@@ -101,4 +101,4 @@ INSTANTIATE_TEST_SUITE_P(
   )
 );
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::epochs

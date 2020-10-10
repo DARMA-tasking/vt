@@ -14,7 +14,7 @@ RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
     ca-certificates \
     curl \
-    cmake \
+    less \
     git \
     wget \
     ${compiler} \
@@ -34,6 +34,12 @@ RUN ln -s \
 
 ENV CC=${compiler} \
     CXX=clang++
+
+COPY ./ci/deps/cmake.sh cmake.sh
+RUN ./cmake.sh 3.18.4
+
+ENV PATH=/cmake/bin/:$PATH
+ENV LESSCHARSET=utf-8
 
 COPY ./ci/deps/mpich.sh mpich.sh
 RUN ./mpich.sh 3.3.2 -j4
@@ -65,6 +71,7 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
     VT_POOL_ENABLED=${VT_POOL_ENABLED} \
     VT_MPI_GUARD_ENABLED=${VT_MPI_GUARD_ENABLED} \
     VT_EXTENDED_TESTS_ENABLED=${VT_EXTENDED_TESTS_ENABLED} \
+    VT_UNITY_BUILD_ENABLED=${VT_UNITY_BUILD_ENABLED} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
 RUN /vt/ci/build_cpp.sh /vt /build

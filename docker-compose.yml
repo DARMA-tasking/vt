@@ -28,6 +28,7 @@
 #   VT_ASAN=0            # Enable address sanitizer
 #   VT_EXTENDED_TESTS=1  # Build all the extended testing
 #   VT_ZOLTAN=0          # Build with Zoltan enabled
+#   VT_UNITY_BUILD=0     # Build with Unity/Jumbo mode enabled
 #   BUILD_TYPE=release   # CMake build type
 #   CODE_COVERAGE=0      # Enable generation of code coverage reports
 #
@@ -122,6 +123,7 @@ x-vtopts: &vtopts
   VT_ASAN_ENABLED: ${VT_ASAN:-0}
   VT_POOL_ENABLED: ${VT_POOL:-1}
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
+  VT_UNITY_BUILD_ENABLED: ${VT_UNITY_BUILD:-0}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}

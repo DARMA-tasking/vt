@@ -51,7 +51,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace bcast {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -219,4 +219,4 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_3) {
   });
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::bcast

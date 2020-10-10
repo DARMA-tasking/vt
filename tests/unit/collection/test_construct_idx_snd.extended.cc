@@ -51,7 +51,7 @@
 #include <tuple>
 #include <string>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace idx_snd {
 
 namespace multi_param_idx_snd_ {
 template <typename... Args> struct ColMsg;
@@ -95,4 +95,4 @@ using CollectionTestTypes = testing::Types<
 
 #endif /*vt_check_enabled(detector)*/
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::idx_snd

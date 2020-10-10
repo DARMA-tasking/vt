@@ -47,6 +47,17 @@
 #if !defined INCLUDED_TERMINATION_ACTION_CALLABLE_H
 #define INCLUDED_TERMINATION_ACTION_CALLABLE_H
 
+namespace vt { namespace tests { namespace unit { namespace channel {
+
+// set channel counting ranks
+vt::NodeType root = vt::uninitialized_destination;
+vt::NodeType node = vt::uninitialized_destination;
+vt::NodeType all  = vt::uninitialized_destination;
+std::unordered_map<vt::EpochType,Data> data;
+bool ok = false;
+
+}}}} /* end namespace vt::tests::unit::channel */
+
 namespace vt { namespace tests { namespace unit {
 
 static bool finished[2] = {false, false};

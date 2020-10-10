@@ -53,7 +53,7 @@
 
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace per {
 
 struct TestCol1 : vt::Collection<TestCol1,vt::Index1D> { };
 struct TestCol2 : vt::Collection<TestCol2,vt::Index1D> { };
@@ -165,4 +165,4 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
 #endif
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::per

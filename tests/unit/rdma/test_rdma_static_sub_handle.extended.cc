@@ -50,10 +50,10 @@
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestObjGroup {
-  using ProxyType = vt::objgroup::proxy::Proxy<TestObjGroup>;
+struct TestObjGroupExt {
+  using ProxyType = vt::objgroup::proxy::Proxy<TestObjGroupExt>;
 
-  TestObjGroup() = default;
+  TestObjGroupExt() = default;
 
   void initialize(ProxyType in_proxy) {
     proxy_ = in_proxy;
@@ -78,7 +78,7 @@ struct TestObjGroup {
   }
 
   static ProxyType construct() {
-    auto proxy = vt::theObjGroup()->makeCollective<TestObjGroup>();
+    auto proxy = vt::theObjGroup()->makeCollective<TestObjGroupExt>();
     proxy.get()->initialize(proxy);
     return proxy;
   }
@@ -94,7 +94,7 @@ TYPED_TEST_SUITE_P(TestRDMAHandleSet);
 
 TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_1) {
   using T = TypeParam;
-  auto proxy = TestObjGroup::construct();
+  auto proxy = TestObjGroupExt::construct();
 
   int32_t num_hans = 4;
   std::size_t num_vals = 8;
@@ -133,7 +133,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_1) {
 
 TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
   using T = TypeParam;
-  auto proxy = TestObjGroup::construct();
+  auto proxy = TestObjGroupExt::construct();
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -178,7 +178,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_2) {
 
 TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_3) {
   using T = TypeParam;
-  auto proxy = TestObjGroup::construct();
+  auto proxy = TestObjGroupExt::construct();
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -261,7 +261,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_3) {
 
 TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_4) {
   using T = TypeParam;
-  auto proxy = TestObjGroup::construct();
+  auto proxy = TestObjGroupExt::construct();
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
@@ -316,7 +316,7 @@ TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_4) {
 
 TYPED_TEST_P(TestRDMAHandleSet, test_rdma_handle_set_5) {
   using T = TypeParam;
-  auto proxy = TestObjGroup::construct();
+  auto proxy = TestObjGroupExt::construct();
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();

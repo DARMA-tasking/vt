@@ -51,7 +51,7 @@
 
 #include "vt/transport.h"
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace for_ {
 
 using namespace vt;
 using namespace vt::tests::unit;
@@ -117,4 +117,4 @@ TEST_F(TestSequencerFor, test_for) {
   }
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::for_

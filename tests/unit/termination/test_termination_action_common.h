@@ -53,11 +53,17 @@
 #define INCLUDED_TERMINATION_ACTION_COMMON_H
 
 using namespace vt::tests::unit;
+
+namespace vt { namespace tests { namespace unit { namespace channel {
+
 // set channel counting ranks
-vt::NodeType channel::root = vt::uninitialized_destination;
-vt::NodeType channel::node = vt::uninitialized_destination;
-vt::NodeType channel::all  = vt::uninitialized_destination;
-std::unordered_map<vt::EpochType,channel::Data> channel::data;
+extern vt::NodeType root;
+extern vt::NodeType node;
+extern vt::NodeType all;
+extern std::unordered_map<vt::EpochType,channel::Data> data;
+extern bool ok;
+
+}}}} /* end namespace vt::tests::unit::channel */
 
 /*
  * common actions and fixtures for:
@@ -69,8 +75,6 @@ namespace vt { namespace tests { namespace unit { namespace action {
 // shortcuts
 using epoch_manip = ::vt::epoch::EpochManip;
 using Base = TestParallelHarnessParam<std::tuple<int, bool, int>>;
-
-static bool ok = false;
 
 struct BaseFixture : Base {
   void SetUp() override {
@@ -115,18 +119,18 @@ struct SimpleFixture : TestParallelHarness {
 };
 
 // epoch sequence creation
-std::vector<vt::EpochType> generateEpochs(
+inline std::vector<vt::EpochType> generateEpochs(
   int nb = 1, bool rooted = false, bool useDS = false
 );
 // fictive distributed computation
-void compute(vt::EpochType const& epoch);
+inline void compute(vt::EpochType const& epoch);
 // add the termination checker algorithm as a pending action
-void add(vt::EpochType const& epoch, int order);
+inline void add(vt::EpochType const& epoch, int order);
 // finish the epoch
-void finish(vt::EpochType const& epoch);
+inline void finish(vt::EpochType const& epoch);
 // set the flag indicating that the current
 // epoch of the sequence is finished
-inline void setOk(vt::Message* /*unused*/) { ok = true; }
+inline void setOk(vt::Message* /*unused*/) { channel::ok = true; }
 
 
 /*
@@ -135,7 +139,7 @@ inline void setOk(vt::Message* /*unused*/) { ok = true; }
  * - trigger termination detection
  * - finish epoch
  */
-void finalize(vt::EpochType const& epoch, int order);
+inline void finalize(vt::EpochType const& epoch, int order);
 
 }}}} // end namespace vt::tests::unit::action
 

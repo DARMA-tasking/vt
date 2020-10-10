@@ -60,7 +60,7 @@ namespace vt { namespace pipe { namespace signal {
 
 /// Used to assign a ID to each signal holder instance to generate unique
 /// cleanup lambdas
-static unsigned signal_holder_next_id_ = 1;
+extern unsigned signal_holder_next_id_;
 
 template <typename SignalT>
 struct SignalHolder {

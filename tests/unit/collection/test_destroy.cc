@@ -52,7 +52,7 @@
 
 #include <cstdint>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace destroy {
 
 using namespace vt;
 using namespace vt::collective;
@@ -124,4 +124,4 @@ TEST_F(TestDestroy, test_destroy_1) {
   EXPECT_EQ(num_destroyed, num_elms_per_node);
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::destroy

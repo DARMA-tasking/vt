@@ -52,7 +52,7 @@
 
 #include <cstdint>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace lb_lite {
 
 using namespace vt;
 using namespace vt::collective;
@@ -211,4 +211,4 @@ TEST_F(TestLB, test_lb_1) {
 //   }
 // }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::lb_lite

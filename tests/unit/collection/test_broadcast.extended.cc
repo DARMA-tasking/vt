@@ -53,7 +53,7 @@
 
 #include <cstdint>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace bcast {
 
 REGISTER_TYPED_TEST_SUITE_P(TestBroadcast, test_broadcast_1);
 
@@ -72,4 +72,4 @@ INSTANTIATE_TYPED_TEST_SUITE_P(
   DEFAULT_NAME_GEN
 );
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::bcast

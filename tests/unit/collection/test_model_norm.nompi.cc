@@ -53,7 +53,7 @@
 #include <limits>
 #include <memory>
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace norm {
 
 using TestModelNorm = TestHarness;
 
@@ -207,4 +207,4 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   EXPECT_EQ(objects_seen, 2);
 }
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::norm

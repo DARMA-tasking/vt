@@ -14,6 +14,10 @@ macro(add_example example_name)
   add_executable(${example_name} ${EXAMPLE_FILE})
   add_dependencies(examples ${example_name})
 
+  if (vt_unity_build_enabled)
+    set_target_properties(${example_name} PROPERTIES UNITY_BUILD ON)
+  endif()
+
   link_target_with_vt(
     TARGET ${example_name}
     DEFAULT_LINK_SET

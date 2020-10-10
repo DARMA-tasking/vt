@@ -67,69 +67,33 @@ set_target_properties(gtest_main PROPERTIES FOLDER extern)
 
 include(GoogleTest)
 
-function(add_unit_test sub_dir unit_test_file)
-  GET_FILENAME_COMPONENT(
-    UNIT_TEST
-    ${unit_test_file}
-    NAME_WE
-  )
-
-  GET_FILENAME_COMPONENT(
-    UNIT_TEST_FULL_EXTENSION
-    ${unit_test_file}
-    EXT
-  )
-
-  # Extended tests are designated with an particular extension: *.extended.cc
-  if(UNIT_TEST_FULL_EXTENSION MATCHES "[.]extended[.]")
-    # message(
-    #   STATUS "found extended test >>>> ${UNIT_TEST_FULL_EXTENSION}"
-    # )
-
-    set(UNIT_TEST "${UNIT_TEST}_extended")
-
-    # Drop out if we are not supposed to build the extended testing
-    if (NOT vt_build_extended_tests)
-      return()
-    endif()
-  else()
-    set(UNIT_TEST "${UNIT_TEST}_basic")
-  endif()
-
-  # Does this test bypass MPI?
-  set(USES_MPI ON)
-  if(UNIT_TEST_FULL_EXTENSION MATCHES "[.]nompi[.]")
-    set(USES_MPI OFF)
-    set(UNIT_TEST "${UNIT_TEST}_nompi")
-  endif()
-
-  # message(
-  #  STATUS "Building unit test >>>> dir=${sub_dir} test=${UNIT_TEST}, "
-  #  "path=${unit_test_file}"
-  # )
-
+function(add_unit_test unit_test_name unit_test_files uses_mpi)
   add_executable(
-    ${UNIT_TEST}
+    ${unit_test_name}
     ${TEST_SOURCE_FILES}
     ${TEST_HEADER_FILES}
-    ${PROJECT_TEST_UNIT_DIR}/${unit_test_file}
+    ${${unit_test_files}}
   )
 
-  add_dependencies(unit_tests ${UNIT_TEST})
+  add_dependencies(unit_tests ${unit_test_name})
 
-  target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_TEST_UNIT_DIR})
-  target_include_directories(${UNIT_TEST} PRIVATE ${PROJECT_GTEST_INCLUDE_DIR})
+  target_include_directories(${unit_test_name} PRIVATE ${PROJECT_TEST_UNIT_DIR})
+  target_include_directories(${unit_test_name} PRIVATE ${PROJECT_GTEST_INCLUDE_DIR})
 
   link_target_with_vt(
-    TARGET ${UNIT_TEST}
+    TARGET ${unit_test_name}
     DEFAULT_LINK_SET
     LINK_GTEST ON
   )
 
-  if(USES_MPI)
+  if (vt_unity_build_enabled)
+    set_target_properties(${unit_test_name} PROPERTIES UNITY_BUILD ON)
+  endif()
+
+  if(uses_mpi)
     foreach(PROC ${PROC_TEST_LIST})
       gtest_add_tests(
-        TARGET                 ${UNIT_TEST}
+        TARGET                 ${unit_test_name}
         WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
         TEST_SUFFIX            _proc_${PROC}
         TEST_PREFIX            vt:
@@ -146,7 +110,7 @@ function(add_unit_test sub_dir unit_test_file)
     endforeach()
   else()
     gtest_add_tests(
-      TARGET                 ${UNIT_TEST}
+      TARGET                 ${unit_test_name}
       WORKING_DIRECTORY      ${CMAKE_CURRENT_BINARY_DIR}
       TEST_SUFFIX            _no_mpi
       TEST_PREFIX            vt:
@@ -176,15 +140,49 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
     GLOB
     "${SUB_DIR}_UNIT_TEST_SOURCE_FILES"
     RELATIVE
-    "${PROJECT_TEST_UNIT_DIR}"
+    ""
     "${PROJECT_TEST_UNIT_DIR}/${SUB_DIR}/*.cc"
   )
 
   set(CUR_TEST_LIST "${SUB_DIR}_test_list")
 
+  set(UNIT_LIST_EXTENDED "")
+  set(UNIT_LIST_BASIC "")
+  set(UNIT_LIST_NOMPI "")
+
   foreach (unit_test_file ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
-    add_unit_test(${SUB_DIR} ${unit_test_file})
+    #message(STATUS "Considering ${unit_test_file}")
+
+    GET_FILENAME_COMPONENT(
+      UNIT_TEST
+      ${unit_test_file}
+      NAME_WE
+    )
+
+    GET_FILENAME_COMPONENT(
+      UNIT_TEST_FULL_EXTENSION
+      ${unit_test_file}
+      EXT
+    )
+
+    # Extended tests are designated with an particular extension: *.extended.cc
+    if(UNIT_TEST_FULL_EXTENSION MATCHES "[.]extended[.]")
+      list(APPEND UNIT_LIST_EXTENDED ${unit_test_file})
+    else()
+      if(UNIT_TEST_FULL_EXTENSION MATCHES "[.]nompi[.]")
+        list(APPEND UNIT_LIST_NOMPI ${unit_test_file})
+      else()
+        list(APPEND UNIT_LIST_BASIC ${unit_test_file})
+      endif()
+    endif()
   endforeach()
+
+  add_unit_test("${SUB_DIR}_basic" UNIT_LIST_BASIC ON)
+  add_unit_test("${SUB_DIR}_nompi" UNIT_LIST_NOMPI OFF)
+
+  if (vt_build_extended_tests)
+    add_unit_test("${SUB_DIR}_extended" UNIT_LIST_EXTENDED ON)
+  endif()
 endforeach()
 
 #
