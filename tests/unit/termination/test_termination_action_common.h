@@ -61,6 +61,7 @@ extern vt::NodeType root;
 extern vt::NodeType node;
 extern vt::NodeType all;
 extern std::unordered_map<vt::EpochType,channel::Data> data;
+extern bool ok;
 
 }}}} /* end namespace vt::tests::unit::channel */
 
@@ -74,8 +75,6 @@ namespace vt { namespace tests { namespace unit { namespace action {
 // shortcuts
 using epoch_manip = ::vt::epoch::EpochManip;
 using Base = TestParallelHarnessParam<std::tuple<int, bool, int>>;
-
-static bool ok = false;
 
 struct BaseFixture : Base {
   void SetUp() override {
@@ -131,7 +130,7 @@ inline void add(vt::EpochType const& epoch, int order);
 inline void finish(vt::EpochType const& epoch);
 // set the flag indicating that the current
 // epoch of the sequence is finished
-inline void setOk(vt::Message* /*unused*/) { ok = true; }
+inline void setOk(vt::Message* /*unused*/) { channel::ok = true; }
 
 
 /*

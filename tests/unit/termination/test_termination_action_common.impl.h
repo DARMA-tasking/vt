@@ -142,7 +142,7 @@ inline void finalize(vt::EpochType const& epoch, int order) {
     finish(epoch);
     vt::theCollective()->barrier();
     // spin until termination of the epoch
-    while (not ok) { vt::rt->runScheduler(); }
+    while (not channel::ok) { vt::rt->runScheduler(); }
   }
 }
 
@@ -167,7 +167,7 @@ inline void add(vt::EpochType const& epoch, int order){
         );
         // check channel counters
         EXPECT_TRUE(channel::hasEnded(epoch));
-        ok = true;
+        channel::ok = true;
         auto msg = vt::makeMessage<vt::Message>();
         vt::theMsg()->broadcastMsg<vt::Message, &setOk>(msg);
       });

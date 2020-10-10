@@ -54,7 +54,7 @@ TEST_P(TestTermCollect, test_term_detect_collect_epoch) /* NOLINT */{
   auto&& sequence = action::generateEpochs(5);
 
   for (auto&& epoch : sequence) {
-    action::ok = false;
+    channel::ok = false;
     if (channel::node == channel::root) {
       action::compute(epoch);
       channel::trigger(epoch);
