@@ -671,6 +671,28 @@ public:
 
 private:
   /**
+   * \internal \brief Produce on the global epoch to inhibit global terminations
+   * before receipt of a nested epoch's completion
+   *
+   * \note Although the creation of a new epoch also produces on the global
+   * epoch, it consumes on both the generated epoch and the global one when the
+   * epoch is activated (\c finishedEpoch ). This means that the termination of
+   * the global epoch along with associated actions can race with notification
+   * of termination on the newly created epoch. If the runtime is destroyed as a
+   * result of the global epoch terminating the final notification of the newly
+   * created epoch can arrive later causing strange behavior. This has been
+   * observed in the code with a full reset of epoch allocation when the runtime
+   * globally terminates.
+   */
+  void produceOnGlobal();
+
+  /**
+   * \internal \brief Consume on the global epoch to inhibit global terminations
+   * before receipt of a nested epoch's completion
+   */
+  void consumeOnGlobal();
+
+  /**
    * \internal \brief Get an epoch's dependency information
    *
    * \param[in] epoch the epoch
