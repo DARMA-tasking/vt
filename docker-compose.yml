@@ -130,6 +130,7 @@ x-vtopts: &vtopts
   CODE_COVERAGE: ${CODE_COVERAGE:-0}
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
+  VT_CI_BUILD: ${VT_CI_BUILD:-0}
 
 services:
   ##############################################################################
