@@ -151,6 +151,8 @@ else()
   message(STATUS "Building VT with user MPI prevention guards disabled")
   set(vt_feature_cmake_mpi_access_guards "0")
 endif()
+message(STATUS "CI_BUILD = ${vt_ci_build}")
+set(vt_feature_cmake_ci_build ${vt_ci_build})
 
 set(vt_feature_cmake_no_feature "0")
 set(vt_feature_cmake_production "0")
