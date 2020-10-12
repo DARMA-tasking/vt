@@ -18,6 +18,6 @@ do
     file=$(mktemp)
     echo "running to output $file : $i"
     ##echo mpirun -n $np $pgm "$@" 2>&1
-    i=$(expr $i + 1)
-    mpirun -n $np $pgm "$@" 2>&1 > $file
+    i=$(($i + 1))
+    mpirun -n "$np" "$pgm" "$@" 2>&1 > "$file"
 done
