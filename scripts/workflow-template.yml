@@ -30,6 +30,7 @@ jobs:
       VT_EXTENDED_TESTS: [% vt_extended_tests %]
       VT_UNITY_BUILD: [% vt_unity_build %]
       VT_ZOLTAN: [% vt_zoltan %]
+      VT_CI_BUILD: [% vt_ci_build %]
       CACHE: [% cache_dir %]
 
     steps:
