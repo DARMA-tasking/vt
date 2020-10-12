@@ -127,11 +127,25 @@ EpochType EpochManip::nextSeqCollective(EpochScopeType scope) {
 EpochType EpochManip::nextSeq(EpochScopeType scope, bool is_collective) {
   if (is_collective) {
     auto& scope_map = scope_collective_;
+
+    vt_debug_print(
+      term, node,
+      "EpochManip::nextSeq: scope={:x}, is_collective={}, exists={}\n",
+      scope, is_collective, scope_map.find(scope) != scope_map.end()
+    );
+
     if (scope_map.find(scope) == scope_map.end()) {
       scope_map[scope] = first_epoch;
     }
     auto const seq = scope_map[scope];
     scope_map[scope]++;
+
+    vt_debug_print(
+      term, node,
+      "EpochManip::nextSeq: scope={:x}, is_collective={}, seq={} seq(0x)={:x}\n",
+      scope, is_collective, seq, seq
+    );
+
     return seq;
   } else {
     // for rooted, it's simple: get the next one and return it.
