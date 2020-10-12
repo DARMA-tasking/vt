@@ -111,6 +111,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dcheckpoint_DIR="$CHECKPOINT_BUILD/install" \
       -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
+      -Dvt_ci_build="${VT_CI_BUILD:-0}" \
       "$VT"
 
 if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
