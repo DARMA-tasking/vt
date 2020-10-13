@@ -751,8 +751,14 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
   cleanupEpoch(epoch, from);
 
   // Matching consume on global epoch once a nested epoch terminates
-  if (epoch != any_epoch_sentinel and (not isRooted(epoch) or isDS(epoch))) {
-    consumeOnGlobal(epoch);
+  if (epoch != any_epoch_sentinel) {
+    auto const this_node = theContext()->getNode();
+    bool const is_rooted = isRooted(epoch);
+    bool const is_ds = isDS(epoch);
+    bool const this_node_root = epoch::EpochManip::node(epoch) == this_node;
+    if (not is_rooted or is_ds or (is_rooted and this_node_root)) {
+      consumeOnGlobal(epoch);
+    }
   }
 }
 
@@ -1190,6 +1196,11 @@ void TerminationDetector::activateEpoch(EpochType const& epoch) {
       normal, term,
       "activateEpoch: epoch={:x}\n", epoch
     );
+
+    auto const this_node = theContext()->getNode();
+    if (isRooted(epoch) and epoch::EpochManip::node(epoch) == this_node) {
+      produceOnGlobal(epoch);
+    }
 
     auto& state = findOrCreateState(epoch, true);
     state.activateEpoch();
