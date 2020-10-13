@@ -164,6 +164,9 @@ else()
   set(vt_feature_cmake_zoltan "0")
 endif()
 
+message(STATUS "CI_BUILD = ${vt_ci_build}")
+set(vt_feature_cmake_ci_build ${vt_ci_build})
+
 set(vt_feature_cmake_no_feature "0")
 set(vt_feature_cmake_production "0")
 
@@ -212,8 +215,8 @@ foreach(loop_build_type ${VT_CONFIG_TYPES})
     ${cmake_vt_debug_modes_${loop_build_type}}
   )
 
-  # assume production mode for everything except debug
-  if (loop_build_type STREQUAL "debug")
+  # assume production mode for everything except debug or CI build
+  if (loop_build_type STREQUAL "debug" OR ${vt_ci_build})
     set(vt_feature_cmake_production "0")
   else()
     set(vt_feature_cmake_production "1")
