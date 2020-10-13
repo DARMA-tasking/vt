@@ -226,8 +226,8 @@ struct DiagnosticFormatter {
     }
     case DiagnosticUnit::Seconds: {
 
-      // Start with the largest unit, testing if its appropriate for the value,
-      // and if not, downgrade it until we find one that works
+      // Start with the smallest unit, testing if its appropriate for the value,
+      // and if not, upgrade it until we find one that works
       auto multiplier = static_cast<int8_t>(TimeMultiplier::Nanoseconds);
       for ( ; multiplier < 0; multiplier++) {
         auto value_tmp = static_cast<double>(val);
