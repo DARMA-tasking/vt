@@ -783,7 +783,7 @@ void TerminationDetector::updateResolvedEpochs(EpochType const& epoch) {
       epoch, isRooted(epoch), first_term, last_term
     );
 
-    theEpoch()->getTerminatedWindow(epoch)->closeEpoch(epoch);
+    theEpoch()->getTerminatedWindow(epoch)->setEpochTerminated(epoch);
   }
 }
 
@@ -1022,7 +1022,6 @@ void TerminationDetector::initializeRootedDSEpoch(
   // Create DS term where this node is the root
   auto ds = getDSTerm(epoch, true);
   ds->setLabel(label);
-  theEpoch()->getTerminatedWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
   produceOnGlobal(epoch);
 
@@ -1133,7 +1132,6 @@ void TerminationDetector::initializeCollectiveEpoch(
     epoch, successor, label
   );
 
-  theEpoch()->getTerminatedWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
   produceOnGlobal(epoch);
 
@@ -1181,7 +1179,6 @@ void TerminationDetector::makeRootedHan(
 
   auto& state = findOrCreateState(epoch, is_ready);
   state.setLabel(label);
-  theEpoch()->getTerminatedWindow(epoch)->addEpoch(epoch);
 
   vt_debug_print(
     term, node,

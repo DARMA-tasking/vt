@@ -198,25 +198,21 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    */
 
   /**
-   * \brief Generate a rooted epoch with a given sequential ID
+   * \brief Generate the control bits for a rooted epoch
    *
-   * \param[in] seq the sequential ID for the epoch
    * \param[in] scope the epoch's scope
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
   static EpochType generateRootedEpoch(
-    EpochType      const& seq,
     EpochScopeType const& scope      = global_epoch_scope,
     eEpochCategory const& category   = default_epoch_category
   );
 
   /**
-   * \brief Generate a new epoch (rooted or collective) with a given sequential
-   * ID
+   * \brief Generate the control bits for an epoch type (rooted or collective)
    *
-   * \param[in] seq the sequential ID for the epoch
    * \param[in] is_rooted if the epoch should be rooted or not
    * \param[in] root_node the root node for the epoch if \c is_rooted
    * \param[in] scope the epoch's scope
@@ -225,7 +221,6 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \return the newly created epoch
    */
   static EpochType generateEpoch(
-    EpochType      const& seq,
     bool           const& is_rooted  = false,
     NodeType       const& root_node  = default_epoch_node,
     EpochScopeType const& scope      = global_epoch_scope,
@@ -316,15 +311,6 @@ private:
   friend struct EpochCollectiveScope;
 
 private:
-  EpochType nextSeqRooted(EpochScopeType scope = global_epoch_scope);
-  EpochType nextSeqCollective(EpochScopeType scope = global_epoch_scope);
-  EpochType nextSeq(EpochScopeType scope, bool is_collective);
-
-private:
-  /// The current rooted sequential ID per node
-  EpochType next_rooted_ = first_epoch;
-  /// The current collective sequential ID per scope
-  std::unordered_map<EpochScopeType, EpochType> scope_collective_;
   /// The current live epoch scopes
   vt::IntegralSet<EpochScopeType> live_scopes_;
   // epoch window container for specific archetyped epochs
