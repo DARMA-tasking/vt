@@ -64,6 +64,7 @@ struct SerializedDataMsgAny : MessageT {
   HandlerType handler = uninitialized_handler;
   TagType data_recv_tag = no_tag;
   NodeType from_node = uninitialized_destination;
+  int nchunks = 0;
 };
 
 template <typename T>

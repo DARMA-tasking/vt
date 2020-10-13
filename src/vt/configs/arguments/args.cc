@@ -165,6 +165,8 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::parsed                = false;
 
+/*static*/ std::size_t ArgConfig::vt_max_mpi_send_size  = 1ull << 30;
+
 static std::unique_ptr<char*[]> new_argv = nullptr;
 
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
@@ -548,6 +550,16 @@ static std::unique_ptr<char*[]> new_argv = nullptr;
   sca->group(schedulerGroup);
   hca->group(schedulerGroup);
   kca->group(schedulerGroup);
+
+  /*
+   * Options for configuring the runtime
+   */
+  auto a1x = app.add_option(
+    "--vt_max_mpi_send_size", config_.vt_max_mpi_send_size, max_size, true
+  );
+
+  auto configRuntime = "Runtime";
+  a1x->group(configRuntime);
 
   /*
    * Run the parser!

@@ -69,4 +69,33 @@ MemoryUnitEnum getUnitFromString(std::string const& unit) {
   return MemoryUnitEnum::Bytes;
 }
 
+std::tuple<std::string, double> getBestMemoryUnit(std::size_t bytes) {
+  auto multiplier = static_cast<int8_t>(MemoryUnitEnum::Yottabytes);
+  for ( ; multiplier > 0; multiplier--) {
+    auto value_tmp = static_cast<double>(bytes);
+    for (int8_t i = 0; i < static_cast<int8_t>(multiplier); i++) {
+      value_tmp /= 1024.0;
+    }
+    if (value_tmp >= 1.) {
+      break;
+    }
+  }
+
+  // We found a multiplier that results in a value over 1.0, use it
+  vtAssert(
+    multiplier <= static_cast<int8_t>(MemoryUnitEnum::Yottabytes) and
+    multiplier >= 0,
+    "Must be a valid memory unit"
+  );
+
+  auto unit_name = getMemoryUnitName(static_cast<MemoryUnitEnum>(multiplier));
+
+  auto new_value = static_cast<double>(bytes);
+  for (int8_t i = 0; i < static_cast<int8_t>(multiplier); i++) {
+    new_value /= 1024.0;
+  }
+
+  return std::make_tuple(unit_name, new_value);
+}
+
 }}} /* end namespace vt::util::memory */

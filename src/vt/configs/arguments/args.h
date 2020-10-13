@@ -154,6 +154,7 @@ public:
   static bool vt_debug_objgroup;
 
   static bool vt_debug_print_flush;
+  std::size_t vt_max_mpi_send_size;
 
   static bool vt_user_1;
   static bool vt_user_2;

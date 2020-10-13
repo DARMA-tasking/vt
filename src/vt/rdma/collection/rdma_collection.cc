@@ -197,7 +197,8 @@ namespace vt { namespace rdma {
 
     auto send_payload = [&](Active::SendFnType send){
       auto ret = send(put_ret, put_node, no_tag);
-      msg->mpi_tag_to_recv = std::get<1>(ret);
+      msg->mpi_tag_to_recv = ret.getTag();
+      msg->nchunks = ret.getNumChunks();
     };
 
     if (tag != no_tag) {
