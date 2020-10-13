@@ -42,9 +42,6 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_CC
-#define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_CC
-
 #include "vt/runtime/component/diagnostic.h"
 
 #include <set>
@@ -87,5 +84,3 @@ diagnostic::Timer Diagnostic::registerTimer(
 }
 
 }}} /* end namespace vt::runtime::component */
-
-#endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_CC*/
