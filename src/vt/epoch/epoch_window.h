@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_window.h
+//                                epoch_window.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,14 +42,12 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERM_WINDOW_H
-#define INCLUDED_TERMINATION_TERM_WINDOW_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_WINDOW_H
+#define INCLUDED_VT_EPOCH_EPOCH_WINDOW_H
 
-#include "vt/config.h"
-#include "vt/epoch/epoch_manip.h"
 #include "vt/termination/interval/integral_set.h"
 
-namespace vt { namespace term {
+namespace vt { namespace epoch {
 
 struct EpochWindow {
 
@@ -124,6 +122,6 @@ private:
   vt::IntegralSet<EpochType> terminated_epochs_;
 };
 
-}} /* end namespace vt::term */
+}} /* end namespace vt::epoch */
 
-#endif /*INCLUDED_TERMINATION_TERM_WINDOW_H*/
+#endif /*INCLUDED_VT_EPOCH_EPOCH_WINDOW_H*/

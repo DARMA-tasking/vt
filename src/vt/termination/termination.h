@@ -51,7 +51,6 @@
 #include "vt/termination/term_state.h"
 #include "vt/termination/term_action.h"
 #include "vt/termination/term_interface.h"
-#include "vt/termination/term_window.h"
 #include "vt/termination/epoch_dependency.h"
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
 #include "vt/termination/graph/epoch_graph.h"
@@ -101,7 +100,6 @@ struct TerminationDetector :
   using EpochContainerType = std::unordered_map<EpochType, T>;
   using TermStateType      = TermState;
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
-  using WindowType         = std::unique_ptr<EpochWindow>;
   using SuccessorBagType   = EpochDependency::SuccessorBagType;
   using EpochGraph         = termination::graph::EpochGraph;
   using EpochGraphMsg      = termination::graph::EpochGraphMsg<EpochGraph>;
@@ -454,24 +452,6 @@ private:
   );
 
   /**
-   * \internal \brief Get archetype bits embedded in epoch
-   *
-   * \param[in] epoch the epoch
-   *
-   * \return the bits masked out
-   */
-  EpochType getArchetype(EpochType const& epoch) const;
-
-  /**
-   * \internal \brief Get an epoch's window
-   *
-   * \param[in] epoch the epoch
-   *
-   * \return the window
-   */
-  EpochWindow* getWindow(EpochType const& epoch);
-
-  /**
    * \internal \brief Check for and perform actions when a epoch's counts are
    * constant.
    *
@@ -769,10 +749,6 @@ private:
   TermStateType hang_;
   // epoch termination state
   EpochContainerType<TermStateType> epoch_state_        = {};
-  // epoch window container for specific archetyped epochs
-  std::unordered_map<EpochType,WindowType> epoch_arch_  = {};
-  // epoch window for basic collective epochs
-  std::unique_ptr<EpochWindow> epoch_coll_              = nullptr;
   // ready epoch list (misnomer: finishedEpoch was invoked)
   std::unordered_set<EpochType> epoch_ready_            = {};
   // list of remote epochs pending status report of finished
