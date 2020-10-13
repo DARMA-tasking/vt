@@ -108,6 +108,8 @@ struct Scheduler : runtime::component::Component<Scheduler> {
 
   std::string name() override { return "Scheduler"; }
 
+  void preDiagnostic() override;
+
   /**
    * \internal \brief Check for termination when running on a since node
    */
@@ -314,6 +316,15 @@ private:
   // Access to triggerEvent.
   friend void vt::runInEpochRooted(ActionType&& fn);
   friend void vt::runInEpochCollective(ActionType&& fn);
+
+private:
+  diagnostic::Counter progressCount;
+  diagnostic::Counter workUnitCount;
+  diagnostic::Gauge queueSizeGauge;
+  diagnostic::Timer vtLiveTime;
+  diagnostic::Timer schedLoopTime;
+  diagnostic::Timer idleTime;
+  diagnostic::Timer idleTimeMinusTerm;
 };
 
 }} //end namespace vt::sched

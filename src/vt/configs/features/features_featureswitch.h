@@ -68,5 +68,6 @@
 #define vt_feature_str_mpi_access_guards  "MPI access guards"
 #define vt_feature_str_zoltan             "Zoltan for load balancing"
 #define vt_feature_str_mimalloc           "mimalloc memory allocator"
+#define vt_feature_str_diagnostics        "Performance analysis diagnostics"
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/

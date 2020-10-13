@@ -370,6 +370,29 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   xy->group(debugLB);
 }
 
+void ArgConfig::addDiagnosticArgs(CLI::App& app) {
+  /*
+   * Flags for controlling diagnostic collection and output
+   */
+  auto diag = "Enable diagnostic (performance metrics/stats) collection";
+  auto sum  = "Print diagnostic summary table to stdout at finalization";
+  auto file = "Output diagnostic summary table to text file";
+  auto csv  = "Output diagnostic summary table to a comma-separated file";
+  auto base = "Use base units (seconds, units, etc.) for CSV file output";
+  auto a = app.add_flag("--vt_diag_enable,!--vt_diag_disable", config_.vt_diag_enable,           diag);
+  auto b = app.add_flag("--vt_diag_print_summary",      config_.vt_diag_print_summary,    sum);
+  auto c = app.add_option("--vt_diag_summary_file",     config_.vt_diag_summary_file,     file);
+  auto d = app.add_option("--vt_diag_summary_csv_file", config_.vt_diag_summary_csv_file, csv);
+  auto e = app.add_flag("--vt_diag_csv_base_units",     config_.vt_diag_csv_base_units,   base);
+
+  auto diagnosticGroup = "Diagnostics";
+  a->group(diagnosticGroup);
+  b->group(diagnosticGroup);
+  c->group(diagnosticGroup);
+  d->group(diagnosticGroup);
+  e->group(diagnosticGroup);
+}
+
 void ArgConfig::addTerminationArgs(CLI::App& app) {
   auto hang         = "Disable termination hang detection";
   auto hang_freq    = "The number of tree traversals before a hang is detected";
@@ -505,6 +528,7 @@ std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
   addTraceArgs(app);
   addDebugPrintArgs(app);
   addLbArgs(app);
+  addDiagnosticArgs(app);
   addTerminationArgs(app);
   addDebuggerArgs(app);
   addUserArgs(app);

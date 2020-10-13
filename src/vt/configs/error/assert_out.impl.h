@@ -51,7 +51,6 @@
 #include "vt/configs/error/stack_out.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/error/pretty_print_message.h"
-#include "vt/context/context.h"
 
 #include <tuple>
 #include <type_traits>

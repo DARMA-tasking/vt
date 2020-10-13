@@ -41,25 +41,27 @@ One may use `cmake` as normal on *vt*, with checkpoint and detector cloned in
 custom configuration build options that can be provided to `cmake` to change the
 build configuration:
 
-| CMake Variable                  | Default Value   | Description |
-| ------------------              | --------------- | ----------- |
-| `vt_lb_enabled`                 | 0               | Compile with support for runtime load balancing |
-| `vt_trace_enabled`              | 0               | Compile with support for runtime tracing (Projections-format) |
-| `vt_test_trace_runtime_enabled` | 0               | Force tracing on at runtime for VT tests |
-| `vt_doxygen_enabled`            | 0               | Enable doxygen generation |
-| `vt_mimalloc_enabled`           | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
-| `vt_asan_enabled`               | 0               | Enable building with address sanitizer |
-| `vt_pool_enabled`               | 1               | Use memory pool in *vt* for message allocation |
-| `vt_zoltan_enabled`             | 0               | Build with Zoltan enabled for `ZoltanLB` support |
-| `vt_mpi_guards`                 | 0               | Guards against mis-use of MPI calls in code using *vt* |
-| `vt_fcontext_enabled`           | 0               | Enable user-level threads through boost fcontext |
-| `vt_priorities_enabled`         | 1               | Enable prioritization of work (adds bits in envelope) |
-| `vt_priority_bits_per_level`    | 3               | Number of bits per level of priority in envelope |
-| `vt_build_extended_tests`       | 1               | Build with full, extended testing |
-| `vt_unity_build_enabled`        | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
-| `CODE_COVERAGE`                 | 0               | Enable code coverage for VT examples/tests |
-| `VT_BUILD_TESTS`                | 1               | Build all VT tests |
-| `VT_BUILD_EXAMPLES`             | 1               | Build all VT examples |
+| CMake Variable                   | Default Value   | Description |
+| ------------------               | --------------- | ----------- |
+| `vt_lb_enabled`                  | 0               | Compile with support for runtime load balancing |
+| `vt_trace_enabled`               | 0               | Compile with support for runtime tracing (Projections-format) |
+| `vt_test_trace_runtime_enabled`  | 0               | Force tracing on at runtime for VT tests |
+| `vt_doxygen_enabled`             | 0               | Enable doxygen generation |
+| `vt_mimalloc_enabled`            | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
+| `vt_asan_enabled`                | 0               | Enable building with address sanitizer |
+| `vt_pool_enabled`                | 1               | Use memory pool in *vt* for message allocation |
+| `vt_zoltan_enabled`              | 0               | Build with Zoltan enabled for `ZoltanLB` support |
+| `vt_mpi_guards`                  | 0               | Guards against mis-use of MPI calls in code using *vt* |
+| `vt_fcontext_enabled`            | 0               | Enable user-level threads through boost fcontext |
+| `vt_priorities_enabled`          | 1               | Enable prioritization of work (adds bits in envelope) |
+| `vt_diagnostics_enabled`         | 1               | Enable VT component diagnostics for performance analysis |
+| `vt_diagnostics_runtime_enabled` | 0               | Enable VT component diagnostics at runtime by default |
+| `vt_priority_bits_per_level`     | 3               | Number of bits per level of priority in envelope |
+| `vt_build_extended_tests`        | 1               | Build with full, extended testing |
+| `vt_unity_build_enabled`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
+| `CODE_COVERAGE`                  | 0               | Enable code coverage for VT examples/tests |
+| `VT_BUILD_TESTS`                 | 1               | Build all VT tests |
+| `VT_BUILD_EXAMPLES`              | 1               | Build all VT examples |
 
 
 \subsection using-the-build-script Using the Build Script
@@ -70,21 +72,23 @@ parameters.
 
 \subsubsection building-environment-variables Build Script Environment Variables
 
-| Variable                    | Default Value   | Description |
-| ------------------          | --------------- | ----------- |
-| `CMAKE_BUILD_TYPE`          | Release         | The `cmake` build type |
-| `VT_LB_ENABLED`             | 1               | Compile with support for runtime load balancing |
-| `VT_TRACE_ENABLED `         | 0               | Compile with support for runtime tracing (Projections-format) |
-| `VT_TRACE_RUNTIME_ENABLED ` | 0               | Force tracing on at runtime (used in CI for automatically testing tracing on all tests/examples) |
-| `VT_DOXYGEN_ENABLED `       | 0               | Enable doxygen generation |
-| `VT_MIMALLOC_ENABLED `      | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
-| `VT_ASAN_ENABLED `          | 0               | Enable building with address sanitizer |
-| `VT_POOL_ENABLED `          | 1               | Use memory pool in *vt* for message allocation |
-| `VT_ZOLTAN_ENABLED `        | 0               | Build with Zoltan enabled for `ZoltanLB` support |
-| `ZOLTAN_DIR `               | <empty>         | Directory pointing to Zoltan installation |
-| `VT_MPI_GUARD_ENABLED `     | 0               | Guards against mis-use of MPI calls in code using *vt* |
-| `VT_EXTENDED_TESTS_ENABLED` | 1               | Build with full, extended testing |
-| `VT_UNITY_BUILD_ENABLED`    | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
+| Variable                         | Default Value   | Description |
+| ------------------               | --------------- | ----------- |
+| `CMAKE_BUILD_TYPE`               | Release         | The `cmake` build type |
+| `VT_LB_ENABLED`                  | 1               | Compile with support for runtime load balancing |
+| `VT_TRACE_ENABLED `              | 0               | Compile with support for runtime tracing (Projections-format) |
+| `VT_TRACE_RUNTIME_ENABLED `      | 0               | Force tracing on at runtime (used in CI for automatically testing tracing on all tests/examples) |
+| `VT_DOXYGEN_ENABLED `            | 0               | Enable doxygen generation |
+| `VT_MIMALLOC_ENABLED `           | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
+| `VT_ASAN_ENABLED `               | 0               | Enable building with address sanitizer |
+| `VT_POOL_ENABLED `               | 1               | Use memory pool in *vt* for message allocation |
+| `VT_ZOLTAN_ENABLED `             | 0               | Build with Zoltan enabled for `ZoltanLB` support |
+| `ZOLTAN_DIR `                    | <empty>         | Directory pointing to Zoltan installation |
+| `VT_MPI_GUARD_ENABLED `          | 0               | Guards against mis-use of MPI calls in code using *vt* |
+| `VT_EXTENDED_TESTS_ENABLED`      | 1               | Build with full, extended testing |
+| `VT_UNITY_BUILD_ENABLED`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
+| `VT_DIAGNOSTICS_ENABLED`         | 1               | Enable VT component diagnostics for performance analysis |
+| `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0               | Enable VT component diagnostics at runtime by default |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned
@@ -136,17 +140,19 @@ which `docker-compose` will read.
 #   ULIMIT_CORE=0
 #
 # DARMA/vt Configuration Variables:
-#   VT_LB=1              # Enable load balancing
-#   VT_TRACE=0           # Enable tracing
-#   VT_MIMALLOC=0        # Enable mimalloc memory allocator
-#   VT_DOCS=0            # Enable doxygen build
-#   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
-#   VT_ASAN=0            # Enable address sanitizer
-#   VT_EXTENDED_TESTS=1  # Build all the extended testing
-#   VT_ZOLTAN=0          # Build with Zoltan enabled
-#   VT_UNITY_BUILD=0     # Build with Unity/Jumbo mode enabled
-#   BUILD_TYPE=release   # CMake build type
-#   CODE_COVERAGE=0      # Enable generation of code coverage reports
+#   VT_LB=1                   # Enable load balancing
+#   VT_TRACE=0                # Enable tracing
+#   VT_MIMALLOC=0             # Enable mimalloc memory allocator
+#   VT_DOCS=0                 # Enable doxygen build
+#   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
+#   VT_ASAN=0                 # Enable address sanitizer
+#   VT_EXTENDED_TESTS=1       # Build all the extended testing
+#   VT_ZOLTAN=0               # Build with Zoltan enabled
+#   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
+#   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
+#   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics at runtime by default
+#   BUILD_TYPE=release        # CMake build type
+#   CODE_COVERAGE=0           # Enable generation of code coverage reports
 ```
 
 With these set, one may run the following for a non-interactive build with

@@ -76,6 +76,76 @@ ActiveMessenger::ActiveMessenger()
    * stack during execution until the AM's destructor is invoked
    */
   pushEpoch(term::any_epoch_sentinel);
+
+  // Register counters for AM/DM message sends and number of bytes
+  amSentCounterGauge = diagnostic::CounterGauge{
+    registerCounter("AM_sent", "active messages sent"),
+    registerGauge("AM_sent_bytes", "active messages bytes sent", UnitType::Bytes)
+  };
+
+  dmSentCounterGauge = diagnostic::CounterGauge{
+    registerCounter("DM_sent", "data messages sent"),
+    registerGauge("DM_sent_bytes", "data messages bytes sent", UnitType::Bytes)
+  };
+
+  // Register counters for AM/DM message receives and number of bytes
+  amRecvCounterGauge = diagnostic::CounterGauge{
+    registerCounter("AM_recv", "active messages received"),
+    registerGauge(
+      "AM_recv_bytes", "active message bytes received", UnitType::Bytes
+    )
+  };
+
+  dmRecvCounterGauge = diagnostic::CounterGauge{
+    registerCounter("DM_recv", "data messages received"),
+    registerGauge(
+      "DM_recv_bytes", "data message bytes received", UnitType::Bytes
+    )
+  };
+
+  // Register counters for AM/DM message MPI_Irecv posts This is useful as a
+  // debugging diagnostic if the program hangs. Checking this against AM_recv,
+  // etc will inform whether if there are outstanding posted receives
+  amPostedCounterGauge = diagnostic::CounterGauge{
+    registerCounter("AM_recv_posted", "active message irecvs posted"),
+    registerGauge(
+      "AM_recv_posted_bytes", "active message irecv posted bytes", UnitType::Bytes
+    )
+  };
+
+  dmPostedCounterGauge = diagnostic::CounterGauge{
+    registerCounter("DM_recv_posted", "data message irecvs posted"),
+    registerGauge(
+      "DM_recv_posted_bytes", "data message irecv posted bytes", UnitType::Bytes
+    )
+  };
+
+  // Number of AM handlers executed
+  amHandlerCount = registerCounter(
+    "AM_handlers", "active message handlers"
+  );
+
+  // Number of broadcast messages that this node sent
+  bcastsSentCount = registerCounter(
+    "bcasts_sent", "active message broadcasts sent"
+  );
+
+  // Number of MPI_Test polls for AM/DM
+  amPollCount = registerCounter("AM_polls", "active message polls");
+  dmPollCount = registerCounter("DM_polls", "data message polls");
+
+  // Number of termination message sent/received
+  tdSentCount = registerCounter("TD_sent", "termination messages sent");
+  tdRecvCount = registerCounter("TD_recv", "termination messages recv");
+
+  // Number of messages that were purely forwarded to another node by this AM
+  amForwardCounterGauge = diagnostic::CounterGauge{
+    registerCounter("AM_forwarded", "messages forwarded (and not delivered)"),
+    registerGauge(
+      "AM_forwarded_bytes", "messages forwarded (and not delivered)",
+      UnitType::Bytes
+    )
+  };
 }
 
 /*virtual*/ ActiveMessenger::~ActiveMessenger() {
@@ -218,6 +288,14 @@ EventType ActiveMessenger::sendMsgBytes(
         tr_begin = vt::timing::Timing::getCurrentTime();
       }
     #endif
+
+    if (is_bcast) {
+      bcastsSentCount.increment(1);
+    }
+    if (is_term) {
+      tdSentCount.increment(1);
+    }
+    amSentCounterGauge.incrementUpdate(msg_size, 1);
 
     const int ret = MPI_Isend(
       msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -365,6 +443,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
       }
     #endif
 
+    dmSentCounterGauge.incrementUpdate(num_bytes, 1);
+
     const int ret = MPI_Isend(
       data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
       mpi_event->getRequest()
@@ -490,6 +570,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
         );
         vtAssertMPISuccess(recv_ret, "MPI_Irecv");
 
+        dmPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
+
         #if vt_check_enabled(trace_enabled)
           if (theConfig()->vt_trace_mpi) {
             auto tr_end = vt::timing::Timing::getCurrentTime();
@@ -506,6 +588,8 @@ bool ActiveMessenger::recvDataMsgBuffer(
         buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
         priority
       };
+
+      dmPollCount.increment(1);
 
       int recv_flag = 0;
       {
@@ -556,6 +640,8 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     trace::addUserNote(tr_note);
   }
 # endif
+
+  dmRecvCounterGauge.incrementUpdate(num_probe_bytes, 1);
 
   auto dealloc_buf = [=]{
     vt_debug_print(
@@ -643,6 +729,8 @@ bool ActiveMessenger::processActiveMsg(
   if (deliver) {
     return deliverActiveMsg(base,from,insert,cont);
   } else {
+    amForwardCounterGauge.incrementUpdate(size, 1);
+
     if (cont != nullptr) {
       cont();
     }
@@ -734,6 +822,11 @@ bool ActiveMessenger::deliverActiveMsg(
       ep_stack_size = epochPreludeHandler(cur_epoch);
     }
 
+    if (is_term) {
+      tdRecvCount.increment(1);
+    }
+    amHandlerCount.increment(1);
+
     runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
 
     // unset current handler
@@ -820,6 +913,8 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
         theContext()->getComm(), &req
       );
 
+      amPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
+
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
           auto tr_end = vt::timing::Timing::getCurrentTime();
@@ -833,6 +928,8 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     }
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
+
+    amPollCount.increment(1);
 
     int recv_flag = 0;
     MPI_Status recv_stat;
@@ -853,6 +950,8 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
   char* buf = irecv->buf;
   auto num_probe_bytes = irecv->probe_bytes;
   auto sender = irecv->sender;
+
+  amRecvCounterGauge.incrementUpdate(num_probe_bytes, 1);
 
 # if vt_check_enabled(trace_enabled)
   if (theConfig()->vt_trace_mpi) {
@@ -917,19 +1016,27 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 }
 
 bool ActiveMessenger::testPendingActiveMsgAsyncRecv() {
-  return in_progress_active_msg_irecv.testAll(
+  int num_mpi_tests = 0;
+  bool const ret = in_progress_active_msg_irecv.testAll(
     [](InProgressIRecv* e){
       theMsg()->finishPendingActiveMsgAsyncRecv(e);
-    }
+    },
+    num_mpi_tests
   );
+  amPollCount.increment(num_mpi_tests);
+  return ret;
 }
 
 bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
-  return in_progress_data_irecv.testAll(
+  int num_mpi_tests = 0;
+  bool const ret = in_progress_data_irecv.testAll(
     [](InProgressDataIRecv* e){
       theMsg()->finishPendingDataMsgAsyncRecv(e);
-    }
+    },
+    num_mpi_tests
   );
+  dmPollCount.increment(num_mpi_tests);
+  return ret;
 }
 
 int ActiveMessenger::progress() {

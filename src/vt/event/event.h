@@ -203,6 +203,11 @@ private:
 # if vt_check_enabled(trace_enabled)
   vt::trace::UserEventIDType trace_event_polling = 0;
 # endif
+
+private:
+  diagnostic::Counter eventPollCount;
+  diagnostic::Gauge eventSizeGauge;
+  diagnostic::Timer mpiEventWaitTime;
 };
 
 }} //end namespace vt::event

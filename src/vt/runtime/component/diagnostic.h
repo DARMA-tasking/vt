@@ -45,6 +45,18 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H
 
+#include "vt/runtime/component/component_name.h"
+#include "vt/runtime/component/component_reduce.h"
+#include "vt/runtime/component/diagnostic_types.h"
+#include "vt/runtime/component/diagnostic_units.h"
+#include "vt/runtime/component/diagnostic_value.h"
+#include "vt/runtime/component/diagnostic_meter.h"
+
+#include <string>
+#include <memory>
+#include <unordered_map>
+#include <functional>
+
 namespace vt { namespace runtime { namespace component {
 
 /**
@@ -53,11 +65,167 @@ namespace vt { namespace runtime { namespace component {
  * \brief The abstract \c Diagnostic trait for outputting debugging state
  * information generically across VT components
  */
-struct Diagnostic {
+struct Diagnostic : ComponentName, ComponentReducer {
+  using DiagnosticBasePtrType = std::unique_ptr<detail::DiagnosticBase>;
+  using UpdateType = DiagnosticUpdate;
+  using UnitType = DiagnosticUnit;
+
   virtual void dumpState() = 0;
-  // @todo diagnostics
+
+  /**
+   * \internal \brief Apply a function to each base diagnostic in a consistent
+   * order across all nodes
+   *
+   * \param[in] apply function to apply that takes \c detail::DiagnosticBase
+   */
+  void foreachDiagnostic(std::function<void(detail::DiagnosticBase*)> apply);
+
+  /**
+   * \internal \brief Pre-diagnostic hook; this fires before finalize but after
+   * all work is done and the system is about to shut down.
+   *
+   * This is typically used to compute some final timings that the system might
+   * use to output time-based diagnostic metrics
+   *
+   * \note Components can rely on this being called exactly once in the
+   * lifecycle
+   */
+  virtual void preDiagnostic() { }
+
+protected:
+  /**
+   * \internal \brief Register a new diagnostic counter with default type
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the counter
+   */
+  diagnostic::Counter registerCounter(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Units
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic gauge with default type
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the gauge
+   */
+  diagnostic::Gauge registerGauge(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Units
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic timer with default type
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the timer
+   */
+  diagnostic::Timer registerTimer(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Seconds
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic counter
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the counter
+   */
+  template <typename T>
+  meter::Counter<T> registerCounterT(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Units
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic gauge
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the gauge
+   */
+  template <typename T>
+  meter::Gauge<T> registerGaugeT(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Units
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic timer
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] unit the unit type for this diagnostic
+   *
+   * \return the timer
+   */
+  template <typename T>
+  meter::Timer<T> registerTimerT(
+    std::string const& key, std::string const& desc,
+    DiagnosticUnit unit = DiagnosticUnit::Seconds
+  );
+
+  /**
+   * \internal \brief Register a new diagnostic
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] desc description of the diagnostic value
+   * \param[in] update the update operator that is applied for
+   * \c updateDiagnostic
+   * \param[in] unit the unit type for this diagnostic
+   * \param[in] type the type of diagnostic being registered
+   * \param[in] initial_value the initial value for the diagnostic
+   *
+   * \return the underlying diagnostic value
+   */
+  template <typename T>
+  detail::DiagnosticValue<T>* registerDiagnostic(
+    std::string const& key, std::string const& desc, DiagnosticUpdate update,
+    DiagnosticUnit unit = DiagnosticUnit::Units,
+    DiagnosticTypeEnum type = DiagnosticTypeEnum::PerformanceDiagnostic,
+    T initial_value = {}
+  );
+
+  /**
+   * \internal \brief Update the current diagnostic value for a particular key
+   *
+   * How the update will be applied depends on the \c DiagnosticUpdate that was
+   * registered when the diagnostic was created:
+   *
+   * \c DiagnosticUpdate::Sum : Accumulate up the values
+   * \c DiagnosticUpdate::Avg : Average the values
+   * \c DiagnosticUpdate::Replace : Replace the existing value with each update
+   *
+   * \param[in] key unique key for diagnostic, should match across nodes
+   * \param[in] value the value to apply the updater to
+   *
+   * \return reference to diagnostic value
+   */
+  template <typename T>
+  void updateDiagnostic(std::string const& key, T value);
+
+private:
+  /// Type-erased base pointers to different diagnostic values
+  std::unordered_map<std::string, DiagnosticBasePtrType> values_;
 };
 
 }}} /* end namespace vt::runtime::component */
+
+#include "vt/runtime/component/diagnostic.impl.h"
 
 #endif /*INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_H*/

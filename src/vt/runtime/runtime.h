@@ -185,6 +185,12 @@ struct Runtime {
   bool finalize(bool const force_now = false, bool const disable_sig = true);
 
   /**
+   * \internal \brief Compute the diagnostics across the components and print
+   * them if requested at the end of the program
+   */
+  void computeAndPrintDiagnostics();
+
+  /**
    * \brief Run the scheduler once
    */
   void runScheduler();

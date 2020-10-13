@@ -50,7 +50,6 @@
 #include "vt/vrt/proxy/base_elm_proxy.h"
 #include "vt/vrt/proxy/collection_elm_proxy.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
-#include "vt/vrt/collection/balance/elm_stats.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -115,7 +114,7 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
    *
    * This must be called on every process
    */
-  void setFocusedSubPhase(balance::ElementStats::SubphaseType subphase);
+  void setFocusedSubPhase(SubphaseType subphase);
 };
 
 }}} /* end namespace vt::vrt::collection */
@@ -129,7 +128,5 @@ template <typename ColT, typename IndexT>
 using CollectionProxy = vrt::collection::CollectionProxy<ColT,IndexT>;
 
 } /* end namespace vt */
-
-#include "vt/vrt/proxy/collection_proxy.impl.h"
 
 #endif /*INCLUDED_VRT_PROXY_COLLECTION_PROXY_H*/

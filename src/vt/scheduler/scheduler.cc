@@ -72,6 +72,45 @@ Scheduler::Scheduler() {
   event_triggers_once.resize(event_count);
 
   progress_time_enabled_ = theConfig()->vt_sched_progress_sec != 0.0;
+
+  // Number of times the progress function is called to poll components
+  progressCount = registerCounter("num_progress", "progress function calls");
+
+  // Number of work units enqueued
+  workUnitCount = registerCounter("num_work_units", "work unit count");
+
+  // Max/avg of work units enqueued
+  queueSizeGauge = registerGauge("queue_size", "work queue size");
+
+  // Time scheduler
+  vtLiveTime = registerTimer("init_time", "duration VT was initialized");
+  schedLoopTime = registerTimer("sched_loop", "inside scheduler loop");
+  idleTime = registerTimer("idle_time", "idle time (inc. TD)");
+  idleTimeMinusTerm = registerTimer("idle_time_term", "idle time (exc. TD)");
+
+  // Explicitly define these out when diagnostics are disabled---they might be
+  // expensive
+# if vt_check_enabled(diagnostics)
+  using timing::Timing;
+
+  // Triggers to get the in-scheduler-loop time added to diagnostics
+  registerTrigger(BeginSchedulerLoop, [this]{ schedLoopTime.start(); });
+  registerTrigger(EndSchedulerLoop, [this]{ schedLoopTime.stop(); });
+
+  // Triggers to get true idle time (including TD messages) in diagnostics
+  registerTrigger(BeginIdle, [this]{ idleTime.start(); });
+  registerTrigger(EndIdle, [this]{ idleTime.stop(); });
+
+  // Triggers to get non-term idle time (excluding TD messages) in diagnostics
+  registerTrigger(BeginIdleMinusTerm, [this]{ idleTimeMinusTerm.start(); });
+  registerTrigger(EndIdleMinusTerm, [this]{ idleTimeMinusTerm.stop(); });
+
+  vtLiveTime.start();
+# endif
+}
+
+void Scheduler::preDiagnostic() {
+  vtLiveTime.stop();
 }
 
 void Scheduler::enqueue(ActionType action) {
@@ -104,6 +143,8 @@ void Scheduler::runWorkUnit(UnitType& work) {
     vt::runtime::ScopedMPIAccess::prohibitByDefault(true);
   }
 #endif
+
+  workUnitCount.increment(1);
 
   ++action_depth_;
   work();
@@ -200,6 +241,7 @@ void Scheduler::runProgress(bool msg_only) {
     } else {
       progressImpl();
     }
+    progressCount.increment(1);
   }
 
   if (theConfig()->vt_print_memory_at_threshold) {
@@ -223,6 +265,8 @@ void Scheduler::scheduler(bool msg_only) {
   }
 
   if (not work_queue_.empty()) {
+    queueSizeGauge.update(work_queue_.size());
+
     processed_after_last_progress_++;
 
     // Leave idle states are before any potential processing.

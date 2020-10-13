@@ -20,17 +20,19 @@
 #   ULIMIT_CORE=0
 #
 # DARMA/vt Configuration Variables:
-#   VT_LB=1              # Enable load balancing
-#   VT_TRACE=0           # Enable tracing
-#   VT_MIMALLOC=0        # Enable mimalloc memory allocator
-#   VT_DOCS=0            # Enable doxygen build
-#   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
-#   VT_ASAN=0            # Enable address sanitizer
-#   VT_EXTENDED_TESTS=1  # Build all the extended testing
-#   VT_ZOLTAN=0          # Build with Zoltan enabled
-#   VT_UNITY_BUILD=0     # Build with Unity/Jumbo mode enabled
-#   BUILD_TYPE=release   # CMake build type
-#   CODE_COVERAGE=0      # Enable generation of code coverage reports
+#   VT_LB=1                   # Enable load balancing
+#   VT_TRACE=0                # Enable tracing
+#   VT_MIMALLOC=0             # Enable mimalloc memory allocator
+#   VT_DOCS=0                 # Enable doxygen build
+#   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
+#   VT_ASAN=0                 # Enable address sanitizer
+#   VT_EXTENDED_TESTS=1       # Build all the extended testing
+#   VT_ZOLTAN=0               # Build with Zoltan enabled
+#   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
+#   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
+#   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics collection at runtime by default
+#   BUILD_TYPE=release        # CMake build type
+#   CODE_COVERAGE=0           # Enable generation of code coverage reports
 #
 # In order to run in the container, there are two stages. First, one must build
 # or pull the base container with the variables exported (or using the defaults
@@ -124,6 +126,8 @@ x-vtopts: &vtopts
   VT_POOL_ENABLED: ${VT_POOL:-1}
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
   VT_UNITY_BUILD_ENABLED: ${VT_UNITY_BUILD:-0}
+  VT_DIAGNOSTICS_ENABLED: ${VT_DIAGNOSTICS:-1}
+  VT_DIAGNOSTICS_RUNTIME_ENABLED: ${VT_DIAGNOSTICS_RUNTIME:-0}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
@@ -296,6 +300,7 @@ services:
       <<: *ccache
       VT_LB_ENABLED: ${VT_LB:-1}
       VT_TRACE_ENABLED:  ${VT_TRACE:-1}
+      VT_DIAGNOSTICS_ENABLED: 1
       VT_DOXYGEN_ENABLED: 1
       CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
     volumes: *ubuntu-volumes
@@ -321,6 +326,7 @@ services:
       <<: *ccache
       VT_LB_ENABLED: ${VT_LB:-1}
       VT_TRACE_ENABLED:  ${VT_TRACE:-1}
+      VT_DIAGNOSTICS_ENABLED: 1
       VT_DOXYGEN_ENABLED: 1
       CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
     volumes: *ubuntu-volumes

@@ -68,6 +68,16 @@ void AsyncEvent::initialize() {
     );
   }
 # endif
+
+  // Number of polls for outgoing messages and parents to complete
+  eventPollCount = registerCounter("event_polls", "message send/event polls");
+
+  // Average/max events in container
+  eventSizeGauge = registerGauge("events_size", "event container length");
+
+  // Average/max time that an MPI_Request sits in the queue waiting for it to
+  // test as complete
+  mpiEventWaitTime = registerTimer("mpi_event_wait", "MPI send request duration");
 }
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
@@ -304,11 +314,26 @@ void AsyncEvent::testEventsTrigger(int const& num_events) {
 
   int cur = 0;
   auto& cont = polling_event_container_;
+
+  if (cont.size() > 0) {
+    eventSizeGauge.update(cont.size());
+  }
+
   for (auto iter = cont.begin(); iter != cont.end(); ) {
     auto& holder = *iter;
     auto event = holder.get_event();
     auto id = event->getEventID();
+
+    eventPollCount.increment(1);
+
     if (event->testReady()) {
+
+#     if vt_check_enabled(diagnostics)
+      mpiEventWaitTime.update(
+        event->getCreateTime(), timing::Timing::getCurrentTime()
+      );
+#     endif
+
       holder.executeActions();
       iter = polling_event_container_.erase(iter);
       lookup_container_.erase(id);

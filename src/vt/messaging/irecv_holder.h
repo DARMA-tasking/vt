@@ -91,11 +91,12 @@ struct IRecvHolder {
    * \brief MPI test all the element in the holder
    *
    * \param[in] c callable to run if the element \c MPI_Test succeeds
+   * \param[out] num_mpi_tests number of MPI tests that the holder performed
    *
    * \return if progress is made
    */
   template <typename Callable>
-  bool testAll(Callable c) {
+  bool testAll(Callable c, int& num_mpi_tests) {
     VT_ALLOW_MPI_CALLS; // MPI_Test in loop
 
 #   if vt_check_enabled(trace_enabled)
@@ -115,6 +116,7 @@ struct IRecvHolder {
       int flag = 0;
       MPI_Status stat;
       MPI_Test(&e.req, &flag, &stat);
+      num_mpi_tests++;
 
       if (flag == 0) {
         ++i;

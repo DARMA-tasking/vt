@@ -1553,6 +1553,30 @@ private:
   IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv;
   IRecvHolder<InProgressDataIRecv> in_progress_data_irecv;
   NodeType this_node_                                     = uninitialized_destination;
+
+private:
+  // Diagnostic counter gauge combos for sent counts/bytes
+  diagnostic::CounterGauge amSentCounterGauge;
+  diagnostic::CounterGauge dmSentCounterGauge;
+
+  // Diagnostic counters for recv counts/bytes
+  diagnostic::CounterGauge amRecvCounterGauge;
+  diagnostic::CounterGauge dmRecvCounterGauge;
+
+  // Diagnostic counters for posted irecv counts/bytes
+  diagnostic::CounterGauge amPostedCounterGauge;
+  diagnostic::CounterGauge dmPostedCounterGauge;
+
+  // Diagnostic counters for counting various actions
+  diagnostic::Counter amHandlerCount;
+  diagnostic::Counter bcastsSentCount;
+  diagnostic::Counter amPollCount;
+  diagnostic::Counter dmPollCount;
+  diagnostic::Counter tdSentCount;
+  diagnostic::Counter tdRecvCount;
+
+  // Diagnostic counters for counting forwarded messages
+  diagnostic::CounterGauge amForwardCounterGauge;
 };
 
 }} // end namespace vt::messaging

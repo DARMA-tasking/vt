@@ -159,6 +159,9 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(mimalloc)
   features.push_back(vt_feature_str_mimalloc);
 #endif
+#if vt_check_enabled(diagnostics)
+  features.push_back(vt_feature_str_diagnostics);
+#endif
 
   std::string dirty = "";
   if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
@@ -716,6 +719,44 @@ void Runtime::printStartupBanner() {
       fmt::print("{}\t{}{}", vt_pre, f20, reset);
     }
   }
+
+#if vt_check_enabled(diagnostics)
+  if (getAppConfig()->vt_diag_enable) {
+#   if vt_check_enabled(diagnostics_runtime)
+    auto f11 = fmt::format("Diagnostics are enabled by default");
+#   else
+    auto f11 = fmt::format("Diagnostics are enabled");
+#   endif
+    auto f12 = opt_on("--vt_diag_enable", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+
+    if (getAppConfig()->vt_diag_summary_file != "") {
+      auto f13 = fmt::format(
+        "Outputting diagnostics summary file \"{}\"",
+        getAppConfig()->vt_diag_summary_file
+      );
+      auto f14 = opt_on("--vt_diag_summary_file", f13);
+      fmt::print("{}\t{}{}", vt_pre, f14, reset);
+    }
+
+    if (getAppConfig()->vt_diag_summary_csv_file != "") {
+      auto f13 = fmt::format(
+        "Outputting CSV diagnostics summary file \"{}\"",
+        getAppConfig()->vt_diag_summary_csv_file
+      );
+      auto f14 = opt_on("--vt_diag_summary_csv_file", f13);
+      fmt::print("{}\t{}{}", vt_pre, f14, reset);
+    }
+  } else {
+#   if vt_check_enabled(diagnostics_runtime)
+    auto f11 = fmt::format("Diagnostics are disabled");
+#   else
+    auto f11 = fmt::format("Diagnostics are disabled by default");
+#   endif
+    auto f12 = opt_to_enable("--vt_diag_enable", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+#endif
 
   if (getAppConfig()->vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");

@@ -50,14 +50,6 @@
 #include "vt/runtime/component/bufferable.h"
 #include "vt/runtime/component/progressable.h"
 
-#include <string>
-
-namespace vt { namespace collective { namespace reduce {
-
-struct Reduce;
-
-}}} /* end namespace vt::collective::reduce */
-
 namespace vt { namespace runtime { namespace component {
 
 struct ComponentPack;
@@ -102,21 +94,9 @@ struct BaseComponent : Diagnostic, Bufferable, Progressable {
    */
   virtual void startup() = 0;
 
-  /**
-   * \internal \brief Get the name of the component
-   */
-  virtual std::string name() = 0;
-
   virtual ~BaseComponent() { }
 
   friend struct ComponentPack;
-
-  ComponentIDType getComponentID() const { return component_id_; }
-
-  collective::reduce::Reduce* reducer();
-
-protected:
-  ComponentIDType component_id_ = 0;
 };
 
 }}} /* end namespace vt::runtime::component */

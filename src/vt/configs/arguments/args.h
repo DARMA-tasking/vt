@@ -90,6 +90,7 @@ private:
   void addTraceArgs(CLI::App& app);
   void addDebugPrintArgs(CLI::App& app);
   void addLbArgs(CLI::App& app);
+  void addDiagnosticArgs(CLI::App& app);
   void addTerminationArgs(CLI::App& app);
   void addDebuggerArgs(CLI::App& app);
   void addUserArgs(CLI::App& app);

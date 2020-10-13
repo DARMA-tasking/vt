@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   base.cc
+//                               counter_gauge.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,14 +42,62 @@
 //@HEADER
 */
 
-#include "vt/runtime/component/base.h"
-#include "vt/collective/reduce/reduce.h"
-#include "vt/collective/collective_alg.h"
+#if !defined INCLUDED_VT_RUNTIME_COMPONENT_METER_COUNTER_GAUGE_H
+#define INCLUDED_VT_RUNTIME_COMPONENT_METER_COUNTER_GAUGE_H
 
-namespace vt { namespace runtime { namespace component {
+#include "vt/runtime/component/meter/counter.h"
+#include "vt/runtime/component/meter/gauge.h"
 
-collective::reduce::Reduce* BaseComponent::reducer() {
-  return theCollective()->getReducerComponent(component_id_);
-}
+namespace vt { namespace runtime { namespace component { namespace meter {
 
-}}} /* end namespace vt::runtime::component */
+/**
+ * \struct CounterGauge
+ *
+ * \brief Combination of a counter/gauge for measuring and counting some event
+ * together that takes place over time.
+ */
+template <typename T, typename U>
+struct CounterGauge : DiagnosticMeter {
+
+  /**
+   * \brief Default constructor available for ease of putting this type in a
+   * class. But, all valid ways to construction involve the factory methods in
+   * the \c Diagnostic base class for component
+   */
+  CounterGauge() = default;
+
+  /**
+   * \brief Constructor to create a new \c CounterGauge combo. Should be
+   * created by registering a new diagnostics to obtain a counter and gauge.
+   *
+   * \param[in] in_counter the underlying counter
+   * \param[in] in_gauge the underlying gauge
+   */
+  CounterGauge(Counter<T> in_counter, Gauge<U> in_gauge)
+    : counter_(in_counter),
+      gauge_(in_gauge)
+  { }
+
+  friend struct component::Diagnostic;
+
+public:
+
+  /**
+   * \brief Increment counter and update gauge value
+   *
+   * \param[in] in the new guage value
+   * \param[in] num number of times to increment the counter
+   */
+  void incrementUpdate(U in, T num = 1) {
+    counter_.increment(num);
+    gauge_.update(in);
+  }
+
+private:
+  Counter<T> counter_;          /**< The counter for some event */
+  Gauge<U> gauge_;              /**< The guage measuring some event */
+};
+
+}}}} /* end namespace vt::runtime::component::meter */
+
+#endif /*INCLUDED_VT_RUNTIME_COMPONENT_METER_COUNTER_GAUGE_H*/

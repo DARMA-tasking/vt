@@ -80,6 +80,12 @@ ComponentPack::~ComponentPack() {
   destruct();
 }
 
+void ComponentPack::foreach(std::function<void(BaseComponent*)> apply) {
+  for (auto&& elm : live_components_) {
+    apply(elm.get());
+  }
+}
+
 void ComponentPack::destruct() {
   live_ = false;
   pollable_components_.clear();

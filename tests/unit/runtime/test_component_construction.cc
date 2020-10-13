@@ -56,11 +56,12 @@ using TestComponentConstruction = TestParallelHarness;
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MyComponent : runtime::component::Component<MyComponent> {
-private:
-  MyComponent() = default;
+public:
+  struct Tag {};
+  explicit MyComponent(Tag) {}
 public:
   static std::unique_ptr<MyComponent> construct() {
-    return std::make_unique<MyComponent>(MyComponent{});
+    return std::make_unique<MyComponent>(Tag{});
   }
   std::string name() override { return "MyComponent"; }
 };
@@ -84,13 +85,14 @@ TEST_F(TestComponentConstruction, test_component_construct_dispatch_1) {
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MyComponentArgs : runtime::component::Component<MyComponentArgs> {
-private:
-  MyComponentArgs() = default;
+public:
+  struct Tag {};
+  explicit MyComponentArgs(Tag) {}
 public:
   struct MyTag {};
   static std::unique_ptr<MyComponentArgs> construct(int a, int& b, MyTag&& tag) {
     b = 20;
-    return std::make_unique<MyComponentArgs>(MyComponentArgs{});
+    return std::make_unique<MyComponentArgs>(Tag{});
   }
   std::string name() override { return "MyComponentArgs"; }
 };
@@ -119,13 +121,14 @@ TEST_F(TestComponentConstruction, test_component_construct_dispatch_args_2) {
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MyComponentMove : runtime::component::Component<MyComponentMove> {
-private:
-  MyComponentMove() = default;
+public:
+  struct Tag {};
+  explicit MyComponentMove(Tag) {}
 public:
   struct MyTag {};
   static std::unique_ptr<MyComponentMove> construct(std::unique_ptr<MyTag> tag) {
     EXPECT_NE(tag, nullptr);
-    return std::make_unique<MyComponentMove>(MyComponentMove{});
+    return std::make_unique<MyComponentMove>(Tag{});
   }
   std::string name() override { return "MyComponentMove"; }
 };

@@ -416,6 +416,7 @@ bool Runtime::initialize(bool const force_now) {
     }
 
     MPI_Barrier(comm);
+
     initialized_ = true;
     return true;
   } else {
@@ -429,8 +430,15 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
 
     MPI_Comm comm = theContext->getComm();
 
-    auto const is_zero = theContext->getNode() == 0;
-    auto const num_units = theTerm->getNumUnits();
+    auto const& is_zero = theContext->getNode() == 0;
+
+#   if vt_check_enabled(diagnostics)
+    if (getAppConfig()->vt_diag_enable) {
+      computeAndPrintDiagnostics();
+    }
+#   endif
+
+    auto const& num_units = theTerm->getNumUnits();
     auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
     MPI_Barrier(comm);
     fflush(stdout);
