@@ -171,6 +171,7 @@ else()
   set(vt_feature_cmake_zoltan "0")
 endif()
 
+option(vt_ci_build "Build VT with CI mode on" OFF)
 if(${vt_ci_build})
   set(vt_feature_cmake_ci_build "1")
 else()
