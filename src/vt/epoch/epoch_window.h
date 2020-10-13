@@ -46,67 +46,90 @@
 #define INCLUDED_VT_EPOCH_EPOCH_WINDOW_H
 
 #include "vt/termination/interval/integral_set.h"
+#include "vt/utils/adt/ranged_counter.h"
 
 namespace vt { namespace epoch {
 
+/**
+ * \struct EpochWindow
+ *
+ * \brief Allocates new epochs and holds the set of terminated epochs for a
+ * given epoch "archetype".
+ *
+ * An epoch's archetype is the epoch's control bits that make it belong to a
+ * certain category/scope/root/etc. based on the control bit pattern. The window
+ * tracks the state of all the epochs with a certain control bit
+ * configuration. Because the control bits are embedded in the high bits, the
+ * window starts contiguous and may get fragmented as epochs are activated and
+ * then terminate out of order.
+ */
 struct EpochWindow {
 
-  /*
-   * Holds the set of terminated epochs for a given archetype. An archetype is
-   * an epoch that belongs to a certain category. The window tracks the state of
-   * all the epochs in that category. Because only one category of epoch (high
-   * bits the same) are in a single category the window will eventually be
-   * contiguous.
+  /**
+   * \brief Initialize the \c EpochWindow with a given epoch's archetype
    *
-   * The wrap around case happens when an epoch exists in the window and then is
-   * re-activated. This case is handled in `addEpoch` by checking for existence
-   * in the integral set before using it.
+   * \param[in] in_epoch the epoch with the control bits for this window
    */
-
-  explicit EpochWindow(EpochType const& in_epoch);
+  explicit EpochWindow(EpochType in_epoch);
 
 private:
-  /*
-   * Does a given epoch match the archetype that this window holds
+  /**
+   * \brief Check if a given epoch matches the archetype that this window holds
    */
-  inline bool isArchetypal(EpochType const& epoch);
+  inline bool isArchetypal(EpochType epoch);
 
 public:
-  /*
-   * Initialize the window for a given archetype: category of an epoch based on
-   * high bits.
-   */
-  void initialize(EpochType const& epoch);
-
-  /*
-   * Get the first terminated epoch in the window
+  /**
+   * \brief Get the first terminated epoch in the window
    */
   EpochType getFirst() const { return terminated_epochs_.lower(); }
-  /*
-   * Get the last terminated epoch in the window
+
+  /**
+   * \brief Get the last terminated epoch in the window
    */
   EpochType getLast()  const { return terminated_epochs_.upper(); }
 
-  /*
-   * Check if an epoch is terminated or not: exists in the set
+  /**
+   * \brief Check if an epoch is terminated or not.
+   *
+   * \param[in] epoch the epoch to check for termination
    */
-  bool isTerminated(EpochType const& epoch) const;
+  bool isTerminated(EpochType epoch) const;
 
-  /*
-   * Activate an epoch: goes from the state terminated to non-terminated if the
-   * epoch has wrapped around
+  /**
+   * \brief Tell the epoch window that an epoch has been terminated
+   *
+   * \param[in] epoch the epoch that has terminated
    */
-  void addEpoch(EpochType const& epoch);
+  void setEpochTerminated(EpochType epoch);
 
-  /*
-   * Track terminated, previously active epoch by adding it to the set
-   */
-  void closeEpoch(EpochType const& epoch);
-
-  /*
-   * Get the size of the current terminated epochs set
+  /**
+   * \brief Get the size of the current terminated epochs set
    */
   std::size_t getSize() const { return terminated_epochs_.size(); }
+
+  /**
+   * \brief Get the total number of terminated epochs
+   *
+   * \note This might under count if invoked while the runtime is
+   * active/processing work!
+   *
+   * \return the total number of epochs that have started and terminated while
+   * the runtime was active
+   */
+  uint64_t getTotalTerminated() const { return total_terminated_; }
+
+  /**
+   * \brief Allocate/generate a new epoch with the proper control bits.
+   *
+   * \note Applies an approximate LRU policy when generating a new epoch. This
+   * ensures that if an epoch "recently" terminates, it is not reallocated
+   * immediately. This is important because termination actions on an epoch can
+   * be registered *after* an epoch terminates.
+   *
+   * \return a new epoch within the window
+   */
+  EpochType allocateNewEpoch();
 
 
   template <typename Serializer>
@@ -116,10 +139,32 @@ public:
   }
 
 private:
-  // The archetypical epoch for this window container (category,rooted,user,..)
+  /**
+   * \brief Activate an epoch: goes from the state terminated to non-terminated.
+   *
+   * \param[in] epoch the epoch to activate
+   */
+  void activateEpoch(EpochType epoch);
+
+private:
+  /// The archetypical epoch for this window container (category,rooted,user,..)
   EpochType archetype_epoch_ = no_epoch;
-  // The set of epochs terminated
+  /// The set of epochs terminated
   vt::IntegralSet<EpochType> terminated_epochs_;
+
+  /// The next epoch to potentially allocate within the proper range for the
+  /// archetype. Used to continuously allocate epochs far apart from previous
+  /// allocated epochs instead of consulting \c terminated_epoch_ to select the
+  /// next one.
+  std::unique_ptr<adt::RangedCounter<EpochType>> next_epoch_;
+
+  ///
+  /// The total number of terminated epochs for this window.
+  ///
+  /// \note This is distinct from terminated_epochs_.size() due to potential
+  /// re-use of epochs and because all epochs start out in "terminated" state.
+  ///
+  uint64_t total_terminated_ = 0;
 };
 
 }} /* end namespace vt::epoch */

@@ -64,7 +64,7 @@ EpochManip::EpochManip()
 { }
 
 /*static*/ EpochType EpochManip::generateEpoch(
-  EpochType const& seq, bool const& is_rooted, NodeType const& root_node,
+  bool const& is_rooted, NodeType const& root_node,
   EpochScopeType const& scope, eEpochCategory const& category
 ) {
   EpochType new_epoch = 0;
@@ -84,81 +84,43 @@ EpochManip::EpochManip()
   if (has_category) {
     EpochManip::setCategory(new_epoch, category);
   }
-  EpochManip::setSeq(new_epoch, seq);
+
+  // Set sequence ID to 0--this is the archetypical epoch with just control bits
+  // initialized
+  EpochManip::setSeq(new_epoch, 0);
+
   return new_epoch;
 }
 
 /*static*/ EpochType EpochManip::generateRootedEpoch(
-  EpochType const& seq, EpochScopeType const& scope,
-  eEpochCategory const& category
+  EpochScopeType const& scope, eEpochCategory const& category
 ) {
-  auto const& root_node = theContext()->getNode();
-  return EpochManip::generateEpoch(seq,true,root_node,scope,category);
+  auto const root_node = theContext()->getNode();
+  return generateEpoch(true,root_node,scope,category);
 }
 
 EpochType EpochManip::getNextCollectiveEpoch(
   EpochScopeType const scope, eEpochCategory const& category
 ) {
-  auto const new_epoch = generateEpoch(
-    nextSeqCollective(scope),false,uninitialized_destination,scope,category
-  );
-  return new_epoch;
+  auto const no_dest = uninitialized_destination;
+  auto const arch_epoch = generateEpoch(false,no_dest,scope,category);
+  return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
 }
 
 EpochType EpochManip::getNextRootedEpoch(
   eEpochCategory const& category, EpochScopeType const scope
 ) {
-  auto const& root_node = theContext()->getNode();
-  return getNextRootedEpoch(category, scope, root_node);
+  auto const root_node = theContext()->getNode();
+  auto const arch_epoch = getNextRootedEpoch(category, scope, root_node);
+  return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
 }
 
 EpochType EpochManip::getNextRootedEpoch(
   eEpochCategory const& category, EpochScopeType const scope,
   NodeType const root_node
 ) {
-  auto const& next_rooted_epoch = EpochManip::generateEpoch(
-    nextSeqRooted(scope),true,root_node,scope,category
-  );
-  return next_rooted_epoch;
-}
-
-EpochType EpochManip::nextSeqRooted(EpochScopeType scope) {
-  return nextSeq(scope, false);
-}
-
-EpochType EpochManip::nextSeqCollective(EpochScopeType scope) {
-  return nextSeq(scope, true);
-}
-
-EpochType EpochManip::nextSeq(EpochScopeType scope, bool is_collective) {
-  if (is_collective) {
-    auto& scope_map = scope_collective_;
-
-    vt_debug_print(
-      term, node,
-      "EpochManip::nextSeq: scope={:x}, is_collective={}, exists={}\n",
-      scope, is_collective, scope_map.find(scope) != scope_map.end()
-    );
-
-    if (scope_map.find(scope) == scope_map.end()) {
-      scope_map[scope] = first_epoch;
-    }
-    auto const seq = scope_map[scope];
-    scope_map[scope]++;
-
-    vt_debug_print(
-      term, node,
-      "EpochManip::nextSeq: scope={:x}, is_collective={}, seq={} seq(0x)={:x}\n",
-      scope, is_collective, seq, seq
-    );
-
-    return seq;
-  } else {
-    // for rooted, it's simple: get the next one and return it.
-    auto const seq = next_rooted_;
-    next_rooted_++;
-    return seq;
-  }
+  auto const arch_epoch = generateEpoch(true,root_node,scope,category);
+  return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
 }
 
 EpochCollectiveScope EpochManip::makeScopeCollective() {

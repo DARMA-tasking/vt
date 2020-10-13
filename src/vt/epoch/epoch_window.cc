@@ -48,20 +48,47 @@
 
 namespace vt { namespace epoch {
 
-EpochWindow::EpochWindow(EpochType const& epoch)
-  : terminated_epochs_(epoch)
- {
-  auto arch_epoch = epoch;
-  /*
-   *  Set the sequence to zero so the archetype can be compared easily to
-   *  incoming epochs to check that they match all the fields. The window
-   *  relies on the sequentiality of same-typed epochs to create a
-   *  resolved/unresolved window of open epochs.
-   */
-  epoch::EpochManip::setSeq(arch_epoch,0);
+EpochWindow::EpochWindow(EpochType epoch) {
+  // Make a copy for manipulation
+  EpochType arch_epoch = epoch;
+
+  // Set the sequence to zero to create the archetype that can be compared
+  // easily to incoming epochs to check that they match all the control bit
+  // fields. For efficiency, the window relies on the sequentiality of
+  // same-typed epochs to create a semi-contiguous window of terminated epochs.
+  EpochManip::setSeq(arch_epoch,0);
   archetype_epoch_ = arch_epoch;
 
-  vtAssertExpr(epoch == archetype_epoch_);
+  // Set all non-control bits (sequence bits to max value) to build the max
+  // epoch allowed for this archetype
+  EpochType max_epoch = archetype_epoch_;
+  EpochManip::setSeq(max_epoch, (~0ull-1));
+
+  // The minimum epoch within this archetype always starts with the sequence
+  // number at 1; this saves space for the global, collective epoch which is
+  // zero. In fact, for simplicity, the global epoch is all zeros given the
+  // control bit scheme
+  EpochType min_epoch = archetype_epoch_;
+  EpochManip::setSeq(min_epoch, 1);
+
+  using IntervalType = typename IntegralSet<EpochType>::IntervalType;
+
+  // The allowable interval for this window
+  IntervalType interval{min_epoch, max_epoch};
+
+  // The ranged counter for allocating the next epoch which will always be
+  // within the interval
+  next_epoch_ = std::make_unique<adt::RangedCounter<EpochType>>(
+    interval.lower(), interval.upper()
+  );
+
+  // All epochs in a given window start out terminated (thus, reusable).
+  terminated_epochs_.insertInterval(interval);
+
+  fmt::print(
+    "EpochWindow: epoch={:x}, arch={:x}, min={:x}, max={:x}\n",
+    epoch, archetype_epoch_, min_epoch, max_epoch
+  );
 
   vt_debug_print(
     normal, term,
@@ -70,16 +97,38 @@ EpochWindow::EpochWindow(EpochType const& epoch)
   );
 }
 
-inline bool EpochWindow::isArchetypal(EpochType const& epoch) {
+EpochType EpochWindow::allocateNewEpoch() {
+  // Check for a strange edge condition where all epochs within the window
+  // are active and not terminated.
+  vtAbortIf(
+    terminated_epochs_.size() == 0,
+    "Must have an epoch to allocate within the specified range"
+  );
+
+  // Increment the next epoch counter until we find an terminated epoch that can
+  // be allocated
+  do {
+    EpochType next = *next_epoch_;
+    if (terminated_epochs_.contains(next)) {
+      (*next_epoch_)++;
+
+      // Tell the system the epoch is now active
+      activateEpoch(next);
+      return next;
+    }
+  } while (true);
+}
+
+inline bool EpochWindow::isArchetypal(EpochType epoch) {
   auto epoch_arch = epoch;
   epoch::EpochManip::setSeq(epoch_arch,0);
   return epoch_arch == archetype_epoch_;
 }
 
-void EpochWindow::addEpoch(EpochType const& epoch) {
+void EpochWindow::activateEpoch(EpochType epoch) {
   vt_debug_print(
     verbose, term,
-    "addEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
+    "activateEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
     terminated_epochs_.size(), terminated_epochs_.compression()
@@ -93,42 +142,41 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
     terminated_epochs_.size()
   );
 
-  // We should possibly perform some error checking once we wrap around in case
-  // of pending actions
-  if (terminated_epochs_.contains(epoch)) {
-    terminated_epochs_.erase(epoch);
-  }
+  vtAssert(terminated_epochs_.contains(epoch), "Epoch must be terminated");
+
+  terminated_epochs_.erase(epoch);
 
   vt_debug_print(
     normal, term,
-    "addEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
+    "activateEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
 }
 
-void EpochWindow::closeEpoch(EpochType const& epoch) {
+void EpochWindow::setEpochTerminated(EpochType epoch) {
   vt_debug_print(
     verbose, term,
-    "closeEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
+    "setEpochTerminated: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
 
   terminated_epochs_.insert(epoch);
+  total_terminated_++;
 
   vt_debug_print(
     normal, term,
-    "closeEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
+    "setEpochTerminated: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
 }
 
-bool EpochWindow::isTerminated(EpochType const& epoch) const {
+bool EpochWindow::isTerminated(EpochType epoch) const {
   vt_debug_print(
     verbose, term,
     "isTerminated: epoch={:x}, first={:x}, last={:x}, num={}, "
