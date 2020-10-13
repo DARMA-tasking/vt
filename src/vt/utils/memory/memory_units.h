@@ -60,6 +60,7 @@ enum struct MemoryUnitEnum : int8_t {
 
 std::string getMemoryUnitName(MemoryUnitEnum unit);
 MemoryUnitEnum getUnitFromString(std::string const& unit);
+std::tuple<std::string, double> getBestMemoryUnit(std::size_t bytes);
 
 }}} /* end namespace vt::util::memory */
 

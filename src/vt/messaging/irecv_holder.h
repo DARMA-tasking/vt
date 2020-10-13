@@ -94,11 +94,9 @@ struct IRecvHolder {
       auto& e = holder_[i];
       vtAssert(e.valid, "Must be valid");
 
-      int flag = 0;
-      MPI_Status stat;
-      MPI_Test(&e.req, &flag, &stat);
+      auto done = e.test();
 
-      if (flag == 0) {
+      if (not done) {
         ++i;
         continue;
       }

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 types_type.h
+//                                 send_info.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,53 +42,62 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TYPES_TYPE
-#define INCLUDED_TYPES_TYPE
+#if !defined INCLUDED_VT_MESSAGING_SEND_INFO_H
+#define INCLUDED_VT_MESSAGING_SEND_INFO_H
 
-#include <cstdint>
-#include <functional>
+#include "vt/config.h"
 
-namespace vt {
+namespace vt { namespace messaging {
 
-// Physical identifier types (nodes, cores, workers, etc.)
-using PhysicalResourceType    = int16_t;
-using NodeType                = PhysicalResourceType;
-using CoreType                = PhysicalResourceType;
-using WorkerCountType         = PhysicalResourceType;
-using WorkerIDType            = PhysicalResourceType;
+/**
+ * \struct SendInfo
+ *
+ * \brief Returned from a data send to be used to receive the data
+ */
+struct SendInfo {
 
-// Runtime system entity types
-using HandlerType             = int64_t;
-using SeedType                = int64_t;
-using EnvelopeDataType        = int8_t;
-using EventType               = uint64_t;
-using SequentialIDType        = uint64_t;
-using EpochType               = uint64_t;
-using TagType                 = int32_t;
-using BarrierType             = uint64_t;
-using CollectiveAlgType       = uint64_t;
-using RefType                 = int16_t;
-using ByteType                = uint64_t;
-using BitCountType            = int32_t;
-using SerialByteType          = char;
-using ErrorCodeType           = int32_t;
-using VirtualProxyType        = uint64_t;
-using VirtualElmOnlyProxyType = uint64_t;
-using VirtualElmCountType     = int64_t;
-using UniqueIndexBitType      = uint64_t;
-using GroupType               = uint64_t;
-using MsgSizeType             = int64_t;
-using PhaseType               = uint64_t;
-using PipeType                = uint64_t;
-using ObjGroupProxyType       = uint64_t;
-using PriorityType            = uint16_t;
-using PriorityLevelType       = uint8_t;
+  /**
+   * \internal
+   * \brief Construct a SendInfo
+   *
+   * \param[in] in_event the send event (parent event if multiple sends)
+   * \param[in] in_tag the MPI tag it was sent with
+   * \param[in] in_nchunks the number of send chunks for the entire payload
+   */
+  SendInfo(EventType in_event, TagType in_tag, int in_nchunks)
+    : event(in_event),
+      tag(in_tag),
+      nchunks(in_nchunks)
+  { }
 
-// Action types for attaching a closure to a runtime function
-using ActionType              = std::function<void()>;
-using ActionProxyType         = std::function<void(VirtualProxyType)>;
-using ActionNodeType          = std::function<void(NodeType)>;
+  /**
+   * \brief Get the send event (either an MPI event or a parent event containing
+   * multiple MPI events)
+   *
+   * \return the send event
+   */
+  EventType getEvent() const { return event; }
 
-}  // end namespace vt
+  /**
+   * \brief The MPI tag that it was sent with
+   *
+   * \return the tag
+   */
+  TagType getTag() const { return tag; }
 
-#endif  /*INCLUDED_TYPES_TYPE*/
+  /**
+   * \brief The number of Isend chunks that make up the entire payload
+   *
+   * \return the number of chunks
+   */
+  int getNumChunks() const { return nchunks; }
+
+private:
+  EventType const event = no_event; /**< The event for the send */
+  TagType const tag = no_tag;       /**< The MPI tag for the send */
+  int const nchunks = 0;            /**< The number of send chunks to receive */
+};
+
+}} /* end namespace vt::messaging */
+
+#endif /*INCLUDED_VT_MESSAGING_SEND_INFO_H*/
