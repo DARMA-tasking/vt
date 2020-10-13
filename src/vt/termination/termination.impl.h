@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/termination/termination.h"
 #include "vt/termination/term_common.h"
+#include "vt/epoch/epoch_manip.h"
 
 namespace vt { namespace term {
 

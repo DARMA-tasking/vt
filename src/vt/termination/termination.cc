@@ -46,7 +46,6 @@
 #include "vt/config.h"
 #include "vt/termination/termination.h"
 #include "vt/termination/term_common.h"
-#include "vt/termination/term_window.h"
 #include "vt/messaging/active.h"
 #include "vt/collective/collective_ops.h"
 #include "vt/scheduler/scheduler.h"
@@ -63,13 +62,10 @@
 
 namespace vt { namespace term {
 
-static EpochType const arch_epoch_coll = 0ull;
-
 TerminationDetector::TerminationDetector()
   : collective::tree::Tree(collective::tree::tree_cons_tag_t),
   any_epoch_state_(any_epoch_sentinel, false, true, getNumChildren()),
-  hang_(no_epoch, true, false, getNumChildren()),
-  epoch_coll_(std::make_unique<EpochWindow>(arch_epoch_coll))
+  hang_(no_epoch, true, false, getNumChildren())
 { }
 
 /*static*/ void TerminationDetector::makeRootedHandler(TermMsg* msg) {
@@ -99,34 +95,6 @@ TerminationDetector::propagateEpochHandler(TermCounterMsg* msg) {
   TermTerminatedReplyMsg* msg
 ) {
   theTerm()->replyTerminated(msg->getEpoch(),msg->isTerminated());
-}
-
-EpochType TerminationDetector::getArchetype(EpochType const& epoch) const {
-  auto epoch_arch = epoch;
-  epoch::EpochManip::setSeq(epoch_arch,0);
-  return epoch_arch;
-}
-
-EpochWindow* TerminationDetector::getWindow(EpochType const& epoch) {
-  auto const is_rooted = epoch::EpochManip::isRooted(epoch);
-  auto const scope = epoch::EpochManip::getScope(epoch);
-  auto const is_scoped = scope != epoch::global_epoch_scope;
-  if ((is_rooted or is_scoped) and epoch != any_epoch_sentinel) {
-    auto const& arch_epoch = getArchetype(epoch);
-    auto iter = epoch_arch_.find(arch_epoch);
-    if (iter == epoch_arch_.end()) {
-      epoch_arch_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(arch_epoch),
-        std::forward_as_tuple(std::make_unique<EpochWindow>(arch_epoch))
-      );
-      iter = epoch_arch_.find(arch_epoch);
-    }
-    return iter->second.get();
-  } else {
-    vtAssertExpr(epoch_coll_ != nullptr);
-    return epoch_coll_.get();
-  }
 }
 
 TermCounterType TerminationDetector::getNumUnits() const {
@@ -806,14 +774,16 @@ void TerminationDetector::replyTerminated(
 
 void TerminationDetector::updateResolvedEpochs(EpochType const& epoch) {
   if (epoch != any_epoch_sentinel) {
+    auto const first_term = theEpoch()->getTerminatedWindow(epoch)->getFirst();
+    auto const last_term = theEpoch()->getTerminatedWindow(epoch)->getLast();
     vt_debug_print(
       term, node,
       "updateResolvedEpoch: epoch={:x}, rooted={}, "
       "collective: first={:x}, last={:x}\n",
-      epoch, isRooted(epoch), epoch_coll_->getFirst(), epoch_coll_->getLast()
+      epoch, isRooted(epoch), first_term, last_term
     );
 
-    getWindow(epoch)->closeEpoch(epoch);
+    theEpoch()->getTerminatedWindow(epoch)->closeEpoch(epoch);
   }
 }
 
@@ -825,7 +795,7 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
   TermStatusEnum status = TermStatusEnum::Pending;
   auto const& is_rooted_epoch = epoch::EpochManip::isRooted(epoch);
 
-  if (getWindow(epoch)->isTerminated(epoch)) {
+  if (theEpoch()->getTerminatedWindow(epoch)->isTerminated(epoch)) {
     status = TermStatusEnum::Terminated;
   } else if (is_rooted_epoch) {
     auto const& this_node = theContext()->getNode();
@@ -835,7 +805,7 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
        * The idea here is that if this is executed on the root, it must have
        * valid info on whether the rooted live or terminated
        */
-      auto window = getWindow(epoch);
+      auto window = theEpoch()->getTerminatedWindow(epoch);
       auto is_terminated = window->isTerminated(epoch);
       if (is_terminated) {
         status = TermStatusEnum::Terminated;
@@ -854,7 +824,8 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
       status = TermStatusEnum::Remote;
     }
   } else {
-    auto const& is_terminated = epoch_coll_->isTerminated(epoch);
+    auto window = theEpoch()->getTerminatedWindow(epoch);
+    auto const& is_terminated = window->isTerminated(epoch);
     if (is_terminated) {
       status = TermStatusEnum::Terminated;
     }
@@ -1051,7 +1022,7 @@ void TerminationDetector::initializeRootedDSEpoch(
   // Create DS term where this node is the root
   auto ds = getDSTerm(epoch, true);
   ds->setLabel(label);
-  getWindow(epoch)->addEpoch(epoch);
+  theEpoch()->getTerminatedWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
   produceOnGlobal(epoch);
 
@@ -1162,7 +1133,7 @@ void TerminationDetector::initializeCollectiveEpoch(
     epoch, successor, label
   );
 
-  getWindow(epoch)->addEpoch(epoch);
+  theEpoch()->getTerminatedWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
   produceOnGlobal(epoch);
 
@@ -1210,7 +1181,7 @@ void TerminationDetector::makeRootedHan(
 
   auto& state = findOrCreateState(epoch, is_ready);
   state.setLabel(label);
-  getWindow(epoch)->addEpoch(epoch);
+  theEpoch()->getTerminatedWindow(epoch)->addEpoch(epoch);
 
   vt_debug_print(
     term, node,
@@ -1245,7 +1216,8 @@ void TerminationDetector::setupNewEpoch(
 }
 
 std::size_t TerminationDetector::getNumTerminatedCollectiveEpochs() const {
-  return epoch_coll_->getSize();
+  auto const window = theEpoch()->getTerminatedWindow(any_epoch_sentinel);
+  return window->getSize();
 }
 
 }} // end namespace vt::term

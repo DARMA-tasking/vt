@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_window.cc
+//                               epoch_window.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,12 +42,11 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/termination/term_window.h"
+#include "vt/epoch/epoch_window.h"
 
 #include <fmt/ostream.h>
 
-namespace vt { namespace term {
+namespace vt { namespace epoch {
 
 EpochWindow::EpochWindow(EpochType const& epoch)
   : terminated_epochs_(epoch)
@@ -141,4 +140,4 @@ bool EpochWindow::isTerminated(EpochType const& epoch) const {
   return terminated_epochs_.contains(epoch);
 }
 
-}} /* end namespace vt::term */
+}} /* end namespace vt::epoch */

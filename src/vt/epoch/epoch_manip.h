@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 #include "vt/epoch/epoch_scope.h"
+#include "vt/epoch/epoch_window.h"
 #include "vt/termination/epoch_tags.h"
 #include "vt/termination/interval/integral_set.h"
 #include "vt/utils/bits/bits_common.h"
@@ -284,6 +285,26 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    */
   EpochCollectiveScope makeScopeCollective();
 
+public:
+  /**
+   * \brief Get an appropriate window that stores the list of
+   * terminated epoch based on the epoch archetype
+   *
+   * \param[in] epoch the epoch in question
+   *
+   * \return the window of terminated epochs of that kind
+   */
+  EpochWindow* getTerminatedWindow(EpochType epoch);
+
+  /**
+   * \internal \brief Get archetype bits embedded in epoch
+   *
+   * \param[in] epoch the epoch in question
+   *
+   * \return all bits except for archetype bits masked out
+   */
+  EpochType getArchetype(EpochType epoch) const;
+
 private:
   /**
    * \internal \brief Destroy an eopch scope by removing it
@@ -306,6 +327,10 @@ private:
   std::unordered_map<EpochScopeType, EpochType> scope_collective_;
   /// The current live epoch scopes
   vt::IntegralSet<EpochScopeType> live_scopes_;
+  // epoch window container for specific archetyped epochs
+  std::unordered_map<EpochType,std::unique_ptr<EpochWindow>> terminated_epochs_;
+  // epoch window for basic collective epochs
+  std::unique_ptr<EpochWindow> terminated_collective_epochs_ = nullptr;
 };
 
 }} /* end namespace vt::epoch */

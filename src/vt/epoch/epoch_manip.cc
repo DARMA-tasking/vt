@@ -48,13 +48,19 @@
 #include "vt/context/context.h"
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
+#include "vt/termination/term_common.h"
 
 #include <fmt/ostream.h>
 
 namespace vt { namespace epoch {
 
+static EpochType const arch_epoch_coll = 0ull;
+
 EpochManip::EpochManip()
-  : live_scopes_(no_scope)
+  : live_scopes_(no_scope),
+    terminated_collective_epochs_(
+      std::make_unique<EpochWindow>(arch_epoch_coll)
+    )
 { }
 
 /*static*/ EpochType EpochManip::generateEpoch(
@@ -199,6 +205,34 @@ void EpochManip::destroyScope(EpochScopeType scope) {
   // because if we did we would have to wait for termination of all epochs
   // within the scope before it could be destroyed. Thus, scopes can be quickly
   // created and destroyed by the user.
+}
+
+EpochType EpochManip::getArchetype(EpochType epoch) const {
+  auto epoch_arch = epoch;
+  epoch::EpochManip::setSeq(epoch_arch,0);
+  return epoch_arch;
+}
+
+EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
+  auto const is_rooted = isRooted(epoch);
+  auto const scope = getScope(epoch);
+  auto const is_scoped = scope != global_epoch_scope;
+  if ((is_rooted or is_scoped) and epoch != term::any_epoch_sentinel) {
+    auto const& arch_epoch = getArchetype(epoch);
+    auto iter = terminated_epochs_.find(arch_epoch);
+    if (iter == terminated_epochs_.end()) {
+      terminated_epochs_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(arch_epoch),
+        std::forward_as_tuple(std::make_unique<EpochWindow>(arch_epoch))
+      );
+      iter = terminated_epochs_.find(arch_epoch);
+    }
+    return iter->second.get();
+  } else {
+    vtAssertExpr(terminated_collective_epochs_ != nullptr);
+    return terminated_collective_epochs_.get();
+  }
 }
 
 /*static*/ bool EpochManip::isRooted(EpochType const& epoch) {
