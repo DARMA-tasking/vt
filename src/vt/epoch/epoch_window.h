@@ -117,7 +117,7 @@ public:
 
 private:
   // The archetypical epoch for this window container (category,rooted,user,..)
-  EpochType archetype_epoch_              = no_epoch;
+  EpochType archetype_epoch_ = no_epoch;
   // The set of epochs terminated
   vt::IntegralSet<EpochType> terminated_epochs_;
 };
