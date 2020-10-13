@@ -751,8 +751,8 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
   cleanupEpoch(epoch, from);
 
   // Matching consume on global epoch once a nested epoch terminates
-  if (epoch != any_epoch_sentinel) {
-    consumeOnGlobal();
+  if (epoch != any_epoch_sentinel and (not isRooted(epoch) or isDS(epoch))) {
+    consumeOnGlobal(epoch);
   }
 }
 
@@ -1055,7 +1055,7 @@ void TerminationDetector::initializeRootedDSEpoch(
   ds->setLabel(label);
   getWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
-  produceOnGlobal();
+  produceOnGlobal(epoch);
 
   if (successor.valid()) {
     addDependency(epoch, successor);
@@ -1136,11 +1136,21 @@ EpochType TerminationDetector::makeEpochCollective(
   return epoch;
 }
 
-void TerminationDetector::produceOnGlobal() {
+void TerminationDetector::produceOnGlobal(EpochType ep) {
+  vt_debug_print(
+    term, node,
+    "produceOnGlobal: ep={:x}\n", ep
+  );
+
   produce(any_epoch_sentinel, 1);
 }
 
-void TerminationDetector::consumeOnGlobal() {
+void TerminationDetector::consumeOnGlobal(EpochType ep) {
+  vt_debug_print(
+    term, node,
+    "consumeOnGlobal: ep={:x}\n", ep
+  );
+
   consume(any_epoch_sentinel, 1);
 }
 
@@ -1156,7 +1166,7 @@ void TerminationDetector::initializeCollectiveEpoch(
 
   getWindow(epoch)->addEpoch(epoch);
   produce(epoch,1);
-  produceOnGlobal();
+  produceOnGlobal(epoch);
 
   setupNewEpoch(epoch, label);
 
@@ -1205,7 +1215,6 @@ void TerminationDetector::makeRootedHan(
   );
 
   produce(epoch,1);
-  produceOnGlobal();
 
   // The user calls finishedEpoch on the root for a non-DS rooted epoch
   if (!is_root) {

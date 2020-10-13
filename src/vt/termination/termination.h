@@ -683,14 +683,18 @@ private:
    * created epoch can arrive later causing strange behavior. This has been
    * observed in the code with a full reset of epoch allocation when the runtime
    * globally terminates.
+   *
+   * \param[in] ep nested epoch (for debugging)
    */
-  void produceOnGlobal();
+  void produceOnGlobal(EpochType ep);
 
   /**
    * \internal \brief Consume on the global epoch to inhibit global terminations
    * before receipt of a nested epoch's completion
+   *
+   * \param[in] ep the nested epoch (for debugging)
    */
-  void consumeOnGlobal();
+  void consumeOnGlobal(EpochType ep);
 
   /**
    * \internal \brief Get an epoch's dependency information
