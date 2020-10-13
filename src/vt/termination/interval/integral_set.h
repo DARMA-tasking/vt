@@ -322,7 +322,7 @@ private:
       ub_ = std::max<DomainT>(ub_, i.upper());
     }
     // Increment count of non-compressed elements
-    elms_++;
+    elms_ += i.width();
   }
 
   IteratorType join(IteratorType it) {
