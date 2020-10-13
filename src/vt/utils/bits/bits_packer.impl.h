@@ -116,8 +116,9 @@ template <typename BitType, typename BitField>
 BitPacker::setFieldDynamic(
   FieldType start, FieldType len, BitField& field, BitType const& segment
 ) {
+  auto const nbits = (sizeof(BitField) * 8) - len;
   field = field & ~(gen_bit_mask(len) << start);
-  field = field | (static_cast<BitField>(segment) << start);
+  field = field | (((static_cast<BitField>(segment) << nbits) >> nbits) << start);
 }
 
 template <FieldType start, FieldType len, typename BitField>
