@@ -74,7 +74,8 @@ TEST_F(TestEpoch, basic_test_first_epoch_unrooted_1) {
 
 TEST_P(TestEpochParam, basic_test_epoch_unrooted_1) {
   EpochType const start_seq  = GetParam();
-  auto const epoch           = epoch::EpochManip::generateEpoch(start_seq, false);
+  auto epoch                 = epoch::EpochManip::generateEpoch(false);
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
   auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
@@ -92,9 +93,10 @@ TEST_P(TestEpochParam, basic_test_epoch_rooted_1) {
   auto const& n              = 48;
   EpochType const start_seq  = GetParam();
   epoch::EpochScopeType in_scope = 3;
-  auto const epoch           = epoch::EpochManip::generateEpoch(
-    start_seq, true, n, in_scope
+  auto epoch                 = epoch::EpochManip::generateEpoch(
+    true, n, in_scope
   );
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
   auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
@@ -111,9 +113,10 @@ TEST_P(TestEpochParam, basic_test_epoch_rooted_1) {
 TEST_P(TestEpochParam, basic_test_epoch_scope_1) {
   EpochType const start_seq  = GetParam();
   epoch::EpochScopeType in_scope = 1;
-  auto const epoch           = epoch::EpochManip::generateEpoch(
-    start_seq, false, uninitialized_destination, in_scope
+  auto epoch                 = epoch::EpochManip::generateEpoch(
+    false, uninitialized_destination, in_scope
   );
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
   auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
@@ -130,10 +133,11 @@ TEST_P(TestEpochParam, basic_test_epoch_scope_1) {
 TEST_P(TestEpochParam, basic_test_epoch_category_1) {
   EpochType const start_seq  = GetParam();
   epoch::EpochScopeType in_scope = 2;
-  auto const epoch           = epoch::EpochManip::generateEpoch(
-    start_seq, false, uninitialized_destination, in_scope,
+  auto epoch                 = epoch::EpochManip::generateEpoch(
+    false, uninitialized_destination, in_scope,
     epoch::eEpochCategory::InsertEpoch
   );
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
   auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
@@ -153,9 +157,10 @@ TEST_P(TestEpochParam, basic_test_epoch_all_1) {
   auto const& n              = 48;
   epoch::EpochScopeType in_scope = 1;
   EpochType const start_seq  = GetParam();
-  auto const epoch           = epoch::EpochManip::generateEpoch(
-    start_seq, true, n, in_scope, epoch::eEpochCategory::InsertEpoch
+  auto epoch                 = epoch::EpochManip::generateEpoch(
+    true, n, in_scope, epoch::eEpochCategory::InsertEpoch
   );
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
   auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
