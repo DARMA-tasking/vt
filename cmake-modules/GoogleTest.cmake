@@ -5,6 +5,8 @@
 GoogleTest
 ----------
 
+.. versionadded:: 3.9
+
 This module defines functions to help use the Google Test infrastructure.  Two
 mechanisms for adding tests are provided. :command:`gtest_add_tests` has been
 around for some time, originally via ``find_package(GTest)``.
@@ -151,9 +153,11 @@ same as the Google Test name (i.e. ``suite.testcase``); see also
                          [PROPERTIES name1 value1...]
                          [TEST_LIST var]
                          [DISCOVERY_TIMEOUT seconds]
+                         [XML_OUTPUT_DIR dir]
+                         [DISCOVERY_MODE <POST_BUILD|PRE_TEST>]
     )
 
-  ``gtest_discover_tests`` sets up a post-build command on the test executable
+  ``gtest_discover_tests()`` sets up a post-build command on the test executable
   that generates the list of tests by parsing the output from running the test
   with the ``--gtest_list_tests`` argument.  Compared to the source parsing
   approach of :command:`gtest_add_tests`, this ensures that the full list of
@@ -210,7 +214,7 @@ same as the Google Test name (i.e. ``suite.testcase``); see also
 
   ``PROPERTIES name1 value1...``
     Specifies additional properties to be set on all tests discovered by this
-    invocation of ``gtest_discover_tests``.
+    invocation of ``gtest_discover_tests()``.
 
   ``TEST_LIST var``
     Make the list of tests available in the variable ``var``, rather than the
@@ -236,7 +240,34 @@ same as the Google Test name (i.e. ``suite.testcase``); see also
       problem.  The ambiguous behavior of the ``TIMEOUT`` keyword in 3.10.1
       and 3.10.2 has not been preserved.
 
+  ``XML_OUTPUT_DIR dir``
+    If specified, the parameter is passed along with ``--gtest_output=xml:``
+    to test executable. The actual file name is the same as the test target,
+    including prefix and suffix. This should be used instead of
+    ``EXTRA_ARGS --gtest_output=xml`` to avoid race conditions writing the
+    XML result output when using parallel test execution.
+
+  ``DISCOVERY_MODE``
+    Provides greater control over when ``gtest_discover_tests()`` performs test
+    discovery. By default, ``POST_BUILD`` sets up a post-build command
+    to perform test discovery at build time. In certain scenarios, like
+    cross-compiling, this ``POST_BUILD`` behavior is not desirable.
+    By contrast, ``PRE_TEST`` delays test discovery until just prior to test
+    execution. This way test discovery occurs in the target environment
+    where the test has a better chance at finding appropriate runtime
+    dependencies.
+
+    ``DISCOVERY_MODE`` defaults to the value of the
+    ``CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE`` variable if it is not
+    passed when calling ``gtest_discover_tests()``. This provides a mechanism
+    for globally selecting a preferred test discovery behavior without having
+    to modify each call site.
+
 #]=======================================================================]
+
+# Save project's policies
+cmake_policy(PUSH)
+cmake_policy(SET CMP0057 NEW) # if IN_LIST
 
 #------------------------------------------------------------------------------
 function(gtest_add_tests)
@@ -298,14 +329,15 @@ function(gtest_add_tests)
   unset(testList)
 
   set(gtest_case_name_regex ".*\\( *([A-Za-z_0-9]+) *, *([A-Za-z_0-9]+) *\\).*")
-  set(gtest_test_type_regex "(TYPED_TEST|TEST_?[FP]?)")
+  #set(gtest_test_type_regex "(TYPED_TEST|TEST_?[FP]?)")
+  set(gtest_test_type_regex "(TYPED_TEST_?P?|TEST_?[FP]?)")
 
   foreach(source IN LISTS ARGS_SOURCES)
     if(NOT ARGS_SKIP_DEPENDENCY)
       set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${source})
     endif()
     file(READ "${source}" contents)
-    string(REGEX MATCHALL "${gtest_test_type_regex} *\\(([A-Za-z_0-9 ,]+)\\)" found_tests ${contents})
+    string(REGEX MATCHALL "${gtest_test_type_regex} *\\(([A-Za-z_0-9 ,]+)\\)" found_tests "${contents}")
     foreach(hit ${found_tests})
       string(REGEX MATCH "${gtest_test_type_regex}" test_type ${hit})
 
@@ -314,12 +346,14 @@ function(gtest_add_tests)
         string(REGEX REPLACE ${gtest_case_name_regex}  "*/\\1.\\2/*" gtest_test_name ${hit})
       elseif("x${test_type}" STREQUAL "xTEST_F" OR "x${test_type}" STREQUAL "xTEST")
         string(REGEX REPLACE ${gtest_case_name_regex} "\\1.\\2" gtest_test_name ${hit})
-      elseif("x${test_type}" STREQUAL "xTYPED_TEST")
-        string(REGEX REPLACE ${gtest_case_name_regex} "\\1/*.\\2" gtest_test_name ${hit})
+      elseif("x${test_type}" STREQUAL "xTYPED_TEST_P")
+        string(REGEX REPLACE ${gtest_case_name_regex} "*\\1/*\\2" gtest_test_name ${hit})
       else()
         message(WARNING "Could not parse GTest ${hit} for adding to CTest.")
         continue()
       endif()
+
+      message(STATUS "Test ${test_type} NAME=${gtest_test_name}")
 
       # Make sure tests disabled in GTest get disabled in CTest
       if(gtest_test_name MATCHES "(^|\\.)DISABLED_")
@@ -366,11 +400,12 @@ function(gtest_add_tests)
 endfunction()
 
 #------------------------------------------------------------------------------
+
 function(gtest_discover_tests TARGET)
   cmake_parse_arguments(
     ""
     "NO_PRETTY_TYPES;NO_PRETTY_VALUES"
-    "TEST_PREFIX;TEST_SUFFIX;WORKING_DIRECTORY;TEST_LIST;DISCOVERY_TIMEOUT"
+    "TEST_PREFIX;TEST_SUFFIX;WORKING_DIRECTORY;TEST_LIST;DISCOVERY_TIMEOUT;XML_OUTPUT_DIR;DISCOVERY_MODE"
     "EXTRA_ARGS;PROPERTIES"
     ${ARGN}
   )
@@ -383,6 +418,12 @@ function(gtest_discover_tests TARGET)
   endif()
   if(NOT _DISCOVERY_TIMEOUT)
     set(_DISCOVERY_TIMEOUT 5)
+  endif()
+  if(NOT _DISCOVERY_MODE)
+    if(NOT CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE)
+      set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE "POST_BUILD")
+    endif()
+    set(_DISCOVERY_MODE ${CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE})
   endif()
 
   get_property(
@@ -415,34 +456,86 @@ function(gtest_discover_tests TARGET)
     TARGET ${TARGET}
     PROPERTY CROSSCOMPILING_EMULATOR
   )
-  add_custom_command(
-    TARGET ${TARGET} POST_BUILD
-    BYPRODUCTS "${ctest_tests_file}"
-    COMMAND "${CMAKE_COMMAND}"
-            -D "TEST_TARGET=${TARGET}"
-            -D "TEST_EXECUTABLE=$<TARGET_FILE:${TARGET}>"
-            -D "TEST_EXECUTOR=${crosscompiling_emulator}"
-            -D "TEST_WORKING_DIR=${_WORKING_DIRECTORY}"
-            -D "TEST_EXTRA_ARGS=${_EXTRA_ARGS}"
-            -D "TEST_PROPERTIES=${_PROPERTIES}"
-            -D "TEST_PREFIX=${_TEST_PREFIX}"
-            -D "TEST_SUFFIX=${_TEST_SUFFIX}"
-            -D "NO_PRETTY_TYPES=${_NO_PRETTY_TYPES}"
-            -D "NO_PRETTY_VALUES=${_NO_PRETTY_VALUES}"
-            -D "TEST_LIST=${_TEST_LIST}"
-            -D "CTEST_FILE=${ctest_tests_file}"
-            -D "TEST_DISCOVERY_TIMEOUT=${_DISCOVERY_TIMEOUT}"
-            -P "${_GOOGLETEST_DISCOVER_TESTS_SCRIPT}"
-    VERBATIM
-  )
 
-  file(WRITE "${ctest_include_file}"
-    "if(EXISTS \"${ctest_tests_file}\")\n"
-    "  include(\"${ctest_tests_file}\")\n"
-    "else()\n"
-    "  add_test(${TARGET}_NOT_BUILT ${TARGET}_NOT_BUILT)\n"
-    "endif()\n"
-  )
+  if(_DISCOVERY_MODE STREQUAL "POST_BUILD")
+    add_custom_command(
+      TARGET ${TARGET} POST_BUILD
+      BYPRODUCTS "${ctest_tests_file}"
+      COMMAND "${CMAKE_COMMAND}"
+              -D "TEST_TARGET=${TARGET}"
+              -D "TEST_EXECUTABLE=$<TARGET_FILE:${TARGET}>"
+              -D "TEST_EXECUTOR=${crosscompiling_emulator}"
+              -D "TEST_WORKING_DIR=${_WORKING_DIRECTORY}"
+              -D "TEST_EXTRA_ARGS=${_EXTRA_ARGS}"
+              -D "TEST_PROPERTIES=${_PROPERTIES}"
+              -D "TEST_PREFIX=${_TEST_PREFIX}"
+              -D "TEST_SUFFIX=${_TEST_SUFFIX}"
+              -D "NO_PRETTY_TYPES=${_NO_PRETTY_TYPES}"
+              -D "NO_PRETTY_VALUES=${_NO_PRETTY_VALUES}"
+              -D "TEST_LIST=${_TEST_LIST}"
+              -D "CTEST_FILE=${ctest_tests_file}"
+              -D "TEST_DISCOVERY_TIMEOUT=${_DISCOVERY_TIMEOUT}"
+              -D "TEST_XML_OUTPUT_DIR=${_XML_OUTPUT_DIR}"
+              -P "${_GOOGLETEST_DISCOVER_TESTS_SCRIPT}"
+      VERBATIM
+    )
+
+    file(WRITE "${ctest_include_file}"
+      "if(EXISTS \"${ctest_tests_file}\")\n"
+      "  include(\"${ctest_tests_file}\")\n"
+      "else()\n"
+      "  add_test(${TARGET}_NOT_BUILT ${TARGET}_NOT_BUILT)\n"
+      "endif()\n"
+    )
+  elseif(_DISCOVERY_MODE STREQUAL "PRE_TEST")
+
+    get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL
+        PROPERTY GENERATOR_IS_MULTI_CONFIG
+    )
+
+    if(GENERATOR_IS_MULTI_CONFIG)
+      set(ctest_tests_file "${ctest_file_base}_tests-$<CONFIG>.cmake")
+    endif()
+
+    string(CONCAT ctest_include_content
+      "if(EXISTS \"$<TARGET_FILE:${TARGET}>\")"                                    "\n"
+      "  if(\"$<TARGET_FILE:${TARGET}>\" IS_NEWER_THAN \"${ctest_tests_file}\")"   "\n"
+      "    include(\"${_GOOGLETEST_DISCOVER_TESTS_SCRIPT}\")"                      "\n"
+      "    gtest_discover_tests_impl("                                             "\n"
+      "      TEST_EXECUTABLE"        " [==[" "$<TARGET_FILE:${TARGET}>"   "]==]"   "\n"
+      "      TEST_EXECUTOR"          " [==[" "${crosscompiling_emulator}" "]==]"   "\n"
+      "      TEST_WORKING_DIR"       " [==[" "${_WORKING_DIRECTORY}"      "]==]"   "\n"
+      "      TEST_EXTRA_ARGS"        " [==[" "${_EXTRA_ARGS}"             "]==]"   "\n"
+      "      TEST_PROPERTIES"        " [==[" "${_PROPERTIES}"             "]==]"   "\n"
+      "      TEST_PREFIX"            " [==[" "${_TEST_PREFIX}"            "]==]"   "\n"
+      "      TEST_SUFFIX"            " [==[" "${_TEST_SUFFIX}"            "]==]"   "\n"
+      "      NO_PRETTY_TYPES"        " [==[" "${_NO_PRETTY_TYPES}"        "]==]"   "\n"
+      "      NO_PRETTY_VALUES"       " [==[" "${_NO_PRETTY_VALUES}"       "]==]"   "\n"
+      "      TEST_LIST"              " [==[" "${_TEST_LIST}"              "]==]"   "\n"
+      "      CTEST_FILE"             " [==[" "${ctest_tests_file}"        "]==]"   "\n"
+      "      TEST_DISCOVERY_TIMEOUT" " [==[" "${_DISCOVERY_TIMEOUT}"      "]==]"   "\n"
+      "      TEST_XML_OUTPUT_DIR"    " [==[" "${_XML_OUTPUT_DIR}"         "]==]"   "\n"
+      "    )"                                                                      "\n"
+      "  endif()"                                                                  "\n"
+      "  include(\"${ctest_tests_file}\")"                                         "\n"
+      "else()"                                                                     "\n"
+      "  add_test(${TARGET}_NOT_BUILT ${TARGET}_NOT_BUILT)"                        "\n"
+      "endif()"                                                                    "\n"
+    )
+
+    if(GENERATOR_IS_MULTI_CONFIG)
+      foreach(_config ${CMAKE_CONFIGURATION_TYPES})
+        file(GENERATE OUTPUT "${ctest_file_base}_include-${_config}.cmake" CONTENT "${ctest_include_content}" CONDITION $<CONFIG:${_config}>)
+      endforeach()
+      file(WRITE "${ctest_include_file}" "include(\"${ctest_file_base}_include-\${CTEST_CONFIGURATION_TYPE}.cmake\")")
+    else()
+      file(GENERATE OUTPUT "${ctest_file_base}_include.cmake" CONTENT "${ctest_include_content}")
+      file(WRITE "${ctest_include_file}" "include(\"${ctest_file_base}_include.cmake\")")
+    endif()
+
+  else()
+    message(FATAL_ERROR "Unknown DISCOVERY_MODE: ${_DISCOVERY_MODE}")
+  endif()
 
   # Add discovered tests to directory TEST_INCLUDE_FILES
   set_property(DIRECTORY
@@ -456,3 +549,6 @@ endfunction()
 set(_GOOGLETEST_DISCOVER_TESTS_SCRIPT
   ${CMAKE_CURRENT_LIST_DIR}/GoogleTestAddTests.cmake
 )
+
+# Restore project's policies
+cmake_policy(POP)
