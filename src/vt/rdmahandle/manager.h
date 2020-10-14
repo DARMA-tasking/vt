@@ -229,7 +229,12 @@ public:
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    //
+    s | cur_handle_obj_group_
+      | cur_handle_collection_
+      | collection_to_manager_
+      | proxy_
+      // holder_
+      | collective_scope_;
   }
 
 private:
