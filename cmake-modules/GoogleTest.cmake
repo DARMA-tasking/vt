@@ -353,8 +353,6 @@ function(gtest_add_tests)
         continue()
       endif()
 
-      message(STATUS "Test ${test_type} NAME=${gtest_test_name}")
-
       # Make sure tests disabled in GTest get disabled in CTest
       if(gtest_test_name MATCHES "(^|\\.)DISABLED_")
         # Add the disabled test if CMake is new enough
