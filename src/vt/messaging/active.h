@@ -123,7 +123,7 @@ struct InProgressIRecv {
 
   InProgressIRecv(
     char* in_buf, CountType in_probe_bytes, NodeType in_sender,
-    MPI_Request in_req
+    MPI_Request in_req = MPI_REQUEST_NULL
   ) : buf(in_buf), probe_bytes(in_probe_bytes), sender(in_sender),
       req(in_req), valid(true)
   { }
