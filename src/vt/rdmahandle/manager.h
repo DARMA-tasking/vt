@@ -227,6 +227,11 @@ private:
 public:
   static std::unique_ptr<Manager> construct();
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    //
+  }
+
 private:
   /// Current collective handle for a given objgroup proxy
   std::unordered_map<ObjGroupProxyType, RDMA_HandleType> cur_handle_obj_group_;

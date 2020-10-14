@@ -97,18 +97,6 @@ struct BaseComponent : Diagnostic, Bufferable, Progressable {
   virtual ~BaseComponent() { }
 
   friend struct ComponentPack;
-
-  ComponentIDType getComponentID() const { return component_id_; }
-
-  collective::reduce::Reduce* reducer();
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | component_id_;
-  }
-
-protected:
-  ComponentIDType component_id_ = 0;
 };
 
 }}} /* end namespace vt::runtime::component */

@@ -145,6 +145,11 @@ public:
    */
   bool isDeallocated(bool is_user_tag, TagType scope_bits) const;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    //
+  }
+
 private:
   using ScopeMapType = std::unordered_map<TagType, std::unique_ptr<detail::ScopeImpl>>;
 

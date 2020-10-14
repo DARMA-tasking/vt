@@ -150,7 +150,7 @@ struct AppConfig {
   bool vt_term_rooted_use_wave = false;
   int64_t vt_hang_freq         = 1024;
 
-#if vt_check_enabled(diagnostics_runtime)
+#if (vt_diagnostics_runtime != 0)
   bool vt_diag_enable = true;
 #else
   bool vt_diag_enable = false;
