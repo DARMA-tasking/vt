@@ -177,6 +177,10 @@ struct BufferedActiveMsg {
   { }
 };
 
+// forward-declare for header
+struct MultiTagHolder;
+struct MultiMsg;
+
 /**
  * \struct ActiveMessenger active.h vt/messaging/active.h
  *
@@ -1382,6 +1386,21 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
+   * \brief Send already-packed message bytes with MPI using multiple
+   * sends if necessary
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] base the message base pointer
+   * \param[in] msg_size the size of the message
+   * \param[in] send_tag the send tag on the message
+   */
+  void sendMsgMPI(
+    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+    MsgSizeType const& msg_size, TagType const& send_tag
+  );
+
+  /**
+   * \internal
    * \brief Set the global epoch (\c pushEpoch is more desirable)
    *
    * \c setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
@@ -1519,6 +1538,22 @@ private:
    */
   MPI_TagType allocateNewTag();
 
+  /**
+   * \internal \brief Handle a control message that coordinates multiple
+   * payloads arriving that constitute a contiguous payload
+   *
+   * \param[in] msg the message with control data
+   */
+  void handleMultiTagMsg(MultiMsg* msg);
+
+  /**
+   * \internal \brief Handle a control message; immediately calls
+   * \c handleMultiTagMsg
+   *
+   * \param[in] msg the message with control data
+   */
+  static void multiTagHandler(MultiMsg* msg);
+
   bool testPendingActiveMsgAsyncRecv();
   bool testPendingDataMsgAsyncRecv();
 
@@ -1563,6 +1598,8 @@ private:
   IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv;
   IRecvHolder<InProgressDataIRecv> in_progress_data_irecv;
   NodeType this_node_                                     = uninitialized_destination;
+  int next_pending_multi_                                 = 0;
+  std::unordered_map<int, std::unique_ptr<MultiTagHolder>> pending_multi_;
 
 private:
   // Diagnostic counter gauge combos for sent counts/bytes

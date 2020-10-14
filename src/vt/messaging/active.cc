@@ -46,6 +46,7 @@
 #include "vt/config.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/messaging/active.h"
+#include "vt/messaging/multitag_holder.h"
 #include "vt/messaging/envelope.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/termination/term_headers.h"
@@ -248,6 +249,166 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   return no_event;
 }
 
+struct MultiMsg : vt::Message {
+  using MessageParentType = vt::Message;
+  using TagsType = std::vector<MPI_TagType>;
+
+  vt_msg_serialize_required();
+
+  MultiMsg() = default;
+  MultiMsg(TagsType in_tags, NodeType in_from, MsgSizeType in_size)
+    : tags(in_tags),
+      from(in_from),
+      size(in_size)
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | tags | from | size;
+  }
+
+  TagsType const& getTags() const { return tags; }
+  NodeType getFrom() const { return from; }
+  MsgSizeType getSize() const { return size; }
+
+private:
+  TagsType tags;
+  NodeType from = uninitialized_destination;
+  MsgSizeType size = 0;
+};
+
+static constexpr std::size_t max_per_send = 1ull << 30;
+
+/*static*/ void ActiveMessenger::multiTagHandler(MultiMsg* msg) {
+  theMsg()->handleMultiTagMsg(msg);
+}
+
+void ActiveMessenger::handleMultiTagMsg(MultiMsg* msg) {
+  int const id = next_pending_multi_++;
+  auto buf =
+#if vt_check_enabled(memory_pool)
+    static_cast<char*>(thePool()->alloc(msg->getSize()));
+#else
+    static_cast<char*>(std::malloc(msg->getSize()));
+#endif
+  auto const& tags = msg->getTags();
+  auto const num = tags.size();
+  auto const from = msg->getFrom();
+  vt_debug_print(
+    active, node,
+    "handleMultiTagMsg: id={}, total size={}, chunks={}, from={}\n",
+    id, msg->getSize(), num, from
+  );
+  auto ir = std::make_unique<InProgressIRecv>(buf,msg->getSize(),from);
+  pending_multi_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(id),
+    std::forward_as_tuple(std::make_unique<MultiTagHolder>(num,std::move(ir)))
+  );
+  int j = 0;
+  for (auto&& tag : tags) {
+    auto fn = [tag,id,this](RDMA_GetType,ActionType){
+      vt_debug_print(
+        active, node,
+        "handleMultiTagMsg: chunk arriving id={}, tag={}\n",
+        id, tag
+      );
+      auto iter = pending_multi_.find(id);
+      auto elm = iter->second.get();
+      elm->decrement();
+      if (elm->ready()) {
+        auto irecv = elm->getIrecv();
+        finishPendingActiveMsgAsyncRecv(irecv.get());
+        pending_multi_.erase(iter);
+      }
+    };
+    theMsg()->recvDataMsgBuffer(buf+(j*max_per_send),tag,from,true,nullptr,fn);
+    j++;
+  }
+}
+
+void ActiveMessenger::sendMsgMPI(
+  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+  MsgSizeType const& msg_size, TagType const& send_tag
+) {
+  BaseMsgType* base_typed_msg = base.get();
+
+  char* untyped_msg = reinterpret_cast<char*>(base_typed_msg);
+
+  if (static_cast<std::size_t>(msg_size) < max_per_send) {
+    auto const event_id = theEvent()->createMPIEvent(this_node_);
+    auto& holder = theEvent()->getEventHolder(event_id);
+    auto mpi_event = holder.get_event();
+
+    int small_msg_size = static_cast<int>(msg_size);
+    {
+      VT_ALLOW_MPI_CALLS;
+      #if vt_check_enabled(trace_enabled)
+        double tr_begin = 0;
+        if (theConfig()->vt_trace_mpi) {
+          tr_begin = vt::timing::Timing::getCurrentTime();
+        }
+      #endif
+      int const ret = MPI_Isend(
+        untyped_msg, small_msg_size, MPI_BYTE, dest, send_tag,
+        theContext()->getComm(), mpi_event->getRequest()
+      );
+      vtAssertMPISuccess(ret, "MPI_Isend");
+
+      #if vt_check_enabled(trace_enabled)
+        if (theConfig()->vt_trace_mpi) {
+          auto tr_end = vt::timing::Timing::getCurrentTime();
+          auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
+          trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+        }
+      #endif
+    }
+  } else {
+    std::vector<MPI_TagType> allocated_tags;
+    int ntags = msg_size / max_per_send;
+    if (msg_size % max_per_send > 0) {
+      ntags++;
+    }
+    allocated_tags.resize(ntags);
+    vt_debug_print(
+      active, node,
+      "sendMsgMPI: (multi): size={}, chunks={}\n",
+      msg_size, allocated_tags.size()
+    );
+    for (int i = 0; i < ntags; i++) {
+      allocated_tags[i] = allocateNewTag();
+    }
+    auto this_node = theContext()->getNode();
+    auto m = makeMessage<MultiMsg>(allocated_tags,this_node,msg_size);
+    sendMsg<MultiMsg, multiTagHandler>(dest, m);
+
+    char* untyped_ptr = untyped_msg;
+    MsgSizeType remainder = msg_size;
+
+    for (int i = 0; i < ntags; i++) {
+      auto subsize = static_cast<ByteType>(
+        std::min(static_cast<std::size_t>(remainder), max_per_send)
+      );
+      vt_debug_print(
+        active, node,
+        "sendMsgMPI: (multi): i={}, total size={}, chunks={}, chunk size={}\n",
+        i, msg_size, allocated_tags.size(), subsize
+      );
+      vtAssert(subsize > 0, "Size must be greater than zero");
+      RDMA_GetType tup = std::make_tuple(untyped_ptr, subsize);
+      TagType in_tag = allocated_tags[i];
+      auto ret = sendData(tup, dest, in_tag);
+      auto event_id = std::get<0>(ret);
+      auto& holder = theEvent()->getEventHolder(event_id);
+      auto mpi_event = holder.get_event();
+      mpi_event->setManagedMessage(base.to<ShortMessage>());
+      remainder -= subsize;
+      untyped_ptr += subsize;
+    }
+  }
+}
+
 EventType ActiveMessenger::sendMsgBytes(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const& msg_size, TagType const& send_tag
@@ -259,18 +420,12 @@ EventType ActiveMessenger::sendMsgBytes(
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_bcast = envelopeIsBcast(msg->env);
 
-  auto const event_id = theEvent()->createMPIEvent(this_node_);
-  auto& holder = theEvent()->getEventHolder(event_id);
-  auto mpi_event = holder.get_event();
-
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       active, node,
       "sendMsgBytes: size={}, dest={}\n", msg_size, dest
     );
   }
-
-  mpi_event->setManagedMessage(base.to<ShortMessage>());
 
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
@@ -281,14 +436,6 @@ EventType ActiveMessenger::sendMsgBytes(
   );
 
   {
-    VT_ALLOW_MPI_CALLS;
-    #if vt_check_enabled(trace_enabled)
-      double tr_begin = 0;
-      if (theConfig()->vt_trace_mpi) {
-        tr_begin = vt::timing::Timing::getCurrentTime();
-      }
-    #endif
-
     if (is_bcast) {
       bcastsSentCount.increment(1);
     }
@@ -297,19 +444,7 @@ EventType ActiveMessenger::sendMsgBytes(
     }
     amSentCounterGauge.incrementUpdate(msg_size, 1);
 
-    const int ret = MPI_Isend(
-      msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-      mpi_event->getRequest()
-    );
-    vtAssertMPISuccess(ret, "MPI_Isend");
-
-    #if vt_check_enabled(trace_enabled)
-      if (theConfig()->vt_trace_mpi) {
-        auto tr_end = vt::timing::Timing::getCurrentTime();
-        auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
-        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
-      }
-    #endif
+    sendMsgMPI(dest, base, msg_size, send_tag);
   }
 
   if (not is_term) {
@@ -321,7 +456,7 @@ EventType ActiveMessenger::sendMsgBytes(
     l->send(dest, msg_size, is_bcast);
   }
 
-  return event_id;
+  return no_event;
 }
 
 #if vt_check_enabled(trace_enabled)
