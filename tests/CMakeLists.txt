@@ -93,7 +93,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
   if(uses_mpi)
     foreach(PROC ${PROC_TEST_LIST})
       vt_gtest_discover_tests(
-        ${UNIT_TEST}
+        ${unit_test_name}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         TEST_PREFIX       vt:
         TEST_SUFFIX       _proc_${PROC}
@@ -101,14 +101,14 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
           TIMEOUT 60
           FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
           PASS_REGULAR_EXPRESSION "PASSED"
-        TEST_LIST         ${CUR_TEST_LIST}
+        # TEST_LIST         ${CUR_TEST_LIST}
         EXECUTE_COMMAND   ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS} ${MPI_NUMPROC_FLAG} ${PROC}
         DISCOVERY_MODE    PRE_TEST
       )
     endforeach()
   else()
     vt_gtest_discover_tests(
-      ${UNIT_TEST}
+      ${unit_test_name}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       TEST_PREFIX       vt:
       TEST_SUFFIX       _nompi
@@ -116,7 +116,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
         TIMEOUT 60
         FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
         PASS_REGULAR_EXPRESSION "PASSED"
-      TEST_LIST         ${CUR_TEST_LIST}
+      # TEST_LIST         ${CUR_TEST_LIST}
       DISCOVERY_MODE    PRE_TEST
     )
   endif()
