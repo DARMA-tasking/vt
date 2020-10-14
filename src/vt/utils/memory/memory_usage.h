@@ -56,13 +56,26 @@
 namespace vt { namespace util { namespace memory {
 
 struct Mstats final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) { }
 };
 
 struct Sbrk final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | inited_
+      | sbrkinit_;
+   }
 
 private:
   bool inited_ = false;
@@ -70,44 +83,83 @@ private:
 };
 
 struct PS final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) { }
 };
 
 struct Mallinfo final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) { }
 };
 
 struct Getrusage final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) { }
 };
 
 struct MachTaskInfo final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) { }
 };
 
 struct Stat final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | failed_;
+   }
 
 private:
   bool failed_ = false;
 };
 
 struct StatM final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | failed_;
+  }
 
 private:
   bool failed_ = false;
 };
 
 struct Mimalloc final : Reporter {
+  checkpoint_virtual_serialize_derived_from(Reporter)
+
   std::size_t getUsage() override;
   std::string getName() override;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) { }
 };
 
 /**
@@ -187,7 +239,8 @@ struct MemoryUsage : runtime::component::Component<MemoryUsage> {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    //
+    s | reporters_
+      | first_valid_reporter_;
   }
 
 private:

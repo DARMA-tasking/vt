@@ -45,16 +45,23 @@
 #if !defined INCLUDED_VT_UTILS_MEMORY_MEMORY_REPORTER_H
 #define INCLUDED_VT_UTILS_MEMORY_MEMORY_REPORTER_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 
 namespace vt { namespace util { namespace memory {
 
 struct Reporter {
 
+  checkpoint_virtual_serialize_root()
+
   virtual ~Reporter() { }
 
   virtual std::size_t getUsage() = 0;
   virtual std::string getName() = 0;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) { }
 };
 
 }}} /* end namespace vt::util::memory */
