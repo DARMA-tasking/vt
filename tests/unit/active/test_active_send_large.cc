@@ -101,7 +101,8 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
   NodeType const this_node = theContext()->getNode();
   NodeType const num_nodes = theContext()->getNumNodes();
 
-  if (num_nodes < 2) {
+  // over two nodes will allocate a lot of memory for the run
+  if (num_nodes != 2) {
     return;
   }
 
@@ -126,7 +127,7 @@ REGISTER_TYPED_TEST_SUITE_P(TestActiveSendLarge, test_large_bytes_msg);
 using NonSerTestTypes = testing::Types<
   std::tuple<std::integral_constant<NumBytesType, 30>, NonSerializedTag>,
   std::tuple<std::integral_constant<NumBytesType, 31>, NonSerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 34>, NonSerializedTag>
+  std::tuple<std::integral_constant<NumBytesType, 32>, NonSerializedTag>
 >;
 
 using SerTestTypes = testing::Types<
