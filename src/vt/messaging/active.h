@@ -1509,6 +1509,16 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   }
 
 private:
+  /**
+   * \internal \brief Allocate a new, unused tag.
+   *
+   * \note Wraps around when reaching max tag, determined by the MPI
+   * implementation.
+   *
+   * \return a new MPI tag
+   */
+  MPI_TagType allocateNewTag();
+
   bool testPendingActiveMsgAsyncRecv();
   bool testPendingDataMsgAsyncRecv();
 

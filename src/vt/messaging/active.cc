@@ -396,6 +396,17 @@ EventType ActiveMessenger::doMessageSend(
   return ret_event;
 }
 
+MPI_TagType ActiveMessenger::allocateNewTag() {
+  auto const max_tag = util::MPI_Attr::getMaxTag();
+
+  if (cur_direct_buffer_tag_ == max_tag) {
+    cur_direct_buffer_tag_ = starting_direct_buffer_tag;
+  }
+  auto const ret_tag = cur_direct_buffer_tag_++;
+
+  return ret_tag;
+}
+
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
 ) {
@@ -406,12 +417,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   if (tag != no_tag) {
     send_tag = tag;
   } else {
-    auto const max_tag = util::MPI_Attr::getMaxTag();
-
-    if (cur_direct_buffer_tag_ == max_tag) {
-      cur_direct_buffer_tag_ = starting_direct_buffer_tag;
-    }
-    send_tag = cur_direct_buffer_tag_++;
+    send_tag = allocateNewTag();
   }
 
   auto const event_id = theEvent()->createMPIEvent(this_node_);
