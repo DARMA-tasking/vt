@@ -121,30 +121,28 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
   EXPECT_EQ(counter, 1);
 }
 
-struct PrintParam {
-  template <typename ParamType>
-  static std::string GetName(int i) {
-    using IntegralType = typename std::tuple_element<0,ParamType>::type;
-    using TagType = typename std::tuple_element<1,ParamType>::type;
-    static constexpr NumBytesType const nbytes = 1ll << IntegralType::value;
-    auto const serialized = std::is_same<TagType, SerializedTag>::value;
-    return fmt::format("bytes{}serialized{}", nbytes, serialized);
-  }
-};
-
 REGISTER_TYPED_TEST_SUITE_P(TestActiveSendLarge, test_large_bytes_msg);
 
-using TestTypes = testing::Types<
+using NonSerTestTypes = testing::Types<
   std::tuple<std::integral_constant<NumBytesType, 30>, NonSerializedTag>,
   std::tuple<std::integral_constant<NumBytesType, 31>, NonSerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 34>, NonSerializedTag>,
+  std::tuple<std::integral_constant<NumBytesType, 34>, NonSerializedTag>
+>;
+
+using SerTestTypes = testing::Types<
   std::tuple<std::integral_constant<NumBytesType, 30>, SerializedTag>,
   std::tuple<std::integral_constant<NumBytesType, 31>, SerializedTag>,
   std::tuple<std::integral_constant<NumBytesType, 34>, SerializedTag>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
-  test_large_bytes_basic, TestActiveSendLarge, TestTypes, PrintParam
+  test_large_bytes_serialized, TestActiveSendLarge, NonSerTestTypes,
+  DEFAULT_NAME_GEN
+);
+
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_large_bytes_nonserialized, TestActiveSendLarge, SerTestTypes,
+  DEFAULT_NAME_GEN
 );
 
 }}}} // end namespace vt::tests::unit::large
