@@ -103,7 +103,7 @@ using UniqueIndexBitType      = uint64_t;
 /// Used for hold an identifier for a group
 using GroupType               = uint64_t;
 /// Used for hold the size of a message
-using MsgSizeType             = int32_t;
+using MsgSizeType             = int64_t;
 /// Used for hold a phase for load balancing
 using PhaseType               = uint64_t;
 /// Used for hold a sub-phase for load balancing
