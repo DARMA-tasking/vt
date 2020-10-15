@@ -79,31 +79,38 @@ void ElementStats::stopTime() {
   );
 }
 
+void ElementStats::recvComm(
+  LBCommKey key, double bytes
+) {
+  comm_.resize(cur_phase_ + 1);
+  comm_.at(cur_phase_)[key].receiveMsg(bytes);
+  subphase_comm_.resize(cur_phase_ + 1);
+  subphase_comm_.at(cur_phase_).resize(cur_subphase_ + 1);
+  subphase_comm_.at(cur_phase_).at(cur_subphase_)[key].receiveMsg(bytes);
+}
+
 void ElementStats::recvObjData(
   ElementIDType pto, ElementIDType tto,
   ElementIDType pfrom, ElementIDType tfrom, double bytes, bool bcast
 ) {
-  comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::CollectionTag{}, pfrom, tfrom, pto, tto, bcast);
-  comm_.at(cur_phase_)[key].receiveMsg(bytes);
+  recvComm(key, bytes);
 }
 
 void ElementStats::recvFromNode(
   ElementIDType pto, ElementIDType tto, NodeType from,
   double bytes, bool bcast
 ) {
-  comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, pto, tto, bcast);
-  comm_.at(cur_phase_)[key].receiveMsg(bytes);
+  recvComm(key, bytes);
 }
 
 void ElementStats::recvToNode(
   NodeType to, ElementIDType pfrom, ElementIDType tfrom,
   double bytes, bool bcast
 ) {
-  comm_.resize(cur_phase_ + 1);
   LBCommKey key(LBCommKey::CollectionToNodeTag{}, pfrom, tfrom, to, bcast);
-  comm_.at(cur_phase_)[key].receiveMsg(bytes);
+  recvComm(key, bytes);
 }
 
 void ElementStats::setModelWeight(TimeType const& time) {
@@ -193,6 +200,19 @@ ElementStats::getComm(PhaseType const& phase) {
   );
 
   return phase_comm;
+}
+
+std::vector<CommMapType> const& ElementStats::getSubphaseComm(PhaseType phase) {
+  subphase_comm_.resize(phase + 1);
+  auto const& subphase_comm = subphase_comm_[phase];
+
+  vt_debug_print(
+    lb, node,
+    "ElementStats: getSubphaseComm: comm size={}, phase={}\n",
+    subphase_comm.size(), phase
+  );
+
+  return subphase_comm;
 }
 
 void ElementStats::setSubPhase(SubphaseType subphase) {

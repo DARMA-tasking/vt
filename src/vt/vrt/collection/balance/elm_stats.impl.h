@@ -90,10 +90,11 @@ template <typename ColT>
   auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
   auto const& subphase_loads = stats.subphase_timings_.at(cur_phase);
   auto const& comm = stats.getComm(cur_phase);
+  auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
 
-  theNodeStats()->addNodeStats(col, cur_phase, total_load, subphase_loads, comm);
+  theNodeStats()->addNodeStats(col, cur_phase, total_load, subphase_loads, comm, subphase_comm);
 
   auto const before_ready = theCollection()->numReadyCollections();
   theCollection()->makeCollectionReady(untyped_proxy);

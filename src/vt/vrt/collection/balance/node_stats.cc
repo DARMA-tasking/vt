@@ -117,6 +117,10 @@ std::unordered_map<PhaseType, CommMapType> const* NodeStats::getNodeComm() const
   return &node_comm_;
 }
 
+std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeStats::getNodeSubphaseComm() const {
+  return &node_subphase_comm_;
+}
+
 void NodeStats::clearStats() {
   NodeStats::node_comm_.clear();
   NodeStats::node_data_.clear();
@@ -301,7 +305,8 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
 ElementIDType NodeStats::addNodeStats(
   Migratable* col_elm,
   PhaseType const& phase, TimeType const& time,
-  std::vector<TimeType> const& subphase_time, CommMapType const& comm
+  std::vector<TimeType> const& subphase_time,
+  CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
 ) {
   // A new temp ID gets assigned when a object is migrated into a node
 
@@ -335,6 +340,13 @@ ElementIDType NodeStats::addNodeStats(
   auto &comm_data = node_comm_[phase];
   for (auto&& c : comm) {
     comm_data[c.first] += c.second;
+  }
+
+  auto &subphase_comm_data = node_subphase_comm_[phase];
+  for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
+    for (auto& sp : subphase_comm[i]) {
+      subphase_comm_data[i][sp.first] += sp.second;
+    }
   }
 
   node_temp_to_perm_[temp_id] = perm_id;
