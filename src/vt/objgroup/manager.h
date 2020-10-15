@@ -366,9 +366,9 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   void serialize(Serializer& s) {
     s | cur_obj_id_
       | dispatch_
-      // | objs_
+      | objs_
       | obj_to_proxy_
-      // | pending_
+      | pending_
       | derived_to_bases_;
   }
 

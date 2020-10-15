@@ -110,6 +110,14 @@ struct MyObjB {
   int recv_ = 0;
   int data_ = 0;
   static int next_id;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | id_
+      | recv_
+      | data_
+      | next_id;
+  }
 };
 
 struct VectorPayload {

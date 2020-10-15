@@ -53,6 +53,9 @@ namespace vt { namespace objgroup { namespace holder {
 
 template <typename ObjT>
 struct HolderBasic final : HolderObjBase<ObjT> {
+
+  checkpoint_virtual_serialize_derived_from(HolderObjBase<ObjT>)
+
   explicit HolderBasic(ObjT* in_obj)
     : obj_(in_obj)
   { }
@@ -66,6 +69,16 @@ public:
   template <typename... Args>
   void reset(Args&&... args) {
     vtAssert(false, "HolderBasic is not resetable");
+  }
+
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
+    s | obj_;
   }
 
 private:

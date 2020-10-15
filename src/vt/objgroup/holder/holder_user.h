@@ -53,6 +53,9 @@ namespace vt { namespace objgroup { namespace holder {
 
 template <template <typename> class UserPtr, typename ObjT>
 struct HolderUser final : HolderObjBase<ObjT> {
+
+  checkpoint_virtual_serialize_derived_from(HolderObjBase<ObjT>)
+
   explicit HolderUser(UserPtr<ObjT> in_obj)
     : obj_(in_obj)
   { }
@@ -66,6 +69,11 @@ public:
   template <typename... Args>
   void reset(Args&&... args) {
     obj_ = UserPtr<ObjT>(std::forward<Args>(args)...);
+  }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | obj_;
   }
 
 private:
