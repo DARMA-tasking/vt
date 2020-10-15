@@ -108,7 +108,7 @@ public:
    * \param[in] phase the current phase
    * \param[in] time the time the object took
    * \param[in] comm the comm graph for the object
-  eric *
+   *
    * \return the temporary ID for the object assigned for this phase
    */
   ElementIDType addNodeStats(
