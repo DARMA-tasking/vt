@@ -77,8 +77,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct NodeStats : runtime::component::Component<NodeStats> {
   using MigrateFnType       = std::function<void(NodeType)>;
-  using PhaseType           = uint64_t;
-  using SubphaseType        = uint16_t;
 
   /**
    * \internal \brief System call to construct \c NodeStats
@@ -110,7 +108,7 @@ public:
    * \param[in] phase the current phase
    * \param[in] time the time the object took
    * \param[in] comm the comm graph for the object
-   *
+  eric *
    * \return the temporary ID for the object assigned for this phase
    */
   ElementIDType addNodeStats(
