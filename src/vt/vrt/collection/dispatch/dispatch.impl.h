@@ -56,29 +56,27 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename MsgT>
-void DispatchCollection<ColT,MsgT>::broadcast(
-  VirtualProxyType proxy, void* msg, HandlerType han, bool member
+void DispatchCollection<ColT, MsgT>::broadcast(
+  VirtualProxyType proxy, void* msg, HandlerType han
 ) {
   using IdxT = typename ColT::IndexType;
   auto const msg_typed = reinterpret_cast<MsgT*>(msg);
-  CollectionProxy<ColT,IdxT> typed_proxy{proxy};
-  theCollection()->broadcastMsgWithHan<MsgT,ColT>(
-    typed_proxy,msg_typed,han,member,true
+  CollectionProxy<ColT, IdxT> typed_proxy{proxy};
+  theCollection()->broadcastMsgWithHan<MsgT, ColT>(
+    typed_proxy, msg_typed, han, true
   );
 }
 
 template <typename ColT, typename MsgT>
-void DispatchCollection<ColT,MsgT>::send(
-  VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member
+void DispatchCollection<ColT, MsgT>::send(
+  VirtualProxyType proxy, void* idx, void* msg, HandlerType han
 ) {
   using IdxT = typename ColT::IndexType;
   auto const msg_typed = reinterpret_cast<MsgT*>(msg);
   auto const idx_typed = reinterpret_cast<IdxT*>(idx);
   auto const& idx_typed_ref = *idx_typed;
-  VrtElmProxy<ColT,IdxT> typed_proxy{proxy,idx_typed_ref};
-  theCollection()->sendMsgWithHan<MsgT,ColT>(
-    typed_proxy,msg_typed,han,member
-  );
+  VrtElmProxy<ColT, IdxT> typed_proxy{proxy, idx_typed_ref};
+  theCollection()->sendMsgWithHan<MsgT, ColT>(typed_proxy, msg_typed, han);
 }
 
 template <typename always_void_>

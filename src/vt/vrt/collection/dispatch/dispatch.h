@@ -61,12 +61,10 @@ struct DispatchCollectionBase {
   DispatchCollectionBase() = default;
   virtual ~DispatchCollectionBase() {}
 
-  virtual void broadcast(
-    VirtualProxyType proxy, void* msg, HandlerType han, bool member
-  ) = 0;
-  virtual void send(
-    VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member
-  ) = 0;
+  virtual void
+  broadcast(VirtualProxyType proxy, void* msg, HandlerType han) = 0;
+  virtual void
+  send(VirtualProxyType proxy, void* idx, void* msg, HandlerType han) = 0;
 
   template <typename=void>
   VirtualProxyType getDefaultProxy() const;
@@ -81,11 +79,9 @@ private:
 template <typename ColT, typename MsgT>
 struct DispatchCollection final : DispatchCollectionBase {
 private:
-  void broadcast(
-    VirtualProxyType proxy, void* msg, HandlerType han, bool member
-  ) override;
+  void broadcast(VirtualProxyType proxy, void* msg, HandlerType han) override;
   void send(
-    VirtualProxyType proxy, void* idx, void* msg, HandlerType han, bool member
+    VirtualProxyType proxy, void* idx, void* msg, HandlerType han
   ) override;
 };
 

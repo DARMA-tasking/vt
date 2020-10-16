@@ -58,12 +58,11 @@ void CallbackProxySend<ColT,MsgT>::serialize(SerializerT& s) {
   CallbackBase<SignalBaseType>::serializer(s);
   s | proxy_ | idx_;
   s | handler_;
-  s | member_;
 }
 
 template <typename ColT, typename MsgT>
-void CallbackProxySend<ColT,MsgT>::trigger_(SignalDataType* data) {
-  theCollection()->sendMsgWithHan(proxy_.index(idx_),data,handler_,member_);
+void CallbackProxySend<ColT, MsgT>::trigger_(SignalDataType* data) {
+  theCollection()->sendMsgWithHan(proxy_.index(idx_), data, handler_);
 }
 
 }}} /* end namespace vt::pipe::callback */

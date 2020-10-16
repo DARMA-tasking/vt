@@ -98,7 +98,7 @@ struct CallbackRawBaseSingle {
   CallbackRawBaseSingle(
     RawBcastColDirTagType, PipeType const& in_pipe,
     HandlerType const& in_handler, AutoHandlerType const& in_vrt,
-    bool const& in_member, VirtualProxyType const& in_proxy
+    VirtualProxyType const& in_proxy
   );
   CallbackRawBaseSingle(
     RawSendColDirTagType, PipeType const& in_pipe,
@@ -188,9 +188,9 @@ struct CallbackTyped : CallbackRawBaseSingle {
   CallbackTyped(
     RawBcastColDirTagType, PipeType const& in_pipe,
     HandlerType const& in_handler, AutoHandlerType const& in_vrt,
-    bool const& in_member, VirtualProxyType const& in_proxy
+    VirtualProxyType const& in_proxy
   ) : CallbackRawBaseSingle(
-        RawBcastColDirTag,in_pipe,in_handler,in_vrt,in_member,in_proxy
+        RawBcastColDirTag, in_pipe, in_handler, in_vrt, in_proxy
       )
   { }
   CallbackTyped(

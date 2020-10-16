@@ -540,7 +540,6 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to run
-   * \param[in] member whether it's a member handler (or active function)
    * \param[in] imm_context whether in an immediate context (running a
    * collection element handler vs. directly in the scheduler)--- if in a
    * handler, local delivery must be postponed
@@ -553,9 +552,8 @@ public:
     typename IdxT = typename ColT::IndexType
   >
   messaging::PendingSend sendMsgUntypedHandler(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member,
-    bool imm_context = true
+    VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
+    HandlerType const& handler, bool imm_context = true
   );
 
   /**
@@ -568,12 +566,11 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to run
-   * \param[in] member whether it's a member handler (or active function)
    */
   template <typename MsgT, typename ColT>
   IsNotColMsgType<MsgT> sendMsgWithHan(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member
+    VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
+    HandlerType const& handler
   );
 
   /**
@@ -585,12 +582,11 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to run
-   * \param[in] member whether it's a member handler (or active function)
    */
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> sendMsgWithHan(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member
+    VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
+    HandlerType const& handler
   );
 
   /**
@@ -600,14 +596,13 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to run
-   * \param[in] member whether it's a member handler (or active function)
    *
    * \return the pending send
    */
   template <typename MsgT, typename ColT>
   messaging::PendingSend sendNormalMsg(
-    VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member
+    VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
+    HandlerType const& handler
   );
 
   /**
@@ -744,12 +739,11 @@ public:
    * \param[in] msg the message
    * \param[in] col pointer to collection element
    * \param[in] han the handler to invoke
-   * \param[in] member whether it's a member handler
    * \param[in] from node that sent the message
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsWrapType<ColT,UserMsgT,MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
+  static IsWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
+    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
     NodeType from
   );
 
@@ -760,12 +754,11 @@ public:
    * \param[in] msg the message
    * \param[in] col pointer to collection element
    * \param[in] han the handler to invoke
-   * \param[in] member whether it's a member handler
    * \param[in] from node that sent the message
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsNotWrapType<ColT,UserMsgT,MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
+  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
+    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
     NodeType from
   );
 
@@ -882,15 +875,13 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to invoke
-   * \param[in] member whether it's a member handler
    * \param[in] instrument whether to instrument the broadcast for load
    * balancing (some system calls use this to disable instrumentation)
    */
   template <typename MsgT, typename ColT>
   IsNotColMsgType<MsgT> broadcastMsgWithHan(
-    CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member,
-    bool instrument = true
+    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
+    HandlerType const& handler, bool instrument = true
   );
 
   /**
@@ -899,15 +890,13 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to invoke
-   * \param[in] member whether it's a member handler
    * \param[in] instrument whether to instrument the broadcast for load
    * balancing (some system calls use this to disable instrumentation)
    */
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> broadcastMsgWithHan(
-    CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member,
-    bool instrument = true
+    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
+    HandlerType const& handler, bool instrument = true
   );
 
   /**
@@ -916,7 +905,6 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to invoke
-   * \param[in] member whether it's a member handler
    * \param[in] instrument whether to instrument the broadcast for load
    * balancing (some system calls use this to disable instrumentation)
    *
@@ -924,9 +912,8 @@ public:
    */
   template <typename MsgT, typename ColT>
   messaging::PendingSend broadcastNormalMsg(
-    CollectionProxyWrapType<ColT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member,
-    bool instrument = true
+    CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
+    HandlerType const& handler, bool instrument = true
   );
 
   /**
@@ -935,7 +922,6 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] msg the message
    * \param[in] handler the handler to invoke
-   * \param[in] member whether it's a member handler
    * \param[in] instrument whether to instrument the broadcast for load
    * balancing (some system calls use this to disable instrumentation)
    *
@@ -943,9 +929,8 @@ public:
    */
   template <typename MsgT, typename ColT, typename IdxT>
   messaging::PendingSend broadcastMsgUntypedHandler(
-    CollectionProxyWrapType<ColT,IdxT> const& proxy, MsgT *msg,
-    HandlerType const& handler, bool const member,
-    bool instrument
+    CollectionProxyWrapType<ColT, IdxT> const& proxy, MsgT* msg,
+    HandlerType const& handler, bool instrument
   );
 
   /**
@@ -1233,13 +1218,12 @@ public:
    * \param[in] msg the message
    * \param[in] col the collection element pointer
    * \param[in] han the handler to invoke
-   * \param[in] member whether it's a member handler
    * \param[in] from the node that sent it
    * \param[in] event the associated trace event
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsWrapType<ColT,UserMsgT,MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
+    static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
+      MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event
   );
 
@@ -1250,13 +1234,12 @@ public:
    * \param[in] msg the message
    * \param[in] col the collection element pointer
    * \param[in] han the handler to invoke
-   * \param[in] member whether it's a member handler
    * \param[in] from the node that sent it
    * \param[in] event the associated trace event
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsNotWrapType<ColT,UserMsgT,MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, CollectionBase<ColT,IndexT>* col, HandlerType han, bool member,
+    static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
+      MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event
   );
 

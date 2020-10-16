@@ -104,9 +104,6 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
   NodeType getFromNode() const;
   void setFromNode(NodeType const& node);
 
-  bool getMember() const;
-  void setMember(bool const& member);
-
   bool getWrap() const;
   void setWrap(bool const& wrap);
 
@@ -136,7 +133,6 @@ private:
   HandlerType vt_sub_handler_ = uninitialized_handler;
   EpochType bcast_epoch_ = no_epoch;
   NodeType from_node_ = uninitialized_destination;
-  bool member_ = false;
   bool is_wrap_ = false;
 
   #if vt_check_enabled(lblite)

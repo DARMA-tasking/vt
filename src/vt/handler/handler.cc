@@ -49,12 +49,13 @@ namespace vt {
 
 /*static*/ HandlerType HandlerManager::makeHandler(
   bool is_auto, bool is_functor, HandlerIdentifierType id, bool is_objgroup,
-  HandlerControlType control, bool is_trace
+  HandlerControlType control, bool is_trace, bool is_member
 ) {
   HandlerType new_han = blank_handler;
   HandlerManager::setHandlerAuto(new_han, is_auto);
   HandlerManager::setHandlerObjGroup(new_han, is_objgroup);
   HandlerManager::setHandlerFunctor(new_han, is_functor);
+  HandlerManager::setHandlerMember(new_han, is_member);
   HandlerManager::setHandlerIdentifier(new_han, id);
 
 #if vt_check_enabled(trace_enabled)
@@ -68,8 +69,9 @@ namespace vt {
   vt_debug_print(
     handler, node,
     "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={},"
-    " id={:x}, control={:x}, han={:x}, is_trace={}\n",
-    is_functor, is_auto, is_objgroup, id, control, new_han, is_trace
+    "is_member={} id={:x}, control={:x}, han={:x}, is_trace={}\n",
+    is_functor, is_auto, is_objgroup, is_member, id, control, new_han,
+    is_trace
   );
 
   return new_han;
@@ -123,6 +125,12 @@ namespace vt {
   BitPackerType::boolSetField<HandlerBitsType::Functor>(han, is_functor);
 }
 
+/*static*/ void HandlerManager::setHandlerMember(
+  HandlerType& han, bool is_member
+) {
+  BitPackerType::boolSetField<HandlerBitsType::Member>(han, is_member);
+}
+
 /*static*/ bool HandlerManager::isHandlerAuto(HandlerType han) {
   return BitPackerType::boolGetField<HandlerBitsType::Auto>(han);
 }
@@ -133,6 +141,10 @@ namespace vt {
 
 /*static*/ bool HandlerManager::isHandlerObjGroup(HandlerType han) {
   return BitPackerType::boolGetField<HandlerBitsType::ObjGroup>(han);
+}
+
+/*static*/ bool HandlerManager::isHandlerMember(HandlerType han) {
+  return BitPackerType::boolGetField<HandlerBitsType::Member>(han);
 }
 
 #if vt_check_enabled(trace_enabled)
@@ -148,4 +160,3 @@ namespace vt {
 #endif
 
 } // end namespace vt
-

@@ -91,8 +91,8 @@ struct BcastColDirCB : CallbackProxyBcastDirect {
   BcastColDirCB(
     HandlerType const& in_handler,
     CallbackProxyBcastDirect::AutoHandlerType const& in_vrt_handler,
-    bool const& in_member, VirtualProxyType const& in_proxy
-  ) : CallbackProxyBcastDirect(in_handler, in_vrt_handler, in_member, in_proxy)
+    VirtualProxyType const& in_proxy
+  ) : CallbackProxyBcastDirect(in_handler, in_vrt_handler, in_proxy)
   { }
 };
 

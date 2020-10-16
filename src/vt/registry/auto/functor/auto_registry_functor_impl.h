@@ -62,10 +62,12 @@ inline HandlerType makeAutoHandlerFunctor() {
   using ContainerType = AutoActiveFunctorContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveFunctorType>;
   using FuncType = ActiveFnPtrType;
-  using RunType = RunnableFunctor<
-    AdapterType, ContainerType, RegInfoType, FuncType, msg
-  >;
-  return HandlerManagerType::makeHandler(true, true, RunType::idx);
+  using RunType =
+    RunnableFunctor<AdapterType, ContainerType, RegInfoType, FuncType, msg>;
+
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = true;
+  return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
 }
 
 template <typename RunnableT, typename RegT, typename InfoT, typename FnT>

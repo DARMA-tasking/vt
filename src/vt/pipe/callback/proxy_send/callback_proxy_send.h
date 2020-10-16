@@ -68,17 +68,15 @@ struct CallbackProxySend : CallbackBase<signal::Signal<MsgT>> {
   using MessageType      = MsgT;
 
   CallbackProxySend(
-    HandlerType const& in_handler, IndexedProxyType const& in_proxy,
-    bool const& in_member
+    HandlerType const& in_handler, IndexedProxyType const& in_proxy
   ) : proxy_(in_proxy.getCollectionProxy()),
-      idx_(in_proxy.getElementProxy().getIndex()),
-      handler_(in_handler), member_(in_member)
+      idx_(in_proxy.getElementProxy().getIndex()), handler_(in_handler)
   { }
 
   CallbackProxySend(
     HandlerType const& in_handler, ProxyType const& in_proxy,
-    IndexType const& in_idx, bool const& in_member
-  ) : proxy_(in_proxy), idx_(in_idx), handler_(in_handler), member_(in_member)
+    IndexType const& in_idx
+  ) : proxy_(in_proxy), idx_(in_idx), handler_(in_handler)
   { }
 
   template <typename SerializerT>
@@ -91,7 +89,6 @@ private:
   ProxyType proxy_     = {};
   IndexType idx_       = {};
   HandlerType handler_ = uninitialized_handler;
-  bool member_         = false;
 };
 
 }}} /* end namespace vt::pipe::callback */

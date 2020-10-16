@@ -52,77 +52,67 @@
 namespace vt { namespace auto_registry {
 
 #if vt_check_enabled(trace_enabled)
-trace::TraceEntryIDType handlerTraceID(
-  HandlerType const& handler, RegistryTypeEnum reg_type
-) {
+
+template <typename ContType>
+trace::TraceEntryIDType getTraceID(HandlerType const handler) {
+  auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
+  return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
+}
+
+trace::TraceEntryIDType
+handlerTraceID(HandlerType const handler, RegistryTypeEnum const reg_type) {
   switch (reg_type) {
   case RegistryTypeEnum::RegGeneral: {
-    bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
-    auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
-    if (not is_functor) {
-      using ContType = AutoActiveContainerType;
-      return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
-    } else {
-      using ContType = AutoActiveFunctorContainerType;
-      return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
+    if (HandlerManagerType::isHandlerFunctor(handler)) {
+      return getTraceID<AutoActiveFunctorContainerType>(handler);
     }
-    break;
+
+    return getTraceID<AutoActiveContainerType>(handler);
   }
+
   case RegistryTypeEnum::RegMap: {
-    bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
-    auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
-    if (not is_functor) {
-      using ContType = AutoActiveMapContainerType;
-      return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
-    } else {
-      using ContType = AutoActiveMapFunctorContainerType;
-      return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
+    if (HandlerManagerType::isHandlerFunctor(handler)) {
+      return getTraceID<AutoActiveMapFunctorContainerType>(handler);
     }
-    break;
+
+    return getTraceID<AutoActiveMapContainerType>(handler);
   }
+
   case RegistryTypeEnum::RegVrt: {
-    using ContType = AutoActiveVCContainerType;
-    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
-    break;
+    return getTraceID<AutoActiveVCContainerType>(handler);
   }
+
   case RegistryTypeEnum::RegObjGroup: {
-    using ContType = AutoActiveObjGroupContainerType;
-    auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
-    return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
-    break;
+    return getTraceID<AutoActiveObjGroupContainerType>(handler);
   }
+
   case RegistryTypeEnum::RegVrtCollection: {
-    using ContType = AutoActiveCollectionContainerType;
-    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
-    break;
+    return getTraceID<AutoActiveCollectionContainerType>(handler);
   }
+
   case RegistryTypeEnum::RegVrtCollectionMember: {
-    using ContType = AutoActiveCollectionMemContainerType;
-    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
-    break;
+    return getTraceID<AutoActiveCollectionMemContainerType>(handler);
   }
+
   case RegistryTypeEnum::RegRDMAGet: {
-    using ContType = AutoActiveRDMAGetContainerType;
-    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
-    break;
+    return getTraceID<AutoActiveRDMAGetContainerType>(handler);
   }
+
   case RegistryTypeEnum::RegRDMAPut: {
-    using ContType = AutoActiveRDMAPutContainerType;
-    return getAutoRegistryGen<ContType>().at(handler).theTraceID();
-    break;
+    return getTraceID<AutoActiveRDMAPutContainerType>(handler);
   }
+
   case RegistryTypeEnum::RegSeed: {
-    using ContType = AutoActiveSeedMapContainerType;
-    auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
-    return getAutoRegistryGen<ContType>().at(han_id).theTraceID();
-    break;
+    return getTraceID<AutoActiveSeedMapContainerType>(handler);
   }
-  default:
+
+  default: {
     assert(0 && "Should not be reachable");
     return trace::TraceEntryIDType{};
-    break;
+  }
   }
 }
+
 #endif
 
 }} // end namespace vt::auto_registry

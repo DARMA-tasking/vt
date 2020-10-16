@@ -71,11 +71,12 @@ inline HandlerType makeAutoHandlerFunctorMap() {
   using RunnableT = RunnableFunctor<
     FunctorT, ContainerType, RegInfoType, FuncType, true, Args...
   >;
-  auto const& han = HandlerManagerType::makeHandler(true, true, RunnableT::idx);
-  vt_debug_print(
-    handler, node,
-    "makeAutoHandlerFunctorMap: handler={}\n", han
-  );
+
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = true;
+  auto const han =
+    HandlerManagerType::makeHandler(is_auto, is_functor, RunnableT::idx);
+  vt_debug_print(handler, node, "makeAutoHandlerFunctorMap: handler={}\n", han);
   return han;
 }
 
@@ -110,12 +111,12 @@ inline HandlerType makeAutoHandlerMap() {
   using ContainerType = AutoActiveMapContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveMapType>;
   using FuncType = ActiveMapFnPtrType;
+
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
   auto id = RunnableGen<FunctorType, ContainerType, RegInfoType, FuncType>::idx;
-  auto const& han = HandlerManagerType::makeHandler(true,false,id);
-  vt_debug_print(
-    handler, node,
-    "makeAutoHandlerMap: id={}, han={}\n", id, han
-  );
+  auto const han = HandlerManagerType::makeHandler(is_auto, is_functor, id);
+  vt_debug_print(handler, node, "makeAutoHandlerMap: id={}, han={}\n", id, han);
   return han;
 }
 
@@ -135,13 +136,13 @@ inline HandlerType makeAutoHandlerSeedMap() {
   using ContainerType = AutoActiveSeedMapContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveSeedMapType>;
   using FuncType = ActiveSeedMapFnPtrType;
+
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
   auto id = RunnableGen<FunctorType, ContainerType, RegInfoType, FuncType>::idx;
-  auto const& han = HandlerManagerType::makeHandler(true,false,id);
-  vt_debug_print(
-    handler, node,
-    "makeAutoHandlerMap: id={}, han={}\n", id, han
-  );
-  return id;
+  auto const han = HandlerManagerType::makeHandler(is_auto, is_functor, id);
+  vt_debug_print(handler, node, "makeAutoHandlerMap: id={}, han={}\n", id, han);
+  return han;
 }
 
 // Registration for seed mapping singletons

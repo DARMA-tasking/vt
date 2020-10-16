@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              collection.impl.h
+//                                test_group.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,64 +42,65 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_COLLECTION_IMPL_H
-#define INCLUDED_RUNNABLE_COLLECTION_IMPL_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/runnable/collection.h"
-#include "vt/registry/auto/auto_registry_common.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/registry/auto/collection/auto_registry_collection.h"
-#include "vt/trace/trace_common.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/active.h"
-#include "vt/serialization/sizer.h"
+#include "test_parallel_harness.h"
 
-namespace vt { namespace runnable {
+#include "vt/handler/handler.h"
 
-template <typename MsgT, typename ElementT>
-/*static*/ void RunnableCollection<MsgT, ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from, uint64_t idx1,
-  uint64_t idx2, uint64_t idx3, uint64_t idx4,
-  trace::TraceEventIDType in_trace_event
-) {
-  auto const member = HandlerManager::isHandlerMember(handler);
+namespace vt { namespace tests { namespace unit {
 
-#if vt_check_enabled(trace_enabled)
-  trace::TraceProcessingTag processing_tag;
-  {
-    auto reg_enum = member ?
-      auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-      auto_registry::RegistryTypeEnum::RegVrtCollection;
-    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
-      handler, reg_enum
-    );
-    trace::TraceEventIDType trace_event = in_trace_event;
-    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
-    auto const from_node = from != uninitialized_destination ? from : ctx_node;
+struct TestHandler : TestParallelHarness { };
 
-    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
+TEST_F(TestHandler, test_make_handler_default_params) {
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
+  constexpr HandlerIdentifierType id = 134;
 
-    processing_tag = theTrace()->beginProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      idx1, idx2, idx3, idx4
-    );
-  }
-#endif
+  auto const han = HandlerManager::makeHandler(is_auto, is_functor, id);
 
-  if (member) {
-    auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
-    (elm->*func)(msg);
-  } else {
-    auto const func = auto_registry::getAutoHandlerCollection(handler);
-    func(msg, elm);
-  };
+  EXPECT_EQ(is_auto, HandlerManager::isHandlerAuto(han));
+  EXPECT_EQ(is_functor, HandlerManager::isHandlerFunctor(han));
+  EXPECT_EQ(id, HandlerManager::getHandlerIdentifier(han));
+
+  // Default parameters' values
+  constexpr bool is_objgroup = false;
+  constexpr HandlerControlType control = 0;
+  constexpr bool is_member = false;
+
+  EXPECT_EQ(is_objgroup, HandlerManager::isHandlerObjGroup(han));
+  EXPECT_EQ(control, HandlerManager::getHandlerControl(han));
+  EXPECT_EQ(is_member, HandlerManager::isHandlerMember(han));
 
 #if vt_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
+  constexpr bool is_trace = true;
+  EXPECT_EQ(is_trace, HandlerManager::isHandlerTrace(han));
 #endif
 }
 
-}} /* end namespace vt::runnable */
+TEST_F(TestHandler, TestHandler_test_make_handler_custom_params) {
+  constexpr bool is_auto = false;
+  constexpr bool is_functor = true;
+  constexpr HandlerIdentifierType id = 9746;
+  constexpr bool is_objgroup = true;
+  constexpr HandlerControlType control = 2289;
+  constexpr bool is_trace = false;
+  constexpr bool is_member = true;
 
-#endif /*INCLUDED_RUNNABLE_COLLECTION_IMPL_H*/
+  auto const han = HandlerManager::makeHandler(
+    is_auto, is_functor, id, is_objgroup, control, is_trace, is_member
+  );
+
+  EXPECT_EQ(is_auto, HandlerManager::isHandlerAuto(han));
+  EXPECT_EQ(is_functor, HandlerManager::isHandlerFunctor(han));
+  EXPECT_EQ(id, HandlerManager::getHandlerIdentifier(han));
+  EXPECT_EQ(is_objgroup, HandlerManager::isHandlerObjGroup(han));
+  EXPECT_EQ(control, HandlerManager::getHandlerControl(han));
+  EXPECT_EQ(is_member, HandlerManager::isHandlerMember(han));
+
+#if vt_check_enabled(trace_enabled)
+  EXPECT_EQ(is_trace, HandlerManager::isHandlerTrace(han));
+#endif
+}
+
+}}} // end namespace vt::tests::unit
