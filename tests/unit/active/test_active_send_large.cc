@@ -77,11 +77,28 @@ struct LargeMsg<
 > : TestStaticBytesMsg<CallbackMsg, nbytes> { };
 
 template <typename T>
+void fillMsg(T msg) {
+  auto arr = reinterpret_cast<int64_t*>(&msg->payload[0]);
+  for (std::size_t i = 0; i < msg->bytes / sizeof(int64_t); i++) {
+    arr[i] = i;
+  }
+}
+
+template <typename T>
+void checkMsg(T msg) {
+  auto arr = reinterpret_cast<int64_t*>(&msg->payload[0]);
+  for (std::size_t i = 0; i < msg->bytes / sizeof(int64_t); i++) {
+    EXPECT_EQ(arr[i], i);
+  }
+}
+
+template <typename T>
 struct TestActiveSendLarge : TestParallelHarness {
   using TagType = typename std::tuple_element<1,T>::type;
 
   template <typename MsgT>
   static void myHandler(MsgT* m) {
+    checkMsg(m);
     auto msg = makeMessage<RecvMsg>();
     m->cb_.send(msg.get());
   }
@@ -113,6 +130,7 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
   vt::runInEpochCollective([&]{
     NodeType next_node = (this_node + 1) % num_nodes;
     auto msg = makeMessage<LargeMsgType>();
+    fillMsg(msg);
     msg->cb_ = cb;
     theMsg()->sendMsg<LargeMsgType, ThisType::template myHandler<LargeMsgType>>(
       next_node, msg
