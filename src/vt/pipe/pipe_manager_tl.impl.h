@@ -149,12 +149,9 @@ PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
   newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto cb = CallbackT(callback::cbunion::RawSendColMsgTag,pipe_id);
   auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
-  bool member = false;
   addListenerAny<MsgT>(
     cb.getPipe(),
-    std::make_unique<callback::CallbackProxySend<ColT,MsgT>>(
-      handler,proxy,member
-    )
+    std::make_unique<callback::CallbackProxySend<ColT, MsgT>>(handler, proxy)
   );
   return cb;
 }
@@ -173,12 +170,9 @@ PipeManagerTL::makeCallbackSingleProxySend(typename ColT::ProxyType proxy) {
   auto cb = CallbackT(callback::cbunion::RawSendColMsgTag,pipe_id);
   auto const& handler =
     auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
-  bool member = true;
   addListenerAny<MsgT>(
     cb.getPipe(),
-    std::make_unique<callback::CallbackProxySend<ColT,MsgT>>(
-      handler,proxy,member
-    )
+    std::make_unique<callback::CallbackProxySend<ColT, MsgT>>(handler, proxy)
   );
   return cb;
 }
@@ -253,9 +247,8 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   auto const& pipe_id = makePipeID(persist,send_back);
   auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>();
   auto const& vrt_handler = vrt::collection::makeVrtDispatch<MsgT,ColT>();
-  bool const member = false;
   auto cb = CallbackT(
-    callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
+    callback::cbunion::RawBcastColDirTag, pipe_id, handler, vrt_handler,
     proxy.getProxy()
   );
   return cb;
@@ -273,9 +266,8 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   auto const& handler =
     auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
   auto const& vrt_handler = vrt::collection::makeVrtDispatch<MsgT,ColT>();
-  bool const member = true;
   auto cb = CallbackT(
-    callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
+    callback::cbunion::RawBcastColDirTag, pipe_id, handler, vrt_handler,
     proxy.getProxy()
   );
   return cb;

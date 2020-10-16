@@ -77,9 +77,8 @@ struct CallbackProxyBcastDirect : CallbackBaseTL<CallbackProxyBcastDirect> {
   CallbackProxyBcastDirect() = default;
   CallbackProxyBcastDirect(
     HandlerType const& in_han, AutoHandlerType const& in_vrt,
-    bool const& in_member, VirtualProxyType const& in_proxy
-  ) : vrt_dispatch_han_(in_vrt), handler_(in_han), proxy_(in_proxy),
-      member_(in_member)
+    VirtualProxyType const& in_proxy
+  ) : vrt_dispatch_han_(in_vrt), handler_(in_han), proxy_(in_proxy)
   { }
 
   template <typename SerializerT>
@@ -89,8 +88,7 @@ struct CallbackProxyBcastDirect : CallbackBaseTL<CallbackProxyBcastDirect> {
     return
       other.handler_ == handler_ &&
       other.vrt_dispatch_han_ == vrt_dispatch_han_ &&
-      other.proxy_ == proxy_ &&
-      other.member_ == member_;
+      other.proxy_ == proxy_;
   }
 
 public:
@@ -105,7 +103,6 @@ private:
   AutoHandlerType vrt_dispatch_han_ = uninitialized_handler;
   HandlerType handler_              = uninitialized_handler;
   VirtualProxyType proxy_           = no_vrt_proxy;
-  bool member_                      = false;
 };
 
 }}} /* end namespace vt::pipe::callback */

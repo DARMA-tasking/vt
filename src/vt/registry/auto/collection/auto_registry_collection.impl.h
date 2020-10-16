@@ -63,7 +63,10 @@ inline HandlerType makeAutoHandlerCollection() {
   using ContainerType = AutoActiveCollectionContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionType>;
   using FuncType = ActiveColFnPtrType;
-  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+
+  auto han = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+  HandlerManager::setHandlerMember(han, false);
+  return han;
 }
 
 inline AutoActiveCollectionMemType getAutoHandlerCollectionMem(
@@ -81,7 +84,10 @@ inline HandlerType makeAutoHandlerCollectionMem() {
   using ContainerType = AutoActiveCollectionMemContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionMemType>;
   using FuncType = ActiveColMemberFnPtrType;
-  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+
+  auto han = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+  HandlerManager::setHandlerMember(han, true);
+  return han;
 }
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>

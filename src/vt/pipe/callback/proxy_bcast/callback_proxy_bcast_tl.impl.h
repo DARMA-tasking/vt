@@ -92,7 +92,6 @@ template <typename SerializerT>
 void CallbackProxyBcastDirect::serialize(SerializerT& s) {
   s | handler_;
   s | vrt_dispatch_han_;
-  s | member_;
   s | proxy_;
 }
 
@@ -108,7 +107,7 @@ void CallbackProxyBcastDirect::trigger(MsgT* msg, PipeType const& pipe) {
 
   auto dispatcher = vrt::collection::getDispatcher(vrt_dispatch_han_);
   auto const& proxy = proxy_;
-  dispatcher->broadcast(proxy,msg,handler_,member_);
+  dispatcher->broadcast(proxy, msg, handler_);
 }
 
 }}} /* end namespace vt::pipe::callback */

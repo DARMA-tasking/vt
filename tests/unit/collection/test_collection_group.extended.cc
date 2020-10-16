@@ -85,7 +85,7 @@ struct ColA : Collection<ColA,Index1D> {
     reduce_test = true;
   }
 
-  void memberHanlder(TestDataMsg* msg) {
+  void memberHandler(TestDataMsg* msg) {
     EXPECT_EQ(msg->value_, theContext()->getNode());
     --elem_counter;
     handler_executed = true;
@@ -146,7 +146,7 @@ TEST_F(TestCollectionGroup, test_collection_group_2) {
   // raw msg pointer case
   runBcastTestHelper([proxy, my_node]{
     auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
-    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, &ColA::memberHanlder>(
+    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, &ColA::memberHandler>(
       msg.get()
     );
   });
@@ -156,7 +156,7 @@ TEST_F(TestCollectionGroup, test_collection_group_2) {
   // smart msg pointer case
   runBcastTestHelper([proxy, my_node]{
     auto msg = ::vt::makeMessage<ColA::TestDataMsg>(my_node);
-    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, &ColA::memberHanlder>(msg);
+    proxy.broadcastCollectiveMsg<ColA::TestDataMsg, &ColA::memberHandler>(msg);
   });
 
   EXPECT_EQ(elem_counter, -numElems);
@@ -164,7 +164,7 @@ TEST_F(TestCollectionGroup, test_collection_group_2) {
   // msg constructed on the fly case
   runBcastTestHelper([proxy, my_node] {
     proxy.broadcastCollective<
-      ColA::TestDataMsg, &ColA::memberHanlder, ColA::TestDataMsg>(my_node);
+      ColA::TestDataMsg, &ColA::memberHandler, ColA::TestDataMsg>(my_node);
   });
 
   EXPECT_EQ(elem_counter, -2 * numElems);
