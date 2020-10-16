@@ -1496,8 +1496,10 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] base the message base pointer
    * \param[in] msg_size the size of the message
    * \param[in] send_tag the send tag on the message
+   *
+   * \return the event to test/wait for completion
    */
-  void sendMsgMPI(
+  EventType sendMsgMPI(
     NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
     MsgSizeType const& msg_size, TagType const& send_tag
   );

@@ -299,7 +299,7 @@ void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
   recvDataDirect(nchunks, buf, tag, sender, size, 0, nullptr, fn);
 }
 
-void ActiveMessenger::sendMsgMPI(
+EventType ActiveMessenger::sendMsgMPI(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const& msg_size, TagType const& send_tag
 ) {
@@ -307,10 +307,18 @@ void ActiveMessenger::sendMsgMPI(
 
   char* untyped_msg = reinterpret_cast<char*>(base_typed_msg);
 
+  vt_debug_print(
+    active, node,
+    "sendMsgMPI: dest={}, msg_size={}, send_tag={}\n",
+    dest, msg_size, send_tag
+  );
+
   if (static_cast<std::size_t>(msg_size) < max_per_send) {
     auto const event_id = theEvent()->createMPIEvent(this_node_);
     auto& holder = theEvent()->getEventHolder(event_id);
     auto mpi_event = holder.get_event();
+
+    mpi_event->setManagedMessage(base.to<ShortMessage>());
 
     int small_msg_size = static_cast<int>(msg_size);
     {
@@ -335,6 +343,8 @@ void ActiveMessenger::sendMsgMPI(
         }
       #endif
     }
+
+    return event_id;
   } else {
     vt_debug_print(
       active, node,
@@ -352,6 +362,8 @@ void ActiveMessenger::sendMsgMPI(
 
     auto m = makeMessage<MultiMsg>(info, this_node, msg_size);
     sendMsg<MultiMsg, chunkedMultiMsg>(dest, m);
+
+    return event_id;
   }
 }
 
@@ -381,17 +393,15 @@ EventType ActiveMessenger::sendMsgBytes(
     dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
   );
 
-  {
-    if (is_bcast) {
-      bcastsSentCount.increment(1);
-    }
-    if (is_term) {
-      tdSentCount.increment(1);
-    }
-    amSentCounterGauge.incrementUpdate(msg_size, 1);
-
-    sendMsgMPI(dest, base, msg_size, send_tag);
+  if (is_bcast) {
+    bcastsSentCount.increment(1);
   }
+  if (is_term) {
+    tdSentCount.increment(1);
+  }
+  amSentCounterGauge.incrementUpdate(msg_size, 1);
+
+  EventType const event_id = sendMsgMPI(dest, base, msg_size, send_tag);
 
   if (not is_term) {
     theTerm()->produce(epoch,1,dest);
@@ -402,7 +412,7 @@ EventType ActiveMessenger::sendMsgBytes(
     l->send(dest, msg_size, is_bcast);
   }
 
-  return no_event;
+  return event_id;
 }
 
 #if vt_check_enabled(trace_enabled)
