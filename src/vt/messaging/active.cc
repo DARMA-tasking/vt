@@ -584,7 +584,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
       #if vt_check_enabled(trace_enabled)
         if (theConfig()->vt_trace_mpi) {
           auto tr_end = vt::timing::Timing::getCurrentTime();
-          auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, num_bytes);
+          auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, subsize);
           trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
         }
       #endif
