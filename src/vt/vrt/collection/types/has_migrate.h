@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               lb_migratable.h
+//                               has_migrate.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,17 +42,17 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_LB_MIGRATION_LB_MIGRATABLE_H
-#define INCLUDED_LB_MIGRATION_LB_MIGRATABLE_H
+#if !defined INCLUDED_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
+#define INCLUDED_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
 
 #include "vt/config.h"
 
-namespace vt {
+namespace vt { namespace vrt { namespace collection {
 
 struct HasMigrate {
   virtual void migrate(NodeType const& to_node) = 0;
 };
 
-} /* end namespace vt */
+}}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_LB_MIGRATION_LB_MIGRATABLE_H*/
+#endif /*INCLUDED_VRT_COLLECTION_TYPES_HAS_MIGRATE_H*/
