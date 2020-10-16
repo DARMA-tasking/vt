@@ -100,6 +100,8 @@ template <typename UserMsgT>
 ) {
   auto const handler = sys_msg->handler;
   auto const& recv_tag = sys_msg->data_recv_tag;
+  auto const& nchunks = sys_msg->nchunks;
+  auto const& len = sys_msg->ptr_size;
   auto const epoch = envelopeGetEpoch(sys_msg->env);
 
   vt_debug_print(
@@ -116,8 +118,8 @@ template <typename UserMsgT>
   }
 
   auto node = sys_msg->from_node;
-  theMsg()->recvDataMsg(
-    recv_tag, sys_msg->from_node,
+  theMsg()->recvDataDirect(
+    nchunks, recv_tag, sys_msg->from_node, len,
     [handler,recv_tag,node,epoch,is_valid_epoch]
     (RDMA_GetType ptr, ActionType action){
       // be careful here not to use "sys_msg", it is no longer valid
@@ -360,9 +362,11 @@ template <typename MsgT, typename BaseT>
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();
         auto send_serialized = [=](Active::SendFnType send){
           auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag);
-          EventType event = std::get<0>(ret);
+          EventType event = ret.getEvent();
           theEvent()->attachAction(event, [=]{ std::free(ptr); });
-          sys_msg->data_recv_tag = std::get<1>(ret);
+          sys_msg->data_recv_tag = ret.getTag();
+          sys_msg->nchunks = ret.getNumChunks();
+          sys_msg->ptr_size = ptr_size;
         };
 
         // wrap metadata
