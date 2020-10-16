@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              multitag_holder.h
+//                                 send_info.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,60 +42,62 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_MESSAGING_MULTITAG_HOLDER_H
-#define INCLUDED_VT_MESSAGING_MULTITAG_HOLDER_H
+#if !defined INCLUDED_VT_MESSAGING_SEND_INFO_H
+#define INCLUDED_VT_MESSAGING_SEND_INFO_H
 
-#include <memory>
+#include "vt/config.h"
 
 namespace vt { namespace messaging {
 
-struct InProgressIRecv;
-
 /**
- * \struct MultiTagHolder
+ * \struct SendInfo
  *
- * \internal \brief Holds a irecv holder along with a counter for when all
- * receives fill the buffer from split sends arriving
+ * \brief Returned from a data send to be used to receive the data
  */
-struct MultiTagHolder {
-  using IRecvPtrType = std::unique_ptr<InProgressIRecv>;
+struct SendInfo {
 
   /**
-   * \brief Construct the holder
+   * \internal
+   * \brief Construct a SendInfo
    *
-   * \param[in] in_cnt the number of sends/recvs it was broken into
-   * \param[in] in_irecv the in-progress irecv holder with the buffer
+   * \param[in] in_event the send event (parent event if multiple sends)
+   * \param[in] in_tag the MPI tag it was sent with
+   * \param[in] in_nchunks the number of send chunks for the entire payload
    */
-  MultiTagHolder(int in_cnt, IRecvPtrType in_irecv)
-    : cnt(in_cnt),
-      irecv(std::move(in_irecv))
+  SendInfo(EventType in_event, TagType in_tag, int in_nchunks)
+    : event(in_event),
+      tag(in_tag),
+      nchunks(in_nchunks)
   { }
 
   /**
-   * \brief Indicate that a recv has arrived
+   * \brief Get the send event (either an MPI event or a parent event containing
+   * multiple MPI events)
+   *
+   * \return the send event
    */
-  void decrement() { cnt--; }
+  EventType getEvent() const { return event; }
 
   /**
-   * \brief Check if the counter is zero indicating all that receives have
-   * arrived
+   * \brief The MPI tag that it was sent with
    *
-   * \return whether it is ready
+   * \return the tag
    */
-  bool ready() const { return cnt == 0; }
+  TagType getTag() const { return tag; }
 
   /**
-   * \brief Get the in-progress irecv holder
+   * \brief The number of Isend chunks that make up the entire payload
    *
-   * \return passes ownership out of this container
+   * \return the number of chunks
    */
-  IRecvPtrType getIrecv() { return std::move(irecv); }
+  int getNumChunks() const { return nchunks; }
 
 private:
-  int cnt = 0;                  /**< The number of split sends/recvs */
-  IRecvPtrType irecv = nullptr; /**< The in-progress irecv holder */
+  EventType const event = no_event; /**< The event for the send */
+  TagType const tag = no_tag;       /**< The MPI tag for the send */
+  int const nchunks = 0;            /**< The number of send chunks to receive */
 };
 
 }} /* end namespace vt::messaging */
 
-#endif /*INCLUDED_VT_MESSAGING_MULTITAG_HOLDER_H*/
+#endif /*INCLUDED_VT_MESSAGING_SEND_INFO_H*/
