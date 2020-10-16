@@ -133,7 +133,7 @@ using NonSerTestTypes = testing::Types<
 using SerTestTypes = testing::Types<
   std::tuple<std::integral_constant<NumBytesType, 30>, SerializedTag>,
   std::tuple<std::integral_constant<NumBytesType, 31>, SerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 34>, SerializedTag>
+  std::tuple<std::integral_constant<NumBytesType, 32>, SerializedTag>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
