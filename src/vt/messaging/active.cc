@@ -764,7 +764,7 @@ void ActiveMessenger::recvDataDirect(
         auto tr_end = vt::timing::Timing::getCurrentTime();
         auto tr_note = fmt::format(
           "Irecv(Data): from={}, bytes={}",
-          stat.MPI_SOURCE, num_probe_bytes
+          from, sublen
         );
         trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
       }
