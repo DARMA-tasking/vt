@@ -102,7 +102,7 @@ struct PendingRecv {
   void* user_buf = nullptr;
   RDMA_ContinuationDeleteType cont = nullptr;
   ActionType dealloc_user_buf = nullptr;
-  NodeType recv_node = uninitialized_destination;
+  NodeType sender = uninitialized_destination;
   PriorityType priority = no_priority;
 
   PendingRecv(
@@ -110,7 +110,7 @@ struct PendingRecv {
     ActionType in_dealloc_user_buf, NodeType node,
     PriorityType in_priority
   ) : nchunks(in_nchunks), user_buf(in_user_buf), cont(in_cont),
-      dealloc_user_buf(in_dealloc_user_buf), recv_node(node),
+      dealloc_user_buf(in_dealloc_user_buf), sender(node),
       priority(in_priority)
   { }
 };
@@ -1140,7 +1140,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] nchunks the number of chunks to receive
    * \param[in] priority the priority to receive the data
    * \param[in] tag the MPI tag to receive on
-   * \param[in] recv_node the node from which to receive
+   * \param[in] sender the sender node
    * \param[in] enqueue whether to enqueue the pending receive
    * \param[in] next a continuation to execute when data arrives
    *
@@ -1148,7 +1148,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   bool recvDataMsg(
     int nchunks, PriorityType priority, TagType const& tag,
-    NodeType const& recv_node, bool const& enqueue,
+    NodeType const& sender, bool const& enqueue,
     RDMA_ContinuationDeleteType next = nullptr
   );
 

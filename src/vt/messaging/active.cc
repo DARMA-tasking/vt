@@ -630,7 +630,7 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
   for (; iter != pending_recvs_.end(); ++iter) {
     auto const done = recvDataMsgBuffer(
       iter->second.nchunks, iter->second.user_buf, iter->second.priority,
-      iter->first, iter->second.recv_node, false, iter->second.dealloc_user_buf,
+      iter->first, iter->second.sender, false, iter->second.dealloc_user_buf,
       iter->second.cont
     );
     if (done) {
@@ -849,11 +849,11 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
 
 bool ActiveMessenger::recvDataMsg(
   int nchunks, PriorityType priority, TagType const& tag,
-  NodeType const& recv_node, bool const& enqueue,
+  NodeType const& sender, bool const& enqueue,
   RDMA_ContinuationDeleteType next
 ) {
   return recvDataMsgBuffer(
-    nchunks, nullptr, priority, tag, recv_node, enqueue, nullptr, next
+    nchunks, nullptr, priority, tag, sender, enqueue, nullptr, next
   );
 }
 
