@@ -12,7 +12,6 @@ set(TOP_LEVEL_SUBDIRS
   rdma
   topos
   vrt
-  lb
   serialization
   utils
   registry
@@ -87,12 +86,6 @@ set(
         vrt/collection/balance/lb_invoke
         vrt/collection/balance/model
         vrt/collection/balance/proxy
-    lb/instrumentation
-      lb/instrumentation/centralized
-    lb/balancers
-      lb/balancers/centralized
-        lb/balancers/centralized/impls
-    lb/migration
     serialization
       serialization/messaging serialization/traits serialization/auto_dispatch
       serialization/sizing

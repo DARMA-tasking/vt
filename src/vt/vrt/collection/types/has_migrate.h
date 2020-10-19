@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            lb_default_migrate.cc
+//                               has_migrate.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,60 +42,17 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
+#define INCLUDED_VRT_COLLECTION_TYPES_HAS_MIGRATE_H
+
 #include "vt/config.h"
-#include "vt/lb/lb_types.h"
-#include "vt/lb/lb_types_internal.h"
-#include "vt/lb/migration/migrate.h"
-#include "vt/lb/instrumentation/entity.h"
-#include "vt/lb/balancers/centralized/lb_interface.h"
-#include "vt/lb/balancers/centralized/lb_default_migrate.h"
-#include "vt/context/context.h"
 
-namespace vt { namespace lb { namespace centralized {
+namespace vt { namespace vrt { namespace collection {
 
-/*virtual*/ void CentralMigrate::notifyMigration(
-  NodeType const& from, NodeType const& to, LBEntityType const& entity
-) {
-  auto const& this_node = theContext()->getNode();
-  if (this_node == from) {
-    migrate(to, entity);
-  }
-}
+struct HasMigrate {
+  virtual void migrate(NodeType const& to_node) = 0;
+};
 
-/*virtual*/ void CentralMigrate::notifyMigrationList(
-  MigrateInfoType const& migrate_info
-) {
-  auto const& this_node = theContext()->getNode();
-  for (auto&& elm : migrate_info.migrations_) {
-    if (elm.first == this_node) {
-      for (auto&& migrate_to_list : elm.second) {
-        for (auto&& entity : migrate_to_list.second) {
-          migrate(migrate_to_list.first, entity);
-        }
-      }
-    }
-  }
-}
+}}} /* end namespace vt::vrt::collection */
 
-/*virtual*/ void CentralMigrate::finishedMigrations() {
-  vt_debug_print(
-    lb, node,
-    "CentralMigrate::finishedMigrations: before sync\n"
-  );
-
-  sync();
-
-  vt_debug_print(
-    lb, node,
-    "CentralMigrate::finishedMigrations: after sync\n"
-  );
-}
-
-void CentralMigrate::migrate(
-  NodeType const& to_node, LBEntityType const& entity
-) {
-  return instrumentation::Entity::notifyMigrate(to_node, entity);
-}
-
-}}} /* end namespace vt::lb::centralized */
-
+#endif /*INCLUDED_VRT_COLLECTION_TYPES_HAS_MIGRATE_H*/

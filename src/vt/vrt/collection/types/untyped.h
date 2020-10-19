@@ -47,7 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/base/base.h"
-#include "vt/lb/migration/lb_migratable.h"
+#include "vt/vrt/collection/types/has_migrate.h"
 
 namespace vt { namespace vrt { namespace collection {
 
