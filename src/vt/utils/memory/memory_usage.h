@@ -172,6 +172,8 @@ struct Mimalloc final : Reporter {
  * be selected from depending on the platform and accuracy needed.
  */
 struct MemoryUsage : runtime::component::Component<MemoryUsage> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   /**
    * \internal \brief Construct a memory usage component
    */
@@ -237,8 +239,13 @@ struct MemoryUsage : runtime::component::Component<MemoryUsage> {
    */
   std::size_t convertBytesFromString(std::string const& in);
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | reporters_
       | first_valid_reporter_;
   }

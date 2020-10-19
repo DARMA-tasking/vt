@@ -81,6 +81,8 @@ struct InformRDMAMsg;
  * \brief RDMA Handle Manager for creation of node- or index-level handles
  */
 struct Manager : runtime::component::Component<Manager> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using ProxyType       = vt::objgroup::proxy::Proxy<Manager>;
   using ElemToHandle    = std::unordered_map<int64_t, RDMA_HandleType>;
   using HandleToManager = std::unordered_map<RDMA_HandleType, ObjGroupProxyType>;
@@ -227,8 +229,13 @@ private:
 public:
   static std::unique_ptr<Manager> construct();
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | cur_handle_obj_group_
       | cur_handle_collection_
       | collection_to_manager_

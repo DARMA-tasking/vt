@@ -94,6 +94,7 @@ struct ComponentConstructor<
  */
 template <typename T>
 struct Component : BaseComponent {
+  checkpoint_virtual_serialize_derived_from(BaseComponent)
 
   Component() = default;
 
@@ -159,6 +160,9 @@ struct Component : BaseComponent {
    * \brief Empty default diagnostic dump state
    */
   virtual void dumpState() override { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 };
 
 /**
@@ -170,6 +174,7 @@ struct Component : BaseComponent {
  */
 template <typename T>
 struct PollableComponent : Component<T> {
+  checkpoint_virtual_serialize_derived_from(Component<T>)
 
   /**
    * \brief Whether the component requires the scheduler to poll

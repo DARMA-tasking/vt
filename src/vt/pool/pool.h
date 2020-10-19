@@ -67,6 +67,8 @@ namespace vt { namespace pool {
  * buckets with free-list to quickly allocate and de-allocate.
  */
 struct Pool : runtime::component::Component<Pool> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using SizeType = size_t;
   using HeaderType = Header;
   using HeaderManagerType = HeaderManager;
@@ -162,8 +164,13 @@ struct Pool : runtime::component::Component<Pool> {
    */
   void finalize() override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | small_msg
       | medium_msg
       | s_msg_worker_

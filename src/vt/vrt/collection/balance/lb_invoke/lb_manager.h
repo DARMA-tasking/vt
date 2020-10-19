@@ -69,6 +69,9 @@ class LoadModel;
  * and invocation.
  */
 struct LBManager : runtime::component::Component<LBManager> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
+  using ListenerFnType = std::function<void(PhaseType)>;
   using LBProxyType    = objgroup::proxy::Proxy<lb::BaseLB>;
 
   /**
@@ -164,8 +167,13 @@ public:
    */
   std::shared_ptr<LoadModel> getLoadModel() { return model_; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | num_invocations_
       | num_release_
       | cached_phase_

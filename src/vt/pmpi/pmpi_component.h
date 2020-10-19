@@ -64,6 +64,7 @@ namespace vt { namespace pmpi {
  * and infrastructure lifetimes such as registrations of events.
  */
 struct PMPIComponent : runtime::component::Component<PMPIComponent> {
+  checkpoint_virtual_serialize_derived_from(Component)
 
   PMPIComponent() = default;
 

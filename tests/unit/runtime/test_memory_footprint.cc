@@ -77,7 +77,7 @@ namespace vt { namespace tests { namespace unit {
 using TestMemoryFootprinting = TestParallelHarness;
 
 TEST_F(TestMemoryFootprinting, test_live_components) {
-  // vt::rt->printMemoryFootprint();
+  vt::rt->printMemoryFootprint();
 }
 
 template<typename T>

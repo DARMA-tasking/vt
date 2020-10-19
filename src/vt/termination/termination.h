@@ -97,6 +97,8 @@ struct TerminationDetector :
   runtime::component::Component<TerminationDetector>,
   TermAction, collective::tree::Tree, DijkstraScholtenTerm, TermInterface
 {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   template <typename T>
   using EpochContainerType = std::unordered_map<EpochType, T>;
   using TermStateType      = TermState;
@@ -603,8 +605,13 @@ public:
   std::unordered_set<EpochType> const& getEpochReadySet() { return epoch_ready_; }
   std::unordered_set<EpochType> const& getEpochWaitSet() { return epoch_wait_status_; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | any_epoch_state_
       | hang_
       | epoch_state_

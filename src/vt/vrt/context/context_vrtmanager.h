@@ -85,8 +85,10 @@ struct PendingRequest {
 };
 
 struct VirtualContextManager
-  : runtime::component::Component<VirtualContextManager>
- {
+  : runtime::component::Component<VirtualContextManager> {
+
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using VirtualPtrType = std::unique_ptr<VirtualContext>;
   using PendingRequestType = PendingRequest;
   using VirtualInfoType = VirtualInfo;
@@ -122,8 +124,13 @@ struct VirtualContextManager
     VirtualProxyType const& toProxy, MsgT *const msg
   );
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | holder_
       | remote_holder_
       | cur_seed_

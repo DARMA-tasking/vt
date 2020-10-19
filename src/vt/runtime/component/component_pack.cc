@@ -177,7 +177,14 @@ void ComponentPack::detectCyclesImpl(std::list<int>& stack, int dep) {
 }
 
 void ComponentPack::printMemoryFootprint() const {
-  // use ComponentPack::foreach
+  for (auto&& c : live_components_) {
+    auto footprint = checkpoint::getMemoryFootprint(*c);
+    fmt::print(
+      "Memory footprint for component {}:\t{}\n",
+      typeid(*c).name(),
+      footprint
+    );
+  }
 }
 
 }}} /* end namespace vt::runtime::component */

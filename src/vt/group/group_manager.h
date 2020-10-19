@@ -84,6 +84,8 @@ namespace vt { namespace group {
  * can dynamically create groups in a fully distributed manner.
  */
 struct GroupManager : runtime::component::Component<GroupManager> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using RegionType = region::Region;
   using RegionPtrType = std::unique_ptr<RegionType>;
   using GroupInfoType = Info;
@@ -371,8 +373,13 @@ public:
    */
   RemoteOperationIDType getNextOpID();
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | next_group_id_
       | next_collective_group_id_
       | local_collective_group_info_

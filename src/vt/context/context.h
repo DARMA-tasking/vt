@@ -69,6 +69,8 @@ namespace vt {  namespace ctx {
  * functionality analogous to \c MPI_Comm_size and \c MPI_Comm_rank.
  */
 struct Context : runtime::component::Component<Context> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   /**
    * \internal
    * \brief Construct the context.
@@ -143,8 +145,13 @@ struct Context : runtime::component::Component<Context> {
 
   std::string name() override { return "Context"; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | thisNode_
       | numNodes_
       | numWorkers_;

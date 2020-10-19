@@ -76,6 +76,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * \c * vt::vrt::collection::balance::LBManager
  */
 struct NodeStats : runtime::component::Component<NodeStats> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using MigrateFnType       = std::function<void(NodeType)>;
 
   /**
@@ -243,8 +245,13 @@ public:
   void initialize() override;
   void finalize() override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | proxy_
       | node_data_
       | node_subphase_data_

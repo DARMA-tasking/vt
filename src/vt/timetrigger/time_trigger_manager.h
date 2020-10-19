@@ -67,6 +67,8 @@ namespace vt { namespace timetrigger {
 struct TimeTriggerManager
   : runtime::component::PollableComponent<TimeTriggerManager>
 {
+  checkpoint_virtual_serialize_derived_from(PollableComponent)
+
   /// A queue prioritized by the earliest next trigger to execute
   using QueueType = std::priority_queue<Trigger, std::vector<Trigger>>;
 
@@ -106,8 +108,13 @@ struct TimeTriggerManager
    */
   void triggerReady(TimeType cur_time);
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | queue_
       | next_trigger_id_
       | removed_;

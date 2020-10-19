@@ -91,6 +91,8 @@ namespace vt { namespace rdma {
  * RDMA.
  */
 struct RDMAManager : runtime::component::Component<RDMAManager> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using RDMA_BitsType = Bits;
   using RDMA_StateType = State;
   using RDMA_TypeType = Type;
@@ -901,8 +903,13 @@ public:
   static void remoteChannel(ChannelMessage* msg);
   static void getInfoChannel(GetInfoChannel* msg);
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | cur_rdma_handler_
       | cur_ident_
       | cur_collective_ident_

@@ -113,6 +113,8 @@ struct SequencerVirtual
   : runtime::component::Component<SequencerVirtual>,
     TaggedSequencerVrt<SeqType, SeqMigratableTriggerType>
 {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   std::string name() override { return "VirtualSequencer"; }
 
   template <typename Serializer>

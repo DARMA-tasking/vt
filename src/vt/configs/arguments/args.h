@@ -67,6 +67,7 @@ namespace vt { namespace arguments {
  * through the command-line arguments.
  */
 struct ArgConfig : runtime::component::Component<ArgConfig> {
+  checkpoint_virtual_serialize_derived_from(Component)
 
   /// Parse the arguments into ArgConfig.
   /// Re-assigns argc/argv to remove consumed arguments.
@@ -80,8 +81,13 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
 
   std::string name() override { return "ArgConfig"; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | config_
       | parsed_;
   }

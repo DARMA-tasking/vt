@@ -94,6 +94,8 @@ struct PipeManager
   : runtime::component::Component<PipeManager>,
     PipeManagerTL, PipeManagerTyped
 {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   template <typename FunctorT>
   using GetMsgType = typename util::FunctorExtractor<FunctorT>::MessageType;
   using Void = V;

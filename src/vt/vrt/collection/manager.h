@@ -105,6 +105,8 @@ namespace vt { namespace vrt { namespace collection {
 struct CollectionManager
   : runtime::component::Component<CollectionManager>
 {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   template <typename ColT, typename IndexT>
   using CollectionType = typename Holder<ColT, IndexT>::Collection;
   template <typename ColT, typename IndexT = typename ColT::IndexType>
@@ -1754,8 +1756,13 @@ public:
     typename ColT::IndexType range, std::string const& file_base
   );
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | buffers_
       | proxy_state_
       | cleanup_fns_

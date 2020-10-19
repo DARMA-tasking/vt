@@ -96,6 +96,8 @@ enum SchedulerEvent {
  * components for incoming work.
  */
 struct Scheduler : runtime::component::Component<Scheduler> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using SchedulerEventType   = SchedulerEvent;
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
@@ -264,8 +266,13 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | work_queue_
       | has_executed_
       | is_idle

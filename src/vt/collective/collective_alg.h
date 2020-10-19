@@ -79,6 +79,7 @@ struct CollectiveAlg :
     virtual barrier::Barrier,
     virtual scatter::Scatter
 {
+  checkpoint_virtual_serialize_derived_from(Component)
 
 /*----------------------------------------------------------------------------
  *

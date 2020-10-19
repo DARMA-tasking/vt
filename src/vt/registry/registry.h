@@ -62,6 +62,8 @@ namespace vt { namespace registry {
  * \brief A VT component that manages registered active handlers.
  */
 struct Registry : runtime::component::Component<Registry> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using HandlerManagerType = HandlerManager;
   using HandlerBitsType = eHandlerBits;
   using TaggerHandlerType = std::tuple<TagType, HandlerType>;
@@ -144,8 +146,13 @@ struct Registry : runtime::component::Component<Registry> {
    */
   ActiveClosureFnType getHandlerNoTag(HandlerType const han);
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | registered_
       | tagged_registered_
       | cur_ident_collective_
