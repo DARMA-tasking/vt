@@ -181,24 +181,18 @@ struct InProgressDataIRecv : InProgressBase {
   bool test(int& num_mpi_tests) {
     int flag = 0;
     MPI_Status stat;
-    for (std::size_t i = 0; i < reqs.size();) {
+    for ( ; cur < reqs.size(); cur++) {
       VT_ALLOW_MPI_CALLS; // MPI_Test
 
-      MPI_Test(&reqs[i], &flag, &stat);
+      MPI_Test(&reqs[cur], &flag, &stat);
       num_mpi_tests++;
 
       if (flag == 0) {
-        ++i;
-        continue;
+        return false;
       }
-
-      if (i < reqs.size() - 1) {
-        reqs[i] = std::move(reqs.back());
-      }
-      reqs.pop_back();
     }
 
-    return reqs.size() == 0;
+    return true;
   }
 
 public:
@@ -208,6 +202,7 @@ public:
   PriorityType priority = no_priority;
 
 private:
+  std::size_t cur = 0;
   std::vector<MPI_Request> reqs;
 };
 
