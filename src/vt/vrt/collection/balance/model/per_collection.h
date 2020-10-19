@@ -85,8 +85,13 @@ struct PerCollection : public ComposedModel
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | models_;
   }
 

@@ -74,8 +74,13 @@ struct CommOverhead : public ComposedModel {
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | proc_comm_
       | per_msg_weight_
       | per_byte_weight_;
