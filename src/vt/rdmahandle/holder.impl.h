@@ -86,7 +86,7 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
     );
     {
       auto this_node = theContext()->getNode();
-      LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_);
+      LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_, false);
       auto mpi_type = TypeMPI<uint64_t>::getType();
       MPI_Put(&count_, 1, mpi_type, this_node, 0, 1, mpi_type, control_window_);
       vt_debug_print_verbose(
@@ -101,11 +101,11 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
 
 template <typename T, HandleEnum E>
 std::size_t Holder<T,E>::getCount(vt::NodeType node, Lock l) {
-  VT_ALLOW_MPI_CALLS;
   uint64_t result = 0;
   auto mpi_type = TypeMPI<uint64_t>::getType();
   {
     LockMPI _scope_lock(l, node, control_window_);
+    VT_ALLOW_MPI_CALLS;
     MPI_Get(&result, 1, mpi_type, node, 0, 1, mpi_type, control_window_);
   }
   vt_debug_print_verbose(

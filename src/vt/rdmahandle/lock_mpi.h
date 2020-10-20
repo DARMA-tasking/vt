@@ -57,15 +57,22 @@ enum struct Lock : int8_t {
 };
 
 struct LockMPI {
-  LockMPI(Lock in_l, vt::NodeType in_rank, MPI_Win in_window)
-    : l_(in_l),
+  LockMPI(
+    Lock in_l, vt::NodeType in_rank, MPI_Win in_window,
+    bool get_mpi_access = true
+  ) : l_(in_l),
       rank_(in_rank),
-      window_(in_window)
+      window_(in_window),
+      get_mpi_access_(get_mpi_access)
   {
     if (l_ != Lock::None) {
       auto lock_type = l_ == Lock::Exclusive ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
-      VT_ALLOW_MPI_CALLS;
-      MPI_Win_lock(lock_type, rank_, 0, window_);
+      if (get_mpi_access_) {
+        VT_ALLOW_MPI_CALLS;
+        MPI_Win_lock(lock_type, rank_, 0, window_);
+      } else {
+        MPI_Win_lock(lock_type, rank_, 0, window_);
+      }
     }
   }
   LockMPI(LockMPI const&) = delete;
@@ -73,8 +80,12 @@ struct LockMPI {
 
   ~LockMPI() {
     if (l_ != Lock::None) {
-      VT_ALLOW_MPI_CALLS;
-      MPI_Win_unlock(rank_, window_);
+      if (get_mpi_access_) {
+        VT_ALLOW_MPI_CALLS;
+        MPI_Win_unlock(rank_, window_);
+      } else {
+        MPI_Win_unlock(rank_, window_);
+      }
     }
   }
 
@@ -82,6 +93,7 @@ private:
   Lock l_ = Lock::None;
   vt::NodeType rank_ = vt::uninitialized_destination;
   MPI_Win window_;
+  bool get_mpi_access_ = true;
 };
 
 }} /* end namespace vt::rdma */
