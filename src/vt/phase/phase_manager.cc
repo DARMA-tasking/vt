@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               phase_manager.h
+//                               phase_manager.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,51 +42,16 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_PHASE_PHASE_MANAGER_H
-#define INCLUDED_VT_PHASE_PHASE_MANAGER_H
-
-#include "vt/configs/types/types_type.h"
-#include "vt/runtime/component/component_pack.h"
+#include "vt/phase/phase_manager.h"
+#include "vt/objgroup/headers.h"
 
 namespace vt { namespace phase {
 
-/**
- * \struct PhaseManager
- *
- * \brief General management of phases in applications
- */
-struct PhaseManager : runtime::component::Component<PhaseManager> {
-
-  PhaseManager() = default;
-
-  std::string name() override { return "PhaseManager"; }
-
-  /**
-   * \internal
-   * \brief Construct a new \c PhaseManager as an objgroup
-   *
-   * \return unique pointer to the new manager
-   */
-  static std::unique_ptr<PhaseManager> construct();
-
-  /**
-   * \brief Get the current phase
-   *
-   * \return the current phase
-   */
-  PhaseType getCurrentPhase() const { return cur_phase_; }
-
-private:
-  PhaseType cur_phase_ = 0;                      /**< Current phase */
-  ObjGroupProxyType proxy_ = no_obj_group;       /**< Objgroup proxy  */
-};
+/*static*/ std::unique_ptr<PhaseManager> PhaseManager::construct() {
+  auto ptr = std::make_unique<PhaseManager>();
+  auto proxy = theObjGroup()->makeCollective<PhaseManager>(ptr.get());
+  proxy.get()->proxy_ = proxy.getProxy();;
+  return ptr;
+}
 
 }} /* end namespace vt::phase */
-
-namespace vt {
-
-extern phase::PhaseManager* thePhase();
-
-}  /* end namespace vt */
-
-#endif /*INCLUDED_VT_PHASE_PHASE_MANAGER_H*/

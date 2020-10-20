@@ -71,6 +71,7 @@
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/timetrigger/time_trigger_manager.h"
+#include "vt/phase/phase_manager.h"
 
 #include "vt/configs/arguments/app_config.h"
 #include "vt/configs/arguments/args.h"
