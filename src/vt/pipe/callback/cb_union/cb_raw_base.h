@@ -131,6 +131,9 @@ struct CallbackRawBaseSingle {
   template <typename MsgT>
   void send(MsgT* msg);
 
+  template <typename MsgT>
+  void sendMsg(messaging::MsgPtrThief<MsgT> msg);
+
   void send();
 
   template <typename SerializerT>
@@ -232,10 +235,15 @@ struct CallbackTyped : CallbackRawBaseSingle {
     cb_   = std::move(other.cb_);
   }
 
+
   template <typename MsgU>
   IsNotVoidType<MsgU> send(MsgU* m) {
     static_assert(std::is_same<MsgT,MsgU>::value, "Required exact type match");
     CallbackRawBaseSingle::send<MsgU>(m);
+  }
+
+  void sendMsg(messaging::MsgPtrThief<MsgT> msg) {
+    CallbackRawBaseSingle::sendMsg<MsgT>(msg);
   }
 
   template <typename T=void, typename=IsVoidType<MsgT,T>>

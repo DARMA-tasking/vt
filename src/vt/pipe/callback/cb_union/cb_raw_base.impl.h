@@ -98,6 +98,11 @@ void CallbackRawBaseSingle::send(MsgT* msg) {
   }
 }
 
+template <typename MsgT>
+void CallbackRawBaseSingle::sendMsg(messaging::MsgPtrThief<MsgT> msg) {
+  send(msg.msg_.get());
+}
+
 template <typename SerializerT>
 void CallbackRawBaseSingle::serialize(SerializerT& s) {
   s | cb_ | pipe_;
