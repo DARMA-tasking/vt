@@ -127,7 +127,6 @@ my @no_guard_patterns = qw(
     MPI_Comm_rank
     MPI_Comm_size
     MPI_Get_.*(?<!accumulate)
-    MPI_Win_(lock|unlock)
 );
 
 sub should_guard_call {

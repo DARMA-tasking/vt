@@ -46,6 +46,7 @@
 #define INCLUDED_VT_RDMAHANDLE_LOCK_MPI_H
 
 #include "vt/config.h"
+#include "vt/runtime/mpi_access.h"
 
 namespace vt { namespace rdma {
 
@@ -63,6 +64,7 @@ struct LockMPI {
   {
     if (l_ != Lock::None) {
       auto lock_type = l_ == Lock::Exclusive ? MPI_LOCK_EXCLUSIVE : MPI_LOCK_SHARED;
+      VT_ALLOW_MPI_CALLS;
       MPI_Win_lock(lock_type, rank_, 0, window_);
     }
   }
@@ -71,6 +73,7 @@ struct LockMPI {
 
   ~LockMPI() {
     if (l_ != Lock::None) {
+      VT_ALLOW_MPI_CALLS;
       MPI_Win_unlock(rank_, window_);
     }
   }
