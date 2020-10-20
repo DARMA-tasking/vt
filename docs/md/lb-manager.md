@@ -57,7 +57,7 @@ To print LB specification during startup, use `--vt_lb_show_spec` command line f
 | GreedyLB       | Centralized             | Gather to central node apply min/max heap      | `vt::vrt::collection::lb::GreedyLB` |
 | GossipLB       | Distributed             | Gossip-based protocol for fully distributed LB | `vt::vrt::collection::lb::GossipLB` |
 | HierarchicalLB | Hierarchical            | Build tree to move objects nodes               | `vt::vrt::collection::lb::HierarchicalLB` |
-| ZotltanLB      | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB           | `vt::vrt::collection::lb::ZoltanLB` |
+| ZoltanLB       | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB           | `vt::vrt::collection::lb::ZoltanLB` |
 | StatsMapLB     | User-specified          | Read file to determine mapping                 | `vt::vrt::collection::lb::StatsMapLB` |
 
 \section load-models Object Load Models
