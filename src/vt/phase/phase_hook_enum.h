@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               phase_manager.cc
+//                              phase_hook_enum.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,34 +42,23 @@
 //@HEADER
 */
 
-#include "vt/phase/phase_manager.h"
-#include "vt/objgroup/headers.h"
+#if !defined INCLUDED_VT_PHASE_PHASE_HOOK_ENUM_H
+#define INCLUDED_VT_PHASE_PHASE_HOOK_ENUM_H
 
 namespace vt { namespace phase {
 
-/*static*/ std::unique_ptr<PhaseManager> PhaseManager::construct() {
-  auto ptr = std::make_unique<PhaseManager>();
-  auto proxy = theObjGroup()->makeCollective<PhaseManager>(ptr.get());
-  proxy.get()->proxy_ = proxy.getProxy();;
-  return ptr;
-}
-
-PhaseHookID PhaseManager::registerHook(PhaseHook type, ActionType trigger) {
-  auto const type_bits = static_cast<HookIDType>(type);
-  auto const hook_id = next_hook_id_++;
-  hooks_[type_bits][hook_id] = trigger;
-  return PhaseHookID{type, hook_id};
-}
-
-void PhaseManager::unregisterHook(PhaseHookID hook) {
-  auto const type = static_cast<HookIDType>(hook.getType());
-  auto const id = hook.getID();
-  auto iter = hooks_[type].find(id);
-  if (iter != hooks_[type].end()) {
-    hooks_[type].erase(iter);
-  } else {
-    vtAssert(false, "Could not find registered hook ID to erase");
-  }
-}
+/**
+ * \enum PhaseHook
+ *
+ * \brief Different times in phase execution one can hook triggered actions into
+ * the \c PhaseManager
+ */
+enum struct PhaseHook : int8_t {
+  Start,                        /**< Before a phase starts */
+  End,                          /**< After a phase ends  */
+  EndPostMigration              /**< After a phase ends after all migrations */
+};
 
 }} /* end namespace vt::phase */
+
+#endif /*INCLUDED_VT_PHASE_PHASE_HOOK_ENUM_H*/

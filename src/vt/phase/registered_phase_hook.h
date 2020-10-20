@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               phase_manager.cc
+//                           registered_phase_hook.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,34 +42,58 @@
 //@HEADER
 */
 
-#include "vt/phase/phase_manager.h"
-#include "vt/objgroup/headers.h"
+#if !defined INCLUDED_VT_PHASE_REGISTERED_PHASE_HOOK_H
+#define INCLUDED_VT_PHASE_REGISTERED_PHASE_HOOK_H
+
+#include "vt/phase/phase_hook_enum.h"
 
 namespace vt { namespace phase {
 
-/*static*/ std::unique_ptr<PhaseManager> PhaseManager::construct() {
-  auto ptr = std::make_unique<PhaseManager>();
-  auto proxy = theObjGroup()->makeCollective<PhaseManager>(ptr.get());
-  proxy.get()->proxy_ = proxy.getProxy();;
-  return ptr;
-}
+// forward-decl for friendship
+struct PhaseManager;
 
-PhaseHookID PhaseManager::registerHook(PhaseHook type, ActionType trigger) {
-  auto const type_bits = static_cast<HookIDType>(type);
-  auto const hook_id = next_hook_id_++;
-  hooks_[type_bits][hook_id] = trigger;
-  return PhaseHookID{type, hook_id};
-}
+/**
+ * \struct PhaseHookID
+ *
+ * \brief A registered phase hook used to identify it and unregister it.
+ */
+struct PhaseHookID {
 
-void PhaseManager::unregisterHook(PhaseHookID hook) {
-  auto const type = static_cast<HookIDType>(hook.getType());
-  auto const id = hook.getID();
-  auto iter = hooks_[type].find(id);
-  if (iter != hooks_[type].end()) {
-    hooks_[type].erase(iter);
-  } else {
-    vtAssert(false, "Could not find registered hook ID to erase");
-  }
-}
+private:
+  /**
+   * \internal
+   * \brief Used by the system to create a new phase hook ID
+   *
+   * \param[in] in_type the type of hook
+   * \param[in] in_id the registered ID
+   */
+  PhaseHookID(PhaseHook in_type, std::size_t in_id)
+    : type_(in_type),
+      id_(in_id)
+  { }
+
+  friend struct PhaseManager;
+
+public:
+  /**
+   * \brief Get the type of hook
+   *
+   * \return the type of hook
+   */
+  PhaseHook getType() const { return type_; }
+
+  /**
+   * \brief Get the ID of the registered hook
+   *
+   * \return the registered hook ID
+   */
+  std::size_t getID() const { return id_; }
+
+private:
+  PhaseHook type_;
+  std::size_t id_ = 0;
+};
 
 }} /* end namespace vt::phase */
+
+#endif /*INCLUDED_VT_PHASE_REGISTERED_PHASE_HOOK_H*/
