@@ -144,14 +144,14 @@ REGISTER_TYPED_TEST_SUITE_P(TestActiveSendLarge, test_large_bytes_msg);
 
 using NonSerTestTypes = testing::Types<
   std::tuple<std::integral_constant<NumBytesType, 30>, NonSerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 31>, NonSerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 32>, NonSerializedTag>
+  std::tuple<std::integral_constant<NumBytesType, 31>, NonSerializedTag>
+  // std::tuple<std::integral_constant<NumBytesType, 32>, NonSerializedTag>
 >;
 
 using SerTestTypes = testing::Types<
   std::tuple<std::integral_constant<NumBytesType, 30>, SerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 31>, SerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 32>, SerializedTag>
+  std::tuple<std::integral_constant<NumBytesType, 31>, SerializedTag>
+  // std::tuple<std::integral_constant<NumBytesType, 32>, SerializedTag>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
