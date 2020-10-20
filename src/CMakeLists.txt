@@ -49,6 +49,7 @@ set(
       termination/interval
       termination/graph
     messaging/envelope messaging/message
+    phase
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
     rdmahandle

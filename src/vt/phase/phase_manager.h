@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           runtime_component_fwd.h
+//                               phase_manager.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,90 +42,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H
-#define INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H
+#if !defined INCLUDED_VT_PHASE_PHASE_MANAGER_H
+#define INCLUDED_VT_PHASE_PHASE_MANAGER_H
 
-#include "vt/config.h"
-#include "vt/termination/term_common.h"
-#include "vt/sequence/sequencer_fwd.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/runtime/component/component_pack.h"
+
+namespace vt { namespace phase {
+
+/**
+ * \struct PhaseManager
+ *
+ * \brief General management of phases in applications
+ */
+struct PhaseManager : runtime::component::Component<PhaseManager> {
+
+  PhaseManager() = default;
+
+  std::string name() override { return "PhaseManager"; }
+
+  /**
+   * \brief Get the current phase
+   *
+   * \return the current phase
+   */
+  PhaseType getCurrentPhase() const { return cur_phase_; }
+
+private:
+  PhaseType cur_phase_ = 0;     /**< Current phase on this node */
+};
+
+}} /* end namespace vt::phase */
 
 namespace vt {
 
-namespace arguments {
-struct ArgConfig;
-}
-namespace registry {
-struct Registry;
-}
-namespace messaging {
-struct ActiveMessenger;
-}
-namespace ctx {
-struct Context;
-}
-namespace event {
-struct AsyncEvent;
-}
-namespace collective {
-struct CollectiveAlg;
-}
-namespace pool {
-struct Pool;
-}
-namespace rdma {
-struct RDMAManager;
-struct Manager;
-}
-namespace param {
-struct Param;
-}
-namespace sched {
-struct Scheduler;
-}
-namespace location {
-struct LocationManager;
-}
-namespace vrt {
-struct VirtualContextManager;
-}
-namespace vrt { namespace collection {
-struct CollectionManager;
-}}
-namespace vrt { namespace collection { namespace balance {
-struct NodeStats;
-struct StatsRestartReader;
-struct LBManager;
-}}}
-namespace group {
-struct GroupManager;
-}
-namespace pipe {
-struct PipeManager;
-}
-namespace objgroup {
-struct ObjGroupManager;
-}
-namespace util { namespace memory {
-struct MemoryUsage;
-}}
-namespace timetrigger {
-struct TimeTriggerManager;
-}
-namespace phase {
-struct PhaseManager;
-}
+extern phase::PhaseManager* thePhase();
 
-#if vt_check_enabled(trace_enabled)
-namespace trace {
-struct Trace;
-}
-#endif
-#if vt_check_enabled(mpi_access_guards)
-namespace pmpi {
-struct PMPIComponent;
-}
-#endif
+}  /* end namespace vt */
 
-} /* end namespace vt */
-
-#endif /*INCLUDED_VT_RUNTIME_RUNTIME_COMPONENT_FWD_H*/
+#endif /*INCLUDED_VT_PHASE_PHASE_MANAGER_H*/
