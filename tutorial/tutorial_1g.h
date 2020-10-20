@@ -150,7 +150,7 @@ static void getCallbackHandler(MsgWithCallback* msg) {
   // Create a msg to trigger to callback
   auto data_msg = ::vt::makeMessage<DataMsg>();
   // Send the callback with the message
-  msg->cb.send(data_msg.get());
+  msg->cb.sendMsg(data_msg);
 }
 /// [Tutorial1G]
 

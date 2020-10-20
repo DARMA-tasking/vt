@@ -165,7 +165,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     checkExpectedStep(3);
     // fmt::print("op4: idx={}, iter={}\n", idx, iter);
     auto m = vt::makeMessage<OpIdxMsg>(idx);
-    msg->cb.send(m.get());
+    msg->cb.sendMsg(m);
   }
   void op4Impl(OpMsg* msg) {
     checkIncExpectedStep(3);

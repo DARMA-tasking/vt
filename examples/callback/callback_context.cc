@@ -90,7 +90,7 @@ static void handler(CallbackMsg* msg) {
   auto data_msg = vt::makeMessage<DataMsg>();
   data_msg->vec_ = std::vector<int>{18,45,28,-1,344};
   fmt::print("handler: vec.size={}\n", data_msg->vec_.size());
-  cb.send(data_msg.get());
+  cb.sendMsg(data_msg);
 }
 
 // Some instance of the context

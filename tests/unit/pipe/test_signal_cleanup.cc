@@ -69,7 +69,7 @@ using TestSignalCleanup = TestParallelHarness;
 
 void bounce(CallbackMsg* msg) {
   auto mm = makeMessage<DataMsg>();
-  msg->cb_.send(mm.get());
+  msg->cb_.sendMsg(mm);
 }
 
 TEST_F(TestSignalCleanup, test_signal_cleanup_3) {

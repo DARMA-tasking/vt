@@ -82,7 +82,7 @@ void hello_world(HelloMsg* msg) {
   static int val = 1;
   fmt::print("{}: Sending callback\n", vt::theContext()->getNode());
   auto to_send = vt::makeMessage<TestMsg>(292 + val++, "test string");
-  msg->cb_.send(to_send.get());
+  msg->cb_.sendMsg(to_send);
 }
 
 void printOutput(TestMsg* msg, std::string type) {
