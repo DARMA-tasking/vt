@@ -63,6 +63,11 @@ bool CallbackRawBaseSingle::operator==(CallbackTyped<MsgT> const& other) const {
   return equal(other);
 }
 
+template <typename MsgT, typename... Args>
+void CallbackRawBaseSingle::send(Args... args) {
+  sendMsg<MsgT>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
 template <typename MsgT>
 void CallbackRawBaseSingle::send(MsgT* msg) {
   switch (cb_.active_) {
