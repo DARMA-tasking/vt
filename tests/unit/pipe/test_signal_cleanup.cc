@@ -68,8 +68,7 @@ struct CallbackMsg : vt::Message {
 using TestSignalCleanup = TestParallelHarness;
 
 void bounce(CallbackMsg* msg) {
-  auto mm = makeMessage<DataMsg>();
-  msg->cb_.sendMsg(mm);
+  msg->cb_.send<DataMsg>();
 }
 
 TEST_F(TestSignalCleanup, test_signal_cleanup_3) {

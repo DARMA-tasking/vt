@@ -80,8 +80,7 @@ struct CallbackDataMsg : vt::Message {
 
 struct TestCallbackSendCollection : TestParallelHarness {
   static void testHandler(CallbackDataMsg* msg) {
-    auto nmsg = makeMessage<DataMsg>(8,9,10);
-    msg->cb_.sendMsg(nmsg);
+    msg->cb_.send<DataMsg>(8,9,10);
   }
   static void testHandlerEmpty(CallbackMsg* msg) {
     msg->cb_.send();
@@ -143,13 +142,11 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_1) {
         if (i % 2 == 0) {
           auto cb =
             theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
-          auto nmsg = makeMessage<DataMsg>(8, 9, 10);
-          cb.sendMsg(nmsg);
+          cb.send<DataMsg>(8, 9, 10);
         } else {
           auto cb =
             theCB()->makeSend<TestCol, DataMsg, &TestCol::cb2>(proxy(i));
-          auto nmsg = makeMessage<DataMsg>(8, 9, 10);
-          cb.sendMsg(nmsg);
+          cb.send<DataMsg>(8, 9, 10);
         }
       }
     }
@@ -220,12 +217,10 @@ TEST_F(TestCallbackSendCollection, test_callback_send_collection_3) {
         if (i % 2 == 0) {
           auto cb =
             theCB()->makeSend<TestCol, DataMsg, &TestCol::cb1>(proxy(i));
-          auto nmsg = makeMessage<DataMsg>(8, 9, 10);
-          cb.sendMsg(nmsg);
+          cb.send<DataMsg>(8, 9, 10);
         } else {
           auto cb = theCB()->makeSend<TestCol, DataMsg, cb3>(proxy(i));
-          auto nmsg = makeMessage<DataMsg>(8, 9, 10);
-          cb.sendMsg(nmsg);
+          cb.send<DataMsg>(8, 9, 10);
         }
       }
     }
