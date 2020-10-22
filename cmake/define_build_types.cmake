@@ -53,6 +53,7 @@ set(
    CatEnum::lb           | \
    CatEnum::vrt_coll     | \
    CatEnum::group        | \
+   CatEnum::phase        | \
    CatEnum::broadcast      \
    "
 )

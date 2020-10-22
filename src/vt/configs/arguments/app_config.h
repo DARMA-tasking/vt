@@ -195,6 +195,7 @@ struct AppConfig {
   bool vt_debug_group        = false;
   bool vt_debug_broadcast    = false;
   bool vt_debug_objgroup     = false;
+  bool vt_debug_phase        = false;
 
   bool vt_debug_print_flush = false;
 

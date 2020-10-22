@@ -113,6 +113,11 @@ void PhaseManager::nextPhaseCollective() {
   );
   in_next_phase_collective_ = true;
 
+  vt_debug_print(
+    phase, node,
+    "PhaseManager::nextPhaseCollective: cur_phase_={}\n", cur_phase_
+  );
+
   // Convert bits to typed proxy
   auto proxy = objgroup::proxy::Proxy<PhaseManager>(proxy_);
 
@@ -124,10 +129,23 @@ void PhaseManager::nextPhaseCollective() {
   theSched()->runSchedulerWhile([this]{ return not reduce_next_phase_done_; });
   reduce_next_phase_done_ = false;
 
+  vt_debug_print(
+    phase, node,
+    "PhaseManager::nextPhaseCollective: cur_phase_={}, reduce done, running "
+    "hooks\n", cur_phase_
+  );
+
   runHooks(PhaseHook::End);
   runHooks(PhaseHook::EndPostMigration);
 
   cur_phase_++;
+
+  vt_debug_print(
+    phase, node,
+    "PhaseManager::nextPhaseCollective: starting next phase: cur_phase_={}\n"
+    "hooks\n", cur_phase_
+  );
+
   runHooks(PhaseHook::Start);
 
   in_next_phase_collective_ = false;

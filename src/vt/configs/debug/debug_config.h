@@ -80,7 +80,8 @@ enum CatEnum : uint64_t {
   group        = 1ull<<27,
   broadcast    = 1ull<<28,
   objgroup     = 1ull<<29,
-  gossiplb     = 1ull<<30
+  gossiplb     = 1ull<<30,
+  phase        = 1ull<<31,
 };
 
 enum CtxEnum : uint64_t {
@@ -129,6 +130,7 @@ vt_option_category_pretty_print(lb,           "lb")
 vt_option_category_pretty_print(location,     "location")
 vt_option_category_pretty_print(objgroup,     "objgroup")
 vt_option_category_pretty_print(param,        "parameterization")
+vt_option_category_pretty_print(phase,        "phase")
 vt_option_category_pretty_print(pipe,         "pipe")
 vt_option_category_pretty_print(pool,         "pool")
 vt_option_category_pretty_print(reduce,       "reduce")
