@@ -94,7 +94,9 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
    * type of hook
    *
    * \note These must be registered across all nodes as they will be run in a
-   * collective epoch. This is for synchronized phase actions.
+   * collective epoch. This is for synchronized phase actions. The order in
+   * which hooks are collectively registered dictate the order they are
+   * executed.
    *
    * \param[in] type the type of trigger to register
    * \param[in] trigger the action to trigger
