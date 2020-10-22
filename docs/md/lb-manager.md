@@ -3,10 +3,10 @@
 
 The LB manager component `vt::vrt::collection::balance::LBManager`, accessed via
 `vt::theLBManager()` manages and coordinates instances of load balancers. It
-potentially with start load balancing after a "phase" is completed; refer to
+will potentially start load balancing after a "phase" is completed; refer to
 \ref phase for details about how to delineate phases in an application. The LB
-manager reads command-line arguments or an LB specification file to determine which
-load balancer to run at a given phase.
+manager reads command-line arguments or an LB specification file to determine
+which load balancer to run at a given phase.
 
 To enable load balancing, the cmake flag \code{.cmake} -Dvt_lb_enabled=1
 \endcode should be passed during building. This also enables automatic
