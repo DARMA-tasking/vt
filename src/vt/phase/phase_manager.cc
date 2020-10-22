@@ -98,6 +98,11 @@ void PhaseManager::unregisterHook(PhaseHookID hook) {
   }
 }
 
+void PhaseManager::startup() {
+  // This is the last chance to fire any starting hooks for the very first phase
+  runHooks(PhaseHook::Start);
+}
+
 struct NextMsg : collective::ReduceNoneMsg {};
 
 void PhaseManager::nextPhaseCollective() {

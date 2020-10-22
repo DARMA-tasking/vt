@@ -72,6 +72,8 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
 
   std::string name() override { return "PhaseManager"; }
 
+  void startup() override;
+
   /**
    * \internal
    * \brief Construct a new \c PhaseManager as an objgroup
