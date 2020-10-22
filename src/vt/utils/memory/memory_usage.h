@@ -125,6 +125,8 @@ struct MemoryUsage : runtime::component::Component<MemoryUsage> {
    */
   MemoryUsage();
 
+  void initialize() override;
+
   std::string name() override { return "MemoryUsage"; }
 
   /**
