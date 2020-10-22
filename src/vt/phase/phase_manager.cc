@@ -74,7 +74,7 @@ PhaseManager::registerHookRooted(PhaseHook type, ActionType trigger) {
     in_next_phase_collective_, "Must not be in next phase to register"
   );
 
-  bool const is_collective = true;
+  bool const is_collective = false;
   auto const type_bits = static_cast<HookIDType>(type);
   auto const hook_id = next_rooted_hook_id_++;
   rooted_hooks_[type_bits][hook_id] = trigger;
