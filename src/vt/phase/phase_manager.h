@@ -165,7 +165,7 @@ private:
    * \internal
    * \brief Run all the hooks registered here of a certain variety
    *
-   * \param[in] type type of hook to run designated by the enum \c PhsaeHook
+   * \param[in] type type of hook to run designated by the enum \c PhaseHook
    */
   void runHooks(PhaseHook type);
 
