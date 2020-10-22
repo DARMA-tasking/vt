@@ -50,8 +50,6 @@ static int32_t num_iter = 8;
 struct IterCol : vt::Collection<IterCol, vt::Index1D> {
   IterCol() = default;
 
-  using EmptyMsg = vt::CollectionMessage<IterCol>;
-
   struct IterMsg : vt::CollectionMessage<IterCol> {
     IterMsg() = default;
     explicit IterMsg(int64_t const in_work_amt, int64_t const in_iter)
@@ -63,14 +61,6 @@ struct IterCol : vt::Collection<IterCol, vt::Index1D> {
   };
 
   void iterWork(IterMsg* msg);
-
-  void runLB(EmptyMsg* msg) {
-    auto const idx = getIndex();
-    auto proxy = getCollectionProxy();
-    proxy[idx].LB<EmptyMsg,&IterCol::doneLB>();
-  }
-
-  void doneLB(EmptyMsg* msg) { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -135,8 +125,7 @@ int main(int argc, char** argv) {
     auto cur_time = vt::timing::Timing::getCurrentTime();
 
     vt::runInEpochCollective([=]{
-        if (this_node == 0)
-          proxy.broadcast<IterCol::IterMsg,&IterCol::iterWork>(10, i);
+      proxy.broadcastCollective<IterCol::IterMsg,&IterCol::iterWork>(10, i);
     });
 
     auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
@@ -144,11 +133,7 @@ int main(int argc, char** argv) {
       fmt::print("iteration: iter={},time={}\n", i, total_time);
     }
 
-    vt::runInEpochCollective([=]{
-        if (this_node == 0)
-          proxy.broadcast<IterCol::EmptyMsg,&IterCol::runLB>();
-    });
-
+    vt::thePhase()->nextPhaseCollective();
   }
 
   vt::finalize();
