@@ -146,9 +146,17 @@ public:
    */
   bool isDeallocated(bool is_user_tag, TagType scope_bits) const;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    //
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
+    s | next_system_scope_
+      | user_scope_
+      | system_scope_
+      | postponed_collectives_;
   }
 
 private:
