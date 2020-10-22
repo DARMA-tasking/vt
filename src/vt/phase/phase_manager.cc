@@ -44,6 +44,7 @@
 
 #include "vt/phase/phase_manager.h"
 #include "vt/objgroup/headers.h"
+#include "vt/pipe/pipe_manager.h"
 
 namespace vt { namespace phase {
 
@@ -70,6 +71,33 @@ void PhaseManager::unregisterHook(PhaseHookID hook) {
   } else {
     vtAssert(false, "Could not find registered hook ID to erase");
   }
+}
+
+struct NextMsg : collective::ReduceNoneMsg {};
+
+void PhaseManager::nextPhaseCollective() {
+  vtAbortIf(
+    in_next_phase_collective_,
+    "A call to nextPhaseCollective has already been invoked."
+    " It must return before it is invoked again"
+  );
+  in_next_phase_collective_ = true;
+
+  // Convert bits to typed proxy
+  auto proxy = objgroup::proxy::Proxy<PhaseManager>(proxy_);
+
+  // Start with a reduction to sure all nodes are ready for this
+  auto cb = theCB()->makeBcast<PhaseManager, NextMsg, &PhaseManager::nextPhaseReduce>(proxy);
+  auto msg = makeMessage<NextMsg>();
+  proxy.reduce(msg.get(), cb);
+
+  theSched()->runSchedulerWhile([this]{ return not reduce_next_phase_done_; });
+
+  in_next_phase_collective_ = false;
+}
+
+void PhaseManager::nextPhaseReduce(NextMsg* msg) {
+  reduce_next_phase_done_ = true;
 }
 
 }} /* end namespace vt::phase */

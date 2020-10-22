@@ -52,6 +52,9 @@
 
 namespace vt { namespace phase {
 
+// fwd-decl for reduce messasge
+struct NextMsg;
+
 /**
  * \struct PhaseManager
  *
@@ -98,11 +101,31 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
    */
   void unregisterHook(PhaseHookID hook);
 
+  /**
+   * \brief Start the next phase collectively.
+   *
+   * \note Performs a reduction to coordinate across nodes and then triggers
+   * post-phase triggerable actions. This function does not return until the any
+   * post-phase actions, including migrations as a result, are terminated.
+   */
+  void nextPhaseCollective();
+
+private:
+  /**
+   * \internal
+   * \brief Reduce handler to kick off the next phase
+   *
+   * \param[in] msg the (empty) next phase message
+   */
+  void nextPhaseReduce(NextMsg* msg);
+
 private:
   PhaseType cur_phase_ = 0;                   /**< Current phase */
   ObjGroupProxyType proxy_ = no_obj_group;    /**< Objgroup proxy  */
   HookIDMapType hooks_;                       /**< Map of regisstered hooks  */
   std::size_t next_hook_id_ = 1;              /**< Next ID for hook registration */
+  bool in_next_phase_collective_ = false;     /**< Whether blocked in next phase */
+  bool reduce_next_phase_done_ = false;       /**< Whether reduce is complete */
 };
 
 }} /* end namespace vt::phase */
