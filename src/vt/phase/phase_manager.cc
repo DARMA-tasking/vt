@@ -142,8 +142,8 @@ void PhaseManager::nextPhaseCollective() {
 
   vt_debug_print(
     phase, node,
-    "PhaseManager::nextPhaseCollective: starting next phase: cur_phase_={}\n"
-    "hooks\n", cur_phase_
+    "PhaseManager::nextPhaseCollective: starting next phase: cur_phase_={}\n",
+    cur_phase_
   );
 
   runHooks(PhaseHook::Start);
