@@ -312,6 +312,8 @@ struct MultiMsg;
  *  - \ref sendpayload
  */
 struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> {
+  checkpoint_virtual_serialize_derived_from(PollableComponent)
+
   using BufferedMsgType      = BufferedActiveMsg;
   using MessageType          = ShortMessage;
   using CountType            = int32_t;
@@ -1676,8 +1678,13 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     send_listen_.clear();
   }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | current_handler_context_
       | current_node_context_
       | current_epoch_context_

@@ -84,6 +84,8 @@ enum class EventState : int8_t {
  * Component to track events in the system to trigger actions or other events
  */
 struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
+  checkpoint_virtual_serialize_derived_from(PollableComponent)
+
   using EventRecordTypeType = eEventRecord;
   using EventManagerType = EventIDManager;
   using EventStateType = EventState;
@@ -187,8 +189,13 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
 
   std::string name() override { return "AsyncEvent"; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | cur_event_
       | event_container_
       | polling_event_container_;
