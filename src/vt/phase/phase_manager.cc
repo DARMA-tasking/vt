@@ -119,6 +119,12 @@ void PhaseManager::nextPhaseCollective() {
   theSched()->runSchedulerWhile([this]{ return not reduce_next_phase_done_; });
   reduce_next_phase_done_ = false;
 
+  runHooks(PhaseHook::End);
+  runHooks(PhaseHook::EndPostMigration);
+
+  cur_phase_++;
+  runHooks(PhaseHook::Start);
+
   in_next_phase_collective_ = false;
 }
 
