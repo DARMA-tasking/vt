@@ -52,38 +52,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-template <typename ColT, typename BaseMsgT>
-struct PhaseMsgBase : BaseMsgT {
-  using ProxyType = typename ColT::CollectionProxyType;
-  PhaseMsgBase() = default;
-
-  PhaseMsgBase(
-    PhaseType const in_cur_phase, ProxyType const in_proxy,
-    bool in_do_sync, bool in_manual
-  ) : proxy_(in_proxy), cur_phase_(in_cur_phase), do_sync_(in_do_sync),
-      manual_(in_manual)
-  { }
-
-  ProxyType getProxy() const { return proxy_; }
-  PhaseType getPhase() const { return cur_phase_; }
-  bool doSync() const { return do_sync_; }
-  bool manual() const { return manual_; }
-
-private:
-  ProxyType proxy_ = {};
-  PhaseType cur_phase_ = fst_lb_phase;
-  bool do_sync_ = true;
-  bool manual_ = false;
-};
-
-template <typename ColT>
-using PhaseMsg = PhaseMsgBase<ColT,CollectionMessage<ColT>>;
-
-template <typename ColT>
-using PhaseReduceMsg = PhaseMsgBase<
-  ColT,collective::ReduceTMsg<collective::NoneType>
->;
-
 template <typename ColT>
 struct CollectStatsMsg : CollectionMessage<ColT> {
   CollectStatsMsg(PhaseType in_phase)

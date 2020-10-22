@@ -255,8 +255,6 @@ void LBManager::finishedLB(PhaseType phase) {
 
   theNodeStats()->outputStatsForPhase(phase);
 
-  auto msg = makeMessage<CollectionPhaseMsg>();
-
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
     triggerListeners(phase);
