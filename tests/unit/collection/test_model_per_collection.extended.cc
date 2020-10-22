@@ -136,17 +136,12 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
 
   // Do some work.
   runInEpochCollective([&]{
-    auto this_node = vt::theContext()->getNode();
-    if (this_node == 0) {
-      proxy1.broadcast<MyMsg<TestCol1>, colHandler<TestCol1>>();
-      proxy2.broadcast<MyMsg<TestCol2>, colHandler<TestCol2>>();
-    }
+    proxy1.broadcastCollective<MyMsg<TestCol1>, colHandler<TestCol1>>();
+    proxy2.broadcastCollective<MyMsg<TestCol2>, colHandler<TestCol2>>();
   });
 
   // Go to the next phase.
-  runInEpochCollective([&]{
-    vt::theCollection()->startPhaseCollective(nullptr);
-  });
+  vt::thePhase()->nextPhaseCollective();
 
   // LB control flow means that there will be no recorded phase for
   // this to even look up objects in, causing failure

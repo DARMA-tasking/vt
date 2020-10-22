@@ -101,8 +101,6 @@ struct IterMsg : CollectionMessage<LBTest> {
   int32_t iter_ = 0;
 };
 using ColProxyType = CollectionIndexProxy<LBTest,Index1D>;
-static void startIter(int32_t const iter, ColProxyType proxy);
-static TimeType cur_time = 0;
 static double weight = 1.0f;
 static int32_t num_iter = 8;
 
@@ -139,7 +137,7 @@ TEST_F(TestLB, test_lb_1) {
     auto cur_time = vt::timing::Timing::getCurrentTime();
 
     vt::runInEpochCollective([=]{
-      proxy.broadcastCollective<IterMsg,&IterCol::iterWork>(10, i);
+      proxy.broadcastCollective<IterMsg,&LBTest::iterWork>(i);
     });
 
     auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
