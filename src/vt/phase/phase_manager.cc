@@ -180,4 +180,8 @@ void PhaseManager::runHooks(PhaseHook type) {
   }
 }
 
+void PhaseManager::runHooksManual(PhaseHook type) {
+  runHooks(type);
+}
+
 }} /* end namespace vt::phase */

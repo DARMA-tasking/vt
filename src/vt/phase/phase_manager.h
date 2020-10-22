@@ -169,6 +169,15 @@ private:
    */
   void runHooks(PhaseHook type);
 
+public:
+  /**
+   * \brief Run hooks manually
+   *
+   * \warning This is only intended to be used for testing and non-standard
+   * use cases where they need to be run.
+   */
+  void runHooksManual(PhaseHook type);
+
 private:
   PhaseType cur_phase_ = 0;                 /**< Current phase */
   ObjGroupProxyType proxy_ = no_obj_group;  /**< Objgroup proxy  */
