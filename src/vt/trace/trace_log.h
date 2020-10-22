@@ -191,8 +191,7 @@ struct Log final {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | sys
-      | user;
+    s.countBytes(*this);
   }
 
   private:

@@ -73,9 +73,7 @@ union uEventPayload {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | event_list;
-
-    s.countBytes(mpi_req);
+    s.countBytes(*this);
   }
 };
 
