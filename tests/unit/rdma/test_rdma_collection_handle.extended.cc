@@ -133,8 +133,8 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
   void afterMigratePost(TestMsg*) {
     if (not triggered_lb) {
       triggered_lb = true;
-      //fmt::print("{}: triggering listeners\n", theContext()->getNode());
-      // theLBManager()->triggerListeners(0);
+      //fmt::print("{}: run post migration hooks\n", theContext()->getNode());
+      vt::thePhase()->runHooksManual(vt::phase::PhaseHook::EndPostMigration);
     }
     auto proxy = this->getCollectionProxy();
     auto cb = theCB()->makeBcast<
