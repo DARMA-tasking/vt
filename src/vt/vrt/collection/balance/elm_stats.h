@@ -102,7 +102,7 @@ struct ElementStats {
 
 public:
   template <typename ColT>
-  static void syncNextPhase(PhaseMsg<ColT>* msg, ColT* col);
+  static void syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col);
 
   friend struct collection::Migratable;
 

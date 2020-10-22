@@ -185,114 +185,71 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
       "LBManager: finished migrations\n"
     );
     theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
-    this->finishedRunningLB(phase);
+    this->finishedLB(phase);
   });
 }
 
-void LBManager::collectiveImpl(
-  PhaseType phase, LBType lb, bool manual, std::size_t num_calls
-) {
+void LBManager::selectStartLB(PhaseType phase) {
+  LBType lb = decideLBToRun(phase, true);
+  startLB(phase, lb);
+}
+
+void LBManager::startLB(PhaseType phase, LBType lb) {
   vt_debug_print(
     lb, node,
-    "collectiveImpl: phase={}, manual={}, num_invocations_={}, num_calls={}, "
-    "num_release={}\n",
-    phase, manual, num_invocations_, num_calls, num_release_
+    "LBManager::startLB: phase={}\n", phase
   );
 
-  num_invocations_++;
+  auto const& this_node = theContext()->getNode();
 
-  if (num_invocations_ == num_calls) {
-    auto const& this_node = theContext()->getNode();
+  if (this_node == 0 and not theConfig()->vt_lb_quiet) {
+    vt_debug_print(
+      lb, node,
+      "LBManager::startLB: phase={}, balancer={}, name={}\n",
+      phase,
+      static_cast<typename std::underlying_type<LBType>::type>(lb),
+      lb_names_[lb]
+    );
+  }
 
-    if (this_node == 0 and not theConfig()->vt_lb_quiet) {
-      vt_debug_print(
-        lb, node,
-        "LBManager::collectiveImpl: phase={}, balancer={}, name={}\n",
-        phase,
-        static_cast<typename std::underlying_type<LBType>::type>(lb),
-        lb_names_[lb]
-      );
-    }
+  if (lb == LBType::NoLB) {
+    // perform cleanup actions and then return out
+    theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
+    finishedLB(phase);
+    return;
+  }
 
-    switch (lb) {
-    case LBType::HierarchicalLB: lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(); break;
-    case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
-    case LBType::RotateLB:       lb_instances_["chosen"] = makeLB<lb::RotateLB>();       break;
-    case LBType::GossipLB:       lb_instances_["chosen"] = makeLB<lb::GossipLB>();       break;
-    case LBType::StatsMapLB:     lb_instances_["chosen"] = makeLB<lb::StatsMapLB>();     break;
-    case LBType::RandomLB:       lb_instances_["chosen"] = makeLB<lb::RandomLB>();       break;
+  switch (lb) {
+  case LBType::HierarchicalLB: lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(); break;
+  case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
+  case LBType::RotateLB:       lb_instances_["chosen"] = makeLB<lb::RotateLB>();       break;
+  case LBType::GossipLB:       lb_instances_["chosen"] = makeLB<lb::GossipLB>();       break;
+  case LBType::StatsMapLB:     lb_instances_["chosen"] = makeLB<lb::StatsMapLB>();     break;
+  case LBType::RandomLB:       lb_instances_["chosen"] = makeLB<lb::RandomLB>();       break;
 #   if vt_check_enabled(zoltan)
-    case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
+  case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
 #   endif
-    case LBType::NoLB:
-      vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
-      break;
-    default:
-      vtAssert(false, "A valid LB must be passed to collectiveImpl");
-      break;
-    }
-
-    LBProxyType base_proxy = lb_instances_["chosen"];
-
-    runLB(base_proxy, phase);
+  case LBType::NoLB:
+    vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
+    break;
+  default:
+    vtAssert(false, "A valid LB must be passed to collectiveImpl");
+    break;
   }
+
+  LBProxyType base_proxy = lb_instances_["chosen"];
+  runLB(base_proxy, phase);
 }
 
-void LBManager::waitLBCollective() {
-  vt_debug_print(
-    lb, node,
-    "waitLBCollective (begin)\n"
-  );
-
-  //
-  // The invocation should only happen collectively across the whole all nodes.
-  //
-  theTerm()->produce();
-  theSched()->runSchedulerWhile([this]{ return synced_in_lb_; });
-  synced_in_lb_ = true;
-  theTerm()->consume();
-
-  vt_debug_print(
-    lb, node,
-    "waitLBCollective (end)\n"
-  );
-}
-
-void LBManager::finishedRunningLB(PhaseType phase) {
-  vt_debug_print(
-    lb, node,
-    "finishedRunningLB\n"
-  );
-  releaseImpl(phase);
-}
-
-void LBManager::releaseImpl(PhaseType phase, std::size_t num_calls) {
-  vt_debug_print(
-    lb, node,
-    "releaseImpl: phase={}, num_invocations_={}, num_calls={}, num_release={}\n",
-    phase, num_invocations_, num_calls, num_release_
-  );
-
-  vtAssert(
-    num_calls != 0 or
-    num_invocations_ > 0, "Must be automatically invoked to releaseImpl"
-  );
-  num_release_++;
-  if (num_release_ == num_calls or num_release_ == num_invocations_) {
-    releaseNow(phase);
-  }
-}
-
-void LBManager::releaseNow(PhaseType phase) {
-  vt_debug_print(lb, node, "releaseNow\n");
+void LBManager::finishedLB(PhaseType phase) {
+  vt_debug_print(lb, node, "finishedLB\n");
 
   auto this_node = theContext()->getNode();
 
   if (this_node == 0) {
     vt_print(
       lb,
-      "LBManager::releaseNow: finished LB, phase={}, invocations={}\n",
-      phase, num_invocations_
+      "LBManager::finishedLB, phase={}\n", phase
     );
   }
 
@@ -304,42 +261,8 @@ void LBManager::releaseNow(PhaseType phase) {
   if (destroy_lb_ != nullptr) {
     triggerListeners(phase);
     destroy_lb_();
-    printMemoryUsage(phase);
     destroy_lb_ = nullptr;
   }
-  releaseLBPhase(msg.get());
-  synced_in_lb_ = false;
-  num_invocations_ = num_release_ = 0;
-}
-
-void LBManager::sysLB(InvokeMsg* msg) {
-  vt_debug_print(lb, node, "sysLB\n");
-  printMemoryUsage(msg->phase_);
-  flushTraceNextPhase();
-  setTraceEnabledNextPhase(msg->phase_);
-  return collectiveImpl(msg->phase_, msg->lb_, msg->manual_, msg->num_collections_);
-}
-
-void LBManager::sysReleaseLB(InvokeMsg* msg) {
-  vt_debug_print(lb, node, "sysReleaseLB\n");
-  printMemoryUsage(msg->phase_);
-  flushTraceNextPhase();
-  setTraceEnabledNextPhase(msg->phase_);
-  return releaseImpl(msg->phase_, msg->num_collections_);
-}
-
-void LBManager::setTraceEnabledNextPhase(PhaseType phase) {
-  // Set if tracing is enabled for this next phase. Do this immediately before
-  // LB runs so LB is always instrumented as the beginning of the next phase
-#if vt_check_enabled(trace_enabled)
-  theTrace()->setTraceEnabledCurrentPhase(phase + 1);
-# endif
-}
-
-void LBManager::flushTraceNextPhase() {
-#if vt_check_enabled(trace_enabled)
-  theTrace()->flushTracesFile(false);
-# endif
 }
 
 int LBManager::registerListenerAfterLB(ListenerFnType fn) {
@@ -352,23 +275,6 @@ void LBManager::unregisterListenerAfterLB(int element) {
     listeners_.size() > static_cast<std::size_t>(element), "Listener must exist"
   );
   listeners_[element] = nullptr;
-}
-
-void LBManager::printMemoryUsage(PhaseType phase) {
-  if (theConfig()->vt_print_memory_each_phase) {
-    auto this_node = theContext()->getNode();
-    if (
-      "all" == theConfig()->vt_print_memory_node or
-      std::to_string(this_node) == theConfig()->vt_print_memory_node
-    ) {
-      if (theMemUsage()->hasWorkingReporter()) {
-        auto memory_usage_str = fmt::format(
-          "Memory Usage: phase={}: {}\n", phase, theMemUsage()->getUsageAll()
-        );
-        vt_print(gen, memory_usage_str);
-      }
-    }
-  }
 }
 
 void LBManager::triggerListeners(PhaseType phase) {

@@ -53,7 +53,6 @@ namespace vt { namespace vrt { namespace collection {
 struct BaseHolder {
   BaseHolder() = default;
 
-  virtual void runLB(PhaseType phase) = 0;
   virtual void destroy() = 0;
 };
 

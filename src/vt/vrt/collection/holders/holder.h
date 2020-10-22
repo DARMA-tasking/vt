@@ -227,45 +227,6 @@ struct Holder {
   void setGroupRoot(NodeType const root) { group_root_ = root; }
 
   /**
-   * \brief Get number of elements ready for LB
-   *
-   * \return number of ready elements
-   */
-  CountType numReady() const { return elements_ready_; }
-
-  /**
-   * \brief Add number of ready elements for LB
-   *
-   * \param[in] num number of ready elements
-   */
-  void addReady(CountType num = 1) { elements_ready_ += 1; }
-
-  /**
-   * \brief Clear all ready elements
-   */
-  void clearReady() { elements_ready_ = 0; }
-
-  /**
-   * \brief Add a LB continuation for an element
-   *
-   * \param[in] idx the index
-   * \param[in] fn the continuation
-   */
-  void addLBCont(IndexT const& idx, LBContFnType fn);
-
-  /**
-   * \brief Run LB continuations for element
-   *
-   * \param[in] idx the index
-   */
-  void runLBCont(IndexT const& idx);
-
-  /**
-   * \brief Run all LB continuations
-   */
-  void runLBCont();
-
-  /**
    * \brief Add element-specific listener
    *
    * \param[in] fn listener function
@@ -297,14 +258,12 @@ private:
   std::unordered_map<EpochType, CollectionMessage<ColT>*> bcasts_ = {};
   EpochType cur_bcast_epoch_                                      = 1;
   TypedIndexContainer vc_container_                               = {};
-  TypedLBContainer vc_lb_continuation_                            = {};
   bool is_destroyed_                                              = false;
   GroupType cur_group_                                            = no_group;
   bool use_group_                                                 = false;
   bool group_ready_                                               = false;
   NodeType group_root_                                            = 0;
   CountType num_erased_not_removed_                               = 0;
-  CountType elements_ready_                                       = 0;
   std::vector<listener::ListenFnType<IndexT>> event_listeners_    = {};
 };
 

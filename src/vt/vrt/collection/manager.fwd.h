@@ -56,8 +56,6 @@ struct CollectionPhaseMsg;
 
 DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
 
-void releaseLBPhase(CollectionPhaseMsg* msg);
-
 }}} /* end namespace vt::vrt::collection */
 
 namespace vt {

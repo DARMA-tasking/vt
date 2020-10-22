@@ -129,11 +129,6 @@ public:
   void startIterCleanup(PhaseType phase, unsigned int look_back);
 
   /**
-   * \internal \brief Release collection after LB runs for this phase
-   */
-  void releaseLB();
-
-  /**
    * \internal \brief Output stats file for given phase based on instrumented data
    *
    * The contents of the file consist of a series of records separated

@@ -86,7 +86,8 @@ struct LBManager : runtime::component::Component<LBManager> {
 
 public:
   /**
-   * \internal \brief Decide which LB to invoke given a certain phase
+   * \internal
+   * \brief Decide which LB to invoke given a certain phase
    *
    * \param[in] phase the phase in question
    * \param[in] try_file whether to try to read from file
@@ -96,13 +97,8 @@ public:
   LBType decideLBToRun(PhaseType phase, bool try_file = true);
 
   /**
-   * \internal \brief Collectively wait for LB, used to invoke without
-   * consideration of readiness of the state of live collections
-   */
-  void waitLBCollective();
-
-  /**
-   * \internal \brief Get the proxy for the LBManager
+   * \internal
+   * \brief Get the proxy for the LBManager
    *
    * \return proxy to the \c LBManager
    */
@@ -111,7 +107,8 @@ public:
   }
 
   /**
-   * \internal \brief Setup the proxy for the LBManager
+   * \internal
+   * \brief Setup the proxy for the LBManager
    *
    * \param[in] proxy the proxy to set
    */
@@ -120,81 +117,30 @@ public:
   }
 
   /**
-   * \internal \brief Tell the manager the LB is finished.
+   * \internal
+   * \brief Collectively start load balancing after deciding which to run
    *
-   * \warning This should *not* be called by the
-   * user, only by load balancers. Not private/protected as friending every LBs
-   * adds too much overhead
-
-   * \param[in] phase the phase that is finished
+   * \param[in] phase the phase
    */
-  void finishedRunningLB(PhaseType phase);
+  void selectStartLB(PhaseType phase);
 
-protected:
   /**
-   * \internal \brief Collectively start load balancing
+   * \internal
+   * \brief Collectively start load balancing
    *
    * \param[in] phase the phase
    * \param[in] lb the load balancer to run
-   * \param[in] manual whether it's manual or invoked from a collection
-   * \param[in] num_calls number of calls required to start
    */
-  void collectiveImpl(
-    PhaseType phase, LBType lb, bool manual, std::size_t num_calls = 1
-  );
+  void startLB(PhaseType phase, LBType lb);
 
+protected:
   /**
-   * \internal \brief Release control back to user
-   *
-   * \param[in] phase the phase
-   * \param[in] num_calls number of calls required to start
-   */
-  void releaseImpl(PhaseType phase, std::size_t num_calls = 0);
-
-  /**
-   * \internal \brief Release control back to user now (without counting down)
+   * \internal
+   * \brief Call when LB is finished to complete post-LB actions
    *
    * \param[in] phase the phase
    */
-  void releaseNow(PhaseType phase);
-
-public:
-  /**
-   * \internal \brief Print the memory usage for a phase
-   *
-   * \param[in] phase the phase
-   */
-  void printMemoryUsage(PhaseType phase);
-
-  /**
-   * \internal \brief Communicate to the trace component that a new phase
-   * occurred, so tracing can be enabled or disabled
-   *
-   * \param[in] phase the phase
-   */
-  void setTraceEnabledNextPhase(PhaseType phase);
-
-  /**
-   * \internal \brief Communicate to the trace component that a new phase
-   * occurred so flushing of traces can occur if required
-   */
-  void flushTraceNextPhase();
-
-  /**
-   * \internal \brief Tell the manager that a collection has hit \c nextPhase so
-   * load balancing can begin once all collections enter
-   *
-   * \param[in] msg the LB message
-   */
-  void sysLB(InvokeMsg* msg);
-
-  /**
-   * \internal \brief Tell the manager that a collection has hit \c nextPhase,
-   * choosing to skip load balancing
-   *
-   * \param[in] msg the LB message
-   */
-  void sysReleaseLB(InvokeMsg* msg);
+  void finishedLB(PhaseType phase);
 
 public:
   /**

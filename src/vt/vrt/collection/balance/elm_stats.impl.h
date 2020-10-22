@@ -71,7 +71,8 @@ void ElementStats::serialize(Serializer& s) {
 }
 
 template <typename ColT>
-/*static*/ void ElementStats::syncNextPhase(PhaseMsg<ColT>* msg, ColT* col) {
+/*static*/
+void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   auto& stats = col->stats_;
 
   vt_debug_print(
@@ -85,52 +86,15 @@ template <typename ColT>
   stats.updatePhase(1);
 
   auto const& cur_phase = msg->getPhase();
-  auto const& proxy = col->getCollectionProxy();
   auto const& untyped_proxy = col->getProxy();
   auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
   auto const& subphase_loads = stats.subphase_timings_.at(cur_phase);
   auto const& comm = stats.getComm(cur_phase);
   auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
-  auto const& idx = col->getIndex();
-  auto const& elm_proxy = proxy[idx];
 
-  theNodeStats()->addNodeStats(col, cur_phase, total_load, subphase_loads, comm, subphase_comm);
-
-  auto const before_ready = theCollection()->numReadyCollections();
-  theCollection()->makeCollectionReady(untyped_proxy);
-  auto const after_ready = theCollection()->numReadyCollections();
-  auto const ready = theCollection()->readyNextPhase();
-
-  vt_debug_print(
-    lb, node,
-    "ElementStats: syncNextPhase: before_ready={}, after_ready={}, ready={}\n",
-    before_ready, after_ready, ready
+  theNodeStats()->addNodeStats(
+    col, cur_phase, total_load, subphase_loads, comm, subphase_comm
   );
-
-  auto lb_man = theLBManager()->getProxy();
-
-  auto const single_node = theContext()->getNumNodes() == 1;
-  auto const lb = lb_man.get()->decideLBToRun(cur_phase);
-  bool const must_run_lb = lb != LBType::NoLB and not single_node;
-  auto const num_collections = theCollection()->numCollections<>();
-  auto const do_sync = msg->doSync();
-  auto nmsg = makeMessage<InvokeMsg>(cur_phase,lb,msg->manual(),num_collections);
-
-  if (must_run_lb) {
-    auto cb = theCB()->makeBcast<LBManager,InvokeMsg,&LBManager::sysLB>(lb_man);
-    proxy.reduce(nmsg.get(),cb);
-  } else {
-
-    // Preemptively release the element directly, doing cleanup later after a
-    // collection reduction. This allows work to start early while still
-    // releasing the node-level LB continuations needed for cleanup
-    if (lb == LBType::NoLB and not do_sync) {
-      theCollection()->elmFinishedLB(elm_proxy,cur_phase);
-    }
-
-    auto cb = theCB()->makeBcast<LBManager,InvokeMsg,&LBManager::sysReleaseLB>(lb_man);
-    proxy.reduce(nmsg.get(),cb);
-  }
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

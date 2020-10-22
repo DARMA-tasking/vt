@@ -84,6 +84,18 @@ using PhaseReduceMsg = PhaseMsgBase<
   ColT,collective::ReduceTMsg<collective::NoneType>
 >;
 
+template <typename ColT>
+struct CollectStatsMsg : CollectionMessage<ColT> {
+  CollectStatsMsg(PhaseType in_phase)
+    : phase_(in_phase)
+  { }
+
+  PhaseType getPhase() const { return phase_; }
+
+private:
+  PhaseType phase_ = fst_lb_phase;
+};
+
 }}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VRT_COLLECTION_BALANCE_PHASE_MSG_H*/
