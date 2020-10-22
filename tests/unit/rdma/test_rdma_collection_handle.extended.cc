@@ -134,7 +134,7 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
     if (not triggered_lb) {
       triggered_lb = true;
       //fmt::print("{}: triggering listeners\n", theContext()->getNode());
-      theLBManager()->triggerListeners(0);
+      // theLBManager()->triggerListeners(0);
     }
     auto proxy = this->getCollectionProxy();
     auto cb = theCB()->makeBcast<
