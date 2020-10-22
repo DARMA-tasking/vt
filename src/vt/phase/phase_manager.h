@@ -61,7 +61,22 @@ struct NextMsg;
 /**
  * \struct PhaseManager
  *
- * \brief General management of phases in applications
+ * \brief General management of phases in an application to delineate collective
+ * intervals of time across nodes.
+ *
+ * Many system components use phases as a natural boundary for performing
+ * incremental operations as the runtime makes progress. For instance, traces
+ * may be flushed at phases boundaries and the load balancing framework might
+ * apply at strategy between phases.
+ *
+ * The main interface for users is invoking
+ * \c vt::thePhase()->nextPhaseCollective() to start the next phase. The system
+ * performs a reduction and blocks completion inside this call. Any work
+ * that belongs in the preceding phase should be synchronized before this is
+ * called. The runtime system or users can register hooks when a phase starts,
+ * ends, or after any migrations are complete. Hooks may be collective or
+ * rooted; collective hooks are invoked in the order in which they are
+ * registered and are always run in a collective epoch.
  */
 struct PhaseManager : runtime::component::Component<PhaseManager> {
   using HookIDType = typename std::underlying_type<PhaseHook>::type;
