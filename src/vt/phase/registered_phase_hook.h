@@ -67,9 +67,10 @@ private:
    * \param[in] in_type the type of hook
    * \param[in] in_id the registered ID
    */
-  PhaseHookID(PhaseHook in_type, std::size_t in_id)
+  PhaseHookID(PhaseHook in_type, std::size_t in_id, bool in_is_collective)
     : type_(in_type),
-      id_(in_id)
+      id_(in_id),
+      is_collective_(in_is_collective)
   { }
 
   friend struct PhaseManager;
@@ -89,9 +90,17 @@ public:
    */
   std::size_t getID() const { return id_; }
 
+  /**
+   * \brief Get whether the hook is collective or not
+   *
+   * \return whether it is collective
+   */
+  std::size_t getIsCollective() const { return is_collective_; }
+
 private:
   PhaseHook type_;
   std::size_t id_ = 0;
+  bool is_collective_ = false;
 };
 
 }} /* end namespace vt::phase */

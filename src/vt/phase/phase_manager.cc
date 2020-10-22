@@ -55,19 +55,44 @@ namespace vt { namespace phase {
   return ptr;
 }
 
-PhaseHookID PhaseManager::registerHook(PhaseHook type, ActionType trigger) {
+PhaseHookID
+PhaseManager::registerHookCollective(PhaseHook type, ActionType trigger) {
+  vtAssertNot(
+    in_next_phase_collective_, "Must not be in next phase to register"
+  );
+
+  bool const is_collective = true;
   auto const type_bits = static_cast<HookIDType>(type);
-  auto const hook_id = next_hook_id_++;
-  hooks_[type_bits][hook_id] = trigger;
-  return PhaseHookID{type, hook_id};
+  auto const hook_id = next_collective_hook_id_++;
+  collective_hooks_[type_bits][hook_id] = trigger;
+  return PhaseHookID{type, hook_id, is_collective};
+}
+
+PhaseHookID
+PhaseManager::registerHookRooted(PhaseHook type, ActionType trigger) {
+  vtAssertNot(
+    in_next_phase_collective_, "Must not be in next phase to register"
+  );
+
+  bool const is_collective = true;
+  auto const type_bits = static_cast<HookIDType>(type);
+  auto const hook_id = next_rooted_hook_id_++;
+  rooted_hooks_[type_bits][hook_id] = trigger;
+  return PhaseHookID{type, hook_id, is_collective};
 }
 
 void PhaseManager::unregisterHook(PhaseHookID hook) {
+  vtAssertNot(
+    in_next_phase_collective_, "Must not be in next phase to unregister"
+  );
+
   auto const type = static_cast<HookIDType>(hook.getType());
   auto const id = hook.getID();
-  auto iter = hooks_[type].find(id);
-  if (iter != hooks_[type].end()) {
-    hooks_[type].erase(iter);
+  auto const is_collective = hook.getIsCollective();
+  auto& hooks = is_collective ? collective_hooks_ : rooted_hooks_;
+  auto iter = hooks[type].find(id);
+  if (iter != hooks[type].end()) {
+    hooks[type].erase(iter);
   } else {
     vtAssert(false, "Could not find registered hook ID to erase");
   }
@@ -92,12 +117,42 @@ void PhaseManager::nextPhaseCollective() {
   proxy.reduce(msg.get(), cb);
 
   theSched()->runSchedulerWhile([this]{ return not reduce_next_phase_done_; });
+  reduce_next_phase_done_ = false;
 
   in_next_phase_collective_ = false;
 }
 
 void PhaseManager::nextPhaseReduce(NextMsg* msg) {
   reduce_next_phase_done_ = true;
+}
+
+void PhaseManager::runHooks(PhaseHook type) {
+  auto const type_bits = static_cast<HookIDType>(type);
+
+  // start out running all rooted hooks of a particular type
+  {
+    auto iter = rooted_hooks_.find(type_bits);
+    if (iter != rooted_hooks_.end()) {
+      if (iter->second.size() > 0) {
+        for (auto&& fn : iter->second) {
+          runInEpochRooted([=]{ fn.second(); });
+        }
+      }
+    }
+  }
+
+  // then, run collective hooks that should be symmetric across nodes
+  {
+    auto iter = collective_hooks_.find(type_bits);
+    if (iter != collective_hooks_.end()) {
+      if (iter->second.size() > 0) {
+        // note, this second is a map, so they are ordered across nodes
+        for (auto&& fn : iter->second) {
+          runInEpochCollective([=]{ fn.second(); });
+        }
+      }
+    }
+  }
 }
 
 }} /* end namespace vt::phase */

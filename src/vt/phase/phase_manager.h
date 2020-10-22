@@ -50,6 +50,9 @@
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/phase/registered_phase_hook.h"
 
+#include <unordered_map>
+#include <map>
+
 namespace vt { namespace phase {
 
 // fwd-decl for reduce messasge
@@ -62,7 +65,7 @@ struct NextMsg;
  */
 struct PhaseManager : runtime::component::Component<PhaseManager> {
   using HookIDType = typename std::underlying_type<PhaseHook>::type;
-  using HookMapType = std::unordered_map<std::size_t, ActionType>;
+  using HookMapType = std::map<std::size_t, ActionType>;
   using HookIDMapType = std::unordered_map<HookIDType, HookMapType>;
 
   PhaseManager() = default;
@@ -85,17 +88,37 @@ struct PhaseManager : runtime::component::Component<PhaseManager> {
   PhaseType getCurrentPhase() const { return cur_phase_; }
 
   /**
-   * \brief Register a phase hook that triggers depending on the type of hook
+   * \brief Collectively register a phase hook that triggers depending on the
+   * type of hook
+   *
+   * \note These must be registered across all nodes as they will be run in a
+   * collective epoch. This is for synchronized phase actions.
    *
    * \param[in] type the type of trigger to register
    * \param[in] trigger the action to trigger
    *
    * \return registered ID that can be used to unregister the hook
    */
-  PhaseHookID registerHook(PhaseHook type, ActionType trigger);
+  PhaseHookID registerHookCollective(PhaseHook type, ActionType trigger);
+
+  /**
+   * \brief Rooted register a phase hook that triggers depending on the type of
+   * hook
+   *
+   * \note This is an independent hook that runs on this node only
+   *
+   * \param[in] type the type of trigger to register
+   * \param[in] trigger the action to trigger
+   *
+   * \return registered ID that can be used to unregister the hook
+   */
+  PhaseHookID registerHookRooted(PhaseHook type, ActionType trigger);
 
   /**
    * \brief Unregister an existing hook
+   *
+   * \warning For collective hooks, they must all be unregistered across all
+   * nodes before the next \c nextPhaseCollective is invoked.
    *
    * \param[in] hook the id of the hook to unregister
    */
@@ -119,13 +142,23 @@ private:
    */
   void nextPhaseReduce(NextMsg* msg);
 
+  /**
+   * \internal
+   * \brief Run all the hooks registered here of a certain variety
+   *
+   * \param[in] type type of hook to run designated by the enum \c PhsaeHook
+   */
+  void runHooks(PhaseHook type);
+
 private:
-  PhaseType cur_phase_ = 0;                   /**< Current phase */
-  ObjGroupProxyType proxy_ = no_obj_group;    /**< Objgroup proxy  */
-  HookIDMapType hooks_;                       /**< Map of regisstered hooks  */
-  std::size_t next_hook_id_ = 1;              /**< Next ID for hook registration */
-  bool in_next_phase_collective_ = false;     /**< Whether blocked in next phase */
-  bool reduce_next_phase_done_ = false;       /**< Whether reduce is complete */
+  PhaseType cur_phase_ = 0;                 /**< Current phase */
+  ObjGroupProxyType proxy_ = no_obj_group;  /**< Objgroup proxy  */
+  HookIDMapType collective_hooks_;          /**< Collective regisstered hooks */
+  HookIDMapType rooted_hooks_;              /**< Rooted regisstered hooks  */
+  std::size_t next_collective_hook_id_ = 1; /**< Next ID for collective hooks */
+  std::size_t next_rooted_hook_id_ = 1;     /**< Next ID for rooted hooks */
+  bool in_next_phase_collective_ = false;   /**< Whether blocked in next phase */
+  bool reduce_next_phase_done_ = false;     /**< Whether reduce is complete */
 };
 
 }} /* end namespace vt::phase */
