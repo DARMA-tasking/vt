@@ -63,6 +63,7 @@
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/naive_persistence.h"
 #include "vt/vrt/collection/balance/model/raw_data.h"
+#include "vt/phase/phase_manager.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -179,14 +180,10 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     strat->applyMigrations(strat->getTransfers());
   });
 
-  runInEpochCollective([=] {
-    vt_debug_print(
-      lb, node,
-      "LBManager: finished migrations\n"
-    );
-    theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
-    this->finishedLB(phase);
-  });
+  vt_debug_print(
+    lb, node,
+    "LBManager: finished migrations\n"
+  );
 }
 
 void LBManager::selectStartLB(PhaseType phase) {
@@ -213,9 +210,7 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
   }
 
   if (lb == LBType::NoLB) {
-    // perform cleanup actions and then return out
-    theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
-    finishedLB(phase);
+    // nothing to do
     return;
   }
 
@@ -241,6 +236,13 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
   runLB(base_proxy, phase);
 }
 
+void LBManager::startup() {
+  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
+    auto const phase = thePhase()->getCurrentPhase();
+    theLBManager()->finishedLB(phase);
+  });
+}
+
 void LBManager::finishedLB(PhaseType phase) {
   vt_debug_print(lb, node, "finishedLB\n");
 
@@ -253,33 +255,13 @@ void LBManager::finishedLB(PhaseType phase) {
     );
   }
 
+  theNodeStats()->startIterCleanup(phase, model_->getNumPastPhasesNeeded());
   theNodeStats()->outputStatsForPhase(phase);
 
   // Destruct the objgroup that was used for LB
   if (destroy_lb_ != nullptr) {
-    triggerListeners(phase);
     destroy_lb_();
     destroy_lb_ = nullptr;
-  }
-}
-
-int LBManager::registerListenerAfterLB(ListenerFnType fn) {
-  listeners_.push_back(fn);
-  return static_cast<int>(listeners_.size() - 1);
-}
-
-void LBManager::unregisterListenerAfterLB(int element) {
-  vtAssert(
-    listeners_.size() > static_cast<std::size_t>(element), "Listener must exist"
-  );
-  listeners_[element] = nullptr;
-}
-
-void LBManager::triggerListeners(PhaseType phase) {
-  for (auto&& l : listeners_) {
-    if (l) {
-      l(phase);
-    }
   }
 }
 

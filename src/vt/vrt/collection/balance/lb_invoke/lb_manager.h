@@ -69,7 +69,6 @@ class LoadModel;
  * and invocation.
  */
 struct LBManager : runtime::component::Component<LBManager> {
-  using ListenerFnType = std::function<void(PhaseType)>;
   using LBProxyType    = objgroup::proxy::Proxy<lb::BaseLB>;
 
   /**
@@ -81,6 +80,8 @@ struct LBManager : runtime::component::Component<LBManager> {
   virtual ~LBManager();
 
   std::string name() override { return "LBManager"; }
+
+  void startup() override;
 
   static std::unique_ptr<LBManager> construct();
 
@@ -144,29 +145,6 @@ protected:
 
 public:
   /**
-   * \brief Register a listener to trigger after LB completes
-   *
-   * \param[in] fn the listener
-   *
-   * \return the ID of the registration
-   */
-  int registerListenerAfterLB(ListenerFnType fn);
-
-  /**
-   * \brief Unregister a listener to trigger after LB completes
-   *
-   * \param[in] element the registration ID
-   */
-  void unregisterListenerAfterLB(int element);
-
-  /**
-   * \internal \brief Trigger all after-LB listeners
-   *
-   * \param[in] phase the phase
-   */
-  void triggerListeners(PhaseType phase);
-
-  /**
    * \brief Set a model of expected object loads to use in place of
    * the current installed model
    *
@@ -206,7 +184,6 @@ private:
   LBType cached_lb_                        = LBType::NoLB;
   std::function<void()> destroy_lb_        = nullptr;
   bool synced_in_lb_                       = true;
-  std::vector<ListenerFnType> listeners_   = {};
   objgroup::proxy::Proxy<LBManager> proxy_;
   std::shared_ptr<LoadModel> base_model_;
   std::shared_ptr<LoadModel> model_;
