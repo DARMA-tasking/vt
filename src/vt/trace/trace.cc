@@ -52,6 +52,7 @@
 #include "vt/trace/file_spec/spec.h"
 #include "vt/objgroup/headers.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/phase/phase_manager.h"
 
 #include <cinttypes>
 #include <fstream>
@@ -148,6 +149,15 @@ void Trace::startup() /*override*/ {
   theSched()->registerTrigger(
     sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
   );
+
+  thePhase()->registerHookRooted(phase::PhaseHook::End, []{
+    auto const phase = thePhase()->getCurrentPhase();
+    theTrace()->setTraceEnabledCurrentPhase(phase + 1);
+  });
+
+  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
+    theTrace()->flushTracesFile(false);
+  });
 #endif
 }
 
