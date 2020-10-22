@@ -652,7 +652,8 @@ void Runtime::initializeComponents() {
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
-    ctx::Context // Everything depends on theContext
+    ctx::Context,       // Everything depends on theContext
+    phase::PhaseManager // For outputting memory at phase boundaries
   >{});
 
   p_->registerComponent<registry::Registry>(&theRegistry, Deps<
@@ -860,7 +861,8 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<phase::PhaseManager>(
     &thePhase, Deps<
-      ctx::Context                        // Everything depends on theContext
+      ctx::Context,                        // Everything depends on theContext
+      objgroup::ObjGroupManager            // Since it's an objgroup
     >{}
   );
 
