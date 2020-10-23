@@ -53,6 +53,8 @@
 #include <unordered_map>
 #include <map>
 
+#define VT_PHASE_MANAGER 20201023
+
 namespace vt { namespace phase {
 
 // fwd-decl for reduce messasge
