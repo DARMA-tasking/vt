@@ -101,38 +101,8 @@ struct IterMsg : CollectionMessage<LBTest> {
   int32_t iter_ = 0;
 };
 using ColProxyType = CollectionIndexProxy<LBTest,Index1D>;
-struct IterReduceMsg : collective::ReduceTMsg<NoneType> {
-  IterReduceMsg() = default;
-  IterReduceMsg(ColProxyType in_proxy, int32_t in_iter)
-    : proxy_(in_proxy), cur_iter_(in_iter)
-  {}
-  ColProxyType proxy_ = {};
-  int32_t cur_iter_ = 0;
-};
-static void startIter(int32_t const iter, ColProxyType proxy);
-static TimeType cur_time = 0;
 static double weight = 1.0f;
 static int32_t num_iter = 8;
-
-struct FinishedIter {
-  void operator()(IterReduceMsg* raw_msg) {
-    auto msg = promoteMsg(raw_msg);
-    auto const new_time = ::vt::timing::Timing::getCurrentTime();
-    ::fmt::print(
-      "finished iteration: iter={}, num_iter={}, time={}\n",
-      msg->cur_iter_,num_iter,new_time-cur_time
-    );
-    auto const iter = msg->cur_iter_;
-    cur_time = new_time;
-    if (iter < num_iter) {
-      theCollection()->nextPhase<LBTest>(msg->proxy_,iter,[=]{
-        startIter(iter+1, msg->proxy_);
-      });
-    } else {
-      msg->proxy_.destroy();
-    }
-  }
-};
 
 /*static*/ void LBTest::iterWork(IterMsg* msg, LBTest* col) {
   double val = 0.1f;
@@ -154,34 +124,28 @@ struct FinishedIter {
   } else {
     col->assertValues();
   }
-  auto proxy = col->getCollectionProxy();
-  auto reduce_msg = makeMessage<IterReduceMsg>(proxy,iter);
-  theCollection()->reduceMsg<
-    LBTest,
-    IterReduceMsg,
-    IterReduceMsg::template msgHandler<
-      IterReduceMsg, collective::PlusOp<collective::NoneType>, FinishedIter
-    >
-  >(proxy, reduce_msg.get());
-}
-
-static void startIter(int32_t const iter, ColProxyType proxy) {
-  ::fmt::print(
-    "startIter: iter={}, cur_iter={}\n", iter, iter
-  );
-
-  proxy.broadcast<IterMsg,LBTest::iterWork>(iter);
 }
 
 struct TestLB : TestParallelHarness { };
 
 TEST_F(TestLB, test_lb_1) {
   auto const& this_node = theContext()->getNode();
-  if (this_node == 0) {
-    auto const& range = Index1D(32);
-    auto proxy = theCollection()->construct<LBTest>(range);
-    cur_time = ::vt::timing::Timing::getCurrentTime();
-    startIter(0,proxy);
+  auto const& range = Index1D(32);
+  auto proxy = theCollection()->constructCollective<LBTest>(range);
+
+  for (int i = 0; i < num_iter; i++) {
+    auto cur_time = vt::timing::Timing::getCurrentTime();
+
+    vt::runInEpochCollective([=]{
+      proxy.broadcastCollective<IterMsg,&LBTest::iterWork>(i);
+    });
+
+    auto total_time = vt::timing::Timing::getCurrentTime() - cur_time;
+    if (this_node == 0) {
+      fmt::print("iteration: iter={},time={}\n", i, total_time);
+    }
+
+    vt::thePhase()->nextPhaseCollective();
   }
 }
 

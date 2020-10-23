@@ -136,6 +136,10 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_2) {
   ValueType snapshot = 0;
 
   auto this_node = theContext()->getNode();
+  auto num_nodes = theContext()->getNumNodes();
+  if (num_nodes != 2) {
+    return;
+  }
 
   double num_to_set = this_node == 0 ? 100 : 175;
 

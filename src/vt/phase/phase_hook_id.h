@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               elm_stats.impl.h
+//                               phase_hook_id.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,61 +42,67 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
+#if !defined INCLUDED_VT_PHASE_PHASE_HOOK_ID_H
+#define INCLUDED_VT_PHASE_PHASE_HOOK_ID_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/elm_stats.h"
-#include "vt/vrt/collection/balance/phase_msg.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
-#include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/timing/timing.h"
+#include "vt/phase/phase_hook_enum.h"
 
-#include <cassert>
-#include <type_traits>
+namespace vt { namespace phase {
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+// forward-decl for friendship
+struct PhaseManager;
 
-template <typename Serializer>
-void ElementStats::serialize(Serializer& s) {
-  s | cur_time_started_;
-  s | cur_time_;
-  s | cur_phase_;
-  s | phase_timings_;
-  s | comm_;
-  s | cur_subphase_;
-  s | subphase_timings_;
-}
+/**
+ * \struct PhaseHookID
+ *
+ * \brief A registered phase hook used to identify it and unregister it.
+ */
+struct PhaseHookID {
 
-template <typename ColT>
-/*static*/
-void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
-  auto& stats = col->stats_;
+private:
+  /**
+   * \internal
+   * \brief Used by the system to create a new phase hook ID
+   *
+   * \param[in] in_type the type of hook
+   * \param[in] in_id the registered ID
+   */
+  PhaseHookID(PhaseHook in_type, std::size_t in_id, bool in_is_collective)
+    : type_(in_type),
+      id_(in_id),
+      is_collective_(in_is_collective)
+  { }
 
-  vt_debug_print(
-    lb, node,
-    "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
-    "msg->getPhase()={}\n",
-    print_ptr(col), col->getIndex(), stats.getPhase(), msg->getPhase()
-  );
+  friend struct PhaseManager;
 
-  vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
-  stats.updatePhase(1);
+public:
+  /**
+   * \brief Get the type of hook
+   *
+   * \return the type of hook
+   */
+  PhaseHook getType() const { return type_; }
 
-  auto const& cur_phase = msg->getPhase();
-  auto const& untyped_proxy = col->getProxy();
-  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
-  auto const& subphase_loads = stats.subphase_timings_.at(cur_phase);
-  auto const& comm = stats.getComm(cur_phase);
-  auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
+  /**
+   * \brief Get the ID of the registered hook
+   *
+   * \return the registered hook ID
+   */
+  std::size_t getID() const { return id_; }
 
-  theNodeStats()->addNodeStats(
-    col, cur_phase, total_load, subphase_loads, comm, subphase_comm
-  );
-}
+  /**
+   * \brief Get whether the hook is collective or not
+   *
+   * \return whether it is collective
+   */
+  std::size_t getIsCollective() const { return is_collective_; }
 
-}}}} /* end namespace vt::vrt::collection::balance */
+private:
+  PhaseHook type_;
+  std::size_t id_ = 0;
+  bool is_collective_ = false;
+};
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H*/
+}} /* end namespace vt::phase */
+
+#endif /*INCLUDED_VT_PHASE_PHASE_HOOK_ID_H*/

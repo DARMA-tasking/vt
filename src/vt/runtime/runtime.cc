@@ -71,6 +71,7 @@
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/timetrigger/time_trigger_manager.h"
+#include "vt/phase/phase_manager.h"
 
 #include "vt/configs/arguments/app_config.h"
 #include "vt/configs/arguments/args.h"
@@ -651,7 +652,8 @@ void Runtime::initializeComponents() {
   );
 
   p_->registerComponent<util::memory::MemoryUsage>(&theMemUsage, Deps<
-    ctx::Context // Everything depends on theContext
+    ctx::Context,       // Everything depends on theContext
+    phase::PhaseManager // For outputting memory at phase boundaries
   >{});
 
   p_->registerComponent<registry::Registry>(&theRegistry, Deps<
@@ -830,7 +832,8 @@ void Runtime::initializeComponents() {
 
   p_->registerComponent<vrt::collection::balance::NodeStats>(
     &theNodeStats, Deps<
-      ctx::Context                        // Everything depends on theContext
+      ctx::Context,                       // Everything depends on theContext
+      phase::PhaseManager                 // For phase structure
     >{}
   );
 
@@ -845,13 +848,21 @@ void Runtime::initializeComponents() {
     &theLBManager, Deps<
       ctx::Context,                        // Everything depends on theContext
       util::memory::MemoryUsage,           // Output mem usage on phase change
-      vrt::collection::balance::NodeStats  // For stat collection
+      vrt::collection::balance::NodeStats, // For stat collection
+      phase::PhaseManager                  // For phase structure
     >{}
   );
 
   p_->registerComponent<timetrigger::TimeTriggerManager>(
     &theTimeTrigger, Deps<
       ctx::Context                         // Everything depends on theContext
+    >{}
+  );
+
+  p_->registerComponent<phase::PhaseManager>(
+    &thePhase, Deps<
+      ctx::Context,                        // Everything depends on theContext
+      objgroup::ObjGroupManager            // Since it's an objgroup
     >{}
   );
 
@@ -888,6 +899,7 @@ void Runtime::initializeComponents() {
   p_->add<vrt::collection::balance::NodeStats>();
   p_->add<vrt::collection::balance::LBManager>();
   p_->add<timetrigger::TimeTriggerManager>();
+  p_->add<phase::PhaseManager>();
 
   if (addStatsRestartReader) {
     p_->add<vrt::collection::balance::StatsRestartReader>();

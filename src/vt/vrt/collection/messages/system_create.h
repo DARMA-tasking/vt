@@ -125,11 +125,6 @@ struct FinishedUpdateMsg : ::vt::collective::reduce::ReduceMsg {
   VirtualProxyType proxy_ = {};
 };
 
-struct CollectionPhaseMsg : ::vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_prohibited();
-};
-
 template <typename ColT, typename IndexT>
 struct InsertMsg : ::vt::Message {
   using MessageParentType = ::vt::Message;

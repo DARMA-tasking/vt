@@ -68,6 +68,7 @@
 #include "vt/pipe/pipe_headers.h"
 #include "vt/objgroup/headers.h"
 #include "vt/timetrigger/time_trigger_manager.h"
+#include "vt/phase/phase_manager.h"
 
 #include <cassert>
 
@@ -134,6 +135,7 @@ vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->
 vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }
 vt::arguments::AppConfig*   theConfig()             { return &CUR_RT->theArgConfig->config_;      }
+vt::phase::PhaseManager*   thePhase()               { return CUR_RT->thePhase;          }
 
 #if vt_check_enabled(trace_enabled)
 trace::Trace*               theTrace()              { return CUR_RT->theTrace;          }

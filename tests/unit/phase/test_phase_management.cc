@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   lbable.h
+//                          test_phase_management.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,50 +42,69 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/messaging/message/smart_ptr.h"
+#include "test_parallel_harness.h"
 
-#include <functional>
+#include <vt/transport.h>
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace tests { namespace unit {
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-struct LBable : BaseProxyT {
-  using FinishedLBType = std::function<void()>;
+using TestPhaseManagement = TestParallelHarness;
 
-  LBable() = default;
-  LBable(
-    typename BaseProxyT::ProxyType const& in_proxy,
-    typename BaseProxyT::ElementProxyType const& in_elm
-  );
+TEST_F(TestPhaseManagement, test_phase_manager_1) {
+  auto phase_mgr = phase::PhaseManager::construct();
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s);
+  // start with phase 0
+  EXPECT_EQ(phase_mgr->getCurrentPhase(), 0);
 
-  template <
-    typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
-  >
-  void LBsync(Args&&... args) const;
-  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
-  void LBsync(MsgT* msg, PhaseType p = no_lb_phase) const;
-  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
-  void LBsync(MsgSharedPtr<MsgT> msg, PhaseType p = no_lb_phase) const;
-  void LBsync(FinishedLBType cont, PhaseType p = no_lb_phase) const;
+  int start_hooks = 0;
+  int end_hooks = 0;
+  int end_post_hooks = 0;
 
-  template <
-    typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f, typename... Args
-  >
-  void LB(Args&&... args) const;
-  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
-  void LB(MsgT* msg, PhaseType p = no_lb_phase) const;
-  template <typename MsgT, ActiveColMemberTypedFnType<MsgT,ColT> f>
-  void LB(MsgSharedPtr<MsgT> msg, PhaseType p = no_lb_phase) const;
-  void LB(FinishedLBType cont, PhaseType p = no_lb_phase) const;
-};
+  auto start = [&]{ start_hooks++; };
+  auto end = [&]{ end_hooks++; };
+  auto endpost = [&]{ end_post_hooks++; };
 
-}}} /* end namespace vt::vrt::collection */
+  // register a starting hook
+  auto hookid = phase_mgr->registerHookRooted(phase::PhaseHook::Start, start);
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_PROXY_LBABLE_H*/
+  // unregister it, make sure it doesn't run
+  phase_mgr->unregisterHook(hookid);
+
+  // run startup function, which will trigger starting hooks
+  phase_mgr->startup();
+  EXPECT_EQ(start_hooks, 0);
+
+  auto hookid2 = phase_mgr->registerHookRooted(phase::PhaseHook::Start, start);
+
+  // run startup function, which will trigger starting hooks
+  phase_mgr->startup();
+  EXPECT_EQ(start_hooks, 1);
+
+  auto hookid3 = phase_mgr->registerHookCollective(phase::PhaseHook::Start, start);
+  phase_mgr->unregisterHook(hookid3);
+
+  // run startup function, which will trigger starting hooks
+  phase_mgr->startup();
+  EXPECT_EQ(start_hooks, 2);
+  phase_mgr->unregisterHook(hookid2);
+
+  phase_mgr->registerHookCollective(phase::PhaseHook::Start, start);
+  phase_mgr->registerHookCollective(phase::PhaseHook::End, end);
+  phase_mgr->registerHookCollective(phase::PhaseHook::EndPostMigration, endpost);
+
+  phase_mgr->nextPhaseCollective();
+  EXPECT_EQ(start_hooks, 3);
+  EXPECT_EQ(end_hooks, 1);
+  EXPECT_EQ(end_post_hooks, 1);
+  EXPECT_EQ(phase_mgr->getCurrentPhase(), 1);
+
+  phase_mgr->nextPhaseCollective();
+  EXPECT_EQ(start_hooks, 4);
+  EXPECT_EQ(end_hooks, 2);
+  EXPECT_EQ(end_post_hooks, 2);
+  EXPECT_EQ(phase_mgr->getCurrentPhase(), 2);
+}
+
+}}} // end namespace vt::tests::unit

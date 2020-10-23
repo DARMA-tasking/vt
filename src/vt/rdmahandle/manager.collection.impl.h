@@ -49,6 +49,7 @@
 #include "vt/rdmahandle/manager.h"
 #include "vt/rdmahandle/sub_handle.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/phase/phase_manager.h"
 
 namespace vt { namespace rdma {
 
@@ -140,7 +141,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
       rdma, node,
       "CollectionHandle: registering LB listener\n"
     );
-    theLBManager()->registerListenerAfterLB([=](PhaseType){
+    thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [=]{
       sub_proxy.get()->afterLB();
     });
 #   endif

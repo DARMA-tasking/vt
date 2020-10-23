@@ -136,33 +136,32 @@ TEST_F(TestModelPerCollection, test_model_per_collection_1) {
 
   // Do some work.
   runInEpochCollective([&]{
-    auto this_node = vt::theContext()->getNode();
-    if (this_node == 0) {
-      proxy1.broadcast<MyMsg<TestCol1>, colHandler<TestCol1>>();
-      proxy2.broadcast<MyMsg<TestCol2>, colHandler<TestCol2>>();
+    proxy1.broadcastCollective<MyMsg<TestCol1>, colHandler<TestCol1>>();
+    proxy2.broadcastCollective<MyMsg<TestCol2>, colHandler<TestCol2>>();
+  });
+
+  // Add a hook for after LB runs, but before instrumentation is cleared
+  thePhase()->registerHookCollective(phase::PhaseHook::End, [=]{
+    // LB control flow means that there will be no recorded phase for
+    // this to even look up objects in, causing failure
+#if vt_check_enabled(lblite)
+    // Test the model, which should be per-collection and return the proxy.
+    auto model = theLBManager()->getLoadModel();
+    // Call updateLoads manually, since it won't be called by the LB
+    // infrastructure when the LB hasn't run, and we need this for the
+    // model to function
+    model->updateLoads(0);
+    for (auto&& obj : *model) {
+      auto work_val = model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
+      EXPECT_DOUBLE_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
+      //fmt::print("{:x} {}\n", obj, work_val);
     }
+#endif
   });
 
   // Go to the next phase.
-  runInEpochCollective([&]{
-    vt::theCollection()->startPhaseCollective(nullptr);
-  });
+  vt::thePhase()->nextPhaseCollective();
 
-  // LB control flow means that there will be no recorded phase for
-  // this to even look up objects in, causing failure
-#if vt_check_enabled(lblite)
-  // Test the model, which should be per-collection and return the proxy.
-  auto model = theLBManager()->getLoadModel();
-  // Call updateLoads manually, since it won't be called by the LB
-  // infrastructure when the LB hasn't run, and we need this for the
-  // model to function
-  model->updateLoads(0);
-  for (auto&& obj : *model) {
-    auto work_val = model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
-    EXPECT_EQ(work_val, static_cast<TimeType>(id_proxy_map[obj]));
-    //fmt::print("{:x} {}\n", obj, work_val);
-  }
-#endif
 }
 
 }}}} // end namespace vt::tests::unit::per

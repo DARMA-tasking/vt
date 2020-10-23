@@ -52,11 +52,8 @@
 namespace vt { namespace vrt { namespace collection {
 
 struct CollectionManager;
-struct CollectionPhaseMsg;
 
 DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
-
-void releaseLBPhase(CollectionPhaseMsg* msg);
 
 }}} /* end namespace vt::vrt::collection */
 

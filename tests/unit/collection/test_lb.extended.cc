@@ -105,16 +105,11 @@ TEST_P(TestLoadBalancer, test_load_balancer_1) {
   for (int phase = 0; phase < num_phases; phase++) {
     // Do some work.
     runInEpochCollective([&]{
-      auto this_node = vt::theContext()->getNode();
-      if (this_node == 0) {
-        proxy.broadcast<MyMsg, colHandler>();
-      }
+      proxy.broadcastCollective<MyMsg, colHandler>();
     });
 
     // Go to the next phase.
-    runInEpochCollective([&]{
-      vt::theCollection()->startPhaseCollective(nullptr);
-    });
+    vt::thePhase()->nextPhaseCollective();
   }
 }
 
@@ -173,14 +168,11 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   for (int phase = 0; phase < num_phases; phase++) {
     // Do some work
     runInEpochCollective([&] {
-      if (vt::theContext()->getNode() == 0) {
-        proxy.broadcast<MyMsg, colHandler>();
-      }
+      proxy.broadcastCollective<MyMsg, colHandler>();
     });
 
     // Go to the next phase
-    runInEpochCollective(
-      [&] { vt::theCollection()->startPhaseCollective(nullptr); });
+    vt::thePhase()->nextPhaseCollective();
   }
 
   auto const file_name = fmt::format(

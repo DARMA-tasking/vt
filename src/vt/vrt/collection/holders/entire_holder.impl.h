@@ -65,14 +65,6 @@ template <typename always_void_>
 }
 
 template <typename always_void_>
-/*static*/ void UniversalIndexHolder<always_void_>::runLB(PhaseType phase) {
-  for (auto&& elm : live_collections_) {
-    auto base_holder = elm.second;
-    base_holder->runLB(phase);
-  }
-}
-
-template <typename always_void_>
 /*static*/ void UniversalIndexHolder<always_void_>::destroyCollection(
   VirtualProxyType const proxy
 ) {
@@ -80,37 +72,6 @@ template <typename always_void_>
   if (iter != live_collections_.end()) {
     live_collections_.erase(iter);
   }
-}
-
-template <typename always_void_>
-/*static*/ bool UniversalIndexHolder<always_void_>::readyNextPhase() {
-  auto const ready_coll = getNumReadyCollections();
-  auto const total_coll = getNumCollections();
-  return ready_coll == total_coll;
-}
-
-template <typename always_void_>
-/*static*/ void UniversalIndexHolder<always_void_>::makeCollectionReady(
-  VirtualProxyType const proxy
-) {
-  ready_collections_.insert(proxy);
-}
-
-template <typename always_void_>
-/*static*/ void UniversalIndexHolder<always_void_>::resetPhase() {
-  ready_collections_.clear();
-}
-
-template <typename always_void_>
-/*static*/ std::size_t
-UniversalIndexHolder<always_void_>::getNumCollections() {
-  return live_collections_.size();
-}
-
-template <typename always_void_>
-/*static*/ std::size_t
-UniversalIndexHolder<always_void_>::getNumReadyCollections() {
-  return ready_collections_.size();
 }
 
 template <typename always_void_>
@@ -164,10 +125,6 @@ UniversalIndexHolder<always_void_>::live_collections_;
 template <typename always_void_>
 /*static*/ std::unordered_map<VirtualProxyType,HandlerType>
 UniversalIndexHolder<always_void_>::live_collections_map_;
-
-template <typename always_void_>
-/*static*/ std::unordered_set<VirtualProxyType>
-UniversalIndexHolder<always_void_>::ready_collections_ = {};
 
 template <typename always_void_>
 /*static*/ std::unordered_map<VirtualProxyType,EpochType>

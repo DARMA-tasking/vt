@@ -45,6 +45,7 @@
 #include "vt/config.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/phase/phase_manager.h"
 #include "vt/context/context.h"
 
 #include <vector>
@@ -353,6 +354,29 @@ MemoryUsage::MemoryUsage() {
     r->getUsage();
   }
   getFirstUsage();
+}
+
+void MemoryUsage::initialize() {
+  if (theConfig()->vt_print_memory_each_phase) {
+    auto this_node = theContext()->getNode();
+    if (
+      "all" == theConfig()->vt_print_memory_node or
+      std::to_string(this_node) == theConfig()->vt_print_memory_node
+    ) {
+      if (theMemUsage()->hasWorkingReporter()) {
+        thePhase()->registerHookRooted(
+          phase::PhaseHook::EndPostMigration, []{
+            auto cur_phase = thePhase()->getCurrentPhase();
+            auto memory_usage_str = fmt::format(
+              "Memory Usage: phase={}: {}\n", cur_phase,
+              theMemUsage()->getUsageAll()
+            );
+            vt_print(gen, memory_usage_str);
+          }
+        );
+      }
+    }
+  }
 }
 
 std::size_t MemoryUsage::getAverageUsage() {

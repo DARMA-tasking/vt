@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               elm_stats.impl.h
+//                              phase_hook_enum.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,61 +42,23 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
+#if !defined INCLUDED_VT_PHASE_PHASE_HOOK_ENUM_H
+#define INCLUDED_VT_PHASE_PHASE_HOOK_ENUM_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/elm_stats.h"
-#include "vt/vrt/collection/balance/phase_msg.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
-#include "vt/vrt/collection/balance/lb_type.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/balance/lb_invoke/lb_manager.h"
-#include "vt/timing/timing.h"
+namespace vt { namespace phase {
 
-#include <cassert>
-#include <type_traits>
+/**
+ * \enum PhaseHook
+ *
+ * \brief Different times in phase execution one can hook triggered actions into
+ * the \c PhaseManager
+ */
+enum struct PhaseHook : int8_t {
+  Start,                        /**< Before a phase starts */
+  End,                          /**< After a phase ends  */
+  EndPostMigration              /**< After a phase ends after all migrations */
+};
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+}} /* end namespace vt::phase */
 
-template <typename Serializer>
-void ElementStats::serialize(Serializer& s) {
-  s | cur_time_started_;
-  s | cur_time_;
-  s | cur_phase_;
-  s | phase_timings_;
-  s | comm_;
-  s | cur_subphase_;
-  s | subphase_timings_;
-}
-
-template <typename ColT>
-/*static*/
-void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
-  auto& stats = col->stats_;
-
-  vt_debug_print(
-    lb, node,
-    "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
-    "msg->getPhase()={}\n",
-    print_ptr(col), col->getIndex(), stats.getPhase(), msg->getPhase()
-  );
-
-  vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
-  stats.updatePhase(1);
-
-  auto const& cur_phase = msg->getPhase();
-  auto const& untyped_proxy = col->getProxy();
-  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
-  auto const& subphase_loads = stats.subphase_timings_.at(cur_phase);
-  auto const& comm = stats.getComm(cur_phase);
-  auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
-
-  theNodeStats()->addNodeStats(
-    col, cur_phase, total_load, subphase_loads, comm, subphase_comm
-  );
-}
-
-}}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_PHASE_PHASE_HOOK_ENUM_H*/

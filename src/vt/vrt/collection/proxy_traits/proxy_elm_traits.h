@@ -49,20 +49,15 @@
 #include "vt/vrt/proxy/base_collection_elm_proxy.h"
 #include "vt/vrt/proxy/base_elm_proxy.h"
 #include "vt/vrt/collection/send/sendable.h"
-#include "vt/vrt/collection/balance/proxy/lbable.h"
 #include "vt/vrt/collection/gettable/gettable.h"
 #include "vt/vrt/collection/insert/insertable.h"
-#include "vt/vrt/collection/balance/proxy/lbable.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 namespace elm_proxy {
 
 template <typename ColT, typename IndexT>
-using Chain4 = LBable<ColT,IndexT,BaseCollectionElmProxy<IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain3 = Gettable<ColT,IndexT,Chain4<ColT,IndexT>>;
+using Chain3 = Gettable<ColT,IndexT,BaseCollectionElmProxy<IndexT>>;
 
 template <typename ColT, typename IndexT>
 using Chain2 = ElmInsertable<ColT,IndexT,Chain3<ColT,IndexT>>;

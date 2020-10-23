@@ -111,6 +111,9 @@ struct MemoryUsage;
 namespace timetrigger {
 struct TimeTriggerManager;
 }
+namespace phase {
+struct PhaseManager;
+}
 
 #if vt_check_enabled(trace_enabled)
 namespace trace {

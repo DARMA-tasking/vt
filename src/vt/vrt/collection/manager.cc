@@ -60,57 +60,28 @@ void CollectionManager::finalize() {
 
 /*virtual*/ CollectionManager::~CollectionManager() { }
 
+void CollectionManager::startup() {
 #if vt_check_enabled(lblite)
-struct StartRootedMsg : vt::Message {
-  StartRootedMsg() = default;
-  explicit StartRootedMsg(PhaseType in_phase) : phase_(in_phase) { }
-  PhaseType phase_;
-};
+  // First hook, do all stat manipulation
+  thePhase()->registerHookCollective(phase::PhaseHook::End, []{
+    auto const& map = theCollection()->collect_stats_for_lb_;
+    for (auto&& elm : map) {
+      // this will trigger all the data collection required for LB
+      elm.second();
+    }
+  });
 
-static void startRootedBroadcast(StartRootedMsg* msg) {
-  theCollection()->startPhaseCollective(nullptr, msg->phase_);
-}
-#endif
-
-void CollectionManager::startPhaseRooted(
-  ActionFinishedLBType fn, PhaseType lb_phase
-) {
-#if vt_check_enabled(lblite)
-  auto msg = makeMessage<StartRootedMsg>(lb_phase);
-  theMsg()->broadcastMsg<StartRootedMsg, startRootedBroadcast>(msg);
-  startPhaseCollective(fn, lb_phase);
-#else
-  if (fn != nullptr) {
-    fn();
-  }
-#endif
-}
-
-void CollectionManager::startPhaseCollective(
-  ActionFinishedLBType fn, PhaseType lb_phase
-) {
-#if vt_check_enabled(lblite)
-  UniversalIndexHolder<>::runLB(lb_phase);
-  if (fn != nullptr) {
-    theTerm()->produce(term::any_epoch_sentinel);
-    lb_continuations_.push_back(fn);
-  } else {
-    theLBManager()->waitLBCollective();
-  }
-#else
-  if (fn != nullptr) {
-    fn();
-  }
+  // Second hook, select and then potentially start the LB
+  thePhase()->registerHookCollective(phase::PhaseHook::End, []{
+    auto const cur_phase = thePhase()->getCurrentPhase();
+    theLBManager()->selectStartLB(cur_phase);
+  });
 #endif
 }
 
 DispatchBasePtrType
 getDispatcher(auto_registry::AutoHandlerType const& han) {
   return theCollection()->getDispatcher(han);
-}
-
-void releaseLBPhase(CollectionPhaseMsg* msg) {
-  CollectionManager::releaseLBPhase<>(msg);
 }
 
 balance::ElementIDType CollectionManager::getCurrentContextPerm() const {

@@ -165,15 +165,6 @@ ElementIDType NodeStats::getNextElm() {
   return (elm << 32) | this_node;
 }
 
-void NodeStats::releaseLB() {
-  using MsgType = CollectionPhaseMsg;
-  auto msg = makeMessage<MsgType>();
-  auto msg_hold = promoteMsg(msg.get());
-  theMsg()->broadcastMsg<MsgType,CollectionManager::releaseLBPhase>(msg);
-
-  CollectionManager::releaseLBPhase(msg_hold.get());
-}
-
 void NodeStats::initialize() {
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_stats) {

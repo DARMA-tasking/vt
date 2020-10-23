@@ -82,6 +82,7 @@
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/phase/phase_manager.h"
 
 #include <tuple>
 #include <utility>
@@ -1979,6 +1980,21 @@ template <typename ColT, typename... Args>
    *  messages can be forwarded properly
    */
   theLocMan()->getCollectionLM<ColT,IndexType>(proxy);
+
+  /**
+   * Type-erase some lambdas for doing the collective broadcast that collects up
+   * the statistics on each node for each collection element
+   */
+  theCollection()->collect_stats_for_lb_[proxy] = [bits=proxy]{
+    using namespace balance;
+    using MsgType = CollectStatsMsg<ColT>;
+    auto const phase = thePhase()->getCurrentPhase();
+    CollectionProxyWrapType<ColT> p{bits};
+    p.template broadcastCollective<MsgType,ElementStats::syncNextPhase<ColT>>(
+      phase
+    );
+  };
+
   vt_debug_print(
     vrt_coll, node,
     "addToState: proxy={:x}, AfterMeta\n", proxy
@@ -2867,275 +2883,6 @@ Holder<ColT, IndexT>* CollectionManager::findElmHolder(
   CollectionProxyWrapType<ColT> proxy
 ) {
   return findElmHolder<ColT,IndexT>(proxy.getProxy());
-}
-
-template <typename>
-std::size_t CollectionManager::numCollections() {
-  return UniversalIndexHolder<>::getNumCollections();
-}
-
-template <typename>
-std::size_t CollectionManager::numReadyCollections() {
-  return UniversalIndexHolder<>::getNumReadyCollections();
-}
-
-template <typename>
-void CollectionManager::resetReadyPhase() {
-  UniversalIndexHolder<>::resetPhase();
-}
-
-template <typename>
-bool CollectionManager::readyNextPhase() {
-  auto const ready = UniversalIndexHolder<>::readyNextPhase();
-  return ready;
-}
-
-template <typename>
-void CollectionManager::makeCollectionReady(VirtualProxyType const proxy) {
-  UniversalIndexHolder<>::makeCollectionReady(proxy);
-}
-
-template <typename ColT>
-void CollectionManager::elmFinishedLB(
-  VirtualElmProxyType<ColT> const& proxy, PhaseType phase
-) {
-  auto const& col_proxy = proxy.getCollectionProxy();
-  auto const& idx = proxy.getElementProxy().getIndex();
-  auto elm_holder = findElmHolder<ColT>(col_proxy);
-  vtAssertInfo(
-    elm_holder != nullptr, "Must find element holder at elmFinishedLB",
-    col_proxy, phase
-  );
-  elm_holder->runLBCont(idx);
-}
-
-template <
-  typename MsgT, typename ColT, ActiveColMemberTypedFnType<MsgT,ColT> f
->
-void CollectionManager::elmReadyLB(
-  VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
-  bool do_sync
-) {
-  auto lb_han = auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>();
-  auto pmsg = promoteMsg(msg);
-
-#if !vt_check_enabled(lblite)
-  theCollection()->sendMsgUntypedHandler<MsgT>(proxy, pmsg.get(), lb_han,true);
-  return;
-#endif
-
-  auto const col_proxy = proxy.getCollectionProxy();
-  auto const idx = proxy.getElementProxy().getIndex();
-  auto elm_holder = findElmHolder<ColT>(col_proxy);
-  vtAssertInfo(
-    elm_holder != nullptr, "Must find element holder at elmReadyLB",
-    col_proxy, phase
-  );
-
-  auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
-
-  vt_debug_print(
-    lb, node,
-    "elmReadyLB: proxy={:x}, idx={}, phase={}, msg={}, epoch={:x}\n",
-    col_proxy, idx, phase, pmsg, cur_epoch
-  );
-
-  theTerm()->produce(cur_epoch);
-  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han,cur_epoch]{
-    theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
-    theTerm()->consume(cur_epoch);
-  });
-
-  auto iter = release_lb_.find(col_proxy);
-  if (iter == release_lb_.end()) {
-    release_lb_[col_proxy] = [this,col_proxy]{
-      auto cur_elm_holder = findElmHolder<ColT>(col_proxy);
-      cur_elm_holder->runLBCont();
-    };
-  }
-
-  elmReadyLB<ColT>(proxy,phase,do_sync,nullptr);
-}
-
-template <typename ColT>
-void CollectionManager::elmReadyLB(
-  VirtualElmProxyType<ColT> const& proxy, PhaseType in_phase,
-  bool do_sync, ActionFinishedLBType cont
-) {
-
-  vt_debug_print(
-    lb, node,
-    "elmReadyLB: index={} ready at sync={}, phase={}\n",
-    proxy.getElementProxy().getIndex(), do_sync, in_phase
-  );
-
-#if !vt_check_enabled(lblite)
-  cont();
-  return;
-#endif
-
-  auto const col_proxy = proxy.getCollectionProxy();
-  auto const idx = proxy.getElementProxy().getIndex();
-  auto elm_holder = findElmHolder<ColT>(col_proxy);
-
-  PhaseType phase = in_phase;
-  if (phase == no_lb_phase) {
-    bool const elm_exists = elm_holder->exists(idx);
-    if (!(elm_exists)) fmt::print("Element must exist idx={}\n", idx);
-    auto& holder = elm_holder->lookup(idx);
-    auto elm = holder.getCollection();
-    if (!(elm != nullptr)) fmt::print("Must have valid element");
-    phase = elm->stats_.getPhase();
-  }
-
-  vtAssertInfo(
-    elm_holder != nullptr, "Must find element holder at elmReadyLB",
-    col_proxy, phase
-  );
-
-  vt_debug_print(
-    lb, node,
-    "elmReadyLB: proxy={:x}, idx={} ready at phase={}\n",
-    col_proxy, idx, phase
-  );
-
-  if (cont != nullptr) {
-    theTerm()->produce(term::any_epoch_sentinel);
-    lb_continuations_.push_back(cont);
-  }
-  if (elm_holder) {
-    vt_debug_print(lb, node, "has elm_holder: exists={}\n", elm_holder->exists(idx));
-
-    vtAssert(
-      elm_holder->exists(idx),
-      "Collection element must be local and currently reside on this node"
-    );
-    elm_holder->addReady();
-    auto const num_ready = elm_holder->numReady();
-    auto const num_total = elm_holder->numElements();
-
-    vt_debug_print(
-      lb, node,
-      "elmReadyLB: proxy={:x}, ready={}, total={} at phase={}\n",
-      col_proxy, num_ready, num_total, phase
-    );
-
-    if (num_ready == num_total) {
-      elm_holder->clearReady();
-
-      vt_debug_print(
-        lb, node,
-        "elmReadyLB: all local elements of proxy={:x} ready at phase={}\n",
-        col_proxy, phase
-      );
-    }
-
-    using namespace balance;
-    CollectionProxyWrapType<ColT> cur_proxy(col_proxy);
-    using MsgType = PhaseMsg<ColT>;
-    auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync, false);
-
-#if vt_check_enabled(lblite)
-    msg->setLBLiteInstrument(false);
-#endif
-
-    vt_debug_print(
-      lb, node,
-      "elmReadyLB: invoking syncNextPhase on  proxy={:x}, at phase={}\n",
-      col_proxy, phase
-    );
-
-    theCollection()->sendMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
-      cur_proxy[idx], msg.get()
-    );
-  }
-}
-
-template <typename ColT>
-void CollectionManager::nextPhase(
-  CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-  PhaseType const& cur_phase, ActionFinishedLBType continuation
-) {
-  using namespace balance;
-  using MsgType = PhaseMsg<ColT>;
-  auto msg = makeMessage<MsgType>(cur_phase, proxy, true, false);
-  auto const instrument = false;
-
-  vt_debug_print(
-    vrt_coll, node,
-    "nextPhase: broadcasting: cur_phase={}\n",
-    cur_phase
-  );
-
-  if (continuation != nullptr) {
-    theTerm()->produce(term::any_epoch_sentinel);
-    lb_continuations_.push_back(continuation);
-
-    auto const& untyped_proxy = proxy.getProxy();
-    auto iter = lb_no_elm_.find(untyped_proxy);
-    if (iter ==lb_no_elm_.end()) {
-      lb_no_elm_.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(untyped_proxy),
-        std::forward_as_tuple([this,untyped_proxy]{
-          auto elm_holder =
-            findElmHolder<ColT,typename ColT::IndexType>(untyped_proxy);
-          auto const& num_elms = elm_holder->numElements();
-          // this collection manager does not participate in reduction
-          if (num_elms == 0) {
-            /*
-             * @todo: Implement child elision in reduction tree and up
-             * propagation
-             */
-          }
-        })
-      );
-    }
-  }
-
-  #if vt_check_enabled(lblite)
-  msg->setLBLiteInstrument(instrument);
-  vt_debug_print(
-  vrt_coll, node,
-    "nextPhase: broadcasting: instrument={}, cur_phase={}\n",
-    msg->lbLiteInstrument(), cur_phase
-    );
-  #endif
-
-  theCollection()->broadcastMsg<MsgType,ElementStats::syncNextPhase<ColT>>(
-    proxy, msg.get(), instrument
-  );
-}
-
-template <typename always_void>
-void CollectionManager::checkReduceNoElements() {
-  // @todo
-}
-
-template <typename always_void>
-/*static*/ void CollectionManager::releaseLBPhase(CollectionPhaseMsg* msg) {
-  theCollection()->releaseLBContinuation();
-}
-
-template <typename>
-void CollectionManager::releaseLBContinuation() {
-  vt_debug_print(
-    lb, node,
-    "releaseLBContinuation\n"
-  );
-  UniversalIndexHolder<>::resetPhase();
-  if (lb_continuations_.size() > 0) {
-    auto continuations = lb_continuations_;
-    lb_continuations_.clear();
-    for (auto&& elm : continuations) {
-      theTerm()->consume(term::any_epoch_sentinel);
-      elm();
-    }
-  }
-  for (auto&& elm : release_lb_) {
-    elm.second();
-  }
-  release_lb_.clear();
 }
 
 template <typename MsgT, typename ColT>

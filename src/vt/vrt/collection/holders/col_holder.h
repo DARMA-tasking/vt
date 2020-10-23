@@ -83,13 +83,6 @@ public:
    */
   void destroy() override;
 
-  /**
-   * \internal \brief Run LB continuations on all collection elements
-   *
-   * \param[in] phase the phase
-   */
-  void runLB(PhaseType phase) override;
-
   bool is_static_ = false;                    /**< Whether is static sized */
   HandlerType map_fn = uninitialized_handler; /**< The map function */
   IndexT max_idx;                             /**< Index range for collection */

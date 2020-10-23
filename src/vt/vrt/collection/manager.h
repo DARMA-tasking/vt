@@ -110,8 +110,6 @@ struct CollectionManager
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using VirtualPtrType = typename Holder<ColT, IndexT>::VirtualPtrType;
   using ActionProxyType = std::function<void(VirtualProxyType)>;
-  using ActionFinishedLBType = std::function<void()>;
-  using NoElementActionType = std::function<void()>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
   using ReduceVirtualIDType = collective::reduce::ReduceVirtualIDType;
@@ -161,6 +159,8 @@ struct CollectionManager
   CollectionManager();
 
   virtual ~CollectionManager();
+
+  void startup() override;
 
   void finalize() override;
 
@@ -1381,166 +1381,6 @@ public:
     NodeType const& migrated_from = uninitialized_destination
   );
 
-  /*
-   * ======================================================================
-   *              LB-related operations on the collection
-   * ======================================================================
-   */
-
-  /**
-   * \brief Rooted call to start the next phase of the collection, starting LB
-   * if necessary.
-   *
-   * The \c nextPhase function is called by a single node on the whole
-   * collection to indicate that LB is ready. All collections must invoke this
-   * for LB to start.
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] cur_phase the phase that finished
-   * \param[in] continuation continuation to fire after LB is done
-   */
-  template <typename ColT>
-  void nextPhase(
-    CollectionProxyWrapType<ColT, typename ColT::IndexType> const& proxy,
-    PhaseType const& cur_phase, ActionFinishedLBType continuation = nullptr
-  );
-
-  /**
-   * \brief Rooted call to start LB, collection independent
-   *
-   * The function \c startPhaseRooted starts, in a rooted manner, the next phase
-   * of the LB without inquiring about the state of the collections. A single
-   * node calls it and the registered runLB funcs are invoked to collect up
-   * statistics and run appropriately. Continuation runs when LB is complete.
-   *
-   * \param[in] fn continuation to fire after LB is done
-   * \param[in] lb_phase the phase that finished
-   */
-  void startPhaseRooted(
-    ActionFinishedLBType fn, PhaseType lb_phase = no_lb_phase
-  );
-
-  /**
-   * \brief Collective call to start LB, collective independent
-   *
-   * The function \c startPhaseCollective starts, in a collective manner, the
-   * next phase of the LB without inquiring about the state of the
-   * collections. The LB starts immediately after collecting statistics and the
-   * continuation executes at completion
-   *
-   * \param[in] fn action to trigger when LB is finished
-   * \param[in] lb_phase (optional) the LB phase
-   */
-  void startPhaseCollective(
-    ActionFinishedLBType fn, PhaseType lb_phase = no_lb_phase
-  );
-
-  /**
-   * \internal \brief Indicate that a collection element is ready for LB
-   *
-   * The \c elmReady function is called by every element of every collection at
-   * the phase boundary for each local element residing on a node. Once all
-   * elements have invoked it, LB will commence.
-   *
-   * \param[in] proxy the collection element proxy
-   * \param[in] phase the phase that is finished
-   * \param[in] do_sync whether LB should do a sync
-   * \param[in] continuation continuation to fire after LB is done
-   */
-  template <typename ColT>
-  void elmReadyLB(
-    VirtualElmProxyType<ColT> const& proxy, PhaseType phase,
-    bool do_sync, ActionFinishedLBType continuation
-  );
-
-  /**
-   * \internal \brief Indicate that a collection element is ready for LB
-   *
-   * The \c elmReady function is called by every element of every collection at
-   * the phase boundary for each local element residing on a node. Once all
-   * elements have invoked it, LB will commence.
-   *
-   * \param[in] proxy the collection element proxy
-   * \param[in] phase the phase that is finished
-   * \param[in] msg message passed by the user to deliver after LB finishes
-   * \param[in] do_sync whether LB should do a sync
-   */
-  template <
-    typename MsgT, typename ColT, ActiveColMemberTypedFnType<MsgT,ColT> f
-  >
-  void elmReadyLB(
-    VirtualElmProxyType<ColT> const& proxy, PhaseType phase, MsgT* msg,
-    bool do_sync
-  );
-
-  /**
-   * \internal \brief Tell an element that LB has completed
-   *
-   * \param[in] proxy the collection element proxy
-   * \param[in] phase the phase that is finished
-   */
-  template <typename ColT>
-  void elmFinishedLB(VirtualElmProxyType<ColT> const& proxy, PhaseType phase);
-
-  /**
-   * \internal \brief Release control flow after LB with type-erased
-   * continuations
-   *
-   * \param[in] msg the phase message
-   */
-  template <typename=void>
-  static void releaseLBPhase(CollectionPhaseMsg* msg);
-
-  /**
-   * \brief Get number of live collection
-   *
-   * \return number of collections
-   */
-  template <typename=void>
-  std::size_t numCollections();
-
-  /**
-   * \brief Get number of live collections that are ready for LB
-   *
-   * \return number of collections
-   */
-  template <typename=void>
-  std::size_t numReadyCollections();
-
-  /**
-   * \brief Query if all collections are ready to start LB
-   *
-   * \return whether live collections == live ready collections
-   */
-  template <typename=void>
-  bool readyNextPhase();
-
-  /**
-   * \internal \brief Reset ready collections for LB
-   */
-  template <typename=void>
-  void resetReadyPhase();
-
-  /**
-   * \internal \brief Release LB continuations after LB
-   */
-  template <typename=void>
-  void releaseLBContinuation();
-
-  /**
-   * \internal \brief Make a collection ready for LB
-   *
-   * \param[in] coll the collection proxy bits
-   */
-  template <typename=void>
-  void makeCollectionReady(VirtualProxyType const coll);
-
-  /**
-   * \internal \brief Check if a collection has no elements but wants to reduce
-   */
-  template <typename=void>
-  void checkReduceNoElements();
-
 private:
   /**
    * \internal \brief Get the entire collection system holder
@@ -2125,8 +1965,7 @@ private:
   CleanupListFnType cleanup_fns_;
   std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<ReduceVirtualIDType,ReduceStamp> reduce_cur_stamp_;
-  std::vector<ActionFinishedLBType> lb_continuations_ = {};
-  std::unordered_map<VirtualProxyType,NoElementActionType> lb_no_elm_ = {};
+  std::unordered_map<VirtualProxyType,ActionType> collect_stats_for_lb_;
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
@@ -2172,7 +2011,6 @@ namespace details
 #include "vt/vrt/collection/dispatch/registry.impl.h"
 #include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
-#include "vt/vrt/collection/balance/proxy/lbable.impl.h"
 #include "vt/rdmahandle/manager.collection.impl.h"
 #include "vt/vrt/proxy/collection_proxy.impl.h"
 

@@ -120,12 +120,6 @@ struct TestColl : Collection<TestColl,vt::Index2D> {
     EXPECT_TRUE(not m->do_check_ or m->getHops() <= 1);
   }
 
-  void dolb(TestMsg* m) {
-    auto idx = this->getIndex();
-    auto proxy = getCollectionProxy();
-    proxy[idx].LB<TestMsg,&TestColl::cont>();
-  }
-
   void cont(TestMsg* m) {
 
   }
@@ -166,11 +160,8 @@ TEST_F(TestHops, test_hops_1) {
     if (this_node == 0) {
       vt_print(gen, "Running LB for iter={}\n", i);
     }
-    runInEpochCollective([&]{
-      if (this_node == 0) {
-        proxy.broadcast<TestColl::TestMsg,&TestColl::dolb>();
-      }
-    });
+
+    thePhase()->nextPhaseCollective();
   }
 
 }

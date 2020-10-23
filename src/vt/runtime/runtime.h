@@ -405,6 +405,7 @@ public:
   ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader = nullptr;
   ComponentPtrType<vrt::collection::balance::LBManager> theLBManager = nullptr;
   ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger = nullptr;
+  ComponentPtrType<phase::PhaseManager> thePhase = nullptr;
 
   // Node-level worker-based components for vt (these are optional)
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp = nullptr;
