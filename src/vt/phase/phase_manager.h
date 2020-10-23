@@ -66,8 +66,8 @@ struct NextMsg;
  *
  * Many system components use phases as a natural boundary for performing
  * incremental operations as the runtime makes progress. For instance, traces
- * may be flushed at phases boundaries and the load balancing framework might
- * apply at strategy between phases.
+ * may be flushed at phase boundaries and the load balancing framework might
+ * apply a strategy between phases.
  *
  * The main interface for users is invoking
  * \c vt::thePhase()->nextPhaseCollective() to start the next phase. The system
