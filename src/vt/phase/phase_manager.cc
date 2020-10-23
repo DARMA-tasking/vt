@@ -161,7 +161,7 @@ void PhaseManager::runHooks(PhaseHook type) {
   // start out running all rooted hooks of a particular type
   {
     auto iter = rooted_hooks_.find(type_bits);
-    if (iter != rooted_hooks_.end() and iter->second.size() > 0) {
+    if (iter != rooted_hooks_.end()) {
       for (auto&& fn : iter->second) {
         runInEpochRooted([=]{ fn.second(); });
       }
@@ -171,7 +171,7 @@ void PhaseManager::runHooks(PhaseHook type) {
   // then, run collective hooks that should be symmetric across nodes
   {
     auto iter = collective_hooks_.find(type_bits);
-    if (iter != collective_hooks_.end() and iter->second.size() > 0) {
+    if (iter != collective_hooks_.end()) {
       // note, this second is a map, so they are ordered across nodes
       for (auto&& fn : iter->second) {
         runInEpochCollective([=]{ fn.second(); });
