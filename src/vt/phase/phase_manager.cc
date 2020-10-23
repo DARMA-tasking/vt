@@ -94,7 +94,7 @@ void PhaseManager::unregisterHook(PhaseHookID hook) {
   if (iter != hooks[type].end()) {
     hooks[type].erase(iter);
   } else {
-    vtAssert(false, "Could not find registered hook ID to erase");
+    vtAbort("Could not find registered hook ID to erase");
   }
 }
 
