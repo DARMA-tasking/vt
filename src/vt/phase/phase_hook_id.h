@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           registered_phase_hook.h
+//                               phase_hook_id.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_PHASE_REGISTERED_PHASE_HOOK_H
-#define INCLUDED_VT_PHASE_REGISTERED_PHASE_HOOK_H
+#if !defined INCLUDED_VT_PHASE_PHASE_HOOK_ID_H
+#define INCLUDED_VT_PHASE_PHASE_HOOK_ID_H
 
 #include "vt/phase/phase_hook_enum.h"
 
@@ -105,4 +105,4 @@ private:
 
 }} /* end namespace vt::phase */
 
-#endif /*INCLUDED_VT_PHASE_REGISTERED_PHASE_HOOK_H*/
+#endif /*INCLUDED_VT_PHASE_PHASE_HOOK_ID_H*/

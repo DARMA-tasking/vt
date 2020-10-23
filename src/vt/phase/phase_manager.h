@@ -48,7 +48,7 @@
 #include "vt/configs/types/types_type.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/phase/phase_hook_enum.h"
-#include "vt/phase/registered_phase_hook.h"
+#include "vt/phase/phase_hook_id.h"
 
 #include <unordered_map>
 #include <map>
