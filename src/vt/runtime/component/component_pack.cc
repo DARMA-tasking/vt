@@ -178,11 +178,10 @@ void ComponentPack::detectCyclesImpl(std::list<int>& stack, int dep) {
 
 void ComponentPack::printMemoryFootprint() const {
   for (auto&& c : live_components_) {
-    auto footprint = checkpoint::getMemoryFootprint(*c);
     fmt::print(
       "Memory footprint for component {}:\t{}\n",
-      typeid(*c).name(),
-      footprint
+      c->name(),
+      checkpoint::getMemoryFootprint(*c)
     );
   }
 }

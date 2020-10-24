@@ -81,15 +81,18 @@ TEST_F(TestMemoryFootprinting, test_live_components) {
 }
 
 template<typename T>
-void printMemoryFootprint(T* obj) {
-  fmt::print("sizeof(obj):\t{}\n", sizeof(*obj));
-
-  auto size = checkpoint::getMemoryFootprint<T>(*obj);
-  fmt::print("footprint(obj):\t{}\n", size);
+void printMemoryFootprint(T* component) {
+  if (component != nullptr) {
+    fmt::print(
+      "Memory footprint for component {}:\t{}\n",
+      component->name(),
+      checkpoint::getMemoryFootprint(*component)
+    );
+  }
 }
 
 TEST_F(TestMemoryFootprinting, test_arg_config) {
-  printMemoryFootprint(theConfig());
+  printMemoryFootprint(vt::rt->theArgConfig);
 }
 
 TEST_F(TestMemoryFootprinting, test_time_trigger_manager) {
@@ -180,9 +183,7 @@ TEST_F(TestMemoryFootprinting, test_async_event) {
 }
 
 TEST_F(TestMemoryFootprinting, test_worker_group_type) {
-  // FIXME: clang builds failing
-  // vt::worker::WorkerGroupType workerGroup;
-  // printMemoryFootprint(&workerGroup);
+  printMemoryFootprint(theWorkerGrp());
 }
 
 TEST_F(TestMemoryFootprinting, test_virtual_context_manager) {

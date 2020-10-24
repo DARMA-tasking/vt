@@ -71,6 +71,10 @@ struct WorkerGroupAny
   : runtime::component::PollableComponent<WorkerGroupAny<WorkerT>>,
   WorkerGroupCounter, WorkerGroupComm
 {
+  checkpoint_virtual_serialize_derived_from(
+    runtime::component::PollableComponent<WorkerGroupAny<WorkerT>>
+  )
+
   using WorkerType = WorkerT;
   using WorkerPtrType = std::unique_ptr<WorkerT>;
   using WorkerContainerType = std::vector<WorkerPtrType>;
@@ -96,8 +100,13 @@ struct WorkerGroupAny
 
   std::string name() override { return "WorkerGroup"; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | finished_fn_
       | initialized_
       | num_workers_;

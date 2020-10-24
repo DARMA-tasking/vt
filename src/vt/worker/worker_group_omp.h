@@ -67,6 +67,8 @@ struct WorkerGroupOMP
   : runtime::component::PollableComponent<WorkerGroupOMP>,
     WorkerGroupCounter, WorkerGroupComm
 {
+  checkpoint_virtual_serialize_derived_from(PollableComponent)
+
   using WorkerType = OMPWorker;
   using WorkerStateType = WorkerType;
   using WorkerStatePtrType = std::unique_ptr<WorkerStateType>;
@@ -97,8 +99,13 @@ struct WorkerGroupOMP
   );
   void enqueueAllWorkers(WorkUnitType const& work_unit);
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
     s | finished_fn_
       | ready_
       | initialized_
