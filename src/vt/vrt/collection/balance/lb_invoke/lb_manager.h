@@ -71,7 +71,6 @@ class LoadModel;
 struct LBManager : runtime::component::Component<LBManager> {
   checkpoint_virtual_serialize_derived_from(Component)
 
-  using ListenerFnType = std::function<void(PhaseType)>;
   using LBProxyType    = objgroup::proxy::Proxy<lb::BaseLB>;
 
   /**
@@ -180,7 +179,6 @@ public:
       | cached_lb_
       | destroy_lb_
       | synced_in_lb_
-      | listeners_
       | proxy_
       | base_model_
       | model_;

@@ -1768,8 +1768,6 @@ public:
       | cleanup_fns_
       | constructed_
       | reduce_cur_stamp_
-      | lb_continuations_
-      | lb_no_elm_
       | insert_finished_action_
       | user_insert_action_
       | dist_tag_id_
