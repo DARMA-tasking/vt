@@ -81,6 +81,8 @@ struct NextMsg;
  * registered and are always run in a collective epoch.
  */
 struct PhaseManager : runtime::component::Component<PhaseManager> {
+  checkpoint_virtual_serialize_derived_from(Component)
+
   using HookIDType = typename std::underlying_type<PhaseHook>::type;
   using HookMapType = std::map<std::size_t, ActionType>;
   using HookIDMapType = std::unordered_map<HookIDType, HookMapType>;
@@ -179,6 +181,23 @@ public:
    * use cases where they need to be run.
    */
   void runHooksManual(PhaseHook type);
+
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
+    s | cur_phase_
+      | proxy_
+      | collective_hooks_
+      | rooted_hooks_
+      | next_collective_hook_id_
+      | next_rooted_hook_id_
+      | in_next_phase_collective_
+      | reduce_next_phase_done_;
+  }
 
 private:
   PhaseType cur_phase_ = 0;                 /**< Current phase */

@@ -197,6 +197,10 @@ TEST_F(TestMemoryFootprinting, test_context) {
   printMemoryFootprint(theContext());
 }
 
+TEST_F(TestMemoryFootprinting, test_phase) {
+  printMemoryFootprint(thePhase());
+}
+
 #if vt_check_enabled(trace_enabled)
 TEST_F(TestMemoryFootprinting, test_trace) {
   printMemoryFootprint(theTrace());
