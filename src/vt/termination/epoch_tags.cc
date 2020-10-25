@@ -48,7 +48,7 @@
 
 namespace vt { namespace term {
 
-SuccessorEpochCapture::SuccessorEpochCapture()
+ChildEpochCapture::ChildEpochCapture()
   : epoch_(
       (theMsg()->getEpoch() != no_epoch and
        theMsg()->getEpoch() != term::any_epoch_sentinel) ?
