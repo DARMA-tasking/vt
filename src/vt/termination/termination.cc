@@ -982,7 +982,7 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 }
 
 EpochType TerminationDetector::makeEpochRootedWave(
-  SuccessorEpochCapture successor, std::string const& label
+  ChildEpochCapture successor, std::string const& label
 ) {
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
 
@@ -1015,7 +1015,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
 }
 
 EpochType TerminationDetector::makeEpochRootedDS(
-  SuccessorEpochCapture successor, std::string const& label
+  ChildEpochCapture successor, std::string const& label
 ) {
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch(false, ds_cat);
@@ -1042,13 +1042,13 @@ EpochType TerminationDetector::makeEpochRootedDS(
 }
 
 EpochType TerminationDetector::makeEpochRooted(
-  UseDS use_ds, SuccessorEpochCapture successor
+  UseDS use_ds, ChildEpochCapture successor
 ) {
   return makeEpochRooted("", use_ds, successor);
 }
 
 EpochType TerminationDetector::makeEpochRooted(
-  std::string const& label, UseDS use_ds, SuccessorEpochCapture successor
+  std::string const& label, UseDS use_ds, ChildEpochCapture successor
 ) {
   /*
    *  This method should only be called by the root node for the rooted epoch
@@ -1076,7 +1076,7 @@ EpochType TerminationDetector::makeEpochRooted(
 }
 
 EpochType TerminationDetector::makeEpochCollective(
-  SuccessorEpochCapture successor
+  ChildEpochCapture successor
 ) {
   vt_debug_print(
     normal, term,
@@ -1087,7 +1087,7 @@ EpochType TerminationDetector::makeEpochCollective(
 }
 
 EpochType TerminationDetector::makeEpochCollective(
-  std::string const& label, SuccessorEpochCapture successor
+  std::string const& label, ChildEpochCapture successor
 ) {
   auto const epoch = epoch::EpochManip::makeNewEpoch();
 
@@ -1110,7 +1110,7 @@ EpochType TerminationDetector::makeEpochCollective(
 
 EpochType TerminationDetector::makeEpoch(
   std::string const& label, bool is_coll, UseDS use_ds,
-  SuccessorEpochCapture successor
+  ChildEpochCapture successor
 ) {
   return is_coll ?
     makeEpochCollective(label, successor) :
