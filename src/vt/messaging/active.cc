@@ -266,8 +266,6 @@ private:
   MsgSizeType size = 0;
 };
 
-static constexpr std::size_t max_per_send = 1ull << 30;
-
 /*static*/ void ActiveMessenger::chunkedMultiMsg(MultiMsg* msg) {
   theMsg()->handleChunkedMultiMsg(msg);
 }
@@ -313,6 +311,7 @@ EventType ActiveMessenger::sendMsgMPI(
     dest, msg_size, send_tag
   );
 
+  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
   if (static_cast<std::size_t>(msg_size) < max_per_send) {
     auto const event_id = theEvent()->createMPIEvent(this_node_);
     auto& holder = theEvent()->getEventHolder(event_id);
@@ -556,6 +555,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
     auto const event_id = theEvent()->createMPIEvent(this_node_);
     auto& holder = theEvent()->getEventHolder(event_id);
     auto mpi_event = holder.get_event();
+    auto const max_per_send = theConfig()->vt_max_mpi_send_size;
     auto subsize = static_cast<ByteType>(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
     );
@@ -747,6 +747,7 @@ void ActiveMessenger::recvDataDirect(
   char* cbuf = static_cast<char*>(buf);
   MsgSizeType remainder = len;
   for (int i = 0; i < nchunks; i++) {
+    auto const max_per_send = theConfig()->vt_max_mpi_send_size;
     auto sublen = static_cast<int>(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
     );

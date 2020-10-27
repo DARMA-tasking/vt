@@ -51,6 +51,7 @@
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/utils/memory/memory_usage.h"
+#include "vt/utils/memory/memory_units.h"
 #include "vt/scheduler/scheduler.h"
 
 #include <memory>
@@ -757,6 +758,23 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 #endif
+
+  // Limit to between 256 B and 1 GiB. If its too small a VT envelope won't fit;
+  // if its too large we overflow an integer passed to MPI.
+  if (getAppConfig()->vt_max_mpi_send_size < 256) {
+    vtAbort("Max size for MPI send must be greater than 256 B");
+  } else if (getAppConfig()->vt_max_mpi_send_size > 1ull << 30) {
+    vtAbort("Max size for MPI send must not be greater than 1 GiB (overflow)");
+  } else {
+    auto const bytes = getAppConfig()->vt_max_mpi_send_size;
+    auto const ret = util::memory::getBestMemoryUnit(bytes);
+    auto f_max = fmt::format(
+      "Splitting messages greater than {} {}",
+      std::get<1>(ret), std::get<0>(ret)
+    );
+    auto f_max_arg = opt_on("--vt_max_mpi_send_size", f_max);
+    fmt::print("{}\t{}{}", vt_pre, f_max_arg, reset);
+  }
 
   if (getAppConfig()->vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
