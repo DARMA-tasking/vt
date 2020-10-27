@@ -217,8 +217,7 @@ struct MsgSharedPtr final {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    // s | impl_
-    //   | ptr_;
+    s.countBytes(*this);
   }
 
 private:
