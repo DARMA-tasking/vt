@@ -1773,7 +1773,8 @@ public:
       | dist_tag_id_
       | release_lb_
       | cur_context_temp_elm_id_
-      | cur_context_perm_elm_id_;
+      | cur_context_perm_elm_id_
+      | collect_stats_for_lb_;
   }
 
 private:
