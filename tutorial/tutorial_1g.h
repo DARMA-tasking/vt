@@ -148,7 +148,7 @@ static void getCallbackHandler(MsgWithCallback* msg) {
   ::fmt::print("getCallbackHandler: triggered on node={}\n", cur_node);
 
   // Send the callback a message
-  msg->cb.send<DataMsg>();
+  msg->cb.send();
 }
 /// [Tutorial1G]
 

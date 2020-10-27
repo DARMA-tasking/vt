@@ -125,7 +125,7 @@ struct PipeManager
    *        // callback triggered with message and associated context
    *      }
    *    );
-   *    cb.send<DataMsg>();
+   *    cb.send();
    *  }
    * \endcode
    *
@@ -188,7 +188,7 @@ struct PipeManager
    *        // callback triggered with message
    *      }
    *    );
-   *    cb.send<DataMsg>();
+   *    cb.send();
    *  }
    * \endcode
    *

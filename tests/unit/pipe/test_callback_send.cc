@@ -80,7 +80,7 @@ static int32_t called = 0;
 
 struct TestCallbackSend : TestParallelHarness {
   static void testHandler(CallbackDataMsg* msg) {
-    msg->cb_.send<DataMsg>(1,2,3);
+    msg->cb_.send(1,2,3);
   }
   static void testHandlerEmpty(CallbackMsg* msg) {
     msg->cb_.send();
@@ -116,7 +116,7 @@ TEST_F(TestCallbackSend, test_callback_send_1) {
 
   runInEpochCollective([this_node]{
     auto cb = theCB()->makeSend<DataMsg, callbackFn>(this_node);
-    cb.send<DataMsg>(1, 2, 3);
+    cb.send(1, 2, 3);
   });
 
   EXPECT_EQ(called, 100);
@@ -128,7 +128,7 @@ TEST_F(TestCallbackSend, test_callback_send_2) {
 
   runInEpochCollective([this_node]{
     auto cb = theCB()->makeSend<CallbackFunctor>(this_node);
-    cb.send<DataMsg>(1, 2, 3);
+    cb.send(1, 2, 3);
   });
 
   EXPECT_EQ(called, 200);

@@ -238,7 +238,7 @@ struct CallbackTyped : CallbackRawBaseSingle {
     cb_   = std::move(other.cb_);
   }
 
-  template <typename MsgU, typename... Args>
+  template <typename MsgU=MsgT, typename... Args>
   void send(Args... args) {
     static_assert(std::is_same<MsgT, MsgU>::value, "Required exact type match");
     sendMsg(makeMessage<MsgU>(std::forward<Args>(args)...));
