@@ -102,6 +102,15 @@ struct TestActiveSendLarge : TestParallelHarness {
     auto msg = makeMessage<RecvMsg>();
     m->cb_.send(msg.get());
   }
+
+  // Set max size to 16 KiB for testing
+  void addAdditionalArgs() override {
+    new_arg = fmt::format("--vt_max_mpi_send_size=16384");
+    addArgs(new_arg);
+  }
+
+private:
+  std::string new_arg;
 };
 
 TYPED_TEST_SUITE_P(TestActiveSendLarge);
@@ -143,14 +152,14 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
 REGISTER_TYPED_TEST_SUITE_P(TestActiveSendLarge, test_large_bytes_msg);
 
 using NonSerTestTypes = testing::Types<
-  std::tuple<std::integral_constant<NumBytesType, 30>, NonSerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 31>, NonSerializedTag>
+  std::tuple<std::integral_constant<NumBytesType, 20>, NonSerializedTag>,
+  std::tuple<std::integral_constant<NumBytesType, 21>, NonSerializedTag>
   // std::tuple<std::integral_constant<NumBytesType, 32>, NonSerializedTag>
 >;
 
 using SerTestTypes = testing::Types<
-  std::tuple<std::integral_constant<NumBytesType, 30>, SerializedTag>,
-  std::tuple<std::integral_constant<NumBytesType, 31>, SerializedTag>
+  std::tuple<std::integral_constant<NumBytesType, 20>, SerializedTag>,
+  std::tuple<std::integral_constant<NumBytesType, 21>, SerializedTag>
   // std::tuple<std::integral_constant<NumBytesType, 32>, SerializedTag>
 >;
 
