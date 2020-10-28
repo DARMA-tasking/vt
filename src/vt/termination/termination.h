@@ -217,7 +217,7 @@ public:
    */
   EpochType makeEpochRooted(
     UseDS use_ds = UseDS{false},
-    ChildEpochCapture successor = ChildEpochCapture{}
+    ParentEpochCapture successor = ParentEpochCapture{}
   );
 
   /**
@@ -228,7 +228,7 @@ public:
    * \return the new epoch
    */
   EpochType makeEpochCollective(
-    ChildEpochCapture successor = ChildEpochCapture{}
+    ParentEpochCapture successor = ParentEpochCapture{}
   );
 
   /**
@@ -243,7 +243,7 @@ public:
   EpochType makeEpochRooted(
     std::string const& label,
     UseDS use_ds = UseDS{false},
-    ChildEpochCapture successor = ChildEpochCapture{}
+    ParentEpochCapture successor = ParentEpochCapture{}
   );
 
   /**
@@ -256,7 +256,7 @@ public:
    */
   EpochType makeEpochCollective(
     std::string const& label,
-    ChildEpochCapture successor = ChildEpochCapture{}
+    ParentEpochCapture successor = ParentEpochCapture{}
   );
 
   /**
@@ -273,7 +273,7 @@ public:
     std::string const& label,
     bool is_coll,
     UseDS use_ds = UseDS{false},
-    ChildEpochCapture successor = ChildEpochCapture{}
+    ParentEpochCapture successor = ParentEpochCapture{}
   );
 
   /**
@@ -313,7 +313,7 @@ public:
    * \return the new epoch
    */
   EpochType makeEpochRootedWave(
-    ChildEpochCapture successor, std::string const& label = ""
+    ParentEpochCapture successor, std::string const& label = ""
   );
 
   /**
@@ -325,7 +325,7 @@ public:
    * \return the new epoch
    */
   EpochType makeEpochRootedDS(
-    ChildEpochCapture successor, std::string const& label = ""
+    ParentEpochCapture successor, std::string const& label = ""
   );
 
 private:

@@ -49,11 +49,11 @@
 
 namespace vt { namespace term {
 
-struct ChildEpochCapture {
-  explicit ChildEpochCapture(EpochType epoch)
+struct ParentEpochCapture {
+  explicit ParentEpochCapture(EpochType epoch)
     : epoch_(epoch)
   { }
-  ChildEpochCapture();
+  ParentEpochCapture();
 
   operator EpochType() const { return epoch_; }
 
