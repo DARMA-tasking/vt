@@ -628,10 +628,10 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
   auto iter = pending_recvs_.begin();
 
   for (; iter != pending_recvs_.end(); ++iter) {
+    auto& elm = iter->second;
     auto const done = recvDataMsgBuffer(
-      iter->second.nchunks, iter->second.user_buf, iter->second.priority,
-      iter->first, iter->second.sender, false, iter->second.dealloc_user_buf,
-      iter->second.cont
+      elm.nchunks, elm.user_buf, elm.priority, iter->first, elm.sender, false,
+      elm.dealloc_user_buf, elm.cont
     );
     if (done) {
       erase = true;
