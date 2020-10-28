@@ -551,11 +551,11 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
   int num_sends = 0;
   std::vector<EventType> events;
   EventType ret_event = no_event;
+  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
   while (remainder > 0) {
     auto const event_id = theEvent()->createMPIEvent(this_node_);
     auto& holder = theEvent()->getEventHolder(event_id);
     auto mpi_event = holder.get_event();
-    auto const max_per_send = theConfig()->vt_max_mpi_send_size;
     auto subsize = static_cast<ByteType>(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
     );
@@ -746,8 +746,8 @@ void ActiveMessenger::recvDataDirect(
 
   char* cbuf = static_cast<char*>(buf);
   MsgSizeType remainder = len;
+  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
   for (int i = 0; i < nchunks; i++) {
-    auto const max_per_send = theConfig()->vt_max_mpi_send_size;
     auto sublen = static_cast<int>(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
     );
