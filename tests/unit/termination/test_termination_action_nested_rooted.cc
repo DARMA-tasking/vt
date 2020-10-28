@@ -56,7 +56,7 @@ struct TestTermNestedRooted : action::BaseFixture {
     if (channel::node == channel::root) {
       epoch = vt::theTerm()->makeEpochRooted(
         term::UseDS{useDS_},
-        term::SuccessorEpochCapture{parent}
+        term::ChildEpochCapture{parent}
       );
       // check that epoch is effectively rooted
       vtAssert(channel::root == epoch_manip::node(epoch), "Node should be root");
