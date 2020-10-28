@@ -230,7 +230,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
-        RDMA_GetType{put_ptr,put_size}, dest, env_tag
+        PtrLenPairType{put_ptr,put_size}, dest, env_tag
       );
       auto const& ret_tag = ret.getTag();
       if (ret_tag != env_tag) {
@@ -284,7 +284,7 @@ void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
   auto const nchunks = info.getNumChunks();
   auto const tag = info.getTag();
 
-  auto fn = [buf,sender,size,tag,this](RDMA_GetType,ActionType){
+  auto fn = [buf,sender,size,tag,this](PtrLenPairType,ActionType){
     vt_debug_print(
       active, node,
       "handleChunkedMultiMsg: all chunks arrived tag={}, size={}, from={}\n",
@@ -352,7 +352,7 @@ EventType ActiveMessenger::sendMsgMPI(
     auto tag = allocateNewTag();
     auto this_node = theContext()->getNode();
 
-    RDMA_GetType tup = std::make_tuple(untyped_msg, msg_size);
+    PtrLenPairType tup = std::make_tuple(untyped_msg, msg_size);
     SendInfo info = sendData(tup, dest, tag);
     auto event_id = info.getEvent();
     auto& holder = theEvent()->getEventHolder(event_id);
@@ -498,7 +498,7 @@ MPI_TagType ActiveMessenger::allocateNewTag() {
 }
 
 SendInfo ActiveMessenger::sendData(
-  RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
+  PtrLenPairType const& ptr, NodeType const& dest, TagType const& tag
 ) {
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
@@ -544,7 +544,7 @@ SendInfo ActiveMessenger::sendData(
 }
 
 std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
-  RDMA_GetType const& payload, NodeType const& dest, TagType const& tag
+  PtrLenPairType const& payload, NodeType const& dest, TagType const& tag
 ) {
   auto ptr = static_cast<char*>(std::get<0>(payload));
   auto remainder = std::get<1>(payload);
@@ -611,14 +611,14 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
 
 bool ActiveMessenger::recvDataMsgPriority(
   int nchunks, PriorityType priority, TagType const& tag, NodeType const& node,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next
 ) {
   return recvDataMsg(nchunks, priority, tag, node, true, next);
 }
 
 bool ActiveMessenger::recvDataMsg(
   int nchunks, TagType const& tag, NodeType const& node,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next
 ) {
   return recvDataMsg(nchunks, default_priority, tag, node, true, next);
 }
@@ -650,7 +650,7 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 bool ActiveMessenger::recvDataMsgBuffer(
   int nchunks, void* const user_buf, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next
 ) {
   return recvDataMsgBuffer(
     nchunks, user_buf, no_priority, tag, node, enqueue, dealloc, next
@@ -660,7 +660,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 bool ActiveMessenger::recvDataMsgBuffer(
   int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next
 ) {
   if (not enqueue) {
     CountType num_probe_bytes;
@@ -722,7 +722,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
 void ActiveMessenger::recvDataDirect(
   int nchunks, TagType const tag, NodeType const from, MsgSizeType len,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next
 ) {
   char* buf =
     #if vt_check_enabled(memory_pool)
@@ -737,7 +737,7 @@ void ActiveMessenger::recvDataDirect(
 void ActiveMessenger::recvDataDirect(
   int nchunks, void* const buf, TagType const tag, NodeType const from,
   MsgSizeType len, PriorityType prio, ActionType dealloc,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next
 ) {
   vtAssert(nchunks > 0, "Must have at least one chunk");
 
@@ -840,7 +840,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   } else {
     // If we have a continuation, schedule to run later
     auto run = [=]{
-      next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
+      next(PtrLenPairType{buf,num_probe_bytes}, dealloc_buf);
       theTerm()->consume(term::any_epoch_sentinel,1,sender);
       theTerm()->hangDetectRecv();
     };
@@ -851,7 +851,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
 bool ActiveMessenger::recvDataMsg(
   int nchunks, PriorityType priority, TagType const& tag,
   NodeType const& sender, bool const& enqueue,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next
 ) {
   return recvDataMsgBuffer(
     nchunks, nullptr, priority, tag, sender, enqueue, nullptr, next
@@ -1178,7 +1178,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     } else {
       /*bool const put_delivered = */recvDataMsg(
         1, put_tag, sender,
-        [=](RDMA_GetType ptr, ActionType deleter){
+        [=](PtrLenPairType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
           scheduleActiveMsg(base, sender, num_probe_bytes, true, deleter);
         }

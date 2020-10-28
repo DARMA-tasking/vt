@@ -75,6 +75,17 @@
 #include <limits>
 #include <stack>
 
+namespace vt {
+
+/// A pair of a void* and number of bytes (length) for sending data
+using PtrLenPairType = std::tuple<void*, ByteType>;
+
+/// A continuation function with an allocated pointer with a deleter function
+using ContinuationDeleterType =
+  std::function<void(PtrLenPairType data, ActionType deleter)>;
+
+} /* end namespace vt */
+
 namespace vt { namespace messaging {
 
 /** \file */
@@ -100,13 +111,13 @@ static constexpr MsgSizeType const max_pack_direct_size = 512;
 struct PendingRecv {
   int nchunks = 0;
   void* user_buf = nullptr;
-  RDMA_ContinuationDeleteType cont = nullptr;
+  ContinuationDeleterType cont = nullptr;
   ActionType dealloc_user_buf = nullptr;
   NodeType sender = uninitialized_destination;
   PriorityType priority = no_priority;
 
   PendingRecv(
-    int in_nchunks, void* in_user_buf, RDMA_ContinuationDeleteType in_cont,
+    int in_nchunks, void* in_user_buf, ContinuationDeleterType in_cont,
     ActionType in_dealloc_user_buf, NodeType node,
     PriorityType in_priority
   ) : nchunks(in_nchunks), user_buf(in_user_buf), cont(in_cont),
@@ -171,7 +182,7 @@ struct InProgressDataIRecv : InProgressBase {
     char* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender,
     std::vector<MPI_Request> in_reqs, void* const in_user_buf,
     ActionType in_dealloc_user_buf,
-    RDMA_ContinuationDeleteType in_next,
+    ContinuationDeleterType in_next,
     PriorityType in_priority
   ) : InProgressBase{in_buf, in_probe_bytes, in_sender},
       user_buf(in_user_buf), dealloc_user_buf(in_dealloc_user_buf),
@@ -198,7 +209,7 @@ struct InProgressDataIRecv : InProgressBase {
 public:
   void* user_buf = nullptr;
   ActionType dealloc_user_buf = nullptr;
-  RDMA_ContinuationDeleteType next = nullptr;
+  ContinuationDeleterType next = nullptr;
   PriorityType priority = no_priority;
 
 private:
@@ -269,9 +280,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   using CountType            = int32_t;
   using PendingRecvType      = PendingRecv;
   using EventRecordType      = event::AsyncEvent::EventRecordType;
-  using SendFnType           = std::function<
-    SendInfo(RDMA_GetType,NodeType,TagType)
-  >;
+  using SendFnType           = std::function<SendInfo(PtrLenPairType,NodeType,TagType)>;
   using UserSendFnType       = std::function<void(SendFnType)>;
   using ContainerPendingType = std::unordered_map<TagType,PendingRecvType>;
   using MsgContType          = std::list<BufferedMsgType>;
@@ -948,7 +957,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *     NodeType send_node = 0;
    *     theMsg()->recvDataMsg(
    *       msg->mpi_tag_to_recv, send_node,
-   *       [=](RDMA_GetType ptr, ActionType deleter){
+   *       [=](PtrLenPairType ptr, ActionType deleter){
    *          // do something with ptr
    *          deleter();
    *       }
@@ -960,7 +969,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *     // The user's payload function that invokes the system send function
    *     // passed to the lambda
    *     auto send_payload = [&](Active::SendFnType send){
-   *       auto ret = send(vt::RDMA_GetType{ptr, num_bytes}, put_node, vt::no_tag);
+   *       auto ret = send(vt::PtrLenPairType{ptr, num_bytes}, put_node, vt::no_tag);
    *       msg->mpi_tag_to_recv = std::get<1>(ret);
    *     };
    *     theMsg()->sendMsg<PutMessage, myHandler>(1, msg);
@@ -1083,7 +1092,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return information about the send for receiving the payload
    */
   SendInfo sendData(
-    RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
+    PtrLenPairType const& ptr, NodeType const& dest, TagType const& tag
   );
 
   /**
@@ -1097,7 +1106,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return a tuple of the event and the number of sends
    */
   std::tuple<EventType, int> sendDataMPI(
-    RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
+    PtrLenPairType const& ptr, NodeType const& dest, TagType const& tag
   );
 
   /**
@@ -1114,7 +1123,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   bool recvDataMsgPriority(
     int nchunks, PriorityType priority, TagType const& tag,
-    NodeType const& node, RDMA_ContinuationDeleteType next = nullptr
+    NodeType const& node, ContinuationDeleterType next = nullptr
   );
 
   /**
@@ -1130,7 +1139,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   bool recvDataMsg(
     int nchunks, TagType const& tag, NodeType const& node,
-    RDMA_ContinuationDeleteType next = nullptr
+    ContinuationDeleterType next = nullptr
   );
 
   /**
@@ -1149,7 +1158,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   bool recvDataMsg(
     int nchunks, PriorityType priority, TagType const& tag,
     NodeType const& sender, bool const& enqueue,
-    RDMA_ContinuationDeleteType next = nullptr
+    ContinuationDeleterType next = nullptr
   );
 
   /**
@@ -1171,7 +1180,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
-    RDMA_ContinuationDeleteType next = nullptr
+    ContinuationDeleterType next = nullptr
   );
 
   /**
@@ -1192,7 +1201,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     int nchunks, void* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
-    RDMA_ContinuationDeleteType next = nullptr
+    ContinuationDeleterType next = nullptr
   );
 
   /**
@@ -1210,7 +1219,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   void recvDataDirect(
     int nchunks, void* const buf, TagType const tag, NodeType const from,
     MsgSizeType len, PriorityType prio, ActionType dealloc = nullptr,
-    RDMA_ContinuationDeleteType next = nullptr
+    ContinuationDeleterType next = nullptr
   );
 
   /**
@@ -1224,7 +1233,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   void recvDataDirect(
     int nchunks, TagType const tag, NodeType const from,
-    MsgSizeType len, RDMA_ContinuationDeleteType next
+    MsgSizeType len, ContinuationDeleterType next
   );
 
   /**
