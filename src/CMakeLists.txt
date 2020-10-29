@@ -76,6 +76,7 @@ set(
       vrt/collection/dispatch vrt/collection/gettable vrt/collection/rdmaable
       vrt/collection/staged_token
       vrt/collection/listener
+      vrt/collection/invoke
       vrt/collection/balance
         vrt/collection/balance/baselb
         vrt/collection/balance/hierarchicallb

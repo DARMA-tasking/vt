@@ -776,6 +776,125 @@ template <typename ColT, typename MsgT>
   }
 }
 
+template <
+  typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
+>
+void CollectionManager::invokeMsg(
+  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy,
+  messaging::MsgPtrThief<MsgT> msg, bool instrument
+)
+{
+  using ColT = typename MsgT::CollectionType;
+
+  auto& msgPtr = msg.msg_;
+  msgPtr->setMember(false);
+  msgPtr->setVrtHandler(
+    auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>()
+  );
+
+  invokeMsgImpl<ColT, MsgT>(proxy, msg, instrument);
+}
+
+template <
+  typename MsgT,
+  ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+>
+void CollectionManager::invokeMsg(
+  VirtualElmProxyType<typename MsgT::CollectionType> const& proxy,
+  messaging::MsgPtrThief<MsgT> msg, bool instrument
+)
+{
+  using ColT = typename MsgT::CollectionType;
+
+  auto& msgPtr = msg.msg_;
+  msgPtr->setMember(true);
+  msgPtr->setVrtHandler(
+    auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>()
+  );
+
+  invokeMsgImpl<ColT, MsgT>(proxy, msg, instrument);
+}
+
+template <typename ColT, typename MsgT>
+void CollectionManager::invokeMsgImpl(
+  VirtualElmProxyType<ColT> const& proxy, messaging::MsgPtrThief<MsgT> msg,
+  bool instrument
+)
+{
+  using IndexT = typename ColT::IndexType;
+  auto& msgPtr = msg.msg_;
+
+  auto idx = proxy.getElementProxy().getIndex();
+  auto elm_holder =
+    theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy()
+  );
+
+  vtAssert(elm_holder != nullptr, "Must have elm holder");
+  vtAssert(
+    elm_holder->exists(idx),
+    fmt::format(
+      "Element with idx:{} doesn't exist on node:{}\n", idx,
+      theContext()->getNode()
+    )
+  );
+
+#if vt_check_enabled(lblite)
+  auto const temp_elm_id = getCurrentContextTemp();
+  auto const perm_elm_id = getCurrentContextPerm();
+
+  vt_debug_print(
+    vrt_coll, node, "invokeMsg: LB current elm context perm={}, temp={}\n",
+    perm_elm_id, temp_elm_id
+  );
+
+  if (perm_elm_id != balance::no_element_id) {
+    msgPtr->setElm(perm_elm_id, temp_elm_id);
+  }
+  msgPtr->setCat(balance::CommCategory::LocalInvoke);
+
+#endif
+
+  auto const cur_epoch = theMsg()->setupEpochMsg(msgPtr);
+  auto& inner_holder = elm_holder->lookup(idx);
+  auto const col_ptr = inner_holder.getCollection();
+  auto const from = theContext()->getNode();
+
+  msgPtr->setFromNode(from);
+  msgPtr->setProxy(proxy);
+
+#if vt_check_enabled(lblite)
+  if (instrument) {
+    col_ptr->getStats().startTime();
+  }
+#endif
+
+  theMsg()->pushEpoch(cur_epoch);
+
+  trace::TraceEventIDType trace_event = trace::no_trace_event;
+#if vt_check_enabled(trace_enabled)
+  auto reg_type = msgPtr->getMember() ?
+    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+    auto_registry::RegistryTypeEnum::RegVrtCollection;
+  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
+
+  trace_event = theMsg()->makeTraceCreationSend(
+    msgPtr, msgPtr->getVrtHandler(), reg_type, msg_size, true
+  );
+#endif
+
+  collectionAutoMsgDeliver<ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
+    msgPtr.get(), col_ptr, msgPtr->getVrtHandler(), msgPtr->getMember(), from,
+    trace_event
+  );
+
+  theMsg()->popEpoch(cur_epoch);
+
+#if vt_check_enabled(lblite)
+  if (instrument) {
+    col_ptr->getStats().stopTime();
+  }
+#endif
+}
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::collectionMsgHandler(BaseMessage* msg) {
