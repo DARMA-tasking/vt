@@ -68,4 +68,12 @@ void Manager::setup(ProxyType in_proxy) {
   return ptr;
 }
 
+std::size_t Manager::getHolderFootprint() const {
+  std::size_t size = 0;
+  for(auto& elm : holder_footprint_) {
+    size += elm.second();
+  }
+  return size;
+}
+
 }} /* end namespace vt::rdma */

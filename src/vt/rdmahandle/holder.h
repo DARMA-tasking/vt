@@ -114,6 +114,21 @@ public:
 
   bool isUniform() const { return uniform_size_; }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | key_
+      | data_base_
+      | control_base_
+      | count_
+      | ready_
+      | mpi2_
+      | uniform_size_
+      | handle_;
+
+    s.countBytes(data_window_);
+    s.countBytes(control_window_);
+  }
+
 private:
   HandleKey key_;
   MPI_Win data_window_;

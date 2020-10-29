@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_RDMAHANDLE_MANAGER_IMPL_H
 #define INCLUDED_VT_RDMAHANDLE_MANAGER_IMPL_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/rdmahandle/manager.h"
 #include "vt/rdmahandle/sub_handle.h"
@@ -133,6 +135,9 @@ Handle<T, E> Manager::makeHandleCollectiveObjGroup(
   auto key = HandleKey{typename HandleKey::ObjGroupTag{}, proxy_bits, next_handle};
   auto han = Handle<T, E>{typename Handle<T, E>::NodeTagType{}, key, size};
   holder_<T,E>[key].template addHandle<ObjGroupProxyType>(key, sub, han, size, uniform_size);
+  holder_footprint_[key] = [&holder = holder_<T,E>[key]]() {
+    return checkpoint::getMemoryFootprint(holder);
+  };
   auto cb = vt::theCB()->makeBcast<
     Manager, impl::ConstructMsg<T, E, ProxyT>, &Manager::finishMake<T, E, ProxyT>
   >(proxy_);
@@ -178,7 +183,11 @@ void Manager::deleteHandleCollectiveObjGroup(Handle<T,E> const& han) {
     iter->second.deallocate();
     holder_<T,E>.erase(iter);
   }
-}
+
+  auto footprint_iter = holder_footprint_.find(key);
+  if (footprint_iter != holder_footprint_.end()) {
+    holder_footprint_.erase(footprint_iter);
+  }}
 
 template <typename T>
 void Manager::deleteHandleSetCollectiveObjGroup(HandleSet<T>& han) {
