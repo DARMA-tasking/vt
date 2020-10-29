@@ -46,6 +46,36 @@
 #define INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
 
 #include "vt/config.h"
+#include "vt/messaging/active.h"
+#include "vt/termination/termination.h"
+
+namespace vt {
+
+template <typename Callable>
+void runInEpochCollective(Callable&& fn) {
+  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
+
+  auto ep = theTerm()->makeEpochCollective();
+  theMsg()->pushEpoch(ep);
+  fn();
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+  runSchedulerThrough(ep);
+}
+
+template <typename Callable>
+void runInEpochRooted(Callable&& fn) {
+  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
+
+  auto ep = theTerm()->makeEpochRooted();
+  theMsg()->pushEpoch(ep);
+  fn();
+  theMsg()->popEpoch(ep);
+  theTerm()->finishedEpoch(ep);
+  runSchedulerThrough(ep);
+}
+
+} /* end namespace vt */
 
 namespace vt { namespace sched {
 

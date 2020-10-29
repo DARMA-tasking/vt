@@ -387,26 +387,4 @@ void runSchedulerThrough(EpochType epoch) {
   theTerm()->consume();
 }
 
-void runInEpochRooted(ActionType&& fn) {
-  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
-
-  auto ep = theTerm()->makeEpochRooted();
-  theMsg()->pushEpoch(ep);
-  fn();
-  theMsg()->popEpoch(ep);
-  theTerm()->finishedEpoch(ep);
-  runSchedulerThrough(ep);
-}
-
-void runInEpochCollective(ActionType&& fn) {
-  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
-
-  auto ep = theTerm()->makeEpochCollective();
-  theMsg()->pushEpoch(ep);
-  fn();
-  theMsg()->popEpoch(ep);
-  theTerm()->finishedEpoch(ep);
-  runSchedulerThrough(ep);
-}
-
 } //end namespace vt
