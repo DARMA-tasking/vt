@@ -294,7 +294,7 @@ void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
     finishPendingActiveMsgAsyncRecv(&irecv);
   };
 
-  recvDataDirect(nchunks, buf, tag, sender, size, 0, nullptr, fn);
+  recvDataDirect(nchunks, buf, tag, sender, size, 0, nullptr, fn, false);
 }
 
 EventType ActiveMessenger::sendMsgMPI(
@@ -631,7 +631,7 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
     auto& elm = iter->second;
     auto const done = recvDataMsgBuffer(
       elm.nchunks, elm.user_buf, elm.priority, iter->first, elm.sender, false,
-      elm.dealloc_user_buf, elm.cont
+      elm.dealloc_user_buf, elm.cont, elm.is_user_buf
     );
     if (done) {
       erase = true;
@@ -650,17 +650,18 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 bool ActiveMessenger::recvDataMsgBuffer(
   int nchunks, void* const user_buf, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc,
-  ContinuationDeleterType next
+  ContinuationDeleterType next, bool is_user_buf
 ) {
   return recvDataMsgBuffer(
-    nchunks, user_buf, no_priority, tag, node, enqueue, dealloc, next
+    nchunks, user_buf, no_priority, tag, node, enqueue, dealloc, next,
+    is_user_buf
   );
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
   int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
-  ContinuationDeleterType next
+  ContinuationDeleterType next, bool is_user_buf
 ) {
   if (not enqueue) {
     CountType num_probe_bytes;
@@ -694,7 +695,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
       recvDataDirect(
         nchunks, buf, tag, sender, num_probe_bytes, priority, dealloc_user_buf,
-        next
+        next, is_user_buf
       );
 
       return true;
@@ -705,15 +706,18 @@ bool ActiveMessenger::recvDataMsgBuffer(
     vt_debug_print(
       active, node,
       "recvDataMsgBuffer: nchunks={}, node={}, tag={}, enqueue={}, "
-      "priority={:x}\n",
-      nchunks, node, tag, print_bool(enqueue), priority
+      "priority={:x} buffering, is_user_buf={}\n",
+      nchunks, node, tag, print_bool(enqueue), priority, is_user_buf
     );
 
     pending_recvs_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
       std::forward_as_tuple(
-        PendingRecvType{nchunks,user_buf,next,dealloc_user_buf,node,priority}
+        PendingRecvType{
+          nchunks, user_buf, next, dealloc_user_buf, node, priority,
+          is_user_buf
+        }
       )
     );
     return false;
@@ -731,13 +735,15 @@ void ActiveMessenger::recvDataDirect(
       static_cast<char*>(std::malloc(len));
     #endif
 
-  recvDataDirect(nchunks, buf, tag, from, len, default_priority, nullptr, next);
+  recvDataDirect(
+    nchunks, buf, tag, from, len, default_priority, nullptr, next, false
+  );
 }
 
 void ActiveMessenger::recvDataDirect(
   int nchunks, void* const buf, TagType const tag, NodeType const from,
   MsgSizeType len, PriorityType prio, ActionType dealloc,
-  ContinuationDeleterType next
+  ContinuationDeleterType next, bool is_user_buf
 ) {
   vtAssert(nchunks > 0, "Must have at least one chunk");
 
@@ -784,7 +790,10 @@ void ActiveMessenger::recvDataDirect(
     remainder -= sublen;
   }
 
-  InProgressDataIRecv recv{cbuf,len,from,std::move(reqs),buf,dealloc,next,prio};
+  InProgressDataIRecv recv{
+    cbuf, len, from, std::move(reqs), is_user_buf ? buf : nullptr, dealloc,
+    next, prio
+  };
 
   int num_mpi_tests = 0;
   bool done = recv.test(num_mpi_tests);

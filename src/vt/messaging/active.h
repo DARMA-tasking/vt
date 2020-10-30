@@ -115,14 +115,15 @@ struct PendingRecv {
   ActionType dealloc_user_buf = nullptr;
   NodeType sender = uninitialized_destination;
   PriorityType priority = no_priority;
+  bool is_user_buf = false;
 
   PendingRecv(
     int in_nchunks, void* in_user_buf, ContinuationDeleterType in_cont,
     ActionType in_dealloc_user_buf, NodeType node,
-    PriorityType in_priority
+    PriorityType in_priority, bool in_is_user_buf
   ) : nchunks(in_nchunks), user_buf(in_user_buf), cont(in_cont),
       dealloc_user_buf(in_dealloc_user_buf), sender(node),
-      priority(in_priority)
+      priority(in_priority), is_user_buf(in_is_user_buf)
   { }
 };
 
@@ -1173,6 +1174,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] enqueue whether to enqueue the operation
    * \param[in] dealloc_user_buf the action to deallocate a user buffer
    * \param[in] next the continuation when the data is ready
+   * \param[in] is_user_buf is a user buffer that require user deallocation
    *
    * \return whether the data is ready or pending
    */
@@ -1180,7 +1182,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
-    ContinuationDeleterType next = nullptr
+    ContinuationDeleterType next = nullptr, bool is_user_buf = false
   );
 
   /**
@@ -1194,6 +1196,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] enqueue whether to enqueue the operation
    * \param[in] dealloc_user_buf the action to deallocate a user buffer
    * \param[in] next the continuation when the data is ready
+   * \param[in] is_user_buf is a user buffer that require user deallocation
    *
    * \return whether the data is ready or pending
    */
@@ -1201,7 +1204,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     int nchunks, void* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
-    ContinuationDeleterType next = nullptr
+    ContinuationDeleterType next = nullptr, bool is_user_buf = false
   );
 
   /**
@@ -1215,11 +1218,12 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] prio the priority for the continuation
    * \param[in] dealloc the action to deallocate the buffer
    * \param[in] next the continuation that gets passed the data when ready
+   * \param[in] is_user_buf is a user buffer that require user deallocation
    */
   void recvDataDirect(
     int nchunks, void* const buf, TagType const tag, NodeType const from,
     MsgSizeType len, PriorityType prio, ActionType dealloc = nullptr,
-    ContinuationDeleterType next = nullptr
+    ContinuationDeleterType next = nullptr, bool is_user_buf = false
   );
 
   /**

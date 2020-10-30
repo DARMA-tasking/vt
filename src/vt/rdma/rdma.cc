@@ -145,7 +145,8 @@ RDMAManager::RDMAManager()
         if (get_ptr_action) {
           get_ptr_action();
         }
-      }
+      },
+      nullptr, true
     );
   }
 }
