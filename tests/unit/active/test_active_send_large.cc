@@ -92,16 +92,16 @@ void checkMsg(T msg) {
   }
 }
 
+template <typename MsgT>
+void myHandler(MsgT* m) {
+  checkMsg(m);
+  auto msg = makeMessage<RecvMsg>();
+  m->cb_.send(msg.get());
+}
+
 template <typename T>
 struct TestActiveSendLarge : TestParallelHarness {
   using TagType = typename std::tuple_element<1,T>::type;
-
-  template <typename MsgT>
-  static void myHandler(MsgT* m) {
-    checkMsg(m);
-    auto msg = makeMessage<RecvMsg>();
-    m->cb_.send(msg.get());
-  }
 
   // Set max size to 16 KiB for testing
   void addAdditionalArgs() override {
@@ -121,7 +121,6 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
 
   static constexpr NumBytesType const nbytes = 1ll << IntegralType::value;
 
-  using ThisType = TestActiveSendLarge<TypeParam>;
   using LargeMsgType = LargeMsg<nbytes, TagType>;
 
   NodeType const this_node = theContext()->getNode();
@@ -141,9 +140,7 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
     auto msg = makeMessage<LargeMsgType>();
     fillMsg(msg);
     msg->cb_ = cb;
-    theMsg()->sendMsg<LargeMsgType, ThisType::template myHandler<LargeMsgType>>(
-      next_node, msg
-    );
+    theMsg()->sendMsg<LargeMsgType, myHandler<LargeMsgType>>(next_node, msg);
   });
 
   EXPECT_EQ(counter, 1);
