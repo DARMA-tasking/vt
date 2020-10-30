@@ -87,8 +87,7 @@ static int32_t called = 0;
 struct TestCallbackFuncCtx : TestParallelHarness {
   static void test_handler(CallbackDataMsg* msg) {
     auto const& n = theContext()->getNode();
-    auto nmsg = makeMessage<DataMsg>(n+1,n+2,n+3);
-    msg->cb_.send(nmsg.get());
+    msg->cb_.send(n+1,n+2,n+3);
   }
 };
 

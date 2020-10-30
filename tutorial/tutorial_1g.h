@@ -147,10 +147,8 @@ static void getCallbackHandler(MsgWithCallback* msg) {
   auto const cur_node = ::vt::theContext()->getNode();
   ::fmt::print("getCallbackHandler: triggered on node={}\n", cur_node);
 
-  // Create a msg to trigger to callback
-  auto data_msg = ::vt::makeMessage<DataMsg>();
-  // Send the callback with the message
-  msg->cb.send(data_msg.get());
+  // Send the callback a message
+  msg->cb.send();
 }
 /// [Tutorial1G]
 

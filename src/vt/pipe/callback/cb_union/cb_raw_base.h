@@ -128,8 +128,14 @@ struct CallbackRawBaseSingle {
   bool null()  const { return cb_.null();  }
   bool valid() const { return cb_.valid(); }
 
+  template <typename MsgT, typename... Args>
+  void send(Args... args);
+
   template <typename MsgT>
   void send(MsgT* msg);
+
+  template <typename MsgT>
+  void sendMsg(messaging::MsgPtrThief<MsgT> msg);
 
   void send();
 
@@ -232,10 +238,20 @@ struct CallbackTyped : CallbackRawBaseSingle {
     cb_   = std::move(other.cb_);
   }
 
+  template <typename MsgU=MsgT, typename... Args>
+  void send(Args... args) {
+    static_assert(std::is_same<MsgT, MsgU>::value, "Required exact type match");
+    sendMsg(makeMessage<MsgU>(std::forward<Args>(args)...));
+  }
+
   template <typename MsgU>
   IsNotVoidType<MsgU> send(MsgU* m) {
     static_assert(std::is_same<MsgT,MsgU>::value, "Required exact type match");
     CallbackRawBaseSingle::send<MsgU>(m);
+  }
+
+  void sendMsg(messaging::MsgPtrThief<MsgT> msg) {
+    CallbackRawBaseSingle::sendMsg<MsgT>(msg);
   }
 
   template <typename T=void, typename=IsVoidType<MsgT,T>>

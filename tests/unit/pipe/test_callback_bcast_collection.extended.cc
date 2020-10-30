@@ -80,8 +80,7 @@ struct CallbackDataMsg : vt::Message {
 
 struct TestCallbackBcastCollection : TestParallelHarness {
   static void testHandler(CallbackDataMsg* msg) {
-    auto nmsg = makeMessage<DataMsg>(8,9,10);
-    msg->cb_.send(nmsg.get());
+    msg->cb_.send(8,9,10);
   }
   static void testHandlerEmpty(CallbackMsg* msg) {
     msg->cb_.send();
@@ -143,8 +142,7 @@ TEST_F(TestCallbackBcastCollection, test_callback_bcast_collection_1) {
   runInEpochCollective([&]{
     if (this_node == 0) {
       auto cb = theCB()->makeBcast<TestCol,DataMsg,&TestCol::cb1>(proxy);
-      auto nmsg = makeMessage<DataMsg>(8,9,10);
-      cb.send(nmsg.get());
+      cb.send(8,9,10);
     }
   });
 

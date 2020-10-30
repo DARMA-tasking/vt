@@ -63,6 +63,11 @@ bool CallbackRawBaseSingle::operator==(CallbackTyped<MsgT> const& other) const {
   return equal(other);
 }
 
+template <typename MsgT, typename... Args>
+void CallbackRawBaseSingle::send(Args... args) {
+  sendMsg<MsgT>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
 template <typename MsgT>
 void CallbackRawBaseSingle::send(MsgT* msg) {
   switch (cb_.active_) {
@@ -96,6 +101,11 @@ void CallbackRawBaseSingle::send(MsgT* msg) {
   default:
     vtAssert(0, "Should not be reachable");
   }
+}
+
+template <typename MsgT>
+void CallbackRawBaseSingle::sendMsg(messaging::MsgPtrThief<MsgT> msg) {
+  send(msg.msg_.get());
 }
 
 template <typename SerializerT>

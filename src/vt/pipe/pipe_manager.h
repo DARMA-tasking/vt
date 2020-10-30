@@ -125,8 +125,7 @@ struct PipeManager
    *        // callback triggered with message and associated context
    *      }
    *    );
-   *    auto my_msg = vt::makeMessage<DataMsg>();
-   *    cb.send(my_msg.get());
+   *    cb.send();
    *  }
    * \endcode
    *
@@ -189,8 +188,7 @@ struct PipeManager
    *        // callback triggered with message
    *      }
    *    );
-   *    auto my_msg = vt::makeMessage<DataMsg>();
-   *    cb.send(my_msg.get());
+   *    cb.send();
    *  }
    * \endcode
    *
