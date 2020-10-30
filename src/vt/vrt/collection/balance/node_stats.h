@@ -46,6 +46,7 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/elm_stats.fwd.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
@@ -113,9 +114,7 @@ public:
    */
   ElementIDType addNodeStats(
     Migratable* col_elm,
-    PhaseType const& phase, TimeType const& time,
-    std::vector<TimeType> const& subphase_time,
-    CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
+    PhaseType const& phase, ElementStats *stats
   );
 
   /**
@@ -163,34 +162,6 @@ public:
    * \internal \brief Generate the next object element ID for LB
    */
   ElementIDType getNextElm();
-
-  /**
-   * \internal \brief Get stored object loads
-   *
-   * \return an observer pointer to the load map
-   */
-  std::unordered_map<PhaseType, LoadMapType> const* getNodeLoad() const;
-
-  /**
-   * \internal \brief Get stored object loads for individual subphases
-   *
-   * \return an observer pointer to the subphase load map
-   */
-  std::unordered_map<PhaseType, SubphaseLoadMapType> const* getNodeSubphaseLoad() const;
-
-  /**
-   * \internal \brief Get stored object comm graph
-   *
-   * \return an observer pointer to the comm graph
-   */
-  std::unordered_map<PhaseType, CommMapType> const* getNodeComm() const;
-
-  /**
-   * \internal \brief Get stored object comm subphase graph
-   *
-   * \return an observer pointer to the comm subphase graph
-   */
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* getNodeSubphaseComm() const;
 
   /**
    * \internal \brief Test if this node has an object to migrate
@@ -257,10 +228,8 @@ private:
 private:
   /// Local proxy to objgroup
   objgroup::proxy::Proxy<NodeStats> proxy_;
-  /// Node timings for each local object
-  std::unordered_map<PhaseType, LoadMapType> node_data_;
-  /// Node subphase timings for each local object
-  std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
+  /// Local ElementStats objects for this phase
+  std::unordered_map<ElementIDType,ElementStats*> local_stats_;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDType,MigrateFnType> node_migrate_;
   /// Map of temporary ID to permanent ID
@@ -269,10 +238,6 @@ private:
   std::unordered_map<ElementIDType,ElementIDType> node_perm_to_temp_;
   /// Map from element temporary ID to the collection's virtual proxy (untyped)
   std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
-  /// Node communication graph for each local object
-  std::unordered_map<PhaseType, CommMapType> node_comm_;
-  /// Node communication graph for each subphase
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// The current element ID
   ElementIDType next_elm_;
   /// The stats file name for outputting instrumentation

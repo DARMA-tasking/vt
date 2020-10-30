@@ -188,6 +188,20 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   return total_load;
 }
 
+std::vector<TimeType> ElementStats::getSubphaseLoads(PhaseType phase) const {
+  vtAssert(subphase_timings_.size() > phase, "Must have phase");
+
+  auto const& loads = subphase_timings_.at(phase);
+
+  vt_debug_print(
+    lb, node,
+    "ElementStats: getSubphaseLoads: phase={}, subphases={}\n",
+    phase, loads.size()
+  );
+
+  return loads;
+}
+
 CommMapType const&
 ElementStats::getComm(PhaseType const& phase) {
   comm_.resize(phase + 1);

@@ -86,15 +86,8 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   stats.updatePhase(1);
 
   auto const& cur_phase = msg->getPhase();
-  auto const& untyped_proxy = col->getProxy();
-  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
-  auto const& subphase_loads = stats.subphase_timings_.at(cur_phase);
-  auto const& comm = stats.getComm(cur_phase);
-  auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
 
-  theNodeStats()->addNodeStats(
-    col, cur_phase, total_load, subphase_loads, comm, subphase_comm
-  );
+  theNodeStats()->addNodeStats(col, cur_phase, &stats);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

@@ -103,28 +103,8 @@ bool NodeStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
   return true;
 }
 
-std::unordered_map<PhaseType, LoadMapType> const*
-NodeStats::getNodeLoad() const {
-  return &node_data_;
-}
-
-std::unordered_map<PhaseType, SubphaseLoadMapType> const*
-NodeStats::getNodeSubphaseLoad() const {
-  return &node_subphase_data_;
-}
-
-std::unordered_map<PhaseType, CommMapType> const* NodeStats::getNodeComm() const {
-  return &node_comm_;
-}
-
-std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeStats::getNodeSubphaseComm() const {
-  return &node_subphase_comm_;
-}
-
 void NodeStats::clearStats() {
-  NodeStats::node_comm_.clear();
-  NodeStats::node_data_.clear();
-  NodeStats::node_subphase_data_.clear();
+  NodeStats::local_stats_.clear();
   NodeStats::node_migrate_.clear();
   NodeStats::node_temp_to_perm_.clear();
   NodeStats::node_perm_to_temp_.clear();
@@ -132,27 +112,8 @@ void NodeStats::clearStats() {
 }
 
 void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
-  // TODO: Add in subphase support here too
-
-  // Convert the temp ID node_data_ for the last iteration into perm ID for
-  // stats output
-  auto const prev_data = std::move(node_data_[phase]);
-  std::unordered_map<ElementIDType,TimeType> new_data;
-  for (auto& elm : prev_data) {
-    auto iter = node_temp_to_perm_.find(elm.first);
-    vtAssert(iter != node_temp_to_perm_.end(), "Temp ID must exist");
-    auto perm_id = iter->second;
-    new_data[perm_id] = elm.second;
-  }
-  node_data_[phase] = std::move(new_data);
-
-  if (phase >= look_back) {
-    node_data_.erase(phase - look_back);
-    node_subphase_data_.erase(phase - look_back);
-    node_comm_.erase(phase - look_back);
-  }
-
   // Create migrate lambdas and temp to perm map since LB is complete
+  NodeStats::local_stats_.clear();
   NodeStats::node_migrate_.clear();
   NodeStats::node_temp_to_perm_.clear();
   NodeStats::node_perm_to_temp_.clear();
@@ -256,10 +217,12 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
 
   vt_print(lb, "NodeStats::outputStatsForPhase: phase={}\n", phase);
 
-  for (auto&& elm : node_data_.at(phase)) {
+  for (auto&& elm : local_stats_) {
     ElementIDType id = elm.first;
-    TimeType time = elm.second;
-    const auto& subphase_times = node_subphase_data_.at(phase)[id];
+    ElementStats *stats = elm.second;
+
+    TimeType time = stats->getLoad(phase);
+    const auto& subphase_times = stats->getSubphaseLoads(phase);
     size_t subphases = subphase_times.size();
 
     auto obj_str = fmt::format("{},{},{},{},[", phase, id, time, subphases);
@@ -277,7 +240,26 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
     fprintf(stats_file_, "%s", obj_str.c_str());
   }
 
-  for (auto&& elm : node_comm_.at(phase)) {
+  CommMapType comm_data;
+  //std::unordered_map<SubphaseType, CommMapType> subphase_comm_data;
+
+  for (auto&& elm : local_stats_) {
+    ElementStats *stats = elm.second;
+
+    auto const& comm = stats->getComm(phase);
+    for (auto&& c : comm) {
+      comm_data[c.first] += c.second;
+    }
+
+    //auto const& subphase_comm = stats->getSubphaseComm(phase);
+    //for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
+    //  for (auto& sp : subphase_comm[i]) {
+    //    subphase_comm_data[i][sp.first] += sp.second;
+    //  }
+    //}
+  }
+
+  for (auto&& elm : comm_data) {
     using E = typename std::underlying_type<CommCategory>::type;
 
     auto const& comm = elm.first;
@@ -295,9 +277,7 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
 
 ElementIDType NodeStats::addNodeStats(
   Migratable* col_elm,
-  PhaseType const& phase, TimeType const& time,
-  std::vector<TimeType> const& subphase_time,
-  CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
+  PhaseType const& phase, ElementStats *stats
 ) {
   // A new temp ID gets assigned when a object is migrated into a node
 
@@ -307,38 +287,14 @@ ElementIDType NodeStats::addNodeStats(
   vt_debug_print(
     lb, node,
     "NodeStats::addNodeStats: temp_id={}, perm_id={}, phase={}, subphases={}, load={}\n",
-    temp_id, perm_id, phase, subphase_time.size(), time
+    temp_id, perm_id, phase, stats->getSubphaseLoads(phase).size(), stats->getLoad(phase)
   );
 
-  auto &phase_data = node_data_[phase];
-  auto elm_iter = phase_data.find(temp_id);
-  vtAssert(elm_iter == phase_data.end(), "Must not exist");
-  phase_data.emplace(
+  local_stats_.emplace(
     std::piecewise_construct,
-    std::forward_as_tuple(temp_id),
-    std::forward_as_tuple(time)
+    std::forward_as_tuple(perm_id),
+    std::forward_as_tuple(stats)
   );
-
-  auto &subphase_data = node_subphase_data_[phase];
-  auto elm_subphase_iter = subphase_data.find(temp_id);
-  vtAssert(elm_subphase_iter == subphase_data.end(), "Must not exist");
-  subphase_data.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(temp_id),
-    std::forward_as_tuple(subphase_time)
-  );
-
-  auto &comm_data = node_comm_[phase];
-  for (auto&& c : comm) {
-    comm_data[c.first] += c.second;
-  }
-
-  auto &subphase_comm_data = node_subphase_comm_[phase];
-  for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
-    for (auto& sp : subphase_comm[i]) {
-      subphase_comm_data[i][sp.first] += sp.second;
-    }
-  }
 
   node_temp_to_perm_[temp_id] = perm_id;
   node_perm_to_temp_[perm_id] = temp_id;

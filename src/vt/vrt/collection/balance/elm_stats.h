@@ -87,6 +87,7 @@ struct ElementStats {
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
   TimeType getLoad(PhaseType phase, SubphaseType subphase) const;
+  std::vector<TimeType> getSubphaseLoads(PhaseType phase) const;
 
   CommMapType const& getComm(PhaseType const& phase);
   std::vector<CommMapType> const& getSubphaseComm(PhaseType phase);
