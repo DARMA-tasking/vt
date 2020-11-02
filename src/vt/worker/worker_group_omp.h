@@ -57,6 +57,8 @@
 #include "vt/utils/mutex/mutex.h"
 #include "vt/runtime/component/component_pack.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <vector>
 #include <memory>
 #include <functional>
@@ -67,8 +69,6 @@ struct WorkerGroupOMP
   : runtime::component::PollableComponent<WorkerGroupOMP>,
     WorkerGroupCounter, WorkerGroupComm
 {
-  checkpoint_virtual_serialize_derived_from(PollableComponent)
-
   using WorkerType = OMPWorker;
   using WorkerStateType = WorkerType;
   using WorkerStatePtrType = std::unique_ptr<WorkerStateType>;

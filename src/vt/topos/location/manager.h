@@ -54,6 +54,8 @@
 #include "vt/vrt/collection/proxy.h"
 #include "vt/runtime/component/component_pack.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <unordered_map>
 #include <functional>
 
@@ -76,8 +78,6 @@ namespace vt { namespace location {
  *
  */
 struct LocationManager : runtime::component::Component<LocationManager> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   template <typename LocType>
   using PtrType = std::unique_ptr<LocType>;
   using LocCoordPtrType = LocationCoord*;

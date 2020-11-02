@@ -48,6 +48,8 @@
 #include "vt/timetrigger/trigger.h"
 #include "vt/runtime/component/component.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <chrono>
 #include <queue>
 #include <unordered_set>
@@ -67,8 +69,6 @@ namespace vt { namespace timetrigger {
 struct TimeTriggerManager
   : runtime::component::PollableComponent<TimeTriggerManager>
 {
-  checkpoint_virtual_serialize_derived_from(PollableComponent)
-
   /// A queue prioritized by the earliest next trigger to execute
   using QueueType = std::priority_queue<Trigger, std::vector<Trigger>>;
 

@@ -54,6 +54,8 @@
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <cassert>
 #include <vector>
 #include <list>
@@ -96,8 +98,6 @@ enum SchedulerEvent {
  * components for incoming work.
  */
 struct Scheduler : runtime::component::Component<Scheduler> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using SchedulerEventType   = SchedulerEvent;
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;

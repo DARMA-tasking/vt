@@ -70,6 +70,8 @@
 
 #include "vt/collective/collective_scope.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <unordered_map>
 #include <cassert>
 
@@ -91,8 +93,6 @@ namespace vt { namespace rdma {
  * RDMA.
  */
 struct RDMAManager : runtime::component::Component<RDMAManager> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using RDMA_BitsType = Bits;
   using RDMA_StateType = State;
   using RDMA_TypeType = Type;

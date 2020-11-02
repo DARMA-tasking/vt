@@ -59,6 +59,8 @@
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/vrt_common.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -108,8 +110,6 @@ struct EntityLocationCoord : LocationCoord {
 
   template <typename MessageT>
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
-
-  checkpoint_virtual_serialize_derived_from(LocationCoord)
 
   /**
    * \internal \brief System call to construct a new entity coordinator

@@ -64,6 +64,8 @@
 #include "vt/collective/collective_scope.h"
 #include "vt/runtime/component/component_pack.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <memory>
 #include <unordered_map>
 #include <cstdlib>
@@ -84,8 +86,6 @@ namespace vt { namespace group {
  * can dynamically create groups in a fully distributed manner.
  */
 struct GroupManager : runtime::component::Component<GroupManager> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using RegionType = region::Region;
   using RegionPtrType = std::unique_ptr<RegionType>;
   using GroupInfoType = Info;

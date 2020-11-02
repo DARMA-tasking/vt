@@ -47,6 +47,9 @@
 
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
+
+#include <checkpoint/checkpoint.h>
+
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -59,8 +62,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct RawData : public LoadModel {
   RawData() = default;
-
-  checkpoint_virtual_serialize_derived_from(LoadModel)
 
   void updateLoads(PhaseType last_completed_phase) override;
   TimeType getWork(ElementIDType object, PhaseOffset when) override;

@@ -48,6 +48,8 @@
 #include <memory>
 #include <mpi.h>
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/context/context_attorney_fwd.h"
@@ -69,8 +71,6 @@ namespace vt {  namespace ctx {
  * functionality analogous to \c MPI_Comm_size and \c MPI_Comm_rank.
  */
 struct Context : runtime::component::Component<Context> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   /**
    * \internal
    * \brief Construct the context.

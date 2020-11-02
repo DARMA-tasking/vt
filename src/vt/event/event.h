@@ -53,6 +53,8 @@
 #include "vt/event/event_holder.h"
 #include "vt/event/event_msgs.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <memory>
 #include <vector>
 #include <list>
@@ -84,8 +86,6 @@ enum class EventState : int8_t {
  * Component to track events in the system to trigger actions or other events
  */
 struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
-  checkpoint_virtual_serialize_derived_from(PollableComponent)
-
   using EventRecordTypeType = eEventRecord;
   using EventManagerType = EventIDManager;
   using EventStateType = EventState;

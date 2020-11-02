@@ -46,6 +46,9 @@
 #define INCLUDED_VRT_COLLECTION_BALANCE_COMM_OVERHEAD_H
 
 #include "vt/vrt/collection/balance/model/composed_model.h"
+
+#include <checkpoint/checkpoint.h>
+
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -65,8 +68,6 @@ struct CommOverhead : public ComposedModel {
     std::shared_ptr<balance::LoadModel> base, TimeType in_per_msg_weight,
     TimeType in_per_byte_weight
   );
-
-  checkpoint_virtual_serialize_derived_from(ComposedModel)
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,

@@ -77,6 +77,8 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/vrt/collection/op_buffer.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -105,8 +107,6 @@ namespace vt { namespace vrt { namespace collection {
 struct CollectionManager
   : runtime::component::Component<CollectionManager>
 {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   template <typename ColT, typename IndexT>
   using CollectionType = typename Holder<ColT, IndexT>::Collection;
   template <typename ColT, typename IndexT = typename ColT::IndexType>

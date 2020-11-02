@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASE_H
 #define INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASE_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 
@@ -56,8 +54,6 @@ struct HolderBase {
   virtual ~HolderBase() = default;
   virtual bool exists() = 0;
 
-  checkpoint_virtual_serialize_root()
-
   template <typename Serializer>
   void serialize(Serializer& s) {}
 };
@@ -66,8 +62,6 @@ template <typename ObjT>
 struct HolderObjBase : HolderBase {
   virtual ~HolderObjBase() = default;
   virtual ObjT* get() = 0;
-
-  checkpoint_virtual_serialize_derived_from(HolderBase)
 
   template <typename Serializer>
   void serialize(Serializer& s) {}

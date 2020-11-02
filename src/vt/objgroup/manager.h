@@ -58,6 +58,8 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <memory>
 #include <functional>
 #include <unordered_map>
@@ -82,7 +84,6 @@ namespace vt { namespace objgroup {
  * implemented as object groups, such as the load balancers.
  */
 struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
-  checkpoint_virtual_serialize_derived_from(Component)
 
   template <typename ObjT>
   using ProxyType           = proxy::Proxy<ObjT>;

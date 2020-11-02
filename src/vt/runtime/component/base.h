@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_BASE_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/configs/types/types_type.h"
 #include "vt/runtime/component/diagnostic.h"
 #include "vt/runtime/component/bufferable.h"
@@ -62,8 +60,6 @@ struct ComponentPack;
  * \brief The abstract \c BaseComponent for VT runtime component pack
  */
 struct BaseComponent : Diagnostic, Bufferable, Progressable {
-  checkpoint_virtual_serialize_root()
-
   /**
    * \struct DepsPack
    *

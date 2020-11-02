@@ -45,6 +45,8 @@
 #if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
 #define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/collective/tree/tree.h"
 #include "vt/activefn/activefn.h"
@@ -79,8 +81,6 @@ struct CollectiveAlg :
     virtual barrier::Barrier,
     virtual scatter::Scatter
 {
-  checkpoint_virtual_serialize_derived_from(Component)
-
 /*----------------------------------------------------------------------------
  *
  *  CollectiveAlg class implements all collective operations:

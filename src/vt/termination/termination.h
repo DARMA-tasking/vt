@@ -62,6 +62,8 @@
 #include "vt/termination/epoch_tags.h"
 #include "vt/runtime/component/component_pack.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
@@ -97,8 +99,6 @@ struct TerminationDetector :
   runtime::component::Component<TerminationDetector>,
   TermAction, collective::tree::Tree, DijkstraScholtenTerm, TermInterface
 {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   template <typename T>
   using EpochContainerType = std::unordered_map<EpochType, T>;
   using TermStateType      = TermState;

@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_MESSAGING_LISTENER_H
 #define INCLUDED_VT_MESSAGING_LISTENER_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 
 namespace vt { namespace messaging {
@@ -61,8 +59,6 @@ namespace vt { namespace messaging {
  */
 struct Listener {
   virtual ~Listener() {}
-
-  checkpoint_virtual_serialize_root()
 
   /**
    * \brief The pure virtual method for listening to all message sends while

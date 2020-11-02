@@ -49,6 +49,8 @@
 #include <unordered_map>
 #include <cassert>
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
 #include "vt/handler/handler.h"
@@ -62,8 +64,6 @@ namespace vt { namespace registry {
  * \brief A VT component that manages registered active handlers.
  */
 struct Registry : runtime::component::Component<Registry> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using HandlerManagerType = HandlerManager;
   using HandlerBitsType = eHandlerBits;
   using TaggerHandlerType = std::tuple<TagType, HandlerType>;

@@ -50,6 +50,8 @@
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/phase/phase_hook_id.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <unordered_map>
 #include <map>
 
@@ -81,8 +83,6 @@ struct NextMsg;
  * registered and are always run in a collective epoch.
  */
 struct PhaseManager : runtime::component::Component<PhaseManager> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using HookIDType = typename std::underlying_type<PhaseHook>::type;
   using HookMapType = std::map<std::size_t, ActionType>;
   using HookIDMapType = std::unordered_map<HookIDType, HookMapType>;

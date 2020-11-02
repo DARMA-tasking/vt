@@ -50,14 +50,14 @@
 #include "vt/utils/memory/memory_units.h"
 #include "vt/utils/memory/memory_reporter.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <string>
 #include <memory>
 
 namespace vt { namespace util { namespace memory {
 
 struct Mstats final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -66,8 +66,6 @@ struct Mstats final : Reporter {
 };
 
 struct Sbrk final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -83,8 +81,6 @@ private:
 };
 
 struct PS final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -93,8 +89,6 @@ struct PS final : Reporter {
 };
 
 struct Mallinfo final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -103,8 +97,6 @@ struct Mallinfo final : Reporter {
 };
 
 struct Getrusage final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -113,8 +105,6 @@ struct Getrusage final : Reporter {
 };
 
 struct MachTaskInfo final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -123,8 +113,6 @@ struct MachTaskInfo final : Reporter {
 };
 
 struct Stat final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -138,8 +126,6 @@ private:
 };
 
 struct StatM final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -153,8 +139,6 @@ private:
 };
 
 struct Mimalloc final : Reporter {
-  checkpoint_virtual_serialize_derived_from(Reporter)
-
   std::size_t getUsage() override;
   std::string getName() override;
 
@@ -172,8 +156,6 @@ struct Mimalloc final : Reporter {
  * be selected from depending on the platform and accuracy needed.
  */
 struct MemoryUsage : runtime::component::Component<MemoryUsage> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   /**
    * \internal \brief Construct a memory usage component
    */

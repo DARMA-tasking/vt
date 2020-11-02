@@ -59,6 +59,8 @@
   #include "vt/worker/worker_seq.h"
 #endif
 
+#include <checkpoint/checkpoint.h>
+
 #include <vector>
 #include <memory>
 
@@ -71,10 +73,6 @@ struct WorkerGroupAny
   : runtime::component::PollableComponent<WorkerGroupAny<WorkerT>>,
   WorkerGroupCounter, WorkerGroupComm
 {
-  checkpoint_virtual_serialize_derived_from(
-    runtime::component::PollableComponent<WorkerGroupAny<WorkerT>>
-  )
-
   using WorkerType = WorkerT;
   using WorkerPtrType = std::unique_ptr<WorkerT>;
   using WorkerContainerType = std::vector<WorkerPtrType>;

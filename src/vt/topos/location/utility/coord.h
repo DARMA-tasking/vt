@@ -45,8 +45,6 @@
 #if !defined INCLUDED_TOPOS_LOCATION_UTILITY_COORD_H
 #define INCLUDED_TOPOS_LOCATION_UTILITY_COORD_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
 
@@ -54,9 +52,6 @@ namespace vt { namespace location {
 
 // General base class for the location coords to erase templated types
 struct LocationCoord {
-
-  checkpoint_virtual_serialize_root()
-
   int data;
 
   template <typename Serializer>

@@ -59,6 +59,8 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/collective/collective_scope.h"
 
+#include <checkpoint/checkpoint.h>
+
 namespace vt { namespace rdma {
 
 /** \file */
@@ -81,8 +83,6 @@ struct InformRDMAMsg;
  * \brief RDMA Handle Manager for creation of node- or index-level handles
  */
 struct Manager : runtime::component::Component<Manager> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using ProxyType       = vt::objgroup::proxy::Proxy<Manager>;
   using ElemToHandle    = std::unordered_map<int64_t, RDMA_HandleType>;
   using HandleToManager = std::unordered_map<RDMA_HandleType, ObjGroupProxyType>;

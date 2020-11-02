@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/component/component.h"
 
@@ -67,8 +69,6 @@ namespace vt { namespace arguments {
  * through the command-line arguments.
  */
 struct ArgConfig : runtime::component::Component<ArgConfig> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   /// Parse the arguments into ArgConfig.
   /// Re-assigns argc/argv to remove consumed arguments.
   /// On success the tuple will be {-1, ""}. Otherwise the exit code

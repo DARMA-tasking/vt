@@ -139,7 +139,6 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
  * \warning This is an experimental component.
  */
 struct Param : runtime::component::Component<Param> {
-  checkpoint_virtual_serialize_derived_from(Component)
 
   std::string name() override { return "Param"; }
 

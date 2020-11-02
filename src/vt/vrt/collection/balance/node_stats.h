@@ -55,6 +55,8 @@
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -76,8 +78,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * \c * vt::vrt::collection::balance::LBManager
  */
 struct NodeStats : runtime::component::Component<NodeStats> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using MigrateFnType       = std::function<void(NodeType)>;
 
   /**

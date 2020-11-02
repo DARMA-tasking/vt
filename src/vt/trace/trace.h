@@ -54,6 +54,8 @@
 
 #include "vt/timing/timing.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <cassert>
 #include <cstdint>
 #include <functional>
@@ -110,8 +112,6 @@ private:
  * java Projections tool.
  */
 struct Trace : runtime::component::Component<Trace> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using LogType             = Log;
   using TraceConstantsType  = eTraceConstants;
   using TimeIntegerType     = int64_t;

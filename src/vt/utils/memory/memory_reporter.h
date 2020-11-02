@@ -52,9 +52,6 @@
 namespace vt { namespace util { namespace memory {
 
 struct Reporter {
-
-  checkpoint_virtual_serialize_root()
-
   virtual ~Reporter() { }
 
   virtual std::size_t getUsage() = 0;

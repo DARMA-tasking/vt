@@ -65,8 +65,6 @@ public:
    */
   Norm(std::shared_ptr<balance::LoadModel> base, double power);
 
-  checkpoint_virtual_serialize_derived_from(ComposedModel)
-
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
   template <typename Serializer>

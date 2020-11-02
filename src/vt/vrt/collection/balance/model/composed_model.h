@@ -48,6 +48,8 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 
+#include <checkpoint/checkpoint.h>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
@@ -65,8 +67,6 @@ public:
   // \param[in] base must not be null
   explicit ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
   explicit ComposedModel(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
-
-  checkpoint_virtual_serialize_derived_from(LoadModel)
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,

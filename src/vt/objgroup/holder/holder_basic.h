@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASIC_H
 #define INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASIC_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/holder/holder_base.h"
@@ -53,8 +55,6 @@ namespace vt { namespace objgroup { namespace holder {
 
 template <typename ObjT>
 struct HolderBasic final : HolderObjBase<ObjT> {
-
-  checkpoint_virtual_serialize_derived_from(HolderObjBase<ObjT>)
 
   explicit HolderBasic(ObjT* in_obj)
     : obj_(in_obj)

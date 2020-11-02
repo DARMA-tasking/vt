@@ -49,6 +49,8 @@
 #include <memory>
 #include <mpi.h>
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/active.fwd.h"
@@ -312,8 +314,6 @@ struct MultiMsg;
  *  - \ref sendpayload
  */
 struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> {
-  checkpoint_virtual_serialize_derived_from(PollableComponent)
-
   using BufferedMsgType      = BufferedActiveMsg;
   using MessageType          = ShortMessage;
   using CountType            = int32_t;

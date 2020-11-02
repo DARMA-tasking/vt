@@ -63,6 +63,8 @@
 #include "vt/activefn/activefn.h"
 #include "vt/topos/mapping/mapping_function.h"
 
+#include <checkpoint/checkpoint.h>
+
 namespace vt { namespace vrt {
 
 using namespace ::vt::serialization;
@@ -86,8 +88,6 @@ struct PendingRequest {
 
 struct VirtualContextManager
   : runtime::component::Component<VirtualContextManager> {
-
-  checkpoint_virtual_serialize_derived_from(Component)
 
   using VirtualPtrType = std::unique_ptr<VirtualContext>;
   using PendingRequestType = PendingRequest;

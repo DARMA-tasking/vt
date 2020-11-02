@@ -70,8 +70,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * files.
  */
 struct StatsRestartReader : runtime::component::Component<StatsRestartReader> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using VecMsg = lb::TransferMsg<std::vector<balance::ElementIDType> >;
 
 public:

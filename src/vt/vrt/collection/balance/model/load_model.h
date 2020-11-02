@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VRT_COLLECTION_BALANCE_LOAD_MODEL_H
 #define INCLUDED_VRT_COLLECTION_BALANCE_LOAD_MODEL_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
@@ -99,8 +97,6 @@ class LoadModel
 public:
   LoadModel() = default;
   virtual ~LoadModel() = default;
-
-  checkpoint_virtual_serialize_root()
 
   /**
    * \brief Initialize the model instance with pointers to the measured load data

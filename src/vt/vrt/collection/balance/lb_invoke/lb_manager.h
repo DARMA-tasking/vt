@@ -53,6 +53,8 @@
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -69,8 +71,6 @@ class LoadModel;
  * and invocation.
  */
 struct LBManager : runtime::component::Component<LBManager> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using LBProxyType    = objgroup::proxy::Proxy<lb::BaseLB>;
 
   /**

@@ -47,6 +47,9 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/model/composed_model.h"
+
+#include <checkpoint/checkpoint.h>
+
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -65,8 +68,6 @@ struct PerCollection : public ComposedModel
    * subphase enumeration
    */
   explicit PerCollection(std::shared_ptr<LoadModel> base);
-
-  checkpoint_virtual_serialize_derived_from(ComposedModel)
 
   /**
    * \brief Add a model for objects in a specific collection

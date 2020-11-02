@@ -94,8 +94,6 @@ struct ComponentConstructor<
  */
 template <typename T>
 struct Component : BaseComponent {
-  checkpoint_virtual_serialize_derived_from(BaseComponent)
-
   Component() = default;
 
   /**
@@ -174,8 +172,6 @@ struct Component : BaseComponent {
  */
 template <typename T>
 struct PollableComponent : Component<T> {
-  checkpoint_virtual_serialize_derived_from(Component<T>)
-
   /**
    * \brief Whether the component requires the scheduler to poll
    *

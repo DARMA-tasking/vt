@@ -45,6 +45,8 @@
 #if !defined INCLUDED_POOL_POOL_H
 #define INCLUDED_POOL_POOL_H
 
+#include <checkpoint/checkpoint.h>
+
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
@@ -67,8 +69,6 @@ namespace vt { namespace pool {
  * buckets with free-list to quickly allocate and de-allocate.
  */
 struct Pool : runtime::component::Component<Pool> {
-  checkpoint_virtual_serialize_derived_from(Component)
-
   using SizeType = size_t;
   using HeaderType = Header;
   using HeaderManagerType = HeaderManager;
