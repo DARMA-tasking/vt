@@ -52,10 +52,9 @@
 namespace vt {
 
 template <typename Callable>
-void runInEpochCollective(Callable&& fn) {
+void runInEpoch(EpochType ep, Callable&& fn) {
   theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
 
-  auto ep = theTerm()->makeEpochCollective();
   theMsg()->pushEpoch(ep);
   fn();
   theMsg()->popEpoch(ep);
@@ -64,15 +63,15 @@ void runInEpochCollective(Callable&& fn) {
 }
 
 template <typename Callable>
-void runInEpochRooted(Callable&& fn) {
-  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
+void runInEpochCollective(Callable&& fn) {
+  auto ep = theTerm()->makeEpochCollective();
+  runInEpoch(ep, std::forward<Callable>(fn));
+}
 
+template <typename Callable>
+void runInEpochRooted(Callable&& fn) {
   auto ep = theTerm()->makeEpochRooted();
-  theMsg()->pushEpoch(ep);
-  fn();
-  theMsg()->popEpoch(ep);
-  theTerm()->finishedEpoch(ep);
-  runSchedulerThrough(ep);
+  runInEpoch(ep, std::forward<Callable>(fn));
 }
 
 } /* end namespace vt */
