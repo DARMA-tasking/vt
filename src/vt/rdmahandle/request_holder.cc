@@ -73,7 +73,7 @@ bool RequestHolder::test() {
     }
   }
   reqs_ = std::move(new_reqs);
-  return new_reqs.size() == 0;
+  return reqs_.size() == 0;
 }
 
 void RequestHolder::wait() {
