@@ -237,6 +237,7 @@ services:
     environment:
       <<: *ccache
       <<: *vtopts
+      OMPI_MCA_btl: "^vader"
     volumes: *ubuntu-volumes
     command: *vt-build-test-clean-cpp-command
 
@@ -256,6 +257,7 @@ services:
     environment:
       <<: *ccache
       <<: *vtopts
+      OMPI_MCA_btl: "^vader"
     volumes: *ubuntu-volumes
 
   ##############################################################################

@@ -184,8 +184,8 @@ void verifyCacheConsistency(
       } else if(my_node not_eq new_home) {
         // On eager case: the message is directly routed to the
         // implicitly resolved location.
-        // Thus the cache is not updated in this case.
-        EXPECT_FALSE(is_entity_cached);
+        // Eager update is sent, updating the cache
+        EXPECT_TRUE(is_entity_cached);
       }
     } else /* my_node == home */ {
       // The entity should be registered in the cache of the home node,

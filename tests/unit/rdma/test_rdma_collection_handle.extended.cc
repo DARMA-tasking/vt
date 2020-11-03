@@ -55,42 +55,24 @@ template <typename T>
 struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
   TestCol() = default;
 
-  struct TestMsg : vt::CollectionMessage<TestCol> {
-    TestMsg() = default;
-    explicit TestMsg(EpochType in_epoch)
-      : migrate_epoch_(in_epoch)
-    { }
-    EpochType migrate_epoch_;
-  };
-  struct ReduceMsg : vt::collective::ReduceNoneMsg {};
+  struct TestMsg : vt::CollectionMessage<TestCol> { };
 
-  void initialize(TestMsg* mm) {
-    auto idx = this->getIndex();
+  void makeHandles(TestMsg*) {
     auto proxy = this->getCollectionProxy();
-    proxy[idx].template send<
-      typename TestCol<T>::TestMsg, &TestCol<T>::initialize2
-    >();
-    migrate_epoch_ = mm->migrate_epoch_;
+    auto idx = this->getIndex();
+    handle_ = proxy.template makeHandleRDMA<T>(idx, 8, true);
   }
 
-  void initialize2(TestMsg*) {
-    auto proxy = this->getCollectionProxy();
+  void setupData(TestMsg* msg) {
     auto idx = this->getIndex();
-    handle_ = proxy.template makeHandleRDMA<T>(this->getIndex(), 8, true);
-    do vt::runScheduler(); while (not handle_.ready());
     handle_.modifyExclusive([&](T* t, std::size_t count) {
       for (int i = 0; i < 8; i++) {
         t[i] = idx.x() * 100 + idx.y();
       }
     });
-    auto cb = theCB()->makeBcast<
-      TestCol<T>,ReduceMsg,&TestCol<T>::afterDataInit
-    >(proxy);
-    auto rmsg = makeMessage<ReduceMsg>();
-    proxy.reduce(rmsg.get(),cb);
   }
 
-  void afterDataInit(ReduceMsg*) {
+  void testData(TestMsg*) {
     auto idx = this->getIndex();
     auto next_x = idx.x() + 1 < 8 ? idx.x() + 1 : 0;
     vt::Index2D next(next_x, idx.y());
@@ -99,52 +81,27 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
     for (int i = 0; i < 8; i++) {
       EXPECT_EQ(ptr[i], next_x * 100 + idx.y());
     }
-    auto proxy = this->getCollectionProxy();
-    auto cb = theCB()->makeBcast<
-      TestCol<T>,ReduceMsg,&TestCol<T>::afterDataCheck
-    >(proxy);
-    auto rmsg = makeMessage<ReduceMsg>();
-    proxy.reduce(rmsg.get(),cb);
   }
 
-  void afterDataCheck(ReduceMsg*) {
+  void migrateObjs(TestMsg*) {
     auto idx = this->getIndex();
-    theMsg()->pushEpoch(migrate_epoch_);
-    if (idx.x() == 0 and idx.y() == 0) {
-      theTerm()->consume(migrate_epoch_);
-    }
     if (idx.y() > 1) {
       auto node = vt::theContext()->getNode();
       auto num = vt::theContext()->getNumNodes();
       auto next = node + 1 < num ? node + 1 : 0;
       this->migrate(next);
     }
-    theMsg()->popEpoch(migrate_epoch_);
   }
 
-  void afterMigrate(TestMsg*) {
-    auto idx = this->getIndex();
-    auto proxy = this->getCollectionProxy();
-    proxy[idx].template send<
-      typename TestCol<T>::TestMsg, &TestCol<T>::afterMigratePost
-    >();
-  }
-
-  void afterMigratePost(TestMsg*) {
+  void runLBHooksForRDMA(TestMsg*) {
     if (not triggered_lb) {
       triggered_lb = true;
       //fmt::print("{}: run post migration hooks\n", theContext()->getNode());
       vt::thePhase()->runHooksManual(vt::phase::PhaseHook::EndPostMigration);
     }
-    auto proxy = this->getCollectionProxy();
-    auto cb = theCB()->makeBcast<
-      TestCol<T>,ReduceMsg,&TestCol<T>::afterMigrateCheck
-    >(proxy);
-    auto rmsg = makeMessage<ReduceMsg>();
-    proxy.reduce(rmsg.get(),cb);
   }
 
-  void afterMigrateCheck(ReduceMsg*) {
+  void checkDataAfterMigrate(TestMsg*) {
     auto idx = this->getIndex();
     auto next_x = idx.x() + 1 < 8 ? idx.x() + 1 : 0;
     vt::Index2D next(next_x, idx.y());
@@ -153,23 +110,9 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
     for (int i = 0; i < 8; i++) {
       EXPECT_EQ(ptr[i], next_x * 100 + idx.y());
     }
-    auto proxy = this->getCollectionProxy();
-    auto cb = theCB()->makeBcast<
-      TestCol<T>,ReduceMsg,&TestCol<T>::afterCheck
-    >(proxy);
-    auto rmsg = makeMessage<ReduceMsg>();
-    proxy.reduce(rmsg.get(),cb);
   }
 
-  void afterCheck(ReduceMsg*) {
-    auto idx = this->getIndex();
-    auto proxy = this->getCollectionProxy();
-    proxy[idx].template send<
-      typename TestCol<T>::TestMsg, &TestCol<T>::afterCheckPost
-    >();
-  }
-
-  void afterCheckPost(TestMsg*) {
+  void destroyHandles(TestMsg*) {
     auto proxy = this->getCollectionProxy();
     proxy.destroyHandleRDMA(handle_);
   }
@@ -178,12 +121,10 @@ struct TestCol : vt::Collection<TestCol<T>, vt::Index2D> {
   void serialize(SerializerT& s) {
     vt::Collection<TestCol<T>, vt::Index2D>::serialize(s);
     s | handle_;
-    s | migrate_epoch_;
   }
 
 private:
   vt::HandleRDMA<T, vt::Index2D> handle_;
-  vt::EpochType migrate_epoch_;
 };
 
 template <typename T>
@@ -193,23 +134,44 @@ TYPED_TEST_SUITE_P(TestRDMAHandleCollection);
 
 TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
   using T = TypeParam;
+  using ColType = TestCol<T>;
+  using MsgType = typename ColType::TestMsg;
+
   triggered_lb = false;
 
-  auto range = vt::Index2D(8,8);
-  auto proxy = theCollection()->constructCollective<TestCol<T>>(range);
+  CollectionProxy<TestCol<T>, Index2D> proxy;
 
-  runInEpochCollective([proxy]{
-    if (theContext()->getNode() == 0) {
-      proxy.template broadcast<
-        typename TestCol<T>::TestMsg, &TestCol<T>::initialize>();
-    }
+  runInEpochCollective([&]{
+    auto range = vt::Index2D(8,8);
+    proxy = theCollection()->constructCollective<ColType>(range);
   });
 
-  runInEpochCollective([proxy]{
-    if (theContext()->getNode() == 0) {
-      proxy.template broadcast<
-        typename TestCol<T>::TestMsg, &TestCol<T>::afterMigrate>();
-    }
+  runInEpochCollective([=]{
+    proxy.template broadcastCollective<MsgType, &ColType::makeHandles>();
+  });
+
+  runInEpochCollective([=]{
+    proxy.template broadcastCollective<MsgType, &ColType::setupData>();
+  });
+
+  runInEpochCollective([=]{
+    proxy.template broadcastCollective<MsgType, &ColType::testData>();
+  });
+
+  runInEpochCollective([=]{
+    proxy.template broadcastCollective<MsgType, &ColType::migrateObjs>();
+  });
+
+  runInEpochCollective([=]{
+    proxy.template broadcastCollective<MsgType, &ColType::runLBHooksForRDMA>();
+  });
+
+  runInEpochCollective([=]{
+    proxy.template broadcastCollective<MsgType, &ColType::checkDataAfterMigrate>();
+  });
+
+  runInEpochCollective([=]{
+    proxy.template broadcastCollective<MsgType, &ColType::destroyHandles>();
   });
 }
 

@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/rdmahandle/request_holder.h"
+#include "vt/runtime/mpi_access.h"
 
 namespace vt { namespace rdma {
 
@@ -60,6 +61,7 @@ MPI_Request* RequestHolder::add() {
 }
 
 bool RequestHolder::test() {
+  VT_ALLOW_MPI_CALLS;
   std::vector<MPI_Request> new_reqs;
   std::vector<MPI_Status> stats;
   stats.resize(reqs_.size());
@@ -71,7 +73,7 @@ bool RequestHolder::test() {
     }
   }
   reqs_ = std::move(new_reqs);
-  return new_reqs.size() == 0;
+  return reqs_.size() == 0;
 }
 
 void RequestHolder::wait() {

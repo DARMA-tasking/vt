@@ -46,6 +46,7 @@
 #define INCLUDED_VT_RDMAHANDLE_HOLDER_IMPL_H
 
 #include "vt/config.h"
+#include "vt/runtime/mpi_access.h"
 
 namespace vt { namespace rdma {
 
@@ -85,7 +86,7 @@ void Holder<T,E>::allocateDataWindow(std::size_t const in_len) {
     );
     {
       auto this_node = theContext()->getNode();
-      LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_);
+      LockMPI _scope_lock(Lock::Exclusive, this_node, control_window_, false);
       auto mpi_type = TypeMPI<uint64_t>::getType();
       MPI_Put(&count_, 1, mpi_type, this_node, 0, 1, mpi_type, control_window_);
       vt_debug_print_verbose(
@@ -104,6 +105,7 @@ std::size_t Holder<T,E>::getCount(vt::NodeType node, Lock l) {
   auto mpi_type = TypeMPI<uint64_t>::getType();
   {
     LockMPI _scope_lock(l, node, control_window_);
+    VT_ALLOW_MPI_CALLS;
     MPI_Get(&result, 1, mpi_type, node, 0, 1, mpi_type, control_window_);
   }
   vt_debug_print_verbose(
@@ -116,6 +118,7 @@ std::size_t Holder<T,E>::getCount(vt::NodeType node, Lock l) {
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::deallocate() {
+  VT_ALLOW_MPI_CALLS;
   if (E == HandleEnum::StaticSize and ready_) {
     MPI_Win_free(&data_window_);
     MPI_Free_mem(data_base_);
@@ -155,6 +158,7 @@ RequestHolder Holder<T,E>::rget(
         "MPI_Get({}, {}, {}, {}, {}, {}, {}, window);\n",
         print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
       );
+      VT_ALLOW_MPI_CALLS;
       MPI_Get(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_);
     });
   } else {
@@ -164,6 +168,7 @@ RequestHolder Holder<T,E>::rget(
       "MPI_Rget({}, {}, {}, {}, {}, {}, {}, window);\n",
       print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
     );
+    VT_ALLOW_MPI_CALLS;
     MPI_Rget(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
   }
   return r;
@@ -191,6 +196,7 @@ RequestHolder Holder<T,E>::rput(
         "MPI_Put({}, {}, {}, {}, {}, {}, {}, window);\n",
         print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
       );
+      VT_ALLOW_MPI_CALLS;
       MPI_Put(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_);
     });
   } else {
@@ -200,6 +206,7 @@ RequestHolder Holder<T,E>::rput(
       "MPI_Rput({}, {}, {}, {}, {}, {}, {}, window);\n",
       print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
     );
+    VT_ALLOW_MPI_CALLS;
     MPI_Rput(ptr, len, mpi_type, node, offset, len, mpi_type, data_window_, r.add());
   }
   return r;
@@ -224,6 +231,7 @@ T Holder<T,E>::fetchOp(vt::NodeType node, Lock l, T in, int offset, MPI_Op op) {
       "MPI_Fetch_and_op({}, {}, {}, {}, {}, window);\n",
       in, print_ptr(&out), mpi_type_str, node, offset
     );
+    VT_ALLOW_MPI_CALLS;
     MPI_Fetch_and_op(&in, &out, mpi_type, node, offset, op, data_window_);
   }
   return out;
@@ -245,6 +253,7 @@ RequestHolder Holder<T,E>::raccum(
         "MPI_Accumulate({}, {}, {}, {}, {}, {}, {}, window);\n",
         print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
       );
+      VT_ALLOW_MPI_CALLS;
       MPI_Accumulate(
         ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_
       );
@@ -256,6 +265,7 @@ RequestHolder Holder<T,E>::raccum(
       "MPI_Raccumulate({}, {}, {}, {}, {}, {}, {}, window);\n",
       print_ptr(ptr), len, mpi_type_str, node, offset, len, mpi_type_str
     );
+    VT_ALLOW_MPI_CALLS;
     MPI_Raccumulate(
       ptr, len, mpi_type, node, offset, len, mpi_type, op, data_window_, r.add()
     );
@@ -273,26 +283,31 @@ void Holder<T,E>::accum(
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::fence(int assert) {
+  VT_ALLOW_MPI_CALLS;
   MPI_Win_fence(assert, data_window_);
 }
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::sync() {
+  VT_ALLOW_MPI_CALLS;
   MPI_Win_sync(data_window_);
 }
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::flush(vt::NodeType node) {
+  VT_ALLOW_MPI_CALLS;
   MPI_Win_flush(node, data_window_);
 }
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::flushLocal(vt::NodeType node) {
+  VT_ALLOW_MPI_CALLS;
   MPI_Win_flush_local(node, data_window_);
 }
 
 template <typename T, HandleEnum E>
 void Holder<T,E>::flushAll() {
+  VT_ALLOW_MPI_CALLS;
   MPI_Win_flush_all(data_window_);
 }
 
