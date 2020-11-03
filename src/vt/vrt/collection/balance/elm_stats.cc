@@ -224,6 +224,22 @@ SubphaseType ElementStats::getSubPhase() const {
   return cur_subphase_;
 }
 
+std::size_t ElementStats::getLoadPhaseCount() const {
+  return phase_timings_.size();
+}
+
+std::size_t ElementStats::getCommPhaseCount() const {
+  return comm_.size();
+}
+
+std::size_t ElementStats::getSubphaseLoadPhaseCount() const {
+  return subphase_timings_.size();
+}
+
+std::size_t ElementStats::getSubphaseCommPhaseCount() const {
+  return subphase_comm_.size();
+}
+
 /*static*/
 void ElementStats::setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase) {
   focused_subphase_[collection] = subphase;

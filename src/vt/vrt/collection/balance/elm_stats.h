@@ -93,6 +93,12 @@ struct ElementStats {
   void setSubPhase(SubphaseType subphase);
   SubphaseType getSubPhase() const;
 
+  // these are just for unit testing
+  std::size_t getLoadPhaseCount() const;
+  std::size_t getCommPhaseCount() const;
+  std::size_t getSubphaseLoadPhaseCount() const;
+  std::size_t getSubphaseCommPhaseCount() const;
+
   static const constexpr SubphaseType no_subphase = std::numeric_limits<SubphaseType>::max();
   static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
   static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
