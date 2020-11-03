@@ -127,6 +127,9 @@ location::LocationManager*  theLocMan()             { return CUR_RT->theLocMan; 
 CollectionManagerType*      theCollection()         { return CUR_RT->theCollection;     }
 group::GroupManager*        theGroup()              { return CUR_RT->theGroup;          }
 pipe::PipeManager*          theCB()                 { return CUR_RT->theCB;             }
+
+
+
 objgroup::ObjGroupManager*  theObjGroup()           { return CUR_RT->theObjGroup;       }
 rdma::Manager*              theHandleRDMA()         { return CUR_RT->theHandleRDMA;     }
 util::memory::MemoryUsage*  theMemUsage()           { return CUR_RT->theMemUsage;       }

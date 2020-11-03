@@ -76,6 +76,8 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/configs/arguments/args.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <memory>
 #include <iostream>
 #include <functional>
@@ -1001,8 +1003,143 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   vt_debug_print(runtime, node, "end: initializeWorkers\n");
 }
 
+template<typename T>
+void printComponentFootprint(T* component) {
+  if (component != nullptr) {
+    fmt::print(
+      "Memory footprint for component {}:\t{}\n",
+      component->name(),
+      checkpoint::getMemoryFootprint(*component)
+    );
+  }
+}
+
 void Runtime::printMemoryFootprint() const {
-  p_->printMemoryFootprint();
+  p_->foreach([&](component::BaseComponent* base) {
+    auto name = base->name();
+    if (name == "ArgConfig")
+    {
+      printComponentFootprint(
+        static_cast<arguments::ArgConfig*>(base)
+      );
+    } else if (name == "Context") {
+      printComponentFootprint(
+        static_cast<ctx::Context*>(base)
+      );
+    } else if (name == "MemoryPool") {
+      printComponentFootprint(
+        static_cast<pool::Pool*>(base)
+      );
+    } else if (name == "VirtualContextManager") {
+      printComponentFootprint(
+        static_cast<vrt::VirtualContextManager*>(base)
+      );
+    } else if (name == "WorkerGroupOMP" || name == "WorkerGroup") {
+      printComponentFootprint(
+        static_cast<worker::WorkerGroupType*>(base)
+      );
+    } else if (name == "Collective") {
+      printComponentFootprint(
+        static_cast<collective::CollectiveAlg*>(base)
+      );
+    } else if (name == "AsyncEvent") {
+      printComponentFootprint(
+        static_cast<event::AsyncEvent*>(base)
+      );
+    } else if (name == "ActiveMessenger") {
+      printComponentFootprint(
+        static_cast<messaging::ActiveMessenger*>(base)
+      );
+    } else if (name == "Param") {
+      printComponentFootprint(
+        static_cast<param::Param*>(base)
+      );
+    } else if (name == "RDMAManager") {
+      printComponentFootprint(
+        static_cast<rdma::RDMAManager*>(base)
+      );
+    } else if (name == "Registry") {
+      printComponentFootprint(
+        static_cast<registry::Registry*>(base)
+      );
+    } else if (name == "Scheduler") {
+      printComponentFootprint(
+        static_cast<sched::Scheduler*>(base)
+      );
+    } else if (name == "Sequencer") {
+      printComponentFootprint(
+        static_cast<seq::Sequencer*>(base)
+      );
+    } else if (name == "VirtualSequencer") {
+      printComponentFootprint(
+        static_cast<seq::SequencerVirtual*>(base)
+      );
+    } else if (name == "TerminationDetector") {
+      printComponentFootprint(
+        static_cast<term::TerminationDetector*>(base)
+      );
+    } else if (name == "LocationManager") {
+      printComponentFootprint(
+        static_cast<location::LocationManager*>(base)
+      );
+    } else if (name == "CollectionManager") {
+      printComponentFootprint(
+        static_cast<vrt::collection::CollectionManager*>(base)
+      );
+    } else if (name == "GroupManager") {
+      printComponentFootprint(
+        static_cast<group::GroupManager*>(base)
+      );
+    } else if (name == "PipeManager") {
+      printComponentFootprint(
+        static_cast<pipe::PipeManager*>(base)
+      );
+    } else if (name == "ObjGroupManager") {
+      printComponentFootprint(
+        static_cast<objgroup::ObjGroupManager*>(base)
+      );
+    } else if (name == "HandleRDMA") {
+      printComponentFootprint(
+        static_cast<rdma::Manager*>(base)
+      );
+    } else if (name == "MemoryUsage") {
+      printComponentFootprint(
+        static_cast<util::memory::MemoryUsage*>(base)
+      );
+    } else if (name == "NodeStats") {
+      printComponentFootprint(
+        static_cast<vrt::collection::balance::NodeStats*>(base)
+      );
+    } else if (name == "StatsRestartReader") {
+      printComponentFootprint(
+        static_cast<vrt::collection::balance::StatsRestartReader*>(base)
+      );
+    } else if (name == "LBManager") {
+      printComponentFootprint(
+        static_cast<vrt::collection::balance::LBManager*>(base)
+      );
+    } else if (name == "TimeTriggerManager") {
+      printComponentFootprint(
+        static_cast<timetrigger::TimeTriggerManager*>(base)
+      );
+    } else if (name == "PhaseManager") {
+      printComponentFootprint(
+        static_cast<vt::phase::PhaseManager*>(base)
+      );
+    #if vt_check_enabled(trace_enabled)
+    } else if (name == "Trace") {
+      printComponentFootprint(
+        static_cast<trace::Trace*>(base)
+      );
+    #endif
+    #if vt_check_enabled(mpi_access_guards)
+    } else if (name == "PMPI") {
+      printComponentFootprint(
+        static_cast<pmpi::PMPIComponent*>(base)
+      );
+    #endif
+    }
+  });
 }
 
 arguments::AppConfig const* Runtime::getAppConfig() const {
