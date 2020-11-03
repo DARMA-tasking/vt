@@ -329,7 +329,6 @@ function(gtest_add_tests)
   unset(testList)
 
   set(gtest_case_name_regex ".*\\( *([A-Za-z_0-9]+) *, *([A-Za-z_0-9]+) *\\).*")
-  #set(gtest_test_type_regex "(TYPED_TEST|TEST_?[FP]?)")
   set(gtest_test_type_regex "(TYPED_TEST_?P?|TEST_?[FP]?)")
 
   foreach(source IN LISTS ARGS_SOURCES)
