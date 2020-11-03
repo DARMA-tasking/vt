@@ -263,6 +263,20 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+void ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg) {
+  auto const proxy_bits = proxy.getProxy();
+  auto const dest_node = proxy.getNode();
+  auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
+  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+  vt_debug_print(
+    objgroup, node,
+    "ObjGroupManager::invoke: proxy={:x}, node={}, ctrl={:x}, han={:x}\n",
+    proxy_bits, dest_node, ctrl, han
+  );
+  invoke<MsgT>(msg, han, dest_node);
+}
+
+template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
 void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
@@ -280,6 +294,13 @@ void ObjGroupManager::send(
   MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node
 ) {
   return objgroup::send(msg,han,dest_node);
+}
+
+template <typename MsgT>
+void ObjGroupManager::invoke(
+  messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node
+) {
+  objgroup::invoke(msg, han, dest_node);
 }
 
 template <typename MsgT>

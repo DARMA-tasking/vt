@@ -878,7 +878,7 @@ void CollectionManager::invokeMsgImpl(
   auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
 
   trace_event = theMsg()->makeTraceCreationSend(
-    msgPtr, msgPtr->getVrtHandler(), reg_type, msg_size, true
+    msgPtr, msgPtr->getVrtHandler(), reg_type, msg_size, false
   );
 #endif
 

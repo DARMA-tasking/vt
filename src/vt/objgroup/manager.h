@@ -216,6 +216,16 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   void send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg);
 
   /**
+   * \internal \brief Invoke message handler on an element of the object group
+   * The message handler will be invoked inline without going through scheduler
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] msg message
+   */
+  template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
+  void invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg);
+
+  /**
    * \internal \brief Broadcast a message to all nodes in object group
    *
    * \param[in] proxy proxy to the object group
@@ -315,6 +325,17 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    */
   template <typename MsgT>
   void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType node);
+
+  /**
+   * \internal \brief Invoke a message handler on an objgroup
+   * The message handler will be invoked inline without going through scheduler
+   *
+   * \param[in] msg message
+   * \param[in] han handler to invoke
+   * \param[in] node node to invoke the handler on
+   */
+  template <typename MsgT>
+  void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType node);
 
   /**
    * \internal \brief Broadcast message to an objgroup

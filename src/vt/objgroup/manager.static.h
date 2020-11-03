@@ -67,6 +67,21 @@ void send(MsgSharedPtr<MsgT> msg, HandlerType han, NodeType dest_node) {
 }
 
 template <typename MsgT>
+void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_node) {
+  auto const this_node = theContext()->getNode();
+
+  vtAssert(
+    dest_node == this_node,
+    fmt::format(
+      "Attempting to invoke handler on node:{} instead of node:{}!", this_node,
+      dest_node
+    )
+  );
+
+  runnable::Runnable<MsgT>::run(han, nullptr, msg.msg_.get(), this_node);
+}
+
+template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
   // Get the current epoch for the message
   auto const cur_epoch = theMsg()->setupEpochMsg(msg);
