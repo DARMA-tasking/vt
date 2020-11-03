@@ -352,13 +352,16 @@ EventType ActiveMessenger::sendMsgMPI(
     auto tag = allocateNewTag();
     auto this_node = theContext()->getNode();
 
+    // Send the actual data in multiple chunks
     PtrLenPairType tup = std::make_tuple(untyped_msg, msg_size);
     SendInfo info = sendData(tup, dest, tag);
+
     auto event_id = info.getEvent();
     auto& holder = theEvent()->getEventHolder(event_id);
     auto mpi_event = holder.get_event();
     mpi_event->setManagedMessage(base.to<ShortMessage>());
 
+    // Send the control message to receive the multiple chunks of data
     auto m = makeMessage<MultiMsg>(info, this_node, msg_size);
     sendMsg<MultiMsg, chunkedMultiMsg>(dest, m);
 
