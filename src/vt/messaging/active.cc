@@ -563,7 +563,6 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
     );
     {
-      VT_ALLOW_MPI_CALLS;
       #if vt_check_enabled(trace_enabled)
         double tr_begin = 0;
         if (theConfig()->vt_trace_mpi) {
@@ -578,6 +577,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
         remainder, dest, tag, num_sends, subsize, std::get<1>(payload)
       );
 
+      VT_ALLOW_MPI_CALLS;
       int const ret = MPI_Isend(
         ptr, subsize, MPI_BYTE, dest, tag, theContext()->getComm(),
         mpi_event->getRequest()
@@ -1088,8 +1088,6 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
     MPI_Request req;
 
     {
-      VT_ALLOW_MPI_CALLS;
-
       #if vt_check_enabled(trace_enabled)
         double tr_begin = 0;
         if (theConfig()->vt_trace_mpi) {
@@ -1097,6 +1095,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
         }
       #endif
 
+      VT_ALLOW_MPI_CALLS;
       MPI_Irecv(
         buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
         theContext()->getComm(), &req
