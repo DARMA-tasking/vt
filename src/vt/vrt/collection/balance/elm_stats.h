@@ -82,7 +82,6 @@ struct ElementStats {
     NodeType to, ElementIDType from_perm, ElementIDType from_temp,
     double bytes, bool bcast
   );
-  void setModelWeight(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;

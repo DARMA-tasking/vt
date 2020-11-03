@@ -113,17 +113,6 @@ void ElementStats::recvToNode(
   recvComm(key, bytes);
 }
 
-void ElementStats::setModelWeight(TimeType const& time) {
-  cur_time_started_ = false;
-  addTime(time);
-
-  vt_debug_print(
-    lb, node,
-    "ElementStats: setModelWeight: time={}, cur_load={}\n",
-    time, phase_timings_.at(cur_phase_)
-  );
-}
-
 void ElementStats::addTime(TimeType const& time) {
   phase_timings_.resize(cur_phase_ + 1);
   phase_timings_.at(cur_phase_) += time;
