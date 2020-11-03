@@ -1,0 +1,83 @@
+# Docker
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+  branches:
+    include:
+      - develop
+      - 1.0.0*
+pr:
+  - .*
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: DockerCompose@0
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerComposeFile: '**/docker-compose.yml'
+          dockerComposeFileArgs: |
+            REPO=lifflander1/vt
+            ARCH=amd64
+            UBUNTU=18.04
+            COMPILER_TYPE=gnu
+            COMPILER=gcc-5
+            BUILD_TYPE=release
+            ULIMIT_CORE=0
+            CODE_COVERAGE=0
+            VT_LB=1
+            VT_TRACE=0
+            VT_TRACE_RT=0
+            VT_MIMALLOC=0
+            VT_DOCS=0
+            VT_ASAN=0
+            VT_POOL=1
+            VT_EXTENDED_TESTS=1
+            VT_UNITY_BUILD=1
+            VT_ZOLTAN=0
+            VT_CI_BUILD=1
+            VT_DIAGNOSTICS= 1
+            CACHE=~/.local/cache/
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp'
+      - task: DockerCompose@0
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerComposeFile: '**/docker-compose.yml'
+          dockerComposeFileArgs: |
+            REPO=lifflander1/vt
+            ARCH=amd64
+            UBUNTU=18.04
+            COMPILER_TYPE=gnu
+            COMPILER=gcc-5
+            BUILD_TYPE=release
+            ULIMIT_CORE=0
+            CODE_COVERAGE=0
+            VT_LB=1
+            VT_TRACE=0
+            VT_TRACE_RT=0
+            VT_MIMALLOC=0
+            VT_DOCS=0
+            VT_ASAN=0
+            VT_POOL=1
+            VT_EXTENDED_TESTS=1
+            VT_UNITY_BUILD=1
+            VT_ZOLTAN=0
+            VT_CI_BUILD=1
+            VT_DIAGNOSTICS= 1
+            CACHE=~/.local/cache/
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'run ubuntu-cpp'
