@@ -85,10 +85,10 @@ stages:
           key: $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY) | $(TS)
           path: '$(build_root)/ccache'
           restoreKeys: |
-            $(Agent.OS) | $(cache_name) | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY)
-            $(Agent.OS) | $(cache_name) | $(TS_YEAR) | $(TS_MONTH)
-            $(Agent.OS) | $(cache_name) | $(TS_YEAR)
-            $(Agent.OS) | $(cache_name)
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY)
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH)
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR)
+            $(Agent.OS) | "$(cache_name)"
       - task: DockerCompose@0
         displayName: Pull container
         inputs:
