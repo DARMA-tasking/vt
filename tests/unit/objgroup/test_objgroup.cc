@@ -271,4 +271,13 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
   }
 }
 
+TEST_F(TestObjGroup, test_proxy_invoke) {
+  auto const& this_node = theContext()->getNode();
+
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+  proxy[this_node].invoke<MyMsg, &MyObjA::handler>();
+
+  EXPECT_EQ(proxy.get()->recv_, 1);
+}
+
 }}} // end namespace vt::tests::unit
