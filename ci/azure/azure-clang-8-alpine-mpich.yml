@@ -41,7 +41,7 @@ variables:
   VT_DIAGNOSTICS: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: alpine-clang-8-cache
-  build_root: "$(CACHE)/~/.local/cache/${{ env.ARCH }}-alpine-${{ env.COMPILER }}-cache//"
+  build_root: "$(CACHE)/$(ARCH)-alpine-$(UBUNTU)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
