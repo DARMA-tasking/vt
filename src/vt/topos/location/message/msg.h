@@ -103,7 +103,7 @@ struct EntityMsg : ActiveMessageT {
   void setLocInst(LocInstType const& inst) { loc_man_inst_ = inst; }
   LocInstType getLocInst() const { return loc_man_inst_;  }
   bool hasHandler() const { return handler_ != uninitialized_handler; }
-  void setHandler(HandlerType const& han) { handler_ = han; }
+  void setHandler(HandlerType const han) { handler_ = han; }
   HandlerType getHandler() const { return handler_; }
   void setSerialize(bool const is_serialize) { serialize_ = is_serialize; }
   bool getSerialize() const { return serialize_; }

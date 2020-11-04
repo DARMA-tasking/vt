@@ -49,13 +49,13 @@
 namespace vt { namespace pipe { namespace callback { namespace cbunion {
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(
-  RawSendMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
+  RawSendMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
   NodeType const& in_node
 ) : pipe_(in_pipe), cb_(SendMsgCB{in_handler,in_node})
 { }
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(
-  RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
+  RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
   bool const& in_inc
 ) : pipe_(in_pipe), cb_(BcastMsgCB{in_handler,in_inc})
 { }
@@ -76,8 +76,8 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(
 { }
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(
-  RawBcastColDirTagType, PipeType const& in_pipe, HandlerType const& in_handler,
-  AutoHandlerType const& in_vrt, VirtualProxyType const& in_proxy
+  RawBcastColDirTagType, PipeType const& in_pipe, HandlerType const in_handler,
+  AutoHandlerType const in_vrt, VirtualProxyType const& in_proxy
 ) : pipe_(in_pipe), cb_(BcastColDirCB{in_handler, in_vrt, in_proxy})
 { }
 

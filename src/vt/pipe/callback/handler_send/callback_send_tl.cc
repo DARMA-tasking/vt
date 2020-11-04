@@ -54,7 +54,7 @@
 namespace vt { namespace pipe { namespace callback {
 
 CallbackSendTypeless::CallbackSendTypeless(
-  HandlerType const& in_handler, NodeType const& in_send_node
+  HandlerType const in_handler, NodeType const& in_send_node
 ) : send_node_(in_send_node), handler_(in_handler)
 { }
 

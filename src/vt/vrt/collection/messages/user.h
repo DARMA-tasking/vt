@@ -87,7 +87,7 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
     : is_wrap_(true)
   { }
 
-  void setVrtHandler(HandlerType const& in_handler);
+  void setVrtHandler(HandlerType const in_handler);
   HandlerType getVrtHandler() const;
 
   // The variable `to_proxy_' manages the intended target of the

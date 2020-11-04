@@ -84,7 +84,7 @@ RegistrarFunctor<RunnableT, RegT, InfoT, FnT>::RegistrarFunctor() {
   // trace
   std::string event_type_name = AdapterType::traceGetEventType();
   std::string event_name = AdapterType::traceGetEventName();
-  auto const& trace_ep = trace::TraceRegistry::registerEventHashed(
+  auto const trace_ep = trace::TraceRegistry::registerEventHashed(
     event_type_name, event_name);
   reg.emplace_back(InfoT{NumArgsTag, fn, trace_ep, num_args});
   #else
@@ -93,17 +93,17 @@ RegistrarFunctor<RunnableT, RegT, InfoT, FnT>::RegistrarFunctor() {
   #endif
 }
 
-inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const& han) {
-  auto const& id = HandlerManagerType::getHandlerIdentifier(han);
+inline NumArgsType getAutoHandlerFunctorArgs(HandlerType const han) {
+  auto const id = HandlerManagerType::getHandlerIdentifier(han);
 
   using ContainerType = AutoActiveFunctorContainerType;
   return getAutoRegistryGen<ContainerType>().at(id).getNumArgs();
 }
 
-inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& han) {
-  auto const& id = HandlerManagerType::getHandlerIdentifier(han);
-  bool const& is_auto = HandlerManagerType::isHandlerAuto(han);
-  bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
+inline AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const han) {
+  auto const id = HandlerManagerType::getHandlerIdentifier(han);
+  bool const is_auto = HandlerManagerType::isHandlerAuto(han);
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(han);
 
   vt_debug_print(
     handler, node,

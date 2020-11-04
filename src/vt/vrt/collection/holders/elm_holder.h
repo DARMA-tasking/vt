@@ -59,7 +59,7 @@ struct ElementHolder {
   using VirtualPtrType = std::unique_ptr<CollectionBase<ColT,IndexT>>;
 
   ElementHolder(
-    VirtualPtrType in_vc_ptr_, HandlerType const& in_han, IndexT const& idx
+    VirtualPtrType in_vc_ptr_, HandlerType const in_han, IndexT const& idx
   );
   ElementHolder(ElementHolder&&) = default;
 

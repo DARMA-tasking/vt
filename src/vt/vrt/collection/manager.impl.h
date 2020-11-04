@@ -1009,7 +1009,7 @@ messaging::PendingSend CollectionManager::broadcastMsgImpl(
 
 template <typename MsgT, typename ColT>
 CollectionManager::IsColMsgType<MsgT> CollectionManager::broadcastMsgWithHan(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg, HandlerType const& h,
+  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg, HandlerType const h,
   bool inst
 ) {
   using IdxT = typename ColT::IndexType;
@@ -1018,7 +1018,7 @@ CollectionManager::IsColMsgType<MsgT> CollectionManager::broadcastMsgWithHan(
 
 template <typename MsgT, typename ColT>
 CollectionManager::IsNotColMsgType<MsgT> CollectionManager::broadcastMsgWithHan(
-  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg, HandlerType const& h,
+  CollectionProxyWrapType<ColT> const& proxy, MsgT* msg, HandlerType const h,
   bool inst
 ) {
   return broadcastNormalMsg<MsgT, ColT>(proxy, msg, h, inst);
@@ -1027,7 +1027,7 @@ CollectionManager::IsNotColMsgType<MsgT> CollectionManager::broadcastMsgWithHan(
 template <typename MsgT, typename ColT>
 messaging::PendingSend CollectionManager::broadcastNormalMsg(
   CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
-  HandlerType const& handler, bool instrument
+  HandlerType const handler, bool instrument
 ) {
   auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(*msg);
   return broadcastMsgUntypedHandler<ColMsgWrap<ColT, MsgT>, ColT>(
@@ -1038,7 +1038,7 @@ messaging::PendingSend CollectionManager::broadcastNormalMsg(
 template <typename MsgT, typename ColT, typename IdxT>
 messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   CollectionProxyWrapType<ColT, IdxT> const& toProxy, MsgT* raw_msg,
-  HandlerType const& handler, bool instrument
+  HandlerType const handler, bool instrument
 ) {
   auto const idx = makeVrtDispatch<MsgT,ColT>();
   auto const col_proxy = toProxy.getProxy();
@@ -1263,7 +1263,7 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
 template <typename MsgT, typename ColT>
 CollectionManager::IsNotColMsgType<MsgT> CollectionManager::sendMsgWithHan(
   VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
-  HandlerType const& handler
+  HandlerType const handler
 ) {
   return sendNormalMsg<MsgT, ColT>(proxy, msg, handler);
 }
@@ -1271,7 +1271,7 @@ CollectionManager::IsNotColMsgType<MsgT> CollectionManager::sendMsgWithHan(
 template <typename MsgT, typename ColT>
 CollectionManager::IsColMsgType<MsgT> CollectionManager::sendMsgWithHan(
   VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
-  HandlerType const& handler
+  HandlerType const handler
 ) {
   using IdxT = typename ColT::IndexType;
   return sendMsgUntypedHandler<MsgT, ColT, IdxT>(proxy, msg, handler);
@@ -1280,7 +1280,7 @@ CollectionManager::IsColMsgType<MsgT> CollectionManager::sendMsgWithHan(
 template <typename MsgT, typename ColT>
 messaging::PendingSend CollectionManager::sendNormalMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
-  HandlerType const& handler
+  HandlerType const handler
 ) {
   auto wrap_msg = makeMessage<ColMsgWrap<ColT, MsgT>>(*msg);
   return sendMsgUntypedHandler<ColMsgWrap<ColT, MsgT>, ColT>(
@@ -1367,7 +1367,7 @@ messaging::PendingSend CollectionManager::sendMsgImpl(
 template <typename MsgT, typename ColT, typename IdxT>
 messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   VirtualElmProxyType<ColT> const& toProxy, MsgT* raw_msg,
-  HandlerType const& handler, bool imm_context
+  HandlerType const handler, bool imm_context
 ) {
   auto const& col_proxy = toProxy.getCollectionProxy();
   auto const& elm_proxy = toProxy.getElementProxy();
@@ -1448,7 +1448,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 template <typename ColT, typename IndexT>
 bool CollectionManager::insertCollectionElement(
   VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
-  HandlerType const& map_han, VirtualProxyType const& proxy,
+  HandlerType const map_han, VirtualProxyType const& proxy,
   bool const is_static, NodeType const& home_node, bool const& is_migrated_in,
   NodeType const& migrated_from
 ) {
@@ -1569,7 +1569,7 @@ template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::constructCollectiveMap(
   typename ColT::IndexType range, DistribConstructFn<ColT> user_construct_fn,
-  HandlerType const& map_han, TagType const& tag
+  HandlerType const map_han, TagType const& tag
 ) {
   using IndexT         = typename ColT::IndexType;
   using TypedProxyType = CollectionProxyWrapType<ColT>;
@@ -1854,7 +1854,7 @@ InsertToken<ColT> CollectionManager::constructInsert(
 
 template <typename ColT>
 InsertToken<ColT> CollectionManager::constructInsertMap(
-  typename ColT::IndexType range, HandlerType const& map_han, TagType const& tag
+  typename ColT::IndexType range, HandlerType const map_han, TagType const& tag
 ) {
   using IndexT         = typename ColT::IndexType;
 
@@ -2063,7 +2063,7 @@ CollectionManager::construct(
 template <typename ColT, typename... Args>
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::constructMap(
-  typename ColT::IndexType range, HandlerType const& map_handler,
+  typename ColT::IndexType range, HandlerType const map_handler,
   Args&&... args
 ) {
   using IndexT = typename ColT::IndexType;
@@ -2111,7 +2111,7 @@ CollectionManager::constructMap(
 }
 
 inline void CollectionManager::insertCollectionInfo(
-  VirtualProxyType const& proxy, HandlerType const& map_han,
+  VirtualProxyType const& proxy, HandlerType const map_han,
   EpochType const& insert_epoch
 ) {
   UniversalIndexHolder<>::insertMap(proxy,map_han,insert_epoch);
@@ -2713,7 +2713,7 @@ template <typename ColT, typename IndexT>
 MigrateStatus CollectionManager::migrateIn(
   VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
   VirtualPtrType<ColT, IndexT> vrt_elm_ptr, IndexT const& max,
-  HandlerType const& map_han
+  HandlerType const map_han
 ) {
   vt_debug_print(
     vrt_coll, node,

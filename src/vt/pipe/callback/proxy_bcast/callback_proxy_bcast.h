@@ -68,7 +68,7 @@ struct CallbackProxyBcast : CallbackBase<signal::Signal<MsgT>> {
   CallbackProxyBcast(CallbackProxyBcast const&) = default;
   CallbackProxyBcast(CallbackProxyBcast&&) = default;
 
-  CallbackProxyBcast(HandlerType const& in_handler, ProxyType const& in_proxy)
+  CallbackProxyBcast(HandlerType const in_handler, ProxyType const& in_proxy)
     : proxy_(in_proxy), handler_(in_handler)
   { }
 

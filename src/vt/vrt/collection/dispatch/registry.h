@@ -81,7 +81,7 @@ struct VrtDispatchHolder {
 template <typename MsgT, typename ColT>
 inline AutoHandlerType registerVrtDispatch();
 
-inline DispatchBasePtrType getDispatch(AutoHandlerType const& han);
+inline DispatchBasePtrType getDispatch(AutoHandlerType const han);
 
 template <typename MsgT, typename ColT>
 inline AutoHandlerType makeVrtDispatch(

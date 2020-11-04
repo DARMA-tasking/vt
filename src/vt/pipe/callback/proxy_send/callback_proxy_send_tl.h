@@ -75,7 +75,7 @@ struct CallbackProxySendDirect : CallbackBaseTL<CallbackProxySendDirect> {
   using AutoHandlerType = auto_registry::AutoHandlerType;
 
   CallbackProxySendDirect() = default;
-  CallbackProxySendDirect(HandlerType const& in_han, AutoHandlerType in_vrt)
+  CallbackProxySendDirect(HandlerType const in_han, AutoHandlerType in_vrt)
     : vrt_dispatch_han_(in_vrt), handler_(in_han)
   { }
 

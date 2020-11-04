@@ -67,7 +67,7 @@ inline HandlerType makeAutoHandlerVC() {
   return HandlerManager::makeHandler(false, false, id);
 }
 
-inline AutoActiveVCType getAutoHandlerVC(HandlerType const& handler) {
+inline AutoActiveVCType getAutoHandlerVC(HandlerType const handler) {
   using ContainerType = AutoActiveVCContainerType;
 
   auto const han_id = HandlerManager::getHandlerIdentifier(handler);

@@ -59,7 +59,7 @@ struct CallbackSendTypeless : CallbackBaseTL<CallbackSendTypeless> {
   CallbackSendTypeless& operator=(CallbackSendTypeless const&) = default;
 
   CallbackSendTypeless(
-    HandlerType const& in_handler, NodeType const& in_send_node
+    HandlerType const in_handler, NodeType const& in_send_node
   );
 
   template <typename SerializerT>

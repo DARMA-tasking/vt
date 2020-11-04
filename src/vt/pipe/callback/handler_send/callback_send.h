@@ -76,7 +76,7 @@ struct CallbackSend : CallbackBase<signal::Signal<MsgT>> {
   CallbackSend(CallbackSend&&) = default;
 
   CallbackSend(
-    HandlerType const& in_handler, NodeType const& in_send_node
+    HandlerType const in_handler, NodeType const& in_send_node
   );
 
   HandlerType getHandler() const { return handler_; }

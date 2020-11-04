@@ -73,7 +73,7 @@ public:
    * \param[in] in_is_static whether the collection is static
    */
   CollectionHolder(
-    HandlerType const& in_map_fn, IndexT const& idx, bool const in_is_static
+    HandlerType const in_map_fn, IndexT const& idx, bool const in_is_static
   );
   virtual ~CollectionHolder() {}
 

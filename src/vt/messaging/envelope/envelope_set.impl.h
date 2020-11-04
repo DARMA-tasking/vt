@@ -94,7 +94,7 @@ inline void setTagType(Env& env) {
 }
 
 template <typename Env>
-inline void envelopeSetHandler(Env& env, HandlerType const& handler) {
+inline void envelopeSetHandler(Env& env, HandlerType const handler) {
   vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->han = handler;
 }

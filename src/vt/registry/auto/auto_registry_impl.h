@@ -57,12 +57,14 @@ namespace vt { namespace auto_registry {
 
 inline AutoActiveObjGroupType getAutoHandlerObjGroup(HandlerType han) {
   using ContainerType = AutoActiveObjGroupContainerType;
+
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
 
 inline AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han) {
   using ContainerType = AutoActiveObjGroupContainerType;
+
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
   return getAutoRegistryGen<ContainerType>().at(id).getObjIdx();
 }
@@ -114,10 +116,10 @@ inline HandlerType makeAutoHandlerParam() {
   return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
 }
 
-inline AutoActiveType getAutoHandler(HandlerType const& handler) {
-  auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
-  bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
-  bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
+inline AutoActiveType getAutoHandler(HandlerType const handler) {
+  auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
+  bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
   vt_debug_print(
     handler, node,

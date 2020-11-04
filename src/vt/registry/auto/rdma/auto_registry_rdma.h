@@ -54,8 +54,8 @@
 
 namespace vt { namespace auto_registry {
 
-AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const& handler);
-AutoActiveRDMAPutType getAutoHandlerRDMAPut(HandlerType const& handler);
+AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const handler);
+AutoActiveRDMAPutType getAutoHandlerRDMAPut(HandlerType const handler);
 
 template <typename MsgT, ActiveTypedRDMAPutFnType<MsgT>* f>
 HandlerType makeAutoHandlerRDMAPut();

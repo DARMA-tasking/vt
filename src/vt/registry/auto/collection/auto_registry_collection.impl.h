@@ -51,7 +51,7 @@
 namespace vt { namespace auto_registry {
 
 inline AutoActiveCollectionType getAutoHandlerCollection(
-  HandlerType const& handler
+  HandlerType const handler
 ) {
   using ContainerType = AutoActiveCollectionContainerType;
 
@@ -74,7 +74,7 @@ inline HandlerType makeAutoHandlerCollection() {
 }
 
 inline AutoActiveCollectionMemType getAutoHandlerCollectionMem(
-  HandlerType const& handler
+  HandlerType const handler
 ) {
   using ContainerType = AutoActiveCollectionMemContainerType;
 

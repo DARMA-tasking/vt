@@ -75,7 +75,7 @@ template <typename MsgT, typename ColT>
 AutoHandlerType const VrtDispatchHolder<MsgT,ColT>::idx =
   registerVrtDispatch<MsgT,ColT>();
 
-inline DispatchBasePtrType getDispatch(AutoHandlerType const& han) {
+inline DispatchBasePtrType getDispatch(AutoHandlerType const han) {
   return getTLRegistry().at(han).get();
 }
 

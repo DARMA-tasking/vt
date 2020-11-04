@@ -80,7 +80,7 @@ void CollectionManager::startup() {
 }
 
 DispatchBasePtrType
-getDispatcher(auto_registry::AutoHandlerType const& han) {
+getDispatcher(auto_registry::AutoHandlerType const han) {
   return theCollection()->getDispatcher(han);
 }
 

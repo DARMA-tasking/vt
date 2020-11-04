@@ -76,7 +76,7 @@ struct CallbackProxyBcastDirect : CallbackBaseTL<CallbackProxyBcastDirect> {
 
   CallbackProxyBcastDirect() = default;
   CallbackProxyBcastDirect(
-    HandlerType const& in_han, AutoHandlerType const& in_vrt,
+    HandlerType const in_han, AutoHandlerType const in_vrt,
     VirtualProxyType const& in_proxy
   ) : vrt_dispatch_han_(in_vrt), handler_(in_han), proxy_(in_proxy)
   { }

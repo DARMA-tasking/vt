@@ -60,7 +60,7 @@ struct UniversalIndexHolder {
   static void destroyAllLive();
   static void destroyCollection(VirtualProxyType const proxy);
   static void insertMap(
-    VirtualProxyType const proxy, HandlerType const& han,
+    VirtualProxyType const proxy, HandlerType const han,
     EpochType const& insert_epoch = no_epoch
   );
   static HandlerType getMap(VirtualProxyType const proxy);

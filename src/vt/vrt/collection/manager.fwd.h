@@ -53,7 +53,7 @@ namespace vt { namespace vrt { namespace collection {
 
 struct CollectionManager;
 
-DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const& han);
+DispatchBasePtrType getDispatcher(auto_registry::AutoHandlerType const han);
 
 }}} /* end namespace vt::vrt::collection */
 

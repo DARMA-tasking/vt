@@ -56,13 +56,13 @@ namespace vt { namespace auto_registry {
 
 using namespace ::vt::vrt::collection;
 
-AutoActiveCollectionType getAutoHandlerCollection(HandlerType const& handler);
+AutoActiveCollectionType getAutoHandlerCollection(HandlerType const handler);
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
 HandlerType makeAutoHandlerCollection();
 
 AutoActiveCollectionMemType getAutoHandlerCollectionMem(
-  HandlerType const& handler
+  HandlerType const handler
 );
 
 template <

@@ -52,7 +52,7 @@
 
 namespace vt { namespace auto_registry {
 
-inline AutoActiveRDMAPutType getAutoHandlerRDMAPut(HandlerType const& handler) {
+inline AutoActiveRDMAPutType getAutoHandlerRDMAPut(HandlerType const handler) {
   using ContainerType = AutoActiveRDMAPutContainerType;
 
   auto const han_id = HandlerManager::getHandlerIdentifier(handler);
@@ -71,7 +71,7 @@ inline HandlerType makeAutoHandlerRDMAPut() {
   return HandlerManager::makeHandler(false, false, id);
 }
 
-inline AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const& handler) {
+inline AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const handler) {
   using ContainerType = AutoActiveRDMAGetContainerType;
 
   auto const han_id = HandlerManager::getHandlerIdentifier(handler);

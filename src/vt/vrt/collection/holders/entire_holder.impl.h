@@ -76,7 +76,7 @@ template <typename always_void_>
 
 template <typename always_void_>
 /*static*/ void UniversalIndexHolder<always_void_>::insertMap(
-  VirtualProxyType const proxy, HandlerType const& han,
+  VirtualProxyType const proxy, HandlerType const han,
   EpochType const& insert_epoch
 ) {
   live_collections_map_.emplace(

@@ -68,13 +68,13 @@ struct CallbackProxySend : CallbackBase<signal::Signal<MsgT>> {
   using MessageType      = MsgT;
 
   CallbackProxySend(
-    HandlerType const& in_handler, IndexedProxyType const& in_proxy
+    HandlerType const in_handler, IndexedProxyType const& in_proxy
   ) : proxy_(in_proxy.getCollectionProxy()),
       idx_(in_proxy.getElementProxy().getIndex()), handler_(in_handler)
   { }
 
   CallbackProxySend(
-    HandlerType const& in_handler, ProxyType const& in_proxy,
+    HandlerType const in_handler, ProxyType const& in_proxy,
     IndexType const& in_idx
   ) : proxy_(in_proxy), idx_(in_idx), handler_(in_handler)
   { }

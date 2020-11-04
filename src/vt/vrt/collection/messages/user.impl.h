@@ -54,7 +54,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename BaseMsgT>
 void CollectionMessage<ColT, BaseMsgT>::setVrtHandler(
-  HandlerType const& in_handler
+  HandlerType const in_handler
 ) {
   vt_sub_handler_ = in_handler;
 }

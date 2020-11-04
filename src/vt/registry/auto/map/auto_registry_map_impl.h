@@ -81,12 +81,12 @@ inline HandlerType makeAutoHandlerFunctorMap() {
 }
 
 inline AutoActiveMapFunctorType getAutoHandlerFunctorMap(
-  HandlerType const& han
+  HandlerType const han
 ) {
   using ContainerType = AutoActiveMapFunctorContainerType;
-  auto const& id = HandlerManagerType::getHandlerIdentifier(han);
-  bool const& is_auto = HandlerManagerType::isHandlerAuto(han);
-  bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
+  auto const id = HandlerManagerType::getHandlerIdentifier(han);
+  bool const is_auto = HandlerManagerType::isHandlerAuto(han);
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(han);
 
   vt_debug_print(
     handler, node,
@@ -120,9 +120,9 @@ inline HandlerType makeAutoHandlerMap() {
   return han;
 }
 
-inline AutoActiveMapType getAutoHandlerMap(HandlerType const& handler) {
+inline AutoActiveMapType getAutoHandlerMap(HandlerType const handler) {
   using ContainerType = AutoActiveMapContainerType;
-  auto const& id = HandlerManagerType::getHandlerIdentifier(handler);
+  auto const id = HandlerManagerType::getHandlerIdentifier(handler);
   vt_debug_print(
     handler, node,
     "getAutoHandlerMap: id={}, handler={}\n", id, handler
@@ -146,9 +146,9 @@ inline HandlerType makeAutoHandlerSeedMap() {
 }
 
 // Registration for seed mapping singletons
-inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const& handler) {
+inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const handler) {
   using ContainerType = AutoActiveSeedMapContainerType;
-  auto const& id = HandlerManagerType::getHandlerIdentifier(handler);
+  auto const id = HandlerManagerType::getHandlerIdentifier(handler);
   vt_debug_print(
     handler, node,
     "getAutoHandlerSeedMap: id={}, handler={}\n", id, handler
@@ -156,8 +156,8 @@ inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const& handler) {
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
 
-inline AutoActiveMapType getHandlerMap(HandlerType const& han) {
-  bool const& is_functor = HandlerManagerType::isHandlerFunctor(han);
+inline AutoActiveMapType getHandlerMap(HandlerType const han) {
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(han);
   if (is_functor) {
     return getAutoHandlerFunctorMap(han);
   } else {

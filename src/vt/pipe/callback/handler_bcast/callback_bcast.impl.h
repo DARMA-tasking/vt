@@ -59,7 +59,7 @@ namespace vt { namespace pipe { namespace callback {
 
 template <typename MsgT>
 CallbackBcast<MsgT>::CallbackBcast(
-  HandlerType const& in_handler, bool const& in_include
+  HandlerType const in_handler, bool const& in_include
 ) : handler_(in_handler), include_sender_(in_include)
 { }
 

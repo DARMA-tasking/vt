@@ -53,7 +53,7 @@ namespace vt {
 
 template <typename Env>
 inline void envelopeSetup(
-  Env& env, NodeType const& dest, HandlerType const& handler
+  Env& env, NodeType const& dest, HandlerType const handler
 ) {
   envelopeSetDest(env, dest);
   envelopeSetHandler(env, handler);

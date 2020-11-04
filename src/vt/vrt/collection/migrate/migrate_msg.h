@@ -60,7 +60,7 @@ struct MigrateMsg final : ::vt::Message {
   MigrateMsg() = default;
   MigrateMsg(
     VrtElmProxy<ColT, IndexT> const& in_elm_proxy, NodeType const& in_from,
-    NodeType const& in_to, HandlerType const& in_map_fn, IndexT const& in_range,
+    NodeType const& in_to, HandlerType const in_map_fn, IndexT const& in_range,
     ColT* in_elm
   ) : elm_proxy_(in_elm_proxy), from_(in_from), to_(in_to), map_fn_(in_map_fn),
       range_(in_range), elm_(in_elm)

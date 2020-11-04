@@ -192,7 +192,7 @@ struct CollectionManager
   template <typename ColT, typename... Args>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
   constructMap(
-    typename ColT::IndexType range, HandlerType const& map,
+    typename ColT::IndexType range, HandlerType const map,
     Args&&... args
   );
 
@@ -332,7 +332,7 @@ struct CollectionManager
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollectiveMap(
     typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
-    HandlerType const& map_han, TagType const& tag
+    HandlerType const map_han, TagType const& tag
   );
 
 private:
@@ -420,7 +420,7 @@ public:
    */
   template <typename ColT>
   InsertToken<ColT> constructInsertMap(
-    typename ColT::IndexType range, HandlerType const& map_han, TagType const& tag
+    typename ColT::IndexType range, HandlerType const map_han, TagType const& tag
   );
 
   /**
@@ -553,7 +553,7 @@ public:
   >
   messaging::PendingSend sendMsgUntypedHandler(
     VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
-    HandlerType const& handler, bool imm_context = true
+    HandlerType const handler, bool imm_context = true
   );
 
   /**
@@ -570,7 +570,7 @@ public:
   template <typename MsgT, typename ColT>
   IsNotColMsgType<MsgT> sendMsgWithHan(
     VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
-    HandlerType const& handler
+    HandlerType const handler
   );
 
   /**
@@ -586,7 +586,7 @@ public:
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> sendMsgWithHan(
     VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
-    HandlerType const& handler
+    HandlerType const handler
   );
 
   /**
@@ -602,7 +602,7 @@ public:
   template <typename MsgT, typename ColT>
   messaging::PendingSend sendNormalMsg(
     VirtualElmProxyType<ColT> const& proxy, MsgT* msg,
-    HandlerType const& handler
+    HandlerType const handler
   );
 
   /**
@@ -881,7 +881,7 @@ public:
   template <typename MsgT, typename ColT>
   IsNotColMsgType<MsgT> broadcastMsgWithHan(
     CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
-    HandlerType const& handler, bool instrument = true
+    HandlerType const handler, bool instrument = true
   );
 
   /**
@@ -896,7 +896,7 @@ public:
   template <typename MsgT, typename ColT>
   IsColMsgType<MsgT> broadcastMsgWithHan(
     CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
-    HandlerType const& handler, bool instrument = true
+    HandlerType const handler, bool instrument = true
   );
 
   /**
@@ -913,7 +913,7 @@ public:
   template <typename MsgT, typename ColT>
   messaging::PendingSend broadcastNormalMsg(
     CollectionProxyWrapType<ColT> const& proxy, MsgT* msg,
-    HandlerType const& handler, bool instrument = true
+    HandlerType const handler, bool instrument = true
   );
 
   /**
@@ -930,7 +930,7 @@ public:
   template <typename MsgT, typename ColT, typename IdxT>
   messaging::PendingSend broadcastMsgUntypedHandler(
     CollectionProxyWrapType<ColT, IdxT> const& proxy, MsgT* msg,
-    HandlerType const& handler, bool instrument
+    HandlerType const handler, bool instrument
   );
 
   /**
@@ -1358,7 +1358,7 @@ public:
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   bool insertCollectionElement(
     VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
-    HandlerType const& map_han, VirtualProxyType const& proxy,
+    HandlerType const map_han, VirtualProxyType const& proxy,
     bool const is_static, NodeType const& home_node,
     bool const& is_migrated_in = false,
     NodeType const& migrated_from = uninitialized_destination
@@ -1438,7 +1438,7 @@ protected:
    * \param[in] insert_epoch insert epoch for dynamic insertions
    */
   void insertCollectionInfo(
-    VirtualProxyType const& proxy, HandlerType const& map,
+    VirtualProxyType const& proxy, HandlerType const map,
     EpochType const& insert_epoch = no_epoch
   );
 
@@ -1662,7 +1662,7 @@ private:
   MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
     VirtualPtrType<ColT, IndexT> vrt_elm_ptr, IndexT const& range,
-    HandlerType const& map_han
+    HandlerType const map_han
   );
 
 public:
