@@ -82,11 +82,9 @@ void ElementStats::stopTime() {
 void ElementStats::recvComm(
   LBCommKey key, double bytes
 ) {
-  comm_.resize(cur_phase_ + 1);
-  comm_.at(cur_phase_)[key].receiveMsg(bytes);
-  subphase_comm_.resize(cur_phase_ + 1);
-  subphase_comm_.at(cur_phase_).resize(cur_subphase_ + 1);
-  subphase_comm_.at(cur_phase_).at(cur_subphase_)[key].receiveMsg(bytes);
+  comm_[cur_phase_][key].receiveMsg(bytes);
+  subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
+  subphase_comm_[cur_phase_].at(cur_subphase_)[key].receiveMsg(bytes);
 }
 
 void ElementStats::recvObjData(
@@ -114,17 +112,15 @@ void ElementStats::recvToNode(
 }
 
 void ElementStats::addTime(TimeType const& time) {
-  phase_timings_.resize(cur_phase_ + 1);
-  phase_timings_.at(cur_phase_) += time;
+  phase_timings_[cur_phase_] += time;
 
-  subphase_timings_.resize(cur_phase_ + 1);
-  subphase_timings_.at(cur_phase_).resize(cur_subphase_ + 1);
-  subphase_timings_.at(cur_phase_).at(cur_subphase_) += time;
+  subphase_timings_[cur_phase_].resize(cur_subphase_ + 1);
+  subphase_timings_[cur_phase_].at(cur_subphase_) += time;
 
   vt_debug_print(
     lb, node,
     "ElementStats: addTime: time={}, cur_load={}\n",
-    time, phase_timings_.at(cur_phase_)
+    time, phase_timings_[cur_phase_]
   );
 }
 
@@ -136,8 +132,6 @@ void ElementStats::updatePhase(PhaseType const& inc) {
   );
 
   cur_phase_ += inc;
-  phase_timings_.resize(cur_phase_ + 1);
-  subphase_timings_.resize(cur_phase_ + 1);
 }
 
 PhaseType ElementStats::getPhase() const {
@@ -145,8 +139,6 @@ PhaseType ElementStats::getPhase() const {
 }
 
 TimeType ElementStats::getLoad(PhaseType const& phase) const {
-  vtAssert(phase_timings_.size() > phase, "Must have phase");
-
   auto const& total_load = phase_timings_.at(phase);
 
   vt_debug_print(
@@ -162,7 +154,6 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   if (subphase == no_subphase)
     return getLoad(phase);
 
-  vtAssert(phase_timings_.size() > phase, "Must have phase");
   auto const& subphase_loads = subphase_timings_.at(phase);
 
   vtAssert(subphase_loads.size() > subphase, "Must have subphase");
@@ -179,7 +170,6 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
 
 CommMapType const&
 ElementStats::getComm(PhaseType const& phase) {
-  comm_.resize(phase + 1);
   auto const& phase_comm = comm_[phase];
 
   vt_debug_print(
@@ -192,7 +182,6 @@ ElementStats::getComm(PhaseType const& phase) {
 }
 
 std::vector<CommMapType> const& ElementStats::getSubphaseComm(PhaseType phase) {
-  subphase_comm_.resize(phase + 1);
   auto const& subphase_comm = subphase_comm_[phase];
 
   vt_debug_print(
