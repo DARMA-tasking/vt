@@ -4,7 +4,11 @@
 
 name: PR tests (clang-8, alpine, mpich)
 
-on: [pull_request]
+trigger:
+  branches:
+    include:
+      - develop
+      - 1.0.0*
 
 pr:
   branches:
