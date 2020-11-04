@@ -95,6 +95,9 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   theNodeStats()->addNodeStats(
     col, cur_phase, total_load, subphase_loads, comm, subphase_comm
   );
+
+  auto model = theLBManager()->getLoadModel();
+  stats.startIterCleanup(cur_phase, model->getNumPastPhasesNeeded());
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
