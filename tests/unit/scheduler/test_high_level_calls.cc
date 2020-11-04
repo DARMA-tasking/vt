@@ -2,11 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               scheduler.impl.h
+//                          test_high_level_calls.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2020 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -42,69 +42,49 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
-#define INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/messaging/active.h"
-#include "vt/termination/termination.h"
+#include "vt/transport.h"
+#include "test_parallel_harness.h"
 
-namespace vt {
+namespace vt { namespace tests { namespace unit {
 
-template <typename Callable>
-void runInEpoch(EpochType ep, Callable&& fn) {
-  theSched()->triggerEvent(sched::SchedulerEvent::PendingSchedulerLoop);
+struct TestHighLevelCalls : TestParallelHarness {
+  bool called = false;
+};
 
-  theMsg()->pushEpoch(ep);
-  fn();
-  theMsg()->popEpoch(ep);
-  theTerm()->finishedEpoch(ep);
-  runSchedulerThrough(ep);
+TEST_F(TestHighLevelCalls, test_collective_lambda) {
+  runInEpochCollective([&]{
+    called = true;
+  });
+
+  EXPECT_EQ(called, true);
 }
 
-template <typename Callable>
-void runInEpochCollective(Callable&& fn) {
-  auto ep = theTerm()->makeEpochCollective();
-  runInEpoch(ep, std::forward<Callable>(fn));
+TEST_F(TestHighLevelCalls, test_collective_std_function) {
+  std::function<void()> fn = [&]{
+    called = true;
+  };
+  runInEpochCollective(fn);
+
+  EXPECT_EQ(called, true);
 }
 
-template <typename Callable>
-void runInEpochRooted(Callable&& fn) {
-  auto ep = theTerm()->makeEpochRooted();
-  runInEpoch(ep, std::forward<Callable>(fn));
+TEST_F(TestHighLevelCalls, test_rooted_lambda) {
+  runInEpochRooted([&]{
+    called = true;
+  });
+
+  EXPECT_EQ(called, true);
 }
 
-} /* end namespace vt */
+TEST_F(TestHighLevelCalls, test_rooted_std_function) {
+  std::function<void()> fn = [&]{
+    called = true;
+  };
+  runInEpochRooted(fn);
 
-namespace vt { namespace sched {
-
-template <typename MsgT>
-void Scheduler::enqueue(MsgT* msg, ActionType action) {
-  bool const is_term = envelopeIsTerm(msg->env);
-
-  if (is_term) {
-    num_term_msgs_++;
-  }
-
-# if vt_check_enabled(priorities)
-  auto priority = envelopeGetPriority(msg->env);
-  work_queue_.emplace(UnitType(is_term, priority, action));
-# else
-  work_queue_.emplace(UnitType(is_term, action));
-# endif
+  EXPECT_EQ(called, true);
 }
 
-template <typename MsgT>
-void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, ActionType action) {
-  //
-  // Assume that MsgSharedPtr<MsgT> is already captured in the action.
-  //
-  // To speed this up, in the future, we could have a pure message queue that
-  // could be dispatched directly based on type/state-bits
-  //
-  enqueue<MsgT>(msg.get(), action);
-}
-
-}} /* end namespace vt::sched */
-
-#endif /*INCLUDED_VT_SCHEDULER_SCHEDULER_IMPL_H*/
+}}} /* end namespace vt::tests::unit */

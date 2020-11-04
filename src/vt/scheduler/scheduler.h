@@ -64,8 +64,11 @@ namespace vt {
   void runScheduler();
   void runSchedulerThrough(EpochType epoch);
 
-  void runInEpochRooted(ActionType&& fn);
-  void runInEpochCollective(ActionType&& fn);
+  template <typename Callable>
+  void runInEpochRooted(Callable&& fn);
+
+  template <typename Callable>
+  void runInEpochCollective(Callable&& fn);
 }
 
 namespace vt { namespace sched {
@@ -314,8 +317,11 @@ private:
   std::size_t last_memory_usage_poll_ = 0;
 
   // Access to triggerEvent.
-  friend void vt::runInEpochRooted(ActionType&& fn);
-  friend void vt::runInEpochCollective(ActionType&& fn);
+  template <typename Callable>
+  friend void vt::runInEpochRooted(Callable&& fn);
+
+  template <typename Callable>
+  friend void vt::runInEpochCollective(Callable&& fn);
 
 private:
   diagnostic::Counter progressCount;
@@ -329,12 +335,12 @@ private:
 
 }} //end namespace vt::sched
 
-#include "vt/scheduler/scheduler.impl.h"
-
 namespace vt {
 
 extern sched::Scheduler* theSched();
 
 }  //end namespace vt
+
+#include "vt/scheduler/scheduler.impl.h"
 
 #endif /*INCLUDED_SCHEDULER_SCHEDULER_H*/
