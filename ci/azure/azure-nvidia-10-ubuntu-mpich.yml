@@ -55,6 +55,7 @@ stages:
     displayName: Build
     pool:
       vmImage: 'ubuntu-latest'
+    timeoutInMinutes: 180
     steps:
       - task: Bash@3
         displayName: Build timestep for caching
