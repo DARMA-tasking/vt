@@ -2,13 +2,9 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (gcc-5, ubuntu, mpich)
+name: PR tests (clang-8, alpine, mpich)
 
-trigger:
-  branches:
-    include:
-      - develop
-      - 1.0.0*
+on: [pull_request]
 
 pr:
   branches:
@@ -21,9 +17,9 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-  UBUNTU: 18.04
-  COMPILER_TYPE: gnu
-  COMPILER: gcc-5
+
+  COMPILER_TYPE: clang
+  COMPILER: clang-8
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
@@ -40,8 +36,8 @@ variables:
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: ubuntu-gcc-5-cache
-  build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
+  cache_name: alpine-clang-8-cache
+  build_root: "$(CACHE)/~/.local/cache/${{ env.ARCH }}-alpine-${{ env.COMPILER }}-cache//"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
@@ -99,14 +95,14 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp-clean'
+          dockerComposeCommand: 'pull --ignore-pull-failures alpine-cpp-clean'
       - task: DockerCompose@0
         displayName: Build container
         inputs:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run ubuntu-cpp-clean'
+          dockerComposeCommand: 'run alpine-cpp-clean'
       - task: DockerCompose@0
         displayName: Push container to registry
         inputs:
@@ -114,7 +110,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push ubuntu-cpp-clean'
+          dockerComposeCommand: 'push alpine-cpp-clean'
       - task: Bash@3
         displayName: Create artifacts
         inputs:

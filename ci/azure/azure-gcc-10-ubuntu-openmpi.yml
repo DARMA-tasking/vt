@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (gcc-5, ubuntu, mpich)
+name: PR tests (gcc-10, ubuntu, openmpi, no LB)
 
 trigger:
   branches:
@@ -21,13 +21,13 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-  UBUNTU: 18.04
+  UBUNTU: 20.04
   COMPILER_TYPE: gnu
-  COMPILER: gcc-5
+  COMPILER: gcc-10
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
-  VT_LB: 1
+  VT_LB: 0
   VT_TRACE: 0
   VT_TRACE_RT: 0
   VT_MIMALLOC: 0
@@ -40,7 +40,7 @@ variables:
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: ubuntu-gcc-5-cache
+  cache_name: ubuntu-gcc-10-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
@@ -99,14 +99,14 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp-clean'
+          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp-clean-openmpi'
       - task: DockerCompose@0
         displayName: Build container
         inputs:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run ubuntu-cpp-clean'
+          dockerComposeCommand: 'run ubuntu-cpp-clean-openmpi'
       - task: DockerCompose@0
         displayName: Push container to registry
         inputs:
@@ -114,7 +114,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push ubuntu-cpp-clean'
+          dockerComposeCommand: 'push ubuntu-cpp-clean-openmpi'
       - task: Bash@3
         displayName: Create artifacts
         inputs:

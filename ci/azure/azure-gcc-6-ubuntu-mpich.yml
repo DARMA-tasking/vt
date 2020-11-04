@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (gcc-5, ubuntu, mpich)
+name: PR tests (gcc-6, ubuntu, mpich)
 
 trigger:
   branches:
@@ -23,7 +23,7 @@ variables:
   ARCH: amd64
   UBUNTU: 18.04
   COMPILER_TYPE: gnu
-  COMPILER: gcc-5
+  COMPILER: gcc-6
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
@@ -40,7 +40,7 @@ variables:
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: ubuntu-gcc-5-cache
+  cache_name: ubuntu-gcc-6-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
