@@ -61,13 +61,7 @@ struct MyMsg : vt::CollectionMessage<ColT> { };
 struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   unsigned int prev_calls_ = 0;
 
-  unsigned int prevCalls() {
-    fmt::print(
-      "{}: {}: prev_calls={}\n",
-      theContext()->getNode(), getIndex(), prev_calls_
-    );
-    return prev_calls_++;
-  }
+  unsigned int prevCalls() { return prev_calls_++; }
 
   static void colHandler(MyMsg<TestCol>* msg, TestCol* col) {
     auto phase = col->prevCalls();
