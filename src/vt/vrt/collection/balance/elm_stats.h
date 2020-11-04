@@ -92,6 +92,11 @@ struct ElementStats {
   void setSubPhase(SubphaseType subphase);
   SubphaseType getSubPhase() const;
 
+  /**
+   * \internal \brief Cleanup after LB runs
+   */
+  void startIterCleanup(PhaseType phase, unsigned int look_back);
+
   // these are just for unit testing
   std::size_t getLoadPhaseCount() const;
   std::size_t getCommPhaseCount() const;
