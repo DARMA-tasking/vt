@@ -441,6 +441,8 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
     }
 #   endif
 
+    printMemoryFootprint();
+
     auto const& num_units = theTerm->getNumUnits();
     auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
     MPI_Barrier(comm);
@@ -1007,14 +1009,25 @@ template<typename T>
 void printComponentFootprint(T* component) {
   if (component != nullptr) {
     fmt::print(
-      "Memory footprint for component {}:\t{}\n",
+      "{}{}\tMemory footprint for {}:\t{}{}{}\n",
+      debug::vtPre(),
+      debug::reset(),
       component->name(),
-      checkpoint::getMemoryFootprint(*component)
+      debug::magenta(),
+      checkpoint::getMemoryFootprint(*component),
+      debug::reset()
     );
   }
 }
 
 void Runtime::printMemoryFootprint() const {
+  fmt::print(
+    "{}{}Printing memory footprint for live components:{}\n",
+    debug::vtPre(),
+    debug::green(),
+    debug::reset()
+  );
+
   p_->foreach([&](component::BaseComponent* base) {
     auto name = base->name();
     if (name == "ArgConfig")

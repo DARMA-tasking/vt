@@ -855,6 +855,8 @@ void Runtime::printStartupBanner() {
     }
   }
 
+  printMemoryFootprint();
+
   //fmt::print("{}\n", reset);
   fmt::print(reset);
 
