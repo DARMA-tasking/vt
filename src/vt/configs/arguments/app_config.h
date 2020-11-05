@@ -102,6 +102,7 @@ struct AppConfig {
   bool vt_print_memory_at_threshold   = false;
   std::string vt_print_memory_threshold = "1 GiB";
   int32_t vt_print_memory_sched_poll    = 100;
+  bool vt_print_memory_footprint  = false;
 
   bool vt_no_warn_stack     = false;
   bool vt_no_assert_stack   = false;
@@ -249,6 +250,7 @@ struct AppConfig {
       | vt_print_memory_at_threshold
       | vt_print_memory_threshold
       | vt_print_memory_sched_poll
+      | vt_print_memory_footprint
 
       | vt_no_warn_stack
       | vt_no_assert_stack

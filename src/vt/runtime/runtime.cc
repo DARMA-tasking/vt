@@ -441,7 +441,9 @@ bool Runtime::finalize(bool const force_now, bool const disable_sig) {
     }
 #   endif
 
-    printMemoryFootprint();
+    if (getAppConfig()->vt_print_memory_footprint) {
+      printMemoryFootprint();
+    }
 
     auto const& num_units = theTerm->getNumUnits();
     auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
