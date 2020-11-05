@@ -2,18 +2,12 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (clang-8, alpine, mpich)
+name: PR tests extended (intel 18.03, ubuntu, mpich)
 
-trigger:
-  branches:
-    include:
-      - develop
-      - 1.0.0*
 
-pr:
-  branches:
-   include:
-     - '*'
+
+
+
 
 
 resources:
@@ -23,27 +17,27 @@ variables:
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
-
-  COMPILER_TYPE: clang
-  COMPILER: clang-8
+  UBUNTU: 18.04
+  COMPILER_TYPE: intel
+  COMPILER: icc-18
   BUILD_TYPE: release
   ULIMIT_CORE: 0
   CODE_COVERAGE: 0
   VT_LB: 1
-  VT_TRACE: 0
+  VT_TRACE: 1
   VT_TRACE_RT: 0
   VT_MIMALLOC: 0
   VT_DOCS: 0
   VT_ASAN: 0
-  VT_POOL: 1
+  VT_POOL: 0
   VT_EXTENDED_TESTS: 1
   VT_UNITY_BUILD: 1
   VT_ZOLTAN: 0
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
-  cache_name: alpine-clang-8-cache
-  build_root: "$(CACHE)/$(ARCH)-alpine-$(COMPILER)-cache/"
+  cache_name: ubuntu-intel-18-cache
+  build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
   TS: 0
   TS_YEAR: 0
   TS_MONTH: 0
@@ -102,14 +96,14 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'pull --ignore-pull-failures alpine-cpp-clean'
+          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp-clean'
       - task: DockerCompose@0
         displayName: Build container
         inputs:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'run alpine-cpp-clean'
+          dockerComposeCommand: 'run ubuntu-cpp-clean'
       - task: DockerCompose@0
         displayName: Push container to registry
         inputs:
@@ -117,7 +111,7 @@ stages:
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'push alpine-cpp-clean'
+          dockerComposeCommand: 'push ubuntu-cpp-clean'
       - task: Bash@3
         displayName: Create artifacts
         inputs:
