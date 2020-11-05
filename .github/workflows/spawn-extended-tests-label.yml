@@ -1,0 +1,42 @@
+
+name: Spawn extended tests (intel-18, nvcc-10.1, nvcc-11)
+
+on:
+  pull_request:
+    types:
+      - labeled
+
+jobs:
+  build_intel_18_extended:
+    if: github.event.label.name == 'runextendedtests'
+    name: Invoke Azure Pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Pipelines Action
+        uses: Azure/pipelines@v1
+        with:
+          azure-devops-project-url: https://dev.azure.com/DARMA-tasking/DARMA
+          azure-pipeline-name: 'PR tests extended (intel 18.03, ubuntu, mpich)'
+          azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+  build_nvcc_10_extended:
+    if: github.event.label.name == 'runextendedtests'
+    name: Invoke Azure Pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Pipelines Action
+        uses: Azure/pipelines@v1
+        with:
+          azure-devops-project-url: https://dev.azure.com/DARMA-tasking/DARMA
+          azure-pipeline-name: 'PR tests extended (nvidia cuda 10.1, ubuntu, mpich)'
+          azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+  build_nvcc_11_extended:
+    if: github.event.label.name == 'runextendedtests'
+    name: Invoke Azure Pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Pipelines Action
+        uses: Azure/pipelines@v1
+        with:
+          azure-devops-project-url: https://dev.azure.com/DARMA-tasking/DARMA
+          azure-pipeline-name: 'PR tests extended (nvidia cuda 11.0, ubuntu, mpich)'
+          azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
