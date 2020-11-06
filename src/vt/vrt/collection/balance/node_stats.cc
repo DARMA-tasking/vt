@@ -160,6 +160,7 @@ void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
     node_data_.erase(phase - look_back);
     node_subphase_data_.erase(phase - look_back);
     node_comm_.erase(phase - look_back);
+    node_subphase_comm_.erase(phase - look_back);
   }
 
   // Create migrate lambdas and temp to perm map since LB is complete
