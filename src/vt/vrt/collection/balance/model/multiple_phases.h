@@ -82,11 +82,6 @@ struct MultiplePhases : ComposedModel {
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | future_phase_block_size_;
-  }
-
 private:
   int future_phase_block_size_ = 0;
 };

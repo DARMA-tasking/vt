@@ -62,9 +62,6 @@ template <typename ObjT>
 struct HolderObjBase : HolderBase {
   virtual ~HolderObjBase() = default;
   virtual ObjT* get() = 0;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {}
 };
 
 }}} /* end namespace vt::objgroup::holder */

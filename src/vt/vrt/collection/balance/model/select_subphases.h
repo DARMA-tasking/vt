@@ -72,11 +72,6 @@ public:
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   int getNumSubphases() override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | subphases_;
-  }
-
   std::vector<unsigned int> subphases_;
 }; // class SelectSubphases
 

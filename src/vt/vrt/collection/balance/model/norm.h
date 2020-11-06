@@ -67,11 +67,6 @@ public:
 
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | power_;
-  }
-
 private:
   const double power_;
 }; // class Norm

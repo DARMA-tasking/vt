@@ -78,23 +78,6 @@ struct RawData : public LoadModel {
   int getNumSubphases() override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<
-        SerializerT,
-        checkpoint::Footprinter
-      >::value
-    >
-  >
-  void serialize(SerializerT& s) {
-    s | last_completed_phase_;
-
-    s.countBytes(proc_load_);
-    s.countBytes(proc_subphase_load_);
-    s.countBytes(proc_comm_);
-  }
-
   // Observer pointers to the underlying data. In operation, these would be owned by NodeStats
   std::unordered_map<PhaseType, LoadMapType>         const* proc_load_;
   std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load_;

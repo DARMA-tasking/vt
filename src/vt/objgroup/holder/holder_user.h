@@ -69,11 +69,6 @@ public:
     obj_ = UserPtr<ObjT>(std::forward<Args>(args)...);
   }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | obj_;
-  }
-
 private:
   UserPtr<ObjT> obj_ = nullptr;
 };

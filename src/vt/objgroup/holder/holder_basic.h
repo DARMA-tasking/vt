@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASIC_H
 #define INCLUDED_VT_OBJGROUP_HOLDER_HOLDER_BASIC_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/objgroup/holder/holder_base.h"
@@ -69,16 +67,6 @@ public:
   template <typename... Args>
   void reset(Args&&... args) {
     vtAssert(false, "HolderBasic is not resetable");
-  }
-
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
-  void serialize(SerializerT& s) {
-    s | obj_;
   }
 
 private:

@@ -60,20 +60,11 @@ namespace vt { namespace util { namespace memory {
 struct Mstats final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) { }
 };
 
 struct Sbrk final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | inited_
-      | sbrkinit_;
-   }
 
 private:
   bool inited_ = false;
@@ -83,43 +74,26 @@ private:
 struct PS final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) { }
 };
 
 struct Mallinfo final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) { }
 };
 
 struct Getrusage final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) { }
 };
 
 struct MachTaskInfo final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) { }
 };
 
 struct Stat final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | failed_;
-   }
 
 private:
   bool failed_ = false;
@@ -129,11 +103,6 @@ struct StatM final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | failed_;
-  }
-
 private:
   bool failed_ = false;
 };
@@ -141,9 +110,6 @@ private:
 struct Mimalloc final : Reporter {
   std::size_t getUsage() override;
   std::string getName() override;
-
-  template <typename Serializer>
-  void serialize(Serializer& s) { }
 };
 
 /**

@@ -158,9 +158,6 @@ struct Component : BaseComponent {
    * \brief Empty default diagnostic dump state
    */
   virtual void dumpState() override { }
-
-  template <typename Serializer>
-  void serialize(Serializer& s) {}
 };
 
 /**

@@ -69,11 +69,6 @@ struct PersistenceMedianLastN : public ComposedModel
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | n_;
-  }
-
 private:
   const unsigned int n_;
 }; // class PersistenceMedianLastN

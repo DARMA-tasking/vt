@@ -73,11 +73,6 @@ struct LinearModel : ComposedModel {
   TimeType getWork(ElementIDType object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | past_len_;
-  }
-
 private:
   const unsigned int past_len_ = 0;
 };

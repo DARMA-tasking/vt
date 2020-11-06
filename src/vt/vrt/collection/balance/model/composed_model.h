@@ -66,7 +66,6 @@ class ComposedModel : public LoadModel
 public:
   // \param[in] base must not be null
   explicit ComposedModel(std::shared_ptr<LoadModel> base) : base_(base) {}
-  explicit ComposedModel(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
 
   void setLoads(std::unordered_map<PhaseType, LoadMapType> const* proc_load,
                 std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
@@ -83,16 +82,6 @@ public:
   int getNumObjects() override;
   unsigned int getNumCompletedPhases() override;
   int getNumSubphases() override;
-
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
-  void serialize(SerializerT& s) {
-    s | base_;
-  }
 
 private:
   std::shared_ptr<LoadModel> base_;

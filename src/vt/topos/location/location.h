@@ -423,22 +423,6 @@ public:
    */
   LocInstType getInst() const;
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
-  void serialize(SerializerT& s) {
-    s | this_inst
-      | local_registered_msg_han_
-      | local_registered_
-      | recs_
-      | pending_actions_
-      | pending_lookups_
-      | loc_asks_;
-  }
-
 private:
   LocInstType this_inst = no_loc_inst;
 
