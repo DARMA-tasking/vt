@@ -82,7 +82,7 @@ void ElementStats::stopTime() {
 void ElementStats::recvComm(
   LBCommKey key, double bytes
 ) {
-  comm_[cur_phase_][key].receiveMsg(bytes);
+  phase_comm_[cur_phase_][key].receiveMsg(bytes);
   subphase_comm_[cur_phase_].resize(cur_subphase_ + 1);
   subphase_comm_[cur_phase_].at(cur_subphase_)[key].receiveMsg(bytes);
 }
@@ -170,7 +170,7 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
 
 CommMapType const&
 ElementStats::getComm(PhaseType const& phase) {
-  auto const& phase_comm = comm_[phase];
+  auto const& phase_comm = phase_comm_[phase];
 
   vt_debug_print(
     lb, node,
@@ -206,7 +206,7 @@ void ElementStats::releaseStatsFromUnneededPhases(PhaseType phase, unsigned int 
   if (phase >= look_back) {
     phase_timings_.erase(phase - look_back);
     subphase_timings_.erase(phase - look_back);
-    comm_.erase(phase - look_back);
+    phase_comm_.erase(phase - look_back);
     subphase_comm_.erase(phase - look_back);
   }
 }
@@ -216,7 +216,7 @@ std::size_t ElementStats::getLoadPhaseCount() const {
 }
 
 std::size_t ElementStats::getCommPhaseCount() const {
-  return comm_.size();
+  return phase_comm_.size();
 }
 
 std::size_t ElementStats::getSubphaseLoadPhaseCount() const {

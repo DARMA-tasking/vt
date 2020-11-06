@@ -122,7 +122,7 @@ protected:
   TimeType cur_time_ = 0.0;
   PhaseType cur_phase_ = fst_lb_phase;
   std::unordered_map<PhaseType, TimeType> phase_timings_ = {};
-  std::unordered_map<PhaseType, CommMapType> comm_ = {};
+  std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};
 
   SubphaseType cur_subphase_ = 0;
   std::unordered_map<PhaseType, std::vector<TimeType>> subphase_timings_ = {};
