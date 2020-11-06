@@ -202,7 +202,7 @@ SubphaseType ElementStats::getSubPhase() const {
   return cur_subphase_;
 }
 
-void ElementStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
+void ElementStats::releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back) {
   if (phase >= look_back) {
     phase_timings_.erase(phase - look_back);
     subphase_timings_.erase(phase - look_back);
