@@ -65,7 +65,7 @@ void ElementStats::serialize(Serializer& s) {
   s | cur_time_;
   s | cur_phase_;
   s | phase_timings_;
-  s | comm_;
+  s | phase_comm_;
   s | cur_subphase_;
   s | subphase_timings_;
 }
