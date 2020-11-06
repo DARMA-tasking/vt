@@ -132,6 +132,13 @@ void ElementStats::updatePhase(PhaseType const& inc) {
   );
 
   cur_phase_ += inc;
+
+  // Access all table entries for current phase, to ensure presence even
+  // if they're left empty
+  phase_timings_[cur_phase_];
+  subphase_timings_[cur_phase_];
+  phase_comm_[cur_phase_];
+  subphase_comm_[cur_phase_];
 }
 
 PhaseType ElementStats::getPhase() const {
