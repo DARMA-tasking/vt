@@ -132,9 +132,7 @@ void NodeStats::clearStats() {
 }
 
 void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
-  // TODO: Add in subphase support here too
-
-  // Convert the temp ID node_data_ for the last iteration into perm ID for
+  // Convert the temp ID node_data_ for the last phase into perm ID for
   // stats output
   auto const prev_data = std::move(node_data_[phase]);
   std::unordered_map<ElementIDType,TimeType> new_data;
@@ -145,6 +143,18 @@ void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
     new_data[perm_id] = elm.second;
   }
   node_data_[phase] = std::move(new_data);
+
+  // Convert the temp ID node_subphase_data_ for the last phase into perm ID for
+  // stats output
+  auto const prev_subphase_data = std::move(node_subphase_data_[phase]);
+  std::unordered_map<ElementIDType, std::vector<TimeType>> new_subphase_data;
+  for (auto& elm : prev_subphase_data) {
+    auto iter = node_temp_to_perm_.find(elm.first);
+    vtAssert(iter != node_temp_to_perm_.end(), "Temp ID must exist");
+    auto perm_id = iter->second;
+    new_subphase_data[perm_id] = elm.second;
+  }
+  node_subphase_data_[phase] = std::move(new_subphase_data);
 
   if (phase >= look_back) {
     node_data_.erase(phase - look_back);
