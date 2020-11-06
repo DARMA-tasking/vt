@@ -76,33 +76,29 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
 
     #if vt_check_enabled(lblite)
       if (phase > phases_needed) {
-        // syncNextPhase will have caused timings to be added for the
+        // updatePhase will have caused entries to be added for the
         // next phase already
-        EXPECT_EQ(load_phase_count, phases_needed + 1);
+        EXPECT_EQ(load_phase_count,    phases_needed + 1);
         EXPECT_EQ(sp_load_phase_count, phases_needed + 1);
-
-        EXPECT_EQ(comm_phase_count, phases_needed);
-        EXPECT_EQ(sp_comm_phase_count, phases_needed);
+        EXPECT_EQ(comm_phase_count,    phases_needed + 1);
+        EXPECT_EQ(sp_comm_phase_count, phases_needed + 1);
       } else if (phase == 0) {
-        EXPECT_EQ(load_phase_count, phase);
+        EXPECT_EQ(load_phase_count,    phase);
         EXPECT_EQ(sp_load_phase_count, phase);
-
-        EXPECT_EQ(comm_phase_count, phase);
+        EXPECT_EQ(comm_phase_count,    phase);
         EXPECT_EQ(sp_comm_phase_count, phase);
       } else {
-        // syncNextPhase will have caused timings to be added for the
+        // updatePhase will have caused entries to be added for the
         // next phase already
-        EXPECT_EQ(load_phase_count, phase + 1);
+        EXPECT_EQ(load_phase_count,    phase + 1);
         EXPECT_EQ(sp_load_phase_count, phase + 1);
-
-        EXPECT_EQ(comm_phase_count, phase);
-        EXPECT_EQ(sp_comm_phase_count, phase);
+        EXPECT_EQ(comm_phase_count,    phase + 1);
+        EXPECT_EQ(sp_comm_phase_count, phase + 1);
       }
     #else
-      EXPECT_EQ(load_phase_count, 0);
+      EXPECT_EQ(load_phase_count,    0);
       EXPECT_EQ(sp_load_phase_count, 0);
-
-      EXPECT_EQ(comm_phase_count, 0);
+      EXPECT_EQ(comm_phase_count,    0);
       EXPECT_EQ(sp_comm_phase_count, 0);
     #endif
   }
