@@ -97,7 +97,7 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   );
 
   auto model = theLBManager()->getLoadModel();
-  stats.startIterCleanup(cur_phase, model->getNumPastPhasesNeeded());
+  stats.releaseStatsFromUnneededPhases(cur_phase, model->getNumPastPhasesNeeded());
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

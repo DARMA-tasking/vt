@@ -92,11 +92,6 @@ struct ElementStats {
   void setSubPhase(SubphaseType subphase);
   SubphaseType getSubPhase() const;
 
-  /**
-   * \internal \brief Cleanup after LB runs
-   */
-  void startIterCleanup(PhaseType phase, unsigned int look_back);
-
   // these are just for unit testing
   std::size_t getLoadPhaseCount() const;
   std::size_t getCommPhaseCount() const;
@@ -115,6 +110,12 @@ public:
   static void syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col);
 
   friend struct collection::Migratable;
+
+protected:
+  /**
+   * \internal \brief Release stats data from phases prior to lookback
+   */
+  void releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back);
 
 protected:
   bool cur_time_started_ = false;
