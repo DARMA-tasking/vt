@@ -46,7 +46,7 @@ stages:
   - job: Build
     displayName: Build
     pool:
-      vmImage: 'ubuntu-latest'
+      vmImage: '[% workflow_runs_on %]'
     timeoutInMinutes: 180
     steps:
       - task: Bash@3
