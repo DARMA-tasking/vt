@@ -60,7 +60,7 @@ struct CallbackBcastTypeless : CallbackBaseTL<CallbackBcastTypeless> {
   CallbackBcastTypeless& operator=(CallbackBcastTypeless const&) = default;
 
   CallbackBcastTypeless(
-    HandlerType const& in_handler, bool const& in_include
+    HandlerType const in_handler, bool const& in_include
   );
 
   HandlerType getHandler() const { return handler_; }

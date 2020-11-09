@@ -52,9 +52,11 @@
 
 namespace vt { namespace auto_registry {
 
-inline AutoActiveRDMAPutType getAutoHandlerRDMAPut(HandlerType const& handler) {
+inline AutoActiveRDMAPutType getAutoHandlerRDMAPut(HandlerType const handler) {
   using ContainerType = AutoActiveRDMAPutContainerType;
-  return getAutoRegistryGen<ContainerType>().at(handler).getFun();
+
+  auto const han_id = HandlerManager::getHandlerIdentifier(handler);
+  return getAutoRegistryGen<ContainerType>().at(han_id).getFun();
 }
 
 template <typename MsgT, ActiveTypedRDMAPutFnType<MsgT>* f>
@@ -63,12 +65,17 @@ inline HandlerType makeAutoHandlerRDMAPut() {
   using ContainerType = AutoActiveRDMAPutContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveRDMAPutType>;
   using FuncType = ActiveRDMAPutFnPtrType;
-  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+
+  auto const id =
+    RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+  return HandlerManager::makeHandler(false, false, id);
 }
 
-inline AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const& handler) {
+inline AutoActiveRDMAGetType getAutoHandlerRDMAGet(HandlerType const handler) {
   using ContainerType = AutoActiveRDMAGetContainerType;
-  return getAutoRegistryGen<ContainerType>().at(handler).getFun();
+
+  auto const han_id = HandlerManager::getHandlerIdentifier(handler);
+  return getAutoRegistryGen<ContainerType>().at(han_id).getFun();
 }
 
 template <typename MsgT, ActiveTypedRDMAGetFnType<MsgT>* f>
@@ -77,9 +84,11 @@ inline HandlerType makeAutoHandlerRDMAGet() {
   using ContainerType = AutoActiveRDMAGetContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveRDMAGetType>;
   using FuncType = ActiveRDMAGetFnPtrType;
-  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
-}
 
+  auto const id =
+    RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+  return HandlerManager::makeHandler(false, false, id);
+}
 
 }} /* end namespace vt::auto_registry */
 

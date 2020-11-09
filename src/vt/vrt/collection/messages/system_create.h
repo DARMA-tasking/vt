@@ -72,7 +72,7 @@ struct CollectionCreateMsg : ::vt::Message {
 
   CollectionCreateMsg() = default;
   CollectionCreateMsg(
-    HandlerType const& in_han, ArgsTuple&& in_tup
+    HandlerType const in_han, ArgsTuple&& in_tup
   ) : ::vt::Message(), tup(std::forward<ArgsTuple>(in_tup)), map(in_han)
   { }
 

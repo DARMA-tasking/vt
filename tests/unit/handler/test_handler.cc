@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            envelope_setup.impl.h
+//                                test_group.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,65 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
-#include "vt/messaging/envelope/envelope_setup.h"
-#include "vt/scheduler/priority.h"
+#include "test_parallel_harness.h"
 
-namespace vt {
+#include "vt/handler/handler.h"
 
-template <typename Env>
-inline void envelopeSetup(
-  Env& env, NodeType const& dest, HandlerType const handler
-) {
-  envelopeSetDest(env, dest);
-  envelopeSetHandler(env, handler);
-}
+namespace vt { namespace tests { namespace unit {
 
-template <typename Env>
-inline void envelopeInit(Env& env) {
-  envelopeSetIsLocked(env, false);
-  setNormalType(env);
-  envelopeSetDest(env, uninitialized_destination);
-  envelopeSetHandler(env, uninitialized_handler);
-  envelopeSetRef(env, not_shared_message);
-  envelopeSetGroup(env);
-#if vt_check_enabled(priorities)
-  envelopeSetPriority(env, min_priority);
-  envelopeSetPriorityLevel(env, 0);
-#endif
+struct TestHandler : TestParallelHarness { };
+
+TEST_F(TestHandler, test_make_handler_default_params) {
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
+  constexpr HandlerIdentifierType id = 134;
+
+  auto const han = HandlerManager::makeHandler(is_auto, is_functor, id);
+
+  EXPECT_EQ(is_auto, HandlerManager::isHandlerAuto(han));
+  EXPECT_EQ(is_functor, HandlerManager::isHandlerFunctor(han));
+  EXPECT_EQ(id, HandlerManager::getHandlerIdentifier(han));
+
+  // Default parameters' values
+  constexpr bool is_objgroup = false;
+  constexpr HandlerControlType control = 0;
+  constexpr bool is_member = false;
+
+  EXPECT_EQ(is_objgroup, HandlerManager::isHandlerObjGroup(han));
+  EXPECT_EQ(control, HandlerManager::getHandlerControl(han));
+  EXPECT_EQ(is_member, HandlerManager::isHandlerMember(han));
+
 #if vt_check_enabled(trace_enabled)
-  envelopeSetTraceRuntimeEnabled(env, true);
-  envelopeSetTraceEvent(env, trace::no_trace_event);
+  constexpr bool is_trace = true;
+  EXPECT_EQ(is_trace, HandlerManager::isHandlerTrace(han));
 #endif
-  envelopeSetHasBeenSerialized(env, false);
 }
 
-inline void envelopeInitEmpty(Envelope& env) {
-  envelopeInit(env);
-}
+TEST_F(TestHandler, TestHandler_test_make_handler_custom_params) {
+  constexpr bool is_auto = false;
+  constexpr bool is_functor = true;
+  constexpr HandlerIdentifierType id = 9746;
+  constexpr bool is_objgroup = true;
+  constexpr HandlerControlType control = 2289;
+  constexpr bool is_trace = false;
+  constexpr bool is_member = true;
 
-template <typename Env>
-inline void envelopeInitCopy(Env& env, Env const& src_env) {
-  auto cur_ref = envelopeGetRef(env);
-  env = src_env;
-  envelopeSetRef(env, cur_ref);
-  envelopeSetIsLocked(env, false);
-}
-
-template <typename Env>
-inline void envelopeInitRecv(Env& env) {
-  // Reset the local ref-count. The sender ref-count is not relevant.
-  envelopeSetRef(env, 0);
-  // Ensure locked; implies all received messages are also locked.
-  vtAssert(
-    envelopeIsLocked(env),
-    "Envelope is not locked. It should have been locked for sending."
+  auto const han = HandlerManager::makeHandler(
+    is_auto, is_functor, id, is_objgroup, control, is_trace, is_member
   );
+
+  EXPECT_EQ(is_auto, HandlerManager::isHandlerAuto(han));
+  EXPECT_EQ(is_functor, HandlerManager::isHandlerFunctor(han));
+  EXPECT_EQ(id, HandlerManager::getHandlerIdentifier(han));
+  EXPECT_EQ(is_objgroup, HandlerManager::isHandlerObjGroup(han));
+  EXPECT_EQ(control, HandlerManager::getHandlerControl(han));
+  EXPECT_EQ(is_member, HandlerManager::isHandlerMember(han));
+
+#if vt_check_enabled(trace_enabled)
+  EXPECT_EQ(is_trace, HandlerManager::isHandlerTrace(han));
+#endif
 }
 
-} /* end namespace vt */
-
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H*/
+}}} // end namespace vt::tests::unit

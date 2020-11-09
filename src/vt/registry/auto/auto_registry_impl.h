@@ -57,29 +57,34 @@ namespace vt { namespace auto_registry {
 
 inline AutoActiveObjGroupType getAutoHandlerObjGroup(HandlerType han) {
   using ContainerType = AutoActiveObjGroupContainerType;
+
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
 }
 
 inline AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han) {
   using ContainerType = AutoActiveObjGroupContainerType;
+
   auto const id = HandlerManagerType::getHandlerIdentifier(han);
   return getAutoRegistryGen<ContainerType>().at(id).getObjIdx();
 }
 
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
-  using AdapterT = FunctorAdapterMember<
-    objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT
-  >;
+  using AdapterT =
+    FunctorAdapterMember<objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT>;
   using ContainerType = AutoActiveObjGroupContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveObjGroupType>;
   using FuncType = objgroup::ActiveObjAnyType;
   using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
 
-  auto const obj = true;
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
+  constexpr bool is_objgroup = true;
   auto const idx = RunType::idx;
-  auto const han = HandlerManagerType::makeHandler(true, false, idx, obj, ctrl);
+  auto const han =
+    HandlerManagerType::makeHandler(is_auto, is_functor, idx, is_objgroup, ctrl
+  );
   auto obj_idx = objgroup::registry::makeObjIdx<ObjT>();
   getAutoRegistryGen<ContainerType>().at(idx).setObjIdx(obj_idx);
   return han;
@@ -93,7 +98,9 @@ inline HandlerType makeAutoHandler() {
   using FuncType = ActiveFnPtrType;
   using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
 
-  return HandlerManagerType::makeHandler(true, false, RunType::idx);
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
+  return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
 }
 
 template <typename T, T value>
@@ -104,13 +111,15 @@ inline HandlerType makeAutoHandlerParam() {
   using FuncType = ActiveFnPtrType;
   using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
 
-  return HandlerManagerType::makeHandler(true, false, RunType::idx);
+  constexpr bool is_auto = true;
+  constexpr bool is_functor = false;
+  return HandlerManagerType::makeHandler(is_auto, is_functor, RunType::idx);
 }
 
-inline AutoActiveType getAutoHandler(HandlerType const& handler) {
-  auto const& han_id = HandlerManagerType::getHandlerIdentifier(handler);
-  bool const& is_auto = HandlerManagerType::isHandlerAuto(handler);
-  bool const& is_functor = HandlerManagerType::isHandlerFunctor(handler);
+inline AutoActiveType getAutoHandler(HandlerType const handler) {
+  auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
+  bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+  bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
   vt_debug_print(
     handler, node,

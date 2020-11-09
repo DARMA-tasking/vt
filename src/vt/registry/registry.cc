@@ -66,7 +66,7 @@ HandlerType Registry::registerNewHandler(
 }
 
 void Registry::swapHandler(
-  HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
+  HandlerType const han, ActiveClosureFnType fn, TagType const& tag
 ) {
   if (tag == no_tag) {
     auto iter = registered_.find(han);
@@ -90,7 +90,7 @@ void Registry::swapHandler(
 }
 
 void Registry::unregisterHandlerFn(
-  HandlerType const& han, TagType const& tag
+  HandlerType const han, TagType const& tag
 ) {
   swapHandler(han, nullptr, tag);
 }
@@ -101,7 +101,7 @@ HandlerType Registry::registerActiveHandler(
   return registerNewHandler(fn, tag, true);
 }
 
-ActiveClosureFnType Registry::getHandlerNoTag(HandlerType const& han) {
+ActiveClosureFnType Registry::getHandlerNoTag(HandlerType const han) {
   auto iter = registered_.find(han);
   if (iter != registered_.end()) {
     return iter->second;
@@ -111,7 +111,7 @@ ActiveClosureFnType Registry::getHandlerNoTag(HandlerType const& han) {
 }
 
 ActiveClosureFnType Registry::getHandler(
-  HandlerType const& han, TagType const& tag
+  HandlerType const han, TagType const& tag
 ) {
   if (tag == no_tag) {
     return getHandlerNoTag(han);

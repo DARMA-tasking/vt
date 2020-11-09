@@ -51,10 +51,12 @@
 namespace vt { namespace auto_registry {
 
 inline AutoActiveCollectionType getAutoHandlerCollection(
-  HandlerType const& handler
+  HandlerType const handler
 ) {
   using ContainerType = AutoActiveCollectionContainerType;
-  return getAutoRegistryGen<ContainerType>().at(handler).getFun();
+
+  auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
+  return getAutoRegistryGen<ContainerType>().at(han_id).getFun();
 }
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>
@@ -63,14 +65,21 @@ inline HandlerType makeAutoHandlerCollection() {
   using ContainerType = AutoActiveCollectionContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionType>;
   using FuncType = ActiveColFnPtrType;
-  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+
+  auto const id =
+    RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+  auto handler = HandlerManager::makeHandler(false, false, id);
+  HandlerManager::setHandlerMember(handler, false);
+  return handler;
 }
 
 inline AutoActiveCollectionMemType getAutoHandlerCollectionMem(
-  HandlerType const& handler
+  HandlerType const handler
 ) {
   using ContainerType = AutoActiveCollectionMemContainerType;
-  return getAutoRegistryGen<ContainerType>().at(handler).getFun();
+
+  auto const han_id = HandlerManagerType::getHandlerIdentifier(handler);
+  return getAutoRegistryGen<ContainerType>().at(han_id).getFun();
 }
 
 template <
@@ -81,7 +90,12 @@ inline HandlerType makeAutoHandlerCollectionMem() {
   using ContainerType = AutoActiveCollectionMemContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionMemType>;
   using FuncType = ActiveColMemberFnPtrType;
-  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+
+  auto const id =
+    RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+  auto handler = HandlerManager::makeHandler(false, false, id);
+  HandlerManager::setHandlerMember(handler, true);
+  return handler;
 }
 
 template <typename ColT, typename MsgT, ActiveColTypedFnType<MsgT, ColT>* f>

@@ -54,7 +54,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename BaseMsgT>
 void CollectionMessage<ColT, BaseMsgT>::setVrtHandler(
-  HandlerType const& in_handler
+  HandlerType const in_handler
 ) {
   vt_sub_handler_ = in_handler;
 }
@@ -120,7 +120,6 @@ void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
   s | to_proxy_;
   s | bcast_proxy_;
   s | bcast_epoch_;
-  s | member_;
   s | is_wrap_;
 
   #if vt_check_enabled(lblite)
@@ -133,16 +132,6 @@ void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
   #if vt_check_enabled(trace_enabled)
     s | trace_event_;
   #endif
-}
-
-template <typename ColT, typename BaseMsgT>
-bool CollectionMessage<ColT,BaseMsgT>::getMember() const {
-  return member_;
-}
-
-template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT,BaseMsgT>::setMember(bool const& member) {
-  member_ = member;
 }
 
 template <typename ColT, typename BaseMsgT>

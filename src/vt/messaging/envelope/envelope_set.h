@@ -124,7 +124,7 @@ inline void setTagType(Env& env);
  * \param[in] handler the handler
  */
 template <typename Env>
-inline void envelopeSetHandler(Env& env, HandlerType const& handler);
+inline void envelopeSetHandler(Env& env, HandlerType const handler);
 
 /**
  * \brief Set destination \c dest field in envelope

@@ -178,12 +178,9 @@ protected:
   void runLB(LBProxyType base_proxy, PhaseType phase);
 
 private:
-  std::size_t num_invocations_             = 0;
-  std::size_t num_release_                 = 0;
   PhaseType cached_phase_                  = no_lb_phase;
   LBType cached_lb_                        = LBType::NoLB;
   std::function<void()> destroy_lb_        = nullptr;
-  bool synced_in_lb_                       = true;
   objgroup::proxy::Proxy<LBManager> proxy_;
   std::shared_ptr<LoadModel> base_model_;
   std::shared_ptr<LoadModel> model_;

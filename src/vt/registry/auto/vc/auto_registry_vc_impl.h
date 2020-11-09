@@ -61,12 +61,17 @@ inline HandlerType makeAutoHandlerVC() {
   using ContainerType = AutoActiveVCContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveVCType>;
   using FuncType = ActiveVirtualFnPtrType;
-  return RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+
+  auto const id =
+    RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>::idx;
+  return HandlerManager::makeHandler(false, false, id);
 }
 
-inline AutoActiveVCType getAutoHandlerVC(HandlerType const& handler) {
+inline AutoActiveVCType getAutoHandlerVC(HandlerType const handler) {
   using ContainerType = AutoActiveVCContainerType;
-  return getAutoRegistryGen<ContainerType>().at(handler).getFun();
+
+  auto const han_id = HandlerManager::getHandlerIdentifier(handler);
+  return getAutoRegistryGen<ContainerType>().at(han_id).getFun();
 }
 
 }} // end namespace vt::auto_registry

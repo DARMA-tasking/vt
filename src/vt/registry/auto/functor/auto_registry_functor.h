@@ -61,8 +61,8 @@ struct RegistrarFunctor {
   RegistrarFunctor();
 };
 
-AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
-NumArgsType getAutoHandlerFunctorArgs(HandlerType const& handler);
+AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const handler);
+NumArgsType getAutoHandlerFunctorArgs(HandlerType const handler);
 
 template <typename FunctorT, bool is_msg, typename... Args>
 HandlerType makeAutoHandlerFunctor();

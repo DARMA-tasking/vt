@@ -62,7 +62,7 @@
 
 namespace vt { namespace auto_registry {
 
-AutoActiveType getAutoHandler(HandlerType const& handler);
+AutoActiveType getAutoHandler(HandlerType const handler);
 
 AutoActiveObjGroupType getAutoHandlerObjGroup(HandlerType han);
 AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han);

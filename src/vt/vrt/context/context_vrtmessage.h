@@ -71,7 +71,7 @@ struct VirtualMessage : RoutedMessageType<vt::Message>
 
   // The variable `vc_sub_handler_' manages the intended user handler the
   // VirtualMessage should trigger
-  void setVrtHandler(HandlerType const& in_handler) {
+  void setVrtHandler(HandlerType const in_handler) {
     vt_sub_handler_ = in_handler;
   }
   HandlerType getVrtHandler() const {

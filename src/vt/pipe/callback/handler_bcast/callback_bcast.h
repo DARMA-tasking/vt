@@ -74,7 +74,7 @@ struct CallbackBcast : CallbackBase<signal::Signal<MsgT>> {
   CallbackBcast(CallbackBcast&&) = default;
 
   CallbackBcast(
-    HandlerType const& in_handler, bool const& in_include
+    HandlerType const in_handler, bool const& in_include
   );
 
   HandlerType getHandler() const { return handler_; }

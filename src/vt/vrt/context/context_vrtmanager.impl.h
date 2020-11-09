@@ -144,7 +144,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
   if (theContext()->getWorker() == worker_id_comm_thread) {
     NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
     // register the user's handler
-    HandlerType const& han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>();
+    HandlerType const han = auto_registry::makeAutoHandlerVC<VcT,MsgT,f>();
     // save the user's handler in the message
     msg->setVrtHandler(han);
     msg->setProxy(toProxy);
@@ -239,7 +239,7 @@ VirtualProxyType VirtualContextManager::makeVirtualRemote(
 
 inline void VirtualContextManager::setupMappedVirutalContext(
   VirtualProxyType const& proxy, SeedType const& seed, CoreType const& core,
-  HandlerType const& map_handle
+  HandlerType const map_handle
 ) {
   auto vrt_info = getVirtualInfoByProxy(proxy);
   vrt_info->setSeed(seed);
@@ -249,7 +249,7 @@ inline void VirtualContextManager::setupMappedVirutalContext(
 
 template <typename VrtContextT, typename... Args>
 VirtualProxyType VirtualContextManager::makeVirtualMapComm(
-  SeedType const& seed, HandlerType const& map_handle, Args&& ... args
+  SeedType const& seed, HandlerType const map_handle, Args&& ... args
 ) {
   auto const& proxy = makeVirtual<VrtContextT, Args...>(
     std::forward<Args>(args)...

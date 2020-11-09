@@ -73,12 +73,12 @@ struct DataMsg : vt::Message {
   HandlerType sub_han = uninitialized_handler;
 
   DataMsg() = default;
-  DataMsg(HandlerType const& in_sub_han, Tuple&& a)
+  DataMsg(HandlerType const in_sub_han, Tuple&& a)
     : Message(), tup(std::forward<Tuple>(a)), sub_han(in_sub_han)
   { }
 
   template <typename... Args>
-  DataMsg(HandlerType const& in_sub_han, Args&&... a)
+  DataMsg(HandlerType const in_sub_han, Args&&... a)
     : Message(), tup(std::forward<Args>(a)...), sub_han(in_sub_han)
   { }
 
@@ -144,7 +144,7 @@ struct Param : runtime::component::Component<Param> {
 
   template <typename... Args>
   void sendDataTuple(
-    NodeType const& dest, HandlerType const& han, std::tuple<Args...>&& tup
+    NodeType const& dest, HandlerType const han, std::tuple<Args...>&& tup
   ) {
     staticCheckCopyable<Args...>();
 
@@ -168,7 +168,7 @@ struct Param : runtime::component::Component<Param> {
 
   template <typename DataMsg>
   void sendDataMsg(
-    NodeType const& dest, HandlerType const& __attribute__((unused)) han,
+    NodeType const& dest, HandlerType const __attribute__((unused)) han,
     MsgSharedPtr<DataMsg> m
   ) {
     auto pmsg = promoteMsg(m.get());

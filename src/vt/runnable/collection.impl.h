@@ -58,11 +58,13 @@
 namespace vt { namespace runnable {
 
 template <typename MsgT, typename ElementT>
-/*static*/ void RunnableCollection<MsgT,ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from,
-  bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4,
+/*static*/ void RunnableCollection<MsgT, ElementT>::run(
+  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from, uint64_t idx1,
+  uint64_t idx2, uint64_t idx3, uint64_t idx4,
   trace::TraceEventIDType in_trace_event
 ) {
+  auto const member = HandlerManager::isHandlerMember(handler);
+
 #if vt_check_enabled(trace_enabled)
   trace::TraceProcessingTag processing_tag;
   {

@@ -97,7 +97,7 @@ struct Registry : runtime::component::Component<Registry> {
    * \param[in] tag relevant message tag for delivery
    */
   void unregisterHandlerFn(
-    HandlerType const& han, TagType const& tag = no_tag
+    HandlerType const han, TagType const& tag = no_tag
   );
 
   /**
@@ -108,7 +108,7 @@ struct Registry : runtime::component::Component<Registry> {
    * \param[in] tag tag to associate
    */
   void swapHandler(
-    HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
+    HandlerType const han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
 
   /**
@@ -132,7 +132,7 @@ struct Registry : runtime::component::Component<Registry> {
    * \return the active function
    */
   ActiveClosureFnType getHandler(
-    HandlerType const& han, TagType const& tag = no_tag
+    HandlerType const han, TagType const& tag = no_tag
   );
 
   /**
@@ -142,7 +142,7 @@ struct Registry : runtime::component::Component<Registry> {
    *
    * \return the active function
    */
-  ActiveClosureFnType getHandlerNoTag(HandlerType const& han);
+  ActiveClosureFnType getHandlerNoTag(HandlerType const han);
 
 private:
   ContainerType registered_;

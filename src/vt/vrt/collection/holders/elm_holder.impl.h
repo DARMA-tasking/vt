@@ -58,7 +58,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 ElementHolder<ColT, IndexT>::ElementHolder(
-  VirtualPtrType in_vc_ptr_, HandlerType const& in_han, IndexT const& idx
+  VirtualPtrType in_vc_ptr_, HandlerType const in_han, IndexT const& idx
 ) : vc_ptr_(std::move(in_vc_ptr_)), map_fn(in_han), max_idx(idx)
 { }
 

@@ -65,7 +65,7 @@ struct AnonCB : CallbackAnonTypeless { };
 struct SendMsgCB : CallbackSendTypeless {
   SendMsgCB() = default;
   SendMsgCB(
-    HandlerType const& in_handler, NodeType const& in_send_node
+    HandlerType const in_handler, NodeType const& in_send_node
   ) : CallbackSendTypeless(in_handler, in_send_node)
   { }
 };
@@ -73,7 +73,7 @@ struct SendMsgCB : CallbackSendTypeless {
 struct BcastMsgCB : CallbackBcastTypeless {
   BcastMsgCB() = default;
   BcastMsgCB(
-    HandlerType const& in_handler, bool const& in_include
+    HandlerType const in_handler, bool const& in_include
   ) : CallbackBcastTypeless(in_handler, in_include)
   { }
 };
@@ -89,10 +89,10 @@ struct BcastColMsgCB : CallbackProxyBcastTypeless {
 struct BcastColDirCB : CallbackProxyBcastDirect {
   BcastColDirCB() = default;
   BcastColDirCB(
-    HandlerType const& in_handler,
-    CallbackProxyBcastDirect::AutoHandlerType const& in_vrt_handler,
-    bool const& in_member, VirtualProxyType const& in_proxy
-  ) : CallbackProxyBcastDirect(in_handler, in_vrt_handler, in_member, in_proxy)
+    HandlerType const in_handler,
+    CallbackProxyBcastDirect::AutoHandlerType const in_vrt_handler,
+    VirtualProxyType const& in_proxy
+  ) : CallbackProxyBcastDirect(in_handler, in_vrt_handler, in_proxy)
   { }
 };
 

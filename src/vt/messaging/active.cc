@@ -1073,7 +1073,7 @@ HandlerType ActiveMessenger::collectiveRegisterHandler(
 }
 
 void ActiveMessenger::swapHandlerFn(
-  HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
+  HandlerType const han, ActiveClosureFnType fn, TagType const& tag
 ) {
   vt_debug_print(
     active, node,
@@ -1088,7 +1088,7 @@ void ActiveMessenger::swapHandlerFn(
 }
 
 void ActiveMessenger::deliverPendingMsgsHandler(
-  HandlerType const& han, TagType const& tag
+  HandlerType const han, TagType const& tag
 ) {
   vt_debug_print(
     active, node,
@@ -1118,7 +1118,7 @@ void ActiveMessenger::deliverPendingMsgsHandler(
 }
 
 void ActiveMessenger::registerHandlerFn(
-  HandlerType const& han, ActiveClosureFnType fn, TagType const& tag
+  HandlerType const han, ActiveClosureFnType fn, TagType const& tag
 ) {
   vt_debug_print(
     active, node,
@@ -1133,7 +1133,7 @@ void ActiveMessenger::registerHandlerFn(
 }
 
 void ActiveMessenger::unregisterHandlerFn(
-  HandlerType const& han, TagType const& tag
+  HandlerType const han, TagType const& tag
 ) {
   vt_debug_print(
     active, node,

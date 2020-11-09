@@ -60,13 +60,13 @@ HandlerType makeAutoHandlerParam();
 template <typename T, bool is_msg, typename... Args>
 HandlerType makeAutoHandlerFunctor();
 
-AutoActiveType getAutoHandler(HandlerType const& handler);
+AutoActiveType getAutoHandler(HandlerType const handler);
 
-AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const& handler);
+AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const handler);
 
 #if vt_check_enabled(trace_enabled)
   trace::TraceEntryIDType handlerTraceID(
-    HandlerType const& handler, RegistryTypeEnum reg_type
+    HandlerType const handler, RegistryTypeEnum reg_type
   );
 #endif
 

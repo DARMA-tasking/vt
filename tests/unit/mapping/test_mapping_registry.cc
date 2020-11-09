@@ -58,7 +58,7 @@ namespace vt { namespace tests { namespace unit {
 struct TestMsg : vt::ShortMessage {
   bool is_block = false;
   HandlerType han;
-  TestMsg(HandlerType const& in_han) : ShortMessage(), han(in_han) { }
+  TestMsg(HandlerType const in_han) : ShortMessage(), han(in_han) { }
 };
 
 struct TestMappingRegistry : TestParallelHarness {

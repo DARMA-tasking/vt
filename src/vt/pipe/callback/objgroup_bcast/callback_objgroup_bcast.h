@@ -55,7 +55,7 @@ namespace vt { namespace pipe { namespace callback {
 struct CallbackObjGroupBcast : CallbackBaseTL<CallbackObjGroupBcast> {
   CallbackObjGroupBcast() = default;
   CallbackObjGroupBcast(
-    HandlerType const& in_han, ObjGroupProxyType const& in_objgroup
+    HandlerType const in_han, ObjGroupProxyType const& in_objgroup
   ) : handler_(in_han), objgroup_(in_objgroup)
   { }
 

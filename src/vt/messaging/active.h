@@ -1185,7 +1185,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] tag the tag this handler will accept (\c vt::no_tag means any)
    */
   void swapHandlerFn(
-    HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
+    HandlerType const han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
 
   /**
@@ -1195,7 +1195,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] han the handler to de-register
    * \param[in] tag the tag this handler will accept (\c vt::no_tag means any)
    */
-  void unregisterHandlerFn(HandlerType const& han, TagType const& tag = no_tag);
+  void unregisterHandlerFn(HandlerType const han, TagType const& tag = no_tag);
 
   /**
    * \internal
@@ -1206,7 +1206,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] tag the tag this handler will accept (\c vt::no_tag means any)
    */
   void registerHandlerFn(
-    HandlerType const& han, ActiveClosureFnType fn, TagType const& tag = no_tag
+    HandlerType const han, ActiveClosureFnType fn, TagType const& tag = no_tag
   );
 
   /**
@@ -1338,7 +1338,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] tag the tag for that handler
    */
   void deliverPendingMsgsHandler(
-    HandlerType const& han, TagType const& tag = no_tag
+    HandlerType const han, TagType const& tag = no_tag
   );
 
   /**

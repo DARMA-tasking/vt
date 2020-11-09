@@ -85,11 +85,11 @@ struct CallbackRawBaseSingle {
 
   // Constructors for different types of callbacks
   CallbackRawBaseSingle(
-    RawSendMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
+    RawSendMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
     NodeType const& in_node
   );
   CallbackRawBaseSingle(
-    RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
+    RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
     bool const& in_inc
   );
   CallbackRawBaseSingle(RawAnonTagType, PipeType const& in_pipe);
@@ -97,12 +97,12 @@ struct CallbackRawBaseSingle {
   CallbackRawBaseSingle(RawBcastColMsgTagType, PipeType const& in_pipe);
   CallbackRawBaseSingle(
     RawBcastColDirTagType, PipeType const& in_pipe,
-    HandlerType const& in_handler, AutoHandlerType const& in_vrt,
-    bool const& in_member, VirtualProxyType const& in_proxy
+    HandlerType const in_handler, AutoHandlerType const in_vrt,
+    VirtualProxyType const& in_proxy
   );
   CallbackRawBaseSingle(
     RawSendColDirTagType, PipeType const& in_pipe,
-    HandlerType const& in_handler, AutoHandlerType const& in_vrt_handler,
+    HandlerType const in_handler, AutoHandlerType const in_vrt_handler,
     void* index_bits
   );
   CallbackRawBaseSingle(
@@ -167,12 +167,12 @@ struct CallbackTyped : CallbackRawBaseSingle {
 
   // Forwarding constructors for different types of callbacks
   CallbackTyped(
-    RawSendMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
+    RawSendMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
     NodeType const& in_node
   ) : CallbackRawBaseSingle(RawSendMsgTag,in_pipe,in_handler,in_node)
   { }
   CallbackTyped(
-    RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const& in_handler,
+    RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
     bool const& in_inc
   )  : CallbackRawBaseSingle(RawBcastMsgTag,in_pipe,in_handler,in_inc)
   { }
@@ -187,15 +187,15 @@ struct CallbackTyped : CallbackRawBaseSingle {
   { }
   CallbackTyped(
     RawBcastColDirTagType, PipeType const& in_pipe,
-    HandlerType const& in_handler, AutoHandlerType const& in_vrt,
-    bool const& in_member, VirtualProxyType const& in_proxy
+    HandlerType const in_handler, AutoHandlerType const in_vrt,
+    VirtualProxyType const& in_proxy
   ) : CallbackRawBaseSingle(
-        RawBcastColDirTag,in_pipe,in_handler,in_vrt,in_member,in_proxy
+        RawBcastColDirTag, in_pipe, in_handler, in_vrt, in_proxy
       )
   { }
   CallbackTyped(
     RawSendColDirTagType, PipeType const& in_pipe,
-    HandlerType const& in_handler, AutoHandlerType const& in_vrt_handler,
+    HandlerType const in_handler, AutoHandlerType const in_vrt_handler,
     void* index_bits
   ) : CallbackRawBaseSingle(
         RawSendColDirTag,in_pipe,in_handler,in_vrt_handler,index_bits

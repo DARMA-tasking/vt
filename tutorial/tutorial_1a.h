@@ -66,7 +66,7 @@ static inline void context() {
 
   // The header-only library fmt is used for printing throughout VT. You can use
   // it because the headers are included by default
-  ::fmt::print("this_node={}, num_ndoes={}\n", this_node, num_nodes);
+  ::fmt::print("this_node={}, num_nodes={}\n", this_node, num_nodes);
 }
 /// [Tutorial1A]
 
