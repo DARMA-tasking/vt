@@ -116,6 +116,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
   }
 
   vt::theCollective()->barrier();
+  vt::rt->printMemoryFootprint();
   proxy.destroyHandleRDMA(handle);
 }
 

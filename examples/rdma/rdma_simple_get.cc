@@ -93,6 +93,7 @@ static vt::RDMA_GetType test_get_fn(
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
+  vt::rt->printMemoryFootprint();
 
   vt::NodeType this_node = vt::theContext()->getNode();
 
@@ -116,6 +117,7 @@ int main(int argc, char** argv) {
     vt::theMsg()->broadcastMsg<HandleMsg, tell_handle>(msg);
   }
 
+  vt::rt->printMemoryFootprint();
   vt::finalize();
 
   return 0;
