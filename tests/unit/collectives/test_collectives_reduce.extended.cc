@@ -116,18 +116,18 @@ TEST_F(TestReduce, test_reduce_vec_int_msg) {
   >(root, vecOfInt);
 }
 
-TEST_F(TestReduce, test_reduce_none_op_cb) {
-  called = 0;
+// TEST_F(TestReduce, test_reduce_none_op_cb) {
+//   called = 0;
 
-  runInEpochCollective([]{
-    auto msg = makeMessage<ReduceNoneMsg>();
-    auto cb = theCB()->makeSend<ReduceNoneMsg, callbackFn>(0);
+//   runInEpochCollective([]{
+//     auto msg = makeMessage<ReduceNoneMsg>();
+//     auto cb = theCB()->makeSend<ReduceNoneMsg, callbackFn>(0);
 
-    theCollective()->global()->reduce<None>(msg.get(), cb);
-  });
+//     theCollective()->global()->reduce<None>(msg.get(), cb);
+//   });
 
-  EXPECT_EQ(called, theContext()->getNumNodes());
-}
+//   EXPECT_EQ(called, theContext()->getNumNodes());
+// }
 
 // TEST_F(TestReduce, test_reduce_none_op_lambda_cb) {
 //   called = 0;

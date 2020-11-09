@@ -105,8 +105,9 @@ template <typename MsgT>
 Callback<MsgT> PipeManager::makeSend(
   FuncMsgType<MsgT> fn, NodeType const& node
 ) {
-  return (node == theContext()->getNode()) ?
-    makeCallbackSingleAnon<MsgT,Callback<MsgT>>(fn) : Callback<MsgT>();
+  // return (node == theContext()->getNode()) ?
+  //   makeCallbackSingleAnon<MsgT,Callback<MsgT>>(fn) : Callback<MsgT>();
+  return Callback<MsgT>();
 }
 
 template <typename FunctorT, typename MsgT>
