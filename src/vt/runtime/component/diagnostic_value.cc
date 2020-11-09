@@ -85,7 +85,7 @@ void reduceHelper(
       }
     }
   );
-  r->reduce<collective::PlusOp<ValueType>>(0, msg.get(), cb);
+  r->reduce<collective::PlusOp<ValueType>>(msg.get(), cb);
 }
 
 } /* end anon namespace */
