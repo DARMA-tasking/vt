@@ -1,0 +1,139 @@
+###############################################################################
+############## Warning this is a generated file---do not modify ###############
+###############################################################################
+
+name: PR tests (nvidia cuda 11.0, ubuntu, mpich)
+
+trigger:
+  branches:
+    include:
+      - develop
+      - 1.0.0*
+
+pr:
+  branches:
+   include:
+     - '*'
+
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+  REPO: lifflander1/vt
+  ARCH: amd64
+  UBUNTU: 18.04
+  COMPILER_TYPE: nvidia
+  COMPILER: nvcc-11
+  BUILD_TYPE: release
+  ULIMIT_CORE: 0
+  CODE_COVERAGE: 0
+  VT_LB: 1
+  VT_TRACE: 1
+  VT_TRACE_RT: 0
+  VT_MIMALLOC: 0
+  VT_DOCS: 0
+  VT_ASAN: 0
+  VT_POOL: 0
+  VT_EXTENDED_TESTS: 0
+  VT_UNITY_BUILD: 1
+  VT_ZOLTAN: 0
+  VT_CI_BUILD: 1
+  VT_DIAGNOSTICS: 0
+  CACHE: "$(Agent.TempDirectory)/cache/"
+  cache_name: ubuntu-nvidia-11-cache
+  build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
+  TS: 0
+  TS_YEAR: 0
+  TS_MONTH: 0
+  TS_DAY: 0
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'ubuntu-18.04'
+    timeoutInMinutes: 180
+    steps:
+      - task: Bash@3
+        displayName: Build timestep for caching
+        inputs:
+          targetType: 'inline'
+          script: |
+            echo 'string(TIMESTAMP current_date "%H;%M;%S" UTC)' > script
+            echo 'execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${current_date}")' >> script
+            val=$(cmake -P script)
+            echo "##vso[task.setvariable variable=TS]$val"
+            echo 'string(TIMESTAMP current_date "%Y" UTC)' > script
+            echo 'execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${current_date}")' >> script
+            val=$(cmake -P script)
+            echo "##vso[task.setvariable variable=TS_YEAR]$val"
+            echo 'string(TIMESTAMP current_date "%m" UTC)' > script
+            echo 'execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${current_date}")' >> script
+            val=$(cmake -P script)
+            echo "##vso[task.setvariable variable=TS_MONTH]$val"
+            echo 'string(TIMESTAMP current_date "%d" UTC)' > script
+            echo 'execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${current_date}")' >> script
+            val=$(cmake -P script)
+            echo "##vso[task.setvariable variable=TS_DAY]$val"
+      - task: Bash@3
+        displayName: Output timestamp for caching
+        inputs:
+          targetType: 'inline'
+          script: 'echo "my pipeline variable is $(TS) $(TS_YEAR) $(TS_MONTH) $(TS_DAY)"'
+      - task: Cache@2
+        displayName: Update cache
+        inputs:
+          securityNamespace: cache
+          key: $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY) | $(TS)
+          path: '$(build_root)/ccache'
+          restoreKeys: |
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY)
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH)
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR)
+            $(Agent.OS) | "$(cache_name)"
+      - task: DockerCompose@0
+        displayName: Pull container
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerComposeFile: '**/docker-compose.yml'
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp-clean'
+      - task: DockerCompose@0
+        displayName: Build container
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerComposeFile: '**/docker-compose.yml'
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'run ubuntu-cpp-clean'
+      - task: DockerCompose@0
+        displayName: Push container to registry
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerRegistryEndpoint: 'dockerRegistryConnection1'
+          dockerComposeFile: '**/docker-compose.yml'
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'push ubuntu-cpp-clean'
+      - task: Bash@3
+        displayName: Create artifacts
+        inputs:
+          targetType: 'inline'
+          script: |
+            zip -j $(Agent.TempDirectory)/LastTest.log.gz $(build_root)/vt/Testing/Temporary/LastTest.log
+            zip -j $(Agent.TempDirectory)/cmake-output.log.gz $(build_root)/vt/cmake-output.log
+      - task: PublishPipelineArtifact@1
+        displayName: Upload CMake test output artifact
+        inputs:
+          targetPath: '$(Agent.TempDirectory)/LastTest.log.gz'
+          artifact: 'CMakeLastTestLog'
+          publishLocation: 'pipeline'
+      - task: PublishPipelineArtifact@1
+        displayName: Upload CMake full output artifact
+        inputs:
+          targetPath: '$(Agent.TempDirectory)/cmake-output.log.gz'
+          artifact: 'CMakeOutputLog'
+          publishLocation: 'pipeline'
