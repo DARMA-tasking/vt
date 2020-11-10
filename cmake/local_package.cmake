@@ -33,10 +33,12 @@ macro(find_package_local pkg_name pkg_directory pkg_other_name)
 
     #message(STATUS "skipping find_package for ${pkg_name}")
   else()
-    message(
-      STATUS "find_package_local: pkg name=\"${pkg_name}\", "
-             "directory=\"${pkg_directory}\""
-    )
+    if (NOT ${pkg_name})
+      message(
+        STATUS "find_package_local: pkg name=\"${pkg_name}\", "
+               "directory=\"${pkg_directory}\""
+      )
+    endif()
 
     # Rest of the arguments are potential relative search paths wrt the
     # ${pkg_directory}
