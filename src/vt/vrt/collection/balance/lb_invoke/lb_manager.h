@@ -173,12 +173,9 @@ public:
     >
   >
   void serialize(SerializerT& s) {
-    s | num_invocations_
-      | num_release_
-      | cached_phase_
+    s | cached_phase_
       | cached_lb_
       | destroy_lb_
-      | synced_in_lb_
       | proxy_
       | base_model_
       | model_;
