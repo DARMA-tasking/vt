@@ -131,14 +131,12 @@ public:
    */
   EpochType allocateNewEpoch();
 
-
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | archetype_epoch_
       | terminated_epochs_;
   }
 
-private:
   /**
    * \brief Activate an epoch: goes from the state terminated to non-terminated.
    *
