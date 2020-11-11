@@ -143,9 +143,9 @@ void EpochWindow::activateEpoch(EpochType epoch) {
     terminated_epochs_.size()
   );
 
-  vtAssert(terminated_epochs_.contains(epoch), "Epoch must be terminated");
-
-  terminated_epochs_.erase(epoch);
+  if (terminated_epochs_.contains(epoch)) {
+    terminated_epochs_.erase(epoch);
+  }
 
   vt_debug_print(
     normal, term,

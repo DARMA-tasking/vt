@@ -1185,6 +1185,8 @@ void TerminationDetector::makeRootedHan(
 ) {
   bool const is_ready = !is_root;
 
+  theEpoch()->getTerminatedWindow(epoch)->activateEpoch(epoch);
+
   auto& state = findOrCreateState(epoch, is_ready);
   state.setLabel(label);
 
