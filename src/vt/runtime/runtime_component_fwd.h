@@ -113,6 +113,7 @@ struct TimeTriggerManager;
 }
 namespace phase {
 struct PhaseManager;
+}
 namespace epoch {
 struct EpochManip;
 }
