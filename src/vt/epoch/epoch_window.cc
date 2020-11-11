@@ -43,6 +43,7 @@
 */
 
 #include "vt/epoch/epoch_window.h"
+#include "vt/epoch/epoch_manip.h"
 
 #include <fmt/ostream.h>
 
