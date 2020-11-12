@@ -121,6 +121,7 @@ static void put_handler_fn(
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
+  vt::rt->printMemoryFootprint();
 
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
@@ -148,6 +149,7 @@ int main(int argc, char** argv) {
     vt::theMsg()->broadcastMsg<HandleMsg,put_data_fn>(msg);
   }
 
+  vt::rt->printMemoryFootprint();
   vt::finalize();
 
   return 0;
