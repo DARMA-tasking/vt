@@ -45,20 +45,48 @@ set(__get_git_revision_description YES)
 # to find the path to this module rather than the path to a calling list file
 get_filename_component(_gitdescmoddir ${CMAKE_CURRENT_LIST_FILE} PATH)
 
+function(git_hash_info _headfile _git_dir _ref _hash)
+	set(HEAD_HASH)
+
+	file(READ "${_headfile}" HEAD_CONTENTS LIMIT 1024)
+
+	string(STRIP "${HEAD_CONTENTS}" HEAD_CONTENTS)
+	if(HEAD_CONTENTS MATCHES "ref")
+		# named branch
+		string(REPLACE "ref: " "" HEAD_REF "${HEAD_CONTENTS}")
+		if(EXISTS "${_git_dir}/${HEAD_REF}")
+			file(READ "${_git_dir}/${HEAD_REF}" HEAD_HASH LIMIT 1024)
+			string(STRIP "${HEAD_HASH}" HEAD_HASH)
+		else()
+			file(READ "${_git_data}/packed-refs" PACKED_REFS)
+			if(${PACKED_REFS} MATCHES "([0-9a-z]*) ${HEAD_REF}")
+				set(HEAD_HASH "${CMAKE_MATCH_1}")
+			endif()
+		endif()
+	endif()
+
+	set(${_ref} "${HEAD_REF}" PARENT_SCOPE)
+	set(${_hash} "${HEAD_HASH}" PARENT_SCOPE)
+endfunction()
+
+
 function(get_git_head_revision _refspecvar _hashvar)
 	set(GIT_PARENT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-	set(GIT_DIR "${GIT_PARENT_DIR}/.git")
-	while(NOT EXISTS "${GIT_DIR}")	# .git dir not found, search parent directories
-		set(GIT_PREVIOUS_PARENT "${GIT_PARENT_DIR}")
-		get_filename_component(GIT_PARENT_DIR ${GIT_PARENT_DIR} PATH)
-		if(GIT_PARENT_DIR STREQUAL GIT_PREVIOUS_PARENT)
-			# We have reached the root directory, we are not in git
-			set(${_refspecvar} "GITDIR-NOTFOUND" PARENT_SCOPE)
-			set(${_hashvar} "GITDIR-NOTFOUND" PARENT_SCOPE)
-			return()
-		endif()
-		set(GIT_DIR "${GIT_PARENT_DIR}/.git")
-	endwhile()
+	if (NOT GIT_DIR)
+		set(_git_dir "${GIT_PARENT_DIR}/.git")
+		while(NOT EXISTS "${_git_dir}")	# .git dir not found, search parent directories
+			set(GIT_PREVIOUS_PARENT "${GIT_PARENT_DIR}")
+			get_filename_component(GIT_PARENT_DIR ${GIT_PARENT_DIR} PATH)
+			if(GIT_PARENT_DIR STREQUAL GIT_PREVIOUS_PARENT)
+				# We have reached the root directory, we are not in git
+				set(${_refspecvar} "GITDIR-NOTFOUND" PARENT_SCOPE)
+				set(${_hashvar} "GITDIR-NOTFOUND" PARENT_SCOPE)
+				return()
+			endif()
+			set(_git_dir "${GIT_PARENT_DIR}/.git")
+		endwhile()
+		set(GIT_DIR "${_git_dir}" CACHE PATH "Path to the Git directory")
+	endif()
 	# check if this is a submodule
 	if(NOT IS_DIRECTORY ${GIT_DIR})
 		file(READ ${GIT_DIR} submodule)
@@ -66,21 +94,13 @@ function(get_git_head_revision _refspecvar _hashvar)
 		get_filename_component(SUBMODULE_DIR ${GIT_DIR} PATH)
 		get_filename_component(GIT_DIR ${SUBMODULE_DIR}/${GIT_DIR_RELATIVE} ABSOLUTE)
 	endif()
-	set(GIT_DATA "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/git-data")
-	if(NOT EXISTS "${GIT_DATA}")
-		file(MAKE_DIRECTORY "${GIT_DATA}")
-	endif()
 
 	if(NOT EXISTS "${GIT_DIR}/HEAD")
 		return()
 	endif()
-	set(HEAD_FILE "${GIT_DATA}/HEAD")
-	configure_file("${GIT_DIR}/HEAD" "${HEAD_FILE}" COPYONLY)
+	set(HEAD_FILE "${GIT_DIR}/HEAD")
 
-	configure_file("${_gitdescmoddir}/GetGitRevisionDescription.cmake.in"
-		"${GIT_DATA}/grabRef.cmake"
-		@ONLY)
-	include("${GIT_DATA}/grabRef.cmake")
+	git_hash_info("${HEAD_FILE}" "${GIT_DIR}" HEAD_REF HEAD_HASH)
 
 	set(${_refspecvar} "${HEAD_REF}" PARENT_SCOPE)
 	set(${_hashvar} "${HEAD_HASH}" PARENT_SCOPE)

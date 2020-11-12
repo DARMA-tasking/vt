@@ -1,8 +1,6 @@
 
 include(GetGitRevisionDescription)
 
-get_git_head_revision(GIT_REFSPEC GIT_SHA1)
-
 # set some variables related to GIT state information
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 git_describe(GIT_EXACT_TAG --tags --abbrev=0 --all)
