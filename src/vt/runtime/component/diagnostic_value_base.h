@@ -49,6 +49,8 @@
 #include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_erased_value.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <string>
 
 namespace vt { namespace runtime { namespace component {
@@ -65,6 +67,7 @@ namespace vt { namespace runtime { namespace component { namespace detail {
  * \brief Base class for a diagnostic value with type of actual value erased
  */
 struct DiagnosticBase {
+  checkpoint_virtual_serialize_root()
 
   /**
    * \internal \brief Construct a new diagnostic base value
@@ -134,6 +137,15 @@ struct DiagnosticBase {
   virtual void reduceOver(
     Diagnostic* diagnostic, DiagnosticErasedValue* out, int snapshot
   ) = 0;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | type_
+      | update_
+      | unit_
+      | key_
+      | desc_;
+  }
 
 protected:
   DiagnosticTypeEnum const type_; /**< The diagnostic type */

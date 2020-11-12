@@ -81,6 +81,13 @@ struct Diagnostic : ComponentName, ComponentReducer {
   void foreachDiagnostic(std::function<void(detail::DiagnosticBase*)> apply);
 
   /**
+   * \internal \brief Return Diagnostic's memory footprint
+   *
+   * \return the footprint
+   */
+  std::size_t getDiagnosticsFootprint();
+
+  /**
    * \internal \brief Pre-diagnostic hook; this fires before finalize but after
    * all work is done and the system is about to shut down.
    *

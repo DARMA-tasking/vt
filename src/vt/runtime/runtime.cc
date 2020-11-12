@@ -1016,7 +1016,10 @@ void printComponentFootprint(T* component) {
       debug::reset(),
       component->name(),
       debug::magenta(),
-      checkpoint::getMemoryFootprint(*component),
+      checkpoint::getMemoryFootprint(
+        *component,
+        component->getDiagnosticsFootprint()
+      ),
       debug::reset()
     );
   }
