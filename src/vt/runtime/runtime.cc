@@ -1035,8 +1035,7 @@ void Runtime::printMemoryFootprint() const {
 
   p_->foreach([&](component::BaseComponent* base) {
     auto name = base->name();
-    if (name == "ArgConfig")
-    {
+    if (name == "ArgConfig") {
       printComponentFootprint(
         static_cast<arguments::ArgConfig*>(base)
       );
@@ -1156,6 +1155,15 @@ void Runtime::printMemoryFootprint() const {
         static_cast<pmpi::PMPIComponent*>(base)
       );
     #endif
+    } else {
+      fmt::print(
+        "{}{}\tWarning:{} memory footprinting is not supported for {}!{}\n",
+        debug::vtPre(),
+        debug::red(),
+        debug::reset(),
+        name,
+        debug::reset()
+      );
     }
   });
 }

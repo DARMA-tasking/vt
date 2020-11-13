@@ -128,11 +128,13 @@ struct PendingRecv {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | user_buf
+    s | nchunks
+      | user_buf
       | cont
       | dealloc_user_buf
-      | recv_node
-      | priority;
+      | sender
+      | priority
+      | is_user_buf;
   }
 };
 
@@ -154,8 +156,6 @@ struct InProgressBase {
       | probe_bytes
       | sender
       | valid;
-
-    s.countBytes(req);
   }
 
   char* buf = nullptr;
