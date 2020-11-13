@@ -161,6 +161,7 @@ struct AppConfig {
   bool vt_diag_csv_base_units = false;
 
   bool vt_pause = false;
+  std::size_t vt_max_mpi_send_size = 1ull << 30;
 
   bool vt_debug_all          = false;
   bool vt_debug_verbose      = false;

@@ -485,6 +485,18 @@ void ArgConfig::addConfigFileArgs(CLI::App& app) {
   a2->group(configGroup);
 }
 
+void ArgConfig::addRuntimeArgs(CLI::App& app) {
+  auto max_size = "Maximum MPI send size (causes larger messages to be split "
+                  "into multiple MPI sends)";
+
+  auto a1 = app.add_option(
+    "--vt_max_mpi_send_size", config_.vt_max_mpi_send_size, max_size, true
+  );
+
+  auto configRuntime = "Runtime";
+  a1->group(configRuntime);
+}
+
 class VtFormatter : public CLI::Formatter {
 public:
   std::string make_usage(const CLI::App *, std::string name) const override {
@@ -537,6 +549,7 @@ std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
   addUserArgs(app);
   addSchedulerArgs(app);
   addConfigFileArgs(app);
+  addRuntimeArgs(app);
 
   std::tuple<int, std::string> result = parseArguments(app, /*out*/ argc, /*out*/ argv);
   if (std::get<0>(result) not_eq -1) {

@@ -56,6 +56,7 @@
 #include "vt/messaging/pending_send.h"
 #include "vt/messaging/listener.h"
 #include "vt/messaging/irecv_holder.h"
+#include "vt/messaging/send_info.h"
 #include "vt/event/event.h"
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
@@ -73,6 +74,17 @@
 #include <unordered_map>
 #include <limits>
 #include <stack>
+
+namespace vt {
+
+/// A pair of a void* and number of bytes (length) for sending data
+using PtrLenPairType = std::tuple<void*, ByteType>;
+
+/// A continuation function with an allocated pointer with a deleter function
+using ContinuationDeleterType =
+  std::function<void(PtrLenPairType data, ActionType deleter)>;
+
+} /* end namespace vt */
 
 namespace vt { namespace messaging {
 
@@ -97,20 +109,40 @@ static constexpr MsgSizeType const max_pack_direct_size = 512;
  * \brief An pending receive event
  */
 struct PendingRecv {
+  int nchunks = 0;
   void* user_buf = nullptr;
-  RDMA_ContinuationDeleteType cont = nullptr;
+  ContinuationDeleterType cont = nullptr;
   ActionType dealloc_user_buf = nullptr;
-  NodeType recv_node = uninitialized_destination;
+  NodeType sender = uninitialized_destination;
   PriorityType priority = no_priority;
+  bool is_user_buf = false;
 
   PendingRecv(
-    void* in_user_buf, RDMA_ContinuationDeleteType in_cont,
+    int in_nchunks, void* in_user_buf, ContinuationDeleterType in_cont,
     ActionType in_dealloc_user_buf, NodeType node,
-    PriorityType in_priority
-  ) : user_buf(in_user_buf), cont(in_cont),
-      dealloc_user_buf(in_dealloc_user_buf), recv_node(node),
-      priority(in_priority)
+    PriorityType in_priority, bool in_is_user_buf
+  ) : nchunks(in_nchunks), user_buf(in_user_buf), cont(in_cont),
+      dealloc_user_buf(in_dealloc_user_buf), sender(node),
+      priority(in_priority), is_user_buf(in_is_user_buf)
   { }
+};
+
+/**
+ * \struct InProgressBase active.h vt/messaging/active.h
+ *
+ * \brief Base class for an in-progress MPI operation
+ */
+struct InProgressBase {
+  InProgressBase(
+    char* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender
+  ) : buf(in_buf), probe_bytes(in_probe_bytes), sender(in_sender),
+      valid(true)
+  { }
+
+  char* buf = nullptr;
+  MsgSizeType probe_bytes = 0;
+  NodeType sender = uninitialized_destination;
+  bool valid = false;
 };
 
 /**
@@ -118,21 +150,27 @@ struct PendingRecv {
  *
  * \brief An in-progress MPI_Irecv watched by the runtime
  */
-struct InProgressIRecv {
-  using CountType = int32_t;
+struct InProgressIRecv : InProgressBase {
 
   InProgressIRecv(
-    char* in_buf, CountType in_probe_bytes, NodeType in_sender,
-    MPI_Request in_req
-  ) : buf(in_buf), probe_bytes(in_probe_bytes), sender(in_sender),
-      req(in_req), valid(true)
+    char* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender,
+    MPI_Request in_req = MPI_REQUEST_NULL
+  ) : InProgressBase(in_buf, in_probe_bytes, in_sender),
+      req(in_req)
   { }
 
-  char* buf = nullptr;
-  CountType probe_bytes = 0;
-  NodeType sender = uninitialized_destination;
-  MPI_Request req;
-  bool valid = false;
+  bool test(int& num_mpi_tests) {
+    VT_ALLOW_MPI_CALLS; // MPI_Test
+
+    int flag = 0;
+    MPI_Status stat;
+    MPI_Test(&req, &flag, &stat);
+    num_mpi_tests++;
+    return flag;
+  }
+
+private:
+  MPI_Request req = MPI_REQUEST_NULL;
 };
 
 /**
@@ -140,22 +178,44 @@ struct InProgressIRecv {
  *
  * \brief An in-progress pure data MPI_Irecv watched by the runtime
  */
-struct InProgressDataIRecv : public InProgressIRecv {
+struct InProgressDataIRecv : InProgressBase {
   InProgressDataIRecv(
-    char* in_buf, CountType in_probe_bytes, NodeType in_sender,
-    MPI_Request in_req, void* const in_user_buf,
+    char* in_buf, MsgSizeType in_probe_bytes, NodeType in_sender,
+    std::vector<MPI_Request> in_reqs, void* const in_user_buf,
     ActionType in_dealloc_user_buf,
-    RDMA_ContinuationDeleteType in_next,
+    ContinuationDeleterType in_next,
     PriorityType in_priority
-  ) : InProgressIRecv{in_buf, in_probe_bytes, in_sender, in_req},
+  ) : InProgressBase{in_buf, in_probe_bytes, in_sender},
       user_buf(in_user_buf), dealloc_user_buf(in_dealloc_user_buf),
-      next(in_next), priority(in_priority)
+      next(in_next), priority(in_priority), reqs(std::move(in_reqs))
   { }
 
+  bool test(int& num_mpi_tests) {
+    int flag = 0;
+    MPI_Status stat;
+    for ( ; cur < reqs.size(); cur++) {
+      VT_ALLOW_MPI_CALLS; // MPI_Test
+
+      MPI_Test(&reqs[cur], &flag, &stat);
+      num_mpi_tests++;
+
+      if (flag == 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+public:
   void* user_buf = nullptr;
   ActionType dealloc_user_buf = nullptr;
-  RDMA_ContinuationDeleteType next = nullptr;
+  ContinuationDeleterType next = nullptr;
   PriorityType priority = no_priority;
+
+private:
+  std::size_t cur = 0;
+  std::vector<MPI_Request> reqs;
 };
 
 /**
@@ -176,6 +236,9 @@ struct BufferedActiveMsg {
   ) : buffered_msg(in_buffered_msg), from_node(in_from_node), cont(in_cont)
   { }
 };
+
+// forward-declare for header
+struct MultiMsg;
 
 /**
  * \struct ActiveMessenger active.h vt/messaging/active.h
@@ -218,10 +281,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   using CountType            = int32_t;
   using PendingRecvType      = PendingRecv;
   using EventRecordType      = event::AsyncEvent::EventRecordType;
-  using SendDataRetType      = std::tuple<EventType, TagType>;
-  using SendFnType           = std::function<
-    SendDataRetType(RDMA_GetType,NodeType,TagType)
-  >;
+  using SendFnType           = std::function<SendInfo(PtrLenPairType,NodeType,TagType)>;
   using UserSendFnType       = std::function<void(SendFnType)>;
   using ContainerPendingType = std::unordered_map<TagType,PendingRecvType>;
   using MsgContType          = std::list<BufferedMsgType>;
@@ -898,7 +958,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *     NodeType send_node = 0;
    *     theMsg()->recvDataMsg(
    *       msg->mpi_tag_to_recv, send_node,
-   *       [=](RDMA_GetType ptr, ActionType deleter){
+   *       [=](PtrLenPairType ptr, ActionType deleter){
    *          // do something with ptr
    *          deleter();
    *       }
@@ -910,7 +970,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *     // The user's payload function that invokes the system send function
    *     // passed to the lambda
    *     auto send_payload = [&](Active::SendFnType send){
-   *       auto ret = send(vt::RDMA_GetType{ptr, num_bytes}, put_node, vt::no_tag);
+   *       auto ret = send(vt::PtrLenPairType{ptr, num_bytes}, put_node, vt::no_tag);
    *       msg->mpi_tag_to_recv = std::get<1>(ret);
    *     };
    *     theMsg()->sendMsg<PutMessage, myHandler>(1, msg);
@@ -1030,16 +1090,31 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] dest the destination node
    * \param[in] tag the MPI tag put on the send (if vt::no_tag, increments tag)
    *
-   * \return a tuple with the event ID and tag used
+   * \return information about the send for receiving the payload
    */
-  SendDataRetType sendData(
-    RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
+  SendInfo sendData(
+    PtrLenPairType const& ptr, NodeType const& dest, TagType const& tag
+  );
+
+  /**
+   * \internal
+   * \brief Send raw bytes to a node with potentially multiple sends
+   *
+   * \param[in] ptr the pointer and bytes to send
+   * \param[in] dest the destination node
+   * \param[in] tag the MPI tag put on the send
+   *
+   * \return a tuple of the event and the number of sends
+   */
+  std::tuple<EventType, int> sendDataMPI(
+    PtrLenPairType const& ptr, NodeType const& dest, TagType const& tag
   );
 
   /**
    * \internal
    * \brief Receive data as bytes from a node with a priority
    *
+   * \param[in] nchunks the number of chunks to receive
    * \param[in] priority the priority to receive the data
    * \param[in] tag the MPI tag to receive on
    * \param[in] node the node from which to receive
@@ -1048,14 +1123,15 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return whether it was successful or pending
    */
   bool recvDataMsgPriority(
-    PriorityType priority, TagType const& tag, NodeType const& node,
-    RDMA_ContinuationDeleteType next = nullptr
+    int nchunks, PriorityType priority, TagType const& tag,
+    NodeType const& node, ContinuationDeleterType next = nullptr
   );
 
   /**
    * \internal
    * \brief Receive data as bytes from a node
    *
+   * \param[in] nchunks the number of chunks to receive
    * \param[in] tag the MPI tag to receive on
    * \param[in] node the node from which to receive
    * \param[in] next a continuation to execute when data arrives
@@ -1063,31 +1139,34 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return whether it was successful or pending
    */
   bool recvDataMsg(
-    TagType const& tag, NodeType const& node,
-    RDMA_ContinuationDeleteType next = nullptr
+    int nchunks, TagType const& tag, NodeType const& node,
+    ContinuationDeleterType next = nullptr
   );
 
   /**
    * \internal
    * \brief Receive data as bytes from a node with a priority
    *
+   * \param[in] nchunks the number of chunks to receive
    * \param[in] priority the priority to receive the data
    * \param[in] tag the MPI tag to receive on
-   * \param[in] recv_node the node from which to receive
+   * \param[in] sender the sender node
    * \param[in] enqueue whether to enqueue the pending receive
    * \param[in] next a continuation to execute when data arrives
    *
    * \return whether it was successful or pending
    */
   bool recvDataMsg(
-    PriorityType priority, TagType const& tag, NodeType const& recv_node,
-    bool const& enqueue, RDMA_ContinuationDeleteType next = nullptr
+    int nchunks, PriorityType priority, TagType const& tag,
+    NodeType const& sender, bool const& enqueue,
+    ContinuationDeleterType next = nullptr
   );
 
   /**
    * \internal
    * \brief Receive data as bytes with a buffer and priority
    *
+   * \param[in] nchunks the number of chunks to receive
    * \param[in] user_buf the buffer to receive into
    * \param[in] priority the priority for the operation
    * \param[in] tag the MPI tag to use for receive
@@ -1095,34 +1174,70 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \param[in] enqueue whether to enqueue the operation
    * \param[in] dealloc_user_buf the action to deallocate a user buffer
    * \param[in] next the continuation when the data is ready
+   * \param[in] is_user_buf is a user buffer that require user deallocation
    *
    * \return whether the data is ready or pending
    */
   bool recvDataMsgBuffer(
-    void* const user_buf, PriorityType priority, TagType const& tag,
+    int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
-    RDMA_ContinuationDeleteType next = nullptr
+    ContinuationDeleterType next = nullptr, bool is_user_buf = false
   );
 
   /**
    * \internal
    * \brief Receive data as bytes with a buffer
    *
+   * \param[in] nchunks the number of chunks to receive
    * \param[in] user_buf the buffer to receive into
    * \param[in] tag the MPI tag to use for receive
    * \param[in] node the node receiving from
    * \param[in] enqueue whether to enqueue the operation
    * \param[in] dealloc_user_buf the action to deallocate a user buffer
    * \param[in] next the continuation when the data is ready
+   * \param[in] is_user_buf is a user buffer that require user deallocation
    *
    * \return whether the data is ready or pending
    */
   bool recvDataMsgBuffer(
-    void* const user_buf, TagType const& tag,
+    int nchunks, void* const user_buf, TagType const& tag,
     NodeType const& node = uninitialized_destination, bool const& enqueue = true,
     ActionType dealloc_user_buf = nullptr,
-    RDMA_ContinuationDeleteType next = nullptr
+    ContinuationDeleterType next = nullptr, bool is_user_buf = false
+  );
+
+  /**
+   * \brief Receive data from MPI in multiple chunks
+   *
+   * \param[in] nchunks the number of chunks to receive
+   * \param[in] buf the receive buffer
+   * \param[in] tag the MPI tag
+   * \param[in] from the sender
+   * \param[in] len the total length
+   * \param[in] prio the priority for the continuation
+   * \param[in] dealloc the action to deallocate the buffer
+   * \param[in] next the continuation that gets passed the data when ready
+   * \param[in] is_user_buf is a user buffer that require user deallocation
+   */
+  void recvDataDirect(
+    int nchunks, void* const buf, TagType const tag, NodeType const from,
+    MsgSizeType len, PriorityType prio, ActionType dealloc = nullptr,
+    ContinuationDeleterType next = nullptr, bool is_user_buf = false
+  );
+
+  /**
+   * \brief Receive data from MPI in multiple chunks
+   *
+   * \param[in] nchunks the number of chunks to receive
+   * \param[in] tag the MPI tag
+   * \param[in] from the sender
+   * \param[in] len the total length
+   * \param[in] next the continuation that gets passed the data when ready
+   */
+  void recvDataDirect(
+    int nchunks, TagType const tag, NodeType const from,
+    MsgSizeType len, ContinuationDeleterType next
   );
 
   /**
@@ -1382,6 +1497,23 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
+   * \brief Send already-packed message bytes with MPI using multiple
+   * sends if necessary
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] base the message base pointer
+   * \param[in] msg_size the size of the message
+   * \param[in] send_tag the send tag on the message
+   *
+   * \return the event to test/wait for completion
+   */
+  EventType sendMsgMPI(
+    NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+    MsgSizeType const& msg_size, TagType const& send_tag
+  );
+
+  /**
+   * \internal
    * \brief Set the global epoch (\c pushEpoch is more desirable)
    *
    * \c setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
@@ -1509,6 +1641,32 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   }
 
 private:
+  /**
+   * \internal \brief Allocate a new, unused tag.
+   *
+   * \note Wraps around when reaching max tag, determined by the MPI
+   * implementation.
+   *
+   * \return a new MPI tag
+   */
+  MPI_TagType allocateNewTag();
+
+  /**
+   * \internal \brief Handle a control message that coordinates multiple
+   * payloads arriving that constitute a contiguous payload
+   *
+   * \param[in] msg the message with control data
+   */
+  void handleChunkedMultiMsg(MultiMsg* msg);
+
+  /**
+   * \internal \brief Handle a control message; immediately calls
+   * \c handleChunkedMultiMsg
+   *
+   * \param[in] msg the message with control data
+   */
+  static void chunkedMultiMsg(MultiMsg* msg);
+
   bool testPendingActiveMsgAsyncRecv();
   bool testPendingDataMsgAsyncRecv();
 

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                memory_units.h
+//                                 send_info.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,46 +42,62 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_UTILS_MEMORY_MEMORY_UNITS_H
-#define INCLUDED_VT_UTILS_MEMORY_MEMORY_UNITS_H
+#if !defined INCLUDED_VT_MESSAGING_SEND_INFO_H
+#define INCLUDED_VT_MESSAGING_SEND_INFO_H
 
 #include "vt/config.h"
 
-#include <string>
+namespace vt { namespace messaging {
 
-namespace vt { namespace util { namespace memory {
+/**
+ * \struct SendInfo
+ *
+ * \brief Returned from a data send to be used to receive the data
+ */
+struct SendInfo {
 
-enum struct MemoryUnitEnum : int8_t {
-  Bytes      = 0,
-  Kilobytes  = 1,
-  Megabytes  = 2,
-  Gigabytes  = 3,
-  Terabytes  = 4,
-  Petabytes  = 5,
-  Exabytes   = 6,
-  Zettabytes = 7,
-  Yottabytes = 8
+  /**
+   * \internal
+   * \brief Construct a SendInfo
+   *
+   * \param[in] in_event the send event (parent event if multiple sends)
+   * \param[in] in_tag the MPI tag it was sent with
+   * \param[in] in_nchunks the number of send chunks for the entire payload
+   */
+  SendInfo(EventType in_event, TagType in_tag, int in_nchunks)
+    : event(in_event),
+      tag(in_tag),
+      nchunks(in_nchunks)
+  { }
+
+  /**
+   * \brief Get the send event (either an MPI event or a parent event containing
+   * multiple MPI events)
+   *
+   * \return the send event
+   */
+  EventType getEvent() const { return event; }
+
+  /**
+   * \brief The MPI tag that it was sent with
+   *
+   * \return the tag
+   */
+  TagType getTag() const { return tag; }
+
+  /**
+   * \brief The number of Isend chunks that make up the entire payload
+   *
+   * \return the number of chunks
+   */
+  int getNumChunks() const { return nchunks; }
+
+private:
+  EventType const event = no_event; /**< The event for the send */
+  TagType const tag = no_tag;       /**< The MPI tag for the send */
+  int const nchunks = 0;            /**< The number of send chunks to receive */
 };
 
-std::string getMemoryUnitName(MemoryUnitEnum unit);
-MemoryUnitEnum getUnitFromString(std::string const& unit);
-std::tuple<std::string, double> getBestMemoryUnit(std::size_t bytes);
+}} /* end namespace vt::messaging */
 
-}}} /* end namespace vt::util::memory */
-
-namespace std {
-
-using MemoryUnitType = vt::util::memory::MemoryUnitEnum;
-
-template <>
-struct hash<MemoryUnitType> {
-  size_t operator()(MemoryUnitType const& in) const {
-    using MemoryUnitUnderType = typename std::underlying_type<MemoryUnitType>::type;
-    auto const val = static_cast<MemoryUnitUnderType>(in);
-    return std::hash<MemoryUnitUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
-#endif /*INCLUDED_VT_UTILS_MEMORY_MEMORY_UNITS_H*/
+#endif /*INCLUDED_VT_MESSAGING_SEND_INFO_H*/

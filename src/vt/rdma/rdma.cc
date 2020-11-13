@@ -87,7 +87,8 @@ RDMAManager::RDMAManager()
 
       auto send_payload = [&](Active::SendFnType send){
         auto ret = send(data, recv_node, no_tag);
-        new_msg->mpi_tag_to_recv = std::get<1>(ret);
+        new_msg->mpi_tag_to_recv = ret.getTag();
+        new_msg->nchunks = ret.getNumChunks();
         vt_debug_print(
           rdma, node,
           "data is sending: tag={}, node={}\n",
@@ -126,7 +127,7 @@ RDMAManager::RDMAManager()
 
   if (get_ptr == nullptr) {
     theMsg()->recvDataMsg(
-      msg->mpi_tag_to_recv, msg->send_back,
+      msg->nchunks, msg->mpi_tag_to_recv, msg->send_back,
       [=](RDMA_GetType ptr, ActionType deleter){
         theRDMA()->triggerGetRecvData(
           op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
@@ -135,7 +136,8 @@ RDMAManager::RDMAManager()
     );
   } else {
     theMsg()->recvDataMsgBuffer(
-      get_ptr, msg->mpi_tag_to_recv, msg->send_back, true, [get_ptr_action]{
+      msg->nchunks, get_ptr, msg->mpi_tag_to_recv, msg->send_back, true,
+      [get_ptr_action]{
         vt_debug_print(
           rdma, node,
           "recv_data_msg_buffer finished\n"
@@ -143,7 +145,8 @@ RDMAManager::RDMAManager()
         if (get_ptr_action) {
           get_ptr_action();
         }
-      }
+      },
+      nullptr, true
     );
   }
 }
@@ -209,6 +212,7 @@ RDMAManager::RDMAManager()
 
     if (put_ptr == nullptr) {
       theMsg()->recvDataMsg(
+        msg->nchunks,
         recv_tag, recv_node, [=](RDMA_GetType ptr, ActionType deleter){
           vt_debug_print(
             rdma, node,
@@ -238,7 +242,7 @@ RDMAManager::RDMAManager()
         msg->offset != no_byte ? static_cast<char*>(put_ptr) + msg->offset : put_ptr;
       // do a direct recv into the user buffer
       theMsg()->recvDataMsgBuffer(
-        put_ptr_offset, recv_tag, recv_node, true, []{},
+        msg->nchunks, put_ptr_offset, recv_tag, recv_node, true, []{},
         [=](RDMA_GetType ptr, ActionType deleter){
           vt_debug_print(
             rdma, node,
@@ -686,7 +690,8 @@ void RDMAManager::putData(
 
           auto send_payload = [&](Active::SendFnType send){
             auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag);
-            msg->mpi_tag_to_recv = std::get<1>(ret);
+            msg->mpi_tag_to_recv = ret.getTag();
+            msg->nchunks = ret.getNumChunks();
           };
 
           if (tag != no_tag) {

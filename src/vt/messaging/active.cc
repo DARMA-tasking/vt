@@ -230,9 +230,9 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     } else {
       auto const& env_tag = envelopeGetPutTag(msg->env);
       auto const& ret = sendData(
-        RDMA_GetType{put_ptr,put_size}, dest, env_tag
+        PtrLenPairType{put_ptr,put_size}, dest, env_tag
       );
-      auto const& ret_tag = std::get<1>(ret);
+      auto const& ret_tag = ret.getTag();
       if (ret_tag != env_tag) {
         envelopeSetPutTag(msg->env, ret_tag);
       }
@@ -248,6 +248,127 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   return no_event;
 }
 
+struct MultiMsg : vt::Message {
+  MultiMsg() = default;
+  MultiMsg(SendInfo in_info, NodeType in_from, MsgSizeType in_size)
+    : info(in_info),
+      from(in_from),
+      size(in_size)
+  { }
+
+  SendInfo getInfo() const { return info; }
+  NodeType getFrom() const { return from; }
+  MsgSizeType getSize() const { return size; }
+
+private:
+  SendInfo info;
+  NodeType from = uninitialized_destination;
+  MsgSizeType size = 0;
+};
+
+/*static*/ void ActiveMessenger::chunkedMultiMsg(MultiMsg* msg) {
+  theMsg()->handleChunkedMultiMsg(msg);
+}
+
+void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
+  auto buf =
+#if vt_check_enabled(memory_pool)
+    static_cast<char*>(thePool()->alloc(msg->getSize()));
+#else
+    static_cast<char*>(std::malloc(msg->getSize()));
+#endif
+
+  auto const size = msg->getSize();
+  auto const info = msg->getInfo();
+  auto const sender = msg->getFrom();
+  auto const nchunks = info.getNumChunks();
+  auto const tag = info.getTag();
+
+  auto fn = [buf,sender,size,tag,this](PtrLenPairType,ActionType){
+    vt_debug_print(
+      active, node,
+      "handleChunkedMultiMsg: all chunks arrived tag={}, size={}, from={}\n",
+      tag, size, sender
+    );
+    InProgressIRecv irecv(buf, size, sender);
+    finishPendingActiveMsgAsyncRecv(&irecv);
+  };
+
+  recvDataDirect(nchunks, buf, tag, sender, size, 0, nullptr, fn, false);
+}
+
+EventType ActiveMessenger::sendMsgMPI(
+  NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
+  MsgSizeType const& msg_size, TagType const& send_tag
+) {
+  BaseMsgType* base_typed_msg = base.get();
+
+  char* untyped_msg = reinterpret_cast<char*>(base_typed_msg);
+
+  vt_debug_print(
+    active, node,
+    "sendMsgMPI: dest={}, msg_size={}, send_tag={}\n",
+    dest, msg_size, send_tag
+  );
+
+  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+  if (static_cast<std::size_t>(msg_size) < max_per_send) {
+    auto const event_id = theEvent()->createMPIEvent(this_node_);
+    auto& holder = theEvent()->getEventHolder(event_id);
+    auto mpi_event = holder.get_event();
+
+    mpi_event->setManagedMessage(base.to<ShortMessage>());
+
+    int small_msg_size = static_cast<int>(msg_size);
+    {
+      VT_ALLOW_MPI_CALLS;
+      #if vt_check_enabled(trace_enabled)
+        double tr_begin = 0;
+        if (theConfig()->vt_trace_mpi) {
+          tr_begin = vt::timing::Timing::getCurrentTime();
+        }
+      #endif
+      int const ret = MPI_Isend(
+        untyped_msg, small_msg_size, MPI_BYTE, dest, send_tag,
+        theContext()->getComm(), mpi_event->getRequest()
+      );
+      vtAssertMPISuccess(ret, "MPI_Isend");
+
+      #if vt_check_enabled(trace_enabled)
+        if (theConfig()->vt_trace_mpi) {
+          auto tr_end = vt::timing::Timing::getCurrentTime();
+          auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
+          trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+        }
+      #endif
+    }
+
+    return event_id;
+  } else {
+    vt_debug_print(
+      active, node,
+      "sendMsgMPI: (multi): size={}\n", msg_size
+    );
+    auto tag = allocateNewTag();
+    auto this_node = theContext()->getNode();
+
+    // Send the actual data in multiple chunks
+    PtrLenPairType tup = std::make_tuple(untyped_msg, msg_size);
+    SendInfo info = sendData(tup, dest, tag);
+
+    auto event_id = info.getEvent();
+    auto& holder = theEvent()->getEventHolder(event_id);
+    auto mpi_event = holder.get_event();
+    mpi_event->setManagedMessage(base.to<ShortMessage>());
+
+    // Send the control message to receive the multiple chunks of data
+    auto m = makeMessage<MultiMsg>(info, this_node, msg_size);
+    sendMsg<MultiMsg, chunkedMultiMsg>(dest, m);
+
+    return event_id;
+  }
+}
+
 EventType ActiveMessenger::sendMsgBytes(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
   MsgSizeType const& msg_size, TagType const& send_tag
@@ -259,18 +380,12 @@ EventType ActiveMessenger::sendMsgBytes(
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_bcast = envelopeIsBcast(msg->env);
 
-  auto const event_id = theEvent()->createMPIEvent(this_node_);
-  auto& holder = theEvent()->getEventHolder(event_id);
-  auto mpi_event = holder.get_event();
-
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       active, node,
       "sendMsgBytes: size={}, dest={}\n", msg_size, dest
     );
   }
-
-  mpi_event->setManagedMessage(base.to<ShortMessage>());
 
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
@@ -280,37 +395,15 @@ EventType ActiveMessenger::sendMsgBytes(
     dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
   );
 
-  {
-    VT_ALLOW_MPI_CALLS;
-    #if vt_check_enabled(trace_enabled)
-      double tr_begin = 0;
-      if (theConfig()->vt_trace_mpi) {
-        tr_begin = vt::timing::Timing::getCurrentTime();
-      }
-    #endif
-
-    if (is_bcast) {
-      bcastsSentCount.increment(1);
-    }
-    if (is_term) {
-      tdSentCount.increment(1);
-    }
-    amSentCounterGauge.incrementUpdate(msg_size, 1);
-
-    const int ret = MPI_Isend(
-      msg, msg_size, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-      mpi_event->getRequest()
-    );
-    vtAssertMPISuccess(ret, "MPI_Isend");
-
-    #if vt_check_enabled(trace_enabled)
-      if (theConfig()->vt_trace_mpi) {
-        auto tr_end = vt::timing::Timing::getCurrentTime();
-        auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
-        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
-      }
-    #endif
+  if (is_bcast) {
+    bcastsSentCount.increment(1);
   }
+  if (is_term) {
+    tdSentCount.increment(1);
+  }
+  amSentCounterGauge.incrementUpdate(msg_size, 1);
+
+  EventType const event_id = sendMsgMPI(dest, base, msg_size, send_tag);
 
   if (not is_term) {
     theTerm()->produce(epoch,1,dest);
@@ -396,8 +489,19 @@ EventType ActiveMessenger::doMessageSend(
   return ret_event;
 }
 
-ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
-  RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
+MPI_TagType ActiveMessenger::allocateNewTag() {
+  auto const max_tag = util::MPI_Attr::getMaxTag();
+
+  if (cur_direct_buffer_tag_ == max_tag) {
+    cur_direct_buffer_tag_ = starting_direct_buffer_tag;
+  }
+  auto const ret_tag = cur_direct_buffer_tag_++;
+
+  return ret_tag;
+}
+
+SendInfo ActiveMessenger::sendData(
+  PtrLenPairType const& ptr, NodeType const& dest, TagType const& tag
 ) {
   auto const& data_ptr = std::get<0>(ptr);
   auto const& num_bytes = std::get<1>(ptr);
@@ -406,18 +510,8 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   if (tag != no_tag) {
     send_tag = tag;
   } else {
-    auto const max_tag = util::MPI_Attr::getMaxTag();
-
-    if (cur_direct_buffer_tag_ == max_tag) {
-      cur_direct_buffer_tag_ = starting_direct_buffer_tag;
-    }
-    send_tag = cur_direct_buffer_tag_++;
+    send_tag = allocateNewTag();
   }
-
-  auto const event_id = theEvent()->createMPIEvent(this_node_);
-  auto& holder = theEvent()->getEventHolder(event_id);
-
-  auto mpi_event = holder.get_event();
 
   vt_debug_print(
     active, node,
@@ -434,31 +528,11 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     "Invalid destination: {}"
   );
 
-  {
-    VT_ALLOW_MPI_CALLS;
-    #if vt_check_enabled(trace_enabled)
-      double tr_begin = 0;
-      if (theConfig()->vt_trace_mpi) {
-        tr_begin = vt::timing::Timing::getCurrentTime();
-      }
-    #endif
+  dmSentCounterGauge.incrementUpdate(num_bytes, 1);
 
-    dmSentCounterGauge.incrementUpdate(num_bytes, 1);
-
-    const int ret = MPI_Isend(
-      data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
-      mpi_event->getRequest()
-    );
-    vtAssertMPISuccess(ret, "MPI_Isend");
-
-    #if vt_check_enabled(trace_enabled)
-      if (theConfig()->vt_trace_mpi) {
-        auto tr_end = vt::timing::Timing::getCurrentTime();
-        auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, num_bytes);
-        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
-      }
-    #endif
-  }
+  auto ret = sendDataMPI(ptr, dest, send_tag);
+  EventType event_id = std::get<0>(ret);
+  int num = std::get<1>(ret);
 
   // Assume that any raw data send/recv is paired with a message with an epoch
   // if required to inhibit early termination of that epoch
@@ -469,20 +543,87 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     l->send(dest, num_bytes, false);
   }
 
-  return SendDataRetType{event_id,send_tag};
+  return SendInfo{event_id, send_tag, num};
+}
+
+std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
+  PtrLenPairType const& payload, NodeType const& dest, TagType const& tag
+) {
+  auto ptr = static_cast<char*>(std::get<0>(payload));
+  auto remainder = std::get<1>(payload);
+  int num_sends = 0;
+  std::vector<EventType> events;
+  EventType ret_event = no_event;
+  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+  while (remainder > 0) {
+    auto const event_id = theEvent()->createMPIEvent(this_node_);
+    auto& holder = theEvent()->getEventHolder(event_id);
+    auto mpi_event = holder.get_event();
+    auto subsize = static_cast<ByteType>(
+      std::min(static_cast<std::size_t>(remainder), max_per_send)
+    );
+    {
+      #if vt_check_enabled(trace_enabled)
+        double tr_begin = 0;
+        if (theConfig()->vt_trace_mpi) {
+          tr_begin = vt::timing::Timing::getCurrentTime();
+        }
+      #endif
+
+      vt_debug_print(
+        active, node,
+        "sendDataMPI: remainder={}, node={}, tag={}, num_sends={}, subsize={},"
+        "total size={}\n",
+        remainder, dest, tag, num_sends, subsize, std::get<1>(payload)
+      );
+
+      VT_ALLOW_MPI_CALLS;
+      int const ret = MPI_Isend(
+        ptr, subsize, MPI_BYTE, dest, tag, theContext()->getComm(),
+        mpi_event->getRequest()
+      );
+      vtAssertMPISuccess(ret, "MPI_Isend");
+
+      #if vt_check_enabled(trace_enabled)
+        if (theConfig()->vt_trace_mpi) {
+          auto tr_end = vt::timing::Timing::getCurrentTime();
+          auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, subsize);
+          trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
+        }
+      #endif
+    }
+    ptr += subsize;
+    remainder -= subsize;
+    num_sends++;
+    events.push_back(event_id);
+  }
+
+  if (events.size() > 1) {
+    ret_event = theEvent()->createParentEvent(theContext()->getNode());
+    auto& holder = theEvent()->getEventHolder(ret_event);
+    for (auto&& child_event : events) {
+      holder.get_event()->addEventToList(child_event);
+    }
+  } else {
+    vtAssert(events.size() > 0, "Must contain at least one event");
+    ret_event = events.back();
+  }
+
+  return std::make_tuple(ret_event, num_sends);
 }
 
 bool ActiveMessenger::recvDataMsgPriority(
-  PriorityType priority, TagType const& tag, NodeType const& node,
-  RDMA_ContinuationDeleteType next
+  int nchunks, PriorityType priority, TagType const& tag, NodeType const& node,
+  ContinuationDeleterType next
 ) {
-  return recvDataMsg(priority, tag, node, true, next);
+  return recvDataMsg(nchunks, priority, tag, node, true, next);
 }
 
 bool ActiveMessenger::recvDataMsg(
-  TagType const& tag, NodeType const& node, RDMA_ContinuationDeleteType next
+  int nchunks, TagType const& tag, NodeType const& node,
+  ContinuationDeleterType next
 ) {
-  return recvDataMsg(default_priority, tag, node, true, next);
+  return recvDataMsg(nchunks, default_priority, tag, node, true, next);
 }
 
 bool ActiveMessenger::tryProcessDataMsgRecv() {
@@ -490,10 +631,10 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
   auto iter = pending_recvs_.begin();
 
   for (; iter != pending_recvs_.end(); ++iter) {
+    auto& elm = iter->second;
     auto const done = recvDataMsgBuffer(
-      iter->second.user_buf, iter->second.priority, iter->first,
-      iter->second.recv_node, false, iter->second.dealloc_user_buf,
-      iter->second.cont
+      elm.nchunks, elm.user_buf, elm.priority, iter->first, elm.sender, false,
+      elm.dealloc_user_buf, elm.cont, elm.is_user_buf
     );
     if (done) {
       erase = true;
@@ -510,17 +651,20 @@ bool ActiveMessenger::tryProcessDataMsgRecv() {
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  void* const user_buf, TagType const& tag,
+  int nchunks, void* const user_buf, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next, bool is_user_buf
 ) {
-  return recvDataMsgBuffer(user_buf, no_priority, tag, node, enqueue, dealloc, next);
+  return recvDataMsgBuffer(
+    nchunks, user_buf, no_priority, tag, node, enqueue, dealloc, next,
+    is_user_buf
+  );
 }
 
 bool ActiveMessenger::recvDataMsgBuffer(
-  void* const user_buf, PriorityType priority, TagType const& tag,
+  int nchunks, void* const user_buf, PriorityType priority, TagType const& tag,
   NodeType const& node, bool const& enqueue, ActionType dealloc_user_buf,
-  RDMA_ContinuationDeleteType next
+  ContinuationDeleterType next, bool is_user_buf
 ) {
   if (not enqueue) {
     CountType num_probe_bytes;
@@ -552,57 +696,10 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
       NodeType const sender = stat.MPI_SOURCE;
 
-      MPI_Request req;
-
-      {
-        VT_ALLOW_MPI_CALLS;
-
-        #if vt_check_enabled(trace_enabled)
-          double tr_begin = 0;
-          if (theConfig()->vt_trace_mpi) {
-            tr_begin = vt::timing::Timing::getCurrentTime();
-          }
-        #endif
-
-        const int recv_ret = MPI_Irecv(
-          buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
-          theContext()->getComm(), &req
-        );
-        vtAssertMPISuccess(recv_ret, "MPI_Irecv");
-
-        dmPostedCounterGauge.incrementUpdate(num_probe_bytes, 1);
-
-        #if vt_check_enabled(trace_enabled)
-          if (theConfig()->vt_trace_mpi) {
-            auto tr_end = vt::timing::Timing::getCurrentTime();
-            auto tr_note = fmt::format(
-              "Irecv(Data): from={}, bytes={}",
-              stat.MPI_SOURCE, num_probe_bytes
-            );
-            trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
-          }
-        #endif
-      }
-
-      InProgressDataIRecv recv_holder{
-        buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
-        priority
-      };
-
-      dmPollCount.increment(1);
-
-      int recv_flag = 0;
-      {
-        VT_ALLOW_MPI_CALLS;
-        MPI_Status recv_stat;
-        MPI_Test(&recv_holder.req, &recv_flag, &recv_stat);
-      }
-
-      if (recv_flag == 1) {
-        finishPendingDataMsgAsyncRecv(&recv_holder);
-      } else {
-        in_progress_data_irecv.emplace(std::move(recv_holder));
-      }
+      recvDataDirect(
+        nchunks, buf, tag, sender, num_probe_bytes, priority, dealloc_user_buf,
+        next, is_user_buf
+      );
 
       return true;
     } else {
@@ -611,18 +708,105 @@ bool ActiveMessenger::recvDataMsgBuffer(
   } else {
     vt_debug_print(
       active, node,
-      "recvDataMsgBuffer: node={}, tag={}, enqueue={}, priority={:x}\n",
-      node, tag, print_bool(enqueue), priority
+      "recvDataMsgBuffer: nchunks={}, node={}, tag={}, enqueue={}, "
+      "priority={:x} buffering, is_user_buf={}\n",
+      nchunks, node, tag, print_bool(enqueue), priority, is_user_buf
     );
 
     pending_recvs_.emplace(
       std::piecewise_construct,
       std::forward_as_tuple(tag),
       std::forward_as_tuple(
-        PendingRecvType{user_buf,next,dealloc_user_buf,node,priority}
+        PendingRecvType{
+          nchunks, user_buf, next, dealloc_user_buf, node, priority,
+          is_user_buf
+        }
       )
     );
     return false;
+  }
+}
+
+void ActiveMessenger::recvDataDirect(
+  int nchunks, TagType const tag, NodeType const from, MsgSizeType len,
+  ContinuationDeleterType next
+) {
+  char* buf =
+    #if vt_check_enabled(memory_pool)
+      static_cast<char*>(thePool()->alloc(len));
+    #else
+      static_cast<char*>(std::malloc(len));
+    #endif
+
+  recvDataDirect(
+    nchunks, buf, tag, from, len, default_priority, nullptr, next, false
+  );
+}
+
+void ActiveMessenger::recvDataDirect(
+  int nchunks, void* const buf, TagType const tag, NodeType const from,
+  MsgSizeType len, PriorityType prio, ActionType dealloc,
+  ContinuationDeleterType next, bool is_user_buf
+) {
+  vtAssert(nchunks > 0, "Must have at least one chunk");
+
+  std::vector<MPI_Request> reqs;
+  reqs.resize(nchunks);
+
+  char* cbuf = static_cast<char*>(buf);
+  MsgSizeType remainder = len;
+  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+  for (int i = 0; i < nchunks; i++) {
+    auto sublen = static_cast<int>(
+      std::min(static_cast<std::size_t>(remainder), max_per_send)
+    );
+
+    #if vt_check_enabled(trace_enabled)
+      double tr_begin = 0;
+      if (theConfig()->vt_trace_mpi) {
+        tr_begin = vt::timing::Timing::getCurrentTime();
+      }
+    #endif
+
+    {
+      VT_ALLOW_MPI_CALLS;
+      int const ret = MPI_Irecv(
+        cbuf+(i*max_per_send), sublen, MPI_BYTE, from, tag,
+        theContext()->getComm(), &reqs[i]
+      );
+      vtAssertMPISuccess(ret, "MPI_Irecv");
+    }
+
+    dmPostedCounterGauge.incrementUpdate(len, 1);
+
+    #if vt_check_enabled(trace_enabled)
+      if (theConfig()->vt_trace_mpi) {
+        auto tr_end = vt::timing::Timing::getCurrentTime();
+        auto tr_note = fmt::format(
+          "Irecv(Data): from={}, bytes={}",
+          from, sublen
+        );
+        trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_irecv);
+      }
+    #endif
+
+    remainder -= sublen;
+  }
+
+  InProgressDataIRecv recv{
+    cbuf, len, from, std::move(reqs), is_user_buf ? buf : nullptr, dealloc,
+    next, prio
+  };
+
+  int num_mpi_tests = 0;
+  bool done = recv.test(num_mpi_tests);
+
+  dmPollCount.increment(num_mpi_tests);
+
+  if (done) {
+    finishPendingDataMsgAsyncRecv(&recv);
+  } else {
+    in_progress_data_irecv.emplace(std::move(recv));
   }
 }
 
@@ -668,7 +852,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   } else {
     // If we have a continuation, schedule to run later
     auto run = [=]{
-      next(RDMA_GetType{buf,num_probe_bytes}, dealloc_buf);
+      next(PtrLenPairType{buf,num_probe_bytes}, dealloc_buf);
       theTerm()->consume(term::any_epoch_sentinel,1,sender);
       theTerm()->hangDetectRecv();
     };
@@ -677,11 +861,12 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
 }
 
 bool ActiveMessenger::recvDataMsg(
-  PriorityType priority, TagType const& tag, NodeType const& recv_node,
-  bool const& enqueue, RDMA_ContinuationDeleteType next
+  int nchunks, PriorityType priority, TagType const& tag,
+  NodeType const& sender, bool const& enqueue,
+  ContinuationDeleterType next
 ) {
   return recvDataMsgBuffer(
-    nullptr, priority, tag, recv_node, enqueue, nullptr, next
+    nchunks, nullptr, priority, tag, sender, enqueue, nullptr, next
   );
 }
 
@@ -876,16 +1061,18 @@ bool ActiveMessenger::deliverActiveMsg(
 }
 
 bool ActiveMessenger::tryProcessIncomingActiveMsg() {
-  VT_ALLOW_MPI_CALLS; // MPI_Iprove, MPI_Irecv, MPI_Test
-
   CountType num_probe_bytes;
   MPI_Status stat;
   int flag;
 
-  MPI_Iprobe(
-    MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
-    theContext()->getComm(), &flag, &stat
-  );
+  {
+    VT_ALLOW_MPI_CALLS;
+
+    MPI_Iprobe(
+      MPI_ANY_SOURCE, static_cast<MPI_TagType>(MPITag::ActiveMsgTag),
+      theContext()->getComm(), &flag, &stat
+    );
+  }
 
   if (flag == 1) {
     MPI_Get_count(&stat, MPI_BYTE, &num_probe_bytes);
@@ -908,6 +1095,7 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
         }
       #endif
 
+      VT_ALLOW_MPI_CALLS;
       MPI_Irecv(
         buf, num_probe_bytes, MPI_BYTE, sender, stat.MPI_TAG,
         theContext()->getComm(), &req
@@ -929,12 +1117,11 @@ bool ActiveMessenger::tryProcessIncomingActiveMsg() {
 
     InProgressIRecv recv_holder{buf, num_probe_bytes, sender, req};
 
-    amPollCount.increment(1);
+    int num_mpi_tests = 0;
+    auto done = recv_holder.test(num_mpi_tests);
+    amPollCount.increment(num_mpi_tests);
 
-    int recv_flag = 0;
-    MPI_Status recv_stat;
-    MPI_Test(&recv_holder.req, &recv_flag, &recv_stat);
-    if (recv_flag == 1) {
+    if (done) {
       finishPendingActiveMsgAsyncRecv(&recv_holder);
     } else {
       in_progress_active_msg_irecv.emplace(std::move(recv_holder));
@@ -1001,8 +1188,8 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
       put_finished = true;
     } else {
       /*bool const put_delivered = */recvDataMsg(
-        put_tag, sender,
-        [=](RDMA_GetType ptr, ActionType deleter){
+        1, put_tag, sender,
+        [=](PtrLenPairType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
           scheduleActiveMsg(base, sender, num_probe_bytes, true, deleter);
         }

@@ -97,8 +97,6 @@ struct IRecvHolder {
    */
   template <typename Callable>
   bool testAll(Callable c, int& num_mpi_tests) {
-    VT_ALLOW_MPI_CALLS; // MPI_Test in loop
-
 #   if vt_check_enabled(trace_enabled)
     std::size_t const holder_size_start = holder_.size();
     TimeType tr_begin = 0.0;
@@ -113,12 +111,9 @@ struct IRecvHolder {
       auto& e = holder_[i];
       vtAssert(e.valid, "Must be valid");
 
-      int flag = 0;
-      MPI_Status stat;
-      MPI_Test(&e.req, &flag, &stat);
-      num_mpi_tests++;
+      auto done = e.test(num_mpi_tests);
 
-      if (flag == 0) {
+      if (not done) {
         ++i;
         continue;
       }

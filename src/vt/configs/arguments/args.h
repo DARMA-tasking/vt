@@ -96,6 +96,7 @@ private:
   void addUserArgs(CLI::App& app);
   void addSchedulerArgs(CLI::App& app);
   void addConfigFileArgs(CLI::App& app);
+  void addRuntimeArgs(CLI::App& app);
 
   void postParseTransform();
 

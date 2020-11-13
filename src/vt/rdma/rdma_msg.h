@@ -82,12 +82,13 @@ struct SendDataMessage : ActiveMessage<EnvelopeT> {
     NodeType const& back = uninitialized_destination,
     NodeType const& in_recv_node = uninitialized_destination,
     bool const in_packed_direct = false
-  ) : ActiveMessage<EnvelopeT>(),
-    rdma_handle(in_han), send_back(back), recv_node(in_recv_node),
-    mpi_tag_to_recv(in_mpi_tag), op_id(in_op), num_bytes(in_num_bytes),
-    offset(in_offset), packed_direct(in_packed_direct)
+  ) : rdma_handle(in_han), send_back(back),
+      recv_node(in_recv_node), mpi_tag_to_recv(in_mpi_tag), op_id(in_op),
+      num_bytes(in_num_bytes), offset(in_offset),
+      packed_direct(in_packed_direct)
   { }
 
+  int nchunks = 0;
   RDMA_HandleType rdma_handle = no_rdma_handle;
   NodeType send_back = uninitialized_destination;
   NodeType recv_node = uninitialized_destination;
