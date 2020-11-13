@@ -363,8 +363,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
     MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType ep
   );
 
-  template <
-    typename SerializerT>
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_obj_id_
       | dispatch_

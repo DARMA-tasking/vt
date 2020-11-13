@@ -72,7 +72,6 @@ static void tellHandle(HandleMsg* msg) {
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
-  vt::rt->printMemoryFootprint();
 
   vt::NodeType this_node = vt::theContext()->getNode();
 
@@ -92,7 +91,6 @@ int main(int argc, char** argv) {
     vt::theMsg()->broadcastMsg<HandleMsg, tellHandle>(msg);
   }
 
-  vt::rt->printMemoryFootprint();
   vt::finalize();
 
   return 0;

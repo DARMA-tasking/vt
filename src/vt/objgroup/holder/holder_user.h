@@ -53,7 +53,6 @@ namespace vt { namespace objgroup { namespace holder {
 
 template <template <typename> class UserPtr, typename ObjT>
 struct HolderUser final : HolderObjBase<ObjT> {
-
   explicit HolderUser(UserPtr<ObjT> in_obj)
     : obj_(in_obj)
   { }

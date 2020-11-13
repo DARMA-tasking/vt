@@ -92,7 +92,6 @@ static void putDataFn(HandleMsg* msg) {
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
-  vt::rt->printMemoryFootprint();
 
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
@@ -123,7 +122,6 @@ int main(int argc, char** argv) {
     vt::theMsg()->sendMsg<HandleMsg, putDataFn>(2, msg2);
   }
 
-  vt::rt->printMemoryFootprint();
   vt::finalize();
 
   return 0;

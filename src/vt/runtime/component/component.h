@@ -94,6 +94,7 @@ struct ComponentConstructor<
  */
 template <typename T>
 struct Component : BaseComponent {
+
   Component() = default;
 
   /**
@@ -169,6 +170,7 @@ struct Component : BaseComponent {
  */
 template <typename T>
 struct PollableComponent : Component<T> {
+
   /**
    * \brief Whether the component requires the scheduler to poll
    *

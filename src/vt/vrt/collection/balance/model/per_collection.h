@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/model/composed_model.h"
-
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {

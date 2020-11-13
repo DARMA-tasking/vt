@@ -53,7 +53,6 @@ namespace vt { namespace objgroup { namespace holder {
 
 template <typename ObjT>
 struct HolderBasic final : HolderObjBase<ObjT> {
-
   explicit HolderBasic(ObjT* in_obj)
     : obj_(in_obj)
   { }
