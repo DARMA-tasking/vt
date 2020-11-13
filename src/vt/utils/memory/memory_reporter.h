@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_UTILS_MEMORY_MEMORY_REPORTER_H
 #define INCLUDED_VT_UTILS_MEMORY_MEMORY_REPORTER_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 
 namespace vt { namespace util { namespace memory {

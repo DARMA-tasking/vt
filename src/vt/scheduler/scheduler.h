@@ -54,8 +54,6 @@
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <cassert>
 #include <vector>
 #include <list>
@@ -266,12 +264,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_
       | has_executed_

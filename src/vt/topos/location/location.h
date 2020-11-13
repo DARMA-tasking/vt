@@ -59,8 +59,6 @@
 #include "vt/activefn/activefn.h"
 #include "vt/vrt/vrt_common.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <cstdint>
 #include <memory>
 #include <vector>

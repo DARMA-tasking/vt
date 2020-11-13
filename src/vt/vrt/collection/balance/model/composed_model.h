@@ -48,8 +48,6 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/model/load_model.h"
 
-#include <checkpoint/checkpoint.h>
-
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**

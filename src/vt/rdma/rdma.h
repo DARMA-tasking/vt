@@ -70,8 +70,6 @@
 
 #include "vt/collective/collective_scope.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <unordered_map>
 #include <cassert>
 
@@ -903,12 +901,7 @@ public:
   static void remoteChannel(ChannelMessage* msg);
   static void getInfoChannel(GetInfoChannel* msg);
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_rdma_handler_
       | cur_ident_

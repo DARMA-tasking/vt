@@ -50,8 +50,6 @@
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/phase/phase_hook_id.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <unordered_map>
 #include <map>
 
@@ -182,12 +180,7 @@ public:
    */
   void runHooksManual(PhaseHook type);
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_phase_
       | proxy_

@@ -53,8 +53,6 @@
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -166,12 +164,7 @@ public:
    */
   std::shared_ptr<LoadModel> getLoadModel() { return model_; }
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cached_phase_
       | cached_lb_

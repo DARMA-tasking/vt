@@ -59,8 +59,6 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/collective/collective_scope.h"
 
-#include <checkpoint/checkpoint.h>
-
 namespace vt { namespace rdma {
 
 /** \file */
@@ -231,12 +229,7 @@ private:
 public:
   static std::unique_ptr<Manager> construct();
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_handle_obj_group_
       | cur_handle_collection_

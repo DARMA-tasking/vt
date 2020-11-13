@@ -45,8 +45,6 @@
 #if !defined INCLUDED_POOL_POOL_H
 #define INCLUDED_POOL_POOL_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/pool/static_sized/memory_pool_equal.h"
@@ -164,12 +162,7 @@ struct Pool : runtime::component::Component<Pool> {
    */
   void finalize() override;
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | small_msg
       | medium_msg

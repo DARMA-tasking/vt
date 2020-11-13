@@ -58,8 +58,6 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <memory>
 #include <functional>
 #include <unordered_map>
@@ -366,11 +364,7 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   );
 
   template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+    typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_obj_id_
       | dispatch_

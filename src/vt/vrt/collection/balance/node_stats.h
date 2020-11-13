@@ -55,8 +55,6 @@
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -245,12 +243,7 @@ public:
   void initialize() override;
   void finalize() override;
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_
       | node_data_

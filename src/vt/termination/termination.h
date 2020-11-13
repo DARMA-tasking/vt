@@ -62,8 +62,6 @@
 #include "vt/termination/epoch_tags.h"
 #include "vt/runtime/component/component_pack.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
@@ -605,12 +603,7 @@ public:
   std::unordered_set<EpochType> const& getEpochReadySet() { return epoch_ready_; }
   std::unordered_set<EpochType> const& getEpochWaitSet() { return epoch_wait_status_; }
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | any_epoch_state_
       | hang_

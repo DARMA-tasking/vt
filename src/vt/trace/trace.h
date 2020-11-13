@@ -54,8 +54,6 @@
 
 #include "vt/timing/timing.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <cassert>
 #include <cstdint>
 #include <functional>
@@ -507,12 +505,7 @@ struct Trace : runtime::component::Component<Trace> {
 
   friend void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | incremental_flush_mode
       | traces_

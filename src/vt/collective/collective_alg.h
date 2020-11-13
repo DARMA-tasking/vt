@@ -45,8 +45,6 @@
 #if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
 #define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/collective/tree/tree.h"
 #include "vt/activefn/activefn.h"
@@ -146,12 +144,7 @@ public:
    */
   bool isDeallocated(bool is_user_tag, TagType scope_bits) const;
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | next_system_scope_
       | user_scope_

@@ -49,8 +49,6 @@
 #include <memory>
 #include <mpi.h>
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
 #include "vt/messaging/active.fwd.h"
@@ -1678,12 +1676,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     send_listen_.clear();
   }
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | current_handler_context_
       | current_node_context_

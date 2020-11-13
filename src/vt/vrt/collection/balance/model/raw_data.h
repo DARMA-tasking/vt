@@ -48,8 +48,6 @@
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {

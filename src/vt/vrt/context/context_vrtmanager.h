@@ -63,8 +63,6 @@
 #include "vt/activefn/activefn.h"
 #include "vt/topos/mapping/mapping_function.h"
 
-#include <checkpoint/checkpoint.h>
-
 namespace vt { namespace vrt {
 
 using namespace ::vt::serialization;
@@ -124,12 +122,7 @@ struct VirtualContextManager
     VirtualProxyType const& toProxy, MsgT *const msg
   );
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | holder_
       | remote_holder_

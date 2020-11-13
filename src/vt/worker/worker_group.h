@@ -59,8 +59,6 @@
   #include "vt/worker/worker_seq.h"
 #endif
 
-#include <checkpoint/checkpoint.h>
-
 #include <vector>
 #include <memory>
 
@@ -98,12 +96,7 @@ struct WorkerGroupAny
 
   std::string name() override { return "WorkerGroup"; }
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | finished_fn_
       | initialized_

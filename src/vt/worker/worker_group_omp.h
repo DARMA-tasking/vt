@@ -57,8 +57,6 @@
 #include "vt/utils/mutex/mutex.h"
 #include "vt/runtime/component/component_pack.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <vector>
 #include <memory>
 #include <functional>
@@ -99,12 +97,7 @@ struct WorkerGroupOMP
   );
   void enqueueAllWorkers(WorkUnitType const& work_unit);
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | finished_fn_
       | ready_

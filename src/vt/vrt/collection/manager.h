@@ -77,8 +77,6 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/vrt/collection/op_buffer.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -1756,12 +1754,7 @@ public:
     typename ColT::IndexType range, std::string const& file_base
   );
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | buffers_
       | proxy_state_

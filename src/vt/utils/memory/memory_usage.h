@@ -50,8 +50,6 @@
 #include "vt/utils/memory/memory_units.h"
 #include "vt/utils/memory/memory_reporter.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <string>
 #include <memory>
 
@@ -187,12 +185,7 @@ struct MemoryUsage : runtime::component::Component<MemoryUsage> {
    */
   std::size_t convertBytesFromString(std::string const& in);
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | reporters_
       | first_valid_reporter_;

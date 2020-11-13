@@ -49,8 +49,6 @@
 #include <unordered_map>
 #include <cassert>
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
 #include "vt/handler/handler.h"
@@ -146,12 +144,7 @@ struct Registry : runtime::component::Component<Registry> {
    */
   ActiveClosureFnType getHandlerNoTag(HandlerType const han);
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | registered_
       | tagged_registered_

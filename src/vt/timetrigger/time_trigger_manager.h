@@ -48,8 +48,6 @@
 #include "vt/timetrigger/trigger.h"
 #include "vt/runtime/component/component.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <chrono>
 #include <queue>
 #include <unordered_set>
@@ -108,12 +106,7 @@ struct TimeTriggerManager
    */
   void triggerReady(TimeType cur_time);
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | queue_
       | next_trigger_id_

@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/component/component.h"
 
@@ -81,12 +79,7 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
 
   std::string name() override { return "ArgConfig"; }
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | config_
       | parsed_;

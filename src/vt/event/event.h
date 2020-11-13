@@ -53,8 +53,6 @@
 #include "vt/event/event_holder.h"
 #include "vt/event/event_msgs.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <memory>
 #include <vector>
 #include <list>
@@ -189,12 +187,7 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
 
   std::string name() override { return "AsyncEvent"; }
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_event_
       | event_container_

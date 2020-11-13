@@ -54,8 +54,6 @@
 #include "vt/vrt/collection/proxy.h"
 #include "vt/runtime/component/component_pack.h"
 
-#include <checkpoint/checkpoint.h>
-
 #include <unordered_map>
 #include <functional>
 
@@ -171,12 +169,7 @@ public:
     LocInstType const inst, ActionLocInstType<LocType> action
   );
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | collectionLoc
       | cur_loc_inst

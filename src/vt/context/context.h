@@ -48,8 +48,6 @@
 #include <memory>
 #include <mpi.h>
 
-#include <checkpoint/checkpoint.h>
-
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/context/context_attorney_fwd.h"
@@ -145,12 +143,7 @@ struct Context : runtime::component::Component<Context> {
 
   std::string name() override { return "Context"; }
 
-  template <
-    typename SerializerT,
-    typename = std::enable_if_t<
-      std::is_same<SerializerT, checkpoint::Footprinter>::value
-    >
-  >
+  template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | thisNode_
       | numNodes_
