@@ -373,6 +373,98 @@ private:
   ObjGroupProxyType proxy_ = no_obj_group; /**< The raw proxy ID bits */
 };
 
+template <>
+struct Proxy<void> {
+  /**
+   * \brief Index the proxy to get the element proxy for a particular node
+   *
+   * \param[in] node the desired node
+   *
+   * \return an indexed proxy to that node
+   */
+  DefaultProxyElm operator[](NodeType node) const;
+
+  /**
+   * \brief Broadcast a message.
+   *
+   * \note Creates message from given args
+   *
+   * \param[in] args the arguments used to make a message
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
+  messaging::PendingSend broadcast(Args&&... args) const;
+
+  /**
+   * \brief Broadcast a message.
+   *
+   * \note Takes ownership of the supplied message.
+   *
+   * \param[in] msg the message to broadcast
+   * \param[in] tag the tag to put on the message
+   *
+   * \return the \c PendingSend for the sent message
+   */
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+  messaging::PendingSend
+  broadcastMsg(messaging::MsgPtrThief<MsgT> msg, TagType tag = no_tag) const;
+
+  /**
+   * \brief Reduce a message up the tree, possibly delayed through a pending
+   * send
+   *
+   * \note Creates message from given args
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] args the arguments used to make a message
+   *
+   * \return the pending send corresponding to the reduce
+   */
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT,
+    typename... Args
+  >
+  messaging::PendingSend reduce(NodeType root, Args&&... args) const;
+
+    template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT>* f,
+    typename... Args
+  >
+  messaging::PendingSend reduce(NodeType root, Args&&... args) const;
+
+  /**
+   * \brief Reduce a message up the tree, possibly delayed through a pending
+   * send
+   *
+   * \param[in] root the root node where the final handler provides the result
+   * \param[in] msg the message to reduce on this node
+   *
+   * \return the pending send corresponding to the reduce
+   */
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT
+  >
+  messaging::PendingSend reduceMsg(NodeType root, MsgT* const msg) const;
+
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT,
+    ActiveTypedFnType<MsgT>* f
+  >
+  messaging::PendingSend reduceMsg(NodeType root, MsgT* const msg) const;
+};
+
+using DefaultProxyType = Proxy<void>;
+
 }}} /* end namespace vt::objgroup::proxy */
 
 #endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_H*/

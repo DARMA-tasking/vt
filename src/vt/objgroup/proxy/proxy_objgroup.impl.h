@@ -223,6 +223,72 @@ void Proxy<ObjT>::destroyHandleSetRDMA(vt::rdma::HandleSet<T> set) const {
   return vt::theHandleRDMA()->deleteHandleSetCollectiveObjGroup<T>(set);
 }
 
+inline DefaultProxyElm Proxy<void>::operator[](NodeType node) const {
+  return DefaultProxyElm{node};
+}
+
+template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
+messaging::PendingSend Proxy<void>::broadcast(Args&&... args) const {
+  return broadcastMsg<MsgT, f>(makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
+template <typename MsgT, ActiveTypedFnType<MsgT>* f>
+messaging::PendingSend
+Proxy<void>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg, TagType tag) const {
+  return theMsg()->broadcastMsg<MsgT, f>(msg, tag);
+}
+
+template <typename OpT, typename FunctorT, typename MsgT, typename... Args>
+messaging::PendingSend
+Proxy<void>::reduce(NodeType root, Args&&... args) const {
+  return reduce<
+    OpT,
+    FunctorT,
+    MsgT,
+    &MsgT::template msgHandler<MsgT, OpT, FunctorT>,
+    Args...
+  >(root, std::forward<Args>(args)...);
+}
+
+template <
+  typename OpT,
+  typename FunctorT,
+  typename MsgT,
+  ActiveTypedFnType<MsgT>* f,
+  typename... Args
+>
+messaging::PendingSend
+Proxy<void>::reduce(NodeType root, Args&&... args) const {
+  auto const msg = makeMessage<MsgT>(std::forward<Args>(args)...);
+  return reduceMsg<OpT, FunctorT, MsgT, f>(root, msg.get());
+}
+
+template <
+  typename OpT,
+  typename FunctorT,
+  typename MsgT
+>
+messaging::PendingSend
+Proxy<void>::reduceMsg(NodeType root, MsgT* const msg) const {
+  return reduceMsg<
+    OpT,
+    FunctorT,
+    MsgT,
+    &MsgT::template msgHandler<MsgT, OpT, FunctorT>
+  >(root, msg);
+}
+
+template <
+  typename OpT,
+  typename FunctorT,
+  typename MsgT,
+  ActiveTypedFnType<MsgT>* f
+>
+messaging::PendingSend
+Proxy<void>::reduceMsg(NodeType root, MsgT* const msg) const {
+  return theCollective()->global()->reduce<OpT, FunctorT>(root, msg);
+}
+
 }}} /* end namespace vt::objgroup::proxy */
 
 #endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_IMPL_H*/

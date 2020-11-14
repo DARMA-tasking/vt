@@ -50,6 +50,7 @@
 #include "vt/objgroup/proxy/proxy_bits.h"
 #include "vt/objgroup/active_func/active_func.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/activefn/activefn.h"
 
 namespace vt { namespace objgroup { namespace proxy {
 
@@ -178,6 +179,25 @@ private:
   ObjGroupProxyType proxy_ = no_obj_group;              /**< The raw proxy ID bits */
   NodeType node_           = uninitialized_destination; /**< The indexed node */
 };
+
+template <>
+struct ProxyElm<void> {
+  explicit ProxyElm(NodeType in_node);
+
+  /**
+   * \brief Send a message to the node indexed by this proxy to be
+   * delivered to the local object instance
+   *
+   * \param[in] args args to pass to the message constructor
+   */
+  template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
+  void send(Args&&... args) const;
+
+private:
+  NodeType node_ = uninitialized_destination; /**< The indexed node */
+};
+
+using DefaultProxyElm = ProxyElm<void>;
 
 }}} /* end namespace vt::objgroup::proxy */
 

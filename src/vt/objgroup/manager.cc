@@ -52,6 +52,10 @@
 
 namespace vt { namespace objgroup {
 
+proxy::DefaultProxyType ObjGroupManager::getDefault() const {
+  return proxy::DefaultProxyType{};
+}
+
 ObjGroupProxyType ObjGroupManager::getProxy(ObjGroupProxyType proxy) {
   return proxy;
 }

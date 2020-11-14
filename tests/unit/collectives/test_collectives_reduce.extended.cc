@@ -107,10 +107,12 @@ TEST_F(TestReduce, test_reduce_vec_int_msg) {
   vecOfInt.push_back(3);
 
   auto const root = 0;
-  auto msg = makeMessage<ReduceVecMsg<int>>(vecOfInt);
-  theCollective()->global()->reduce<
-    PlusOp<std::vector<int>>, Verify<ReduceOP::Plus>
-  >(root, msg.get());
+  auto const default_proxy = theObjGroup()->getDefault();
+  default_proxy.reduce<
+    PlusOp<std::vector<int>>,
+    Verify<ReduceOP::Plus>,
+    ReduceVecMsg<int>
+  >(root, vecOfInt);
 }
 
 }}} // end namespace vt::tests::unit
