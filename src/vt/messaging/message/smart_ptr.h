@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/refs.h"
+#include "vt/serialization/sizer.h"
 
 #include <iosfwd>
 #include <cassert>
@@ -215,9 +216,13 @@ struct MsgSharedPtr final {
               << ")";
   }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s.countBytes(*this);
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    if (ownsMessage()) {
+      auto ptr = get();
+      auto const msg_size = vt::serialization::MsgSizer<MsgType>::get(ptr);
+      s.addBytes(msg_size);
+    }
   }
 
 private:
