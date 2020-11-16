@@ -1010,16 +1010,22 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
 template<typename T>
 void printComponentFootprint(T* component) {
   if (component != nullptr) {
+    auto bytes = checkpoint::getMemoryFootprint(
+      *component,
+      component->getDiagnosticsFootprint()
+    );
+    auto const ret = util::memory::getBestMemoryUnit(bytes);
+    auto const new_value = fmt::format("{:.{}f}", std::get<1>(ret), 1);
+    auto const unit = std::get<0>(ret);
+
     fmt::print(
-      "{}{}\tMemory footprint for {}:\t{}{}{}\n",
+      "{}{}\t{:<24}{}{:>6} {}{}\n",
       debug::vtPre(),
       debug::reset(),
       component->name(),
       debug::magenta(),
-      checkpoint::getMemoryFootprint(
-        *component,
-        component->getDiagnosticsFootprint()
-      ),
+      new_value,
+      unit,
       debug::reset()
     );
   }
