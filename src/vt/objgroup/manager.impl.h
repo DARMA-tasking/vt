@@ -58,6 +58,7 @@
 #include "vt/registry/auto/auto_registry.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
+#include "vt/runnable/invoke.h"
 
 #include <memory>
 
@@ -275,6 +276,24 @@ void ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<Ms
   );
   invoke<MsgT>(msg, han, dest_node);
 }
+
+template <typename ObjT, typename Type, Type f, typename... Args>
+decltype(auto)
+ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
+  auto const proxy_bits = proxy.getProxy();
+  auto const dest_node = proxy.getNode();
+  auto const this_node = theContext()->getNode();
+  auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
+
+  vtAssert(
+    dest_node == this_node,
+    fmt::format(
+      "Attempting to invoke handler on node:{} instead of node:{}!", this_node,
+      dest_node));
+
+  return runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
+}
+
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
 void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {

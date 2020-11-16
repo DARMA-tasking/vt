@@ -226,6 +226,16 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   void invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg);
 
   /**
+   * \internal \brief Invoke function 'f' on an element of the object group
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] proxy proxy to the object group
+   * \param[in] args function arguments
+   */
+  template <typename ObjT, typename Type, Type f, typename... Args>
+  decltype(auto) invoke(ProxyElmType<ObjT> proxy, Args&&... args);
+
+  /**
    * \internal \brief Broadcast a message to all nodes in object group
    *
    * \param[in] proxy proxy to the object group
