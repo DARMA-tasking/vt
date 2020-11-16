@@ -385,6 +385,17 @@ struct Trace : runtime::component::Component<Trace> {
   );
 
   /**
+   * \brief Log a local function invoke
+   *
+   * \param[in] ep the registered function's event ID
+   * \param[in] time the time of the event
+   *
+   * \return the trace event ID
+   */
+  TraceEventIDType
+  localInvoke(TraceEntryIDType const ep, double const time = getCurrentTime());
+
+  /**
    * \brief Log a message send
    *
    * \param[in] ep the handler ID
