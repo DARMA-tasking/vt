@@ -79,6 +79,7 @@
 #include "vt/serialization/sizer.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
+#include "vt/runnable/invoke.h"
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
 #include "vt/scheduler/scheduler.h"
@@ -776,6 +777,119 @@ template <typename ColT, typename MsgT>
   }
 }
 
+template <typename ColT, typename Type, Type f, typename... Args>
+runnable::Copyable<Type> CollectionManager::invoke(
+  VirtualElmProxyType<ColT> const& proxy, Args... args
+) {
+  using IndexT = typename ColT::IndexType;
+
+  auto idx = proxy.getElementProxy().getIndex();
+  auto elm_holder =
+    theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy());
+
+  vtAssert(elm_holder != nullptr, "Must have elm holder");
+  vtAssert(
+    elm_holder->exists(idx),
+    fmt::format(
+      "Element with idx:{} doesn't exist on node:{}\n", idx,
+      theContext()->getNode()));
+
+  auto& inner_holder = elm_holder->lookup(idx);
+  auto const col_ptr = inner_holder.getCollection();
+  void* raw_ptr = static_cast<void*>(col_ptr);
+  auto ptr = reinterpret_cast<ColT*>(raw_ptr);
+
+  auto const col_proxy = col_ptr->getProxy();
+  InsertContextHolder<IndexT>::set(&idx, col_proxy);
+
+#if vt_check_enabled(lblite)
+  col_ptr->getStats().startTime();
+#endif
+
+  const auto& result =
+    runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
+
+#if vt_check_enabled(lblite)
+  col_ptr->getStats().stopTime();
+#endif
+
+  return result;
+}
+
+template <typename ColT, typename Type, Type f, typename... Args>
+runnable::NotCopyable<Type> CollectionManager::invoke(
+  VirtualElmProxyType<ColT> const& proxy, Args... args
+) {
+  using IndexT = typename ColT::IndexType;
+
+  auto idx = proxy.getElementProxy().getIndex();
+  auto elm_holder =
+    theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy());
+
+  vtAssert(elm_holder != nullptr, "Must have elm holder");
+  vtAssert(
+    elm_holder->exists(idx),
+    fmt::format(
+      "Element with idx:{} doesn't exist on node:{}\n", idx,
+      theContext()->getNode()));
+
+  auto& inner_holder = elm_holder->lookup(idx);
+  auto const col_ptr = inner_holder.getCollection();
+  void* raw_ptr = static_cast<void*>(col_ptr);
+  auto ptr = reinterpret_cast<ColT*>(raw_ptr);
+
+  auto const col_proxy = col_ptr->getProxy();
+  InsertContextHolder<IndexT>::set(&idx, col_proxy);
+
+#if vt_check_enabled(lblite)
+  col_ptr->getStats().startTime();
+#endif
+
+  auto&& result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
+
+#if vt_check_enabled(lblite)
+  col_ptr->getStats().stopTime();
+#endif
+
+  return std::move(result);
+}
+
+template <typename ColT, typename Type, Type f, typename... Args>
+runnable::IsVoidReturn<Type> CollectionManager::invoke(
+  VirtualElmProxyType<ColT> const& proxy, Args... args
+) {
+  using IndexT = typename ColT::IndexType;
+
+  auto idx = proxy.getElementProxy().getIndex();
+  auto elm_holder =
+    theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy());
+
+  vtAssert(elm_holder != nullptr, "Must have elm holder");
+  vtAssert(
+    elm_holder->exists(idx),
+    fmt::format(
+      "Element with idx:{} doesn't exist on node:{}\n", idx,
+      theContext()->getNode()));
+
+  auto& inner_holder = elm_holder->lookup(idx);
+  auto const col_ptr = inner_holder.getCollection();
+  void* raw_ptr = static_cast<void*>(col_ptr);
+  auto ptr = reinterpret_cast<ColT*>(raw_ptr);
+
+  auto const col_proxy = col_ptr->getProxy();
+  InsertContextHolder<IndexT>::set(&idx, col_proxy);
+
+#if vt_check_enabled(lblite)
+  col_ptr->getStats().startTime();
+#endif
+
+  runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
+
+#if vt_check_enabled(lblite)
+  col_ptr->getStats().stopTime();
+#endif
+}
+
 template <
   typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
 >
@@ -787,7 +901,6 @@ void CollectionManager::invokeMsg(
   using ColT = typename MsgT::CollectionType;
 
   auto& msgPtr = msg.msg_;
-  msgPtr->setMember(false);
   msgPtr->setVrtHandler(
     auto_registry::makeAutoHandlerCollection<ColT, MsgT, f>()
   );
@@ -807,7 +920,6 @@ void CollectionManager::invokeMsg(
   using ColT = typename MsgT::CollectionType;
 
   auto& msgPtr = msg.msg_;
-  msgPtr->setMember(true);
   msgPtr->setVrtHandler(
     auto_registry::makeAutoHandlerCollectionMem<ColT, MsgT, f>()
   );
@@ -870,21 +982,23 @@ void CollectionManager::invokeMsgImpl(
 
   theMsg()->pushEpoch(cur_epoch);
 
+  auto const han = msgPtr->getVrtHandler();
+
   trace::TraceEventIDType trace_event = trace::no_trace_event;
 #if vt_check_enabled(trace_enabled)
-  auto reg_type = msgPtr->getMember() ?
+
+  auto reg_type = HandlerManager::isHandlerMember(han) ?
     auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
     auto_registry::RegistryTypeEnum::RegVrtCollection;
   auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
 
   trace_event = theMsg()->makeTraceCreationSend(
-    msgPtr, msgPtr->getVrtHandler(), reg_type, msg_size, false
+    msgPtr, han, reg_type, msg_size, false
   );
 #endif
 
   collectionAutoMsgDeliver<ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
-    msgPtr.get(), col_ptr, msgPtr->getVrtHandler(), msgPtr->getMember(), from,
-    trace_event
+    msgPtr.get(), col_ptr, han, from, trace_event
   );
 
   theMsg()->popEpoch(cur_epoch);

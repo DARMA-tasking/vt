@@ -76,6 +76,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/vrt/collection/op_buffer.h"
+#include "vt/runnable/invoke.h"
 
 #include <memory>
 #include <vector>
@@ -790,6 +791,39 @@ public:
    */
   template <typename ColT, typename MsgT>
   static void recordStats(ColT* col_ptr, MsgT* msg);
+
+  /**
+   * \brief Invoke function 'f' (with copyable return type) inline without going
+   * through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] args function params
+   */
+  template <typename ColT, typename Type, Type f, typename... Args>
+  runnable::Copyable<Type>
+  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
+
+  /**
+   * \brief Invoke function 'f' (with non-copyable return type) inline without
+   * going through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] args function params
+   */
+  template <typename ColT, typename Type, Type f, typename... Args>
+  runnable::NotCopyable<Type>
+  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
+
+  /**
+   * \brief Invoke function 'f' (with void return type) inline without going
+   * through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] args function params
+   */
+  template <typename ColT, typename Type, Type f, typename... Args>
+  runnable::IsVoidReturn<Type>
+  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
 
   /**
    * \brief Invoke message action function handler without going through scheduler

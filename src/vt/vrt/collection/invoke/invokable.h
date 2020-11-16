@@ -68,6 +68,9 @@ struct Invokable : BaseProxyT {
     typename... Args
   >
   void invoke(Args&&... args) const;
+
+  template <typename Type, Type f, typename... Args>
+  decltype(auto) invoke(Args&&... args) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

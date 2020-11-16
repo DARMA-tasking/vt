@@ -86,6 +86,18 @@ void Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const
   theCollection()->invokeMsg<MsgT, f>(proxy, msg);
 }
 
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename Type, Type f, typename... Args>
+decltype(auto)
+Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const {
+  auto const& proxy = VrtElmProxy<ColT, IndexT>(
+    this->getCollectionProxy(), this->getElementProxy());
+
+  return theCollection()->invoke<ColT, Type, f, Args...>(
+    proxy, std::forward<Args>(args)...
+  );
+}
+
 }}} /* end namespace vt::vrt::collection */
 
 #endif /*INCLUDED_VRT_COLLECTION_INVOKE_INVOKABLE_IMPL_H*/
