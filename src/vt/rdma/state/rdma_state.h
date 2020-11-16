@@ -158,9 +158,10 @@ struct State {
       | get_tag_holder
       | put_tag_holder
       | pending_tag_gets
-      | pending_tag_puts
-      | user_state_get_msg_
-      | user_state_put_msg_;
+      | pending_tag_puts;
+
+      s.countBytes(user_state_get_msg_);
+      s.countBytes(user_state_put_msg_);
 
       s.countBytes(rdma_get_fn);
       s.countBytes(rdma_put_fn);

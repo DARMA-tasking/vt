@@ -80,6 +80,10 @@ TEST_F(TestMemoryFootprinting, test_live_components) {
   vt::rt->printMemoryFootprint();
 }
 
+TEST_F(TestMemoryFootprinting, test_live_components_at_shutdown) {
+  theConfig()->vt_print_memory_footprint = true;
+}
+
 template<typename T>
 void printMemoryFootprint(T* component) {
   if (component != nullptr) {
@@ -200,6 +204,10 @@ TEST_F(TestMemoryFootprinting, test_context) {
 
 TEST_F(TestMemoryFootprinting, test_phase) {
   printMemoryFootprint(thePhase());
+}
+
+TEST_F(TestMemoryFootprinting, test_stats_reader) {
+  printMemoryFootprint(theStatsReader());
 }
 
 #if vt_check_enabled(trace_enabled)

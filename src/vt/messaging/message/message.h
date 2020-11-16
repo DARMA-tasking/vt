@@ -64,10 +64,7 @@ namespace vt { namespace messaging {
  * \brief The very lowest base class for a message. Used by the runtime to cast
  * on delivery to handlers without type knowledge.
  */
-struct BaseMsg {
-  template <typename Serializer>
-  void serialize(Serializer& s) {}
-};
+struct BaseMsg { };
 
 /**
  * \struct ActiveMsg message.h vt/messaging/message/message.h
