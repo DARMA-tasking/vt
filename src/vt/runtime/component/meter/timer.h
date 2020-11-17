@@ -109,6 +109,11 @@ public:
     }
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | start_time_;
+  }
+
 private:
   T start_time_ = 0;
 };

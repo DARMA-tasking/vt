@@ -99,6 +99,11 @@ public:
 #   endif
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | impl_;
+  }
+
 private:
   detail::DiagnosticValue<T>* impl_ = nullptr; /**< The actual underlying value */
 };

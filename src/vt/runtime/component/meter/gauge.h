@@ -88,6 +88,9 @@ public:
     this->updateStats(val);
 #   endif
   }
+
+  template <typename SerializerT>
+  void serialize(SerializerT&) { }
 };
 
 }}}} /* end namespace vt::runtime::component::meter */

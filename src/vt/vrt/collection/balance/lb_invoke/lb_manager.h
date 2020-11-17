@@ -171,7 +171,8 @@ public:
       | destroy_lb_
       | proxy_
       | base_model_
-      | model_;
+      | model_
+      | lb_instances_;
   }
 
 protected:

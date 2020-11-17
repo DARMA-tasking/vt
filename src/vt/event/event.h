@@ -191,7 +191,10 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
   void serialize(SerializerT& s) {
     s | cur_event_
       | event_container_
-      | polling_event_container_;
+      | polling_event_container_
+      | eventPollCount
+      | eventSizeGauge
+      | mpiEventWaitTime;
 
     s.countBytes(lookup_container_);
 

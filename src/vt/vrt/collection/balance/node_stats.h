@@ -255,7 +255,8 @@ public:
       | node_comm_
       | next_elm_
       | stats_file_
-      | created_dir_;
+      | created_dir_
+      | node_subphase_comm_;
   }
 
 private:

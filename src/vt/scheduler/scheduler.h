@@ -279,7 +279,14 @@ struct Scheduler : runtime::component::Component<Scheduler> {
       | processed_after_last_progress_
       | last_threshold_memory_usage_
       | threshold_memory_usage_
-      | last_memory_usage_poll_;
+      | last_memory_usage_poll_
+      | progressCount
+      | workUnitCount
+      | queueSizeGauge
+      | vtLiveTime
+      | schedLoopTime
+      | idleTime
+      | idleTimeMinusTerm;
   }
 
 private:

@@ -117,6 +117,10 @@ struct EventRecord {
       | event_union_
       | event_id_
       | type_;
+
+  # if vt_check_enabled(diagnostics)
+    s | creation_time_stamp_;
+  # endif
   }
 
 private:
