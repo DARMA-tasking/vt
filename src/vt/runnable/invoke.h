@@ -56,35 +56,35 @@ template <typename FunctionType, FunctionType f>
 struct CallableWrapper;
 
 template <typename FunctionType, FunctionType f>
-constexpr decltype(auto) CreatetEventTypeCStyleFunc() {
+static decltype(auto) CreatetEventTypeCStyleFunc() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
 
-  auto ns = TE::getNamespace(TE::getValueName<FunctionType, f>());
+  auto ns = TE::getNamespace(TE::getValueName<std::decay_t<FunctionType>, f>());
   if (ns.empty())
     ns = "(none)";
   return DU::removeSpaces(ns);
 }
 
 template <typename Class>
-constexpr decltype(auto) CreatetEventTypeMemberFunc() {
+static decltype(auto) CreatetEventTypeMemberFunc() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
 
-  auto typeName = TE::getTypeName<Class>();
+  auto typeName = TE::getTypeName<std::decay_t<Class>>();
   if (typeName.empty())
     typeName = "(none)";
   return DU::removeSpaces(typeName);
 }
 
 template <typename FunctionType, FunctionType f, typename... Args>
-constexpr decltype(auto) CreateEventName() {
+static decltype(auto) CreateEventName() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
 
   std::vector<std::string> arg_types = {TE::getTypeName<Args>()...};
   auto argsV = DU::join(",", arg_types);
-  auto valueName = TE::getValueName<FunctionType, f>();
+  auto valueName = TE::lastNamedPfType(TE::prettyFunctionForValue<FunctionType,f>(), "T");
   auto barename = TE::getBarename(valueName);
   return DU::removeSpaces(barename + "(" + argsV + ")");
 }
@@ -97,7 +97,7 @@ struct CallableWrapper<Ret(*)(Args...), f> {
   static decltype(auto) GetTraceID() {
     return trace::TraceRegistry::registerEventHashed(
       CreatetEventTypeCStyleFunc<Type, f>(),
-      CreateEventName<Type, f>());
+      CreateEventName<Type, f, Args...>());
   }
 };
 
@@ -110,7 +110,7 @@ struct CallableWrapper<Ret (Class::*)(Args...), f> {
 
   static decltype(auto) GetTraceID() {
     return trace::TraceRegistry::registerEventHashed(
-      CreatetEventTypeMemberFunc<Class>(), CreateEventName<Type, f>()
+      CreatetEventTypeMemberFunc<Class>(), CreateEventName<Type, f, Args...>()
     );
   }
 };
@@ -140,14 +140,16 @@ using NotCopyable = std::enable_if_t<
   Ret
 >;
 
+#if vt_check_enabled(trace_enabled)
 template <typename Callable, Callable f, typename... Args>
-constexpr decltype(auto) BeginProcessingInvokeEvent() {
+static decltype(auto) BeginProcessingInvokeEvent() {
   const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
   const auto trace_event = theTrace()->localInvoke(trace_id);
   const auto from_node = theContext()->getNode();
 
   return theTrace()->beginProcessing(trace_id, 0, trace_event, from_node);
 }
+#endif
 
 template <
   typename Fn, typename Type, typename T1,
@@ -173,7 +175,7 @@ decltype(auto) invokeImpl(RetT (*f)(Args...), Args&&... args) {
 }
 
 template <typename Callable, Callable f, typename... Args>
-constexpr inline Copyable<Callable> invoke(Args&&... args) {
+Copyable<Callable> invoke(Args&&... args) {
 #if vt_check_enabled(trace_enabled)
   const auto processing_tag =
     BeginProcessingInvokeEvent<Callable, f>();
@@ -189,7 +191,7 @@ constexpr inline Copyable<Callable> invoke(Args&&... args) {
 }
 
 template <typename Callable, Callable f, typename... Args>
-constexpr inline NotCopyable<Callable> invoke(Args&&... args) {
+NotCopyable<Callable> invoke(Args&&... args) {
 #if vt_check_enabled(trace_enabled)
   const auto processing_tag =
     BeginProcessingInvokeEvent<Callable, f>();
@@ -205,7 +207,7 @@ constexpr inline NotCopyable<Callable> invoke(Args&&... args) {
 }
 
 template <typename Callable, Callable f, typename... Args>
-constexpr inline IsVoidReturn<Callable> invoke(Args&&... args) {
+IsVoidReturn<Callable> invoke(Args&&... args) {
 #if vt_check_enabled(trace_enabled)
   const auto processing_tag =
     BeginProcessingInvokeEvent<Callable, f>();
