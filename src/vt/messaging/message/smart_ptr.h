@@ -216,7 +216,12 @@ struct MsgSharedPtr final {
               << ")";
   }
 
-  template <typename SerializerT>
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
   void serialize(SerializerT& s) {
     if (ownsMessage()) {
       auto ptr = get();
