@@ -816,7 +816,8 @@ WARN_LOGFILE           =
 
 INPUT                  = "@DOXYGEN_INPUT_DIR@" \
                          "@DOXYGEN_DOCS_DIR@" \
-                         "@DOXYGEN_CHECKPOINT_DIR@"
+                         "@DOXYGEN_CHECKPOINT_SHARED_DOCS_DIR@" \
+                         "@DOXYGEN_CHECKPOINT_SRC_DIR@"
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
