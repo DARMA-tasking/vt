@@ -65,7 +65,7 @@ void ElementStats::serialize(Serializer& s) {
   s | cur_time_;
   s | cur_phase_;
   s | phase_timings_;
-  s | comm_;
+  s | phase_comm_;
   s | cur_subphase_;
   s | subphase_timings_;
 }
@@ -95,6 +95,9 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   theNodeStats()->addNodeStats(
     col, cur_phase, total_load, subphase_loads, comm, subphase_comm
   );
+
+  auto model = theLBManager()->getLoadModel();
+  stats.releaseStatsFromUnneededPhases(cur_phase, model->getNumPastPhasesNeeded());
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

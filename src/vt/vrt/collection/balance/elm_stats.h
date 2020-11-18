@@ -82,7 +82,6 @@ struct ElementStats {
     NodeType to, ElementIDType from_perm, ElementIDType from_temp,
     double bytes, bool bcast
   );
-  void setModelWeight(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
@@ -92,6 +91,12 @@ struct ElementStats {
   std::vector<CommMapType> const& getSubphaseComm(PhaseType phase);
   void setSubPhase(SubphaseType subphase);
   SubphaseType getSubPhase() const;
+
+  // these are just for unit testing
+  std::size_t getLoadPhaseCount() const;
+  std::size_t getCommPhaseCount() const;
+  std::size_t getSubphaseLoadPhaseCount() const;
+  std::size_t getSubphaseCommPhaseCount() const;
 
   static const constexpr SubphaseType no_subphase = std::numeric_limits<SubphaseType>::max();
   static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
@@ -107,15 +112,21 @@ public:
   friend struct collection::Migratable;
 
 protected:
+  /**
+   * \internal \brief Release stats data from phases prior to lookback
+   */
+  void releaseStatsFromUnneededPhases(PhaseType phase, unsigned int look_back);
+
+protected:
   bool cur_time_started_ = false;
   TimeType cur_time_ = 0.0;
   PhaseType cur_phase_ = fst_lb_phase;
-  std::vector<TimeType> phase_timings_ = {};
-  std::vector<CommMapType> comm_ = {};
+  std::unordered_map<PhaseType, TimeType> phase_timings_ = {};
+  std::unordered_map<PhaseType, CommMapType> phase_comm_ = {};
 
   SubphaseType cur_subphase_ = 0;
-  std::vector<std::vector<TimeType>> subphase_timings_ = {};
-  std::vector<std::vector<CommMapType>> subphase_comm_ = {};
+  std::unordered_map<PhaseType, std::vector<TimeType>> subphase_timings_ = {};
+  std::unordered_map<PhaseType, std::vector<CommMapType>> subphase_comm_ = {};
 
   static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
 };
