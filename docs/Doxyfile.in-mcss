@@ -7,7 +7,7 @@ EXTRACT_ALL             = YES
 
 M_LINKS_NAVBAR1 = \
   "introduction context active-messenger collection collective group location objgroup pipe pool rdmahandle registry scheduler term trace trace-only" \
-  "learn vt-build tutorial examples" \
+  "learn vt-build tutorial examples ckpt_learn_serialize" \
   "pages" \
   "namespaces namespacevt namespacevt_1_1collective namespacevt_1_1debug namespacevt_1_1group namespacevt_1_1location namespacevt_1_1messaging namespacevt_1_1objgroup namespacevt_1_1pipe namespacevt_1_1rdma namespacevt_1_1runtime namespacevt_1_1term namespacevt_1_1vrt"
 
