@@ -101,6 +101,14 @@ struct DiagnosticStatsPack : DiagnosticMeter {
     }
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | sum_
+      | avg_
+      | max_
+      | min_;
+  }
+
 protected:
   detail::DiagnosticValue<T>* sum_ = nullptr; /**< Sum of all update values */
   detail::DiagnosticValue<T>* avg_ = nullptr; /**< Avg of all update values */

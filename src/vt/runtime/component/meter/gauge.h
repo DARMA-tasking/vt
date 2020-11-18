@@ -90,7 +90,9 @@ public:
   }
 
   template <typename SerializerT>
-  void serialize(SerializerT&) { }
+  void serialize(SerializerT& s) {
+    DiagnosticStatsPack<T>::serialize(s);
+  }
 };
 
 }}}} /* end namespace vt::runtime::component::meter */
