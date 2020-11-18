@@ -103,11 +103,10 @@ struct Channel {
       | num_bytes_
       | ptr_
       | op_type_
-      | channel_group_tag_;
-
-    s.countBytes(window_);
-    s.countBytes(channel_group_);
-    s.countBytes(channel_comm_);
+      | channel_group_tag_
+      | window_
+      | channel_group_
+      | channel_comm_;
   }
 
 private:

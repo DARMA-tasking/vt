@@ -123,10 +123,9 @@ public:
       | ready_
       | mpi2_
       | uniform_size_
-      | handle_;
-
-    s.countBytes(data_window_);
-    s.countBytes(control_window_);
+      | handle_
+      | data_window_
+      | control_window_;
   }
 
 private:

@@ -382,9 +382,8 @@ public:
       | cur_collective_id_
       | continuation_actions_
       | cleanup_actions_
-      | collective_scope_;
-
-    s.countBytes(default_comm_);
+      | collective_scope_
+      | default_comm_;
   }
 
 private:

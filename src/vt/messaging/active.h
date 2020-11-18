@@ -232,9 +232,8 @@ struct InProgressDataIRecv : InProgressBase {
       | dealloc_user_buf
       | next
       | priority
-      | cur;
-
-    s.countBytes(reqs);
+      | cur
+      | reqs;
   }
 
   void* user_buf = nullptr;
