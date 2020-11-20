@@ -56,7 +56,7 @@ template <typename FunctionType, FunctionType f>
 struct CallableWrapper;
 
 template <typename FunctionType, FunctionType f>
-static decltype(auto) CreatetEventTypeCStyleFunc() {
+static std::string CreatetEventTypeCStyleFunc() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
 
@@ -67,7 +67,7 @@ static decltype(auto) CreatetEventTypeCStyleFunc() {
 }
 
 template <typename Class>
-static decltype(auto) CreatetEventTypeMemberFunc() {
+static std::string CreatetEventTypeMemberFunc() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
 
@@ -78,7 +78,7 @@ static decltype(auto) CreatetEventTypeMemberFunc() {
 }
 
 template <typename FunctionType, FunctionType f, typename... Args>
-static decltype(auto) CreateEventName() {
+static std::string CreateEventName() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
 
@@ -94,7 +94,7 @@ struct CallableWrapper<Ret(*)(Args...), f> {
   using ReturnType = Ret;
   using Type = Ret(*)(Args...);
 
-  static decltype(auto) GetTraceID() {
+  static trace::TraceEntryIDType GetTraceID() {
     return trace::TraceRegistry::registerEventHashed(
       CreatetEventTypeCStyleFunc<Type, f>(),
       CreateEventName<Type, f, Args...>());
@@ -108,7 +108,7 @@ struct CallableWrapper<Ret (Class::*)(Args...), f> {
   using ReturnType = Ret;
   using Type = Ret (Class::*)(Args...);
 
-  static decltype(auto) GetTraceID() {
+  static trace::TraceEntryIDType GetTraceID() {
     return trace::TraceRegistry::registerEventHashed(
       CreatetEventTypeMemberFunc<Class>(), CreateEventName<Type, f, Args...>()
     );
@@ -142,7 +142,7 @@ using NotCopyable = std::enable_if_t<
 
 #if vt_check_enabled(trace_enabled)
 template <typename Callable, Callable f, typename... Args>
-static decltype(auto) BeginProcessingInvokeEvent() {
+static trace::TraceProcessingTag BeginProcessingInvokeEvent() {
   const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
   const auto trace_event = theTrace()->localInvoke(trace_id);
   const auto from_node = theContext()->getNode();
@@ -170,7 +170,7 @@ decltype(auto) invokeImpl(Type Fn::*f, T1&& obj, Args&&... args) {
 }
 
 template <typename RetT, typename... Args>
-decltype(auto) invokeImpl(RetT (*f)(Args...), Args&&... args) {
+RetT invokeImpl(RetT (*f)(Args...), Args&&... args) {
   return (*f)(std::forward<Args>(args)...);
 }
 
