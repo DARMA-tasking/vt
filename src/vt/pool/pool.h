@@ -71,7 +71,7 @@ struct Pool : runtime::component::Component<Pool> {
   using HeaderType = Header;
   using HeaderManagerType = HeaderManager;
   template <int64_t num_bytes_t>
-  using MemoryPoolType = MemoryPoolEqual<num_bytes_t>;
+  using MemoryPoolType = FixedSizePool<num_bytes_t>;
   template <int64_t num_bytes_t>
   using MemoryPoolPtrType = std::unique_ptr<MemoryPoolType<num_bytes_t>>;
 
