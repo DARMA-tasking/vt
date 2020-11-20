@@ -45,6 +45,8 @@
 #include "test_parallel_harness.h"
 #include "vt/transport.h"
 
+#include <numeric>
+
 #if !defined INCLUDED_TEST_OBJGROUP_COMMON_H
 #define INCLUDED_TEST_OBJGROUP_COMMON_H
 
@@ -79,6 +81,12 @@ struct MyObjA {
       msg->from_, id_, next_id
     );
     recv_++;
+  }
+
+  int accumulateVec(const std::vector<int32_t>& vec) {
+    recv_++;
+
+    return std::accumulate(std::begin(vec), std::end(vec), 0);
   }
 
   int id_ = -1;

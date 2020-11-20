@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               test_invoke.cc
+//                                test_invoke.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -43,74 +43,60 @@
 */
 
 #include "test_parallel_harness.h"
-#include "test_collection_common.h"
+#include "vt/runnable/invoke.h"
+#include <vt/transport.h>
 
-#include "vt/transport.h"
-
-#include <gtest/gtest.h>
+#include <vector>
 #include <numeric>
+#include <gtest/gtest.h>
 
-namespace vt { namespace tests { namespace unit { namespace invoke {
+namespace vt { namespace tests { namespace unit {
 
-static bool handler_invoked = false;
-
-template <typename TestCol>
-struct TestMsg : CollectionMessage<TestCol> {
-  using IdxType = typename TestCol::IndexType;
-
-  explicit TestMsg(IdxType index_value) {
-    index_value_ = index_value;
+struct TestInvoke : TestParallelHarness {
+  virtual void addAdditionalArgs() override {
+    static char traceon[]{"--vt_trace=1"};
+    addArgs(traceon);
   }
-
-  IdxType index_value_ = IdxType{-1};
 };
 
-struct TestCol : public Collection<TestCol, Index1D> {
-  void memberHandler(TestMsg<TestCol>* msg) {
-    handler_invoked = true;
-    EXPECT_EQ(getIndex(), msg->index_value_);
-  }
+static int test_value = -1;
 
-  int accumulateVec(IndexType idx, const std::vector<int32_t>& vec) {
-    handler_invoked = true;
-    EXPECT_EQ(getIndex(), idx);
+struct A {
+  virtual ~A() = default;
 
+  virtual int memberFunc(const std::vector<int>& vec) = 0;
+};
+
+struct B : A {
+  ~B() override = default;
+
+  int memberFunc(const std::vector<int>& vec) override {
+    test_value = 30;
     return std::accumulate(std::begin(vec), std::end(vec), 0);
   }
 };
 
-struct TestCollectionInvoke : TestParallelHarness {};
+void voidWithArg(int in_val) { test_value = in_val; }
 
-TEST_F(TestCollectionInvoke, test_collection_invoke_1) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-  auto const num_elems = Index1D{4};
-
-  auto proxy = theCollection()->constructCollective<TestCol>(num_elems);
-
-  auto const dest_elem = Index1D{this_node + num_elems.x() / num_nodes - 1};
-
-  // Message handler
-  {
-    proxy[dest_elem].invoke<TestMsg<TestCol>, &TestCol::memberHandler>(
-      dest_elem);
-
-    EXPECT_EQ(handler_invoked, true);
-
-    handler_invoked = false;
-  }
-
-  // Non-message function
-  {
-    auto const accumulate_result =
-      proxy[dest_elem]
-        .invoke<decltype(&TestCol::accumulateVec), &TestCol::accumulateVec>(
-          dest_elem, std::vector<int32_t>{2, 4, 5}
-        );
-
-    EXPECT_EQ(accumulate_result, 11);
-    EXPECT_EQ(handler_invoked, true);
-  }
+std::unique_ptr<A> nonCopyableFun() {
+  test_value = 20;
+  return std::make_unique<B>();
 }
 
-}}}} // end namespace vt::tests::unit::invoke
+TEST_F(TestInvoke, test_invoke_call) {
+  vt::runnable::invoke<decltype(&voidWithArg), &voidWithArg>(10);
+  EXPECT_EQ(test_value, 10);
+
+  auto b = vt::runnable::invoke<decltype(&nonCopyableFun), &nonCopyableFun>();
+  EXPECT_EQ(test_value, 20);
+
+  auto accumulate_result =
+    vt::runnable::invoke<decltype(&A::memberFunc), &A::memberFunc>(
+      b.get(), std::vector<int32_t>{10, 20, 30}
+    );
+  EXPECT_EQ(accumulate_result, 60);
+  EXPECT_EQ(test_value, 30);
+}
+
+
+}}} // end namespace vt::tests::unit
