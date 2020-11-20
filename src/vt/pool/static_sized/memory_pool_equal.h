@@ -66,7 +66,7 @@ static constexpr size_t const memory_size_medium =
   sizeof(EpochTagEnvelope) + medium_msg_size_buf;
 
 template <int64_t num_bytes_t>
-struct MemoryPoolEqual {
+struct FixedSizePool {
   using ContainerType = std::vector<void*>;
   using SlotType = int64_t;
   using HeaderType = Header;
@@ -75,9 +75,9 @@ struct MemoryPoolEqual {
   static constexpr SlotType const fst_pool_slot = 0;
   static constexpr SlotType const default_pool_size = 1024;
 
-  MemoryPoolEqual(SlotType const in_pool_size = default_pool_size);
+  FixedSizePool(SlotType const in_pool_size = default_pool_size);
 
-  virtual ~MemoryPoolEqual();
+  virtual ~FixedSizePool();
 
   void* alloc(size_t const& sz, size_t const& oversize);
   void dealloc(void* const t);
