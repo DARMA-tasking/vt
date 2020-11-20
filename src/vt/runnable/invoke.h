@@ -53,9 +53,6 @@
 namespace vt { namespace runnable {
 
 template <typename FunctionType, FunctionType f>
-struct CallableWrapper;
-
-template <typename FunctionType, FunctionType f>
 static std::string CreatetEventTypeCStyleFunc() {
   using TE = vt::util::demangle::TemplateExtract;
   using DU = vt::util::demangle::DemanglerUtils;
@@ -63,6 +60,7 @@ static std::string CreatetEventTypeCStyleFunc() {
   auto ns = TE::getNamespace(TE::getValueName<std::decay_t<FunctionType>, f>());
   if (ns.empty())
     ns = "(none)";
+
   return DU::removeSpaces(ns);
 }
 
@@ -74,6 +72,7 @@ static std::string CreatetEventTypeMemberFunc() {
   auto typeName = TE::getTypeName<std::decay_t<Class>>();
   if (typeName.empty())
     typeName = "(none)";
+
   return DU::removeSpaces(typeName);
 }
 
@@ -84,20 +83,34 @@ static std::string CreateEventName() {
 
   std::vector<std::string> arg_types = {TE::getTypeName<Args>()...};
   auto argsV = DU::join(",", arg_types);
-  auto valueName = TE::lastNamedPfType(TE::prettyFunctionForValue<FunctionType,f>(), "T");
+  auto valueName =
+    TE::lastNamedPfType(TE::prettyFunctionForValue<FunctionType, f>(), "T"
+  );
   auto barename = TE::getBarename(valueName);
+
   return DU::removeSpaces(barename + "(" + argsV + ")");
 }
+
+template <typename FunctionType, FunctionType f>
+struct CallableWrapper;
 
 template <typename Ret, typename... Args, Ret (*f)(Args...)>
 struct CallableWrapper<Ret(*)(Args...), f> {
   using ReturnType = Ret;
   using Type = Ret(*)(Args...);
 
+  static std::string GetEventTypeName() {
+    return CreatetEventTypeCStyleFunc<Type, f>();
+  }
+
+  static std::string GetEventName() {
+    return CreateEventName<Type, f, Args...>();
+  }
+
   static trace::TraceEntryIDType GetTraceID() {
     return trace::TraceRegistry::registerEventHashed(
-      CreatetEventTypeCStyleFunc<Type, f>(),
-      CreateEventName<Type, f, Args...>());
+      GetEventTypeName(), GetEventName()
+    );
   }
 };
 
@@ -108,9 +121,17 @@ struct CallableWrapper<Ret (Class::*)(Args...), f> {
   using ReturnType = Ret;
   using Type = Ret (Class::*)(Args...);
 
+  static std::string GetEventTypeName() {
+    return CreatetEventTypeMemberFunc<Class>();
+  }
+
+  static std::string GetEventName() {
+    return CreateEventName<Type, f, Args...>();
+  }
+
   static trace::TraceEntryIDType GetTraceID() {
     return trace::TraceRegistry::registerEventHashed(
-      CreatetEventTypeMemberFunc<Class>(), CreateEventName<Type, f, Args...>()
+      GetEventTypeName(), GetEventName()
     );
   }
 };
@@ -169,9 +190,9 @@ decltype(auto) invokeImpl(Type Fn::*f, T1&& obj, Args&&... args) {
   return (std::forward<T1>(obj).*f)(std::forward<Args>(args)...);
 }
 
-template <typename RetT, typename... Args>
-RetT invokeImpl(RetT (*f)(Args...), Args&&... args) {
-  return (*f)(std::forward<Args>(args)...);
+template <typename Callable, typename... Args>
+decltype(auto) invokeImpl(Callable&& f, Args&&... args) {
+  return std::forward<Callable>(f)(std::forward<Args>(args)...);
 }
 
 template <typename Callable, Callable f, typename... Args>
