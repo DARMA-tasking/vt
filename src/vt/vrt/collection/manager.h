@@ -1446,6 +1446,17 @@ public:
   );
 
 private:
+
+  /**
+   * \internal \brief Get the collection element pointer for given proxy
+   *
+   * \param[in] proxy the collection proxy
+   *
+   * \return the collection element pointer
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  ColT* getCollectionPtrForInvoke(VirtualElmProxyType<ColT> const& proxy);
+
   /**
    * \internal \brief Get the entire collection system holder
    *

@@ -777,12 +777,10 @@ template <typename ColT, typename MsgT>
   }
 }
 
-template <typename ColT, typename Type, Type f, typename... Args>
-runnable::Copyable<Type> CollectionManager::invoke(
-  VirtualElmProxyType<ColT> const& proxy, Args... args
+template <typename ColT, typename IndexT>
+ColT* CollectionManager::getCollectionPtrForInvoke(
+  VirtualElmProxyType<ColT> const& proxy
 ) {
-  using IndexT = typename ColT::IndexType;
-
   auto idx = proxy.getElementProxy().getIndex();
   auto elm_holder =
     theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy());
@@ -795,22 +793,25 @@ runnable::Copyable<Type> CollectionManager::invoke(
       theContext()->getNode()));
 
   auto& inner_holder = elm_holder->lookup(idx);
-  auto const col_ptr = inner_holder.getCollection();
-  void* raw_ptr = static_cast<void*>(col_ptr);
-  auto ptr = reinterpret_cast<ColT*>(raw_ptr);
 
-  auto const col_proxy = col_ptr->getProxy();
-  InsertContextHolder<IndexT>::set(&idx, col_proxy);
+  return static_cast<ColT*>(inner_holder.getCollection());
+}
+
+template <typename ColT, typename Type, Type f, typename... Args>
+runnable::Copyable<Type> CollectionManager::invoke(
+  VirtualElmProxyType<ColT> const& proxy, Args... args
+) {
+  auto ptr = getCollectionPtrForInvoke(proxy);
 
 #if vt_check_enabled(lblite)
-  col_ptr->getStats().startTime();
+  ptr->getStats().startTime();
 #endif
 
   const auto& result =
     runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
 
 #if vt_check_enabled(lblite)
-  col_ptr->getStats().stopTime();
+  ptr->getStats().stopTime();
 #endif
 
   return result;
@@ -820,35 +821,16 @@ template <typename ColT, typename Type, Type f, typename... Args>
 runnable::NotCopyable<Type> CollectionManager::invoke(
   VirtualElmProxyType<ColT> const& proxy, Args... args
 ) {
-  using IndexT = typename ColT::IndexType;
-
-  auto idx = proxy.getElementProxy().getIndex();
-  auto elm_holder =
-    theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy());
-
-  vtAssert(elm_holder != nullptr, "Must have elm holder");
-  vtAssert(
-    elm_holder->exists(idx),
-    fmt::format(
-      "Element with idx:{} doesn't exist on node:{}\n", idx,
-      theContext()->getNode()));
-
-  auto& inner_holder = elm_holder->lookup(idx);
-  auto const col_ptr = inner_holder.getCollection();
-  void* raw_ptr = static_cast<void*>(col_ptr);
-  auto ptr = reinterpret_cast<ColT*>(raw_ptr);
-
-  auto const col_proxy = col_ptr->getProxy();
-  InsertContextHolder<IndexT>::set(&idx, col_proxy);
+  auto ptr = getCollectionPtrForInvoke(proxy);
 
 #if vt_check_enabled(lblite)
-  col_ptr->getStats().startTime();
+  ptr->getStats().startTime();
 #endif
 
   auto&& result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
 
 #if vt_check_enabled(lblite)
-  col_ptr->getStats().stopTime();
+  ptr->getStats().stopTime();
 #endif
 
   return std::move(result);
@@ -858,35 +840,16 @@ template <typename ColT, typename Type, Type f, typename... Args>
 runnable::IsVoidReturn<Type> CollectionManager::invoke(
   VirtualElmProxyType<ColT> const& proxy, Args... args
 ) {
-  using IndexT = typename ColT::IndexType;
-
-  auto idx = proxy.getElementProxy().getIndex();
-  auto elm_holder =
-    theCollection()->findElmHolder<ColT, IndexT>(proxy.getCollectionProxy());
-
-  vtAssert(elm_holder != nullptr, "Must have elm holder");
-  vtAssert(
-    elm_holder->exists(idx),
-    fmt::format(
-      "Element with idx:{} doesn't exist on node:{}\n", idx,
-      theContext()->getNode()));
-
-  auto& inner_holder = elm_holder->lookup(idx);
-  auto const col_ptr = inner_holder.getCollection();
-  void* raw_ptr = static_cast<void*>(col_ptr);
-  auto ptr = reinterpret_cast<ColT*>(raw_ptr);
-
-  auto const col_proxy = col_ptr->getProxy();
-  InsertContextHolder<IndexT>::set(&idx, col_proxy);
+  auto ptr = getCollectionPtrForInvoke(proxy);
 
 #if vt_check_enabled(lblite)
-  col_ptr->getStats().startTime();
+  ptr->getStats().startTime();
 #endif
 
   runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
 
 #if vt_check_enabled(lblite)
-  col_ptr->getStats().stopTime();
+  ptr->getStats().stopTime();
 #endif
 }
 
