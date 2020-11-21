@@ -194,9 +194,8 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
       | polling_event_container_
       | eventPollCount
       | eventSizeGauge
-      | mpiEventWaitTime;
-
-    s.countBytes(lookup_container_);
+      | mpiEventWaitTime
+      | lookup_container_;
 
   # if vt_check_enabled(trace_enabled)
     s | trace_event_polling;
