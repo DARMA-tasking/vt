@@ -264,32 +264,36 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
 }
 
 template <typename ObjT, typename MsgT, ActiveObjType<MsgT, ObjT> fn>
-void ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg) {
+void ObjGroupManager::invoke(
+  ProxyElmType<ObjT> proxy, messaging::MsgPtrThief<MsgT> msg
+) {
   auto const proxy_bits = proxy.getProxy();
   auto const dest_node = proxy.getNode();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
-  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+  auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT, MsgT, fn>(ctrl);
+
   vt_debug_print(
     objgroup, node,
     "ObjGroupManager::invoke: proxy={:x}, node={}, ctrl={:x}, han={:x}\n",
     proxy_bits, dest_node, ctrl, han
   );
+
   invoke<MsgT>(msg, han, dest_node);
 }
 
 template <typename ObjT, typename Type, Type f, typename... Args>
 decltype(auto)
 ObjGroupManager::invoke(ProxyElmType<ObjT> proxy, Args&&... args) {
-  auto const proxy_bits = proxy.getProxy();
   auto const dest_node = proxy.getNode();
   auto const this_node = theContext()->getNode();
-  auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
 
   vtAssert(
     dest_node == this_node,
     fmt::format(
-      "Attempting to invoke handler on node:{} instead of node:{}!", this_node,
-      dest_node));
+      "Attempting to invoke handler on node:{} instead of node:{}!\n", this_node,
+      dest_node
+    )
+  );
 
   return runnable::invoke<Type, f>(get(proxy), std::forward<Args>(args)...);
 }
@@ -300,12 +304,14 @@ void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const proxy_bits = proxy.getProxy();
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
+
   vt_debug_print(
     objgroup, node,
     "ObjGroupManager::broadcast: proxy={:x}, ctrl={:x}, han={:x}\n",
     proxy_bits, ctrl, han
   );
-  broadcast<MsgT>(msg,han);
+
+  broadcast<MsgT>(msg, han);
 }
 
 template <typename MsgT>
