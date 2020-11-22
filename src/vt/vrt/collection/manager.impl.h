@@ -798,7 +798,7 @@ ColT* CollectionManager::getCollectionPtrForInvoke(
 }
 
 template <typename ColT, typename Type, Type f, typename... Args>
-runnable::Copyable<Type> CollectionManager::invoke(
+util::Copyable<Type> CollectionManager::invoke(
   VirtualElmProxyType<ColT> const& proxy, Args... args
 ) {
   auto ptr = getCollectionPtrForInvoke(proxy);
@@ -818,7 +818,7 @@ runnable::Copyable<Type> CollectionManager::invoke(
 }
 
 template <typename ColT, typename Type, Type f, typename... Args>
-runnable::NotCopyable<Type> CollectionManager::invoke(
+util::NotCopyable<Type> CollectionManager::invoke(
   VirtualElmProxyType<ColT> const& proxy, Args... args
 ) {
   auto ptr = getCollectionPtrForInvoke(proxy);
@@ -837,7 +837,7 @@ runnable::NotCopyable<Type> CollectionManager::invoke(
 }
 
 template <typename ColT, typename Type, Type f, typename... Args>
-runnable::IsVoidReturn<Type> CollectionManager::invoke(
+util::IsVoidReturn<Type> CollectionManager::invoke(
   VirtualElmProxyType<ColT> const& proxy, Args... args
 ) {
   auto ptr = getCollectionPtrForInvoke(proxy);

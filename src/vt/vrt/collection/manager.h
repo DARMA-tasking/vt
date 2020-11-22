@@ -800,7 +800,7 @@ public:
    * \param[in] args function params
    */
   template <typename ColT, typename Type, Type f, typename... Args>
-  runnable::Copyable<Type>
+  util::Copyable<Type>
   invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
 
   /**
@@ -811,7 +811,7 @@ public:
    * \param[in] args function params
    */
   template <typename ColT, typename Type, Type f, typename... Args>
-  runnable::NotCopyable<Type>
+  util::NotCopyable<Type>
   invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
 
   /**
@@ -822,7 +822,7 @@ public:
    * \param[in] args function params
    */
   template <typename ColT, typename Type, Type f, typename... Args>
-  runnable::IsVoidReturn<Type>
+  util::IsVoidReturn<Type>
   invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
 
   /**

@@ -47,6 +47,8 @@
 
 #include "vt/config.h"
 #include "vt/utils/demangle/demangle.h"
+#include "vt/utils/static_checks/function_ret_check.h"
+#include "vt/trace/trace_registry.h"
 
 #include <type_traits>
 
@@ -96,7 +98,6 @@ struct CallableWrapper;
 
 template <typename Ret, typename... Args, Ret (*f)(Args...)>
 struct CallableWrapper<Ret(*)(Args...), f> {
-  using ReturnType = Ret;
   using Type = Ret(*)(Args...);
 
   static std::string GetEventTypeName() {
@@ -118,7 +119,6 @@ template <
   typename Ret, typename Class, typename... Args, Ret (Class::*f)(Args...)
 >
 struct CallableWrapper<Ret (Class::*)(Args...), f> {
-  using ReturnType = Ret;
   using Type = Ret (Class::*)(Args...);
 
   static std::string GetEventTypeName() {
@@ -135,31 +135,6 @@ struct CallableWrapper<Ret (Class::*)(Args...), f> {
     );
   }
 };
-
-template <typename FunctionType>
-using IsVoidReturn = std::enable_if_t<
-  std::is_same<
-    typename CallableWrapper<FunctionType, nullptr>::ReturnType, void>::value,
-  void
->;
-
-template <
-  typename FunctionType,
-  typename Ret = typename CallableWrapper<FunctionType, nullptr>::ReturnType
->
-using Copyable = std::enable_if_t<
-  !std::is_same<Ret, void>::value && std::is_copy_constructible<Ret>::value,
-  Ret
->;
-
-template <
-  typename FunctionType,
-  typename Ret = typename CallableWrapper<FunctionType, nullptr>::ReturnType
->
-using NotCopyable = std::enable_if_t<
-  !std::is_same<Ret, void>::value && !std::is_copy_constructible<Ret>::value,
-  Ret
->;
 
 #if vt_check_enabled(trace_enabled)
 template <typename Callable, Callable f, typename... Args>
@@ -196,7 +171,7 @@ decltype(auto) invokeImpl(Callable&& f, Args&&... args) {
 }
 
 template <typename Callable, Callable f, typename... Args>
-Copyable<Callable> invoke(Args&&... args) {
+util::Copyable<Callable> invoke(Args&&... args) {
 #if vt_check_enabled(trace_enabled)
   const auto processing_tag =
     BeginProcessingInvokeEvent<Callable, f>();
@@ -212,7 +187,7 @@ Copyable<Callable> invoke(Args&&... args) {
 }
 
 template <typename Callable, Callable f, typename... Args>
-NotCopyable<Callable> invoke(Args&&... args) {
+util::NotCopyable<Callable> invoke(Args&&... args) {
 #if vt_check_enabled(trace_enabled)
   const auto processing_tag =
     BeginProcessingInvokeEvent<Callable, f>();
@@ -228,7 +203,7 @@ NotCopyable<Callable> invoke(Args&&... args) {
 }
 
 template <typename Callable, Callable f, typename... Args>
-IsVoidReturn<Callable> invoke(Args&&... args) {
+util::IsVoidReturn<Callable> invoke(Args&&... args) {
 #if vt_check_enabled(trace_enabled)
   const auto processing_tag =
     BeginProcessingInvokeEvent<Callable, f>();
