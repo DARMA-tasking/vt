@@ -1026,7 +1026,8 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       );
       break;
     }
-    case TraceConstantsType::Creation: {
+    case TraceConstantsType::Creation:
+    case TraceConstantsType::LocalInvoke: {
       auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,
