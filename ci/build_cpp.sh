@@ -7,7 +7,7 @@ build_dir=${2}
 
 # Dependency versions, when fetched via git.
 detector_rev=master
-checkpoint_rev=156-footprint-non-serializable-elements
+checkpoint_rev=develop
 
 if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
 then
