@@ -189,10 +189,10 @@ struct Log final {
       reset();
     }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s.countBytes(*this);
-  }
+    template <typename Serializer>
+    void serialize(Serializer& s) {
+      s.countBytes(*this);
+    }
 
   private:
 

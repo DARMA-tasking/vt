@@ -106,9 +106,8 @@ struct ConcurrentDequeLocked {
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | needs_lock_
-      | container_;
-
-    s.countBytes(container_mutex_);
+      | container_
+      | container_mutex_;
   }
 
 private:

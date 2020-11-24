@@ -87,9 +87,8 @@ struct ProcessBuffer {
     s | buffer_
       | needs_lock_
       | worker_
-      | process_fn_;
-
-    s.countBytes(mutex_);
+      | process_fn_
+      | mutex_;
   }
 
 private:
