@@ -294,7 +294,7 @@ include(../cmake/set_linker_flags.cmake)
 
 install(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
-  EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
+  EXPORT                    "${VIRTUAL_TRANSPORT_LIBRARY}Targets"
   CONFIGURATIONS            ${build_type_list}
   COMPONENT                 runtime
   LIBRARY DESTINATION       lib
@@ -304,7 +304,7 @@ install(
 )
 
 install(
-  EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
+  EXPORT                    "${VIRTUAL_TRANSPORT_LIBRARY}Targets"
   DESTINATION               cmake
   NAMESPACE                 vt::runtime::
   FILE                      "vtTargets.cmake"
@@ -324,10 +324,19 @@ else()
   set(MIMALLOC_LIBRARY_EXPORT "")
 endif()
 
+if (${vt_libfort_enabled})
+  set(FORT_LIBRARY_EXPORT ${FORT_LIBRARY})
+  install(TARGETS ${FORT_LIBRARY} EXPORT "${VIRTUAL_TRANSPORT_LIBRARY}Targets")
+else()
+  set(FORT_LIBRARY_EXPORT "")
+endif()
+
+# Export to build directory
 export(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
                             ${FCONTEXT_LIBRARY_EXPORT}
                             ${MIMALLOC_LIBRARY_EXPORT}
+                            ${FORT_LIBRARY_EXPORT}
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
