@@ -80,7 +80,7 @@ struct PerCollection : public ComposedModel
 
   void updateLoads(PhaseType last_completed_phase) override;
 
-  TimeType getWork(ElementIDType object, PhaseOffset when) override;
+  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
 private:

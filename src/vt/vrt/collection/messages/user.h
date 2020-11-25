@@ -115,9 +115,8 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
   #if vt_check_enabled(lblite)
     bool lbLiteInstrument() const;
     void setLBLiteInstrument(bool const& val);
-    balance::ElementIDType getElm() const;
-    balance::ElementIDType getElmTemp() const;
-    void setElm(balance::ElementIDType perm, balance::ElementIDType temp);
+    balance::ElementIDStruct getElm() const;
+    void setElm(balance::ElementIDStruct elm);
     balance::CommCategory getCat() const;
     void setCat(balance::CommCategory cat);
   #endif
@@ -142,8 +141,9 @@ private:
      * (sendMsg,broadcastMsg) they are automatically instrumented
      */
     bool lb_lite_instrument_ = false;
-    balance::ElementIDType elm_perm_ = 0;
-    balance::ElementIDType elm_temp_ = 0;
+    balance::ElementIDStruct elm_ = {
+      0, uninitialized_destination, uninitialized_destination
+    };
     balance::CommCategory cat_ = balance::CommCategory::SendRecv;
   #endif
 

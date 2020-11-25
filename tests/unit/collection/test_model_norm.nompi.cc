@@ -58,7 +58,7 @@ namespace vt { namespace tests { namespace unit { namespace norm {
 using TestModelNorm = TestHarness;
 
 using vt::vrt::collection::balance::CommMapType;
-using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::Norm;
@@ -86,7 +86,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getWork(ElementIDType id, PhaseOffset phase) override {
+  TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     return proc_subphase_load_->at(0).at(id).at(phase.subphase);
   }
 
@@ -110,16 +110,18 @@ private:
 };
 
 TEST_F(TestModelNorm, test_model_norm_1) {
+  NodeType this_node = 0;
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{150}}}}};
+       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
+       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
 
   ProcSubphaseLoadMap proc_subphase_load = {
     {0,
      SubphaseLoadMapType{
-       {ElementIDType{1}, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {ElementIDType{2}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, TimeType{20}, TimeType{30}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
 
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
@@ -128,7 +130,7 @@ TEST_F(TestModelNorm, test_model_norm_1) {
   for (unsigned int iter = 0; iter < num_subphases; ++iter) {
     int objects_seen = 0;
     for (auto&& obj : *test_model) {
-      EXPECT_TRUE(obj == 1 || obj == 2);
+      EXPECT_TRUE(obj.id == 1 || obj.id == 2);
       ++objects_seen;
 
       // offset.subphase != PhaseOffset::WHOLE_PHASE
@@ -142,16 +144,18 @@ TEST_F(TestModelNorm, test_model_norm_1) {
 }
 
 TEST_F(TestModelNorm, test_model_norm_2) {
+  NodeType this_node = 0;
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{150}}}}};
+       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
+       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
 
   ProcSubphaseLoadMap proc_subphase_load = {
     {0,
      SubphaseLoadMapType{
-       {ElementIDType{1}, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {ElementIDType{2}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, TimeType{20}, TimeType{30}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
 
   // finite 'power' value
   auto test_model = std::make_shared<Norm>(std::make_shared<StubModel>(), 3.0);
@@ -163,28 +167,30 @@ TEST_F(TestModelNorm, test_model_norm_2) {
 
   int objects_seen = 0;
   for (auto&& obj : *test_model) {
-    EXPECT_TRUE(obj == 1 || obj == 2);
+    EXPECT_TRUE(obj.id == 1 || obj.id == 2);
     ++objects_seen;
 
     auto work_val =
       test_model->getWork(obj, PhaseOffset{0, PhaseOffset::WHOLE_PHASE});
-    EXPECT_NEAR(work_val, expected_norms[obj - 1], 0.001);
+    EXPECT_NEAR(work_val, expected_norms[obj.id - 1], 0.001);
   }
 
   EXPECT_EQ(objects_seen, 2);
 }
 
 TEST_F(TestModelNorm, test_model_norm_3) {
+  NodeType this_node = 0;
   ProcLoadMap proc_load = {
     {0,
      LoadMapType{
-       {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{150}}}}};
+       {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
+       {ElementIDStruct{2,this_node,this_node}, TimeType{150}}}}};
 
   ProcSubphaseLoadMap proc_subphase_load = {
     {0,
      SubphaseLoadMapType{
-       {ElementIDType{1}, {TimeType{10}, TimeType{20}, TimeType{30}}},
-       {ElementIDType{2}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
+       {ElementIDStruct{1,this_node,this_node}, {TimeType{10}, TimeType{20}, TimeType{30}}},
+       {ElementIDStruct{2,this_node,this_node}, {TimeType{40}, TimeType{50}, TimeType{60}}}}}};
 
   // infinite 'power' value
   auto test_model = std::make_shared<Norm>(
@@ -196,12 +202,12 @@ TEST_F(TestModelNorm, test_model_norm_3) {
 
   int objects_seen = 0;
   for (auto&& obj : *test_model) {
-    EXPECT_TRUE(obj == 1 || obj == 2);
+    EXPECT_TRUE(obj.id == 1 || obj.id == 2);
     ++objects_seen;
 
     auto work_val =
       test_model->getWork(obj, PhaseOffset{0, PhaseOffset::WHOLE_PHASE});
-    EXPECT_EQ(work_val, expected_norms[obj - 1]);
+    EXPECT_EQ(work_val, expected_norms[obj.id - 1]);
   }
 
   EXPECT_EQ(objects_seen, 2);

@@ -49,7 +49,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType LinearModel::getWork(ElementIDType object, PhaseOffset when) {
+TimeType LinearModel::getWork(ElementIDStruct object, PhaseOffset when) {
   using util::stats::LinearRegression;
 
   // Retrospective queries don't call for a prediction

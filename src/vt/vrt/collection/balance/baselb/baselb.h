@@ -64,7 +64,7 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 static constexpr int32_t const default_bin_size = 10;
 
 struct BaseLB {
-  using ObjIDType        = balance::ElementIDType;
+  using ObjIDType        = balance::ElementIDStruct;
   using ObjBinType       = int32_t;
   using ObjBinListType   = std::list<ObjIDType>;
   using ObjSampleType    = std::map<ObjBinType, ObjBinListType>;

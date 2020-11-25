@@ -88,26 +88,26 @@ void ElementStats::recvComm(
 }
 
 void ElementStats::recvObjData(
-  ElementIDType pto, ElementIDType tto,
-  ElementIDType pfrom, ElementIDType tfrom, double bytes, bool bcast
+  ElementIDStruct pto,
+  ElementIDStruct pfrom, double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::CollectionTag{}, pfrom, tfrom, pto, tto, bcast);
+  LBCommKey key(LBCommKey::CollectionTag{}, pfrom, pto, bcast);
   recvComm(key, bytes);
 }
 
 void ElementStats::recvFromNode(
-  ElementIDType pto, ElementIDType tto, NodeType from,
+  ElementIDStruct pto, NodeType from,
   double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, pto, tto, bcast);
+  LBCommKey key(LBCommKey::NodeToCollectionTag{}, from, pto, bcast);
   recvComm(key, bytes);
 }
 
 void ElementStats::recvToNode(
-  NodeType to, ElementIDType pfrom, ElementIDType tfrom,
+  NodeType to, ElementIDStruct pfrom,
   double bytes, bool bcast
 ) {
-  LBCommKey key(LBCommKey::CollectionToNodeTag{}, pfrom, tfrom, to, bcast);
+  LBCommKey key(LBCommKey::CollectionToNodeTag{}, pfrom, to, bcast);
   recvComm(key, bytes);
 }
 

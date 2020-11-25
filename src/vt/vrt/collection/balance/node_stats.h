@@ -109,9 +109,9 @@ public:
    * \param[in] time the time the object took
    * \param[in] comm the comm graph for the object
    *
-   * \return the temporary ID for the object assigned for this phase
+   * \return the ID struct for the object assigned for this phase
    */
-  ElementIDType addNodeStats(
+  ElementIDStruct addNodeStats(
     Migratable* col_elm,
     PhaseType const& phase, TimeType const& time,
     std::vector<TimeType> const& subphase_time,
@@ -124,7 +124,7 @@ public:
   void clearStats();
 
   /**
-   * \internal \brief Cleanup after LB runs; convert temporary to permanent IDs
+   * \internal \brief Cleanup after LB runs
    */
   void startIterCleanup(PhaseType phase, unsigned int look_back);
 
@@ -162,7 +162,7 @@ public:
   /**
    * \internal \brief Generate the next object element ID for LB
    */
-  ElementIDType getNextElm();
+  ElementIDStruct getNextElm();
 
   /**
    * \internal \brief Get stored object loads
@@ -195,50 +195,31 @@ public:
   /**
    * \internal \brief Test if this node has an object to migrate
    *
-   * \param[in] obj_id the object temporary ID
+   * \param[in] obj_id the object ID struct
    *
    * \return whether this node has the object
    */
-  bool hasObjectToMigrate(ElementIDType obj_id) const;
+  bool hasObjectToMigrate(ElementIDStruct obj_id) const;
 
   /**
    * \internal \brief Migrate an local object to another node
    *
-   * \param[in] obj_id the object temporary ID
+   * \param[in] obj_id the object ID struct
    * \param[in] to_node the node to migrate to
    *
    * \return whether this node has the object
    */
-  bool migrateObjTo(ElementIDType obj_id, NodeType to_node);
-
-  /**
-   * \internal \brief Convert temporary element ID to permanent Returns
-   * \c no_element_id if not found.
-   * \param[in] temp_id temporary ID
-   *
-   * \return permanent ID
-   */
-  ElementIDType tempToPerm(ElementIDType temp_id) const;
-
-  /**
-   * \internal \brief Convert permanent element ID to temporary. Returns
-   * \c no_element_id if not found.
-   *
-   * \param[in] perm_id permanent ID
-   *
-   * \return temporary ID
-   */
-  ElementIDType permToTemp(ElementIDType perm_id) const;
+  bool migrateObjTo(ElementIDStruct obj_id, NodeType to_node);
 
   /**
    * \internal \brief Get the collection proxy for a given element ID
    *
-   * \param[in] temp_id the temporary ID for the element for a given phase
+   * \param[in] obj_id the ID struct for the element
    *
    * \return the virtual proxy if the element is part of the collection;
    * otherwise \c no_vrt_proxy
    */
-  VirtualProxyType getCollectionProxyForElement(ElementIDType temp_id) const;
+  VirtualProxyType getCollectionProxyForElement(ElementIDStruct obj_id) const;
 
   void initialize() override;
   void finalize() override;
@@ -249,8 +230,6 @@ public:
       | node_data_
       | node_subphase_data_
       | node_migrate_
-      | node_temp_to_perm_
-      | node_perm_to_temp_
       | node_collection_lookup_
       | node_comm_
       | next_elm_
@@ -278,13 +257,9 @@ private:
   /// Node subphase timings for each local object
   std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
   /// Local migration type-free lambdas for each object
-  std::unordered_map<ElementIDType,MigrateFnType> node_migrate_;
-  /// Map of temporary ID to permanent ID
-  std::unordered_map<ElementIDType,ElementIDType> node_temp_to_perm_;
-  /// Map of permanent ID to temporary ID
-  std::unordered_map<ElementIDType,ElementIDType> node_perm_to_temp_;
-  /// Map from element temporary ID to the collection's virtual proxy (untyped)
-  std::unordered_map<ElementIDType,VirtualProxyType> node_collection_lookup_;
+  std::unordered_map<ElementIDStruct,MigrateFnType> node_migrate_;
+  /// Map from element ID to the collection's virtual proxy (untyped)
+  std::unordered_map<ElementIDStruct,VirtualProxyType> node_collection_lookup_;
   /// Node communication graph for each local object
   std::unordered_map<PhaseType, CommMapType> node_comm_;
   /// Node communication graph for each subphase

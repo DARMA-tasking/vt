@@ -64,7 +64,7 @@ static constexpr int32_t const num_elms = 64;
 
 using vt::vrt::collection::balance::ComposedModel;
 using vt::vrt::collection::balance::LoadModel;
-using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::PerCollection;
 
@@ -75,7 +75,7 @@ struct ConstantTestModel : ComposedModel {
       proxy_(in_proxy)
   { }
 
-  TimeType getWork(ElementIDType, PhaseOffset) override {
+  TimeType getWork(ElementIDStruct, PhaseOffset) override {
     return static_cast<TimeType>(proxy_);
   }
 
@@ -86,13 +86,13 @@ private:
 template <typename ColT>
 struct MyMsg : vt::CollectionMessage<ColT> { };
 
-std::unordered_map<ElementIDType, VirtualProxyType> id_proxy_map;
+std::unordered_map<ElementIDStruct, VirtualProxyType> id_proxy_map;
 
 template <typename ColT>
 void colHandler(MyMsg<ColT>*, ColT* col) {
   // do nothing, except setting up our map using the temp ID, which will hit
   // every node
-  id_proxy_map[col->getTempID()] = col->getProxy();
+  id_proxy_map[col->getElmID()] = col->getProxy();
 }
 
 TEST_F(TestModelPerCollection, test_model_per_collection_1) {

@@ -420,12 +420,13 @@ void GossipLB::decide() {
         vt_debug_print(
           gossiplb, node,
           "GossipLB::decide: under.size()={}, selected_node={}, selected_load={},"
-          "obj_id={:x}, obj_load={}, avg={}, this_new_load_={}, "
+          "obj_id={:x}, home={}, obj_load={}, avg={}, this_new_load_={}, "
           "criterion={}\n",
           under.size(),
           selected_node,
           selected_load,
-          obj_id,
+          obj_id.id,
+          obj_id.home_node,
           obj_load,
           avg,
           this_new_load_,

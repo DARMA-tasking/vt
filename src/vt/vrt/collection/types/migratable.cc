@@ -50,8 +50,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 Migratable::Migratable()
-  : stats_elm_id_(theNodeStats()->getNextElm()),
-    temp_elm_id_(theNodeStats()->getNextElm())
+  : elm_id_(theNodeStats()->getNextElm())
 { }
 
 /*virtual*/ void Migratable::destroy() {

@@ -51,7 +51,7 @@ NaivePersistence::NaivePersistence(std::shared_ptr<balance::LoadModel> base)
   : ComposedModel(base)
 { }
 
-TimeType NaivePersistence::getWork(ElementIDType object, PhaseOffset offset)
+TimeType NaivePersistence::getWork(ElementIDStruct object, PhaseOffset offset)
 {
   if (offset.phases >= 0)
     offset.phases = -1;

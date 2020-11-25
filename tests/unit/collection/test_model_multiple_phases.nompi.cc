@@ -56,7 +56,7 @@ namespace vt { namespace tests { namespace unit { namespace multiple {
 
 using TestModelMultiplePhases = TestHarness;
 
-using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::MultiplePhases;
 using vt::vrt::collection::balance::PhaseOffset;
@@ -79,7 +79,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getWork(ElementIDType id, PhaseOffset phase) override {
+  TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     // Here we return predicted loads for future phases
     // For the sake of the test we use values from the past phases
     return proc_load_->at(phase.phases).at(id);
@@ -103,15 +103,20 @@ private:
 };
 
 TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
+  NodeType this_node = 0;
   std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{10}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}}},
     {1, LoadMapType{
-      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{30}}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{20}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{30}}}},
     {2, LoadMapType{
-      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{10}}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{30}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}}},
     {3, LoadMapType{
-      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{5}}}}};
+      {ElementIDStruct{1,this_node,this_node}, TimeType{40}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{5}}}}};
 
   auto test_model =
     std::make_shared<MultiplePhases>(std::make_shared<StubModel>(), 4);
@@ -121,7 +126,7 @@ TEST_F(TestModelMultiplePhases, test_model_multiple_phases_1) {
 
   for (auto&& obj : *test_model) {
     auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
-    EXPECT_EQ(work_val, obj == 1 ? TimeType{100} : TimeType{85});
+    EXPECT_EQ(work_val, obj.id == 1 ? TimeType{100} : TimeType{85});
   }
 }
 

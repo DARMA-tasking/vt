@@ -56,7 +56,7 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct GreedyLBTypes {
-  using ObjIDType = balance::ElementIDType;
+  using ObjIDType = balance::ElementIDStruct;
   using ObjBinType = int32_t;
   using ObjBinListType = std::list<ObjIDType>;
   using ObjSampleType = std::map<ObjBinType, ObjBinListType>;
@@ -76,7 +76,9 @@ struct GreedyRecord {
   ObjType getObj() const { return obj_; }
 
 private:
-  GreedyLBTypes::ObjIDType obj_ = 0;
+  GreedyLBTypes::ObjIDType obj_ = {
+    0, uninitialized_destination, uninitialized_destination
+  };
   LoadType load_ = 0.0f;
 };
 

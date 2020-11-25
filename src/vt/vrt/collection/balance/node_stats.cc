@@ -70,28 +70,12 @@ void NodeStats::setProxy(objgroup::proxy::Proxy<NodeStats> in_proxy) {
   return ptr;
 }
 
-ElementIDType NodeStats::tempToPerm(ElementIDType temp_id) const {
-  auto iter = node_temp_to_perm_.find(temp_id);
-  if (iter == node_temp_to_perm_.end()) {
-    return no_element_id;
-  }
-  return iter->second;
-}
-
-ElementIDType NodeStats::permToTemp(ElementIDType perm_id) const {
-  auto iter = node_perm_to_temp_.find(perm_id);
-  if (iter == node_perm_to_temp_.end()) {
-    return no_element_id;
-  }
-  return iter->second;
-}
-
-bool NodeStats::hasObjectToMigrate(ElementIDType obj_id) const {
+bool NodeStats::hasObjectToMigrate(ElementIDStruct obj_id) const {
   auto iter = node_migrate_.find(obj_id);
   return iter != node_migrate_.end();
 }
 
-bool NodeStats::migrateObjTo(ElementIDType obj_id, NodeType to_node) {
+bool NodeStats::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
   auto iter = node_migrate_.find(obj_id);
   if (iter == node_migrate_.end()) {
     return false;
@@ -126,26 +110,10 @@ void NodeStats::clearStats() {
   NodeStats::node_data_.clear();
   NodeStats::node_subphase_data_.clear();
   NodeStats::node_migrate_.clear();
-  NodeStats::node_temp_to_perm_.clear();
-  NodeStats::node_perm_to_temp_.clear();
   next_elm_ = 1;
 }
 
 void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
-  // TODO: Add in subphase support here too
-
-  // Convert the temp ID node_data_ for the last iteration into perm ID for
-  // stats output
-  auto const prev_data = std::move(node_data_[phase]);
-  std::unordered_map<ElementIDType,TimeType> new_data;
-  for (auto& elm : prev_data) {
-    auto iter = node_temp_to_perm_.find(elm.first);
-    vtAssert(iter != node_temp_to_perm_.end(), "Temp ID must exist");
-    auto perm_id = iter->second;
-    new_data[perm_id] = elm.second;
-  }
-  node_data_[phase] = std::move(new_data);
-
   if (phase >= look_back) {
     node_data_.erase(phase - look_back);
     node_subphase_data_.erase(phase - look_back);
@@ -153,17 +121,16 @@ void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
     node_subphase_comm_.erase(phase - look_back);
   }
 
-  // Create migrate lambdas and temp to perm map since LB is complete
+  // Clear migrate lambdas and proxy lookup since LB is complete
   NodeStats::node_migrate_.clear();
-  NodeStats::node_temp_to_perm_.clear();
-  NodeStats::node_perm_to_temp_.clear();
   node_collection_lookup_.clear();
 }
 
-ElementIDType NodeStats::getNextElm() {
+ElementIDStruct NodeStats::getNextElm() {
   auto const& this_node = theContext()->getNode();
-  auto elm = next_elm_++;
-  return (elm << 32) | this_node;
+  auto id = (next_elm_++ << 32) | this_node;
+  ElementIDStruct elm{id, this_node, this_node};
+  return elm;
 }
 
 void NodeStats::initialize() {
@@ -227,15 +194,15 @@ getRecvSendDirection(CommKeyType const& comm) {
   switch (comm.cat_) {
   case CommCategory::SendRecv:
   case CommCategory::Broadcast:
-    return std::make_pair(comm.toObj(), comm.fromObj());
+    return std::make_pair(comm.toObj().id, comm.fromObj().id);
 
   case CommCategory::NodeToCollection:
   case CommCategory::NodeToCollectionBcast:
-    return std::make_pair(comm.toObj(), comm.fromNode());
+    return std::make_pair(comm.toObj().id, comm.fromNode());
 
   case CommCategory::CollectionToNode:
   case CommCategory::CollectionToNodeBcast:
-    return std::make_pair(comm.toNode(), comm.fromObj());
+    return std::make_pair(comm.toNode(), comm.fromObj().id);
 
   // Comm stats are not recorded for local operations
   // this case is just to avoid warning of not handled enum
@@ -259,12 +226,12 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
   vt_print(lb, "NodeStats::outputStatsForPhase: phase={}\n", phase);
 
   for (auto&& elm : node_data_.at(phase)) {
-    ElementIDType id = elm.first;
+    ElementIDStruct id = elm.first;
     TimeType time = elm.second;
     const auto& subphase_times = node_subphase_data_.at(phase)[id];
     size_t subphases = subphase_times.size();
 
-    auto obj_str = fmt::format("{},{},{:e},{},[", phase, id, time, subphases);
+    auto obj_str = fmt::format("{},{},{:e},{},[", phase, id.id, time, subphases);
 
     for (size_t s = 0; s < subphases; s++) {
       if (s > 0) {
@@ -295,38 +262,37 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
   fflush(stats_file_);
 }
 
-ElementIDType NodeStats::addNodeStats(
+ElementIDStruct NodeStats::addNodeStats(
   Migratable* col_elm,
   PhaseType const& phase, TimeType const& time,
   std::vector<TimeType> const& subphase_time,
   CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
 ) {
-  // A new temp ID gets assigned when a object is migrated into a node
+  // The ID struct is modified when a object is migrated into a node
 
-  auto const temp_id = col_elm->temp_elm_id_;
-  auto const perm_id = col_elm->stats_elm_id_;
+  auto const obj_id = col_elm->elm_id_;
 
   vt_debug_print(
     lb, node,
-    "NodeStats::addNodeStats: temp_id={}, perm_id={}, phase={}, subphases={}, load={}\n",
-    temp_id, perm_id, phase, subphase_time.size(), time
+    "NodeStats::addNodeStats: obj_id={}, phase={}, subphases={}, load={}\n",
+    obj_id, phase, subphase_time.size(), time
   );
 
   auto &phase_data = node_data_[phase];
-  auto elm_iter = phase_data.find(temp_id);
+  auto elm_iter = phase_data.find(obj_id);
   vtAssert(elm_iter == phase_data.end(), "Must not exist");
   phase_data.emplace(
     std::piecewise_construct,
-    std::forward_as_tuple(temp_id),
+    std::forward_as_tuple(obj_id),
     std::forward_as_tuple(time)
   );
 
   auto &subphase_data = node_subphase_data_[phase];
-  auto elm_subphase_iter = subphase_data.find(temp_id);
+  auto elm_subphase_iter = subphase_data.find(obj_id);
   vtAssert(elm_subphase_iter == subphase_data.end(), "Must not exist");
   subphase_data.emplace(
     std::piecewise_construct,
-    std::forward_as_tuple(temp_id),
+    std::forward_as_tuple(obj_id),
     std::forward_as_tuple(subphase_time)
   );
 
@@ -342,14 +308,11 @@ ElementIDType NodeStats::addNodeStats(
     }
   }
 
-  node_temp_to_perm_[temp_id] = perm_id;
-  node_perm_to_temp_[perm_id] = temp_id;
-
-  auto migrate_iter = node_migrate_.find(temp_id);
+  auto migrate_iter = node_migrate_.find(obj_id);
   if (migrate_iter == node_migrate_.end()) {
     node_migrate_.emplace(
       std::piecewise_construct,
-      std::forward_as_tuple(temp_id),
+      std::forward_as_tuple(obj_id),
       std::forward_as_tuple([col_elm](NodeType node){
         col_elm->migrate(node);
       })
@@ -357,15 +320,15 @@ ElementIDType NodeStats::addNodeStats(
   }
 
   auto const col_proxy = col_elm->getProxy();
-  node_collection_lookup_[temp_id] = col_proxy;
+  node_collection_lookup_[obj_id] = col_proxy;
 
-  return temp_id;
+  return obj_id;
 }
 
 VirtualProxyType NodeStats::getCollectionProxyForElement(
-  ElementIDType temp_id
+  ElementIDStruct obj_id
 ) const {
-  auto iter = node_collection_lookup_.find(temp_id);
+  auto iter = node_collection_lookup_.find(obj_id);
   if (iter == node_collection_lookup_.end()) {
     return no_vrt_proxy;
   }

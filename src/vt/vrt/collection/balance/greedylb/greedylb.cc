@@ -210,8 +210,9 @@ void GreedyLB::runBalancer(
 GreedyLB::ObjIDType GreedyLB::objSetNode(
   NodeType const& node, ObjIDType const& id
 ) {
-  auto const new_id = id & 0xFFFFFFFF0000000;
-  return new_id | node;
+  auto new_id = id;
+  new_id.curr_node = node;
+  return new_id;
 }
 
 void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
@@ -223,7 +224,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     "recvObjsDirect: num_recs={}\n", num_recs
   );
 
-  for (decltype(+num_recs) i = 0; i < num_recs; i++) {
+  for (decltype(+num_recs.id) i = 0; i < num_recs.id; i++) {
     auto const to_node = objGetNode(recs[i]);
     auto const new_obj_id = objSetNode(this_node,recs[i]);
     vt_debug_print(
@@ -274,7 +275,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
       auto const& proc = node_transfer[node];
       auto const& rec_size = proc.size();
-      *ptr_out = rec_size;
+      ptr_out->id = rec_size;
       for (size_t i = 0; i < rec_size; i++) {
         *(ptr_out + i + 1) = proc[i];
       }

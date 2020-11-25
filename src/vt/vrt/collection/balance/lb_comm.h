@@ -63,8 +63,8 @@ enum struct CommCategory : int8_t {
   LocalInvoke = 8
 };
 
-inline NodeType objGetNode(ElementIDType const id) {
-  return id & 0x0000000FFFFFFFF;
+inline NodeType objGetNode(ElementIDStruct const id) {
+  return id.curr_node;
 }
 
 struct LBCommKey {
@@ -80,40 +80,36 @@ struct LBCommKey {
 
   LBCommKey(
     CollectionTag,
-    ElementIDType from, ElementIDType from_temp,
-    ElementIDType to,   ElementIDType to_temp,
+    ElementIDStruct from, ElementIDStruct to,
     bool bcast
-  ) : from_(from), from_temp_(from_temp), to_(to), to_temp_(to_temp),
+  ) : from_(from), to_(to),
       cat_(bcast ? CommCategory::Broadcast : CommCategory::SendRecv)
   { }
   LBCommKey(
     CollectionToNodeTag,
-    ElementIDType from, ElementIDType from_temp, NodeType to,
+    ElementIDStruct from, NodeType to,
     bool bcast
-  ) : from_(from), from_temp_(from_temp), nto_(to),
+  ) : from_(from), nto_(to),
       cat_(bcast ? CommCategory::CollectionToNodeBcast : CommCategory::CollectionToNode)
   { }
   LBCommKey(
     NodeToCollectionTag,
-    NodeType from, ElementIDType to, ElementIDType to_temp,
+    NodeType from, ElementIDStruct to,
     bool bcast
-  ) : to_(to), to_temp_(to_temp), nfrom_(from),
+  ) : to_(to), nfrom_(from),
       cat_(bcast ? CommCategory::NodeToCollectionBcast : CommCategory::NodeToCollection)
   { }
 
-  ElementIDType from_      = no_element_id;
-  ElementIDType from_temp_ = no_element_id;
-  ElementIDType to_        = no_element_id;
-  ElementIDType to_temp_   = no_element_id;
+  ElementIDStruct from_ = { no_element_id, uninitialized_destination, uninitialized_destination };
+  ElementIDStruct to_   = { no_element_id, uninitialized_destination, uninitialized_destination };
+
   ElementIDType edge_id_   = no_element_id;
   NodeType nfrom_          = uninitialized_destination;
   NodeType nto_            = uninitialized_destination;
   CommCategory  cat_       = CommCategory::SendRecv;
 
-  ElementIDType fromObj()      const { return from_; }
-  ElementIDType toObj()        const { return to_; }
-  ElementIDType fromObjTemp()  const { return from_temp_; }
-  ElementIDType toObjTemp()    const { return to_temp_; }
+  ElementIDStruct fromObj()    const { return from_; }
+  ElementIDStruct toObj()      const { return to_; }
   ElementIDType fromNode()     const { return nfrom_; }
   ElementIDType toNode()       const { return nto_; }
   ElementIDType edgeID()       const { return edge_id_; }
@@ -121,11 +117,11 @@ struct LBCommKey {
   bool selfEdge() const { return cat_ == CommCategory::SendRecv and from_ == to_; }
   bool offNode() const {
     if (cat_ == CommCategory::SendRecv) {
-      return objGetNode(from_temp_) != objGetNode(to_temp_);
+      return objGetNode(from_) != objGetNode(to_);
     } else if (cat_ == CommCategory::CollectionToNode) {
-      return objGetNode(from_temp_) != nto_;
+      return objGetNode(from_) != nto_;
     } else if (cat_ == CommCategory::NodeToCollection) {
-      return objGetNode(to_temp_) != nfrom_;
+      return objGetNode(to_) != nfrom_;
     } else {
       return true;
     }
@@ -141,7 +137,7 @@ struct LBCommKey {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | from_ | to_ | from_temp_ | to_temp_ | nfrom_ | nto_ | cat_ | edge_id_;
+    s | from_ | to_ | nfrom_ | nto_ | cat_ | edge_id_;
   }
 };
 
@@ -175,8 +171,9 @@ using CommMapType   = std::unordered_map<CommKeyType,CommVolume>;
 
 namespace std {
 
-using CommCategoryType = vt::vrt::collection::balance::CommCategory;
-using LBCommKeyType    = vt::vrt::collection::balance::LBCommKey;
+using CommCategoryType    = vt::vrt::collection::balance::CommCategory;
+using LBCommKeyType       = vt::vrt::collection::balance::LBCommKey;
+using ElementIDStructType = vt::vrt::collection::balance::ElementIDStruct;
 
 template <>
 struct hash<CommCategoryType> {
@@ -190,7 +187,10 @@ struct hash<CommCategoryType> {
 template <>
 struct hash<LBCommKeyType> {
   size_t operator()(LBCommKeyType const& in) const {
-    return std::hash<uint64_t>()(in.from_ ^ in.to_ ^ in.nfrom_ ^ in.nto_);
+    return std::hash<uint64_t>()(
+      std::hash<ElementIDStructType>()(in.from_) ^ 
+      std::hash<ElementIDStructType>()(in.to_) ^ in.nfrom_ ^ in.nto_
+    );
   }
 };
 

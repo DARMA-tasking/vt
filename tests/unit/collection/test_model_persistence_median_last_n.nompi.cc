@@ -58,7 +58,7 @@ using TestModelPersistenceMedianLastN = TestHarness;
 
 static int32_t num_phases = 0;
 
-using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::PersistenceMedianLastN;
 using vt::vrt::collection::balance::PhaseOffset;
@@ -81,7 +81,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getWork(ElementIDType id, PhaseOffset phase) override {
+  TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     // Most recent phase will be at the end of vector
     return proc_load_->at(num_phases + phase.phases).at(id);
   }
@@ -104,6 +104,7 @@ private:
 
 TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) {
   constexpr int32_t num_total_phases = 7;
+  NodeType this_node = 0;
 
   auto test_model =
     std::make_shared<PersistenceMedianLastN>(std::make_shared<StubModel>(), 4);
@@ -115,19 +116,26 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
     LoadMapType{
-      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{10}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{4}}, {ElementIDType{2}, TimeType{10}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{4}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{100}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{20}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{100}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{50}}, {ElementIDType{2}, TimeType{40}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{50}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{2}}, {ElementIDType{2}, TimeType{50}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{2}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{50}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{20}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{20}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{100}}, {ElementIDType{2}, TimeType{10}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{100}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}},
   };
 
   std::array<std::pair<TimeType, TimeType>, num_total_phases> expected_medians{
@@ -149,7 +157,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
       auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(
         work_val,
-        obj == 1 ? expected_medians[iter].first : expected_medians[iter].second)
+        obj.id == 1 ? expected_medians[iter].first : expected_medians[iter].second)
         << fmt::format("Test failed on iteration {}", iter);
     }
   }

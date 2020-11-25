@@ -108,9 +108,9 @@ void BaseLB::importProcessorData(
 
     vt_debug_print_verbose(
       lb, node,
-      "\t {}: importProcessorData: this_load={}, obj={}, load={}, "
+      "\t {}: importProcessorData: this_load={}, obj={}, home={}, load={}, "
       "load_milli={}, bin={}\n",
-      this_node, this_load, obj, load, load_milli, bin
+      this_node, this_load, obj.id, obj.home_node, load, load_milli, bin
     );
   }
 
@@ -191,8 +191,8 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
 
       vt_debug_print(
         lb, node,
-        "migrateObjectTo, obj_id={}, from={}, to={}, found={}\n",
-        obj_id, from, to, has_object
+        "migrateObjectTo, obj_id={}, home={}, from={}, to={}, found={}\n",
+        obj_id.id, obj_id.home_node, from, to, has_object
       );
 
       local_migration_count_++;
