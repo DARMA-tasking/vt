@@ -243,6 +243,22 @@ public:
   void initialize() override;
   void finalize() override;
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | proxy_
+      | node_data_
+      | node_subphase_data_
+      | node_migrate_
+      | node_temp_to_perm_
+      | node_perm_to_temp_
+      | node_collection_lookup_
+      | node_comm_
+      | next_elm_
+      | stats_file_
+      | created_dir_
+      | node_subphase_comm_;
+  }
+
 private:
   /**
    * \internal \brief Create the stats file

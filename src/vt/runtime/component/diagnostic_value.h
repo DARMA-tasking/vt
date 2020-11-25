@@ -374,6 +374,12 @@ struct DiagnosticSnapshotValues {
     snapshots_.at(snapshot) = DiagnosticValueWrapper<T>{initial_value_};
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | initial_value_
+      | snapshots_;
+  }
+
 protected:
   T initial_value_;                                  /**< Save for later reset */
   std::vector<DiagnosticValueWrapper<T>> snapshots_; /**< Value time snapshots */
@@ -386,6 +392,8 @@ protected:
  */
 template <typename T>
 struct DiagnosticValue : DiagnosticBase {
+  checkpoint_virtual_serialize_derived_from(DiagnosticBase)
+
   /**
    * \internal \brief Create a new typed diagnostic value
    *
@@ -430,6 +438,11 @@ struct DiagnosticValue : DiagnosticBase {
   void reduceOver(
     Diagnostic* diagnostic, DiagnosticErasedValue* out, int snapshot
   ) override;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | values_;
+  }
 
 private:
   DiagnosticSnapshotValues<T> values_; /**< The value snapshots */

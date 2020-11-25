@@ -79,7 +79,6 @@ struct CollectiveAlg :
     virtual barrier::Barrier,
     virtual scatter::Scatter
 {
-
 /*----------------------------------------------------------------------------
  *
  *  CollectiveAlg class implements all collective operations:
@@ -144,6 +143,14 @@ public:
    * \return whether it is deallocated
    */
   bool isDeallocated(bool is_user_tag, TagType scope_bits) const;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | next_system_scope_
+      | user_scope_
+      | system_scope_
+      | postponed_collectives_;
+  }
 
 private:
   using ScopeMapType = std::unordered_map<TagType, std::unique_ptr<detail::ScopeImpl>>;

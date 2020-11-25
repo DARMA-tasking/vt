@@ -169,6 +169,15 @@ public:
     LocInstType const inst, ActionLocInstType<LocType> action
   );
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | collectionLoc
+      | cur_loc_inst
+      | loc_insts
+      | virtual_loc
+      | vrtContextLoc;
+  }
+
 protected:
   CollectionContainerType collectionLoc;
 

@@ -70,6 +70,11 @@ using EventListPtrType = EventListType*;
 union uEventPayload {
   MPI_Request mpi_req;
   EventListPtrType event_list;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s.countBytes(*this);
+  }
 };
 
 struct EventRecord {
@@ -104,6 +109,19 @@ struct EventRecord {
     return creation_time_stamp_;
   }
 # endif
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | ready
+      | msg_
+      | event_union_
+      | event_id_
+      | type_;
+
+  # if vt_check_enabled(diagnostics)
+    s | creation_time_stamp_;
+  # endif
+  }
 
 private:
   bool ready = false;

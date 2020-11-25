@@ -144,6 +144,29 @@ struct State {
     ByteType req_offset, TagType tag, bool is_local
   );
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | using_default_put_handler
+      | using_default_get_handler
+      | group_info
+      | this_rdma_get_handler
+      | this_rdma_put_handler
+      | this_get_handler
+      | this_put_handler
+      | get_any_tag
+      | put_any_tag
+      | get_tag_holder
+      | put_tag_holder
+      | pending_tag_gets
+      | pending_tag_puts;
+
+      s.countBytes(user_state_get_msg_);
+      s.countBytes(user_state_put_msg_);
+
+      s.countBytes(rdma_get_fn);
+      s.countBytes(rdma_put_fn);
+  }
+
   bool using_default_put_handler = false;
   bool using_default_get_handler = false;
 

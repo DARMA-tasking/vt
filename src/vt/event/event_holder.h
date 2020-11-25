@@ -69,6 +69,12 @@ struct EventHolder {
   void makeReadyTrigger();
   void executeActions();
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | event_
+      | actions_;
+  }
+
 private:
   EventRecordPtrType event_;
 

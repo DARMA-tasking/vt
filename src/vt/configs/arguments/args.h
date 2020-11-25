@@ -67,7 +67,6 @@ namespace vt { namespace arguments {
  * through the command-line arguments.
  */
 struct ArgConfig : runtime::component::Component<ArgConfig> {
-
   /// Parse the arguments into ArgConfig.
   /// Re-assigns argc/argv to remove consumed arguments.
   /// On success the tuple will be {-1, ""}. Otherwise the exit code
@@ -79,6 +78,12 @@ struct ArgConfig : runtime::component::Component<ArgConfig> {
   static std::unique_ptr<ArgConfig> construct(std::unique_ptr<ArgConfig> arg);
 
   std::string name() override { return "ArgConfig"; }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | config_
+      | parsed_;
+  }
 
   AppConfig config_;
 

@@ -70,6 +70,14 @@ struct LocLookup {
   void clearCache();
   void printCache() const;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | max_cache_size_
+      | directory_
+      | cache_
+      | this_node_;
+  }
+
 private:
   LocationSizeType max_cache_size_ = 0;
   Directory<KeyT, ValueT> directory_;

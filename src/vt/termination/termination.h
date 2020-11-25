@@ -603,6 +603,18 @@ public:
   std::unordered_set<EpochType> const& getEpochReadySet() { return epoch_ready_; }
   std::unordered_set<EpochType> const& getEpochWaitSet() { return epoch_wait_status_; }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | any_epoch_state_
+      | hang_
+      | epoch_state_
+      | epoch_arch_
+      | epoch_coll_
+      | epoch_ready_
+      | epoch_wait_status_
+      | has_printed_epoch_graph;
+  }
+
 private:
   /**
    * \internal \brief Get an epoch's dependency information

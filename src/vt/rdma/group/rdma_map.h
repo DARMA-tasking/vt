@@ -76,6 +76,12 @@ struct Map {
       block, block * block_size, (block + 1) * block_size
     };
   }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | block_map
+      | elm_map;
+  }
 };
 
 static Map default_map = Map(Map::defaultBlockMap, Map::defaultElmMap);

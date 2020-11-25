@@ -49,6 +49,8 @@
 
 #if vt_check_enabled(openmp)
 
+#include <checkpoint/checkpoint.h>
+
 #include <omp.h>
 
 namespace vt { namespace util { namespace mutex {
@@ -64,6 +66,16 @@ struct OMPMutex {
   void lock();
   void unlock();
   bool try_lock();
+
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
+    s | omp_lock;
+  }
 };
 
 }}} /* end namespace vt::util::mutex */
@@ -79,8 +91,8 @@ struct OMPMutex {
   );
 
   }}} // end namespace vt::util::mutex
-#endif
+#endif // vt_check_enabled(detector)
 
-#endif
+#endif // vt_check_enabled(openmp)
 
 #endif /*INCLUDED_UTILS_MUTEX_OMP_MUTEX_H*/

@@ -64,7 +64,6 @@ namespace vt { namespace pmpi {
  * and infrastructure lifetimes such as registrations of events.
  */
 struct PMPIComponent : runtime::component::Component<PMPIComponent> {
-
   PMPIComponent() = default;
 
   std::string name() override { return "PMPI"; }
@@ -85,6 +84,11 @@ struct PMPIComponent : runtime::component::Component<PMPIComponent> {
    */
   static bool shouldLogCall() {
     return trace_pmpi and runtime::ScopedMPIAccess::mpiCallsTraced();
+  }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | trace_pmpi;
   }
 
 private:

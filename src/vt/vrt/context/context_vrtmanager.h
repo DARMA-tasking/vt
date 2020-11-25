@@ -76,11 +76,17 @@ struct PendingRequest {
     VirtualRequestIDType const& in_req_id, ActionProxyType in_action
   ) : req_id(in_req_id), action(in_action)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | req_id
+      | action;
+  }
 };
 
 struct VirtualContextManager
-  : runtime::component::Component<VirtualContextManager>
- {
+  : runtime::component::Component<VirtualContextManager> {
+
   using VirtualPtrType = std::unique_ptr<VirtualContext>;
   using PendingRequestType = PendingRequest;
   using VirtualInfoType = VirtualInfo;
@@ -115,6 +121,18 @@ struct VirtualContextManager
   messaging::PendingSend sendSerialMsg(
     VirtualProxyType const& toProxy, MsgT *const msg
   );
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | holder_
+      | remote_holder_
+      | cur_seed_
+      | curIdent_
+      | curRemoteID_
+      | myNode_
+      | cur_request_id
+      | pending_request_;
+  }
 
 private:
   // For delayed construction, e.g., when the virtual context is mapped to a

@@ -162,6 +162,14 @@ struct Pool : runtime::component::Component<Pool> {
    */
   void finalize() override;
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | small_msg
+      | medium_msg
+      | s_msg_worker_
+      | m_msg_worker_;
+  }
+
 private:
   /**
    * \internal \brief Attempt allocation via pooled allocator and fall back to

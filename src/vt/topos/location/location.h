@@ -238,13 +238,13 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] id the entity ID
    * \param[in] home_node home node for the entity
    * \param[in] msg pointer to the message
-   * \param[in] serialize whether it should be serialized (optional)
+   * \param[in] serialize_msg whether it should be serialized (optional)
    * \param[in] from_node the sending node (optional)
    */
   template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
-    bool const serialize = false,
+    bool const serialize_msg = false,
     NodeType from_node = uninitialized_destination
   );
 
@@ -376,21 +376,21 @@ private:
   /**
    * \internal \brief Route a message to destination with eager protocol
    *
-   * \param[in] serialize whether it is serialized
+   * \param[in] is_serialized whether it is serialized
    * \param[in] id the entity ID
    * \param[in] home_node the home node
    * \param[in] msg the message to route
    */
   template <typename MessageT>
   void routeMsgEager(
-    bool const serialize, EntityID const& id, NodeType const& home_node,
+    bool const is_serialized, EntityID const& id, NodeType const& home_node,
     MsgSharedPtr<MessageT> msg
   );
 
   /**
    * \internal \brief Route a message to destination with rendezvous protocol
    *
-   * \param[in] serialize whether it is serialized
+   * \param[in] is_serialized whether it is serialized
    * \param[in] id the entity ID
    * \param[in] home_node the home node
    * \param[in] to_node destination node
@@ -398,7 +398,7 @@ private:
    */
   template <typename MessageT>
   void routeMsgNode(
-    bool const serialize, EntityID const& id, NodeType const& home_node,
+    bool const is_serialized, EntityID const& id, NodeType const& home_node,
     NodeType const& to_node, MsgSharedPtr<MessageT> msg
   );
 

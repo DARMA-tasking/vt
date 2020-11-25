@@ -180,6 +180,18 @@ public:
    */
   void runHooksManual(PhaseHook type);
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | cur_phase_
+      | proxy_
+      | collective_hooks_
+      | rooted_hooks_
+      | next_collective_hook_id_
+      | next_rooted_hook_id_
+      | in_next_phase_collective_
+      | reduce_next_phase_done_;
+  }
+
 private:
   PhaseType cur_phase_ = 0;                 /**< Current phase */
   ObjGroupProxyType proxy_ = no_obj_group;  /**< Objgroup proxy  */

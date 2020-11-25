@@ -187,6 +187,9 @@ public:
    * this.
    */
   virtual int getNumSubphases() = 0;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 }; // class LoadModel
 
 }}}} // namespaces

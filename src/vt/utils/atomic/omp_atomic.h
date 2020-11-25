@@ -164,6 +164,11 @@ struct AtomicOMP {
     return cas_succeed;
   }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | value_;
+  }
+
 private:
   T value_;
 };

@@ -96,6 +96,14 @@ struct WorkerGroupAny
 
   std::string name() override { return "WorkerGroup"; }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | finished_fn_
+      | initialized_
+      | num_workers_
+      | workers_;
+  }
+
 private:
   WorkerFinishedFnType finished_fn_ = nullptr;
   bool initialized_ = false;

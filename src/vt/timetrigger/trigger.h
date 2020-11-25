@@ -129,6 +129,14 @@ struct Trigger {
     return lhs.nextTriggerTime() > rhs.nextTriggerTime();
   }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | period_
+      | trigger_
+      | last_trigger_time_
+      | id_;
+  }
+
 private:
   std::chrono::milliseconds period_;   /**< The trigger's period */
   ActionType trigger_ = nullptr;       /**< The action to trigger  */

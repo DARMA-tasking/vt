@@ -44,6 +44,8 @@
 
 #include <gtest/gtest.h>
 
+#include <checkpoint/checkpoint.h>
+
 #include "test_parallel_harness.h"
 
 #include <vt/transport.h>
@@ -157,6 +159,10 @@ TEST_F(TestDiagnosticValue, test_diagnostic_value_2) {
       val.update(num_to_set);
       EXPECT_DOUBLE_EQ(val.get(snapshot), num_to_set);
     }
+
+    // make sure that memory footprinting using base pointer works
+    vt::runtime::component::detail::DiagnosticBase* base_ptr = &val;
+    EXPECT_GT(checkpoint::getMemoryFootprint(*base_ptr), sizeof(*base_ptr));
   }
 
   auto diag = std::make_unique<TestDiagnostic>();

@@ -97,6 +97,9 @@ struct BaseComponent : Diagnostic, Bufferable, Progressable {
   virtual ~BaseComponent() { }
 
   friend struct ComponentPack;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 };
 
 }}} /* end namespace vt::runtime::component */

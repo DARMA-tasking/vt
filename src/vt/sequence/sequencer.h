@@ -189,6 +189,14 @@ public:
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   void sequenceMsg(MessageT* msg);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | context_
+      | node_lookup_
+      | seq_lookup_
+      | seq_manager;
+  }
+
 private:
   SeqListType& getSeqList(SeqType const& seq_id);
 
@@ -209,6 +217,9 @@ struct Sequencer
     TaggedSequencer<SeqType, SeqMigratableTriggerType>
 {
   std::string name() override { return "Sequencer"; }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 };
 
 #define SEQUENCE_REGISTER_HANDLER(message, handler)                     \

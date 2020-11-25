@@ -125,6 +125,17 @@ struct PendingRecv {
       dealloc_user_buf(in_dealloc_user_buf), sender(node),
       priority(in_priority), is_user_buf(in_is_user_buf)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | nchunks
+      | user_buf
+      | cont
+      | dealloc_user_buf
+      | sender
+      | priority
+      | is_user_buf;
+  }
 };
 
 /**
@@ -138,6 +149,14 @@ struct InProgressBase {
   ) : buf(in_buf), probe_bytes(in_probe_bytes), sender(in_sender),
       valid(true)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | buf
+      | probe_bytes
+      | sender
+      | valid;
+  }
 
   char* buf = nullptr;
   MsgSizeType probe_bytes = 0;
@@ -207,7 +226,16 @@ struct InProgressDataIRecv : InProgressBase {
     return true;
   }
 
-public:
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | user_buf
+      | dealloc_user_buf
+      | next
+      | priority
+      | cur
+      | reqs;
+  }
+
   void* user_buf = nullptr;
   ActionType dealloc_user_buf = nullptr;
   ContinuationDeleterType next = nullptr;
@@ -235,6 +263,13 @@ struct BufferedActiveMsg {
     ActionType in_cont
   ) : buffered_msg(in_buffered_msg), from_node(in_from_node), cont(in_cont)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | buffered_msg
+      | from_node
+      | cont;
+  }
 };
 
 // forward-declare for header
@@ -1638,6 +1673,32 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   void clearListeners() {
     send_listen_.clear();
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | current_handler_context_
+      | current_node_context_
+      | current_epoch_context_
+      | current_priority_context_
+      | current_priority_level_context_
+      | maybe_ready_tag_han_
+      | pending_handler_msgs_
+      | pending_recvs_
+      | cur_direct_buffer_tag_
+      | epoch_stack_
+      | send_listen_
+      | in_progress_active_msg_irecv
+      | in_progress_data_irecv
+      | this_node_;
+
+  # if vt_check_enabled(trace_enabled)
+    s | current_trace_context_
+      | trace_irecv
+      | trace_isend
+      | trace_irecv_polling_am
+      | trace_irecv_polling_dm;
+  # endif
   }
 
 private:

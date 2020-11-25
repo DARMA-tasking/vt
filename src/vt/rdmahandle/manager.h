@@ -224,8 +224,21 @@ private:
     return static_cast<vt::NodeType>(idx->x());
   }
 
+  std::size_t getHolderFootprint() const;
+
 public:
   static std::unique_ptr<Manager> construct();
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | cur_handle_obj_group_
+      | cur_handle_collection_
+      | collection_to_manager_
+      | proxy_
+      | collective_scope_;
+
+    s.addBytes(getHolderFootprint());
+  }
 
 private:
   /// Current collective handle for a given objgroup proxy
@@ -243,6 +256,7 @@ private:
   /// Holder for RDMA control data
   template <typename T, HandleEnum E>
   static std::unordered_map<HandleKey, Holder<T,E>> holder_;
+  std::unordered_map<HandleKey, std::function<std::size_t()>> holder_footprint_;
 
   // Collective scope for MPI operations
   CollectiveScopeType collective_scope_;
@@ -251,23 +265,7 @@ private:
 template <typename T, HandleEnum E>
 /*static*/ std::unordered_map<HandleKey, Holder<T,E>> Manager::holder_ = {};
 
-
 }} /* end namespace vt::rdma */
-
-namespace std {
-
-template <>
-struct hash<vt::rdma::HandleKey> {
-  size_t operator()(vt::rdma::HandleKey const& in) const {
-    return std::hash<uint64_t>()(
-      in.handle_ ^
-      (in.proxy_.is_obj_ ? in.proxy_.u_.obj_ : in.proxy_.u_.vrt_) ^
-      (in.proxy_.is_obj_ ? 0x10 : 0x00)
-    );
-  }
-};
-
-} /* end namespace std */
 
 #include "vt/rdmahandle/handle.impl.h"
 #include "vt/rdmahandle/manager.impl.h"

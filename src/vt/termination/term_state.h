@@ -87,6 +87,26 @@ struct TermState : EpochDependency, EpochLabel {
   TermState(TermState&&) = default;
   TermState& operator=(TermState const&) = default;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | l_prod
+      | l_cons
+      | g_prod1
+      | g_cons1
+      | g_prod2
+      | g_cons2
+      | constant_count
+      | num_print_constant
+      | local_terminated_
+      | epoch_active_
+      | term_detected_
+      | deps_
+      | recv_child_count_
+      | num_children_
+      | cur_wave_
+      | submitted_wave_;
+  }
+
   // four-counter method (local prod/cons, global prod/cons 1/2)
   TermCounterType l_prod                      = 0;
   TermCounterType l_cons                      = 0;

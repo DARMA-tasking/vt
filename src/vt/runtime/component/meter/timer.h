@@ -109,6 +109,13 @@ public:
     }
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | start_time_;
+
+    DiagnosticStatsPack<T>::serialize(s);
+  }
+
 private:
   T start_time_ = 0;
 };

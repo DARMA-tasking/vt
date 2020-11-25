@@ -144,6 +144,14 @@ struct Registry : runtime::component::Component<Registry> {
    */
   ActiveClosureFnType getHandlerNoTag(HandlerType const han);
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | registered_
+      | tagged_registered_
+      | cur_ident_collective_
+      | cur_ident_;
+  }
+
 private:
   ContainerType registered_;
   HanTagContainerType tagged_registered_;

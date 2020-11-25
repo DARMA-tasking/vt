@@ -855,6 +855,10 @@ void Runtime::printStartupBanner() {
     }
   }
 
+  if (getAppConfig()->vt_print_memory_footprint) {
+    printMemoryFootprint();
+  }
+
   //fmt::print("{}\n", reset);
   fmt::print(reset);
 

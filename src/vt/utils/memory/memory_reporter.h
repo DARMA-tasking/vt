@@ -50,11 +50,13 @@
 namespace vt { namespace util { namespace memory {
 
 struct Reporter {
-
   virtual ~Reporter() { }
 
   virtual std::size_t getUsage() = 0;
   virtual std::string getName() = 0;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) { }
 };
 
 }}} /* end namespace vt::util::memory */

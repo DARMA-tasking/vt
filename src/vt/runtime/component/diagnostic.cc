@@ -44,6 +44,8 @@
 
 #include "vt/runtime/component/diagnostic.h"
 
+#include <checkpoint/checkpoint.h>
+
 #include <set>
 
 namespace vt { namespace runtime { namespace component {
@@ -60,6 +62,10 @@ void Diagnostic::foreachDiagnostic(
     vtAssert(iter != values_.end(), "Key must exist");
     apply(iter->second.get());
   }
+}
+
+std::size_t Diagnostic::getDiagnosticsFootprint() {
+  return checkpoint::getMemoryFootprint(values_);
 }
 
 diagnostic::Counter Diagnostic::registerCounter(

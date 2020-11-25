@@ -260,6 +260,9 @@ struct Param : runtime::component::Component<Param> {
     auto m = makeMessage<DataMsg<TupleType>>(han, std::forward<Args>(a)...);
     sendDataMsg(dest, han, m);
   }
+
+  template <typename Serializer>
+  void serialize(Serializer&) {}
 };
 
 }} //end namespace vt::param

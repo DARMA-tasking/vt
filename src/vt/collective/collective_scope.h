@@ -58,6 +58,13 @@ namespace detail {
 
 struct ScopeImpl {
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | live_
+      | next_seq_
+      | planned_collective_;
+  }
+
 private:
   ScopeImpl() = default;
 
@@ -69,6 +76,13 @@ private:
     CollectiveInfo(TagType in_seq, ActionType in_action, EpochType in_epoch)
       : seq_(in_seq), action_(in_action), epoch_(in_epoch)
     { }
+
+    template <typename Serializer>
+    void serialize(Serializer& s) {
+      s | seq_
+        | action_
+        | epoch_;
+    }
 
     TagType seq_ = no_tag;
     ActionType action_ = no_action;
@@ -191,6 +205,12 @@ public:
    * \return the scope bits
    */
   TagType getScopeBits() const { return scope_; }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | is_user_tag_
+      | scope_;
+  }
 
 private:
 

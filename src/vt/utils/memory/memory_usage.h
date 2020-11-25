@@ -185,6 +185,12 @@ struct MemoryUsage : runtime::component::Component<MemoryUsage> {
    */
   std::size_t convertBytesFromString(std::string const& in);
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | reporters_
+      | first_valid_reporter_;
+  }
+
 private:
   std::vector<std::unique_ptr<Reporter>> reporters_;
   int first_valid_reporter_ = -1;

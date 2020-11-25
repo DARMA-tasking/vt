@@ -53,6 +53,9 @@ namespace vt { namespace objgroup { namespace holder {
 struct HolderBase {
   virtual ~HolderBase() = default;
   virtual bool exists() = 0;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 };
 
 template <typename ObjT>

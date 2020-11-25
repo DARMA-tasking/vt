@@ -65,6 +65,12 @@ struct LocEntity {
 
   friend struct EntityLocationCoord<EntityID>;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | entity_
+      | msg_action_;
+  }
+
 private:
   EntityID entity_;
   LocMsgActionType msg_action_ = nullptr;

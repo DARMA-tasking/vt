@@ -98,6 +98,20 @@ struct VirtualInfo {
   bool hasNodeMap() const { return node_map_handle_ != uninitialized_handler; }
   void setSeed(SeedType const seed) { seed_ = seed; }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | core_map_handle_
+      | node_map_handle_
+      | default_core_
+      | default_node_
+      | proxy_
+      | is_constructed_
+      | vrt_ptr_
+      | needs_lock_
+      | seed_
+      | msg_buffer_;
+  }
+
  private:
   HandlerType core_map_handle_ = uninitialized_handler;
   HandlerType node_map_handle_ = uninitialized_handler;

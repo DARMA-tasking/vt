@@ -73,6 +73,11 @@ struct DispatchBase {
 
   ObjGroupProxyType proxy() const { return proxy_; }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | proxy_;
+  }
+
 private:
   ObjGroupProxyType proxy_ = no_obj_group;
 };

@@ -70,6 +70,13 @@ struct LocRecord {
   template <typename U>
   friend std::ostream& operator<<(std::ostream& os, LocRecord<U> const& rec);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | id_
+      | state_
+      | cur_node_;
+  }
+
 private:
   EntityID id_;
   LocStateType state_ = eLocState::Invalid;

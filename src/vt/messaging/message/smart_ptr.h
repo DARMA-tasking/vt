@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/refs.h"
+#include "vt/serialization/sizer.h"
 
 #include <iosfwd>
 #include <cassert>
@@ -213,6 +214,20 @@ struct MsgSharedPtr final {
               <<              m.ptr_    << ","
               << "ref="    << nrefs
               << ")";
+  }
+
+  template <
+    typename SerializerT,
+    typename = std::enable_if_t<
+      std::is_same<SerializerT, checkpoint::Footprinter>::value
+    >
+  >
+  void serialize(SerializerT& s) {
+    if (ownsMessage()) {
+      auto ptr = get();
+      auto const msg_size = vt::serialization::MsgSizer<MsgType>::get(ptr);
+      s.addBytes(msg_size);
+    }
   }
 
 private:

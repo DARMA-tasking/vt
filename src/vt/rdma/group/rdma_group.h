@@ -93,6 +93,15 @@ struct Group {
 
   NodeType findDefaultNode(RDMA_ElmType const& elm);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | map
+      | elm_size
+      | num_total_elems
+      | num_blocks
+      | unsized_;
+  }
+
   RDMA_MapType map;
 
   ByteType elm_size;

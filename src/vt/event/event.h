@@ -187,6 +187,21 @@ struct AsyncEvent : runtime::component::PollableComponent<AsyncEvent> {
 
   std::string name() override { return "AsyncEvent"; }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | cur_event_
+      | event_container_
+      | polling_event_container_
+      | eventPollCount
+      | eventSizeGauge
+      | mpiEventWaitTime
+      | lookup_container_;
+
+  # if vt_check_enabled(trace_enabled)
+    s | trace_event_polling;
+  # endif
+  }
+
 private:
   // next event id
   EventType cur_event_ = 0;

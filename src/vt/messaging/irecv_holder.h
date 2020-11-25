@@ -146,6 +146,14 @@ struct IRecvHolder {
     return progress_made;
   }
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | holder_;
+  # if vt_check_enabled(trace_enabled)
+    s | trace_user_event_;
+  # endif
+  }
+
 private:
   std::vector<T> holder_;
 

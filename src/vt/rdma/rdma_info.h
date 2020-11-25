@@ -74,6 +74,18 @@ struct Info {
       data_ptr(in_data_ptr), cont(in_cont), cont_action(in_cont_action),
       offset(in_offset), is_local(in_is_local)
   { }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | rdma_type
+      | num_bytes
+      | tag
+      | data_ptr
+      | cont
+      | cont_action
+      | offset
+      | is_local;
+  }
 };
 
 }} //end namespace vt::rdma

@@ -164,6 +164,17 @@ public:
    */
   std::shared_ptr<LoadModel> getLoadModel() { return model_; }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | cached_phase_
+      | cached_lb_
+      | destroy_lb_
+      | proxy_
+      | base_model_
+      | model_
+      | lb_instances_;
+  }
+
 protected:
   /**
    * \internal \brief Collectively construct a new load balancer

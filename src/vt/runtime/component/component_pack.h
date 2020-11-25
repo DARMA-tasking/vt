@@ -135,6 +135,11 @@ public:
    */
   void foreach(std::function<void(BaseComponent*)> apply);
 
+  /**
+   * \internal \brief Print memory footprint for all live components
+   */
+  void printMemoryFootprint() const;
+
 private:
   /**
    * \internal \brief Topologically sort all the registered components to find a

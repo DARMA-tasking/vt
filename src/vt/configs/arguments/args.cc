@@ -105,6 +105,7 @@ void ArgConfig::addMemUsageArgs(CLI::App& app) {
   auto mem_at_thresh = "Print memory usage from scheduler when reaches a threshold increment";
   auto mem_thresh    = "The threshold increments to print memory usage: \"<value> {GiB,MiB,KiB,B}\"";
   auto mem_sched     = "The frequency to query the memory threshold check (some memory reporters might be expensive)";
+  auto mem_footprint = "Print live components' memory footprint after initialization and before shutdown";
   auto mm = app.add_option("--vt_memory_reporters",          config_.vt_memory_reporters, mem_desc, true);
   auto mn = app.add_flag("--vt_print_memory_each_phase",     config_.vt_print_memory_each_phase, mem_phase);
   auto mo = app.add_option("--vt_print_memory_node",         config_.vt_print_memory_node, mem_node, true);
@@ -112,6 +113,7 @@ void ArgConfig::addMemUsageArgs(CLI::App& app) {
   auto mq = app.add_flag("--vt_print_memory_at_threshold",   config_.vt_print_memory_at_threshold, mem_at_thresh);
   auto mr = app.add_option("--vt_print_memory_threshold",    config_.vt_print_memory_threshold, mem_thresh, true);
   auto ms = app.add_option("--vt_print_memory_sched_poll",   config_.vt_print_memory_sched_poll, mem_sched, true);
+  auto mf = app.add_flag("--vt_print_memory_footprint", config_.vt_print_memory_footprint, mem_footprint);
   auto memoryGroup = "Memory Usage Reporting";
   mm->group(memoryGroup);
   mn->group(memoryGroup);
@@ -120,6 +122,7 @@ void ArgConfig::addMemUsageArgs(CLI::App& app) {
   mq->group(memoryGroup);
   mr->group(memoryGroup);
   ms->group(memoryGroup);
+  mf->group(memoryGroup);
 }
 
 

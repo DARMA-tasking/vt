@@ -438,6 +438,9 @@ struct MyObjGroup {
     vt::theTerm()->consume(vt::term::any_epoch_sentinel);
   }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {}
+
 private:
   // Has an update been started
   bool started_ = false;
@@ -629,6 +632,9 @@ struct MergeObjGroup
 
     vt::runSchedulerThrough(epoch_);
   }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {}
 
   private:
 

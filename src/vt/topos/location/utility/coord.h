@@ -53,6 +53,11 @@ namespace vt { namespace location {
 // General base class for the location coords to erase templated types
 struct LocationCoord {
   int data;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | data;
+  }
 };
 
 }}  // end namespace vt::location

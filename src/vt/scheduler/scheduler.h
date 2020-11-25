@@ -264,6 +264,31 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | work_queue_
+      | has_executed_
+      | is_idle
+      | is_idle_minus_term
+      | action_depth_
+      | num_term_msgs_
+      | event_triggers
+      | event_triggers_once
+      | last_progress_time_
+      | progress_time_enabled_
+      | processed_after_last_progress_
+      | last_threshold_memory_usage_
+      | threshold_memory_usage_
+      | last_memory_usage_poll_
+      | progressCount
+      | workUnitCount
+      | queueSizeGauge
+      | vtLiveTime
+      | schedLoopTime
+      | idleTime
+      | idleTimeMinusTerm;
+  }
+
 private:
 
   /**

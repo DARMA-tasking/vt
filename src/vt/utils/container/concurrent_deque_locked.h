@@ -103,6 +103,13 @@ struct ConcurrentDequeLocked {
 
   SizeType size();
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | needs_lock_
+      | container_
+      | container_mutex_;
+  }
+
 private:
   MutexType* getMutex();
 

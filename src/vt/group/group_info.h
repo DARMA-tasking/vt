@@ -113,6 +113,13 @@ public:
   static void groupSetupHandler(MsgT* msg);
   static void groupTriggerHandler(GroupOnlyMsg* msg);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | group_
+      | is_collective_
+      | finished_setup_action_;
+  }
+
 protected:
   GroupType getGroupID() const override { return group_;                 }
   ActionType getAction() const override { return finished_setup_action_; }

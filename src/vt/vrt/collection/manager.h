@@ -1481,7 +1481,6 @@ public:
     typename ColT::IndexType const& idx
   );
 
-public:
   /**
    * \brief Migrate element to a new node
    *
@@ -1755,6 +1754,22 @@ public:
     typename ColT::IndexType range, std::string const& file_base
   );
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | buffers_
+      | proxy_state_
+      | cleanup_fns_
+      | constructed_
+      | reduce_cur_stamp_
+      | insert_finished_action_
+      | user_insert_action_
+      | dist_tag_id_
+      | release_lb_
+      | cur_context_temp_elm_id_
+      | cur_context_perm_elm_id_
+      | collect_stats_for_lb_;
+  }
+
 private:
   /**
    * \brief Next proxy identifier for assignment of virtual proxy IDs
@@ -1794,7 +1809,6 @@ private:
     balance::ElementIDType elm_perm, balance::ElementIDType elm_temp
   );
 
-private:
   /**
    * \internal \brief Get the mapped node for an element
    *
@@ -1844,7 +1858,6 @@ private:
     return fn(cur_base, max_base, theContext()->getNumNodes());
   }
 
-private:
   using ActionPendingType = std::function<messaging::PendingSend(void)>;
 
   /**

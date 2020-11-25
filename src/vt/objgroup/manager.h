@@ -82,6 +82,7 @@ namespace vt { namespace objgroup {
  * implemented as object groups, such as the load balancers.
  */
 struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
+
   template <typename ObjT>
   using ProxyType           = proxy::Proxy<ObjT>;
   template <typename ObjT>
@@ -361,6 +362,16 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
   friend void scheduleMsg(
     MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType ep
   );
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | cur_obj_id_
+      | dispatch_
+      | objs_
+      | obj_to_proxy_
+      | pending_
+      | derived_to_bases_;
+  }
 
 private:
   /**

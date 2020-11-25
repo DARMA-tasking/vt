@@ -364,6 +364,11 @@ public:
   template <typename MsgT>
   void triggerSendBack(PipeType const& pipe, MsgT* data);
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | group_id_;
+  }
+
 private:
   /// The group ID used to indicate that the message is being used as a pipe
   GroupType group_id_ = no_group;

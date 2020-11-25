@@ -106,6 +106,13 @@ struct TimeTriggerManager
    */
   void triggerReady(TimeType cur_time);
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | queue_
+      | next_trigger_id_
+      | removed_;
+  }
+
 private:
   QueueType queue_;                     /**< Priority queue of time triggers */
   int next_trigger_id_ = 0;             /**< Next trigger id */

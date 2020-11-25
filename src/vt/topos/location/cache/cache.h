@@ -75,6 +75,13 @@ struct LocationCache {
   void insert(KeyT const& key, ValueT const& value);
   void printCache() const;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | cache_
+      | max_size_
+      | lookup_;
+  }
+
  private:
   // container for quick lookup
   LookupContainerType lookup_;

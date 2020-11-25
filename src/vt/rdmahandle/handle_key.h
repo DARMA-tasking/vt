@@ -88,8 +88,30 @@ struct HandleKey {
     proxy_.is_obj_ = false;
     proxy_.u_.vrt_ = in_proxy;
   }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | handle_;
+
+    s.countBytes(proxy_);
+  }
 };
 
 }} /* end namespace vt::rdma */
+
+namespace std {
+
+template <>
+struct hash<vt::rdma::HandleKey> {
+  size_t operator()(vt::rdma::HandleKey const& in) const {
+    return std::hash<uint64_t>()(
+      in.handle_ ^
+      (in.proxy_.is_obj_ ? in.proxy_.u_.obj_ : in.proxy_.u_.vrt_) ^
+      (in.proxy_.is_obj_ ? 0x10 : 0x00)
+    );
+  }
+};
+
+} /* end namespace std */
 
 #endif /*INCLUDED_VT_RDMAHANDLE_HANDLE_KEY_H*/

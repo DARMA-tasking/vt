@@ -69,6 +69,12 @@ struct ChannelLookup {
 
   ChannelLookup(ChannelLookup const&) = default;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | handle
+      | target
+      | non_target;
+  }
 };
 
 inline bool

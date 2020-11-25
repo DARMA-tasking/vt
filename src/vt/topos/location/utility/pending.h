@@ -63,6 +63,12 @@ struct PendingLocationLookup {
 
   friend struct EntityLocationCoord<EntityID>;
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | entity_
+      | action_;
+  }
+
 private:
   EntityID entity_;
   NodeActionType action_ = nullptr;

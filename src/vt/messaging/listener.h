@@ -69,6 +69,9 @@ struct Listener {
    * \param[in] bcast whether the message is being broadcast or sent
    */
   virtual void send(NodeType dest, MsgSizeType size, bool bcast) = 0;
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {}
 };
 
 }} /* end namespace vt::messaging */

@@ -79,6 +79,15 @@ struct StdThreadWorker {
   void sendTerminateSignal();
   void progress();
 
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | should_terminate_
+      | worker_id_
+      | work_queue_
+      | thd_
+      | finished_fn_;
+  }
+
 private:
   void scheduler();
 
