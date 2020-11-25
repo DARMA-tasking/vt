@@ -46,7 +46,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-TimeType MultiplePhases::getWork(ElementIDType object, PhaseOffset when) {
+TimeType MultiplePhases::getWork(ElementIDStruct object, PhaseOffset when) {
   // Retrospective queries don't call for a prediction
   if (when.phases < 0)
     return ComposedModel::getWork(object, when);

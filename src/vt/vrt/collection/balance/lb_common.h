@@ -50,6 +50,7 @@
 
 #include <cstdlib>
 #include <unordered_map>
+#include <ostream>
 
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
@@ -78,8 +79,8 @@ std::ostream& operator<<(
 
 static constexpr ElementIDType const no_element_id = 0;
 
-using LoadMapType         = std::unordered_map<ElementIDType,TimeType>;
-using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
+using LoadMapType         = std::unordered_map<ElementIDStruct,TimeType>;
+using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
 } /* end namespace balance */
 
 namespace lb {

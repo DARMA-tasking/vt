@@ -57,7 +57,7 @@ namespace vt { namespace tests { namespace unit { namespace raw {
 using TestRawData = TestHarness;
 
 using vt::vrt::collection::balance::CommMapType;
-using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::RawData;
 using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::LoadModel;
@@ -66,6 +66,7 @@ using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::SubphaseLoadMapType;
 
 TEST_F(TestRawData, test_model_raw_data_scalar) {
+  NodeType this_node = 0;
   auto test_model =
     std::make_shared<RawData>();
 
@@ -73,26 +74,23 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
   std::unordered_map<PhaseType, SubphaseLoadMapType> subphase_loads;
   test_model->setLoads(&proc_loads, &subphase_loads, nullptr);
 
+  ElementIDStruct id1{1,this_node,this_node};
+  ElementIDStruct id2{2,this_node,this_node};
+
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
-    LoadMapType{
-      {ElementIDType{1}, TimeType{5}}, {ElementIDType{2}, TimeType{10}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{100}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{50}}, {ElementIDType{2}, TimeType{40}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{2}}, {ElementIDType{2}, TimeType{50}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{20}}},
-    LoadMapType{
-      {ElementIDType{1}, TimeType{100}}, {ElementIDType{2}, TimeType{10}}},
+    LoadMapType{{id1, TimeType{5}},   {id2, TimeType{10}}},
+    LoadMapType{{id1, TimeType{30}},  {id2, TimeType{100}}},
+    LoadMapType{{id1, TimeType{50}},  {id2, TimeType{40}}},
+    LoadMapType{{id1, TimeType{2}},   {id2, TimeType{50}}},
+    LoadMapType{{id1, TimeType{60}},  {id2, TimeType{20}}},
+    LoadMapType{{id1, TimeType{100}}, {id2, TimeType{10}}},
   };
 
   for (size_t iter = 0; iter < load_holder.size(); ++iter) {
     proc_loads[iter] = load_holder[iter];
-    subphase_loads[iter][1] = {load_holder[iter][1]};
-    subphase_loads[iter][2] = {load_holder[iter][2]};
+    subphase_loads[iter][id1] = {load_holder[iter][id1]};
+    subphase_loads[iter][id2] = {load_holder[iter][id2]};
     test_model->updateLoads(iter);
 
     EXPECT_EQ(test_model->getNumObjects(), 2);
@@ -104,7 +102,7 @@ TEST_F(TestRawData, test_model_raw_data_scalar) {
 
     int objects_seen = 0;
     for (auto&& obj : *test_model) {
-      EXPECT_TRUE(obj == 1 || obj == 2);
+      EXPECT_TRUE(obj.id == 1 || obj.id == 2);
       objects_seen++;
 
       auto work_val = test_model->getWork(obj, PhaseOffset{-1, PhaseOffset::WHOLE_PHASE});

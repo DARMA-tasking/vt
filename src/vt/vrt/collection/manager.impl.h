@@ -471,24 +471,22 @@ template <typename ColT, typename IndexT, typename MsgT>
         // Set the current context (element ID) that is executing (having a message
         // delivered). This is used for load balancing to build the communication
         // graph
-        auto const perm_elm_id = base->getElmID();
-        auto const temp_elm_id = base->getTempID();
-        auto const perm_prev_elm = theCollection()->getCurrentContextPerm();
-        auto const temp_prev_elm = theCollection()->getCurrentContextTemp();
+        auto const elm_id = base->getElmID();
+        auto const prev_elm = theCollection()->getCurrentContext();
 
-        theCollection()->setCurrentContext(perm_elm_id, temp_elm_id);
+        theCollection()->setCurrentContext(elm_id);
 
         vt_debug_print(
           vrt_coll, node,
-          "collectionBcastHandler: current context: perm={}, temp={}\n",
-          perm_elm_id, temp_elm_id
+          "collectionBcastHandler: current context: elm={}\n",
+          elm_id
         );
 
         std::unique_ptr<messaging::Listener> listener =
           std::make_unique<balance::LBListener>(
             [&](NodeType dest, MsgSizeType size, bool bcast){
               auto& stats = base->getStats();
-              stats.recvToNode(dest, perm_elm_id, temp_elm_id, size, bcast);
+              stats.recvToNode(dest, elm_id, size, bcast);
             }
           );
         theMsg()->addSendListener(std::move(listener));
@@ -509,7 +507,7 @@ template <typename ColT, typename IndexT, typename MsgT>
         theMsg()->clearListeners();
 
         // Unset the element ID context
-        theCollection()->setCurrentContext(perm_prev_elm, temp_prev_elm);
+        theCollection()->setCurrentContext(prev_elm);
 
         if (msg->lbLiteInstrument()) {
           auto& stats = base->getStats();
@@ -698,24 +696,22 @@ template <typename ColT, typename IndexT, typename MsgT>
     // Set the current context (element ID) that is executing (having a message
     // delivered). This is used for load balancing to build the communication
     // graph
-    auto const perm_elm_id = col_ptr->getElmID();
-    auto const temp_elm_id = col_ptr->getTempID();
-    auto const perm_prev_elm = theCollection()->getCurrentContextPerm();
-    auto const temp_prev_elm = theCollection()->getCurrentContextTemp();
+    auto const elm_id = col_ptr->getElmID();
+    auto const prev_elm = theCollection()->getCurrentContext();
 
-    theCollection()->setCurrentContext(perm_elm_id, temp_elm_id);
+    theCollection()->setCurrentContext(elm_id);
 
     vt_debug_print(
       vrt_coll, node,
-      "collectionMsgTypedHandler: current context: perm={}, temp={}\n",
-      perm_elm_id, temp_elm_id
+      "collectionMsgTypedHandler: current context: elm={}\n",
+      elm_id
     );
 
     std::unique_ptr<messaging::Listener> listener =
       std::make_unique<balance::LBListener>(
         [&](NodeType dest, MsgSizeType size, bool bcast){
           auto& stats = col_ptr->getStats();
-          stats.recvToNode(dest, perm_elm_id, temp_elm_id, size, bcast);
+          stats.recvToNode(dest, elm_id, size, bcast);
         }
       );
     theMsg()->addSendListener(std::move(listener));
@@ -737,7 +733,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   #if vt_check_enabled(lblite)
     theMsg()->clearListeners();
 
-    theCollection()->setCurrentContext(perm_prev_elm, temp_prev_elm);
+    theCollection()->setCurrentContext(prev_elm);
 
     if (col_msg->lbLiteInstrument()) {
       auto& stats = col_ptr->getStats();
@@ -749,33 +745,31 @@ template <typename ColT, typename IndexT, typename MsgT>
 template <typename ColT, typename MsgT>
 /*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
   auto const pto = col_ptr->getElmID();
-  auto const tto = col_ptr->getTempID();
   auto const pfrom = msg->getElm();
-  auto const tfrom = msg->getElmTemp();
   auto& stats = col_ptr->getStats();
   auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   vt_debug_print(
     vrt_coll, node,
-    "recordStats: receive msg: perm(to={}, from={}), temp(to={}, from={})"
+    "recordStats: receive msg: elm(to={}, from={}),"
     " no={}, size={}, category={}\n",
-    pto, pfrom, tto, tfrom, balance::no_element_id, msg_size,
+    pto, pfrom, balance::no_element_id, msg_size,
     static_cast<typename std::underlying_type<balance::CommCategory>::type>(cat)
   );
   if (
     cat == balance::CommCategory::SendRecv or
     cat == balance::CommCategory::Broadcast
   ) {
-    vtAssert(pfrom != balance::no_element_id, "Must not be no element ID");
+    vtAssert(pfrom.id != balance::no_element_id, "Must not be no element ID");
     bool bcast = cat == balance::CommCategory::SendRecv ? false : true;
-    stats.recvObjData(pto, tto, pfrom, tfrom, msg_size, bcast);
+    stats.recvObjData(pto, pfrom, msg_size, bcast);
   } else if (
     cat == balance::CommCategory::NodeToCollection or
     cat == balance::CommCategory::NodeToCollectionBcast
   ) {
     bool bcast = cat == balance::CommCategory::NodeToCollection ? false : true;
     auto nfrom = msg->getFromNode();
-    stats.recvFromNode(pto, tto, nfrom, msg_size, bcast);
+    stats.recvFromNode(pto, nfrom, msg_size, bcast);
   }
 }
 
@@ -916,16 +910,15 @@ void CollectionManager::invokeMsgImpl(
   );
 
 #if vt_check_enabled(lblite)
-  auto const temp_elm_id = getCurrentContextTemp();
-  auto const perm_elm_id = getCurrentContextPerm();
+  auto const elm_id = getCurrentContext();
 
   vt_debug_print(
-    vrt_coll, node, "invokeMsg: LB current elm context perm={}, temp={}\n",
-    perm_elm_id, temp_elm_id
+    vrt_coll, node, "invokeMsg: LB current elm context elm={}\n",
+    elm_id
   );
 
-  if (perm_elm_id != balance::no_element_id) {
-    msgPtr->setElm(perm_elm_id, temp_elm_id);
+  if (elm_id.id != balance::no_element_id) {
+    msgPtr->setElm(elm_id);
   }
   msgPtr->setCat(balance::CommCategory::LocalInvoke);
 
@@ -1264,17 +1257,16 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
 
 # if vt_check_enabled(lblite)
   msg->setLBLiteInstrument(instrument);
-  auto const temp_elm_id = getCurrentContextTemp();
-  auto const perm_elm_id = getCurrentContextPerm();
+  auto const elm_id = getCurrentContext();
 
   vt_debug_print(
     vrt_coll, node,
-    "broadcasting msg: LB current elm context perm={}, temp={}\n",
-    perm_elm_id, temp_elm_id
+    "broadcasting msg: LB current elm context elm={}\n",
+    elm_id
   );
 
-  if (perm_elm_id != balance::no_element_id) {
-    msg->setElm(perm_elm_id, temp_elm_id);
+  if (elm_id.id != balance::no_element_id) {
+    msg->setElm(elm_id);
     msg->setCat(balance::CommCategory::Broadcast);
   } else {
     msg->setCat(balance::CommCategory::NodeToCollection);
@@ -1571,17 +1563,16 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 # if vt_check_enabled(lblite)
   msg->setLBLiteInstrument(true);
 
-  auto const temp_elm_id = getCurrentContextTemp();
-  auto const perm_elm_id = getCurrentContextPerm();
+  auto const elm_id = getCurrentContext();
 
   vt_debug_print(
     vrt_coll, node,
-    "sending msg: LB current elm context perm={}, temp={}\n",
-    perm_elm_id, temp_elm_id
+    "sending msg: LB current elm context elm={}\n",
+    elm_id
   );
 
-  if (perm_elm_id != balance::no_element_id) {
-    msg->setElm(perm_elm_id, temp_elm_id);
+  if (elm_id.id != balance::no_element_id) {
+    msg->setElm(elm_id);
     msg->setCat(balance::CommCategory::SendRecv);
   } else {
     msg->setCat(balance::CommCategory::NodeToCollection);
@@ -3022,8 +3013,9 @@ MigrateStatus CollectionManager::migrateIn(
    */
   vc_raw_ptr->preMigrateIn();
 
-  // Always assign a new temp element ID for LB statistic tracking
-  vrt_elm_ptr->temp_elm_id_ = theNodeStats()->getNextElm();
+  // Always update the element ID struct for LB statistic tracking
+  auto const& this_node = theContext()->getNode();
+  vrt_elm_ptr->elm_id_.curr_node = this_node;
 
   bool const is_static = ColT::isStaticSized();
 

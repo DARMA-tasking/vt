@@ -1870,8 +1870,7 @@ public:
       | user_insert_action_
       | dist_tag_id_
       | release_lb_
-      | cur_context_temp_elm_id_
-      | cur_context_perm_elm_id_
+      | cur_context_elm_id_
       | collect_stats_for_lb_;
   }
 
@@ -1889,29 +1888,20 @@ private:
   static BcastBufferType<ColT> broadcasts_;
 
   /**
-   * \internal \brief Get the current LB temporary element ID based on handler
+   * \internal \brief Get the current LB element ID struct based on handler
    * context
    *
    * \return the element ID
    */
-  balance::ElementIDType getCurrentContextTemp() const;
-
-  /**
-   * \internal \brief Get the current LB permanent element ID based on handler
-   * context
-   *
-   * \return the element ID
-   */
-  balance::ElementIDType getCurrentContextPerm() const;
+  balance::ElementIDStruct getCurrentContext() const;
 
   /**
    * \internal \brief Set the current LB element ID
    *
-   * \param[in] elm_perm permanent ID
-   * \param[in] elm_temp temporary ID
+   * \param[in] elm ID struct
    */
   void setCurrentContext(
-    balance::ElementIDType elm_perm, balance::ElementIDType elm_temp
+    balance::ElementIDStruct elm
   );
 
   /**
@@ -2071,8 +2061,9 @@ private:
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
-  balance::ElementIDType cur_context_temp_elm_id_ = balance::no_element_id;
-  balance::ElementIDType cur_context_perm_elm_id_ = balance::no_element_id;
+  balance::ElementIDStruct cur_context_elm_id_ = {
+    balance::no_element_id, uninitialized_destination, uninitialized_destination
+  };
 };
 
 // These are static variables in class templates because Intel 18

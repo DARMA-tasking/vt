@@ -62,7 +62,7 @@ void CommOverhead::setLoads(std::unordered_map<PhaseType, LoadMapType> const* pr
   ComposedModel::setLoads(proc_load, proc_subphase_load, proc_comm);
 }
 
-TimeType CommOverhead::getWork(ElementIDType object, PhaseOffset offset) {
+TimeType CommOverhead::getWork(ElementIDStruct object, PhaseOffset offset) {
   auto work = ComposedModel::getWork(object, offset);
 
   auto phase = getNumCompletedPhases() + offset.phases;
@@ -71,7 +71,7 @@ TimeType CommOverhead::getWork(ElementIDType object, PhaseOffset offset) {
   TimeType overhead = 0.;
   for (auto&& c : comm) {
     // find messages that go off-node and are sent to this object
-    if (c.first.offNode() and c.first.toObjTemp() == object) {
+    if (c.first.offNode() and c.first.toObj() == object) {
       overhead += per_msg_weight_ * c.second.messages;
       overhead += per_byte_weight_ * c.second.bytes;
     }

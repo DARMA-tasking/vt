@@ -100,8 +100,7 @@ struct Migratable : MigrateHookBase, storage::Storable {
    */
   virtual void destroy();
 
-  balance::ElementIDType getElmID() const { return stats_elm_id_; }
-  balance::ElementIDType getTempID() const { return temp_elm_id_; }
+  balance::ElementIDStruct getElmID() const { return elm_id_; }
 
 protected:
   template <typename Serializer>
@@ -114,8 +113,7 @@ protected:
 public:
   balance::ElementStats& getStats() { return stats_; }
 protected:
-  balance::ElementIDType stats_elm_id_ = 0;
-  balance::ElementIDType temp_elm_id_ = 0;
+  balance::ElementIDStruct elm_id_ = {0, uninitialized_destination, uninitialized_destination};
 };
 
 }}} /* end namespace vt::vrt::collection */

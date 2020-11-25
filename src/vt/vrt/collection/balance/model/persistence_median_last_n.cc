@@ -55,7 +55,7 @@ PersistenceMedianLastN::PersistenceMedianLastN(std::shared_ptr<LoadModel> base, 
   vtAssert(n > 0, "Cannot take a median over no phases");
 }
 
-TimeType PersistenceMedianLastN::getWork(ElementIDType object, PhaseOffset when)
+TimeType PersistenceMedianLastN::getWork(ElementIDStruct object, PhaseOffset when)
 {
   // Retrospective queries don't call for a prospective calculation
   if (when.phases < 0)

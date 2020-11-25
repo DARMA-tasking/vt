@@ -95,8 +95,8 @@ void RandomLB::runLB() {
     if (to_node != this_node) {
       vt_debug_print(
         lb, node,
-        "RandomLB: migrating obj={:x} from={} to={}\n",
-        *it, this_node, to_node
+        "RandomLB: migrating obj={:x} home={} from={} to={}\n",
+        it->id, it->home_node, this_node, to_node
       );
       migrateObjectTo(*it, to_node);
     }

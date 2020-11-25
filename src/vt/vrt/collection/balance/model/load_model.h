@@ -134,7 +134,7 @@ public:
    * The `updateLoads` method must have been called before any call to
    * this.
    */
-  virtual TimeType getWork(ElementIDType object, PhaseOffset when) = 0;
+  virtual TimeType getWork(ElementIDStruct object, PhaseOffset when) = 0;
 
   /**
    * \brief Compute how many phases of past load statistics need to be

@@ -56,7 +56,7 @@ namespace vt { namespace tests { namespace unit { namespace naive {
 
 using TestModelNaivePersistence = TestHarness;
 
-using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::NaivePersistence;
 using vt::vrt::collection::balance::PhaseOffset;
@@ -83,7 +83,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getWork(ElementIDType id, PhaseOffset phase) override {
+  TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     EXPECT_LE(phase.phases, -1);
     return proc_load_->at(getIndexFromPhase(phase.phases)).at(id);
   }
@@ -106,15 +106,20 @@ private:
 };
 
 TEST_F(TestModelNaivePersistence, test_model_naive_persistence_1) {
-    std::unordered_map<PhaseType, LoadMapType> proc_loads = {
+  NodeType this_node = 0;
+  std::unordered_map<PhaseType, LoadMapType> proc_loads = {
     {0, LoadMapType{
-      {ElementIDType{1}, TimeType{10}}, {ElementIDType{2}, TimeType{40}}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{10}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}}},
     {1, LoadMapType{
-      {ElementIDType{1}, TimeType{4}}, {ElementIDType{2}, TimeType{10}}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{4}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}}},
     {2, LoadMapType{
-      {ElementIDType{1}, TimeType{20}}, {ElementIDType{2}, TimeType{50}}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{20}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{50}}}},
     {3, LoadMapType{
-      {ElementIDType{1}, TimeType{40}}, {ElementIDType{2}, TimeType{100}}}}};
+      {ElementIDStruct{1,this_node,this_node}, TimeType{40}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{100}}}}};
 
   auto test_model =
     std::make_shared<NaivePersistence>(std::make_shared<StubModel>());

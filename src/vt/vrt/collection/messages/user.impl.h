@@ -125,8 +125,7 @@ void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
 
   #if vt_check_enabled(lblite)
     s | lb_lite_instrument_;
-    s | elm_perm_;
-    s | elm_temp_;
+    s | elm_;
     s | cat_;
   #endif
 
@@ -157,21 +156,15 @@ void CollectionMessage<ColT, BaseMsgT>::setLBLiteInstrument(bool const& val) {
 }
 
 template <typename ColT, typename BaseMsgT>
-balance::ElementIDType CollectionMessage<ColT, BaseMsgT>::getElm() const {
-  return elm_perm_;
+balance::ElementIDStruct CollectionMessage<ColT, BaseMsgT>::getElm() const {
+  return elm_;
 }
 
 template <typename ColT, typename BaseMsgT>
 void CollectionMessage<ColT, BaseMsgT>::setElm(
-  balance::ElementIDType perm, balance::ElementIDType temp
+  balance::ElementIDStruct elm
 ) {
-  elm_perm_ = perm;
-  elm_temp_ = temp;
-}
-
-template <typename ColT, typename BaseMsgT>
-balance::ElementIDType CollectionMessage<ColT, BaseMsgT>::getElmTemp() const {
-  return elm_temp_;
+  elm_ = elm;
 }
 
 template <typename ColT, typename BaseMsgT>
