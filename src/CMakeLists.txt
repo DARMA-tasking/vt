@@ -6,6 +6,7 @@ set(TOP_LEVEL_SUBDIRS
   group
   messaging
   objgroup
+  phase
   pool
   pipe
   pmpi
@@ -324,10 +325,24 @@ else()
   set(MIMALLOC_LIBRARY_EXPORT "")
 endif()
 
+if (${vt_libfort_enabled})
+  set(FORT_LIBRARY_EXPORT ${FORT_LIBRARY})
+  install(TARGETS ${FORT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+else()
+  set(FORT_LIBRARY_EXPORT "")
+endif()
+
+install(TARGETS detector EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+
+# Export to build directory
 export(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
                             ${FCONTEXT_LIBRARY_EXPORT}
                             ${MIMALLOC_LIBRARY_EXPORT}
+                            ${FORT_LIBRARY_EXPORT}
+                            checkpoint
+                            detector
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
