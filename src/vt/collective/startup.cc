@@ -66,7 +66,8 @@ RuntimePtrType initialize(int& argc, char**& argv, MPI_Comm* comm) {
 RuntimePtrType initialize(MPI_Comm* comm) {
   int argc = 0;
   char** argv = nullptr;
-  return CollectiveOps::initialize(argc,argv,no_workers,true,comm);
+  bool const is_interop = comm != nullptr;
+  return CollectiveOps::initialize(argc,argv,no_workers,is_interop,comm);
 }
 
 void finalize(RuntimePtrType in_rt) {
