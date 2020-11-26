@@ -641,7 +641,7 @@ Trace::localInvoke(TraceEntryIDType const ep, double const time) {
     return no_trace_event;
   }
 
-  auto const type = TraceConstantsType::LocalInvoke;
+  auto const type = TraceConstantsType::Creation;
 
   NodeType const node = theContext()->getNode();
 
@@ -770,7 +770,6 @@ TraceEventIDType Trace::logEvent(LogType&& log) {
   case TraceConstantsType::Creation:
   case TraceConstantsType::CreationBcast:
   case TraceConstantsType::MessageRecv:
-  case TraceConstantsType::LocalInvoke:
     log.event = cur_event_++;
     break;
   case TraceConstantsType::BeginIdle:
@@ -1026,8 +1025,7 @@ void Trace::writeTracesFile(int flush, bool is_incremental_flush) {
       );
       break;
     }
-    case TraceConstantsType::Creation:
-    case TraceConstantsType::LocalInvoke: {
+    case TraceConstantsType::Creation: {
       auto const& sdata = log.sys_data();
       gzprintf(
         gzfile,

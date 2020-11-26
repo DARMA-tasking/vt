@@ -83,8 +83,7 @@ enum class eTraceConstants : int32_t {
   UserStat                  = 32,
   BeginUserEventPair        = 98,
   EndUserEventPair          = 99,
-  UserEventPair             = 100,
-  LocalInvoke               = 101
+  UserEventPair             = 100
 };
 
 
