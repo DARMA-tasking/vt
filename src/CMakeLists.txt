@@ -332,8 +332,15 @@ else()
   set(FORT_LIBRARY_EXPORT "")
 endif()
 
-install(TARGETS detector EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+if (vt_find_detector_dep EQUAL 0)
+  install(TARGETS detector EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+  set(DETECTOR_EXPORT detector)
+endif()
+
+if (vt_find_checkpoint_dep EQUAL 0)
+  install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+  set(CHECKPOINT_EXPORT checkpoint)
+endif()
 
 # Export to build directory
 export(
@@ -341,8 +348,8 @@ export(
                             ${FCONTEXT_LIBRARY_EXPORT}
                             ${MIMALLOC_LIBRARY_EXPORT}
                             ${FORT_LIBRARY_EXPORT}
-                            checkpoint
-                            detector
+                            ${CHEKPOINT_EXPORT}
+                            ${DETECTOR_EXPORT}
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
