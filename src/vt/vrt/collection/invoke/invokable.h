@@ -58,17 +58,35 @@ struct Invokable : BaseProxyT {
     typename BaseProxyT::ElementProxyType const& in_elm
   );
 
+  /**
+   * \brief Invoke member message handler on a collection element
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] args arguments for creating the message
+   */
   template <
     typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f, typename... Args
   >
   void invoke(Args&&... args) const;
 
+  /**
+   * \brief Invoke message handler on a collection element
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] args arguments for creating the message
+   */
   template <
     typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f,
     typename... Args
   >
   void invoke(Args&&... args) const;
 
+  /**
+   * \brief Invoke function 'f' on a collection element
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] args function arguments
+   */
   template <typename Type, Type f, typename... Args>
   decltype(auto) invoke(Args&&... args) const;
 };
