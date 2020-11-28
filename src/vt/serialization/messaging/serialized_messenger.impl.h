@@ -59,6 +59,7 @@
 #include <type_traits>
 #include <cstdlib>
 #include <cassert>
+#include <typeinfo>
 
 namespace vt { namespace serialization {
 
@@ -120,16 +121,22 @@ template <typename UserMsgT>
     recv_tag, sys_msg->from_node,
     [handler,recv_tag,node,epoch,is_valid_epoch]
     (RDMA_GetType ptr, ActionType action){
+      vt_debug_print(
+        serial_msg, node,
+        "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
+        "msg_size={}, msg_type_id={}\n",
+        handler, recv_tag, sizeof(UserMsgT), typeid(UserMsgT).name()
+      );
       // be careful here not to use "sys_msg", it is no longer valid
       auto msg_data = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
       auto msg = deserializeFullMessage<UserMsgT>(msg_data);
 
-      vt_debug_print(
-        serial_msg, node,
-        "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
-        "epoch={}\n",
-        handler, recv_tag, envelopeGetEpoch(msg->env)
-      );
+      //vt_debug_print(
+      //  serial_msg, node,
+      //  "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
+      //  "epoch={}\n",
+      //  handler, recv_tag, envelopeGetEpoch(msg->env)
+      //);
 
       if (is_valid_epoch) {
         theMsg()->pushEpoch(epoch);

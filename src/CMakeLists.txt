@@ -7,6 +7,7 @@ set(TOP_LEVEL_SUBDIRS
   messaging
   objgroup
   pool
+  phase
   pipe
   pmpi
   rdma
