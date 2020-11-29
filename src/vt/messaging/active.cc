@@ -527,6 +527,12 @@ bool ActiveMessenger::recvDataMsgBuffer(
     MPI_Status stat;
     int flag;
 
+    vt_debug_print(
+      active, node,
+      "try recvData: from={}, recv_tag={}\n",
+      node, tag
+    );
+
     {
       VT_ALLOW_MPI_CALLS;
       const int probe_ret = MPI_Iprobe(
@@ -563,6 +569,12 @@ bool ActiveMessenger::recvDataMsgBuffer(
             tr_begin = vt::timing::Timing::getCurrentTime();
           }
         #endif
+
+        vt_debug_print(
+          active, node,
+          "recvData: num_bytes={} from={}, recv_tag={}\n",
+          num_probe_bytes, stat.MPI_SOURCE, stat.MPI_TAG
+        );
 
         const int recv_ret = MPI_Irecv(
           buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
