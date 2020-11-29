@@ -124,8 +124,9 @@ template <typename UserMsgT>
       vt_debug_print(
         serial_msg, node,
         "serialMsgHandler: recvDataMsg finished: handler={}, recv_tag={},"
-        "msg_size={}, msg_type_id={}\n",
-        handler, recv_tag, sizeof(UserMsgT), typeid(UserMsgT).name()
+        "sizeof_msg={}, data_size={}, msg_type_id={}\n",
+        handler, recv_tag, sizeof(UserMsgT), std::get<1>(ptr),
+        typeid(UserMsgT).name()
       );
       // be careful here not to use "sys_msg", it is no longer valid
       auto msg_data = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
