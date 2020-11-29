@@ -396,6 +396,14 @@ EventType ActiveMessenger::doMessageSend(
   return ret_event;
 }
 
+static char computeCheckSum(char* buf, InProgressDataIRecv::CountType len) {
+  char sum = buf[0];
+  for (InProgressDataIRecv::CountType i = 1; i < len; i++) {
+    sum ^= buf[i];
+  }
+  return sum;
+}
+
 ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
   RDMA_GetType const& ptr, NodeType const& dest, TagType const& tag
 ) {
@@ -421,8 +429,9 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
 
   vt_debug_print(
     active, node,
-    "sendData: ptr={}, num_bytes={} dest={}, tag={}, send_tag={}\n",
-    data_ptr, num_bytes, dest, tag, send_tag
+    "sendData: ptr={}, num_bytes={} dest={}, tag={}, send_tag={}, checksum={:x}\n",
+    data_ptr, num_bytes, dest, tag, send_tag,
+    computeCheckSum(static_cast<char*>(data_ptr), num_bytes)
   );
   fflush(stdout);
 
@@ -608,7 +617,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
 
       InProgressDataIRecv recv_holder{
         buf, num_probe_bytes, sender, req, user_buf, dealloc_user_buf, next,
-        priority
+        priority, stat.MPI_TAG
       };
 
       dmPollCount.increment(1);
@@ -655,6 +664,7 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
   auto user_buf = irecv->user_buf;
   auto dealloc_user_buf = irecv->dealloc_user_buf;
   auto next = irecv->next;
+  auto tag = irecv->tag;
 
 # if vt_check_enabled(trace_enabled)
   if (theConfig()->vt_trace_mpi) {
@@ -662,6 +672,12 @@ void ActiveMessenger::finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv) 
     trace::addUserNote(tr_note);
   }
 # endif
+
+  vt_debug_print(
+    active, node,
+    "recvData: data_size={}, from={}, recv_tag={}, checksum={:x}\n",
+    num_probe_bytes, sender, tag, computeCheckSum(buf, num_probe_bytes)
+  );
 
   dmRecvCounterGauge.incrementUpdate(num_probe_bytes, 1);
 

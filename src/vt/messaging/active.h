@@ -146,16 +146,18 @@ struct InProgressDataIRecv : public InProgressIRecv {
     MPI_Request in_req, void* const in_user_buf,
     ActionType in_dealloc_user_buf,
     RDMA_ContinuationDeleteType in_next,
-    PriorityType in_priority
+    PriorityType in_priority,
+    TagType in_tag
   ) : InProgressIRecv{in_buf, in_probe_bytes, in_sender, in_req},
       user_buf(in_user_buf), dealloc_user_buf(in_dealloc_user_buf),
-      next(in_next), priority(in_priority)
+      next(in_next), priority(in_priority), tag(in_tag)
   { }
 
   void* user_buf = nullptr;
   ActionType dealloc_user_buf = nullptr;
   RDMA_ContinuationDeleteType next = nullptr;
   PriorityType priority = no_priority;
+  TagType tag = no_tag;
 };
 
 /**
