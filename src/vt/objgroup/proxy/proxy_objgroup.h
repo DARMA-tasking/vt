@@ -332,6 +332,11 @@ public:
    */
   ProxyElm<ObjT> operator()(NodeType node) const;
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | proxy_;
+  }
+
 private:
   ObjGroupProxyType proxy_ = no_obj_group; /**< The raw proxy ID bits */
 };
