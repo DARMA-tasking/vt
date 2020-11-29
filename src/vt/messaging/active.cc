@@ -424,6 +424,7 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     "sendData: ptr={}, num_bytes={} dest={}, tag={}, send_tag={}\n",
     data_ptr, num_bytes, dest, tag, send_tag
   );
+  fflush(stdout);
 
   vtWarnIf(
     dest == theContext()->getNode(),
@@ -444,6 +445,13 @@ ActiveMessenger::SendDataRetType ActiveMessenger::sendData(
     #endif
 
     dmSentCounterGauge.incrementUpdate(num_bytes, 1);
+
+    vt_debug_print(
+      active, node,
+      "sendData2: num_bytes={} dest={}, send_tag={}\n",
+      num_bytes, dest, send_tag
+    );
+    fflush(stdout);
 
     const int ret = MPI_Isend(
       data_ptr, num_bytes, MPI_BYTE, dest, send_tag, theContext()->getComm(),
@@ -532,6 +540,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
       "try recvData: from={}, recv_tag={}\n",
       node, tag
     );
+    fflush(stdout);
 
     {
       VT_ALLOW_MPI_CALLS;
@@ -575,6 +584,7 @@ bool ActiveMessenger::recvDataMsgBuffer(
           "recvData: num_bytes={} from={}, recv_tag={}\n",
           num_probe_bytes, stat.MPI_SOURCE, stat.MPI_TAG
         );
+        fflush(stdout);
 
         const int recv_ret = MPI_Irecv(
           buf, num_probe_bytes, MPI_BYTE, stat.MPI_SOURCE, stat.MPI_TAG,
