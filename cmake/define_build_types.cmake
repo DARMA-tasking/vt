@@ -59,7 +59,7 @@ set(
 )
 
 option(vt_detector_disabled "Build VT with detector disabled" OFF)
-option(vt_lb_enabled "Build VT with load balancing enabled" OFF)
+option(vt_lb_enabled "Build VT with load balancing enabled" ON)
 option(vt_trace_enabled "Build VT with trace enabled" OFF)
 option(vt_priorities_enabled "Build VT with message priorities enabled" ON)
 option(

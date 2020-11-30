@@ -43,7 +43,7 @@ build configuration:
 
 | CMake Variable                   | Default Value   | Description |
 | ------------------               | --------------- | ----------- |
-| `vt_lb_enabled`                  | 0               | Compile with support for runtime load balancing |
+| `vt_lb_enabled`                  | 1               | Compile with support for runtime load balancing |
 | `vt_trace_enabled`               | 0               | Compile with support for runtime tracing (Projections-format) |
 | `vt_test_trace_runtime_enabled`  | 0               | Force tracing on at runtime for VT tests |
 | `vt_doxygen_enabled`             | 0               | Enable doxygen generation |
