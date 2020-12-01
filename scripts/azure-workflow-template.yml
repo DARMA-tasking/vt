@@ -46,9 +46,15 @@ stages:
   - job: Build
     displayName: Build
     pool:
-      vmImage: '[% workflow_runs_on %]'
+      [% workflow_runs_on %]
     timeoutInMinutes: 180
     steps:
+      - task: Bash@3
+        displayName: Job setup
+        inputs:
+          targetType: 'inline'
+          script: |
+            [% job_setup %]
       - task: Bash@3
         displayName: Build timestep for caching
         inputs:
