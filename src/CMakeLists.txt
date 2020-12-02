@@ -315,7 +315,10 @@ install(
 
 if(CMAKE_VERSION VERSION_LESS "3.13.0")
   message(
-    WARNING "VT: Install targets skipped, effects packages built with a VT install"
+    WARNING
+    "VT: Install targets skipped because CMake version ${CMAKE_VERSION}<3.13; "
+    "affects packages built with a VT install. "
+    "CMake <3.13 does not support exporting targets from subdirectories"
   )
   set(cmake_do_install 0)
 else()
