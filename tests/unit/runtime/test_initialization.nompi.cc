@@ -2,11 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  startup.cc
+//                        test_initialization.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2020 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -42,40 +42,22 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/collective/startup.h"
-#include "vt/collective/collective_ops.h"
-#include "vt/runtime/runtime_headers.h"
-#include "vt/context/context.h"
+#include <gtest/gtest.h>
 
-namespace vt {
+#include "test_harness.h"
 
-// vt::{initialize,finalize} for main ::vt namespace
-RuntimePtrType initialize(
-  int argc, char** argv, WorkerCountType const num_workers,
-  bool is_interop /* = false */, MPI_Comm* comm /* = nullptr */
-) {
-  return CollectiveOps::initialize(argc,argv,num_workers,is_interop,comm);
+#include <vt/transport.h>
+
+namespace vt { namespace tests { namespace unit {
+
+using TestInitialization = TestHarness;
+
+TEST_F(TestInitialization, test_initialize_no_args) {
+  vt::initialize();
+
+  EXPECT_EQ(theConfig()->prog_name, "vt_unknown");
+
+  vt::finalize();
 }
 
-RuntimePtrType initialize(
-  int argc /* = 0 */, char** argv /* = nullptr */,
-  MPI_Comm* comm /* = nullptr */
-) {
-  bool const is_interop = comm != nullptr;
-  return CollectiveOps::initialize(argc,argv,no_workers,is_interop,comm);
-}
-
-void finalize(RuntimePtrType in_rt) {
-  if (in_rt) {
-    return CollectiveOps::finalize(std::move(in_rt));
-  } else {
-    return CollectiveOps::finalize(nullptr);
-  }
-}
-
-void finalize() {
-  CollectiveOps::finalize(nullptr);
-}
-
-} /* end namespace vt */
+}}} // end namespace vt::tests::unit
