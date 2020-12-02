@@ -313,31 +313,34 @@ install(
   COMPONENT                 runtime
 )
 
-if (${vt_fcontext_enabled})
+if(CMAKE_VERSION VERSION_LESS "3.13.0")
+  message(
+    WARNING "VT: Install targets skipped, effects packages built with a VT install"
+  )
+  set(cmake_do_install 0)
+else()
+  set(cmake_do_install 1)
+endif()
+
+if (vt_fcontext_enabled AND cmake_do_install)
   set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
-else()
-  set(FCONTEXT_LIBRARY_EXPORT "")
 endif()
 
-if (${vt_mimalloc_enabled})
+if (vt_mimalloc_enabled AND cmake_do_install)
   set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
-else()
-  set(MIMALLOC_LIBRARY_EXPORT "")
 endif()
 
-if (${vt_libfort_enabled})
+if (vt_libfort_enabled AND cmake_do_install)
   set(FORT_LIBRARY_EXPORT ${FORT_LIBRARY})
   install(TARGETS ${FORT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-else()
-  set(FORT_LIBRARY_EXPORT "")
 endif()
 
-if (vt_find_detector_dep EQUAL 0)
+if (vt_find_detector_dep EQUAL 0 AND cmake_do_install)
   install(TARGETS detector EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
   set(DETECTOR_EXPORT detector)
 endif()
 
-if (vt_find_checkpoint_dep EQUAL 0)
+if (vt_find_checkpoint_dep EQUAL 0 AND cmake_do_install)
   install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
   set(CHECKPOINT_EXPORT checkpoint)
 endif()
