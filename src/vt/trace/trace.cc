@@ -635,19 +635,6 @@ void Trace::endIdle(double const time) {
   emitTraceForTopProcessingEvent(time, TraceConstantsType::BeginProcessing);
 }
 
-TraceEventIDType
-Trace::localInvoke(TraceEntryIDType const ep, double const time) {
-  if (not checkDynamicRuntimeEnabled()) {
-    return no_trace_event;
-  }
-
-  auto const type = TraceConstantsType::Creation;
-
-  NodeType const node = theContext()->getNode();
-
-  return logEvent(LogType{time, ep, type, node, 0});
-}
-
 TraceEventIDType Trace::messageCreation(
   TraceEntryIDType const ep, TraceMsgLenType const len, double const time
 ) {

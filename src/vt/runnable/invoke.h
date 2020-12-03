@@ -85,9 +85,7 @@ static std::string CreateEventName() {
 
   std::vector<std::string> arg_types = {TE::getTypeName<Args>()...};
   auto argsV = DU::join(",", arg_types);
-  auto valueName =
-    TE::lastNamedPfType(TE::prettyFunctionForValue<FunctionType, f>(), "T"
-  );
+  auto valueName = TE::getValueName<FunctionType, f>();
   auto barename = TE::getBarename(valueName);
 
   return DU::removeSpaces(barename + "(" + argsV + ")");
@@ -140,10 +138,18 @@ struct CallableWrapper<Ret (Class::*)(Args...), f> {
 template <typename Callable, Callable f, typename... Args>
 static trace::TraceProcessingTag BeginProcessingInvokeEvent() {
   const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
-  const auto trace_event = theTrace()->localInvoke(trace_id);
+  const auto trace_event = theTrace()->messageCreation(trace_id, 0);
   const auto from_node = theContext()->getNode();
 
   return theTrace()->beginProcessing(trace_id, 0, trace_event, from_node);
+}
+
+template <typename Callable, Callable f, typename... Args>
+static void EndProcessingInvokeEvent(trace::TraceProcessingTag processing_tag) {
+  theTrace()->endProcessing(processing_tag);
+
+  const auto trace_id = CallableWrapper<Callable, f>::GetTraceID();
+  theTrace()->messageCreation(trace_id, 0);
 }
 #endif
 
@@ -180,7 +186,7 @@ util::Copyable<Callable> invoke(Args&&... args) {
   const auto& returnVal = invokeImpl(f, std::forward<Args>(args)...);
 
 #if vt_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
+  EndProcessingInvokeEvent<Callable, f>(processing_tag);
 #endif
 
   return returnVal;
@@ -196,7 +202,7 @@ util::NotCopyable<Callable> invoke(Args&&... args) {
   auto&& returnVal = invokeImpl(f, std::forward<Args>(args)...);
 
 #if vt_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
+  EndProcessingInvokeEvent<Callable, f>(processing_tag);
 #endif
 
   return std::move(returnVal);
@@ -212,7 +218,7 @@ util::IsVoidReturn<Callable> invoke(Args&&... args) {
   invokeImpl(f, std::forward<Args>(args)...);
 
 #if vt_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
+  EndProcessingInvokeEvent<Callable, f>(processing_tag);
 #endif
 }
 
