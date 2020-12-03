@@ -6,6 +6,7 @@ set(TOP_LEVEL_SUBDIRS
   group
   messaging
   objgroup
+  phase
   pool
   pipe
   pmpi
@@ -312,22 +313,51 @@ install(
   COMPONENT                 runtime
 )
 
-if (${vt_fcontext_enabled})
-  set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
+if(CMAKE_VERSION VERSION_LESS "3.13.0")
+  message(
+    WARNING
+    "VT: Install targets skipped because CMake version ${CMAKE_VERSION}<3.13; "
+    "affects packages built with a VT install. "
+    "CMake <3.13 does not support exporting targets from subdirectories"
+  )
+  set(cmake_do_install 0)
 else()
-  set(FCONTEXT_LIBRARY_EXPORT "")
+  set(cmake_do_install 1)
 endif()
 
-if (${vt_mimalloc_enabled})
-  set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
-else()
-  set(MIMALLOC_LIBRARY_EXPORT "")
+if (cmake_do_install)
+  if (vt_fcontext_enabled)
+    set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
+  endif()
+
+  if (vt_mimalloc_enabled)
+    set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
+  endif()
+
+  if (vt_libfort_enabled)
+    set(FORT_LIBRARY_EXPORT ${FORT_LIBRARY})
+    install(TARGETS ${FORT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+  endif()
+
+  if (vt_find_detector_dep EQUAL 0)
+    install(TARGETS detector EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+    set(DETECTOR_EXPORT detector)
+  endif()
+
+  if (vt_find_checkpoint_dep EQUAL 0)
+    install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+    set(CHECKPOINT_EXPORT checkpoint)
+  endif()
 endif()
 
+# Export to build directory
 export(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
                             ${FCONTEXT_LIBRARY_EXPORT}
                             ${MIMALLOC_LIBRARY_EXPORT}
+                            ${FORT_LIBRARY_EXPORT}
+                            ${CHEKPOINT_EXPORT}
+                            ${DETECTOR_EXPORT}
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )

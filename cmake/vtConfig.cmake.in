@@ -17,11 +17,15 @@ endif()
 
 find_dependency(MPI REQUIRED)
 
-set (detector_DIR @detector_DIR@)
-find_dependency(detector REQUIRED HINTS @detector_DIR@)
+if (@vt_find_detector_dep@)
+  set (detector_DIR @detector_DIR@)
+  find_dependency(detector REQUIRED HINTS @detector_DIR@)
+endif()
 
-set (checkpoint_DIR @checkpoint_DIR@)
-find_dependency(checkpoint REQUIRED HINTS @checkpoint_DIR@)
+if (@vt_find_checkpoint_dep@)
+  set (checkpoint_DIR @checkpoint_DIR@)
+  find_dependency(checkpoint REQUIRED HINTS @checkpoint_DIR@)
+endif()
 
 set (VT_INCLUDE_DIRS "@CMAKE_INSTALL_PREFIX@/include")
 set (VT_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
