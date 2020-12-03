@@ -52,15 +52,13 @@
 
 namespace vt { namespace pool {
 
-template <int64_t num_bytes_t>
-FixedSizePool<num_bytes_t>::FixedSizePool(SlotType const in_pool_size)
+FixedSizePool::FixedSizePool(SlotType const in_pool_size)
   : pool_size_(in_pool_size)
 {
   resizePool();
 }
 
-template <int64_t num_bytes_t>
-/*virtual*/ FixedSizePool<num_bytes_t>::~FixedSizePool() {
+/*virtual*/ FixedSizePool::~FixedSizePool() {
   vt_debug_print(
     pool, node,
     "cur_slot_={}\n", cur_slot_
@@ -78,8 +76,7 @@ template <int64_t num_bytes_t>
   }
 }
 
-template <int64_t num_bytes_t>
-void* FixedSizePool<num_bytes_t>::alloc(
+void* FixedSizePool::alloc(
   size_t const& sz, size_t const& oversize
 ) {
   if (static_cast<size_t>(cur_slot_ + 1) >= holder_.size()) {
@@ -108,8 +105,7 @@ void* FixedSizePool<num_bytes_t>::alloc(
   return ptr_ret;
 }
 
-template <int64_t num_bytes_t>
-void FixedSizePool<num_bytes_t>::dealloc(void* const t) {
+void FixedSizePool::dealloc(void* const t) {
   vt_debug_print(
     pool, node,
     "dealloc t={}, cur_slot={}\n", t, cur_slot_
@@ -125,8 +121,13 @@ void FixedSizePool<num_bytes_t>::dealloc(void* const t) {
   holder_[--cur_slot_] = ptr_actual;
 }
 
-template <int64_t num_bytes_t>
-void FixedSizePool<num_bytes_t>::resizePool() {
+// Right now function doubles the vector.
+// If not enough slots are used make it smaller
+// Needs a function to make the pool larger or smaller
+// Also needs an argument for pool size.
+// Size should be determined from current usage
+// 
+void FixedSizePool::resizePool() {
   SlotType const cur_size = holder_.size();
   SlotType const new_size = cur_size == 0 ? pool_size_ : cur_size * 2;
 
@@ -137,9 +138,8 @@ void FixedSizePool<num_bytes_t>::resizePool() {
   }
 }
 
-template <int64_t num_bytes_t>
-typename FixedSizePool<num_bytes_t>::SlotType
-FixedSizePool<num_bytes_t>::getNumBytes() {
+typename FixedSizePool::SlotType
+FixedSizePool::getNumBytes() {
   return num_bytes_;
 }
 

@@ -53,6 +53,9 @@
 #include <vector>
 #include <cstdint>
 
+// Add methods to return the currently used
+// memory in the system in order to determine
+// how to resize the memory pool.
 namespace vt { namespace pool {
 
 static constexpr size_t const small_msg_size_buf =
@@ -65,7 +68,6 @@ static constexpr size_t const medium_msg_size_buf =
 static constexpr size_t const memory_size_medium =
   sizeof(EpochTagEnvelope) + medium_msg_size_buf;
 
-template <int64_t num_bytes_t>
 struct FixedSizePool {
   using ContainerType = std::vector<void*>;
   using SlotType = int64_t;
@@ -75,7 +77,7 @@ struct FixedSizePool {
   static constexpr SlotType const fst_pool_slot = 0;
   static constexpr SlotType const default_pool_size = 1024;
 
-  FixedSizePool(SlotType const in_pool_size = default_pool_size);
+  FixedSizePool(SlotType const in_pool_size = default_pool_size, int64_t num_bytes_t);
 
   virtual ~FixedSizePool();
 
