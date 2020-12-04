@@ -87,7 +87,7 @@ struct Reducable : BaseProxyT {
     return reduce<
       OpT,
       MsgT,
-      MsgT::template msgHandler<
+      &MsgT::template msgHandler<
         MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
         >
       >(msg, cb, stamp);
@@ -111,7 +111,7 @@ struct Reducable : BaseProxyT {
       OpT,
       FunctorT,
       MsgT,
-      MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      &MsgT::template msgHandler<MsgT, OpT, FunctorT>
       >(msg, stamp);
   }
 
