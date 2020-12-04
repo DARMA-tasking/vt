@@ -179,15 +179,33 @@ struct Reduce : virtual collective::tree::Tree {
   template <
     typename OpT,
     typename MsgT,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
-      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
-    >
+    ActiveTypedFnType<MsgT> *f
   >
   PendingSendType reduce(
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
+  template <
+    typename OpT,
+    typename MsgT
+  >
+  PendingSendType reduce(
+    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  )
+    {
+      return reduce<
+        OpT,
+        MsgT,
+        MsgT::template msgHandler<
+          MsgT,
+          OpT,
+          collective::reduce::operators::ReduceCallback<MsgT>
+          >
+        >(root, msg, cb, id, num_contrib);
+    }
 
   /**
    * \brief Reduce a message up the tree
@@ -203,15 +221,33 @@ struct Reduce : virtual collective::tree::Tree {
   template <
     typename OpT,
     typename MsgT,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
-      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
-    >
+    ActiveTypedFnType<MsgT> *f
   >
   detail::ReduceStamp reduceImmediate(
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
+  template <
+    typename OpT,
+    typename MsgT
+  >
+  detail::ReduceStamp reduceImmediate(
+    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  )
+  {
+    return reduceImmediate<
+      OpT,
+      MsgT,
+      MsgT::template msgHandler<
+        MsgT,
+        OpT,
+        collective::reduce::operators::ReduceCallback<MsgT>
+        >
+      >(root, msg, cb, id, num_contrib);
+  }
 
   /**
    * \brief Reduce a message up the tree with a target function on the root node
@@ -227,13 +263,31 @@ struct Reduce : virtual collective::tree::Tree {
     typename OpT,
     typename FunctorT,
     typename MsgT,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+    ActiveTypedFnType<MsgT> *f
   >
   PendingSendType reduce(
     NodeType const& root, MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT
+  >
+  PendingSendType reduce(
+    NodeType const& root, MsgT* msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  )
+  {
+    return reduce<
+      OpT,
+      FunctorT,
+      MsgT,
+      MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      >(root, msg, id, num_contrib);
+  }
 
   /**
    * \brief Reduce a message up the tree with a target function on the root node
@@ -249,13 +303,31 @@ struct Reduce : virtual collective::tree::Tree {
     typename OpT,
     typename FunctorT,
     typename MsgT,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+    ActiveTypedFnType<MsgT> *f
   >
   detail::ReduceStamp reduceImmediate(
     NodeType const& root, MsgT* msg,
     detail::ReduceStamp id = detail::ReduceStamp{},
     ReduceNumType const& num_contrib = 1
   );
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT
+    >
+  detail::ReduceStamp reduceImmediate(
+    NodeType const& root, MsgT* msg,
+    detail::ReduceStamp id = detail::ReduceStamp{},
+    ReduceNumType const& num_contrib = 1
+  )
+  {
+    return reduceImmediate<
+      OpT,
+      FunctorT,
+      MsgT,
+      MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      >(root, msg, id, num_contrib);
+  }
 
   /**
    * \internal \brief Combine in a new message for a given reduction
