@@ -77,7 +77,7 @@ struct MPISingletonMultiTest {
   }
 
 public:
-  const MPI_Comm getComm() { return comm_; }
+  MPI_Comm getComm() { return comm_; }
 
 private:
   MPI_Comm comm_;
