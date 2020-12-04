@@ -199,7 +199,7 @@ struct Reduce : virtual collective::tree::Tree {
       return reduce<
         OpT,
         MsgT,
-        MsgT::template msgHandler<
+        &MsgT::template msgHandler<
           MsgT,
           OpT,
           collective::reduce::operators::ReduceCallback<MsgT>
@@ -241,7 +241,7 @@ struct Reduce : virtual collective::tree::Tree {
     return reduceImmediate<
       OpT,
       MsgT,
-      MsgT::template msgHandler<
+      &MsgT::template msgHandler<
         MsgT,
         OpT,
         collective::reduce::operators::ReduceCallback<MsgT>
@@ -285,7 +285,7 @@ struct Reduce : virtual collective::tree::Tree {
       OpT,
       FunctorT,
       MsgT,
-      MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      &MsgT::template msgHandler<MsgT, OpT, FunctorT>
       >(root, msg, id, num_contrib);
   }
 
@@ -325,7 +325,7 @@ struct Reduce : virtual collective::tree::Tree {
       OpT,
       FunctorT,
       MsgT,
-      MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      &MsgT::template msgHandler<MsgT, OpT, FunctorT>
       >(root, msg, id, num_contrib);
   }
 

@@ -168,7 +168,7 @@ public:
       OpT,
       MsgPtrT,
       MsgT,
-      MsgT::template msgHandler<
+      &MsgT::template msgHandler<
         MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
         >
       >(msg, cb, stamp);
@@ -204,7 +204,7 @@ public:
       FunctorT,
       MsgPtrT,
       MsgT,
-      MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      &MsgT::template msgHandler<MsgT, OpT, FunctorT>
       >(msg, stamp);
   }
 
