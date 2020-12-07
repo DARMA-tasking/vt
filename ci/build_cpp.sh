@@ -16,8 +16,18 @@ else
     target=${3:-install}
 fi
 
-echo -e "===\n=== ccache statistics before build\n==="
-ccache -s
+if hash ccache &>/dev/null
+then
+    use_ccache=true
+fi
+
+if test "$use_ccache"
+then
+    { echo -e "===\n=== ccache statistics before build\n==="; } 2>/dev/null
+    ccache -s
+else
+    { echo -e "===\n=== ccache not found, compiling without it\n==="; } 2>/dev/null
+fi
 
 mkdir -p "${build_dir}"
 pushd "${build_dir}"
@@ -34,7 +44,7 @@ fi
 
 if test -d "${source_dir}/lib/detector"
 then
-    echo "Detector already in lib... not downloading, building, and installing"
+    { echo "Detector already in lib... not downloading, building, and installing"; } 2>/dev/null
 else
     git clone -b "${detector_rev}" --depth 1 https://github.com/DARMA-tasking/detector.git
     export DETECTOR=$PWD/detector
@@ -51,7 +61,7 @@ fi
 
 if test -d "${source_dir}/lib/checkpoint"
 then
-    echo "Checkpoint already in lib... not downloading, building, and installing"
+    { echo "Checkpoint already in lib... not downloading, building, and installing"; } 2>/dev/null
 else
     if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
     then
@@ -74,7 +84,7 @@ else
     fi
 fi
 
-if test ${VT_ZOLTAN_ENABLED:-0} -eq 1
+if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
 then
     export ZOLTAN_CONFIG=${ZOLTAN_DIR:-""}
 fi
@@ -128,7 +138,7 @@ then
     cd ../
 
     "$MCSS/documentation/doxygen.py" Doxyfile-mcss
-    cp  -R docs "$GHPAGE"
+    cp -R docs "$GHPAGE"
     cd "$GHPAGE"
     git config --global user.email "jliffla@sandia.gov"
     git config --global user.name "Jonathan Lifflander"
@@ -139,5 +149,8 @@ else
     time cmake --build . --target "${target}"
 fi
 
-echo -e "===\n=== ccache statistics after build\n==="
-ccache -s
+if test "$use_ccache"
+then
+    { echo -e "===\n=== ccache statistics after build\n==="; } 2>/dev/null
+    ccache -s
+fi
