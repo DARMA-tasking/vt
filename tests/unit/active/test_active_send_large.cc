@@ -135,8 +135,9 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
   auto e = pipe::LifetimeEnum::Once;
   auto cb = theCB()->makeFunc<RecvMsg>(e, [&counter](RecvMsg*){ counter++; });
 
+  NodeType next_node = (this_node + 1) % num_nodes;
+
   vt::runInEpochCollective([&]{
-    NodeType next_node = (this_node + 1) % num_nodes;
     auto msg = makeMessage<LargeMsgType>();
     fillMsg(msg);
     msg->cb_ = cb;
