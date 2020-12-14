@@ -158,6 +158,21 @@ struct Trace : runtime::component::Component<Trace> {
   void finalize() override;
 
   /**
+   * \brief Initialize trace module in stand-alone mode. This will create
+   * stripped-down version of runtime and initialize components needed for
+   * tracing MPI calls
+   *
+   * \param[in] comm MPI communicator type
+   * \param[in] flush_size Flush output trace every (flush_size) trace records
+   */
+  void initializeStandalone(MPI_Comm comm, int32_t flush_size);
+
+  /**
+   * \brief Cleanup all components initialized for standalone mode
+   */
+  void finalizeStandalone();
+
+  /**
    * \internal \brief Setup the file names for output
    *
    * \param[in] in_prog_name the program name
@@ -657,6 +672,7 @@ private:
   std::unique_ptr<vt_gzFile> log_file_;
   bool wrote_sts_file_          = false;
   size_t trace_write_count_     = 0;
+  bool standalone_version_      = false;
 
   ObjGroupProxyType spec_proxy_ = vt::no_obj_group;
   bool trace_enabled_cur_phase_ = true;

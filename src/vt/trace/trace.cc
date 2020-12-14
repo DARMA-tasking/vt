@@ -53,6 +53,7 @@
 #include "vt/objgroup/headers.h"
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/phase/phase_manager.h"
+#include "vt/runtime/runtime.h"
 
 #include <cinttypes>
 #include <fstream>
@@ -132,6 +133,25 @@ void Trace::initialize() /*override*/ {
 #endif
 }
 
+void Trace::initializeStandalone(MPI_Comm comm, int32_t flush_size) {
+  runtime::Runtime::createRuntimeForTraceOnly(this, comm, flush_size);
+
+  standalone_version_ = true;
+
+  initialize();
+  startup();
+}
+
+void Trace::finalizeStandalone(){
+  finalize();
+
+  if(enabled_){
+    cleanupTracesFile();
+  }
+
+  runtime::Runtime::finalizeRuntimeForTraceOnly();
+}
+
 void Trace::startup() /*override*/ {
 #if vt_check_enabled(trace_enabled)
   theSched()->registerTrigger(
@@ -150,14 +170,16 @@ void Trace::startup() /*override*/ {
     sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
   );
 
-  thePhase()->registerHookRooted(phase::PhaseHook::End, []{
-    auto const phase = thePhase()->getCurrentPhase();
-    theTrace()->setTraceEnabledCurrentPhase(phase + 1);
-  });
+  if (!standalone_version_) {
+    thePhase()->registerHookRooted(phase::PhaseHook::End, [] {
+      auto const phase = thePhase()->getCurrentPhase();
+      theTrace()->setTraceEnabledCurrentPhase(phase + 1);
+    });
 
-  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
-    theTrace()->flushTracesFile(false);
-  });
+    thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [] {
+      theTrace()->flushTracesFile(false);
+    });
+  }
 #endif
 }
 
@@ -241,6 +263,12 @@ void Trace::setupNames(std::string const& in_prog_name) {
 }
 
 /*virtual*/ Trace::~Trace() {
+  // For standalone version we output traces in finalizeStandalone()
+  // Nothing to do here
+  if (standalone_version_) {
+    return;
+  }
+
   // Not good - not much to do in late destruction.
   vtWarnIf(
     not open_events_.empty(),
