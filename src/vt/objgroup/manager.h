@@ -111,6 +111,14 @@ struct ObjGroupManager : runtime::component::Component<ObjGroupManager> {
    */
 
   /**
+   * \brief Construct a special proxy instance that allows sending, broadcasting
+   * and reducing without actual object group.
+   *
+   * \return proxy to the object group
+   */
+  proxy::DefaultProxyType getDefault() const;
+
+  /**
    * \brief Collectively construct a new object group. Allocates and constructs
    * the object on each node by forwarding constructor arguments.
    *

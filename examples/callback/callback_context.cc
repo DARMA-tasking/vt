@@ -108,8 +108,9 @@ int main(int argc, char** argv) {
     auto cb = vt::theCB()->makeFunc<DataMsg,MyContext>(
       vt::pipe::LifetimeEnum::Once, &my_global_ctx, callbackFn
     );
-    auto msg = vt::makeMessage<CallbackMsg>(cb);
-    vt::theMsg()->sendMsg<CallbackMsg,handler>(1, msg);
+
+    auto const default_proxy = vt::theObjGroup()->getDefault();
+    default_proxy[1].send<CallbackMsg, handler>(cb);
   }
 
   vt::finalize();

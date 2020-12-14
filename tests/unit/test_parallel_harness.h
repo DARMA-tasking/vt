@@ -92,7 +92,6 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 
     TestHarnessAny<TestBase>::SetUp();
 
-    // TODO (STRZ) - do we want to use additional args here as well?
     if (mpi_singleton == nullptr) {
       mpi_singleton =
         std::make_unique<MPISingletonMultiTest>(test_argc, test_argv);

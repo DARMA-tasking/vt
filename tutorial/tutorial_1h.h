@@ -90,7 +90,8 @@ static inline void activeMessageReduce() {
   // Get a reference to the value to set it in this reduce msg
   reduce_msg->getVal() = 50;
 
-  ::vt::theCollective()->global()->reduce<ReduceOp,ReduceResult>(
+  auto const default_proxy = theObjGroup()->getDefault();
+  default_proxy.reduceMsg<ReduceOp, ReduceResult>(
     root_reduce_node, reduce_msg.get()
   );
 }

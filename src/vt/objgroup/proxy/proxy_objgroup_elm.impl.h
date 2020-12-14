@@ -97,6 +97,14 @@ ObjT* ProxyElm<ObjT>::get() const {
   return theObjGroup()->get<ObjT>(proxy);
 }
 
+inline ProxyElm<void>::ProxyElm(NodeType in_node) : node_{in_node} {}
+
+template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename... Args>
+void ProxyElm<void>::send(Args&&... args) const {
+  vt::theMsg()->sendMsg<MsgT, f>(
+    node_, vt::makeMessage<MsgT>(std::forward<Args>(args)...));
+}
+
 }}} /* end namespace vt::objgroup::proxy */
 
 #endif /*INCLUDED_VT_OBJGROUP_PROXY_PROXY_OBJGROUP_ELM_IMPL_H*/
