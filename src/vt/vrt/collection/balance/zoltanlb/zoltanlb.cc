@@ -218,8 +218,7 @@ void ZoltanLB::makeGraphSymmetric() {
   }
 
   for (auto&& elm : shared_edges) {
-    auto msg = makeMessage<CommMsg>(elm.second);
-    proxy[elm.first].send<CommMsg, &ZoltanLB::recvSharedEdges>(msg.get());
+    proxy[elm.first].send<CommMsg, &ZoltanLB::recvSharedEdges>(elm.second);
   }
 
 }
@@ -362,8 +361,7 @@ void ZoltanLB::allocateShareEdgeGIDs() {
 
   if (use_shared_edges_) {
     for (auto&& elm : shared_edges) {
-      auto msg = makeMessage<CommMsg>(elm.second);
-      proxy[elm.first].send<CommMsg, &ZoltanLB::recvEdgeGID>(msg.get());
+      proxy[elm.first].send<CommMsg, &ZoltanLB::recvEdgeGID>(elm.second);
     }
   }
 }
