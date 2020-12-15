@@ -50,9 +50,8 @@ macro(find_package_local pkg_name pkg_directory pkg_other_name)
 
     foreach(prefix ${prefix_args})
       set(potential_path ${pkg_directory}/${prefix})
-      set(${pkg_name}_DIR ${potential_path})
       # message("prefix: ${potential_path}")
-      if (EXISTS "${${pkg_name}_DIR}${pkg_prefix}")
+      if (EXISTS "${potential_path}")
         # message(STATUS "find_package_local: trying path: ${potential_path}")
 
         # Search locally only for package based on the user's supplied path; if
