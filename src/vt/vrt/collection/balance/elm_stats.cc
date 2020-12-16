@@ -141,6 +141,10 @@ void ElementStats::updatePhase(PhaseType const& inc) {
   subphase_comm_[cur_phase_];
 }
 
+void ElementStats::resetPhase() {
+  cur_phase_ = fst_lb_phase;
+}
+
 PhaseType ElementStats::getPhase() const {
   return cur_phase_;
 }
