@@ -54,9 +54,6 @@ using TestInitialization = TestHarness;
 
 TEST_F(TestInitialization, test_initialize_no_args) {
   vt::initialize();
-
-  EXPECT_EQ(theConfig()->prog_name, "vt_unknown");
-
   vt::finalize();
 }
 
