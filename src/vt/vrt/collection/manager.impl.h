@@ -3343,6 +3343,7 @@ CollectionManager::restoreFromFile(
     // @todo: error check the file read with bytes in directory
 
     auto col_ptr = checkpoint::deserializeFromFile<ColT>(file_name);
+    col_ptr->stats_.resetPhase();
     token[idx].insertPtr(std::move(col_ptr));
   }
 

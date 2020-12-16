@@ -137,6 +137,10 @@ void ElementStats::updatePhase(PhaseType const& inc) {
   cur_phase_ += inc;
 }
 
+void ElementStats::resetPhase() {
+  cur_phase_ = fst_lb_phase;
+}
+
 PhaseType ElementStats::getPhase() const {
   return cur_phase_;
 }
