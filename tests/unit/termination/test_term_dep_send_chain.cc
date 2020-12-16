@@ -524,8 +524,8 @@ struct MergeCol : vt::Collection<MergeCol,vt::Index2D> {
 
   struct GhostMsg : vt::CollectionMessage<MergeCol > {
     GhostMsg() = default;
-    explicit GhostMsg(vt::CollectionProxy<MergeCol, vt::Index2D> proxy_)
-      : proxy(proxy_)
+    explicit GhostMsg(vt::CollectionProxy<MergeCol, vt::Index2D> in_proxy_)
+      : proxy(in_proxy_)
     {}
     vt::CollectionProxy<MergeCol, vt::Index2D> proxy;
   };
