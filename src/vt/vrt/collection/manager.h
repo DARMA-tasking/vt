@@ -76,6 +76,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/vrt/collection/op_buffer.h"
+#include "vt/runnable/invoke.h"
 
 #include <memory>
 #include <vector>
@@ -792,6 +793,86 @@ public:
   static void recordStats(ColT* col_ptr, MsgT* msg);
 
   /**
+   * \brief Invoke function 'f' (with copyable return type) inline without going
+   * through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] args function params
+   */
+  template <typename ColT, typename Type, Type f, typename... Args>
+  util::Copyable<Type>
+  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
+
+  /**
+   * \brief Invoke function 'f' (with non-copyable return type) inline without
+   * going through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] args function params
+   */
+  template <typename ColT, typename Type, Type f, typename... Args>
+  util::NotCopyable<Type>
+  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
+
+  /**
+   * \brief Invoke function 'f' (with void return type) inline without going
+   * through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] args function params
+   */
+  template <typename ColT, typename Type, Type f, typename... Args>
+  util::IsVoidReturn<Type>
+  invoke(VirtualElmProxyType<ColT> const& proxy, Args... args);
+
+  /**
+   * \brief Invoke message action function handler without going through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   */
+  template <
+    typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
+  >
+  void invokeMsg(
+    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy,
+    messaging::MsgPtrThief<MsgT> msg, bool instrument = true
+  );
+
+  /**
+   * \brief Invoke message action member handler without going through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   */
+  template <
+    typename MsgT,
+    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+  >
+  void invokeMsg(
+    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy,
+    messaging::MsgPtrThief<MsgT> msg, bool instrument = true
+  );
+
+  /**
+   * \internal \brief Invoke message handler without going through scheduler
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] msg the message with the virtual handler
+   * \param[in] instrument whether to instrument the broadcast for load
+   * balancing (some system calls use this to disable instrumentation)
+   */
+  template <typename ColT, typename MsgT>
+  void invokeMsgImpl(
+    VirtualElmProxyType<ColT> const& proxy, messaging::MsgPtrThief<MsgT> msg,
+    bool instrument
+  );
+
+  /**
    * \brief Reduce over a collection
    *
    * \param[in] proxy the collection proxy
@@ -1365,6 +1446,17 @@ public:
   );
 
 private:
+
+  /**
+   * \internal \brief Get the collection element pointer for given proxy
+   *
+   * \param[in] proxy the collection proxy
+   *
+   * \return the collection element pointer
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  ColT* getCollectionPtrForInvoke(VirtualElmProxyType<ColT> const& proxy);
+
   /**
    * \internal \brief Get the entire collection system holder
    *
@@ -1994,6 +2086,7 @@ namespace details
 #include "vt/vrt/collection/send/sendable.impl.h"
 #include "vt/vrt/collection/gettable/gettable.impl.h"
 #include "vt/vrt/collection/reducable/reducable.impl.h"
+#include "vt/vrt/collection/invoke/invokable.impl.h"
 #include "vt/vrt/collection/insert/insertable.impl.h"
 #include "vt/vrt/collection/insert/insert_finished.impl.h"
 #include "vt/vrt/collection/destroy/destroyable.impl.h"

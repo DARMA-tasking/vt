@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              proxy_elm_traits.h
+//                                test_invoke.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,48 +42,61 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
-#define INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
+#include "test_parallel_harness.h"
+#include "vt/runnable/invoke.h"
+#include <vt/transport.h>
 
-#include "vt/config.h"
-#include "vt/vrt/proxy/base_collection_elm_proxy.h"
-#include "vt/vrt/proxy/base_elm_proxy.h"
-#include "vt/vrt/collection/send/sendable.h"
-#include "vt/vrt/collection/invoke/invokable.h"
-#include "vt/vrt/collection/gettable/gettable.h"
-#include "vt/vrt/collection/insert/insertable.h"
+#include <vector>
+#include <numeric>
+#include <gtest/gtest.h>
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace tests { namespace unit {
 
-namespace elm_proxy {
-
-template <typename ColT, typename IndexT>
-using Chain4 = Invokable<ColT,IndexT,BaseCollectionElmProxy<IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain3 = Gettable<ColT,IndexT,Chain4<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain2 = ElmInsertable<ColT,IndexT,Chain3<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain1 = Sendable<ColT,IndexT,Chain2<ColT,IndexT>>;
-
-} /* end namespace proxy */
-
-template <typename ColT, typename IndexT>
-struct ProxyCollectionElmTraits : elm_proxy::Chain1<ColT,IndexT> {
-  ProxyCollectionElmTraits() = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits const&) = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits&&) = default;
-  ProxyCollectionElmTraits(
-    typename elm_proxy::Chain1<ColT,IndexT>::ProxyType const& in_proxy,
-    typename elm_proxy::Chain1<ColT,IndexT>::ElementProxyType const& in_elm
-  ) : elm_proxy::Chain1<ColT,IndexT>(in_proxy,in_elm)
-  {}
-  ProxyCollectionElmTraits& operator=(ProxyCollectionElmTraits const&) = default;
+struct TestInvoke : TestParallelHarness {
+  virtual void addAdditionalArgs() override {
+    static char traceon[]{"--vt_trace=1"};
+    addArgs(traceon);
+  }
 };
 
-}}} /* end namespace vt::vrt::collection */
+static int test_value = -1;
 
-#endif /*INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H*/
+struct A {
+  virtual ~A() = default;
+
+  virtual int memberFunc(const std::vector<int>& vec) = 0;
+};
+
+struct B : A {
+  ~B() override = default;
+
+  int memberFunc(const std::vector<int>& vec) override {
+    test_value = 30;
+    return std::accumulate(std::begin(vec), std::end(vec), 0);
+  }
+};
+
+void voidWithArg(int in_val) { test_value = in_val; }
+
+std::unique_ptr<A> nonCopyableFun() {
+  test_value = 20;
+  return std::make_unique<B>();
+}
+
+TEST_F(TestInvoke, test_invoke_call) {
+  vt::runnable::invoke<decltype(&voidWithArg), &voidWithArg>(10);
+  EXPECT_EQ(test_value, 10);
+
+  auto b = vt::runnable::invoke<decltype(&nonCopyableFun), &nonCopyableFun>();
+  EXPECT_EQ(test_value, 20);
+
+  auto accumulate_result =
+    vt::runnable::invoke<decltype(&A::memberFunc), &A::memberFunc>(
+      b.get(), std::vector<int32_t>{10, 20, 30}
+    );
+  EXPECT_EQ(accumulate_result, 60);
+  EXPECT_EQ(test_value, 30);
+}
+
+
+}}} // end namespace vt::tests::unit

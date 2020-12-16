@@ -128,6 +128,24 @@ struct ProxyElm {
   void send(Args&&... args) const;
 
   /**
+   * \brief Invoke locally a message handler on the node/element indexed by this proxy.
+   * The message handler will be invoked inline without going through scheduler
+   *
+   * \param[in] args args to pass to the message constructor
+   */
+  template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
+  void invoke(Args&&... args) const;
+
+  /**
+   * \brief Invoke locally a function 'f' on the node/element indexed by this proxy.
+   * The function will be invoked inline without going through scheduler
+   *
+   * \param[in] args function arguments
+   */
+  template <typename Type, Type f, typename... Args>
+  decltype(auto) invoke(Args&&... args) const;
+
+  /**
    * \brief Update the local object instance pointer on this node. Must be run
    * on local node.
    *

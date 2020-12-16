@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              proxy_elm_traits.h
+//                            function_ret_check.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,48 +42,56 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
-#define INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H
+#if !defined INCLUDED_UTILS_STATIC_CHECKS_FUNCTION_RET_CHECK_H
+#define INCLUDED_UTILS_STATIC_CHECKS_FUNCTION_RET_CHECK_H
 
-#include "vt/config.h"
-#include "vt/vrt/proxy/base_collection_elm_proxy.h"
-#include "vt/vrt/proxy/base_elm_proxy.h"
-#include "vt/vrt/collection/send/sendable.h"
-#include "vt/vrt/collection/invoke/invokable.h"
-#include "vt/vrt/collection/gettable/gettable.h"
-#include "vt/vrt/collection/insert/insertable.h"
+#include <type_traits>
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace util {
 
-namespace elm_proxy {
+template <typename FunctorT>
+struct FunctionWrapper;
 
-template <typename ColT, typename IndexT>
-using Chain4 = Invokable<ColT,IndexT,BaseCollectionElmProxy<IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain3 = Gettable<ColT,IndexT,Chain4<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain2 = ElmInsertable<ColT,IndexT,Chain3<ColT,IndexT>>;
-
-template <typename ColT, typename IndexT>
-using Chain1 = Sendable<ColT,IndexT,Chain2<ColT,IndexT>>;
-
-} /* end namespace proxy */
-
-template <typename ColT, typename IndexT>
-struct ProxyCollectionElmTraits : elm_proxy::Chain1<ColT,IndexT> {
-  ProxyCollectionElmTraits() = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits const&) = default;
-  ProxyCollectionElmTraits(ProxyCollectionElmTraits&&) = default;
-  ProxyCollectionElmTraits(
-    typename elm_proxy::Chain1<ColT,IndexT>::ProxyType const& in_proxy,
-    typename elm_proxy::Chain1<ColT,IndexT>::ElementProxyType const& in_elm
-  ) : elm_proxy::Chain1<ColT,IndexT>(in_proxy,in_elm)
-  {}
-  ProxyCollectionElmTraits& operator=(ProxyCollectionElmTraits const&) = default;
+template <typename ReturnT, typename... ArgsT>
+struct FunctionWrapper<ReturnT(*)(ArgsT...)> {
+  using ReturnType = ReturnT;
+  using Type = ReturnT(*)(ArgsT...);
 };
 
-}}} /* end namespace vt::vrt::collection */
+template <
+  typename ReturnT, typename FunctorT, typename... ArgsT
+>
+struct FunctionWrapper<ReturnT (FunctorT::*)(ArgsT...)> {
+  using ReturnType = ReturnT;
+  using Type = ReturnT (FunctorT::*)(ArgsT...);
+};
 
-#endif /*INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_ELM_TRAITS_H*/
+
+template <typename FunctionType>
+using IsVoidReturn = std::enable_if_t<
+  std::is_same<
+    typename FunctionWrapper<FunctionType>::ReturnType, void>::value,
+  void
+>;
+
+template <
+  typename FunctionType,
+  typename Ret = typename FunctionWrapper<FunctionType>::ReturnType
+>
+using Copyable = std::enable_if_t<
+  !std::is_same<Ret, void>::value && std::is_copy_constructible<Ret>::value,
+  Ret
+>;
+
+template <
+  typename FunctionType,
+  typename Ret = typename FunctionWrapper<FunctionType>::ReturnType
+>
+using NotCopyable = std::enable_if_t<
+  !std::is_same<Ret, void>::value && !std::is_copy_constructible<Ret>::value,
+  Ret
+>;
+
+}} /* end namespace vt::util */
+
+#endif /*INCLUDED_UTILS_STATIC_CHECKS_FUNCTION_RET_CHECK_H*/

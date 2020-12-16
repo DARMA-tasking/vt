@@ -237,9 +237,10 @@ getRecvSendDirection(CommKeyType const& comm) {
   case CommCategory::CollectionToNodeBcast:
     return std::make_pair(comm.toNode(), comm.fromObj());
 
-  // Comm stats are not recorded for collective bcast
+  // Comm stats are not recorded for local operations
   // this case is just to avoid warning of not handled enum
   case CommCategory::CollectiveToCollectionBcast:
+  case CommCategory::LocalInvoke:
     return std::make_pair(ElementIDType{}, ElementIDType{});
   }
 

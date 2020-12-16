@@ -271,4 +271,25 @@ TEST_F(TestObjGroup, test_proxy_reduce) {
   }
 }
 
+TEST_F(TestObjGroup, test_proxy_invoke) {
+  auto const& this_node = theContext()->getNode();
+
+  auto proxy = vt::theObjGroup()->makeCollective<MyObjA>();
+
+
+  // Message handler
+  proxy[this_node].invoke<MyMsg, &MyObjA::handler>();
+
+  EXPECT_EQ(proxy.get()->recv_, 1);
+
+  // Non-message function
+  auto const accumulate_result =
+    proxy[this_node]
+      .invoke<decltype(&MyObjA::accumulateVec), &MyObjA::accumulateVec>(
+        std::vector<int32_t>{2, 4, 5});
+
+  EXPECT_EQ(accumulate_result, 11);
+  EXPECT_EQ(proxy.get()->recv_, 2);
+}
+
 }}} // end namespace vt::tests::unit

@@ -79,6 +79,26 @@ void ProxyElm<ObjT>::send(Args&&... args) const {
 }
 
 template <typename ObjT>
+template <typename MsgT, ActiveObjType<MsgT, ObjT> fn, typename... Args>
+void ProxyElm<ObjT>::invoke(Args&&... args) const {
+  auto proxy = ProxyElm<ObjT>(*this);
+  theObjGroup()->invoke<ObjT, MsgT, fn>(
+    proxy, makeMessage<MsgT>(std::forward<Args>(args)...)
+  );
+}
+
+template <typename ObjT>
+template <typename Type, Type f, typename... Args>
+decltype(auto) ProxyElm<ObjT>::invoke(
+  Args&&... args
+) const
+{
+  auto proxy = ProxyElm<ObjT>(*this);
+  return theObjGroup()->invoke<ObjT, Type, f>(
+    proxy, std::forward<Args>(args)...);
+}
+
+template <typename ObjT>
 template <typename SerializerT>
 void ProxyElm<ObjT>::serialize(SerializerT& s) {
   s | proxy_ | node_;

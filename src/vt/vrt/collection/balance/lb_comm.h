@@ -59,7 +59,8 @@ enum struct CommCategory : int8_t {
   Broadcast = 4,
   CollectionToNodeBcast = 5,
   NodeToCollectionBcast = 6,
-  CollectiveToCollectionBcast = 7
+  CollectiveToCollectionBcast = 7,
+  LocalInvoke = 8
 };
 
 inline NodeType objGetNode(ElementIDType const id) {
