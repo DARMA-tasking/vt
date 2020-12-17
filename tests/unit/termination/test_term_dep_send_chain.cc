@@ -60,9 +60,9 @@ struct TestTermDepSendChain :
 
 struct TestMsg1 : vt::Message {
   TestMsg1() = default;
-  TestMsg1(int in_a, int in_b, int in_c) : a(in_a), b(in_b), c(in_c) { }
+  TestMsg1(int a, int b, int c) : a_(a), b_(b), c_(c) { }
 
-  int a = 0, b = 0, c = 0;
+  int a_ = 0, b_ = 0, c_ = 0;
 };
 
 // Create some value that is calculable
@@ -75,18 +75,18 @@ struct MyObjGroup;
 struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   MyCol() = default;
   MyCol(NodeType num, int k) : max_x(static_cast<int>(num)), max_y(k) {
-    idx = getIndex();
+    idx_ = getIndex();
   }
 
   struct OpMsg : vt::CollectionMessage<MyCol> {
     OpMsg() = default;
-    OpMsg(double a_, double b_) : a(a_), b(b_) { }
-    double a = 0.0, b = 0.0;
+    OpMsg(double a, double b) : a_(a), b_(b) { }
+    double a_ = 0.0, b_ = 0.0;
   };
 
   struct OpIdxMsg : vt::CollectionMessage<MyCol> {
-    OpIdxMsg(vt::Index2D idx_) : idx(idx_) { }
-    vt::Index2D idx;
+    OpIdxMsg(vt::Index2D idx) : idx_(idx) { }
+    vt::Index2D idx_;
   };
 
   struct OpVMsg : vt::CollectionMessage<MyCol> {
@@ -94,51 +94,51 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     vt_msg_serialize_required(); // by stl container
 
     OpVMsg() = default;
-    OpVMsg(std::vector<double> in) : vec(in) { }
-    OpVMsg(std::vector<double> in, int step_) : vec(in), step(step_) { }
+    OpVMsg(std::vector<double> vec) : vec_(vec) { }
+    OpVMsg(std::vector<double> vec, int step) : vec_(vec), step_(step) { }
 
     template <typename SerializerT>
     void serialize(SerializerT& s) {
       MessageParentType::serialize(s);
-      s | vec | step;
+      s | vec_ | step_;
     }
 
-    std::vector<double> vec = {};
-    int step = 0;
+    std::vector<double> vec_ = {};
+    int step_ = 0;
   };
 
   struct ProxyMsg : vt::CollectionMessage<MyCol> {
     ProxyMsg() = default;
-    ProxyMsg(vt::Callback<OpIdxMsg> cb_) : cb(cb_) { }
-    vt::Callback<OpIdxMsg> cb = {};
+    ProxyMsg(vt::Callback<OpIdxMsg> cb) : cb_(cb) { }
+    vt::Callback<OpIdxMsg> cb_ = {};
   };
 
   struct FinalMsg : vt::CollectionMessage<MyCol> {
     FinalMsg() = default;
-    FinalMsg(int num_) : num(num_) { }
-    int num = 0;
+    FinalMsg(int num) : num_(num) { }
+    int num_ = 0;
   };
 
   static constexpr int const num_steps = 7;
 
   void checkExpectedStep(int expected) {
-    EXPECT_EQ(step / num_steps, iter);
-    EXPECT_EQ(step % num_steps, expected);
+    EXPECT_EQ(step_ / num_steps, iter_);
+    EXPECT_EQ(step_ % num_steps, expected);
   }
 
   void checkIncExpectedStep(int expected) {
     checkExpectedStep(expected);
-    step++;
+    step_++;
     if (expected == num_steps - 1) {
-      iter++;
+      iter_++;
     }
   }
 
   void op1(OpMsg* msg) {
-    migrating = false;
+    migrating_ = false;
     checkIncExpectedStep(0);
-    EXPECT_EQ(msg->a, calcVal(1,idx));
-    EXPECT_EQ(msg->b, calcVal(2,idx));
+    EXPECT_EQ(msg->a_, calcVal(1, idx_));
+    EXPECT_EQ(msg->b_, calcVal(2, idx_));
     // fmt::print(
     //   "op1: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
     // );
@@ -146,8 +146,8 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
 
   void op2(OpMsg* msg) {
     checkIncExpectedStep(1);
-    EXPECT_EQ(msg->a, calcVal(3,idx));
-    EXPECT_EQ(msg->b, calcVal(4,idx));
+    EXPECT_EQ(msg->a_, calcVal(3, idx_));
+    EXPECT_EQ(msg->b_, calcVal(4, idx_));
     // fmt::print(
     //   "op2: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
     // );
@@ -156,7 +156,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   void op3(OpVMsg* msg) {
     checkIncExpectedStep(2);
     for (auto i = 0; i < 10; i++) {
-      EXPECT_EQ(msg->vec[i], idx.x()*i + idx.y());
+      EXPECT_EQ(msg->vec_[i], idx_.x()*i + idx_.y());
     }
     // fmt::print("op3: idx={}, iter={}, size={}\n", idx, iter, msg->vec.size());
   }
@@ -164,12 +164,12 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   void op4(ProxyMsg* msg) {
     checkExpectedStep(3);
     // fmt::print("op4: idx={}, iter={}\n", idx, iter);
-    msg->cb.send(idx);
+    msg->cb_.send(idx_);
   }
   void op4Impl(OpMsg* msg) {
     checkIncExpectedStep(3);
-    EXPECT_EQ(msg->a, calcVal(5,idx));
-    EXPECT_EQ(msg->b, calcVal(6,idx));
+    EXPECT_EQ(msg->a_, calcVal(5, idx_));
+    EXPECT_EQ(msg->b_, calcVal(6, idx_));
     // fmt::print(
     //   "op4Impl: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
     // );
@@ -177,8 +177,8 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
 
   void op5(OpMsg* msg) {
     checkIncExpectedStep(4);
-    EXPECT_EQ(msg->a, calcVal(7,idx));
-    EXPECT_EQ(msg->b, calcVal(8,idx));
+    EXPECT_EQ(msg->a_, calcVal(7, idx_));
+    EXPECT_EQ(msg->b_, calcVal(8, idx_));
     // fmt::print(
     //   "op5: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
     // );
@@ -188,18 +188,18 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     // Do not increment step until all op6Impl msgs are received to check
     // correctness
     checkExpectedStep(5);
-    EXPECT_EQ(msg->a, calcVal(9,idx));
-    EXPECT_EQ(msg->b, calcVal(10,idx));
+    EXPECT_EQ(msg->a_, calcVal(9, idx_));
+    EXPECT_EQ(msg->b_, calcVal(10, idx_));
     auto proxy = this->getCollectionProxy();
-    auto xp1 = idx.x() + 1 < max_x ? idx.x() + 1 : 0;
-    auto yp1 = idx.y() + 1 < max_y ? idx.y() + 1 : 0;
-    auto xm1 = idx.x() - 1 >= 0 ? idx.x() - 1 : max_x - 1;
-    auto ym1 = idx.y() - 1 >= 0 ? idx.y() - 1 : max_y - 1;
+    auto xp1 = idx_.x() + 1 < max_x ? idx_.x() + 1 : 0;
+    auto yp1 = idx_.y() + 1 < max_y ? idx_.y() + 1 : 0;
+    auto xm1 = idx_.x() - 1 >= 0 ? idx_.x() - 1 : max_x - 1;
+    auto ym1 = idx_.y() - 1 >= 0 ? idx_.y() - 1 : max_y - 1;
     std::vector<double> v = { 1.0, 2.0, 3.0 };
-    proxy(xp1,idx.y()).template send<OpVMsg, &MyCol::op6Impl>(v);
-    proxy(xm1,idx.y()).template send<OpVMsg, &MyCol::op6Impl>(v);
-    proxy(idx.x(),yp1).template send<OpVMsg, &MyCol::op6Impl>(v);
-    proxy(idx.x(),ym1).template send<OpVMsg, &MyCol::op6Impl>(v);
+    proxy(xp1, idx_.y()).template send<OpVMsg, &MyCol::op6Impl>(v);
+    proxy(xm1, idx_.y()).template send<OpVMsg, &MyCol::op6Impl>(v);
+    proxy(idx_.x(), yp1).template send<OpVMsg, &MyCol::op6Impl>(v);
+    proxy(idx_.x(), ym1).template send<OpVMsg, &MyCol::op6Impl>(v);
     // fmt::print(
     //   "op6: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
     // );
@@ -237,8 +237,8 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
 
   void op7(OpMsg* msg) {
     checkIncExpectedStep(6);
-    EXPECT_EQ(msg->a, calcVal(11,idx));
-    EXPECT_EQ(msg->b, calcVal(12,idx));
+    EXPECT_EQ(msg->a_, calcVal(11, idx_));
+    EXPECT_EQ(msg->b_, calcVal(12, idx_));
     // fmt::print(
     //   "op7: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
     // );
@@ -246,14 +246,14 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
 
   void doMigrate(OpMsg* msg) {
     checkExpectedStep(0);
-    EXPECT_EQ(msg->a, calcVal(13,idx));
-    EXPECT_EQ(msg->b, calcVal(14,idx));
+    EXPECT_EQ(msg->a_, calcVal(13, idx_));
+    EXPECT_EQ(msg->b_, calcVal(14, idx_));
 
     fmt::print(
-      "doMigrate: idx={}, iter={}, a={}, b={}\n", idx, iter, msg->a, msg->b
+      "doMigrate: idx={}, iter={}, a={}, b={}\n", idx_, iter_, msg->a_, msg->b_
     );
 
-    migrating = true;
+    migrating_ = true;
     auto node = vt::theContext()->getNode();
     auto num = vt::theContext()->getNumNodes();
     auto next = node + 1 < num ? node + 1 : 0;
@@ -261,14 +261,14 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
   void finalCheck(FinalMsg* msg) {
-    auto num_iter = msg->num;
-    EXPECT_EQ(step / num_steps, num_iter);
-    EXPECT_EQ(iter, num_iter);
-    final_check = true;
+    auto num_iter = msg->num_;
+    EXPECT_EQ(step_ / num_steps, num_iter);
+    EXPECT_EQ(iter_, num_iter);
+    final_check_ = true;
   }
 
   virtual ~MyCol() {
-    EXPECT_TRUE(final_check or migrating);
+    EXPECT_TRUE(final_check_ or migrating_);
     // fmt::print(
     //   "destructor idx={}, final={}, mig={}\n",
     //   getIndex(), final_check, migrating
@@ -278,8 +278,8 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     vt::Collection<MyCol,vt::Index2D>::serialize(s);
-    s | iter | step | idx | final_check | max_x | max_y | started_op6_;
-    s | migrating;
+    s | iter_ | step_ | idx_ | final_check_ | max_x | max_y | started_op6_;
+    s | migrating_;
     s | op6_counter_;
 
     // Skip the stack op6_msgs_ because migration only occurs after all op-steps
@@ -290,14 +290,14 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
   }
 
 private:
-  int iter = 0;
-  int step = 0;
-  vt::Index2D idx;
-  bool final_check = false;
+  int iter_ = 0;
+  int step_ = 0;
+  vt::Index2D idx_;
+  bool final_check_ = false;
   int max_x = 0, max_y = 0;
   bool started_op6_ = false;
   int op6_counter_ = 0;
-  bool migrating = false;
+  bool migrating_ = false;
   std::stack<MsgSharedPtr<OpVMsg>> op6_msgs_;
 };
 
@@ -311,13 +311,13 @@ struct MyObjGroup {
   MyObjGroup() = default;
 
   void makeVT() {
-    frontend_proxy = vt::theObjGroup()->makeCollective(this);
+    frontend_proxy_ = vt::theObjGroup()->makeCollective(this);
   }
 
   void makeColl(NodeType num_nodes, int k) {
     auto const node = theContext()->getNode();
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
-    backend_proxy = vt::theCollection()->constructCollective<MyCol>(
+    backend_proxy_ = vt::theCollection()->constructCollective<MyCol>(
       range, [=](vt::Index2D idx) {
         return std::make_unique<MyCol>(num_nodes, k);
       }
@@ -338,9 +338,9 @@ struct MyObjGroup {
 
   void op1() {
     chains_->nextStep("op1", [=](vt::Index2D idx) {
-      auto a = calcVal(1,idx);
-      auto b = calcVal(2,idx);
-      return backend_proxy(idx).template send<OpMsg, &MyCol::op1>(a,b);
+      auto a = calcVal(1, idx);
+      auto b = calcVal(2, idx);
+      return backend_proxy_(idx).template send<OpMsg, &MyCol::op1>(a,b);
     });
   }
 
@@ -348,7 +348,7 @@ struct MyObjGroup {
     chains_->nextStep("op2", [=](vt::Index2D idx) {
       auto a = calcVal(3,idx);
       auto b = calcVal(4,idx);
-      return backend_proxy(idx).template send<OpMsg, &MyCol::op2>(a,b);
+      return backend_proxy_(idx).template send<OpMsg, &MyCol::op2>(a,b);
     });
   }
 
@@ -358,7 +358,7 @@ struct MyObjGroup {
       for (auto i = 0; i < 10; i++) {
         v.push_back(idx.x()*i + idx.y());
       }
-      return backend_proxy(idx).template send<OpVMsg, &MyCol::op3>(v);
+      return backend_proxy_(idx).template send<OpVMsg, &MyCol::op3>(v);
     });
   }
 
@@ -367,24 +367,24 @@ struct MyObjGroup {
       auto node = vt::theContext()->getNode();
       auto num = vt::theContext()->getNumNodes();
       auto next = node + 1 < num ? node + 1 : 0;
-      auto proxy = frontend_proxy(next);
+      auto proxy = frontend_proxy_(next);
       auto c = vt::theCB()->makeSend<MyObjGroup,OpIdxMsg,&MyObjGroup::op4Impl>(proxy);
-      return backend_proxy(idx).template send<ProxyMsg, &MyCol::op4>(c);
+      return backend_proxy_(idx).template send<ProxyMsg, &MyCol::op4>(c);
     });
   }
   void op4Impl(OpIdxMsg* msg) {
     //  Respond to collection element for op4
-    auto idx = msg->idx;
+    auto idx = msg->idx_;
     auto a = calcVal(5,idx);
     auto b = calcVal(6,idx);
-    backend_proxy(idx).template send<OpMsg, &MyCol::op4Impl>(a,b);
+    backend_proxy_(idx).template send<OpMsg, &MyCol::op4Impl>(a,b);
   }
 
   void op5() {
     chains_->nextStep("op5", [=](vt::Index2D idx) {
       auto a = calcVal(7,idx);
       auto b = calcVal(8,idx);
-      return backend_proxy(idx).template send<OpMsg, &MyCol::op5>(a,b);
+      return backend_proxy_(idx).template send<OpMsg, &MyCol::op5>(a,b);
     });
   }
 
@@ -392,7 +392,7 @@ struct MyObjGroup {
     chains_->nextStepCollective("op6", [=](vt::Index2D idx) {
       auto a = calcVal(9,idx);
       auto b = calcVal(10,idx);
-      return backend_proxy(idx).template send<OpMsg, &MyCol::op6>(a,b);
+      return backend_proxy_(idx).template send<OpMsg, &MyCol::op6>(a,b);
     });
   }
 
@@ -400,7 +400,7 @@ struct MyObjGroup {
     chains_->nextStep("op7", [=](vt::Index2D idx) {
       auto a = calcVal(11,idx);
       auto b = calcVal(12,idx);
-      return backend_proxy(idx).template send<OpMsg, &MyCol::op7>(a,b);
+      return backend_proxy_(idx).template send<OpMsg, &MyCol::op7>(a,b);
     });
   }
 
@@ -408,7 +408,7 @@ struct MyObjGroup {
     chains_->nextStep("doMigrate", [=](vt::Index2D idx) {
       auto a = calcVal(13,idx);
       auto b = calcVal(14,idx);
-      return backend_proxy(idx).template send<OpMsg, &MyCol::doMigrate>(a,b);
+      return backend_proxy_(idx).template send<OpMsg, &MyCol::doMigrate>(a,b);
     });
   }
 
@@ -424,7 +424,7 @@ struct MyObjGroup {
 
   void finalCheck(int i) {
     chains_->nextStep("finalCheck", [=](vt::Index2D idx) {
-      return backend_proxy(idx).template send<FinalMsg, &MyCol::finalCheck>(i);
+      return backend_proxy_(idx).template send<FinalMsg, &MyCol::finalCheck>(i);
     });
   }
 
@@ -447,9 +447,9 @@ private:
   // The current epoch for a given update
   vt::EpochType epoch_ = vt::no_epoch;
   // The backend collection proxy for managing the over decomposed workers
-  vt::CollectionProxy<MyCol, vt::Index2D> backend_proxy = {};
+  vt::CollectionProxy<MyCol, vt::Index2D> backend_proxy_ = {};
   // The proxy for this objgroup
-  vt::objgroup::proxy::Proxy<MyObjGroup> frontend_proxy = {};
+  vt::objgroup::proxy::Proxy<MyObjGroup> frontend_proxy_ = {};
   // The current collection chains that are being managed here
   std::unique_ptr<vt::messaging::CollectionChainSet<vt::Index2D>> chains_ = nullptr;
 };
@@ -512,52 +512,52 @@ struct PrintParam {
 
 struct MergeCol : vt::Collection<MergeCol,vt::Index2D> {
   MergeCol() = default;
-  MergeCol(NodeType num, double off) : offset( off ) {
-    idx = getIndex();
+  MergeCol(NodeType num, double off) : offset_( off ) {
+    idx_ = getIndex();
   }
 
   struct DataMsg : vt::CollectionMessage<MergeCol> {
     DataMsg() = default;
-    explicit DataMsg(double x_) : x(x_) { }
-    double x = 0.0;
+    explicit DataMsg(double x) : x_(x) { }
+    double x_ = 0.0;
   };
 
   struct GhostMsg : vt::CollectionMessage<MergeCol > {
     GhostMsg() = default;
-    explicit GhostMsg(vt::CollectionProxy<MergeCol, vt::Index2D> in_proxy_)
-      : proxy(in_proxy_)
+    explicit GhostMsg(vt::CollectionProxy<MergeCol, vt::Index2D> proxy)
+      : proxy_(proxy)
     {}
-    vt::CollectionProxy<MergeCol, vt::Index2D> proxy;
+    vt::CollectionProxy<MergeCol, vt::Index2D> proxy_;
   };
 
   void initData(DataMsg* msg) {
-    EXPECT_EQ(msg->x, calcVal(1,idx));
-    data = msg->x + offset;
+    EXPECT_EQ(msg->x_, calcVal(1, idx_));
+    data_ = msg->x_ + offset_;
   }
 
   void ghost(GhostMsg* msg) {
-    msg->proxy(getIndex()).template send<DataMsg, &MergeCol::interact>(data);
+    msg->proxy_(getIndex()).template send<DataMsg, &MergeCol::interact>(data_);
   }
 
   void interact(DataMsg* msg ) {
-    data *= msg->x;
+    data_ *= msg->x_;
   }
 
   void check(DataMsg *msg) {
-    EXPECT_EQ(msg->x, data);
+    EXPECT_EQ(msg->x_, data_);
   }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     vt::Collection<MergeCol,vt::Index2D>::serialize(s);
-    s | idx | offset | data;
+    s | idx_ | offset_ | data_;
   }
 
 private:
 
-  vt::Index2D idx;
-  double offset = 0;
-  double data = 0.0;
+  vt::Index2D idx_;
+  double offset_ = 0;
+  double data_ = 0.0;
 };
 
 struct MergeObjGroup
@@ -575,13 +575,13 @@ struct MergeObjGroup
   }
 
   void makeVT() {
-    frontend_proxy = vt::theObjGroup()->makeCollective(this);
+    frontend_proxy_ = vt::theObjGroup()->makeCollective(this);
   }
 
   void makeColl(NodeType num_nodes, int k, double offset) {
     auto const node = theContext()->getNode();
     auto range = vt::Index2D(static_cast<int>(num_nodes),k);
-    backend_proxy = vt::theCollection()->constructCollective<MergeCol>(
+    backend_proxy_ = vt::theCollection()->constructCollective<MergeCol>(
       range, [=](vt::Index2D idx) {
         return std::make_unique<MergeCol>(num_nodes, offset);
       }
@@ -602,17 +602,17 @@ struct MergeObjGroup
   void initData() {
     chains_->nextStep("initData", [=](vt::Index2D idx) {
       auto x = calcVal(1,idx);
-      return backend_proxy(idx).template send<MergeCol::DataMsg, &MergeCol::initData>(x);
+      return backend_proxy_(idx).template send<MergeCol::DataMsg, &MergeCol::initData>(x);
     });
   }
 
   void interact( MergeObjGroup &other ) {
-    auto other_proxy = other.backend_proxy;
+    auto other_proxy = other.backend_proxy_;
     vt::messaging::CollectionChainSet<vt::Index2D>::mergeStepCollective( "interact",
                                                                         *chains_,
                                                                         *other.chains_,
                                                            [=]( vt::Index2D idx) {
-      return backend_proxy(idx).template send<MergeCol::GhostMsg, &MergeCol::ghost>(other_proxy);
+      return backend_proxy_(idx).template send<MergeCol::GhostMsg, &MergeCol::ghost>(other_proxy);
     });
   }
 
@@ -621,7 +621,7 @@ struct MergeObjGroup
       auto x = calcVal(1,idx) + offset;
       if ( !is_left )
         x *= calcVal(1,idx) + other_offset;
-      return backend_proxy(idx).template send<MergeCol::DataMsg, &MergeCol::check>(x);
+      return backend_proxy_(idx).template send<MergeCol::DataMsg, &MergeCol::check>(x);
     });
   }
 
@@ -641,9 +641,9 @@ struct MergeObjGroup
   // The current epoch for a given update
   vt::EpochType epoch_ = vt::no_epoch;
   // The backend collection proxy for managing the over decomposed workers
-  vt::CollectionProxy<MergeCol, vt::Index2D> backend_proxy = {};
+  vt::CollectionProxy<MergeCol, vt::Index2D> backend_proxy_ = {};
   // The proxy for this objgroup
-  vt::objgroup::proxy::Proxy<MergeObjGroup> frontend_proxy = {};
+  vt::objgroup::proxy::Proxy<MergeObjGroup> frontend_proxy_ = {};
   // The current collection chains that are being managed here
   std::unique_ptr<vt::messaging::CollectionChainSet<vt::Index2D>> chains_ = nullptr;
 };
