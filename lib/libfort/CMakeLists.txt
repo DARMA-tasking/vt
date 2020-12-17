@@ -62,6 +62,13 @@ else()
         -Wfloat-equal \
         -Wwrite-strings \
         ")
+    #Supress
+    if("${FORT_COMPILER}" STREQUAL "Intel")
+    set(ADDITIONAL_WARNINGS "${ADDITIONAL_WARNINGS} \
+        -wd279 \
+        -wd2192 \
+        -wd2102")
+    endif()
     if("${FORT_COMPILER}" STREQUAL "GNU")
         set(ADDITIONAL_WARNINGS "${ADDITIONAL_WARNINGS} \
             -Wtrampolines \
