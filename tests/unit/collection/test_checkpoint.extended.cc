@@ -189,6 +189,8 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
       }
     });
 
+    vt::thePhase()->nextPhaseCollective();
+
     // Destroy the collection
     vt::runInEpochCollective([&]{
       if (this_node == 0) {
