@@ -89,26 +89,56 @@ public:
   template <
     typename OpT = collective::None,
     typename MsgPtrT,
-    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
-      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
-    >
+    typename MsgT,
+    ActiveTypedFnType<MsgT> *f
   >
   EpochType reduce(
     MsgPtrT msg, Callback<MsgT> cb, EpochType epoch = no_epoch,
     TagType tag = no_tag
   ) const;
+  template <
+    typename OpT = collective::None,
+    typename MsgPtrT,
+    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
+  >
+  PendingSendType reduce(
+    MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
+  ) const
+  {
+    return reduce<
+      OpT,
+      MsgPtrT,
+      MsgT,
+      &MsgT::template msgHandler<
+        MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
+        >
+      >(msg, cb, stamp);
+  }
 
   template <
     typename OpT = collective::None,
     typename FunctorT,
     typename MsgPtrT,
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+    ActiveTypedFnType<MsgT> *f
   >
-  EpochType reduce(
-    MsgPtrT msg, EpochType epoch = no_epoch, TagType tag = no_tag
-  ) const;
+  PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
+  template <
+    typename OpT = collective::None,
+    typename FunctorT,
+    typename MsgPtrT,
+    typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
+  >
+  PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const
+  {
+    return reduce<
+      OpT,
+      FunctorT,
+      MsgPtrT,
+      MsgT,
+      &MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      >(msg, stamp);
+  }
 
   template <
     typename MsgPtrT,

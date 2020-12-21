@@ -75,6 +75,9 @@ struct MPISingletonMultiTest {
     MPI_Finalize();
   }
 
+public:
+  MPI_Comm getComm() { return comm_; }
+
 private:
   MPI_Comm comm_;
 };
