@@ -554,8 +554,10 @@ static std::unique_ptr<char*[]> new_argv = nullptr;
   /*
    * Options for configuring the runtime
    */
+  auto max_size = "Maximum MPI send size (causes larger messages to be split "
+                  "into multiple MPI sends)";
   auto a1x = app.add_option(
-    "--vt_max_mpi_send_size", config_.vt_max_mpi_send_size, max_size, true
+    "--vt_max_mpi_send_size", vt_max_mpi_send_size, max_size, true
   );
 
   auto configRuntime = "Runtime";

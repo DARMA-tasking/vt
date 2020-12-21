@@ -214,7 +214,7 @@ void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
   auto const tag = info.getTag();
 
   auto fn = [buf,sender,size,tag,this](PtrLenPairType,ActionType){
-    vt_debug_print(
+    debug_print(
       active, node,
       "handleChunkedMultiMsg: all chunks arrived tag={}, size={}, from={}\n",
       tag, size, sender
@@ -234,13 +234,13 @@ EventType ActiveMessenger::sendMsgMPI(
 
   char* untyped_msg = reinterpret_cast<char*>(base_typed_msg);
 
-  vt_debug_print(
+  debug_print(
     active, node,
     "sendMsgMPI: dest={}, msg_size={}, send_tag={}\n",
     dest, msg_size, send_tag
   );
 
-  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+  auto const max_per_send = ArgType::vt_max_mpi_send_size;
   if (static_cast<std::size_t>(msg_size) < max_per_send) {
     auto const event_id = theEvent()->createMPIEvent(this_node_);
     auto& holder = theEvent()->getEventHolder(event_id);
@@ -253,7 +253,7 @@ EventType ActiveMessenger::sendMsgMPI(
       VT_ALLOW_MPI_CALLS;
       #if vt_check_enabled(trace_enabled)
         double tr_begin = 0;
-        if (theConfig()->vt_trace_mpi) {
+        if (ArgType::vt_trace_mpi) {
           tr_begin = vt::timing::Timing::getCurrentTime();
         }
       #endif
@@ -264,7 +264,7 @@ EventType ActiveMessenger::sendMsgMPI(
       vtAssertMPISuccess(ret, "MPI_Isend");
 
       #if vt_check_enabled(trace_enabled)
-        if (theConfig()->vt_trace_mpi) {
+        if (ArgType::vt_trace_mpi) {
           auto tr_end = vt::timing::Timing::getCurrentTime();
           auto tr_note = fmt::format("Isend(AM): dest={}, bytes={}", dest, msg_size);
           trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
@@ -274,7 +274,7 @@ EventType ActiveMessenger::sendMsgMPI(
 
     return event_id;
   } else {
-    vt_debug_print(
+    debug_print(
       active, node,
       "sendMsgMPI: (multi): size={}\n", msg_size
     );
@@ -471,7 +471,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
   int num_sends = 0;
   std::vector<EventType> events;
   EventType ret_event = no_event;
-  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+  auto const max_per_send = ArgType::vt_max_mpi_send_size;
   while (remainder > 0) {
     auto const event_id = theEvent()->createMPIEvent(this_node_);
     auto& holder = theEvent()->getEventHolder(event_id);
@@ -482,12 +482,12 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
     {
       #if vt_check_enabled(trace_enabled)
         double tr_begin = 0;
-        if (theConfig()->vt_trace_mpi) {
+        if (ArgType::vt_trace_mpi) {
           tr_begin = vt::timing::Timing::getCurrentTime();
         }
       #endif
 
-      vt_debug_print(
+      debug_print(
         active, node,
         "sendDataMPI: remainder={}, node={}, tag={}, num_sends={}, subsize={},"
         "total size={}\n",
@@ -502,7 +502,7 @@ std::tuple<EventType, int> ActiveMessenger::sendDataMPI(
       vtAssertMPISuccess(ret, "MPI_Isend");
 
       #if vt_check_enabled(trace_enabled)
-        if (theConfig()->vt_trace_mpi) {
+        if (ArgType::vt_trace_mpi) {
           auto tr_end = vt::timing::Timing::getCurrentTime();
           auto tr_note = fmt::format("Isend(Data): dest={}, bytes={}", dest, subsize);
           trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_isend);
@@ -672,7 +672,7 @@ void ActiveMessenger::recvDataDirect(
 
   char* cbuf = static_cast<char*>(buf);
   MsgSizeType remainder = len;
-  auto const max_per_send = theConfig()->vt_max_mpi_send_size;
+  auto const max_per_send = ArgType::vt_max_mpi_send_size;
   for (int i = 0; i < nchunks; i++) {
     auto sublen = static_cast<int>(
       std::min(static_cast<std::size_t>(remainder), max_per_send)
@@ -680,7 +680,7 @@ void ActiveMessenger::recvDataDirect(
 
     #if vt_check_enabled(trace_enabled)
       double tr_begin = 0;
-      if (theConfig()->vt_trace_mpi) {
+      if (ArgType::vt_trace_mpi) {
         tr_begin = vt::timing::Timing::getCurrentTime();
       }
     #endif
@@ -697,7 +697,7 @@ void ActiveMessenger::recvDataDirect(
     dmPostedCounterGauge.incrementUpdate(len, 1);
 
     #if vt_check_enabled(trace_enabled)
-      if (theConfig()->vt_trace_mpi) {
+      if (ArgType::vt_trace_mpi) {
         auto tr_end = vt::timing::Timing::getCurrentTime();
         auto tr_note = fmt::format(
           "Irecv(Data): from={}, bytes={}",
