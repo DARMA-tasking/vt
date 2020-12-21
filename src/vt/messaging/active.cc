@@ -326,9 +326,9 @@ EventType ActiveMessenger::sendMsgBytes(
   );
 
   if (is_term) {
-    tdSentCount.increment(1);
+    // tdSentCount.increment(1);
   }
-  amSentCounterGauge.incrementUpdate(msg_size, 1);
+  // amSentCounterGauge.incrementUpdate(msg_size, 1);
 
   EventType const event_id = sendMsgMPI(dest, base, msg_size, send_tag);
 
@@ -693,7 +693,7 @@ void ActiveMessenger::recvDataDirect(
       vtAssertMPISuccess(ret, "MPI_Irecv");
     }
 
-    dmPostedCounterGauge.incrementUpdate(len, 1);
+    // dmPostedCounterGauge.incrementUpdate(len, 1);
 
     #if vt_check_enabled(trace_enabled)
       if (ArgType::vt_trace_mpi) {
