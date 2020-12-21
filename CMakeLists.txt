@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
+set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
+
 if (POLICY CMP0082) # CMake 3.14
   # Prevent mixing install policies from add_subdirectory;
   # This suppresses a warning as the old behavior is deprecated-by-definition.

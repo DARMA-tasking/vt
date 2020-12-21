@@ -20,6 +20,7 @@ resources:
 - repo: self
 
 variables:
+  System.Debug: true
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
@@ -117,6 +118,26 @@ stages:
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
           dockerComposeCommand: 'run alpine-cpp-clean'
+      - task: Bash@3
+        displayName: Prepare comment with compilation errors and warnings
+        condition: succeededOrFailed()
+        inputs:
+          targetType: 'inline'
+          script: |
+            val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
+            tmp_comment_body='`''`''`'%0D%0A${val}%0D%0A'`''`''`'
+            delimiter="-=-=-=-"
+            new_line="%0D%0A"
+            comment_body=${tmp_comment_body//$delimiter/$new_line}
+            echo "##vso[task.setvariable variable=comp_errs_warns;]$comment_body"
+      - task: GitHubComment@0
+        displayName: Put warnings and errors in PR comment
+        condition: and(succeeded(), ne(variables['comp_errs_warns'], ''))
+        inputs:
+          gitHubConnection: 'DARMA-tasking'
+          repositoryName: 'DARMA-tasking/vt'
+          id: $(SYSTEM.PULLREQUEST.PULLREQUESTNUMBER)
+          comment: $(comp_errs_warns)
       - task: DockerCompose@0
         displayName: Push container to registry
         inputs:

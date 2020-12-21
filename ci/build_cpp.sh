@@ -149,7 +149,23 @@ then
     git commit -m "Update docs (auto-build)"
     git push origin master
 else
-    time cmake --build . --target "${target}"
+    GENERATOR=$(cmake -L | grep USED_CMAKE_GENERATOR:STRING | cut -d"=" -f2)
+    OUTPUT="$VT_BUILD"/compilation_errors_warnings.out
+    OUTPUT_TMP="$OUTPUT".tmp
+    DELIMITER="-=-=-=-"
+    if test "$GENERATOR" = "Ninja"
+    then
+        NINJA_STATUS="[ninja][%f/%t] " time cmake --build . --target "${target}" | tee "$OUTPUT_TMP"
+        WARNS_ERRS=$(grep -Ev '^(\[ninja\]\[[[:digit:]]+\/[[:digit:]]+\])|(--) .*$' "$OUTPUT_TMP")
+        WARNS_ERRS=${WARNS_ERRS//$'\n'/$DELIMITER}
+        echo "$WARNS_ERRS" > "$OUTPUT"
+    elif test "$GENERATOR" = "Unix Makefiles"
+    then
+        time cmake --build . --target "${target}" 2> >(tee "$OUTPUT_TMP")
+        WARNS_ERRS=$(cat "$OUTPUT_TMP")
+        WARNS_ERRS=${WARNS_ERRS//$'\n'/$DELIMITER}
+        echo "$WARNS_ERRS" > "$OUTPUT"
+    fi
 fi
 
 if test "$use_ccache"
