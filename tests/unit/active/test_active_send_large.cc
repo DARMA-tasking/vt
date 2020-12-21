@@ -140,7 +140,7 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
     auto msg = makeMessage<LargeMsgType>();
     fillMsg(msg);
     msg->cb_ = cb;
-    theMsg()->sendMsg<LargeMsgType, myHandler<LargeMsgType>>(next_node, msg);
+    theMsg()->sendMsg<LargeMsgType, myHandler<LargeMsgType>>(next_node, msg.get());
   });
 
   EXPECT_EQ(counter, 1);

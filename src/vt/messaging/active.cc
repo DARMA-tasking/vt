@@ -292,7 +292,7 @@ EventType ActiveMessenger::sendMsgMPI(
 
     // Send the control message to receive the multiple chunks of data
     auto m = makeMessage<MultiMsg>(info, this_node, msg_size);
-    sendMsg<MultiMsg, chunkedMultiMsg>(dest, m);
+    sendMsg<MultiMsg, chunkedMultiMsg>(dest, m.get());
 
     return event_id;
   }
