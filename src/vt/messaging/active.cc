@@ -325,7 +325,6 @@ EventType ActiveMessenger::sendMsgBytes(
     dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
   );
 
-  }
   if (is_term) {
     tdSentCount.increment(1);
   }
