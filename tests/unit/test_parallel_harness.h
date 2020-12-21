@@ -119,6 +119,41 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 
     TestHarnessAny<TestBase>::TearDown();
   }
+
+protected:
+  template <typename Arg>
+  void addArgs(Arg& arg) {
+    this->additional_args_.emplace_back(&arg[0]);
+  }
+
+  template <typename Arg, typename... Args>
+  void addArgs(Arg& arg, Args&... args) {
+    this->additional_args_.emplace_back(&arg[0]);
+    addArgs(args...);
+  }
+
+private:
+  /**
+   * \internal \brief Add additional arguments used during initialization of vt
+   * components
+   *
+   * To add additional arguments override this function in your class and add
+   * needed arguments to `additional_args_` vector.
+   *
+   * Example:
+   * struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
+   *   virtual void addAdditionalArgs() override {
+   *     static char vt_lb_stats[]{"--vt_lb_stats"};
+   *     static char vt_lb_stats_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
+   *     static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile"};
+   *
+   *     addArgs(vt_lb_stats, vt_lb_stats_dir, vt_lb_stats_file);
+   *   }
+   * };
+   */
+  virtual void addAdditionalArgs() {}
+
+  std::vector<char*> additional_args_;
 };
 
 using TestParallelHarness = TestParallelHarnessAny<testing::Test>;
