@@ -306,7 +306,6 @@ EventType ActiveMessenger::sendMsgBytes(
 
   auto const epoch = envelopeIsEpochType(msg->env) ?
     envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
-  auto const is_shared = isSharedMessage(msg);
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_bcast = envelopeIsBcast(msg->env);
 
