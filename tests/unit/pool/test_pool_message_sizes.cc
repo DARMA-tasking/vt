@@ -102,12 +102,12 @@ void TestPoolMessageSizes::testPoolFun(TestMsg<num_bytes>* prev_msg) {
 
   if (count < max_test_count) {
     auto msg = makeSharedMessage<TestMsg<num_bytes>>();
-    theMsg()->sendMsg<TestMsg<num_bytes>, testPoolFun>(
+    theMsg()->sendMsg<TestMsg<num_bytes>, testPoolFun<num_bytes>>(
       next, msg
     );
   } else {
     auto msg = makeSharedMessage<TestMsg<num_bytes * 2>>();
-    theMsg()->sendMsg<TestMsg<num_bytes * 2>, testPoolFun>(
+    theMsg()->sendMsg<TestMsg<num_bytes * 2>, testPoolFun<num_bytes * 2>>(
       next, msg
     );
     count = 0;
