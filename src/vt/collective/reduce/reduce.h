@@ -100,55 +100,15 @@ struct Reduce : virtual collective::tree::Tree {
     typename OpT,
     typename MsgT
   >
-  PendingSendType reduce(
+  SequentialIDType reduce(
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
-    detail::ReduceStamp id = detail::ReduceStamp{},
-    ReduceNumType const& num_contrib = 1
-  )
-    {
-      return reduce<
-        OpT,
-        MsgT,
-        &MsgT::template msgHandler<
-          MsgT,
-          OpT,
-          collective::reduce::operators::ReduceCallback<MsgT>
-          >
-        >(root, msg, cb, id, num_contrib);
-    }
-
-  /**
-   * \brief Reduce a message up the tree
-   *
-   * \param[in] root the root node where the final handler provides the result
-   * \param[in] msg the message to reduce on this node
-   * \param[in] cb the callback to trigger on the root node
-   * \param[in] id the reduction stamp (optional), provided if out-of-order
-   * \param[in] num_contrib number of expected contributions from this node
-   *
-   * \return the next reduction stamp
-   */
-  template <
-    typename OpT,
-    typename MsgT,
-    ActiveTypedFnType<MsgT> *f
-  >
-  detail::ReduceStamp reduceImmediate(
-    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
-    detail::ReduceStamp id = detail::ReduceStamp{},
-    ReduceNumType const& num_contrib = 1
-  );
-  template <
-    typename OpT,
-    typename MsgT
-  >
-  detail::ReduceStamp reduceImmediate(
-    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
-    detail::ReduceStamp id = detail::ReduceStamp{},
-    ReduceNumType const& num_contrib = 1
+    TagType const& tag = no_tag, SequentialIDType const& seq = no_seq_id,
+    ReduceNumType const& num_contrib = 1,
+    VirtualProxyType const& proxy = no_vrt_proxy,
+    ObjGroupProxyType objgroup = no_obj_group
   )
   {
-    return reduceImmediate<
+    return reduce<
       OpT,
       MsgT,
       &MsgT::template msgHandler<
@@ -156,59 +116,9 @@ struct Reduce : virtual collective::tree::Tree {
         OpT,
         collective::reduce::operators::ReduceCallback<MsgT>
         >
-      >(root, msg, cb, id, num_contrib);
+      >(root, msg, cb, tag, seq, num_contrib, proxy, objgroup);
   }
 
-  /**
-   * \brief Reduce a message up the tree with a target function on the root node
-   *
-   * \param[in] root the root node where the final handler provides the result
-   * \param[in] msg the message to reduce on this node
-   * \param[in] id the reduction stamp (optional), provided if out-of-order
-   * \param[in] num_contrib number of expected contributions from this node
-   *
-   * \return the next reduction stamp
-   */
-  template <
-    typename OpT,
-    typename FunctorT,
-    typename MsgT,
-    ActiveTypedFnType<MsgT> *f
-  >
-  PendingSendType reduce(
-    NodeType const& root, MsgT* msg,
-    detail::ReduceStamp id = detail::ReduceStamp{},
-    ReduceNumType const& num_contrib = 1
-  );
-  template <
-    typename OpT,
-    typename FunctorT,
-    typename MsgT
-  >
-  PendingSendType reduce(
-    NodeType const& root, MsgT* msg,
-    detail::ReduceStamp id = detail::ReduceStamp{},
-    ReduceNumType const& num_contrib = 1
-  )
-  {
-    return reduce<
-      OpT,
-      FunctorT,
-      MsgT,
-      &MsgT::template msgHandler<MsgT, OpT, FunctorT>
-      >(root, msg, id, num_contrib);
-  }
-
-  /**
-   * \brief Reduce a message up the tree with a target function on the root node
-   *
-   * \param[in] root the root node where the final handler provides the result
-   * \param[in] msg the message to reduce on this node
-   * \param[in] id the reduction stamp (optional), provided if out-of-order
-   * \param[in] num_contrib number of expected contributions from this node
-   *
-   * \return the next reduction stamp
-   */
   template <
     typename OpT,
     typename FunctorT,
@@ -224,19 +134,19 @@ struct Reduce : virtual collective::tree::Tree {
     typename OpT,
     typename FunctorT,
     typename MsgT
-    >
-  detail::ReduceStamp reduceImmediate(
-    NodeType const& root, MsgT* msg,
-    detail::ReduceStamp id = detail::ReduceStamp{},
-    ReduceNumType const& num_contrib = 1
+  >
+  SequentialIDType reduce(
+    NodeType const& root, MsgT* msg, TagType const& tag = no_tag,
+    SequentialIDType const& seq = no_seq_id, ReduceNumType const& num_contrib = 1,
+    VirtualProxyType const& proxy = no_vrt_proxy
   )
   {
-    return reduceImmediate<
+    return reduce<
       OpT,
       FunctorT,
       MsgT,
       &MsgT::template msgHandler<MsgT, OpT, FunctorT>
-      >(root, msg, id, num_contrib);
+      >(root, msg, tag, seq, num_contrib, proxy);
   }
 
   template <typename MessageT>

@@ -101,8 +101,9 @@ public:
     typename MsgPtrT,
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
   >
-  PendingSendType reduce(
-    MsgPtrT msg, Callback<MsgT> cb, ReduceStamp stamp = ReduceStamp{}
+  EpochType reduce(
+    MsgPtrT msg, Callback<MsgT> cb, EpochType epoch = no_epoch,
+    TagType tag = no_tag
   ) const
   {
     return reduce<
@@ -112,7 +113,7 @@ public:
       &MsgT::template msgHandler<
         MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
         >
-      >(msg, cb, stamp);
+      >(msg, cb, epoch, tag);
   }
 
   template <
@@ -122,14 +123,18 @@ public:
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType,
     ActiveTypedFnType<MsgT> *f
   >
-  PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const;
+  EpochType reduce(
+    MsgPtrT msg, EpochType epoch = no_epoch, TagType tag = no_tag
+  ) const;
   template <
     typename OpT = collective::None,
     typename FunctorT,
     typename MsgPtrT,
     typename MsgT = typename util::MsgPtrType<MsgPtrT>::MsgType
   >
-  PendingSendType reduce(MsgPtrT msg, ReduceStamp stamp = ReduceStamp{}) const
+  EpochType reduce(
+    MsgPtrT msg, EpochType epoch = no_epoch, TagType tag = no_tag
+  ) const
   {
     return reduce<
       OpT,
@@ -137,7 +142,7 @@ public:
       MsgPtrT,
       MsgT,
       &MsgT::template msgHandler<MsgT, OpT, FunctorT>
-      >(msg, stamp);
+      >(msg, epoch, tag);
   }
 
   template <
