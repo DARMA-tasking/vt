@@ -21,15 +21,17 @@ jobs:
       CMAKE_BUILD_TYPE: release
       VT_LB_ENABLED: 1
       VT_TRACE_ENABLED: 1
+      CMAKE_GENERATOR: "Unix Makefiles"
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
 
     steps:
     - uses: actions/checkout@v2
     - uses: actions/cache@v1
       with:
         path: ~/.ccache
-        key: ${{ runner.os }}-macosx-clang-8-ccache-${{ hashFiles('**/*') }}
+        key: ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-macosx-clang-8-ccache-
+          ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
     - name: Install Dependencies
       shell: bash
       run: brew update --preinstall && brew bundle --file=ci/Brewfile
