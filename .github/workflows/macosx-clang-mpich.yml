@@ -27,9 +27,9 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: ~/.ccache
-        key: ${{ runner.os }}-macosx-clang-8-ccache-${{ hashFiles('**/*') }}
+        key: ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-macosx-clang-8-ccache-
+          ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
     - name: Install Dependencies
       shell: bash
       run: brew update --preinstall && brew bundle --file=ci/Brewfile
