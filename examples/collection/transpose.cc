@@ -121,7 +121,7 @@ struct SubSolveInfo {
   static void solveDataIncoming(DataMsg* msg);
   static void subSolveHandler(SubSolveMsg* msg);
 
-  MPI_Comm sub_comm = MPI_COMM_WORLD;
+  MPI_Comm sub_comm_ = MPI_COMM_WORLD;
   int32_t sub_rank_ = -1;
   int32_t sub_size_ = -1;
   int32_t needed_blocks_ = 0;
@@ -232,7 +232,7 @@ vt::NodeType my_map(IndexT* idx, IndexT* max_idx, vt::NodeType num_nodes) {
   // Do a simple "blocked" map from collection pieces to node
   auto const blocks_to_node = num_pieces / sub_size;
   auto const solver_local_elms = blocks_to_node * block_size;
-  solver_info.sub_comm = sub_comm;
+  solver_info.sub_comm_ = sub_comm;
   solver_info.sub_rank_ = sub_rank;
   solver_info.sub_size_ = sub_size;
   solver_info.needed_blocks_ = blocks_to_node;
@@ -305,7 +305,7 @@ static void solveGroupSetup(vt::NodeType this_node, vt::VirtualProxyType coll_pr
   // auto const& the_comm = vt::theContext()->getComm();
   // MPI_Comm manual_sub_comm;
   // MPI_Comm_split(the_comm, is_even_node, this_node, &manual_sub_comm);
-  // solver_info.sub_comm = manual_sub_comm;
+  // solver_info.sub_comm_ = manual_sub_comm;
 
   fmt::print(
     "solveGroupSetup: node={}, is_even_node={}\n",

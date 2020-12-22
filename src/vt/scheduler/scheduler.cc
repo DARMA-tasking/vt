@@ -338,7 +338,7 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
 
 void Scheduler::triggerEvent(SchedulerEventType const& event) {
   vtAssert(
-    event_triggers.size() >= event, "Must be large enough to hold this event"
+    event_triggers.size() >= static_cast<size_t>(event), "Must be large enough to hold this event"
   );
 
   for (auto& t : event_triggers[event]) {
@@ -355,7 +355,7 @@ void Scheduler::registerTrigger(
   SchedulerEventType const& event, TriggerType trigger
 ) {
   vtAssert(
-    event_triggers.size() >= event, "Must be large enough to hold this event"
+    event_triggers.size() >= static_cast<size_t>(event), "Must be large enough to hold this event"
   );
   event_triggers[event].push_back(trigger);
 }
@@ -364,7 +364,7 @@ void Scheduler::registerTriggerOnce(
   SchedulerEventType const& event, TriggerType trigger
 ) {
   vtAssert(
-    event_triggers.size() >= event, "Must be large enough to hold this event"
+    event_triggers.size() >= static_cast<size_t>(event), "Must be large enough to hold this event"
   );
   event_triggers_once[event].push_back(trigger);
 }

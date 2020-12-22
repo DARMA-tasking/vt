@@ -165,11 +165,11 @@ static arguments::AppConfig preInitAppConfig{};
  * \return A configuration; possible a default configuration.
  */
 arguments::AppConfig const* preConfig() {
-  auto const rt = curRT;
-  if (not rt)
+  auto const runtime = curRT;
+  if (not runtime)
     return &preInitAppConfig;
-  auto const* config = rt->theArgConfig;
-  return config not_eq nullptr ? &config->config_ : rt->getAppConfig();
+  auto const* config = runtime->theArgConfig;
+  return config not_eq nullptr ? &config->config_ : runtime->getAppConfig();
 }
 
 }} /* end namespace vt::debug */
