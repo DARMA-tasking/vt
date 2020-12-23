@@ -46,10 +46,15 @@
 #define INCLUDED_VT_TRACE_TRACE_USER_EVENT_H
 
 #include "vt/config.h"
+
+#if !vt_check_enabled(trace_only)
+#include "vt/messaging/message.h"
+#endif
+
 #include "vt/trace/trace_common.h"
 #include "vt/utils/bits/bits_common.h"
 #include "vt/context/context.h"
-#include "vt/messaging/message.h"
+
 
 #include <string>
 #include <unordered_map>
@@ -75,7 +80,7 @@ enum eUserEventLayoutBits {
 void insertNewUserEvent(UserEventIDType event, std::string const& name);
 
 struct UserEventRegistry {
-
+#if !vt_check_enabled(trace_only)
   struct NewUserEventMsg : vt::Message {
     using MessageParentType = vt::Message;
     vt_msg_serialize_required(); // by name_
@@ -97,18 +102,21 @@ struct UserEventRegistry {
   };
 
   static void newEventHan(NewUserEventMsg* msg);
+#endif
 
   UserEventIDType createEvent(
     bool user, bool rooted, NodeType in_node, UserSpecEventIDType id,
     bool hash = false
   );
-
-  UserEventIDType hash(std::string const& in_event_name);
   UserEventIDType collective(std::string const& in_event_name);
+#if !vt_check_enabled(trace_only)
+  UserEventIDType hash(std::string const& in_event_name);
   UserEventIDType rooted(std::string const& in_event_name);
   UserEventIDType user(
     std::string const& in_event_name, UserSpecEventIDType id
   );
+#endif
+
 
   std::unordered_map<UserEventIDType, std::string> const& getEvents() const {
     return user_event_;

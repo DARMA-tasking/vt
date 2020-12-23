@@ -170,7 +170,7 @@ struct TraceScopedEventHash final {
    * \param[in] in_str the name of the event
    */
   explicit TraceScopedEventHash(std::string const& in_str)
-    : begin_(Trace::getCurrentTime()),
+    : begin_(TraceLite::getCurrentTime()),
       str_(in_str)
   {
     event_ = registerEventHashed(str_);
@@ -185,7 +185,7 @@ struct TraceScopedEventHash final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = Trace::getCurrentTime();
+      double end = TraceLite::getCurrentTime();
       theTrace()->addUserEventBracketed(event_, begin_, end);
 
       event_ = no_user_event_id;
@@ -215,7 +215,7 @@ struct TraceScopedEvent final {
    * \c registerEventCollective )
    */
   explicit TraceScopedEvent(UserEventIDType event)
-    : begin_(event != no_user_event_id ? Trace::getCurrentTime() : 0),
+    : begin_(event != no_user_event_id ? TraceLite::getCurrentTime() : 0),
       event_(event)
   { }
 
@@ -228,7 +228,7 @@ struct TraceScopedEvent final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = Trace::getCurrentTime();
+      double end = TraceLite::getCurrentTime();
       theTrace()->addUserEventBracketed(event_, begin_, end);
 
       event_ = no_user_event_id;
@@ -259,7 +259,7 @@ struct TraceScopedNote final {
    */
   TraceScopedNote(
     std::string const& in_note, TraceEventIDType const in_event = no_trace_event
-  ) : begin_(in_event != no_trace_event ? Trace::getCurrentTime() : 0),
+  ) : begin_(in_event != no_trace_event ? TraceLite::getCurrentTime() : 0),
       event_(in_event),
       note_(in_note)
   { }
@@ -273,7 +273,7 @@ struct TraceScopedNote final {
    */
   void end() {
     if (event_ != no_user_event_id) {
-      double end = Trace::getCurrentTime();
+      double end = TraceLite::getCurrentTime();
       theTrace()->addUserBracketedNote(begin_, end, note_, event_);
 
       event_ = no_user_event_id;
