@@ -901,6 +901,8 @@ public:
   /**
    * \brief Restore the collection (collective) from file.
    *
+   * \note Resets the phase to 0 for every element.
+   *
    * \param[in] range the range of the collection to restart
    * \param[in] file_base the base file name for the files to read
    *

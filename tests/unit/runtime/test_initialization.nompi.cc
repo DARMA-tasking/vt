@@ -2,11 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                memory_units.h
+//                        test_initialization.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2020 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -42,46 +42,19 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_UTILS_MEMORY_MEMORY_UNITS_H
-#define INCLUDED_VT_UTILS_MEMORY_MEMORY_UNITS_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
+#include "test_harness.h"
 
-#include <string>
+#include <vt/transport.h>
 
-namespace vt { namespace util { namespace memory {
+namespace vt { namespace tests { namespace unit {
 
-enum struct MemoryUnitEnum : int8_t {
-  Bytes      = 0,
-  Kilobytes  = 1,
-  Megabytes  = 2,
-  Gigabytes  = 3,
-  Terabytes  = 4,
-  Petabytes  = 5,
-  Exabytes   = 6,
-  Zettabytes = 7,
-  Yottabytes = 8
-};
+using TestInitialization = TestHarness;
 
-std::string getMemoryUnitName(MemoryUnitEnum unit);
-MemoryUnitEnum getUnitFromString(std::string const& unit);
-std::tuple<std::string, double> getBestMemoryUnit(std::size_t bytes);
+TEST_F(TestInitialization, test_initialize_no_args) {
+  vt::initialize();
+  vt::finalize();
+}
 
-}}} /* end namespace vt::util::memory */
-
-namespace std {
-
-using MemoryUnitType = vt::util::memory::MemoryUnitEnum;
-
-template <>
-struct hash<MemoryUnitType> {
-  size_t operator()(MemoryUnitType const& in) const {
-    using MemoryUnitUnderType = typename std::underlying_type<MemoryUnitType>::type;
-    auto const val = static_cast<MemoryUnitUnderType>(in);
-    return std::hash<MemoryUnitUnderType>()(val);
-  }
-};
-
-} /* end namespace std */
-
-#endif /*INCLUDED_VT_UTILS_MEMORY_MEMORY_UNITS_H*/
+}}} // end namespace vt::tests::unit

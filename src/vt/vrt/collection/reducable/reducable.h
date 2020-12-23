@@ -70,25 +70,57 @@ struct Reducable : BaseProxyT {
   template <
     typename OpT = collective::None,
     typename MsgT,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
-      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
-    >
+    ActiveTypedFnType<MsgT> *f
   >
   EpochType reduce(
     MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag
   ) const;
+  template <
+    typename OpT = collective::None,
+    typename MsgT
+  >
+  EpochType reduce(
+    MsgT *const msg, Callback<MsgT> cb, EpochType const& epoch = no_epoch,
+    TagType const& tag = no_tag
+  ) const
+  {
+    return reduce<
+      OpT,
+      MsgT,
+      &MsgT::template msgHandler<
+        MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
+        >
+      >(msg, cb, epoch, tag);
+  }
 
   template <
     typename OpT,
     typename FunctorT,
     typename MsgT,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+    ActiveTypedFnType<MsgT> *f
   >
   EpochType reduce(
     MsgT *const msg, EpochType const& epoch = no_epoch,
     TagType const& tag = no_tag
   ) const;
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT
+  >
+  EpochType reduce(
+    MsgT *const msg, EpochType const& epoch = no_epoch,
+    TagType const& tag = no_tag
+  ) const
+  {
+    return reduce<
+      OpT,
+      FunctorT,
+      MsgT,
+      &MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      >(msg, epoch, tag);
+  }
 
   template <typename MsgT, ActiveTypedFnType<MsgT> *f>
   EpochType reduce(

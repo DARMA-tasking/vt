@@ -52,21 +52,18 @@ namespace vt {
 
 // vt::{initialize,finalize} for main ::vt namespace
 RuntimePtrType initialize(
-  int& argc, char**& argv, WorkerCountType const num_workers,
-  bool is_interop, MPI_Comm* comm
+  int argc, char** argv, WorkerCountType const num_workers,
+  bool is_interop /* = false */, MPI_Comm* comm /* = nullptr */
 ) {
   return CollectiveOps::initialize(argc,argv,num_workers,is_interop,comm);
 }
 
-RuntimePtrType initialize(int& argc, char**& argv, MPI_Comm* comm) {
+RuntimePtrType initialize(
+  int argc /* = 0 */, char** argv /* = nullptr */,
+  MPI_Comm* comm /* = nullptr */
+) {
   bool const is_interop = comm != nullptr;
   return CollectiveOps::initialize(argc,argv,no_workers,is_interop,comm);
-}
-
-RuntimePtrType initialize(MPI_Comm* comm) {
-  int argc = 0;
-  char** argv = nullptr;
-  return CollectiveOps::initialize(argc,argv,no_workers,true,comm);
 }
 
 void finalize(RuntimePtrType in_rt) {

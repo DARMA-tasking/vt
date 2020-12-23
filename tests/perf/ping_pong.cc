@@ -105,7 +105,7 @@ static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
 
   if (num_bytes != max_bytes) {
     auto pmsg = makeSharedMessage<PingMsg<num_bytes * 2>>();
-    theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong>(
+    theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong<num_bytes * 2>>(
       pong_node, pmsg
     );
   }
@@ -133,7 +133,7 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
 
   if (cnt >= num_pings) {
     auto msg = makeSharedMessage<FinishedPingMsg<num_bytes>>(num_bytes);
-    theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing>(
+    theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing<num_bytes>>(
       0, msg
     );
   } else {
@@ -141,12 +141,12 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
       theContext()->getNode() == ping_node ? pong_node : ping_node;
     #if REUSE_MESSAGE_PING_PONG
       // @todo: fix this memory allocation problem
-      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong>(
+      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(
         next, in_msg, [=]{ /*delete in_msg;*/ }
       );
     #else
       auto m = makeSharedMessage<PingMsg<num_bytes>>(cnt + 1);
-      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong>(next, m);
+      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(next, m);
     #endif
   }
 }
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
 
   if (my_node == 0) {
     auto m = makeSharedMessage<PingMsg<min_bytes>>();
-    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong>(pong_node, m);
+    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong<min_bytes>>(pong_node, m);
   }
 
   while (!rt->isTerminated()) {

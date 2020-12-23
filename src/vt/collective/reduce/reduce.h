@@ -87,9 +87,7 @@ struct Reduce : virtual collective::tree::Tree {
   template <
     typename OpT,
     typename MsgT,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<
-      MsgT, OpT, collective::reduce::operators::ReduceCallback<MsgT>
-    >
+    ActiveTypedFnType<MsgT> *f
   >
   SequentialIDType reduce(
     NodeType const& root, MsgT* msg, Callback<MsgT> cb,
@@ -98,18 +96,58 @@ struct Reduce : virtual collective::tree::Tree {
     VirtualProxyType const& proxy = no_vrt_proxy,
     ObjGroupProxyType objgroup = no_obj_group
   );
+  template <
+    typename OpT,
+    typename MsgT
+  >
+  SequentialIDType reduce(
+    NodeType const& root, MsgT* msg, Callback<MsgT> cb,
+    TagType const& tag = no_tag, SequentialIDType const& seq = no_seq_id,
+    ReduceNumType const& num_contrib = 1,
+    VirtualProxyType const& proxy = no_vrt_proxy,
+    ObjGroupProxyType objgroup = no_obj_group
+  )
+  {
+    return reduce<
+      OpT,
+      MsgT,
+      &MsgT::template msgHandler<
+        MsgT,
+        OpT,
+        collective::reduce::operators::ReduceCallback<MsgT>
+        >
+      >(root, msg, cb, tag, seq, num_contrib, proxy, objgroup);
+  }
 
   template <
     typename OpT,
     typename FunctorT,
     typename MsgT,
-    ActiveTypedFnType<MsgT> *f = MsgT::template msgHandler<MsgT, OpT, FunctorT>
+    ActiveTypedFnType<MsgT> *f
   >
   SequentialIDType reduce(
     NodeType const& root, MsgT* msg, TagType const& tag = no_tag,
     SequentialIDType const& seq = no_seq_id, ReduceNumType const& num_contrib = 1,
     VirtualProxyType const& proxy = no_vrt_proxy
   );
+  template <
+    typename OpT,
+    typename FunctorT,
+    typename MsgT
+  >
+  SequentialIDType reduce(
+    NodeType const& root, MsgT* msg, TagType const& tag = no_tag,
+    SequentialIDType const& seq = no_seq_id, ReduceNumType const& num_contrib = 1,
+    VirtualProxyType const& proxy = no_vrt_proxy
+  )
+  {
+    return reduce<
+      OpT,
+      FunctorT,
+      MsgT,
+      &MsgT::template msgHandler<MsgT, OpT, FunctorT>
+      >(root, msg, tag, seq, num_contrib, proxy);
+  }
 
   template <typename MessageT>
   void reduceAddMsg(
