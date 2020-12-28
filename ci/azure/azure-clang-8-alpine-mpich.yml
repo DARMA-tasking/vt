@@ -135,8 +135,8 @@ stages:
         condition: and(succeeded(), ne(variables['comp_errs_warns'], ''))
         inputs:
           gitHubConnection: 'DARMA-tasking'
-          repositoryName: 'DARMA-tasking/vt'
-          id: $(SYSTEM.PULLREQUEST.PULLREQUESTNUMBER)
+          repositoryName: $(Build.Repository.Name)
+          id: $(System.PullRequest.PullRequestNumber)
           comment: $(comp_errs_warns)
       - task: DockerCompose@0
         displayName: Push container to registry
