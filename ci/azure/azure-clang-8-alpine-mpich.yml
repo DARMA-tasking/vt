@@ -124,8 +124,9 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
+            title=$(Build.BuildNumber)
             val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
-            tmp_comment_body='`''`''`'%0D%0A${val}%0D%0A'`''`''`'
+            tmp_comment_body=${title}%0D%0A'`''`''`'%0D%0A${val}%0D%0A'`''`''`'
             delimiter="-=-=-=-"
             new_line="%0D%0A"
             comment_body=${tmp_comment_body//$delimiter/$new_line}
