@@ -70,8 +70,9 @@ struct TestInitialization : TestParallelHarness {
     custom_args.emplace_back(&prog_name[0]);
     custom_args.emplace_back(&cli_argument[0]);
     custom_args.emplace_back(&vt_no_terminate[0]);
+    custom_args.emplace_back(nullptr);
 
-    custom_argc = custom_args.size();
+    custom_argc = custom_args.size() - 1;
     custom_argv = custom_args.data();
     EXPECT_EQ(custom_argc, 3);
 
@@ -90,6 +91,7 @@ TEST_F(TestInitialization, test_initialize_with_args) {
   EXPECT_EQ(custom_argc, 2);
   EXPECT_STREQ(custom_argv[0], "vt_program");
   EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
+  EXPECT_EQ(custom_argv[2], nullptr);
 }
 
 }}} // end namespace vt::tests::unit
