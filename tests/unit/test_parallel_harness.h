@@ -99,9 +99,6 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 
 #if vt_feature_cmake_test_trace_on
     static char traceon[]{"--vt_trace=1"};
-#endif
-
-#if vt_feature_cmake_test_trace_on
     addArgs(traceon);
 #endif
 
