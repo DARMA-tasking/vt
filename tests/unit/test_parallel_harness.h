@@ -58,6 +58,9 @@
 
 namespace vt { namespace tests { namespace unit {
 
+extern int test_argc;
+extern char** test_argv;
+
 /*
  *  gtest runs many tests in the same binary, but there is no way to know when
  *  to call MPI_Finalize, which can only be called once (when it's called
