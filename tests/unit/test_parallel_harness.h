@@ -110,6 +110,10 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     auto const new_args = injectAdditionalArgs(test_argc, test_argv);
     auto custom_argc = new_args.first;
     auto custom_argv = new_args.second;
+    vtAssert(
+      custom_argv[custom_argc] == nullptr,
+      "The value of argv[argc] should always be 0"
+    );
     CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true, &comm);
 
 #if DEBUG_TEST_HARNESS_PRINT
@@ -157,7 +161,8 @@ private:
 
     addAdditionalArgs();
 
-    int custom_argc = additional_args_.size();
+    additional_args_.emplace_back(nullptr);
+    int custom_argc = additional_args_.size() - 1;
     char** custom_argv = additional_args_.data();
 
     return std::make_pair(custom_argc, custom_argv);
