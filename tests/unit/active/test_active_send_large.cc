@@ -101,8 +101,6 @@ void myHandler(MsgT* m) {
 
 template <typename T>
 struct TestActiveSendLarge : TestParallelHarness {
-  using TagType = typename std::tuple_element<1,T>::type;
-
   // Set max size to 16 KiB for testing
   void addAdditionalArgs() override {
     new_arg = fmt::format("--vt_max_mpi_send_size=16384");
