@@ -109,6 +109,8 @@ if (vt_werror_enabled)
 endif()
 include(cmake/load_bundled_libraries.cmake)
 
+include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
+
 # Primary VT build
 add_subdirectory(src)
 
