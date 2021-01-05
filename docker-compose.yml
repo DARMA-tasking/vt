@@ -102,6 +102,7 @@ x-vtopts: &vtopts
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
+  VT_CI_BUILD: ${VT_CI_BUILD:-0}
 
 services:
   ##############################################################################

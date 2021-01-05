@@ -28,6 +28,7 @@ jobs:
       VT_DOCS: 0
       VT_ASAN: 0
       VT_POOL: 0
+      VT_CI_BUILD: 1
       CACHE: ~/.local/cache/
 
     steps:
