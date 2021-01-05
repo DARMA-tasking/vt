@@ -168,6 +168,7 @@ else
         # To easily tell if compilation of given file succeeded special progress bar is used
         # (controlled by variable NINJA_STATUS)
         NINJA_STATUS="[ninja][%f/%t] " time cmake --build . --target "${target}" | tee "$OUTPUT_TMP"
+        sed -i '/ninja: build stopped:/d' "$OUTPUT_TMP"
 
         # Now every line that doesn't start with [ninja][number]/[number] is an error or a warning
         WARNS_ERRS=$(grep -Ev '^(\[ninja\]\[[[:digit:]]+\/[[:digit:]]+\])|(--) .*$' "$OUTPUT_TMP")
