@@ -14,6 +14,7 @@ resources:
 - repo: self
 
 variables:
+  System.Debug: true
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
@@ -60,3 +61,110 @@ stages:
           targetType: 'inline'
           script: |
             echo setup
+      - task: Bash@3
+        displayName: Build timestep for caching
+        inputs:
+          targetType: 'inline'
+          script: |
+            echo 'string(TIMESTAMP current_date "%H;%M;%S" UTC)' > script
+            echo 'execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${current_date}")' >> script
+            val=$(cmake -P script)
+            echo "##vso[task.setvariable variable=TS]$val"
+            echo 'string(TIMESTAMP current_date "%Y" UTC)' > script
+            echo 'execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${current_date}")' >> script
+            val=$(cmake -P script)
+            echo "##vso[task.setvariable variable=TS_YEAR]$val"
+            echo 'string(TIMESTAMP current_date "%m" UTC)' > script
+            echo 'execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${current_date}")' >> script
+            val=$(cmake -P script)
+            echo "##vso[task.setvariable variable=TS_MONTH]$val"
+            echo 'string(TIMESTAMP current_date "%d" UTC)' > script
+            echo 'execute_process(COMMAND ${CMAKE_COMMAND} -E echo "${current_date}")' >> script
+            val=$(cmake -P script)
+            echo "##vso[task.setvariable variable=TS_DAY]$val"
+      - task: Bash@3
+        displayName: Output timestamp for caching
+        inputs:
+          targetType: 'inline'
+          script: 'echo "my pipeline variable is $(TS) $(TS_YEAR) $(TS_MONTH) $(TS_DAY)"'
+      - task: Cache@2
+        displayName: Update cache
+        inputs:
+          securityNamespace: cache
+          key: $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY) | $(TS)
+          path: '$(build_root)/ccache'
+          restoreKeys: |
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY)
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH)
+            $(Agent.OS) | "$(cache_name)" | $(TS_YEAR)
+            $(Agent.OS) | "$(cache_name)"
+      - task: DockerCompose@0
+        displayName: Pull container
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerComposeFile: '**/docker-compose.yml'
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp-clean'
+      - task: DockerCompose@0
+        displayName: Build container
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerComposeFile: '**/docker-compose.yml'
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'run ubuntu-cpp-clean'
+      - task: Bash@3
+        displayName: Prepare comment with compilation errors and warnings
+        condition: succeededOrFailed()
+        inputs:
+          targetType: 'inline'
+          # * read warnings and errors from a file,
+          # * return empty $comment_body if there aren't any errors or warnings,
+          # * replace special delimiter with CRLF - %0D%0A (essentially restore new lines),
+          # * output preprocessed report to a variable for the next task (that puts it as PR comment).
+          script: |
+            val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
+            if test -z "$val"
+            then
+            echo "##vso[task.setvariable variable=comp_errs_warns;]$val"
+            return 0
+            fi
+            tmp_comment_body=**"$(Build.BuildNumber)"**%0D%0A'`''`''`'%0D%0A${val}%0D%0A'`''`''`'
+            delimiter="-=-=-=-"
+            new_line="%0D%0A"
+            comment_body=${tmp_comment_body//$delimiter/$new_line}
+            echo "##vso[task.setvariable variable=comp_errs_warns;]$comment_body"
+      - task: GitHubComment@0
+        displayName: Put warnings and errors in PR comment
+        condition: and(succeededOrFailed(), ne(variables['comp_errs_warns'], ''))
+        inputs:
+          gitHubConnection: 'DARMA-tasking'
+          repositoryName: $(Build.Repository.Name)
+          id: $(System.PullRequest.PullRequestNumber)
+          comment: $(comp_errs_warns)
+      - task: DockerCompose@0
+        displayName: Push container to registry
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerRegistryEndpoint: 'dockerRegistryConnection1'
+          dockerComposeFile: '**/docker-compose.yml'
+          action: 'Run a Docker Compose command'
+          dockerComposeCommand: 'push ubuntu-cpp-clean'
+      - task: Bash@3
+        displayName: Create artifacts
+        inputs:
+          targetType: 'inline'
+          script: |
+            zip -j $(Agent.TempDirectory)/LastTest.log.gz $(build_root)/vt/Testing/Temporary/LastTest.log
+            zip -j $(Agent.TempDirectory)/cmake-output.log.gz $(build_root)/vt/cmake-output.log
+      - task: PublishPipelineArtifact@1
+        displayName: Upload CMake test output artifact
+        inputs:
+          targetPath: '$(Agent.TempDirectory)/LastTest.log.gz'
+          artifact: 'CMakeLastTestLog'
+          publishLocation: 'pipeline'
+      - task: PublishPipelineArtifact@1
+        displayName: Upload CMake full output artifact
+        inputs:
+          targetPath: '$(Agent.TempDirectory)/cmake-output.log.gz'
+          artifact: 'CMakeOutputLog'
+          publishLocation: 'pipeline'

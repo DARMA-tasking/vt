@@ -10,6 +10,7 @@ resources:
 - repo: self
 
 variables:
+  System.Debug: true
   tag: '$(Build.BuildId)'
   REPO: [% repo %]
   ARCH: [% arch %]
@@ -107,6 +108,35 @@ stages:
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
           dockerComposeCommand: 'run [% docker_target %]'
+      - task: Bash@3
+        displayName: Prepare comment with compilation errors and warnings
+        condition: succeededOrFailed()
+        inputs:
+          targetType: 'inline'
+          # * read warnings and errors from a file,
+          # * return empty $comment_body if there aren't any errors or warnings,
+          # * replace special delimiter with CRLF - %0D%0A (essentially restore new lines),
+          # * output preprocessed report to a variable for the next task (that puts it as PR comment).
+          script: |
+            val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
+            if test -z "$val"
+            then
+            echo "##vso[task.setvariable variable=comp_errs_warns;]$val"
+            return 0
+            fi
+            tmp_comment_body=**"$(Build.BuildNumber)"**%0D%0A'`''`''`'%0D%0A${val}%0D%0A'`''`''`'
+            delimiter="-=-=-=-"
+            new_line="%0D%0A"
+            comment_body=${tmp_comment_body//$delimiter/$new_line}
+            echo "##vso[task.setvariable variable=comp_errs_warns;]$comment_body"
+      - task: GitHubComment@0
+        displayName: Put warnings and errors in PR comment
+        condition: and(succeededOrFailed(), ne(variables['comp_errs_warns'], ''))
+        inputs:
+          gitHubConnection: 'DARMA-tasking'
+          repositoryName: $(Build.Repository.Name)
+          id: $(System.PullRequest.PullRequestNumber)
+          comment: $(comp_errs_warns)
       - task: DockerCompose@0
         displayName: Push container to registry
         inputs:
