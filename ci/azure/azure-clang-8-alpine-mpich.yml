@@ -123,6 +123,9 @@ stages:
         condition: succeededOrFailed()
         inputs:
           targetType: 'inline'
+          # * read warnings and errors from a file,
+          # * replace special delimiter with CRLF - %0D%0A (essentially restore new lines),
+          # * save preprocessed report to variable for next task (that puts it as PR comment).
           script: |
             val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
             tmp_comment_body=**"$(Build.BuildNumber)"**%0D%0A'`''`''`'%0D%0A${val}%0D%0A'`''`''`'

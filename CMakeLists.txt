@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
+# To generate output file with compilation errors and warnings
+# CMake generator needs to be known
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
 
 if (POLICY CMP0082) # CMake 3.14
