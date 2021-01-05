@@ -78,8 +78,6 @@ struct IRecvHolder {
 
   template <typename Callable>
   bool testAll(Callable c) {
-    VT_ALLOW_MPI_CALLS; // MPI_Test in loop
-
 #   if backend_check_enabled(trace_enabled)
     std::size_t const holder_size_start = holder_.size();
     TimeType tr_begin = 0.0;
