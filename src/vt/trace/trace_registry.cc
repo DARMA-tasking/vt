@@ -36,7 +36,7 @@ TraceRegistry::registerEventHashed(
   // );
 
   TraceEntryIDType event_type_id = getEventId(event_type_name);
-  TraceEntrySeqType event_type_seq = no_trace_entry_seq
+  TraceEntrySeqType event_type_seq = no_trace_entry_seq;
 
   { // ensure event type / category
     auto* event_types = TraceContainers::getEventTypeContainer();
@@ -128,3 +128,4 @@ TraceRegistry::getEvent(TraceEntryIDType id) {
 }
 
 }} //end namespace vt::trace
+

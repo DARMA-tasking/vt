@@ -151,7 +151,7 @@ then
 else
     # Generate output file with compilation warnings and errors
 
-    GENERATOR=$(cmake -L | grep USED_CMAKE_GENERATOR:STRING | cut -d"=" -f2)
+    GENERATOR=$(cmake -L . | grep USED_CMAKE_GENERATOR:STRING | cut -d"=" -f2)
     OUTPUT="$VT_BUILD"/compilation_errors_warnings.out
     OUTPUT_TMP="$OUTPUT".tmp
 
@@ -167,7 +167,8 @@ else
     then
         # To easily tell if compilation of given file succeeded special progress bar is used
         # (controlled by variable NINJA_STATUS)
-        NINJA_STATUS="[ninja][%f/%t] " time cmake --build . --target "${target}" | tee "$OUTPUT_TMP"
+        export NINJA_STATUS="[ninja][%f/%t] "
+        time cmake --build . --target "${target}" | tee "$OUTPUT_TMP"
         sed -i '/ninja: build stopped:/d' "$OUTPUT_TMP"
 
         # Now every line that doesn't start with [ninja][number]/[number] is an error or a warning
