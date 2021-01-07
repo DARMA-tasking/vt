@@ -84,7 +84,7 @@ struct TestCollectionInvoke : TestParallelHarness {};
 TEST_F(TestCollectionInvoke, test_collection_invoke_1) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
-  auto const num_elems = Index1D{4};
+  auto const num_elems = Index1D{8};
 
   auto proxy = theCollection()->constructCollective<TestCol>(num_elems);
 
