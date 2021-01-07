@@ -9,11 +9,11 @@
 #
 # Variables:
 #   ARCH={amd64, arm64v8, ...}
-#   COMPILER_TYPE={gnu, clang, intel, nvidia}
+#   COMPILER_TYPE={gnu, clang, intel, intel-oneapi, nvidia}
 #   COMPILER={gcc-5, gcc-6, gcc-7, gcc-8, gcc-9, gcc-10,
 #             clang-3.9, clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
 #             clang-9, clang-10,
-#             icc-18, icc-19,
+#             icc-18, icc-19, icc-21
 #             nvcc-10, nvcc-11}
 #   REPO=lifflander1/vt
 #   UBUNTU={18.04, 20.04}
@@ -33,6 +33,7 @@
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics collection at runtime by default
 #   BUILD_TYPE=release        # CMake build type
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
+#   BUILD_PARALLELISM=0       # Set build parallelism (default 0 means auto detect)
 #
 # In order to run in the container, there are two stages. First, one must build
 # or pull the base container with the variables exported (or using the defaults
@@ -80,6 +81,7 @@ volumes:
   amd64-ubuntu-18.04-icc-18-cache:
   amd64-ubuntu-18.04-icc-19-cache:
   amd64-ubuntu-18.04-icc-20-cache:
+  amd64-ubuntu-18.04-icc-21-cache:
   amd64-ubuntu-18.04-nvcc-10-cache:
   amd64-ubuntu-18.04-nvcc-11-cache:
   amd64-alpine-clang-3.9-cache:
@@ -99,6 +101,7 @@ volumes:
   amd64-alpine-icc-18-cache:
   amd64-alpine-icc-19-cache:
   amd64-alpine-icc-20-cache:
+  amd64-alpine-icc-21-cache:
   amd64-alpine-nvcc-10-cache:
   amd64-alpine-nvcc-11-cache:
   arm64v8-ubuntu-18.04-gcc-7-cache:
@@ -135,6 +138,7 @@ x-vtopts: &vtopts
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
+  BUILD_PARALLELISM: ${BUILD_PARALLELISM:-0}
 
 services:
   ##############################################################################

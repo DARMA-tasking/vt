@@ -29,6 +29,11 @@ else
     { echo -e "===\n=== ccache not found, compiling without it\n==="; } 2>/dev/null
 fi
 
+if test "${BUILD_PARALLELISM:-0}" -ne 0
+then
+    export CMAKE_BUILD_PARALLEL_LEVEL="${BUILD_PARALLELISM}"
+fi
+
 mkdir -p "${build_dir}"
 pushd "${build_dir}"
 
