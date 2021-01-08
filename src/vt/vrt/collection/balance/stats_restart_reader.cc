@@ -148,21 +148,22 @@ void StatsRestartReader::inputStatsFile(
   while (!finished) {
     if (fscanf(pFile, "%zu %c %" PRIu64 " %c %lf",
                &phaseID, &separator, &elmID, &separator, &tval) > 0) {
-      fgetpos (pFile,&pos);
-      fscanf (pFile, "%c", &separator);
-      if (separator == ',') {
-        // COM detected, read the end of line and do nothing else
-        int res = fscanf (pFile, "%lf %c %hhi", &d_buffer, &separator, &typeID);
-        vtAssertExpr(res == 3);
-      } else {
-        // Load detected, create the new element
-        fsetpos (pFile,&pos);
-        if (prevPhaseID != phaseID) {
-          prevPhaseID = phaseID;
-          element_history.push_back(buffer);
-          buffer.clear();
+      fgetpos(pFile, &pos);
+      if (fscanf(pFile, "%c", &separator)) {
+        if (separator == ',') {
+          // COM detected, read the end of line and do nothing else
+          int res = fscanf (pFile, "%lf %c %hhi", &d_buffer, &separator, &typeID);
+          vtAssertExpr(res == 3);
+        } else {
+          // Load detected, create the new element
+          fsetpos (pFile,&pos);
+          if (prevPhaseID != phaseID) {
+            prevPhaseID = phaseID;
+            element_history.push_back(buffer);
+            buffer.clear();
+          }
+          buffer.insert(elmID);
         }
-        buffer.insert(elmID);
       }
     } else {
       finished = true;
