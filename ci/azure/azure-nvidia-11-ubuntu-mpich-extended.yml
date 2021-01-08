@@ -117,16 +117,28 @@ stages:
         condition: succeededOrFailed()
         inputs:
           targetType: 'inline'
-          # * read warnings and errors from a file,
-          # * return empty $comment_body if there aren't any errors or warnings,
-          # * replace special delimiter with CRLF - %0D%0A (essentially restore new lines),
-          # * output preprocessed report to a variable for the next task (that puts it as PR comment).
+          # Maximum length of the comment body is 65536 characters.
+          # https://github.community/t/maximum-length-for-the-comment-body-in-issues-and-pr/148867
+          #
+          # Minus some decorations, comment's title, and additional description gives about 64.5k characters.
+          #
+          # What this script does? -.
+          #                         |
+          #                         V
+          # * reads warnings and errors from a file,
+          # * if there aren't any errors or warnings, returns information about it,
+          # * replaces special delimiter with CRLF - %0D%0A (essentially restores new lines),
+          # * outputs preprocessed report to a variable for the next task (that puts it as a PR comment).
           script: |
+            max_comment_size=64450
             val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
             if test -z "$val"
             then
-            echo "##vso[task.setvariable variable=comp_errs_warns;]$val"
-            return 0
+            val="Compiled without errors and warnings."
+            fi
+            if test ${#val} -gt "$max_comment_size"
+            then
+            val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read pipeline log. <=="
             fi
             tmp_comment_body=**"$(Build.BuildNumber)"**%0D%0A'`''`''`'%0D%0A${val}%0D%0A'`''`''`'
             delimiter="-=-=-=-"
