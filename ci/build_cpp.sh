@@ -102,6 +102,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_doxygen_enabled="${VT_DOXYGEN_ENABLED:-0}" \
       -Dvt_mimalloc_enabled="${VT_MIMALLOC_ENABLED:-0}" \
       -Dvt_asan_enabled="${VT_ASAN_ENABLED:-0}" \
+      -Dvt_werror_enabled="${VT_WERROR_ENABLED:-0}" \
       -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
       -Dvt_build_extended_tests="${VT_EXTENDED_TESTS_ENABLED:-1}" \
       -Dvt_zoltan_enabled="${VT_ZOLTAN_ENABLED:-0}" \
