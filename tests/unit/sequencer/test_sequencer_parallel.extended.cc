@@ -64,7 +64,7 @@ using namespace vt::tests::unit;
 using namespace std::placeholders;
 
 #if DEBUG_TEST_HARNESS_PRINT
-#define DEBUG_PRINT_SEQ_NESTED(ORDER, CUR, LABEL)                        \
+#define DEBUG_PRINT_SEQ_PARALLEL(ORDER, CUR, LABEL)                      \
   do {                                                                   \
     auto seq_id = theSeq()->getCurrentSeq();                             \
     fmt::print(                                                          \
@@ -73,7 +73,7 @@ using namespace std::placeholders;
     );                                                                   \
   } while (false);
 #else
-#define DEBUG_PRINT_SEQ_NESTED(ORDER, CUR, LABEL)
+#define DEBUG_PRINT_SEQ_PARALLEL(ORDER, CUR, LABEL)
 #endif
 
 using CountType = uint32_t;
@@ -101,7 +101,7 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
       str_build << "PAR-";
       str_build << wait_n;
       auto str = str_build.str().c_str();
-      DEBUG_PRINT_SEQ_NESTED(*order, wait_n, str);
+      DEBUG_PRINT_SEQ_PARALLEL(*order, wait_n, str);
       #endif
       OrderType const result = order->fetch_add(1);
       EXPECT_TRUE(
@@ -123,7 +123,7 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
       return;
     }
 
-    DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
+    DEBUG_PRINT_SEQ_PARALLEL(seq_ordering_, 0, "INIT");
     EXPECT_EQ(seq_ordering_++, 0U);
 
     std::atomic<OrderType>* order_ptr = &seq_ordering_;
@@ -190,19 +190,19 @@ struct TestSequencerParallel : TestParallelHarness {
       return;
     }
 
-    DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
+    DEBUG_PRINT_SEQ_PARALLEL(seq_ordering_, 0, "INIT");
 
     EXPECT_EQ(seq_ordering_++, 0U);
 
     theSeq()->parallel(seq_id, []{
       theSeq()->wait<TestMsg, seqParHan1>([](TestMsg* msg){
-        DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 1, "PAR-1");
+        DEBUG_PRINT_SEQ_PARALLEL(seq_ordering_, 1, "PAR-1");
         auto const val = seq_ordering_.fetch_add(1);
         EXPECT_TRUE(val == 1 or val == 2);
       });
     },[]{
       theSeq()->wait<TestMsg, seqParHan1>([](TestMsg* msg){
-        DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 2, "PAR-2");
+        DEBUG_PRINT_SEQ_PARALLEL(seq_ordering_, 2, "PAR-2");
         auto const val = seq_ordering_.fetch_add(1);
         EXPECT_TRUE(val == 1 or val == 2);
       });
@@ -219,7 +219,7 @@ struct TestSequencerParallel : TestParallelHarness {
       str_build << "PAR-";
       str_build << wait_n;
       auto str = str_build.str().c_str();
-      DEBUG_PRINT_SEQ_NESTED(*order, wait_n, str);
+      DEBUG_PRINT_SEQ_PARALLEL(*order, wait_n, str);
       #endif
       OrderType const result = order->fetch_add(1);
       EXPECT_TRUE(
@@ -237,7 +237,7 @@ struct TestSequencerParallel : TestParallelHarness {
       return;
     }
 
-    DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
+    DEBUG_PRINT_SEQ_PARALLEL(seq_ordering_, 0, "INIT");
 
     EXPECT_EQ(seq_ordering_++, 0U);
 
@@ -261,7 +261,7 @@ struct TestSequencerParallel : TestParallelHarness {
       return;
     }
 
-    DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
+    DEBUG_PRINT_SEQ_PARALLEL(seq_ordering_, 0, "INIT");
 
     EXPECT_EQ(seq_ordering_++, 0U);
 
@@ -289,7 +289,7 @@ struct TestSequencerParallel : TestParallelHarness {
       return;
     }
 
-    DEBUG_PRINT_SEQ_NESTED(seq_ordering_, 0, "INIT");
+    DEBUG_PRINT_SEQ_PARALLEL(seq_ordering_, 0, "INIT");
 
     EXPECT_EQ(seq_ordering_++, 0U);
 
