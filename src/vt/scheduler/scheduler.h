@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          scheduler.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                 scheduler.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -46,6 +46,12 @@
 #define INCLUDED_SCHEDULER_SCHEDULER_H
 
 #include "vt/config.h"
+#include "vt/scheduler/queue.h"
+#include "vt/scheduler/priority_queue.h"
+#include "vt/scheduler/prioritized_work_unit.h"
+#include "vt/scheduler/work_unit.h"
+#include "vt/messaging/message/smart_ptr.h"
+#include "vt/timing/timing.h"
 
 #include <cassert>
 #include <vector>
@@ -53,47 +59,133 @@
 #include <functional>
 #include <memory>
 
+namespace vt {
+  void runScheduler();
+  void runSchedulerThrough(EpochType epoch);
+
+  void runInEpochRooted(ActionType&& fn);
+  void runInEpochCollective(ActionType&& fn);
+}
+
 namespace vt { namespace sched {
 
 enum SchedulerEvent {
-  BeginIdle = 0,
-  EndIdle = 1,
-  SchedulerEventSize = 2
+  BeginIdle            = 0,
+  EndIdle              = 1,
+  BeginIdleMinusTerm   = 2,
+  EndIdleMinusTerm     = 3,
+  BeginSchedulerLoop   = 4,
+  EndSchedulerLoop     = 5,
+  PendingSchedulerLoop = 6,
+
+  LastSchedulerEvent   = 6,
 };
 
 struct Scheduler {
-  using SchedulerEventType = SchedulerEvent;
-  using TriggerType = std::function<void()>;
+  using SchedulerEventType   = SchedulerEvent;
+  using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
+
+# if backend_check_enabled(priorities)
+  using UnitType             = PriorityUnit;
+# else
+  using UnitType             = Unit;
+# endif
 
   Scheduler();
 
   static void checkTermSingleNode();
 
-  void scheduler();
-  bool schedulerImpl();
-  void schedulerForever();
+  bool shouldCallProgress(
+    int32_t processed_since_last_progress, TimeType time_since_last_progress
+  ) const;
+
+  void scheduler(bool msg_only = false);
+  void runProgress(bool msg_only = false);
+
+  /**
+   * \brief Runs the scheduler until a condition is met.
+   *
+   * Runs the scheduler until a condition is met.
+   * This form SHOULD be used instead of "while (..) { runScheduler(..) }"
+   * in all cases of nested scheduler loops, such as during a barrier,
+   * in order to ensure proper event unwinding and idle time tracking.
+   */
+  void runSchedulerWhile(std::function<bool()> cond);
+
   void registerTrigger(SchedulerEventType const& event, TriggerType trigger);
   void registerTriggerOnce(
     SchedulerEventType const& event, TriggerType trigger
   );
   void triggerEvent(SchedulerEventType const& event);
+
   bool hasSchedRun() const { return has_executed_; }
 
+  void enqueue(ActionType action);
+  void enqueue(PriorityType priority, ActionType action);
+
+  void printMemoryUsage();
+
+  template <typename MsgT>
+  void enqueue(MsgT* msg, ActionType action);
+  template <typename MsgT>
+  void enqueue(MsgSharedPtr<MsgT> msg, ActionType action);
+
+  std::size_t workQueueSize() const { return work_queue_.size(); }
+  bool workQueueEmpty() const { return work_queue_.empty(); }
+
+  bool isIdle() const { return work_queue_.empty(); }
+  bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
+
 private:
-  bool has_executed_ = false;
-  bool is_idle = false;
+
+  /**
+   * \brief Executes a specific work unit.
+   */
+  void runWorkUnit(UnitType& work);
+  bool progressMsgOnlyImpl();
+  bool progressImpl();
+
+private:
+
+# if backend_check_enabled(priorities)
+  PriorityQueue<UnitType> work_queue_;
+# else
+  Queue<UnitType> work_queue_;
+# endif
+
+  bool has_executed_      = false;
+  bool is_idle            = true;
+  bool is_idle_minus_term = true;
+  // The depth of work action currently executing.
+  unsigned int action_depth_ = 0;
+
+  // The number of termination messages currently in the queue---they weakly
+  // imply idleness for the stake of termination
+  std::size_t num_term_msgs_ = 0;
 
   EventTriggerContType event_triggers;
   EventTriggerContType event_triggers_once;
+
+  TimeType last_progress_time_ = 0.0;
+  bool progress_time_enabled_ = false;
+  int32_t processed_after_last_progress_ = 0;
+
+  std::size_t last_threshold_memory_usage_ = 0;
+  std::size_t threshold_memory_usage_ = 0;
+  std::size_t last_memory_usage_poll_ = 0;
+
+  // Access to triggerEvent.
+  friend void vt::runInEpochRooted(ActionType&& fn);
+  friend void vt::runInEpochCollective(ActionType&& fn);
 };
 
-}} //end namespace vt::scheduler
+}} //end namespace vt::sched
+
+#include "vt/scheduler/scheduler.impl.h"
 
 namespace vt {
-
-void runScheduler();
 
 extern sched::Scheduler* theSched();
 

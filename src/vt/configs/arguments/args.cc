@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          args.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                   args.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -52,15 +52,29 @@
 
 namespace vt { namespace arguments {
 
-/*static*/ CLI::App    ArgConfig::app{"vt"};
 /*static*/ bool        ArgConfig::vt_color              = true;
 /*static*/ bool        ArgConfig::vt_no_color           = false;
-/*static*/ bool        ArgConfig::vt_auto_color         = false;
 /*static*/ bool        ArgConfig::vt_quiet              = false;
+/*static*/ bool        ArgConfig::colorize_output       = false;
+
+/*static*/ int32_t     ArgConfig::vt_sched_num_progress = 2;
+/*static*/ int32_t     ArgConfig::vt_sched_progress_han = 0;
+/*static*/ double      ArgConfig::vt_sched_progress_sec = 0.0;
 
 /*static*/ bool        ArgConfig::vt_no_sigint          = false;
 /*static*/ bool        ArgConfig::vt_no_sigsegv         = false;
 /*static*/ bool        ArgConfig::vt_no_terminate       = false;
+/*static*/ std::string ArgConfig::vt_memory_reporters   =
+# if backend_check_enabled(mimalloc)
+  "mimalloc,"
+# endif
+  "mstats,machinfo,selfstat,selfstatm,sbrk,mallinfo,getrusage,ps";
+/*static*/ bool        ArgConfig::vt_print_memory_each_phase = false;
+/*static*/ std::string ArgConfig::vt_print_memory_node  = "0";
+/*static*/ bool        ArgConfig::vt_allow_memory_report_with_ps = false;
+/*static*/ bool        ArgConfig::vt_print_memory_at_threshold = false;
+/*static*/ std::string ArgConfig::vt_print_memory_threshold = "1 GiB";
+/*static*/ int32_t     ArgConfig::vt_print_memory_sched_poll = 100;
 
 /*static*/ bool        ArgConfig::vt_no_warn_stack      = false;
 /*static*/ bool        ArgConfig::vt_no_assert_stack    = false;
@@ -71,15 +85,23 @@ namespace vt { namespace arguments {
 /*static*/ int32_t     ArgConfig::vt_stack_mod          = 0;
 
 /*static*/ bool        ArgConfig::vt_trace              = false;
+/*static*/ bool        ArgConfig::vt_trace_mpi          = false;
 /*static*/ std::string ArgConfig::vt_trace_file         = "";
 /*static*/ std::string ArgConfig::vt_trace_dir          = "";
 /*static*/ int32_t     ArgConfig::vt_trace_mod          = 0;
+/*static*/ int32_t     ArgConfig::vt_trace_flush_size   = 0;
+/*static*/ bool        ArgConfig::vt_trace_spec           = false;
+/*static*/ std::string ArgConfig::vt_trace_spec_file      = "";
+/*static*/ bool        ArgConfig::vt_trace_memory_usage   = false;
+/*static*/ bool        ArgConfig::vt_trace_event_polling  = false;
+/*static*/ bool        ArgConfig::vt_trace_irecv_polling  = false;
 
 /*static*/ bool        ArgConfig::vt_lb                 = false;
 /*static*/ bool        ArgConfig::vt_lb_file            = false;
 /*static*/ bool        ArgConfig::vt_lb_quiet           = false;
-/*static*/ std::string ArgConfig::vt_lb_file_name       = "balance.in";
+/*static*/ std::string ArgConfig::vt_lb_file_name       = "";
 /*static*/ std::string ArgConfig::vt_lb_name            = "NoLB";
+/*static*/ std::string ArgConfig::vt_lb_args            = "";
 /*static*/ int32_t     ArgConfig::vt_lb_interval        = 1;
 /*static*/ bool        ArgConfig::vt_lb_stats           = false;
 /*static*/ std::string ArgConfig::vt_lb_stats_dir       = "vt_lb_stats";
@@ -89,6 +111,9 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_term_rooted_use_wave = false;
 /*static*/ bool        ArgConfig::vt_no_detect_hang     = false;
 /*static*/ int64_t     ArgConfig::vt_hang_freq          = 1024;
+/*static*/ bool        ArgConfig::vt_epoch_graph_on_hang= true;
+/*static*/ bool        ArgConfig::vt_epoch_graph_terse  = false;
+/*static*/ bool        ArgConfig::vt_print_no_progress  = true;
 
 /*static*/ bool        ArgConfig::vt_pause              = false;
 
@@ -111,6 +136,7 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_param        = false;
 /*static*/ bool        ArgConfig::vt_debug_handler      = false;
 /*static*/ bool        ArgConfig::vt_debug_hierlb       = false;
+/*static*/ bool        ArgConfig::vt_debug_gossiplb     = false;
 /*static*/ bool        ArgConfig::vt_debug_scatter      = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence     = false;
 /*static*/ bool        ArgConfig::vt_debug_sequence_vrt = false;
@@ -125,6 +151,8 @@ namespace vt { namespace arguments {
 /*static*/ bool        ArgConfig::vt_debug_broadcast    = false;
 /*static*/ bool        ArgConfig::vt_debug_objgroup     = false;
 
+/*static*/ bool        ArgConfig::vt_debug_print_flush  = false;
+
 /*static*/ bool        ArgConfig::vt_user_1             = false;
 /*static*/ bool        ArgConfig::vt_user_2             = false;
 /*static*/ bool        ArgConfig::vt_user_3             = false;
@@ -137,13 +165,20 @@ namespace vt { namespace arguments {
 
 /*static*/ bool        ArgConfig::parsed                = false;
 
+/*static*/ std::size_t ArgConfig::vt_max_mpi_send_size  = 1ull << 30;
+
+static std::unique_ptr<char*[]> new_argv = nullptr;
+
 /*static*/ int ArgConfig::parse(int& argc, char**& argv) {
+  static CLI::App app{"vt"};
+
   if (parsed || argc == 0 || argv == nullptr) {
     return 0;
   }
 
+  // CLI11 app parser expects to get the arguments in *reverse* order!
   std::vector<std::string> args;
-  for (auto i = 0; i < argc; i++) {
+  for (int i = argc-1; i > 0; i--) {
     args.push_back(std::string(argv[i]));
   }
 
@@ -152,40 +187,65 @@ namespace vt { namespace arguments {
   /*
    * Flags for controlling the colorization of output from vt
    */
+
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
-  auto always = "Always colorize output";
-  auto never  = "Never colorize output";
-  auto maybe  = "Use isatty to determine colorization of output";
+  auto always = "Colorize output (default)";
+  auto never  = "Do not colorize output (overrides --vt_color)";
   auto a  = app.add_flag("-c,--vt_color",      vt_color,      always);
   auto b  = app.add_flag("-n,--vt_no_color",   vt_no_color,   never);
-  auto c  = app.add_flag("-a,--vt_auto_color", vt_auto_color, maybe);
   auto a1 = app.add_flag("-q,--vt_quiet",      vt_quiet,      quiet);
   auto outputGroup = "Output Control";
   a->group(outputGroup);
   b->group(outputGroup);
-  c->group(outputGroup);
   a1->group(outputGroup);
   b->excludes(a);
-  b->excludes(c);
 
   /*
    * Flags for controlling the signals that VT tries to catch
    */
+
   auto no_sigint      = "Do not register signal handler for SIGINT";
   auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
   auto no_terminate   = "Do not register handler for std::terminate";
   auto d = app.add_flag("--vt_no_SIGINT",    vt_no_sigint,    no_sigint);
   auto e = app.add_flag("--vt_no_SIGSEGV",   vt_no_sigsegv,   no_sigsegv);
   auto f = app.add_flag("--vt_no_terminate", vt_no_terminate, no_terminate);
-  auto signalGroup = "Signa Handling";
+  auto signalGroup = "Signal Handling";
   d->group(signalGroup);
   e->group(signalGroup);
   f->group(signalGroup);
+
+  /*
+   * Flags for controlling memory usage reporting
+   */
+  auto mem_desc  = "List of memory reporters to query in order of precedence";
+  auto mem_phase = "Print memory usage each new phase";
+  auto mem_node  = "Node to print memory usage from or \"all\"";
+  auto mem_ps    = "Enable memory reporting with PS (warning: forking to query 'ps' may not be scalable)";
+  auto mem_at_thresh = "Print memory usage from scheduler when reaches a threshold increment";
+  auto mem_thresh    = "The threshold increments to print memory usage: \"<value> {GiB,MiB,KiB,B}\"";
+  auto mem_sched     = "The frequency to query the memory threshold check (some memory reporters might be expensive)";
+  auto mm = app.add_option("--vt_memory_reporters", vt_memory_reporters, mem_desc, true);
+  auto mn = app.add_flag("--vt_print_memory_each_phase", vt_print_memory_each_phase, mem_phase);
+  auto mo = app.add_option("--vt_print_memory_node", vt_print_memory_node, mem_node, true);
+  auto mp = app.add_flag("--vt_allow_memory_report_with_ps", vt_allow_memory_report_with_ps, mem_ps);
+  auto mq = app.add_flag("--vt_print_memory_at_threshold", vt_print_memory_at_threshold, mem_at_thresh);
+  auto mr = app.add_option("--vt_print_memory_threshold", vt_print_memory_threshold, mem_thresh, true);
+  auto ms = app.add_option("--vt_print_memory_sched_poll", vt_print_memory_sched_poll, mem_sched, true);
+  auto memoryGroup = "Memory Usage Reporting";
+  mm->group(memoryGroup);
+  mn->group(memoryGroup);
+  mo->group(memoryGroup);
+  mp->group(memoryGroup);
+  mq->group(memoryGroup);
+  mr->group(memoryGroup);
+  ms->group(memoryGroup);
 
 
   /*
    * Flags to control stack dumping
    */
+
   auto stack  = "Do not dump stack traces";
   auto warn   = "Do not dump stack traces when vtWarn(..) is invoked";
   auto assert = "Do not dump stack traces when vtAssert(..) is invoked";
@@ -209,24 +269,46 @@ namespace vt { namespace arguments {
   l->group(stackGroup);
   m->group(stackGroup);
 
-
   /*
    * Flags to control tracing output
    */
-  auto trace  = "Enable tracing (must be compiled with trace_enabled)";
-  auto tfile  = "Name of trace files";
-  auto tdir   = "Name of directory for trace files";
-  auto tmod   = "Output trace file if (node % vt_stack_mod) == 0";
-  auto n = app.add_flag("--vt_trace",           vt_trace,           trace);
-  auto o = app.add_option("--vt_trace_file",    vt_trace_file,      tfile, "");
-  auto p = app.add_option("--vt_trace_dir",     vt_trace_dir,       tdir,  "");
-  auto q = app.add_option("--vt_trace_mod",     vt_trace_mod,       tmod,  1);
+
+  auto trace     = "Enable tracing (must be compiled with trace_enabled)";
+  auto trace_mpi = "Enable tracing of MPI calls (must be compiled with "
+                   "trace_enabled)";
+  auto tfile     = "Name of trace files";
+  auto tdir      = "Name of directory for trace files";
+  auto tmod      = "Output trace file if (node % vt_stack_mod) == 0";
+  auto tflushmod = "Flush output trace every (vt_trace_flush_size) trace records";
+  auto tspec     = "Enable trace spec file (defines which phases tracing is on)";
+  auto tspecfile = "File containing trace spec; --vt_trace_spec to enable";
+  auto tmemusage = "Trace memory usage using first memory reporter";
+  auto tpolled   = "Trace AsyncEvent component polling (inc. MPI_Isend requests)";
+  auto tirecv     = "Trace MPI_Irecv request polling";
+  auto n  = app.add_flag("--vt_trace",              vt_trace,           trace);
+  auto nm = app.add_flag("--vt_trace_mpi",          vt_trace_mpi,       trace_mpi);
+  auto o  = app.add_option("--vt_trace_file",       vt_trace_file,      tfile, "");
+  auto p  = app.add_option("--vt_trace_dir",        vt_trace_dir,       tdir,  "");
+  auto q  = app.add_option("--vt_trace_mod",        vt_trace_mod,       tmod,  1);
+  auto qf = app.add_option("--vt_trace_flush_size", vt_trace_flush_size,tflushmod,
+    0);
+  auto qza = app.add_flag("--vt_trace_spec",          vt_trace_spec,           tspec);
+  auto qzb = app.add_option("--vt_trace_spec_file",   vt_trace_spec_file,      tspecfile, "");
+  auto qzc = app.add_flag("--vt_trace_memory_usage",  vt_trace_memory_usage,   tmemusage);
+  auto qzd = app.add_flag("--vt_trace_event_polling", vt_trace_event_polling,  tpolled);
+  auto qze = app.add_flag("--vt_trace_irecv_polling", vt_trace_irecv_polling,  tirecv);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
+  nm->group(traceGroup);
   o->group(traceGroup);
   p->group(traceGroup);
   q->group(traceGroup);
-
+  qf->group(traceGroup);
+  qza->group(traceGroup);
+  qzb->group(traceGroup);
+  qzc->group(traceGroup);
+  qzd->group(traceGroup);
+  qze->group(traceGroup);
 
   /*
    * Flags for controlling debug print output at runtime
@@ -253,6 +335,7 @@ namespace vt { namespace arguments {
   auto oap = "Enable debug_param        = \"" debug_pp(param)        "\"";
   auto pap = "Enable debug_handler      = \"" debug_pp(handler)      "\"";
   auto qap = "Enable debug_hierlb       = \"" debug_pp(hierlb)       "\"";
+  auto qbp = "Enable debug_gossiplb     = \"" debug_pp(gossiplb)     "\"";
   auto rap = "Enable debug_scatter      = \"" debug_pp(scatter)      "\"";
   auto sap = "Enable debug_sequence     = \"" debug_pp(sequence)     "\"";
   auto tap = "Enable debug_sequence_vrt = \"" debug_pp(sequence_vrt) "\"";
@@ -286,6 +369,7 @@ namespace vt { namespace arguments {
   auto oa = app.add_flag("--vt_debug_param",        vt_debug_param,        oap);
   auto pa = app.add_flag("--vt_debug_handler",      vt_debug_handler,      pap);
   auto qa = app.add_flag("--vt_debug_hierlb",       vt_debug_hierlb,       qap);
+  auto qb = app.add_flag("--vt_debug_gossiplb",     vt_debug_gossiplb,     qbp);
   auto ra = app.add_flag("--vt_debug_scatter",      vt_debug_scatter,      rap);
   auto sa = app.add_flag("--vt_debug_sequence",     vt_debug_sequence,     sap);
   auto ta = app.add_flag("--vt_debug_sequence_vrt", vt_debug_sequence_vrt, tap);
@@ -319,6 +403,7 @@ namespace vt { namespace arguments {
   oa->group(debugGroup);
   pa->group(debugGroup);
   qa->group(debugGroup);
+  qb->group(debugGroup);
   ra->group(debugGroup);
   sa->group(debugGroup);
   ta->group(debugGroup);
@@ -333,12 +418,18 @@ namespace vt { namespace arguments {
   cb->group(debugGroup);
   db->group(debugGroup);
 
+  auto dbq = "Always flush VT runtime prints";
+  auto eb  = app.add_flag("--vt_debug_print_flush", vt_debug_print_flush, dbq);
+  eb->group(debugGroup);
+
+
   /*
    * Flags for enabling load balancing and configuring it
    */
 
   auto lb            = "Enable load balancing";
   auto lb_file       = "Enable reading LB configuration from file";
+  auto lb_args       = "Arguments pass to LB: \"x=0 y=1 test=2\"";
   auto lb_quiet      = "Silence load balancing output";
   auto lb_file_name  = "LB configuration file to read";
   auto lb_name       = "Name of the load balancer to use";
@@ -348,14 +439,16 @@ namespace vt { namespace arguments {
   auto lb_stats_file = "Load balancing statistics output file name";
   auto lbn = "NoLB";
   auto lbi = 1;
-  auto lbf = "balance.in";
+  auto lbf = "";
   auto lbd = "vt_lb_stats";
   auto lbs = "stats";
+  auto lba = "";
   auto s  = app.add_flag("--vt_lb",              vt_lb,             lb);
   auto t  = app.add_flag("--vt_lb_file",         vt_lb_file,        lb_file);
   auto t1 = app.add_flag("--vt_lb_quiet",        vt_lb_quiet,       lb_quiet);
   auto u  = app.add_option("--vt_lb_file_name",  vt_lb_file_name,   lb_file_name, lbf);
   auto v  = app.add_option("--vt_lb_name",       vt_lb_name,        lb_name,      lbn);
+  auto v1 = app.add_option("--vt_lb_args",       vt_lb_args,        lb_args,      lba);
   auto w  = app.add_option("--vt_lb_interval",   vt_lb_interval,    lb_interval,  lbi);
   auto ww = app.add_flag("--vt_lb_stats",        vt_lb_stats,       lb_stats);
   auto wx = app.add_option("--vt_lb_stats_dir",  vt_lb_stats_dir,   lb_stats_dir, lbd);
@@ -366,6 +459,7 @@ namespace vt { namespace arguments {
   t1->group(debugLB);
   u->group(debugLB);
   v->group(debugLB);
+  v1->group(debugLB);
   w->group(debugLB);
   ww->group(debugLB);
   wx->group(debugLB);
@@ -379,15 +473,24 @@ namespace vt { namespace arguments {
   auto hang_freq    = "The number of tree traversals before a hang is detected";
   auto ds           = "Force use of Dijkstra-Scholten (DS) algorithm for rooted epoch termination detection";
   auto wave         = "Force use of 4-counter algorithm for rooted epoch termination detection";
+  auto graph_on     = "Output epoch graph to file (DOT) when hang is detected";
+  auto terse        = "Output epoch graph to file in terse mode";
+  auto progress     = "Print termination counts when progress is stalled";
   auto hfd          = 1024;
-  auto x  = app.add_flag("--vt_no_detect_hang",       vt_no_detect_hang,       hang);
-  auto x1 = app.add_flag("--vt_term_rooted_use_ds",   vt_term_rooted_use_ds,   ds);
-  auto x2 = app.add_flag("--vt_term_rooted_use_wave", vt_term_rooted_use_wave, wave);
-  auto y = app.add_option("--vt_hang_freq",           vt_hang_freq,      hang_freq, hfd);
+  auto x  = app.add_flag("--vt_no_detect_hang",        vt_no_detect_hang,       hang);
+  auto x1 = app.add_flag("--vt_term_rooted_use_ds",    vt_term_rooted_use_ds,   ds);
+  auto x2 = app.add_flag("--vt_term_rooted_use_wave",  vt_term_rooted_use_wave, wave);
+  auto x3 = app.add_option("--vt_epoch_graph_on_hang", vt_epoch_graph_on_hang,  graph_on, true);
+  auto x4 = app.add_flag("--vt_epoch_graph_terse",     vt_epoch_graph_terse,    terse);
+  auto x5 = app.add_option("--vt_print_no_progress",   vt_print_no_progress,    progress, true);
+  auto y = app.add_option("--vt_hang_freq",            vt_hang_freq,      hang_freq, hfd);
   auto debugTerm = "Termination";
   x->group(debugTerm);
   x1->group(debugTerm);
   x2->group(debugTerm);
+  x3->group(debugTerm);
+  x4->group(debugTerm);
+  x5->group(debugTerm);
   y->group(debugTerm);
 
   /*
@@ -433,6 +536,32 @@ namespace vt { namespace arguments {
   us2->group(userOpts);
   us3->group(userOpts);
 
+  /*
+   * Options for configuring the VT scheduler
+   */
+
+  auto nsched = "Number of times to run the progress function in scheduler";
+  auto ksched = "Run the MPI progress function at least every k handlers that run";
+  auto ssched = "Run the MPI progress function at least every s seconds";
+  auto sca = app.add_option("--vt_sched_num_progress", vt_sched_num_progress, nsched, 2);
+  auto hca = app.add_option("--vt_sched_progress_han", vt_sched_progress_han, ksched, 0);
+  auto kca = app.add_option("--vt_sched_progress_sec", vt_sched_progress_sec, ssched, 0.0);
+  auto schedulerGroup = "Scheduler Configuration";
+  sca->group(schedulerGroup);
+  hca->group(schedulerGroup);
+  kca->group(schedulerGroup);
+
+  /*
+   * Options for configuring the runtime
+   */
+  auto max_size = "Maximum MPI send size (causes larger messages to be split "
+                  "into multiple MPI sends)";
+  auto a1x = app.add_option(
+    "--vt_max_mpi_send_size", vt_max_mpi_send_size, max_size, true
+  );
+
+  auto configRuntime = "Runtime";
+  a1x->group(configRuntime);
 
   /*
    * Run the parser!
@@ -444,34 +573,47 @@ namespace vt { namespace arguments {
     return app.exit(ex);
   }
 
+  // Determine the final colorization setting.
+  if (vt_no_color) {
+    colorize_output = false;
+  } else {
+    // Otherwise, colorize.
+    // (Within MPI there is no good method to auto-detect.)
+    colorize_output = true;
+  }
+
   /*
    * Put the arguments back into argc, argv, but properly order them based on
    * the input order by comparing between the current args
    */
   std::vector<std::string> ret_args;
   std::vector<std::size_t> ret_idx;
+  int item = argc;
 
-  // Reverse iterate (CLI11 reverses the order when they modify the args)
-  for (auto iter = args.rbegin(); iter != args.rend(); ++iter) {
-    for (auto ii = 0; ii < argc; ii++) {
-      if (std::string(argv[ii]) == *iter) {
+  // Iterate forward (CLI11 reverses the order when it modifies the args)
+  for (auto&& skipped : args) {
+    for (auto ii = item-1; ii >= 0; ii--) {
+      if (std::string(argv[ii]) == skipped) {
         ret_idx.push_back(ii);
+        item--;
         break;
       }
     }
-    ret_args.push_back(*iter);
+    ret_args.push_back(skipped);
   }
+  std::reverse(ret_idx.begin(), ret_idx.end());
 
   // Use the saved index to setup the new_argv and new_argc
-  int new_argc = ret_args.size();
-  char** new_argv = new char*[new_argc];
-  for (auto ii = 0; ii < new_argc; ii++) {
-    new_argv[ii] = argv[ret_idx[ii]];
+  int new_argc = ret_args.size() + 1;
+  new_argv = std::make_unique<char*[]>(new_argc + 1);
+  new_argv[0] = argv[0];
+  for (auto ii = 1; ii < new_argc; ii++) {
+    new_argv[ii] = argv[ret_idx[ii - 1]];
   }
 
   // Set them back with all vt arguments elided
   argc = new_argc;
-  argv = new_argv;
+  argv = new_argv.get();
 
   parsed = true;
   return 1;

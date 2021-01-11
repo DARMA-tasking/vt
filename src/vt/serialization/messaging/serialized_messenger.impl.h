@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          serialized_messenger.impl.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                         serialized_messenger.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -50,7 +50,6 @@
 #include "vt/messaging/active.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
-#include "vt/serialization/serialization.h"
 #include "vt/runnable/general.h"
 #include "vt/serialization/messaging/serialized_data_msg.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
@@ -61,24 +60,6 @@
 #include <cassert>
 
 namespace vt { namespace serialization {
-
-template <typename MsgT>
-/*static*/ void SerializedMessenger::parserdesHandler(MsgT* msg) {
-  auto const& msg_size = sizeof(MsgT);
-  auto const& han_size = sizeof(HandlerType);
-  auto const& size_size = sizeof(size_t);
-  auto msg_ptr = reinterpret_cast<char*>(msg);
-  auto const& user_handler = *reinterpret_cast<HandlerType*>(
-    msg_ptr + msg_size
-  );
-  auto const& ptr_size = *reinterpret_cast<size_t*>(
-    msg_ptr + msg_size + han_size
-  );
-  auto ptr_offset = msg_ptr + msg_size + han_size + size_size;
-  auto t_ptr = deserializePartial<MsgT>(ptr_offset, ptr_size, msg);
-  auto const& from_node = theMsg()->getFromNodeCurrentHandler();
-  runnable::Runnable<MsgT>::run(user_handler, nullptr, t_ptr, from_node);
-}
 
 template <typename UserMsgT>
 /*static*/ void SerializedMessenger::serialMsgHandlerBcast(
@@ -97,7 +78,7 @@ template <typename UserMsgT>
   auto ptr_offset =
     reinterpret_cast<char*>(sys_msg) + sizeof(SerialWrapperMsgType<UserMsgT>);
   auto user_msg = makeMessage<UserMsgT>();
-  deserializeInPlace<UserMsgT>(ptr_offset,ptr_size,user_msg.get());
+  checkpoint::deserializeInPlace<UserMsgT>(ptr_offset,user_msg.get());
   messageResetDeserdes(user_msg);
   runnable::Runnable<UserMsgT>::run(
     handler, nullptr, user_msg.get(), sys_msg->from_node
@@ -110,23 +91,32 @@ template <typename UserMsgT>
 ) {
   auto const handler = sys_msg->handler;
   auto const& recv_tag = sys_msg->data_recv_tag;
+  auto const& nchunks = sys_msg->nchunks;
+  auto const& len = sys_msg->ptr_size;
+  auto const epoch = envelopeGetEpoch(sys_msg->env);
 
   debug_print(
     serial_msg, node,
     "serialMsgHandler: non-eager, recvDataMsg: msg={}, handler={}, "
     "recv_tag={}, epoch={}\n",
-    print_ptr(sys_msg), handler, recv_tag, envelopeGetEpoch(sys_msg->env)
+    print_ptr(sys_msg), handler, recv_tag, epoch
   );
 
+  bool const is_valid_epoch = epoch != no_epoch;
+
+  if (is_valid_epoch) {
+    theTerm()->produce(epoch);
+  }
+
   auto node = sys_msg->from_node;
-  theMsg()->recvDataMsg(
-    recv_tag, sys_msg->from_node,
-    [handler,recv_tag,node](RDMA_GetType ptr, ActionType action){
+  theMsg()->recvDataDirect(
+    nchunks, recv_tag, sys_msg->from_node, len,
+    [handler,recv_tag,node,epoch,is_valid_epoch]
+    (RDMA_GetType ptr, ActionType action){
       // be careful here not to use "msg", it is no longer valid
       auto raw_ptr = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
-      auto ptr_size = std::get<1>(ptr);
       auto msg = makeMessage<UserMsgT>();
-      deserializeInPlace<UserMsgT>(raw_ptr, ptr_size, msg.get());
+      checkpoint::deserializeInPlace<UserMsgT>(raw_ptr, msg.get());
       messageResetDeserdes(msg);
 
       debug_print(
@@ -136,8 +126,16 @@ template <typename UserMsgT>
         handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
+      if (is_valid_epoch) {
+        theMsg()->pushEpoch(epoch);
+      }
       runnable::Runnable<UserMsgT>::run(handler, nullptr, msg.get(), node);
       action();
+
+      if (is_valid_epoch) {
+        theMsg()->popEpoch(epoch);
+        theTerm()->consume(epoch);
+      }
     }
   );
 }
@@ -149,8 +147,8 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   auto const handler = sys_msg->handler;
 
   auto user_msg = makeMessage<UserMsgT>();
-  deserializeInPlace<UserMsgT>(
-    sys_msg->payload.data(), sys_msg->bytes, user_msg.get()
+  checkpoint::deserializeInPlace<UserMsgT>(
+    sys_msg->payload.data(), user_msg.get()
   );
   messageResetDeserdes(user_msg);
 
@@ -168,135 +166,6 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   runnable::Runnable<UserMsgT>::run(
     handler, nullptr, user_msg.get(), sys_msg->from_node
   );
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsg(
-  NodeType dest, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsg<MsgT,f>(msg, false, dest);
-}
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsg(
-  NodeType dest, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: (functor) dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsg<FunctorT,MsgT>(msg, false, dest);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::sendParserdesMsgHandler(
-  NodeType dest, HandlerType const& handler, MsgT* msg
-) {
-  debug_print(
-    serial_msg, node,
-    "sendParserdesMsg: dest={}, msg={}\n",
-    dest, print_ptr(msg)
-  );
-  return parserdesMsgHandler<MsgT>(msg, handler, false, dest);
-}
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsg: (functor) msg={}\n", print_ptr(msg)
-  );
-  return parserdesMsg<FunctorT,MsgT>(msg,true);
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsg(MsgT* msg) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsg: msg={}\n", print_ptr(msg)
-  );
-  return parserdesMsg<MsgT,f>(msg,true);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend
- SerializedMessenger::broadcastParserdesMsgHandler(
-  MsgT* msg, HandlerType const& han
-) {
-  debug_print(
-    serial_msg, node,
-    "broadcastParserdesMsgHandler: msg={}, han={}\n", print_ptr(msg), han
-  );
-  return parserdesMsgHandler<MsgT>(msg,han,true);
-}
-
-
-template <typename FunctorT, typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsg(
-  MsgT* msg, bool is_bcast, NodeType dest
-) {
-  auto const& h = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
-  return parserdesMsgHandler(msg,h,is_bcast,dest);
-}
-
-template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsg(
-  MsgT* msg, bool is_bcast, NodeType dest
-) {
-  auto const& h = auto_registry::makeAutoHandler<MsgT,f>(nullptr);
-  return parserdesMsgHandler(msg,h,is_bcast,dest);
-}
-
-template <typename MsgT, typename BaseT>
-/*static*/ messaging::PendingSend SerializedMessenger::parserdesMsgHandler(
-  MsgT* msg, HandlerType const& handler, bool is_bcast, NodeType dest
-) {
-  auto const& user_handler = handler;
-  SizeType ptr_size = 0;
-  auto const& rem_size = thePool()->remainingSize(msg);
-  auto const& msg_size = sizeof(MsgT);
-  auto const& han_size = sizeof(HandlerType);
-  auto const& size_size = sizeof(size_t);
-  auto msg_ptr = reinterpret_cast<char*>(msg);
-
-  auto serialized_msg = serializePartial(
-    *msg, [&](SizeType size) -> SerialByteType* {
-      ptr_size = size;
-      if (size + han_size <= rem_size) {
-        auto ptr = msg_ptr + msg_size + han_size + size_size;
-        return ptr;
-      } else {
-        vtAssert(0, "Must fit in remaining size (current limitation)");
-        return nullptr;
-      }
-    }
-  );
-
-  debug_print(
-    serial_msg, node,
-    "parserdesMsg: ptr_size={}, rem_size={}, msg_size={}, is_bcast={}, "
-    "dest={}\n",
-    ptr_size, rem_size, msg_size, is_bcast, dest
-  );
-
-  *reinterpret_cast<HandlerType*>(msg_ptr + msg_size) = user_handler;
-  *reinterpret_cast<HandlerType*>(msg_ptr + msg_size + han_size) = ptr_size;
-
-  auto const& total_size = ptr_size + msg_size + han_size + size_size;
-  auto const& tag = no_tag;
-  if (is_bcast) {
-    return theMsg()->broadcastMsgSz<MsgT,parserdesHandler>(msg, total_size, tag);
-  } else {
-    return theMsg()->sendMsgSz<MsgT,parserdesHandler>(dest, msg, total_size, tag);
-  }
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT> *f, typename BaseT>
@@ -361,7 +230,7 @@ template <typename MsgT, typename BaseT>
   SizeType ptr_size = 0;
   auto sys_size = sizeof(typename decltype(sys_msg)::MsgType);
 
-  auto serialized_msg = serialize(
+  auto serialized_msg = checkpoint::serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
       if (size >= serialized_msg_eager_size) {
@@ -405,11 +274,13 @@ template <typename MsgT, typename BaseT>
   } else {
     auto const& total_size = ptr_size + sys_size;
 
+    auto cur_ref = envelopeGetRef(sys_msg->env);
     sys_msg->handler = han;
     sys_msg->env = msg->env;
     sys_msg->from_node = theContext()->getNode();
     sys_msg->ptr_size = ptr_size;
     envelopeSetGroup(sys_msg->env, group_);
+    envelopeSetRef(sys_msg->env, cur_ref);
 
     debug_print(
       serial_msg, node,
@@ -444,7 +315,7 @@ template <typename MsgT, typename BaseT>
   SerialByteType* ptr = nullptr;
   SizeType ptr_size = 0;
 
-  auto serialized_msg = serialize(
+  auto serialized_msg = checkpoint::serialize(
     *msg.get(), [&](SizeType size) -> SerialByteType* {
       ptr_size = size;
 
@@ -483,9 +354,11 @@ template <typename MsgT, typename BaseT>
         auto sys_msg = makeMessage<SerialWrapperMsgType<MsgT>>();
         auto send_serialized = [=](Active::SendFnType send){
           auto ret = send(RDMA_GetType{ptr, ptr_size}, dest, no_tag);
-	  EventType event = std::get<0>(ret);
-	  theEvent()->attachAction(event, [=]{ std::free(ptr); });
-          sys_msg->data_recv_tag = std::get<1>(ret);
+          EventType event = ret.getEvent();
+          theEvent()->attachAction(event, [=]{ std::free(ptr); });
+          sys_msg->data_recv_tag = ret.getTag();
+          sys_msg->nchunks = ret.getNumChunks();
+          sys_msg->ptr_size = ptr_size;
         };
         auto cur_ref = envelopeGetRef(sys_msg->env);
         sys_msg->env = msg->env;
@@ -504,7 +377,7 @@ template <typename MsgT, typename BaseT>
         );
       } else {
         auto user_msg = makeMessage<MsgT>();
-        deserializeInPlace<MsgT>(ptr, ptr_size, user_msg.get());
+        checkpoint::deserializeInPlace<MsgT>(ptr, user_msg.get());
         messageResetDeserdes(user_msg);
 
         debug_print(

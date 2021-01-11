@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          group_info_collective.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                           group_info_collective.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -56,6 +56,7 @@
 #include "vt/collective/tree/tree.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/collective_ops.h"
+#include "vt/pipe/pipe_headers.h"
 
 #include <memory>
 #include <set>
@@ -102,13 +103,14 @@ MPI_Comm InfoColl::getComm() const {
 
 void InfoColl::freeComm() {
   if (mpi_group_comm != MPI_COMM_WORLD) {
-    MPI_Comm_free(&mpi_group_comm);
-    mpi_group_comm = MPI_COMM_WORLD;
+    theGroup()->collective_scope_.mpiCollectiveWait([this]{
+      MPI_Comm_free(&mpi_group_comm);
+      mpi_group_comm = MPI_COMM_WORLD;
+    });
   }
 }
 
 void InfoColl::setupCollective() {
-  auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const& group_ = getGroupID();
 
@@ -136,9 +138,18 @@ void InfoColl::setupCollective() {
   );
 
   if (make_mpi_group_) {
-    auto const cur_comm = theContext()->getComm();
-    int32_t const group_color = in_group;
-    MPI_Comm_split(cur_comm, group_color, this_node, &mpi_group_comm);
+    // Create the MPI group, and wait for all nodes to get here. In theory, this
+    // might be overlapable with VT's group construction, but for now just wait
+    // on it here. These should be ordered within this scope, as the collective
+    // group creation is a collective invocation.
+    theGroup()->collective_scope_.mpiCollectiveWait(
+      [in_group,this]{
+        auto const this_node_impl = theContext()->getNode();
+        auto const cur_comm = theContext()->getComm();
+        int32_t const group_color = in_group;
+        MPI_Comm_split(cur_comm, group_color, this_node_impl, &mpi_group_comm);
+      }
+    );
   }
 
   up_tree_cont_       = makeCollectiveContinuation(group_);
@@ -222,14 +233,13 @@ void InfoColl::upTree() {
     "Must be equal"
   );
   decltype(msgs_) msg_in_group = {};
-  std::size_t subtree = 0;
+  subtree_ = 0;
   for (auto&& msg : msgs_) {
     if (msg->isInGroup()) {
       msg_in_group.push_back(msg);
-      subtree += msg->getSubtreeSize();
+      subtree_ += msg->getSubtreeSize();
     }
   }
-  subtree_ = subtree;
 
   auto& span_children_ = collective_->span_children_;
   auto const& is_root = collective_->isInitialRoot();
@@ -242,7 +252,7 @@ void InfoColl::upTree() {
     "InfoColl::upTree: is_in_group={}, msgs.size()={}, msg_in_group.size()={}, "
     "extra={}, wait={}, group={:x}, op={:x}, is_root={}, subtree={}\n",
     is_in_group, msgs_.size(), msg_in_group.size(), extra_count_,
-    coll_wait_count_, group, op, is_root, subtree
+    coll_wait_count_, group, op, is_root, subtree_
   );
 
   if (is_root) {
@@ -257,11 +267,11 @@ void InfoColl::upTree() {
        */
       debug_print(
         group, node,
-        "InfoColl::upTree: is_in_group={}, subtree={}, num_nodes={}\n",
-        is_in_group, subtree, theContext()->getNumNodes()
+        "InfoColl::upTree: is_in_group={}, subtree_={}, num_nodes={}\n",
+        is_in_group, subtree_, theContext()->getNumNodes()
       );
       if (
-        subtree + 1 == static_cast<std::size_t>(theContext()->getNumNodes()) &&
+        subtree_ + 1 == static_cast<std::size_t>(theContext()->getNumNodes()) &&
         is_in_group
       ) {
         /*
@@ -328,18 +338,24 @@ void InfoColl::upTree() {
     }
   }
 
-  auto const& subtree_this = is_in_group ? 1 : 0;
-  auto const& sub = static_cast<NodeType>(subtree_this);
+  auto const subtree_this = is_in_group ? 1 : 0;
 
   if (is_in_group && (msg_in_group.size() == 2 || msg_in_group.size() == 0)) {
     /*
      *  Case where we have an approx. a balanced tree: send up the tree like
      *  usual
      */
-    auto const& child = theContext()->getNode();
-    auto const& total_subtree = static_cast<NodeType>(subtree + sub);
-    auto const& level =
+    auto const child = theContext()->getNode();
+    auto const total_subtree = static_cast<NodeType>(subtree_ + subtree_this);
+    auto const level =
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
+
+    debug_print(
+      group, node,
+      "InfoColl::upTree: case 1: sub={}, total={}\n",
+      subtree_, total_subtree
+    );
+
     auto cmsg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,level
     );
@@ -354,12 +370,23 @@ void InfoColl::upTree() {
      * bypassing this node that is null: thus, forward the non-null's child's
      * message up the initial spanning tree
      */
-    auto const& child = theContext()->getNode();
-    auto const& extra = static_cast<GroupCollectiveMsg::CountType>(
+    auto const child = theContext()->getNode();
+    auto const extra = static_cast<GroupCollectiveMsg::CountType>(
       msg_in_group.size()
     );
+
+    for (std::size_t i = 0; i < msg_in_group.size(); i++) {
+      subtree_ -= msg_in_group[i]->getSubtreeSize();
+    }
+
+    debug_print(
+      group, node,
+      "InfoColl::upTree: case 2: sub={} (total is same)\n",
+      subtree_
+    );
+
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,sub,child,0,extra
+      group,op,is_in_group,static_cast<NodeType>(subtree_),child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     /*
@@ -375,10 +402,21 @@ void InfoColl::upTree() {
      * child in the spanning tree because that will create a stick-like graph,
      * loosing efficiency!
      */
-    auto const& child = theContext()->getNode();
-    auto const& extra = 1;
+    auto const child = theContext()->getNode();
+    auto const extra = 1;
+
+    subtree_ -= msg_in_group[0]->getSubtreeSize();
+
+    auto const total_subtree = static_cast<NodeType>(subtree_ + subtree_this);
+
+    debug_print(
+      group, node,
+      "InfoColl::upTree: case 3: sub={}, total={}\n",
+      subtree_, total_subtree
+    );
+
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
-      group,op,is_in_group,sub,child,0,extra
+      group,op,is_in_group,total_subtree,child,0,extra
     );
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg_in_group[0].get());
@@ -395,10 +433,26 @@ void InfoColl::upTree() {
       msg_list.emplace_back(msg);
     }
 
-    auto const& extra =
+    std::sort(msg_list.begin(), msg_list.end(), GroupCollSort());
+
+    auto const extra =
       static_cast<GroupCollectiveMsg::CountType>(msg_in_group.size() / 2);
-    auto const& child = theContext()->getNode();
-    auto const& total_subtree = static_cast<NodeType>(sub + subtree);
+    auto const child = theContext()->getNode();
+
+    auto tree_iter = msg_list.rbegin();
+    for (int i = 0; i < extra; i++) {
+      subtree_ -= (*tree_iter)->getSubtreeSize();
+      tree_iter++;
+    }
+
+    auto const total_subtree = static_cast<NodeType>(subtree_this + subtree_);
+
+    debug_print(
+      group, node,
+      "InfoColl::upTree: case 4: sub={}, total={}\n",
+      subtree_, total_subtree
+    );
+
     auto msg = makeSharedMessage<GroupCollectiveMsg>(
       group,op,is_in_group,total_subtree,child,0,extra
     );
@@ -410,7 +464,6 @@ void InfoColl::upTree() {
       msg_in_group.size(), msg_list.size()
     );
 
-    std::sort(msg_list.begin(), msg_list.end(), GroupCollSort());
 
     auto iter = msg_list.rbegin();
     auto iter_end = msg_list.rend();
@@ -499,8 +552,11 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
     extra_arrived_count_++;
   }
 
-  auto const& ready =
-    coll_wait_count_ + extra_count_ == arrived_count_ + extra_arrived_count_ + 1;
+  // Make sure that the early "extra" messages do not make the counts seem equal
+  // when extras have yet to be discovered
+  auto const ready =
+    (coll_wait_count_ + extra_count_ == arrived_count_ + extra_arrived_count_ + 1) and
+    (coll_wait_count_ == static_cast<WaitCountType>(arrived_count_) + 1);
 
   debug_print(
     group, node,

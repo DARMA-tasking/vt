@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          ds.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                    ds.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -54,41 +54,10 @@
 namespace vt { namespace term { namespace ds {
 
 template <typename CommType>
-void TermDS<CommType>::addParentEpoch(EpochType const in_parent) {
-  debug_print(
-    termds, node,
-    "addParentEpoch: epoch_={:x}, parent={:x}\n", epoch_, in_parent
-  );
-
-  // Produce a single work unit for the parent epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(in_parent,1);
-  parents_.push_back(in_parent);
-}
-
-template <typename CommType>
-void TermDS<CommType>::clearParents() {
-  debug_print(
-    termds, node,
-    "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-    parents_.size()
-  );
-
-  for (auto&& in_parent : parents_) {
-    debug_print(
-      termds, node,
-      "clearParents: epoch={:x}, parent={:x}\n", epoch_, in_parent
-    );
-    theTerm()->consume(in_parent,1);
-  }
-  parents_.clear();
-}
-
-template <typename CommType>
 TermDS<CommType>::TermDS(EpochType in_epoch, bool isRoot_, NodeType self_)
-  : parent(-1), self(self_), C(0), ackedArbitrary(0), ackedParent(0),
-    reqedParent(0), engagementMessageCount(0), D(0), processedSum(C),
-    epoch_(in_epoch)
+  : EpochDependency(in_epoch, true),
+    parent(-1), self(self_), C(0), ackedArbitrary(0), ackedParent(0),
+    reqedParent(0), engagementMessageCount(0), D(0), processedSum(C)
 {
   setRoot(isRoot_);
 }
@@ -100,7 +69,18 @@ void TermDS<CommType>::terminated() {
     "terminated: epoch={:x}\n", epoch_
   );
 
+  is_terminated = true;
   CommType::rootTerminated(epoch_);
+}
+
+template <typename CommType>
+void TermDS<CommType>::disengaged() {
+  debug_print(
+    termds, node,
+    "disengaged: epoch={:x}\n", epoch_
+  );
+
+  CommType::disengage(epoch_);
 }
 
 template <typename CommType>
@@ -333,6 +313,10 @@ void TermDS<CommType>::tryLast() {
     parent = -1;
     C = ackedParent = ackedArbitrary = reqedParent = 0;
     engagementMessageCount = processedSum = 0;
+
+    // Call disengage to trigger potential cleanup (might be the last time we
+    // ever see this DS-epoch)
+    disengaged();
   }
 }
 

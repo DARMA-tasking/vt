@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          auto_registry_impl.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                             auto_registry_impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 #if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H
@@ -69,13 +69,14 @@ inline AutoHandlerType getAutoHandlerObjTypeIdx(HandlerType han) {
 
 template <typename ObjT, typename MsgT, objgroup::ActiveObjType<MsgT, ObjT> f>
 inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
-  using FunctorT = FunctorAdapterMember<
+  using AdapterT = FunctorAdapterMember<
     objgroup::ActiveObjType<MsgT, ObjT>, f, ObjT
   >;
   using ContainerType = AutoActiveObjGroupContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveObjGroupType>;
   using FuncType = objgroup::ActiveObjAnyType;
-  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
   auto const obj = true;
   auto const idx = RunType::idx;
   auto const han = HandlerManagerType::makeHandler(true, false, idx, obj, ctrl);
@@ -86,22 +87,23 @@ inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 inline HandlerType makeAutoHandler(MessageT* const __attribute__((unused)) msg) {
-  using FunctorT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
+  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;
-  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
-  //auto const& name = demangle::DemanglerUtils::getDemangledType<FunctorT>();
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
   return HandlerManagerType::makeHandler(true, false, RunType::idx);
 }
 
 template <typename T, T value>
-inline HandlerType makeAutoHandler() {
-  using FunctorT = FunctorAdapter<T, value>;
+inline HandlerType makeAutoHandlerParam() {
+  using AdapterT = FunctorAdapterParam<T, value>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;
-  using RunType = RunnableGen<FunctorT, ContainerType, RegInfoType, FuncType>;
+  using RunType = RunnableGen<AdapterT, ContainerType, RegInfoType, FuncType>;
+
   return HandlerManagerType::makeHandler(true, false, RunType::idx);
 }
 
@@ -129,8 +131,8 @@ void setHandlerTraceNameObjGroup(
 ) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandlerObjGroup<ObjT,MsgT,f>(ctrl);
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegObjGroup);
-  setTraceName(trace_id, name, parent);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegObjGroup);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 
@@ -138,44 +140,17 @@ template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
   auto const handler = makeAutoHandler<MsgT,f>(nullptr);
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
-  setTraceName(trace_id, name, parent);
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 
 template <typename T, T value>
 void setHandlerTraceName(std::string const& name, std::string const& parent) {
 #if backend_check_enabled(trace_enabled)
-  auto const handler = makeAutoHandler<T,value>();
-  auto const trace_id = theTraceID(handler, RegistryTypeEnum::RegGeneral);
-  setTraceName(trace_id, name, parent);
-#endif
-}
-
-inline void setTraceName(
-  trace::TraceEntryIDType id, std::string const& name, std::string const& parent
-) {
-#if backend_check_enabled(trace_enabled)
-  using TraceContainersType = trace::TraceRegistry::TraceContainersType;
-  auto event_iter = TraceContainersType::getEventContainer().find(id);
-  vtAssertExpr(event_iter != TraceContainersType::getEventContainer().end());
-  if (event_iter != TraceContainersType::getEventContainer().end()) {
-    if (name != "") {
-      event_iter->second.setEventName(name);
-    }
-    if (parent != "") {
-      auto type_id = event_iter->second.theEventTypeId();
-      auto iter = TraceContainersType::getEventTypeContainer().find(type_id);
-      vtAssertInfo(
-        iter != TraceContainersType::getEventTypeContainer().end(),
-        "Event type must exist",
-        name, parent, id, type_id
-      );
-      if (iter != TraceContainersType::getEventTypeContainer().end()) {
-        iter->second.setEventName(parent);
-      }
-    }
-  }
+  auto const handler = makeAutoHandlerParam<T,value>();
+  auto const trace_id = handlerTraceID(handler, RegistryTypeEnum::RegGeneral);
+  trace::TraceRegistry::setTraceName(trace_id, name, parent);
 #endif
 }
 

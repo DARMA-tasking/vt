@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          auto_registry_functor.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                           auto_registry_functor.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -75,16 +75,12 @@ struct RegistrarWrapperFunctor {
 template <typename FunctorT, typename RegT, typename InfoT, typename FnT>
 AutoHandlerType registerActiveFunctor();
 
-template <typename... Args>
-struct pack { };
-
 template <
-  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename AdapterT, typename RegT, typename InfoT, typename FnT, bool msg,
   typename... Args
 >
 struct RunnableFunctor {
-  using FunctorType = FunctorT;
-  using PackedArgsType = pack<Args...>;
+  using AdapterType = AdapterT;
 
   static constexpr bool const IsMsgType = msg;
 
@@ -94,19 +90,20 @@ struct RunnableFunctor {
 };
 
 template <
-  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename AdapterT, typename RegT, typename InfoT, typename FnT, bool msg,
   typename... Args
 >
-AutoHandlerType const RunnableFunctor<FunctorT,RegT,InfoT,FnT,msg,Args...>::idx =
+AutoHandlerType const RunnableFunctor<AdapterT, RegT, InfoT, FnT, msg, Args...>::idx =
   registerActiveFunctor<
-  RunnableFunctor<FunctorT, RegT, InfoT, FnT, msg, Args...>, RegT, InfoT, FnT
+    RunnableFunctor<AdapterT, RegT, InfoT, FnT, msg, Args...>,
+    RegT, InfoT, FnT
   >();
 
 template <
-  typename FunctorT, typename RegT, typename InfoT, typename FnT, bool msg,
+  typename AdapterT, typename RegT, typename InfoT, typename FnT, bool msg,
   typename... Args
 >
-bool const RunnableFunctor<FunctorT, RegT, InfoT, FnT, msg, Args...>::IsMsgType;
+bool const RunnableFunctor<AdapterT, RegT, InfoT, FnT, msg, Args...>::IsMsgType;
 
 }} // end namespace vt::auto_registry
 

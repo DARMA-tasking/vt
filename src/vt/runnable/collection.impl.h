@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          collection.impl.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                              collection.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -62,25 +62,27 @@ template <typename MsgT, typename ElementT>
   HandlerType handler, MsgT* msg, ElementT* elm, NodeType from,
   bool member, uint64_t idx1, uint64_t idx2, uint64_t idx3, uint64_t idx4
 ) {
-  #if backend_check_enabled(trace_enabled)
+#if backend_check_enabled(trace_enabled)
+  trace::TraceProcessingTag processing_tag;
+  {
     auto reg_enum = member ?
       auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
       auto_registry::RegistryTypeEnum::RegVrtCollection;
-    trace::TraceEntryIDType trace_id = auto_registry::theTraceID(
+    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
       handler, reg_enum
     );
     trace::TraceEventIDType trace_event = theMsg()->getCurrentTraceEvent();
     auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
     auto const from_node = from != uninitialized_destination ? from : ctx_node;
-  #endif
 
-  #if backend_check_enabled(trace_enabled)
     auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
-    theTrace()->beginProcessing(
+
+    processing_tag = theTrace()->beginProcessing(
       trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
+      idx1, idx2, idx3, idx4
     );
-  #endif
+  }
+#endif
 
   if (member) {
     auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
@@ -90,12 +92,9 @@ template <typename MsgT, typename ElementT>
     func(msg, elm);
   };
 
-  #if backend_check_enabled(trace_enabled)
-    theTrace()->endProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      trace::Trace::getCurrentTime(), idx1, idx2, idx3, idx4
-    );
-  #endif
+#if backend_check_enabled(trace_enabled)
+  theTrace()->endProcessing(processing_tag);
+#endif
 }
 
 }} /* end namespace vt::runnable */

@@ -1,53 +1,54 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          args.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                    args.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
 #if !defined INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 #define INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H
 
-#include "vt/config.h"
+// Do not pull in any VT dependencies here
 
-#include "CLI/CLI11.hpp"
+#include <string>
+#include <memory>
 
 namespace vt { namespace arguments {
 
@@ -58,12 +59,24 @@ struct ArgConfig {
 public:
   static bool vt_color;
   static bool vt_no_color;
-  static bool vt_auto_color;
   static bool vt_quiet;
+  // Derived from vt_*_color arguments after parsing.
+  static bool colorize_output;
+
+  static int32_t vt_sched_progress_han;
+  static double vt_sched_progress_sec;
+  static int32_t vt_sched_num_progress;
 
   static bool vt_no_sigint;
   static bool vt_no_sigsegv;
   static bool vt_no_terminate;
+  static std::string vt_memory_reporters;
+  static bool vt_print_memory_each_phase;
+  static std::string vt_print_memory_node;
+  static bool vt_allow_memory_report_with_ps;
+  static bool vt_print_memory_at_threshold;
+  static std::string vt_print_memory_threshold;
+  static int32_t vt_print_memory_sched_poll;
 
   static bool vt_no_warn_stack;
   static bool vt_no_assert_stack;
@@ -74,21 +87,32 @@ public:
   static int32_t vt_stack_mod;
 
   static bool vt_trace;
+  static bool vt_trace_mpi;
   static std::string vt_trace_file;
   static std::string vt_trace_dir;
   static int32_t vt_trace_mod;
+  static int32_t vt_trace_flush_size;
+  static bool vt_trace_spec;
+  static std::string vt_trace_spec_file;
+  static bool vt_trace_memory_usage;
+  static bool vt_trace_event_polling;
+  static bool vt_trace_irecv_polling;
 
   static bool vt_lb;
   static bool vt_lb_file;
   static bool vt_lb_quiet;
   static std::string vt_lb_file_name;
   static std::string vt_lb_name;
+  static std::string vt_lb_args;
   static int32_t vt_lb_interval;
   static bool vt_lb_stats;
   static std::string vt_lb_stats_dir;
   static std::string vt_lb_stats_file;
 
   static bool vt_no_detect_hang;
+  static bool vt_print_no_progress;
+  static bool vt_epoch_graph_on_hang;
+  static bool vt_epoch_graph_terse;
   static bool vt_term_rooted_use_ds;
   static bool vt_term_rooted_use_wave;
   static int64_t vt_hang_freq;
@@ -114,6 +138,7 @@ public:
   static bool vt_debug_param;
   static bool vt_debug_handler;
   static bool vt_debug_hierlb;
+  static bool vt_debug_gossiplb;
   static bool vt_debug_scatter;
   static bool vt_debug_sequence;
   static bool vt_debug_sequence_vrt;
@@ -128,6 +153,9 @@ public:
   static bool vt_debug_broadcast;
   static bool vt_debug_objgroup;
 
+  static bool vt_debug_print_flush;
+  static std::size_t vt_max_mpi_send_size;
+
   static bool vt_user_1;
   static bool vt_user_2;
   static bool vt_user_3;
@@ -139,7 +167,6 @@ public:
   static std::string vt_user_str_3;
 
 private:
-  static CLI::App app;
   static bool parsed;
 };
 
@@ -147,6 +174,43 @@ inline bool user1() { return ArgConfig::vt_user_1; }
 inline bool user2() { return ArgConfig::vt_user_2; }
 inline bool user3() { return ArgConfig::vt_user_3; }
 
+inline bool alwaysFlush() {
+  return ArgConfig::vt_debug_print_flush;
+}
+
+struct ArgAdapatorTag {};
+
+#define vt_adapt_argument(arg) decltype(ArgConfig::arg)& arg = ArgConfig::arg
+
+struct ArgAdaptor {
+  explicit ArgAdaptor(ArgAdapatorTag) { }
+
+  vt_adapt_argument(vt_lb);
+  vt_adapt_argument(vt_lb_file);
+  vt_adapt_argument(vt_lb_quiet);
+  vt_adapt_argument(vt_lb_file_name);
+  vt_adapt_argument(vt_lb_name);
+  vt_adapt_argument(vt_lb_args);
+  vt_adapt_argument(vt_lb_interval);
+  vt_adapt_argument(vt_lb_stats);
+  vt_adapt_argument(vt_lb_stats_dir);
+  vt_adapt_argument(vt_lb_stats_file);
+};
+
+#undef vt_adapt_argument
+
 }} /* end namespace vt::arguments */
+
+namespace vt {
+
+inline std::unique_ptr<arguments::ArgAdaptor> theConfig() {
+  // initialize with current values
+  auto adaptor = std::make_unique<arguments::ArgAdaptor>(
+    arguments::ArgAdapatorTag{}
+  );
+  return adaptor;
+}
+
+} /* end namespace vt */
 
 #endif /*INCLUDED_VT_CONFIGS_ARGUMENTS_ARGS_H*/

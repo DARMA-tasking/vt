@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          term_state.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                term_state.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -47,35 +47,6 @@
 #include "vt/termination/termination.h"
 
 namespace vt { namespace term {
-
-void TermState::addParentEpoch(EpochType const parent) {
-  debug_print(
-    term, node,
-    "addParentEpoch: epoch={:x}, parent={:x}\n", epoch_, parent
-  );
-
-  // Produce a single work unit on the parent epoch so it can not finish while
-  // this epoch is live
-  theTerm()->produce(parent,1);
-  parents_.push_back(parent);
-}
-
-void TermState::clearParents() {
-  debug_print(
-    term, node,
-    "clearParents: epoch={:x}, parents_.size()={}\n", epoch_,
-    parents_.size()
-  );
-
-  for (auto&& parent : parents_) {
-    debug_print(
-      term, node,
-      "clearParents: epoch={:x}, parent={:x}\n", epoch_, parent
-    );
-    theTerm()->consume(parent,1);
-  }
-  parents_.clear();
-}
 
 TermWaveType TermState::getCurWave() const {
   return cur_wave_;
@@ -143,6 +114,14 @@ void TermState::receiveContinueSignal(TermWaveType const& wave) {
   cur_wave_ = wave;
 }
 
+void TermState::incrementDependency() {
+  deps_++;
+}
+
+TermCounterType TermState::decrementDependency() {
+  return --deps_;
+}
+
 bool TermState::readySubmitParent(bool const needs_active) const {
   vtAssert(
     num_children_ != uninitialized_destination, "Children must be valid"
@@ -150,16 +129,17 @@ bool TermState::readySubmitParent(bool const needs_active) const {
 
   auto const ret = (epoch_active_ or not needs_active) and
     recv_child_count_ == num_children_ and local_terminated_ and
-    submitted_wave_ == cur_wave_ - 1 and not term_detected_;
+    submitted_wave_ == cur_wave_ - 1 and not term_detected_ and
+    deps_ == 0;
 
   debug_print_verbose(
     term, node,
     "readySubmitParent: epoch={:x}, active={}, local_ready={}, "
     "sub_wave={}, cur_wave_={}, recv_child={}, num_child={}, term={}:"
-    " ret={}\n",
+    " deps_={}, ret={}\n",
     epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
     submitted_wave_, cur_wave_, recv_child_count_, num_children_,
-    print_bool(term_detected_), print_bool(ret)
+    print_bool(term_detected_), deps_, print_bool(ret)
   );
 
   return ret;
@@ -168,9 +148,9 @@ bool TermState::readySubmitParent(bool const needs_active) const {
 TermState::TermState(
   EpochType const& in_epoch, bool const in_local_terminated, bool const active,
   NodeType const& children
-)
-  : local_terminated_(in_local_terminated), epoch_active_(active),
-    num_children_(children), epoch_(in_epoch)
+) : EpochDependency(in_epoch, false),
+    local_terminated_(in_local_terminated), epoch_active_(active),
+    num_children_(children)
 {
   debug_print(
     term, node,
@@ -181,7 +161,7 @@ TermState::TermState(
 }
 
 TermState::TermState(EpochType const& in_epoch, NodeType const& children)
-  : num_children_(children), epoch_(in_epoch)
+  : EpochDependency(in_epoch, false), num_children_(children)
 {
   debug_print(
     term, node,

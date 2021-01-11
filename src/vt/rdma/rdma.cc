@@ -1,54 +1,59 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          rdma.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                   rdma.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
 #include "vt/rdma/rdma.h"
 #include "vt/messaging/active.h"
 #include "vt/pipe/pipe_headers.h"
+#include "vt/collective/collective_alg.h"
 
 #include <cstring>
 
 namespace vt { namespace rdma {
+
+RDMAManager::RDMAManager()
+  : collective_scope_(theCollective()->makeCollectiveScope())
+{ }
 
 /*static*/ void RDMAManager::getRDMAMsg(GetMessage* msg) {
   auto const msg_tag = envelopeGetTag(msg->env);
@@ -66,7 +71,7 @@ namespace vt { namespace rdma {
   theRDMA()->requestGetData(
     msg, msg->is_user_msg, msg->rdma_handle, msg_tag, msg->num_bytes,
     msg->offset, false, nullptr, recv_node,
-    [msg_tag,op_id,recv_node,handle](RDMA_GetType data){
+    [op_id,recv_node,handle](RDMA_GetType data){
       auto const& my_node = theContext()->getNode();
       debug_print(
         rdma, node, "data is ready\n"
@@ -82,7 +87,8 @@ namespace vt { namespace rdma {
 
       auto send_payload = [&](Active::SendFnType send){
         auto ret = send(data, recv_node, no_tag);
-        new_msg->mpi_tag_to_recv = std::get<1>(ret);
+        new_msg->mpi_tag_to_recv = ret.getTag();
+        new_msg->nchunks = ret.getNumChunks();
         debug_print(
           rdma, node,
           "data is sending: tag={}, node={}\n",
@@ -110,7 +116,6 @@ namespace vt { namespace rdma {
   auto get_ptr = std::get<0>(direct);
   auto get_ptr_action = std::get<1>(direct);
 
-  auto const& this_node = theContext()->getNode();
   debug_print(
     rdma, node,
     "getRecvMsg: op={}, tag={}, bytes={}, get_ptr={}, "
@@ -121,16 +126,17 @@ namespace vt { namespace rdma {
 
   if (get_ptr == nullptr) {
     theMsg()->recvDataMsg(
-      msg->mpi_tag_to_recv, msg->send_back,
+      msg->nchunks, msg->mpi_tag_to_recv, msg->send_back,
       [=](RDMA_GetType ptr, ActionType deleter){
         theRDMA()->triggerGetRecvData(
-          op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr)
+          op_id, msg_tag, std::get<0>(ptr), std::get<1>(ptr), deleter
         );
       }
     );
   } else {
     theMsg()->recvDataMsgBuffer(
-      get_ptr, msg->mpi_tag_to_recv, msg->send_back, true, [this_node,get_ptr_action]{
+      msg->nchunks, get_ptr, msg->mpi_tag_to_recv, msg->send_back, true,
+      [get_ptr_action]{
         debug_print(
           rdma, node,
           "recv_data_msg_buffer finished\n"
@@ -138,7 +144,8 @@ namespace vt { namespace rdma {
         if (get_ptr_action) {
           get_ptr_action();
         }
-      }
+      },
+      nullptr, true
     );
   }
 }
@@ -204,6 +211,7 @@ namespace vt { namespace rdma {
 
     if (put_ptr == nullptr) {
       theMsg()->recvDataMsg(
+        msg->nchunks,
         recv_tag, recv_node, [=](RDMA_GetType ptr, ActionType deleter){
           debug_print(
             rdma, node,
@@ -224,6 +232,7 @@ namespace vt { namespace rdma {
                   send_back, new_msg
                 );
               }
+              deleter();
             }, false, recv_node
           );
         });
@@ -232,7 +241,7 @@ namespace vt { namespace rdma {
         msg->offset != no_byte ? static_cast<char*>(put_ptr) + msg->offset : put_ptr;
       // do a direct recv into the user buffer
       theMsg()->recvDataMsgBuffer(
-        put_ptr_offset, recv_tag, recv_node, true, []{},
+        msg->nchunks, put_ptr_offset, recv_tag, recv_node, true, []{},
         [=](RDMA_GetType ptr, ActionType deleter){
           debug_print(
             rdma, node,
@@ -680,7 +689,8 @@ void RDMAManager::putData(
 
           auto send_payload = [&](Active::SendFnType send){
             auto ret = send(RDMA_GetType{ptr, num_bytes}, put_node, no_tag);
-            msg->mpi_tag_to_recv = std::get<1>(ret);
+            msg->mpi_tag_to_recv = ret.getTag();
+            msg->nchunks = ret.getNumChunks();
           };
 
           if (tag != no_tag) {
@@ -758,7 +768,6 @@ void RDMAManager::putRegionTypeless(
 
     auto group = state.group_info.get();
 
-    auto local_action = new Action(1, nullptr);
     auto remote_action = new Action(1, after_put_action);
 
     group->walk_region(region, [&](
@@ -781,7 +790,6 @@ void RDMAManager::putRegionTypeless(
         roffset, roffset*elm_size
       );
 
-      local_action->addDep();
       remote_action->addDep();
 
       putData(
@@ -790,7 +798,6 @@ void RDMAManager::putRegionTypeless(
       );
     });
 
-    local_action->release();
     remote_action->release();
   } else {
     vtAssert(
@@ -1083,7 +1090,7 @@ void RDMAManager::setupChannelWithRemote(
       han, dest, override_target, target
     );
 
-    auto cb = theCB()->makeFunc(action);
+    auto cb = theCB()->makeFunc(pipe::LifetimeEnum::Once, action);
     auto msg = makeMessage<ChannelMessage>(
       type, han, num_bytes, tag, cb, dest, override_target
     );
@@ -1276,13 +1283,15 @@ void RDMAManager::createDirectChannelInternal(
       "Should not have a tag assigned at this point"
     );
 
-    auto cb = theCB()->makeFunc<GetInfoChannel>([=](GetInfoChannel* msg){
-      auto const& my_num_bytes = msg->num_bytes;
-      createDirectChannelFinish(
-        type, han, non_target, action, unique_channel_tag, is_target, my_num_bytes,
-        override_target
-      );
-    });
+    auto cb = theCB()->makeFunc<GetInfoChannel>(
+      pipe::LifetimeEnum::Once, [=](GetInfoChannel* msg){
+        auto const& my_num_bytes = msg->num_bytes;
+        createDirectChannelFinish(
+          type, han, non_target, action, unique_channel_tag, is_target, my_num_bytes,
+          override_target
+        );
+      }
+    );
     auto msg = makeMessage<CreateChannel>(
       type, han, unique_channel_tag, target, this_node, cb
     );
@@ -1313,7 +1322,7 @@ void RDMAManager::removeDirectChannel(
   auto const target = getTarget(han, override_target);
 
   if (this_node != target) {
-    auto cb = theCB()->makeFunc([=]{
+    auto cb = theCB()->makeFunc(pipe::LifetimeEnum::Once, [=]{
       auto iter = channels_.find(
         makeChannelLookup(han,RDMA_TypeType::Put,target,this_node)
       );

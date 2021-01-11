@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          greedylb.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                 greedylb.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -56,6 +56,7 @@
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/context/context.h"
 #include "vt/vrt/collection/manager.h"
+#include "vt/collective/reduce/reduce.h"
 
 #include <unordered_map>
 #include <memory>
@@ -65,118 +66,48 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-/*static*/ std::unique_ptr<GreedyLB> GreedyLB::greedy_lb_inst = nullptr;
+/*static*/ objgroup::proxy::Proxy<GreedyLB> GreedyLB::scatter_proxy = {};
 
-/*static*/ void GreedyLB::greedyLBHandler(balance::StartLBMsg* msg) {
-  auto const& phase = msg->getPhase();
-  GreedyLB::greedy_lb_inst = std::make_unique<GreedyLB>();
-
-  using namespace balance;
-  ReadLBSpec::openFile();
-  ReadLBSpec::readFile();
-
-  bool fallback = true;
-  bool has_spec = ReadLBSpec::hasSpec();
-  if (has_spec) {
-    auto spec = ReadLBSpec::entry(phase);
-    if (spec) {
-      bool has_min_only = false;
-      if (spec->hasMin()) {
-        GreedyLB::greedy_lb_inst->this_threshold = spec->min();
-        GreedyLB::greedy_lb_inst->greedy_threshold = spec->min();
-        has_min_only = true;
-      }
-      if (spec->hasMax()) {
-        GreedyLB::greedy_lb_inst->this_threshold = spec->max();
-        GreedyLB::greedy_lb_inst->greedy_max_threshold = spec->min();
-        has_min_only = false;
-      }
-      if (has_min_only) {
-        GreedyLB::greedy_lb_inst->greedy_auto_threshold = false;
-      }
-      fallback = false;
-    }
-  }
-
-  if (fallback) {
-    GreedyLB::greedy_lb_inst->greedy_auto_threshold = greedy_auto_threshold_p;
-    GreedyLB::greedy_lb_inst->greedy_threshold = greedy_threshold_p;
-    GreedyLB::greedy_lb_inst->greedy_max_threshold = greedy_max_threshold_p;
-    GreedyLB::greedy_lb_inst->this_threshold = greedy_threshold_p;
-  }
-
-  GreedyLB::greedy_lb_inst->start_time_ = timing::Timing::getCurrentTime();
-  vtAssertExpr(balance::ProcStats::proc_data_.size() >= phase);
-  GreedyLB::greedy_lb_inst->procDataIn(balance::ProcStats::proc_data_[phase]);
-  greedy_lb_inst->reduceLoad();
+void GreedyLB::init(objgroup::proxy::Proxy<GreedyLB> in_proxy) {
+  proxy = scatter_proxy = in_proxy;
 }
 
-void GreedyLB::reduceLoad() {
-  debug_print(
-    lb, node,
-    "reduceLoad: this_load={}\n", this_load
-  );
-  auto msg = makeSharedMessage<ProcStatsMsgType>(this_load);
-  theCollective()->reduce<
-    ProcStatsMsgType,
-    ProcStatsMsgType::template msgHandler<
-      ProcStatsMsgType, collective::PlusOp<balance::LoadData>, GreedyAvgLoad
-    >
-  >(greedy_root,msg);
+void GreedyLB::inputParams(balance::SpecEntry* spec) {
+  std::vector<std::string> allowed{"min", "max", "auto"};
+  spec->checkAllowedKeys(allowed);
+  min_threshold = spec->getOrDefault<double>("min", greedy_threshold_p);
+  max_threshold = spec->getOrDefault<double>("max", greedy_max_threshold_p);
+  auto_threshold = spec->getOrDefault<bool>("auto", greedy_auto_threshold_p);
 }
 
-GreedyLB::LoadType GreedyLB::loadMilli(LoadType const& load) {
-  return load * 1000;
+void GreedyLB::runLB() {
+  loadStats();
 }
 
-GreedyLB::ObjBinType GreedyLB::histogramSample(LoadType const& load) {
-  ObjBinType const bin =
-    ((static_cast<int32_t>(load)) / greedy_bin_size * greedy_bin_size)
-    + greedy_bin_size;
-  return bin;
-}
-
-void GreedyLB::GreedyAvgLoad::operator()(balance::ProcStatsMsg* msg) {
-  auto nmsg = makeSharedMessage<balance::ProcStatsMsg>(*msg);
-  theMsg()->broadcastMsg<
-    balance::ProcStatsMsg, GreedyLB::loadStatsHandler
-  >(nmsg);
-  auto nmsg_root = makeSharedMessage<balance::ProcStatsMsg>(*msg);
-  GreedyLB::loadStatsHandler(nmsg_root);
-}
-
-/*static*/ void GreedyLB::loadStatsHandler(ProcStatsMsgType* msg) {
-  auto const& lmax = msg->getConstVal().loadMax();
-  auto const& lsum = msg->getConstVal().loadSum();
-  GreedyLB::greedy_lb_inst->loadStats(lsum,lmax);
-}
-
-void GreedyLB::loadStats(
-  LoadType const& total_load, LoadType const& in_max_load
-) {
+void GreedyLB::loadStats() {
   auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-  avg_load = total_load / num_nodes;
-  max_load = in_max_load;
+  auto avg_load = getAvgLoad();
+  auto total_load = getSumLoad();
+  auto I = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
 
-  auto const& diff = max_load - avg_load;
-  auto const& diff_percent = (diff / avg_load) * 100.0f;
-  bool const& should_lb = diff_percent > greedy_tolerance;
+  bool should_lb = false;
+  this_load_begin = this_load;
 
-  if (should_lb && greedy_auto_threshold) {
-    this_threshold = std::min(
-      std::max(1.0f - (diff_percent / 100.0f), greedy_threshold),
-      greedy_max_threshold
-    );
+  if (avg_load > 0.0000000001) {
+    should_lb = I > greedy_tolerance;
+  }
+
+  if (auto_threshold) {
+    this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
   }
 
   if (this_node == 0) {
     vt_print(
       lb,
-      "loadStats: this_load={}, total_load={}, avg_load={}, max_load={}, "
-      "diff={}, diff_percent={}, should_lb={}, auto={}, threshold={}\n",
-      this_load, total_load, avg_load, max_load, diff, diff_percent,
-      should_lb, greedy_auto_threshold, this_threshold
+      "loadStats: load={:.2f}, total={:.2f}, avg={:.2f}, I={:.2f},"
+      "should_lb={}, auto={}, threshold={}\n",
+      this_load, total_load, avg_load, I, should_lb, auto_threshold,
+      this_threshold
     );
     fflush(stdout);
   }
@@ -186,47 +117,40 @@ void GreedyLB::loadStats(
     reduceCollect();
   } else {
     // release continuation for next iteration
-    finishedLB();
+    migrationDone();
   }
 }
 
-void GreedyLB::CentralCollect::operator()(GreedyCollectMsg* msg) {
+void GreedyLB::collectHandler(GreedyCollectMsg* msg) {
   debug_print(
     lb, node,
-    "CentralCollect: entries size={}\n",
+    "GreedyLB::collectHandler: entries size={}\n",
     msg->getConstVal().getSample().size()
   );
 
   for (auto&& elm : msg->getConstVal().getSample()) {
     debug_print(
       lb, node,
-      "\t CentralCollect: bin={}, num={}\n",
+      "\t collectHandler: bin={}, num={}\n",
       elm.first, elm.second.size()
     );
   }
 
   auto objs = std::move(msg->getVal().getSampleMove());
   auto profile = std::move(msg->getVal().getLoadProfileMove());
-  greedy_lb_inst->runBalancer(std::move(objs),std::move(profile));
+  runBalancer(std::move(objs),std::move(profile));
 }
 
 void GreedyLB::reduceCollect() {
-  #if greedylb_use_parserdes
-    vtAssert(0, "greedylb parserdes not implemented");
-  #else
-    debug_print(
-      lb, node,
-      "GreedyLB::reduceCollect: load={}, load_begin={} load_over.size()={}\n",
-      this_load, this_load_begin, load_over.size()
-    );
-    auto msg = makeSharedMessage<GreedyCollectMsg>(load_over,this_load);
-    theCollective()->reduce<
-      GreedyCollectMsg,
-      GreedyCollectMsg::template msgHandler<
-        GreedyCollectMsg, collective::PlusOp<GreedyPayload>, CentralCollect
-      >
-    >(greedy_root,msg);
-  #endif
+  debug_print(
+    lb, node,
+    "GreedyLB::reduceCollect: load={}, load_begin={} load_over.size()={}\n",
+    this_load, this_load_begin, load_over.size()
+  );
+  using MsgType = GreedyCollectMsg;
+  auto cb = vt::theCB()->makeSend<GreedyLB, MsgType, &GreedyLB::collectHandler>(proxy[0]);
+  auto msg = makeSharedMessage<MsgType>(load_over,this_load);
+  proxy.template reduce<collective::PlusOp<GreedyPayload>>(msg,cb);
 }
 
 void GreedyLB::runBalancer(
@@ -286,35 +210,11 @@ void GreedyLB::runBalancer(
   return transferObjs(std::move(nodes));
 }
 
-NodeType GreedyLB::objGetNode(ObjIDType const& id) {
-  return id & 0x0000000FFFFFFFF;
-}
-
 GreedyLB::ObjIDType GreedyLB::objSetNode(
   NodeType const& node, ObjIDType const& id
 ) {
   auto const new_id = id & 0xFFFFFFFF0000000;
   return new_id | node;
-}
-
-void GreedyLB::finishedTransferExchange() {
-  auto const& this_node = theContext()->getNode();
-  debug_print(
-    lb, node,
-    "finished all transfers: count={}\n",
-    transfer_count
-  );
-  if (this_node == 0) {
-    auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
-    vt_print(
-      lb,
-      "loadStats: total_time={}, transfer_count={}\n",
-      total_time, transfer_count
-    );
-    fflush(stdout);
-  }
-  balance::ProcStats::startIterCleanup();
-  theCollection()->releaseLBContinuation();
 }
 
 void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
@@ -325,15 +225,13 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     lb, node,
     "recvObjsDirect: num_recs={}\n", num_recs
   );
-  TransferType transfer_list;
-  auto const epoch = theTerm()->makeEpochCollective();
+
+  auto epoch = startMigrationCollective();
   theMsg()->pushEpoch(epoch);
-  theTerm()->addActionEpoch(epoch,[this]{
-    this->finishedTransferExchange();
-  });
+
   for (decltype(+num_recs) i = 0; i < num_recs; i++) {
-    auto const& to_node = objGetNode(recs[i]);
-    auto const& new_obj_id = objSetNode(this_node,recs[i]);
+    auto const to_node = objGetNode(recs[i]);
+    auto const new_obj_id = objSetNode(this_node,recs[i]);
     debug_print(
       lb, node,
       "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}, "
@@ -341,17 +239,20 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
       i, to_node, recs[i], new_obj_id, num_recs,
       reinterpret_cast<char*>(recs) - reinterpret_cast<char*>(objs)
     );
-    auto iter = balance::ProcStats::proc_migrate_.find(new_obj_id);
-    vtAssert(iter != balance::ProcStats::proc_migrate_.end(), "Must exist");
-    iter->second(to_node);
-    transfer_count++;
+
+    migrateObjectTo(new_obj_id, to_node);
   }
-  theTerm()->finishedEpoch(epoch);
-  theMsg()->popEpoch();
+
+  theMsg()->popEpoch(epoch);
+  finishMigrationCollective();
 }
 
 /*static*/ void GreedyLB::recvObjsHan(GreedyLBTypes::ObjIDType* objs) {
-  GreedyLB::greedy_lb_inst->recvObjsDirect(objs);
+  debug_print(
+    lb, node,
+    "recvObjsHan: num_recs={}\n", *objs
+  );
+  scatter_proxy.get()->recvObjsDirect(objs);
 }
 
 void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
@@ -362,7 +263,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
     auto const& node = elm.node_;
     auto const& recs = elm.recs_;
     for (auto&& rec : recs) {
-      auto const& cur_node = objGetNode(rec);
+      auto const cur_node = objGetNode(rec);
       // transfer required from `cur_node' to `node'
       if (cur_node != node) {
         auto const new_obj_id = objSetNode(node, rec);
@@ -390,7 +291,20 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
   );
 }
 
+double GreedyLB::getAvgLoad() const {
+  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
+}
+
+double GreedyLB::getMaxLoad() const {
+  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
+}
+
+double GreedyLB::getSumLoad() const {
+  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::sum);
+}
+
 void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
+  auto avg_load = getAvgLoad();
   auto const threshold = this_threshold * avg_load;
   auto const obj_id = bin_list.back();
 
@@ -403,8 +317,8 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   load_over[bin].push_back(obj_id);
   bin_list.pop_back();
 
-  auto obj_iter = stats->find(obj_id);
-  vtAssert(obj_iter != stats->end(), "Obj must exist in stats");
+  auto obj_iter = load_data->find(obj_id);
+  vtAssert(obj_iter != load_data->end(), "Obj must exist in stats");
   auto const& obj_time_milli = loadMilli(obj_iter->second);
 
   this_load -= obj_time_milli;
@@ -418,6 +332,7 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
 }
 
 void GreedyLB::calcLoadOver() {
+  auto avg_load = getAvgLoad();
   auto const threshold = this_threshold * avg_load;
 
   debug_print(
@@ -441,52 +356,6 @@ void GreedyLB::calcLoadOver() {
       obj_sample.erase(obj_iter);
     }
   }
-}
-
-void GreedyLB::finishedLB() {
-  auto const& this_node = theContext()->getNode();
-  debug_print(
-    lb, node,
-    "finished all transfers: count={}\n",
-    transfer_count
-  );
-  if (this_node == 0) {
-    auto const& total_time = timing::Timing::getCurrentTime() - start_time_;
-    vt_print(
-      lb,
-      "GreedyLB: loadStats: total_time={}, transfer_count={}\n",
-      total_time, transfer_count
-    );
-    fflush(stdout);
-  }
-  balance::ProcStats::proc_migrate_.clear();
-  balance::ProcStats::proc_data_.clear();
-  balance::ProcStats::next_elm_ = 1;
-  theCollection()->releaseLBContinuation();
-}
-
-void GreedyLB::procDataIn(ElementLoadType const& data_in) {
-  auto const& this_node = theContext()->getNode();
-  debug_print(
-    lb, node,
-    "{}: procDataIn: size={}\n", this_node, data_in.size()
-  );
-  for (auto&& stat : data_in) {
-    auto const& obj = stat.first;
-    auto const& load = stat.second;
-    auto const& load_milli = loadMilli(load);
-    auto const& bin = histogramSample(load_milli);
-    this_load += load_milli;
-    obj_sample[bin].push_back(obj);
-
-    debug_print(
-      lb, node,
-      "\t {}: procDataIn: this_load={}, obj={}, load={}, load_milli={}, bin={}\n",
-      this_node, this_load, obj, load, load_milli, bin
-    );
-  }
-  this_load_begin = this_load;
-  stats = &data_in;
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

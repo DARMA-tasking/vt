@@ -8,6 +8,7 @@ set(TOP_LEVEL_SUBDIRS
   objgroup
   pool
   pipe
+  pmpi
   rdma
   topos
   vrt
@@ -43,13 +44,18 @@ set(
       pipe/callback/objgroup_bcast
       pipe/callback/anon
       pipe/callback/cb_union
-    termination/dijkstra-scholten
+    termination
+      termination/dijkstra-scholten
+      termination/interval
+      termination/graph
     messaging/envelope messaging/message
     pool/static_sized pool/header
     rdma/channel rdma/collection rdma/group rdma/state
     topos/location
       topos/location/cache topos/location/message topos/location/record
       topos/location/utility
+      topos/location/directory
+      topos/location/lookup
     topos/index
       topos/index/dense topos/index/traits topos/index/printer
     topos/mapping
@@ -64,10 +70,13 @@ set(
       vrt/collection/dispatch vrt/collection/gettable
       vrt/collection/staged_token
       vrt/collection/balance
+        vrt/collection/balance/baselb
         vrt/collection/balance/hierarchicallb
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
         vrt/collection/balance/gossiplb
+        vrt/collection/balance/zoltanlb
+        vrt/collection/balance/randomlb
         vrt/collection/balance/lb_invoke
         vrt/collection/balance/proxy
     lb/instrumentation
@@ -81,13 +90,15 @@ set(
       serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
+    utils/memory utils/mpi_limits
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
       registry/auto/vc registry/auto/rdma registry/auto/index
     objgroup
       objgroup/proxy objgroup/holder objgroup/active_func objgroup/dispatch
       objgroup/type_registry
-
+    trace
+      trace/file_spec
 )
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
@@ -159,6 +170,30 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
   )
 endforeach()
 
+# Generate PMPI wrappers, if enabled and possible.
+if(vt_mpi_guards AND PERL_FOUND)
+  set(MPI_WRAP_GENERATED "${PROJECT_BIN_DIR}/src/vt/pmpi/generated/mpiwrap.cc")
+
+  file(MAKE_DIRECTORY "${PROJECT_BIN_DIR}/src/vt/pmpi/generated")
+
+  add_custom_command(
+    OUTPUT ${MPI_WRAP_GENERATED}
+    COMMAND ${PERL_EXECUTABLE}
+    ARGS "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/generate_mpi_wrappers.pl"
+         "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/mpi_functions.h.in"
+         "${MPI_WRAP_GENERATED}"
+    DEPENDS
+         "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/generate_mpi_wrappers.pl"
+         "${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/mpi_functions.h.in"
+  )
+
+  list(
+    APPEND
+    SOURCE_FILES
+    ${MPI_WRAP_GENERATED}
+  )
+endif()
+
 add_library(
   ${VIRTUAL_TRANSPORT_LIBRARY}
   STATIC
@@ -214,6 +249,22 @@ target_include_directories(
   $<INSTALL_INTERFACE:${VT_EXTERNAL_DESTINATION}>
 )
 
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  # Add required flags (GCC & LLVM/Clang)
+  target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE
+    -O0        # no optimization
+    -g         # generate debug info
+    --coverage # sets all required flags
+  )
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE --coverage)
+  else()
+    target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE --coverage)
+  endif()
+endif()
+
+include(../cmake/set_linker_flags.cmake)
+
 install(
   TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
   EXPORT                    ${VIRTUAL_TRANSPORT_LIBRARY}
@@ -234,9 +285,22 @@ install(
   COMPONENT                 runtime
 )
 
+if (${vt_fcontext_enabled})
+  set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
+else()
+  set(FCONTEXT_LIBRARY_EXPORT "")
+endif()
+
+if (${vt_mimalloc_enabled})
+  set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
+else()
+  set(MIMALLOC_LIBRARY_EXPORT "")
+endif()
+
 export(
-  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY} ${FCONTEXT_LIBRARY}
+  TARGETS                   ${VIRTUAL_TRANSPORT_LIBRARY}
+                            ${FCONTEXT_LIBRARY_EXPORT}
+                            ${MIMALLOC_LIBRARY_EXPORT}
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
-

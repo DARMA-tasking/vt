@@ -1,0 +1,171 @@
+/*
+//@HEADER
+// *****************************************************************************
+//
+//                              test_lb_reader.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
+//
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Questions? Contact darma@sandia.gov
+//
+// *****************************************************************************
+//@HEADER
+*/
+
+#include <vt/transport.h>
+#include <vt/vrt/collection/balance/read_lb.h>
+
+#include "test_harness.h"
+
+namespace vt { namespace tests { namespace unit {
+
+using TestLBReader = TestHarness;
+
+TEST_F(TestLBReader, test_lb_read_1) {
+
+  std::string file_name = "test_lb_read_1.txt";
+  std::ofstream out(file_name);
+  out << ""
+    "0 NoLB\n"
+    "1 HierarchicalLB\n"
+    "%10 HierarchicalLB\n";
+  out.close();
+
+  using Spec       = vt::vrt::collection::balance::ReadLBSpec;
+  using SpecIdx    = vt::vrt::collection::balance::SpecIndex;
+  using SpecLBType = vt::vrt::collection::balance::LBType;
+  Spec::clear();
+  Spec::openFile(file_name);
+  Spec::readFile();
+
+  for (SpecIdx i = 0; i < 21; i++) {
+    auto entry = Spec::entry(i);
+    switch (i) {
+    case 0:
+      EXPECT_TRUE(entry != nullptr);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::NoLB);
+      break;
+    case 1:
+      EXPECT_TRUE(entry != nullptr);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      break;
+    case 10:
+    case 20:
+      EXPECT_TRUE(entry != nullptr);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      break;
+    default:
+      EXPECT_TRUE(entry == nullptr);
+    }
+  }
+}
+
+TEST_F(TestLBReader, test_lb_read_2) {
+
+  std::string file_name = "test_lb_read_2.txt";
+  std::ofstream out(file_name);
+  out << ""
+    "0 NoLB\n"
+    "1 HierarchicalLB min=0.9 max=1.1 auto=false\n"
+    "%10 GossipLB c=1 k=5 f=2 i=10\n"
+    "%5 GreedyLB min=1.0\n"
+    "120 HierarchicalLB test_xyz=3\n";
+  out.close();
+
+  using Spec       = vt::vrt::collection::balance::ReadLBSpec;
+  using SpecIdx    = vt::vrt::collection::balance::SpecIndex;
+  using SpecLBType = vt::vrt::collection::balance::LBType;
+  Spec::clear();
+  Spec::openFile(file_name);
+  Spec::readFile();
+
+  for (SpecIdx i = 0; i < 121; i++) {
+    auto entry = Spec::entry(i);
+    switch (i) {
+    case 0:
+      EXPECT_TRUE(entry != nullptr);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::NoLB);
+      break;
+    case 1:
+      EXPECT_TRUE(entry != nullptr);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      EXPECT_TRUE(entry->getOrDefault<double>("min", 0.) == 0.9);
+      EXPECT_TRUE(entry->getOrDefault<double>("max", 0.) == 1.1);
+      EXPECT_TRUE(entry->getOrDefault<bool>("auto", true) == false);
+      break;
+    case 10:
+    case 20:
+    case 30:
+    case 40:
+    case 50:
+    case 60:
+    case 70:
+    case 80:
+    case 90:
+    case 100:
+    case 110:
+      EXPECT_TRUE(entry != nullptr);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::GossipLB);
+      EXPECT_TRUE(entry->getOrDefault<int32_t>("c", 0) == 1);
+      EXPECT_TRUE(entry->getOrDefault<int32_t>("k", 0) == 5);
+      EXPECT_TRUE(entry->getOrDefault<int32_t>("f", 0) == 2);
+      EXPECT_TRUE(entry->getOrDefault<int32_t>("i", 0) == 10);
+      break;
+    case 5:
+    case 15:
+    case 25:
+    case 35:
+    case 45:
+    case 55:
+    case 65:
+    case 75:
+    case 85:
+    case 95:
+    case 105:
+    case 115:
+      EXPECT_TRUE(entry != nullptr);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::GreedyLB);
+      EXPECT_TRUE(entry->getOrDefault<double>("min", 0.) == 1.0);
+      break;
+    case 120:
+      EXPECT_TRUE(entry != nullptr);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
+      EXPECT_TRUE(entry->getOrDefault<int32_t>("test_xyz", 0) == 3);
+      break;
+    default:
+      EXPECT_TRUE(entry == nullptr);
+    }
+  }
+}
+
+}}} // end namespace vt::tests::unit

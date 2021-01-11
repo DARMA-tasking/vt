@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                        test_location.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                               test_location.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -181,7 +181,9 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
     if (my_node == old_home) {
       vt::theLocMan()->virtual_loc->entityMigrated(entity, new_home);
     } else if (my_node == new_home) {
-      vt::theLocMan()->virtual_loc->registerEntityMigrated(entity, my_node);
+      vt::theLocMan()->virtual_loc->registerEntityMigrated(
+        entity, old_home, my_node
+      );
     }
 
     vt::theCollective()->barrier();
@@ -198,6 +200,60 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
   }
 }
 
+TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
+
+  auto const nb_nodes = vt::theContext()->getNumNodes();
+
+  // cannot perform entity migration if less than 3 nodes
+  if (nb_nodes > 2) {
+    auto const my_node  = vt::theContext()->getNode();
+    auto const entity   = location::default_entity;
+    auto const home_node = 0;
+    auto const migrate_to_node = 1;
+
+    // Register the entity on the node 0
+    if (my_node == home_node) {
+      vt::theLocMan()->virtual_loc->registerEntity(entity, home_node);
+    }
+
+    vt::theCollective()->barrier();
+
+    if (my_node == home_node) {
+      vt::theLocMan()->virtual_loc->entityMigrated(entity, migrate_to_node);
+    } else if (my_node == migrate_to_node) {
+      vt::theLocMan()->virtual_loc->registerEntityMigrated(
+        entity, home_node, migrate_to_node
+      );
+    }
+
+    vt::theCollective()->barrier();
+    // Clear the cache, to see if we can correctly fetch location after all
+    // cached entries are removed. Without the permanent directory, the home
+    // node will not know how to fetch the location.
+    vt::theLocMan()->virtual_loc->clearCache();
+    vt::theCollective()->barrier();
+
+    bool executed = false;
+    vt::theLocMan()->virtual_loc->getLocation(
+      entity, home_node, [=,&executed](vt::NodeType resident_node) {
+        // With a clear cache, the result should always be accurate/up-to-date
+        EXPECT_TRUE(resident_node == migrate_to_node);
+        executed = true;
+      }
+    );
+
+    while (not executed) {
+      vt::runScheduler();
+    }
+
+    vt::theCollective()->barrier();
+
+    EXPECT_TRUE(executed);
+
+    vt::theCollective()->barrier();
+  }
+}
+
 TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
@@ -206,6 +262,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
   if (nb_nodes > 2) {
     auto const my_node   = vt::theContext()->getNode();
     auto const next_node = (my_node + 1) % nb_nodes;
+    auto const prev_home = (my_node - 1) >= 0 ? my_node - 1 : nb_nodes-1;
     auto const entity    = location::default_entity + my_node;
 
     // register the entity on the current node
@@ -220,7 +277,9 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
       location::default_entity + nb_nodes - 1 :
       location::default_entity + my_node - 1
     );
-    vt::theLocMan()->virtual_loc->registerEntityMigrated(prev_node, my_node);
+    vt::theLocMan()->virtual_loc->registerEntityMigrated(
+      prev_node, prev_home, my_node
+    );
     vt::theCollective()->barrier();
 
     int check_sum = 0;
@@ -262,8 +321,9 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
   }
 }
 
-TYPED_TEST_CASE_P(TestLocationRoute);  /* NOLINT */
-TYPED_TEST_P(TestLocationRoute, test_route_entity)  /* NOLINT */ {
+TYPED_TEST_SUITE_P(TestLocationRoute);
+
+TYPED_TEST_P(TestLocationRoute, test_route_entity) {
 
   auto const nb_nodes = vt::theContext()->getNumNodes();
   auto const my_node  = vt::theContext()->getNode();
@@ -357,7 +417,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
     } else if (my_node == new_home) {
       // receive migrated entity: register it and keep in cache
       vt::theLocMan()->virtual_loc->registerEntityMigrated(
-        entity, my_node, [entity,&nb_received](vt::BaseMessage* in_msg) {
+        entity, home, my_node, [entity,&nb_received](vt::BaseMessage* in_msg) {
           debug_print(
             location, node,
             "TestLocationRoute: message arrived to me for a migrated entity={}\n",
@@ -382,12 +442,15 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
   }
 }
 
-REGISTER_TYPED_TEST_CASE_P /* NOLINT */ (
+REGISTER_TYPED_TEST_SUITE_P(
   TestLocationRoute,
   test_route_entity, test_entity_cache_hits, test_entity_cache_migrated_entity
 );
-INSTANTIATE_TYPED_TEST_CASE_P /* NOLINT */ (
-  Message, TestLocationRoute, location::MsgType
+
+using LocationMsgType = location::MsgType;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(
+  test_location_message, TestLocationRoute, LocationMsgType, DEFAULT_NAME_GEN
 );
 
 }}} // end namespace vt::tests::unit

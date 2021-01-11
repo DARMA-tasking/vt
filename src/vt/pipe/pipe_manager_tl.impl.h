@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          pipe_manager_tl.impl.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                            pipe_manager_tl.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -193,9 +193,7 @@ CallbackT
 PipeManagerTL::makeCallbackObjGrpSend(objgroup::proxy::ProxyElm<ObjT> proxy) {
   bool const persist = true;
   bool const send_back = false;
-  bool const dispatch = true;
   auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const proxy_bits = proxy.getProxy();
   auto const dest_node = proxy.getNode();
   auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
@@ -214,9 +212,7 @@ CallbackT
 PipeManagerTL::makeCallbackObjGrpBcast(objgroup::proxy::Proxy<ObjT> proxy) {
   bool const persist = true;
   bool const send_back = false;
-  bool const dispatch = true;
   auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const proxy_bits = proxy.getProxy();
   auto const ctrl = objgroup::proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
@@ -258,9 +254,7 @@ CallbackT
 PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   bool const persist = true;
   bool const send_back = false;
-  bool const dispatch = true;
   auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const& handler = auto_registry::makeAutoHandlerCollection<ColT,MsgT,f>(
     nullptr
   );
@@ -269,12 +263,6 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   auto cb = CallbackT(
     callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
     proxy.getProxy()
-  );
-  addListenerAny<MsgT>(
-    cb.getPipe(),
-    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(
-      handler,proxy,member
-    )
   );
   return cb;
 }
@@ -287,9 +275,7 @@ CallbackT
 PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   bool const persist = true;
   bool const send_back = false;
-  bool const dispatch = true;
   auto const& pipe_id = makePipeID(persist,send_back);
-  newPipeState(pipe_id,persist,dispatch,-1,-1,0);
   auto const& handler =
     auto_registry::makeAutoHandlerCollectionMem<ColT,MsgT,f>(nullptr);
   auto const& vrt_handler = vrt::collection::makeVrtDispatch<MsgT,ColT>();
@@ -297,12 +283,6 @@ PipeManagerTL::makeCallbackSingleProxyBcastDirect(ColProxyType<ColT> proxy) {
   auto cb = CallbackT(
     callback::cbunion::RawBcastColDirTag,pipe_id,handler,vrt_handler,member,
     proxy.getProxy()
-  );
-  addListenerAny<MsgT>(
-    cb.getPipe(),
-    std::make_unique<callback::CallbackProxyBcast<ColT,MsgT>>(
-      handler,proxy,member
-    )
   );
   return cb;
 }
@@ -342,8 +322,13 @@ PipeManagerTL::makeCallbackSingleBcast(bool const& inc) {
 
 template <typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleAnonVoid(FuncVoidType fn) {
-  auto const& new_pipe_id = makeCallbackFuncVoid(true,fn,true);
+PipeManagerTL::makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn) {
+  PipeType new_pipe_id = no_pipe;
+  if (life == LifetimeEnum::Once) {
+    new_pipe_id = makeCallbackFuncVoid(false,fn,true,1,1);
+  } else {
+    new_pipe_id = makeCallbackFuncVoid(true,fn,true);
+  }
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
   debug_print(
@@ -357,7 +342,9 @@ PipeManagerTL::makeCallbackSingleAnonVoid(FuncVoidType fn) {
 
 template <typename C, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncCtxType<C> fn) {
+PipeManagerTL::makeCallbackSingleAnon(
+  LifetimeEnum life, C* ctx, FuncCtxType<C> fn
+) {
   auto fn_closure = [ctx,fn] { fn(ctx); };
 
   debug_print(
@@ -365,12 +352,14 @@ PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncCtxType<C> fn) {
     "makeCallbackSingleAnon: created closure\n"
   );
 
-  return makeCallbackSingleAnonVoid(fn_closure);
+  return makeCallbackSingleAnonVoid(life,fn_closure);
 }
 
 template <typename MsgT, typename C, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncMsgCtxType<MsgT, C> fn) {
+PipeManagerTL::makeCallbackSingleAnon(
+  LifetimeEnum life, C* ctx, FuncMsgCtxType<MsgT, C> fn
+) {
   auto fn_closure = [ctx,fn](MsgT* msg) { fn(msg, ctx); };
 
   debug_print(
@@ -378,13 +367,19 @@ PipeManagerTL::makeCallbackSingleAnon(C* ctx, FuncMsgCtxType<MsgT, C> fn) {
     "makeCallbackSingleAnon: created closure\n"
   );
 
-  return makeCallbackSingleAnon<MsgT,CallbackT>(fn_closure);
+  return makeCallbackSingleAnon<MsgT,CallbackT>(life,fn_closure);
 }
 
 template <typename MsgT, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleAnon(FuncMsgType<MsgT> fn) {
-  auto const& new_pipe_id = makeCallbackFunc<MsgT>(true,fn,true);
+PipeManagerTL::makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<MsgT> fn) {
+  PipeType new_pipe_id = no_pipe;
+  if (life == LifetimeEnum::Once) {
+    new_pipe_id = makeCallbackFunc<MsgT>(false,fn,true,1,1);
+  } else {
+    new_pipe_id = makeCallbackFunc<MsgT>(true,fn,true);
+  }
+
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
   debug_print(

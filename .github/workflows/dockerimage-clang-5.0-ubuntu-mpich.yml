@@ -1,0 +1,78 @@
+name: PR tests (clang-5.0, ubuntu, mpich, trace)
+
+# Trigger the workflow on push or pull request
+on:
+  push:
+    branches:
+      - develop
+      - 1.*
+  pull_request:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+      REPO: lifflander1/vt
+      ARCH: amd64
+      UBUNTU: 18.04
+      COMPILER_TYPE: clang
+      COMPILER: clang-5.0
+      BUILD_TYPE: release
+      ULIMIT_CORE: 0
+      VT_LB: 1
+      VT_TRACE: 1
+      VT_TRACE_RT: 0
+      VT_MIMALLOC: 0
+      VT_DOCS: 0
+      VT_ASAN: 0
+      VT_CI_BUILD: 1
+      CACHE: ~/.local/cache/
+
+    steps:
+    - name: Setup Build Root
+      uses: allenevans/set-env@v2.0.1
+      with:
+        BUILD_ROOT: "~/.local/cache/${{ env.ARCH }}-ubuntu-${{ env.UBUNTU }}-${{ env.COMPILER }}-cache/"
+    - name: Prepare caching timestamp
+      id: cache_ts
+      shell: cmake -P {0}
+      run: |
+        string(TIMESTAMP current_date "%Y-%m-%d-%H;%M;%S" UTC)
+        message("::set-output name=timestamp::${current_date}")
+    - uses: actions/cache@v1
+      env:
+        cache-name: ubuntu-clang-5.0-cache
+      with:
+        path: ${{ env.BUILD_ROOT }}/ccache
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ steps.cache_ts.outputs.timestamp }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.cache-name }}-
+    - uses: actions/checkout@v2
+    - name: Docker Pull Base Image
+      shell: bash
+      run: docker-compose pull --ignore-pull-failures ubuntu-cpp-clean
+    - name: Build the Docker image
+      run: docker-compose run ubuntu-cpp-clean
+    - name: Docker Push Base Image
+      if: success()
+      continue-on-error: true
+      shell: bash
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} \
+                     -p ${{ secrets.DOCKER_PASSWORD }}
+        docker-compose push ubuntu-cpp-clean
+    - name: Zip up CMake output
+      run: |
+        zip -j LastTest.log.gz ${{ env.BUILD_ROOT }}/vt/Testing/Temporary/LastTest.log
+        zip -j cmake-output.log.gz ${{ env.BUILD_ROOT }}/vt/cmake-output.log
+    - uses: actions/upload-artifact@v1
+      with:
+        name: CMake test output
+        path: cmake-output.log.gz
+    - uses: actions/upload-artifact@v1
+      with:
+        name: CMake full output
+        path: LastTest.log.gz

@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          runtime.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                  runtime.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -58,15 +58,19 @@
 #include "vt/pipe/pipe_manager.h"
 #include "vt/objgroup/manager.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/termination/termination.h"
 #include "vt/topos/location/location_headers.h"
 #include "vt/vrt/context/context_vrtmanager.h"
 #include "vt/vrt/collection/collection_headers.h"
+#include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/configs/generated/vt_git_revision.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/configs/error/stack_out.h"
 #include "vt/configs/error/pretty_print_stack.h"
+#include "vt/utils/memory/memory_usage.h"
+#include "vt/utils/mpi_limits/mpi_max_tag.h"
 
 #include <memory>
 #include <iostream>
@@ -127,6 +131,12 @@ void Runtime::pauseForDebugger() {
   if (node == 0 || node == -1) {
     ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
   }
+  // Try to flush out all logs before dying
+# if backend_check_enabled(trace_enabled)
+  if (vt::theTrace()) {
+    vt::theTrace()->cleanupTracesFile();
+  }
+# endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     auto stack_pretty = debug::stack::prettyPrintStack(std::get<1>(stack));
@@ -148,6 +158,12 @@ void Runtime::pauseForDebugger() {
   auto vt_pre    = debug::vtPre();
   auto bred      = debug::bred();
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
+  // Try to flush out all logs before dying
+# if backend_check_enabled(trace_enabled)
+  if (vt::theTrace()) {
+    vt::theTrace()->cleanupTracesFile();
+  }
+# endif
   if (Runtime::nodeStackWrite()) {
     auto stack = debug::stack::dumpStack();
     if (ArgType::vt_stack_file != "") {
@@ -221,8 +237,10 @@ void Runtime::setupTerminateHandler() {
 }
 
 /*virtual*/ Runtime::~Runtime() {
-  while (runtime_active_ && !aborted_) {
-    runScheduler();
+  if (runtime_active_ && !aborted_) {
+    theSched->runSchedulerWhile([this]{
+      return runtime_active_ && !aborted_;
+    });
   }
   if (!aborted_) {
     finalize();
@@ -333,14 +351,14 @@ void Runtime::printStartupBanner() {
 #if backend_check_enabled(production)
   features.push_back(vt_feature_str_production);
 #endif
+#if backend_check_enabled(priorities)
+  features.push_back(vt_feature_str_priorities);
+#endif
 #if backend_check_enabled(stdthread)
   features.push_back(vt_feature_str_stdthread);
 #endif
 #if backend_check_enabled(mpi_rdma)
   features.push_back(vt_feature_str_mpi_rdma);
-#endif
-#if backend_check_enabled(parserdes)
-  features.push_back(vt_feature_str_parserdes);
 #endif
 #if backend_check_enabled(print_term_msgs)
   features.push_back(vt_feature_str_print_term_msgs);
@@ -351,15 +369,33 @@ void Runtime::printStartupBanner() {
 #if backend_check_enabled(memory_pool)
   features.push_back(vt_feature_str_memory_pool);
 #endif
+#if backend_check_enabled(zoltan)
+  features.push_back(vt_feature_str_zoltan);
+#endif
+#if backend_check_enabled(mimalloc)
+  features.push_back(vt_feature_str_mimalloc);
+#endif
+#if backend_check_enabled(mpi_access_guards)
+  features.push_back(vt_feature_str_mpi_access_guards);
+#endif
 
   std::string dirty = "";
   if (strncmp(vt_git_clean_status.c_str(), "DIRTY", 5) == 0) {
     dirty = red + std::string("*dirty*") + reset;
   }
 
+  auto const max_tag = util::MPI_Attr::getMaxTag();
+  auto const max_tag_str = std::to_string(max_tag);
+  auto const version_tuple = util::MPI_Attr::getVersion();
+  auto const version = std::to_string(std::get<0>(version_tuple));
+  auto const subversion = std::to_string(std::get<1>(version_tuple));
+
   auto f1 = fmt::format("{} {}{}\n", reg(init), reg(mode), emph(mode_type + thd));
   auto f2 = fmt::format("{}Running on: {}\n", green, emph(all_node));
   auto f3 = fmt::format("{}Machine Hostname: {}\n", green, emph(hostname));
+  auto f3a = fmt::format("{}MPI Version: {}.{}\n", green, emph(version), emph(subversion));
+  auto f3b = fmt::format("{}MPI Max tag: {}\n", green, emph(max_tag_str));
+
   auto f4 = fmt::format("{}Build SHA: {}\n", green, emph(vt_git_sha1));
   auto f5 = fmt::format("{}Build Ref: {}\n", green, emph(vt_git_refspec));
   auto f6 = fmt::format("{}Description: {} {}\n", green, emph(vt_git_description), dirty);
@@ -368,6 +404,8 @@ void Runtime::printStartupBanner() {
   fmt::print("{}{}{}", vt_pre, f1, reset);
   fmt::print("{}{}{}", vt_pre, f2, reset);
   fmt::print("{}{}{}", vt_pre, f3, reset);
+  fmt::print("{}{}{}", vt_pre, f3a, reset);
+  fmt::print("{}{}{}", vt_pre, f3b, reset);
   fmt::print("{}{}{}", vt_pre, f4, reset);
   fmt::print("{}{}{}", vt_pre, f5, reset);
   fmt::print("{}{}{}", vt_pre, f6, reset);
@@ -401,6 +439,12 @@ void Runtime::printStartupBanner() {
       green, reset, compile, magenta, opt, reset, reset
     );
   };
+  auto opt_to_enable = [=](std::string opt, std::string compile) -> std::string {
+    return fmt::format(
+      "{}Default:{} {}, use {}{}{} to enable{}\n",
+      green, reset, compile, magenta, opt, reset, reset
+    );
+  };
 
   auto f8 = fmt::format("{}Runtime Configuration:{}\n", green, reset);
   fmt::print("{}{}{}", vt_pre, f8, reset);
@@ -409,6 +453,7 @@ void Runtime::printStartupBanner() {
     if (ArgType::vt_lb) {
       auto f9 = warn_cr("--vt_lb", "lblite");
       fmt::print("{}\t{}{}", vt_pre, f9, reset);
+      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
     }
     if (ArgType::vt_lb_stats) {
       auto f9 = warn_cr("--vt_lb_stats", "lblite");
@@ -416,15 +461,51 @@ void Runtime::printStartupBanner() {
     }
   #endif
 
+  {
+    auto f11 = fmt::format(
+      "Running MPI progress {} times each invocation",
+      ArgType::vt_sched_num_progress
+    );
+    auto f12 = opt_on("--vt_sched_num_progress", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  {
+    auto f11 = fmt::format(
+      "Running MPI progress function at least every {} handler(s) executed",
+      ArgType::vt_sched_progress_han
+    );
+    auto f12 = opt_on("--vt_sched_progress_han", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_sched_progress_sec != 0.0) {
+    auto f11 = fmt::format(
+      "Running MPI progress function at least every {} seconds",
+      ArgType::vt_sched_progress_sec
+    );
+    auto f12 = opt_on("--vt_sched_progress_sec", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_lb) {
     auto f9 = opt_on("--vt_lb", "Load balancing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
     if (ArgType::vt_lb_file) {
-      auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
-      fmt::print("{}\t{}{}", vt_pre, f10, reset);
-      auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
-      auto f11 = opt_on("--vt_lb_file_name", f12);
-      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+      if (ArgType::vt_lb_file_name == "") {
+        auto warn_lb_file = fmt::format(
+          "{}Warning:{} {}{}{} has no effect: compile-time"
+          " option {}{}{} is empty{}\n", red, reset, magenta, "--vt_lb_file",
+          reset, magenta, "--vt_lb_file_name", reset, reset
+        );
+        fmt::print("{}\t{}{}", vt_pre, warn_lb_file, reset);
+      } else {
+        auto f10 = opt_on("--vt_lb_file", "Reading LB config from file");
+        fmt::print("{}\t{}{}", vt_pre, f10, reset);
+        auto f12 = fmt::format("Reading file \"{}\"", ArgType::vt_lb_file_name);
+        auto f11 = opt_on("--vt_lb_file_name", f12);
+        fmt::print("{}\t{}{}", vt_pre, f11, reset);
+      }
     } else {
       auto a3 = fmt::format("Load balancer name: \"{}\"", ArgType::vt_lb_name);
       auto a4 = opt_on("--vt_lb_name", a3);
@@ -433,6 +514,21 @@ void Runtime::printStartupBanner() {
         fmt::format("Load balancing interval = {}", ArgType::vt_lb_interval);
       auto a2 = opt_on("--vt_lb_interval", a1);
       fmt::print("{}\t{}{}", vt_pre, a2, reset);
+
+      // Check validity of LB passed to VT
+      bool found = false;
+      for (auto&& lb : vrt::collection::balance::lb_names_) {
+        if (ArgType::vt_lb_name == lb.second) {
+          found = true;
+          break;
+        }
+      }
+      if (not found) {
+        auto str = fmt::format(
+          "Could not find valid LB named: \"{}\"", ArgType::vt_lb_name
+        );
+        vtAbort(str);
+      }
     }
   }
 
@@ -468,7 +564,7 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_trace", "Tracing enabled");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
     if (ArgType::vt_trace_file != "") {
-      auto f11 = fmt::format("Trace file name \"{}\"", theTrace->getTraceName());
+      auto f11 = fmt::format("Trace file name \"{}\"", ArgType::vt_trace_file);
       auto f12 = opt_on("--vt_trace_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     } else {
@@ -496,6 +592,60 @@ void Runtime::printStartupBanner() {
       auto f12 = opt_on("--vt_trace_mod", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
+    if (ArgType::vt_trace_flush_size != 0) {
+      auto f11 = fmt::format("Flush output incrementally with a buffer of,"
+                             " at least, {} record(s)",
+                             ArgType::vt_trace_flush_size);
+      auto f12 = opt_on("--vt_trace_flush_size", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    } else {
+      auto f11 = fmt::format("Flushing traces at end of run");
+      auto f12 = opt_inverse("--vt_trace_flush_size", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_spec) {
+      {
+        auto f11 = fmt::format("Using trace enable specification for phases");
+        auto f12 = opt_on("--vt_trace_spec", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+      if (ArgType::vt_trace_spec_file == "") {
+        auto warn_trace_file = fmt::format(
+          "{}Warning:{} {}{}{} has no effect: no specification file given"
+          " option {}{}{} is empty{}\n", red, reset, magenta,
+          "--vt_trace_spec",
+          reset, magenta, "--vt_trace_spec_file", reset, reset
+        );
+        fmt::print("{}\t{}{}", vt_pre, warn_trace_file, reset);
+      } else {
+        auto f11 = fmt::format(
+          "Using trace specification file \"{}\"",
+          ArgType::vt_trace_spec_file
+        );
+        auto f12 = opt_inverse("--vt_trace_spec", f11);
+        fmt::print("{}\t{}{}", vt_pre, f12, reset);
+      }
+    }
+    if (ArgType::vt_trace_memory_usage) {
+      auto f11 = fmt::format("Tracing memory usage");
+      auto f12 = opt_on("--vt_trace_memory_usage", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_mpi) {
+      auto f11 = fmt::format("Tracing MPI invocations");
+      auto f12 = opt_on("--vt_trace_mpi", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_event_polling) {
+      auto f11 = fmt::format("Tracing event polling (inc. MPI Isend requests)");
+      auto f12 = opt_on("--vt_trace_event_polling", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
+    if (ArgType::vt_trace_irecv_polling) {
+      auto f11 = fmt::format("Tracing MPI Irecv polling");
+      auto f12 = opt_on("--vt_trace_irecv_polling", f11);
+      fmt::print("{}\t{}{}", vt_pre, f12, reset);
+    }
   }
   #endif
 
@@ -512,6 +662,28 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_print_no_progress) {
+    auto f11 = fmt::format("Printing warnings when progress is stalls");
+    auto f12 = opt_on("--vt_print_no_progress", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_epoch_graph_terse) {
+    auto f11 = fmt::format("Printing terse epoch graphs when hang detected");
+    auto f12 = opt_on("--vt_epoch_graph_terse", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("Printing verbose epoch graphs when hang detected");
+    auto f12 = opt_inverse("--vt_epoch_graph_terse", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_epoch_graph_on_hang) {
+    auto f11 = fmt::format("Epoch graph output enabled if hang detected");
+    auto f12 = opt_on("--vt_epoch_graph_on_hang", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_no_detect_hang) {
     auto f11 = fmt::format("Disabling termination hang detection");
     auto f12 = opt_on("--vt_no_detect_hang", f11);
@@ -525,7 +697,7 @@ void Runtime::printStartupBanner() {
   if (!ArgType::vt_no_detect_hang) {
     if (ArgType::vt_hang_freq != 0) {
       auto f11 = fmt::format(
-        "Detecting hang every {} tree traversals ", ArgType::vt_hang_freq
+        "Printing stall warning every {} tree traversals ", ArgType::vt_hang_freq
       );
       auto f12 = opt_on("--vt_hang_detect", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
@@ -552,20 +724,24 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_no_terminate) {
+    auto f11 = fmt::format("Disabling std::terminate signal handling");
+    auto f12 = opt_on("--vt_no_terminate", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("std::terminate signal handling enabled by default");
+    auto f12 = opt_inverse("--vt_no_terminate", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (ArgType::vt_no_color) {
-    auto f11 = fmt::format("Disabling color output");
+    auto f11 = fmt::format("Color output disabled");
     auto f12 = opt_on("--vt_no_color", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   } else {
-    if (ArgType::vt_auto_color) {
-      auto f11 = fmt::format("Automatic TTY detection for color output");
-      auto f12 = opt_on("--vt_auto_color", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    } else {
-      auto f11 = fmt::format("Color output enabled by default");
-      auto f12 = opt_inverse("--vt_no_color", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
+    auto f11 = fmt::format("Color output enabled");
+    auto f12 = opt_inverse("--vt_no_color", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
   if (ArgType::vt_no_stack) {
@@ -624,9 +800,106 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (ArgType::vt_memory_reporters != "") {
+    auto f11 = fmt::format(
+      "Memory usage checker precedence: {}",
+      ArgType::vt_memory_reporters
+    );
+    auto f12 = opt_on("--vt_memory_reporters", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+
+    auto usage = util::memory::MemoryUsage::get();
+
+    auto working_reporters = usage->getWorkingReporters();
+    if (working_reporters.size() > 0) {
+      std::string working_str = "";
+      for (std::size_t i = 0; i < working_reporters.size(); i++) {
+        working_str += working_reporters[i];
+        if (i != working_reporters.size() - 1) {
+          working_str += ",";
+        }
+      }
+      auto f13 = fmt::format(
+        "{}Working memory reporters:{} {}{}{}\n",
+        green, reset, magenta, working_str, reset
+      );
+      fmt::print("{}\t{}{}", vt_pre, f13, reset);
+
+      auto all_usage_str = usage->getUsageAll();
+      if (all_usage_str != "") {
+        auto f14 = fmt::format(
+          "{}Initial memory usage:{} {}\n",
+          green, reset, all_usage_str
+        );
+        fmt::print("{}\t{}{}", vt_pre, f14, reset);
+      }
+    }
+
+    if (ArgType::vt_print_memory_each_phase) {
+      auto f15 = fmt::format("Printing memory usage each phase");
+      auto f16 = opt_on("--vt_print_memory_each_phase", f15);
+      fmt::print("{}\t{}{}", vt_pre, f16, reset);
+
+      auto f17 = fmt::format(
+        "Printing memory usage from node: {}", ArgType::vt_print_memory_node
+      );
+      auto f18 = opt_on("--vt_print_memory_node", f17);
+      fmt::print("{}\t{}{}", vt_pre, f18, reset);
+    } else {
+      auto f15 = fmt::format("Memory usage printing disabled");
+      auto f16 = opt_to_enable("--vt_print_memory_each_phase", f15);
+      fmt::print("{}\t{}{}", vt_pre, f16, reset);
+    }
+
+    if (ArgType::vt_print_memory_at_threshold) {
+      auto f15 = fmt::format("Printing memory usage at threshold increment");
+      auto f16 = opt_on("--vt_print_memory_at_threshold", f15);
+      fmt::print("{}\t{}{}", vt_pre, f16, reset);
+
+      auto f17 = fmt::format(
+        "Printing memory usage using threshold: {}",
+        ArgType::vt_print_memory_threshold
+      );
+      auto f18 = opt_on("--vt_print_memory_threshold", f17);
+      fmt::print("{}\t{}{}", vt_pre, f18, reset);
+
+      usage->convertBytesFromString(ArgType::vt_print_memory_threshold);
+
+      auto f19 = fmt::format(
+        "Polling for memory usage threshold every {} scheduler calls",
+        ArgType::vt_print_memory_sched_poll
+      );
+      auto f20 = opt_on("--vt_print_memory_sched_poll", f19);
+      fmt::print("{}\t{}{}", vt_pre, f20, reset);
+    }
+  }
+
+  // Limit to between 256 B and 1 GiB. If its too small a VT envelope won't fit;
+  // if its too large we overflow an integer passed to MPI.
+  if (ArgType::vt_max_mpi_send_size < 256) {
+    vtAbort("Max size for MPI send must be greater than 256 B");
+  } else if (ArgType::vt_max_mpi_send_size > 1ull << 30) {
+    vtAbort("Max size for MPI send must not be greater than 1 GiB (overflow)");
+  } else {
+    auto const bytes = ArgType::vt_max_mpi_send_size;
+    auto const ret = util::memory::getBestMemoryUnit(bytes);
+    auto f_max = fmt::format(
+      "Splitting messages greater than {} {}",
+      std::get<1>(ret), std::get<0>(ret)
+    );
+    auto f_max_arg = opt_on("--vt_max_mpi_send_size", f_max);
+    fmt::print("{}\t{}{}", vt_pre, f_max_arg, reset);
+  }
+
   if (ArgType::vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
     auto f12 = opt_on("--vt_debug_all", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
+  if (ArgType::vt_debug_print_flush) {
+    auto f11 = fmt::format("Flushing stdout after all VT prints is enabled");
+    auto f12 = opt_on("--vt_debug_print_flush", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
@@ -655,6 +928,7 @@ void Runtime::printStartupBanner() {
   vt_runtime_debug_warn_compile(param)
   vt_runtime_debug_warn_compile(handler)
   vt_runtime_debug_warn_compile(hierlb)
+  vt_runtime_debug_warn_compile(gossiplb)
   vt_runtime_debug_warn_compile(scatter)
   vt_runtime_debug_warn_compile(sequence)
   vt_runtime_debug_warn_compile(sequence_vrt)
@@ -670,9 +944,17 @@ void Runtime::printStartupBanner() {
 
   //fmt::print("{}\n", reset);
   fmt::print(reset);
+
+  // Enqueue a check for later in case arguments are modified before work
+  // actually executes
+  theSched->enqueue([this]{
+    this->checkForArgumentErrors();
+  });
 }
 
-void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
+void Runtime::printShutdownBanner(
+  term::TermCounterType const& num_units, std::size_t const coll_epochs
+) {
   // If --vt_quiet is set, immediately exit printing nothing during startup
   if (ArgType::vt_quiet) {
     return;
@@ -683,11 +965,21 @@ void Runtime::printShutdownBanner(term::TermCounterType const& num_units) {
   auto magenta  = debug::magenta();
   auto f1 = fmt::format("{}Runtime Finalizing{}", green, reset);
   auto f2 = fmt::format("{}Total work units processed:{} ", green, reset);
+  auto f3 = fmt::format("{}Total collective epochs processed:{} ", green, reset);
   auto vt_pre = bd_green + std::string("vt") + reset + ": ";
   std::string fin = "";
   std::string units = std::to_string(num_units);
+  fmt::print("{}{}{}{}{}\n", vt_pre, f3, magenta, coll_epochs, reset);
   fmt::print("{}{}{}{}{}\n", vt_pre, f2, magenta, units, reset);
   fmt::print("{}{}{}\n", vt_pre, f1, reset);
+}
+
+void Runtime::checkForArgumentErrors() {
+  #if !backend_check_enabled(lblite)
+    if (ArgType::vt_lb) {
+      vtAbort("Load balancing enabled with --vt_lb, but disabled at compile time");
+    }
+  #endif
 }
 
 bool Runtime::initialize(bool const force_now) {
@@ -713,6 +1005,7 @@ bool Runtime::finalize(bool const force_now) {
   if (force_now) {
     auto const& is_zero = theContext->getNode() == 0;
     auto const& num_units = theTerm->getNumUnits();
+    auto const coll_epochs = theTerm->getNumTerminatedCollectiveEpochs();
     sync();
     fflush(stdout);
     fflush(stderr);
@@ -723,7 +1016,7 @@ bool Runtime::finalize(bool const force_now) {
     sync();
     sync();
     if (is_zero) {
-      printShutdownBanner(num_units);
+      printShutdownBanner(num_units, coll_epochs);
     }
     finalizeContext();
     finalized_ = true;
@@ -766,7 +1059,7 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
-	std::_Exit(code);
+    std::_Exit(code);
     // @todo: why will this not compile with clang!!?
     //quick_exit(code);
   }
@@ -859,12 +1152,12 @@ void Runtime::setup() {
   auto action = std::bind(&Runtime::terminationHandler, this);
   theTerm->addDefaultAction(action);
 
-  MPI_Barrier(theContext->getComm());
-
   // wait for all nodes to start up to initialize the runtime
-  theCollective->barrierThen([this]{
-    MPI_Barrier(theContext->getComm());
-  });
+  theCollective->barrier();
+
+# if backend_check_enabled(trace_enabled)
+  theTrace->loadAndBroadcastSpec();
+# endif
 
   if (ArgType::vt_pause) {
     pauseForDebugger();
@@ -890,16 +1183,21 @@ void Runtime::finalizeContext() {
 void Runtime::initializeComponents() {
   debug_print(runtime, node, "begin: initializeComponents\n");
 
+  // Initialize the memory usage tracker on each node
+  util::memory::MemoryUsage::initialize();
+
   // Helper components: not allowed to send messages during construction
   theRegistry = std::make_unique<registry::Registry>();
   theEvent = std::make_unique<event::AsyncEvent>();
   thePool = std::make_unique<pool::Pool>();
 
+  // Initialize tracing, when it is enabled; used in the AM constructor
+  initializeTrace();
+
   // Core components: enables more complex subsequent initialization
   theObjGroup = std::make_unique<objgroup::ObjGroupManager>();
   theMsg = std::make_unique<messaging::ActiveMessenger>();
   theSched = std::make_unique<sched::Scheduler>();
-  initializeTrace();
   theTerm = std::make_unique<term::TerminationDetector>();
   theCollective = std::make_unique<collective::CollectiveAlg>();
   theGroup = std::make_unique<group::GroupManager>();
@@ -914,6 +1212,11 @@ void Runtime::initializeComponents() {
   theVirtualManager = std::make_unique<vrt::VirtualContextManager>();
   theCollection = std::make_unique<vrt::collection::CollectionManager>();
 
+  #if backend_check_enabled(trace_enabled)
+    theTrace->initialize();
+  #endif
+  theEvent->initialize();
+
   debug_print(runtime, node, "end: initializeComponents\n");
 }
 
@@ -921,11 +1224,13 @@ void Runtime::initializeTrace() {
   #if backend_check_enabled(trace_enabled)
     theTrace = std::make_unique<trace::Trace>();
 
-    std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
-    auto const& node = theContext->getNode();
-    theTrace->setupNames(
-      name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
-    );
+    if (ArgType::vt_trace) {
+      std::string name = user_argc_ == 0 ? "prog" : user_argv_[0];
+      auto const& node = theContext->getNode();
+      theTrace->setupNames(
+        name, name + "." + std::to_string(node) + ".log.gz", name + "_trace"
+      );
+    }
   #endif
 }
 
@@ -998,9 +1303,26 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     theWorkerGrp->registerIdleListener(localTermFn);
   } else {
     // Without workers running on the node, the termination detector should
-    // assume its locally ready to propagate instead of waiting for them to
-    // become idle.
-    theTerm->setLocalTerminated(true);
+    // enable/disable the global collective epoch based on the state of the
+    // scheduler; register listeners to activate/deactivate that epoch
+    theSched->registerTrigger(
+      sched::SchedulerEvent::BeginIdleMinusTerm, []{
+        debug_print(
+          runtime, node,
+          "setLocalTerminated: BeginIdle: true\n"
+        );
+        vt::theTerm()->setLocalTerminated(true, false);
+      }
+    );
+    theSched->registerTrigger(
+      sched::SchedulerEvent::EndIdleMinusTerm, []{
+        debug_print(
+          runtime, node,
+          "setLocalTerminated: EndIdle: false\n"
+        );
+        vt::theTerm()->setLocalTerminated(false, false);
+      }
+    );
   }
 
   debug_print(runtime, node, "end: initializeWorkers\n");
@@ -1021,13 +1343,13 @@ void Runtime::finalizeComponents() {
   theRDMA = nullptr;
 
   // Core components
-  theCollective = nullptr;
   theTerm = nullptr;
   theSched = nullptr;
   theMsg = nullptr;
   theGroup = nullptr;
   theCB = nullptr;
   theObjGroup = nullptr;
+  theCollective = nullptr;
 
   // Helper components: thePool the last to be destructed because it handles
   // memory allocations
@@ -1037,6 +1359,9 @@ void Runtime::finalizeComponents() {
   // Initialize individual memory pool for each worker
   thePool->destroyWorkerPools();
   thePool = nullptr;
+
+  // Finalize memory usage component
+  util::memory::MemoryUsage::finalize();
 
   debug_print(runtime, node, "end: finalizeComponents\n");
 }

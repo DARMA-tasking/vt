@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          sequencer.impl.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                               sequencer.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -264,20 +264,8 @@ TaggedSequencer<SeqTag, SeqTrigger>::getCurrentSeq() const {
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
-bool TaggedSequencer<SeqTag, SeqTrigger>::scheduler() {
-  bool found = false;
-  if (work_deque_.size() > 0) {
-    debug_print(
-      sequence, node, "Sequencer: scheduler executing size={}\n",
-      work_deque_.size()
-    );
-
-    auto work_unit = work_deque_.front();
-    work_deque_.popFront();
-    work_unit();
-    found = true;
-  }
-  return found;
+bool TaggedSequencer<SeqTag, SeqTrigger>::progress() {
+  return false;
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
@@ -372,7 +360,6 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
     if (has_match) {
       auto msg = SeqStateMatcherType<MessageT, f>::getMatchingMsg(tag);
       action.runAction(msg);
-      messageDeref(msg);
     }
 
     debug_print(
@@ -395,7 +382,9 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
         seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(node->isBlockedNode())
       );
 
-      node->activate();
+      if (node->isParallel()) {
+        node->activate();
+      }
     } else {
       // buffer the action to wait for a matching message
 
@@ -408,7 +397,9 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
           print_bool(node->isBlockedNode()), print_ptr(msg)
         );
 
-        action.runAction(msg, false);
+        auto pmsg = promoteMsg(msg);
+
+        action.runAction(pmsg, false);
 
         vtAssert(node != nullptr, "node must not be nullptr");
 
@@ -526,8 +517,12 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
   SeqContextType new_context(id, node, suspendable);
   context_ = &new_context;
   if (suspendable) {
+#if backend_check_enabled(fcontext)
     new_context.seq_ult->initialize(c);
     new_context.seq_ult->start();
+#else
+    vtAbort("Trying to use suspendable context without fcontext enabled!");
+#endif
   } else {
     c();
   }
@@ -548,7 +543,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::enqueue(ActionType const& action) {
     sequence, node, "Sequencer: enqueue item\n"
   );
 
-  work_deque_.pushBack(action);
+  theSched()->enqueue(action);
 }
 
 template <typename SeqTag, template <typename> class SeqTrigger>
@@ -572,10 +567,14 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
     print_ptr(msg), print_bool(has_match), msg_tag
   );
 
+  // reference the arrival message to keep it alive past normal lifetime, in
+  // case it's buffered or put into the scheduler
+  auto pmsg = promoteMsg(msg);
+
   if (has_match) {
     auto action = SeqStateMatcherType<MessageT, f>::getMatchingAction(msg_tag);
-    auto handle_msg_action = [this,action,msg]{
-      lookupContextExecute(action.seq_id, action.generateCallable(msg));
+    auto handle_msg_action = [this,action,pmsg]{
+      lookupContextExecute(action.seq_id, action.generateCallable(pmsg));
     };
 
     // skip the work queue and directly execute
@@ -588,12 +587,9 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
     // nothing was found so the message must be buffered and wait an action
     // being posted
 
-    // reference the arrival message to keep it alive past normal lifetime
-    messageRef(msg);
-
     // buffer the unmatched messaged until a trigger is posted for it that
     // matches
-    SeqStateMatcherType<MessageT, f>::bufferUnmatchedMessage(msg, msg_tag);
+    SeqStateMatcherType<MessageT, f>::bufferUnmatchedMessage(pmsg, msg_tag);
   }
 }
 

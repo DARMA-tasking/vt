@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          test_sequencer_extensive.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                         test_sequencer_extensive.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -163,6 +163,7 @@ static constexpr CountType const max_seq_depth = 8;
         depth = m->info[4];                                             \
       }                                                                 \
     );                                                                  \
+    DEBUG_PRINT("before pre sequence {}\n", seq_ordering_);             \
                                                                         \
     theSeq()->sequenced([=]{                                            \
       for (uint32_t wb = 0; wb < nwaits_pre; wb++) {                    \
@@ -174,9 +175,12 @@ static constexpr CountType const max_seq_depth = 8;
           }                                                             \
         );                                                              \
       }                                                                 \
+      DEBUG_PRINT("after pre sequence {}\n", seq_ordering_);            \
+      DEBUG_PRINT("before mid sequence {}\n", seq_ordering_);           \
                                                                         \
       for (uint32_t nseg = 0; nseg < num_segs; nseg++) {                \
         theSeq()->sequenced([=]{                                        \
+          DEBUG_PRINT("inside mid sequence:nseg={},depth={}\n",nseg,depth); \
           DEBUG_PRINT("nseg={}:num_waits={}\n",nseg,num_waits);         \
           DEBUG_PRINT_SEQ(seq_ordering_, 0, "start-sequenced");         \
           seqDepth(depth, [=]{                                          \
@@ -185,6 +189,7 @@ static constexpr CountType const max_seq_depth = 8;
                 no_tag, [=](MSG_TYPE* msg){                             \
                   CountType const this_wait =                           \
                     (nseg * num_waits) + w + nwaits_pre + nwait_offset; \
+                  DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "bexpect seq-main"); \
                   EXPECT_EQ(seq_ordering_++, this_wait);                \
                   DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-main"); \
                 }                                                       \
@@ -194,24 +199,28 @@ static constexpr CountType const max_seq_depth = 8;
         });                                                             \
       }                                                                 \
                                                                         \
+      DEBUG_PRINT("after mid sequence {}\n", seq_ordering_);            \
+      DEBUG_PRINT("before post sequence {}\n", seq_ordering_);          \
+                                                                        \
       for (uint32_t wa = 0; wa < nwaits_post; wa++) {                   \
         theSeq()->wait_closure<MSG_TYPE, SEQ_HAN>(                      \
           no_tag, [=](MSG_TYPE* msg){                                   \
             CountType const this_wait =                                 \
               (num_segs * num_waits) + nwaits_pre + wa + nwait_offset;  \
-            EXPECT_EQ(seq_ordering_++, this_wait);                      \
             DEBUG_PRINT_SEQ(seq_ordering_, this_wait, "seq-post");      \
+            EXPECT_EQ(seq_ordering_++, this_wait);                      \
           }                                                             \
         );                                                              \
       }                                                                 \
     });                                                                 \
+    DEBUG_PRINT("after post sequence {}\n", seq_ordering_);             \
   }                                                                     \
 
 
 static inline ParamContainerType make_values() {
   ParamContainerType testing_values;
-  for (CountType nwaits = 0; nwaits < max_num_waits; nwaits++) {
-    for (CountType nsegs = 0; nsegs < max_num_segs; nsegs++) {
+  for (CountType nwaits = 1; nwaits < max_num_waits; nwaits++) {
+    for (CountType nsegs = 1; nsegs < max_num_segs; nsegs++) {
       for (CountType d = 0; d < max_seq_depth; d++) {
         for (CountType wb = 0; wb < max_num_waits_before; wb++) {
           for (CountType wa = 0; wa < max_num_waits_after; wa++) {
@@ -256,9 +265,9 @@ TEST_P(TestSequencerExtensive, test_wait_1) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   test_sequencer_extensive, TestSequencerExtensive,
-  testing::ValuesIn(make_values()),
+  testing::ValuesIn(make_values())
 );
 
 }}} // end namespace vt::tests::unit

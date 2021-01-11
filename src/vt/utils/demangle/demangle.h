@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          demangle.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                  demangle.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -46,88 +46,114 @@
 #define INCLUDED_UTILS_DEMANGLE_DEMANGLE_H
 
 #include "vt/config.h"
-#include "vt/utils/string/static.h"
-#include "vt/utils/demangle/get_type_name.h"
-#include "vt/utils/demangle/demangled_name.h"
 
 #include <string>
-#include <sstream>
 #include <vector>
-#include <cassert>
 #include <cstring>
-#include <iterator>
-#include <iostream>
-#include <regex>
 #include <cstdlib>
 #include <assert.h>
 
 namespace vt { namespace util { namespace demangle {
 
-using StrContainerType = std::vector<std::string>;
+struct TemplateExtract {
+  /// IFF tracing a tracing-enabled build, returns the compiler-dependent
+  /// 'PRETTY PRINT' value of the ADORNED function as a string.
+  /// The only useful bit here is the "[T = ..]" of the template in scope
+  /// as the function name itself is self-evident; GCC and Clang supply this.
+  /// This code will simply NOT COMPILE if the compiler is lacking required
+  /// support; this method cannot be used if tracing is disabled.
+  /// There should probably be a cmake check..
+  template <class T>
+  static constexpr char const* prettyFunctionForType() {
+  #if backend_check_enabled(trace_enabled)
+    return __PRETTY_FUNCTION__;
+  #else
+    assert(false && "Can only be used for a trace_enabled build.");
+    return "";
+  #endif
+  }
+
+  /// When the goal is to extract the value "as appearing"
+  /// in the template parameterization, and not the type..
+  template <class T, T PF_VALUE_NAME>
+  static constexpr char const* prettyFunctionForValue() {
+  #if backend_check_enabled(trace_enabled)
+    return __PRETTY_FUNCTION__;
+  #else
+    assert(false && "Can only be used for a trace_enabled build.");
+    return "";
+  #endif
+  }
+
+  // T,T* 'overload' for GCC
+  template <class T, T* PF_VALUE_NAME>
+  static constexpr char const* prettyFunctionForValuePtr() {
+  #if backend_check_enabled(trace_enabled)
+    return __PRETTY_FUNCTION__;
+  #else
+    assert(false && "Can only be used for a trace_enabled build.");
+    return "";
+  #endif
+  }
+
+  /// Given a GCC/Clang-like __PRETTY_FUNCTION__ output,
+  /// extract the template instantiation information as a string,
+  /// assuming a SINGLE template parameter.
+  /// Returns an empty string if such cannot be extracted.
+  static std::string singlePfType(std::string const& pf);
+
+  /// Given a GCG/Clang-long __PRETTY_FUNCTION__ output,
+  /// extract the template information as a string,
+  /// assuming tparam names the LAST template parameter.
+  /// Returns an empty string if such cannot be extracted.
+  static std::string lastNamedPfType(std::string const& spf, std::string const& tparam);
+
+  /// Return the type of T, as a string.
+  /// Requires compiler extension support.
+  template <typename T>
+  static std::string getTypeName() {
+    return singlePfType(prettyFunctionForType<T>());
+  }
+
+  /// Return the type of T, as a string.
+  /// Requires compiler extension support.
+  /// (Might be able to use 'auto T' in C++17.)
+  template <typename T, T value>
+  static std::string getValueName() {
+    return lastNamedPfType(prettyFunctionForValue<T,value>(), "PF_VALUE_NAME");
+  }
+
+  // T,T* 'overload' for GCC
+  template <typename T, T* value>
+  static std::string getValueNamePtr() {
+    return lastNamedPfType(prettyFunctionForValuePtr<T,value>(), "PF_VALUE_NAME");
+  }
+
+  /// Given a string like 'a::b::c', return the namespace of 'a::b'.
+  /// Does not strip out extra template parameterization artifacts.
+  /// Removes any leading '&', if present (as in 'values representing types').
+  static std::string getNamespace(std::string const& typestr);
+
+  /// Given a string like 'a::b::c', return the barename of 'c'.
+  /// Returns the bare name in absense of any namespace (eg. 'c' -> 'c').
+  /// Removes any leading '&', if present (as in 'values representing types').
+  static std::string getBarename(std::string const& typestr);
+
+  /// Given a string like 'void (...)' (that is, the string representation of
+  /// a function type.. return the argument section. As the name indicates
+  /// this is somewhat limited.
+  static std::string getVoidFuncStrArgs(std::string const& typestr);
+};
 
 struct DemanglerUtils {
-  template <typename T>
-  static inline std::string getTypeName() {
-    std::string s{type_name<T>().data()};
-    return s;
-  }
+  static std::vector<std::string>
+  splitString(std::string const& str, char delim);
 
-  template <typename StringOut>
-  static inline void splitString(
-    std::string const& s, char delim, StringOut result
-  ) {
-    std::stringstream ss;
-    ss.str(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-      *(result++) = item;
-    }
-  }
+  static std::string
+  removeSpaces(std::string const& str);
 
-  static inline StrContainerType splitString(
-    std::string const& str, char delim
-  ) {
-    StrContainerType elems;
-    splitString(str, delim, std::back_inserter(elems));
-    return elems;
-  }
-
-  static inline std::string removeSpaces(std::string const& str) {
-    StrContainerType const& str_split = splitString(str, ' ');
-    std::stringstream clean;
-    for (auto&& x : str_split) {
-      clean << x;
-    }
-    return clean.str();
-  }
-};
-
-/*
- *                   Example Format for active message function:
- *
- *  vt::auto_registry::Runnable<
- *    vt::auto_registry::FunctorAdapter<
- *      void (vt::term::TermCounterMsg*),
- *      &(vt::term::TerminationDetector::propagate_epoch_handler(
- *        vt::term::TermCounterMsg*)
- *       )
- *    >
- *  >
- */
-struct ActiveFunctionDemangler {
-  using StrParsedOutType = DemangledName;
-  using UtilType = DemanglerUtils;
-
-  static StrParsedOutType parseActiveFunctionName(std::string const& str);
-};
-
-struct ActiveFunctorDemangler {
-  using StrParsedOutType = DemangledName;
-  using UtilType = DemanglerUtils;
-
-  static StrParsedOutType parseActiveFunctorName(
-      std::string const& name, std::string const& args
-  );
+  static std::string
+  join(std::string const& delim, std::vector<std::string> const& strs);
 };
 
 }}} // end namespace vt::util::demangle

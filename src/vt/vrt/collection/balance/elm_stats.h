@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          elm_stats.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                 elm_stats.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -58,11 +58,13 @@
 #include <cstdint>
 #include <vector>
 #include <tuple>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct ElementStats {
   using PhaseType       = uint64_t;
+  using SubphaseType    = uint16_t;
   using ArgType         = vt::arguments::ArgConfig;
 
   ElementStats() = default;
@@ -72,31 +74,55 @@ struct ElementStats {
   void startTime();
   void stopTime();
   void addTime(TimeType const& time);
-  void recvObjData(ElementIDType to, ElementIDType from, double bytes, bool bcast);
-  void recvFromNode(ElementIDType to, NodeType from, double bytes, bool bcast);
-  void recvToNode(NodeType to, ElementIDType from, double bytes, bool bcast);
+  void recvObjData(
+    ElementIDType to_perm, ElementIDType to_temp,
+    ElementIDType from_perm, ElementIDType from_temp, double bytes, bool bcast
+  );
+  void recvFromNode(
+    ElementIDType to_perm, ElementIDType to_temp, NodeType from,
+    double bytes, bool bcast
+  );
+  void recvToNode(
+    NodeType to, ElementIDType from_perm, ElementIDType from_temp,
+    double bytes, bool bcast
+  );
   void setModelWeight(TimeType const& time);
   void updatePhase(PhaseType const& inc = 1);
+  void resetPhase();
   PhaseType getPhase() const;
   TimeType getLoad(PhaseType const& phase) const;
+  TimeType getLoad(PhaseType phase, SubphaseType subphase) const;
+
   CommMapType const& getComm(PhaseType const& phase);
+  void setSubPhase(SubphaseType subphase);
+  SubphaseType getSubPhase() const;
+
+  static const constexpr SubphaseType no_subphase = std::numeric_limits<SubphaseType>::max();
+  static void setFocusedSubPhase(VirtualProxyType collection, SubphaseType subphase);
+  static SubphaseType getFocusedSubPhase(VirtualProxyType collection);
 
   template <typename Serializer>
   void serialize(Serializer& s);
+
+  void clear();
 
 public:
   template <typename ColT>
   static void syncNextPhase(PhaseMsg<ColT>* msg, ColT* col);
 
-  template <typename ColT>
   friend struct collection::Migratable;
 
 protected:
   bool cur_time_started_ = false;
   TimeType cur_time_ = 0.0;
   PhaseType cur_phase_ = fst_lb_phase;
-  std::vector<TimeType> phase_timings_ = {};
-  std::vector<CommMapType> comm_ = {};
+  std::unordered_map<PhaseType, TimeType> phase_timings_ = {};
+  std::unordered_map<PhaseType, CommMapType> comm_ = {};
+
+  SubphaseType cur_subphase_ = 0;
+  std::unordered_map<PhaseType, std::vector<TimeType>> subphase_timings_ = {};
+
+  static std::unordered_map<VirtualProxyType, SubphaseType> focused_subphase_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

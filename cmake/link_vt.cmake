@@ -30,6 +30,8 @@ function(link_target_with_vt)
     LINK_CHECKPOINT
     LINK_DETECTOR
     LINK_CLI11
+    LINK_DL
+    LINK_ZOLTAN
   )
   set(
     multiValueArg
@@ -47,12 +49,26 @@ function(link_target_with_vt)
     message(STATUS "link_target_with_vt: default link=${ARG_DEFAULT_LINK_SET}")
   endif()
 
+  if (NOT DEFINED ARG_LINK_ZOLTAN AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ZOLTAN)
+    if (vt_zoltan_enabled)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: zoltan=${ARG_LINK_ZOLTAN}")
+      endif()
+
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} zoltan
+        )
+      target_include_directories(
+        ${ARG_TARGET} PUBLIC $<BUILD_INTERFACE:${Zoltan_INCLUDE_DIRS}>
+        )
+    endif()
+  endif()
+
   if (${ARG_LINK_GTEST})
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: gtest=${ARG_LINK_GTEST}")
     endif()
-    target_include_directories(${ARG_TARGET} PRIVATE ${GTEST_INCLUDE_DIRS})
-    target_link_libraries(${ARG_TARGET} PRIVATE ${GTEST_BOTH_LIBRARIES})
+    target_link_libraries(${ARG_TARGET} PRIVATE gtest)
   endif()
 
   if (NOT ARG_LINK_VT_LIB)
@@ -76,6 +92,16 @@ function(link_target_with_vt)
     endif()
   endif()
 
+  if (NOT DEFINED ARG_LINK_DL AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_DL)
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: dl=${ARG_LINK_DL}")
+    endif()
+
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CMAKE_DL_LIBS}
+    )
+  endif()
+
   if (NOT DEFINED ARG_LINK_MPI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_MPI)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: MPI=${ARG_LINK_MPI}")
@@ -86,13 +112,15 @@ function(link_target_with_vt)
     )
   endif()
 
-  if (NOT DEFINED ARG_LINK_FCONTEXT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FCONTEXT)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: fcontext=${ARG_LINK_FCONTEXT}")
+  if (${vt_fcontext_enabled})
+    if (NOT DEFINED ARG_LINK_FCONTEXT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FCONTEXT)
+      if (${ARG_DEBUG_LINK})
+        message(STATUS "link_target_with_vt: fcontext=${ARG_LINK_FCONTEXT}")
+      endif()
+      target_link_libraries(
+        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FCONTEXT_LIBRARY}
+        )
     endif()
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${FCONTEXT_LIBRARY}
-    )
   endif()
 
   if (NOT DEFINED ARG_LINK_ZLIB AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_ZLIB)
@@ -108,7 +136,7 @@ function(link_target_with_vt)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt: fmt=${ARG_LINK_FMT}")
     endif()
-    target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1)
+    target_compile_definitions(${ARG_TARGET} PUBLIC FMT_HEADER_ONLY=1 FMT_USE_USER_DEFINED_LITERALS=0)
     target_include_directories(${ARG_TARGET} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_BASE_DIR}/lib/fmt>
       $<INSTALL_INTERFACE:include/fmt>
@@ -116,16 +144,12 @@ function(link_target_with_vt)
   endif()
 
   if (NOT DEFINED ARG_LINK_CHECKPOINT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_CHECKPOINT)
-    if (${VT_HAS_SERIALIZATION_LIBRARY})
-      if (${ARG_DEBUG_LINK})
-        message(STATUS "link_target_with_vt: checkpoint=${ARG_LINK_CHECKPOINT}")
-      endif()
-      target_link_libraries(
-        ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CHECKPOINT_LIBRARY}
-      )
-    else()
-      message(FATAL_ERROR "Trying to link with nonexistent checkpoint library")
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: checkpoint=${ARG_LINK_CHECKPOINT}")
     endif()
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${CHECKPOINT_LIBRARY}
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_DETECTOR AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_DETECTOR)
@@ -163,6 +187,15 @@ function(link_target_with_vt)
     endif()
     # @todo: is there something that needs to be done for std::threads to work
     # in all cases, perhaps "-pthread"?
+  endif()
+
+  if (${vt_mimalloc_enabled})
+    if (${ARG_DEBUG_LINK})
+      message(STATUS "link_target_with_vt: mimalloc=${vt_mimalloc_enabled}")
+    endif()
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${MIMALLOC_LIBRARY}
+    )
   endif()
 
   if (${ARG_CUSTOM_LINK_ARGS})

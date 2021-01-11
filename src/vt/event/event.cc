@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          event.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                   event.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -60,26 +60,32 @@ namespace vt { namespace event {
 //   return ready;
 // }
 
+void AsyncEvent::initialize() {
+# if backend_check_enabled(trace_enabled)
+  if (vt::arguments::ArgConfig::vt_trace_event_polling) {
+    trace_event_polling = trace::registerEventCollective(
+      "AsyncEvent::testEventsTrigger"
+    );
+  }
+# endif
+}
 
 EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) {
   auto const& this_node = theContext()->getNode();
-  auto const& event_id = createNormalEvent(this_node);
-  auto& holder = getEventHolder(event_id);
 
   auto trigger = [=]{
     callable();
   };
 
   auto const& event_state = testEventComplete(event);
-  auto const& this_event_owning_node = getOwningNode(event_id);
 
   debug_print(
     event, node,
-    "theEvent: event={}, newevent={}, state={}, "
-    "newevent_owning_node={}, this_node={}\n",
-    event, event_id, static_cast<int>(event_state), this_event_owning_node,
-    this_node
+    "event={}, state={}\n",
+    event, static_cast<int>(event_state)
   );
+
+  EventType ret_event = no_event;
 
   switch (event_state) {
   case EventStateType::EventReady:
@@ -89,9 +95,11 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     this->getEventHolder(event).attachAction(
       trigger
     );
-    holder.makeReadyTrigger();
     break;
   case EventStateType::EventRemote: {
+    auto const& event_id = createNormalEvent(this_node);
+    auto& holder = getEventHolder(event_id);
+
     // attach event to new id
     holder.attachAction(trigger);
 
@@ -109,13 +117,15 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     theMsg()->sendMsg<EventCheckFinishedMsg, checkEventFinished>(
       owning_node, msg
     );
+
+    ret_event = event_id;
   }
     break;
   default:
     vtAssert(0, "This should be unreachable");
     break;
   }
-  return event_id;
+  return ret_event;
 }
 
 /*static*/ void AsyncEvent::eventFinished(EventFinishedMsg* msg) {
@@ -178,7 +188,7 @@ void AsyncEvent::cleanup() {
   event_container_.clear();
 }
 
-bool AsyncEvent::scheduler() {
+bool AsyncEvent::progress() {
   theEvent()->testEventsTrigger();
   return false;
 }
@@ -207,12 +217,12 @@ EventType AsyncEvent::createEvent(
   auto& container = needsPolling(type)
     ? polling_event_container_ : event_container_;
 
-  container.emplace_front(EventHolderType(std::move(et)));
+  container.emplace_back(EventHolderType(std::move(et)));
 
   lookup_container_.emplace(
     std::piecewise_construct,
     std::forward_as_tuple(event),
-    std::forward_as_tuple(container.begin())
+    std::forward_as_tuple(--container.end())
   );
 
   return event;
@@ -231,7 +241,11 @@ EventType AsyncEvent::createParentEvent(NodeType const& node) {
 }
 
 void AsyncEvent::removeEventID(EventType const& event) {
-  lookup_container_.erase(event);
+  auto iter = lookup_container_.find(event);
+  if (iter != lookup_container_.end()) {
+    event_container_.erase(iter->second);
+    lookup_container_.erase(event);
+  }
 }
 
 AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) {
@@ -278,24 +292,53 @@ AsyncEvent::EventStateType AsyncEvent::testEventComplete(EventType const& event)
 }
 
 void AsyncEvent::testEventsTrigger(int const& num_events) {
+# if backend_check_enabled(trace_enabled)
+  int32_t num_completed  = 0;
+  TimeType tr_begin = 0.0;
+
+  if (arguments::ArgConfig::vt_trace_event_polling) {
+    tr_begin = timing::Timing::getCurrentTime();
+  }
+# endif
+
   int cur = 0;
   auto& cont = polling_event_container_;
-  for (auto iter = cont.begin(); iter != cont.end(); iter++) {
+  for (auto iter = cont.begin(); iter != cont.end(); ) {
     auto& holder = *iter;
     auto event = holder.get_event();
     auto id = event->getEventID();
     if (event->testReady()) {
       holder.executeActions();
-      polling_event_container_.erase(iter);
+      iter = polling_event_container_.erase(iter);
       lookup_container_.erase(id);
-      return;
+
+#     if backend_check_enabled(trace_enabled)
+      if (arguments::ArgConfig::vt_trace_event_polling) {
+        ++num_completed;
+      }
+#     endif
+
+    } else {
+      iter++;
     }
 
     cur++;
-    if (cur > num_events) {
+    if (num_events > 0 and cur > num_events) {
       break;
     }
   }
+
+# if backend_check_enabled(trace_enabled)
+  if (arguments::ArgConfig::vt_trace_event_polling) {
+    if (num_completed > 0) {
+      TimeType tr_end = timing::Timing::getCurrentTime();
+      auto tr_note = fmt::format("completed {} of {}", num_completed, cur);
+      trace::addUserBracketedNote(tr_begin, tr_end, tr_note, trace_event_polling);
+    }
+  } else {
+    (void)num_completed;
+  }
+# endif
 }
 
 }} //end namespace vt::event

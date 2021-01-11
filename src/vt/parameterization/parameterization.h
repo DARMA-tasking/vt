@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          parameterization.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                              parameterization.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -68,6 +68,7 @@ struct DataMsg : vt::Message {
   Tuple tup;
   HandlerType sub_han = uninitialized_handler;
 
+  DataMsg() = default;
   DataMsg(HandlerType const& in_sub_han, Tuple&& a)
     : Message(), tup(std::forward<Tuple>(a)), sub_han(in_sub_han)
   { }
@@ -76,6 +77,12 @@ struct DataMsg : vt::Message {
   DataMsg(HandlerType const& in_sub_han, Args&&... a)
     : Message(), tup(std::forward<Args>(a)...), sub_han(in_sub_han)
   { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | tup;
+    s | sub_han;
+  }
 };
 
 
@@ -87,49 +94,49 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
   );
 
 #if backend_check_enabled(trace_enabled)
-  trace::TraceEntryIDType ep = auto_registry::theTraceID(
-    msg->sub_han, auto_registry::RegistryTypeEnum::RegGeneral
-  );
-  trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
+  trace::TraceProcessingTag processing_tag;
+  {
+    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(
+      msg->sub_han, auto_registry::RegistryTypeEnum::RegGeneral
+    );
+    trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
 
-  fmt::print("dataMessageHandler: id={}, ep={}\n", msg->sub_han, ep);
+    size_t msg_size = sizeof(*msg);
+    NodeType const& from_node = theMsg()->getFromNodeCurrentHandler();
 
-  NodeType const& from_node = theMsg()->getFromNodeCurrentHandler();
-
-  theTrace()->beginProcessing(ep, sizeof(*msg), event, from_node);
+    processing_tag =
+      theTrace()->beginProcessing(ep, msg_size, event, from_node);
+  }
 #endif
 
   if (HandlerManagerType::isHandlerFunctor(msg->sub_han)) {
     auto fn = auto_registry::getAutoHandlerFunctor(msg->sub_han);
-    invokeCallableTuple(std::forward<Tuple>(msg->tup), fn, true);
+    invokeCallableTuple(msg->tup, fn, true);
   } else {
     // regular active function
     auto fn = auto_registry::getAutoHandler(msg->sub_han);
-    invokeCallableTuple(std::forward<Tuple>(msg->tup), fn, false);
+    invokeCallableTuple(msg->tup, fn, false);
   }
 
 #if backend_check_enabled(trace_enabled)
-  theTrace()->endProcessing(ep, sizeof(*msg), event, from_node);
+  theTrace()->endProcessing(processing_tag);
 #endif
 }
 
 struct Param {
 
   template <typename... Args>
-  EventType sendDataTuple(
+  void sendDataTuple(
     NodeType const& dest, HandlerType const& han, std::tuple<Args...>&& tup
   ) {
     staticCheckCopyable<Args...>();
 
     using TupleType = typename std::decay<decltype(tup)>::type;
 
-    DataMsg<TupleType>* m = new DataMsg<TupleType>(
+    auto m = makeMessage<DataMsg<TupleType>>(
       han, std::forward<std::tuple<Args...>>(tup)
     );
-
-    return theMsg()->sendMsg<DataMsg<TupleType>, dataMessageHandler>(
-      dest, m, [=]{ delete m; }
-    );
+    theMsg()->sendMsg<DataMsg<TupleType>, dataMessageHandler>(dest, m.get());
   }
 
   template <typename... Args>
@@ -143,55 +150,50 @@ struct Param {
   }
 
   template <typename DataMsg>
-  EventType sendDataMsg(
+  void sendDataMsg(
     NodeType const& dest, HandlerType const& __attribute__((unused)) han,
-    DataMsg* m
+    MsgSharedPtr<DataMsg> m
   ) {
-    return theMsg()->sendMsg<DataMsg, dataMessageHandler>(
-      dest, m, [=]{ delete m; }
-    );
+    theMsg()->sendMsg<DataMsg, dataMessageHandler>(dest, m.get());
   }
 
   template <typename T, T value, typename Tuple>
-  EventType sendData(
+  void sendData(
     NodeType const& dest, Tuple tup,
     NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
-    return sendDataTuple(dest, han, std::forward<Tuple>(tup));
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
+    sendDataTuple(dest, han, std::forward<Tuple>(tup));
   }
 
   template <typename T, T value, typename... Args>
-  EventType sendData(
-    NodeType const& dest, DataMsg<std::tuple<Args...>>* msg,
+  void sendData(
+    NodeType const& dest, MsgSharedPtr<DataMsg<std::tuple<Args...>>> msg,
     NonType<T, value> __attribute__((unused)) non = NonType<T,value>()
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
     msg->sub_han = han;
-    return sendDataMsg(dest, han, msg);
+    sendDataMsg(dest, han, msg);
   }
 
   template <typename T, T value, typename... Args>
-  EventType sendData(
+  void sendData(
     NodeType const& dest, NonType<T, value> __attribute__((unused)) non,
     Args&&... a
   ) {
-    auto const& han = auto_registry::makeAutoHandler<T,value>();
+    auto const& han = auto_registry::makeAutoHandlerParam<T,value>();
 
     staticCheckCopyable<Args...>();
 
     using TupleType = std::tuple<Args...>;
 
-    DataMsg<TupleType>* m = new DataMsg<TupleType>(
-      han, std::forward<Args>(a)...
-    );
-
-    return sendDataMsg(dest, han, m);
+    auto m = makeMessage<DataMsg<TupleType>>(han, std::forward<Args>(a)...);
+    sendDataMsg(dest, han, m);
   }
 
   template <typename T, T value, typename... Args>
-  EventType sendData(NodeType const& dest, Args&&... a) {
-    return sendData(dest, NonType<T,value>(), std::forward<Args>(a)...);
+  void sendData(NodeType const& dest, Args&&... a) {
+    sendData(dest, NonType<T,value>(), std::forward<Args>(a)...);
   }
 
   /*
@@ -199,22 +201,24 @@ struct Param {
    */
 
   template <typename FunctorT, typename... Args>
-  EventType sendDataHelperFunctor(
+  void sendDataHelperFunctor(
     NodeType const& dest, std::tuple<Args...>&& tup
   ) {
     auto const& han = auto_registry::makeAutoHandlerFunctor<
       FunctorT, false, Args...
     >();
-    return sendDataTuple(dest, han, std::forward<std::tuple<Args...>>(tup));
+    sendDataTuple(dest, han, std::forward<std::tuple<Args...>>(tup));
   }
 
   template <typename FunctorT, typename Tuple>
-  EventType sendData(NodeType const& dest, Tuple tup) {
-    return sendDataHelperFunctor<FunctorT>(dest, std::forward<Tuple>(tup));
+  void sendData(NodeType const& dest, Tuple tup) {
+    sendDataHelperFunctor<FunctorT>(dest, std::forward<Tuple>(tup));
   }
 
   template <typename FunctorT, typename... Args>
-  EventType sendData(NodeType const& dest, DataMsg<std::tuple<Args...>>* msg) {
+  void sendData(
+    NodeType const& dest, MsgSharedPtr<DataMsg<std::tuple<Args...>>> msg
+  ) {
     staticCheckCopyable<Args...>();
 
     auto const& han = auto_registry::makeAutoHandlerFunctor<
@@ -222,11 +226,11 @@ struct Param {
     >();
     msg->sub_han = han;
 
-    return sendDataMsg(dest, han, msg);
+    sendDataMsg(dest, han, msg);
   }
 
   template <typename FunctorT, typename... Args>
-  EventType sendData(NodeType const& dest, Args&&... a) {
+  void sendData(NodeType const& dest, Args&&... a) {
     staticCheckCopyable<Args...>();
 
     auto const& han = auto_registry::makeAutoHandlerFunctor<
@@ -235,11 +239,8 @@ struct Param {
 
     using TupleType = std::tuple<Args...>;
 
-    DataMsg<TupleType>* m = new DataMsg<TupleType>(
-      han, std::forward<Args>(a)...
-    );
-
-    return sendDataMsg(dest, han, m);
+    auto m = makeMessage<DataMsg<TupleType>>(han, std::forward<Args>(a)...);
+    sendDataMsg(dest, han, m);
   }
 };
 
@@ -250,8 +251,8 @@ namespace vt {
 extern param::Param* theParam();
 
 template <typename... Args>
-param::DataMsg<std::tuple<Args...>>* buildData(Args&&... a) {
-  return new param::DataMsg<std::tuple<Args...>>(
+MsgSharedPtr<param::DataMsg<std::tuple<Args...>>> buildData(Args&&... a) {
+  return makeMessage<param::DataMsg<std::tuple<Args...>>>(
     uninitialized_handler, std::forward<Args>(a)...
   );
 }

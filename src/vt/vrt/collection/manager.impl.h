@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          manager.impl.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                manager.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -68,15 +68,15 @@
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/insert_context_holder.h"
+#include "vt/vrt/collection/collection_directory.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/termination/term_headers.h"
-#include "vt/serialization/serialization.h"
 #include "vt/serialization/auto_dispatch/dispatch.h"
-#include "vt/serialization/auto_sizing/sizing.h"
+#include "vt/serialization/sizer.h"
 #include "vt/collective/reduce/reduce_hash.h"
 #include "vt/runnable/collection.h"
 
@@ -85,6 +85,8 @@
 #include <functional>
 #include <cassert>
 #include <memory>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "fmt/format.h"
 #include "fmt/ostream.h"
@@ -311,7 +313,7 @@ GroupType CollectionManager::createGroupCollection(
 
       if (!is_group_default && my_in_group) {
         uint64_t const group_tag_mask = 0x0fff0000;
-        auto group_msg = makeSharedMessage<CollectionGroupMsg>(proxy,new_group);
+        auto group_msg = makeMessage<CollectionGroupMsg>(proxy,new_group);
         auto const& group_tag_id = vid | group_tag_mask;
         debug_print(
           vrt_coll, node,
@@ -320,7 +322,7 @@ GroupType CollectionManager::createGroupCollection(
         theGroup()->groupReduce(new_group)->reduce<
           CollectionGroupMsg,
           collectionGroupReduceHan
-        >(group_root, group_msg, group_tag_id);
+        >(group_root, group_msg.get(), group_tag_id);
       } else if (is_group_default) {
         /*
          *  Trigger the group finished handler directly because the default
@@ -347,6 +349,8 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
   NodeType from
 ) {
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+
   auto& user_msg = msg->getMsg();
   auto user_msg_ptr = &user_msg;
   // Be careful with type casting here..convert to typeless before
@@ -357,14 +361,23 @@ CollectionManager::collectionAutoMsgDeliver(
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
-  auto const idx = base->getIndex();
+  auto idx = base->getIndex();
   uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+
+  // Set the current context index, enabling the user to query the index of
+  // their collection element
+  auto const proxy = base->getProxy();
+  IdxContextHolder::set(&idx,proxy);
+
   runnable::RunnableCollection<UserMsgT,UntypedCollection>::run(
     han, user_msg_ptr, ptr, from, member, idx1, idx2, idx3, idx4
   );
+
+  // Clear the current index context
+  IdxContextHolder::clear();
 }
 
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
@@ -373,6 +386,8 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT,IndexT>* base, HandlerType han, bool member,
   NodeType from
 ) {
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+
   // Be careful with type casting here..convert to typeless before
   // reinterpreting the pointer so the compiler does not produce the wrong
   // offset
@@ -381,14 +396,23 @@ CollectionManager::collectionAutoMsgDeliver(
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
-  auto const idx = base->getIndex();
+  auto idx = base->getIndex();
   uint64_t const idx1 = idx.ndims() > 0 ? idx[0] : 0;
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+
+  // Set the current context index, enabling the user to query the index of
+  // their collection element
+  auto const proxy = base->getProxy();
+  IdxContextHolder::set(&idx,proxy);
+
   runnable::RunnableCollection<MsgT,UntypedCollection>::run(
     han, msg, ptr, from, member, idx1, idx2, idx3, idx4
   );
+
+  // Clear the current index context
+  IdxContextHolder::clear();
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
@@ -423,65 +447,65 @@ template <typename ColT, typename IndexT, typename MsgT>
         "broadcast: apply to element: epoch={}, bcast_epoch={}\n",
         msg->bcast_epoch_, base->cur_bcast_epoch_
       );
-      if (base->cur_bcast_epoch_ == msg->bcast_epoch_ - 1) {
-        vtAssert(base != nullptr, "Must be valid pointer");
-        base->cur_bcast_epoch_++;
+      vtAssert(base != nullptr, "Must be valid pointer");
+      base->cur_bcast_epoch_++;
 
-        #if backend_check_enabled(lblite)
-          debug_print(
-            vrt_coll, node,
-            "broadcast: apply to element: instrument={}\n",
-            msg->lbLiteInstrument()
-          );
-          if (msg->lbLiteInstrument()) {
-            recordStats(base, msg);
-            auto& stats = base->getStats();
-            stats.startTime();
-          }
+      #if backend_check_enabled(lblite)
+        debug_print(
+          vrt_coll, node,
+          "broadcast: apply to element: instrument={}\n",
+          msg->lbLiteInstrument()
+        );
+        if (msg->lbLiteInstrument()) {
+          recordStats(base, msg);
+          auto& stats = base->getStats();
+          stats.startTime();
+        }
 
-          // Set the current context (element ID) that is executing (having a message
-          // delivered). This is used for load balancing to build the communication
-          // graph
-          auto const elm_id = base->getElmID();
-          auto const prev_elm = theCollection()->getCurrentContext();
-          theCollection()->setCurrentContext(elm_id);
+        // Set the current context (element ID) that is executing (having a message
+        // delivered). This is used for load balancing to build the communication
+        // graph
+        auto const perm_elm_id = base->getElmID();
+        auto const temp_elm_id = base->getTempID();
+        auto const perm_prev_elm = theCollection()->getCurrentContextPerm();
+        auto const temp_prev_elm = theCollection()->getCurrentContextTemp();
 
-          debug_print(
-            vrt_coll, node,
-            "collectionBcastHandler: setting current context={}\n",
-            elm_id
-          );
+        theCollection()->setCurrentContext(perm_elm_id, temp_elm_id);
 
-          std::unique_ptr<messaging::Listener> listener =
-            std::make_unique<balance::LBListener>(
-              [&](NodeType dest, MsgSizeType size, bool bcast){
-                auto& stats = base->getStats();
-                stats.recvToNode(dest, elm_id, size, bcast);
-              }
-            );
-          theMsg()->addSendListener(std::move(listener));
-
-        #endif
-
-        // be very careful here, do not touch `base' after running the active
-        // message because it might have migrated out and be invalid
-        auto const from = col_msg->getFromNode();
-        collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
-          msg,base,handler,member,from
+        debug_print(
+          vrt_coll, node,
+          "collectionBcastHandler: current context: perm={}, temp={}\n",
+          perm_elm_id, temp_elm_id
         );
 
-        #if backend_check_enabled(lblite)
-          theMsg()->clearListeners();
+        std::unique_ptr<messaging::Listener> listener =
+          std::make_unique<balance::LBListener>(
+            [&](NodeType dest, MsgSizeType size, bool bcast){
+              auto& stats = base->getStats();
+              stats.recvToNode(dest, perm_elm_id, temp_elm_id, size, bcast);
+            }
+          );
+        theMsg()->addSendListener(std::move(listener));
+      #endif
 
-          // Unset the element ID context
-          theCollection()->setCurrentContext(prev_elm);
+      // be very careful here, do not touch `base' after running the active
+      // message because it might have migrated out and be invalid
+      auto const from = col_msg->getFromNode();
+      collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
+        msg,base,handler,member,from
+      );
 
-          if (msg->lbLiteInstrument()) {
-            auto& stats = base->getStats();
-            stats.stopTime();
-          }
-        #endif
-      }
+      #if backend_check_enabled(lblite)
+        theMsg()->clearListeners();
+
+        // Unset the element ID context
+        theCollection()->setCurrentContext(perm_prev_elm, temp_prev_elm);
+
+        if (msg->lbLiteInstrument()) {
+          auto& stats = base->getStats();
+          stats.stopTime();
+        }
+      #endif
     });
   }
   /*
@@ -697,21 +721,24 @@ template <typename ColT, typename IndexT, typename MsgT>
     // Set the current context (element ID) that is executing (having a message
     // delivered). This is used for load balancing to build the communication
     // graph
-    auto const elm_id = col_ptr->getElmID();
-    auto const prev_elm = theCollection()->getCurrentContext();
-    theCollection()->setCurrentContext(elm_id);
+    auto const perm_elm_id = col_ptr->getElmID();
+    auto const temp_elm_id = col_ptr->getTempID();
+    auto const perm_prev_elm = theCollection()->getCurrentContextPerm();
+    auto const temp_prev_elm = theCollection()->getCurrentContextTemp();
+
+    theCollection()->setCurrentContext(perm_elm_id, temp_elm_id);
 
     debug_print(
       vrt_coll, node,
-      "collectionMsgTypedHandler: setting current context={}\n",
-      elm_id
+      "collectionMsgTypedHandler: current context: perm={}, temp={}\n",
+      perm_elm_id, temp_elm_id
     );
 
     std::unique_ptr<messaging::Listener> listener =
       std::make_unique<balance::LBListener>(
         [&](NodeType dest, MsgSizeType size, bool bcast){
           auto& stats = col_ptr->getStats();
-          stats.recvToNode(dest, elm_id, size, bcast);
+          stats.recvToNode(dest, perm_elm_id, temp_elm_id, size, bcast);
         }
       );
     theMsg()->addSendListener(std::move(listener));
@@ -728,8 +755,7 @@ template <typename ColT, typename IndexT, typename MsgT>
   #if backend_check_enabled(lblite)
     theMsg()->clearListeners();
 
-    // Unset the element ID context
-    theCollection()->setCurrentContext(prev_elm);
+    theCollection()->setCurrentContext(perm_prev_elm, temp_prev_elm);
 
     if (col_msg->lbLiteInstrument()) {
       auto& stats = col_ptr->getStats();
@@ -740,31 +766,34 @@ template <typename ColT, typename IndexT, typename MsgT>
 
 template <typename ColT, typename MsgT>
 /*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
-  auto const to = col_ptr->getElmID();
-  auto const from = msg->getElm();
+  auto const pto = col_ptr->getElmID();
+  auto const tto = col_ptr->getTempID();
+  auto const pfrom = msg->getElm();
+  auto const tfrom = msg->getElmTemp();
   auto& stats = col_ptr->getStats();
-  auto const msg_size = serialization::Size<MsgT>::getSize(msg);
+  auto const msg_size = serialization::MsgSizer<MsgT>::get(msg);
   auto const cat = msg->getCat();
   debug_print(
     vrt_coll, node,
-    "recordStats: receive msg: to={}, from={}, no={}, size={}, category={}\n",
-    to, from, balance::no_element_id, msg_size,
+    "recordStats: receive msg: perm(to={}, from={}), temp(to={}, from={})"
+    " no={}, size={}, category={}\n",
+    pto, pfrom, tto, tfrom, balance::no_element_id, msg_size,
     static_cast<typename std::underlying_type<balance::CommCategory>::type>(cat)
   );
   if (
     cat == balance::CommCategory::SendRecv or
     cat == balance::CommCategory::Broadcast
   ) {
-    vtAssert(from != balance::no_element_id, "Must not be no element ID");
+    vtAssert(pfrom != balance::no_element_id, "Must not be no element ID");
     bool bcast = cat == balance::CommCategory::SendRecv ? false : true;
-    stats.recvObjData(to, from, msg_size, bcast);
+    stats.recvObjData(pto, tto, pfrom, tfrom, msg_size, bcast);
   } else if (
     cat == balance::CommCategory::NodeToCollection or
     cat == balance::CommCategory::NodeToCollectionBcast
   ) {
     bool bcast = cat == balance::CommCategory::NodeToCollection ? false : true;
     auto nfrom = msg->getFromNode();
-    stats.recvFromNode(to, nfrom, msg_size, bcast);
+    stats.recvFromNode(pto, tto, nfrom, msg_size, bcast);
   }
 }
 
@@ -951,9 +980,9 @@ messaging::PendingSend CollectionManager::broadcastNormalMsg(
   HandlerType const& handler, bool const member,
   bool instrument
 ) {
-  auto wrap_msg = makeSharedMessage<ColMsgWrap<ColT,MsgT>>(*msg);
+  auto wrap_msg = makeMessage<ColMsgWrap<ColT,MsgT>>(*msg);
   return broadcastMsgUntypedHandler<ColMsgWrap<ColT,MsgT>,ColT>(
-    proxy, wrap_msg, handler, member, instrument
+    proxy, wrap_msg.get(), handler, member, instrument
   );
 }
 
@@ -982,16 +1011,17 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   #endif
 
   #if backend_check_enabled(lblite)
-    auto const elm_id = getCurrentContext();
+    auto const temp_elm_id = getCurrentContextTemp();
+    auto const perm_elm_id = getCurrentContextPerm();
 
     debug_print(
       vrt_coll, node,
-      "broadcasting msg: LB current elm context={}\n",
-      elm_id
+      "broadcasting msg: LB current elm context perm={}, temp={}\n",
+      perm_elm_id, temp_elm_id
     );
 
-    if (elm_id != balance::no_element_id) {
-      msg->setElm(elm_id);
+    if (perm_elm_id != balance::no_element_id) {
+      msg->setElm(perm_elm_id, temp_elm_id);
       msg->setCat(balance::CommCategory::Broadcast);
     } else {
       msg->setCat(balance::CommCategory::NodeToCollection);
@@ -1273,9 +1303,9 @@ messaging::PendingSend CollectionManager::sendNormalMsg(
   VirtualElmProxyType<ColT> const& proxy, MsgT *msg,
   HandlerType const& handler, bool const member
 ) {
-  auto wrap_msg = makeSharedMessage<ColMsgWrap<ColT,MsgT>>(*msg);
+  auto wrap_msg = makeMessage<ColMsgWrap<ColT,MsgT>>(*msg);
   return sendMsgUntypedHandler<ColMsgWrap<ColT,MsgT>,ColT>(
-    proxy, wrap_msg, handler, member
+    proxy, wrap_msg.get(), handler, member
   );
 }
 
@@ -1379,16 +1409,17 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     #endif
 
     #if backend_check_enabled(lblite)
-      auto const elm_id = getCurrentContext();
+      auto const temp_elm_id = getCurrentContextTemp();
+      auto const perm_elm_id = getCurrentContextPerm();
 
       debug_print(
         vrt_coll, node,
-        "sending msg: LB current elm context={}\n",
-        elm_id
+        "sending msg: LB current elm context perm={}, temp={}\n",
+        perm_elm_id, temp_elm_id
       );
 
-      if (elm_id != balance::no_element_id) {
-        msg->setElm(elm_id);
+      if (perm_elm_id != balance::no_element_id) {
+        msg->setElm(perm_elm_id, temp_elm_id);
         msg->setCat(balance::CommCategory::SendRecv);
       } else {
         msg->setCat(balance::CommCategory::NodeToCollection);
@@ -1411,7 +1442,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   if (imm_context) {
     theTerm()->produce(cur_epoch);
     return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
-      schedule<>([=]{
+      schedule([=]{
         theMsg()->pushEpoch(cur_epoch);
         theCollection()->sendMsgUntypedHandler<MsgT,ColT,IdxT>(
           toProxy, reinterpret_cast<MsgT*>(inner_msg.get()), handler, member, false
@@ -1568,7 +1599,7 @@ bool CollectionManager::insertCollectionElement(
 
     if (is_migrated_in) {
       theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntityMigrated(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, migrated_from,
+        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
     } else {
@@ -1750,9 +1781,9 @@ CollectionManager::constructCollectiveMap(
   // Wait for construction to finish before we release control to the user; this
   // ensures that other parts of the system do not migrate elements until the
   // group construction is complete
-  while (constructed_.find(proxy) == constructed_.end()) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile([this, &proxy]{
+    return constructed_.find(proxy) == constructed_.end();
+  });
 
   debug_print(
     vrt_coll, node,
@@ -1806,20 +1837,46 @@ VirtualProxyType CollectionManager::makeDistProxy(TagType const& tag) {
 /* end SPMD distributed collection support */
 
 
+template <typename ColT>
+void CollectionManager::staticInsertColPtr(
+  VirtualProxyType proxy, typename ColT::IndexType idx,
+  std::unique_ptr<ColT> ptr
+) {
+  using IndexT = typename ColT::IndexType;
+  using BaseIdxType = vt::index::BaseIndex;
+
+  auto map_han = UniversalIndexHolder<>::getMap(proxy);
+  auto holder = findColHolder<ColT, IndexT>(proxy);
+  auto range = holder->max_idx;
+  auto const num_elms = range.getSize();
+  auto fn = auto_registry::getHandlerMap(map_han);
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const cur = static_cast<BaseIdxType*>(&idx);
+  auto const max = static_cast<BaseIdxType*>(&range);
+  auto const home_node = fn(cur, max, num_nodes);
+
+  // Through the attorney, setup all the properties on the newly constructed
+  // collection element: index, proxy, number of elements. Note: because of
+  // how the constructor works, the index is not currently available through
+  // "getIndex"
+  CollectionTypeAttorney::setup(ptr.get(), num_elms, idx, proxy);
+
+  VirtualPtrType<ColT, IndexT> col_ptr(
+    static_cast<CollectionBase<ColT, IndexT>*>(ptr.release())
+  );
+
+  // Insert the element into the managed holder for elements
+  insertCollectionElement<ColT>(
+    std::move(col_ptr), idx, range, map_han, proxy, true, home_node
+  );
+}
+
 template <typename ColT, typename... Args>
 void CollectionManager::staticInsert(
   VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
 ) {
   using IndexT           = typename ColT::IndexType;
   using IdxContextHolder = InsertContextHolder<IndexT>;
-  using BaseIdxType      = vt::index::BaseIndex;
-
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  auto map_han = UniversalIndexHolder<>::getMap(proxy);
-
-  // Set the current context index to `idx`
-  IdxContextHolder::set(&idx,proxy);
 
   auto tuple = std::make_tuple(std::forward<Args>(args)...);
 
@@ -1828,12 +1885,8 @@ void CollectionManager::staticInsert(
   auto range = holder->max_idx;
   auto const num_elms = range.getSize();
 
-  // Get the handler function
-  auto fn = auto_registry::getHandlerMap(map_han);
-
-  auto const cur = static_cast<BaseIdxType*>(&idx);
-  auto const max = static_cast<BaseIdxType*>(&range);
-  auto const& home_node = fn(cur, max, num_nodes);
+  // Set the current context index to `idx`
+  IdxContextHolder::set(&idx,proxy);
 
   #if backend_check_enabled(detector) && backend_check_enabled(cons_multi_idx)
     auto elm_ptr = DerefCons::derefTuple<ColT, IndexT, decltype(tuple)>(
@@ -1846,34 +1899,43 @@ void CollectionManager::staticInsert(
     );
   #endif
 
+  // Clear the current index context
+  IdxContextHolder::clear();
+
   debug_print_verbose(
     vrt_coll, node,
     "construct (staticInsert): ptr={}\n", print_ptr(elm_ptr.get())
   );
 
-  // Through the attorney, setup all the properties on the newly constructed
-  // collection element: index, proxy, number of elements. Note: because of
-  // how the constructor works, the index is not currently available through
-  // "getIndex"
-  CollectionTypeAttorney::setup(elm_ptr.get(), num_elms, idx, proxy);
+  std::unique_ptr<ColT> col_ptr(static_cast<ColT*>(elm_ptr.release()));
 
-  // Insert the element into the managed holder for elements
-  insertCollectionElement<ColT>(
-    std::move(elm_ptr), idx, range, map_han, proxy, true, home_node
-  );
+  staticInsertColPtr<ColT>(proxy, idx, std::move(col_ptr));
+}
 
-  // Clear the current index context
-  IdxContextHolder::clear();
-
+template <
+  typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
+>
+InsertToken<ColT> CollectionManager::constructInsert(
+  typename ColT::IndexType range, TagType const& tag
+) {
+  using IndexT = typename ColT::IndexType;
+  auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
+  return constructInsertMap<ColT>(range, map_han, tag);
 }
 
 template <typename ColT>
 InsertToken<ColT> CollectionManager::constructInsert(
   typename ColT::IndexType range, TagType const& tag
 ) {
-  using IndexT         = typename ColT::IndexType;
-
   auto const map_han = getDefaultMap<ColT>();
+  return constructInsertMap<ColT>(range, map_han, tag);
+}
+
+template <typename ColT>
+InsertToken<ColT> CollectionManager::constructInsertMap(
+  typename ColT::IndexType range, HandlerType const& map_han, TagType const& tag
+) {
+  using IndexT         = typename ColT::IndexType;
 
   // Create a new distributed proxy, ordered wrt the input tag
   auto const& proxy = makeDistProxy<>(tag);
@@ -1897,6 +1959,9 @@ InsertToken<ColT> CollectionManager::constructInsert(
 
   // Insert the meta-data for this new collection
   insertMetaCollection<ColT>(proxy, map_han, range, is_static);
+
+  // Insert action on cleanup for this collection
+  theCollection()->addCleanupFn<ColT>(proxy);
 
   return InsertToken<ColT>{proxy};
 }
@@ -1939,17 +2004,19 @@ template <typename ColT, typename ParamT, typename... Args>
 template <typename IndexT>
 /*static*/ IndexT* CollectionManager::queryIndexContext() {
   using IdxContextHolder = InsertContextHolder<IndexT>;
-  auto const idx = IdxContextHolder::index();
-  vtAssertExpr(idx != nullptr);
-  return idx;
+  return IdxContextHolder::index();
 }
 
 template <typename IndexT>
 /*static*/ VirtualProxyType CollectionManager::queryProxyContext() {
   using IdxContextHolder = InsertContextHolder<IndexT>;
-  auto const proxy = IdxContextHolder::proxy();
-  vtAssertExpr(proxy != no_vrt_proxy);
-  return proxy;
+  return IdxContextHolder::proxy();
+}
+
+template <typename IndexT>
+/*static*/ bool CollectionManager::hasContext() {
+  using IdxContextHolder = InsertContextHolder<IndexT>;
+  return IdxContextHolder::hasContext();
 }
 
 template <typename ColT, typename... Args>
@@ -2069,7 +2136,9 @@ CollectionManager::constructMap(
   CollectionInfo<ColT, IndexT> info(range, is_static, node, new_proxy);
 
   if (!is_static) {
-    auto const& insert_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+    auto const& insert_epoch = theTerm()->makeEpochRootedWave(
+      term::SuccessorEpochCapture{no_epoch}
+    );
     theTerm()->finishNoActivateEpoch(insert_epoch);
     info.setInsertEpoch(insert_epoch);
     setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
@@ -2227,10 +2296,16 @@ void CollectionManager::finishedInsertEpoch(
     untyped_proxy, epoch
   );
 
+  if (not findColHolder<ColT>(untyped_proxy)) {
+    return;
+  }
+
   /*
    *  Add trigger for the next insertion phase/epoch finishing
    */
-  auto const& next_insert_epoch = theTerm()->makeEpochRootedWave(false,no_epoch);
+  auto const& next_insert_epoch = theTerm()->makeEpochRootedWave(
+    term::SuccessorEpochCapture{no_epoch}
+  );
   theTerm()->finishNoActivateEpoch(next_insert_epoch);
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,next_insert_epoch);
 
@@ -2586,7 +2661,7 @@ MigrateStatus CollectionManager::migrate(
 
   auto const epoch = theMsg()->getEpoch();
   theTerm()->produce(epoch);
-  schedule<>([=]{
+  schedule([=]{
     theMsg()->pushEpoch(epoch);
     migrateOut<ColT,IndexT>(col_proxy, idx, dest);
     theMsg()->popEpoch(epoch);
@@ -2727,8 +2802,18 @@ MigrateStatus CollectionManager::migrateIn(
 
   CollectionProxy<ColT, IndexT>(proxy).operator()(idx);
 
+  // Always assign a new temp element ID for LB statistic tracking
+  vrt_elm_ptr->temp_elm_id_ = balance::ProcStats::getNextElm();
+
   bool const is_static = ColT::isStaticSized();
-  auto const home_node = uninitialized_destination;
+
+  auto idx_copy = idx;
+  auto max_idx_copy = max;
+  auto const cur_cast = static_cast<vt::index::BaseIndex*>(&idx_copy);
+  auto const max_cast = static_cast<vt::index::BaseIndex*>(&max_idx_copy);
+  auto fn = auto_registry::getHandlerMap(map_han);
+  auto const home_node = fn(cur_cast, max_cast, theContext()->getNumNodes());
+
   auto const inserted = insertCollectionElement<ColT, IndexT>(
     std::move(vrt_elm_ptr), idx, max, map_han, proxy, is_static,
     home_node, true, from
@@ -2894,22 +2979,26 @@ void CollectionManager::elmReadyLB(
   return;
 #endif
 
-  auto const& col_proxy = proxy.getCollectionProxy();
-  auto const& idx = proxy.getElementProxy().getIndex();
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const idx = proxy.getElementProxy().getIndex();
   auto elm_holder = findElmHolder<ColT>(col_proxy);
   vtAssertInfo(
     elm_holder != nullptr, "Must find element holder at elmReadyLB",
     col_proxy, phase
   );
 
+  auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
+
   debug_print(
     lb, node,
-    "elmReadyLB: proxy={:x}, idx={}, phase={}, msg={}\n",
-    col_proxy, idx, phase, pmsg
+    "elmReadyLB: proxy={:x}, idx={}, phase={}, msg={}, epoch={:x}\n",
+    col_proxy, idx, phase, pmsg, cur_epoch
   );
 
-  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han]{
+  theTerm()->produce(cur_epoch);
+  elm_holder->addLBCont(idx,[pmsg,proxy,lb_han,cur_epoch]{
     theCollection()->sendMsgUntypedHandler<MsgT>(proxy,pmsg.get(),lb_han,true);
+    theTerm()->consume(cur_epoch);
   });
 
   auto iter = release_lb_.find(col_proxy);
@@ -2929,18 +3018,29 @@ void CollectionManager::elmReadyLB(
   bool do_sync, ActionFinishedLBType cont
 ) {
 
+  debug_print(
+    lb, node,
+    "elmReadyLB: index={} ready at sync={}, phase={}\n",
+    proxy.getElementProxy().getIndex(), do_sync, in_phase
+  );
+
 #if !backend_check_enabled(lblite)
   cont();
   return;
 #endif
 
-  auto const& col_proxy = proxy.getCollectionProxy();
-  auto const& idx = proxy.getElementProxy().getIndex();
+  auto const col_proxy = proxy.getCollectionProxy();
+  auto const idx = proxy.getElementProxy().getIndex();
   auto elm_holder = findElmHolder<ColT>(col_proxy);
 
   PhaseType phase = in_phase;
   if (phase == no_lb_phase) {
-    phase = elm_holder->lookup(idx).getCollection()->stats_.getPhase();
+    bool const elm_exists = elm_holder->exists(idx);
+    if (!(elm_exists)) fmt::print("Element must exist idx={}\n", idx);
+    auto& holder = elm_holder->lookup(idx);
+    auto elm = holder.getCollection();
+    if (!(elm != nullptr)) fmt::print("Must have valid element");
+    phase = elm->stats_.getPhase();
   }
 
   vtAssertInfo(
@@ -2959,6 +3059,8 @@ void CollectionManager::elmReadyLB(
     lb_continuations_.push_back(cont);
   }
   if (elm_holder) {
+    debug_print(lb, node, "has elm_holder: exists={}\n", elm_holder->exists(idx));
+
     vtAssert(
       elm_holder->exists(idx),
       "Collection element must be local and currently reside on this node"
@@ -2986,7 +3088,7 @@ void CollectionManager::elmReadyLB(
     using namespace balance;
     CollectionProxyWrapType<ColT> cur_proxy(col_proxy);
     using MsgType = PhaseMsg<ColT>;
-    auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync);
+    auto msg = makeMessage<MsgType>(phase, cur_proxy, do_sync, false);
 
 #if backend_check_enabled(lblite)
     msg->setLBLiteInstrument(false);
@@ -3011,8 +3113,8 @@ void CollectionManager::nextPhase(
 ) {
   using namespace balance;
   using MsgType = PhaseMsg<ColT>;
-  auto msg = makeSharedMessage<MsgType>(cur_phase, proxy);
-  auto const& instrument = false;
+  auto msg = makeSharedMessage<MsgType>(cur_phase, proxy, true, false);
+  auto const instrument = false;
 
   debug_print(
     vrt_coll, node,
@@ -3072,6 +3174,10 @@ template <typename always_void>
 
 template <typename>
 void CollectionManager::releaseLBContinuation() {
+  debug_print(
+    lb, node,
+    "releaseLBContinuation\n"
+  );
   UniversalIndexHolder<>::resetPhase();
   if (lb_continuations_.size() > 0) {
     auto continuations = lb_continuations_;
@@ -3100,21 +3206,148 @@ CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
 }
 
-template <typename always_void>
-void CollectionManager::schedule(ActionType action) {
-  work_units_.push_back(action);
+template <typename ColT, typename IndexT>
+IndexT CollectionManager::getRange(VirtualProxyType proxy) {
+  auto col_holder = findColHolder<ColT>(proxy);
+  return col_holder->max_idx;
 }
 
-template <typename always_void>
-bool CollectionManager::scheduler() {
-  if (work_units_.size() == 0) {
-    return false;
+template <typename IndexT>
+std::string CollectionManager::makeMetaFilename(
+  std::string file_base, bool make_sub_dirs
+) {
+  auto this_node = theContext()->getNode();
+  if (make_sub_dirs) {
+
+    auto subdir = fmt::format("{}/directory-{}", file_base, this_node);
+    int flag = mkdir(subdir.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + subdir);
+    }
+
+    return fmt::format(
+      "{}/directory-{}/{}.directory", file_base, this_node, this_node
+    );
   } else {
-    auto unit = work_units_.back();
-    work_units_.pop_back();
-    unit();
-    return true;
+    return fmt::format("{}.{}.directory", file_base, this_node);
   }
+}
+
+template <typename IndexT>
+std::string CollectionManager::makeFilename(
+  IndexT range, IndexT idx, std::string file_base, bool make_sub_dirs,
+  int files_per_directory
+) {
+  vtAssert(files_per_directory >= 1, "Must be >= 1");
+
+  std::string idx_str = "";
+  for (int i = 0; i < idx.ndims(); i++) {
+    idx_str += fmt::format("{}{}", idx[i], i < idx.ndims() - 1 ? "." : "");
+  }
+  if (make_sub_dirs) {
+    auto lin = mapping::linearizeDenseIndexColMajor(&idx, &range);
+    auto dir_name = lin / files_per_directory;
+
+    int flag = 0;
+    flag = mkdir(file_base.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + file_base);
+    }
+
+    auto subdir = fmt::format("{}/{}", file_base, dir_name);
+    flag = mkdir(subdir.c_str(), S_IRWXU);
+    if (flag < 0 && errno != EEXIST) {
+      throw std::runtime_error("Failed to create directory: " + subdir);
+    }
+
+    return fmt::format("{}/{}/{}", file_base, dir_name, idx_str);
+  } else {
+    return fmt::format("{}-{}", file_base, idx_str);
+  }
+}
+
+template <typename ColT, typename IndexT>
+void CollectionManager::checkpointToFile(
+  CollectionProxyWrapType<ColT> proxy, std::string const& file_base,
+  bool make_sub_dirs, int files_per_directory
+) {
+  auto proxy_bits = proxy.getProxy();
+
+  debug_print(
+    vrt_coll, node,
+    "checkpointToFile: proxy={:x}, file_base={}\n",
+    proxy_bits, file_base
+  );
+
+  // Get the element holder
+  auto holder_ = findElmHolder<ColT>(proxy_bits);
+  vtAssert(holder_ != nullptr, "Must have valid holder for collection");
+
+  auto range = getRange<ColT>(proxy_bits);
+
+  CollectionDirectory<IndexT> directory;
+
+  holder_->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
+    auto const name = makeFilename(
+      range, idx, file_base, make_sub_dirs, files_per_directory
+    );
+    auto const bytes = checkpoint::getSize(*static_cast<ColT*>(elm));
+    directory.elements_.emplace_back(
+      typename CollectionDirectory<IndexT>::Element{idx, name, bytes}
+    );
+
+    checkpoint::serializeToFile(*static_cast<ColT*>(elm), name);
+  });
+
+  auto const directory_name = makeMetaFilename<IndexT>(file_base, make_sub_dirs);
+  checkpoint::serializeToFile(directory, directory_name);
+}
+
+template <typename ColT>
+CollectionManager::CollectionProxyWrapType<ColT>
+CollectionManager::restoreFromFile(
+  typename ColT::IndexType range, std::string const& file_base
+) {
+  using IndexType = typename ColT::IndexType;
+  using DirectoryType = CollectionDirectory<IndexType>;
+
+  auto token = constructInsert<ColT>(range);
+
+  auto metadata_file_name = makeMetaFilename<IndexType>(file_base, false);
+
+  if (access(metadata_file_name.c_str(), F_OK) == -1) {
+    // file doesn't exist, try looking in sub-directory
+    metadata_file_name = makeMetaFilename<IndexType>(file_base, true);
+  }
+
+  if (access(metadata_file_name.c_str(), F_OK) == -1) {
+    throw std::runtime_error("Collection directory file cannot be found");
+  }
+
+  auto directory = checkpoint::deserializeFromFile<DirectoryType>(
+    metadata_file_name
+  );
+
+  for (auto&& elm : directory->elements_) {
+    auto idx = elm.idx_;
+    auto file_name = elm.file_name_;
+
+    if (access(file_name.c_str(), F_OK) == -1) {
+      auto err = fmt::format(
+        "Collection element file cannot be found: idx={}, file={}",
+        idx, file_name
+      );
+      throw std::runtime_error(err);
+    }
+
+    // @todo: error check the file read with bytes in directory
+
+    auto col_ptr = checkpoint::deserializeFromFile<ColT>(file_name);
+    col_ptr->stats_.resetPhase();
+    token[idx].insertPtr(std::move(col_ptr));
+  }
+
+  return finishedInsert(std::move(token));
 }
 
 }}} /* end namespace vt::vrt::collection */

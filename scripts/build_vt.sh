@@ -4,7 +4,7 @@ if test $# -lt 1
 then
     echo                                                \
         "usage: $0 "                                    \
-       "<build-mode=debug|release> "                    \
+       "<build-mode=debug|release|relwithdebinfo> "     \
        "<compiler=clang|gnu> "                          \
        "[ <has-serialization=0|1> ] "                   \
        "[ <build-all-tests=0|1> ] "                     \
@@ -62,8 +62,6 @@ then
     detector_dir=$6
 fi
 
-gtest_dir=/Users/jliffla/codes/gtest/gtest-install/
-
 SOURCE_BASE_DIR=../virtual-transport/
 MAKE_VERBOSE=off
 
@@ -85,7 +83,7 @@ then
     build_all=""
 else
     #echo "Setting no build all for ${has_all}"
-    build_all="-DVT_NO_BUILD_TESTS=1 -DVT_NO_BUILD_EXAMPLES=1"
+    build_all="-DVT_BUILD_TESTS=0 -DVT_BUILD_EXAMPLES=0"
 fi
 
 (>&2 echo "=== Building vt ===")
@@ -95,16 +93,14 @@ fi
 (>&2 echo -e "\tVT installation directory=${vt_install_dir}")
 (>&2 echo -e "\tCheckpoint=${has_serial}, path=$serialization_dir")
 (>&2 echo -e "\tDetector path=${detector_dir}")
-(>&2 echo -e "\tGoogle gtest path=${gtest_dir}")
 
 cmake ${SOURCE_BASE_DIR}                                                    \
-      -DCMAKE_INSTALL_PREFIX=${vt_install_dir}                              \
-      -DCMAKE_BUILD_TYPE=${build_mode}                                      \
-      -DCMAKE_VERBOSE_MAKEFILE:BOOL=$MAKE_VERBOSE                           \
-      -DCMAKE_CXX_COMPILER=${CXX_COMPILER}                                  \
-      -DCMAKE_C_COMPILER=${CC_COMPILER}                                     \
+      -DCMAKE_INSTALL_PREFIX="${vt_install_dir}"                            \
+      -DCMAKE_BUILD_TYPE="${build_mode}"                                    \
+      -DCMAKE_VERBOSE_MAKEFILE:BOOL="${MAKE_VERBOSE}"                       \
+      -DCMAKE_CXX_COMPILER="${CXX_COMPILER}"                                \
+      -DCMAKE_C_COMPILER="${CC_COMPILER}"                                   \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=true                                  \
       ${build_all}                                                          \
-      -Dcheckpoint_DIR=${serialization_dir}                                 \
-      -Ddetector_DIR=${detector_dir}                                        \
-      -Dgtest_DIR=${gtest_dir}
+      -Dcheckpoint_DIR="${serialization_dir}"                               \
+      -Ddetector_DIR="${detector_dir}"

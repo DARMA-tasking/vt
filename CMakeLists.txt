@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
+if (POLICY CMP0082) # CMake 3.14
+  # Prevent mixing install policies from add_subdirectory;
+  # This suppresses a warning as the old behavior is deprecated-by-definition.
+  cmake_policy(SET CMP0082 NEW)
+endif()
+
 include(cmake/turn_on_warnings.cmake)
+
+include(cmake/check_system_functions.cmake)
 
 set(VIRTUAL_TRANSPORT_LIBRARY vt CACHE INTERNAL "" FORCE )
 set(FCONTEXT_LIBRARY fcontext)
@@ -21,14 +29,17 @@ set_darma_compiler_flags()
 # Import the linking macros for VT-related targets
 include(cmake/link_vt.cmake)
 
-# Load all the packages that are required for VT
+# Load packages that are required for core VT build
 include(cmake/load_packages.cmake)
 
 # Code coverage option of VT
-OPTION(CODE_COVERAGE_ENABLED FALSE)
-if(CODE_COVERAGE_ENABLED)
-    include(cmake/code_coverage.cmake)
-endif(CODE_COVERAGE_ENABLED)
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+# OPTION(CODE_COVERAGE_ENABLED FALSE)
+# if(CODE_COVERAGE_ENABLED)
+#     include(cmake/code_coverage.cmake)
+# endif(CODE_COVERAGE_ENABLED)
+
+set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
 
 set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
@@ -37,18 +48,90 @@ set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
 include(cmake/build_git_info.cmake)
 
-# Add subdirectories for tests and examples
-add_subdirectory(${PROJECT_LIB_DIR}/context)
+option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
+
+string(TOLOWER ${CMAKE_BUILD_TYPE} LOWERCASE_CMAKE_BUILD_TYPE)
+if (LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "debug")
+  option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" ON)
+else()
+  option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" OFF)
+endif()
+
+# Bundled dependencies
+if (${vt_fcontext_enabled})
+  add_subdirectory(${PROJECT_LIB_DIR}/context)
+endif()
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
+
+option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
+option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
+if (${vt_mimalloc_enabled})
+  add_subdirectory(${PROJECT_LIB_DIR}/mimalloc)
+  if (${vt_mimalloc_static})
+    set(MIMALLOC_LIBRARY mimalloc-static)
+  else()
+    set(MIMALLOC_LIBRARY mimalloc)
+  endif()
+endif()
+
+# Primary VT build
 add_subdirectory(src)
 
-add_custom_target(examples)
-add_subdirectory(examples)
+#
+# Test prep - ensures examples can be registered as tests.
+#
+option(VT_BUILD_TESTS "Build VT tests" ON)
 
-add_custom_target(unit_tests)
-add_custom_target(perf_tests)
-add_subdirectory(tests)
+if (VT_BUILD_TESTS
+   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  # CTest implies enable_testing() and defines the BUILD_TESTING option.
+  # The default of BUILD_TESTING is ON.
+  # Testing is only enabled if the actual project being built is VT.
+  include(CTest)
+endif()
+
+#
+# Examples
+#
+option(VT_BUILD_EXAMPLES "Build VT examples" ON)
+
+if (VT_BUILD_EXAMPLES)
+  message(
+    STATUS
+    "VT: building examples"
+  )
+
+  add_custom_target(examples)
+  add_subdirectory(examples)
+else()
+  message(
+    STATUS "VT: NOT building examples because VT_BUILD_EXAMPLES is not set.\
+ Examples that are not built are NOT TESTED."
+  )
+endif()
+
+#
+# Tests
+#
+
+if (BUILD_TESTING
+   AND VT_BUILD_TESTS
+   AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  message(
+    STATUS
+    "VT: building tests"
+  )
+
+  add_custom_target(unit_tests)
+  add_custom_target(perf_tests)
+  add_subdirectory(tests)
+else()
+  message(
+    STATUS
+    "VT: NOT building tests because VT_BUILD_TESTS or BUILD_TESTING are not set"
+  )
+endif()
 
 # Configure file for the VT package
 configure_file(

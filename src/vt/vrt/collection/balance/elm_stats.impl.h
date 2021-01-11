@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          elm_stats.impl.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                               elm_stats.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -54,6 +54,7 @@
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke.h"
 #include "vt/timing/timing.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include <cassert>
 #include <type_traits>
@@ -67,6 +68,8 @@ void ElementStats::serialize(Serializer& s) {
   s | cur_phase_;
   s | phase_timings_;
   s | comm_;
+  s | cur_subphase_;
+  s | subphase_timings_;
 }
 
 template <typename ColT>
@@ -86,12 +89,15 @@ template <typename ColT>
   auto const& cur_phase = msg->getPhase();
   auto const& proxy = col->getCollectionProxy();
   auto const& untyped_proxy = col->getProxy();
-  auto const& total_load = stats.getLoad(cur_phase);
+  auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
+  auto const& subphase_loads = stats.subphase_timings_.at(cur_phase);
   auto const& comm = stats.getComm(cur_phase);
   auto const& idx = col->getIndex();
   auto const& elm_proxy = proxy[idx];
 
-  ProcStats::addProcStats<ColT>(elm_proxy, col, cur_phase, total_load, comm);
+  ProcStats::addProcStats(col, cur_phase, total_load, subphase_loads, comm);
+
+  col->getStats().clear();
 
   auto const before_ready = theCollection()->numReadyCollections();
   theCollection()->makeCollectionReady(untyped_proxy);
@@ -104,23 +110,31 @@ template <typename ColT>
     before_ready, after_ready, ready
   );
 
-  if (ready) {
-    using MsgType = InvokeReduceMsg;
-    auto const do_sync = msg->doSync();
-    auto const lb = InvokeLB::shouldInvoke(cur_phase);
-    Callback<MsgType> cb_;
-    if (lb != LBType::NoLB) {
-      cb_ = theCB()->makeBcast<MsgType,InvokeLB::startLBCollective>();
-    } else if (do_sync) {
-      cb_ = theCB()->makeBcast<MsgType,InvokeLB::releaseLBCollective>();
-    }
+  using MsgType = InvokeReduceMsg;
 
-    if (lb != LBType::NoLB or do_sync) {
-      auto nmsg = makeMessage<MsgType>(cur_phase,lb);
-      proxy.reduce(nmsg.get(),cb_);
-    } else {
+  auto lb_man = LBManager::getProxy();
+
+  auto const single_node = theContext()->getNumNodes() == 1;
+  auto const lb = lb_man.get()->decideLBToRun(cur_phase);
+  bool const must_run_lb = lb != LBType::NoLB and not single_node;
+  auto const num_collections = theCollection()->numCollections<>();
+  auto const do_sync = msg->doSync();
+  auto nmsg = makeMessage<MsgType>(cur_phase,lb,msg->manual(),num_collections);
+
+  if (must_run_lb) {
+    auto cb = theCB()->makeBcast<LBManager,MsgType,&LBManager::sysLB<MsgType>>(lb_man);
+    proxy.reduce(nmsg.get(),cb);
+  } else {
+
+    // Preemptively release the element directly, doing cleanup later after a
+    // collection reduction. This allows work to start early while still
+    // releasing the node-level LB continuations needed for cleanup
+    if (lb == LBType::NoLB and not do_sync) {
       theCollection()->elmFinishedLB(elm_proxy,cur_phase);
     }
+
+    auto cb = theCB()->makeBcast<LBManager,MsgType,&LBManager::sysReleaseLB<MsgType>>(lb_man);
+    proxy.reduce(nmsg.get(),cb);
   }
 }
 

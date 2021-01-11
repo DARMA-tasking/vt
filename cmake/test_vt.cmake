@@ -43,7 +43,7 @@ function(run_executable_with_mpi)
     COMMAND
       ${MPI_RUN_COMMAND}
       ${MPI_NUMPROC_FLAG} ${ARG_TARGET_NPROC}
-      ${MPI_PRE_FLAGS}
+      ${MPI_PRE_FLAGS} ${MPI_EXTRA_FLAGS}
       ${ARG_WRAPPER_EXECUTABLE} ${ARG_WRAPPER_ARGS} ./${ARG_TARGET_EXECUTABLE}
       ${MPI_EPI_FLAGS} ${ARG_TARGET_ARGS}
   )
@@ -51,6 +51,7 @@ function(run_executable_with_mpi)
   set_tests_properties(
     ${ARG_TARGET_NAME}
     PROPERTIES TIMEOUT 60
+    PROCESSORS ${ARG_TARGET_NPROC}
   )
 endfunction()
 
@@ -100,12 +101,26 @@ macro(add_test_for_example_vt test_target test_exec test_list)
   foreach(PROC ${PROC_TEST_LIST})
     GET_FILENAME_COMPONENT(test_name ${test_exec} NAME_WE)
 
+    # Examples run with additional flags per enabled build options
+    # when such can be applied generally. This does not cover specific
+    # interactions between various combinations.
+    set(EXEC_ARGS ${ARGN})
+    if (vt_trace_enabled)
+        list(APPEND EXEC_ARGS "--vt_trace")
+    endif()
+
     run_executable_with_mpi(
       TARGET_EXECUTABLE            ${test_name}
-      TARGET_ARGS                  ${ARGN}
+      TARGET_ARGS                  ${EXEC_ARGS}
       TARGET_NPROC                 ${PROC}
-      TARGET_NAME                  vt:${test_name}_${PROC}
+      TARGET_NAME                  vt_example:${test_name}_${PROC}
       TARGET_WORKING_DIRECTORY     ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    set_tests_properties(
+      vt_example:${test_name}_${PROC}
+      PROPERTIES
+      FAIL_REGULAR_EXPRESSION "Segmentation fault"
     )
   endforeach()
 endmacro()

@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          location.impl.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                               location.impl.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -63,7 +63,7 @@ namespace vt { namespace location {
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord()
-  : EntityLocationCoord<EntityID>(theLocMan()->cur_loc_inst++)
+  : EntityLocationCoord<EntityID>( LocationManager::cur_loc_inst++ )
 { }
 
 template <typename EntityID>
@@ -74,7 +74,9 @@ EntityLocationCoord<EntityID>::EntityLocationCoord(
 
 template <typename EntityID>
 EntityLocationCoord<EntityID>::EntityLocationCoord(LocInstType const identifier)
-  : this_inst(identifier), recs_(default_max_cache_size)
+  : LocationCoord(),
+    this_inst(identifier),
+    recs_(default_max_cache_size, theContext()->getNode())
 {
   debug_print(
     location, node,
@@ -113,7 +115,7 @@ void EntityLocationCoord<EntityID>::registerEntity(
 
   local_registered_.insert(id);
 
-  recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+  recs_.insert(id, home, LocRecType{id, eLocState::Local, this_node});
 
   if (msg_action != nullptr) {
     // vtAssert(
@@ -220,21 +222,27 @@ void EntityLocationCoord<EntityID>::entityMigrated(
     local_registered_.erase(reg_iter);
   }
 
-  recs_.insert(id, LocRecType{id, eLocState::Remote, new_node});
+  recs_.update(id, LocRecType{id, eLocState::Remote, new_node});
 }
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::registerEntityMigrated(
-  EntityID const& id, NodeType const& from, LocMsgActionType msg_action
+  EntityID const& id, NodeType const& home_node, NodeType const& from,
+  LocMsgActionType msg_action
 ) {
   // @todo: currently `from' is unused, but is passed to this method in case we
   // need it in the future
-  return registerEntity(id, uninitialized_destination, msg_action, true);
+  return registerEntity(id, home_node, msg_action, true);
 }
 
 template <typename EntityID>
 bool EntityLocationCoord<EntityID>::isCached(EntityID const& id) const {
   return recs_.exists(id);
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::clearCache() {
+  recs_.clearCache();
 }
 
 template <typename EntityID>
@@ -290,7 +298,7 @@ void EntityLocationCoord<EntityID>::routeMsgEager(
   );
 
   if (found) {
-    recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    recs_.insert(id, home_node, LocRecType{id, eLocState::Local, this_node});
     route_to_node = this_node;
   } else {
     bool const& rec_exists = recs_.exists(id);
@@ -341,7 +349,7 @@ void EntityLocationCoord<EntityID>::getLocation(
       "EntityLocationCoord: getLocation: entity is local\n"
     );
 
-    recs_.insert(id, LocRecType{id, eLocState::Local, this_node});
+    recs_.insert(id, home_node, LocRecType{id, eLocState::Local, this_node});
     action(this_node);
     return;
   } else {
@@ -390,6 +398,53 @@ void EntityLocationCoord<EntityID>::getLocation(
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::handleEagerUpdate(
+  EntityID const& id, NodeType home_node, NodeType deliver_node
+) {
+  auto this_node = theContext()->getNode();
+  vtAssert(this_node != deliver_node, "This should have been a forwarding node");
+  vtAssert(home_node != uninitialized_destination, "Home node should be valid");
+
+  debug_print(
+    location, node,
+    "handleEagerUpdate: id={}, home_node={}, deliver_node={}\n",
+    id, home_node, deliver_node
+  );
+
+  // Insert a new entry in the cache for the updated location
+  recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, deliver_node});
+
+  auto ask_iter = loc_asks_.find(id);
+  if (ask_iter != loc_asks_.end()) {
+    for (auto&& ask_node : ask_iter->second) {
+      sendEagerUpdate(id, ask_node, home_node, deliver_node);
+    }
+    loc_asks_.erase(ask_iter);
+  }
+}
+
+template <typename EntityID>
+void EntityLocationCoord<EntityID>::sendEagerUpdate(
+  EntityID const& id, NodeType ask_node, NodeType home_node,
+  NodeType deliver_node
+) {
+  debug_print(
+    location, node,
+    "sendEagerUpdate: id={}, ask_node={}, home_node={}, deliver_node={}\n",
+    id, ask_node, home_node, deliver_node
+  );
+
+  auto this_node = theContext()->getNode();
+  if (ask_node != this_node) {
+    vtAssert(ask_node != uninitialized_destination, "Ask node must be valid");
+    auto msg = makeMessage<LocMsgType>(
+      this_inst, id, ask_node, home_node, deliver_node
+    );
+    theMsg()->sendMsg<LocMsgType, recvEagerUpdate>(ask_node, msg.get());
+  }
+}
+
+template <typename EntityID>
 template <typename MessageT>
 void EntityLocationCoord<EntityID>::routeMsgNode(
   bool const serialize, EntityID const& id, NodeType const& home_node,
@@ -408,8 +463,19 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
   );
 
   if (to_node != this_node) {
+    // Get the current ask node, which is the from node for the first hop
+    auto ask_node = msg->getAskNode();
+    if (ask_node != uninitialized_destination) {
+      // Insert into the ask list for a later update when information is known
+      loc_asks_[id].insert(ask_node);
+    }
+
+    // Update the new asking node, as this node is will be the next to ask
+    msg->setAskNode(this_node);
+
     // set the instance on the message to deliver to the correct manager
     msg->setLocInst(this_inst);
+
     // send to the node discovered by the location manager
     theMsg()->sendMsgAuto<MessageT, msgHandler>(to_node, msg.get());
   } else {
@@ -447,6 +513,13 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           "EntityLocationCoord: no direct handler: id={}\n", hid
         );
         reg_han_iter->second.applyRegisteredActionMsg(msg.get());
+      }
+
+      auto ask_node = msg->getAskNode();
+
+      if (ask_node != uninitialized_destination) {
+        auto delivered_node = theContext()->getNode();
+        sendEagerUpdate(hid, ask_node, home_node, delivered_node);
       }
     };
 
@@ -593,7 +666,8 @@ void EntityLocationCoord<EntityID>::routeMsg(
 
 template <typename EntityID>
 void EntityLocationCoord<EntityID>::updatePendingRequest(
-  LocEventID const& event_id, EntityID const& id, NodeType const& node
+  LocEventID const& event_id, EntityID const& id,
+  NodeType const& node, NodeType const& home_node
 ) {
 
   debug_print(
@@ -611,13 +685,13 @@ void EntityLocationCoord<EntityID>::updatePendingRequest(
 
     auto const& entity = pending_iter->second.entity_;
 
-    recs_.insert(entity, LocRecType{entity, eLocState::Remote, node});
+    recs_.insert(entity, home_node, LocRecType{entity, eLocState::Remote, node});
 
     pending_iter->second.applyNodeAction(node);
 
     pending_actions_.erase(pending_iter);
   } else {
-    recs_.insert(id, LocRecType{id, eLocState::Remote, node});
+    recs_.insert(id, home_node, LocRecType{id, eLocState::Remote, node});
 
     // trigger any pending actions upon registration
     auto pending_lookup_iter = pending_lookups_.find(id);
@@ -657,12 +731,14 @@ template <typename MessageT>
   auto const& from_node = msg->getLocFromNode();
   auto const epoch = theMsg()->getEpochContextMsg(msg);
 
+  msg->incHops();
+
   debug_print(
     location, node,
     "msgHandler: msg={}, ref={}, loc_inst={}, serialize={}, id={}, from={}, "
-    "epoch={:x}\n",
+    "epoch={:x}, hops={}, ask={}\n",
     print_ptr(msg.get()), envelopeGetRef(msg->env), inst, serialize, entity_id,
-    from_node, epoch
+    from_node, epoch, msg->getHops(), msg->getAskNode()
   );
 
   theTerm()->produce(epoch);
@@ -749,7 +825,35 @@ template <typename EntityID>
         "updateLocation: event_id={}, running pending: resolved={}, id={}\n",
         event_id, msg->resolved_node, entity
       );
-      loc->updatePendingRequest(event_id, entity, msg->resolved_node);
+      loc->updatePendingRequest(
+        event_id, entity, msg->resolved_node, msg->home_node
+      );
+      theMsg()->popEpoch(epoch);
+      theTerm()->consume(epoch);
+    }
+  );
+}
+
+template <typename EntityID>
+/*static*/ void EntityLocationCoord<EntityID>::recvEagerUpdate(
+  LocMsgType *raw_msg
+) {
+  auto msg = promoteMsg(raw_msg);
+  auto const& inst = msg->loc_man_inst;
+  auto const& entity = msg->entity;
+  auto const epoch = theMsg()->getEpochContextMsg(msg);
+
+  debug_print(
+    location, node,
+    "recvEagerUpdate: resolved={}, id={}, epoch={:x}\n",
+    msg->resolved_node, entity, epoch
+  );
+
+  theTerm()->produce(epoch);
+  LocationManager::applyInstance<EntityLocationCoord<EntityID>>(
+    inst, [=](EntityLocationCoord<EntityID>* loc) {
+      theMsg()->pushEpoch(epoch);
+      loc->handleEagerUpdate(entity, msg->home_node, msg->resolved_node);
       theMsg()->popEpoch(epoch);
       theTerm()->consume(epoch);
     }

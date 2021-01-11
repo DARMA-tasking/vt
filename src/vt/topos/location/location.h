@@ -1,44 +1,44 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          location.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                  location.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
@@ -52,7 +52,7 @@
 #include "vt/topos/location/utility/entity.h"
 #include "vt/topos/location/utility/coord.h"
 #include "vt/topos/location/message/msg.h"
-#include "vt/topos/location/cache/cache.h"
+#include "vt/topos/location/lookup/lookup.h"
 #include "vt/topos/location/record/record.h"
 #include "vt/topos/location/record/state.h"
 #include "vt/context/context.h"
@@ -73,7 +73,7 @@ struct collection_lm_tag_t {};
 template <typename EntityID>
 struct EntityLocationCoord : LocationCoord {
   using LocRecType = LocRecord<EntityID>;
-  using LocCacheType = LocationCache<EntityID, LocRecType>;
+  using LocCacheType = LocLookup<EntityID, LocRecType>;
   using LocEntityMsg = LocEntity<EntityID>;
   using LocalRegisteredContType = std::unordered_set<EntityID>;
   using LocalRegisteredMsgContType = std::unordered_map<EntityID, LocEntityMsg>;
@@ -82,6 +82,7 @@ struct EntityLocationCoord : LocationCoord {
   using PendingLocLookupsType = std::unordered_map<EntityID, ActionListType>;
   using ActionContainerType = std::unordered_map<LocEventID, PendingType>;
   using LocMsgType = LocationMsg<EntityID>;
+  using LocAsksType = std::unordered_map<EntityID, std::unordered_set<NodeType>>;
 
   template <typename MessageT>
   using EntityMsgType = EntityMsg<EntityID, MessageT>;
@@ -115,10 +116,11 @@ struct EntityLocationCoord : LocationCoord {
    *
    *   1) Node 0: registerEntity(my_id, ...);
    *   2) Node 0: entityMigrated(my_id, 1);
-   *   3) Node 1: registerEntityMigrated(my_id, 0, ...);
+   *   3) Node 1: registerEntityMigrated(my_id, <home>, 0, ...);
    */
   void registerEntityMigrated(
-    EntityID const& id, NodeType const& __attribute__((unused)) from,
+    EntityID const& id, NodeType const& home_node,
+    NodeType const& __attribute__((unused)) from_node,
     LocMsgActionType msg_action = nullptr
   );
 
@@ -169,11 +171,21 @@ struct EntityLocationCoord : LocationCoord {
   );
 
   void updatePendingRequest(
-    LocEventID const& event_id, EntityID const& id, NodeType const& node
+    LocEventID const& event_id, EntityID const& id,
+    NodeType const& resolved_node, NodeType const& home_node
   );
   void printCurrentCache() const;
 
   bool isCached(EntityID const& id) const;
+  void clearCache();
+
+  void sendEagerUpdate(
+    EntityID const& id, NodeType ask_node, NodeType home_node,
+    NodeType deliver_node
+  );
+  void handleEagerUpdate(
+    EntityID const& id, NodeType home_node, NodeType deliver_node
+  );
 
   template <typename MessageT>
   bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const;
@@ -183,6 +195,7 @@ private:
   static void msgHandler(MessageT *msg);
   static void getLocationHandler(LocMsgType *msg);
   static void updateLocation(LocMsgType *msg);
+  static void recvEagerUpdate(LocMsgType *msg);
 
   template <typename MessageT>
   void routeMsgEager(
@@ -218,6 +231,9 @@ private:
 
   // pending lookup requests where this manager is the home node
   PendingLocLookupsType pending_lookups_;
+
+  // List of nodes that inquire about an entity that require an update
+  LocAsksType loc_asks_;
 };
 
 }}  // end namespace vt::location

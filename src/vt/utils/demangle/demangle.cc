@@ -1,362 +1,210 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          demangle.cc
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                 demangle.cc
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
-
-#include "vt/config.h"
 #include "vt/utils/demangle/demangle.h"
-#include "vt/context/context.h"
 
 #include <vector>
 #include <string>
 #include <list>
 #include <cstring>
 
+#include <sstream>
+#include <iterator>
+#include <algorithm>
+
+#include <iostream>
+
 namespace vt { namespace util { namespace demangle {
 
-/*static*/ ActiveFunctionDemangler::StrParsedOutType
-ActiveFunctionDemangler::parseActiveFunctionName(std::string const& str) {
-  using CountType = int32_t;
-  using CharType = char;
+//
+// TemplateExtract
+//
 
-  std::string clean_namespace = {};
-  std::string clean_funcname  = {};
-  std::string clean_params    = {};
-
-  debug_print_verbose(
-    gen, node,
-    "ADAPT before: adapt={}\n", str
-  );
-
-  std::string const adapt_start     = "FunctorAdapter";
-  std::string const adapt_start_mem = "FunctorAdapterMember";
-
-  CountType const start_sentinel = -1;
-  CountType start                = start_sentinel;
-
-  CountType limit = str.size() - adapt_start_mem.size() - 1;
-  bool found_member = false;
-  for (CountType i = 0; i < limit; i++) {
-    auto const substr = str.substr(i, adapt_start_mem.size());
-    debug_print_verbose(
-      gen, node,
-      "ADAPT XX substr: substr={}\n", substr
-    );
-    if (substr == adapt_start_mem) {
-      debug_print_verbose(
-        gen, node,
-        "ADAPT substr: substr={}\n", substr
-      );
-      start = i;
-      found_member = true;
-      break;
-    }
-  }
-
-  if (not found_member) {
-    for (CountType i = 0; i < limit; i++) {
-      auto const substr = str.substr(i, adapt_start.size());
-      debug_print_verbose(
-        gen, node,
-        "ADAPT XX substr: substr={}\n", substr
-      );
-      if (substr == adapt_start) {
-        debug_print_verbose(
-          gen, node,
-          "ADAPT substr: substr={}\n", substr
-        );
-        start = i;
-        break;
-      }
-    }
-  }
-
-  vtAssert(start != start_sentinel, "String must be found");
-
-  std::string adapt = found_member ? adapt_start_mem : adapt_start;
-
-  std::string func_adapt_params;
-
-# if defined(__clang__)
-  CountType   const  str_offset_right_ns = adapt.size() + 1;
-  CountType   const  str_offset_right_tn = start;
-
-  func_adapt_params  = str.substr(
-                     str_offset_right_ns + str_offset_right_tn,
-    str.size() - 2 - str_offset_right_ns - str_offset_right_tn
-  );
-# elif defined(__GNUC__)
-  CountType   const  str_offset_right_ns = adapt.size() + 1;
-  CountType   const  str_offset_right_tn = start;
-
-  func_adapt_params  = str.substr(
-                     str_offset_right_ns + str_offset_right_tn,
-    str.size() - 1 - str_offset_right_ns - str_offset_right_tn
-  );
-  auto const split_semi = DemanglerUtils::splitString(func_adapt_params,';');
-  vtAssert(split_semi.size() > 0, "Must have at least one element");
-  func_adapt_params = split_semi[0].substr(0,split_semi[0].size()-1);
-#else
-  // @todo: what should we do here
-  func_adapt_params = str;
-# endif
-
-  debug_print_verbose(
-    gen, node,
-    "ADAPT: adapt={}\n", func_adapt_params
-  );
-
-  CountType      paren_count  [2]  = {0,0};
-  CountType      bracket_count[2]  = {0,0};
-  CountType      brace_count  [2]  = {0,0};
-  CountType      caret_count  [2]  = {0,0};
-  CharType const paren        [2]  = {'(', ')'};
-  CharType const bracket      [2]  = {'[', ']'};
-  CharType const brace        [2]  = {'{', '}'};
-  CharType const caret        [2]  = {'<', '>'};
-  CharType const delim      = ',';
-
-  std::list<std::tuple<CharType const*, CountType*>> tuples = {
-    std::make_tuple(paren   , paren_count   ),
-    std::make_tuple(bracket , bracket_count ),
-    std::make_tuple(brace   , brace_count   ),
-    std::make_tuple(caret   , caret_count   )
-  };
-  CountType cur_param    = 0;
-  std::vector<std::string> pieces(cur_param + 1);
-  for (auto&& ch : func_adapt_params) {
-    for (auto const& tup : tuples) {
-      if (ch == std::get<0>(tup)[0]) { std::get<1>(tup)[0]++; }
-      if (ch == std::get<0>(tup)[1]) { std::get<1>(tup)[1]++; }
-    }
-    bool equal = true;
-    for (auto const& tup : tuples) {
-      if (std::get<1>(tup)[0] != std::get<1>(tup)[1]) {
-        equal = false;
-        break;
-      }
-    }
-    if (ch == delim && equal) {
-      cur_param++;
-      pieces.resize(cur_param + 1);
-    } else {
-      pieces.at(cur_param) += ch;
-    }
-  }
-
-  for (auto&& elm : pieces) {
-    debug_print_verbose(
-      gen, node,
-      "ADAPT: split: adapt={}\n", elm
-    );
-  }
-
-  vtAssertInfo(
-    pieces.size() >= 2, "Must be two pieces", pieces[0]
-  );
-
-  auto const func_args = pieces[0];
-
-#   if defined(__clang__)
-    auto const func_name = pieces[1].substr(2,pieces[1].size()-2);
-#   elif defined(__GNUC__)
-    auto       func_name = pieces[1].substr(1,pieces[1].size()-1);
-#   else
-    auto const func_name = pieces[1];
-#   endif
-
-  debug_print_verbose(
-    gen, node,
-    "ADAPT: func_args: adapt={}\n", func_args
-  );
-  debug_print_verbose(
-    gen, node,
-    "ADAPT: func_name: adapt={}\n", func_name
-  );
-
-# if defined(__clang__)
-# elif defined(__GNUC__)
-  std::string func_name_no_template = {};
-  CountType temp_in = 0, temp_out = 0;
-  for (size_t i = 0; i < func_name.size(); i++) {
-    if (func_name[i] == '<') { temp_in++;  };
-    if (func_name[i] == '>') { temp_out++; };
-    if (temp_in == temp_out && func_name[i] != '>') {
-      func_name_no_template += func_name[i];
-    }
-  }
-  func_name = DemanglerUtils::removeSpaces(func_name_no_template);
-  debug_print_verbose(
-    gen, node,
-    "ADAPT: func_name_no_template: adapt={}\n", func_name_no_template
-  );
-# endif
-
-  std::string const delim_str = {"::"};
-  CountType cur_func_piece = 0;
-  std::vector<std::string> func_name_pieces(cur_func_piece + 1);
-  for (size_t i = 0; i < func_name.size(); i++) {
-    if (
-      func_name.size() - 1   >    i + 1U          &&
-      func_name[i    ]       ==   delim_str[0]    &&
-      func_name[i + 1]       ==   delim_str[1]
-    ) {
-      i++;
-      cur_func_piece++;
-      func_name_pieces.resize(cur_func_piece + 1);
-    } else {
-      func_name_pieces.at(cur_func_piece) += func_name[i];
-    }
-  }
-
-  #if backend_check_enabled(verbose) && backend_check_enabled(gen)
-    for (auto&& elm : func_name_pieces) {
-      debug_print_verbose(
-        gen, node,
-        "ADAPT: func_name piece: adapt={}\n", elm
-      );
-    }
-  #endif
-
-  std::string fused_namespace = {};
-  if (func_name_pieces.size() < 2) {
-    // There is no namespace (in global); use "::" to represent it
-    fused_namespace = "::";
-  } else {
-    for (auto iter = func_name_pieces.begin(); iter != func_name_pieces.end() - 1; ++iter) {
-      debug_print_verbose(
-        gen, node,
-        "ADAPT: NS piece: adapt={}\n", *iter
-      );
-      fused_namespace += *iter + "::";
-    }
-  }
-
-  clean_funcname = *(func_name_pieces.end() - 1);
-  clean_namespace = fused_namespace;
-
-# if defined(__clang__)
-  CountType const init_offset = 6;
-# elif defined(__GNUC__)
-  CountType const init_offset = 5;
-# else
-  CountType const init_offset = 4;
-# endif
-
-  auto const init_sub = func_args.substr(0,init_offset);
-
-# if defined(__clang__)
-  std::string const leading_void_str = "void (";
-# elif defined(__GNUC__)
-  std::string const leading_void_str = "void(";
-# else
-  std::string const leading_void_str = "void";
-# endif
-
-  if (init_sub == leading_void_str) {
-    auto const args = func_args.substr(
-                          init_offset,
-      func_args.size() - (init_offset) - 1
-    );
-    debug_print_verbose(
-      gen, node,
-      "ADAPT: args={}\n", args
-    );
-    clean_params = DemanglerUtils::removeSpaces(args);
-  } else {
-    clean_params = "";
-  }
-
-  if (found_member) {
-    CountType pstart = 0;
-    for (size_t i = 0; i < clean_params.size(); i++) {
-      if (clean_params[i] == '*') {
-        pstart = i+3;
-        break;
-      }
-    }
-    clean_params = clean_params.substr(pstart,clean_params.size());
-  }
-
-  debug_print_verbose(
-    gen, node,
-    "ADAPT: \n"
-    "\t CLEAN namespace = \"{}\" \n"
-    "\t CLEAN  funcname = \"{}\" \n"
-    "\t CLEAN  params   = \"{}\" \n""\n",
-    clean_namespace, clean_funcname, clean_params
-  );
-
-  auto const demangled = DemangledName{
-    clean_namespace, clean_funcname, clean_params
-  };
-  return demangled;
+/*static*/ std::string
+TemplateExtract::singlePfType(std::string const& pf) {
+  // PF -> .. [T = (...)]
+  return lastNamedPfType(pf, "");
 }
 
-/*static*/ ActiveFunctorDemangler::StrParsedOutType
-ActiveFunctorDemangler::parseActiveFunctorName(
-  std::string const& name, std::string const& args
+/*static*/ std::string
+TemplateExtract::lastNamedPfType(std::string const& pf, std::string const& tparam) {
+  // PF -> .. [T1 = .., T2 = .., TPARAM = (...)]
+  std::string seek = tparam + " = ";
+
+  size_t i = pf.find(seek);
+  if (i == std::string::npos)
+    return "";
+  i = i + seek.length();
+
+  return pf.substr(i, pf.length() - i - 1);
+}
+
+// Given a::b or a::b<c::d> or a<>::b<c>, eg. determines the
+// starting position at which it can be a namespace vs class.
+// That is, the STARTING position of the rightmost "::" that
+// is not located inside angle brackets
+// If there is no namespace the result will not start with a "::".
+size_t getNameDivide(
+ std::string const& str,
+ size_t best, size_t start, size_t depth
 ) {
-  debug_print_verbose(
-    gen, node,
-    "parseActiveFunctorName: \n"
-    "\t input name = \"{}\" \n"
-    "\t input args = \"{}\" \n",
-    name, args
-  );
+  size_t s = str.find("::", start);
+  if (s == std::string::npos) {
+    return best;
+  }
 
-  auto const ret = ActiveFunctionDemangler::parseActiveFunctionName(name);
+  size_t o = str.find_first_of("<>", start);
+  if (o < s) {
+    if (str[o] == '<') {
+      return getNameDivide(str, best, o + 1, depth + 1);
+    } else {
+      // no guarantee positive depth on ><> (fishy) input.
+      return getNameDivide(str, best, o + 1, depth - 1);
+    }
+  }
 
-  debug_print_verbose(
-    gen, node,
-    "parseActiveFunctorName: \n"
-    "\t CLEAN namespace = \"{}\" \n"
-    "\t CLEAN funcname = \"{}\" \n",
-    ret.getNamespace(),
-    ret.getFunc()
-  );
+  if (depth == 0)
+    best = s;
+  return getNameDivide(str, best, s + 2, depth);
+}
 
-  return ret;
+// A wee bit of a lie.. eat through some characters.
+// these can come from __PRETTY_PRINT__, eg. although
+// not so useful to include in this use case.
+int skipTypePrefix(std::string const& str) {
+  size_t s = 0;
+  while (s < str.length()
+         and (str[s] == '&' or str[s] == ':')) {
+    s += 1;
+  }
+  return s;
+}
+
+/*static*/ std::string
+TemplateExtract::getNamespace(std::string const& typestr) {
+  size_t s = skipTypePrefix(typestr);
+  size_t d = getNameDivide(typestr, s, s, 0);
+
+  return typestr.substr(s, d - s);
+}
+
+/*static*/ std::string
+TemplateExtract::getBarename(std::string const& typestr) {
+  size_t s = skipTypePrefix(typestr);
+  size_t d = getNameDivide(typestr, s, s, 0);
+
+  if (typestr.substr(d, 2) == "::") {
+    // skip "::" divider
+    return typestr.substr(d + 2, std::string::npos);
+  } else {
+    // Namespace is not present - already bare.
+    return typestr.substr(d, std::string::npos);
+  }
+}
+
+/*static*/ std::string
+TemplateExtract::getVoidFuncStrArgs(std::string const& typestr) {
+  size_t s = 0;
+  // eat leading "void ("
+  if (typestr.find("void") == 0) {
+    s += 4;
+  }
+  if (s < typestr.length() and typestr[s] == ' ') {
+    s += 1;
+  }
+  if (s < typestr.length() and typestr[s] == '(') {
+    s += 1;
+  }
+  // eat trailing ")"
+  size_t e = typestr.length() - 1;
+  if (e != std::string::npos && typestr[e] == ')') {
+    e -= 1;
+  }
+
+  return typestr.substr(s, e - s);
+}
+
+//
+// DemanglerUtils
+//
+
+/*static*/ std::vector<std::string>
+DemanglerUtils::splitString(std::string const& str, char delim) {
+  std::stringstream ss;
+  ss.str(str);
+
+  std::string item;
+  std::vector<std::string> elems;
+  while (std::getline(ss, item, delim)) {
+    elems.push_back(item);
+  }
+  return elems;
+}
+
+/*static*/ std::string
+DemanglerUtils::removeSpaces(std::string const& str) {
+  std::string clean{str};
+
+  clean.erase(
+    std::remove(clean.begin(), clean.end(), ' '),
+    clean.end());
+
+  return clean;
+}
+
+/*static*/ std::string
+DemanglerUtils::join(
+  std::string const& delim, std::vector<std::string> const& strs
+) {
+  std::string s;
+  for (std::string const& i : strs) {
+    if (&i != &strs[0]) {
+      s += delim;
+    }
+    s += i;
+  }
+  return s;
 }
 
 }}} // end namespace vt::util::demangle

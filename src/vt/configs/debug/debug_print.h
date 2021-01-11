@@ -1,50 +1,51 @@
 /*
 //@HEADER
-// ************************************************************************
+// *****************************************************************************
 //
-//                          debug_print.h
-//                     vt (Virtual Transport)
-//                  Copyright (C) 2018 NTESS, LLC
+//                                debug_print.h
+//                           DARMA Toolkit v. 1.0.0
+//                       DARMA/vt => Virtual Transport
 //
-// Under the terms of Contract DE-NA-0003525 with NTESS, LLC,
-// the U.S. Government retains certain rights in this software.
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
+// Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// modification, are permitted provided that the following conditions are met:
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
+// * Redistributions of source code must retain the above copyright notice,
+//   this list of conditions and the following disclaimer.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
 //
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from this
+//   software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact darma@sandia.gov
 //
-// ************************************************************************
+// *****************************************************************************
 //@HEADER
 */
 
 #if !defined INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_PRINT_H
 
+#include "vt/configs/types/types_headers.h"
 #include "vt/configs/debug/debug_config.h"
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/debug/debug_var_unused.h"
@@ -62,31 +63,28 @@
   debug_test(backend,line_file, "{}:{} ", )
 
 #define vt_type_print_colorize(debug_type)
-  vt_print_colorize_impl("\033[32m", debug_pretty_print(debug_type), ":")
+  vt_print_colorize_impl(::vt::debug::green(), debug_pretty_print(debug_type), ":")
 
 */
 
+/// Colorize the first string followed by the second in normal color.
+/// Honors colorization checks.
 #define vt_print_colorize_impl(color, str, str2)                        \
-  ((::vt::debug::ttyc()) ?                                              \
-   (std::string(color) + std::string(str) + std::string("\033[00m") +   \
+  (::vt::debug::colorizeOutput() ?                                      \
+   (color + std::string(str) + ::vt::debug::reset() +                   \
     std::string(str2)) :                                                \
    std::string(str) + std::string(str2))
 
-#define vt_print_colorize vt_print_colorize_impl("\033[32;1m", "vt", ":")
+#define vt_print_colorize                                               \
+  vt_print_colorize_impl(::vt::debug::bd_green(), "vt", ":")
 
-#define vt_proc_print_colorize(proc)                                     \
-  vt_print_colorize_impl("\033[34m", "[" + std::to_string(proc) + "]", "")
+#define vt_proc_print_colorize(proc)                                    \
+  vt_print_colorize_impl(::vt::debug::blue(), "[" + std::to_string(proc) + "]", "")
 
 #define debug_argument_option(opt)                                      \
   ::vt::arguments::ArgConfig::vt_debug_ ## opt
 
 #define debug_all_option ::vt::arguments::ArgConfig::vt_debug_all
-
-namespace vt { namespace runtime {
-struct Runtime;
-} /* end namespace runtime */
-extern runtime::Runtime* curRT;
-} /* end namespace vt */
 
 #define debug_print_impl(force, inconfig, inmode, cat, ctx, ...)        \
   vt::config::ApplyOp<                                                  \
@@ -107,19 +105,26 @@ extern runtime::Runtime* curRT;
     false, vt::config::DefaultConfig, verbose, feature, ctx, __VA_ARGS__ \
   )
 
-#define vt_make_config(feature)                                          \
+#define vt_make_config(feature, cftype)                                  \
   vt::config::Configuration<                                             \
     static_cast<vt::config::CatEnum>(                                    \
-      vt::config::DefaultConfig::category | vt::config::CatEnum::feature \
+      vt::config::cftype::category | vt::config::CatEnum::feature        \
     ),                                                                   \
-    vt::config::DefaultConfig::context,                                  \
-    vt::config::DefaultConfig::mode                                      \
+    vt::config::cftype::context,                                         \
+    vt::config::cftype::mode                                             \
   >
 
-#define debug_print_force_impl(feature, ctx, ...)                       \
+#define config_print_force_impl(cftype, feature, ctx, ...)              \
   debug_print_impl(                                                     \
-    true, vt_make_config(feature), normal, feature, ctx, __VA_ARGS__    \
+    true, vt_make_config(feature, cftype), normal, feature, ctx,        \
+    __VA_ARGS__                                                         \
   )
+
+#define vt_print_force_impl(feature, ctx, ...)                          \
+  config_print_force_impl(VTPrintConfig, feature, ctx, __VA_ARGS__)
+
+#define debug_print_force_impl(feature, ctx, ...)                       \
+  config_print_force_impl(DefaultConfig, feature, ctx, __VA_ARGS__)
 
 #if debug_force_enabled
   //#warning "Debug force is enabled"
@@ -135,7 +140,7 @@ extern runtime::Runtime* curRT;
 #define vt_print(feature, ...)                                          \
   do {                                                                  \
     if (!::vt::arguments::ArgConfig::vt_quiet) {                        \
-      debug_print_force_impl(feature, node, __VA_ARGS__);               \
+      vt_print_force_impl(feature, node, __VA_ARGS__);                  \
     }                                                                   \
   } while(0);
 
@@ -143,11 +148,21 @@ extern runtime::Runtime* curRT;
 
 #define vt_option_check_enabled(mode, bit) ((mode & bit) not_eq 0)
 
+namespace vt { namespace runtime {
+struct Runtime;
+}} /* end namespace vt::runtime */
+
+namespace vt {
+extern runtime::Runtime* curRT;
+} /* end namespace vt */
+
 namespace vt { namespace debug {
-
 NodeType preNode();
+}} /* end namespace vt::debug */
 
-}} /* end naamespace vt::ctx */
+namespace vt { namespace arguments {
+bool alwaysFlush();
+}} /* end namespace vt::arguments */
 
 namespace vt { namespace config {
 
@@ -163,10 +178,10 @@ static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
       "{} {} {} {}",
       vt_print_colorize,
       vt_proc_print_colorize(node),
-      vt_print_colorize_impl("\033[32m",  PrettyPrintCat<cat>::print(), ":"),
+      vt_print_colorize_impl(::vt::debug::green(), PrettyPrintCat<cat>::print(), ":"),
       user
     );
-    if (vt_option_check_enabled(mod, ModeEnum::flush)) {
+    if (vt_option_check_enabled(mod, ModeEnum::flush) or arguments::alwaysFlush()) {
       fflush(stdout);
     }
   }
