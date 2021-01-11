@@ -62,6 +62,7 @@ struct TestDiagnostic : vt::runtime::component::Diagnostic {
     // assigned IDs at startup
     component_id_ = 10000;
   }
+  virtual ~TestDiagnostic() = default;
 
   void dumpState() override {}
   std::string name() override { return "Test"; }
