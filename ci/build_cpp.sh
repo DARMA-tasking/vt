@@ -148,7 +148,8 @@ then
     git add docs
     git commit -m "Update docs (auto-build)"
     git push origin master
-else
+elif test "${VT_CI_BUILD:-0}" -eq 1
+then
     # Generate output file with compilation warnings and errors
 
     GENERATOR=$(cmake -L . | grep USED_CMAKE_GENERATOR:STRING | cut -d"=" -f2)
@@ -183,6 +184,8 @@ else
     # Convert new lines and redirect to an output file
     WARNS_ERRS=${WARNS_ERRS//$'\n'/$DELIMITER}
     echo "$WARNS_ERRS" > "$OUTPUT"
+else
+    time cmake --build . --target "${target}"
 fi
 
 if test "$use_ccache"
