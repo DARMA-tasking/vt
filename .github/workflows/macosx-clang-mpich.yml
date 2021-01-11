@@ -34,7 +34,7 @@ jobs:
           ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
     - name: Install Dependencies
       shell: bash
-      run: rm /usr/local/bin/2to3 && rm /usr/local/bin/c++-8 && brew update --preinstall && brew bundle --file=ci/Brewfile
+      run: brew bundle --file=ci/Brewfile
     - name: Modify hosts file
       shell: bash
       run: echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
