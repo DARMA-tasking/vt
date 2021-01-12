@@ -134,7 +134,9 @@ public:
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | archetype_epoch_
-      | terminated_epochs_;
+      | terminated_epochs_
+      | next_epoch_
+      | total_terminated_;
   }
 
   /**
@@ -147,6 +149,7 @@ public:
 private:
   /// The archetypical epoch for this window container (category,rooted,user,..)
   EpochType archetype_epoch_ = no_epoch;
+
   /// The set of epochs terminated
   vt::IntegralSet<EpochType> terminated_epochs_;
 

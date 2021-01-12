@@ -212,6 +212,10 @@ TEST_F(TestMemoryFootprinting, test_stats_reader) {
   printMemoryFootprint(theStatsReader());
 }
 
+TEST_F(TestMemoryFootprinting, test_epoch) {
+  printMemoryFootprint(theEpoch());
+}
+
 #if vt_check_enabled(trace_enabled)
 TEST_F(TestMemoryFootprinting, test_trace) {
   printMemoryFootprint(theTrace());

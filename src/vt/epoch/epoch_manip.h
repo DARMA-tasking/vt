@@ -300,6 +300,13 @@ public:
    */
   EpochType getArchetype(EpochType epoch) const;
 
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | live_scopes_
+      | terminated_epochs_
+      | terminated_collective_epochs_;
+  }
+
 private:
   /**
    * \internal \brief Destroy an eopch scope by removing it
