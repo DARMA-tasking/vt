@@ -148,7 +148,7 @@ which `docker-compose` will read.
 #   VT_DOCS=0                 # Enable doxygen build
 #   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
 #   VT_ASAN=0                 # Enable address sanitizer
-#   VT_WERROR=0               # Treat all warnings as errors
+#   VT_WERROR=1               # Treat all warnings as errors
 #   VT_EXTENDED_TESTS=1       # Build all the extended testing
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
 #   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
