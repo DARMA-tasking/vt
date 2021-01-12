@@ -49,6 +49,7 @@ build configuration:
 | `vt_doxygen_enabled`             | 0               | Enable doxygen generation |
 | `vt_mimalloc_enabled`            | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
 | `vt_asan_enabled`                | 0               | Enable building with address sanitizer |
+| `vt_werror_enabled`              | 0               | Treat all warnings as errors |
 | `vt_pool_enabled`                | 1               | Use memory pool in *vt* for message allocation |
 | `vt_zoltan_enabled`              | 0               | Build with Zoltan enabled for `ZoltanLB` support |
 | `vt_mpi_guards`                  | 0               | Guards against mis-use of MPI calls in code using *vt* |
@@ -81,6 +82,7 @@ parameters.
 | `VT_DOXYGEN_ENABLED `            | 0               | Enable doxygen generation |
 | `VT_MIMALLOC_ENABLED `           | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
 | `VT_ASAN_ENABLED `               | 0               | Enable building with address sanitizer |
+| `VT_WERROR_ENABLED `             | 0               | Treat all warnings as errors |
 | `VT_POOL_ENABLED `               | 1               | Use memory pool in *vt* for message allocation |
 | `VT_ZOLTAN_ENABLED `             | 0               | Build with Zoltan enabled for `ZoltanLB` support |
 | `ZOLTAN_DIR `                    | <empty>         | Directory pointing to Zoltan installation |
@@ -146,6 +148,7 @@ which `docker-compose` will read.
 #   VT_DOCS=0                 # Enable doxygen build
 #   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
 #   VT_ASAN=0                 # Enable address sanitizer
+#   VT_WERROR=0               # Treat all warnings as errors
 #   VT_EXTENDED_TESTS=1       # Build all the extended testing
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
 #   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
