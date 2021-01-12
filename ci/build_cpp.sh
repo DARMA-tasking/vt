@@ -134,8 +134,10 @@ then
     git clone "https://${token}@github.com/DARMA-tasking/DARMA-tasking.github.io"
     git clone https://github.com/mosra/m.css
     cd m.css
-    git checkout 6eefd92c2aa3e0a257503d31b1a469867dfff8b6
+    git checkout master
     cd ../
+
+    sed -i 's/assert len(self.children) < 16 and len(self.results) < 2048/\#removed assertion/' ./m.css/documentation/_search.py
 
     "$MCSS/documentation/doxygen.py" Doxyfile-mcss
     cp -R docs "$GHPAGE"
