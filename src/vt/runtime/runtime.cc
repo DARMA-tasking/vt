@@ -1181,6 +1181,10 @@ void Runtime::printMemoryFootprint() const {
       printComponentFootprint(
         static_cast<vt::phase::PhaseManager*>(base)
       );
+    } else if (name == "EpochManip") {
+      printComponentFootprint(
+        static_cast<vt::epoch::EpochManip*>(base)
+      );
     #if vt_check_enabled(trace_enabled)
     } else if (name == "Trace") {
       printComponentFootprint(
