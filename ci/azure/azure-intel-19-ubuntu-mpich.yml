@@ -20,7 +20,6 @@ resources:
 - repo: self
 
 variables:
-  System.Debug: true
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
