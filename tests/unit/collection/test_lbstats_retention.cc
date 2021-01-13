@@ -64,9 +64,6 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
   unsigned int prevCalls() { return prev_calls_++; }
 
   static void colHandler(MyMsg<TestCol>* msg, TestCol* col) {
-    auto phase = col->prevCalls();
-    auto model = theLBManager()->getLoadModel();
-    auto phases_needed = model->getNumPastPhasesNeeded();
 
     auto& stats = col->stats_;
     auto load_phase_count = stats.getLoadPhaseCount();
@@ -75,6 +72,9 @@ struct TestCol : vt::Collection<TestCol,vt::Index1D> {
     auto sp_comm_phase_count = stats.getSubphaseCommPhaseCount();
 
     #if vt_check_enabled(lblite)
+      auto phase = col->prevCalls();
+      auto model = theLBManager()->getLoadModel();
+      auto phases_needed = model->getNumPastPhasesNeeded();
       if (phase > phases_needed) {
         // updatePhase will have caused entries to be added for the
         // next phase already

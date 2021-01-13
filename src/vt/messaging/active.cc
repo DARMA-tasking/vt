@@ -249,7 +249,6 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
 }
 
 struct MultiMsg : vt::Message {
-  MultiMsg() = default;
   MultiMsg(SendInfo in_info, NodeType in_from, MsgSizeType in_size)
     : info(in_info),
       from(in_from),

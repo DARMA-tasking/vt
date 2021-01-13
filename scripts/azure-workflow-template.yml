@@ -25,6 +25,7 @@ variables:
   VT_MIMALLOC: [% vt_mimalloc %]
   VT_DOCS: [% vt_docs %]
   VT_ASAN: [% vt_asan %]
+  VT_WERROR: [% vt_werror %]
   VT_POOL: [% vt_pool %]
   VT_EXTENDED_TESTS: [% vt_extended_tests %]
   VT_UNITY_BUILD: [% vt_unity_build %]
