@@ -52,22 +52,28 @@ else()
     set(ADDITIONAL_WARNINGS "\
         -Wall \
         -Wextra \
-        -Wdouble-promotion \
         -Wshadow \
         -Wformat=2 \
         -Wno-variadic-macros \
-        -Wcast-align \
         -Wstrict-aliasing=2 \
-        -Wstrict-overflow=5 \
         -Wfloat-equal \
         -Wwrite-strings \
         ")
+    if(NOT "${FORT_COMPILER}" STREQUAL "Intel")
+        set(ADDITIONAL_WARNINGS "${ADDITIONAL_WARNINGS} \
+            -Wdouble-promotion \
+            -Wcast-align \
+            -Wstrict-overflow=5 \
+            ")
+    endif()
     #Supress
     if("${FORT_COMPILER}" STREQUAL "Intel")
     set(ADDITIONAL_WARNINGS "${ADDITIONAL_WARNINGS} \
         -wd279 \
         -wd2192 \
-        -wd2102")
+        -wd2102 \
+        -diag-disable:remark \
+        ")
     endif()
     if("${FORT_COMPILER}" STREQUAL "GNU")
         set(ADDITIONAL_WARNINGS "${ADDITIONAL_WARNINGS} \
@@ -75,7 +81,10 @@ else()
             -Wlogical-op")
     endif()
 
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADDITIONAL_WARNINGS} -Wpedantic")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADDITIONAL_WARNINGS}")
+    if(NOT "${FORT_COMPILER}" STREQUAL "Intel")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wpedantic")
+    endif()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADDITIONAL_WARNINGS}")
 endif()
 
