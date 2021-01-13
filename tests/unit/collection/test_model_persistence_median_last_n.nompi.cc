@@ -130,7 +130,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
       {ElementIDType{1}, TimeType{100}}, {ElementIDType{2}, TimeType{10}}},
   };
 
-  std::array<std::pair<TimeType, TimeType>, num_total_phases> expected_medians{{
+  std::array<std::pair<TimeType, TimeType>, num_total_phases> expected_medians{
     std::make_pair(TimeType{10}, TimeType{40}), // iter 0 results
     std::make_pair(TimeType{7},  TimeType{25}), // iter 1 results
     std::make_pair(TimeType{10}, TimeType{40}), // iter 2 results
@@ -138,7 +138,7 @@ TEST_F(TestModelPersistenceMedianLastN, test_model_persistence_median_last_n_1) 
     std::make_pair(TimeType{12}, TimeType{45}), // iter 4 results
     std::make_pair(TimeType{35}, TimeType{45}), // iter 5 results
     std::make_pair(TimeType{55}, TimeType{30})  // iter 6 results
-  }};
+  };
 
   for (auto iter = 0; iter < num_total_phases; ++iter) {
     proc_loads[iter] = load_holder[iter];

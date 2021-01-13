@@ -83,7 +83,7 @@ TEST_F(TestHistogramApprox, test_histogram_2) {
   // Basic test of min/max/total count/number of centroids
 
   constexpr int len = 10;
-  std::array<int64_t, len> vals = {{ 3, 92, 4, 1, 24, 8, 33, 29, 55, 87 }};
+  std::array<int64_t, len> vals = { 3, 92, 4, 1, 24, 8, 33, 29, 55, 87 };
 
   vt::adt::HistogramApprox<int64_t, int64_t> h{4};
 
@@ -102,7 +102,7 @@ TEST_F(TestHistogramApprox, test_histogram_sum_3) {
   // histogram is large enough to be exact over the values inserted
 
   constexpr int len = 8;
-  std::array<double, len> vals = {{ 1, 2, 3, 4, 4, 4, 5, 6 }};
+  std::array<double, len> vals = { 1, 2, 3, 4, 4, 4, 5, 6 };
 
   vt::adt::HistogramApprox<double, int64_t> h{16};
 
@@ -146,7 +146,7 @@ TEST_F(TestHistogramApprox, test_histogram_sum_4) {
 
     fmt::print("{}\n",approx.buildContainerString());
 
-    std::array<double, 5> test_vals = {{ -2.0, -1.0, 0.0, 1.0, 2.0 }};
+    std::array<double, 5> test_vals = {-2.0, -1.0, 0.0, 1.0, 2.0 };
 
     for (auto&& elm : test_vals) {
       auto a = approx.estimateNumValues(elm);
@@ -163,9 +163,9 @@ TEST_F(TestHistogramApprox, test_histogram_quantile_5) {
   // enough to compute exact quantiles
 
   constexpr int len = 12;
-  std::array<double, len> vals = {{
+  std::array<double, len> vals = {
     0.01, 0.1, 1.0, 2.0, 3.0, 4.0, 4.0, 4.0, 4.1, 4.2, 4.3, 4.3
-  }};
+  };
 
   vt::adt::HistogramApprox<double, int64_t> h{16};
 
@@ -207,9 +207,9 @@ TEST_F(TestHistogramApprox, test_histogram_quantile_6) {
 
     fmt::print("{}\n",approx.buildContainerString());
 
-    std::array<double, 12> test_vals = {{
+    std::array<double, 12> test_vals = {
       0.0001, 0.001, 0.01, 0.1, 0.25, 0.35, 0.65, 0.75, 0.9, 0.99, 0.999, 0.9999
-    }};
+    };
 
     for (auto&& elm : test_vals) {
       auto a = approx.quantile(elm);
@@ -237,7 +237,7 @@ TEST_F(TestHistogramApprox, test_histogram_merge_7) {
 
   vt::adt::HistogramApprox<double, int64_t> h2{8};
 
-  std::array<double, 3> arr = {{ 7.6, 8.2, 7.7 }};
+  std::array<double, 3> arr = { 7.6, 8.2, 7.7 };
 
   for (auto&& elm : arr) {
     h2.add(elm);

@@ -158,9 +158,8 @@ TEST_F(TestModelNorm, test_model_norm_2) {
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
   test_model->updateLoads(0);
 
-  std::array<TimeType, 2> expected_norms = {{
-    TimeType{33.019}, TimeType{73.986}
-  }};
+  std::array<TimeType, 2> expected_norms = {
+    TimeType{33.019}, TimeType{73.986}};
 
   int objects_seen = 0;
   for (auto&& obj : *test_model) {
@@ -193,7 +192,7 @@ TEST_F(TestModelNorm, test_model_norm_3) {
   test_model->setLoads(&proc_load, &proc_subphase_load, nullptr);
   test_model->updateLoads(0);
 
-  std::array<TimeType, 2> expected_norms = {{ TimeType{30}, TimeType{60} }};
+  std::array<TimeType, 2> expected_norms = {TimeType{30}, TimeType{60}};
 
   int objects_seen = 0;
   for (auto&& obj : *test_model) {

@@ -133,14 +133,14 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
       {ElementIDType{1}, TimeType{100}}, {ElementIDType{2}, TimeType{10}}},
   };
 
-  std::array<std::pair<TimeType, TimeType>, num_test_interations> expected_data{{
+  std::array<std::pair<TimeType, TimeType>, num_test_interations> expected_data{
     std::make_pair(TimeType{0}, TimeType{-20}),   // iter 0 results
     std::make_pair(TimeType{35}, TimeType{110}),  // iter 1 results
     std::make_pair(TimeType{60}, TimeType{70}),   // iter 2 results
     std::make_pair(TimeType{24.5}, TimeType{65}), // iter 3 results
     std::make_pair(TimeType{46}, TimeType{-5}),   // iter 4 results
     std::make_pair(TimeType{105}, TimeType{0})    // iter 5 results
-  }};
+  };
 
   for (auto iter = 0; iter < num_test_interations; ++iter) {
     proc_loads[num_phases] = load_holder[iter];
