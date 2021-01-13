@@ -281,8 +281,11 @@ struct DiagnosticValueWrapper {
 private:
   T value_;                     /**< The raw value */
   std::size_t N_ = 0;           /**< The cardinality */
-  T min_, max_, sum_;           /**< The min/max/sum for reduction */
-  double avg_, M2_, M3_, M4_;   /**< The avg and 2/3/4 moments for reduction */
+  T min_ = {}, max_ = {}, sum_ = {}; /**< The min/max/sum for reduction */
+  /**
+   * The avg and 2/3/4 moments for reduction
+   */
+  double avg_ = 0.0, M2_ = 0.0, M3_ = 0.0, M4_ = 0.0;
   adt::HistogramApprox<double, int64_t> hist_; /**< Histogram values for reduce */
   bool updated_ = false;        /**< Whether value has changed from initial */
 };
