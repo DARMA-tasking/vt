@@ -130,7 +130,8 @@ stages:
             val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
             if test -z "$val"
             then
-            val="Compiled without errors and warnings."
+            echo "##vso[task.setvariable variable=comp_errs_warns;]$val"
+            exit 0
             fi
             if test ${#val} -gt "$max_comment_size"
             then

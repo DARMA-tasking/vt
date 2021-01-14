@@ -173,7 +173,7 @@ then
         sed -i '/ninja: build stopped:/d' "$OUTPUT_TMP"
 
         # Now every line that doesn't start with [ninja][number]/[number] is an error or a warning
-        WARNS_ERRS=$(grep -Ev '^(\[ninja\]\[[[:digit:]]+\/[[:digit:]]+\])|(--) .*$' "$OUTPUT_TMP")
+        WARNS_ERRS=$(grep -Ev '^(\[ninja\]\[[[:digit:]]+\/[[:digit:]]+\])|(--) .*$' "$OUTPUT_TMP" || true)
     elif test "$GENERATOR" = "Unix Makefiles"
     then
         # Gcc outputs warnings and errors to stderr, so there's not much to do
