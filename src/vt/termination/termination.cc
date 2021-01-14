@@ -550,9 +550,7 @@ void TerminationDetector::countsConstant(TermStateType& state) {
         if (theConfig()->vt_print_no_progress) {
           auto const current  = state.getEpoch();
           bool const is_rooted = epoch::EpochManip::isRooted(current);
-          bool const has_categ = epoch::EpochManip::hasCategory(current);
-          bool const useDS = has_categ and
-            epoch::EpochManip::category(current) ==
+          bool const useDS = epoch::EpochManip::category(current) ==
             epoch::eEpochCategory::DijkstraScholtenEpoch;
 
           auto f1 = fmt::format(
