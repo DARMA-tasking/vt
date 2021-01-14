@@ -92,16 +92,6 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   static bool isRooted(EpochType const& epoch);
 
   /**
-   * \brief Gets whether the epoch has a category or not
-   *
-   * \param[in] epoch the epoch to operate on
-   *
-   * \return whether \c epoch has a category---
-   *         not \c eEpochCategory::NoCategoryEpoch
-   */
-  static bool hasCategory(EpochType const& epoch);
-
-  /**
    * \brief Gets the \c eEpochCategory of a given epoch
    *
    * \param[in] epoch the epoch to operate on
@@ -151,14 +141,6 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \param[in] is_rooted whether to set the epoch as rooted or not
    */
   static void setIsRooted(EpochType& epoch, bool const is_rooted);
-
-  /**
-   * \brief Set whether the \c epoch has a category or not
-   *
-   * \param[in,out] epoch the epoch to modify
-   * \param[in] has_cat whether to the epoch has a category
-   */
-  static void setHasCategory(EpochType& epoch, bool const has_cat  );
 
   /**
    * \brief Set the category for the \c epoch

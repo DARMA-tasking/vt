@@ -86,14 +86,11 @@ namespace vt { namespace epoch {
  * \brief The header bit positions for an epoch (\c vt::EpochType)
  */
 enum struct eEpochHeader : int8_t {
-  RootedEpoch   = 1,
-  CategoryEpoch = 2
+  RootedEpoch   = 1
 };
 
 /// Number of bits for root flag
 static constexpr BitCountType const epoch_root_num_bits = 1;
-/// Number of bits for category flag
-static constexpr BitCountType const epoch_hcat_num_bits = 1;
 
 /**
  *  Important: if you add new types of epoch headers to the preceding enum, you
@@ -101,6 +98,15 @@ static constexpr BitCountType const epoch_hcat_num_bits = 1;
  *  the header types.
  *
  */
+
+/**
+ * \brief The number of bits for all types of categories.
+ *
+ *  Important: if you add categories to the enum of epoch categories, you must
+ *  ensure the \c epoch_category_num_bits is sufficiently large.
+ *
+ */
+static constexpr BitCountType const epoch_category_num_bits = 2;
 
 /**
  * \brief These are different categories of epochs that are allowed.
@@ -119,23 +125,14 @@ inline std::ostream& operator<<(std::ostream& os, eEpochCategory const& cat) {
   return debug::printEnum<eEpochCategory>(os,cat);
 }
 
-/**
- * \brief The number of bits for all types of categories.
- *
- *  Important: if you add categories to the enum of epoch categories, you must
- *  ensure the \c epoch_category_num_bits is sufficiently large.
- *
- */
-static constexpr BitCountType const epoch_category_num_bits = 2;
-
 /// Holds a epoch scope ID (collectively generated)
 using EpochScopeType = uint64_t;
 
 /// The default, global epoch scope
 static constexpr EpochScopeType const global_epoch_scope = 0;
 
-/// The number of bits assigned for epoch scopes
-static constexpr EpochScopeType const scope_bits = 5;
+// Number of bits allocated for an epoch scope
+static constexpr BitCountType const scope_bits = 20;
 
 /// The limit on number of live scopes at a given time;
 /// Scope 0 is the default scope so that is excluded as a valid scope
@@ -144,28 +141,43 @@ static constexpr EpochScopeType const scope_limit = (1<<scope_bits) - 1;
 /// The scope sentinel
 static constexpr EpochScopeType const no_scope = ~0ull;
 
-/// The total number of bits remaining the sequential part of the \c EpochType
-static constexpr BitCountType const epoch_seq_num_bits = sizeof(EpochType) * 8 -
-  (epoch_root_num_bits     +
-   epoch_hcat_num_bits     +
-   epoch_category_num_bits +
-   node_num_bits           +
-   scope_bits);
+/// The number of sequential ID bits remaining for a collective \c EpochType
+static constexpr BitCountType const epoch_seq_coll_num_bits =
+  sizeof(EpochType) * 8 -
+  (epoch_root_num_bits + epoch_category_num_bits + scope_bits);
+
+/// The total number of bits remaining for a rooted \c EpochType
+static constexpr BitCountType const epoch_seq_root_num_bits =
+  sizeof(EpochType) * 8 -
+  (epoch_root_num_bits + epoch_category_num_bits + scope_bits + node_num_bits);
 
 /**
- *  \brief Epoch layout enum to help with manipuating the bits
+ *  \brief Epoch layout enum for collective epochs to help with manipulating the
+ *  bits
  *
  *  This describes the layout of the epoch used by \c EpochManip to get/set the
  *  bits on an \c EpochType field
  */
-enum eEpochLayout {
-  EpochSequential   = 0,
-  EpochScope        = eEpochLayout::EpochSequential  + epoch_seq_num_bits,
-  EpochNode         = eEpochLayout::EpochScope       + scope_bits,
-  EpochCategory     = eEpochLayout::EpochNode        + node_num_bits,
-  EpochHasCategory  = eEpochLayout::EpochCategory    + epoch_category_num_bits,
-  EpochIsRooted     = eEpochLayout::EpochHasCategory + epoch_hcat_num_bits,
-  EpochSentinelEnd  = eEpochLayout::EpochIsRooted
+enum eEpochColl {
+  cEpochSequential = 0,
+  cEpochScope      = eEpochColl::cEpochSequential + epoch_seq_coll_num_bits,
+  cEpochCategory   = eEpochColl::cEpochScope      + scope_bits,
+  cEpochIsRooted   = eEpochColl::cEpochCategory   + epoch_category_num_bits
+};
+
+/**
+ *  \brief Epoch layout enum for rooted epochs to help with manipulating the
+ *  bits
+ *
+ *  This describes the layout of the epoch used by \c EpochManip to get/set the
+ *  bits on an \c EpochType field
+ */
+enum eEpochRoot {
+  rEpochSequential = 0,
+  rEpochNode       = eEpochRoot::rEpochSequential + epoch_seq_root_num_bits,
+  rEpochScope      = eEpochRoot::rEpochNode       + node_num_bits,
+  rEpochCategory   = eEpochRoot::rEpochScope      + scope_bits,
+  rEpochIsRooted   = eEpochRoot::rEpochCategory   + epoch_category_num_bits
 };
 
 /// The first epoch sequence number
