@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
+# To generate output file with compilation errors and warnings
+# CMake generator needs to be known
+set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
+
 if (POLICY CMP0082) # CMake 3.14
   # Prevent mixing install policies from add_subdirectory;
   # This suppresses a warning as the old behavior is deprecated-by-definition.
@@ -106,6 +110,8 @@ if (vt_werror_enabled)
   enable_cxx_compiler_flag_if_supported("-Werror")
 endif()
 include(cmake/load_bundled_libraries.cmake)
+
+include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 
 # Primary VT build
 add_subdirectory(src)

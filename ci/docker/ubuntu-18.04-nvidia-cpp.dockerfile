@@ -71,11 +71,9 @@ RUN ./mpich.sh 3.3.2 -j4
 ENV CUDACXX=/usr/local/cuda-versioned/bin/nvcc
 ENV PATH=/usr/local/cuda-versioned/bin/:$PATH
 
-RUN git clone https://github.com/kokkos/nvcc_wrapper.git && \
-    cd nvcc_wrapper && \
-    mkdir build && \
-    cd build && \
-    cmake ../
+RUN mkdir -p /nvcc_wrapper/build && \
+    wget https://raw.githubusercontent.com/DARMA-tasking/kokkos/add-Wno-deprecated-gpu-targets/bin/nvcc_wrapper -P /nvcc_wrapper/build && \
+    chmod +x /nvcc_wrapper/build/nvcc_wrapper
 
 ENV MPI_EXTRA_FLAGS="" \
     CXX=/nvcc_wrapper/build/nvcc_wrapper \

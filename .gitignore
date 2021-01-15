@@ -40,3 +40,5 @@ CMakeSettings.json
 *.app
 
 .dir-locals.el
+
+.idea/
