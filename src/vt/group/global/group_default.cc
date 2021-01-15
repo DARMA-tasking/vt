@@ -150,7 +150,7 @@ namespace vt { namespace group { namespace global {
 
 /*static*/ EventType DefaultGroup::broadcast(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root
+  MsgSizeType const& size, bool const is_root, bool* const deliver
 ) {
   // By default use the default_group_->spanning_tree_
   auto const& msg = base.get();
@@ -159,7 +159,8 @@ namespace vt { namespace group { namespace global {
   auto const& num_children = default_group_->spanning_tree_->getNumChildren();
   auto const& node = theContext()->getNode();
   NodeType const& root_node = 0;
-  bool const& send_to_root = is_root && node != root_node;
+  auto const is_root_of_tree = node == root_node;
+  bool const& send_to_root = is_root && !is_root_of_tree;
   EventType event = no_event;
 
   vt_debug_print(
@@ -168,7 +169,7 @@ namespace vt { namespace group { namespace global {
     print_ptr(base.get()), size, from, dest, print_bool(is_root)
   );
 
-  if (num_children > 0 || send_to_root) {
+  if (is_root || ((num_children > 0) && !is_root_of_tree) || send_to_root) {
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
@@ -189,6 +190,10 @@ namespace vt { namespace group { namespace global {
           theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
         }
       });
+    }
+
+    if (is_root) {
+       *deliver = true;
     }
 
     // If not the root of the spanning tree, send to the root to propagate to

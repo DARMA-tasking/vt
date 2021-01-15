@@ -172,18 +172,19 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   MsgT* rawMsg = msg.get();
 
   bool is_term = envelopeIsTerm(rawMsg->env);
+  const bool is_bcast = dest == broadcast_dest;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       active, node,
-      dest == broadcast_dest
+      is_bcast
         ? "broadcastMsg of ptr={}, type={}\n"
         : "sendMsg of ptr={}, type={}\n",
       print_ptr(rawMsg), typeid(MsgT).name()
     );
   }
 
-  if (dest == broadcast_dest) {
+  if (is_bcast) {
     dest = theContext()->getNode();
     setBroadcastType(rawMsg->env);
   }

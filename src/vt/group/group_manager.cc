@@ -269,7 +269,7 @@ void GroupManager::initializeLocalGroup(
       // Deliver the message normally if it's not a the root of a broadcast
       *deliver = !root;
       if (group == default_group) {
-        return global::DefaultGroup::broadcast(base,from,size,root);
+        return global::DefaultGroup::broadcast(base,from,size,root,deliver);
       } else {
         auto const& is_collective_group = GroupIDBuilder::isCollective(group);
         if (is_collective_group) {
