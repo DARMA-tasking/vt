@@ -137,6 +137,7 @@ struct AppConfig {
   std::string vt_lb_name      = "NoLB";
   std::string vt_lb_args      = "";
   int32_t vt_lb_interval      = 1;
+  bool vt_lb_keep_last_elm    = false;
   bool vt_lb_stats            = false;
   std::string vt_lb_stats_dir     = "vt_lb_stats";
   std::string vt_lb_stats_file    = "stats";

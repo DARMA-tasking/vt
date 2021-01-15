@@ -336,6 +336,7 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   auto lb_show_spec  = "Show LB specification during startup";
   auto lb_name       = "Name of the load balancer to use";
   auto lb_interval   = "Load balancing interval";
+  auto lb_keep_last_elm = "Do not migrate last element in collection";
   auto lb_stats      = "Enable load balancing statistics";
   auto lb_stats_dir  = "Load balancing statistics output directory";
   auto lb_stats_file = "Load balancing statistics output file name";
@@ -355,6 +356,7 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   auto v  = app.add_option("--vt_lb_name",       config_.vt_lb_name,        lb_name,      lbn);
   auto v1 = app.add_option("--vt_lb_args",       config_.vt_lb_args,        lb_args,      lba);
   auto w  = app.add_option("--vt_lb_interval",   config_.vt_lb_interval,    lb_interval,  lbi);
+  auto wl = app.add_flag("--vt_lb_keep_last_elm", config_.vt_lb_keep_last_elm, lb_keep_last_elm);
   auto ww = app.add_flag("--vt_lb_stats",        config_.vt_lb_stats,       lb_stats);
   auto wx = app.add_option("--vt_lb_stats_dir",  config_.vt_lb_stats_dir,   lb_stats_dir, lbd);
   auto wy = app.add_option("--vt_lb_stats_file", config_.vt_lb_stats_file,  lb_stats_file,lbs);
@@ -369,6 +371,7 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   v->group(debugLB);
   v1->group(debugLB);
   w->group(debugLB);
+  wl->group(debugLB);
   ww->group(debugLB);
   wx->group(debugLB);
   wy->group(debugLB);

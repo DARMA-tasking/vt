@@ -87,6 +87,7 @@ TEST_P(TestLoadBalancer, test_load_balancer_1) {
 
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = lb_name;
+  vt::theConfig()->vt_lb_keep_last_elm = true;
   if (vt::theContext()->getNode() == 0) {
     fmt::print("Testing lb {}\n", lb_name);
   }
