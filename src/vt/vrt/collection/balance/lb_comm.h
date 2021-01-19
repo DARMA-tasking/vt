@@ -188,7 +188,7 @@ template <>
 struct hash<LBCommKeyType> {
   size_t operator()(LBCommKeyType const& in) const {
     return std::hash<uint64_t>()(
-      std::hash<ElementIDStructType>()(in.from_) ^ 
+      std::hash<ElementIDStructType>()(in.from_) ^
       std::hash<ElementIDStructType>()(in.to_) ^ in.nfrom_ ^ in.nto_
     );
   }
