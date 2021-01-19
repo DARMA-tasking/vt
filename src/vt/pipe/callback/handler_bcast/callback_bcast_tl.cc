@@ -61,16 +61,16 @@ CallbackBcastTypeless::CallbackBcastTypeless(
 
 void CallbackBcastTypeless::triggerVoid(PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
-  vt_debug_print(
-    pipe, node,
+  fmt::print(
     "CallbackBcast: (void) trigger_: pipe={:x}, this_node={}, "
     "include_sender_={}\n",
     pipe, this_node, include_sender_
   );
   auto msg = makeMessage<CallbackMsg>(pipe);
   theMsg()->broadcastMsg<CallbackMsg>(handler_, msg);
+  assert(include_sender_);
   if (include_sender_) {
-    runnable::RunnableVoid::run(handler_,this_node);
+    //runnable::RunnableVoid::run(handler_,this_node);
   }
 }
 

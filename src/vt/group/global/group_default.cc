@@ -192,8 +192,8 @@ namespace vt { namespace group { namespace global {
       });
     }
 
-    if (is_root) {
-       *deliver = true;
+    if (is_root && !envelopeIsTerm(msg->env)) {
+      *deliver = true;
     }
 
     // If not the root of the spanning tree, send to the root to propagate to

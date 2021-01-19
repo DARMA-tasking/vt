@@ -74,13 +74,6 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
 
   auto pmsg = promoteMsg(msg);
   theMsg()->broadcastMsg<MsgT>(handler_, pmsg);
-
-  auto msg_group = envelopeGetGroup(msg->env);
-  bool const is_default = msg_group == default_group;
-  if (include_sender_ and is_default) {
-    auto nmsg = makeMessage<MsgT>(*msg); // create copy (?)
-    runnable::Runnable<MsgT>::run(handler_, nullptr, nmsg.get(), this_node);
-  }
 }
 
 }}} /* end namespace vt::pipe::callback */

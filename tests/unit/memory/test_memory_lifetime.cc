@@ -149,7 +149,7 @@ TEST_F(TestMemoryLifetime, test_active_bcast_serial_lifetime) {
     });
 
     EXPECT_EQ(SerialTrackMsg::alloc_count, 0);
-    EXPECT_EQ(local_count, num_msgs_sent*(num_nodes-1));
+    EXPECT_EQ(local_count, num_msgs_sent*num_nodes);
   }
 }
 
@@ -210,7 +210,7 @@ TEST_F(TestMemoryLifetime, test_active_bcast_normal_lifetime_msgptr) {
     }
 
     theTerm()->addAction([=]{
-      EXPECT_EQ(local_count, num_msgs_sent*(num_nodes-1));
+      EXPECT_EQ(local_count, num_msgs_sent*num_nodes);
     });
   }
 }

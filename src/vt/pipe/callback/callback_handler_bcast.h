@@ -73,10 +73,12 @@ struct CallbackBcast : CallbackBase<signal::Signal<MsgT>> {
 
 private:
   void trigger_(SignalDataType* data) override {
+    fmt::print("{}: trigger_ include_root_={}\n", include_root_)
     theMsg()->broadcastMsg<MsgT,f>(data);
+    assert(include_root_);
     if (include_root_) {
       auto nmsg = makeMessage<SignalDataType*>(*data);
-      f(nmsg.get());
+      //f(nmsg.get());
     }
   }
 
