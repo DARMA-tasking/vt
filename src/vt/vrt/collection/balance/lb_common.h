@@ -60,12 +60,13 @@ using ElementIDType = uint64_t;
 struct ElementIDStruct {
   using isByteCopyable = std::true_type;
 
+  // id must be unique across nodes
   ElementIDType id = 0;
   NodeType home_node = uninitialized_destination;
   NodeType curr_node = uninitialized_destination;
 
   bool operator==(const ElementIDStruct& rhs) const {
-    return id == rhs.id and home_node == rhs.home_node;
+    return id == rhs.id;
   }
 
   bool operator<(const ElementIDStruct& rhs) const {
