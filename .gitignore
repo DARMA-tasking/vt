@@ -4,6 +4,8 @@ transport
 lib/*-build
 lib/checkpoint
 lib/detector
+lib/googletest
+lib/kokkos
 .emacs.desktop
 .vscode/
 project/*
