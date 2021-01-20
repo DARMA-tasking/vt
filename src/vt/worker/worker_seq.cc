@@ -60,8 +60,6 @@
 
 namespace vt { namespace worker {
 
-using namespace fcontext;
-
 WorkerSeq::WorkerSeq(
   WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds,
   WorkerFinishedFnType finished_fn
