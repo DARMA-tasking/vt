@@ -162,7 +162,9 @@ public:
   ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
 
   // Node-level worker-based components for vt (these are optional)
-  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;
+  #if vt_threading_enabled
+  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp = nullptr;
+  #endif
 
   // Optional components
   #if backend_check_enabled(trace_enabled)

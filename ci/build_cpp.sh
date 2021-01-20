@@ -87,6 +87,9 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_asan_enabled="${VT_ASAN_ENABLED:-0}" \
       -Dvt_pool_enabled="${VT_POOL_ENABLED:-1}" \
       -Dzoltan_DIR="${ZOLTAN_CONFIG:-}" \
+      -Dvt_fcontext_enabled="${VT_FCONTEXT_ENABLED:-0}" \
+      -DUSE_OPENMP="${VT_USE_OPENMP:-0}" \
+      -DUSE_STD_THREAD="${VT_USE_STD_THREAD:-0}" \
       -DMI_INTERPOSE:BOOL=ON \
       -DMI_OVERRIDE:BOOL=ON \
       -Dvt_mpi_guards="${VT_MPI_GUARD_ENABLED:-0}" \

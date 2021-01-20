@@ -102,7 +102,11 @@ void CollectiveAnyOps<instance>::scheduleThenFinalize(
   if (workers == no_workers) {
     sched_fn();
   } else {
+    #if vt_threading_enabled
     theWorkerGrp()->spawnWorkersBlock(sched_fn);
+    #else
+    sched_fn();
+    #endif
   }
 
   CollectiveAnyOps<instance>::finalize(has_rt ? std::move(in_rt) : nullptr);
