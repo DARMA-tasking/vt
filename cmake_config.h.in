@@ -56,7 +56,6 @@
 #define vt_feature_cmake_stdthread           @vt_feature_cmake_stdthread@
 #define vt_feature_cmake_mpi_rdma            @vt_feature_cmake_mpi_rdma@
 #define vt_feature_cmake_print_term_msgs     @vt_feature_cmake_print_term_msgs@
-#define vt_feature_cmake_default_threading   @vt_feature_cmake_default_threading@
 #define vt_feature_cmake_no_pool_alloc_env   @vt_feature_cmake_no_pool_alloc_env@
 #define vt_feature_cmake_memory_pool         @vt_feature_cmake_memory_pool@
 #define vt_feature_cmake_cons_multi_idx      @vt_feature_cmake_cons_multi_idx@

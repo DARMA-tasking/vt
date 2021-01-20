@@ -103,8 +103,6 @@ using VTPrintConfig = Configuration<
 
 }} /* end namespace vt::config */
 
-#define vt_default_threading openmp
-
 #define backend_no_threading                                             \
   !vt_check_enabled(openmp) && !vt_check_enabled(stdthread)
 
