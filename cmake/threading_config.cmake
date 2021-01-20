@@ -28,3 +28,8 @@ function(config_for_std_thread)
   set(vt_feature_cmake_openmp "0" PARENT_SCOPE)
   set(vt_feature_cmake_stdthread "1" PARENT_SCOPE)
 endfunction(config_for_std_thread)
+
+function(config_no_threading)
+  set(vt_feature_cmake_openmp "0" PARENT_SCOPE)
+  set(vt_feature_cmake_stdthread "0" PARENT_SCOPE)
+endfunction(config_no_threading)
