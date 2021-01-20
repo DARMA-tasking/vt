@@ -87,8 +87,6 @@ if (vt_unity_build_enabled)
   endif()
 endif()
 
-option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
-
 # Option included here, handled in define_build_modes.cmake so libfort can be
 # included correspondingly
 option(vt_diagnostics_enabled "Build VT with performance metrics/stats" ON)
