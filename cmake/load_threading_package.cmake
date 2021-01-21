@@ -32,7 +32,8 @@ elseif(USE_OPENMP)
 else()
   message(
     STATUS
-    "No threading configuration provided"
+    "Neither OpenMP nor std::thread was requested, "
+    "using fcontext for worker threading"
   )
   config_no_threading()
 endif()
