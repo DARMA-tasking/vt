@@ -156,6 +156,12 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   auto msg_data = sys_msg->payload.data();
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
+  // Keep bcast related data in user_msg since it's sometimes
+  // needed in the handler
+  if (envelopeIsBcast(sys_msg->env)) {
+    envelopeCopyBcastData(user_msg->env, sys_msg->env);
+  }
+
   vt_debug_print(
     serial_msg, node,
     "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}, "
