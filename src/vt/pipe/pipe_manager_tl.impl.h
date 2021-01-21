@@ -95,10 +95,10 @@ void PipeManagerTL::addListener(CallbackT const& cb, NodeType const& node) {
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
-void PipeManagerTL::addListenerBcast(CallbackT const& cb, bool const& inc) {
+void PipeManagerTL::addListenerBcast(CallbackT const& cb) {
   auto const& han = auto_registry::makeAutoHandler<MsgT,f>();
   addListenerAny<MsgT>(
-    cb.getPipe(), std::make_unique<callback::CallbackBcast<MsgT>>(han,inc)
+    cb.getPipe(), std::make_unique<callback::CallbackBcast<MsgT>>(han)
   );
 }
 
@@ -127,12 +127,12 @@ void PipeManagerTL::addListenerFunctorVoid(
 
 template <typename FunctorT, typename T, typename CallbackT>
 void PipeManagerTL::addListenerFunctorBcast(
-  CallbackT const& cb, bool const& inc
+  CallbackT const& cb
 ) {
   using MsgT = typename util::FunctorExtractor<FunctorT>::MessageType;
   auto const& han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
   addListenerAny<MsgT>(
-    cb.getPipe(), std::make_unique<callback::CallbackBcast<MsgT>>(han,inc)
+    cb.getPipe(), std::make_unique<callback::CallbackBcast<MsgT>>(han)
   );
 }
 
@@ -297,11 +297,11 @@ CallbackT
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackSingleBcast(bool const& inc) {
+PipeManagerTL::makeCallbackSingleBcast() {
   auto const& new_pipe_id = makePipeID(true,false);
   auto const& handler = auto_registry::makeAutoHandler<MsgT,f>();
   auto cb = CallbackT(
-    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler,inc
+    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler
   );
   return cb;
 }
@@ -392,13 +392,13 @@ PipeManagerTL::makeCallbackFunctorSend(NodeType const& send_to_node) {
 
 template <typename FunctorT, typename T, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackFunctorBcast(bool const& inc) {
+PipeManagerTL::makeCallbackFunctorBcast() {
   using MsgT = typename util::FunctorExtractor<FunctorT>::MessageType;
   auto const& new_pipe_id = makePipeID(true,false);
   auto const& handler =
     auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
   auto cb = CallbackT(
-    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler,inc
+    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler
   );
   return cb;
 }
@@ -416,11 +416,11 @@ PipeManagerTL::makeCallbackFunctorSendVoid(NodeType const& send_to_node) {
 
 template <typename FunctorT, typename CallbackT>
 CallbackT
-PipeManagerTL::makeCallbackFunctorBcastVoid(bool const& inc) {
+PipeManagerTL::makeCallbackFunctorBcastVoid() {
   auto const& new_pipe_id = makePipeID(true,false);
   auto const& handler = auto_registry::makeAutoHandlerFunctor<FunctorT,true>();
   auto cb = CallbackT(
-    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler,inc
+    callback::cbunion::RawBcastMsgTag,new_pipe_id,handler
   );
   return cb;
 }

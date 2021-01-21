@@ -60,19 +60,16 @@ struct CallbackBcastTypeless : CallbackBaseTL<CallbackBcastTypeless> {
   CallbackBcastTypeless& operator=(CallbackBcastTypeless const&) = default;
 
   CallbackBcastTypeless(
-    HandlerType const in_handler, bool const& in_include
+    HandlerType const in_handler
   );
 
   HandlerType getHandler() const { return handler_; }
-  bool getIncSender() const { return include_sender_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
   bool operator==(CallbackBcastTypeless const& other) const {
-    return
-      other.include_sender_ == include_sender_ &&
-      other.handler_ == handler_;
+    return other.handler_ == handler_;
   }
 
 public:
@@ -82,7 +79,6 @@ public:
 
 private:
   HandlerType handler_ = uninitialized_handler;
-  bool include_sender_  = false;
 };
 
 }}} /* end namespace vt::pipe::callback */

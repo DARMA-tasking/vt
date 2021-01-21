@@ -195,10 +195,11 @@ template <typename SysMsgT>
     // Total count across the statically sized collection
     std::size_t num_elms = info.range_.getSize();
 
-    // fmt::print(
-    //   "{}: running foreach: size={}, range={}, map_han={}\n",
-    //   theContext()->getNode(), num_elms, range, map_han
-    // );
+    vt_debug_print(
+      vrt_coll, node,
+      "running foreach: size={}, range={}, map_han={}\n",
+      num_elms, range, map_han
+    );
 
     range.foreach([&](IndexT cur_idx) mutable {
       vt_debug_print_verbose(
@@ -614,13 +615,6 @@ template <typename>
 /*static*/ void CollectionManager::collectionGroupFinishedHan(
   CollectionGroupMsg* msg
 ) {
-  // THIS SEEMS TO BE CALLED ON NON-DEFAULT GRP
-    const auto is_root = envelopeIsBcast(msg->env) && (theContext()->getNode() == envelopeGetDest(msg->env));
-      fmt::print("{}: CollectionManager::collectionGroupFinishedHan bcast={}\n", theContext()->getNode(), is_root);
-  // if(is_root){
-  //   return;
-  // }
-
   auto const& proxy = msg->getProxy();
   theCollection()->addToState(proxy, BufferReleaseEnum::AfterGroupReady);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
@@ -633,9 +627,12 @@ template <typename>
   auto const& proxy = msg->proxy;
   theCollection()->constructed_.insert(proxy);
   theCollection()->addToState(proxy, BufferReleaseEnum::AfterFullyConstructed);
-  // fmt::print(
-  //   "{}: addToState: proxy={:x}, AfterCons\n", theContext()->getNode(), proxy
-  // );
+
+  vt_debug_print(
+    vrt_coll, node,
+    "addToState: proxy={:x}, AfterCons\n", proxy
+  );
+
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Broadcast);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Send);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
@@ -645,9 +642,10 @@ template <typename>
 /*static*/ void CollectionManager::collectionGroupReduceHan(
   CollectionGroupMsg* msg
 ) {
-  fmt::print(
-    "{}: collectionGroupReduceHan: proxy={:x}, root={}, group={}\n",
-    theContext()->getNode(), msg->proxy, msg->isRoot(), msg->getGroup()
+  vt_debug_print(
+    vrt_coll, node,
+    "collectionGroupReduceHan: proxy={:x}, root={}, group={}\n",
+    msg->proxy, msg->isRoot(), msg->getGroup()
   );
   if (msg->isRoot()) {
     auto nmsg = makeMessage<CollectionGroupMsg>(*msg);
@@ -1337,15 +1335,12 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
 
   auto msg = promoteMsg(raw_msg);
 
-
-
   vt_debug_print(
     vrt_coll, node,
     "reduceMsg: msg={}\n", print_ptr(raw_msg)
   );
 
   auto const col_proxy = proxy.getProxy();
-  //fmt::print("reduceMsg: msg={}\n", print_ptr(raw_msg));
   auto const cur_epoch = theMsg()->getEpochContextMsg(msg);
 
   return bufferOpOrExecute<ColT>(
@@ -1393,10 +1388,6 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
       }
 
       auto ret_stamp = r->reduceImmediate<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
-
-    //  fmt::print("{}: reduceMsg: col_proxy={:x}, num_elms={}\n",
-    //     theContext()->getNode(), col_proxy, num_elms
-    //   );
 
       vt_debug_print(
         vrt_coll, node,
@@ -1627,21 +1618,21 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   msg->setProxy(toProxy);
 
   auto idx = elm_proxy.getIndex();
-  // fmt::print(
-  //   "{}: sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={:x}, idx={}, "
-  //   "handler={}, imm_context={}\n",
-  //   theContext()->getNode(), col_proxy, cur_epoch, idx, handler, imm_context
-  // );
+  vt_debug_print(
+    vrt_coll, node,
+    "sendMsgUntypedHandler: col_proxy={:x}, cur_epoch={:x}, idx={}, "
+    "handler={}, imm_context={}\n",
+    col_proxy, cur_epoch, idx, handler, imm_context
+  );
 
   return schedule(
     msg, !imm_context, cur_epoch, [=]{
       bufferOpOrExecute<ColT>(
         col_proxy,
         BufferTypeEnum::Send,
-        static_cast<BufferReleaseEnum>(AfterFullyConstructed | AfterMetaDataKnown),
+        BufferReleaseEnum::AfterMetaDataKnown,
         cur_epoch,
         [=]() -> messaging::PendingSend {
-          fmt::print("{}: Executing PendingSend\n", theContext()->getNode());
           auto home_node = getMapped<ColT>(col_proxy, idx);
           // route the message to the destination using the location manager
           auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
@@ -1666,10 +1657,11 @@ bool CollectionManager::insertCollectionElement(
 ) {
   auto holder = findColHolder<ColT, IndexT>(proxy);
 
-  // fmt::print(
-  //   "{}: insertCollectionElement: proxy={:x}, map_han={}, idx={}, max_idx={}\n",
-  //   theContext()->getNode(), proxy, map_han, print_index(idx), print_index(max_idx)
-  // );
+  vt_debug_print(
+    vrt_coll, node,
+    "insertCollectionElement: proxy={:x}, map_han={}, idx={}, max_idx={}\n",
+    proxy, map_han, print_index(idx), print_index(max_idx)
+  );
 
   if (holder == nullptr) {
     insertMetaCollection<ColT>(proxy,map_han,max_idx,is_static);
@@ -1905,7 +1897,8 @@ CollectionManager::constructCollectiveMap(
   // Construct a underlying group for the collection
   groupConstruction<ColT>(proxy, is_static);
 
-  fmt::print(
+  vt_debug_print(
+    vrt_coll, node,
     "constructCollectiveMap: entering wait for constructed_\n"
   );
 
@@ -2181,9 +2174,10 @@ template <typename ColT, typename... Args>
     );
   };
 
-  // fmt::print(
-  //   "{}: addToState: proxy={:x}, AfterMeta\n", theContext()->getNode(), proxy
-  // );
+  vt_debug_print(
+    vrt_coll, node,
+    "addToState: proxy={:x}, AfterMeta\n", proxy
+  );
 
   theCollection()->addToState(proxy, BufferReleaseEnum::AfterMetaDataKnown);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Send);
@@ -2203,9 +2197,10 @@ template <typename ColT>
   auto msg = makeMessage<CollectionConsMsg>(proxy);
   theMsg()->markAsCollectionMessage(msg);
   auto const& root = 0;
-  // fmt::print(
-  //   "{}: reduceConstruction: invoke reduce: proxy={:x}\n", theContext()->getNode(), proxy
-  // );
+  vt_debug_print(
+    vrt_coll, node,
+    "reduceConstruction: invoke reduce: proxy={:x}\n", proxy
+  );
 
   using collective::reduce::makeStamp;
   using collective::reduce::StrongUserID;
@@ -2301,6 +2296,11 @@ CollectionManager::constructMap(
 
   create_msg->info = info;
 
+  vt_debug_print(
+    vrt_coll, node,
+    "construct_map: range={}\n", range.toString().c_str()
+  );
+
   theMsg()->broadcastMsg<MsgType,distConstruct<MsgType>>(
     create_msg
   );
@@ -2346,12 +2346,14 @@ template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::updateInsertEpochHandler(
   UpdateInsertMsg<ColT,IndexT>* msg
 ) {
-    const auto is_root = envelopeIsBcast(msg->env) && (theContext()->getNode() == envelopeGetDest(msg->env));
-      fmt::print("{}: CollectionManager::updateInsertEpochHandler bcast={}\n", theContext()->getNode(), is_root);
+  auto const is_bcast = envelopeIsBcast(msg->env);
+  auto const dest = envelopeGetDest(msg->env);
+  auto const this_node = theContext()->getNode();
+  const auto is_root = is_bcast && (this_node == dest);
+
   if(is_root){
     return;
   }
-
 
   auto const& untyped_proxy = msg->proxy_.getProxy();
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,msg->epoch_);
@@ -3299,13 +3301,11 @@ messaging::PendingSend CollectionManager::bufferOpOrExecute(
 ) {
 
   if (checkReady(proxy, release)) {
-    //fmt::print("{}: CollectionManager::bufferOpOrExecute action ready\n", theContext()->getNode());
     theMsg()->pushEpoch(epoch);
     auto ps = action();
     theMsg()->popEpoch(epoch);
     return ps;
   } else {
-    //fmt::print("{}: CollectionManager::bufferOpOrExecute buffer action\n", theContext()->getNode());
     return bufferOp<ColT>(proxy, type, release, epoch, action);
   }
 }
@@ -3336,7 +3336,6 @@ template <typename MsgT>
 messaging::PendingSend CollectionManager::schedule(
   MsgT msg, bool execute_now, EpochType cur_epoch, ActionType action
 ) {
-  fmt::print("{}: CollectionManager::schedule\n", theContext()->getNode());
   theTerm()->produce(cur_epoch);
   return messaging::PendingSend(msg, [=](MsgVirtualPtr<BaseMsgType> inner_msg){
     auto fn = [=]{

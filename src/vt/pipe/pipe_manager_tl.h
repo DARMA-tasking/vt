@@ -98,7 +98,7 @@ struct PipeManagerTL : virtual PipeManagerBase {
   CbkT makeCallbackSingleSend(NodeType const& node);
 
   template <typename T, FnType<T>* f, typename CbkT = DefType<T>>
-  CbkT makeCallbackSingleBcast(bool const& inc);
+  CbkT makeCallbackSingleBcast();
 
   // Single active message functor-handler
   template <
@@ -113,14 +113,14 @@ struct PipeManagerTL : virtual PipeManagerBase {
     typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
     typename CbkT = DefType<T>
   >
-  CbkT makeCallbackFunctorBcast(bool const& inc);
+  CbkT makeCallbackFunctorBcast();
 
   // Single active message functor-handler void param
   template <typename FunctorT, typename CbkT = DefType<V>>
   CbkT makeCallbackFunctorSendVoid(NodeType const& node);
 
   template <typename FunctorT, typename CbkT = DefType<V>>
-  CbkT makeCallbackFunctorBcastVoid(bool const& inc);
+  CbkT makeCallbackFunctorBcastVoid();
 
   // Single active message anon func-handler
   template <typename CbkT = DefType<V>>
@@ -188,7 +188,7 @@ struct PipeManagerTL : virtual PipeManagerBase {
   void addListener(CbkT const& cb, NodeType const& node);
 
   template <typename T, ActiveTypedFnType<T>* f, typename CbkT = DefType<T>>
-  void addListenerBcast(CbkT const& cb, bool const& inc);
+  void addListenerBcast(CbkT const& cb);
 
   template <
     typename FunctorT,
@@ -205,7 +205,7 @@ struct PipeManagerTL : virtual PipeManagerBase {
     typename T = typename util::FunctorExtractor<FunctorT>::MessageType,
     typename CbkT = DefType<T>
   >
-  void addListenerFunctorBcast(CbkT const& cb, bool const& inc);
+  void addListenerFunctorBcast(CbkT const& cb);
 };
 
 }} /* end namespace vt::pipe */

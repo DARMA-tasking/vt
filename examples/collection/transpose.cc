@@ -177,9 +177,6 @@ struct Block : vt::Collection<Block, vt::Index1D> {
       auto proxy = this->getCollectionProxy();
       auto proxy_msg = vt::makeMessage<ProxyMsg>(proxy.getProxy());
       vt::theMsg()->broadcastMsg<SetupGroup,ProxyMsg>(proxy_msg);
-      // Invoke it locally: broadcast sends to all other nodes
-      // auto proxy_msg_local = vt::makeMessage<ProxyMsg>(proxy.getProxy());
-      // SetupGroup()(proxy_msg_local.get());
     }
   }
 

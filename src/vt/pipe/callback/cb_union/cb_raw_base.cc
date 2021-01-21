@@ -55,9 +55,8 @@ CallbackRawBaseSingle::CallbackRawBaseSingle(
 { }
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(
-  RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
-  bool const& in_inc
-) : pipe_(in_pipe), cb_(BcastMsgCB{in_handler,in_inc})
+  RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler
+) : pipe_(in_pipe), cb_(BcastMsgCB{in_handler})
 { }
 
 CallbackRawBaseSingle::CallbackRawBaseSingle(

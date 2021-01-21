@@ -58,7 +58,6 @@ namespace vt { namespace pipe { namespace callback {
 
 template <typename SerializerT>
 void CallbackBcastTypeless::serialize(SerializerT& s) {
-  s | include_sender_;
   s | handler_;
 }
 
@@ -68,8 +67,8 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
 
   vt_debug_print(
     pipe, node,
-    "CallbackBcast: trigger_: pipe={:x}, this_node={}, include_sender_={}\n",
-    pipe, this_node, include_sender_
+    "CallbackBcast: trigger_: pipe={:x}, this_node={}\n",
+    pipe, this_node
   );
 
   auto pmsg = promoteMsg(msg);

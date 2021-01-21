@@ -73,8 +73,8 @@ struct SendMsgCB : CallbackSendTypeless {
 struct BcastMsgCB : CallbackBcastTypeless {
   BcastMsgCB() = default;
   BcastMsgCB(
-    HandlerType const in_handler, bool const& in_include
-  ) : CallbackBcastTypeless(in_handler, in_include)
+    HandlerType const in_handler
+  ) : CallbackBcastTypeless(in_handler)
   { }
 };
 
