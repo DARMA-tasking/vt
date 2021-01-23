@@ -60,6 +60,15 @@ Barrier::Barrier() :
 }
 
 /*static*/ void Barrier::barrierDown(BarrierMsg* msg) {
+  auto const is_bcast = envelopeIsBcast(msg->env);
+  auto const dest = envelopeGetDest(msg->env);
+  auto const this_node = theContext()->getNode();
+  const auto is_root = is_bcast && (this_node == dest);
+
+  if (is_root) {
+    return;
+  }
+
   theCollective()->barrierDown(msg->is_named, msg->is_wait, msg->barrier);
 }
 
@@ -235,6 +244,7 @@ void Barrier::barrierUp(
         "barrierDown: barrier={}\n", barrier
       );
       theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg);
+      barrierDown(is_named, is_wait, barrier);
     }
   }
 }
