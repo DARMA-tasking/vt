@@ -109,9 +109,7 @@ TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
       }
     });
 
-    if (my_node != root) {
-      ASSERT_TRUE(handler_count == num_msg_sent);
-    }
+    ASSERT_TRUE(handler_count == num_msg_sent);
   }
 }
 

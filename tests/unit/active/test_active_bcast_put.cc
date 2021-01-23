@@ -131,9 +131,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
       }
     });
 
-    if (my_node != root) {
-      ASSERT_TRUE(handler_count == num_msg_sent);
-    }
+    ASSERT_TRUE(handler_count == num_msg_sent);
   }
 
   // Spin here so test_vec does not go out of scope before the send completes
