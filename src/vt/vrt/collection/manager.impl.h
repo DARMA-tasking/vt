@@ -160,12 +160,9 @@ template <typename SysMsgT>
   using IndexT      = typename SysMsgT::IndexType;
   using BaseIdxType = vt::index::BaseIndex;
 
-  auto const is_bcast = envelopeIsBcast(msg->env);
-  auto const dest = envelopeGetDest(msg->env);
-  auto const this_node = theContext()->getNode();
-  const auto is_root = is_bcast && (this_node == dest);
-
-  if(is_root){
+  // Handler already executed inline after calling bcast
+  // Don't run this function twice
+  if(envelopeIsBcastRoot(msg->env)){
     return;
   }
 
@@ -2346,12 +2343,9 @@ template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::updateInsertEpochHandler(
   UpdateInsertMsg<ColT,IndexT>* msg
 ) {
-  auto const is_bcast = envelopeIsBcast(msg->env);
-  auto const dest = envelopeGetDest(msg->env);
-  auto const this_node = theContext()->getNode();
-  const auto is_root = is_bcast && (this_node == dest);
-
-  if(is_root){
+  // Handler already executed inline after calling bcast
+  // Don't run this function twice
+  if(envelopeIsBcastRoot(msg->env)){
     return;
   }
 

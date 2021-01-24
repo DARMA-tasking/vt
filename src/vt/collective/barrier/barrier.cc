@@ -60,12 +60,9 @@ Barrier::Barrier() :
 }
 
 /*static*/ void Barrier::barrierDown(BarrierMsg* msg) {
-  auto const is_bcast = envelopeIsBcast(msg->env);
-  auto const dest = envelopeGetDest(msg->env);
-  auto const this_node = theContext()->getNode();
-  const auto is_root = is_bcast && (this_node == dest);
-
-  if (is_root) {
+  // Handler already executed inline after calling bcast
+  // Don't run this function twice
+  if(envelopeIsBcastRoot(msg->env)){
     return;
   }
 

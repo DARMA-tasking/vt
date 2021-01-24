@@ -46,6 +46,7 @@
 #define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TEST_H
 
 #include "vt/config.h"
+#include "vt/context/context.h"
 #include "vt/messaging/envelope/envelope_type.h"
 #include "vt/messaging/envelope/envelope_base.h"
 
@@ -135,6 +136,14 @@ inline bool envelopeHasBeenSerialized(Env& env);
  */
 template <typename Env>
 inline bool envelopeIsLocked(Env& env);
+
+/**
+ * \brief Test if the message is bcast root.
+ *
+ * \param[in] env the envelope
+ */
+template <typename Env>
+inline bool envelopeIsBcastRoot(Env& env);
 
 }} //end namespace vt::messaging
 
