@@ -21,6 +21,9 @@ jobs:
       CMAKE_BUILD_TYPE: release
       VT_LB_ENABLED: 1
       VT_TRACE_ENABLED: 1
+      VT_USE_OPENMP: 0
+      VT_USE_STD_THREAD: 0
+      VT_WERROR: 1
       CMAKE_GENERATOR: "Unix Makefiles"
       CMAKE_BUILD_PARALLEL_LEVEL: 4
 
