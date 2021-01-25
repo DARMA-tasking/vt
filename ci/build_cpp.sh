@@ -127,6 +127,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \
       "$VT"
+cmake_conf_ret=$?
 
 if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
 then
@@ -170,6 +171,7 @@ then
         # (controlled by variable NINJA_STATUS)
         export NINJA_STATUS="[ninja][%f/%t] "
         time cmake --build . --target "${target}" | tee "$OUTPUT_TMP"
+        compilation_ret=${PIPESTATUS[0]}
         sed -i '/ninja: build stopped:/d' "$OUTPUT_TMP"
 
         # Now every line that doesn't start with [ninja][number]/[number] is an error or a warning
@@ -178,6 +180,7 @@ then
     then
         # Gcc outputs warnings and errors to stderr, so there's not much to do
         time cmake --build . --target "${target}" 2> >(tee "$OUTPUT_TMP")
+        compilation_ret=$?
         WARNS_ERRS=$(cat "$OUTPUT_TMP")
     fi
 
@@ -186,6 +189,7 @@ then
     echo "$WARNS_ERRS" > "$OUTPUT"
 else
     time cmake --build . --target "${target}"
+    compilation_ret=$?
 fi
 
 if test "$use_ccache"
@@ -193,3 +197,16 @@ then
     { echo -e "===\n=== ccache statistics after build\n==="; } 2>/dev/null
     ccache -s
 fi
+
+# Exit with error code if there was any
+if test "$cmake_conf_ret" -ne 0
+then
+    echo "There was an error during CMake configuration"
+    exit "$cmake_conf_ret"
+elif test "$compilation_ret" -ne 0
+then
+    echo "There was an error during compilation"
+    exit "$compilation_ret"
+fi
+
+exit 0
