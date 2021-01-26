@@ -80,14 +80,15 @@ void colHandler(MyMsg*, MyCol* col) {
   }
 }
 
-struct TestLoadBalancer : TestParallelHarnessParam<std::string> { };
+struct TestLoadBalancer : TestParallelHarnessParam<std::string> {
+  void runTest();
+};
 
-TEST_P(TestLoadBalancer, test_load_balancer_1) {
+void TestLoadBalancer::runTest() {
   auto lb_name = GetParam();
 
   vt::theConfig()->vt_lb = true;
   vt::theConfig()->vt_lb_name = lb_name;
-  vt::theConfig()->vt_lb_keep_last_elm = true;
   if (vt::theContext()->getNode() == 0) {
     fmt::print("Testing lb {}\n", lb_name);
   }
@@ -112,6 +113,16 @@ TEST_P(TestLoadBalancer, test_load_balancer_1) {
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
   }
+  return;
+}
+
+TEST_P(TestLoadBalancer, test_load_balancer_1) {
+  runTest();
+}
+
+TEST_P(TestLoadBalancer, test_load_balancer_keep_last_elm) {
+  vt::theConfig()->vt_lb_keep_last_elm = true;
+  runTest();
 }
 
 auto balancers = ::testing::Values(
