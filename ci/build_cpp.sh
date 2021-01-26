@@ -212,4 +212,17 @@ then
     exit "$compilation_ret"
 fi
 
-exit 0
+if test "${VT_CI_BUILD:-0}" -eq 1 && test "${target}" = "install"
+then
+    git clone https://github.com/DARMA-tasking/vt-sample-project
+    mkdir -p vt-sample-project/build
+    cd vt-sample-project/build
+    export vt_DIR="$VT_BUILD/install"
+    cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
+      -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
+      -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
+      -DCMAKE_C_COMPILER="${CC:-cc}" \
+      ..
+    cmake --build .
+fi
