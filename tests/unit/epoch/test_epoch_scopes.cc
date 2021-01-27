@@ -279,5 +279,59 @@ static void finalHandler(TestMsg* msg) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Test creating nested collective epochs to demonstrate ordering bug
+///////////////////////////////////////////////////////////////////////////////
+
+// static void nestedHandler(TestMsg* msg);
+// static void nestedHandler2(TestMsg* msg);
+
+// TEST_F(TestEpochScopes, test_epoch_scope_3) {
+//   // Test creating nested collective epochs
+
+//   auto const this_node = theContext()->getNode();
+//   auto const num_nodes = theContext()->getNumNodes();
+
+//   // Must have at least 2 nodes to run this test
+//   if (num_nodes < 2) {
+//     return;
+//   }
+
+//   auto scope = theEpoch()->makeScopeCollective();
+
+//   for (int i = 0; i < 100; i++) {
+//     auto ep = scope.makeEpochCollective();
+//     auto scope_bits = scope.getScope();
+//     theMsg()->pushEpoch(ep);
+
+//     auto next_node = (this_node + 1) % num_nodes;
+//     auto msg = makeMessage<TestMsg>(scope_bits);
+//     theMsg()->sendMsg<TestMsg, nestedHandler>(next_node, msg);
+
+//     for (int j = 0; j < 5; j++) {
+//       vt::runScheduler();
+//     }
+
+//     theMsg()->popEpoch(ep);
+//     theTerm()->finishedEpoch(ep);
+//   }
+// }
+
+// static void nestedHandler(TestMsg* msg) {
+//   auto ep = theTerm()->makeEpochCollective();
+//   theMsg()->pushEpoch(ep);
+
+//   auto const this_node = theContext()->getNode();
+//   auto const num_nodes = theContext()->getNumNodes();
+//   auto next_node = (this_node + 1) % num_nodes;
+//   auto nmsg = makeMessage<TestMsg>(msg->scope_);
+//   theMsg()->sendMsg<TestMsg, nestedHandler2>(next_node, nmsg);
+
+//   theMsg()->popEpoch(ep);
+//   theTerm()->finishedEpoch(ep);
+// }
+
+// static void nestedHandler2(TestMsg* msg) {}
+
+///////////////////////////////////////////////////////////////////////////////
 
 }}} // end namespace vt::tests::unit

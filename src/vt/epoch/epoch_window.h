@@ -97,6 +97,14 @@ public:
   bool isTerminated(EpochType epoch) const;
 
   /**
+   * \brief Check if an epoch is terminated and free for reuse (garbage
+   * collected)
+   *
+   * \param[in] epoch the epoch to check if it's free
+   */
+  bool isFree(EpochType epoch) const;
+
+  /**
    * \brief Tell the epoch window that an epoch has been terminated
    *
    * \param[in] epoch the epoch that has terminated
@@ -131,12 +139,18 @@ public:
    */
   EpochType allocateNewEpoch();
 
+  /**
+   * \brief Serializer for memory footprinting
+   *
+   * \param[in] s the serializer
+   */
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | archetype_epoch_
       | terminated_epochs_
       | next_epoch_
-      | total_terminated_;
+      | total_terminated_
+      | pending_free_;
   }
 
   /**
@@ -147,10 +161,31 @@ public:
   void activateEpoch(EpochType epoch);
 
 private:
+
+  /**
+   * \brief Check if we have enough terminated but not free epochs that we
+   * should do some garbage collection
+   */
+  void checkGarbageCollection();
+
+public:
+
+  /**
+   * \brief Free terminated epochs that are garbage collected
+   *
+   * \param[in] eps set of freed epochs
+   */
+  void garbageCollect(vt::IntegralSet<EpochType> const& eps);
+
+private:
   /// The archetypical epoch for this window container (category,rooted,user,..)
   EpochType archetype_epoch_ = no_epoch;
 
-  /// The set of epochs terminated
+  /// The set of epochs terminated, that all nodes know about
+  vt::IntegralSet<EpochType> free_epochs_;
+
+  /// The set of terminated epochs, but not garbage collected; thus, they are
+  /// not reusable safely
   vt::IntegralSet<EpochType> terminated_epochs_;
 
   /// The next epoch to potentially allocate within the proper range for the
@@ -166,6 +201,9 @@ private:
   /// re-use of epochs and because all epochs start out in "terminated" state.
   ///
   uint64_t total_terminated_ = 0;
+
+  /// Whether we have a pending garbage collection going on
+  bool pending_free_ = false;
 };
 
 }} /* end namespace vt::epoch */

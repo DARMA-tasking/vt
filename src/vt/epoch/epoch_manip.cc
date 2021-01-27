@@ -49,6 +49,8 @@
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
 #include "vt/termination/term_common.h"
+#include "vt/objgroup/manager.h"
+#include "vt/epoch/garbage_collect_msg.h"
 
 #include <fmt/ostream.h>
 
@@ -62,6 +64,29 @@ EpochManip::EpochManip()
       std::make_unique<EpochWindow>(arch_epoch_coll)
     )
 { }
+
+void EpochManip::collectEpochs(GarbageCollectMsg* msg) {
+  reducedEpochs(msg);
+}
+
+void EpochManip::confirmCollectEpochs(GarbageConfirmMsg* msg) {
+  confirmedReducedEpochs(msg);
+}
+
+/*static*/ std::unique_ptr<EpochManip> EpochManip::construct() {
+  auto ptr = std::make_unique<EpochManip>();
+  auto proxy = theObjGroup()->makeCollective<EpochManip>(ptr.get());
+  proxy.get()->setProxy(proxy.getProxy());
+  return ptr;
+}
+
+void EpochManip::setProxy(ObjGroupProxyType proxy) {
+  proxy_ = proxy;
+}
+
+ObjGroupProxyType EpochManip::getProxy() const {
+  return proxy_;
+}
 
 /*static*/ EpochType EpochManip::generateEpoch(
   bool const& is_rooted, NodeType const& root_node,

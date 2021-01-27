@@ -138,6 +138,15 @@ struct RangedCounter {
     }
   }
 
+  /**
+   * \brief Get the size of the range that this counter applies over
+   *
+   * \return the range
+   */
+  T getRange() const {
+    return hi_ - lo_;
+  }
+
 private:
   T lo_ = {};             /**< The low value for inclusive range */
   T hi_ = {};             /**< The high value for the inclusive range*/

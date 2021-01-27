@@ -54,12 +54,18 @@
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
 #include "vt/runtime/component/component.h"
+#include "vt/epoch/epoch_garbage_collect.h"
+
 
 #include <unordered_map>
 
 namespace vt { namespace epoch {
 
 /** \file */
+
+struct GarbageCollectMsg;
+struct GarbageConfirmMsg;
+struct GarbageCollectTrait;
 
 /**
  * \struct EpochManip epoch_manip.h vt/epoch/epoch_manip.h
@@ -71,12 +77,16 @@ namespace vt { namespace epoch {
  * how to set the appropriate bits to change the type bits of an \c EpochType
  * by setting the bit pattern.
  */
-struct EpochManip : runtime::component::Component<EpochManip> {
+struct EpochManip
+  : GarbageCollectTrait, runtime::component::Component<EpochManip>
+{
   using CapturedContextType = term::SuccessorEpochCapture;
 
   EpochManip();
 
   std::string name() override { return "EpochManip"; }
+
+  static std::unique_ptr<EpochManip> construct();
 
   /*
    *  Epoch getters to check type and state of EpochType
@@ -282,12 +292,38 @@ public:
    */
   EpochType getArchetype(EpochType epoch) const;
 
+  /**
+   * \internal
+   * \brief Setup the proxy for \c EpochManip
+   *
+   * \param[in] proxy the proxy to set
+   */
+  void setProxy(ObjGroupProxyType proxy);
+
+  /**
+   * \internal
+   * \brief Get the proxy for \c EpochManip
+   *
+   * \return the objgroup proxy
+   */
+  ObjGroupProxyType getProxy() const;
+
+  /**
+   * \brief Serializer for memory footprinting
+   *
+   * \param[in] s the serializer
+   */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | live_scopes_
       | terminated_epochs_
-      | terminated_collective_epochs_;
+      | terminated_collective_epochs_
+      | proxy_;
   }
+
+  void collectEpochs(GarbageCollectMsg* msg);
+
+  void confirmCollectEpochs(GarbageConfirmMsg* msg);
 
 private:
   /**
@@ -297,7 +333,11 @@ private:
    */
   void destroyScope(EpochScopeType scope);
 
+  void garbageCollectHandler();
+
   friend struct EpochCollectiveScope;
+  friend struct EpochWindow;
+  friend struct GarbageCollectTrait;
 
 private:
   /// The current live epoch scopes
@@ -306,6 +346,8 @@ private:
   std::unordered_map<EpochType,std::unique_ptr<EpochWindow>> terminated_epochs_;
   // epoch window for basic collective epochs
   std::unique_ptr<EpochWindow> terminated_collective_epochs_ = nullptr;
+  // the object group proxy
+  ObjGroupProxyType proxy_ = no_obj_group;
 };
 
 }} /* end namespace vt::epoch */

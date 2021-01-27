@@ -44,6 +44,12 @@
 
 #include "vt/epoch/epoch_window.h"
 #include "vt/epoch/epoch_manip.h"
+#include "vt/collective/reduce/reduce_scope.h"
+#include "vt/collective/reduce/reduce.h"
+#include "vt/termination/interval/integral_set_intersect.h"
+#include "vt/pipe/pipe_manager.h"
+#include "vt/epoch/epoch_garbage_collect.h"
+#include "vt/epoch/garbage_collect_msg.h"
 
 #include <fmt/ostream.h>
 
@@ -83,8 +89,8 @@ EpochWindow::EpochWindow(EpochType epoch) {
     interval.lower(), interval.upper()
   );
 
-  // All epochs in a given window start out terminated (thus, reusable).
-  terminated_epochs_.insertInterval(interval);
+  // All epochs in a given window start out terminated and free (thus, reusable).
+  free_epochs_.insertInterval(interval);
 
   fmt::print(
     "EpochWindow: epoch={:x}, arch={:x}, min={:x}, max={:x}\n",
@@ -99,18 +105,25 @@ EpochWindow::EpochWindow(EpochType epoch) {
 }
 
 EpochType EpochWindow::allocateNewEpoch() {
-  // Check for a strange edge condition where all epochs within the window
-  // are active and not terminated.
+  // Check for the condition where all epochs within the window are active and
+  // not terminated and haven't been garbage collected.
+
+  // @todo: need to potentially spin here to garbage collect instead of just
+  // aborting!
+
   vtAbortIf(
-    terminated_epochs_.size() == 0,
+    free_epochs_.size() == 0,
     "Must have an epoch to allocate within the specified range"
   );
 
   // Increment the next epoch counter until we find an terminated epoch that can
   // be allocated
+
+  // @todo: this is probably a little slow, but tries to give a contiguous
+  // allocation policy with minimal reuse
   do {
     EpochType next = *next_epoch_;
-    if (terminated_epochs_.contains(next)) {
+    if (free_epochs_.contains(next)) {
       (*next_epoch_)++;
 
       // Tell the system the epoch is now active
@@ -131,28 +144,32 @@ void EpochWindow::activateEpoch(EpochType epoch) {
     term, node,
     "activateEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
-    terminated_epochs_.size(), terminated_epochs_.compression()
+    epoch, free_epochs_.lower(), free_epochs_.upper(),
+    free_epochs_.size(), free_epochs_.compression()
   );
 
   auto is_epoch_arch = isArchetypal(epoch);
 
   vtAssertExprInfo(
     is_epoch_arch, epoch, is_epoch_arch, archetype_epoch_,
-    terminated_epochs_.lower(), terminated_epochs_.upper(),
-    terminated_epochs_.size()
+    free_epochs_.lower(), free_epochs_.upper(),
+    free_epochs_.size()
   );
 
-  if (terminated_epochs_.contains(epoch)) {
-    terminated_epochs_.erase(epoch);
+  // @todo: I think this is idempotent, thus may be called multiple times
+
+  ///vtAssert(free_epochs_.contains(epoch), "The epoch must be free");
+
+  if (free_epochs_.contains(epoch)) {
+    free_epochs_.erase(epoch);
   }
 
   vt_debug_print(
     term, node,
     "activateEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
-    epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
-    terminated_epochs_.size(), terminated_epochs_.compression()
+    epoch, free_epochs_.lower(), free_epochs_.upper(),
+    free_epochs_.size(), free_epochs_.compression()
   );
 }
 
@@ -168,6 +185,8 @@ void EpochWindow::setEpochTerminated(EpochType epoch) {
   terminated_epochs_.insert(epoch);
   total_terminated_++;
 
+  checkGarbageCollection();
+
   vt_debug_print(
     term, node,
     "setEpochTerminated: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
@@ -175,6 +194,77 @@ void EpochWindow::setEpochTerminated(EpochType epoch) {
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
+
+}
+
+void EpochWindow::checkGarbageCollection() {
+  if (pending_free_) {
+    return;
+  }
+  pending_free_ = true;
+
+  auto const term_size = terminated_epochs_.size();
+
+  // @todo: make trigger parameterized?
+
+  // If we reach X% of capacity, engage the collection protocol
+  if (term_size == next_epoch_->getRange() * 0.10) {
+    // At the most, let's say we do 64 MiB of frees at a time. If the
+    // compression rate is good, we could do a lot more than that
+
+    auto const max_size = (1 << 26) / (2*sizeof(EpochType));
+
+    vt::IntegralSet<EpochType> to_collect;
+
+    // We can garbage collect the whole thing
+    if (terminated_epochs_.compressedSize() < max_size) {
+      to_collect = terminated_epochs_;
+    } else {
+      auto iter = terminated_epochs_.ibegin();
+      for (uint64_t i = 0; i < max_size; i++) {
+        auto x = *iter;
+        to_collect.insertInterval(x);
+        iter++;
+        vtAssert(
+          iter != terminated_epochs_.iend(), "We should not reach the end"
+        );
+      }
+    }
+
+    // start reduction
+
+    NodeType collective_root = 0;
+
+    auto proxy = theEpoch()->getProxy();
+
+    objgroup::proxy::Proxy<EpochManip> p{proxy};
+
+    auto cb = theCB()->makeBcast<
+      EpochManip, GarbageCollectMsg, &EpochManip::collectEpochs
+    >(p);
+    auto msg = makeMessage<GarbageCollectMsg>(archetype_epoch_, to_collect);
+
+    // Get the reducer scope for the epoch component
+    auto r = theEpoch()->reducer();
+
+    using collective::reduce::makeStamp;
+    using collective::reduce::StrongEpoch;
+    using OpType = collective::PlusOp<IntegralSetData>;
+
+    // Stamp this with the epoch's archetype which ensures these don't get mixed
+    // up across epoch types garbage collecting concurrently
+    auto stamp = makeStamp<StrongEpoch>(archetype_epoch_);
+    r->reduce<OpType>(collective_root, msg.get(), cb, stamp);
+  }
+}
+
+void EpochWindow::garbageCollect(vt::IntegralSet<EpochType> const& eps) {
+  for (auto&& x : eps) {
+    terminated_epochs_.erase(x);
+    free_epochs_.insert(x);
+  }
+
+  pending_free_ = false;
 }
 
 bool EpochWindow::isTerminated(EpochType epoch) const {
@@ -186,7 +276,21 @@ bool EpochWindow::isTerminated(EpochType epoch) const {
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
 
-  return terminated_epochs_.contains(epoch);
+  // An epoch is terminated if it's known by this node, or has been fully
+  // garbage collected
+  return terminated_epochs_.contains(epoch) or free_epochs_.contains(epoch);
+}
+
+bool EpochWindow::isFree(EpochType epoch) const {
+  vt_debug_print(
+    term, node,
+    "isFree: epoch={:x}, first={:x}, last={:x}, num={}, "
+    "compression={}\n",
+    epoch, free_epochs_.lower(), free_epochs_.upper(),
+    free_epochs_.size(), free_epochs_.compression()
+  );
+
+  return free_epochs_.contains(epoch);
 }
 
 }} /* end namespace vt::epoch */
