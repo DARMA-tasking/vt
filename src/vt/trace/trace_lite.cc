@@ -142,6 +142,7 @@ void TraceLite::initializeStandalone(MPI_Comm comm) {
   config_ptr->vt_trace = true;
   config_ptr->vt_trace_mpi = true;
   config_ptr->vt_trace_pmpi = true;
+  config_ptr->colorize_output = true;
 
   pmpi_ptr = new pmpi::PMPIComponent;
   pmpi_ptr->startup();
@@ -449,6 +450,14 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
       traces_.size(), trace_write_count_,
       TraceContainersType::getEventTypeContainer()->size(),
       TraceContainersType::getEventContainer()->size());
+
+    if (node == 0) {
+      vt_print(
+        trace,
+        "writeTracesFile: to_write={}, already_written={}\n",
+        traces_.size(), trace_write_count_
+      );
+    }
 
     vt::trace::TraceScopedEvent scope(
       is_incremental_flush ? flush_event_ : no_user_event_id);
