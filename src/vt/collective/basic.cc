@@ -44,25 +44,34 @@
 
 #include "vt/config.h"
 #include "vt/collective/basic.h"
+#if !vt_check_enabled(trace_only)
 #include "vt/collective/startup.h"
 #include "vt/collective/collective_ops.h"
-
+#endif
 namespace vt {
 
 void abort(std::string const str, int32_t const code) {
+#if !vt_check_enabled(trace_only)
   return CollectiveOps::abort(str,code);
+#endif
 }
 
 void output(
   std::string const str, int32_t const code, bool error, bool formatted,
   bool decorate, bool abort_out
 ) {
+#if !vt_check_enabled(trace_only)
   return CollectiveOps::output(str,code,error,decorate,formatted,abort_out);
+#else
+  ::fmt::print(str.c_str());
+#endif
 }
 
 int rerror(char const* str) {
   fmt::print("Error: {}\n", str);
+#if !vt_check_enabled(trace_only)
   vt::finalize();
+#endif
   return 0;
 }
 

@@ -58,7 +58,8 @@
 #include <tuple>
 #include <type_traits>
 
-#if vt_check_enabled(production)
+
+#if vt_check_enabled(production) || vt_check_enabled(trace_only)
   #define vtAbort(str)                                                \
     ::vt::error::display(str,1);
   #define vtAbortCode(xy,str)                                         \
@@ -69,7 +70,6 @@
   #define vtAbortCode(xy,str)                                         \
     ::vt::error::displayLoc(str,xy,DEBUG_LOCATION,std::make_tuple());
 #endif
-
 #define vtAbortIf(cond,str)                                             \
   do {                                                                  \
     if ((cond)) {                                                       \
@@ -82,7 +82,6 @@
       vtAbortCode(code,str);                                            \
     }                                                                   \
   } while (false)
-
 #define vtAbortIfNot(cond,str)                                          \
   vtAbortIf(INVERT_COND(cond),str)
 #define vtAbortIfNotCode(code,cond,str)                                 \

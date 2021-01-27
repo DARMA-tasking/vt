@@ -79,7 +79,6 @@ struct TraceLite  {
    * \param[in] in_prog_name the program name
    */
   TraceLite(std::string const& in_prog_name);
-  TraceLite();
 
   virtual ~TraceLite();
 
@@ -104,15 +103,21 @@ struct TraceLite  {
    */
   std::string getDirectory() const { return full_dir_name_;   }
 
+#if vt_check_enabled(trace_only)
   /**
    * \brief Initialize trace module in stand-alone mode. This will create
    * stripped-down version of runtime and initialize components needed for
    * tracing MPI calls
    *
    * \param[in] comm MPI communicator type
-   * \param[in] flush_size Flush output trace every (flush_size) trace records
    */
-  void initializeStandalone(MPI_Comm comm, int32_t flush_size);
+  void initializeStandalone(MPI_Comm comm);
+
+  /**
+   * \brief Cleanup all components initialized for standalone mode
+   */
+  void finalizeStandalone();
+#endif
 
   /**
    * \brief Collectively register a user event
@@ -125,11 +130,6 @@ struct TraceLite  {
    * \return the user event ID
    */
   UserEventIDType registerUserEventColl(std::string const& name);
-
-  /**
-   * \brief Cleanup all components initialized for standalone mode
-   */
-  void finalizeStandalone();
 
   /**
    * \internal \brief Setup the file names for output
@@ -203,7 +203,7 @@ struct TraceLite  {
    * \param[in] useGlobalSync whether a global sync should be invoked before
    * flushing output
    */
-  void flushTracesFile(bool useGlobalSync);
+  void flushTracesFile(bool useGlobalSync = false);
 
   /**
    * \internal \brief Cleanup traces data, write to disk and close
@@ -360,7 +360,7 @@ protected:
   std::string full_dir_name_    = "";
   bool wrote_sts_file_          = false;
   size_t trace_write_count_     = 0;
-  bool standalone_version_      = false;
+  bool standalone_initalized_   = false;
   bool trace_enabled_cur_phase_ = true;
   bool idle_begun_              = false;
   std::unique_ptr<vt_gzFile> log_file_;

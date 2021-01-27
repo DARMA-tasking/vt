@@ -1,4 +1,3 @@
-
 set(TOP_LEVEL_SUBDIRS
   configs
   collective
@@ -110,70 +109,104 @@ list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 set(VT_INSTALL_DESTINATION "include/vt")
 set(VT_EXTERNAL_DESTINATION "include")
 
-foreach(DIR ${TOP_LEVEL_SUBDIRS})
+if(vt_trace_only)
+  set(HEADER_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_common.h ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_constants.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_containers.h ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_event.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_log.h ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_user_event.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_user.h ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_lite.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/timing/timing.h ${CMAKE_CURRENT_SOURCE_DIR}/vt/runtime/mpi_access.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/context/context.h ${CMAKE_CURRENT_SOURCE_DIR}/vt/configs/generated/vt_git_revision.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/utils/demangle/demangle.h ${CMAKE_CURRENT_SOURCE_DIR}/vt/configs/error/hard_error.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/configs/error/pretty_print_message.h ${CMAKE_CURRENT_SOURCE_DIR}/vt/collective/basic.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/pmpi_component.h
+  )
+
+  set(SOURCE_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_containers.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_event.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_lite.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_user_event.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_registry.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/pmpi_component.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/runtime/mpi_access.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/timing/timing.cc ${PROJECT_BIN_DIR}/src/vt/configs/generated/vt_git_revision.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/context/context.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/utils/demangle/demangle.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/collective/basic.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/configs/error/pretty_print_message.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/pmpi/pmpi_component.cc
+  )
+
+  foreach ( FILE ${HEADER_FILES} )
+    get_filename_component( DIR ${FILE} DIRECTORY )
+    install(
+      FILES ${FILE}
+      DESTINATION "include/${DIR}"
+    )
+  endforeach()
+else()
+  foreach(DIR ${TOP_LEVEL_SUBDIRS})
+    install(
+      DIRECTORY                "vt/${DIR}"
+      DESTINATION              ${VT_INSTALL_DESTINATION}
+      CONFIGURATIONS           ${build_type_list}
+      FILES_MATCHING PATTERN   "*.h"
+    )
+  endforeach()
+
+  file(GLOB TOP_HEADERS "vt/*.h")
+
   install(
-    DIRECTORY                "vt/${DIR}"
-    DESTINATION              ${VT_INSTALL_DESTINATION}
-    CONFIGURATIONS           ${build_type_list}
-    FILES_MATCHING PATTERN   "*.h"
-  )
-endforeach()
-
-file(GLOB TOP_HEADERS "vt/*.h")
-
-install(
-  FILES                      ${TOP_HEADERS}
-  DESTINATION                ${VT_INSTALL_DESTINATION}
-  CONFIGURATIONS             ${build_type_list}
-)
-
-file(
-  GLOB
-  HEADER_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.h
-)
-
-file(
-  GLOB
-  SOURCE_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.cc
-)
-
-file(
-  GLOB
-  SOURCE_FILES
-  ${PROJECT_BIN_DIR}/src/vt/configs/generated/vt_git_revision.cc
-)
-
-foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
-  file(
-    GLOB
-    "${SUB_DIR}_HEADER_FILES"
-    RELATIVE
-    "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/vt/${SUB_DIR}/*.h"
+    FILES                      ${TOP_HEADERS}
+    DESTINATION                ${VT_INSTALL_DESTINATION}
+    CONFIGURATIONS             ${build_type_list}
   )
 
   file(
     GLOB
-    "${SUB_DIR}_SOURCE_FILES"
-    RELATIVE
-    "${CMAKE_CURRENT_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/vt/${SUB_DIR}/*.cc"
-  )
-
-  list(
-    APPEND
     HEADER_FILES
-    "${${SUB_DIR}_HEADER_FILES}"
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.h
   )
 
-  list(
-    APPEND
+  file(
+    GLOB
     SOURCE_FILES
-    "${${SUB_DIR}_SOURCE_FILES}"
+    ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.cc
   )
-endforeach()
+
+  file(
+    GLOB
+    SOURCE_FILES
+    ${PROJECT_BIN_DIR}/src/vt/configs/generated/vt_git_revision.cc
+  )
+
+  foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
+    file(
+      GLOB
+      "${SUB_DIR}_HEADER_FILES"
+      RELATIVE
+      "${CMAKE_CURRENT_SOURCE_DIR}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/vt/${SUB_DIR}/*.h"
+    )
+
+    file(
+      GLOB
+      "${SUB_DIR}_SOURCE_FILES"
+      RELATIVE
+      "${CMAKE_CURRENT_SOURCE_DIR}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/vt/${SUB_DIR}/*.cc"
+    )
+
+    list(
+      APPEND
+      HEADER_FILES
+      "${${SUB_DIR}_HEADER_FILES}"
+    )
+
+    list(
+      APPEND
+      SOURCE_FILES
+      "${${SUB_DIR}_SOURCE_FILES}"
+    )
+  endforeach()
+
+endif()
 
 # Generate PMPI wrappers, if enabled and possible.
 if(vt_mpi_guards AND PERL_FOUND)

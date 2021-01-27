@@ -248,30 +248,6 @@ private:
   RuntimeInstType const instance_;
 
   /**
-   * \internal \brief Create simplified version of runtime which only
-   * initializes components needed for tracing. This is used by trace-only mode
-   * of vt
-   *
-   * \param[in] trace pointer to trace module for which runtime is being created
-   * \param[in] comm MPI communicator
-   * \param[in] flush_size Flush output trace every (flush_size) trace records
-   */
-  static void createRuntimeForTraceOnly(
-    trace::Trace* trace, MPI_Comm comm, int32_t flush_size);
-
-  /**
-   * \internal \brief Finalize runtime and all components that were initialized
-   * for trace-only mode of vt
-   */
-  static void finalizeRuntimeForTraceOnly();
-
-  /**
-   * \internal \brief Create runtime without initializing any components.
-   * Used by the trace component for trace-only mode.
-   */
-  Runtime();
-
-  /**
    * \internal \brief Check if this node should dump during stack output
    *
    * \return whether this node is allowed to write
@@ -284,8 +260,6 @@ private:
    * \param[in] str the stack to output to file
    */
   static void writeToFile(std::string const& str);
-
-  friend struct ::vt::trace::Trace;
 
 protected:
   /**
@@ -459,7 +433,6 @@ protected:
   bool runtime_active_ = false;
   bool is_interop_ = false;
   bool sig_handlers_disabled_ = false;
-  bool trace_only_ = false;
   WorkerCountType num_workers_ = no_workers;
   //< Communicator to be given to theContext creation; don't use otherwise.
   MPI_Comm initial_communicator_ = MPI_COMM_NULL;

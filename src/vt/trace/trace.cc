@@ -72,37 +72,8 @@ using TraceContainersType = TraceContainers;
 
 using LogType = Trace::LogType;
 
-Trace::Trace(std::string const& in_prog_name)
-{
-  /*
-   * Incremental flush mode for zlib. Several options are available:
-   *
-   *   Z_NO_FLUSH
-   *   Z_PARTIAL_FLUSH
-   *   Z_SYNC_FLUSH
-   *   Z_FULL_FLUSH
-   *   Z_FINISH
-   *   Z_BLOCK
-   *   Z_TREES
-   *
-   *  Turns out that any flush weaker than Z_FINISH, may not output a valid
-   *  trace---some of these modes produce a completely valid gz file---but don't
-   *  necessarily flush to the next gzprintf newline. Thus, during an exigent
-   *  exit, the traces will not be readable by Projections, unless they are
-   *  altered to clear out the last partially written line. Z_FINISH can be
-   *  invoked for every incremental flush at the cost of space---compression
-   *  across multiple flush epochs will be lost (see zlib docs).
-   *
-   *  For now, the incremental_flush_mode will be Z_SYNC_FINISH, implying that
-   *  the gz files will have to cleaned if a segfault, etc. occurs. Change this
-   *  to Z_FINISH if you want a clean flush.
-   */
-
-  incremental_flush_mode = Z_SYNC_FLUSH;
-
-  // The first (implied) scheduler always starts with an empty event stack.
-  event_holds_.push_back(0);
-}
+Trace::Trace(std::string const& in_prog_name) : TraceLite(in_prog_name)
+{}
 
 void Trace::initialize() /*override*/ {
 #if vt_check_enabled(trace_enabled)
@@ -135,16 +106,13 @@ void Trace::startup() /*override*/ {
     sched::SchedulerEvent::EndIdle, [this]{ endIdle(); }
   );
 
-  if (!standalone_version_) {
-    thePhase()->registerHookRooted(phase::PhaseHook::End, [] {
-      auto const phase = thePhase()->getCurrentPhase();
-      theTrace()->setTraceEnabledCurrentPhase(phase + 1);
-    });
-
-    thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [] {
-      theTrace()->flushTracesFile(false);
-    });
-  }
+  thePhase()->registerHookRooted(phase::PhaseHook::End, [] {
+    auto const phase = thePhase()->getCurrentPhase();
+    theTrace()->setTraceEnabledCurrentPhase(phase + 1);
+  });
+  thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [] {
+    theTrace()->flushTracesFile(false);
+  });
 #endif
 }
 
@@ -181,12 +149,6 @@ bool Trace::inIdleEvent() const {
 }
 
 /*virtual*/ Trace::~Trace() {
-  // For standalone version we output traces in finalizeStandalone()
-  // Nothing to do here
-  if (standalone_version_) {
-    return;
-  }
-
   // Not good - not much to do in late destruction.
   vtWarnIf(
     not open_events_.empty(),

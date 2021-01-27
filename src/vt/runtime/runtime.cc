@@ -187,40 +187,6 @@ Runtime::Runtime(
   setupTerminateHandler();
 }
 
-/*static*/ void Runtime::createRuntimeForTraceOnly(
-  trace::Trace* trace, MPI_Comm comm, int32_t flush_size) {
-  curRT = new ::vt::runtime::Runtime;
-  curRT->theTrace = trace;
-  curRT->theContext = new ctx::Context(true, comm);
-
-  curRT->theArgConfig = new arguments::ArgConfig;
-  curRT->theArgConfig->config_.vt_trace = true;
-  curRT->theArgConfig->config_.vt_trace_mpi = true;
-  curRT->theArgConfig->config_.vt_trace_pmpi = true;
-  curRT->theArgConfig->config_.vt_trace_flush_size = flush_size;
-
-  curRT->thePMPI = new pmpi::PMPIComponent;
-  curRT->thePMPI->startup();
-
-  curRT->theSched = new sched::Scheduler;
-}
-
-/*static*/ void Runtime::finalizeRuntimeForTraceOnly() {
-  vtAssert(curRT, "Runtime not initialized!");
-
-  curRT->thePMPI->finalize();
-  delete curRT->thePMPI;
-
-  delete curRT->theArgConfig;
-  delete curRT->theContext;
-  delete curRT;
-}
-
-Runtime::Runtime() : instance_(RuntimeInstType::OtherInstance) {
-  is_interop_ = true;
-  trace_only_ = true;
-}
-
 bool Runtime::hasSchedRun() const {
   return theSched ? theSched->hasSchedRun() : false;
 }
@@ -358,7 +324,7 @@ void Runtime::setupTerminateHandler() {
     });
   }
 
-  if (!aborted_ && !trace_only_) {
+  if (!aborted_) {
     finalize();
   }
 

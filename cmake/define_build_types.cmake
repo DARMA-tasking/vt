@@ -104,6 +104,15 @@ else()
   set(vt_feature_cmake_trace_enabled "0")
 endif()
 
+if (${vt_trace_only})
+  message(STATUS "Building VT in trace-only mode")
+  set(vt_feature_cmake_trace_enabled "1")
+  set(vt_feature_cmake_trace_only "1")
+else()
+  message(STATUS "Building VT in standard mode")
+  set(vt_feature_cmake_trace_only "0")
+endif()
+
 if (${vt_priorities_enabled})
   message(STATUS "Building VT with priorities enabled")
   message(

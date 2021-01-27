@@ -46,9 +46,10 @@
 #if !vt_check_enabled(trace_only)
 #include "vt/collective/collective_alg.h"
 #endif
+#include "vt/pmpi/pmpi_component.h"
 #include "vt/trace/trace_containers.h"
-#include "vt/trace/trace_user.h"
 #include "vt/trace/trace_registry.h"
+#include "vt/trace/trace_user.h"
 #include "vt/utils/demangle/demangle.h"
 
 #include <cinttypes>
@@ -63,10 +64,12 @@ namespace vt {
 trace::TraceLite* trace_ptr = nullptr;
 ctx::Context* context_ptr = nullptr;
 arguments::AppConfig* config_ptr = nullptr;
+pmpi::PMPIComponent* pmpi_ptr = nullptr;
 
 trace::TraceLite* theTrace() { return trace_ptr; }
 ctx::Context* theContext() { return context_ptr; }
 arguments::AppConfig* theConfig() { return config_ptr; }
+pmpi::PMPIComponent* thePMPI() { return pmpi_ptr; }
 
 namespace debug {
 arguments::AppConfig const* preConfig() { return config_ptr; }
@@ -93,10 +96,6 @@ struct TraceEventSeqCompare {
     return a->theEventSeq() < b->theEventSeq();
   }
 };
-
-TraceLite::TraceLite()
-  : start_time_(getCurrentTime()), prog_name_("prog_name"), log_file_(nullptr) {
-}
 
 TraceLite::TraceLite(std::string const& in_prog_name)
   : start_time_(getCurrentTime()), prog_name_(in_prog_name),
@@ -133,11 +132,8 @@ TraceLite::TraceLite(std::string const& in_prog_name)
 
 TraceLite::~TraceLite() {}
 
-void TraceLite::initializeStandalone(MPI_Comm comm, int32_t flush_size) {
-  // runtime::Runtime::createRuntimeForTraceOnly(this, comm, flush_size);
-
-  standalone_version_ = true;
-  #if vt_check_enabled(trace_only)
+#if vt_check_enabled(trace_only)
+void TraceLite::initializeStandalone(MPI_Comm comm) {
   trace_ptr = this;
   context_ptr = new ctx::Context(true, comm);
 
@@ -145,21 +141,28 @@ void TraceLite::initializeStandalone(MPI_Comm comm, int32_t flush_size) {
   config_ptr->vt_trace = true;
   config_ptr->vt_trace_mpi = true;
   config_ptr->vt_trace_pmpi = true;
-  config_ptr->vt_trace_flush_size = flush_size;
-#endif
-  // initialize();
-  // startup();
+
+  pmpi_ptr = new pmpi::PMPIComponent;
+  pmpi_ptr->startup();
+
+  setupNames(prog_name_);
+  flush_event_ = registerUserEventColl("trace_flush");
+  standalone_initalized_ = true;
 }
 
 void TraceLite::finalizeStandalone() {
-  // finalize();
+  vtAssert(standalone_initalized_, "Standalone tracing not initialized!");
 
   if (enabled_) {
     cleanupTracesFile();
   }
 
-  // runtime::Runtime::finalizeRuntimeForTraceOnly();
+  delete config_ptr;
+  delete context_ptr;
+
+  standalone_initalized_ = false;
 }
+#endif
 
 void TraceLite::setupNames(std::string const& in_prog_name) {
   if (not theConfig()->vt_trace) {
@@ -254,15 +257,13 @@ void TraceLite::addUserBracketedNote(
 
   vt_debug_print(
     trace, node,
-    "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n",
-    begin, end, note, event
+    "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n", begin,
+    end, note, event
   );
 
   auto const type = TraceConstantsType::UserSuppliedBracketedNote;
 
-  logEvent(
-    LogType{begin, end, type, note, event}
-  );
+  logEvent(LogType{begin, end, type, note, event});
 }
 
 
@@ -408,6 +409,7 @@ void TraceLite::cleanupTracesFile() {
 }
 
 void TraceLite::flushTracesFile(bool useGlobalSync) {
+#if !vt_check_enabled(trace_only)
   if (theConfig()->vt_trace_flush_size == 0) {
     // Flush the traces at the end only
     return;
@@ -415,15 +417,16 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
   if (useGlobalSync) {
     // Synchronize all the nodes before flushing the traces
     // (Consider pushing out: barrier usages are probably domain-specific.)
-    #if !vt_check_enabled(trace_only)
     theCollective()->barrier();
-    #endif
   }
   if (
     traces_.size() >=
     static_cast<std::size_t>(theConfig()->vt_trace_flush_size)) {
     writeTracesFile(incremental_flush_mode, true);
   }
+#else
+  writeTracesFile(incremental_flush_mode, true);
+#endif
 }
 
 void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
