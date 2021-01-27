@@ -2833,6 +2833,14 @@ MigrateStatus CollectionManager::migrateOut(
      elm_holder->numElements()
    );
 
+   if (elm_holder->numElements() == 1 and theConfig()->vt_lb_keep_last_elm) {
+     vt_debug_print(
+       vrt_coll, node,
+       "migrateOut: do not migrate last element\n"
+     );
+     return MigrateStatus::ElementNotLocal;
+   }
+
    auto& coll_elm_info = elm_holder->lookup(idx);
    auto map_fn = coll_elm_info.map_fn;
    auto range = coll_elm_info.max_idx;
