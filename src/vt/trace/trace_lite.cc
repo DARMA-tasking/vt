@@ -58,6 +58,7 @@
 #include <mpi.h>
 #include <sys/stat.h>
 #include <zlib.h>
+#include <map>
 
 namespace vt {
 #if vt_check_enabled(trace_only)
@@ -448,12 +449,6 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
       traces_.size(), trace_write_count_,
       TraceContainersType::getEventTypeContainer()->size(),
       TraceContainersType::getEventContainer()->size());
-
-    if (theContext()->getNode() == 0) {
-      vt_print(
-        trace, "writeTracesFile: to_write={}, already_written={}\n",
-        traces_.size(), trace_write_count_);
-    }
 
     vt::trace::TraceScopedEvent scope(
       is_incremental_flush ? flush_event_ : no_user_event_id);

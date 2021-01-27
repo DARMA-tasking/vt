@@ -105,13 +105,11 @@ else()
 endif()
 
 if (${vt_trace_only})
-  message(STATUS "Building VT in trace-only mode")
-  set(vt_feature_cmake_trace_enabled "1")
-  set(vt_feature_cmake_trace_only "1")
-else()
-  message(STATUS "Building VT in standard mode")
-  set(vt_feature_cmake_trace_only "0")
+  message(STATUS "Building additional target for VT in trace-only mode")
 endif()
+
+# This will be set to 1 during generation of cmake config for vt-trace target
+set(vt_feature_cmake_trace_only "0")
 
 if (${vt_priorities_enabled})
   message(STATUS "Building VT with priorities enabled")
@@ -305,6 +303,34 @@ foreach(loop_build_type ${VT_CONFIG_TYPES})
     ${VIRTUAL_TRANSPORT_LIBRARY}
     PROPERTIES ${loop_build_type_upper}_POSTFIX "-${loop_build_type}"
   )
+
+  # Generate separate config file for vt-trace with trace_only flag set to 1
+  if (${vt_trace_only})
+    set(vt_feature_cmake_trace_enabled "1")
+    set(vt_feature_cmake_trace_only "1")
+    configure_file(
+      ${PROJECT_BASE_DIR}/cmake_config.h.in
+      ${PROJECT_BIN_DIR}/${loop_build_type}/vt-trace/vt/cmake_config.h @ONLY
+    )
+
+    # In trace-only target we don't use INSTALL_DIR/include as include directory
+    # We use INSTALL_DIR/include/vt-trace instead so we can use separate cmake_config.h
+    install(
+      FILES            "${PROJECT_BINARY_DIR}/${loop_build_type}/vt-trace/vt/cmake_config.h"
+      DESTINATION      include/vt-trace/vt
+      CONFIGURATIONS   ${loop_build_type}
+    )
+
+    set_target_properties(
+      ${VT_TRACE_LIB}
+      PROPERTIES ${loop_build_type_upper}_POSTFIX "-${loop_build_type}"
+    )
+    set(vt_feature_cmake_trace_only "0")
+
+    if(NOT ${vt_trace_enabled})
+      set(vt_feature_cmake_trace_enabled "0")
+    endif()
+  endif()
 endforeach()
 
 # message(STATUS "chosen build type=${CMAKE_BUILD_TYPE}")
@@ -320,3 +346,14 @@ target_include_directories(
   $<INSTALL_INTERFACE:include>
 )
 
+if (${vt_trace_only})
+  target_include_directories(
+    ${VT_TRACE_LIB} PUBLIC
+    $<BUILD_INTERFACE:$<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug/vt-trace>>
+    $<BUILD_INTERFACE:$<$<CONFIG:relwithdebinfo>:${PROJECT_BIN_DIR}/relwithdebinfo/vt-trace>>
+    $<BUILD_INTERFACE:$<$<CONFIG:release>:${PROJECT_BIN_DIR}/release/vt-trace>>
+    $<BUILD_INTERFACE:$<$<CONFIG:${CMAKE_BUILD_TYPE}>:${PROJECT_BIN_DIR}/${lower_CMAKE_BUILD_TYPE}/vt-trace>>
+    $<BUILD_INTERFACE:$<$<CONFIG:>:${PROJECT_BIN_DIR}/undefined>>
+    $<INSTALL_INTERFACE:include/vt-trace>
+  )
+endif()

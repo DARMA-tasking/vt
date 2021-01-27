@@ -388,15 +388,16 @@ protected:
   std::vector<DiagnosticValueWrapper<T>> snapshots_; /**< Value time snapshots */
 };
 
-/**
+/**1
  * \struct DiagnosticValue
  *
  * \brief A keyed diagnostic value of some type \c T
  */
 template <typename T>
 struct DiagnosticValue : DiagnosticBase {
+#if !vt_check_enabled(trace_only)
   checkpoint_virtual_serialize_derived_from(DiagnosticBase)
-
+#endif
   /**
    * \internal \brief Create a new typed diagnostic value
    *

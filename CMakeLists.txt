@@ -113,17 +113,10 @@ include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 # Primary VT build
 add_subdirectory(src)
 
-if(vt_trace_only)
-  option(VT_BUILD_TESTS "Build VT tests" OFF)
-  option(VT_BUILD_EXAMPLES "Build VT examples" OFF)
-else()
-  option(VT_BUILD_TESTS "Build VT tests" ON)
-  option(VT_BUILD_EXAMPLES "Build VT examples" ON)
-endif()
 #
 # Test prep - ensures examples can be registered as tests.
 #
-
+option(VT_BUILD_TESTS "Build VT tests" ON)
 
 if (VT_BUILD_TESTS
    AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -136,6 +129,7 @@ endif()
 #
 # Examples
 #
+option(VT_BUILD_EXAMPLES "Build VT examples" ON)
 
 if (VT_BUILD_EXAMPLES)
   message(

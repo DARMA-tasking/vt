@@ -8,6 +8,9 @@
 GET_FILENAME_COMPONENT (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 include(${VT_CMAKE_DIR}/vtTargets.cmake)
+if (@vt_trace_only@)
+  include(${VT_CMAKE_DIR}/vt-traceTargets.cmake)
+endif()
 
 include(CMakeFindDependencyMacro)
 

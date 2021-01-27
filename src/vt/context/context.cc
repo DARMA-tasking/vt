@@ -43,7 +43,9 @@
 */
 
 #include "vt/context/context.h"
+#if !vt_check_enabled(trace_only)
 #include "vt/runtime/runtime.h"
+#endif
 
 #include <string>
 #include <cstring>
