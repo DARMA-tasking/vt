@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              migratable.impl.h
+//                                  storable.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,23 +42,86 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
-#define INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/types/migratable.h"
+#include "vt/vrt/collection/types/storage/store_elm.h"
 
-namespace vt { namespace vrt { namespace collection {
+#include <unordered_map>
+#include <memory>
 
-template <typename Serializer>
-void Migratable::serialize(Serializer& s) {
-  MigrateHookBase::serialize(s);
-  storage::Storable::serialize(s);
-  s | stats_;
-  s | stats_elm_id_;
-  s | temp_elm_id_;
-}
+namespace vt { namespace vrt { namespace collection { namespace storage {
 
-}}} /* end namespace vt::vrt::collection */
+/**
+ * \struct Storable
+ *
+ * \brief Trait for collection elements to store values inside the collection
+ */
+struct Storable {
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H*/
+  Storable() = default;
+
+  /**
+   * \brief Serializer
+   *
+   * \param[in] s the serializer
+   */
+  template <typename SerializerT>
+  void serialize(SerializerT& s);
+
+  /**
+   * \brief Insert a new key/value pair
+   *
+   * \param[in] str the key
+   * \param[in] u the value
+   */
+  template <typename U>
+  void valInsert(std::string const& str, U&& u);
+
+  /**
+   * \brief Get the value from a key
+   *
+   * \param[in] str the key
+   *
+   * \return the associated value
+   */
+  template <typename U>
+  U& valGet(std::string const& str);
+
+  /**
+   * \brief Get the const value from a key
+   *
+   * \param[in] str the key
+   *
+   * \return the associated, const value
+   */
+  template <typename U>
+  U const& valGet(std::string const& str) const;
+
+  /**
+   * \brief Check if a key exists
+   *
+   * \param[in] str the key
+   *
+   * \return whether it exists
+   */
+  bool valExists(std::string const& str) const;
+
+  /**
+   * \brief Remove a key
+   *
+   * \param[in] str the key
+   */
+  void valRemove(std::string const& str);
+
+private:
+  /// Map of type-erased, stored values
+  std::unordered_map<std::string, std::unique_ptr<StoreElmBase>> map_;
+};
+
+}}}} /* end namespace vt::vrt::collection::storage */
+
+#include "vt/vrt/collection/types/storage/storable.impl.h"
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_H*/

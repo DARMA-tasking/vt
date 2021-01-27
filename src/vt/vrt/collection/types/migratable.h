@@ -50,6 +50,7 @@
 #include "vt/vrt/base/base.h"
 #include "vt/vrt/collection/types/migrate_hooks.h"
 #include "vt/vrt/collection/types/migratable.fwd.h"
+#include "vt/vrt/collection/types/storage/storable.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
 
@@ -60,7 +61,7 @@ namespace balance {
   struct NodeStats;
 }
 
-struct Migratable : MigrateHookBase {
+struct Migratable : MigrateHookBase, storage::Storable {
 
   Migratable();
 

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              migratable.impl.h
+//                                 storable.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,23 +42,24 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
-#define INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_CC
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_CC
 
-#include "vt/config.h"
-#include "vt/vrt/collection/types/migratable.h"
+#include "vt/vrt/collection/types/storage/storable.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace storage {
 
-template <typename Serializer>
-void Migratable::serialize(Serializer& s) {
-  MigrateHookBase::serialize(s);
-  storage::Storable::serialize(s);
-  s | stats_;
-  s | stats_elm_id_;
-  s | temp_elm_id_;
+bool Storable::valExists(std::string const& str) const {
+  return map_.find(str) != map_.end();
 }
 
-}}} /* end namespace vt::vrt::collection */
+void Storable::valRemove(std::string const& str) {
+  auto iter = map_.find(str);
+  if (iter != map_.end()) {
+    map_.erase(iter);
+  }
+}
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H*/
+}}}} /* end namespace vt::vrt::collection::storage */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_CC*/
