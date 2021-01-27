@@ -71,6 +71,9 @@ struct TestCol : Collection<TestCol, Index1D> {
     this->valInsert("vec", std::vector<int>{5,4,1,7,3});
     this->valInsert("test", TestData(10, 20.5f));
 
+    auto a = std::make_unique<int>(1000);
+    this->valInsert("up", std::move(a));
+
     testHandlerValues(msg);
   }
 
@@ -86,6 +89,9 @@ struct TestCol : Collection<TestCol, Index1D> {
     auto v = this->valGet<TestData>("test");
     EXPECT_EQ(v.a, 10);
     EXPECT_EQ(v.b, 20.5f);
+
+    auto& up = this->valGet<std::unique_ptr<int>>("up");
+    EXPECT_EQ(*up, 1000);
   }
 
 };
