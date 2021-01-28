@@ -97,11 +97,13 @@ struct TestCol : Collection<TestCol, Index1D> {
 };
 
 struct TestCollectionStorage : TestParallelHarness {
+#if vt_check_enabled(lblite)
   void addAdditionalArgs() override {
     static char vt_lb[]{"--vt_lb"};
     static char vt_lb_name[]{"--vt_lb_name=RotateLB"};
     addArgs(vt_lb, vt_lb_name);
   }
+#endif
 };
 
 TEST_F(TestCollectionStorage, test_collection_storage_1) {
