@@ -74,18 +74,6 @@ struct AsyncOpWrapper {
   { }
 
   /**
-   * \internal \brief Construct with arguments to build the unique pointer to
-   * the async operation
-   *
-   * \param[in] args the arguments
-   */
-  template <typename U, typename... Args>
-  explicit AsyncOpWrapper(Args&&... args)
-    : valid(true),
-      op_(std::make_unique<U>(std::forward<Args>(args)...))
-  { }
-
-  /**
    * \internal \brief Test completion of the operation
    *
    * \param[in] num_tests how many tests were executed (diagnostics)
