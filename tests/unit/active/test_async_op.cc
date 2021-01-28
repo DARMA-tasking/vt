@@ -53,7 +53,10 @@ namespace vt { namespace tests { namespace unit {
 using TestAsyncOp = TestParallelHarness;
 
 struct AsyncOpMPI : messaging::AsyncOp {
-  AsyncOpMPI() = default;
+  explicit AsyncOpMPI(MPI_Request in_req, ActionType in_trigger = nullptr)
+    : req_(in_req),
+      trigger_(in_trigger)
+  { }
 
   bool poll() override {
     VT_ALLOW_MPI_CALLS; // MPI_Test
@@ -63,17 +66,7 @@ struct AsyncOpMPI : messaging::AsyncOp {
     return flag;
   }
 
-  void done() override {
-    if (trigger_) {
-      trigger_();
-    }
-  }
-
-  void setRequest(MPI_Request in_req) { req_ = in_req; }
-  void setTrigger(ActionType in_trigger) { trigger_ = in_trigger; }
-
-public:
-  int data_ = 0;
+  void done() override { if (trigger_) trigger_(); }
 
 private:
   MPI_Request req_ = MPI_REQUEST_NULL;
@@ -88,35 +81,28 @@ struct MyObjGroup {
     auto const this_node = theContext()->getNode();
     auto const num_nodes = theContext()->getNumNodes();
     auto const to_node = (this_node + 1) % num_nodes;
-    auto from_node = this_node - 1;
-    if (from_node < 0) {
-      from_node = num_nodes - 1;
+    from_node_ = this_node - 1;
+    if (from_node_ < 0) {
+      from_node_ = num_nodes - 1;
     }
 
     auto comm = theContext()->getComm();
     int const tag = 299999;
 
     MPI_Request req1;
-    auto op1 = std::make_unique<AsyncOpMPI>();
-    op1->data_ = this_node;
+    send_val_ = this_node;
     {
       VT_ALLOW_MPI_CALLS; // MPI_Isend
-      MPI_Isend(&op1->data_, 1, MPI_INT, to_node, tag, comm, &req1);
+      MPI_Isend(&send_val_, 1, MPI_INT, to_node, tag, comm, &req1);
     }
-    op1->setRequest(req1);
+    auto op1 = std::make_unique<AsyncOpMPI>(req1);
 
     MPI_Request req2;
-    auto op2 = std::make_unique<AsyncOpMPI>();
-    auto trigger = [data = &op2->data_, from_node, this]{
-      EXPECT_EQ(*data, from_node);
-      done = true;
-    };
-    op2->setTrigger(trigger);
     {
       VT_ALLOW_MPI_CALLS; // MPI_Irecv
-      MPI_Irecv(&op2->data_, 1, MPI_INT, from_node, tag, comm, &req2);
+      MPI_Irecv(&recv_val_, 1, MPI_INT, from_node_, tag, comm, &req2);
     }
-    op2->setRequest(req2);
+    auto op2 = std::make_unique<AsyncOpMPI>(req2, [this]{ done_ = true; } );
 
     // Register these async operations for polling; since these operations are
     // enclosed in an epoch, they should inhibit the current epoch from
@@ -125,7 +111,15 @@ struct MyObjGroup {
     theMsg()->registerAsyncOp(std::move(op2));
   }
 
-  bool done = false;
+  void check() {
+    EXPECT_EQ(from_node_, recv_val_);
+    EXPECT_TRUE(done_);
+  }
+
+  int send_val_ = 0;
+  int recv_val_ = -1000;
+  bool done_ = false;
+  NodeType from_node_ = 0;
 };
 
 TEST_F(TestAsyncOp, test_async_op_1) {
@@ -136,8 +130,8 @@ TEST_F(TestAsyncOp, test_async_op_1) {
   runInEpoch(ep, [p, this_node]{
     p[this_node].send<MyMsg, &MyObjGroup::handler>();
   });
-  // Assert that async MPI ops are done after return
-  EXPECT_TRUE(p[this_node].get()->done);
+  // Check async MPI ops are completed after return
+  p[this_node].get()->check();
 }
 
 }}} // end namespace vt::tests::unit
