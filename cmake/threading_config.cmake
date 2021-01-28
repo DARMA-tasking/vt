@@ -1,6 +1,4 @@
-
 function(config_for_openmp)
-  set(DEFAULT_THREADING openmp PARENT_SCOPE)
   message(
     STATUS
     "OpenMP has been found: "
@@ -9,9 +7,13 @@ function(config_for_openmp)
     "CXX FLAGS=\"${OpenMP_CXX_FLAGS}\""
   )
 
+  set(DEFAULT_THREADING openmp PARENT_SCOPE)
+
   set(vt_feature_cmake_openmp "1" PARENT_SCOPE)
   set(vt_feature_cmake_stdthread "0" PARENT_SCOPE)
   set(vt_fcontext_enabled "0" PARENT_SCOPE)
+
+  set(LOCAL_THREADS_DEPENDENCY "find_dependency(OpenMP REQUIRED)" PARENT_SCOPE)
 
   #
   # The OpenMP compiler and linker flags are handled through the target instead
@@ -29,6 +31,8 @@ function(config_for_std_thread)
   set(vt_feature_cmake_openmp "0" PARENT_SCOPE)
   set(vt_feature_cmake_stdthread "1" PARENT_SCOPE)
   set(vt_fcontext_enabled "0" PARENT_SCOPE)
+
+  set(LOCAL_THREADS_DEPENDENCY "find_dependency(Threads REQUIRED)" PARENT_SCOPE)
 endfunction(config_for_std_thread)
 
 function(config_for_fcontext)
