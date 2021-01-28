@@ -161,7 +161,7 @@ private:
   T elm_ = {};                  /**< The stored value */
 };
 
-namespace {
+namespace detail {
 
 /**
  * \internal \struct ByteWrapper
@@ -190,7 +190,7 @@ struct ByteWrapper {
   T elm_ = {};                  /**< The stored, byte-copyable value */
 };
 
-} /* end anon namespace */
+} /* end detail namespace */
 
 /**
  * \struct StoreElm
@@ -215,7 +215,7 @@ struct StoreElm<
    */
   template <typename U>
   explicit StoreElm(U&& u)
-    : wrapper_(ByteWrapper<T>{std::forward<U>(u)})
+    : wrapper_(detail::ByteWrapper<T>{std::forward<U>(u)})
   { }
 
   /**
@@ -250,7 +250,7 @@ struct StoreElm<
   T const& get() const { return wrapper_.elm_; }
 
 private:
-  ByteWrapper<T> wrapper_ = {}; /**< The stored, byte-copyable value wrapper */
+  detail::ByteWrapper<T> wrapper_ = {}; /**< The byte-copyable value wrapper */
 };
 
 }}}} /* end namespace vt::vrt::collection::storage */
