@@ -1707,7 +1707,8 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       | trace_irecv
       | trace_isend
       | trace_irecv_polling_am
-      | trace_irecv_polling_dm;
+      | trace_irecv_polling_dm
+      | trace_asyncop;
   # endif
   }
 
@@ -1784,6 +1785,7 @@ private:
   trace::UserEventIDType trace_isend             = trace::no_user_event_id;
   trace::UserEventIDType trace_irecv_polling_am  = trace::no_user_event_id;
   trace::UserEventIDType trace_irecv_polling_dm  = trace::no_user_event_id;
+  trace::UserEventIDType trace_asyncop           = trace::no_user_event_id;
 # endif
 
   HandlerType current_handler_context_                    = uninitialized_handler;

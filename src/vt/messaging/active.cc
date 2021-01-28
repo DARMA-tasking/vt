@@ -66,8 +66,10 @@ ActiveMessenger::ActiveMessenger()
   trace_isend(trace::registerEventCollective("MPI_Isend")),
   trace_irecv_polling_am(trace::registerEventCollective("IRecv: Active Msg poll")),
   trace_irecv_polling_dm(trace::registerEventCollective("IRecv: Data Msg poll")),
+  trace_asyncop(trace::registerEventCollective("AsyncOP: poll")),
   in_progress_active_msg_irecv(trace_irecv_polling_am),
   in_progress_data_irecv(trace_irecv_polling_dm),
+  in_progress_ops(trace_asyncop),
 # endif
   this_node_(theContext()->getNode())
 {

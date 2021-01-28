@@ -60,9 +60,6 @@ namespace vt { namespace messaging {
  */
 struct AsyncOpWrapper {
 
-  /// Default constructor so the IRecvHolder can be constructed
-  AsyncOpWrapper() = default;
-
   /**
    * \internal \brief Construct with unique pointer to operation
    *
