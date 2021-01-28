@@ -598,7 +598,7 @@ inline EpochType ActiveMessenger::setupEpochMsg(MsgSharedPtr<MsgT> const& msg) {
 
 template <typename T>
 void ActiveMessenger::registerAsyncOp(std::unique_ptr<T> in) {
- std::unique_ptr<AsyncOp> op(static_cast<AsyncOp*>(in.release()));
+  std::unique_ptr<AsyncOp> op(static_cast<AsyncOp*>(in.release()));
   in_progress_ops.emplace(AsyncOpWrapper{std::move(op)});
 }
 
