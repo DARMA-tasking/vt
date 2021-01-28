@@ -65,6 +65,8 @@ struct StoreElmBase {
 
   StoreElmBase() = default;
 
+  virtual ~StoreElmBase() {}
+
   /**
    * \brief Get the value as \c T
    *
