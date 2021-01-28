@@ -1225,15 +1225,27 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
   return ret;
 }
 
+bool ActiveMessenger::testPendingAsyncOps() {
+  int num_tests = 0;
+  bool const ret = in_progress_ops.testAll(
+    [](AsyncOpWrapper* op) {
+      op->done();
+    },
+    num_tests
+  );
+  return ret;
+}
+
 int ActiveMessenger::progress() {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   processMaybeReadyHanTag();
   bool const received_active_msg = testPendingActiveMsgAsyncRecv();
   bool const received_data_msg = testPendingDataMsgAsyncRecv();
+  bool const general_async = testPendingAsyncOps();
 
   return started_irecv_active_msg or started_irecv_data_msg or
-         received_active_msg or received_data_msg;
+         received_active_msg or received_data_msg or general_async;
 }
 
 void ActiveMessenger::processMaybeReadyHanTag() {

@@ -57,6 +57,7 @@
 #include "vt/messaging/listener.h"
 #include "vt/messaging/irecv_holder.h"
 #include "vt/messaging/send_info.h"
+#include "vt/messaging/async_op_wrapper.h"
 #include "vt/event/event.h"
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
@@ -1675,6 +1676,14 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     send_listen_.clear();
   }
 
+  /**
+   * \brief Register a async operation that needs polling
+   *
+   * \param[in] op the async operation to register
+   */
+  template <typename T>
+  void registerAsyncOp(std::unique_ptr<T> op);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | current_handler_context_
@@ -1690,6 +1699,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       | send_listen_
       | in_progress_active_msg_irecv
       | in_progress_data_irecv
+      | in_progress_ops
       | this_node_;
 
   # if vt_check_enabled(trace_enabled)
@@ -1728,8 +1738,26 @@ private:
    */
   static void chunkedMultiMsg(MultiMsg* msg);
 
+  /**
+   * \brief Test pending MPI request for active message receives
+   *
+   * \return whether progress was made
+   */
   bool testPendingActiveMsgAsyncRecv();
+
+  /**
+   * \brief Test pending MPI request for data message receives
+   *
+   * \return whether progress was made
+   */
   bool testPendingDataMsgAsyncRecv();
+
+  /**
+   * \brief Test pending general asynchronous events
+   *
+   * \return whether progress was made
+   */
+  bool testPendingAsyncOps();
 
   /**
    * \brief Called when a VT-MPI message has been received.
@@ -1771,6 +1799,7 @@ private:
   std::vector<ListenerType> send_listen_                  = {};
   IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv;
   IRecvHolder<InProgressDataIRecv> in_progress_data_irecv;
+  IRecvHolder<AsyncOpWrapper> in_progress_ops;
   NodeType this_node_                                     = uninitialized_destination;
 
 private:

@@ -596,6 +596,12 @@ inline EpochType ActiveMessenger::setupEpochMsg(MsgSharedPtr<MsgT> const& msg) {
   return setupEpochMsg(msg.get());
 }
 
+template <typename T>
+void ActiveMessenger::registerAsyncOp(std::unique_ptr<T> in) {
+ std::unique_ptr<AsyncOp> op(static_cast<AsyncOp*>(in.release()));
+  in_progress_ops.emplace(AsyncOpWrapper{std::move(op)});
+}
+
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ACTIVE_IMPL_H*/
