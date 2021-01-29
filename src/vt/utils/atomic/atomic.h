@@ -51,10 +51,8 @@
   #include "vt/utils/atomic/omp_atomic.h"
 #elif vt_check_enabled(stdthread)
   #include "vt/utils/atomic/std_atomic.h"
-#elif backend_no_threading
-  #include "vt/utils/atomic/null_atomic.h"
 #else
-  vt_backend_static_assert_unreachable
+  #include "vt/utils/atomic/null_atomic.h"
 #endif
 
 namespace vt { namespace util { namespace atomic {
@@ -65,11 +63,9 @@ namespace vt { namespace util { namespace atomic {
 #elif vt_check_enabled(stdthread)
   template <typename T>
   using AtomicType = AtomicSTD<T>;
-#elif backend_no_threading
+#else
   template <typename T>
   using AtomicType = AtomicNull<T>;
-#else
-  vt_backend_static_assert_unreachable
 #endif
 
 }}} /* end namespace vt::util::atomic */
