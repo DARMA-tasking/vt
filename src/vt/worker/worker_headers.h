@@ -51,12 +51,8 @@
 
 #if vt_check_enabled(openmp)
   #include "vt/worker/worker_group_omp.h"
-#elif vt_check_enabled(stdthread)
-  #include "vt/worker/worker_group.h"
-#elif backend_no_threading
-  #include "vt/worker/worker_group.h"
 #else
-  vt_backend_static_assert_unreachable
+  #include "vt/worker/worker_group.h"
 #endif
 
 namespace vt { namespace worker {
@@ -65,20 +61,20 @@ namespace vt { namespace worker {
   using WorkerGroupType = WorkerGroupOMP;
 #elif vt_check_enabled(stdthread)
   using WorkerGroupType = WorkerGroupSTD;
-#elif backend_no_threading
+#elif vt_check_enabled(fcontext)
   using WorkerGroupType = WorkerGroupSeq;
 #else
-  vt_backend_static_assert_unreachable
+  using WorkerGroupType = WorkerGroupDummy;
 #endif
 
 #if vt_check_enabled(openmp)
   using WorkerType = OMPWorker;
 #elif vt_check_enabled(stdthread)
   using WorkerType = StdThreadWorker;
-#elif backend_no_threading
+#elif vt_check_enabled(fcontext)
   using WorkerType = WorkerSeq;
 #else
-  vt_backend_static_assert_unreachable
+  using WorkerType = WorkerDummy;
 #endif
 
 }} /* end namespace vt::worker */

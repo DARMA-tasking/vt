@@ -98,7 +98,6 @@ else()
   option(vt_libfort_enabled "Build VT with fort library enabled" OFF)
 endif()
 
-option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
 option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
 option(vt_asan_enabled "Build VT with address sanitizer" OFF)

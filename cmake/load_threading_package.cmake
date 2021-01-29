@@ -8,6 +8,7 @@ include(cmake/threading_config.cmake)
 # Threading build configuration
 option(USE_STD_THREAD "whether to force use of std::thread for threading" OFF)
 option(USE_OPENMP "whether to force use of OpenMP for threading" OFF)
+option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 
 if (USE_STD_THREAD)
   message(
@@ -29,11 +30,16 @@ elseif(USE_OPENMP)
       "valid OpenMP in compiler"
     )
   endif()
+elseif(vt_fcontext_enabled)
+  message(
+    STATUS
+    "Using fcontext for worker threading"
+  )
+  config_for_fcontext()
 else()
   message(
     STATUS
-    "Neither OpenMP nor std::thread was requested, "
-    "using fcontext for worker threading"
+    "\n\n\nThreading disabled\n\n\n"
   )
   config_no_threading()
 endif()

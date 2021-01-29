@@ -11,6 +11,7 @@ function(config_for_openmp)
 
   set(vt_feature_cmake_openmp "1" PARENT_SCOPE)
   set(vt_feature_cmake_stdthread "0" PARENT_SCOPE)
+  set(vt_fcontext_enabled "0" PARENT_SCOPE)
 
   #
   # The OpenMP compiler and linker flags are handled through the target instead
@@ -27,10 +28,17 @@ function(config_for_std_thread)
 
   set(vt_feature_cmake_openmp "0" PARENT_SCOPE)
   set(vt_feature_cmake_stdthread "1" PARENT_SCOPE)
+  set(vt_fcontext_enabled "0" PARENT_SCOPE)
 endfunction(config_for_std_thread)
+
+function(config_for_fcontext)
+  set(vt_feature_cmake_openmp "0" PARENT_SCOPE)
+  set(vt_feature_cmake_stdthread "0" PARENT_SCOPE)
+  set(vt_fcontext_enabled "1" PARENT_SCOPE)
+endfunction(config_for_fcontext)
 
 function(config_no_threading)
   set(vt_feature_cmake_openmp "0" PARENT_SCOPE)
   set(vt_feature_cmake_stdthread "0" PARENT_SCOPE)
-  option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" ON)
+  set(vt_fcontext_enabled "0" PARENT_SCOPE)
 endfunction(config_no_threading)

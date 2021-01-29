@@ -44,7 +44,7 @@
 
 #include "vt/config.h"
 
-#if backend_no_threading
+#if vt_check_enabled(fcontext)
 
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
