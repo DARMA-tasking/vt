@@ -53,10 +53,8 @@
   #include "vt/utils/tls/omp_tls.h"
 #elif vt_check_enabled(stdthread)
   #include "vt/utils/tls/std_tls.h"
-#elif backend_no_threading
-  #include "vt/utils/tls/null_tls.h"
 #else
-  vt_backend_static_assert_unreachable
+  #include "vt/utils/tls/null_tls.h"
 #endif
 
 #if backend_null_tls
@@ -77,14 +75,12 @@ namespace vt { namespace util { namespace tls {
 
   template <typename T, char const* tag, T val>
   using ThreadLocalInitType = ThreadLocalInitSTD<T,tag,val>;
-#elif backend_no_threading
+#else
   template <typename T, char const* tag>
   using ThreadLocalType = ThreadLocalNull<T,tag>;
 
   template <typename T, char const* tag, T val>
   using ThreadLocalInitType = ThreadLocalInitNull<T,tag,val>;
-#else
-  vt_backend_static_assert_unreachable
 #endif
 
 #if backend_null_tls
