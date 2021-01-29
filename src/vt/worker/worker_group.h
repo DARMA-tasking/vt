@@ -58,7 +58,7 @@
 #elif vt_check_enabled(fcontext)
   #include "vt/worker/worker_seq.h"
 #else
-  #include "vt/worker/worker_dummy.h"
+  // #include "vt/worker/worker_dummy.h"
 #endif
 
 #include <vector>
@@ -118,7 +118,7 @@ private:
 #elif vt_check_enabled(fcontext)
   using WorkerGroupSeq = WorkerGroupAny<WorkerSeq>;
 #else
-  using WorkerGroupDummy = WorkerGroupAny<WorkerDummy>;
+  // using WorkerGroupDummy = WorkerGroupAny<WorkerDummy>;
 #endif /*vt_check_enabled(stdthread)*/
 
 }} /* end namespace vt::worker */

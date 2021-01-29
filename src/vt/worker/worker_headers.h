@@ -45,6 +45,8 @@
 #if !defined INCLUDED_WORKER_WORKER_HEADERS_H
 #define INCLUDED_WORKER_WORKER_HEADERS_H
 
+#if vt_threading_enabled
+
 #include "vt/worker/worker.h"
 #include "vt/worker/worker_group.h"
 #include "vt/worker/worker_types.h"
@@ -64,7 +66,7 @@ namespace vt { namespace worker {
 #elif vt_check_enabled(fcontext)
   using WorkerGroupType = WorkerGroupSeq;
 #else
-  using WorkerGroupType = WorkerGroupDummy;
+  // using WorkerGroupType = WorkerGroupDummy;
 #endif
 
 #if vt_check_enabled(openmp)
@@ -74,7 +76,7 @@ namespace vt { namespace worker {
 #elif vt_check_enabled(fcontext)
   using WorkerType = WorkerSeq;
 #else
-  using WorkerType = WorkerDummy;
+  // using WorkerType = WorkerDummy;
 #endif
 
 }} /* end namespace vt::worker */
@@ -84,5 +86,7 @@ namespace vt {
 extern worker::WorkerGroupType* theWorkerGrp();
 
 } /* end namespace vt */
+
+#endif /* vt_threading_enabled */
 
 #endif /*INCLUDED_WORKER_WORKER_HEADERS_H*/
