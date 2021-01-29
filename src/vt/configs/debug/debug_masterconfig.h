@@ -107,6 +107,8 @@ using VTPrintConfig = Configuration<
   !vt_check_enabled(openmp) && !vt_check_enabled(stdthread)
 
 #define vt_threading_enabled                                             \
-  vt_check_enabled(openmp) && vt_check_enabled(stdthread) && vt_check_enabled(fcontext)
+  (vt_check_enabled(openmp)                                              \
+    or vt_check_enabled(stdthread)                                       \
+    or vt_check_enabled(fcontext))
 
 #endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_MASTERCONFIG_H*/

@@ -189,10 +189,15 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
   } else {
     return messaging::PendingSend(
       base_msg, msg_sz, [=](MsgPtr<BaseMsgType> mymsg) {
+        #if vt_threading_enabled
         theWorkerGrp()->enqueueCommThread([=]{
           auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
           theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, typed_msg);
         });
+        #else
+        auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
+        theVirtualManager()->sendSerialMsg<VcT, MsgT, f>(toProxy, typed_msg);
+        #endif
       }
     );
   }
@@ -295,7 +300,11 @@ VirtualProxyType VirtualContextManager::makeVirtualMap(Args... args) {
 
       // work to defer to the worker thread
       auto work_unit = [=]{ cl->make(); delete cl; };
+      #if vt_threading_enabled
       theWorkerGrp()->enqueueForWorker(mapped_core, work_unit);
+      #else
+      work_unit();
+      #endif
 
       return proxy;
     }

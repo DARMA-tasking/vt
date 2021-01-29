@@ -39,7 +39,7 @@ elseif(vt_fcontext_enabled)
 else()
   message(
     STATUS
-    "\n\n\nThreading disabled\n\n\n"
+    "Threading disabled"
   )
   config_no_threading()
 endif()

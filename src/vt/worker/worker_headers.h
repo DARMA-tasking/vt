@@ -65,8 +65,6 @@ namespace vt { namespace worker {
   using WorkerGroupType = WorkerGroupSTD;
 #elif vt_check_enabled(fcontext)
   using WorkerGroupType = WorkerGroupSeq;
-#else
-  // using WorkerGroupType = WorkerGroupDummy;
 #endif
 
 #if vt_check_enabled(openmp)
@@ -75,8 +73,6 @@ namespace vt { namespace worker {
   using WorkerType = StdThreadWorker;
 #elif vt_check_enabled(fcontext)
   using WorkerType = WorkerSeq;
-#else
-  // using WorkerType = WorkerDummy;
 #endif
 
 }} /* end namespace vt::worker */

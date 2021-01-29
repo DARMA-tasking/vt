@@ -80,9 +80,14 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
   );
 
   msg_buffer_.attach([this](VirtualMessage* msg){
+    #if vt_threading_enabled
     theWorkerGrp()->enqueueCommThread([this,msg]{
       enqueueWorkUnit(msg);
     });
+    #else
+    (void)this;
+    enqueueWorkUnit(msg);
+    #endif
   });
 }
 
@@ -105,15 +110,17 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
   };
 
   bool const has_workers = theContext()->hasWorkers();
-  bool const execute_comm = msg->getExecuteCommThread();
 
-  if (has_workers) {
+  if (has_workers and vt_threading_enabled) {
+    #if vt_threading_enabled
+    bool const execute_comm = msg->getExecuteCommThread();
     if (hasCoreMap() && !execute_comm) {
       auto const core = getCore();
       theWorkerGrp()->enqueueForWorker(core, work_unit);
     } else {
       theWorkerGrp()->enqueueCommThread(work_unit);
     }
+    #endif
     return true;
   } else {
     work_unit();

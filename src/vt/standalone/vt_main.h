@@ -91,11 +91,13 @@ int vt_main(
 
   auto comm_fn = vrCommThreadWork<VrtContextT>;
 
-  if (workers == no_workers) {
+  if (workers == no_workers or !vt_threading_enabled) {
     comm_fn();
   } else {
+    #if vt_threading_enabled
     vtAssert(theWorkerGrp() != nullptr, "Must have valid worker group");
     theWorkerGrp()->spawnWorkersBlock(comm_fn);
+    #endif
   }
 
   vt_debug_print(gen, node, "vt_main: auto finalize workers={}\n", workers);
