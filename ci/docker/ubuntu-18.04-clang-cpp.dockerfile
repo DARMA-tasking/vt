@@ -24,6 +24,7 @@ RUN apt-get update -y -q && \
     valgrind \
     make-guile \
     libomp5 \
+    libomp-dev \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
