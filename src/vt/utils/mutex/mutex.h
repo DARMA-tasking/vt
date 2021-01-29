@@ -55,10 +55,8 @@
   #include "vt/utils/mutex/omp_mutex.h"
 #elif vt_check_enabled(stdthread)
   #include "vt/utils/mutex/std_mutex.h"
-#elif backend_no_threading
-  #include "vt/utils/mutex/null_mutex.h"
 #else
-  vt_backend_static_assert_unreachable
+  #include "vt/utils/mutex/null_mutex.h"
 #endif
 
 namespace vt { namespace util { namespace mutex {
@@ -67,10 +65,8 @@ namespace vt { namespace util { namespace mutex {
   using MutexType = OMPMutex;
 #elif vt_check_enabled(stdthread)
   using MutexType = STDMutex;
-#elif backend_no_threading
-  using MutexType = NullMutex;
 #else
-  vt_backend_static_assert_unreachable
+  using MutexType = NullMutex;
 #endif
 
 using NullMutexType = NullMutex;
