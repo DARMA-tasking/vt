@@ -55,7 +55,7 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
 #include "vt/messaging/listener.h"
-#include "vt/messaging/irecv_holder.h"
+#include "vt/messaging/request_holder.h"
 #include "vt/messaging/send_info.h"
 #include "vt/messaging/async_op_wrapper.h"
 #include "vt/event/event.h"
@@ -1799,9 +1799,9 @@ private:
   TagType cur_direct_buffer_tag_                          = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
   std::vector<ListenerType> send_listen_                  = {};
-  IRecvHolder<InProgressIRecv> in_progress_active_msg_irecv;
-  IRecvHolder<InProgressDataIRecv> in_progress_data_irecv;
-  IRecvHolder<AsyncOpWrapper> in_progress_ops;
+  RequestHolder<InProgressIRecv> in_progress_active_msg_irecv;
+  RequestHolder<InProgressDataIRecv> in_progress_data_irecv;
+  RequestHolder<AsyncOpWrapper> in_progress_ops;
   NodeType this_node_                                     = uninitialized_destination;
 
 private:
