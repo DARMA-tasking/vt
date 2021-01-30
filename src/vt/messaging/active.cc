@@ -1229,13 +1229,12 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
 
 bool ActiveMessenger::testPendingAsyncOps() {
   int num_tests = 0;
-  bool const ret = in_progress_ops.testAll(
+  return in_progress_ops.testAll(
     [](AsyncOpWrapper* op) {
       op->done();
     },
     num_tests
   );
-  return ret;
 }
 
 int ActiveMessenger::progress() {
