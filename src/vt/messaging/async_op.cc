@@ -52,7 +52,8 @@ AsyncOp::AsyncOp() {
 }
 
 AsyncOp::AsyncOp(AsyncOp&& in) {
-  std::swap(cur_epoch_, in.cur_epoch_);
+  cur_epoch_ = in.cur_epoch_;
+  in.cur_epoch_ = no_epoch;
 }
 
 /*virtual*/ AsyncOp::~AsyncOp() {
