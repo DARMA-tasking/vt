@@ -45,7 +45,7 @@
 #if !defined INCLUDED_VT_MESSAGING_ASYNC_OP_H
 #define INCLUDED_VT_MESSAGING_ASYNC_OP_H
 
-#include "vt/config.h"
+#include "vt/configs/types/types_headers.h"
 
 namespace vt { namespace messaging {
 
