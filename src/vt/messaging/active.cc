@@ -66,8 +66,10 @@ ActiveMessenger::ActiveMessenger()
   trace_isend(trace::registerEventCollective("MPI_Isend")),
   trace_irecv_polling_am(trace::registerEventCollective("IRecv: Active Msg poll")),
   trace_irecv_polling_dm(trace::registerEventCollective("IRecv: Data Msg poll")),
+  trace_asyncop(trace::registerEventCollective("AsyncOP: poll")),
   in_progress_active_msg_irecv(trace_irecv_polling_am),
   in_progress_data_irecv(trace_irecv_polling_dm),
+  in_progress_ops(trace_asyncop),
 # endif
   this_node_(theContext()->getNode())
 {
@@ -1225,15 +1227,26 @@ bool ActiveMessenger::testPendingDataMsgAsyncRecv() {
   return ret;
 }
 
+bool ActiveMessenger::testPendingAsyncOps() {
+  int num_tests = 0;
+  return in_progress_ops.testAll(
+    [](AsyncOpWrapper* op) {
+      op->done();
+    },
+    num_tests
+  );
+}
+
 int ActiveMessenger::progress() {
   bool const started_irecv_active_msg = tryProcessIncomingActiveMsg();
   bool const started_irecv_data_msg = tryProcessDataMsgRecv();
   processMaybeReadyHanTag();
   bool const received_active_msg = testPendingActiveMsgAsyncRecv();
   bool const received_data_msg = testPendingDataMsgAsyncRecv();
+  bool const general_async = testPendingAsyncOps();
 
   return started_irecv_active_msg or started_irecv_data_msg or
-         received_active_msg or received_data_msg;
+         received_active_msg or received_data_msg or general_async;
 }
 
 void ActiveMessenger::processMaybeReadyHanTag() {

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                irecv_holder.h
+//                               request_holder.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
-#define INCLUDED_VT_MESSAGING_IRECV_HOLDER_H
+#if !defined INCLUDED_VT_MESSAGING_REQUEST_HOLDER_H
+#define INCLUDED_VT_MESSAGING_REQUEST_HOLDER_H
 
 #include "vt/config.h"
 #include "vt/configs/arguments/app_config.h"
@@ -62,19 +62,19 @@ namespace vt { namespace messaging {
 /** \file */
 
 /**
- * \struct IRecvHolder
+ * \struct RequestHolder
  *
  * \brief Holds a set of pending MPI Irecvs to poll for completion
  */
 template <typename T>
-struct IRecvHolder {
+struct RequestHolder {
 
 # if vt_check_enabled(trace_enabled)
-  explicit IRecvHolder(trace::UserEventIDType in_trace_user_event)
+  explicit RequestHolder(trace::UserEventIDType in_trace_user_event)
     : trace_user_event_(in_trace_user_event)
   { }
 # else
-  IRecvHolder() = default;
+  RequestHolder() = default;
 #endif
 
   /**
@@ -164,4 +164,4 @@ private:
 
 }} /* end namespace vt::messaging */
 
-#endif /*INCLUDED_VT_MESSAGING_IRECV_HOLDER_H*/
+#endif /*INCLUDED_VT_MESSAGING_REQUEST_HOLDER_H*/
