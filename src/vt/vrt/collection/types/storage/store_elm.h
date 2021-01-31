@@ -208,6 +208,11 @@ struct StoreElm<
   /// polymorphic serializer for derived class
   checkpoint_virtual_serialize_derived_from(StoreElmBase)
 
+  static_assert(
+    std::is_trivially_copyable<T>::value and not std::is_pointer<T>::value,
+    "Non-serializable must always at least be trivially copyable and not a pointer"
+  );
+
   /**
    * \brief Construct with value
    *
