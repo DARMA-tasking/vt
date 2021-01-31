@@ -68,6 +68,9 @@ struct TestCol : Collection<TestCol, Index1D> {
 
   void testHandler(TestMsg* msg) {
     this->valInsert("hello", this->getIndex().x());
+    this->valRemove("hello");
+    this->valInsert("hello", this->getIndex().x());
+
     this->valInsert("vec", std::vector<int>{5,4,1,7,3});
     this->valInsert("test", TestData(10, 20.5f));
 
