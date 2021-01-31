@@ -77,6 +77,7 @@ set(
       vrt/collection/staged_token
       vrt/collection/listener
       vrt/collection/invoke
+      vrt/collection/types/storage
       vrt/collection/balance
         vrt/collection/balance/baselb
         vrt/collection/balance/hierarchicallb

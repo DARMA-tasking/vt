@@ -87,7 +87,7 @@ template <typename ColT, typename IndexT>
   // auto vc_raw_ptr = ::checkpoint::deserialize<ColT>(
   //   buf, col_t
   // );
-  auto vc_elm_ptr = std::make_unique<ColT>(std::move(*msg->elm_));
+  auto vc_elm_ptr = std::unique_ptr<ColT>(msg->elm_);
 
   auto const& migrate_status =
     CollectionElmAttorney<ColT,IndexT>::migrateIn(

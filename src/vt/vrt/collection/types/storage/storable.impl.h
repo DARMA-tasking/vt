@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              migratable.impl.h
+//                               storable.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,23 +42,45 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
-#define INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_IMPL_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/types/migratable.h"
+#include "vt/vrt/collection/types/storage/storable.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace storage {
 
-template <typename Serializer>
-void Migratable::serialize(Serializer& s) {
-  MigrateHookBase::serialize(s);
-  storage::Storable::serialize(s);
-  s | stats_;
-  s | stats_elm_id_;
-  s | temp_elm_id_;
+template <typename SerializerT>
+void Storable::serialize(SerializerT& s) {
+  s | map_;
 }
 
-}}} /* end namespace vt::vrt::collection */
+template <typename U>
+void Storable::valInsert(std::string const& str, U&& u) {
+  map_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(str),
+    std::forward_as_tuple(
+      std::make_unique<StoreElm<typename std::decay<U>::type>>(
+        std::forward<U>(u)
+      )
+    )
+  );
+}
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_IMPL_H*/
+template <typename U>
+U& Storable::valGet(std::string const& str) {
+  vtAssert(valExists(str), "Key must exist in map");
+  auto iter = map_.find(str);
+  return iter->second->get<U>();
+}
+
+template <typename U>
+U const& Storable::valGet(std::string const& str) const {
+  vtAssert(valExists(str), "Key must exist in map");
+  auto iter = map_.find(str);
+  return iter->second->get<U>();
+}
+
+}}}} /* end namespace vt::vrt::collection::storage */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_IMPL_H*/
