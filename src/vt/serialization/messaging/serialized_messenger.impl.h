@@ -199,7 +199,7 @@ template <typename MsgT, typename BaseT>
 template <typename MsgT, typename BaseT>
 /*static*/ messaging::PendingSend
  SerializedMessenger::broadcastSerialMsg(
-  MsgT* msg_ptr, HandlerType han
+  MsgT* msg_ptr, HandlerType han, bool deliver_to_sender
 ) {
   using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
 
@@ -256,7 +256,7 @@ template <typename MsgT, typename BaseT>
     );
 
     theMsg()->markAsSerialMsgMessage(payload_msg);
-    return theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg);
+    return theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg, deliver_to_sender);
   } else {
     auto const& total_size = ptr_size + sys_size;
 

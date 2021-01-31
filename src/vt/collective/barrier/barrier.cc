@@ -60,12 +60,6 @@ Barrier::Barrier() :
 }
 
 /*static*/ void Barrier::barrierDown(BarrierMsg* msg) {
-  // Handler already executed inline after calling bcast
-  // Don't run this function twice
-  if(envelopeIsBcastRoot(msg->env)){
-    return;
-  }
-
   theCollective()->barrierDown(msg->is_named, msg->is_wait, msg->barrier);
 }
 
@@ -240,7 +234,7 @@ void Barrier::barrierUp(
         barrier, node,
         "barrierDown: barrier={}\n", barrier
       );
-      theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg);
+      theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg, false);
       barrierDown(is_named, is_wait, barrier);
     }
   }

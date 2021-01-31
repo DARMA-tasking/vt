@@ -235,7 +235,7 @@ messaging::PendingSend Proxy<void>::broadcast(Args&&... args) const {
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
 messaging::PendingSend
 Proxy<void>::broadcastMsg(messaging::MsgPtrThief<MsgT> msg, TagType tag) const {
-  return theMsg()->broadcastMsg<MsgT, f>(msg, tag);
+  return theMsg()->broadcastMsg<MsgT, f>(msg, true, tag);
 }
 
 template <typename OpT, typename FunctorT, typename MsgT, typename... Args>

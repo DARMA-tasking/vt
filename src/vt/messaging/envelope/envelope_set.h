@@ -91,9 +91,10 @@ inline void setTermType(Env& env);
  * \brief Set broadcast bit (changes how \c dest is interpreted) \c EnvBroadcast
  *
  * \param[in,out] env the envelope
+ * \param[in] deliver_to_sender whether the message should be delivered to sender
  */
 template <typename Env>
-inline void setBroadcastType(Env& env);
+inline void setBroadcastType(Env& env, bool deliver_to_sender = true);
 
 /**
  * \brief Set epoch bit \c EnvEpoch

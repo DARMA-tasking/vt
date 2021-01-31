@@ -76,6 +76,16 @@ template <typename Env>
 inline NodeType envelopeGetDest(Env const& env);
 
 /**
+ * \brief Check whether bcast should be delivered to sender
+ *
+ * \param[in] env the envelope
+ *
+ * \return whether to deliver msg to sender
+ */
+template <typename Env>
+inline bool envelopeGetDeliverBcast(Env const& env);
+
+/**
  * \brief Get the group on an envelope
  *
  * \param[in] env the envelope

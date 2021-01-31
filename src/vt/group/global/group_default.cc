@@ -192,7 +192,7 @@ namespace vt { namespace group { namespace global {
       });
     }
 
-    if (is_root && !envelopeIsTerm(msg->env)) {
+    if (is_root && envelopeGetDeliverBcast(msg->env)) {
       *deliver = true;
     }
 

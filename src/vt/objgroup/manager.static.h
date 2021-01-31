@@ -83,7 +83,7 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
 
 template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
-  theMsg()->broadcastMsg<MsgT>(han, msg, no_tag);
+  theMsg()->broadcastMsg<MsgT>(han, msg);
 }
 
 }} /* end namespace vt::objgroup */

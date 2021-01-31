@@ -160,12 +160,6 @@ template <typename SysMsgT>
   using IndexT      = typename SysMsgT::IndexType;
   using BaseIdxType = vt::index::BaseIndex;
 
-  // Handler already executed inline after calling bcast
-  // Don't run this function twice
-  if(envelopeIsBcastRoot(msg->env)){
-    return;
-  }
-
   auto const num_nodes = theContext()->getNumNodes();
 
   auto& info = msg->info;
@@ -2299,7 +2293,7 @@ CollectionManager::constructMap(
   );
 
   theMsg()->broadcastMsg<MsgType,distConstruct<MsgType>>(
-    create_msg
+    create_msg, false
   );
 
   auto create_msg_local = makeMessage<MsgType>(
@@ -2343,12 +2337,6 @@ template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::updateInsertEpochHandler(
   UpdateInsertMsg<ColT,IndexT>* msg
 ) {
-  // Handler already executed inline after calling bcast
-  // Don't run this function twice
-  if(envelopeIsBcastRoot(msg->env)){
-    return;
-  }
-
   auto const& untyped_proxy = msg->proxy_.getProxy();
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,msg->epoch_);
 
@@ -2472,7 +2460,7 @@ void CollectionManager::finishedInsertEpoch(
   theMsg()->markAsCollectionMessage(msg);
   theMsg()->broadcastMsg<
     UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
-  >(msg);
+  >(msg, false);
 
   /*
    *  Start building the a new group for broadcasts and reductions over the
@@ -2983,7 +2971,6 @@ void CollectionManager::destroy(
 
   auto msg = makeMessage<DestroyMsgType>(proxy, this_node);
   theMsg()->markAsCollectionMessage(msg);
-  auto msg_hold = promoteMsg(msg.get()); // keep after bcast
   theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
 }
 

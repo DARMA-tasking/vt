@@ -98,14 +98,6 @@ inline bool envelopeIsLocked(Env& env) {
   return reinterpret_cast<Envelope const*>(&env)->is_locked;
 }
 
-template <typename Env>
-inline bool envelopeIsBcastRoot(Env& env) {
-  auto const is_bcast = envelopeIsBcast(env);
-  auto const dest = envelopeGetDest(env);
-  auto const this_node = theContext()->getNode();
-  return is_bcast && (this_node == dest);
-}
-
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TEST_IMPL_H*/

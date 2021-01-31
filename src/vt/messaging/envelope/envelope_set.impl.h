@@ -76,9 +76,10 @@ inline void setTermType(Env& env) {
 }
 
 template <typename Env>
-inline void setBroadcastType(Env& env) {
+inline void setBroadcastType(Env& env, bool deliver_to_sender) {
   vtAssert(not envelopeIsLocked(env), "Envelope locked.");
   reinterpret_cast<Envelope*>(&env)->type |= 1 << eEnvType::EnvBroadcast;
+  reinterpret_cast<Envelope*>(&env)->deliver_bcast_to_sender = deliver_to_sender;
 }
 
 template <typename Env>

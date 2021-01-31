@@ -666,6 +666,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \param[in] msg the message to broadcast
    * \param[in] msg_size the size of the message to send
+   * \param[in] deliver_to_sender whether msg should be delivered to sender
    * \param[in] tag the tag to put on the message
    *
    * \return the \c PendingSend for the sent message
@@ -674,6 +675,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType broadcastMsgSz(
     MsgPtrThief<MsgT> msg,
     ByteType msg_size,
+    bool deliver_to_sender = true,
     TagType tag = no_tag
   );
 
@@ -683,6 +685,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \note Takes ownership of the supplied message.
    *
    * \param[in] msg the message to broadcast
+   * \param[in] deliver_to_sender whether msg should be delivered to sender
    * \param[in] tag the tag to put on the message
    *
    * \return the \c PendingSend for the sent message
@@ -690,6 +693,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT, ActiveTypedFnType<MsgT>* f>
   PendingSendType broadcastMsg(
     MsgPtrThief<MsgT> msg,
+    bool deliver_to_sender = true,
     TagType tag = no_tag
   );
 
@@ -819,6 +823,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \note Takes ownership of the supplied message.
    *
    * \param[in] msg the message to broadcast
+   * \param[in] deliver_to_sender whether msg should be delivered to sender
    * \param[in] tag the optional tag to put on the message
    *
    * \return the \c PendingSend for the broadcast
@@ -826,6 +831,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <ActiveFnType* f, typename MsgT>
   PendingSendType broadcastMsg(
     MsgPtrThief<MsgT> msg,
+    bool deliver_to_sender = true,
     TagType tag = no_tag
   );
 
@@ -890,6 +896,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \note Takes ownership of the supplied message.
    *
    * \param[in] msg the message to broadcast
+   * \param[in] deliver_to_sender whether msg should be delivered to sender
    * \param[in] tag the optional tag to put on the message
    *
    * \return the \c PendingSend for the broadcast
@@ -900,6 +907,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   >
   PendingSendType broadcastMsg(
     MsgPtrThief<MsgT> msg,
+    bool deliver_to_sender = true,
     TagType tag = no_tag
   );
 
@@ -1023,6 +1031,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \param[in] han the handler to invoke
    * \param[in] msg the message to broadcast
+   * \param[in] deliver_to_sender whether msg should be delivered to sender
    * \param[in] tag the optional tag to put on the message
    *
    * \return the \c PendingSend for the send
@@ -1031,6 +1040,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   PendingSendType broadcastMsg(
     HandlerType han,
     MsgPtrThief<MsgT> msg,
+    bool deliver_to_sender = true,
     TagType tag = no_tag
   );
 

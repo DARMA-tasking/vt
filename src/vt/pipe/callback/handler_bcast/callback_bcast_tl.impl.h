@@ -71,8 +71,7 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     pipe, this_node
   );
 
-  auto pmsg = promoteMsg(msg);
-  theMsg()->broadcastMsg<MsgT>(handler_, pmsg);
+  theMsg()->broadcastMsg<MsgT>(handler_, msg);
 }
 
 }}} /* end namespace vt::pipe::callback */
