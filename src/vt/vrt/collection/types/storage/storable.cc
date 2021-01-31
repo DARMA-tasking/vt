@@ -42,9 +42,6 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_CC
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_CC
-
 #include "vt/vrt/collection/types/storage/storable.h"
 
 namespace vt { namespace vrt { namespace collection { namespace storage {
@@ -61,5 +58,3 @@ void Storable::valRemove(std::string const& str) {
 }
 
 }}}} /* end namespace vt::vrt::collection::storage */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STORAGE_STORABLE_CC*/
