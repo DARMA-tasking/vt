@@ -77,6 +77,7 @@ struct MigrateMsg final : ::vt::Message {
     MessageParentType::serialize(s);
     s | elm_proxy_ | from_ | to_ | map_fn_ | range_;
     if (s.isUnpacking()) {
+      // handler always takes ownership of this by constructing a unique_ptr
       elm_ = new ColT{};
     }
     s | *elm_;
