@@ -222,21 +222,19 @@ int main(int argc, char** argv) {
     }
   }
 
-  vt::runInEpochCollective([=]{
-      if (this_node == 0) {
-        //
-        // Create the interval decomposition into objects
-        //
-        using BaseIndexType = typename vt::Index1D::DenseIndexType;
-        auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
+  //
+  // Create the interval decomposition into objects
+  //
+  using BaseIndexType = typename vt::Index1D::DenseIndexType;
+  auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
-        auto proxy = vt::theCollection()->construct<Integration1D>(range);
-        proxy.broadcast<Integration1D::InitMsg,&Integration1D::compute>
-          (
-           num_objs, numIntPerObject
-          );
-      }
-    });
+  auto proxy = vt::theCollection()->constructCollective<Integration1D>(range);
+
+  vt::runInEpochCollective([proxy, num_objs, numIntPerObject]{
+    proxy.broadcastCollective<Integration1D::InitMsg, &Integration1D::compute>(
+      num_objs, numIntPerObject
+    );
+  });
 
   // Add something like this to validate the reduction.
   // Create the variable root_reduce_finished as a static variable,
