@@ -84,6 +84,7 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
 
   vtAssert(stats.getPhase() == msg->getPhase(), "Phases must match");
   stats.updatePhase(1);
+  stats.setSubPhase(0);
 
   auto const& cur_phase = msg->getPhase();
   auto const& untyped_proxy = col->getProxy();
