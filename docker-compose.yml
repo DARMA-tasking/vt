@@ -30,8 +30,9 @@
 #   VT_EXTENDED_TESTS=1       # Build all the extended testing
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
 #   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
-#   VT_USE_OPENMP             # Force use of OpenMP for threading
-#   VT_USE_STD_THREAD         # Force use of std::thread for threading
+#   VT_FCONTEXT=0             # Force use of fcontext for threading
+#   VT_USE_OPENMP=0           # Force use of OpenMP for threading
+#   VT_USE_STD_THREAD=0       # Force use of std::thread for threading
 #   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics collection at runtime by default
 #   BUILD_TYPE=release        # CMake build type
@@ -130,6 +131,7 @@ x-vtopts: &vtopts
   VT_POOL_ENABLED: ${VT_POOL:-1}
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
   VT_UNITY_BUILD_ENABLED: ${VT_UNITY_BUILD:-0}
+  VT_FCONTEXT_ENABLED: ${VT_FCONTEXT:-0}
   VT_USE_OPENMP: ${VT_USE_OPENMP:-0}
   VT_USE_STD_THREAD: ${VT_USE_STD_THREAD:-0}
   VT_DIAGNOSTICS_ENABLED: ${VT_DIAGNOSTICS:-1}

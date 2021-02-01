@@ -110,6 +110,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \
       -Dvt_diagnostics_runtime_enabled="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}" \
       -Dzoltan_DIR="${ZOLTAN_CONFIG:-}" \
+      -Dvt_fcontext_enabled="${VT_FCONTEXT_ENABLED:-0}" \
       -DUSE_OPENMP="${VT_USE_OPENMP:-0}" \
       -DUSE_STD_THREAD="${VT_USE_STD_THREAD:-0}" \
       -DCODE_COVERAGE="${CODE_COVERAGE:-0}" \
