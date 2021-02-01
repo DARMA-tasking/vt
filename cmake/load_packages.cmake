@@ -15,6 +15,9 @@ include(cmake/load_threading_package.cmake)
 # Perl is used to build the PMPI wrappers
 find_package(Perl)
 
+# Discover and load Backtrace
+include(cmake/load_backtrace_package.cmake)
+
 # Doxygen package
 include(cmake/load_doxygen.cmake)
 
