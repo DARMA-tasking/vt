@@ -12,9 +12,9 @@ include(${VT_CMAKE_DIR}/vtTargets.cmake)
 include(CMakeFindDependencyMacro)
 
 @THREADS_DEPENDENCY@
+@ZOLTAN_DEPENDENCY@
 
 find_dependency(MPI REQUIRED)
-
 find_dependency(Backtrace REQUIRED)
 
 if (@vt_find_detector_dep@)
