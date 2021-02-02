@@ -264,14 +264,14 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
     const auto& subphase_times = node_subphase_data_.at(phase)[id];
     size_t subphases = subphase_times.size();
 
-    auto obj_str = fmt::format("{},{},{},{},[", phase, id, time, subphases);
+    auto obj_str = fmt::format("{},{},{:e},{},[", phase, id, time, subphases);
 
     for (size_t s = 0; s < subphases; s++) {
       if (s > 0) {
         obj_str += ",";
       }
 
-      obj_str += std::to_string(subphase_times[s]);
+      obj_str += fmt::format("{:e}", subphase_times[s]);
     }
 
     obj_str += "]\n";
