@@ -215,4 +215,8 @@ function(link_target_with_vt)
       ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${ARG_CUSTOM_LINK_ARGS}
      )
   endif()
+
+  if (vt_asan_enabled)
+    target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} -fsanitize=address)
+  endif()
 endfunction()
