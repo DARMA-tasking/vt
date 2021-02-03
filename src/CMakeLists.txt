@@ -260,7 +260,7 @@ link_target_with_vt(
 #  TRACE ONLY TARGET #
 ######################
 
-if (${vt_trace_only})
+if (vt_trace_only)
 
   # Don't GLOB all files, pick only the ones we're gonna use
   set(TRACE_HEADERS
