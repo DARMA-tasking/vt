@@ -189,7 +189,7 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} OpenMP::OpenMP_CXX
     )
-  elseif (NOT DEFINED ARG_LINK_STDTHREAD AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_STDTHREAD)
+  elseif (NOT DEFINED ARG_LINK_STDTHREAD AND DEFAULT_THREADING STREQUAL stdthread OR ARG_LINK_STDTHREAD)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt(..): stdthread=${ARG_LINK_STDTHREAD}")
     endif()

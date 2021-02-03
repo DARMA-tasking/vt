@@ -262,13 +262,6 @@ link_target_with_vt(
   DEFAULT_LINK_SET
 )
 
-# link_target_with_vt(
-#   TARGET ${VIRTUAL_TRANSPORT_LIBRARY_DV1}
-#   BUILD_TYPE debug
-#   LINK_VT_LIB
-#   DEFAULT_LINK_SET
-# )
-
 # Define and set up the different build types of VT
 include(../cmake/define_build_types.cmake)
 
