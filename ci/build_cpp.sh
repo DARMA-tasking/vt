@@ -211,7 +211,9 @@ then
     exit "$compilation_ret"
 fi
 
-if test "${VT_CI_BUILD:-0}" -eq 1 && test "${target}" = "install"
+# Don't build vt-sample on Alpine Linux
+is_alpine="$(grep ID < /etc/os-release | grep -c alpine || true)"
+if test "$is_alpine" -eq 0 && test "${VT_CI_BUILD:-0}" -eq 1 && test "${target}" = "install"
 then
     git clone https://github.com/DARMA-tasking/vt-sample-project
     mkdir -p vt-sample-project/build

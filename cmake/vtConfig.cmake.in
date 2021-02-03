@@ -15,7 +15,6 @@ include(CMakeFindDependencyMacro)
 @ZOLTAN_DEPENDENCY@
 
 find_dependency(MPI REQUIRED)
-find_dependency(Backtrace REQUIRED)
 
 if (@vt_find_detector_dep@)
   set (detector_DIR @detector_DIR@)

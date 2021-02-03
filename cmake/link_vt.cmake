@@ -32,7 +32,6 @@ function(link_target_with_vt)
     LINK_DL
     LINK_ZOLTAN
     LINK_FORT
-    LINK_BACKTRACE
   )
   set(
     multiValueArg
@@ -215,18 +214,5 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${ARG_CUSTOM_LINK_ARGS}
      )
-  endif()
-
-  if (NOT DEFINED ARG_LINK_BACKTRACE AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_BACKTRACE)
-    if (${ARG_DEBUG_LINK})
-      message(STATUS "link_target_with_vt: Backtrace=${ARG_LINK_BACKTRACE}")
-    endif()
-
-    target_link_libraries(
-      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${Backtrace_LIBRARIES}
-    )
-    target_include_directories(
-      ${ARG_TARGET} PUBLIC $<BUILD_INTERFACE:${Backtrace_INCLUDE_DIRECTORIES}>
-    )
   endif()
 endfunction()
