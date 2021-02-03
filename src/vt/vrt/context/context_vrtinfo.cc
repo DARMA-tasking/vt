@@ -111,7 +111,7 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
 
   bool const has_workers = theContext()->hasWorkers();
 
-  if (has_workers and vt_threading_enabled) {
+  if (has_workers) {
     #if vt_threading_enabled
     bool const execute_comm = msg->getExecuteCommThread();
     if (hasCoreMap() && !execute_comm) {
@@ -120,6 +120,8 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
     } else {
       theWorkerGrp()->enqueueCommThread(work_unit);
     }
+    #else
+    work_unit();
     #endif
     return true;
   } else {
