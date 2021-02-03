@@ -104,7 +104,8 @@ else()
   set(vt_feature_cmake_trace_enabled "0")
 endif()
 
-if (${vt_trace_only})
+option(vt_trace_only "Build VT with trace-only mode enabled" ON)
+if (vt_trace_only)
   message(STATUS "Building additional target for VT in trace-only mode")
 endif()
 
@@ -155,10 +156,10 @@ else()
   option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" OFF)
 endif()
 
-if (vt_mpi_guards AND PERL_FOUND)
+if ((vt_mpi_guards OR vt_trace_only) AND PERL_FOUND)
   message(STATUS "Building VT with user MPI prevention guards enabled")
   set(vt_feature_cmake_mpi_access_guards "1")
-elseif (vt_mpi_guards AND NOT PERL_FOUND)
+elseif ((vt_mpi_guards OR vt_trace_only) AND NOT PERL_FOUND)
   # No perl? Can't generate wrapper source file.
   message(STATUS "Building VT with user MPI prevention guards disabled (requested, but perl not found)")
   set(vt_feature_cmake_mpi_access_guards "0")
@@ -305,7 +306,7 @@ foreach(loop_build_type ${VT_CONFIG_TYPES})
   )
 
   # Generate separate config file for vt-trace with trace_only flag set to 1
-  if (${vt_trace_only})
+  if (vt_trace_only)
     set(vt_feature_cmake_trace_enabled "1")
     set(vt_feature_cmake_trace_only "1")
     configure_file(
@@ -346,7 +347,7 @@ target_include_directories(
   $<INSTALL_INTERFACE:include>
 )
 
-if (${vt_trace_only})
+if (vt_trace_only)
   target_include_directories(
     ${VT_TRACE_LIB} PUBLIC
     $<BUILD_INTERFACE:$<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug/vt-trace>>
