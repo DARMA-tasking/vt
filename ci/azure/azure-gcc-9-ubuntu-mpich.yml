@@ -171,6 +171,7 @@ stages:
           comment: $(comp_errs_warns)
       - task: DockerCompose@0
         displayName: Push container to registry
+        condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
         inputs:
           containerregistrytype: 'Container Registry'
           dockerRegistryEndpoint: 'dockerRegistryConnection1'
