@@ -1,4 +1,3 @@
-
 ARG arch=amd64
 FROM ${arch}/ubuntu:18.04 as base
 
