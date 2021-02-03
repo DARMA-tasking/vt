@@ -119,7 +119,7 @@ stages:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: $(compose_command)
+          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean'
       - task: DockerCompose@0
         displayName: Build container
         inputs:

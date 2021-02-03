@@ -8,7 +8,7 @@ diff_latest() {
 
 if diff_latest | grep -i dockerfile > /dev/null
 then
-    echo "build --pull ubuntu-cpp-clean"
+    echo "build --pull"
 else
-    echo "pull --ignore-pull-failures ubuntu-cpp-clean"
+    echo "pull --ignore-pull-failures"
 fi

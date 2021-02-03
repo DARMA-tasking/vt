@@ -106,13 +106,20 @@ stages:
             $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH)
             $(Agent.OS) | "$(cache_name)" | $(TS_YEAR)
             $(Agent.OS) | "$(cache_name)"
+      - task: Bash@3
+        displayName: Check for changes in containers
+        inputs:
+          targetType: 'inline'
+          script: |
+            val=$(./scripts/check_containers.sh)
+            echo "##vso[task.setvariable variable=compose_command]$val"
       - task: DockerCompose@0
         displayName: Pull container
         inputs:
           containerregistrytype: 'Container Registry'
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
-          dockerComposeCommand: 'pull --ignore-pull-failures ubuntu-cpp-clean'
+          dockerComposeCommand: '$(compose_command) ubuntu-cpp-clean'
       - task: DockerCompose@0
         displayName: Build container
         inputs:
