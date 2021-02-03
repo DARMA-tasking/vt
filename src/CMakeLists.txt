@@ -170,7 +170,7 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
 endforeach()
 
 # Generate PMPI wrappers, if enabled and possible.
-if(vt_mpi_guards AND PERL_FOUND)
+if((vt_mpi_guards OR vt_trace_only) AND PERL_FOUND)
   set(MPI_WRAP_GENERATED "${PROJECT_BIN_DIR}/src/vt/pmpi/generated/mpiwrap.cc")
 
   file(MAKE_DIRECTORY "${PROJECT_BIN_DIR}/src/vt/pmpi/generated")
