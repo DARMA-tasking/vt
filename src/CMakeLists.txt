@@ -324,7 +324,7 @@ if (vt_trace_only)
 
     # vt/pmpi
     vt/pmpi/pmpi_component.h
-)
+  )
 
   set(TRACE_SOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_containers.cc ${CMAKE_CURRENT_SOURCE_DIR}/vt/trace/trace_event.cc
