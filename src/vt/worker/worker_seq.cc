@@ -44,7 +44,7 @@
 
 #include "vt/config.h"
 
-#if backend_no_threading
+#if vt_check_enabled(fcontext)
 
 #include "vt/context/context.h"
 #include "vt/context/context_attorney.h"
@@ -59,8 +59,6 @@
 #define WORKER_SEQ_VERBOSE 0
 
 namespace vt { namespace worker {
-
-using namespace fcontext;
 
 WorkerSeq::WorkerSeq(
   WorkerIDType const& in_worker_id_, WorkerCountType const& in_num_thds,

@@ -735,6 +735,7 @@ void Runtime::initializeComponents() {
     >{}
   );
 
+  #if vt_threading_enabled
   p_->registerComponent<worker::WorkerGroupType>(
     &theWorkerGrp, Deps<
       ctx::Context,               // Everything depends on theContext
@@ -743,6 +744,7 @@ void Runtime::initializeComponents() {
       term::TerminationDetector   // Depends on TD for idle callbacks
     >{}
   );
+  #endif
 
   p_->registerComponent<collective::CollectiveAlg>(
     &theCollective, Deps<
@@ -911,10 +913,12 @@ void Runtime::initializeComponents() {
     p_->add<vrt::collection::balance::StatsRestartReader>();
   }
 
+  #if vt_threading_enabled
   bool const has_workers = num_workers_ != no_workers;
   if (has_workers) {
     p_->add<worker::WorkerGroupType>();
   }
+  #endif
 
   p_->construct();
 
@@ -966,6 +970,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   bool const has_workers = num_workers != no_workers;
 
   if (has_workers) {
+    #if vt_threading_enabled
     ContextAttorney::setNumWorkers(num_workers);
 
     // Initialize individual memory pool for each worker
@@ -980,6 +985,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
       }
     };
     theWorkerGrp->registerIdleListener(localTermFn);
+    #endif
   } else {
     // Without workers running on the node, the termination detector should
     // enable/disable the global collective epoch based on the state of the
@@ -1058,9 +1064,11 @@ void Runtime::printMemoryFootprint() const {
         static_cast<vrt::VirtualContextManager*>(base)
       );
     } else if (name == "WorkerGroupOMP" || name == "WorkerGroup") {
+      #if vt_threading_enabled
       printComponentFootprint(
         static_cast<worker::WorkerGroupType*>(base)
       );
+      #endif
     } else if (name == "Collective") {
       printComponentFootprint(
         static_cast<collective::CollectiveAlg*>(base)

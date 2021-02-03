@@ -60,7 +60,10 @@ build configuration:
 | `vt_priority_bits_per_level`     | 3               | Number of bits per level of priority in envelope |
 | `vt_build_extended_tests`        | 1               | Build with full, extended testing |
 | `vt_unity_build_enabled`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
+| `vt_fcontext_enabled`            | 1               | Force use of fcontext for threading |
 | `CODE_COVERAGE`                  | 0               | Enable code coverage for VT examples/tests |
+| `USE_OPENMP`                     | 0               | Force use of OpenMP for threading |
+| `USE_STD_THREAD`                 | 0               | Force use of std::thread for threading |
 | `VT_BUILD_TESTS`                 | 1               | Build all VT tests |
 | `VT_BUILD_EXAMPLES`              | 1               | Build all VT examples |
 
@@ -84,6 +87,9 @@ parameters.
 | `VT_ASAN_ENABLED `               | 0               | Enable building with address sanitizer |
 | `VT_WERROR_ENABLED `             | 0               | Treat all warnings as errors |
 | `VT_POOL_ENABLED `               | 1               | Use memory pool in *vt* for message allocation |
+| `VT_FCONTEXT_ENABLED`            | 0               | Force use of fcontext for threading |
+| `VT_USE_OPENMP`                  | 0               | Force use of OpenMP for threading |
+| `VT_USE_STD_THREAD`              | 0               | Force use of std::thread for threading |
 | `VT_ZOLTAN_ENABLED `             | 0               | Build with Zoltan enabled for `ZoltanLB` support |
 | `ZOLTAN_DIR `                    | <empty>         | Directory pointing to Zoltan installation |
 | `VT_MPI_GUARD_ENABLED `          | 0               | Guards against mis-use of MPI calls in code using *vt* |
@@ -152,6 +158,9 @@ which `docker-compose` will read.
 #   VT_EXTENDED_TESTS=1       # Build all the extended testing
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
 #   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
+#   VT_FCONTEXT=0             # Force use of fcontext for threading
+#   VT_USE_OPENMP=0           # Force use of OpenMP for threading
+#   VT_USE_STD_THREAD=0       # Force use of std::thread for threading
 #   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics at runtime by default
 #   BUILD_TYPE=release        # CMake build type

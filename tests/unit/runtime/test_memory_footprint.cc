@@ -186,9 +186,11 @@ TEST_F(TestMemoryFootprinting, test_async_event) {
   printMemoryFootprint(&event);
 }
 
+#if vt_threading_enabled
 TEST_F(TestMemoryFootprinting, test_worker_group_type) {
   printMemoryFootprint(theWorkerGrp());
 }
+#endif
 
 TEST_F(TestMemoryFootprinting, test_virtual_context_manager) {
   printMemoryFootprint(theVirtualManager());

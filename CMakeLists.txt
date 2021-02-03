@@ -87,8 +87,6 @@ if (vt_unity_build_enabled)
   endif()
 endif()
 
-option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
-
 # Option included here, handled in define_build_modes.cmake so libfort can be
 # included correspondingly
 option(vt_diagnostics_enabled "Build VT with performance metrics/stats" ON)
@@ -100,7 +98,6 @@ else()
   option(vt_libfort_enabled "Build VT with fort library enabled" OFF)
 endif()
 
-option(vt_fcontext_enabled "Build VT with fcontext (ULT) enabled" OFF)
 option(vt_mimalloc_enabled "Build VT with mimalloc" OFF)
 option(vt_mimalloc_static "Build VT with mimalloc using static linking" ON)
 option(vt_asan_enabled "Build VT with address sanitizer" OFF)

@@ -413,7 +413,9 @@ public:
   ComponentPtrType<phase::PhaseManager> thePhase = nullptr;
 
   // Node-level worker-based components for vt (these are optional)
+  #if vt_threading_enabled
   ComponentPtrType<worker::WorkerGroupType> theWorkerGrp = nullptr;
+  #endif
 
   // Optional components
   #if vt_check_enabled(trace_enabled)

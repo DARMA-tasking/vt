@@ -328,10 +328,6 @@ else()
 endif()
 
 if (cmake_do_install)
-  if (vt_fcontext_enabled)
-    set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
-  endif()
-
   if (vt_mimalloc_enabled)
     set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
   endif()
@@ -350,6 +346,10 @@ if (cmake_do_install)
     install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
     set(CHECKPOINT_EXPORT checkpoint)
   endif()
+endif()
+
+if (vt_fcontext_enabled)
+  set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
 endif()
 
 # Export to build directory

@@ -60,7 +60,6 @@
 #define vt_feature_stdthread           0 || vt_feature_cmake_stdthread
 #define vt_feature_mpi_rdma            0 || vt_feature_cmake_mpi_rdma
 #define vt_feature_print_term_msgs     0 || vt_feature_cmake_print_term_msgs
-#define vt_feature_default_threading   0 || vt_feature_cmake_default_threading
 #define vt_feature_no_pool_alloc_env   0 || vt_feature_cmake_no_pool_alloc_env
 #define vt_feature_memory_pool         0 || vt_feature_cmake_memory_pool
 #define vt_feature_priorities          0 || vt_feature_cmake_priorities

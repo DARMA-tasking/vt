@@ -220,7 +220,6 @@ set(vt_feature_cmake_production "0")
 
 set (vt_feature_cmake_mpi_rdma "0")
 set (vt_feature_cmake_print_term_msgs "0")
-set (vt_feature_cmake_default_threading "1")
 set (vt_feature_cmake_no_pool_alloc_env "0")
 
 if (${vt_pool_enabled})

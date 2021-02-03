@@ -55,7 +55,7 @@
 
 #if vt_check_enabled(stdthread)
   #include "vt/worker/worker_stdthread.h"
-#elif backend_no_threading
+#elif vt_check_enabled(fcontext)
   #include "vt/worker/worker_seq.h"
 #endif
 
@@ -113,9 +113,9 @@ private:
 
 #if vt_check_enabled(stdthread)
   using WorkerGroupSTD = WorkerGroupAny<StdThreadWorker>;
-#elif backend_no_threading
+#elif vt_check_enabled(fcontext)
   using WorkerGroupSeq = WorkerGroupAny<WorkerSeq>;
-#endif /*vt_check_enabled(stdthread)*/
+#endif
 
 }} /* end namespace vt::worker */
 
