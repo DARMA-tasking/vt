@@ -1,4 +1,3 @@
-
 #
 #  Load and discover threading settings
 #
@@ -15,6 +14,7 @@ if (USE_STD_THREAD)
     STATUS
     "Using std::thread for worker threading"
   )
+  find_package(Threads)
   config_for_std_thread()
 elseif(USE_OPENMP)
   message(
@@ -43,3 +43,5 @@ else()
   )
   config_no_threading()
 endif()
+
+set(THREADS_DEPENDENCY ${LOCAL_THREADS_DEPENDENCY} CACHE STRING "Rule for threading dependency used in vtConfig" FORCE)

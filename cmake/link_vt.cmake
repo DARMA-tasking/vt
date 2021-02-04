@@ -1,4 +1,3 @@
-
 # Convenience function for linking VT or with VT
 function(link_target_with_vt)
   if (ARGC LESS 1)
@@ -190,12 +189,13 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} OpenMP::OpenMP_CXX
     )
-  elseif (NOT DEFINED ARG_LINK_STDTHREAD AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_STDTHREAD)
+  elseif (NOT DEFINED ARG_LINK_STDTHREAD AND DEFAULT_THREADING STREQUAL stdthread OR ARG_LINK_STDTHREAD)
     if (${ARG_DEBUG_LINK})
       message(STATUS "link_target_with_vt(..): stdthread=${ARG_LINK_STDTHREAD}")
     endif()
-    # @todo: is there something that needs to be done for std::threads to work
-    # in all cases, perhaps "-pthread"?
+    target_link_libraries(
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} Threads::Threads
+    )
   endif()
 
   if (${vt_mimalloc_enabled})
@@ -214,5 +214,9 @@ function(link_target_with_vt)
     target_link_libraries(
       ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${ARG_CUSTOM_LINK_ARGS}
      )
+  endif()
+
+  if (vt_asan_enabled)
+    target_link_libraries(${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} -fsanitize=address)
   endif()
 endfunction()

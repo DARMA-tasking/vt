@@ -86,7 +86,7 @@ fi
 
 if test "${VT_ZOLTAN_ENABLED:-0}" -eq 1
 then
-    export ZOLTAN_CONFIG=${ZOLTAN_DIR:-""}
+    export Zoltan_DIR=${ZOLTAN_DIR:-""}
 fi
 
 export VT=${source_dir}
@@ -109,7 +109,6 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_unity_build_enabled="${VT_UNITY_BUILD_ENABLED:-0}" \
       -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \
       -Dvt_diagnostics_runtime_enabled="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}" \
-      -Dzoltan_DIR="${ZOLTAN_CONFIG:-}" \
       -Dvt_fcontext_enabled="${VT_FCONTEXT_ENABLED:-0}" \
       -DUSE_OPENMP="${VT_USE_OPENMP:-0}" \
       -DUSE_STD_THREAD="${VT_USE_STD_THREAD:-0}" \
@@ -212,4 +211,19 @@ then
     exit "$compilation_ret"
 fi
 
-exit 0
+# Don't build vt-sample on Alpine Linux
+is_alpine="$(grep ID < /etc/os-release | grep -c alpine || true)"
+if test "$is_alpine" -eq 0 && test "${VT_CI_BUILD:-0}" -eq 1 && test "${target}" = "install"
+then
+    git clone https://github.com/DARMA-tasking/vt-sample-project
+    mkdir -p vt-sample-project/build
+    cd vt-sample-project/build
+    export vt_DIR="$VT_BUILD/install"
+    cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
+      -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
+      -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
+      -DCMAKE_C_COMPILER="${CC:-cc}" \
+      ..
+    cmake --build .
+fi
