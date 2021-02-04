@@ -1214,7 +1214,7 @@ void TerminationDetector::setupNewEpoch(
 
 std::size_t TerminationDetector::getNumTerminatedCollectiveEpochs() const {
   auto const window = theEpoch()->getTerminatedWindow(any_epoch_sentinel);
-  return window->getSize();
+  return window->getTotalTerminated();
 }
 
 }} // end namespace vt::term
