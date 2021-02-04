@@ -164,7 +164,52 @@ private:
 
   /**
    * \brief Check if we have enough terminated but not free epochs that we
-   * should do some garbage collection
+   * should do some garbage collection.
+   *
+   * ========= Overview of distributed garbage collection protocol ============
+   *
+   * - Every epoch archetype (high-bits + epoch scope) runs in a completely
+   *   distinct scope for garbage collection. The archetype is computed by
+   *   setting the sequence identifier for an epoch to zero. Each epoch
+   *   archetype contains its own \c EpochWindow which tracks epoch allocation.
+   *
+   * - The \c EpochWindow tracks \c terminated_epochs_ and \c free_epochs_ along
+   *   with a \c RangedCounter that controls the order of epoch
+   *   allocation. Terminated epochs are ones that are terminated but not
+   *   garbage collected and thus can't be reused. Free epochs, which all epochs
+   *   start in, are valid for re-use. The guarantee, for non-rooted epochs, is
+   *   that all nodes will have the same set of \c free_epochs_
+   *
+   * - Distributed garbage collection is activated when \c terminated_epochs_
+   *   reaches a percentage of the total epochs for a given archetype that are
+   *   terminated but not freed. At this point, each node creates a set of
+   *   terminated epochs that fits in some max size message (currently set to 64
+   *   MiB). If the terminated epochs are dense, the IntegralSet will very
+   *   compactly represent them (best case O(2) storage). If they are highly
+   *   fragmented, the max exists to limit the cost of engaging the protocol. A
+   *   possible future improvement would be finding good dense regions to
+   *   garbage collect rather than just traversing them in order (the current
+   *   implementation).
+   *
+   * - Once each node reaches the threshold and builds its terminated epoch
+   *   message, a unique reduction is instigated which is keyed on the archetype
+   *   epoch bits that are unique to this \c EpochWindow instance. The reduction
+   *   computes the intersection of terminated epochs IntegralSet that are
+   *   submitted. Note that an intersection is required because these sets may
+   *   differ depending on when termination is notified.
+   *
+   * - While the reduction is in progress, a flag is set that disables any more
+   *   garbage collection until the reduction finishes for a given archetype. In
+   *   theory it might be possible to have multiple concurrent garbage
+   *   collections but this would be very difficult to implement correctly.
+   *
+   * - When the reduction finishes, the resulting epoch intersection is
+   *   saved. The next step of creating confirmation across nodes needs to be
+   *   highly synchronized. A simple reduction+broadcast won't suffice because
+   *   the broadcast might execute in different orders on different nodes which
+   *   can race with new epoch allocation. The solution to this is to use the
+   *   collective scope API to achieve consensus before executing the actual
+   *   epoch free operation.
    */
   void checkGarbageCollection();
 
