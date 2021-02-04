@@ -106,7 +106,6 @@ private:
 
 // fwd-declare the garbage collect messages to reduce dependencies
 struct GarbageCollectMsg;
-struct GarbageConfirmMsg;
 
 /**
  * \struct GarbageCollectTrait

@@ -96,37 +96,6 @@ private:
   EpochType epoch_ = no_epoch; /**< The epoch archetype being collected */
 };
 
-/**
- * \struct GarbageConfirmMsg
- *
- * \brief Garbage collection message confirming that all nodes have received the
- * epochs to collect
- */
-struct GarbageConfirmMsg : vt::collective::ReduceNoneMsg {
-//  vt_msg_serialize_prohibit();
-
-  GarbageConfirmMsg() = default;
-
-  /**
-   * \brief Construct a new garbage confirmation message
-   *
-   * \param[in] in_epoch the epoch
-   */
-  explicit GarbageConfirmMsg(EpochType in_epoch)
-    : epoch_(in_epoch)
-  { }
-
-  /**
-   * \brief Get the archetype epoch
-   *
-   * \return the epoch
-   */
-  EpochType getEpoch() const { return epoch_; }
-
-private:
-  EpochType epoch_ = no_epoch; /**< The epoch archetype being collected */
-};
-
 }} /* end namespace vt::epoch */
 
 #endif /*INCLUDED_VT_EPOCH_GARBAGE_COLLECT_MSG_H*/

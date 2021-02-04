@@ -64,7 +64,6 @@ namespace vt { namespace epoch {
 /** \file */
 
 struct GarbageCollectMsg;
-struct GarbageConfirmMsg;
 struct GarbageCollectTrait;
 
 /**
