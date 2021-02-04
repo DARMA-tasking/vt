@@ -201,6 +201,7 @@ struct AppConfig {
   bool vt_debug_broadcast    = false;
   bool vt_debug_objgroup     = false;
   bool vt_debug_phase        = false;
+  bool vt_debug_epoch        = false;
 
   bool vt_debug_print_flush = false;
 
@@ -338,6 +339,7 @@ struct AppConfig {
       | vt_debug_group
       | vt_debug_broadcast
       | vt_debug_objgroup
+      | vt_debug_epoch
 
       | vt_debug_print_flush
 
