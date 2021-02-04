@@ -151,6 +151,7 @@ struct AppConfig {
   bool vt_epoch_graph_terse    = false;
   bool vt_term_rooted_use_ds   = false;
   bool vt_term_rooted_use_wave = false;
+  double vt_term_gc_threshold  = 0.10;
   int64_t vt_hang_freq         = 1024;
 
 #if (vt_diagnostics_runtime != 0)
@@ -299,6 +300,7 @@ struct AppConfig {
       | vt_epoch_graph_terse
       | vt_term_rooted_use_ds
       | vt_term_rooted_use_wave
+      | vt_term_gc_threshold
       | vt_hang_freq
 
       | vt_pause
