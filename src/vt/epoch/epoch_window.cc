@@ -123,13 +123,14 @@ EpochType EpochWindow::allocateNewEpoch() {
   // allocation policy with minimal reuse
   do {
     EpochType next = *next_epoch_;
-    if (free_epochs_.contains(next)) {
-      (*next_epoch_)++;
+    (*next_epoch_)++;
 
+    if (free_epochs_.contains(next)) {
       // Tell the system the epoch is now active
       activateEpoch(next);
       return next;
     }
+
   } while (true);
 }
 
@@ -156,10 +157,6 @@ void EpochWindow::activateEpoch(EpochType epoch) {
     free_epochs_.size()
   );
 
-  // @todo: I think this is idempotent, thus may be called multiple times
-
-  ///vtAssert(free_epochs_.contains(epoch), "The epoch must be free");
-
   if (free_epochs_.contains(epoch)) {
     free_epochs_.erase(epoch);
   }
@@ -182,10 +179,16 @@ void EpochWindow::setEpochTerminated(EpochType epoch) {
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
 
-  terminated_epochs_.insert(epoch);
   total_terminated_++;
 
-  checkGarbageCollection();
+  // Rooted epochs (allocated only on this node) do not need to go through
+  // distributed garbage collection; directly add them to the free list.
+  if (EpochManip::isRooted(archetype_epoch_)) {
+    free_epochs_.insert(epoch);
+  } else {
+    terminated_epochs_.insert(epoch);
+    checkGarbageCollection();
+  }
 
   vt_debug_print(
     term, node,
@@ -194,24 +197,22 @@ void EpochWindow::setEpochTerminated(EpochType epoch) {
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
     terminated_epochs_.size(), terminated_epochs_.compression()
   );
-
 }
 
 void EpochWindow::checkGarbageCollection() {
   if (pending_free_) {
     return;
   }
-  pending_free_ = true;
 
   auto const term_size = terminated_epochs_.size();
 
-  // @todo: make trigger parameterized?
-
   // If we reach X% of capacity, engage the collection protocol
-  if (term_size == next_epoch_->getRange() * 0.10) {
+  if (term_size >= next_epoch_->getRange() * theConfig()->vt_term_gc_threshold) {
+    // Stop any further progression until we finish this garbage collection
+    pending_free_ = true;
+
     // At the most, let's say we do 64 MiB of frees at a time. If the
     // compression rate is good, we could do a lot more than that
-
     auto const max_size = (1 << 26) / (2*sizeof(EpochType));
 
     vt::IntegralSet<EpochType> to_collect;
@@ -232,15 +233,20 @@ void EpochWindow::checkGarbageCollection() {
     }
 
     // start reduction
-
     NodeType collective_root = 0;
 
     auto proxy = theEpoch()->getProxy();
 
     objgroup::proxy::Proxy<EpochManip> p{proxy};
 
+    vt_debug_print(
+      epoch, node,
+      "checkGarbageCollection(): start reduce: num eps={}, compressed sz={}\n",
+      to_collect.size(), to_collect.compressedSize()
+    );
+
     auto cb = theCB()->makeBcast<
-      EpochManip, GarbageCollectMsg, &EpochManip::collectEpochs
+      EpochManip, GarbageCollectMsg, &EpochManip::reducedEpochs
     >(p);
     auto msg = makeMessage<GarbageCollectMsg>(archetype_epoch_, to_collect);
 

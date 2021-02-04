@@ -321,9 +321,13 @@ public:
       | proxy_;
   }
 
-  void collectEpochs(GarbageCollectMsg* msg);
-
-  void confirmCollectEpochs(GarbageConfirmMsg* msg);
+  /**
+   * \internal \brief Reduce set of epochs for garbage collection---pass-through
+   * to \c GarbageCollectTrait
+   *
+   * \param[in] msg set of epochs
+   */
+  void reducedEpochs(GarbageCollectMsg* msg);
 
 private:
   /**

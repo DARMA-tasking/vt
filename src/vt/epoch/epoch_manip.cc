@@ -65,12 +65,8 @@ EpochManip::EpochManip()
     )
 { }
 
-void EpochManip::collectEpochs(GarbageCollectMsg* msg) {
-  reducedEpochs(msg);
-}
-
-void EpochManip::confirmCollectEpochs(GarbageConfirmMsg* msg) {
-  confirmedReducedEpochs(msg);
+void EpochManip::reducedEpochs(GarbageCollectMsg* msg) {
+  reducedEpochsImpl(msg);
 }
 
 /*static*/ std::unique_ptr<EpochManip> EpochManip::construct() {

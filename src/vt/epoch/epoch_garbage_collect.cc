@@ -46,71 +46,40 @@
 #include "vt/epoch/epoch_garbage_collect.h"
 #include "vt/epoch/garbage_collect_msg.h"
 #include "vt/epoch/epoch_manip.h"
-#include "vt/collective/reduce/reduce_scope.h"
-#include "vt/collective/reduce/reduce.h"
-#include "vt/pipe/pipe_manager.h"
+#include "vt/collective/collective_alg.h"
 
 namespace vt { namespace epoch {
 
-void GarbageCollectTrait::reducedEpochs(GarbageCollectMsg* msg) {
+void GarbageCollectTrait::reducedEpochsImpl(GarbageCollectMsg* msg) {
   auto const ep = msg->getEpoch();
-  auto iter = waiting_.find(ep);
 
-  vtAssert(
-    iter == waiting_.end(),
-    "An epoch archetype can only garbage collect one set at a time"
+  vt_debug_print(
+    epoch, node,
+    "GarbageCollectTrait::reducedEpochsImpl: archetype={:x}\n", ep
   );
 
-  // Save the message, waiting for confirmation reduction
-  waiting_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(ep),
-    std::forward_as_tuple(
-      makeMessage<GarbageCollectMsg>(ep, msg->getVal().getSet())
-    )
+  auto const mask = 0xFFFFFFFF00000000ull;
+  vtAssert((ep & mask) == ep, "Archetype bits should not extend past 32 bits");
+  TagType const topbits = static_cast<TagType>(ep >> 32);
+
+  // Achieve consensus on garbage collecting these epochs
+  auto scope = theCollective()->makeCollectiveScope(topbits);
+
+  vt_debug_print(
+    epoch, node,
+    "reducedEpochsImpl: archetype={:x} start MPI collective: num epochs={}\n",
+    ep, msg->getVal().getSet().size()
   );
 
-  NodeType collective_root = 0;
+  scope.mpiCollectiveWait([ep,msg]{
+    auto window = theEpoch()->getTerminatedWindow(ep);
+    window->garbageCollect(msg->getVal().getSet());
+  });
 
-  auto proxy = theEpoch()->getProxy();
-  objgroup::proxy::Proxy<EpochManip> p{proxy};
-
-  auto cb = theCB()->makeBcast<
-    EpochManip, GarbageConfirmMsg, &EpochManip::confirmCollectEpochs
-  >(p);
-  auto msg_send = makeMessage<GarbageConfirmMsg>(ep);
-
-  using collective::reduce::makeStamp;
-  using collective::reduce::StrongEpoch;
-
-  auto r = theEpoch()->reducer();
-
-  // Stamp this with the epoch's archetype which ensures these don't get mixed
-  // up across epoch types garbage collecting concurrently
-  auto stamp = makeStamp<StrongEpoch>(ep);
-  r->reduce<collective::None>(collective_root, msg_send.get(), cb, stamp);
+  vt_debug_print(
+    epoch, node,
+    "reducedEpochsImpl: archetype={:x} done MPI collective\n", ep
+  );
 }
-
-void GarbageCollectTrait::confirmedReducedEpochs(GarbageConfirmMsg* msg) {
-  auto const ep = msg->getEpoch();
-  auto iter = waiting_.find(ep);
-
-  vtAssert(
-    iter != waiting_.end(),
-    "Must have a valid waiting garbage collection message---just confirmed"
-  );
-
-  auto stored = iter->second;
-
-  auto eiter = theEpoch()->terminated_epochs_.find(ep);
-  vtAssert(
-    eiter != theEpoch()->terminated_epochs_.end(),
-    "Must have valid epoch type"
-  );
-
-  eiter->second->garbageCollect(stored->getVal().getSet());
-  waiting_.erase(iter);
-}
-
 
 }} /* end namespace vt::epoch */

@@ -104,7 +104,7 @@ private:
   IntegralSetType set_;         /**< The integral set */
 };
 
-// fwd-declare the garbage collect message to reduce dependencies
+// fwd-declare the garbage collect messages to reduce dependencies
 struct GarbageCollectMsg;
 struct GarbageConfirmMsg;
 
@@ -115,12 +115,13 @@ struct GarbageConfirmMsg;
  */
 struct GarbageCollectTrait {
 
-  void reducedEpochs(GarbageCollectMsg* msg);
+  /**
+   * \internal \brief Reduce handler for a set of epochs being garbage collected
+   *
+   * \param[in] msg the set of epoch
+   */
+  void reducedEpochsImpl(GarbageCollectMsg* msg);
 
-  void confirmedReducedEpochs(GarbageConfirmMsg* msg);
-
-private:
-  std::unordered_map<EpochType, MsgSharedPtr<GarbageCollectMsg>> waiting_;
 };
 
 }} /* end namespace vt::epoch */
