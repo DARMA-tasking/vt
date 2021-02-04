@@ -876,6 +876,7 @@ void Runtime::printStartupBanner() {
   vt_runtime_debug_warn_compile(objgroup)
   vt_runtime_debug_warn_compile(phase)
   vt_runtime_debug_warn_compile(context)
+  vt_runtime_debug_warn_compile(epoch)
 
   auto arg_str = [](std::vector<char*> const& args) -> std::string {
     std::stringstream ss;
