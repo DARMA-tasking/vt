@@ -160,6 +160,37 @@ public:
    */
   void activateEpoch(EpochType epoch);
 
+  /**
+   * \internal \brief Get the set of free epochs
+   *
+   * \note For testing purposes.
+   *
+   * \return free epoch set
+   */
+  vt::IntegralSet<EpochType> const& getFreeSet() const {
+    return free_epochs_;
+  }
+
+  /**
+   * \internal \brief Get the set of terminated, but not free epochs
+   *
+   * \note For testing purposes.
+   *
+   * \return terminated epoch set
+   */
+  vt::IntegralSet<EpochType> const& getTerminatedSet() const {
+    return terminated_epochs_;
+  }
+
+  /**
+   * \internal \brief Get the number of epochs in this range for this archetype
+   *
+   * \return the total number of epochs in the valid range
+   */
+  uint64_t getRangeSize() const {
+    return static_cast<uint64_t>(next_epoch_->getRange());
+  }
+
 private:
 
   /**
