@@ -62,6 +62,7 @@
 
 
 #include <vt/transport.h>
+#include <vt/runnable/invoke.h>
 
 #include <cstdlib>
 #include <cassert>
@@ -70,7 +71,15 @@
 static constexpr std::size_t const default_nrow_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
 static constexpr double const default_tol = 1.0e-02;
-static bool is_done = false;
+
+struct NodeObj {
+  bool is_finished_ = false;
+  struct WorkFinishedMsg : vt::Message {};
+
+  void workFinishedHandler(WorkFinishedMsg*) { is_finished_ = true; }
+  bool isWorkFinished() { return is_finished_; }
+};
+using NodeObjProxy = vt::objgroup::proxy::Proxy<NodeObj>;
 
 struct LinearPb1DJacobi : vt::Collection<LinearPb1DJacobi,vt::Index1D> {
 
@@ -83,6 +92,7 @@ private:
   size_t numObjs_ = 1;
   size_t numRowsPerObject_ = 1;
   size_t maxIter_ = 8;
+  NodeObjProxy objProxy_;
 
 public:
 
@@ -100,11 +110,12 @@ public:
     size_t numObjects = 0;
     size_t nRowPerObject = 0;
     size_t iterMax = 0;
+    NodeObjProxy objProxy;
 
     LPMsg() = default;
 
-    LPMsg(const size_t nobjs, const size_t nrow, const size_t itMax) :
-      numObjects(nobjs), nRowPerObject(nrow), iterMax(itMax)
+    LPMsg(const size_t nobjs, const size_t nrow, const size_t itMax, NodeObjProxy proxy) :
+      numObjects(nobjs), nRowPerObject(nrow), iterMax(itMax), objProxy(proxy)
     { }
 
   };
@@ -132,14 +143,12 @@ public:
 
       fmt::print(to_print);
 
-      auto proxy = getCollectionProxy();
-      proxy.broadcast<BlankMsg, &LinearPb1DJacobi::workDoneCB>();
+      // Notify all nodes that computation is finished
+      objProxy_.broadcast<NodeObj::WorkFinishedMsg, &NodeObj::workFinishedHandler>();
     } else {
       fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter_, normRes);
     }
   }
-
-  void workDoneCB(BlankMsg*) { is_done = true; }
 
   void doIteration() {
 
@@ -304,6 +313,7 @@ public:
     numObjs_ = msg->numObjects;
     numRowsPerObject_ = msg->nRowPerObject;
     maxIter_ = msg->iterMax;
+    objProxy_ = msg->objProxy;
 
     // Initialize the starting vector
     init();
@@ -311,6 +321,10 @@ public:
 
 };
 
+bool isWorkDone( vt::objgroup::proxy::Proxy<NodeObj> const& proxy){
+  auto const this_node = vt::theContext()->getNode();
+  return proxy[this_node].invoke<decltype(&NodeObj::isWorkFinished), &NodeObj::isWorkFinished>();
+}
 
 int main(int argc, char** argv) {
 
@@ -352,22 +366,26 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  // Object group of all nodes that take part in computation
+  // Used to determine whether the computation is finished
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>();
+
   // Create the decomposition into objects
   using BaseIndexType = typename vt::Index1D::DenseIndexType;
   auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
-  auto proxy =
+  auto col_proxy =
     vt::theCollection()->constructCollective<LinearPb1DJacobi>(range);
 
-  vt::runInEpochCollective([proxy, num_objs, numRowsPerObject, maxIter]{
-    proxy.broadcastCollective<LinearPb1DJacobi::LPMsg, &LinearPb1DJacobi::init>(
-      num_objs, numRowsPerObject, maxIter
+  vt::runInEpochCollective([col_proxy, grp_proxy, num_objs, numRowsPerObject, maxIter]{
+    col_proxy.broadcastCollective<LinearPb1DJacobi::LPMsg, &LinearPb1DJacobi::init>(
+      num_objs, numRowsPerObject, maxIter, grp_proxy
     );
   });
 
-  while(!is_done){
-    vt::runInEpochCollective([proxy]{
-      proxy.broadcastCollective<
+  while(!isWorkDone(grp_proxy)){
+    vt::runInEpochCollective([col_proxy]{
+      col_proxy.broadcastCollective<
         LinearPb1DJacobi::BlankMsg, &LinearPb1DJacobi::doIter
       >();
     });
