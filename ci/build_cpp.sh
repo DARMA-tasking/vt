@@ -99,7 +99,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_test_trace_runtime_enabled="${VT_TRACE_RUNTIME_ENABLED:-0}" \
       -Dvt_lb_enabled="${VT_LB_ENABLED:-1}" \
       -Dvt_trace_enabled="${VT_TRACE_ENABLED:-0}" \
-      -Dvt_trace_only="${VT_TRACE_ONLY:-0}" \
+      -Dvt_trace_only="${VT_BUILD_TRACE_ONLY:-0}" \
       -Dvt_doxygen_enabled="${VT_DOXYGEN_ENABLED:-0}" \
       -Dvt_mimalloc_enabled="${VT_MIMALLOC_ENABLED:-0}" \
       -Dvt_asan_enabled="${VT_ASAN_ENABLED:-0}" \
@@ -216,7 +216,7 @@ fi
 is_alpine="$(grep ID < /etc/os-release | grep -c alpine || true)"
 if test "$is_alpine" -eq 0 && test "${VT_CI_BUILD:-0}" -eq 1 && test "${target}" = "install"
 then
-    git clone https://github.com/DARMA-tasking/vt-sample-project
+    git clone https://github.com/DARMA-tasking/vt-sample-project -b sample-use-of-trace-only-vt
     mkdir -p vt-sample-project/build
     cd vt-sample-project/build
     export vt_DIR="$VT_BUILD/install"

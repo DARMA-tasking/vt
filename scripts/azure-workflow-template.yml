@@ -22,6 +22,7 @@ variables:
   VT_LB: [% vt_lb %]
   VT_TRACE: [% vt_trace %]
   VT_TRACE_RT: [% vt_trace_rt %]
+  VT_TRACE_ONLY: [% vt_trace_only %]
   VT_MIMALLOC: [% vt_mimalloc %]
   VT_DOCS: [% vt_docs %]
   VT_ASAN: [% vt_asan %]

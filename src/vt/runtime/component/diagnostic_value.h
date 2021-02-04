@@ -388,7 +388,7 @@ protected:
   std::vector<DiagnosticValueWrapper<T>> snapshots_; /**< Value time snapshots */
 };
 
-/**1
+/**
  * \struct DiagnosticValue
  *
  * \brief A keyed diagnostic value of some type \c T
