@@ -87,16 +87,13 @@ void ZoltanLB::inputParams(balance::SpecEntry* spec) {
     {"SEED",                          ""            }
   };
 
-  std::vector<std::string> allowed{"edges", "use_shared_edges"};
+  std::vector<std::string> allowed{"edges"};
   for (auto& c : zoltan_config_) {
     allowed.push_back(c.first);
   }
   spec->checkAllowedKeys(allowed);
 
   do_edges_ = spec->getOrDefault<bool>("edges", do_edges_);
-  use_shared_edges_ = spec->getOrDefault<bool>(
-    "use_shared_edges", use_shared_edges_
-  );
 
   for (auto& c : zoltan_config_) {
     c.second = spec->getOrDefault<std::string>(c.first, c.second);
@@ -347,41 +344,10 @@ void ZoltanLB::allocateShareEdgeGIDs() {
           key.fromObjTemp(),
           key.toObjTemp()
         );
-
-        if (use_shared_edges_) {
-          auto other_node = from_node == this_node ? to_node : from_node;
-          shared_edges[other_node][key] = elm.second;
-        }
       } else {
-        // If use_shared_edges_, the other node will set the ID; wait to receive
-        // it in next phase. If not shared, the other node will provide the edge
+        // The other node will provide the edge
       }
     }
-  }
-
-  if (use_shared_edges_) {
-    for (auto&& elm : shared_edges) {
-      proxy[elm.first].send<CommMsg, &ZoltanLB::recvEdgeGID>(elm.second);
-    }
-  }
-}
-
-void ZoltanLB::recvEdgeGID(CommMsg* msg) {
-  auto& comm = msg->comm_;
-  for (auto&& elm : comm) {
-    vtAssert(
-      load_comm_edge_id.find(elm.first) == load_comm_edge_id.end(),
-      "Must not exists in edge ID map"
-    );
-
-    vt_debug_print(
-      lb, node,
-      "recvEdgeGID: edge_id={:x}, from={:x}, to={:x}\n",
-      elm.first.edge_id_,
-      elm.first.fromObjTemp(),
-      elm.first.toObjTemp()
-    );
-    load_comm_edge_id[elm.first] = elm.second;
   }
 }
 
@@ -498,7 +464,6 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
 
     // Set the edge weights as bytes in the communication graph
     {
-      auto const this_node = theContext()->getNode();
       int edge_idx = 0;
       int neighbor_idx = 0;
 
@@ -525,28 +490,22 @@ std::unique_ptr<ZoltanLB::Graph> ZoltanLB::makeGraph() {
           neighbor_idx
         );
 
-        auto from_node = objGetNode(iter->first.fromObjTemp());
-        auto to_node = objGetNode(iter->first.toObjTemp());
-
         // Set up the links between communicating GIDs
-        if ((use_shared_edges_ and from_node == this_node) or not use_shared_edges_) {
-          vt_debug_print(
-            lb, node,
-            "makeEdgeGraph: \t edge_id={}: edge_idx={}, obj={:x}\n",
-            iter->first.edge_id_, edge_idx, iter->first.fromObjTemp()
-          );
+        vt_debug_print(
+          lb, node,
+          "makeEdgeGraph: \t edge_id={}: edge_idx={}, obj={:x}\n",
+          iter->first.edge_id_, edge_idx, iter->first.fromObjTemp()
+        );
 
-          graph->neighbor_gid[neighbor_idx++] = iter->first.fromObjTemp();
-        }
-        if ((use_shared_edges_ and to_node == this_node) or not use_shared_edges_) {
-          vt_debug_print(
-            lb, node,
-            "makeEdgeGraph: \t edge_id={}: edge_idx={}, obj={:x}\n",
-            iter->first.edge_id_, edge_idx, iter->first.toObjTemp()
-          );
+        graph->neighbor_gid[neighbor_idx++] = iter->first.fromObjTemp();
 
-          graph->neighbor_gid[neighbor_idx++] = iter->first.toObjTemp();
-        }
+        vt_debug_print(
+          lb, node,
+          "makeEdgeGraph: \t edge_id={}: edge_idx={}, obj={:x}\n",
+          iter->first.edge_id_, edge_idx, iter->first.toObjTemp()
+        );
+
+        graph->neighbor_gid[neighbor_idx++] = iter->first.toObjTemp();
 
         // This edge begins at neighbor_idx
         graph->neighbor_idx[edge_idx + 1] = neighbor_idx;

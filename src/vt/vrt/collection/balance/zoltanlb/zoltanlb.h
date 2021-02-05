@@ -120,7 +120,6 @@ private:
   };
 
   void recvSharedEdges(CommMsg* msg);
-  void recvEdgeGID(CommMsg* msg);
 
 private:
   static int getNumberOfVertices(void *data, int *ierr);
@@ -146,7 +145,6 @@ private:
   objgroup::proxy::Proxy<ZoltanLB> proxy = {};
   Zoltan_Struct* zoltan_ = nullptr;
   bool do_edges_ = false;
-  bool use_shared_edges_ = false;
   std::unordered_map<std::string, std::string> zoltan_config_;
   ElementCommType load_comm_symm;
   ElementCommType load_comm_edge_id;
