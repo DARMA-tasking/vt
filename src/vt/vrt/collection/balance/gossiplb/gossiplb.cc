@@ -117,7 +117,7 @@ void GossipLB::runLB() {
 
 void GossipLB::doLBStages(TimeType start_imb) {
   std::unordered_map<ObjIDType, TimeType> best_objs;
-  LoadType best_load;
+  LoadType best_load = 0;
   TimeType best_imb = start_imb+1;
   uint16_t best_trial = 0;
 
