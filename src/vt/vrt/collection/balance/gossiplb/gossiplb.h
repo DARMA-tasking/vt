@@ -57,6 +57,32 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+struct RejectionStats {
+  RejectionStats() = default;
+  RejectionStats(int n_rejected, int n_transfers)
+    : n_rejected_(n_rejected), n_transfers_(n_transfers) { }
+
+  friend RejectionStats operator+(RejectionStats a1, RejectionStats const& a2) {
+    a1.n_rejected_ += a2.n_rejected_;
+    a1.n_transfers_ += a2.n_transfers_;
+
+    return a1;
+  }
+
+  int n_rejected_ = 0;
+  int n_transfers_ = 0;
+};
+
+struct GossipRejectionStatsMsg : collective::ReduceTMsg<RejectionStats> {
+  GossipRejectionStatsMsg() = default;
+  GossipRejectionStatsMsg(int n_rejected, int n_transfers)
+    : ReduceTMsg<RejectionStats>(RejectionStats(n_rejected, n_transfers))
+  { }
+  GossipRejectionStatsMsg(RejectionStats&& rs)
+    : ReduceTMsg<RejectionStats>(std::move(rs))
+  { }
+};
+
 struct GossipLB : BaseLB {
   using GossipMsg     = balance::GossipMsg;
   using NodeSetType   = std::vector<NodeType>;
@@ -74,7 +100,7 @@ public:
   void inputParams(balance::SpecEntry* spec) override;
 
 protected:
-  void doLBStages();
+  void doLBStages(TimeType start_imb);
   void inform();
   void decide();
   void migrate();
@@ -94,6 +120,8 @@ protected:
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
+  void gossipStatsHandler(StatsMsgType* msg);
+  void gossipRejectionStatsHandler(GossipRejectionStatsMsg* msg);
   void thunkMigrations();
 
   void setupDone(ReduceMsgType* msg);
@@ -104,6 +132,7 @@ private:
   uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;
   uint16_t num_iters_                               = 4;
+  uint16_t num_trials_                              = 3;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   objgroup::proxy::Proxy<GossipLB> proxy_           = {};
@@ -113,6 +142,7 @@ private:
   std::unordered_set<NodeType> underloaded_         = {};
   std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
+  TimeType new_imbalance_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   bool setup_done_                                  = false;
 };

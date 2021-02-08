@@ -74,15 +74,16 @@ bool GossipLB::isOverloaded(LoadType load) const {
 }
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"f", "k", "i", "c"};
+  std::vector<std::string> allowed{"f", "k", "i", "c", "trials"};
   spec->checkAllowedKeys(allowed);
   using CriterionEnumUnder = typename std::underlying_type<CriterionEnum>::type;
   auto default_c = static_cast<CriterionEnumUnder>(criterion_);
-  f_         = spec->getOrDefault<int32_t>("f", f_);
-  k_max_     = spec->getOrDefault<int32_t>("k", k_max_);
-  num_iters_ = spec->getOrDefault<int32_t>("i", num_iters_);
-  int32_t c  = spec->getOrDefault<int32_t>("c", default_c);
-  criterion_ = static_cast<CriterionEnum>(c);
+  f_          = spec->getOrDefault<int32_t>("f", f_);
+  k_max_      = spec->getOrDefault<int32_t>("k", k_max_);
+  num_iters_  = spec->getOrDefault<int32_t>("i", num_iters_);
+  num_trials_ = spec->getOrDefault<int32_t>("trials", num_trials_);
+  int32_t c   = spec->getOrDefault<int32_t>("c", default_c);
+  criterion_  = static_cast<CriterionEnum>(c);
 }
 
 void GossipLB::runLB() {
@@ -90,6 +91,7 @@ void GossipLB::runLB() {
 
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   auto const max  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
+  auto const imb  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
   auto const load = this_load;
 
   if (avg > 0.0000000001) {
@@ -106,57 +108,183 @@ void GossipLB::runLB() {
   }
 
   if (should_lb) {
-    doLBStages();
+    doLBStages(imb);
   }
 }
 
-void GossipLB::doLBStages() {
-  for (iter_ = 0; iter_ < num_iters_; iter_++) {
-    bool first_iter = iter_ == 0;
+void GossipLB::doLBStages(TimeType start_imb) {
+  std::unordered_map<ObjIDType, TimeType> best_objs;
+  LoadType best_load;
+  TimeType best_imb = start_imb+1;
+  uint16_t best_trial = 0;
 
-    vt_debug_print(
-      terse, gossiplb,
-      "GossipLB::doLBStages: (before) running iter_={}, num_iters_={}, load={}, new_load={}\n",
-      iter_, num_iters_, this_load, this_new_load_
-    );
+  auto this_node = theContext()->getNode();
 
-    if (first_iter) {
-      // Copy this node's object assignments to a local, mutable copy
-      cur_objs_.clear();
-      for (auto obj : *load_model_)
-        cur_objs_[obj] = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
-      this_new_load_ = this_load;
-    } else {
-      // Clear out data structures from previous iteration
-      selected_.clear();
-      underloaded_.clear();
-      load_info_.clear();
-      k_cur_ = 0;
-      is_overloaded_ = is_underloaded_ = false;
+  for (uint16_t trial = 0; trial < num_trials_; ++trial) {
+    // Clear out data structures
+    selected_.clear();
+    underloaded_.clear();
+    load_info_.clear();
+    k_cur_ = 0;
+    is_overloaded_ = is_underloaded_ = false;
+
+    for (iter_ = 0; iter_ < num_iters_; iter_++) {
+      bool first_iter = iter_ == 0;
+
+      vt_debug_print(
+        normal, gossiplb,
+        "GossipLB::doLBStages: (before) running iter_={}, num_iters_={}, load={}, new_load={}\n",
+        iter_, num_iters_, this_load, this_new_load_
+      );
+
+      if (first_iter) {
+        // Copy this node's object assignments to a local, mutable copy
+        cur_objs_.clear();
+        for (auto obj : *load_model_)
+          cur_objs_[obj] = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
+        this_new_load_ = this_load;
+      } else {
+        // Clear out data structures from previous iteration
+        selected_.clear();
+        underloaded_.clear();
+        load_info_.clear();
+        k_cur_ = 0;
+        is_overloaded_ = is_underloaded_ = false;
+      }
+
+      if (isOverloaded(this_new_load_)) {
+        is_overloaded_ = true;
+      } else if (isUnderloaded(this_new_load_)) {
+        is_underloaded_ = true;
+      }
+
+      inform();
+      decide();
+
+      vt_debug_print(
+        normal, gossiplb,
+        "GossipLB::doLBStages: (after) running iter_={}, num_iters_={}, load={}, new_load={}\n",
+        iter_, num_iters_, this_load, this_new_load_
+      );
+
+      runInEpochCollective([=] {
+        using StatsMsgType = balance::NodeStatsMsg;
+        using ReduceOp = collective::PlusOp<balance::LoadData>;
+        auto cb = vt::theCB()->makeBcast<
+          GossipLB, StatsMsgType, &GossipLB::gossipStatsHandler
+        >(this->proxy_);
+        // Perform the reduction for P_l -> processor load only
+        auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_new_load_);
+        this->proxy_.template reduce<ReduceOp>(msg,cb);
+      });
+
+      if (this_node == 0) {
+        vt_print(
+          gossiplb,
+          "GossipLB::doLBStages: trial={} iter={} imb={:0.2f}\n",
+          trial, iter_, new_imbalance_
+        );
+      }
     }
 
-    if (isOverloaded(this_new_load_)) {
-      is_overloaded_ = true;
-    } else if (isUnderloaded(this_new_load_)) {
-      is_underloaded_ = true;
+    if (this_node == 0) {
+      vt_print(
+        gossiplb,
+        "GossipLB::doLBStages: trial={} imb={:0.2f}\n",
+        trial, new_imbalance_
+      );
     }
 
-    inform();
-    decide();
+    if (cur_objs_.size() == 0) {
+      vt_print(
+        gossiplb,
+        "GossipLB::doLBStages: trial={} local_objs={}\n",
+        trial, cur_objs_.size()
+      );
+    }
 
-    vt_debug_print(
-      normal, gossiplb,
-      "GossipLB::doLBStages: (after) running iter_={}, num_iters_={}, load={}, new_load={}\n",
-      iter_, num_iters_, this_load, this_new_load_
-    );
+    if (new_imbalance_ <= start_imb && new_imbalance_ < best_imb) {
+      best_load = this_new_load_;
+      best_objs = cur_objs_;
+      best_imb = new_imbalance_;
+      best_trial = trial;
+    }
+
+    // Clear out for next try or for not migrating by default
+    cur_objs_.clear();
+    this_new_load_ = this_load;
   }
 
-  // Update the load based on new object assignments
-  this_load = this_new_load_;
+  if (best_imb <= start_imb) {
+    cur_objs_ = best_objs;
+    this_load = this_new_load_ = best_load;
+    new_imbalance_ = best_imb;
+
+    // Update the load based on new object assignments
+    if (this_node == 0) {
+      vt_print(
+        gossiplb,
+        "GossipLB::doLBStages: chose trial={} with imb={:0.2f}\n",
+        best_trial, new_imbalance_
+      );
+    }
+  } else if (this_node == 0) {
+    vt_print(
+      gossiplb,
+      "GossipLB::doLBStages: rejected all trials because they would increase imbalance\n"
+    );
+  }
 
   // Concretize lazy migrations by invoking the BaseLB object migration on new
   // object node assignments
   thunkMigrations();
+}
+
+void GossipLB::gossipStatsHandler(StatsMsgType* msg) {
+  auto in = msg->getConstVal();
+  new_imbalance_ = in.I();
+
+  auto this_node = theContext()->getNode();
+  if (this_node == 0) {
+    vt_print(
+      gossiplb,
+      "GossipLB::gossipStatsHandler: max={:0.2f} min={:0.2f} avg={:0.2f} imb={:0.2f}\n",
+      in.max(), in.min(), in.avg(), in.I()
+    );
+  }
+/*
+  if (this_new_load_ <= in.min() * 1.01) {
+    vt_print(
+      gossiplb,
+      "GossipLB::gossipStatsHandler: new_load={:0.2f} min={:0.2f} count={}\n",
+      this_new_load_, in.min(), cur_objs_.size()
+    );
+  }
+  if (this_new_load_ >= in.max() * 0.99) {
+    vt_print(
+      gossiplb,
+      "GossipLB::gossipStatsHandler: new_load={:0.2f} max={:0.2f} count={}\n",
+      this_new_load_, in.max(), cur_objs_.size()
+    );
+  }
+*/
+}
+
+void GossipLB::gossipRejectionStatsHandler(GossipRejectionStatsMsg* msg) {
+  auto in = msg->getConstVal();
+
+  auto n_rejected = in.n_rejected_;
+  auto n_transfers = in.n_transfers_;
+  double rej = static_cast<double>(n_rejected) / static_cast<double>(n_rejected + n_transfers) * 100.0;
+
+  auto this_node = theContext()->getNode();
+  if (this_node == 0) {
+    vt_print(
+      gossiplb,
+      "GossipLB::gossipRejectionStatsHandler: n_transfers={} n_rejected={} rejection_rate={:0.1f}%\n",
+      n_transfers, n_rejected, rej
+    );
+  }
 }
 
 void GossipLB::inform() {
@@ -378,6 +506,8 @@ void GossipLB::decide() {
 
   auto lazy_epoch = theTerm()->makeEpochCollective("GossipLB: decide");
 
+  int n_transfers = 0, n_rejected = 0;
+
   if (is_overloaded_) {
     std::vector<NodeType> under = makeUnderloaded();
     std::unordered_map<NodeType, ObjsType> migrate_objs;
@@ -434,6 +564,7 @@ void GossipLB::decide() {
         );
 
         if (eval) {
+          ++n_transfers;
           migrate_objs[selected_node][obj_id] = obj_load;
 
           this_new_load_ -= obj_load;
@@ -441,6 +572,7 @@ void GossipLB::decide() {
 
           iter = cur_objs_.erase(iter);
         } else {
+          ++n_rejected;
           iter++;
         }
 
@@ -464,6 +596,15 @@ void GossipLB::decide() {
   theTerm()->finishedEpoch(lazy_epoch);
 
   vt::runSchedulerThrough(lazy_epoch);
+
+  runInEpochCollective([=] {
+    using ReduceOp = collective::PlusOp<RejectionStats>;
+    auto cb = vt::theCB()->makeBcast<
+      GossipLB, GossipRejectionStatsMsg, &GossipLB::gossipRejectionStatsHandler
+    >(this->proxy_);
+    auto msg = makeMessage<GossipRejectionStatsMsg>(n_rejected, n_transfers);
+    this->proxy_.template reduce<ReduceOp>(msg,cb);
+  });
 }
 
 void GossipLB::thunkMigrations() {
