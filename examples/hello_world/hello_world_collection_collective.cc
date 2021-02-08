@@ -43,43 +43,98 @@
 */
 
 #include <vt/transport.h>
+#include <vt/vrt/collection/balance/model/per_collection.h>
+#include <vt/vrt/collection/balance/model/composed_model.h>
+#include <vt/vrt/collection/balance/model/load_model.h>
 
-/// [Hello world collective collection]
-struct Hello : vt::Collection<Hello, vt::Index1D> {
-  Hello() = default;
+#include <memory>
+#include <cinttypes>
 
-  virtual ~Hello() {
-    vt::NodeType num_nodes = vt::theContext()->getNumNodes();
-    vtAssert(counter_ == num_nodes, "Should receive # nodes broadcasts");
-  }
+inline vt::NodeType empireMap(vt::Index2D* idx, vt::Index2D*, vt::NodeType) {
+  return idx->x();
+}
 
+struct Hello : vt::Collection<Hello, vt::Index2D> {
   using TestMsg = vt::CollectionMessage<Hello>;
 
-  void doWork(TestMsg* msg) {
-    counter_++;
-    fmt::print("Hello from {}, counter_={}\n", this->getIndex().x(), counter_);
+  void timestep(TestMsg* msg) { }
+};
+
+using vt::vrt::collection::balance::ComposedModel;
+using vt::vrt::collection::balance::LoadModel;
+using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::PhaseOffset;
+using vt::vrt::collection::balance::PerCollection;
+
+struct FileModel : ComposedModel {
+
+  FileModel(std::shared_ptr<LoadModel> in_base, std::string const& filename)
+    : vt::vrt::collection::balance::ComposedModel(in_base)
+  {
+    parseFile(filename);
+  }
+
+  vt::TimeType getWork(ElementIDType elmid, PhaseOffset offset) override {
+    //ignore offset for now
+    auto const phase = getNumCompletedPhases();
+    auto iter = loads.find(phase);
+    vtAssert(iter != loads.end(), "Must have phase in history");
+    auto elmiter = iter->second.find(elmid);
+    vtAssert(elmiter != iter->second.end(), "Must have elm ID in history");
+    return elmiter->second;
+  }
+
+  void parseFile(std::string const& file) {
+    std::FILE *f = std::fopen(file.c_str(), "r");
+    vtAbortIf(not f, "File opening failed");
+
+    int phase = 0;
+    ElementIDType elm_id = 0;
+    vt::TimeType load = 0.;
+
+    while (fscanf(f, "%d, %" PRIu64 ", %lf", &phase, &elm_id, &load) == 3) {
+      loads[phase][elm_id] = load;
+    }
   }
 
 private:
-  int counter_ = 0;
+  std::unordered_map<int, std::unordered_map<ElementIDType, vt::TimeType>> loads;
 };
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
-  int32_t num_elms = 16;
-  if (argc > 1) {
-    num_elms = atoi(argv[1]);
+  vtAbortIf(
+    argc != 4, "Must have two arguments: <num_elms per rank>, <ts>, <file>"
+  );
+
+  int32_t num_elms = atoi(argv[1]);
+  int32_t ts = atoi(argv[2]);
+  std::string file = std::string{argv[3]};
+
+  auto const nranks = vt::theContext()->getNumNodes();
+  auto const node = vt::theContext()->getNode();
+
+  auto range = vt::Index2D(static_cast<int>(nranks), num_elms);
+  auto proxy = vt::theCollection()->constructCollective<Hello,empireMap>(range);
+
+  auto base = vt::theLBManager()->getBaseLoadModel();
+  auto per_col = std::make_shared<PerCollection>(base);
+
+  auto proxy_bits = proxy.getProxy();
+
+  auto node_filename = fmt::format("{}.{}.out", file, node);
+
+  per_col->addModel(proxy_bits, std::make_shared<FileModel>(base, node_filename));
+
+  for (int i = 0; i < ts; i++) {
+    // Delete this?
+    proxy.broadcastCollective<Hello::TestMsg, &Hello::timestep>();
+
+    vt::thePhase()->nextPhaseCollective();
   }
-
-  auto range = vt::Index1D(num_elms);
-  auto proxy = vt::theCollection()->constructCollective<Hello>(range);
-
-  // All nodes send a broadcast to all elements
-  proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
 
   vt::finalize();
 
   return 0;
 }
-/// [Hello world collective collection]
