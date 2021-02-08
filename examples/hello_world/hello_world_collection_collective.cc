@@ -76,6 +76,7 @@ struct FileModel : ComposedModel {
 
   vt::TimeType getWork(ElementIDType elmid, PhaseOffset offset) override {
     //ignore offset for now
+    //vt_print(gen, "getWork {} phase={}\n", elmid, getNumCompletedPhases());
     auto const phase = getNumCompletedPhases();
     auto iter = loads.find(phase);
     vtAssert(iter != loads.end(), "Must have phase in history");
@@ -92,7 +93,10 @@ struct FileModel : ComposedModel {
     ElementIDType elm_id = 0;
     vt::TimeType load = 0.;
 
+    vt_print(gen, "parsing file {}\n", file);
+
     while (fscanf(f, "%d, %" PRIu64 ", %lf", &phase, &elm_id, &load) == 3) {
+      //vt_print(gen, "reading in loads for elm={}, phase={}\n", elm_id, phase);
       loads[phase][elm_id] = load;
     }
   }
@@ -126,6 +130,8 @@ int main(int argc, char** argv) {
   auto node_filename = fmt::format("{}.{}.out", file, node);
 
   per_col->addModel(proxy_bits, std::make_shared<FileModel>(base, node_filename));
+
+  vt::theLBManager()->setLoadModel(per_col);
 
   for (int i = 0; i < ts; i++) {
     // Delete this?
