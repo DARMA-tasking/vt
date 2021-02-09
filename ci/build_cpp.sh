@@ -216,7 +216,7 @@ fi
 is_alpine="$(grep ID < /etc/os-release | grep -c alpine || true)"
 if test "$is_alpine" -eq 0 && test "${VT_CI_BUILD:-0}" -eq 1 && test "${target}" = "install"
 then
-    git clone https://github.com/DARMA-tasking/vt-sample-project -b sample-use-of-trace-only-vt
+    git clone https://github.com/DARMA-tasking/vt-sample-project -b 1-add-vt-trace
     mkdir -p vt-sample-project/build
     cd vt-sample-project/build
     export vt_DIR="$VT_BUILD/install"
