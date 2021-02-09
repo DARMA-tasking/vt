@@ -254,8 +254,8 @@ link_target_with_vt(
 
 # Define and set up the different build types of VT
 
+include(../cmake/trace_only_functions.cmake)
 if (vt_trace_only)
-  include(../cmake/trace_only_functions.cmake)
   create_trace_only_target()
 endif()
 
