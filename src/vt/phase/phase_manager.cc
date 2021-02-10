@@ -52,6 +52,10 @@ namespace vt { namespace phase {
   auto ptr = std::make_unique<PhaseManager>();
   auto proxy = theObjGroup()->makeCollective<PhaseManager>(ptr.get());
   proxy.get()->proxy_ = proxy.getProxy();;
+
+  // Construct the subphase manager
+  subphase::SubphaseManager::subphaseConstruct();
+
   return ptr;
 }
 
@@ -118,6 +122,12 @@ void PhaseManager::nextPhaseCollective() {
     "PhaseManager::nextPhaseCollective: cur_phase_={}\n", cur_phase_
   );
 
+  // Inhibit progress to ending this phase until all subphase labels are fully
+  // resolved
+  theSched()->runSchedulerWhile([this]{
+    return subphase::SubphaseManager::isPendingResolution();
+  });
+
   // Convert bits to typed proxy
   auto proxy = objgroup::proxy::Proxy<PhaseManager>(proxy_);
 
@@ -182,6 +192,10 @@ void PhaseManager::runHooks(PhaseHook type) {
 
 void PhaseManager::runHooksManual(PhaseHook type) {
   runHooks(type);
+}
+
+bool PhaseManager::isPendingSubphaseResolution() const {
+  return SubphaseManager::isPendingResolution();
 }
 
 }} /* end namespace vt::phase */
