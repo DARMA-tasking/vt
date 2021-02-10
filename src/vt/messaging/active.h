@@ -1710,7 +1710,20 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       | in_progress_active_msg_irecv
       | in_progress_data_irecv
       | in_progress_ops
-      | this_node_;
+      | this_node_
+      | amForwardCounterGauge
+      | amHandlerCount
+      | amPollCount
+      | amPostedCounterGauge
+      | amRecvCounterGauge
+      | amSentCounterGauge
+      | bcastsSentCount
+      | dmPollCount
+      | dmPostedCounterGauge
+      | dmRecvCounterGauge
+      | dmSentCounterGauge
+      | tdRecvCount
+      | tdSentCount;
 
   # if vt_check_enabled(trace_enabled)
     s | current_trace_context_
