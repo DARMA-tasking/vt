@@ -128,6 +128,12 @@ void PhaseManager::nextPhaseCollective() {
     return subphase::SubphaseManager::isPendingResolution();
   });
 
+  vt_debug_print(
+    phase, node,
+    "PhaseManager::nextPhaseCollective: cur_phase_={}, "
+    "subphase resolution complete\n", cur_phase_
+  );
+
   // Convert bits to typed proxy
   auto proxy = objgroup::proxy::Proxy<PhaseManager>(proxy_);
 
