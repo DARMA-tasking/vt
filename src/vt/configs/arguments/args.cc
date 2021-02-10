@@ -164,6 +164,7 @@ void ArgConfig::addTraceArgs(CLI::App& app) {
   auto tfile     = "Name of trace files";
   auto tdir      = "Name of directory for trace files";
   auto tmod      = "Output trace file if (node % config_.vt_stack_mod) == 0";
+  auto zflush    = "Set flush mode to Z_FINISH for trace file";
   auto tflushmod = "Flush output trace every (vt_trace_flush_size) trace records";
   auto tsysall   = "Trace all system events";
   auto tsysTD    = "Trace system termination events";
@@ -175,24 +176,24 @@ void ArgConfig::addTraceArgs(CLI::App& app) {
   auto tmemusage = "Trace memory usage using first memory reporter";
   auto tpolled   = "Trace AsyncEvent component polling (inc. MPI_Isend requests)";
   auto tirecv     = "Trace MPI_Irecv request polling";
-  auto n  = app.add_flag("--vt_trace",              config_.vt_trace,           trace);
-  auto nm = app.add_option("--vt_trace_mpi",        arg_trace_mpi,                 trace_mpi)
+  auto n  = app.add_flag("--vt_trace",                   config_.vt_trace,                   trace);
+  auto nm = app.add_option("--vt_trace_mpi",             arg_trace_mpi,                      trace_mpi)
     ->check(CLI::IsMember({"internal", "external"}));
-  auto o  = app.add_option("--vt_trace_file",       config_.vt_trace_file,      tfile, "");
-  auto p  = app.add_option("--vt_trace_dir",        config_.vt_trace_dir,       tdir,  "");
-  auto q  = app.add_option("--vt_trace_mod",        config_.vt_trace_mod,       tmod,  1);
-  auto qf = app.add_option("--vt_trace_flush_size", config_.vt_trace_flush_size,tflushmod,
-    0);
-  auto qt = app.add_flag("--vt_trace_sys_all",        config_.vt_trace_sys_all,        tsysall);
-  auto qw = app.add_flag("--vt_trace_sys_term",       config_.vt_trace_sys_term,       tsysTD);
-  auto qx = app.add_flag("--vt_trace_sys_location",   config_.vt_trace_sys_location,   tsysloc);
-  auto qy = app.add_flag("--vt_trace_sys_collection", config_.vt_trace_sys_collection, tsyscoll);
-  auto qz = app.add_flag("--vt_trace_sys_serial_msg", config_.vt_trace_sys_serial_msg, tsyssmsg);
-  auto qza = app.add_flag("--vt_trace_spec",          config_.vt_trace_spec,           tspec);
-  auto qzb = app.add_option("--vt_trace_spec_file",   config_.vt_trace_spec_file,      tspecfile, "");
-  auto qzc = app.add_flag("--vt_trace_memory_usage",  config_.vt_trace_memory_usage,   tmemusage);
-  auto qzd = app.add_flag("--vt_trace_event_polling", config_.vt_trace_event_polling,  tpolled);
-  auto qze = app.add_flag("--vt_trace_irecv_polling", config_.vt_trace_irecv_polling,  tirecv);
+  auto o  = app.add_option("--vt_trace_file",            config_.vt_trace_file,              tfile,     "");
+  auto p  = app.add_option("--vt_trace_dir",             config_.vt_trace_dir,               tdir,      "");
+  auto q  = app.add_option("--vt_trace_mod",             config_.vt_trace_mod,               tmod,      1);
+  auto qf = app.add_option("--vt_trace_flush_size",      config_.vt_trace_flush_size,        tflushmod, 0);
+  auto qg = app.add_flag("--vt_trace_gzip_finish_flush", config_.vt_trace_gzip_finish_flush, zflush);
+  auto qt = app.add_flag("--vt_trace_sys_all",           config_.vt_trace_sys_all,           tsysall);
+  auto qw = app.add_flag("--vt_trace_sys_term",          config_.vt_trace_sys_term,          tsysTD);
+  auto qx = app.add_flag("--vt_trace_sys_location",      config_.vt_trace_sys_location,      tsysloc);
+  auto qy = app.add_flag("--vt_trace_sys_collection",    config_.vt_trace_sys_collection,    tsyscoll);
+  auto qz = app.add_flag("--vt_trace_sys_serial_msg",    config_.vt_trace_sys_serial_msg,    tsyssmsg);
+  auto qza = app.add_flag("--vt_trace_spec",             config_.vt_trace_spec,              tspec);
+  auto qzb = app.add_option("--vt_trace_spec_file",      config_.vt_trace_spec_file,         tspecfile, "");
+  auto qzc = app.add_flag("--vt_trace_memory_usage",     config_.vt_trace_memory_usage,      tmemusage);
+  auto qzd = app.add_flag("--vt_trace_event_polling",    config_.vt_trace_event_polling,     tpolled);
+  auto qze = app.add_flag("--vt_trace_irecv_polling",    config_.vt_trace_irecv_polling,     tirecv);
   auto traceGroup = "Tracing Configuration";
   n->group(traceGroup);
   nm->group(traceGroup);
@@ -200,6 +201,7 @@ void ArgConfig::addTraceArgs(CLI::App& app) {
   p->group(traceGroup);
   q->group(traceGroup);
   qf->group(traceGroup);
+  qg->group(traceGroup);
   qt->group(traceGroup);
   qw->group(traceGroup);
   qx->group(traceGroup);
