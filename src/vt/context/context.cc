@@ -43,7 +43,9 @@
 */
 
 #include "vt/context/context.h"
+#if !vt_check_enabled(trace_only)
 #include "vt/runtime/runtime.h"
+#endif
 
 #include <string>
 #include <cstring>
@@ -94,14 +96,22 @@ DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
 namespace vt { namespace debug {
 
 NodeType preNode() {
+  #if !vt_check_enabled(trace_only)
   return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
     theContext()->getNode() :
     -1;
+  #else
+    return theContext() ? theContext()->getNode() : -1;
+  #endif
 }
 NodeType preNodes() {
+  #if !vt_check_enabled(trace_only)
   return ::vt::curRT != nullptr and ::vt::curRT->isLive() ?
     theContext()->getNumNodes() :
     -1;
+  #else
+    return theContext() ? theContext()->getNode() : -1;
+  #endif
 }
 
 }} /* end namespace vt::debug */

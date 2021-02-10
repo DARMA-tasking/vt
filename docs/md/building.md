@@ -45,6 +45,7 @@ build configuration:
 | ------------------               | --------------- | ----------- |
 | `vt_lb_enabled`                  | 1               | Compile with support for runtime load balancing |
 | `vt_trace_enabled`               | 0               | Compile with support for runtime tracing (Projections-format) |
+| `vt_trace_only`                  | 0               | Compile vt in trace-only mode (stripped down version for tracing MPI calls) |
 | `vt_test_trace_runtime_enabled`  | 0               | Force tracing on at runtime for VT tests |
 | `vt_doxygen_enabled`             | 0               | Enable doxygen generation |
 | `vt_mimalloc_enabled`            | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |
@@ -81,6 +82,7 @@ parameters.
 | `CMAKE_BUILD_TYPE`               | Release         | The `cmake` build type |
 | `VT_LB_ENABLED`                  | 1               | Compile with support for runtime load balancing |
 | `VT_TRACE_ENABLED `              | 0               | Compile with support for runtime tracing (Projections-format) |
+| `VT_TRACE_ONLY `                 | 0               | Compile vt in trace-only mode (stripped down version for tracing MPI calls) |
 | `VT_TRACE_RUNTIME_ENABLED `      | 0               | Force tracing on at runtime (used in CI for automatically testing tracing on all tests/examples) |
 | `VT_DOXYGEN_ENABLED `            | 0               | Enable doxygen generation |
 | `VT_MIMALLOC_ENABLED `           | 0               | Enable `mimalloc`, alternative allocator for debugging memory usage/frees/corruption |

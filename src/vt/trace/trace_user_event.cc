@@ -43,10 +43,15 @@
 */
 
 #include "vt/config.h"
+
+#if !vt_check_enabled(trace_only)
+#include "vt/messaging/active.h"
+#endif
+
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_user_event.h"
 #include "vt/utils/bits/bits_common.h"
-#include "vt/messaging/active.h"
+
 
 namespace vt { namespace trace {
 
@@ -67,6 +72,7 @@ UserEventIDType UserEventRegistry::createEvent(
   return event;
 }
 
+#if !vt_check_enabled(trace_only)
 /*static*/ void UserEventRegistry::newEventHan(NewUserEventMsg* msg) {
   vtAssert(theContext()->getNode() == 0, "Must be node 0");
   insertNewUserEvent(msg->id_, msg->name_);
@@ -86,11 +92,6 @@ UserEventIDType UserEventRegistry::hash(std::string const& in_event_name) {
     }
   }
   return id;
-}
-
-UserEventIDType UserEventRegistry::collective(std::string const& in_event_name) {
-  auto ret = newEventImpl(false, false, in_event_name, cur_coll_event_++);
-  return std::get<0>(ret);
 }
 
 UserEventIDType UserEventRegistry::rooted(std::string const& in_event_name) {
@@ -115,6 +116,12 @@ UserEventIDType UserEventRegistry::user(
     theMsg()->sendMsg<NewUserEventMsg,newEventHan>(0, msg);
   }
   return id;
+}
+#endif
+
+UserEventIDType UserEventRegistry::collective(std::string const& in_event_name) {
+  auto ret = newEventImpl(false, false, in_event_name, cur_coll_event_++);
+  return std::get<0>(ret);
 }
 
 std::tuple<UserEventIDType, bool> UserEventRegistry::newEventImpl(

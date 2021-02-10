@@ -1,4 +1,3 @@
-
 set(TOP_LEVEL_SUBDIRS
   configs
   collective
@@ -108,7 +107,10 @@ set(
 list(APPEND PROJECT_SUBDIRS_LIST ${TOP_LEVEL_SUBDIRS})
 
 set(VT_INSTALL_DESTINATION "include/vt")
+set(VT_TRACE_INSTALL_DESTINATION "include/vt-trace")
+
 set(VT_EXTERNAL_DESTINATION "include")
+set(VT_TRACE_EXTERNAL_DESTINATION "include/vt-trace")
 
 foreach(DIR ${TOP_LEVEL_SUBDIRS})
   install(
@@ -120,31 +122,26 @@ foreach(DIR ${TOP_LEVEL_SUBDIRS})
 endforeach()
 
 file(GLOB TOP_HEADERS "vt/*.h")
-
 install(
   FILES                      ${TOP_HEADERS}
   DESTINATION                ${VT_INSTALL_DESTINATION}
   CONFIGURATIONS             ${build_type_list}
 )
-
 file(
   GLOB
   HEADER_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.h
 )
-
 file(
   GLOB
   SOURCE_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/vt/*.cc
 )
-
 file(
   GLOB
   SOURCE_FILES
   ${PROJECT_BIN_DIR}/src/vt/configs/generated/vt_git_revision.cc
 )
-
 foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
   file(
     GLOB
@@ -153,7 +150,6 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/vt/${SUB_DIR}/*.h"
   )
-
   file(
     GLOB
     "${SUB_DIR}_SOURCE_FILES"
@@ -161,13 +157,11 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/vt/${SUB_DIR}/*.cc"
   )
-
   list(
     APPEND
     HEADER_FILES
     "${${SUB_DIR}_HEADER_FILES}"
   )
-
   list(
     APPEND
     SOURCE_FILES
@@ -176,7 +170,7 @@ foreach(SUB_DIR ${PROJECT_SUBDIRS_LIST})
 endforeach()
 
 # Generate PMPI wrappers, if enabled and possible.
-if(vt_mpi_guards AND PERL_FOUND)
+if((vt_mpi_guards OR vt_trace_only) AND PERL_FOUND)
   set(MPI_WRAP_GENERATED "${PROJECT_BIN_DIR}/src/vt/pmpi/generated/mpiwrap.cc")
 
   file(MAKE_DIRECTORY "${PROJECT_BIN_DIR}/src/vt/pmpi/generated")
@@ -206,11 +200,8 @@ add_library(
 )
 
 target_compile_features(
-  ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC cxx_std_14
-)
-
-target_compile_features(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
+  cxx_std_14
   cxx_variadic_templates
   cxx_auto_type
   cxx_constexpr
@@ -229,8 +220,7 @@ target_compile_features(
   cxx_alias_templates
 )
 
-target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS})
-target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${VT_TARGET_CXX_FLAGS})
+target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS} ${VT_TARGET_CXX_FLAGS})
 
 if (vt_gold_linker_enabled)
   if (UNIX AND NOT APPLE)
@@ -263,6 +253,12 @@ link_target_with_vt(
 )
 
 # Define and set up the different build types of VT
+
+include(../cmake/trace_only_functions.cmake)
+if (vt_trace_only)
+  create_trace_only_target()
+endif()
+
 include(../cmake/define_build_types.cmake)
 
 target_include_directories(

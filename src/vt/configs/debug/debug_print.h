@@ -186,9 +186,9 @@ struct DebugPrintOp<cat, CtxEnum::node, mod> {
   template <typename Arg, typename... Args>
   void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
     if (rt_option or vt::debug::preConfig()->vt_debug_all) {
-      auto no_node = static_cast<NodeType>(-1);
-      auto node = vt::curRT != nullptr ? vt::debug::preNode() : no_node;
-      debugPrintImpl<cat,mod>(node,std::forward<Arg>(arg),std::forward<Args>(args)...);
+        debugPrintImpl<cat, mod>(
+          vt::debug::preNode(), std::forward<Arg>(arg),
+          std::forward<Args>(args)...);
     }
   }
 };

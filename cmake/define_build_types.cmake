@@ -104,6 +104,14 @@ else()
   set(vt_feature_cmake_trace_enabled "0")
 endif()
 
+option(vt_trace_only "Build VT with trace-only mode enabled" ON)
+if (vt_trace_only)
+  message(STATUS "Building additional target for VT in trace-only mode")
+endif()
+
+# This will be set to 1 during generation of cmake config for vt-trace target
+set(vt_feature_cmake_trace_only "0")
+
 if (${vt_priorities_enabled})
   message(STATUS "Building VT with priorities enabled")
   message(
@@ -148,10 +156,10 @@ else()
   option(vt_mpi_guards "Build VT with poison MPI calls: code invoked from VT callbacks cannot invoke MPI functions" OFF)
 endif()
 
-if (vt_mpi_guards AND PERL_FOUND)
+if ((vt_mpi_guards OR vt_trace_only) AND PERL_FOUND)
   message(STATUS "Building VT with user MPI prevention guards enabled")
   set(vt_feature_cmake_mpi_access_guards "1")
-elseif (vt_mpi_guards AND NOT PERL_FOUND)
+elseif ((vt_mpi_guards OR vt_trace_only) AND NOT PERL_FOUND)
   # No perl? Can't generate wrapper source file.
   message(STATUS "Building VT with user MPI prevention guards disabled (requested, but perl not found)")
   set(vt_feature_cmake_mpi_access_guards "0")
@@ -296,6 +304,11 @@ foreach(loop_build_type ${VT_CONFIG_TYPES})
     ${VIRTUAL_TRANSPORT_LIBRARY}
     PROPERTIES ${loop_build_type_upper}_POSTFIX "-${loop_build_type}"
   )
+
+  # Generate separate config file for vt-trace
+  if (vt_trace_only)
+    set_trace_only_config()
+  endif()
 endforeach()
 
 # message(STATUS "chosen build type=${CMAKE_BUILD_TYPE}")
@@ -311,3 +324,14 @@ target_include_directories(
   $<INSTALL_INTERFACE:include>
 )
 
+if (vt_trace_only)
+  target_include_directories(
+    ${VT_TRACE_LIB} PUBLIC
+    $<BUILD_INTERFACE:$<$<CONFIG:debug>:${PROJECT_BIN_DIR}/debug/vt-trace>>
+    $<BUILD_INTERFACE:$<$<CONFIG:relwithdebinfo>:${PROJECT_BIN_DIR}/relwithdebinfo/vt-trace>>
+    $<BUILD_INTERFACE:$<$<CONFIG:release>:${PROJECT_BIN_DIR}/release/vt-trace>>
+    $<BUILD_INTERFACE:$<$<CONFIG:${CMAKE_BUILD_TYPE}>:${PROJECT_BIN_DIR}/${lower_CMAKE_BUILD_TYPE}/vt-trace>>
+    $<BUILD_INTERFACE:$<$<CONFIG:>:${PROJECT_BIN_DIR}/undefined>>
+    $<INSTALL_INTERFACE:include/vt-trace>
+  )
+endif()

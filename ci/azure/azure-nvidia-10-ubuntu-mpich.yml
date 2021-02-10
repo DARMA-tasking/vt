@@ -32,6 +32,7 @@ variables:
   VT_LB: 1
   VT_TRACE: 1
   VT_TRACE_RT: 0
+  VT_TRACE_ONLY: 1
   VT_MIMALLOC: 0
   VT_DOCS: 0
   VT_ASAN: 0

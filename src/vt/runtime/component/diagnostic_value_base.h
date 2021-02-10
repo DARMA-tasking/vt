@@ -49,7 +49,9 @@
 #include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_erased_value.h"
 
+#if !vt_check_enabled(trace_only)
 #include <checkpoint/checkpoint.h>
+#endif
 
 #include <string>
 
@@ -67,8 +69,9 @@ namespace vt { namespace runtime { namespace component { namespace detail {
  * \brief Base class for a diagnostic value with type of actual value erased
  */
 struct DiagnosticBase {
+  #if !vt_check_enabled(trace_only)
   checkpoint_virtual_serialize_root()
-
+#endif
   /**
    * \internal \brief Construct a new diagnostic base value
    *
