@@ -187,6 +187,9 @@ void SubphaseManager::resolveRootedString(RootedStringMsg* msg) {
     // Generate a new unique ID
     auto const n = theContext()->getNode();
     id = SubphaseBits::makeID(false, n, seq_id);
+
+    // Save the ID for future requests
+    resolved_broker_ids_[label] = id;
   }
 
   vt_debug_print(
