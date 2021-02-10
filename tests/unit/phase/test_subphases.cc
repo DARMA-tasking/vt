@@ -141,4 +141,62 @@ TEST_F(TestSubphases, test_subphase_collective_resolution) {
   }
 }
 
+TEST_F(TestSubphases, test_subphase_reduce_global_map) {
+  EXPECT_FALSE(thePhase()->isPendingSubphaseResolution());
+
+  std::string label1{"my-test-collective-label2"};
+  std::string label2{"my-test-collective-label3"};
+  std::string label3{"my-test-collective-label4"};
+
+  vt_print(gen, "registering three collective subphases\n");
+
+  // All nodes register the same rooted subphase label and should end up with
+  // the same ID from the broker
+  SubphaseType id1 = thePhase()->registerCollectiveSubphase(label1);
+  SubphaseType id2 = thePhase()->registerCollectiveSubphase(label2);
+  SubphaseType id3 = thePhase()->registerCollectiveSubphase(label3);
+
+  std::string label4{"my-test-rooted-label2"};
+  std::string label5{"my-test-rooted-label3"};
+  std::string label6{"my-test-rooted-label4"};
+  SubphaseType id4 = 0, id5 = 0, id6 = 0;
+
+  vt_print(gen, "registering rooted subphases\n");
+
+  // All nodes register the same rooted subphase label and should end up with
+  // the same ID from the broker
+  thePhase()->registerRootedSubphase(label4, [&id4](SubphaseType id) { id4=id; });
+  thePhase()->registerRootedSubphase(label5, [&id5](SubphaseType id) { id5=id; });
+  thePhase()->registerRootedSubphase(label6, [&id6](SubphaseType id) { id6=id; });
+
+  // Start the next phase, which would require all label resolution to be
+  // complete
+  thePhase()->nextPhaseCollective();
+
+  EXPECT_NE(id1, 0);
+  EXPECT_NE(id2, 0);
+  EXPECT_NE(id3, 0);
+  EXPECT_NE(id4, 0);
+  EXPECT_NE(id5, 0);
+  EXPECT_NE(id6, 0);
+
+  using IDMap = typename phase::subphase::SubphaseManager::IDMapType;
+
+  IDMap out_map{};
+
+  runInEpochCollective([&out_map]{
+    thePhase()->reduceLabels([&](IDMap const& in){ out_map = in; });
+  });
+
+  if (theContext()->getNode() == 0) {
+    EXPECT_EQ(out_map.size(), 6);
+    EXPECT_EQ(out_map[label1], id1);
+    EXPECT_EQ(out_map[label2], id2);
+    EXPECT_EQ(out_map[label3], id3);
+    EXPECT_EQ(out_map[label4], id4);
+    EXPECT_EQ(out_map[label5], id5);
+    EXPECT_EQ(out_map[label6], id6);
+  }
+}
+
 }}} // end namespace vt::tests::unit

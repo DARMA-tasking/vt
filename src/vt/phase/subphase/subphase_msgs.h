@@ -103,6 +103,92 @@ struct RootedStringMsg : Message {
   vt::Callback<SubphaseIDMsg> cb_;  /**< the callback to trigger */
 };
 
+/**
+ * \internal
+ * \struct StringIDMap
+ *
+ * \brief Structure used to collect up labels across nodes to build up a global
+ * map of subphase labels to IDs.
+ */
+struct StringIDMap {
+  using IDMapType = std::unordered_map<std::string, SubphaseType>;
+
+  StringIDMap() = default;
+
+  /**
+   * \internal
+   * \brief Construct an label-ID map
+   *
+   * \param[in] in_map the local input map
+   */
+  explicit StringIDMap(IDMapType const& in_map)
+    : map_(in_map)
+  { }
+
+  /**
+   * \internal
+   * \brief Reduction operator for ID map
+   *
+   * \param[in] a1 Element 1 to combine
+   * \param[in] a2 Element 2 to combine
+   *
+   * \return combined map for reduction
+   */
+  friend StringIDMap operator+(StringIDMap a1, StringIDMap const& a2) {
+    for (auto&& elm : a2.map_) {
+      auto iter = a1.map_.find(elm.first);
+      if (iter != a1.map_.end()) {
+        vtAssert(iter->second == elm.second, "Must match existing entry");
+      }
+      a1.map_[elm.first] = elm.second;
+    }
+    return a1;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | map_;
+  }
+
+  IDMapType map_;               /**< The label-ID map for reducing */
+};
+
+/**
+ * \internal
+ * \struct StringIDMapMsg
+ *
+ * \brief Reduction message for label-ID map
+ */
+struct StringIDMapMsg : SerializeRequired<
+  collective::ReduceTMsg<StringIDMap>,
+  StringIDMapMsg
+>
+{
+  using MessageParentType = SerializeRequired<
+    collective::ReduceTMsg<StringIDMap>,
+    StringIDMapMsg
+  >;
+
+  StringIDMapMsg() = default;
+
+  /**
+   * \internal
+   * \brief Construct a reduce message of label-ID map
+   *
+   * \param[in] map_in the local input map
+   */
+  explicit StringIDMapMsg(
+    std::unordered_map<std::string, SubphaseType> const& map_in
+  ) : MessageParentType(StringIDMap{map_in})
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+  }
+};
+
+
 }}} /* end namespace vt::phase::subphase */
 
 #endif /*INCLUDED_VT_PHASE_SUBPHASE_SUBPHASE_MSGS_H*/

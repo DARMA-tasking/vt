@@ -48,6 +48,7 @@
 #include "vt/pipe/pipe_manager.h"
 #include "vt/phase/subphase/subphase_msgs.h"
 #include "vt/phase/subphase/subphase_bits.h"
+#include "vt/phase/phase_manager.h"
 
 #include <functional>
 
@@ -200,6 +201,27 @@ void SubphaseManager::resolveRootedString(RootedStringMsg* msg) {
 
   // Send it back to the requesting node
   cb.send(id);
+}
+
+void SubphaseManager::reduceLabels(
+  std::function<void(IDMapType const& map)> callback
+) {
+  auto cb = theCB()->makeFunc<StringIDMapMsg>(
+    pipe::LifetimeEnum::Once,
+    [callback](StringIDMapMsg* msg) { callback(msg->getVal().map_); }
+  );
+
+  IDMapType local_map = collective_ids_;
+  for (auto&& elm : resolved_broker_ids_) {
+    local_map[elm.first] = elm.second;
+  }
+
+  auto msg = makeMessage<StringIDMapMsg>(local_map);
+
+  NodeType const cb_root = 0;
+
+  auto r = thePhase()->reducer();
+  r->reduce<collective::PlusOp<StringIDMap>>(cb_root, msg.get(), cb);
 }
 
 bool SubphaseManager::isPendingResolution() const {

@@ -52,6 +52,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <tuple>
 
 namespace vt { namespace phase { namespace subphase {
 
@@ -69,6 +70,7 @@ struct RootedStringMsg;
 struct SubphaseManager {
   using SubphaseAction = std::function<void(SubphaseType)>;
   using ActionListType = std::vector<SubphaseAction>;
+  using IDMapType      = std::unordered_map<std::string, SubphaseType>;
 
   SubphaseManager() = default;
 
@@ -106,6 +108,13 @@ public:
       | collective_used_ids_
       | resolved_broker_ids_;
   }
+
+  /**
+   * \brief Reduce the labels to generate a global map of label to SubphaseType
+   *
+   * \param[in] callback the callback that is fired on one node
+   */
+  void reduceLabels(std::function<void(IDMapType const& map)> callback);
 
 private:
   /**
