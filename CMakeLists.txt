@@ -110,6 +110,11 @@ include(cmake/load_bundled_libraries.cmake)
 
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
 
+option(vt_trace_only "Build VT with trace-only mode enabled" ON)
+if (vt_trace_only)
+  message(STATUS "Building additional target for VT in trace-only mode")
+endif()
+
 # Primary VT build
 add_subdirectory(src)
 

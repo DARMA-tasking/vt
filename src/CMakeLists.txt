@@ -252,13 +252,12 @@ link_target_with_vt(
   DEFAULT_LINK_SET
 )
 
-# Define and set up the different build types of VT
-
 include(../cmake/trace_only_functions.cmake)
 if (vt_trace_only)
   create_trace_only_target()
 endif()
 
+# Define and set up the different build types of VT
 include(../cmake/define_build_types.cmake)
 
 target_include_directories(
