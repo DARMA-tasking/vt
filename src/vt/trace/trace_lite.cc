@@ -120,18 +120,28 @@ TraceLite::TraceLite(std::string const& in_prog_name)
    *  invoked for every incremental flush at the cost of space---compression
    *  across multiple flush epochs will be lost (see zlib docs).
    *
-   *  For now, the incremental_flush_mode will be Z_SYNC_FINISH, implying that
-   *  the gz files will have to cleaned if a segfault, etc. occurs. Change this
-   *  to Z_FINISH if you want a clean flush.
+   *  By default the incremental_flush_mode_ will be Z_SYNC_FINISH, implying that
+   *  the gz files will have to be cleaned if a segfault, etc. occurs. If you want
+   *  a clean flush use --vt_trace_gzip_finish_flush flag which will set
+   *  incremental_flush_mode_ to Z_FINISH
    */
 
-  incremental_flush_mode = Z_SYNC_FLUSH;
+  auto const use_z_finish = theConfig()->vt_trace_gzip_finish_flush;
+  setFlushType(use_z_finish ? Z_FINISH : Z_SYNC_FLUSH);
 
   // The first (implied) scheduler always starts with an empty event stack.
   event_holds_.push_back(0);
 }
 
 TraceLite::~TraceLite() {}
+
+void TraceLite::setFlushType(int flush_type){
+  vtAssert(
+    flush_type <= 6 and flush_type >= 0,
+    fmt::format("flush_type={} has to be in [0;6] range!\n", flush_type));
+
+  incremental_flush_mode_ = flush_type;
+}
 
 #if vt_check_enabled(trace_only)
 void TraceLite::initializeStandalone(MPI_Comm comm) {
@@ -424,10 +434,10 @@ void TraceLite::flushTracesFile(bool useGlobalSync) {
   if (
     traces_.size() >=
     static_cast<std::size_t>(theConfig()->vt_trace_flush_size)) {
-    writeTracesFile(incremental_flush_mode, true);
+    writeTracesFile(incremental_flush_mode_, true);
   }
 #else
-  writeTracesFile(incremental_flush_mode, true);
+  writeTracesFile(incremental_flush_mode_, true);
 #endif
 }
 

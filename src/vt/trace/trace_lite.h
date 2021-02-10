@@ -83,6 +83,22 @@ struct TraceLite  {
   virtual ~TraceLite();
 
   /**
+   * \brief Set zlib incremental flush mode for trace file.
+   *
+   * Available options:
+   * - Z_NO_FLUSH = 0
+   * - Z_PARTIAL_FLUSH = 1
+   * - Z_SYNC_FLUSH = 2
+   * - Z_FULL_FLUSH = 3
+   * - Z_FINISH = 4
+   * - Z_BLOCK = 5
+   * - Z_TREES = 6
+   *
+   * \param[in] flush_type the zlib flush mode
+   */
+  void setFlushType(int flush_type);
+
+  /**
    * \brief Get the trace file name for this node
    *
    * \return the file name
@@ -343,7 +359,7 @@ protected:
    * Incremental flush mode for zlib. Not set here with zlib constants to reduce
    * header dependencies.
    */
-  int incremental_flush_mode = 0;
+  int incremental_flush_mode_ = 0;
 
   UserEventRegistry user_event_ = {};
   EventHoldStackType event_holds_;

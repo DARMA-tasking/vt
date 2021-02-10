@@ -366,7 +366,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | incremental_flush_mode
+    s | incremental_flush_mode_
       | traces_
       | open_events_
       | event_holds_
