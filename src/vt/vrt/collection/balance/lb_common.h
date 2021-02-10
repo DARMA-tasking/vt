@@ -52,6 +52,8 @@
 #include <unordered_map>
 #include <ostream>
 
+#include <fmt/ostream.h>
+
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
 
