@@ -103,7 +103,7 @@ struct LBCommKey {
   ElementIDStruct from_ = { no_element_id, uninitialized_destination, uninitialized_destination };
   ElementIDStruct to_   = { no_element_id, uninitialized_destination, uninitialized_destination };
 
-  ElementIDType edge_id_   = no_element_id;
+  ElementIDStruct edge_id_ = { no_element_id, uninitialized_destination, uninitialized_destination };
   NodeType nfrom_          = uninitialized_destination;
   NodeType nto_            = uninitialized_destination;
   CommCategory  cat_       = CommCategory::SendRecv;
@@ -112,7 +112,7 @@ struct LBCommKey {
   ElementIDStruct toObj()      const { return to_; }
   ElementIDType fromNode()     const { return nfrom_; }
   ElementIDType toNode()       const { return nto_; }
-  ElementIDType edgeID()       const { return edge_id_; }
+  ElementIDStruct edgeID()     const { return edge_id_; }
 
   bool selfEdge() const { return cat_ == CommCategory::SendRecv and from_ == to_; }
   bool offNode() const {
