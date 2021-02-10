@@ -122,8 +122,10 @@ protected:
    * \internal
    * \brief Construct the object group for the subphase manager; invoked by the
    * phase manager during startup.
+   *
+   * \param[in] ptr the subphase pointer to construct the objgroup
    */
-  static void subphaseConstruct();
+  static void subphaseConstruct(SubphaseManager* ptr);
 
   /**
    * \internal

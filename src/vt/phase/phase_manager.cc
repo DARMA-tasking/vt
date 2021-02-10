@@ -54,7 +54,7 @@ namespace vt { namespace phase {
   proxy.get()->proxy_ = proxy.getProxy();;
 
   // Construct the subphase manager
-  subphase::SubphaseManager::subphaseConstruct();
+  subphase::SubphaseManager::subphaseConstruct(ptr.get());
 
   return ptr;
 }

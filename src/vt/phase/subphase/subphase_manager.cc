@@ -53,8 +53,8 @@
 
 namespace vt { namespace phase { namespace subphase {
 
-/*static*/ void SubphaseManager::subphaseConstruct() {
-  auto proxy = theObjGroup()->makeCollective<SubphaseManager>();
+/*static*/ void SubphaseManager::subphaseConstruct(SubphaseManager* ptr) {
+  auto proxy = theObjGroup()->makeCollective<SubphaseManager>(ptr);
   proxy.get()->subphase_proxy_ = proxy.getProxy();
 }
 
