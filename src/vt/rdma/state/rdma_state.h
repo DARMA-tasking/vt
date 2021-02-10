@@ -158,13 +158,14 @@ struct State {
       | get_tag_holder
       | put_tag_holder
       | pending_tag_gets
-      | pending_tag_puts;
-
-      s.countBytes(user_state_get_msg_);
-      s.countBytes(user_state_put_msg_);
-
-      s.countBytes(rdma_get_fn);
-      s.countBytes(rdma_put_fn);
+      | pending_tag_puts
+      | user_state_get_msg_
+      | user_state_put_msg_
+      | rdma_get_fn
+      | rdma_put_fn
+      | no_rdma_handle
+      | no_rdma_ptr
+      | no_byte;
   }
 
   bool using_default_put_handler = false;
