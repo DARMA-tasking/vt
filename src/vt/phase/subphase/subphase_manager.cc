@@ -207,4 +207,3 @@ bool SubphaseManager::isPendingResolution() const {
 }
 
 }}} /* end namespace vt::phase::subphase */
-
