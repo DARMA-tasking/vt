@@ -144,26 +144,47 @@ stages:
             val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
             if test -z "$val"
             then
-            echo "##vso[task.setvariable variable=comp_errs_warns;]$val"
-            exit 0
+            val=Successful
             fi
             if test ${#val} -gt "$max_comment_size"
             then
             val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read pipeline log. <=="
             fi
-            tmp_comment_body=**"$(Build.BuildNumber)"**%0D%0A'`''`''`'%0D%0A${val}%0D%0A'`''`''`'
             delimiter="-=-=-=-"
-            new_line="%0D%0A"
-            comment_body=${tmp_comment_body//$delimiter/$new_line}
+            new_line="\n"
+            comment_body=${val//$delimiter/$new_line}
+            quotation_mark="\""
+            new_quotation_mark="\\\""
+            comment_body=${comment_body//$quotation_mark/$new_quotation_mark}
             echo "##vso[task.setvariable variable=comp_errs_warns;]$comment_body"
-      - task: GitHubComment@0
+      - task: Bash@3
         displayName: Put warnings and errors in PR comment
         condition: and(succeededOrFailed(), and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['comp_errs_warns'], '')))
         inputs:
-          gitHubConnection: 'DARMA-tasking'
-          repositoryName: $(Build.Repository.Name)
-          id: $(System.PullRequest.PullRequestNumber)
-          comment: $(comp_errs_warns)
+          targetType: 'inline'
+          script: |
+            rm data.json || true
+            {
+            echo "{"
+            echo '  "event_type": "comment-pr",'
+            echo '  "client_payload": {'
+            echo '    "commit_sha": "'"$(git log --skip=1 -1  --pretty=format:%H)"'",'
+            echo '    "comment_title": "$(Build.BuildNumber)",'
+            echo '    "comment_content": "$(comp_errs_warns)",'
+            echo '    "pr_number": "$(System.PullRequest.PullRequestNumber)"'
+            echo "  }"
+            echo "}"
+            } >> data.json
+            curl \
+              --request POST \
+              --url https://api.github.com/repos/$(Build.Repository.Name)/dispatches \
+              --header "Accept: application/vnd.github.everest-preview+json" \
+              --header "Authorization: token $GITHUB_PAT" \
+              --data "@data.json"
+            rm data.json
+
+        env:
+          GITHUB_PAT: $(github_pat)
       - task: DockerCompose@0
         displayName: Push container to registry
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
