@@ -86,7 +86,7 @@ using TraceContainersType = TraceContainers;
 // Lifetime is same as the underlying stream.
 struct vt_gzFile {
   gzFile file_type;
-  vt_gzFile(gzFile pS) : file_type(pS) {}
+  explicit vt_gzFile(gzFile pS) : file_type(pS) {}
 };
 
 using LogType = TraceLite::LogType;
