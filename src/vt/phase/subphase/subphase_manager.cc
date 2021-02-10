@@ -100,6 +100,11 @@ SubphaseType SubphaseManager::registerCollectiveSubphase(
 void SubphaseManager::registerRootedSubphase(
   std::string const& label, SubphaseAction action
 ) {
+  vt_debug_print(
+    phase, node,
+    "SubphaseManager::registerRootedSubphase: label={}\n", label
+  );
+
   // Check if it's pending.. if so push it back; we are awaiting resolution
   auto iter = pending_.find(label);
   if (iter != pending_.end()) {
@@ -115,6 +120,13 @@ void SubphaseManager::registerRootedSubphase(
   std::size_t const h = std::hash<std::string>{}(label);
   NodeType const broker = static_cast<NodeType>(h % num_nodes);
 
+  vt_debug_print(
+    phase, node,
+    "SubphaseManager::registerRootedSubphase: label={}, hash={}, "
+    "contacting broker={}\n",
+    label, h, broker
+  );
+
   // Callback when the broker resolves the ID
   auto cb = theCB()->makeFunc<SubphaseIDMsg>(
     pipe::LifetimeEnum::Once,
@@ -122,6 +134,13 @@ void SubphaseManager::registerRootedSubphase(
       auto const id = sub_msg->id_;
       vtAssert(rooted_ids_.find(label) == rooted_ids_.end(), "Must not exist");
       rooted_ids_[label] = id;
+
+      vt_debug_print(
+        phase, node,
+        "SubphaseManager::registerRootedSubphase: callback: label={}, "
+        "new id={}\n",
+        label, id
+      );
 
       // Fire all the actions and clean up
       action(id);
@@ -150,6 +169,12 @@ void SubphaseManager::resolveRootedString(RootedStringMsg* msg) {
   auto cb = msg->cb_;
   SubphaseType id = no_lb_phase;
 
+  vt_debug_print(
+    phase, node,
+    "SubphaseManager::resolveRootedString: handler: label={}, found={}\n",
+    label, resolved_broker_ids_.find(label) != resolved_broker_ids_.end()
+  );
+
   // Check to see if we generated an ID for this already---if so, send that
   // back!
   auto iter = resolved_broker_ids_.find(label);
@@ -163,6 +188,12 @@ void SubphaseManager::resolveRootedString(RootedStringMsg* msg) {
     auto const n = theContext()->getNode();
     id = SubphaseBits::makeID(false, n, seq_id);
   }
+
+  vt_debug_print(
+    phase, node,
+    "SubphaseManager::resolveRootedString: handler: label={}, gen id={}\n",
+    label, id
+  );
 
   // Send it back to the requesting node
   cb.send(id);
