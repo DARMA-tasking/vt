@@ -43,6 +43,7 @@
 */
 
 #include "vt/phase/subphase/subphase_bits.h"
+#include "vt/utils/bits/bits_packer.h"
 
 namespace vt { namespace phase { namespace subphase {
 
