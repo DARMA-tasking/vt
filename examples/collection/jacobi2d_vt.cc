@@ -79,6 +79,14 @@ static constexpr std::size_t const default_nrow_object = 8;
 static constexpr std::size_t const default_num_objs = 4;
 static constexpr double const default_tol = 1.0e-02;
 
+struct NodeObj {
+  bool is_finished_ = false;
+  struct WorkFinishedMsg : vt::Message {};
+
+  void workFinishedHandler(WorkFinishedMsg*) { is_finished_ = true; }
+  bool isWorkFinished() { return is_finished_; }
+};
+using NodeObjProxy = vt::objgroup::proxy::Proxy<NodeObj>;
 
 struct LinearPb2DJacobi : vt::Collection<LinearPb2DJacobi,vt::Index2D> {
 
@@ -91,6 +99,7 @@ private:
   size_t numObjsX_ = 1, numObjsY_ = 1;
   size_t numRowsPerObject_ = default_nrow_object;
   size_t maxIter_ = 5;
+  NodeObjProxy objProxy_;
 
 public:
 
@@ -105,18 +114,17 @@ public:
 
   struct BlankMsg : vt::CollectionMessage<LinearPb2DJacobi> { };
 
-  struct InitMsg : vt::collective::ReduceNoneMsg { };
-
   struct LPMsg : vt::CollectionMessage<LinearPb2DJacobi> {
 
     size_t numXObjs = 0;
     size_t numYObjs = 0;
     size_t numIter = 0;
+    NodeObjProxy objProxy;
 
     LPMsg() = default;
 
-    LPMsg(const size_t nx, const size_t ny, const size_t nref)
-      : numXObjs(nx), numYObjs(ny), numIter(nref)
+    LPMsg(const size_t nx, const size_t ny, const size_t nref, NodeObjProxy proxy)
+      : numXObjs(nx), numYObjs(ny), numIter(nref), objProxy(proxy)
     { }
 
   };
@@ -135,25 +143,22 @@ public:
     //
 
     const double normRes = msg->getConstVal();
-    const size_t iter = iter_;
-    const size_t maxIter = maxIter_;
+    auto const iter_max_reached = iter_ > maxIter_;
+    auto const norm_res_done = normRes < default_tol;
 
-    if ((iter <= maxIter) and (normRes >= default_tol)) {
-      fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter, normRes);
-      //
-      // Start a new iteration
-      //
-      auto proxy = getCollectionProxy();
-      proxy.broadcast<BlankMsg, &LinearPb2DJacobi::sendInfo>();
-    }
-    else if (iter > maxIter) {
-      fmt::print("\n Maximum Number of Iterations Reached. \n\n");
-    }
-    else{
-      fmt::print("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
+    if (iter_max_reached or norm_res_done) {
+      auto const to_print = iter_max_reached ?
+        "\n Maximum Number of Iterations Reached. \n\n" :
+        fmt::format("\n Max-Norm Residual Reduced by {} \n\n", default_tol);
+
+      fmt::print(to_print);
+
+      // Notify all nodes that computation is finished
+      objProxy_.broadcast<NodeObj::WorkFinishedMsg, &NodeObj::workFinishedHandler>();
+    } else {
+      fmt::print(" ## ITER {} >> Residual Norm = {} \n", iter_, normRes);
     }
   }
-
 
   void doIteration() {
 
@@ -281,11 +286,7 @@ public:
 
   }
 
-  void doneInit(InitMsg *msg) {
-    sendInfo(nullptr);
-  }
-
-  void sendInfo(BlankMsg *msg) {
+  void doIter(BlankMsg *msg) {
 
     //
     // Treat the particular case of 1 object
@@ -412,26 +413,23 @@ public:
   }
 
 
-  void solve(LPMsg* msg) {
+  void init(LPMsg* msg) {
 
     numObjsX_ = msg->numXObjs;
     numObjsY_ = msg->numYObjs;
     maxIter_ = msg->numIter;
+    objProxy_ = msg->objProxy;
 
     // Initialize the starting vector
     init();
-
-    // Wait for all initializations to complete, reduce, and then:
-    // Start the algorithm with a neighbor-to-neighbor communication
-    using CollType = LinearPb2DJacobi;
-    auto proxy = this->getCollectionProxy();
-    auto cb = vt::theCB()->makeBcast<CollType, InitMsg, &CollType::doneInit>(proxy);
-    auto empty = vt::makeMessage<InitMsg>();
-    proxy.reduce(empty.get(),cb);
   }
 
 };
 
+bool isWorkDone( vt::objgroup::proxy::Proxy<NodeObj> const& proxy){
+  auto const this_node = vt::theContext()->getNode();
+  return proxy[this_node].invoke<decltype(&NodeObj::isWorkFinished), &NodeObj::isWorkFinished>();
+}
 
 int main(int argc, char** argv) {
 
@@ -489,18 +487,33 @@ int main(int argc, char** argv) {
     fmt::print(stdout, "\n");
   }
 
-  if (this_node == 0) {
+  // Object group of all nodes that take part in computation
+  // Used to determine whether the computation is finished
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>();
 
-    // Create the decomposition into objects
-    using BaseIndexType = typename vt::Index2D::DenseIndexType;
-    auto range = vt::Index2D(
-      static_cast<BaseIndexType>(numX_objs),
-      static_cast<BaseIndexType>(numY_objs)
+  // Create the decomposition into objects
+  using BaseIndexType = typename vt::Index2D::DenseIndexType;
+  auto range = vt::Index2D(
+    static_cast<BaseIndexType>(numX_objs),
+    static_cast<BaseIndexType>(numY_objs)
+  );
+
+  auto col_proxy =
+    vt::theCollection()->constructCollective<LinearPb2DJacobi>(range);
+
+  vt::runInEpochCollective([col_proxy, grp_proxy, numX_objs, numY_objs, maxIter] {
+    col_proxy.broadcastCollective<LinearPb2DJacobi::LPMsg, &LinearPb2DJacobi::init>(
+      numX_objs, numY_objs, maxIter, grp_proxy
     );
-    auto proxy = vt::theCollection()->construct<LinearPb2DJacobi>(range);
-    proxy.broadcast<LinearPb2DJacobi::LPMsg, &LinearPb2DJacobi::solve>(
-      numX_objs, numY_objs, maxIter
-    );
+  });
+
+  while (!isWorkDone(grp_proxy)) {
+    vt::runInEpochCollective([col_proxy] {
+      col_proxy.broadcastCollective<
+        LinearPb2DJacobi::BlankMsg, &LinearPb2DJacobi::doIter>();
+    });
+
+    vt::thePhase()->nextPhaseCollective();
   }
 
   vt::finalize();
