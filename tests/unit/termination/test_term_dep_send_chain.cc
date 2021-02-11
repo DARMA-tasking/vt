@@ -439,7 +439,13 @@ struct MyObjGroup {
   }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {}
+  void serialize(SerializerT& s) {
+    s | started_
+      | epoch_
+      | backend_proxy_
+      | frontend_proxy_
+      | chains_;
+  }
 
 private:
   // Has an update been started
