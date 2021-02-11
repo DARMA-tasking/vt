@@ -634,7 +634,12 @@ struct MergeObjGroup
   }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {}
+  void serialize(SerializerT& s) {
+    s | epoch_
+      | backend_proxy_
+      | frontend_proxy_
+      | chains_;
+  }
 
   private:
 
