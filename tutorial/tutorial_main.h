@@ -81,51 +81,42 @@ int main(int argc, char** argv) {
    */
 
   // These parts of the tutorial only require the root node
-  if (::vt::theContext()->getNode() == 0) {
-    // Invoke tutorial 1a: context (node, number of nodes)
-    context();
+  ::vt::runInEpochCollective([] {
+    if (::vt::theContext()->getNode() == 0) {
+      // Invoke tutorial 1a: context (node, number of nodes)
+      context();
 
-    // Invoke tutorial 1b: active message send
-    activeMessageNode();
+      // Invoke tutorial 1b: active message send
+      activeMessageNode();
 
-    // Invoke tutorial 1c: active message serialization
-    activeMessageSerialization();
+      // Invoke tutorial 1c: active message serialization
+      activeMessageSerialization();
 
-    // Invoke tutorial 1d: active message broadcast
-    activeMessageBroadcast();
+      // Invoke tutorial 1d: active message broadcast
+      activeMessageBroadcast();
 
-    // Invoke tutorial 1e: active message group rooted
-    activeMessageGroupRoot();
+      // Invoke tutorial 1e: active message group rooted
+      activeMessageGroupRoot();
 
-    // Invoke tutorial 1g: callback
-    activeMessageCallback();
-  }
-
-  /*
-   * The barrier (which should not be used in most cases) causes all nodes to
-   * wait until they arrive. Barriers can be named (as an optional parameter) so
-   * multiple strands can independently make progress. The barrier here is so
-   * the output from the above calls are easier to read and not interleaved with
-   * the following.
-   */
-  ::vt::theCollective()->barrier();
+      // Invoke tutorial 1g: callback
+      activeMessageCallback();
+    }
+  });
 
   // Invoke tutorial 1f: active message group collective
-  activeMessageGroupCollective();
-
-  ::vt::theCollective()->barrier();
+  ::vt::runInEpochCollective([] { activeMessageGroupCollective(); });
 
   // Invoke tutorial 1h: reduction
-  activeMessageReduce();
+  ::vt::runInEpochCollective([] {activeMessageReduce(); });
 
   // Invoke tutorial 2a: virtual collection creation
-  collection();
+  ::vt::runInEpochCollective([] { collection(); });
 
   // Invoke tutorial 2b: virtual collection reduce
-  collectionReduce();
+  ::vt::runInEpochCollective([] { collectionReduce(); });
 
-  // Termination with active messages
-  activeMessageTerm();
+  // Invoke tutorial 3a: Termination with active messages
+  ::vt::runInEpochCollective([] { activeMessageTerm(); });
 
 
   /*
@@ -143,5 +134,4 @@ int main(int argc, char** argv) {
    * All node invoke finalize at the end of the program
    */
   ::vt::CollectiveOps::finalize();
-
 }

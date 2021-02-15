@@ -67,7 +67,7 @@ struct ReduceResult {
 };
 
 
-// Tutorial code to demonstrate using a callback
+// Tutorial code to demonstrate using reduction on all nodes
 static inline void activeMessageReduce() {
   NodeType const this_node = ::vt::theContext()->getNode();
   (void)this_node;  // don't warn about unused variable

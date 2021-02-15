@@ -55,7 +55,7 @@ struct MySimpleMsg : ::vt::Message { };
 // Forward declaration for the active message handler
 static void msgHandlerGroupA(MySimpleMsg* msg);
 
-// Tutorial code to demonstrate broadcasting a message to the entire system
+// Tutorial code to demonstrate rooted group creation and broadcast to that group
 static inline void activeMessageGroupRoot() {
   NodeType const this_node = ::vt::theContext()->getNode();
   NodeType const num_nodes = ::vt::theContext()->getNumNodes();
