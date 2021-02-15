@@ -77,11 +77,14 @@ struct FileModel : ComposedModel {
   vt::TimeType getWork(ElementIDType elmid, PhaseOffset offset) override {
     //ignore offset for now
     //vt_print(gen, "getWork {} phase={}\n", elmid, getNumCompletedPhases());
-    auto const phase = getNumCompletedPhases();
+    auto const phase = getNumCompletedPhases(); // FIXME: off by 1 error
     auto iter = loads.find(phase);
-    vtAssert(iter != loads.end(), "Must have phase in history");
+    vtAbortIf(iter == loads.end(), "Must have phase in history");
     auto elmiter = iter->second.find(elmid);
-    vtAssert(elmiter != iter->second.end(), "Must have elm ID in history");
+    if (elmiter == iter->second.end()) {
+      vt_print(gen, "could not find elm_id={}\n", elmid);
+    }
+    vtAbortIf(elmiter == iter->second.end(), "Must have elm ID in history");
     return elmiter->second;
   }
 
