@@ -104,11 +104,6 @@ else()
   set(vt_feature_cmake_trace_enabled "0")
 endif()
 
-option(vt_trace_only "Build VT with trace-only mode enabled" ON)
-if (vt_trace_only)
-  message(STATUS "Building additional target for VT in trace-only mode")
-endif()
-
 # This will be set to 1 during generation of cmake config for vt-trace target
 set(vt_feature_cmake_trace_only "0")
 
