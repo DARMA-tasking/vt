@@ -135,16 +135,19 @@ private:
   uint16_t num_trials_                              = 3;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
+  std::unordered_map<NodeType, LoadType> new_load_info_ = {};
   objgroup::proxy::Proxy<GossipLB> proxy_           = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
   std::unordered_set<NodeType> selected_            = {};
   std::unordered_set<NodeType> underloaded_         = {};
+  std::unordered_set<NodeType> new_underloaded_     = {};
   std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
   TimeType new_imbalance_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   bool setup_done_                                  = false;
+  bool propagate_next_round_                        = false;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

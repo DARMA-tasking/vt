@@ -300,6 +300,10 @@ void GossipLB::inform() {
   if (is_underloaded_) {
     underloaded_.insert(this_node);
   }
+  auto propagate_this_round = is_underloaded_;
+  propagate_next_round_ = false;
+  new_underloaded_ = underloaded_;
+  new_load_info_ = load_info_;
 
   vt_debug_print(
     gossiplb, node,
@@ -316,16 +320,25 @@ void GossipLB::inform() {
 
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
-  auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
+  for (; k_cur_ < k_max_; ++k_cur_) {
+    auto name = fmt::format("GossipLB: inform k_cur_={}", k_cur_);
+    auto propagate_epoch = theTerm()->makeEpochCollective(name);
 
-  // Underloaded start the round
-  if (is_underloaded_) {
-    propagateRound(propagate_epoch);
+    // Underloaded start the first round; ranks that received on some round
+    // start subsequent rounds
+    if (propagate_this_round) {
+      propagateRound(propagate_epoch);
+    }
+
+    theTerm()->finishedEpoch(propagate_epoch);
+
+    vt::runSchedulerThrough(propagate_epoch);
+
+    propagate_this_round = propagate_next_round_;
+    propagate_next_round_ = false;
+    underloaded_ = new_underloaded_;
+    load_info_ = new_load_info_;
   }
-
-  theTerm()->finishedEpoch(propagate_epoch);
-
-  vt::runSchedulerThrough(propagate_epoch);
 
   vt_debug_print(
     gossiplb, node,
@@ -400,6 +413,9 @@ void GossipLB::propagateRound(EpochType epoch) {
 void GossipLB::propagateIncoming(GossipMsg* msg) {
   auto const from_node = msg->getFromNode();
 
+  // we collected more info that should be propagated on the next round
+  propagate_next_round_ = true;
+
   vt_debug_print(
     gossiplb, node,
     "GossipLB::propagateIncoming: k_max_={}, k_cur_={}, from_node={}, "
@@ -408,21 +424,13 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
   );
 
   for (auto&& elm : msg->getNodeLoad()) {
-    if (load_info_.find(elm.first) == load_info_.end()) {
-      load_info_[elm.first] = elm.second;
+    if (new_load_info_.find(elm.first) == new_load_info_.end()) {
+      new_load_info_[elm.first] = elm.second;
 
       if (isUnderloaded(elm.second)) {
-        underloaded_.insert(elm.first);
+        new_underloaded_.insert(elm.first);
       }
     }
-  }
-
-  if (k_cur_ == k_max_ - 1) {
-    // nothing to do but wait for termination to be detected
-  } else {
-    // send out another round
-    propagateRound();
-    k_cur_++;
   }
 }
 
