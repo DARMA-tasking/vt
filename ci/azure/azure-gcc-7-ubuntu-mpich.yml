@@ -73,12 +73,13 @@ stages:
             source /etc/docker-setup.sh
       - task: Bash@3
         displayName: Test editing comment
+        condition: and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest'))
         inputs:
           targetType: 'inline'
           script: |
             curl \
               --request POST \
-              --url https://api.github.com/repos/jstrzebonski/comment-on-pr-action-test/dispatches \
+              --url https://api.github.com/repos/$(Build.Repository.Name)/dispatches \
               --header "Accept: application/vnd.github.everest-preview+json" \
               --header "Authorization: token $GITHUB_PAT" \
               --data '
