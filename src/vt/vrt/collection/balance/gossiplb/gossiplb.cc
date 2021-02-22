@@ -411,7 +411,7 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
     if (load_info_.find(elm.first) == load_info_.end()) {
       load_info_[elm.first] = elm.second;
 
-      if (isUnderloaded(elm.first)) {
+      if (isUnderloaded(elm.second)) {
         underloaded_.insert(elm.first);
       }
     }
@@ -479,7 +479,7 @@ NodeType GossipLB::sampleFromCMF(
 std::vector<NodeType> GossipLB::makeUnderloaded() const {
   std::vector<NodeType> under = {};
   for (auto&& elm : load_info_) {
-    if (isUnderloaded(elm.first)) {
+    if (isUnderloaded(elm.second)) {
       under.push_back(elm.first);
     }
   }
