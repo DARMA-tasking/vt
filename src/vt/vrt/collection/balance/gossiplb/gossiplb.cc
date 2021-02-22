@@ -355,6 +355,9 @@ void GossipLB::propagateRound(EpochType epoch) {
 
   auto& selected = selected_;
   selected = underloaded_;
+  if (selected.find(this_node) == selected.end()) {
+    selected.insert(this_node);
+  }
 
   auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
 
@@ -366,7 +369,7 @@ void GossipLB::propagateRound(EpochType epoch) {
 
   for (int i = 0; i < fanout; i++) {
     // This implies full knowledge of all processors
-    if (selected.size() >= static_cast<size_t>(num_nodes - 1)) {
+    if (selected.size() >= static_cast<size_t>(num_nodes)) {
       return;
     }
 
@@ -377,9 +380,9 @@ void GossipLB::propagateRound(EpochType epoch) {
     do {
       random_node = dist(gen);
     } while (
-      selected.find(random_node) != selected.end() or
-      random_node == this_node
+      selected.find(random_node) != selected.end()
     );
+    selected.insert(random_node);
 
     debug_print(
       gossiplb, node,
