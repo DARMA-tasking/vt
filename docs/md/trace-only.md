@@ -1,7 +1,7 @@
 \page trace-only Trace-only
 \brief Using vt in trace-only mode
 
-\section introduction What is trace-only mode
+\section what-is-vt-trace What is trace-only mode
 
 Trace-only mode is lightweight library which includes the subset of VT-runtime that allows to generate trace files for an application that uses MPI calls.
 The following examples will show how to generate vt-trace target and then how to use it.
