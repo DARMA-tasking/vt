@@ -118,7 +118,6 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
   ProcStats::proc_migrate_.clear();
   ProcStats::proc_temp_to_perm_.clear();
   ProcStats::proc_perm_to_temp_.clear();
-  clearStats();
 }
 
 /*static*/ ElementIDType ProcStats::getNextElm() {
