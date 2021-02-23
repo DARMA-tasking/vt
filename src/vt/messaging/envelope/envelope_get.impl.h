@@ -61,6 +61,11 @@ inline NodeType envelopeGetDest(Env const& env) {
 }
 
 template <typename Env>
+inline bool envelopeGetDeliverBcast(Env const& env) {
+  return reinterpret_cast<Envelope const*>(&env)->deliver_bcast_to_sender;
+}
+
+template <typename Env>
 inline GroupType envelopeGetGroup(Env& env) {
   return reinterpret_cast<Envelope*>(&env)->group;
 }

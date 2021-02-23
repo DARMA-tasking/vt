@@ -235,7 +235,6 @@ void Barrier::barrierUp(
         "barrierDown: barrier={}\n", barrier
       );
       theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg);
-      barrierDown(is_named, is_wait, barrier);
     }
   }
 }

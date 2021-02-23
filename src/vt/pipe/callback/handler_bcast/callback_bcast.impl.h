@@ -93,9 +93,6 @@ CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) 
   );
   auto msg = makeMessage<CallbackMsg>(pid);
   theMsg()->broadcastMsg<CallbackMsg>(handler_, msg);
-  if (include_sender_) {
-    runnable::RunnableVoid::run(handler_,this_node);
-  }
 }
 
 template <typename MsgT>
@@ -109,13 +106,6 @@ CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) 
     this_node, include_sender_
   );
   theMsg()->broadcastMsg<SignalDataType>(handler_, data);
-  auto msg_group = envelopeGetGroup(data->env);
-  bool const is_default = msg_group == default_group;
-  if (include_sender_ and is_default) {
-    auto nmsg = makeMessage<SignalDataType>(*data);
-    auto short_msg = nmsg.template to<ShortMessage>.get();
-    runnable::Runnable<ShortMessage>::run(handler_,nullptr,short_msg,this_node);
-  }
 }
 
 }}} /* end namespace vt::pipe::callback */

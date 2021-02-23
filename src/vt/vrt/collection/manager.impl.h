@@ -618,10 +618,12 @@ template <typename>
   auto const& proxy = msg->proxy;
   theCollection()->constructed_.insert(proxy);
   theCollection()->addToState(proxy, BufferReleaseEnum::AfterFullyConstructed);
+
   vt_debug_print(
     vrt_coll, node,
     "addToState: proxy={:x}, AfterCons\n", proxy
   );
+
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Broadcast);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Send);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
@@ -1034,10 +1036,6 @@ messaging::PendingSend CollectionManager::broadcastFromRoot(MsgT* raw_msg) {
   auto ret = theMsg()->broadcastMsg<MsgT,collectionBcastHandler<ColT,IndexT>>(
     msg
   );
-
-  if (!send_group) {
-    collectionBcastHandler<ColT,IndexT,MsgT>(msg_hold.get());
-  }
 
   theMsg()->popEpoch(cur_epoch);
 
@@ -2171,6 +2169,7 @@ template <typename ColT, typename... Args>
     vrt_coll, node,
     "addToState: proxy={:x}, AfterMeta\n", proxy
   );
+
   theCollection()->addToState(proxy, BufferReleaseEnum::AfterMetaDataKnown);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Send);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Broadcast);
@@ -2294,7 +2293,7 @@ CollectionManager::constructMap(
   );
 
   theMsg()->broadcastMsg<MsgType,distConstruct<MsgType>>(
-    create_msg
+    create_msg, false
   );
 
   auto create_msg_local = makeMessage<MsgType>(
@@ -2461,7 +2460,7 @@ void CollectionManager::finishedInsertEpoch(
   theMsg()->markAsCollectionMessage(msg);
   theMsg()->broadcastMsg<
     UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
-  >(msg);
+  >(msg, false);
 
   /*
    *  Start building the a new group for broadcasts and reductions over the
@@ -2972,10 +2971,7 @@ void CollectionManager::destroy(
 
   auto msg = makeMessage<DestroyMsgType>(proxy, this_node);
   theMsg()->markAsCollectionMessage(msg);
-  auto msg_hold = promoteMsg(msg.get()); // keep after bcast
   theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
-
-  DestroyHandlers::destroyNow(msg_hold.get());
 }
 
 template <typename ColT, typename IndexT>
@@ -3284,6 +3280,7 @@ messaging::PendingSend CollectionManager::bufferOpOrExecute(
   VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
   EpochType epoch, ActionPendingType action
 ) {
+
   if (checkReady(proxy, release)) {
     theMsg()->pushEpoch(epoch);
     auto ps = action();

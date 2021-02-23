@@ -91,6 +91,14 @@ inline void envelopeInitCopy(Env& env, Env const& src_env) {
 }
 
 template <typename Env>
+inline void envelopeCopyBcastData(Env& env, Env const& src_env) {
+  envelopeSetIsLocked(env, false);
+  envelopeSetDest(env, envelopeGetDest(src_env));
+  setBroadcastType(env);
+  envelopeSetIsLocked(env, true);
+}
+
+template <typename Env>
 inline void envelopeInitRecv(Env& env) {
   // Reset the local ref-count. The sender ref-count is not relevant.
   envelopeSetRef(env, 0);

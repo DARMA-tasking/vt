@@ -485,7 +485,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       if (is_term) {
         auto msg = makeMessage<TermMsg>(state.getEpoch());
         theMsg()->markAsTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg);
+        theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg, false);
 
         state.setTerminated();
 
@@ -514,7 +514,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
         auto msg = makeMessage<TermMsg>(state.getEpoch(), state.getCurWave());
         theMsg()->markAsTermMessage(msg);
-        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(msg);
+        theMsg()->broadcastMsg<TermMsg, epochContinueHandler>(msg, false);
       }
     }
 
@@ -595,7 +595,7 @@ void TerminationDetector::countsConstant(TermStateType& state) {
             if (not theConfig()->vt_no_detect_hang) {
               auto msg = makeMessage<HangCheckMsg>();
               theMsg()->markAsTermMessage(msg.get());
-              theMsg()->broadcastMsg<HangCheckMsg, hangCheckHandler>(msg);
+              theMsg()->broadcastMsg<HangCheckMsg, hangCheckHandler>(msg, false);
               hangCheckHandler(nullptr);
             }
           }
@@ -612,7 +612,7 @@ void TerminationDetector::startEpochGraphBuild() {
   if (theConfig()->vt_epoch_graph_on_hang) {
     auto msg = makeMessage<BuildGraphMsg>();
     theMsg()->markAsTermMessage(msg.get());
-    theMsg()->broadcastMsg<BuildGraphMsg, buildLocalGraphHandler>(msg);
+    theMsg()->broadcastMsg<BuildGraphMsg, buildLocalGraphHandler>(msg, false);
     buildLocalGraphHandler(nullptr);
   }
 }
@@ -991,7 +991,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
    */
   auto msg = makeMessage<TermMsg>(epoch);
   theMsg()->markAsTermMessage(msg);
-  theMsg()->broadcastMsg<TermMsg,makeRootedHandler>(msg);
+  theMsg()->broadcastMsg<TermMsg,makeRootedHandler>(msg, false);
 
   /*
    *  Setup the new rooted epoch locally on the root node (this node)

@@ -61,27 +61,10 @@ struct CallbackBcast : CallbackBase<signal::Signal<MsgT>> {
   using SignalDataType = typename SignalType::DataType;
   using MessageType    = MsgT;
 
-  explicit CallbackBcast(bool const in_include_root = false)
-    : include_root_(in_include_root)
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    CallbackBase<SignalBaseType>::serializer(s);
-    s | include_root_;
-  }
-
 private:
   void trigger_(SignalDataType* data) override {
     theMsg()->broadcastMsg<MsgT,f>(data);
-    if (include_root_) {
-      auto nmsg = makeMessage<SignalDataType*>(*data);
-      f(nmsg.get());
-    }
   }
-
-private:
-  bool include_root_ = false;
 };
 
 }}} /* end namespace vt::pipe::callback */

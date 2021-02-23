@@ -83,13 +83,7 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
 
 template <typename MsgT>
 void broadcast(MsgSharedPtr<MsgT> msg, HandlerType han) {
-  // Get the current epoch for the message
-  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
-  // Broadcast the message
-  auto msg_hold = promoteMsg(msg.get()); // for scheduling
-  theMsg()->broadcastMsg<MsgT>(han, msg, no_tag);
-  // Schedule delivery on this node for the objgroup
-  scheduleMsg(msg_hold.template toVirtual<ShortMessage>(), han, cur_epoch);
+  theMsg()->broadcastMsg<MsgT>(han, msg);
 }
 
 }} /* end namespace vt::objgroup */

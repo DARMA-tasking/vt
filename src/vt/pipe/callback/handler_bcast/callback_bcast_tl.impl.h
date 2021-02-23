@@ -58,7 +58,6 @@ namespace vt { namespace pipe { namespace callback {
 
 template <typename SerializerT>
 void CallbackBcastTypeless::serialize(SerializerT& s) {
-  s | include_sender_;
   s | handler_;
 }
 
@@ -68,19 +67,11 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
 
   vt_debug_print(
     pipe, node,
-    "CallbackBcast: trigger_: pipe={:x}, this_node={}, include_sender_={}\n",
-    pipe, this_node, include_sender_
+    "CallbackBcast: trigger_: pipe={:x}, this_node={}\n",
+    pipe, this_node
   );
 
-  auto pmsg = promoteMsg(msg);
-  theMsg()->broadcastMsg<MsgT>(handler_, pmsg);
-
-  auto msg_group = envelopeGetGroup(msg->env);
-  bool const is_default = msg_group == default_group;
-  if (include_sender_ and is_default) {
-    auto nmsg = makeMessage<MsgT>(*msg); // create copy (?)
-    runnable::Runnable<MsgT>::run(handler_, nullptr, nmsg.get(), this_node);
-  }
+  theMsg()->broadcastMsg<MsgT>(handler_, msg);
 }
 
 }}} /* end namespace vt::pipe::callback */

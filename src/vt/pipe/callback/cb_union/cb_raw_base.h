@@ -89,8 +89,7 @@ struct CallbackRawBaseSingle {
     NodeType const& in_node
   );
   CallbackRawBaseSingle(
-    RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
-    bool const& in_inc
+    RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler
   );
   CallbackRawBaseSingle(RawAnonTagType, PipeType const& in_pipe);
   CallbackRawBaseSingle(RawSendColMsgTagType, PipeType const& in_pipe);
@@ -172,9 +171,8 @@ struct CallbackTyped : CallbackRawBaseSingle {
   ) : CallbackRawBaseSingle(RawSendMsgTag,in_pipe,in_handler,in_node)
   { }
   CallbackTyped(
-    RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler,
-    bool const& in_inc
-  )  : CallbackRawBaseSingle(RawBcastMsgTag,in_pipe,in_handler,in_inc)
+    RawBcastMsgTagType, PipeType const& in_pipe, HandlerType const in_handler
+  )  : CallbackRawBaseSingle(RawBcastMsgTag,in_pipe,in_handler)
   { }
   CallbackTyped(RawAnonTagType, PipeType const& in_pipe)
     : CallbackRawBaseSingle(RawAnonTag,in_pipe)

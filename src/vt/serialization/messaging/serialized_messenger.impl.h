@@ -156,6 +156,12 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   auto msg_data = sys_msg->payload.data();
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
+  // Keep bcast related data in user_msg since it's sometimes
+  // needed in the handler
+  if (envelopeIsBcast(sys_msg->env)) {
+    envelopeCopyBcastData(user_msg->env, sys_msg->env);
+  }
+
   vt_debug_print(
     serial_msg, node,
     "payloadMsgHandler: group={:x}, msg={}, handler={}, bytes={}, "
@@ -193,7 +199,7 @@ template <typename MsgT, typename BaseT>
 template <typename MsgT, typename BaseT>
 /*static*/ messaging::PendingSend
  SerializedMessenger::broadcastSerialMsg(
-  MsgT* msg_ptr, HandlerType han
+  MsgT* msg_ptr, HandlerType han, bool deliver_to_sender
 ) {
   using PayloadMsg = SerialEagerPayloadMsg<MsgT, BaseT>;
 
@@ -250,7 +256,7 @@ template <typename MsgT, typename BaseT>
     );
 
     theMsg()->markAsSerialMsgMessage(payload_msg);
-    return theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg);
+    return theMsg()->broadcastMsg<PayloadMsg,payloadMsgHandler>(payload_msg, deliver_to_sender);
   } else {
     auto const& total_size = ptr_size + sys_size;
 

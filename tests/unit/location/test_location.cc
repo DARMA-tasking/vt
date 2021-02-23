@@ -353,14 +353,14 @@ TYPED_TEST_P(TestLocationRoute, test_route_entity) {
     auto msg = vt::makeMessage<MsgType>(entity, my_node, is_long);
     vt::theMsg()->broadcastMsg<MsgType, location::routeTestHandler<TypeParam>>(msg);
 
-    while (msg_count < nb_nodes - 1) { vt::runScheduler(); }
+    vt::theSched()->runSchedulerWhile([&msg_count, nb_nodes]{ return msg_count < nb_nodes; });
 
     vt_debug_print(
       location, node,
       "TestLocationRoute: all messages have been arrived\n"
     );
 
-    EXPECT_EQ(msg_count, nb_nodes - 1);
+    EXPECT_EQ(msg_count, nb_nodes);
   }
 }
 

@@ -186,6 +186,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
   auto const& is_term = envelopeIsTerm(msg->env);
   auto const& is_put = envelopeIsPut(msg->env);
   auto const& is_put_packed = envelopeIsPackedPutType(msg->env);
+  auto const& is_bcast = envelopeIsBcast(msg->env);
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
@@ -194,6 +195,11 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
       msg_size, dest, print_bool(is_put), print_bool(is_put_packed)
     );
   }
+
+  vtWarnIf(
+    !(dest != theContext()->getNode() || is_bcast),
+    "Destination {} should != this node"
+  );
 
   MsgSizeType new_msg_size = msg_size;
 
@@ -388,10 +394,6 @@ EventType ActiveMessenger::sendMsgBytes(
     );
   }
 
-  vtWarnIf(
-    !(dest != theContext()->getNode() || is_bcast),
-    "Destination {} should != this node"
-  );
   vtAbortIf(
     dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
   );
@@ -520,10 +522,6 @@ SendInfo ActiveMessenger::sendData(
     data_ptr, num_bytes, dest, tag, send_tag
   );
 
-  vtWarnIf(
-    dest == theContext()->getNode(),
-    "Destination {} should != this node"
-  );
   vtAbortIf(
     dest >= theContext()->getNumNodes() || dest < 0,
     "Invalid destination: {}"

@@ -177,9 +177,6 @@ struct Block : vt::Collection<Block, vt::Index1D> {
       auto proxy = this->getCollectionProxy();
       auto proxy_msg = vt::makeMessage<ProxyMsg>(proxy.getProxy());
       vt::theMsg()->broadcastMsg<SetupGroup,ProxyMsg>(proxy_msg);
-      // Invoke it locally: broadcast sends to all other nodes
-      auto proxy_msg_local = vt::makeMessage<ProxyMsg>(proxy.getProxy());
-      SetupGroup()(proxy_msg_local.get());
     }
   }
 
@@ -314,7 +311,7 @@ static void solveGroupSetup(vt::NodeType this_node, vt::VirtualProxyType coll_pr
 
   vt::theGroup()->newGroupCollective(
     is_even_node, [=](vt::GroupType group_id){
-      fmt::print("Group is created: id={:x}\n", group_id);
+      fmt::print("{}: Group is created: id={:x}\n", this_node, group_id);
       if (this_node == 1) {
         auto msg = vt::makeMessage<SubSolveMsg>(coll_proxy);
         vt::envelopeSetGroup(msg->env, group_id);

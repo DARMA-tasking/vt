@@ -119,12 +119,19 @@ struct TestTermChaining : TestParallelHarness {
   }
 
   static void test_handler_bcast(TestMsg* msg) {
+    static auto visited = 0;
+
     if (theContext()->getNode() == 0) {
       EXPECT_EQ(handler_count, 2);
     } else {
       EXPECT_EQ(handler_count, 12);
     }
-    handler_count = 3;
+
+    ++visited;
+
+    if (visited == 2) {
+      handler_count = 3;
+    }
   }
 
   static void start_chain() {
@@ -170,7 +177,6 @@ struct TestTermChaining : TestParallelHarness {
     vt::theMsg()->popEpoch(epoch2);
     vt::theTerm()->finishedEpoch(epoch2);
 
-    // Broadcast from both nodes, bcast wont send to itself
     EpochType epoch3 = theTerm()->makeEpochRooted();
     vt::theMsg()->pushEpoch(epoch3);
     auto msg3 = makeMessage<TestMsg>();

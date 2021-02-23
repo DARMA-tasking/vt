@@ -93,6 +93,15 @@ template <typename Env>
 inline void envelopeInitCopy(Env& env, Env const& src_env);
 
 /**
+ * \brief Copy broadcast related data
+ *
+ * \param[in,out] env the target envelope to copy to
+ * \param[in] env the original envelope to use as a copy
+ */
+template <typename Env>
+inline void envelopeCopyBcastData(Env& env, Env const& src_env);
+
+/**
  * \brief Initialize/validate an envelope that has been received.
  *
  * The ref-count is set to zero.

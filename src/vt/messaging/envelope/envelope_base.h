@@ -98,6 +98,10 @@ struct ActiveEnvelope {
   /// True iff the message is considered locked.
   /// If locked, changes to the envelope will result in failure.
   bool is_locked : 1;
+
+  // Used only for broadcast to default group
+  // Determines whether message should also be sent to the sender
+  bool deliver_bcast_to_sender : 1;
 };
 
 }} /* end namespace vt::messaging */
