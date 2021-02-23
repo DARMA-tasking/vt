@@ -4,26 +4,22 @@ ARG arch=amd64
 FROM lifflander1/vt:${arch}-ubuntu-18.04-${compiler}-cpp
 
 ARG proxy=""
-ARG zoltan_enabled
 
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
 
-RUN apt-get update -y -q && \
-    apt-get install -y -q --no-install-recommends \
-    ${zoltan_enabled:+gfortran-$(echo ${compiler} | cut -d- -f2)} &&\
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN if test ${zoltan_enabled} -eq 1; then \
-      ln -s \
-      "$(which gfortran-$(echo ${compiler}  | cut -d- -f2))" \
-      /usr/bin/gfortran; \
-    fi
-
+ARG zoltan_enabled
 ARG ZOLTAN_INSTALL_DIR=/trilinos-install
 
 RUN if test ${zoltan_enabled} -eq 1; then \
+      apt-get update -y -q && \
+      apt-get install -y -q --no-install-recommends \
+      gfortran-$(echo ${compiler} | cut -d- -f2) &&\
+      apt-get clean && \
+      rm -rf /var/lib/apt/lists/* && \
+      ln -s \
+      "$(which gfortran-$(echo ${compiler}  | cut -d- -f2))" \
+      /usr/bin/gfortran && \
       ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
     fi
 
