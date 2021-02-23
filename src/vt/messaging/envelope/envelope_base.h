@@ -100,7 +100,7 @@ struct ActiveEnvelope {
   bool is_locked : 1;
 
   // Used only for broadcast to default group
-  // Determines whether message should be send also to sender
+  // Determines whether message should also be sent to the sender
   bool deliver_bcast_to_sender : 1;
 };
 
