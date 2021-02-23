@@ -344,8 +344,8 @@ TraceProcessingTag Trace::beginProcessing(
 
   vt_debug_print(
     trace, node,
-    "event_start: ep={}, event={}, time={}, from={}\n",
-    ep, event, time, from_node
+    "event_start: ep={}, event={}, time={}, from={}, entry chare={}\n",
+    ep, event, time, from_node, TraceRegistry::getEvent(ep).theEventSeq()
   );
 
   auto const type = TraceConstantsType::BeginProcessing;
@@ -387,6 +387,13 @@ void Trace::endProcessing(
     endIdle(time);
   }
 
+  vt_debug_print(
+    trace, node,
+    "event_stop: ep={}, event={}, time={}, from_node={}, entry chare={}\n",
+    ep, event, time, open_events_.back().node,
+    TraceRegistry::getEvent(ep).theEventSeq()
+  );
+
   vtAssert(
     not open_events_.empty()
     // This is current contract expectations; however it precludes async closing.
@@ -398,12 +405,6 @@ void Trace::endProcessing(
   if (theConfig()->vt_trace_memory_usage) {
     addMemoryEvent(theMemUsage()->getFirstUsage());
   }
-
-  vt_debug_print(
-    trace, node,
-    "event_stop: ep={}, event={}, time={}, from_node={}\n",
-    ep, event, time, open_events_.back().node
-  );
 
   // Final event is same as original with a few .. tweaks.
   // Always done PRIOR TO restarts.
