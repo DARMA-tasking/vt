@@ -118,6 +118,8 @@ public:
       } else {
         s | *successors_[i];
       }
+
+      s.skip(successors_);
     }
   }
 

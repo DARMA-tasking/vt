@@ -287,6 +287,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     if (not s.isUnpacking()) {
       vtAssert(op6_msgs_.size() == 0, "Stack should be empty during serialize");
     }
+    s.skip(op6_msgs_);
   }
 
 private:

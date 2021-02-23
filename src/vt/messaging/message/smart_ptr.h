@@ -227,6 +227,9 @@ struct MsgSharedPtr final {
       auto ptr = get();
       auto const msg_size = vt::serialization::MsgSizer<MsgType>::get(ptr);
       s.addBytes(msg_size);
+
+      s.skip(impl_);
+      s.skip(ptr_);
     }
   }
 

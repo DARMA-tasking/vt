@@ -238,6 +238,7 @@ public:
       | collective_scope_;
 
     s.addBytes(getHolderFootprint());
+    s.skip(holder_footprint_);
   }
 
 private:

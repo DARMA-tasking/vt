@@ -469,6 +469,8 @@ public:
       hint_ = set_.end();
     }
     s | elms_;
+
+    s.skip(hint_);
   }
 
 private:

@@ -255,6 +255,9 @@ struct GeneralCallback {
       vtAssert(0, "Should be unreachable");
       break;
     }
+
+    s.skip(active_);
+    s.skip(u_);
   }
 
   bool null()  const { return active_ == CallbackEnum::NoCB; }
