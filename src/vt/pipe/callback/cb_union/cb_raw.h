@@ -222,7 +222,10 @@ struct GeneralCallback {
     using EnumDataType = typename std::underlying_type<CallbackEnum>::type;
     EnumDataType val = static_cast<EnumDataType>(active_);
     s | val;
+    s.skip(active_);
+
     active_ = static_cast<CallbackEnum>(val);
+    s.skip(u_); // only serialize actual content of the union
     switch (active_) {
     case CallbackEnum::AnonCB:
       s | u_.anon_cb_;
@@ -255,9 +258,6 @@ struct GeneralCallback {
       vtAssert(0, "Should be unreachable");
       break;
     }
-
-    s.skip(active_);
-    s.skip(u_);
   }
 
   bool null()  const { return active_ == CallbackEnum::NoCB; }

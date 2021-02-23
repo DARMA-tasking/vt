@@ -468,9 +468,9 @@ public:
     if (s.isUnpacking()) {
       hint_ = set_.end();
     }
-    s | elms_;
-
     s.skip(hint_);
+
+    s | elms_;
   }
 
 private:

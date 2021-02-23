@@ -388,7 +388,7 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
       | between_sched_event_type_
       | between_sched_event_;
 
-    s.skip(log_file_);
+    s.skip(log_file_); // definition unavailable
   }
 
 private:

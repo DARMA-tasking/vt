@@ -118,9 +118,8 @@ public:
       } else {
         s | *successors_[i];
       }
-
-      s.skip(successors_);
     }
+    s.skip(successors_);
   }
 
 private:
