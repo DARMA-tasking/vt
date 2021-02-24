@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                       simple_collection_collective.cc
+//                            lb_tuning_driver.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -112,17 +112,22 @@ int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   vtAbortIf(
-    argc != 4, "Must have two arguments: <num_elms per rank>, <ts>, <file>"
+    argc != 4,
+    "Must have three arguments: <num elms per rank>, <phases to run>, "
+    "<stats file name>"
   );
 
-  int32_t num_elms = atoi(argv[1]);
-  int32_t ts = atoi(argv[2]);
-  std::string file = std::string{argv[3]};
+  // number of elements per rank
+  int32_t num_elms_per_rank = atoi(argv[1]);
+  // phases to run after loading object stats
+  int32_t phases_to_run = atoi(argv[2]);
+  // stats file name, e.g., "stats" for stats.rankid.out
+  std::string stats_file = std::string{argv[3]};
 
   auto const nranks = vt::theContext()->getNumNodes();
   auto const node = vt::theContext()->getNode();
 
-  auto range = vt::Index2D(static_cast<int>(nranks), num_elms);
+  auto range = vt::Index2D(static_cast<int>(nranks), num_elms_per_rank);
   auto proxy = vt::theCollection()->constructCollective<Hello,empireMap>(range);
 
   auto base = vt::theLBManager()->getBaseLoadModel();
@@ -130,13 +135,13 @@ int main(int argc, char** argv) {
 
   auto proxy_bits = proxy.getProxy();
 
-  auto node_filename = fmt::format("{}.{}.out", file, node);
+  auto node_filename = fmt::format("{}.{}.out", stats_file, node);
 
   per_col->addModel(proxy_bits, std::make_shared<FileModel>(base, node_filename));
 
   vt::theLBManager()->setLoadModel(per_col);
 
-  for (int i = 0; i < ts; i++) {
+  for (int i = 0; i < phases_to_run; i++) {
     // Delete this?
     proxy.broadcastCollective<Hello::TestMsg, &Hello::timestep>();
 
