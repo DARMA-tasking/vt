@@ -2,6 +2,7 @@
 set(
   COLLECTION_EXAMPLES
   lb_iter
+  lb_tuning_driver
   jacobi1d_vt
   jacobi2d_vt
   migrate_collection
