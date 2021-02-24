@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              termination.impl.h
+//                            garbage_collect_msg.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,48 +42,60 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERMINATION_IMPL_H
-#define INCLUDED_TERMINATION_TERMINATION_IMPL_H
+#if !defined INCLUDED_VT_EPOCH_GARBAGE_COLLECT_MSG_H
+#define INCLUDED_VT_EPOCH_GARBAGE_COLLECT_MSG_H
 
 #include "vt/config.h"
-#include "vt/termination/termination.h"
-#include "vt/termination/term_common.h"
-#include "vt/epoch/epoch_manip.h"
+#include "vt/collective/reduce/operators/default_msg.h"
+#include "vt/epoch/epoch_garbage_collect.h"
 
-namespace vt { namespace term {
+namespace vt { namespace epoch {
 
-inline void TerminationDetector::produce(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "produce: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, true, node);
-}
+/**
+ * \struct GarbageCollectMsg
+ *
+ * \brief Garbage collection message for integral sets that is reduced to find
+ * common epochs across nodes which are known to have terminated and thus can be
+ * reused.
+ */
+struct GarbageCollectMsg : vt::collective::ReduceTMsg<IntegralSetData> {
+  using MessageParentType = vt::collective::ReduceTMsg<IntegralSetData>;
+  vt_msg_serialize_required(); // set_
 
-inline void TerminationDetector::consume(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "consume: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, false, node);
-}
+  GarbageCollectMsg() = default; // required for serialization
 
-inline bool TerminationDetector::isRooted(EpochType epoch) {
-  bool const is_sentinel = epoch == any_epoch_sentinel or epoch == no_epoch;
-  return is_sentinel ? false : epoch::EpochManip::isRooted(epoch);
-}
+  /**
+   * \internal \brief Construct a new garbage collection message
+   *
+   * \param[in] in_epoch the archetype epoch
+   * \param[in] in_set the integral set on this node
+   */
+  GarbageCollectMsg(
+    EpochType const& in_epoch, IntegralSet<EpochType> const& in_set
+  ) : MessageParentType(IntegralSetData{in_set}),
+      epoch_(in_epoch)
+  { }
 
-inline bool TerminationDetector::isDS(EpochType epoch) {
-  if (isRooted(epoch)) {
-    auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
-    auto const epoch_category = epoch::EpochManip::category(epoch);
-    auto const is_ds = epoch_category == ds_epoch;
-    return is_ds;
-  } else {
-    return false;
+  GarbageCollectMsg(GarbageCollectMsg const&) = default;
+  GarbageCollectMsg(GarbageCollectMsg&&) = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | epoch_;
   }
-}
 
-}} /* end namespace vt::term */
+  /**
+   * \brief Get the archetype epoch
+   *
+   * \return the epoch
+   */
+  EpochType getEpoch() const { return epoch_; }
 
-#endif /*INCLUDED_TERMINATION_TERMINATION_IMPL_H*/
+private:
+  EpochType epoch_ = no_epoch; /**< The epoch archetype being collected */
+};
+
+}} /* end namespace vt::epoch */
+
+#endif /*INCLUDED_VT_EPOCH_GARBAGE_COLLECT_MSG_H*/

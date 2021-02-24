@@ -411,6 +411,7 @@ public:
   ComponentPtrType<vrt::collection::balance::LBManager> theLBManager = nullptr;
   ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger = nullptr;
   ComponentPtrType<phase::PhaseManager> thePhase = nullptr;
+  ComponentPtrType<epoch::EpochManip> theEpoch = nullptr;
 
   // Node-level worker-based components for vt (these are optional)
   #if vt_threading_enabled

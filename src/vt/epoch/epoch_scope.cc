@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              termination.impl.h
+//                                epoch_scope.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,48 +42,25 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERMINATION_IMPL_H
-#define INCLUDED_TERMINATION_TERMINATION_IMPL_H
-
-#include "vt/config.h"
-#include "vt/termination/termination.h"
-#include "vt/termination/term_common.h"
+#include "vt/epoch/epoch_scope.h"
 #include "vt/epoch/epoch_manip.h"
+#include "vt/termination/termination.h"
 
-namespace vt { namespace term {
+namespace vt { namespace epoch {
 
-inline void TerminationDetector::produce(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "produce: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, true, node);
-}
-
-inline void TerminationDetector::consume(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "consume: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, false, node);
-}
-
-inline bool TerminationDetector::isRooted(EpochType epoch) {
-  bool const is_sentinel = epoch == any_epoch_sentinel or epoch == no_epoch;
-  return is_sentinel ? false : epoch::EpochManip::isRooted(epoch);
-}
-
-inline bool TerminationDetector::isDS(EpochType epoch) {
-  if (isRooted(epoch)) {
-    auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
-    auto const epoch_category = epoch::EpochManip::category(epoch);
-    auto const is_ds = epoch_category == ds_epoch;
-    return is_ds;
-  } else {
-    return false;
+EpochCollectiveScope::~EpochCollectiveScope() {
+  if (scope_ != no_scope) {
+    theEpoch()->destroyScope(scope_);
   }
 }
 
-}} /* end namespace vt::term */
+EpochType EpochCollectiveScope::makeEpochCollective(
+  std::string const& label, term::SuccessorEpochCapture successor
+) {
+  vtAssert(scope_ != no_scope, "Must have valid scope");
+  auto const epoch = theEpoch()->getNextCollectiveEpoch(scope_);
+  theTerm()->initializeCollectiveEpoch(epoch, label, successor);
+  return epoch;
+}
 
-#endif /*INCLUDED_TERMINATION_TERMINATION_IMPL_H*/
+}} /* end namespace vt::epoch */

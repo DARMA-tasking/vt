@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              termination.impl.h
+//                           epoch_garbage_collect.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,48 +42,87 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERMINATION_IMPL_H
-#define INCLUDED_TERMINATION_TERMINATION_IMPL_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_GARBAGE_COLLECT_H
+#define INCLUDED_VT_EPOCH_EPOCH_GARBAGE_COLLECT_H
 
 #include "vt/config.h"
-#include "vt/termination/termination.h"
-#include "vt/termination/term_common.h"
-#include "vt/epoch/epoch_manip.h"
+#include "vt/termination/interval/integral_set_intersect.h"
+#include "vt/messaging/message/smart_ptr.h"
 
-namespace vt { namespace term {
+namespace vt { namespace epoch {
 
-inline void TerminationDetector::produce(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "produce: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, true, node);
-}
+/**
+ * \struct IntegralSetData
+ *
+ * \brief Container that holds a \c IntegralSet<EpochType> to perform set
+ * intersection for a garbage collecting reducer
+ */
+struct IntegralSetData {
+  using IntegralSetType = vt::IntegralSet<EpochType>;
 
-inline void TerminationDetector::consume(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "consume: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, false, node);
-}
+  IntegralSetData() = default;
 
-inline bool TerminationDetector::isRooted(EpochType epoch) {
-  bool const is_sentinel = epoch == any_epoch_sentinel or epoch == no_epoch;
-  return is_sentinel ? false : epoch::EpochManip::isRooted(epoch);
-}
+  /**
+   * \internal \brief Construct the container
+   *
+   * \param[in] in_set the integral set of this node
+   */
+  explicit IntegralSetData(IntegralSetType const& in_set)
+    : set_(in_set)
+  { }
 
-inline bool TerminationDetector::isDS(EpochType epoch) {
-  if (isRooted(epoch)) {
-    auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
-    auto const epoch_category = epoch::EpochManip::category(epoch);
-    auto const is_ds = epoch_category == ds_epoch;
-    return is_ds;
-  } else {
-    return false;
+  /**
+   * \internal \brief Intersect two integral sets to determine common epochs
+   * that can be garbage collected
+   *
+   * \param[in] a1 integral set 1
+   * \param[in] a2 integral set 2
+   *
+   * \return the intersection of 1 and 2
+   */
+  friend IntegralSetData operator+(IntegralSetData a1, IntegralSetData const& a2) {
+    return IntegralSetData{
+      termination::interval::Intersect<IntegralSetType>()(a1.set_, a2.set_)
+    };
   }
-}
 
-}} /* end namespace vt::term */
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | set_;
+  }
 
-#endif /*INCLUDED_TERMINATION_TERMINATION_IMPL_H*/
+  /**
+   * \brief Get the underlying integral set
+   *
+   * \return the integral set
+   */
+  IntegralSetType const& getSet() const {
+    return set_;
+  }
+
+private:
+  IntegralSetType set_;         /**< The integral set */
+};
+
+// fwd-declare the garbage collect messages to reduce dependencies
+struct GarbageCollectMsg;
+
+/**
+ * \struct GarbageCollectTrait
+ *
+ * \brief Garbage collection functionality
+ */
+struct GarbageCollectTrait {
+
+  /**
+   * \internal \brief Reduce handler for a set of epochs being garbage collected
+   *
+   * \param[in] msg the set of epoch
+   */
+  void reducedEpochsImpl(GarbageCollectMsg* msg);
+
+};
+
+}} /* end namespace vt::epoch */
+
+#endif /*INCLUDED_VT_EPOCH_EPOCH_GARBAGE_COLLECT_H*/

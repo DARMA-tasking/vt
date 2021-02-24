@@ -54,6 +54,7 @@ set(
    CatEnum::vrt_coll     | \
    CatEnum::group        | \
    CatEnum::phase        | \
+   CatEnum::epoch        | \
    CatEnum::broadcast      \
    "
 )

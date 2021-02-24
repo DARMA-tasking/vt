@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              epoch_manip_set.h
+//                           integral_set_intersect.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,55 +42,32 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EPOCH_EPOCH_MANIP_SET_H
-#define INCLUDED_EPOCH_EPOCH_MANIP_SET_H
+#if !defined INCLUDED_VT_TERMINATION_INTERVAL_INTEGRAL_SET_INTERSECT_H
+#define INCLUDED_VT_TERMINATION_INTERVAL_INTEGRAL_SET_INTERSECT_H
 
 #include "vt/config.h"
-#include "vt/epoch/epoch.h"
-#include "vt/epoch/epoch_manip.h"
-#include "vt/utils/bits/bits_common.h"
-#include "vt/utils/bits/bits_packer.h"
+#include "vt/termination/interval/interval.h"
+#include "vt/termination/interval/integral_set.h"
 
-namespace vt { namespace epoch {
+namespace vt { namespace termination { namespace interval {
 
-/*static*/ inline
-void EpochManip::setIsRooted(EpochType& epoch, bool const is_rooted) {
-  BitPackerType::boolSetField<eEpochLayout::EpochIsRooted,1,EpochType>(epoch,is_rooted);
-}
+template <typename T>
+struct Intersect {
 
-/*static*/ inline
-void EpochManip::setHasCategory(EpochType& epoch, bool const has_cat) {
-  BitPackerType::boolSetField<eEpochLayout::EpochHasCategory,1,EpochType>(
-    epoch,has_cat
-  );
-}
+  T operator()(T const& a1, T const& b1) const {
+    T c = {};
 
-/*static*/ inline
-void EpochManip::setIsUser(EpochType& epoch, bool const is_user) {
-  BitPackerType::boolSetField<eEpochLayout::EpochUser,1,EpochType>(
-    epoch,is_user
-  );
-}
+    // Implement intersection of two \c IntegralSet; this is slow.
+    for (auto&& x : a1) {
+      if (b1.contains(x)) {
+        c.insert(x);
+      }
+    }
+    return c;
+  }
 
-/*static*/ inline
-void EpochManip::setCategory(EpochType& epoch, eEpochCategory const cat) {
-  BitPackerType::setField<
-    eEpochLayout::EpochCategory, epoch_category_num_bits
-  >(epoch,cat);
-}
+};
 
-/*static*/ inline
-void EpochManip::setNode(EpochType& epoch, NodeType const node) {
-  BitPackerType::setField<eEpochLayout::EpochNode, node_num_bits>(epoch,node);
-}
+}}} /* end namespace vt::termination::interval */
 
-/*static*/ inline
-void EpochManip::setSeq(EpochType& epoch, EpochType const seq) {
-  BitPackerType::setField<
-    eEpochLayout::EpochSequential, epoch_seq_num_bits
-  >(epoch,seq);
-}
-
-}} /* end namespace vt::epoch */
-
-#endif /*INCLUDED_EPOCH_EPOCH_MANIP_SET_H*/
+#endif /*INCLUDED_VT_TERMINATION_INTERVAL_INTEGRAL_SET_INTERSECT_H*/

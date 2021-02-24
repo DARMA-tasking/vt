@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              epoch_manip_get.h
+//                                epoch_scope.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,49 +42,79 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EPOCH_EPOCH_MANIP_GET_H
-#define INCLUDED_EPOCH_EPOCH_MANIP_GET_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_SCOPE_H
+#define INCLUDED_VT_EPOCH_EPOCH_SCOPE_H
 
-#include "vt/config.h"
 #include "vt/epoch/epoch.h"
-#include "vt/epoch/epoch_manip.h"
-#include "vt/utils/bits/bits_common.h"
-#include "vt/utils/bits/bits_packer.h"
+#include "vt/termination/epoch_tags.h"
 
 namespace vt { namespace epoch {
 
-/*static*/ inline bool EpochManip::isRooted(EpochType const& epoch) {
-  constexpr BitPackerType::FieldType field = eEpochLayout::EpochIsRooted;
-  constexpr BitPackerType::FieldType size = 1;
-  return BitPackerType::boolGetField<field,size,EpochType>(epoch);
-}
+struct EpochManip;
 
-/*static*/ inline bool EpochManip::hasCategory(EpochType const& epoch) {
-  return BitPackerType::boolGetField<eEpochLayout::EpochHasCategory>(epoch);
-}
+/**
+ * \struct EpochCollectiveScope
+ *
+ * \brief Create a new collective epoch scope to order epoch creation across
+ * nodes for consistent epoch values. Allows parallel composition for components
+ * interleaved that collectively create epochs. Enables cross-dependency
+ * analysis/alignment for rooted epochs within a collective epoch scope.
+ *
+ * \note There is a limit on the number of epoch scopes that can be live at a
+ * given time set as \c vt::epoch::scope_limit
+ */
+struct EpochCollectiveScope {
 
-/*static*/ inline bool EpochManip::isUser(EpochType const& epoch) {
-  return BitPackerType::boolGetField<eEpochLayout::EpochUser>(epoch);
-}
+private:
+  /**
+   * \internal \brief System constructor to generate a new epoch scope
+   *
+   * \param[in] in_scope the scope ID
+   */
+  explicit EpochCollectiveScope(EpochScopeType in_scope)
+    : scope_(in_scope)
+  { }
 
-/*static*/ inline eEpochCategory EpochManip::category(EpochType const& epoch) {
-  return BitPackerType::getField<
-    eEpochLayout::EpochCategory, epoch_category_num_bits, eEpochCategory
-  >(epoch);
-}
+  friend struct EpochManip;
 
-/*static*/ inline NodeType EpochManip::node(EpochType const& epoch) {
-  return BitPackerType::getField<
-    eEpochLayout::EpochNode, node_num_bits, NodeType
-  >(epoch);
-}
+public:
+  EpochCollectiveScope(EpochCollectiveScope&& other)
+    : scope_(other.scope_)
+  {
+    other.scope_ = no_scope;
+  }
+  EpochCollectiveScope(EpochCollectiveScope const&) = delete;
+  EpochCollectiveScope& operator=(EpochCollectiveScope const&) = delete;
+  EpochCollectiveScope& operator=(EpochCollectiveScope&&) = delete;
 
-/*static*/ inline EpochType EpochManip::seq(EpochType const& epoch) {
-  return BitPackerType::getField<
-    eEpochLayout::EpochSequential, epoch_seq_num_bits, EpochType
-  >(epoch);
-}
+  ~EpochCollectiveScope();
+
+  /**
+   * \brief Ask for a new collective epoch within this scope
+   *
+   * \return the next collective epoch
+   */
+  EpochType makeEpochCollective(
+    std::string const& label = "",
+    term::SuccessorEpochCapture successor = term::SuccessorEpochCapture{}
+  );
+
+  /**
+   * \brief Get the bits associated with this epoch scope
+   *
+   * \note Primarily, for testing purposes
+   *
+   * \return the epoch scope bits
+   */
+  EpochScopeType getScope() const {
+    return scope_;
+  }
+
+private:
+  /// The identifying scope bits for this collective epoch scope
+  EpochScopeType scope_ = no_scope;
+};
 
 }} /* end namespace vt::epoch */
 
-#endif /*INCLUDED_EPOCH_EPOCH_MANIP_GET_H*/
+#endif /*INCLUDED_VT_EPOCH_EPOCH_SCOPE_H*/

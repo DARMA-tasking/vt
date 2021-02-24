@@ -43,6 +43,7 @@
 */
 
 #include "vt/config.h"
+#include "vt/context/context.h"
 #include "vt/termination/graph/epoch_graph.h"
 #include "vt/termination/term_common.h"
 #include "vt/epoch/epoch_headers.h"

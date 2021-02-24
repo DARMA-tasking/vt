@@ -251,6 +251,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   auto cbp = "Enable debug_broadcast    = \"" debug_pp(broadcast)    "\"";
   auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
   auto dcp = "Enable debug_phase        = \"" debug_pp(phase)        "\"";
+  auto ddp = "Enable debug_epoch        = \"" debug_pp(epoch)        "\"";
 
   auto r  = app.add_flag("--vt_debug_all",          config_.vt_debug_all,          rp);
   auto r1 = app.add_flag("--vt_debug_verbose",      config_.vt_debug_verbose,      rq);
@@ -286,6 +287,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   auto cb = app.add_flag("--vt_debug_broadcast",    config_.vt_debug_broadcast,    cbp);
   auto db = app.add_flag("--vt_debug_objgroup",     config_.vt_debug_objgroup,     dbp);
   auto dc = app.add_flag("--vt_debug_phase",        config_.vt_debug_phase,        dcp);
+  auto dd = app.add_flag("--vt_debug_epoch",        config_.vt_debug_epoch,        ddp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
   r1->group(debugGroup);
@@ -321,6 +323,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   cb->group(debugGroup);
   db->group(debugGroup);
   dc->group(debugGroup);
+  dd->group(debugGroup);
 
   auto dbq = "Always flush VT runtime prints";
   auto eb  = app.add_flag("--vt_debug_print_flush", config_.vt_debug_print_flush, dbq);
@@ -412,14 +415,17 @@ void ArgConfig::addTerminationArgs(CLI::App& app) {
   auto graph_on     = "Output epoch graph to file (DOT) when hang is detected";
   auto terse        = "Output epoch graph to file in terse mode";
   auto progress     = "Print termination counts when progress is stalled";
+  auto gc_thresh    = "Set the threshold for garbage collecting used epoch (0.1 -> 10% of total epochs)";
   auto hfd          = 1024;
+  auto thresh       = 0.1;
   auto x  = app.add_flag("--vt_no_detect_hang",        config_.vt_no_detect_hang,       hang);
   auto x1 = app.add_flag("--vt_term_rooted_use_ds",    config_.vt_term_rooted_use_ds,   ds);
   auto x2 = app.add_flag("--vt_term_rooted_use_wave",  config_.vt_term_rooted_use_wave, wave);
   auto x3 = app.add_option("--vt_epoch_graph_on_hang", config_.vt_epoch_graph_on_hang,  graph_on, true);
   auto x4 = app.add_flag("--vt_epoch_graph_terse",     config_.vt_epoch_graph_terse,    terse);
   auto x5 = app.add_option("--vt_print_no_progress",   config_.vt_print_no_progress,    progress, true);
-  auto y = app.add_option("--vt_hang_freq",            config_.vt_hang_freq,      hang_freq, hfd);
+  auto y = app.add_option("--vt_hang_freq",            config_.vt_hang_freq,            hang_freq, hfd);
+  auto z = app.add_option("--vt_term_gc_threshold",    config_.vt_term_gc_threshold,    gc_thresh, thresh);
   auto debugTerm = "Termination";
   x->group(debugTerm);
   x1->group(debugTerm);
@@ -428,6 +434,7 @@ void ArgConfig::addTerminationArgs(CLI::App& app) {
   x4->group(debugTerm);
   x5->group(debugTerm);
   y->group(debugTerm);
+  z->group(debugTerm);
 }
 
 void ArgConfig::addDebuggerArgs(CLI::App& app) {

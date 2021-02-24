@@ -51,7 +51,6 @@
 #include "vt/termination/term_state.h"
 #include "vt/termination/term_action.h"
 #include "vt/termination/term_interface.h"
-#include "vt/termination/term_window.h"
 #include "vt/termination/epoch_dependency.h"
 #include "vt/termination/dijkstra-scholten/ds_headers.h"
 #include "vt/termination/graph/epoch_graph.h"
@@ -101,7 +100,6 @@ struct TerminationDetector :
   using EpochContainerType = std::unordered_map<EpochType, T>;
   using TermStateType      = TermState;
   using TermStateDSType    = term::ds::StateDS::TerminatorType;
-  using WindowType         = std::unique_ptr<EpochWindow>;
   using SuccessorBagType   = EpochDependency::SuccessorBagType;
   using EpochGraph         = termination::graph::EpochGraph;
   using EpochGraphMsg      = termination::graph::EpochGraphMsg<EpochGraph>;
@@ -277,6 +275,34 @@ public:
   );
 
   /**
+   * \brief Setup a collective epoch with the epoch already generated
+   *
+   * \param[in] epoch the collective epoch already generated
+   * \param[in] label epoch label for debugging purposes
+   * \param[in] successor successor epoch that waits for this new epoch
+   */
+  void initializeCollectiveEpoch(
+    EpochType const epoch,
+    std::string const& label,
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
+  );
+
+  /**
+   * \brief Setup a new rooted epoch with the epoch already generated
+   *
+   * \param[in] epoch the collective epoch already generated
+   * \param[in] label epoch label for debugging purposes
+   * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
+   * \param[in] successor successor epoch that waits for this new epoch
+   */
+  void initializeRootedEpoch(
+    EpochType const epoch,
+    std::string const& label,
+    UseDS use_ds = UseDS{false},
+    SuccessorEpochCapture successor = SuccessorEpochCapture{}
+  );
+
+  /**
    * \brief Tell the termination detector that all initial work has been
    * enqueued for a given epoch on this node
    *
@@ -326,6 +352,32 @@ public:
    */
   EpochType makeEpochRootedDS(
     SuccessorEpochCapture successor, std::string const& label = ""
+  );
+
+  /**
+   * \brief Setup a new rooted epoch that uses the 4-counter wave algorithm with
+   * an epoch already generated
+   *
+   * \param[in] epoch the wave epoch already generated
+   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] label epoch label for debugging purposes
+   */
+  void initializeRootedWaveEpoch(
+    EpochType const epoch, SuccessorEpochCapture successor,
+    std::string const& label = ""
+  );
+
+  /**
+   * \brief Setup a new rooted epoch that uses the DS algorithm with the epoch
+   * already generated
+   *
+   * \param[in] epoch the DS epoch already generated
+   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] label epoch label for debugging purposes
+   */
+  void initializeRootedDSEpoch(
+    EpochType const epoch, SuccessorEpochCapture successor,
+    std::string const& label = ""
   );
 
 private:
@@ -398,24 +450,6 @@ private:
     EpochType const& epoch, TermCounterType const& prod,
     TermCounterType const& cons
   );
-
-  /**
-   * \internal \brief Get archetype bits embedded in epoch
-   *
-   * \param[in] epoch the epoch
-   *
-   * \return the bits masked out
-   */
-  EpochType getArchetype(EpochType const& epoch) const;
-
-  /**
-   * \internal \brief Get an epoch's window
-   *
-   * \param[in] epoch the epoch
-   *
-   * \return the window
-   */
-  EpochWindow* getWindow(EpochType const& epoch);
 
   /**
    * \internal \brief Check for and perform actions when a epoch's counts are
@@ -608,14 +642,38 @@ public:
     s | any_epoch_state_
       | hang_
       | epoch_state_
-      | epoch_arch_
-      | epoch_coll_
       | epoch_ready_
       | epoch_wait_status_
       | has_printed_epoch_graph;
   }
 
 private:
+  /**
+   * \internal \brief Produce on the global epoch to inhibit global terminations
+   * before receipt of a nested epoch's completion
+   *
+   * \note Although the creation of a new epoch also produces on the global
+   * epoch, it consumes on both the generated epoch and the global one when the
+   * epoch is activated (\c finishedEpoch ). This means that the termination of
+   * the global epoch along with associated actions can race with notification
+   * of termination on the newly created epoch. If the runtime is destroyed as a
+   * result of the global epoch terminating the final notification of the newly
+   * created epoch can arrive later causing strange behavior. This has been
+   * observed in the code with a full reset of epoch allocation when the runtime
+   * globally terminates.
+   *
+   * \param[in] ep nested epoch (for debugging)
+   */
+  void produceOnGlobal(EpochType ep);
+
+  /**
+   * \internal \brief Consume on the global epoch to inhibit global terminations
+   * before receipt of a nested epoch's completion
+   *
+   * \param[in] ep the nested epoch (for debugging)
+   */
+  void consumeOnGlobal(EpochType ep);
+
   /**
    * \internal \brief Get an epoch's dependency information
    *
@@ -689,10 +747,6 @@ private:
   TermStateType hang_;
   // epoch termination state
   EpochContainerType<TermStateType> epoch_state_        = {};
-  // epoch window container for specific archetyped epochs
-  std::unordered_map<EpochType,WindowType> epoch_arch_  = {};
-  // epoch window for basic collective epochs
-  std::unique_ptr<EpochWindow> epoch_coll_              = nullptr;
   // ready epoch list (misnomer: finishedEpoch was invoked)
   std::unordered_set<EpochType> epoch_ready_            = {};
   // list of remote epochs pending status report of finished

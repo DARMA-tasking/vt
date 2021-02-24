@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              termination.impl.h
+//                           epoch_garbage_collect.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,48 +42,44 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERMINATION_IMPL_H
-#define INCLUDED_TERMINATION_TERMINATION_IMPL_H
-
 #include "vt/config.h"
-#include "vt/termination/termination.h"
-#include "vt/termination/term_common.h"
+#include "vt/epoch/epoch_garbage_collect.h"
+#include "vt/epoch/garbage_collect_msg.h"
 #include "vt/epoch/epoch_manip.h"
+#include "vt/collective/collective_alg.h"
 
-namespace vt { namespace term {
+namespace vt { namespace epoch {
 
-inline void TerminationDetector::produce(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "produce: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, true, node);
+void GarbageCollectTrait::reducedEpochsImpl(GarbageCollectMsg* msg) {
+  auto const ep = msg->getEpoch();
+
+  vt_debug_print(
+    epoch, node,
+    "GarbageCollectTrait::reducedEpochsImpl: archetype={:x}\n", ep
+  );
+
+  auto const mask = 0xFFFFFFFF00000000ull;
+  vtAssert((ep & mask) == ep, "Archetype bits should not extend past 32 bits");
+  TagType const topbits = static_cast<TagType>(ep >> 32);
+
+  // Achieve consensus on garbage collecting these epochs
+  auto scope = theCollective()->makeCollectiveScope(topbits);
+
+  vt_debug_print(
+    epoch, node,
+    "reducedEpochsImpl: archetype={:x} start MPI collective: num epochs={}\n",
+    ep, msg->getVal().getSet().size()
+  );
+
+  scope.mpiCollectiveWait([ep,msg]{
+    auto window = theEpoch()->getTerminatedWindow(ep);
+    window->garbageCollect(msg->getVal().getSet());
+  });
+
+  vt_debug_print(
+    epoch, node,
+    "reducedEpochsImpl: archetype={:x} done MPI collective\n", ep
+  );
 }
 
-inline void TerminationDetector::consume(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "consume: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, false, node);
-}
-
-inline bool TerminationDetector::isRooted(EpochType epoch) {
-  bool const is_sentinel = epoch == any_epoch_sentinel or epoch == no_epoch;
-  return is_sentinel ? false : epoch::EpochManip::isRooted(epoch);
-}
-
-inline bool TerminationDetector::isDS(EpochType epoch) {
-  if (isRooted(epoch)) {
-    auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
-    auto const epoch_category = epoch::EpochManip::category(epoch);
-    auto const is_ds = epoch_category == ds_epoch;
-    return is_ds;
-  } else {
-    return false;
-  }
-}
-
-}} /* end namespace vt::term */
-
-#endif /*INCLUDED_TERMINATION_TERMINATION_IMPL_H*/
+}} /* end namespace vt::epoch */

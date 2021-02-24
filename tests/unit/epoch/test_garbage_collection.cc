@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              termination.impl.h
+//                         test_garbage_collection.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,48 +42,56 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERMINATION_IMPL_H
-#define INCLUDED_TERMINATION_TERMINATION_IMPL_H
+#include <vt/transport.h>
 
-#include "vt/config.h"
-#include "vt/termination/termination.h"
-#include "vt/termination/term_common.h"
-#include "vt/epoch/epoch_manip.h"
+#include <gtest/gtest.h>
 
-namespace vt { namespace term {
+#include "test_parallel_harness.h"
 
-inline void TerminationDetector::produce(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "produce: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, true, node);
-}
+namespace vt { namespace tests { namespace unit {
 
-inline void TerminationDetector::consume(
-  EpochType epoch, TermCounterType num_units, NodeType node
-) {
-  vt_debug_print_verbose(term, node, "consume: epoch={:x}, node={}\n", epoch, node);
-  auto const in_epoch = epoch == no_epoch ? any_epoch_sentinel : epoch;
-  return produceConsume(in_epoch, num_units, false, node);
-}
-
-inline bool TerminationDetector::isRooted(EpochType epoch) {
-  bool const is_sentinel = epoch == any_epoch_sentinel or epoch == no_epoch;
-  return is_sentinel ? false : epoch::EpochManip::isRooted(epoch);
-}
-
-inline bool TerminationDetector::isDS(EpochType epoch) {
-  if (isRooted(epoch)) {
-    auto const ds_epoch = epoch::eEpochCategory::DijkstraScholtenEpoch;
-    auto const epoch_category = epoch::EpochManip::category(epoch);
-    auto const is_ds = epoch_category == ds_epoch;
-    return is_ds;
-  } else {
-    return false;
+struct TestGarbageCollection : TestParallelHarness {
+  // Inject arguments to set the garbage collection threshold very low for
+  // testing the protocol. Otherwise, it would never engage unless billions of
+  // epoch are processed.
+  void addAdditionalArgs() override {
+    static char gc_threshold[]{"--vt_term_gc_threshold=0.000000001"};
+    addArgs(gc_threshold);
   }
+};
+
+// Start with testing garbage collection for epochs that terminate sequentially,
+// testing that garbage collection actually runs with the set threshold and
+// frees the epochs properly.
+TEST_F(TestGarbageCollection, test_garbage_collecton_1) {
+  // (1<<41)*.0000000010 = ~2,199 collective epochs to process per GC
+
+  auto const num_bits = vt::epoch::epoch_seq_coll_num_bits;
+  auto ep_per_gc = static_cast<uint64_t>(((1ull << num_bits) * 0.000000001) + 0.5);
+  auto num_iter = 10000ull;
+
+  fmt::print("num bits={}\n", num_bits);
+  fmt::print("num epochs={}\n", 1ull << (int64_t)vt::epoch::epoch_seq_coll_num_bits);
+  fmt::print("ep_per_gc={}\n", ep_per_gc);
+
+  for (uint64_t i = 0; i < num_iter; i++) {
+    vt::runInEpochCollective([]{});
+  }
+
+  auto w = theEpoch()->getTerminatedWindow(epoch::EpochManip::generateEpoch());
+  auto const& free = w->getFreeSet();
+  auto const& term = w->getTerminatedSet();
+  auto const& total = w->getRangeSize();
+
+  auto const expected_gcs = num_iter / ep_per_gc;
+  auto const expected_free = ep_per_gc * expected_gcs;
+
+  fmt::print("term.size() = {}\n", term.size());
+  fmt::print("total - free.size() = {}\n", total - free.size());
+  fmt::print("expected_free = {}\n", expected_free);
+
+  EXPECT_TRUE(num_iter - expected_free >= term.size());
+  EXPECT_TRUE(total - free.size() < (num_iter - expected_free)*1.1);
 }
 
-}} /* end namespace vt::term */
-
-#endif /*INCLUDED_TERMINATION_TERMINATION_IMPL_H*/
+}}} // end namespace vt::tests::unit
