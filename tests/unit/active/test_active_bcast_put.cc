@@ -131,7 +131,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
       }
     });
 
-    ASSERT_TRUE(handler_count == num_msg_sent);
+    ASSERT_EQ(num_msg_sent, handler_count);
   }
 
   // Spin here so test_vec does not go out of scope before the send completes
