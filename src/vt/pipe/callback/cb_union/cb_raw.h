@@ -223,9 +223,10 @@ struct GeneralCallback {
 
     // serialize actual content of the union and account for leftovers and
     // padding bytes when footprinting
+    auto union_size = sizeof(this->u_);
     auto ser = [&](auto& cb){
       s | cb;
-      s.addBytes(sizeof(this->u_) - sizeof(cb));
+      s.addBytes(union_size - sizeof(cb));
     };
     s.skip(u_);
     switch (active_) {
