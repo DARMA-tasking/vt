@@ -109,7 +109,7 @@ TEST_P(TestActiveBroadcast, test_type_safe_active_fn_bcast2) {
       }
     });
 
-    ASSERT_TRUE(handler_count == num_msg_sent);
+    ASSERT_EQ(num_msg_sent, handler_count);
   }
 }
 

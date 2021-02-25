@@ -404,11 +404,12 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
     auto const nb_rounds = 5;
     auto nb_received     = 0;
 
-    // register entity
-    if (my_node == home) {
-      vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
-    }
-    vt::theCollective()->barrier();
+    ::vt::runInEpochCollective([my_node, entity] {
+      // register entity
+      if (my_node == home) {
+        vt::theLocMan()->virtual_loc->registerEntity(entity, my_node);
+      }
+    });
 
     if (my_node == home) {
       // migrate entity: unregister it but keep its id in cache

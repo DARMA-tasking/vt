@@ -163,13 +163,16 @@ namespace vt { namespace group { namespace global {
   bool const& send_to_root = is_root && !is_root_of_tree;
   EventType event = no_event;
 
+  auto const this_node_dest = dest == node;
+  auto const first_send = from == uninitialized_destination;
+
   vt_debug_print(
     broadcast, node,
     "DefaultGroup::broadcast msg={}, size={}, from={}, dest={}, is_root={}\n",
     print_ptr(base.get()), size, from, dest, print_bool(is_root)
   );
 
-  if (is_root || ((num_children > 0) && !is_root_of_tree) || send_to_root) {
+  if ((num_children > 0 || send_to_root) && (!this_node_dest || first_send)) {
     auto const& send_tag = static_cast<messaging::MPI_TagType>(
       messaging::MPITag::ActiveMsgTag
     );
@@ -192,10 +195,6 @@ namespace vt { namespace group { namespace global {
       });
     }
 
-    if (is_root && envelopeGetDeliverBcast(msg->env)) {
-      *deliver = true;
-    }
-
     // If not the root of the spanning tree, send to the root to propagate to
     // the rest of the tree
     if (send_to_root) {
@@ -208,6 +207,10 @@ namespace vt { namespace group { namespace global {
 
       theMsg()->sendMsgBytesWithPut(root_node, base, size, send_tag);
     }
+  }
+
+  if (is_root) {
+    *deliver = envelopeGetDeliverBcast(msg->env);
   }
 
   return event;
