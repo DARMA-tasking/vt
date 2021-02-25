@@ -195,10 +195,6 @@ namespace vt { namespace group { namespace global {
       });
     }
 
-    if (is_root) {
-      *deliver = envelopeGetDeliverBcast(msg->env);
-    }
-
     // If not the root of the spanning tree, send to the root to propagate to
     // the rest of the tree
     if (send_to_root) {
@@ -211,6 +207,10 @@ namespace vt { namespace group { namespace global {
 
       theMsg()->sendMsgBytesWithPut(root_node, base, size, send_tag);
     }
+  }
+
+  if (is_root) {
+    *deliver = envelopeGetDeliverBcast(msg->env);
   }
 
   return event;
