@@ -68,16 +68,27 @@ using vt::vrt::collection::balance::PerCollection;
 
 struct FileModel : ComposedModel {
 
-  FileModel(std::shared_ptr<LoadModel> in_base, std::string const& filename)
-    : vt::vrt::collection::balance::ComposedModel(in_base)
+  FileModel(
+    std::shared_ptr<LoadModel> in_base, std::string const& filename,
+    int initial_phase, int phases_to_run
+  )
+    : vt::vrt::collection::balance::ComposedModel(in_base),
+       initial_phase_(initial_phase), phases_to_run_(phases_to_run)
   {
     parseFile(filename);
   }
 
   vt::TimeType getWork(ElementIDType elmid, PhaseOffset offset) override {
-    //ignore offset for now
-    //vt_print(gen, "getWork {} phase={}\n", elmid, getNumCompletedPhases());
-    auto const phase = getNumCompletedPhases(); // FIXME: off by 1 error
+    auto const phase = getNumCompletedPhases()-1 + initial_phase_;
+    //vt_print(gen, "getWork {} phase={}\n", elmid, phase);
+    vtAbortIf(
+      offset.phases != PhaseOffset::NEXT_PHASE,
+      "This driver only supports offset.phases == NEXT_PHASE"
+    );
+    vtAbortIf(
+      offset.subphase != PhaseOffset::WHOLE_PHASE,
+      "This driver only supports offset.subphase == WHOLE_PHASE"
+    );
     auto iter = loads.find(phase);
     vtAbortIf(iter == loads.end(), "Must have phase in history");
     auto elmiter = iter->second.find(elmid);
@@ -98,31 +109,44 @@ struct FileModel : ComposedModel {
 
     vt_print(gen, "parsing file {}\n", file);
 
+    // FIXME: make this work with stats dumped by develop
     while (fscanf(f, "%d, %" PRIu64 ", %lf", &phase, &elm_id, &load) == 3) {
-      //vt_print(gen, "reading in loads for elm={}, phase={}\n", elm_id, phase);
-      loads[phase][elm_id] = load;
+      // only load in stats that are strictly necessary, ignoring the rest
+      if (phase >= initial_phase_ && phase < initial_phase_ + phases_to_run_) {
+        vt_print(gen, "reading in loads for elm={}, phase={}\n", elm_id, phase);
+        loads[phase][elm_id] = load;
+      } else {
+        vt_print(gen, "skipping loads for elm={}, phase={}\n", elm_id, phase);
+      }
     }
   }
 
 private:
-  std::unordered_map<int, std::unordered_map<ElementIDType, vt::TimeType>> loads;
+  std::unordered_map<
+    int /*phase as recorded in stats file*/,
+    std::unordered_map<ElementIDType, vt::TimeType>
+  > loads;
+  int initial_phase_;
+  int phases_to_run_;
 };
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   vtAbortIf(
-    argc != 4,
-    "Must have three arguments: <num elms per rank>, <phases to run>, "
+    argc != 5,
+    "Must have four arguments: <num elms per rank>, <initial phase>, <phases to run>, "
     "<stats file name>"
   );
 
   // number of elements per rank
   int32_t num_elms_per_rank = atoi(argv[1]);
-  // phases to run after loading object stats
-  int32_t phases_to_run = atoi(argv[2]);
+  // initial phase to import from the stats files
+  int initial_phase = atoi(argv[2]);
+  // phases to run after loading object stats (FIXME: find stats in other files)
+  int32_t phases_to_run = atoi(argv[3]);
   // stats file name, e.g., "stats" for stats.rankid.out
-  std::string stats_file = std::string{argv[3]};
+  std::string stats_file = std::string{argv[4]};
 
   auto const nranks = vt::theContext()->getNumNodes();
   auto const node = vt::theContext()->getNode();
@@ -137,7 +161,11 @@ int main(int argc, char** argv) {
 
   auto node_filename = fmt::format("{}.{}.out", stats_file, node);
 
-  per_col->addModel(proxy_bits, std::make_shared<FileModel>(base, node_filename));
+  per_col->addModel(
+    proxy_bits, std::make_shared<FileModel>(
+      base, node_filename, initial_phase, phases_to_run
+    )
+  );
 
   vt::theLBManager()->setLoadModel(per_col);
 
