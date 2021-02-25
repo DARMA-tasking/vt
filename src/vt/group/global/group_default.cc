@@ -163,8 +163,8 @@ namespace vt { namespace group { namespace global {
   bool const& send_to_root = is_root && !is_root_of_tree;
   EventType event = no_event;
 
-  auto const& this_node_dest = dest == node;
-  auto const& first_send = from == uninitialized_destination;
+  auto const this_node_dest = dest == node;
+  auto const first_send = from == uninitialized_destination;
 
   vt_debug_print(
     broadcast, node,
