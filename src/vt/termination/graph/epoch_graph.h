@@ -119,6 +119,7 @@ public:
         s | *successors_[i];
       }
     }
+    s.skip(successors_);
   }
 
 private:

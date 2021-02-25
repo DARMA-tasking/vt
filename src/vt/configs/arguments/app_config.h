@@ -301,7 +301,14 @@ struct AppConfig {
       | vt_term_rooted_use_wave
       | vt_hang_freq
 
+      | vt_diag_enable
+      | vt_diag_print_summary
+      | vt_diag_summary_csv_file
+      | vt_diag_summary_file
+      | vt_diag_csv_base_units
+
       | vt_pause
+      | vt_max_mpi_send_size
 
       | vt_debug_all
       | vt_debug_verbose
@@ -336,6 +343,7 @@ struct AppConfig {
       | vt_debug_group
       | vt_debug_broadcast
       | vt_debug_objgroup
+      | vt_debug_phase
 
       | vt_debug_print_flush
 

@@ -91,9 +91,8 @@ struct HandleKey {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | handle_;
-
-    s.countBytes(proxy_);
+    s | handle_
+      | proxy_;
   }
 };
 

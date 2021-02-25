@@ -387,6 +387,8 @@ struct Trace : runtime::component::Component<Trace>, TraceLite {
       | flush_event_
       | between_sched_event_type_
       | between_sched_event_;
+
+    s.skip(log_file_); // definition unavailable
   }
 
 private:

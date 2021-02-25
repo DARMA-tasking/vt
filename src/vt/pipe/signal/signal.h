@@ -74,6 +74,8 @@ struct Signal : SignalBase {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | signal_tag_;
+
+    s.skip(data_ptr_);
   }
 
 public:

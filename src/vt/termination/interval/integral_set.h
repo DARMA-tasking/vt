@@ -468,6 +468,8 @@ public:
     if (s.isUnpacking()) {
       hint_ = set_.end();
     }
+    s.skip(hint_);
+
     s | elms_;
   }
 

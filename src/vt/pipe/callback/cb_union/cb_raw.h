@@ -219,37 +219,44 @@ struct GeneralCallback {
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    using EnumDataType = typename std::underlying_type<CallbackEnum>::type;
-    EnumDataType val = static_cast<EnumDataType>(active_);
-    s | val;
-    active_ = static_cast<CallbackEnum>(val);
+    s | active_;
+
+    // serialize actual content of the union and account for leftovers and
+    // padding bytes when footprinting
+    auto union_size = sizeof(this->u_);
+    auto ser = [&](auto& cb){
+      s | cb;
+      s.addBytes(union_size - sizeof(cb));
+    };
+    s.skip(u_);
     switch (active_) {
     case CallbackEnum::AnonCB:
-      s | u_.anon_cb_;
+      ser(u_.anon_cb_);
       break;
     case CallbackEnum::SendMsgCB:
-      s | u_.send_msg_cb_;
+      ser(u_.send_msg_cb_);
       break;
     case CallbackEnum::SendColMsgCB:
-      s | u_.send_col_msg_cb_;
+      ser(u_.send_col_msg_cb_);
       break;
     case CallbackEnum::BcastMsgCB:
-      s | u_.bcast_msg_cb_;
+      ser(u_.bcast_msg_cb_);
       break;
     case CallbackEnum::BcastColMsgCB:
-      s | u_.bcast_col_msg_cb_;
+      ser(u_.bcast_col_msg_cb_);
       break;
     case CallbackEnum::BcastColDirCB:
-      s | u_.bcast_col_dir_cb_;
+      ser(u_.bcast_col_dir_cb_);
       break;
     case CallbackEnum::BcastObjGrpCB:
-      s | u_.bcast_obj_cb_;
+      ser(u_.bcast_obj_cb_);
       break;
     case CallbackEnum::SendObjGrpCB:
-      s | u_.send_obj_cb_;
+      ser(u_.send_obj_cb_);
       break;
     case CallbackEnum::NoCB:
       // Serializing empty callback!
+      s.addBytes(sizeof(u_) - sizeof(active_));
       break;
     default:
       vtAssert(0, "Should be unreachable");

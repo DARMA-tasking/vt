@@ -160,6 +160,10 @@ public:
   void serialize(SerializerT& s) {
     s | count_;
     s | hoff_;
+
+    s.skip(actions_);
+    s.skip(lock_);
+    s.skip(user_buffer_);
   }
 
 protected:

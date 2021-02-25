@@ -121,6 +121,7 @@ void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
   s | bcast_proxy_;
   s | bcast_epoch_;
   s | is_wrap_;
+  s | from_node_;
 
   #if vt_check_enabled(lblite)
     s | lb_lite_instrument_;

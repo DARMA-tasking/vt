@@ -287,6 +287,7 @@ struct MyCol : vt::Collection<MyCol,vt::Index2D> {
     if (not s.isUnpacking()) {
       vtAssert(op6_msgs_.size() == 0, "Stack should be empty during serialize");
     }
+    s.skip(op6_msgs_);
   }
 
 private:
@@ -439,7 +440,13 @@ struct MyObjGroup {
   }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {}
+  void serialize(SerializerT& s) {
+    s | started_
+      | epoch_
+      | backend_proxy_
+      | frontend_proxy_
+      | chains_;
+  }
 
 private:
   // Has an update been started
@@ -634,7 +641,12 @@ struct MergeObjGroup
   }
 
   template <typename SerializerT>
-  void serialize(SerializerT& s) {}
+  void serialize(SerializerT& s) {
+    s | epoch_
+      | backend_proxy_
+      | frontend_proxy_
+      | chains_;
+  }
 
   private:
 
