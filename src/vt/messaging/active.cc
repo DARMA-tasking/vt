@@ -54,6 +54,7 @@
 #include "vt/timing/timing.h"
 #include "vt/scheduler/priority.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
+#include "vt/utils/hash/error_checking_hash.h"
 #include "vt/runtime/mpi_access.h"
 #include "vt/scheduler/scheduler.h"
 
@@ -479,6 +480,8 @@ EventType ActiveMessenger::doMessageSend(
     );
   }
 
+  setErrorCheckingHash(msg, msg_size);
+
   bool deliver = false;
   EventType const ret_event = group::GroupActiveAttorney::groupHandler(
     base, uninitialized_destination, msg_size, true, &deliver
@@ -895,6 +898,8 @@ bool ActiveMessenger::processActiveMsg(
   using ::vt::group::GroupActiveAttorney;
 
   auto msg = base.to<ShortMessage>().get();
+
+  checkErrorCheckingHash(msg, size);
 
   // Call group handler
   bool deliver = false;
@@ -1354,6 +1359,65 @@ PriorityType ActiveMessenger::getCurrentPriority() const {
 
 PriorityLevelType ActiveMessenger::getCurrentPriorityLevel() const {
   return current_priority_level_context_;
+}
+
+template <typename Env>
+static char* getOffsetAfterEnvelope(BaseMsgType* m) {
+  auto tmsg = reinterpret_cast<messaging::ActiveMsg<Env>*>(m);
+  auto env_len = sizeof(Env);
+  auto start_ptr = reinterpret_cast<char*>(&tmsg->env) + env_len;
+  return start_ptr;
+}
+
+static uint64_t computeErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
+  auto byte_ptr = reinterpret_cast<const char*>(m);
+  char* start_ptr = nullptr;
+  std::size_t len = 0;
+
+  if (envelopeIsEpochType(m->env) and envelopeIsTagType(m->env)) {
+    start_ptr = getOffsetAfterEnvelope<EpochTagEnvelope>(m);
+    len = (byte_ptr + bytes) - start_ptr;
+  } else if (envelopeIsEpochType(m->env)) {
+    start_ptr = getOffsetAfterEnvelope<EpochEnvelope>(m);
+    len = (byte_ptr + bytes) - start_ptr;
+  } else if (envelopeIsTagType(m->env)) {
+    start_ptr = getOffsetAfterEnvelope<TagEnvelope>(m);
+    len = (byte_ptr + bytes) - start_ptr;
+  } else {
+    start_ptr = getOffsetAfterEnvelope<Envelope>(m);
+    len = (byte_ptr + bytes) - start_ptr;
+  }
+
+  auto const hash = util::defaultHash(start_ptr, len);
+
+  vt_print(active, "computed hash to {:x}, bytes={}, total={}\n", hash, len, bytes);
+
+  return hash;
+}
+
+void ActiveMessenger::setErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
+  #if vt_check_enabled(error_checking)
+    auto const hash = computeErrorCheckingHash(m, bytes);
+    vt_print(active, "setting hash to {:x}, bytes={}\n", hash, bytes);
+    envelopeSetErrorCheckingHash(m->env, hash);
+  #endif
+}
+
+void ActiveMessenger::checkErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
+  #if vt_check_enabled(error_checking)
+    auto const computed_hash = computeErrorCheckingHash(m, bytes);
+    auto msg_hash = envelopeGetErrorCheckingHash(m->env);
+
+    if (msg_hash != computed_hash) {
+      vt_print(
+        active, "Hashes do not match: computed={:x}, envelope={:x}, bytes={}\n",
+        computed_hash, msg_hash, bytes
+      );
+      vtAbort("Hashes do not match (computed vs. in envelope)");
+    } else {
+      vt_print(active, "hashes match: {:x}\n", computed_hash);
+    }
+  #endif
 }
 
 }} // end namespace vt::messaging
