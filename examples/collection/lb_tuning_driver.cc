@@ -62,6 +62,7 @@ struct Hello : vt::Collection<Hello, vt::Index2D> {
 
 using vt::vrt::collection::balance::ComposedModel;
 using vt::vrt::collection::balance::LoadModel;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::ElementIDType;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::PerCollection;
@@ -78,9 +79,9 @@ struct FileModel : ComposedModel {
     parseFile(filename);
   }
 
-  vt::TimeType getWork(ElementIDType elmid, PhaseOffset offset) override {
+  vt::TimeType getWork(ElementIDStruct elmid, PhaseOffset offset) override {
     auto const phase = getNumCompletedPhases()-1 + initial_phase_;
-    //vt_print(gen, "getWork {} phase={}\n", elmid, phase);
+    //vt_print(gen, "getWork {} phase={}\n", elmid.id, phase);
     vtAbortIf(
       offset.phases != PhaseOffset::NEXT_PHASE,
       "This driver only supports offset.phases == NEXT_PHASE"
@@ -91,9 +92,9 @@ struct FileModel : ComposedModel {
     );
     auto iter = loads.find(phase);
     vtAbortIf(iter == loads.end(), "Must have phase in history");
-    auto elmiter = iter->second.find(elmid);
+    auto elmiter = iter->second.find(elmid.id);
     if (elmiter == iter->second.end()) {
-      vt_print(gen, "could not find elm_id={}\n", elmid);
+      vt_print(gen, "could not find elm_id={}\n", elmid.id);
     }
     vtAbortIf(elmiter == iter->second.end(), "Must have elm ID in history");
     return elmiter->second;
