@@ -19,13 +19,6 @@ else()
 endif()
 list(REMOVE_DUPLICATES VT_CONFIG_TYPES)
 
-# to speedup compiling, we can disable vt_debug_print
-if (${VT_DEBUG_FAST})
-  set(VT_DEBUG_MODE_ON 0)
-else()
-  set(VT_DEBUG_MODE_ON 1)
-endif()
-
 # all vt_debug_print and vt_print categories we can potentially compile in
 set(
   cmake_vt_debug_modes_all
@@ -235,35 +228,10 @@ endif()
 
 set (vt_feature_cmake_cons_multi_idx "0")
 
-set(cmake_vt_debug_modes_debug                 "${cmake_vt_debug_modes_all}")
-set(cmake_vt_debug_modes_relwithdebinfo        "")
-set(cmake_vt_debug_modes_release               "")
-set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
-set(cmake_config_debug_enabled_relwithdebinfo  0)
-set(cmake_config_debug_enabled_release         0)
-
-set(
-  cmake_vt_modes
-  ${cmake_vt_debug_modes_all}
-)
 
 # this loop executes over all known build types, not just the selected one
 foreach(loop_build_type ${VT_CONFIG_TYPES})
   #message(STATUS "generating for build type=${loop_build_type}")
-
-  # disable debug_print for unfamiliar build types
-  if (NOT DEFINED cmake_vt_debug_modes_${loop_build_type})
-    set(cmake_vt_debug_modes_${loop_build_type} "")
-  endif()
-  if (NOT DEFINED cmake_config_debug_enabled_${loop_build_type})
-    set(cmake_config_debug_enabled_${loop_build_type} 0)
-  endif()
-
-  # use the debug_print modes specified for this build type before the loop
-  set(
-    cmake_vt_debug_modes
-    ${cmake_vt_debug_modes_${loop_build_type}}
-  )
 
   # assume production mode for everything except debug or CI build
   if (loop_build_type STREQUAL "debug" OR ${vt_feature_cmake_ci_build})
@@ -271,13 +239,6 @@ foreach(loop_build_type ${VT_CONFIG_TYPES})
   else()
     set(vt_feature_cmake_production "1")
   endif()
-
-  # use the vt_debug_print configuration specified for this build type before
-  # the loop
-  set(
-    cmake_config_debug_enabled
-    ${cmake_config_debug_enabled_${loop_build_type}}
-  )
 
   # put the config file in a subdirectory corresponding to the lower case build name
   configure_file(

@@ -59,22 +59,6 @@
 
 namespace vt { namespace config {
 
-#define vt_backend_debug_categories cmake_config_modes
-using DefaultConfig = Configuration<
-  static_cast<CatEnum>(
-    vt_backend_debug_categories | CatEnum::none
-  ),
-  static_cast<CtxEnum>(
-    CtxEnum::node |
-    CtxEnum::unknown
-  ),
-  static_cast<ModeEnum>(
-    ModeEnum::verbose |
-    ModeEnum::normal  |
-    ModeEnum::flush
-  )
->;
-
 #define vt_backend_categories cmake_config_modes
 using VTPrintConfig = Configuration<
   static_cast<CatEnum>(

@@ -101,11 +101,6 @@ if ($atomic ne "") {
 
 my $source_base_dir = "../$vt";
 
-my $fast_str = "";
-if ($fast == 1) {
-    $fast_str = "-DVT_DEBUG_FAST=1";
-}
-
 my $lb_str = "";
 if ($lb_on == 1) {
     $lb_str = "-Dvt_lb_enabled:BOOL=true ";
@@ -178,7 +173,6 @@ my $finalstr = <<CMAKESTR
       ${detector_on_str}                                                     \\
       -Dcheckpoint_DIR=$checkpoint                                           \\
       -Ddetector_DIR=$detector                                               \\
-      $fast_str                                                              \\
       $atomic                                                                \\
       ${build_all_str}
 CMAKESTR

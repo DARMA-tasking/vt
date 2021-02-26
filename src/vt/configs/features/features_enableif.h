@@ -55,13 +55,13 @@
 #define vt_check_enabled(test_option) (vt_feature_ ## test_option != 0)
 
 #define vt_backend_debug_enabled(test_option)                                \
-  ((vt::config::DefaultConfig::category & vt::config::CatEnum::test_option) != 0)
+  ((vt::config::VTPrintConfig::category & vt::config::CatEnum::test_option) != 0)
 
 #define vt_backend_context_enabled(test_option)                              \
-  ((vt::config::DefaultConfig::context & vt::config::CtxEnum::test_option) != 0)
+  ((vt::config::VTPrintConfig::context & vt::config::CtxEnum::test_option) != 0)
 
 #define vt_backend_mode_enabled(test_option)                                 \
-  ((vt::config::DefaultConfig::mode & vt::config::ModeEnum::test_option) != 0)
+  ((vt::config::VTPrintConfig::mode & vt::config::ModeEnum::test_option) != 0)
 
 #define vt_backend_enable_if_impl(feature, eit, eif)      \
   do {                                                    \
