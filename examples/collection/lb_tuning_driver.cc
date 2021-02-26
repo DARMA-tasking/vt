@@ -54,8 +54,8 @@ inline vt::NodeType elmIndexMap(vt::Index2D* idx, vt::Index2D*, vt::NodeType) {
   return idx->x();
 }
 
-struct Hello : vt::Collection<Hello, vt::Index2D> {
-  using TestMsg = vt::CollectionMessage<Hello>;
+struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
+  using TestMsg = vt::CollectionMessage<PlaceHolder>;
 
   void timestep(TestMsg* msg) { }
 };
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
   auto const node = vt::theContext()->getNode();
 
   auto range = vt::Index2D(static_cast<int>(nranks), num_elms_per_rank);
-  auto proxy = vt::theCollection()->constructCollective<Hello,elmIndexMap>(range);
+  auto proxy = vt::theCollection()->constructCollective<PlaceHolder,elmIndexMap>(range);
 
   auto base = vt::theLBManager()->getBaseLoadModel();
   auto per_col = std::make_shared<PerCollection>(base);
@@ -171,8 +171,11 @@ int main(int argc, char** argv) {
   vt::theLBManager()->setLoadModel(per_col);
 
   for (int i = 0; i < phases_to_run; i++) {
+    if (node == 0)
+      vt_print(gen, "Simulated phase {}...\n", i + initial_phase);
+
     // Delete this?
-    proxy.broadcastCollective<Hello::TestMsg, &Hello::timestep>();
+    proxy.broadcastCollective<PlaceHolder::TestMsg, &PlaceHolder::timestep>();
 
     vt::thePhase()->nextPhaseCollective();
   }
