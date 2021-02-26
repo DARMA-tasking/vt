@@ -99,6 +99,13 @@ inline bool envelopeGetTraceRuntimeEnabled(Env& env) {
 }
 #endif
 
+#if vt_check_enabled(error_checking)
+template <typename Env>
+inline uint64_t envelopeGetErrorCheckingHash(Env& env) {
+  return reinterpret_cast<Envelope*>(&env)->error_checking_hash;
+}
+#endif
+
 } /* end namespace vt */
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_GET_IMPL_H*/

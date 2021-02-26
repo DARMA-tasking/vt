@@ -238,6 +238,17 @@ inline void envelopeSetIsLocked(Env& env, bool is_locked);
 template <typename Env>
 inline void envelopeUnlockForForwarding(Env& env);
 
+#if vt_check_enabled(error_checking)
+/**
+ * \brief Set the error checking hash for a message to verify byte correctness
+ *
+ * \param[in,out] env the envelope
+ * \param[in] error_checking_hash hash to set in envelope
+ */
+template <typename Env>
+inline void envelopeSetErrorCheckingHash(Env& env, uint64_t error_checking_hash);
+#endif
+
 } /* end namespace vt */
 
 #include "vt/messaging/envelope/envelope_set.impl.h"

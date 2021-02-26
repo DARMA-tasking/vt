@@ -102,6 +102,11 @@ struct ActiveEnvelope {
   // Used only for broadcast to default group
   // Determines whether message should also be sent to the sender
   bool deliver_bcast_to_sender : 1;
+
+#if vt_check_enabled(error_checking)
+  /// Error checking hash for message bytes
+  uint64_t error_checking_hash;
+#endif
 };
 
 }} /* end namespace vt::messaging */
