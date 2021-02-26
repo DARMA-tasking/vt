@@ -67,14 +67,22 @@ using vt::vrt::collection::balance::ElementIDType;
 using vt::vrt::collection::balance::PhaseOffset;
 using vt::vrt::collection::balance::PerCollection;
 
+ElementIDType convertReleaseStatsID(ElementIDType release_perm_id) {
+  auto local_id = release_perm_id >> 32;
+  auto node_id = release_perm_id - (local_id << 32);
+  auto converted_local_id = (local_id - 1) / 2;
+  auto converted_elm_id = converted_local_id << 32 | node_id;
+  return converted_elm_id;
+}
 struct FileModel : ComposedModel {
 
   FileModel(
     std::shared_ptr<LoadModel> in_base, std::string const& filename,
-    int initial_phase, int phases_to_run
+    int initial_phase, int phases_to_run, int convert_from_release
   )
     : vt::vrt::collection::balance::ComposedModel(in_base),
-       initial_phase_(initial_phase), phases_to_run_(phases_to_run)
+      initial_phase_(initial_phase), phases_to_run_(phases_to_run),
+      convert_from_release_(convert_from_release)
   {
     parseFile(filename);
   }
@@ -105,19 +113,29 @@ struct FileModel : ComposedModel {
     vtAbortIf(not f, "File opening failed");
 
     int phase = 0;
-    ElementIDType elm_id = 0;
+    ElementIDType read_elm_id = 0;
     vt::TimeType load = 0.;
 
     vt_print(gen, "parsing file {}\n", file);
 
     // FIXME: make this work with stats dumped by develop
-    while (fscanf(f, "%d, %" PRIu64 ", %lf", &phase, &elm_id, &load) == 3) {
+    while (fscanf(f, "%d, %" PRIu64 ", %lf", &phase, &read_elm_id, &load) == 3) {
       // only load in stats that are strictly necessary, ignoring the rest
       if (phase >= initial_phase_ && phase < initial_phase_ + phases_to_run_) {
-        vt_print(gen, "reading in loads for elm={}, phase={}\n", elm_id, phase);
+        auto elm_id = convert_from_release_ ?
+          convertReleaseStatsID(read_elm_id) : read_elm_id;
+        vt_print(
+          gen,
+          "reading in loads for elm={}, converted_elm={}, phase={}\n",
+          read_elm_id, elm_id, phase
+        );
         loads[phase][elm_id] = load;
       } else {
-        vt_print(gen, "skipping loads for elm={}, phase={}\n", elm_id, phase);
+        vt_print(
+          gen,
+          "skipping loads for elm={}, phase={}\n",
+          read_elm_id, phase
+        );
       }
     }
   }
@@ -129,15 +147,16 @@ private:
   > loads;
   int initial_phase_;
   int phases_to_run_;
+  bool convert_from_release_;
 };
 
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   vtAbortIf(
-    argc != 5,
-    "Must have four arguments: <num elms per rank>, <initial phase>, <phases to run>, "
-    "<stats file name>"
+    argc != 6,
+    "Must have five arguments: <num elms per rank>, <initial phase>, <phases to run>, "
+    "<stats file name>, <release?1:0>"
   );
 
   // number of elements per rank
@@ -148,6 +167,8 @@ int main(int argc, char** argv) {
   int32_t phases_to_run = atoi(argv[3]);
   // stats file name, e.g., "stats" for stats.rankid.out
   std::string stats_file = std::string{argv[4]};
+  // whether or not the stats files were generated with 1.0.0
+  int convert_from_release = atoi(argv[5]);
 
   auto const nranks = vt::theContext()->getNumNodes();
   auto const node = vt::theContext()->getNode();
@@ -164,7 +185,7 @@ int main(int argc, char** argv) {
 
   per_col->addModel(
     proxy_bits, std::make_shared<FileModel>(
-      base, node_filename, initial_phase, phases_to_run
+      base, node_filename, initial_phase, phases_to_run, convert_from_release
     )
   );
 
