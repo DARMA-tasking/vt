@@ -136,6 +136,9 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(priorities)
   features.push_back(vt_feature_str_priorities);
 #endif
+#if vt_check_enabled(fcontext)
+  features.push_back(vt_feature_str_fcontext);
+#endif
 #if vt_check_enabled(stdthread)
   features.push_back(vt_feature_str_stdthread);
 #endif
