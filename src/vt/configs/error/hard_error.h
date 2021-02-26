@@ -59,7 +59,7 @@
 #include <type_traits>
 
 
-#if vt_check_enabled(production) || vt_check_enabled(trace_only)
+#if vt_check_enabled(trace_only)
   #define vtAbort(str)                                                \
     ::vt::error::display(str,1);
   #define vtAbortCode(xy,str)                                         \

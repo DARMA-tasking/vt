@@ -127,38 +127,30 @@ inline void warning(
 
 } /* end namespace vt */
 
-#if vt_check_enabled(production)
-  #define vtWarn(str)
-  #define vtWarnCode(error,str)
-  #define vtWarnIf(cond,str)           vt_force_use(cond)
-  #define vtWarnIfCode(error,cond,str) vt_force_use(cond)
-  #define vtWarnFail(str)
-  #define vtWarnFailCode(error,str)
-#else
-  #define vtWarn(str)                                             \
-    ::vt::warning(str,1,    false, DEBUG_LOCATION, std::make_tuple());
-  #define vtWarnCode(code,str)                                    \
-    ::vt::warning(str,code, false, DEBUG_LOCATION, std::make_tuple());
-  #define vtWarnFail(str)                                         \
-    ::vt::warning(str,1,    true,  DEBUG_LOCATION, std::make_tuple());
-  #define vtWarnFailCode(code,str)                                \
-    ::vt::warning(str,code, true,  DEBUG_LOCATION, std::make_tuple());
-  #define vtWarnIf(cond,str)                                      \
-    do {                                                                  \
-      if (cond) {                                                         \
-        vtWarn(str);                                                      \
-      }                                                                   \
-    } while (false)
-  #define vtWarnIfCode(code,cond,str)                                     \
-    do {                                                                  \
-      if (cond) {                                                         \
-        vtWarnCode(code,str);                                             \
-      }                                                                   \
-    } while (false)
-  #define vtWarnIfNot(cond,str)                                   \
-    vtWarnIf(INVERT_COND(cond),str)
-  #define vtWarnIfNotCode(code,cond,str)                          \
-    vtWarnIfCode(code,INVERT_COND(cond),str)
-#endif
+#define vtWarn(str)                                             \
+  ::vt::warning(str,1,    false, DEBUG_LOCATION, std::make_tuple());
+#define vtWarnCode(code,str)                                    \
+  ::vt::warning(str,code, false, DEBUG_LOCATION, std::make_tuple());
+#define vtWarnFail(str)                                         \
+  ::vt::warning(str,1,    true,  DEBUG_LOCATION, std::make_tuple());
+#define vtWarnFailCode(code,str)                                \
+  ::vt::warning(str,code, true,  DEBUG_LOCATION, std::make_tuple());
+#define vtWarnIf(cond,str)                                      \
+  do {                                                                  \
+    if (cond) {                                                         \
+      vtWarn(str);                                                      \
+    }                                                                   \
+  } while (false)
+#define vtWarnIfCode(code,cond,str)                                     \
+  do {                                                                  \
+    if (cond) {                                                         \
+      vtWarnCode(code,str);                                             \
+    }                                                                   \
+  } while (false)
+#define vtWarnIfNot(cond,str)                                   \
+  vtWarnIf(INVERT_COND(cond),str)
+#define vtWarnIfNotCode(code,cond,str)                          \
+  vtWarnIfCode(code,INVERT_COND(cond),str)
+
 
 #endif /*INCLUDED_CONFIGS_ERROR_SOFT_ERROR_H*/
