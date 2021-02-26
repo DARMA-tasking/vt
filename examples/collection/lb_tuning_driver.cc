@@ -54,11 +54,125 @@ inline vt::NodeType elmIndexMap(vt::Index2D* idx, vt::Index2D*, vt::NodeType) {
   return idx->x();
 }
 
+struct MappingMsg : vt::Message {
+  using ObjectIDType = vt::vrt::collection::balance::ElementIDType;
+
+  vt::Index2D index_;
+  ObjectIDType obj_id_;
+
+  explicit MappingMsg(vt::Index2D index, ObjectIDType obj_id)
+    : index_(index), obj_id_(obj_id)
+  { }
+};
+
+inline vt::NodeType findDirectoryNode(MappingMsg::ObjectIDType obj_id) {
+  auto const nranks = vt::theContext()->getNumNodes();
+  return obj_id % nranks;
+}
+
+static std::unordered_map<MappingMsg::ObjectIDType, vt::Index2D> obj_id_mapping;
+
+static void ReceiveMapping(MappingMsg* msg) {
+  auto obj_id = msg->obj_id_;
+  auto index = msg->index_;
+  obj_id_mapping[obj_id] = index;
+  vt_debug_print(
+    gen, node,
+    "ReceiveMapping: obj {} is index {}\n",
+    obj_id, index
+  );
+}
+
 struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
   using TestMsg = vt::CollectionMessage<PlaceHolder>;
 
+  struct MigrateHereMsg : vt::CollectionMessage<PlaceHolder> {
+    using MessageParentType = vt::CollectionMessage<PlaceHolder>;
+
+    MigrateHereMsg() = default;
+
+    MigrateHereMsg(vt::NodeType src)
+      : src_(src)
+    { }
+
+    template <typename Serializer>
+    void serialize(Serializer& s) {
+      MessageParentType::serialize(s);
+      s | src_;
+    }
+
+    vt::NodeType src_ = vt::uninitialized_destination;
+  };
+
   void timestep(TestMsg* msg) { }
+
+  void shareMapping(TestMsg* msg) {
+    // announce mapping from perm id to index to rank determined by hashing
+    auto obj_id = this->getElmID();
+    auto index = this->getIndex();
+    auto response = vt::makeMessage<MappingMsg>(index, obj_id.id);
+    auto const this_rank = vt::theContext()->getNode();
+    int dest = findDirectoryNode(obj_id.id);
+    vt_debug_print(
+      gen, node,
+      "shareMapping: sharing with {} that obj {} is index {}\n",
+      dest, obj_id.id, index
+    );
+    if (dest != this_rank) {
+      vt::theMsg()->sendMsg<MappingMsg, ReceiveMapping>(dest, response);
+    } else {
+      ReceiveMapping(response.get());
+    }
+  }
+
+  void migrateSelf(MigrateHereMsg* msg) {
+    // migrate oneself to the requesting rank
+    auto const this_rank = vt::theContext()->getNode();
+    auto dest = msg->src_;
+    if (dest != this_rank) {
+      vt_debug_print(
+        gen, node,
+        "migrateSelf: index {} asked to migrate from {} to {}\n",
+        this->getIndex(), this_rank, dest
+      );
+      this->migrate(dest);
+    }
+  }
 };
+
+struct QueryMsg : vt::Message {
+  using ObjectIDType = MappingMsg::ObjectIDType;
+
+  ObjectIDType obj_id_;
+  vt::NodeType src_;
+
+  explicit QueryMsg(ObjectIDType obj_id, vt::NodeType src)
+    : obj_id_(obj_id), src_(src)
+  { }
+};
+
+static void RequestMapping(QueryMsg *msg) {
+  auto dest = msg->src_;
+  auto obj_id = msg->obj_id_;
+  auto iter = obj_id_mapping.find(obj_id);
+  if (iter == obj_id_mapping.end()) {
+    vt_print(
+      gen,
+      "RequestMapping: {} asked for index of {} but it is unknown\n",
+      dest, obj_id
+    );
+    vtAbort("unknown id");
+  }
+
+  auto index = obj_id_mapping.at(obj_id);
+  auto response = vt::makeMessage<MappingMsg>(index, obj_id);
+  vt_debug_print(
+    gen, node,
+    "RequestMapping: responding that obj {} is index {}\n",
+    obj_id, index
+  );
+  vt::theMsg()->sendMsg<MappingMsg, ReceiveMapping>(dest, response);
+}
 
 using vt::vrt::collection::balance::ComposedModel;
 using vt::vrt::collection::balance::LoadModel;
@@ -74,22 +188,25 @@ ElementIDType convertReleaseStatsID(ElementIDType release_perm_id) {
   auto converted_elm_id = converted_local_id << 32 | node_id;
   return converted_elm_id;
 }
+
 struct FileModel : ComposedModel {
+  using ProxyType = vt::CollectionProxy<PlaceHolder, vt::Index2D>;
 
   FileModel(
     std::shared_ptr<LoadModel> in_base, std::string const& filename,
-    int initial_phase, int phases_to_run, int convert_from_release
+    int initial_phase, int phases_to_run, int convert_from_release,
+    ProxyType proxy
   )
     : vt::vrt::collection::balance::ComposedModel(in_base),
       initial_phase_(initial_phase), phases_to_run_(phases_to_run),
-      convert_from_release_(convert_from_release)
+      convert_from_release_(convert_from_release), proxy_(proxy)
   {
     parseFile(filename);
   }
 
   vt::TimeType getWork(ElementIDStruct elmid, PhaseOffset offset) override {
     auto const phase = getNumCompletedPhases()-1 + initial_phase_;
-    //vt_print(gen, "getWork {} phase={}\n", elmid.id, phase);
+    //vt_debug_print(gen, node, "getWork {} phase={}\n", elmid.id, phase);
     vtAbortIf(
       offset.phases != PhaseOffset::NEXT_PHASE,
       "This driver only supports offset.phases == NEXT_PHASE"
@@ -116,7 +233,7 @@ struct FileModel : ComposedModel {
     ElementIDType read_elm_id = 0;
     vt::TimeType load = 0.;
 
-    vt_print(gen, "parsing file {}\n", file);
+    vt_debug_print(gen, node, "parsing file {}\n", file);
 
     // FIXME: make this work with stats dumped by develop
     while (fscanf(f, "%d, %" PRIu64 ", %lf", &phase, &read_elm_id, &load) == 3) {
@@ -131,12 +248,52 @@ struct FileModel : ComposedModel {
         );
         loads[phase][elm_id] = load;
       } else {
-        vt_print(
-          gen,
+        vt_debug_print(
+          gen, node,
           "skipping loads for elm={}, phase={}\n",
           read_elm_id, phase
         );
       }
+    }
+  }
+
+  void requestObjIndices() {
+    // loop over local stats objects, asking rank determined by hashing perm
+    // id what the index is
+    auto const this_rank = vt::theContext()->getNode();
+    auto iter = loads.find(initial_phase_);
+    vtAbortIf(iter == loads.end(), "Must have phase in history");
+    for (auto obj : iter->second) {
+      int dest = findDirectoryNode(obj.first);
+      if (dest != this_rank) {
+        vt_debug_print(
+          gen, node,
+          "looking for index of object {}\n",
+          obj.first
+        );
+        auto query = vt::makeMessage<QueryMsg>(obj.first, this_rank);
+        vt::theMsg()->sendMsg<QueryMsg, RequestMapping>(dest, query);
+      }
+    }
+  }
+
+  void migrateObjectsHere() {
+    // loop over local stats objects, asking for the corresponding collection
+    // elements to be migrated here
+    auto const this_rank = vt::theContext()->getNode();
+    auto iter = loads.find(initial_phase_);
+    vtAbortIf(iter == loads.end(), "Must have phase in history");
+    for (auto obj : iter->second) {
+      auto index = obj_id_mapping.at(obj.first);
+      vt_debug_print(
+        gen, node,
+        "requesting index {} (object {}) to migrate here\n",
+        index,
+        obj.first
+      );
+      proxy_[index].send<
+        PlaceHolder::MigrateHereMsg, &PlaceHolder::migrateSelf
+      >(this_rank);
     }
   }
 
@@ -148,6 +305,7 @@ private:
   int initial_phase_;
   int phases_to_run_;
   bool convert_from_release_;
+  ProxyType proxy_;
 };
 
 int main(int argc, char** argv) {
@@ -183,14 +341,32 @@ int main(int argc, char** argv) {
 
   auto node_filename = fmt::format("{}.{}.out", stats_file, node);
 
-  per_col->addModel(
-    proxy_bits, std::make_shared<FileModel>(
-      base, node_filename, initial_phase, phases_to_run, convert_from_release
-    )
+  auto file_model = std::make_shared<FileModel>(
+    base, node_filename, initial_phase, phases_to_run,
+    convert_from_release, proxy
   );
+
+  per_col->addModel(proxy_bits, file_model);
 
   vt::theLBManager()->setLoadModel(per_col);
 
+  // start by moving the objects to their positions in phase initial_phase
+  if (node == 0)
+    vt_print(gen, "Initializing...\n");
+  vt::runInEpochCollective([=]{
+    proxy.broadcastCollective<
+      PlaceHolder::TestMsg, &PlaceHolder::shareMapping
+    >();
+  });
+  vt::runInEpochCollective([=]{
+    file_model->requestObjIndices();
+  });
+  vt::runInEpochCollective([=]{
+    file_model->migrateObjectsHere();
+  });
+
+  if (node == 0)
+    vt_print(gen, "Timestepping...\n");
   for (int i = 0; i < phases_to_run; i++) {
     if (node == 0)
       vt_print(gen, "Simulated phase {}...\n", i + initial_phase);
