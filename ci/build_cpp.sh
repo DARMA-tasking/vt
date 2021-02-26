@@ -110,6 +110,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_unity_build_enabled="${VT_UNITY_BUILD_ENABLED:-0}" \
       -Dvt_diagnostics_enabled="${VT_DIAGNOSTICS_ENABLED:-1}" \
       -Dvt_diagnostics_runtime_enabled="${VT_DIAGNOSTICS_RUNTIME_ENABLED:-0}" \
+      -Dvt_error_checking="${VT_ERROR_CHECKING:-0}" \
       -Dvt_fcontext_enabled="${VT_FCONTEXT_ENABLED:-0}" \
       -DUSE_OPENMP="${VT_USE_OPENMP:-0}" \
       -DUSE_STD_THREAD="${VT_USE_STD_THREAD:-0}" \

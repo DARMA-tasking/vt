@@ -218,6 +218,26 @@ else()
   set(vt_feature_cmake_libfort "0")
 endif()
 
+if (LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "release")
+  option(
+    vt_error_checking
+    "Build VT with error checking (increases envelope size by 8 bytes)" OFF
+  )
+else()
+  option(
+    vt_error_checking
+    "Build VT with error checking (increases envelope size by 8 bytes)" ON
+  )
+endif()
+
+if (vt_error_checking)
+  set(vt_feature_cmake_error_checking "1")
+  message(STATUS "Building VT with error checking enabled")
+else()
+  set(vt_feature_cmake_error_checking "0")
+  message(STATUS "Building VT with error checking disabled")
+endif()
+
 set(vt_feature_cmake_no_feature "0")
 set(vt_feature_cmake_production "0")
 
