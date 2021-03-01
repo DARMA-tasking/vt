@@ -1,27 +1,36 @@
 ARG compiler=gcc-7
 ARG arch=amd64
+ARG ubuntu=18.04
 
-FROM lifflander1/vt:${arch}-ubuntu-18.04-${compiler}-cpp
+FROM lifflander1/vt:${arch}-ubuntu-${ubuntu}-${compiler}-cpp
+
+# All ARGs are invalidated after FROM instruction, so it has to be redefined
+ARG compiler=gcc-7
 
 ARG proxy=""
-
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
 
-ARG zoltan_enabled
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG zoltan_enabled=0
 ARG ZOLTAN_INSTALL_DIR=/trilinos-install
+ENV ZOLTAN_DIR=${ZOLTAN_INSTALL_DIR}
 
 RUN if test ${zoltan_enabled} -eq 1; then \
       apt-get update -y -q && \
       apt-get install -y -q --no-install-recommends \
-      gfortran-$(echo ${compiler} | cut -d- -f2) &&\
+      gfortran-$(echo ${compiler} | cut -d- -f2) && \
       apt-get clean && \
-      rm -rf /var/lib/apt/lists/* && \
+      rm -rf /var/lib/apt/lists/*; \
+
       ln -s \
       "$(which gfortran-$(echo ${compiler}  | cut -d- -f2))" \
-      /usr/bin/gfortran && \
+      /usr/bin/gfortran; \
+
       ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
     fi
+
 
 COPY . /vt
 
