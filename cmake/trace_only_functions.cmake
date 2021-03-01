@@ -33,7 +33,7 @@ function(create_trace_only_target)
     vt/configs/features/features_enableif.h vt/configs/features/features_featureswitch.h
     vt/configs/features/features_defines.h vt/configs/types/types_type.h
     vt/configs/error/pretty_print_message.h vt/configs/debug/debug_masterconfig.h
-    vt/configs/features/features_metafeatures.h vt/configs/debug/debug_config.h
+    vt/configs/debug/debug_config.h
     vt/configs/debug/debug_printconst.h vt/configs/debug/debug_print.h
     vt/configs/arguments/app_config.h vt/configs/types/types_headers.h
     vt/configs/types/types_size.h vt/configs/types/types_rdma.h

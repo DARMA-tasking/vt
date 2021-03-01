@@ -49,8 +49,6 @@
 
 #include <string>
 
-#include "fmt/format.h"
-
 namespace vt { namespace debug {
 
 std::string stringizeMessage(

@@ -203,7 +203,6 @@ struct Configuration {
 
 #include "vt/configs/features/features_featureswitch.h"
 #include "vt/configs/features/features_defines.h"
-#include "vt/configs/features/features_metafeatures.h"
 #include "vt/configs/features/features_enableif.h"
 #include "vt/configs/debug/debug_printconst.h"
 

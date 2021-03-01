@@ -45,37 +45,11 @@
 #if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_ENABLEIF_H
 #define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_ENABLEIF_H
 
-#include "vt/configs/features/features_featureswitch.h"
 #include "vt/configs/features/features_defines.h"
-
-#define vt_backend_static_assert_unreachable                                  \
-  static_assert(false, "Configuration error: This should be unreachable");
-
 
 #define vt_check_enabled(test_option) (vt_feature_ ## test_option != 0)
 
 #define vt_backend_debug_enabled(test_option)                                \
   ((vt::config::VTPrintConfig::category & vt::config::CatEnum::test_option) != 0)
-
-#define vt_backend_context_enabled(test_option)                              \
-  ((vt::config::VTPrintConfig::context & vt::config::CtxEnum::test_option) != 0)
-
-#define vt_backend_mode_enabled(test_option)                                 \
-  ((vt::config::VTPrintConfig::mode & vt::config::ModeEnum::test_option) != 0)
-
-#define vt_backend_enable_if_impl(feature, eit, eif)      \
-  do {                                                    \
-    if (vt_check_enabled(feature)) {                      \
-      eit                                                 \
-    } else {                                              \
-      eif                                                 \
-    }                                                     \
-  } while (0);
-
-#define vt_backend_enable_if_else(feature, eit, eif)  \
-  vt_backend_enable_if_impl(feature, eit, eif)
-
-#define vt_backend_enable_if(feature, eit)            \
-  vt_backend_enable_if_impl(feature, eit, )
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_ENABLEIF_H*/

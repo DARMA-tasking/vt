@@ -50,13 +50,10 @@
  *  triggered
  */
 
-#include "vt/configs/debug/debug_config.h"
 #include "vt/configs/error/common.h"
 #include "vt/configs/error/error.h"
 
-#include <string>
 #include <tuple>
-#include <type_traits>
 
 
 #if vt_check_enabled(trace_only)
