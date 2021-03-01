@@ -57,7 +57,6 @@
 #include "vt/configs/error/assert_out_info.h"
 #include "vt/configs/error/keyval_printer.h"
 
-#include <cassert>
 #include <tuple>
 #include <type_traits>
 
@@ -152,19 +151,18 @@
   #define vtAssertExprArgImpl(fail,cond,...)                            \
     vtAssertArgImpl(fail,cond,#cond,__VA_ARGS__)
 
-  #if vt_check_enabled(assert_no_fail)
-    #define vtAssert(cond,str)         vtAssertImpl(false,cond,str)
-    #define vtAssertInfo(cond,str,...) vtAssertArgImpl(false,cond,str,__VA_ARGS__)
-    #define vtAssertExpr(cond)         vtAssertExprImpl(false,cond)
-    #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(false,cond,__VA_ARGS__)
-    #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
-  #else
-    #define vtAssert(cond,str)         vtAssertImpl(true,cond,str)
-    #define vtAssertInfo(cond,str,...) vtAssertArgImpl(true,cond,str,__VA_ARGS__)
-    #define vtAssertExpr(cond)         vtAssertExprImpl(true,cond)
-    #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(true,cond,__VA_ARGS__)
-    #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
-  #endif
+  #define vt_assert_should_fail (!vt::debug::preConfig()->vt_no_assert_fail)
+
+  #define vtAssert(cond,str)                                            \
+    vtAssertImpl(vt_assert_should_fail,cond,str)
+  #define vtAssertInfo(cond,str,...)                                    \
+    vtAssertArgImpl(vt_assert_should_fail,cond,str,__VA_ARGS__)
+  #define vtAssertExpr(cond)                                            \
+    vtAssertExprImpl(vt_assert_should_fail,cond)
+  #define vtAssertExprInfo(cond,...)                                    \
+    vtAssertExprArgImpl(vt_assert_should_fail,cond,__VA_ARGS__)
+  #define vtWarnInfo(cond,str,...)                                      \
+    vtAssertArgImpl(false,cond,str,__VA_ARGS__)
 
   #define vtAssertNot(cond,str)        vtAssert(INVERT_COND(cond),str)
   #define vtAssertNotExpr(cond)        vtAssertExpr(INVERT_COND(cond))
