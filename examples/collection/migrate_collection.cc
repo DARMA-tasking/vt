@@ -48,13 +48,14 @@
 static constexpr int32_t const default_num_elms = 16;
 
 struct Hello : vt::Collection<Hello, vt::Index1D> {
-  Hello() = default;
 
   explicit Hello(vt::NodeType create) {
     vt::NodeType this_node = vt::theContext()->getNode();
     fmt::print("{}: Hello: create={}, index={}\n", this_node, create, getIndex());
     test_val = getIndex().x() * 29.3;
   }
+
+  explicit Hello(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
 
   template <typename Serializer>
   void serialize(Serializer& s) {
