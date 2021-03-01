@@ -48,6 +48,7 @@
 #include "vt/messaging/active.h"
 #include "vt/messaging/envelope.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/messaging/envelope_offset.h"
 #include "vt/termination/term_headers.h"
 #include "vt/group/group_manager_active_attorney.h"
 #include "vt/runnable/general.h"
@@ -1361,32 +1362,10 @@ PriorityLevelType ActiveMessenger::getCurrentPriorityLevel() const {
   return current_priority_level_context_;
 }
 
-template <typename Env>
-static char* getOffsetAfterEnvelope(BaseMsgType* m) {
-  auto tmsg = reinterpret_cast<messaging::ActiveMsg<Env>*>(m);
-  auto env_len = sizeof(Env);
-  auto start_ptr = reinterpret_cast<char*>(&tmsg->env) + env_len;
-  return start_ptr;
-}
-
 static uint64_t computeErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
   auto byte_ptr = reinterpret_cast<const char*>(m);
-  char* start_ptr = nullptr;
-  std::size_t len = 0;
-
-  if (envelopeIsEpochType(m->env) and envelopeIsTagType(m->env)) {
-    start_ptr = getOffsetAfterEnvelope<EpochTagEnvelope>(m);
-    len = (byte_ptr + bytes) - start_ptr;
-  } else if (envelopeIsEpochType(m->env)) {
-    start_ptr = getOffsetAfterEnvelope<EpochEnvelope>(m);
-    len = (byte_ptr + bytes) - start_ptr;
-  } else if (envelopeIsTagType(m->env)) {
-    start_ptr = getOffsetAfterEnvelope<TagEnvelope>(m);
-    len = (byte_ptr + bytes) - start_ptr;
-  } else {
-    start_ptr = getOffsetAfterEnvelope<Envelope>(m);
-    len = (byte_ptr + bytes) - start_ptr;
-  }
+  char const* start_ptr = getOffsetAfterEnvelope(m);
+  std::size_t const len = (byte_ptr + bytes) - start_ptr;
 
   auto const hash = util::defaultHash(start_ptr, len);
 
