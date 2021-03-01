@@ -205,6 +205,18 @@ else()
   set(vt_feature_cmake_diagnostics_runtime "0")
 endif()
 
+option(
+  vt_production_build_enabled
+  "Build VT with assertions and debug prints disabled" OFF
+)
+if (${vt_production_build_enabled})
+  message(STATUS "Building VT with assertions and debug prints disabled")
+  set(vt_feature_cmake_production_build "1")
+else()
+  message(STATUS "Building VT with assertions and debug prints enabled")
+  set(vt_feature_cmake_production_build "0")
+endif()
+
 if (vt_libfort_enabled)
   set(vt_feature_cmake_libfort "1")
 else()
@@ -212,7 +224,6 @@ else()
 endif()
 
 set(vt_feature_cmake_no_feature "0")
-set(vt_feature_cmake_production "0")
 
 set (vt_feature_cmake_mpi_rdma "0")
 set (vt_feature_cmake_print_term_msgs "0")
@@ -232,13 +243,6 @@ set (vt_feature_cmake_cons_multi_idx "0")
 # this loop executes over all known build types, not just the selected one
 foreach(loop_build_type ${VT_CONFIG_TYPES})
   #message(STATUS "generating for build type=${loop_build_type}")
-
-  # assume production mode for everything except debug or CI build
-  if (loop_build_type STREQUAL "debug" OR ${vt_feature_cmake_ci_build})
-    set(vt_feature_cmake_production "0")
-  else()
-    set(vt_feature_cmake_production "1")
-  endif()
 
   # put the config file in a subdirectory corresponding to the lower case build name
   configure_file(

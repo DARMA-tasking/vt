@@ -130,8 +130,8 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(openmp)
   features.push_back(vt_feature_str_openmp);
 #endif
-#if vt_check_enabled(production)
-  features.push_back(vt_feature_str_production);
+#if vt_check_enabled(production_build)
+  features.push_back(vt_feature_str_production_build);
 #endif
 #if vt_check_enabled(priorities)
   features.push_back(vt_feature_str_priorities);

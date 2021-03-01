@@ -59,6 +59,7 @@ build configuration:
 | `vt_diagnostics_runtime_enabled` | 0               | Enable VT component diagnostics at runtime by default |
 | `vt_priority_bits_per_level`     | 3               | Number of bits per level of priority in envelope |
 | `vt_build_extended_tests`        | 1               | Build with full, extended testing |
+| `vt_production_build_enabled`    | 0               | Disable assertions and debug prints at compile time |
 | `vt_unity_build_enabled`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
 | `vt_fcontext_enabled`            | 0               | Force use of fcontext for threading |
 | `CODE_COVERAGE`                  | 0               | Enable code coverage for VT examples/tests |

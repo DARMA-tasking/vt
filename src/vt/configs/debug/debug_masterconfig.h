@@ -59,6 +59,13 @@
 
 namespace vt { namespace config {
 
+#if vt_check_enabled(production_build)
+using VTPrintConfig = Configuration<
+  static_cast<CatEnum>(CatEnum::none),
+  static_cast<CtxEnum>(0ull),
+  static_cast<ModeEnum>(0ull)
+>;
+#else
 #define vt_backend_categories cmake_config_modes
 using VTPrintConfig = Configuration<
   static_cast<CatEnum>(
@@ -74,7 +81,7 @@ using VTPrintConfig = Configuration<
     ModeEnum::flush
   )
 >;
-
+#endif
 
 }} /* end namespace vt::config */
 

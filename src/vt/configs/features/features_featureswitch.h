@@ -64,7 +64,8 @@
 #define vt_feature_str_openmp             "OpenMP Threading"
 #define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
 #define vt_feature_str_priorities         "Message priorities"
-#define vt_feature_str_production         "Production Build"
+#define vt_feature_str_production_build   "Production Build (assertions and " \
+                                          "debug prints disabled)"
 #define vt_feature_str_stdthread          "std::thread Threading"
 #define vt_feature_str_trace_enabled      "Tracing Projections"
 #define vt_feature_str_zoltan             "Zoltan for load balancing"

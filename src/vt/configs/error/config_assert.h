@@ -105,56 +105,75 @@
 #define vt_make_list_strings(a) #a,
 #define argsToString(...) vt_applyxn(vt_make_list_strings,__VA_ARGS__)
 
-#define vtAssertImpl(fail,cond,str)                                   \
-  do {                                                                \
-    if (!(cond)) {                                                    \
-      ::vt::debug::assert::assertOut(                                 \
-        fail,#cond,str,DEBUG_LOCATION,1,std::make_tuple()             \
-      );                                                              \
-    }                                                                 \
-  } while (false)
-#define vtAssertExprImpl(fail,cond)                                   \
-  do {                                                                \
-    if (!(cond)) {                                                    \
-      ::vt::debug::assert::assertOutExpr(                             \
-        fail,#cond,DEBUG_LOCATION,1                                   \
-      );                                                              \
-    }                                                                 \
-  } while (false)
-#define vtAssertArgImpl(fail,cond,str,...)                            \
-  do {                                                                \
-    if (!(cond)) {                                                    \
-      ::vt::debug::assert::assertOutInfo(                             \
-        fail,#cond,str,DEBUG_LOCATION,1,                              \
-        std::make_tuple(argsToString(__VA_ARGS__)""),                 \
-        std::make_tuple(__VA_ARGS__,"")                               \
-      );                                                              \
-    }                                                                 \
-  } while (false)
-#define vtAssertExprArgImpl(fail,cond,...)                            \
-  vtAssertArgImpl(fail,cond,#cond,__VA_ARGS__)
-
-#if vt_check_enabled(assert_no_fail)
-  #define vtAssert(cond,str)         vtAssertImpl(false,cond,str)
-  #define vtAssertInfo(cond,str,...) vtAssertArgImpl(false,cond,str,__VA_ARGS__)
-  #define vtAssertExpr(cond)         vtAssertExprImpl(false,cond)
-  #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(false,cond,__VA_ARGS__)
-  #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
+#if vt_check_enabled(production_build)
+  #define vtAssert(cond,str)            vt_force_use(cond)
+  #define vtAssertInfo(cond,str,...)    vt_force_use(cond,__VA_ARGS__)
+  #define vtAssertNot(cond,str)         vt_force_use(cond)
+  #define vtAssertNotInfo(cond,str,...) vt_force_use(cond,__VA_ARGS__)
+  #define vtAssertNotExpr(cond)         vt_force_use(cond)
+  #define vtAssertExpr(cond)            vt_force_use(cond)
+  #define vtAssertExprInfo(cond,...)    vt_force_use(cond,__VA_ARGS__)
+  #define vtWarnInfo(cond,str,...)      vt_force_use(cond,__VA_ARGS__)
+/**
+ * \internal
+ * Assert that the MPI call's return code is MPI_SUCCESS (0).
+ *
+ * The failure assert contains the MPI call name (eg. "MPI_Iprobe"),
+ * short summary (eg. "failed"), and the actual return value.
+ */
+  #define vtAssertMPISuccess(ret,mpi_name)   vt_force_use(ret)
 #else
-  #define vtAssert(cond,str)         vtAssertImpl(true,cond,str)
-  #define vtAssertInfo(cond,str,...) vtAssertArgImpl(true,cond,str,__VA_ARGS__)
-  #define vtAssertExpr(cond)         vtAssertExprImpl(true,cond)
-  #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(true,cond,__VA_ARGS__)
-  #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
+  #define vtAssertImpl(fail,cond,str)                                   \
+    do {                                                                \
+      if (!(cond)) {                                                    \
+        ::vt::debug::assert::assertOut(                                 \
+          fail,#cond,str,DEBUG_LOCATION,1,std::make_tuple()             \
+        );                                                              \
+      }                                                                 \
+    } while (false)
+  #define vtAssertExprImpl(fail,cond)                                   \
+    do {                                                                \
+      if (!(cond)) {                                                    \
+        ::vt::debug::assert::assertOutExpr(                             \
+          fail,#cond,DEBUG_LOCATION,1                                   \
+        );                                                              \
+      }                                                                 \
+    } while (false)
+  #define vtAssertArgImpl(fail,cond,str,...)                            \
+    do {                                                                \
+      if (!(cond)) {                                                    \
+        ::vt::debug::assert::assertOutInfo(                             \
+          fail,#cond,str,DEBUG_LOCATION,1,                              \
+          std::make_tuple(argsToString(__VA_ARGS__)""),                 \
+          std::make_tuple(__VA_ARGS__,"")                               \
+        );                                                              \
+      }                                                                 \
+    } while (false)
+  #define vtAssertExprArgImpl(fail,cond,...)                            \
+    vtAssertArgImpl(fail,cond,#cond,__VA_ARGS__)
+
+  #if vt_check_enabled(assert_no_fail)
+    #define vtAssert(cond,str)         vtAssertImpl(false,cond,str)
+    #define vtAssertInfo(cond,str,...) vtAssertArgImpl(false,cond,str,__VA_ARGS__)
+    #define vtAssertExpr(cond)         vtAssertExprImpl(false,cond)
+    #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(false,cond,__VA_ARGS__)
+    #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
+  #else
+    #define vtAssert(cond,str)         vtAssertImpl(true,cond,str)
+    #define vtAssertInfo(cond,str,...) vtAssertArgImpl(true,cond,str,__VA_ARGS__)
+    #define vtAssertExpr(cond)         vtAssertExprImpl(true,cond)
+    #define vtAssertExprInfo(cond,...) vtAssertExprArgImpl(true,cond,__VA_ARGS__)
+    #define vtWarnInfo(cond,str,...)   vtAssertArgImpl(false,cond,str,__VA_ARGS__)
+  #endif
+
+  #define vtAssertNot(cond,str)        vtAssert(INVERT_COND(cond),str)
+  #define vtAssertNotExpr(cond)        vtAssertExpr(INVERT_COND(cond))
+  #define vtAssertNotInfo(cond,str,...)                                 \
+    vtAssertInfo(INVERT_COND(cond),str,__VA_ARGS__)
+
+  #define vtAssertMPISuccess(ret,mpi_name)  vtAssertInfo(               \
+    (ret == 0), "MPI call '" mpi_name "' failed.", ret                  \
+  )
 #endif
-
-#define vtAssertNot(cond,str)        vtAssert(INVERT_COND(cond),str)
-#define vtAssertNotExpr(cond)        vtAssertExpr(INVERT_COND(cond))
-#define vtAssertNotInfo(cond,str,...)                                 \
-  vtAssertInfo(INVERT_COND(cond),str,__VA_ARGS__)
-
-#define vtAssertMPISuccess(ret,mpi_name)  vtAssertInfo(               \
-  (ret == 0), "MPI call '" mpi_name "' failed.", ret                  \
-)
 
 #endif /*INCLUDED_CONFIGS_ERROR_CONFIG_ASSERT_H*/
