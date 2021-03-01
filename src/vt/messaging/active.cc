@@ -1369,7 +1369,11 @@ static uint64_t computeErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
 
   auto const hash = util::defaultHash(start_ptr, len);
 
-  vt_print(active, "computed hash to {:x}, bytes={}, total={}\n", hash, len, bytes);
+  vt_debug_print(
+    active, node,
+    "computed hash to {:x}, bytes={}, total={}\n",
+    hash, len, bytes
+  );
 
   return hash;
 }
@@ -1377,7 +1381,12 @@ static uint64_t computeErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
 void ActiveMessenger::setErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
   #if vt_check_enabled(error_checking)
     auto const hash = computeErrorCheckingHash(m, bytes);
-    vt_print(active, "setting hash to {:x}, bytes={}\n", hash, bytes);
+
+    vt_debug_print(
+      active, node,
+      "setting hash to {:x}, bytes={}\n", hash, bytes
+    );
+
     envelopeSetErrorCheckingHash(m->env, hash);
   #endif
 }
@@ -1394,7 +1403,10 @@ void ActiveMessenger::checkErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) 
       );
       vtAbort("Hashes do not match (computed vs. in envelope)");
     } else {
-      vt_print(active, "hashes match: {:x}\n", computed_hash);
+      vt_debug_print(
+        active, node,
+        "hashes match: {:x}\n", computed_hash
+      );
     }
   #endif
 }
