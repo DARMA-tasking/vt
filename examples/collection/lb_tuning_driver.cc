@@ -104,6 +104,28 @@ struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
     vt::NodeType src_ = vt::uninitialized_destination;
   };
 
+  struct StatsDataMsg : vt::CollectionMessage<PlaceHolder> {
+    using MessageParentType = vt::CollectionMessage<PlaceHolder>;
+    using ObjStatsMapType = std::unordered_map<
+      int /*phase from stats file*/, vt::TimeType
+    >;
+    vt_msg_serialize_required();
+
+    StatsDataMsg() = default;
+
+    StatsDataMsg(const ObjStatsMapType &stats)
+      : stats_(stats)
+    { }
+
+    template <typename Serializer>
+    void serialize(Serializer& s) {
+      MessageParentType::serialize(s);
+      s | stats_;
+    }
+
+    ObjStatsMapType stats_;
+  };
+
   void timestep(TestMsg* msg) { }
 
   void shareMapping(TestMsg* msg) {
@@ -112,7 +134,7 @@ struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
     auto index = this->getIndex();
     auto response = vt::makeMessage<MappingMsg>(index, obj_id.id);
     auto const this_rank = vt::theContext()->getNode();
-    int dest = findDirectoryNode(obj_id.id);
+    vt::NodeType dest = findDirectoryNode(obj_id.id);
     vt_debug_print(
       gen, node,
       "shareMapping: sharing with {} that obj {} is index {}\n",
@@ -138,6 +160,34 @@ struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
       this->migrate(dest);
     }
   }
+
+  void recvStatsData(StatsDataMsg *msg) {
+    vt_debug_print(
+      gen, node,
+      "recvStatsData: index {} received stats data for {} phases\n",
+      this->getIndex(), msg->stats_.size()
+    );
+    stats_from_file_.insert(msg->stats_.begin(), msg->stats_.end());
+  }
+
+  vt::TimeType getLoad(int phase_in_stats_file) {
+    return stats_from_file_[phase_in_stats_file];
+  }
+
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    vt::Collection<PlaceHolder, vt::Index2D>::serialize(s);
+    s | stats_from_file_;
+  }
+
+  virtual void epiMigrateIn() {
+    auto obj_id = this->getElmID();
+    auto index = this->getIndex();
+    obj_id_mapping[obj_id.id] = index;
+  }
+
+  // carry my loads from the stats files with me
+  StatsDataMsg::ObjStatsMapType stats_from_file_;
 };
 
 struct QueryMsg : vt::Message {
@@ -156,15 +206,20 @@ static void RequestMapping(QueryMsg *msg) {
   auto obj_id = msg->obj_id_;
   auto iter = obj_id_mapping.find(obj_id);
   if (iter == obj_id_mapping.end()) {
-    vt_print(
-      gen,
+    vt_debug_print(
+      gen, node,
       "RequestMapping: {} asked for index of {} but it is unknown\n",
       dest, obj_id
     );
     vtAbort("unknown id");
   }
 
-  auto index = obj_id_mapping.at(obj_id);
+  auto idxiter = obj_id_mapping.find(obj_id);
+  vtAssert(
+    idxiter != obj_id_mapping.end(),
+    "Element ID to index mapping must be known"
+  );
+  auto index = idxiter->second;
   auto response = vt::makeMessage<MappingMsg>(index, obj_id);
   vt_debug_print(
     gen, node,
@@ -206,7 +261,12 @@ struct FileModel : ComposedModel {
 
   vt::TimeType getWork(ElementIDStruct elmid, PhaseOffset offset) override {
     auto const phase = getNumCompletedPhases()-1 + initial_phase_;
-    //vt_debug_print(gen, node, "getWork {} phase={}\n", elmid.id, phase);
+    vt_debug_print(
+      gen, node,
+      "getWork {} phase={}\n",
+      elmid.id, phase
+    );
+
     vtAbortIf(
       offset.phases != PhaseOffset::NEXT_PHASE,
       "This driver only supports offset.phases == NEXT_PHASE"
@@ -215,14 +275,26 @@ struct FileModel : ComposedModel {
       offset.subphase != PhaseOffset::WHOLE_PHASE,
       "This driver only supports offset.subphase == WHOLE_PHASE"
     );
-    auto iter = loads.find(phase);
-    vtAbortIf(iter == loads.end(), "Must have phase in history");
-    auto elmiter = iter->second.find(elmid.id);
-    if (elmiter == iter->second.end()) {
-      vt_print(gen, "could not find elm_id={}\n", elmid.id);
+
+    auto idxiter = obj_id_mapping.find(elmid.id);
+    vtAssert(
+      idxiter != obj_id_mapping.end(),
+      "Element ID to index mapping must be known"
+    );
+    auto index = idxiter->second;
+
+    auto elm_ptr = proxy_(index).tryGetLocalPtr();
+    if (elm_ptr == nullptr) {
+      vt_debug_print(
+        gen, node,
+        "could not find elm_id={} index={}\n",
+        elmid.id, index
+      );
+      return 0; // FIXME: this BREAKS the O_l statistics post-migration!
     }
-    vtAbortIf(elmiter == iter->second.end(), "Must have elm ID in history");
-    return elmiter->second;
+    vtAbortIf(elm_ptr == nullptr, "Must have element locally");
+    auto load = elm_ptr->getLoad(phase);
+    return load;
   }
 
   void parseFile(std::string const& file) {
@@ -241,12 +313,14 @@ struct FileModel : ComposedModel {
       if (phase >= initial_phase_ && phase < initial_phase_ + phases_to_run_) {
         auto elm_id = convert_from_release_ ?
           convertReleaseStatsID(read_elm_id) : read_elm_id;
-        vt_print(
-          gen,
+        vt_debug_print(
+          gen, node,
           "reading in loads for elm={}, converted_elm={}, phase={}\n",
           read_elm_id, elm_id, phase
         );
-        loads[phase][elm_id] = load;
+        loads_by_obj_[elm_id][phase] = load;
+        if (phase == initial_phase_)
+          initial_objs_.push_back(elm_id);
       } else {
         vt_debug_print(
           gen, node,
@@ -261,10 +335,8 @@ struct FileModel : ComposedModel {
     // loop over local stats objects, asking rank determined by hashing perm
     // id what the index is
     auto const this_rank = vt::theContext()->getNode();
-    auto iter = loads.find(initial_phase_);
-    vtAbortIf(iter == loads.end(), "Must have phase in history");
-    for (auto obj : iter->second) {
-      int dest = findDirectoryNode(obj.first);
+    for (auto obj : loads_by_obj_) {
+      vt::NodeType dest = findDirectoryNode(obj.first);
       if (dest != this_rank) {
         vt_debug_print(
           gen, node,
@@ -281,15 +353,17 @@ struct FileModel : ComposedModel {
     // loop over local stats objects, asking for the corresponding collection
     // elements to be migrated here
     auto const this_rank = vt::theContext()->getNode();
-    auto iter = loads.find(initial_phase_);
-    vtAbortIf(iter == loads.end(), "Must have phase in history");
-    for (auto obj : iter->second) {
-      auto index = obj_id_mapping.at(obj.first);
+    for (auto obj : initial_objs_) {
+      auto idxiter = obj_id_mapping.find(obj);
+      vtAssert(
+        idxiter != obj_id_mapping.end(),
+        "Element ID to index mapping must be known"
+      );
+      auto index = idxiter->second;
       vt_debug_print(
         gen, node,
         "requesting index {} (object {}) to migrate here\n",
-        index,
-        obj.first
+        index, obj
       );
       proxy_[index].send<
         PlaceHolder::MigrateHereMsg, &PlaceHolder::migrateSelf
@@ -297,11 +371,46 @@ struct FileModel : ComposedModel {
     }
   }
 
+  void stuffStatsIntoCollection() {
+    for (auto obj : initial_objs_) {
+      auto idxiter = obj_id_mapping.find(obj);
+      vtAssert(
+        idxiter != obj_id_mapping.end(),
+        "Element ID to index mapping must be known"
+      );
+      auto index = idxiter->second;
+      vtAssert(
+        proxy_[index].tryGetLocalPtr() != nullptr,
+        "should be local by now"
+      );
+    }
+    // send a message to each object appearing in our stats files with
+    // all relevant loads
+    for (auto obj : loads_by_obj_) {
+      auto idxiter = obj_id_mapping.find(obj.first);
+      vtAssert(
+        idxiter != obj_id_mapping.end(),
+        "Element ID to index mapping must be known"
+      );
+      auto index = idxiter->second;
+      vt_debug_print(
+        gen, node,
+        "sending stats for obj {} to index {}\n",
+        obj.first, index
+      );
+      proxy_[index].send<
+        PlaceHolder::StatsDataMsg, &PlaceHolder::recvStatsData
+      >(obj.second);
+    }
+    loads_by_obj_.clear();
+  }
+
 private:
   std::unordered_map<
-    int /*phase as recorded in stats file*/,
-    std::unordered_map<ElementIDType, vt::TimeType>
-  > loads;
+    ElementIDType,
+    PlaceHolder::StatsDataMsg::ObjStatsMapType
+  > loads_by_obj_;
+  std::vector<ElementIDType> initial_objs_;
   int initial_phase_;
   int phases_to_run_;
   bool convert_from_release_;
@@ -321,7 +430,7 @@ int main(int argc, char** argv) {
   int32_t num_elms_per_rank = atoi(argv[1]);
   // initial phase to import from the stats files
   int initial_phase = atoi(argv[2]);
-  // phases to run after loading object stats (FIXME: find stats in other files)
+  // phases to run after loading object stats
   int32_t phases_to_run = atoi(argv[3]);
   // stats file name, e.g., "stats" for stats.rankid.out
   std::string stats_file = std::string{argv[4]};
@@ -351,6 +460,7 @@ int main(int argc, char** argv) {
   vt::theLBManager()->setLoadModel(per_col);
 
   // start by moving the objects to their positions in phase initial_phase
+  // and moving stats into the collection elements themselves
   if (node == 0)
     vt_print(gen, "Initializing...\n");
   vt::runInEpochCollective([=]{
@@ -363,6 +473,11 @@ int main(int argc, char** argv) {
   });
   vt::runInEpochCollective([=]{
     file_model->migrateObjectsHere();
+  });
+  vt::runInEpochCollective([=]{
+    // find vt index of each object id in our local stats files and
+    // send message with loads directly to that index
+    file_model->stuffStatsIntoCollection();
   });
 
   if (node == 0)
