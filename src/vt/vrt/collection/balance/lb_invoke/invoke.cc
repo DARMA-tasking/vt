@@ -224,6 +224,7 @@ void LBManager::releaseNow(PhaseType phase) {
     );
   }
 
+  balance::ProcStats::startIterCleanup();
   balance::ProcStats::clearStats();
 
   auto msg = makeMessage<CollectionPhaseMsg>();
