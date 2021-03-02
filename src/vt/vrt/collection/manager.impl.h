@@ -2931,8 +2931,6 @@ MigrateStatus CollectionManager::migrateIn(
    */
   vc_raw_ptr->preMigrateIn();
 
-  CollectionProxy<ColT, IndexT>(proxy).operator()(idx);
-
   // Always assign a new temp element ID for LB statistic tracking
   vrt_elm_ptr->temp_elm_id_ = theNodeStats()->getNextElm();
 
