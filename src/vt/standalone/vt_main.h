@@ -70,9 +70,7 @@ inline void vrLaunchMainContext() {
 inline void vtMainScheduler() {
   vt_debug_print(gen, node, "vtMainScheduler: running main scheduler\n");
 
-  while (!rt->isTerminated()) {
-    rt->runScheduler();
-  }
+  vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated();});
 }
 
 template <typename VrtContextT>

@@ -172,9 +172,7 @@ int main(int argc, char** argv) {
     theMsg()->sendMsg<PingMsg<min_bytes>, pingPong<min_bytes>>(pong_node, m);
   }
 
-  while (!rt->isTerminated()) {
-    runScheduler();
-  }
+  vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
 
   CollectiveOps::finalize();
 

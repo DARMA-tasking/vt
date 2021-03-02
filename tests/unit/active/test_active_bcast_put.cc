@@ -135,9 +135,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
   }
 
   // Spin here so test_vec does not go out of scope before the send completes
-  while (not vt::rt->isTerminated()) {
-    vt::runScheduler();
-  }
+  vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
 }
 
 INSTANTIATE_TEST_SUITE_P(

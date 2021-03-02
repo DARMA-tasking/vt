@@ -142,7 +142,7 @@ inline void finalize(vt::EpochType const& epoch, int order) {
     finish(epoch);
     vt::theCollective()->barrier();
     // spin until termination of the epoch
-    while (not channel::ok) { vt::rt->runScheduler(); }
+    vt::theSched()->runSchedulerWhile([] { return not channel::ok; });
   }
 }
 

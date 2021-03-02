@@ -126,9 +126,8 @@ int main(int argc, char** argv) {
    * all work in the system is finished and will not generate more work (via a
    * incomplete causal chain of events).
    */
-  while (!::vt::rt->isTerminated()) {
-    ::vt::runScheduler();
-  }
+
+  ::vt::theSched()->runSchedulerWhile([]{return !::vt::rt->isTerminated(); });
 
   /*
    * All node invoke finalize at the end of the program

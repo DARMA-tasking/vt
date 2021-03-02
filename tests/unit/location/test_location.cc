@@ -70,9 +70,7 @@ TEST_F(TestLocation, test_register_and_get_entity) /* NOLINT */ {
     }
   );
 
-  while (not success) {
-    vt::runScheduler();
-  }
+  vt::theSched()->runSchedulerWhile([&success]{ return not success; });
 
   vt::theCollective()->barrier();
 
@@ -111,9 +109,7 @@ TEST_F(TestLocation, test_register_and_get_multiple_entities)  /* NOLINT */ {
       }
     );
 
-    while (not success) {
-      vt::runScheduler();
-    }
+    vt::theSched()->runSchedulerWhile([&success]{ return not success; });
 
     vt::theCollective()->barrier();
 
@@ -172,9 +168,7 @@ TEST_F(TestLocation, test_migrate_entity) /* NOLINT */ {
       }
     );
 
-    while (not done) {
-      vt::runScheduler();
-    }
+    vt::theSched()->runSchedulerWhile([&done]{ return !done; });
 
     vt::theCollective()->barrier();
 
@@ -242,9 +236,7 @@ TEST_F(TestLocation, test_migrate_entity_expire_cache) /* NOLINT */ {
       }
     );
 
-    while (not executed) {
-      vt::runScheduler();
-    }
+    vt::theSched()->runSchedulerWhile([&executed]{ return not executed; });
 
     vt::theCollective()->barrier();
 
@@ -305,9 +297,7 @@ TEST_F(TestLocation, test_migrate_multiple_entities) /* NOLINT */ {
         }
       );
 
-      while (not success) {
-        vt::runScheduler();
-      }
+      vt::theSched()->runSchedulerWhile([&success]{ return !success; });
 
       vt::theCollective()->barrier();
 

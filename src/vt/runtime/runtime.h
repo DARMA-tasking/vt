@@ -191,7 +191,7 @@ struct Runtime {
   void computeAndPrintDiagnostics();
 
   /**
-   * \brief Run the scheduler once
+   * \internal \brief Run the scheduler once
    */
   void runScheduler();
 

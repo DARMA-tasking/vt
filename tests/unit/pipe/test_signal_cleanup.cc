@@ -88,7 +88,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
   }
 
   // run until termination
-  do vt::runScheduler(); while (not vt::rt->isTerminated());
+  vt::theSched()->runSchedulerWhile([]{ return not vt::rt->isTerminated(); });
 
   // explicitly finalize runtime to destroy and reset components
   vt::rt->finalize(true, false);
@@ -115,7 +115,7 @@ TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
   }
 
   // run until termination
-  do vt::runScheduler(); while (not vt::rt->isTerminated());
+  vt::theSched()->runSchedulerWhile([]{ return not vt::rt->isTerminated(); });
 
   // now, check if we only fired the callbacks exactly once!
   if (this_node == 0) {
