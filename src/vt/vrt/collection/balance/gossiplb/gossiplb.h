@@ -83,8 +83,16 @@ struct GossipRejectionStatsMsg : collective::ReduceTMsg<RejectionStats> {
   { }
 };
 
+enum struct InformTypeEnum : uint8_t {
+  // synchronized rounds propagate info faster but have sync cost
+  SyncInform  = 0,
+  // async rounds propagate before round has completed, omitting some info
+  AsyncInform = 1
+};
+
 struct GossipLB : BaseLB {
   using GossipMsgAsync = balance::GossipMsgAsync;
+  using GossipMsgSync  =  balance::GossipMsg;
   using NodeSetType    = std::vector<NodeType>;
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
@@ -103,11 +111,14 @@ public:
 protected:
   void doLBStages(TimeType start_imb);
   void informAsync();
+  void informSync();
   void decide();
   void migrate();
 
   void propagateRoundAsync(uint8_t k_cur_async, EpochType epoch = no_epoch);
+  void propagateRoundSync(EpochType epoch = no_epoch);
   void propagateIncomingAsync(GossipMsgAsync* msg);
+  void propagateIncomingSync(GossipMsgSync* msg);
   bool isUnderloaded(LoadType load) const;
   bool isUnderloadedRelaxed(LoadType over, LoadType under) const;
   bool isOverloaded(LoadType load) const;
@@ -137,16 +148,20 @@ private:
   uint16_t num_trials_                              = 3;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
+  std::unordered_map<NodeType, LoadType> new_load_info_ = {};
   objgroup::proxy::Proxy<GossipLB> proxy_           = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
   std::unordered_set<NodeType> selected_            = {};
   std::unordered_set<NodeType> underloaded_         = {};
+  std::unordered_set<NodeType> new_underloaded_     = {};
   std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
   TimeType new_imbalance_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
+  InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
   bool setup_done_                                  = false;
+  bool propagate_next_round_                        = false;
   std::vector<bool> propagated_k_;
 };
 
