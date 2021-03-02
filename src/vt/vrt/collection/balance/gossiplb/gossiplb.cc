@@ -265,7 +265,7 @@ void GossipLB::gossipStatsHandler(StatsMsgType* msg) {
   }
 }
 
-void GossipLB::gossipRejectionStatsHandler(GossipRejectionStatsMsg* msg) {
+void GossipLB::gossipRejectionStatsHandler(GossipRejectionMsgType* msg) {
   auto in = msg->getConstVal();
 
   auto n_rejected = in.n_rejected_;
@@ -762,11 +762,11 @@ void GossipLB::decide() {
   theSched()->runSchedulerWhile([&decide_done]{ return not decide_done; });
 
   runInEpochCollective([=] {
-    using ReduceOp = collective::PlusOp<RejectionStats>;
+    using ReduceOp = collective::PlusOp<balance::RejectionStats>;
     auto cb = vt::theCB()->makeBcast<
-      GossipLB, GossipRejectionStatsMsg, &GossipLB::gossipRejectionStatsHandler
+      GossipLB, GossipRejectionMsgType, &GossipLB::gossipRejectionStatsHandler
     >(this->proxy_);
-    auto msg = makeMessage<GossipRejectionStatsMsg>(n_rejected, n_transfers);
+    auto msg = makeMessage<GossipRejectionMsgType>(n_rejected, n_transfers);
     this->proxy_.template reduce<ReduceOp>(msg,cb);
   });
 }

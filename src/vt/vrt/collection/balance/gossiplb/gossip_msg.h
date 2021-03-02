@@ -130,6 +130,32 @@ private:
   ObjsType objs_  = {};
 };
 
+struct RejectionStats {
+  RejectionStats() = default;
+  RejectionStats(int n_rejected, int n_transfers)
+    : n_rejected_(n_rejected), n_transfers_(n_transfers) { }
+
+  friend RejectionStats operator+(RejectionStats a1, RejectionStats const& a2) {
+    a1.n_rejected_ += a2.n_rejected_;
+    a1.n_transfers_ += a2.n_transfers_;
+
+    return a1;
+  }
+
+  int n_rejected_ = 0;
+  int n_transfers_ = 0;
+};
+
+struct GossipRejectionStatsMsg : collective::ReduceTMsg<RejectionStats> {
+  GossipRejectionStatsMsg() = default;
+  GossipRejectionStatsMsg(int n_rejected, int n_transfers)
+    : ReduceTMsg<RejectionStats>(RejectionStats(n_rejected, n_transfers))
+  { }
+  GossipRejectionStatsMsg(RejectionStats&& rs)
+    : ReduceTMsg<RejectionStats>(std::move(rs))
+  { }
+};
+
 }}}} /* end namespace vt::vrt::collection::balance */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H*/

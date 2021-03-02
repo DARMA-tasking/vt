@@ -57,32 +57,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct RejectionStats {
-  RejectionStats() = default;
-  RejectionStats(int n_rejected, int n_transfers)
-    : n_rejected_(n_rejected), n_transfers_(n_transfers) { }
-
-  friend RejectionStats operator+(RejectionStats a1, RejectionStats const& a2) {
-    a1.n_rejected_ += a2.n_rejected_;
-    a1.n_transfers_ += a2.n_transfers_;
-
-    return a1;
-  }
-
-  int n_rejected_ = 0;
-  int n_transfers_ = 0;
-};
-
-struct GossipRejectionStatsMsg : collective::ReduceTMsg<RejectionStats> {
-  GossipRejectionStatsMsg() = default;
-  GossipRejectionStatsMsg(int n_rejected, int n_transfers)
-    : ReduceTMsg<RejectionStats>(RejectionStats(n_rejected, n_transfers))
-  { }
-  GossipRejectionStatsMsg(RejectionStats&& rs)
-    : ReduceTMsg<RejectionStats>(std::move(rs))
-  { }
-};
-
 enum struct InformTypeEnum : uint8_t {
   // synchronized rounds propagate info faster but have sync cost
   SyncInform  = 0,
@@ -92,10 +66,11 @@ enum struct InformTypeEnum : uint8_t {
 
 struct GossipLB : BaseLB {
   using GossipMsgAsync = balance::GossipMsgAsync;
-  using GossipMsgSync  =  balance::GossipMsg;
+  using GossipMsgSync  = balance::GossipMsg;
   using NodeSetType    = std::vector<NodeType>;
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
+  using GossipRejectionMsgType = balance::GossipRejectionStatsMsg;
 
   GossipLB() = default;
 
@@ -133,7 +108,7 @@ protected:
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
   void gossipStatsHandler(StatsMsgType* msg);
-  void gossipRejectionStatsHandler(GossipRejectionStatsMsg* msg);
+  void gossipRejectionStatsHandler(GossipRejectionMsgType* msg);
   void thunkMigrations();
 
   void setupDone(ReduceMsgType* msg);
