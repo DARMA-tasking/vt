@@ -77,13 +77,19 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{"f", "k", "i", "c", "trials"};
   spec->checkAllowedKeys(allowed);
   using CriterionEnumUnder = typename std::underlying_type<CriterionEnum>::type;
+  using InformTypeEnumUnder = typename std::underlying_type<InformTypeEnum>::type;
+
   auto default_c = static_cast<CriterionEnumUnder>(criterion_);
-  f_          = spec->getOrDefault<int32_t>("f", f_);
-  k_max_      = spec->getOrDefault<int32_t>("k", k_max_);
-  num_iters_  = spec->getOrDefault<int32_t>("i", num_iters_);
-  num_trials_ = spec->getOrDefault<int32_t>("trials", num_trials_);
-  int32_t c   = spec->getOrDefault<int32_t>("c", default_c);
-  criterion_  = static_cast<CriterionEnum>(c);
+  auto default_inform = static_cast<InformTypeEnumUnder>(inform_type_);
+
+  f_           = spec->getOrDefault<int32_t>("f", f_);
+  k_max_       = spec->getOrDefault<int32_t>("k", k_max_);
+  num_iters_   = spec->getOrDefault<int32_t>("i", num_iters_);
+  num_trials_  = spec->getOrDefault<int32_t>("trials", num_trials_);
+  int32_t c    = spec->getOrDefault<int32_t>("c", default_c);
+  criterion_   = static_cast<CriterionEnum>(c);
+  int32_t inf  = spec->getOrDefault<int32_t>("inform", default_inform);
+  inform_type_ = static_cast<InformTypeEnum>(inf);
 }
 
 void GossipLB::runLB() {
@@ -159,7 +165,17 @@ void GossipLB::doLBStages(TimeType start_imb) {
         is_underloaded_ = true;
       }
 
-      informAsync();
+      switch (inform_type_) {
+      case InformTypeEnum::SyncInform:
+        informSync();
+        break;
+      case InformTypeEnum::AsyncInform:
+        informAsync();
+        break;
+      default:
+        vtAbort("GossipLB:: Unsupported inform type");
+      }
+
       decide();
 
       vt_debug_print(
@@ -318,6 +334,70 @@ void GossipLB::informAsync() {
   );
 }
 
+void GossipLB::informSync() {
+  vt_debug_print(
+    normal, gossiplb,
+    "GossipLB::informSync: starting inform phase: trial={}, iter={}, "
+    "k_max={}, k_cur={}, is_underloaded={}, is_overloaded={}, load={}\n",
+    trial_, iter_, k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
+  );
+
+  vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
+
+  auto const this_node = theContext()->getNode();
+  if (is_underloaded_) {
+    underloaded_.insert(this_node);
+  }
+
+  auto propagate_this_round = is_underloaded_;
+  propagate_next_round_ = false;
+  new_underloaded_ = underloaded_;
+  new_load_info_ = load_info_;
+
+  setup_done_ = false;
+
+  auto cb = theCB()->makeBcast<GossipLB, ReduceMsgType, &GossipLB::setupDone>(proxy_);
+  auto msg = makeMessage<ReduceMsgType>();
+  proxy_.reduce(msg.get(), cb);
+
+  theSched()->runSchedulerWhile([this]{ return not setup_done_; });
+
+  for (; k_cur_ < k_max_; ++k_cur_) {
+    auto name = fmt::format("GossipLB: informSync k_cur={}", k_cur_);
+    auto propagate_epoch = theTerm()->makeEpochCollective(name);
+
+    // Underloaded start the first round; ranks that received on some round
+    // start subsequent rounds
+    if (propagate_this_round) {
+      propagateRoundSync(propagate_epoch);
+    }
+
+    theTerm()->finishedEpoch(propagate_epoch);
+
+    vt::runSchedulerThrough(propagate_epoch);
+
+    propagate_this_round = propagate_next_round_;
+    propagate_next_round_ = false;
+    underloaded_ = new_underloaded_;
+    load_info_ = new_load_info_;
+  }
+
+  if (is_overloaded_) {
+    vt_print(
+      gossiplb,
+      "GossipLB::informSync: trial={}, iter={}, known underloaded={}\n",
+      trial_, iter_, underloaded_.size()
+    );
+  }
+
+  vt_debug_print(
+    verbose, gossiplb,
+    "GossipLB::informSync: finished inform phase: trial={}, iter={}, "
+    "k_max={}, k_cur={}\n",
+    trial_, iter_, k_max_, k_cur_
+  );
+}
+
 void GossipLB::setupDone(ReduceMsgType* msg) {
   setup_done_ = true;
 }
@@ -385,6 +465,66 @@ void GossipLB::propagateRoundAsync(uint8_t k_cur_async, EpochType epoch) {
   }
 }
 
+void GossipLB::propagateRoundSync(EpochType epoch) {
+  vt_debug_print(
+    normal, gossiplb,
+    "GossipLB::propagateRoundSync: trial={}, iter={}, k_max={}, k_cur={}\n",
+    trial_, iter_, k_max_, k_cur_
+  );
+
+  auto const this_node = theContext()->getNode();
+  auto const num_nodes = theContext()->getNumNodes();
+  std::uniform_int_distribution<NodeType> dist(0, num_nodes - 1);
+  std::mt19937 gen(seed_());
+
+  auto& selected = selected_;
+  selected = underloaded_;
+  if (selected.find(this_node) == selected.end()) {
+    selected.insert(this_node);
+  }
+
+  auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
+
+  vt_debug_print(
+    verbose, gossiplb,
+    "GossipLB::propagateRoundSync: trial={}, iter={}, k_max={}, k_cur={}, "
+    "selected.size()={}, fanout={}\n",
+    trial_, iter_, k_max_, k_cur_, selected.size(), fanout
+  );
+
+  for (int i = 0; i < fanout; i++) {
+    // This implies full knowledge of all processors
+    if (selected.size() >= static_cast<size_t>(num_nodes)) {
+      return;
+    }
+
+    // First, randomly select a node
+    NodeType random_node = uninitialized_destination;
+
+    // Keep generating until we have a unique node for this round
+    do {
+      random_node = dist(gen);
+    } while (
+      selected.find(random_node) != selected.end()
+    );
+    selected.insert(random_node);
+
+    vt_debug_print(
+      verbose, gossiplb,
+      "GossipLB::propagateRoundSync: k_max_={}, k_cur_={}, sending={}\n",
+      k_max_, k_cur_, random_node
+    );
+
+    // Send message with load
+    auto msg = makeMessage<GossipMsgSync>(this_node, load_info_);
+    if (epoch != no_epoch) {
+      envelopeSetEpoch(msg->env, epoch);
+    }
+    msg->addNodeLoad(this_node, this_new_load_);
+    proxy_[random_node].sendMsg<GossipMsgSync, &GossipLB::propagateIncomingSync>(msg.get());
+  }
+}
+
 void GossipLB::propagateIncomingAsync(GossipMsgAsync* msg) {
   auto const from_node = msg->getFromNode();
   auto k_cur_async = msg->getRound();
@@ -414,6 +554,30 @@ void GossipLB::propagateIncomingAsync(GossipMsgAsync* msg) {
     // send out another round
     propagated_k_[k_cur_async] = true;
     propagateRoundAsync(k_cur_async + 1);
+  }
+}
+
+void GossipLB::propagateIncomingSync(GossipMsgSync* msg) {
+  auto const from_node = msg->getFromNode();
+
+  // we collected more info that should be propagated on the next round
+  propagate_next_round_ = true;
+
+  vt_debug_print(
+    normal, gossiplb,
+    "GossipLB::propagateIncomingSync: trial={}, iter={}, k_max={}, "
+    "k_cur={}, from_node={}, load info size={}\n",
+    trial_, iter_, k_max_, k_cur_, from_node, msg->getNodeLoad().size()
+  );
+
+  for (auto&& elm : msg->getNodeLoad()) {
+    if (new_load_info_.find(elm.first) == new_load_info_.end()) {
+      new_load_info_[elm.first] = elm.second;
+
+      if (isUnderloaded(elm.second)) {
+        new_underloaded_.insert(elm.first);
+      }
+    }
   }
 }
 
