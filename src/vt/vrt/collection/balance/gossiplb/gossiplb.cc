@@ -160,7 +160,7 @@ void GossipLB::doLBStages(TimeType start_imb) {
         is_underloaded_ = true;
       }
 
-      inform();
+      informAsync();
       decide();
 
       debug_print(
@@ -266,11 +266,14 @@ void GossipLB::gossipRejectionStatsHandler(GossipRejectionStatsMsg* msg) {
   }
 }
 
-void GossipLB::inform() {
+void GossipLB::informAsync() {
+  propagated_k_.assign(k_max_, false);
+  uint8_t k_cur_async = 0;
+
   debug_print(
     gossiplb, node,
-    "GossipLB::inform: starting inform phase: trial={}, iter={}, k_max={}, "
-    "k_cur={}, is_underloaded={}, is_overloaded={}, load={}\n",
+    "GossipLB::informAsync: starting inform phase: trial={}, iter={}, "
+    "k_max={}, k_cur={}, is_underloaded={}, is_overloaded={}, load={}\n",
     trial_, iter_, k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
   );
 
@@ -290,12 +293,12 @@ void GossipLB::inform() {
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
   bool inform_done = false;
-  auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: inform");
+  auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: informAsync");
   theTerm()->addAction(propagate_epoch, [&inform_done] { inform_done = true; });
 
   // Underloaded start the round
   if (is_underloaded_) {
-    propagateRound(propagate_epoch);
+    propagateRoundAsync(k_cur_async, propagate_epoch);
   }
 
   theTerm()->finishedEpoch(propagate_epoch);
@@ -305,14 +308,14 @@ void GossipLB::inform() {
   if (is_overloaded_) {
     vt_print(
       gossiplb,
-      "GossipLB::inform: trial={}, iter={}, known underloaded={}\n",
+      "GossipLB::informAsync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
     );
   }
 
   debug_print(
     gossiplb, node,
-    "GossipLB::inform: finished inform phase: trial={}, iter={}, "
+    "GossipLB::informAsync: finished inform phase: trial={}, iter={}, "
     "k_max={}, k_cur={}\n",
     trial_, iter_, k_max_, k_cur_
   );
@@ -322,10 +325,10 @@ void GossipLB::setupDone(ReduceMsgType* msg) {
   setup_done_ = true;
 }
 
-void GossipLB::propagateRound(EpochType epoch) {
+void GossipLB::propagateRoundAsync(uint8_t k_cur_async, EpochType epoch) {
   debug_print(
     gossiplb, node,
-    "GossipLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}\n",
+    "GossipLB::propagateRoundAsync: trial={}, iter={}, k_max={}, k_cur={}\n",
     trial_, iter_, k_max_, k_cur_
   );
 
@@ -344,7 +347,7 @@ void GossipLB::propagateRound(EpochType epoch) {
 
   debug_print(
     gossiplb, node,
-    "GossipLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}, "
+    "GossipLB::propagateRoundAsync: trial={}, iter={}, k_max={}, k_cur={}, "
     "selected.size()={}, fanout={}\n",
     trial_, iter_, k_max_, k_cur_, selected.size(), fanout
   );
@@ -368,28 +371,31 @@ void GossipLB::propagateRound(EpochType epoch) {
 
     debug_print(
       gossiplb, node,
-      "GossipLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}, "
-      "sending={}\n",
+      "GossipLB::propagateRoundAsync: trial={}, iter={}, k_max={}, "
+      "k_cur={}, sending={}\n",
       trial_, iter_, k_max_, k_cur_, random_node
     );
 
     // Send message with load
-    auto msg = makeMessage<GossipMsg>(this_node, load_info_);
+    auto msg = makeMessage<GossipMsgAsync>(this_node, load_info_, k_cur_async);
     if (epoch != no_epoch) {
       envelopeSetEpoch(msg->env, epoch);
     }
     msg->addNodeLoad(this_node, this_new_load_);
-    proxy_[random_node].send<GossipMsg, &GossipLB::propagateIncoming>(msg.get());
+    proxy_[random_node].send<
+      GossipMsgAsync, &GossipLB::propagateIncomingAsync
+    >(msg.get());
   }
 }
 
-void GossipLB::propagateIncoming(GossipMsg* msg) {
+void GossipLB::propagateIncomingAsync(GossipMsgAsync* msg) {
   auto const from_node = msg->getFromNode();
+  auto k_cur_async = msg->getRound();
 
   debug_print(
     gossiplb, node,
-    "GossipLB::propagateIncoming: trial={}, iter={}, k_max={}, k_cur={}, "
-    "from_node={}, load info size={}\n",
+    "GossipLB::propagateIncomingAsync: trial={}, iter={}, k_max={}, "
+    "k_cur={}, from_node={}, load info size={}\n",
     trial_, iter_, k_max_, k_cur_, from_node, msg->getNodeLoad().size()
   );
 
@@ -403,12 +409,14 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
     }
   }
 
-  if (k_cur_ == k_max_ - 1) {
+  if (k_cur_async == k_max_ - 1) {
     // nothing to do but wait for termination to be detected
+  } else if (propagated_k_[k_cur_async]) {
+    // we already propagated this round before receiving this message
   } else {
     // send out another round
-    propagateRound();
-    k_cur_++;
+    propagated_k_[k_cur_async] = true;
+    propagateRoundAsync(k_cur_async + 1);
   }
 }
 
