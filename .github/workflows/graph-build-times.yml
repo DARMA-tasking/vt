@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Generate and push graph
-      uses: DARMA-tasking/graph-build-times@1-create-the-github-action
+      uses: DARMA-tasking/graph-build-times@master
       with:
         github_personal_token: ${{ secrets.GH_PAT }}
         github_token: ${{ github.token }}
