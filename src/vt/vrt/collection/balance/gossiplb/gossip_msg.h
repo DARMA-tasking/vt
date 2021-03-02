@@ -85,6 +85,31 @@ private:
   NodeLoadType node_load_ = {};
 };
 
+struct GossipMsgAsync : GossipMsg {
+  using MessageParentType = GossipMsg;
+  vt_msg_serialize_if_needed_by_parent();
+
+  GossipMsgAsync() = default;
+  GossipMsgAsync(
+    NodeType in_from_node, NodeLoadType const& in_node_load, int round
+  )
+    : GossipMsg(in_from_node, in_node_load), round_(round)
+  { }
+
+  uint8_t getRound() const {
+    return round_;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | round_;
+  }
+
+private:
+  int round_;
+};
+
 struct LazyMigrationMsg : SerializeRequired<
   vt::Message,
   LazyMigrationMsg
