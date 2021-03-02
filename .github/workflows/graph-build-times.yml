@@ -6,8 +6,6 @@ on:
   push:
     branches:
       - develop
-      # Remove later
-      - 1216-graph-docker-build-times
 
 jobs:
   graph:

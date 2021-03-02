@@ -18,6 +18,8 @@
 ![apple clang, macosx, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(clang-8,%20macosx,%20mpich)/badge.svg?branch=develop)
 ![Build Documentation](https://github.com/DARMA-tasking/vt/workflows/Build%20Documentation/badge.svg?branch=develop)
 
+![](https://github.com/DARMA-tasking/vt/wiki/build_times.png)
+
 ## Introduction : What is *vt*?
 
 *vt* is an active messaging layer that utilizes C++ object virtualization to
