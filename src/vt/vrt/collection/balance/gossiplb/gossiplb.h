@@ -84,10 +84,10 @@ struct GossipRejectionStatsMsg : collective::ReduceTMsg<RejectionStats> {
 };
 
 struct GossipLB : BaseLB {
-  using GossipMsg     = balance::GossipMsg;
-  using NodeSetType   = std::vector<NodeType>;
-  using ObjsType      = std::unordered_map<ObjIDType, LoadType>;
-  using ReduceMsgType = vt::collective::ReduceNoneMsg;
+  using GossipMsgAsync = balance::GossipMsgAsync;
+  using NodeSetType    = std::vector<NodeType>;
+  using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
+  using ReduceMsgType  = vt::collective::ReduceNoneMsg;
 
   GossipLB() = default;
   GossipLB(GossipLB const&) = delete;
@@ -101,12 +101,12 @@ public:
 
 protected:
   void doLBStages(TimeType start_imb);
-  void inform();
+  void informAsync();
   void decide();
   void migrate();
 
-  void propagateRound(EpochType epoch = no_epoch);
-  void propagateIncoming(GossipMsg* msg);
+  void propagateRoundAsync(uint8_t k_cur_async, EpochType epoch = no_epoch);
+  void propagateIncomingAsync(GossipMsgAsync* msg);
   bool isUnderloaded(LoadType load) const;
   bool isUnderloadedRelaxed(LoadType over, LoadType under) const;
   bool isOverloaded(LoadType load) const;
@@ -146,6 +146,7 @@ private:
   TimeType new_imbalance_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   bool setup_done_                                  = false;
+  std::vector<bool> propagated_k_;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
