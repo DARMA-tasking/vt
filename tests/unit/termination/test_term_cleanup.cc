@@ -93,9 +93,9 @@ TEST_F(TestTermCleanup, test_termination_cleanup_1) {
     EXPECT_LT(theTerm()->getEpochReadySet().size(), std::size_t{2});
   }
 
-  while (not vt::rt->isTerminated() or not vt::theSched()->isIdle()) {
-    vt::runScheduler();
-  }
+  theSched()->runSchedulerWhile(
+    [] { return not vt::rt->isTerminated() or not vt::theSched()->isIdle();
+  });
 
   EXPECT_LT(theTerm()->getEpochState().size(), std::size_t{2});
   EXPECT_EQ(theTerm()->getEpochWaitSet().size(), std::size_t{0});
@@ -149,9 +149,9 @@ TEST_F(TestTermCleanup, test_termination_cleanup_2) {
     vt::runSchedulerThrough(wave_epoch);
   }
 
-  while (not vt::rt->isTerminated() or not vt::theSched()->isIdle()) {
-    vt::runScheduler();
-  }
+  vt::theSched()->runSchedulerWhile(
+    []{ return not vt::rt->isTerminated() or not vt::theSched()->isIdle();
+  });
 
   EXPECT_LT(theTerm()->getEpochState().size(), std::size_t{2});
   EXPECT_EQ(theTerm()->getEpochWaitSet().size(), std::size_t{0});

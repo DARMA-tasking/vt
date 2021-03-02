@@ -91,7 +91,9 @@ void sender() {
     auto msg = vt::makeMessage<PingMsg>(bytes);
     vt::theMsg()->sendMsg<PingMsg,handler>(1, msg);
   }
-  while (not is_done) vt::runScheduler();
+
+  runSchedulerWhile([]{return !is_done; });
+
   is_done = false;
   auto time = (vt::timing::Timing::getCurrentTime() - start) / pings;
   auto Mb = static_cast<double>(bytes) / 1024.0 / 1024.0;

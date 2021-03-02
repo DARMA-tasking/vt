@@ -134,9 +134,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
 
   //--- Spin here so the test does not end before the communications complete
 
-  while (not vt::rt->isTerminated()) {
-    vt::runScheduler();
-  }
+  vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
 
   //--- Check the read values
 

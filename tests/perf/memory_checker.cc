@@ -85,9 +85,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  while (!vt::rt->isTerminated()) {
-    vt::runScheduler();
-  }
+  vt::theSched()->runSchedulerWhile([]{ return !vt::rt->isTerminated(); });
 
   vt::finalize();
 
