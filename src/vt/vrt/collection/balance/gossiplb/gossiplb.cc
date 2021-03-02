@@ -122,7 +122,7 @@ void GossipLB::runLB() {
 }
 
 void GossipLB::doLBStages(TimeType start_imb) {
-  std::unordered_map<ObjIDType, TimeType> best_objs;
+  decltype(this->cur_objs_) best_objs;
   LoadType best_load = 0;
   TimeType best_imb = start_imb+1;
   uint16_t best_trial = 0;
@@ -149,7 +149,10 @@ void GossipLB::doLBStages(TimeType start_imb) {
 
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
-        cur_objs_ = *load_data;
+        cur_objs_.clear();
+        for (auto obj : *load_data) {
+          cur_objs_[obj.first] = obj.second;
+        }
         this_new_load_ = this_load;
       } else {
         // Clear out data structures from previous iteration
