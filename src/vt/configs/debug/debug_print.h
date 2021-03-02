@@ -244,8 +244,8 @@ struct CheckEnabled<
   Op, C,
   cat, ctx, mod,
   typename std::enable_if_t<
+    not vt_check_enabled(production_build) and
     (C::context  & ctx) not_eq 0 and
-    (C::category & cat) not_eq 0 and
     (C::mode     & mod) not_eq 0
   >
 > {

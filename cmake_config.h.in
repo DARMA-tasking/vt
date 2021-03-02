@@ -42,8 +42,6 @@
 //@HEADER
 */
 
-#define cmake_config_modes @cmake_vt_debug_modes_all@
-
 #define vt_feature_cmake_no_feature          @vt_feature_cmake_no_feature@
 #define vt_feature_cmake_bit_check_overflow  @vt_feature_cmake_bit_check_overflow@
 #define vt_feature_cmake_trace_enabled       @vt_feature_cmake_trace_enabled@

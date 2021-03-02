@@ -793,8 +793,8 @@ void Runtime::printStartupBanner() {
 
 #define vt_runtime_debug_warn_compile(opt)                              \
   do {                                                                  \
-    if (!vt_backend_debug_enabled(opt) and getAppConfig()->vt_debug_ ## opt) { \
-      auto f9 = warn_cr("--vt_debug_" #opt, "debug_" #opt);             \
+    if (vt_check_enabled(production_build) and getAppConfig()->vt_debug_ ## opt) { \
+      auto f9 = warn_cr("--vt_debug_" #opt, "vt_debug_print");             \
       fmt::print("{}\t{}{}", vt_pre, f9, reset);                        \
     }                                                                   \
   } while (0);

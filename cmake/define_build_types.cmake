@@ -19,38 +19,6 @@ else()
 endif()
 list(REMOVE_DUPLICATES VT_CONFIG_TYPES)
 
-# all vt_debug_print and vt_print categories we can potentially compile in
-set(
-  cmake_vt_debug_modes_all
-  "CatEnum::gen          | \
-   CatEnum::runtime      | \
-   CatEnum::active       | \
-   CatEnum::term         | \
-   CatEnum::termds       | \
-   CatEnum::barrier      | \
-   CatEnum::pipe         | \
-   CatEnum::param        | \
-   CatEnum::pool         | \
-   CatEnum::reduce       | \
-   CatEnum::rdma         | \
-   CatEnum::rdma_channel | \
-   CatEnum::handler      | \
-   CatEnum::hierlb       | \
-   CatEnum::gossiplb     | \
-   CatEnum::scatter      | \
-   CatEnum::serial_msg   | \
-   CatEnum::sequence     | \
-   CatEnum::trace        | \
-   CatEnum::objgroup     | \
-   CatEnum::location     | \
-   CatEnum::lb           | \
-   CatEnum::vrt_coll     | \
-   CatEnum::group        | \
-   CatEnum::phase        | \
-   CatEnum::broadcast      \
-   "
-)
-
 option(vt_detector_disabled "Build VT with detector disabled" OFF)
 option(vt_lb_enabled "Build VT with load balancing enabled" ON)
 option(vt_trace_enabled "Build VT with trace enabled" OFF)
