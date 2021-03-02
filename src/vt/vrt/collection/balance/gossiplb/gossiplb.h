@@ -131,6 +131,7 @@ private:
   uint8_t k_max_                                    = 4;
   uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;
+  uint16_t trial_                                   = 0;
   uint16_t num_iters_                               = 4;
   uint16_t num_trials_                              = 3;
   std::random_device seed_;
