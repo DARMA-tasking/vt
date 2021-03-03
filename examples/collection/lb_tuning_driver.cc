@@ -49,6 +49,7 @@
 
 #include <memory>
 #include <cinttypes>
+#include <regex>
 
 inline vt::NodeType elmIndexMap(vt::Index2D* idx, vt::Index2D*, vt::NodeType) {
   return idx->x();
@@ -298,37 +299,62 @@ struct FileModel : ComposedModel {
   }
 
   void parseFile(std::string const& file) {
-    std::FILE *f = std::fopen(file.c_str(), "r");
-    vtAbortIf(not f, "File opening failed");
+    vt_debug_print(gen, node, "parsing file {}\n", file);
+
+    std::ifstream f(file.c_str());
+    std::string line;
+    bool is_load_line = false;
 
     int phase = 0;
     ElementIDType read_elm_id = 0;
     vt::TimeType load = 0.;
 
-    vt_debug_print(gen, node, "parsing file {}\n", file);
+    while (std::getline(f, line)) {
+      is_load_line = false;
+      auto pos = line.find('[');
+      if (pos != std::string::npos) {
+        // this line contains subphase loads notation, i.e.,
+        // phase,elm_id,phase_load,n_subphases,[subphase0_load,subphase1_load...]
+        is_load_line = true;
+      } else if (std::count(line.begin(), line.end(), ',') == 2) {
+        // this line does not contain subphase loads notation, i.e.,
+        // phase,elm_id,phase_load
+        is_load_line = true;
+      } // else it is comm data, i.e., phase,elm1_id,elm2_id,bytes,category
 
-    // FIXME: make this work with stats dumped by develop
-    while (fscanf(f, "%d, %" PRIu64 ", %lf", &phase, &read_elm_id, &load) == 3) {
-      // only load in stats that are strictly necessary, ignoring the rest
-      if (phase >= initial_phase_ && phase < initial_phase_ + phases_to_run_) {
-        auto elm_id = convert_from_release_ ?
-          convertReleaseStatsID(read_elm_id) : read_elm_id;
-        vt_debug_print(
-          gen, node,
-          "reading in loads for elm={}, converted_elm={}, phase={}\n",
-          read_elm_id, elm_id, phase
-        );
-        loads_by_obj_[elm_id][phase] = load;
-        if (phase == initial_phase_)
-          initial_objs_.push_back(elm_id);
+      if (is_load_line) {
+        std::string nocommas = std::regex_replace(line, std::regex(","), " ");
+        std::istringstream iss(nocommas);
+        iss >> phase >> read_elm_id >> load;
+
+        // only load in stats that are strictly necessary, ignoring the rest
+        if (phase >= initial_phase_ && phase < initial_phase_ + phases_to_run_) {
+          auto elm_id = convert_from_release_ ?
+            convertReleaseStatsID(read_elm_id) : read_elm_id;
+          vt_debug_print(
+            gen, node,
+            "reading in loads for elm={}, converted_elm={}, phase={}\n",
+            read_elm_id, elm_id, phase
+          );
+          loads_by_obj_[elm_id][phase] = load;
+          if (phase == initial_phase_)
+            initial_objs_.push_back(elm_id);
+        } else {
+          vt_debug_print(
+            gen, node,
+            "skipping loads for elm={}, phase={}\n",
+            read_elm_id, phase
+          );
+        }
       } else {
         vt_debug_print(
           gen, node,
-          "skipping loads for elm={}, phase={}\n",
-          read_elm_id, phase
+          "skipping line: {}\n",
+          line
         );
       }
     }
+    f.close();
   }
 
   void requestObjIndices() {
