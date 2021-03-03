@@ -17,8 +17,7 @@
 [![nvidia cuda 11.0, ubuntu, mpich](https://dev.azure.com/DARMA-tasking/DARMA/_apis/build/status/PR%20tests%20(nvidia%20cuda%2011.0%2C%20ubuntu%2C%20mpich)?branchName=develop&Label=(nvidia%20cuda%2011.0%2C%20ubuntu%2C%20mpich))](https://dev.azure.com/DARMA-tasking/DARMA/_build/latest?definitionId=12&branchName=develop)
 ![apple clang, macosx, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(clang-8,%20macosx,%20mpich)/badge.svg?branch=develop)
 ![Build Documentation](https://github.com/DARMA-tasking/vt/workflows/Build%20Documentation/badge.svg?branch=develop)
-
-![](https://github.com/DARMA-tasking/vt/wiki/build_times.png)
+[![](https://github.com/DARMA-tasking/vt/wiki/build_time_badge.svg)](https://github.com/DARMA-tasking/vt/wiki/build_times.png)
 
 ## Introduction : What is *vt*?
 

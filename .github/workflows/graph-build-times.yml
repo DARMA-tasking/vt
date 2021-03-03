@@ -1,23 +1,32 @@
 name: Graph VT build times
 
+# Only trigger, when the Docker Image CI finishes
+# This ensures that the graph will actually include the most recent build
+# on:
+#   workflow_run:
+#     workflows: ["Docker Image CI"]
+#     types:
+#       - completed
+
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
   push:
     branches:
-      - develop
+      - 1216-graph-docker-build-times
 
 jobs:
   graph:
     runs-on: ubuntu-latest
     steps:
     - name: Generate and push graph
-      uses: DARMA-tasking/graph-build-times@master
+      uses: DARMA-tasking/graph-build-times@3-generate-badge
       with:
         github_personal_token: ${{ secrets.GH_PAT }}
         github_token: ${{ github.token }}
         workflow: pushdockerimage.yml
-        filename: build_times.png
+        graph_filename: build_times.png
+        badge_filename: build_time_badge.svg
+        badge_title: vt:develop build time
+        badge_logo: Docker
         num_last_build: 50
         title: Last 50 builds of vt:develop docker image
         graph_width: 19
