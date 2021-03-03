@@ -107,7 +107,7 @@ using MsgSizeType             = int64_t;
 /// Used for hold a phase for load balancing
 using PhaseType               = uint64_t;
 /// Used for hold a sub-phase for load balancing
-using SubphaseType            = uint16_t;
+using SubphaseType            = uint64_t;
 /// Used for hold the identifier for a pipe (callbacks)
 using PipeType                = uint64_t;
 /// Used for hold the proxy ID for an objgroup

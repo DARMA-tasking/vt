@@ -49,6 +49,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/phase/phase_hook_enum.h"
 #include "vt/phase/phase_hook_id.h"
+#include "vt/phase/subphase/subphase_manager.h"
 
 #include <unordered_map>
 #include <map>
@@ -80,7 +81,9 @@ struct NextMsg;
  * rooted; collective hooks are invoked in the order in which they are
  * registered and are always run in a collective epoch.
  */
-struct PhaseManager : runtime::component::Component<PhaseManager> {
+struct PhaseManager
+  : runtime::component::Component<PhaseManager>, subphase::SubphaseManager
+{
   using HookIDType = typename std::underlying_type<PhaseHook>::type;
   using HookMapType = std::map<std::size_t, ActionType>;
   using HookIDMapType = std::unordered_map<HookIDType, HookMapType>;
@@ -180,6 +183,17 @@ public:
    */
   void runHooksManual(PhaseHook type);
 
+  /**
+   * \internal
+   * \brief Check if the \c PhaseManager has pending subphase ID resolution in
+   * progress
+   *
+   * \note This is primarily intended to be used for testing purposes
+   *
+   * \return whether it's pending resolution
+   */
+  bool isPendingSubphaseResolution() const;
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | cur_phase_
@@ -190,6 +204,7 @@ public:
       | next_rooted_hook_id_
       | in_next_phase_collective_
       | reduce_next_phase_done_;
+    subphase::SubphaseManager::serialize(s);
   }
 
 private:
