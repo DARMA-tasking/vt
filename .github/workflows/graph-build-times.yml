@@ -2,16 +2,11 @@ name: Graph VT build times
 
 # Only trigger, when the Docker Image CI finishes
 # This ensures that the graph will actually include the most recent build
-# on:
-#   workflow_run:
-#     workflows: ["Docker Image CI"]
-#     types:
-#       - completed
-
 on:
-  push:
-    branches:
-      - 1216-graph-docker-build-times
+  workflow_run:
+    workflows: ["Docker Image CI"]
+    types:
+      - completed
 
 jobs:
   graph:
