@@ -110,7 +110,7 @@ volumes:
   arm64v8-alpine-gcc-7-cache:
 
 # Define basic rules for ccache used across multiple services. The beauty of
-# docker compose with cached volumes is that similarily configured builds will
+# docker compose with cached volumes is that similarly configured builds will
 # reuse a ccache volume making build speeds much faster than a fresh build each
 # time.
 x-ccache: &ccache
@@ -320,6 +320,25 @@ services:
     command: &docs-cpp-command >
       /bin/bash -c "
         /vt/ci/build_cpp.sh /vt /build ${TOKEN}"
+
+  ##############################################################################
+  # Build vt sample project using DARMA-vt installed from spack package.
+  ubuntu-spack:
+    image: ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+    build:
+      context: .
+      target: base
+      dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
+      cache_from:
+        - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
+      args: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *vtopts
+    volumes: *ubuntu-volumes
+    command:
+      /bin/bash -c "
+        /vt/ci/test_spack_package.sh"
 
   ##############################################################################
   # Interactive build documentation for VT in the container on ubuntu platform

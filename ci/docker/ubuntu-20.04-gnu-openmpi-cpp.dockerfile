@@ -29,6 +29,7 @@ RUN apt-get update -y -q && \
     make-guile \
     libomp5 \
     ccache \
+    python3 \
     ssh && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
