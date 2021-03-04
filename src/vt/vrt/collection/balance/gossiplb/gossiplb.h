@@ -52,6 +52,7 @@
 
 #include <random>
 #include <unordered_map>
+#include <map>
 #include <unordered_set>
 #include <vector>
 
@@ -120,6 +121,7 @@ private:
   uint16_t trial_                                   = 0;
   uint16_t num_iters_                               = 4;
   uint16_t num_trials_                              = 3;
+  bool deterministic_                               = false;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   std::unordered_map<NodeType, LoadType> new_load_info_ = {};
@@ -137,6 +139,8 @@ private:
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
   std::vector<bool> propagated_k_;
+  std::mt19937 gen_propagate_;
+  std::mt19937 gen_sample_;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

@@ -61,6 +61,9 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 
 void GossipLB::init(objgroup::proxy::Proxy<GossipLB> in_proxy) {
   proxy_ = in_proxy;
+  auto const this_node = theContext()->getNode();
+  gen_propagate_.seed(this_node + 12345);
+  gen_sample_.seed(this_node + 54321);
 }
 
 bool GossipLB::isUnderloaded(LoadType load) const {
@@ -74,7 +77,7 @@ bool GossipLB::isOverloaded(LoadType load) const {
 }
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"f", "k", "i", "c", "trials"};
+  std::vector<std::string> allowed{"f", "k", "i", "c", "trials", "deterministic"};
   spec->checkAllowedKeys(allowed);
   using CriterionEnumUnder = typename std::underlying_type<CriterionEnum>::type;
   using InformTypeEnumUnder = typename std::underlying_type<InformTypeEnum>::type;
@@ -82,14 +85,20 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   auto default_c = static_cast<CriterionEnumUnder>(criterion_);
   auto default_inform = static_cast<InformTypeEnumUnder>(inform_type_);
 
-  f_           = spec->getOrDefault<int32_t>("f", f_);
-  k_max_       = spec->getOrDefault<int32_t>("k", k_max_);
-  num_iters_   = spec->getOrDefault<int32_t>("i", num_iters_);
-  num_trials_  = spec->getOrDefault<int32_t>("trials", num_trials_);
-  int32_t c    = spec->getOrDefault<int32_t>("c", default_c);
-  criterion_   = static_cast<CriterionEnum>(c);
-  int32_t inf  = spec->getOrDefault<int32_t>("inform", default_inform);
-  inform_type_ = static_cast<InformTypeEnum>(inf);
+  f_             = spec->getOrDefault<int32_t>("f", f_);
+  k_max_         = spec->getOrDefault<int32_t>("k", k_max_);
+  num_iters_     = spec->getOrDefault<int32_t>("i", num_iters_);
+  num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
+  deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
+  int32_t c      = spec->getOrDefault<int32_t>("c", default_c);
+  criterion_     = static_cast<CriterionEnum>(c);
+  int32_t inf    = spec->getOrDefault<int32_t>("inform", default_inform);
+  inform_type_   = static_cast<InformTypeEnum>(inf);
+
+  vtAbortIf(
+    inform_type_ == InformTypeEnum::AsyncInform && deterministic_,
+    "Asynchronous informs allow race conditions and thus are not deterministic"
+  );
 }
 
 void GossipLB::runLB() {
@@ -412,7 +421,10 @@ void GossipLB::propagateRoundAsync(uint8_t k_cur_async, EpochType epoch) {
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
   std::uniform_int_distribution<NodeType> dist(0, num_nodes - 1);
-  std::mt19937 gen(seed_());
+
+  if (!deterministic_) {
+    gen_propagate_.seed(seed_());
+  }
 
   auto& selected = selected_;
   selected = underloaded_;
@@ -440,7 +452,7 @@ void GossipLB::propagateRoundAsync(uint8_t k_cur_async, EpochType epoch) {
 
     // Keep generating until we have a unique node for this round
     do {
-      random_node = dist(gen);
+      random_node = dist(gen_propagate_);
     } while (
       selected.find(random_node) != selected.end()
     );
@@ -475,7 +487,10 @@ void GossipLB::propagateRoundSync(EpochType epoch) {
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
   std::uniform_int_distribution<NodeType> dist(0, num_nodes - 1);
-  std::mt19937 gen(seed_());
+
+  if (!deterministic_) {
+    gen_propagate_.seed(seed_());
+  }
 
   auto& selected = selected_;
   selected = underloaded_;
@@ -503,7 +518,7 @@ void GossipLB::propagateRoundSync(EpochType epoch) {
 
     // Keep generating until we have a unique node for this round
     do {
-      random_node = dist(gen);
+      random_node = dist(gen_propagate_);
     } while (
       selected.find(random_node) != selected.end()
     );
@@ -613,12 +628,15 @@ NodeType GossipLB::sampleFromCMF(
 ) {
   // Create the distribution
   std::uniform_real_distribution<double> dist(0.0, 1.0);
-  std::mt19937 gen(seed_());
+
+  if (!deterministic_) {
+    gen_sample_.seed(seed_());
+  }
 
   NodeType selected_node = uninitialized_destination;
 
   // Pick from the CMF
-  auto const u = dist(gen);
+  auto const u = dist(gen_sample_);
   std::size_t i = 0;
   for (auto&& x : cmf) {
     if (x >= u) {
@@ -637,6 +655,9 @@ std::vector<NodeType> GossipLB::makeUnderloaded() const {
     if (isUnderloaded(elm.second)) {
       under.push_back(elm.first);
     }
+  }
+  if (deterministic_) {
+    std::sort(under.begin(), under.end());
   }
   return under;
 }
