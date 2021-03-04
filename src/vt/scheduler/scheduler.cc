@@ -373,10 +373,6 @@ void Scheduler::registerTriggerOnce(
 
 namespace vt {
 
-void runScheduler() {
-  theSched()->scheduler();
-}
-
 void runSchedulerThrough(EpochType epoch) {
   // WARNING: This is to prevent global termination from spuriously
   // thinking that the work done in this loop over the scheduler

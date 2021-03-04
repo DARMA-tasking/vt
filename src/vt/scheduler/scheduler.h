@@ -61,7 +61,6 @@
 #include <memory>
 
 namespace vt {
-  void runScheduler();
   void runSchedulerThrough(EpochType epoch);
 
   template <typename Callable>
@@ -154,7 +153,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \brief Runs the scheduler until a condition is met.
    *
    * Runs the scheduler until a condition is met.
-   * This form SHOULD be used instead of "while (..) { runScheduler(..) }"
+   * This form SHOULD be used instead of "while (..) { vt::theSched()->scheduler(..) }"
    * in all cases of nested scheduler loops, such as during a barrier,
    * in order to ensure proper event unwinding and idle time tracking.
    *

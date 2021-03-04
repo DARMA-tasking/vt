@@ -496,10 +496,6 @@ void Runtime::systemSync() {
   MPI_Barrier(comm);
 }
 
-void Runtime::runScheduler() {
-  theSched->scheduler();
-}
-
 void Runtime::reset() {
   MPI_Comm comm = theContext->getComm();
   MPI_Barrier(comm);
