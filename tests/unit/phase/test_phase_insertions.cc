@@ -67,6 +67,8 @@ struct MyCol : vt::InsertableCollection<MyCol,vt::Index1D> {
     s | val;
   }
 
+  vt::PhaseType getPhase() { return this->getStats().getPhase(); }
+
   double val = 0.0;
 };
 
@@ -74,7 +76,7 @@ using MyMsg = vt::CollectionMessage<MyCol>;
 
 // A dummy kernel that does some work depending on the index
 void colHandler(MyMsg*, MyCol* col) {
-  fmt::print("running colHandler: idx={}\n", col->getIndex());
+  fmt::print("running colHandler: idx={}, phase={}\n", col->getIndex(), col->getPhase());
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < col->getIndex().x() * 20; j++) {
       col->val += (i*29+j*2)-4;
