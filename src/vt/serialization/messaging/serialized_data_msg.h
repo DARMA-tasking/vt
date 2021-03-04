@@ -65,6 +65,11 @@ struct SerializedDataMsgAny : MessageT {
   TagType data_recv_tag = no_tag;
   NodeType from_node = uninitialized_destination;
   int nchunks = 0;
+
+#if vt_check_enabled(error_checking)
+  /// Error checking hash for message bytes
+  uint64_t error_checking_hash = 0;
+#endif
 };
 
 template <typename T>
