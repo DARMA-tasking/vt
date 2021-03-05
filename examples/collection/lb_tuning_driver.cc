@@ -333,8 +333,8 @@ struct FileModel : ComposedModel {
             convertReleaseStatsID(read_elm_id) : read_elm_id;
           vt_debug_print(
             gen, node,
-            "reading in loads for elm={}, converted_elm={}, phase={}\n",
-            read_elm_id, elm_id, phase
+            "reading in loads for elm={}, converted_elm={}, phase={}, load={}\n",
+            read_elm_id, elm_id, phase, load
           );
           loads_by_obj_[elm_id][phase] = load;
           if (phase == initial_phase_)
