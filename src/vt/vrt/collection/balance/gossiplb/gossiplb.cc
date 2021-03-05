@@ -702,6 +702,12 @@ void GossipLB::decide() {
     if (under.size() > 0) {
       // Iterate through all the objects
       for (auto iter = cur_objs_.begin(); iter != cur_objs_.end(); ) {
+        auto obj_load = cur_objs_[iter->first];
+
+        // the object stats are in seconds but the processor stats are in
+        // milliseconds; for now, convert the object loads to milliseconds
+        auto obj_load_ms = loadMilli(obj_load);
+
         // Rebuild the relaxed underloaded set based on updated load of this node
         under = makeUnderloaded();
         if (under.size() == 0) {
@@ -727,17 +733,12 @@ void GossipLB::decide() {
         //auto max_obj_size = avg - selected_load;
         auto obj_id = iter->first;
 
-        // @todo: for now, convert to milliseconds due to the stats framework all
-        // computing in milliseconds; should be converted to seconds along with
-        // the rest of the stats framework
-        auto obj_load = loadMilli(iter->second);
-
-        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
+        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load_ms, avg);
 
         debug_print(
           gossiplb, node,
           "GossipLB::decide: trial={}, iter={}, under.size()={}, "
-          "selected_node={}, selected_load={:e}, obj_id={:x}, obj_load={:e}, "
+          "selected_node={}, selected_load={:e}, obj_id={:x}, obj_load_ms={:e}, "
           "avg={:e}, this_new_load_={:e}, criterion={}\n",
           trial_,
           iter_,
@@ -745,7 +746,7 @@ void GossipLB::decide() {
           selected_node,
           selected_load,
           obj_id,
-          obj_load,
+          obj_load_ms,
           avg,
           this_new_load_,
           eval
@@ -753,10 +754,12 @@ void GossipLB::decide() {
 
         if (eval) {
           ++n_transfers;
+          // transfer the object load in seconds, not milliseconds,
+          // to match the object load units on the receiving end
           migrate_objs[selected_node][obj_id] = obj_load;
 
-          this_new_load_ -= obj_load;
-          selected_load += obj_load;
+          this_new_load_ -= obj_load_ms;
+          selected_load += obj_load_ms;
 
           iter = cur_objs_.erase(iter);
         } else {
@@ -819,7 +822,8 @@ void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
     auto iter = cur_objs_.find(obj.first);
     vtAssert(iter == cur_objs_.end(), "Incoming object should not exist");
     cur_objs_.insert(obj);
-    this_new_load_ += obj.second;
+    // need to convert to milliseconds because we received seconds
+    this_new_load_ += loadMilli(obj.second);
   }
 }
 
