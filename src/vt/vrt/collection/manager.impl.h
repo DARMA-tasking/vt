@@ -2740,6 +2740,8 @@ void CollectionManager::insert(
          */
         CollectionTypeAttorney::setup(new_vc, num_elms, cur_idx, untyped_proxy);
 
+        new_vc->getStats().updatePhase(thePhase()->getCurrentPhase());
+
         theCollection()->insertCollectionElement<ColT, IndexT>(
           std::move(new_vc), cur_idx, max_idx, map_han, untyped_proxy, false,
           mapped_node

@@ -165,6 +165,14 @@ private:
 
   /**
    * \internal
+   * \brief Reduce handler to synchronize the end of the phase transition
+   *
+   * \param[in] msg the (empty) next phase message
+   */
+  void nextPhaseDone(NextMsg* msg);
+
+  /**
+   * \internal
    * \brief Run all the hooks registered here of a certain variety
    *
    * \param[in] type type of hook to run designated by the enum \c PhaseHook
@@ -189,7 +197,8 @@ public:
       | next_collective_hook_id_
       | next_rooted_hook_id_
       | in_next_phase_collective_
-      | reduce_next_phase_done_;
+      | reduce_next_phase_done_
+      | reduce_finished_;
   }
 
 private:
@@ -201,6 +210,7 @@ private:
   std::size_t next_rooted_hook_id_ = 1;     /**< Next ID for rooted hooks */
   bool in_next_phase_collective_ = false;   /**< Whether blocked in next phase */
   bool reduce_next_phase_done_ = false;     /**< Whether reduce is complete */
+  bool reduce_finished_ = false;            /**< Whether next phase is done */
 };
 
 }} /* end namespace vt::phase */
