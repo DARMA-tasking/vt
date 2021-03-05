@@ -1612,11 +1612,14 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] idx the index to insert
    * \param[in] node the node to insert on
+   * \param[in] pinged_home_already whether the home node has been contacted to
+   * ensure an insertion has not occurred already
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void insert(
     CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
-    NodeType const& node = uninitialized_destination
+    NodeType const& node = uninitialized_destination,
+    bool pinged_home_already = false
   );
 
   /**

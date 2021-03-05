@@ -147,6 +147,7 @@ struct InsertMsg : ::vt::Message {
   NodeType home_node_ = uninitialized_destination;
   EpochType epoch_ = no_epoch;
   EpochType g_epoch_ = no_epoch;
+  bool pinged_ = false;
 };
 
 template <typename ColT, typename IndexT>

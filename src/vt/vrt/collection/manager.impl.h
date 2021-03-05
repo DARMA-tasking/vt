@@ -2327,7 +2327,7 @@ template <typename ColT, typename IndexT>
   auto const& epoch = msg->epoch_;
   auto const& g_epoch = msg->g_epoch_;
   theCollection()->insert<ColT,IndexT>(
-    msg->proxy_,msg->idx_,msg->construct_node_
+    msg->proxy_,msg->idx_,msg->construct_node_,msg->pinged_
   );
   theTerm()->consume(epoch,1,from);
   theTerm()->consume(g_epoch,1,from);
@@ -2341,6 +2341,12 @@ template <typename ColT, typename IndexT>
   VrtElmProxy<ColT, IndexT> elm{proxy.getProxy(),idx};
   auto elm_lives_somewhere = lm->isCached(elm);
 
+  vt_debug_print(
+    vrt_coll, node,
+    "pingHomeHandler: idx={}, elm_lives_somewhere={}\n",
+    idx, elm_lives_somewhere
+  );
+
   if (elm_lives_somewhere) {
     // send no message back---cancel the insertion
   } else {
@@ -2353,6 +2359,7 @@ template <typename ColT, typename IndexT>
       msg->proxy_, msg->max_, msg->idx_, msg->construct_node_,
       msg->home_node_, msg->epoch_, msg->g_epoch_
     );
+    msg2->pinged_ = true;
     auto insert_epoch = msg->epoch_;
     auto cur_epoch = msg->g_epoch_;
     theTerm()->produce(insert_epoch,1,insert_node);
@@ -2722,7 +2729,7 @@ ColT* CollectionManager::tryGetLocalPtr(
 template <typename ColT, typename IndexT>
 void CollectionManager::insert(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
-  NodeType const& node
+  NodeType const& node, bool pinged_home_already
 ) {
   using IdxContextHolder = InsertContextHolder<IndexT>;
 
@@ -2760,7 +2767,7 @@ void CollectionManager::insert(
         "insert: insert_node={}, mapped_node={}\n", insert_node, mapped_node
       );
 
-      if (insert_node == this_node) {
+      if (insert_node == this_node and not pinged_home_already) {
         // Case 0--insertion from home node onto home node (or message sent from
         // another node to insert on home node)
         if (mapped_node == this_node) {
