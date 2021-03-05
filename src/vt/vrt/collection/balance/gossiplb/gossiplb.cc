@@ -128,9 +128,8 @@ void GossipLB::runLB() {
   if (theContext()->getNode() == 0) {
     vt_print(
       gossiplb,
-      "GossipLB::runLB: avg={}, max={}, load={},"
-      " overloaded_={}, underloaded_={}, should_lb={}\n",
-      avg, max, load, is_overloaded_, is_underloaded_, should_lb
+      "GossipLB::runLB: avg={}, max={}, load={}, should_lb={}\n",
+      avg, max, load, should_lb
     );
   }
 
