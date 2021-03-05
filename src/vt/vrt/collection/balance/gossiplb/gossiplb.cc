@@ -78,13 +78,18 @@ bool GossipLB::isOverloaded(LoadType load) const {
 }
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"f", "k", "i", "c", "trials", "deterministic"};
+  std::vector<std::string> allowed{
+    "f", "k", "i", "c", "trials", "deterministic", "ordering"
+  };
   spec->checkAllowedKeys(allowed);
-  using CriterionEnumUnder = typename std::underlying_type<CriterionEnum>::type;
-  using InformTypeEnumUnder = typename std::underlying_type<InformTypeEnum>::type;
 
-  auto default_c = static_cast<CriterionEnumUnder>(criterion_);
+  using CriterionEnumUnder   = typename std::underlying_type<CriterionEnum>::type;
+  using InformTypeEnumUnder  = typename std::underlying_type<InformTypeEnum>::type;
+  using ObjectOrderEnumUnder = typename std::underlying_type<ObjectOrderEnum>::type;
+
+  auto default_c      = static_cast<CriterionEnumUnder>(criterion_);
   auto default_inform = static_cast<InformTypeEnumUnder>(inform_type_);
+  auto default_order  = static_cast<ObjectOrderEnumUnder>(obj_ordering_);
 
   f_             = spec->getOrDefault<int32_t>("f", f_);
   k_max_         = spec->getOrDefault<int32_t>("k", k_max_);
@@ -92,13 +97,20 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
   deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
   int32_t c      = spec->getOrDefault<int32_t>("c", default_c);
+
   criterion_     = static_cast<CriterionEnum>(c);
   int32_t inf    = spec->getOrDefault<int32_t>("inform", default_inform);
   inform_type_   = static_cast<InformTypeEnum>(inf);
+  int32_t ord    = spec->getOrDefault<int32_t>("ordering", default_order);
+  obj_ordering_  = static_cast<ObjectOrderEnum>(ord);
 
   vtAbortIf(
     inform_type_ == InformTypeEnum::AsyncInform && deterministic_,
     "Asynchronous informs allow race conditions and thus are not deterministic"
+  );
+  vtAbortIf(
+    obj_ordering_ == ObjectOrderEnum::Arbitrary && deterministic_,
+    "Arbitrary object ordering is not deterministic"
   );
 }
 
@@ -700,9 +712,71 @@ void GossipLB::decide() {
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
     if (under.size() > 0) {
+      std::vector<ObjIDType> ordered_obj_ids(cur_objs_.size());
+
+      // define the iteration order
+      int i = 0;
+      for (auto &obj : cur_objs_) {
+        ordered_obj_ids[i++] = obj.first;
+      }
+      switch (obj_ordering_) {
+      case ObjectOrderEnum::ElmID:
+        std::sort(
+          ordered_obj_ids.begin(), ordered_obj_ids.end(), std::less<ObjIDType>()
+        );
+        break;
+      case ObjectOrderEnum::Marginal:
+        {
+          // first find marginal object's load
+          auto over_avg = this_new_load_ - avg;
+          // if no objects are larger than over_avg, then marginal will still
+          // (incorrectly) reflect the total load, which will not be a problem
+          auto marginal = this_new_load_;
+          for (auto &obj : cur_objs_) {
+            // the object stats are in seconds but the processor stats are in
+            // milliseconds; for now, convert the object loads to milliseconds
+            auto obj_load_ms = loadMilli(obj.second);
+            if (obj_load_ms > over_avg && obj_load_ms < marginal) {
+              marginal = obj_load_ms;
+            }
+          }
+          // sort largest to smallest if <= marginal
+          // sort smallest to largest if > marginal
+          std::sort(
+            ordered_obj_ids.begin(), ordered_obj_ids.end(),
+            [=](const ObjIDType &left, const ObjIDType &right) {
+              auto left_load = loadMilli(this->cur_objs_[left]);
+              auto right_load = loadMilli(this->cur_objs_[right]);
+              if (left_load <= marginal && right_load <= marginal) {
+                // we're in the sort load descending regime (first section)
+                return left_load > right_load;
+              }
+              // else
+              // EITHER
+              // a) both are above the cut, and we're in the sort ascending
+              //    regime (second section), so return left < right
+              // OR
+              // b) one is above the cut and one is at or below, and the one
+              //    that is at or below the cut needs to come first, so
+              //    also return left < right
+              return left_load < right_load;
+            }
+          );
+          debug_print(
+            gossiplb, node,
+            "GossipLB::decide: over_avg={}, marginal={}\n",
+            over_avg, loadMilli(cur_objs_[ordered_obj_ids[0]])
+          );
+        }
+        break;
+      default:
+        break;
+      }
+
       // Iterate through all the objects
-      for (auto iter = cur_objs_.begin(); iter != cur_objs_.end(); ) {
-        auto obj_load = cur_objs_[iter->first];
+      for (auto iter = ordered_obj_ids.begin(); iter != ordered_obj_ids.end(); ) {
+        auto obj_id = *iter;
+        auto obj_load = cur_objs_[obj_id];
 
         // the object stats are in seconds but the processor stats are in
         // milliseconds; for now, convert the object loads to milliseconds
@@ -720,7 +794,7 @@ void GossipLB::decide() {
 
         debug_print(
           gossiplb, node,
-          "GossipLB::decide: selected_node={}, load_info_.size()\n",
+          "GossipLB::decide: selected_node={}, load_info_.size()={}\n",
           selected_node, load_info_.size()
         );
 
@@ -731,7 +805,6 @@ void GossipLB::decide() {
         auto& selected_load = load_iter->second;
 
         //auto max_obj_size = avg - selected_load;
-        auto obj_id = iter->first;
 
         bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load_ms, avg);
 
@@ -761,7 +834,8 @@ void GossipLB::decide() {
           this_new_load_ -= obj_load_ms;
           selected_load += obj_load_ms;
 
-          iter = cur_objs_.erase(iter);
+          iter = ordered_obj_ids.erase(iter);
+          cur_objs_.erase(obj_id);
         } else {
           ++n_rejected;
           iter++;

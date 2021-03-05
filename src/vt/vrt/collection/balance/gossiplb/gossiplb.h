@@ -65,6 +65,12 @@ enum struct InformTypeEnum : uint8_t {
   AsyncInform = 1
 };
 
+enum struct ObjectOrderEnum : uint8_t {
+  Arbitrary = 0,
+  ElmID     = 1,
+  Marginal  = 2
+};
+
 struct GossipLB : BaseLB {
   using GossipMsgAsync = balance::GossipMsgAsync;
   using GossipMsgSync  = balance::GossipMsg;
@@ -132,11 +138,12 @@ private:
   std::unordered_set<NodeType> selected_            = {};
   std::unordered_set<NodeType> underloaded_         = {};
   std::unordered_set<NodeType> new_underloaded_     = {};
-  std::map<ObjIDType, TimeType> cur_objs_           = {};
+  std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
   TimeType new_imbalance_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
+  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::Arbitrary;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
   std::vector<bool> propagated_k_;
