@@ -129,9 +129,8 @@ void GossipLB::runLB() {
   if (theContext()->getNode() == 0) {
     vt_print(
       gossiplb,
-      "GossipLB::runLB: avg={}, max={}, load={},"
-      " overloaded_={}, underloaded_={}, should_lb={}\n",
-      avg, max, load, is_overloaded_, is_underloaded_, should_lb
+      "GossipLB::runLB: avg={}, max={}, load={}, should_lb={}\n",
+      avg, max, load, should_lb
     );
   }
 
@@ -170,10 +169,7 @@ void GossipLB::doLBStages(TimeType start_imb) {
 
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
-        cur_objs_.clear();
-        for (auto obj : *load_data) {
-          cur_objs_[obj.first] = obj.second;
-        }
+        cur_objs_ = *load_data;
         this_new_load_ = this_load;
       } else {
         // Clear out data structures from previous iteration
