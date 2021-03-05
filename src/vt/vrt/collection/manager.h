@@ -1597,6 +1597,14 @@ public:
   static void insertHandler(InsertMsg<ColT,IndexT>* msg);
 
   /**
+   * \internal \brief Handler to query home before inserting on this node
+   *
+   * \param[in] msg insert message
+   */
+  template <typename ColT, typename IndexT>
+  static void pingHomeHandler(InsertMsg<ColT,IndexT>* msg);
+
+  /**
    * \internal \brief Dynamically insert an element or send a message to mapped
    * node to insert. If the \c node parameter is set, ignore the mapped node and
    * insert wherever specified by the user

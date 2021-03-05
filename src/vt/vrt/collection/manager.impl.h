@@ -2334,6 +2334,40 @@ template <typename ColT, typename IndexT>
 }
 
 template <typename ColT, typename IndexT>
+/*static*/ void CollectionManager::pingHomeHandler(InsertMsg<ColT,IndexT>* msg) {
+  auto proxy = msg->proxy_;
+  auto idx = msg->idx_;
+  auto lm = theLocMan()->getCollectionLM<ColT, IndexT>(proxy.getProxy());
+  VrtElmProxy<ColT, IndexT> elm{proxy.getProxy(),idx};
+  auto elm_lives_somewhere = lm->isCached(elm);
+
+  if (elm_lives_somewhere) {
+    // send no message back---cancel the insertion
+  } else {
+    auto const insert_node = msg->construct_node_;
+    // reserve the slot to stop any race with other insertions
+    lm->registerEntityRemote(elm, msg->home_node_, insert_node);
+
+    // send a message back that the insertion shall proceed
+    auto msg2 = makeMessage<InsertMsg<ColT,IndexT>>(*msg);
+    auto insert_epoch = msg->epoch_;
+    auto cur_epoch = msg->g_epoch_;
+    theTerm()->produce(insert_epoch,1,insert_node);
+    theTerm()->produce(cur_epoch,1,insert_node);
+    theMsg()->markAsCollectionMessage(msg);
+    theMsg()->sendMsg<InsertMsg<ColT,IndexT>,insertHandler<ColT,IndexT>>(
+      insert_node, msg2
+    );
+  }
+
+  auto const from = theMsg()->getFromNodeCurrentHandler();
+  auto const& epoch = msg->epoch_;
+  auto const& g_epoch = msg->g_epoch_;
+  theTerm()->consume(epoch,1,from);
+  theTerm()->consume(g_epoch,1,from);
+}
+
+template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::updateInsertEpochHandler(
   UpdateInsertMsg<ColT,IndexT>* msg
 ) {
@@ -2716,7 +2750,52 @@ void CollectionManager::insert(
       auto const this_node = theContext()->getNode();
       auto cur_idx = idx;
 
+      bool proceed_with_insertion = true;
+
+      vt_print(
+        vrt_coll, "insert: insert_node={}, mapped_node={}\n", insert_node,
+        mapped_node
+      );
+
       if (insert_node == this_node) {
+        // Case 0--insertion from home node onto home node (or message sent from
+        // another node to insert on home node)
+        if (mapped_node == this_node) {
+          // auto holder = findColHolder<ColT, IndexT>(untyped_proxy);
+          // vtAssert(holder != nullptr, "Collection meta-data must be here");
+          auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
+          auto const elm_exists = elm_holder->exists(idx);
+          if (elm_exists) {
+            // element exists here and is live--return
+            proceed_with_insertion = false;
+          } else {
+            auto lm = theLocMan()->getCollectionLM<ColT, IndexT>(untyped_proxy);
+            VrtElmProxy<ColT, IndexT> elm{untyped_proxy,idx};
+            auto elm_lives_somewhere = lm->isCached(elm);
+            if (elm_lives_somewhere) {
+              // element exists somewhere in the system and since we are the home
+              // we check the cache to determine if it has been inserted
+              proceed_with_insertion = false;
+            }
+          }
+        } else {
+          // Case 1: insertion from the non-home node---we must check if the home
+          // has a reserved entry from another insertion. If so, we cancel the
+          // insertion---otherwise, we reserve for this insertion
+          auto msg = makeMessage<InsertMsg<ColT,IndexT>>(
+            proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
+          );
+          theTerm()->produce(insert_epoch,1,insert_node);
+          theTerm()->produce(cur_epoch,1,insert_node);
+          theMsg()->markAsCollectionMessage(msg);
+          theMsg()->sendMsg<InsertMsg<ColT, IndexT>, pingHomeHandler<ColT, IndexT>>(
+            mapped_node, msg
+          );
+          proceed_with_insertion = false;
+        }
+      }
+
+      if (insert_node == this_node and proceed_with_insertion) {
         auto const& num_elms = max_idx.getSize();
         std::tuple<> tup;
 
@@ -2749,7 +2828,7 @@ void CollectionManager::insert(
 
         // Clear the current index context
         IdxContextHolder::clear();
-      } else {
+      } else if (insert_node != this_node) {
         auto msg = makeMessage<InsertMsg<ColT,IndexT>>(
           proxy,max_idx,idx,insert_node,mapped_node,insert_epoch,cur_epoch
         );
