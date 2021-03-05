@@ -2349,7 +2349,10 @@ template <typename ColT, typename IndexT>
     lm->registerEntityRemote(elm, msg->home_node_, insert_node);
 
     // send a message back that the insertion shall proceed
-    auto msg2 = makeMessage<InsertMsg<ColT,IndexT>>(*msg);
+    auto msg2 = makeMessage<InsertMsg<ColT,IndexT>>(
+      msg->proxy_, msg->max_, msg->idx_, msg->construct_node_,
+      msg->home_node_, msg->epoch_, msg->g_epoch_
+    );
     auto insert_epoch = msg->epoch_;
     auto cur_epoch = msg->g_epoch_;
     theTerm()->produce(insert_epoch,1,insert_node);
