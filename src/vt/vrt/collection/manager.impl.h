@@ -2755,9 +2755,9 @@ void CollectionManager::insert(
 
       bool proceed_with_insertion = true;
 
-      vt_print(
-        vrt_coll, "insert: insert_node={}, mapped_node={}\n", insert_node,
-        mapped_node
+      vt_debug_print(
+        vrt_coll, node,
+        "insert: insert_node={}, mapped_node={}\n", insert_node, mapped_node
       );
 
       if (insert_node == this_node) {
