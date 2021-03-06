@@ -56,10 +56,18 @@ namespace vt { namespace tests { namespace unit {
 static constexpr int const num_elms = 64;
 static constexpr int const num_phases = 10;
 
+static bool created_elm_0 = false;
+
 struct MyCol : vt::InsertableCollection<MyCol,vt::Index1D> {
   MyCol() {
-    fmt::print("constructing element: idx={}\n", getIndex());
+    fmt::print("{}: constructing element: idx={}\n", theContext()->getNode(), getIndex());
+    if (getIndex() == vt::Index1D{0}) {
+      EXPECT_FALSE(created_elm_0);
+      created_elm_0 = true;
+    }
   }
+
+  explicit MyCol(checkpoint::SERIALIZE_CONSTRUCT_TAG) {}
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
@@ -84,12 +92,28 @@ void colHandler(MyMsg*, MyCol* col) {
   }
 }
 
+static NodeType map_fn(Index1D* idx, Index1D* max_idx, NodeType nnodes) {
+  return mapping::dense1DRoundRobinMap(idx, max_idx, nnodes);
+}
+
+static vt::vrt::collection::CollectionProxy<MyCol> proxy;
+
+struct ProxyMsg : vt::Message {
+  explicit ProxyMsg(VirtualProxyType const in_proxy)
+    : proxy_(in_proxy)
+  { }
+
+  VirtualProxyType proxy_ = no_vrt_proxy;
+};
+
+void proxyHandler(ProxyMsg* m) {
+  proxy = vt::vrt::collection::CollectionProxy<MyCol>{m->proxy_};
+}
+
 using TestPhaseInsertions = TestParallelHarness;
 
 TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
   auto range = vt::Index1D(num_elms);
-
-  vt::vrt::collection::CollectionProxy<MyCol> proxy;
 
   auto this_node = theContext()->getNode();
   int insert_counter = range.x() / 2;
@@ -99,7 +123,9 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     // For now, since insertable collections aren't allowed to be collectively
     // constructed, used a rooted construction with rooted broadcasts.
     if (this_node == 0) {
-      proxy = vt::theCollection()->construct<MyCol>(range);
+      proxy = vt::theCollection()->construct<MyCol, map_fn>(range);
+      auto m = makeMessage<ProxyMsg>(proxy.getProxy());
+      theMsg()->broadcastMsg<ProxyMsg, proxyHandler>(m);
     }
   });
 
@@ -128,6 +154,13 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
       if (this_node == 0 and insert_counter < num_elms) {
         proxy[insert_counter].insert();
         insert_counter++;
+      }
+
+      // Try to re-insert an element that already exists to test for reinsertion
+      // bugs
+      if (this_node == 0 or this_node == 1) {
+        proxy[0].insert(1);
+        proxy[0].insert(0);
       }
     });
   }

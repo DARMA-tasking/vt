@@ -181,6 +181,38 @@ void EntityLocationCoord<EntityID>::registerEntity(
 }
 
 template <typename EntityID>
+void EntityLocationCoord<EntityID>::registerEntityRemote(
+  EntityID const& id, NodeType const& home, NodeType const create_node,
+  LocMsgActionType msg_action
+) {
+  auto reg_iter = local_registered_.find(id);
+  vtAssert(
+    reg_iter == local_registered_.end(),
+    "EntityLocationCoord entity should not already be registered"
+  );
+
+  vt_debug_print(
+    location, node,
+    "EntityLocationCoord: registerEntityRemote: inst={}, home={}, "
+    "create_node={}, id={}\n",
+    this_inst, home, create_node, id
+  );
+
+  auto const this_node = theContext()->getNode();
+  vtAssert(home == this_node, "Must be registered on home node");
+
+  recs_.insert(id, home, LocRecType{id, eLocState::Remote, create_node});
+
+  if (msg_action != nullptr) {
+    local_registered_msg_han_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(id),
+      std::forward_as_tuple(LocEntityMsg{id, msg_action})
+    );
+  }
+}
+
+template <typename EntityID>
 void EntityLocationCoord<EntityID>::unregisterEntity(EntityID const& id) {
   auto reg_iter = local_registered_.find(id);
 

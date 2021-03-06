@@ -1597,6 +1597,14 @@ public:
   static void insertHandler(InsertMsg<ColT,IndexT>* msg);
 
   /**
+   * \internal \brief Handler to query home before inserting on this node
+   *
+   * \param[in] msg insert message
+   */
+  template <typename ColT, typename IndexT>
+  static void pingHomeHandler(InsertMsg<ColT,IndexT>* msg);
+
+  /**
    * \internal \brief Dynamically insert an element or send a message to mapped
    * node to insert. If the \c node parameter is set, ignore the mapped node and
    * insert wherever specified by the user
@@ -1604,11 +1612,14 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] idx the index to insert
    * \param[in] node the node to insert on
+   * \param[in] pinged_home_already whether the home node has been contacted to
+   * ensure an insertion has not occurred already
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   void insert(
     CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
-    NodeType const& node = uninitialized_destination
+    NodeType const& node = uninitialized_destination,
+    bool pinged_home_already = false
   );
 
   /**

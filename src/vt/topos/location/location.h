@@ -146,6 +146,23 @@ struct EntityLocationCoord : LocationCoord {
   );
 
   /**
+   * \brief Register a new entity that has been created remotely---on another
+   * rank off the home node.
+   *
+   * \note Example: an insertion occurs off home node. The insertion node sends
+   * a message to the home and makes this invocation
+   *
+   * \param[in] id the entity ID
+   * \param[in] home the home node for this entity
+   * \param[in] create_node the node where the creation is occurring
+   * \param[in] msg_action function to trigger when message arrives for it
+   */
+  void registerEntityRemote(
+    EntityID const& id, NodeType const& home, NodeType const create_node,
+    LocMsgActionType msg_action = nullptr
+  );
+
+  /**
    * \brief Unregister an entity
    *
    * \param[in] id the entity ID
