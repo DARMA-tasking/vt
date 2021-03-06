@@ -71,6 +71,12 @@ enum struct ObjectOrderEnum : uint8_t {
   Marginal  = 2
 };
 
+enum struct CMFTypeEnum : uint8_t {
+  Original   = 0,
+  NormByMax  = 1,
+  NormBySelf = 2
+};
+
 struct GossipLB : BaseLB {
   using GossipMsgAsync = balance::GossipMsgAsync;
   using GossipMsgSync  = balance::GossipMsg;
@@ -143,6 +149,7 @@ private:
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
   ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::Arbitrary;
+  CMFTypeEnum cmf_type_                             = CMFTypeEnum::Original;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
   std::vector<bool> propagated_k_;
