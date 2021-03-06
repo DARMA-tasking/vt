@@ -198,6 +198,9 @@ void EntityLocationCoord<EntityID>::registerEntityRemote(
     this_inst, home, create_node, id
   );
 
+  auto const this_node = theContext()->getNode();
+  vtAssert(home == this_node, "Must be registered on home node");
+
   recs_.insert(id, home, LocRecType{id, eLocState::Remote, create_node});
 
   if (msg_action != nullptr) {
