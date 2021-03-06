@@ -220,7 +220,7 @@ void GossipLB::doLBStages(TimeType start_imb) {
       if (this_node == 0) {
         vt_print(
           gossiplb,
-          "GossipLB::doLBStages: trial={} iter={} imb={:0.2f}\n",
+          "GossipLB::doLBStages: trial={} iter={} imb={:0.4f}\n",
           trial_, iter_, new_imbalance_
         );
       }
@@ -229,7 +229,7 @@ void GossipLB::doLBStages(TimeType start_imb) {
     if (this_node == 0) {
       vt_print(
         gossiplb,
-        "GossipLB::doLBStages: trial={} imb={:0.2f}\n",
+        "GossipLB::doLBStages: trial={} imb={:0.4f}\n",
         trial_, new_imbalance_
       );
     }
@@ -255,7 +255,7 @@ void GossipLB::doLBStages(TimeType start_imb) {
     if (this_node == 0) {
       vt_print(
         gossiplb,
-        "GossipLB::doLBStages: chose trial={} with imb={:0.2f}\n",
+        "GossipLB::doLBStages: chose trial={} with imb={:0.4f}\n",
         best_trial, new_imbalance_
       );
     }
@@ -279,7 +279,7 @@ void GossipLB::gossipStatsHandler(StatsMsgType* msg) {
   if (this_node == 0) {
     vt_print(
       gossiplb,
-      "GossipLB::gossipStatsHandler: max={:0.2f} min={:0.2f} avg={:0.2f} imb={:0.2f}\n",
+      "GossipLB::gossipStatsHandler: max={:0.2f} min={:0.2f} avg={:0.2f} imb={:0.4f}\n",
       in.max(), in.min(), in.avg(), in.I()
     );
   }
