@@ -78,17 +78,19 @@ bool GossipLB::isOverloaded(LoadType load) const {
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{
-    "f", "k", "i", "c", "trials", "deterministic", "ordering"
+    "f", "k", "i", "c", "trials", "deterministic", "ordering", "cmf"
   };
   spec->checkAllowedKeys(allowed);
 
   using CriterionEnumUnder   = typename std::underlying_type<CriterionEnum>::type;
   using InformTypeEnumUnder  = typename std::underlying_type<InformTypeEnum>::type;
   using ObjectOrderEnumUnder = typename std::underlying_type<ObjectOrderEnum>::type;
+  using CMFTypeEnumUnder     = typename std::underlying_type<CMFTypeEnum>::type;
 
   auto default_c      = static_cast<CriterionEnumUnder>(criterion_);
   auto default_inform = static_cast<InformTypeEnumUnder>(inform_type_);
   auto default_order  = static_cast<ObjectOrderEnumUnder>(obj_ordering_);
+  auto default_cmf    = static_cast<CMFTypeEnumUnder>(cmf_type_);
 
   f_             = spec->getOrDefault<int32_t>("f", f_);
   k_max_         = spec->getOrDefault<int32_t>("k", k_max_);
@@ -102,6 +104,8 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   inform_type_   = static_cast<InformTypeEnum>(inf);
   int32_t ord    = spec->getOrDefault<int32_t>("ordering", default_order);
   obj_ordering_  = static_cast<ObjectOrderEnum>(ord);
+  int32_t cmf    = spec->getOrDefault<int32_t>("cmf", default_cmf);
+  cmf_type_      = static_cast<CMFTypeEnum>(cmf);
 
   vtAbortIf(
     inform_type_ == InformTypeEnum::AsyncInform && deterministic_,
@@ -612,15 +616,40 @@ std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
 
   // Build the CMF
   double sum_p = 0.0;
-  double inv_l_avg = 1.0 / avg;
-  std::vector<double> cmf = {};
+  double factor = 1.0;
 
+  switch (cmf_type_) {
+  case CMFTypeEnum::Original:
+    factor = 1.0 / avg;
+    break;
+  case CMFTypeEnum::NormBySelf:
+    factor = 1.0 / this_new_load_;
+    break;
+  case CMFTypeEnum::NormByMax:
+    {
+      double l_max = 0.0;
+      for (auto&& pe : under) {
+        auto iter = load_info_.find(pe);
+        vtAssert(iter != load_info_.end(), "Node must be in load_info_");
+        auto load = iter->second;
+        if (load > l_max) {
+          l_max = load;
+        }
+      }
+      factor = 1.0 / (l_max > avg ? l_max : avg);
+    }
+    break;
+  default:
+    vtAbort("This CMF type is not supported");
+  }
+
+  std::vector<double> cmf = {};
   for (auto&& pe : under) {
     auto iter = load_info_.find(pe);
     vtAssert(iter != load_info_.end(), "Node must be in load_info_");
 
     auto load = iter->second;
-    sum_p += 1. - inv_l_avg * load;
+    sum_p += 1. - factor * load;
     cmf.push_back(sum_p);
   }
 
@@ -773,8 +802,10 @@ void GossipLB::decide() {
         // milliseconds; for now, convert the object loads to milliseconds
         auto obj_load_ms = loadMilli(obj_load);
 
-        // Rebuild the relaxed underloaded set based on updated load of this node
-        under = makeUnderloaded();
+        if (cmf_type_ == CMFTypeEnum::Original) {
+          // Rebuild the relaxed underloaded set based on updated load of this node
+          under = makeUnderloaded();
+        }
         if (under.size() == 0) {
           break;
         }
