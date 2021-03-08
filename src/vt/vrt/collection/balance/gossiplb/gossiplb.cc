@@ -130,8 +130,8 @@ void GossipLB::runLB() {
   }
 
   if (theContext()->getNode() == 0) {
-    vt_print(
-      gossiplb,
+    vt_debug_print(
+      terse, gossiplb,
       "GossipLB::runLB: avg={}, max={}, load={}, should_lb={}\n",
       avg, max, load, should_lb
     );
@@ -203,7 +203,7 @@ void GossipLB::doLBStages(TimeType start_imb) {
       decide();
 
       vt_debug_print(
-        normal, gossiplb,
+        verbose, gossiplb,
         "GossipLB::doLBStages: (after) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
         trial_, iter_, num_iters_, this_load, this_new_load_
@@ -219,20 +219,12 @@ void GossipLB::doLBStages(TimeType start_imb) {
         auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_new_load_);
         this->proxy_.template reduce<ReduceOp>(msg,cb);
       });
-
-      if (this_node == 0) {
-        vt_print(
-          gossiplb,
-          "GossipLB::doLBStages: trial={} iter={} imb={:0.4f}\n",
-          trial_, iter_, new_imbalance_
-        );
-      }
     }
 
     if (this_node == 0) {
       vt_print(
         gossiplb,
-        "GossipLB::doLBStages: trial={} imb={:0.4f}\n",
+        "GossipLB::doLBStages: trial={} final imb={:0.4f}\n",
         trial_, new_imbalance_
       );
     }
@@ -280,10 +272,11 @@ void GossipLB::gossipStatsHandler(StatsMsgType* msg) {
 
   auto this_node = theContext()->getNode();
   if (this_node == 0) {
-    vt_print(
-      gossiplb,
-      "GossipLB::gossipStatsHandler: max={:0.2f} min={:0.2f} avg={:0.2f} imb={:0.4f}\n",
-      in.max(), in.min(), in.avg(), in.I()
+    vt_debug_print(
+      terse, gossiplb,
+      "GossipLB::gossipStatsHandler: trial={} iter={} max={:0.2f} min={:0.2f} "
+      "avg={:0.2f} imb={:0.4f}\n",
+      trial_, iter_, in.max(), in.min(), in.avg(), in.I()
     );
   }
 }
@@ -293,13 +286,15 @@ void GossipLB::gossipRejectionStatsHandler(GossipRejectionMsgType* msg) {
 
   auto n_rejected = in.n_rejected_;
   auto n_transfers = in.n_transfers_;
-  double rej = static_cast<double>(n_rejected) / static_cast<double>(n_rejected + n_transfers) * 100.0;
+  double rej = static_cast<double>(n_rejected) /
+    static_cast<double>(n_rejected + n_transfers) * 100.0;
 
   auto this_node = theContext()->getNode();
   if (this_node == 0) {
-    vt_print(
-      gossiplb,
-      "GossipLB::gossipRejectionStatsHandler: n_transfers={} n_rejected={} rejection_rate={:0.1f}%\n",
+    vt_debug_print(
+      terse, gossiplb,
+      "GossipLB::gossipRejectionStatsHandler: n_transfers={} n_rejected={} "
+      "rejection_rate={:0.1f}%\n",
       n_transfers, n_rejected, rej
     );
   }
@@ -310,7 +305,7 @@ void GossipLB::informAsync() {
   uint8_t k_cur_async = 0;
 
   vt_debug_print(
-    normal, gossiplb,
+    normal, gossiplb, node,
     "GossipLB::informAsync: starting inform phase: trial={}, iter={}, "
     "k_max={}, k_cur={}, is_underloaded={}, is_overloaded={}, load={}\n",
     trial_, iter_, k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
@@ -343,8 +338,8 @@ void GossipLB::informAsync() {
   vt::runSchedulerThrough(propagate_epoch);
 
   if (is_overloaded_) {
-    vt_print(
-      gossiplb,
+    vt_debug_print(
+      verbose, gossiplb,
       "GossipLB::informAsync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
     );
@@ -407,8 +402,8 @@ void GossipLB::informSync() {
   }
 
   if (is_overloaded_) {
-    vt_print(
-      gossiplb,
+    vt_debug_print(
+      terse, gossiplb,
       "GossipLB::informSync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
     );
@@ -783,7 +778,7 @@ void GossipLB::decide() {
             }
           );
           vt_debug_print(
-            normal, gossiplb,
+            verbose, gossiplb,
             "GossipLB::decide: over_avg={}, marginal={}\n",
             over_avg, loadMilli(cur_objs_[ordered_obj_ids[0]])
           );
@@ -897,7 +892,7 @@ void GossipLB::decide() {
 
 void GossipLB::thunkMigrations() {
   vt_debug_print(
-    normal, gossiplb,
+    terse, gossiplb,
     "thunkMigrations, total num_objs={}\n",
     cur_objs_.size()
   );
