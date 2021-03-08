@@ -52,7 +52,6 @@
 
 #include <random>
 #include <unordered_map>
-#include <map>
 #include <unordered_set>
 #include <vector>
 
@@ -80,6 +79,7 @@ enum struct CMFTypeEnum : uint8_t {
 struct GossipLB : BaseLB {
   using GossipMsgAsync = balance::GossipMsgAsync;
   using GossipMsgSync  = balance::GossipMsg;
+  using ArgType        = vt::arguments::ArgConfig;
   using NodeSetType    = std::vector<NodeType>;
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
