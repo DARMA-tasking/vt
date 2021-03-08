@@ -102,8 +102,7 @@ protected:
   void decide();
   void migrate();
 
-  void propagateRoundAsync(uint8_t k_cur_async, EpochType epoch = no_epoch);
-  void propagateRoundSync(EpochType epoch = no_epoch);
+  void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
   void propagateIncomingAsync(GossipMsgAsync* msg);
   void propagateIncomingSync(GossipMsgSync* msg);
   bool isUnderloaded(LoadType load) const;
