@@ -27,7 +27,11 @@ else()
   set(MPI_MAX_NUMPROC  "${MPI_MAX_NUMPROC}")
 endif()
 
-message(STATUS "MPI detected max nproc: ${MPI_MAX_NUMPROC}")
+if(${MPI_MAX_NUMPROC} GREATER ${MPIEXEC_MAX_NUMPROCS})
+  message("Oversubscribing number of nodes to ${MPI_MAX_NUMPROC} with detected ${MPIEXEC_MAX_NUMPROCS}")
+endif()
+
+message(STATUS "MPI max nproc: ${MPI_MAX_NUMPROC}")
 
 include(cmake/test_vt.cmake)
 
