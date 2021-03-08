@@ -209,16 +209,18 @@ void GossipLB::doLBStages(TimeType start_imb) {
         trial_, iter_, num_iters_, this_load, this_new_load_
       );
 
-      runInEpochCollective([=] {
-        using StatsMsgType = balance::NodeStatsMsg;
-        using ReduceOp = collective::PlusOp<balance::LoadData>;
-        auto cb = vt::theCB()->makeBcast<
-          GossipLB, StatsMsgType, &GossipLB::gossipStatsHandler
-        >(this->proxy_);
-        // Perform the reduction for P_l -> processor load only
-        auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_new_load_);
-        this->proxy_.template reduce<ReduceOp>(msg,cb);
-      });
+      if (theConfig()->vt_debug_gossiplb || (iter_ == num_iters_ - 1)) {
+        runInEpochCollective([=] {
+          using StatsMsgType = balance::NodeStatsMsg;
+          using ReduceOp = collective::PlusOp<balance::LoadData>;
+          auto cb = vt::theCB()->makeBcast<
+            GossipLB, StatsMsgType, &GossipLB::gossipStatsHandler
+          >(this->proxy_);
+          // Perform the reduction for P_l -> processor load only
+          auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_new_load_);
+          this->proxy_.template reduce<ReduceOp>(msg,cb);
+        });
+      }
     }
 
     if (this_node == 0) {
@@ -828,14 +830,17 @@ void GossipLB::decide() {
 
   vt::runSchedulerThrough(lazy_epoch);
 
-  runInEpochCollective([=] {
-    using ReduceOp = collective::PlusOp<balance::RejectionStats>;
-    auto cb = vt::theCB()->makeBcast<
-      GossipLB, GossipRejectionMsgType, &GossipLB::gossipRejectionStatsHandler
-    >(this->proxy_);
-    auto msg = makeMessage<GossipRejectionMsgType>(n_rejected, n_transfers);
-    this->proxy_.template reduce<ReduceOp>(msg,cb);
-  });
+  if (theConfig()->vt_debug_gossiplb) {
+    // compute rejection rate because it will be printed
+    runInEpochCollective([=] {
+      using ReduceOp = collective::PlusOp<balance::RejectionStats>;
+      auto cb = vt::theCB()->makeBcast<
+        GossipLB, GossipRejectionMsgType, &GossipLB::gossipRejectionStatsHandler
+      >(this->proxy_);
+      auto msg = makeMessage<GossipRejectionMsgType>(n_rejected, n_transfers);
+      this->proxy_.template reduce<ReduceOp>(msg,cb);
+    });
+  }
 }
 
 void GossipLB::thunkMigrations() {
