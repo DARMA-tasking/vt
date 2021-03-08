@@ -305,7 +305,7 @@ void GossipLB::informAsync() {
   uint8_t k_cur_async = 0;
 
   vt_debug_print(
-    normal, gossiplb, node,
+    normal, gossiplb,
     "GossipLB::informAsync: starting inform phase: trial={}, iter={}, "
     "k_max={}, k_cur={}, is_underloaded={}, is_overloaded={}, load={}\n",
     trial_, iter_, k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
@@ -330,7 +330,7 @@ void GossipLB::informAsync() {
 
   // Underloaded start the round
   if (is_underloaded_) {
-    propagateRoundAsync(k_cur_async, propagate_epoch);
+    propagateRound(k_cur_async, false, propagate_epoch);
   }
 
   theTerm()->finishedEpoch(propagate_epoch);
@@ -388,7 +388,7 @@ void GossipLB::informSync() {
     // Underloaded start the first round; ranks that received on some round
     // start subsequent rounds
     if (propagate_this_round) {
-      propagateRoundSync(propagate_epoch);
+      propagateRound(k_cur_, propagate_epoch, true);
     }
 
     theTerm()->finishedEpoch(propagate_epoch);
@@ -421,11 +421,11 @@ void GossipLB::setupDone(ReduceMsgType* msg) {
   setup_done_ = true;
 }
 
-void GossipLB::propagateRoundAsync(uint8_t k_cur_async, EpochType epoch) {
+void GossipLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
   vt_debug_print(
     normal, gossiplb,
-    "GossipLB::propagateRoundAsync: trial={}, iter={}, k_max={}, k_cur={}\n",
-    trial_, iter_, k_max_, k_cur_
+    "GossipLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}\n",
+    trial_, iter_, k_max_, k_cur
   );
 
   auto const this_node = theContext()->getNode();
@@ -446,9 +446,9 @@ void GossipLB::propagateRoundAsync(uint8_t k_cur_async, EpochType epoch) {
 
   vt_debug_print(
     verbose, gossiplb,
-    "GossipLB::propagateRoundAsync: trial={}, iter={}, k_max={}, k_cur={}, "
+    "GossipLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}, "
     "selected.size()={}, fanout={}\n",
-    trial_, iter_, k_max_, k_cur_, selected.size(), fanout
+    trial_, iter_, k_max_, k_cur, selected.size(), fanout
   );
 
   for (int i = 0; i < fanout; i++) {
@@ -470,83 +470,31 @@ void GossipLB::propagateRoundAsync(uint8_t k_cur_async, EpochType epoch) {
 
     vt_debug_print(
       verbose, gossiplb,
-      "GossipLB::propagateRoundAsync: trial={}, iter={}, k_max={}, "
+      "GossipLB::propagateRound: trial={}, iter={}, k_max={}, "
       "k_cur={}, sending={}\n",
-      trial_, iter_, k_max_, k_cur_, random_node
+      trial_, iter_, k_max_, k_cur, random_node
     );
 
     // Send message with load
-    auto msg = makeMessage<GossipMsgAsync>(this_node, load_info_, k_cur_async);
-    if (epoch != no_epoch) {
-      envelopeSetEpoch(msg->env, epoch);
+    if (sync) {
+      auto msg = makeMessage<GossipMsgSync>(this_node, load_info_);
+      if (epoch != no_epoch) {
+        envelopeSetEpoch(msg->env, epoch);
+      }
+      msg->addNodeLoad(this_node, this_new_load_);
+      proxy_[random_node].sendMsg<
+        GossipMsgSync, &GossipLB::propagateIncomingSync
+      >(msg.get());
+    } else {
+      auto msg = makeMessage<GossipMsgAsync>(this_node, load_info_, k_cur);
+      if (epoch != no_epoch) {
+        envelopeSetEpoch(msg->env, epoch);
+      }
+      msg->addNodeLoad(this_node, this_new_load_);
+      proxy_[random_node].sendMsg<
+        GossipMsgAsync, &GossipLB::propagateIncomingAsync
+      >(msg.get());
     }
-    msg->addNodeLoad(this_node, this_new_load_);
-    proxy_[random_node].sendMsg<
-      GossipMsgAsync, &GossipLB::propagateIncomingAsync
-    >(msg.get());
-  }
-}
-
-void GossipLB::propagateRoundSync(EpochType epoch) {
-  vt_debug_print(
-    normal, gossiplb,
-    "GossipLB::propagateRoundSync: trial={}, iter={}, k_max={}, k_cur={}\n",
-    trial_, iter_, k_max_, k_cur_
-  );
-
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
-  std::uniform_int_distribution<NodeType> dist(0, num_nodes - 1);
-
-  if (!deterministic_) {
-    gen_propagate_.seed(seed_());
-  }
-
-  auto& selected = selected_;
-  selected = underloaded_;
-  if (selected.find(this_node) == selected.end()) {
-    selected.insert(this_node);
-  }
-
-  auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
-
-  vt_debug_print(
-    verbose, gossiplb,
-    "GossipLB::propagateRoundSync: trial={}, iter={}, k_max={}, k_cur={}, "
-    "selected.size()={}, fanout={}\n",
-    trial_, iter_, k_max_, k_cur_, selected.size(), fanout
-  );
-
-  for (int i = 0; i < fanout; i++) {
-    // This implies full knowledge of all processors
-    if (selected.size() >= static_cast<size_t>(num_nodes)) {
-      return;
-    }
-
-    // First, randomly select a node
-    NodeType random_node = uninitialized_destination;
-
-    // Keep generating until we have a unique node for this round
-    do {
-      random_node = dist(gen_propagate_);
-    } while (
-      selected.find(random_node) != selected.end()
-    );
-    selected.insert(random_node);
-
-    vt_debug_print(
-      verbose, gossiplb,
-      "GossipLB::propagateRoundSync: k_max_={}, k_cur_={}, sending={}\n",
-      k_max_, k_cur_, random_node
-    );
-
-    // Send message with load
-    auto msg = makeMessage<GossipMsgSync>(this_node, load_info_);
-    if (epoch != no_epoch) {
-      envelopeSetEpoch(msg->env, epoch);
-    }
-    msg->addNodeLoad(this_node, this_new_load_);
-    proxy_[random_node].sendMsg<GossipMsgSync, &GossipLB::propagateIncomingSync>(msg.get());
   }
 }
 
@@ -578,7 +526,7 @@ void GossipLB::propagateIncomingAsync(GossipMsgAsync* msg) {
   } else {
     // send out another round
     propagated_k_[k_cur_async] = true;
-    propagateRoundAsync(k_cur_async + 1);
+    propagateRound(k_cur_async + 1, false);
   }
 }
 
