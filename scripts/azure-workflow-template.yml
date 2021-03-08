@@ -29,6 +29,7 @@ variables:
   VT_WERROR: [% vt_werror %]
   VT_POOL: [% vt_pool %]
   VT_EXTENDED_TESTS: [% vt_extended_tests %]
+  VT_TESTS_NUM_NODES: [% vt_tests_num_nodes %]
   VT_UNITY_BUILD: [% vt_unity_build %]
   VT_PRODUCTION_BUILD: [% vt_production_build %]
   VT_FCONTEXT: [% vt_fcontext %]
