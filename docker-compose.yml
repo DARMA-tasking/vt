@@ -146,6 +146,7 @@ x-vtopts: &vtopts
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
+  VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-2}
 
 services:
   ##############################################################################
