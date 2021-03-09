@@ -84,19 +84,14 @@ getDispatcher(auto_registry::AutoHandlerType const han) {
   return theCollection()->getDispatcher(han);
 }
 
-balance::ElementIDType CollectionManager::getCurrentContextPerm() const {
-  return cur_context_perm_elm_id_;
-}
-
-balance::ElementIDType CollectionManager::getCurrentContextTemp() const {
-  return cur_context_temp_elm_id_;
+balance::ElementIDStruct CollectionManager::getCurrentContext() const {
+  return cur_context_elm_id_;
 }
 
 void CollectionManager::setCurrentContext(
-  balance::ElementIDType perm, balance::ElementIDType temp
+  balance::ElementIDStruct elm
 ) {
-  cur_context_perm_elm_id_ = perm;
-  cur_context_temp_elm_id_ = temp;
+  cur_context_elm_id_ = elm;
 }
 
 void CollectionManager::schedule(ActionType action) {

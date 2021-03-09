@@ -50,16 +50,40 @@
 
 #include <cstdlib>
 #include <unordered_map>
+#include <ostream>
+
+#include <fmt/ostream.h>
 
 namespace vt { namespace vrt { namespace collection {
 namespace balance {
 
 using ElementIDType = uint64_t;
 
+struct ElementIDStruct {
+  using isByteCopyable = std::true_type;
+
+  // id must be unique across nodes
+  ElementIDType id = 0;
+  NodeType home_node = uninitialized_destination;
+  NodeType curr_node = uninitialized_destination;
+
+  bool operator==(const ElementIDStruct& rhs) const {
+    return id == rhs.id;
+  }
+
+  bool operator<(const ElementIDStruct& rhs) const {
+    return id < rhs.id;
+  }
+};
+
+std::ostream& operator<<(
+  std::ostream& os, const ::vt::vrt::collection::balance::ElementIDStruct& id
+);
+
 static constexpr ElementIDType const no_element_id = 0;
 
-using LoadMapType         = std::unordered_map<ElementIDType,TimeType>;
-using SubphaseLoadMapType = std::unordered_map<ElementIDType, std::vector<TimeType>>;
+using LoadMapType         = std::unordered_map<ElementIDStruct,TimeType>;
+using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
 } /* end namespace balance */
 
 namespace lb {
@@ -106,5 +130,19 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
 extern std::unordered_map<Statistic,std::string> lb_stat_name_;
 
 }}}} /* end namespace vt::vrt::collection::lb */
+
+namespace std {
+
+using ElementIDStructType = vt::vrt::collection::balance::ElementIDStruct;
+using ElementIDMemberType = vt::vrt::collection::balance::ElementIDType;
+
+template <>
+struct hash<ElementIDStructType> {
+  size_t operator()(ElementIDStructType const& in) const {
+    return std::hash<ElementIDMemberType>()(in.id);
+  }
+};
+
+} /* end namespace std */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_COMMON_H*/

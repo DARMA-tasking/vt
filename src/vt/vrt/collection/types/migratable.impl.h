@@ -55,8 +55,7 @@ void Migratable::serialize(Serializer& s) {
   MigrateHookBase::serialize(s);
   storage::Storable::serialize(s);
   s | stats_;
-  s | stats_elm_id_;
-  s | temp_elm_id_;
+  s | elm_id_;
 }
 
 }}} /* end namespace vt::vrt::collection */

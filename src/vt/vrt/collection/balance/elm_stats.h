@@ -71,15 +71,15 @@ struct ElementStats {
   void addTime(TimeType const& time);
   void recvComm(LBCommKey key, double bytes);
   void recvObjData(
-    ElementIDType to_perm, ElementIDType to_temp,
-    ElementIDType from_perm, ElementIDType from_temp, double bytes, bool bcast
+    ElementIDStruct to_perm,
+    ElementIDStruct from_perm, double bytes, bool bcast
   );
   void recvFromNode(
-    ElementIDType to_perm, ElementIDType to_temp, NodeType from,
+    ElementIDStruct to_perm, NodeType from,
     double bytes, bool bcast
   );
   void recvToNode(
-    NodeType to, ElementIDType from_perm, ElementIDType from_temp,
+    NodeType to, ElementIDStruct from_perm,
     double bytes, bool bcast
   );
   void updatePhase(PhaseType const& inc = 1);

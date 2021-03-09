@@ -70,7 +70,7 @@ struct LinearModel : ComposedModel {
       past_len_(in_past_len)
   { }
 
-  TimeType getWork(ElementIDType object, PhaseOffset when) override;
+  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
   unsigned int getNumPastPhasesNeeded(unsigned int look_back) override;
 
 private:

@@ -61,7 +61,7 @@ using vt::vrt::collection::balance::CommKeyType;
 using vt::vrt::collection::balance::CommMapType;
 using vt::vrt::collection::balance::CommOverhead;
 using vt::vrt::collection::balance::CommVolume;
-using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::LoadModel;
 using vt::vrt::collection::balance::ObjectIterator;
@@ -87,7 +87,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getWork(ElementIDType id, PhaseOffset phase) override {
+  TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     const auto work = proc_load_->at(0).at(id);
 
     if (phase.subphase == PhaseOffset::WHOLE_PHASE) {
@@ -116,68 +116,68 @@ private:
 };
 
 TEST_F(TestModelCommOverhead, test_model_comm_overhead_1) {
-  ProcLoadMap proc_load = {
-    {0,
-     LoadMapType{
-       {ElementIDType{1}, TimeType{60}},
-       {ElementIDType{2}, TimeType{150}},
-       {ElementIDType{3}, TimeType{75}}}}};
+
+  // For simplicity's sake, the elements are on the home node
+  // Element 1 (home node == 1)
+  ElementIDStruct const elem1 = {1, 1, 1};
+
+  // Element 2 (home node == 2)
+  ElementIDStruct const elem2 = {2, 2, 2};
+
+  // Element 3 (home node == 3)
+  ElementIDStruct const elem3 = {3, 3, 3};
+
+  ProcLoadMap proc_load = {{0, LoadMapType{{elem2, TimeType{150}}}}};
 
   ProcCommMap proc_comm = {
     {0,
      CommMapType{// Node 1 -> Node 2
-                 {{CommKeyType::CollectionTag{}, ElementIDType{1},
-                   ElementIDType{1}, ElementIDType{2}, ElementIDType{2}, false},
+                 {{CommKeyType::CollectionTag{}, elem1, elem2, false},
                   CommVolume{20.0, 2}},
 
                  // Node 3 -> Node 2
-                 {{CommKeyType::CollectionTag{}, ElementIDType{3},
-                   ElementIDType{3}, ElementIDType{2}, ElementIDType{2}, false},
-                  CommVolume{5.0, 5}},
-
-                 // Node 1 -> Node 3
-                 {{CommKeyType::CollectionTag{}, ElementIDType{1},
-                   ElementIDType{1}, ElementIDType{3}, ElementIDType{3}, false},
-                  CommVolume{100.0, 1}}}},
+                 {{CommKeyType::CollectionTag{}, elem3, elem2, false},
+                  CommVolume{5.0, 5}}}
+    },
     {1,
-     CommMapType{// Node 3 -> Node 1 (current phase) -> Node 2
-                 {{CommKeyType::CollectionTag{}, ElementIDType{3},
-                   ElementIDType{3}, ElementIDType{2}, ElementIDType{1}, false},
-                  CommVolume{20.0, 2}},
-
-                 // Node 3 -> Node 2 (current phase) -> Node 1
-                 {{CommKeyType::CollectionTag{}, ElementIDType{3},
-                   ElementIDType{3}, ElementIDType{1}, ElementIDType{2}, false},
+     CommMapType{
+                 // Node 3 -> Node 2
+                 {{CommKeyType::CollectionTag{}, elem3, elem2, false},
                   CommVolume{500.0, 50}},
 
-                 // Node 1 -> Node 3 (current phase) -> Node 2
-                 {{CommKeyType::CollectionTag{}, ElementIDType{1},
-                   ElementIDType{1}, ElementIDType{2}, ElementIDType{3}, false},
-                  CommVolume{25.0, 10}}}}};
+                 // Node 1 -> Node 2
+                 {{CommKeyType::CollectionTag{}, elem1, elem2, false},
+                  CommVolume{25.0, 10}}}
+    }
+  };
 
-  auto test_model =
-    std::make_shared<CommOverhead>(std::make_shared<StubModel>(), 3.0, 5.0);
+  constexpr auto per_msg_weight = 3.0;
+  constexpr auto per_byte_weight = 5.0;
+
+  auto test_model = std::make_shared<CommOverhead>(
+    std::make_shared<StubModel>(), per_msg_weight, per_byte_weight
+  );
   test_model->setLoads(&proc_load, nullptr, &proc_comm);
 
-  std::unordered_map<PhaseType, std::vector<TimeType>> expected_work = {
-    {0, {TimeType{60}, TimeType{296}, TimeType{578}}},
-    {1, {TimeType{16.6}, TimeType{280}, TimeType{23}}}};
+  std::unordered_map<PhaseType, TimeType> expected_work = {
+    {0, TimeType{296}}, {1, TimeType{295.5}}
+  };
 
   for (; num_phases < 2; ++num_phases) {
     test_model->updateLoads(num_phases);
     int objects_seen = 0;
 
     for (auto&& obj : *test_model) {
-      EXPECT_TRUE(obj == 1 || obj == 2 || obj == 3);
+      EXPECT_TRUE(obj.id == 2);
       ++objects_seen;
 
       const auto subphase = num_phases == 0 ? PhaseOffset::WHOLE_PHASE : 1;
       auto work_val = test_model->getWork(obj, PhaseOffset{0, subphase});
-      EXPECT_EQ(work_val, expected_work[num_phases][obj - 1])
+      EXPECT_EQ(work_val, expected_work[num_phases])
         << fmt::format("For element={} on phase={}\n", obj, num_phases);
     }
 
-    EXPECT_EQ(objects_seen, 3);
+    EXPECT_EQ(objects_seen, 1);
   }
 }
 

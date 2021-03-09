@@ -70,7 +70,7 @@ struct CommOverhead : public ComposedModel {
                 std::unordered_map<PhaseType, SubphaseLoadMapType> const* proc_subphase_load,
                 std::unordered_map<PhaseType, CommMapType> const* proc_comm) override;
 
-  TimeType getWork(ElementIDType object, PhaseOffset when) override;
+  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
 
 private:
   std::unordered_map<PhaseType, CommMapType> const* proc_comm_; /**< Underlying comm data */

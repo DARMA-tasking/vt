@@ -59,7 +59,7 @@ using TestLinearModel = TestHarness;
 static int32_t num_phases = 1;
 
 using vt::vrt::collection::balance::CommMapType;
-using vt::vrt::collection::balance::ElementIDType;
+using vt::vrt::collection::balance::ElementIDStruct;
 using vt::vrt::collection::balance::LinearModel;
 using vt::vrt::collection::balance::LoadMapType;
 using vt::vrt::collection::balance::LoadModel;
@@ -81,7 +81,7 @@ struct StubModel : LoadModel {
 
   void updateLoads(PhaseType) override {}
 
-  TimeType getWork(ElementIDType id, PhaseOffset phase) override {
+  TimeType getWork(ElementIDStruct id, PhaseOffset phase) override {
     // Most recent phase will be at the end of vector
     return proc_load_->at(num_phases + phase.phases).at(id);
   }
@@ -104,6 +104,7 @@ private:
 
 TEST_F(TestLinearModel, test_model_linear_model_1) {
   constexpr int32_t num_test_interations = 6;
+  NodeType this_node = 0;
 
   auto test_model =
     std::make_shared<LinearModel>(std::make_shared<StubModel>(), 4);
@@ -111,8 +112,8 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
   // For linear regression there needs to be at least 2 phases completed
   // so we begin with 1 phase already done
   std::unordered_map<PhaseType, LoadMapType> proc_loads{{0, LoadMapType{
-    {ElementIDType{1}, TimeType{10}},
-    {ElementIDType{2}, TimeType{40}}
+    {ElementIDStruct{1,this_node,this_node}, TimeType{10}},
+    {ElementIDStruct{2,this_node,this_node}, TimeType{40}}
     }}};
   test_model->setLoads(&proc_loads, nullptr, nullptr);
   test_model->updateLoads(0);
@@ -120,17 +121,23 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
   // Work loads to be added in each test iteration
   std::vector<LoadMapType> load_holder{
     LoadMapType{
-      {ElementIDType{1}, TimeType{5}}, {ElementIDType{2}, TimeType{10}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{5}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{30}}, {ElementIDType{2}, TimeType{100}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{30}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{100}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{50}}, {ElementIDType{2}, TimeType{40}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{50}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{40}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{2}}, {ElementIDType{2}, TimeType{50}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{2}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{50}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{60}}, {ElementIDType{2}, TimeType{20}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{60}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{20}}},
     LoadMapType{
-      {ElementIDType{1}, TimeType{100}}, {ElementIDType{2}, TimeType{10}}},
+      {ElementIDStruct{1,this_node,this_node}, TimeType{100}},
+      {ElementIDStruct{2,this_node,this_node}, TimeType{10}}},
   };
 
   std::array<std::pair<TimeType, TimeType>, num_test_interations> expected_data{
@@ -151,7 +158,7 @@ TEST_F(TestLinearModel, test_model_linear_model_1) {
       auto work_val = test_model->getWork(obj, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE});
       EXPECT_EQ(
         work_val,
-        obj == 1 ? expected_data[iter].first : expected_data[iter].second)
+        obj.id == 1 ? expected_data[iter].first : expected_data[iter].second)
         << fmt::format("Test failed on iteration {}", iter);
     }
   }

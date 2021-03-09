@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                multiple_phases.h
+//                                 lb_common.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,50 +42,19 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_MULTIPLE_PHASES_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_MULTIPLE_PHASES_H
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 
-#include "vt/vrt/collection/balance/model/composed_model.h"
+#include <ostream>
+#include <fmt/ostream.h>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/**
- * \struct MultiplePhases
- *
- * \brief Predict an object's load as a sum over blocks of N future phases
- *
- * Expected to be most useful either when queried by an explicitly
- * subphase-aware vector-optimizing load balancer, or when queried by
- * a whole-phase scalar-optimizing load balancer with a Norm model
- * composed on top of this.
- *
- * Multiple phase blocked predictions will only be meaningfully
- * different from single phase predictions when composed on top of a
- * Predictor model that is not constant across future
- * phases. I.e. `LinearModel` rather than `NaivePersistence` or
- * `PersistenceMedianLastN`.
- */
-struct MultiplePhases : ComposedModel {
-  /**
-   * \brief Constructor
-   *
-   * \param[in] base the base model
-   *
-   * \param[in] in_future_phase_block_size how many phases to predict
-   * as each single queried phase
-   */
-  explicit MultiplePhases(
-    std::shared_ptr<balance::LoadModel> base, int in_future_phase_block_size)
-    : ComposedModel(base)
-    , future_phase_block_size_(in_future_phase_block_size)
-  { }
-
-  TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
-
-private:
-  int future_phase_block_size_ = 0;
-};
+std::ostream& operator<<(
+  std::ostream& os, const ::vt::vrt::collection::balance::ElementIDStruct& id
+) {
+  os << "(" << id.id << "," << id.home_node << "," << id.curr_node << ")";
+  return os;
+}
 
 }}}} /* end namespace vt::vrt::collection::balance */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_MULTIPLE_PHASES_H*/
