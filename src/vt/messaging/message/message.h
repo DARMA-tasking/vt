@@ -115,7 +115,11 @@ struct ActiveMsg : BaseMsg {
    * \return a pointer to the allocated memory
    */
   static void* operator new(std::size_t sz) {
-    auto const& ptr = thePool()->alloc(sz);
+    #if vt_check_enabled(error_checking)
+      auto const& ptr = thePool()->alloc(sz + sizeof(uint64_t));
+    #else
+      auto const& ptr = thePool()->alloc(sz);
+    #endif
 
     vt_debug_print(
       pool, node,
@@ -135,7 +139,11 @@ struct ActiveMsg : BaseMsg {
    * \return a pointer to the allocated memory
    */
   static void* operator new(std::size_t sz, std::size_t oversize) {
-    auto const& ptr = thePool()->alloc(sz, oversize);
+    #if vt_check_enabled(error_checking)
+      auto const& ptr = thePool()->alloc(sz + sizeof(uint64_t), oversize);
+    #else
+      auto const& ptr = thePool()->alloc(sz, oversize);
+    #endif
 
     vt_debug_print(
       pool, node,
@@ -173,11 +181,19 @@ struct ActiveMsg : BaseMsg {
   }
   #else
   static void* operator new(std::size_t sz) {
-    return std::malloc(sz);
+    #if vt_check_enabled(error_checking)
+      return std::malloc(sz + sizeof(uint64_t));
+    #else
+      return std::malloc(sz);
+    #endif
   }
 
   static void* operator new(std::size_t sz, std::size_t oversize) {
-    return std::malloc(sz + oversize);
+    #if vt_check_enabled(error_checking)
+      return std::malloc(sz + oversize + sizeof(uint64_t));
+    #else
+      return std::malloc(sz + oversize);
+    #endif
   }
 
   static void operator delete(void* ptr) {

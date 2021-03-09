@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            serialized_data_msg.h
+//                            error_checking_hash.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,48 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H
-#define INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H
+#if !defined INCLUDED_VT_UTILS_HASH_ERROR_CHECKING_HASH_H
+#define INCLUDED_VT_UTILS_HASH_ERROR_CHECKING_HASH_H
 
 #include "vt/config.h"
-#include "vt/messaging/message.h"
 
-namespace vt { namespace serialization {
+namespace vt { namespace util { namespace hash {
 
-using SizeType = std::size_t;
+/**
+ * \struct ErrorCheckingHash
+ *
+ * \brief Error checking hash functions
+ */
+struct ErrorCheckingHash {
 
-static constexpr SizeType const serialized_msg_eager_size = 128;
+  /**
+   * \brief PJW hash function used for elf
+   *
+   * Reference: https://en.wikipedia.org/wiki/PJW_hash_function
+   *
+   * \param[in] s char array
+   * \param[in] len length of array
+   *
+   * \return the hash value
+   */
+  static uint64_t elf(char const* s, std::size_t len);
 
-struct NoneVrt { };
-
-template <typename T, typename MessageT>
-struct SerializedDataMsgAny : MessageT {
-  SerializedDataMsgAny() = default;
-
-  ByteType ptr_size = 0;
-  HandlerType handler = uninitialized_handler;
-  TagType data_recv_tag = no_tag;
-  NodeType from_node = uninitialized_destination;
-  int nchunks = 0;
-
-#if vt_check_enabled(error_checking)
-  /// Error checking hash for message bytes
-  uint64_t error_checking_hash = 0;
-#endif
 };
 
-template <typename T>
-using SerializedDataMsg = SerializedDataMsgAny<T, Message>;
+} /* end namespace hash */
 
-using NumBytesType = int64_t;
+/**
+ * \brief Invoke the default hash function for error checking
+ *
+ * \param[in] s char array
+ * \param[in] len length of array
+ *
+ * \return the hash value
+ */
+inline uint64_t defaultHash(char const* s, std::size_t len) {
+  return hash::ErrorCheckingHash::elf(s, len);
+}
 
-template <typename UserMsgT, typename MessageT, NumBytesType num_bytes>
-struct SerialPayloadMsg : MessageT {
-  std::array<SerialByteType, num_bytes> payload{};
-  NumBytesType bytes = 0;
+}} /* end namespace vt::util */
 
-  SerialPayloadMsg() : MessageT() { }
-
-  explicit SerialPayloadMsg(NumBytesType const& in_bytes)
-    : MessageT(), bytes(in_bytes)
-  { }
-
-  explicit SerialPayloadMsg(
-    NumBytesType const& in_bytes, std::array<ByteType, num_bytes>&& arr
-  ) : MessageT(), payload(std::forward<std::array<ByteType, num_bytes>>(arr)),
-      bytes(in_bytes)
-  { }
-};
-
-template <typename UserMsgT, typename BaseEagerMsgT>
-using SerialEagerPayloadMsg = SerialPayloadMsg<
-  UserMsgT, SerializedDataMsgAny<UserMsgT, BaseEagerMsgT>,
-  serialized_msg_eager_size
->;
-
-}} /* end namespace vt::serialization */
-
-#endif /*INCLUDED_SERIALIZATION_MESSAGING/SERIALIZED_DATA_MSG_H*/
+#endif /*INCLUDED_VT_UTILS_HASH_ERROR_CHECKING_HASH_H*/

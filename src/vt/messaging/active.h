@@ -1735,6 +1735,24 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   # endif
   }
 
+  /**
+   * \brief Set the error checking hash on the message contents (excluding the
+   * envelope)
+   *
+   * \param[in] m the message
+   * \param[in] bytes num bytes
+   */
+  void setErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes);
+
+  /**
+   * \brief Check the error checking hash on the message contents (excluding the
+   * envelope)
+   *
+   * \param[in] m the message
+   * \param[in] bytes num bytes
+   */
+  void checkErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes);
+
 private:
   /**
    * \internal \brief Allocate a new, unused tag.

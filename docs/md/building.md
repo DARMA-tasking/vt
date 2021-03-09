@@ -62,6 +62,7 @@ build configuration:
 | `vt_build_extended_tests`        | 1               | Build with full, extended testing |
 | `vt_unity_build_enabled`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
 | `vt_fcontext_enabled`            | 1               | Force use of fcontext for threading |
+| `vt_error_checking`              | 0               | Enable error checking mode for messages |
 | `CODE_COVERAGE`                  | 0               | Enable code coverage for VT examples/tests |
 | `USE_OPENMP`                     | 0               | Force use of OpenMP for threading |
 | `USE_STD_THREAD`                 | 0               | Force use of std::thread for threading |
@@ -99,6 +100,7 @@ parameters.
 | `VT_UNITY_BUILD_ENABLED`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
 | `VT_DIAGNOSTICS_ENABLED`         | 1               | Enable VT component diagnostics for performance analysis |
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0               | Enable VT component diagnostics at runtime by default |
+| `VT_ERROR_CHECKING`              | 0               | Enable error checking mode for messages |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned
@@ -165,6 +167,7 @@ which `docker-compose` will read.
 #   VT_USE_STD_THREAD=0       # Force use of std::thread for threading
 #   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics at runtime by default
+#   VT_ERROR_CHECKING=1       # Enable error checking mode
 #   BUILD_TYPE=release        # CMake build type
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
 ```

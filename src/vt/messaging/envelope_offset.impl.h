@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            serialized_data_msg.h
+//                            envelope_offset.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,65 +42,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H
-#define INCLUDED_SERIALIZATION_MESSAGING_SERIALIZED_DATA_MSG_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_OFFSET_IMPL_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_OFFSET_IMPL_H
 
-#include "vt/config.h"
-#include "vt/messaging/message.h"
+#include "vt/messaging/envelope_offset.h"
 
-namespace vt { namespace serialization {
+namespace vt { namespace messaging {
 
-using SizeType = std::size_t;
+template <typename Env>
+char* getOffsetImpl(BaseMsgType* m) {
+  auto tmsg = reinterpret_cast<messaging::ActiveMsg<Env>*>(m);
+  auto env_len = sizeof(Env);
+  auto start_ptr = reinterpret_cast<char*>(&tmsg->env) + env_len;
+  return start_ptr;
+}
 
-static constexpr SizeType const serialized_msg_eager_size = 128;
+template <typename EnvT>
+char* getOffsetWithPut(BaseMsgType* m) {
+  if (envelopeIsPut(m->env)) {
+    return getOffsetImpl<PutEnvelope<EnvT, size_t>>(m);
+  } else {
+    return getOffsetImpl<EnvT>(m);
+  }
+}
 
-struct NoneVrt { };
+char* getOffsetAfterEnvelope(BaseMsgType* m) {
+  if (envelopeIsEpochType(m->env) and envelopeIsTagType(m->env)) {
+    return getOffsetWithPut<EpochTagEnvelope>(m);
+  } else if (envelopeIsEpochType(m->env)) {
+    return getOffsetWithPut<EpochEnvelope>(m);
+  } else if (envelopeIsTagType(m->env)) {
+    return getOffsetWithPut<TagEnvelope>(m);
+  } else {
+    return getOffsetWithPut<Envelope>(m);
+  }
+}
 
-template <typename T, typename MessageT>
-struct SerializedDataMsgAny : MessageT {
-  SerializedDataMsgAny() = default;
+}} /* end namespace vt::messaging */
 
-  ByteType ptr_size = 0;
-  HandlerType handler = uninitialized_handler;
-  TagType data_recv_tag = no_tag;
-  NodeType from_node = uninitialized_destination;
-  int nchunks = 0;
-
-#if vt_check_enabled(error_checking)
-  /// Error checking hash for message bytes
-  uint64_t error_checking_hash = 0;
-#endif
-};
-
-template <typename T>
-using SerializedDataMsg = SerializedDataMsgAny<T, Message>;
-
-using NumBytesType = int64_t;
-
-template <typename UserMsgT, typename MessageT, NumBytesType num_bytes>
-struct SerialPayloadMsg : MessageT {
-  std::array<SerialByteType, num_bytes> payload{};
-  NumBytesType bytes = 0;
-
-  SerialPayloadMsg() : MessageT() { }
-
-  explicit SerialPayloadMsg(NumBytesType const& in_bytes)
-    : MessageT(), bytes(in_bytes)
-  { }
-
-  explicit SerialPayloadMsg(
-    NumBytesType const& in_bytes, std::array<ByteType, num_bytes>&& arr
-  ) : MessageT(), payload(std::forward<std::array<ByteType, num_bytes>>(arr)),
-      bytes(in_bytes)
-  { }
-};
-
-template <typename UserMsgT, typename BaseEagerMsgT>
-using SerialEagerPayloadMsg = SerialPayloadMsg<
-  UserMsgT, SerializedDataMsgAny<UserMsgT, BaseEagerMsgT>,
-  serialized_msg_eager_size
->;
-
-}} /* end namespace vt::serialization */
-
-#endif /*INCLUDED_SERIALIZATION_MESSAGING/SERIALIZED_DATA_MSG_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_OFFSET_IMPL_H*/

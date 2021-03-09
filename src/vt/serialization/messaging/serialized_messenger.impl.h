@@ -54,6 +54,7 @@
 #include "vt/serialization/messaging/serialized_data_msg.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/messaging/envelope/envelope_set.h" // envelopeSetRef
+#include "vt/utils/hash/error_checking_hash.h"
 
 #include <tuple>
 #include <type_traits>
@@ -104,6 +105,10 @@ template <typename UserMsgT>
   auto const& len = sys_msg->ptr_size;
   auto const epoch = envelopeGetEpoch(sys_msg->env);
 
+  #if vt_check_enabled(error_checking)
+    auto const msg_hash = sys_msg->error_checking_hash;
+  #endif
+
   vt_debug_print(
     serial_msg, node,
     "serialMsgHandler: non-eager, recvDataMsg: msg={}, handler={}, "
@@ -120,8 +125,24 @@ template <typename UserMsgT>
   auto node = sys_msg->from_node;
   theMsg()->recvDataDirect(
     nchunks, recv_tag, sys_msg->from_node, len,
-    [handler,recv_tag,node,epoch,is_valid_epoch]
+    [handler,recv_tag,node,epoch,is_valid_epoch,msg_hash]
     (RDMA_GetType ptr, ActionType action){
+      #if vt_check_enabled(error_checking)
+        auto hash = util::defaultHash(
+          static_cast<char const*>(std::get<0>(ptr)), std::get<1>(ptr)
+        );
+        if (msg_hash != hash) {
+          vt_print(
+            active,
+            "Hashes do not match: computed={:x}, envelope={:x}, bytes={}, tag={}\n",
+            hash, msg_hash, std::get<1>(ptr), recv_tag
+          );
+          vtAbort(
+            "Hashes do not match for serialized content"
+          );
+        }
+      #endif
+
       // be careful here not to use "sys_msg", it is no longer valid
       auto msg_data = reinterpret_cast<SerialByteType*>(std::get<0>(ptr));
       auto msg = deserializeFullMessage<UserMsgT>(msg_data);
@@ -378,6 +399,11 @@ template <typename MsgT, typename BaseT>
         // wrap metadata
         sys_msg->handler = typed_handler;
         sys_msg->from_node = theContext()->getNode();
+
+        #if vt_check_enabled(error_checking)
+          sys_msg->error_checking_hash = util::defaultHash(ptr, ptr_size);
+        #endif
+
         // setup envelope
         envelopeInitCopy(sys_msg->env, msg->env);
 

@@ -149,6 +149,18 @@ template <typename Env>
 inline bool envelopeGetTraceRuntimeEnabled(Env& env);
 #endif
 
+#if vt_check_enabled(error_checking)
+/**
+ * \brief Get the error checking hash from the envelope
+ *
+ * \param[in] env the envelope
+ *
+ * \return the error checking hash
+ */
+template <typename Env>
+inline uint64_t envelopeGetErrorCheckingHash(Env& env);
+#endif
+
 } /* end namespace vt */
 
 #include "vt/messaging/envelope/envelope_get.impl.h"

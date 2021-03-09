@@ -48,12 +48,14 @@
 #include "vt/messaging/active.h"
 #include "vt/messaging/envelope.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/messaging/envelope_offset.h"
 #include "vt/termination/term_headers.h"
 #include "vt/group/group_manager_active_attorney.h"
 #include "vt/runnable/general.h"
 #include "vt/timing/timing.h"
 #include "vt/scheduler/priority.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
+#include "vt/utils/hash/error_checking_hash.h"
 #include "vt/runtime/mpi_access.h"
 #include "vt/scheduler/scheduler.h"
 
@@ -306,11 +308,32 @@ void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
 
 EventType ActiveMessenger::sendMsgMPI(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, TagType const& send_tag
+  MsgSizeType const& in_msg_size, TagType const& send_tag
 ) {
+  #if vt_check_enabled(error_checking)
+    MsgSizeType msg_size = in_msg_size + sizeof(uint64_t);
+  #else
+    MsgSizeType msg_size = in_msg_size;
+  #endif
+
   BaseMsgType* base_typed_msg = base.get();
 
   char* untyped_msg = reinterpret_cast<char*>(base_typed_msg);
+
+  #if vt_check_enabled(error_checking)
+    auto ref = envelopeGetRef(base_typed_msg->env);
+    envelopeSetRef(base_typed_msg->env, 0);
+
+    auto const hash = util::defaultHash(untyped_msg, in_msg_size);
+    *reinterpret_cast<uint64_t*>(untyped_msg + in_msg_size) = hash;
+
+    envelopeSetRef(base_typed_msg->env, ref);
+
+    vt_debug_print(
+      active, node,
+      "Setting full hashes: {:x}, bytes={}, {}\n", hash, in_msg_size, msg_size
+    );
+  #endif
 
   vt_debug_print(
     active, node,
@@ -478,6 +501,8 @@ EventType ActiveMessenger::doMessageSend(
       print_bool(envelopeIsPut(msg->env))
     );
   }
+
+  setErrorCheckingHash(msg, msg_size);
 
   bool deliver = false;
   EventType const ret_event = group::GroupActiveAttorney::groupHandler(
@@ -896,6 +921,8 @@ bool ActiveMessenger::processActiveMsg(
 
   auto msg = base.to<ShortMessage>().get();
 
+  checkErrorCheckingHash(msg, size);
+
   // Call group handler
   bool deliver = false;
   GroupActiveAttorney::groupHandler(base, from, size, false, &deliver);
@@ -1147,6 +1174,36 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 # endif
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
+
+  #if vt_check_enabled(error_checking)
+    CountType msg_bytes = num_probe_bytes - sizeof(uint64_t);
+
+    auto ref = envelopeGetRef(msg->env);
+    envelopeSetRef(msg->env, 0);
+
+    auto const computed_hash = util::defaultHash(buf, msg_bytes);
+    auto const hash = *reinterpret_cast<uint64_t*>(buf + msg_bytes);
+
+    envelopeSetRef(msg->env, ref);
+
+    if (hash != computed_hash) {
+      vt_print(
+        active, "Hashes do not match (full): computed={:x}, msg={:x}, bytes={}\n",
+        computed_hash, hash, msg_bytes
+      );
+      vtAbort("Hashes do not match (full) (computed vs. full)");
+    } else {
+      vt_debug_print(
+        active, node,
+        "Full hashes match: {:x}, bytes={}, {}\n", computed_hash,
+        msg_bytes, num_probe_bytes
+      );
+    }
+
+  #else
+    CountType msg_bytes = num_probe_bytes;
+  #endif
+
   envelopeInitRecv(msg->env);
   MsgPtr<MessageType> base = MsgPtr<MessageType>{msg};
 
@@ -1164,13 +1221,11 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     );
   }
 
-  CountType msg_bytes = num_probe_bytes;
-
   if (is_put) {
     auto const put_tag = envelopeGetPutTag(msg->env);
     if (put_tag == PutPackedTag) {
       auto const put_size = envelopeGetPutSize(msg->env);
-      auto const msg_size = num_probe_bytes - put_size;
+      auto const msg_size = msg_bytes - put_size;
       char* put_ptr = buf + msg_size;
       msg_bytes = msg_size;
 
@@ -1190,7 +1245,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         1, put_tag, sender,
         [=](PtrLenPairType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-          scheduleActiveMsg(base, sender, num_probe_bytes, true, deleter);
+          scheduleActiveMsg(base, sender, msg_bytes, true, deleter);
         }
      );
     }
@@ -1354,6 +1409,55 @@ PriorityType ActiveMessenger::getCurrentPriority() const {
 
 PriorityLevelType ActiveMessenger::getCurrentPriorityLevel() const {
   return current_priority_level_context_;
+}
+
+static uint64_t computeErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
+  auto byte_ptr = reinterpret_cast<const char*>(m);
+  char const* start_ptr = getOffsetAfterEnvelope(m);
+  std::size_t const len = (byte_ptr + bytes) - start_ptr;
+
+  auto const hash = util::defaultHash(start_ptr, len);
+
+  vt_debug_print(
+    active, node,
+    "computed hash to {:x}, bytes={}, total={}\n",
+    hash, len, bytes
+  );
+
+  return hash;
+}
+
+void ActiveMessenger::setErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
+  #if vt_check_enabled(error_checking)
+    auto const hash = computeErrorCheckingHash(m, bytes);
+
+    vt_debug_print(
+      active, node,
+      "setting hash to {:x}, bytes={}\n", hash, bytes
+    );
+
+    envelopeSetErrorCheckingHash(m->env, hash);
+  #endif
+}
+
+void ActiveMessenger::checkErrorCheckingHash(BaseMsgType* m, MsgSizeType bytes) {
+  #if vt_check_enabled(error_checking)
+    auto const computed_hash = computeErrorCheckingHash(m, bytes);
+    auto msg_hash = envelopeGetErrorCheckingHash(m->env);
+
+    if (msg_hash != computed_hash) {
+      vt_print(
+        active, "Hashes do not match: computed={:x}, envelope={:x}, bytes={}\n",
+        computed_hash, msg_hash, bytes
+      );
+      vtAbort("Hashes do not match (computed vs. in envelope)");
+    } else {
+      vt_debug_print(
+        active, node,
+        "hashes match: {:x}\n", computed_hash
+      );
+    }
+  #endif
 }
 
 }} // end namespace vt::messaging

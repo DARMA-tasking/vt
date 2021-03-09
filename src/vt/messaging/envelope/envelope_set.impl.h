@@ -162,6 +162,13 @@ inline void envelopeUnlockForForwarding(Env& env) {
   reinterpret_cast<Envelope*>(&env)->is_locked = false;
 }
 
+#if vt_check_enabled(error_checking)
+template <typename Env>
+inline void envelopeSetErrorCheckingHash(Env& env, uint64_t error_checking_hash) {
+  reinterpret_cast<Envelope*>(&env)->error_checking_hash = error_checking_hash;
+}
+#endif
+
 } /* end namespace vt */
 
 #endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SET_IMPL_H*/

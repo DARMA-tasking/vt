@@ -35,6 +35,7 @@
 #   VT_USE_STD_THREAD=0       # Force use of std::thread for threading
 #   VT_DIAGNOSTICS=1          # Build with diagnostics enabled
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics collection at runtime by default
+#   VT_ERROR_CHECKING=1       # Enable error checking mode
 #   BUILD_TYPE=release        # CMake build type
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
 #
@@ -137,6 +138,7 @@ x-vtopts: &vtopts
   VT_USE_STD_THREAD: ${VT_USE_STD_THREAD:-0}
   VT_DIAGNOSTICS_ENABLED: ${VT_DIAGNOSTICS:-1}
   VT_DIAGNOSTICS_RUNTIME_ENABLED: ${VT_DIAGNOSTICS_RUNTIME:-0}
+  VT_ERROR_CHECKING: ${VT_ERROR_CHECKING:-1}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   VT_EXTENDED_TESTS_ENABLED: ${VT_EXTENDED_TESTS:-1}
