@@ -308,11 +308,32 @@ void ActiveMessenger::handleChunkedMultiMsg(MultiMsg* msg) {
 
 EventType ActiveMessenger::sendMsgMPI(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, TagType const& send_tag
+  MsgSizeType const& in_msg_size, TagType const& send_tag
 ) {
+  #if vt_check_enabled(error_checking)
+    MsgSizeType msg_size = in_msg_size + sizeof(uint64_t);
+  #else
+    MsgSizeType msg_size = in_msg_size;
+  #endif
+
   BaseMsgType* base_typed_msg = base.get();
 
   char* untyped_msg = reinterpret_cast<char*>(base_typed_msg);
+
+  #if vt_check_enabled(error_checking)
+    auto ref = envelopeGetRef(base_typed_msg->env);
+    envelopeSetRef(base_typed_msg->env, 0);
+
+    auto const hash = util::defaultHash(untyped_msg, in_msg_size);
+    *reinterpret_cast<uint64_t*>(untyped_msg + in_msg_size) = hash;
+
+    envelopeSetRef(base_typed_msg->env, ref);
+
+    vt_debug_print(
+      active, node,
+      "Setting full hashes: {:x}, bytes={}, {}\n", hash, in_msg_size, msg_size
+    );
+  #endif
 
   vt_debug_print(
     active, node,
@@ -1153,6 +1174,36 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 # endif
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
+
+  #if vt_check_enabled(error_checking)
+    CountType msg_bytes = num_probe_bytes - sizeof(uint64_t);
+
+    auto ref = envelopeGetRef(msg->env);
+    envelopeSetRef(msg->env, 0);
+
+    auto const computed_hash = util::defaultHash(buf, msg_bytes);
+    auto const hash = *reinterpret_cast<uint64_t*>(buf + msg_bytes);
+
+    envelopeSetRef(msg->env, ref);
+
+    if (hash != computed_hash) {
+      vt_print(
+        active, "Hashes do not match (full): computed={:x}, msg={:x}, bytes={}\n",
+        computed_hash, hash, msg_bytes
+      );
+      vtAbort("Hashes do not match (full) (computed vs. full)");
+    } else {
+      vt_debug_print(
+        active, node,
+        "Full hashes match: {:x}, bytes={}, {}\n", computed_hash,
+        msg_bytes, num_probe_bytes
+      );
+    }
+
+  #else
+    CountType msg_bytes = num_probe_bytes;
+  #endif
+
   envelopeInitRecv(msg->env);
   MsgPtr<MessageType> base = MsgPtr<MessageType>{msg};
 
@@ -1170,13 +1221,11 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
     );
   }
 
-  CountType msg_bytes = num_probe_bytes;
-
   if (is_put) {
     auto const put_tag = envelopeGetPutTag(msg->env);
     if (put_tag == PutPackedTag) {
       auto const put_size = envelopeGetPutSize(msg->env);
-      auto const msg_size = num_probe_bytes - put_size;
+      auto const msg_size = msg_bytes - put_size;
       char* put_ptr = buf + msg_size;
       msg_bytes = msg_size;
 
@@ -1196,7 +1245,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         1, put_tag, sender,
         [=](PtrLenPairType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-          scheduleActiveMsg(base, sender, num_probe_bytes, true, deleter);
+          scheduleActiveMsg(base, sender, msg_bytes, true, deleter);
         }
      );
     }
