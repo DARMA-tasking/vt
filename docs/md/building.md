@@ -97,6 +97,7 @@ parameters.
 | `VT_MPI_GUARD_ENABLED `          | 0               | Guards against mis-use of MPI calls in code using *vt* |
 | `VT_EXTENDED_TESTS_ENABLED`      | 1               | Build with full, extended testing |
 | `VT_UNITY_BUILD_ENABLED`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
+| `VT_PRODUCTION_BUILD_ENABLED`    | 0               | Disable assertions and debug prints at compile time |
 | `VT_DIAGNOSTICS_ENABLED`         | 1               | Enable VT component diagnostics for performance analysis |
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0               | Enable VT component diagnostics at runtime by default |
 

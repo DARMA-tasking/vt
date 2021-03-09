@@ -52,6 +52,7 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestCliArguments : TestParallelHarness { };
 
+#if not vt_check_enabled(production_build)
 TEST_F(TestCliArguments, test_vt_assert) {
   EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
 
@@ -60,6 +61,7 @@ TEST_F(TestCliArguments, test_vt_assert) {
     "Should abort."
   );
 }
+#endif
 
 TEST_F(TestCliArguments, test_assert_no_fail) {
   EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
