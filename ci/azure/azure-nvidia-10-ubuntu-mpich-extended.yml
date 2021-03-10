@@ -150,6 +150,8 @@ stages:
             delimiter="-=-=-=-"
             tests_failures=$(< $(build_root)/vt/cmake-output.log sed -n -e '/The following tests FAILED:/,$p')
             tests_failures=${tests_failures//$'\n'/$delimiter}
+            tabulation="  "
+            tests_failures=${tests_failures//$'\t'/$tabulation}
             if test -z "$tests_failures"
             then
             tests_failures='Testing - passed'
