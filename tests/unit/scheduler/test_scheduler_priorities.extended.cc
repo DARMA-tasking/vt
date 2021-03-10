@@ -80,9 +80,8 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_1) {
 
   total = testSched->workQueueSize();
 
-  do {
-    testSched->scheduler();
-  } while (total > 0);
+  testSched->runSchedulerWhile([&total]{ return total > 0; });
+
 # endif
 }
 
@@ -122,9 +121,8 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_2) {
 
   total = testSched->workQueueSize();
 
-  do {
-    testSched->scheduler();
-  } while (total > 0);
+  testSched->runSchedulerWhile([&total]{ return total > 0; });
+
 # endif
 }
 
@@ -167,9 +165,8 @@ TEST_F(TestSchedPriorities, test_scheduler_priorities_3) {
 
   total = testSched->workQueueSize();
 
-  do {
-    testSched->scheduler();
-  } while (total > 0);
+  testSched->runSchedulerWhile([&total]{ return total > 0; });
+
 # endif
 }
 

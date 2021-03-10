@@ -98,8 +98,8 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   // break out
   int k = 0;
 
-  theSched()->runSchedulerWhile([&k, ep]() mutable {
-    return theTerm()->isEpochTerminated(ep) || (k++ > 10);
+  theSched()->runSchedulerWhile([&k, ep] {
+    return !theTerm()->isEpochTerminated(ep) && (++k <= 10);
   });
 
   // Epoch should not end with a valid pending send created in an live epoch
