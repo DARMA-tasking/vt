@@ -8,23 +8,14 @@ scheduler allows registration of callbacks when the system is idle.
 
 \section calls-to-the-scheduler Calls to the scheduler
 
-To advance the scheduler, one can call it as follows:
-
-\code{.cpp}
-vt::theSched()->scheduler();
-\endcode
-
-This polls every component that might generate or complete work, and potentially
-runs one piece of available work.
-
-However, if the scheduler needs to be run until a condition (or set of
-conditions) is met, it is recommended that `runSchedulerWhile` be invoked:
+To advance the scheduler, one should use:
 
 \code{.cpp}
 vt::theSched()->runSchedulerWhile(/*std::function<bool()> cond*/);
 \endcode
 
-\copydetails vt::sched::Scheduler::runSchedulerWhile(std::function<bool()>)
+This function polls (while \c cond is true) every component that might generate or complete work, and potentially runs one piece of available work,
+while also ensuring proper event unwinding and idle time tracking.
 
 \section higher-level-calls Higher-level Calls to Wait for Completion
 
@@ -48,7 +39,7 @@ vt::runInEpochRooted([]{
 });
 \endcode
 
-If the work should be executed by all nodes, use a collective epoch::
+If the work should be executed by all nodes, use a collective epoch:
 
 \code{.cpp}
 vt::runInEpochCollective([]{

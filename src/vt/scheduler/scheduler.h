@@ -131,15 +131,19 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   ) const;
 
   /**
+   * \internal
    * \brief Turn the scheduler
    *
    * Polls every component that might generate or complete work, and
    * potentially runs one piece of available work.
    *
+   * \note This function should only be used internally by vt. For running scheduler
+   * in user code, one should use \c runSchedulerWhile
+   *
    * \param[in] msg_only whether to only make progress on the core active
    * messenger
    */
-  void scheduler(bool msg_only = false);
+  void runSchedulerImpl(bool msg_only = false);
 
   /**
    * \brief Run the progress function
@@ -153,7 +157,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \brief Runs the scheduler until a condition is met.
    *
    * Runs the scheduler until a condition is met.
-   * This form SHOULD be used instead of "while (..) { vt::theSched()->scheduler(..) }"
+   * This form SHOULD be used instead of "while (..) { runSchedulerImpl(..) }"
    * in all cases of nested scheduler loops, such as during a barrier,
    * in order to ensure proper event unwinding and idle time tracking.
    *
