@@ -143,17 +143,18 @@ stages:
             then
             warnings_errors='Compilation - successful'
             fi
+            delimiter="-=-=-=-"
             tests_failures=$(< $(build_root)/vt/cmake-output.log sed -n -e '/The following tests FAILED:/,$p')
+            tests_failures=${tests_failures//$'\n'/$delimiter}
             if test -z "$tests_failures"
             then
             tests_failures='Testing - passed'
             fi
-            val="$warnings_errors"$'\n'$'\n'"$tests_failures"
+            val="$warnings_errors""$delimiter""$delimiter""$tests_failures"
             if test ${#val} -gt "$max_comment_size"
             then
             val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read pipeline log. <=="
             fi
-            delimiter="-=-=-=-"
             new_line="\n"
             comment_body=${val//$delimiter/$new_line}
             quotation_mark="\""
