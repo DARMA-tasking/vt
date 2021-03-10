@@ -141,11 +141,17 @@ stages:
           # * outputs preprocessed report to a variable for the next task (that puts it as a PR comment).
           script: |
             max_comment_size=64450
-            val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
-            if test -z "$val"
+            warnings_errors=$(cat $(build_root)/vt/compilation_errors_warnings.out)
+            if test -z "$warnings_errors"
             then
-            val=Successful
+            warnings_errors='Compilation - successful'
             fi
+            tests_failures=$(< $(build_root)/vt/cmake-output.log sed -n -e '/The following tests FAILED:/,$p')
+            if test -z "$tests_failures"
+            then
+            tests_failures='Testing - passed'
+            fi
+            val="$warnings_errors"$'\n'$'\n'"$tests_failures"
             if test ${#val} -gt "$max_comment_size"
             then
             val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read pipeline log. <=="
