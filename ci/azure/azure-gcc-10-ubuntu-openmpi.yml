@@ -129,65 +129,18 @@ stages:
           action: 'Run a Docker Compose command'
           dockerComposeCommand: 'run ubuntu-cpp-clean-openmpi'
       - task: Bash@3
-        displayName: Prepare comment with compilation errors and warnings
+        displayName: Put compilation's and tests' logs in PR comment
         condition: and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest'))
         inputs:
           targetType: 'inline'
-          # Maximum length of the comment body is 65536 characters.
-          # https://github.community/t/maximum-length-for-the-comment-body-in-issues-and-pr/148867
-          #
-          # Minus some decorations, comment's title, and additional description gives about 64.5k characters.
-          #
-          # What this script does? -.
-          #                         |
-          #                         V
-          # * reads warnings and errors from a file,
-          # * if there aren't any errors or warnings, returns information about it,
-          # * replaces special delimiter with CRLF - %0D%0A (essentially restores new lines),
-          # * outputs preprocessed report to a variable for the next task (that puts it as a PR comment).
           script: |
-            max_comment_size=64450
-            val=$(cat $(build_root)/vt/compilation_errors_warnings.out)
-            if test -z "$val"
-            then
-            val=Successful
-            fi
-            if test ${#val} -gt "$max_comment_size"
-            then
-            val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read pipeline log. <=="
-            fi
-            delimiter="-=-=-=-"
-            new_line="\n"
-            comment_body=${val//$delimiter/$new_line}
-            quotation_mark="\""
-            new_quotation_mark="\\\""
-            comment_body=${comment_body//$quotation_mark/$new_quotation_mark}
-            echo "##vso[task.setvariable variable=comp_errs_warns;]$comment_body"
-      - task: Bash@3
-        displayName: Put warnings and errors in PR comment
-        condition: and(succeededOrFailed(), and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['comp_errs_warns'], '')))
-        inputs:
-          targetType: 'inline'
-          script: |
-            rm data.json || true
-            {
-            echo "{"
-            echo '  "event_type": "comment-pr",'
-            echo '  "client_payload": {'
-            echo '    "commit_sha": "'"$(git log --skip=1 -1  --pretty=format:%H)"'",'
-            echo '    "comment_title": "$(Build.BuildNumber)",'
-            echo '    "comment_content": "$(comp_errs_warns)",'
-            echo '    "pr_number": "$(System.PullRequest.PullRequestNumber)"'
-            echo "  }"
-            echo "}"
-            } >> data.json
-            curl \
-              --request POST \
-              --url https://api.github.com/repos/$(Build.Repository.Name)/dispatches \
-              --header "Accept: application/vnd.github.everest-preview+json" \
-              --header "Authorization: token $GITHUB_PAT" \
-              --data "@data.json"
-            rm data.json
+            ./scripts/report_logs_in_comment.sh                     \
+                "$(build_root)/vt/compilation_errors_warnings.out"  \
+                "$(build_root)/vt/cmake-output.log"                 \
+                "$(Build.BuildNumber)"                              \
+                "$(System.PullRequest.PullRequestNumber)"           \
+                "$(Build.Repository.Name)"                          \
+                "$GITHUB_PAT"
 
         env:
           GITHUB_PAT: $(github_pat)
