@@ -31,12 +31,12 @@
 #
 # Example of usage:
 # ./report_logs_in_comment.sh                           \
-#    $(build_root)/vt/compilation_errors_warnings.out   \
-#    $(build_root)/vt/cmake-output.log                  \
-#    $(Build.BuildNumber)                               \
-#    $(System.PullRequest.PullRequestNumber)            \
-#    $(Build.Repository.Name)                           \
-#    $GITHUB_PAT
+#    "$(build_root)/vt/compilation_errors_warnings.out" \
+#    "$(build_root)/vt/cmake-output.log"                \
+#    "$(Build.BuildNumber)"                             \
+#    "$(System.PullRequest.PullRequestNumber)"          \
+#    "$(Build.Repository.Name)"                         \
+#    "$GITHUB_PAT"
 
 compilation_errors_warnings_out="$1"
 cmake_output_log="$2"
