@@ -135,13 +135,13 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            ./scripts/report_logs_in_comment.sh                   \
-                $(build_root)/vt/compilation_errors_warnings.out  \
-                $(build_root)/vt/cmake-output.log                 \
-                $(Build.BuildNumber)                              \
-                $(System.PullRequest.PullRequestNumber)           \
-                $(Build.Repository.Name)                          \
-                $GITHUB_PAT
+            ./scripts/report_logs_in_comment.sh                     \
+                "$(build_root)/vt/compilation_errors_warnings.out"  \
+                "$(build_root)/vt/cmake-output.log"                 \
+                "$(Build.BuildNumber)"                              \
+                "$(System.PullRequest.PullRequestNumber)"           \
+                "$(Build.Repository.Name)"                          \
+                "$GITHUB_PAT"
 
         env:
           GITHUB_PAT: $(github_pat)
