@@ -43,6 +43,9 @@
 */
 
 #include <vt/transport.h>
+#include <vt/scheduler/thread_action.h>
+
+using TA = vt::scheduler::ThreadAction;
 
 struct HelloMsg : vt::Message {
   HelloMsg(vt::NodeType in_from) : from(in_from) { }
@@ -51,8 +54,21 @@ struct HelloMsg : vt::Message {
 };
 
 static void hello_world(HelloMsg* msg) {
-  vt::NodeType this_node = vt::theContext()->getNode();
-  fmt::print("{}: Hello from node {}\n", this_node, msg->from);
+  auto fn = [=]{
+    vt::NodeType this_node = vt::theContext()->getNode();
+    fmt::print("{}: 1 Hello from node {}\n", this_node, msg->from);
+    TA::suspend();
+    fmt::print("{}: 2 Hello from node {}\n", this_node, msg->from);
+    TA::suspend();
+    fmt::print("{}: 3 Hello from node {}\n", this_node, msg->from);
+    TA::suspend();
+    fmt::print("{}: 4 Hello from node {}\n", this_node, msg->from);
+  };
+  TA ta(fn);
+  ta.runUntilDone();
+  // ta.resume();
+  // ta.resume();
+  // ta.resume();
 }
 
 int main(int argc, char** argv) {
