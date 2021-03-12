@@ -110,6 +110,11 @@ struct ThreadAction final {
     }
   }
 
+  static bool isThreadActive() {
+    return cur_running_ != nullptr;
+  }
+
+private:
   static ThreadAction* cur_running_;
 
 private:
