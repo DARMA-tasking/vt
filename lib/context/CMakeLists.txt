@@ -147,7 +147,12 @@ foreach(FILE ${PROJECT_EXAMPLE_TOP_HEADERS})
   list(APPEND PROJECT_EXAMPLE_TOP_HEADER_FILES "${PROJECT_EXAMPLE_DIR}/${FILE}")
 endforeach()
 
-if(CONTEXT_BUILD_TESTS_EXAMPLES)
+option(
+  vt_fcontext_build_tests_examples "Build fcontext (ULTs) tests and examples"
+  OFF
+)
+
+if(vt_fcontext_build_tests_examples)
 
   foreach(EXAMPLE_FULL ${PROJECT_C_EXAMPLES})
     GET_FILENAME_COMPONENT(
