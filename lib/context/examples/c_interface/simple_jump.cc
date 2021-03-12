@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include "fcontext.h"
+#include "context/fcontext.h"
 #include "util.h"
 
 #include <cstdio>
