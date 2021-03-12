@@ -74,6 +74,7 @@ struct ThreadAction final {
     if (done_) {
       return;
     }
+    theMsg()->pushEpoch(cur_epoch_);
     cur_running_ = this;
     transfer_in = jump_fcontext(transfer_in.ctx, nullptr);
   }
@@ -89,9 +90,11 @@ struct ThreadAction final {
     fmt::print("running: runFnImpl\n");
     auto ta = static_cast<ThreadAction*>(t.data);
     if (ta->action_) {
+      theMsg()->pushEpoch(ta->cur_epoch_);
       cur_running_ = ta;
       ta->transfer_out = t;
       ta->action_();
+      theMsg()->popEpoch(ta->cur_epoch_);
       cur_running_ = nullptr;
     }
     fmt::print("done running: runFnImpl\n");
@@ -104,6 +107,7 @@ struct ThreadAction final {
       auto x = cur_running_;
       cur_running_ = nullptr;
       fmt::print("suspend\n");
+      theMsg()->popEpoch(x->cur_epoch_);
       x->transfer_out = jump_fcontext(x->transfer_out.ctx, nullptr);
     } else {
       fmt::print("Can not suspend---no thread is running\n");
