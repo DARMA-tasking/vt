@@ -46,6 +46,7 @@
 #define INCLUDED_VT_SCHEDULER_THREAD_ACTION_H
 
 #include "vt/config.h"
+#include "vt/messaging/active.h"
 #include <context/fcontext.h>
 
 namespace vt { namespace scheduler {
@@ -54,8 +55,11 @@ struct ThreadAction {
 
   explicit ThreadAction(ActionType in_action)
     : action_(in_action),
+      cur_epoch_(theMsg()->getEpoch()),
       stack(create_fcontext_stack())
-  { }
+  {
+    theTerm()->produce(cur_epoch_);
+  }
 
   ThreadAction(ThreadAction&&) = default;
   ThreadAction(ThreadAction const&) = delete;
@@ -63,6 +67,7 @@ struct ThreadAction {
   ThreadAction& operator=(ThreadAction const&) = delete;
 
   ~ThreadAction() {
+    theTerm()->consume(cur_epoch_);
     destroy_fcontext_stack(stack);
   }
 
@@ -116,6 +121,7 @@ struct ThreadAction {
 
 private:
   ActionType action_ = nullptr;
+  EpochType cur_epoch_ = no_epoch;
   fcontext_stack_t stack;
   fcontext_t ctx;
   fcontext_transfer_t transfer_out, transfer_in;
