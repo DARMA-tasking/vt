@@ -49,10 +49,10 @@
 
 namespace vt { namespace scheduler {
 
-/*explicit*/ ThreadAction::ThreadAction(ActionType in_action)
+ThreadAction::ThreadAction(ActionType in_action, std::size_t stack_size)
   : action_(in_action),
     cur_epoch_(theMsg()->getEpoch()),
-    stack(create_fcontext_stack())
+    stack(create_fcontext_stack(stack_size))
 {
   theTerm()->produce(cur_epoch_);
 }

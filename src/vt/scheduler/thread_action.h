@@ -55,7 +55,7 @@ namespace vt { namespace scheduler {
 
 struct ThreadAction final {
 
-  explicit ThreadAction(ActionType in_action);
+  explicit ThreadAction(ActionType in_action, std::size_t stack_size = 0);
 
   ThreadAction(ThreadAction&&) = default;
   ThreadAction(ThreadAction const&) = delete;
