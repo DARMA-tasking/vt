@@ -42,9 +42,9 @@
 //@HEADER
 */
 
-#include "context_wrapper.h"
-#include "fcontext.h"
-#include "context_stack.h"
+#include "context/context_wrapper.h"
+#include "context/fcontext.h"
+#include "context/context_stack.h"
 #include "util.h"
 
 #include <time.h>

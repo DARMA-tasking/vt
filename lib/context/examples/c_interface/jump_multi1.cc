@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include "fcontext.h"
+#include "context/fcontext.h"
 #include "util.h"
 
 #include <cstdio>
@@ -82,9 +82,9 @@ int main(int argc, char** argv) {
   puts("main 2");
   auto t2 = jump_fcontext(ctx2, nullptr);
   puts("main 3");
-  auto t3 = jump_fcontext(t1.ctx, nullptr);
+  jump_fcontext(t1.ctx, nullptr);
   puts("main 4");
-  auto t4 = jump_fcontext(t2.ctx, nullptr);
+  jump_fcontext(t2.ctx, nullptr);
   puts("END");
 
   destroy_fcontext_stack(s1);

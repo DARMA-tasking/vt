@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include "fcontext.h"
+#include "context/fcontext.h"
 #include "util.h"
 
 #include <cstdio>
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
   int data = 10;
   data_ptr = &data;
 
-  printf("main 1: data=%p\n", &data);
+  printf("main 1: data=%p\n", static_cast<void*>(&data));
   jump_fcontext(ctx1, &data);
   puts("END");
 
