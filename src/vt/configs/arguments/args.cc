@@ -496,13 +496,20 @@ void ArgConfig::addConfigFileArgs(CLI::App& app) {
 void ArgConfig::addRuntimeArgs(CLI::App& app) {
   auto max_size = "Maximum MPI send size (causes larger messages to be split "
                   "into multiple MPI sends)";
+  auto assert = "Do not abort the program when vtAssert(..) is invoked";
+
 
   auto a1 = app.add_option(
     "--vt_max_mpi_send_size", config_.vt_max_mpi_send_size, max_size, true
   );
+  auto a2 = app.add_flag(
+    "--vt_no_assert_fail", config_.vt_no_assert_fail, assert
+  );
+
 
   auto configRuntime = "Runtime";
   a1->group(configRuntime);
+  a2->group(configRuntime);
 }
 
 class VtFormatter : public CLI::Formatter {

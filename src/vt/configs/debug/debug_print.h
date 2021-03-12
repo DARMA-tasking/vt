@@ -96,12 +96,12 @@
 
 #define vt_debug_print(feature, ctx, ...)                               \
   vt_debug_print_impl(                                                  \
-    false, vt::config::DefaultConfig, normal, feature, ctx, __VA_ARGS__ \
+    false, vt::config::VTPrintConfig, normal, feature, ctx, __VA_ARGS__ \
   )
 
 #define vt_debug_print_verbose(feature, ctx, ...)                       \
   vt_debug_print_impl(                                                  \
-    false, vt::config::DefaultConfig, verbose, feature, ctx, __VA_ARGS__ \
+    false, vt::config::VTPrintConfig, verbose, feature, ctx, __VA_ARGS__ \
   )
 
 #define vt_make_config(feature, cftype)                                  \
@@ -123,7 +123,7 @@
   vt_config_print_force_impl(VTPrintConfig, feature, ctx, __VA_ARGS__)
 
 #define vt_debug_print_force_impl(feature, ctx, ...)                    \
-  vt_config_print_force_impl(DefaultConfig, feature, ctx, __VA_ARGS__)
+  vt_config_print_force_impl(VTPrintConfig, feature, ctx, __VA_ARGS__)
 
 #if vt_debug_force_enabled
   //#warning "Debug force is enabled"
@@ -244,8 +244,8 @@ struct CheckEnabled<
   Op, C,
   cat, ctx, mod,
   typename std::enable_if_t<
+    not vt_check_enabled(production_build) and
     (C::context  & ctx) not_eq 0 and
-    (C::category & cat) not_eq 0 and
     (C::mode     & mod) not_eq 0
   >
 > {

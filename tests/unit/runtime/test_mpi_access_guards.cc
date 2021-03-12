@@ -98,13 +98,8 @@ void testMpiAccess(bool access_allowed, bool grant_access) {
 }
 
 TEST_F(TestMpiAccessGuardDeathTest, test_mpi_access_prevented) {
-#if vt_check_enabled(mpi_access_guards) && !vt_check_enabled(production)
+#if vt_check_enabled(mpi_access_guards)
   testMpiAccess(false, false);
-#else
-  // Not applicable to 'death' / failure. Covered in allowed test case:
-  // - must have feature enabled
-  // - must be debug (as vtAssert is disabled in release/production)
-  GTEST_SKIP();
 #endif
 }
 

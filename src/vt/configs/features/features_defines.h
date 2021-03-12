@@ -73,5 +73,6 @@
 #define vt_feature_diagnostics         0 || vt_feature_cmake_diagnostics
 #define vt_feature_diagnostics_runtime 0 || vt_feature_cmake_diagnostics_runtime
 #define vt_feature_libfort             0 || vt_feature_cmake_libfort
+#define vt_feature_production_build    0 || vt_feature_cmake_production_build
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_DEFINES_H*/

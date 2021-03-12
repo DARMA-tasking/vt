@@ -45,29 +45,29 @@
 #if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
 #define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H
 
-#include "vt/configs/features/features_defines.h"
-
 /*
  * Strings for various vt features
  */
 
 #define vt_feature_str_bit_check_overflow "Check bitfield overflow"
+#define vt_feature_str_cons_multi_idx     "Collection Constructor Positional"
 #define vt_feature_str_detector           "C++ Trait Detector"
+#define vt_feature_str_diagnostics        "Performance analysis diagnostics"
+#define vt_feature_str_fcontext           "fcontext Threading"
 #define vt_feature_str_lblite             "Load Balancing for Collections"
 #define vt_feature_str_memory_pool        "Memory Pooling"
+#define vt_feature_str_mimalloc           "mimalloc memory allocator"
+#define vt_feature_str_mpi_access_guards  "MPI access guards"
 #define vt_feature_str_mpi_rdma           "Native RDMA with MPI"
 #define vt_feature_str_no_feature         "No feature"
 #define vt_feature_str_no_pool_alloc_env  "No memory pool envelope"
 #define vt_feature_str_openmp             "OpenMP Threading"
 #define vt_feature_str_print_term_msgs    "Print Termination Control Messages"
-#define vt_feature_str_production         "Production Build"
+#define vt_feature_str_priorities         "Message priorities"
+#define vt_feature_str_production_build   "Production Build (assertions and " \
+                                          "debug prints disabled)"
 #define vt_feature_str_stdthread          "std::thread Threading"
 #define vt_feature_str_trace_enabled      "Tracing Projections"
-#define vt_feature_str_cons_multi_idx     "Collection Constructor Positional"
-#define vt_feature_str_priorities         "Message priorities"
-#define vt_feature_str_mpi_access_guards  "MPI access guards"
 #define vt_feature_str_zoltan             "Zoltan for load balancing"
-#define vt_feature_str_mimalloc           "mimalloc memory allocator"
-#define vt_feature_str_diagnostics        "Performance analysis diagnostics"
 
 #endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_FEATURESWITCH_H*/

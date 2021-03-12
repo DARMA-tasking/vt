@@ -52,7 +52,6 @@
  * partially defined with cmake options
  */
 
-#define vt_debug_enabled cmake_config_debug_enabled
 #define vt_debug_force_enabled 0
 
 #include "vt/configs/debug/debug_config.h"
@@ -60,34 +59,9 @@
 
 namespace vt { namespace config {
 
-#if !vt_debug_enabled
-using DefaultConfig = Configuration<
-  static_cast<CatEnum>(CatEnum::none),
-  static_cast<CtxEnum>(0ull),
-  static_cast<ModeEnum>(0ull)
->;
-#else
-#define vt_backend_debug_categories cmake_config_debug_modes
-using DefaultConfig = Configuration<
-  static_cast<CatEnum>(
-    vt_backend_debug_categories | CatEnum::none
-  ),
-  static_cast<CtxEnum>(
-    CtxEnum::node |
-    CtxEnum::unknown
-  ),
-  static_cast<ModeEnum>(
-    ModeEnum::verbose |
-    ModeEnum::normal  |
-    ModeEnum::flush
-  )
->;
-#endif
-
-#define vt_backend_categories cmake_config_modes
 using VTPrintConfig = Configuration<
   static_cast<CatEnum>(
-    vt_backend_categories | CatEnum::none
+    CatEnum::none
   ),
   static_cast<CtxEnum>(
     CtxEnum::node |
@@ -99,7 +73,6 @@ using VTPrintConfig = Configuration<
     ModeEnum::flush
   )
 >;
-
 
 }} /* end namespace vt::config */
 

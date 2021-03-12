@@ -19,45 +19,6 @@ else()
 endif()
 list(REMOVE_DUPLICATES VT_CONFIG_TYPES)
 
-# to speedup compiling, we can disable vt_debug_print
-if (${VT_DEBUG_FAST})
-  set(VT_DEBUG_MODE_ON 0)
-else()
-  set(VT_DEBUG_MODE_ON 1)
-endif()
-
-# all vt_debug_print and vt_print categories we can potentially compile in
-set(
-  cmake_vt_debug_modes_all
-  "CatEnum::gen          | \
-   CatEnum::runtime      | \
-   CatEnum::active       | \
-   CatEnum::term         | \
-   CatEnum::termds       | \
-   CatEnum::barrier      | \
-   CatEnum::pipe         | \
-   CatEnum::param        | \
-   CatEnum::pool         | \
-   CatEnum::reduce       | \
-   CatEnum::rdma         | \
-   CatEnum::rdma_channel | \
-   CatEnum::handler      | \
-   CatEnum::hierlb       | \
-   CatEnum::gossiplb     | \
-   CatEnum::scatter      | \
-   CatEnum::serial_msg   | \
-   CatEnum::sequence     | \
-   CatEnum::trace        | \
-   CatEnum::objgroup     | \
-   CatEnum::location     | \
-   CatEnum::lb           | \
-   CatEnum::vrt_coll     | \
-   CatEnum::group        | \
-   CatEnum::phase        | \
-   CatEnum::broadcast      \
-   "
-)
-
 option(vt_detector_disabled "Build VT with detector disabled" OFF)
 option(vt_lb_enabled "Build VT with load balancing enabled" ON)
 option(vt_trace_enabled "Build VT with trace enabled" OFF)
@@ -212,6 +173,18 @@ else()
   set(vt_feature_cmake_diagnostics_runtime "0")
 endif()
 
+option(
+  vt_production_build_enabled
+  "Build VT with assertions and debug prints disabled" OFF
+)
+if (${vt_production_build_enabled})
+  message(STATUS "Building VT with assertions and debug prints disabled")
+  set(vt_feature_cmake_production_build "1")
+else()
+  message(STATUS "Building VT with assertions and debug prints enabled")
+  set(vt_feature_cmake_production_build "0")
+endif()
+
 if (vt_libfort_enabled)
   set(vt_feature_cmake_libfort "1")
 else()
@@ -219,7 +192,6 @@ else()
 endif()
 
 set(vt_feature_cmake_no_feature "0")
-set(vt_feature_cmake_production "0")
 
 set (vt_feature_cmake_mpi_rdma "0")
 set (vt_feature_cmake_print_term_msgs "0")
@@ -235,49 +207,10 @@ endif()
 
 set (vt_feature_cmake_cons_multi_idx "0")
 
-set(cmake_vt_debug_modes_debug                 "${cmake_vt_debug_modes_all}")
-set(cmake_vt_debug_modes_relwithdebinfo        "")
-set(cmake_vt_debug_modes_release               "")
-set(cmake_config_debug_enabled_debug           ${VT_DEBUG_MODE_ON})
-set(cmake_config_debug_enabled_relwithdebinfo  0)
-set(cmake_config_debug_enabled_release         0)
-
-set(
-  cmake_vt_modes
-  ${cmake_vt_debug_modes_all}
-)
 
 # this loop executes over all known build types, not just the selected one
 foreach(loop_build_type ${VT_CONFIG_TYPES})
   #message(STATUS "generating for build type=${loop_build_type}")
-
-  # disable debug_print for unfamiliar build types
-  if (NOT DEFINED cmake_vt_debug_modes_${loop_build_type})
-    set(cmake_vt_debug_modes_${loop_build_type} "")
-  endif()
-  if (NOT DEFINED cmake_config_debug_enabled_${loop_build_type})
-    set(cmake_config_debug_enabled_${loop_build_type} 0)
-  endif()
-
-  # use the debug_print modes specified for this build type before the loop
-  set(
-    cmake_vt_debug_modes
-    ${cmake_vt_debug_modes_${loop_build_type}}
-  )
-
-  # assume production mode for everything except debug or CI build
-  if (loop_build_type STREQUAL "debug" OR ${vt_feature_cmake_ci_build})
-    set(vt_feature_cmake_production "0")
-  else()
-    set(vt_feature_cmake_production "1")
-  endif()
-
-  # use the vt_debug_print configuration specified for this build type before
-  # the loop
-  set(
-    cmake_config_debug_enabled
-    ${cmake_config_debug_enabled_${loop_build_type}}
-  )
 
   # put the config file in a subdirectory corresponding to the lower case build name
   configure_file(

@@ -48,14 +48,8 @@
 #include "vt/configs/types/types_headers.h"
 #include "vt/collective/basic.h"
 
-#include <tuple>
-
-#define outputArgsImpl(...) std::make_tuple(__VA_ARGS__)
-
 #define INVERT_COND(cond) (!(cond))
 #define DEBUG_LOCATION __FILE__,__LINE__,__func__
-
-#include <string>
 
 namespace vt {
 

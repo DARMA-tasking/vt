@@ -164,6 +164,7 @@ struct AppConfig {
   bool vt_diag_csv_base_units = false;
 
   bool vt_pause = false;
+  bool vt_no_assert_fail = false;
   std::size_t vt_max_mpi_send_size = 1ull << 30;
 
   bool vt_debug_all          = false;
@@ -308,6 +309,7 @@ struct AppConfig {
       | vt_diag_csv_base_units
 
       | vt_pause
+      | vt_no_assert_fail
       | vt_max_mpi_send_size
 
       | vt_debug_all

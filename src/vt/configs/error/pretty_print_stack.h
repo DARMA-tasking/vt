@@ -49,8 +49,6 @@
 #include "vt/configs/error/stack_out.h"
 #include "vt/configs/debug/debug_colorize.h"
 
-#include <vector>
-#include <tuple>
 #include <string>
 
 namespace vt { namespace debug { namespace stack {

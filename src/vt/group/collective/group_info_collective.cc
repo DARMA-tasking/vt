@@ -674,7 +674,7 @@ void InfoColl::finalize() {
 
   if (in_phase_two_ && send_down_finished_ == send_down_) {
 
-    if (vt_backend_debug_enabled(group)) {
+    if (!vt_check_enabled(production_build)) {
       char buf[256];
       buf[0] = '\0';
       int cur = 0;

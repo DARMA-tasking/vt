@@ -54,14 +54,14 @@ build configuration:
 | `vt_pool_enabled`                | 1               | Use memory pool in *vt* for message allocation |
 | `vt_zoltan_enabled`              | 0               | Build with Zoltan enabled for `ZoltanLB` support |
 | `vt_mpi_guards`                  | 0               | Guards against mis-use of MPI calls in code using *vt* |
-| `vt_fcontext_enabled`            | 0               | Enable user-level threads through boost fcontext |
 | `vt_priorities_enabled`          | 1               | Enable prioritization of work (adds bits in envelope) |
 | `vt_diagnostics_enabled`         | 1               | Enable VT component diagnostics for performance analysis |
 | `vt_diagnostics_runtime_enabled` | 0               | Enable VT component diagnostics at runtime by default |
 | `vt_priority_bits_per_level`     | 3               | Number of bits per level of priority in envelope |
 | `vt_build_extended_tests`        | 1               | Build with full, extended testing |
+| `vt_production_build_enabled`    | 0               | Disable assertions and debug prints at compile time |
 | `vt_unity_build_enabled`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
-| `vt_fcontext_enabled`            | 1               | Force use of fcontext for threading |
+| `vt_fcontext_enabled`            | 0               | Force use of fcontext for threading |
 | `CODE_COVERAGE`                  | 0               | Enable code coverage for VT examples/tests |
 | `USE_OPENMP`                     | 0               | Force use of OpenMP for threading |
 | `USE_STD_THREAD`                 | 0               | Force use of std::thread for threading |
@@ -97,6 +97,7 @@ parameters.
 | `VT_MPI_GUARD_ENABLED `          | 0               | Guards against mis-use of MPI calls in code using *vt* |
 | `VT_EXTENDED_TESTS_ENABLED`      | 1               | Build with full, extended testing |
 | `VT_UNITY_BUILD_ENABLED`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
+| `VT_PRODUCTION_BUILD_ENABLED`    | 0               | Disable assertions and debug prints at compile time |
 | `VT_DIAGNOSTICS_ENABLED`         | 1               | Enable VT component diagnostics for performance analysis |
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0               | Enable VT component diagnostics at runtime by default |
 

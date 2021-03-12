@@ -42,10 +42,6 @@
 //@HEADER
 */
 
-#cmakedefine01 cmake_config_debug_enabled
-#define cmake_config_debug_modes @cmake_vt_debug_modes@
-#define cmake_config_modes @cmake_vt_modes@
-
 #define vt_feature_cmake_no_feature          @vt_feature_cmake_no_feature@
 #define vt_feature_cmake_bit_check_overflow  @vt_feature_cmake_bit_check_overflow@
 #define vt_feature_cmake_trace_enabled       @vt_feature_cmake_trace_enabled@
@@ -71,6 +67,7 @@
 #define vt_feature_cmake_diagnostics         @vt_feature_cmake_diagnostics@
 #define vt_feature_cmake_diagnostics_runtime @vt_feature_cmake_diagnostics_runtime@
 #define vt_feature_cmake_libfort             @vt_feature_cmake_libfort@
+#define vt_feature_cmake_production_build    @vt_feature_cmake_production_build@
 
 #cmakedefine vt_quirked_trivially_copyable_on_msg
 #cmakedefine vt_quirked_serialize_method_detection

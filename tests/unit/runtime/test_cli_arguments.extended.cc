@@ -2,11 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           features_metafeatures.h
+//                       test_cli_arguments.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2020 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -42,35 +42,33 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONFIGS_FEATURES_FEATURES_METAFEATURES_H
-#define INCLUDED_VT_CONFIGS_FEATURES_FEATURES_METAFEATURES_H
+#include <gtest/gtest.h>
 
-#include "vt/configs/features/features_defines.h"
+#include "test_parallel_harness.h"
 
-// Meta-features and debug and turn combinations on
-#define debug_meta_all    \
-  CatEnum::active       | \
-  CatEnum::barrier      | \
-  CatEnum::broadcast    | \
-  CatEnum::event        | \
-  CatEnum::gen          | \
-  CatEnum::group        | \
-  CatEnum::handler      | \
-  CatEnum::lb           | \
-  CatEnum::location     | \
-  CatEnum::param        | \
-  CatEnum::pool         | \
-  CatEnum::reduce       | \
-  CatEnum::rdma         | \
-  CatEnum::rdma_channel | \
-  CatEnum::rdma_state   | \
-  CatEnum::runtime      | \
-  CatEnum::sequence     | \
-  CatEnum::serial       | \
-  CatEnum::term         | \
-  CatEnum::trace        | \
-  CatEnum::vrt          | \
-  CatEnum::vrt_coll     | \
-  CatEnum::worker
+#include <vt/transport.h>
 
-#endif /*INCLUDED_VT_CONFIGS_FEATURES_FEATURES_METAFEATURES_H*/
+namespace vt { namespace tests { namespace unit {
+
+struct TestCliArguments : TestParallelHarness { };
+
+#if not vt_check_enabled(production_build)
+TEST_F(TestCliArguments, test_vt_assert) {
+  EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
+
+  ASSERT_DEATH(
+    vtAssert(false, "Should abort."),
+    "Should abort."
+  );
+}
+#endif
+
+TEST_F(TestCliArguments, test_assert_no_fail) {
+  EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
+  theConfig()->vt_no_assert_fail = true;
+
+  vtAssert(false, "Should not abort.");
+  SUCCEED();
+}
+
+}}} // end namespace vt::tests::unit

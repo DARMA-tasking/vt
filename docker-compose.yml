@@ -30,6 +30,7 @@
 #   VT_EXTENDED_TESTS=1       # Build all the extended testing
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
 #   VT_UNITY_BUILD=0          # Build with Unity/Jumbo mode enabled
+#   VT_PRODUCTION_BUILD=0     # Disable assertions and debug prints
 #   VT_FCONTEXT=0             # Force use of fcontext for threading
 #   VT_USE_OPENMP=0           # Force use of OpenMP for threading
 #   VT_USE_STD_THREAD=0       # Force use of std::thread for threading
@@ -132,6 +133,7 @@ x-vtopts: &vtopts
   VT_POOL_ENABLED: ${VT_POOL:-1}
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
   VT_UNITY_BUILD_ENABLED: ${VT_UNITY_BUILD:-0}
+  VT_PRODUCTION_BUILD_ENABLED: ${VT_PRODUCTION_BUILD:-0}
   VT_FCONTEXT_ENABLED: ${VT_FCONTEXT:-0}
   VT_USE_OPENMP: ${VT_USE_OPENMP:-0}
   VT_USE_STD_THREAD: ${VT_USE_STD_THREAD:-0}

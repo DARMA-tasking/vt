@@ -155,8 +155,8 @@ protected:
 private:
   std::pair<int, char**>
   injectAdditionalArgs(int old_argc, char** old_argv) {
-    std::copy(
-      old_argv, old_argv + old_argc, std::back_inserter(additional_args_)
+    additional_args_.insert(
+      additional_args_.begin(), old_argv, old_argv + old_argc
     );
 
     addAdditionalArgs();
