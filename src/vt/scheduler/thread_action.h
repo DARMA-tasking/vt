@@ -45,8 +45,11 @@
 #if !defined INCLUDED_VT_SCHEDULER_THREAD_ACTION_H
 #define INCLUDED_VT_SCHEDULER_THREAD_ACTION_H
 
+#if vt_check_enabled(fcontext)
+
 #include "vt/config.h"
 #include "vt/messaging/active.h"
+
 #include <context/fcontext.h>
 
 namespace vt { namespace scheduler {
@@ -130,4 +133,5 @@ private:
 
 }} /* end namespace vt::scheduler */
 
+#endif /*vt_check_enabled(fcontext)*/
 #endif /*INCLUDED_VT_SCHEDULER_THREAD_ACTION_H*/
