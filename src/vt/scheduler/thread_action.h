@@ -48,31 +48,21 @@
 #if vt_check_enabled(fcontext)
 
 #include "vt/config.h"
-#include "vt/messaging/active.h"
 
 #include <context/fcontext.h>
 
 namespace vt { namespace scheduler {
 
-struct ThreadAction {
+struct ThreadAction final {
 
-  explicit ThreadAction(ActionType in_action)
-    : action_(in_action),
-      cur_epoch_(theMsg()->getEpoch()),
-      stack(create_fcontext_stack())
-  {
-    theTerm()->produce(cur_epoch_);
-  }
+  explicit ThreadAction(ActionType in_action);
 
   ThreadAction(ThreadAction&&) = default;
   ThreadAction(ThreadAction const&) = delete;
   ThreadAction& operator=(ThreadAction&&) = default;
   ThreadAction& operator=(ThreadAction const&) = delete;
 
-  ~ThreadAction() {
-    theTerm()->consume(cur_epoch_);
-    destroy_fcontext_stack(stack);
-  }
+  ~ThreadAction();
 
   void run() {
     ctx = make_fcontext_stack(stack, runFnImpl);

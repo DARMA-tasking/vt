@@ -43,9 +43,27 @@
 */
 
 #include "vt/scheduler/thread_action.h"
+#include "vt/messaging/active.h"
+
+#if vt_check_enabled(fcontext)
 
 namespace vt { namespace scheduler {
+
+/*explicit*/ ThreadAction::ThreadAction(ActionType in_action)
+  : action_(in_action),
+    cur_epoch_(theMsg()->getEpoch()),
+    stack(create_fcontext_stack())
+{
+  theTerm()->produce(cur_epoch_);
+}
+
+ThreadAction::~ThreadAction() {
+  theTerm()->consume(cur_epoch_);
+  destroy_fcontext_stack(stack);
+}
 
 /*static*/ ThreadAction* ThreadAction::cur_running_ = nullptr;
 
 }} /* end namespace vt::scheduler */
+
+#endif /*vt_check_enabled(fcontext)*/
