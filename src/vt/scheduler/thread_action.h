@@ -70,6 +70,14 @@ struct ThreadAction final {
   }
 
   void resume() {
+    // @todo: there is other context that is set/unset depending on what the
+    // work unit is. e.g.: ActiveMessenger::{current_handler_context_,
+    // current_node_context_, current_epoch_context_, current_priority_context_,
+    // current_priority_level_context_, current_trace_context_}
+    //
+    // there is other context in the CollectionManager, and maybe in other components
+    //
+
     fmt::print("try resume: done={}\n", done_);
     if (done_) {
       return;
