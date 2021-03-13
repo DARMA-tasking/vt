@@ -54,13 +54,17 @@ fi
 
 # Extract tests' report from log file
 delimiter="-=-=-=-"
-tests_failures=$(< "$cmake_output_log" sed -n -e '/The following tests FAILED:/,$p')
-tests_failures=${tests_failures//$'\n'/$delimiter}
-tabulation="  "
-tests_failures=${tests_failures//$'\t'/$tabulation}
-if test -z "$tests_failures"
+tests_failures=""
+if test -f "$cmake_output_log"
 then
-    tests_failures='Testing - passed'
+    tests_failures=$(< "$cmake_output_log" sed -n -e '/The following tests FAILED:/,$p')
+    tests_failures=${tests_failures//$'\n'/$delimiter}
+    tabulation="  "
+    tests_failures=${tests_failures//$'\t'/$tabulation}
+    if test -z "$tests_failures"
+    then
+        tests_failures='Testing - passed'
+    fi
 fi
 
 # Concatenate both reports into one
