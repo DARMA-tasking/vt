@@ -50,19 +50,108 @@
 namespace vt { namespace scheduler {
 
 ThreadAction::ThreadAction(ActionType in_action, std::size_t stack_size)
-  : action_(in_action),
+  : ThreadAction(0, in_action, stack_size)
+{ }
+
+ThreadAction::ThreadAction(
+  uint64_t in_id, ActionType in_action, std::size_t stack_size
+) : id_(in_id),
+    action_(in_action),
     cur_epoch_(theMsg()->getEpoch()),
     stack(create_fcontext_stack(stack_size))
-{
-  theTerm()->produce(cur_epoch_);
-}
+{ }
 
 ThreadAction::~ThreadAction() {
-  theTerm()->consume(cur_epoch_);
   destroy_fcontext_stack(stack);
 }
 
 /*static*/ ThreadAction* ThreadAction::cur_running_ = nullptr;
+
+void ThreadAction::run() {
+  ctx = make_fcontext_stack(stack, runFnImpl);
+  transfer_in = jump_fcontext(ctx, static_cast<void*>(this));
+}
+
+void ThreadAction::resume() {
+  // @todo: there is other context that is set/unset depending on what the
+  // work unit is. e.g.: ActiveMessenger::{current_handler_context_,
+  // current_node_context_, current_epoch_context_, current_priority_context_,
+  // current_priority_level_context_, current_trace_context_}
+  //
+  // there is other context in the CollectionManager, and maybe in other components
+  //
+
+  vt_debug_print(
+    gen, node,
+    "try resume: isDone={}\n", done_
+  );
+
+  if (done_) {
+    return;
+  }
+
+  theTerm()->consume(cur_epoch_);
+  theMsg()->pushEpoch(cur_epoch_);
+  cur_running_ = this;
+  transfer_in = jump_fcontext(transfer_in.ctx, nullptr);
+}
+
+void ThreadAction::runUntilDone() {
+  run();
+  while (not done_) {
+    resume();
+  }
+}
+
+/*static*/ void ThreadAction::runFnImpl(fcontext_transfer_t t) {
+  vt_debug_print(
+    gen, node,
+    "start running: runFnImpl\n"
+  );
+
+  auto ta = static_cast<ThreadAction*>(t.data);
+  if (ta->action_) {
+    theMsg()->pushEpoch(ta->cur_epoch_);
+    cur_running_ = ta;
+    ta->transfer_out = t;
+    ta->action_();
+    theMsg()->popEpoch(ta->cur_epoch_);
+    cur_running_ = nullptr;
+  }
+
+  vt_debug_print(
+    gen, node,
+    "finished running: runFnImpl\n"
+  );
+
+  ta->done_ = true;
+  jump_fcontext(ta->transfer_out.ctx, nullptr);
+}
+
+/*static*/ void ThreadAction::suspend() {
+  if (cur_running_ != nullptr) {
+    auto x = cur_running_;
+    cur_running_ = nullptr;
+    vt_debug_print(gen, node, "suspend\n");
+    theTerm()->produce(x->cur_epoch_);
+    theMsg()->popEpoch(x->cur_epoch_);
+    x->transfer_out = jump_fcontext(x->transfer_out.ctx, nullptr);
+  } else {
+    fmt::print("Can not suspend---no thread is running\n");
+  }
+}
+
+/*static*/ bool ThreadAction::isThreadActive() {
+  return cur_running_ != nullptr;
+}
+
+/*static*/ uint64_t ThreadAction::getActiveThreadID() {
+  if (cur_running_) {
+    return cur_running_->id_;
+  } else {
+    return 0;
+  }
+}
 
 }} /* end namespace vt::scheduler */
 

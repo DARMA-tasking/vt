@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               thread_action.h
+//                              thread_manager.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,54 +42,13 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_SCHEDULER_THREAD_ACTION_H
-#define INCLUDED_VT_SCHEDULER_THREAD_ACTION_H
+#include "vt/scheduler/thread_manager.h"
 
-#if vt_check_enabled(fcontext)
-
-#include "vt/config.h"
-
-#include <context/fcontext.h>
+#include <memory>
 
 namespace vt { namespace scheduler {
 
-struct ThreadAction final {
-
-  explicit ThreadAction(ActionType in_action, std::size_t stack_size = 0);
-  ThreadAction(uint64_t in_id, ActionType in_action, std::size_t stack_size = 0);
-
-  ThreadAction(ThreadAction&&) = default;
-  ThreadAction(ThreadAction const&) = delete;
-  ThreadAction& operator=(ThreadAction&&) = default;
-  ThreadAction& operator=(ThreadAction const&) = delete;
-
-  ~ThreadAction();
-
-  void run();
-  void resume();
-  void runUntilDone();
-  uint64_t getID() const { return id_; }
-  bool isDone() const { return done_; }
-
-  static void runFnImpl(fcontext_transfer_t t);
-  static void suspend();
-  static bool isThreadActive();
-  static uint64_t getActiveThreadID();
-
-private:
-  static ThreadAction* cur_running_;
-
-private:
-  uint64_t id_ = 0;
-  ActionType action_ = nullptr;
-  EpochType cur_epoch_ = no_epoch;
-  fcontext_stack_t stack;
-  fcontext_t ctx;
-  fcontext_transfer_t transfer_out, transfer_in;
-  bool done_ = false;
-};
+/*static*/ uint64_t ThreadManager::next_thread_id_ = 1;
+/*static*/ std::unordered_map<uint64_t, std::unique_ptr<ThreadAction>> ThreadManager::threads_;
 
 }} /* end namespace vt::scheduler */
-
-#endif /*vt_check_enabled(fcontext)*/
-#endif /*INCLUDED_VT_SCHEDULER_THREAD_ACTION_H*/
