@@ -193,7 +193,7 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
   auto const file_path =
     fmt::format("{}/{}", theConfig()->vt_lb_stats_dir, file_name);
   auto const readPhases = getPhasesFromStatsFile(file_path.c_str());
-  EXPECT_EQ(readPhases.size(), num_phases)
+  EXPECT_EQ(readPhases.size(), num_phases);
 
   vt::theCollective()->barrier();
 
