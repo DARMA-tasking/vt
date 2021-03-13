@@ -83,6 +83,7 @@ struct CallbackProxySend : CallbackBase<signal::Signal<MsgT>> {
   void serialize(SerializerT& s);
 
 private:
+  using CallbackBase<signal::Signal<MsgT>>::trigger_;
   void trigger_(SignalDataType* data) override;
 
 private:
