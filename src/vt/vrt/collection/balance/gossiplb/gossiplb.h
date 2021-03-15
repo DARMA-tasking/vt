@@ -147,8 +147,8 @@ private:
   TimeType new_imbalance_                           = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
-  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::Arbitrary;
-  CMFTypeEnum cmf_type_                             = CMFTypeEnum::Original;
+  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::Marginal;
+  CMFTypeEnum cmf_type_                             = CMFTypeEnum::NormByMax;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
   std::vector<bool> propagated_k_;
