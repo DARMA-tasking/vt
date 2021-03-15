@@ -10,6 +10,7 @@ resources:
 - repo: self
 
 variables:
+  System.debug: true
   tag: '$(Build.BuildId)'
   REPO: [% repo %]
   ARCH: [% arch %]
