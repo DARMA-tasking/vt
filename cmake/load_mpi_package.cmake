@@ -18,7 +18,9 @@ set(MPI_EPI_FLAGS    "${MPIEXEC_POSTFLAGS}")
 set(MPI_NUMPROC_FLAG "${MPIEXEC_NUMPROC_FLAG}")
 set(MPI_MAX_NUMPROC  "${MPIEXEC_MAX_NUMPROCS}")
 
-message(STATUS "MPI detected max nproc: ${MPIEXEC_MAX_NUMPROCS}")
+set(cmake_detected_max_num_nodes ${MPIEXEC_MAX_NUMPROCS})
+
+message(STATUS "MPI max nproc: ${MPI_MAX_NUMPROC}")
 
 include(cmake/test_vt.cmake)
 
