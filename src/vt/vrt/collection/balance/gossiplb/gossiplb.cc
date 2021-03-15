@@ -557,9 +557,18 @@ void GossipLB::propagateIncomingSync(GossipMsgSync* msg) {
 }
 
 std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
+  // Build the CMF
+  std::vector<double> cmf = {};
+
+  if (under.size() == 1) {
+    // trying to compute the cmf for only a single object can result
+    // in nan for some cmf types below, so do it the easy way instead
+    cmf.push_back(1.0);
+    return cmf;
+  }
+
   double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
 
-  // Build the CMF
   double sum_p = 0.0;
   double factor = 1.0;
 
@@ -588,7 +597,6 @@ std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
     vtAbort("This CMF type is not supported");
   }
 
-  std::vector<double> cmf = {};
   for (auto&& pe : under) {
     auto iter = load_info_.find(pe);
     vtAssert(iter != load_info_.end(), "Node must be in load_info_");
