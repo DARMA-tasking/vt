@@ -76,6 +76,16 @@ static inline void activeMessageGroupCollective() {
 
   auto const& is_even_node = this_node % 2 == 0;
 
+  if (this_node == 0) {
+    int val = 10;
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    vt::theSched()->runSchedulerWhile(
+      [&val]{
+        return --val >= 0;
+      }
+    );
+  }
+
   auto group = theGroup()->newGroupCollective(
     is_even_node, [](GroupType group_id){
       fmt::print("Group is created: id={:x}\n", group_id);
