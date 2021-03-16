@@ -43,6 +43,8 @@
 */
 
 #include "test_objgroup_common.h"
+#include "test_helpers.h"
+
 #include <typeinfo>
 
 namespace vt { namespace tests { namespace unit {
@@ -51,8 +53,7 @@ struct TestObjGroup : TestParallelHarness {
 
   void SetUp() override {
     TestParallelHarness::SetUp();
-    auto const nb_nodes = vt::theContext()->getNumNodes();
-    vtAssert(nb_nodes > 1, "Failure: require two or more nodes");
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
   void TearDown() override {

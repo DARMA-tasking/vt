@@ -46,6 +46,7 @@
 
 #include "vt/transport.h"
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 
 namespace vt { namespace tests { namespace unit {
 
@@ -110,7 +111,7 @@ static void message_handler_with_nested_loop(TestMsg* msg) {
 
 TEST_F(TestSchedulerLoop, test_scheduler_loop_nesting_1) {
 
-  vtAssert(theContext()->getNumNodes() >= 2, "At least 2 nodes required.");
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
 
   NodeType node = theContext()->getNode();
   NodeType target_node = (node + 1) % theContext()->getNumNodes();

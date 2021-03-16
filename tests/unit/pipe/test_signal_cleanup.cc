@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -72,6 +73,8 @@ void bounce(CallbackMsg* msg) {
 }
 
 TEST_F(TestSignalCleanup, test_signal_cleanup_3) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
   auto const this_node = theContext()->getNode();
 
   int c1 = 0, c2 = 0;

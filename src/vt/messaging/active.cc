@@ -395,7 +395,8 @@ EventType ActiveMessenger::sendMsgBytes(
   }
 
   vtAbortIf(
-    dest >= theContext()->getNumNodes() || dest < 0, "Invalid destination: {}"
+    dest >= theContext()->getNumNodes() || dest < 0,
+    fmt::format("Invalid destination: {}", dest)
   );
 
   if (is_bcast) {

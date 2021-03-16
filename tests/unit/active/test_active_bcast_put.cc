@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -69,6 +70,8 @@ struct TestActiveBroadcastPut : TestParameterHarnessNode {
     TestParameterHarnessNode::SetUp();
     handler_count = 0;
     num_msg_sent = 1;
+
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
   virtual void TearDown() {
