@@ -78,7 +78,7 @@ bool GossipLB::isOverloaded(LoadType load) const {
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{
-    "f", "k", "i", "c", "trials", "deterministic", "ordering", "cmf"
+    "f", "k", "i", "c", "trials", "deterministic", "inform", "ordering", "cmf"
   };
   spec->checkAllowedKeys(allowed);
 
@@ -97,8 +97,8 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   num_iters_     = spec->getOrDefault<int32_t>("i", num_iters_);
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
   deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
-  int32_t c      = spec->getOrDefault<int32_t>("c", default_c);
 
+  int32_t c      = spec->getOrDefault<int32_t>("c", default_c);
   criterion_     = static_cast<CriterionEnum>(c);
   int32_t inf    = spec->getOrDefault<int32_t>("inform", default_inform);
   inform_type_   = static_cast<InformTypeEnum>(inf);
