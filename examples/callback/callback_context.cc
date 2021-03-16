@@ -99,6 +99,11 @@ static MyContext my_global_ctx = {};
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
+  if (vt::theContext()->getNumNodes() < 2) {
+    vt::finalize();
+    return 0;
+  }
+
   vt::NodeType this_node = vt::theContext()->getNode();
 
   if (this_node == 0) {

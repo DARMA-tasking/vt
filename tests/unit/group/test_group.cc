@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -62,6 +63,11 @@ static int32_t num_recv = 0;
 struct TestMsg : ::vt::Message {};
 
 struct TestGroup : TestParallelHarness {
+  void SetUp() override {
+    TestParallelHarness::SetUp();
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
+  }
+
   static void groupHandler(TestMsg* msg) {
     auto const& this_node = theContext()->getNode();
     num_recv++;

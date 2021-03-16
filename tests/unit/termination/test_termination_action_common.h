@@ -48,6 +48,7 @@
 
 #include "test_parallel_harness.h"
 #include "test_termination_channel_counting.h"
+#include "test_helpers.h"
 
 #if !defined INCLUDED_TERMINATION_ACTION_COMMON_H
 #define INCLUDED_TERMINATION_ACTION_COMMON_H
@@ -84,7 +85,7 @@ struct BaseFixture : Base {
     channel::root = 0;
     channel::node = vt::theContext()->getNode();
     channel::all  = vt::theContext()->getNumNodes();
-    vtAssert(channel::all > 1, "There should be at least two nodes");
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
 
     // retrieve test parameters
     auto const& values = GetParam();
@@ -114,7 +115,7 @@ struct SimpleFixture : TestParallelHarness {
     channel::root = 0;
     channel::node = vt::theContext()->getNode();
     channel::all  = vt::theContext()->getNumNodes();
-    vtAssert(channel::all > 1, "Should use at least two nodes");
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 };
 

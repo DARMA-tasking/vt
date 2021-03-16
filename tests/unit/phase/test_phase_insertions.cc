@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include <vt/transport.h>
 
@@ -113,6 +114,8 @@ void proxyHandler(ProxyMsg* m) {
 using TestPhaseInsertions = TestParallelHarness;
 
 TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
   auto range = vt::Index1D(num_elms);
 
   auto this_node = theContext()->getNode();

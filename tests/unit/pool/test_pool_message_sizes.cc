@@ -49,6 +49,7 @@
 #include "test_harness.h"
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -118,6 +119,8 @@ template <>
 void TestPoolMessageSizes::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
 
 TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
   using namespace vt;
 
   auto const& my_node = theContext()->getNode();

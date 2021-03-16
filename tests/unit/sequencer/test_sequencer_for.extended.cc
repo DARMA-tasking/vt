@@ -48,6 +48,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -91,6 +92,8 @@ struct TestSequencerFor : TestParallelHarness {
 };
 
 TEST_F(TestSequencerFor, test_for) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
   auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT

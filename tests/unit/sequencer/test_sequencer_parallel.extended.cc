@@ -53,6 +53,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -87,8 +88,9 @@ struct TestSequencerParallelParam : TestParallelHarnessParam<CountType> {
 
   SEQUENCE_REGISTER_HANDLER(TestSequencerParallelParam::TestMsg, seqParHanN);
 
-  virtual void SetUp() {
+  void SetUp() override {
     TestParallelHarnessParam<CountType>::SetUp();
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
   }
 
   template <typename MessageT, ActiveTypedFnType<MessageT>* f>
@@ -181,6 +183,11 @@ struct TestSequencerParallel : TestParallelHarness {
   SEQUENCE_REGISTER_HANDLER(TestSequencerParallel::TestMsg, seqParHan2);
   SEQUENCE_REGISTER_HANDLER(TestSequencerParallel::TestMsg, seqParHan3);
   SEQUENCE_REGISTER_HANDLER(TestSequencerParallel::TestMsg, seqParHan4);
+
+  void SetUp() override {
+    TestParallelHarness::SetUp();
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
+  }
 
   static void seqParFn1(SeqType const& seq_id) {
     static std::atomic<OrderType> seq_ordering_{};

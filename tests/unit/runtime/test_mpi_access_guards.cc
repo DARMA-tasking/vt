@@ -46,6 +46,7 @@
 
 #include "vt/transport.h"
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 
 namespace vt { namespace tests { namespace unit {
 
@@ -87,8 +88,6 @@ void testMpiAccess(bool access_allowed, bool grant_access) {
   expected_to_fail_on_mpi_access = not access_allowed;
   explicitly_grant_access = grant_access;
 
-  vtAssert(theContext()->getNumNodes() >= 2, "Requires at least 2 nodes");
-
   if (theContext()->getNode() == 0) {
     // Sending message for common-case of attempting MPI access within
     // a message handler; it applies to all cases through the scheduler.
@@ -99,11 +98,13 @@ void testMpiAccess(bool access_allowed, bool grant_access) {
 
 TEST_F(TestMpiAccessGuardDeathTest, test_mpi_access_prevented) {
 #if vt_check_enabled(mpi_access_guards)
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
   testMpiAccess(false, false);
 #endif
 }
 
 TEST_F(TestMpiAccessGuardTest, test_mpi_access_allowed) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
 #if vt_check_enabled(mpi_access_guards)
   // Only allowed with grant when feature enabled
   testMpiAccess(true, true);
