@@ -57,10 +57,41 @@ std::unique_ptr<MPISingletonMultiTest> mpi_singleton = nullptr;
 int test_argc = 0;
 char** test_argv = nullptr;
 
-
 }}} // end namespace vt::tests::unit
 
+bool should_init_MPI(int& argc, char** argv) {
+  if (argc < 3) {
+    return false;
+  }
+
+  /**
+   * Extra flag (--MPI_TEST or --NO_MPI_TEST) is added as the last argument
+   */
+
+  std::string test_arg = argv[argc - 1];
+  assert(
+    (test_arg == "--MPI_TEST" or test_arg == "--NO_MPI_TEST") &&
+    "Last argument should be either --MPI_TEST or --NO_MPI_TEST"
+  );
+
+  // 'Remove' the argument so we don't pass it further to vt
+  argv[argc - 1] = nullptr;
+  --argc;
+
+  return test_arg == "--MPI_TEST";
+}
+
 int main(int argc, char **argv) {
+
+  /**
+   * Initalize MPI (if needed) before GTEST so we can disable tests' generation
+   * based on the number of ranks.
+   */
+  if (should_init_MPI(argc, argv)) {
+    vt::tests::unit::mpi_singleton =
+      std::make_unique<vt::tests::unit::MPISingletonMultiTest>(argc, argv);
+  }
+
   ::testing::InitGoogleTest(&argc, argv);
 
   vt::tests::unit::test_argc = argc;
