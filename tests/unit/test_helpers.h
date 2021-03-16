@@ -115,7 +115,7 @@ inline bool isOversubscribed() {
  */
 #define SET_NUM_NODES_CONSTRAINT(req_num_nodes)                           \
 {                                                                         \
- auto const num_nodes = theContext()->getNumNodes();                      \
+  auto const num_nodes = theContext()->getNumNodes();                     \
   if (num_nodes != req_num_nodes) {                                       \
     GTEST_SKIP() << fmt::format(                                          \
       "Skipping the run on {} nodes. This test should run only on {} "    \
