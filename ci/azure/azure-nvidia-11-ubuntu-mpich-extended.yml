@@ -140,7 +140,9 @@ stages:
                 "$(Build.BuildNumber)"                              \
                 "$(System.PullRequest.PullRequestNumber)"           \
                 "$(Build.Repository.Name)"                          \
-                "$GITHUB_PAT"
+                "$GITHUB_PAT"                                       \
+                "$(Build.BuildId)"                                  \
+                "$(System.JobId)"
 
         env:
           GITHUB_PAT: $(github_pat)

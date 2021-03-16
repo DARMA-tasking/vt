@@ -36,7 +36,9 @@
 #    "$(Build.BuildNumber)"                             \
 #    "$(System.PullRequest.PullRequestNumber)"          \
 #    "$(Build.Repository.Name)"                         \
-#    "$GITHUB_PAT"
+#    "$GITHUB_PAT"                                      \
+#    "$(Build.BuildId"                                  \
+#    "$(System.JobId)"
 
 compilation_errors_warnings_out="$1"
 cmake_output_log="$2"
@@ -44,6 +46,9 @@ build_number="$3"
 pull_request_number="$4"
 repository_name="$5"
 github_pat="$6"
+build_id="$7"
+job_id="$8"
+task_id="28db5144-7e5d-5c90-2820-8676d630d9d2"
 
 # Extract compilation's errors and warnings from log file
 warnings_errors=$(cat "$compilation_errors_warnings_out")
@@ -72,20 +77,29 @@ val="$warnings_errors""$delimiter""$delimiter""$tests_failures"
 max_comment_size=64450
 if test ${#val} -gt "$max_comment_size"
 then
-    val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read pipeline log. <=="
+    val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read log. <=="
 fi
+
+# Build comment
+commit_sha="$(git log --skip=1 -1  --pretty=format:%H)"
+build_link='https://dev.azure.com/DARMA-tasking/DARMA/_build/results?buildId='"$build_id"'&view=logs&j='"$job_id"'&t='"$task_id"
+comment_body="**$build_number**\nBuild for $commit_sha\n\n$val\n\nBuild log: $build_link"
 
 # Fix new lines
 new_line="\n"
-comment_body=${val//$delimiter/$new_line}
+comment_body=${comment_body//$delimiter/$new_line}
 quotation_mark="\""
 new_quotation_mark="\\\""
 comment_body=${comment_body//$quotation_mark/$new_quotation_mark}
 
 # Ensure there's no temporary json file
-rm data.json || true
+if test -f data.json
+then
+    rm data.json
+fi
 
 # Prepare data send with request to GitHub
+# TODO (STRZ) - remove commit_sha
 {
 echo "{"
 echo '  "event_type": "comment-pr",'
