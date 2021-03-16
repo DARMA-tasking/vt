@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -67,12 +68,9 @@ struct TestTermReset : TestParallelHarness {
 /*static*/ int32_t TestTermReset::handler_count = 0;
 
 TEST_F(TestTermReset, test_termination_reset_1) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
 
-  if (num_nodes < 2) {
-    return;
-  }
+  auto const& this_node = theContext()->getNode();
 
   if (this_node == 0) {
     auto msg = makeMessage<TestMsg>();

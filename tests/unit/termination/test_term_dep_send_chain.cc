@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 #include "vt/messaging/collection_chain_set.h"
@@ -462,6 +463,8 @@ private:
 };
 
 TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
+  SET_MAX_NUM_NODES_CONSTRAINT(CMAKE_DETECTED_MAX_NUM_NODES);
+
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
   auto const iter = 50;
@@ -661,6 +664,9 @@ struct MergeObjGroup
 };
 
 TEST_P(TestTermDepSendChain, test_term_dep_send_chain_merge) {
+
+  SET_MAX_NUM_NODES_CONSTRAINT(CMAKE_DETECTED_MAX_NUM_NODES);
+
   auto const& num_nodes = theContext()->getNumNodes();
   auto const iter = 50;
   auto const& tup = GetParam();

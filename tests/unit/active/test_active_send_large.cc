@@ -47,6 +47,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 namespace vt { namespace tests { namespace unit { namespace large {
 
@@ -114,6 +115,9 @@ private:
 TYPED_TEST_SUITE_P(TestActiveSendLarge);
 
 TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
+  // over two nodes will allocate a lot of memory for the run
+  SET_NUM_NODES_CONSTRAINT(2);
+
   using IntegralType = typename std::tuple_element<0,TypeParam>::type;
   using TagType = typename std::tuple_element<1,TypeParam>::type;
 
@@ -123,11 +127,6 @@ TYPED_TEST_P(TestActiveSendLarge, test_large_bytes_msg) {
 
   NodeType const this_node = theContext()->getNode();
   NodeType const num_nodes = theContext()->getNumNodes();
-
-  // over two nodes will allocate a lot of memory for the run
-  if (num_nodes != 2) {
-    return;
-  }
 
   int counter = 0;
   auto e = pipe::LifetimeEnum::Once;
