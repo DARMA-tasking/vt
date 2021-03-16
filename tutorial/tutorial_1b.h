@@ -154,7 +154,7 @@ static void msgHandlerA(MyMsg* msg) {
   NodeType const to_node = 0;
   auto msg2 = ::vt::makeMessage<MyMsg>(10,20);
 
-  ::vt::theMsg()->sendMsg<MsgHandlerB, MyMsg>(to_node, msg2);
+  ::vt::theMsg()->sendMsg<MsgHandlerB>(to_node, msg2);
 
   // Alternate/equivalent form with explicit (and optional) std::move:
   //
