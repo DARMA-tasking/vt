@@ -71,6 +71,8 @@ struct MPISingletonMultiTest {
   MPISingletonMultiTest(int& argc, char**& argv) {
     MPI_Init(&argc, &argv);
     comm_ = MPI_COMM_WORLD;
+
+    MPI_Comm_size(comm_, &num_ranks_);
     MPI_Barrier(comm_);
   }
 
@@ -82,8 +84,11 @@ struct MPISingletonMultiTest {
 public:
   MPI_Comm getComm() { return comm_; }
 
+  int getNumRanks() { return num_ranks_; }
+
 private:
   MPI_Comm comm_;
+  int num_ranks_;
 };
 
 extern std::unique_ptr<MPISingletonMultiTest> mpi_singleton;
