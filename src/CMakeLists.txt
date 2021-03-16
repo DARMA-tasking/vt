@@ -26,6 +26,7 @@ set(
   # Add component along with sub-directories
     configs/debug configs/features configs/types configs/error configs/arguments
     configs/generated
+    context/runnable_context
     collective
       collective/barrier
       collective/tree
