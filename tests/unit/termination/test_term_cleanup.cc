@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 #include "vt/messaging/dependent_send_chain.h"
@@ -65,12 +66,10 @@ struct TestTermCleanup :  TestParallelHarness {
 
 
 TEST_F(TestTermCleanup, test_termination_cleanup_1) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
-
-  if (num_nodes < 2) {
-    return;
-  }
 
   int const num_epochs = 100;
 
@@ -104,12 +103,10 @@ TEST_F(TestTermCleanup, test_termination_cleanup_1) {
 }
 
 TEST_F(TestTermCleanup, test_termination_cleanup_2) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
+
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
-
-  if (num_nodes < 2) {
-    return;
-  }
 
   int const num_epochs = 100;
 

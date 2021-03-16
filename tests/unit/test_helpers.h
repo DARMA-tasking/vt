@@ -63,7 +63,7 @@ extern std::unique_ptr<MPISingletonMultiTest> mpi_singleton;
  * Check whether we're oversubscribing on the current execution.
  * This is using MPI because it can be used before vt initializes.
  */
-bool isOversubscribed() {
+inline bool isOversubscribed() {
   assert((mpi_singleton) && "mpi_singleton should be initialized!");
   return mpi_singleton->getNumRanks() > CMAKE_DETECTED_MAX_NUM_NODES;
 }

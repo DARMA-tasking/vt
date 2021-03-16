@@ -60,14 +60,12 @@ char** test_argv = nullptr;
 }}} // end namespace vt::tests::unit
 
 bool should_init_MPI(int& argc, char** argv) {
-  if (argc < 3) {
+  if (argc < 2) {
     return false;
   }
 
-  /**
-   * Extra flag (--MPI_TEST or --NO_MPI_TEST) is added as the last argument
-   */
 
+  // Extra flag (--MPI_TEST or --NO_MPI_TEST) is added as the last argument
   std::string test_arg = argv[argc - 1];
   assert(
     (test_arg == "--MPI_TEST" or test_arg == "--NO_MPI_TEST") &&
@@ -75,7 +73,6 @@ bool should_init_MPI(int& argc, char** argv) {
   );
 
   // 'Remove' the argument so we don't pass it further to vt
-  argv[argc - 1] = nullptr;
   --argc;
 
   return test_arg == "--MPI_TEST";
@@ -84,8 +81,8 @@ bool should_init_MPI(int& argc, char** argv) {
 int main(int argc, char **argv) {
 
   /**
-   * Initalize MPI (if needed) before GTEST so we can disable tests' generation
-   * based on the number of ranks.
+   * Initalize MPI (if needed) before GTEST so we can check for number of ranks
+   * during GTEST code generation.
    */
   if (should_init_MPI(argc, argv)) {
     vt::tests::unit::mpi_singleton =

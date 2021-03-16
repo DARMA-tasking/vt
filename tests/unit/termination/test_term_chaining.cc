@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 #include "vt/messaging/dependent_send_chain.h"
@@ -208,11 +209,9 @@ struct TestTermChaining : TestParallelHarness {
 /*static*/ vt::EpochType TestTermChaining::epoch;
 
 TEST_F(TestTermChaining, test_termination_chaining_1) {
-  auto const& this_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+  SET_NUM_NODES_CONSTRAINT(2);
 
-  if (num_nodes != 2)
-    return;
+  auto const& this_node = theContext()->getNode();
 
   epoch = theTerm()->makeEpochCollective();
 
