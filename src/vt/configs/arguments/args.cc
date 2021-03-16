@@ -251,6 +251,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   auto cbp = "Enable debug_broadcast    = \"" debug_pp(broadcast)    "\"";
   auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
   auto dcp = "Enable debug_phase        = \"" debug_pp(phase)        "\"";
+  auto ddp = "Enable debug_context      = \"" debug_pp(context)      "\"";
 
   auto r  = app.add_flag("--vt_debug_all",          config_.vt_debug_all,          rp);
   auto r1 = app.add_flag("--vt_debug_verbose",      config_.vt_debug_verbose,      rq);
@@ -286,6 +287,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   auto cb = app.add_flag("--vt_debug_broadcast",    config_.vt_debug_broadcast,    cbp);
   auto db = app.add_flag("--vt_debug_objgroup",     config_.vt_debug_objgroup,     dbp);
   auto dc = app.add_flag("--vt_debug_phase",        config_.vt_debug_phase,        dcp);
+  auto dd = app.add_flag("--vt_debug_context",      config_.vt_debug_context,      ddp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
   r1->group(debugGroup);
@@ -321,6 +323,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   cb->group(debugGroup);
   db->group(debugGroup);
   dc->group(debugGroup);
+  dd->group(debugGroup);
 
   auto dbq = "Always flush VT runtime prints";
   auto eb  = app.add_flag("--vt_debug_print_flush", config_.vt_debug_print_flush, dbq);

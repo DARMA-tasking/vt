@@ -82,6 +82,7 @@ enum CatEnum : uint64_t {
   objgroup     = 1ull<<29,
   gossiplb     = 1ull<<30,
   phase        = 1ull<<31,
+  context      = 1ull<<32
 };
 
 enum CtxEnum : uint64_t {
@@ -120,6 +121,7 @@ vt_option_category_pretty_print(none,         "none")
 vt_option_category_pretty_print(active,       "active")
 vt_option_category_pretty_print(barrier,      "barrier")
 vt_option_category_pretty_print(broadcast,    "bcast")
+vt_option_category_pretty_print(context,      "context")
 vt_option_category_pretty_print(event,        "event")
 vt_option_category_pretty_print(gen,          "general")
 vt_option_category_pretty_print(group,        "group")
