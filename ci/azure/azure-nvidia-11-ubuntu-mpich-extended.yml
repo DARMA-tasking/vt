@@ -14,7 +14,6 @@ resources:
 - repo: self
 
 variables:
-  System.debug: true
   tag: '$(Build.BuildId)'
   REPO: lifflander1/vt
   ARCH: amd64
@@ -130,10 +129,6 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            echo "System.DefinitionId: $(System.DefinitionId)"
-            echo "System.JobId: $(System.JobId)"
-            echo "Build.BuildId: $(Build.BuildId)"
-            echo "Build.BuildNumber: $(Build.BuildNumber)"
             ./scripts/report_logs_in_comment.sh                     \
                 "$(build_root)/vt/compilation_errors_warnings.out"  \
                 "$(build_root)/vt/cmake-output.log"                 \
