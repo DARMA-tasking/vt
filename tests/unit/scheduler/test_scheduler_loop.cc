@@ -101,7 +101,7 @@ static void message_handler_with_nested_loop(TestMsg* msg) {
     // Original manual loops.
     // Not recommended as scheduler event generation is less consistent.
     while (not ack[next_depth]) {
-      theSched()->runSchedulerImpl();
+      theSched()->runSchedulerOnceImpl();
     }
   } else {
     vtAssertInfo(false, "Invalid action", action);

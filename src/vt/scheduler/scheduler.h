@@ -143,7 +143,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \param[in] msg_only whether to only make progress on the core active
    * messenger
    */
-  void runSchedulerImpl(bool msg_only = false);
+  void runSchedulerOnceImpl(bool msg_only = false);
 
   /**
    * \brief Run the progress function
@@ -157,7 +157,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \brief Runs the scheduler until a condition is met.
    *
    * Runs the scheduler until a condition is met.
-   * This form SHOULD be used instead of "while (..) { runSchedulerImpl(..) }"
+   * This form SHOULD be used instead of "while (..) { runSchedulerOnceImpl(..) }"
    * in all cases of nested scheduler loops, such as during a barrier,
    * in order to ensure proper event unwinding and idle time tracking.
    *
