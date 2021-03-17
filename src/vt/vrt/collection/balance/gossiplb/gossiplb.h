@@ -133,6 +133,7 @@ private:
   uint16_t num_iters_                               = 4;
   uint16_t num_trials_                              = 3;
   bool deterministic_                               = false;
+  bool rollback_                                    = true;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   std::unordered_map<NodeType, LoadType> new_load_info_ = {};
