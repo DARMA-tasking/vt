@@ -10,6 +10,7 @@ git clone https://github.com/DARMA-tasking/spack-package.git
 "$spack_path"/bin/spack repo add "$vt_spack_package"
 "$spack_path"/bin/spack external find
 "$spack_path"/bin/spack install darma-vt@develop \
+    build_type=Release \
     lb_enabled="$VT_LB_ENABLED" \
     trace_enabled="$VT_TRACE_ENABLED" \
     trace_only="$VT_BUILD_TRACE_ONLY" \
@@ -25,7 +26,9 @@ git clone https://github.com/DARMA-tasking/spack-package.git
     unity_build_enabled="$VT_UNITY_BUILD_ENABLED" \
     fcontext_enabled="$VT_FCONTEXT_ENABLED" \
     use_openmp="$VT_USE_OPENMP" \
-    use_std_thread="$VT_USE_STD_THREAD"
+    use_std_thread="$VT_USE_STD_THREAD" \
+    -build_tests \
+    -build_examples
 
 git clone https://github.com/DARMA-tasking/vt-sample-project
 mkdir -p vt-sample-project/build
@@ -33,8 +36,7 @@ cd vt-sample-project/build || exit 1
 vt_DIR=$("$spack_path"/bin/spack location --install-dir darma-vt)
 export vt_DIR
 cmake -G "${CMAKE_GENERATOR:-Ninja}" \
-  -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
-  -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
+  -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
   -DCMAKE_C_COMPILER="${CC:-cc}" \
   ..
