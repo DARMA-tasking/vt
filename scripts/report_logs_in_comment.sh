@@ -79,12 +79,11 @@ if test ${#val} -gt "$max_comment_size"
 then
     val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read log. <=="
 fi
-val='```'"$val"'```'
 
 # Build comment
 commit_sha="$(git log --skip=1 -1  --pretty=format:%H)"
 build_link='https://dev.azure.com/DARMA-tasking/DARMA/_build/results?buildId='"$build_id"'&view=logs&j='"$job_id"'&t='"$task_id"
-comment_body="**$build_number**\nBuild for $commit_sha\n\n$val\n\nBuild log: $build_link"
+comment_body="Build for $commit_sha\n\n"'```'"\n$val\n"'```'"\n\nBuild log: $build_link"
 
 # Fix new lines
 new_line="\n"
