@@ -79,6 +79,7 @@ if test ${#val} -gt "$max_comment_size"
 then
     val="${val:0:max_comment_size}%0D%0A%0D%0A%0D%0A ==> And there is more. Read log. <=="
 fi
+val='```'"$val"'```'
 
 # Build comment
 commit_sha="$(git log --skip=1 -1  --pretty=format:%H)"
