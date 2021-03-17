@@ -79,7 +79,8 @@ bool GossipLB::isOverloaded(LoadType load) const {
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{
-    "f", "k", "i", "c", "trials", "deterministic", "inform", "ordering", "cmf"
+    "f", "k", "i", "c", "trials", "deterministic", "inform", "ordering", "cmf",
+    "rollback"
   };
   spec->checkAllowedKeys(allowed);
 
@@ -98,6 +99,7 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   num_iters_     = spec->getOrDefault<int32_t>("i", num_iters_);
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
   deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
+  rollback_      = spec->getOrDefault<int32_t>("rollback", rollback_);
 
   int32_t c      = spec->getOrDefault<int32_t>("c", default_c);
   criterion_     = static_cast<CriterionEnum>(c);
@@ -148,7 +150,7 @@ void GossipLB::runLB() {
 void GossipLB::doLBStages(TimeType start_imb) {
   decltype(this->cur_objs_) best_objs;
   LoadType best_load = 0;
-  TimeType best_imb = start_imb+1;
+  TimeType best_imb = start_imb + 10;
   uint16_t best_trial = 0;
 
   auto this_node = theContext()->getNode();
@@ -160,6 +162,8 @@ void GossipLB::doLBStages(TimeType start_imb) {
     load_info_.clear();
     k_cur_ = 0;
     is_overloaded_ = is_underloaded_ = false;
+
+    TimeType best_imb_this_trial = start_imb + 10;
 
     for (iter_ = 0; iter_ < num_iters_; iter_++) {
       bool first_iter = iter_ == 0;
@@ -210,7 +214,7 @@ void GossipLB::doLBStages(TimeType start_imb) {
         trial_, iter_, num_iters_, this_load, this_new_load_
       );
 
-      if (ArgType::vt_debug_gossiplb || (iter_ == num_iters_ - 1)) {
+      if (rollback_ || ArgType::vt_debug_gossiplb || (iter_ == num_iters_ - 1)) {
         runInEpochCollective([=] {
           using StatsMsgType = balance::ProcStatsMsg;
           using ReduceOp = collective::PlusOp<balance::LoadData>;
@@ -222,21 +226,27 @@ void GossipLB::doLBStages(TimeType start_imb) {
           this->proxy_.template reduce<ReduceOp>(msg,cb);
         });
       }
+
+      if (rollback_ || (iter_ == num_iters_ - 1)) {
+        // if known, save the best iteration within any trial so we can roll back
+        if (new_imbalance_ < best_imb && new_imbalance_ <= start_imb) {
+          best_load = this_new_load_;
+          best_objs = cur_objs_;
+          best_imb = new_imbalance_;
+          best_trial = trial_;
+        }
+        if (new_imbalance_ < best_imb_this_trial) {
+          best_imb_this_trial = new_imbalance_;
+        }
+      }
     }
 
     if (this_node == 0) {
       vt_print(
         gossiplb,
-        "GossipLB::doLBStages: trial={} final imb={:0.4f}\n",
-        trial_, new_imbalance_
+        "GossipLB::doLBStages: trial={} {} imb={:0.4f}\n",
+        trial_, rollback_ ? "best" : "final", best_imb_this_trial
       );
-    }
-
-    if (new_imbalance_ <= start_imb && new_imbalance_ < best_imb) {
-      best_load = this_new_load_;
-      best_objs = cur_objs_;
-      best_imb = new_imbalance_;
-      best_trial = trial_;
     }
 
     // Clear out for next try or for not migrating by default
