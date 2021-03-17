@@ -67,19 +67,17 @@ void GossipLB::init(objgroup::proxy::Proxy<GossipLB> in_proxy) {
 }
 
 bool GossipLB::isUnderloaded(LoadType load) const {
-  auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
-  return load < avg * gossip_threshold;
+  return load < target_max_load_ * gossip_threshold;
 }
 
 bool GossipLB::isOverloaded(LoadType load) const {
-  auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
-  return load > avg * gossip_threshold;
+  return load > target_max_load_ * gossip_threshold;
 }
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{
     "f", "k", "i", "c", "trials", "deterministic", "inform", "ordering", "cmf",
-    "rollback"
+    "rollback", "targetpole"
   };
   spec->checkAllowedKeys(allowed);
 
@@ -99,6 +97,7 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
   deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
   rollback_      = spec->getOrDefault<int32_t>("rollback", rollback_);
+  target_pole_   = spec->getOrDefault<int32_t>("targetpole", target_pole_);
 
   int32_t c      = spec->getOrDefault<int32_t>("c", default_c);
   criterion_     = static_cast<CriterionEnum>(c);
@@ -124,18 +123,28 @@ void GossipLB::runLB() {
 
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   auto const max  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
+  auto const pole = stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max) * 1000;
   auto const imb  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
   auto const load = this_load;
 
+  if (target_pole_) {
+    // we can't get the processor max lower than the max object load, so
+    // modify the algorithm to define overloaded as exceeding the max
+    // object load instead of the processor average load
+    target_max_load_ = (pole > avg ? pole : avg);
+  } else {
+    target_max_load_ = avg;
+  }
+
   if (avg > 0.0000000001) {
-    should_lb = max > gossip_tolerance * avg;
+    should_lb = max > gossip_tolerance * target_max_load_;
   }
 
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, gossiplb,
-      "GossipLB::runLB: avg={}, max={}, load={}, should_lb={}\n",
-      avg, max, load, should_lb
+      "GossipLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
+      avg, max, pole, imb, load, should_lb
     );
   }
 
@@ -287,8 +296,10 @@ void GossipLB::gossipStatsHandler(StatsMsgType* msg) {
     vt_debug_print(
       terse, gossiplb,
       "GossipLB::gossipStatsHandler: trial={} iter={} max={:0.2f} min={:0.2f} "
-      "avg={:0.2f} imb={:0.4f}\n",
-      trial_, iter_, in.max(), in.min(), in.avg(), in.I()
+      "avg={:0.2f} pole={:0.2f} imb={:0.4f}\n",
+      trial_, iter_, in.max(), in.min(), in.avg(),
+      stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max) * 1000,
+      in.I()
     );
   }
 }
@@ -579,14 +590,12 @@ std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
     return cmf;
   }
 
-  double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
-
   double sum_p = 0.0;
   double factor = 1.0;
 
   switch (cmf_type_) {
   case CMFTypeEnum::Original:
-    factor = 1.0 / avg;
+    factor = 1.0 / target_max_load_;
     break;
   case CMFTypeEnum::NormBySelf:
     factor = 1.0 / this_new_load_;
@@ -602,7 +611,7 @@ std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
           l_max = load;
         }
       }
-      factor = 1.0 / (l_max > avg ? l_max : avg);
+      factor = 1.0 / (l_max > target_max_load_ ? l_max : target_max_load_);
     }
     break;
   default:
@@ -686,8 +695,6 @@ GossipLB::selectObject(
 }
 
 void GossipLB::decide() {
-  double const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
-
   auto lazy_epoch = theTerm()->makeEpochCollective("GossipLB: decide");
 
   int n_transfers = 0, n_rejected = 0;
@@ -713,7 +720,7 @@ void GossipLB::decide() {
       case ObjectOrderEnum::Marginal:
         {
           // first find marginal object's load
-          auto over_avg = this_new_load_ - avg;
+          auto over_avg = this_new_load_ - target_max_load_;
           // if no objects are larger than over_avg, then marginal will still
           // (incorrectly) reflect the total load, which will not be a problem
           auto marginal = this_new_load_;
@@ -791,15 +798,16 @@ void GossipLB::decide() {
         // The load of the node selected
         auto& selected_load = load_iter->second;
 
-        //auto max_obj_size = avg - selected_load;
-
-        bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load_ms, avg);
+        bool eval = Criterion(criterion_)(
+          this_new_load_, selected_load, obj_load_ms, target_max_load_
+        );
 
         vt_debug_print(
           verbose, gossiplb,
           "GossipLB::decide: trial={}, iter={}, under.size()={}, "
           "selected_node={}, selected_load={:e}, obj_id={:x}, home={}, "
-          "obj_load_ms={:e}, avg={:e}, this_new_load_={:e}, criterion={}\n",
+          "obj_load_ms={:e}, target_max_load={:e}, this_new_load_={:e}, "
+          "criterion={}\n",
           trial_,
           iter_,
           under.size(),
@@ -808,7 +816,7 @@ void GossipLB::decide() {
           obj_id.id,
           obj_id.home_node,
           obj_load_ms,
-          avg,
+          target_max_load_,
           this_new_load_,
           eval
         );
@@ -829,7 +837,7 @@ void GossipLB::decide() {
           iter++;
         }
 
-        if (not (this_new_load_ > avg)) {
+        if (not (this_new_load_ > target_max_load_)) {
           break;
         }
       }

@@ -134,6 +134,7 @@ private:
   uint16_t num_trials_                              = 3;
   bool deterministic_                               = false;
   bool rollback_                                    = true;
+  bool target_pole_                                 = false;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   std::unordered_map<NodeType, LoadType> new_load_info_ = {};
@@ -146,6 +147,7 @@ private:
   std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
   TimeType new_imbalance_                           = 0.0;
+  TimeType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
   ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::Marginal;
