@@ -99,12 +99,10 @@ then
 fi
 
 # Prepare data send with request to GitHub
-# TODO (STRZ) - remove commit_sha
 {
 echo "{"
 echo '  "event_type": "comment-pr",'
 echo '  "client_payload": {'
-echo '    "commit_sha": "'"$(git log --skip=1 -1  --pretty=format:%H)"'",'
 echo '    "comment_title": "'"$build_number"'",'
 echo '    "comment_content": "'"$comment_body"'",'
 echo '    "pr_number": "'"$pull_request_number"'"'

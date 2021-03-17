@@ -14,7 +14,6 @@ jobs:
           repo_owner: ${{ github.event.repository.owner.login }}
           repo_name: ${{ github.event.repository.name }}
           pr_number: ${{ github.event.client_payload.pr_number }}
-          commit_sha: ${{ github.event.client_payload.commit_sha }}
           comment_title: ${{ github.event.client_payload.comment_title }}
           comment_content: ${{ github.event.client_payload.comment_content }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
