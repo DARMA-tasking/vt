@@ -52,52 +52,21 @@
 
 namespace vt { namespace tests { namespace unit {
 
-std::unique_ptr<MPISingletonMultiTest> mpi_singleton = nullptr;
-
 int test_argc = 0;
 char** test_argv = nullptr;
-
-void init_MPI_if_needed(int& argc, char** argv) {
-  if (argc < 2 or (mpi_singleton != nullptr)) {
-    return;
-  }
-
-  // Extra flag (--MPI_TEST or --NO_MPI_TEST) is added as the last argument
-  std::string test_arg = argv[argc - 1];
-  assert(
-    (test_arg == "--MPI_TEST" or test_arg == "--NO_MPI_TEST") &&
-    "Last argument should be either --MPI_TEST or --NO_MPI_TEST"
-  );
-
-  // 'Remove' the argument so we don't pass it further to vt
-  --argc;
-
-  if (test_arg == "--MPI_TEST") {
-    mpi_singleton = std::make_unique<MPISingletonMultiTest>(argc, argv);
-  }
-}
 
 }}} // end namespace vt::tests::unit
 
 int main(int argc, char **argv) {
 
-  /**
-   * Initalize MPI (if needed) before GTEST so we can check for number of ranks
-   * during GTEST code generation.
-   */
-  vt::tests::unit::init_MPI_if_needed(argc, argv);
+  using namespace vt::tests::unit;
 
-  ::testing::InitGoogleTest(&argc, argv);
+  test_argc = argc;
+  test_argv = argv;
 
-  vt::tests::unit::test_argc = argc;
-  vt::tests::unit::test_argv = argv;
-  vt::tests::unit::TestHarness::store_cmdline_args(argc, argv);
+  ::testing::InitGoogleTest(&test_argc, test_argv);
 
-  int const ret = RUN_ALL_TESTS();
+  TestHarness::store_cmdline_args(test_argc, test_argv);
 
-  if (vt::tests::unit::mpi_singleton) {
-    vt::tests::unit::mpi_singleton = nullptr;
-  }
-
-  return ret;
+  return RUN_ALL_TESTS();
 }

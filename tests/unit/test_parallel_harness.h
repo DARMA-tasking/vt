@@ -51,6 +51,7 @@
 
 #include "test_config.h"
 #include "test_harness.h"
+#include "mpi_singleton.h"
 
 #include "vt/transport.h"
 
@@ -61,38 +62,6 @@ namespace vt { namespace tests { namespace unit {
 extern int test_argc;
 extern char** test_argv;
 
-/*
- *  gtest runs many tests in the same binary, but there is no way to know when
- *  to call MPI_Finalize, which can only be called once (when it's called
- *  MPI_Init can't be called again)! This singleton uses static initialization
- *  to init/finalize exactly once
- */
-struct MPISingletonMultiTest {
-  MPISingletonMultiTest(int& argc, char**& argv) {
-    MPI_Init(&argc, &argv);
-    comm_ = MPI_COMM_WORLD;
-
-    MPI_Comm_size(comm_, &num_ranks_);
-    MPI_Barrier(comm_);
-  }
-
-  virtual ~MPISingletonMultiTest() {
-    MPI_Barrier(comm_);
-    MPI_Finalize();
-  }
-
-public:
-  MPI_Comm getComm() { return comm_; }
-
-  int getNumRanks() { return num_ranks_; }
-
-private:
-  MPI_Comm comm_;
-  int num_ranks_;
-};
-
-extern std::unique_ptr<MPISingletonMultiTest> mpi_singleton;
-
 template <typename TestBase>
 struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
   virtual void SetUp() {
@@ -100,18 +69,13 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 
     TestHarnessAny<TestBase>::SetUp();
 
-    if (mpi_singleton == nullptr) {
-      mpi_singleton =
-        std::make_unique<MPISingletonMultiTest>(test_argc, test_argv);
-    }
-
 #if vt_feature_cmake_test_trace_on
     static char traceon[]{"--vt_trace=1"};
     addArgs(traceon);
 #endif
 
     // communicator is duplicated.
-    MPI_Comm comm = mpi_singleton->getComm();
+    MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
     auto const new_args = injectAdditionalArgs(test_argc, test_argv);
     auto custom_argc = new_args.first;
     auto custom_argv = new_args.second;

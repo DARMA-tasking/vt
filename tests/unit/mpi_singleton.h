@@ -2,11 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           test_initialization.cc
+//                              mpi_singleton.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2020 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -42,51 +42,57 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#if !defined __VIRTUAL_TRANSPORT_MPI_SINGLETON___
+#define __VIRTUAL_TRANSPORT_MPI_SINGLETON___
 
-#include "test_parallel_harness.h"
-
-#include <vt/transport.h>
+#include <memory>
+#include <mpi.h>
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestInitialization : TestParallelHarness {
-  void SetUp() override {
-    using namespace vt;
+extern int test_argc;
+extern char** test_argv;
 
-    TestHarness::SetUp();
+/*
+ *  gtest runs many tests in the same binary, but there is no way to know when
+ *  to call MPI_Finalize, which can only be called once (when it's called
+ *  MPI_Init can't be called again)! This singleton uses static initialization
+ *  to init/finalize exactly once
+ */
+struct MPISingletonMultiTest {
+  MPISingletonMultiTest(int& argc, char**& argv) {
+    MPI_Init(&argc, &argv);
+    comm_ = MPI_COMM_WORLD;
 
-    // communicator is duplicated.
-    MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
-
-    static char prog_name[]{"vt_program"};
-    static char cli_argument[]{"--cli_argument=100"};
-    static char vt_no_terminate[]{"--vt_no_terminate"};
-    custom_args.emplace_back(&prog_name[0]);
-    custom_args.emplace_back(&cli_argument[0]);
-    custom_args.emplace_back(&vt_no_terminate[0]);
-    custom_args.emplace_back(nullptr);
-
-    custom_argc = custom_args.size() - 1;
-    custom_argv = custom_args.data();
-    EXPECT_EQ(custom_argc, 3);
-
-    vt::initialize(custom_argc, custom_argv, no_workers, true, &comm);
+    MPI_Comm_size(comm_, &num_ranks_);
+    MPI_Barrier(comm_);
   }
 
-  std::vector<char*> custom_args;
-  int custom_argc;
-  char** custom_argv;
+  virtual ~MPISingletonMultiTest() {
+    MPI_Barrier(comm_);
+    MPI_Finalize();
+  }
+
+public:
+  static MPISingletonMultiTest* Get() {
+    static std::unique_ptr<MPISingletonMultiTest> mpi_singleton = nullptr;
+
+    if (!mpi_singleton) {
+      mpi_singleton =
+        std::make_unique<MPISingletonMultiTest>(test_argc, test_argv);
+    }
+
+    return mpi_singleton.get();
+  }
+
+  MPI_Comm getComm() { return comm_; }
+  int getNumRanks() { return num_ranks_; }
+
+private:
+  MPI_Comm comm_;
+  int num_ranks_;
 };
 
-TEST_F(TestInitialization, test_initialize_with_args) {
-  EXPECT_EQ(theConfig()->prog_name, "vt_program");
-  EXPECT_EQ(theConfig()->vt_no_terminate, true);
+}}} // namespace vt::tests::unit
 
-  EXPECT_EQ(custom_argc, 2);
-  EXPECT_STREQ(custom_argv[0], "vt_program");
-  EXPECT_STREQ(custom_argv[1], "--cli_argument=100");
-  EXPECT_EQ(custom_argv[2], nullptr);
-}
-
-}}} // end namespace vt::tests::unit
+#endif /* __VIRTUAL_TRANSPORT_MPI_SINGLETON___ */
