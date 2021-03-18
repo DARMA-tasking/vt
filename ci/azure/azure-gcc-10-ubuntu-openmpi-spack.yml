@@ -8,12 +8,6 @@ trigger:
   branches:
     include:
       - develop
-      - 1.0.0*
-
-pr:
-  branches:
-   include:
-     - '*'
 
 resources:
 - repo: self
