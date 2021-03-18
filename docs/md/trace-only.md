@@ -21,7 +21,7 @@ or add CMake flag `vt_trace_only`:
 cmake -Dvt_trace_only=1
 ```
 
-This will generate tv-trace target alongside the regular vt-runtime CMake tagret.
+This will generate vt-trace target alongside the regular vt-runtime CMake target.
 
 ***
 

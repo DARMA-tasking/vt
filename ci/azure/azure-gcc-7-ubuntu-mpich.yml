@@ -72,7 +72,7 @@ stages:
           script: |
             source /etc/docker-setup.sh
       - task: Bash@3
-        displayName: Build timestep for caching
+        displayName: Build timestamp for caching
         inputs:
           targetType: 'inline'
           script: |

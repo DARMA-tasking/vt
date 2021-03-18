@@ -23,14 +23,11 @@ RUN if test ${zoltan_enabled} -eq 1; then \
       gfortran-$(echo ${compiler} | cut -d- -f2) && \
       apt-get clean && \
       rm -rf /var/lib/apt/lists/*; \
-
       ln -s \
       "$(which gfortran-$(echo ${compiler}  | cut -d- -f2))" \
       /usr/bin/gfortran; \
-
       ./zoltan.sh -j4 ${ZOLTAN_INSTALL_DIR}; \
     fi
-
 
 COPY . /vt
 
