@@ -62,7 +62,7 @@ stages:
           script: |
             [% job_setup %]
       - task: Bash@3
-        displayName: Build timestep for caching
+        displayName: Build timestamp for caching
         inputs:
           targetType: 'inline'
           script: |
