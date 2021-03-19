@@ -59,7 +59,9 @@ Trace::Trace(
   RegistryEnumType in_han_type
 ) : is_collection_(false),
     event_(envelopeGetTraceEvent(msg->env)),
-    msg_size_(vt::serialization::MsgSizer<MsgT>::get(msg.get())),
+    msg_size_(
+      vt::serialization::MsgSizer<typename MsgT::MsgType>::get(msg.get())
+    ),
     is_traced_(HandlerManager::isHandlerTrace(in_handler)),
     from_node_(in_from_node),
     han_type_(in_han_type),
@@ -74,7 +76,9 @@ Trace::Trace(
   uint64_t in_idx3, uint64_t in_idx4
 ) : is_collection_(true),
     event_(in_trace_event),
-    msg_size_(vt::serialization::MsgSizer<MsgT>::get(msg.get())),
+    msg_size_(
+      vt::serialization::MsgSizer<typename MsgT::MsgType>::get(msg.get())
+    ),
     is_traced_(HandlerManager::isHandlerTrace(in_handler)),
     from_node_(in_from_node),
     han_type_(in_han_type),

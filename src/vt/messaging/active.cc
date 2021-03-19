@@ -979,7 +979,7 @@ bool ActiveMessenger::deliverActiveMsg(
     }
     r->template addContext<ctx::Continuation>(cont);
     r->template addContext<ctx::Trace>(
-      msg, handler, from_node, auto_registry::RegistryTypeEnum::RegGeneral
+      base, handler, from_node, auto_registry::RegistryTypeEnum::RegGeneral
     );
     r->template addContext<ctx::FromNode>(from_node);
     r->template addContext<ctx::SetContext>(r.get());
