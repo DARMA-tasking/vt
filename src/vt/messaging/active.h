@@ -1413,21 +1413,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Schedule an active message for future delivery
-   *
-   * \param[in] base the message ptr
-   * \param[in] sender the sender of the message
-   * \param[in] size the size of the message
-   * \param[in] insert whether to insert the message if handler does not exist
-   * \param[in] cont continuation after message is processed
-   */
-  void scheduleActiveMsg(
-    MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
-    MsgSizeType const& size, bool insert, ActionType cont = nullptr
-  );
-
-  /**
-   * \internal
    * \brief Process an incoming active message
    *
    * Forwards the message to the appropriate group nodes or broadcasts it
@@ -1449,7 +1434,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Deliver an active message locally
+   * \brief Prepare an active message to run by building a \c RunnableNew
    *
    * \param[in] base the message ptr
    * \param[in] from_node the node the message came from
@@ -1458,7 +1443,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return whether the message was delivered, false when handler does not exist
    */
-  bool deliverActiveMsg(
+  bool prepareActiveMsgToRun(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& from_node,
     bool insert, ActionType cont
   );

@@ -884,19 +884,6 @@ NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
   return theContext()->getNode();
 }
 
-void ActiveMessenger::scheduleActiveMsg(
-  MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool insert, ActionType cont
-) {
-  vt_debug_print_verbose(
-    active, node,
-    "scheduleActiveMsg: msg={}, from={}, size={}, insert={}\n",
-    print_ptr(base.get()), from, size, insert
-  );
-
-  processActiveMsg(base, from, size, insert, cont);
-}
-
 bool ActiveMessenger::processActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
   MsgSizeType const& size, bool insert, ActionType cont
@@ -920,7 +907,7 @@ bool ActiveMessenger::processActiveMsg(
   }
 
   if (deliver) {
-    return deliverActiveMsg(base,from,insert,cont);
+    return prepareActiveMsgToRun(base,from,insert,cont);
   } else {
     amForwardCounterGauge.incrementUpdate(size, 1);
 
@@ -931,7 +918,7 @@ bool ActiveMessenger::processActiveMsg(
   }
 }
 
-bool ActiveMessenger::deliverActiveMsg(
+bool ActiveMessenger::prepareActiveMsgToRun(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& in_from_node,
   bool insert, ActionType cont
 ) {
@@ -951,7 +938,7 @@ bool ActiveMessenger::deliverActiveMsg(
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       active, node,
-      "deliverActiveMsg: msg={}, ref={}, is_bcast={}, epoch={:x}\n",
+      "prepareActiveMsgToRun: msg={}, ref={}, is_bcast={}, epoch={:x}\n",
       print_ptr(msg), envelopeGetRef(msg->env), print_bool(is_bcast),
       epoch
     );
@@ -965,7 +952,7 @@ bool ActiveMessenger::deliverActiveMsg(
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       active, node,
-      "deliverActiveMsg: msg={}, handler={:x}, tag={}, is_auto={}, "
+      "prepareActiveMsgToRun: msg={}, handler={:x}, tag={}, is_auto={}, "
       "is_obj_group={}, has_handler={}, insert={}\n",
       print_ptr(msg), handler, tag, is_auto, is_obj,
       has_handler, insert
@@ -1147,14 +1134,14 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         1, put_tag, sender,
         [=](PtrLenPairType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-          scheduleActiveMsg(base, sender, num_probe_bytes, true, deleter);
+          processActiveMsg(base, sender, num_probe_bytes, true, deleter);
         }
      );
     }
   }
 
   if (!is_put || put_finished) {
-    scheduleActiveMsg(base, sender, msg_bytes, true);
+    processActiveMsg(base, sender, msg_bytes, true);
   }
 }
 
@@ -1258,7 +1245,9 @@ void ActiveMessenger::deliverPendingMsgsHandler(
           print_ptr(cur->buffered_msg.get()), cur->from_node
         );
         if (
-          deliverActiveMsg(cur->buffered_msg, cur->from_node, false, cur->cont)
+          prepareActiveMsgToRun(
+            cur->buffered_msg, cur->from_node, false, cur->cont
+          )
         ) {
           cur = iter->second.erase(cur);
         } else {
