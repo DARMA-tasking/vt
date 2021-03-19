@@ -1304,9 +1304,9 @@ public:
    * \param[in] event the associated trace event
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-    static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-      MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from, trace::TraceEventIDType event
+  static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
+    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
   /**
@@ -1320,9 +1320,9 @@ public:
    * \param[in] event the associated trace event
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-    static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-      MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from, trace::TraceEventIDType event
+  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
+    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
   /**

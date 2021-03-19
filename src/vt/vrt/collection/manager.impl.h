@@ -360,7 +360,7 @@ template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsWrapType<ColT, UserMsgT, MsgT>
 CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
-  trace::TraceEventIDType event
+  trace::TraceEventIDType event, bool immediate
 ) {
   auto user_msg = makeMessage<UserMsgT>(std::move(msg->getMsg()));
   // Be careful with type casting here..convert to typeless before
@@ -394,14 +394,18 @@ CollectionManager::collectionAutoMsgDeliver(
   r->template addContext<ctx::LBStats<CollectionBase<ColT,IndexT>>>(base, msg);
 #endif
   r->setupHandlerElement(ptr, RunnableEnum::Collection, han, from);
-  r->run();
+  if (immediate) {
+    r->run();
+  } else {
+    theSched()->enqueue(msg, std::move(r));
+  }
 }
 
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsNotWrapType<ColT, UserMsgT, MsgT>
 CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
-  trace::TraceEventIDType event
+  trace::TraceEventIDType event, bool immediate
 ) {
   // Be careful with type casting here..convert to typeless before
   // reinterpreting the pointer so the compiler does not produce the wrong
@@ -434,7 +438,11 @@ CollectionManager::collectionAutoMsgDeliver(
   r->template addContext<ctx::LBStats<CollectionBase<ColT,IndexT>>>(base, msg);
 #endif
   r->setupHandlerElement(ptr, RunnableEnum::Collection, han, from);
-  r->run();
+  if (immediate) {
+    r->run();
+  } else {
+    theSched()->enqueue(msg, std::move(r));
+  }
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
@@ -479,7 +487,7 @@ template <typename ColT, typename IndexT, typename MsgT>
         trace_event = col_msg->getFromTraceEvent();
       #endif
       collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
-        msg, base, handler, from, trace_event
+        msg, base, handler, from, trace_event, false
       );
     });
   }
@@ -656,7 +664,7 @@ template <typename ColT, typename IndexT, typename MsgT>
     trace_event = col_msg->getFromTraceEvent();
   #endif
   collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
-    msg, col_ptr, sub_handler, from, trace_event
+    msg, col_ptr, sub_handler, from, trace_event, false
   );
   theMsg()->popEpoch(cur_epoch);
 }
@@ -851,12 +859,6 @@ void CollectionManager::invokeMsgImpl(
   msgPtr->setFromNode(from);
   msgPtr->setProxy(proxy);
 
-#if vt_check_enabled(lblite)
-  if (instrument) {
-    col_ptr->getStats().startTime();
-  }
-#endif
-
   theMsg()->pushEpoch(cur_epoch);
 
   auto const han = msgPtr->getVrtHandler();
@@ -875,16 +877,10 @@ void CollectionManager::invokeMsgImpl(
 #endif
 
   collectionAutoMsgDeliver<ColT, IndexT, MsgT, typename MsgT::UserMsgType>(
-    msgPtr.get(), col_ptr, han, from, trace_event
+    msgPtr.get(), col_ptr, han, from, trace_event, true
   );
 
   theMsg()->popEpoch(cur_epoch);
-
-#if vt_check_enabled(lblite)
-  if (instrument) {
-    col_ptr->getStats().stopTime();
-  }
-#endif
 }
 
 template <typename ColT, typename IndexT>
@@ -1015,18 +1011,14 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
   msg->setCat(balance::CommCategory::CollectiveToCollectionBcast);
 #endif
 
-  auto const cur_epoch = theMsg()->setupEpochMsg(msg);
+  auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(proxy);
+  auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
+  msg->setBcastEpoch(bcast_epoch);
 
-  return schedule(msg, false, cur_epoch, [proxy, msg] {
-    auto elm_holder = theCollection()->findElmHolder<ColT, IndexT>(proxy);
-    auto const bcast_epoch = elm_holder->cur_bcast_epoch_++;
-    msg->setBcastEpoch(bcast_epoch);
+  theMsg()->markAsCollectionMessage(msg);
+  collectionBcastHandler<ColT, IndexT, MsgT>(msg.get());
 
-    theMsg()->markAsCollectionMessage(msg);
-
-    collectionBcastHandler<ColT, IndexT, MsgT>(msg.get());
-  }
-  );
+  return messaging::PendingSend{nullptr};
 }
 
 template <
