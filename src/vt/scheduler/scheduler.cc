@@ -113,24 +113,6 @@ void Scheduler::preDiagnostic() {
   vtLiveTime.stop();
 }
 
-void Scheduler::enqueue(ActionType action) {
-  bool const is_term = false;
-# if vt_check_enabled(priorities)
-  work_queue_.emplace(UnitType(is_term, default_priority, action));
-# else
-  work_queue_.emplace(UnitType(is_term, action));
-# endif
-}
-
-void Scheduler::enqueue(PriorityType priority, ActionType action) {
-  bool const is_term = false;
-# if vt_check_enabled(priorities)
-  work_queue_.emplace(UnitType(is_term, priority, action));
-# else
-  work_queue_.emplace(UnitType(is_term, action));
-# endif
-}
-
 void Scheduler::runWorkUnit(UnitType& work) {
   bool const is_term = work.isTerm();
 

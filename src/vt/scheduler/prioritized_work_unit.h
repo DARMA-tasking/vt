@@ -45,34 +45,27 @@
 #if !defined INCLUDED_VT_SCHEDULER_PRIORITIZED_WORK_UNIT_H
 #define INCLUDED_VT_SCHEDULER_PRIORITIZED_WORK_UNIT_H
 
-#include "vt/config.h"
+#include "vt/scheduler/base_unit.h"
 
 namespace vt { namespace sched {
 
-struct PriorityUnit {
-  using UnitActionType = ActionType;
-
-  PriorityUnit(bool in_is_term, PriorityType in_priority, UnitActionType in_work)
-    : work_(in_work), priority_(in_priority), is_term_(in_is_term)
+struct PriorityUnit : BaseUnit {
+  PriorityUnit(bool in_is_term, RunnablePtrType in_ptr, PriorityType in_priority)
+    : BaseUnit(std::move(in_ptr), in_is_term),
+      priority_(in_priority)
   { }
 
-  void operator()() { execute(); }
-
-  void execute() {
-    vtAssertExpr(work_ != nullptr);
-    work_();
-  }
+  PriorityUnit(bool in_is_term, ActionType in_work, PriorityType in_priority)
+    : BaseUnit(in_work, in_is_term),
+      priority_(in_priority)
+  { }
 
   friend bool operator<(PriorityUnit const& lhs, PriorityUnit const& rhs) {
     return lhs.priority_ < rhs.priority_;
   }
 
-  bool isTerm() const { return is_term_; }
-
 private:
-  UnitActionType work_   = nullptr;
   PriorityType priority_ = no_priority;
-  bool is_term_          = false;
 };
 
 }} /* end namespace vt::sched */

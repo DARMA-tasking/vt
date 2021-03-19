@@ -202,17 +202,19 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \brief Enqueue an action to execute later with the default priority
    * \c default_priority
    *
-   * \param[in] action action to execute
+   * \param[in] r action to execute
    */
-  void enqueue(ActionType action);
+  template <typename RunT>
+  void enqueue(RunT r);
 
   /**
    * \brief Enqueue an action with a priority to execute later
    *
    * \param[in] priority the priority of the action
-   * \param[in] action the action to execute later
+   * \param[in] r the action to execute later
    */
-  void enqueue(PriorityType priority, ActionType action);
+  template <typename RunT>
+  void enqueue(PriorityType priority, RunT r);
 
   /**
    * \brief Print current memory usage
@@ -224,20 +226,20 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * will be enqueued with the priority found on the message.
    *
    * \param[in] msg the message
-   * \param[in] action the action to execute later
+   * \param[in] r the action to execute later
    */
-  template <typename MsgT>
-  void enqueue(MsgT* msg, ActionType action);
+  template <typename MsgT, typename RunT>
+  void enqueue(MsgT* msg, RunT r);
 
   /**
-   * \brief Enqueue a action associated with a prioritized message. The action
+   * \brief Enqueue an action associated with a prioritized message. The action
    * will be enqueued with the priority found on the message.
    *
    * \param[in] msg the message
    * \param[in] action the action to execute later
    */
-  template <typename MsgT>
-  void enqueue(MsgSharedPtr<MsgT> msg, ActionType action);
+  template <typename MsgT, typename RunT>
+  void enqueue(MsgSharedPtr<MsgT> msg, RunT r);
 
   /**
    * \brief Get the work queue size
