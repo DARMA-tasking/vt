@@ -82,7 +82,6 @@ private:
 private:
   uint64_t id_ = 0;
   ActionType action_ = nullptr;
-  EpochType cur_epoch_ = no_epoch;
   fcontext_stack_t stack;
   fcontext_t ctx;
   fcontext_transfer_t transfer_out, transfer_in;

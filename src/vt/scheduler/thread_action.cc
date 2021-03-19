@@ -57,7 +57,6 @@ ThreadAction::ThreadAction(
   uint64_t in_id, ActionType in_action, std::size_t stack_size
 ) : id_(in_id),
     action_(in_action),
-    cur_epoch_(theMsg()->getEpoch()),
     stack(create_fcontext_stack(stack_size))
 { }
 
@@ -90,8 +89,6 @@ void ThreadAction::resume() {
     return;
   }
 
-  theTerm()->consume(cur_epoch_);
-  theMsg()->pushEpoch(cur_epoch_);
   cur_running_ = this;
   transfer_in = jump_fcontext(transfer_in.ctx, nullptr);
 }
@@ -111,11 +108,9 @@ void ThreadAction::runUntilDone() {
 
   auto ta = static_cast<ThreadAction*>(t.data);
   if (ta->action_) {
-    theMsg()->pushEpoch(ta->cur_epoch_);
     cur_running_ = ta;
     ta->transfer_out = t;
     ta->action_();
-    theMsg()->popEpoch(ta->cur_epoch_);
     cur_running_ = nullptr;
   }
 
@@ -133,8 +128,6 @@ void ThreadAction::runUntilDone() {
     auto x = cur_running_;
     cur_running_ = nullptr;
     vt_debug_print(gen, node, "suspend\n");
-    theTerm()->produce(x->cur_epoch_);
-    theMsg()->popEpoch(x->cur_epoch_);
     x->transfer_out = jump_fcontext(x->transfer_out.ctx, nullptr);
   } else {
     fmt::print("Can not suspend---no thread is running\n");
