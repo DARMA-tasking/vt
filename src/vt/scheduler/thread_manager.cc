@@ -48,7 +48,25 @@
 
 namespace vt { namespace scheduler {
 
+/*static*/ void ThreadManager::deallocateThread(uint64_t tid) {
+  auto iter = threads_.find(tid);
+  if (iter != threads_.end()) {
+    vtAssertExpr(iter->second->isDone());
+    threads_.erase(iter);
+  }
+}
+
+/*static*/ ThreadAction* ThreadManager::getThread(uint64_t tid) {
+  auto iter = threads_.find(tid);
+  if (iter == threads_.end()) {
+    return nullptr;
+  } else {
+    return iter->second.get();
+  }
+}
+
 /*static*/ uint64_t ThreadManager::next_thread_id_ = 1;
-/*static*/ std::unordered_map<uint64_t, std::unique_ptr<ThreadAction>> ThreadManager::threads_;
+/*static*/ std::unordered_map<uint64_t, std::unique_ptr<ThreadAction>>
+  ThreadManager::threads_;
 
 }} /* end namespace vt::scheduler */

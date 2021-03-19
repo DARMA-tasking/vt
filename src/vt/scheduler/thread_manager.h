@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_SCHEDULER_THREAD_MANAGER_H
 #define INCLUDED_VT_SCHEDULER_THREAD_MANAGER_H
 
+#include "vt/config.h"
+
 #if vt_check_enabled(fcontext)
 
 #include "vt/scheduler/thread_action.h"
@@ -80,22 +82,8 @@ struct ThreadManager {
     return tid;
   }
 
-  static void deallocateThread(uint64_t tid) {
-    auto iter = threads_.find(tid);
-    if (iter != threads_.end()) {
-      vtAssertExpr(iter->second->isDone());
-      threads_.erase(iter);
-    }
-  }
-
-  static ThreadAction* getThread(uint64_t tid) {
-    auto iter = threads_.find(tid);
-    if (iter == threads_.end()) {
-      return nullptr;
-    } else {
-      return iter->second.get();
-    }
-  }
+  static void deallocateThread(uint64_t tid);
+  static ThreadAction* getThread(uint64_t tid);
 
 private:
   static uint64_t next_thread_id_;
