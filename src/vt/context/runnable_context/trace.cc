@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                   trace.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,55 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_CC
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_CC
+
+#if vt_check_enabled(trace_enabled)
+
+#include "vt/context/runnable_context/trace.h"
 
 namespace vt { namespace ctx {
 
-/**
- * \struct Base
- *
- * \brief Base context for runnable tasks.
- *
- * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
- * (ULTs), \c suspend() and \c resume might be called if the thread that a task
- * is running in suspends the stack mid-execution (typically waiting for a
- * dependency). Thus, any context is expected to save all state in suspend and
- * then return that state back during resume when the ULT is resumed.
- */
-struct Base {
+void Trace::begin() {
+  if (not is_traced_) {
+    return;
+  }
 
-  virtual ~Base() = default;
+  auto trace_id = auto_registry::handlerTraceID(handler_, han_type_);
 
-  /**
-   * \brief Invoked immediately before a task is executed
-   */
-  virtual void begin() {}
+  if (is_collection_) {
+    auto const cur_node = theMsg()->getFromNodeCurrentHandler();
+    auto const from_node =
+      from_node_ != uninitialized_destination ? from_node_ : cur_node;
 
-  /**
-   * \brief Invoked immediately after a task is executed
-   */
-  virtual void end() {}
+    processing_tag_ = theTrace()->beginProcessing(
+      trace_id, msg_size_, event_, from_node, idx1_, idx2_, idx3_, idx4_
+    );
+  } else {
+    processing_tag_ = theTrace()->beginProcessing(
+      trace_id, msg_size_, event_, from_node_
+    );
+  }
+}
 
-  /**
-   * \brief Invoked when a task is suspended (for ULTs, when enabled)
-   */
-  virtual void suspend() {}
+void Trace::end() {
+  if (not is_traced_) {
+    return;
+  }
 
-  /**
-   * \brief Invoked when a handler is resumed (for ULTs, when enabled)
-   */
-  virtual void resume() {}
-};
+  theTrace()->endProcessing(processing_tag_);
+}
+
+void Trace::suspend() {
+  end();
+}
+
+void Trace::resume() {
+  // @todo: connect up the last event to this new one after suspension
+  begin();
+}
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H*/
+#endif /*vt_check_enabled(trace_enabled)*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_CC*/

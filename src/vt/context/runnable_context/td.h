@@ -51,19 +51,49 @@
 
 namespace vt { namespace ctx {
 
+/**
+ * \struct TD
+ *
+ * \brief Context for termination detection to be preserved with a task. Manages
+ * the epoch stack associated with running tasks.
+ */
 struct TD : Base {
 
+  /**
+   * \brief Construct with a given epoch
+   *
+   * \param[in] in_ep the epoch
+   */
   explicit TD(EpochType in_ep);
 
+  /**
+   * \brief During begin \c TD will produce on the epoch and push it on the
+   * epoch stack.
+   */
   void begin() override;
+
+  /**
+   * \brief During end \c TD will consume on the epoch and pop it off the stack
+   */
   void end() override;
+
+  /**
+   * \brief When suspended, \c TD will preserve any epochs pushed on the stack
+   * after begin and restore the stack back to the state before begin was
+   * invoked
+   */
   void suspend() override;
+
+  /**
+   * \brief When resumed, \c TD will restore the stack back from when it was
+   * suspended
+   */
   void resume() override;
 
 private:
-  EpochType ep_ = no_epoch;
-  std::size_t epoch_stack_size_ = 0;
-  std::vector<EpochType> suspended_epochs_;
+  EpochType ep_ = no_epoch;                    /**< The epoch for the task */
+  std::size_t epoch_stack_size_ = 0;           /**< Epoch stack size at start  */
+  std::vector<EpochType> suspended_epochs_;    /**< Suspended epoch stack */
 };
 
 }} /* end namespace vt::ctx */

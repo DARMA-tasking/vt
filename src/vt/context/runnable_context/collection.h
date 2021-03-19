@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                 collection.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,57 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H
+
+#include "vt/context/runnable_context/base.h"
+
+namespace vt { namespace vrt { namespace collection {
+
+template <typename ColT, typename IndexT>
+struct CollectionBase;
+
+}}} /* end namespace vt::vrt::collection */
 
 namespace vt { namespace ctx {
 
 /**
- * \struct Base
+ * \struct Collection
  *
- * \brief Base context for runnable tasks.
- *
- * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
- * (ULTs), \c suspend() and \c resume might be called if the thread that a task
- * is running in suspends the stack mid-execution (typically waiting for a
- * dependency). Thus, any context is expected to save all state in suspend and
- * then return that state back during resume when the ULT is resumed.
+ * \brief Context for a collection element that is running. Includes the index
+ * and proxy for the collection.
  */
-struct Base {
-
-  virtual ~Base() = default;
-
-  /**
-   * \brief Invoked immediately before a task is executed
-   */
-  virtual void begin() {}
+template <typename IndexT>
+struct Collection : Base {
 
   /**
-   * \brief Invoked immediately after a task is executed
+   * \brief Construct a \c Collection
+   *
+   * \param[in] elm the collection element to extract the index and proxy
    */
-  virtual void end() {}
+  template <typename ColT>
+  explicit Collection(vrt::collection::CollectionBase<ColT, IndexT>* elm);
 
   /**
-   * \brief Invoked when a task is suspended (for ULTs, when enabled)
+   * \brief Set the collection context
    */
-  virtual void suspend() {}
+  void begin() override;
 
   /**
-   * \brief Invoked when a handler is resumed (for ULTs, when enabled)
+   * \brief Remove the collection context
    */
-  virtual void resume() {}
+  void end() override;
+
+  void suspend() override;
+  void resume() override;
+
+private:
+  IndexT idx_ = {};                         /**< the collection element index */
+  VirtualProxyType proxy_ = no_vrt_proxy;   /**< the collection proxy */
 };
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H*/
+#include "vt/context/runnable_context/collection.impl.h"
+
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H*/

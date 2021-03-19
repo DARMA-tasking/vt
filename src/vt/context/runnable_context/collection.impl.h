@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                              collection.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,43 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_IMPL_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_IMPL_H
+
+#include "vt/context/runnable_context/collection.h"
+#include "vt/vrt/collection/types/base.h"
+#include "vt/vrt/collection/holders/insert_context_holder.h"
 
 namespace vt { namespace ctx {
 
-/**
- * \struct Base
- *
- * \brief Base context for runnable tasks.
- *
- * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
- * (ULTs), \c suspend() and \c resume might be called if the thread that a task
- * is running in suspends the stack mid-execution (typically waiting for a
- * dependency). Thus, any context is expected to save all state in suspend and
- * then return that state back during resume when the ULT is resumed.
- */
-struct Base {
+template <typename IndexT>
+template <typename ColT>
+/*explicit*/ Collection<IndexT>::Collection(
+  vrt::collection::CollectionBase<ColT, IndexT>* elm
+) : idx_(elm->getIndex()),
+    proxy_(elm->getProxy())
+{ }
 
-  virtual ~Base() = default;
+template <typename IndexT>
+void Collection<IndexT>::begin() {
+  vrt::collection::InsertContextHolder<IndexT>::set(&idx_, proxy_);
+}
 
-  /**
-   * \brief Invoked immediately before a task is executed
-   */
-  virtual void begin() {}
+template <typename IndexT>
+void Collection<IndexT>::end() {
+  vrt::collection::InsertContextHolder<IndexT>::clear();
+}
 
-  /**
-   * \brief Invoked immediately after a task is executed
-   */
-  virtual void end() {}
+template <typename IndexT>
+void Collection<IndexT>::suspend() {
+  end();
+}
 
-  /**
-   * \brief Invoked when a task is suspended (for ULTs, when enabled)
-   */
-  virtual void suspend() {}
-
-  /**
-   * \brief Invoked when a handler is resumed (for ULTs, when enabled)
-   */
-  virtual void resume() {}
-};
+template <typename IndexT>
+void Collection<IndexT>::resume() {
+  begin();
+}
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_IMPL_H*/

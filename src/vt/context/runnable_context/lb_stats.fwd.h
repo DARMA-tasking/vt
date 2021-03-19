@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                lb_stats.fwd.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,14 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_FWD_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_FWD_H
 
 namespace vt { namespace ctx {
 
-/**
- * \struct Base
- *
- * \brief Base context for runnable tasks.
- *
- * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
- * (ULTs), \c suspend() and \c resume might be called if the thread that a task
- * is running in suspends the stack mid-execution (typically waiting for a
- * dependency). Thus, any context is expected to save all state in suspend and
- * then return that state back during resume when the ULT is resumed.
- */
-struct Base {
-
-  virtual ~Base() = default;
-
-  /**
-   * \brief Invoked immediately before a task is executed
-   */
-  virtual void begin() {}
-
-  /**
-   * \brief Invoked immediately after a task is executed
-   */
-  virtual void end() {}
-
-  /**
-   * \brief Invoked when a task is suspended (for ULTs, when enabled)
-   */
-  virtual void suspend() {}
-
-  /**
-   * \brief Invoked when a handler is resumed (for ULTs, when enabled)
-   */
-  virtual void resume() {}
-};
+template <typename ElmT>
+struct LBStats;
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_FWD_H*/

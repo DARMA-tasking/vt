@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                set_context.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,66 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
+
+#include "vt/context/runnable_context/base.h"
+#include "vt/runnable/runnable.fwd.h"
 
 namespace vt { namespace ctx {
 
 /**
- * \struct Base
+ * \struct SetContext
  *
- * \brief Base context for runnable tasks.
- *
- * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
- * (ULTs), \c suspend() and \c resume might be called if the thread that a task
- * is running in suspends the stack mid-execution (typically waiting for a
- * dependency). Thus, any context is expected to save all state in suspend and
- * then return that state back during resume when the ULT is resumed.
+ * \brief Set the context of the current running task for query by other
+ * components or users.
  */
-struct Base {
-
-  virtual ~Base() = default;
+struct SetContext : Base {
 
   /**
-   * \brief Invoked immediately before a task is executed
+   * \brief Construct a \c SetContext
+   *
+   * \param[in] in_nonowning_cur_task the current task (non-owning ptr held)
    */
-  virtual void begin() {}
+  explicit SetContext(runnable::RunnableNew* in_nonowning_cur_task)
+    : nonowning_cur_task_(in_nonowning_cur_task)
+  {}
 
   /**
-   * \brief Invoked immediately after a task is executed
+   * \brief Preserve the existing task and replace with a new one
    */
-  virtual void end() {}
+  void begin() override {
+    // we have to handle the ugly handler-inside-handler case.. preserve the
+    // previous context (pop) and set the new task (push)
+    nonowning_prev_task_ = theContext()->getTask();
+    theContext()->setTask(nonowning_cur_task_);
+  }
 
   /**
-   * \brief Invoked when a task is suspended (for ULTs, when enabled)
+   * \brief Restore the previous existing task to the context (if there was one)
    */
-  virtual void suspend() {}
+  void end() override {
+    vtAssert(
+      theContext()->getTask() == nonowning_cur_task_, "Must be correct task"
+    );
+    theContext()->setTask(nonowning_prev_task_);
+  }
 
-  /**
-   * \brief Invoked when a handler is resumed (for ULTs, when enabled)
-   */
-  virtual void resume() {}
+  void suspend() override {
+    end();
+  }
+
+  void resume() override {
+    begin();
+  }
+
+private:
+  /// The previous runnable that was in the context
+  runnable::RunnableNew* nonowning_prev_task_ = nullptr;
+  /// The new runnable that is replacing it
+  runnable::RunnableNew* nonowning_cur_task_ = nullptr;
 };
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H*/

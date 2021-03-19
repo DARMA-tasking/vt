@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                  lb_stats.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,53 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H
+
+#include "vt/context/runnable_context/base.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 
 namespace vt { namespace ctx {
 
 /**
- * \struct Base
+ * \struct LBStats
  *
- * \brief Base context for runnable tasks.
- *
- * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
- * (ULTs), \c suspend() and \c resume might be called if the thread that a task
- * is running in suspends the stack mid-execution (typically waiting for a
- * dependency). Thus, any context is expected to save all state in suspend and
- * then return that state back during resume when the ULT is resumed.
+ * \brief Context for collection LB statistics when a task runs
  */
-struct Base {
-
-  virtual ~Base() = default;
-
-  /**
-   * \brief Invoked immediately before a task is executed
-   */
-  virtual void begin() {}
+template <typename ElmT>
+struct LBStats : Base {
+  using ElementIDStruct = vrt::collection::balance::ElementIDStruct;
 
   /**
-   * \brief Invoked immediately after a task is executed
+   * \brief Construct a \c LBStats
+   *
+   * \param[in] in_elm the collection element
+   * \param[in] msg the incoming message (used for communication stats)
    */
-  virtual void end() {}
+  template <typename MsgT>
+  LBStats(ElmT* in_elm, MsgT* msg);
 
   /**
-   * \brief Invoked when a task is suspended (for ULTs, when enabled)
+   * \brief Set the context and timing for a collection task
    */
-  virtual void suspend() {}
+  void begin() override;
 
   /**
-   * \brief Invoked when a handler is resumed (for ULTs, when enabled)
+   * \brief Remove the context and store timing for a collection task
    */
-  virtual void resume() {}
+  void end() override;
+
+  void suspend() override;
+  void resume() override;
+
+private:
+  ElmT* elm_ = nullptr;               /**< Non-owning pointer to element */
+  ElementIDStruct prev_elm_id_ = {};  /**< Previous element ID  */
+  bool should_instrument_ = false;    /**< Whether we are instrumenting */
 };
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H*/
+#include "vt/context/runnable_context/lb_stats.impl.h"
+
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H*/

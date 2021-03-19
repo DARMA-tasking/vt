@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                    td.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,72 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
+#include "vt/context/runnable_context/td.h"
+#include "vt/termination/termination.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace ctx {
 
-/**
- * \struct Base
- *
- * \brief Base context for runnable tasks.
- *
- * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
- * (ULTs), \c suspend() and \c resume might be called if the thread that a task
- * is running in suspends the stack mid-execution (typically waiting for a
- * dependency). Thus, any context is expected to save all state in suspend and
- * then return that state back during resume when the ULT is resumed.
- */
-struct Base {
+TD::TD(EpochType in_ep)
+  : ep_(in_ep == no_epoch ? term::any_epoch_sentinel : in_ep)
+{ }
 
-  virtual ~Base() = default;
+void TD::begin() {
+  theTerm()->produce(ep_);
+  theMsg()->pushEpoch(ep_);
+  epoch_stack_size_ = theMsg()->getEpochStack().size();
+}
 
-  /**
-   * \brief Invoked immediately before a task is executed
-   */
-  virtual void begin() {}
+void TD::end() {
+  auto& epoch_stack = theMsg()->getEpochStack();
 
-  /**
-   * \brief Invoked immediately after a task is executed
-   */
-  virtual void end() {}
+  vt_debug_print(
+    context, node,
+    "TD::end: top={:x}, size={}\n",
+    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
+    epoch_stack.size()
+  );
 
-  /**
-   * \brief Invoked when a task is suspended (for ULTs, when enabled)
-   */
-  virtual void suspend() {}
+  vtAssertNot(
+    epoch_stack_size_ < epoch_stack.size(),
+    "Epoch stack popped below preceding push size in handler"
+  );
 
-  /**
-   * \brief Invoked when a handler is resumed (for ULTs, when enabled)
-   */
-  virtual void resume() {}
-};
+  vtWarnIfNot(
+    epoch_stack_size_ == epoch_stack.size(), "Stack must be same size"
+  );
+
+  vtAssertNotExpr(epoch_stack.size() == 0);
+
+  while (epoch_stack.size() > epoch_stack_size_) {
+    theMsg()->popEpoch();
+  }
+
+  vtAssertExpr(epoch_stack.size() == epoch_stack_size_);
+
+  theMsg()->popEpoch(ep_);
+  theTerm()->consume(ep_);
+}
+
+void TD::suspend() {
+  auto& epoch_stack = theMsg()->getEpochStack();
+
+  while (epoch_stack.size() > epoch_stack_size_) {
+    suspended_epochs_.push_back(theMsg()->getEpoch());
+    theMsg()->popEpoch();
+  }
+
+  theMsg()->popEpoch(ep_);
+}
+
+void TD::resume() {
+  auto const sz = suspended_epochs_.size();
+  for (std::size_t i = 0; i < sz; i++) {
+    theMsg()->pushEpoch(suspended_epochs_[sz - i - 1]);
+  }
+  suspended_epochs_.clear();
+
+  theMsg()->pushEpoch(ep_);
+}
 
 }} /* end namespace vt::ctx */
-
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H*/

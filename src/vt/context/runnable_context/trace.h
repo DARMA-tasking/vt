@@ -52,25 +52,93 @@
 namespace vt { namespace ctx {
 
 #if vt_check_enabled(trace_enabled)
+
+/**
+ * \struct Trace
+ *
+ * \brief Manages tracing a task's execution for outputting logs
+ */
 struct Trace : Base {
 
-  template <typename EnvT>
-  Trace(EnvT const& env)
-    : event_(envelopeGetTraceEvent(env))
-  { }
+  using RegistryEnumType = auto_registry::RegistryTypeEnum;
 
+  /**
+   * \brief Construct a new trace context (basic processing event)
+   *
+   * \param[in] msg the associated message
+   * \param[in] in_handler the handler
+   * \param[in] in_from_node the node that instigated this event
+   * \param[in] in_han_type the type of handler for tracing
+   */
+  template <typename MsgT>
+  Trace(
+    MsgT const& msg, HandlerType const in_handler, NodeType const in_from_node,
+    RegistryEnumType in_han_type
+  );
+
+  /**
+   * \brief Construct a new trace context (collection processing event)
+   *
+   * \param[in] msg the associated message
+   * \param[in] in_trace_event the trace event associated with this event
+   * \param[in] in_handler the handler
+   * \param[in] in_from_node the node that instigated this event
+   * \param[in] in_han_type the type of handler for tracing
+   * \param[in] in_idx1 1-dimension index
+   * \param[in] in_idx2 2-dimension index
+   * \param[in] in_idx3 3-dimension index
+   * \param[in] in_idx4 4-dimension index
+   */
+  template <typename MsgT>
+  Trace(
+    MsgT const& msg, trace::TraceEventIDType const in_trace_event,
+    HandlerType const in_handler, NodeType const in_from_node,
+    RegistryEnumType in_han_type, uint64_t in_idx1, uint64_t in_idx2,
+    uint64_t in_idx3, uint64_t in_idx4
+  );
+
+  /**
+   * \brief Get the current trace event
+   *
+   * \return the current trace event
+   */
   trace::TraceEventIDType getEvent() const { return event_; }
 
+  void begin() override;
+  void end() override;
+  void suspend() override;
+  void resume() override;
+
 private:
+  /// Whether it's a collection or not
+  bool is_collection_ = false;
+  /// The current trace event
   trace::TraceEventIDType event_ = trace::no_trace_event;
+  /// The size of the message for tracing
+  std::size_t msg_size_ = 0;
+  /// Whether this is traced
+  bool is_traced_ = false;
+  /// The from node
+  NodeType from_node_ = uninitialized_destination;
+  /// The registry handler type enum
+  RegistryEnumType han_type_;
+  /// The active handler for extracting trace info
+  HandlerType handler_ = uninitialized_handler;
+  /// The collection indices
+  uint64_t idx1_ = 0, idx2_ = 0, idx3_ = 0, idx4_ = 0;
+  /// The open processing tag
+  trace::TraceProcessingTag processing_tag_;
 };
+
 #else
+
 struct Trace : Base {
 
-  template <typename EnvT>
-  Trace(EnvT) {}
+  template <typename... Args>
+  Trace(Args... args) {}
 
 };
+
 #endif
 
 }} /* end namespace vt::ctx */

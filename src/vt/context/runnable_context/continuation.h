@@ -49,19 +49,33 @@
 
 namespace vt { namespace ctx {
 
+/**
+ * \struct Continuation
+ *
+ * \brief A continuation that runs after a task is complete.
+ */
 struct Continuation : Base {
 
+  /**
+   * \brief Construct a \c Continuation
+   *
+   * \param[in] in_cont the continuation
+   */
   explicit Continuation(ActionType in_cont)
     : cont_(in_cont)
   { }
 
+  /**
+   * \brief After the task runs, invoke the continuation if non-null
+   */
   void end() override {
     if (cont_) {
       cont_();
     }
   }
+
 private:
-  ActionType cont_ = nullptr;
+  ActionType cont_ = nullptr;   /**< the continuation */
 };
 
 }} /* end namespace vt::ctx */

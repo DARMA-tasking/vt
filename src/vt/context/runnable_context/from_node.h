@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    base.h
+//                                 from_node.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,41 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_FROM_NODE_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_FROM_NODE_H
+
+#include "vt/context/runnable_context/base.h"
 
 namespace vt { namespace ctx {
 
 /**
- * \struct Base
+ * \struct FromNode
  *
- * \brief Base context for runnable tasks.
- *
- * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
- * (ULTs), \c suspend() and \c resume might be called if the thread that a task
- * is running in suspends the stack mid-execution (typically waiting for a
- * dependency). Thus, any context is expected to save all state in suspend and
- * then return that state back during resume when the ULT is resumed.
+ * \brief Get the node that instigated the current task running. Typically the
+ * logical node that caused an handler or event to run.
  */
-struct Base {
-
-  virtual ~Base() = default;
+struct FromNode : Base {
 
   /**
-   * \brief Invoked immediately before a task is executed
+   * \brief Construct a \c FromNode
+   *
+   * \param[in] in_node the node
    */
-  virtual void begin() {}
+  explicit FromNode(NodeType const in_node)
+    : node_(in_node)
+  { }
 
   /**
-   * \brief Invoked immediately after a task is executed
+   * \brief Get the node that instigated the current task
+   *
+   * \return the node
    */
-  virtual void end() {}
+  NodeType get() const { return node_; }
 
-  /**
-   * \brief Invoked when a task is suspended (for ULTs, when enabled)
-   */
-  virtual void suspend() {}
-
-  /**
-   * \brief Invoked when a handler is resumed (for ULTs, when enabled)
-   */
-  virtual void resume() {}
+private:
+  NodeType node_ = uninitialized_destination; /**< The from node */
 };
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_FROM_NODE_H*/
