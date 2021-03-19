@@ -52,6 +52,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/context/context_attorney_fwd.h"
 #include "vt/utils/tls/tls.h"
+#include "vt/runnable/runnable.fwd.h"
 
 namespace vt {  namespace ctx {
 
@@ -151,6 +152,20 @@ struct Context : runtime::component::Component<Context> {
       | communicator_;
   }
 
+  /**
+   * \brief Get the current running task
+   *
+   * \return the current running task
+   */
+  runnable::RunnableNew* getTask() const { return cur_task_; }
+
+  /**
+   * \brief Set the current running task
+   *
+   * \param[in] in_task the current running task
+   */
+  void setTask(runnable::RunnableNew* in_task);
+
 protected:
   /// Set the number of workers through the attorney (internal)
   void setNumWorkers(WorkerCountType const worker_count) {
@@ -171,6 +186,7 @@ private:
   WorkerCountType numWorkers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_WORLD;
   DeclareClassInsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
+  runnable::RunnableNew* cur_task_ = nullptr;
 };
 
 }} // end namespace vt::ctx

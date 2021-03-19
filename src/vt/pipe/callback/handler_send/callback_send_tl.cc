@@ -49,7 +49,9 @@
 #include "vt/pipe/msg/callback.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -67,7 +69,12 @@ void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
     pipe, this_node, send_node_
   );
   if (this_node == send_node_) {
-    runnable::RunnableVoid::run(handler_,this_node);
+    auto r = std::make_unique<runnable::RunnableNew>(true);
+    r->template addContext<ctx::TD>(theMsg()->getEpoch());
+    r->template addContext<ctx::FromNode>(this_node);
+    r->template addContext<ctx::SetContext>(r.get());
+    r->setupHandler(RunnableEnum::Void, handler_, this_node);
+    r->run();
   } else {
     auto msg = makeMessage<CallbackMsg>(pipe);
     theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);

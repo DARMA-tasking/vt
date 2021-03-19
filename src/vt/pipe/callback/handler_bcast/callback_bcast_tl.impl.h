@@ -52,7 +52,6 @@
 #include "vt/activefn/activefn.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
 
 namespace vt { namespace pipe { namespace callback {
 

@@ -43,8 +43,10 @@
 */
 
 #include "vt/context/context.h"
+#include "vt/runnable/runnable.h"
+
 #if !vt_check_enabled(trace_only)
-#include "vt/runtime/runtime.h"
+# include "vt/runtime/runtime.h"
 #endif
 
 #include <string>
@@ -90,6 +92,10 @@ void Context::setDefaultWorker() {
 }
 
 DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
+
+void Context::setTask(runnable::RunnableNew* in_task) {
+  cur_task_ = in_task;
+}
 
 }}  // end namespace vt::ctx
 

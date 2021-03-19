@@ -51,7 +51,6 @@
 #include "vt/pipe/pipe_manager.fwd.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
 
 #include <cassert>
 

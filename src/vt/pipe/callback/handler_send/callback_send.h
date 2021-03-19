@@ -51,9 +51,6 @@
 #include "vt/pipe/callback/callback_base.h"
 #include "vt/activefn/activefn.h"
 #include "vt/context/context.h"
-#include "vt/messaging/active.h"
-#include "vt/messaging/envelope.h"
-#include "vt/runnable/general.h"
 
 #include <type_traits>
 

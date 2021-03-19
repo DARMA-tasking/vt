@@ -53,7 +53,10 @@
 #include "vt/topos/location/utility/entity.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
 
 #include <cstdint>
 #include <memory>
@@ -531,14 +534,23 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
         auto const& handler = msg->getHandler();
-        auto active_fn = auto_registry::getAutoHandler(handler);
+
         vt_debug_print(
           location, node,
           "EntityLocationCoord: apply direct handler action: "
           "id={}, from={}, handler={}, ref={}\n",
           hid, from, handler, envelopeGetRef(msg->env)
         );
-        runnable::Runnable<MessageT>::run(handler, active_fn, msg.get(), from);
+
+        auto r = std::make_unique<runnable::RunnableNew>(msg, true);
+        r->template addContext<ctx::TD>(theMsg()->getEpoch());
+        r->template addContext<ctx::Trace>(
+          msg, handler, from, auto_registry::RegistryTypeEnum::RegGeneral
+        );
+        r->template addContext<ctx::FromNode>(from);
+        r->template addContext<ctx::SetContext>(r.get());
+        r->setupHandler(RunnableEnum::Active, handler, from);
+        r->run();
       } else {
         auto reg_han_iter = local_registered_msg_han_.find(hid);
         vtAssert(

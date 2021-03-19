@@ -50,7 +50,10 @@
 #include "vt/pipe/callback/handler_send/callback_send.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -89,7 +92,12 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     this_node, send_node_
   );
   if (this_node == send_node_) {
-    runnable::RunnableVoid::run(handler_,this_node);
+    auto r = std::make_unique<runnable::RunnableNew>(true);
+    r->template addContext<ctx::TD>(theMsg()->getEpoch());
+    r->template addContext<ctx::FromNode>(this_node);
+    r->template addContext<ctx::SetContext>(r.get());
+    r->setupHandler(RunnableEnum::Void, handler_, this_node);
+    r->run();
   } else {
     auto msg = makeMessage<CallbackMsg>(pid);
     theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);
@@ -108,7 +116,16 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   );
   if (this_node == send_node_) {
     auto msg = reinterpret_cast<ShortMessage*>(data);
-    runnable::Runnable<ShortMessage>::run(handler_, nullptr, msg, this_node);
+    auto m = promoteMsg(msg);
+    auto r = std::make_unique<runnable::RunnableNew>(m, true);
+    r->template addContext<ctx::TD>(theMsg()->getEpoch());
+    r->template addContext<ctx::Trace>(
+      m, handler_, this_node, auto_registry::RegistryTypeEnum::RegGeneral
+    );
+    r->template addContext<ctx::FromNode>(this_node);
+    r->template addContext<ctx::SetContext>(r.get());
+    r->setupHandler(RunnableEnum::Active, handler_, this_node);
+    r->run();
   } else {
     theMsg()->sendMsg<SignalDataType>(send_node_, handler_, data);
   }

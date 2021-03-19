@@ -49,6 +49,11 @@
 #include "vt/objgroup/type_registry/registry.h"
 #include "vt/context/context.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace objgroup {
 
@@ -124,15 +129,17 @@ void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
 void scheduleMsg(
   MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
 ) {
-  // Produce here, consume when the dispatcher actually runs---it might be
-  // delayed
-  theTerm()->produce(epoch);
-  // Schedule the work of dispatching the message handler for later
-  theSched()->enqueue([msg,han,epoch]{
-    auto const node = theContext()->getNode();
-    runnable::Runnable<ShortMessage>::runObj(han,msg.get(),node);
-    theTerm()->consume(epoch);
-  });
+  auto const node = theContext()->getNode();
+  auto r = std::make_unique<runnable::RunnableNew>(msg, true);
+  r->template addContext<ctx::TD>(epoch);
+  r->template addContext<ctx::Trace>(
+    msg, han, node, auto_registry::RegistryTypeEnum::RegGeneral
+  );
+  r->template addContext<ctx::FromNode>(node);
+  r->template addContext<ctx::SetContext>(r.get());
+
+  r->setupHandler(RunnableEnum::Active, han, node);
+  theSched()->enqueue(msg, std::move(r));
 }
 
 }} /* end namespace vt::objgroup */

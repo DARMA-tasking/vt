@@ -78,12 +78,18 @@
 #include "vt/termination/term_headers.h"
 #include "vt/serialization/sizer.h"
 #include "vt/collective/reduce/reduce_hash.h"
-#include "vt/runnable/collection.h"
-#include "vt/runnable/invoke.h"
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
 #include "vt/scheduler/scheduler.h"
 #include "vt/phase/phase_manager.h"
+#include "vt/runnable/invoke.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
+#include "vt/context/runnable_context/collection.h"
+#include "vt/context/runnable_context/lb_stats.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <tuple>
 #include <utility>
@@ -356,10 +362,7 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event
 ) {
-  using IdxContextHolder = InsertContextHolder<IndexT>;
-
-  auto& user_msg = msg->getMsg();
-  auto user_msg_ptr = &user_msg;
+  auto user_msg = makeMessage<UserMsgT>(std::move(msg->getMsg()));
   // Be careful with type casting here..convert to typeless before
   // reinterpreting the pointer so the compiler does not produce the wrong
   // offset
@@ -374,17 +377,24 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
 
-  // Set the current context index, enabling the user to query the index of
-  // their collection element
-  auto const proxy = base->getProxy();
-  IdxContextHolder::set(&idx,proxy);
+  auto const member = HandlerManager::isHandlerMember(han);
+  auto reg = member ?
+    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+    auto_registry::RegistryTypeEnum::RegVrtCollection;
 
-  runnable::RunnableCollection<UserMsgT,UntypedCollection>::run(
-    han, user_msg_ptr, ptr, from, idx1, idx2, idx3, idx4
+  auto r = std::make_unique<runnable::RunnableNew>(user_msg, true);
+  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::Trace>(
+    user_msg, event, han, from, reg, idx1, idx2, idx3, idx4
   );
-
-  // Clear the current index context
-  IdxContextHolder::clear();
+  r->template addContext<ctx::FromNode>(from);
+  r->template addContext<ctx::SetContext>(r.get());
+  r->template addContext<ctx::Collection<IndexT>>(base);
+#if vt_check_enabled(lblite)
+  r->template addContext<ctx::LBStats<CollectionBase<ColT,IndexT>>>(base, msg);
+#endif
+  r->setupHandlerElement(ptr, RunnableEnum::Collection, han, from);
+  r->run();
 }
 
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
@@ -393,8 +403,6 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event
 ) {
-  using IdxContextHolder = InsertContextHolder<IndexT>;
-
   // Be careful with type casting here..convert to typeless before
   // reinterpreting the pointer so the compiler does not produce the wrong
   // offset
@@ -408,18 +416,25 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+  auto const member = HandlerManager::isHandlerMember(han);
+  auto reg = member ?
+    auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
+    auto_registry::RegistryTypeEnum::RegVrtCollection;
 
-  // Set the current context index, enabling the user to query the index of
-  // their collection element
-  auto const proxy = base->getProxy();
-  IdxContextHolder::set(&idx,proxy);
-
-  runnable::RunnableCollection<MsgT,UntypedCollection>::run(
-    han, msg, ptr, from, idx1, idx2, idx3, idx4, event
+  auto m = promoteMsg(msg);
+  auto r = std::make_unique<runnable::RunnableNew>(m, true);
+  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::Trace>(
+    m, event, han, from, reg, idx1, idx2, idx3, idx4
   );
-
-  // Clear the current index context
-  IdxContextHolder::clear();
+  r->template addContext<ctx::FromNode>(from);
+  r->template addContext<ctx::SetContext>(r.get());
+  r->template addContext<ctx::Collection<IndexT>>(base);
+#if vt_check_enabled(lblite)
+  r->template addContext<ctx::LBStats<CollectionBase<ColT,IndexT>>>(base, msg);
+#endif
+  r->setupHandlerElement(ptr, RunnableEnum::Collection, han, from);
+  r->run();
 }
 
 template <typename ColT, typename IndexT, typename MsgT>
@@ -456,42 +471,6 @@ template <typename ColT, typename IndexT, typename MsgT>
       vtAssert(base != nullptr, "Must be valid pointer");
       base->cur_bcast_epoch_++;
 
-      #if vt_check_enabled(lblite)
-        vt_debug_print(
-          vrt_coll, node,
-          "broadcast: apply to element: instrument={}\n",
-          msg->lbLiteInstrument()
-        );
-        if (msg->lbLiteInstrument()) {
-          recordStats(base, msg);
-          auto& stats = base->getStats();
-          stats.startTime();
-        }
-
-        // Set the current context (element ID) that is executing (having a message
-        // delivered). This is used for load balancing to build the communication
-        // graph
-        auto const elm_id = base->getElmID();
-        auto const prev_elm = theCollection()->getCurrentContext();
-
-        theCollection()->setCurrentContext(elm_id);
-
-        vt_debug_print(
-          vrt_coll, node,
-          "collectionBcastHandler: current context: elm={}\n",
-          elm_id
-        );
-
-        std::unique_ptr<messaging::Listener> listener =
-          std::make_unique<balance::LBListener>(
-            [&](NodeType dest, MsgSizeType size, bool bcast){
-              auto& stats = base->getStats();
-              stats.recvToNode(dest, elm_id, size, bcast);
-            }
-          );
-        theMsg()->addSendListener(std::move(listener));
-      #endif
-
       // be very careful here, do not touch `base' after running the active
       // message because it might have migrated out and be invalid
       auto const from = col_msg->getFromNode();
@@ -502,18 +481,6 @@ template <typename ColT, typename IndexT, typename MsgT>
       collectionAutoMsgDeliver<ColT,IndexT,MsgT,typename MsgT::UserMsgType>(
         msg, base, handler, from, trace_event
       );
-
-      #if vt_check_enabled(lblite)
-        theMsg()->clearListeners();
-
-        // Unset the element ID context
-        theCollection()->setCurrentContext(prev_elm);
-
-        if (msg->lbLiteInstrument()) {
-          auto& stats = base->getStats();
-          stats.stopTime();
-        }
-      #endif
     });
   }
   /*
@@ -680,43 +647,6 @@ template <typename ColT, typename IndexT, typename MsgT>
     sub_handler, HandlerManager::isHandlerMember(sub_handler), cur_epoch, idx, exists
   );
 
-
-  #if vt_check_enabled(lblite)
-    vt_debug_print(
-      vrt_coll, node,
-      "collectionMsgTypedHandler: receive msg: instrument={}\n",
-      col_msg->lbLiteInstrument()
-    );
-    if (col_msg->lbLiteInstrument()) {
-      recordStats(col_ptr, msg);
-      auto& stats = col_ptr->getStats();
-      stats.startTime();
-    }
-
-    // Set the current context (element ID) that is executing (having a message
-    // delivered). This is used for load balancing to build the communication
-    // graph
-    auto const elm_id = col_ptr->getElmID();
-    auto const prev_elm = theCollection()->getCurrentContext();
-
-    theCollection()->setCurrentContext(elm_id);
-
-    vt_debug_print(
-      vrt_coll, node,
-      "collectionMsgTypedHandler: current context: elm={}\n",
-      elm_id
-    );
-
-    std::unique_ptr<messaging::Listener> listener =
-      std::make_unique<balance::LBListener>(
-        [&](NodeType dest, MsgSizeType size, bool bcast){
-          auto& stats = col_ptr->getStats();
-          stats.recvToNode(dest, elm_id, size, bcast);
-        }
-      );
-    theMsg()->addSendListener(std::move(listener));
-  #endif
-
   // Dispatch the handler after pushing the contextual epoch
   theMsg()->pushEpoch(cur_epoch);
   auto const from = col_msg->getFromNode();
@@ -729,17 +659,6 @@ template <typename ColT, typename IndexT, typename MsgT>
     msg, col_ptr, sub_handler, from, trace_event
   );
   theMsg()->popEpoch(cur_epoch);
-
-  #if vt_check_enabled(lblite)
-    theMsg()->clearListeners();
-
-    theCollection()->setCurrentContext(prev_elm);
-
-    if (col_msg->lbLiteInstrument()) {
-      auto& stats = col_ptr->getStats();
-      stats.stopTime();
-    }
-  #endif
 }
 
 template <typename ColT, typename MsgT>

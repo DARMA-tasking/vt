@@ -52,7 +52,10 @@
 #include "vt/activefn/activefn.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -70,11 +73,18 @@ void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     "CallbackSendTypeless: trigger_: pipe={:x}, this_node={}, send_node_={}\n",
     pipe, this_node, send_node_
   );
+  auto pmsg = promoteMsg(msg);
   if (this_node == send_node_) {
-    auto nmsg = reinterpret_cast<ShortMessage*>(msg);
-    runnable::Runnable<ShortMessage>::run(handler_, nullptr, nmsg, this_node);
+    auto r = std::make_unique<runnable::RunnableNew>(pmsg, true);
+    r->template addContext<ctx::TD>(theMsg()->getEpoch());
+    r->template addContext<ctx::Trace>(
+      pmsg, handler_, this_node, auto_registry::RegistryTypeEnum::RegGeneral
+    );
+    r->template addContext<ctx::FromNode>(this_node);
+    r->template addContext<ctx::SetContext>(r.get());
+    r->setupHandler(RunnableEnum::Active, handler_, this_node);
+    r->run();
   } else {
-    auto pmsg = promoteMsg(msg);
     theMsg()->sendMsg<MsgT>(send_node_, handler_, pmsg);
   }
 }

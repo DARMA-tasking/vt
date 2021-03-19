@@ -50,12 +50,17 @@
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/termination/term_headers.h"
 #include "vt/group/group_manager_active_attorney.h"
-#include "vt/runnable/general.h"
 #include "vt/timing/timing.h"
 #include "vt/scheduler/priority.h"
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
 #include "vt/runtime/mpi_access.h"
 #include "vt/scheduler/scheduler.h"
+#include "vt/runnable/runnable.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/continuation.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
 
 namespace vt { namespace messaging {
 
@@ -422,7 +427,7 @@ EventType ActiveMessenger::sendMsgBytes(
 
 #if vt_check_enabled(trace_enabled)
 trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
-  return current_trace_context_;
+  return theContext()->getTask()->get<ctx::Trace>()->getEvent();
 }
 #endif
 
@@ -870,7 +875,13 @@ bool ActiveMessenger::recvDataMsg(
 }
 
 NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
-  return current_node_context_;
+  if (theContext()->getTask() != nullptr) {
+    auto from = theContext()->getTask()->get<ctx::FromNode>();
+    if (from != nullptr) {
+      return from->get();
+    }
+  }
+  return theContext()->getNode();
 }
 
 void ActiveMessenger::scheduleActiveMsg(
@@ -883,9 +894,7 @@ void ActiveMessenger::scheduleActiveMsg(
     print_ptr(base.get()), from, size, insert
   );
 
-  // Enqueue the message for processing
-  auto run = [=]{ processActiveMsg(base, from, size, insert, cont); };
-  theSched()->enqueue(base, run);
+  processActiveMsg(base, from, size, insert, cont);
 }
 
 bool ActiveMessenger::processActiveMsg(
@@ -939,13 +948,6 @@ bool ActiveMessenger::deliverActiveMsg(
   auto const tag = is_tag ? envelopeGetTag(msg->env) : no_tag;
   auto const from_node = is_bcast ? dest : in_from_node;
 
-  ActiveFnPtrType active_fun = nullptr;
-
-  bool has_ex_handler = false;
-  bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
-  bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
-  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
-
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       active, node,
@@ -955,85 +957,40 @@ bool ActiveMessenger::deliverActiveMsg(
     );
   }
 
-  if (is_auto and is_functor and not is_obj) {
-    active_fun = auto_registry::getAutoHandlerFunctor(handler);
-  } else if (is_auto and not is_obj) {
-    active_fun = auto_registry::getAutoHandler(handler);
-  } else if (not is_obj) {
-    auto ret = theRegistry()->getHandler(handler, tag);
-    if (ret != nullptr) {
-      has_ex_handler = true;
-    }
-  }
-
-  bool const has_handler = active_fun != no_action or has_ex_handler or is_obj;
+  bool const is_auto = HandlerManagerType::isHandlerAuto(handler);
+  bool const is_obj = HandlerManagerType::isHandlerObjGroup(handler);
+  bool has_handler =
+    (is_obj or is_auto) or theRegistry()->getHandler(handler, tag) != nullptr;
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
       active, node,
       "deliverActiveMsg: msg={}, handler={:x}, tag={}, is_auto={}, "
-      "is_functor={}, is_obj_group={}, has_handler={}, insert={}\n",
-      print_ptr(msg), handler, tag, is_auto, is_functor, is_obj,
+      "is_obj_group={}, has_handler={}, insert={}\n",
+      print_ptr(msg), handler, tag, is_auto, is_obj,
       has_handler, insert
     );
   }
 
   if (has_handler) {
-    // the epoch_stack_ size after the epoch on the active message, if included
-    // in the envelope, is pushed.
-    EpochStackSizeType ep_stack_size = 0;
-
-    auto const env_epoch    = not (epoch == term::any_epoch_sentinel);
-    auto const has_epoch    = env_epoch and epoch != no_epoch;
-    auto const cur_epoch    = env_epoch ? epoch : no_epoch;
-
-    // set the current handler so the user can request it in the context of an
-    // active fun
-    current_handler_context_  = handler;
-    current_node_context_     = from_node;
-    current_epoch_context_    = cur_epoch;
-
-    #if vt_check_enabled(priorities)
-      current_priority_context_       = envelopeGetPriority(msg->env);
-      current_priority_level_context_ = envelopeGetPriorityLevel(msg->env);
-    #endif
-
-    #if vt_check_enabled(trace_enabled)
-      current_trace_context_  = envelopeGetTraceEvent(msg->env);
-    #endif
-
-    if (has_epoch) {
-      ep_stack_size = epochPreludeHandler(cur_epoch);
+    auto r = std::make_unique<runnable::RunnableNew>(base, not is_term);
+    if (not is_term) {
+      r->template addContext<ctx::TD>(epoch);
     }
+    r->template addContext<ctx::Continuation>(cont);
+    r->template addContext<ctx::Trace>(
+      msg, handler, from_node, auto_registry::RegistryTypeEnum::RegGeneral
+    );
+    r->template addContext<ctx::FromNode>(from_node);
+    r->template addContext<ctx::SetContext>(r.get());
 
     if (is_term) {
       tdRecvCount.increment(1);
     }
     amHandlerCount.increment(1);
 
-    runnable::Runnable<MsgType>::run(handler,active_fun,msg,from_node,tag);
-
-    // unset current handler
-    current_handler_context_  = uninitialized_handler;
-    current_node_context_     = uninitialized_destination;
-    current_epoch_context_    = no_epoch;
-
-    #if vt_check_enabled(trace_enabled)
-      current_trace_context_  = trace::no_trace_event;
-    #endif
-
-    #if vt_check_enabled(priorities)
-      current_priority_context_       = no_priority;
-      current_priority_level_context_ = no_priority_level;
-    #endif
-
-    if (cont != nullptr) {
-      cont();
-    }
-
-    if (has_epoch) {
-      epochEpilogHandler(cur_epoch,ep_stack_size);
-    }
+    r->setupHandler(RunnableEnum::Active, handler, from_node, tag);
+    theSched()->enqueue(base, std::move(r));
 
     if (not is_term) {
       theTerm()->consume(epoch,1,from_node);
@@ -1338,22 +1295,6 @@ void ActiveMessenger::unregisterHandlerFn(
   );
 
   return theRegistry()->unregisterHandlerFn(han, tag);
-}
-
-HandlerType ActiveMessenger::getCurrentHandler() const {
-  return current_handler_context_;
-}
-
-EpochType ActiveMessenger::getCurrentEpoch() const {
-  return current_epoch_context_;
-}
-
-PriorityType ActiveMessenger::getCurrentPriority() const {
-  return current_priority_context_;
-}
-
-PriorityLevelType ActiveMessenger::getCurrentPriorityLevel() const {
-  return current_priority_level_context_;
 }
 
 }} // end namespace vt::messaging

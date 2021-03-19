@@ -52,6 +52,9 @@
 #include "vt/scheduler/priority.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
+#include "vt/scheduler/thread_action.h"
+#include "vt/scheduler/thread_manager.h"
+#include "vt/runnable/runnable.h"
 
 namespace vt { namespace messaging {
 
@@ -478,9 +481,7 @@ inline void ActiveMessenger::epochEpilogHandler(
   vtWarnInfo(
     ep_stack_size == cur_stack_size, "Stack must be same size",
     ep_stack_size, cur_stack_size,
-    cur_stack_size > 0 ? epoch_stack_.top() : no_epoch,
-    current_handler_context_, current_epoch_context_, current_node_context_,
-    cur_epoch
+    cur_stack_size > 0 ? epoch_stack_.top() : no_epoch
   );
   vtAssertNotExpr(cur_stack_size == 0);
   while (cur_stack_size > ep_stack_size) {

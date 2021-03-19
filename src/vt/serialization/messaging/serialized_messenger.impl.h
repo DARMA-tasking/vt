@@ -50,10 +50,16 @@
 #include "vt/messaging/active.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
-#include "vt/runnable/general.h"
 #include "vt/serialization/messaging/serialized_data_msg.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/messaging/envelope/envelope_set.h" // envelopeSetRef
+#include "vt/runnable/runnable.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/continuation.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <tuple>
 #include <type_traits>
@@ -89,9 +95,17 @@ template <typename UserMsgT>
   auto msg_data = ptr_offset;
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
-  runnable::Runnable<UserMsgT>::run(
-    handler, nullptr, user_msg.get(), sys_msg->from_node
+  auto r = std::make_unique<runnable::RunnableNew>(user_msg, true);
+  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::Trace>(
+    user_msg, handler, sys_msg->from_node,
+    auto_registry::RegistryTypeEnum::RegGeneral
   );
+  r->template addContext<ctx::FromNode>(sys_msg->from_node);
+  r->template addContext<ctx::SetContext>(r.get());
+
+  r->setupHandler(RunnableEnum::Active, handler, sys_msg->from_node);
+  theSched()->enqueue(user_msg, std::move(r));
 }
 
 template <typename UserMsgT>
@@ -133,14 +147,21 @@ template <typename UserMsgT>
         handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
+      auto r = std::make_unique<runnable::RunnableNew>(msg, true);
       if (is_valid_epoch) {
-        theMsg()->pushEpoch(epoch);
+        r->template addContext<ctx::TD>(epoch);
       }
-      runnable::Runnable<UserMsgT>::run(handler, nullptr, msg.get(), node);
-      action();
+      r->template addContext<ctx::Trace>(
+        msg, handler, node, auto_registry::RegistryTypeEnum::RegGeneral
+      );
+      r->template addContext<ctx::FromNode>(node);
+      r->template addContext<ctx::SetContext>(r.get());
+      r->template addContext<ctx::Continuation>(action);
+
+      r->setupHandler(RunnableEnum::Active, handler, node);
+      theSched()->enqueue(msg, std::move(r));
 
       if (is_valid_epoch) {
-        theMsg()->popEpoch(epoch);
         theTerm()->consume(epoch);
       }
     }
@@ -171,9 +192,17 @@ template <typename UserMsgT, typename BaseEagerMsgT>
     print_ptr(user_msg.get()), envelopeGetEpoch(sys_msg->env)
   );
 
-  runnable::Runnable<UserMsgT>::run(
-    handler, nullptr, user_msg.get(), sys_msg->from_node
+  auto r = std::make_unique<runnable::RunnableNew>(user_msg, true);
+  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::Trace>(
+    user_msg, handler, sys_msg->from_node,
+    auto_registry::RegistryTypeEnum::RegGeneral
   );
+  r->template addContext<ctx::FromNode>(sys_msg->from_node);
+  r->template addContext<ctx::SetContext>(r.get());
+
+  r->setupHandler(RunnableEnum::Active, handler, sys_msg->from_node);
+  theSched()->enqueue(user_msg, std::move(r));
 }
 
 template <typename MsgT, typename BaseT>
@@ -405,7 +434,17 @@ template <typename MsgT, typename BaseT>
         auto base_msg = msg.template to<BaseMsgType>();
         ByteType msg_sz = sizeof(MsgT);
         return messaging::PendingSend(base_msg, msg_sz, [=](MsgPtr<BaseMsgType> in){
-          runnable::Runnable<MsgT>::run(typed_handler,nullptr,msg.get(),node);
+          auto r = std::make_unique<runnable::RunnableNew>(msg, true);
+          r->template addContext<ctx::TD>(theMsg()->getEpoch());
+          r->template addContext<ctx::Trace>(
+            msg, typed_handler, node,
+            auto_registry::RegistryTypeEnum::RegGeneral
+          );
+          r->template addContext<ctx::FromNode>(node);
+          r->template addContext<ctx::SetContext>(r.get());
+
+          r->setupHandler(RunnableEnum::Active, typed_handler, node);
+          theSched()->enqueue(msg, std::move(r));
         });
       }
     };

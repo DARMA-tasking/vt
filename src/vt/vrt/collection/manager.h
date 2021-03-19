@@ -77,6 +77,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/vrt/collection/op_buffer.h"
 #include "vt/runnable/invoke.h"
+#include "vt/context/runnable_context/lb_stats.fwd.h"
 
 #include <memory>
 #include <vector>
@@ -1733,6 +1734,9 @@ private:
   friend struct InsertTokenRval;
 
   friend struct balance::ElementStats;
+
+  template <typename ElmT>
+  friend struct ctx::LBStats;
 
   /**
    * \internal \brief Migrate an element out of this node

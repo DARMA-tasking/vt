@@ -78,6 +78,10 @@
 
 namespace vt {
 
+namespace runnable {
+struct RunnableNew;
+}
+
 /// A pair of a void* and number of bytes (length) for sending data
 using PtrLenPairType = std::tuple<void*, ByteType>;
 
@@ -1385,14 +1389,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Get the current handler (valid only while running a handler)
-   *
-   * \return the handler ID
-   */
-  HandlerType getCurrentHandler() const;
-
-  /**
-   * \internal
    * \brief Get the from node for the current running handler (valid only while
    * running a handler)
    *
@@ -1405,14 +1401,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   NodeType getFromNodeCurrentHandler() const;
 
-  /**
-   * \internal
-   * \brief Get the current epoch on the handler running
-   *
-   * \return the epoch on the message that triggered the current handler
-   */
-  EpochType getCurrentEpoch() const;
-
   #if vt_check_enabled(trace_enabled)
     /**
      * \internal
@@ -1422,22 +1410,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
      */
     trace::TraceEventIDType getCurrentTraceEvent() const;
   #endif
-
-  /**
-   * \internal
-   * \brief Get the priority on the handler running
-   *
-   * \return the priority on the message that triggered the current handler
-   */
-  PriorityType getCurrentPriority() const;
-
-  /**
-   * \internal
-   * \brief Get the priority level on the handler running
-   *
-   * \return the priority level of the message that triggered the current handler
-   */
-  PriorityLevelType getCurrentPriorityLevel() const;
 
   /**
    * \internal
@@ -1618,6 +1590,12 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
+   * \brief Access the epoch stack
+   */
+  inline EpochStackType& getEpochStack() { return epoch_stack_; }
+
+  /**
+   * \internal
    * \brief Get the epoch for a message based on the current context so an
    * subsequent operation on it can be safely delayed
    *
@@ -1696,12 +1674,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | current_handler_context_
-      | current_node_context_
-      | current_epoch_context_
-      | current_priority_context_
-      | current_priority_level_context_
-      | maybe_ready_tag_han_
+    s | maybe_ready_tag_han_
       | pending_handler_msgs_
       | pending_recvs_
       | cur_direct_buffer_tag_
@@ -1803,7 +1776,6 @@ private:
 
 private:
 # if vt_check_enabled(trace_enabled)
-  trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
   trace::UserEventIDType trace_irecv             = trace::no_user_event_id;
   trace::UserEventIDType trace_isend             = trace::no_user_event_id;
   trace::UserEventIDType trace_irecv_polling_am  = trace::no_user_event_id;
@@ -1811,11 +1783,6 @@ private:
   trace::UserEventIDType trace_asyncop           = trace::no_user_event_id;
 # endif
 
-  HandlerType current_handler_context_                    = uninitialized_handler;
-  NodeType current_node_context_                          = uninitialized_destination;
-  EpochType current_epoch_context_                        = no_epoch;
-  PriorityType current_priority_context_                  = no_priority;
-  PriorityLevelType current_priority_level_context_       = no_priority_level;
   MaybeReadyType maybe_ready_tag_han_                     = {};
   ContWaitType pending_handler_msgs_                      = {};
   ContainerPendingType pending_recvs_                     = {};

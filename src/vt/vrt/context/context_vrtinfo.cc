@@ -51,7 +51,11 @@
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/messaging/message.h"
-#include "vt/runnable/vrt.h"
+#include "vt/context/runnable_context/td.h"
+#include "vt/context/runnable_context/trace.h"
+#include "vt/context/runnable_context/from_node.h"
+#include "vt/context/runnable_context/set_context.h"
+#include "vt/scheduler/scheduler.h"
 
 #include <memory>
 #include <cassert>
@@ -104,9 +108,16 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
   auto work_unit = [=]{
     // @todo: fix the from node
     auto const& from_node = 0;
-    runnable::RunnableVrt<VirtualMessage,VirtualContext>::run(
-      sub_handler, msg.get(), vc_ptr, from_node
+    auto m = promoteMsg(raw_msg);
+    auto r = std::make_unique<runnable::RunnableNew>(m, false);
+    r->template addContext<ctx::TD>(theMsg()->getEpoch());
+    r->template addContext<ctx::Trace>(
+      m, sub_handler, from_node, auto_registry::RegistryTypeEnum::RegVrt
     );
+    r->template addContext<ctx::FromNode>(from_node);
+    r->template addContext<ctx::SetContext>(r.get());
+    r->setupHandlerElement(vc_ptr, RunnableEnum::Vrt, sub_handler, from_node);
+    r->run();
   };
 
   bool const has_workers = theContext()->hasWorkers();
