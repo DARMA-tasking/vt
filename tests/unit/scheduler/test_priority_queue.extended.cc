@@ -58,11 +58,11 @@ TEST_F(TestPriorityQueue, test_priority_queue_1) {
   vt::sched::PriorityQueue<PriorityUnit> queue;
   bool const t = false;
 
-  queue.emplace(PriorityUnit(t, 1, [&]{ EXPECT_EQ(seq, 5); seq++; }));
-  queue.emplace(PriorityUnit(t, 2, [&]{ EXPECT_EQ(seq, 4); seq++; }));
-  queue.emplace(PriorityUnit(t, 3, [&]{ EXPECT_EQ(seq, 3); seq++; }));
-  queue.emplace(PriorityUnit(t, 4, [&]{ EXPECT_EQ(seq, 2); seq++; }));
-  queue.emplace(PriorityUnit(t, 5, [&]{ EXPECT_EQ(seq, 1); seq++; }));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 5); seq++; }, 1));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 4); seq++; }, 2));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 3); seq++; }, 3));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 2); seq++; }, 4));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 1); seq++; }, 5));
 
   EXPECT_EQ(seq, 1);
 
@@ -80,11 +80,11 @@ TEST_F(TestPriorityQueue, test_priority_queue_2) {
   vt::sched::PriorityQueue<PriorityUnit> queue;
   bool const t = false;
 
-  queue.emplace(PriorityUnit(t, 2, [&]{ EXPECT_EQ(seq, 4); seq++; }));
-  queue.emplace(PriorityUnit(t, 3, [&]{ EXPECT_EQ(seq, 3); seq++; }));
-  queue.emplace(PriorityUnit(t, 1, [&]{ EXPECT_EQ(seq, 5); seq++; }));
-  queue.emplace(PriorityUnit(t, 5, [&]{ EXPECT_EQ(seq, 1); seq++; }));
-  queue.emplace(PriorityUnit(t, 4, [&]{ EXPECT_EQ(seq, 2); seq++; }));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 4); seq++; }, 2));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 3); seq++; }, 3));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 5); seq++; }, 1));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 1); seq++; }, 5));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 2); seq++; }, 4));
 
   EXPECT_EQ(seq, 1);
 
@@ -104,22 +104,22 @@ TEST_F(TestPriorityQueue, test_priority_queue_3) {
   bool const t = false;
 
 #if vt_feature_cmake_priority_bits_level == 1
-  queue.emplace(PriorityUnit(t, Priority::DepthFirst,   [&]{ EXPECT_EQ(seq, 2); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::BreadthFirst, [&]{ EXPECT_EQ(seq, 1); seq++; }));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 2); seq++; }, Priority::DepthFirst));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 1); seq++; }, Priority::BreadthFirst));
 #elif vt_feature_cmake_priority_bits_level == 2
-  queue.emplace(PriorityUnit(t, Priority::Low,          [&]{ EXPECT_EQ(seq, 4); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::Medium,       [&]{ EXPECT_EQ(seq, 3); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::High,         [&]{ EXPECT_EQ(seq, 2); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::BreadthFirst, [&]{ EXPECT_EQ(seq, 1); seq++; }));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 4); seq++; }, Priority::Low));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 3); seq++; }, Priority::Medium));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 2); seq++; }, Priority::High));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 1); seq++; }, Priority::BreadthFirst));
 #elif vt_feature_cmake_priority_bits_level == 3
-  queue.emplace(PriorityUnit(t, Priority::Lowest,       [&]{ EXPECT_EQ(seq, 8); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::Low,          [&]{ EXPECT_EQ(seq, 7); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::MediumLow,    [&]{ EXPECT_EQ(seq, 6); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::Medium,       [&]{ EXPECT_EQ(seq, 5); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::MediumHigh,   [&]{ EXPECT_EQ(seq, 4); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::High,         [&]{ EXPECT_EQ(seq, 3); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::Highest,      [&]{ EXPECT_EQ(seq, 2); seq++; }));
-  queue.emplace(PriorityUnit(t, Priority::BreadthFirst, [&]{ EXPECT_EQ(seq, 1); seq++; }));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 8); seq++; }, Priority::Lowest));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 7); seq++; }, Priority::Low));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 6); seq++; }, Priority::MediumLow));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 5); seq++; }, Priority::Medium));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 4); seq++; }, Priority::MediumHigh));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 3); seq++; }, Priority::High));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 2); seq++; }, Priority::Highest));
+  queue.emplace(PriorityUnit(t, [&]{ EXPECT_EQ(seq, 1); seq++; }, Priority::BreadthFirst));
 #else
   // Do nothing
 #endif
