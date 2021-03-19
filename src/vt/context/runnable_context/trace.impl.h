@@ -48,6 +48,8 @@
 #if vt_check_enabled(trace_enabled)
 
 #include "vt/context/runnable_context/trace.h"
+#include "vt/handler/handler.h"
+#include "vt/serialization/sizer.h"
 
 namespace vt { namespace ctx {
 
@@ -58,7 +60,7 @@ Trace::Trace(
 ) : is_collection_(false),
     event_(envelopeGetTraceEvent(msg->env)),
     msg_size_(vt::serialization::MsgSizer<MsgT>::get(msg)),
-    is_traced_(HandlerManagerType::isHandlerTrace(in_handler)),
+    is_traced_(HandlerManager::isHandlerTrace(in_handler)),
     from_node_(in_from_node),
     han_type_(in_han_type),
     handler_(in_handler)
@@ -73,7 +75,7 @@ Trace::Trace(
 ) : is_collection_(true),
     event_(in_trace_event),
     msg_size_(vt::serialization::MsgSizer<MsgT>::get(msg)),
-    is_traced_(HandlerManagerType::isHandlerTrace(in_handler)),
+    is_traced_(HandlerManager::isHandlerTrace(in_handler)),
     from_node_(in_from_node),
     han_type_(in_han_type),
     handler_(in_handler),
