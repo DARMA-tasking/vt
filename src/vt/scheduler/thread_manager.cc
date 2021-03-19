@@ -44,6 +44,8 @@
 
 #include "vt/scheduler/thread_manager.h"
 
+#if vt_check_enabled(fcontext)
+
 #include <memory>
 
 namespace vt { namespace scheduler {
@@ -70,3 +72,5 @@ namespace vt { namespace scheduler {
   ThreadManager::threads_;
 
 }} /* end namespace vt::scheduler */
+
+#endif /*vt_check_enabled(fcontext)*/

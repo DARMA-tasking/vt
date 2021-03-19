@@ -45,9 +45,13 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_CC
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_CC
 
+#include "vt/config.h"
+
 #if vt_check_enabled(trace_enabled)
 
 #include "vt/context/runnable_context/trace.h"
+#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace ctx {
 

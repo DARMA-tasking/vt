@@ -46,6 +46,8 @@
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
 
 #include "vt/context/runnable_context/base.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/configs/types/types_sentinels.h"
 
 #include <vector>
 

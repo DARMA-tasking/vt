@@ -48,6 +48,7 @@
 #include "vt/context/runnable_context/base.h"
 #include "vt/trace/trace_common.h"
 #include "vt/messaging/envelope/envelope_get.h"
+#include "vt/registry/auto/auto_registry_common.h"
 
 namespace vt { namespace ctx {
 
