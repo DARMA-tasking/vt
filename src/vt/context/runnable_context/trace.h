@@ -144,4 +144,6 @@ struct Trace : Base {
 
 }} /* end namespace vt::ctx */
 
+#include "vt/context/runnable_context/trace.impl.h"
+
 #endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TRACE_H*/
