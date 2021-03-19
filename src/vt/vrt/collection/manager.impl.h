@@ -1518,15 +1518,15 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     col_proxy, cur_epoch, idx, handler, imm_context
   );
 
-  return schedule(
-    msg, !imm_context, cur_epoch, [=]{
-      bufferOpOrExecute<ColT>(
-        col_proxy,
-        BufferTypeEnum::Send,
-        BufferReleaseEnum::AfterMetaDataKnown,
-        cur_epoch,
-        [=]() -> messaging::PendingSend {
-          auto home_node = getMapped<ColT>(col_proxy, idx);
+  return bufferOpOrExecute<ColT>(
+    col_proxy,
+    BufferTypeEnum::Send,
+    BufferReleaseEnum::AfterMetaDataKnown,
+    cur_epoch,
+    [=]() mutable -> messaging::PendingSend {
+      return messaging::PendingSend{
+        msg, [=](MsgSharedPtr<BaseMsgType>& inner_msg){
+          auto home_node = theCollection()->getMapped<ColT>(col_proxy, idx);
           // route the message to the destination using the location manager
           auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
           vtAssert(lm != nullptr, "LM must exist");
@@ -1534,9 +1534,8 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
           lm->template routeMsgSerializeHandler<
             MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
           >(toProxy, home_node, msg);
-          return messaging::PendingSend{nullptr};
         }
-      );
+      };
     }
   );
 }
