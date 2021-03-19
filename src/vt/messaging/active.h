@@ -1699,8 +1699,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       | tdSentCount;
 
   # if vt_check_enabled(trace_enabled)
-    s | current_trace_context_
-      | trace_irecv
+    s | trace_irecv
       | trace_isend
       | trace_irecv_polling_am
       | trace_irecv_polling_dm
