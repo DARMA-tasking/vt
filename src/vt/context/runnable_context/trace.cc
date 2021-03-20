@@ -63,7 +63,7 @@ void Trace::begin() {
   auto trace_id = auto_registry::handlerTraceID(handler_, han_type_);
 
   if (is_collection_) {
-    auto const cur_node = theMsg()->getFromNodeCurrentHandler();
+    auto const cur_node = theContext()->getFromNodeCurrentTask();
     auto const from_node =
       from_node_ != uninitialized_destination ? from_node_ : cur_node;
 

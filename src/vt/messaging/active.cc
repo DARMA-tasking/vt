@@ -881,16 +881,6 @@ bool ActiveMessenger::recvDataMsg(
   );
 }
 
-NodeType ActiveMessenger::getFromNodeCurrentHandler() const {
-  if (theContext()->getTask() != nullptr) {
-    auto from = theContext()->getTask()->get<ctx::FromNode>();
-    if (from != nullptr) {
-      return from->get();
-    }
-  }
-  return theContext()->getNode();
-}
-
 bool ActiveMessenger::processActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
   MsgSizeType const& size, bool insert, ActionType cont

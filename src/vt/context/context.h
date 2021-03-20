@@ -159,6 +159,22 @@ struct Context : runtime::component::Component<Context> {
    */
   runnable::RunnableNew* getTask() const { return cur_task_; }
 
+  /**
+   * \brief Get the node that caused the current running task to execute; i.e.,
+   * the node that sent the message to trigger the current runnable.
+   *
+   * \note If a task is not currently running, this will return the this node
+   * ---equivalent to \c theContext()->getNode()
+   *
+   * For the current task that is executing, get the node that sent the message
+   * that caused this runnable to execute. Note, for collection handlers this
+   * will not be the logical node that sent the message. It will be the node
+   * that last forwarded the message during location discovery.
+   *
+   * \return the node that sent the message that triggered the current task
+   */
+  NodeType getFromNodeCurrentTask() const;
+
 protected:
   /**
    * \brief Set the current running task

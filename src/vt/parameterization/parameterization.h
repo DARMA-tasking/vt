@@ -107,7 +107,7 @@ static void dataMessageHandler(DataMsg<Tuple>* msg) {
     trace::TraceEventIDType event = envelopeGetTraceEvent(msg->env);
 
     size_t msg_size = sizeof(*msg);
-    NodeType const& from_node = theMsg()->getFromNodeCurrentHandler();
+    NodeType const& from_node = theContext()->getFromNodeCurrentTask();
 
     processing_tag =
       theTrace()->beginProcessing(ep, msg_size, event, from_node);

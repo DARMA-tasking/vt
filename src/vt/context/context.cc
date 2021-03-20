@@ -43,6 +43,7 @@
 */
 
 #include "vt/context/context.h"
+#include "vt/context/runnable_context/from_node.h"
 
 #if !vt_check_enabled(trace_only)
 # include "vt/runtime/runtime.h"
@@ -94,6 +95,16 @@ DeclareClassOutsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
 
 void Context::setTask(runnable::RunnableNew* in_task) {
   cur_task_ = in_task;
+}
+
+NodeType Context::getFromNodeCurrentTask() const {
+  if (getTask() != nullptr) {
+    auto from = getTask()->get<ctx::FromNode>();
+    if (from != nullptr) {
+      return from->get();
+    }
+  }
+  return getNode();
 }
 
 }}  // end namespace vt::ctx

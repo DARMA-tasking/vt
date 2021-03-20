@@ -2223,7 +2223,7 @@ inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
 
 template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::insertHandler(InsertMsg<ColT,IndexT>* msg) {
-  auto const from = theMsg()->getFromNodeCurrentHandler();
+  auto const from = theContext()->getFromNodeCurrentTask();
   auto const& epoch = msg->epoch_;
   auto const& g_epoch = msg->g_epoch_;
   theCollection()->insert<ColT,IndexT>(
@@ -2270,7 +2270,7 @@ template <typename ColT, typename IndexT>
     );
   }
 
-  auto const from = theMsg()->getFromNodeCurrentHandler();
+  auto const from = theContext()->getFromNodeCurrentTask();
   auto const& epoch = msg->epoch_;
   auto const& g_epoch = msg->g_epoch_;
   theTerm()->consume(epoch,1,from);

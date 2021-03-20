@@ -82,7 +82,7 @@ void Reduce::reduceRootRecv(MsgT* msg) {
   msg->count_ = 1;
   msg->is_root_ = true;
 
-  auto const& from_node = theMsg()->getFromNodeCurrentHandler();
+  auto const& from_node = theContext()->getFromNodeCurrentTask();
   auto m = promoteMsg(msg);
   auto r = std::make_unique<runnable::RunnableNew>(m, false);
   r->template addContext<ctx::TD>(theMsg()->getEpoch());
@@ -264,7 +264,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
        *  applying the reduction operator
        */
       auto const& handler = state.combine_handler_;
-      auto const& from_node = theMsg()->getFromNodeCurrentHandler();
+      auto const& from_node = theContext()->getFromNodeCurrentTask();
 
       // this needs to run inline.. threaded not allowed for reduction
       // combination

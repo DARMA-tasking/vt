@@ -1381,20 +1381,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     ActiveClosureFnType fn, TagType const& tag = no_tag
   );
 
-  /**
-   * \internal
-   * \brief Get the from node for the current running handler (valid only while
-   * running a handler)
-   *
-   * For the current handler that is executing, get the node that sent the
-   * message that caused this handler to run. Note, for collection handlers this
-   * will not be the logical node that sent the message. It will be the node
-   * that last forwarded the message during location discovery.
-   *
-   * \return the node that sent the message that triggered the current handler
-   */
-  NodeType getFromNodeCurrentHandler() const;
-
   #if vt_check_enabled(trace_enabled)
     /**
      * \internal

@@ -188,7 +188,7 @@ void InfoColl::setupCollective() {
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
       vtAssertExpr(iter != theGroup()->local_collective_group_info_.end());
-      auto const& from = theMsg()->getFromNodeCurrentHandler();
+      auto const& from = theContext()->getFromNodeCurrentTask();
       iter->second->newTree(from);
     }
   );
@@ -606,7 +606,7 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
 }
 
 void InfoColl::downTree(GroupCollectiveMsg* msg) {
-  auto const& from = theMsg()->getFromNodeCurrentHandler();
+  auto const& from = theContext()->getFromNodeCurrentTask();
 
   vt_debug_print(
     group, node,
