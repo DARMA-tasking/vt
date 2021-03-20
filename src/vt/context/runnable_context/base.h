@@ -53,11 +53,11 @@ namespace vt { namespace ctx {
  * \brief Base context for runnable tasks.
  *
  * \c ctx::Base is used to create contexts that are associated with tasks
- * wrapped with the \c runnable::Runnable class. When message arrive and trigger
- * a handler or other actions occur, contexts that inherit from \c Base can be
- * used to maintain a particular context when that runnable is passed to the
- * scheduler for execution later. The \c begin() and \c end() methods are called
- * when the task starts and stops. If VT is build with user-level threads
+ * wrapped with the \c runnable::Runnable class. When messages arrive and
+ * trigger a handler or other actions occur, contexts that inherit from \c Base
+ * can be used to maintain a particular context when that runnable is passed to
+ * the scheduler for later execution. The \c begin() and \c end() methods are
+ * called when the task starts and stops. If VT is built with user-level threads
  * (ULTs), \c suspend() and \c resume might be called if the thread that a task
  * is running in suspends the stack mid-execution (typically waiting for a
  * dependency). Thus, any context is expected to save all state in suspend and
