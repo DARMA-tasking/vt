@@ -59,7 +59,7 @@ namespace vt { namespace ctx {
  *
  * \brief Manages tracing a task's execution for outputting logs
  */
-struct Trace : Base {
+struct Trace final : Base {
 
   using RegistryEnumType = auto_registry::RegistryTypeEnum;
 
@@ -105,10 +105,10 @@ struct Trace : Base {
    */
   trace::TraceEventIDType getEvent() const { return event_; }
 
-  void begin() override;
-  void end() override;
-  void suspend() override;
-  void resume() override;
+  void begin() final override;
+  void end() final override;
+  void suspend() final override;
+  void resume() final override;
 
 private:
   /// Whether it's a collection or not

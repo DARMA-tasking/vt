@@ -55,7 +55,7 @@ namespace vt { namespace ctx {
  * \brief Get the node that instigated the current task running. Typically the
  * logical node that caused an handler or event to run.
  */
-struct FromNode : Base {
+struct FromNode final : Base {
 
   /**
    * \brief Construct a \c FromNode

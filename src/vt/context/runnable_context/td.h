@@ -59,7 +59,7 @@ namespace vt { namespace ctx {
  * \brief Context for termination detection to be preserved with a task. Manages
  * the epoch stack associated with running tasks.
  */
-struct TD : Base {
+struct TD final : Base {
 
   /**
    * \brief Construct with a given epoch
@@ -72,25 +72,25 @@ struct TD : Base {
    * \brief During begin \c TD will produce on the epoch and push it on the
    * epoch stack.
    */
-  void begin() override;
+  void begin() final override;
 
   /**
    * \brief During end \c TD will consume on the epoch and pop it off the stack
    */
-  void end() override;
+  void end() final override;
 
   /**
    * \brief When suspended, \c TD will preserve any epochs pushed on the stack
    * after begin and restore the stack back to the state before begin was
    * invoked
    */
-  void suspend() override;
+  void suspend() final override;
 
   /**
    * \brief When resumed, \c TD will restore the stack back from when it was
    * suspended
    */
-  void resume() override;
+  void resume() final override;
 
 private:
   EpochType ep_ = no_epoch;                    /**< The epoch for the task */

@@ -63,7 +63,7 @@ namespace vt { namespace ctx {
  * and proxy for the collection.
  */
 template <typename IndexT>
-struct Collection : Base {
+struct Collection final : Base {
 
   /**
    * \brief Construct a \c Collection
@@ -76,15 +76,15 @@ struct Collection : Base {
   /**
    * \brief Set the collection context
    */
-  void begin() override;
+  void begin() final override;
 
   /**
    * \brief Remove the collection context
    */
-  void end() override;
+  void end() final override;
 
-  void suspend() override;
-  void resume() override;
+  void suspend() final override;
+  void resume() final override;
 
 private:
   IndexT idx_ = {};                         /**< the collection element index */

@@ -56,7 +56,7 @@ namespace vt { namespace ctx {
  * \brief Set the context of the current running task for query by other
  * components or users.
  */
-struct SetContext : Base {
+struct SetContext final : Base {
 
   /**
    * \brief Construct a \c SetContext
@@ -70,7 +70,7 @@ struct SetContext : Base {
   /**
    * \brief Preserve the existing task and replace with a new one
    */
-  void begin() override {
+  void begin() final override {
     // we have to handle the ugly handler-inside-handler case.. preserve the
     // previous context (pop) and set the new task (push)
     nonowning_prev_task_ = theContext()->getTask();
@@ -80,18 +80,18 @@ struct SetContext : Base {
   /**
    * \brief Restore the previous existing task to the context (if there was one)
    */
-  void end() override {
+  void end() final override {
     vtAssert(
       theContext()->getTask() == nonowning_cur_task_, "Must be correct task"
     );
     theContext()->setTask(nonowning_prev_task_);
   }
 
-  void suspend() override {
+  void suspend() final override {
     end();
   }
 
-  void resume() override {
+  void resume() final override {
     begin();
   }
 

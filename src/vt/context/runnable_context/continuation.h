@@ -54,7 +54,7 @@ namespace vt { namespace ctx {
  *
  * \brief A continuation that runs after a task is complete.
  */
-struct Continuation : Base {
+struct Continuation final : Base {
 
   /**
    * \brief Construct a \c Continuation
@@ -68,7 +68,7 @@ struct Continuation : Base {
   /**
    * \brief After the task runs, invoke the continuation if non-null
    */
-  void end() override {
+  void end() final override {
     if (cont_) {
       cont_();
     }

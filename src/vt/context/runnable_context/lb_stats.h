@@ -56,7 +56,7 @@ namespace vt { namespace ctx {
  * \brief Context for collection LB statistics when a task runs
  */
 template <typename ElmT>
-struct LBStats : Base {
+struct LBStats final : Base {
   using ElementIDStruct = vrt::collection::balance::ElementIDStruct;
 
   /**
@@ -71,15 +71,15 @@ struct LBStats : Base {
   /**
    * \brief Set the context and timing for a collection task
    */
-  void begin() override;
+  void begin() final override;
 
   /**
    * \brief Remove the context and store timing for a collection task
    */
-  void end() override;
+  void end() final override;
 
-  void suspend() override;
-  void resume() override;
+  void suspend() final override;
+  void resume() final override;
 
 private:
   ElmT* elm_ = nullptr;               /**< Non-owning pointer to element */
