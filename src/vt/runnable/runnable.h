@@ -190,17 +190,20 @@ public:
    */
   void run();
 
-public:
+private:
   /**
-   * \brief Begin all contexts
+   * \internal \brief Loop through all the contexts associated with this
+   * runnable and invoke \c begin() on them.
    */
   void begin();
 
   /**
-   * \brief End all contexts
+   * \internal \brief Loop through all the contexts associated with this
+   * runnable and invoke \c end() on them.
    */
   void end();
 
+public:
   /**
    * \brief Get a context object by the type \c T
    *
