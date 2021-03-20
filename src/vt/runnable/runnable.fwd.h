@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_RUNNABLE_RUNNABLE_FWD_H
 #define INCLUDED_VT_RUNNABLE_RUNNABLE_FWD_H
 
-#include "vt/config.h"
-
 namespace vt { namespace runnable {
 
 struct RunnableNew;

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                set_context.h
+//                                set_context.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,31 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
-
-#include "vt/context/runnable_context/base.h"
-#include "vt/runnable/runnable.fwd.h"
+#include "vt/context/runnable_context/set_context.h"
+#include "vt/context/context_attorney.h"
 
 namespace vt { namespace ctx {
 
-/**
- * \struct SetContext
- *
- * \brief Set the context of the current running task for query by other
- * components or users.
- */
-struct SetContext final : Base {
+void SetContext::begin() {
+  // we have to handle the ugly handler-inside-handler case.. preserve the
+  // previous context (pop) and set the new task (push)
+  nonowning_prev_task_ = theContext()->getTask();
+  ContextAttorney::setTask(nonowning_cur_task_);
+}
 
-  /**
-   * \brief Construct a \c SetContext
-   *
-   * \param[in] in_nonowning_cur_task the current task (non-owning ptr held)
-   */
-  explicit SetContext(runnable::RunnableNew* in_nonowning_cur_task)
-    : nonowning_cur_task_(in_nonowning_cur_task)
-  {}
+void SetContext::end() {
+  vtAssert(
+    theContext()->getTask() == nonowning_cur_task_, "Must be correct task"
+  );
+  ContextAttorney::setTask(nonowning_prev_task_);
+}
 
-  /**
-   * \brief Preserve the existing task and replace with a new one
-   */
-  void begin() final override;
+void SetContext::suspend() {
+  end();
+}
 
-  /**
-   * \brief Restore the previous existing task to the context (if there was one)
-   */
-  void end() final override;
-
-  void suspend() final override;
-
-  void resume() final override;
-
-private:
-  /// The previous runnable that was in the context
-  runnable::RunnableNew* nonowning_prev_task_ = nullptr;
-  /// The new runnable that is replacing it
-  runnable::RunnableNew* nonowning_cur_task_ = nullptr;
-};
+void SetContext::resume() {
+  begin();
+}
 
 }} /* end namespace vt::ctx */
-
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H*/

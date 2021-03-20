@@ -159,6 +159,7 @@ struct Context : runtime::component::Component<Context> {
    */
   runnable::RunnableNew* getTask() const { return cur_task_; }
 
+protected:
   /**
    * \brief Set the current running task
    *
@@ -166,7 +167,6 @@ struct Context : runtime::component::Component<Context> {
    */
   void setTask(runnable::RunnableNew* in_task);
 
-protected:
   /// Set the number of workers through the attorney (internal)
   void setNumWorkers(WorkerCountType const worker_count) {
     numWorkers_ = worker_count;
