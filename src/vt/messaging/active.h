@@ -54,7 +54,6 @@
 #include "vt/messaging/active.fwd.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
-#include "vt/messaging/listener.h"
 #include "vt/messaging/request_holder.h"
 #include "vt/messaging/send_info.h"
 #include "vt/messaging/async_op_wrapper.h"
@@ -331,7 +330,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   using HandlerManagerType   = HandlerManager;
   using EpochStackType       = std::stack<EpochType>;
   using PendingSendType      = PendingSend;
-  using ListenerType         = std::unique_ptr<Listener>;
 
   /**
    * \internal
@@ -1631,25 +1629,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   inline EpochType setupEpochMsg(MsgSharedPtr<MsgT> const& msg);
 
   /**
-   * \internal
-   * \brief Register a listener on the active messenger---see \c Listener
-   *
-   * \param[in] ptr a \c std::unique_ptr<L> to a listener
-   */
-  template <typename L>
-  void addSendListener(std::unique_ptr<L> ptr) {
-    send_listen_.push_back(std::move(ptr));
-  }
-
-  /**
-   * \internal
-   * \brief Clear all listeners
-   */
-  void clearListeners() {
-    send_listen_.clear();
-  }
-
-  /**
    * \brief Register a async operation that needs polling
    *
    * \param[in] op the async operation to register
@@ -1664,7 +1643,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       | pending_recvs_
       | cur_direct_buffer_tag_
       | epoch_stack_
-      | send_listen_
       | in_progress_active_msg_irecv
       | in_progress_data_irecv
       | in_progress_ops
@@ -1772,7 +1750,6 @@ private:
   ContainerPendingType pending_recvs_                     = {};
   TagType cur_direct_buffer_tag_                          = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
-  std::vector<ListenerType> send_listen_                  = {};
   RequestHolder<InProgressIRecv> in_progress_active_msg_irecv;
   RequestHolder<InProgressDataIRecv> in_progress_data_irecv;
   RequestHolder<AsyncOpWrapper> in_progress_ops;

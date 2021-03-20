@@ -47,6 +47,7 @@
 
 #include "vt/context/runnable_context/base.h"
 #include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/elm_stats.fwd.h"
 
 namespace vt { namespace ctx {
 
@@ -55,9 +56,9 @@ namespace vt { namespace ctx {
  *
  * \brief Context for collection LB statistics when a task runs
  */
-template <typename ElmT>
 struct LBStats final : Base {
   using ElementIDStruct = vrt::collection::balance::ElementIDStruct;
+  using ElementStats = vrt::collection::balance::ElementStats;
 
   /**
    * \brief Construct a \c LBStats
@@ -65,7 +66,7 @@ struct LBStats final : Base {
    * \param[in] in_elm the collection element
    * \param[in] msg the incoming message (used for communication stats)
    */
-  template <typename MsgT>
+  template <typename ElmT, typename MsgT>
   LBStats(ElmT* in_elm, MsgT* msg);
 
   /**
@@ -78,17 +79,26 @@ struct LBStats final : Base {
    */
   void end() final override;
 
+  /**
+   * \brief Record statistics whenever a message is sent and a collection
+   * element is running.
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] size the size of the message
+   * \param[in] bcast whether the message is being broadcast or sent
+   */
+  void send(NodeType dest, MsgSizeType size, bool bcast) final override;
+
   void suspend() final override;
   void resume() final override;
 
 private:
-  ElmT* elm_ = nullptr;               /**< Non-owning pointer to element */
+  ElementStats* stats_ = nullptr;     /**< Element statistics */
   ElementIDStruct prev_elm_id_ = {};  /**< Previous element ID  */
+  ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
   bool should_instrument_ = false;    /**< Whether we are instrumenting */
 };
 
 }} /* end namespace vt::ctx */
-
-#include "vt/context/runnable_context/lb_stats.impl.h"
 
 #endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H*/

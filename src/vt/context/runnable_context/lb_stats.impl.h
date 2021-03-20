@@ -47,72 +47,21 @@
 
 #include "vt/context/runnable_context/lb_stats.h"
 #include "vt/messaging/active.h"
+#include "vt/vrt/collection/balance/elm_stats.h"
 #include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/balance/lb_listener.h"
 
 #include <memory>
 
 namespace vt { namespace ctx {
 
-template <typename ElmT>
-template <typename MsgT>
-LBStats<ElmT>::LBStats(ElmT* in_elm, MsgT* msg)
-  : elm_(in_elm),
+template <typename ElmT, typename MsgT>
+LBStats::LBStats(ElmT* in_elm, MsgT* msg)
+  : stats_(&in_elm->getStats()),
+    cur_elm_id_(in_elm->getElmID()),
     should_instrument_(msg->lbLiteInstrument())
 {
   // record the communication stats right away!
-  theCollection()->recordStats(elm_, msg);
-}
-
-template <typename ElmT>
-void LBStats<ElmT>::begin() {
-  // Save current element ID context
-  prev_elm_id_ = theCollection()->getCurrentContext();
-
-  // Set the current element context for communication stats
-  auto const elm_id = elm_->getElmID();
-  theCollection()->setCurrentContext(elm_id);
-
-  // Add the listener for the active messenger
-  std::unique_ptr<messaging::Listener> listener =
-    std::make_unique<vrt::collection::balance::LBListener>(
-      [&](NodeType dest, MsgSizeType size, bool bcast){
-        auto& stats = elm_->getStats();
-        stats.recvToNode(dest, elm_id, size, bcast);
-      }
-    );
-  theMsg()->addSendListener(std::move(listener));
-
-  // record start time
-  if (should_instrument_) {
-    auto& stats = elm_->getStats();
-    stats.startTime();
-  }
-}
-
-template <typename ElmT>
-void LBStats<ElmT>::end() {
-  // Set the element ID context back the previous element
-  theCollection()->setCurrentContext(prev_elm_id_);
-
-  // Clear the listener now that we are done
-  theMsg()->clearListeners();
-
-  // record end time
-  if (should_instrument_) {
-    auto& stats = elm_->getStats();
-    stats.stopTime();
-  }
-}
-
-template <typename ElmT>
-void LBStats<ElmT>::suspend() {
-  end();
-}
-
-template <typename ElmT>
-void LBStats<ElmT>::resume() {
-  begin();
+  theCollection()->recordStats(in_elm, msg);
 }
 
 }} /* end namespace vt::ctx */

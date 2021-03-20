@@ -64,7 +64,6 @@
 #include "vt/vrt/collection/destroy/destroy_msg.h"
 #include "vt/vrt/collection/destroy/destroy_handlers.h"
 #include "vt/vrt/collection/balance/phase_msg.h"
-#include "vt/vrt/collection/balance/lb_listener.h"
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
 #include "vt/vrt/collection/holders/collection_context_holder.h"
@@ -391,7 +390,7 @@ CollectionManager::collectionAutoMsgDeliver(
   r->template addContext<ctx::SetContext>(r.get());
   r->template addContext<ctx::Collection<IndexT>>(base);
 #if vt_check_enabled(lblite)
-  r->template addContext<ctx::LBStats<CollectionBase<ColT,IndexT>>>(base, msg);
+  r->template addContext<ctx::LBStats>(base, msg);
 #endif
   r->setupHandlerElement(ptr, RunnableEnum::Collection, han, from);
   if (immediate) {
@@ -435,7 +434,7 @@ CollectionManager::collectionAutoMsgDeliver(
   r->template addContext<ctx::SetContext>(r.get());
   r->template addContext<ctx::Collection<IndexT>>(base);
 #if vt_check_enabled(lblite)
-  r->template addContext<ctx::LBStats<CollectionBase<ColT,IndexT>>>(base, msg);
+  r->template addContext<ctx::LBStats>(base, msg);
 #endif
   r->setupHandlerElement(ptr, RunnableEnum::Collection, han, from);
   if (immediate) {

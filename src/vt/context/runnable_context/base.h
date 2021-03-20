@@ -86,6 +86,15 @@ struct Base {
    * \brief Invoked when a handler is resumed (for ULTs, when enabled)
    */
   virtual void resume() {}
+
+  /**
+   * \brief Invoked when a message is sent to any node
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] size the size of the message
+   * \param[in] bcast whether the message is being broadcast or sent
+   */
+  virtual void send(NodeType dest, MsgSizeType size, bool bcast) { }
 };
 
 }} /* end namespace vt::ctx */

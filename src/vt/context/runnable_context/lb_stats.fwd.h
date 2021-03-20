@@ -47,7 +47,6 @@
 
 namespace vt { namespace ctx {
 
-template <typename ElmT>
 struct LBStats;
 
 }} /* end namespace vt::ctx */

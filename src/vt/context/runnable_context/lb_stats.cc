@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                lb_listener.h
+//                                 lb_stats.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,44 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H
+#include "vt/context/runnable_context/lb_stats.h"
+#include "vt/vrt/collection/manager.h"
 
-#include "vt/config.h"
-#include "vt/messaging/listener.h"
+namespace vt { namespace ctx {
 
-#include <functional>
+void LBStats::begin() {
+  // Save current element ID context
+  prev_elm_id_ = theCollection()->getCurrentContext();
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+  // Set the current element context for communication stats
+  theCollection()->setCurrentContext(cur_elm_id_);
 
-struct LBListener final : messaging::Listener {
-  using FnType = std::function<void(NodeType, MsgSizeType, bool)>;
-
-  explicit LBListener(FnType fn) : fn_(fn) { }
-
-  void send(NodeType dest, MsgSizeType size, bool bcast) override {
-    fn_(dest,size,bcast);
+  // record start time
+  if (should_instrument_) {
+    stats_->startTime();
   }
+}
 
-private:
-  FnType fn_ = nullptr;
-};
+void LBStats::end() {
+  // Set the element ID context back the previous element
+  theCollection()->setCurrentContext(prev_elm_id_);
 
-}}}} /* end namespace vt::vrt::collection::balance */
+  // record end time
+  if (should_instrument_) {
+    stats_->stopTime();
+  }
+}
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H*/
+void LBStats::send(NodeType dest, MsgSizeType size, bool bcast) {
+  stats_->recvToNode(dest, cur_elm_id_, size, bcast);
+}
+
+void LBStats::suspend() {
+  end();
+}
+
+void LBStats::resume() {
+  begin();
+}
+
+}} /* end namespace vt::ctx */

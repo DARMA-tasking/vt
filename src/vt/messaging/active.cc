@@ -61,6 +61,7 @@
 #include "vt/context/runnable_context/trace.h"
 #include "vt/context/runnable_context/from_node.h"
 #include "vt/context/runnable_context/set_context.h"
+#include "vt/context/runnable_context/lb_stats.h"
 
 namespace vt { namespace messaging {
 
@@ -418,8 +419,11 @@ EventType ActiveMessenger::sendMsgBytes(
     theTerm()->hangDetectSend();
   }
 
-  for (auto&& l : send_listen_) {
-    l->send(dest, msg_size, is_bcast);
+  if (theContext()->getTask() != nullptr) {
+    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+    if (lb != nullptr) {
+      lb->send(dest, msg_size, is_bcast);
+    }
   }
 
   return event_id;
@@ -543,8 +547,11 @@ SendInfo ActiveMessenger::sendData(
   theTerm()->produce(term::any_epoch_sentinel,1,dest);
   theTerm()->hangDetectSend();
 
-  for (auto&& l : send_listen_) {
-    l->send(dest, num_bytes, false);
+  if (theContext()->getTask() != nullptr) {
+    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+    if (lb != nullptr) {
+      lb->send(dest, num_bytes, false);
+    }
   }
 
   return SendInfo{event_id, send_tag, num};
