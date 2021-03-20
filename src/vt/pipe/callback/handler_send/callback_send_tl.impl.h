@@ -56,6 +56,7 @@
 #include "vt/context/runnable_context/trace.h"
 #include "vt/context/runnable_context/from_node.h"
 #include "vt/context/runnable_context/set_context.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -83,7 +84,7 @@ void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     r->template addContext<ctx::FromNode>(this_node);
     r->template addContext<ctx::SetContext>(r.get());
     r->setupHandler(RunnableEnum::Active, handler_, this_node);
-    r->run();
+    theSched()->enqueue(pmsg, std::move(r));
   } else {
     theMsg()->sendMsg<MsgT>(send_node_, handler_, pmsg);
   }

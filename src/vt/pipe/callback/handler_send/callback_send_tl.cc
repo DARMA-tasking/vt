@@ -52,6 +52,7 @@
 #include "vt/context/runnable_context/td.h"
 #include "vt/context/runnable_context/from_node.h"
 #include "vt/context/runnable_context/set_context.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -74,7 +75,7 @@ void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
     r->template addContext<ctx::FromNode>(this_node);
     r->template addContext<ctx::SetContext>(r.get());
     r->setupHandler(RunnableEnum::Void, handler_, this_node);
-    r->run();
+    theSched()->enqueue(std::move(r));
   } else {
     auto msg = makeMessage<CallbackMsg>(pipe);
     theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);
