@@ -208,10 +208,10 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   void enqueue(RunT r);
 
   /**
-   * \brief Enqueue an action with a priority to execute later
+   * \brief Enqueue an runnable with a priority to execute later
    *
    * \param[in] priority the priority of the action
-   * \param[in] r the action to execute later
+   * \param[in] r the runnable to execute later
    */
   template <typename RunT>
   void enqueue(PriorityType priority, RunT r);
@@ -226,17 +226,17 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * will be enqueued with the priority found on the message.
    *
    * \param[in] msg the message
-   * \param[in] r the action to execute later
+   * \param[in] r the runnable to execute later
    */
   template <typename MsgT, typename RunT>
   void enqueue(MsgT* msg, RunT r);
 
   /**
-   * \brief Enqueue an action associated with a prioritized message. The action
+   * \brief Enqueue an runnable associated with a prioritized message. The action
    * will be enqueued with the priority found on the message.
    *
    * \param[in] msg the message
-   * \param[in] action the action to execute later
+   * \param[in] r the runnable to execute later
    */
   template <typename MsgT, typename RunT>
   void enqueue(MsgSharedPtr<MsgT> msg, RunT r);
