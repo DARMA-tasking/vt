@@ -119,7 +119,7 @@ void RunnableNew::setupHandler(
     } else if (is_auto) {
       func = auto_registry::getAutoHandler(handler);
     } else {
-      vtAssert(false, "Must be auto handler");
+      vtAbort("Must be auto/functor for a void handler");
     }
 
     auto void_fn = reinterpret_cast<FnParamType<>>(func);
