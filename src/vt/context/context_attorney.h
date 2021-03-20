@@ -50,7 +50,7 @@
 #include "vt/worker/worker_headers.h"
 #include "vt/runtime/runtime_headers.h"
 #include "vt/runnable/runnable.fwd.h"
-#include "vt/context/context_runnable/set_context.fwd.h"
+#include "vt/context/runnable_context/set_context.fwd.h"
 
 namespace vt {  namespace ctx {
 
