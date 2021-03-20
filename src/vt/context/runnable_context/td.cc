@@ -73,7 +73,7 @@ void TD::end() {
     "Epoch stack popped below preceding push size in handler"
   );
 
-  vtWarnIfNot(
+  vtAssert(
     epoch_stack_size_ == epoch_stack.size(), "Stack must be same size"
   );
 
