@@ -119,7 +119,7 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     auto msg = reinterpret_cast<ShortMessage*>(data);
     auto m = promoteMsg(msg);
     auto r = std::make_unique<runnable::RunnableNew>(m, true);
-    r->template addContext<ctx::TD>(theMsg()->getEpoch());
+    r->template addContext<ctx::TD>(m);
     r->template addContext<ctx::Trace>(
       m, handler_, this_node, auto_registry::RegistryTypeEnum::RegGeneral
     );

@@ -269,7 +269,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       // this needs to run inline.. threaded not allowed for reduction
       // combination
       auto r = std::make_unique<runnable::RunnableNew>(state.msgs[0], false);
-      r->template addContext<ctx::TD>(theMsg()->getEpoch());
+      r->template addContext<ctx::TD>(state.msgs[0]);
       r->template addContext<ctx::Trace>(
         state.msgs[0], handler, from_node,
         auto_registry::RegistryTypeEnum::RegGeneral

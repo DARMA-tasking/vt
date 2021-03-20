@@ -110,7 +110,7 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
     auto const& from_node = 0;
     auto m = promoteMsg(raw_msg);
     auto r = std::make_unique<runnable::RunnableNew>(m, false);
-    r->template addContext<ctx::TD>(theMsg()->getEpoch());
+    r->template addContext<ctx::TD>(m);
     r->template addContext<ctx::Trace>(
       m, sub_handler, from_node, auto_registry::RegistryTypeEnum::RegVrt
     );

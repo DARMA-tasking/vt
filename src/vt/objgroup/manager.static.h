@@ -85,7 +85,7 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
 
   // this is a local invocation.. no thread required
   auto r = std::make_unique<runnable::RunnableNew>(msg.msg_, false);
-  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::TD>(msg.msg_);
   r->template addContext<ctx::Trace>(
     msg.msg_, han, this_node, auto_registry::RegistryTypeEnum::RegGeneral
   );

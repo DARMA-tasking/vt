@@ -382,7 +382,7 @@ CollectionManager::collectionAutoMsgDeliver(
     auto_registry::RegistryTypeEnum::RegVrtCollection;
 
   auto r = std::make_unique<runnable::RunnableNew>(user_msg, true);
-  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::TD>(user_msg);
   r->template addContext<ctx::Trace>(
     user_msg, event, han, from, reg, idx1, idx2, idx3, idx4
   );
@@ -426,7 +426,7 @@ CollectionManager::collectionAutoMsgDeliver(
 
   auto m = promoteMsg(msg);
   auto r = std::make_unique<runnable::RunnableNew>(m, true);
-  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::TD>(m);
   r->template addContext<ctx::Trace>(
     m, event, han, from, reg, idx1, idx2, idx3, idx4
   );

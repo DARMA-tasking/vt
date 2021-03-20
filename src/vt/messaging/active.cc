@@ -953,7 +953,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
   if (has_handler) {
     auto r = std::make_unique<runnable::RunnableNew>(base, not is_term);
     if (not is_term) {
-      r->template addContext<ctx::TD>(epoch);
+      r->template addContext<ctx::TD>(base);
     }
     r->template addContext<ctx::Continuation>(cont);
     r->template addContext<ctx::Trace>(

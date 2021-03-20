@@ -83,9 +83,7 @@ struct RunnableNew {
   RunnableNew(MsgSharedPtr<U> const& in_msg, bool in_is_threaded)
     : msg_(in_msg.template to<BaseMsgType>()),
       is_threaded_(in_is_threaded)
-  {
-    produceEpochMsg();
-  }
+  { }
 
   /**
    * \brief Construct a new \c RunnableNew without a message
@@ -100,22 +98,6 @@ struct RunnableNew {
   RunnableNew(RunnableNew const&) = delete;
   RunnableNew& operator=(RunnableNew const&) = delete;
   RunnableNew& operator=(RunnableNew&&) = default;
-
-  ~RunnableNew();
-
-private:
-  /**
-   * \internal \brief Produce on the epoch held by the message because the
-   * runnable might be postponed and we need to stop termination until the
-   * runnable completes.
-   */
-  void produceEpochMsg();
-
-  /**
-   * \internal \brief Consume on the epoch held by the message---called by the
-   * destructor.
-   */
-  void consumeEpochMsg();
 
 public:
   /**
@@ -222,7 +204,6 @@ private:
   std::vector<CtxBasePtr> contexts_;        /**< Vector of contexts */
   ActionType task_ = nullptr;               /**< The runnable's task  */
   bool done_ = false;                       /**< Whether task is complete */
-  vt::EpochType msg_epoch_ = no_epoch;      /**< The message's epoch */
 };
 
 }} /* end namespace vt::runnable */

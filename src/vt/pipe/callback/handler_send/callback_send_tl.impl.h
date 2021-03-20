@@ -77,7 +77,7 @@ void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto pmsg = promoteMsg(msg);
   if (this_node == send_node_) {
     auto r = std::make_unique<runnable::RunnableNew>(pmsg, true);
-    r->template addContext<ctx::TD>(theMsg()->getEpoch());
+    r->template addContext<ctx::TD>(pmsg);
     r->template addContext<ctx::Trace>(
       pmsg, handler_, this_node, auto_registry::RegistryTypeEnum::RegGeneral
     );

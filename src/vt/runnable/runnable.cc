@@ -50,31 +50,6 @@
 
 namespace vt { namespace runnable {
 
-RunnableNew::~RunnableNew() {
-  consumeEpochMsg();
-}
-
-void RunnableNew::produceEpochMsg() {
-  if (msg_ != nullptr) {
-    auto const is_term = envelopeIsTerm(msg_->env);
-    if (not is_term) {
-      // Consume on the epoch in the message
-      msg_epoch_ = envelopeIsEpochType(msg_->env) ?
-        envelopeGetEpoch(msg_->env) : term::any_epoch_sentinel;
-      if (msg_epoch_ == no_epoch) {
-        msg_epoch_ = term::any_epoch_sentinel;
-      }
-      theTerm()->produce(msg_epoch_);
-    }
-  }
-}
-
-void RunnableNew::consumeEpochMsg() {
-  if (msg_epoch_ != no_epoch) {
-    theTerm()->consume(msg_epoch_);
-  }
-}
-
 void RunnableNew::setupHandler(
   HandlerType handler, NodeType from_node, bool is_void, TagType tag
 ) {

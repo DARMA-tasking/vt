@@ -96,7 +96,7 @@ template <typename UserMsgT>
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
   auto r = std::make_unique<runnable::RunnableNew>(user_msg, true);
-  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::TD>(user_msg);
   r->template addContext<ctx::Trace>(
     user_msg, handler, sys_msg->from_node,
     auto_registry::RegistryTypeEnum::RegGeneral
@@ -193,7 +193,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   );
 
   auto r = std::make_unique<runnable::RunnableNew>(user_msg, true);
-  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::TD>(user_msg);
   r->template addContext<ctx::Trace>(
     user_msg, handler, sys_msg->from_node,
     auto_registry::RegistryTypeEnum::RegGeneral
@@ -435,7 +435,7 @@ template <typename MsgT, typename BaseT>
         ByteType msg_sz = sizeof(MsgT);
         return messaging::PendingSend(base_msg, msg_sz, [=](MsgPtr<BaseMsgType> in){
           auto r = std::make_unique<runnable::RunnableNew>(msg, true);
-          r->template addContext<ctx::TD>(theMsg()->getEpoch());
+          r->template addContext<ctx::TD>(msg);
           r->template addContext<ctx::Trace>(
             msg, typed_handler, node,
             auto_registry::RegistryTypeEnum::RegGeneral

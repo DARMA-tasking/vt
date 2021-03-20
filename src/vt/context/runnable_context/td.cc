@@ -50,10 +50,19 @@ namespace vt { namespace ctx {
 
 TD::TD(EpochType in_ep)
   : ep_(in_ep == no_epoch ? term::any_epoch_sentinel : in_ep)
-{ }
+{
+  if (ep_ != no_epoch) {
+    theTerm()->produce(ep_);
+  }
+}
+
+/*virtual*/ TD::~TD() {
+  if (ep_ != no_epoch) {
+    theTerm()->consume(ep_);
+  }
+}
 
 void TD::begin() {
-  theTerm()->produce(ep_);
   theMsg()->pushEpoch(ep_);
   epoch_stack_size_ = theMsg()->getEpochStack().size();
 }
@@ -86,7 +95,6 @@ void TD::end() {
   vtAssertExpr(epoch_stack.size() == epoch_stack_size_);
 
   theMsg()->popEpoch(ep_);
-  theTerm()->consume(ep_);
 }
 
 void TD::suspend() {

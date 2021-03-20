@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                     td.h
+//                                  td.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,77 +42,47 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_IMPL_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_IMPL_H
 
-#include "vt/context/runnable_context/base.h"
-#include "vt/configs/types/types_type.h"
-#include "vt/configs/types/types_sentinels.h"
-
-#include <vector>
+#include "vt/context/runnable_context/td.h"
+#include "vt/messaging/envelope.h"
+#include "vt/termination/term_common.h"
 
 namespace vt { namespace ctx {
 
+namespace {
+
 /**
- * \struct TD
+ * \brief Helper function to extract the epoch from a message
  *
- * \brief Context for termination detection to be preserved with a task. Manages
- * the epoch stack associated with running tasks.
+ * \param[in] msg the message
+ *
+ * \return the associated epoch
  */
-struct TD final : Base {
+template <typename MsgPtrT>
+static EpochType extractEpochMsg(MsgPtrT msg) {
+  auto const is_term = envelopeIsTerm(msg->env);
+  if (not is_term) {
+    auto ep_ = envelopeIsEpochType(msg->env) ?
+      envelopeGetEpoch(msg->env) : term::any_epoch_sentinel;
+    if (ep_ == no_epoch) {
+      ep_ = term::any_epoch_sentinel;
+    }
+    return ep_;
+  } else {
+    return no_epoch;
+  }
+}
 
-  /**
-   * \brief Construct with a given epoch
-   *
-   * \param[in] in_ep the epoch
-   */
-  explicit TD(EpochType in_ep);
+} /* end anon namespace */
 
-  /**
-   * \brief On destructor consume the epoch
-   */
-  virtual ~TD();
+template <typename MsgPtrT>
+/*explicit*/ TD::TD(MsgPtrT msg)
+  : TD(extractEpochMsg(msg))
+{ }
 
-  /**
-   * \brief Construct with a message to extract the epoch
-   *
-   * \param[in] msg the message to extract the epoch from
-   */
-  template <typename MsgPtrT>
-  explicit TD(MsgPtrT msg);
-
-  /**
-   * \brief During begin \c TD will produce on the epoch and push it on the
-   * epoch stack.
-   */
-  void begin() final override;
-
-  /**
-   * \brief During end \c TD will consume on the epoch and pop it off the stack
-   */
-  void end() final override;
-
-  /**
-   * \brief When suspended, \c TD will preserve any epochs pushed on the stack
-   * after begin and restore the stack back to the state before begin was
-   * invoked
-   */
-  void suspend() final override;
-
-  /**
-   * \brief When resumed, \c TD will restore the stack back from when it was
-   * suspended
-   */
-  void resume() final override;
-
-private:
-  EpochType ep_ = no_epoch;                    /**< The epoch for the task */
-  std::size_t epoch_stack_size_ = 0;           /**< Epoch stack size at start  */
-  std::vector<EpochType> suspended_epochs_;    /**< Suspended epoch stack */
-};
 
 }} /* end namespace vt::ctx */
 
-#include "vt/context/runnable_context/td.impl.h"
-
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_TD_IMPL_H*/

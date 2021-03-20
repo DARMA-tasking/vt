@@ -543,7 +543,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         );
 
         auto r = std::make_unique<runnable::RunnableNew>(msg, true);
-        r->template addContext<ctx::TD>(theMsg()->getEpoch());
+        r->template addContext<ctx::TD>(msg);
         r->template addContext<ctx::Trace>(
           msg, handler, from, auto_registry::RegistryTypeEnum::RegGeneral
         );
