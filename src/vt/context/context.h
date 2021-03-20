@@ -54,6 +54,10 @@
 #include "vt/utils/tls/tls.h"
 #include "vt/runnable/runnable.fwd.h"
 
+#if vt_check_enabled(trace_only)
+# include "vt/trace/trace_common.h"
+#endif
+
 namespace vt {  namespace ctx {
 
 /** \file */
