@@ -97,7 +97,7 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     r->template addContext<ctx::TD>(theMsg()->getEpoch());
     r->template addContext<ctx::FromNode>(this_node);
     r->template addContext<ctx::SetContext>(r.get());
-    r->setupHandler(RunnableEnum::Void, handler_, this_node);
+    r->setupHandler(handler_, this_node, true);
     theSched()->enqueue(std::move(r));
   } else {
     auto msg = makeMessage<CallbackMsg>(pid);
@@ -125,7 +125,7 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     );
     r->template addContext<ctx::FromNode>(this_node);
     r->template addContext<ctx::SetContext>(r.get());
-    r->setupHandler(RunnableEnum::Active, handler_, this_node);
+    r->setupHandler(handler_, this_node);
     theSched()->enqueue(m, std::move(r));
   } else {
     theMsg()->sendMsg<SignalDataType>(send_node_, handler_, data);

@@ -392,7 +392,7 @@ CollectionManager::collectionAutoMsgDeliver(
 #if vt_check_enabled(lblite)
   r->template addContext<ctx::LBStats>(base, msg);
 #endif
-  r->setupHandlerElement(ptr, RunnableEnum::Collection, han, from);
+  r->setupHandlerElement(ptr, han, from);
   if (immediate) {
     r->run();
   } else {
@@ -436,7 +436,7 @@ CollectionManager::collectionAutoMsgDeliver(
 #if vt_check_enabled(lblite)
   r->template addContext<ctx::LBStats>(base, msg);
 #endif
-  r->setupHandlerElement(ptr, RunnableEnum::Collection, han, from);
+  r->setupHandlerElement(ptr, han, from);
   if (immediate) {
     r->run();
   } else {

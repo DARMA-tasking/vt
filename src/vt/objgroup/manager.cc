@@ -138,7 +138,7 @@ void scheduleMsg(
   r->template addContext<ctx::FromNode>(node);
   r->template addContext<ctx::SetContext>(r.get());
 
-  r->setupHandler(RunnableEnum::Active, han, node);
+  r->setupHandler(han, node);
   theSched()->enqueue(msg, std::move(r));
 }
 

@@ -62,19 +62,6 @@ struct UntypedCollection;
 namespace vt { namespace runnable {
 
 /**
- * \enum RunnableEnum
- *
- * \brief The type of runnable active handler
- */
-enum struct RunnableEnum {
-  None,                         /**< Invalid type */
-  Vrt,                          /**< Virtual context (non-collection) */
-  Active,                       /**< Active message, inc. object groups */
-  Void,                         /**< A non-message handler with no arguments */
-  Collection                    /**< Collection element handler dispatch */
-};
-
-/**
  * \struct RunnableNew
  *
  * \brief Holds a runnable active handler along with all the context associated
@@ -146,38 +133,35 @@ public:
    * \brief Set up a handler to run on an collection object
    *
    * \param[in] elm the object pointer
-   * \param[in] run_type the type of runnable
    * \param[in] handler the handler ID bits
    * \param[in] from_node the node that caused this to run
    */
   void setupHandlerElement(
-    vrt::collection::UntypedCollection* elm, RunnableEnum run_type,
-    HandlerType handler, NodeType from_node
+    vrt::collection::UntypedCollection* elm, HandlerType handler,
+    NodeType from_node
   );
 
   /**
    * \brief Set up a handler to run on an non-collection object
    *
    * \param[in] elm the object pointer
-   * \param[in] run_type the type of runnable
    * \param[in] handler the handler ID bits
    * \param[in] from_node the node that caused this to run
    */
   void setupHandlerElement(
-    vrt::VirtualContext* elm, RunnableEnum run_type,
-    HandlerType handler, NodeType from_node
+    vrt::VirtualContext* elm, HandlerType handler, NodeType from_node
   );
 
   /**
    * \brief Set up a basic handler to run
    *
-   * \param[in] run_type the type of runnable
    * \param[in] handler the handler ID bits
    * \param[in] from_node the node that caused this to run
+   * \param[in] is_void whether it's a void handler w/o an associated message
    * \param[in] tag an optional tag
    */
   void setupHandler(
-    RunnableEnum run_type, HandlerType handler, NodeType from_node,
+    HandlerType handler, NodeType from_node, bool is_void = false,
     TagType tag = no_tag
   );
 
@@ -242,12 +226,6 @@ private:
 };
 
 }} /* end namespace vt::runnable */
-
-namespace vt {
-
-using RunnableEnum = runnable::RunnableEnum;
-
-} /* end namespace vt */
 
 #include "vt/runnable/runnable.impl.h"
 

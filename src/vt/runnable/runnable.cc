@@ -76,13 +76,12 @@ void RunnableNew::consumeEpochMsg() {
 }
 
 void RunnableNew::setupHandler(
-  RunnableEnum run_type, HandlerType handler, NodeType from_node,
-  TagType tag
+  HandlerType handler, NodeType from_node, bool is_void, TagType tag
 ) {
   using HandlerManagerType = HandlerManager;
   bool is_obj = HandlerManagerType::isHandlerObjGroup(handler);
 
-  if (run_type == RunnableEnum::Active) {
+  if (not is_void) {
     if (is_obj) {
       task_ = [=]{ objgroup::dispatchObjGroup(msg_, handler); };
     } else {
@@ -109,7 +108,7 @@ void RunnableNew::setupHandler(
         task_ = [=]{ func(msg_.get()); };
       }
     }
-  } else if (run_type == RunnableEnum::Void) {
+  } else {
     bool is_auto = HandlerManagerType::isHandlerAuto(handler);
     bool is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
@@ -125,39 +124,28 @@ void RunnableNew::setupHandler(
 
     auto void_fn = reinterpret_cast<FnParamType<>>(func);
     task_ = [=] { void_fn(); };
-  } else {
-    vtAbort("Invalid runnable type---should be unreachable");
   }
 }
 
 void RunnableNew::setupHandlerElement(
-  vrt::collection::UntypedCollection* elm, RunnableEnum run_type,
-  HandlerType handler, NodeType from_node
+  vrt::collection::UntypedCollection* elm, HandlerType handler,
+  NodeType from_node
 ) {
-  if (run_type == RunnableEnum::Collection) {
-    auto const member = HandlerManager::isHandlerMember(handler);
-    if (member) {
-      auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
-      task_ = [=]{ (elm->*func)(msg_.get()); };
-    } else {
-      auto const func = auto_registry::getAutoHandlerCollection(handler);
-      task_ = [=]{ func(msg_.get(), elm); };
-    };
+  auto const member = HandlerManager::isHandlerMember(handler);
+  if (member) {
+    auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
+    task_ = [=]{ (elm->*func)(msg_.get()); };
   } else {
-    vtAbort("Invalid runnable type---should be unreachable");
-  }
-}
-
-void RunnableNew::setupHandlerElement(
-  vrt::VirtualContext* elm, RunnableEnum run_type,
-  HandlerType handler, NodeType from_node
-) {
-  if (run_type == RunnableEnum::Vrt) {
-    auto const func = auto_registry::getAutoHandlerVC(handler);
+    auto const func = auto_registry::getAutoHandlerCollection(handler);
     task_ = [=]{ func(msg_.get(), elm); };
-  } else {
-    vtAbort("Invalid runnable type---should be unreachable");
-  }
+  };
+}
+
+void RunnableNew::setupHandlerElement(
+  vrt::VirtualContext* elm, HandlerType handler, NodeType from_node
+) {
+  auto const func = auto_registry::getAutoHandlerVC(handler);
+  task_ = [=]{ func(msg_.get(), elm); };
 }
 
 void RunnableNew::run() {

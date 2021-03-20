@@ -549,7 +549,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         );
         r->template addContext<ctx::FromNode>(from);
         r->template addContext<ctx::SetContext>(r.get());
-        r->setupHandler(RunnableEnum::Active, handler, from);
+        r->setupHandler(handler, from);
         r->run();
       } else {
         auto reg_han_iter = local_registered_msg_han_.find(hid);
