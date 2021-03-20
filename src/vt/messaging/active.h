@@ -77,10 +77,6 @@
 
 namespace vt {
 
-namespace runnable {
-struct RunnableNew;
-}
-
 /// A pair of a void* and number of bytes (length) for sending data
 using PtrLenPairType = std::tuple<void*, ByteType>;
 
