@@ -43,7 +43,6 @@
 */
 
 #include "vt/context/context.h"
-#include "vt/runnable/runnable.h"
 
 #if !vt_check_enabled(trace_only)
 # include "vt/runtime/runtime.h"
