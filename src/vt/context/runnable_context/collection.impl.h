@@ -47,7 +47,7 @@
 
 #include "vt/context/runnable_context/collection.h"
 #include "vt/vrt/collection/types/base.h"
-#include "vt/vrt/collection/holders/insert_context_holder.h"
+#include "vt/vrt/collection/holders/collection_context_holder.h"
 
 namespace vt { namespace ctx {
 
@@ -61,12 +61,12 @@ template <typename ColT>
 
 template <typename IndexT>
 void Collection<IndexT>::begin() {
-  vrt::collection::InsertContextHolder<IndexT>::set(&idx_, proxy_);
+  vrt::collection::CollectionContextHolder<IndexT>::set(&idx_, proxy_);
 }
 
 template <typename IndexT>
 void Collection<IndexT>::end() {
-  vrt::collection::InsertContextHolder<IndexT>::clear();
+  vrt::collection::CollectionContextHolder<IndexT>::clear();
 }
 
 template <typename IndexT>

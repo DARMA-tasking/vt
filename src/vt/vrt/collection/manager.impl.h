@@ -67,7 +67,7 @@
 #include "vt/vrt/collection/balance/lb_listener.h"
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
-#include "vt/vrt/collection/holders/insert_context_holder.h"
+#include "vt/vrt/collection/holders/collection_context_holder.h"
 #include "vt/vrt/collection/collection_directory.h"
 #include "vt/vrt/collection/balance/node_stats.h"
 #include "vt/vrt/proxy/collection_proxy.h"
@@ -217,7 +217,7 @@ template <typename SysMsgT>
       );
 
       if (theContext()->getNode() == mapped_node) {
-        using IdxContextHolder = InsertContextHolder<IndexT>;
+        using IdxContextHolder = CollectionContextHolder<IndexT>;
 
         // Actually construct the element. If the detector is enabled, call the
         // detection-based overloads to invoke the constructor with the
@@ -1718,7 +1718,7 @@ CollectionManager::constructCollectiveMap(
   range.foreach([&](IndexT cur_idx) mutable {
     using BaseIdxType      = vt::index::BaseIndex;
     using VirtualElmPtr    = VirtualPtrType<ColT,IndexT>;
-    using IdxContextHolder = InsertContextHolder<IndexT>;
+    using IdxContextHolder = CollectionContextHolder<IndexT>;
 
     vt_debug_print_verbose(
       vrt_coll, node,
@@ -1892,7 +1892,7 @@ void CollectionManager::staticInsert(
   VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
 ) {
   using IndexT           = typename ColT::IndexType;
-  using IdxContextHolder = InsertContextHolder<IndexT>;
+  using IdxContextHolder = CollectionContextHolder<IndexT>;
 
   auto tuple = std::make_tuple(std::forward<Args>(args)...);
 
@@ -2019,19 +2019,19 @@ template <typename ColT, typename ParamT, typename... Args>
 
 template <typename IndexT>
 /*static*/ IndexT* CollectionManager::queryIndexContext() {
-  using IdxContextHolder = InsertContextHolder<IndexT>;
+  using IdxContextHolder = CollectionContextHolder<IndexT>;
   return IdxContextHolder::index();
 }
 
 template <typename IndexT>
 /*static*/ VirtualProxyType CollectionManager::queryProxyContext() {
-  using IdxContextHolder = InsertContextHolder<IndexT>;
+  using IdxContextHolder = CollectionContextHolder<IndexT>;
   return IdxContextHolder::proxy();
 }
 
 template <typename IndexT>
 /*static*/ bool CollectionManager::hasContext() {
-  using IdxContextHolder = InsertContextHolder<IndexT>;
+  using IdxContextHolder = CollectionContextHolder<IndexT>;
   return IdxContextHolder::hasContext();
 }
 
@@ -2632,7 +2632,7 @@ void CollectionManager::insert(
   CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
   NodeType const& node, bool pinged_home_already
 ) {
-  using IdxContextHolder = InsertContextHolder<IndexT>;
+  using IdxContextHolder = CollectionContextHolder<IndexT>;
 
   auto const untyped_proxy = proxy.getProxy();
   auto const cur_epoch = theMsg()->getEpoch();

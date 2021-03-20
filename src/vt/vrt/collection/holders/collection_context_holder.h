@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           insert_context_holder.h
+//                         collection_context_holder.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_HOLDERS_INSERT_CONTEXT_HOLDER_H
-#define INCLUDED_VT_VRT_COLLECTION_HOLDERS_INSERT_CONTEXT_HOLDER_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_HOLDERS_COLLECTION_CONTEXT_HOLDER_H
+#define INCLUDED_VT_VRT_COLLECTION_HOLDERS_COLLECTION_CONTEXT_HOLDER_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -52,7 +52,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
-struct InsertContextHolder {
+struct CollectionContextHolder {
 
   static void set(IndexT* const set_idx, VirtualProxyType const& set_proxy) {
     ctx_idx = set_idx;
@@ -82,12 +82,12 @@ private:
 };
 
 template <typename IndexT>
-/*static*/ IndexT* InsertContextHolder<IndexT>::ctx_idx = nullptr;
+/*static*/ IndexT* CollectionContextHolder<IndexT>::ctx_idx = nullptr;
 
 template <typename IndexT>
 /*static*/ VirtualProxyType
-InsertContextHolder<IndexT>::ctx_proxy = no_vrt_proxy;
+CollectionContextHolder<IndexT>::ctx_proxy = no_vrt_proxy;
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_HOLDERS_INSERT_CONTEXT_HOLDER_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_HOLDERS_COLLECTION_CONTEXT_HOLDER_H*/
