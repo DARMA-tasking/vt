@@ -1515,17 +1515,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Set the global epoch (\c pushEpoch is more desirable)
-   *
-   * \c setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
-   * stack depending on the value of the `epoch' passed as an argument.
-   *
-   * \param[in] epoch the epoch to set
-   */
-  inline void setGlobalEpoch(EpochType const& epoch = no_epoch);
-
-  /**
-   * \internal
    * \brief Get the current global epoch
    *
    * \c Returns the top epoch on the stack iff \c epoch_stack.size() > 0, else it
@@ -1727,14 +1716,6 @@ private:
    * \brief Called when a VT-MPI message has been received.
    */
   void finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv);
-
-private:
-  using EpochStackSizeType = typename EpochStackType::size_type;
-
-  inline EpochStackSizeType epochPreludeHandler(EpochType const& epoch);
-  inline void epochEpilogHandler(
-    EpochType const& epoch, EpochStackSizeType const& prev_stack_size
-  );
 
 private:
 # if vt_check_enabled(trace_enabled)
