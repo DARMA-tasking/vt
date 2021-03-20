@@ -1381,16 +1381,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     ActiveClosureFnType fn, TagType const& tag = no_tag
   );
 
-  #if vt_check_enabled(trace_enabled)
-    /**
-     * \internal
-     * \brief Get the trace event on the handler running
-     *
-     * \return the trace event on the message that triggered the current handler
-     */
-    trace::TraceEventIDType getCurrentTraceEvent() const;
-  #endif
-
   /**
    * \internal
    * \brief Process an incoming active message

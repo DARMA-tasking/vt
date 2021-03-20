@@ -175,6 +175,17 @@ struct Context : runtime::component::Component<Context> {
    */
   NodeType getFromNodeCurrentTask() const;
 
+#if vt_check_enabled(trace_enabled)
+  /**
+   * \brief Get the trace event from the current task
+   *
+   * \note If a task is not currently running, this will return \c no_trace_event
+   *
+   * \return the trace event on the message that triggered the current task
+   */
+  trace::TraceEventIDType getTraceEventCurrentTask() const;
+#endif
+
 protected:
   /**
    * \brief Set the current running task

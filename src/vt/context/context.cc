@@ -44,9 +44,11 @@
 
 #include "vt/context/context.h"
 #include "vt/context/runnable_context/from_node.h"
+#include "vt/runnable/runnable.h"
 
 #if !vt_check_enabled(trace_only)
 # include "vt/runtime/runtime.h"
+# include "vt/trace/trace_common.h"
 #endif
 
 #include <string>
@@ -106,6 +108,16 @@ NodeType Context::getFromNodeCurrentTask() const {
   }
   return getNode();
 }
+
+#if vt_check_enabled(trace_enabled)
+trace::TraceEventIDType Context::getTraceEventCurrentTask() const {
+  if (getTask() != nullptr) {
+    return theContext()->getTask()->get<ctx::Trace>()->getEvent();
+  } else {
+    return trace::no_trace_event;
+  }
+}
+#endif /* vt_check_enabled(trace_enabled) */
 
 }}  // end namespace vt::ctx
 

@@ -260,7 +260,7 @@ void State::getData(
       trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
         reg_han, auto_registry::RegistryTypeEnum::RegRDMAGet
       );
-      trace::TraceEventIDType event = theMsg()->getCurrentTraceEvent();
+      trace::TraceEventIDType event = theContext()->getTraceEventCurrentTask();
       size_t msg_size = info.num_bytes;
 
       processing_tag =
@@ -329,7 +329,7 @@ void State::putData(
       trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
         reg_han, auto_registry::RegistryTypeEnum::RegRDMAPut
       );
-      trace::TraceEventIDType event = theMsg()->getCurrentTraceEvent();
+      trace::TraceEventIDType event = theContext()->getTraceEventCurrentTask();
       size_t msg_size = info.num_bytes;
 
       processing_tag =

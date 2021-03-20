@@ -429,12 +429,6 @@ EventType ActiveMessenger::sendMsgBytes(
   return event_id;
 }
 
-#if vt_check_enabled(trace_enabled)
-trace::TraceEventIDType ActiveMessenger::getCurrentTraceEvent() const {
-  return theContext()->getTask()->get<ctx::Trace>()->getEvent();
-}
-#endif
-
 EventType ActiveMessenger::doMessageSend(
   MsgSharedPtr<BaseMsgType>& base, MsgSizeType msg_size
 ) {
