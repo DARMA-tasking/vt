@@ -165,10 +165,13 @@ void RunnableNew::run() {
 
   vtAssert(task_ != nullptr, "Must have a valid task to run");
 
+#if vt_check_enabled(fcontext)
   if (is_threaded_) {
     using TM = scheduler::ThreadManager;
     TM::allocateThreadRun(task_);
-  } else {
+  } else
+#endif
+  {
     task_();
   }
 
