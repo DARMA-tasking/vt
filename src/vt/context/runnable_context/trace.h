@@ -136,7 +136,7 @@ private:
 struct Trace : Base {
 
   template <typename... Args>
-  Trace(Args... args) {}
+  Trace(Args&&... args) {}
 
 };
 
