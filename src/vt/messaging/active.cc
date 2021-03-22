@@ -967,7 +967,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
     }
     amHandlerCount.increment(1);
 
-    r->setupHandler(handler, from_node, false, tag);
+    r->setupHandler(handler, false, tag);
     theSched()->enqueue(base, std::move(r));
 
     if (not is_term) {

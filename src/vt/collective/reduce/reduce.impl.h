@@ -91,7 +91,7 @@ void Reduce::reduceRootRecv(MsgT* msg) {
   );
   r->template addContext<ctx::FromNode>(from_node);
   r->template addContext<ctx::SetContext>(r.get());
-  r->setupHandler(handler, from_node);
+  r->setupHandler(handler);
   r->run();
 }
 
@@ -277,7 +277,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       r->template addContext<ctx::FromNode>(from_node);
       r->template addContext<ctx::SetContext>(r.get());
 
-      r->setupHandler(handler, from_node);
+      r->setupHandler(handler);
       r->run();
     }
 

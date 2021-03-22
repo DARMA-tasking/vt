@@ -51,7 +51,7 @@
 namespace vt { namespace runnable {
 
 void RunnableNew::setupHandler(
-  HandlerType handler, NodeType from_node, bool is_void, TagType tag
+  HandlerType handler, bool is_void, TagType tag
 ) {
   using HandlerManagerType = HandlerManager;
   bool is_obj = HandlerManagerType::isHandlerObjGroup(handler);
@@ -103,8 +103,7 @@ void RunnableNew::setupHandler(
 }
 
 void RunnableNew::setupHandlerElement(
-  vrt::collection::UntypedCollection* elm, HandlerType handler,
-  NodeType from_node
+  vrt::collection::UntypedCollection* elm, HandlerType handler
 ) {
   auto const member = HandlerManager::isHandlerMember(handler);
   if (member) {
@@ -117,7 +116,7 @@ void RunnableNew::setupHandlerElement(
 }
 
 void RunnableNew::setupHandlerElement(
-  vrt::VirtualContext* elm, HandlerType handler, NodeType from_node
+  vrt::VirtualContext* elm, HandlerType handler
 ) {
   auto const func = auto_registry::getAutoHandlerVC(handler);
   task_ = [=]{ func(msg_.get(), elm); };

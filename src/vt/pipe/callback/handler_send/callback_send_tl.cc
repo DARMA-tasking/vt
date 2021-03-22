@@ -74,7 +74,7 @@ void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
     r->template addContext<ctx::TD>(theMsg()->getEpoch());
     r->template addContext<ctx::FromNode>(this_node);
     r->template addContext<ctx::SetContext>(r.get());
-    r->setupHandler(handler_, this_node, true);
+    r->setupHandler(handler_, true);
     theSched()->enqueue(std::move(r));
   } else {
     auto msg = makeMessage<CallbackMsg>(pipe);

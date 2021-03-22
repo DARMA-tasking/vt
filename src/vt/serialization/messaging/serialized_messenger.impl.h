@@ -104,7 +104,7 @@ template <typename UserMsgT>
   r->template addContext<ctx::FromNode>(sys_msg->from_node);
   r->template addContext<ctx::SetContext>(r.get());
 
-  r->setupHandler(handler, sys_msg->from_node);
+  r->setupHandler(handler);
   theSched()->enqueue(user_msg, std::move(r));
 }
 
@@ -158,7 +158,7 @@ template <typename UserMsgT>
       r->template addContext<ctx::SetContext>(r.get());
       r->template addContext<ctx::Continuation>(action);
 
-      r->setupHandler(handler, node);
+      r->setupHandler(handler);
       theSched()->enqueue(msg, std::move(r));
 
       if (is_valid_epoch) {
@@ -201,7 +201,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   r->template addContext<ctx::FromNode>(sys_msg->from_node);
   r->template addContext<ctx::SetContext>(r.get());
 
-  r->setupHandler(handler, sys_msg->from_node);
+  r->setupHandler(handler);
   theSched()->enqueue(user_msg, std::move(r));
 }
 
@@ -443,7 +443,7 @@ template <typename MsgT, typename BaseT>
           r->template addContext<ctx::FromNode>(node);
           r->template addContext<ctx::SetContext>(r.get());
 
-          r->setupHandler(typed_handler, node);
+          r->setupHandler(typed_handler);
           theSched()->enqueue(msg, std::move(r));
         });
       }

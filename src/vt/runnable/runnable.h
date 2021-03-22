@@ -116,11 +116,9 @@ public:
    *
    * \param[in] elm the object pointer
    * \param[in] handler the handler ID bits
-   * \param[in] from_node the node that caused this to run
    */
   void setupHandlerElement(
-    vrt::collection::UntypedCollection* elm, HandlerType handler,
-    NodeType from_node
+    vrt::collection::UntypedCollection* elm, HandlerType handler
   );
 
   /**
@@ -128,23 +126,18 @@ public:
    *
    * \param[in] elm the object pointer
    * \param[in] handler the handler ID bits
-   * \param[in] from_node the node that caused this to run
    */
-  void setupHandlerElement(
-    vrt::VirtualContext* elm, HandlerType handler, NodeType from_node
-  );
+  void setupHandlerElement(vrt::VirtualContext* elm, HandlerType handler);
 
   /**
    * \brief Set up a basic handler to run
    *
    * \param[in] handler the handler ID bits
-   * \param[in] from_node the node that caused this to run
    * \param[in] is_void whether it's a void handler w/o an associated message
    * \param[in] tag an optional tag
    */
   void setupHandler(
-    HandlerType handler, NodeType from_node, bool is_void = false,
-    TagType tag = no_tag
+    HandlerType handler, bool is_void = false, TagType tag = no_tag
   );
 
   /**

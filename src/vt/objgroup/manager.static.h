@@ -91,7 +91,7 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
   );
   r->template addContext<ctx::FromNode>(this_node);
   r->template addContext<ctx::SetContext>(r.get());
-  r->setupHandler(han, this_node);
+  r->setupHandler(han);
   r->run();
 }
 
