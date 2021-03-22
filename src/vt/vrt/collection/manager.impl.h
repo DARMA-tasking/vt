@@ -387,7 +387,6 @@ CollectionManager::collectionAutoMsgDeliver(
     user_msg, event, han, from, reg, idx1, idx2, idx3, idx4
   );
   r->template addContext<ctx::FromNode>(from);
-  r->template addContext<ctx::SetContext>(r.get());
   r->template addContext<ctx::Collection<IndexT>>(base);
 #if vt_check_enabled(lblite)
   r->template addContext<ctx::LBStats>(base, msg);
@@ -431,7 +430,6 @@ CollectionManager::collectionAutoMsgDeliver(
     m, event, han, from, reg, idx1, idx2, idx3, idx4
   );
   r->template addContext<ctx::FromNode>(from);
-  r->template addContext<ctx::SetContext>(r.get());
   r->template addContext<ctx::Collection<IndexT>>(base);
 #if vt_check_enabled(lblite)
   r->template addContext<ctx::LBStats>(base, msg);

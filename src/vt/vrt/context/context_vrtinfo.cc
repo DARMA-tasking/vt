@@ -115,7 +115,6 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
       m, sub_handler, from_node, auto_registry::RegistryTypeEnum::RegVrt
     );
     r->template addContext<ctx::FromNode>(from_node);
-    r->template addContext<ctx::SetContext>(r.get());
     r->setupHandlerElement(vc_ptr, sub_handler);
     r->run();
   };

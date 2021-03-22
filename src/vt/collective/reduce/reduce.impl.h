@@ -90,7 +90,6 @@ void Reduce::reduceRootRecv(MsgT* msg) {
     m, handler, from_node, auto_registry::RegistryTypeEnum::RegGeneral
   );
   r->template addContext<ctx::FromNode>(from_node);
-  r->template addContext<ctx::SetContext>(r.get());
   r->setupHandler(handler);
   r->run();
 }
@@ -275,7 +274,6 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         auto_registry::RegistryTypeEnum::RegGeneral
       );
       r->template addContext<ctx::FromNode>(from_node);
-      r->template addContext<ctx::SetContext>(r.get());
 
       r->setupHandler(handler);
       r->run();

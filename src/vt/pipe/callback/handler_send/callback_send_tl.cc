@@ -73,7 +73,6 @@ void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
     auto r = std::make_unique<runnable::RunnableNew>(true);
     r->template addContext<ctx::TD>(theMsg()->getEpoch());
     r->template addContext<ctx::FromNode>(this_node);
-    r->template addContext<ctx::SetContext>(r.get());
     r->setupHandler(handler_, true);
     theSched()->enqueue(std::move(r));
   } else {

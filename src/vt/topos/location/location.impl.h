@@ -548,7 +548,6 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
           msg, handler, from, auto_registry::RegistryTypeEnum::RegGeneral
         );
         r->template addContext<ctx::FromNode>(from);
-        r->template addContext<ctx::SetContext>(r.get());
         r->setupHandler(handler);
         r->run();
       } else {

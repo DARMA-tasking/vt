@@ -136,7 +136,6 @@ void scheduleMsg(
     msg, han, node, auto_registry::RegistryTypeEnum::RegGeneral
   );
   r->template addContext<ctx::FromNode>(node);
-  r->template addContext<ctx::SetContext>(r.get());
 
   r->setupHandler(han);
   theSched()->enqueue(msg, std::move(r));

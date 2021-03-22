@@ -102,7 +102,6 @@ template <typename UserMsgT>
     auto_registry::RegistryTypeEnum::RegGeneral
   );
   r->template addContext<ctx::FromNode>(sys_msg->from_node);
-  r->template addContext<ctx::SetContext>(r.get());
 
   r->setupHandler(handler);
   theSched()->enqueue(user_msg, std::move(r));
@@ -155,7 +154,6 @@ template <typename UserMsgT>
         msg, handler, node, auto_registry::RegistryTypeEnum::RegGeneral
       );
       r->template addContext<ctx::FromNode>(node);
-      r->template addContext<ctx::SetContext>(r.get());
       r->template addContext<ctx::Continuation>(action);
 
       r->setupHandler(handler);
@@ -199,7 +197,6 @@ template <typename UserMsgT, typename BaseEagerMsgT>
     auto_registry::RegistryTypeEnum::RegGeneral
   );
   r->template addContext<ctx::FromNode>(sys_msg->from_node);
-  r->template addContext<ctx::SetContext>(r.get());
 
   r->setupHandler(handler);
   theSched()->enqueue(user_msg, std::move(r));
@@ -441,7 +438,6 @@ template <typename MsgT, typename BaseT>
             auto_registry::RegistryTypeEnum::RegGeneral
           );
           r->template addContext<ctx::FromNode>(node);
-          r->template addContext<ctx::SetContext>(r.get());
 
           r->setupHandler(typed_handler);
           theSched()->enqueue(msg, std::move(r));

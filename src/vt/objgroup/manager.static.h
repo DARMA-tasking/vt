@@ -90,7 +90,6 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
     msg.msg_, han, this_node, auto_registry::RegistryTypeEnum::RegGeneral
   );
   r->template addContext<ctx::FromNode>(this_node);
-  r->template addContext<ctx::SetContext>(r.get());
   r->setupHandler(han);
   r->run();
 }

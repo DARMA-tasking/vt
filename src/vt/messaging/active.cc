@@ -960,7 +960,6 @@ bool ActiveMessenger::prepareActiveMsgToRun(
       base, handler, from_node, auto_registry::RegistryTypeEnum::RegGeneral
     );
     r->template addContext<ctx::FromNode>(from_node);
-    r->template addContext<ctx::SetContext>(r.get());
 
     if (is_term) {
       tdRecvCount.increment(1);

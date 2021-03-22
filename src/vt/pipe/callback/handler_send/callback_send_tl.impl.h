@@ -82,7 +82,6 @@ void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
       pmsg, handler_, this_node, auto_registry::RegistryTypeEnum::RegGeneral
     );
     r->template addContext<ctx::FromNode>(this_node);
-    r->template addContext<ctx::SetContext>(r.get());
     r->setupHandler(handler_);
     theSched()->enqueue(pmsg, std::move(r));
   } else {

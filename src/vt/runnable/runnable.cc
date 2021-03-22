@@ -47,6 +47,7 @@
 #include "vt/messaging/envelope.h"
 #include "vt/vrt/context/context_vrt.h"
 #include "vt/vrt/collection/types/untyped.h"
+#include "vt/context/runnable_context/set_context.h"
 
 namespace vt { namespace runnable {
 
@@ -123,6 +124,8 @@ void RunnableNew::setupHandlerElement(
 }
 
 void RunnableNew::run() {
+  addContext<ctx::SetContext>(this);
+
   begin();
 
   vtAssert(task_ != nullptr, "Must have a valid task to run");
