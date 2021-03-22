@@ -57,24 +57,26 @@ namespace vt { namespace ctx {
  * \struct TD
  *
  * \brief Context for termination detection to be preserved with a task. Manages
- * the epoch stack associated with running tasks.
+ * the epoch stack  associated with running tasks. Produces and consumes in the
+ * constructor and destructor to ensure termination is not detected early.
  */
 struct TD final : Base {
 
   /**
-   * \brief Construct with a given epoch
+   * \brief Construct with a given epoch; produce on that epoch.
    *
    * \param[in] in_ep the epoch
    */
   explicit TD(EpochType in_ep);
 
   /**
-   * \brief On destructor consume the epoch
+   * \brief When destroyed, consume the epoch held by the context.
    */
   virtual ~TD();
 
   /**
-   * \brief Construct with a message to extract the epoch
+   * \brief Construct with a message to extract the epoch; produce on that
+   * epoch.
    *
    * \param[in] msg the message to extract the epoch from
    */
@@ -82,13 +84,13 @@ struct TD final : Base {
   explicit TD(MsgPtrT msg);
 
   /**
-   * \brief During begin \c TD will produce on the epoch and push it on the
-   * epoch stack.
+   * \brief During begin \c TD will capture the epoch stack size and push \c ep_
    */
   void begin() final override;
 
   /**
-   * \brief During end \c TD will consume on the epoch and pop it off the stack
+   * \brief During end \c TD will pop all epochs off of the stack down to the
+   * size in captured in \c begin()
    */
   void end() final override;
 
