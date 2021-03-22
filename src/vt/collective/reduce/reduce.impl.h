@@ -85,7 +85,7 @@ void Reduce::reduceRootRecv(MsgT* msg) {
   auto const& from_node = theContext()->getFromNodeCurrentTask();
   auto m = promoteMsg(msg);
   auto r = std::make_unique<runnable::RunnableNew>(m, false);
-  r->template addContext<ctx::TD>(theMsg()->getEpoch());
+  r->template addContext<ctx::TD>(m);
   r->template addContext<ctx::Trace>(
     m, handler, from_node, auto_registry::RegistryTypeEnum::RegGeneral
   );
