@@ -46,10 +46,12 @@
 #include "vt/context/runnable_context/from_node.h"
 #include "vt/runnable/runnable.h"
 
-#if vt_check_enabled(trace_only)
-# include "vt/trace/trace_common.h"
-#else
+#if !vt_check_enabled(trace_only)
 # include "vt/runtime/runtime.h"
+#endif
+
+#if vt_check_enabled(trace_enabled)
+# include "vt/trace/trace_common.h"
 #endif
 
 #include <string>

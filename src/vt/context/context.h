@@ -54,7 +54,7 @@
 #include "vt/utils/tls/tls.h"
 #include "vt/runnable/runnable.fwd.h"
 
-#if vt_check_enabled(trace_only)
+#if vt_check_enabled(trace_enabled)
 # include "vt/trace/trace_common.h"
 #endif
 
