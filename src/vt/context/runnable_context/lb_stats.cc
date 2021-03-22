@@ -48,12 +48,6 @@
 namespace vt { namespace ctx {
 
 void LBStats::begin() {
-  // Save current element ID context
-  prev_elm_id_ = theCollection()->getCurrentContext();
-
-  // Set the current element context for communication stats
-  theCollection()->setCurrentContext(cur_elm_id_);
-
   // record start time
   if (should_instrument_) {
     stats_->startTime();
@@ -61,9 +55,6 @@ void LBStats::begin() {
 }
 
 void LBStats::end() {
-  // Set the element ID context back the previous element
-  theCollection()->setCurrentContext(prev_elm_id_);
-
   // record end time
   if (should_instrument_) {
     stats_->stopTime();
@@ -80,6 +71,10 @@ void LBStats::suspend() {
 
 void LBStats::resume() {
   begin();
+}
+
+typename LBStats::ElementIDStruct const& LBStats::getCurrentElementID() const {
+  return cur_elm_id_;
 }
 
 }} /* end namespace vt::ctx */

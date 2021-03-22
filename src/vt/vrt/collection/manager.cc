@@ -85,13 +85,17 @@ getDispatcher(auto_registry::AutoHandlerType const han) {
 }
 
 balance::ElementIDStruct CollectionManager::getCurrentContext() const {
-  return cur_context_elm_id_;
-}
-
-void CollectionManager::setCurrentContext(
-  balance::ElementIDStruct elm
-) {
-  cur_context_elm_id_ = elm;
+# if vt_check_enabled(lblite)
+  if (theContext()->getTask() != nullptr) {
+    auto lb = theContext()->getTask()->get<ctx::LBStats>();
+    if (lb != nullptr) {
+      return lb->getCurrentElementID();
+    }
+  }
+#endif
+  return balance::ElementIDStruct{
+    balance::no_element_id, uninitialized_destination, uninitialized_destination
+  };
 }
 
 void CollectionManager::schedule(ActionType action) {

@@ -92,9 +92,15 @@ struct LBStats final : Base {
   void suspend() final override;
   void resume() final override;
 
+  /**
+   * \brief Get the current element ID struct for the running context
+   *
+   * \return the current element ID
+   */
+  ElementIDStruct const& getCurrentElementID() const;
+
 private:
   ElementStats* stats_ = nullptr;     /**< Element statistics */
-  ElementIDStruct prev_elm_id_ = {};  /**< Previous element ID  */
   ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
   bool should_instrument_ = false;    /**< Whether we are instrumenting */
 };

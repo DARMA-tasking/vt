@@ -1873,7 +1873,6 @@ public:
       | user_insert_action_
       | dist_tag_id_
       | release_lb_
-      | cur_context_elm_id_
       | collect_stats_for_lb_;
   }
 
@@ -1897,15 +1896,6 @@ private:
    * \return the element ID
    */
   balance::ElementIDStruct getCurrentContext() const;
-
-  /**
-   * \internal \brief Set the current LB element ID
-   *
-   * \param[in] elm ID struct
-   */
-  void setCurrentContext(
-    balance::ElementIDStruct elm
-  );
 
   /**
    * \internal \brief Get the mapped node for an element
@@ -2064,9 +2054,6 @@ private:
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
-  balance::ElementIDStruct cur_context_elm_id_ = {
-    balance::no_element_id, uninitialized_destination, uninitialized_destination
-  };
 };
 
 // These are static variables in class templates because Intel 18
