@@ -48,6 +48,7 @@
 #include "vt/vrt/context/context_vrt.h"
 #include "vt/vrt/collection/types/untyped.h"
 #include "vt/context/runnable_context/set_context.h"
+#include "vt/configs/debug/debug_var_unused.h"
 
 namespace vt { namespace runnable {
 
@@ -137,6 +138,8 @@ void RunnableNew::run() {
   } else
 #endif
   {
+    // force use this for when fcontext is disabled to avoid compiler warning
+    vt_force_use(is_threaded_)
     task_();
   }
 
