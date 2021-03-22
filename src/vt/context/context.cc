@@ -122,7 +122,10 @@ NodeType Context::getFromNodeCurrentTask() const {
 trace::TraceEventIDType Context::getTraceEventCurrentTask() const {
 #if !vt_check_enabled(trace_only)
   if (getTask() != nullptr) {
-    return theContext()->getTask()->get<ctx::Trace>()->getEvent();
+    auto t = getTask()->get<ctx::Trace>();
+    if (t != nullptr) {
+      return t->getEvent();
+    }
   }
 #endif
   return trace::no_trace_event;
