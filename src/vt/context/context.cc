@@ -44,10 +44,14 @@
 
 #include "vt/context/context.h"
 #include "vt/context/runnable_context/from_node.h"
-#include "vt/runnable/runnable.h"
 
-#if !vt_check_enabled(trace_only)
+#if vt_check_enabled(trace_only)
+namespace vt { namespace runnable {
+struct RunnableNew {};
+}} /* end namespact vt::runnable */
+#else
 # include "vt/runtime/runtime.h"
+# include "vt/runnable/runnable.h"
 #endif
 
 #if vt_check_enabled(trace_enabled)
@@ -103,22 +107,25 @@ void Context::setTask(runnable::RunnableNew* in_task) {
 }
 
 NodeType Context::getFromNodeCurrentTask() const {
+#if !vt_check_enabled(trace_only)
   if (getTask() != nullptr) {
     auto from = getTask()->get<ctx::FromNode>();
     if (from != nullptr) {
       return from->get();
     }
   }
+#endif
   return getNode();
 }
 
 #if vt_check_enabled(trace_enabled)
 trace::TraceEventIDType Context::getTraceEventCurrentTask() const {
+#if !vt_check_enabled(trace_only)
   if (getTask() != nullptr) {
     return theContext()->getTask()->get<ctx::Trace>()->getEvent();
-  } else {
-    return trace::no_trace_event;
   }
+#endif
+  return trace::no_trace_event;
 }
 #endif /* vt_check_enabled(trace_enabled) */
 
