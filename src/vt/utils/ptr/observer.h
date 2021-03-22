@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                set_context.h
+//                                  observer.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,53 +42,71 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
-#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H
+#if !defined INCLUDED_VT_UTILS_PTR_OBSERVER_H
+#define INCLUDED_VT_UTILS_PTR_OBSERVER_H
 
-#include "vt/context/runnable_context/base.h"
-#include "vt/runnable/runnable.fwd.h"
-#include "vt/utils/ptr/observer.h"
+#include "vt/config.h"
 
-namespace vt { namespace ctx {
+namespace vt { namespace util { namespace ptr {
 
 /**
- * \struct SetContext
+ * \struct ObserverPtr
  *
- * \brief Set the context of the current running task for query by other
- * components or users.
+ * \brief A simple wrapper over a raw pointer that indicates it is held as an
+ * observer that does not own or control the lifetime.
  */
-struct SetContext final : Base {
+template <typename T>
+struct ObserverPtr final {
 
-  /**
-   * \brief Construct a \c SetContext
-   *
-   * \param[in] in_nonowning_cur_task the current task (non-owning ptr held)
-   */
-  explicit SetContext(runnable::RunnableNew* in_cur_task)
-    : cur_task_(in_cur_task)
-  {}
+  explicit ObserverPtr(T* in_p)
+    : p_(in_p)
+  { }
 
-  /**
-   * \brief Preserve the existing task and replace with a new one
-   */
-  void begin() final override;
+  ObserverPtr(std::nullptr_t) { }
+  ObserverPtr() = default;
+  ObserverPtr(ObserverPtr const&) = default;
+  ObserverPtr(ObserverPtr&&) = default;
 
-  /**
-   * \brief Restore the previous existing task to the context (if there was one)
-   */
-  void end() final override;
+  ObserverPtr<T>& operator=(std::nullptr_t) {
+    p_ = nullptr;
+    return *this;
+  }
 
-  void suspend() final override;
+  ObserverPtr<T>& operator=(T* in) {
+    p_ = in;
+    return *this;
+  }
 
-  void resume() final override;
+  ObserverPtr<T>& operator=(ObserverPtr<T> const& in) {
+    p_ = in.p_;
+    return *this;
+  }
+
+  bool operator==(T* n) const { return p_ == n; }
+  bool operator!=(T* n) const { return p_ != n; }
+  bool operator==(ObserverPtr<T> const& n) const { return p_ == n.p_; }
+  bool operator!=(ObserverPtr<T> const& n) const { return p_ != n.p_; }
+  bool operator==(std::nullptr_t) const { return p_ == nullptr; }
+  bool operator!=(std::nullptr_t) const { return p_ != nullptr; }
+
+  operator T*() const { return p_; }
+  T* operator*() const { return p_; }
+  T* operator->() const { return p_; }
+  T* get() const { return p_; }
+
+  void reset() { p_ = nullptr; }
 
 private:
-  /// The previous runnable that was in the context
-  util::ObserverPtr<runnable::RunnableNew> prev_task_ = nullptr;
-  /// The new runnable that is replacing it
-  util::ObserverPtr<runnable::RunnableNew> cur_task_ = nullptr;
+  T* p_ = nullptr;
 };
 
-}} /* end namespace vt::ctx */
+}}} /* end namespace vt::util::ptr */
 
-#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_SET_CONTEXT_H*/
+namespace vt { namespace util {
+
+template <typename T>
+using ObserverPtr = ptr::ObserverPtr<T>;
+
+}} /* end namespace vt::util */
+
+#endif /*INCLUDED_VT_UTILS_PTR_OBSERVER_H*/

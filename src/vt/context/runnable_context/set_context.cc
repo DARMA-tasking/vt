@@ -50,15 +50,15 @@ namespace vt { namespace ctx {
 void SetContext::begin() {
   // we have to handle the ugly handler-inside-handler case.. preserve the
   // previous context (pop) and set the new task (push)
-  nonowning_prev_task_ = theContext()->getTask();
-  ContextAttorney::setTask(nonowning_cur_task_);
+  prev_task_ = theContext()->getTask();
+  ContextAttorney::setTask(cur_task_);
 }
 
 void SetContext::end() {
   vtAssert(
-    theContext()->getTask() == nonowning_cur_task_, "Must be correct task"
+    theContext()->getTask() == cur_task_, "Must be correct task"
   );
-  ContextAttorney::setTask(nonowning_prev_task_);
+  ContextAttorney::setTask(prev_task_);
 }
 
 void SetContext::suspend() {
