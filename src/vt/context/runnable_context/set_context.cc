@@ -52,9 +52,21 @@ void SetContext::begin() {
   // previous context (pop) and set the new task (push)
   prev_task_ = theContext()->getTask();
   ContextAttorney::setTask(cur_task_);
+
+  vt_debug_print(
+    context, node,
+    "{}: begin(): prev={}, task={}\n",
+    print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
+  );
 }
 
 void SetContext::end() {
+  vt_debug_print(
+    context, node,
+    "{}: end(): prev={}, task={}\n",
+    print_ptr(this), print_ptr(prev_task_.get()), print_ptr(theContext()->getTask())
+  );
+
   vtAssert(
     theContext()->getTask() == cur_task_, "Must be correct task"
   );
@@ -62,10 +74,22 @@ void SetContext::end() {
 }
 
 void SetContext::suspend() {
+  vt_debug_print(
+    context, node,
+    "{}: suspend(): prev={}, task={}\n",
+    print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
+  );
+
   end();
 }
 
 void SetContext::resume() {
+  vt_debug_print(
+    context, node,
+    "{}: resume(): prev={}, task={}\n",
+    print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
+  );
+
   begin();
 }
 

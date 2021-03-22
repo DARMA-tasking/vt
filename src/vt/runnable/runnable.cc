@@ -125,6 +125,11 @@ void RunnableNew::setupHandlerElement(
 }
 
 void RunnableNew::run() {
+  vt_debug_print(
+    context, node,
+    "start running task={}\n", print_ptr(this)
+  );
+
   addContext<ctx::SetContext>(this);
 
   begin();
@@ -144,6 +149,11 @@ void RunnableNew::run() {
   }
 
   end();
+
+  vt_debug_print(
+    context, node,
+    "done running task={}\n", print_ptr(this)
+  );
 }
 
 void RunnableNew::begin() {
