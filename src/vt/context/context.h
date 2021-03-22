@@ -52,7 +52,14 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/context/context_attorney_fwd.h"
 #include "vt/utils/tls/tls.h"
-#include "vt/runnable/runnable.fwd.h"
+
+#if vt_check_enabled(trace_only)
+namespace vt { namespace runnable {
+struct RunnableNew;
+}} /* end namespace vt::runnable */
+#else
+# include "vt/runnable/runnable.fwd.h"
+#endif
 
 #if vt_check_enabled(trace_enabled)
 # include "vt/trace/trace_common.h"
