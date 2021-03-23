@@ -134,7 +134,7 @@ template <typename UserMsgT>
       );
 
       runnable::makeRunnable(msg, true, handler, node)
-        .withTDEpoch(epoch, is_valid_epoch)
+        .withTDEpoch(epoch, not is_valid_epoch)
         .withContinuation(action)
         .enqueue();
 
