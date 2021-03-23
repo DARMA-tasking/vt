@@ -125,32 +125,64 @@ void RunnableNew::setupHandlerElement(
 }
 
 void RunnableNew::run() {
-  vt_debug_print(
-    context, node,
-    "start running task={}\n", print_ptr(this)
+  vtAbortIf(
+    done_ and not suspended_,
+    "Runnable task must either be not done (finished execution) or suspended"
   );
 
-  begin();
+  vt_debug_print(
+    context, node,
+    "start running task={}, done={}, suspended={}\n",
+    print_ptr(this), done_, suspended_
+  );
+
+  if (suspended_) {
+    resume();
+  } else {
+    begin();
+  }
 
   vtAssert(task_ != nullptr, "Must have a valid task to run");
 
 #if vt_check_enabled(fcontext)
   if (is_threaded_) {
     using TM = scheduler::ThreadManager;
-    TM::allocateThreadRun(task_);
+
+    if (suspended_) {
+      // find the thread and resume it
+      TM::getThread(tid_)->resume();
+    } else {
+      // allocate a new thread to run the task
+      tid_ = TM::allocateThreadRun(task_);
+    }
+
+    // check if it is done running, and save that state
+    done_ = TM::getThread(tid_)->isDone();
+
+    // cleanup/deallocate the thread
+    if (done_) {
+      TM::deallocateThread(tid_);
+    }
   } else
 #endif
   {
     // force use this for when fcontext is disabled to avoid compiler warning
-    vt_force_use(is_threaded_)
+    vt_force_use(is_threaded_, tid_)
     task_();
+    done_ = true;
   }
 
-  end();
+  if (done_) {
+    end();
+  } else {
+    suspended_ = true;
+    suspend();
+  }
 
   vt_debug_print(
     context, node,
-    "done running task={}\n", print_ptr(this)
+    "done running task={}, done={}, suspended={}\n",
+    print_ptr(this), done_, suspended_
   );
 }
 

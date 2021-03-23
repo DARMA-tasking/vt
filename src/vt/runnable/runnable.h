@@ -149,6 +149,8 @@ public:
    */
   void run();
 
+  uint64_t getThreadID() const { return tid_; }
+
 private:
   /**
    * \internal \brief Loop through all the contexts associated with this
@@ -209,6 +211,8 @@ private:
   std::vector<CtxBasePtr> contexts_;        /**< Vector of contexts */
   ActionType task_ = nullptr;               /**< The runnable's task  */
   bool done_ = false;                       /**< Whether task is complete */
+  bool suspended_ = false;                  /**< Whether task is suspended */
+  uint64_t tid_ = 0;                        /**< The thread ID for the task */
 };
 
 }} /* end namespace vt::runnable */
