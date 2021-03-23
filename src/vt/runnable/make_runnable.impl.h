@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           callback_send_tl.impl.h
+//                             make_runnable.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,46 +42,25 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_IMPL_H
-#define INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_IMPL_H
+#if !defined INCLUDED_VT_RUNNABLE_MAKE_RUNNABLE_IMPL_H
+#define INCLUDED_VT_RUNNABLE_MAKE_RUNNABLE_IMPL_H
 
-#include "vt/config.h"
-#include "vt/pipe/pipe_common.h"
-#include "vt/pipe/callback/callback_base_tl.h"
-#include "vt/pipe/callback/handler_send/callback_send_tl.h"
-#include "vt/activefn/activefn.h"
-#include "vt/context/context.h"
-#include "vt/messaging/active.h"
 #include "vt/runnable/make_runnable.h"
+#include "vt/scheduler/scheduler.h"
 
-namespace vt { namespace pipe { namespace callback {
-
-template <typename SerializerT>
-void CallbackSendTypeless::serialize(SerializerT& s) {
-  s | send_node_;
-  s | handler_;
-}
+namespace vt { namespace runnable {
 
 template <typename MsgT>
-void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
-  auto const& this_node = theContext()->getNode();
-  vt_debug_print(
-    pipe, node,
-    "CallbackSendTypeless: trigger_: pipe={:x}, this_node={}, send_node_={}\n",
-    pipe, this_node, send_node_
-  );
-  auto pmsg = promoteMsg(msg);
-  if (this_node == send_node_) {
-    runnable::makeRunnable(pmsg, true, handler_, this_node)
-      .withTDMsg()
-      .enqueue();
+void RunnableMaker<MsgT>::enqueue() {
+  setup();
+  if (msg_ != nullptr) {
+    theSched()->enqueue(msg_, std::move(impl_));
   } else {
-    theMsg()->sendMsg<MsgT>(send_node_, handler_, pmsg);
+    theSched()->enqueue(std::move(impl_));
   }
+  is_done_ = true;
 }
 
-}}} /* end namespace vt::pipe::callback */
+}} /* end namespace vt::runnable */
 
-#include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.impl.h"
-
-#endif /*INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_IMPL_H*/
+#endif /*INCLUDED_VT_RUNNABLE_MAKE_RUNNABLE_IMPL_H*/

@@ -2097,6 +2097,7 @@ namespace details
 #include "vt/rdmahandle/manager.collection.impl.h"
 #include "vt/vrt/proxy/collection_proxy.impl.h"
 #include "vt/context/runnable_context/lb_stats.impl.h"
+#include "vt/context/runnable_context/collection.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"

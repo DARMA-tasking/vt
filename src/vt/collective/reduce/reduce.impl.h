@@ -51,11 +51,7 @@
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/messaging/active.h"
 #include "vt/messaging/message.h"
-#include "vt/context/runnable_context/td.h"
-#include "vt/context/runnable_context/trace.h"
-#include "vt/context/runnable_context/from_node.h"
-#include "vt/context/runnable_context/set_context.h"
-#include "vt/scheduler/scheduler.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace collective { namespace reduce {
 
@@ -83,15 +79,11 @@ void Reduce::reduceRootRecv(MsgT* msg) {
   msg->is_root_ = true;
 
   auto const& from_node = theContext()->getFromNodeCurrentTask();
+
   auto m = promoteMsg(msg);
-  auto r = std::make_unique<runnable::RunnableNew>(m, false);
-  r->template addContext<ctx::TD>(m);
-  r->template addContext<ctx::Trace>(
-    m, handler, from_node, auto_registry::RegistryTypeEnum::RegGeneral
-  );
-  r->template addContext<ctx::FromNode>(from_node);
-  r->setupHandler(handler);
-  r->run();
+  runnable::makeRunnable(m, false, handler, from_node)
+    .withTDMsg()
+    .run();
 }
 
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
@@ -267,16 +259,9 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
 
       // this needs to run inline.. threaded not allowed for reduction
       // combination
-      auto r = std::make_unique<runnable::RunnableNew>(state.msgs[0], false);
-      r->template addContext<ctx::TD>(state.msgs[0]);
-      r->template addContext<ctx::Trace>(
-        state.msgs[0], handler, from_node,
-        auto_registry::RegistryTypeEnum::RegGeneral
-      );
-      r->template addContext<ctx::FromNode>(from_node);
-
-      r->setupHandler(handler);
-      r->run();
+      runnable::makeRunnable(state.msgs[0], false, handler, from_node)
+        .withTDMsg()
+        .run();
     }
 
     // Send to parent

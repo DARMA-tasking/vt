@@ -93,6 +93,4 @@ private:
 
 }} /* end namespace vt::ctx */
 
-#include "vt/context/runnable_context/collection.impl.h"
-
 #endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H*/

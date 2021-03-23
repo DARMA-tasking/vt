@@ -82,13 +82,7 @@
 #include "vt/scheduler/scheduler.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/runnable/invoke.h"
-#include "vt/context/runnable_context/td.h"
-#include "vt/context/runnable_context/trace.h"
-#include "vt/context/runnable_context/from_node.h"
-#include "vt/context/runnable_context/set_context.h"
-#include "vt/context/runnable_context/collection.h"
-#include "vt/context/runnable_context/lb_stats.h"
-#include "vt/scheduler/scheduler.h"
+#include "vt/runnable/make_runnable.h"
 
 #include <tuple>
 #include <utility>
@@ -362,11 +356,6 @@ CollectionManager::collectionAutoMsgDeliver(
   trace::TraceEventIDType event, bool immediate
 ) {
   auto user_msg = makeMessage<UserMsgT>(std::move(msg->getMsg()));
-  // Be careful with type casting here..convert to typeless before
-  // reinterpreting the pointer so the compiler does not produce the wrong
-  // offset
-  void* raw_ptr = static_cast<void*>(base);
-  auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
 
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
@@ -381,22 +370,14 @@ CollectionManager::collectionAutoMsgDeliver(
     auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
     auto_registry::RegistryTypeEnum::RegVrtCollection;
 
-  auto r = std::make_unique<runnable::RunnableNew>(user_msg, true);
-  r->template addContext<ctx::TD>(theMsg()->getEpochContextMsg(msg));
-  r->template addContext<ctx::Trace>(
-    user_msg, event, han, from, reg, idx1, idx2, idx3, idx4
-  );
-  r->template addContext<ctx::FromNode>(from);
-  r->template addContext<ctx::Collection<IndexT>>(base);
+  runnable::makeRunnable(user_msg, true, han, from, reg)
+    .withTDEpoch(theMsg()->getEpochContextMsg(msg))
+    .template withCollection<IndexT>(base)
+    .withTraceIndex(event, idx1, idx2, idx3, idx4)
 #if vt_check_enabled(lblite)
-  r->template addContext<ctx::LBStats>(base, msg);
+    .withLBStats(base, msg)
 #endif
-  r->setupHandlerElement(ptr, han);
-  if (immediate) {
-    r->run();
-  } else {
-    theSched()->enqueue(msg, std::move(r));
-  }
+    .runOrEnqueue(immediate);
 }
 
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
@@ -405,12 +386,6 @@ CollectionManager::collectionAutoMsgDeliver(
   MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event, bool immediate
 ) {
-  // Be careful with type casting here..convert to typeless before
-  // reinterpreting the pointer so the compiler does not produce the wrong
-  // offset
-  void* raw_ptr = static_cast<void*>(base);
-  auto ptr = reinterpret_cast<UntypedCollection*>(raw_ptr);
-
   // Expand out the index for tracing purposes; Projections takes up to
   // 4-dimensions
   auto idx = base->getIndex();
@@ -418,28 +393,21 @@ CollectionManager::collectionAutoMsgDeliver(
   uint64_t const idx2 = idx.ndims() > 1 ? idx[1] : 0;
   uint64_t const idx3 = idx.ndims() > 2 ? idx[2] : 0;
   uint64_t const idx4 = idx.ndims() > 3 ? idx[3] : 0;
+
   auto const member = HandlerManager::isHandlerMember(han);
   auto reg = member ?
     auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
     auto_registry::RegistryTypeEnum::RegVrtCollection;
 
   auto m = promoteMsg(msg);
-  auto r = std::make_unique<runnable::RunnableNew>(m, true);
-  r->template addContext<ctx::TD>(theMsg()->getEpochContextMsg(msg));
-  r->template addContext<ctx::Trace>(
-    m, event, han, from, reg, idx1, idx2, idx3, idx4
-  );
-  r->template addContext<ctx::FromNode>(from);
-  r->template addContext<ctx::Collection<IndexT>>(base);
+  runnable::makeRunnable(m, true, han, from, reg)
+    .withTDEpoch(theMsg()->getEpochContextMsg(msg))
+    .template withCollection<IndexT>(base)
+    .withTraceIndex(event, idx1, idx2, idx3, idx4)
 #if vt_check_enabled(lblite)
-  r->template addContext<ctx::LBStats>(base, msg);
+    .withLBStats(base)
 #endif
-  r->setupHandlerElement(ptr, han);
-  if (immediate) {
-    r->run();
-  } else {
-    theSched()->enqueue(msg, std::move(r));
-  }
+    .runOrEnqueue(immediate);
 }
 
 template <typename ColT, typename IndexT, typename MsgT>

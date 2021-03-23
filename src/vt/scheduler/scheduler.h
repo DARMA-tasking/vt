@@ -50,7 +50,6 @@
 #include "vt/scheduler/priority_queue.h"
 #include "vt/scheduler/prioritized_work_unit.h"
 #include "vt/scheduler/work_unit.h"
-#include "vt/messaging/message/smart_ptr.h"
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
 
@@ -61,14 +60,21 @@
 #include <memory>
 
 namespace vt {
-  void runSchedulerThrough(EpochType epoch);
 
-  template <typename Callable>
-  void runInEpochRooted(Callable&& fn);
+void runSchedulerThrough(EpochType epoch);
 
-  template <typename Callable>
-  void runInEpochCollective(Callable&& fn);
-}
+template <typename Callable>
+void runInEpochRooted(Callable&& fn);
+
+template <typename Callable>
+void runInEpochCollective(Callable&& fn);
+
+namespace messaging {
+
+template <typename T>
+struct MsgSharedPtr;
+
+}} /* end namespace vt::messaging */
 
 namespace vt { namespace sched {
 
@@ -239,7 +245,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \param[in] r the runnable to execute later
    */
   template <typename MsgT, typename RunT>
-  void enqueue(MsgSharedPtr<MsgT> msg, RunT r);
+  void enqueue(messaging::MsgSharedPtr<MsgT> msg, RunT r);
 
   /**
    * \brief Get the work queue size

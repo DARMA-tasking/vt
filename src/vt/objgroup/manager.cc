@@ -49,11 +49,7 @@
 #include "vt/objgroup/type_registry/registry.h"
 #include "vt/context/context.h"
 #include "vt/messaging/message/smart_ptr.h"
-#include "vt/context/runnable_context/td.h"
-#include "vt/context/runnable_context/trace.h"
-#include "vt/context/runnable_context/from_node.h"
-#include "vt/context/runnable_context/set_context.h"
-#include "vt/scheduler/scheduler.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace objgroup {
 
@@ -130,15 +126,9 @@ void scheduleMsg(
   MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
 ) {
   auto const node = theContext()->getNode();
-  auto r = std::make_unique<runnable::RunnableNew>(msg, true);
-  r->template addContext<ctx::TD>(epoch);
-  r->template addContext<ctx::Trace>(
-    msg, han, node, auto_registry::RegistryTypeEnum::RegGeneral
-  );
-  r->template addContext<ctx::FromNode>(node);
-
-  r->setupHandler(han);
-  theSched()->enqueue(msg, std::move(r));
+  runnable::makeRunnable(msg, true, han, node)
+    .withTDEpoch(epoch)
+    .enqueue();
 }
 
 }} /* end namespace vt::objgroup */

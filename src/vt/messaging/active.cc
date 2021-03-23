@@ -55,13 +55,7 @@
 #include "vt/utils/mpi_limits/mpi_max_tag.h"
 #include "vt/runtime/mpi_access.h"
 #include "vt/scheduler/scheduler.h"
-#include "vt/runnable/runnable.h"
-#include "vt/context/runnable_context/td.h"
-#include "vt/context/runnable_context/continuation.h"
-#include "vt/context/runnable_context/trace.h"
-#include "vt/context/runnable_context/from_node.h"
-#include "vt/context/runnable_context/set_context.h"
-#include "vt/context/runnable_context/lb_stats.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace messaging {
 
@@ -951,23 +945,16 @@ bool ActiveMessenger::prepareActiveMsgToRun(
   }
 
   if (has_handler) {
-    auto r = std::make_unique<runnable::RunnableNew>(base, not is_term);
-    if (not is_term) {
-      r->template addContext<ctx::TD>(base);
-    }
-    r->template addContext<ctx::Continuation>(cont);
-    r->template addContext<ctx::Trace>(
-      base, handler, from_node, auto_registry::RegistryTypeEnum::RegGeneral
-    );
-    r->template addContext<ctx::FromNode>(from_node);
+    runnable::makeRunnable(base, not is_term, handler, from_node)
+      .withContinuation(cont)
+      .withTag(tag)
+      .withTDMsg(is_term)
+      .enqueue();
 
     if (is_term) {
       tdRecvCount.increment(1);
     }
     amHandlerCount.increment(1);
-
-    r->setupHandler(handler, false, tag);
-    theSched()->enqueue(base, std::move(r));
 
     if (not is_term) {
       theTerm()->consume(epoch,1,from_node);

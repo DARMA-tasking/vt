@@ -48,11 +48,7 @@
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/messaging/active.h"
-#include "vt/context/runnable_context/td.h"
-#include "vt/context/runnable_context/trace.h"
-#include "vt/context/runnable_context/from_node.h"
-#include "vt/context/runnable_context/set_context.h"
-#include "vt/scheduler/scheduler.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace objgroup {
 
@@ -84,14 +80,9 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
   );
 
   // this is a local invocation.. no thread required
-  auto r = std::make_unique<runnable::RunnableNew>(msg.msg_, false);
-  r->template addContext<ctx::TD>(msg.msg_);
-  r->template addContext<ctx::Trace>(
-    msg.msg_, han, this_node, auto_registry::RegistryTypeEnum::RegGeneral
-  );
-  r->template addContext<ctx::FromNode>(this_node);
-  r->setupHandler(han);
-  r->run();
+  runnable::makeRunnable(msg.msg_, false, han, this_node)
+    .withTDMsg()
+    .run();
 }
 
 template <typename MsgT>
