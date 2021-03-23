@@ -54,7 +54,7 @@
 #include <string>
 #include <vector>
 
-#include "fmt/format.h"
+#include "fmt/core.h"
 
 namespace vt { namespace util { namespace error {
 

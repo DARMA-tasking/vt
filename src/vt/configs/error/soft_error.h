@@ -58,7 +58,7 @@
 
 #include <string>
 
-#include "fmt/format.h"
+#include "fmt/core.h"
 
 namespace vt {
 

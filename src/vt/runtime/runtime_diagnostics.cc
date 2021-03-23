@@ -57,7 +57,7 @@
 #include <fort.hpp>
 #endif /*vt_check_enabled(libfort)*/
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include <map>
 #include <string>

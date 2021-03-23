@@ -51,7 +51,7 @@
 #include "vt/configs/debug/debug_colorize.h"
 #include "vt/configs/debug/debug_var_unused.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 /*
    === Debug file/line/func functionality ===
