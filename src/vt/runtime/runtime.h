@@ -191,11 +191,6 @@ struct Runtime {
   void computeAndPrintDiagnostics();
 
   /**
-   * \brief Run the scheduler once
-   */
-  void runScheduler();
-
-  /**
    * \brief Abort--die immediately after spitting out error message
    *
    * \param[in] abort_str the error message

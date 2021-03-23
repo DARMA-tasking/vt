@@ -97,13 +97,10 @@ TEST_F(TestPendingSend, test_pending_send_hold) {
   // !theTerm()->isEpochTermianted(ep), thus `k` is used to
   // break out
   int k = 0;
-  while (!theTerm()->isEpochTerminated(ep)) {
-    k++;
-    vt::runScheduler();
-    if (k > 10) {
-      break;
-    }
-  }
+
+  theSched()->runSchedulerWhile([&k, ep] {
+    return !theTerm()->isEpochTerminated(ep) && (++k <= 10);
+  });
 
   // Epoch should not end with a valid pending send created in an live epoch
   EXPECT_EQ(theTerm()->isEpochTerminated(ep), false);

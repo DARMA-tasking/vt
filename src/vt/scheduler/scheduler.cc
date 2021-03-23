@@ -253,7 +253,7 @@ void Scheduler::runProgress(bool msg_only) {
   last_progress_time_ = timing::Timing::getCurrentTime();
 }
 
-void Scheduler::scheduler(bool msg_only) {
+void Scheduler::runSchedulerOnceImpl(bool msg_only) {
   using TimerType = timing::Timing;
 
   auto time_since_last_progress = TimerType::getCurrentTime() - last_progress_time_;
@@ -322,7 +322,7 @@ void Scheduler::runSchedulerWhile(std::function<bool()> cond) {
   }
 
   while (cond()) {
-    scheduler();
+    runSchedulerOnceImpl();
   }
 
   // After running the scheduler ensure to exit idle state.
@@ -372,10 +372,6 @@ void Scheduler::registerTriggerOnce(
 }} //end namespace vt::sched
 
 namespace vt {
-
-void runScheduler() {
-  theSched()->scheduler();
-}
 
 void runSchedulerThrough(EpochType epoch) {
   // WARNING: This is to prevent global termination from spuriously

@@ -126,9 +126,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
   virtual void TearDown() {
     using namespace vt;
 
-    while (!rt->isTerminated()) {
-      runScheduler();
-    }
+  vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
 
 #if DEBUG_TEST_HARNESS_PRINT
     auto const& my_node = theContext()->getNode();

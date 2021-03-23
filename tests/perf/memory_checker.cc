@@ -75,19 +75,17 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 32; i++) {
       allocateAndTouch(1024 * 1024 * 64);
       fmt::print("After alloc {} MiB: {}\n", (i + 1) * 64, usage->getUsageAll());
-      vt::runScheduler();
+      vt::theSched()->runSchedulerOnceImpl();
     }
 
     for (int i = 0; i < 32; i++) {
       deallocate();
       fmt::print("After de-alloc {} MiB: {}\n", (32 * 64) - (i + 1) * 64, usage->getUsageAll());
-      vt::runScheduler();
+      vt::theSched()->runSchedulerOnceImpl();
     }
   }
 
-  while (!vt::rt->isTerminated()) {
-    vt::runScheduler();
-  }
+  vt::theSched()->runSchedulerWhile([]{ return !vt::rt->isTerminated(); });
 
   vt::finalize();
 

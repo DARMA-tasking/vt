@@ -81,7 +81,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_1) {
     testSched->enqueue([]{ sleep_for(50ms); });
   }
 
-  do testSched->scheduler(); while (not done);
+  testSched->runSchedulerWhile([&done]{return not done;});
 
   double const fudge = 0.8;
 
@@ -120,7 +120,7 @@ TEST_F(TestSchedProgress, test_scheduler_progress_2) {
     testSched->enqueue([]{ sleep_for(100ms); });
   }
 
-  do testSched->scheduler(); while (not done);
+  testSched->runSchedulerWhile([&done]{return not done;});
 
   double const fudge = 0.8;
 

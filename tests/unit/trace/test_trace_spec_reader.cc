@@ -75,7 +75,7 @@ TEST_F(TestTraceSpec, test_trace_spec_1) {
     proxy.get()->parse();
     proxy.get()->broadcastSpec();
   }
-  do vt::runScheduler(); while (not proxy.get()->specReceived());
+  vt::theSched()->runSchedulerWhile([proxy]{ return not proxy.get()->specReceived();});
   theTerm()->consume();
 
   for (typename Spec::SpecIndex i = 0; i < 1000; i++) {
@@ -109,7 +109,7 @@ TEST_F(TestTraceSpec, test_trace_spec_2) {
     proxy.get()->parse();
     proxy.get()->broadcastSpec();
   }
-  do vt::runScheduler(); while (not proxy.get()->specReceived());
+  vt::theSched()->runSchedulerWhile([proxy]{ return not proxy.get()->specReceived();});
   theTerm()->consume();
 
   for (typename Spec::SpecIndex i = 0; i < 1000; i++) {
@@ -145,7 +145,10 @@ TEST_F(TestTraceSpec, test_trace_spec_3) {
     proxy.get()->parse();
     proxy.get()->broadcastSpec();
   }
-  do vt::runScheduler(); while (not proxy.get()->specReceived());
+  vt::theSched()->runSchedulerWhile(
+    [proxy]{ return not proxy.get()->specReceived();
+  });
+
   theTerm()->consume();
 
   for (typename Spec::SpecIndex i = 0; i < 1000; i++) {
@@ -186,7 +189,7 @@ TEST_F(TestTraceSpec, test_trace_spec_4) {
     proxy.get()->parse();
     proxy.get()->broadcastSpec();
   }
-  do vt::runScheduler(); while (not proxy.get()->specReceived());
+  vt::theSched()->runSchedulerWhile([proxy]{ return not proxy.get()->specReceived();});
   theTerm()->consume();
 
   for (typename Spec::SpecIndex i = 0; i < 1000; i++) {

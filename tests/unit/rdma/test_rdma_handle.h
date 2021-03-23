@@ -86,7 +86,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_1) {
   auto proxy = TestObjGroup::construct();
   vt::HandleRDMA<T> handle = proxy.get()->makeHandle<T>(size, true);
 
-  do vt::runScheduler(); while (not handle.ready());
+  vt::theSched()->runSchedulerWhile([handle]{ return not handle.ready(); });
 
   auto rank = vt::theContext()->getNode();
   int space = 100;
@@ -127,7 +127,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_2) {
   auto proxy = TestObjGroup::construct();
   vt::HandleRDMA<T> handle = proxy.get()->makeHandle<T>(size, true);
 
-  do vt::runScheduler(); while (not handle.ready());
+  vt::theSched()->runSchedulerWhile([handle]{ return not handle.ready(); });
 
   auto rank = vt::theContext()->getNode();
   int space = 100;
@@ -181,7 +181,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_3) {
   auto proxy = TestObjGroup::construct();
   vt::HandleRDMA<T> handle = proxy.get()->makeHandle<T>(size, true);
 
-  do vt::runScheduler(); while (not handle.ready());
+  vt::theSched()->runSchedulerWhile([handle]{ return not handle.ready(); });
 
   int space = 100;
   UpdateData<T>::init(handle, space, size, 0);
@@ -224,7 +224,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_4) {
   auto proxy = TestObjGroup::construct();
   vt::HandleRDMA<T> handle = proxy.get()->makeHandle<T>(size, false);
 
-  do vt::runScheduler(); while (not handle.ready());
+  vt::theSched()->runSchedulerWhile([handle]{ return not handle.ready(); });
 
   // Barrier to order following locks
   vt::theCollective()->barrier();
@@ -245,7 +245,7 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_5) {
   auto proxy = TestObjGroup::construct();
   vt::HandleRDMA<T> handle = proxy.get()->makeHandle<T>(size, true);
 
-  do vt::runScheduler(); while (not handle.ready());
+  vt::theSched()->runSchedulerWhile([handle]{ return not handle.ready(); });
 
   int space = 100;
   UpdateData<T>::init(handle, space, size, 0);
