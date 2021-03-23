@@ -47,7 +47,7 @@
 
 #if vt_check_enabled(fcontext)
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 ThreadAction::ThreadAction(ActionType in_action, std::size_t stack_size)
   : ThreadAction(0, in_action, stack_size)
@@ -146,6 +146,6 @@ void ThreadAction::runUntilDone() {
   }
 }
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*vt_check_enabled(fcontext)*/

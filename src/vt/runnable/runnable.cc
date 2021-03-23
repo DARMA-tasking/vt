@@ -146,7 +146,7 @@ void RunnableNew::run() {
 
 #if vt_check_enabled(fcontext)
   if (is_threaded_) {
-    using TM = scheduler::ThreadManager;
+    using TM = sched::ThreadManager;
 
     if (suspended_) {
       // find the thread and resume it

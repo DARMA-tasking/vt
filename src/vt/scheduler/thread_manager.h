@@ -54,7 +54,7 @@
 #include <memory>
 #include <unordered_map>
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 struct ThreadManager {
 
@@ -90,7 +90,7 @@ private:
   static std::unordered_map<uint64_t, std::unique_ptr<ThreadAction>> threads_;
 };
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*vt_check_enabled(fcontext)*/
 #endif /*INCLUDED_VT_SCHEDULER_THREAD_MANAGER_H*/

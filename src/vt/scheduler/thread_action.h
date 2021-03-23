@@ -51,7 +51,7 @@
 
 #include <context/fcontext.h>
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 struct ThreadAction final {
 
@@ -88,7 +88,7 @@ private:
   bool done_ = false;
 };
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*vt_check_enabled(fcontext)*/
 #endif /*INCLUDED_VT_SCHEDULER_THREAD_ACTION_H*/

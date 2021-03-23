@@ -48,7 +48,7 @@
 
 #include <memory>
 
-namespace vt { namespace scheduler {
+namespace vt { namespace sched {
 
 /*static*/ void ThreadManager::deallocateThread(uint64_t tid) {
   auto iter = threads_.find(tid);
@@ -71,6 +71,6 @@ namespace vt { namespace scheduler {
 /*static*/ std::unordered_map<uint64_t, std::unique_ptr<ThreadAction>>
   ThreadManager::threads_;
 
-}} /* end namespace vt::scheduler */
+}} /* end namespace vt::sched */
 
 #endif /*vt_check_enabled(fcontext)*/
