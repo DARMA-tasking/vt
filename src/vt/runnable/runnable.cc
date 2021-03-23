@@ -130,8 +130,6 @@ void RunnableNew::run() {
     "start running task={}\n", print_ptr(this)
   );
 
-  addContext<ctx::SetContext>(this);
-
   begin();
 
   vtAssert(task_ != nullptr, "Must have a valid task to run");

@@ -288,6 +288,7 @@ RunnableMaker<U> makeRunnable(
     r->template addContext<ctx::Trace>(msg, handler, from, han_type);
   }
   r->template addContext<ctx::FromNode>(from);
+  r->template addContext<ctx::SetContext>(r.get());
   return RunnableMaker<U>{std::move(r), msg, handler, han_type, from};
 }
 
@@ -309,6 +310,7 @@ inline RunnableMaker<BaseMsgType> makeRunnableVoid(
   auto r = std::make_unique<RunnableNew>(is_threaded);
   // @todo: figure out how to trace this?
   r->template addContext<ctx::FromNode>(from);
+  r->template addContext<ctx::SetContext>(r.get());
   return RunnableMaker<BaseMsgType>{std::move(r), nullptr, handler, han_type, from};
 }
 
