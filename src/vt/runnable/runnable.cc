@@ -166,4 +166,16 @@ void RunnableNew::end() {
   }
 }
 
+void RunnableNew::suspend() {
+  for (auto&& ctx : contexts_) {
+    ctx->suspend();
+  }
+}
+
+void RunnableNew::resume() {
+  for (auto&& ctx : contexts_) {
+    ctx->resume();
+  }
+}
+
 }} /* end namespace vt::runnable */

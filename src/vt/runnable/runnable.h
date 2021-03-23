@@ -162,6 +162,18 @@ private:
    */
   void end();
 
+  /**
+   * \internal \brief Loop through all the contexts associated with this
+   * runnable and invoke \c suspend() on them.
+   */
+  void suspend();
+
+  /**
+   * \internal \brief Loop through all the contexts associated with this
+   * runnable and invoke \c resume() on them.
+   */
+  void resume();
+
 public:
   /**
    * \brief Get a context object by the type \c T
