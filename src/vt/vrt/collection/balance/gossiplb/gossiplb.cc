@@ -405,7 +405,8 @@ void GossipLB::informSync() {
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
   for (; k_cur_ < k_max_; ++k_cur_) {
-    vt::theCollective()->barrier();
+    auto kbarr = theCollective()->newNamedCollectiveBarrier();
+    theCollective()->barrier(nullptr, kbarr);
 
     auto name = fmt::format("GossipLB: informSync k_cur={}", k_cur_);
     auto propagate_epoch = theTerm()->makeEpochCollective(name);
