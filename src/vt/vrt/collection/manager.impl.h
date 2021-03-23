@@ -372,7 +372,7 @@ CollectionManager::collectionAutoMsgDeliver(
 
   runnable::makeRunnable(user_msg, true, han, from, reg)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
-    .template withCollection<IndexT>(base)
+    .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
 #if vt_check_enabled(lblite)
     .withLBStats(base, msg)
@@ -402,7 +402,7 @@ CollectionManager::collectionAutoMsgDeliver(
   auto m = promoteMsg(msg);
   runnable::makeRunnable(m, true, han, from, reg)
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
-    .template withCollection<IndexT>(base)
+    .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
 #if vt_check_enabled(lblite)
     .withLBStats(base)
