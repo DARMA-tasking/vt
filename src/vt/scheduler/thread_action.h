@@ -45,9 +45,9 @@
 #if !defined INCLUDED_VT_SCHEDULER_THREAD_ACTION_H
 #define INCLUDED_VT_SCHEDULER_THREAD_ACTION_H
 
-#if vt_check_enabled(fcontext)
-
 #include "vt/config.h"
+
+#if vt_check_enabled(fcontext)
 
 #include <context/fcontext.h>
 
