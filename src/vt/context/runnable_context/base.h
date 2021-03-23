@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_BASE_H
 
+#include "vt/configs/types/types_type.h"
+
 namespace vt { namespace ctx {
 
 /**
