@@ -242,6 +242,12 @@ void Runtime::printStartupBanner() {
       green, reset, compile, magenta, opt, reset, reset
     );
   };
+  auto opt_remove = [=](std::string opt, std::string compile) -> std::string {
+    return fmt::format(
+      "{}Option:{} {}, remove {}{}{} to enable{}\n",
+      green, reset, compile, magenta, opt, reset, reset
+    );
+  };
 
   auto f8 = fmt::format("{}Runtime Configuration:{}\n", green, reset);
   fmt::print("{}{}{}", vt_pre, f8, reset);
@@ -758,6 +764,29 @@ void Runtime::printStartupBanner() {
     auto f11 = fmt::format("Diagnostics are disabled by default");
 #   endif
     auto f12 = opt_to_enable("--vt_diag_enable", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+#endif
+
+#if vt_check_enabled(fcontext)
+  if (not getAppConfig()->vt_ult_disable) {
+    auto f11 = fmt::format("Handlers running in user-level threads are enabled");
+
+    auto f12 = opt_off("--vt_ult_disable", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+
+    auto const ret = util::memory::getBestMemoryUnit(
+      getAppConfig()->vt_ult_stack_size
+    );
+    auto f13 = fmt::format(
+      "User-level stack size is {} {}",
+      std::get<1>(ret), std::get<0>(ret)
+    );
+    auto f14 = opt_on("--vt_ult_stack_size", f13);
+    fmt::print("{}\t{}{}", vt_pre, f14, reset);
+  } else {
+    auto f11 = fmt::format("Handlers running in user-level threads are disabled");
+    auto f12 = opt_remove("--vt_diag_disable", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 #endif
