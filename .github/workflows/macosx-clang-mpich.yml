@@ -29,12 +29,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/cache@v1
+    - uses: actions/cache@v2
       with:
         path: ~/.ccache
         key: ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-macosx-clang-8-ccache-${{ secrets.GH_ACTIONS_CACHE_VERSION }}
+    - uses: actions/cache@v2
+      id: mpich-cache
+      with:
+        path: /path/to/mpich
+        key: ${{ runner.os }}-macosx-clang-8-mpich-${{ hashFiles('**/.github/workflows/macosx-clang-mpich.yml') }}
     - name: Install Dependencies
       shell: bash
       run: brew bundle --file=ci/Brewfile
@@ -43,7 +48,8 @@ jobs:
       run: echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
     - name: Build mpich
       shell: bash
-      run: ./ci/deps/mpich.sh 3.3.2 -j4
+      run: |
+        ci/deps/mpich.sh 3.3.2 -j4
     - name: Build
       shell: bash
       run: ci/build_cpp.sh $(pwd) $(pwd)/build
