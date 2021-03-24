@@ -44,6 +44,7 @@
 
 #include "vt/scheduler/thread_action.h"
 #include "vt/messaging/active.h"
+#include "vt/configs/arguments/app_config.h"
 
 #if vt_check_enabled(fcontext)
 
@@ -57,7 +58,11 @@ ThreadAction::ThreadAction(
   ThreadIDType in_tid, ActionType in_action, std::size_t stack_size
 ) : tid_(in_tid),
     action_(in_action),
-    stack_(create_fcontext_stack(stack_size))
+    stack_(
+      create_fcontext_stack(
+        stack_size == 0 ? theConfig()->vt_ult_stack_size : stack_size
+      )
+    )
 { }
 
 ThreadAction::~ThreadAction() {
