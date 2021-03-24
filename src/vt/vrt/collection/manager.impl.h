@@ -374,9 +374,7 @@ CollectionManager::collectionAutoMsgDeliver(
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
-#if vt_check_enabled(lblite)
     .withLBStats(base, msg)
-#endif
     .runOrEnqueue(immediate);
 }
 
@@ -404,9 +402,7 @@ CollectionManager::collectionAutoMsgDeliver(
     .withTDEpoch(theMsg()->getEpochContextMsg(msg))
     .withCollection(base)
     .withTraceIndex(event, idx1, idx2, idx3, idx4)
-#if vt_check_enabled(lblite)
     .withLBStats(base)
-#endif
     .runOrEnqueue(immediate);
 }
 

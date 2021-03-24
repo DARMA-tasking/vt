@@ -170,7 +170,9 @@ struct RunnableMaker {
    */
   template <typename ElmT, typename MsgU>
   RunnableMaker&& withLBStats(ElmT* elm, MsgU* msg) {
+#if vt_check_enabled(lblite)
     impl_->template addContext<ctx::LBStats>(elm, msg);
+#endif
     return std::move(*this);
   }
 
@@ -181,7 +183,9 @@ struct RunnableMaker {
    */
   template <typename ElmT>
   RunnableMaker&& withLBStats(ElmT* elm) {
+#if vt_check_enabled(lblite)
     impl_->template addContext<ctx::LBStats>(elm, msg_.get());
+#endif
     return std::move(*this);
   }
 
