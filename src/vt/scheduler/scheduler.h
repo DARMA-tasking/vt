@@ -53,6 +53,7 @@
 #include "vt/scheduler/suspended_units.h"
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/messaging/async_op_wrapper.fwd.h"
 
 #include <cassert>
 #include <vector>
@@ -365,6 +366,8 @@ private:
 
   // For access to suspended_ to move runnables if they don't complete
   friend struct BaseUnit;
+  // For access to suspended_ to re-enqueue runnables when they complete
+  friend struct messaging::AsyncOpWrapper;
 
 private:
   diagnostic::Counter progressCount;

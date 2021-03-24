@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              async_op_wrapper.h
+//                            async_op_wrapper.fwd.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,79 +42,13 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_MESSAGING_ASYNC_OP_WRAPPER_H
-#define INCLUDED_VT_MESSAGING_ASYNC_OP_WRAPPER_H
-
-#include "vt/messaging/async_op.h"
-
-#include <memory>
+#if !defined INCLUDED_VT_MESSAGING_ASYNC_OP_WRAPPER_FWD_H
+#define INCLUDED_VT_MESSAGING_ASYNC_OP_WRAPPER_FWD_H
 
 namespace vt { namespace messaging {
 
-/**
- * \internal
- * \struct AsyncOpWrapper
- *
- * \brief Wrapper for a general asynchronous operation that holds a pointer to
- * base class.
- */
-struct AsyncOpWrapper {
-
-  /**
-   * \internal \brief Construct with unique pointer to operation
-   *
-   * \param[in] ptr the operation
-   */
-  explicit AsyncOpWrapper(std::unique_ptr<AsyncOp> ptr)
-    : valid(true),
-      op_(std::move(ptr))
-  { }
-
-  /**
-   * \internal \brief Construct with unique pointer to operation and a thread ID
-   * to resume when it completes
-   *
-   * \param[in] ptr the operation
-   * \param[in] tid the thread ID to resume after completion
-   */
-  AsyncOpWrapper(std::unique_ptr<AsyncOp> ptr, ThreadIDType in_tid)
-    : valid(true),
-      op_(std::move(ptr)),
-      tid_(in_tid)
-  { }
-
-  /**
-   * \internal \brief Test completion of the operation
-   *
-   * \param[in] num_tests how many tests were executed (diagnostics)
-   *
-   * \return whether the operation is complete
-   */
-  bool test(int& num_tests);
-
-  /**
-   * \internal \brief Trigger continuation after operation completes
-   */
-  void done();
-
-  /**
-   * \brief Serializer for footprinting
-   *
-   * \param[in] s the serializer
-   */
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | valid | op_ | tid_;
-  }
-
-public:
-  bool valid = false;                         /**< Whether op is valid  */
-
-private:
-  std::unique_ptr<AsyncOp> op_ = nullptr;     /**< The enclosed operation  */
-  ThreadIDType tid_ = no_thread_id;           /**< The thread ID to resume */
-};
+struct AsyncOpWrapper;
 
 }} /* end namespace vt::messaging */
 
-#endif /*INCLUDED_VT_MESSAGING_ASYNC_OP_WRAPPER_H*/
+#endif /*INCLUDED_VT_MESSAGING_ASYNC_OP_WRAPPER_FWD_H*/
