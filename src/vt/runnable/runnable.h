@@ -213,6 +213,16 @@ public:
    */
   bool isDone() const { return done_; }
 
+  /**
+   * \brief Check if this runnable is suspended or not
+   *
+   * \note If the \c run() method is never called suspended will not be true
+   * because it was never started.
+   *
+   * \return return if it is suspended
+   */
+  bool isSuspended() const { return suspended_; }
+
 private:
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
   bool is_threaded_ = false;                /**< Whether ULTs are supported */
