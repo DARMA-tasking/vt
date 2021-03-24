@@ -573,13 +573,10 @@ void ActiveMessenger::blockOnAsyncOp(std::unique_ptr<T> op) {
   TA::suspend();
 
 #else
-  vtWarn("Using a blocking async operation without threads may cause errors");
-
-  //
-  // @todo: implement this?
-  //
-  // theSched()->runSchedulerWhile([]{ return not op->poll(); }
-  // op->done();
+  vtAbort(
+    "Using a blocking async operation without threads is not allowed. "
+    "Please enable fcontext in cmake and re-run"
+  );
 #endif
 }
 
