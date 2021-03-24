@@ -564,7 +564,14 @@ void ActiveMessenger::blockOnAsyncOp(std::unique_ptr<T> op) {
   auto tid = TA::getActiveThreadID();
 
   if (tid == no_thread_id) {
-    vtAbort("Trying to block a thread on an AsyncOp when no thread is active");
+    if (theConfig()->vt_ult_disable) {
+      vtAbort(
+        "You have disabled user-level threads with --vt_ult_disable,"
+        " please enable to block on a async operation"
+      );
+    } else {
+      vtAbort("Trying to block a thread on an AsyncOp when no thread is active");
+    }
   }
 
   in_progress_ops.emplace(AsyncOpWrapper{std::move(op), tid});
