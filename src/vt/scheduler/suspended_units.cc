@@ -64,7 +64,7 @@ void SuspendedUnits::addSuspended(
 
 void SuspendedUnits::resumeRunnable(ThreadIDType tid) {
   auto iter = units_.find(tid);
-  vtAbortIf(iter == units_.end(), "Must have valid thread ID to suspend");
+  vtAbortIf(iter == units_.end(), "Must have valid thread ID to resume");
   auto r = std::move(iter->second.runnable_);
   auto p = iter->second.priority_;
   theSched()->enqueue(p, std::move(r));
