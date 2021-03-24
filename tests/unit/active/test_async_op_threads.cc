@@ -68,6 +68,10 @@ struct MyObjGroup {
       from_node_ = num_nodes - 1;
     }
 
+    // get the epoch stack and store the original size
+    auto& epoch_stack = theMsg()->getEpochStack();
+    std::size_t original_epoch_size = epoch_stack.size();
+
     auto comm = theContext()->getComm();
     int const tag = 299999;
 
@@ -85,8 +89,21 @@ struct MyObjGroup {
       MPI_Irecv(&recv_val_, 1, MPI_INT, from_node_, tag, comm, &req2);
     }
     auto op2 = std::make_unique<messaging::AsyncOpMPI>(
-      req2, [this]{ done_ = true; }
+      req2,
+      [this,original_epoch_size]{
+        done_ = true;
+        // stack should be the size before running this method since we haven't
+        // resumed the thread yet!
+        EXPECT_EQ(theMsg()->getEpochStack().size(), original_epoch_size - 2);
+      }
     );
+
+    auto cur_ep = theMsg()->getEpoch();
+    // push twice
+    theMsg()->pushEpoch(cur_ep);
+    theMsg()->pushEpoch(cur_ep);
+
+    EXPECT_EQ(epoch_stack.size(), original_epoch_size + 2);
 
     // Register these async operations to block the user-level thread until
     // completion of the MPI request; since these operations are enclosed in an
@@ -96,11 +113,19 @@ struct MyObjGroup {
     theMsg()->blockOnAsyncOp(std::move(op1));
     vt_print(gen, "done with op1\n");
 
+    EXPECT_EQ(epoch_stack.size(), original_epoch_size + 2);
+
     vt_print(gen, "call blockOnAsyncOp(op2)\n");
     theMsg()->blockOnAsyncOp(std::move(op2));
     vt_print(gen, "done with op2\n");
 
+    EXPECT_EQ(epoch_stack.size(), original_epoch_size + 2);
+
     check();
+
+    // pop twice down to starting size
+    theMsg()->popEpoch(cur_ep);
+    theMsg()->popEpoch(cur_ep);
   }
 
   void check() {
