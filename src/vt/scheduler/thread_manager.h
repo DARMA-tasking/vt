@@ -59,7 +59,7 @@ namespace vt { namespace sched {
 struct ThreadManager {
 
   template <typename... Args>
-  static uint64_t allocateThread(Args&&... args) {
+  static ThreadIDType allocateThread(Args&&... args) {
     auto const tid = next_thread_id_++;
     threads_.emplace(
       std::piecewise_construct,
@@ -72,22 +72,19 @@ struct ThreadManager {
   }
 
   template <typename... Args>
-  static uint64_t allocateThreadRun(Args&&... args) {
+  static ThreadIDType allocateThreadRun(Args&&... args) {
     auto const tid = allocateThread(std::forward<Args>(args)...);
     auto ta = getThread(tid);
     ta->run();
-    if (ta->isDone()) {
-      deallocateThread(tid);
-    }
     return tid;
   }
 
-  static void deallocateThread(uint64_t tid);
-  static ThreadAction* getThread(uint64_t tid);
+  static void deallocateThread(ThreadIDType tid);
+  static ThreadAction* getThread(ThreadIDType tid);
 
 private:
-  static uint64_t next_thread_id_;
-  static std::unordered_map<uint64_t, std::unique_ptr<ThreadAction>> threads_;
+  static ThreadIDType next_thread_id_;
+  static std::unordered_map<ThreadIDType, std::unique_ptr<ThreadAction>> threads_;
 };
 
 }} /* end namespace vt::sched */

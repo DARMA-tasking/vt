@@ -50,7 +50,7 @@
 
 namespace vt { namespace sched {
 
-/*static*/ void ThreadManager::deallocateThread(uint64_t tid) {
+/*static*/ void ThreadManager::deallocateThread(ThreadIDType tid) {
   auto iter = threads_.find(tid);
   if (iter != threads_.end()) {
     vtAssertExpr(iter->second->isDone());
@@ -58,7 +58,7 @@ namespace vt { namespace sched {
   }
 }
 
-/*static*/ ThreadAction* ThreadManager::getThread(uint64_t tid) {
+/*static*/ ThreadAction* ThreadManager::getThread(ThreadIDType tid) {
   auto iter = threads_.find(tid);
   if (iter == threads_.end()) {
     return nullptr;
@@ -67,8 +67,8 @@ namespace vt { namespace sched {
   }
 }
 
-/*static*/ uint64_t ThreadManager::next_thread_id_ = 1;
-/*static*/ std::unordered_map<uint64_t, std::unique_ptr<ThreadAction>>
+/*static*/ ThreadIDType ThreadManager::next_thread_id_ = 1;
+/*static*/ std::unordered_map<ThreadIDType, std::unique_ptr<ThreadAction>>
   ThreadManager::threads_;
 
 }} /* end namespace vt::sched */

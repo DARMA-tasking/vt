@@ -50,12 +50,12 @@
 namespace vt { namespace sched {
 
 ThreadAction::ThreadAction(ActionType in_action, std::size_t stack_size)
-  : ThreadAction(0, in_action, stack_size)
+  : ThreadAction(no_thread_id, in_action, stack_size)
 { }
 
 ThreadAction::ThreadAction(
-  uint64_t in_id, ActionType in_action, std::size_t stack_size
-) : id_(in_id),
+  ThreadIDType in_tid, ActionType in_action, std::size_t stack_size
+) : tid_(in_tid),
     action_(in_action),
     stack(create_fcontext_stack(stack_size))
 { }
@@ -138,11 +138,11 @@ void ThreadAction::runUntilDone() {
   return cur_running_ != nullptr;
 }
 
-/*static*/ uint64_t ThreadAction::getActiveThreadID() {
+/*static*/ ThreadIDType ThreadAction::getActiveThreadID() {
   if (cur_running_) {
-    return cur_running_->id_;
+    return cur_running_->tid_;
   } else {
-    return 0;
+    return no_thread_id;
   }
 }
 

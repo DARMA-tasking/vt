@@ -149,7 +149,15 @@ public:
    */
   void run();
 
-  uint64_t getThreadID() const { return tid_; }
+  /**
+   * \brief Get the thread ID associated with the runnable.
+   *
+   * \note Return \c no_thread_id if the runnable has not started or is not
+   * threaded
+   *
+   * \return the thread ID
+   */
+  ThreadIDType getThreadID() const { return tid_; }
 
 private:
   /**
@@ -212,7 +220,7 @@ private:
   ActionType task_ = nullptr;               /**< The runnable's task  */
   bool done_ = false;                       /**< Whether task is complete */
   bool suspended_ = false;                  /**< Whether task is suspended */
-  uint64_t tid_ = 0;                        /**< The thread ID for the task */
+  ThreadIDType tid_ = no_thread_id;         /**< The thread ID for the task */
 };
 
 }} /* end namespace vt::runnable */

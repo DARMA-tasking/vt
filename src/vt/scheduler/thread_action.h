@@ -56,7 +56,9 @@ namespace vt { namespace sched {
 struct ThreadAction final {
 
   explicit ThreadAction(ActionType in_action, std::size_t stack_size = 0);
-  ThreadAction(uint64_t in_id, ActionType in_action, std::size_t stack_size = 0);
+  ThreadAction(
+    ThreadIDType in_id, ActionType in_action, std::size_t stack_size = 0
+  );
 
   ThreadAction(ThreadAction&&) = default;
   ThreadAction(ThreadAction const&) = delete;
@@ -68,19 +70,19 @@ struct ThreadAction final {
   void run();
   void resume();
   void runUntilDone();
-  uint64_t getID() const { return id_; }
+  ThreadIDType getThreadID() const { return tid_; }
   bool isDone() const { return done_; }
 
   static void runFnImpl(fcontext_transfer_t t);
   static void suspend();
   static bool isThreadActive();
-  static uint64_t getActiveThreadID();
+  static ThreadIDType getActiveThreadID();
 
 private:
   static ThreadAction* cur_running_;
 
 private:
-  uint64_t id_ = 0;
+  ThreadIDType tid_ = no_thread_id;
   ActionType action_ = nullptr;
   fcontext_stack_t stack;
   fcontext_t ctx;
