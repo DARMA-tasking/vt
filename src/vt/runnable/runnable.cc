@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/types/untyped.h"
 #include "vt/context/runnable_context/set_context.h"
 #include "vt/configs/debug/debug_var_unused.h"
+#include "vt/configs/arguments/app_config.h"
 
 namespace vt { namespace runnable {
 
@@ -145,7 +146,7 @@ void RunnableNew::run() {
   vtAssert(task_ != nullptr, "Must have a valid task to run");
 
 #if vt_check_enabled(fcontext)
-  if (is_threaded_) {
+  if (is_threaded_ and not theConfig()->vt_ult_disable) {
     using TM = sched::ThreadManager;
 
     if (suspended_) {
