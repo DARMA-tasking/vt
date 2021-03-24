@@ -366,9 +366,11 @@ void Scheduler::resume(ThreadIDType tid) {
   suspended_.resumeRunnable(tid);
 }
 
+#if vt_check_enabled(fcontext)
 ThreadManager* Scheduler::getThreadManager() {
   return thread_manager_.get();
 }
+#endif
 
 }} //end namespace vt::sched
 
