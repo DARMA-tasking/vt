@@ -56,38 +56,61 @@
 
 namespace vt { namespace sched {
 
+/**
+ * \struct ThreadManager
+ *
+ * \brief Manages/holds allocated user-level threads until deallocation along
+ * with the associated \c ThreadAction which contains their stack and other
+ * configuration.
+ */
 struct ThreadManager {
 
+  /**
+   * \brief Allocate a new thread
+   *
+   * \param[in] args arguments to pass to the \c ThreadAction constructor
+   *
+   * \return the allocated thread ID
+   */
   template <typename... Args>
-  static ThreadIDType allocateThread(Args&&... args) {
-    auto const tid = next_thread_id_++;
-    threads_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(tid),
-      std::forward_as_tuple(
-        std::make_unique<ThreadAction>(tid, std::forward<Args>(args)...)
-      )
-    );
-    return tid;
-  }
+  ThreadIDType allocateThread(Args&&... args);
 
+  /**
+   * \brief Allocate a new thread and run it immediately
+   *
+   * \param[in] args arguments to pass to the \c ThreadAction constructor
+   *
+   * \return the allocated thread ID
+   */
   template <typename... Args>
-  static ThreadIDType allocateThreadRun(Args&&... args) {
-    auto const tid = allocateThread(std::forward<Args>(args)...);
-    auto ta = getThread(tid);
-    ta->run();
-    return tid;
-  }
+  ThreadIDType allocateThreadRun(Args&&... args);
 
-  static void deallocateThread(ThreadIDType tid);
-  static ThreadAction* getThread(ThreadIDType tid);
+  /**
+   * \brief Deallocate a user-level thread and the associated \c ThreadAction
+   *
+   * \param[in] tid the thread ID
+   */
+  void deallocateThread(ThreadIDType tid);
+
+  /**
+   * \brief Get the \c ThreadAction associated with a thread ID
+   *
+   * \param[in] tid the thread ID
+   *
+   * \return the thread action
+   */
+  ThreadAction* getThread(ThreadIDType tid);
 
 private:
-  static ThreadIDType next_thread_id_;
-  static std::unordered_map<ThreadIDType, std::unique_ptr<ThreadAction>> threads_;
+  /// The next thread ID for allocation (start at 1 because no_thread_id=0)
+  ThreadIDType next_thread_id_ = 1;
+  /// Holder for live threads contained in \c ThreadAction
+  std::unordered_map<ThreadIDType, std::unique_ptr<ThreadAction>> threads_;
 };
 
 }} /* end namespace vt::sched */
+
+#include "vt/scheduler/thread_manager.impl.h"
 
 #endif /*vt_check_enabled(fcontext)*/
 #endif /*INCLUDED_VT_SCHEDULER_THREAD_MANAGER_H*/

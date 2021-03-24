@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              thread_manager.cc
+//                            thread_manager.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,31 +42,34 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_SCHEDULER_THREAD_MANAGER_IMPL_H
+#define INCLUDED_VT_SCHEDULER_THREAD_MANAGER_IMPL_H
+
 #include "vt/scheduler/thread_manager.h"
-
-#if vt_check_enabled(fcontext)
-
-#include <memory>
 
 namespace vt { namespace sched {
 
-void ThreadManager::deallocateThread(ThreadIDType tid) {
-  auto iter = threads_.find(tid);
-  if (iter != threads_.end()) {
-    vtAssertExpr(iter->second->isDone());
-    threads_.erase(iter);
-  }
+template <typename... Args>
+ThreadIDType ThreadManager::allocateThread(Args&&... args) {
+  auto const tid = next_thread_id_++;
+  threads_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(tid),
+    std::forward_as_tuple(
+      std::make_unique<ThreadAction>(tid, std::forward<Args>(args)...)
+    )
+  );
+  return tid;
 }
 
-ThreadAction* ThreadManager::getThread(ThreadIDType tid) {
-  auto iter = threads_.find(tid);
-  if (iter == threads_.end()) {
-    return nullptr;
-  } else {
-    return iter->second.get();
-  }
+template <typename... Args>
+ThreadIDType ThreadManager::allocateThreadRun(Args&&... args) {
+  auto const tid = allocateThread(std::forward<Args>(args)...);
+  auto ta = getThread(tid);
+  ta->run();
+  return tid;
 }
 
 }} /* end namespace vt::sched */
 
-#endif /*vt_check_enabled(fcontext)*/
+#endif /*INCLUDED_VT_SCHEDULER_THREAD_MANAGER_IMPL_H*/

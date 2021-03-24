@@ -50,6 +50,7 @@
 #include "vt/context/runnable_context/set_context.h"
 #include "vt/configs/debug/debug_var_unused.h"
 #include "vt/configs/arguments/app_config.h"
+#include "vt/scheduler/thread_manager.h"
 
 namespace vt { namespace runnable {
 
@@ -147,22 +148,22 @@ void RunnableNew::run() {
 
 #if vt_check_enabled(fcontext)
   if (is_threaded_ and not theConfig()->vt_ult_disable) {
-    using TM = sched::ThreadManager;
+    auto tm = theSched()->getThreadManager();
 
     if (suspended_) {
       // find the thread and resume it
-      TM::getThread(tid_)->resume();
+      tm->getThread(tid_)->resume();
     } else {
       // allocate a new thread to run the task
-      tid_ = TM::allocateThreadRun(task_);
+      tid_ = tm->allocateThreadRun(task_);
     }
 
     // check if it is done running, and save that state
-    done_ = TM::getThread(tid_)->isDone();
+    done_ = tm->getThread(tid_)->isDone();
 
     // cleanup/deallocate the thread
     if (done_) {
-      TM::deallocateThread(tid_);
+      tm->deallocateThread(tid_);
     }
   } else
 #endif

@@ -80,6 +80,8 @@ struct MsgSharedPtr;
 
 namespace vt { namespace sched {
 
+struct ThreadManager;
+
 enum SchedulerEvent {
   BeginIdle            = 0,
   EndIdle              = 1,
@@ -297,10 +299,22 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   void resume(ThreadIDType tid);
 
+#if vt_check_enabled(fcontext)
+  /**
+   * \brief Get the thread manager
+   *
+   * \return reference to thread manager
+   */
+  ThreadManager* getThreadManager();
+#endif
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_
       | suspended_
+#if vt_check_enabled(fcontext)
+      | thread_manager_
+#endif
       | has_executed_
       | is_idle
       | is_idle_minus_term
@@ -353,6 +367,10 @@ private:
 # else
   Queue<UnitType> work_queue_;
 # endif
+
+#if vt_check_enabled(fcontext)
+  std::unique_ptr<ThreadManager> thread_manager_ = nullptr;
+#endif
 
   SuspendedUnits suspended_;
 

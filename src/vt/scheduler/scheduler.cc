@@ -56,6 +56,7 @@
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/mpi_access.h"
+#include "vt/scheduler/thread_manager.h"
 
 namespace vt { namespace sched {
 
@@ -66,7 +67,11 @@ namespace vt { namespace sched {
   }
 }
 
-Scheduler::Scheduler() {
+Scheduler::Scheduler()
+#if vt_check_enabled(fcontext)
+  : thread_manager_(std::make_unique<ThreadManager>())
+#endif
+{
   auto event_count = SchedulerEventType::LastSchedulerEvent + 1;
   event_triggers.resize(event_count);
   event_triggers_once.resize(event_count);
@@ -359,6 +364,10 @@ void Scheduler::suspend(
 
 void Scheduler::resume(ThreadIDType tid) {
   suspended_.resumeRunnable(tid);
+}
+
+ThreadManager* Scheduler::getThreadManager() {
+  return thread_manager_.get();
 }
 
 }} //end namespace vt::sched
