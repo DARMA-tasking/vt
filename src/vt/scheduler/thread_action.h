@@ -92,12 +92,12 @@ struct ThreadAction final {
   void run();
 
   /**
-   * \brief Resume the thread were left offn
+   * \brief Resume the thread where left off
    */
   void resume();
 
   /**
-   * \brief Keep yielding back to thread (resuming after suspension) unit the
+   * \brief Keep yielding back to thread (resuming after suspension) until the
    * thread finishes the action
    */
   void runUntilDone();
@@ -146,10 +146,8 @@ private:
   static void runFnImpl(fcontext_transfer_t t);
 
 private:
-  /// The currently running \c ThreadAction
-  static ThreadAction* cur_running_;
+  static ThreadAction* cur_running_; /**< The current running \c ThreadAction */
 
-private:
   ThreadIDType tid_ = no_thread_id;         /**< the thread ID */
   ActionType action_ = nullptr;             /**< the action to run  */
   fcontext_stack_t stack_;                  /**< the fcontext stack */
