@@ -540,7 +540,7 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
         );
 
         runnable::makeRunnable(msg, true, handler, from)
-          .withTDMsg()
+          .withTDEpochFromMsg()
           .run();
       } else {
         auto reg_han_iter = local_registered_msg_han_.find(hid);

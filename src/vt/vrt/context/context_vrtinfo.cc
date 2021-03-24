@@ -107,7 +107,7 @@ bool VirtualInfo::enqueueWorkUnit(VirtualMessage* raw_msg) {
     auto m = promoteMsg(raw_msg);
     auto reg = auto_registry::RegistryTypeEnum::RegVrt;
     runnable::makeRunnable(m, false, sub_handler, from_node, reg)
-      .withTDMsg()
+      .withTDEpochFromMsg()
       .withElementHandler(vc_ptr)
       .run();
   };

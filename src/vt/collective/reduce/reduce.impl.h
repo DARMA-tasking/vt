@@ -82,7 +82,7 @@ void Reduce::reduceRootRecv(MsgT* msg) {
 
   auto m = promoteMsg(msg);
   runnable::makeRunnable(m, false, handler, from_node)
-    .withTDMsg()
+    .withTDEpochFromMsg()
     .run();
 }
 
@@ -260,7 +260,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       // this needs to run inline.. threaded not allowed for reduction
       // combination
       runnable::makeRunnable(state.msgs[0], false, handler, from_node)
-        .withTDMsg()
+        .withTDEpochFromMsg()
         .run();
     }
 

@@ -942,7 +942,7 @@ bool ActiveMessenger::prepareActiveMsgToRun(
     runnable::makeRunnable(base, not is_term, handler, from_node)
       .withContinuation(cont)
       .withTag(tag)
-      .withTDMsg(is_term)
+      .withTDEpochFromMsg(is_term)
       .enqueue();
 
     if (is_term) {

@@ -90,7 +90,7 @@ template <typename UserMsgT>
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
   runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
-    .withTDMsg()
+    .withTDEpochFromMsg()
     .enqueue();
 }
 
@@ -170,7 +170,7 @@ template <typename UserMsgT, typename BaseEagerMsgT>
   );
 
   runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
-    .withTDMsg()
+    .withTDEpochFromMsg()
     .enqueue();
 }
 
@@ -404,7 +404,7 @@ template <typename MsgT, typename BaseT>
         ByteType msg_sz = sizeof(MsgT);
         return messaging::PendingSend(base_msg, msg_sz, [=](MsgPtr<BaseMsgType> in){
           runnable::makeRunnable(msg, true, typed_handler, node)
-            .withTDMsg()
+            .withTDEpochFromMsg()
             .enqueue();
         });
       }

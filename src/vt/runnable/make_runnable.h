@@ -123,7 +123,7 @@ struct RunnableMaker {
    *
    * \param[in] is_term whether it's a termination message
    */
-  RunnableMaker&& withTDMsg(bool is_term = false) {
+  RunnableMaker&& withTDEpochFromMsg(bool is_term = false) {
     if (not is_term) {
       impl_->template addContext<ctx::TD>(msg_);
     }
