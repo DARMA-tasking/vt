@@ -44,6 +44,7 @@
 
 #include <vt/transport.h>
 #include <vt/runtime/mpi_access.h>
+#include <vt/messaging/async_op_mpi.h>
 
 #include <gtest/gtest.h>
 #include "test_parallel_harness.h"
@@ -53,27 +54,6 @@
 namespace vt { namespace tests { namespace unit { namespace threads {
 
 using TestAsyncOpThreads = TestParallelHarness;
-
-struct AsyncOpMPI : messaging::AsyncOp {
-  explicit AsyncOpMPI(MPI_Request in_req, ActionType in_trigger = nullptr)
-    : req_(in_req),
-      trigger_(in_trigger)
-  { }
-
-  bool poll() override {
-    VT_ALLOW_MPI_CALLS; // MPI_Test
-    int flag = 0;
-    MPI_Status stat;
-    MPI_Test(&req_, &flag, &stat);
-    return flag;
-  }
-
-  void done() override { if (trigger_) trigger_(); }
-
-private:
-  MPI_Request req_ = MPI_REQUEST_NULL;
-  ActionType trigger_ = nullptr;
-};
 
 using MyMsg = Message;
 
@@ -97,14 +77,16 @@ struct MyObjGroup {
       VT_ALLOW_MPI_CALLS; // MPI_Isend
       MPI_Isend(&send_val_, 1, MPI_INT, to_node, tag, comm, &req1);
     }
-    auto op1 = std::make_unique<AsyncOpMPI>(req1);
+    auto op1 = std::make_unique<messaging::AsyncOpMPI>(req1);
 
     MPI_Request req2;
     {
       VT_ALLOW_MPI_CALLS; // MPI_Irecv
       MPI_Irecv(&recv_val_, 1, MPI_INT, from_node_, tag, comm, &req2);
     }
-    auto op2 = std::make_unique<AsyncOpMPI>(req2, [this]{ done_ = true; } );
+    auto op2 = std::make_unique<messaging::AsyncOpMPI>(
+      req2, [this]{ done_ = true; }
+    );
 
     // Register these async operations to block the user-level thread until
     // completion of the MPI request; since these operations are enclosed in an
