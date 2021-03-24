@@ -414,10 +414,7 @@ EventType ActiveMessenger::sendMsgBytes(
   }
 
   if (theContext()->getTask() != nullptr) {
-    auto lb = theContext()->getTask()->get<ctx::LBStats>();
-    if (lb != nullptr) {
-      lb->send(dest, msg_size, is_bcast);
-    }
+    theContext()->getTask()->send(dest, msg_size, is_bcast);
   }
 
   return event_id;
@@ -536,10 +533,7 @@ SendInfo ActiveMessenger::sendData(
   theTerm()->hangDetectSend();
 
   if (theContext()->getTask() != nullptr) {
-    auto lb = theContext()->getTask()->get<ctx::LBStats>();
-    if (lb != nullptr) {
-      lb->send(dest, num_bytes, false);
-    }
+    theContext()->getTask()->send(dest, num_bytes, false);
   }
 
   return SendInfo{event_id, send_tag, num};

@@ -210,4 +210,10 @@ void RunnableNew::resume() {
   }
 }
 
+void RunnableNew::send(NodeType dest, MsgSizeType size, bool bcast) {
+  for (auto&& ctx : contexts_) {
+    ctx->send(dest, size, bcast);
+  }
+}
+
 }} /* end namespace vt::runnable */

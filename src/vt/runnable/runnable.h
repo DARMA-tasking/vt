@@ -186,6 +186,16 @@ private:
 
 public:
   /**
+   * \brief Loop through all contexts add run the \c send() method associated
+   * with this runnable
+   *
+   * \param[in] dest the destination node for the send
+   * \param[in] size the message size
+   * \param[in] bcast whether it's a broadcast
+   */
+  void send(NodeType dest, MsgSizeType size, bool bcast);
+
+  /**
    * \brief Get a context object by the type \c T
    *
    * \note If the type doesn't exist, the function will return \c nullptr
