@@ -1,2 +1,1 @@
 brew "ccache"
-brew "mpich"

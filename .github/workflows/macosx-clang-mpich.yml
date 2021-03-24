@@ -41,6 +41,9 @@ jobs:
     - name: Modify hosts file
       shell: bash
       run: echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
+    - name: Build mpich
+      shell: bash
+      run: ./ci/deps/mpich.sh 3.3.2 -j4
     - name: Build
       shell: bash
       run: ci/build_cpp.sh $(pwd) $(pwd)/build
