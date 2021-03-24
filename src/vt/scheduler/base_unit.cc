@@ -44,6 +44,7 @@
 
 #include "vt/scheduler/base_unit.h"
 #include "vt/runnable/runnable.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace sched {
 
@@ -51,11 +52,8 @@ void BaseUnit::execute() {
   if (r_) {
     r_->run();
     if (not r_->isDone()) {
-      //
-      // @todo: do something!
-      //
-      // preserve the lifetime of this runnable so the
-      // allocation doesn't disappear under the stack
+      auto tid = r_->getThreadID();
+      theSched()->suspended_.addSuspended(tid, std::move(r_));
     }
   } else if (work_) {
     work_();
