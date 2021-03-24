@@ -351,6 +351,16 @@ void Scheduler::registerTriggerOnce(
   event_triggers_once[event].push_back(trigger);
 }
 
+void Scheduler::suspend(
+  ThreadIDType tid, RunnablePtrType runnable, PriorityType p
+) {
+  suspended_.addSuspended(tid, std::move(runnable), p);
+}
+
+void Scheduler::resume(ThreadIDType tid) {
+  suspended_.resumeRunnable(tid);
+}
+
 }} //end namespace vt::sched
 
 namespace vt {

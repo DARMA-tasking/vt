@@ -59,7 +59,7 @@ void AsyncOpWrapper::done() {
   op_ = nullptr;
 
   if (tid_ != no_thread_id) {
-    theSched()->suspended_.resumeRunnable(tid_);
+    theSched()->resume(tid_);
   }
 }
 

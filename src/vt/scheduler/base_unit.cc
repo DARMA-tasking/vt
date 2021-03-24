@@ -53,7 +53,7 @@ void BaseUnit::execute() {
     r_->run();
     if (not r_->isDone()) {
       auto tid = r_->getThreadID();
-      theSched()->suspended_.addSuspended(tid, std::move(r_));
+      theSched()->suspend(tid, std::move(r_));
     }
   } else if (work_) {
     work_();

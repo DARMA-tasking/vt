@@ -107,6 +107,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
+  using RunnablePtrType      = std::unique_ptr<runnable::RunnableNew>;
 
 # if vt_check_enabled(priorities)
   using UnitType             = PriorityUnit;
@@ -277,6 +278,25 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
 
+  /**
+   * \brief Suspend a thread with an ID and runnable
+   *
+   * \param[in] tid the threads ID
+   * \param[in] runnable the runnable
+   * \param[in] p the priority for resumption
+   */
+  void suspend(
+    ThreadIDType tid, RunnablePtrType runnable, PriorityType p = default_priority
+  );
+
+  /**
+   * \brief Resume a thread that is associated with a runnable that is currently
+   * suspended
+   *
+   * \param[in] tid the suspended thread ID
+   */
+  void resume(ThreadIDType tid);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_
@@ -363,11 +383,6 @@ private:
 
   template <typename Callable>
   friend void vt::runInEpochCollective(Callable&& fn);
-
-  // For access to suspended_ to move runnables if they don't complete
-  friend struct BaseUnit;
-  // For access to suspended_ to re-enqueue runnables when they complete
-  friend struct messaging::AsyncOpWrapper;
 
 private:
   diagnostic::Counter progressCount;
