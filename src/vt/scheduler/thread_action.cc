@@ -57,29 +57,21 @@ ThreadAction::ThreadAction(
   ThreadIDType in_tid, ActionType in_action, std::size_t stack_size
 ) : tid_(in_tid),
     action_(in_action),
-    stack(create_fcontext_stack(stack_size))
+    stack_(create_fcontext_stack(stack_size))
 { }
 
 ThreadAction::~ThreadAction() {
-  destroy_fcontext_stack(stack);
+  destroy_fcontext_stack(stack_);
 }
 
 /*static*/ ThreadAction* ThreadAction::cur_running_ = nullptr;
 
 void ThreadAction::run() {
-  ctx = make_fcontext_stack(stack, runFnImpl);
-  transfer_in = jump_fcontext(ctx, static_cast<void*>(this));
+  ctx_ = make_fcontext_stack(stack_, runFnImpl);
+  transfer_in_ = jump_fcontext(ctx_, static_cast<void*>(this));
 }
 
 void ThreadAction::resume() {
-  // @todo: there is other context that is set/unset depending on what the
-  // work unit is. e.g.: ActiveMessenger::{current_handler_context_,
-  // current_node_context_, current_epoch_context_, current_priority_context_,
-  // current_priority_level_context_, current_trace_context_}
-  //
-  // there is other context in the CollectionManager, and maybe in other components
-  //
-
   vt_debug_print(
     gen, node,
     "try resume: isDone={}\n", done_
@@ -90,7 +82,7 @@ void ThreadAction::resume() {
   }
 
   cur_running_ = this;
-  transfer_in = jump_fcontext(transfer_in.ctx, nullptr);
+  transfer_in_ = jump_fcontext(transfer_in_.ctx, nullptr);
 }
 
 void ThreadAction::runUntilDone() {
@@ -109,7 +101,7 @@ void ThreadAction::runUntilDone() {
   auto ta = static_cast<ThreadAction*>(t.data);
   if (ta->action_) {
     cur_running_ = ta;
-    ta->transfer_out = t;
+    ta->transfer_out_ = t;
     ta->action_();
     cur_running_ = nullptr;
   }
@@ -120,7 +112,7 @@ void ThreadAction::runUntilDone() {
   );
 
   ta->done_ = true;
-  jump_fcontext(ta->transfer_out.ctx, nullptr);
+  jump_fcontext(ta->transfer_out_.ctx, nullptr);
 }
 
 /*static*/ void ThreadAction::suspend() {
@@ -128,7 +120,7 @@ void ThreadAction::runUntilDone() {
     auto x = cur_running_;
     cur_running_ = nullptr;
     vt_debug_print(gen, node, "suspend\n");
-    x->transfer_out = jump_fcontext(x->transfer_out.ctx, nullptr);
+    x->transfer_out_ = jump_fcontext(x->transfer_out_.ctx, nullptr);
   } else {
     fmt::print("Can not suspend---no thread is running\n");
   }

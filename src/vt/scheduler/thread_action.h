@@ -53,11 +53,30 @@
 
 namespace vt { namespace sched {
 
+/**
+ * \struct ThreadAction
+ *
+ * \brief An action that runs in a user-level thread with fcontext
+ */
 struct ThreadAction final {
 
+  /**
+   * \brief Construct a \c ThreadAction
+   *
+   * \param[in] in_action the action to run
+   * \param[in] stack_size the size of the stack
+   */
   explicit ThreadAction(ActionType in_action, std::size_t stack_size = 0);
+
+  /**
+   * \brief Construct a \c ThreadAction
+   *
+   * \param[in] in_id the thread id
+   * \param[in] in_action the action to run
+   * \param[in] stack_size the size of the stack
+   */
   ThreadAction(
-    ThreadIDType in_id, ActionType in_action, std::size_t stack_size = 0
+    ThreadIDType in_tid, ActionType in_action, std::size_t stack_size = 0
   );
 
   ThreadAction(ThreadAction&&) = default;
@@ -67,27 +86,77 @@ struct ThreadAction final {
 
   ~ThreadAction();
 
+  /**
+   * \brief Run the thread and the action
+   */
   void run();
+
+  /**
+   * \brief Resume the thread were left offn
+   */
   void resume();
+
+  /**
+   * \brief Keep yielding back to thread (resuming after suspension) unit the
+   * thread finishes the action
+   */
   void runUntilDone();
+
+  /**
+   * \brief Get the thread ID
+   *
+   * \note Return \c no_thread_id if not constructed with one
+   *
+   * \return the thread ID
+   */
   ThreadIDType getThreadID() const { return tid_; }
+
+  /**
+   * \brief Check if the thread is done executing
+   *
+   * \return whether it is done
+   */
   bool isDone() const { return done_; }
 
-  static void runFnImpl(fcontext_transfer_t t);
+  /**
+   * \brief Suspend the current thread's execution
+   */
   static void suspend();
+
+  /**
+   * \brief Query whether a thread is currently running
+   *
+   * \return whether a thread is running
+   */
   static bool isThreadActive();
+
+  /**
+   * \brief Get the active thread ID for the running \c ThreadAction
+   *
+   * \return the thread ID
+   */
   static ThreadIDType getActiveThreadID();
 
 private:
+  /**
+   * \brief Static run function to pass the fcontext
+   *
+   * \param[in] t the transfer
+   */
+  static void runFnImpl(fcontext_transfer_t t);
+
+private:
+  /// The currently running \c ThreadAction
   static ThreadAction* cur_running_;
 
 private:
-  ThreadIDType tid_ = no_thread_id;
-  ActionType action_ = nullptr;
-  fcontext_stack_t stack;
-  fcontext_t ctx;
-  fcontext_transfer_t transfer_out, transfer_in;
-  bool done_ = false;
+  ThreadIDType tid_ = no_thread_id;         /**< the thread ID */
+  ActionType action_ = nullptr;             /**< the action to run  */
+  fcontext_stack_t stack_;                  /**< the fcontext stack */
+  fcontext_t ctx_;                          /**< the fcontext context */
+  fcontext_transfer_t transfer_out_;        /**< transfer out of thread */
+  fcontext_transfer_t transfer_in_;         /**< transfer into thread */
+  bool done_ = false;                       /**< whether the thread is done */
 };
 
 }} /* end namespace vt::sched */
