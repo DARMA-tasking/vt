@@ -515,6 +515,24 @@ void ArgConfig::addRuntimeArgs(CLI::App& app) {
   a2->group(configRuntime);
 }
 
+void ArgConfig::addThreadingArgs(CLI::App& app) {
+#if (vt_feature_fcontext != 0)
+  auto ult_disable = "Disable running handlers in user-level threads";
+  auto stack_size = "The default stack size for user-level threads";
+
+  auto a1 = app.add_flag(
+    "--vt_ult_disable", config_.vt_ult_disable, ult_disable
+  );
+  auto a2 = app.add_option(
+    "--vt_ult_stack_size", config_.vt_ult_stack_size, stack_size, true
+  );
+
+  auto configThreads = "Threads";
+  a1->group(configThreads);
+  a2->group(configThreads);
+#endif
+}
+
 class VtFormatter : public CLI::Formatter {
 public:
   std::string make_usage(const CLI::App *, std::string name) const override {
@@ -568,6 +586,7 @@ std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
   addSchedulerArgs(app);
   addConfigFileArgs(app);
   addRuntimeArgs(app);
+  addThreadingArgs(app);
 
   std::tuple<int, std::string> result = parseArguments(app, /*out*/ argc, /*out*/ argv);
   if (std::get<0>(result) not_eq -1) {

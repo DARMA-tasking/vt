@@ -167,6 +167,11 @@ struct AppConfig {
   bool vt_no_assert_fail = false;
   std::size_t vt_max_mpi_send_size = 1ull << 30;
 
+#if (vt_feature_fcontext != 0)
+  bool vt_ult_disable = false;
+  std::size_t vt_ult_stack_size = (1 << 21) - 64;
+#endif
+
   bool vt_debug_all          = false;
   bool vt_debug_verbose      = false;
   bool vt_debug_none         = false;
