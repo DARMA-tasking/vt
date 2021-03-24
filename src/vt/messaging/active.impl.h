@@ -557,6 +557,32 @@ void ActiveMessenger::registerAsyncOp(std::unique_ptr<T> in) {
   in_progress_ops.emplace(AsyncOpWrapper{std::move(in)});
 }
 
+template <typename T>
+void ActiveMessenger::blockOnAsyncOp(std::unique_ptr<T> op) {
+#if vt_check_enabled(fcontext)
+  using TA = sched::ThreadAction;
+  auto tid = TA::getActiveThreadID();
+
+  if (tid == no_thread_id) {
+    vtAbort("Trying to block a thread on an AsyncOp when no thread is active");
+  }
+
+  in_progress_ops.emplace(AsyncOpWrapper{std::move(op), tid});
+
+  // Suspend the currently running thread!
+  TA::suspend();
+
+#else
+  vtWarn("Using a blocking async operation without threads may cause errors");
+
+  //
+  // @todo: implement this?
+  //
+  // theSched()->runSchedulerWhile([]{ return not op->poll(); }
+  // op->done();
+#endif
+}
+
 }} //end namespace vt::messaging
 
 #endif /*INCLUDED_MESSAGING_ACTIVE_IMPL_H*/

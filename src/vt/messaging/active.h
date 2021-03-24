@@ -1597,6 +1597,18 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename T>
   void registerAsyncOp(std::unique_ptr<T> op);
 
+  /**
+   * \brief Block the current task's execution on an pollable async operation
+   * until it completes
+   *
+   * \note This may only be safely called if the current task is running in a
+   * user-level thread.
+   *
+   * \param[in] op the async operation to block on
+   */
+  template <typename T>
+  void blockOnAsyncOp(std::unique_ptr<T> op);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | maybe_ready_tag_han_
