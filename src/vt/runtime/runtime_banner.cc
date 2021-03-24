@@ -786,7 +786,7 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f14, reset);
   } else {
     auto f11 = fmt::format("Handlers running in user-level threads are disabled");
-    auto f12 = opt_remove("--vt_diag_disable", f11);
+    auto f12 = opt_remove("--vt_ult_disable", f11);
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 #endif
