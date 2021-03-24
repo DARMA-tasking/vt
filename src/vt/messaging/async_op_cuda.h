@@ -64,7 +64,7 @@ struct AsyncOpCUDA : AsyncOp {
    * \param[in] in_stream the CUDA stream to generate an event from
    * \param[in] in_cont the action to execute when event completes
    */
-  AsyncOpCUDA(cudaStream_t in_stream, ActionType in_cont)
+  AsyncOpCUDA(cudaStream_t in_stream, ActionType in_cont = nullptr)
     : cont_(in_cont)
   {
     cudaEventCreate(&event_);
@@ -77,7 +77,7 @@ struct AsyncOpCUDA : AsyncOp {
    * \param[in] in_event the CUDA event to poll
    * \param[in] in_cont the action to execute when event completes
    */
-  AsyncOpCUDA(cudaEvent_t in_event, ActionType in_cont)
+  AsyncOpCUDA(cudaEvent_t in_event, ActionType in_cont = nullptr)
     : event_(in_event),
       cont_(in_cont)
   { }
