@@ -50,6 +50,7 @@
 #include "vt/scheduler/priority_queue.h"
 #include "vt/scheduler/prioritized_work_unit.h"
 #include "vt/scheduler/work_unit.h"
+#include "vt/scheduler/suspended_units.h"
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
 
@@ -278,6 +279,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_
+      | suspended_
       | has_executed_
       | is_idle
       | is_idle_minus_term
@@ -331,6 +333,8 @@ private:
   Queue<UnitType> work_queue_;
 # endif
 
+  SuspendedUnits suspended_;
+
   bool has_executed_      = false;
   bool is_idle            = true;
   bool is_idle_minus_term = true;
@@ -358,6 +362,9 @@ private:
 
   template <typename Callable>
   friend void vt::runInEpochCollective(Callable&& fn);
+
+  // For access to suspended_ to move runnables if they don't complete
+  friend struct BaseUnit;
 
 private:
   diagnostic::Counter progressCount;
