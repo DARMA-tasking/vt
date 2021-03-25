@@ -70,7 +70,7 @@ inline void assertOutInfo(
   using KeyType = std::tuple<Args2...>;
   using ValueType = std::tuple<Args...>;
   static constexpr auto size = std::tuple_size<KeyType>::value;
-  using PrinterType = util::error::PrinterNameValue<size-1,KeyType,ValueType>;
+  using PrinterType = util::error::PrinterNameValue<size-2,KeyType,ValueType>;
 
   // Output the standard assert message
   assertOut(false,cond,str,file,line,func,error);
