@@ -6,6 +6,19 @@ enable_language(CXX ASM)
 include (CTest)
 enable_testing()
 
+include(CheckIncludeFiles)
+check_include_files(valgrind/valgrind.h context_has_valgrind_h)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/context_config.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/context_config.h @ONLY
+)
+
+install(
+  FILES            ${CMAKE_CURRENT_BINARY_DIR}/context_config.h
+  DESTINATION      include
+)
+
 EXECUTE_PROCESS(COMMAND uname -p OUTPUT_VARIABLE CPU_ARCH )
 string(REGEX REPLACE "\n$" ""  CPU_ARCH "${CPU_ARCH}" )
 
@@ -79,6 +92,7 @@ target_compile_features(${FCONTEXT_LIBRARY} PUBLIC cxx_std_14)
 target_include_directories(
   ${FCONTEXT_LIBRARY} PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
   $<INSTALL_INTERFACE:${VT_CONTEXT_EXTERNAL_DESTINATION}>
 )
 

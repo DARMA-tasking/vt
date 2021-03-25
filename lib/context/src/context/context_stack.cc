@@ -53,10 +53,22 @@
 #include <sys/mman.h>
 
 #include <memory>
+#include <unordered_map>
+
+#include <context_config.h>
+
+#if defined(context_has_valgrind_h)
+# include <valgrind/valgrind.h>
+#endif
 
 #define DEBUG_PRINT_STACK_CONTEXT 0
 
 namespace fcontext {
+
+#if defined(context_has_valgrind_h)
+using ValgrindStackID = unsigned;
+static std::unordered_map<char*, ValgrindStackID> valgrind_ids;
+#endif
 
 FContextStackType allocateMallocStackInner(size_t const size_in) {
   size_t const size = size_in == 0 ? default_malloc_stack_size : size_in;
@@ -68,7 +80,14 @@ FContextStackType allocateMallocStackInner(size_t const size_in) {
 
   assert(mem_ptr != nullptr && "malloc failed to allocate memory");
 
-  return FContextStackType{static_cast<char*>(mem_ptr) + size, size};
+  auto end = static_cast<char*>(mem_ptr) + size;
+
+#if defined(context_has_valgrind_h)
+  auto stack_id = VALGRIND_STACK_REGISTER(mem_ptr, end);
+  valgrind_ids[end] = stack_id;
+#endif
+
+  return FContextStackType{end, size};
 }
 
 ULTContextType allocateMallocStack(size_t const size) {
@@ -146,6 +165,14 @@ void destroyStackInner(fcontext_stack_t stack, bool is_page_alloced) {
     #if DEBUG_PRINT_STACK_CONTEXT
     printf("ptr=%p: is_page_alloced=%s\n", stack.sptr, is_page_alloced ? "true" : "false");
     #endif
+
+#if defined(context_has_valgrind_h)
+    auto iter = valgrind_ids.find(static_cast<char*>(stack.sptr));
+    if (iter != valgrind_ids.end()) {
+      VALGRIND_STACK_DEREGISTER(iter->second);
+      valgrind_ids.erase(iter);
+    }
+#endif
 
     if (is_page_alloced) {
       munmap(stack.sptr, stack.ssize);
