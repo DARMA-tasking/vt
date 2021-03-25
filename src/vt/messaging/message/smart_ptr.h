@@ -113,7 +113,9 @@ struct MsgSharedPtr final {
   }
 
   MsgSharedPtr(MsgSharedPtr<T> const& in) {
-    init(in.get(), in.impl_);
+    if (in != nullptr) {
+      init(in.get(), in.impl_);
+    }
   }
 
   MsgSharedPtr(MsgSharedPtr<T>&& in) {

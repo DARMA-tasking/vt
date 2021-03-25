@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                lb_listener.h
+//                                 base_unit.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,70 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H
+#if !defined INCLUDED_VT_SCHEDULER_BASE_UNIT_H
+#define INCLUDED_VT_SCHEDULER_BASE_UNIT_H
 
 #include "vt/config.h"
-#include "vt/messaging/listener.h"
+#include "vt/runnable/runnable.fwd.h"
 
-#include <functional>
+#include <memory>
 
-namespace vt { namespace vrt { namespace collection { namespace balance {
+namespace vt { namespace sched {
 
-struct LBListener final : messaging::Listener {
-  using FnType = std::function<void(NodeType, MsgSizeType, bool)>;
+/**
+ * \struct BaseUnit
+ *
+ * \brief The base class for a work unit that either holds a \c std::unique_ptr
+ * to a runnable or contains a general lambda to execute.
+ */
+struct BaseUnit {
+  using RunnablePtrType = std::unique_ptr<runnable::RunnableNew>;
 
-  explicit LBListener(FnType fn) : fn_(fn) { }
+  /**
+   * \brief Construct with a runnable
+   *
+   * \param[in] in_r the runnable moved in
+   * \param[in] in_is_term whether it's a termination task
+   */
+  BaseUnit(RunnablePtrType in_r, bool in_is_term)
+    : r_(std::move(in_r)),
+      is_term_(in_is_term)
+  { }
 
-  void send(NodeType dest, MsgSizeType size, bool bcast) override {
-    fn_(dest,size,bcast);
-  }
+  /**
+   * \brief Construct with a general lambda
+   *
+   * \param[in] in_work the action to execute
+   * \param[in] in_is_term whether it's a termination task
+   */
+  BaseUnit(ActionType in_work, bool in_is_term)
+    : work_(in_work),
+      is_term_(in_is_term)
+  { }
 
-private:
-  FnType fn_ = nullptr;
+  /**
+   * \brief Check if this work unit is a termination task
+   *
+   * \return whether it's a termination task
+   */
+  bool isTerm() const { return is_term_; }
+
+  /**
+   * \brief Execute the work
+   */
+  void operator()() { execute(); }
+
+  /**
+   * \brief Execute the work
+   */
+  void execute();
+
+protected:
+  RunnablePtrType r_ = nullptr; /**< the runnable task */
+  ActionType work_ = nullptr;   /**< the lambda task */
+  bool is_term_ = false;        /**< whether it's a termination task */
 };
 
-}}}} /* end namespace vt::vrt::collection::balance */
+}} /* end namespace vt::sched */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_LISTENER_H*/
+#endif /*INCLUDED_VT_SCHEDULER_BASE_UNIT_H*/

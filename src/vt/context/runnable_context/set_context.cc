@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  listener.h
+//                                set_context.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,38 +42,55 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_MESSAGING_LISTENER_H
-#define INCLUDED_VT_MESSAGING_LISTENER_H
+#include "vt/context/runnable_context/set_context.h"
+#include "vt/context/context_attorney.h"
 
-#include "vt/config.h"
+namespace vt { namespace ctx {
 
-namespace vt { namespace messaging {
+void SetContext::begin() {
+  // we have to handle the ugly handler-inside-handler case.. preserve the
+  // previous context (pop) and set the new task (push)
+  prev_task_ = theContext()->getTask();
+  ContextAttorney::setTask(cur_task_);
 
-/** \file */
+  vt_debug_print(
+    context, node,
+    "{}: begin(): prev={}, task={}\n",
+    print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
+  );
+}
 
-/**
- * \struct Listener listener.h vt/messaging/listener.h
- *
- * \brief The base listener to register to listen to message events
- *
- */
-struct Listener {
-  virtual ~Listener() {}
+void SetContext::end() {
+  vt_debug_print(
+    context, node,
+    "{}: end(): prev={}, task={}\n",
+    print_ptr(this), print_ptr(prev_task_.get()), print_ptr(theContext()->getTask())
+  );
 
-  /**
-   * \brief The pure virtual method for listening to all message sends while
-   * registered
-   *
-   * \param[in] dest the destination of the message
-   * \param[in] size the size of the message
-   * \param[in] bcast whether the message is being broadcast or sent
-   */
-  virtual void send(NodeType dest, MsgSizeType size, bool bcast) = 0;
+  vtAssert(
+    theContext()->getTask() == cur_task_, "Must be correct task"
+  );
+  ContextAttorney::setTask(prev_task_);
+}
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {}
-};
+void SetContext::suspend() {
+  vt_debug_print(
+    context, node,
+    "{}: suspend(): prev={}, task={}\n",
+    print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
+  );
 
-}} /* end namespace vt::messaging */
+  end();
+}
 
-#endif /*INCLUDED_VT_MESSAGING_LISTENER_H*/
+void SetContext::resume() {
+  vt_debug_print(
+    context, node,
+    "{}: resume(): prev={}, task={}\n",
+    print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
+  );
+
+  begin();
+}
+
+}} /* end namespace vt::ctx */

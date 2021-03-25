@@ -57,4 +57,8 @@ namespace vt { namespace ctx {
   theContext()->setNumWorkers(nworkers);
 }
 
+/*static*/ void ContextAttorney::setTask(runnable::RunnableNew* in_task) {
+  theContext()->setTask(in_task);
+}
+
 }} /* end namespace vt::ctx */

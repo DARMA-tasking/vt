@@ -56,6 +56,7 @@
 #include "vt/utils/memory/memory_usage.h"
 #include "vt/runtime/runtime.h"
 #include "vt/runtime/mpi_access.h"
+#include "vt/scheduler/thread_manager.h"
 
 namespace vt { namespace sched {
 
@@ -66,7 +67,11 @@ namespace vt { namespace sched {
   }
 }
 
-Scheduler::Scheduler() {
+Scheduler::Scheduler()
+#if vt_check_enabled(fcontext)
+  : thread_manager_(std::make_unique<ThreadManager>())
+#endif
+{
   auto event_count = SchedulerEventType::LastSchedulerEvent + 1;
   event_triggers.resize(event_count);
   event_triggers_once.resize(event_count);
@@ -111,24 +116,6 @@ Scheduler::Scheduler() {
 
 void Scheduler::preDiagnostic() {
   vtLiveTime.stop();
-}
-
-void Scheduler::enqueue(ActionType action) {
-  bool const is_term = false;
-# if vt_check_enabled(priorities)
-  work_queue_.emplace(UnitType(is_term, default_priority, action));
-# else
-  work_queue_.emplace(UnitType(is_term, action));
-# endif
-}
-
-void Scheduler::enqueue(PriorityType priority, ActionType action) {
-  bool const is_term = false;
-# if vt_check_enabled(priorities)
-  work_queue_.emplace(UnitType(is_term, priority, action));
-# else
-  work_queue_.emplace(UnitType(is_term, action));
-# endif
 }
 
 void Scheduler::runWorkUnit(UnitType& work) {
@@ -368,6 +355,22 @@ void Scheduler::registerTriggerOnce(
   );
   event_triggers_once[event].push_back(trigger);
 }
+
+void Scheduler::suspend(
+  ThreadIDType tid, RunnablePtrType runnable, PriorityType p
+) {
+  suspended_.addSuspended(tid, std::move(runnable), p);
+}
+
+void Scheduler::resume(ThreadIDType tid) {
+  suspended_.resumeRunnable(tid);
+}
+
+#if vt_check_enabled(fcontext)
+ThreadManager* Scheduler::getThreadManager() {
+  return thread_manager_.get();
+}
+#endif
 
 }} //end namespace vt::sched
 

@@ -71,26 +71,31 @@ struct AsyncOpWrapper {
   { }
 
   /**
+   * \internal \brief Construct with unique pointer to operation and a thread ID
+   * to resume when it completes
+   *
+   * \param[in] ptr the operation
+   * \param[in] tid the thread ID to resume after completion
+   */
+  AsyncOpWrapper(std::unique_ptr<AsyncOp> ptr, ThreadIDType in_tid)
+    : valid(true),
+      op_(std::move(ptr)),
+      tid_(in_tid)
+  { }
+
+  /**
    * \internal \brief Test completion of the operation
    *
    * \param[in] num_tests how many tests were executed (diagnostics)
    *
    * \return whether the operation is complete
    */
-  bool test(int& num_tests) {
-    vtAssert(op_ != nullptr, "Must have valid operator");
-    auto const is_done = op_->poll();
-    num_tests++;
-    return is_done;
-  }
+  bool test(int& num_tests);
 
   /**
    * \internal \brief Trigger continuation after operation completes
    */
-  void done() {
-    op_->done();
-    op_ = nullptr;
-  }
+  void done();
 
   /**
    * \brief Serializer for footprinting
@@ -99,7 +104,7 @@ struct AsyncOpWrapper {
    */
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | valid | op_;
+    s | valid | op_ | tid_;
   }
 
 public:
@@ -107,6 +112,7 @@ public:
 
 private:
   std::unique_ptr<AsyncOp> op_ = nullptr;     /**< The enclosed operation  */
+  ThreadIDType tid_ = no_thread_id;           /**< The thread ID to resume */
 };
 
 }} /* end namespace vt::messaging */

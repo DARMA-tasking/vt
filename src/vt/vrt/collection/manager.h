@@ -77,6 +77,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/vrt/collection/op_buffer.h"
 #include "vt/runnable/invoke.h"
+#include "vt/context/runnable_context/lb_stats.fwd.h"
 
 #include <memory>
 #include <vector>
@@ -1303,9 +1304,9 @@ public:
    * \param[in] event the associated trace event
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-    static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-      MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from, trace::TraceEventIDType event
+  static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
+    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
   /**
@@ -1319,9 +1320,9 @@ public:
    * \param[in] event the associated trace event
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-    static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-      MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from, trace::TraceEventIDType event
+  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
+    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
   /**
@@ -1734,6 +1735,8 @@ private:
 
   friend struct balance::ElementStats;
 
+  friend struct ctx::LBStats;
+
   /**
    * \internal \brief Migrate an element out of this node
    *
@@ -1870,7 +1873,6 @@ public:
       | user_insert_action_
       | dist_tag_id_
       | release_lb_
-      | cur_context_elm_id_
       | collect_stats_for_lb_;
   }
 
@@ -1894,15 +1896,6 @@ private:
    * \return the element ID
    */
   balance::ElementIDStruct getCurrentContext() const;
-
-  /**
-   * \internal \brief Set the current LB element ID
-   *
-   * \param[in] elm ID struct
-   */
-  void setCurrentContext(
-    balance::ElementIDStruct elm
-  );
 
   /**
    * \internal \brief Get the mapped node for an element
@@ -2061,9 +2054,6 @@ private:
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
   std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
-  balance::ElementIDStruct cur_context_elm_id_ = {
-    balance::no_element_id, uninitialized_destination, uninitialized_destination
-  };
 };
 
 // These are static variables in class templates because Intel 18
@@ -2106,6 +2096,8 @@ namespace details
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/rdmahandle/manager.collection.impl.h"
 #include "vt/vrt/proxy/collection_proxy.impl.h"
+#include "vt/context/runnable_context/lb_stats.impl.h"
+#include "vt/context/runnable_context/collection.impl.h"
 
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"

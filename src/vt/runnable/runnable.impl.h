@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  vrt.impl.h
+//                               runnable.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,46 +42,26 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_VRT_IMPL_H
-#define INCLUDED_RUNNABLE_VRT_IMPL_H
+#if !defined INCLUDED_VT_RUNNABLE_RUNNABLE_IMPL_H
+#define INCLUDED_VT_RUNNABLE_RUNNABLE_IMPL_H
 
-#include "vt/config.h"
-#include "vt/runnable/vrt.h"
-#include "vt/registry/auto/auto_registry_common.h"
-#include "vt/registry/auto/auto_registry_interface.h"
+#include "vt/runnable/runnable.h"
+#include "vt/registry/auto/collection/auto_registry_collection.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
-#include "vt/trace/trace_common.h"
-#include "vt/messaging/envelope.h"
-#include "vt/serialization/sizer.h"
 
 namespace vt { namespace runnable {
 
-template <typename MsgT, typename ElementT>
-/*static*/ void RunnableVrt<MsgT,ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node
-) {
-#if vt_check_enabled(trace_enabled)
-  trace::TraceProcessingTag processing_tag;
-  {
-    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
-      handler, auto_registry::RegistryTypeEnum::RegVrt
-    );
-    trace::TraceEventIDType trace_event = envelopeGetTraceEvent(msg->env);
-    size_t msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
-
-    processing_tag =
-      theTrace()->beginProcessing(trace_id, msg_size, trace_event, from_node);
+template <typename T>
+T* RunnableNew::get() {
+  for (auto&& ctx : contexts_) {
+    auto t = dynamic_cast<T*>(ctx.get());
+    if (t) {
+      return t;
+    }
   }
-#endif
-
-  auto const func = auto_registry::getAutoHandlerVC(handler);
-  func(msg, elm);
-
-#if vt_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
-#endif
+  return nullptr;
 }
 
 }} /* end namespace vt::runnable */
 
-#endif /*INCLUDED_RUNNABLE_VRT_IMPL_H*/
+#endif /*INCLUDED_VT_RUNNABLE_RUNNABLE_IMPL_H*/

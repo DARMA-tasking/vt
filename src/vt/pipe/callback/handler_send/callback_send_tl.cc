@@ -49,7 +49,7 @@
 #include "vt/pipe/msg/callback.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -67,7 +67,9 @@ void CallbackSendTypeless::triggerVoid(PipeType const& pipe) {
     pipe, this_node, send_node_
   );
   if (this_node == send_node_) {
-    runnable::RunnableVoid::run(handler_,this_node);
+    runnable::makeRunnableVoid(true, handler_, this_node)
+      .withTDEpoch(theMsg()->getEpoch())
+      .enqueue();
   } else {
     auto msg = makeMessage<CallbackMsg>(pipe);
     theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);

@@ -62,9 +62,12 @@ struct PriorityQueue {
 
   void emplace(T&& elm) { impl_.emplace(std::forward<T>(elm)); }
 
-  T pop() { auto elm = impl_.top(); impl_.pop(); return elm; }
-
-  T const& top() { return impl_.top(); }
+  T pop() {
+    // pull out the BIG guns:
+    T elm = std::move(const_cast<T&>(impl_.top()));
+    impl_.pop();
+    return elm;
+  }
 
   std::size_t size() const { return impl_.size(); }
 

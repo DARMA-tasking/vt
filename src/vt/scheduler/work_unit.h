@@ -45,32 +45,11 @@
 #if !defined INCLUDED_VT_SCHEDULER_WORK_UNIT_H
 #define INCLUDED_VT_SCHEDULER_WORK_UNIT_H
 
-#include "vt/config.h"
-
-#include <functional>
+#include "vt/scheduler/base_unit.h"
 
 namespace vt { namespace sched {
 
-struct Unit {
-  using UnitActionType = ActionType;
-
-  Unit(bool in_is_term, UnitActionType in_work)
-    : work_(in_work), is_term_(in_is_term)
-  { }
-
-  void operator()() { execute(); }
-
-  void execute() {
-    vtAssertExpr(work_ != nullptr);
-    work_();
-  }
-
-  bool isTerm() const { return is_term_; }
-
-private:
-  UnitActionType work_ = nullptr;
-  bool is_term_        = false;
-};
+using Unit = BaseUnit;
 
 }} /* end namespace vt::sched */
 

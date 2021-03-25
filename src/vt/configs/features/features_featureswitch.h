@@ -53,7 +53,7 @@
 #define vt_feature_str_cons_multi_idx     "Collection Constructor Positional"
 #define vt_feature_str_detector           "C++ Trait Detector"
 #define vt_feature_str_diagnostics        "Performance analysis diagnostics"
-#define vt_feature_str_fcontext           "fcontext Threading"
+#define vt_feature_str_fcontext           "User-level threading with fcontext"
 #define vt_feature_str_lblite             "Load Balancing for Collections"
 #define vt_feature_str_memory_pool        "Memory Pooling"
 #define vt_feature_str_mimalloc           "mimalloc memory allocator"

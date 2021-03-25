@@ -167,6 +167,11 @@ struct AppConfig {
   bool vt_no_assert_fail = false;
   std::size_t vt_max_mpi_send_size = 1ull << 30;
 
+#if (vt_feature_fcontext != 0)
+  bool vt_ult_disable = false;
+  std::size_t vt_ult_stack_size = (1 << 21) - 64;
+#endif
+
   bool vt_debug_all          = false;
   bool vt_debug_verbose      = false;
   bool vt_debug_none         = false;
@@ -201,6 +206,7 @@ struct AppConfig {
   bool vt_debug_broadcast    = false;
   bool vt_debug_objgroup     = false;
   bool vt_debug_phase        = false;
+  bool vt_debug_context      = false;
 
   bool vt_debug_print_flush = false;
 
@@ -346,6 +352,7 @@ struct AppConfig {
       | vt_debug_broadcast
       | vt_debug_objgroup
       | vt_debug_phase
+      | vt_debug_context
 
       | vt_debug_print_flush
 

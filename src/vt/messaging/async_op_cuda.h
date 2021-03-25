@@ -62,10 +62,10 @@ struct AsyncOpCUDA : AsyncOp {
    * \brief Construct with stream
    *
    * \param[in] in_stream the CUDA stream to generate an event from
-   * \param[in] in_trigger the trigger to execute when event completes
+   * \param[in] in_cont the action to execute when event completes
    */
-  AsyncOpCUDA(cudaStream_t in_stream, ActionType in_trigger)
-    : trigger_(in_trigger)
+  AsyncOpCUDA(cudaStream_t in_stream, ActionType in_cont = nullptr)
+    : cont_(in_cont)
   {
     cudaEventCreate(&event_);
     cudaEventRecord(event_, in_stream);
@@ -75,11 +75,11 @@ struct AsyncOpCUDA : AsyncOp {
    * \brief Construct with an event
    *
    * \param[in] in_event the CUDA event to poll
-   * \param[in] in_trigger the trigger to execute when event completes
+   * \param[in] in_cont the action to execute when event completes
    */
-  AsyncOpCUDA(cudaEvent_t in_event, ActionType in_trigger)
+  AsyncOpCUDA(cudaEvent_t in_event, ActionType in_cont = nullptr)
     : event_(in_event),
-      trigger_(in_trigger)
+      cont_(in_cont)
   { }
 
   /**
@@ -95,14 +95,14 @@ struct AsyncOpCUDA : AsyncOp {
    * \brief Trigger continuation after completion
    */
   void done() override {
-    if (trigger_) {
-      trigger_();
+    if (cont_) {
+      cont_();
     }
   }
 
 private:
   cudaEvent_t event_ = {};        /**< The CUDA event being tested */
-  ActionType trigger_ = nullptr;  /**< The continuation after event completes */
+  ActionType cont_ = nullptr;     /**< The continuation after event completes */
 };
 
 #endif /*__CUDACC__*/

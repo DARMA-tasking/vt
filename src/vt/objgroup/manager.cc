@@ -49,6 +49,7 @@
 #include "vt/objgroup/type_registry/registry.h"
 #include "vt/context/context.h"
 #include "vt/messaging/message/smart_ptr.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace objgroup {
 
@@ -124,15 +125,10 @@ void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
 void scheduleMsg(
   MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
 ) {
-  // Produce here, consume when the dispatcher actually runs---it might be
-  // delayed
-  theTerm()->produce(epoch);
-  // Schedule the work of dispatching the message handler for later
-  theSched()->enqueue([msg,han,epoch]{
-    auto const node = theContext()->getNode();
-    runnable::Runnable<ShortMessage>::runObj(han,msg.get(),node);
-    theTerm()->consume(epoch);
-  });
+  auto const node = theContext()->getNode();
+  runnable::makeRunnable(msg, true, han, node)
+    .withTDEpoch(epoch)
+    .enqueue();
 }
 
 }} /* end namespace vt::objgroup */

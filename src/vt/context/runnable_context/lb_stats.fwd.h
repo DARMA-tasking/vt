@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           insert_context_holder.h
+//                                lb_stats.fwd.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,52 +42,13 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_HOLDERS_INSERT_CONTEXT_HOLDER_H
-#define INCLUDED_VT_VRT_COLLECTION_HOLDERS_INSERT_CONTEXT_HOLDER_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_FWD_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_FWD_H
 
-#include "vt/config.h"
-#include "vt/vrt/vrt_common.h"
-#include "vt/vrt/collection/manager.fwd.h"
+namespace vt { namespace ctx {
 
-namespace vt { namespace vrt { namespace collection {
+struct LBStats;
 
-template <typename IndexT>
-struct InsertContextHolder {
+}} /* end namespace vt::ctx */
 
-  static void set(IndexT* const set_idx, VirtualProxyType const& set_proxy) {
-    ctx_idx = set_idx;
-    ctx_proxy = set_proxy;
-  }
-
-  static void clear() {
-    ctx_idx = nullptr;
-    ctx_proxy = no_vrt_proxy;
-  }
-
-  static IndexT* index() {
-    return ctx_idx;
-  }
-
-  static VirtualProxyType proxy() {
-    return ctx_proxy;
-  }
-
-  static bool hasContext() {
-    return ctx_idx != nullptr and ctx_proxy != no_vrt_proxy;
-  }
-
-private:
-  static IndexT* ctx_idx;
-  static VirtualProxyType ctx_proxy;
-};
-
-template <typename IndexT>
-/*static*/ IndexT* InsertContextHolder<IndexT>::ctx_idx = nullptr;
-
-template <typename IndexT>
-/*static*/ VirtualProxyType
-InsertContextHolder<IndexT>::ctx_proxy = no_vrt_proxy;
-
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_HOLDERS_INSERT_CONTEXT_HOLDER_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_FWD_H*/

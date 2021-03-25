@@ -50,8 +50,8 @@
 #include "vt/registry/registry.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
 #include "vt/messaging/message.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace collective { namespace reduce {
 
@@ -77,8 +77,13 @@ void Reduce::reduceRootRecv(MsgT* msg) {
   msg->next_ = nullptr;
   msg->count_ = 1;
   msg->is_root_ = true;
-  auto const& from_node = theMsg()->getFromNodeCurrentHandler();
-  runnable::Runnable<MsgT>::run(handler, nullptr, msg, from_node);
+
+  auto const& from_node = theContext()->getFromNodeCurrentTask();
+
+  auto m = promoteMsg(msg);
+  runnable::makeRunnable(m, false, handler, from_node)
+    .withTDEpochFromMsg()
+    .run();
 }
 
 template <typename OpT, typename MsgT, ActiveTypedFnType<MsgT> *f>
@@ -250,10 +255,13 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
        *  applying the reduction operator
        */
       auto const& handler = state.combine_handler_;
-      auto const& from_node = theMsg()->getFromNodeCurrentHandler();
-      runnable::Runnable<MsgT>::run(
-        handler,nullptr,static_cast<MsgT*>(state.msgs[0].get()),from_node
-      );
+      auto const& from_node = theContext()->getFromNodeCurrentTask();
+
+      // this needs to run inline.. threaded not allowed for reduction
+      // combination
+      runnable::makeRunnable(state.msgs[0], false, handler, from_node)
+        .withTDEpochFromMsg()
+        .run();
     }
 
     // Send to parent

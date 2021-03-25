@@ -52,7 +52,7 @@
 #include "vt/activefn/activefn.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -70,11 +70,12 @@ void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
     "CallbackSendTypeless: trigger_: pipe={:x}, this_node={}, send_node_={}\n",
     pipe, this_node, send_node_
   );
+  auto pmsg = promoteMsg(msg);
   if (this_node == send_node_) {
-    auto nmsg = reinterpret_cast<ShortMessage*>(msg);
-    runnable::Runnable<ShortMessage>::run(handler_, nullptr, nmsg, this_node);
+    runnable::makeRunnable(pmsg, true, handler_, this_node)
+      .withTDEpochFromMsg()
+      .enqueue();
   } else {
-    auto pmsg = promoteMsg(msg);
     theMsg()->sendMsg<MsgT>(send_node_, handler_, pmsg);
   }
 }

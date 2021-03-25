@@ -48,7 +48,6 @@
 #include "vt/pipe/msg/callback.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
 
 #include <cassert>
 

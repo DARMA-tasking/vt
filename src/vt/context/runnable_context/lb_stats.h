@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    vrt.h
+//                                  lb_stats.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,22 +42,69 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_VRT_H
-#define INCLUDED_RUNNABLE_VRT_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H
 
-#include "vt/config.h"
+#include "vt/context/runnable_context/base.h"
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/elm_stats.fwd.h"
 
-namespace vt { namespace runnable {
+namespace vt { namespace ctx {
 
-template <typename MsgT, typename ElementT>
-struct RunnableVrt {
-  static void run(
-    HandlerType handler, MsgT* msg, ElementT* elm, NodeType from_node
-  );
+/**
+ * \struct LBStats
+ *
+ * \brief Context for collection LB statistics when a task runs
+ */
+struct LBStats final : Base {
+  using ElementIDStruct = vrt::collection::balance::ElementIDStruct;
+  using ElementStats = vrt::collection::balance::ElementStats;
+
+  /**
+   * \brief Construct a \c LBStats
+   *
+   * \param[in] in_elm the collection element
+   * \param[in] msg the incoming message (used for communication stats)
+   */
+  template <typename ElmT, typename MsgT>
+  LBStats(ElmT* in_elm, MsgT* msg);
+
+  /**
+   * \brief Set the context and timing for a collection task
+   */
+  void begin() final override;
+
+  /**
+   * \brief Remove the context and store timing for a collection task
+   */
+  void end() final override;
+
+  /**
+   * \brief Record statistics whenever a message is sent and a collection
+   * element is running.
+   *
+   * \param[in] dest the destination of the message
+   * \param[in] size the size of the message
+   * \param[in] bcast whether the message is being broadcast or sent
+   */
+  void send(NodeType dest, MsgSizeType size, bool bcast) final override;
+
+  void suspend() final override;
+  void resume() final override;
+
+  /**
+   * \brief Get the current element ID struct for the running context
+   *
+   * \return the current element ID
+   */
+  ElementIDStruct const& getCurrentElementID() const;
+
+private:
+  ElementStats* stats_ = nullptr;     /**< Element statistics */
+  ElementIDStruct cur_elm_id_ = {};   /**< Current element ID  */
+  bool should_instrument_ = false;    /**< Whether we are instrumenting */
 };
 
-}} /* end namespace vt::runnable */
+}} /* end namespace vt::ctx */
 
-#include "vt/runnable/vrt.impl.h"
-
-#endif /*INCLUDED_RUNNABLE_VRT_H*/
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_H*/

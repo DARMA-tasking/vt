@@ -50,10 +50,10 @@
 #include "vt/messaging/active.h"
 #include "vt/registry/auto/auto_registry_interface.h"
 #include "vt/registry/auto/vc/auto_registry_vc.h"
-#include "vt/runnable/general.h"
 #include "vt/serialization/messaging/serialized_data_msg.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
 #include "vt/messaging/envelope/envelope_set.h" // envelopeSetRef
+#include "vt/runnable/make_runnable.h"
 
 #include <tuple>
 #include <type_traits>
@@ -89,9 +89,9 @@ template <typename UserMsgT>
   auto msg_data = ptr_offset;
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 
-  runnable::Runnable<UserMsgT>::run(
-    handler, nullptr, user_msg.get(), sys_msg->from_node
-  );
+  runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
+    .withTDEpochFromMsg()
+    .enqueue();
 }
 
 template <typename UserMsgT>
@@ -133,14 +133,12 @@ template <typename UserMsgT>
         handler, recv_tag, envelopeGetEpoch(msg->env)
       );
 
-      if (is_valid_epoch) {
-        theMsg()->pushEpoch(epoch);
-      }
-      runnable::Runnable<UserMsgT>::run(handler, nullptr, msg.get(), node);
-      action();
+      runnable::makeRunnable(msg, true, handler, node)
+        .withTDEpoch(epoch, not is_valid_epoch)
+        .withContinuation(action)
+        .enqueue();
 
       if (is_valid_epoch) {
-        theMsg()->popEpoch(epoch);
         theTerm()->consume(epoch);
       }
     }
@@ -171,9 +169,9 @@ template <typename UserMsgT, typename BaseEagerMsgT>
     print_ptr(user_msg.get()), envelopeGetEpoch(sys_msg->env)
   );
 
-  runnable::Runnable<UserMsgT>::run(
-    handler, nullptr, user_msg.get(), sys_msg->from_node
-  );
+  runnable::makeRunnable(user_msg, true, handler, sys_msg->from_node)
+    .withTDEpochFromMsg()
+    .enqueue();
 }
 
 template <typename MsgT, typename BaseT>
@@ -405,7 +403,9 @@ template <typename MsgT, typename BaseT>
         auto base_msg = msg.template to<BaseMsgType>();
         ByteType msg_sz = sizeof(MsgT);
         return messaging::PendingSend(base_msg, msg_sz, [=](MsgPtr<BaseMsgType> in){
-          runnable::Runnable<MsgT>::run(typed_handler,nullptr,msg.get(),node);
+          runnable::makeRunnable(msg, true, typed_handler, node)
+            .withTDEpochFromMsg()
+            .enqueue();
         });
       }
     };

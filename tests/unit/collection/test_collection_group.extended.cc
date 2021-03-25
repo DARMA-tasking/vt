@@ -109,13 +109,11 @@ void colHanlder(
 }
 
 template <typename f>
-void runBcastTestHelper(f&& func)
-{
+void runBcastTestHelper(f&& func) {
   handler_executed = false;
-  func();
-
-  // spin the scheduler until the handler is called
-  theSched()->runSchedulerWhile([]{ return not handler_executed; });
+  runInEpochCollective([=]{
+    func();
+  });
 }
 
 struct TestCollectionGroup : TestParallelHarness { };

@@ -68,11 +68,6 @@ void VirtualContextManager::insertVirtualContext(
   auto holder_iter = holder_.find(id);
   vtAssert(holder_iter == holder_.end(), "Holder must not contain id");
 
-  // registry the proxy with location manager
-  theLocMan()->vrtContextLoc->registerEntity(
-    proxy, myNode_, virtualMsgHandler
-  );
-
   bool const is_constructed = new_vc != nullptr;
 
   if (is_constructed) {
@@ -98,6 +93,11 @@ void VirtualContextManager::insertVirtualContext(
     std::piecewise_construct,
     std::forward_as_tuple(id),
     std::forward_as_tuple(std::move(info))
+  );
+
+  // registry the proxy with location manager
+  theLocMan()->vrtContextLoc->registerEntity(
+    proxy, myNode_, virtualMsgHandler
   );
 }
 

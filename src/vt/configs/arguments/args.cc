@@ -251,6 +251,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   auto cbp = "Enable debug_broadcast    = \"" debug_pp(broadcast)    "\"";
   auto dbp = "Enable debug_objgroup     = \"" debug_pp(objgroup)     "\"";
   auto dcp = "Enable debug_phase        = \"" debug_pp(phase)        "\"";
+  auto ddp = "Enable debug_context      = \"" debug_pp(context)      "\"";
 
   auto r  = app.add_flag("--vt_debug_all",          config_.vt_debug_all,          rp);
   auto r1 = app.add_flag("--vt_debug_verbose",      config_.vt_debug_verbose,      rq);
@@ -286,6 +287,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   auto cb = app.add_flag("--vt_debug_broadcast",    config_.vt_debug_broadcast,    cbp);
   auto db = app.add_flag("--vt_debug_objgroup",     config_.vt_debug_objgroup,     dbp);
   auto dc = app.add_flag("--vt_debug_phase",        config_.vt_debug_phase,        dcp);
+  auto dd = app.add_flag("--vt_debug_context",      config_.vt_debug_context,      ddp);
   auto debugGroup = "Debug Print Configuration (must be compile-time enabled)";
   r->group(debugGroup);
   r1->group(debugGroup);
@@ -321,6 +323,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   cb->group(debugGroup);
   db->group(debugGroup);
   dc->group(debugGroup);
+  dd->group(debugGroup);
 
   auto dbq = "Always flush VT runtime prints";
   auto eb  = app.add_flag("--vt_debug_print_flush", config_.vt_debug_print_flush, dbq);
@@ -512,6 +515,24 @@ void ArgConfig::addRuntimeArgs(CLI::App& app) {
   a2->group(configRuntime);
 }
 
+void ArgConfig::addThreadingArgs(CLI::App& app) {
+#if (vt_feature_fcontext != 0)
+  auto ult_disable = "Disable running handlers in user-level threads";
+  auto stack_size = "The default stack size for user-level threads";
+
+  auto a1 = app.add_flag(
+    "--vt_ult_disable", config_.vt_ult_disable, ult_disable
+  );
+  auto a2 = app.add_option(
+    "--vt_ult_stack_size", config_.vt_ult_stack_size, stack_size, true
+  );
+
+  auto configThreads = "Threads";
+  a1->group(configThreads);
+  a2->group(configThreads);
+#endif
+}
+
 class VtFormatter : public CLI::Formatter {
 public:
   std::string make_usage(const CLI::App *, std::string name) const override {
@@ -565,6 +586,7 @@ std::tuple<int, std::string> ArgConfig::parse(int& argc, char**& argv) {
   addSchedulerArgs(app);
   addConfigFileArgs(app);
   addRuntimeArgs(app);
+  addThreadingArgs(app);
 
   std::tuple<int, std::string> result = parseArguments(app, /*out*/ argc, /*out*/ argv);
   if (std::get<0>(result) not_eq -1) {

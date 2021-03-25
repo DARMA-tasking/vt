@@ -50,9 +50,10 @@
 #include "vt/scheduler/priority_queue.h"
 #include "vt/scheduler/prioritized_work_unit.h"
 #include "vt/scheduler/work_unit.h"
-#include "vt/messaging/message/smart_ptr.h"
+#include "vt/scheduler/suspended_units.h"
 #include "vt/timing/timing.h"
 #include "vt/runtime/component/component_pack.h"
+#include "vt/messaging/async_op_wrapper.fwd.h"
 
 #include <cassert>
 #include <vector>
@@ -61,16 +62,25 @@
 #include <memory>
 
 namespace vt {
-  void runSchedulerThrough(EpochType epoch);
 
-  template <typename Callable>
-  void runInEpochRooted(Callable&& fn);
+void runSchedulerThrough(EpochType epoch);
 
-  template <typename Callable>
-  void runInEpochCollective(Callable&& fn);
-}
+template <typename Callable>
+void runInEpochRooted(Callable&& fn);
+
+template <typename Callable>
+void runInEpochCollective(Callable&& fn);
+
+namespace messaging {
+
+template <typename T>
+struct MsgSharedPtr;
+
+}} /* end namespace vt::messaging */
 
 namespace vt { namespace sched {
+
+struct ThreadManager;
 
 enum SchedulerEvent {
   BeginIdle            = 0,
@@ -99,6 +109,7 @@ struct Scheduler : runtime::component::Component<Scheduler> {
   using TriggerType          = std::function<void()>;
   using TriggerContainerType = std::list<TriggerType>;
   using EventTriggerContType = std::vector<TriggerContainerType>;
+  using RunnablePtrType      = std::unique_ptr<runnable::RunnableNew>;
 
 # if vt_check_enabled(priorities)
   using UnitType             = PriorityUnit;
@@ -202,17 +213,19 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * \brief Enqueue an action to execute later with the default priority
    * \c default_priority
    *
-   * \param[in] action action to execute
+   * \param[in] r action to execute
    */
-  void enqueue(ActionType action);
+  template <typename RunT>
+  void enqueue(RunT r);
 
   /**
-   * \brief Enqueue an action with a priority to execute later
+   * \brief Enqueue an runnable with a priority to execute later
    *
    * \param[in] priority the priority of the action
-   * \param[in] action the action to execute later
+   * \param[in] r the runnable to execute later
    */
-  void enqueue(PriorityType priority, ActionType action);
+  template <typename RunT>
+  void enqueue(PriorityType priority, RunT r);
 
   /**
    * \brief Print current memory usage
@@ -224,20 +237,20 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    * will be enqueued with the priority found on the message.
    *
    * \param[in] msg the message
-   * \param[in] action the action to execute later
+   * \param[in] r the runnable to execute later
    */
-  template <typename MsgT>
-  void enqueue(MsgT* msg, ActionType action);
+  template <typename MsgT, typename RunT>
+  void enqueue(MsgT* msg, RunT r);
 
   /**
-   * \brief Enqueue a action associated with a prioritized message. The action
+   * \brief Enqueue an runnable associated with a prioritized message. The action
    * will be enqueued with the priority found on the message.
    *
    * \param[in] msg the message
-   * \param[in] action the action to execute later
+   * \param[in] r the runnable to execute later
    */
-  template <typename MsgT>
-  void enqueue(MsgSharedPtr<MsgT> msg, ActionType action);
+  template <typename MsgT, typename RunT>
+  void enqueue(messaging::MsgSharedPtr<MsgT> msg, RunT r);
 
   /**
    * \brief Get the work queue size
@@ -267,9 +280,41 @@ struct Scheduler : runtime::component::Component<Scheduler> {
    */
   bool isIdleMinusTerm() const { return work_queue_.size() == num_term_msgs_; }
 
+  /**
+   * \brief Suspend a thread with an ID and runnable
+   *
+   * \param[in] tid the threads ID
+   * \param[in] runnable the runnable
+   * \param[in] p the priority for resumption
+   */
+  void suspend(
+    ThreadIDType tid, RunnablePtrType runnable, PriorityType p = default_priority
+  );
+
+  /**
+   * \brief Resume a thread that is associated with a runnable that is currently
+   * suspended
+   *
+   * \param[in] tid the suspended thread ID
+   */
+  void resume(ThreadIDType tid);
+
+#if vt_check_enabled(fcontext)
+  /**
+   * \brief Get the thread manager
+   *
+   * \return reference to thread manager
+   */
+  ThreadManager* getThreadManager();
+#endif
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | work_queue_
+      | suspended_
+#if vt_check_enabled(fcontext)
+      | thread_manager_
+#endif
       | has_executed_
       | is_idle
       | is_idle_minus_term
@@ -322,6 +367,12 @@ private:
 # else
   Queue<UnitType> work_queue_;
 # endif
+
+#if vt_check_enabled(fcontext)
+  std::unique_ptr<ThreadManager> thread_manager_ = nullptr;
+#endif
+
+  SuspendedUnits suspended_;
 
   bool has_executed_      = false;
   bool is_idle            = true;

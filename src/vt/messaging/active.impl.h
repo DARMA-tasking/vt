@@ -52,6 +52,9 @@
 #include "vt/scheduler/priority.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/serialization/messaging/serialized_messenger.h"
+#include "vt/scheduler/thread_action.h"
+#include "vt/scheduler/thread_manager.h"
+#include "vt/runnable/runnable.h"
 
 namespace vt { namespace messaging {
 
@@ -446,69 +449,6 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   );
 }
 
-inline ActiveMessenger::EpochStackSizeType
-ActiveMessenger::epochPreludeHandler(EpochType const& cur_epoch) {
-  vt_debug_print(
-    active, node,
-    "epochPreludeHandler: top={:x}, cur_epoch={:x}, size={}\n",
-    epoch_stack_.size() > 0 ? epoch_stack_.top(): no_epoch, cur_epoch,
-    epoch_stack_.size()
-  );
-
-  epoch_stack_.push(cur_epoch);
-  return epoch_stack_.size();
-}
-
-inline void ActiveMessenger::epochEpilogHandler(
-  EpochType const& cur_epoch, EpochStackSizeType const& ep_stack_size
-) {
-  EpochStackSizeType cur_stack_size = epoch_stack_.size();
-
-  vt_debug_print(
-    active, node,
-    "epochEpilogHandler: top={:x}, size={}\n",
-    epoch_stack_.size() > 0 ? epoch_stack_.top(): no_epoch,
-    cur_stack_size
-  );
-
-  vtAssertNot(
-    ep_stack_size < cur_stack_size,
-    "Epoch stack popped below preceding push size in handler"
-  );
-  vtWarnInfo(
-    ep_stack_size == cur_stack_size, "Stack must be same size",
-    ep_stack_size, cur_stack_size,
-    cur_stack_size > 0 ? epoch_stack_.top() : no_epoch,
-    current_handler_context_, current_epoch_context_, current_node_context_,
-    cur_epoch
-  );
-  vtAssertNotExpr(cur_stack_size == 0);
-  while (cur_stack_size > ep_stack_size) {
-    cur_stack_size = (epoch_stack_.pop(), epoch_stack_.size());
-  }
-  vtAssertExpr(epoch_stack_.top() == cur_epoch);
-  vtAssertExpr(cur_stack_size == ep_stack_size);
-  epoch_stack_.pop();
-}
-
-inline void ActiveMessenger::setGlobalEpoch(EpochType const& epoch) {
-  /*
-   * setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
-   * stack depending on the value of the `epoch' passed as an argument.
-   */
-  if (epoch == no_epoch) {
-    vtAssertInfo(
-      epoch_stack_.size() > 0, "Setting no global epoch requires non-zero size",
-      epoch_stack_.size()
-    );
-    if (epoch_stack_.size() > 0) {
-      epoch_stack_.pop();
-    }
-  } else {
-    epoch_stack_.push(epoch);
-  }
-}
-
 inline EpochType ActiveMessenger::getGlobalEpoch() const {
   vtAssertInfo(
     epoch_stack_.size() > 0, "Epoch stack size must be greater than zero",
@@ -615,6 +555,36 @@ inline EpochType ActiveMessenger::setupEpochMsg(MsgSharedPtr<MsgT> const& msg) {
 template <typename T>
 void ActiveMessenger::registerAsyncOp(std::unique_ptr<T> in) {
   in_progress_ops.emplace(AsyncOpWrapper{std::move(in)});
+}
+
+template <typename T>
+void ActiveMessenger::blockOnAsyncOp(std::unique_ptr<T> op) {
+#if vt_check_enabled(fcontext)
+  using TA = sched::ThreadAction;
+  auto tid = TA::getActiveThreadID();
+
+  if (tid == no_thread_id) {
+    if (theConfig()->vt_ult_disable) {
+      vtAbort(
+        "You have disabled user-level threads with --vt_ult_disable,"
+        " please enable to block on a async operation"
+      );
+    } else {
+      vtAbort("Trying to block a thread on an AsyncOp when no thread is active");
+    }
+  }
+
+  in_progress_ops.emplace(AsyncOpWrapper{std::move(op), tid});
+
+  // Suspend the currently running thread!
+  TA::suspend();
+
+#else
+  vtAbort(
+    "Using a blocking async operation without threads is not allowed. "
+    "Please enable fcontext in cmake and re-run"
+  );
+#endif
 }
 
 }} //end namespace vt::messaging

@@ -54,7 +54,6 @@
 #include "vt/messaging/active.fwd.h"
 #include "vt/messaging/message/smart_ptr.h"
 #include "vt/messaging/pending_send.h"
-#include "vt/messaging/listener.h"
 #include "vt/messaging/request_holder.h"
 #include "vt/messaging/send_info.h"
 #include "vt/messaging/async_op_wrapper.h"
@@ -327,7 +326,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   using HandlerManagerType   = HandlerManager;
   using EpochStackType       = std::stack<EpochType>;
   using PendingSendType      = PendingSend;
-  using ListenerType         = std::unique_ptr<Listener>;
 
   /**
    * \internal
@@ -1385,77 +1383,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Get the current handler (valid only while running a handler)
-   *
-   * \return the handler ID
-   */
-  HandlerType getCurrentHandler() const;
-
-  /**
-   * \internal
-   * \brief Get the from node for the current running handler (valid only while
-   * running a handler)
-   *
-   * For the current handler that is executing, get the node that sent the
-   * message that caused this handler to run. Note, for collection handlers this
-   * will not be the logical node that sent the message. It will be the node
-   * that last forwarded the message during location discovery.
-   *
-   * \return the node that sent the message that triggered the current handler
-   */
-  NodeType getFromNodeCurrentHandler() const;
-
-  /**
-   * \internal
-   * \brief Get the current epoch on the handler running
-   *
-   * \return the epoch on the message that triggered the current handler
-   */
-  EpochType getCurrentEpoch() const;
-
-  #if vt_check_enabled(trace_enabled)
-    /**
-     * \internal
-     * \brief Get the trace event on the handler running
-     *
-     * \return the trace event on the message that triggered the current handler
-     */
-    trace::TraceEventIDType getCurrentTraceEvent() const;
-  #endif
-
-  /**
-   * \internal
-   * \brief Get the priority on the handler running
-   *
-   * \return the priority on the message that triggered the current handler
-   */
-  PriorityType getCurrentPriority() const;
-
-  /**
-   * \internal
-   * \brief Get the priority level on the handler running
-   *
-   * \return the priority level of the message that triggered the current handler
-   */
-  PriorityLevelType getCurrentPriorityLevel() const;
-
-  /**
-   * \internal
-   * \brief Schedule an active message for future delivery
-   *
-   * \param[in] base the message ptr
-   * \param[in] sender the sender of the message
-   * \param[in] size the size of the message
-   * \param[in] insert whether to insert the message if handler does not exist
-   * \param[in] cont continuation after message is processed
-   */
-  void scheduleActiveMsg(
-    MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
-    MsgSizeType const& size, bool insert, ActionType cont = nullptr
-  );
-
-  /**
-   * \internal
    * \brief Process an incoming active message
    *
    * Forwards the message to the appropriate group nodes or broadcasts it
@@ -1477,7 +1404,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Deliver an active message locally
+   * \brief Prepare an active message to run by building a \c RunnableNew
    *
    * \param[in] base the message ptr
    * \param[in] from_node the node the message came from
@@ -1486,7 +1413,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return whether the message was delivered, false when handler does not exist
    */
-  bool deliverActiveMsg(
+  bool prepareActiveMsgToRun(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& from_node,
     bool insert, ActionType cont
   );
@@ -1560,17 +1487,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
 
   /**
    * \internal
-   * \brief Set the global epoch (\c pushEpoch is more desirable)
-   *
-   * \c setGlobalEpoch() is a shortcut for both pushing and popping epochs on the
-   * stack depending on the value of the `epoch' passed as an argument.
-   *
-   * \param[in] epoch the epoch to set
-   */
-  inline void setGlobalEpoch(EpochType const& epoch = no_epoch);
-
-  /**
-   * \internal
    * \brief Get the current global epoch
    *
    * \c Returns the top epoch on the stack iff \c epoch_stack.size() > 0, else it
@@ -1615,6 +1531,12 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the epoch on the top of the stack
    */
   inline EpochType getEpoch() const;
+
+  /**
+   * \internal
+   * \brief Access the epoch stack
+   */
+  inline EpochStackType& getEpochStack() { return epoch_stack_; }
 
   /**
    * \internal
@@ -1668,25 +1590,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   inline EpochType setupEpochMsg(MsgSharedPtr<MsgT> const& msg);
 
   /**
-   * \internal
-   * \brief Register a listener on the active messenger---see \c Listener
-   *
-   * \param[in] ptr a \c std::unique_ptr<L> to a listener
-   */
-  template <typename L>
-  void addSendListener(std::unique_ptr<L> ptr) {
-    send_listen_.push_back(std::move(ptr));
-  }
-
-  /**
-   * \internal
-   * \brief Clear all listeners
-   */
-  void clearListeners() {
-    send_listen_.clear();
-  }
-
-  /**
    * \brief Register a async operation that needs polling
    *
    * \param[in] op the async operation to register
@@ -1694,19 +1597,25 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename T>
   void registerAsyncOp(std::unique_ptr<T> op);
 
+  /**
+   * \brief Block the current task's execution on an pollable async operation
+   * until it completes
+   *
+   * \note This may only be safely called if the current task is running in a
+   * user-level thread.
+   *
+   * \param[in] op the async operation to block on
+   */
+  template <typename T>
+  void blockOnAsyncOp(std::unique_ptr<T> op);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | current_handler_context_
-      | current_node_context_
-      | current_epoch_context_
-      | current_priority_context_
-      | current_priority_level_context_
-      | maybe_ready_tag_han_
+    s | maybe_ready_tag_han_
       | pending_handler_msgs_
       | pending_recvs_
       | cur_direct_buffer_tag_
       | epoch_stack_
-      | send_listen_
       | in_progress_active_msg_irecv
       | in_progress_data_irecv
       | in_progress_ops
@@ -1726,8 +1635,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       | tdSentCount;
 
   # if vt_check_enabled(trace_enabled)
-    s | current_trace_context_
-      | trace_irecv
+    s | trace_irecv
       | trace_isend
       | trace_irecv_polling_am
       | trace_irecv_polling_dm
@@ -1794,16 +1702,7 @@ private:
   void finishPendingDataMsgAsyncRecv(InProgressDataIRecv* irecv);
 
 private:
-  using EpochStackSizeType = typename EpochStackType::size_type;
-
-  inline EpochStackSizeType epochPreludeHandler(EpochType const& epoch);
-  inline void epochEpilogHandler(
-    EpochType const& epoch, EpochStackSizeType const& prev_stack_size
-  );
-
-private:
 # if vt_check_enabled(trace_enabled)
-  trace::TraceEventIDType current_trace_context_ = trace::no_trace_event;
   trace::UserEventIDType trace_irecv             = trace::no_user_event_id;
   trace::UserEventIDType trace_isend             = trace::no_user_event_id;
   trace::UserEventIDType trace_irecv_polling_am  = trace::no_user_event_id;
@@ -1811,17 +1710,11 @@ private:
   trace::UserEventIDType trace_asyncop           = trace::no_user_event_id;
 # endif
 
-  HandlerType current_handler_context_                    = uninitialized_handler;
-  NodeType current_node_context_                          = uninitialized_destination;
-  EpochType current_epoch_context_                        = no_epoch;
-  PriorityType current_priority_context_                  = no_priority;
-  PriorityLevelType current_priority_level_context_       = no_priority_level;
   MaybeReadyType maybe_ready_tag_han_                     = {};
   ContWaitType pending_handler_msgs_                      = {};
   ContainerPendingType pending_recvs_                     = {};
   TagType cur_direct_buffer_tag_                          = starting_direct_buffer_tag;
   EpochStackType epoch_stack_;
-  std::vector<ListenerType> send_listen_                  = {};
   RequestHolder<InProgressIRecv> in_progress_active_msg_irecv;
   RequestHolder<InProgressDataIRecv> in_progress_data_irecv;
   RequestHolder<AsyncOpWrapper> in_progress_ops;

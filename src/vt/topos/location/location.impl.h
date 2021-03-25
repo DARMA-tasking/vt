@@ -53,7 +53,7 @@
 #include "vt/topos/location/utility/entity.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
+#include "vt/runnable/make_runnable.h"
 
 #include <cstdint>
 #include <memory>
@@ -531,14 +531,17 @@ void EntityLocationCoord<EntityID>::routeMsgNode(
       auto const& from = msg->getLocFromNode();
       if (has_handler) {
         auto const& handler = msg->getHandler();
-        auto active_fn = auto_registry::getAutoHandler(handler);
+
         vt_debug_print(
           location, node,
           "EntityLocationCoord: apply direct handler action: "
           "id={}, from={}, handler={}, ref={}\n",
           hid, from, handler, envelopeGetRef(msg->env)
         );
-        runnable::Runnable<MessageT>::run(handler, active_fn, msg.get(), from);
+
+        runnable::makeRunnable(msg, true, handler, from)
+          .withTDEpochFromMsg()
+          .run();
       } else {
         auto reg_han_iter = local_registered_msg_han_.find(hid);
         vtAssert(

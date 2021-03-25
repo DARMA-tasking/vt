@@ -49,6 +49,8 @@
 #include "vt/context/context_attorney_fwd.h"
 #include "vt/worker/worker_headers.h"
 #include "vt/runtime/runtime_headers.h"
+#include "vt/runnable/runnable.fwd.h"
+#include "vt/context/runnable_context/set_context.fwd.h"
 
 namespace vt {  namespace ctx {
 
@@ -72,11 +74,16 @@ struct ContextAttorney {
   /// Allow the runtime to set the number of workers
   friend runtime::Runtime;
 
+  /// Allow \c ctx::SetContext to modify the running task
+  friend ctx::SetContext;
+
 private:
   /// Allow internal runtime to set the worker
   static void setWorker(WorkerIDType const worker);
   /// Allow internal runtime to set the number of workers
   static void setNumWorkers(WorkerCountType const worker_count);
+  /// Allow setting the current running task
+  static void setTask(runnable::RunnableNew* in_task);
 };
 
 }} /* end namespace vt::ctx */

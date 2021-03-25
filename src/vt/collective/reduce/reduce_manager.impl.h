@@ -49,7 +49,6 @@
 #include "vt/collective/reduce/reduce.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
 
 namespace vt { namespace collective { namespace reduce {
 

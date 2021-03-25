@@ -48,6 +48,7 @@
 #include "vt/config.h"
 #include "vt/objgroup/common.h"
 #include "vt/messaging/active.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace objgroup {
 
@@ -78,7 +79,10 @@ void invoke(messaging::MsgPtrThief<MsgT> msg, HandlerType han, NodeType dest_nod
     )
   );
 
-  runnable::Runnable<MsgT>::run(han, nullptr, msg.msg_.get(), this_node);
+  // this is a local invocation.. no thread required
+  runnable::makeRunnable(msg.msg_, false, han, this_node)
+    .withTDEpochFromMsg()
+    .run();
 }
 
 template <typename MsgT>

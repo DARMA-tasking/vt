@@ -78,8 +78,8 @@ void runInEpochRooted(Callable&& fn) {
 
 namespace vt { namespace sched {
 
-template <typename MsgT>
-void Scheduler::enqueue(MsgT* msg, ActionType action) {
+template <typename MsgT, typename RunT>
+void Scheduler::enqueue(MsgT* msg, RunT r) {
   bool const is_term = envelopeIsTerm(msg->env);
 
   if (is_term) {
@@ -88,21 +88,41 @@ void Scheduler::enqueue(MsgT* msg, ActionType action) {
 
 # if vt_check_enabled(priorities)
   auto priority = envelopeGetPriority(msg->env);
-  work_queue_.emplace(UnitType(is_term, priority, action));
+  work_queue_.emplace(UnitType(is_term, std::move(r), priority));
 # else
-  work_queue_.emplace(UnitType(is_term, action));
+  work_queue_.emplace(UnitType(is_term, std::move(r)));
 # endif
 }
 
-template <typename MsgT>
-void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, ActionType action) {
+template <typename MsgT, typename RunT>
+void Scheduler::enqueue(MsgSharedPtr<MsgT> msg, RunT r) {
   //
   // Assume that MsgSharedPtr<MsgT> is already captured in the action.
   //
   // To speed this up, in the future, we could have a pure message queue that
   // could be dispatched directly based on type/state-bits
   //
-  enqueue<MsgT>(msg.get(), action);
+  enqueue<MsgT>(msg.get(), std::move(r));
+}
+
+template <typename RunT>
+void Scheduler::enqueue(RunT r) {
+  bool const is_term = false;
+# if vt_check_enabled(priorities)
+  work_queue_.emplace(UnitType(is_term, std::move(r), default_priority));
+# else
+  work_queue_.emplace(UnitType(is_term, std::move(r)));
+# endif
+}
+
+template <typename RunT>
+void Scheduler::enqueue(PriorityType priority, RunT r) {
+  bool const is_term = false;
+# if vt_check_enabled(priorities)
+  work_queue_.emplace(UnitType(is_term, std::move(r), priority));
+# else
+  work_queue_.emplace(UnitType(is_term, std::move(r)));
+# endif
 }
 
 }} /* end namespace vt::sched */

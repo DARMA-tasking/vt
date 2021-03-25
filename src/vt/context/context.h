@@ -53,6 +53,18 @@
 #include "vt/context/context_attorney_fwd.h"
 #include "vt/utils/tls/tls.h"
 
+#if vt_check_enabled(trace_only)
+namespace vt { namespace runnable {
+struct RunnableNew;
+}} /* end namespace vt::runnable */
+#else
+# include "vt/runnable/runnable.fwd.h"
+#endif
+
+#if vt_check_enabled(trace_enabled)
+# include "vt/trace/trace_common.h"
+#endif
+
 namespace vt {  namespace ctx {
 
 /** \file */
@@ -151,7 +163,48 @@ struct Context : runtime::component::Component<Context> {
       | communicator_;
   }
 
+  /**
+   * \brief Get the current running task
+   *
+   * \return the current running task
+   */
+  runnable::RunnableNew* getTask() const { return cur_task_; }
+
+  /**
+   * \brief Get the node that caused the current running task to execute; i.e.,
+   * the node that sent the message to trigger the current runnable.
+   *
+   * \note If a task is not currently running, this will return the this node
+   * ---equivalent to \c theContext()->getNode()
+   *
+   * For the current task that is executing, get the node that sent the message
+   * that caused this runnable to execute. Note, for collection handlers this
+   * will not be the logical node that sent the message. It will be the node
+   * that last forwarded the message during location discovery.
+   *
+   * \return the node that sent the message that triggered the current task
+   */
+  NodeType getFromNodeCurrentTask() const;
+
+#if vt_check_enabled(trace_enabled)
+  /**
+   * \brief Get the trace event from the current task
+   *
+   * \note If a task is not currently running, this will return \c no_trace_event
+   *
+   * \return the trace event on the message that triggered the current task
+   */
+  trace::TraceEventIDType getTraceEventCurrentTask() const;
+#endif
+
 protected:
+  /**
+   * \brief Set the current running task
+   *
+   * \param[in] in_task the current running task
+   */
+  void setTask(runnable::RunnableNew* in_task);
+
   /// Set the number of workers through the attorney (internal)
   void setNumWorkers(WorkerCountType const worker_count) {
     numWorkers_ = worker_count;
@@ -171,6 +224,7 @@ private:
   WorkerCountType numWorkers_ = no_workers;
   MPI_Comm communicator_ = MPI_COMM_WORLD;
   DeclareClassInsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
+  runnable::RunnableNew* cur_task_ = nullptr;
 };
 
 }} // end namespace vt::ctx

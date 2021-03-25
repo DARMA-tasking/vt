@@ -50,7 +50,7 @@
 #include "vt/pipe/callback/handler_send/callback_send.h"
 #include "vt/context/context.h"
 #include "vt/messaging/active.h"
-#include "vt/runnable/general.h"
+#include "vt/runnable/make_runnable.h"
 
 namespace vt { namespace pipe { namespace callback {
 
@@ -89,7 +89,9 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
     this_node, send_node_
   );
   if (this_node == send_node_) {
-    runnable::RunnableVoid::run(handler_,this_node);
+    runnable::makeRunnableVoid(true, handler_, this_node)
+      .withTDEpoch(theMsg()->getEpoch())
+      .enqueue();
   } else {
     auto msg = makeMessage<CallbackMsg>(pid);
     theMsg()->sendMsg<CallbackMsg>(send_node_, handler_, msg);
@@ -108,7 +110,10 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   );
   if (this_node == send_node_) {
     auto msg = reinterpret_cast<ShortMessage*>(data);
-    runnable::Runnable<ShortMessage>::run(handler_, nullptr, msg, this_node);
+    auto m = promoteMsg(msg);
+    runnable::makeRunnable(m, true, handler_, this_node)
+      .withTDEpochFromMsg()
+      .enqueue();
   } else {
     theMsg()->sendMsg<SignalDataType>(send_node_, handler_, data);
   }

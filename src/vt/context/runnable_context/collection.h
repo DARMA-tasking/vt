@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              collection.impl.h
+//                                 collection.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,64 +42,55 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_COLLECTION_IMPL_H
-#define INCLUDED_RUNNABLE_COLLECTION_IMPL_H
+#if !defined INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H
+#define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H
 
-#include "vt/config.h"
-#include "vt/runnable/collection.h"
-#include "vt/registry/auto/auto_registry_common.h"
-#include "vt/registry/auto/auto_registry_interface.h"
-#include "vt/registry/auto/collection/auto_registry_collection.h"
-#include "vt/trace/trace_common.h"
-#include "vt/messaging/envelope.h"
-#include "vt/messaging/active.h"
-#include "vt/serialization/sizer.h"
+#include "vt/context/runnable_context/base.h"
 
-namespace vt { namespace runnable {
+namespace vt { namespace vrt { namespace collection {
 
-template <typename MsgT, typename ElementT>
-/*static*/ void RunnableCollection<MsgT, ElementT>::run(
-  HandlerType handler, MsgT* msg, ElementT* elm, NodeType from, uint64_t idx1,
-  uint64_t idx2, uint64_t idx3, uint64_t idx4,
-  trace::TraceEventIDType in_trace_event
-) {
-  auto const member = HandlerManager::isHandlerMember(handler);
+template <typename ColT, typename IndexT>
+struct CollectionBase;
 
-#if vt_check_enabled(trace_enabled)
-  trace::TraceProcessingTag processing_tag;
-  {
-    auto reg_enum = member ?
-      auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
-      auto_registry::RegistryTypeEnum::RegVrtCollection;
-    trace::TraceEntryIDType trace_id = auto_registry::handlerTraceID(
-      handler, reg_enum
-    );
-    trace::TraceEventIDType trace_event = in_trace_event;
-    auto const ctx_node = theMsg()->getFromNodeCurrentHandler();
-    auto const from_node = from != uninitialized_destination ? from : ctx_node;
+}}} /* end namespace vt::vrt::collection */
 
-    auto const msg_size = vt::serialization::MsgSizer<MsgT>::get(msg);
+namespace vt { namespace ctx {
 
-    processing_tag = theTrace()->beginProcessing(
-      trace_id, msg_size, trace_event, from_node,
-      idx1, idx2, idx3, idx4
-    );
-  }
-#endif
+/**
+ * \struct Collection
+ *
+ * \brief Context for a collection element that is running. Includes the index
+ * and proxy for the collection.
+ */
+template <typename IndexT>
+struct Collection final : Base {
 
-  if (member) {
-    auto const func = auto_registry::getAutoHandlerCollectionMem(handler);
-    (elm->*func)(msg);
-  } else {
-    auto const func = auto_registry::getAutoHandlerCollection(handler);
-    func(msg, elm);
-  };
+  /**
+   * \brief Construct a \c Collection
+   *
+   * \param[in] elm the collection element to extract the index and proxy
+   */
+  template <typename ColT>
+  explicit Collection(vrt::collection::CollectionBase<ColT, IndexT>* elm);
 
-#if vt_check_enabled(trace_enabled)
-  theTrace()->endProcessing(processing_tag);
-#endif
-}
+  /**
+   * \brief Set the collection context
+   */
+  void begin() final override;
 
-}} /* end namespace vt::runnable */
+  /**
+   * \brief Remove the collection context
+   */
+  void end() final override;
 
-#endif /*INCLUDED_RUNNABLE_COLLECTION_IMPL_H*/
+  void suspend() final override;
+  void resume() final override;
+
+private:
+  IndexT idx_ = {};                         /**< the collection element index */
+  VirtualProxyType proxy_ = no_vrt_proxy;   /**< the collection proxy */
+};
+
+}} /* end namespace vt::ctx */
+
+#endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_H*/

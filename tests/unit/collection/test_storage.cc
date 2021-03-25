@@ -116,15 +116,24 @@ TEST_F(TestCollectionStorage, test_collection_storage_1) {
   using MsgType = typename TestCol::TestMsg;
 
   auto proxy = theCollection()->constructCollective<TestCol>(num_elms);
-  proxy.broadcastCollective<MsgType, &TestCol::testHandler>();
+
+  runInEpochCollective([=]{
+    proxy.broadcastCollective<MsgType, &TestCol::testHandler>();
+  });
 
   // Go to the next phase
   vt::thePhase()->nextPhaseCollective();
-  proxy.broadcastCollective<MsgType, &TestCol::testHandlerValues>();
+
+  runInEpochCollective([=]{
+    proxy.broadcastCollective<MsgType, &TestCol::testHandlerValues>();
+  });
 
   // Go to the next phase
   vt::thePhase()->nextPhaseCollective();
-  proxy.broadcastCollective<MsgType, &TestCol::testHandlerValues>();
+
+  runInEpochCollective([=]{
+    proxy.broadcastCollective<MsgType, &TestCol::testHandlerValues>();
+  });
 }
 
 }}}} // end namespace vt::tests::unit::storage

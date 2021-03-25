@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  general.h
+//                              suspended_units.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,54 +42,33 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_GENERAL_H
-#define INCLUDED_RUNNABLE_GENERAL_H
+#include "vt/scheduler/suspended_units.h"
+#include "vt/scheduler/scheduler.h"
+#include "vt/runnable/runnable.h"
 
-#include "vt/config.h"
-#include "vt/registry/registry.h"
-#include "vt/registry/auto/auto_registry_interface.h"
+namespace vt { namespace sched {
 
-namespace vt {
+void SuspendedUnits::addSuspended(
+  ThreadIDType tid, RunnablePtrType runnable, PriorityType p
+) {
+  vtAssert(runnable->isSuspended(), "Runnable must be suspended to add");
 
-namespace objgroup {
-
-void scheduleMsg(
-  MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
-);
-
-} /* end namespace objgroup */
-
-namespace runnable {
-
-template <typename MsgT>
-struct Runnable {
-  template <typename... Args>
-  using FnParamType = void(*)(Args...);
-
-  // Dispatch for normal active message handlers (functors, fn pointer, etc.)
-  static void run(
-    HandlerType handler, ActiveFnPtrType func, MsgT* msg, NodeType from_node,
-    TagType in_tag = no_tag
+  units_.emplace(
+    std::piecewise_construct,
+    std::forward_as_tuple(tid),
+    std::forward_as_tuple(
+      detail::SuspendedRunnable{std::move(runnable), p}
+    )
   );
+}
 
-  friend void objgroup::scheduleMsg(
-    MsgSharedPtr<ShortMessage> msg, HandlerType han, EpochType epoch
-  );
+void SuspendedUnits::resumeRunnable(ThreadIDType tid) {
+  auto iter = units_.find(tid);
+  vtAbortIf(iter == units_.end(), "Must have valid thread ID to resume");
+  auto r = std::move(iter->second.runnable_);
+  auto p = iter->second.priority_;
+  theSched()->enqueue(p, std::move(r));
+  units_.erase(iter);
+}
 
-private:
-  // Dispatch for object groups: handler with node-local object ptr
-  static void runObj(HandlerType handler, MsgT* msg, NodeType from_node);
-};
-
-struct RunnableVoid {
-  template <typename... Args>
-  using FnParamType = void(*)(Args...);
-
-  static inline void run(HandlerType handler, NodeType from_node);
-};
-
-}} /* end namespace vt::runnable */
-
-#include "vt/runnable/general.impl.h"
-
-#endif /*INCLUDED_RUNNABLE_GENERAL_H*/
+}} /* end namespace vt::sched */
