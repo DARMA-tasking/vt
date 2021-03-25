@@ -69,9 +69,7 @@ assertOutInfo(
   std::string const& file, int const line, std::string const& func,
   ErrorCodeType error, std::tuple<Args2...>&& tup, std::tuple<Args...>&& t2
 ) {
-  return assertOut(
-    fail,cond,str,file,line,func,error,std::forward<std::tuple<Args...>>(t2)
-  );
+  return assertOut(fail,cond,str,file,line,func,error);
 }
 
 template <typename... Args, typename... Args2>
@@ -88,7 +86,7 @@ assertOutInfo(
   using PrinterType = util::error::PrinterNameValue<size-1,KeyType,ValueType>;
 
   // Output the standard assert message
-  assertOut(false,cond,str,file,line,func,error,std::make_tuple());
+  assertOut(false,cond,str,file,line,func,error);
 
   // Output each expression computed passed to the function along with the
   // computed value of that passed expression
