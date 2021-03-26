@@ -159,13 +159,27 @@ struct RejectionStats {
   int n_transfers_ = 0;
 };
 
-struct GossipRejectionStatsMsg : collective::ReduceTMsg<RejectionStats> {
+static_assert(
+  vt::messaging::is_byte_copyable_t<RejectionStats>::value,
+  "Must be trivially copyable to avoid serialization."
+);
+
+struct GossipRejectionStatsMsg : NonSerialized<
+  collective::ReduceTMsg<RejectionStats>,
+  GossipRejectionStatsMsg
+>
+{
+  using MessageParentType = NonSerialized<
+    collective::ReduceTMsg<RejectionStats>,
+    GossipRejectionStatsMsg
+  >;
+
   GossipRejectionStatsMsg() = default;
   GossipRejectionStatsMsg(int n_rejected, int n_transfers)
-    : ReduceTMsg<RejectionStats>(RejectionStats(n_rejected, n_transfers))
+    : MessageParentType(RejectionStats(n_rejected, n_transfers))
   { }
   GossipRejectionStatsMsg(RejectionStats&& rs)
-    : ReduceTMsg<RejectionStats>(std::move(rs))
+    : MessageParentType(std::move(rs))
   { }
 };
 
