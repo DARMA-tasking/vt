@@ -264,11 +264,11 @@ void GossipLB::doLBStages(TimeType start_imb) {
   }
 
   if (best_imb <= start_imb) {
+    // load the configuration with the best imbalance
     cur_objs_ = best_objs;
     this_load = this_new_load_ = best_load;
     new_imbalance_ = best_imb;
 
-    // Update the load based on new object assignments
     if (this_node == 0) {
       vt_print(
         gossiplb,
@@ -698,6 +698,75 @@ GossipLB::selectObject(
   }
 }
 
+std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
+  // define the iteration order
+  std::vector<ObjIDType> ordered_obj_ids(cur_objs_.size());
+
+  int i = 0;
+  for (auto &obj : cur_objs_) {
+    ordered_obj_ids[i++] = obj.first;
+  }
+
+  switch (obj_ordering_) {
+  case ObjectOrderEnum::ElmID:
+    std::sort(
+      ordered_obj_ids.begin(), ordered_obj_ids.end(), std::less<ObjIDType>()
+    );
+    break;
+  case ObjectOrderEnum::Marginal:
+    {
+      // first find marginal object's load
+      auto over_avg = this_new_load_ - target_max_load_;
+      // if no objects are larger than over_avg, then marginal will still
+      // (incorrectly) reflect the total load, which will not be a problem
+      auto marginal = this_new_load_;
+      for (auto &obj : cur_objs_) {
+        // the object stats are in seconds but the processor stats are in
+        // milliseconds; for now, convert the object loads to milliseconds
+        auto obj_load_ms = loadMilli(obj.second);
+        if (obj_load_ms > over_avg && obj_load_ms < marginal) {
+          marginal = obj_load_ms;
+        }
+      }
+      // sort largest to smallest if <= marginal
+      // sort smallest to largest if > marginal
+      std::sort(
+        ordered_obj_ids.begin(), ordered_obj_ids.end(),
+        [=](const ObjIDType &left, const ObjIDType &right) {
+          auto left_load = loadMilli(this->cur_objs_[left]);
+          auto right_load = loadMilli(this->cur_objs_[right]);
+          if (left_load <= marginal && right_load <= marginal) {
+            // we're in the sort load descending regime (first section)
+            return left_load > right_load;
+          }
+          // else
+          // EITHER
+          // a) both are above the cut, and we're in the sort ascending
+          //    regime (second section), so return left < right
+          // OR
+          // b) one is above the cut and one is at or below, and the one
+          //    that is at or below the cut needs to come first, so
+          //    also return left < right
+          return left_load < right_load;
+        }
+      );
+      debug_print_verbose(
+        gossiplb, node,
+        "GossipLB::decide: over_avg={}, marginal={}\n",
+        over_avg, loadMilli(cur_objs_[ordered_obj_ids[0]])
+      );
+    }
+    break;
+  case ObjectOrderEnum::Arbitrary:
+    break;
+  default:
+    vtAbort("GossipLB::orderObjects: ordering not supported");
+    break;
+  }
+
+  return ordered_obj_ids;
+}
+
 void GossipLB::decide() {
   bool decide_done = false;
   auto lazy_epoch = theTerm()->makeEpochCollective("GossipLB: decide");
@@ -710,66 +779,7 @@ void GossipLB::decide() {
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
     if (under.size() > 0) {
-      std::vector<ObjIDType> ordered_obj_ids(cur_objs_.size());
-
-      // define the iteration order
-      int i = 0;
-      for (auto &obj : cur_objs_) {
-        ordered_obj_ids[i++] = obj.first;
-      }
-      switch (obj_ordering_) {
-      case ObjectOrderEnum::ElmID:
-        std::sort(
-          ordered_obj_ids.begin(), ordered_obj_ids.end(), std::less<ObjIDType>()
-        );
-        break;
-      case ObjectOrderEnum::Marginal:
-        {
-          // first find marginal object's load
-          auto over_avg = this_new_load_ - target_max_load_;
-          // if no objects are larger than over_avg, then marginal will still
-          // (incorrectly) reflect the total load, which will not be a problem
-          auto marginal = this_new_load_;
-          for (auto &obj : cur_objs_) {
-            // the object stats are in seconds but the processor stats are in
-            // milliseconds; for now, convert the object loads to milliseconds
-            auto obj_load_ms = loadMilli(obj.second);
-            if (obj_load_ms > over_avg && obj_load_ms < marginal) {
-              marginal = obj_load_ms;
-            }
-          }
-          // sort largest to smallest if <= marginal
-          // sort smallest to largest if > marginal
-          std::sort(
-            ordered_obj_ids.begin(), ordered_obj_ids.end(),
-            [=](const ObjIDType &left, const ObjIDType &right) {
-              auto left_load = loadMilli(this->cur_objs_[left]);
-              auto right_load = loadMilli(this->cur_objs_[right]);
-              if (left_load <= marginal && right_load <= marginal) {
-                // we're in the sort load descending regime (first section)
-                return left_load > right_load;
-              }
-              // else
-              // EITHER
-              // a) both are above the cut, and we're in the sort ascending
-              //    regime (second section), so return left < right
-              // OR
-              // b) one is above the cut and one is at or below, and the one
-              //    that is at or below the cut needs to come first, so
-              //    also return left < right
-              return left_load < right_load;
-            }
-          );
-          debug_print_verbose(
-            gossiplb, node,
-            "GossipLB::decide: over_avg={}, marginal={}\n",
-            over_avg, loadMilli(cur_objs_[ordered_obj_ids[0]])
-          );
-        }
-        break;
-      default:
-        break;
-      }
+      std::vector<ObjIDType> ordered_obj_ids = orderObjects();
 
       // Iterate through all the objects
       for (auto iter = ordered_obj_ids.begin(); iter != ordered_obj_ids.end(); ) {

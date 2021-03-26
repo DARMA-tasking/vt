@@ -113,6 +113,7 @@ protected:
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
   std::vector<NodeType> makeUnderloaded() const;
+  std::vector<ObjIDType> orderObjects();
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
