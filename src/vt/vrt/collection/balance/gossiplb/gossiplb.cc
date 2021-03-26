@@ -166,7 +166,6 @@ void GossipLB::doLBStages(TimeType start_imb) {
     selected_.clear();
     underloaded_.clear();
     load_info_.clear();
-    k_cur_ = 0;
     is_overloaded_ = is_underloaded_ = false;
 
     TimeType best_imb_this_trial = start_imb + 10;
@@ -192,7 +191,6 @@ void GossipLB::doLBStages(TimeType start_imb) {
         selected_.clear();
         underloaded_.clear();
         load_info_.clear();
-        k_cur_ = 0;
         is_overloaded_ = is_underloaded_ = false;
       }
 
@@ -324,13 +322,12 @@ void GossipLB::gossipRejectionStatsHandler(GossipRejectionMsgType* msg) {
 
 void GossipLB::informAsync() {
   propagated_k_.assign(k_max_, false);
-  uint8_t k_cur_async = 0;
 
   vt_debug_print(
     normal, gossiplb,
     "GossipLB::informAsync: starting inform phase: trial={}, iter={}, "
-    "k_max={}, k_cur={}, is_underloaded={}, is_overloaded={}, load={}\n",
-    trial_, iter_, k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
+    "k_max={}, is_underloaded={}, is_overloaded={}, load={}\n",
+    trial_, iter_, k_max_, is_underloaded_, is_overloaded_, this_new_load_
   );
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
@@ -352,6 +349,7 @@ void GossipLB::informAsync() {
 
   // Underloaded start the round
   if (is_underloaded_) {
+    uint8_t k_cur_async = 0;
     propagateRound(k_cur_async, false, propagate_epoch);
   }
 
@@ -370,8 +368,8 @@ void GossipLB::informAsync() {
   vt_debug_print(
     verbose, gossiplb,
     "GossipLB::informAsync: finished inform phase: trial={}, iter={}, "
-    "k_max={}, k_cur={}\n",
-    trial_, iter_, k_max_, k_cur_
+    "k_max={}\n",
+    trial_, iter_, k_max_
   );
 }
 
@@ -379,8 +377,8 @@ void GossipLB::informSync() {
   vt_debug_print(
     normal, gossiplb,
     "GossipLB::informSync: starting inform phase: trial={}, iter={}, "
-    "k_max={}, k_cur={}, is_underloaded={}, is_overloaded={}, load={}\n",
-    trial_, iter_, k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
+    "k_max={}, is_underloaded={}, is_overloaded={}, load={}\n",
+    trial_, iter_, k_max_, is_underloaded_, is_overloaded_, this_new_load_
   );
 
   vtAssert(k_max_ > 0, "Number of rounds (k) must be greater than zero");
@@ -403,7 +401,7 @@ void GossipLB::informSync() {
 
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
-  for (; k_cur_ < k_max_; ++k_cur_) {
+  for (k_cur_ = 0; k_cur_ < k_max_; ++k_cur_) {
     auto kbarr = theCollective()->newNamedCollectiveBarrier();
     theCollective()->barrier(nullptr, kbarr);
 
@@ -531,7 +529,7 @@ void GossipLB::propagateIncomingAsync(GossipMsgAsync* msg) {
     normal, gossiplb,
     "GossipLB::propagateIncomingAsync: trial={}, iter={}, k_max={}, "
     "k_cur={}, from_node={}, load info size={}\n",
-    trial_, iter_, k_max_, k_cur_, from_node, msg->getNodeLoad().size()
+    trial_, iter_, k_max_, k_cur_async, from_node, msg->getNodeLoad().size()
   );
 
   for (auto&& elm : msg->getNodeLoad()) {
