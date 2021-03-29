@@ -57,7 +57,7 @@
 
 #include <context_config.h>
 
-#if defined(context_has_valgrind_h)
+#if defined(context_has_valgrind_h) && defined(context_valgrind_stack_compiled)
 # include <valgrind/valgrind.h>
 #endif
 
@@ -82,7 +82,7 @@ FContextStackType allocateMallocStackInner(size_t const size_in) {
 
   auto end = static_cast<char*>(mem_ptr) + size;
 
-#if defined(context_has_valgrind_h)
+#if defined(context_has_valgrind_h) && defined(context_valgrind_stack_compiled)
   auto stack_id = VALGRIND_STACK_REGISTER(mem_ptr, end);
   valgrind_ids[end] = stack_id;
 #endif
@@ -166,7 +166,7 @@ void destroyStackInner(fcontext_stack_t stack, bool is_page_alloced) {
     printf("ptr=%p: is_page_alloced=%s\n", stack.sptr, is_page_alloced ? "true" : "false");
     #endif
 
-#if defined(context_has_valgrind_h)
+#if defined(context_has_valgrind_h) && defined(context_valgrind_stack_compiled)
     auto iter = valgrind_ids.find(static_cast<char*>(stack.sptr));
     if (iter != valgrind_ids.end()) {
       VALGRIND_STACK_DEREGISTER(iter->second);

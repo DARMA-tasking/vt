@@ -6,6 +6,8 @@ enable_language(CXX ASM)
 include (CTest)
 enable_testing()
 
+include(check_valgrind.cmake)
+
 include(CheckIncludeFiles)
 check_include_files(valgrind/valgrind.h context_has_valgrind_h)
 

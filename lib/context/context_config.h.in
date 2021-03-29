@@ -43,3 +43,4 @@
 */
 
 #cmakedefine context_has_valgrind_h
+#cmakedefine context_valgrind_stack_compiled
