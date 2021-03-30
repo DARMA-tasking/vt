@@ -55,7 +55,10 @@ struct RunnableNew {};
 #endif
 
 #if vt_check_enabled(trace_enabled)
-# include "vt/trace/trace_common.h"
+#include "vt/trace/trace_common.h"
+#if !vt_check_enabled(trace_only)
+#include "vt/context/runnable_context/trace.h"
+#endif
 #endif
 
 #include <string>

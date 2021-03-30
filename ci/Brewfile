@@ -1,2 +1,2 @@
 brew "ccache"
-brew "mpich"
+brew "coreutils"
