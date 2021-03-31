@@ -93,7 +93,7 @@ enum CtxEnum : uint64_t {
 enum ModeEnum : uint64_t {
   normal       = 1ull<<0,
   verbose      = 1ull<<1,
-  verbose_2    = 1ull<<2,
+  terse        = 1ull<<2,
   flush        = 1ull<<3,
   startup      = 1ull<<4,
   line_file    = 1ull<<5,
@@ -184,7 +184,7 @@ struct PrettyPrintMode;
 
 vt_option_mode_pretty_print(normal,    "normal")
 vt_option_mode_pretty_print(verbose,   "verbose")
-vt_option_mode_pretty_print(verbose_2, "verbose_2")
+vt_option_mode_pretty_print(terse,     "terse")
 vt_option_mode_pretty_print(flush,     "flush all debug prints")
 vt_option_mode_pretty_print(startup,   "print function context_debug")
 vt_option_mode_pretty_print(line_file, "print line/file debug")

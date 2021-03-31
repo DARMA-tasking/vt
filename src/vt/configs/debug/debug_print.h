@@ -94,14 +94,24 @@
     vt::config::ModeEnum::inmode                                        \
   >::apply(vt_debug_argument_option(cat) or force, __VA_ARGS__)
 
-#define vt_debug_print(feature, ctx, ...)                               \
+#define vt_debug_print(type, feature, ctx, ...)                         \
   vt_debug_print_impl(                                                  \
-    false, vt::config::VTPrintConfig, normal, feature, ctx, __VA_ARGS__ \
+    false, vt::config::VTPrintConfig, type, feature, ctx, __VA_ARGS__   \
   )
 
 #define vt_debug_print_verbose(feature, ctx, ...)                       \
   vt_debug_print_impl(                                                  \
-    false, vt::config::VTPrintConfig, verbose, feature, ctx, __VA_ARGS__ \
+    false, vt::config::VTPrintConfig, verbose, feature, ctx, __VA_ARGS__\
+  )
+
+#define vt_debug_print_terse(feature, ctx, ...)                         \
+  vt_debug_print_impl(                                                  \
+    false, vt::config::VTPrintConfig, terse, feature, ctx, __VA_ARGS__  \
+  )
+
+#define vt_debug_print_normal(feature, ctx, ...)                        \
+  vt_debug_print_impl(                                                  \
+    false, vt::config::VTPrintConfig, terse, feature, ctx, __VA_ARGS__  \
   )
 
 #define vt_make_config(feature, cftype)                                  \
