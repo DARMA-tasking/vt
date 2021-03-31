@@ -51,9 +51,7 @@
 #include "vt/topos/index/index_example.h"
 #include "vt/topos/index/dense/dense_array.h"
 
-#if vt_check_enabled(detector)
-  #include "vt/topos/index/traits/traits.h"
-#endif
+#include "vt/topos/index/traits/traits.h"
 
 namespace vt { namespace index {
 
@@ -64,11 +62,9 @@ template <typename T = IdxBase> using Index2D  = DenseIndexArray<T, 2>;
 template <typename T = IdxBase> using Index3D  = DenseIndexArray<T, 3>;
 template <typename T, int8_t N> using IdxType = DenseIndexArray<T, N>;
 
-#if vt_check_enabled(detector)
-  static_assert(IndexTraits<Index1D<IdxBase>>::is_index, "Does not conform");
-  static_assert(IndexTraits<Index2D<IdxBase>>::is_index, "Does not conform");
-  static_assert(IndexTraits<Index3D<IdxBase>>::is_index, "Does not conform");
-#endif
+static_assert(IndexTraits<Index1D<IdxBase>>::is_index, "Does not conform");
+static_assert(IndexTraits<Index2D<IdxBase>>::is_index, "Does not conform");
+static_assert(IndexTraits<Index3D<IdxBase>>::is_index, "Does not conform");
 
 }}  // end namespace vt::index
 

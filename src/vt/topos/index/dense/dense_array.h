@@ -61,9 +61,7 @@
 #include <initializer_list>
 #include <iosfwd>
 
-#if vt_check_enabled(detector)
-  #include "vt/topos/index/traits/traits.h"
-#endif
+#include "vt/topos/index/traits/traits.h"
 
 namespace vt { namespace index {
 
@@ -153,12 +151,10 @@ private:
   std::array<IndexType, ndim> dims = {};
 };
 
-#if vt_check_enabled(detector)
-  static_assert(
-    vt::index::IndexTraits<DenseIndexArray<int, 10>>::is_index,
-    "DenseIndexArray must follow the index concept"
-  );
-#endif
+static_assert(
+  vt::index::IndexTraits<DenseIndexArray<int, 10>>::is_index,
+  "DenseIndexArray must follow the index concept"
+);
 
 }}  // end namespace vt::index
 

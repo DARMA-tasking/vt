@@ -49,14 +49,10 @@
 #include "vt/vrt/collection/traits/cons_detect.h"
 #include "vt/vrt/collection/constructor/coll_constructors.h"
 
-#if vt_check_enabled(detector)
-  #include "detector_headers.h"
-#endif /* vt_check_enabled(detector) */
+#include "detector_headers.h"
 
 #include <functional>
 #include <tuple>
-
-#if vt_check_enabled(detector)
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -129,7 +125,5 @@ struct DispatchCons : DispatchConsImpl<
 >{ };
 
 }}} /* end namespace vt::vrt::collection */
-
-#endif /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_VRT_COLLECTION_TRAITS_CONS_DISPATCH_H*/

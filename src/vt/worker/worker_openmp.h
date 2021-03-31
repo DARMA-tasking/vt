@@ -96,18 +96,16 @@ private:
 
 }} /* end namespace vt::worker */
 
-#if vt_check_enabled(detector)
-  #include "vt/worker/worker_traits.h"
+#include "vt/worker/worker_traits.h"
 
-  namespace vt { namespace worker {
+namespace vt { namespace worker {
 
-  static_assert(
-    WorkerTraits<OMPWorker>::is_worker,
-    "vt::worker::Worker must follow the Worker concept"
-  );
+static_assert(
+  WorkerTraits<OMPWorker>::is_worker,
+  "vt::worker::Worker must follow the Worker concept"
+);
 
-  }} /* end namespace vt::worker */
-#endif /*vt_check_enabled(detector)*/
+}} /* end namespace vt::worker */
 
 #endif /*vt_check_enabled(openmp)*/
 

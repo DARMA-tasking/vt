@@ -47,9 +47,7 @@
 
 #include "vt/config.h"
 
-#if vt_check_enabled(detector)
-  #include "detector_headers.h"
-#endif /* vt_check_enabled(detector) */
+#include "detector_headers.h"
 
 namespace vt { namespace vrt { namespace collection {
 

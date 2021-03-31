@@ -54,7 +54,6 @@
 #define vt_feature_bit_check_overflow  0 || vt_feature_cmake_bit_check_overflo
 #define vt_feature_trace_enabled       0 || vt_feature_cmake_trace_enabled
 #define vt_feature_trace_only          0 || vt_feature_cmake_trace_only
-#define vt_feature_detector            0 || vt_feature_cmake_detector
 #define vt_feature_lblite              0 || vt_feature_cmake_lblite
 #define vt_feature_openmp              0 || vt_feature_cmake_openmp
 #define vt_feature_production          0 || vt_feature_cmake_production

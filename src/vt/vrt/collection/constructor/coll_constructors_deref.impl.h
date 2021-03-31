@@ -48,8 +48,6 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/manager.h"
 
-#if vt_check_enabled(detector)
-
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename Tuple, typename... Args>
@@ -81,7 +79,5 @@ DerefCons::expandSeq(
 }
 
 }}} /* end namespace vt::vrt::collection */
-
-#endif /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_IMPL_H*/

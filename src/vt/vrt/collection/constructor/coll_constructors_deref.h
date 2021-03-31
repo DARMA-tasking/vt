@@ -48,14 +48,10 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/manager.h"
 
-#if vt_check_enabled(detector)
-  #include "detector_headers.h"
-#endif /*vt_check_enabled(detector)*/
+#include "detector_headers.h"
 
 #include <tuple>
 #include <functional>
-
-#if vt_check_enabled(detector)
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -80,7 +76,5 @@ struct DerefCons {
 }}} /* end namespace vt::vrt::collection */
 
 #include "vt/vrt/collection/constructor/coll_constructors_deref.impl.h"
-
-#endif /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_VRT_COLLECTION_COLL_CONSTRUCTORS_DEREF_H*/

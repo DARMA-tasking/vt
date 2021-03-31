@@ -118,18 +118,16 @@ private:
 
 }} /* end namespace vt::worker */
 
-#if vt_check_enabled(detector)
-  #include "vt/worker/worker_group_traits.h"
+#include "vt/worker/worker_group_traits.h"
 
-  namespace vt { namespace worker {
+namespace vt { namespace worker {
 
-  static_assert(
-    WorkerGroupTraits<WorkerGroupOMP>::is_worker,
-    "WorkerGroupOMP must follow the WorkerGroup concept"
-  );
+static_assert(
+  WorkerGroupTraits<WorkerGroupOMP>::is_worker,
+  "WorkerGroupOMP must follow the WorkerGroup concept"
+);
 
-  }} /* end namespace vt::worker */
-#endif /*vt_check_enabled(detector)*/
+}} /* end namespace vt::worker */
 
 #endif /*vt_check_enabled(openmp)*/
 

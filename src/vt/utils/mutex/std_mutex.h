@@ -56,18 +56,16 @@ using STDMutex = std::mutex;
 
 }}} // end namespace vt::util::mutex
 
-#if vt_check_enabled(detector)
-  #include "vt/utils/mutex/mutex_traits.h"
+#include "vt/utils/mutex/mutex_traits.h"
 
-  namespace vt { namespace util { namespace mutex {
+namespace vt { namespace util { namespace mutex {
 
-  static_assert(
-    MutexTraits<STDMutex>::is_mutex,
-    "STDMutex should follow the mutex concept"
-  );
+static_assert(
+  MutexTraits<STDMutex>::is_mutex,
+  "STDMutex should follow the mutex concept"
+);
 
-  }}} // end namespace vt::util::mutex
-#endif
+}}} // end namespace vt::util::mutex
 
 #endif /*vt_check_enabled(stdthread)*/
 
