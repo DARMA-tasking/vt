@@ -94,7 +94,12 @@
     vt::config::ModeEnum::inmode                                        \
   >::apply(vt_debug_argument_option(cat) or force, __VA_ARGS__)
 
-#define vt_debug_print(type, feature, ctx, ...)                         \
+#define vt_debug_print(type, feature, ...)                              \
+  vt_debug_print_impl(                                                  \
+    false, vt::config::VTPrintConfig, type, feature, node, __VA_ARGS__  \
+  )
+
+#define vt_debug_print_context(type, feature, ctx, ...)                 \
   vt_debug_print_impl(                                                  \
     false, vt::config::VTPrintConfig, type, feature, ctx, __VA_ARGS__   \
   )
