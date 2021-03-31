@@ -121,7 +121,6 @@ void Runtime::printStartupBanner() {
 #if vt_check_enabled(trace_enabled)
   features.push_back(vt_feature_str_trace_enabled);
 #endif
-features.push_back(vt_feature_str_detector);
 #if vt_check_enabled(lblite)
   features.push_back(vt_feature_str_lblite);
 #endif

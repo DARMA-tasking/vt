@@ -85,14 +85,13 @@ using CollectionTestTypes = testing::Types<
   multi_param_idx_snd_           ::TestCol<int64_t,int64_t>
 >;
 
-// Only enable this test if the detector is enabled since they depend on
-// detecting constructor index
-#if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
+// This test depends on detecting constructor index
+#if vt_check_enabled(cons_multi_idx)
 
   INSTANTIATE_TYPED_TEST_SUITE_P(
     test_construct_idx_snd, TestConstruct, CollectionTestTypes
   );
 
-#endif /*vt_check_enabled(detector)*/
+#endif /*vt_check_enabled(cons_multi_idx)*/
 
 }}}} // end namespace vt::tests::unit::idx_snd
