@@ -56,7 +56,7 @@ void messageRef(MsgT* msg) {
   envelopeRef(msg->env);
 
   vt_debug_print(
-    pool, node,
+    verbose, pool,
     "messageRef msg={}, refs={}\n",
     print_ptr(msg), envelopeGetRef(msg->env)
   );
@@ -67,7 +67,7 @@ void messageDeref(MsgT* msg) {
   RefType refcount = envelopeDeref(msg->env);
 
   vt_debug_print(
-    pool, node,
+    verbose, pool,
     "messageDeref msg={}, refs={}\n",
     print_ptr(msg), refcount
   );

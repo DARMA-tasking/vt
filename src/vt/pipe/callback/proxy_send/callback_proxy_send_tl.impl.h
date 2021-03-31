@@ -66,7 +66,7 @@ void CallbackProxySendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
   auto const& pipe_node = PipeIDBuilder::getNode(pipe);
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "CallbackProxySendTypeless: trigger_: pipe={:x}, this_node={}\n",
     pipe, this_node
   );

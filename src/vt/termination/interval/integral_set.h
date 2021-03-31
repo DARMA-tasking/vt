@@ -90,7 +90,7 @@ struct IntegralSetBase {
       hint_(set_.end())
   {
     vt_debug_print(
-      gen, node,
+      normal, gen,
       "OrderedSet: construct: bounds=[{:x},{:x}] elms_={}, is_end={}\n",
       lb_, ub_, elms_, hint_ == set_.end()
     );
@@ -106,7 +106,7 @@ struct IntegralSetBase {
   >
   IteratorType insert(DomainU&& val) {
     vt_debug_print(
-      gen, node,
+      normal, gen,
       "OrderedSet: insert: bounds=[{:x},{:x}] elms_={}, is_end={}\n",
       lb_, ub_, elms_, hint_ == set_.end()
     );
@@ -136,7 +136,7 @@ struct IntegralSetBase {
   >
   IteratorType insertInterval(IntervalU&& i) {
     vt_debug_print(
-      gen, node,
+      normal, gen,
       "OrderedSet: insertInterval: bounds=[{:x},{:x}] elms_={}, i={}, is_end={}\n",
       lb_, ub_, elms_, i, hint_ == set_.end()
     );
@@ -182,7 +182,7 @@ struct IntegralSetBase {
     auto iter = set_.find(j);
     bool in_set = iter != set_.end();
     vt_debug_print(
-      gen, node,
+      normal, gen,
       "OrderedSet: erase: bounds=[{:x},{:x}] size={}, comp={}, val={}, in={}\n",
       lb_, ub_, size(), compressedSize(), j, in_set
     );
@@ -252,13 +252,16 @@ struct IntegralSetBase {
 
   void dumpState() const {
     vt_debug_print(
-      gen, node,
+      verbose, gen,
       "OrderedSet: bounds=[{:x},{:x}] size={}, compressedSize={}, compression={}\n",
       lb_, ub_, size(), compressedSize(), compression()
     );
     std::size_t c = 0;
     for (auto&& i : set_) {
-      vt_debug_print(gen, node, "\t interval {} : {}\n", c, i);
+      vt_debug_print(
+        verbose, gen,
+        "\t interval {} : {}\n", c, i
+      );
       c++;
     }
   }
@@ -267,7 +270,7 @@ private:
 
   IteratorType insertSet(IteratorType it, IntervalType&& i) {
     vt_debug_print(
-      gen, node,
+      normal, gen,
       "OrderedSet: insertSet: bounds=[{:x},{:x}] elms_={}, i={}, is_end={}\n",
       lb_, ub_, elms_, i, it == set_.end()
     );
@@ -308,7 +311,7 @@ private:
 
   void insertGlobal(IntervalType const& i) {
     vt_debug_print(
-      gen, node,
+      verbose, gen,
       "OrderedSet: insertGlobal: bounds=[{:x},{:x}] elms_={}, i={}\n",
       lb_, ub_, elms_, i
     );
@@ -327,7 +330,7 @@ private:
 
   IteratorType join(IteratorType it) {
     vt_debug_print(
-      gen, node,
+      verbose, gen,
       "OrderedSet: join: bounds=[{:x},{:x}] elms_={}\n",
       lb_, ub_, elms_
     );

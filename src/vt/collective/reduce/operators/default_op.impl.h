@@ -56,7 +56,7 @@ template <typename MsgT, typename Op, typename ActOp>
   if (msg->isRoot()) {
     auto cb = msg->getCallback();
     vt_debug_print(
-      reduce, node,
+      terse, reduce,
       "ROOT: reduce root: valid={}, ptr={}\n", cb.valid(), print_ptr(msg)
     );
     if (cb.valid()) {
@@ -68,7 +68,7 @@ template <typename MsgT, typename Op, typename ActOp>
     MsgT* fst_msg = msg;
     MsgT* cur_msg = msg->template getNext<MsgT>();
     vt_debug_print(
-      reduce, node,
+      verbose, reduce,
       "leaf: fst valid={}, ptr={}\n", fst_msg->getCallback().valid(),
       print_ptr(fst_msg)
     );

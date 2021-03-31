@@ -94,7 +94,7 @@ void msgSetPriorityImpl(
 
   bool const is_breadth_first = new_priority == sched::Priority::BreadthFirst;
   vt_debug_print(
-    gen, node,
+    verbose, gen,
     "msgSetPriorityImpl: new_priority={:x}, old_priority={:x}, level={}, "
     "is_breadth_first={}\n",
     new_priority, old_priority, level, is_breadth_first

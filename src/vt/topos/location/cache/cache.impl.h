@@ -101,7 +101,7 @@ void LocationCache<KeyT, ValueT>::insert(KeyT const& key, ValueT const& value) {
   auto iter = lookup_.find(key);
 
   vt_debug_print(
-    location, node,
+    verbose, location,
     "location cache: insert: found={}, size={}\n",
     print_bool(iter != lookup_.end()), lookup_.size()
   );
@@ -146,7 +146,7 @@ void LocationCache<KeyT, ValueT>::printCache() const {
   }
 
   vt_debug_print(
-    location, node,
+    normal, location,
     "printing cache: {}", stream.str().c_str()
   );
 }

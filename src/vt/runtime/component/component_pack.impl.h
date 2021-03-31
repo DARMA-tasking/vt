@@ -92,7 +92,7 @@ registry::AutoHandlerType ComponentPack::registerComponent(
       auto ptr = tupleCons<T>(std::move(tup));
 
       vt_debug_print(
-        runtime, node,
+        verbose, runtime,
         "ComponentPack: constructed component={}, pollable={}\n",
         ptr->name(), ptr->pollable()
       );

@@ -98,7 +98,7 @@ struct ActiveMsg : BaseMsg {
     envelopeInitEmpty(env);
 
     vt_debug_print(
-      pool, node,
+      verbose, pool,
       "Message::constructor of ptr={}, type={}\n",
       print_ptr(this), typeid(this).name()
     );
@@ -118,7 +118,7 @@ struct ActiveMsg : BaseMsg {
     auto const& ptr = thePool()->alloc(sz);
 
     vt_debug_print(
-      pool, node,
+      verbose, pool,
       "Message::new of size={}, ptr={}\n", sz, print_ptr(ptr)
     );
 
@@ -138,7 +138,7 @@ struct ActiveMsg : BaseMsg {
     auto const& ptr = thePool()->alloc(sz, oversize);
 
     vt_debug_print(
-      pool, node,
+      verbose, pool,
       "Message::new (special sized) of size={}, oversize={}, ptr={}\n",
       sz, oversize, print_ptr(ptr)
     );
@@ -153,7 +153,7 @@ struct ActiveMsg : BaseMsg {
    */
   static void operator delete(void* ptr) {
     vt_debug_print(
-      pool, node,
+      verbose, pool,
       "Message::delete of ptr={}\n", print_ptr(ptr)
     );
 
@@ -169,22 +169,52 @@ struct ActiveMsg : BaseMsg {
    * \return the pointer
    */
   static void* operator new(std::size_t, void* mem) {
+    vt_debug_print(
+      verbose, pool,
+      "Message::new (in-place) of ptr={}\n", print_ptr(mem)
+    );
+
     return mem;
   }
   #else
   static void* operator new(std::size_t sz) {
-    return std::malloc(sz);
+    auto ptr = std::malloc(sz);
+
+    vt_debug_print(
+      verbose, gen,
+      "Message::new (malloc) of size={}, ptr={}\n", sz, print_ptr(ptr)
+    );
+
+    return ptr;
   }
 
   static void* operator new(std::size_t sz, std::size_t oversize) {
-    return std::malloc(sz + oversize);
+    auto ptr = std::malloc(sz + oversize);
+
+    vt_debug_print(
+      verbose, gen,
+      "Message::new (malloc) of size={}, oversize={}, ptr={}\n",
+      sz, oversize, print_ptr(ptr)
+    );
+
+    return ptr;
   }
 
   static void operator delete(void* ptr) {
+    vt_debug_print(
+      verbose, gen,
+      "Message::delete (free) ptr={}\n", print_ptr(ptr)
+    );
+
     std::free(ptr);
   }
 
   static void* operator new(std::size_t, void* mem) {
+    vt_debug_print(
+      verbose, gen,
+      "Message::new (in-place) ptr={}\n", print_ptr(mem)
+    );
+
     return mem;
   }
   #endif
