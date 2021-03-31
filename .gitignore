@@ -7,10 +7,12 @@ lib/detector
 lib/googletest
 lib/kokkos
 .emacs.desktop
+.clangd/
 .vscode/
 project/*
 balance.in
 CMakeSettings.json
+compile_commands.json
 
 # Prerequisites
 *.d
