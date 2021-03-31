@@ -104,19 +104,19 @@
     false, vt::config::VTPrintConfig, type, feature, ctx, __VA_ARGS__   \
   )
 
-#define vt_debug_print_verbose(feature, ctx, ...)                       \
+#define vt_debug_print_verbose(feature, ...)                            \
   vt_debug_print_impl(                                                  \
-    false, vt::config::VTPrintConfig, verbose, feature, ctx, __VA_ARGS__\
+    false, vt::config::VTPrintConfig, verbose, feature, node, __VA_ARGS__ \
   )
 
-#define vt_debug_print_terse(feature, ctx, ...)                         \
+#define vt_debug_print_terse(feature, ...)                              \
   vt_debug_print_impl(                                                  \
-    false, vt::config::VTPrintConfig, terse, feature, ctx, __VA_ARGS__  \
+    false, vt::config::VTPrintConfig, terse, feature, node, __VA_ARGS__ \
   )
 
-#define vt_debug_print_normal(feature, ctx, ...)                        \
+#define vt_debug_print_normal(feature, ...)                             \
   vt_debug_print_impl(                                                  \
-    false, vt::config::VTPrintConfig, terse, feature, ctx, __VA_ARGS__  \
+    false, vt::config::VTPrintConfig, terse, feature, node, __VA_ARGS__ \
   )
 
 #define vt_make_config(feature, cftype)                                  \
