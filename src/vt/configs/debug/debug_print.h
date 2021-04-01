@@ -184,14 +184,26 @@ static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
   auto const level = mod & mask;
   if (level <= vt::debug::preConfig()->vt_debug_level_val) {
     auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
+    std::string debug_level = "";
+    if (level == ModeEnum::terse) {
+      debug_level = "(t)";
+    } else if (level == ModeEnum::normal) {
+      debug_level = "(n)";
+    } else if (level == ModeEnum::verbose) {
+      debug_level = "(v)";
+    }
     fmt::print(
-      "{} {} {} {}",
+      "{} {} {} {} {}",
       vt_print_colorize,
       vt_proc_print_colorize(node),
-      vt_print_colorize_impl(::vt::debug::green(), PrettyPrintCat<cat>::print(), ":"),
+      vt_print_colorize_impl(::vt::debug::yellow(), debug_level, ""),
+      vt_print_colorize_impl(
+        ::vt::debug::green(), PrettyPrintCat<cat>::print(), ":"
+      ),
       user
     );
-    if (vt_option_check_enabled(mod, ModeEnum::flush) or vt::debug::preConfig()->alwaysFlush()) {
+    bool const flush_enabled = vt_option_check_enabled(mod, ModeEnum::flush);
+    if (flush_enabled or vt::debug::preConfig()->alwaysFlush()) {
       fflush(stdout);
     }
   }
