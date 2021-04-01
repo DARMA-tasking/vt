@@ -292,6 +292,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
           "reduce notify root (direct): scope={}, stamp={}, root={}, node={}\n",
           scope_.str(), detail::stringizeStamp(id), root, this_node
         );
+        theMsg()->setupEpochMsg(typed_msg.get());
         reduceRootRecv(typed_msg.get());
       }
     } else {

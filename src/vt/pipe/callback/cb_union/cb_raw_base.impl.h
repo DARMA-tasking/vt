@@ -70,6 +70,8 @@ void CallbackRawBaseSingle::send(Args... args) {
 
 template <typename MsgT>
 void CallbackRawBaseSingle::send(MsgT* msg) {
+  theMsg()->setupEpochMsg(msg);
+
   switch (cb_.active_) {
   case CallbackEnum::SendMsgCB:
     cb_.u_.send_msg_cb_.trigger<MsgT>(msg,pipe_);
