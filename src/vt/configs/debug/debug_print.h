@@ -116,7 +116,7 @@
 
 #define vt_debug_print_normal(feature, ...)                             \
   vt_debug_print_impl(                                                  \
-    false, vt::config::VTPrintConfig, terse, feature, node, __VA_ARGS__ \
+    false, vt::config::VTPrintConfig, normal, feature, node, __VA_ARGS__\
   )
 
 #define vt_make_config(feature, cftype)                                  \
