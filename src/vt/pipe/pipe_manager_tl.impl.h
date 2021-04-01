@@ -318,7 +318,7 @@ PipeManagerTL::makeCallbackSingleAnonVoid(LifetimeEnum life, FuncVoidType fn) {
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
   vt_debug_print(
-    pipe, node,
+    normal, pipe,
     "makeCallbackSingleAnonVoid: persist={}, pipe={:x}\n",
     true, new_pipe_id
   );
@@ -334,7 +334,7 @@ PipeManagerTL::makeCallbackSingleAnon(
   auto fn_closure = [ctx,fn] { fn(ctx); };
 
   vt_debug_print(
-    pipe, node,
+    normal, pipe,
     "makeCallbackSingleAnon: created closure\n"
   );
 
@@ -349,7 +349,7 @@ PipeManagerTL::makeCallbackSingleAnon(
   auto fn_closure = [ctx,fn](MsgT* msg) { fn(msg, ctx); };
 
   vt_debug_print(
-    pipe, node,
+    normal, pipe,
     "makeCallbackSingleAnon: created closure\n"
   );
 
@@ -369,7 +369,7 @@ PipeManagerTL::makeCallbackSingleAnon(LifetimeEnum life, FuncMsgType<MsgT> fn) {
   auto cb = CallbackT(callback::cbunion::RawAnonTag,new_pipe_id);
 
   vt_debug_print(
-    pipe, node,
+    normal, pipe,
     "makeCallbackSingleAnon: persist={}, pipe={:x}\n",
     true, new_pipe_id
   );

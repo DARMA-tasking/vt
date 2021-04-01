@@ -82,7 +82,7 @@ RemoteContainer<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU*) {
   auto const& pid = BaseContainer<MsgT>::getPipe();
   constexpr auto multi_callback = std::tuple_size<decltype(trigger_list_)>();
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "RemoteContainer: (void) invoke trigger: pipe={:x}, multi={}\n",
     pid, multi_callback
   );
@@ -96,7 +96,7 @@ RemoteContainer<MsgT,TupleT>::triggerDirect(CallbackT cb, MsgU* data) {
   auto const& pid = BaseContainer<MsgT>::getPipe();
   auto const& multi_callback = std::tuple_size<decltype(trigger_list_)>() > 0;
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "RemoteContainer: (typed) invoke trigger: pipe={:x}, multi={}, ptr={}\n",
     pid, multi_callback, print_ptr(data)
   );
@@ -119,7 +119,7 @@ void RemoteContainer<MsgT,TupleT>::trigger(MsgU* data) {
   auto const& pipe = BaseContainer<MsgT>::getPipe();
   bool const& is_send_back = isSendBack();
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "RemoteContainer: pipe={:x}, send_back={}, size={}\n",
     pipe, is_send_back, std::tuple_size<decltype(trigger_list_)>()
   );

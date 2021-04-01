@@ -86,7 +86,7 @@ typename CallbackBcast<MsgT>::template IsVoidType<T>
 CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "CallbackBcast: (void) trigger_: this_node={}, include_sender_={}\n",
     this_node, include_sender_
   );
@@ -100,7 +100,7 @@ typename CallbackBcast<MsgT>::template IsNotVoidType<T>
 CallbackBcast<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "CallbackBcast: trigger_: this_node={}, include_sender_={}\n",
     this_node, include_sender_
   );

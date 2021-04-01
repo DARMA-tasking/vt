@@ -73,7 +73,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   auto const& pipe_node = PipeIDBuilder::getNode(pid);
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "CallbackAnon: (void signal) trigger_: pipe_={:x}, pipe_node={}\n",
     pid, pipe_node
   );
@@ -93,7 +93,7 @@ CallbackAnon<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
   auto const& this_node = theContext()->getNode();
   auto const& pipe_node = PipeIDBuilder::getNode(pid);
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "CallbackAnon: (T signal) trigger_: pipe_={:x}, pipe_node={}\n",
     pid, pipe_node
   );

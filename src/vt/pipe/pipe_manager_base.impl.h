@@ -98,7 +98,7 @@ void PipeManagerBase::triggerPipeUnknown(PipeType const& pipe, MsgT* msg) {
   vtAssert(iter != pipe_state_.end(), "Pipe state must exist");
 
   vt_debug_print(
-    pipe, node,
+    verbose, pipe,
     "PipeManagerBase: triggerPipeUnknown: pipe={:x}, msg_ptr={}: "
     "dynamic dispatch\n",
     pipe, print_ptr(msg)
