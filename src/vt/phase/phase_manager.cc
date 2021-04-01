@@ -65,6 +65,13 @@ PhaseManager::registerHookCollective(PhaseHook type, ActionType trigger) {
   auto const type_bits = static_cast<HookIDType>(type);
   auto const hook_id = next_collective_hook_id_++;
   collective_hooks_[type_bits][hook_id] = trigger;
+
+  vt_debug_print(
+    verbose, phase,
+    "PhaseManager::registerHookCollective: type={}, hook_id={}\n",
+    type_bits, hook_id
+  );
+
   return PhaseHookID{type, hook_id, is_collective};
 }
 
@@ -78,6 +85,13 @@ PhaseManager::registerHookRooted(PhaseHook type, ActionType trigger) {
   auto const type_bits = static_cast<HookIDType>(type);
   auto const hook_id = next_rooted_hook_id_++;
   rooted_hooks_[type_bits][hook_id] = trigger;
+
+  vt_debug_print(
+    verbose, phase,
+    "PhaseManager::registerHookRooted: type={}, hook_id={}\n",
+    type_bits, hook_id
+  );
+
   return PhaseHookID{type, hook_id, is_collective};
 }
 
@@ -89,6 +103,13 @@ void PhaseManager::unregisterHook(PhaseHookID hook) {
   auto const type = static_cast<HookIDType>(hook.getType());
   auto const id = hook.getID();
   auto const is_collective = hook.getIsCollective();
+
+  vt_debug_print(
+    verbose, phase,
+    "PhaseManager::unregisterHook: type={}, id={}, is_collective={}\n",
+    type, id, is_collective
+  );
+
   auto& hooks = is_collective ? collective_hooks_ : rooted_hooks_;
   auto iter = hooks[type].find(id);
   if (iter != hooks[type].end()) {
@@ -114,7 +135,7 @@ void PhaseManager::nextPhaseCollective() {
   in_next_phase_collective_ = true;
 
   vt_debug_print(
-    phase, node,
+    normal, phase,
     "PhaseManager::nextPhaseCollective: cur_phase_={}\n", cur_phase_
   );
 
@@ -130,7 +151,7 @@ void PhaseManager::nextPhaseCollective() {
   reduce_next_phase_done_ = false;
 
   vt_debug_print(
-    phase, node,
+    normal, phase,
     "PhaseManager::nextPhaseCollective: cur_phase_={}, reduce done, running "
     "hooks\n", cur_phase_
   );
@@ -141,7 +162,7 @@ void PhaseManager::nextPhaseCollective() {
   cur_phase_++;
 
   vt_debug_print(
-    phase, node,
+    normal, phase,
     "PhaseManager::nextPhaseCollective: starting next phase: cur_phase_={}\n",
     cur_phase_
   );
