@@ -98,8 +98,8 @@ bool EventRecord::testMPIEventReady() {
   bool const mpiready = flag == 1;
 
   if (mpiready and msg_ != nullptr) {
-    vt_debug_print_verbose(
-      active, node,
+    vt_debug_print(
+      verbose, event,
       "testMPIEventRead: deref: msg={}\n",
       print_ptr(msg_.get())
     );

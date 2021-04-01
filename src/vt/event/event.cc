@@ -90,7 +90,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   auto const& event_state = testEventComplete(event);
 
   vt_debug_print(
-    event, node,
+    normal, event,
     "event={}, state={}\n",
     event, static_cast<int>(event_state)
   );
@@ -119,7 +119,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
     );
 
     vt_debug_print(
-      event, node,
+      verbose, event,
       "theEvent: event={}, newevent={}, state={} sending msg, node={}\n",
       event, event_id, static_cast<int>(event_state), this_node
     );
@@ -171,7 +171,7 @@ EventType AsyncEvent::attachAction(EventType const& event, ActionType callable) 
   auto const& is_complete = theEvent()->testEventComplete(event);
 
   vt_debug_print(
-    event, node,
+    normal, event,
     "checkEventFinishedHan:: event={}, node={}, "
     "this_node={}, complete={}, sent_from_node={}\n",
     event, node, theContext()->getNode(), static_cast<int>(is_complete),
@@ -263,7 +263,7 @@ AsyncEvent::EventHolderType& AsyncEvent::getEventHolder(EventType const& event) 
   auto const& owning_node = getOwningNode(event);
 
   vt_debug_print(
-    event, node,
+    verbose, event,
     "theEvent: theEventHolder: node={}, event={}, owning_node={}\n",
     theContext()->getNode(), event, owning_node
   );
