@@ -91,13 +91,13 @@ void SubHandle<T,E,IndexT>::makeSubHandles(bool initial) {
   auto const total = totalLocalCount();
   auto const num_local = sub_handles_.size();
   vt_debug_print(
-    rdma, node,
+    terse, rdma,
     "total={}, num_local={}, is_migratable_={}\n",
     total, num_local, is_migratable_
   );
   for (uint64_t i = 0; i < sub_prefix_.size(); i++) {
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "i={} prefix={} layout={}\n",
       i, sub_prefix_[i], sub_layout_[i]
     );
@@ -109,7 +109,7 @@ void SubHandle<T,E,IndexT>::makeSubHandles(bool initial) {
     auto loc_len =
       num_local > 0 ? (is_migratable_ ? num_local * 4 : (num_local + 1) * 2) : 0;
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "total={}, num_local={}, is_migratable_={}, loc_len={}\n",
       total, num_local, is_migratable_, loc_len
     );
@@ -149,7 +149,7 @@ template <typename T, HandleEnum E, typename IndexT>
 typename IndexT::DenseIndexType
 SubHandle<T,E,IndexT>::linearize(IndexT idx) {
   vt_debug_print(
-    rdma, node,
+    verbose, rdma,
     "linearize: idx={}, range={}\n",
     idx, range_
   );
@@ -203,7 +203,7 @@ void SubHandle<T,E,IndexT>::updateInfo(
   auto this_node = theContext()->getNode();
   auto home_size = loc_handle_.getCount(home);
   vt_debug_print(
-    rdma, node,
+    normal, rdma,
     "updateInfo: idx={}, this_node={}, home={}, home_size={}\n",
     idx, this_node, home, home_size
   );
@@ -213,14 +213,14 @@ void SubHandle<T,E,IndexT>::updateInfo(
   // modified
   loc_handle_.get(home, &ptr[0], home_size, 0, Lock::Exclusive);
   for (uint64_t i = 0; i < home_size; i += 4) {
-    vt_debug_print_verbose(
-      rdma, node,
+    vt_debug_print(
+      verbose, rdma,
       "updateInfo: idx={}, node={}, home={}, ptr[{}]={},{},{},{}\n",
       idx, this_node, home, i, ptr[i+0], ptr[i+1], ptr[i+2], ptr[i+3]
     );
     if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
-      vt_debug_print_verbose(
-        rdma, node,
+      vt_debug_print(
+        verbose, rdma,
         "updateInfo: idx={}, node={}, home={}, "
         "ptr[{}]={},{},{},{}\n",
         idx, this_node, home, i,
@@ -245,8 +245,8 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
       auto ptr = std::make_unique<uint64_t[]>(4);
       loc_handle_.get(home_node, &ptr[0], 4, offset*2, Lock::Exclusive);
       auto lin_idx = linearize(idx);
-      vt_debug_print_verbose(
-        rdma, node,
+      vt_debug_print(
+        verbose, rdma,
         "fetchInfo: ordered: offset={}, idx={}, node={}, home={}, "
         "ptr={},{}, {},{}\n",
         offset, idx, this_node, home_node, ptr[0], ptr[1], ptr[2], ptr[3]
@@ -257,8 +257,8 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
       auto ptr = std::make_unique<uint64_t[]>(4);
       loc_handle_.get(home_node, &ptr[0], 4, offset*4, Lock::Exclusive);
       auto lin_idx = linearize(idx);
-      vt_debug_print_verbose(
-        rdma, node,
+      vt_debug_print(
+        verbose, rdma,
         "fetchInfo: ordered: offset={}, idx={}, node={}, home={},"
         " ptr={},{},{},{}\n",
         offset, idx, this_node, home_node, ptr[0], ptr[1], ptr[2], ptr[3]
@@ -269,7 +269,7 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
   } else {
     auto home_size = loc_handle_.getCount(home_node);
     vt_debug_print(
-      rdma, node,
+      normal, rdma,
       "fetchInfo: idx={}, this_node={}, home_node={}, home_size={}\n",
       idx, this_node, home_node, home_size
     );
@@ -278,14 +278,14 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
     loc_handle_.get(home_node, &ptr[0], home_size, 0, Lock::Exclusive);
     if (not is_migratable_) {
       for (uint64_t i = 0; i < home_size; i += 2) {
-        vt_debug_print_verbose(
-          rdma, node,
+        vt_debug_print(
+          verbose, rdma,
           "fetchInfo: idx={}, node={}, home={}, ptr[{}]={},{}\n",
           idx, this_node, home_node, i, ptr[i+0], ptr[i+1]
         );
         if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
-          vt_debug_print_verbose(
-            rdma, node,
+          vt_debug_print(
+            verbose, rdma,
             "fetchInfo: idx={}, node={}, home={}, ptr[{}]={},{}, {},{}\n",
             idx, this_node, home_node, i, ptr[i+0], ptr[i+1],
             ptr[i+2], ptr[i+3]
@@ -295,14 +295,14 @@ IndexInfo SubHandle<T,E,IndexT>::fetchInfo(IndexT const& idx) {
       }
     } else {
       for (uint64_t i = 0; i < home_size; i += 4) {
-        vt_debug_print_verbose(
-          rdma, node,
+        vt_debug_print(
+          verbose, rdma,
           "fetchInfo: idx={}, node={}, home={}, ptr[{}]={},{},{},{}\n",
           idx, this_node, home_node, i, ptr[i+0], ptr[i+1], ptr[i+2], ptr[i+3]
         );
         if (ptr[i] == static_cast<uint64_t>(lin_idx)) {
-          vt_debug_print_verbose(
-            rdma, node,
+          vt_debug_print(
+            verbose, rdma,
             "fetchInfo: idx={}, node={}, home={}, "
             "ptr[{}]={},{},{},{}\n",
             idx, this_node, home_node, i,
@@ -446,7 +446,7 @@ void SubHandle<T,E,IndexT>::stageLocalIndex(
   IndexT index, uint64_t count
 ) {
   vt_debug_print(
-    rdma, node,
+    verbose, rdma,
     "addLocalIndex: idx={}, count={}, range={}\n",
     index, count, range_
   );
@@ -553,7 +553,7 @@ template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::migratedOutIndex(IndexT index) {
   vtAssertExpr(is_migratable_);
   vt_debug_print(
-    rdma, node,
+    normal, rdma,
     "migratedOutIndex: idx={}\n", index
   );
   migrate_out_.push_back(index);
@@ -563,7 +563,7 @@ template <typename T, HandleEnum E, typename IndexT>
 void SubHandle<T,E,IndexT>::migratedInIndex(IndexT index) {
   vtAssertExpr(is_migratable_);
   vt_debug_print(
-    rdma, node,
+    normal, rdma,
     "migratedInIndex: idx={}\n", index
   );
   migrate_in_.push_back(index);
@@ -602,7 +602,7 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
   auto global_changed = msg->getVal();
 
   vt_debug_print(
-    rdma, node,
+    normal, rdma,
     "checkChanged: global_changed={}\n", global_changed
   );
 
@@ -614,7 +614,7 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     }
 
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "checkChanged: cur_handles={}, in={}, out={}\n",
       cur_handles.size(), migrate_in_.size(), migrate_out_.size()
     );
@@ -628,7 +628,7 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     );
 
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "checkChanged: all_handles={}, in={}, out={}\n",
       all_handles.size(), migrate_in_.size(), migrate_out_.size()
     );
@@ -644,13 +644,13 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     );
 
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "checkChanged: new_handles={}, in={}, out={}\n",
       new_handles.size(), migrate_in_.size(), migrate_out_.size()
     );
 
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "checkChanged: in.size()={}, out.size()={}\n",
       migrate_in_.size(), migrate_out_.size()
     );
@@ -659,7 +659,7 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     std::unordered_map<IndexT, std::size_t> new_handles_sized;
     for (auto&& h : new_handles) {
       vt_debug_print(
-        rdma, node,
+        verbose, rdma,
         "checkChanged: fetching size: idx={}\n", h
       );
 
@@ -668,7 +668,7 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     }
 
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "checkChanged: fetched all sizes\n"
     );
 
@@ -707,7 +707,7 @@ void SubHandle<T,E,IndexT>::checkChanged(impl::ReduceLBMsg* msg) {
     }
 
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "checkChanged: new_handles_sized={}, staged={}\n",
       new_handles_sized.size(), sub_handles_staged_.size()
     );

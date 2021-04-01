@@ -94,7 +94,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
   }
 
   vt_debug_print(
-    rdma, node,
+    normal, rdma,
     "CollectionHandle: next_handle={}, idx={}, range={}\n",
     next_handle, idx, range
   );
@@ -138,7 +138,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     // If LB is enabled then we need to register an afterLB listener
 #   if vt_check_enabled(lblite)
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "CollectionHandle: registering LB listener\n"
     );
     thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, [=]{
@@ -179,7 +179,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
     auto current = sub_proxy.get()->getNumHandles();
 
     vt_debug_print(
-      rdma, node,
+      verbose, rdma,
       "CollectionHandle: expected={}, current={}\n", expected, current
     );
 
