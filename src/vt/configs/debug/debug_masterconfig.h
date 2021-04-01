@@ -68,6 +68,8 @@ using VTPrintConfig = Configuration<
     CtxEnum::unknown
   ),
   static_cast<ModeEnum>(
+    ModeEnum::terse   |
+    ModeEnum::normal  |
     ModeEnum::verbose |
     ModeEnum::normal  |
     ModeEnum::flush
