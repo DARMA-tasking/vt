@@ -71,7 +71,6 @@ using VTPrintConfig = Configuration<
     ModeEnum::terse   |
     ModeEnum::normal  |
     ModeEnum::verbose |
-    ModeEnum::normal  |
     ModeEnum::flush
   )
 >;
