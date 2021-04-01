@@ -68,7 +68,7 @@ SeqParallel::SeqFuncLen SeqParallel::getSize() const {
 
 SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqParallel: expandParallelNode: funcs={}, skip_queue={}, node={}\n",
     num_funcs_, print_bool(seq_skip_queue), PRINT_SEQ_NODE_PTR(this_node)
   );
@@ -82,7 +82,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
 
   for (auto&& par_fn : par_funcs_) {
     vt_debug_print(
-      sequence, node,
+      normal, sequence,
       "SeqParallel: expandParallelNode: num_funcs_={}, expanding\n", num_funcs_
     );
 
@@ -94,7 +94,7 @@ SeqNodeStateEnumType SeqParallel::expandParallelNode(SeqNodePtrType this_node) {
     } else {
       auto defer_work = [=]{
         vt_debug_print(
-          sequence, node,
+          normal, sequence,
           "SeqParallel: parallel node: expand deferred: id={}\n", seq_id_
         );
 
@@ -115,7 +115,7 @@ bool SeqParallel::join() {
   auto const& old_val = num_funcs_completed_.fetch_add(1);
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqParallel: join: old_val={}, num_funcs={}\n", old_val, num_funcs_
   );
 

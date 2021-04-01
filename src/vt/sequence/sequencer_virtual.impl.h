@@ -68,14 +68,14 @@ TaggedSequencerVrt<SeqTag, SeqTrigger>::createVirtualSeq(
   VirtualProxyType const& proxy
 ) {
   vt_debug_print(
-    sequence_vrt, node,
+    verbose, sequence_vrt,
     "SequencerVirtual: createSeqVrtContextt\n"
   );
 
   auto vrt_context = theVirtualManager()->getVirtualByProxy(proxy);
 
   vt_debug_print(
-    sequence_vrt, node,
+    verbose, sequence_vrt,
     "SequencerVirtual: lookup virtual context: vrt_context={}\n",
     print_ptr(vrt_context)
   );
@@ -87,7 +87,7 @@ TaggedSequencerVrt<SeqTag, SeqTrigger>::createVirtualSeq(
   SeqType const& next_seq = this->createSeq();
 
   vt_debug_print(
-    sequence_vrt, node,
+    verbose, sequence_vrt,
     "SequencerVirtual: createSeqVrtContextt: new seq_id={}\n", next_seq
   );
 
@@ -113,7 +113,7 @@ VirtualProxyType TaggedSequencerVrt<SeqTag, SeqTrigger>::getCurrentVirtualProxy(
   auto cur_seq_id = this->context_->getSeq();
 
   vt_debug_print(
-    sequence_vrt, node,
+    verbose, sequence_vrt,
     "SequencerVirtual: getCurrentVrtProxy: seq={}\n", cur_seq_id
   );
 
@@ -135,7 +135,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::sequenceVrtMsg(
   TagType const& msg_tag = is_tag_type ? envelopeGetTag(msg->env) : no_tag;
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "sequenceVrtMsg: arrived: msg={}, tag={}\n", print_ptr(msg), msg_tag
   );
 
@@ -143,7 +143,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::sequenceVrtMsg(
     SeqStateMatcherType<VcT, MsgT, f>::hasMatchingAction(msg_tag);
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "sequenceVrtMsg: arriving: msg={}, has_match={}, tag={}\n",
     print_ptr(msg), print_bool(has_match), msg_tag
   );
@@ -212,7 +212,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
   bool const seq_ready = node->isReady();
 
   vt_debug_print(
-    sequence_vrt, node,
+    verbose, sequence_vrt,
     "SequencerVrt: wait: tag={}: context seq id={}, node={}, blocked={}, "
     "ready={}\n",
     tag, seq_id, PRINT_SEQ_NODE_PTR(node),
@@ -231,7 +231,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
     }
 
     vt_debug_print(
-      sequence_vrt, node,
+      verbose, sequence_vrt,
       "SequencerVrt: {}: tag={}: node={}, has_match={}, "
       "is_blocked={}\n",
       has_match ? "wait ran *immediately*" : "wait registered", tag,
@@ -245,7 +245,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
 
     if (has_match) {
       vt_debug_print(
-        sequence_vrt, node,
+        verbose, sequence_vrt,
         "SequencerVrt: activating next node: seq={}, node={}, blocked={}\n",
         seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(node->isBlockedNode())
       );
@@ -256,7 +256,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
 
       auto msg_recv_trigger = [node,seq_id,action,tag](MsgT* msg, VcT* vc){
         vt_debug_print(
-          sequence_vrt, node,
+          verbose, sequence_vrt,
           "SequencerVrt: msg_recv_trigger: seq={}, tag={}, node={}, blocked={}, "
           "msg={}\n",
           seq_id, tag, PRINT_SEQ_NODE_PTR(node),
@@ -286,7 +286,7 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
     bool const has_match = not deferred_wait_action();
 
     vt_debug_print(
-      sequence_vrt, node,
+      verbose, sequence_vrt,
       "SequencerVrt: executed wait: has_match={}: seq_id={}\n",
       print_bool(has_match), seq_id
     );

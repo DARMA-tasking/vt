@@ -58,7 +58,7 @@ SeqNode::SeqNode(SeqNodeParentTag, SeqType const& id)
   payload_.children = new SeqNodeContainerType<SeqNodePtrType>{};
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: creating with SeqNodeParentTag: (type={}) (ptr={}): "
     "children={}, size={}\n",
     PRINT_SEQ_NODE_TYPE(type_), print_ptr(this),
@@ -73,7 +73,7 @@ SeqNode::SeqNode(SeqNodeLeafTag, SeqType const& id)
   payload_.funcs = new SeqNodeContainerType<SeqExpandFunType>{};
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: creating with SeqNodeLeafTag: (type={}) (ptr={}): "
     "funcs={}, size={}\n",
     PRINT_SEQ_NODE_TYPE(type_), print_ptr(this), print_ptr(payload_.funcs),
@@ -88,7 +88,7 @@ SeqNode::SeqNode(SeqNodeParallelTag, SeqType const& id, SeqParallelPtrType par)
   payload_.parallel = par;
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: creating with SeqNodeParallelTag: (type={}) (ptr={}): "
     "parallel={}\n",
     PRINT_SEQ_NODE_TYPE(type_), print_ptr(this), print_ptr(payload_.parallel)
@@ -154,7 +154,7 @@ void SeqNode::setBlockedOnNode(eSeqConstructType cons, bool const& is_blocked) {
     ready_ = not is_blocked;
 
     vt_debug_print(
-      sequence, node,
+      normal, sequence,
       "SeqNode: ({}) blockedOnNode blocked_on_node_={}\n",
       print_ptr(this), print_bool(blocked_on_node_)
     );
@@ -163,7 +163,7 @@ void SeqNode::setBlockedOnNode(eSeqConstructType cons, bool const& is_blocked) {
 
 SeqNodeStateEnumType SeqNode::expandLeafNode() {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: expandLeafNode ({}): payload_.funcs: ptr={}\n",
     print_ptr(this), print_ptr(payload_.funcs)
   );
@@ -175,7 +175,7 @@ SeqNodeStateEnumType SeqNode::expandLeafNode() {
     auto& funcs = *payload_.funcs;
     do {
       vt_debug_print(
-        sequence, node,
+        normal, sequence,
         "SeqNode: expandLeafNode ({}) (type={}): funcs.size()={}, "
         "cur_state={}\n",
         print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), funcs.size(),
@@ -193,7 +193,7 @@ SeqNodeStateEnumType SeqNode::expandLeafNode() {
       executeSeqExpandContext(seq_id_, this_node, elm);
 
       vt_debug_print(
-        sequence, node,
+        normal, sequence,
         "SeqNode: ({}) after running elm (ready_={}): blocked_on_node_={}\n",
         print_ptr(this), print_bool(ready_), print_bool(blocked_on_node_)
       );
@@ -211,7 +211,7 @@ SeqNodeStateEnumType SeqNode::expandLeafNode() {
 
 SeqNodeStateEnumType SeqNode::expandParentNode() {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: expandParentNode ({}) (type={}): payload_.children: ptr={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), print_ptr(payload_.children)
   );
@@ -222,7 +222,7 @@ SeqNodeStateEnumType SeqNode::expandParentNode() {
     auto& children = *payload_.children;
     do {
       vt_debug_print(
-        sequence, node,
+        normal, sequence,
         "SeqNode: expandParentNode ({}) (type={}): children.size()={}\n",
         print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), children.size()
       );
@@ -243,7 +243,7 @@ SeqNodeStateEnumType SeqNode::expandParentNode() {
 
 bool SeqNode::executeClosuresUntilBlocked() {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: executeClosuresUntilBlocked (begin) ({}): num={}: blocked={}\n",
     print_ptr(this), sequenced_closures_.size(), print_bool(blocked_on_node_)
   );
@@ -253,7 +253,7 @@ bool SeqNode::executeClosuresUntilBlocked() {
   do {
     if (sequenced_closures_.size() != 0) {
       vt_debug_print(
-        sequence, node,
+        normal, sequence,
         "SeqNode: executeClosuresUntilBlocked ({}) execute closure: num={}\n",
         print_ptr(this), sequenced_closures_.size()
       );
@@ -272,7 +272,7 @@ bool SeqNode::executeClosuresUntilBlocked() {
       blocked = is_waiting or blocked_on_node_;
 
       vt_debug_print(
-        sequence, node,
+        normal, sequence,
         "SeqNode: executeClosuresUntilBlocked ({}) execute closure: status={}, "
         "is_waiting={}, blocked={}\n",
         print_ptr(this), PRINT_SEQ_NODE_STATE(status), print_bool(is_waiting),
@@ -287,7 +287,7 @@ bool SeqNode::executeClosuresUntilBlocked() {
   }
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: executeClosuresUntilBlocked (end) ({}): num={}: "
     "blocked_on_node_={}, blocked={}\n",
     print_ptr(this), sequenced_closures_.size(), print_bool(blocked_on_node_),
@@ -302,7 +302,7 @@ void SeqNode::activate() {
   bool finished_parallel = false;
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: activate ({}), type={}, type_is_parallel={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), print_bool(type_is_parallel)
   );
@@ -311,7 +311,7 @@ void SeqNode::activate() {
     finished_parallel = payload_.parallel->join();
 
     vt_debug_print(
-      sequence, node,
+      normal, sequence,
       "SeqNode: activate finished__parallel={}\n", print_bool(finished_parallel)
     );
   }
@@ -322,7 +322,7 @@ void SeqNode::activate() {
     bool const has_sequenced_closures = sequenced_closures_.size() != 0;
 
     vt_debug_print(
-      sequence, node,
+      normal, sequence,
       "SeqNode: activate ({}) next={}, parent={}, blocked={}, "
       "has_sequenced_closures={}, num closures={}, num unexpanded nodes={}\n",
       print_ptr(this), print_bool(next_node_), print_bool(parent_node_),
@@ -356,7 +356,7 @@ void SeqNode::activate() {
       auto const& next = next_node_ != nullptr ? next_node_ : parent_node_;
 
       vt_debug_print(
-        sequence, node,
+        normal, sequence,
         "SeqNode: activate ({}) next={}, parent={}, selected={}\n",
         print_ptr(this), PRINT_SEQ_NODE_PTR(next_node_), PRINT_SEQ_NODE_PTR(parent_node_),
         PRINT_SEQ_NODE_PTR(next)
@@ -368,7 +368,7 @@ void SeqNode::activate() {
         next->activate();
       } else {
         vt_debug_print(
-          sequence, node,
+          normal, sequence,
           "SeqNode: activate ({}) done with sequence\n", print_ptr(this)
         );
       }
@@ -378,7 +378,7 @@ void SeqNode::activate() {
 
 SeqNodeStateEnumType SeqNode::expandNext() {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: expandNext ({}) (type={})\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_)
   );
@@ -401,7 +401,7 @@ SeqNodeStateEnumType SeqNode::expandNext() {
 
 void SeqNode::addSequencedChild(SeqNodePtrType ptr) {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: addSequencedChild ({}) (type={}): ptr={}: "
     "payload_.children.size={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), print_ptr(ptr.get()),
@@ -421,7 +421,7 @@ void SeqNode::addSequencedChild(SeqNodePtrType ptr) {
 
 void SeqNode::addSequencedFunction(SeqExpandFunType fun) {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: addSequencedFunction ({}) (type={}): payload_.funcs.size={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), payload_.funcs->size()
   );
@@ -434,7 +434,7 @@ void SeqNode::addSequencedFunction(SeqExpandFunType fun) {
 
 void SeqNode::addParallelFunction(SeqExpandFunType fun) {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: addParallelFunction ({}) (type={}): payload_.funcs.size={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), payload_.funcs->size()
   );
@@ -469,7 +469,7 @@ void SeqNode::addSequencedParallelClosure(SeqNodePtrType par_node) {
   sequenced_closures_.emplace_back(SeqClosure{par_node});
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: addSequencedParallelClosure ({}) (type={}): num closures={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), sequenced_closures_.size()
   );
@@ -479,7 +479,7 @@ void SeqNode::addSequencedParallelClosure(SeqNodePtrType par_node) {
 
 void SeqNode::addSequencedClosure(SeqLeafClosureType cl, bool const& is_leaf) {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: addSequencedClosure ({}) (type={}): num closures={}, is_leaf={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), sequenced_closures_.size(),
     print_bool(is_leaf)
@@ -495,7 +495,7 @@ void SeqNode::addSequencedClosure(SeqLeafClosureType cl, bool const& is_leaf) {
   }
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: addSequencedClosure ({}) (type={}): num closures={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), sequenced_closures_.size()
   );
@@ -507,7 +507,7 @@ void SeqNode::executeIfReady() {
   bool const is_ready = not isBlockedNode();
 
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqNode: executeIfReady ({}) (type={}): num closures={}: is_ready={}\n",
     print_ptr(this), PRINT_SEQ_NODE_TYPE(type_), sequenced_closures_.size(),
     print_bool(is_ready)

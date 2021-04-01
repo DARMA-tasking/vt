@@ -190,7 +190,7 @@ template <typename FnT>
   FnT action, SeqType const& seq_id, TagType const& tag
 ) {
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "SeqMatcher: buffering action: seq={}, tag={}\n", seq_id, tag
   );
 

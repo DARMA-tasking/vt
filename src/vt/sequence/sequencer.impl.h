@@ -114,7 +114,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(UserSeqFunType const& fn) {
   assertValidContext();
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: sequenced: fn: context_={}\n",
     print_ptr(context_)
   );
@@ -127,7 +127,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(
   SeqType const& seq_id, UserSeqFunWithIDType const& fn
 ) {
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: sequenced (UserSeqFunWithIDType) seq_id={}\n", seq_id
   );
 
@@ -142,7 +142,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::sequenced(
   bool const has_context = hasContext();
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: sequenced (UserSeqFunType) seq_id={}: has_context={}\n",
     seq_id, print_bool(has_context)
   );
@@ -176,7 +176,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel_lst(
   bool const has_context = hasContext();
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: parallel: seq_id={}, has_context={}, num fns={}\n",
     seq_id, print_bool(has_context), fn_list.size()
   );
@@ -198,7 +198,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel(FnT&&... fns) {
   assertValidContext();
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: parallel: fn: context_={}: num fns={}\n",
     context_, sizeof...(fns)
   );
@@ -214,7 +214,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::parallel(
   bool const has_context = hasContext();
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: parallel: seq_id={}, has_context={}, num fns={}\n",
     seq_id, print_bool(has_context), sizeof...(fns)
   );
@@ -343,7 +343,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
   bool const seq_ready = node->isReady();
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: wait: tag={}: context seq id={}, node={}, blocked={}, "
     "ready={}\n",
     tag, seq_id, PRINT_SEQ_NODE_PTR(node),
@@ -359,7 +359,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
     }
 
     vt_debug_print(
-      sequence, node,
+      verbose, sequence,
       "Sequencer: {}: tag={}: node={}, has_match={}, "
       "is_blocked={}\n",
       has_match ? "wait ran *immediately*" : "wait registered", tag,
@@ -373,7 +373,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
 
     if (has_match) {
       vt_debug_print(
-        sequence, node,
+        verbose, sequence,
         "Sequencer: activating next node: seq={}, node={}, blocked={}\n",
         seq_id, PRINT_SEQ_NODE_PTR(node), print_bool(node->isBlockedNode())
       );
@@ -386,7 +386,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
 
       auto msg_recv_trigger = [node,seq_id,action,tag](MessageT* msg){
         vt_debug_print(
-          sequence, node,
+          verbose, sequence,
           "Sequencer: msg_recv_trigger: seq={}, tag={}, node={}, blocked={}, "
           "msg={}\n",
           seq_id, tag, PRINT_SEQ_NODE_PTR(node),
@@ -420,7 +420,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
     bool const has_match = not deferred_wait_action();
 
     vt_debug_print(
-      sequence, node,
+      verbose, sequence,
       "Sequencer: executed wait: has_match={}: seq_id={}\n",
       print_bool(has_match), seq_id
     );
@@ -429,7 +429,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
     should_suspend = true;
 
     vt_debug_print(
-      sequence, node,
+      verbose, sequence,
       "Sequencer: deferring wait: seq_id={}\n", seq_id
     );
 
@@ -438,7 +438,7 @@ void TaggedSequencer<SeqTag, SeqTrigger>::wait_on_trigger(
 
   if (should_suspend and context_->isSuspendable()) {
     vt_debug_print(
-      sequence, node,
+      verbose, sequence,
       "Sequencer: should suspend: seq_id={}, context suspendable={}\n",
       seq_id, print_bool(context_->isSuspendable())
     );
@@ -458,7 +458,7 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::lookupContextExecute(
   auto seq_node = node_iter->second;
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: lookupContextExecute (start): id={}: context={}, node={}\n",
     id, print_ptr(context_), PRINT_SEQ_NODE_PTR(seq_node)
   );
@@ -466,7 +466,7 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::lookupContextExecute(
   bool const blocked = executeInNodeContext(id, seq_node, c);
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: lookupContextExecute (end): id={}: context={}, node={}, "
     "blocked={}\n",
     id, print_ptr(context_), PRINT_SEQ_NODE_PTR(seq_node), print_bool(blocked)
@@ -502,7 +502,7 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
   SeqContextType* prev_context = context_;
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: executeInNodeContext (start): id={}: node={}\n",
     id, print_ptr(node.get())
   );
@@ -525,7 +525,7 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
   context_ = prev_context;
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "Sequencer: executeInNodeContext (end): id={}: node={}\n",
     id, print_ptr(node.get())
   );
@@ -536,7 +536,8 @@ bool TaggedSequencer<SeqTag, SeqTrigger>::executeInNodeContext(
 template <typename SeqTag, template <typename> class SeqTrigger>
 void TaggedSequencer<SeqTag, SeqTrigger>::enqueue(ActionType const& action) {
   vt_debug_print(
-    sequence, node, "Sequencer: enqueue item\n"
+    verbose, sequence,
+    "Sequencer: enqueue item\n"
   );
 
   theSched()->enqueue(action);
@@ -549,7 +550,7 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
   TagType const& msg_tag = is_tag_type ? envelopeGetTag(msg->env) : no_tag;
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "sequenceMsg: arrived: msg={}, tag={}\n",
     print_ptr(msg), msg_tag
   );
@@ -558,7 +559,7 @@ template <typename MessageT, ActiveTypedFnType<MessageT>* f>
     SeqStateMatcherType<MessageT, f>::hasMatchingAction(msg_tag);
 
   vt_debug_print(
-    sequence, node,
+    verbose, sequence,
     "sequenceMsg: arriving: msg={}, has_match={}, tag={}\n",
     print_ptr(msg), print_bool(has_match), msg_tag
   );
