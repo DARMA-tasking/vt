@@ -131,7 +131,7 @@ void InfoColl::setupCollective() {
   this->coll_wait_count_ = children + 1;
 
   vt_debug_print(
-    group, node,
+    terse, group,
     "InfoColl::setupCollective: is_in_group={}, group_={:x}, parent={}, "
     "children={}, wait={}\n",
     is_in_group, group_, parent, children, coll_wait_count_
@@ -202,7 +202,7 @@ void InfoColl::setupCollective() {
   );
 
   vt_debug_print(
-    group, node,
+    normal, group,
     "InfoColl::setupCollective: is_in_group={}, parent={}: up tree\n",
     is_in_group, parent
   );
@@ -221,7 +221,7 @@ void InfoColl::atRoot() {
   auto const& is_root = collective_->isInitialRoot();
   auto const& group = getGroupID();
   vt_debug_print(
-    group, node,
+    normal, group,
     "InfoColl::atRoot: is_in_group={}, group={:x}, root={}, children={}\n",
     is_in_group, group, is_root, collective_->span_children_.size()
   );
@@ -248,7 +248,7 @@ void InfoColl::upTree() {
   auto const& op = up_tree_cont_;
 
   vt_debug_print(
-    group, node,
+    normal, group,
     "InfoColl::upTree: is_in_group={}, msgs.size()={}, msg_in_group.size()={}, "
     "extra={}, wait={}, group={:x}, op={:x}, is_root={}, subtree={}\n",
     is_in_group, msgs_.size(), msg_in_group.size(), extra_count_,
@@ -266,7 +266,7 @@ void InfoColl::upTree() {
        *  that without using this group explicitly
        */
       vt_debug_print(
-        group, node,
+        normal, group,
         "InfoColl::upTree: is_in_group={}, subtree_={}, num_nodes={}\n",
         is_in_group, subtree_, theContext()->getNumNodes()
       );
@@ -307,7 +307,7 @@ void InfoColl::upTree() {
       has_root_        = true;
 
       vt_debug_print(
-        group, node,
+        normal, group,
         "InfoColl::upTree: ROOT group={:x}, is_root={}, new_root={}, msgs={}\n",
         group, is_root, root_node, msg_list.size()
       );
@@ -323,7 +323,7 @@ void InfoColl::upTree() {
 
       for (std::size_t i = 1; i < msg_list.size(); i++) {
         vt_debug_print(
-          group, node,
+          verbose, group,
           "InfoColl::upTree: ROOT group={:x}, new_root={}, sending to={}\n",
           group, root_node, msg_list[i]->getChild()
         );
@@ -352,7 +352,7 @@ void InfoColl::upTree() {
       msg_in_group.size() == 2 ? msg_in_group[0]->getLevel() + 1 : 0;
 
     vt_debug_print(
-      group, node,
+      normal, group,
       "InfoColl::upTree: case 1: sub={}, total={}\n",
       subtree_, total_subtree
     );
@@ -381,7 +381,7 @@ void InfoColl::upTree() {
     }
 
     vt_debug_print(
-      group, node,
+      normal, group,
       "InfoColl::upTree: case 2: sub={} (total is same)\n",
       subtree_
     );
@@ -413,7 +413,7 @@ void InfoColl::upTree() {
     auto const total_subtree = static_cast<NodeType>(subtree_ + subtree_this);
 
     vt_debug_print(
-      group, node,
+      normal, group,
       "InfoColl::upTree: case 3: sub={}, total={}\n",
       subtree_, total_subtree
     );
@@ -431,7 +431,7 @@ void InfoColl::upTree() {
     std::vector<GroupCollectiveMsg*> msg_list;
     for (auto&& msg : msg_in_group) {
       vt_debug_print(
-        group, node,
+        verbose, group,
         "InfoColl::upTree: inserting into set msg={}\n",
         print_ptr(msg.get())
       );
@@ -453,7 +453,7 @@ void InfoColl::upTree() {
     auto const total_subtree = static_cast<NodeType>(subtree_this + subtree_);
 
     vt_debug_print(
-      group, node,
+      normal, group,
       "InfoColl::upTree: case 4: sub={}, total={}\n",
       subtree_, total_subtree
     );
@@ -464,7 +464,7 @@ void InfoColl::upTree() {
     theMsg()->sendMsg<GroupCollectiveMsg,upHan>(p, msg);
 
     vt_debug_print(
-      group, node,
+      verbose, group,
       "InfoColl::upTree: msg_in_group.size()={}, msg_size.size()={}\n",
       msg_in_group.size(), msg_list.size()
     );
@@ -513,7 +513,7 @@ void InfoColl::newRoot(GroupCollectiveMsg* msg) {
   auto const& this_node = theContext()->getNode();
 
   vt_debug_print(
-    group, node,
+    normal, group,
     "InfoColl::newRoot: group={:x}\n", msg->getGroup()
   );
 
@@ -523,8 +523,8 @@ void InfoColl::newRoot(GroupCollectiveMsg* msg) {
 }
 
 NodeType InfoColl::getRoot() const {
-  vt_debug_print_verbose(
-    group, node,
+  vt_debug_print(
+    verbose, group,
     "InfoColl::getRoot: group={:x}, has_root_={}, known_root_node_={}\n",
     getGroupID(), has_root_, known_root_node_
   );
@@ -567,7 +567,7 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
     (coll_wait_count_ == static_cast<WaitCountType>(arrived_count_) + 1);
 
   vt_debug_print(
-    group, node,
+    verbose, group,
     "InfoColl::collectiveFn: group={:x}, arrived_count_={}, extra_count_={}, "
     "coll_wait_count_-1={}, ready={}\n",
     msg->getGroup(), arrived_count_, extra_count_, coll_wait_count_-1,
@@ -593,7 +593,7 @@ void InfoColl::collectiveFn(MsgSharedPtr<GroupCollectiveMsg> msg) {
   envelopeUnlockForForwarding(msg->env);
 
   vt_debug_print(
-    group, node,
+    verbose, group,
     "InfoColl::upHan: group={:x}, op={:x}, child={}, extra={}\n",
     msg->getGroup(), msg->getOpID(), msg->getChild(), msg->getExtraNodes()
   );
@@ -609,7 +609,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
   auto const& from = theContext()->getFromNodeCurrentTask();
 
   vt_debug_print(
-    group, node,
+    verbose, group,
     "InfoColl::downTree: group={:x}, child={}, from={}\n",
     getGroupID(), msg->getChild(), from
   );
@@ -660,7 +660,7 @@ void InfoColl::sendDownNewTree() {
   auto const& children = collective_->span_children_;
   for (auto&& c : children) {
     vt_debug_print(
-      group, node,
+      verbose, group,
       "InfoColl::sendDownNewTree: group={:x}, sending to child={}\n",
       group_, c
     );
@@ -684,7 +684,7 @@ void InfoColl::finalize() {
 
       auto const& num_children = collective_->span_children_.size();
       vt_debug_print(
-        group, node,
+        verbose, group,
         "InfoColl::finalize: group={:x}, send_down_={}, "
         "send_down_finished_={}, in_phase_two_={}, in_group={}, "
         "has_root_={}, known_root_node_={}, is_new_root_={}, num={}, sub={},"
@@ -698,7 +698,7 @@ void InfoColl::finalize() {
     for (auto&& c : children) {
 
       vt_debug_print(
-        group, node,
+        verbose, group,
         "InfoColl::finalize: group={:x}, sending to child={}\n",
         group_, c
       );
@@ -733,8 +733,8 @@ void InfoColl::finalize() {
 void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   auto const& new_root = msg->getRoot();
   vtAssert(new_root != uninitialized_destination, "Must have root node");
-  vt_debug_print_verbose(
-    group, node,
+  vt_debug_print(
+    verbose, group,
     "InfoColl::finalizeTree: group={:x}, new_root={}\n",
     msg->getGroup(), new_root
   );

@@ -102,8 +102,8 @@ template <typename T>
 void GroupManagerT<T>::registerContinuationT(
   RemoteOperationIDType const op, ActionTType action
 ) {
-  vt_debug_print_verbose(
-    group, node,
+  vt_debug_print(
+    verbose, group,
     "GroupManager::registerContinuationT: op={:x}\n", op
   );
 
@@ -126,8 +126,8 @@ void GroupManagerT<T>::triggerContinuationT(
   auto iter = continuation_actions_t_.find(op);
   auto const& found = iter != continuation_actions_t_.end();
 
-  vt_debug_print_verbose(
-    group, node,
+  vt_debug_print(
+    verbose, group,
     "GroupManager::triggerContinuationT: op={:x}, found={}, size={}\n",
     op, found, continuation_actions_t_.size()
   );

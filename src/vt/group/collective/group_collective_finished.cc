@@ -52,8 +52,8 @@
 namespace vt { namespace group {
 
 void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
-  vt_debug_print_verbose(
-    group, node,
+  vt_debug_print(
+    verbose, group,
     "CollSetupFinished: group={:x}\n", msg->getGroup()
   );
   auto iter = theGroup()->local_collective_group_info_.find(msg->getGroup());
