@@ -94,7 +94,7 @@ struct DataMsg : vt::Message {
 template <typename Tuple>
 static void dataMessageHandler(DataMsg<Tuple>* msg) {
   vt_debug_print(
-    param, node,
+    normal, param,
     "dataMessageHandler: id={}\n", msg->sub_han
   );
 
