@@ -184,7 +184,7 @@ bool State::testReadyPutData(TagType const& tag) {
   auto const& state = *msg->state;
 
   vt_debug_print(
-    rdma_state, node,
+    normal, rdma_state,
     "defaultGetHandlerFn: msg={}, req_num_bytes={}, tag={}\n",
     print_ptr(msg), req_num_bytes, tag
   );
@@ -207,7 +207,7 @@ bool State::testReadyPutData(TagType const& tag) {
   auto const& state = *msg->state;
 
   vt_debug_print(
-    rdma_state, node,
+    normal, rdma_state,
     "defaultPutHandlerFn: msg={}, ptr={}, req_num_bytes={}, tag={}\n",
     print_ptr(msg), print_ptr(in_ptr), req_num_bytes, tag
   );
@@ -233,7 +233,7 @@ void State::getData(
   bool const ready = testReadyGetData(info.tag);
 
   vt_debug_print(
-    rdma_state, node,
+    normal, rdma_state,
     "getData: msg={}, tag={}, ready={}, handle={}, get_any_tag={},"
     " is_local={}\n",
     print_ptr(msg), info.tag, print_bool(ready), handle,
@@ -303,7 +303,7 @@ void State::putData(
   bool const ready = testReadyPutData(info.tag);
 
   vt_debug_print(
-    rdma_state, node,
+    normal, rdma_state,
     "putData: msg={}, tag={}, ptr={}, num_bytes={}, "
     "ready={}, handle={}, get_any_tag={}, is_local={}\n",
     print_ptr(msg), info.tag, print_ptr(info.data_ptr), info.num_bytes,

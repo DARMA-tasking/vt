@@ -59,7 +59,7 @@ RDMA_HandlerType State::setRDMAGetFn(
   MsgT* msg, FuncT const& fn, bool const& any_tag, TagType const& tag
 ) {
   vt_debug_print(
-    rdma_state, node,
+    normal, rdma_state,
     "setRDMAGetFn: GET tag={}, handle={}, any_tag={}\n",
     tag, handle, print_bool(any_tag)
   );
@@ -97,7 +97,7 @@ RDMA_HandlerType State::setRDMAPutFn(
   RDMA_HandlerType const handler = makeRdmaHandler(RDMA_TypeType::Put);
 
   vt_debug_print(
-    rdma_state, node,
+    normal, rdma_state,
     "setRDMAPutFn: PUT tag={}, handle={}, any_tag={}\n",
     tag, handle, print_bool(any_tag)
   );
