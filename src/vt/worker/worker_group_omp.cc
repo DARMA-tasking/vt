@@ -105,7 +105,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
   using ::vt::ctx::ContextAttorney;
 
   vt_debug_print(
-    worker, node,
+    normal, worker,
     "Worker group OMP: launching num worker threads={}, num comm threads={}\n",
     num_workers_, num_default_comm
   );
@@ -113,7 +113,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
   initialized_ = true;
 
   vt_debug_print(
-    worker, node,
+    normal, worker,
     "worker group OMP spawning={}\n", num_workers_ + 1
   );
 
@@ -131,7 +131,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
       ContextAttorney::setWorker(thd);
 
       vt_debug_print(
-        worker, node,
+        normal, worker,
         "Worker group OMP: (worker) thd={}, num threads={}\n", thd, nthds
       );
 
@@ -145,7 +145,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
       ContextAttorney::setWorker(worker_id_comm_thread);
 
       vt_debug_print(
-        worker, node,
+        normal, worker,
         "Worker group OMP: (comm) thd={}, num threads={}\n", thd, nthds
       );
 
@@ -162,7 +162,7 @@ void WorkerGroupOMP::spawnWorkersBlock(WorkerCommFnType comm_fn) {
 
       // once the comm function exits the program is terminated
       for (auto thr = 0; thr < num_workers_; thr++) {
-        vt_debug_print( worker, node, "comm: calling join thd={}\n", thr );
+        vt_debug_print(normal, worker, "comm: calling join thd={}\n", thr );
         worker_state_[thr]->join();
       }
     }
@@ -183,7 +183,7 @@ void WorkerGroupOMP::enqueueAnyWorker(WorkUnitType const& work_unit) {
   vtAssert(initialized_, "Must be initialized to enqueue");
 
   #if WORKER_OMP_VERBOSE
-  vt_debug_print(worker, node, "WorkerGroupOMP: enqueue any worker\n");
+  vt_debug_print(normal, worker, "WorkerGroupOMP: enqueue any worker\n");
   #endif
 
   this->enqueued();
@@ -200,7 +200,7 @@ void WorkerGroupOMP::enqueueForWorker(
   );
 
   #if WORKER_OMP_VERBOSE
-  vt_debug_print(worker, node, "WorkerGroupOMP: enqueue for id={}\n", worker_id);
+  vt_debug_print(normal, worker, "WorkerGroupOMP: enqueue for id={}\n", worker_id);
   #endif
 
   this->enqueued();
@@ -211,7 +211,7 @@ void WorkerGroupOMP::enqueueAllWorkers(WorkUnitType const& work_unit) {
   vtAssert(initialized_, "Must be initialized to enqueue");
 
   #if WORKER_OMP_VERBOSE
-  vt_debug_print(worker, node, "WorkerGroupOMP: enqueue all workers\n");
+  vt_debug_print(normal, worker, "WorkerGroupOMP: enqueue all workers\n");
   #endif
 
   this->enqueued(num_workers_);

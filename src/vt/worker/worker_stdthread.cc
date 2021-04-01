@@ -97,7 +97,7 @@ void StdThreadWorker::sendTerminateSignal() {
 
 void StdThreadWorker::spawn() {
   vt_debug_print(
-    worker, node,
+    normal, worker,
     "StdThreadWorker: spawn: spawning worker: id={}\n", worker_id_
   );
 
@@ -107,7 +107,7 @@ void StdThreadWorker::spawn() {
 
 void StdThreadWorker::join() {
   vt_debug_print(
-    worker, node,
+    normal, worker,
     "StdThreadWorker: join: spawning worker: id={}\n", worker_id_
   );
 
