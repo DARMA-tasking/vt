@@ -92,7 +92,7 @@ void ComponentPack::destruct() {
   while (live_components_.size() > 0) {
     if (live_components_.back() != nullptr) {
       vt_debug_print(
-        runtime, node,
+        normal, runtime,
         "ComponentPack: finalizing component={}\n",
         live_components_.back()->name()
       );
