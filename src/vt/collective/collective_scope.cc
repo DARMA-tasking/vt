@@ -70,8 +70,9 @@ TagType CollectiveScope::mpiCollectiveAsync(ActionType action) {
   );
 
   vt_debug_print(
-    gen, node,
-    "mpiCollectiveAsync: is_user_tag_={}, scope={}: new MPI collective with seq tag={}\n",
+    terse, gen,
+    "mpiCollectiveAsync: is_user_tag_={}, scope={}: new MPI collective with "
+    "seq tag={}\n",
     is_user_tag_, scope_, tag
   );
 

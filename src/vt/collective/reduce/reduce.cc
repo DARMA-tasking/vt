@@ -57,7 +57,7 @@ Reduce::Reduce(detail::ReduceScope const& in_scope)
     next_seq_(1)
 {
   vt_debug_print(
-    reduce, node,
+    normal, reduce,
     "Reduce constructor: children={}, parent={}\n",
     getNumChildren(), getParent()
   );
@@ -70,7 +70,7 @@ Reduce::Reduce(
     next_seq_(1)
 {
   vt_debug_print(
-    reduce, node,
+    normal, reduce,
     "Reduce constructor: children={}, parent={}\n",
     getNumChildren(), getParent()
   );
