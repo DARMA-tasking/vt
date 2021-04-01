@@ -133,7 +133,7 @@ void RunnableNew::run() {
   );
 
   vt_debug_print(
-    context, node,
+    terse, context,
     "start running task={}, done={}, suspended={}\n",
     print_ptr(this), done_, suspended_
   );
@@ -182,7 +182,7 @@ void RunnableNew::run() {
   }
 
   vt_debug_print(
-    context, node,
+    terse, context,
     "done running task={}, done={}, suspended={}\n",
     print_ptr(this), done_, suspended_
   );
