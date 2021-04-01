@@ -622,11 +622,11 @@ void ArgConfig::postParseTransform() {
   config_.vt_trace_pmpi = contains(arg_trace_mpi, "external");
 
   if (config_.vt_debug_level == "terse" or config_.vt_debug_level == "0") {
-    config_.vt_debug_level_val = 2;
+    config_.vt_debug_level_val = 1;
   } else if (config_.vt_debug_level == "normal" or config_.vt_debug_level == "1") {
-    config_.vt_debug_level_val = 4;
+    config_.vt_debug_level_val = 2;
   } else if (config_.vt_debug_level == "verbose" or config_.vt_debug_level == "2") {
-    config_.vt_debug_level_val = 8;
+    config_.vt_debug_level_val = 4;
   } else {
     vtAbort("Invalid value passed to --vt_deubg_level");
   }
