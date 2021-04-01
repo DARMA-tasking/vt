@@ -77,7 +77,7 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   auto& stats = col->stats_;
 
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "ElementStats: syncNextPhase ({}) (idx={}): stats.getPhase()={}, "
     "msg->getPhase()={}\n",
     print_ptr(col), col->getIndex(), stats.getPhase(), msg->getPhase()

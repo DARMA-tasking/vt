@@ -107,7 +107,7 @@ void HierarchicalLB::setupTree(double const threshold) {
   this_threshold = threshold;
 
   vt_debug_print(
-    hierlb, node,
+    terse, hierlb,
     "HierarchicalLB: setupTree: threshold={}\n",
     threshold
   );
@@ -123,14 +123,14 @@ void HierarchicalLB::setupTree(double const threshold) {
         std::forward_as_tuple(std::make_unique<HierLBChild>())
       );
       vt_debug_print(
-        hierlb, node,
+        normal, hierlb,
         "\t{}: child={}\n", this_node, child
       );
     }
   }
 
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "HierarchicalLB: num children={}\n",
     children.size()
   );
@@ -152,7 +152,7 @@ void HierarchicalLB::setupTree(double const threshold) {
         vtAssert(child_iter != children.end(), "Must exist");
         child_iter->second->final_child = true;
         vt_debug_print(
-          hierlb, node,
+          normal, hierlb,
           "\t{}: child-x={}\n", this_node, child
         );
       }
@@ -169,7 +169,7 @@ void HierarchicalLB::setupTree(double const threshold) {
   bottom_parent = ((this_node + 1 + factor) - 1) / hierlb_nary;
 
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "\t{}: parent={}, bottom_parent={}, children.size()={}\n",
     this_node, parent, bottom_parent, children.size()
   );
@@ -243,7 +243,7 @@ void HierarchicalLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   this_load -= obj_time_milli;
 
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
     "adding unit: bin={}, milli={}\n",
     this_load_begin, this_load, threshold, bin, obj_time_milli
@@ -254,7 +254,7 @@ void HierarchicalLB::calcLoadOver(HeapExtractEnum const extract) {
   auto const threshold = this_threshold * getAvgLoad();
 
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "calcLoadOver: this_load={}, avg_load={}, threshold={}, "
     "strategy={}\n",
     this_load, getAvgLoad(), threshold,
@@ -311,7 +311,7 @@ void HierarchicalLB::downTreeHandler(LBTreeDownMsg* msg) {
 
 void HierarchicalLB::startMigrations() {
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "startMigrations\n"
   );
 
@@ -337,7 +337,7 @@ void HierarchicalLB::downTree(
   NodeType const from, ObjSampleType excess_load, bool const final_child
 ) {
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "downTree: from={}, bottom_parent={}: excess_load={}, final_child={}\n",
     from, bottom_parent, excess_load.size(), final_child
   );
@@ -350,7 +350,7 @@ void HierarchicalLB::downTree(
       LoadType const total_taken_load = item.first * item.second.size();
 
       vt_debug_print(
-        hierlb, node,
+        verbose, hierlb,
         "downTree: from={}, taken_bin={}, taken_bin_count={}, "
         "total_taken_load={}\n",
         from, item.first, item.second.size(), total_taken_load
@@ -360,7 +360,7 @@ void HierarchicalLB::downTree(
     }
 
     vt_debug_print(
-      hierlb, node,
+      normal, hierlb,
       "downTree: this_load_begin={}, new load profile={}, avg_load={}\n",
       this_load_begin, this_load, getAvgLoad()
     );
@@ -398,7 +398,7 @@ void HierarchicalLB::lbTreeUp(
   auto const& this_node = theContext()->getNode();
 
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "lbTreeUp: child={}, child_load={}, child_size={}, "
     "child_msgs={}, children.size()={}, agg_node_size={}, "
     "avg_load={}, child_avg={}, incoming load.size={}\n",
@@ -411,7 +411,7 @@ void HierarchicalLB::lbTreeUp(
   if (load.size() > 0) {
     for (auto& bin : load) {
       vt_debug_print(
-        hierlb, node,
+        verbose, hierlb,
         "\t lbTreeUp: combining bins for bin={}, size={}\n",
         bin.first, bin.second.size()
       );
@@ -475,7 +475,7 @@ void HierarchicalLB::lbTreeUp(
   if (static_cast<size_t>(child_msgs) == children.size()) {
     if (this_node == hierlb_root) {
       vt_debug_print(
-        hierlb, node,
+        normal, hierlb,
         "lbTreeUp: reached root!: total_load={}, avg={}\n",
         total_child_load, total_child_load/agg_node_size
       );
@@ -498,7 +498,7 @@ HierLBChild* HierarchicalLB::findMinChild() {
   auto cur = cur_iter->second.get();
 
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "findMinChild, cur->node={}, load={}\n",
     cur->node, cur->cur_load
   );
@@ -507,12 +507,12 @@ HierLBChild* HierarchicalLB::findMinChild() {
     auto const& load = c.second->cur_load / c.second->node_size;
     auto const& cur_load = cur->cur_load / cur->node_size;
     vt_debug_print(
-      hierlb, node,
+      verbose, hierlb,
       "\t findMinChild: CUR node={}, node_size={}, load={}, rel-load={}\n",
       cur->node, cur->node_size, cur->cur_load, cur_load
     );
     vt_debug_print(
-      hierlb, node,
+      verbose, hierlb,
       "\t findMinChild: C node={}, node_size={}, load={}, rel-load={}\n",
       c.second->node, c.second->node_size, c.second->cur_load, load
     );
@@ -528,7 +528,7 @@ void HierarchicalLB::sendDownTree() {
   auto const& this_node = theContext()->getNode();
 
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "sendDownTree: given={}\n", given_objs.size()
   );
 
@@ -540,7 +540,7 @@ void HierarchicalLB::sendDownTree() {
     double const threshold = getAvgLoad() * weight * this_threshold;
 
     vt_debug_print(
-      hierlb, node,
+      verbose, hierlb,
       "\t sendDownTree: distribute min child: c={}, child={}, cur_load={}, "
       "weight={}, avg_load={}, threshold={}\n",
       print_ptr(c), c ? c->node : -1, c ? c->cur_load : -1.0,
@@ -552,7 +552,7 @@ void HierarchicalLB::sendDownTree() {
     } else {
       if (cIter->second.size() != 0) {
         vt_debug_print(
-          hierlb, node,
+          verbose, hierlb,
           "\t sendDownTree: distribute: child={}, cur_load={}, time={}\n",
           c->node, c->cur_load, cIter->first
        );
@@ -580,14 +580,14 @@ void HierarchicalLB::sendDownTree() {
 
   for (auto& c : children) {
     vt_debug_print(
-      hierlb, node,
+      verbose, hierlb,
       "sendDownTree: downTreeSend: node={}, recs={}\n",
       c.second->node, c.second->recs.size()
     );
 
     for (auto&& elm : c.second->recs) {
       vt_debug_print(
-        hierlb, node,
+        verbose, hierlb,
         "\t downTreeSend: node={}, recs={}, bin={}, bin_size={}, final={}\n",
         c.second->node, c.second->recs.size(), elm.first, elm.second.size(),
         c.second->final_child
@@ -607,7 +607,7 @@ void HierarchicalLB::distributeAmoungChildren() {
   auto const& this_node = theContext()->getNode();
 
   vt_debug_print(
-    hierlb, node,
+    normal, hierlb,
     "distributeAmoungChildren: parent={}\n", parent
   );
 
@@ -619,7 +619,7 @@ void HierarchicalLB::distributeAmoungChildren() {
     double const threshold = getAvgLoad() * weight * this_threshold;
 
     vt_debug_print(
-      hierlb, node,
+      verbose, hierlb,
       "\t Up: distribute min child: c={}, child={}, cur_load={}, "
       "weight={}, avg_load={}, threshold={}\n",
       print_ptr(c),
@@ -633,7 +633,7 @@ void HierarchicalLB::distributeAmoungChildren() {
     } else {
       if (cIter->second.size() != 0) {
         vt_debug_print(
-          hierlb, node,
+          verbose, hierlb,
           "\t Up: distribute: child={}, cur_load={}, time={}\n",
           c->node, c->cur_load, cIter->first
         );
@@ -665,7 +665,7 @@ void HierarchicalLB::distributeAmoungChildren() {
     auto const& load = child.second->cur_load;
     auto const& is_live = child.second->is_live;
     vt_debug_print(
-      hierlb, node,
+      verbose, hierlb,
       "distributeAmoungChildren: parent={}, child={}. is_live={}, size={}, "
       "load={}\n",
       parent, node, is_live, node_size, load

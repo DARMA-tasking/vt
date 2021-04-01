@@ -82,7 +82,7 @@ LBManager::~LBManager() = default;
 
 LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   vt_debug_print(
-    lb, node,
+    verbose, lb,
     "LBManager::decideLBToRun: phase={}, try_file={}, cached_phase_={}, lb={}\n",
     phase, try_file, cached_phase_, lb_names_[cached_lb_]
   );
@@ -126,7 +126,7 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
   }
 
   vt_debug_print(
-    lb, node,
+    terse, lb,
     "LBManager::decidedLBToRun: phase={}, return lb_={}\n",
     phase, lb_names_[the_lb]
   );
@@ -166,7 +166,7 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
 
   runInEpochCollective([=] {
     vt_debug_print(
-      lb, node,
+      terse, lb,
       "LBManager: running strategy\n"
     );
     strat->startLB(phase, base_proxy, model_.get(), theNodeStats()->getNodeComm()->at(phase));
@@ -174,14 +174,14 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
 
   runInEpochCollective([=] {
     vt_debug_print(
-      lb, node,
+      terse, lb,
       "LBManager: starting migrations\n"
     );
     strat->applyMigrations(strat->getTransfers());
   });
 
   vt_debug_print(
-    lb, node,
+    terse, lb,
     "LBManager: finished migrations\n"
   );
 }
@@ -193,7 +193,7 @@ void LBManager::selectStartLB(PhaseType phase) {
 
 void LBManager::startLB(PhaseType phase, LBType lb) {
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "LBManager::startLB: phase={}\n", phase
   );
 
@@ -201,7 +201,7 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
 
   if (this_node == 0 and not theConfig()->vt_lb_quiet) {
     vt_debug_print(
-      lb, node,
+      terse, lb,
       "LBManager::startLB: phase={}, balancer={}, name={}\n",
       phase,
       static_cast<typename std::underlying_type<LBType>::type>(lb),
@@ -244,7 +244,10 @@ void LBManager::startup() {
 }
 
 void LBManager::finishedLB(PhaseType phase) {
-  vt_debug_print(lb, node, "finishedLB\n");
+  vt_debug_print(
+    normal, lb,
+    "finishedLB\n"
+  );
 
   auto this_node = theContext()->getNode();
 

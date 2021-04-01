@@ -74,7 +74,7 @@ void VirtualInfo::setVirtualContextPtr(VirtualPtrType in_vrt_ptr) {
   is_constructed_ = true;
 
   vt_debug_print(
-    vrt, node,
+    verbose, vrt,
     "setVirtualContextPtr: set ptr={}, attaching process fn\n",
     print_ptr(in_vrt_ptr.get())
   );
@@ -137,7 +137,7 @@ void VirtualInfo::tryEnqueueWorkUnit(VirtualMessage* msg) {
   bool const is_constructed = is_constructed_.load();
 
   vt_debug_print(
-    vrt, node,
+    verbose, vrt,
     "tryEnqueueWorkUnit is_cons={}\n", print_bool(is_constructed)
   );
 

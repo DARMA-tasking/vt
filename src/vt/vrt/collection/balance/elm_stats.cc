@@ -55,8 +55,8 @@ void ElementStats::startTime() {
   cur_time_ = start_time;
   cur_time_started_ = true;
 
-  vt_debug_print_verbose(
-    lb, node,
+  vt_debug_print(
+    verbose, lb,
     "ElementStats: startTime: time={}\n",
     start_time
   );
@@ -72,8 +72,8 @@ void ElementStats::stopTime() {
     addTime(total_time);
   }
 
-  vt_debug_print_verbose(
-    lb, node,
+  vt_debug_print(
+    verbose, lb,
     "ElementStats: stopTime: time={}, total={}, started={}\n",
     stop_time, total_time, started
   );
@@ -118,7 +118,7 @@ void ElementStats::addTime(TimeType const& time) {
   subphase_timings_[cur_phase_].at(cur_subphase_) += time;
 
   vt_debug_print(
-    lb, node,
+    verbose,lb,
     "ElementStats: addTime: time={}, cur_load={}\n",
     time, phase_timings_[cur_phase_]
   );
@@ -126,7 +126,7 @@ void ElementStats::addTime(TimeType const& time) {
 
 void ElementStats::updatePhase(PhaseType const& inc) {
   vt_debug_print(
-    lb, node,
+    verbose, lb,
     "ElementStats: updatePhase: cur_phase_={}, inc={}\n",
     cur_phase_, inc
   );
@@ -153,10 +153,10 @@ TimeType ElementStats::getLoad(PhaseType const& phase) const {
   auto const& total_load = phase_timings_.at(phase);
 
   vt_debug_print(
-              lb, node,
-              "ElementStats: getLoad: load={}, phase={}, size={}\n",
-              total_load, phase, phase_timings_.size()
-              );
+    verbose, lb,
+    "ElementStats: getLoad: load={}, phase={}, size={}\n",
+    total_load, phase, phase_timings_.size()
+  );
 
   return total_load;
 }
@@ -171,7 +171,7 @@ TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
   auto total_load = subphase_loads.at(subphase);
 
   vt_debug_print(
-    lb, node,
+    verbose, lb,
     "ElementStats: getLoad: load={}, phase={}, subphase={}\n",
     total_load, phase, subphase
   );
@@ -184,7 +184,7 @@ ElementStats::getComm(PhaseType const& phase) {
   auto const& phase_comm = phase_comm_[phase];
 
   vt_debug_print(
-    lb, node,
+    verbose, lb,
     "ElementStats: getComm: comm size={}, phase={}\n",
     phase_comm.size(), phase
   );
@@ -196,7 +196,7 @@ std::vector<CommMapType> const& ElementStats::getSubphaseComm(PhaseType phase) {
   auto const& subphase_comm = subphase_comm_[phase];
 
   vt_debug_print(
-    lb, node,
+    verbose, lb,
     "ElementStats: getSubphaseComm: comm size={}, phase={}\n",
     subphase_comm.size(), phase
   );

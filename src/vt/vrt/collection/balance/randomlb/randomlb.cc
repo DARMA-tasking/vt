@@ -94,7 +94,7 @@ void RandomLB::runLB() {
     auto const to_node = dist(gen);
     if (to_node != this_node) {
       vt_debug_print(
-        lb, node,
+        terse, lb,
         "RandomLB: migrating obj={:x} home={} from={} to={}\n",
         it->id, it->home_node, this_node, to_node
       );

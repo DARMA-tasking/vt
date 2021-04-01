@@ -95,7 +95,7 @@ void BaseLB::importProcessorData(
 ) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "{}: importProcessorData: load stats size={}, load comm size={}\n",
     this_node, load_model_->getNumObjects(), comm_in.size()
   );
@@ -106,8 +106,8 @@ void BaseLB::importProcessorData(
     this_load += load_milli;
     obj_sample[bin].push_back(obj);
 
-    vt_debug_print_verbose(
-      lb, node,
+    vt_debug_print(
+      verbose, lb,
       "\t {}: importProcessorData: this_load={}, obj={}, home={}, load={}, "
       "load_milli={}, bin={}\n",
       this_node, this_load, obj.id, obj.home_node, load, load_milli, bin
@@ -190,7 +190,7 @@ void BaseLB::applyMigrations(TransferVecType const &transfers) {
       bool has_object = theNodeStats()->hasObjectToMigrate(obj_id);
 
       vt_debug_print(
-        lb, node,
+        normal, lb,
         "migrateObjectTo, obj_id={}, home={}, from={}, to={}, found={}\n",
         obj_id.id, obj_id.home_node, from, to, has_object
       );
@@ -249,7 +249,7 @@ void BaseLB::finalize(CountMsg* msg) {
 
 void BaseLB::migrationDone() {
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "BaseLB::migrationDone: local migration count={}\n",
     local_migration_count_
   );
@@ -270,7 +270,7 @@ void BaseLB::finishedStats() {
 
 void BaseLB::computeStatistics() {
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "computeStatistics: this_load={}\n", this_load
   );
 

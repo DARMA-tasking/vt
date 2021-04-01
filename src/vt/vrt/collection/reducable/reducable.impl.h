@@ -66,7 +66,7 @@ messaging::PendingSend Reducable<ColT,IndexT,BaseProxyT>::reduce(
   auto const proxy = this->getProxy();
   msg->setCallback(cb);
   vt_debug_print(
-    reduce, node,
+    normal, reduce,
     "Reducable: valid={} {}, ptr={}\n", cb.valid(), msg->getCallback().valid(),
     print_ptr(msg)
   );
