@@ -135,7 +135,7 @@ void TerminationDetector::setLocalTerminated(
   bool const local_terminated, bool const no_propagate
 ) {
   vt_debug_print(
-    term, node,
+    verbose, term,
     "setLocalTerminated: is_term={}, no_propagate={}\n",
     local_terminated, no_propagate
   );
@@ -179,8 +179,8 @@ void TerminationDetector::produceConsumeState(
   auto& counter = produce ? state.l_prod : state.l_cons;
   counter += num_units;
 
-  vt_debug_print_verbose(
-    term, node,
+  vt_debug_print(
+    verbose, term,
     "produceConsumeState: epoch={:x}, event_count={}, l_prod={}, l_cons={}, "
     "num_units={}, produce={}, node={}\n",
     state.getEpoch(), state.getRecvChildCount(), state.l_prod, state.l_cons, num_units,
@@ -194,8 +194,8 @@ void TerminationDetector::produceConsumeState(
 
 TerminationDetector::TermStateDSType*
 TerminationDetector::getDSTerm(EpochType epoch, bool is_root) {
-  vt_debug_print_verbose(
-    termds, node,
+  vt_debug_print(
+    verbose, termds,
     "getDSTerm: epoch={:x}, is_rooted={}, is_ds={}\n",
     epoch, isRooted(epoch), isDS(epoch)
   );
@@ -223,7 +223,7 @@ void TerminationDetector::produceConsume(
   EpochType epoch, TermCounterType num_units, bool produce, NodeType node
 ) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "produceConsume: epoch={:x}, rooted={}, ds={}, count={}, produce={}, "
     "node={}\n",
     epoch, isRooted(epoch), isDS(epoch), num_units, produce, node
@@ -270,8 +270,8 @@ void TerminationDetector::maybePropagate() {
 void TerminationDetector::propagateEpochExternalState(
   TermStateType& state, TermCounterType const& prod, TermCounterType const& cons
 ) {
-  vt_debug_print_verbose(
-    term, node,
+  vt_debug_print(
+    verbose, term,
     "propagateEpochExternalState: epoch={:x}, prod={}, cons={}, "
     "event_count={}, wave={}\n",
     state.getEpoch(), prod, cons, state.getRecvChildCount(), state.getCurWave()
@@ -291,8 +291,8 @@ void TerminationDetector::propagateEpochExternal(
   EpochType const& epoch, TermCounterType const& prod,
   TermCounterType const& cons
 ) {
-  vt_debug_print_verbose(
-    term, node,
+  vt_debug_print(
+    verbose, term,
     "propagateEpochExternal: epoch={:x}, prod={}, cons={}\n",
     epoch, prod, cons
   );
@@ -411,8 +411,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
   bool const& is_root = isRoot();
   auto const& parent = getParent();
 
-  vt_debug_print_verbose(
-    term, node,
+  vt_debug_print(
+    verbose, term,
     "propagateEpoch: epoch={:x}, l_prod={}, l_cons={}, event_count={}, "
     "children={}, is_ready={}\n",
     state.getEpoch(), state.l_prod, state.l_cons, state.getRecvChildCount(),
@@ -426,8 +426,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     state.g_prod1 += state.l_prod;
     state.g_cons1 += state.l_cons;
 
-    vt_debug_print_verbose(
-      term, node,
+    vt_debug_print(
+      verbose, term,
       "propagateEpoch: epoch={:x}, l_prod={}, l_cons={}, "
       "g_prod1={}, g_cons1={}, event_count={}, children={}\n",
       state.getEpoch(), state.l_prod, state.l_cons, state.g_prod1, state.g_cons1,
@@ -440,8 +440,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
       );
       theMsg()->markAsTermMessage(msg);
 
-      vt_debug_print_verbose(
-        term, node,
+      vt_debug_print(
+        verbose, term,
         "propagateEpoch: sending to parent: {}, msg={}, epoch={:x}, wave={}\n",
         parent, print_ptr(msg.get()), state.getEpoch(), state.getCurWave()
       );
@@ -455,7 +455,7 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
 
       // four-counter method implementation
       vt_debug_print(
-        term, node,
+        normal, term,
         "propagateEpoch [root]: epoch={:x}, g_prod1={}, g_cons1={}, "
         "g_prod2={}, g_cons2={}, detected_term={}\n",
         state.getEpoch(), state.g_prod1, state.g_cons1, state.g_prod2,
@@ -487,6 +487,14 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         theMsg()->markAsTermMessage(msg);
         theMsg()->broadcastMsg<TermMsg, epochTerminatedHandler>(msg, false);
 
+        vt_debug_print(
+          terse, term,
+          "propagateEpoch [root]: epoch={:x}, g_prod1={}, g_cons1={}, "
+          "g_prod2={}, g_cons2={}: termination detected\n",
+          state.getEpoch(), state.g_prod1, state.g_cons1, state.g_prod2,
+          state.g_cons2
+        );
+
         state.setTerminated();
 
         epochTerminated(state.getEpoch(), CallFromEnum::Root);
@@ -506,8 +514,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
         state.g_prod1 = state.g_cons1 = 0;
         state.setCurWave(state.getCurWave() + 1);
 
-        vt_debug_print_verbose(
-          term, node,
+        vt_debug_print(
+          verbose, term,
           "propagateEpoch [root]: epoch={:x}, wave={}, continue\n",
           state.getEpoch(), state.getCurWave()
         );
@@ -519,8 +527,8 @@ bool TerminationDetector::propagateEpoch(TermStateType& state) {
     }
 
     if (not is_term) {
-      vt_debug_print_verbose(
-        term, node,
+      vt_debug_print(
+        verbose, term,
         "propagateEpoch: epoch={:x}, is_root={}: reset counters\n",
         state.getEpoch(), print_bool(is_root)
       );
@@ -564,7 +572,7 @@ void TerminationDetector::countsConstant(TermStateType& state) {
         state.num_print_constant
       ) {
         vt_debug_print(
-          term, node,
+          normal, term,
           "countsConstant: epoch={:x}, state.constant_count={}\n",
           state.getEpoch(), state.constant_count
         );
@@ -627,7 +635,7 @@ void TerminationDetector::startEpochGraphBuild() {
   using ReduceOp = collective::PlusOp<EpochGraph>;
 
   vt_debug_print(
-    term, node,
+    verbose, term,
     "buildLocalGraphHandler: building local epoch graph\n"
   );
 
@@ -662,7 +670,7 @@ void TerminationDetector::startEpochGraphBuild() {
 
 /*static*/ void TerminationDetector::epochGraphBuiltHandler(EpochGraphMsg* msg) {
   vt_debug_print(
-    term, node,
+    verbose, term,
     "epochGraphBuiltHandler: collected global, merged graph\n"
   );
 
@@ -674,7 +682,7 @@ void TerminationDetector::startEpochGraphBuild() {
 
 void TerminationDetector::cleanupEpoch(EpochType const& epoch, CallFromEnum from) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "cleanupEpoch: epoch={:x}, is_rooted_epoch={}, is_ds={}, isRoot={}\n",
     epoch, isRooted(epoch), isDS(epoch), from == CallFromEnum::Root ? true : false
   );
@@ -717,7 +725,7 @@ void TerminationDetector::cleanupEpoch(EpochType const& epoch, CallFromEnum from
 
 void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum from) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "epochTerminated: epoch={:x}, is_rooted_epoch={}, is_ds={}, isRoot={}\n",
     epoch, isRooted(epoch), isDS(epoch), from == CallFromEnum::Root ? true : false
   );
@@ -755,14 +763,14 @@ void TerminationDetector::inquireTerminated(
   );
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "inquireTerminated: epoch={:x}, is_rooted={}, root={}, from={}\n",
     epoch, is_rooted, epoch_root_node, from
   );
 
   addAction(epoch, [=]{
     vt_debug_print(
-      term, node,
+      normal, term,
       "inquireTerminated: epoch={:x}, from={} ready trigger\n", epoch, from
     );
 
@@ -776,7 +784,7 @@ void TerminationDetector::replyTerminated(
   EpochType const& epoch, bool const& is_terminated
 ) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "replyTerminated: epoch={:x}, is_terminated={}\n",
     epoch, is_terminated
   );
@@ -794,7 +802,7 @@ void TerminationDetector::replyTerminated(
 void TerminationDetector::updateResolvedEpochs(EpochType const& epoch) {
   if (epoch != any_epoch_sentinel) {
     vt_debug_print(
-      term, node,
+      normal, term,
       "updateResolvedEpoch: epoch={:x}, rooted={}, "
       "collective: first={:x}, last={:x}\n",
       epoch, isRooted(epoch), epoch_coll_->getFirst(), epoch_coll_->getLast()
@@ -848,7 +856,7 @@ TermStatusEnum TerminationDetector::testEpochTerminated(EpochType epoch) {
   }
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "testEpochTerminated: epoch={:x}, pending={}, terminated={}, remote={}\n",
     epoch, status == TermStatusEnum::Pending, status == TermStatusEnum::Terminated,
     status == TermStatusEnum::Remote
@@ -861,7 +869,7 @@ void TerminationDetector::epochContinue(
   EpochType const& epoch, TermWaveType const& wave
 ) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "epochContinue: epoch={:x}, wave={}\n",
     epoch, wave
   );
@@ -895,7 +903,7 @@ void TerminationDetector::addDependency(
   EpochType predecessor, EpochType successor
 ) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "addDependency: successor={:x}, predecessor={:x}, cur_epoch={:x}\n",
     successor, predecessor, theMsg()->getEpoch()
   );
@@ -958,7 +966,7 @@ void TerminationDetector::finishNoActivateEpoch(EpochType const& epoch) {
 
 void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "finishedEpoch: epoch={:x}, finished={}\n",
     epoch, epoch_ready_.find(epoch) != epoch_ready_.end()
   );
@@ -967,7 +975,7 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
   activateEpoch(epoch);
 
   vt_debug_print(
-    term, node,
+    verbose, term,
     "finishedEpoch: (after consume) epoch={:x}\n",
     epoch
   );
@@ -979,7 +987,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
   auto const epoch = epoch::EpochManip::makeNewRootedEpoch();
 
   vt_debug_print(
-    term, node,
+    terse, term,
     "makeEpochRootedWave: root={}, epoch={:x}, successor={:x},"
     "label={}\n",
     theContext()->getNode(), epoch, successor, label
@@ -1025,7 +1033,7 @@ EpochType TerminationDetector::makeEpochRootedDS(
   }
 
   vt_debug_print(
-    term, node,
+    terse, term,
     "makeEpochRootedDS: successor={:x}, epoch={:x}, label={}\n",
     successor, epoch, label
   );
@@ -1049,7 +1057,7 @@ EpochType TerminationDetector::makeEpochRooted(
    */
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "makeEpochRooted: root={}, use_ds={}, successor={:x}, label={}\n",
     theContext()->getNode(), use_ds, successor, label
   );
@@ -1071,7 +1079,7 @@ EpochType TerminationDetector::makeEpochCollective(
   SuccessorEpochCapture successor
 ) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "makeEpochCollective: no label\n"
   );
 
@@ -1084,7 +1092,7 @@ EpochType TerminationDetector::makeEpochCollective(
   auto const epoch = epoch::EpochManip::makeNewEpoch();
 
   vt_debug_print(
-    term, node,
+    terse, term,
     "makeEpochCollective: epoch={:x}, successor={:x}, label={}\n",
     epoch, successor, label
   );
@@ -1112,7 +1120,7 @@ EpochType TerminationDetector::makeEpoch(
 void TerminationDetector::activateEpoch(EpochType const& epoch) {
   if (!isDS(epoch)) {
     vt_debug_print(
-      term, node,
+      normal, term,
       "activateEpoch: epoch={:x}\n", epoch
     );
 
@@ -1135,7 +1143,7 @@ void TerminationDetector::makeRootedHan(
   getWindow(epoch)->addEpoch(epoch);
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "makeRootedHan: epoch={:x}, is_root={}\n", epoch, is_root
   );
 
@@ -1155,7 +1163,7 @@ void TerminationDetector::setupNewEpoch(
   bool const found = epoch_iter != epoch_state_.end();
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "setupNewEpoch: epoch={:x}, found={}, count={}\n",
     epoch, print_bool(found),
     (found ? epoch_iter->second.getRecvChildCount() : -1)

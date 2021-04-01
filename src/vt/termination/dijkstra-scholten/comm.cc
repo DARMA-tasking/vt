@@ -59,7 +59,7 @@ namespace vt { namespace term { namespace ds {
   EpochType epoch, Endpoint successor, int64_t count
 ) {
   vt_debug_print(
-    termds, node,
+    normal, termds,
     "StateDS::requestAck: epoch={:x}, successor={}, count={}\n",
     epoch, successor, count
   );
@@ -74,7 +74,7 @@ namespace vt { namespace term { namespace ds {
   EpochType epoch, Endpoint predecessor, int64_t count
 ) {
   vt_debug_print(
-    termds, node,
+    normal, termds,
     "StateDS::acknowledge: epoch={:x}, predecessor={}, count={}\n",
     epoch, predecessor, count
   );
@@ -87,7 +87,7 @@ namespace vt { namespace term { namespace ds {
 
 /*static*/ void StateDS::rootTerminated(EpochType epoch) {
   vt_debug_print(
-    termds, node,
+    normal, termds,
     "StateDS::rootTerminated: epoch={:x}\n", epoch
   );
   theTerm()->epochTerminated(epoch, TerminationDetector::CallFromEnum::Root);
@@ -95,7 +95,7 @@ namespace vt { namespace term { namespace ds {
 
 /*static*/ void StateDS::disengage(EpochType epoch) {
   vt_debug_print(
-    termds, node,
+    normal, termds,
     "StateDS::disengage: epoch={:x}\n", epoch
   );
 

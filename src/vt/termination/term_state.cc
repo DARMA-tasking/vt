@@ -71,8 +71,8 @@ TermState::EventCountType TermState::getRecvChildCount() const {
 void TermState::notifyChildReceive() {
   recv_child_count_++;
 
-  vt_debug_print_verbose(
-    term, node,
+  vt_debug_print(
+    verbose, term,
     "notifyChildReceive: epoch={:x}, active={}, local_ready={}, "
     "submitted_wave={}, recv={}, children={}\n",
     epoch_, print_bool(epoch_active_), print_bool(local_terminated_),
@@ -132,8 +132,8 @@ bool TermState::readySubmitParent(bool const needs_active) const {
     submitted_wave_ == cur_wave_ - 1 and not term_detected_ and
     deps_ == 0;
 
-  vt_debug_print_verbose(
-    term, node,
+  vt_debug_print(
+    verbose, term,
     "readySubmitParent: epoch={:x}, active={}, local_ready={}, "
     "sub_wave={}, cur_wave_={}, recv_child={}, num_child={}, term={}:"
     " deps_={}, ret={}\n",
@@ -153,7 +153,7 @@ TermState::TermState(
     num_children_(children)
 {
   vt_debug_print(
-    term, node,
+    normal, term,
     "TermState: constructor: epoch={:x}, num_children={}, active={}, "
     "local_terminated={}\n",
     epoch_, num_children_, print_bool(epoch_active_), print_bool(local_terminated_)
@@ -164,7 +164,7 @@ TermState::TermState(EpochType const& in_epoch, NodeType const& children)
   : EpochDependency(in_epoch, false), num_children_(children)
 {
   vt_debug_print(
-    term, node,
+    normal, term,
     "TermState: constructor: epoch={:x}, event={}\n", epoch_, recv_child_count_
   );
 }
