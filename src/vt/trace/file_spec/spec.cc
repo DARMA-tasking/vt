@@ -182,7 +182,7 @@ void TraceSpec::parse() {
     }
 
     vt_debug_print(
-      trace, node,
+      verbose, trace,
       "TraceSpec::parser: is_mod={}, phase={}, neg={}, pos={}\n",
       is_mod, phase, phase_negative_offset, phase_positive_offset
     );

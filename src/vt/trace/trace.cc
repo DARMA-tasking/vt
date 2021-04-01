@@ -164,7 +164,7 @@ void Trace::addUserNote(std::string const& note) {
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "Trace::addUserNote: note={}\n",
     note
   );
@@ -183,7 +183,7 @@ void Trace::addUserData(int32_t data) {
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "Trace::addUserData: data={}\n",
     data
   );
@@ -222,7 +222,7 @@ void Trace::addUserEvent(UserEventIDType event) {
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "Trace::addUserEvent: event={:x}\n",
     event
   );
@@ -242,7 +242,7 @@ void Trace::addUserEventManual(UserSpecEventIDType event) {
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "Trace::addUserEventManual: event={:x}\n",
     event
   );
@@ -257,7 +257,7 @@ void Trace::addUserEventBracketedBegin(UserEventIDType event) {
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "Trace::addUserEventBracketedBegin: event={:x}\n",
     event
   );
@@ -277,7 +277,7 @@ void Trace::addUserEventBracketedEnd(UserEventIDType event) {
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "Trace::addUserEventBracketedEnd: event={:x}\n",
     event
   );
@@ -317,7 +317,7 @@ void Trace::addUserEventBracketedManual(
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "Trace::addUserEventBracketedManual: event={:x}, begin={}, end={}\n",
     event, begin, end
   );
@@ -343,7 +343,7 @@ TraceProcessingTag Trace::beginProcessing(
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "event_start: ep={}, event={}, time={}, from={}, entry chare={}\n",
     ep, event, time, from_node, TraceRegistry::getEvent(ep).theEventSeq()
   );
@@ -388,7 +388,7 @@ void Trace::endProcessing(
   }
 
   vt_debug_print(
-    trace, node,
+    normal, trace,
     "event_stop: ep={}, event={}, time={}, from_node={}, entry chare={}\n",
     ep, event, time, open_events_.back().node,
     TraceRegistry::getEvent(ep).theEventSeq()
@@ -521,7 +521,7 @@ void Trace::setTraceEnabledCurrentPhase(PhaseType cur_phase) {
     trace_enabled_cur_phase_ = ret;
 
     vt_debug_print(
-      gen, node,
+      terse, gen,
       "setTraceEnabledCurrentPhase: phase={}, enabled={}\n",
       cur_phase,
       trace_enabled_cur_phase_
