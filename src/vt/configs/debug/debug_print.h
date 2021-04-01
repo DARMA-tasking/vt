@@ -180,7 +180,8 @@ struct DebugPrintOp;
 
 template <CatEnum cat, ModeEnum mod, typename Arg, typename... Args>
 static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
-  auto const level = mod & 0x0000000000000007;
+  auto mask = ModeEnum::terse | ModeEnum::normal | ModeEnum::verbose;
+  auto const level = mod & mask;
   if (level <= vt::debug::preConfig()->vt_debug_level_val) {
     auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
     fmt::print(
