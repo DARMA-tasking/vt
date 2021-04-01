@@ -71,7 +71,7 @@ void TD::end() {
   auto& epoch_stack = theMsg()->getEpochStack();
 
   vt_debug_print(
-    context, node,
+    verbose, context,
     "TD::end: top={:x}, size={}\n",
     epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
     epoch_stack.size()
