@@ -180,8 +180,8 @@ struct DebugPrintOp;
 
 template <CatEnum cat, ModeEnum mod, typename Arg, typename... Args>
 static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
-  bool const verb = vt_option_check_enabled(mod, ModeEnum::verbose);
-  if ((verb and vt::debug::preConfig()->vt_debug_verbose) or not verb) {
+  auto const level = mod & 0x000000000000000E;
+  if (level <= vt::debug::preConfig()->vt_debug_level_val) {
     auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
     fmt::print(
       "{} {} {} {}",
@@ -201,9 +201,10 @@ struct DebugPrintOp<cat, CtxEnum::node, mod> {
   template <typename Arg, typename... Args>
   void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
     if (rt_option or vt::debug::preConfig()->vt_debug_all) {
-        debugPrintImpl<cat, mod>(
-          vt::debug::preNode(), std::forward<Arg>(arg),
-          std::forward<Args>(args)...);
+      debugPrintImpl<cat, mod>(
+        vt::debug::preNode(), std::forward<Arg>(arg),
+        std::forward<Args>(args)...
+      );
     }
   }
 };

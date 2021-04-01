@@ -91,9 +91,9 @@ enum CtxEnum : uint64_t {
 };
 
 enum ModeEnum : uint64_t {
-  normal       = 1ull<<0,
-  verbose      = 1ull<<1,
-  terse        = 1ull<<2,
+  terse        = 1ull<<0,
+  normal       = 1ull<<1,
+  verbose      = 1ull<<2,
   flush        = 1ull<<3,
   startup      = 1ull<<4,
   line_file    = 1ull<<5,
