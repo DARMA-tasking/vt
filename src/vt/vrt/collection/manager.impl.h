@@ -222,7 +222,7 @@ template <typename SysMsgT>
         // is often very handy
         IdxContextHolder::set(&cur_idx,proxy);
 
-        #if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
+        #if vt_check_enabled(cons_multi_idx)
           auto new_vc = DerefCons::derefTuple<ColT, IndexT, decltype(msg->tup)>(
             num_elms, cur_idx, &msg->tup
           );
@@ -1865,7 +1865,7 @@ void CollectionManager::staticInsert(
   // Set the current context index to `idx`
   IdxContextHolder::set(&idx,proxy);
 
-  #if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
+  #if vt_check_enabled(cons_multi_idx)
     auto elm_ptr = DerefCons::derefTuple<ColT, IndexT, decltype(tuple)>(
       num_elms, idx, &tuple
     );
@@ -2675,7 +2675,7 @@ void CollectionManager::insert(
         // index during the constructor
         IdxContextHolder::set(&cur_idx,untyped_proxy);
 
-#       if vt_check_enabled(detector) && vt_check_enabled(cons_multi_idx)
+#       if vt_check_enabled(cons_multi_idx)
         auto new_vc = DerefCons::derefTuple<ColT,IndexT,std::tuple<>>(
           num_elms, cur_idx, &tup
         );

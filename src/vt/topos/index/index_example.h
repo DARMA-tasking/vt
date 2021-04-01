@@ -102,16 +102,14 @@ struct ExampleIndex {
 
 }} // end namespace vt::index
 
-#if vt_check_enabled(detector)
-  #include "vt/topos/index/traits/traits.h"
+#include "vt/topos/index/traits/traits.h"
 
-  namespace vt { namespace index {
+namespace vt { namespace index {
 
-  static_assert(
-    IndexTraits<ExampleIndex>::is_index, "ExampleIndex does not conform"
-  );
+static_assert(
+  IndexTraits<ExampleIndex>::is_index, "ExampleIndex does not conform"
+);
 
-  }} // end namespace vt::index
-#endif
+}} // end namespace vt::index
 
 #endif  /*INCLUDED_TOPOS_INDEX_EXAMPLE*/

@@ -47,11 +47,7 @@
 
 #include "vt/config.h"
 
-#if vt_check_enabled(detector)
-  #include "detector_headers.h"
-#endif /*vt_check_enabled(detector)*/
-
-#if vt_check_enabled(detector)
+#include "detector_headers.h"
 
 namespace vt { namespace util { namespace mutex {
 
@@ -87,7 +83,5 @@ struct MutexTraits {
 };
 
 }}} /* end namespace vt::util::mutex */
-
-#endif /*vt_check_enabled(detector)*/
 
 #endif /*INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H*/

@@ -119,7 +119,7 @@ private:
 
 }} /* end namespace vt::worker */
 
-#if vt_check_enabled(detector) && vt_check_enabled(stdthread)
+#if vt_check_enabled(stdthread)
   #include "vt/worker/worker_group_traits.h"
 
   namespace vt { namespace worker {
@@ -130,7 +130,7 @@ private:
   );
 
   }} /* end namespace vt::worker */
-#endif /*vt_check_enabled(detector) && vt_check_enabled(stdthread)*/
+#endif /*vt_check_enabled(stdthread)*/
 
 #include "vt/worker/worker_group.impl.h"
 
