@@ -72,7 +72,7 @@ TEST_P(TestTermRooted, test_term_detect_rooted_epoch) /* NOLINT */{
 
     for (auto&& epoch : sequence) {
       vt_debug_print(
-        term, node,
+        normal, term,
         "epoch={:x}, order_={}, useDS_={}\n",
         epoch, order_, useDS_
       );

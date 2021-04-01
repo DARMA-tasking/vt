@@ -93,7 +93,7 @@ struct BaseFixture : Base {
     depth_ = std::get<2>(values);
 
     vt_debug_print(
-      term, node,
+      normal, term,
       "BaseFixture::setup: order_={}, useDS_={}, depth_={}\n",
       order_, useDS_, depth_
     );

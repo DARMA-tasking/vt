@@ -92,7 +92,7 @@ inline void sendPing(vt::NodeType dst, int count, vt::EpochType ep) {
 
 inline void sendEcho(vt::NodeType dst, int count, vt::EpochType ep) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "rank:{} echo::dst {}\n",
     node, dst
   );
@@ -151,7 +151,7 @@ inline void echoHandler(CtrlMsg* msg) {
   degree--;
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "rank {}: echoHandler: in={}, ack={}, degree={}\n",
     node,nb_in, nb_ack, degree
   );
@@ -182,7 +182,7 @@ inline void pingHandler(CtrlMsg* msg) {
   auto& activator = data[ep].activator_;
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "{}: pingHandler: in={}, src={}, degree={}\n",
     node,nb.in_,src,degree
   );
@@ -207,7 +207,7 @@ inline void trigger(vt::EpochType ep) {
 
     if (dst != node) {
       vt_debug_print(
-        term, node,
+        normal, term,
         "rank:{} trigger dst {}\n",
         node, dst
       );
@@ -233,7 +233,7 @@ inline void propagate(vt::EpochType ep) {
       // confirmation missing
       if (nb.out_ != nb.ack_) {
         vt_debug_print(
-          term, node,
+          normal, term,
           "rank {}: propagate: sendPing to {}, out={}, degree={}\n",
           node, dst, nb.out_, degree+1
         );

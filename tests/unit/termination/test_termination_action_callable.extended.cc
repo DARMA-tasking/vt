@@ -89,7 +89,7 @@ TEST_F(TestTermCallable, test_add_action_unique) /*NOLINT*/{
   // the end of the epoch and toggle the previous flag.
   ::vt::theTerm()->addActionEpoch(epoch, [=]{
     vt_debug_print(
-      term, node,
+      normal, term,
       "current epoch:{:x} finished\n",
       epoch
     );
@@ -100,7 +100,7 @@ TEST_F(TestTermCallable, test_add_action_unique) /*NOLINT*/{
   // the action submitted for the given epoch.
   ::vt::theTerm()->addActionUnique(epoch, [=]{
     vt_debug_print(
-      term, node,
+      normal, term,
       "trigger callable for epoch:{:x}\n",
       epoch
     );

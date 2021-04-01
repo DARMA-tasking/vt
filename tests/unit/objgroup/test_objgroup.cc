@@ -164,7 +164,7 @@ TEST_F(TestObjGroup, test_proxy_update) {
   auto const obj2 = proxy.get();
 
   vt_debug_print(
-    objgroup, node,
+    normal, objgroup,
     "test_proxy_update: obj1->id_:{}, obj2->id_:{}",
     obj1_id, obj2->id_
   );
@@ -185,14 +185,14 @@ TEST_F(TestObjGroup, test_proxy_schedule) {
 
     obj = proxy.get();
     vt_debug_print(
-      objgroup, node,
+      normal, objgroup,
       "obj->recv:{} before term\n", obj->recv_
     );
   });
 
   // check state to ensure all expected events executed
   vt_debug_print(
-    objgroup, node,
+    normal, objgroup,
     "obj->recv:{} after term\n", obj->recv_
   );
   EXPECT_EQ(obj->recv_, num_nodes + 1);

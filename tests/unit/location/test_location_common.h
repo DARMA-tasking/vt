@@ -120,7 +120,7 @@ void routeTestHandler(EntityMsg* msg) {
   EXPECT_TRUE(correct_size);
 
   vt_debug_print(
-    location, node,
+    normal, location,
     "routeTestHandler: entity={}, home={}, bytes={}\n",
     msg->entity_, msg->home_, test_msg_size
   );
@@ -169,7 +169,7 @@ void verifyCacheConsistency(
       bool is_entity_cached = isCached(entity);
 
       vt_debug_print(
-        location, node,
+        normal, location,
         "verifyCacheConsistency: iter={}, entityID={}, home={}, bytes={}, "
         "in cache={}, serialize={}\n",
         iter, entity, msg->from_, sizeof(*msg), is_entity_cached, serialize

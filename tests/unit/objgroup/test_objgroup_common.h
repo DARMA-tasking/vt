@@ -76,7 +76,7 @@ struct MyObjA {
 
   void handler(MyMsg* msg) {
     vt_debug_print(
-      objgroup, node,
+      normal, objgroup,
       "MyObjA: received message from:{} for group:{}, next_id:{}\n",
       msg->from_, id_, next_id
     );
@@ -107,7 +107,7 @@ struct MyObjB {
 
   void handler(MyMsg* msg) {
     vt_debug_print(
-      objgroup, node,
+      normal, objgroup,
       "MyObjB: received message from:{} for group:{} with data:{} \n",
       msg->from_, id_, data_
     );

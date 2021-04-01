@@ -80,14 +80,14 @@ struct TestReduce : TestParallelHarness {
 
   static void reducePlus(MyReduceMsg* msg) {
     vt_debug_print(
-      reduce, node,
+      normal, reduce,
       "cur={}: is_root={}, count={}, next={}, num={}\n",
       print_ptr(msg), print_bool(msg->isRoot()), msg->getCount(),
       print_ptr(msg->getNext<MyReduceMsg>()), msg->num
     );
 
     if (msg->isRoot()) {
-      vt_debug_print(reduce, node, "final value={}\n", msg->num);
+      vt_debug_print(normal, reduce, "final value={}\n", msg->num);
       auto n = vt::theContext()->getNumNodes();
       // check expected result
       EXPECT_EQ(msg->num, n * (n - 1)/2);
@@ -97,7 +97,7 @@ struct TestReduce : TestParallelHarness {
 
       while (cur_msg not_eq nullptr) {
         vt_debug_print(
-          reduce, node,
+          normal, reduce,
           "while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
           print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
           cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()),
@@ -117,7 +117,7 @@ struct Verify {
   void operator()(SysMsg* msg) {
     // print value
     auto value = msg->getConstVal();
-    vt_debug_print(reduce, node, "final value={}\n", value);
+    vt_debug_print(normal, reduce, "final value={}\n", value);
 
     // check result
     auto n = vt::theContext()->getNumNodes();
