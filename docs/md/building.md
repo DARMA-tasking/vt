@@ -67,7 +67,7 @@ build configuration:
 | `USE_STD_THREAD`                 | 0               | Force use of std::thread for threading |
 | `VT_BUILD_TESTS`                 | 1               | Build all VT tests |
 | `VT_BUILD_EXAMPLES`              | 1               | Build all VT examples |
-
+| `vt_debug_verbose`               | 1 (not Release) | Enable VT verbose debug prints at compile-time |
 
 \subsection using-the-build-script Using the Build Script
 
@@ -100,6 +100,7 @@ parameters.
 | `VT_PRODUCTION_BUILD_ENABLED`    | 0               | Disable assertions and debug prints at compile time |
 | `VT_DIAGNOSTICS_ENABLED`         | 1               | Enable VT component diagnostics for performance analysis |
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0               | Enable VT component diagnostics at runtime by default |
+| `VT_DEBUG_VERBOSE`               | <empty>         | Enable VT verbose debug prints at compile-time |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned
@@ -168,6 +169,7 @@ which `docker-compose` will read.
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics at runtime by default
 #   BUILD_TYPE=release        # CMake build type
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
+#   VT_DEBUG_VERBOSE          # Enable verbose debug prints at compile-time
 ```
 
 With these set, one may run the following for a non-interactive build with

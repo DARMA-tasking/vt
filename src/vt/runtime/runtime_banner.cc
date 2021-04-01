@@ -814,6 +814,10 @@ void Runtime::printStartupBanner() {
       print_level = debug::yellow() + std::string{"normal"} + reset;
     } else if (level == "2" or level == "verbose") {
       print_level = debug::yellow() + std::string{"verbose"} + reset;
+#if !vt_check_enabled(debug_verbose)
+      auto w1 = warn_cr("--vt_debug_level=verbose", "vt_debug_verbose");
+      fmt::print("{}\t{}{}", vt_pre, w1, reset);
+#endif
     }
     auto f11 = fmt::format("Debug print mode set to {}", print_level);
     auto f12 = opt_on("--vt_debug_level", f11);
