@@ -628,7 +628,7 @@ void ArgConfig::postParseTransform() {
   } else if (config_.vt_debug_level == "verbose" or config_.vt_debug_level == "2") {
     config_.vt_debug_level_val = 4;
   } else {
-    vtAbort("Invalid value passed to --vt_deubg_level");
+    vtAbort("Invalid value passed to --vt_debug_level");
   }
 }
 
