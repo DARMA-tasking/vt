@@ -67,7 +67,7 @@ namespace vt {
   }
 
   vt_debug_print(
-    handler, node,
+    verbose, handler,
     "HandlerManager::makeHandler: is_functor={}, is_auto={}, is_objgroup={},"
     "is_member={} id={:x}, control={:x}, han={:x}, is_trace={}\n",
     is_functor, is_auto, is_objgroup, is_member, id, control, new_han,

@@ -181,7 +181,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
 
   if (!is_term || vt_check_enabled(print_term_msgs)) {
     vt_debug_print(
-      active, node,
+      verbose, active,
       is_bcast
         ? "broadcastMsg of ptr={}, type={}\n"
         : "sendMsg of ptr={}, type={}\n",

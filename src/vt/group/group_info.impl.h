@@ -87,7 +87,7 @@ template <typename MsgT>
   auto new_size = group_size - 1;
 
   vt_debug_print(
-    group, node,
+    terse, group,
     "Info::groupSetupHandler: group size={}, group_total_size={}, "
     "new_size={}, min_spanning_tree_size={}\n",
     group_size, group_total_size, new_size, min_spanning_tree_size
@@ -95,7 +95,7 @@ template <typename MsgT>
 
   if (new_size < min_spanning_tree_size) {
     vt_debug_print(
-      group, node,
+      normal, group,
       "Info::groupSetupHandler: create leaf node: size={}\n",
       new_size
     );
@@ -108,7 +108,7 @@ template <typename MsgT>
     );
 
     vt_debug_print(
-      group, node,
+      verbose, group,
       "Info::groupSetupHandler: op={}, parent={}\n",
       op_id, parent
     );
@@ -122,7 +122,7 @@ template <typename MsgT>
     }
   } else {
     vt_debug_print(
-      group, node,
+      normal, group,
       "Info::groupSetupHandler: split and send to children: size={}\n",
       new_size
     );
@@ -137,7 +137,7 @@ template <typename MsgT>
       auto info = iter->second.get();
 
       vt_debug_print(
-        group, node,
+        verbose, group,
         "Info::parent continuation: wait_count_={}, parent={}\n",
         info->wait_count_, parent
       );
@@ -145,7 +145,7 @@ template <typename MsgT>
       info->wait_count_--;
       if (info->wait_count_ == 0 && parent != uninitialized_destination) {
         vt_debug_print(
-          group, node,
+          verbose, group,
           "Info::parent continuation: sending to parent={}, op_id={}\n",
           parent, op_id
         );
@@ -168,7 +168,7 @@ template <typename MsgT>
       local_nodes.push_back(c);
 
       vt_debug_print(
-        group, node,
+        verbose, group,
         "Info::groupSetupHandler: child c={}, c_size={}\n", c, c_size
       );
 

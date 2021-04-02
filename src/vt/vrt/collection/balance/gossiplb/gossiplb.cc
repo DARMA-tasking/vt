@@ -115,7 +115,7 @@ void GossipLB::doLBStages() {
     bool first_iter = iter_ == 0;
 
     vt_debug_print(
-      gossiplb, node,
+      terse, gossiplb,
       "GossipLB::doLBStages: (before) running iter_={}, num_iters_={}, load={}, new_load={}\n",
       iter_, num_iters_, this_load, this_new_load_
     );
@@ -145,7 +145,7 @@ void GossipLB::doLBStages() {
     decide();
 
     vt_debug_print(
-      gossiplb, node,
+      normal, gossiplb,
       "GossipLB::doLBStages: (after) running iter_={}, num_iters_={}, load={}, new_load={}\n",
       iter_, num_iters_, this_load, this_new_load_
     );
@@ -161,7 +161,7 @@ void GossipLB::doLBStages() {
 
 void GossipLB::inform() {
   vt_debug_print(
-    gossiplb, node,
+    normal, gossiplb,
     "GossipLB::inform: starting inform phase: k_max_={}, k_cur_={}\n",
     k_max_, k_cur_
   );
@@ -174,7 +174,7 @@ void GossipLB::inform() {
   }
 
   vt_debug_print(
-    gossiplb, node,
+    verbose, gossiplb,
     "GossipLB::inform: starting inform phase: k_max_={}, k_cur_={}, "
     "is_underloaded={}, is_overloaded={}, load={}\n",
     k_max_, k_cur_, is_underloaded_, is_overloaded_, this_new_load_
@@ -200,7 +200,7 @@ void GossipLB::inform() {
   vt::runSchedulerThrough(propagate_epoch);
 
   vt_debug_print(
-    gossiplb, node,
+    verbose, gossiplb,
     "GossipLB::inform: finished inform phase: k_max_={}, k_cur_={}\n",
     k_max_, k_cur_
   );
@@ -212,7 +212,7 @@ void GossipLB::setupDone(ReduceMsgType* msg) {
 
 void GossipLB::propagateRound(EpochType epoch) {
   vt_debug_print(
-    gossiplb, node,
+    normal, gossiplb,
     "GossipLB::propagateRound: k_max_={}, k_cur_={}\n",
     k_max_, k_cur_
   );
@@ -228,7 +228,7 @@ void GossipLB::propagateRound(EpochType epoch) {
   auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
 
   vt_debug_print(
-    gossiplb, node,
+    verbose, gossiplb,
     "GossipLB::propagateRound: k_max_={}, k_cur_={}, selected.size()={}, fanout={}\n",
     k_max_, k_cur_, selected.size(), fanout
   );
@@ -251,7 +251,7 @@ void GossipLB::propagateRound(EpochType epoch) {
     );
 
     vt_debug_print(
-      gossiplb, node,
+      verbose, gossiplb,
       "GossipLB::propagateRound: k_max_={}, k_cur_={}, sending={}\n",
       k_max_, k_cur_, random_node
     );
@@ -270,7 +270,7 @@ void GossipLB::propagateIncoming(GossipMsg* msg) {
   auto const from_node = msg->getFromNode();
 
   vt_debug_print(
-    gossiplb, node,
+    normal, gossiplb,
     "GossipLB::propagateIncoming: k_max_={}, k_cur_={}, from_node={}, "
     "load info size={}\n",
     k_max_, k_cur_, from_node, msg->getNodeLoad().size()
@@ -396,7 +396,7 @@ void GossipLB::decide() {
         auto const selected_node = sampleFromCMF(under, cmf);
 
         vt_debug_print(
-          gossiplb, node,
+          verbose, gossiplb,
           "GossipLB::decide: selected_node={}, load_info_.size()\n",
           selected_node, load_info_.size()
         );
@@ -418,7 +418,7 @@ void GossipLB::decide() {
         bool eval = Criterion(criterion_)(this_new_load_, selected_load, obj_load, avg);
 
         vt_debug_print(
-          gossiplb, node,
+          verbose, gossiplb,
           "GossipLB::decide: under.size()={}, selected_node={}, selected_load={},"
           "obj_id={:x}, home={}, obj_load={}, avg={}, this_new_load_={}, "
           "criterion={}\n",
@@ -468,7 +468,7 @@ void GossipLB::decide() {
 
 void GossipLB::thunkMigrations() {
   vt_debug_print(
-    gossiplb, node,
+    normal, gossiplb,
     "thunkMigrations, total num_objs={}\n",
     cur_objs_.size()
   );

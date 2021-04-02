@@ -79,7 +79,7 @@ Channel::Channel(
   non_target_pos_ = 1;
 
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: construct: target={}, non_target={}, my_node={}, han={}, "
     "ptr={}, bytes={}, is_target={}\n",
     target_, non_target_, my_node, rdma_handle_, ptr_, num_bytes_,
@@ -90,7 +90,7 @@ Channel::Channel(
 void
 Channel::initChannelGroup() {
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: initChannelGroup: target={}, non_target={}, han={}\n",
     target_, non_target_, rdma_handle_
   );
@@ -124,7 +124,7 @@ Channel::initChannelGroup() {
   }
 
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: initChannelGroup: finished\n"
   );
 
@@ -134,7 +134,7 @@ Channel::initChannelGroup() {
 void
 Channel::syncChannelLocal() {
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: syncChannelLocal: target={}, locked={} starting\n",
     target_, print_bool(locked_)
   );
@@ -151,7 +151,7 @@ Channel::syncChannelLocal() {
   }
 
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: syncChannelLocal: target={}, locked={} finished\n",
     target_, print_bool(locked_)
   );
@@ -160,7 +160,7 @@ Channel::syncChannelLocal() {
 void
 Channel::syncChannelGlobal() {
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: syncChannelGlobal: target={} starting\n", target_
   );
 
@@ -172,7 +172,7 @@ Channel::syncChannelGlobal() {
   }
 
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: syncChannelGlobal: target={} finished\n", target_
   );
 }
@@ -191,7 +191,7 @@ Channel::lockChannelForOp() {
       (op_type_ == RDMA_TypeType::Put ? MPI_LOCK_SHARED : MPI_LOCK_SHARED);
 
     vt_debug_print(
-      rdma_channel, node,
+      normal, rdma_channel,
       "lockChannelForOp: is_target={}, target={}, op_type={}, "
       "lock_type={}, exclusive={}\n",
       print_bool(is_target_), target_, PRINT_RDMA_OP_TYPE(op_type_),
@@ -203,7 +203,7 @@ Channel::lockChannelForOp() {
     );
 
     vt_debug_print(
-      rdma_channel, node,
+      normal, rdma_channel,
       "lockChannelForOp: target={}, op_type={}, MPI_Win_lock finished\n",
       target_, PRINT_RDMA_OP_TYPE(op_type_)
     );
@@ -225,7 +225,7 @@ Channel::unlockChannelForOp() {
     vtAssert(ret == MPI_SUCCESS, "MPI_Win_unlock: Should be successful");
 
     vt_debug_print(
-      rdma_channel, node,
+      normal, rdma_channel,
       "unlockChannelForOp: target={}, op_type={}\n",
       target_, PRINT_RDMA_OP_TYPE(op_type_)
     );
@@ -244,7 +244,7 @@ Channel::writeDataToChannel(
   ByteType const d_offset = offset == no_byte ? 0 : offset;
 
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "writeDataToChannel: target={}, ptr={}, ptr_num_bytes={}, "
     "num_bytes={}, op_type={}, offset={}, locked_={}\n",
     target_, ptr, ptr_num_bytes, num_bytes_, PRINT_RDMA_OP_TYPE(op_type_),
@@ -256,7 +256,7 @@ Channel::writeDataToChannel(
   }
 
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "writeDataToChannel: lock finished: target={}, op_type={}, locked_={}\n",
     target_, PRINT_RDMA_OP_TYPE(op_type_), locked_
   );
@@ -301,7 +301,7 @@ void
 Channel::initChannelWindow() {
 
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: create window: num_bytes={}\n", num_bytes_
   );
 
@@ -324,7 +324,7 @@ Channel::initChannelWindow() {
   initialized_ = true;
 
   vt_debug_print(
-    rdma_channel, node,
+    normal, rdma_channel,
     "channel: initChannel: finished creating window\n"
   );
 }

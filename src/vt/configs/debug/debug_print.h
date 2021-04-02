@@ -94,14 +94,29 @@
     vt::config::ModeEnum::inmode                                        \
   >::apply(vt_debug_argument_option(cat) or force, __VA_ARGS__)
 
-#define vt_debug_print(feature, ctx, ...)                               \
+#define vt_debug_print(type, feature, ...)                              \
   vt_debug_print_impl(                                                  \
-    false, vt::config::VTPrintConfig, normal, feature, ctx, __VA_ARGS__ \
+    false, vt::config::VTPrintConfig, type, feature, node, __VA_ARGS__  \
   )
 
-#define vt_debug_print_verbose(feature, ctx, ...)                       \
+#define vt_debug_print_context(type, feature, ctx, ...)                 \
   vt_debug_print_impl(                                                  \
-    false, vt::config::VTPrintConfig, verbose, feature, ctx, __VA_ARGS__ \
+    false, vt::config::VTPrintConfig, type, feature, ctx, __VA_ARGS__   \
+  )
+
+#define vt_debug_print_verbose(feature, ...)                            \
+  vt_debug_print_impl(                                                  \
+    false, vt::config::VTPrintConfig, verbose, feature, node, __VA_ARGS__ \
+  )
+
+#define vt_debug_print_terse(feature, ...)                              \
+  vt_debug_print_impl(                                                  \
+    false, vt::config::VTPrintConfig, terse, feature, node, __VA_ARGS__ \
+  )
+
+#define vt_debug_print_normal(feature, ...)                             \
+  vt_debug_print_impl(                                                  \
+    false, vt::config::VTPrintConfig, normal, feature, node, __VA_ARGS__\
   )
 
 #define vt_make_config(feature, cftype)                                  \
@@ -165,17 +180,30 @@ struct DebugPrintOp;
 
 template <CatEnum cat, ModeEnum mod, typename Arg, typename... Args>
 static inline void debugPrintImpl(NodeType node, Arg&& arg, Args&&... args) {
-  bool const verb = vt_option_check_enabled(mod, ModeEnum::verbose);
-  if ((verb and vt::debug::preConfig()->vt_debug_verbose) or not verb) {
+  constexpr auto mask = ModeEnum::terse | ModeEnum::normal | ModeEnum::verbose;
+  constexpr auto level = mod & mask;
+  if (level <= vt::debug::preConfig()->vt_debug_level_val) {
     auto user = fmt::format(std::forward<Arg>(arg),std::forward<Args>(args)...);
+    std::string debug_level = "";
+    if (level == ModeEnum::terse) {
+      debug_level = "(t)";
+    } else if (level == ModeEnum::normal) {
+      debug_level = "(n)";
+    } else if (level == ModeEnum::verbose) {
+      debug_level = "(v)";
+    }
     fmt::print(
-      "{} {} {} {}",
+      "{} {} {} {} {}",
       vt_print_colorize,
       vt_proc_print_colorize(node),
-      vt_print_colorize_impl(::vt::debug::green(), PrettyPrintCat<cat>::print(), ":"),
+      vt_print_colorize_impl(::vt::debug::yellow(), debug_level, ""),
+      vt_print_colorize_impl(
+        ::vt::debug::green(), PrettyPrintCat<cat>::print(), ":"
+      ),
       user
     );
-    if (vt_option_check_enabled(mod, ModeEnum::flush) or vt::debug::preConfig()->alwaysFlush()) {
+    bool const flush_enabled = vt_option_check_enabled(mod, ModeEnum::flush);
+    if (flush_enabled or vt::debug::preConfig()->alwaysFlush()) {
       fflush(stdout);
     }
   }
@@ -186,9 +214,10 @@ struct DebugPrintOp<cat, CtxEnum::node, mod> {
   template <typename Arg, typename... Args>
   void operator()(bool const rt_option, Arg&& arg, Args&&... args) {
     if (rt_option or vt::debug::preConfig()->vt_debug_all) {
-        debugPrintImpl<cat, mod>(
-          vt::debug::preNode(), std::forward<Arg>(arg),
-          std::forward<Args>(args)...);
+      debugPrintImpl<cat, mod>(
+        vt::debug::preNode(), std::forward<Arg>(arg),
+        std::forward<Args>(args)...
+      );
     }
   }
 };

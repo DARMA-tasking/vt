@@ -134,6 +134,20 @@ else()
   set(vt_feature_cmake_ci_build "0")
 endif()
 
+if (LOWERCASE_CMAKE_BUILD_TYPE STREQUAL "release")
+  option(vt_debug_verbose "Build VT with verbose debug printing enabled" OFF)
+else()
+  option(vt_debug_verbose "Build VT with verbose debug printing enabled" ON)
+endif()
+
+if(vt_debug_verbose)
+  message(STATUS "Building VT with verbose debug printing enabled")
+  set(vt_feature_cmake_debug_verbose "1")
+else()
+  message(STATUS "Building VT with verbose debug printing disabled")
+  set(vt_feature_cmake_debug_verbose "0")
+endif()
+
 message(STATUS "CI_BUILD = ${vt_feature_cmake_ci_build}")
 
 option(

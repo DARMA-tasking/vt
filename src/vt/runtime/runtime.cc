@@ -336,8 +336,8 @@ void Runtime::setupTerminateHandler() {
 bool Runtime::tryInitialize() {
   bool const init_now = !initialized_ && !finalized_;
 
-  vt_debug_print(
-    runtime, unknown,
+  vt_debug_print_context(
+    normal, runtime, unknown,
     "Runtime: tryInitialize: initialized_={}, finalized_={}, init_now={}\n",
     print_bool(initialized_), print_bool(finalized_), print_bool(init_now)
   );
@@ -353,8 +353,8 @@ bool Runtime::tryFinalize(bool const disable_sig) {
   bool const has_run_sched = hasSchedRun();
   bool const finalize_now = rt_live && has_run_sched;
 
-  vt_debug_print(
-    runtime, unknown,
+  vt_debug_print_context(
+    normal, runtime, unknown,
     "Runtime: tryFinalize: initialized_={}, finalized_={}, rt_live={}, sched={}, "
     "finalize_now={}\n",
     print_bool(initialized_), print_bool(finalized_), print_bool(rt_live),
@@ -596,7 +596,7 @@ void Runtime::output(
 
 void Runtime::terminationHandler() {
   vt_debug_print(
-    runtime, node,
+    terse, runtime,
     "Runtime: executing registered termination handler\n"
   );
 
@@ -608,7 +608,7 @@ void Runtime::terminationHandler() {
 }
 
 void Runtime::setup() {
-  vt_debug_print(runtime, node, "begin: setup\n");
+  vt_debug_print(normal, runtime, "begin: setup\n");
 
   runtime_active_ = true;
 
@@ -626,11 +626,11 @@ void Runtime::setup() {
     pauseForDebugger();
   }
 
-  vt_debug_print(runtime, node, "end: setup\n");
+  vt_debug_print(normal, runtime, "end: setup\n");
 }
 
 void Runtime::initializeComponents() {
-  vt_debug_print(runtime, node, "begin: initializeComponents\n");
+  vt_debug_print(normal, runtime, "begin: initializeComponents\n");
 
   using component::ComponentPack;
   using component::Deps;
@@ -918,7 +918,10 @@ void Runtime::initializeComponents() {
 
   p_->construct();
 
-  vt_debug_print(runtime, node, "end: initializeComponents\n");
+  vt_debug_print(
+    normal, runtime,
+    "end: initializeComponents\n"
+  );
 }
 
 namespace {
@@ -949,18 +952,26 @@ void Runtime::initializeErrorHandlers() {
 }
 
 void Runtime::initializeOptionalComponents() {
-  vt_debug_print(runtime, node, "begin: initializeOptionalComponents\n");
+  vt_debug_print(
+    verbose, runtime,
+    "begin: initializeOptionalComponents\n"
+  );
 
   initializeWorkers(num_workers_);
 
-  vt_debug_print(runtime, node, "end: initializeOptionalComponents\n");
+  vt_debug_print(
+    verbose, runtime,
+    "end: initializeOptionalComponents\n"
+  );
 }
 
 void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   using ::vt::ctx::ContextAttorney;
 
   vt_debug_print(
-    runtime, node, "begin: initializeWorkers: workers={}\n", num_workers
+    normal, runtime,
+    "begin: initializeWorkers: workers={}\n",
+    num_workers
   );
 
   bool const has_workers = num_workers != no_workers;
@@ -989,7 +1000,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     theSched->registerTrigger(
       sched::SchedulerEvent::BeginIdleMinusTerm, []{
         vt_debug_print(
-          runtime, node,
+          normal, runtime,
           "setLocalTerminated: BeginIdle: true\n"
         );
         vt::theTerm()->setLocalTerminated(true, false);
@@ -998,7 +1009,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     theSched->registerTrigger(
       sched::SchedulerEvent::EndIdleMinusTerm, []{
         vt_debug_print(
-          runtime, node,
+          normal, runtime,
           "setLocalTerminated: EndIdle: false\n"
         );
         vt::theTerm()->setLocalTerminated(false, false);
@@ -1006,7 +1017,10 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
     );
   }
 
-  vt_debug_print(runtime, node, "end: initializeWorkers\n");
+  vt_debug_print(
+    normal, runtime,
+    "end: initializeWorkers\n"
+  );
 }
 
 template<typename T>

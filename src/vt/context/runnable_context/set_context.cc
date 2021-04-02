@@ -54,7 +54,7 @@ void SetContext::begin() {
   ContextAttorney::setTask(cur_task_);
 
   vt_debug_print(
-    context, node,
+    verbose, context,
     "{}: begin(): prev={}, task={}\n",
     print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
   );
@@ -62,7 +62,7 @@ void SetContext::begin() {
 
 void SetContext::end() {
   vt_debug_print(
-    context, node,
+    verbose, context,
     "{}: end(): prev={}, task={}\n",
     print_ptr(this), print_ptr(prev_task_.get()), print_ptr(theContext()->getTask())
   );
@@ -75,7 +75,7 @@ void SetContext::end() {
 
 void SetContext::suspend() {
   vt_debug_print(
-    context, node,
+    verbose, context,
     "{}: suspend(): prev={}, task={}\n",
     print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
   );
@@ -85,7 +85,7 @@ void SetContext::suspend() {
 
 void SetContext::resume() {
   vt_debug_print(
-    context, node,
+    verbose, context,
     "{}: resume(): prev={}, task={}\n",
     print_ptr(this), print_ptr(prev_task_.get()), print_ptr(cur_task_.get())
   );

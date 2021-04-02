@@ -120,14 +120,14 @@ void GreedyLB::loadStats() {
 
 void GreedyLB::collectHandler(GreedyCollectMsg* msg) {
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "GreedyLB::collectHandler: entries size={}\n",
     msg->getConstVal().getSample().size()
   );
 
   for (auto&& elm : msg->getConstVal().getSample()) {
     vt_debug_print(
-      lb, node,
+      verbose, lb,
       "\t collectHandler: bin={}, num={}\n",
       elm.first, elm.second.size()
     );
@@ -140,7 +140,7 @@ void GreedyLB::collectHandler(GreedyCollectMsg* msg) {
 
 void GreedyLB::reduceCollect() {
   vt_debug_print(
-    lb, node,
+    verbose, lb,
     "GreedyLB::reduceCollect: load={}, load_begin={} load_over.size()={}\n",
     this_load, this_load_begin, load_over.size()
   );
@@ -160,7 +160,7 @@ void GreedyLB::runBalancer(
   LoadProfileType profile{std::move(in_profile)};
   std::vector<GreedyRecord> recs;
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "GreedyLB::runBalancer: objs={}, profile={}\n",
     objs.size(), profile.size()
   );
@@ -178,7 +178,7 @@ void GreedyLB::runBalancer(
     vtAssert(iter != profile.end(), "Must have load profile");
     nodes.emplace_back(GreedyProc{n,iter->second});
     vt_debug_print(
-      lb, node,
+      verbose, lb,
       "\t GreedyLB::runBalancer: node={}, profile={}\n",
       n, iter->second
     );
@@ -193,7 +193,7 @@ void GreedyLB::runBalancer(
     auto min_node = nodes.back();
     nodes.pop_back();
     vt_debug_print(
-      lb, node,
+      verbose, lb,
       "\t GreedyLB::runBalancer: min_node={}, load_={}, "
       "recs_={}, max_rec: obj={}, time={}\n",
       min_node.node_, min_node.load_, min_node.recs_.size(),
@@ -220,7 +220,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
   auto const& num_recs = *objs;
   auto recs = objs + 1;
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "recvObjsDirect: num_recs={}\n", num_recs
   );
 
@@ -228,7 +228,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     auto const to_node = objGetNode(recs[i]);
     auto const new_obj_id = objSetNode(this_node,recs[i]);
     vt_debug_print(
-      lb, node,
+      verbose, lb,
       "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}, "
       "byte_offset={}\n",
       i, to_node, recs[i], new_obj_id, num_recs,
@@ -241,7 +241,7 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
 
 /*static*/ void GreedyLB::recvObjsHan(GreedyLBTypes::ObjIDType* objs) {
   vt_debug_print(
-    lb, node,
+    verbose, lb,
     "recvObjsHan: num_recs={}\n", *objs
   );
   scatter_proxy.get()->recvObjsDirect(objs);
@@ -266,7 +266,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
   }
   max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "GreedyLB::transferObjs: max_recs={}, max_bytes={}\n",
     max_recs, max_bytes
   );
@@ -308,7 +308,7 @@ void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {
   this_load -= obj_time_milli;
 
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "loadOverBin: this_load_begin={}, this_load={}, threshold={}: "
     "adding unit: bin={}, milli={}\n",
     this_load_begin, this_load, threshold, bin, obj_time_milli
@@ -320,7 +320,7 @@ void GreedyLB::calcLoadOver() {
   auto const threshold = this_threshold * avg_load;
 
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "calcLoadOver: this_load={}, avg_load={}, threshold={}\n",
     this_load, avg_load, threshold
   );

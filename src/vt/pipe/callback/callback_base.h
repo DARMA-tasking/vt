@@ -107,13 +107,13 @@ public:
       triggered_++;
     }
     vt_debug_print(
-      pipe, node,
+      verbose, pipe,
       "CallbackBase: (before) invoke trigger_: pipe={:x}\n",
       pipe_id
     );
     trigger_(data,pipe_id);
     vt_debug_print(
-      pipe, node,
+      verbose, pipe,
       "CallbackBase: (after) invoke trigger_: pipe={:x}\n",
       pipe_id
     );

@@ -82,7 +82,7 @@ struct VirtualMakeClosure {
 
   void make() {
     vt_debug_print(
-      vrt, node,
+      verbose, vrt,
       "VirtualMakeClosure: calling make()\n"
     );
 

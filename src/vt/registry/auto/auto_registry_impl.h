@@ -122,8 +122,8 @@ inline AutoActiveType getAutoHandler(HandlerType const handler) {
   bool const is_functor = HandlerManagerType::isHandlerFunctor(handler);
 
   vt_debug_print(
-    handler, node,
-    "get_auto_handler: handler={}, id={}, is_auto={}, is_functor={}\n",
+    verbose, handler,
+    "getAuoHandler: handler={}, id={}, is_auto={}, is_functor={}\n",
     handler, han_id, print_bool(is_auto), print_bool(is_functor)
   );
 

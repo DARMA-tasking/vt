@@ -45,6 +45,8 @@
 #if !defined INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_TYPES_H
 #define INCLUDED_VT_RUNTIME_COMPONENT_DIAGNOSTIC_TYPES_H
 
+#include <cstdint>
+
 namespace vt { namespace runtime { namespace component {
 
 /**

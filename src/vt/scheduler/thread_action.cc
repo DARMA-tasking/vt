@@ -78,7 +78,7 @@ void ThreadAction::run() {
 
 void ThreadAction::resume() {
   vt_debug_print(
-    gen, node,
+    normal, gen,
     "try resume: isDone={}\n", done_
   );
 
@@ -99,7 +99,7 @@ void ThreadAction::runUntilDone() {
 
 /*static*/ void ThreadAction::runFnImpl(fcontext_transfer_t t) {
   vt_debug_print(
-    gen, node,
+    normal, gen,
     "start running: runFnImpl\n"
   );
 
@@ -112,7 +112,7 @@ void ThreadAction::runUntilDone() {
   }
 
   vt_debug_print(
-    gen, node,
+    normal, gen,
     "finished running: runFnImpl\n"
   );
 
@@ -124,7 +124,10 @@ void ThreadAction::runUntilDone() {
   if (cur_running_ != nullptr) {
     auto x = cur_running_;
     cur_running_ = nullptr;
-    vt_debug_print(gen, node, "suspend\n");
+    vt_debug_print(
+      normal, gen,
+      "suspend\n"
+    );
     x->transfer_out_ = jump_fcontext(x->transfer_out_.ctx, nullptr);
   } else {
     fmt::print("Can not suspend---no thread is running\n");

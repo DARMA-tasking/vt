@@ -76,7 +76,10 @@ inline HandlerType makeAutoHandlerFunctorMap() {
   constexpr bool is_functor = true;
   auto const han =
     HandlerManagerType::makeHandler(is_auto, is_functor, RunnableT::idx);
-  vt_debug_print(handler, node, "makeAutoHandlerFunctorMap: handler={}\n", han);
+  vt_debug_print(
+    verbose, handler,
+    "makeAutoHandlerFunctorMap: handler={}\n", han
+  );
   return han;
 }
 
@@ -89,7 +92,7 @@ inline AutoActiveMapFunctorType getAutoHandlerFunctorMap(
   bool const is_functor = HandlerManagerType::isHandlerFunctor(han);
 
   vt_debug_print(
-    handler, node,
+    verbose, handler,
     "getAutoHandlerFunctorMap: handler={}, id={}, is_auto={}, is_functor={}\n",
     han, id, print_bool(is_auto), print_bool(is_functor)
   );
@@ -116,7 +119,10 @@ inline HandlerType makeAutoHandlerMap() {
   constexpr bool is_functor = false;
   auto id = RunnableGen<FunctorType, ContainerType, RegInfoType, FuncType>::idx;
   auto const han = HandlerManagerType::makeHandler(is_auto, is_functor, id);
-  vt_debug_print(handler, node, "makeAutoHandlerMap: id={}, han={}\n", id, han);
+  vt_debug_print(
+    verbose, handler,
+    "makeAutoHandlerMap: id={}, han={}\n", id, han
+  );
   return han;
 }
 
@@ -124,7 +130,7 @@ inline AutoActiveMapType getAutoHandlerMap(HandlerType const handler) {
   using ContainerType = AutoActiveMapContainerType;
   auto const id = HandlerManagerType::getHandlerIdentifier(handler);
   vt_debug_print(
-    handler, node,
+    verbose, handler,
     "getAutoHandlerMap: id={}, handler={}\n", id, handler
   );
   return getAutoRegistryGen<ContainerType>().at(id).getFun();
@@ -141,7 +147,10 @@ inline HandlerType makeAutoHandlerSeedMap() {
   constexpr bool is_functor = false;
   auto id = RunnableGen<FunctorType, ContainerType, RegInfoType, FuncType>::idx;
   auto const han = HandlerManagerType::makeHandler(is_auto, is_functor, id);
-  vt_debug_print(handler, node, "makeAutoHandlerMap: id={}, han={}\n", id, han);
+  vt_debug_print(
+    verbose, handler,
+    "makeAutoHandlerMap: id={}, han={}\n", id, han
+  );
   return han;
 }
 
@@ -150,7 +159,7 @@ inline AutoActiveSeedMapType getAutoHandlerSeedMap(HandlerType const handler) {
   using ContainerType = AutoActiveSeedMapContainerType;
   auto const id = HandlerManagerType::getHandlerIdentifier(handler);
   vt_debug_print(
-    handler, node,
+    verbose, handler,
     "getAutoHandlerSeedMap: id={}, handler={}\n", id, handler
   );
   return getAutoRegistryGen<ContainerType>().at(id).getFun();

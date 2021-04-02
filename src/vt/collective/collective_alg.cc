@@ -159,7 +159,7 @@ static void broadcastConsensus(
       theCollective()->system_scope_ ;
 
     vt_debug_print(
-      gen, node,
+      terse, gen,
       "runCollective: is_user_tag={}, scope={}, seq={}\n",
       msg->is_user_tag_, msg->scope_, msg->seq_
     );
@@ -179,7 +179,7 @@ static void broadcastConsensus(
   );
 
   vt_debug_print(
-    gen, node,
+    normal, gen,
     "mpiCollective: consensus_tag={}, msg->tag_={}, "
     "consensus_scope={}, msg->scope_={}\n",
     consensus_tag, msg->seq_,

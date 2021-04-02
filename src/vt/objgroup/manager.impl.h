@@ -109,7 +109,7 @@ ObjGroupManager::makeCollectiveObj(ObjT* obj, HolderBasePtrType holder) {
   auto const obj_ptr = reinterpret_cast<void*>(obj);
   auto const proxy = makeCollectiveImpl(std::move(holder),obj_type_idx,obj_ptr);
   vt_debug_print(
-    objgroup, node,
+    terse, objgroup,
     "makeCollectiveObj: obj_type_idx={}, proxy={:x}\n",
     obj_type_idx, proxy
   );
@@ -129,7 +129,7 @@ void ObjGroupManager::destroyCollective(ProxyType<ObjT> proxy) {
   auto const proxy_bits = proxy.getProxy();
   auto derived_iter = derived_to_bases_.find(proxy_bits);
   vt_debug_print(
-    objgroup, node,
+    terse, objgroup,
     "destroyCollective: proxy={:x}, num bases={}\n", proxy_bits,
     derived_iter != derived_to_bases_.end() ? derived_iter->second.size() : 0
   );
@@ -163,7 +163,7 @@ void ObjGroupManager::regObjProxy(ObjT* obj, ObjGroupProxyType proxy) {
   auto iter = dispatch_.find(proxy);
   vtAssertExpr(iter == dispatch_.end());
   vt_debug_print(
-    objgroup, node,
+    normal, objgroup,
     "regObjProxy: obj={}, proxy={:x}\n",
     print_ptr(obj), proxy
   );
@@ -197,7 +197,7 @@ void ObjGroupManager::registerBaseCollective(ProxyType<ObjT> proxy) {
   auto const base_idx = registry::makeObjIdx<BaseT>();
   proxy::ObjGroupProxy::setTypeIdx(base_proxy, base_idx);
   vt_debug_print(
-    objgroup, node,
+    normal, objgroup,
     "ObjGroupManager::registerBaseCollective: derived={:x}, base={:x}\n",
     derived, base_proxy
   );
@@ -223,7 +223,7 @@ void ObjGroupManager::downcast(ProxyType<ObjT> proxy) {
   auto const base_idx = registry::makeObjIdx<BaseT>();
   proxy::ObjGroupProxy::setTypeIdx(base_proxy, base_idx);
   vt_debug_print(
-    objgroup, node,
+    verbose, objgroup,
     "ObjGroupManager::downcast: derived={:x}, base={:x}\n",
     derived, base_proxy
   );
@@ -256,7 +256,7 @@ void ObjGroupManager::send(ProxyElmType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const ctrl = proxy::ObjGroupProxy::getID(proxy_bits);
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
   vt_debug_print(
-    objgroup, node,
+    terse, objgroup,
     "ObjGroupManager::send: proxy={:x}, node={}, ctrl={:x}, han={:x}\n",
     proxy_bits, dest_node, ctrl, han
   );
@@ -273,7 +273,7 @@ void ObjGroupManager::invoke(
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT, MsgT, fn>(ctrl);
 
   vt_debug_print(
-    objgroup, node,
+    terse, objgroup,
     "ObjGroupManager::invoke: proxy={:x}, node={}, ctrl={:x}, han={:x}\n",
     proxy_bits, dest_node, ctrl, han
   );
@@ -306,7 +306,7 @@ void ObjGroupManager::broadcast(ProxyType<ObjT> proxy, MsgSharedPtr<MsgT> msg) {
   auto const han = auto_registry::makeAutoHandlerObjGroup<ObjT,MsgT,fn>(ctrl);
 
   vt_debug_print(
-    objgroup, node,
+    terse, objgroup,
     "ObjGroupManager::broadcast: proxy={:x}, ctrl={:x}, han={:x}\n",
     proxy_bits, ctrl, han
   );

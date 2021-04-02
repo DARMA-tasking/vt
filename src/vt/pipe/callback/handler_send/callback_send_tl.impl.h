@@ -66,7 +66,7 @@ template <typename MsgT>
 void CallbackSendTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "CallbackSendTypeless: trigger_: pipe={:x}, this_node={}, send_node_={}\n",
     pipe, this_node, send_node_
   );

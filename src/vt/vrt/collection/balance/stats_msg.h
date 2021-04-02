@@ -64,12 +64,22 @@ struct LoadData {
     : max_(y), sum_(y), min_(y), avg_(y), M2_(0.0f), M3_(0.0f), M4_(0.0f),
       N_(1), P_(y not_eq 0.0f)
   {
-    vt_debug_print(lb, node, "LoadData: in={}, N_={}\n", y, N_);
+    vt_debug_print(
+      verbose, lb,
+      "LoadData: in={}, N_={}\n", y, N_
+    );
   }
 
   friend LoadData operator+(LoadData a1, LoadData const& a2) {
-    vt_debug_print(lb, node, "operator+: a1.N_={}, a2.N_={}\n", a1.N_, a2.N_);
-    vt_debug_print(lb, node, "operator+: a1.avg_={}, a2.avg_={}\n", a1.avg_, a2.avg_);
+    vt_debug_print(
+      verbose, lb,
+      "operator+: a1.N_={}, a2.N_={}\n", a1.N_, a2.N_
+    );
+
+    vt_debug_print(
+      verbose, lb,
+      "operator+: a1.avg_={}, a2.avg_={}\n", a1.avg_, a2.avg_
+    );
 
     int32_t N            = a1.N_ + a2.N_;
     double delta         = a2.avg_ - a1.avg_;

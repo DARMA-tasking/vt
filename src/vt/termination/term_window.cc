@@ -65,7 +65,7 @@ EpochWindow::EpochWindow(EpochType const& epoch)
   vtAssertExpr(epoch == archetype_epoch_);
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "initialize window: epoch={:x}, archetype epoch={:x}\n",
     epoch, archetype_epoch_
   );
@@ -78,8 +78,8 @@ inline bool EpochWindow::isArchetypal(EpochType const& epoch) {
 }
 
 void EpochWindow::addEpoch(EpochType const& epoch) {
-  vt_debug_print_verbose(
-    term, node,
+  vt_debug_print(
+    verbose, term,
     "addEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
@@ -101,7 +101,7 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
   }
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "addEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
@@ -110,8 +110,8 @@ void EpochWindow::addEpoch(EpochType const& epoch) {
 }
 
 void EpochWindow::closeEpoch(EpochType const& epoch) {
-  vt_debug_print_verbose(
-    term, node,
+  vt_debug_print(
+    verbose, term,
     "closeEpoch: (before) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
@@ -121,7 +121,7 @@ void EpochWindow::closeEpoch(EpochType const& epoch) {
   terminated_epochs_.insert(epoch);
 
   vt_debug_print(
-    term, node,
+    normal, term,
     "closeEpoch: (after) epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),
@@ -131,7 +131,7 @@ void EpochWindow::closeEpoch(EpochType const& epoch) {
 
 bool EpochWindow::isTerminated(EpochType const& epoch) const {
   vt_debug_print(
-    term, node,
+    verbose, term,
     "isTerminated: epoch={:x}, first={:x}, last={:x}, num={}, "
     "compression={}\n",
     epoch, terminated_epochs_.lower(), terminated_epochs_.upper(),

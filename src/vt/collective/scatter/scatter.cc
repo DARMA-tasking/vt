@@ -61,7 +61,7 @@ char* Scatter::applyScatterRecur(
   auto children = Tree::getChildren(node);
   char* cur_ptr = ptr;
   vt_debug_print(
-    scatter, node,
+    normal, scatter,
     "Scatter::applyScatterRecur: elm_size={}, ptr={}, node={}\n",
     elm_size, print_ptr(ptr), node
   );
@@ -69,7 +69,7 @@ char* Scatter::applyScatterRecur(
   cur_ptr += elm_size;
   for (auto&& child : children) {
     vt_debug_print(
-      scatter, node,
+      verbose, scatter,
       "Scatter::applyScatterRecur: child={}\n", child
     );
     cur_ptr = applyScatterRecur(child, cur_ptr, elm_size, size_fn, data_fn);
@@ -85,7 +85,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
   auto in_ptr = in_base_ptr + elm_size;
   auto const& user_handler = msg->user_han;
   vt_debug_print(
-    scatter, node,
+    normal, scatter,
     "Scatter::scatterIn: handler={}, total_size={}, elm_size={}, offset={}, "
     "parent children={}\n",
     user_handler, total_size, elm_size, in_ptr - in_base_ptr, total_children
@@ -97,7 +97,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
       child_bytes_size, child_bytes_size, elm_size
     );
     vt_debug_print(
-      scatter, node,
+      verbose, scatter,
       "Scatter::scatterIn: child={}, num_children={}, child_bytes_size={}\n",
       child, num_children, child_bytes_size
     );
@@ -107,7 +107,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     child_msg->user_han = user_handler;
     auto ptr = reinterpret_cast<char*>(child_msg.get()) + sizeof(ScatterMsg);
     vt_debug_print(
-      scatter, node,
+      verbose, scatter,
       "Scatter::scatterIn: child={}, num_children={}, elm_size={}, "
       "offset={}, child_remaining={}, parent size={}, child_bytes_size={}\n",
       child, num_children, elm_size, in_ptr - in_base_ptr,

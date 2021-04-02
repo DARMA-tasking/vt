@@ -127,7 +127,7 @@ void Barrier::waitBarrier(
   auto& barrier_state = insertFindBarrier(is_named, is_wait, barrier);
 
   vt_debug_print(
-    barrier, node,
+    terse, barrier,
     "waitBarrier: named={}, barrier={}\n", is_named, barrier
   );
 
@@ -142,7 +142,7 @@ void Barrier::waitBarrier(
   });
 
   vt_debug_print(
-    barrier, node,
+    normal, barrier,
     "waitBarrier: released: named={}, barrier={}\n", is_named, barrier
   );
 
@@ -153,7 +153,7 @@ void Barrier::contBarrier(
   ActionType fn, BarrierType const& named, bool const skip_term
 ) {
   vt_debug_print(
-    barrier, node,
+    verbose, barrier,
     "contBarrier: named_barrier={}, skip_term={}\n", named, skip_term
   );
 
@@ -165,8 +165,9 @@ void Barrier::contBarrier(
   insertFindBarrier(is_named, is_wait, barrier, fn);
 
   vt_debug_print(
-    barrier, node,
-    "contBarrier: named={}, barrier={}\n", is_named, barrier
+    terse, barrier,
+    "contBarrier: named={}, barrier={}, skip_term={}\n",
+    is_named, barrier, skip_term
   );
 
   barrierUp(is_named, is_wait, barrier, skip_term);
@@ -178,7 +179,7 @@ void Barrier::barrierDown(
   auto& barrier_state = insertFindBarrier(is_named, is_wait, barrier);
 
   vt_debug_print(
-    barrier, node,
+    verbose, barrier,
     "barrierUp: invoking: named={}, wait={}, barrier={}\n",
     is_named, is_wait, barrier
   );
@@ -207,7 +208,7 @@ void Barrier::barrierUp(
   bool const is_ready = barrier_state.recv_event_count == num_children + 1;
 
   vt_debug_print(
-    barrier, node,
+    verbose, barrier,
     "barrierUp: invoking: named={}, wait={}, ready={}, events={}, barrier={}\n",
     is_named, is_wait, is_ready, barrier_state.recv_event_count, barrier
   );
@@ -220,7 +221,7 @@ void Barrier::barrierUp(
         theMsg()->markAsTermMessage(msg);
       }
       vt_debug_print(
-        barrier, node,
+        verbose, barrier,
         "barrierUp: barrier={}\n", barrier
       );
       theMsg()->sendMsg<BarrierMsg, barrierUp>(parent, msg);
@@ -231,7 +232,7 @@ void Barrier::barrierUp(
         theMsg()->markAsTermMessage(msg);
       }
       vt_debug_print(
-        barrier, node,
+        verbose, barrier,
         "barrierDown: barrier={}\n", barrier
       );
       theMsg()->broadcastMsg<BarrierMsg, barrierDown>(msg);

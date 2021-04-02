@@ -104,7 +104,7 @@ struct SysMsgVec : vt::collective::ReduceTMsg<VectorPayload> {
 struct CheckVec {
   void operator()(SysMsgVec* msg) {
     auto const size = msg->getConstVal().vec.size();
-    vt_debug_print(reduce, node, "final vec.size={}\n", size);
+    vt_debug_print(normal, reduce, "final vec.size={}\n", size);
     EXPECT_EQ(size, reduce::collect_size * 2U);
   }
 };
@@ -117,7 +117,7 @@ struct MyCol : Collection<MyCol, Index1D> {
   MyCol()
     : Collection<MyCol, Index1D>() {
     vt_debug_print(
-      reduce, node,
+      normal, reduce,
       "constructing MyCol on node={}: idx.x()={}, ptr={}\n",
       theContext()->getNode(), getIndex().x(), print_ptr(this)
     );
@@ -139,7 +139,7 @@ struct ColMsg : CollectionMessage<MyCol> {
 template <int expected, bool check = true>
 void reducePlus(MyReduceMsg* msg) {
   vt_debug_print(
-    reduce, node,
+    normal, reduce,
     "reducePlus: cur={}: is_root={}, count={}, next={}, num={}\n",
     print_ptr(msg), print_bool(msg->isRoot()),
     msg->getCount(), print_ptr(msg->getNext<MyReduceMsg>()), msg->num
@@ -147,7 +147,7 @@ void reducePlus(MyReduceMsg* msg) {
 
   if (msg->isRoot()) {
     int const value = msg->num;
-    vt_debug_print(reduce, node, "reducePlus: final num={}\n", value);
+    vt_debug_print(normal, reduce, "reducePlus: final num={}\n", value);
     if (check) {
       EXPECT_EQ(value, expected);
     }
@@ -156,7 +156,7 @@ void reducePlus(MyReduceMsg* msg) {
     auto cur_msg = msg->getNext<MyReduceMsg>();
     while (cur_msg != nullptr) {
       vt_debug_print(
-        reduce, node,
+        normal, reduce,
         "reducePlus: while fst_msg={}: cur_msg={}, is_root={}, count={}, next={}, num={}\n",
         print_ptr(fst_msg), print_ptr(cur_msg), print_bool(cur_msg->isRoot()),
         cur_msg->getCount(), print_ptr(cur_msg->getNext<MyReduceMsg>()), cur_msg->num

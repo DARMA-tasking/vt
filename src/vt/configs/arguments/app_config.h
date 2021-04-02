@@ -172,8 +172,10 @@ struct AppConfig {
   std::size_t vt_ult_stack_size = (1 << 21) - 64;
 #endif
 
+  std::string vt_debug_level = "terse";
+  uint64_t vt_debug_level_val = 0;
+
   bool vt_debug_all          = false;
-  bool vt_debug_verbose      = false;
   bool vt_debug_none         = false;
   bool vt_debug_gen          = false;
   bool vt_debug_runtime      = false;
@@ -318,8 +320,10 @@ struct AppConfig {
       | vt_no_assert_fail
       | vt_max_mpi_send_size
 
+      | vt_debug_level
+      | vt_debug_level_val
+
       | vt_debug_all
-      | vt_debug_verbose
       | vt_debug_none
       | vt_debug_gen
       | vt_debug_runtime

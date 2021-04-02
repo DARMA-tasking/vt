@@ -149,7 +149,7 @@ void NodeStats::createStatsFile() {
   auto const file_name = fmt::format("{}/{}", dir, file);
 
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "NodeStats::createStatsFile: file={}\n", file_name
   );
 
@@ -273,7 +273,7 @@ ElementIDStruct NodeStats::addNodeStats(
   auto const obj_id = col_elm->elm_id_;
 
   vt_debug_print(
-    lb, node,
+    normal, lb,
     "NodeStats::addNodeStats: obj_id={}, phase={}, subphases={}, load={}\n",
     obj_id, phase, subphase_time.size(), time
   );

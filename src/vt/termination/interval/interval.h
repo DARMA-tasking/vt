@@ -169,7 +169,7 @@ public:
   static bool intersects(IntT&& i1, IntU&& i2) {
     bool ret = i1.lower() <= i2.upper() and i2.lower() <= i1.upper();
     vt_debug_print(
-      gen, node,
+      verbose, gen,
       "Interval intersects: i1={}, i2={}, op:{}<={}={} and {}<={}={} => {}\n",
       i1, i2,
       i1.lower(), i2.upper(), i1.lower() <= i2.upper(),

@@ -62,7 +62,7 @@ MemoryPoolEqual<num_bytes_t>::MemoryPoolEqual(SlotType const in_pool_size)
 template <int64_t num_bytes_t>
 /*virtual*/ MemoryPoolEqual<num_bytes_t>::~MemoryPoolEqual() {
   vt_debug_print(
-    pool, node,
+    normal, pool,
     "cur_slot_={}\n", cur_slot_
   );
 
@@ -98,7 +98,7 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
   );
 
   vt_debug_print(
-    pool, node,
+    normal, pool,
     "alloc: ptr={}, ptr_ret={} cur_slot={}, sz={}, oversize={}\n",
     ptr, ptr_ret, cur_slot_, sz, oversize
   );
@@ -111,7 +111,7 @@ void* MemoryPoolEqual<num_bytes_t>::alloc(
 template <int64_t num_bytes_t>
 void MemoryPoolEqual<num_bytes_t>::dealloc(void* const t) {
   vt_debug_print(
-    pool, node,
+    normal, pool,
     "dealloc t={}, cur_slot={}\n", t, cur_slot_
   );
 

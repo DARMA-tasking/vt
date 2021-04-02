@@ -68,7 +68,7 @@ template <typename ColT, typename IndexT>
   auto const& idx = elm_proxy.getIndex();
 
   vt_debug_print(
-    vrt_coll, node,
+    terse, vrt_coll,
     "migrateInHandler: from_node={}, idx={}\n",
     from_node, idx
   );

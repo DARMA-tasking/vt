@@ -805,6 +805,25 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f_max_arg, reset);
   }
 
+  {
+    std::string print_level = "";
+    auto const& level = getAppConfig()->vt_debug_level;
+    if (level == "0" or level == "terse") {
+      print_level = debug::yellow() + std::string{"terse"} + reset;
+    } else if (level == "1" or level == "normal") {
+      print_level = debug::yellow() + std::string{"normal"} + reset;
+    } else if (level == "2" or level == "verbose") {
+      print_level = debug::yellow() + std::string{"verbose"} + reset;
+#if !vt_check_enabled(debug_verbose)
+      auto w1 = warn_cr("--vt_debug_level=verbose", "vt_debug_verbose");
+      fmt::print("{}\t{}{}", vt_pre, w1, reset);
+#endif
+    }
+    auto f11 = fmt::format("Debug print mode set to {}", print_level);
+    auto f12 = opt_on("--vt_debug_level", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (getAppConfig()->vt_debug_all) {
     auto f11 = fmt::format("All debug prints are on (if enabled compile-time)");
     auto f12 = opt_on("--vt_debug_all", f11);

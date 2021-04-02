@@ -65,7 +65,7 @@ void CallbackBcastTypeless::trigger(MsgT* msg, PipeType const& pipe) {
   auto const& this_node = theContext()->getNode();
 
   vt_debug_print(
-    pipe, node,
+    terse, pipe,
     "CallbackBcast: trigger_: pipe={:x}, this_node={}\n",
     pipe, this_node
   );

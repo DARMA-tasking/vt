@@ -249,7 +249,8 @@ void TraceLite::addUserEventBracketed(
   }
 
   vt_debug_print(
-    trace, node, "Trace::addUserEventBracketed: event={:x}, begin={}, end={}\n",
+    normal, trace,
+    "Trace::addUserEventBracketed: event={:x}, begin={}, end={}\n",
     event, begin, end);
 
   auto const type = TraceConstantsType::UserEventPair;
@@ -268,9 +269,9 @@ void TraceLite::addUserBracketedNote(
   }
 
   vt_debug_print(
-    trace, node,
-    "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n", begin,
-    end, note, event
+    normal, trace,
+    "Trace::addUserBracketedNote: begin={}, end={}, note={}, event={}\n",
+    begin, end, note, event
   );
 
   auto const type = TraceConstantsType::UserSuppliedBracketedNote;
@@ -350,7 +351,11 @@ void TraceLite::beginIdle(double const time) {
     return;
   }
 
-  vt_debug_print(trace, node, "begin_idle: time={}\n", time);
+  vt_debug_print(
+    verbose, trace,
+    "begin_idle: time={}\n",
+    time
+  );
 
   auto const type = TraceConstantsType::BeginIdle;
   NodeType const node = theContext()->getNode();
@@ -368,7 +373,11 @@ void TraceLite::endIdle(double const time) {
     return;
   }
 
-  vt_debug_print(trace, node, "end_idle: time={}\n", time);
+  vt_debug_print(
+    verbose, trace,
+    "end_idle: time={}\n",
+    time
+  );
 
   auto const type = TraceConstantsType::EndIdle;
   NodeType const node = theContext()->getNode();
@@ -454,12 +463,13 @@ void TraceLite::writeTracesFile(int flush, bool is_incremental_flush) {
     }
 
     vt_debug_print(
-      trace, node,
+      terse, trace,
       "write_traces_file: to_write={}, already_written={}, "
       "event_parents_types={}, event_types={}\n",
       traces_.size(), trace_write_count_,
       TraceContainersType::getEventTypeContainer()->size(),
-      TraceContainersType::getEventContainer()->size());
+      TraceContainersType::getEventContainer()->size()
+    );
 
     if (node == 0) {
       vt_print(

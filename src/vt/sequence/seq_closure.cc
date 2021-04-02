@@ -61,7 +61,7 @@ SeqClosure::SeqClosure(SeqLeafClosureType in_leaf)
 
 SeqNodeStateEnumType SeqClosure::execute() {
   vt_debug_print(
-    sequence, node,
+    normal, sequence,
     "SeqClosure: execute is_leaf={}\n", print_bool(is_leaf)
   );
 

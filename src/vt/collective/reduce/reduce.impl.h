@@ -62,7 +62,7 @@ void Reduce::reduceUpHan(MsgT* msg) {
   vtAssert(msg->scope() == scope_, "Must match correct scope");
 
   vt_debug_print(
-    reduce, node,
+    verbose, reduce,
     "reduceUpHan: scope={}, stamp={}, msg={}\n",
     msg->scope().str(), detail::stringizeStamp(msg->stamp()), print_ptr(msg)
   );
@@ -151,7 +151,7 @@ detail::ReduceStamp Reduce::reduceImmediate(
   msg->reduce_id_ = detail::ReduceIDImpl{cur_id, scope_};
 
   vt_debug_print(
-    reduce, node,
+    terse, reduce,
     "reduce: scope={}, stamp={}, contrib={}, msg={}, ref={}\n",
     scope_.str(), detail::stringizeStamp(id), num_contrib, print_ptr(msg),
     envelopeGetRef(msg->env)
@@ -191,7 +191,7 @@ void Reduce::reduceAddMsg(
   state.combine_handler_ = msg->combine_handler_;
   state.reduce_root_ = msg->reduce_root_;
   vt_debug_print(
-    reduce, node,
+    verbose, reduce,
     "reduceAddMsg: scope={}, stamp={}, msg={}, contrib={}, msgs.size()={}, "
     "ref={}\n",
     scope_.str(), detail::stringizeStamp(lookup), print_ptr(msg),
@@ -211,7 +211,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
   bool ready = nmsgs == total;
 
   vt_debug_print(
-    reduce, node,
+    normal, reduce,
     "startReduce: scope={}, stamp={}, msg={}, children={}, "
     "contrib_={}, local_contrib_={}, nmsgs={}, ready={}\n",
     scope_.str(), detail::stringizeStamp(id), state.msgs.size(),
@@ -234,8 +234,8 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         typed_msg->count_ = size - i;
         typed_msg->is_root_ = false;
 
-        vt_debug_print_verbose(
-          reduce, node,
+        vt_debug_print(
+          verbose, reduce,
           "scope={}, stamp={}: i={} next={} has_next={} count={} msgs.size()={} "
           "ref={}\n",
           scope_.str(), detail::stringizeStamp(id),
@@ -244,8 +244,8 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         );
       }
 
-      vt_debug_print_verbose(
-        reduce, node,
+      vt_debug_print(
+        verbose, reduce,
         "scope={}, stamp={}, msgs.size()={}\n",
         scope_.str(), detail::stringizeStamp(id), size
       );
@@ -280,7 +280,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       auto const& this_node = theContext()->getNode();
       if (root != this_node) {
         vt_debug_print(
-          reduce, node,
+          normal, reduce,
           "reduce notify root (send): scope={}, stamp={}, root={}, node={}\n",
           scope_.str(), detail::stringizeStamp(id), root, this_node
         );
@@ -288,7 +288,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         theMsg()->sendMsg<MsgT,ReduceManager::reduceRootRecv<MsgT>>(root, typed_msg);
       } else {
         vt_debug_print(
-          reduce, node,
+          normal, reduce,
           "reduce notify root (direct): scope={}, stamp={}, root={}, node={}\n",
           scope_.str(), detail::stringizeStamp(id), root, this_node
         );
@@ -297,7 +297,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
     } else {
       auto const& parent = getParent();
       vt_debug_print(
-        reduce, node,
+        normal, reduce,
         "reduce send to parent: scope={}, stamp={}, parent={}\n",
         scope_.str(), detail::stringizeStamp(id), parent
       );

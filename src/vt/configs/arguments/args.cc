@@ -218,7 +218,7 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   #define debug_pp(opt) +std::string(vt::config::PrettyPrintCat<config::opt>::str)+
 
   auto rp  = "Enable all debug prints";
-  auto rq  = "Enable verbose debug prints";
+  auto rq  = "Set level for debug prints (0=>terse, 1=>normal, 2=>verbose)";
   auto aap = "Enable debug_none         = \"" debug_pp(none)         "\"";
   auto bap = "Enable debug_gen          = \"" debug_pp(gen)          "\"";
   auto cap = "Enable debug_runtime      = \"" debug_pp(runtime)      "\"";
@@ -253,8 +253,9 @@ void ArgConfig::addDebugPrintArgs(CLI::App& app) {
   auto dcp = "Enable debug_phase        = \"" debug_pp(phase)        "\"";
   auto ddp = "Enable debug_context      = \"" debug_pp(context)      "\"";
 
+  auto r1 = app.add_option("--vt_debug_level",      config_.vt_debug_level,        rq);
+
   auto r  = app.add_flag("--vt_debug_all",          config_.vt_debug_all,          rp);
-  auto r1 = app.add_flag("--vt_debug_verbose",      config_.vt_debug_verbose,      rq);
   auto aa = app.add_flag("--vt_debug_none",         config_.vt_debug_none,         aap);
   auto ba = app.add_flag("--vt_debug_gen",          config_.vt_debug_gen,          bap);
   auto ca = app.add_flag("--vt_debug_runtime",      config_.vt_debug_runtime,      cap);
@@ -619,6 +620,20 @@ void ArgConfig::postParseTransform() {
 
   config_.vt_trace_mpi = contains(arg_trace_mpi, "internal");
   config_.vt_trace_pmpi = contains(arg_trace_mpi, "external");
+
+  using config::ModeEnum;
+
+  auto const& level = config_.vt_debug_level;
+  if (level == "terse" or level == "0") {
+    config_.vt_debug_level_val = ModeEnum::terse;
+  } else if (level == "normal" or level == "1") {
+    config_.vt_debug_level_val = ModeEnum::terse | ModeEnum::normal;
+  } else if (level == "verbose" or level == "2") {
+    config_.vt_debug_level_val =
+      ModeEnum::terse | ModeEnum::normal | ModeEnum::verbose;
+  } else {
+    vtAbort("Invalid value passed to --vt_debug_level");
+  }
 }
 
 std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc, char**& argv) {

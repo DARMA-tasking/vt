@@ -115,7 +115,7 @@ void Manager::finishMake(impl::ConstructMsg<T, E, ProxyT>* msg) {
   auto const& size = msg->getVal().size_;
   auto const& count = msg->getVal().count_;
   vt_debug_print(
-    rdma, node,
+    normal, rdma,
     "finishMake: handle={:x}, size={}, count={}\n",
     key.handle_, size, count
   );
@@ -203,7 +203,7 @@ void Manager::deleteHandleCollection(Handle<T,E,IndexT>& han) {
   auto proxy = objgroup::proxy::Proxy<SubType>{han.proxy_};
   proxy.get()->deleteHandle();
   vt_debug_print(
-    rdma, node,
+    normal, rdma,
     "deleteHandleCollection: num deleted={}, num active={}\n",
     proxy.get()->getNumDeletedHandles(),
     proxy.get()->getNumActiveHandles()
@@ -212,7 +212,7 @@ void Manager::deleteHandleCollection(Handle<T,E,IndexT>& han) {
   // manager
   if (proxy.get()->getNumDeletedHandles() == proxy.get()->getNumActiveHandles()) {
     vt_debug_print(
-      rdma, node,
+      normal, rdma,
       "deleteHandleCollection: deleting handle collection: num={}\n",
       proxy.get()->getNumDeletedHandles()
     );

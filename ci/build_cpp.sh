@@ -131,6 +131,7 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH:-}" \
       -DCMAKE_INSTALL_PREFIX="$VT_BUILD/install" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \
+      -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-}" \
       "$VT"
 cmake_conf_ret=$?
 

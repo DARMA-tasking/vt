@@ -66,14 +66,14 @@ void ObjGroupManager::dispatch(MsgSharedPtr<ShortMessage> msg, HandlerType han) 
   auto const ctrl = HandlerManager::getHandlerControl(han);
   auto const type_idx = auto_registry::getAutoHandlerObjTypeIdx(han);
   vt_debug_print(
-    objgroup, node,
+    verbose, objgroup,
     "dispatch: type_idx={:x}, ctrl={:x}, han={:x}\n", type_idx, ctrl, han
   );
   auto const node = 0;
   auto const proxy = proxy::ObjGroupProxy::create(ctrl,type_idx,node,true);
   auto dispatch_iter = dispatch_.find(proxy);
   vt_debug_print(
-    objgroup, node,
+    normal, objgroup,
     "dispatch: try type_idx={:x}, ctrl={:x}, han={:x}, has dispatch={}\n",
     type_idx, ctrl, han, dispatch_iter != dispatch_.end()
   );
@@ -116,7 +116,7 @@ ObjGroupProxyType ObjGroupManager::makeCollectiveImpl(
 
 void dispatchObjGroup(MsgSharedPtr<ShortMessage> msg, HandlerType han) {
   vt_debug_print(
-    objgroup, node,
+    verbose, objgroup,
     "dispatchObjGroup: han={:x}\n", han
   );
   return theObjGroup()->dispatch(msg,han);

@@ -38,6 +38,7 @@
 #   VT_DIAGNOSTICS_RUNTIME=0  # Enable diagnostics collection at runtime by default
 #   BUILD_TYPE=release        # CMake build type
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
+#   VT_DEBUG_VERBOSE          # Enable verbose debug prints at compile-time
 #
 # In order to run in the container, there are two stages. First, one must build
 # or pull the base container with the variables exported (or using the defaults
@@ -147,6 +148,7 @@ x-vtopts: &vtopts
   http_proxy: ${PROXY-}
   LSAN_OPTIONS: ${LSAN_OPTIONS-}
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
+  VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE-}
 
 services:
   ##############################################################################
