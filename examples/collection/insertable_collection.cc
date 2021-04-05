@@ -56,6 +56,11 @@ struct InsertCol : vt::InsertableCollection<InsertCol, vt::Index1D> {
 int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
+  if(vt::theContext()->getNumNodes() < 2){
+    vt::finalize();
+    return 0;
+  }
+
   vt::NodeType this_node = vt::theContext()->getNode();
 
   int32_t num_elms = default_num_elms;

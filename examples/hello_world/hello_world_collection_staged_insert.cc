@@ -79,6 +79,11 @@ int main(int argc, char** argv) {
   vt::NodeType this_node = vt::theContext()->getNode();
   vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
+  if(num_nodes < 2){
+    vt::finalize();
+    return 0;
+  }
+
   int num_elms = 32;
   if (argc > 1) {
     num_elms = atoi(argv[1]);

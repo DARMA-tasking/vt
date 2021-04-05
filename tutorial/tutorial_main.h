@@ -67,6 +67,12 @@ int main(int argc, char** argv) {
    */
   ::vt::CollectiveOps::initialize(argc, argv);
 
+  // Tutorial code is meant to be run on at least 2 nodes
+  if(::vt::theContext()->getNumNodes() < 2){
+    ::vt::CollectiveOps::finalize();
+    return 0;
+  }
+
   /*
    * The tutorial pieces generate work for many nodes, but they all stem from
    * node 0. This is a common pattern. Collections and other virtualized

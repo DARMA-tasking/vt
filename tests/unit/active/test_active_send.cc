@@ -46,6 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -69,6 +70,8 @@ struct TestActiveSend : TestParallelHarness {
 
   virtual void SetUp() {
     TestParallelHarness::SetUp();
+
+    SET_MIN_NUM_NODES_CONSTRAINT(2);
 
     handler_count = 0;
     num_msg_sent = 16;

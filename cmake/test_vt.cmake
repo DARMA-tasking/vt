@@ -83,8 +83,7 @@ function(build_mpi_proc_test_list)
     )
   endif()
 
-  # Start with 2 processors since many tests/examples require at least 2
-  set(CUR_N_PROC "2")
+  set(CUR_N_PROC "1")
   set(CUR_PROC_LIST "")
   while(CUR_N_PROC LESS_EQUAL "${ARG_MAX_PROC}")
     #message("${CUR_N_PROC}")

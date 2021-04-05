@@ -106,6 +106,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
         PROPERTIES TIMEOUT 60
         FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
         PASS_REGULAR_EXPRESSION "PASSED"
+        SKIP_REGULAR_EXPRESSION "SKIPPED"
       )
     endforeach()
   else()
@@ -115,7 +116,6 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
       TEST_SUFFIX            _no_mpi
       TEST_PREFIX            vt:
       TEST_LIST              ${CUR_TEST_LIST}
-      EXECUTE_COMMAND        ${PROC}
     )
   endif()
 

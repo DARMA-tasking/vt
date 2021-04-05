@@ -56,13 +56,8 @@ struct TestInitialization : TestParallelHarness {
 
     TestHarness::SetUp();
 
-    if (mpi_singleton == nullptr) {
-      mpi_singleton =
-        std::make_unique<MPISingletonMultiTest>(test_argc, test_argv);
-    }
-
     // communicator is duplicated.
-    MPI_Comm comm = mpi_singleton->getComm();
+    MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
 
     static char prog_name[]{"vt_program"};
     static char cli_argument[]{"--cli_argument=100"};

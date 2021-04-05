@@ -48,6 +48,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include "vt/transport.h"
 
@@ -231,6 +232,7 @@ TEST_F(TestSequencerVirtual, test_seq_vc_2) {
 }
 
 TEST_F(TestSequencerVirtual, test_seq_vc_distinct_inst_3) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
   auto const& my_node = theContext()->getNode();
 
   runInEpochCollective([my_node]{

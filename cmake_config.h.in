@@ -69,6 +69,8 @@
 #define vt_feature_cmake_production_build    @vt_feature_cmake_production_build@
 #define vt_feature_cmake_debug_verbose       @vt_feature_cmake_debug_verbose@
 
+#define vt_detected_max_num_nodes @cmake_detected_max_num_nodes@
+
 #cmakedefine vt_quirked_trivially_copyable_on_msg
 #cmakedefine vt_quirked_serialize_method_detection
 

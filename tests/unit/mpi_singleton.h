@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                        test_sequencer_for.extended.cc
+//                              mpi_singleton.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,82 +42,57 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#if !defined __VIRTUAL_TRANSPORT_MPI_SINGLETON___
+#define __VIRTUAL_TRANSPORT_MPI_SINGLETON___
 
-#include <cstdint>
+#include <memory>
+#include <mpi.h>
 
-#include "test_parallel_harness.h"
-#include "data_message.h"
-#include "test_helpers.h"
+namespace vt { namespace tests { namespace unit {
 
-#include "vt/transport.h"
+extern int test_argc;
+extern char** test_argv;
 
-namespace vt { namespace tests { namespace unit { namespace for_ {
+/*
+ *  gtest runs many tests in the same binary, but there is no way to know when
+ *  to call MPI_Finalize, which can only be called once (when it's called
+ *  MPI_Init can't be called again)! This singleton uses static initialization
+ *  to init/finalize exactly once
+ */
+struct MPISingletonMultiTest {
+  MPISingletonMultiTest(int& argc, char**& argv) {
+    MPI_Init(&argc, &argv);
+    comm_ = MPI_COMM_WORLD;
 
-using namespace vt;
-using namespace vt::tests::unit;
+    MPI_Comm_size(comm_, &num_ranks_);
+    MPI_Barrier(comm_);
+  }
 
-static constexpr vt::seq::ForIndex const end_range = 10;
+  virtual ~MPISingletonMultiTest() {
+    MPI_Barrier(comm_);
+    MPI_Finalize();
+  }
 
-struct TestSequencerFor : TestParallelHarness {
-  using TestMsg = TestStaticBytesNormalMsg<4>;
-  using OrderType = uint32_t;
+public:
+  static MPISingletonMultiTest* Get() {
+    static std::unique_ptr<MPISingletonMultiTest> mpi_singleton = nullptr;
 
-  SEQUENCE_REGISTER_HANDLER(TestSequencerFor::TestMsg, testSeqForHan);
-
-  static void testSeqForFn(SeqType const& seq_id) {
-    static std::atomic<OrderType> seq_ordering_{};
-
-    #if DEBUG_TEST_HARNESS_PRINT
-      fmt::print("testSeqForFn seq_id={}\n", seq_id);
-    #endif
-
-    if (seq_id == -1) {
-      EXPECT_EQ(seq_ordering_++, 11U);
-      return;
+    if (!mpi_singleton) {
+      mpi_singleton =
+        std::make_unique<MPISingletonMultiTest>(test_argc, test_argv);
     }
 
-    EXPECT_EQ(seq_ordering_++, 0U);
-
-    theSeq()->for_loop(0, end_range, 1, [](vt::seq::ForIndex i) {
-      theSeq()->wait_closure<TestMsg, testSeqForHan>(no_tag, [=](TestMsg* msg){
-        #if DEBUG_TEST_HARNESS_PRINT
-          fmt::print("testSeqForFn running wait\n");
-        #endif
-
-        EXPECT_EQ(seq_ordering_++, static_cast<size_t>(i+1));
-      });
-    });
+    return mpi_singleton.get();
   }
+
+  MPI_Comm getComm() { return comm_; }
+  int getNumRanks() { return num_ranks_; }
+
+private:
+  MPI_Comm comm_;
+  int num_ranks_;
 };
 
-TEST_F(TestSequencerFor, test_for) {
-  SET_MIN_NUM_NODES_CONSTRAINT(2);
+}}} // namespace vt::tests::unit
 
-  auto const& my_node = theContext()->getNode();
-
-  #if DEBUG_TEST_HARNESS_PRINT
-    fmt::print("test_seq_handler: node={}\n", my_node);
-  #endif
-
-  SeqType const& seq_id = theSeq()->nextSeq();
-
-  runInEpochCollective([seq_id, my_node]{
-    if (my_node == 0) {
-      theSeq()->sequenced(seq_id, testSeqForFn);
-    }
-
-    for (int i = 0; i < end_range; i++) {
-      if (my_node == 1) {
-        auto msg = makeMessage<TestMsg>();
-        theMsg()->sendMsg<TestMsg, testSeqForHan>(0, msg);
-      }
-    }
-  });
-
-  if (my_node == 0) {
-    testSeqForFn(-1);
-  }
-}
-
-}}}} // end namespace vt::tests::unit::for_
+#endif /* __VIRTUAL_TRANSPORT_MPI_SINGLETON___ */
