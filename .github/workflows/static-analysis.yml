@@ -1,0 +1,34 @@
+name: Static analysis
+
+on: pull_request
+# on:
+#   # Trigger the workflow on push or pull request,
+#   # but only for the master branch
+#   push:
+#     branches:
+#       - develop
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      LAST_BUILD_TIME: 0
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Generate graph and badge
+        uses: DARMA-tasking/graph-build-times@7-add-static-analysis
+        with:
+            github_personal_token: ${{ secrets.GH_PAT }}
+            graph_filename: build_times_tmp.png
+            badge_filename: build_time_badge_tmp.svg
+            badge_title: vt:develop build time
+            badge_logo: Docker
+            num_last_build: 50
+            title: vt build times
+            graph_width: 19
+            graph_height: 8
+            run_number: 2
