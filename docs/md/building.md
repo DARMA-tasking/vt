@@ -62,7 +62,7 @@ build configuration:
 | `vt_production_build_enabled`    | 0               | Disable assertions and debug prints at compile time |
 | `vt_unity_build_enabled`         | 0               | Build with Unity/Jumbo mode enabled (requires CMake >= 3.16) |
 | `vt_fcontext_enabled`            | 0               | Force use of fcontext for threading |
-| `vt_tests_num_nodes`             | 0               | Maximum number of nodes used for tests. Value 0 means it should use the default detected by CMake |
+| `vt_tests_num_nodes`             | -               | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
 | `CODE_COVERAGE`                  | 0               | Enable code coverage for VT examples/tests |
 | `USE_OPENMP`                     | 0               | Force use of OpenMP for threading |
 | `USE_STD_THREAD`                 | 0               | Force use of std::thread for threading |
@@ -102,7 +102,7 @@ parameters.
 | `VT_DIAGNOSTICS_ENABLED`         | 1               | Enable VT component diagnostics for performance analysis |
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0               | Enable VT component diagnostics at runtime by default |
 | `VT_DEBUG_VERBOSE`               | <empty>         | Enable VT verbose debug prints at compile-time |
-| `VT_TESTS_NUM_NODES`             | 0               | Maximum number of nodes used for tests. Value 0 means it should use the default detected by CMake |
+| `VT_TESTS_NUM_NODES`             | <empty>         | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned

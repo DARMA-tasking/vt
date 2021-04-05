@@ -19,16 +19,14 @@ set(MPI_NUMPROC_FLAG "${MPIEXEC_NUMPROC_FLAG}")
 
 set(cmake_detected_max_num_nodes ${MPIEXEC_MAX_NUMPROCS})
 
-message(STATUS "MPI max nproc: ${MPI_MAX_NUMPROC}")
-# Value of 0 means we should use the default value detected by CMake
-if("${vt_tests_num_nodes}" GREATER "0")
-  set(MPI_MAX_NUMPROC  "${vt_tests_num_nodes}")
-else()
-  set(MPI_MAX_NUMPROC  "${MPI_MAX_NUMPROC}")
+set(MPI_MAX_NUMPROC "${MPIEXEC_MAX_NUMPROCS}")
+
+if(${vt_tests_num_nodes})
+  set(MPI_MAX_NUMPROC "${vt_tests_num_nodes}")
 endif()
 
 if(${MPI_MAX_NUMPROC} GREATER ${MPIEXEC_MAX_NUMPROCS})
-  message("Oversubscribing number of nodes to ${MPI_MAX_NUMPROC} with detected ${MPIEXEC_MAX_NUMPROCS}")
+  message(STATUS "Oversubscribing number of nodes to ${MPI_MAX_NUMPROC} with detected ${MPIEXEC_MAX_NUMPROCS}")
 endif()
 
 message(STATUS "MPI max nproc: ${MPI_MAX_NUMPROC}")
