@@ -103,7 +103,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
 
       set_tests_properties(
         ${${CUR_TEST_LIST}}
-        PROPERTIES TIMEOUT 360
+        PROPERTIES TIMEOUT 60
         FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
         PASS_REGULAR_EXPRESSION "PASSED"
         SKIP_REGULAR_EXPRESSION "SKIPPED"

@@ -412,7 +412,7 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
           entity, home, my_node,
           [entity, &nb_received](vt::BaseMessage* in_msg) {
             vt_debug_print(
-              location, node,
+              normal, location,
               "TestLocationRoute: message arrived to me for a migrated "
               "entity={}\n",
               entity);
