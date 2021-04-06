@@ -119,7 +119,7 @@ template <>
 void TestPoolMessageSizes::testPoolFun<max_bytes>(TestMsg<max_bytes>* msg) { }
 
 TEST_F(TestPoolMessageSizes, pool_message_sizes_alloc) {
-  SET_MIN_NUM_NODES_CONSTRAINT(2);
+  SET_NUM_NODES_CONSTRAINT(2);
 
   using namespace vt;
 
