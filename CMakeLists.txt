@@ -48,6 +48,7 @@ option(CODE_COVERAGE "Enable coverage reporting" OFF)
 # endif(CODE_COVERAGE_ENABLED)
 
 set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
+message(STATUS "Running with MPI extra flags = ${MPI_EXTRA_FLAGS}")
 
 set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
 set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})

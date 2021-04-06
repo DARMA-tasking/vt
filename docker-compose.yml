@@ -149,7 +149,7 @@ x-vtopts: &vtopts
   LSAN_OPTIONS: ${LSAN_OPTIONS-}
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
   VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE-}
-  VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-2}
+  VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-}
 
 services:
   ##############################################################################
@@ -247,7 +247,9 @@ services:
       dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
-      args: *default-args
+      args:
+        <<: *default-args
+        MPI_FLAGS: "--oversubscribe"
     ulimits: *ulimits
     environment:
       <<: *ccache
