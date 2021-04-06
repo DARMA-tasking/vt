@@ -53,6 +53,11 @@ void RotateLB::init(objgroup::proxy::Proxy<RotateLB> in_proxy) {
   proxy = in_proxy;
 }
 
+/*static*/ std::unordered_map<std::string, std::string>
+RotateLB::getInputKeysWithHelp() {
+  return std::unordered_map<std::string, std::string>{};
+}
+
 void RotateLB::inputParams(balance::SpecEntry* spec) { }
 
 void RotateLB::runLB() {

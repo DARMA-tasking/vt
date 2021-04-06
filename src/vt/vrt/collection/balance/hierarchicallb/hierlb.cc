@@ -71,8 +71,68 @@ void HierarchicalLB::init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy) {
   proxy = in_proxy;
 }
 
+/*static*/ std::unordered_map<std::string, std::string>
+HierarchicalLB::getInputKeysWithHelp() {
+  std::unordered_map<std::string, std::string> const keys_help = {
+    {
+      "min",
+      R"(
+Values: <double>
+Default: 0.8
+Description:
+  The load threshold for objects to consider on each node. The default value of
+  0.8 will consider 80% of the average load for re-balancing on each node. The
+  order these will be selected is based on the value passed to "strategy". If
+  the parameter "auto" is set to "true", this will be the minimum threshold;
+  otherwise, it sets the threshold directly.
+)"
+    },
+    {
+      "max",
+      R"(
+Values: <double>
+Default: 1.004
+Description:
+  The maximum load threshold for objects to consider on each node which is only
+  used if "auto" is "true".
+)"
+    },
+    {
+      "auto",
+      R"(
+Values: {true, false}
+Default: true
+Description:
+  Automatically determine the threshold between "min" and "max" using
+  calculated I (imbalance metric) with the formula
+  min(max(1-I, min), max).
+)"
+    },
+    {
+      "strategy",
+      R"(
+Values: {LoadOverLessThan, LoadOverGreaterThan, LoadOverOneEach}
+Default: LoadOverLessThan
+Description:
+  Select the strategy for which objects to select for rebalancing that are over
+  the selected threshold:
+   -  LoadOverLessThan    -- pick the smallest objects on the node
+   -  LoadOverGreaterThan -- pick the largest objects on the node
+   -  LoadOverOneEach     -- pick objects from all the sample bins across the
+                             range of sizes
+)"
+    }
+  };
+  return keys_help;
+}
+
 void HierarchicalLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"min", "max", "auto", "strategy"};
+  auto keys_help = getInputKeysWithHelp();
+
+  std::vector<std::string> allowed;
+  for (auto&& elm : keys_help) {
+    allowed.push_back(elm.first);
+  }
   spec->checkAllowedKeys(allowed);
   min_threshold = spec->getOrDefault<double>("min", hierlb_threshold_p);
   max_threshold = spec->getOrDefault<double>("max", hierlb_max_threshold_p);
