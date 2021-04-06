@@ -61,7 +61,7 @@ COPY ./ci/deps/openmpi.sh openmpi.sh
 RUN ./openmpi.sh v4.0 4.0.4 -j4
 
 ARG MPI_FLAGS=""
-ENV MPI_EXTRA_FLAGS="--allow-run-as-root;${MPI_FLAGS}" \
+ENV MPI_EXTRA_FLAGS="--allow-run-as-root ${MPI_FLAGS}" \
     PATH=/usr/lib/ccache/:$PATH
 
 ARG ZOLTAN_INSTALL_DIR=/trilinos-install
