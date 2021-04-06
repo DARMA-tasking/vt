@@ -76,6 +76,8 @@ struct HierarchicalLB : BaseLB {
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
 
+  static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
+
   void setupTree(double const threshold);
   void calcLoadOver(HeapExtractEnum const extract);
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);

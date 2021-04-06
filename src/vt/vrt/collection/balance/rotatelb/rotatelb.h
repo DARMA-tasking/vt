@@ -69,6 +69,8 @@ struct RotateLB : BaseLB {
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
 
+  static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
+
 private:
   objgroup::proxy::Proxy<RotateLB> proxy = {};
 };
