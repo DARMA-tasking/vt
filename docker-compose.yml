@@ -247,9 +247,7 @@ services:
       dockerfile: ci/docker/ubuntu-${UBUNTU}-${COMPILER_TYPE}-openmpi-cpp.dockerfile
       cache_from:
         - ${REPO}:${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-openmpi-cpp
-      args:
-        <<: *default-args
-        MPI_FLAGS: "--oversubscribe"
+      args: *default-args
     ulimits: *ulimits
     environment:
       <<: *ccache
