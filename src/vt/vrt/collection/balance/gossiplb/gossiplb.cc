@@ -709,16 +709,21 @@ GossipLB::selectObject(
   }
 }
 
-std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
+/*static*/
+std::vector<GossipLB::ObjIDType> GossipLB::orderObjects(
+  ObjectOrderEnum obj_ordering,
+  std::unordered_map<ObjIDType, TimeType> cur_objs,
+  LoadType this_new_load, TimeType target_max_load
+) {
   // define the iteration order
-  std::vector<ObjIDType> ordered_obj_ids(cur_objs_.size());
+  std::vector<ObjIDType> ordered_obj_ids(cur_objs.size());
 
   int i = 0;
-  for (auto &obj : cur_objs_) {
+  for (auto &obj : cur_objs) {
     ordered_obj_ids[i++] = obj.first;
   }
 
-  switch (obj_ordering_) {
+  switch (obj_ordering) {
   case ObjectOrderEnum::ElmID:
     std::sort(
       ordered_obj_ids.begin(), ordered_obj_ids.end(), std::less<ObjIDType>()
@@ -728,11 +733,11 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
     {
       // first find the load of the smallest single object that, if migrated
       // away, could bring this processor's load below the target load
-      auto over_avg = this_new_load_ - target_max_load_;
+      auto over_avg = this_new_load - target_max_load;
       // if no objects are larger than over_avg, then single_obj_load will still
       // (incorrectly) reflect the total load, which will not be a problem
-      auto single_obj_load = this_new_load_;
-      for (auto &obj : cur_objs_) {
+      auto single_obj_load = this_new_load;
+      for (auto &obj : cur_objs) {
         // the object stats are in seconds but the processor stats are in
         // milliseconds; for now, convert the object loads to milliseconds
         auto obj_load_ms = loadMilli(obj.second);
@@ -744,9 +749,11 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
       // sort smallest to largest if > single_obj_load
       std::sort(
         ordered_obj_ids.begin(), ordered_obj_ids.end(),
-        [=](const ObjIDType &left, const ObjIDType &right) {
-          auto left_load = loadMilli(this->cur_objs_[left]);
-          auto right_load = loadMilli(this->cur_objs_[right]);
+        [&cur_objs, single_obj_load](
+          const ObjIDType &left, const ObjIDType &right
+        ) {
+          auto left_load = loadMilli(cur_objs[left]);
+          auto right_load = loadMilli(cur_objs[right]);
           if (left_load <= single_obj_load && right_load <= single_obj_load) {
             // we're in the sort load descending regime (first section)
             return left_load > right_load;
@@ -765,7 +772,7 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
       debug_print_verbose(
         gossiplb, node,
         "GossipLB::decide: over_avg={}, single_obj_load={}\n",
-        over_avg, loadMilli(cur_objs_[ordered_obj_ids[0]])
+        over_avg, loadMilli(cur_objs[ordered_obj_ids[0]])
       );
     }
     break;
@@ -774,21 +781,21 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
       // first find the smallest object that, if migrated away along with all
       // smaller objects, could bring this processor's load below the target
       // load
-      auto over_avg = this_new_load_ - target_max_load_;
+      auto over_avg = this_new_load - target_max_load;
       std::sort(
         ordered_obj_ids.begin(), ordered_obj_ids.end(),
-        [=](const ObjIDType &left, const ObjIDType &right) {
+        [&cur_objs](const ObjIDType &left, const ObjIDType &right) {
           // skipping the conversion to milliseconds here
-          auto left_load = this->cur_objs_[left];
-          auto right_load = this->cur_objs_[right];
+          auto left_load = cur_objs[left];
+          auto right_load = cur_objs[right];
           // sort load descending
           return left_load > right_load;
         }
       );
-      auto cum_obj_load = this_new_load_;
-      auto single_obj_load = loadMilli(cur_objs_[ordered_obj_ids[0]]);
+      auto cum_obj_load = this_new_load;
+      auto single_obj_load = loadMilli(cur_objs[ordered_obj_ids[0]]);
       for (auto obj_id : ordered_obj_ids) {
-        auto this_obj_load = loadMilli(cur_objs_[obj_id]);
+        auto this_obj_load = loadMilli(cur_objs[obj_id]);
         if (cum_obj_load - this_obj_load < over_avg) {
           single_obj_load = this_obj_load;
           break;
@@ -801,9 +808,11 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
       // sort smallest to largest if > single_obj_load
       std::sort(
         ordered_obj_ids.begin(), ordered_obj_ids.end(),
-        [=](const ObjIDType &left, const ObjIDType &right) {
-          auto left_load = loadMilli(this->cur_objs_[left]);
-          auto right_load = loadMilli(this->cur_objs_[right]);
+        [&cur_objs, single_obj_load](
+          const ObjIDType &left, const ObjIDType &right
+        ) {
+          auto left_load = loadMilli(cur_objs[left]);
+          auto right_load = loadMilli(cur_objs[right]);
           if (left_load <= single_obj_load && right_load <= single_obj_load) {
             // we're in the sort load descending regime (first section)
             return left_load > right_load;
@@ -822,7 +831,7 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
       debug_print(
         gossiplb, node,
         "GossipLB::decide: over_avg={}, marginal_obj_load={}\n",
-        over_avg, loadMilli(cur_objs_[ordered_obj_ids[0]])
+        over_avg, loadMilli(cur_objs[ordered_obj_ids[0]])
       );
     }
     break;
@@ -848,7 +857,9 @@ void GossipLB::decide() {
     std::unordered_map<NodeType, ObjsType> migrate_objs;
 
     if (under.size() > 0) {
-      std::vector<ObjIDType> ordered_obj_ids = orderObjects();
+      std::vector<ObjIDType> ordered_obj_ids = orderObjects(
+        obj_ordering_, cur_objs_, this_new_load_, target_max_load_
+      );
 
       // Iterate through all the objects
       for (auto iter = ordered_obj_ids.begin(); iter != ordered_obj_ids.end(); ) {
