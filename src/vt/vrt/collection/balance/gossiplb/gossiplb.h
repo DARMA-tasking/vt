@@ -155,6 +155,12 @@ public:
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
 
+  static std::vector<ObjIDType> orderObjects(
+    ObjectOrderEnum obj_ordering,
+    std::unordered_map<ObjIDType, TimeType> cur_objs,
+    LoadType this_new_load, TimeType target_max_load
+  );
+
 protected:
   void doLBStages(TimeType start_imb);
   void informAsync();
@@ -172,11 +178,6 @@ protected:
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
   std::vector<NodeType> makeUnderloaded() const;
-  static std::vector<ObjIDType> orderObjects(
-    ObjectOrderEnum obj_ordering,
-    std::unordered_map<ObjIDType, TimeType> cur_objs,
-    LoadType this_new_load, TimeType target_max_load
-  );
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
