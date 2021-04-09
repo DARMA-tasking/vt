@@ -58,43 +58,71 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-// gossiping approach
+/// Enum for gossiping approach
 enum struct InformTypeEnum : uint8_t {
-  // synchronous: round number defined at the processor level;  propagates
-  // after all messages for a round are received, but has sync cost
+  /**
+   * \brief Synchronous sharing of underloaded processor loads
+   *
+   * The round number is defined at the processor level. This approach
+   * propagates known loads after all messages for a round are received,
+   * maximizing the amount of information propagated per round, but has a
+   * synchronization cost.
+   */
   SyncInform  = 0,
-  // asynchronous: round number defined at the message level; propagates
-  // when the first message for a round is received, so has no sync cost
+  /**
+   * \brief Asynchronous sharing of underloaded processor loads
+   *
+   * The round number is defined at the message level. This approach
+   * propagates known loads when the first message for a round is received,
+   * avoiding the synchronization cost but delaying the propagation of some
+   * information until the following round.
+   */
   AsyncInform = 1
 };
 
-// order in which local objects are considered for transfer
+/// Enum for the order in which local objects are considered for transfer
 enum struct ObjectOrderEnum : uint8_t {
-  // abitrary: use the unordered_map order
-  Arbitrary = 0,
-  // element id: ascending by id member of ElementIDStruct
+  Arbitrary = 0, //< Arbitrary order: iterate as defined by the unordered_map
+  /**
+   * \brief By element ID
+   *
+   * Sort ascending by the ID member of ElementIDStruct.
+   */
   ElmID     = 1,
-  // marginal: order by load, starting with the object of marginal load
-  // (the smallest object that can be transferred to drop the processor
-  // load below the average), then descending for objects with loads less
-  // than the marginal load, and finally ascending for objects with loads
-  // greater than the marginal load
+  /**
+   * \brief Order for the least migrations
+   *
+   * Order by load, starting with the smallest object that can be transferred
+   * to drop the processor load below the average, then descending for objects
+   * with smaller loads, and finally ascending for objects with larger loads.
+   */
   Marginal  = 2
 };
 
-// how the cmf is computed
+/// Enum for how the CMF is computed
 enum struct CMFTypeEnum : uint8_t {
-  // original: remove processors from the CMF as soon as they exceed the
-  // target (e.g., processor-avg) load; use a CMF factor of 1.0/x, where x
-  // is the target load
+  /**
+   * \brief Original approach
+   *
+   * Remove processors from the CMF as soon as they exceed the target (e.g.,
+   * processor-avg) load. Use a CMF factor of 1.0/x, where x is the target load.
+   */
   Original   = 0,
-  // normalize by max: do not remove processors from the CMF that exceed the
-  // target load until the next iteration; use a CMF factor of 1.0/x, where x
-  // is the maximum of the target load and the most loaded processor in the CMF
+  /**
+   * \brief Compute the CMF factor using the largest processor load in the CMF
+   *
+   * Do not remove processors from the CMF that exceed the target load until the
+   * next iteration. Use a CMF factor of 1.0/x, where x is the greater of the
+   * target load and the load of the most loaded processor in the CMF.
+   */
   NormByMax  = 1,
-  // normalize by self: do not remove processors from the CMF that exceed the
-  // target load until the next iteration; use a CMF factor of 1.0/x, where x
-  // is the load of the processor that is computing the CMF
+  /**
+   * \brief Compute the CMF factor using the load of this processor
+   *
+   * Do not remove processors from the CMF that exceed the target load until the
+   * next iteration. Use a CMF factor of 1.0/x, where x is the load of the
+   * processor that is computing the CMF.
+   */
   NormBySelf = 2
 };
 
@@ -153,18 +181,35 @@ private:
   uint16_t iter_                                    = 0;
   uint16_t trial_                                   = 0;
   uint16_t num_iters_                               = 4;
-  // how many times to repeat the requested number of iterations, hoping to
-  // find a better imbalance (helps if it's easy to get stuck in a local
-  // minimum)
+  /**
+   * \brief Number of trials
+   *
+   * How many times to repeat the requested number of iterations, hoping to find
+   * a better imbalance. This helps if it's easy to get stuck in a local minimum.
+   */
   uint16_t num_trials_                              = 3;
-  // whether to make migration choices deterministic, assuming we're operating
-  // on deterministic loads
+  /**
+   * \brief Whether to make migration choices deterministic
+   *
+   * This will only lead to reproducibility when paired with deterministic
+   * object loads, for example when using a driver that feeds the load balancer
+   * object loads read from vt stats files.
+   */
   bool deterministic_                               = false;
-  // whether to roll back to the state from a previous iteration if that
-  // iteration had a better imbalance than the final one
+  /**
+   * \brief Whether to roll back to the best iteration
+   *
+   * If the final iteration of a trial has a worse imbalance than any earier
+   * iteration, it will roll back to the best iteration.
+   */
   bool rollback_                                    = true;
-  // whether to use a target load equal to the maximum object load (the
-  // "longest pole") when that load exceeds the processor-average load
+  /**
+   * \brief Whether to adjust the target load when we have a long pole
+   *
+   * When an object load exceeds the processor-average load (i.e., we have a
+   * "long pole"), adjust the target load to be the maximum object load
+   * ("longest pole") instead of the processor-average load.
+   */
   bool target_pole_                                 = false;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
