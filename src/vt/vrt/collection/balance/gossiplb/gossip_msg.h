@@ -85,6 +85,31 @@ private:
   NodeLoadType node_load_ = {};
 };
 
+struct GossipMsgAsync : GossipMsg {
+  using MessageParentType = GossipMsg;
+  vt_msg_serialize_if_needed_by_parent();
+
+  GossipMsgAsync() = default;
+  GossipMsgAsync(
+    NodeType in_from_node, NodeLoadType const& in_node_load, int round
+  )
+    : GossipMsg(in_from_node, in_node_load), round_(round)
+  { }
+
+  uint8_t getRound() const {
+    return round_;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | round_;
+  }
+
+private:
+  int round_;
+};
+
 struct LazyMigrationMsg : SerializeRequired<
   vt::Message,
   LazyMigrationMsg
@@ -116,6 +141,46 @@ struct LazyMigrationMsg : SerializeRequired<
 private:
   NodeType to_node_ = uninitialized_destination;
   ObjsType objs_  = {};
+};
+
+struct RejectionStats {
+  RejectionStats() = default;
+  RejectionStats(int n_rejected, int n_transfers)
+    : n_rejected_(n_rejected), n_transfers_(n_transfers) { }
+
+  friend RejectionStats operator+(RejectionStats a1, RejectionStats const& a2) {
+    a1.n_rejected_ += a2.n_rejected_;
+    a1.n_transfers_ += a2.n_transfers_;
+
+    return a1;
+  }
+
+  int n_rejected_ = 0;
+  int n_transfers_ = 0;
+};
+
+static_assert(
+  vt::messaging::is_byte_copyable_t<RejectionStats>::value,
+  "Must be trivially copyable to avoid serialization."
+);
+
+struct GossipRejectionStatsMsg : NonSerialized<
+  collective::ReduceTMsg<RejectionStats>,
+  GossipRejectionStatsMsg
+>
+{
+  using MessageParentType = NonSerialized<
+    collective::ReduceTMsg<RejectionStats>,
+    GossipRejectionStatsMsg
+  >;
+
+  GossipRejectionStatsMsg() = default;
+  GossipRejectionStatsMsg(int n_rejected, int n_transfers)
+    : MessageParentType(RejectionStats(n_rejected, n_transfers))
+  { }
+  GossipRejectionStatsMsg(RejectionStats&& rs)
+    : MessageParentType(std::move(rs))
+  { }
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
