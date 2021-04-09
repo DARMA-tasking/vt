@@ -113,7 +113,7 @@ struct BaseLB {
   void finishedStats();
 
   ObjBinType histogramSample(LoadType const& load) const;
-  LoadType loadMilli(LoadType const& load) const;
+  static LoadType loadMilli(LoadType const& load);
   int32_t getBinSize() const { return bin_size_; }
   NodeType objGetNode(ObjIDType const id) const;
 
