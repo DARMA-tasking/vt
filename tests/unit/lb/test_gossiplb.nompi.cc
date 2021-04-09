@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              test_lb_reader.cc
+//                           test_gossiplb.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
