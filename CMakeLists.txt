@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(vt)
 
+set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
+set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
+set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+
 if (POLICY CMP0082) # CMake 3.14
   # Prevent mixing install policies from add_subdirectory;
   # This suppresses a warning as the old behavior is deprecated-by-definition.
@@ -40,11 +45,6 @@ option(CODE_COVERAGE "Enable coverage reporting" OFF)
 # endif(CODE_COVERAGE_ENABLED)
 
 set(MPI_EXTRA_FLAGS "" CACHE STRING "Flags to pass to mpirun/mpiexec")
-
-set(PROJECT_BIN_DIR     ${CMAKE_CURRENT_BINARY_DIR})
-set(PROJECT_BASE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
-set(PROJECT_LIB_DIR     ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-set(PROJECT_EXAMPLE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 
 include(cmake/build_git_info.cmake)
 

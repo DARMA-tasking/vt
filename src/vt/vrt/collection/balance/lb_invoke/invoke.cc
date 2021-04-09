@@ -89,7 +89,10 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
     }
   } else {
     vtAssert(ArgType::vt_lb_interval != 0, "LB Interval must not be 0");
-    if (phase % ArgType::vt_lb_interval == 0) {
+    // avoid running LB on warm-up phase unless we're running LB at every phase
+    if (phase % ArgType::vt_lb_interval == 1 || (
+      ArgType::vt_lb_interval == 1 && phase != 0
+    )) {
       for (auto&& elm : lb_names_) {
         if (elm.second == ArgType::vt_lb_name) {
           the_lb = elm.first;
@@ -224,6 +227,7 @@ void LBManager::releaseNow(PhaseType phase) {
     );
   }
 
+  balance::ProcStats::startIterCleanup();
   balance::ProcStats::clearStats();
 
   auto msg = makeMessage<CollectionPhaseMsg>();

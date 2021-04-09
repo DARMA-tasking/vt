@@ -104,9 +104,7 @@ bool CollectiveScope::isCollectiveDone(TagType tag) {
 }
 
 void CollectiveScope::waitCollective(TagType tag) {
-  while (not isCollectiveDone(tag)) {
-    runScheduler();
-  }
+  theSched()->runSchedulerWhile([this,tag]{ return not isCollectiveDone(tag); });
 }
 
 void CollectiveScope::mpiCollectiveWait(ActionType action) {
