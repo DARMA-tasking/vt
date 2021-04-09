@@ -57,11 +57,54 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+// gossiping approach
+enum struct InformTypeEnum : uint8_t {
+  // synchronous: round number defined at the processor level;  propagates
+  // after all messages for a round are received, but has sync cost
+  SyncInform  = 0,
+  // asynchronous: round number defined at the message level; propagates
+  // when the first message for a round is received, so has no sync cost
+  AsyncInform = 1
+};
+
+// order in which local objects are considered for transfer
+enum struct ObjectOrderEnum : uint8_t {
+  // abitrary: use the unordered_map order
+  Arbitrary = 0,
+  // element id: ascending by object id
+  ElmID     = 1,
+  // marginal: order by load, starting with the object of marginal load
+  // (the smallest object that can be transferred to drop the processor
+  // load below the average), then descending for objects with loads less
+  // than the marginal load, and finally ascending for objects with loads
+  // greater than the marginal load
+  Marginal  = 2
+};
+
+// how the cmf is computed
+enum struct CMFTypeEnum : uint8_t {
+  // original: remove processors from the CMF as soon as they exceed the
+  // target (e.g., processor-avg) load; use a CMF factor of 1.0/x, where x
+  // is the target load
+  Original   = 0,
+  // normalize by max: do not remove processors from the CMF that exceed the
+  // target load until the next iteration; use a CMF factor of 1.0/x, where x
+  // is the maximum of the target load and the most loaded processor in the CMF
+  NormByMax  = 1,
+  // normalize by self: do not remove processors from the CMF that exceed the
+  // target load until the next iteration; use a CMF factor of 1.0/x, where x
+  // is the load of the processor that is computing the CMF
+  NormBySelf = 2
+};
+
 struct GossipLB : BaseLB {
-  using GossipMsg     = balance::GossipMsg;
-  using NodeSetType   = std::vector<NodeType>;
-  using ObjsType      = std::unordered_map<ObjIDType, LoadType>;
-  using ReduceMsgType = vt::collective::ReduceNoneMsg;
+  using GossipMsgAsync = balance::GossipMsgAsync;
+  using GossipMsgSync  = balance::GossipMsg;
+  using ArgType        = vt::arguments::ArgConfig;
+  using NodeSetType    = std::vector<NodeType>;
+  using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
+  using ReduceMsgType  = vt::collective::ReduceNoneMsg;
+  using GossipRejectionMsgType = balance::GossipRejectionStatsMsg;
 
   GossipLB() = default;
 
@@ -75,13 +118,15 @@ public:
   void inputParams(balance::SpecEntry* spec) override;
 
 protected:
-  void doLBStages();
-  void inform();
+  void doLBStages(TimeType start_imb);
+  void informAsync();
+  void informSync();
   void decide();
   void migrate();
 
-  void propagateRound(EpochType epoch = no_epoch);
-  void propagateIncoming(GossipMsg* msg);
+  void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
+  void propagateIncomingAsync(GossipMsgAsync* msg);
+  void propagateIncomingSync(GossipMsgSync* msg);
   bool isUnderloaded(LoadType load) const;
   bool isUnderloadedRelaxed(LoadType over, LoadType under) const;
   bool isOverloaded(LoadType load) const;
@@ -89,12 +134,15 @@ protected:
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
   std::vector<NodeType> makeUnderloaded() const;
+  std::vector<ObjIDType> orderObjects();
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
+  void gossipStatsHandler(StatsMsgType* msg);
+  void gossipRejectionStatsHandler(GossipRejectionMsgType* msg);
   void thunkMigrations();
 
   void setupDone(ReduceMsgType* msg);
@@ -104,18 +152,43 @@ private:
   uint8_t k_max_                                    = 4;
   uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;
+  uint16_t trial_                                   = 0;
   uint16_t num_iters_                               = 4;
+  // how many times to repeat the requested number of iterations, hoping to
+  // find a better imbalance (helps if it's easy to get stuck in a local
+  // minimum)
+  uint16_t num_trials_                              = 3;
+  // whether to make migration choices deterministic, assuming we're operating
+  // on deterministic loads
+  bool deterministic_                               = false;
+  // whether to roll back to the state from a previous iteration if that
+  // iteration had a better imbalance than the final one
+  bool rollback_                                    = true;
+  // whether to use a target load equal to the maximum object load (the
+  // "longest pole") when that load exceeds the processor-average load
+  bool target_pole_                                 = false;
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
+  std::unordered_map<NodeType, LoadType> new_load_info_ = {};
   objgroup::proxy::Proxy<GossipLB> proxy_           = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
   std::unordered_set<NodeType> selected_            = {};
   std::unordered_set<NodeType> underloaded_         = {};
+  std::unordered_set<NodeType> new_underloaded_     = {};
   std::unordered_map<ObjIDType, TimeType> cur_objs_ = {};
   LoadType this_new_load_                           = 0.0;
+  TimeType new_imbalance_                           = 0.0;
+  TimeType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
+  InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
+  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::Marginal;
+  CMFTypeEnum cmf_type_                             = CMFTypeEnum::NormByMax;
   bool setup_done_                                  = false;
+  bool propagate_next_round_                        = false;
+  std::vector<bool> propagated_k_;
+  std::mt19937 gen_propagate_;
+  std::mt19937 gen_sample_;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

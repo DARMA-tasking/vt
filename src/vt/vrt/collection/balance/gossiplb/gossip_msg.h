@@ -81,6 +81,30 @@ private:
   NodeLoadType node_load_ = {};
 };
 
+struct GossipMsgAsync : GossipMsg {
+  using MessageParentType = GossipMsg;
+
+  GossipMsgAsync() = default;
+  GossipMsgAsync(
+    NodeType in_from_node, NodeLoadType const& in_node_load, int round
+  )
+    : GossipMsg(in_from_node, in_node_load), round_(round)
+  { }
+
+  uint8_t getRound() const {
+    return round_;
+  }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | round_;
+  }
+
+private:
+  int round_;
+};
+
 struct LazyMigrationMsg : vt::Message {
   using ObjsType = std::unordered_map<lb::BaseLB::ObjIDType, lb::BaseLB::LoadType>;
 
@@ -104,6 +128,32 @@ struct LazyMigrationMsg : vt::Message {
 private:
   NodeType to_node_ = uninitialized_destination;
   ObjsType objs_  = {};
+};
+
+struct RejectionStats {
+  RejectionStats() = default;
+  RejectionStats(int n_rejected, int n_transfers)
+    : n_rejected_(n_rejected), n_transfers_(n_transfers) { }
+
+  friend RejectionStats operator+(RejectionStats a1, RejectionStats const& a2) {
+    a1.n_rejected_ += a2.n_rejected_;
+    a1.n_transfers_ += a2.n_transfers_;
+
+    return a1;
+  }
+
+  int n_rejected_ = 0;
+  int n_transfers_ = 0;
+};
+
+struct GossipRejectionStatsMsg : collective::ReduceTMsg<RejectionStats> {
+  GossipRejectionStatsMsg() = default;
+  GossipRejectionStatsMsg(int n_rejected, int n_transfers)
+    : ReduceTMsg<RejectionStats>(RejectionStats(n_rejected, n_transfers))
+  { }
+  GossipRejectionStatsMsg(RejectionStats&& rs)
+    : ReduceTMsg<RejectionStats>(std::move(rs))
+  { }
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
