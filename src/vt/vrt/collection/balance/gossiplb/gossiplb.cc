@@ -752,6 +752,63 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
       );
     }
     break;
+  case ObjectOrderEnum::SmallestObjects:
+    {
+      // first find the smallest object that, if migrated away along with all
+      // smaller objects, could bring this processor's load below the target
+      // load
+      auto over_avg = this_new_load_ - target_max_load_;
+      std::sort(
+        ordered_obj_ids.begin(), ordered_obj_ids.end(),
+        [=](const ObjIDType &left, const ObjIDType &right) {
+          // skipping the conversion to milliseconds here
+          auto left_load = this->cur_objs_[left];
+          auto right_load = this->cur_objs_[right];
+          // sort load descending
+          return left_load > right_load;
+        }
+      );
+      auto cum_obj_load = this_new_load_;
+      auto single_obj_load = loadMilli(cur_objs_[ordered_obj_ids[0]]);
+      for (auto obj_id : ordered_obj_ids) {
+        auto this_obj_load = loadMilli(cur_objs_[obj_id]);
+        if (cum_obj_load - this_obj_load < over_avg) {
+          single_obj_load = this_obj_load;
+          break;
+        } else {
+          cum_obj_load -= this_obj_load;
+        }
+      }
+      // now that we found that object, re-sort based on it
+      // sort largest to smallest if <= single_obj_load
+      // sort smallest to largest if > single_obj_load
+      std::sort(
+        ordered_obj_ids.begin(), ordered_obj_ids.end(),
+        [=](const ObjIDType &left, const ObjIDType &right) {
+          auto left_load = loadMilli(this->cur_objs_[left]);
+          auto right_load = loadMilli(this->cur_objs_[right]);
+          if (left_load <= single_obj_load && right_load <= single_obj_load) {
+            // we're in the sort load descending regime (first section)
+            return left_load > right_load;
+          }
+          // else
+          // EITHER
+          // a) both are above the cut, and we're in the sort ascending
+          //    regime (second section), so return left < right
+          // OR
+          // b) one is above the cut and one is at or below, and the one
+          //    that is at or below the cut needs to come first, so
+          //    also return left < right
+          return left_load < right_load;
+        }
+      );
+      vt_debug_print(
+        normal, gossiplb,
+        "GossipLB::decide: over_avg={}, marginal_obj_load={}\n",
+        over_avg, loadMilli(cur_objs_[ordered_obj_ids[0]])
+      );
+    }
+    break;
   case ObjectOrderEnum::Arbitrary:
     break;
   default:
