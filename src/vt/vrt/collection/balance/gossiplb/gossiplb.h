@@ -92,11 +92,12 @@ enum struct ObjectOrderEnum : uint8_t {
   /**
    * \brief Order for the least migrations
    *
-   * Order by load, starting with the smallest object that can be transferred
-   * to drop the processor load below the average, then descending for objects
-   * with smaller loads, and finally ascending for objects with larger loads.
+   * Order starting with the smallest object that can be transferred to drop
+   * the processor load below the average, then by descending load for objects
+   * with smaller loads, and finally by ascending load for objects with larger
+   * loads.
    */
-  Marginal  = 2
+  LeastMigrations = 2
 };
 
 /// Enum for how the CMF is computed
@@ -226,7 +227,7 @@ private:
   TimeType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
-  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::Marginal;
+  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::LeastMigrations;
   CMFTypeEnum cmf_type_                             = CMFTypeEnum::NormByMax;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;

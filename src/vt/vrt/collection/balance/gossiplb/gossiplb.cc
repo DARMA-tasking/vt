@@ -707,29 +707,30 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
       ordered_obj_ids.begin(), ordered_obj_ids.end(), std::less<ObjIDType>()
     );
     break;
-  case ObjectOrderEnum::Marginal:
+  case ObjectOrderEnum::LeastMigrations:
     {
-      // first find marginal object's load
+      // first find the load of the smallest single object that, if migrated
+      // away, could bring this processor's load below the target load
       auto over_avg = this_new_load_ - target_max_load_;
-      // if no objects are larger than over_avg, then marginal will still
+      // if no objects are larger than over_avg, then single_obj_load will still
       // (incorrectly) reflect the total load, which will not be a problem
-      auto marginal = this_new_load_;
+      auto single_obj_load = this_new_load_;
       for (auto &obj : cur_objs_) {
         // the object stats are in seconds but the processor stats are in
         // milliseconds; for now, convert the object loads to milliseconds
         auto obj_load_ms = loadMilli(obj.second);
-        if (obj_load_ms > over_avg && obj_load_ms < marginal) {
-          marginal = obj_load_ms;
+        if (obj_load_ms > over_avg && obj_load_ms < single_obj_load) {
+          single_obj_load = obj_load_ms;
         }
       }
-      // sort largest to smallest if <= marginal
-      // sort smallest to largest if > marginal
+      // sort largest to smallest if <= single_obj_load
+      // sort smallest to largest if > single_obj_load
       std::sort(
         ordered_obj_ids.begin(), ordered_obj_ids.end(),
         [=](const ObjIDType &left, const ObjIDType &right) {
           auto left_load = loadMilli(this->cur_objs_[left]);
           auto right_load = loadMilli(this->cur_objs_[right]);
-          if (left_load <= marginal && right_load <= marginal) {
+          if (left_load <= single_obj_load && right_load <= single_obj_load) {
             // we're in the sort load descending regime (first section)
             return left_load > right_load;
           }
@@ -746,7 +747,7 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects() {
       );
       vt_debug_print(
         normal, gossiplb,
-        "GossipLB::decide: over_avg={}, marginal={}\n",
+        "GossipLB::decide: over_avg={}, single_obj_load={}\n",
         over_avg, loadMilli(cur_objs_[ordered_obj_ids[0]])
       );
     }
