@@ -348,6 +348,8 @@ long getpagesize();
 namespace detail {
 
 struct buffer_size {
+  buffer_size() = default;
+
   size_t value = 0;
   buffer_size operator=(size_t val) const {
     auto bs = buffer_size();
@@ -363,8 +365,8 @@ struct ostream_params {
   ostream_params() {}
 
   template <typename... T>
-  ostream_params(T... params, int oflag) : ostream_params(params...) {
-    this->oflag = oflag;
+  ostream_params(T... params, int in_oflag) : ostream_params(params...) {
+    this->oflag = in_oflag;
   }
 
   template <typename... T>
