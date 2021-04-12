@@ -45,7 +45,7 @@
 #include <cassert>
 #include <cstdint>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include "vt/transport.h"
 

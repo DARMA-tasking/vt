@@ -8,7 +8,7 @@
 #include <string>
 #include <unistd.h> // gethostname
 
-#include "fmt/format.h"
+#include "fmt/core.h"
 
 namespace vt { namespace debug {
 

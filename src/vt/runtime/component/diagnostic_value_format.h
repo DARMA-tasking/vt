@@ -50,7 +50,7 @@
 #include "vt/runtime/component/diagnostic_enum_format.h"
 #include "vt/utils/memory/memory_units.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 namespace vt { namespace runtime { namespace component { namespace detail {
 

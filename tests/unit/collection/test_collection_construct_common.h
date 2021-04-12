@@ -50,7 +50,7 @@
 #include "vt/vrt/collection/manager.h"
 #include "data_message.h"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <fmt/ostream.h>
 
 #include <gtest/gtest.h>

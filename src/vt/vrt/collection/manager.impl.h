@@ -92,7 +92,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "fmt/format.h"
+#include "fmt/core.h"
 #include "fmt/ostream.h"
 
 namespace vt { namespace vrt { namespace collection {
