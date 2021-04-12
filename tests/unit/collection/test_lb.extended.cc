@@ -47,6 +47,7 @@
 #include "test_parallel_harness.h"
 #include "test_collection_common.h"
 #include "data_message.h"
+#include "test_helpers.h"
 
 #include <vt/transport.h>
 
@@ -82,6 +83,11 @@ void colHandler(MyMsg*, MyCol* col) {
 
 struct TestLoadBalancer : TestParallelHarnessParam<std::string> {
   void runTest();
+
+  void SetUp() override {
+    TestParallelHarnessParam<std::string>::SetUp();
+    SET_MAX_NUM_NODES_CONSTRAINT(CMAKE_DETECTED_MAX_NUM_NODES);
+  }
 };
 
 void TestLoadBalancer::runTest() {
