@@ -17,7 +17,8 @@ endif()
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 
 # fmt always included in the build
-add_subdirectory(${PROJECT_LIB_DIR}/fmt)
+set(FMT_LIBRARY fmt)
+add_subdirectory(${PROJECT_LIB_DIR}/fmt EXCLUDE_FROM_ALL)
 
 # Optionally include mimalloc (alternative memory allocator)
 if (vt_mimalloc_enabled)
