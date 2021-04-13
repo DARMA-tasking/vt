@@ -94,7 +94,7 @@ function(create_trace_only_target)
   # we use INSTALL_DIR/include/vt-trace instead
   # so we have to install FMT lib aswell
   install(
-    FILES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/fmt/fmt/format.h"
+    FILES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/fmt/include/fmt/core.h"
     DESTINATION "include/vt-trace/fmt"
   )
 
