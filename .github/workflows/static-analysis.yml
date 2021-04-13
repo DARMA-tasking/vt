@@ -13,8 +13,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    env:
-      LAST_BUILD_TIME: 0
 
     steps:
       - uses: actions/checkout@v2
@@ -31,4 +29,3 @@ jobs:
             title: vt build times
             graph_width: 19
             graph_height: 15
-            run_number: 7
