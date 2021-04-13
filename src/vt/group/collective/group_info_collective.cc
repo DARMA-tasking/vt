@@ -152,7 +152,6 @@ void InfoColl::setupCollective() {
     );
   }
 
-  up_tree_cont_       = makeCollectiveContinuation(group_);
   down_tree_cont_     = theGroup()->nextCollectiveID();
   down_tree_fin_cont_ = theGroup()->nextCollectiveID();
   finalize_cont_      = theGroup()->nextCollectiveID();
@@ -200,6 +199,12 @@ void InfoColl::setupCollective() {
       iter->second->newRoot(msg.get());
     }
   );
+
+  // This must be *after* all the other continuation registrations because it
+  // triggers buffered work that is waiting on the meta-continuation to be
+  // registered which checks for message counts and then dispatches to the
+  // secondary continuation.
+  up_tree_cont_ = makeCollectiveContinuation(group_);
 
   vt_debug_print(
     normal, group,
