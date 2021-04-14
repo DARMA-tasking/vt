@@ -92,6 +92,18 @@ void TestLoadBalancer::runTest() {
   if (vt::theContext()->getNode() == 0) {
     fmt::print("Testing lb {}\n", lb_name);
   }
+  if (lb_name.compare("GossipLB") == 0) {
+    auto nproc = vt::theContext()->getNumNodes();
+    int f = std::max(1, std::min(nproc-1, 3));
+    int k = nproc < 4 ? 2 : std::ceil(log(nproc)/log(f));
+    auto lb_args = fmt::format(
+      "f={} k={} trials=1 inform=1 ordering=0 rollback=0 targetpole=0", f, k
+    );
+    vt::theConfig()->vt_lb_args = lb_args;
+    if (vt::theContext()->getNode() == 0) {
+      fmt::print("Using lb_args {}\n", lb_args);
+    }
+  }
 
   vt::theCollective()->barrier();
 
