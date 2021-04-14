@@ -201,4 +201,15 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_smallobjects_smallest) {
   orderUsingOverloadAndVerify(order, over_avg, soln);
 }
 
+///////////////////////////////////////////////////////////////////////////
+
+TEST_F(TestGossipLB, test_gossiplb_ordering_largestobjects) {
+  ObjectOrdering order = ObjectOrdering::LargestObjects;
+  TimeType over_avg = 4.5;
+  // result will be independent of over_avg
+  std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};
+
+  orderUsingOverloadAndVerify(order, over_avg, soln);
+}
+
 }}} // end namespace vt::tests::unit

@@ -91,7 +91,11 @@ enum struct ObjectOrderEnum : uint8_t {
    * descending load for objects with smaller loads, and finally by ascending
    * load for objects with larger loads.
    */
-  SmallObjects = 3
+  SmallObjects = 3,
+  /**
+   * \brief Order by descending load
+   */
+  LargestObjects = 4
 };
 
 // how the cmf is computed
