@@ -139,8 +139,8 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_elmid) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_leastmigrations_intermediate) {
-  ObjectOrdering order = ObjectOrdering::LeastMigrations;
+TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_intermediate) {
+  ObjectOrdering order = ObjectOrdering::FewestMigrations;
   TimeType over_avg = 4.5;
   // single_obj_load will be 5.0
   // load order will be 5.0, 4.0, 3.0, 2.0, 6.0, 9.0
@@ -149,8 +149,8 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_leastmigrations_intermediate) {
   orderUsingOverloadAndVerify(order, over_avg, soln);
 }
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_leastmigrations_largest) {
-  ObjectOrdering order = ObjectOrdering::LeastMigrations;
+TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_largest) {
+  ObjectOrdering order = ObjectOrdering::FewestMigrations;
   TimeType over_avg = 12.5;
   // single_obj_load will be 9.0
   // load order will be 9.0, 6.0, 5.0, 4.0, 3.0, 2.0
@@ -159,8 +159,8 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_leastmigrations_largest) {
   orderUsingOverloadAndVerify(order, over_avg, soln);
 }
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_leastmigrations_smallest) {
-  ObjectOrdering order = ObjectOrdering::LeastMigrations;
+TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_smallest) {
+  ObjectOrdering order = ObjectOrdering::FewestMigrations;
   TimeType over_avg = 1.5;
   // single_obj_load will be 2.0
   // load order will be 2.0, 3.0, 4.0, 5.0, 6.0, 9.0
