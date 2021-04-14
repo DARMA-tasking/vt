@@ -116,12 +116,22 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
     auto interval = theConfig()->vt_lb_interval;
     vtAssert(interval != 0, "LB Interval must not be 0");
     if (interval == 1 || phase % interval == 1) {
+      bool name_match = false;
       for (auto&& elm : lb_names_) {
         if (elm.second == theConfig()->vt_lb_name) {
           the_lb = elm.first;
+          name_match = true;
           break;
         }
       }
+      vtAbortIf(
+        !name_match,
+        fmt::format(
+          "LB Name \"{}\" requested does not exist or was not enabled at "
+          "compile time",
+          theConfig()->vt_lb_name
+        )
+      );
     }
   }
 
