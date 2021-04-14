@@ -78,7 +78,7 @@ static void ReceiveMapping(MappingMsg* msg) {
   auto index = msg->index_;
   obj_id_mapping[obj_id] = index;
   vt_debug_print(
-    gen, node,
+    normal, gen,
     "ReceiveMapping: obj {} is index {}\n",
     obj_id, index
   );
@@ -137,7 +137,7 @@ struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
     auto const this_rank = vt::theContext()->getNode();
     vt::NodeType dest = findDirectoryNode(obj_id.id);
     vt_debug_print(
-      gen, node,
+      normal, gen,
       "shareMapping: sharing with {} that obj {} is index {}\n",
       dest, obj_id.id, index
     );
@@ -154,7 +154,7 @@ struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
     auto dest = msg->src_;
     if (dest != this_rank) {
       vt_debug_print(
-        gen, node,
+        normal, gen,
         "migrateSelf: index {} asked to migrate from {} to {}\n",
         this->getIndex(), this_rank, dest
       );
@@ -164,7 +164,7 @@ struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
 
   void recvStatsData(StatsDataMsg *msg) {
     vt_debug_print(
-      gen, node,
+      normal, gen,
       "recvStatsData: index {} received stats data for {} phases\n",
       this->getIndex(), msg->stats_.size()
     );
@@ -207,8 +207,8 @@ static void RequestMapping(QueryMsg *msg) {
   auto obj_id = msg->obj_id_;
   auto iter = obj_id_mapping.find(obj_id);
   if (iter == obj_id_mapping.end()) {
-    vt_debug_print(
-      gen, node,
+    vt_print(
+      gen,
       "RequestMapping: {} asked for index of {} but it is unknown\n",
       dest, obj_id
     );
@@ -223,7 +223,7 @@ static void RequestMapping(QueryMsg *msg) {
   auto index = idxiter->second;
   auto response = vt::makeMessage<MappingMsg>(index, obj_id);
   vt_debug_print(
-    gen, node,
+    normal, gen,
     "RequestMapping: responding that obj {} is index {}\n",
     obj_id, index
   );
@@ -263,7 +263,7 @@ struct FileModel : ComposedModel {
   vt::TimeType getWork(ElementIDStruct elmid, PhaseOffset offset) override {
     auto const phase = getNumCompletedPhases()-1 + initial_phase_;
     vt_debug_print(
-      gen, node,
+      verbose, gen,
       "getWork {} phase={}\n",
       elmid.id, phase
     );
@@ -287,7 +287,7 @@ struct FileModel : ComposedModel {
     auto elm_ptr = proxy_(index).tryGetLocalPtr();
     if (elm_ptr == nullptr) {
       vt_debug_print(
-        gen, node,
+        verbose, gen,
         "could not find elm_id={} index={}\n",
         elmid.id, index
       );
@@ -299,7 +299,7 @@ struct FileModel : ComposedModel {
   }
 
   void parseFile(std::string const& file) {
-    vt_debug_print(gen, node, "parsing file {}\n", file);
+    vt_debug_print(normal, gen, "parsing file {}\n", file);
 
     std::ifstream f(file.c_str());
     std::string line;
@@ -332,7 +332,7 @@ struct FileModel : ComposedModel {
           auto elm_id = convert_from_release_ ?
             convertReleaseStatsID(read_elm_id) : read_elm_id;
           vt_debug_print(
-            gen, node,
+            normal, gen,
             "reading in loads for elm={}, converted_elm={}, phase={}, load={}\n",
             read_elm_id, elm_id, phase, load
           );
@@ -341,14 +341,14 @@ struct FileModel : ComposedModel {
             initial_objs_.push_back(elm_id);
         } else {
           vt_debug_print(
-            gen, node,
+            verbose, gen,
             "skipping loads for elm={}, phase={}\n",
             read_elm_id, phase
           );
         }
       } else {
         vt_debug_print(
-          gen, node,
+          verbose, gen,
           "skipping line: {}\n",
           line
         );
@@ -365,7 +365,7 @@ struct FileModel : ComposedModel {
       vt::NodeType dest = findDirectoryNode(obj.first);
       if (dest != this_rank) {
         vt_debug_print(
-          gen, node,
+          normal, gen,
           "looking for index of object {}\n",
           obj.first
         );
@@ -387,7 +387,7 @@ struct FileModel : ComposedModel {
       );
       auto index = idxiter->second;
       vt_debug_print(
-        gen, node,
+        normal, gen,
         "requesting index {} (object {}) to migrate here\n",
         index, obj
       );
@@ -420,7 +420,7 @@ struct FileModel : ComposedModel {
       );
       auto index = idxiter->second;
       vt_debug_print(
-        gen, node,
+        normal, gen,
         "sending stats for obj {} to index {}\n",
         obj.first, index
       );
