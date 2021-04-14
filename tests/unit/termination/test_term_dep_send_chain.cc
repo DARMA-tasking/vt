@@ -677,20 +677,17 @@ TEST_P(TestTermDepSendChain, test_term_dep_send_chain_merge) {
   vt::theConfig()->vt_term_rooted_use_ds = use_ds;
 
   auto obj_a = std::make_unique<MergeObjGroup>();
-  auto obj_b = std::make_unique<MergeObjGroup>();
-
   obj_a->startup();
   obj_a->makeVT();
+  obj_a->makeColl(num_nodes,k, 0.0);
 
+  auto obj_b = std::make_unique<MergeObjGroup>();
   obj_b->startup();
   obj_b->makeVT();
+  obj_b->makeColl(num_nodes,k, 1000.0);
 
-  vt::runInEpochCollective([&obj_a, num_nodes, k]() mutable {
-    obj_a->makeColl(num_nodes,k, 0.0);
-  });
-  vt::runInEpochCollective([&obj_b, num_nodes, k]() mutable {
-    obj_b->makeColl(num_nodes,k, 1000.0);
-  });
+  // Must have barrier here so op4Impl does not bounce early (invalid proxy)!
+  vt::theCollective()->barrier();
 
   for (int t = 0; t < iter; t++) {
     obj_a->startUpdate();

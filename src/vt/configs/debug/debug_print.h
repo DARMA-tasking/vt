@@ -130,7 +130,7 @@
 
 #define vt_config_print_force_impl(cftype, feature, ctx, ...)           \
   vt_debug_print_impl(                                                  \
-    true, vt_make_config(feature, cftype), normal, feature, ctx,        \
+    true, vt_make_config(feature, cftype), terse, feature, ctx,         \
     __VA_ARGS__                                                         \
   )
 
