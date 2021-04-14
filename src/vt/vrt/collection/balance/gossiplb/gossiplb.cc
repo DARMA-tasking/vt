@@ -759,7 +759,7 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects(
       );
     }
     break;
-  case ObjectOrderEnum::SmallestObjects:
+  case ObjectOrderEnum::SmallObjects:
     {
       // first find the smallest object that, if migrated away along with all
       // smaller objects, could bring this processor's load below the target

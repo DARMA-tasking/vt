@@ -99,7 +99,7 @@ enum struct ObjectOrderEnum : uint8_t {
    */
   LeastMigrations = 2,
   /**
-   * \brief Order for migrating the smallest objects
+   * \brief Order for migrating the objects with the smallest loads
    *
    * Find the object with the smallest load where the sum of its own load and
    * all smaller loads meets or exceeds the amount by which this processor's
@@ -107,7 +107,7 @@ enum struct ObjectOrderEnum : uint8_t {
    * descending load for objects with smaller loads, and finally by ascending
    * load for objects with larger loads.
    */
-  SmallestObjects = 3
+  SmallObjects = 3
 };
 
 /// Enum for how the CMF is computed
