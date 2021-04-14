@@ -818,6 +818,21 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects(
       );
     }
     break;
+  case ObjectOrderEnum::LargestObjects:
+    {
+      // sort by descending load
+      std::sort(
+        ordered_obj_ids.begin(), ordered_obj_ids.end(),
+        [&cur_objs](const ObjIDType &left, const ObjIDType &right) {
+          // skipping the conversion to milliseconds here
+          auto left_load = cur_objs[left];
+          auto right_load = cur_objs[right];
+          // sort load descending
+          return left_load > right_load;
+        }
+      );
+    }
+    break;
   case ObjectOrderEnum::Arbitrary:
     break;
   default:
