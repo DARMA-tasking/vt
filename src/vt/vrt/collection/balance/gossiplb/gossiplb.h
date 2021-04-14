@@ -74,14 +74,14 @@ enum struct ObjectOrderEnum : uint8_t {
   // element id: ascending by object id
   ElmID     = 1,
   /**
-   * \brief Order for the least migrations
+   * \brief Order for the fewest migrations
    *
-   * Order starting with the smallest object that can be transferred to drop
-   * the processor load below the average, then by descending load for objects
-   * with smaller loads, and finally by ascending load for objects with larger
-   * loads.
+   * Order starting with the object with the smallest load that can be
+   * transferred to drop the processor load below the average, then by
+   * descending load for objects with smaller loads, and finally by ascending
+   * load for objects with larger loads.
    */
-  LeastMigrations = 2,
+  FewestMigrations = 2,
   /**
    * \brief Order for migrating the objects with the smallest loads
    *
@@ -200,7 +200,7 @@ private:
   TimeType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
-  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::LeastMigrations;
+  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::FewestMigrations;
   CMFTypeEnum cmf_type_                             = CMFTypeEnum::NormByMax;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;

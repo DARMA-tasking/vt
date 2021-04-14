@@ -729,7 +729,7 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects(
       ordered_obj_ids.begin(), ordered_obj_ids.end(), std::less<ObjIDType>()
     );
     break;
-  case ObjectOrderEnum::LeastMigrations:
+  case ObjectOrderEnum::FewestMigrations:
     {
       // first find the load of the smallest single object that, if migrated
       // away, could bring this processor's load below the target load
