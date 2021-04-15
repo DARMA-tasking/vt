@@ -83,12 +83,12 @@ struct LocationManager : runtime::component::Component<LocationManager> {
   using VrtLocType = EntityLocationCoord<int32_t>;
   using VrtLocProxyType = EntityLocationCoord<VirtualProxyType>;
 
-  template <typename ColT, typename IndexT>
-  using CollectionProxyType = ::vt::vrt::VirtualElmProxyType<ColT, IndexT>;
-  template <typename ColT, typename IndexT>
-  using VrtColl = EntityLocationCoord<CollectionProxyType<ColT, IndexT>>;
-  template <typename ColT, typename IndexT>
-  using CollectionLocType = PtrType<VrtColl<ColT, IndexT>>;
+  template <typename IndexT>
+  using IndexedElmType = EntityLocationCoord<IndexT>;
+
+  template <typename IndexT>
+  using CollectionLocType = PtrType<IndexT>;
+
   using LocErasureType = LocationCoord;
   using LocDeleterType = std::function<void(LocErasureType*)>;
   using CollectionLocErasedType = std::unique_ptr<
@@ -126,15 +126,15 @@ struct LocationManager : runtime::component::Component<LocationManager> {
    *
    * \return pointer to the coordinator, typed on the collection/index
    */
-  template <typename ColT, typename IndexT>
-  VrtColl<ColT, IndexT>* getCollectionLM(VirtualProxyType const& proxy);
+  template <typename IndexT>
+  IndexedElmType<IndexT>* getCollectionLM(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Insert a new location coordinator for a collection
    *
    * \param[in] proxy the collection proxy bits
    */
-  template <typename ColT, typename IndexT>
+  template <typename IndexT>
   void insertCollectionLM(VirtualProxyType const& proxy);
 
 public:

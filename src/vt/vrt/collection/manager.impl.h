@@ -1492,12 +1492,12 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
         msg, [=](MsgSharedPtr<BaseMsgType>& inner_msg){
           auto home_node = theCollection()->getMapped<ColT>(col_proxy, idx);
           // route the message to the destination using the location manager
-          auto lm = theLocMan()->getCollectionLM<ColT, IdxT>(col_proxy);
+          auto lm = theLocMan()->getCollectionLM<IdxT>(col_proxy);
           vtAssert(lm != nullptr, "LM must exist");
           theMsg()->markAsCollectionMessage(msg);
           lm->template routeMsgSerializeHandler<
             MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
-          >(toProxy, home_node, msg);
+          >(toProxy.getElementProxy().getIndex(), home_node, msg);
         }
       };
     }
@@ -1551,16 +1551,16 @@ bool CollectionManager::insertCollectionElement(
     });
 
     if (is_migrated_in) {
-      theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->entityImmigrated(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node, migrated_from,
+      theLocMan()->getCollectionLM<IndexT>(proxy)->entityImmigrated(
+        idx, home_node, migrated_from,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementMigratedIn, idx
       );
     } else {
-      theLocMan()->getCollectionLM<ColT, IndexT>(proxy)->registerEntity(
-        VrtElmProxy<ColT, IndexT>{proxy,idx}, home_node,
+      theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
+        idx, home_node,
         CollectionManager::collectionMsgHandler<ColT, IndexT>
       );
       elm_holder->applyListeners(
@@ -1654,7 +1654,7 @@ CollectionManager::constructCollectiveMap(
 
   // Invoke getCollectionLM() to create a new location manager instance for this
   // collection
-  theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+  theLocMan()->getCollectionLM<IndexT>(proxy);
 
   vt_debug_print(
     terse, vrt_coll,
@@ -1930,7 +1930,7 @@ InsertToken<ColT> CollectionManager::constructInsertMap(
 
   // Invoke getCollectionLM() to create a new location manager instance for this
   // collection
-  theLocMan()->getCollectionLM<ColT, IndexT>(proxy);
+  theLocMan()->getCollectionLM<IndexT>(proxy);
 
   // Start the local collection initiation process, lcoal meta-info about the
   // collection. Insert epoch is `no_epoch` because dynamic insertions are not
@@ -2014,7 +2014,7 @@ template <typename ColT, typename... Args>
    *  This is to ensure that the collection LM instance gets created so that
    *  messages can be forwarded properly
    */
-  theLocMan()->getCollectionLM<ColT,IndexType>(proxy);
+  theLocMan()->getCollectionLM<IndexType>(proxy);
 
   /**
    * Type-erase some lambdas for doing the collective broadcast that collects up
@@ -2202,9 +2202,8 @@ template <typename ColT, typename IndexT>
 /*static*/ void CollectionManager::pingHomeHandler(InsertMsg<ColT,IndexT>* msg) {
   auto proxy = msg->proxy_;
   auto idx = msg->idx_;
-  auto lm = theLocMan()->getCollectionLM<ColT, IndexT>(proxy.getProxy());
-  VrtElmProxy<ColT, IndexT> elm{proxy.getProxy(),idx};
-  auto elm_lives_somewhere = lm->isCached(elm);
+  auto lm = theLocMan()->getCollectionLM<IndexT>(proxy.getProxy());
+  auto elm_lives_somewhere = lm->isCached(idx);
 
   vt_debug_print(
     verbose, vrt_coll,
@@ -2217,7 +2216,7 @@ template <typename ColT, typename IndexT>
   } else {
     auto const insert_node = msg->construct_node_;
     // reserve the slot to stop any race with other insertions
-    lm->registerEntityRemote(elm, msg->home_node_, insert_node);
+    lm->registerEntityRemote(idx, msg->home_node_, insert_node);
 
     // send a message back that the insertion shall proceed
     auto msg2 = makeMessage<InsertMsg<ColT,IndexT>>(
@@ -2644,9 +2643,8 @@ void CollectionManager::insert(
             // element exists here and is live--return
             proceed_with_insertion = false;
           } else {
-            auto lm = theLocMan()->getCollectionLM<ColT, IndexT>(untyped_proxy);
-            VrtElmProxy<ColT, IndexT> elm{untyped_proxy,idx};
-            auto elm_lives_somewhere = lm->isCached(elm);
+            auto lm = theLocMan()->getCollectionLM<IndexT>(untyped_proxy);
+            auto elm_lives_somewhere = lm->isCached(idx);
             if (elm_lives_somewhere) {
               // element exists somewhere in the system and since we are the home
               // we check the cache to determine if it has been inserted
@@ -2829,9 +2827,7 @@ MigrateStatus CollectionManager::migrateOut(
      MigrateMsgType, MigrateHandlers::migrateInHandler<ColT, IndexT>
    >(dest, msg);
 
-   theLocMan()->getCollectionLM<ColT, IndexT>(col_proxy)->entityEmigrated(
-     proxy, dest
-   );
+   theLocMan()->getCollectionLM<IndexT>(col_proxy)->entityEmigrated(idx, dest);
 
    /*
     * Invoke the virtual epilog migrate out function
