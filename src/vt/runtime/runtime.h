@@ -94,6 +94,7 @@ struct Runtime {
    * \param[in] in_num_workers number of worker threads to initialize
    * \param[in] interop_mode whether running in interoperability mode
    * \param[in] in_comm the MPI communicator (if in interoperability mode)
+   * \param[in] delay_startup_banner whether to delay the startup banner output
    * \param[in] in_instance the runtime instance to set
    */
   Runtime(
@@ -101,6 +102,7 @@ struct Runtime {
     WorkerCountType in_num_workers = no_workers,
     bool const interop_mode = false,
     MPI_Comm in_comm = MPI_COMM_WORLD,
+    bool delay_startup_banner = false,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
 
@@ -444,6 +446,7 @@ protected:
   std::unique_ptr<component::ComponentPack> p_;
   std::unique_ptr<arguments::ArgConfig> arg_config_;
   arguments::AppConfig const* app_config_;   /**< App config during startup */
+  bool delay_startup_banner_ = false; /**< Delay printout of startup banner */
 };
 
 }} /* end namespace vt::runtime */

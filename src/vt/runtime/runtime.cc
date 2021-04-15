@@ -100,12 +100,14 @@ namespace vt { namespace runtime {
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm in_comm, RuntimeInstType const in_instance
+  bool const interop_mode, MPI_Comm in_comm, bool delay_startup_banner,
+  RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers),
      initial_communicator_(in_comm),
      arg_config_(std::make_unique<arguments::ArgConfig>()),
-     app_config_(&arg_config_->config_)
+     app_config_(&arg_config_->config_),
+     delay_startup_banner_(delay_startup_banner)
 {
   /// =========================================================================
   /// Notes on lifecycle for the ArgConfig/AppConfig
@@ -390,21 +392,30 @@ bool Runtime::initialize(bool const force_now) {
 
     MPI_Barrier(comm);
     if (theContext->getNode() == 0) {
-      printStartupBanner();
-      // Enqueue a check for later in case arguments are modified before work
-      // actually executes
-      theSched->enqueue([this]{
-        this->checkForArgumentErrors();
-      });
+      auto fn = [=]{
+        printStartupBanner();
+        // Enqueue a check for later in case arguments are modified before work
+        // actually executes
+        theSched->enqueue([this]{
+          this->checkForArgumentErrors();
+        });
 
-      // If the user specified to output a configuration file, write it to the
-      // specified file on rank 0
-      if (theConfig()->vt_output_config) {
-        std::ofstream out(theConfig()->vt_output_config_file);
-        out << theConfig()->vt_output_config_str;
-        out.close();
+        // If the user specified to output a configuration file, write it to the
+        // specified file on rank 0
+        if (theConfig()->vt_output_config) {
+          std::ofstream out(theConfig()->vt_output_config_file);
+          out << theConfig()->vt_output_config_str;
+          out.close();
+        }
+      };
+
+      if (delay_startup_banner_) {
+        theSched->enqueue(fn);
+      } else {
+        fn();
       }
     }
+
     setup();
 
     // Runtime component is being re-initialized
