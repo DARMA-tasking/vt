@@ -234,19 +234,7 @@ struct EntityLocationCoord : LocationCoord {
    */
   template <typename MessageT, ActiveTypedFnType<MessageT> *f>
   void routeMsgHandler(
-    EntityID const& id, NodeType const& home_node, MessageT *m
-  );
-
-  /**
-   * \brief Route a serialized message with a custom handler
-   *
-   * \param[in] id the entity ID
-   * \param[in] home_node home node for entity
-   * \param[in] msg pointer to the message
-   */
-  template <typename MessageT, ActiveTypedFnType<MessageT> *f>
-  void routeMsgSerializeHandler(
-    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
+    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m
   );
 
   /**
@@ -255,26 +243,12 @@ struct EntityLocationCoord : LocationCoord {
    * \param[in] id the entity ID
    * \param[in] home_node home node for the entity
    * \param[in] msg pointer to the message
-   * \param[in] serialize_msg whether it should be serialized (optional)
    * \param[in] from_node the sending node (optional)
    */
   template <typename MessageT>
   void routeMsg(
     EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg,
-    bool const serialize_msg = false,
     NodeType from_node = uninitialized_destination
-  );
-
-  /**
-   * \brief  Route a message to the default handler
-   *
-   * \param[in] id the entity ID
-   * \param[in] home_node home node for the entity
-   * \param[in] msg pointer to the message
-   */
-  template <typename MessageT>
-  void routeMsgSerialize(
-    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
   );
 
   /**
@@ -393,21 +367,18 @@ private:
   /**
    * \internal \brief Route a message to destination with eager protocol
    *
-   * \param[in] is_serialized whether it is serialized
    * \param[in] id the entity ID
    * \param[in] home_node the home node
    * \param[in] msg the message to route
    */
   template <typename MessageT>
   void routeMsgEager(
-    bool const is_serialized, EntityID const& id, NodeType const& home_node,
-    MsgSharedPtr<MessageT> msg
+    EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> msg
   );
 
   /**
    * \internal \brief Route a message to destination with rendezvous protocol
    *
-   * \param[in] is_serialized whether it is serialized
    * \param[in] id the entity ID
    * \param[in] home_node the home node
    * \param[in] to_node destination node
@@ -415,8 +386,8 @@ private:
    */
   template <typename MessageT>
   void routeMsgNode(
-    bool const is_serialized, EntityID const& id, NodeType const& home_node,
-    NodeType const& to_node, MsgSharedPtr<MessageT> msg
+    EntityID const& id, NodeType const& home_node, NodeType const& to_node,
+    MsgSharedPtr<MessageT> msg
   );
 
   /**

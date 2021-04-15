@@ -1495,7 +1495,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
           auto lm = theLocMan()->getCollectionLM<IdxT>(col_proxy);
           vtAssert(lm != nullptr, "LM must exist");
           theMsg()->markAsCollectionMessage(msg);
-          lm->template routeMsgSerializeHandler<
+          lm->template routeMsgHandler<
             MsgT, collectionMsgTypedHandler<ColT,IdxT,MsgT>
           >(toProxy.getElementProxy().getIndex(), home_node, msg);
         }
