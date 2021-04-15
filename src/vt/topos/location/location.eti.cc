@@ -83,4 +83,3 @@ template struct EntityLocationCoord<IdxType<uint64_t, 2>>;
 template struct EntityLocationCoord<IdxType<uint64_t, 3>>;
 
 }} /* end namespace vt::location */
-
