@@ -90,13 +90,28 @@ enum struct ObjectOrderEnum : uint8_t {
    */
   ElmID     = 1,
   /**
-   * \brief Order for the least migrations
+   * \brief Order for the fewest migrations
    *
-   * Order by load, starting with the smallest object that can be transferred
-   * to drop the processor load below the average, then descending for objects
-   * with smaller loads, and finally ascending for objects with larger loads.
+   * Order starting with the object with the smallest load that can be
+   * transferred to drop the processor load below the average, then by
+   * descending load for objects with smaller loads, and finally by ascending
+   * load for objects with larger loads.
    */
-  Marginal  = 2
+  FewestMigrations = 2,
+  /**
+   * \brief Order for migrating the objects with the smallest loads
+   *
+   * Find the object with the smallest load where the sum of its own load and
+   * all smaller loads meets or exceeds the amount by which this processor's
+   * load exceeds the target load. Order starting with that object, then by
+   * descending load for objects with smaller loads, and finally by ascending
+   * load for objects with larger loads.
+   */
+  SmallObjects = 3,
+  /**
+   * \brief Order by descending load
+   */
+  LargestObjects = 4
 };
 
 /// Enum for how the CMF is computed
@@ -144,6 +159,12 @@ public:
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
 
+  static std::vector<ObjIDType> orderObjects(
+    ObjectOrderEnum obj_ordering,
+    std::unordered_map<ObjIDType, TimeType> cur_objs,
+    LoadType this_new_load, TimeType target_max_load
+  );
+
 protected:
   void doLBStages(TimeType start_imb);
   void informAsync();
@@ -161,7 +182,6 @@ protected:
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
   std::vector<NodeType> makeUnderloaded() const;
-  std::vector<ObjIDType> orderObjects();
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
@@ -226,7 +246,7 @@ private:
   TimeType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
   InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
-  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::Marginal;
+  ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::FewestMigrations;
   CMFTypeEnum cmf_type_                             = CMFTypeEnum::NormByMax;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
