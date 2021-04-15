@@ -54,16 +54,6 @@
 namespace vt { namespace location {
 
 template <typename EntityID>
-template <typename MessageT>
-bool EntityLocationCoord<EntityID>::useEagerProtocol(
-  MsgSharedPtr<MessageT> msg
-) const {
-  bool const is_small = sizeof(*msg) < small_msg_max_size;
-  // could change according to entity type or another criterion
-  return is_small;
-}
-
-template <typename EntityID>
 template <typename MessageT, ActiveTypedFnType<MessageT> *f>
 void EntityLocationCoord<EntityID>::routeMsgHandler(
   EntityID const& id, NodeType const& home_node, MsgSharedPtr<MessageT> m

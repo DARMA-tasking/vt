@@ -331,8 +331,31 @@ struct EntityLocationCoord : LocationCoord {
    *
    * \return whether it is of eager size
    */
-  template <typename MessageT>
-  bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const;
+  template <
+    typename MessageT,
+    std::enable_if_t<true
+      and ::vt::messaging::msg_defines_serialize_mode<MessageT>::value
+      and ::vt::messaging::msg_serialization_mode<MessageT>::required,
+      int
+    > = 0
+  >
+  bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const {
+    return false;
+  }
+
+  template <
+    typename MessageT,
+    std::enable_if_t<
+      not ::vt::messaging::msg_defines_serialize_mode<MessageT>::value or
+      not ::vt::messaging::msg_serialization_mode<MessageT>::required,
+      int
+    > = 0
+  >
+  bool useEagerProtocol(MsgSharedPtr<MessageT> msg) const {
+    bool const is_small = sizeof(*msg) < small_msg_max_size;
+    // could change according to entity type or another criterion
+    return is_small;
+  }
 
 private:
   /**
