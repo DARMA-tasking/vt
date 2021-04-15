@@ -69,7 +69,13 @@ template <typename Callable>
 void runInEpochRooted(Callable&& fn);
 
 template <typename Callable>
+void runInEpochRooted(std::string const& label, Callable&& fn);
+
+template <typename Callable>
 void runInEpochCollective(Callable&& fn);
+
+template <typename Callable>
+void runInEpochCollective(std::string const& label, Callable&& fn);
 
 namespace messaging {
 
