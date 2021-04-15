@@ -433,6 +433,6 @@ private:
 
 }}  // end namespace vt::location
 
-#include "vt/topos/location/location.impl.h"
+#include "vt/topos/location/location.routing.impl.h"
 
 #endif /*INCLUDED_TOPOS_LOCATION_LOCATION_H*/
