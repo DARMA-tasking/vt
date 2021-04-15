@@ -55,6 +55,7 @@
 #include "vt/registry/auto/vc/auto_registry_vc.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
 #include "vt/worker/worker_headers.h"
+#include "vt/messaging/active.h"
 
 #include <cassert>
 #include <memory>
