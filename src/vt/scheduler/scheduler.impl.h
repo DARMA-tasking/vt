@@ -69,8 +69,20 @@ void runInEpochCollective(Callable&& fn) {
 }
 
 template <typename Callable>
+void runInEpochCollective(std::string const& label, Callable&& fn) {
+  auto ep = theTerm()->makeEpochCollective(label);
+  runInEpoch(ep, std::forward<Callable>(fn));
+}
+
+template <typename Callable>
 void runInEpochRooted(Callable&& fn) {
   auto ep = theTerm()->makeEpochRooted();
+  runInEpoch(ep, std::forward<Callable>(fn));
+}
+
+template <typename Callable>
+void runInEpochRooted(std::string const& label, Callable&& fn) {
+  auto ep = theTerm()->makeEpochRooted(label);
   runInEpoch(ep, std::forward<Callable>(fn));
 }
 

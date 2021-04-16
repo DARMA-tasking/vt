@@ -70,8 +70,25 @@ TEST_F(TestHighLevelCalls, test_collective_std_function) {
   EXPECT_EQ(called, true);
 }
 
+TEST_F(TestHighLevelCalls, test_collective_std_function_labeled) {
+  std::function<void()> fn = [&]{
+    called = true;
+  };
+  runInEpochCollective("label", fn);
+
+  EXPECT_EQ(called, true);
+}
+
 TEST_F(TestHighLevelCalls, test_rooted_lambda) {
   runInEpochRooted([&]{
+    called = true;
+  });
+
+  EXPECT_EQ(called, true);
+}
+
+TEST_F(TestHighLevelCalls, test_rooted_lambda_labeled) {
+  runInEpochRooted("label", [&]{
     called = true;
   });
 
