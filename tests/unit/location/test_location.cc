@@ -401,24 +401,26 @@ TYPED_TEST_P(TestLocationRoute, test_entity_cache_migrated_entity) /* NOLINT */{
       }
     });
 
-    if (my_node == home) {
-      // migrate entity: unregister it but keep its id in cache
-      vt::theLocMan()->virtual_loc->entityEmigrated(entity, new_home);
-      EXPECT_TRUE(location::isCached(entity));
-    } else if (my_node == new_home) {
-      // receive migrated entity: register it and keep in cache
-      vt::theLocMan()->virtual_loc->entityImmigrated(
-        entity, home, my_node, [entity,&nb_received](vt::BaseMessage* in_msg) {
-          vt_debug_print(
-            normal, location,
-            "TestLocationRoute: message arrived to me for a migrated entity={}\n",
-            entity
-          );
-          nb_received++;
-        }
-      );
-      EXPECT_TRUE(location::isCached(entity));
-    }
+    ::vt::runInEpochCollective([my_node, entity, &nb_received] {
+      if (my_node == home) {
+        // migrate entity: unregister it but keep its id in cache
+        vt::theLocMan()->virtual_loc->entityEmigrated(entity, new_home);
+        EXPECT_TRUE(location::isCached(entity));
+      } else if (my_node == new_home) {
+        // receive migrated entity: register it and keep in cache
+        vt::theLocMan()->virtual_loc->entityImmigrated(
+          entity, home, my_node,
+          [entity, &nb_received](vt::BaseMessage* in_msg) {
+            vt_debug_print(
+              normal, location,
+              "TestLocationRoute: message arrived to me for a migrated "
+              "entity={}\n",
+              entity);
+            nb_received++;
+          });
+        EXPECT_TRUE(location::isCached(entity));
+      }
+    });
 
     // check cache consistency for the given entity
     location::verifyCacheConsistency<TypeParam>(

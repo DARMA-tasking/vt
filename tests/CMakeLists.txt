@@ -98,7 +98,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
         TEST_SUFFIX            _proc_${PROC}
         TEST_PREFIX            vt:
         TEST_LIST              ${CUR_TEST_LIST}
-        EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS} ${MPI_NUMPROC_FLAG} ${PROC}
+        EXECUTE_COMMAND        ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS_LIST} ${MPI_NUMPROC_FLAG} ${PROC}
       )
 
       set_tests_properties(

@@ -16,9 +16,18 @@ set(MPI_RUN_COMMAND  "${MPIEXEC_EXECUTABLE}")
 set(MPI_PRE_FLAGS    "${MPIEXEC_PREFLAGS}")
 set(MPI_EPI_FLAGS    "${MPIEXEC_POSTFLAGS}")
 set(MPI_NUMPROC_FLAG "${MPIEXEC_NUMPROC_FLAG}")
-set(MPI_MAX_NUMPROC  "${MPIEXEC_MAX_NUMPROCS}")
 
 set(cmake_detected_max_num_nodes ${MPIEXEC_MAX_NUMPROCS})
+
+set(MPI_MAX_NUMPROC "${MPIEXEC_MAX_NUMPROCS}")
+
+if(${vt_tests_num_nodes})
+  set(MPI_MAX_NUMPROC "${vt_tests_num_nodes}")
+endif()
+
+if(${MPI_MAX_NUMPROC} GREATER ${MPIEXEC_MAX_NUMPROCS})
+  message(STATUS "Oversubscribing number of nodes to ${MPI_MAX_NUMPROC} with detected ${MPIEXEC_MAX_NUMPROCS}")
+endif()
 
 message(STATUS "MPI max nproc: ${MPI_MAX_NUMPROC}")
 

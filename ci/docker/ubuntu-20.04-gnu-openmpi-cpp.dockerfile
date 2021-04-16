@@ -60,7 +60,7 @@ ENV LESSCHARSET=utf-8
 COPY ./ci/deps/openmpi.sh openmpi.sh
 RUN ./openmpi.sh v4.0 4.0.4 -j4
 
-ENV MPI_EXTRA_FLAGS="--allow-run-as-root" \
+ENV MPI_EXTRA_FLAGS="--allow-run-as-root --oversubscribe" \
     PATH=/usr/lib/ccache/:$PATH
 
 ARG ZOLTAN_INSTALL_DIR=/trilinos-install
