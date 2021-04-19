@@ -62,7 +62,7 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
   ActionType action
 ) const {
-  auto const col_proxy = this->getProxy().getProxy();
+  auto const col_proxy = this->getProxy();
   theCollection()->finishedInserting<IndexT>(col_proxy,action);
 }
 
