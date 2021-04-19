@@ -776,13 +776,6 @@ void CollectionManager::invokeMsgImpl(
   theMsg()->popEpoch(cur_epoch);
 }
 
-template <typename ColT, typename IndexT>
-/*static*/ void CollectionManager::collectionMsgHandler(BaseMessage* msg) {
-  return collectionMsgTypedHandler<ColT,IndexT,CollectionMessage<ColT>>(
-    static_cast<CollectionMessage<ColT>*>(msg)
-  );
-}
-
 template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::broadcastRootHandler(MsgT* msg) {
   envelopeUnlockForForwarding(msg->env);
@@ -1481,16 +1474,14 @@ bool CollectionManager::insertCollectionElement(
 
     if (is_migrated_in) {
       theLocMan()->getCollectionLM<IndexT>(proxy)->entityImmigrated(
-        idx, home_node, migrated_from,
-        CollectionManager::collectionMsgHandler<ColT, IndexT>
+        idx, home_node, migrated_from
       );
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementMigratedIn, idx
       );
     } else {
       theLocMan()->getCollectionLM<IndexT>(proxy)->registerEntity(
-        idx, home_node,
-        CollectionManager::collectionMsgHandler<ColT, IndexT>
+        idx, home_node
       );
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementCreated, idx

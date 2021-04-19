@@ -732,14 +732,6 @@ public:
   );
 
   /**
-   * \internal \brief Base collection message handler
-   *
-   * \param[in] msg the message
-   */
-  template <typename CoLT, typename IndexT>
-  static void collectionMsgHandler(BaseMessage* msg);
-
-  /**
    * \internal \brief Typed collection message handler
    *
    * \param[in] msg the message
