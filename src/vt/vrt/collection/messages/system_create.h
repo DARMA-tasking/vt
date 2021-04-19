@@ -150,7 +150,7 @@ struct InsertMsg : ::vt::Message {
   bool pinged_ = false;
 };
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct DoneInsertMsg : ::vt::Message {
   using MessageParentType = ::vt::Message;
   vt_msg_serialize_prohibited();
@@ -158,27 +158,27 @@ struct DoneInsertMsg : ::vt::Message {
   DoneInsertMsg() = default;
 
   DoneInsertMsg(
-    CollectionProxy<ColT,IndexT> in_proxy,
+    VirtualProxyType in_proxy,
     NodeType const& in_action_node = uninitialized_destination
   ) : action_node_(in_action_node), proxy_(in_proxy)
   { }
 
   NodeType action_node_ = uninitialized_destination;
-  CollectionProxy<ColT,IndexT> proxy_ = {};
+  VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct ActInsertMsg : ::vt::Message {
   using MessageParentType = ::vt::Message;
   vt_msg_serialize_prohibited();
 
   ActInsertMsg() = default;
 
-  explicit ActInsertMsg(CollectionProxy<ColT,IndexT> in_proxy)
+  explicit ActInsertMsg(VirtualProxyType in_proxy)
     : proxy_(in_proxy)
   { }
 
-  CollectionProxy<ColT,IndexT> proxy_ = {};
+  VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
 template <typename ColT, typename IndexT>

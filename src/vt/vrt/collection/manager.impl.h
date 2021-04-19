@@ -145,11 +145,10 @@ CollectionManager::runConstructor(
   );
 }
 
-template <typename ColT>
+template <typename IndexT>
 void CollectionManager::addCleanupFn(VirtualProxyType proxy) {
   cleanup_fns_[proxy].push_back([=]{
-    CollectionProxyWrapType<ColT> typed_proxy(proxy);
-    destroyMatching(typed_proxy);
+    destroyMatching<IndexT>(proxy);
   });
 }
 
@@ -177,7 +176,7 @@ template <typename SysMsgT>
   theCollection()->insertCollectionInfo(proxy,msg->map,insert_epoch);
 
   // Add the cleanup function for this node
-  theCollection()->addCleanupFn<ColT>(proxy);
+  theCollection()->addCleanupFn<IndexT>(proxy);
 
   if (info.immediate_) {
     // Get the handler function
@@ -1660,7 +1659,7 @@ CollectionManager::constructCollectiveMap(
   );
 
   // Insert action on cleanup for this collection
-  theCollection()->addCleanupFn<ColT>(proxy);
+  theCollection()->addCleanupFn<IndexT>(proxy);
 
   // Start the local collection initiation process, lcoal meta-info about the
   // collection. Insert epoch is `no_epoch` because dynamic insertions are not
@@ -1938,7 +1937,7 @@ InsertToken<ColT> CollectionManager::constructInsertMap(
   insertMetaCollection<ColT>(proxy, map_han, range, is_static);
 
   // Insert action on cleanup for this collection
-  theCollection()->addCleanupFn<ColT>(proxy);
+  theCollection()->addCleanupFn<IndexT>(proxy);
 
   return InsertToken<ColT>{proxy};
 }
@@ -2393,12 +2392,10 @@ void CollectionManager::finishedInsertEpoch(
   );
 }
 
-template <typename ColT, typename IndexT>
-/*static*/ void CollectionManager::actInsertHandler(
-  ActInsertMsg<ColT,IndexT>* msg
-) {
-  auto const& untyped_proxy = msg->proxy_.getProxy();
-  return theCollection()->actInsert<>(untyped_proxy);
+template <typename IndexT>
+/*static*/ void CollectionManager::actInsertHandler(ActInsertMsg<IndexT>* msg) {
+  auto const& proxy = msg->proxy_;
+  return theCollection()->actInsert<>(proxy);
 }
 
 template <typename>
@@ -2419,12 +2416,12 @@ void CollectionManager::actInsert(VirtualProxyType const& proxy) {
   }
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 /*static*/ void CollectionManager::doneInsertHandler(
-  DoneInsertMsg<ColT,IndexT>* msg
+  DoneInsertMsg<IndexT>* msg
 ) {
   auto const& node = msg->action_node_;
-  auto const& untyped_proxy = msg->proxy_.getProxy();
+  auto const& untyped_proxy = msg->proxy_;
 
   vt_debug_print(
     verbose, vrt_coll,
@@ -2434,35 +2431,33 @@ template <typename ColT, typename IndexT>
 
   if (node != uninitialized_destination) {
     auto send = [untyped_proxy,node]{
-      auto smsg = makeMessage<ActInsertMsg<ColT,IndexT>>(untyped_proxy);
+      auto smsg = makeMessage<ActInsertMsg<IndexT>>(untyped_proxy);
       theMsg()->markAsCollectionMessage(smsg);
-      theMsg()->sendMsg<
-        ActInsertMsg<ColT,IndexT>,actInsertHandler<ColT,IndexT>
-      >(node, smsg);
+      theMsg()->sendMsg<ActInsertMsg<IndexT>, actInsertHandler<IndexT>>(
+        node, smsg
+      );
     };
-    return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_, send);
+    return theCollection()->finishedInserting<IndexT>(msg->proxy_, send);
   } else {
-    return theCollection()->finishedInserting<ColT,IndexT>(msg->proxy_);
+    return theCollection()->finishedInserting<IndexT>(msg->proxy_);
   }
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 void CollectionManager::finishedInserting(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy,
-  ActionType insert_action
+  VirtualProxyType proxy, ActionType insert_action
 ) {
   auto const& this_node = theContext()->getNode();
-  auto const& untyped_proxy = proxy.getProxy();
   /*
    *  Register the user's action for when insertion is completed across the
    *  whole system, which termination in the insertion epoch can enforce
    */
   if (insert_action) {
-    auto iter = user_insert_action_.find(untyped_proxy);
+    auto iter = user_insert_action_.find(proxy);
     if (iter ==  user_insert_action_.end()) {
       user_insert_action_.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(untyped_proxy),
+        std::forward_as_tuple(proxy),
         std::forward_as_tuple(ActionVecType{insert_action})
       );
     } else {
@@ -2470,28 +2465,28 @@ void CollectionManager::finishedInserting(
     }
   }
 
-  auto const& cons_node = VirtualProxyBuilder::getVirtualNode(untyped_proxy);
+  auto const& cons_node = VirtualProxyBuilder::getVirtualNode(proxy);
 
   vt_debug_print(
     verbose, vrt_coll,
     "finishedInserting: proxy={:x}, cons_node={}, this_node={}\n",
-    proxy.getProxy(), cons_node, this_node
+    proxy, cons_node, this_node
   );
 
   if (cons_node == this_node) {
-    auto iter = insert_finished_action_.find(untyped_proxy);
+    auto iter = insert_finished_action_.find(proxy);
     if (iter != insert_finished_action_.end()) {
       auto action_lst = iter->second;
-      insert_finished_action_.erase(untyped_proxy);
+      insert_finished_action_.erase(proxy);
       for (auto&& action : action_lst) {
         action();
       }
     }
   } else {
     auto node = insert_action ? this_node : uninitialized_destination;
-    auto msg = makeMessage<DoneInsertMsg<ColT,IndexT>>(proxy,node);
+    auto msg = makeMessage<DoneInsertMsg<IndexT>>(proxy,node);
     theMsg()->markAsCollectionMessage(msg);
-    theMsg()->sendMsg<DoneInsertMsg<ColT,IndexT>,doneInsertHandler<ColT,IndexT>>(
+    theMsg()->sendMsg<DoneInsertMsg<IndexT>,doneInsertHandler<IndexT>>(
       cons_node, msg
     );
   }
@@ -2905,19 +2900,18 @@ void CollectionManager::incomingDestroy(
   }
 }
 
-template <typename ColT, typename IndexT>
-void CollectionManager::destroyMatching(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy
-) {
+template <typename IndexT>
+void CollectionManager::destroyMatching(VirtualProxyType proxy) {
+  using ElmT = Indexable<IndexT>;
+
   vt_debug_print(
     normal, vrt_coll,
     "destroyMatching: proxy={:x}\n",
-    proxy.getProxy()
+    proxy
   );
 
-  auto const untyped_proxy = proxy.getProxy();
-  UniversalIndexHolder<>::destroyCollection(untyped_proxy);
-  auto elm_holder = findElmHolder<IndexT>(untyped_proxy);
+  UniversalIndexHolder<>::destroyCollection(proxy);
+  auto elm_holder = findElmHolder<IndexT>(proxy);
   if (elm_holder) {
     elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>*) {
       elm_holder->applyListeners(
@@ -2927,18 +2921,18 @@ void CollectionManager::destroyMatching(
     elm_holder->destroyAll();
   }
 
-  auto const is_static = ColT::isStaticSized();
+  auto const is_static = ElmT::isStaticSized();
   if (not is_static) {
     auto const& this_node = theContext()->getNode();
-    auto const cons_node = VirtualProxyBuilder::getVirtualNode(untyped_proxy);
+    auto const cons_node = VirtualProxyBuilder::getVirtualNode(proxy);
     if (cons_node == this_node) {
-      finishedInserting(proxy, nullptr);
+      finishedInserting<IndexT>(proxy, nullptr);
     }
   }
 
-  EntireHolder<IndexT>::remove(untyped_proxy);
+  EntireHolder<IndexT>::remove(proxy);
 
-  auto iter = cleanup_fns_.find(untyped_proxy);
+  auto iter = cleanup_fns_.find(proxy);
   if (iter != cleanup_fns_.end()) {
     cleanup_fns_.erase(iter);
   }

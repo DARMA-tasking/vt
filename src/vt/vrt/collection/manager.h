@@ -1481,8 +1481,8 @@ private:
    *
    * \param[in] proxy the collection proxy
    */
-  template <typename ColT, typename IndexT>
-  void destroyMatching(CollectionProxyWrapType<ColT,IndexT> const& proxy);
+  template <typename IndexT>
+  void destroyMatching(VirtualProxyType proxy);
 
 protected:
   /**
@@ -1613,16 +1613,16 @@ public:
    *
    * \param[in] msg done insert message
    */
-  template <typename ColT, typename IndexT>
-  static void doneInsertHandler(DoneInsertMsg<ColT,IndexT>* msg);
+  template <typename IndexT>
+  static void doneInsertHandler(DoneInsertMsg<IndexT>* msg);
 
   /**
    * \internal \brief Do a dynamic insertion handler
    *
    * \param[in] msg insert message
    */
-  template <typename ColT, typename IndexT>
-  static void actInsertHandler(ActInsertMsg<ColT,IndexT>* msg);
+  template <typename IndexT>
+  static void actInsertHandler(ActInsertMsg<IndexT>* msg);
 
   /**
    * \internal \brief Update the insert epoch
@@ -1665,10 +1665,9 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] insert_action action to execute after insertions complete
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   void finishedInserting(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
-    ActionType insert_action = nullptr
+    VirtualProxyType proxy, ActionType insert_action = nullptr
   );
 
   /**
@@ -1676,7 +1675,7 @@ public:
    *
    * \param[in] proxy the collection proxy bits
    */
-  template <typename ColT>
+  template <typename IndexT>
   void addCleanupFn(VirtualProxyType proxy);
 
 private:
