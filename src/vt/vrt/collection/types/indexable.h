@@ -56,6 +56,8 @@ namespace vt { namespace vrt { namespace collection {
 template <typename IndexT>
 struct Indexable : Migratable {
 
+  using IndexType = IndexT;
+
   explicit Indexable(IndexT&& in_index);
   Indexable() = default;
 

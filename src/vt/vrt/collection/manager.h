@@ -1275,7 +1275,7 @@ public:
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
   static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    MsgT* msg, Indexable<IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
@@ -1291,7 +1291,7 @@ public:
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
   static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    MsgT* msg, Indexable<IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event, bool immediate
   );
 

@@ -352,7 +352,7 @@ GroupType CollectionManager::createGroupCollection(
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsWrapType<ColT, UserMsgT, MsgT>
 CollectionManager::collectionAutoMsgDeliver(
-  MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
+  MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event, bool immediate
 ) {
   auto user_msg = makeMessage<UserMsgT>(std::move(msg->getMsg()));
@@ -381,7 +381,7 @@ CollectionManager::collectionAutoMsgDeliver(
 template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
 /*static*/ CollectionManager::IsNotWrapType<ColT, UserMsgT, MsgT>
 CollectionManager::collectionAutoMsgDeliver(
-  MsgT* msg, CollectionBase<ColT, IndexT>* base, HandlerType han, NodeType from,
+  MsgT* msg, Indexable<IndexT>* base, HandlerType han, NodeType from,
   trace::TraceEventIDType event, bool immediate
 ) {
   // Expand out the index for tracing purposes; Projections takes up to
