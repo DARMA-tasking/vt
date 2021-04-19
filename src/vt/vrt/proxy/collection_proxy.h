@@ -60,6 +60,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT = typename ColT::IndexType>
 struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
+  using IndexType = IndexT;
   using ElmProxyType = VrtElmProxy<ColT, IndexT>;
 
   CollectionProxy() = default;

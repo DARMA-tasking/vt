@@ -1435,7 +1435,7 @@ private:
    *
    * \return the collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   CollectionHolder<IndexT>* findColHolder(VirtualProxyType const& proxy);
 
   /**
@@ -1445,7 +1445,7 @@ private:
    *
    * \return the element collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   Holder<IndexT>* findElmHolder(VirtualProxyType const& proxy);
 
   /**
@@ -1455,8 +1455,8 @@ private:
    *
    * \return the element collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
+  template <typename ProxyT, typename IndexT = typename ProxyT::IndexType>
+  Holder<IndexT>* findElmHolder(ProxyT proxy);
 
 public:
   /**
