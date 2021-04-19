@@ -1535,11 +1535,8 @@ public:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IndexT>
-  NodeType getMappedNode(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
-    typename ColT::IndexType const& idx
-  );
+  template <typename IndexT>
+  NodeType getMappedNode(VirtualProxyType proxy, IndexT const& idx);
 
   /**
    * \brief Migrate element to a new node
@@ -1865,11 +1862,11 @@ private:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  template <typename IdxT>
   NodeType getMapped(VirtualProxyType proxy, IdxT cur) {
     auto map_han = UniversalIndexHolder<>::getMap(proxy);
     auto max = getRange<IdxT>(proxy);
-    return getMapped<ColT>(map_han, cur, max);
+    return getMapped<IdxT>(map_han, cur, max);
   }
 
   /**
@@ -1882,10 +1879,10 @@ private:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  template <typename IdxT>
   NodeType getMapped(VirtualProxyType proxy, HandlerType map_han, IdxT cur) {
     auto max = getRange<IdxT>(proxy);
-    return getMapped<ColT>(map_han, cur, max);
+    return getMapped<IdxT>(map_han, cur, max);
   }
 
   /**
@@ -1898,7 +1895,7 @@ private:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  template <typename IdxT>
   NodeType getMapped(HandlerType map_han, IdxT cur, IdxT max) {
     auto fn = auto_registry::getHandlerMap(map_han);
     auto const cur_base = static_cast<vt::index::BaseIndex*>(&cur);

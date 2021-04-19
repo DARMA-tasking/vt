@@ -1490,7 +1490,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
     [=]() mutable -> messaging::PendingSend {
       return messaging::PendingSend{
         msg, [=](MsgSharedPtr<BaseMsgType>& inner_msg){
-          auto home_node = theCollection()->getMapped<ColT>(col_proxy, idx);
+          auto home_node = theCollection()->getMapped<IdxT>(col_proxy, idx);
           // route the message to the destination using the location manager
           auto lm = theLocMan()->getCollectionLM<IdxT>(col_proxy);
           vtAssert(lm != nullptr, "LM must exist");
@@ -2377,17 +2377,15 @@ void CollectionManager::finishedInsertEpoch(
   );
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 NodeType CollectionManager::getMappedNode(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy,
-  typename ColT::IndexType const& idx
+  VirtualProxyType proxy, IndexT const& idx
 ) {
-  auto const untyped_proxy = proxy.getProxy();
-  auto found_constructed = constructed_.find(untyped_proxy) != constructed_.end();
+  auto found_constructed = constructed_.find(proxy) != constructed_.end();
   if (found_constructed) {
-    auto col_holder = findColHolder<IndexT>(untyped_proxy);
+    auto col_holder = findColHolder<IndexT>(proxy);
     auto max_idx = col_holder->max_idx;
-    auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
+    auto map_han = UniversalIndexHolder<>::getMap(proxy);
     bool const& is_functor =
       auto_registry::HandlerManagerType::isHandlerFunctor(map_han);
     auto_registry::AutoActiveMapType fn = nullptr;
@@ -2464,7 +2462,7 @@ void CollectionManager::insert(
     [=]() -> messaging::PendingSend {
       auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
       auto const max_idx = getRange<IndexT>(untyped_proxy);
-      auto const mapped_node = getMapped<ColT>(map_han, idx, max_idx);
+      auto const mapped_node = getMapped<IndexT>(map_han, idx, max_idx);
       auto const has_explicit_node = node != uninitialized_destination;
       auto const insert_node = has_explicit_node ? node : mapped_node;
       auto const this_node = theContext()->getNode();
