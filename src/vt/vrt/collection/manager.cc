@@ -79,6 +79,25 @@ CollectionManager::CollectionManager() { }
   r->reduce<collective::None>(root, msg.get(), cb, stamp);
 }
 
+void CollectionManager::incomingDestroy(VirtualProxyType proxy) {
+  auto iter = cleanup_fns_.find(proxy);
+  if (iter != cleanup_fns_.end()) {
+    auto fns = std::move(iter->second);
+    cleanup_fns_.erase(iter);
+    for (auto fn : fns) {
+      fn();
+    }
+  }
+}
+
+void CollectionManager::destroy(VirtualProxyType proxy) {
+  auto const& this_node = theContext()->getNode();
+
+  auto msg = makeMessage<DestroyMsg>(proxy, this_node);
+  theMsg()->markAsCollectionMessage(msg);
+  theMsg()->broadcastMsg<DestroyMsg, DestroyHandlers::destroyNow>(msg);
+}
+
 void CollectionManager::finalize() {
   cleanupAll<>();
 }

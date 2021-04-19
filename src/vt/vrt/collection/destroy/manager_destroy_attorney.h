@@ -53,12 +53,11 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
 struct CollectionElmDestroyAttorney {
   friend struct DestroyHandlers;
 
 private:
-  static void incomingDestroy(CollectionIndexProxy<ColT, IndexT> const& proxy);
+  static void incomingDestroy(VirtualProxyType proxy);
 };
 
 }}} /* end namespace vt::vrt::collection */

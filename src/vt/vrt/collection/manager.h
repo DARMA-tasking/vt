@@ -1463,8 +1463,7 @@ public:
    *
    * \param[in] proxy the collection proxy
    */
-  template <typename ColT, typename IndexT>
-  void destroy(CollectionProxyWrapType<ColT,IndexT> const& proxy);
+  void destroy(VirtualProxyType proxy);
 
 private:
   /**
@@ -1472,8 +1471,7 @@ private:
    *
    * \param[in] proxy the collection proxy
    */
-  template <typename ColT, typename IndexT>
-  void incomingDestroy(CollectionProxyWrapType<ColT,IndexT> const& proxy);
+  void incomingDestroy(VirtualProxyType proxy);
 
   /**
    * \internal \brief Destroy all elements and related meta-data for a proxy
@@ -1695,7 +1693,6 @@ private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmAttorney;
 
-  template <typename ColT, typename IndexT>
   friend struct CollectionElmDestroyAttorney;
 
   template <typename ColT, typename IndexT>

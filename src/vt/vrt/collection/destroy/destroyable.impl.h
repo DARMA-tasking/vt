@@ -60,7 +60,7 @@ Destroyable<ColT,IndexT,BaseProxyT>::Destroyable(
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 void Destroyable<ColT,IndexT,BaseProxyT>::destroy() const {
-  return theCollection()->destroy<ColT,IndexT>(this->getProxy());
+  return theCollection()->destroy(this->getProxy().getProxy());
 }
 
 }}} /* end namespace vt::vrt::collection */

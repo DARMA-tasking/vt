@@ -2874,32 +2874,6 @@ MigrateStatus CollectionManager::migrateIn(
   }
 }
 
-template <typename ColT, typename IndexT>
-void CollectionManager::destroy(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy
-) {
-  using DestroyMsgType = DestroyMsg<ColT, IndexT>;
-  auto const& this_node = theContext()->getNode();
-
-  auto msg = makeMessage<DestroyMsgType>(proxy, this_node);
-  theMsg()->markAsCollectionMessage(msg);
-  theMsg()->broadcastMsg<DestroyMsgType, DestroyHandlers::destroyNow>(msg);
-}
-
-template <typename ColT, typename IndexT>
-void CollectionManager::incomingDestroy(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy
-) {
-  auto iter = cleanup_fns_.find(proxy.getProxy());
-  if (iter != cleanup_fns_.end()) {
-    auto fns = std::move(iter->second);
-    cleanup_fns_.erase(iter);
-    for (auto fn : fns) {
-      fn();
-    }
-  }
-}
-
 template <typename IndexT>
 void CollectionManager::destroyMatching(VirtualProxyType proxy) {
   using ElmT = Indexable<IndexT>;

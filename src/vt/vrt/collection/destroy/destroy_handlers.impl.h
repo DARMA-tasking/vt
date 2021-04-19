@@ -53,10 +53,9 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-/*static*/ void DestroyHandlers::destroyNow(DestroyMsg<ColT, IndexT>* msg) {
+/*static*/ inline void DestroyHandlers::destroyNow(DestroyMsg* msg) {
   auto const& proxy = msg->getProxy();
-  return CollectionElmDestroyAttorney<ColT,IndexT>::incomingDestroy(proxy);
+  return CollectionElmDestroyAttorney::incomingDestroy(proxy);
 }
 
 }}} /* end namespace vt::vrt::collection */
