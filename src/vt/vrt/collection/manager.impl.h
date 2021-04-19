@@ -558,8 +558,8 @@ template <typename ColT, typename IndexT, typename MsgT>
   theMsg()->popEpoch(cur_epoch);
 }
 
-template <typename ColT, typename MsgT>
-/*static*/ void CollectionManager::recordStats(ColT* col_ptr, MsgT* msg) {
+template <typename MsgT>
+/*static*/ void CollectionManager::recordStats(Migratable* col_ptr, MsgT* msg) {
   auto const pto = col_ptr->getElmID();
   auto const pfrom = msg->getElm();
   auto& stats = col_ptr->getStats();
