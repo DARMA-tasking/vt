@@ -195,7 +195,7 @@ protected:
   void setupDone(ReduceMsgType* msg);
 
 private:
-  uint8_t f_                                        = 4;
+  uint16_t f_                                       = 4;
   uint8_t k_max_                                    = 4;
   uint8_t k_cur_                                    = 0;
   uint16_t iter_                                    = 0;
