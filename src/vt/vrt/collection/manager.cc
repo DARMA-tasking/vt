@@ -54,6 +54,31 @@ namespace vt { namespace vrt { namespace collection {
 
 CollectionManager::CollectionManager() { }
 
+/*static*/ void CollectionManager::reduceConstruction(
+  VirtualProxyType const& proxy
+) {
+  /*
+   * Start a asynchronous reduction to coordinate operations that might depend
+   * on construction completing (meta-data must be available, LM initialized,
+   * etc.)
+   */
+  auto msg = makeMessage<CollectionConsMsg>(proxy);
+  theMsg()->markAsCollectionMessage(msg);
+  auto const& root = 0;
+  vt_debug_print(
+    normal, vrt_coll,
+    "reduceConstruction: invoke reduce: proxy={:x}\n", proxy
+  );
+
+  using collective::reduce::makeStamp;
+  using collective::reduce::StrongUserID;
+
+  auto stamp = makeStamp<StrongUserID>(proxy);
+  auto r = theCollection()->reducer();
+  auto cb = theCB()->makeBcast<CollectionConsMsg, collectionFinishedHan<void>>();
+  r->reduce<collective::None>(root, msg.get(), cb, stamp);
+}
+
 void CollectionManager::finalize() {
   cleanupAll<>();
 }

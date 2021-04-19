@@ -263,7 +263,7 @@ template <typename SysMsgT>
 
   // Reduce construction of the collection to release dependencies when
   // construction has finsihed
-  reduceConstruction<ColT>(proxy);
+  reduceConstruction(proxy);
 
   // Construct a underlying group for the collection
   groupConstruction<IndexT>(proxy,info.immediate_);
@@ -1745,7 +1745,7 @@ CollectionManager::constructCollectiveMap(
   insertMetaCollection<ColT>(proxy, map_han, range, is_static);
 
   // Reduce construction of the distributed collection
-  reduceConstruction<ColT>(proxy);
+  reduceConstruction(proxy);
 
   // Construct a underlying group for the collection
   groupConstruction<IndexT>(proxy, is_static);
@@ -1956,7 +1956,7 @@ CollectionManager::finishedInsert(InsertToken<ColT>&& token) {
   auto const typed_proxy = TypedProxyType{proxy};
 
   // Reduce construction of the distributed collection
-  reduceConstruction<ColT>(proxy);
+  reduceConstruction(proxy);
 
   // Construct a underlying group for the collection
   groupConstruction<typename ColT::IndexType>(proxy, true);
@@ -2036,32 +2036,6 @@ template <typename ColT, typename... Args>
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Send);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Broadcast);
   theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
-}
-
-template <typename ColT>
-/*static*/ void CollectionManager::reduceConstruction(
-  VirtualProxyType const& proxy
-) {
-  /*
-   * Start a asynchronous reduction to coordinate operations that might depend
-   * on construction completing (meta-data must be available, LM initialized,
-   * etc.)
-   */
-  auto msg = makeMessage<CollectionConsMsg>(proxy);
-  theMsg()->markAsCollectionMessage(msg);
-  auto const& root = 0;
-  vt_debug_print(
-    normal, vrt_coll,
-    "reduceConstruction: invoke reduce: proxy={:x}\n", proxy
-  );
-
-  using collective::reduce::makeStamp;
-  using collective::reduce::StrongUserID;
-
-  auto stamp = makeStamp<StrongUserID>(proxy);
-  auto r = theCollection()->reducer();
-  auto cb = theCB()->makeBcast<CollectionConsMsg, collectionFinishedHan<void>>();
-  r->reduce<collective::None>(root, msg.get(), cb, stamp);
 }
 
 template <typename IndexT>

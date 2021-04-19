@@ -517,7 +517,6 @@ public:
    *
    * \param[in] proxy the collection proxy
    */
-  template <typename ColT>
   static void reduceConstruction(VirtualProxyType const& proxy);
 
   /**
