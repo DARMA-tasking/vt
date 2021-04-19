@@ -115,7 +115,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
         sub_proxy.get()->migratedInIndex(lidx);
       }
     };
-    theCollection()->template registerElementListener<ColT>(proxy_bits, fn);
+    theCollection()->template registerElementListener<IndexT>(proxy_bits, fn);
 
     // Count the number of local handles that should exist here. We can't use the
     // cached value in the collection manager since this might be invoked in the

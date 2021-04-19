@@ -2838,7 +2838,7 @@ CollectionManager::getDispatcher(DispatchHandlerType const& han) {
   return getDispatch(han);
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 int CollectionManager::registerElementListener(
   VirtualProxyType proxy, listener::ListenFnType<IndexT> fn
 ) {
@@ -2846,7 +2846,7 @@ int CollectionManager::registerElementListener(
   return elm_holder->addListener(fn);
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 void CollectionManager::unregisterElementListener(
   VirtualProxyType proxy, int element
 ) {

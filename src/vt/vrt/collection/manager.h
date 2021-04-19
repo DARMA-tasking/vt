@@ -1731,7 +1731,7 @@ public:
    * \param[in] proxy the proxy of the collection
    * \param[in] fn the listener function
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   int registerElementListener(
     VirtualProxyType proxy, listener::ListenFnType<IndexT> fn
   );
@@ -1742,7 +1742,7 @@ public:
    * \param[in] proxy the proxy of the collection
    * \param[in] element the index of the registered listener function
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   void unregisterElementListener(VirtualProxyType proxy, int element);
 
   /**
