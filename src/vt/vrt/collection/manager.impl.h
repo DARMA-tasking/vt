@@ -266,10 +266,10 @@ template <typename SysMsgT>
   reduceConstruction<ColT>(proxy);
 
   // Construct a underlying group for the collection
-  groupConstruction<ColT>(proxy,info.immediate_);
+  groupConstruction<IndexT>(proxy,info.immediate_);
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 std::size_t CollectionManager::groupElementCount(VirtualProxyType const& p) {
   auto elm_holder = theCollection()->findElmHolder<IndexT>(p);
   std::size_t const num_elms = elm_holder->numElements();
@@ -1748,7 +1748,7 @@ CollectionManager::constructCollectiveMap(
   reduceConstruction<ColT>(proxy);
 
   // Construct a underlying group for the collection
-  groupConstruction<ColT>(proxy, is_static);
+  groupConstruction<IndexT>(proxy, is_static);
 
   vt_debug_print(
     normal, vrt_coll,
@@ -1959,7 +1959,7 @@ CollectionManager::finishedInsert(InsertToken<ColT>&& token) {
   reduceConstruction<ColT>(proxy);
 
   // Construct a underlying group for the collection
-  groupConstruction<ColT>(proxy, true);
+  groupConstruction<typename ColT::IndexType>(proxy, true);
 
   return typed_proxy;
 }
@@ -2064,7 +2064,7 @@ template <typename ColT>
   r->reduce<collective::None>(root, msg.get(), cb, stamp);
 }
 
-template <typename ColT>
+template <typename IndexT>
 /*static*/ void CollectionManager::groupConstruction(
   VirtualProxyType const& proxy, bool immediate
 ) {
@@ -2075,8 +2075,7 @@ template <typename ColT>
      *  change
      */
 
-    using IndexT = typename ColT::IndexType;
-    auto const elms = theCollection()->groupElementCount<ColT,IndexT>(proxy);
+    auto const elms = theCollection()->groupElementCount<IndexT>(proxy);
     bool const in_group = elms > 0;
 
     vt_debug_print(
@@ -2250,9 +2249,7 @@ template <typename ColT, typename IndexT>
    *  current set of elements based the distributed snapshot
    */
 
-  auto const elms = theCollection()->groupElementCount<ColT,IndexT>(
-    untyped_proxy
-  );
+  auto const elms = theCollection()->groupElementCount<IndexT>(untyped_proxy);
   bool const in_group = elms > 0;
 
   vt_debug_print(
@@ -2371,9 +2368,7 @@ void CollectionManager::finishedInsertEpoch(
    *  Start building the a new group for broadcasts and reductions over the
    *  current set of elements based the distributed snapshot
    */
-  auto const elms = theCollection()->groupElementCount<ColT,IndexT>(
-    untyped_proxy
-  );
+  auto const elms = theCollection()->groupElementCount<IndexT>(untyped_proxy);
   bool const in_group = elms > 0;
 
   vt_debug_print(

@@ -532,7 +532,7 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] immediate whether to start group construction now
    */
-  template <typename ColT>
+  template <typename IndexT>
   static void groupConstruction(VirtualProxyType const& proxy, bool immediate);
 
   /**
@@ -1345,7 +1345,7 @@ public:
    *
    * \return number of local elmeents
    */
-  template <typename ColT, typename IndexT>
+  template <typename IndexT>
   std::size_t groupElementCount(VirtualProxyType const& proxy);
 
   /**
