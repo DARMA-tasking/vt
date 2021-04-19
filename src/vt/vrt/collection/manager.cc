@@ -98,6 +98,112 @@ void CollectionManager::destroy(VirtualProxyType proxy) {
   theMsg()->broadcastMsg<DestroyMsg, DestroyHandlers::destroyNow>(msg);
 }
 
+/*static*/ void CollectionManager::actInsertHandler(ActInsertMsg* msg) {
+  auto const& proxy = msg->proxy_;
+  return theCollection()->actInsert(proxy);
+}
+
+void CollectionManager::actInsert(VirtualProxyType const& proxy) {
+  vt_debug_print(
+    verbose, vrt_coll,
+    "actInsert: proxy={:x}\n",
+    proxy
+  );
+
+  auto iter = user_insert_action_.find(proxy);
+  if (iter != user_insert_action_.end()) {
+    auto action_lst = iter->second;
+    user_insert_action_.erase(iter);
+    for (auto&& action : action_lst) {
+      action();
+    }
+  }
+}
+
+/*static*/ void CollectionManager::finishedUpdateHan(FinishedUpdateMsg* msg) {
+  vt_debug_print(
+    verbose, vrt_coll,
+    "finishedUpdateHan: proxy={:x}, root={}\n",
+    msg->proxy_, msg->isRoot()
+  );
+
+  if (msg->isRoot()) {
+    /*
+     *  Trigger any actions that the user may have registered for when insertion
+     *  has fully terminated
+     */
+    return theCollection()->actInsert(msg->proxy_);
+  }
+}
+
+/*static*/ void CollectionManager::doneInsertHandler(DoneInsertMsg* msg) {
+  auto const& node = msg->action_node_;
+  auto const& untyped_proxy = msg->proxy_;
+
+  vt_debug_print(
+    verbose, vrt_coll,
+    "doneInsertHandler: proxy={:x}, node={}\n",
+    untyped_proxy, node
+  );
+
+  if (node != uninitialized_destination) {
+    auto send = [untyped_proxy,node]{
+      auto smsg = makeMessage<ActInsertMsg>(untyped_proxy);
+      theMsg()->markAsCollectionMessage(smsg);
+      theMsg()->sendMsg<ActInsertMsg, actInsertHandler>(node, smsg);
+    };
+    return theCollection()->finishedInserting(msg->proxy_, send);
+  } else {
+    return theCollection()->finishedInserting(msg->proxy_);
+  }
+}
+
+void CollectionManager::finishedInserting(
+  VirtualProxyType proxy, ActionType insert_action
+) {
+  auto const& this_node = theContext()->getNode();
+  /*
+   *  Register the user's action for when insertion is completed across the
+   *  whole system, which termination in the insertion epoch can enforce
+   */
+  if (insert_action) {
+    auto iter = user_insert_action_.find(proxy);
+    if (iter ==  user_insert_action_.end()) {
+      user_insert_action_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(proxy),
+        std::forward_as_tuple(ActionVecType{insert_action})
+      );
+    } else {
+      iter->second.push_back(insert_action);
+    }
+  }
+
+  auto const& cons_node = VirtualProxyBuilder::getVirtualNode(proxy);
+
+  vt_debug_print(
+    verbose, vrt_coll,
+    "finishedInserting: proxy={:x}, cons_node={}, this_node={}\n",
+    proxy, cons_node, this_node
+  );
+
+  if (cons_node == this_node) {
+    auto iter = insert_finished_action_.find(proxy);
+    if (iter != insert_finished_action_.end()) {
+      auto action_lst = iter->second;
+      insert_finished_action_.erase(proxy);
+      for (auto&& action : action_lst) {
+        action();
+      }
+    }
+  } else {
+    auto node = insert_action ? this_node : uninitialized_destination;
+    auto msg = makeMessage<DoneInsertMsg>(proxy,node);
+    theMsg()->markAsCollectionMessage(msg);
+    theMsg()->sendMsg<DoneInsertMsg,doneInsertHandler>(cons_node, msg);
+  }
+}
+
 void CollectionManager::finalize() {
   cleanupAll<>();
 }

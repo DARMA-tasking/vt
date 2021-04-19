@@ -150,7 +150,6 @@ struct InsertMsg : ::vt::Message {
   bool pinged_ = false;
 };
 
-template <typename IndexT>
 struct DoneInsertMsg : ::vt::Message {
   using MessageParentType = ::vt::Message;
   vt_msg_serialize_prohibited();
@@ -167,7 +166,6 @@ struct DoneInsertMsg : ::vt::Message {
   VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
-template <typename IndexT>
 struct ActInsertMsg : ::vt::Message {
   using MessageParentType = ::vt::Message;
   vt_msg_serialize_prohibited();

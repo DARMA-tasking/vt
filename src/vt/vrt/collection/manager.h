@@ -1611,16 +1611,14 @@ public:
    *
    * \param[in] msg done insert message
    */
-  template <typename IndexT>
-  static void doneInsertHandler(DoneInsertMsg<IndexT>* msg);
+  static void doneInsertHandler(DoneInsertMsg* msg);
 
   /**
    * \internal \brief Do a dynamic insertion handler
    *
    * \param[in] msg insert message
    */
-  template <typename IndexT>
-  static void actInsertHandler(ActInsertMsg<IndexT>* msg);
+  static void actInsertHandler(ActInsertMsg* msg);
 
   /**
    * \internal \brief Update the insert epoch
@@ -1635,7 +1633,6 @@ public:
    *
    * \param[in] msg the finished update
    */
-  template <typename=void>
   static void finishedUpdateHan(FinishedUpdateMsg* msg);
 
   /**
@@ -1643,7 +1640,6 @@ public:
    *
    * \param[in] proxy the collection proxy bits
    */
-  template <typename=void>
   void actInsert(VirtualProxyType const& proxy);
 
   /**
@@ -1663,7 +1659,6 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] insert_action action to execute after insertions complete
    */
-  template <typename IndexT>
   void finishedInserting(
     VirtualProxyType proxy, ActionType insert_action = nullptr
   );

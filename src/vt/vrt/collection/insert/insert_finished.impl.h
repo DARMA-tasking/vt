@@ -63,7 +63,7 @@ void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
   ActionType action
 ) const {
   auto const col_proxy = this->getProxy();
-  theCollection()->finishedInserting<IndexT>(col_proxy,action);
+  theCollection()->finishedInserting(col_proxy,action);
 }
 
 }}} /* end namespace vt::vrt::collection */
