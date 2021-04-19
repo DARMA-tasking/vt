@@ -334,7 +334,7 @@ GroupType CollectionManager::createGroupCollection(
          *  group will now be utilized
          */
         auto nmsg = makeMessage<CollectionGroupMsg>(proxy,new_group);
-        theCollection()->collectionGroupFinishedHan<>(nmsg.get());
+        theCollection()->collectionGroupFinishedHan(nmsg.get());
       }
     }
   );
@@ -533,51 +533,6 @@ CollectionMessage<ColT>* CollectionManager::getBufferedBroadcastMsg(
     }
   }
   return nullptr;
-}
-
-template <typename>
-/*static*/ void CollectionManager::collectionGroupFinishedHan(
-  CollectionGroupMsg* msg
-) {
-  auto const& proxy = msg->getProxy();
-  theCollection()->addToState(proxy, BufferReleaseEnum::AfterGroupReady);
-  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
-}
-
-template <typename>
-/*static*/ void CollectionManager::collectionFinishedHan(
-  CollectionConsMsg* msg
-) {
-  auto const& proxy = msg->proxy;
-  theCollection()->constructed_.insert(proxy);
-  theCollection()->addToState(proxy, BufferReleaseEnum::AfterFullyConstructed);
-
-  vt_debug_print(
-    verbose, vrt_coll,
-    "addToState: proxy={:x}, AfterCons\n", proxy
-  );
-
-  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Broadcast);
-  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Send);
-  theCollection()->triggerReadyOps(proxy, BufferTypeEnum::Reduce);
-}
-
-template <typename>
-/*static*/ void CollectionManager::collectionGroupReduceHan(
-  CollectionGroupMsg* msg
-) {
-  vt_debug_print(
-    verbose, vrt_coll,
-    "collectionGroupReduceHan: proxy={:x}, root={}, group={}\n",
-    msg->proxy, msg->isRoot(), msg->getGroup()
-  );
-  if (msg->isRoot()) {
-    auto nmsg = makeMessage<CollectionGroupMsg>(*msg);
-    theMsg()->markAsCollectionMessage(nmsg);
-    theMsg()->broadcastMsg<CollectionGroupMsg,collectionGroupFinishedHan>(
-      nmsg
-    );
-  }
 }
 
 template <typename ColT, typename IndexT, typename MsgT>

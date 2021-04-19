@@ -1315,7 +1315,6 @@ public:
    *
    * \param[in] msg the message
    */
-  template <typename=void>
   static void collectionFinishedHan(CollectionConsMsg* msg);
 
   /**
@@ -1323,7 +1322,6 @@ public:
    *
    * \param[in] msg the message
    */
-  template <typename=void>
   static void collectionGroupReduceHan(CollectionGroupMsg* msg);
 
   /**
@@ -1331,7 +1329,6 @@ public:
    *
    * \param[in] msg the message
    */
-  template <typename=void>
   static void collectionGroupFinishedHan(CollectionGroupMsg* msg);
 
   /**
