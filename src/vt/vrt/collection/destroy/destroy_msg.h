@@ -63,11 +63,6 @@ struct DestroyMsg final : ::vt::Message {
   VirtualProxyType getProxy() const { return proxy_; }
   NodeType getFromNode() const { return from_; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | proxy_ | from_;
-  }
-
 private:
   VirtualProxyType proxy_ = no_vrt_proxy;
   NodeType from_ = uninitialized_destination;
