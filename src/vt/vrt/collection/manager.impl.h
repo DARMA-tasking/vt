@@ -2463,7 +2463,7 @@ void CollectionManager::insert(
     cur_epoch,
     [=]() -> messaging::PendingSend {
       auto map_han = UniversalIndexHolder<>::getMap(untyped_proxy);
-      auto const max_idx = getRange<ColT>(untyped_proxy);
+      auto const max_idx = getRange<IndexT>(untyped_proxy);
       auto const mapped_node = getMapped<ColT>(map_han, idx, max_idx);
       auto const has_explicit_node = node != uninitialized_destination;
       auto const insert_node = has_explicit_node ? node : mapped_node;
@@ -2858,7 +2858,7 @@ void CollectionManager::unregisterElementListener(
   elm_holder->removeListener(element);
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 IndexT CollectionManager::getRange(VirtualProxyType proxy) {
   auto col_holder = findColHolder<IndexT>(proxy);
   return col_holder->max_idx;
@@ -2935,7 +2935,7 @@ void CollectionManager::checkpointToFile(
   auto holder_ = findElmHolder<IndexT>(proxy_bits);
   vtAssert(holder_ != nullptr, "Must have valid holder for collection");
 
-  auto range = getRange<ColT>(proxy_bits);
+  auto range = getRange<IndexT>(proxy_bits);
 
   CollectionDirectory<IndexT> directory;
 

@@ -1758,7 +1758,7 @@ public:
    *
    * \return the range of the collection
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   IndexT getRange(VirtualProxyType proxy);
 
   /**
@@ -1868,7 +1868,7 @@ private:
   template <typename ColT, typename IdxT = typename ColT::IndexType>
   NodeType getMapped(VirtualProxyType proxy, IdxT cur) {
     auto map_han = UniversalIndexHolder<>::getMap(proxy);
-    auto max = getRange<ColT>(proxy);
+    auto max = getRange<IdxT>(proxy);
     return getMapped<ColT>(map_han, cur, max);
   }
 
@@ -1884,7 +1884,7 @@ private:
    */
   template <typename ColT, typename IdxT = typename ColT::IndexType>
   NodeType getMapped(VirtualProxyType proxy, HandlerType map_han, IdxT cur) {
-    auto max = getRange<ColT>(proxy);
+    auto max = getRange<IdxT>(proxy);
     return getMapped<ColT>(map_han, cur, max);
   }
 

@@ -88,7 +88,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
   auto idx = collection_proxy.getElementProxy().getIndex();
   IndexT range = in_range;
   if (in_next_handle == no_rdma_handle) {
-    range = theCollection()->getRange<ColT>(proxy_bits);
+    range = theCollection()->getRange<IndexT>(proxy_bits);
     auto lin = vt::mapping::linearizeDenseIndexRowMajor(&idx, &range);
     next_handle = ++cur_handle_collection_[proxy_bits][lin];
   }
