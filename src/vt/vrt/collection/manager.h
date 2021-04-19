@@ -172,13 +172,11 @@ struct CollectionManager
    * \internal \brief Trigger cleanup lambdas---triggered when termination
    * occurs
    */
-  template <typename=void>
   void cleanupAll();
 
   /**
    * \internal \brief Destroy all collections
    */
-  template <typename=void>
   void destroyCollections();
 
   /**

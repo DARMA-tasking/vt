@@ -323,8 +323,32 @@ void CollectionManager::triggerReadyOps(
   }
 }
 
+void CollectionManager::cleanupAll() {
+  /*
+   *  Run the cleanup functions for type-specific cleanup that can not be
+   *  performed without capturing the type of each collection
+   */
+  int num_cleanup = 0;
+  int tot_cleanup = static_cast<int>(cleanup_fns_.size());
+  auto iter = cleanup_fns_.begin();
+  while (iter != cleanup_fns_.end()) {
+    auto lst = std::move(iter->second);
+    iter = cleanup_fns_.erase(iter);
+    num_cleanup++;
+    for (auto fn : lst) {
+      fn();
+    }
+  }
+  vtAssertExpr(cleanup_fns_.size() == 0);
+  vtAssertExpr(num_cleanup == tot_cleanup);
+}
+
+void CollectionManager::destroyCollections() {
+  UniversalIndexHolder<>::destroyAllLive();
+}
+
 void CollectionManager::finalize() {
-  cleanupAll<>();
+  cleanupAll();
 }
 
 /*virtual*/ CollectionManager::~CollectionManager() { }
