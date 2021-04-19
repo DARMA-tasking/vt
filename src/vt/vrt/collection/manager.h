@@ -735,36 +735,6 @@ public:
   );
 
   /**
-   * \internal \brief Deliver a message to a collection element with a promoted
-   * collection message that wrapped the user's non-collection message.
-   *
-   * \param[in] msg the message
-   * \param[in] col pointer to collection element
-   * \param[in] han the handler to invoke
-   * \param[in] from node that sent the message
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from
-  );
-
-  /**
-   * \internal \brief Deliver a message to a collection element with a normal
-   * collection message
-   *
-   * \param[in] msg the message
-   * \param[in] col pointer to collection element
-   * \param[in] han the handler to invoke
-   * \param[in] from node that sent the message
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from
-  );
-
-  /**
    * \internal \brief Base collection message handler
    *
    * \param[in] msg the message
