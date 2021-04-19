@@ -1962,7 +1962,6 @@ private:
    *
    * \return a pending send
    */
-  template <typename ColT>
   messaging::PendingSend bufferOp(
     VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
     EpochType epoch, ActionPendingType action
@@ -1980,7 +1979,6 @@ private:
    *
    * \return a pending send
    */
-  template <typename ColT>
   messaging::PendingSend bufferOpOrExecute(
     VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
     EpochType epoch, ActionPendingType action

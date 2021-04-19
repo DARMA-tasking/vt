@@ -204,6 +204,83 @@ void CollectionManager::finishedInserting(
   }
 }
 
+bool CollectionManager::checkReady(
+  VirtualProxyType proxy, BufferReleaseEnum release
+) {
+  return getReadyBits(proxy, release) == release;
+}
+
+BufferReleaseEnum CollectionManager::getReadyBits(
+  VirtualProxyType proxy, BufferReleaseEnum release
+) {
+  auto release_state = getState(proxy);
+  auto ret = static_cast<BufferReleaseEnum>(release & release_state);
+
+  vt_debug_print(
+    verbose, vrt_coll,
+    "getReadyBits: proxy={:x}, check release={:b}, state={:b}, ret={:b}\n",
+    proxy, release, release_state, ret
+  );
+
+  return ret;
+}
+
+messaging::PendingSend CollectionManager::bufferOp(
+  VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
+  EpochType epoch, ActionPendingType action
+) {
+  vtAssertInfo(
+    !checkReady(proxy, release), "Should not be ready if buffering",
+    proxy
+  );
+  theTerm()->produce(epoch);
+  buffers_[proxy][type][release].push_back([=]() -> messaging::PendingSend {
+    theMsg()->pushEpoch(epoch);
+    auto ps = action();
+    theMsg()->popEpoch(epoch);
+    theTerm()->consume(epoch);
+    return ps;
+  });
+  return messaging::PendingSend{nullptr};
+}
+
+messaging::PendingSend CollectionManager::bufferOpOrExecute(
+  VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
+  EpochType epoch, ActionPendingType action
+) {
+
+  if (checkReady(proxy, release)) {
+    theMsg()->pushEpoch(epoch);
+    auto ps = action();
+    theMsg()->popEpoch(epoch);
+    return ps;
+  } else {
+    return bufferOp(proxy, type, release, epoch, action);
+  }
+}
+
+void CollectionManager::triggerReadyOps(
+  VirtualProxyType proxy, BufferTypeEnum type
+) {
+  auto proxy_iter = buffers_.find(proxy);
+  if (proxy_iter != buffers_.end()) {
+    auto type_iter = proxy_iter->second.find(type);
+    if (type_iter != proxy_iter->second.end()) {
+      auto release_map = type_iter->second;
+      for (auto iter = release_map.begin(); iter != release_map.end(); ) {
+        if (checkReady(proxy, iter->first)) {
+          for (auto&& action : iter->second) {
+            action();
+          }
+          iter = release_map.erase(iter);
+        } else {
+          iter++;
+        }
+      }
+    }
+  }
+}
+
 void CollectionManager::finalize() {
   cleanupAll<>();
 }
