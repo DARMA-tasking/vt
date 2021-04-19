@@ -665,7 +665,9 @@ ColT* CollectionManager::getCollectionPtrForInvoke(
   VirtualElmProxyType<ColT> const& proxy
 ) {
   auto idx = proxy.getElementProxy().getIndex();
-  auto elm_holder = theCollection()->findElmHolder(proxy.getCollectionProxy());
+  auto elm_holder = theCollection()->findElmHolder<IndexT>(
+    proxy.getCollectionProxy()
+  );
 
   vtAssert(elm_holder != nullptr, "Must have elm holder");
   vtAssert(
@@ -784,7 +786,9 @@ void CollectionManager::invokeMsgImpl(
   auto& msgPtr = msg.msg_;
 
   auto idx = proxy.getElementProxy().getIndex();
-  auto elm_holder = theCollection()->findElmHolder(proxy.getCollectionProxy());
+  auto elm_holder = theCollection()->findElmHolder<IndexT>(
+    proxy.getCollectionProxy()
+  );
 
   vtAssert(elm_holder != nullptr, "Must have elm holder");
   vtAssert(
