@@ -130,8 +130,8 @@ template <typename always_void_>
 /*static*/ std::unordered_map<VirtualProxyType,EpochType>
 UniversalIndexHolder<always_void_>::insert_epoch_ = {};
 
-template <typename ColT, typename IndexT>
-/*static*/ void EntireHolder<ColT, IndexT>::insert(
+template <typename IndexT>
+/*static*/ void EntireHolder<IndexT>::insert(
   VirtualProxyType const& proxy, InnerHolderPtr ptr
 ) {
   proxy_container_.emplace(
@@ -146,8 +146,8 @@ template <typename ColT, typename IndexT>
   );
 }
 
-template <typename ColT, typename IndexT>
-/*static*/ void EntireHolder<ColT, IndexT>::remove(
+template <typename IndexT>
+/*static*/ void EntireHolder<IndexT>::remove(
   VirtualProxyType const& proxy
 ) {
   auto iter = proxy_container_.find(proxy);
@@ -156,9 +156,9 @@ template <typename ColT, typename IndexT>
   }
 }
 
-template <typename ColT, typename IndexT>
-/*static*/ typename EntireHolder<ColT, IndexT>::ProxyContainerType
-EntireHolder<ColT, IndexT>::proxy_container_;
+template <typename IndexT>
+/*static*/ typename EntireHolder<IndexT>::ProxyContainerType
+EntireHolder<IndexT>::proxy_container_;
 
 }}} /* end namespace vt::vrt::collection */
 

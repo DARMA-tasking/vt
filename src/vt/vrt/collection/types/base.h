@@ -74,27 +74,12 @@ struct CollectionBase : Indexable<IndexT> {
   ProxyType getElementProxy(IndexT const& idx) const;
   CollectionProxyType getCollectionProxy() const;
 
-  bool isStatic() const;
-
-  static bool isStaticSized();
-
-  void setSize(VirtualElmCountType const& elms);
-
-  // Should be implemented in derived class (non-virtual)
-  VirtualElmCountType getSize() const;
-
   virtual void migrate(NodeType const& node) override;
 
   template <typename Serializer>
   void serialize(Serializer& s);
 
   friend struct CollectionManager;
-
-protected:
-  VirtualElmCountType numElems_ = no_elms;
-  EpochType cur_bcast_epoch_ = 0;
-  bool hasStaticSize_ = true;
-  bool elmsFixedAtCreation_ = true;
 };
 
 }}} /* end namespace vt::vrt::collection */

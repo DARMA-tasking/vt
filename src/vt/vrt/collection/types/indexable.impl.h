@@ -55,13 +55,20 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-Indexable<IndexT>::Indexable(IndexT&& in_index)
-  : Migratable(),
-    index_(std::move(in_index)),
-    set_index_(true)
-{ }
+// template <typename IndexT>
+// Indexable<IndexT>::Indexable(IndexT&& in_index)
+//   index_(std::move(in_index)),
+//   set_index_(true)
+// { }
 
+template <typename IndexT>
+Indexable<IndexT>::Indexable(
+  bool const static_size, bool const elms_fixed,
+  VirtualElmCountType const num
+): numElems_(num),
+   hasStaticSize_(static_size),
+   elmsFixedAtCreation_(elms_fixed)
+{ }
 
 template <typename IndexT>
 IndexT const& Indexable<IndexT>::getIndex() const {
@@ -80,6 +87,10 @@ void Indexable<IndexT>::serialize(SerializerT& s) {
   Migratable::serialize(s);
   s | set_index_;
   s | index_;
+  s | hasStaticSize_;
+  s | elmsFixedAtCreation_;
+  s | cur_bcast_epoch_;
+  s | numElems_;
 }
 
 template <typename IndexT>
@@ -88,6 +99,21 @@ void Indexable<IndexT>::setIndex(IndexT const& in_index) {
   // `set_index_`
   index_ = in_index;
   set_index_ = true;
+}
+
+template <typename IndexT>
+bool Indexable<IndexT>::isStatic() const {
+  return hasStaticSize_ && elmsFixedAtCreation_;
+}
+
+template <typename IndexT>
+/*static*/ bool Indexable<IndexT>::isStaticSized() {
+  return true;
+}
+
+template <typename IndexT>
+void Indexable<IndexT>::setSize(VirtualElmCountType const& elms) {
+  numElems_ = elms;
 }
 
 }}} /* end namespace vt::vrt::collection */

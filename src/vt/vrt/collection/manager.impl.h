@@ -133,7 +133,7 @@ void CollectionManager::destroyCollections() {
 }
 
 template <typename ColT, typename IndexT, typename Tuple, size_t... I>
-/*static*/ typename CollectionManager::VirtualPtrType<ColT, IndexT>
+/*static*/ typename CollectionManager::VirtualPtrType<IndexT>
 CollectionManager::runConstructor(
   VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
   std::index_sequence<I...>
@@ -430,7 +430,7 @@ template <typename ColT, typename IndexT, typename MsgT>
       "broadcast apply: size={}\n", elm_holder->numElements()
     );
     elm_holder->foreach([col_msg, msg, handler](
-      IndexT const& idx, CollectionBase<ColT,IndexT>* base
+      IndexT const& idx, Indexable<IndexT>* base
     ) {
       vt_debug_print(
         verbose, vrt_coll,
@@ -1506,7 +1506,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
 
 template <typename ColT, typename IndexT>
 bool CollectionManager::insertCollectionElement(
-  VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
+  VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
   HandlerType const map_han, VirtualProxyType const& proxy,
   bool const is_static, NodeType const& home_node, bool const& is_migrated_in,
   NodeType const& migrated_from
@@ -1546,7 +1546,7 @@ bool CollectionManager::insertCollectionElement(
   );
 
   if (!destroyed) {
-    elm_holder->insert(idx, typename Holder<ColT, IndexT>::InnerHolder{
+    elm_holder->insert(idx, typename Holder<IndexT>::InnerHolder{
       std::move(vc), map_han, max_idx
     });
 
@@ -1681,7 +1681,7 @@ CollectionManager::constructCollectiveMap(
   // the holder
   range.foreach([&](IndexT cur_idx) mutable {
     using BaseIdxType      = vt::index::BaseIndex;
-    using VirtualElmPtr    = VirtualPtrType<ColT,IndexT>;
+    using VirtualElmPtr    = VirtualPtrType<IndexT>;
     using IdxContextHolder = CollectionContextHolder<IndexT>;
 
     vt_debug_print(
@@ -1841,8 +1841,8 @@ void CollectionManager::staticInsertColPtr(
   // "getIndex"
   CollectionTypeAttorney::setup(ptr.get(), num_elms, idx, proxy);
 
-  VirtualPtrType<ColT, IndexT> col_ptr(
-    static_cast<CollectionBase<ColT, IndexT>*>(ptr.release())
+  VirtualPtrType<IndexT> col_ptr(
+    static_cast<Indexable<IndexT>*>(ptr.release())
   );
 
   // Insert the element into the managed holder for elements
@@ -2004,7 +2004,7 @@ template <typename ColT, typename... Args>
   VirtualProxyType const& proxy, Args&&... args
 ) {
   using IndexType      = typename ColT::IndexType;
-  using MetaHolderType = EntireHolder<ColT, IndexType>;
+  using MetaHolderType = EntireHolder<IndexType>;
   using HolderType     = typename MetaHolderType::InnerHolder;
 
   // Create and insert the meta-data into the meta-collection holder
@@ -2867,7 +2867,7 @@ MigrateStatus CollectionManager::migrateOut(
 template <typename ColT, typename IndexT>
 MigrateStatus CollectionManager::migrateIn(
   VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-  VirtualPtrType<ColT, IndexT> vrt_elm_ptr, IndexT const& max,
+  VirtualPtrType<IndexT> vrt_elm_ptr, IndexT const& max,
   HandlerType const map_han
 ) {
   vt_debug_print(
@@ -2953,7 +2953,7 @@ void CollectionManager::destroyMatching(
   UniversalIndexHolder<>::destroyCollection(untyped_proxy);
   auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
   if (elm_holder) {
-    elm_holder->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>*) {
+    elm_holder->foreach([&](IndexT const& idx, Indexable<IndexT>*) {
       elm_holder->applyListeners(
         listener::ElementEventEnum::ElementDestroyed, idx
       );
@@ -2970,7 +2970,7 @@ void CollectionManager::destroyMatching(
     }
   }
 
-  EntireHolder<ColT, IndexT>::remove(untyped_proxy);
+  EntireHolder<IndexT>::remove(untyped_proxy);
 
   auto iter = cleanup_fns_.find(untyped_proxy);
   if (iter != cleanup_fns_.end()) {
@@ -2979,11 +2979,11 @@ void CollectionManager::destroyMatching(
 }
 
 template <typename ColT, typename IndexT>
-CollectionHolder<ColT, IndexT>* CollectionManager::findColHolder(
+CollectionHolder<IndexT>* CollectionManager::findColHolder(
   VirtualProxyType const& proxy
 ) {
   #pragma sst global proxy_container_
-  auto& holder_container = EntireHolder<ColT, IndexT>::proxy_container_;
+  auto& holder_container = EntireHolder<IndexT>::proxy_container_;
   auto holder_iter = holder_container.find(proxy);
   auto const& found_holder = holder_iter != holder_container.end();
   if (found_holder) {
@@ -2994,7 +2994,7 @@ CollectionHolder<ColT, IndexT>* CollectionManager::findColHolder(
 }
 
 template <typename ColT, typename IndexT>
-Holder<ColT, IndexT>* CollectionManager::findElmHolder(
+Holder<IndexT>* CollectionManager::findElmHolder(
   VirtualProxyType const& proxy
 ) {
   auto ret = findColHolder<ColT, IndexT>(proxy);
@@ -3006,7 +3006,7 @@ Holder<ColT, IndexT>* CollectionManager::findElmHolder(
 }
 
 template <typename ColT, typename IndexT>
-Holder<ColT, IndexT>* CollectionManager::findElmHolder(
+Holder<IndexT>* CollectionManager::findElmHolder(
   CollectionProxyWrapType<ColT> proxy
 ) {
   return findElmHolder<ColT,IndexT>(proxy.getProxy());
@@ -3122,7 +3122,7 @@ void CollectionManager::checkpointToFile(
 
   CollectionDirectory<IndexT> directory;
 
-  holder_->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>* elm) {
+  holder_->foreach([&](IndexT const& idx, Indexable<IndexT>* elm) {
     auto const name = makeFilename(
       range, idx, file_base, make_sub_dirs, files_per_directory
     );

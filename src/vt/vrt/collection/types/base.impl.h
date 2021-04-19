@@ -59,10 +59,7 @@ template <typename ColT, typename IndexT>
 CollectionBase<ColT, IndexT>::CollectionBase(
   bool const static_size, bool const elms_fixed,
   VirtualElmCountType const num
-) : Indexable<IndexT>(),
-    numElems_(num),
-    hasStaticSize_(static_size),
-    elmsFixedAtCreation_(elms_fixed)
+) : Indexable<IndexT>(static_size, elms_fixed, num)
 { }
 
 template <typename ColT, typename IndexT>
@@ -87,16 +84,6 @@ CollectionBase<ColT, IndexT>::getCollectionProxy() const {
 }
 
 template <typename ColT, typename IndexT>
-bool CollectionBase<ColT, IndexT>::isStatic() const {
-  return hasStaticSize_ && elmsFixedAtCreation_;
-}
-
-template <typename ColT, typename IndexT>
-/*static*/ bool CollectionBase<ColT, IndexT>::isStaticSized() {
-  return true;
-}
-
-template <typename ColT, typename IndexT>
 /*virtual*/ void CollectionBase<ColT, IndexT>::migrate(NodeType const& node) {
   auto const proxy = this->getCollectionProxy();
   auto const index = this->getIndex();
@@ -107,19 +94,10 @@ template <typename ColT, typename IndexT>
 template <typename Serializer>
 void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   Indexable<IndexT>::serialize(s);
-  s | hasStaticSize_;
-  s | elmsFixedAtCreation_;
-  s | cur_bcast_epoch_;
-  s | numElems_;
 }
 
 template <typename ColT, typename IndexT>
 /*virtual*/ CollectionBase<ColT, IndexT>::~CollectionBase() {}
-
-template <typename ColT, typename IndexT>
-void CollectionBase<ColT, IndexT>::setSize(VirtualElmCountType const& elms) {
-  numElems_ = elms;
-}
 
 }}} /* end namespace vt::vrt::collection */
 

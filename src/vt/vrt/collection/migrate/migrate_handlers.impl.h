@@ -89,9 +89,13 @@ template <typename ColT, typename IndexT>
   // );
   auto vc_elm_ptr = std::unique_ptr<ColT>(msg->elm_);
 
+  std::unique_ptr<Indexable<IndexT>> idx_ptr(
+    static_cast<Indexable<IndexT>*>(vc_elm_ptr.release())
+  );
+
   auto const& migrate_status =
     CollectionElmAttorney<ColT,IndexT>::migrateIn(
-      col_proxy, idx, from_node, std::move(vc_elm_ptr), range, map_han
+      col_proxy, idx, from_node, std::move(idx_ptr), range, map_han
     );
 
   vtAssert(

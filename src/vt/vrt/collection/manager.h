@@ -107,10 +107,10 @@ namespace vt { namespace vrt { namespace collection {
 struct CollectionManager
   : runtime::component::Component<CollectionManager>
 {
-  template <typename ColT, typename IndexT>
-  using CollectionType = typename Holder<ColT, IndexT>::Collection;
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  using VirtualPtrType = typename Holder<ColT, IndexT>::VirtualPtrType;
+  template <typename IndexT>
+  using CollectionType = typename Holder<IndexT>::Collection;
+  template <typename IndexT>
+  using VirtualPtrType = typename Holder<IndexT>::VirtualPtrType;
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
@@ -134,7 +134,7 @@ struct CollectionManager
   using ActionVecType = std::vector<ActionType>;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;
+  using DistribConstructFn = std::function<VirtualPtrType<IndexT>(IndexT idx)>;
 
   template <typename T, typename U=void>
   using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg, messaging::PendingSend>;
@@ -1379,7 +1379,7 @@ public:
    * \return unique pointer to the new element
    */
   template <typename ColT, typename IndexT, typename Tuple, size_t... I>
-  static VirtualPtrType<ColT, IndexT> runConstructor(
+  static VirtualPtrType<IndexT> runConstructor(
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
     std::index_sequence<I...>
   );
@@ -1409,7 +1409,7 @@ public:
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   bool insertCollectionElement(
-    VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
+    VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
     HandlerType const map_han, VirtualProxyType const& proxy,
     bool const is_static, NodeType const& home_node,
     bool const& is_migrated_in = false,
@@ -1436,7 +1436,7 @@ private:
    * \return the collection holder
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
+  CollectionHolder<IndexT>* findColHolder(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Get the collection element holder
@@ -1446,7 +1446,7 @@ private:
    * \return the element collection holder
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<ColT, IndexT>* findElmHolder(VirtualProxyType const& proxy);
+  Holder<IndexT>* findElmHolder(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Get the collection element holder
@@ -1456,7 +1456,7 @@ private:
    * \return the element collection holder
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<ColT, IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
+  Holder<IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
 
 public:
   /**
@@ -1736,7 +1736,7 @@ private:
   template <typename ColT, typename IndexT>
   MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-    VirtualPtrType<ColT, IndexT> vrt_elm_ptr, IndexT const& range,
+    VirtualPtrType<IndexT> vrt_elm_ptr, IndexT const& range,
     HandlerType const map_han
   );
 
