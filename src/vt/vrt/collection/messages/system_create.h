@@ -179,7 +179,6 @@ struct ActInsertMsg : ::vt::Message {
   VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
-template <typename ColT, typename IndexT>
 struct UpdateInsertMsg : ::vt::Message {
   using MessageParentType = ::vt::Message;
   vt_msg_serialize_prohibited();
@@ -187,11 +186,11 @@ struct UpdateInsertMsg : ::vt::Message {
   UpdateInsertMsg() = default;
 
   UpdateInsertMsg(
-    CollectionProxy<ColT,IndexT> in_proxy, EpochType const& in_epoch
+    VirtualProxyType in_proxy, EpochType const& in_epoch
   ) : proxy_(in_proxy), epoch_(in_epoch)
   { }
 
-  CollectionProxy<ColT,IndexT> proxy_ = {};
+  VirtualProxyType proxy_ = no_vrt_proxy;
   EpochType epoch_ = no_epoch;
 };
 

@@ -2120,7 +2120,7 @@ CollectionManager::constructMap(
     );
     theTerm()->finishNoActivateEpoch(insert_epoch);
     info.setInsertEpoch(insert_epoch);
-    setupNextInsertTrigger<ColT,IndexT>(new_proxy,insert_epoch);
+    setupNextInsertTrigger<IndexT>(new_proxy,insert_epoch);
   }
 
   create_msg->info = info;
@@ -2214,11 +2214,11 @@ template <typename ColT, typename IndexT>
   theTerm()->consume(g_epoch,1,from);
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 /*static*/ void CollectionManager::updateInsertEpochHandler(
-  UpdateInsertMsg<ColT,IndexT>* msg
+  UpdateInsertMsg* msg
 ) {
-  auto const& untyped_proxy = msg->proxy_.getProxy();
+  auto const& untyped_proxy = msg->proxy_;
   UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,msg->epoch_);
 
   /*
@@ -2251,7 +2251,7 @@ template <typename ColT, typename IndexT>
   r->reduce<FinishedUpdateMsg,finishedUpdateHan>(root, nmsg.get(), stamp);
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 void CollectionManager::setupNextInsertTrigger(
   VirtualProxyType const& proxy, EpochType const& insert_epoch
 ) {
@@ -2267,7 +2267,7 @@ void CollectionManager::setupNextInsertTrigger(
       "insert finished insert trigger: epoch={}\n",
       insert_epoch
     );
-    theCollection()->finishedInsertEpoch<ColT,IndexT>(proxy,insert_epoch);
+    theCollection()->finishedInsertEpoch<IndexT>(proxy,insert_epoch);
   };
   auto start_detect = [insert_epoch,finished_insert_trigger]{
     vt_debug_print(
@@ -2289,19 +2289,17 @@ void CollectionManager::setupNextInsertTrigger(
   }
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 void CollectionManager::finishedInsertEpoch(
-  CollectionProxyWrapType<ColT,IndexT> const& proxy, EpochType const& epoch
+  VirtualProxyType proxy, EpochType epoch
 ) {
-  auto const& untyped_proxy = proxy.getProxy();
-
   vt_debug_print(
     verbose, vrt_coll,
     "finishedInsertEpoch: (before) proxy={:x}, epoch={}\n",
-    untyped_proxy, epoch
+    proxy, epoch
   );
 
-  if (not findColHolder<IndexT>(untyped_proxy)) {
+  if (not findColHolder<IndexT>(proxy)) {
     return;
   }
 
@@ -2312,21 +2310,21 @@ void CollectionManager::finishedInsertEpoch(
     term::ParentEpochCapture{no_epoch}
   );
   theTerm()->finishNoActivateEpoch(next_insert_epoch);
-  UniversalIndexHolder<>::insertSetEpoch(untyped_proxy,next_insert_epoch);
+  UniversalIndexHolder<>::insertSetEpoch(proxy,next_insert_epoch);
 
-  auto msg = makeMessage<UpdateInsertMsg<ColT,IndexT>>(
-    proxy,next_insert_epoch
+  auto msg = makeMessage<UpdateInsertMsg>(
+    proxy, next_insert_epoch
   );
   theMsg()->markAsCollectionMessage(msg);
-  theMsg()->broadcastMsg<
-    UpdateInsertMsg<ColT,IndexT>,updateInsertEpochHandler
-  >(msg, false);
+  theMsg()->broadcastMsg<UpdateInsertMsg,updateInsertEpochHandler<IndexT>>(
+    msg, false
+  );
 
   /*
    *  Start building the a new group for broadcasts and reductions over the
    *  current set of elements based the distributed snapshot
    */
-  auto const elms = theCollection()->groupElementCount<IndexT>(untyped_proxy);
+  auto const elms = theCollection()->groupElementCount<IndexT>(proxy);
   bool const in_group = elms > 0;
 
   vt_debug_print(
@@ -2335,23 +2333,23 @@ void CollectionManager::finishedInsertEpoch(
     elms, in_group
   );
 
-  theCollection()->createGroupCollection<IndexT>(untyped_proxy, in_group);
+  theCollection()->createGroupCollection<IndexT>(proxy, in_group);
 
   vt_debug_print(
     verbose, vrt_coll,
     "finishedInsertEpoch: (after broadcast) proxy={:x}, epoch={}\n",
-    untyped_proxy, epoch
+    proxy, epoch
   );
 
   /*
    *  Setup next epoch
    */
-  setupNextInsertTrigger<ColT,IndexT>(untyped_proxy,next_insert_epoch);
+  setupNextInsertTrigger<IndexT>(proxy,next_insert_epoch);
 
   vt_debug_print(
     verbose, vrt_coll,
     "finishedInsertEpoch: (after setup) proxy={:x}, epoch={}\n",
-    untyped_proxy, epoch
+    proxy, epoch
   );
 
   /*
@@ -2361,7 +2359,7 @@ void CollectionManager::finishedInsertEpoch(
    *  corresponding collection after are related to the new insert epoch
    */
   auto const& root = 0;
-  auto nmsg = makeMessage<FinishedUpdateMsg>(untyped_proxy);
+  auto nmsg = makeMessage<FinishedUpdateMsg>(proxy);
 
   using collective::reduce::makeStamp;
   using collective::reduce::StrongEpoch;
@@ -2373,7 +2371,7 @@ void CollectionManager::finishedInsertEpoch(
   vt_debug_print(
     verbose, vrt_coll,
     "finishedInsertEpoch: (after reduce) proxy={:x}, epoch={}\n",
-    untyped_proxy, epoch
+    proxy, epoch
   );
 }
 

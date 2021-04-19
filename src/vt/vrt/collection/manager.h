@@ -1622,8 +1622,8 @@ public:
    *
    * \param[in] msg the update insert message
    */
-  template <typename ColT, typename IndexT>
-  static void updateInsertEpochHandler(UpdateInsertMsg<ColT,IndexT>* msg);
+  template <typename IndexT>
+  static void updateInsertEpochHandler(UpdateInsertMsg* msg);
 
   /**
    * \internal \brief Finished insert
@@ -1645,7 +1645,7 @@ public:
    * \param[in] proxy the collection proxy bits
    * \param[in] insert_epoch the insert epoch
    */
-  template <typename ColT, typename IndexT>
+  template <typename IndexT>
   void setupNextInsertTrigger(
     VirtualProxyType const& proxy, EpochType const& insert_epoch
   );
@@ -1675,11 +1675,8 @@ private:
    * \param[in] proxy the collection proxy
    * \param[in] insert_epoch insert epoch
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  void finishedInsertEpoch(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
-    EpochType const& insert_epoch
-  );
+  template <typename IndexT>
+  void finishedInsertEpoch(VirtualProxyType proxy, EpochType insert_epoch);
 
 private:
   template <typename ColT, typename IndexT>
