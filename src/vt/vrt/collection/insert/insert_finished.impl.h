@@ -62,8 +62,8 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
   ActionType action
 ) const {
-  auto const col_proxy = this->getProxy();
-  theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
+  auto const col_proxy = this->getProxy().getProxy();
+  theCollection()->finishedInserting<IndexT>(col_proxy,action);
 }
 
 }}} /* end namespace vt::vrt::collection */
