@@ -283,7 +283,7 @@ std::size_t CollectionManager::groupElementCount(VirtualProxyType const& p) {
   return num_elms;
 }
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 GroupType CollectionManager::createGroupCollection(
   VirtualProxyType const& proxy, bool const in_group
 ) {
@@ -2085,7 +2085,7 @@ template <typename ColT>
       proxy, elms, in_group
     );
 
-    theCollection()->createGroupCollection<ColT,IndexT>(proxy, in_group);
+    theCollection()->createGroupCollection<IndexT>(proxy, in_group);
   } else {
     /*
      *  If the collection is not immediate (non-static) we need to wait for a
@@ -2261,7 +2261,7 @@ template <typename ColT, typename IndexT>
     elms, in_group
   );
 
-  theCollection()->createGroupCollection<ColT, IndexT>(untyped_proxy, in_group);
+  theCollection()->createGroupCollection<IndexT>(untyped_proxy, in_group);
 
   /*
    *  Contribute to reduction for update epoch
@@ -2382,7 +2382,7 @@ void CollectionManager::finishedInsertEpoch(
     elms, in_group
   );
 
-  theCollection()->createGroupCollection<ColT, IndexT>(untyped_proxy, in_group);
+  theCollection()->createGroupCollection<IndexT>(untyped_proxy, in_group);
 
   vt_debug_print(
     verbose, vrt_coll,

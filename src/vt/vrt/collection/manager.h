@@ -1356,7 +1356,7 @@ public:
    *
    * \return the new group ID
    */
-  template <typename ColT, typename IndexT>
+  template <typename IndexT>
   GroupType createGroupCollection(
     VirtualProxyType const& proxy, bool const in_group
   );
