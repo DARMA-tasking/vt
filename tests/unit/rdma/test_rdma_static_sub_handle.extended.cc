@@ -44,7 +44,7 @@
 
 #include <gtest/gtest.h>
 
-#include "vt/transport.h"
+#include "vt/objgroup/manager.h"
 #include "test_parallel_harness.h"
 #include "test_rdma_common.h"
 

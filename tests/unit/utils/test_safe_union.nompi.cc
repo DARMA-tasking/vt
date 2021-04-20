@@ -44,7 +44,6 @@
 
 #include <gtest/gtest.h>
 
-#include <vt/transport.h>
 #include <vt/utils/adt/union.h>
 #include "test_harness.h"
 

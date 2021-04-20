@@ -43,7 +43,8 @@
 */
 
 #include <gtest/gtest.h>
-#include <vt/transport.h>
+#include "vt/collective/collective.h"
+#include "vt/collective/collective_alg.h"
 
 #include "test_parallel_harness.h"
 

@@ -48,7 +48,7 @@
 #include "data_message.h"
 #include "test_helpers.h"
 
-#include "vt/transport.h"
+#include "vt/group/group_manager.h"
 
 #include <algorithm>
 

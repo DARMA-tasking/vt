@@ -45,10 +45,7 @@
 #include <gtest/gtest.h>
 
 #include <checkpoint/checkpoint.h>
-
 #include "test_parallel_harness.h"
-
-#include <vt/transport.h>
 
 #if vt_check_enabled(diagnostics)
 

@@ -42,10 +42,12 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
 #include <vt/vrt/collection/balance/elm_stats.h>
 #include <vt/vrt/collection/balance/model/persistence_median_last_n.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
+#include <vt/vrt/collection/balance/lb_invoke/lb_manager.h>
+#include <vt/vrt/collection/types/type_aliases.h>
+#include <vt/vrt/collection/manager.h>
 
 #include <gtest/gtest.h>
 

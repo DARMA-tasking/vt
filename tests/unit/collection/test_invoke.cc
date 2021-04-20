@@ -45,7 +45,7 @@
 #include "test_parallel_harness.h"
 #include "test_collection_common.h"
 
-#include "vt/transport.h"
+#include "vt/vrt/collection/manager.h"
 
 #include <gtest/gtest.h>
 #include <numeric>

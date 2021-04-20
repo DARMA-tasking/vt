@@ -42,10 +42,10 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
 #include <vt/vrt/collection/balance/model/per_collection.h>
 #include <vt/vrt/collection/balance/model/composed_model.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
+#include <vt/vrt/collection/manager.h>
 
 #include <gtest/gtest.h>
 

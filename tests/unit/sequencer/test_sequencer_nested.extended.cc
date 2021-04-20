@@ -50,7 +50,7 @@
 #include "data_message.h"
 #include "test_helpers.h"
 
-#include "vt/transport.h"
+#include "vt/sequence/sequencer.h"
 
 namespace vt { namespace tests { namespace unit { namespace nested {
 

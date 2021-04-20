@@ -48,7 +48,7 @@
 #include "test_collection_common.h"
 #include "data_message.h"
 
-#include "vt/transport.h"
+#include "vt/vrt/collection/manager.h"
 
 #include <cstdint>
 #include <tuple>

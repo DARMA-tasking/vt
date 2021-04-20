@@ -46,7 +46,7 @@
 
 #include "test_harness.h"
 
-#include "vt/transport.h"
+#include "vt/topos/mapping/dense/dense.h"
 
 namespace vt { namespace tests { namespace unit { namespace linear {
 

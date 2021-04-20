@@ -42,22 +42,18 @@
 //@HEADER
 */
 
-#include <cstring>
-#include <memory>
-
 #include <gtest/gtest.h>
 
 #include "test_harness.h"
 #include "test_parallel_harness.h"
-
-#include "vt/transport.h"
+#include "vt/utils/atomic/atomic.h"
+#include "vt/utils/mutex/mutex.h"
 
 #if vt_check_enabled(openmp)
   #include <omp.h>
 #else
   #include <thread>
 #endif
-#include <thread>
 
 namespace vt { namespace tests { namespace unit {
 

@@ -45,7 +45,7 @@
 #if ! defined __VIRTUAL_TRANSPORT_DATA_MESSAGE__
 #define __VIRTUAL_TRANSPORT_DATA_MESSAGE__
 
-#include "vt/transport.h"
+#include "vt/messaging/message.h"
 
 #include <array>
 #include <cstdint>

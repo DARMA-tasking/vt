@@ -46,7 +46,7 @@
 
 #include "test_parallel_harness.h"
 
-#include "vt/transport.h"
+#include "vt/group/group_manager.h"
 
 namespace vt { namespace tests { namespace unit {
 

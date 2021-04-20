@@ -43,6 +43,7 @@
 */
 
 #include "test_location_common.h"
+#include "vt/collective/collective_alg.h"
 
 namespace vt { namespace tests { namespace unit {
 

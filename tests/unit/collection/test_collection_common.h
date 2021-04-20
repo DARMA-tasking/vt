@@ -45,7 +45,8 @@
 #if !defined INCLUDED_COLLECTION_TEST_COLLECTION_COMMON_H
 #define INCLUDED_COLLECTION_TEST_COLLECTION_COMMON_H
 
-#include "vt/transport.h"
+#include <vt/topos/index/index.h>
+#include <vt/context/context.h>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>

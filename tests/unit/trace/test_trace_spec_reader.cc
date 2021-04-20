@@ -42,7 +42,9 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
+#include <vt/termination/termination.h>
+#include <vt/collective/collective_alg.h>
+#include <vt/objgroup/manager.h>
 #include <vt/trace/file_spec/spec.h>
 
 #include "test_parallel_harness.h"

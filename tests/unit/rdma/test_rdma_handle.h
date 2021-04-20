@@ -44,8 +44,8 @@
 
 #include <gtest/gtest.h>
 
-#include "vt/transport.h"
 #include "test_parallel_harness.h"
+#include "vt/objgroup/manager.h"
 #include "test_rdma_common.h"
 
 namespace vt { namespace tests { namespace unit {

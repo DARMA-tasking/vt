@@ -44,6 +44,7 @@
 
 #include "test_objgroup_common.h"
 #include "test_helpers.h"
+#include "vt/objgroup/manager.h"
 
 #include <typeinfo>
 

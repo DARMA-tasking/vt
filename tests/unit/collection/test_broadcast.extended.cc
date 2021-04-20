@@ -49,8 +49,6 @@
 #include "data_message.h"
 #include "test_broadcast.h"
 
-#include "vt/transport.h"
-
 #include <cstdint>
 
 namespace vt { namespace tests { namespace unit { namespace bcast {

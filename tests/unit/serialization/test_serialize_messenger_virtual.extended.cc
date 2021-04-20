@@ -47,7 +47,7 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 
-#include "vt/transport.h"
+#include "vt/vrt/context/context_vrtmanager.h"
 
 namespace vt { namespace tests { namespace unit {
 

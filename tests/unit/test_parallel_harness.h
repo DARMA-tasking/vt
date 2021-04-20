@@ -46,16 +46,13 @@
 #define __VIRTUAL_TRANSPORT_TEST_PARALLEL_HARNESS__
 
 #include <vector>
-#include <string>
-#include <memory>
 
 #include "test_config.h"
 #include "test_harness.h"
 #include "mpi_singleton.h"
 
-#include "vt/transport.h"
-
-#include <mpi.h>
+#include "vt/collective/collective_ops.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace tests { namespace unit {
 

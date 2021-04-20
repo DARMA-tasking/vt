@@ -42,12 +42,15 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
+#include <mpi.h>
+#include "test_parallel_harness.h"
+
 #include <vt/runtime/mpi_access.h>
 #include <vt/messaging/async_op_mpi.h>
+#include <vt/objgroup/manager.h>
 
 #include <gtest/gtest.h>
-#include "test_parallel_harness.h"
+
 
 namespace vt { namespace tests { namespace unit {
 

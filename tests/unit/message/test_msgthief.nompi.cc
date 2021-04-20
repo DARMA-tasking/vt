@@ -46,8 +46,7 @@
 
 // TODO: change to pure unit after #990
 #include "test_parallel_harness.h"
-
-#include "vt/transport.h"
+#include "vt/messaging/message/shared_message.h"
 
 namespace vt { namespace tests { namespace unit {
 

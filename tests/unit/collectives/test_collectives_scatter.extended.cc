@@ -47,7 +47,7 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 
-#include "vt/transport.h"
+#include "vt/collective/collective_alg.h"
 
 #define DEBUG_SCATTER 0
 

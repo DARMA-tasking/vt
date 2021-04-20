@@ -44,7 +44,7 @@
 
 #include <gtest/gtest.h>
 
-#include "vt/transport.h"
+#include "vt/utils/bits/bits_packer.h"
 #include "test_harness.h"
 
 namespace vt { namespace tests { namespace unit {

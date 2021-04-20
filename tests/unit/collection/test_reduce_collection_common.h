@@ -46,7 +46,7 @@
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
-#include "vt/transport.h"
+#include "vt/vrt/collection/manager.h"
 
 #if !defined INCLUDED_TEST_REDUCE_COLLECTION_COMMON_H
 #define INCLUDED_TEST_REDUCE_COLLECTION_COMMON_H

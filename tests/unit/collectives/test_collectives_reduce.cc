@@ -48,7 +48,7 @@
 #include "data_message.h"
 #include "test_collectives_reduce.h"
 
-#include "vt/transport.h"
+#include "vt/collective/collective.h"
 
 namespace vt { namespace tests { namespace unit {
 

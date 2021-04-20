@@ -47,7 +47,6 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 
-#include "vt/transport.h"
 #include "vt/termination/interval/integral_set.h"
 
 namespace vt { namespace tests { namespace unit {

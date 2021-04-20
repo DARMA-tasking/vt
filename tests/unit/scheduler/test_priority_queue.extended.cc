@@ -44,7 +44,7 @@
 
 #include <gtest/gtest.h>
 
-#include "vt/transport.h"
+#include "vt/scheduler/priority_queue.h"
 #include "test_parallel_harness.h"
 
 namespace vt { namespace tests { namespace unit {

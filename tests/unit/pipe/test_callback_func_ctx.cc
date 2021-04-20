@@ -47,7 +47,7 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 
-#include "vt/transport.h"
+#include "vt/pipe/pipe_manager.h"
 
 #include <memory>
 

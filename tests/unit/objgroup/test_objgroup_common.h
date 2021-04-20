@@ -43,7 +43,7 @@
 */
 
 #include "test_parallel_harness.h"
-#include "vt/transport.h"
+#include "vt/collective/reduce/operators/default_msg.h"
 
 #include <numeric>
 

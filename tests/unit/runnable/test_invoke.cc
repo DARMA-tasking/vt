@@ -44,7 +44,6 @@
 
 #include "test_parallel_harness.h"
 #include "vt/runnable/invoke.h"
-#include <vt/transport.h>
 
 #include <vector>
 #include <numeric>
