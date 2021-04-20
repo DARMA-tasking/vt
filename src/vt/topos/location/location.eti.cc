@@ -50,36 +50,24 @@ namespace vt { namespace location {
 template struct EntityLocationCoord<int32_t>;
 template struct EntityLocationCoord<VirtualProxyType>;
 
-template struct EntityLocationCoord<IdxType<int8_t, 1>>;
-template struct EntityLocationCoord<IdxType<int8_t, 2>>;
-template struct EntityLocationCoord<IdxType<int8_t, 3>>;
+#define instantiate_dims_over(TYPE)                       \
+  template struct EntityLocationCoord<IdxType<TYPE, 1>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 2>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 3>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 4>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 5>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 6>>;
 
-template struct EntityLocationCoord<IdxType<int16_t, 1>>;
-template struct EntityLocationCoord<IdxType<int16_t, 2>>;
-template struct EntityLocationCoord<IdxType<int16_t, 3>>;
+instantiate_dims_over(char)
+instantiate_dims_over(short)
+instantiate_dims_over(int)
+instantiate_dims_over(long)
+instantiate_dims_over(long long)
 
-template struct EntityLocationCoord<IdxType<int32_t, 1>>;
-template struct EntityLocationCoord<IdxType<int32_t, 2>>;
-template struct EntityLocationCoord<IdxType<int32_t, 3>>;
-
-template struct EntityLocationCoord<IdxType<int64_t, 1>>;
-template struct EntityLocationCoord<IdxType<int64_t, 2>>;
-template struct EntityLocationCoord<IdxType<int64_t, 3>>;
-
-template struct EntityLocationCoord<IdxType<uint8_t, 1>>;
-template struct EntityLocationCoord<IdxType<uint8_t, 2>>;
-template struct EntityLocationCoord<IdxType<uint8_t, 3>>;
-
-template struct EntityLocationCoord<IdxType<uint16_t, 1>>;
-template struct EntityLocationCoord<IdxType<uint16_t, 2>>;
-template struct EntityLocationCoord<IdxType<uint16_t, 3>>;
-
-template struct EntityLocationCoord<IdxType<uint32_t, 1>>;
-template struct EntityLocationCoord<IdxType<uint32_t, 2>>;
-template struct EntityLocationCoord<IdxType<uint32_t, 3>>;
-
-template struct EntityLocationCoord<IdxType<uint64_t, 1>>;
-template struct EntityLocationCoord<IdxType<uint64_t, 2>>;
-template struct EntityLocationCoord<IdxType<uint64_t, 3>>;
+instantiate_dims_over(unsigned char)
+instantiate_dims_over(unsigned short)
+instantiate_dims_over(unsigned int)
+instantiate_dims_over(unsigned long)
+instantiate_dims_over(unsigned long long)
 
 }} /* end namespace vt::location */
