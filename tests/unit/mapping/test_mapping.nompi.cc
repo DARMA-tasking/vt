@@ -46,9 +46,9 @@
 
 #include "test_harness.h"
 
-#include "vt/transport.h"
 #include "vt/topos/index/index.h"
 #include "vt/topos/mapping/mapping.h"
+#include "vt/topos/mapping/dense/dense.h"
 
 #include <vector>
 

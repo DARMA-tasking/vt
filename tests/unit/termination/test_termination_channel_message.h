@@ -43,7 +43,8 @@
 */
 
 #include "data_message.h"
-#include "vt/transport.h"
+#include "vt/configs/types/types_type.h"
+#include "vt/messaging/message/message.h"
 
 #if !defined INCLUDED_TERMINATION_CHANNEL_MESSAGES_H
 #define INCLUDED_TERMINATION_CHANNEL_MESSAGES_H

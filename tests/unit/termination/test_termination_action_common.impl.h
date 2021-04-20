@@ -45,6 +45,8 @@
 #if !defined INCLUDED_TERMINATION_ACTION_COMMON_IMPL_H
 #define INCLUDED_TERMINATION_ACTION_COMMON_IMPL_H
 
+#include "vt/collective/collective_alg.h"
+
 namespace vt { namespace tests { namespace unit { namespace action {
 
 // epoch sequence creation [rooted,collect]

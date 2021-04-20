@@ -46,12 +46,11 @@
 
 #include <gtest/gtest.h>
 
-#include "test_harness.h"
 #include "test_parallel_harness.h"
 #include "data_message.h"
 #include "test_helpers.h"
 
-#include "vt/transport.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace tests { namespace unit { namespace msg_size {
 

@@ -41,13 +41,14 @@
 // *****************************************************************************
 //@HEADER
 */
+#include <mpi.h>
+#include "test_parallel_harness.h"
 
-#include <vt/transport.h>
-#include <vt/runtime/mpi_access.h>
 #include <vt/messaging/async_op_mpi.h>
+#include <vt/messaging/active.h>
 
 #include <gtest/gtest.h>
-#include "test_parallel_harness.h"
+
 
 #if vt_check_enabled(fcontext)
 

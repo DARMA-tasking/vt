@@ -44,11 +44,10 @@
 
 #include <gtest/gtest.h>
 
+#include "vt/vrt/collection/manager.h"
 #include "test_parallel_harness.h"
 #include "test_collection_common.h"
 #include "data_message.h"
-
-#include "vt/transport.h"
 
 #include <cstdint>
 

@@ -50,7 +50,7 @@
 #include "test_harness.h"
 #include "test_parallel_harness.h"
 
-#include "vt/transport.h"
+#include "vt/utils/tls/tls.h"
 
 #if vt_check_enabled(openmp)
   #include <omp.h>

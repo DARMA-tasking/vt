@@ -46,6 +46,7 @@
 #define INCLUDED_VT_TESTS_RDMA_COMMON_H
 
 #include <gtest/gtest.h>
+#include "vt/configs/types/types_type.h"
 
 namespace vt { namespace tests { namespace unit {
 

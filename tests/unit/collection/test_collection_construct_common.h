@@ -47,9 +47,8 @@
 
 #include "test_parallel_harness.h"
 #include "test_collection_common.h"
+#include "vt/vrt/collection/manager.h"
 #include "data_message.h"
-
-#include "vt/transport.h"
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>

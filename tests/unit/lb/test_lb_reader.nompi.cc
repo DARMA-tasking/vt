@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
 #include <vt/vrt/collection/balance/read_lb.h>
 
 #include "test_harness.h"

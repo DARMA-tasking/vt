@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
 #include <vt/vrt/collection/balance/lb_common.h>
 #include <vt/vrt/collection/balance/baselb/baselb.h>
 #include <vt/vrt/collection/balance/gossiplb/gossiplb.h>

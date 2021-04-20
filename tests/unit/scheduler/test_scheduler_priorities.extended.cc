@@ -44,7 +44,9 @@
 
 #include <gtest/gtest.h>
 
-#include "vt/transport.h"
+#include "vt/scheduler/scheduler.h"
+#include "vt/objgroup/manager.h"
+
 #include "test_parallel_harness.h"
 
 #include <memory>

@@ -49,8 +49,6 @@
 #include "data_message.h"
 #include "test_send.h"
 
-#include "vt/transport.h"
-
 #include <cstdint>
 #include <tuple>
 

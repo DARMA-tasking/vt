@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
 #include <vt/vrt/collection/balance/model/load_model.h>
 #include <vt/vrt/collection/balance/model/multiple_phases.h>
 

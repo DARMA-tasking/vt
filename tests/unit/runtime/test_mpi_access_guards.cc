@@ -43,9 +43,10 @@
 */
 
 #include <gtest/gtest.h>
+#include <mpi.h>
 
-#include "vt/transport.h"
 #include "test_parallel_harness.h"
+#include "vt/runtime/mpi_access.h"
 #include "test_helpers.h"
 
 namespace vt { namespace tests { namespace unit {

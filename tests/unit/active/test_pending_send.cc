@@ -44,10 +44,9 @@
 
 #include <gtest/gtest.h>
 
+#include "vt/termination/termination.h"
 #include "test_parallel_harness.h"
 #include "data_message.h"
-
-#include "vt/transport.h"
 
 namespace vt { namespace tests { namespace unit {
 

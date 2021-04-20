@@ -42,13 +42,9 @@
 //@HEADER
 */
 
-#include <vector>
-#include <memory>
-
 #include <gtest/gtest.h>
 
 #include "test_harness.h"
-#include "test_parallel_harness.h"
 
 namespace vt { namespace tests { namespace unit {
 

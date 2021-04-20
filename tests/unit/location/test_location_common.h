@@ -46,8 +46,8 @@
 #define INCLUDED_TEST_LOCATION_COMMON_H
 
 #include "data_message.h"
-#include "vt/transport.h"
 #include "test_parallel_harness.h"
+#include "vt/topos/location/manager.h"
 
 namespace vt { namespace tests { namespace unit { namespace location {
 

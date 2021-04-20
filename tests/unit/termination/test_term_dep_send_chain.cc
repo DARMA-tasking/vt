@@ -48,7 +48,7 @@
 #include "data_message.h"
 #include "test_helpers.h"
 
-#include "vt/transport.h"
+#include "vt/vrt/collection/manager.h"
 #include "vt/messaging/collection_chain_set.h"
 
 namespace vt { namespace tests { namespace unit {

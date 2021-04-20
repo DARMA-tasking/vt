@@ -46,10 +46,9 @@
 
 #include <gtest/gtest.h>
 
-#include "test_harness.h"
 #include "test_parallel_harness.h"
 
-#include "vt/transport.h"
+#include "vt/messaging/active.h"
 
 namespace vt { namespace tests { namespace unit {
 

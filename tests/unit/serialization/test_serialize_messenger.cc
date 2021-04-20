@@ -50,7 +50,7 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 
-#include "vt/transport.h"
+#include "vt/serialization/messaging/serialized_messenger.h"
 
 namespace vt { namespace tests { namespace unit {
 

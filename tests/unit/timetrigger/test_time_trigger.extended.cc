@@ -44,7 +44,6 @@
 
 #include <gtest/gtest.h>
 
-#include <vt/transport.h>
 #include <vt/timetrigger/time_trigger_manager.h>
 
 #include "test_parallel_harness.h"

@@ -44,11 +44,10 @@
 
 #include <gtest/gtest.h>
 
+#include "vt/messaging/active.h"
 #include "test_parallel_harness.h"
 #include "data_message.h"
 #include "test_helpers.h"
-
-#include "vt/transport.h"
 
 namespace vt { namespace tests { namespace unit { namespace send_put {
 

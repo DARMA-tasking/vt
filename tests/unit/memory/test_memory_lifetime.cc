@@ -47,8 +47,8 @@
 #include "test_parallel_harness.h"
 #include "data_message.h"
 #include "test_helpers.h"
-
-#include "vt/transport.h"
+#include "vt/termination/termination.h"
+#include "vt/pipe/pipe_manager.h"
 
 namespace vt { namespace tests { namespace unit {
 

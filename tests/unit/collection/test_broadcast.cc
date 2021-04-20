@@ -44,12 +44,9 @@
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
 #include "test_collection_common.h"
 #include "data_message.h"
 #include "test_broadcast.h"
-
-#include "vt/transport.h"
 
 #include <cstdint>
 

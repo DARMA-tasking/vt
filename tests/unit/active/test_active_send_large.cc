@@ -42,9 +42,12 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
 #include <gtest/gtest.h>
 
+#include "vt/messaging/active.h"
+#include "vt/pipe/callback/cb_union/cb_raw_base.h"
+#include "vt/pipe/pipe_lifetime.h"
+#include "vt/pipe/pipe_manager.h"
 #include "test_parallel_harness.h"
 #include "data_message.h"
 #include "test_helpers.h"

@@ -42,10 +42,10 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
+#include "vt/vrt/collection/manager.h"
 
 #include <memory>
 

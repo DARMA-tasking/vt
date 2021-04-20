@@ -44,8 +44,8 @@
 
 #include <gtest/gtest.h>
 
-#include "vt/transport.h"
 #include "test_parallel_harness.h"
+#include "vt/vrt/collection/manager.h"
 
 namespace vt { namespace tests { namespace unit {
 
