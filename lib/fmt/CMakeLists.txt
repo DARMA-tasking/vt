@@ -1,27 +1,5 @@
 project(FMT CXX)
 
-# Joins arguments and places the results in ${result_var}.
-function(join result_var)
-  set(result )
-  foreach (arg ${ARGN})
-    set(result "${result}${arg}")
-  endforeach ()
-  set(${result_var} "${result}" PARENT_SCOPE)
-endfunction()
-
-# Get version from core.h
-file(READ include/fmt/core.h core_h)
-if (NOT core_h MATCHES "FMT_VERSION ([0-9]+)([0-9][0-9])([0-9][0-9])")
-  message(FATAL_ERROR "Cannot get FMT_VERSION from core.h.")
-endif ()
-# Use math to skip leading zeros if any.
-math(EXPR CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1})
-math(EXPR CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
-math(EXPR CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
-join(FMT_VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.
-                 ${CPACK_PACKAGE_VERSION_PATCH})
-message(STATUS "fmt version: ${FMT_VERSION}")
-
 if (NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif ()
@@ -38,8 +16,7 @@ function(add_headers VAR)
 endfunction()
 
 # Define the fmt library, its includes and the needed defines.
-add_headers(FMT_HEADERS chrono.h color.h compile.h core.h format.h format-inl.h
-                        locale.h ostream.h printf.h ranges.h)
+add_headers(FMT_HEADERS core.h format.h format-inl.h ostream.h)
 set(FMT_SOURCES src/format.cc)
 
 add_library(fmt ${FMT_SOURCES} ${FMT_HEADERS})
@@ -52,7 +29,6 @@ target_include_directories(fmt PUBLIC
 set(FMT_DEBUG_POSTFIX d CACHE STRING "Debug library postfix.")
 
 set_target_properties(fmt PROPERTIES
-  VERSION ${FMT_VERSION} SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}
   DEBUG_POSTFIX "${FMT_DEBUG_POSTFIX}")
 
 install(
