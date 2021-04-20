@@ -17,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Generate graph and badge
-        uses: DARMA-tasking/graph-build-times@7-add-static-analysis
+      - name: Generate build stats
+        uses: DARMA-tasking/build-stats@7-add-static-analysis
         with:
             github_personal_token: ${{ secrets.GH_PAT }}
             badge_title: vt:develop build time
