@@ -58,6 +58,8 @@ template struct EntityLocationCoord<VirtualProxyType>;
   template struct EntityLocationCoord<IdxType<TYPE, 5>>;  \
   template struct EntityLocationCoord<IdxType<TYPE, 6>>;
 
+instantiate_dims_over(signed char)
+
 instantiate_dims_over(char)
 instantiate_dims_over(short)
 instantiate_dims_over(int)
