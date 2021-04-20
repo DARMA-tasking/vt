@@ -112,10 +112,10 @@ TEST_F(TestTermCleanup, test_termination_cleanup_2) {
   for (int i = 0; i < num_epochs; i++) {
     EpochType const coll_epoch = theTerm()->makeEpochCollective();
     EpochType const root_epoch = theTerm()->makeEpochRootedDS(
-      term::SuccessorEpochCapture{no_epoch}
+      term::ParentEpochCapture{no_epoch}
     );
     EpochType const wave_epoch = theTerm()->makeEpochRootedWave(
-      term::SuccessorEpochCapture{no_epoch}
+      term::ParentEpochCapture{no_epoch}
     );
     //fmt::print("global collective epoch {:x}\n", epoch);
 
