@@ -76,22 +76,7 @@ template <typename ColT, typename IndexT>
   auto const& map_han = msg->getMapHandler();
   auto const& range = msg->getRange();
 
-  // auto buf = reinterpret_cast<SerialByteType*>(msg->getPut());
-  // auto const& buf_size = msg->getPutSize();
-
-  // auto vc_elm_ptr = std::make_unique<ColT>();
-  // auto vc_raw_ptr = ::checkpoint::deserialize<ColT>(
-  //   buf, vc_elm_ptr.get()
-  // );
-  // ColT* col_t = new ColT();
-  // auto vc_raw_ptr = ::checkpoint::deserialize<ColT>(
-  //   buf, col_t
-  // );
-  auto vc_elm_ptr = std::unique_ptr<ColT>(msg->elm_);
-
-  std::unique_ptr<Indexable<IndexT>> idx_ptr(
-    static_cast<Indexable<IndexT>*>(vc_elm_ptr.release())
-  );
+  auto idx_ptr = std::unique_ptr<Indexable<IndexT>>(msg->elm_);
 
   auto const& migrate_status =
     CollectionElmAttorney<ColT,IndexT>::migrateIn(
