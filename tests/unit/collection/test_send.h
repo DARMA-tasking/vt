@@ -155,7 +155,7 @@ TYPED_TEST_P(TestCollectionSend, test_collection_send_1) {
       if (i % 2 == 0) {
         proxy[i].template sendMsg<MsgType,SendHandlers<ColType>::handler>(msg.get());
       } else {
-        theCollection()->sendMsg<MsgType,SendHandlers<ColType>::handler>(
+        theCollection()->sendMsg<MsgType,ColType,SendHandlers<ColType>::handler>(
           proxy[i], msg.get()
         );
       }
@@ -180,7 +180,7 @@ TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
       if (i % 2 == 0) {
         proxy[i].template sendMsg<MsgType,&ColType::handler>(msg.get());
       } else {
-        theCollection()->sendMsg<MsgType,&ColType::handler>(
+        theCollection()->sendMsg<MsgType,ColType,&ColType::handler>(
           proxy[i], msg.get()
         );
       }

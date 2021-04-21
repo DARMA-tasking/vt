@@ -68,16 +68,20 @@ HandlerType CollectionMessage<ColT, BaseMsgT>::getVrtHandler() const {
 }
 
 template <typename ColT, typename BaseMsgT>
-VirtualElmProxyType<ColT, typename ColT::IndexType>
-CollectionMessage<ColT, BaseMsgT>::getProxy() const {
-  return to_proxy_;
+VirtualProxyType CollectionMessage<ColT, BaseMsgT>::getProxy() const {
+  return col_proxy_;
 }
 
 template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT, BaseMsgT>::setProxy(
-  VirtualElmProxyType<ColT, typename ColT::IndexType> const& in_proxy
-) {
-  to_proxy_ = in_proxy;
+typename ColT::IndexType CollectionMessage<ColT, BaseMsgT>::getIndex() const {
+  return col_idx_;
+}
+
+template <typename ColT, typename BaseMsgT>
+template <typename T>
+void CollectionMessage<ColT, BaseMsgT>::setProxy(T const& in_proxy) {
+  col_proxy_ = in_proxy.getCollectionProxy();
+  col_idx_ = in_proxy.getElementProxy().getIndex();
 }
 
 template <typename ColT, typename BaseMsgT>
@@ -117,7 +121,8 @@ template <typename SerializerT>
 void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
   MessageParentType::serialize(s);
   s | vt_sub_handler_;
-  s | to_proxy_;
+  s | col_proxy_;
+  s | col_idx_;
   s | bcast_proxy_;
   s | bcast_epoch_;
   s | is_wrap_;

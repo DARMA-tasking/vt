@@ -70,7 +70,7 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-  return theCollection()->sendMsg<MsgT, f>(proxy, msg);
+  return theCollection()->sendMsg<MsgT, ColT, f>(proxy, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -87,7 +87,7 @@ messaging::PendingSend Sendable<ColT, IndexT, BaseProxyT>::sendMsg(
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy, elm_proxy);
-  return theCollection()->sendMsg<MsgT, f>(proxy, msg.msg_.get());
+  return theCollection()->sendMsg<MsgT, ColT, f>(proxy, msg.msg_.get());
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -102,7 +102,7 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(MsgT* msg) const {
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
-  return theCollection()->sendMsg<MsgT, f>(proxy, msg);
+  return theCollection()->sendMsg<MsgT, ColT, f>(proxy, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -119,7 +119,7 @@ messaging::PendingSend Sendable<ColT, IndexT, BaseProxyT>::sendMsg(
   auto col_proxy = this->getCollectionProxy();
   auto elm_proxy = this->getElementProxy();
   auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy, elm_proxy);
-  return theCollection()->sendMsg<MsgT, f>(proxy, msg.msg_.get());
+  return theCollection()->sendMsg<MsgT, ColT, f>(proxy, msg.msg_.get());
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>

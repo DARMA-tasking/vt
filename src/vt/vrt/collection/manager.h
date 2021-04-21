@@ -547,7 +547,7 @@ public:
    */
   template <
     typename MsgT,
-    typename ColT = typename MsgT::CollectionType,
+    typename ColT,
     typename IdxT = typename ColT::IndexType
   >
   messaging::PendingSend sendMsgUntypedHandler(
@@ -613,10 +613,12 @@ public:
    * \return a pending send
    */
   template <
-    typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT, ColT> *f
   >
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   /**
@@ -629,10 +631,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   /**
@@ -644,8 +647,12 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  IsColMsgType<MsgT> sendMsg(
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  IsColMsgType<MsgT> sendMsgCheck(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -658,8 +665,12 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  IsNotColMsgType<MsgT> sendMsg(
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  IsNotColMsgType<MsgT> sendMsgCheck(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -677,7 +688,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  IsColMsgType<MsgT> sendMsg(
+  IsColMsgType<MsgT> sendMsgCheck(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -695,7 +706,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  IsNotColMsgType<MsgT> sendMsg(
+  IsNotColMsgType<MsgT> sendMsgCheck(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -708,7 +719,11 @@ public:
    *
    * \return the pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
   messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
@@ -725,7 +740,7 @@ public:
   template <
     typename MsgT,
     typename ColT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
@@ -794,10 +809,12 @@ public:
    * balancing (some system calls use this to disable instrumentation)
    */
   template <
-    typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT, ColT>* f
   >
   void invokeMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy,
+    VirtualElmProxyType<ColT> const& proxy,
     messaging::MsgPtrThief<MsgT> msg, bool instrument = true
   );
 
@@ -811,10 +828,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   void invokeMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy,
+    VirtualElmProxyType<ColT> const& proxy,
     messaging::MsgPtrThief<MsgT> msg, bool instrument = true
   );
 
@@ -987,10 +1005,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
   >
   messaging::PendingSend broadcastCollectiveMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     messaging::MsgPtrThief<MsgT> msg, bool instrument = true);
 
   /**
@@ -1006,10 +1025,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend broadcastCollectiveMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     messaging::MsgPtrThief<MsgT> msg, bool instrument = true);
 
   /**
@@ -1039,10 +1059,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+    typename ColT,
+    ActiveColTypedFnType<MsgT, ColT> *f
   >
   messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
 
@@ -1058,10 +1079,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT,ColT> f
   >
   messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
 
@@ -1076,8 +1098,12 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  IsColMsgType<MsgT> broadcastMsg(
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  IsColMsgType<MsgT> broadcastMsgCheck(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -1093,8 +1119,12 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  IsNotColMsgType<MsgT> broadcastMsg(
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  IsNotColMsgType<MsgT> broadcastMsgCheck(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -1115,7 +1145,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  IsColMsgType<MsgT> broadcastMsg(
+  IsColMsgType<MsgT> broadcastMsgCheck(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -1136,7 +1166,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  IsNotColMsgType<MsgT> broadcastMsg(
+  IsNotColMsgType<MsgT> broadcastMsgCheck(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -1151,7 +1181,11 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
   messaging::PendingSend broadcastMsgImpl(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true

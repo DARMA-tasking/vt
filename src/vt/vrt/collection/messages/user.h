@@ -90,8 +90,11 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, typename ColT::IndexType>
 
   // The variable `to_proxy_' manages the intended target of the
   // `CollectionMessage'
-  VirtualElmProxyType<ColT, IndexType> getProxy() const;
-  void setProxy(VirtualElmProxyType<ColT, IndexType> const& in_proxy);
+  VirtualProxyType getProxy() const;
+  typename ColT::IndexType getIndex() const;
+
+  template <typename T>
+  void setProxy(T const& in_proxy);
 
   VirtualProxyType getBcastProxy() const;
   void setBcastProxy(VirtualProxyType const& in_proxy);
@@ -126,7 +129,8 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, typename ColT::IndexType>
 
 private:
   VirtualProxyType bcast_proxy_{};
-  VirtualElmProxyType<ColT, IndexType> to_proxy_{};
+  VirtualProxyType col_proxy_ = no_vrt_proxy;
+  typename ColT::IndexType col_idx_ = {};
   HandlerType vt_sub_handler_ = uninitialized_handler;
   EpochType bcast_epoch_ = no_epoch;
   NodeType from_node_ = uninitialized_destination;

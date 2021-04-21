@@ -135,7 +135,7 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
 
     auto msg = makeMessage<MsgType>(args);
     theCollection()->broadcastMsg<
-      MsgType,BroadcastHandlers<ColType>::handler
+      MsgType,ColType,BroadcastHandlers<ColType>::handler
     >(proxy, msg.get());
   }
 }

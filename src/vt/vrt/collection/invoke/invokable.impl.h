@@ -68,7 +68,7 @@ void Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const
   );
 
   auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
-  theCollection()->invokeMsg<MsgT, f>(proxy, msg);
+  theCollection()->invokeMsg<MsgT, ColT, f>(proxy, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
@@ -83,7 +83,7 @@ void Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const
   );
 
   auto msg = makeMessage<MsgT>(std::forward<Args>(args)...);
-  theCollection()->invokeMsg<MsgT, f>(proxy, msg);
+  theCollection()->invokeMsg<MsgT, ColT, f>(proxy, msg);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
