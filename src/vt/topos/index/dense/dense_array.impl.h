@@ -59,21 +59,21 @@
 
 namespace vt { namespace index {
 
-template <typename IndexType, NumDimensionsType ndim>
-DenseIndexArray<IndexType, ndim>::DenseIndexArray(
-  std::array<IndexType, ndim> in_array
+template <typename T, NumDimensionsType ndim>
+DenseIndexArray<T, ndim>::DenseIndexArray(
+  std::array<T, ndim> in_array
 ) : BaseIndex(), dims(in_array)
 { }
 
-template <typename IndexType, NumDimensionsType ndim>
+template <typename T, NumDimensionsType ndim>
 template <typename... Idxs, typename>
-DenseIndexArray<IndexType, ndim>::DenseIndexArray(Idxs&&... init)
+DenseIndexArray<T, ndim>::DenseIndexArray(Idxs&&... init)
   : BaseIndex(), dims({{init...}})
 { }
 
-template <typename IndexType, NumDimensionsType ndim>
-DenseIndexArray<IndexType, ndim>::DenseIndexArray(
-  DenseIndexArraySingleInitTag, IndexType const& init_value
+template <typename T, NumDimensionsType ndim>
+DenseIndexArray<T, ndim>::DenseIndexArray(
+  DenseIndexArraySingleInitTag, T const& init_value
 ) : BaseIndex()
 {
   for (int i = 0; i < ndim; i++) {
@@ -81,49 +81,47 @@ DenseIndexArray<IndexType, ndim>::DenseIndexArray(
   }
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-IndexType& DenseIndexArray<IndexType, ndim>::operator[](IndexType const& index) {
+template <typename T, NumDimensionsType ndim>
+T& DenseIndexArray<T, ndim>::operator[](T const& index) {
   return dims[index];
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-IndexType const& DenseIndexArray<IndexType, ndim>::operator[](
-  IndexType const& index
+template <typename T, NumDimensionsType ndim>
+T const& DenseIndexArray<T, ndim>::operator[](
+  T const& index
 ) const {
   return dims[index];
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-IndexType DenseIndexArray<IndexType, ndim>::get(IndexType const& index) const {
+template <typename T, NumDimensionsType ndim>
+T DenseIndexArray<T, ndim>::get(T const& index) const {
   return dims[index];
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-typename DenseIndexArray<IndexType, ndim>::IndexSizeType
-DenseIndexArray<IndexType, ndim>::packedSize() const {
+template <typename T, NumDimensionsType ndim>
+typename DenseIndexArray<T, ndim>::IndexSizeType
+DenseIndexArray<T, ndim>::packedSize() const {
   return ndim * sizeof(IndexType);
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-bool DenseIndexArray<IndexType, ndim>::indexIsByteCopyable() const {
+template <typename T, NumDimensionsType ndim>
+bool DenseIndexArray<T, ndim>::indexIsByteCopyable() const {
   return true;
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-void DenseIndexArray<IndexType, ndim>::foreach(ApplyType fn) const {
+template <typename T, NumDimensionsType ndim>
+void DenseIndexArray<T, ndim>::foreach(ApplyType fn) const {
   auto const idx = *this;
   return foreach(idx, fn);
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-void DenseIndexArray<IndexType, ndim>::foreach(
-  ThisIndexType in_max, ApplyType fn
-) const {
-  ThisIndexType max = in_max;
+template <typename T, NumDimensionsType ndim>
+void DenseIndexArray<T, ndim>::foreach(IndexType in_max, ApplyType fn) const {
+  IndexType max = in_max;
   auto size = max.getSize();
-  std::array<IndexType, ndim> vec = {{0}};
+  std::array<T, ndim> vec = {{0}};
   for (decltype(size) sz = 0; sz < size; sz++) {
-    fn(ThisIndexType(vec));
+    fn(IndexType(vec));
     for (auto i = 0; i < ndim; i++) {
       if (vec[i] + 1 < max[i]) {
         vec[i]++;
@@ -136,8 +134,8 @@ void DenseIndexArray<IndexType, ndim>::foreach(
   }
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-UniqueIndexBitType DenseIndexArray<IndexType, ndim>::uniqueBits() const {
+template <typename T, NumDimensionsType ndim>
+UniqueIndexBitType DenseIndexArray<T, ndim>::uniqueBits() const {
   UniqueIndexBitType bits{};
   auto const& nbits = (sizeof(UniqueIndexBitType) * 8) / ndim;
   for (auto i = 0; i < ndim; i++) {
@@ -146,12 +144,12 @@ UniqueIndexBitType DenseIndexArray<IndexType, ndim>::uniqueBits() const {
   return bits;
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-/*static*/ typename DenseIndexArray<IndexType, ndim>::ThisIndexType
-DenseIndexArray<IndexType, ndim>::uniqueBitsToIndex(UniqueIndexBitType const& bits) {
+template <typename T, NumDimensionsType ndim>
+/*static*/ typename DenseIndexArray<T, ndim>::IndexType
+DenseIndexArray<T, ndim>::uniqueBitsToIndex(UniqueIndexBitType const& bits) {
   using BitType = UniqueIndexBitType;
 
-  ThisIndexType idx{};
+  IndexType idx{};
   auto const& nbits = (sizeof(UniqueIndexBitType) * 8) / ndim;
   for (auto i = 0; i < ndim; i++) {
     auto const& val = vt::utils::BitPacker::getFieldDynamic<BitType>(i*nbits, nbits, bits);
@@ -160,9 +158,9 @@ DenseIndexArray<IndexType, ndim>::uniqueBitsToIndex(UniqueIndexBitType const& bi
   return idx;
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-typename DenseIndexArray<IndexType, ndim>::DenseArraySizeType
-DenseIndexArray<IndexType, ndim>::getSize() const {
+template <typename T, NumDimensionsType ndim>
+typename DenseIndexArray<T, ndim>::DenseArraySizeType
+DenseIndexArray<T, ndim>::getSize() const {
   DenseArraySizeType sz = 1;
   for (int i = 0; i < ndim; i++) {
     sz *= dims[i];
@@ -170,8 +168,8 @@ DenseIndexArray<IndexType, ndim>::getSize() const {
   return sz;
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-std::string DenseIndexArray<IndexType, ndim>::toString() const {
+template <typename T, NumDimensionsType ndim>
+std::string DenseIndexArray<T, ndim>::toString() const {
   std::stringstream stream;
   stream << "[";
   for (int i = 0; i < ndim; i++) {
@@ -181,8 +179,8 @@ std::string DenseIndexArray<IndexType, ndim>::toString() const {
   return stream.str();
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-bool DenseIndexArray<IndexType, ndim>::operator==(
+template <typename T, NumDimensionsType ndim>
+bool DenseIndexArray<T, ndim>::operator==(
   DenseIndexArrayType const& other
 ) const {
   for (int i = ndim - 1; i >= 0; i--) {
@@ -193,13 +191,13 @@ bool DenseIndexArray<IndexType, ndim>::operator==(
   return true;
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-IndexType const* DenseIndexArray<IndexType, ndim>::raw() const {
+template <typename T, NumDimensionsType ndim>
+T const* DenseIndexArray<T, ndim>::raw() const {
   return &dims[0];
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-bool DenseIndexArray<IndexType, ndim>::operator<(
+template <typename T, NumDimensionsType ndim>
+bool DenseIndexArray<T, ndim>::operator<(
   DenseIndexArrayType const& other
 ) const {
   for (int i = ndim - 1; i >= 0; i--) {
@@ -212,9 +210,9 @@ bool DenseIndexArray<IndexType, ndim>::operator<(
   return false;
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-typename DenseIndexArray<IndexType, ndim>::DenseIndexArrayType
-DenseIndexArray<IndexType, ndim>::operator+(DenseIndexArrayType const& other) const {
+template <typename T, NumDimensionsType ndim>
+typename DenseIndexArray<T, ndim>::DenseIndexArrayType
+DenseIndexArray<T, ndim>::operator+(DenseIndexArrayType const& other) const {
   DenseIndexArrayType val;
   for (int i = 0; i < ndim; i++) {
     val.dims[i] = dims[i] + other.dims[i];
@@ -222,9 +220,9 @@ DenseIndexArray<IndexType, ndim>::operator+(DenseIndexArrayType const& other) co
   return val;
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-typename DenseIndexArray<IndexType, ndim>::DenseIndexArrayType
-DenseIndexArray<IndexType, ndim>::operator-(DenseIndexArrayType const& other) const {
+template <typename T, NumDimensionsType ndim>
+typename DenseIndexArray<T, ndim>::DenseIndexArrayType
+DenseIndexArray<T, ndim>::operator-(DenseIndexArrayType const& other) const {
   DenseIndexArrayType val;
   for (int i = 0; i < ndim; i++) {
     val.dims[i] = dims[i] - other.dims[i];
@@ -233,21 +231,21 @@ DenseIndexArray<IndexType, ndim>::operator-(DenseIndexArrayType const& other) co
 }
 
 // special accessors (x,y,z) enabled depending on the number of dimensions
-template <typename IndexType, NumDimensionsType ndim>
-template <typename T, typename>
-IndexType DenseIndexArray<IndexType, ndim>::x() const {
+template <typename T, NumDimensionsType ndim>
+template <typename U, typename>
+T DenseIndexArray<T, ndim>::x() const {
   return dims[0];
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-template <typename T, typename>
-IndexType DenseIndexArray<IndexType, ndim>::y() const {
+template <typename T, NumDimensionsType ndim>
+template <typename U, typename>
+T DenseIndexArray<T, ndim>::y() const {
   return dims[1];
 }
 
-template <typename IndexType, NumDimensionsType ndim>
-template <typename T, typename>
-IndexType DenseIndexArray<IndexType, ndim>::z() const {
+template <typename T, NumDimensionsType ndim>
+template <typename U, typename>
+T DenseIndexArray<T, ndim>::z() const {
   return dims[2];
 }
 
@@ -269,14 +267,14 @@ std::ostream& operator<<(
 }}  // end namespace vt::index
 
 namespace std {
-  template <typename IndexType, ::vt::index::NumDimensionsType ndim>
-  struct hash<::vt::index::DenseIndexArray<IndexType, ndim>> {
+  template <typename T, ::vt::index::NumDimensionsType ndim>
+  struct hash<::vt::index::DenseIndexArray<T, ndim>> {
     size_t operator()(
-      ::vt::index::DenseIndexArray<IndexType, ndim> const& in
+      ::vt::index::DenseIndexArray<T, ndim> const& in
     ) const {
-      auto val = std::hash<IndexType>()(in[0]);
+      auto val = std::hash<T>()(in[0]);
       for (auto i = 1; i < ndim; i++) {
-        val += std::hash<IndexType>()(in[i]);
+        val += std::hash<T>()(in[i]);
       }
       return val;
     }
