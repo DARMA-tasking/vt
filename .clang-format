@@ -1,63 +1,92 @@
 Language: Cpp
 ColumnLimit: 80
-
 UseTab: Never
-IndentWidth: 2
+
 AccessModifierOffset: -4
-NamespaceIndentation: None
-CompactNamespaces: true
-AlwaysBreakAfterDefinitionReturnType: None
-AlwaysBreakAfterReturnType: None
 AlignAfterOpenBracket: AlwaysBreak
-ContinuationIndentWidth: 2
-PenaltyReturnTypeOnItsOwnLine: 100
-
-# CompactNamespaces: true
-# BraceWrapping: AfterFunction
-
-#BinPackArguments: false
-#BinPackParameters: false
-# AllowAllParametersOfDeclarationOnNextLine: true
-
-# BreakBeforeBraces: Attach
-
-BreakBeforeBraces: Custom
-BraceWrapping:
-  AfterFunction : false
-  AfterClass : false
-  AfterEnum : false
-  IndentBraces: false
-
-AlwaysBreakTemplateDeclarations: true
-BreakConstructorInitializersBeforeComma: true
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
-AllowShortBlocksOnASingleLine: false
-AllowShortIfStatementsOnASingleLine: false
-AllowShortLoopsOnASingleLine: false
-AllowShortLoopsOnASingleLine: true
-IndentWrappedFunctionNames: false
-
-PointerAlignment: Left
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros: false
+AlignEscapedNewlines: Left
 AlignOperands: false
 AlignTrailingComments: true
-
-SpacesInParentheses: false
-SpacesInSquareBrackets: false
-SpaceAfterCStyleCast: false
-SpaceBeforeAssignmentOperators: true
+AllowAllArgumentsOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: true
+BinPackParameters: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: false
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+BreakStringLiterals: true
+CompactNamespaces: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 2
+Cpp11BracedListStyle: true
+DeriveLineEnding: false
+DerivePointerAlignment: false
+DisableFormat: false
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: true
+IncludeBlocks: Preserve
+IndentCaseLabels: false
+IndentGotoLabels: false
+IndentPPDirectives: BeforeHash
+IndentWidth: 2
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+PenaltyReturnTypeOnItsOwnLine: 100
+PointerAlignment: Left
+ReflowComments: false
+SortIncludes: false
+SortUsingDeclarations: false
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: true
 SpaceInEmptyParentheses: false
 SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
 SpacesInContainerLiterals: false
-SpaceBeforeParens: ControlStatements
-MaxEmptyLinesToKeep: 2
-IndentCaseLabels: false
-
-# BreakBeforeInheritanceComma: false
-ConstructorInitializerIndentWidth: 2
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
-BreakConstructorInitializersBeforeComma: false
-
-# ExperimentalAutoDetectBinPacking: true
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: c++14
