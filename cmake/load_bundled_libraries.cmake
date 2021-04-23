@@ -17,6 +17,7 @@ endif()
 add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 
 # fmt always included in the build
+set(FMT_LIBRARY fmt)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 
 # Optionally include mimalloc (alternative memory allocator)

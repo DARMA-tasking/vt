@@ -317,6 +317,9 @@ else()
 endif()
 
 if (cmake_do_install)
+  set(FMT_LIBRARY_EXPORT ${FMT_LIBRARY})
+  install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+
   if (vt_mimalloc_enabled)
     set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
   endif()
@@ -347,6 +350,7 @@ export(
                             ${FCONTEXT_LIBRARY_EXPORT}
                             ${MIMALLOC_LIBRARY_EXPORT}
                             ${FORT_LIBRARY_EXPORT}
+                            ${FMT_LIBRARY_EXPORT}
                             ${CHEKPOINT_EXPORT}
                             ${DETECTOR_EXPORT}
   FILE                      "vtTargets.cmake"
