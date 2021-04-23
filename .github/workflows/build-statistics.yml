@@ -1,0 +1,24 @@
+name: Build statistics
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Generate build stats
+        uses: DARMA-tasking/build-stats@master
+        with:
+            github_personal_token: ${{ secrets.GH_PAT }}
+            badge_title: vt:develop build time
+            num_last_build: 50
+            title: vt build times
+            build_stats_output: "build_stats"

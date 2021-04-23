@@ -21,7 +21,7 @@
 [![gcc-10, ubuntu, openmpi, no LB, spack-package](https://dev.azure.com/DARMA-tasking/DARMA/_apis/build/status/PR%20tests%20spack-package%20(gcc-10%2C%20ubuntu%2C%20openmpi%2C%20no%20LB%2C%20spack-package)?branchName=develop&Label=(gcc-10%2C%20ubuntu%2C%20openmpi%2C%20no%20LB%2C%20spack-package))](https://dev.azure.com/DARMA-tasking/DARMA/_build/latest?definitionId=20&branchName=develop)
 ![apple clang, macosx, mpich](https://github.com/DARMA-tasking/vt/workflows/PR%20tests%20(clang-8,%20macosx,%20mpich)/badge.svg?branch=develop)
 ![Build Documentation](https://github.com/DARMA-tasking/vt/workflows/Build%20Documentation/badge.svg?branch=develop)
-[![](https://github.com/DARMA-tasking/vt/wiki/build_time_badge.svg)](https://github.com/DARMA-tasking/vt/wiki/build_times.png)
+[![](https://github.com/DARMA-tasking/vt/wiki/build_stats/build_status_badge.svg)](https://github.com/DARMA-tasking/vt/wiki/Build-Stats)
 
 ## Introduction : What is *vt*?
 
