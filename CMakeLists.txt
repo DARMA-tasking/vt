@@ -63,14 +63,6 @@ include(cmake/link_vt.cmake)
 # Load packages that are required for core VT build
 include(cmake/load_packages.cmake)
 
-# Request C++14, allow fallback (to C++11).. default is to fallback.
-# Might be ideal to have builds request a lower standard.
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED OFF)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 include(cmake/build_git_info.cmake)
 
 include(cmake/check_compiler.cmake)

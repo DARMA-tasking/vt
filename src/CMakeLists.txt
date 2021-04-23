@@ -221,7 +221,7 @@ target_compile_features(
   cxx_alias_templates
 )
 
-target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${CXX_STANDARD_FLAGS} ${VT_TARGET_CXX_FLAGS})
+target_compile_options(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC ${VT_TARGET_CXX_FLAGS})
 
 if (vt_gold_linker_enabled)
   if (UNIX AND NOT APPLE)
