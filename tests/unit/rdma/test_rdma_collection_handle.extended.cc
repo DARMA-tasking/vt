@@ -45,6 +45,7 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
+#include "test_helpers.h"
 #include "vt/vrt/collection/manager.h"
 
 namespace vt { namespace tests { namespace unit {
@@ -133,6 +134,8 @@ struct TestRDMAHandleCollection : TestParallelHarness { };
 TYPED_TEST_SUITE_P(TestRDMAHandleCollection);
 
 TYPED_TEST_P(TestRDMAHandleCollection, test_rdma_handle_collection_1) {
+  SET_MAX_NUM_NODES_CONSTRAINT(CMAKE_DETECTED_MAX_NUM_NODES);
+
   using T = TypeParam;
   using ColType = TestCol<T>;
   using MsgType = typename ColType::TestMsg;
