@@ -3,7 +3,6 @@
 
 macro(set_darma_compiler_flags)
 
-set_property(DIRECTORY PROPERTY CXX_STANDARD 14)
 set(CXX_EXTENSIONS OFF)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
