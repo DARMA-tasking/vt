@@ -12,7 +12,7 @@ function(check_cc_quirk VAR CC_FILE)
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cc_tests/${CC_FILE}
       OUTPUT_VARIABLE check_cc_quirk_output
-      CXX_STANDARD ${CMAKE_CXX_STANDARD}
+      CXX_STANDARD 14
       CXX_STANDARD_REQUIRED ON
       CXX_EXTENSIONS OFF
     )
