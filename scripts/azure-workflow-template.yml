@@ -135,7 +135,8 @@ stages:
                 "$(Build.Repository.Name)"                          \
                 "$GITHUB_PAT"                                       \
                 "$(Build.BuildId)"                                  \
-                "$(System.JobId)"
+                "$(System.JobId)"                                   \
+                "$(Agent.JobStatus)"
 
         env:
           GITHUB_PAT: $(github_pat)
