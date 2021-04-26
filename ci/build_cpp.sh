@@ -46,17 +46,24 @@ if test -d "${source_dir}/lib/detector"
 then
     { echo "Detector already in lib... not downloading, building, and installing"; } 2>/dev/null
 else
-    git clone -b "${detector_rev}" --depth 1 https://github.com/DARMA-tasking/detector.git
-    export DETECTOR=$PWD/detector
-    export DETECTOR_BUILD=${build_dir}/detector
-    mkdir -p "$DETECTOR_BUILD"
-    cd "$DETECTOR_BUILD"
-    mkdir build
-    cd build
-    cmake -G "${CMAKE_GENERATOR:-Ninja}" \
-          -DCMAKE_INSTALL_PREFIX="$DETECTOR_BUILD/install" \
-          "$DETECTOR"
-    cmake --build . --target install
+    if test "${VT_DOXYGEN_ENABLED:-0}" -eq 1
+    then
+        cd "${source_dir}/lib"
+        git clone -b "${detector_rev}" --depth 1 https://github.com/DARMA-tasking/detector.git
+        cd -
+    else
+      git clone -b "${detector_rev}" --depth 1 https://github.com/DARMA-tasking/detector.git
+      export DETECTOR=$PWD/detector
+      export DETECTOR_BUILD=${build_dir}/detector
+      mkdir -p "$DETECTOR_BUILD"
+      cd "$DETECTOR_BUILD"
+      mkdir build
+      cd build
+      cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+            -DCMAKE_INSTALL_PREFIX="$DETECTOR_BUILD/install" \
+            "$DETECTOR"
+      cmake --build . --target install
+    fi
 fi
 
 if test -d "${source_dir}/lib/checkpoint"
@@ -67,7 +74,7 @@ else
     then
         cd "${source_dir}/lib"
         git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
-        cd ../../
+        cd -
     else
         git clone -b "${checkpoint_rev}" --depth 1 https://github.com/DARMA-tasking/checkpoint.git
         export CHECKPOINT=$PWD/checkpoint
