@@ -46,6 +46,8 @@
 #define INCLUDED_UTILS_STATIC_CHECKS_FUNCTOR_H
 
 #include "vt/config.h"
+#include <type_traits>
+
 
 namespace vt { namespace util {
 
@@ -54,6 +56,13 @@ struct FunctorTraits;
 
 template <typename FunctorT, typename ReturnT, typename MsgT>
 struct FunctorTraits<ReturnT(FunctorT::*)(MsgT*)> {
+  using FunctorType = FunctorT;
+  using MessageType = MsgT;
+  using ReturnType  = ReturnT;
+};
+
+template <typename FunctorT, typename ReturnT, typename MsgT>
+struct FunctorTraits<ReturnT(FunctorT::*)(MsgT*) const> {
   using FunctorType = FunctorT;
   using MessageType = MsgT;
   using ReturnType  = ReturnT;
