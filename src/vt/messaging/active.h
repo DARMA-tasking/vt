@@ -904,7 +904,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsg(
-    MsgPtrThief<MsgT> msg,
+    MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
     bool deliver_to_sender = true,
     TagType tag = no_tag
   );
@@ -926,7 +926,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsgAuto(
-    MsgPtrThief<MsgT> msg,
+    MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
     TagType tag = no_tag
   );
 
@@ -947,7 +947,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   >
   PendingSendType sendMsg(
     NodeType dest,
-    MsgPtrThief<MsgT> msg,
+    MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
     TagType tag = no_tag
   );
 
@@ -970,7 +970,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   >
   PendingSendType sendMsgAuto(
     NodeType dest,
-    MsgPtrThief<MsgT> msg,
+    MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
     TagType tag = no_tag
   );
 

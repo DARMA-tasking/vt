@@ -347,7 +347,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
-  MsgPtrThief<MsgT> msg,
+  MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
   bool deliver_to_sender,
   TagType tag
 ) {
@@ -362,7 +362,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   NodeType dest,
-  MsgPtrThief<MsgT> msg,
+  MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
@@ -372,7 +372,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
-  MsgPtrThief<MsgT> msg,
+  MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
@@ -385,7 +385,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
 template <typename FunctorT, typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   NodeType dest,
-  MsgPtrThief<MsgT> msg,
+  MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
