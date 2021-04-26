@@ -111,8 +111,7 @@ template <typename SignalT, typename ListenerT>
 void PipeManagerBase::registerCallback(
   PipeType const& pipe, ListenerT&& listener, bool update_state
 ) {
-  auto& holder = signal_holder_<SignalT>;
-  auto const holder_id = holder.getID();
+  auto const holder_id = signal_holder_<SignalT>.getID();
 
   auto cleanup_iter = signal_cleanup_fns_.find(holder_id);
   if (cleanup_iter == signal_cleanup_fns_.end()) {
@@ -125,7 +124,7 @@ void PipeManagerBase::registerCallback(
    *  Save the new listener in the typed signal holder container for delivery
    *  when a signal arrives
    */
-  holder.addListener(pipe, std::move(listener));
+  signal_holder_<SignalT>.addListener(pipe, std::move(listener));
   /*
    *  Update the number of registered listeners in the pipe state
    */
