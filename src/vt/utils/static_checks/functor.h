@@ -46,7 +46,6 @@
 #define INCLUDED_UTILS_STATIC_CHECKS_FUNCTOR_H
 
 #include "vt/config.h"
-#include <type_traits>
 
 
 namespace vt { namespace util {
