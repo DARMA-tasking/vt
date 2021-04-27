@@ -14,7 +14,6 @@ RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
     ca-certificates \
     curl \
-    cmake \
     git \
     mpich \
     libmpich-dev \
@@ -38,6 +37,11 @@ ENV MPI_EXTRA_FLAGS="" \
     CC=mpicc \
     CXX=mpicxx \
     PATH=/usr/lib/ccache/:$PATH
+
+COPY ./ci/deps/cmake.sh cmake.sh
+RUN ./cmake.sh 3.18.4
+
+ENV PATH=/cmake/bin/:$PATH
 
 FROM base as build
 COPY . /vt
