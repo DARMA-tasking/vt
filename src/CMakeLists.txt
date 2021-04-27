@@ -44,6 +44,8 @@ set(
       pipe/callback/objgroup_bcast
       pipe/callback/anon
       pipe/callback/cb_union
+    pmpi
+      pmpi/generated
     timetrigger
     termination
       termination/dijkstra-scholten
