@@ -138,7 +138,17 @@ enum struct CMFTypeEnum : uint8_t {
    * next iteration. Use a CMF factor of 1.0/x, where x is the load of the
    * processor that is computing the CMF.
    */
-  NormBySelf = 2
+  NormBySelf = 2,
+  /**
+   * \brief Narrow the CMF to only include processors that can accommodate the
+   * transfer
+   *
+   * Use a CMF factor of 1.0/x, where x is the greater of the target load and
+   * the load of the most loaded processor in the CMF. Only include processors
+   * in the CMF that will pass the chosen Criterion for the object being
+   * considered for transfer.
+   */
+  NormByMaxExcludeIneligible = 3,
 };
 
 struct GossipLB : BaseLB {
@@ -182,6 +192,9 @@ protected:
   std::vector<double> createCMF(NodeSetType const& under);
   NodeType sampleFromCMF(NodeSetType const& under, std::vector<double> const& cmf);
   std::vector<NodeType> makeUnderloaded() const;
+  std::vector<NodeType> makeSufficientlyUnderloaded(
+    LoadType load_to_accommodate
+  ) const;
   ElementLoadType::iterator selectObject(
     LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
   );
