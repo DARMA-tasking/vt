@@ -687,16 +687,16 @@ util::Copyable<Type> CollectionManager::invoke(
 ) {
   auto ptr = getCollectionPtrForInvoke(proxy);
 
-#if vt_check_enabled(lblite)
-  ptr->getStats().startTime();
-#endif
+  auto const this_node = theContext()->getNode();
+  util::Copyable<Type> result;
 
-  const auto& result =
-    runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-
-#if vt_check_enabled(lblite)
-  ptr->getStats().stopTime();
-#endif
+  runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+    .withCollection(ptr)
+    .withLBStatsVoidMsg(ptr)
+    .withExplicitTask([&]{
+      result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
+    })
+    .runOrEnqueue(true);
 
   return result;
 }
@@ -707,15 +707,17 @@ util::NotCopyable<Type> CollectionManager::invoke(
 ) {
   auto ptr = getCollectionPtrForInvoke(proxy);
 
-#if vt_check_enabled(lblite)
-  ptr->getStats().startTime();
-#endif
+  auto const this_node = theContext()->getNode();
+  util::NotCopyable<Type> result;
 
-  auto&& result = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-
-#if vt_check_enabled(lblite)
-  ptr->getStats().stopTime();
-#endif
+  runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+    .withCollection(ptr)
+    .withLBStatsVoidMsg(ptr)
+    .withExplicitTask([&]{
+      auto&& ret = runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
+      result = std::move(ret);
+    })
+    .runOrEnqueue(true);
 
   return std::move(result);
 }
@@ -726,15 +728,15 @@ util::IsVoidReturn<Type> CollectionManager::invoke(
 ) {
   auto ptr = getCollectionPtrForInvoke(proxy);
 
-#if vt_check_enabled(lblite)
-  ptr->getStats().startTime();
-#endif
+  auto const this_node = theContext()->getNode();
 
-  runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
-
-#if vt_check_enabled(lblite)
-  ptr->getStats().stopTime();
-#endif
+  runnable::makeRunnableVoid(false, uninitialized_handler, this_node)
+    .withCollection(ptr)
+    .withLBStatsVoidMsg(ptr)
+    .withExplicitTask([&]{
+      runnable::invoke<Type, f>(ptr, std::forward<Args>(args)...);
+    })
+    .runOrEnqueue(true);
 }
 
 template <

@@ -152,12 +152,15 @@ struct RunnableMaker {
     impl_->template addContext<ctx::Collection<IdxT>>(elm);
     set_handler_ = true;
 
-    // Be careful with type casting here..convert to typeless before
-    // reinterpreting the pointer so the compiler does not produce the wrong
-    // offset
-    auto void_ptr = static_cast<void*>(elm);
-    auto ptr = reinterpret_cast<vrt::collection::UntypedCollection*>(void_ptr);
-    impl_->setupHandlerElement(ptr, handler_);
+    if (handler_ != uninitialized_handler) {
+      // Be careful with type casting here..convert to typeless before
+      // reinterpreting the pointer so the compiler does not produce the wrong
+      // offset
+      auto void_ptr = static_cast<void*>(elm);
+      auto ptr = reinterpret_cast<vrt::collection::UntypedCollection*>(void_ptr);
+      impl_->setupHandlerElement(ptr, handler_);
+    }
+
     return std::move(*this);
   }
 
@@ -172,6 +175,19 @@ struct RunnableMaker {
   RunnableMaker&& withLBStats(ElmT* elm, MsgU* msg) {
 #if vt_check_enabled(lblite)
     impl_->template addContext<ctx::LBStats>(elm, msg);
+#endif
+    return std::move(*this);
+  }
+
+  /**
+   * \brief Add LB stats for instrumentation (without a message)
+   *
+   * \param[in] elm the element
+   */
+  template <typename ElmT>
+  RunnableMaker&& withLBStatsVoidMsg(ElmT* elm) {
+#if vt_check_enabled(lblite)
+    impl_->template addContext<ctx::LBStats>(elm);
 #endif
     return std::move(*this);
   }
@@ -245,6 +261,17 @@ struct RunnableMaker {
    * \brief Enqueue the runnable in the scheduler for execution later
    */
   void enqueue();
+
+  /**
+   * \brief Set an explicit task for this runnable (not going through normal
+   * handler)
+   *
+   * \param[in] task_ the task to execute
+   */
+  RunnableMaker&& withExplicitTask(ActionType task_) {
+    impl_->setExplicitTask(task_);
+    return std::move(*this);
+  }
 
 private:
   /**

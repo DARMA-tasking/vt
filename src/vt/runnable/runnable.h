@@ -233,6 +233,15 @@ public:
    */
   bool isSuspended() const { return suspended_; }
 
+  /**
+   * \brief Set an explicit task for the runnable bypassing the handler
+   *
+   * \param[in] task_in the task
+   */
+  void setExplicitTask(ActionType task_in) {
+    task_ = task_in;
+  }
+
 private:
   MsgSharedPtr<BaseMsgType> msg_ = nullptr; /**< The associated message */
   bool is_threaded_ = false;                /**< Whether ULTs are supported */
