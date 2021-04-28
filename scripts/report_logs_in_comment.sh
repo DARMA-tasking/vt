@@ -38,7 +38,8 @@
 #    "$(Build.Repository.Name)"                         \
 #    "$GITHUB_PAT"                                      \
 #    "$(Build.BuildId"                                  \
-#    "$(System.JobId)"
+#    "$(System.JobId)"                                  \
+#    "$(Agent.JobStatus)"
 
 compilation_errors_warnings_out="$1"
 cmake_output_log="$2"
@@ -48,14 +49,19 @@ repository_name="$5"
 github_pat="$6"
 build_id="$7"
 job_id="$8"
+job_status="$9"
 task_id="28db5144-7e5d-5c90-2820-8676d630d9d2"
+
+echo "job_status: $job_status"
+if test "$job_status" = "Succeeded" || test "$job_status" = "SucceededWithIssues"
+then
+    succeeded=1
+else
+    succeeded=0
+fi
 
 # Extract compilation's errors and warnings from log file
 warnings_errors=$(cat "$compilation_errors_warnings_out")
-if test -z "$warnings_errors"
-then
-    warnings_errors='Compilation - successful'
-fi
 
 # Extract tests' report from log file
 delimiter="-=-=-=-"
@@ -66,9 +72,23 @@ then
     tests_failures=${tests_failures//$'\n'/$delimiter}
     tabulation="  "
     tests_failures=${tests_failures//$'\t'/$tabulation}
+fi
+
+if test "$succeeded" -eq 1
+then
+    if test -z "$warnings_errors"
+    then
+        warnings_errors='Compilation - successful'
+    fi
+
     if test -z "$tests_failures"
     then
         tests_failures='Testing - passed'
+    fi
+else
+    if test -z "$warnings_errors" && test -z "$tests_failures"
+    then
+        warnings_errors='Build failed for unknown reason. Check build logs'
     fi
 fi
 
