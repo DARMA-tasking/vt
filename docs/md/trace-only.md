@@ -45,7 +45,7 @@ target_link_libraries(${target_name} PUBLIC vt::vt-trace)
 
 Example CMake:
 \code{.cmake}
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 
 project(my_target)
 

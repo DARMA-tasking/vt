@@ -278,11 +278,7 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     -g         # generate debug info
     --coverage # sets all required flags
   )
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
-    target_link_options(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE --coverage)
-  else()
-    target_link_libraries(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE --coverage)
-  endif()
+  target_link_options(${VIRTUAL_TRANSPORT_LIBRARY} INTERFACE --coverage)
 endif()
 
 include(../cmake/set_linker_flags.cmake)
@@ -307,40 +303,26 @@ install(
   COMPONENT                 runtime
 )
 
-if(CMAKE_VERSION VERSION_LESS "3.13.0")
-  message(
-    WARNING
-    "VT: Install targets skipped because CMake version ${CMAKE_VERSION}<3.13; "
-    "affects packages built with a VT install. "
-    "CMake <3.13 does not support exporting targets from subdirectories"
-  )
-  set(cmake_do_install 0)
-else()
-  set(cmake_do_install 1)
+set(FMT_LIBRARY_EXPORT ${FMT_LIBRARY})
+install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+
+if (vt_mimalloc_enabled)
+  set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
 endif()
 
-if (cmake_do_install)
-  set(FMT_LIBRARY_EXPORT ${FMT_LIBRARY})
-  install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+if (vt_libfort_enabled)
+  set(FORT_LIBRARY_EXPORT ${FORT_LIBRARY})
+  install(TARGETS ${FORT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+endif()
 
-  if (vt_mimalloc_enabled)
-    set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
-  endif()
+if (vt_find_detector_dep EQUAL 0)
+  install(TARGETS detector EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+  set(DETECTOR_EXPORT detector)
+endif()
 
-  if (vt_libfort_enabled)
-    set(FORT_LIBRARY_EXPORT ${FORT_LIBRARY})
-    install(TARGETS ${FORT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-  endif()
-
-  if (vt_find_detector_dep EQUAL 0)
-    install(TARGETS detector EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-    set(DETECTOR_EXPORT detector)
-  endif()
-
-  if (vt_find_checkpoint_dep EQUAL 0)
-    install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-    set(CHECKPOINT_EXPORT checkpoint)
-  endif()
+if (vt_find_checkpoint_dep EQUAL 0)
+  install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+  set(CHECKPOINT_EXPORT checkpoint)
 endif()
 
 if (vt_fcontext_enabled)
