@@ -64,6 +64,13 @@ LBStats::LBStats(ElmT* in_elm, MsgT* msg)
   theCollection()->recordStats(in_elm, msg);
 }
 
+template <typename ElmT>
+LBStats::LBStats(ElmT* in_elm)
+  : stats_(&in_elm->getStats()),
+    cur_elm_id_(in_elm->getElmID()),
+    should_instrument_(true)
+{ }
+
 }} /* end namespace vt::ctx */
 
 #endif /*INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_LB_STATS_IMPL_H*/

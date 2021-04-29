@@ -70,6 +70,14 @@ struct LBStats final : Base {
   LBStats(ElmT* in_elm, MsgT* msg);
 
   /**
+   * \brief Construct a \c LBStats
+   *
+   * \param[in] in_elm the collection element
+   */
+  template <typename ElmT>
+  explicit LBStats(ElmT* in_elm);
+
+  /**
    * \brief Set the context and timing for a collection task
    */
   void begin() final override;
