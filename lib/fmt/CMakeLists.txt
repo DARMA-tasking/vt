@@ -15,7 +15,7 @@ set(FMT_SOURCES src/format.cc)
 add_library(fmt ${FMT_SOURCES} ${FMT_HEADERS})
 add_library(fmt::fmt ALIAS fmt)
 
-target_include_directories(fmt PUBLIC
+target_include_directories(fmt SYSTEM PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
