@@ -150,6 +150,7 @@ x-vtopts: &vtopts
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
   VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE-}
   VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-}
+  CODECOV_TOKEN: ${CODECOV_TOKEN:-}
 
 services:
   ##############################################################################

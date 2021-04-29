@@ -121,6 +121,8 @@ stages:
           dockerComposeFile: '**/docker-compose.yml'
           action: 'Run a Docker Compose command'
           dockerComposeCommand: 'run [% docker_target %]'
+        env:
+          CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3
         displayName: Put compilation's and tests' logs in PR comment
         condition: and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest'))
@@ -137,7 +139,6 @@ stages:
                 "$(Build.BuildId)"                                  \
                 "$(System.JobId)"                                   \
                 "$(Agent.JobStatus)"
-
         env:
           GITHUB_PAT: $(github_pat)
       - task: DockerCompose@0
