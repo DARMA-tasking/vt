@@ -101,9 +101,9 @@ option(vt_werror_enabled "Build VT with -Werror enabled" OFF)
 if (vt_werror_enabled)
   enable_cxx_compiler_flag_if_supported("-Werror")
 endif()
-include(cmake/load_bundled_libraries.cmake)
 
 include(cmake/nvcc_no_deprecated_gpu_targets.cmake)
+include(cmake/load_bundled_libraries.cmake)
 
 option(vt_trace_only "Build VT with trace-only mode enabled" OFF)
 if (vt_trace_only)
