@@ -106,13 +106,25 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
   auto const phase = proc_data_.size() - 1;
   auto const prev_data = std::move(proc_data_[phase]);
   std::unordered_map<ElementIDType,TimeType> new_data;
-  for (auto& elm : prev_data) {
+  for (const auto& elm : prev_data) {
     auto iter = proc_temp_to_perm_.find(elm.first);
     vtAssert(iter != proc_temp_to_perm_.end(), "Temp ID must exist");
     auto perm_id = iter->second;
     new_data[perm_id] = elm.second;
   }
   proc_data_[phase] = std::move(new_data);
+
+  // Convert the temp ID proc_subphase_data_ for the last iteration into perm
+  // ID for stats output
+  auto const prev_subphase_data = std::move(proc_subphase_data_[phase]);
+  SubphaseLoadMapType new_subphase_data;
+  for (const auto& elm : prev_subphase_data) {
+    auto iter = proc_temp_to_perm_.find(elm.first);
+    vtAssert(iter != proc_temp_to_perm_.end(), "Temp ID must exist");
+    auto perm_id = iter->second;
+    new_subphase_data[perm_id] = elm.second;
+  }
+  proc_subphase_data_[phase] = std::move(new_subphase_data);
 
   // Create migrate lambdas and temp to perm map since LB is complete
   ProcStats::proc_migrate_.clear();
