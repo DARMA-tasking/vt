@@ -375,7 +375,7 @@ void GossipLB::informAsync() {
   theSched()->runSchedulerWhile([&inform_done]{ return not inform_done; });
 
   if (is_overloaded_) {
-    debug_print_verbose(
+    debug_print(
       gossiplb, node,
       "GossipLB::informAsync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
@@ -442,7 +442,7 @@ void GossipLB::informSync() {
   }
 
   if (is_overloaded_) {
-    debug_print_verbose(
+    debug_print(
       gossiplb, node,
       "GossipLB::informSync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
