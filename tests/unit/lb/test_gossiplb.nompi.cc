@@ -52,20 +52,19 @@
 namespace vt { namespace tests { namespace unit {
 
 using TestGossipLB = TestHarness;
-using ElementIDStruct = vt::vrt::collection::balance::ElementIDStruct;
 using ElementIDType = vt::vrt::collection::balance::ElementIDType;
 using ObjectOrdering = vt::vrt::collection::lb::ObjectOrderEnum;
 
 TimeType setupProblem(
-  std::unordered_map<ElementIDStruct, TimeType> &cur_objs
+  std::unordered_map<ElementIDType, TimeType> &cur_objs
 ) {
   // total load of 29 seconds
-  cur_objs.emplace(ElementIDStruct{3,0,0}, 4.0);
-  cur_objs.emplace(ElementIDStruct{5,0,0}, 5.0);
-  cur_objs.emplace(ElementIDStruct{2,0,0}, 9.0);
-  cur_objs.emplace(ElementIDStruct{0,0,0}, 2.0);
-  cur_objs.emplace(ElementIDStruct{1,0,0}, 6.0);
-  cur_objs.emplace(ElementIDStruct{4,0,0}, 3.0);
+  cur_objs.emplace(ElementIDType{3}, 4.0);
+  cur_objs.emplace(ElementIDType{5}, 5.0);
+  cur_objs.emplace(ElementIDType{2}, 9.0);
+  cur_objs.emplace(ElementIDType{0}, 2.0);
+  cur_objs.emplace(ElementIDType{1}, 6.0);
+  cur_objs.emplace(ElementIDType{4}, 3.0);
 
   // compute the load for this processor
   TimeType my_load = 0;
@@ -77,7 +76,7 @@ TimeType setupProblem(
 
 void orderAndVerify(
   ObjectOrdering order,
-  const std::unordered_map<ElementIDStruct, TimeType> &cur_objs,
+  const std::unordered_map<ElementIDType, TimeType> &cur_objs,
   TimeType my_load_ms, TimeType target_load_ms,
   const std::vector<ElementIDType> &soln
 ) {
@@ -89,7 +88,7 @@ void orderAndVerify(
   // verify correctness of the returned ordering
   int i = 0;
   for (auto obj_id : ordered_objs) {
-    EXPECT_EQ(obj_id.id, soln[i++]);
+    EXPECT_EQ(obj_id, soln[i++]);
   }
 }
 
@@ -97,7 +96,7 @@ void orderUsingOverloadAndVerify(
   ObjectOrdering order, TimeType over_avg_sec /* my_load-target_load */,
   const std::vector<ElementIDType> &soln
 ) {
-  std::unordered_map<ElementIDStruct, TimeType> cur_objs;
+  std::unordered_map<ElementIDType, TimeType> cur_objs;
   TimeType my_load_ms = vt::vrt::collection::lb::BaseLB::loadMilli(
     setupProblem(cur_objs)
   );
@@ -113,7 +112,7 @@ void orderUsingTargetLoadAndVerify(
   ObjectOrdering order, TimeType target_load_sec,
   const std::vector<ElementIDType> &soln
 ) {
-  std::unordered_map<ElementIDStruct, TimeType> cur_objs;
+  std::unordered_map<ElementIDType, TimeType> cur_objs;
   TimeType my_load_ms = vt::vrt::collection::lb::BaseLB::loadMilli(
     setupProblem(cur_objs)
   );
