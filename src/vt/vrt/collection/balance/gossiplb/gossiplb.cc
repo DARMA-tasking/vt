@@ -212,11 +212,13 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
 
   vtAbortIf(
     inform_type_ == InformTypeEnum::AsyncInform && deterministic_,
-    "Asynchronous informs allow race conditions and thus are not deterministic"
+    "Asynchronous informs allow race conditions and thus are not "
+    "deterministic; use inform=SyncInform"
   );
   vtAbortIf(
     obj_ordering_ == ObjectOrderEnum::Arbitrary && deterministic_,
-    "Arbitrary object ordering is not deterministic"
+    "Arbitrary object ordering is not deterministic; use ordering=ElmID "
+    "or another option"
   );
 
   if (theContext()->getNode() == 0) {
