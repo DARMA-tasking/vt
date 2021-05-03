@@ -76,21 +76,21 @@ bool GossipLB::isOverloaded(LoadType load) const {
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{
-    "f", "k", "i", "c", "trials", "deterministic", "inform", "ordering", "cmf",
-    "rollback", "targetpole"
+    "fanout", "rounds", "iters", "criterion", "trials", "deterministic",
+    "inform", "ordering", "cmf", "rollback", "targetpole"
   };
   spec->checkAllowedKeys(allowed);
 
-  f_             = spec->getOrDefault<int32_t>("f", f_);
-  k_max_         = spec->getOrDefault<int32_t>("k", k_max_);
-  num_iters_     = spec->getOrDefault<int32_t>("i", num_iters_);
+  f_             = spec->getOrDefault<int32_t>("fanout", f_);
+  k_max_         = spec->getOrDefault<int32_t>("rounds", k_max_);
+  num_iters_     = spec->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
   deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
   rollback_      = spec->getOrDefault<int32_t>("rollback", rollback_);
   target_pole_   = spec->getOrDefault<int32_t>("targetpole", target_pole_);
 
   EnumConverter<CriterionEnum> criterion_converter_(
-    "c", "CriterionEnum", {
+    "criterion", "CriterionEnum", {
       {CriterionEnum::Grapevine,         "Grapevine"},
       {CriterionEnum::ModifiedGrapevine, "ModifiedGrapevine"}
     }
@@ -138,9 +138,9 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, gossiplb,
-      "GossipLB::inputParams: using f={}, k={}, i={}, c={}, trials={}, "
-      "deterministic={}, inform={}, ordering={}, cmf={}, rollback={}, "
-      "targetpole={}\n",
+      "GossipLB::inputParams: using fanout={}, rounds={}, iters={}, "
+      "criterion={}, trials={}, deterministic={}, inform={}, ordering={}, "
+      "cmf={}, rollback={}, targetpole={}\n",
       f_, k_max_, num_iters_, criterion_converter_.getString(criterion_),
       num_trials_, deterministic_,
       inform_type_converter_.getString(inform_type_),
