@@ -228,4 +228,44 @@ enum struct KnowledgeEnum : uint8_t {
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
+namespace std {
+
+using InformTypeEnum = ::vt::vrt::collection::lb::InformTypeEnum;
+
+template <>
+struct hash<InformTypeEnum> {
+  size_t operator()(InformTypeEnum const& in) const {
+    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+  }
+};
+
+using ObjectOrderEnum = ::vt::vrt::collection::lb::ObjectOrderEnum;
+
+template <>
+struct hash<ObjectOrderEnum> {
+  size_t operator()(ObjectOrderEnum const& in) const {
+    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+  }
+};
+
+using CMFTypeEnum = ::vt::vrt::collection::lb::CMFTypeEnum;
+
+template <>
+struct hash<CMFTypeEnum> {
+  size_t operator()(CMFTypeEnum const& in) const {
+    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+  }
+};
+
+using KnowledgeEnum = ::vt::vrt::collection::lb::KnowledgeEnum;
+
+template <>
+struct hash<KnowledgeEnum> {
+  size_t operator()(KnowledgeEnum const& in) const {
+    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+  }
+};
+
+} /* end namespace std */
+
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_ENUMS_H*/
