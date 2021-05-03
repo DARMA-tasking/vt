@@ -901,8 +901,26 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   template <
     typename FunctorT,
-    typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
+    typename MsgT
   >
+  PendingSendType broadcastMsg(
+    MsgPtrThief<MsgT> msg,
+    bool deliver_to_sender = true,
+    TagType tag = no_tag
+  );
+
+  /**
+   * \brief Broadcast a message.
+   *
+   * \note Takes ownership of the supplied message.
+   *
+   * \param[in] msg the message to broadcast
+   * \param[in] deliver_to_sender whether msg should be delivered to sender
+   * \param[in] tag the optional tag to put on the message
+   *
+   * \return the \c PendingSend for the broadcast
+   */
+  template <typename FunctorT>
   PendingSendType broadcastMsg(
     MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
     bool deliver_to_sender = true,
@@ -926,7 +944,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
   >
   PendingSendType broadcastMsgAuto(
-    MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
@@ -941,10 +959,25 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \return the \c PendingSend for the send
    */
-  template <
-    typename FunctorT,
-    typename MsgT = typename util::FunctorExtractor<FunctorT>::MessageType
-  >
+  template <typename FunctorT,typename MsgT>
+  PendingSendType sendMsg(
+    NodeType dest,
+    MsgPtrThief<MsgT> msg,
+    TagType tag = no_tag
+  );
+
+  /**
+   * \brief Send a message with a type-safe handler.
+   *
+   * \note Takes ownership of the supplied message.
+   *
+   * \param[in] dest the destination node to send the message to
+   * \param[in] msg the message to broadcast
+   * \param[in] tag the tag to put on the message
+   *
+   * \return the \c PendingSend for the send
+   */
+  template <typename FunctorT>
   PendingSendType sendMsg(
     NodeType dest,
     MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
@@ -970,7 +1003,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   >
   PendingSendType sendMsgAuto(
     NodeType dest,
-    MsgPtrThief<typename util::FunctorExtractor<FunctorT>::MessageType> msg,
+    MsgPtrThief<MsgT> msg,
     TagType tag = no_tag
   );
 
