@@ -136,9 +136,9 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
       f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
     } else {
       // set both the fanout and the rounds
-      k_max_ = static_cast<uint16_t>(
+      k_max_ = static_cast<uint16_t>(std::max(1.0,
         std::round(std::sqrt(std::log(num_nodes)/std::log(2.0)))
-      );
+      ));
       f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
     }
   } else if (knowledge_ == KnowledgeEnum::Complete) {
