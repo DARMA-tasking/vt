@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
 #include "vt/vrt/collection/balance/gossiplb/criterion.h"
+#include "vt/vrt/collection/balance/gossiplb/gossip_enums.h"
 
 #include <random>
 #include <unordered_map>
@@ -57,99 +58,6 @@
 #include <vector>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
-
-/// Enum for gossiping approach
-enum struct InformTypeEnum : uint8_t {
-  /**
-   * \brief Synchronous sharing of underloaded processor loads
-   *
-   * The round number is defined at the processor level. This approach
-   * propagates known loads after all messages for a round are received,
-   * maximizing the amount of information propagated per round, but has a
-   * synchronization cost.
-   */
-  SyncInform  = 0,
-  /**
-   * \brief Asynchronous sharing of underloaded processor loads
-   *
-   * The round number is defined at the message level. This approach
-   * propagates known loads when the first message for a round is received,
-   * avoiding the synchronization cost but delaying the propagation of some
-   * information until the following round.
-   */
-  AsyncInform = 1
-};
-
-/// Enum for the order in which local objects are considered for transfer
-enum struct ObjectOrderEnum : uint8_t {
-  Arbitrary = 0, //< Arbitrary order: iterate as defined by the unordered_map
-  /**
-   * \brief By element ID
-   *
-   * Sort ascending by the ID member of ElementIDStruct.
-   */
-  ElmID     = 1,
-  /**
-   * \brief Order for the fewest migrations
-   *
-   * Order starting with the object with the smallest load that can be
-   * transferred to drop the processor load below the average, then by
-   * descending load for objects with smaller loads, and finally by ascending
-   * load for objects with larger loads.
-   */
-  FewestMigrations = 2,
-  /**
-   * \brief Order for migrating the objects with the smallest loads
-   *
-   * Find the object with the smallest load where the sum of its own load and
-   * all smaller loads meets or exceeds the amount by which this processor's
-   * load exceeds the target load. Order starting with that object, then by
-   * descending load for objects with smaller loads, and finally by ascending
-   * load for objects with larger loads.
-   */
-  SmallObjects = 3,
-  /**
-   * \brief Order by descending load
-   */
-  LargestObjects = 4
-};
-
-/// Enum for how the CMF is computed
-enum struct CMFTypeEnum : uint8_t {
-  /**
-   * \brief Original approach
-   *
-   * Remove processors from the CMF as soon as they exceed the target (e.g.,
-   * processor-avg) load. Use a CMF factor of 1.0/x, where x is the target load.
-   */
-  Original   = 0,
-  /**
-   * \brief Compute the CMF factor using the largest processor load in the CMF
-   *
-   * Do not remove processors from the CMF that exceed the target load until the
-   * next iteration. Use a CMF factor of 1.0/x, where x is the greater of the
-   * target load and the load of the most loaded processor in the CMF.
-   */
-  NormByMax  = 1,
-  /**
-   * \brief Compute the CMF factor using the load of this processor
-   *
-   * Do not remove processors from the CMF that exceed the target load until the
-   * next iteration. Use a CMF factor of 1.0/x, where x is the load of the
-   * processor that is computing the CMF.
-   */
-  NormBySelf = 2,
-  /**
-   * \brief Narrow the CMF to only include processors that can accommodate the
-   * transfer
-   *
-   * Use a CMF factor of 1.0/x, where x is the greater of the target load and
-   * the load of the most loaded processor in the CMF. Only include processors
-   * in the CMF that will pass the chosen Criterion for the object being
-   * considered for transfer.
-   */
-  NormByMaxExcludeIneligible = 3,
-};
 
 struct GossipLB : BaseLB {
   using GossipMsgAsync = balance::GossipMsgAsync;
