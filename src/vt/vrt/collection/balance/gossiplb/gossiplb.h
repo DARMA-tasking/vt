@@ -128,7 +128,7 @@ private:
    * How many times to repeat the requested number of iterations, hoping to find
    * a better imbalance. This helps if it's easy to get stuck in a local minimum.
    */
-  uint16_t num_trials_                              = 3;
+  uint16_t num_trials_                              = 1;
   /**
    * \brief Whether to make migration choices deterministic
    *
