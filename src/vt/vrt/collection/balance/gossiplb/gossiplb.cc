@@ -1108,7 +1108,7 @@ void GossipLB::decide() {
 
 void GossipLB::thunkMigrations() {
   vt_debug_print(
-    terse, gossiplb,
+    normal, gossiplb,
     "thunkMigrations, total num_objs={}\n",
     cur_objs_.size()
   );
