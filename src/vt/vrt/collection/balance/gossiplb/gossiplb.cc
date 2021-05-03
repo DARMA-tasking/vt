@@ -168,9 +168,10 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
 
   num_iters_     = spec->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
-  deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
-  rollback_      = spec->getOrDefault<int32_t>("rollback", rollback_);
-  target_pole_   = spec->getOrDefault<int32_t>("targetpole", target_pole_);
+
+  deterministic_ = spec->getOrDefault<bool>("deterministic", deterministic_);
+  rollback_      = spec->getOrDefault<bool>("rollback", rollback_);
+  target_pole_   = spec->getOrDefault<bool>("targetpole", target_pole_);
 
   EnumConverter<CriterionEnum> criterion_converter_(
     "criterion", "CriterionEnum", {
