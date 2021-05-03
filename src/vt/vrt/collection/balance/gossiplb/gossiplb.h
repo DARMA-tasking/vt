@@ -166,7 +166,7 @@ private:
   TimeType new_imbalance_                           = 0.0;
   TimeType target_max_load_                         = 0.0;
   CriterionEnum criterion_                          = CriterionEnum::ModifiedGrapevine;
-  InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
+  InformTypeEnum inform_type_                       = InformTypeEnum::AsyncInform;
   ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::FewestMigrations;
   CMFTypeEnum cmf_type_                             = CMFTypeEnum::NormByMax;
   KnowledgeEnum knowledge_                          = KnowledgeEnum::Log;
