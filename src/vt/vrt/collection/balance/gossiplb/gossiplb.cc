@@ -76,13 +76,96 @@ bool GossipLB::isOverloaded(LoadType load) const {
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{
-    "fanout", "rounds", "iters", "criterion", "trials", "deterministic",
-    "inform", "ordering", "cmf", "rollback", "targetpole"
+    "knowledge", "fanout", "rounds", "iters", "criterion", "trials",
+    "deterministic", "inform", "ordering", "cmf", "rollback", "targetpole",
   };
   spec->checkAllowedKeys(allowed);
 
-  f_             = spec->getOrDefault<int32_t>("fanout", f_);
-  k_max_         = spec->getOrDefault<int32_t>("rounds", k_max_);
+  // the following options interact with each other, so we need to know
+  // which were defaulted and which were explicitly specified
+  auto params = spec->getParams();
+  bool specified_knowledge = params.find("knowledge") != params.end();
+  bool specified_fanout    = params.find("fanout")    != params.end();
+  bool specified_rounds    = params.find("rounds")    != params.end();
+
+  EnumConverter<KnowledgeEnum> knowledge_converter_(
+    "knowledge", "KnowledgeEnum", {
+      {KnowledgeEnum::UserDefined, "UserDefined"},
+      {KnowledgeEnum::Complete,    "Complete"},
+      {KnowledgeEnum::Log,         "Log"}
+    }
+  );
+  knowledge_ = knowledge_converter_.getFromSpec(spec, knowledge_);
+
+  vtAbortIf(
+    specified_knowledge && knowledge_ == KnowledgeEnum::Log &&
+    specified_fanout && specified_rounds,
+    "GossipLB: You must leave fanout and/or rounds unspecified when "
+    "knowledge=Log"
+  );
+  vtAbortIf(
+    !specified_knowledge && knowledge_ == KnowledgeEnum::Log &&
+    specified_fanout && specified_rounds,
+    "GossipLB: You must use knowledge=UserDefined if you want to explicitly "
+    "set both fanout and rounds"
+  );
+  vtAbortIf(
+    knowledge_ == KnowledgeEnum::Complete &&
+    (specified_fanout || specified_rounds),
+    "GossipLB: You must leave fanout and rounds unspecified when "
+    "knowledge=Complete"
+  );
+  vtAbortIf(
+    knowledge_ == KnowledgeEnum::UserDefined &&
+    (!specified_fanout || !specified_rounds),
+    "GossipLB: You must explicitly set both fanout and rounds when "
+    "knowledge=UserDefined"
+  );
+
+  auto num_nodes = theContext()->getNumNodes();
+  if (knowledge_ == KnowledgeEnum::Log) {
+    if (specified_fanout) {
+      // set the rounds based on the chosen fanout: k=log_f(p)
+      f_ = spec->getOrDefault<int32_t>("fanout", f_);
+      k_max_ = static_cast<uint8_t>(
+        std::ceil(std::log(num_nodes)/std::log(f_))
+      );
+    } else if (specified_rounds) {
+      // set the fanout based on the chosen rounds: f=p^(1/k)
+      k_max_ = spec->getOrDefault<int32_t>("rounds", k_max_);
+      f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
+    } else {
+      // set both the fanout and the rounds
+      k_max_ = static_cast<uint16_t>(
+        std::round(std::sqrt(std::log(num_nodes)/std::log(2.0)))
+      );
+      f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
+    }
+  } else if (knowledge_ == KnowledgeEnum::Complete) {
+    f_ = num_nodes - 1;
+    k_max_ = 1;
+  } else { // knowledge_ == KnowledgeEnum::UserDefined
+    // if either of these was omitted, a default will be used, which probably
+    // isn't desirable
+    f_     = spec->getOrDefault<int32_t>("fanout", f_);
+    k_max_ = spec->getOrDefault<int32_t>("rounds", k_max_);
+  }
+
+  if (f_ < 1) {
+    auto s = fmt::format(
+      "GossipLB: fanout={} is invalid; fanout must be positive",
+      f_
+    );
+    vtAbort(s);
+  }
+  if (k_max_ < 1) {
+    auto s = fmt::format(
+      "GossipLB: rounds={} is invalid; rounds must be positive",
+      k_max_
+    );
+    vtAbort(s);
+  }
+
   num_iters_     = spec->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
   deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
@@ -138,15 +221,14 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, gossiplb,
-      "GossipLB::inputParams: using fanout={}, rounds={}, iters={}, "
-      "criterion={}, trials={}, deterministic={}, inform={}, ordering={}, "
-      "cmf={}, rollback={}, targetpole={}\n",
-      f_, k_max_, num_iters_, criterion_converter_.getString(criterion_),
-      num_trials_, deterministic_,
+      "GossipLB::inputParams: using knowledge={}, fanout={}, rounds={}, "
+      "iters={}, criterion={}, trials={}, deterministic={}, inform={}, "
+      "ordering={}, cmf={}, rollback={}, targetpole={}\n",
+      knowledge_converter_.getString(knowledge_), f_, k_max_, num_iters_,
+      criterion_converter_.getString(criterion_), num_trials_, deterministic_,
       inform_type_converter_.getString(inform_type_),
       obj_ordering_converter_.getString(obj_ordering_),
-      cmf_type_converter_.getString(cmf_type_),
-      rollback_, target_pole_
+      cmf_type_converter_.getString(cmf_type_), rollback_, target_pole_
     );
   }
 }

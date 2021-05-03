@@ -169,6 +169,7 @@ private:
   InformTypeEnum inform_type_                       = InformTypeEnum::SyncInform;
   ObjectOrderEnum obj_ordering_                     = ObjectOrderEnum::FewestMigrations;
   CMFTypeEnum cmf_type_                             = CMFTypeEnum::NormByMax;
+  KnowledgeEnum knowledge_                          = KnowledgeEnum::Log;
   bool setup_done_                                  = false;
   bool propagate_next_round_                        = false;
   std::vector<bool> propagated_k_;

@@ -203,6 +203,29 @@ enum struct CMFTypeEnum : uint8_t {
   NormByMaxExcludeIneligible = 3,
 };
 
+/// Enum for determining fanout and rounds
+enum struct KnowledgeEnum : uint8_t {
+  /**
+   * \brief User defined values of fanout and rounds
+   *
+   * The fanout and rounds must be set explicitly
+   */
+  UserDefined = 0,
+  /**
+   * \brief Full information
+   *
+   * The fanout will be as large as possible, with only one round
+   */
+  Complete    = 1,
+  /**
+   * \brief Choose rounds and/or fanout based on log rule
+   *
+   * The relationship between rounds and fanout will be approximately
+   * rounds = log(num_ranks)/log(fanout).
+   */
+  Log         = 2
+};
+
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_ENUMS_H*/
