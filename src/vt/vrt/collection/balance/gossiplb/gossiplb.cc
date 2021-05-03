@@ -81,16 +81,6 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   };
   spec->checkAllowedKeys(allowed);
 
-  using CriterionEnumUnder   = typename std::underlying_type<CriterionEnum>::type;
-  using InformTypeEnumUnder  = typename std::underlying_type<InformTypeEnum>::type;
-  using ObjectOrderEnumUnder = typename std::underlying_type<ObjectOrderEnum>::type;
-  using CMFTypeEnumUnder     = typename std::underlying_type<CMFTypeEnum>::type;
-
-  auto default_c      = static_cast<CriterionEnumUnder>(criterion_);
-  auto default_inform = static_cast<InformTypeEnumUnder>(inform_type_);
-  auto default_order  = static_cast<ObjectOrderEnumUnder>(obj_ordering_);
-  auto default_cmf    = static_cast<CMFTypeEnumUnder>(cmf_type_);
-
   f_             = spec->getOrDefault<int32_t>("f", f_);
   k_max_         = spec->getOrDefault<int32_t>("k", k_max_);
   num_iters_     = spec->getOrDefault<int32_t>("i", num_iters_);
@@ -99,14 +89,42 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   rollback_      = spec->getOrDefault<int32_t>("rollback", rollback_);
   target_pole_   = spec->getOrDefault<int32_t>("targetpole", target_pole_);
 
-  int32_t c      = spec->getOrDefault<int32_t>("c", default_c);
-  criterion_     = static_cast<CriterionEnum>(c);
-  int32_t inf    = spec->getOrDefault<int32_t>("inform", default_inform);
-  inform_type_   = static_cast<InformTypeEnum>(inf);
-  int32_t ord    = spec->getOrDefault<int32_t>("ordering", default_order);
-  obj_ordering_  = static_cast<ObjectOrderEnum>(ord);
-  int32_t cmf    = spec->getOrDefault<int32_t>("cmf", default_cmf);
-  cmf_type_      = static_cast<CMFTypeEnum>(cmf);
+  EnumConverter<CriterionEnum> criterion_converter_(
+    "c", "CriterionEnum", {
+      {CriterionEnum::Grapevine,         "Grapevine"},
+      {CriterionEnum::ModifiedGrapevine, "ModifiedGrapevine"}
+    }
+  );
+  criterion_ = criterion_converter_.getFromSpec(spec, criterion_);
+
+  EnumConverter<InformTypeEnum> inform_type_converter_(
+    "inform", "InformTypeEnum", {
+      {InformTypeEnum::SyncInform,  "SyncInform"},
+      {InformTypeEnum::AsyncInform, "AsyncInform"}
+    }
+  );
+  inform_type_ = inform_type_converter_.getFromSpec(spec, inform_type_);
+
+  EnumConverter<ObjectOrderEnum> obj_ordering_converter_(
+    "ordering", "ObjectOrderEnum", {
+      {ObjectOrderEnum::Arbitrary,        "Arbitrary"},
+      {ObjectOrderEnum::ElmID,            "ElmID"},
+      {ObjectOrderEnum::FewestMigrations, "FewestMigrations"},
+      {ObjectOrderEnum::SmallObjects,     "SmallObjects"},
+      {ObjectOrderEnum::LargestObjects,   "LargestObjects"}
+    }
+  );
+  obj_ordering_ = obj_ordering_converter_.getFromSpec(spec, obj_ordering_);
+
+  EnumConverter<CMFTypeEnum> cmf_type_converter_(
+    "cmf", "CMFTypeEnum", {
+      {CMFTypeEnum::Original,                   "Original"},
+      {CMFTypeEnum::NormByMax,                  "NormByMax"},
+      {CMFTypeEnum::NormBySelf,                 "NormBySelf"},
+      {CMFTypeEnum::NormByMaxExcludeIneligible, "NormByMaxExcludeIneligible"}
+    }
+  );
+  cmf_type_ = cmf_type_converter_.getFromSpec(spec, cmf_type_);
 
   vtAbortIf(
     inform_type_ == InformTypeEnum::AsyncInform && deterministic_,
@@ -123,9 +141,11 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
       "GossipLB::inputParams: using f={}, k={}, i={}, c={}, trials={}, "
       "deterministic={}, inform={}, ordering={}, cmf={}, rollback={}, "
       "targetpole={}\n",
-      f_, k_max_, num_iters_, static_cast<int32_t>(criterion_), num_trials_,
-      deterministic_, static_cast<int32_t>(inform_type_),
-      static_cast<int32_t>(obj_ordering_), static_cast<int32_t>(cmf_type_),
+      f_, k_max_, num_iters_, criterion_converter_.getString(criterion_),
+      num_trials_, deterministic_,
+      inform_type_converter_.getString(inform_type_),
+      obj_ordering_converter_.getString(obj_ordering_),
+      cmf_type_converter_.getString(cmf_type_),
       rollback_, target_pole_
     );
   }

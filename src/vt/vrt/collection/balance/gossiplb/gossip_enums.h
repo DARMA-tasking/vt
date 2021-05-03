@@ -46,8 +46,69 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_ENUMS_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/read_lb.h"
+
+#include <string>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
+
+template <typename T>
+struct EnumConverter {
+  using EnumToStrMap = typename std::unordered_map<T, std::string>;
+  using StrToEnumMap = typename std::unordered_map<std::string, T>;
+
+  EnumConverter(
+    const std::string &par_name,
+    const std::string &enum_type,
+    const EnumToStrMap &enum_to_str
+  ) : enum_to_str_(enum_to_str),
+      par_name_(par_name),
+      enum_type_(enum_type)
+  {
+    for (const auto &it : enum_to_str_) {
+      str_to_enum_[it.second] = it.first;
+    }
+  }
+
+  virtual ~EnumConverter() = default;
+
+  std::string getString(T e) const {
+    auto it = enum_to_str_.find(e);
+    if (it == enum_to_str_.end()) {
+      auto err = fmt::format(
+        "GossipLB EnumConverter: enum '{}' value '{}' was not found in the map",
+        enum_type_, e
+      );
+      vtAbort(err);
+    }
+    return it->second;
+  }
+
+  T getEnum(std::string s) const {
+    auto it = str_to_enum_.find(s);
+    if (it == str_to_enum_.end()) {
+      auto err = fmt::format(
+        "GossipLB: LB argument '{}' value '{}' is not recognized",
+        par_name_, s
+      );
+      vtAbort(err);
+    }
+    return it->second;
+  }
+
+  T getFromSpec(balance::SpecEntry* spec, T def_value) const {
+    std::string spec_value = spec->getOrDefault<std::string>(
+      par_name_, getString(def_value)
+    );
+    return getEnum(spec_value);
+  }
+
+  EnumToStrMap enum_to_str_;
+  StrToEnumMap str_to_enum_;
+  std::string par_name_;
+  std::string enum_type_;
+};
 
 /// Enum for gossiping approach
 enum struct InformTypeEnum : uint8_t {
