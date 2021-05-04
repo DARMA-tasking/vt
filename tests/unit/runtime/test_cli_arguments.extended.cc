@@ -56,10 +56,17 @@ struct TestCliArguments : TestParallelHarness { };
 TEST_F(TestCliArguments, test_vt_assert) {
   EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
 
+#if vt_check_enabled(throw_on_abort)
+  ASSERT_THROW(
+    vtAssert(false, "Should throw."),
+    std::runtime_error
+  );
+#else
   ASSERT_DEATH(
     vtAssert(false, "Should abort."),
     "Should abort."
   );
+#endif
 }
 #endif
 
