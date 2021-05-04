@@ -75,10 +75,17 @@ static void attempt_mpi_access() {
 
 static void message_handler(DummyMsg* msg) {
   if (expected_to_fail_on_mpi_access) {
+#if vt_check_enabled(throw_on_abort)
+  ASSERT_THROW(
+    attempt_mpi_access(),
+    std::runtime_error
+  );
+#else
     ASSERT_DEATH(
       attempt_mpi_access(),
       "MPI functions should not used inside user code invoked from VT handlers"
     );
+#endif
   } else {
     attempt_mpi_access();
     SUCCEED();

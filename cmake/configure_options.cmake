@@ -134,7 +134,7 @@ else()
     set(vt_feature_cmake_ci_build "0")
 endif()
 
-option(vt_throw_on_abort "Build VT with load balancing enabled" OFF)
+option(vt_throw_on_abort "Build VT with 'throw on vtAbort'" OFF)
 if (${vt_throw_on_abort})
     message(STATUS "Building VT with 'throw on vtAbort'")
     set (vt_feature_cmake_throw_on_abort "1")
