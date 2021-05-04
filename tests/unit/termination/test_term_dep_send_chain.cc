@@ -463,7 +463,7 @@ private:
 };
 
 TEST_P(TestTermDepSendChain, test_term_dep_send_chain) {
-  SET_MAX_NUM_NODES_CONSTRAINT(CMAKE_DETECTED_MAX_NUM_NODES);
+  SET_MAX_NUM_NODES_CONSTRAINT(1/*CMAKE_DETECTED_MAX_NUM_NODES*/);
 
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
@@ -665,7 +665,7 @@ struct MergeObjGroup
 
 TEST_P(TestTermDepSendChain, test_term_dep_send_chain_merge) {
 
-  SET_MAX_NUM_NODES_CONSTRAINT(CMAKE_DETECTED_MAX_NUM_NODES);
+  SET_MAX_NUM_NODES_CONSTRAINT(1/*CMAKE_DETECTED_MAX_NUM_NODES*/);
 
   auto const& num_nodes = theContext()->getNumNodes();
   auto const iter = 50;
