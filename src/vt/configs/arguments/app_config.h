@@ -166,6 +166,8 @@ struct AppConfig {
   bool vt_pause = false;
   bool vt_no_assert_fail = false;
   std::size_t vt_max_mpi_send_size = 1ull << 30;
+  int16_t vt_msg_ref_count_max = 1000;
+  bool vt_print_max_ref_count = false;
 
 #if (vt_feature_fcontext != 0)
   bool vt_ult_disable = false;
@@ -319,6 +321,8 @@ struct AppConfig {
       | vt_pause
       | vt_no_assert_fail
       | vt_max_mpi_send_size
+      | vt_msg_ref_count_max
+      | vt_print_max_ref_count
 
       | vt_debug_level
       | vt_debug_level_val

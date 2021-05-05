@@ -245,6 +245,13 @@ void Runtime::printStartupBanner() {
       green, reset, compile, magenta, opt, reset, reset
     );
   };
+  auto opt_change =
+    [=](std::string opt, std::string compile, std::string reason) -> std::string {
+    return fmt::format(
+      "{}Option:{} {}, is disabled because {}{}{} is {}{}\n",
+      green, reset, compile, magenta, opt, reset, reason, reset
+    );
+  };
 
   auto f8 = fmt::format("{}Runtime Configuration:{}\n", green, reset);
   fmt::print("{}{}{}", vt_pre, f8, reset);
@@ -803,6 +810,29 @@ void Runtime::printStartupBanner() {
     );
     auto f_max_arg = opt_on("--vt_max_mpi_send_size", f_max);
     fmt::print("{}\t{}{}", vt_pre, f_max_arg, reset);
+  }
+
+  {
+    auto max_ref_opt = "Maximum ref count for messages";
+    if (getAppConfig()->vt_msg_ref_count_max != 0) {
+      auto ref_msg = fmt::format(
+        "{} is set to \"{}\"",
+        max_ref_opt, getAppConfig()->vt_msg_ref_count_max
+      );
+      auto f11 = opt_on("--vt_msg_ref_count_max", ref_msg);
+      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+    } else {
+      auto f11 = opt_change("--vt_msg_ref_count_max", max_ref_opt, "== 0");
+      fmt::print("{}\t{}{}", vt_pre, f11, reset);
+    }
+  }
+
+  if (getAppConfig()->vt_print_max_ref_count) {
+    auto max_msg = fmt::format(
+      "Printing whenever a new maximum ref count is reached across all messages"
+    );
+    auto f11 = opt_on("--vt_print_max_ref_count", max_msg);
+    fmt::print("{}\t{}{}", vt_pre, f11, reset);
   }
 
   {

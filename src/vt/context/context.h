@@ -197,6 +197,24 @@ struct Context : runtime::component::Component<Context> {
   trace::TraceEventIDType getTraceEventCurrentTask() const;
 #endif
 
+  /**
+   * \brief Get the maximum observed reference count for the current runtime
+   *
+   * \return the maximum reference count observed
+   */
+  RefType getMaxObservedRefCount() const {
+    return max_observed_ref_count;
+  }
+
+  /**
+   * \brief Set a new maximum observed reference count
+   *
+   * \param[in] new_max the new max
+   */
+  void setMaxObservedRefCount(RefType new_max) {
+    max_observed_ref_count = new_max;
+  }
+
 protected:
   /**
    * \brief Set the current running task
@@ -225,6 +243,7 @@ private:
   MPI_Comm communicator_ = MPI_COMM_WORLD;
   DeclareClassInsideInitTLS(Context, WorkerIDType, thisWorker_, no_worker_id)
   runnable::RunnableNew* cur_task_ = nullptr;
+  RefType max_observed_ref_count = 1;
 };
 
 }} // end namespace vt::ctx

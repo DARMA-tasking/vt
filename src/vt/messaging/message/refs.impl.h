@@ -53,6 +53,33 @@ namespace vt {
 
 template <typename MsgT>
 void messageRef(MsgT* msg) {
+
+  vtAssertInfo(
+    envelopeGetRef(msg->env) >= 0 and
+    (theConfig()->vt_msg_ref_count_max == 0 or
+     envelopeGetRef(msg->env) + 1 < theConfig()->vt_msg_ref_count_max),
+    "Bad ref-count on message ref-increment. "
+    "Message ref-count must never be negative and cannot exceed limit.",
+    static_cast<RefType>(envelopeGetRef(msg->env)),
+    theConfig()->vt_msg_ref_count_max
+  );
+
+  if (theConfig()->vt_print_max_ref_count) {
+    auto const cur_max = theContext()->getMaxObservedRefCount();
+    auto const ref = envelopeGetRef(msg->env);
+    if (ref + 1 > cur_max) {
+      theContext()->setMaxObservedRefCount(ref + 1);
+
+      auto debug_str = fmt::format(
+        "Message {}{}{} reached new max ref count {}{}{}\n",
+        debug::green(), typeid(MsgT).name(), debug::reset(),
+        debug::magenta(), ref+1, debug::reset()
+      );
+
+      vt_print(active, debug_str);
+    }
+  }
+
   envelopeRef(msg->env);
 
   vt_debug_print(

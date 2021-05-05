@@ -60,12 +60,6 @@ inline void envelopeRef(Env& env) {
     "This is can be caused by explicitly using 'new Message(..)' "
     "instead of a MsgPtr/makeMessage/makeSharedMessage construct."
   );
-  vtAssertInfo(
-    envp->ref >= 0 and envp->ref < 100,
-    "Bad ref-count on message ref-increment. "
-    "Message ref-count must never be negative and cannnot exceed limit (100).",
-    static_cast<RefType>(envp->ref)
-  );
 
   envp->ref++;
 }

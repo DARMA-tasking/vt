@@ -501,7 +501,8 @@ void ArgConfig::addRuntimeArgs(CLI::App& app) {
   auto max_size = "Maximum MPI send size (causes larger messages to be split "
                   "into multiple MPI sends)";
   auto assert = "Do not abort the program when vtAssert(..) is invoked";
-
+  auto max_ref = "Maximum ref count for messages (when reached assertion will fail)";
+  auto print_max = "Print the maximum ref count reached for debugging";
 
   auto a1 = app.add_option(
     "--vt_max_mpi_send_size", config_.vt_max_mpi_send_size, max_size, true
@@ -509,11 +510,18 @@ void ArgConfig::addRuntimeArgs(CLI::App& app) {
   auto a2 = app.add_flag(
     "--vt_no_assert_fail", config_.vt_no_assert_fail, assert
   );
-
+  auto a3 = app.add_option(
+    "--vt_msg_ref_count_max", config_.vt_msg_ref_count_max, max_ref, true
+  );
+  auto a4 = app.add_flag(
+    "--vt_print_max_ref_count", config_.vt_print_max_ref_count, print_max
+  );
 
   auto configRuntime = "Runtime";
   a1->group(configRuntime);
   a2->group(configRuntime);
+  a3->group(configRuntime);
+  a4->group(configRuntime);
 }
 
 void ArgConfig::addThreadingArgs(CLI::App& app) {
