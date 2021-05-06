@@ -52,8 +52,7 @@
 namespace vt { namespace vrt { namespace collection {
 
 struct DestroyHandlers {
-  template <typename ColT, typename IndexT>
-  static void destroyNow(DestroyMsg<ColT, IndexT>* msg);
+  static void destroyNow(DestroyMsg* msg);
 };
 
 }}} /* end namespace vt::vrt::collection */

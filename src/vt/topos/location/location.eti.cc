@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            insert_finished.impl.h
+//                               location.eti.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,30 +42,34 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
-#define INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
+#include "vt/topos/location/location.h"
+#include "vt/topos/location/location.impl.h"
 
-#include "vt/config.h"
-#include "vt/vrt/collection/insert/insert_finished.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/vrt/proxy/base_collection_proxy.h"
+namespace vt { namespace location {
 
-namespace vt { namespace vrt { namespace collection {
+template struct EntityLocationCoord<int32_t>;
+template struct EntityLocationCoord<VirtualProxyType>;
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-InsertFinished<ColT,IndexT,BaseProxyT>::InsertFinished(
-  VirtualProxyType const in_proxy
-) : BaseProxyT(in_proxy)
-{ }
+#define instantiate_dims_over(TYPE)                       \
+  template struct EntityLocationCoord<IdxType<TYPE, 1>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 2>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 3>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 4>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 5>>;  \
+  template struct EntityLocationCoord<IdxType<TYPE, 6>>;
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
-  ActionType action
-) const {
-  auto const col_proxy = this->getProxy();
-  theCollection()->finishedInserting(col_proxy,action);
-}
+instantiate_dims_over(signed char)
 
-}}} /* end namespace vt::vrt::collection */
+instantiate_dims_over(char)
+instantiate_dims_over(short)
+instantiate_dims_over(int)
+instantiate_dims_over(long)
+instantiate_dims_over(long long)
 
-#endif /*INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H*/
+instantiate_dims_over(unsigned char)
+instantiate_dims_over(unsigned short)
+instantiate_dims_over(unsigned int)
+instantiate_dims_over(unsigned long)
+instantiate_dims_over(unsigned long long)
+
+}} /* end namespace vt::location */

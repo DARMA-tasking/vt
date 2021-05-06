@@ -48,15 +48,15 @@
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/manager.fwd.h"
-#include "vt/vrt/collection/types/headers.h"
+#include "vt/vrt/collection/types/indexable.h"
 
 #include <memory>
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct ElementHolder {
-  using VirtualPtrType = std::unique_ptr<CollectionBase<ColT,IndexT>>;
+  using VirtualPtrType = std::unique_ptr<Indexable<IndexT>>;
 
   ElementHolder(
     VirtualPtrType in_vc_ptr_, HandlerType const in_han, IndexT const& idx

@@ -46,15 +46,14 @@
 #define INCLUDED_VT_CONTEXT_RUNNABLE_CONTEXT_COLLECTION_IMPL_H
 
 #include "vt/context/runnable_context/collection.h"
-#include "vt/vrt/collection/types/base.h"
+#include "vt/vrt/collection/types/indexable.h"
 #include "vt/vrt/collection/holders/collection_context_holder.h"
 
 namespace vt { namespace ctx {
 
 template <typename IndexT>
-template <typename ColT>
 /*explicit*/ Collection<IndexT>::Collection(
-  vrt::collection::CollectionBase<ColT, IndexT>* elm
+  vrt::collection::Indexable<IndexT>* elm
 ) : idx_(elm->getIndex()),
     proxy_(elm->getProxy())
 { }

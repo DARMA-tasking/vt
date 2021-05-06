@@ -54,8 +54,8 @@
 
 namespace vt { namespace ctx {
 
-template <typename ElmT, typename MsgT>
-LBStats::LBStats(ElmT* in_elm, MsgT* msg)
+template <typename MsgT>
+LBStats::LBStats(vrt::collection::Migratable* in_elm, MsgT* msg)
   : stats_(&in_elm->getStats()),
     cur_elm_id_(in_elm->getElmID()),
     should_instrument_(msg->lbLiteInstrument())

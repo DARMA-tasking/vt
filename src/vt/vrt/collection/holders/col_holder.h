@@ -61,7 +61,7 @@ namespace vt { namespace vrt { namespace collection {
  * the virtual overloaded function for running LB and destroying the collection
  * from a type-erased base class.
  */
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct CollectionHolder : BaseHolder {
 
 public:
@@ -86,7 +86,7 @@ public:
   bool is_static_ = false;                    /**< Whether is static sized */
   HandlerType map_fn = uninitialized_handler; /**< The map function */
   IndexT max_idx;                             /**< Index range for collection */
-  Holder<ColT, IndexT> holder_;               /**< Inner holder of elements */
+  Holder<IndexT> holder_;                     /**< Inner holder of elements */
 };
 
 }}} /* end namespace vt::vrt::collection */

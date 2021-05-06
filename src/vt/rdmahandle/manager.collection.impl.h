@@ -88,7 +88,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
   auto idx = collection_proxy.getElementProxy().getIndex();
   IndexT range = in_range;
   if (in_next_handle == no_rdma_handle) {
-    range = theCollection()->getRange<ColT>(proxy_bits);
+    range = theCollection()->getRange<IndexT>(proxy_bits);
     auto lin = vt::mapping::linearizeDenseIndexRowMajor(&idx, &range);
     next_handle = ++cur_handle_collection_[proxy_bits][lin];
   }
@@ -115,7 +115,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
         sub_proxy.get()->migratedInIndex(lidx);
       }
     };
-    theCollection()->template registerElementListener<ColT>(proxy_bits, fn);
+    theCollection()->template registerElementListener<IndexT>(proxy_bits, fn);
 
     // Count the number of local handles that should exist here. We can't use the
     // cached value in the collection manager since this might be invoked in the

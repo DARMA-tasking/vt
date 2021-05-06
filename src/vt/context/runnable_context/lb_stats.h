@@ -49,6 +49,12 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/elm_stats.fwd.h"
 
+namespace vt { namespace vrt { namespace collection {
+
+struct Migratable;
+
+}}} /* end namespace vt::vrt::collection */
+
 namespace vt { namespace ctx {
 
 /**
@@ -66,8 +72,8 @@ struct LBStats final : Base {
    * \param[in] in_elm the collection element
    * \param[in] msg the incoming message (used for communication stats)
    */
-  template <typename ElmT, typename MsgT>
-  LBStats(ElmT* in_elm, MsgT* msg);
+  template <typename MsgT>
+  LBStats(vrt::collection::Migratable* in_elm, MsgT* msg);
 
   /**
    * \brief Construct a \c LBStats

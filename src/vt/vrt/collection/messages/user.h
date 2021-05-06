@@ -58,10 +58,8 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename MessageT, typename ColT>
-using RoutedMessageType = LocationRoutedMsg<
-  ::vt::vrt::VirtualElmProxyType<ColT, typename ColT::IndexType>, MessageT
->;
+template <typename MessageT, typename IndexT>
+using RoutedMessageType = LocationRoutedMsg<IndexT, MessageT>;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
@@ -69,8 +67,8 @@ static struct ColMsgWrapTagType { } ColMsgWrapTag { };
 #pragma GCC diagnostic pop
 
 template <typename ColT, typename BaseMsgT = ::vt::Message>
-struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
-  using MessageParentType = RoutedMessageType<BaseMsgT, ColT>;
+struct CollectionMessage : RoutedMessageType<BaseMsgT, typename ColT::IndexType> {
+  using MessageParentType = RoutedMessageType<BaseMsgT, typename ColT::IndexType>;
   vt_msg_serialize_if_needed_by_parent();
 
   /*
@@ -92,8 +90,11 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
 
   // The variable `to_proxy_' manages the intended target of the
   // `CollectionMessage'
-  VirtualElmProxyType<ColT, IndexType> getProxy() const;
-  void setProxy(VirtualElmProxyType<ColT, IndexType> const& in_proxy);
+  VirtualProxyType getProxy() const;
+  typename ColT::IndexType getIndex() const;
+
+  template <typename T>
+  void setProxy(T const& in_proxy);
 
   VirtualProxyType getBcastProxy() const;
   void setBcastProxy(VirtualProxyType const& in_proxy);
@@ -128,7 +129,8 @@ struct CollectionMessage : RoutedMessageType<BaseMsgT, ColT> {
 
 private:
   VirtualProxyType bcast_proxy_{};
-  VirtualElmProxyType<ColT, IndexType> to_proxy_{};
+  VirtualProxyType col_proxy_ = no_vrt_proxy;
+  typename ColT::IndexType col_idx_ = {};
   HandlerType vt_sub_handler_ = uninitialized_handler;
   EpochType bcast_epoch_ = no_epoch;
   NodeType from_node_ = uninitialized_destination;

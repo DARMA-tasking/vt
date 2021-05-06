@@ -78,9 +78,9 @@ private:
   static std::size_t num_collections_phase_;
 };
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct EntireHolder {
-  using InnerHolder = CollectionHolder<ColT, IndexT>;
+  using InnerHolder = CollectionHolder<IndexT>;
   using InnerHolderPtr = std::shared_ptr<InnerHolder>;
   using ProxyContainerType = std::unordered_map<
     VirtualProxyType, InnerHolderPtr

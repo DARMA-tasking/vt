@@ -50,14 +50,14 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-CollectionHolder<ColT, IndexT>::CollectionHolder(
+template <typename IndexT>
+CollectionHolder<IndexT>::CollectionHolder(
   HandlerType const in_map_fn, IndexT const& idx, bool const in_is_static
 ) : is_static_(in_is_static), map_fn(in_map_fn), max_idx(idx)
 { }
 
-template <typename ColT, typename IndexT>
-void CollectionHolder<ColT, IndexT>::destroy() {
+template <typename IndexT>
+void CollectionHolder<IndexT>::destroy() {
   holder_.destroyAll();
 }
 

@@ -75,16 +75,16 @@ struct DenseIndexArray;
 static struct DenseIndexArraySingleInitTag { } dense_single_value_tag { };
 #pragma GCC diagnostic pop
 
-template <typename IndexType, NumDimensionsType ndim>
+template <typename T, NumDimensionsType ndim>
 struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
-  using ThisIndexType = DenseIndexArray<IndexType, ndim>;
+  using IndexType = DenseIndexArray<T, ndim>;
   using IndexSizeType = size_t;
-  using ApplyType = std::function<void(ThisIndexType)>;
+  using ApplyType = std::function<void(IndexType)>;
   using IsByteCopyable = serialization::ByteCopyTrait;
-  using DenseIndexArrayType = DenseIndexArray<IndexType, ndim>;
+  using DenseIndexArrayType = DenseIndexArray<T, ndim>;
   using DenseArraySizeType = uint64_t;
-  using DenseIndexType = IndexType;
-  using BuildIndexType = IndexType;
+  using DenseIndexType = T;
+  using BuildIndexType = T;
 
   DenseIndexArray() = default;
   DenseIndexArray(DenseIndexArray const&) = default;
@@ -94,30 +94,30 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   template <
     typename... Idxs,
     typename = typename std::enable_if<
-      util::meta_type_eq<IndexType, typename std::decay<Idxs>::type...>::value and
+      util::meta_type_eq<T, typename std::decay<Idxs>::type...>::value and
       sizeof...(Idxs) == ndim
     >::type
   >
   explicit DenseIndexArray(Idxs&&... init);
 
-  DenseIndexArray(std::array<IndexType, ndim> in_array);
-  DenseIndexArray(DenseIndexArraySingleInitTag, IndexType const& init_value);
+  DenseIndexArray(std::array<T, ndim> in_array);
+  DenseIndexArray(DenseIndexArraySingleInitTag, T const& init_value);
 
   NumDimensionsType ndims() const { return ndim; }
 
-  IndexType& operator[](IndexType const& index);
-  IndexType const& operator[](IndexType const& index) const;
-  IndexType get(IndexType const& index) const;
-  IndexType const* raw() const;
+  T& operator[](T const& index);
+  T const& operator[](T const& index) const;
+  T get(T const& index) const;
+  T const* raw() const;
   IndexSizeType packedSize() const;
   bool indexIsByteCopyable() const;
   DenseArraySizeType getSize() const;
   std::string toString() const;
-  void foreach(ThisIndexType max, ApplyType fn) const;
+  void foreach(IndexType max, ApplyType fn) const;
   void foreach(ApplyType fn) const;
   UniqueIndexBitType uniqueBits() const;
 
-  static ThisIndexType uniqueBitsToIndex(UniqueIndexBitType const& bits);
+  static IndexType uniqueBitsToIndex(UniqueIndexBitType const& bits);
 
   bool operator==(DenseIndexArrayType const& other) const;
   bool operator<(DenseIndexArrayType const& other) const;
@@ -128,19 +128,19 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
 
   // special accessors (x,y,z) enabled depending on the number of dimensions
   template <
-    typename T = void, typename = typename std::enable_if<ndim >= 1, T>::type
+    typename U = void, typename = typename std::enable_if<ndim >= 1, U>::type
   >
-  IndexType x() const;
+  T x() const;
 
   template <
-    typename T = void, typename = typename std::enable_if<ndim >= 2, T>::type
+    typename U = void, typename = typename std::enable_if<ndim >= 2, U>::type
   >
-  IndexType y() const;
+  T y() const;
 
   template <
-    typename T = void, typename = typename std::enable_if<ndim >= 3, T>::type
+    typename U = void, typename = typename std::enable_if<ndim >= 3, U>::type
   >
-  IndexType z() const;
+  T z() const;
 
   template <typename IndexT, NumDimensionsType nd>
   friend std::ostream& operator<<(
@@ -148,7 +148,7 @@ struct DenseIndexArray : BaseIndex, serialization::ByteCopyTrait {
   );
 
 private:
-  std::array<IndexType, ndim> dims = {};
+  std::array<T, ndim> dims = {};
 };
 
 static_assert(

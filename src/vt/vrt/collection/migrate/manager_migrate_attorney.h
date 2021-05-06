@@ -56,14 +56,17 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+template <typename IndexT>
+struct Indexable;
+
 template <typename ColT, typename IndexT>
-struct Collection;
+struct CollectionBase;
 
 template <typename ColT, typename IndexT>
 struct CollectionElmAttorney {
-  using CollectionType = CollectionBase<ColT, IndexT>;
-  using VirtualPtrType = std::unique_ptr<CollectionType>;
+  using VirtualPtrType = std::unique_ptr<Indexable<IndexT>>;
 
+  friend struct Indexable<IndexT>;
   friend struct CollectionBase<ColT, IndexT>;
   friend struct MigrateHandlers;
   friend struct Migratable;

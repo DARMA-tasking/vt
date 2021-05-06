@@ -52,7 +52,7 @@ struct Hello : vt::Collection<Hello, vt::Index1D> {
     vtAssert(counter_ == 1, "Must be equal");
   }
 
-  using TestMsg = vt::CollectionMessage<Hello>;
+  using TestMsg = vt::CollectionMessage<vt::Index1D>;
 
   void doWork(TestMsg* msg) {
     fmt::print("Hello from {}\n", this->getIndex());

@@ -50,7 +50,7 @@
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vt/vrt/collection/holders/elm_holder.h"
-#include "vt/vrt/collection/types/headers.h"
+#include "vt/vrt/collection/types/indexable.h"
 #include "vt/vrt/collection/messages/user.h"
 #include "vt/vrt/collection/listener/listen_events.h"
 
@@ -72,14 +72,14 @@ namespace vt { namespace vrt { namespace collection {
  * proxy. Provides functionality to find, add, remove, and foreach over the
  * collection elements.
  */
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct Holder {
   template <typename T, typename U>
   using ContType            = std::unordered_map<T, U>;
-  using CollectionType      = CollectionBase<ColT, IndexT>;
+  using CollectionType      = Indexable<IndexT>;
   using VirtualPtrType      = std::unique_ptr<CollectionType>;
   using LookupElementType   = IndexT;
-  using InnerHolder         = ElementHolder<ColT, IndexT>;
+  using InnerHolder         = ElementHolder<IndexT>;
   using TypedIndexContainer = ContType<LookupElementType, InnerHolder>;
   using LBContFnType        = std::function<void()>;
   using LBContListType      = std::list<LBContFnType>;
@@ -255,7 +255,6 @@ struct Holder {
 private:
   bool erased                                                     = false;
   typename TypedIndexContainer::iterator foreach_iter             = {};
-  std::unordered_map<EpochType, CollectionMessage<ColT>*> bcasts_ = {};
   EpochType cur_bcast_epoch_                                      = 1;
   TypedIndexContainer vc_container_                               = {};
   bool is_destroyed_                                              = false;

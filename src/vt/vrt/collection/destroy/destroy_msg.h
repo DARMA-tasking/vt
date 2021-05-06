@@ -46,34 +46,25 @@
 #define INCLUDED_VRT_COLLECTION_DESTROY_DESTROY_MSG_H
 
 #include "vt/config.h"
-#include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/messaging/message.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
 struct DestroyMsg final : ::vt::Message {
   using MessageParentType = ::vt::Message;
-  using CollectionProxyType = CollectionProxy<ColT,IndexT>;
-  vt_msg_serialize_if_needed_by_parent_or_type1(CollectionProxyType);
+  vt_msg_serialize_prohibited();
 
   DestroyMsg() = default;
-  DestroyMsg(
-    CollectionProxyType const& in_proxy,
-    NodeType const& in_from
-  ) : proxy_(in_proxy), from_(in_from)
+  DestroyMsg(VirtualProxyType in_proxy, NodeType in_from)
+    : proxy_(in_proxy),
+      from_(in_from)
   { }
 
-  CollectionProxyType getProxy() const { return proxy_; }
+  VirtualProxyType getProxy() const { return proxy_; }
   NodeType getFromNode() const { return from_; }
 
-  template <typename Serializer>
-  void serialize(Serializer& s) {
-    s | proxy_ | from_;
-  }
-
 private:
-  CollectionProxyType proxy_;
+  VirtualProxyType proxy_ = no_vrt_proxy;
   NodeType from_ = uninitialized_destination;
 };
 

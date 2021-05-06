@@ -56,10 +56,27 @@ namespace vt { namespace vrt { namespace collection {
 template <typename IndexT>
 struct Indexable : Migratable {
 
-  explicit Indexable(IndexT&& in_index);
-  Indexable() = default;
+  using IndexType = IndexT;
+
+  // explicit Indexable(IndexT&& in_index);
+
+  Indexable(
+    bool const static_size, bool const elms_fixed,
+    VirtualElmCountType const num
+  );
 
   IndexT const& getIndex() const;
+
+  bool isStatic() const;
+
+  static bool isStaticSized();
+
+  void setSize(VirtualElmCountType const& elms);
+
+  // Should be implemented in derived class (non-virtual)
+  VirtualElmCountType getSize() const;
+
+  friend struct CollectionManager;
 
 protected:
   template <typename Serializer>
@@ -77,6 +94,12 @@ private:
   // constructor overload has no index, it will not be set until the its set
   // through the `CollectionTypeAttorney`
   bool set_index_ = false;
+
+protected:
+  VirtualElmCountType numElems_ = no_elms;
+  EpochType cur_bcast_epoch_ = 0;
+  bool hasStaticSize_ = true;
+  bool elmsFixedAtCreation_ = true;
 };
 
 }}} /* end namespace vt::vrt::collection */

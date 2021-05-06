@@ -107,10 +107,10 @@ namespace vt { namespace vrt { namespace collection {
 struct CollectionManager
   : runtime::component::Component<CollectionManager>
 {
-  template <typename ColT, typename IndexT>
-  using CollectionType = typename Holder<ColT, IndexT>::Collection;
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  using VirtualPtrType = typename Holder<ColT, IndexT>::VirtualPtrType;
+  template <typename IndexT>
+  using CollectionType = typename Holder<IndexT>::Collection;
+  template <typename IndexT>
+  using VirtualPtrType = typename Holder<IndexT>::VirtualPtrType;
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
@@ -134,7 +134,7 @@ struct CollectionManager
   using ActionVecType = std::vector<ActionType>;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;
+  using DistribConstructFn = std::function<VirtualPtrType<IndexT>(IndexT idx)>;
 
   template <typename T, typename U=void>
   using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg, messaging::PendingSend>;
@@ -172,13 +172,11 @@ struct CollectionManager
    * \internal \brief Trigger cleanup lambdas---triggered when termination
    * occurs
    */
-  template <typename=void>
   void cleanupAll();
 
   /**
    * \internal \brief Destroy all collections
    */
-  template <typename=void>
   void destroyCollections();
 
   /**
@@ -517,7 +515,6 @@ public:
    *
    * \param[in] proxy the collection proxy
    */
-  template <typename ColT>
   static void reduceConstruction(VirtualProxyType const& proxy);
 
   /**
@@ -532,7 +529,7 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] immediate whether to start group construction now
    */
-  template <typename ColT>
+  template <typename IndexT>
   static void groupConstruction(VirtualProxyType const& proxy, bool immediate);
 
   /**
@@ -550,7 +547,7 @@ public:
    */
   template <
     typename MsgT,
-    typename ColT = typename MsgT::CollectionType,
+    typename ColT,
     typename IdxT = typename ColT::IndexType
   >
   messaging::PendingSend sendMsgUntypedHandler(
@@ -616,10 +613,12 @@ public:
    * \return a pending send
    */
   template <
-    typename MsgT, ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT, ColT> *f
   >
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   /**
@@ -632,10 +631,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend sendMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy, MsgT *msg
+    VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
   /**
@@ -647,8 +647,12 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  IsColMsgType<MsgT> sendMsg(
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  IsColMsgType<MsgT> sendMsgCheck(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -661,8 +665,12 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  IsNotColMsgType<MsgT> sendMsg(
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  IsNotColMsgType<MsgT> sendMsgCheck(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -680,7 +688,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  IsColMsgType<MsgT> sendMsg(
+  IsColMsgType<MsgT> sendMsgCheck(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -698,7 +706,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  IsNotColMsgType<MsgT> sendMsg(
+  IsNotColMsgType<MsgT> sendMsgCheck(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
 
@@ -711,7 +719,11 @@ public:
    *
    * \return the pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
   messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
@@ -728,49 +740,11 @@ public:
   template <
     typename MsgT,
     typename ColT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend sendMsgImpl(
     VirtualElmProxyType<ColT> const& proxy, MsgT *msg
   );
-
-  /**
-   * \internal \brief Deliver a message to a collection element with a promoted
-   * collection message that wrapped the user's non-collection message.
-   *
-   * \param[in] msg the message
-   * \param[in] col pointer to collection element
-   * \param[in] han the handler to invoke
-   * \param[in] from node that sent the message
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from
-  );
-
-  /**
-   * \internal \brief Deliver a message to a collection element with a normal
-   * collection message
-   *
-   * \param[in] msg the message
-   * \param[in] col pointer to collection element
-   * \param[in] han the handler to invoke
-   * \param[in] from node that sent the message
-   */
-  template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
-  static IsNotWrapType<ColT, UserMsgT, MsgT> collectionMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
-    NodeType from
-  );
-
-  /**
-   * \internal \brief Base collection message handler
-   *
-   * \param[in] msg the message
-   */
-  template <typename CoLT, typename IndexT>
-  static void collectionMsgHandler(BaseMessage* msg);
 
   /**
    * \internal \brief Typed collection message handler
@@ -790,8 +764,8 @@ public:
    * \param[in] col_ptr the collection element pointer
    * \param[in] msg the message to deliver
    */
-  template <typename ColT, typename MsgT>
-  static void recordStats(ColT* col_ptr, MsgT* msg);
+  template <typename MsgT>
+  static void recordStats(Migratable* col_ptr, MsgT* msg);
 
   /**
    * \brief Invoke function 'f' (with copyable return type) inline without going
@@ -835,10 +809,12 @@ public:
    * balancing (some system calls use this to disable instrumentation)
    */
   template <
-    typename MsgT, ActiveColTypedFnType<MsgT, typename MsgT::CollectionType>* f
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT, ColT>* f
   >
   void invokeMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy,
+    VirtualElmProxyType<ColT> const& proxy,
     messaging::MsgPtrThief<MsgT> msg, bool instrument = true
   );
 
@@ -852,10 +828,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   void invokeMsg(
-    VirtualElmProxyType<typename MsgT::CollectionType> const& proxy,
+    VirtualElmProxyType<ColT> const& proxy,
     messaging::MsgPtrThief<MsgT> msg, bool instrument = true
   );
 
@@ -1028,10 +1005,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
   >
   messaging::PendingSend broadcastCollectiveMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     messaging::MsgPtrThief<MsgT> msg, bool instrument = true);
 
   /**
@@ -1047,10 +1025,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT, typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT, ColT> f
   >
   messaging::PendingSend broadcastCollectiveMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     messaging::MsgPtrThief<MsgT> msg, bool instrument = true);
 
   /**
@@ -1080,10 +1059,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColTypedFnType<MsgT,typename MsgT::CollectionType> *f
+    typename ColT,
+    ActiveColTypedFnType<MsgT, ColT> *f
   >
   messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
 
@@ -1099,10 +1079,11 @@ public:
    */
   template <
     typename MsgT,
-    ActiveColMemberTypedFnType<MsgT,typename MsgT::CollectionType> f
+    typename ColT,
+    ActiveColMemberTypedFnType<MsgT,ColT> f
   >
   messaging::PendingSend broadcastMsg(
-    CollectionProxyWrapType<typename MsgT::CollectionType> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
 
@@ -1117,8 +1098,12 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  IsColMsgType<MsgT> broadcastMsg(
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  IsColMsgType<MsgT> broadcastMsgCheck(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -1134,8 +1119,12 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
-  IsNotColMsgType<MsgT> broadcastMsg(
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
+  IsNotColMsgType<MsgT> broadcastMsgCheck(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -1156,7 +1145,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  IsColMsgType<MsgT> broadcastMsg(
+  IsColMsgType<MsgT> broadcastMsgCheck(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -1177,7 +1166,7 @@ public:
     typename ColT,
     ActiveColMemberTypedFnType<MsgT,ColT> f
   >
-  IsNotColMsgType<MsgT> broadcastMsg(
+  IsNotColMsgType<MsgT> broadcastMsgCheck(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
   );
@@ -1192,7 +1181,11 @@ public:
    *
    * \return a pending send
    */
-  template <typename MsgT, typename ColT, ActiveColTypedFnType<MsgT,ColT> *f>
+  template <
+    typename MsgT,
+    typename ColT,
+    ActiveColTypedFnType<MsgT,ColT> *f
+  >
   messaging::PendingSend broadcastMsgImpl(
     CollectionProxyWrapType<ColT> const& proxy,
     MsgT *msg, bool instrument = true
@@ -1305,7 +1298,7 @@ public:
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
   static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    MsgT* msg, Indexable<IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
@@ -1321,7 +1314,7 @@ public:
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
   static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    MsgT* msg, Indexable<IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
@@ -1346,7 +1339,6 @@ public:
    *
    * \param[in] msg the message
    */
-  template <typename=void>
   static void collectionFinishedHan(CollectionConsMsg* msg);
 
   /**
@@ -1354,7 +1346,6 @@ public:
    *
    * \param[in] msg the message
    */
-  template <typename=void>
   static void collectionGroupReduceHan(CollectionGroupMsg* msg);
 
   /**
@@ -1362,7 +1353,6 @@ public:
    *
    * \param[in] msg the message
    */
-  template <typename=void>
   static void collectionGroupFinishedHan(CollectionGroupMsg* msg);
 
   /**
@@ -1375,7 +1365,7 @@ public:
    *
    * \return number of local elmeents
    */
-  template <typename ColT, typename IndexT>
+  template <typename IndexT>
   std::size_t groupElementCount(VirtualProxyType const& proxy);
 
   /**
@@ -1386,7 +1376,7 @@ public:
    *
    * \return the new group ID
    */
-  template <typename ColT, typename IndexT>
+  template <typename IndexT>
   GroupType createGroupCollection(
     VirtualProxyType const& proxy, bool const in_group
   );
@@ -1409,7 +1399,7 @@ public:
    * \return unique pointer to the new element
    */
   template <typename ColT, typename IndexT, typename Tuple, size_t... I>
-  static VirtualPtrType<ColT, IndexT> runConstructor(
+  static VirtualPtrType<IndexT> runConstructor(
     VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
     std::index_sequence<I...>
   );
@@ -1439,7 +1429,7 @@ public:
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   bool insertCollectionElement(
-    VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
+    VirtualPtrType<IndexT> vc, IndexT const& idx, IndexT const& max_idx,
     HandlerType const map_han, VirtualProxyType const& proxy,
     bool const is_static, NodeType const& home_node,
     bool const& is_migrated_in = false,
@@ -1465,8 +1455,8 @@ private:
    *
    * \return the collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
+  template <typename IndexT>
+  CollectionHolder<IndexT>* findColHolder(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Get the collection element holder
@@ -1475,8 +1465,8 @@ private:
    *
    * \return the element collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<ColT, IndexT>* findElmHolder(VirtualProxyType const& proxy);
+  template <typename IndexT>
+  Holder<IndexT>* findElmHolder(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Get the collection element holder
@@ -1485,8 +1475,8 @@ private:
    *
    * \return the element collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<ColT, IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
+  template <typename ProxyT, typename IndexT = typename ProxyT::IndexType>
+  Holder<IndexT>* findElmHolder(ProxyT proxy);
 
 public:
   /**
@@ -1494,8 +1484,7 @@ public:
    *
    * \param[in] proxy the collection proxy
    */
-  template <typename ColT, typename IndexT>
-  void destroy(CollectionProxyWrapType<ColT,IndexT> const& proxy);
+  void destroy(VirtualProxyType proxy);
 
 private:
   /**
@@ -1503,8 +1492,7 @@ private:
    *
    * \param[in] proxy the collection proxy
    */
-  template <typename ColT, typename IndexT>
-  void incomingDestroy(CollectionProxyWrapType<ColT,IndexT> const& proxy);
+  void incomingDestroy(VirtualProxyType proxy);
 
   /**
    * \internal \brief Destroy all elements and related meta-data for a proxy
@@ -1512,8 +1500,8 @@ private:
    *
    * \param[in] proxy the collection proxy
    */
-  template <typename ColT, typename IndexT>
-  void destroyMatching(CollectionProxyWrapType<ColT,IndexT> const& proxy);
+  template <typename IndexT>
+  void destroyMatching(VirtualProxyType proxy);
 
 protected:
   /**
@@ -1568,11 +1556,8 @@ public:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IndexT>
-  NodeType getMappedNode(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
-    typename ColT::IndexType const& idx
-  );
+  template <typename IndexT>
+  NodeType getMappedNode(VirtualProxyType proxy, IndexT const& idx);
 
   /**
    * \brief Migrate element to a new node
@@ -1644,31 +1629,28 @@ public:
    *
    * \param[in] msg done insert message
    */
-  template <typename ColT, typename IndexT>
-  static void doneInsertHandler(DoneInsertMsg<ColT,IndexT>* msg);
+  static void doneInsertHandler(DoneInsertMsg* msg);
 
   /**
    * \internal \brief Do a dynamic insertion handler
    *
    * \param[in] msg insert message
    */
-  template <typename ColT, typename IndexT>
-  static void actInsertHandler(ActInsertMsg<ColT,IndexT>* msg);
+  static void actInsertHandler(ActInsertMsg* msg);
 
   /**
    * \internal \brief Update the insert epoch
    *
    * \param[in] msg the update insert message
    */
-  template <typename ColT, typename IndexT>
-  static void updateInsertEpochHandler(UpdateInsertMsg<ColT,IndexT>* msg);
+  template <typename IndexT>
+  static void updateInsertEpochHandler(UpdateInsertMsg* msg);
 
   /**
    * \internal \brief Finished insert
    *
    * \param[in] msg the finished update
    */
-  template <typename=void>
   static void finishedUpdateHan(FinishedUpdateMsg* msg);
 
   /**
@@ -1676,7 +1658,6 @@ public:
    *
    * \param[in] proxy the collection proxy bits
    */
-  template <typename=void>
   void actInsert(VirtualProxyType const& proxy);
 
   /**
@@ -1685,7 +1666,7 @@ public:
    * \param[in] proxy the collection proxy bits
    * \param[in] insert_epoch the insert epoch
    */
-  template <typename ColT, typename IndexT>
+  template <typename IndexT>
   void setupNextInsertTrigger(
     VirtualProxyType const& proxy, EpochType const& insert_epoch
   );
@@ -1696,10 +1677,8 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] insert_action action to execute after insertions complete
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
   void finishedInserting(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
-    ActionType insert_action = nullptr
+    VirtualProxyType proxy, ActionType insert_action = nullptr
   );
 
   /**
@@ -1707,7 +1686,7 @@ public:
    *
    * \param[in] proxy the collection proxy bits
    */
-  template <typename ColT>
+  template <typename IndexT>
   void addCleanupFn(VirtualProxyType proxy);
 
 private:
@@ -1717,17 +1696,13 @@ private:
    * \param[in] proxy the collection proxy
    * \param[in] insert_epoch insert epoch
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  void finishedInsertEpoch(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
-    EpochType const& insert_epoch
-  );
+  template <typename IndexT>
+  void finishedInsertEpoch(VirtualProxyType proxy, EpochType insert_epoch);
 
 private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmAttorney;
 
-  template <typename ColT, typename IndexT>
   friend struct CollectionElmDestroyAttorney;
 
   template <typename ColT, typename IndexT>
@@ -1766,7 +1741,7 @@ private:
   template <typename ColT, typename IndexT>
   MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-    VirtualPtrType<ColT, IndexT> vrt_elm_ptr, IndexT const& range,
+    VirtualPtrType<IndexT> vrt_elm_ptr, IndexT const& range,
     HandlerType const map_han
   );
 
@@ -1777,7 +1752,7 @@ public:
    * \param[in] proxy the proxy of the collection
    * \param[in] fn the listener function
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   int registerElementListener(
     VirtualProxyType proxy, listener::ListenFnType<IndexT> fn
   );
@@ -1788,7 +1763,7 @@ public:
    * \param[in] proxy the proxy of the collection
    * \param[in] element the index of the registered listener function
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   void unregisterElementListener(VirtualProxyType proxy, int element);
 
   /**
@@ -1798,7 +1773,7 @@ public:
    *
    * \return the range of the collection
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename IndexT>
   IndexT getRange(VirtualProxyType proxy);
 
   /**
@@ -1905,11 +1880,11 @@ private:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  template <typename IdxT>
   NodeType getMapped(VirtualProxyType proxy, IdxT cur) {
     auto map_han = UniversalIndexHolder<>::getMap(proxy);
-    auto max = getRange<ColT>(proxy);
-    return getMapped<ColT>(map_han, cur, max);
+    auto max = getRange<IdxT>(proxy);
+    return getMapped<IdxT>(map_han, cur, max);
   }
 
   /**
@@ -1922,10 +1897,10 @@ private:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  template <typename IdxT>
   NodeType getMapped(VirtualProxyType proxy, HandlerType map_han, IdxT cur) {
-    auto max = getRange<ColT>(proxy);
-    return getMapped<ColT>(map_han, cur, max);
+    auto max = getRange<IdxT>(proxy);
+    return getMapped<IdxT>(map_han, cur, max);
   }
 
   /**
@@ -1938,7 +1913,7 @@ private:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  template <typename IdxT>
   NodeType getMapped(HandlerType map_han, IdxT cur, IdxT max) {
     auto fn = auto_registry::getHandlerMap(map_han);
     auto const cur_base = static_cast<vt::index::BaseIndex*>(&cur);
@@ -2005,7 +1980,6 @@ private:
    *
    * \return a pending send
    */
-  template <typename ColT>
   messaging::PendingSend bufferOp(
     VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
     EpochType epoch, ActionPendingType action
@@ -2023,7 +1997,6 @@ private:
    *
    * \return a pending send
    */
-  template <typename ColT>
   messaging::PendingSend bufferOpOrExecute(
     VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
     EpochType epoch, ActionPendingType action

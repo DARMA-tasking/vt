@@ -54,11 +54,10 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-/*static*/ void CollectionElmDestroyAttorney<ColT, IndexT>::incomingDestroy(
-  CollectionIndexProxy<ColT, IndexT> const& proxy
+/*static*/ inline void CollectionElmDestroyAttorney::incomingDestroy(
+  VirtualProxyType proxy
 ) {
-  return theCollection()->incomingDestroy<ColT,IndexT>(proxy);
+  return theCollection()->incomingDestroy(proxy);
 }
 
 }}} /* end namespace vt::vrt::collection */
