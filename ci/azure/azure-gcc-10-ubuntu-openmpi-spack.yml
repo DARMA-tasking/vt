@@ -5,9 +5,9 @@
 name: PR tests spack-package (gcc-10, ubuntu, openmpi, no LB, spack-package)
 
 trigger:
-  branches:
-    include:
-      - develop
+  - develop
+
+pr: none
 
 resources:
 - repo: self
