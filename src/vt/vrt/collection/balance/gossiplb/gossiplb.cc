@@ -117,6 +117,19 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
     obj_ordering_ == ObjectOrderEnum::Arbitrary && deterministic_,
     "Arbitrary object ordering is not deterministic"
   );
+
+  if (theContext()->getNode() == 0) {
+    debug_print(
+      gossiplb, node,
+      "GossipLB::inputParams: using f={}, k={}, i={}, c={}, trials={}, "
+      "deterministic={}, inform={}, ordering={}, cmf={}, rollback={}, "
+      "targetpole={}\n",
+      f_, k_max_, num_iters_, static_cast<int32_t>(criterion_), num_trials_,
+      deterministic_, static_cast<int32_t>(inform_type_),
+      static_cast<int32_t>(obj_ordering_), static_cast<int32_t>(cmf_type_),
+      rollback_, target_pole_
+    );
+  }
 }
 
 void GossipLB::runLB() {
