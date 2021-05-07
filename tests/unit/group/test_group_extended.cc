@@ -82,7 +82,7 @@ static inline void activeMessageGroupCollective() {
       // node 1 broadcasts to the group of even nodes
       auto const my_node = ::vt::theContext()->getNode();
       if (my_node == 1) {
-        auto msg = makeMessage<MySimpleMsg>();
+        auto msg = makeSharedMessage<MySimpleMsg>();
         envelopeSetGroup(msg->env, group_id);
         theMsg()->broadcastMsg<MySimpleMsg,msgHandlerGroup>(msg);
       }
