@@ -95,8 +95,8 @@ int main(int argc, char** argv) {
     auto new_msg = vt::makeMessage<AnotherMsg>();
     vt::theMsg()->broadcastMsg<MultipleFunctions, AnotherMsg>(new_msg);
 
-    new_msg = vt::makeMessage<AnotherMsg>();
-    vt::theMsg()->sendMsg<MultipleFunctions, AnotherMsg>(1, new_msg);
+    msg = vt::makeMessage<HelloMsg>(this_node);
+    vt::theMsg()->sendMsg<MultipleFunctions, HelloMsg>(1, msg);
   }
 
   vt::finalize();
