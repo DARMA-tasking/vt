@@ -52,9 +52,21 @@ struct HelloMsg : vt::Message {
   { }
 };
 
+struct AnotherMsg : vt::Message{};
+
 struct HelloWorld {
   void operator()(HelloMsg* msg) const {
-    fmt::print("{}: Hello from node {}\n", vt::theContext()->getNode(), msg->from);
+    fmt::print("{}: HelloWorld -> Hello from node {}\n", vt::theContext()->getNode(), msg->from);
+  }
+};
+
+struct MultipleFunctions {
+  void operator()(HelloMsg* msg) const {
+    fmt::print("{}: MultipleFunctions -> Hello from node {}\n", vt::theContext()->getNode(), msg->from);
+  }
+
+  void operator()(AnotherMsg* msg) const {
+    fmt::print("{}: MultipleFunctions with AnotherMsg\n", vt::theContext()->getNode());
   }
 };
 
@@ -70,7 +82,21 @@ int main(int argc, char** argv) {
 
   if (this_node == 0) {
     auto msg = vt::makeMessage<HelloMsg>(this_node);
-    vt::theMsg()->broadcastMsg<HelloWorld,HelloMsg>(msg);
+
+    // 'HelloWorld' functor has only single 'operator()' declared
+    // so we can call send/broadcast without specifying message type
+    vt::theMsg()->broadcastMsg<HelloWorld>(msg);
+
+    msg = vt::makeMessage<HelloMsg>(this_node);
+    vt::theMsg()->sendMsg<HelloWorld>(1, msg);
+
+    // 'MultipleFunctions' functor declares more than one 'operator()'
+    // so we have to specify the type of the message, as it can't be deduced
+    auto new_msg = vt::makeMessage<AnotherMsg>();
+    vt::theMsg()->broadcastMsg<MultipleFunctions, AnotherMsg>(new_msg);
+
+    msg = vt::makeMessage<HelloMsg>(this_node);
+    vt::theMsg()->sendMsg<MultipleFunctions, HelloMsg>(1, msg);
   }
 
   vt::finalize();

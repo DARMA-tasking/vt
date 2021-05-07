@@ -59,6 +59,13 @@ struct FunctorTraits<ReturnT(FunctorT::*)(MsgT*)> {
   using ReturnType  = ReturnT;
 };
 
+template <typename FunctorT, typename ReturnT, typename MsgT>
+struct FunctorTraits<ReturnT(FunctorT::*)(MsgT*) const> {
+  using FunctorType = FunctorT;
+  using MessageType = MsgT;
+  using ReturnType  = ReturnT;
+};
+
 template <
   typename FunctorT,
   typename FunctorFnT = decltype(&FunctorT::operator()),

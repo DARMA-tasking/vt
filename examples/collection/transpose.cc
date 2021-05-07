@@ -176,7 +176,7 @@ struct Block : vt::Collection<Block, vt::Index1D> {
     if (getIndex().x() == 0) {
       auto proxy = this->getCollectionProxy();
       auto proxy_msg = vt::makeMessage<ProxyMsg>(proxy.getProxy());
-      vt::theMsg()->broadcastMsg<SetupGroup,ProxyMsg>(proxy_msg);
+      vt::theMsg()->broadcastMsg<SetupGroup>(proxy_msg);
     }
   }
 
