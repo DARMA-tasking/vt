@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 
-
 namespace vt { namespace util {
 
 template <typename FunctorT>

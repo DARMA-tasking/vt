@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
     auto msg = vt::makeMessage<HelloMsg>(this_node);
 
     // 'HelloWorld' functor has only single 'operator()' declared
-    // so we can call send/braodcast without specyfing message type
+    // so we can call send/broadcast without specifying message type
     vt::theMsg()->broadcastMsg<HelloWorld>(msg);
 
     msg = vt::makeMessage<HelloMsg>(this_node);
