@@ -1,6 +1,6 @@
 
 ARG arch=amd64
-FROM lifflander1/vt:alpine-final as base
+FROM alpine:3.13 as base
 
 ARG proxy=""
 ARG compiler=clang
@@ -8,15 +8,49 @@ ARG compiler=clang
 ENV https_proxy=${proxy} \
     http_proxy=${proxy}
 
-RUN source "$HOME/.bashrc" && \
-    source /usr/share/spack/share/spack/setup-env.sh && \
-    spack env activate clang-mpich
+RUN apk add --no-cache \
+        alpine-sdk \
+        autoconf \
+        automake \
+        bash \
+        binutils-dev \
+        ccache \
+        clang \
+        clang-dev \
+        cmake \
+        dpkg \
+        libdwarf-dev \
+        libexecinfo-dev \
+        libtool \
+        linux-headers \
+        m4 \
+        make \
+        ninja \
+        wget \
+        zlib \
+        zlib-dev
+
+RUN ln -sf /usr/bin/clang /usr/bin/cc && \
+    ln -sf /usr/bin/clang++ /usr/bin/c++ && \
+    update-alternatives --install /usr/bin/cc cc /usr/bin/clang 10 && \
+    update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 10 && \
+    update-alternatives --auto cc && \
+    update-alternatives --auto c++ && \
+    update-alternatives --display cc && \
+    update-alternatives --display c++ && \
+    cc --version && \
+    c++ --version
+
+ENV CC=clang \
+    CXX=clang++
+
+COPY ./ci/deps/mpich.sh mpich.sh
+RUN ./mpich.sh 3.3.2 -j4
 
 ENV CMAKE_EXE_LINKER_FLAGS="-lexecinfo" \
     CC=mpicc \
     CXX=mpicxx \
-    PATH=/usr/lib/ccache/:$PATH \
-    PATH=/usr/share/spack/var/spack/environments/clang-mpich/.spack-env/view/bin/:$PATH
+    PATH=/usr/lib/ccache/:$PATH
 
 FROM base as build
 COPY . /vt
@@ -50,7 +84,6 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
 RUN /vt/ci/build_cpp.sh /vt /build
-COPY /build/ /build
 
 FROM build as test
 RUN /vt/ci/test_cpp.sh /vt /build

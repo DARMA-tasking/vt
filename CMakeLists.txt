@@ -1,15 +1,13 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
 project(vt)
 
 # To generate output file with compilation errors and warnings
 # CMake generator needs to be known
 set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERATOR" FORCE)
 
-if (POLICY CMP0082) # CMake 3.14
-  # Prevent mixing install policies from add_subdirectory;
-  # This suppresses a warning as the old behavior is deprecated-by-definition.
-  cmake_policy(SET CMP0082 NEW)
-endif()
+# Prevent mixing install policies from add_subdirectory;
+# This suppresses a warning as the old behavior is deprecated-by-definition.
+cmake_policy(SET CMP0082 NEW)
 
 include(cmake/turn_on_warnings.cmake)
 
@@ -72,14 +70,7 @@ option(vt_gold_linker_enabled "Build VT using the `gold' linker" ON)
 option(vt_unity_build_enabled "Build VT with Unity/Jumbo mode enabled" OFF)
 
 if (vt_unity_build_enabled)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16)
     message(STATUS "Building VT in Unity/Jumbo build mode")
-  else()
-    message(
-      STATUS
-      "Could *not* build VT in Unity/Jumbo mode---version of CMake ${CMAKE_VERSION} < 3.16"
-    )
-  endif()
 endif()
 
 # Option included here, handled in define_build_modes.cmake so libfort can be
