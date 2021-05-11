@@ -612,6 +612,7 @@ std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
     factor = 1.0 / this_new_load_;
     break;
   case CMFTypeEnum::NormByMax:
+  case CMFTypeEnum::NormByMaxExcludeIneligible:
     {
       double l_max = 0.0;
       for (auto&& pe : under) {
@@ -685,6 +686,24 @@ std::vector<NodeType> GossipLB::makeUnderloaded() const {
     std::sort(under.begin(), under.end());
   }
   return under;
+}
+
+std::vector<NodeType> GossipLB::makeSufficientlyUnderloaded(
+  TimeType load_to_accommodate
+) const {
+  std::vector<NodeType> sufficiently_under = {};
+  for (auto&& elm : load_info_) {
+    bool eval = Criterion(criterion_)(
+      this_new_load_, elm.second, load_to_accommodate, target_max_load_
+    );
+    if (eval) {
+      sufficiently_under.push_back(elm.first);
+    }
+  }
+  if (deterministic_) {
+    std::sort(sufficiently_under.begin(), sufficiently_under.end());
+  }
+  return sufficiently_under;
 }
 
 GossipLB::ElementLoadType::iterator
@@ -882,9 +901,18 @@ void GossipLB::decide() {
         if (cmf_type_ == CMFTypeEnum::Original) {
           // Rebuild the relaxed underloaded set based on updated load of this node
           under = makeUnderloaded();
-        }
-        if (under.size() == 0) {
-          break;
+          if (under.size() == 0) {
+            break;
+          }
+        } else if (cmf_type_ == CMFTypeEnum::NormByMaxExcludeIneligible) {
+          // Rebuild the underloaded set and eliminate processors that will
+          // fail the Criterion for this object
+          under = makeSufficientlyUnderloaded(obj_load_ms);
+          if (under.size() == 0) {
+            ++n_rejected;
+            iter++;
+            continue;
+          }
         }
         // Rebuild the CMF with the new loads taken into account
         auto cmf = createCMF(under);
