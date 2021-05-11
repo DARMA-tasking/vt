@@ -48,9 +48,6 @@
 #include "vt/runtime/runtime_inst.h"
 #include "vt/utils/tls/tls.h"
 
-#if vt_check_enabled(throw_on_abort)
-#include <stdexcept>
-#endif
 #include <memory>
 #include <cstdlib>
 #include <mpi.h>
@@ -148,15 +145,11 @@ void CollectiveAnyOps<instance>::abort(
     //--- Try to flush most of the traces before aborting
     myrt->theTrace->cleanupTracesFile();
 #endif
-#if vt_check_enabled(throw_on_abort)
-  }
-  throw std::runtime_error(str);
-#else
     myrt->abort(str, code);
   } else {
     std::_Exit(code);
   }
-#endif
+
 }
 
 template <runtime::RuntimeInstType instance>
