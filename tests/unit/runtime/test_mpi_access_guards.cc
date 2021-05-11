@@ -105,7 +105,7 @@ void testMpiAccess(bool access_allowed, bool grant_access) {
 }
 
 TEST_F(TestMpiAccessGuardDeathTest, test_mpi_access_prevented) {
-#if vt_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards) and !vt_check_enabled(trace_enabled)
   SET_MIN_NUM_NODES_CONSTRAINT(2);
   testMpiAccess(false, false);
 #endif
