@@ -518,7 +518,9 @@ void Runtime::reset() {
 }
 
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
+#if !vt_check_enabled(throw_on_abort)
   aborted_ = true;
+#endif
   output(abort_str,code,true,true,false);
 
 #if vt_check_enabled(throw_on_abort)
@@ -526,7 +528,6 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
 #else
   std::raise( SIGTRAP );
   if (theContext) {
-
     auto const comm = theContext->getComm();
     MPI_Abort(comm, 129);
   } else {
