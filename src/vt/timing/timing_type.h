@@ -44,8 +44,6 @@
 #if !defined INCLUDED_VT_TIMING_TIMING_TYPE_H
 #define INCLUDED_VT_TIMING_TIMING_TYPE_H
 
-#include "vt/config.h"
-
 namespace vt {
 
 using TimeType = double;

@@ -41,9 +41,10 @@
 //@HEADER
 */
 
-#include "vt/config.h"
 #include "vt/timing/timing.h"
-#include "vt/timing/timing_type.h"
+
+#include "vt/runtime/component/diagnostic_units.h"
+#include "vt/runtime/component/diagnostic_value_format.h"
 
 #include <mpi.h>
 
@@ -51,6 +52,15 @@ namespace vt { namespace timing {
 
 /*static*/ TimeType Timing::getCurrentTime() {
   return MPI_Wtime();
+}
+
+/*static*/ std::string Timing::getTimeWithUnits(TimeType const time) {
+  using DF = vt::runtime::component::detail::DiagnosticFormatter;
+  using vt::runtime::component::detail::decimal_format;
+
+  auto constexpr unit = vt::runtime::component::DiagnosticUnit::Seconds;
+  bool constexpr align = false;
+  return DF::getValueWithUnits(time, unit, decimal_format, align);
 }
 
 }} /* end namespace vt::timing */

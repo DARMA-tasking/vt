@@ -2,10 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   timing.h
+//                            test_timing.nompi.cc
+//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,33 +42,43 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TIMING_TIMING_H
-#define INCLUDED_VT_TIMING_TIMING_H
+#include <gtest/gtest.h>
 
-#include <string>
+#include "test_harness.h"
 
-#include "vt/timing/timing_type.h"
+#include "vt/timing/timing.h"
 
-namespace vt { namespace timing {
+namespace vt { namespace tests { namespace unit {
 
-struct Timing {
-  /**
-   * \brief Get current time on the calling processor
-   *
-   * \return current time in seconds
-   */
-  static TimeType getCurrentTime();
+using TestTiming = TestHarness;
 
-  /**
-   * \brief Format a time value to a \c std::string with units
-   *
-   * \param[in] time time in seconds
-   *
-   * \return pretty-printed \c std::string
-   */
-  static std::string getTimeWithUnits(TimeType const time);
-};
+TEST_F(TestTiming, test_time_formatting) {
+  using vt::timing::Timing;
 
-}} /* end namespace vt::timing */
+  {
+    auto const t = 15664645.400691890716;
+    EXPECT_EQ(Timing::getTimeWithUnits(t), "15664645.4 sec");
+  }
 
-#endif /*INCLUDED_VT_TIMING_TIMING_H*/
+  {
+    auto const t = 4.0006918907165527344;
+    EXPECT_EQ(Timing::getTimeWithUnits(t), "4.0 sec");
+  }
+
+  {
+    auto const t = 0.0691890716552734423;
+    EXPECT_EQ(Timing::getTimeWithUnits(t), "69.2 ms");
+  }
+
+  {
+    auto const t = 0.0006918907165527344;
+    EXPECT_EQ(Timing::getTimeWithUnits(t), "691.9 μs");
+  }
+
+  {
+    auto const t = 0.0000006918907165527;
+    EXPECT_EQ(Timing::getTimeWithUnits(t), "691.9 ns");
+  }
+}
+
+}}} /* end namespace vt::tests::unit */
