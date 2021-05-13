@@ -71,6 +71,11 @@ TEST_F(TestTiming, test_time_formatting) {
   }
 
   {
+    auto const t = -0.0691890716552734423;
+    EXPECT_EQ(Timing::getTimeWithUnits(t), "-69.2 ms");
+  }
+
+  {
     auto const t = 0.0006918907165527344;
     EXPECT_EQ(Timing::getTimeWithUnits(t), "691.9 μs");
   }
