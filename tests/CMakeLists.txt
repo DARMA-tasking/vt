@@ -135,6 +135,12 @@ set(
   ${PROJECT_TEST_UNIT_DIR}/main.cc
 )
 
+# List of test files that should be excluded
+set(
+  EXCLUDED_TEST_FILES
+  ${PROJECT_TEST_UNIT_DIR}/sequencer/test_sequencer_extensive.extended.cc
+)
+
 foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
   file(
     GLOB
@@ -152,6 +158,11 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
 
   foreach (unit_test_file ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
     #message(STATUS "Considering ${unit_test_file}")
+
+    if (${unit_test_file} IN_LIST EXCLUDED_TEST_FILES)
+      message(STATUS "Test file ${unit_test_file} is present on EXCLUDED_TEST_FILES list. Skipping!")
+      continue()
+    endif()
 
     GET_FILENAME_COMPONENT(
       UNIT_TEST
