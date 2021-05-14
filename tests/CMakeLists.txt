@@ -34,10 +34,6 @@ subdirlist(
   ${PROJECT_TEST_UNIT_DIR}
 )
 
-subdirlist(
-  PROJECT_PERF_TESTS
-  ${PROJECT_TEST_PERF_DIR}
-)
 
 #
 # Setup/add googletest CMake configuration
@@ -200,19 +196,19 @@ endforeach()
 # Performance Tests
 #
 
-foreach(PERF_TEST ${PROJECT_PERF_TESTS})
-  add_executable(${PERF_TEST} ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc)
-  add_dependencies(perf_tests ${PERF_TEST})
+file(GLOB PROJECT_PERF_TESTS ${PROJECT_TEST_PERF_DIR}/*.cc)
 
-  link_target_with_vt(
-    TARGET ${PERF_TEST}
-    DEFAULT_LINK_SET
-    LINK_GTEST ON
+foreach(PERF_TEST ${PROJECT_PERF_TESTS})
+  GET_FILENAME_COMPONENT(
+    TEST_NAME
+    ${PERF_TEST}
+    NAME_WLE
   )
 
-  add_test_for_example_vt(
-    ${PERF_TEST}
-    ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
-    perf_tests
+  add_executable(${TEST_NAME} ${PERF_TEST})
+
+  link_target_with_vt(
+    TARGET ${TEST_NAME}
+    DEFAULT_LINK_SET
   )
 endforeach()

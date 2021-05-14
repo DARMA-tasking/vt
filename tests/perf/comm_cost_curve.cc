@@ -91,7 +91,7 @@ void sender() {
     vt::theMsg()->sendMsg<PingMsg,handler>(1, msg);
   }
 
-  runSchedulerWhile([]{return !is_done; });
+  vt::theSched()->runSchedulerWhile([]{return !is_done; });
 
   is_done = false;
   auto time = (vt::timing::Timing::getCurrentTime() - start) / pings;
