@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-
-#include <vt/transport.h>
+#include <vt/collective/startup.h>
+#include <vt/messaging/active.h>
 
 #include <cstdlib>
 #include <array>

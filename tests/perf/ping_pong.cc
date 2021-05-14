@@ -41,12 +41,13 @@
 //@HEADER
 */
 
+#include <vt/collective/collective_ops.h>
+#include <vt/messaging/active.h>
+
 #include <cassert>
 #include <cstdint>
 
 #include <fmt/core.h>
-
-#include "vt/transport.h"
 
 #define DEBUG_PING_PONG 0
 #define REUSE_MESSAGE_PING_PONG 0
