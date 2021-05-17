@@ -44,6 +44,7 @@
 #include "vt/phase/phase_manager.h"
 #include "vt/objgroup/headers.h"
 #include "vt/pipe/pipe_manager.h"
+#include "vt/timing/timing.h"
 
 namespace vt { namespace phase {
 
@@ -214,6 +215,20 @@ void PhaseManager::runHooks(PhaseHook type) {
 
 void PhaseManager::runHooksManual(PhaseHook type) {
   runHooks(type);
+}
+
+void PhaseManager::setStartTime() {
+  start_time_ = timing::Timing::getCurrentTime();
+}
+
+void PhaseManager::printSummary() {
+  if (theContext()->getNode() == 0 and cur_phase_ != 0) {
+    auto time = timing::Timing::getCurrentTime() - start_time_;
+    vt_print(
+      phase, "PhaseManager::printSummary, phase={}, time={}\n",
+      cur_phase_, timing::Timing::getTimeWithUnits(time)
+    );
+  }
 }
 
 }} /* end namespace vt::phase */
