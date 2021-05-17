@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/read_lb.h"
+#include "vt/vrt/collection/balance/gossiplb/criterion.h"
 
 #include <string>
 #include <unordered_map>
@@ -229,6 +230,15 @@ enum struct KnowledgeEnum : uint8_t {
 }}}} /* end namespace vt::vrt::collection::lb */
 
 namespace std {
+
+using CriterionEnum = ::vt::vrt::collection::lb::CriterionEnum;
+
+template <>
+struct hash<CriterionEnum> {
+  size_t operator()(CriterionEnum const& in) const {
+    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+  }
+};
 
 using InformTypeEnum = ::vt::vrt::collection::lb::InformTypeEnum;
 
