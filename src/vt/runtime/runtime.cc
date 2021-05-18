@@ -1027,7 +1027,12 @@ bool Runtime::finalize(bool const force_now) {
 }
 
 void Runtime::sync() {
-  MPI_Barrier(theContext->getComm());
+  MPI_Comm comm = theContext->getComm();
+  if (comm == MPI_COMM_NULL) {
+    vtAbort("Trying to sync runtime while the communicator is not available");
+  } else {
+    MPI_Barrier(comm);
+  }
 }
 
 void Runtime::runScheduler() {
@@ -1216,6 +1221,7 @@ void Runtime::initializeComponents() {
     theTrace->initialize();
   #endif
   theEvent->initialize();
+  vrt::collection::balance::ProcStats::initialize();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }
@@ -1362,6 +1368,7 @@ void Runtime::finalizeComponents() {
 
   // Finalize memory usage component
   util::memory::MemoryUsage::finalize();
+  vrt::collection::balance::ProcStats::finalize();
 
   debug_print(runtime, node, "end: finalizeComponents\n");
 }

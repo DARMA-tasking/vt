@@ -61,6 +61,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+using ArgType = vt::arguments::ArgConfig;
+
 /*static*/
 typename ProcStats::SparseMapType<std::unordered_map<ElementIDType,TimeType>>
   ProcStats::proc_data_ = {};
@@ -146,7 +148,6 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
 }
 
 /*static*/ void ProcStats::createStatsFile() {
-  using ArgType = vt::arguments::ArgConfig;
   auto const node = theContext()->getNode();
   auto const base_file = std::string(ArgType::vt_lb_stats_file);
   auto const dir = std::string(ArgType::vt_lb_stats_dir);
@@ -155,7 +156,7 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
 
   debug_print(
     lb, node,
-    "ProcStats: createStatsFile file={}\n", file_name
+    "ProcStats:: createStatsFile file={}\n", file_name
   );
 
   // Node 0 creates the directory
@@ -174,6 +175,7 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
   }
 
   stats_file_ = fopen(file_name.c_str(), "w+");
+  vtAssertExpr(stats_file_ != nullptr);
 }
 
 /*static*/ void ProcStats::closeStatsFile() {
@@ -183,74 +185,88 @@ ProcStats::getProcSubphaseLoad(PhaseType phase) {
   }
 }
 
-/*static*/ void ProcStats::outputStatsFile() {
-  if (stats_file_ == nullptr) {
+std::pair<ElementIDType, ElementIDType>
+getRecvSendDirection(CommKeyType const& comm) {
+  switch (comm.cat_) {
+  case CommCategory::SendRecv:
+  case CommCategory::Broadcast:
+    return std::make_pair(comm.toObj(), comm.fromObj());
+
+  case CommCategory::NodeToCollection:
+  case CommCategory::NodeToCollectionBcast:
+    return std::make_pair(comm.toObj(), comm.fromNode());
+
+  case CommCategory::CollectionToNode:
+  case CommCategory::CollectionToNodeBcast:
+    return std::make_pair(comm.toNode(), comm.fromObj());
+  }
+
+  vtAssert(false, "Invalid balance::CommCategory enum value");
+  return std::make_pair(ElementIDType{}, ElementIDType{});
+}
+
+/*static*/ void ProcStats::initialize() {
+#if backend_check_enabled(lblite)
+  if (ArgType::vt_lb_stats and stats_file_ == nullptr) {
     createStatsFile();
+  }
+#endif
+}
+
+/*static*/ void ProcStats::finalize() {
+  // If statistics are enabled, close output file and clear stats
+#if backend_check_enabled(lblite)
+  if (ArgType::vt_lb_stats) {
+    closeStatsFile();
+    clearStats();
+  }
+#endif
+}
+
+/*static*/ void ProcStats::outputStatsForPhase(PhaseType phase) {
+  // Statistics output when LB is enabled and appropriate flag is enabled
+  if (!ArgType::vt_lb_stats) {
+    return;
   }
 
   vtAssertExpr(stats_file_ != nullptr);
+  debug_print(lb, node, "ProcStats::outputStatsForPhase: phase={}\n", phase);
 
-  auto const num_iters = proc_data_.size();
+  for (auto&& elm : proc_data_.at(phase)) {
+    ElementIDType id = elm.first;
+    TimeType time = elm.second;
+    const auto& subphase_times = proc_subphase_data_.at(phase)[id];
+    size_t subphases = subphase_times.size();
 
-  vt_print(lb, "ProcStats::outputStatsFile: file={}, iter={}\n", print_ptr(stats_file_), num_iters);
+    auto obj_str = fmt::format("{},{},{},{},[", phase, id, time, subphases);
 
-  for (size_t i = 0; i < num_iters; i++) {
-    for (auto&& elm : proc_data_[i]) {
-      ElementIDType id = elm.first;
-      TimeType time = elm.second;
-      const auto& subphase_times = proc_subphase_data_[i][id];
-      size_t subphases = subphase_times.size();
-
-      auto obj_str = fmt::format("{},{},{},{},[", i, id, time, subphases);
-      for (size_t s = 0; s < subphases; s++) {
-        obj_str += std::to_string(subphase_times[s]);
-        if (s != subphases - 1)
-          obj_str += ",";
+    for (size_t s = 0; s < subphases; s++) {
+      if (s > 0) {
+        obj_str += ",";
       }
 
-      obj_str += "]\n";
-
-      fprintf(stats_file_, "%s", obj_str.c_str());
+      obj_str += std::to_string(subphase_times[s]);
     }
-    for (auto&& elm : proc_comm_[i]) {
-      using E = typename std::underlying_type<CommCategory>::type;
 
-      auto const& key = elm.first;
-      auto const& val = elm.second;
-      auto const cat = static_cast<E>(key.cat_);
+    obj_str += "]\n";
 
-      if (
-        key.cat_ == CommCategory::SendRecv or
-        key.cat_ == CommCategory::Broadcast
-      ) {
-        auto const to   = key.toObj();
-        auto const from = key.fromObj();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
-        fprintf(stats_file_, "%s", obj_str.c_str());
-      } else if (
-        key.cat_ == CommCategory::NodeToCollection or
-        key.cat_ == CommCategory::NodeToCollectionBcast
-      ) {
-        auto const to   = key.toObj();
-        auto const from = key.fromNode();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
-        fprintf(stats_file_, "%s", obj_str.c_str());
-      } else if (
-        key.cat_ == CommCategory::CollectionToNode or
-        key.cat_ == CommCategory::CollectionToNodeBcast
-      ) {
-        auto const to   = key.toNode();
-        auto const from = key.fromObj();
-        auto obj_str = fmt::format("{},{},{},{},{}\n", i, to, from, val, cat);
-        fprintf(stats_file_, "%s", obj_str.c_str());
-      } else {
-        vtAssert(false, "Invalid balance::CommCategory enum value");
-      }
-    }
+    fprintf(stats_file_, "%s", obj_str.c_str());
   }
-  fflush(stats_file_);
 
-  closeStatsFile();
+  for (auto&& elm : proc_comm_.at(phase)) {
+    using E = typename std::underlying_type<CommCategory>::type;
+
+    auto const& comm = elm.first;
+    auto const recvSend = getRecvSendDirection(comm);
+    auto const cat = static_cast<E>(comm.cat_);
+    auto obj_str = fmt::format(
+      "{},{},{},{},{}\n", phase, recvSend.first, recvSend.second,
+      elm.second, cat
+    );
+    fprintf(stats_file_, "%s", obj_str.c_str());
+  }
+
+  fflush(stats_file_);
 }
 
 ElementIDType ProcStats::addProcStats(
