@@ -196,7 +196,7 @@ void PhaseManager::runHooks(PhaseHook type) {
     auto iter = rooted_hooks_.find(type_bits);
     if (iter != rooted_hooks_.end()) {
       for (auto&& fn : iter->second) {
-        runInEpochRooted([=]{ fn.second(); });
+        runInEpochRooted("PhaseManager::runHooks", [=]{ fn.second(); });
       }
     }
   }
