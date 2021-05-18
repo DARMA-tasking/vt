@@ -84,6 +84,7 @@ struct AppConfig {
   bool vt_no_color   = false;
 #endif
   bool vt_auto_color = false;
+  bool vt_time_units = false;
   bool vt_quiet      = false;
   // Derived from vt_*_color arguments after parsing.
   bool colorize_output;

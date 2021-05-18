@@ -44,16 +44,18 @@
 
 #include <gtest/gtest.h>
 
-#include "test_harness.h"
+#include "test_parallel_harness.h"
 
+#include "vt/configs/arguments/app_config.h"
 #include "vt/timing/timing.h"
 
 namespace vt { namespace tests { namespace unit {
 
-using TestTiming = TestHarness;
+using TestTiming = TestParallelHarness;
 
 TEST_F(TestTiming, test_time_formatting) {
   using vt::timing::Timing;
+  theConfig()->vt_time_units = true;
 
   {
     auto const t = 15664645.400691890716;

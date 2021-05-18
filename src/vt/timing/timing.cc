@@ -43,10 +43,12 @@
 
 #include "vt/timing/timing.h"
 
+#include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_value_format.h"
 
 #include <mpi.h>
+#include <string>
 
 namespace vt { namespace timing {
 
@@ -55,6 +57,10 @@ namespace vt { namespace timing {
 }
 
 /*static*/ std::string Timing::getTimeWithUnits(TimeType const time) {
+  if (not theConfig()->vt_time_units) {
+    return std::to_string(time);
+  }
+
   using DF = vt::runtime::component::detail::DiagnosticFormatter;
   using vt::runtime::component::detail::decimal_format;
 

@@ -68,12 +68,15 @@ void ArgConfig::addColorArgs(CLI::App& app) {
   auto quiet  = "Quiet the output from vt (only errors, warnings)";
   auto always = "Colorize output (default)";
   auto never  = "Do not colorize output (overrides --vt_color)";
+  auto time_units = "Print time values with appropriate units";
   auto a  = app.add_flag("--vt_color",    config_.vt_color,      always);
   auto b  = app.add_flag("--vt_no_color", config_.vt_no_color,   never);
+  auto c  = app.add_flag("--vt_time_units", config_.vt_time_units, time_units);
   auto a1 = app.add_flag("--vt_quiet",    config_.vt_quiet,      quiet);
   auto outputGroup = "Output Control";
   a->group(outputGroup);
   b->group(outputGroup);
+  c->group(outputGroup);
   a1->group(outputGroup);
   // Do not exclude 'a' from 'b' here because when inputting/outputting a
   // config, both will be written out causing an error when reading a written
