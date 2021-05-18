@@ -72,7 +72,7 @@ ENV CUDACXX=/usr/local/cuda-versioned/bin/nvcc
 ENV PATH=/usr/local/cuda-versioned/bin/:$PATH
 
 RUN mkdir -p /nvcc_wrapper/build && \
-    wget https://raw.githubusercontent.com/DARMA-tasking/kokkos/add-Wno-deprecated-gpu-targets/bin/nvcc_wrapper -P /nvcc_wrapper/build && \
+    wget https://raw.githubusercontent.com/kokkos/kokkos/3.4.00/bin/nvcc_wrapper -P /nvcc_wrapper/build && \
     chmod +x /nvcc_wrapper/build/nvcc_wrapper
 
 ENV MPI_EXTRA_FLAGS="" \
