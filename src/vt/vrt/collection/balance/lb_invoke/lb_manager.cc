@@ -170,11 +170,11 @@ void
 LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
   lb::BaseLB* strat = base_proxy.get();
 
-  runInEpochCollective([=] {
+  runInEpochCollective("LBManager::runLB -> updateLoads", [=] {
     model_->updateLoads(phase);
   });
 
-  runInEpochCollective([=] {
+  runInEpochCollective("LBManager::runLB -> startLB", [=] {
     vt_debug_print(
       terse, lb,
       "LBManager: running strategy\n"
@@ -182,7 +182,7 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     strat->startLB(phase, base_proxy, model_.get(), theNodeStats()->getNodeComm()->at(phase));
   });
 
-  runInEpochCollective([=] {
+  runInEpochCollective("LBManager::runLB -> applyMigrations", [=] {
     vt_debug_print(
       terse, lb,
       "LBManager: starting migrations\n"

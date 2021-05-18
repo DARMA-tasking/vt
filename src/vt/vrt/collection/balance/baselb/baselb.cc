@@ -73,8 +73,12 @@ void BaseLB::startLB(
 
   importProcessorData(in_comm_stats);
 
-  runInEpochCollective([this] { computeStatistics(); });
-  runInEpochCollective([this] { finishedStats();     });
+  runInEpochCollective(
+    "BaseLB::startLB -> computeStatistics", [this]{ computeStatistics(); }
+  );
+  runInEpochCollective(
+    "BaseLB::startLB -> finishedStats", [this]{ finishedStats(); }
+  );
 }
 
 /*static*/

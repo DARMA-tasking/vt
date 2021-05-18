@@ -109,10 +109,10 @@ void ZoltanLB::runLB() {
   }
 
   if (do_edges_) {
-    runInEpochCollective([this]{ makeGraphSymmetric();    });
-    runInEpochCollective([this]{ combineEdges();          });
-    runInEpochCollective([this]{ countEdges();            });
-    runInEpochCollective([this]{ allocateShareEdgeGIDs(); });
+    runInEpochCollective("ZoltanLB::runLB -> makeGraphSymmetric", [this]{ makeGraphSymmetric(); });
+    runInEpochCollective("ZoltanLB::runLB -> combineEdges", [this]{ combineEdges(); });
+    runInEpochCollective("ZoltanLB::runLB -> countEdges", [this]{ countEdges(); });
+    runInEpochCollective("ZoltanLB::runLB -> allocateShareEdgeGIDs", [this]{ allocateShareEdgeGIDs(); });
   }
 
   initZoltan();
