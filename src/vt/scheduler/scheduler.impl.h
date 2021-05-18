@@ -64,7 +64,7 @@ void runInEpoch(EpochType ep, Callable&& fn) {
 
 template <typename Callable>
 void runInEpochCollective(Callable&& fn) {
-  runInEpochCollective("", std::forward<Callable>(fn));
+  runInEpochCollective("UNLABELED", std::forward<Callable>(fn));
 }
 
 template <typename Callable>
@@ -75,7 +75,7 @@ void runInEpochCollective(std::string const& label, Callable&& fn) {
 
 template <typename Callable>
 void runInEpochRooted(Callable&& fn) {
-  runInEpochRooted("", std::forward<Callable>(fn));
+  runInEpochRooted("UNLABELED", std::forward<Callable>(fn));
 }
 
 template <typename Callable>
