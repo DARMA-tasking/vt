@@ -96,7 +96,7 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     try {
       vt::theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
     } catch (std::exception& e) {
-      fmt::print("Caught an exception: {}\n", e.what());
+      ADD_FAILURE() << fmt::format("Caught an exception: {}\n", e.what());
     }
 #else
     vt::theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
