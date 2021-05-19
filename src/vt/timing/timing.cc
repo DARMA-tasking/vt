@@ -44,6 +44,7 @@
 #include "vt/timing/timing.h"
 
 #include "vt/configs/arguments/app_config.h"
+#include "vt/configs/debug/debug_print.h"
 #include "vt/runtime/component/diagnostic_units.h"
 #include "vt/runtime/component/diagnostic_value_format.h"
 
@@ -57,7 +58,7 @@ namespace vt { namespace timing {
 }
 
 /*static*/ std::string Timing::getTimeWithUnits(TimeType const time) {
-  if (not theConfig()->vt_time_units) {
+  if (not debug::preConfig()->vt_time_units) {
     return std::to_string(time);
   }
 
