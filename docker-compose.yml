@@ -25,6 +25,9 @@
 #   VT_TRACE_RT=0        # Enable tracing at runtime (for testing)
 #   VT_ASAN=0            # Enable address sanitizer
 #   BUILD_TYPE=release   # CMake build type
+#   VT_FCONTEXT=0             # Force use of fcontext for threading
+#   VT_USE_OPENMP=0           # Force use of OpenMP for threading
+#   VT_USE_STD_THREAD=0       # Force use of std::thread for threading
 #
 # Examples:
 #
@@ -98,6 +101,9 @@ x-vtopts: &vtopts
   VT_ASAN_ENABLED: ${VT_ASAN:-0}
   VT_POOL_ENABLED: ${VT_POOL:-1}
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
+  VT_FCONTEXT_ENABLED: ${VT_FCONTEXT:-0}
+  VT_USE_OPENMP: ${VT_USE_OPENMP:-0}
+  VT_USE_STD_THREAD: ${VT_USE_STD_THREAD:-0}
   CMAKE_BUILD_TYPE: ${BUILD_TYPE:-release}
   VT_MPI_GUARD_ENABLED: ${VT_MPI_GUARD:-1}
   https_proxy: ${PROXY-}

@@ -107,7 +107,9 @@ using CollectionManagerType = vrt::collection::CollectionManager;
 ctx::Context*               theContext()        { return CUR_RT_TS->theContext.get();        }
 pool::Pool*                 thePool()           { return CUR_RT_TS->thePool.get();           }
 vrt::VirtualContextManager* theVirtualManager() { return CUR_RT_TS->theVirtualManager.get(); }
+#if vt_threading_enabled
 worker::WorkerGroupType*    theWorkerGrp()      { return CUR_RT_TS->theWorkerGrp.get();      }
+#endif
 
 // Non thread-safe runtime components
 collective::CollectiveAlg*  theCollective()     { return CUR_RT->theCollective.get();     }
