@@ -535,20 +535,10 @@ void Runtime::printStartupBanner() {
   if (ArgType::vt_lb_stats) {
     auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
-
-    auto const fname = ArgType::vt_lb_stats_file;
-    if (fname != "") {
-      auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
-      auto f12 = opt_on("--vt_lb_stats_file", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-
-    auto const fdir = ArgType::vt_lb_stats_dir;
-    if (fdir != "") {
-      auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
-      auto f12 = opt_on("--vt_lb_stats_dir", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
+    vtAbort(
+      "--vt_lb_stats was used, but load balancing statistics collection "
+      "is disabled in this release."
+    );
   }
 
 

@@ -138,144 +138,148 @@ INSTANTIATE_TEST_SUITE_P(
   LoadBalancerExplode, TestLoadBalancer, balancers
 );
 
-struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
-  virtual void addAdditionalArgs() override {
-    static char vt_lb_stats[]{"--vt_lb_stats"};
-    static char vt_lb_stats_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
-    static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile"};
+/**
+ * Following tests are disabled since --vt_lb_stats is disallowed.
+ */
 
-    addArgs(vt_lb_stats, vt_lb_stats_dir, vt_lb_stats_file);
-  }
-};
+// struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
+//   virtual void addAdditionalArgs() override {
+//     static char vt_lb_stats[]{"--vt_lb_stats"};
+//     static char vt_lb_stats_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
+//     static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile"};
 
-struct TestNodeStatsDumper : TestParallelHarnessWithStatsDumping {};
+//     addArgs(vt_lb_stats, vt_lb_stats_dir, vt_lb_stats_file);
+//   }
+// };
 
-void closeNodeStatsFile(char const* file_path);
-int countCreatedStatsFiles(char const* path);
-void removeStatsOutputDir(char const* path);
-std::map<int, int> getPhasesFromStatsFile(const char* file_path);
+// struct TestNodeStatsDumper : TestParallelHarnessWithStatsDumping {};
 
-TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
-  ArgType::vt_lb = true;
-  ArgType::vt_lb_name = "GreedyLB";
-  ArgType::vt_lb_interval = GetParam();
+// void closeNodeStatsFile(char const* file_path);
+// int countCreatedStatsFiles(char const* path);
+// void removeStatsOutputDir(char const* path);
+// std::map<int, int> getPhasesFromStatsFile(const char* file_path);
 
-  if (vt::theContext()->getNode() == 0) {
-    fmt::print(
-      "Testing dumping Node Stats with LB interval {}\n",
-      ArgType::vt_lb_interval
-    );
-  }
+// TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
+//   ArgType::vt_lb = true;
+//   ArgType::vt_lb_name = "GreedyLB";
+//   ArgType::vt_lb_interval = GetParam();
 
-  vt::vrt::collection::CollectionProxy<MyCol> proxy;
-  auto const range = vt::Index1D(num_elms);
+//   if (vt::theContext()->getNode() == 0) {
+//     fmt::print(
+//       "Testing dumping Node Stats with LB interval {}\n",
+//       ArgType::vt_lb_interval
+//     );
+//   }
 
-  // Construct a collection
-  runInEpochCollective([&] {
-    proxy = vt::theCollection()->constructCollective<MyCol>(
-      range, [](vt::Index1D) { return std::make_unique<MyCol>(); }
-    );
-  });
+//   vt::vrt::collection::CollectionProxy<MyCol> proxy;
+//   auto const range = vt::Index1D(num_elms);
 
-  for (int phase = 0; phase < num_phases; phase++) {
-    // Do some work
-    runInEpochCollective([&] {
-      if (vt::theContext()->getNode() == 0) {
-        proxy.broadcast<MyMsg, colHandler>();
-      }
-    });
+//   // Construct a collection
+//   runInEpochCollective([&] {
+//     proxy = vt::theCollection()->constructCollective<MyCol>(
+//       range, [](vt::Index1D) { return std::make_unique<MyCol>(); }
+//     );
+//   });
 
-    // Go to the next phase
-    runInEpochCollective(
-      [&] { vt::theCollection()->startPhaseCollective(nullptr); });
-  }
+//   for (int phase = 0; phase < num_phases; phase++) {
+//     // Do some work
+//     runInEpochCollective([&] {
+//       if (vt::theContext()->getNode() == 0) {
+//         proxy.broadcast<MyMsg, colHandler>();
+//       }
+//     });
 
-  auto const file_name = fmt::format(
-    "{}.{}.out", ArgType::vt_lb_stats_file, vt::theContext()->getNode()
-  );
-  auto const file_path =
-    fmt::format("{}/{}", ArgType::vt_lb_stats_dir, file_name);
-  auto const readPhases = getPhasesFromStatsFile(file_path.c_str());
-  EXPECT_EQ(readPhases.size(), num_phases);
+//     // Go to the next phase
+//     runInEpochCollective(
+//       [&] { vt::theCollection()->startPhaseCollective(nullptr); });
+//   }
 
-  vt::theCollective()->barrier();
+//   auto const file_name = fmt::format(
+//     "{}.{}.out", ArgType::vt_lb_stats_file, vt::theContext()->getNode()
+//   );
+//   auto const file_path =
+//     fmt::format("{}/{}", ArgType::vt_lb_stats_dir, file_name);
+//   auto const readPhases = getPhasesFromStatsFile(file_path.c_str());
+//   EXPECT_EQ(readPhases.size(), num_phases);
 
-  if (vt::theContext()->getNode() == 0) {
-    removeStatsOutputDir(ArgType::vt_lb_stats_dir.c_str());
-  }
+//   vt::theCollective()->barrier();
 
-  // Prevent NodeStats from closing files during finalize()
-  // All the tmp files are removed already
-  ArgType::vt_lb_stats = false;
-}
+//   if (vt::theContext()->getNode() == 0) {
+//     removeStatsOutputDir(ArgType::vt_lb_stats_dir.c_str());
+//   }
 
-int countCreatedStatsFiles(char const* path) {
-  int files_counter = 0;
-  if (auto* dir = opendir(path)) {
-    while (auto* dir_ent = readdir(dir)) {
-      if (
-        strcmp(dir_ent->d_name, ".") == 0 ||
-        strcmp(dir_ent->d_name, "..") == 0
-      ) {
-        continue;
-      }
+//   // Prevent NodeStats from closing files during finalize()
+//   // All the tmp files are removed already
+//   ArgType::vt_lb_stats = false;
+// }
 
-      std::string file_path = std::string{path} + '/' + dir_ent->d_name;
-      struct stat stat_buf;
-      if (stat(file_path.c_str(), &stat_buf) == 0 && stat_buf.st_size > 0) {
-        ++files_counter;
-      }
-    }
+// int countCreatedStatsFiles(char const* path) {
+//   int files_counter = 0;
+//   if (auto* dir = opendir(path)) {
+//     while (auto* dir_ent = readdir(dir)) {
+//       if (
+//         strcmp(dir_ent->d_name, ".") == 0 ||
+//         strcmp(dir_ent->d_name, "..") == 0
+//       ) {
+//         continue;
+//       }
 
-    closedir(dir);
-  }
+//       std::string file_path = std::string{path} + '/' + dir_ent->d_name;
+//       struct stat stat_buf;
+//       if (stat(file_path.c_str(), &stat_buf) == 0 && stat_buf.st_size > 0) {
+//         ++files_counter;
+//       }
+//     }
 
-  return files_counter;
-}
+//     closedir(dir);
+//   }
 
-void removeStatsOutputDir(char const* path) {
-  if (auto* dir = opendir(path)) {
-    while (auto* dir_ent = readdir(dir)) {
-      if (
-        strcmp(dir_ent->d_name, ".") == 0 ||
-        strcmp(dir_ent->d_name, "..") == 0
-      ) {
-        continue;
-      }
+//   return files_counter;
+// }
 
-      std::string file_path = std::string{path} + '/' + dir_ent->d_name;
-      auto const* path_cstr = file_path.c_str();
-      unlink(path_cstr);
-    }
+// void removeStatsOutputDir(char const* path) {
+//   if (auto* dir = opendir(path)) {
+//     while (auto* dir_ent = readdir(dir)) {
+//       if (
+//         strcmp(dir_ent->d_name, ".") == 0 ||
+//         strcmp(dir_ent->d_name, "..") == 0
+//       ) {
+//         continue;
+//       }
 
-    rmdir(path);
-  }
-}
+//       std::string file_path = std::string{path} + '/' + dir_ent->d_name;
+//       auto const* path_cstr = file_path.c_str();
+//       unlink(path_cstr);
+//     }
 
-std::map<int, int> getPhasesFromStatsFile(const char* file_path) {
-  std::ifstream stats_file{file_path};
-  std::string line;
+//     rmdir(path);
+//   }
+// }
 
-  std::map<int, int> phases;
+// std::map<int, int> getPhasesFromStatsFile(const char* file_path) {
+//   std::ifstream stats_file{file_path};
+//   std::string line;
 
-  while (std::getline(stats_file, line)) {
-    std::istringstream iss{line};
-    int phase_num;
-    if (!(iss >> phase_num)) {
-      break;
-    }
+//   std::map<int, int> phases;
 
-    phases[phase_num]++;
-  }
+//   while (std::getline(stats_file, line)) {
+//     std::istringstream iss{line};
+//     int phase_num;
+//     if (!(iss >> phase_num)) {
+//       break;
+//     }
 
-  return phases;
-}
+//     phases[phase_num]++;
+//   }
 
-auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+//   return phases;
+// }
 
-INSTANTIATE_TEST_SUITE_P(
-  NodeStatsDumperExplode, TestNodeStatsDumper, intervals
-);
+// auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+// INSTANTIATE_TEST_SUITE_P(
+//   NodeStatsDumperExplode, TestNodeStatsDumper, intervals
+// );
 
 }}} // end namespace vt::tests::unit
 
