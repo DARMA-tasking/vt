@@ -91,10 +91,11 @@ namespace vt { namespace runtime {
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
+  bool const interop_mode, MPI_Comm* in_comm, bool delay_startup_banner,
+  RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
-     user_argv_(argv)
+     user_argv_(argv), delay_startup_banner_(delay_startup_banner)
 {
   ArgType::parse(argc, argv);
   if (argc > 0) {
@@ -980,8 +981,17 @@ bool Runtime::initialize(bool const force_now) {
     initializeErrorHandlers();
     sync();
     if (theContext->getNode() == 0) {
-      printStartupBanner();
+      auto fn = [=]{
+        printStartupBanner();
+      };
+
+      if (delay_startup_banner_) {
+        theSched->enqueue(fn);
+      } else {
+        fn();
+      }
     }
+
     setup();
     sync();
     initialized_ = true;
