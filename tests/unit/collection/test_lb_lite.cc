@@ -136,7 +136,7 @@ struct FinishedIter {
 
 /*static*/ void LBTest::iterWork(IterMsg* msg, LBTest* col) {
   double val = 0.1f;
-  double val2 = 0.4f;
+  double val_2 = 0.4f;
   auto const idx = col->getIndex().x();
   auto const iter = msg->iter_;
   int64_t const max_work = 1000 * weight;
@@ -145,10 +145,10 @@ struct FinishedIter {
   int const x = idx < 8 ? max_work : (idx > 40 ? mid_work : min_work);
   //::fmt::print("proc={}, idx={}, iter={}\n", theContext()->getNode(),idx,iter);
   for (int i = 0; i < 10000 * x; i++) {
-    val *= val2 + i*29.4;
-    val2 += 1.0;
+    val *= val_2 + i*29.4;
+    val_2 += 1.0;
   }
-  col->data_2 += val + val2;
+  col->data_2 += val + val_2;
   if (iter == 0) {
     col->setValues();
   } else {

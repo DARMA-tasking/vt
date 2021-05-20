@@ -236,7 +236,6 @@ void GossipLB::doLBStages(TimeType start_imb) {
 
       if (rollback_ || ArgType::vt_debug_gossiplb || (iter_ == num_iters_ - 1)) {
         runInEpochCollective([=] {
-          using StatsMsgType = balance::ProcStatsMsg;
           using ReduceOp = collective::PlusOp<balance::LoadData>;
           auto cb = vt::theCB()->makeBcast<
             GossipLB, StatsMsgType, &GossipLB::gossipStatsHandler
