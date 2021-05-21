@@ -58,6 +58,37 @@ struct PutTestMessage : ::vt::PayloadMessage {
   PutTestMessage() = default;
 };
 
+struct Particle {
+  Particle() = default;
+  Particle(double in_x, double in_y, double in_z)
+    : x(in_x), y(in_y), z(in_z)
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | x | y | z;
+  }
+
+  double x, y, z;
+};
+
+struct ParticleMsg : ::vt::Message {
+  using MessageParentType = ::vt::Message; // base message
+  vt_msg_serialize_required();             // mark serialization mode
+
+  ParticleMsg() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s); // ensure parent is serialized consistently
+
+    s | particles;
+  }
+
+public:
+  std::vector<Particle> particles;
+};
+
 struct TestActiveSend : TestParallelHarness {
   using TestMsg = TestStaticBytesShortMsg<4>;
 
@@ -121,6 +152,15 @@ struct TestActiveSend : TestParallelHarness {
     handler_count++;
 
     EXPECT_EQ(this_node, to_node);
+  }
+
+  static void msgSerialA(ParticleMsg* msg) {
+    vtAssert(msg->particles.size() == 2, "Should be two particles");
+
+    auto const cur_node = ::vt::theContext()->getNode();
+    vtAssert(cur_node == 0, "This handler should execute on node 0");
+
+    ::fmt::print("msgSerialA: triggered on node={}\n", cur_node);
   }
 };
 
@@ -208,5 +248,18 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
   vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
 }
 
+TEST_F(TestActiveSend, test_active_message_serialization) {
+  vt::runInEpochCollective([] {
+    auto const this_node = theContext()->getNode();
+
+    if (this_node == 0) {
+      NodeType const destination = 0;
+      auto msg = vt::makeMessage<ParticleMsg>();
+      msg->particles.push_back(Particle{1.0,2.0,3.0});
+      msg->particles.push_back(Particle{4.0,5.0,6.0});
+      theMsg()->sendMsg<ParticleMsg, msgSerialA>(destination, msg);
+    }
+  });
+}
 
 }}}} // end namespace vt::tests::unit::send
