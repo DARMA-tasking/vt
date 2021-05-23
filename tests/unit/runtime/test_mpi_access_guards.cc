@@ -57,6 +57,9 @@ using TestMpiAccessGuardDeathTest = TestMpiAccessGuardTest;
 
 using DummyMsg = vt::Message;
 
+// Currently
+static constexpr bool TEST_FAILURE = vt_check_enabled(mpi_access_guards) and
+  not (vt_check_enabled(throw_on_abort) and vt_check_enabled(trace_enabled));
 static bool expected_to_fail_on_mpi_access = false;
 static bool explicitly_grant_access = false;
 
@@ -75,10 +78,17 @@ static void attempt_mpi_access() {
 
 static void message_handler(DummyMsg* msg) {
   if (expected_to_fail_on_mpi_access) {
+#if vt_check_enabled(throw_on_abort)
+  ASSERT_THROW(
+    attempt_mpi_access(),
+    std::runtime_error
+  );
+#else
     ASSERT_DEATH(
       attempt_mpi_access(),
       "MPI functions should not used inside user code invoked from VT handlers"
     );
+#endif
   } else {
     attempt_mpi_access();
     SUCCEED();
@@ -98,7 +108,7 @@ void testMpiAccess(bool access_allowed, bool grant_access) {
 }
 
 TEST_F(TestMpiAccessGuardDeathTest, test_mpi_access_prevented) {
-#if vt_check_enabled(mpi_access_guards)
+#if vt_check_enabled(mpi_access_guards) and not vt_check_enabled(trace_enabled)
   SET_MIN_NUM_NODES_CONSTRAINT(2);
   testMpiAccess(false, false);
 #endif

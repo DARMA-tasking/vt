@@ -411,7 +411,9 @@ void TraceLite::disableTracing() { enabled_ = false; }
 
 void TraceLite::cleanupTracesFile() {
   auto const& node = theContext()->getNode();
-  if (not(traceWritingEnabled(node) or isStsOutputNode(node))) {
+  if (
+    not(traceWritingEnabled(node) or isStsOutputNode(node)) or
+    traces_.empty()) {
     return;
   }
 

@@ -149,6 +149,7 @@ void CollectiveAnyOps<instance>::abort(
   } else {
     std::_Exit(code);
   }
+
 }
 
 template <runtime::RuntimeInstType instance>

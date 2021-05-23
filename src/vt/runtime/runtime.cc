@@ -78,6 +78,9 @@
 
 #include <checkpoint/checkpoint.h>
 
+#if vt_check_enabled(throw_on_abort)
+#include <stdexcept>
+#endif
 #include <memory>
 #include <iostream>
 #include <functional>
@@ -515,8 +518,14 @@ void Runtime::reset() {
 }
 
 void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
+#if !vt_check_enabled(throw_on_abort)
   aborted_ = true;
+#endif
   output(abort_str,code,true,true,false);
+
+#if vt_check_enabled(throw_on_abort)
+  throw std::runtime_error(abort_str);
+#else
   std::raise( SIGTRAP );
   if (theContext) {
     auto const comm = theContext->getComm();
@@ -526,6 +535,7 @@ void Runtime::abort(std::string const abort_str, ErrorCodeType const code) {
     // @todo: why will this not compile with clang!!?
     //quick_exit(code);
   }
+#endif
 }
 
 void Runtime::output(
