@@ -58,7 +58,6 @@
 
 namespace vt { namespace messaging {
 
-constexpr ByteType msgsize_not_specified = static_cast<ByteType>(-1);
 constexpr NodeType broadcast_dest = uninitialized_destination;
 
 template <typename MsgPtrT>
@@ -106,15 +105,15 @@ void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
 template <typename MsgPtrT>
 trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
   MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
-  MsgSizeType msg_size, bool is_bcast
+  bool is_bcast
 ) {
   #if vt_check_enabled(trace_enabled)
     trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
     trace::TraceEventIDType event = trace::no_trace_event;
     if (not is_bcast) {
-      event = theTrace()->messageCreation(ep, msg_size);
+      event = theTrace()->messageCreation(ep, msg.size());
     } else {
-      event = theTrace()->messageCreationBcast(ep, msg_size);
+      event = theTrace()->messageCreationBcast(ep, msg.size());
     }
     return event;
   #else
@@ -127,7 +126,6 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   NodeType dest,
   HandlerType han,
   MsgSharedPtr<MsgT>& msg,
-  ByteType msg_size,
   TagType tag
 ) {
   // These calls eventually end up back and the non-serialized sendMsgImpl,
@@ -164,7 +162,6 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   NodeType dest,
   HandlerType han,
   MsgSharedPtr<MsgT>& msg,
-  ByteType msg_size,
   TagType tag
 ) {
   static_assert(
@@ -194,9 +191,6 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   if (is_bcast) {
     dest = theContext()->getNode();
   }
-  if (msg_size == msgsize_not_specified) {
-    msg_size = sizeof(MsgT);
-  }
   if (tag != no_tag) {
     envelopeSetTag(rawMsg->env, tag);
   }
@@ -206,7 +200,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgCopyableImpl(
   envelopeSetIsLocked(rawMsg->env, true);
 
   auto base = msg.template to<BaseMsgType>();
-  return PendingSendType(base, msg_size);
+  return PendingSendType(base);
 }
 
 template <typename MsgT>
@@ -217,7 +211,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
   TagType tag
 ) {
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename MsgT>
@@ -228,8 +222,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   ByteType msg_size,
   TagType tag
 ) {
-  MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msg_size, tag);
+  MsgSharedPtr<MsgT> msgptr(msg.msg_, msg_size); // Note: use explicitly proveded message size
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename MsgT>
@@ -240,7 +234,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
   TagType tag
 ) {
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
@@ -251,12 +245,12 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgSz(
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
-  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  MsgSharedPtr<MsgT> msgptr(msg.msg_, msg_size); // Note: use explicitly proveded message size
 
   setBroadcastType(msgptr->env, deliver_to_sender);
 
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msgptr, msg_size, tag
+    broadcast_dest, han, msgptr, tag
   );
 }
 
@@ -272,7 +266,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   setBroadcastType(msgptr->env, deliver_to_sender);
 
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+    broadcast_dest, han, msgptr, tag
   );
 }
 
@@ -284,7 +278,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
@@ -295,8 +289,8 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSz(
   TagType tag
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
-  MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msg_size, tag);
+  MsgSharedPtr<MsgT> msgptr(msg.msg_, msg_size); // Note: use explicitly proveded message size
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
@@ -307,7 +301,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
@@ -318,7 +312,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+    broadcast_dest, han, msgptr, tag
   );
 }
 
@@ -332,7 +326,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   setBroadcastType(msgptr->env, deliver_to_sender);
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+    broadcast_dest, han, msgptr, tag
   );
 }
 
@@ -344,7 +338,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 ) {
   auto const han = auto_registry::makeAutoHandler<MsgT,f>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename FunctorT, typename MsgT>
@@ -357,7 +351,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   setBroadcastType(msgptr->env, deliver_to_sender);
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+    broadcast_dest, han, msgptr, tag
   );
 }
 
@@ -379,7 +373,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename FunctorT>
@@ -400,7 +394,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+    broadcast_dest, han, msgptr, tag
   );
 }
 
@@ -412,7 +406,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgAuto(
 ) {
   auto const han = auto_registry::makeAutoHandlerFunctor<FunctorT,true,MsgT*>();
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename MsgT>
@@ -432,7 +426,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsg(
 
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   auto tag = no_tag;
-  return sendMsgImpl<MsgT>(dest, han, msgptr, msgsize_not_specified, tag);
+  return sendMsgImpl<MsgT>(dest, han, msgptr, tag);
 }
 
 template <typename MsgT, ActiveTypedFnType<MsgT>* f>
@@ -455,7 +449,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsg(
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   setBroadcastType(msgptr->env, deliver_to_sender);
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+    broadcast_dest, han, msgptr, tag
   );
 }
 
@@ -467,7 +461,7 @@ ActiveMessenger::PendingSendType ActiveMessenger::broadcastMsgAuto(
 ) {
   MsgSharedPtr<MsgT> msgptr = msg.msg_;
   return sendMsgImpl<MsgT>(
-    broadcast_dest, han, msgptr, msgsize_not_specified, tag
+    broadcast_dest, han, msgptr, tag
   );
 }
 

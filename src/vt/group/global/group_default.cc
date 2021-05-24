@@ -150,7 +150,7 @@ namespace vt { namespace group { namespace global {
 
 /*static*/ EventType DefaultGroup::broadcast(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool const is_root, bool* const deliver
+  bool const is_root, bool* const deliver
 ) {
   // By default use the default_group_->spanning_tree_
   auto const& msg = base.get();
@@ -169,7 +169,7 @@ namespace vt { namespace group { namespace global {
   vt_debug_print(
     normal, broadcast,
     "DefaultGroup::broadcast msg={}, size={}, from={}, dest={}, is_root={}\n",
-    print_ptr(base.get()), size, from, dest, print_bool(is_root)
+    print_ptr(base.get()), base.size(), from, dest, print_bool(is_root)
   );
 
   if ((num_children > 0 || send_to_root) && (!this_node_dest || first_send)) {
@@ -186,11 +186,11 @@ namespace vt { namespace group { namespace global {
           normal, broadcast,
           "DefaultGroup::broadcast *send* size={}, from={}, child={}, send={}, "
           "msg={}\n",
-          size, from, child, print_bool(send), print_ptr(msg)
+          base.size(), from, child, print_bool(send), print_ptr(msg)
         );
 
         if (send) {
-          theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
+          theMsg()->sendMsgBytesWithPut(child, base, send_tag);
         }
       });
     }
@@ -205,7 +205,7 @@ namespace vt { namespace group { namespace global {
         print_bool(is_root), root_node, dest, print_ptr(msg)
       );
 
-      theMsg()->sendMsgBytesWithPut(root_node, base, size, send_tag);
+      theMsg()->sendMsgBytesWithPut(root_node, base, send_tag);
     }
   }
 

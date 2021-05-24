@@ -401,8 +401,7 @@ template <typename MsgT, typename BaseT>
         );
 
         auto base_msg = msg.template to<BaseMsgType>();
-        ByteType msg_sz = sizeof(MsgT);
-        return messaging::PendingSend(base_msg, msg_sz, [=](MsgPtr<BaseMsgType> in){
+        return messaging::PendingSend(base_msg, [=](MsgPtr<BaseMsgType> in){
           runnable::makeRunnable(msg, true, typed_handler, node)
             .withTDEpochFromMsg()
             .enqueue();

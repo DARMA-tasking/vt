@@ -833,10 +833,9 @@ void CollectionManager::invokeMsgImpl(
   auto reg_type = HandlerManager::isHandlerMember(han) ?
     auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
     auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
 
   trace_event = theMsg()->makeTraceCreationSend(
-    msgPtr, han, reg_type, msg_size, false
+    msgPtr, han, reg_type, false
   );
 #endif
 
@@ -963,9 +962,8 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
   auto reg_type = HandlerManager::isHandlerMember(han) ?
     auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
     auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   auto event = theMsg()->makeTraceCreationSend(
-    msg, han, reg_type, msg_size, true
+    msg, han, reg_type, true
   );
   msg->setFromTraceEvent(event);
 #endif
@@ -1123,9 +1121,8 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   auto reg_type = HandlerManager::isHandlerMember(handler) ?
     auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
     auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   auto event = theMsg()->makeTraceCreationSend(
-    msg, handler, reg_type, msg_size, true
+    msg, handler, reg_type, true
   );
   msg->setFromTraceEvent(event);
 # endif
@@ -1462,9 +1459,8 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   auto reg_type = HandlerManager::isHandlerMember(handler) ?
     auto_registry::RegistryTypeEnum::RegVrtCollectionMember :
     auto_registry::RegistryTypeEnum::RegVrtCollection;
-  auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   auto event = theMsg()->makeTraceCreationSend(
-    msg, handler, reg_type, msg_size, false
+    msg, handler, reg_type, false
   );
   msg->setFromTraceEvent(event);
 #endif

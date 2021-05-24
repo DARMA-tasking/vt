@@ -81,15 +81,12 @@ struct PendingSend final {
    * internal message-sending action is applied.
    *
    * \param[in] in_msg the message to send
-   * \param[in] in_msg_size the size of the message (type is erased)
    * \param[in] in_action the "send" action to run, if overridden.
    */
   PendingSend(
     MsgSharedPtr<BaseMsgType>& in_msg,
-    ByteType in_msg_size,
     SendActionType in_action = nullptr
   ) : msg_(in_msg)
-    , msg_size_(in_msg_size)
     , send_action_(in_action)
   {
     produceMsg();
@@ -115,7 +112,6 @@ struct PendingSend final {
     MsgSharedPtr<MsgT>& in_msg,
     SendActionType in_action
   ) : msg_(in_msg.template toVirtual<BaseMsgType>())
-    , msg_size_(sizeof(MsgT))
     , send_action_(in_action)
   {
     produceMsg();
@@ -186,7 +182,6 @@ private:
 
 private:
   MsgPtr<BaseMsgType> msg_ = nullptr;
-  ByteType msg_size_ = no_byte;
   SendActionType send_action_ = {};
   EpochActionType epoch_action_ = {};
   EpochType epoch_produced_ = no_epoch;
