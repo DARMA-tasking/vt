@@ -285,7 +285,7 @@ template <typename MsgT, typename BaseT>
     using MsgType = SerialWrapperMsgType<MsgT>;
     theMsg()->markAsSerialMsgMessage(sys_msg);
     return theMsg()->broadcastMsgSz<MsgType,serialMsgHandlerBcast>(
-      sys_msg, total_size, no_tag
+      sys_msg, total_size, deliver_to_sender, no_tag
     );
   }
 }
