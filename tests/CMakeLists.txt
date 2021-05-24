@@ -205,7 +205,10 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     NAME_WLE
   )
 
-  add_executable(${TEST_NAME} ${PERF_TEST})
+  add_executable(${TEST_NAME} ${PERF_TEST}
+    ${PROJECT_TEST_PERF_DIR}/common/test_harness.h
+    ${PROJECT_TEST_PERF_DIR}/common/test_harness.cc
+  )
 
   link_target_with_vt(
     TARGET ${TEST_NAME}
