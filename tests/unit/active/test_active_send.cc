@@ -58,35 +58,21 @@ struct PutTestMessage : ::vt::PayloadMessage {
   PutTestMessage() = default;
 };
 
-struct Particle {
-  Particle() = default;
-  Particle(double in_x, double in_y, double in_z)
-    : x(in_x), y(in_y), z(in_z)
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    s | x | y | z;
-  }
-
-  double x, y, z;
-};
-
-struct ParticleMsg : ::vt::Message {
+struct DataMsg : ::vt::Message {
   using MessageParentType = ::vt::Message; // base message
   vt_msg_serialize_required();             // mark serialization mode
 
-  ParticleMsg() = default;
+  DataMsg() = default;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     MessageParentType::serialize(s); // ensure parent is serialized consistently
 
-    s | particles;
+    s | data;
   }
 
 public:
-  std::vector<Particle> particles;
+  std::vector<uint32_t> data;
 };
 
 struct TestActiveSend : TestParallelHarness {
@@ -100,8 +86,6 @@ struct TestActiveSend : TestParallelHarness {
 
   virtual void SetUp() {
     TestParallelHarness::SetUp();
-
-    SET_MIN_NUM_NODES_CONSTRAINT(2);
 
     handler_count = 0;
     num_msg_sent = 16;
@@ -154,14 +138,7 @@ struct TestActiveSend : TestParallelHarness {
     EXPECT_EQ(this_node, to_node);
   }
 
-  static void msgSerialA(ParticleMsg* msg) {
-    vtAssert(msg->particles.size() == 2, "Should be two particles");
-
-    auto const cur_node = ::vt::theContext()->getNode();
-    vtAssert(cur_node == 0, "This handler should execute on node 0");
-
-    ::fmt::print("msgSerialA: triggered on node={}\n", cur_node);
-  }
+  static void msgSerialA(DataMsg*) { handler_count++; }
 };
 
 /*static*/ NodeType TestActiveSend::from_node;
@@ -170,6 +147,7 @@ struct TestActiveSend : TestParallelHarness {
 /*static*/ int TestActiveSend::num_msg_sent;
 
 TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
   auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
@@ -201,6 +179,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send) {
 }
 
 TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
   auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
@@ -225,6 +204,7 @@ TEST_F(TestActiveSend, test_type_safe_active_fn_send_small_put) {
 }
 
 TEST_F(TestActiveSend, test_type_safe_active_fn_send_large_put) {
+  SET_MIN_NUM_NODES_CONSTRAINT(2);
   auto const& my_node = theContext()->getNode();
 
   #if DEBUG_TEST_HARNESS_PRINT
@@ -252,14 +232,15 @@ TEST_F(TestActiveSend, test_active_message_serialization) {
   vt::runInEpochCollective([] {
     auto const this_node = theContext()->getNode();
 
-    if (this_node == 0) {
-      NodeType const destination = 0;
-      auto msg = vt::makeMessage<ParticleMsg>();
-      msg->particles.push_back(Particle{1.0,2.0,3.0});
-      msg->particles.push_back(Particle{4.0,5.0,6.0});
-      theMsg()->sendMsg<ParticleMsg, msgSerialA>(destination, msg);
+    for (auto i = 0; i < num_msg_sent; ++i) {
+      auto msg = vt::makeMessage<DataMsg>();
+      msg->data.resize(serialization::serialized_msg_eager_size);
+
+      theMsg()->sendMsg<DataMsg, msgSerialA>(this_node, msg);
     }
   });
+
+  EXPECT_EQ(handler_count, num_msg_sent);
 }
 
 }}}} // end namespace vt::tests::unit::send
