@@ -51,10 +51,21 @@
 namespace vt { namespace tests { namespace perf { namespace common {
 
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
+using DurationMicro = std::chrono::duration<double, std::micro>;
+using DurationMilli = std::chrono::duration<double, std::milli>;
+using DurationSec = std::chrono::duration<double>;
 
 struct StopWatch {
   void Start();
-  std::chrono::duration<double> Stop();
+
+  template <typename Duration = DurationMilli>
+  Duration Stop() {
+    auto const now = std::chrono::steady_clock::now();
+    auto const delta = Duration{now - cur_time_};
+    cur_time_ = now;
+
+    return delta;
+  }
 
   private:
   TimePoint cur_time_;
@@ -62,6 +73,7 @@ struct StopWatch {
 
 struct ScopedTimer {
   ScopedTimer(std::string const& name);
+  ScopedTimer(std::string && name);
   ~ScopedTimer();
 
   private:

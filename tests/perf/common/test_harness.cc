@@ -64,8 +64,12 @@ void PerfTestHarness::SetUp(int argc, char** argv) {
 }
 
 void PerfTestHarness::TearDown() {
-  vt::theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
+  SpinScheduler();
   CollectiveOps::finalize();
+}
+
+void PerfTestHarness::SpinScheduler() {
+  vt::theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
 }
 
 void PerfTestHarness::StartTimer() {

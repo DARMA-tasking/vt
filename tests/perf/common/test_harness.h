@@ -58,6 +58,8 @@ struct PerfTestHarness {
   virtual void SetUp(int argc, char** argv);
   virtual void TearDown();
 
+  static void SpinScheduler();
+
   /*
    *  ------------------
    *  Time based helpers

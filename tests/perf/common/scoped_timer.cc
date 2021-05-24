@@ -52,21 +52,17 @@ void StopWatch::Start() {
   cur_time_ = std::chrono::steady_clock::now();
 }
 
-std::chrono::duration<double> StopWatch::Stop() {
-  auto const now = std::chrono::steady_clock::now();
-  auto const delta = std::chrono::duration<double>{now - cur_time_};
-  cur_time_ = now;
-
-  return delta;
+ScopedTimer::ScopedTimer(std::string const& name) : name_(name) {
+  watch_.Start();
 }
 
-ScopedTimer::ScopedTimer(std::string const& name) : name_(name) {
+ScopedTimer::ScopedTimer(std::string && name) : name_(std::move(name)) {
   watch_.Start();
 }
 
 ScopedTimer::~ScopedTimer() {
   auto const time_elapsed = watch_.Stop();
-  fmt::print("{} took {}ms", name_, time_elapsed.count());
+  fmt::print("{} took {}ms\n", name_, time_elapsed.count());
 }
 
 }}}} // namespace vt::tests::perf::common

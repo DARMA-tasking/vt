@@ -47,11 +47,13 @@
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
+static constexpr uint32_t NUM_ITERS = 20;
+
   #define VT_PERF_TEST(StructName, TestName)               \
     struct StructName##TestName : StructName {             \
       void SetUp(int argc, char** argv) override {         \
         StructName::SetUp(argc, argv);                     \
-        name_ = #TestName;                              \
+        name_ = #TestName;                                 \
       }                                                    \
       void TearDown() override { StructName::TearDown(); } \
       void TestFunc();                                     \
@@ -59,11 +61,23 @@ namespace vt { namespace tests { namespace perf { namespace common {
     using TestType = StructName##TestName;                 \
     void StructName##TestName::TestFunc()
 
+  #define VT_TIME_EXEC(func)            \
+    {                                   \
+      ScopedTimer(#func);               \
+      func;                             \
+      PerfTestHarness::SpinScheduler(); \
+    }
+
+  #define RUN_PERF(func)                       \
+    for (uint32_t i = 0; i < NUM_ITERS; ++i) { \
+      VT_TIME_EXEC(func);                      \
+    }
+
   #define VT_PERF_TEST_MAIN()         \
     int main(int argc, char** argv) { \
       TestType t;                     \
       t.SetUp(argc, argv);            \
-      t.TestFunc();                   \
+      RUN_PERF(t.TestFunc());         \
       t.TearDown();                   \
                                       \
       return 0;                       \
