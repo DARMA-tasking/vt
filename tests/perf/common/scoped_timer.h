@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               test_harness.h
+//                                scoped_timer.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,43 +42,33 @@
 //@HEADER
 */
 
-#if !defined __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
-#define __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
+#if !defined INCLUDED_VT_TEST_PERF_COMMON_SCOPED_TIMER_H
+#define INCLUDED_VT_TEST_PERF_COMMON_SCOPED_TIMER_H
 
-#include "scoped_timer.h"
-#include "test_harness_macros.h"
-
-#include <vt/configs/types/types_type.h>
+#include <string>
+#include <chrono>
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
-struct PerfTestHarness {
-  virtual ~PerfTestHarness() = default;
+using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
 
-  virtual void SetUp(int argc, char** argv);
-  virtual void TearDown();
+struct StopWatch {
+  void Start();
+  std::chrono::duration<double> Stop();
 
-  /*
-   *  ------------------
-   *  Time based helpers
-   *  ------------------
-   */
-  void StartTimer();
-  void StopTimer();
+  private:
+  TimePoint cur_time_;
+};
 
-  /*
-   *  --------------------
-   *  Memory based helpers
-   *  --------------------
-   */
-  void GetMemoryUsage();
+struct ScopedTimer {
+  ScopedTimer(std::string const& name);
+  ~ScopedTimer();
 
-  protected:
-  NodeType my_node_ = {};
+  private:
+  std::string name_ = "default";
   StopWatch watch_ = {};
-  std::string name_ = {};
 };
 
 }}}} // namespace vt::tests::perf::common
 
-#endif // __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
+#endif // INCLUDED_VT_TEST_PERF_COMMON_SCOPED_TIMER_H

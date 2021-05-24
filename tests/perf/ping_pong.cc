@@ -40,7 +40,7 @@
 // *****************************************************************************
 //@HEADER
 */
-
+#include "common/test_harness.h"
 #include <vt/collective/collective_ops.h>
 #include <vt/messaging/active.h>
 
@@ -61,8 +61,6 @@ static int64_t num_pings = 1024;
 
 static constexpr NodeType const ping_node = 0;
 static constexpr NodeType const pong_node = 1;
-
-static double startTime = 0.0;
 
 template <int64_t num_bytes>
 struct PingMsg : ShortMessage {
@@ -89,14 +87,14 @@ template <int64_t num_bytes>
 static void finishedPing(FinishedPingMsg<num_bytes>* msg);
 
 static void printTiming(int64_t const& num_bytes) {
-  double const total = MPI_Wtime() - startTime;
+  // vt::tests::perf::PerfTestHarness::StopTimer();
 
-  startTime = MPI_Wtime();
+  // vt::tests::perf::PerfTestHarness::StartTimer();
 
-  fmt::print(
-    "{}: Finished num_pings={}, bytes={}, total time={}, time/msg={}\n",
-    theContext()->getNode(), num_pings, num_bytes, total, total/num_pings
-  );
+  // fmt::print(
+  //   "{}: Finished num_pings={}, bytes={}, total time={}, time/msg={}\n",
+  //   theContext()->getNode(), num_pings, num_bytes, total, total/num_pings
+  // );
 }
 
 template <int64_t num_bytes>
@@ -151,30 +149,17 @@ static void pingPong(PingMsg<num_bytes>* in_msg) {
   }
 }
 
-int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
+struct MyTest : vt::tests::perf::common::PerfTestHarness {};
 
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
+VT_PERF_TEST(MyTest, test_ping_pong_1) {
+  StartTimer();
 
-  if (num_nodes == 1) {
-    CollectiveOps::abort("At least 2 ranks required");
-  }
-
-  if (argc > 1) {
-    num_pings = atoi(argv[1]);
-  }
-
-  startTime = MPI_Wtime();
-
-  if (my_node == 0) {
+  if (my_node_ == 0) {
     auto m = makeMessage<PingMsg<min_bytes>>();
     theMsg()->sendMsg<PingMsg<min_bytes>, pingPong<min_bytes>>(pong_node, m);
   }
 
-  vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
-
-  CollectiveOps::finalize();
-
-  return 0;
+  StopTimer();
 }
+
+VT_PERF_TEST_MAIN();

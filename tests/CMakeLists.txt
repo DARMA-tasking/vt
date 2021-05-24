@@ -196,6 +196,13 @@ endforeach()
 # Performance Tests
 #
 
+add_library(perf_timer STATIC
+  ${PROJECT_TEST_PERF_DIR}/common/scoped_timer.h
+  ${PROJECT_TEST_PERF_DIR}/common/scoped_timer.cc
+)
+
+target_link_libraries(perf_timer fmt)
+
 file(GLOB PROJECT_PERF_TESTS ${PROJECT_TEST_PERF_DIR}/*.cc)
 
 foreach(PERF_TEST ${PROJECT_PERF_TESTS})
@@ -214,4 +221,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     TARGET ${TEST_NAME}
     DEFAULT_LINK_SET
   )
+
+  target_link_libraries(${TEST_NAME} PUBLIC perf_timer)
+
 endforeach()

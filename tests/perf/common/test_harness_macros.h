@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               test_harness.h
+//                            test_harness_macros.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,43 +42,33 @@
 //@HEADER
 */
 
-#if !defined __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
-#define __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
-
-#include "scoped_timer.h"
-#include "test_harness_macros.h"
-
-#include <vt/configs/types/types_type.h>
+#if !defined __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS_MACROS__
+#define __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS_MACROS__
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
-struct PerfTestHarness {
-  virtual ~PerfTestHarness() = default;
+  #define VT_PERF_TEST(StructName, TestName)               \
+    struct StructName##TestName : StructName {             \
+      void SetUp(int argc, char** argv) override {         \
+        StructName::SetUp(argc, argv);                     \
+        name_ = #TestName;                              \
+      }                                                    \
+      void TearDown() override { StructName::TearDown(); } \
+      void TestFunc();                                     \
+    };                                                     \
+    using TestType = StructName##TestName;                 \
+    void StructName##TestName::TestFunc()
 
-  virtual void SetUp(int argc, char** argv);
-  virtual void TearDown();
-
-  /*
-   *  ------------------
-   *  Time based helpers
-   *  ------------------
-   */
-  void StartTimer();
-  void StopTimer();
-
-  /*
-   *  --------------------
-   *  Memory based helpers
-   *  --------------------
-   */
-  void GetMemoryUsage();
-
-  protected:
-  NodeType my_node_ = {};
-  StopWatch watch_ = {};
-  std::string name_ = {};
-};
+  #define VT_PERF_TEST_MAIN()         \
+    int main(int argc, char** argv) { \
+      TestType t;                     \
+      t.SetUp(argc, argv);            \
+      t.TestFunc();                   \
+      t.TearDown();                   \
+                                      \
+      return 0;                       \
+    }
 
 }}}} // namespace vt::tests::perf::common
 
-#endif // __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
+#endif // __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS_MACROS__

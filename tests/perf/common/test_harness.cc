@@ -43,14 +43,20 @@
 */
 
 #include "test_harness.h"
+
 #include <vt/collective/collective_ops.h>
 #include <vt/scheduler/scheduler.h>
 #include <vt/utils/memory/memory_usage.h>
 
-namespace vt { namespace tests { namespace perf {
+namespace vt { namespace tests { namespace perf { namespace common {
 
-NodeType PerfTestHarness::my_node_ = -1;
-double PerfTestHarness::start_time_ = 0.0;
+/*
+* Helper function which generates CSV file with the tests resutls.
+* Example output:
+* name,min,max,mean,
+*
+*/
+void OutputToFile() { }
 
 void PerfTestHarness::SetUp(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv);
@@ -63,17 +69,17 @@ void PerfTestHarness::TearDown() {
 }
 
 void PerfTestHarness::StartTimer() {
-  start_time_ = MPI_Wtime();
+  watch_.Start();
 }
 
 void PerfTestHarness::StopTimer() {
-  auto const now = MPI_Wtime();
-  fmt::print("{} took {}", "name", now);
+  auto const time_elapsed = watch_.Stop();
+  fmt::print("Node:{} {} took {}ms\n", my_node_, name_, time_elapsed.count());
 }
 
 void PerfTestHarness::GetMemoryUsage() {
   auto const mem_usage = vt::theMemUsage()->getUsageAll();
-  fmt::print("{} memory usage {}", "name", mem_usage);
+  fmt::print("Node:{} {} memory usage {}\n", my_node_, "name", mem_usage);
 }
 
-}}} // namespace vt::tests::perf
+}}}} // namespace vt::tests::perf::common
