@@ -234,7 +234,7 @@ void GossipLB::doLBStages(TimeType start_imb) {
       );
 
       if (rollback_ || theConfig()->vt_debug_gossiplb || (iter_ == num_iters_ - 1)) {
-        runInEpochCollective([=] {
+        runInEpochCollective("GossipLB::doLBStages -> P_l reduce", [=] {
           using ReduceOp = collective::PlusOp<balance::LoadData>;
           auto cb = vt::theCB()->makeBcast<
             GossipLB, StatsMsgType, &GossipLB::gossipStatsHandler
@@ -993,7 +993,7 @@ void GossipLB::decide() {
 
   if (theConfig()->vt_debug_gossiplb) {
     // compute rejection rate because it will be printed
-    runInEpochCollective([=] {
+    runInEpochCollective("GossipLB::decide -> compute rejection", [=] {
       using ReduceOp = collective::PlusOp<balance::RejectionStats>;
       auto cb = vt::theCB()->makeBcast<
         GossipLB, GossipRejectionMsgType, &GossipLB::gossipRejectionStatsHandler

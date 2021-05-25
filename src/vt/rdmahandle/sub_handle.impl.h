@@ -587,7 +587,7 @@ void SubHandle<T,E,IndexT>::afterLB() {
   auto cb = theCB()->makeBcast<
     ThisType,impl::ReduceLBMsg,&ThisType::checkChanged
   >(proxy_);
-  auto epoch = theTerm()->makeEpochCollective();
+  auto epoch = theTerm()->makeEpochCollective("SubHandle::afterLB");
   theMsg()->pushEpoch(epoch);
   auto msg = makeMessage<impl::ReduceLBMsg>(local_changed);
   proxy_.template reduce<collective::OrOp<bool>>(msg.get(),cb);

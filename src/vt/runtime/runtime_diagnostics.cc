@@ -189,7 +189,7 @@ void Runtime::computeAndPrintDiagnostics() {
 
   std::map<std::string, ComponentDiagnosticMap> component_vals;
 
-  runInEpochCollective([&]{
+  runInEpochCollective("Runtime::computeAndPrintDiagnostics", [&]{
     p_->foreach([&](component::BaseComponent* c) {
       // Run the pre-diagnostic hook
       c->preDiagnostic();

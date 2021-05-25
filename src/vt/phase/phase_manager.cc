@@ -196,7 +196,7 @@ void PhaseManager::runHooks(PhaseHook type) {
     auto iter = rooted_hooks_.find(type_bits);
     if (iter != rooted_hooks_.end()) {
       for (auto&& fn : iter->second) {
-        runInEpochRooted([=]{ fn.second(); });
+        runInEpochRooted("PhaseManager::runHooks", [=]{ fn.second(); });
       }
     }
   }
@@ -207,7 +207,7 @@ void PhaseManager::runHooks(PhaseHook type) {
     if (iter != collective_hooks_.end()) {
       // note, this second is a map, so they are ordered across nodes
       for (auto&& fn : iter->second) {
-        runInEpochCollective([=]{ fn.second(); });
+        runInEpochCollective("PhaseManager::runHooks", [=]{ fn.second(); });
       }
     }
   }
