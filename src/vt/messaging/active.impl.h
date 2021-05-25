@@ -143,17 +143,19 @@ ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
     "Tagged messages serialization not implemented."
   );
 
+  MsgT* rawMsg = msg.get();
+  setupEpochMsg(rawMsg);
+
   // Original message is locked even though it is not the actual message sent.
   // This is for consistency with sending non-serialized messages.
   envelopeSetIsLocked(msg->env, true);
 
-  MsgT* msgp = msg.get();
   if (dest == broadcast_dest) {
     return SerializedMessenger::broadcastSerialMsg<MsgT>(
-      msgp, han, envelopeGetDeliverBcast(msgp->env)
+      rawMsg, han, envelopeGetDeliverBcast(rawMsg->env)
     );
   } else {
-    return SerializedMessenger::sendSerialMsg<MsgT>(dest,msgp,han);
+    return SerializedMessenger::sendSerialMsg<MsgT>(dest, rawMsg, han);
   }
 }
 

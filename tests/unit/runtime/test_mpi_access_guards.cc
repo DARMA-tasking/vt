@@ -57,9 +57,6 @@ using TestMpiAccessGuardDeathTest = TestMpiAccessGuardTest;
 
 using DummyMsg = vt::Message;
 
-// Currently
-static constexpr bool TEST_FAILURE = vt_check_enabled(mpi_access_guards) and
-  not (vt_check_enabled(throw_on_abort) and vt_check_enabled(trace_enabled));
 static bool expected_to_fail_on_mpi_access = false;
 static bool explicitly_grant_access = false;
 
