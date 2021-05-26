@@ -257,7 +257,7 @@ struct StatsFileLoadModel : ComposedModel {
       initial_phase_(initial_phase), phases_to_run_(phases_to_run),
       convert_from_release_(convert_from_release), proxy_(proxy)
   {
-    parseFile(filename);
+    parseRankStatsFile(filename);
   }
 
   vt::TimeType getWork(ElementIDStruct elmid, PhaseOffset offset) override {
@@ -298,7 +298,7 @@ struct StatsFileLoadModel : ComposedModel {
     return load;
   }
 
-  void parseFile(std::string const& file) {
+  void parseRankStatsFile(std::string const& file) {
     vt_debug_print(normal, gen, "parsing file {}\n", file);
 
     std::ifstream f(file.c_str());
