@@ -245,10 +245,10 @@ ElementIDType convertReleaseStatsID(ElementIDType release_perm_id) {
   return converted_elm_id;
 }
 
-struct FileModel : ComposedModel {
+struct StatsFileLoadModel : ComposedModel {
   using ProxyType = vt::CollectionProxy<StatsDriven2DCollElm, vt::Index2D>;
 
-  FileModel(
+  StatsFileLoadModel(
     std::shared_ptr<LoadModel> in_base, std::string const& filename,
     int initial_phase, int phases_to_run, int convert_from_release,
     ProxyType proxy
@@ -476,7 +476,7 @@ int main(int argc, char** argv) {
 
   auto node_filename = fmt::format("{}.{}.out", stats_file, node);
 
-  auto file_model = std::make_shared<FileModel>(
+  auto file_model = std::make_shared<StatsFileLoadModel>(
     base, node_filename, initial_phase, phases_to_run,
     convert_from_release, proxy
   );
