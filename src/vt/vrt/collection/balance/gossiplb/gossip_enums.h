@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  gossiplb.h
+//                              gossip_enums.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -231,47 +231,37 @@ enum struct KnowledgeEnum : uint8_t {
 
 namespace std {
 
-using CriterionEnum = ::vt::vrt::collection::lb::CriterionEnum;
-
 template <>
-struct hash<CriterionEnum> {
-  size_t operator()(CriterionEnum const& in) const {
+struct hash<::vt::vrt::collection::lb::CriterionEnum> {
+  size_t operator()(::vt::vrt::collection::lb::CriterionEnum const& in) const {
     return std::hash<uint8_t>()(static_cast<uint8_t>(in));
   }
 };
 
-using InformTypeEnum = ::vt::vrt::collection::lb::InformTypeEnum;
-
 template <>
-struct hash<InformTypeEnum> {
-  size_t operator()(InformTypeEnum const& in) const {
+struct hash<::vt::vrt::collection::lb::InformTypeEnum> {
+  size_t operator()(::vt::vrt::collection::lb::InformTypeEnum const& in) const {
     return std::hash<uint8_t>()(static_cast<uint8_t>(in));
   }
 };
 
-using ObjectOrderEnum = ::vt::vrt::collection::lb::ObjectOrderEnum;
-
 template <>
-struct hash<ObjectOrderEnum> {
-  size_t operator()(ObjectOrderEnum const& in) const {
+struct hash<::vt::vrt::collection::lb::ObjectOrderEnum> {
+  size_t operator()(::vt::vrt::collection::lb::ObjectOrderEnum const& in) const {
     return std::hash<uint8_t>()(static_cast<uint8_t>(in));
   }
 };
 
-using CMFTypeEnum = ::vt::vrt::collection::lb::CMFTypeEnum;
-
 template <>
-struct hash<CMFTypeEnum> {
-  size_t operator()(CMFTypeEnum const& in) const {
+struct hash<::vt::vrt::collection::lb::CMFTypeEnum> {
+  size_t operator()(::vt::vrt::collection::lb::CMFTypeEnum const& in) const {
     return std::hash<uint8_t>()(static_cast<uint8_t>(in));
   }
 };
 
-using KnowledgeEnum = ::vt::vrt::collection::lb::KnowledgeEnum;
-
 template <>
-struct hash<KnowledgeEnum> {
-  size_t operator()(KnowledgeEnum const& in) const {
+struct hash<::vt::vrt::collection::lb::KnowledgeEnum> {
+  size_t operator()(::vt::vrt::collection::lb::KnowledgeEnum const& in) const {
     return std::hash<uint8_t>()(static_cast<uint8_t>(in));
   }
 };
