@@ -93,7 +93,7 @@ void TestLoadBalancer::runTest() {
     fmt::print("Testing lb {}\n", lb_name);
   }
   if (lb_name.compare("GossipLB") == 0) {
-    auto lb_args = fmt::format("ordering=Arbitrary rollback=false");
+    std::string lb_args("ordering=Arbitrary rollback=false");
     vt::theConfig()->vt_lb_args = lb_args;
     if (vt::theContext()->getNode() == 0) {
       fmt::print("Using lb_args {}\n", lb_args);
