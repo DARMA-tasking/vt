@@ -84,11 +84,11 @@ static void ReceiveMapping(MappingMsg* msg) {
   );
 }
 
-struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
-  using TestMsg = vt::CollectionMessage<PlaceHolder>;
+struct StatsDriven2DCollElm : vt::Collection<StatsDriven2DCollElm, vt::Index2D> {
+  using TestMsg = vt::CollectionMessage<StatsDriven2DCollElm>;
 
-  struct MigrateHereMsg : vt::CollectionMessage<PlaceHolder> {
-    using MessageParentType = vt::CollectionMessage<PlaceHolder>;
+  struct MigrateHereMsg : vt::CollectionMessage<StatsDriven2DCollElm> {
+    using MessageParentType = vt::CollectionMessage<StatsDriven2DCollElm>;
 
     MigrateHereMsg() = default;
 
@@ -105,8 +105,8 @@ struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
     vt::NodeType src_ = vt::uninitialized_destination;
   };
 
-  struct StatsDataMsg : vt::CollectionMessage<PlaceHolder> {
-    using MessageParentType = vt::CollectionMessage<PlaceHolder>;
+  struct StatsDataMsg : vt::CollectionMessage<StatsDriven2DCollElm> {
+    using MessageParentType = vt::CollectionMessage<StatsDriven2DCollElm>;
     using ObjStatsMapType = std::unordered_map<
       int /*phase from stats file*/, vt::TimeType
     >;
@@ -177,7 +177,7 @@ struct PlaceHolder : vt::Collection<PlaceHolder, vt::Index2D> {
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    vt::Collection<PlaceHolder, vt::Index2D>::serialize(s);
+    vt::Collection<StatsDriven2DCollElm, vt::Index2D>::serialize(s);
     s | stats_from_file_;
   }
 
@@ -246,7 +246,7 @@ ElementIDType convertReleaseStatsID(ElementIDType release_perm_id) {
 }
 
 struct FileModel : ComposedModel {
-  using ProxyType = vt::CollectionProxy<PlaceHolder, vt::Index2D>;
+  using ProxyType = vt::CollectionProxy<StatsDriven2DCollElm, vt::Index2D>;
 
   FileModel(
     std::shared_ptr<LoadModel> in_base, std::string const& filename,
@@ -392,7 +392,7 @@ struct FileModel : ComposedModel {
         index, obj
       );
       proxy_[index].send<
-        PlaceHolder::MigrateHereMsg, &PlaceHolder::migrateSelf
+        StatsDriven2DCollElm::MigrateHereMsg, &StatsDriven2DCollElm::migrateSelf
       >(this_rank);
     }
   }
@@ -425,7 +425,7 @@ struct FileModel : ComposedModel {
         obj.first, index
       );
       proxy_[index].send<
-        PlaceHolder::StatsDataMsg, &PlaceHolder::recvStatsData
+        StatsDriven2DCollElm::StatsDataMsg, &StatsDriven2DCollElm::recvStatsData
       >(obj.second);
     }
     loads_by_obj_.clear();
@@ -434,7 +434,7 @@ struct FileModel : ComposedModel {
 private:
   std::unordered_map<
     ElementIDType,
-    PlaceHolder::StatsDataMsg::ObjStatsMapType
+    StatsDriven2DCollElm::StatsDataMsg::ObjStatsMapType
   > loads_by_obj_;
   std::vector<ElementIDType> initial_objs_;
   int initial_phase_;
@@ -467,7 +467,7 @@ int main(int argc, char** argv) {
   auto const node = vt::theContext()->getNode();
 
   auto range = vt::Index2D(static_cast<int>(nranks), num_elms_per_rank);
-  auto proxy = vt::theCollection()->constructCollective<PlaceHolder,elmIndexMap>(range);
+  auto proxy = vt::theCollection()->constructCollective<StatsDriven2DCollElm,elmIndexMap>(range);
 
   auto base = vt::theLBManager()->getBaseLoadModel();
   auto per_col = std::make_shared<PerCollection>(base);
@@ -491,7 +491,7 @@ int main(int argc, char** argv) {
     vt_print(gen, "Initializing...\n");
   vt::runInEpochCollective([=]{
     proxy.broadcastCollective<
-      PlaceHolder::TestMsg, &PlaceHolder::shareMapping
+      StatsDriven2DCollElm::TestMsg, &StatsDriven2DCollElm::shareMapping
     >();
   });
   vt::runInEpochCollective([=]{
@@ -513,7 +513,7 @@ int main(int argc, char** argv) {
       vt_print(gen, "Simulated phase {}...\n", i + initial_phase);
 
     // Delete this?
-    proxy.broadcastCollective<PlaceHolder::TestMsg, &PlaceHolder::timestep>();
+    proxy.broadcastCollective<StatsDriven2DCollElm::TestMsg, &StatsDriven2DCollElm::timestep>();
 
     vt::thePhase()->nextPhaseCollective();
   }
