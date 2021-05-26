@@ -102,25 +102,6 @@ void ActiveMessenger::setTagMessage(MsgT* msg, TagType tag) {
   envelopeSetTag(msg->env, tag);
 }
 
-template <typename MsgPtrT>
-trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
-  MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
-  bool is_bcast
-) {
-  #if vt_check_enabled(trace_enabled)
-    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
-    trace::TraceEventIDType event = trace::no_trace_event;
-    if (not is_bcast) {
-      event = theTrace()->messageCreation(ep, msg.size());
-    } else {
-      event = theTrace()->messageCreationBcast(ep, msg.size());
-    }
-    return event;
-  #else
-    return trace::no_trace_event;
-  #endif
-}
-
 template <typename MsgT>
 ActiveMessenger::PendingSendType ActiveMessenger::sendMsgSerializableImpl(
   NodeType dest,

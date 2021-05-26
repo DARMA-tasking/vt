@@ -395,10 +395,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT>
   void setTagMessage(MsgT* msg, TagType tag);
 
-  template <typename MsgPtrT>
   trace::TraceEventIDType makeTraceCreationSend(
-    MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
-    bool is_bcast
+    HandlerType const handler, auto_registry::RegistryTypeEnum type,
+    ByteType serialized_msg_size, bool is_bcast
   );
 
   // With serialization, the correct method is resolved via SFINAE.

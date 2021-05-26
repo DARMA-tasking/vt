@@ -165,6 +165,24 @@ ActiveMessenger::ActiveMessenger()
   vtAssertExpr(epoch_stack_.size() == 0);
 }
 
+trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
+  HandlerType const handler, auto_registry::RegistryTypeEnum type,
+  ByteType serialized_msg_size, bool is_bcast
+) {
+  #if vt_check_enabled(trace_enabled)
+    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
+    trace::TraceEventIDType event = trace::no_trace_event;
+    if (not is_bcast) {
+      event = theTrace()->messageCreation(ep, serialized_msg_size);
+    } else {
+      event = theTrace()->messageCreationBcast(ep, serialized_msg_size);
+    }
+    return event;
+  #else
+    return trace::no_trace_event;
+  #endif
+}
+
 void ActiveMessenger::packMsg(
   MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
 ) {
@@ -456,8 +474,8 @@ EventType ActiveMessenger::doMessageSend(
       // auto cur_event = envelopeGetTraceEvent(msg->env);
       // if (cur_event == trace::no_trace_event) {
       auto event = makeTraceCreationSend(
-        base, handler, auto_registry::RegistryTypeEnum::RegGeneral,
-        is_bcast
+        handler, auto_registry::RegistryTypeEnum::RegGeneral,
+        base.size(), is_bcast
       );
       envelopeSetTraceEvent(msg->env, event);
     }
