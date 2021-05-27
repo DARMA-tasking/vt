@@ -319,6 +319,7 @@ struct AppConfig {
 
       | vt_pause
       | vt_no_assert_fail
+      | vt_throw_on_abort
       | vt_max_mpi_send_size
 
       | vt_debug_level
