@@ -54,11 +54,25 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+/**
+ * \struct EnumConverter
+ *
+ * \brief A VT component that converts enumerated values to their
+ * stringifications for the purposes of reading LB arguments from the LB
+ * spec file.
+ */
 template <typename T>
 struct EnumConverter {
   using EnumToStrMap = typename std::unordered_map<T, std::string>;
   using StrToEnumMap = typename std::unordered_map<std::string, T>;
 
+  /**
+   * \brief Construct a converter for a specific enumerated type
+   *
+   * \param[in] par_name name of the LB arg in the spec file
+   * \param[in] enum_type name of the enumerated type being converted
+   * \param[in] enum_to_str unordered map of enumerated values to their strings
+   */
   EnumConverter(
     const std::string &par_name,
     const std::string &enum_type,
