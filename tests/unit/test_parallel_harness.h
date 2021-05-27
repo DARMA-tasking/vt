@@ -71,6 +71,9 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
     addArgs(traceon);
 #endif
 
+    static char throw_on_abort[]{"--vt_throw_on_abort=1"};
+    addArgs(throw_on_abort);
+
     // communicator is duplicated.
     MPI_Comm comm = MPISingletonMultiTest::Get()->getComm();
     auto const new_args = injectAdditionalArgs(test_argc, test_argv);
