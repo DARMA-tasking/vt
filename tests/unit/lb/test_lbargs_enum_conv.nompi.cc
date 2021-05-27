@@ -43,6 +43,7 @@
 */
 
 #include "vt/vrt/collection/balance/lb_args_enum_converter.h"
+#include "vt/vrt/collection/balance/read_lb.h"
 
 #include "test_harness.h"
 
@@ -99,6 +100,35 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_mapping) {
   checkString(dummy_, "One");
   checkString(dummy_, "Two");
   checkString(dummy_, "Three");
+}
+
+TEST_F(TestLBArgsEnumConverter, test_enum_converter_spec) {
+  vrt::collection::balance::LBArgsEnumConverter<DummyEnum> dummy_(
+    "dummy", "DummyEnum", {
+      {DummyEnum::One,   "One"},
+      {DummyEnum::Two,   "Two"},
+      {DummyEnum::Three, "Three"}
+    }
+  );
+  // normally this wouldn't reuse the same enum, but we're just testing
+  // spec-related stuff here so it's fine
+  vrt::collection::balance::LBArgsEnumConverter<DummyEnum> count_(
+    "count", "DummyEnum", {
+      {DummyEnum::One,   "One"},
+      {DummyEnum::Two,   "Two"},
+      {DummyEnum::Three, "Three"}
+    }
+  );
+
+  std::string spec_string("dummy=Two");  // deliberately omit 'count='
+  auto spec = vrt::collection::balance::ReadLBSpec::makeSpecFromParams(
+    spec_string
+  );
+
+  // explicitly specified should return specified value
+  EXPECT_EQ(dummy_.getFromSpec(&spec, DummyEnum::One), DummyEnum::Two);
+  // unspecified should return default value
+  EXPECT_EQ(count_.getFromSpec(&spec, DummyEnum::One), DummyEnum::One);
 }
 
 }}} // end namespace vt::tests::unit
