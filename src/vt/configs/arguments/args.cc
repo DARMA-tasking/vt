@@ -501,6 +501,7 @@ void ArgConfig::addRuntimeArgs(CLI::App& app) {
   auto max_size = "Maximum MPI send size (causes larger messages to be split "
                   "into multiple MPI sends)";
   auto assert = "Do not abort the program when vtAssert(..) is invoked";
+  auto throw_on_abort = "Throw an exception when vtAbort(..) is called";
 
 
   auto a1 = app.add_option(
@@ -509,11 +510,15 @@ void ArgConfig::addRuntimeArgs(CLI::App& app) {
   auto a2 = app.add_flag(
     "--vt_no_assert_fail", config_.vt_no_assert_fail, assert
   );
+  auto a3 = app.add_flag(
+    "--vt_throw_on_abort", config_.vt_throw_on_abort, throw_on_abort
+  );
 
 
   auto configRuntime = "Runtime";
   a1->group(configRuntime);
   a2->group(configRuntime);
+  a3->group(configRuntime);
 }
 
 void ArgConfig::addThreadingArgs(CLI::App& app) {
