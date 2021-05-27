@@ -1100,7 +1100,7 @@ EpochType TerminationDetector::makeEpochCollective(
 
 void TerminationDetector::produceOnGlobal(EpochType ep) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "produceOnGlobal: ep={:x}\n", ep
   );
 
@@ -1109,7 +1109,7 @@ void TerminationDetector::produceOnGlobal(EpochType ep) {
 
 void TerminationDetector::consumeOnGlobal(EpochType ep) {
   vt_debug_print(
-    term, node,
+    normal, term,
     "consumeOnGlobal: ep={:x}\n", ep
   );
 
