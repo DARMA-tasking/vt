@@ -41,7 +41,6 @@ variables:
   VT_USE_STD_THREAD: 0
   VT_ZOLTAN: 0
   VT_CI_BUILD: 1
-  VT_THROW_ON_ABORT: 1
   VT_DIAGNOSTICS: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-nvidia-10-cache

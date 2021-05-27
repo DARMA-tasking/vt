@@ -95,15 +95,11 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
   virtual void TearDown() {
     using namespace vt;
 
-#if vt_check_enabled(throw_on_abort)
     try {
       vt::theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
     } catch (std::exception& e) {
       ADD_FAILURE() << fmt::format("Caught an exception: {}\n", e.what());
     }
-#else
-    vt::theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
-#endif
 
 #if DEBUG_TEST_HARNESS_PRINT
     auto const& my_node = theContext()->getNode();
