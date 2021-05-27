@@ -45,7 +45,7 @@
 #include <vt/vrt/collection/balance/lb_common.h>
 #include <vt/vrt/collection/balance/baselb/baselb.h>
 #include <vt/vrt/collection/balance/gossiplb/gossiplb.h>
-#include <vt/vrt/collection/balance/gossiplb/gossip_enums.h>
+#include "vt/vrt/collection/balance/lb_args_enum_converter.h"
 
 #include "test_harness.h"
 
