@@ -74,6 +74,12 @@ struct EnumConverter {
 
   virtual ~EnumConverter() = default;
 
+  /**
+   * \brief Convert from an enumerated value to a string
+   *
+   * Using the mapping provided at construction, return the string to which the
+   * passed enumerated value maps.
+   */
   std::string getString(T e) const {
     auto it = enum_to_str_.find(e);
     if (it == enum_to_str_.end()) {
@@ -86,6 +92,12 @@ struct EnumConverter {
     return it->second;
   }
 
+  /**
+   * \brief Convert from string to the enumerated value
+   *
+   * Using the reverse of the mapping provided at construction, return the
+   * enumerated value to which the passed string maps.
+   */
   T getEnum(const std::string &s) const {
     auto it = str_to_enum_.find(s);
     if (it == str_to_enum_.end()) {
@@ -98,6 +110,12 @@ struct EnumConverter {
     return it->second;
   }
 
+  /**
+   * \brief Read string from the spec and convert to enum
+   *
+   * Read the string from the spec entry and convert it to an enumerated value
+   * using the reverse of the mapping provided at construction.
+   */
   T getFromSpec(balance::SpecEntry* spec, T def_value) const {
     std::string spec_value = spec->getOrDefault<std::string>(
       par_name_, getString(def_value)
@@ -105,10 +123,10 @@ struct EnumConverter {
     return getEnum(spec_value);
   }
 
-  EnumToStrMap enum_to_str_;
-  StrToEnumMap str_to_enum_;
-  std::string par_name_;
-  std::string enum_type_;
+  EnumToStrMap enum_to_str_;  //< 1 to 1 mapping of enumerated values to strings
+  StrToEnumMap str_to_enum_;  //< 1 to 1 mapping of strings to enumerated values
+  std::string par_name_;      //< parameter to look for in the spec file
+  std::string enum_type_;     //< name of the enumerated type for error handling
 };
 
 /// Enum for gossiping approach
