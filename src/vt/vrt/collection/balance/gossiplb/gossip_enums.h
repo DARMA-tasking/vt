@@ -55,14 +55,14 @@
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 /**
- * \struct EnumConverter
+ * \struct LBArgsEnumConverter
  *
  * \brief A VT component that converts enumerated values to their
  * stringifications for the purposes of reading LB arguments from the LB
  * spec file.
  */
 template <typename T>
-struct EnumConverter {
+struct LBArgsEnumConverter {
   using EnumToStrMap = typename std::unordered_map<T, std::string>;
   using StrToEnumMap = typename std::unordered_map<std::string, T>;
 
@@ -73,7 +73,7 @@ struct EnumConverter {
    * \param[in] enum_type name of the enumerated type being converted
    * \param[in] enum_to_str unordered map of enumerated values to their strings
    */
-  EnumConverter(
+  LBArgsEnumConverter(
     const std::string &par_name,
     const std::string &enum_type,
     const EnumToStrMap &enum_to_str
@@ -86,7 +86,7 @@ struct EnumConverter {
     }
   }
 
-  virtual ~EnumConverter() = default;
+  virtual ~LBArgsEnumConverter() = default;
 
   /**
    * \brief Convert from an enumerated value to a string
@@ -97,9 +97,12 @@ struct EnumConverter {
   std::string getString(T e) const {
     auto it = enum_to_str_.find(e);
     if (it == enum_to_str_.end()) {
+      // this error indicates that you need to update the constructor for
+      // this converter to include all options
       auto err = fmt::format(
-        "GossipLB EnumConverter: enum '{}' value '{}' was not found in the map",
-        enum_type_, e
+        "LBArgsEnumConverter: enum '{}' value '{}' corresponding to LB "
+        "argument '{}' does not have a string associated with it",
+        enum_type_, e, par_name_
       );
       vtAbort(err);
     }
@@ -115,9 +118,12 @@ struct EnumConverter {
   T getEnum(const std::string &s) const {
     auto it = str_to_enum_.find(s);
     if (it == str_to_enum_.end()) {
+      // either the user typed something in wrong or you need to update the
+      // constructor for this converter to include all options
       auto err = fmt::format(
-        "GossipLB: LB argument '{}' value '{}' is not recognized",
-        par_name_, s
+        "LBArgsEnumConverter: LB argument '{}' string '{}' is not a recognized "
+        "option for enum '{}'",
+        par_name_, s, enum_type_
       );
       vtAbort(err);
     }

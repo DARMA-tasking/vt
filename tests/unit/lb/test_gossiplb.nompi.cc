@@ -236,17 +236,19 @@ struct hash<::vt::tests::unit::DummyEnum> {
 namespace vt { namespace tests { namespace unit {
 
 template <typename E>
-void checkEnum(vrt::collection::lb::EnumConverter<E> &conv, E e) {
+void checkEnum(vrt::collection::lb::LBArgsEnumConverter<E> &conv, E e) {
   EXPECT_EQ(conv.getEnum(conv.getString(e)), e);
 }
 
 template <typename E>
-void checkString(vrt::collection::lb::EnumConverter<E> &conv, const std::string &s) {
+void checkString(
+  vrt::collection::lb::LBArgsEnumConverter<E> &conv, const std::string &s
+) {
   EXPECT_EQ(conv.getString(conv.getEnum(s)).compare(s), 0);
 }
 
 TEST_F(TestGossipLB, test_enum_converter) {
-  vrt::collection::lb::EnumConverter<DummyEnum> dummy_(
+  vrt::collection::lb::LBArgsEnumConverter<DummyEnum> dummy_(
     "dummy", "DummyEnum", {
       {DummyEnum::One,   "One"},
       {DummyEnum::Two,   "Two"},

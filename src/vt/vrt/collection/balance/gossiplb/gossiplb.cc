@@ -88,7 +88,7 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   bool specified_fanout    = params.find("fanout")    != params.end();
   bool specified_rounds    = params.find("rounds")    != params.end();
 
-  EnumConverter<KnowledgeEnum> knowledge_converter_(
+  LBArgsEnumConverter<KnowledgeEnum> knowledge_converter_(
     "knowledge", "KnowledgeEnum", {
       {KnowledgeEnum::UserDefined, "UserDefined"},
       {KnowledgeEnum::Complete,    "Complete"},
@@ -173,7 +173,7 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   rollback_      = spec->getOrDefault<bool>("rollback", rollback_);
   target_pole_   = spec->getOrDefault<bool>("targetpole", target_pole_);
 
-  EnumConverter<CriterionEnum> criterion_converter_(
+  LBArgsEnumConverter<CriterionEnum> criterion_converter_(
     "criterion", "CriterionEnum", {
       {CriterionEnum::Grapevine,         "Grapevine"},
       {CriterionEnum::ModifiedGrapevine, "ModifiedGrapevine"}
@@ -181,7 +181,7 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   );
   criterion_ = criterion_converter_.getFromSpec(spec, criterion_);
 
-  EnumConverter<InformTypeEnum> inform_type_converter_(
+  LBArgsEnumConverter<InformTypeEnum> inform_type_converter_(
     "inform", "InformTypeEnum", {
       {InformTypeEnum::SyncInform,  "SyncInform"},
       {InformTypeEnum::AsyncInform, "AsyncInform"}
@@ -189,7 +189,7 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   );
   inform_type_ = inform_type_converter_.getFromSpec(spec, inform_type_);
 
-  EnumConverter<ObjectOrderEnum> obj_ordering_converter_(
+  LBArgsEnumConverter<ObjectOrderEnum> obj_ordering_converter_(
     "ordering", "ObjectOrderEnum", {
       {ObjectOrderEnum::Arbitrary,        "Arbitrary"},
       {ObjectOrderEnum::ElmID,            "ElmID"},
@@ -200,7 +200,7 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   );
   obj_ordering_ = obj_ordering_converter_.getFromSpec(spec, obj_ordering_);
 
-  EnumConverter<CMFTypeEnum> cmf_type_converter_(
+  LBArgsEnumConverter<CMFTypeEnum> cmf_type_converter_(
     "cmf", "CMFTypeEnum", {
       {CMFTypeEnum::Original,                   "Original"},
       {CMFTypeEnum::NormByMax,                  "NormByMax"},
