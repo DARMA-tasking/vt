@@ -71,7 +71,7 @@ namespace vt { namespace epoch {
  * by setting the bit pattern.
  */
 struct EpochManip : runtime::component::Component<EpochManip> {
-  using CapturedContextType = term::SuccessorEpochCapture;
+  using CapturedContextType = term::ParentEpochCapture;
 
   EpochManip();
 

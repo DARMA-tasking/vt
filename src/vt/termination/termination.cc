@@ -974,7 +974,7 @@ EpochType TerminationDetector::makeEpochRootedWave(
 }
 
 void TerminationDetector::initializeRootedWaveEpoch(
-  EpochType const epoch, SuccessorEpochCapture successor,
+  EpochType const epoch, ParentEpochCapture successor,
   std::string const& label
 ) {
   vt_debug_print(
@@ -1012,7 +1012,7 @@ EpochType TerminationDetector::makeEpochRootedDS(
 }
 
 void TerminationDetector::initializeRootedDSEpoch(
-  EpochType const epoch, SuccessorEpochCapture successor,
+  EpochType const epoch, ParentEpochCapture successor,
   std::string const& label
 ) {
   vtAssert(term_.find(epoch) == term_.end(), "New epoch must not exist");
@@ -1070,7 +1070,7 @@ EpochType TerminationDetector::makeEpochRooted(
 
 void TerminationDetector::initializeRootedEpoch(
   EpochType const epoch, std::string const& label, UseDS use_ds,
-  SuccessorEpochCapture successor
+  ParentEpochCapture successor
 ) {
   if (use_ds) {
     initializeRootedDSEpoch(epoch, successor, label);
@@ -1118,7 +1118,7 @@ void TerminationDetector::consumeOnGlobal(EpochType ep) {
 
 void TerminationDetector::initializeCollectiveEpoch(
   EpochType const epoch, std::string const& label,
-  SuccessorEpochCapture successor
+  ParentEpochCapture successor
 ) {
   vt_debug_print(
     terse, term,

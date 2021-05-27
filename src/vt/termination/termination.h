@@ -209,24 +209,24 @@ public:
    * \brief Create a new rooted epoch
    *
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochRooted(
     UseDS use_ds = UseDS{false},
-    ParentEpochCapture successor = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{}
   );
 
   /**
    * \brief Create a new collective epoch
    *
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochCollective(
-    ParentEpochCapture successor = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{}
   );
 
   /**
@@ -234,27 +234,27 @@ public:
    *
    * \param[in] label epoch label for debugging purposes
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochRooted(
     std::string const& label,
     UseDS use_ds = UseDS{false},
-    ParentEpochCapture successor = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{}
   );
 
   /**
    * \brief Create a collective epoch with a label
    *
    * \param[in] label epoch label for debugging purposes
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    *
    * \return the new epoch
    */
   EpochType makeEpochCollective(
     std::string const& label,
-    ParentEpochCapture successor = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{}
   );
 
   /**
@@ -263,7 +263,7 @@ public:
    * \param[in] label epoch label for debugging purposes
    * \param[in] is_coll whether to create a collective or rooted epoch
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    *
    * \return the new epoch
    */
@@ -271,7 +271,7 @@ public:
     std::string const& label,
     bool is_coll,
     UseDS use_ds = UseDS{false},
-    ParentEpochCapture successor = ParentEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{}
   );
 
   /**
@@ -279,12 +279,12 @@ public:
    *
    * \param[in] epoch the collective epoch already generated
    * \param[in] label epoch label for debugging purposes
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    */
   void initializeCollectiveEpoch(
     EpochType const epoch,
     std::string const& label,
-    SuccessorEpochCapture successor = SuccessorEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{}
   );
 
   /**
@@ -293,13 +293,13 @@ public:
    * \param[in] epoch the collective epoch already generated
    * \param[in] label epoch label for debugging purposes
    * \param[in] use_ds whether to use the Dijkstra-Scholten algorithm
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    */
   void initializeRootedEpoch(
     EpochType const epoch,
     std::string const& label,
     UseDS use_ds = UseDS{false},
-    SuccessorEpochCapture successor = SuccessorEpochCapture{}
+    ParentEpochCapture parent = ParentEpochCapture{}
   );
 
   /**
@@ -333,25 +333,25 @@ public:
   /**
    * \brief Create a new rooted epoch that uses the 4-counter wave algorithm
    *
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    * \param[in] label epoch label for debugging purposes
    *
    * \return the new epoch
    */
   EpochType makeEpochRootedWave(
-    ParentEpochCapture successor, std::string const& label = ""
+    ParentEpochCapture parent, std::string const& label = ""
   );
 
   /**
    * \brief Create a new rooted epoch that uses the DS algorithm
    *
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    * \param[in] label epoch label for debugging purposes
    *
    * \return the new epoch
    */
   EpochType makeEpochRootedDS(
-    ParentEpochCapture successor, std::string const& label = ""
+    ParentEpochCapture parent, std::string const& label = ""
   );
 
   /**
@@ -359,11 +359,11 @@ public:
    * an epoch already generated
    *
    * \param[in] epoch the wave epoch already generated
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    * \param[in] label epoch label for debugging purposes
    */
   void initializeRootedWaveEpoch(
-    EpochType const epoch, SuccessorEpochCapture successor,
+    EpochType const epoch, ParentEpochCapture parent,
     std::string const& label = ""
   );
 
@@ -372,11 +372,11 @@ public:
    * already generated
    *
    * \param[in] epoch the DS epoch already generated
-   * \param[in] successor successor epoch that waits for this new epoch
+   * \param[in] parent parent epoch that waits for this new epoch
    * \param[in] label epoch label for debugging purposes
    */
   void initializeRootedDSEpoch(
-    EpochType const epoch, SuccessorEpochCapture successor,
+    EpochType const epoch, ParentEpochCapture parent,
     std::string const& label = ""
   );
 
