@@ -86,7 +86,7 @@ struct EnumConverter {
     return it->second;
   }
 
-  T getEnum(std::string s) const {
+  T getEnum(const std::string &s) const {
     auto it = str_to_enum_.find(s);
     if (it == str_to_enum_.end()) {
       auto err = fmt::format(
@@ -234,35 +234,50 @@ namespace std {
 template <>
 struct hash<::vt::vrt::collection::lb::CriterionEnum> {
   size_t operator()(::vt::vrt::collection::lb::CriterionEnum const& in) const {
-    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+    using under = std::underlying_type<
+      ::vt::vrt::collection::lb::CriterionEnum
+    >::type;
+    return std::hash<under>()(static_cast<under>(in));
   }
 };
 
 template <>
 struct hash<::vt::vrt::collection::lb::InformTypeEnum> {
   size_t operator()(::vt::vrt::collection::lb::InformTypeEnum const& in) const {
-    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+    using under = std::underlying_type<
+      ::vt::vrt::collection::lb::InformTypeEnum
+    >::type;
+    return std::hash<under>()(static_cast<under>(in));
   }
 };
 
 template <>
 struct hash<::vt::vrt::collection::lb::ObjectOrderEnum> {
   size_t operator()(::vt::vrt::collection::lb::ObjectOrderEnum const& in) const {
-    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+    using under = std::underlying_type<
+      ::vt::vrt::collection::lb::ObjectOrderEnum
+    >::type;
+    return std::hash<under>()(static_cast<under>(in));
   }
 };
 
 template <>
 struct hash<::vt::vrt::collection::lb::CMFTypeEnum> {
   size_t operator()(::vt::vrt::collection::lb::CMFTypeEnum const& in) const {
-    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+    using under = std::underlying_type<
+      ::vt::vrt::collection::lb::CMFTypeEnum
+    >::type;
+    return std::hash<under>()(static_cast<under>(in));
   }
 };
 
 template <>
 struct hash<::vt::vrt::collection::lb::KnowledgeEnum> {
   size_t operator()(::vt::vrt::collection::lb::KnowledgeEnum const& in) const {
-    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
+    using under = std::underlying_type<
+      ::vt::vrt::collection::lb::KnowledgeEnum
+    >::type;
+    return std::hash<under>()(static_cast<under>(in));
   }
 };
 
