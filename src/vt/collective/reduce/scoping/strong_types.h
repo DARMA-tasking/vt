@@ -46,7 +46,7 @@
 
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
-#include "vt/collective/reduce/scoping/strong.h"
+#include "vt/utils/strong/strong_type.h"
 
 namespace vt { namespace collective { namespace reduce { namespace detail {
 
