@@ -721,8 +721,11 @@ void TerminationDetector::epochTerminated(EpochType const& epoch, CallFromEnum f
     auto const this_node = theContext()->getNode();
     bool const is_rooted = isRooted(epoch);
     bool const is_ds = isDS(epoch);
-    bool const this_node_root = epoch::EpochManip::node(epoch) == this_node;
-    if (not is_rooted or is_ds or (is_rooted and this_node_root)) {
+    if (
+      not is_rooted or
+      is_ds or
+      (is_rooted and epoch::EpochManip::node(epoch) == this_node)
+    ) {
       consumeOnGlobal(epoch);
     }
   }
