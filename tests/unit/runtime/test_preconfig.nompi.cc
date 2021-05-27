@@ -2,11 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                test_harness.h
+//                           test_preconfig.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2020 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,39 +41,37 @@
 // *****************************************************************************
 //@HEADER
 */
-#if ! defined __VIRTUAL_TRANSPORT_TEST_HARNESS__
-#define __VIRTUAL_TRANSPORT_TEST_HARNESS__
 
-#include <vt/config.h>
 #include <gtest/gtest.h>
 
-#include <vector>
-#include <string>
+#include "test_harness.h"
 
-#include "test_config.h"
-#include "data_message.h"
+#include <vt/configs/arguments/app_config.h>
 
 namespace vt { namespace tests { namespace unit {
 
-template <typename TestBase>
-struct TestHarnessAny : TestBase {
-  static void store_cmdline_args(int argc, char **argv) {
-    orig_args_ = std::vector<std::string>(argv, argv + argc);
+struct TestPreconfig : TestHarness { };
 
-    vt::debug::preConfigRef()->vt_throw_on_abort = true;
-  }
+#if not vt_check_enabled(production_build)
+TEST_F(TestPreconfig, test_vt_assert) {
+  EXPECT_EQ(vt::debug::preConfig()->vt_throw_on_abort, true)
+    << "vt_throw_on_abort should be enabled by default";
 
-  static std::vector<std::string> orig_args_;
-};
+  ASSERT_THROW(
+    vtAssert(false, "Should throw."),
+    std::runtime_error
+  );
+}
+#endif
 
-template <typename TestBase>
-std::vector<std::string> TestHarnessAny<TestBase>::orig_args_;
+TEST_F(TestPreconfig, test_vt_abort) {
+  EXPECT_EQ(vt::debug::preConfig()->vt_throw_on_abort, true)
+    << "vt_throw_on_abort should be enabled by default";
 
-using TestHarness = TestHarnessAny<testing::Test>;
-
-template <typename ParamT>
-using TestHarnessParam = TestHarnessAny<testing::TestWithParam<ParamT>>;
+  ASSERT_THROW(
+    vtAbort("Should throw."),
+    std::runtime_error
+  );
+}
 
 }}} // end namespace vt::tests::unit
-
-#endif /* __VIRTUAL_TRANSPORT_TEST_HARNESS__ */
