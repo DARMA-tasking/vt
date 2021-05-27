@@ -45,7 +45,6 @@
 #include <vt/vrt/collection/balance/lb_common.h>
 #include <vt/vrt/collection/balance/baselb/baselb.h>
 #include <vt/vrt/collection/balance/gossiplb/gossiplb.h>
-#include "vt/vrt/collection/balance/lb_args_enum_converter.h"
 
 #include "test_harness.h"
 
@@ -210,59 +209,6 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_largestobjects) {
   std::vector<ElementIDType> soln = {2, 1, 5, 3, 4, 0};
 
   orderUsingOverloadAndVerify(order, over_avg, soln);
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-enum struct DummyEnum : uint8_t {
-  One = 1,
-  Two = 2,
-  Three = 3
-};
-
-}}} // end namespace vt::tests::unit
-
-namespace std {
-
-template <>
-struct hash<::vt::tests::unit::DummyEnum> {
-  size_t operator()(::vt::tests::unit::DummyEnum const& in) const {
-    return std::hash<uint8_t>()(static_cast<uint8_t>(in));
-  }
-};
-
-} // end namespace std
-
-namespace vt { namespace tests { namespace unit {
-
-template <typename E>
-void checkEnum(vrt::collection::lb::LBArgsEnumConverter<E> &conv, E e) {
-  EXPECT_EQ(conv.getEnum(conv.getString(e)), e);
-}
-
-template <typename E>
-void checkString(
-  vrt::collection::lb::LBArgsEnumConverter<E> &conv, const std::string &s
-) {
-  EXPECT_EQ(conv.getString(conv.getEnum(s)).compare(s), 0);
-}
-
-TEST_F(TestGossipLB, test_enum_converter) {
-  vrt::collection::lb::LBArgsEnumConverter<DummyEnum> dummy_(
-    "dummy", "DummyEnum", {
-      {DummyEnum::One,   "One"},
-      {DummyEnum::Two,   "Two"},
-      {DummyEnum::Three, "Three"}
-    }
-  );
-
-  checkEnum(dummy_, DummyEnum::One);
-  checkEnum(dummy_, DummyEnum::Two);
-  checkEnum(dummy_, DummyEnum::Three);
-
-  checkString(dummy_, "One");
-  checkString(dummy_, "Two");
-  checkString(dummy_, "Three");
 }
 
 }}} // end namespace vt::tests::unit
