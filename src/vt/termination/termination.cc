@@ -966,12 +966,8 @@ void TerminationDetector::finishedEpoch(EpochType const& epoch) {
 EpochType TerminationDetector::makeEpochRootedWave(
   ParentEpochCapture successor, std::string const& label
 ) {
-  auto scope = epoch::global_epoch_scope;
-  if (successor != no_epoch and successor != any_epoch_sentinel) {
-    scope = epoch::EpochManip::getScope(successor);
-  }
   auto const no_cat = epoch::eEpochCategory::NoCategoryEpoch;
-  auto const epoch = theEpoch()->getNextRootedEpoch(no_cat, scope);
+  auto const epoch = theEpoch()->getNextRootedEpoch(no_cat);
   initializeRootedWaveEpoch(epoch, successor, label);
   return epoch;
 
@@ -1009,12 +1005,8 @@ void TerminationDetector::initializeRootedWaveEpoch(
 EpochType TerminationDetector::makeEpochRootedDS(
   ParentEpochCapture successor, std::string const& label
 ) {
-  auto scope = epoch::global_epoch_scope;
-  if (successor != no_epoch and successor != any_epoch_sentinel) {
-    scope = epoch::EpochManip::getScope(successor);
-  }
   auto const ds_cat = epoch::eEpochCategory::DijkstraScholtenEpoch;
-  auto const epoch = theEpoch()->getNextRootedEpoch(ds_cat, scope);
+  auto const epoch = theEpoch()->getNextRootedEpoch(ds_cat);
   initializeRootedDSEpoch(epoch, successor, label);
   return epoch;
 }
@@ -1101,11 +1093,7 @@ EpochType TerminationDetector::makeEpochCollective(
 EpochType TerminationDetector::makeEpochCollective(
   std::string const& label, ParentEpochCapture successor
 ) {
-  auto scope = epoch::global_epoch_scope;
-  if (successor != no_epoch and successor != any_epoch_sentinel) {
-    scope = epoch::EpochManip::getScope(successor);
-  }
-  auto const epoch = theEpoch()->getNextCollectiveEpoch(scope);
+  auto const epoch = theEpoch()->getNextCollectiveEpoch();
   initializeCollectiveEpoch(epoch, label, successor);
   return epoch;
 }

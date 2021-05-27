@@ -70,8 +70,8 @@ namespace vt { namespace epoch {
  *                                           /                                |
  *                                   _______                                  |
  *                                  /                                          \
- *                                  | .... n .... | ... scope ... | ...........|
- *                                    <NodeType>   <EpochScopeType> <SeqEpochID>
+ *                                  | .... n .... | ..........................|
+ *                                    <NodeType>          <SeqEpochID>
  *
  *  +++++++++++++++++++++++++++++++++++++++++++  Rooted Extended Layout ++
  *
@@ -125,31 +125,15 @@ inline std::ostream& operator<<(std::ostream& os, eEpochCategory const& cat) {
   return debug::printEnum<eEpochCategory>(os,cat);
 }
 
-/// Holds a epoch scope ID (collectively generated)
-using EpochScopeType = uint64_t;
-
-/// The default, global epoch scope
-static constexpr EpochScopeType const global_epoch_scope = 0;
-
-// Number of bits allocated for an epoch scope
-static constexpr BitCountType const scope_bits = 20;
-
-/// The limit on number of live scopes at a given time;
-/// Scope 0 is the default scope so that is excluded as a valid scope
-static constexpr EpochScopeType const scope_limit = (1<<scope_bits) - 1;
-
-/// The scope sentinel
-static constexpr EpochScopeType const no_scope = ~0ull;
-
 /// The number of sequential ID bits remaining for a collective \c EpochType
 static constexpr BitCountType const epoch_seq_coll_num_bits =
   sizeof(EpochType) * 8 -
-  (epoch_root_num_bits + epoch_category_num_bits + scope_bits);
+  (epoch_root_num_bits + epoch_category_num_bits);
 
 /// The total number of bits remaining for a rooted \c EpochType
 static constexpr BitCountType const epoch_seq_root_num_bits =
   sizeof(EpochType) * 8 -
-  (epoch_root_num_bits + epoch_category_num_bits + scope_bits + node_num_bits);
+  (epoch_root_num_bits + epoch_category_num_bits + node_num_bits);
 
 /**
  *  \brief Epoch layout enum for collective epochs to help with manipulating the
@@ -160,8 +144,7 @@ static constexpr BitCountType const epoch_seq_root_num_bits =
  */
 enum eEpochColl {
   cEpochSequential = 0,
-  cEpochScope      = eEpochColl::cEpochSequential + epoch_seq_coll_num_bits,
-  cEpochCategory   = eEpochColl::cEpochScope      + scope_bits,
+  cEpochCategory   = eEpochColl::cEpochSequential + epoch_seq_coll_num_bits,
   cEpochIsRooted   = eEpochColl::cEpochCategory   + epoch_category_num_bits
 };
 
@@ -175,8 +158,7 @@ enum eEpochColl {
 enum eEpochRoot {
   rEpochSequential = 0,
   rEpochNode       = eEpochRoot::rEpochSequential + epoch_seq_root_num_bits,
-  rEpochScope      = eEpochRoot::rEpochNode       + node_num_bits,
-  rEpochCategory   = eEpochRoot::rEpochScope      + scope_bits,
+  rEpochCategory   = eEpochRoot::rEpochNode       + node_num_bits,
   rEpochIsRooted   = eEpochRoot::rEpochCategory   + epoch_category_num_bits
 };
 
@@ -191,12 +173,5 @@ static constexpr eEpochCategory const default_epoch_category =
   eEpochCategory::NoCategoryEpoch;
 
 }} //end namespace vt::epoch
-
-namespace vt {
-
-/// Type for epoch scope bits embedded in an \c EpochType
-using EpochScopeType = epoch::EpochScopeType;
-
-} /* end namespace vt */
 
 #endif /*INCLUDED_EPOCH_EPOCH_H*/

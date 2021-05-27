@@ -57,15 +57,14 @@ namespace vt { namespace epoch {
 static EpochType const arch_epoch_coll = 0ull;
 
 EpochManip::EpochManip()
-  : live_scopes_(no_scope),
-    terminated_collective_epochs_(
+  : terminated_collective_epochs_(
       std::make_unique<EpochWindow>(arch_epoch_coll)
     )
 { }
 
 /*static*/ EpochType EpochManip::generateEpoch(
   bool const& is_rooted, NodeType const& root_node,
-  EpochScopeType const& scope, eEpochCategory const& category
+  eEpochCategory const& category
 ) {
   EpochType new_epoch = 0;
   bool const& has_category = category != eEpochCategory::NoCategoryEpoch;
@@ -74,11 +73,6 @@ EpochManip::EpochManip()
   if (has_category) {
     EpochManip::setCategory(new_epoch, category);
   }
-
-  // Compose in the high bits of the sequence epoch ID a scope (only actually
-  // impacts the value if not global scope). Use the \c scope_limit to
-  // determine how many bits are reserved.
-  EpochManip::setScope(new_epoch, scope);
 
   if (is_rooted) {
     vtAssertExpr(root_node != uninitialized_destination);
@@ -93,80 +87,33 @@ EpochManip::EpochManip()
 }
 
 /*static*/ EpochType EpochManip::generateRootedEpoch(
-  EpochScopeType const& scope, eEpochCategory const& category
+  eEpochCategory const& category
 ) {
   auto const root_node = theContext()->getNode();
-  return generateEpoch(true,root_node,scope,category);
+  return generateEpoch(true,root_node,category);
 }
 
 EpochType EpochManip::getNextCollectiveEpoch(
-  EpochScopeType const scope, eEpochCategory const& category
+  eEpochCategory const& category
 ) {
   auto const no_dest = uninitialized_destination;
-  auto const arch_epoch = generateEpoch(false,no_dest,scope,category);
+  auto const arch_epoch = generateEpoch(false,no_dest,category);
   return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
 }
 
 EpochType EpochManip::getNextRootedEpoch(
-  eEpochCategory const& category, EpochScopeType const scope
+  eEpochCategory const& category
 ) {
   auto const root_node = theContext()->getNode();
-  auto const arch_epoch = getNextRootedEpoch(category, scope, root_node);
+  auto const arch_epoch = getNextRootedEpoch(category, root_node);
   return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
 }
 
 EpochType EpochManip::getNextRootedEpoch(
-  eEpochCategory const& category, EpochScopeType const scope,
-  NodeType const root_node
+  eEpochCategory const& category, NodeType const root_node
 ) {
-  auto const arch_epoch = generateEpoch(true,root_node,scope,category);
+  auto const arch_epoch = generateEpoch(true,root_node,category);
   return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
-}
-
-EpochCollectiveScope EpochManip::makeScopeCollective() {
-  // We have \c scope_limit scopes available, not including the global scope
-  vtAbortIf(live_scopes_.size() >= scope_limit, "Must have space for new scope");
-
-  static constexpr EpochScopeType const first_scope = 1;
-
-  // if empty, go with the first scope
-  EpochScopeType next = first_scope;
-
-  if (not live_scopes_.empty()) {
-    if (live_scopes_.upper() < scope_limit) {
-      next = live_scopes_.upper() + 1;
-    } else if (live_scopes_.lower() > 1) {
-      next = live_scopes_.lower() - 1;
-    } else {
-      // fall back to just searching the integral set for one that is not live
-      EpochScopeType s = first_scope;
-      do {
-        if (not live_scopes_.exists(s)) {
-          next = s;
-          break;
-        }
-        s++;
-      } while (s <= scope_limit);
-    }
-  }
-
-  vtAssert(next >= 1, "Scope must be greater than 0");
-  vtAssert(next < scope_limit + 1, "Scope must be less than the scope limit");
-  vtAssert(not live_scopes_.exists(next), "Scope must not already exist");
-
-  // insert the scope to track it
-  live_scopes_.insert(next);
-
-  return EpochCollectiveScope{next};
-}
-
-void EpochManip::destroyScope(EpochScopeType scope) {
-  vtAssert(live_scopes_.exists(scope), "Scope must exist to destroy");
-  live_scopes_.erase(scope);
-  // Very important: explicitly don't clear the scope map (\c scope_collective_)
-  // because if we did we would have to wait for termination of all epochs
-  // within the scope before it could be destroyed. Thus, scopes can be quickly
-  // created and destroyed by the user.
 }
 
 EpochType EpochManip::getArchetype(EpochType epoch) const {
@@ -177,9 +124,7 @@ EpochType EpochManip::getArchetype(EpochType epoch) const {
 
 EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   auto const is_rooted = isRooted(epoch);
-  auto const scope = getScope(epoch);
-  auto const is_scoped = scope != global_epoch_scope;
-  if ((is_rooted or is_scoped) and epoch != term::any_epoch_sentinel) {
+  if (is_rooted and epoch != term::any_epoch_sentinel) {
     auto const& arch_epoch = getArchetype(epoch);
     auto iter = terminated_epochs_.find(arch_epoch);
     if (iter == terminated_epochs_.end()) {
@@ -229,24 +174,11 @@ EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   }
 }
 
-/*static*/ EpochScopeType EpochManip::getScope(EpochType const& epoch) {
-  // Note that collective and rooted epochs use the same layout here
-  return BitPackerType::getField<
-    eEpochColl::cEpochScope, scope_bits, EpochScopeType
-  >(epoch);
-}
-
 /*static*/
 void EpochManip::setIsRooted(EpochType& epoch, bool const is_rooted) {
   BitPackerType::boolSetField<eEpochRoot::rEpochIsRooted,1,EpochType>(
     epoch, is_rooted
   );
-}
-
-/*static*/
-void EpochManip::setScope(EpochType& epoch, EpochScopeType const scope) {
-  // Note that collective and rooted epochs use the same layout here
-  BitPackerType::setField<eEpochColl::cEpochScope,scope_bits>(epoch,scope);
 }
 
 /*static*/

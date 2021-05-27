@@ -47,7 +47,6 @@
 
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
-#include "vt/epoch/epoch_scope.h"
 #include "vt/epoch/epoch_window.h"
 #include "vt/termination/epoch_tags.h"
 #include "vt/termination/interval/integral_set.h"
@@ -64,8 +63,8 @@ namespace vt { namespace epoch {
 /**
  * \struct EpochManip epoch_manip.h vt/epoch/epoch_manip.h
  *
- * \brief Component for managing epoch ID allocation/deallocation, manipulating
- * the bits inside an epoch identifier, and managing distinct epoch scopes.
+ * \brief Component for managing epoch ID allocation/deallocation and
+ * manipulating the bits inside an epoch identifier.
  *
  * Used by the system mostly to manage the bits inside an \c EpochType. It knows
  * how to set the appropriate bits to change the type bits of an \c EpochType
@@ -114,21 +113,9 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \param[in] epoch the epoch to operate on
    *
-   * \note This will include the scope bits which are composed at the top of the
-   * sequence ID bit field.
-   *
    * \return the sequential number for an \c epoch
    */
   static EpochType seq(EpochType const& epoch);
-
-  /**
-   * \brief Gets the scope for an epoch
-   *
-   * \param[in] epoch the epoch to operate on
-   *
-   * \return the epoch's scope
-   */
-  static EpochScopeType getScope(EpochType const& epoch);
 
   /*
    *  Epoch setters to manipulate the type and state of EpochType
@@ -166,14 +153,6 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    */
   static void setSeq(EpochType& epoch, EpochType const seq);
 
-  /**
-   * \brief Set the scope for an \c epoch
-   *
-   * \param[in,out] epoch the epoch to modify
-   * \param[in] scope the scope to set on the epoch
-   */
-  static void setScope(EpochType& epoch, EpochScopeType const scope);
-
   /*
    * General (stateless) methods for creating a epoch with certain properties
    * based on a current sequence number
@@ -182,13 +161,11 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   /**
    * \brief Generate the control bits for a rooted epoch
    *
-   * \param[in] scope the epoch's scope
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
   static EpochType generateRootedEpoch(
-    EpochScopeType const& scope      = global_epoch_scope,
     eEpochCategory const& category   = default_epoch_category
   );
 
@@ -197,7 +174,6 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \param[in] is_rooted if the epoch should be rooted or not
    * \param[in] root_node the root node for the epoch if \c is_rooted
-   * \param[in] scope the epoch's scope
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
@@ -205,7 +181,6 @@ struct EpochManip : runtime::component::Component<EpochManip> {
   static EpochType generateEpoch(
     bool           const& is_rooted  = false,
     NodeType       const& root_node  = default_epoch_node,
-    EpochScopeType const& scope      = global_epoch_scope,
     eEpochCategory const& category   = default_epoch_category
   );
 
@@ -218,13 +193,11 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \brief Stateful method to create the next rooted epoch
    *
    * \param[in] category the category for the epoch
-   * \param[in] scope the epoch's scope
    *
    * \return the newly created epoch
    */
   EpochType getNextRootedEpoch(
-    eEpochCategory const& category   = default_epoch_category,
-    EpochScopeType const scope       = global_epoch_scope
+    eEpochCategory const& category = default_epoch_category
   );
 
   /**
@@ -232,35 +205,24 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * node embedded in the bits
    *
    * \param[in] category the category for the epoch
-   * \param[in] scope the epoch's scope
    * \param[in] root_node the root node for the epoch
    *
    * \return the newly created epoch
    */
   EpochType getNextRootedEpoch(
-    eEpochCategory const& category, EpochScopeType const scope,
-    NodeType const root_node
+    eEpochCategory const& category, NodeType const root_node
   );
 
   /**
    * \brief Stateful method to create the next collective epoch
    *
-   * \param[in] scope the epoch's scope
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
   EpochType getNextCollectiveEpoch(
-    EpochScopeType const scope       = global_epoch_scope,
-    eEpochCategory const& category   = default_epoch_category
+    eEpochCategory const& category = default_epoch_category
   );
-
-  /**
-   * \brief Make a new collective epoch scope for ordering epoch creation
-   *
-   * \return a new scope
-   */
-  EpochCollectiveScope makeScopeCollective();
 
 public:
   /**
@@ -284,24 +246,11 @@ public:
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | live_scopes_
-      | terminated_epochs_
+    s | terminated_epochs_
       | terminated_collective_epochs_;
   }
 
 private:
-  /**
-   * \internal \brief Destroy an eopch scope by removing it
-   *
-   * \param[in] scope the scope to destroy
-   */
-  void destroyScope(EpochScopeType scope);
-
-  friend struct EpochCollectiveScope;
-
-private:
-  /// The current live epoch scopes
-  vt::IntegralSet<EpochScopeType> live_scopes_;
   // epoch window container for specific archetyped epochs
   std::unordered_map<EpochType,std::unique_ptr<EpochWindow>> terminated_epochs_;
   // epoch window for basic collective epochs
