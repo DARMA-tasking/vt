@@ -142,6 +142,7 @@ struct LBArgsEnumConverter {
     return getEnum(spec_value);
   }
 
+private:
   EnumToStrMap enum_to_str_;  //< 1 to 1 mapping of enumerated values to strings
   StrToEnumMap str_to_enum_;  //< 1 to 1 mapping of strings to enumerated values
   std::string par_name_;      //< parameter to look for in the spec file
