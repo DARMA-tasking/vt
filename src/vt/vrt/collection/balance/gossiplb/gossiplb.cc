@@ -530,7 +530,7 @@ void GossipLB::informSync() {
     // Underloaded start the first round; ranks that received on some round
     // start subsequent rounds
     if (propagate_this_round) {
-      propagateRound(k_cur_, propagate_epoch, true);
+      propagateRound(k_cur_, true, propagate_epoch);
     }
 
     theTerm()->finishedEpoch(propagate_epoch);
