@@ -146,10 +146,13 @@ void CollectiveAnyOps<instance>::abort(
     myrt->theTrace->cleanupTracesFile();
 #endif
     myrt->abort(str, code);
+  } else if (vt::debug::preConfig()->vt_throw_on_abort) {
+    // Special case when preConfig has 'vt_throw_on_abort' option set
+    // This is meant to be used by nompi unit tests
+    throw std::runtime_error(str);
   } else {
     std::_Exit(code);
   }
-
 }
 
 template <runtime::RuntimeInstType instance>

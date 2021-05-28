@@ -69,7 +69,6 @@ build configuration:
 | `VT_BUILD_TESTS`                 | 1               | Build all VT tests |
 | `VT_BUILD_EXAMPLES`              | 1               | Build all VT examples |
 | `vt_debug_verbose`               | 1 (not Release) | Enable VT verbose debug prints at compile-time |
-| `vt_throw_on_abort`              | 0               | Throw an exception instead of calling `MPI_Abort` on `vtAbort` |
 
 \subsection using-the-build-script Using the Build Script
 
@@ -104,7 +103,6 @@ parameters.
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0               | Enable VT component diagnostics at runtime by default |
 | `VT_DEBUG_VERBOSE`               | <empty>         | Enable VT verbose debug prints at compile-time |
 | `VT_TESTS_NUM_NODES`             | <empty>         | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
-| `VT_THROW_ON_ABORT`              | 0               | Throw an exception instead of calling `MPI_Abort` on `vtAbort` |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned

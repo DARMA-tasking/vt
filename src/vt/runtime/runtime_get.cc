@@ -157,6 +157,20 @@ namespace vt { namespace debug {
 // Dummy config that applies outside of RT initialization, much like preNode.
 static arguments::AppConfig preInitAppConfig{};
 
+
+/**
+ * \internal
+ * \brief Returns the preConfig, accessible OUTSIDE of VT initialization.
+ *
+ * This non-const version is used by 'nompi' tests, in order to customize
+ * the app config (mostly vt_throw_on_abort)
+ *
+ * \return A modifiable configuration
+ */
+arguments::AppConfig* preConfigRef(){
+  return &preInitAppConfig;
+}
+
 /**
  * \internal
  * \brief Returns the config, accessible OUTSIDE of VT initialization.

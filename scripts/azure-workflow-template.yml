@@ -37,7 +37,6 @@ variables:
   VT_USE_STD_THREAD: [% vt_use_std_thread %]
   VT_ZOLTAN: [% vt_zoltan %]
   VT_CI_BUILD: [% vt_ci_build %]
-  VT_THROW_ON_ABORT: [% vt_throw_on_abort %]
   VT_DIAGNOSTICS: [% vt_diagnostics %]
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: [% cache_name %]

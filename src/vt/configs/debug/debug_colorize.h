@@ -46,10 +46,12 @@
 #define INCLUDED_VT_CONFIGS_DEBUG_DEBUG_COLORIZE_H
 
 #include "vt/configs/arguments/app_config.h"
+#include "vt/configs/types/types_type.h"
 
 #include <string>
 
 namespace vt { namespace debug {
+arguments::AppConfig * preConfigRef();
 arguments::AppConfig const* preConfig();
 }} /* end namespace vt::debug */
 

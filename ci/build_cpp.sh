@@ -140,7 +140,6 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
       -Dvt_ci_build="${VT_CI_BUILD:-0}" \
       -Dvt_debug_verbose="${VT_DEBUG_VERBOSE:-}" \
       -Dvt_tests_num_nodes="${VT_TESTS_NUM_NODES:-}" \
-      -Dvt_throw_on_abort="${VT_THROW_ON_ABORT:-0}" \
       "$VT"
 cmake_conf_ret=$?
 

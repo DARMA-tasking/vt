@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                       test_cli_arguments.extended.cc
+//                           test_preconfig.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,17 +44,18 @@
 
 #include <gtest/gtest.h>
 
-#include "test_parallel_harness.h"
+#include "test_harness.h"
 
 #include <vt/configs/arguments/app_config.h>
 
 namespace vt { namespace tests { namespace unit {
 
-struct TestCliArguments : TestParallelHarness { };
+struct TestPreconfig : TestHarness { };
 
 #if not vt_check_enabled(production_build)
-TEST_F(TestCliArguments, test_vt_assert) {
-  EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
+TEST_F(TestPreconfig, test_vt_assert) {
+  EXPECT_EQ(vt::debug::preConfig()->vt_throw_on_abort, true)
+    << "vt_throw_on_abort should be enabled by default";
 
   ASSERT_THROW(
     vtAssert(false, "Should throw."),
@@ -63,12 +64,14 @@ TEST_F(TestCliArguments, test_vt_assert) {
 }
 #endif
 
-TEST_F(TestCliArguments, test_assert_no_fail) {
-  EXPECT_EQ(theConfig()->vt_no_assert_fail, false);
-  theConfig()->vt_no_assert_fail = true;
+TEST_F(TestPreconfig, test_vt_abort) {
+  EXPECT_EQ(vt::debug::preConfig()->vt_throw_on_abort, true)
+    << "vt_throw_on_abort should be enabled by default";
 
-  vtAssert(false, "Should not abort.");
-  SUCCEED();
+  ASSERT_THROW(
+    vtAbort("Should throw."),
+    std::runtime_error
+  );
 }
 
 }}} // end namespace vt::tests::unit

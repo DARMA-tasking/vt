@@ -44,6 +44,7 @@
 #if ! defined __VIRTUAL_TRANSPORT_TEST_HARNESS__
 #define __VIRTUAL_TRANSPORT_TEST_HARNESS__
 
+#include <vt/config.h>
 #include <gtest/gtest.h>
 
 #include <vector>
@@ -58,6 +59,8 @@ template <typename TestBase>
 struct TestHarnessAny : TestBase {
   static void store_cmdline_args(int argc, char **argv) {
     orig_args_ = std::vector<std::string>(argv, argv + argc);
+
+    vt::debug::preConfigRef()->vt_throw_on_abort = true;
   }
 
   static std::vector<std::string> orig_args_;
