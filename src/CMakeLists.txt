@@ -83,7 +83,7 @@ set(
         vrt/collection/balance/hierarchicallb
         vrt/collection/balance/greedylb
         vrt/collection/balance/rotatelb
-        vrt/collection/balance/gossiplb
+        vrt/collection/balance/temperedlb
         vrt/collection/balance/statsmaplb
         vrt/collection/balance/zoltanlb
         vrt/collection/balance/randomlb

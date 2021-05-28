@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           test_gossiplb.nompi.cc
+//                          test_temperedlb.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,7 +44,7 @@
 
 #include <vt/vrt/collection/balance/lb_common.h>
 #include <vt/vrt/collection/balance/baselb/baselb.h>
-#include <vt/vrt/collection/balance/gossiplb/gossiplb.h>
+#include <vt/vrt/collection/balance/temperedlb/temperedlb.h>
 
 #include "test_harness.h"
 

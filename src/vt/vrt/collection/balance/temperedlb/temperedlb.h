@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  gossiplb.h
+//                                temperedlb.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,14 +42,14 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
-#include "vt/vrt/collection/balance/gossiplb/criterion.h"
-#include "vt/vrt/collection/balance/gossiplb/gossip_enums.h"
+#include "vt/vrt/collection/balance/temperedlb/tempered_msgs.h"
+#include "vt/vrt/collection/balance/temperedlb/criterion.h"
+#include "vt/vrt/collection/balance/temperedlb/tempered_enums.h"
 
 #include <random>
 #include <unordered_map>
@@ -179,4 +179,4 @@ private:
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H*/

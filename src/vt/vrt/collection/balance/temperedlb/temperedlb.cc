@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 gossiplb.cc
+//                               temperedlb.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,10 +44,10 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
-#include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
-#include "vt/vrt/collection/balance/gossiplb/gossip_constants.h"
-#include "vt/vrt/collection/balance/gossiplb/criterion.h"
+#include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
+#include "vt/vrt/collection/balance/temperedlb/tempered_msgs.h"
+#include "vt/vrt/collection/balance/temperedlb/tempered_constants.h"
+#include "vt/vrt/collection/balance/temperedlb/criterion.h"
 #include "vt/vrt/collection/balance/lb_args_enum_converter.h"
 #include "vt/context/context.h"
 

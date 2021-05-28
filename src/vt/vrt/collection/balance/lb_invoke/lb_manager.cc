@@ -52,7 +52,7 @@
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
-#include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
+#include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
