@@ -100,6 +100,23 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_mapping) {
   checkString(dummy_, "One");
   checkString(dummy_, "Two");
   checkString(dummy_, "Three");
+
+  ASSERT_THROW(
+    dummy_.getString(static_cast<DummyEnum>(0)),
+    std::runtime_error
+  );
+  ASSERT_THROW(
+    dummy_.getString(static_cast<DummyEnum>(4)),
+    std::runtime_error
+  );
+  ASSERT_THROW(
+    dummy_.getEnum("Zero"),
+    std::runtime_error
+  );
+  ASSERT_THROW(
+    dummy_.getEnum("Four"),
+    std::runtime_error
+  );
 }
 
 TEST_F(TestLBArgsEnumConverter, test_enum_converter_spec) {
@@ -129,6 +146,20 @@ TEST_F(TestLBArgsEnumConverter, test_enum_converter_spec) {
   EXPECT_EQ(dummy_.getFromSpec(&spec, DummyEnum::One), DummyEnum::Two);
   // unspecified should return default value
   EXPECT_EQ(count_.getFromSpec(&spec, DummyEnum::One), DummyEnum::One);
+
+  std::string bad_spec_string("dummy=Four");
+  auto bad_spec = vrt::collection::balance::ReadLBSpec::makeSpecFromParams(
+    bad_spec_string
+  );
+
+  ASSERT_THROW(
+    dummy_.getFromSpec(&bad_spec, DummyEnum::One),
+    std::runtime_error
+  );
+  ASSERT_THROW(
+    dummy_.getFromSpec(&spec, static_cast<DummyEnum>(0)),
+    std::runtime_error
+  );
 }
 
 }}} // end namespace vt::tests::unit
