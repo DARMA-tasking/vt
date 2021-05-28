@@ -59,21 +59,21 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct GossipLB : BaseLB {
-  using GossipMsgAsync = balance::GossipMsgAsync;
-  using GossipMsgSync  = balance::GossipMsg;
+struct TemperedLB : BaseLB {
+  using LoadMsgAsync   = balance::LoadMsgAsync;
+  using LoadMsgSync    = balance::LoadMsg;
   using NodeSetType    = std::vector<NodeType>;
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
-  using GossipRejectionMsgType = balance::GossipRejectionStatsMsg;
+  using RejectionMsgType = balance::RejectionStatsMsg;
 
-  GossipLB() = default;
-  GossipLB(GossipLB const&) = delete;
+  TemperedLB() = default;
+  TemperedLB(TemperedLB const&) = delete;
 
-  virtual ~GossipLB() {}
+  virtual ~TemperedLB() {}
 
 public:
-  void init(objgroup::proxy::Proxy<GossipLB> in_proxy);
+  void init(objgroup::proxy::Proxy<TemperedLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
 
@@ -91,8 +91,8 @@ protected:
   void migrate();
 
   void propagateRound(uint8_t k_cur_async, bool sync, EpochType epoch = no_epoch);
-  void propagateIncomingAsync(GossipMsgAsync* msg);
-  void propagateIncomingSync(GossipMsgSync* msg);
+  void propagateIncomingAsync(LoadMsgAsync* msg);
+  void propagateIncomingSync(LoadMsgSync* msg);
   bool isUnderloaded(LoadType load) const;
   bool isUnderloadedRelaxed(LoadType over, LoadType under) const;
   bool isOverloaded(LoadType load) const;
@@ -109,8 +109,8 @@ protected:
 
   void lazyMigrateObjsTo(EpochType epoch, NodeType node, ObjsType const& objs);
   void inLazyMigrations(balance::LazyMigrationMsg* msg);
-  void gossipStatsHandler(StatsMsgType* msg);
-  void gossipRejectionStatsHandler(GossipRejectionMsgType* msg);
+  void loadStatsHandler(StatsMsgType* msg);
+  void rejectionStatsHandler(RejectionMsgType* msg);
   void thunkMigrations();
 
   void setupDone(ReduceMsgType* msg);
@@ -155,7 +155,7 @@ private:
   std::random_device seed_;
   std::unordered_map<NodeType, LoadType> load_info_ = {};
   std::unordered_map<NodeType, LoadType> new_load_info_ = {};
-  objgroup::proxy::Proxy<GossipLB> proxy_           = {};
+  objgroup::proxy::Proxy<TemperedLB> proxy_         = {};
   bool is_overloaded_                               = false;
   bool is_underloaded_                              = false;
   std::unordered_set<NodeType> selected_            = {};

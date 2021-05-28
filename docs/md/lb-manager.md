@@ -41,7 +41,7 @@ of `key=value`. These arguments are the equivalent of passing
 The following is an example LB specification:
 
 \code
-%10 GossipLB c=1 k=5 f=2 i=10
+%10 TemperedLB c=1 k=5 f=2 i=10
 0 HierarchicalLB min=0.9 max=1.1 auto=false
 % 5 GreedyLB min=1.0
 120 GreedyLB c=0 k=2 f=3 i=3
@@ -56,7 +56,7 @@ To print LB specification during startup, use `--vt_lb_show_spec` command line f
 | RotateLB       | Testing                 | Rotate objects in a ring                       | `vt::vrt::collection::lb::RotateLB` |
 | RandomLB       | Testing                 | Randomly migrate object with seed              | `vt::vrt::collection::lb::RandomLB` |
 | GreedyLB       | Centralized             | Gather to central node apply min/max heap      | `vt::vrt::collection::lb::GreedyLB` |
-| GossipLB       | Distributed             | Gossip-based protocol for fully distributed LB | `vt::vrt::collection::lb::GossipLB` |
+| TemperedLB     | Distributed             | Gossip-based protocol for fully distributed LB | `vt::vrt::collection::lb::TemperedLB` |
 | HierarchicalLB | Hierarchical            | Build tree to move objects nodes               | `vt::vrt::collection::lb::HierarchicalLB` |
 | ZoltanLB       | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB           | `vt::vrt::collection::lb::ZoltanLB` |
 | StatsMapLB     | User-specified          | Read file to determine mapping                 | `vt::vrt::collection::lb::StatsMapLB` |

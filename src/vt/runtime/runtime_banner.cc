@@ -861,7 +861,7 @@ void Runtime::printStartupBanner() {
   vt_runtime_debug_warn_compile(param)
   vt_runtime_debug_warn_compile(handler)
   vt_runtime_debug_warn_compile(hierlb)
-  vt_runtime_debug_warn_compile(gossiplb)
+  vt_runtime_debug_warn_compile(temperedlb)
   vt_runtime_debug_warn_compile(scatter)
   vt_runtime_debug_warn_compile(sequence)
   vt_runtime_debug_warn_compile(sequence_vrt)

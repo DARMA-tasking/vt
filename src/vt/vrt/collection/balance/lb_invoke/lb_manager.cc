@@ -228,7 +228,7 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
   case LBType::HierarchicalLB: lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(); break;
   case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
   case LBType::RotateLB:       lb_instances_["chosen"] = makeLB<lb::RotateLB>();       break;
-  case LBType::GossipLB:       lb_instances_["chosen"] = makeLB<lb::GossipLB>();       break;
+  case LBType::TemperedLB:     lb_instances_["chosen"] = makeLB<lb::TemperedLB>();     break;
   case LBType::StatsMapLB:     lb_instances_["chosen"] = makeLB<lb::StatsMapLB>();     break;
   case LBType::RandomLB:       lb_instances_["chosen"] = makeLB<lb::RandomLB>();       break;
 #   if vt_check_enabled(zoltan)

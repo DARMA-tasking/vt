@@ -170,7 +170,7 @@ private:
 /*
  * Reads the following file format for LB spec---example:
  *
- *     %10 GossipLB c=1 k=5 f=2 i=10
+ *     %10 TemperedLB c=1 k=5 f=2 i=10
  *     0 HierarchicalLB min=0.9 max=1.1 auto=false
  *     % 5 GreedyLB min=1.0
  *     120 GreedyLB c=0 k=2 f=3 i=3

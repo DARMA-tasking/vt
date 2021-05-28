@@ -50,7 +50,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-/// Enum for gossiping approach
+/// Enum for information propagation approach
 enum struct InformTypeEnum : uint8_t {
   /**
    * \brief Synchronous sharing of underloaded processor loads

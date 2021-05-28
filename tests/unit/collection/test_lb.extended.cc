@@ -92,7 +92,7 @@ void TestLoadBalancer::runTest() {
   if (vt::theContext()->getNode() == 0) {
     fmt::print("Testing lb {}\n", lb_name);
   }
-  if (lb_name.compare("GossipLB") == 0) {
+  if (lb_name.compare("TemperedLB") == 0) {
     std::string lb_args("ordering=Arbitrary rollback=false");
     vt::theConfig()->vt_lb_args = lb_args;
     if (vt::theContext()->getNode() == 0) {
@@ -136,7 +136,7 @@ auto balancers = ::testing::Values(
     "RandomLB",
     "RotateLB",
     "HierarchicalLB",
-    "GossipLB",
+    "TemperedLB",
     "GreedyLB"
 #   if vt_check_enabled(zoltan)
     , "ZoltanLB"

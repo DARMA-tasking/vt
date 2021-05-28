@@ -194,7 +194,7 @@ struct AppConfig {
   bool vt_debug_param        = false;
   bool vt_debug_handler      = false;
   bool vt_debug_hierlb       = false;
-  bool vt_debug_gossiplb     = false;
+  bool vt_debug_temperedlb   = false;
   bool vt_debug_scatter      = false;
   bool vt_debug_sequence     = false;
   bool vt_debug_sequence_vrt = false;
@@ -343,7 +343,7 @@ struct AppConfig {
       | vt_debug_param
       | vt_debug_handler
       | vt_debug_hierlb
-      | vt_debug_gossiplb
+      | vt_debug_temperedlb
       | vt_debug_scatter
       | vt_debug_sequence
       | vt_debug_sequence_vrt
