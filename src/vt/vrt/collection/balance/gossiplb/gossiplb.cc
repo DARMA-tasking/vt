@@ -48,6 +48,7 @@
 #include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
 #include "vt/vrt/collection/balance/gossiplb/gossip_constants.h"
 #include "vt/vrt/collection/balance/gossiplb/criterion.h"
+#include "vt/vrt/collection/balance/lb_args_enum_converter.h"
 #include "vt/context/context.h"
 
 #include <cstdint>
@@ -76,57 +77,162 @@ bool GossipLB::isOverloaded(LoadType load) const {
 
 void GossipLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{
-    "f", "k", "i", "c", "trials", "deterministic", "inform", "ordering", "cmf",
-    "rollback", "targetpole"
+    "knowledge", "fanout", "rounds", "iters", "criterion", "trials",
+    "deterministic", "inform", "ordering", "cmf", "rollback", "targetpole",
   };
   spec->checkAllowedKeys(allowed);
 
-  using CriterionEnumUnder   = typename std::underlying_type<CriterionEnum>::type;
-  using InformTypeEnumUnder  = typename std::underlying_type<InformTypeEnum>::type;
-  using ObjectOrderEnumUnder = typename std::underlying_type<ObjectOrderEnum>::type;
-  using CMFTypeEnumUnder     = typename std::underlying_type<CMFTypeEnum>::type;
+  // the following options interact with each other, so we need to know
+  // which were defaulted and which were explicitly specified
+  auto params = spec->getParams();
+  bool specified_knowledge = params.find("knowledge") != params.end();
+  bool specified_fanout    = params.find("fanout")    != params.end();
+  bool specified_rounds    = params.find("rounds")    != params.end();
 
-  auto default_c      = static_cast<CriterionEnumUnder>(criterion_);
-  auto default_inform = static_cast<InformTypeEnumUnder>(inform_type_);
-  auto default_order  = static_cast<ObjectOrderEnumUnder>(obj_ordering_);
-  auto default_cmf    = static_cast<CMFTypeEnumUnder>(cmf_type_);
+  balance::LBArgsEnumConverter<KnowledgeEnum> knowledge_converter_(
+    "knowledge", "KnowledgeEnum", {
+      {KnowledgeEnum::UserDefined, "UserDefined"},
+      {KnowledgeEnum::Complete,    "Complete"},
+      {KnowledgeEnum::Log,         "Log"}
+    }
+  );
+  knowledge_ = knowledge_converter_.getFromSpec(spec, knowledge_);
 
-  f_             = spec->getOrDefault<int32_t>("f", f_);
-  k_max_         = spec->getOrDefault<int32_t>("k", k_max_);
-  num_iters_     = spec->getOrDefault<int32_t>("i", num_iters_);
+  vtAbortIf(
+    specified_knowledge && knowledge_ == KnowledgeEnum::Log &&
+    specified_fanout && specified_rounds,
+    "GossipLB: You must leave fanout and/or rounds unspecified when "
+    "knowledge=Log"
+  );
+  vtAbortIf(
+    !specified_knowledge && knowledge_ == KnowledgeEnum::Log &&
+    specified_fanout && specified_rounds,
+    "GossipLB: You must use knowledge=UserDefined if you want to explicitly "
+    "set both fanout and rounds"
+  );
+  vtAbortIf(
+    knowledge_ == KnowledgeEnum::Complete &&
+    (specified_fanout || specified_rounds),
+    "GossipLB: You must leave fanout and rounds unspecified when "
+    "knowledge=Complete"
+  );
+  vtAbortIf(
+    knowledge_ == KnowledgeEnum::UserDefined &&
+    (!specified_fanout || !specified_rounds),
+    "GossipLB: You must explicitly set both fanout and rounds when "
+    "knowledge=UserDefined"
+  );
+
+  auto num_nodes = theContext()->getNumNodes();
+  if (knowledge_ == KnowledgeEnum::Log) {
+    if (specified_fanout) {
+      // set the rounds based on the chosen fanout: k=log_f(p)
+      f_ = spec->getOrDefault<int32_t>("fanout", f_);
+      k_max_ = static_cast<uint8_t>(
+        std::ceil(std::log(num_nodes)/std::log(f_))
+      );
+    } else if (specified_rounds) {
+      // set the fanout based on the chosen rounds: f=p^(1/k)
+      k_max_ = spec->getOrDefault<int32_t>("rounds", k_max_);
+      f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
+    } else {
+      // set both the fanout and the rounds
+      k_max_ = static_cast<uint16_t>(std::max(1.0,
+        std::round(std::sqrt(std::log(num_nodes)/std::log(2.0)))
+      ));
+      f_ = static_cast<uint16_t>(std::ceil(std::pow(num_nodes, 1.0/k_max_)));
+    }
+  } else if (knowledge_ == KnowledgeEnum::Complete) {
+    f_ = num_nodes - 1;
+    k_max_ = 1;
+  } else { // knowledge_ == KnowledgeEnum::UserDefined
+    // if either of these was omitted, a default will be used, which probably
+    // isn't desirable
+    f_     = spec->getOrDefault<int32_t>("fanout", f_);
+    k_max_ = spec->getOrDefault<int32_t>("rounds", k_max_);
+  }
+
+  if (f_ < 1) {
+    auto s = fmt::format(
+      "GossipLB: fanout={} is invalid; fanout must be positive",
+      f_
+    );
+    vtAbort(s);
+  }
+  if (k_max_ < 1) {
+    auto s = fmt::format(
+      "GossipLB: rounds={} is invalid; rounds must be positive",
+      k_max_
+    );
+    vtAbort(s);
+  }
+
+  num_iters_     = spec->getOrDefault<int32_t>("iters", num_iters_);
   num_trials_    = spec->getOrDefault<int32_t>("trials", num_trials_);
-  deterministic_ = spec->getOrDefault<int32_t>("deterministic", deterministic_);
-  rollback_      = spec->getOrDefault<int32_t>("rollback", rollback_);
-  target_pole_   = spec->getOrDefault<int32_t>("targetpole", target_pole_);
 
-  int32_t c      = spec->getOrDefault<int32_t>("c", default_c);
-  criterion_     = static_cast<CriterionEnum>(c);
-  int32_t inf    = spec->getOrDefault<int32_t>("inform", default_inform);
-  inform_type_   = static_cast<InformTypeEnum>(inf);
-  int32_t ord    = spec->getOrDefault<int32_t>("ordering", default_order);
-  obj_ordering_  = static_cast<ObjectOrderEnum>(ord);
-  int32_t cmf    = spec->getOrDefault<int32_t>("cmf", default_cmf);
-  cmf_type_      = static_cast<CMFTypeEnum>(cmf);
+  deterministic_ = spec->getOrDefault<bool>("deterministic", deterministic_);
+  rollback_      = spec->getOrDefault<bool>("rollback", rollback_);
+  target_pole_   = spec->getOrDefault<bool>("targetpole", target_pole_);
+
+  balance::LBArgsEnumConverter<CriterionEnum> criterion_converter_(
+    "criterion", "CriterionEnum", {
+      {CriterionEnum::Grapevine,         "Grapevine"},
+      {CriterionEnum::ModifiedGrapevine, "ModifiedGrapevine"}
+    }
+  );
+  criterion_ = criterion_converter_.getFromSpec(spec, criterion_);
+
+  balance::LBArgsEnumConverter<InformTypeEnum> inform_type_converter_(
+    "inform", "InformTypeEnum", {
+      {InformTypeEnum::SyncInform,  "SyncInform"},
+      {InformTypeEnum::AsyncInform, "AsyncInform"}
+    }
+  );
+  inform_type_ = inform_type_converter_.getFromSpec(spec, inform_type_);
+
+  balance::LBArgsEnumConverter<ObjectOrderEnum> obj_ordering_converter_(
+    "ordering", "ObjectOrderEnum", {
+      {ObjectOrderEnum::Arbitrary,        "Arbitrary"},
+      {ObjectOrderEnum::ElmID,            "ElmID"},
+      {ObjectOrderEnum::FewestMigrations, "FewestMigrations"},
+      {ObjectOrderEnum::SmallObjects,     "SmallObjects"},
+      {ObjectOrderEnum::LargestObjects,   "LargestObjects"}
+    }
+  );
+  obj_ordering_ = obj_ordering_converter_.getFromSpec(spec, obj_ordering_);
+
+  balance::LBArgsEnumConverter<CMFTypeEnum> cmf_type_converter_(
+    "cmf", "CMFTypeEnum", {
+      {CMFTypeEnum::Original,                   "Original"},
+      {CMFTypeEnum::NormByMax,                  "NormByMax"},
+      {CMFTypeEnum::NormBySelf,                 "NormBySelf"},
+      {CMFTypeEnum::NormByMaxExcludeIneligible, "NormByMaxExcludeIneligible"}
+    }
+  );
+  cmf_type_ = cmf_type_converter_.getFromSpec(spec, cmf_type_);
 
   vtAbortIf(
     inform_type_ == InformTypeEnum::AsyncInform && deterministic_,
-    "Asynchronous informs allow race conditions and thus are not deterministic"
+    "Asynchronous informs allow race conditions and thus are not "
+    "deterministic; use inform=SyncInform"
   );
   vtAbortIf(
     obj_ordering_ == ObjectOrderEnum::Arbitrary && deterministic_,
-    "Arbitrary object ordering is not deterministic"
+    "Arbitrary object ordering is not deterministic; use ordering=ElmID "
+    "or another option"
   );
 
   if (theContext()->getNode() == 0) {
     vt_debug_print(
       terse, gossiplb,
-      "GossipLB::inputParams: using f={}, k={}, i={}, c={}, trials={}, "
-      "deterministic={}, inform={}, ordering={}, cmf={}, rollback={}, "
-      "targetpole={}\n",
-      f_, k_max_, num_iters_, static_cast<int32_t>(criterion_), num_trials_,
-      deterministic_, static_cast<int32_t>(inform_type_),
-      static_cast<int32_t>(obj_ordering_), static_cast<int32_t>(cmf_type_),
-      rollback_, target_pole_
+      "GossipLB::inputParams: using knowledge={}, fanout={}, rounds={}, "
+      "iters={}, criterion={}, trials={}, deterministic={}, inform={}, "
+      "ordering={}, cmf={}, rollback={}, targetpole={}\n",
+      knowledge_converter_.getString(knowledge_), f_, k_max_, num_iters_,
+      criterion_converter_.getString(criterion_), num_trials_, deterministic_,
+      inform_type_converter_.getString(inform_type_),
+      obj_ordering_converter_.getString(obj_ordering_),
+      cmf_type_converter_.getString(cmf_type_), rollback_, target_pole_
     );
   }
 }
@@ -1006,7 +1112,7 @@ void GossipLB::decide() {
 
 void GossipLB::thunkMigrations() {
   vt_debug_print(
-    terse, gossiplb,
+    normal, gossiplb,
     "thunkMigrations, total num_objs={}\n",
     cur_objs_.size()
   );
