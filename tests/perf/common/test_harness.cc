@@ -49,9 +49,13 @@
 #include <vt/utils/memory/memory_usage.h>
 
 #include <numeric>
+#include <fstream>
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
+/////////////////////////////////////////////////
+///////////////      HELPERS      ///////////////
+/////////////////////////////////////////////////
 static void CopyTestData(
   PerfTestHarness::TestResults const& source,
   PerfTestHarness::CombinedResults& dest, NodeType node
@@ -85,18 +89,20 @@ struct TestMsg : Message {
   }
 };
 
-struct OutputGenerator{
+void OutputToFile(std::string const& name, std::string const& content) {
+  std::ofstream file(fmt::format("{}.csv", name));
+  file << content;
+}
 
-};
-/*
-* Helper function which generates CSV file with the tests resutls.
-* Example output:
-* name,min,max,mean,
-*
-*/
-void OutputToFile() { }
+/////////////////////////////////////////////////
+///////////////   PERF HARNESS    ///////////////
+/////////////////////////////////////////////////
 
 PerfTestHarness::CombinedResults PerfTestHarness::combined_timings_ = {};
+std::unordered_map<std::string, StopWatch> PerfTestHarness::timers_ = {};
+PerfTestHarness::TestResults PerfTestHarness::timings_ = {};
+NodeType PerfTestHarness::my_node_ = {};
+std::string PerfTestHarness::name_ = {};
 
 void PerfTestHarness::SetUp(int argc, char** argv) {
   CollectiveOps::initialize(argc, argv, no_workers, true);
@@ -126,6 +132,8 @@ void PerfTestHarness::DumpResults() const {
     // Copy the root node's data to 'combined_timings_'
     CopyTestData(timings_, combined_timings_, my_node_);
 
+    std::string file_content = "name,node,mean\n";
+
     for (auto const& test_run : combined_timings_) {
       auto const name = test_run.first;
 
@@ -136,6 +144,8 @@ void PerfTestHarness::DumpResults() const {
         auto const num_timings = timings.size();
         auto const mean =
           std::accumulate(timings.begin(), timings.end(), 0.0) / num_timings;
+
+        file_content.append(fmt::format("{},{},{:.3f}\n", name, node, mean));
 
         fmt::print(
           "{} Timings for {} (mean value: {})\n", debug::proc(node),
@@ -148,6 +158,8 @@ void PerfTestHarness::DumpResults() const {
         }
       }
     }
+
+    OutputToFile(name_, file_content);
   }
 }
 
@@ -163,7 +175,7 @@ void PerfTestHarness::AddResult(TestResult const& test_result, bool iteration_fi
   // Root node will be responsible for generating the final output
   // so every other node sends its results to it (at the end of iteration)
   if (iteration_finished) {
-    runInEpochCollective([this] {
+    runInEpochCollective([] {
       constexpr auto root_node = 0;
       if (my_node_ != root_node) {
         auto msg = makeMessage<TestMsg>(timings_, my_node_);
@@ -184,15 +196,6 @@ void PerfTestHarness::RecvTestResult(TestMsg* msg) {
 
 void PerfTestHarness::SpinScheduler() {
   vt::theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
-}
-
-void PerfTestHarness::StartTimer() {
-  watch_.Start();
-}
-
-void PerfTestHarness::StopTimer() {
-  auto const time_elapsed = watch_.Stop();
-  fmt::print("Node:{} {} took {}ms\n", my_node_, name_, time_elapsed);
 }
 
 void PerfTestHarness::GetMemoryUsage() {

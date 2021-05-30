@@ -69,17 +69,9 @@ struct PerfTestHarness {
 
   std::string GetName() const;
   void DumpResults() const;
-  void AddResult(TestResult const& test_result, bool iteration_finished = false);
+  static void AddResult(TestResult const& test_result, bool iteration_finished = false);
   static void RecvTestResult(TestMsg* msg);
   static void SpinScheduler();
-
-  /*
-   *  ------------------
-   *  Time based helpers
-   *  ------------------
-   */
-  void StartTimer();
-  void StopTimer();
 
   /*
    *  --------------------
@@ -89,12 +81,12 @@ struct PerfTestHarness {
   void GetMemoryUsage();
 
   protected:
-  NodeType my_node_ = {};
-  StopWatch watch_ = {};
-  std::string name_ = {};
+  static NodeType my_node_;
+  static std::unordered_map<std::string, StopWatch> timers_;
+  static std::string name_;
 
   // Local timings
-  TestResults timings_ = {};
+  static TestResults timings_;
 
   // Combined timings that are stored on the root node
   static CombinedResults combined_timings_;

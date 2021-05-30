@@ -53,6 +53,7 @@
 #define REUSE_MESSAGE_PING_PONG 0
 
 using namespace vt;
+using namespace vt::tests::perf::common;
 
 static constexpr int64_t const min_bytes = 1;
 static constexpr int64_t const max_bytes = 16384;
@@ -80,78 +81,47 @@ struct FinishedPingMsg : ShortMessage {
   { }
 };
 
-template <int64_t num_bytes>
-static void pingPong(PingMsg<num_bytes>* in_msg);
-
-template <int64_t num_bytes>
-static void finishedPing(FinishedPingMsg<num_bytes>* msg);
-
-static void printTiming(int64_t const& num_bytes) {
-  // vt::tests::perf::PerfTestHarness::StopTimer();
-
-  // vt::tests::perf::PerfTestHarness::StartTimer();
-
-  // fmt::print(
-  //   "{}: Finished num_pings={}, bytes={}, total time={}, time/msg={}\n",
-  //   theContext()->getNode(), num_pings, num_bytes, total, total/num_pings
-  // );
-}
-
-template <int64_t num_bytes>
-static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
-  printTiming(num_bytes);
-
-  if (num_bytes != max_bytes) {
-    auto pmsg = makeMessage<PingMsg<num_bytes * 2>>();
-    theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong<num_bytes * 2>>(
-      pong_node, pmsg
-    );
+struct MyTest : PerfTestHarness {
+  static void printTiming(int64_t const& num_bytes) {
+    auto const& name = fmt::format("{}", num_bytes);
+    AddResult({name, timers_[name].Stop()});
   }
-}
 
-template <>
-void finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
-  printTiming(max_bytes);
-}
+  template <int64_t num_bytes>
+  static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
+    printTiming(num_bytes);
 
-template <int64_t num_bytes>
-static void pingPong(PingMsg<num_bytes>* in_msg) {
-  auto const& cnt = in_msg->count;
+    if (num_bytes != max_bytes) {
+      timers_[fmt::format("{}", num_bytes * 2)].Start();
 
-  #if DEBUG_PING_PONG
-    fmt::print(
-      "{}: pingPong: cnt={}, bytes={}\n",
-      theContext()->getNode(), cnt, num_bytes
-    );
-  #endif
+      auto pmsg = makeMessage<PingMsg<num_bytes * 2>>();
+      theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong<num_bytes * 2>>(
+        pong_node, pmsg);
+    }
+  }
 
-  #if REUSE_MESSAGE_PING_PONG
-    in_msg->count++;
-  #endif
+  template <int64_t num_bytes>
+  static void pingPong(PingMsg<num_bytes>* in_msg) {
+    auto const& cnt = in_msg->count;
 
-  if (cnt >= num_pings) {
-    auto msg = makeMessage<FinishedPingMsg<num_bytes>>(num_bytes);
-    theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing<num_bytes>>(
-      0, msg
-    );
-  } else {
-    NodeType const next =
-      theContext()->getNode() == ping_node ? pong_node : ping_node;
-    #if REUSE_MESSAGE_PING_PONG
-      // @todo: fix this memory allocation problem
-      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(
-        next, in_msg, [=]{ /*delete in_msg;*/ }
-      );
-    #else
+    if (cnt >= num_pings) {
+      auto msg = makeMessage<FinishedPingMsg<num_bytes>>(num_bytes);
+      theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing<num_bytes>>(
+        0, msg);
+    } else {
+      NodeType const next =
+        theContext()->getNode() == ping_node ? pong_node : ping_node;
+
       auto m = makeMessage<PingMsg<num_bytes>>(cnt + 1);
       theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(next, m);
-    #endif
+    }
   }
+};
+
+template <>
+void MyTest::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
+  MyTest::printTiming(max_bytes);
 }
-
-using namespace vt::tests::perf::common;
-
-struct MyTest : PerfTestHarness {};
 
 VT_PERF_TEST(MyTest, test_ping_pong_1) {
   if (my_node_ == 0) {
