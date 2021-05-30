@@ -59,12 +59,12 @@ struct StopWatch {
   void Start();
 
   template <typename Duration = DurationMilli>
-  Duration Stop() {
+  double Stop() {
     auto const now = std::chrono::steady_clock::now();
     auto const delta = Duration{now - cur_time_};
     cur_time_ = now;
 
-    return delta;
+    return delta.count();
   }
 
   private:

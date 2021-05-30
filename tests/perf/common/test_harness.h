@@ -49,15 +49,28 @@
 #include "test_harness_macros.h"
 
 #include <vt/configs/types/types_type.h>
+#include <unordered_map>
+#include <vector>
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
+struct TestMsg;
+
 struct PerfTestHarness {
+  using TestResults = std::unordered_map<std::string, std::vector<double>>;
+  using CombinedResults = std::unordered_map<
+    std::string, std::unordered_map<NodeType, std::vector<double>>>;
+  using TestResult = std::pair<std::string, double>;
+
   virtual ~PerfTestHarness() = default;
 
   virtual void SetUp(int argc, char** argv);
   virtual void TearDown();
 
+  std::string GetName() const;
+  void DumpResults() const;
+  void AddResult(TestResult const& test_result, bool iteration_finished = false);
+  static void RecvTestResult(TestMsg* msg);
   static void SpinScheduler();
 
   /*
@@ -79,6 +92,12 @@ struct PerfTestHarness {
   NodeType my_node_ = {};
   StopWatch watch_ = {};
   std::string name_ = {};
+
+  // Local timings
+  TestResults timings_ = {};
+
+  // Combined timings that are stored on the root node
+  static CombinedResults combined_timings_;
 };
 
 }}}} // namespace vt::tests::perf::common

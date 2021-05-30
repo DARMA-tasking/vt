@@ -62,7 +62,7 @@ ScopedTimer::ScopedTimer(std::string && name) : name_(std::move(name)) {
 
 ScopedTimer::~ScopedTimer() {
   auto const time_elapsed = watch_.Stop();
-  fmt::print("{} took {}ms\n", name_, time_elapsed.count());
+  fmt::print("{} took {}ms\n", name_, time_elapsed);
 }
 
 }}}} // namespace vt::tests::perf::common
