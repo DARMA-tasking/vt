@@ -197,11 +197,9 @@ endforeach()
 #
 
 add_library(perf_timer STATIC
-  ${PROJECT_TEST_PERF_DIR}/common/scoped_timer.h
-  ${PROJECT_TEST_PERF_DIR}/common/scoped_timer.cc
+  ${PROJECT_TEST_PERF_DIR}/common/timers.h
+  ${PROJECT_TEST_PERF_DIR}/common/timers.cc
 )
-
-target_link_libraries(perf_timer fmt)
 
 file(GLOB PROJECT_PERF_TESTS ${PROJECT_TEST_PERF_DIR}/*.cc)
 

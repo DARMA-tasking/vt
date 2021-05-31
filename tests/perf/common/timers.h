@@ -42,10 +42,9 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TEST_PERF_COMMON_SCOPED_TIMER_H
-#define INCLUDED_VT_TEST_PERF_COMMON_SCOPED_TIMER_H
+#if !defined INCLUDED_VT_TEST_PERF_COMMON_TIMERS_H
+#define INCLUDED_VT_TEST_PERF_COMMON_TIMERS_H
 
-#include <string>
 #include <chrono>
 
 namespace vt { namespace tests { namespace perf { namespace common {
@@ -55,6 +54,34 @@ using DurationMicro = std::chrono::duration<double, std::micro>;
 using DurationMilli = std::chrono::duration<double, std::milli>;
 using DurationSec = std::chrono::duration<double>;
 
+template <typename Duration>
+struct DurationConverter {
+  static DurationMicro ToMicro(Duration const& in_duration) {
+    return DurationSec{in_duration};
+  }
+
+  static DurationMilli ToMilli(Duration const& in_duration) {
+    return DurationMilli{in_duration};
+  }
+
+  static DurationSec ToSec(Duration const& in_duration) {
+    return DurationSec{in_duration};
+  }
+};
+
+/*
+* Simple stopwatch utility struct for measuring time.
+*
+* Example use:
+*
+* StopWatch t;
+*
+* t.Start();
+* SomeFunction();
+* auto const delta = t.Stop<DurationMicro>();
+*
+* fmt::print("SomeFunction took {}?s", delta);
+*/
 struct StopWatch {
   void Start();
 
@@ -71,16 +98,6 @@ struct StopWatch {
   TimePoint cur_time_;
 };
 
-struct ScopedTimer {
-  ScopedTimer(std::string const& name);
-  ScopedTimer(std::string && name);
-  ~ScopedTimer();
-
-  private:
-  std::string name_ = "default";
-  StopWatch watch_ = {};
-};
-
 }}}} // namespace vt::tests::perf::common
 
-#endif // INCLUDED_VT_TEST_PERF_COMMON_SCOPED_TIMER_H
+#endif // INCLUDED_VT_TEST_PERF_COMMON_TIMERS_H

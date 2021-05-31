@@ -42,27 +42,12 @@
 //@HEADER
 */
 
-#include "scoped_timer.h"
-
-#include <fmt/core.h>
+#include "timers.h"
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
 void StopWatch::Start() {
   cur_time_ = std::chrono::steady_clock::now();
-}
-
-ScopedTimer::ScopedTimer(std::string const& name) : name_(name) {
-  watch_.Start();
-}
-
-ScopedTimer::ScopedTimer(std::string && name) : name_(std::move(name)) {
-  watch_.Start();
-}
-
-ScopedTimer::~ScopedTimer() {
-  auto const time_elapsed = watch_.Stop();
-  fmt::print("{} took {}ms\n", name_, time_elapsed);
 }
 
 }}}} // namespace vt::tests::perf::common

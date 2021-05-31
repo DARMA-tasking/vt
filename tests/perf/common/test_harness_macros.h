@@ -49,8 +49,8 @@ namespace vt { namespace tests { namespace perf { namespace common {
 
 static constexpr uint32_t NUM_ITERS = 50;
 
-/*
-  * Helper macros for registering the test and generating main function.
+/**
+  * \brief  Helper macros for registering the test and generating main function.
   * Example usage:
   *
   * struct MyTestMsg : vt::Message {};
@@ -80,28 +80,29 @@ static constexpr uint32_t NUM_ITERS = 50;
     using TestType = StructName##TestName;                 \
     void StructName##TestName::TestFunc()
 
-  #define VT_PERF_TEST_MAIN()                                 \
-    int main(int argc, char** argv) {                         \
-      MPI_Init(&argc, &argv);                                 \
-      using namespace vt::tests::perf::common;                \
-      TestType test;                                          \
-      StopWatch timer;                                        \
-                                                              \
-      for (uint32_t i = 0; i < NUM_ITERS; ++i) {              \
-        test.SetUp(argc, argv);                               \
-                                                              \
-        timer.Start();                                        \
-        test.TestFunc();                                      \
-        PerfTestHarness::SpinScheduler();                     \
-        test.AddResult({test.GetName(), timer.Stop()}, true); \
-                                                              \
-        test.TearDown();                                      \
-      }                                                       \
-                                                              \
-      test.DumpResults();                                     \
-      MPI_Finalize();                                         \
-                                                              \
-      return 0;                                               \
+  #define VT_PERF_TEST_MAIN()                           \
+    int main(int argc, char** argv) {                   \
+      MPI_Init(&argc, &argv);                           \
+      using namespace vt::tests::perf::common;          \
+      TestType test;                                    \
+      StopWatch timer;                                  \
+                                                        \
+      for (uint32_t i = 0; i < NUM_ITERS; ++i) {        \
+        test.SetUp(argc, argv);                         \
+                                                        \
+        timer.Start();                                  \
+        test.TestFunc();                                \
+        PerfTestHarness::SpinScheduler();               \
+        test.AddResult({test.GetName(), timer.Stop()}); \
+        test.SyncResults();                             \
+                                                        \
+        test.TearDown();                                \
+      }                                                 \
+                                                        \
+      test.DumpResults();                               \
+      MPI_Finalize();                                   \
+                                                        \
+      return 0;                                         \
     }
 
 }}}} // namespace vt::tests::perf::common

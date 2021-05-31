@@ -95,7 +95,7 @@ void OutputToFile(std::string const& name, std::string const& content) {
 }
 
 /////////////////////////////////////////////////
-///////////////   PERF HARNESS    ///////////////
+///////////////   TEST HARNESS    ///////////////
 /////////////////////////////////////////////////
 
 PerfTestHarness::CombinedResults PerfTestHarness::combined_timings_ = {};
@@ -117,9 +117,7 @@ void PerfTestHarness::TearDown() {
   SpinScheduler();
   CollectiveOps::finalize();
 
-  if(my_node_ != 0){
-    timings_.clear();
-  }
+  timings_.clear();
 }
 
 std::string PerfTestHarness::GetName() const {
@@ -129,9 +127,6 @@ std::string PerfTestHarness::GetName() const {
 void PerfTestHarness::DumpResults() const {
   // Only dump results on root node
   if (my_node_ == 0) {
-    // Copy the root node's data to 'combined_timings_'
-    CopyTestData(timings_, combined_timings_, my_node_);
-
     std::string file_content = "name,node,mean\n";
 
     for (auto const& test_run : combined_timings_) {
@@ -163,34 +158,27 @@ void PerfTestHarness::DumpResults() const {
   }
 }
 
-void PerfTestHarness::AddResult(TestResult const& test_result, bool iteration_finished) {
-  auto found = timings_.find(test_result.first);
+void PerfTestHarness::AddResult(TestResult const& test_result) {
+  timings_[test_result.first].push_back(test_result.second);
+}
 
-  if (found != timings_.end()) {
-    found->second.push_back(test_result.second);
-  } else {
-    timings_[test_result.first] = {test_result.second};
-  }
-
+void PerfTestHarness::SyncResults() {
   // Root node will be responsible for generating the final output
-  // so every other node sends its results to it (at the end of iteration)
-  if (iteration_finished) {
-    runInEpochCollective([] {
-      constexpr auto root_node = 0;
-      if (my_node_ != root_node) {
-        auto msg = makeMessage<TestMsg>(timings_, my_node_);
-        theMsg()->sendMsg<TestMsg, &PerfTestHarness::RecvTestResult>(
-          root_node, msg);
-      }
-    });
-  }
+  // so every other node sends its results to it (at the end of test iteration)
+  runInEpochCollective([] {
+    constexpr auto root_node = 0;
+    if (my_node_ != root_node) {
+      auto msg = makeMessage<TestMsg>(timings_, my_node_);
+      theMsg()->sendMsg<TestMsg, &PerfTestHarness::RecvTestResult>(
+        root_node, msg);
+    }else{
+      // Copy the root node's data to 'combined_timings_'
+      CopyTestData(timings_, combined_timings_, my_node_);
+    }
+  });
 }
 
 void PerfTestHarness::RecvTestResult(TestMsg* msg) {
-  fmt::print(
-    "Received test result from node = {} with {} tests results!\n",
-    msg->from_node_, msg->results_.size());
-
   CopyTestData(msg->results_, combined_timings_, msg->from_node_);
 }
 

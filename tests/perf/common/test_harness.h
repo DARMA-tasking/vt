@@ -45,7 +45,7 @@
 #if !defined __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
 #define __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
 
-#include "scoped_timer.h"
+#include "timers.h"
 #include "test_harness_macros.h"
 
 #include <vt/configs/types/types_type.h>
@@ -67,17 +67,44 @@ struct PerfTestHarness {
   virtual void SetUp(int argc, char** argv);
   virtual void TearDown();
 
+  /**
+   * \brief Get the name if this test suite
+   *
+   * \return name
+   */
   std::string GetName() const;
+
+  /**
+   * \brief Dump the test results to stdout and CSV file ({name_}.csv)
+   * This is called at the end of running test suite.
+   */
   void DumpResults() const;
-  static void AddResult(TestResult const& test_result, bool iteration_finished = false);
+
+  /**
+   * \brief Add a single test result (name-time pair)
+   *
+   * \param[in] test_result name-time pair of test result
+   */
+  static void AddResult(TestResult const& test_result);
+
+  /**
+   * \brief Send the tests' results to root node.
+   * This is called after each test iteration.
+   */
+  static void SyncResults();
+
+  /**
+   * \brief Handler for receiving test results from other nodes
+   *
+   * \param[in] msg message that contains the results
+   */
   static void RecvTestResult(TestMsg* msg);
+
+  /**
+   * \brief Spin the scheduler until all work is done.
+   */
   static void SpinScheduler();
 
-  /*
-   *  --------------------
-   *  Memory based helpers
-   *  --------------------
-   */
   void GetMemoryUsage();
 
   protected:
@@ -85,10 +112,10 @@ struct PerfTestHarness {
   static std::unordered_map<std::string, StopWatch> timers_;
   static std::string name_;
 
-  // Local timings
+  // Local (per node) timings
   static TestResults timings_;
 
-  // Combined timings that are stored on the root node
+  // Combined timings from all nodes, that are stored on the root node
   static CombinedResults combined_timings_;
 };
 
