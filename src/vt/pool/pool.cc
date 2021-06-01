@@ -212,9 +212,13 @@ void Pool::dealloc(void* const buf) {
   );
 
   if (pool_type != ePoolSize::Malloc && alloc_worker != worker) {
+    #if vt_threading_enabled
     theWorkerGrp()->enqueueForWorker(worker, [buf]{
       thePool()->dealloc(buf);
     });
+    #else
+    thePool()->dealloc(buf);
+    #endif
     return;
   }
 

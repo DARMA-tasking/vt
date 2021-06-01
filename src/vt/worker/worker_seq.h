@@ -47,13 +47,13 @@
 
 #include "vt/config.h"
 
-#if backend_no_threading
+#if vt_check_enabled(fcontext)
 
 #include "vt/worker/worker_common.h"
 #include "vt/worker/worker_types.h"
 #include "vt/utils/container/concurrent_deque.h"
 
-#include <fcontext.h>
+#include <context/fcontext.h>
 
 #include <functional>
 

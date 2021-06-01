@@ -24,6 +24,7 @@ RUN apt-get update -y -q && \
     valgrind \
     make-guile \
     libomp5 \
+    libomp-dev \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -68,6 +69,9 @@ ARG VT_MIMALLOC_ENABLED
 ARG VT_DOXYGEN_ENABLED
 ARG VT_ASAN_ENABLED
 ARG VT_POOL_ENABLED
+ARG VT_FCONTEXT_ENABLED
+ARG VT_USE_OPENMP
+ARG VT_USE_STD_THREAD
 ARG CMAKE_BUILD_TYPE
 
 ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
@@ -78,6 +82,9 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
     VT_ASAN_ENABLED=${VT_ASAN_ENABLED} \
     VT_POOL_ENABLED=${VT_POOL_ENABLED} \
     VT_MPI_GUARD_ENABLED=${VT_MPI_GUARD_ENABLED} \
+    VT_FCONTEXT_ENABLED=${VT_FCONTEXT_ENABLED} \
+    VT_USE_OPENMP=${VT_USE_OPENMP} \
+    VT_USE_STD_THREAD=${VT_USE_STD_THREAD} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
 RUN /vt/ci/build_cpp.sh /vt /build

@@ -74,7 +74,8 @@ void BaseLB::startLBHandler(
   computeStatistics();
 }
 
-BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) const {
+/*static*/
+BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) {
   // Convert `load` in seconds to milliseconds, typically for binning purposes
   return load * 1000;
 }

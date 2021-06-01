@@ -93,12 +93,22 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
     if (phase % ArgType::vt_lb_interval == 1 || (
       ArgType::vt_lb_interval == 1 && phase != 0
     )) {
+      bool name_match = false;
       for (auto&& elm : lb_names_) {
         if (elm.second == ArgType::vt_lb_name) {
           the_lb = elm.first;
+          name_match = true;
           break;
         }
       }
+      vtAbortIf(
+        !name_match,
+        fmt::format(
+          "LB Name \"{}\" requested does not exist or was not enabled at "
+          "compile time",
+          ArgType::vt_lb_name
+        )
+      );
     }
   }
 
@@ -227,6 +237,7 @@ void LBManager::releaseNow(PhaseType phase) {
     );
   }
 
+  balance::ProcStats::outputStatsForPhase(phase);
   balance::ProcStats::startIterCleanup();
   balance::ProcStats::clearStats();
 

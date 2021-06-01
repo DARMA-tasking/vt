@@ -115,6 +115,7 @@ static AtomicType<int> atomic_test_val = {0};
 static AtomicType<int> atomic_num = {0};
 static std::vector<bool> count(num_workers);
 
+#if vt_check_enabled(openmp) or vt_check_enabled(stdthread)
 static void testAtomicMulti() {
   auto val = atomic_test_val.fetch_add(1);
   //fmt::print("val={}\n", val);
@@ -129,10 +130,12 @@ static void testAtomicMulti() {
     EXPECT_EQ(val2, 0);
   }
 }
+#endif /* vt_check_enabled(openmp) or vt_check_enabled(stdthread) */
 
 static AtomicType<int> atomic_test_cas = {0};
 static AtomicType<int> atomic_test_slot = {0};
 
+#if vt_check_enabled(openmp) or vt_check_enabled(stdthread)
 static void testAtomicMultiCAS() {
   int expected = atomic_test_slot.fetch_add(1);
   int desired = expected + 1;
@@ -146,6 +149,7 @@ static void testAtomicMultiCAS() {
 
   //fmt::print("finished: expected={}, desired={}\n", expected, desired);
 }
+#endif /* vt_check_enabled(openmp) or vt_check_enabled(stdthread) */
 
 TEST_F(TestAtomic, basic_atomic_fetch_add_multi_thd) {
   count.resize(num_workers);

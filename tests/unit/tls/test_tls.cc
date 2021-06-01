@@ -164,6 +164,20 @@ TEST_F(TestTLS, basic_tls_init_static_single_thd) {
   }
 }
 
+// Test TLS: w/o initializer, single thread, class static variable
+struct TestClsMultiStatic {
+  DeclareClassInsideTLS(TestClsMultiStatic, int, test_noinit_class_multi_thd)
+};
+DeclareClassOutsideTLS(TestClsMultiStatic, int, test_noinit_class_multi_thd)
+
+// Test TLS: winitializer, single thread, class static variable
+struct TestClsMultiInitStatic {
+  DeclareClassInsideInitTLS(TestClsMultiInitStatic, int, test_init_class_multi_thd, init_val)
+};
+DeclareClassOutsideInitTLS(TestClsMultiInitStatic, int, test_init_class_multi_thd, init_val)
+
+#if vt_check_enabled(openmp) or vt_check_enabled(stdthread)
+
 static constexpr WorkerCountType const num_workers = 8;
 
 // Test TLS: w/o initializer, multi thread, global variable
@@ -177,18 +191,6 @@ DeclareStaticTLS(int, test_noinit_static_multi_thd)
 
 // Test TLS: w/initializer, multi thread, static global variable
 DeclareStaticInitTLS(int, test_init_static_multi_thd, init_val)
-
-// Test TLS: w/o initializer, single thread, class static variable
-struct TestClsMultiStatic {
-  DeclareClassInsideTLS(TestClsMultiStatic, int, test_noinit_class_multi_thd)
-};
-DeclareClassOutsideTLS(TestClsMultiStatic, int, test_noinit_class_multi_thd)
-
-// Test TLS: winitializer, single thread, class static variable
-struct TestClsMultiInitStatic {
-  DeclareClassInsideInitTLS(TestClsMultiInitStatic, int, test_init_class_multi_thd, init_val)
-};
-DeclareClassOutsideInitTLS(TestClsMultiInitStatic, int, test_init_class_multi_thd, init_val)
 
 static void testTLSMulti(
   bool const is_static, bool const is_init, bool const is_class = false
@@ -239,6 +241,7 @@ static void testTLSMulti(
     }
   }
 }
+#endif /* vt_check_enabled(openmp) or vt_check_enabled(stdthread) */
 
 #if backend_check_enabled(openmp)
 

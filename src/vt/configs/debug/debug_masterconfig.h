@@ -108,4 +108,9 @@ using VTPrintConfig = Configuration<
 #define backend_no_threading                                             \
   !backend_check_enabled(openmp) && !backend_check_enabled(stdthread)
 
+#define vt_threading_enabled                                             \
+  (backend_check_enabled(openmp)                                              \
+    or backend_check_enabled(stdthread)                                       \
+    or backend_check_enabled(fcontext))
+
 #endif /*INCLUDED_VT_CONFIGS_DEBUG_DEBUG_MASTERCONFIG_H*/

@@ -58,14 +58,6 @@ CollectionManager::CollectionManager() {
 /*virtual*/ CollectionManager::~CollectionManager() {
   cleanupAll<>();
 
-  // Statistics output when LB is enabled and appropriate flag is enabled
-#if backend_check_enabled(lblite)
-  if (ArgType::vt_lb_stats) {
-    balance::ProcStats::outputStatsFile();
-    balance::ProcStats::clearStats();
-  }
-#endif
-
   // Destroy the LBManager
   balance::LBManager::destroy();
 }
