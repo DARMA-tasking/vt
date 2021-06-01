@@ -46,6 +46,7 @@
 
 #include <vt/collective/collective_ops.h>
 #include <vt/scheduler/scheduler.h>
+#include <vt/phase/phase_manager.h>
 #include <vt/utils/memory/memory_usage.h>
 
 #include <numeric>
@@ -129,28 +130,34 @@ void PerfTestHarness::DumpResults() const {
   if (my_node_ == 0) {
     std::string file_content = "name,node,mean\n";
 
-    for (auto const& test_run : combined_timings_) {
+    for (auto& test_run : combined_timings_) {
       auto const name = test_run.first;
 
-      for (auto const& per_node_result : test_run.second) {
+      for (auto& per_node_result : test_run.second) {
         auto const node = per_node_result.first;
-        auto const& timings = per_node_result.second;
+        auto& timings = per_node_result.second;
 
         auto const num_timings = timings.size();
         auto const mean =
           std::accumulate(timings.begin(), timings.end(), 0.0) / num_timings;
+        std::sort(timings.begin(), timings.end());
+        auto const& min = timings.front();
+        auto const& max = timings.back();
 
         file_content.append(fmt::format("{},{},{:.3f}\n", name, node, mean));
 
         fmt::print(
-          "{} Timings for {} (mean value: {})\n", debug::proc(node),
-          debug::reg(name), debug::emph(fmt::format("{:.3f}ms", mean)));
+          "{} Timings for {} (mean value: {} min: {} max: {})\n",
+          debug::proc(node), debug::reg(name),
+          debug::emph(fmt::format("{:.3f}ms", mean)),
+          debug::emph(fmt::format("{:.3f}ms", min)),
+          debug::emph(fmt::format("{:.3f}ms", max)));
 
-        for (uint32_t run_num = 0; run_num < num_timings; ++run_num) {
-          fmt::print(
-            "{} Run {} -> {}\n", debug::proc(node), run_num,
-            debug::emph(fmt::format("{:.3f}ms", timings[run_num])));
-        }
+        // for (uint32_t run_num = 0; run_num < num_timings; ++run_num) {
+        //   fmt::print(
+        //     "{} Run {} -> {}\n", debug::proc(node), run_num,
+        //     debug::emph(fmt::format("{:.3f}ms", timings[run_num])));
+        // }
       }
     }
 
@@ -183,11 +190,27 @@ void PerfTestHarness::RecvTestResult(TestMsg* msg) {
 }
 
 void PerfTestHarness::SpinScheduler() {
-  vt::theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
+  theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
+}
+
+void PerfTestHarness::BenchmarkPhase(std::string const& prefix)
+{
+  auto GetName = [prefix] {
+    return fmt::format("{}{}", prefix, thePhase()->getCurrentPhase());
+  };
+
+  thePhase()->registerHookCollective(phase::PhaseHook::Start, [GetName] {
+    timers_[GetName()].Start();
+  });
+
+  thePhase()->registerHookCollective(phase::PhaseHook::End, [GetName] {
+    auto const name = GetName();
+    AddResult({name, timers_[name].Stop()});
+  });
 }
 
 void PerfTestHarness::GetMemoryUsage() {
-  auto const mem_usage = vt::theMemUsage()->getUsageAll();
+  auto const mem_usage = theMemUsage()->getUsageAll();
   fmt::print("Node:{} {} memory usage {}\n", my_node_, "name", mem_usage);
 }
 

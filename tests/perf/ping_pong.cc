@@ -124,6 +124,8 @@ void MyTest::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
 }
 
 VT_PERF_TEST(MyTest, test_ping_pong) {
+  timers_[fmt::format("{}", min_bytes)].Start();
+
   if (my_node_ == 0) {
     auto m = makeMessage<PingMsg<min_bytes>>();
     theMsg()->sendMsg<PingMsg<min_bytes>, pingPong<min_bytes>>(pong_node, m);

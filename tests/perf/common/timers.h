@@ -95,7 +95,7 @@ struct StopWatch {
   }
 
   private:
-  TimePoint cur_time_;
+  TimePoint cur_time_ = std::chrono::steady_clock::now();
 };
 
 }}}} // namespace vt::tests::perf::common

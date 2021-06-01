@@ -401,6 +401,8 @@ bool isWorkDone( vt::objgroup::proxy::Proxy<NodeObj> const& proxy){
 struct JacobiTest : vt::tests::perf::common::PerfTestHarness {};
 
 VT_PERF_TEST(JacobiTest, jacobi2d_vt) {
+  BenchmarkPhase();
+
   size_t numX_objs = default_num_objs;
   size_t numY_objs = default_num_objs;
   size_t maxIter = 100;
@@ -426,17 +428,10 @@ VT_PERF_TEST(JacobiTest, jacobi2d_vt) {
     });
 
   while (!isWorkDone(grp_proxy)) {
-    auto const& name = fmt::format("phase_{}", vt::thePhase()->getCurrentPhase());
-    auto& timer = timers_[name];
-
-    timer.Start();
-
     vt::runInEpochCollective([col_proxy] {
       col_proxy.broadcastCollective<
         LinearPb2DJacobi::BlankMsg, &LinearPb2DJacobi::doIter>();
     });
-
-    AddResult({name, timer.Stop()});
 
     vt::thePhase()->nextPhaseCollective();
   }

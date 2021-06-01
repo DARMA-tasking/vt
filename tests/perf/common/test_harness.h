@@ -50,6 +50,8 @@
 
 #include <vt/configs/types/types_type.h>
 #include <unordered_map>
+#include <map>
+#include <string>
 #include <vector>
 
 namespace vt { namespace tests { namespace perf { namespace common {
@@ -57,9 +59,9 @@ namespace vt { namespace tests { namespace perf { namespace common {
 struct TestMsg;
 
 struct PerfTestHarness {
-  using TestResults = std::unordered_map<std::string, std::vector<double>>;
-  using CombinedResults = std::unordered_map<
-    std::string, std::unordered_map<NodeType, std::vector<double>>>;
+  using TestResults = std::map<std::string, std::vector<double>>;
+  using CombinedResults =
+    std::map<std::string, std::map<NodeType, std::vector<double>>>;
   using TestResult = std::pair<std::string, double>;
 
   virtual ~PerfTestHarness() = default;
@@ -105,7 +107,14 @@ struct PerfTestHarness {
    */
   static void SpinScheduler();
 
-  void GetMemoryUsage();
+  /**
+   * \brief Helper function used for phase-based tests.
+   * This will register for Begin/End Phase notifications from \c PhaseManager
+   * and uses \c StopWatch to measure time
+   */
+  static void BenchmarkPhase(std::string const& prefix = "phase");
+
+  static void GetMemoryUsage();
 
   protected:
   static NodeType my_node_;
