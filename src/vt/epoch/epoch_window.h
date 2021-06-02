@@ -156,7 +156,7 @@ private:
   /// archetype. Used to continuously allocate epochs far apart from previous
   /// allocated epochs instead of consulting \c terminated_epoch_ to select the
   /// next one.
-  std::unique_ptr<adt::RangedCounter<EpochType>> next_epoch_;
+  std::unique_ptr<adt::RangedCounter<EpochType::ImplType>> next_epoch_;
 
   ///
   /// The total number of terminated epochs for this window.

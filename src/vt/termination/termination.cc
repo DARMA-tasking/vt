@@ -1001,7 +1001,7 @@ void TerminationDetector::initializeRootedWaveEpoch(
     terse, term,
     "makeEpochRootedWave: root={}, epoch={:x}, successor={:x},"
     "label={}\n",
-    theContext()->getNode(), epoch, successor, label
+    theContext()->getNode(), epoch, (EpochType)successor, label
   );
 
   /*
@@ -1050,7 +1050,7 @@ void TerminationDetector::initializeRootedDSEpoch(
   vt_debug_print(
     terse, term,
     "makeEpochRootedDS: successor={:x}, epoch={:x}, label={}\n",
-    successor, epoch, label
+    (EpochType)successor, epoch, label
   );
 }
 
@@ -1072,7 +1072,7 @@ EpochType TerminationDetector::makeEpochRooted(
   vt_debug_print(
     normal, term,
     "makeEpochRooted: root={}, use_ds={}, successor={:x}, label={}\n",
-    theContext()->getNode(), use_ds, successor, label
+    theContext()->getNode(), use_ds, (EpochType)successor, label
   );
 
   bool const force_use_ds = vt::theConfig()->vt_term_rooted_use_ds;
@@ -1143,7 +1143,7 @@ void TerminationDetector::initializeCollectiveEpoch(
   vt_debug_print(
     terse, term,
     "makeEpochCollective: epoch={:x}, successor={:x}, label={}\n",
-    epoch, successor, label
+    epoch, (EpochType)successor, label
   );
 
   produce(epoch,1);
