@@ -82,6 +82,15 @@ struct EpochType : Strong<
   explicit constexpr EpochType(detail::EpochImplType in)
     : BaseType(in)
   { }
+
+  /**
+   * \brief Constructor from base class for operator up-conversion
+   *
+   * \param[in] in the underlying strong value
+   */
+  explicit EpochType(BaseType const& in)
+    : BaseType(in)
+  { }
 };
 
 }} /* end namespace vt::epoch */
