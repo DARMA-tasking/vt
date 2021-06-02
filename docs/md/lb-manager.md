@@ -56,7 +56,7 @@ To print LB specification during startup, use `--vt_lb_show_spec` command line f
 | RotateLB       | Testing                 | Rotate objects in a ring                       | `vt::vrt::collection::lb::RotateLB` |
 | RandomLB       | Testing                 | Randomly migrate object with seed              | `vt::vrt::collection::lb::RandomLB` |
 | GreedyLB       | Centralized             | Gather to central node apply min/max heap      | `vt::vrt::collection::lb::GreedyLB` |
-| TemperedLB     | Distributed             | Gossip-based protocol for fully distributed LB | `vt::vrt::collection::lb::TemperedLB` |
+| TemperedLB     | Distributed             | Inspired by epidemic algorithms                | `vt::vrt::collection::lb::TemperedLB` |
 | HierarchicalLB | Hierarchical            | Build tree to move objects nodes               | `vt::vrt::collection::lb::HierarchicalLB` |
 | ZoltanLB       | Hyper-graph Partitioner | Run Zoltan in hyper-graph mode to LB           | `vt::vrt::collection::lb::ZoltanLB` |
 | StatsMapLB     | User-specified          | Read file to determine mapping                 | `vt::vrt::collection::lb::StatsMapLB` |
