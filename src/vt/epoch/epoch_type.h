@@ -45,7 +45,6 @@
 #if !defined INCLUDED_VT_EPOCH_EPOCH_TYPE_H
 #define INCLUDED_VT_EPOCH_EPOCH_TYPE_H
 
-#include "vt/configs/types/types_sentinels.h"
 #include "vt/utils/strong/strong_type.h"
 #include "vt/epoch/epoch_impl_type.h"
 

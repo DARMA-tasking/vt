@@ -45,8 +45,6 @@
 #if !defined INCLUDED_VT_EPOCH_EPOCH_IMPL_TYPE_H
 #define INCLUDED_VT_EPOCH_EPOCH_IMPL_TYPE_H
 
-#include "vt/config.h"
-
 namespace vt { namespace epoch { namespace detail {
 
 /// Epoch tag type for the strong type
@@ -54,6 +52,12 @@ struct EpochImplTag {};
 
 /// Bare type used to hold an epoch for termination detection
 using EpochImplType = uint64_t;
+
+}}} /* end namespace vt::epoch::detail */
+
+#include "vt/configs/types/types_sentinels.h"
+
+namespace vt { namespace epoch { namespace detail {
 
 /// The bare sentinel value for epochs
 static constexpr EpochImplType const no_epoch_impl = u64empty;
