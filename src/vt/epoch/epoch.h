@@ -161,9 +161,6 @@ enum eEpochRoot {
   rEpochIsRooted   = eEpochRoot::rEpochCategory   + epoch_category_num_bits
 };
 
-/// The first epoch sequence number
-static constexpr EpochType const first_epoch = 1;
-
 /// The default epoch node used for non-rooted epochs
 static constexpr NodeType const default_epoch_node = uninitialized_destination;
 

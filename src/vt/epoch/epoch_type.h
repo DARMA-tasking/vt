@@ -2,10 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_common.h
+//                                 epoch_type.h
+//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,29 +42,71 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_TERM_COMMON_H
-#define INCLUDED_VT_TERMINATION_TERM_COMMON_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_TYPE_H
+#define INCLUDED_VT_EPOCH_EPOCH_TYPE_H
 
-#include "vt/config.h"
-#include "vt/termination/termination.fwd.h"
-#include "vt/epoch/epoch.h"
+#include "vt/configs/types/types_sentinels.h"
+#include "vt/utils/strong/strong_type.h"
+#include "vt/epoch/epoch_impl_type.h"
 
-namespace vt { namespace term {
+namespace vt { namespace epoch {
 
-// Universally covers all messages regardless of associated epoch
-static constexpr EpochType const any_epoch_sentinel = EpochType{
-  static_cast<EpochType::ImplType>(-1000)
+struct EpochType : Strong<
+  detail::EpochImplType, detail::no_epoch_impl, detail::EpochImplTag
+> {
+  /// Base class for strong type
+  using BaseType = Strong<
+    detail::EpochImplType, detail::no_epoch_impl, detail::EpochImplTag
+  >;
+
+  /// \c EpochType is always byte-copyable
+  using isByteCopyable = std::true_type;
+
+  /// The underlying type for an epoch
+  using ImplType = detail::EpochImplType;
+
+  EpochType() = default;
+
+  /**
+   * \brief Nullptr constructor default constructs strong type to set initial
+   * sentinel value
+   *
+   * \param[in] nullptr_t nullptr
+   */
+  constexpr EpochType(std::nullptr_t) {}
+
+  /**
+   * \brief Construct with a particular underlying value
+   *
+   * \param[in] in the value
+   */
+  explicit constexpr EpochType(detail::EpochImplType in)
+    : BaseType(in)
+  { }
 };
 
-using TermCounterType = int64_t;
-using TermWaveType = int64_t;
+}} /* end namespace vt::epoch */
 
-}} /* end namespace vt::term */
+namespace std {
+
+/// Hash function for \c EpochType
+template <>
+struct hash<vt::epoch::EpochType> {
+  size_t operator()(vt::epoch::EpochType const& in) const {
+    return std::hash<vt::epoch::EpochType::ImplType>()(in.get());
+  }
+};
+
+} /* end namespace std */
 
 namespace vt {
 
-extern term::TerminationDetector* theTerm();
+/// The strong epoch type for holding a epoch for termination detection
+using EpochType = epoch::EpochType;
 
-} // end namespace vt
+/// The sentinel value for a empty epoch
+static constexpr EpochType const no_epoch = nullptr;
 
-#endif /*INCLUDED_VT_TERMINATION_TERM_COMMON_H*/
+} /* end namespace vt */
+
+#endif /*INCLUDED_VT_EPOCH_EPOCH_TYPE_H*/

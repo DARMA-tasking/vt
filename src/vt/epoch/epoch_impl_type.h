@@ -2,10 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                term_common.h
+//                              epoch_impl_type.h
+//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,29 +42,22 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TERMINATION_TERM_COMMON_H
-#define INCLUDED_VT_TERMINATION_TERM_COMMON_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_IMPL_TYPE_H
+#define INCLUDED_VT_EPOCH_EPOCH_IMPL_TYPE_H
 
 #include "vt/config.h"
-#include "vt/termination/termination.fwd.h"
-#include "vt/epoch/epoch.h"
 
-namespace vt { namespace term {
+namespace vt { namespace epoch { namespace detail {
 
-// Universally covers all messages regardless of associated epoch
-static constexpr EpochType const any_epoch_sentinel = EpochType{
-  static_cast<EpochType::ImplType>(-1000)
-};
+/// Epoch tag type for the strong type
+struct EpochImplTag {};
 
-using TermCounterType = int64_t;
-using TermWaveType = int64_t;
+/// Bare type used to hold an epoch for termination detection
+using EpochImplType = uint64_t;
 
-}} /* end namespace vt::term */
+/// The bare sentinel value for epochs
+static constexpr EpochImplType const no_epoch_impl = u64empty;
 
-namespace vt {
+}}} /* end namespace vt::epoch::detail */
 
-extern term::TerminationDetector* theTerm();
-
-} // end namespace vt
-
-#endif /*INCLUDED_VT_TERMINATION_TERM_COMMON_H*/
+#endif /*INCLUDED_VT_EPOCH_EPOCH_IMPL_TYPE_H*/

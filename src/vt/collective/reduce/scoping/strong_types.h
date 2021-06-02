@@ -72,7 +72,7 @@ using StrongVrtProxy = Strong<VirtualProxyType,  no_vrt_proxy, tags::VrtProxyTag
 using StrongGroup    = Strong<GroupType,         no_group,     tags::GroupTag>;
 using StrongCom      = Strong<ComponentIDType,   u32empty,     tags::ComponentTag>;
 using StrongUserID   = Strong<UserIDType,        u64empty,     tags::UserIDTag>;
-using StrongEpoch    = Strong<EpochType,         no_epoch,     tags::EpochTag>;
+using StrongEpoch    = EpochType;
 
 /**
  * \struct TagPair

@@ -81,12 +81,12 @@ public:
   /**
    * \brief Get the first terminated epoch in the window
    */
-  EpochType getFirst() const { return terminated_epochs_.lower(); }
+  EpochType getFirst() const { return EpochType{terminated_epochs_.lower()}; }
 
   /**
    * \brief Get the last terminated epoch in the window
    */
-  EpochType getLast()  const { return terminated_epochs_.upper(); }
+  EpochType getLast()  const { return EpochType{terminated_epochs_.upper()}; }
 
   /**
    * \brief Check if an epoch is terminated or not.
@@ -150,7 +150,7 @@ private:
   EpochType archetype_epoch_ = no_epoch;
 
   /// The set of epochs terminated
-  vt::IntegralSet<EpochType> terminated_epochs_;
+  vt::IntegralSet<EpochType::ImplType> terminated_epochs_;
 
   /// The next epoch to potentially allocate within the proper range for the
   /// archetype. Used to continuously allocate epochs far apart from previous

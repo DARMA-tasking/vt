@@ -52,9 +52,9 @@ namespace vt {
 template <typename Env>
 inline EpochType envelopeGetEpoch(Env const& env) {
   if (envelopeIsEpochType(env) and envelopeIsTagType(env)) {
-    return reinterpret_cast<EpochTagEnvelope const*>(&env)->epoch;
+    return EpochType{reinterpret_cast<EpochTagEnvelope const*>(&env)->epoch};
   } else if (envelopeIsEpochType(env)) {
-    return reinterpret_cast<EpochEnvelope const*>(&env)->epoch;
+    return EpochType{reinterpret_cast<EpochEnvelope const*>(&env)->epoch};
   } else {
     vtAssert(0, "Envelope must be able to hold an epoch");
     return no_epoch;
@@ -64,9 +64,9 @@ inline EpochType envelopeGetEpoch(Env const& env) {
 template <typename Env>
 inline void envelopeSetEpoch(Env& env, EpochType const& epoch) {
   if (envelopeIsEpochType(env) and envelopeIsTagType(env)) {
-    reinterpret_cast<EpochTagEnvelope*>(&env)->epoch = epoch;
+    reinterpret_cast<EpochTagEnvelope*>(&env)->epoch = *epoch;
   } else if (envelopeIsEpochType(env)) {
-    reinterpret_cast<EpochEnvelope*>(&env)->epoch = epoch;
+    reinterpret_cast<EpochEnvelope*>(&env)->epoch = *epoch;
   } else {
     vtAssert(0, "Envelope must be able to hold an epoch");
   }

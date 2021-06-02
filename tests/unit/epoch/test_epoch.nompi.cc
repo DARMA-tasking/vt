@@ -57,7 +57,7 @@ struct TestEpochParam : TestHarnessParam<::vt::EpochType> { };
 struct TestEpochBits  : TestHarness                       { };
 
 TEST_F(TestEpoch, basic_test_first_epoch_collective_1) {
-  auto const epoch        = epoch::first_epoch;
+  auto const epoch        = EpochType{1};
   auto const is_rooted    = epoch::EpochManip::isRooted(epoch);
   auto const get_seq      = epoch::EpochManip::seq(epoch);
 

@@ -66,8 +66,8 @@ namespace vt { namespace messaging {
 struct EpochActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  ActiveEnvelope env;               /**< The basic envelope */
-  EpochType epoch : epoch_num_bits; /**< The epoch */
+  ActiveEnvelope env;                                  /**< Basic envelope */
+  epoch::detail::EpochImplType epoch : epoch_num_bits; /**< Epoch bits */
 };
 
 /**
@@ -78,8 +78,8 @@ struct EpochActiveEnvelope {
 struct TagActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  ActiveEnvelope env;               /**< The basic envelope */
-  TagType tag     : tag_num_bits;   /**< The tag */
+  ActiveEnvelope env;               /**< Basic envelope */
+  TagType tag     : tag_num_bits;   /**< Tag bits */
 };
 
 /**
@@ -91,9 +91,9 @@ struct TagActiveEnvelope {
 struct EpochTagActiveEnvelope {
   using isByteCopyable = std::true_type;
 
-  ActiveEnvelope env;               /**< The basic envelope */
-  EpochType epoch : epoch_num_bits; /**< The epoch */
-  TagType tag     : tag_num_bits;   /**< The tag */
+  ActiveEnvelope env;                                  /**< Basic envelope */
+  epoch::detail::EpochImplType epoch : epoch_num_bits; /**< Epoch bits */
+  TagType tag                        : tag_num_bits;   /**< Tag bits */
 };
 
 }} //end namespace vt::messaging

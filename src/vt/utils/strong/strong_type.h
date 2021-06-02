@@ -67,14 +67,14 @@ struct Strong {
   /**
    * \brief Default construct with static initial value
    */
-  Strong() = default;
+  constexpr Strong() = default;
 
   /**
    * \brief Construct with a explicit initial value
    *
    * \param[in] v the value
    */
-  explicit Strong(T v) : v_(v) { }
+  explicit constexpr Strong(T v) : v_(v) { }
 
   /**
    * \brief Equal operator
