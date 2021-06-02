@@ -93,6 +93,16 @@ struct EpochType : Strong<
   { }
 };
 
+/**
+ * \internal \brief Make an epoch that is zero, helper function for system epoch
+ * manipulation
+ *
+ * \return zero'ed epoch
+ */
+constexpr inline EpochType makeEpochZero() {
+  return EpochType{static_cast<EpochType::ImplType>(0ull)};
+}
+
 }} /* end namespace vt::epoch */
 
 namespace std {
