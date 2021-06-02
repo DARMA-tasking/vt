@@ -110,7 +110,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
   out << ""
     "0 NoLB\n"
     "1 HierarchicalLB min=0.9 max=1.1 auto=false\n"
-    "%10 GossipLB c=1 k=5 f=2 i=10\n"
+    "%10 TemperedLB c=1 k=5 f=2 i=10\n"
     "%5 GreedyLB min=1.0\n"
     "120 HierarchicalLB test_xyz=3\n";
   out.close();
@@ -151,7 +151,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
     case 100:
     case 110:
       EXPECT_TRUE(entry != nullptr);
-      EXPECT_TRUE(entry->getLB() == SpecLBType::GossipLB);
+      EXPECT_TRUE(entry->getLB() == SpecLBType::TemperedLB);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("c", 0) == 1);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("k", 0) == 5);
       EXPECT_TRUE(entry->getOrDefault<int32_t>("f", 0) == 2);
@@ -192,7 +192,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
     "vt: \tRun `HierarchicalLB` on phase 120 with arguments `test_xyz=3`\n"
     "vt: \tMod (%) specification lines:\n"
     "vt: \tRun `GreedyLB` every 5 phases with arguments `min=1.0` excluding phases 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120\n"
-    "vt: \tRun `GossipLB` every 10 phases with arguments `c=1 f=2 i=10 k=5` excluding phases 120\n";
+    "vt: \tRun `TemperedLB` every 10 phases with arguments `c=1 f=2 i=10 k=5` excluding phases 120\n";
   EXPECT_EQ(Spec::toString(), expected_spec);
 }
 

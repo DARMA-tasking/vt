@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 gossiplb.cc
+//                               temperedlb.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,10 +44,10 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
-#include "vt/vrt/collection/balance/gossiplb/gossiplb.h"
-#include "vt/vrt/collection/balance/gossiplb/gossip_msg.h"
-#include "vt/vrt/collection/balance/gossiplb/gossip_constants.h"
-#include "vt/vrt/collection/balance/gossiplb/criterion.h"
+#include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
+#include "vt/vrt/collection/balance/temperedlb/tempered_msgs.h"
+#include "vt/vrt/collection/balance/temperedlb/tempered_constants.h"
+#include "vt/vrt/collection/balance/temperedlb/criterion.h"
 #include "vt/vrt/collection/balance/lb_args_enum_converter.h"
 #include "vt/context/context.h"
 
@@ -60,22 +60,22 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-void GossipLB::init(objgroup::proxy::Proxy<GossipLB> in_proxy) {
+void TemperedLB::init(objgroup::proxy::Proxy<TemperedLB> in_proxy) {
   proxy_ = in_proxy;
   auto const this_node = theContext()->getNode();
   gen_propagate_.seed(this_node + 12345);
   gen_sample_.seed(this_node + 54321);
 }
 
-bool GossipLB::isUnderloaded(LoadType load) const {
-  return load < target_max_load_ * gossip_threshold;
+bool TemperedLB::isUnderloaded(LoadType load) const {
+  return load < target_max_load_ * temperedlb_load_threshold;
 }
 
-bool GossipLB::isOverloaded(LoadType load) const {
-  return load > target_max_load_ * gossip_threshold;
+bool TemperedLB::isOverloaded(LoadType load) const {
+  return load > target_max_load_ * temperedlb_load_threshold;
 }
 
-void GossipLB::inputParams(balance::SpecEntry* spec) {
+void TemperedLB::inputParams(balance::SpecEntry* spec) {
   std::vector<std::string> allowed{
     "knowledge", "fanout", "rounds", "iters", "criterion", "trials",
     "deterministic", "inform", "ordering", "cmf", "rollback", "targetpole",
@@ -101,25 +101,25 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   vtAbortIf(
     specified_knowledge && knowledge_ == KnowledgeEnum::Log &&
     specified_fanout && specified_rounds,
-    "GossipLB: You must leave fanout and/or rounds unspecified when "
+    "TemperedLB: You must leave fanout and/or rounds unspecified when "
     "knowledge=Log"
   );
   vtAbortIf(
     !specified_knowledge && knowledge_ == KnowledgeEnum::Log &&
     specified_fanout && specified_rounds,
-    "GossipLB: You must use knowledge=UserDefined if you want to explicitly "
+    "TemperedLB: You must use knowledge=UserDefined if you want to explicitly "
     "set both fanout and rounds"
   );
   vtAbortIf(
     knowledge_ == KnowledgeEnum::Complete &&
     (specified_fanout || specified_rounds),
-    "GossipLB: You must leave fanout and rounds unspecified when "
+    "TemperedLB: You must leave fanout and rounds unspecified when "
     "knowledge=Complete"
   );
   vtAbortIf(
     knowledge_ == KnowledgeEnum::UserDefined &&
     (!specified_fanout || !specified_rounds),
-    "GossipLB: You must explicitly set both fanout and rounds when "
+    "TemperedLB: You must explicitly set both fanout and rounds when "
     "knowledge=UserDefined"
   );
 
@@ -154,14 +154,14 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
 
   if (f_ < 1) {
     auto s = fmt::format(
-      "GossipLB: fanout={} is invalid; fanout must be positive",
+      "TemperedLB: fanout={} is invalid; fanout must be positive",
       f_
     );
     vtAbort(s);
   }
   if (k_max_ < 1) {
     auto s = fmt::format(
-      "GossipLB: rounds={} is invalid; rounds must be positive",
+      "TemperedLB: rounds={} is invalid; rounds must be positive",
       k_max_
     );
     vtAbort(s);
@@ -224,8 +224,8 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
 
   if (theContext()->getNode() == 0) {
     vt_debug_print(
-      terse, gossiplb,
-      "GossipLB::inputParams: using knowledge={}, fanout={}, rounds={}, "
+      terse, temperedlb,
+      "TemperedLB::inputParams: using knowledge={}, fanout={}, rounds={}, "
       "iters={}, criterion={}, trials={}, deterministic={}, inform={}, "
       "ordering={}, cmf={}, rollback={}, targetpole={}\n",
       knowledge_converter_.getString(knowledge_), f_, k_max_, num_iters_,
@@ -237,7 +237,7 @@ void GossipLB::inputParams(balance::SpecEntry* spec) {
   }
 }
 
-void GossipLB::runLB() {
+void TemperedLB::runLB() {
   bool should_lb = false;
 
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
@@ -256,13 +256,13 @@ void GossipLB::runLB() {
   }
 
   if (avg > 0.0000000001) {
-    should_lb = max > gossip_tolerance * target_max_load_;
+    should_lb = max > run_temperedlb_tolerance * target_max_load_;
   }
 
   if (theContext()->getNode() == 0) {
     vt_debug_print(
-      terse, gossiplb,
-      "GossipLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
+      terse, temperedlb,
+      "TemperedLB::runLB: avg={}, max={}, pole={}, imb={}, load={}, should_lb={}\n",
       avg, max, pole, imb, load, should_lb
     );
   }
@@ -272,7 +272,7 @@ void GossipLB::runLB() {
   }
 }
 
-void GossipLB::doLBStages(TimeType start_imb) {
+void TemperedLB::doLBStages(TimeType start_imb) {
   decltype(this->cur_objs_) best_objs;
   LoadType best_load = 0;
   TimeType best_imb = start_imb + 10;
@@ -293,8 +293,8 @@ void GossipLB::doLBStages(TimeType start_imb) {
       bool first_iter = iter_ == 0;
 
       vt_debug_print(
-        normal, gossiplb,
-        "GossipLB::doLBStages: (before) running trial={}, iter={}, "
+        normal, temperedlb,
+        "TemperedLB::doLBStages: (before) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
         trial_, iter_, num_iters_, this_load, this_new_load_
       );
@@ -327,23 +327,23 @@ void GossipLB::doLBStages(TimeType start_imb) {
         informAsync();
         break;
       default:
-        vtAbort("GossipLB:: Unsupported inform type");
+        vtAbort("TemperedLB:: Unsupported inform type");
       }
 
       decide();
 
       vt_debug_print(
-        verbose, gossiplb,
-        "GossipLB::doLBStages: (after) running trial={}, iter={}, "
+        verbose, temperedlb,
+        "TemperedLB::doLBStages: (after) running trial={}, iter={}, "
         "num_iters={}, load={}, new_load={}\n",
         trial_, iter_, num_iters_, this_load, this_new_load_
       );
 
-      if (rollback_ || theConfig()->vt_debug_gossiplb || (iter_ == num_iters_ - 1)) {
-        runInEpochCollective("GossipLB::doLBStages -> P_l reduce", [=] {
+      if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
+        runInEpochCollective("TemperedLB::doLBStages -> P_l reduce", [=] {
           using ReduceOp = collective::PlusOp<balance::LoadData>;
           auto cb = vt::theCB()->makeBcast<
-            GossipLB, StatsMsgType, &GossipLB::gossipStatsHandler
+            TemperedLB, StatsMsgType, &TemperedLB::loadStatsHandler
           >(this->proxy_);
           // Perform the reduction for P_l -> processor load only
           auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_new_load_);
@@ -367,8 +367,8 @@ void GossipLB::doLBStages(TimeType start_imb) {
 
     if (this_node == 0) {
       vt_print(
-        gossiplb,
-        "GossipLB::doLBStages: trial={} {} imb={:0.4f}\n",
+        temperedlb,
+        "TemperedLB::doLBStages: trial={} {} imb={:0.4f}\n",
         trial_, rollback_ ? "best" : "final", best_imb_this_trial
       );
     }
@@ -386,15 +386,15 @@ void GossipLB::doLBStages(TimeType start_imb) {
 
     if (this_node == 0) {
       vt_print(
-        gossiplb,
-        "GossipLB::doLBStages: chose trial={} with imb={:0.4f}\n",
+        temperedlb,
+        "TemperedLB::doLBStages: chose trial={} with imb={:0.4f}\n",
         best_trial, new_imbalance_
       );
     }
   } else if (this_node == 0) {
     vt_print(
-      gossiplb,
-      "GossipLB::doLBStages: rejected all trials because they would increase imbalance\n"
+      temperedlb,
+      "TemperedLB::doLBStages: rejected all trials because they would increase imbalance\n"
     );
   }
 
@@ -403,15 +403,15 @@ void GossipLB::doLBStages(TimeType start_imb) {
   thunkMigrations();
 }
 
-void GossipLB::gossipStatsHandler(StatsMsgType* msg) {
+void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
   auto in = msg->getConstVal();
   new_imbalance_ = in.I();
 
   auto this_node = theContext()->getNode();
   if (this_node == 0) {
     vt_debug_print(
-      terse, gossiplb,
-      "GossipLB::gossipStatsHandler: trial={} iter={} max={:0.2f} min={:0.2f} "
+      terse, temperedlb,
+      "TemperedLB::loadStatsHandler: trial={} iter={} max={:0.2f} min={:0.2f} "
       "avg={:0.2f} pole={:0.2f} imb={:0.4f}\n",
       trial_, iter_, in.max(), in.min(), in.avg(),
       stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max) * 1000,
@@ -420,7 +420,7 @@ void GossipLB::gossipStatsHandler(StatsMsgType* msg) {
   }
 }
 
-void GossipLB::gossipRejectionStatsHandler(GossipRejectionMsgType* msg) {
+void TemperedLB::rejectionStatsHandler(RejectionMsgType* msg) {
   auto in = msg->getConstVal();
 
   auto n_rejected = in.n_rejected_;
@@ -431,20 +431,20 @@ void GossipLB::gossipRejectionStatsHandler(GossipRejectionMsgType* msg) {
   auto this_node = theContext()->getNode();
   if (this_node == 0) {
     vt_debug_print(
-      terse, gossiplb,
-      "GossipLB::gossipRejectionStatsHandler: n_transfers={} n_rejected={} "
+      terse, temperedlb,
+      "TemperedLB::rejectionStatsHandler: n_transfers={} n_rejected={} "
       "rejection_rate={:0.1f}%\n",
       n_transfers, n_rejected, rej
     );
   }
 }
 
-void GossipLB::informAsync() {
+void TemperedLB::informAsync() {
   propagated_k_.assign(k_max_, false);
 
   vt_debug_print(
-    normal, gossiplb,
-    "GossipLB::informAsync: starting inform phase: trial={}, iter={}, "
+    normal, temperedlb,
+    "TemperedLB::informAsync: starting inform phase: trial={}, iter={}, "
     "k_max={}, is_underloaded={}, is_overloaded={}, load={}\n",
     trial_, iter_, k_max_, is_underloaded_, is_overloaded_, this_new_load_
   );
@@ -458,13 +458,13 @@ void GossipLB::informAsync() {
 
   setup_done_ = false;
 
-  auto cb = theCB()->makeBcast<GossipLB, ReduceMsgType, &GossipLB::setupDone>(proxy_);
+  auto cb = theCB()->makeBcast<TemperedLB, ReduceMsgType, &TemperedLB::setupDone>(proxy_);
   auto msg = makeMessage<ReduceMsgType>();
   proxy_.reduce(msg.get(), cb);
 
   theSched()->runSchedulerWhile([this]{ return not setup_done_; });
 
-  auto propagate_epoch = theTerm()->makeEpochCollective("GossipLB: informAsync");
+  auto propagate_epoch = theTerm()->makeEpochCollective("TemperedLB: informAsync");
 
   // Underloaded start the round
   if (is_underloaded_) {
@@ -478,24 +478,24 @@ void GossipLB::informAsync() {
 
   if (is_overloaded_) {
     vt_debug_print(
-      terse, gossiplb,
-      "GossipLB::informAsync: trial={}, iter={}, known underloaded={}\n",
+      terse, temperedlb,
+      "TemperedLB::informAsync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
     );
   }
 
   vt_debug_print(
-    verbose, gossiplb,
-    "GossipLB::informAsync: finished inform phase: trial={}, iter={}, "
+    verbose, temperedlb,
+    "TemperedLB::informAsync: finished inform phase: trial={}, iter={}, "
     "k_max={}\n",
     trial_, iter_, k_max_
   );
 }
 
-void GossipLB::informSync() {
+void TemperedLB::informSync() {
   vt_debug_print(
-    normal, gossiplb,
-    "GossipLB::informSync: starting inform phase: trial={}, iter={}, "
+    normal, temperedlb,
+    "TemperedLB::informSync: starting inform phase: trial={}, iter={}, "
     "k_max={}, is_underloaded={}, is_overloaded={}, load={}\n",
     trial_, iter_, k_max_, is_underloaded_, is_overloaded_, this_new_load_
   );
@@ -514,7 +514,7 @@ void GossipLB::informSync() {
 
   setup_done_ = false;
 
-  auto cb = theCB()->makeBcast<GossipLB, ReduceMsgType, &GossipLB::setupDone>(proxy_);
+  auto cb = theCB()->makeBcast<TemperedLB, ReduceMsgType, &TemperedLB::setupDone>(proxy_);
   auto msg = makeMessage<ReduceMsgType>();
   proxy_.reduce(msg.get(), cb);
 
@@ -524,7 +524,7 @@ void GossipLB::informSync() {
     auto kbarr = theCollective()->newNamedCollectiveBarrier();
     theCollective()->barrier(nullptr, kbarr);
 
-    auto name = fmt::format("GossipLB: informSync k_cur={}", k_cur_);
+    auto name = fmt::format("TemperedLB: informSync k_cur={}", k_cur_);
     auto propagate_epoch = theTerm()->makeEpochCollective(name);
 
     // Underloaded start the first round; ranks that received on some round
@@ -545,28 +545,28 @@ void GossipLB::informSync() {
 
   if (is_overloaded_) {
     vt_debug_print(
-      terse, gossiplb,
-      "GossipLB::informSync: trial={}, iter={}, known underloaded={}\n",
+      terse, temperedlb,
+      "TemperedLB::informSync: trial={}, iter={}, known underloaded={}\n",
       trial_, iter_, underloaded_.size()
     );
   }
 
   vt_debug_print(
-    verbose, gossiplb,
-    "GossipLB::informSync: finished inform phase: trial={}, iter={}, "
+    verbose, temperedlb,
+    "TemperedLB::informSync: finished inform phase: trial={}, iter={}, "
     "k_max={}, k_cur={}\n",
     trial_, iter_, k_max_, k_cur_
   );
 }
 
-void GossipLB::setupDone(ReduceMsgType* msg) {
+void TemperedLB::setupDone(ReduceMsgType* msg) {
   setup_done_ = true;
 }
 
-void GossipLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
+void TemperedLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
   vt_debug_print(
-    normal, gossiplb,
-    "GossipLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}\n",
+    normal, temperedlb,
+    "TemperedLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}\n",
     trial_, iter_, k_max_, k_cur
   );
 
@@ -587,8 +587,8 @@ void GossipLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
   auto const fanout = std::min(f_, static_cast<decltype(f_)>(num_nodes - 1));
 
   vt_debug_print(
-    verbose, gossiplb,
-    "GossipLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}, "
+    verbose, temperedlb,
+    "TemperedLB::propagateRound: trial={}, iter={}, k_max={}, k_cur={}, "
     "selected.size()={}, fanout={}\n",
     trial_, iter_, k_max_, k_cur, selected.size(), fanout
   );
@@ -611,42 +611,42 @@ void GossipLB::propagateRound(uint8_t k_cur, bool sync, EpochType epoch) {
     selected.insert(random_node);
 
     vt_debug_print(
-      verbose, gossiplb,
-      "GossipLB::propagateRound: trial={}, iter={}, k_max={}, "
+      verbose, temperedlb,
+      "TemperedLB::propagateRound: trial={}, iter={}, k_max={}, "
       "k_cur={}, sending={}\n",
       trial_, iter_, k_max_, k_cur, random_node
     );
 
     // Send message with load
     if (sync) {
-      auto msg = makeMessage<GossipMsgSync>(this_node, load_info_);
+      auto msg = makeMessage<LoadMsgSync>(this_node, load_info_);
       if (epoch != no_epoch) {
         envelopeSetEpoch(msg->env, epoch);
       }
       msg->addNodeLoad(this_node, this_new_load_);
       proxy_[random_node].sendMsg<
-        GossipMsgSync, &GossipLB::propagateIncomingSync
+        LoadMsgSync, &TemperedLB::propagateIncomingSync
       >(msg.get());
     } else {
-      auto msg = makeMessage<GossipMsgAsync>(this_node, load_info_, k_cur);
+      auto msg = makeMessage<LoadMsgAsync>(this_node, load_info_, k_cur);
       if (epoch != no_epoch) {
         envelopeSetEpoch(msg->env, epoch);
       }
       msg->addNodeLoad(this_node, this_new_load_);
       proxy_[random_node].sendMsg<
-        GossipMsgAsync, &GossipLB::propagateIncomingAsync
+        LoadMsgAsync, &TemperedLB::propagateIncomingAsync
       >(msg.get());
     }
   }
 }
 
-void GossipLB::propagateIncomingAsync(GossipMsgAsync* msg) {
+void TemperedLB::propagateIncomingAsync(LoadMsgAsync* msg) {
   auto const from_node = msg->getFromNode();
   auto k_cur_async = msg->getRound();
 
   vt_debug_print(
-    normal, gossiplb,
-    "GossipLB::propagateIncomingAsync: trial={}, iter={}, k_max={}, "
+    normal, temperedlb,
+    "TemperedLB::propagateIncomingAsync: trial={}, iter={}, k_max={}, "
     "k_cur={}, from_node={}, load info size={}\n",
     trial_, iter_, k_max_, k_cur_async, from_node, msg->getNodeLoad().size()
   );
@@ -672,15 +672,15 @@ void GossipLB::propagateIncomingAsync(GossipMsgAsync* msg) {
   }
 }
 
-void GossipLB::propagateIncomingSync(GossipMsgSync* msg) {
+void TemperedLB::propagateIncomingSync(LoadMsgSync* msg) {
   auto const from_node = msg->getFromNode();
 
   // we collected more info that should be propagated on the next round
   propagate_next_round_ = true;
 
   vt_debug_print(
-    normal, gossiplb,
-    "GossipLB::propagateIncomingSync: trial={}, iter={}, k_max={}, "
+    normal, temperedlb,
+    "TemperedLB::propagateIncomingSync: trial={}, iter={}, k_max={}, "
     "k_cur={}, from_node={}, load info size={}\n",
     trial_, iter_, k_max_, k_cur_, from_node, msg->getNodeLoad().size()
   );
@@ -696,7 +696,7 @@ void GossipLB::propagateIncomingSync(GossipMsgSync* msg) {
   }
 }
 
-std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
+std::vector<double> TemperedLB::createCMF(NodeSetType const& under) {
   // Build the CMF
   std::vector<double> cmf = {};
 
@@ -755,7 +755,7 @@ std::vector<double> GossipLB::createCMF(NodeSetType const& under) {
   return cmf;
 }
 
-NodeType GossipLB::sampleFromCMF(
+NodeType TemperedLB::sampleFromCMF(
   NodeSetType const& under, std::vector<double> const& cmf
 ) {
   // Create the distribution
@@ -781,7 +781,7 @@ NodeType GossipLB::sampleFromCMF(
   return selected_node;
 }
 
-std::vector<NodeType> GossipLB::makeUnderloaded() const {
+std::vector<NodeType> TemperedLB::makeUnderloaded() const {
   std::vector<NodeType> under = {};
   for (auto&& elm : load_info_) {
     if (isUnderloaded(elm.second)) {
@@ -794,7 +794,7 @@ std::vector<NodeType> GossipLB::makeUnderloaded() const {
   return under;
 }
 
-std::vector<NodeType> GossipLB::makeSufficientlyUnderloaded(
+std::vector<NodeType> TemperedLB::makeSufficientlyUnderloaded(
   TimeType load_to_accommodate
 ) const {
   std::vector<NodeType> sufficiently_under = {};
@@ -812,8 +812,8 @@ std::vector<NodeType> GossipLB::makeSufficientlyUnderloaded(
   return sufficiently_under;
 }
 
-GossipLB::ElementLoadType::iterator
-GossipLB::selectObject(
+TemperedLB::ElementLoadType::iterator
+TemperedLB::selectObject(
   LoadType size, ElementLoadType& load, std::set<ObjIDType> const& available
 ) {
   if (available.size() == 0) {
@@ -831,7 +831,7 @@ GossipLB::selectObject(
 }
 
 /*static*/
-std::vector<GossipLB::ObjIDType> GossipLB::orderObjects(
+std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
   ObjectOrderEnum obj_ordering,
   std::unordered_map<ObjIDType, TimeType> cur_objs,
   LoadType this_new_load, TimeType target_max_load
@@ -891,8 +891,8 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects(
         }
       );
       vt_debug_print(
-        normal, gossiplb,
-        "GossipLB::decide: over_avg={}, single_obj_load={}\n",
+        normal, temperedlb,
+        "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
         over_avg, loadMilli(cur_objs[ordered_obj_ids[0]])
       );
     }
@@ -950,8 +950,8 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects(
         }
       );
       vt_debug_print(
-        normal, gossiplb,
-        "GossipLB::decide: over_avg={}, marginal_obj_load={}\n",
+        normal, temperedlb,
+        "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
         over_avg, loadMilli(cur_objs[ordered_obj_ids[0]])
       );
     }
@@ -974,15 +974,15 @@ std::vector<GossipLB::ObjIDType> GossipLB::orderObjects(
   case ObjectOrderEnum::Arbitrary:
     break;
   default:
-    vtAbort("GossipLB::orderObjects: ordering not supported");
+    vtAbort("TemperedLB::orderObjects: ordering not supported");
     break;
   }
 
   return ordered_obj_ids;
 }
 
-void GossipLB::decide() {
-  auto lazy_epoch = theTerm()->makeEpochCollective("GossipLB: decide");
+void TemperedLB::decide() {
+  auto lazy_epoch = theTerm()->makeEpochCollective("TemperedLB: decide");
 
   int n_transfers = 0, n_rejected = 0;
 
@@ -1026,8 +1026,8 @@ void GossipLB::decide() {
         auto const selected_node = sampleFromCMF(under, cmf);
 
         vt_debug_print(
-          verbose, gossiplb,
-          "GossipLB::decide: selected_node={}, load_info_.size()={}\n",
+          verbose, temperedlb,
+          "TemperedLB::decide: selected_node={}, load_info_.size()={}\n",
           selected_node, load_info_.size()
         );
 
@@ -1042,8 +1042,8 @@ void GossipLB::decide() {
         );
 
         vt_debug_print(
-          verbose, gossiplb,
-          "GossipLB::decide: trial={}, iter={}, under.size()={}, "
+          verbose, temperedlb,
+          "TemperedLB::decide: trial={}, iter={}, under.size()={}, "
           "selected_node={}, selected_load={:e}, obj_id={:x}, home={}, "
           "obj_load_ms={:e}, target_max_load={:e}, this_new_load_={:e}, "
           "criterion={}\n",
@@ -1097,22 +1097,22 @@ void GossipLB::decide() {
 
   vt::runSchedulerThrough(lazy_epoch);
 
-  if (theConfig()->vt_debug_gossiplb) {
+  if (theConfig()->vt_debug_temperedlb) {
     // compute rejection rate because it will be printed
-    runInEpochCollective("GossipLB::decide -> compute rejection", [=] {
+    runInEpochCollective("TemperedLB::decide -> compute rejection", [=] {
       using ReduceOp = collective::PlusOp<balance::RejectionStats>;
       auto cb = vt::theCB()->makeBcast<
-        GossipLB, GossipRejectionMsgType, &GossipLB::gossipRejectionStatsHandler
+        TemperedLB, RejectionMsgType, &TemperedLB::rejectionStatsHandler
       >(this->proxy_);
-      auto msg = makeMessage<GossipRejectionMsgType>(n_rejected, n_transfers);
+      auto msg = makeMessage<RejectionMsgType>(n_rejected, n_transfers);
       this->proxy_.template reduce<ReduceOp>(msg,cb);
     });
   }
 }
 
-void GossipLB::thunkMigrations() {
+void TemperedLB::thunkMigrations() {
   vt_debug_print(
-    normal, gossiplb,
+    normal, temperedlb,
     "thunkMigrations, total num_objs={}\n",
     cur_objs_.size()
   );
@@ -1124,7 +1124,7 @@ void GossipLB::thunkMigrations() {
   }
 }
 
-void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
+void TemperedLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
   auto const& incoming_objs = msg->getObjSet();
   for (auto& obj : incoming_objs) {
     auto iter = cur_objs_.find(obj.first);
@@ -1135,16 +1135,16 @@ void GossipLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
   }
 }
 
-void GossipLB::lazyMigrateObjsTo(
+void TemperedLB::lazyMigrateObjsTo(
   EpochType epoch, NodeType node, ObjsType const& objs
 ) {
   using LazyMsg = balance::LazyMigrationMsg;
   auto msg = makeMessage<LazyMsg>(node, objs);
   envelopeSetEpoch(msg->env, epoch);
-  proxy_[node].sendMsg<LazyMsg, &GossipLB::inLazyMigrations>(msg);
+  proxy_[node].sendMsg<LazyMsg, &TemperedLB::inLazyMigrations>(msg);
 }
 
-void GossipLB::migrate() {
+void TemperedLB::migrate() {
   vtAssertExpr(false);
 }
 

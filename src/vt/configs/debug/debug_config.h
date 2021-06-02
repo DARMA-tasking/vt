@@ -80,7 +80,7 @@ enum CatEnum : uint64_t {
   group        = 1ull<<27,
   broadcast    = 1ull<<28,
   objgroup     = 1ull<<29,
-  gossiplb     = 1ull<<30,
+  temperedlb   = 1ull<<30,
   phase        = 1ull<<31,
   context      = 1ull<<32
 };
@@ -127,7 +127,7 @@ vt_option_category_pretty_print(gen,          "general")
 vt_option_category_pretty_print(group,        "group")
 vt_option_category_pretty_print(handler,      "handler")
 vt_option_category_pretty_print(hierlb,       "HierarchicalLB")
-vt_option_category_pretty_print(gossiplb,     "GossipLB")
+vt_option_category_pretty_print(temperedlb,   "TemperedLB")
 vt_option_category_pretty_print(lb,           "lb")
 vt_option_category_pretty_print(location,     "location")
 vt_option_category_pretty_print(objgroup,     "objgroup")

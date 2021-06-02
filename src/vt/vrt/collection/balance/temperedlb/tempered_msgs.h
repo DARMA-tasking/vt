@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 gossip_msg.h
+//                              tempered_msgs.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_MSGS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_MSGS_H
 
 #include "vt/config.h"
 
@@ -52,14 +52,14 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-struct GossipMsg : vt::Message {
+struct LoadMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_required(); // node_load_
 
   using NodeLoadType = std::unordered_map<NodeType, lb::BaseLB::LoadType>;
 
-  GossipMsg() = default;
-  GossipMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
+  LoadMsg() = default;
+  LoadMsg(NodeType in_from_node, NodeLoadType const& in_node_load)
     : from_node_(in_from_node), node_load_(in_node_load)
   { }
 
@@ -85,15 +85,15 @@ private:
   NodeLoadType node_load_ = {};
 };
 
-struct GossipMsgAsync : GossipMsg {
-  using MessageParentType = GossipMsg;
+struct LoadMsgAsync : LoadMsg {
+  using MessageParentType = LoadMsg;
   vt_msg_serialize_if_needed_by_parent();
 
-  GossipMsgAsync() = default;
-  GossipMsgAsync(
+  LoadMsgAsync() = default;
+  LoadMsgAsync(
     NodeType in_from_node, NodeLoadType const& in_node_load, int round
   )
-    : GossipMsg(in_from_node, in_node_load), round_(round)
+    : LoadMsg(in_from_node, in_node_load), round_(round)
   { }
 
   uint8_t getRound() const {
@@ -164,25 +164,25 @@ static_assert(
   "Must be trivially copyable to avoid serialization."
 );
 
-struct GossipRejectionStatsMsg : NonSerialized<
+struct RejectionStatsMsg : NonSerialized<
   collective::ReduceTMsg<RejectionStats>,
-  GossipRejectionStatsMsg
+  RejectionStatsMsg
 >
 {
   using MessageParentType = NonSerialized<
     collective::ReduceTMsg<RejectionStats>,
-    GossipRejectionStatsMsg
+    RejectionStatsMsg
   >;
 
-  GossipRejectionStatsMsg() = default;
-  GossipRejectionStatsMsg(int n_rejected, int n_transfers)
+  RejectionStatsMsg() = default;
+  RejectionStatsMsg(int n_rejected, int n_transfers)
     : MessageParentType(RejectionStats(n_rejected, n_transfers))
   { }
-  GossipRejectionStatsMsg(RejectionStats&& rs)
+  RejectionStatsMsg(RejectionStats&& rs)
     : MessageParentType(std::move(rs))
   { }
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIP_MSG_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_MSGS_H*/

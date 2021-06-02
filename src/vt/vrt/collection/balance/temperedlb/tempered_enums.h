@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              gossip_enums.h
+//                              tempered_enums.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,15 +42,15 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_ENUMS_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_ENUMS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_ENUMS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_ENUMS_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/gossiplb/criterion.h"
+#include "vt/vrt/collection/balance/temperedlb/criterion.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-/// Enum for gossiping approach
+/// Enum for information propagation approach
 enum struct InformTypeEnum : uint8_t {
   /**
    * \brief Synchronous sharing of underloaded processor loads
@@ -222,4 +222,4 @@ struct hash<::vt::vrt::collection::lb::KnowledgeEnum> {
 
 } /* end namespace std */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_GOSSIPLB_ENUMS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_ENUMS_H*/

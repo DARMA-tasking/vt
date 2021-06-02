@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 criterion.h
+//                            tempered_constants.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,58 +42,16 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_CONSTANTS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_CONSTANTS_H
 
 #include "vt/config.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-enum struct CriterionEnum : uint8_t {
-  Grapevine         = 0,
-  ModifiedGrapevine = 1
-};
-
-struct CriterionBase {
-  using LoadType = double;
-};
-
-struct GrapevineCriterion : CriterionBase {
-  bool operator()(LoadType, LoadType under, LoadType obj, LoadType avg) const {
-    return not (under + obj > avg);
-  }
-};
-
-struct ModifiedGrapevineCriterion : CriterionBase {
-  bool operator()(LoadType over, LoadType under, LoadType obj, LoadType) const {
-    return obj < over - under;
-  }
-};
-
-struct Criterion : CriterionBase {
-  explicit Criterion(CriterionEnum const criterion)
-    : criterion_(criterion)
-  { }
-
-  bool operator()(LoadType over, LoadType under, LoadType obj, LoadType avg) const {
-    switch (criterion_) {
-    case CriterionEnum::Grapevine:
-      return GrapevineCriterion()(over, under, obj, avg);
-      break;
-    case CriterionEnum::ModifiedGrapevine:
-      return ModifiedGrapevineCriterion()(over, under, obj, avg);
-      break;
-    default:
-      vtAssert(false, "Incorrect criterion value");
-      return false;
-      break;
-    };
-  }
-
-protected:
-  CriterionEnum const criterion_;
-};
+static constexpr double const run_temperedlb_tolerance = 0.05f;
+static constexpr double const temperedlb_load_threshold = 1.0f;
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GOSSIPLB_CRITERION_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPERED_CONSTANTS_H*/

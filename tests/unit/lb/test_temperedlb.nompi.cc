@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           test_gossiplb.nompi.cc
+//                          test_temperedlb.nompi.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -44,13 +44,13 @@
 
 #include <vt/vrt/collection/balance/lb_common.h>
 #include <vt/vrt/collection/balance/baselb/baselb.h>
-#include <vt/vrt/collection/balance/gossiplb/gossiplb.h>
+#include <vt/vrt/collection/balance/temperedlb/temperedlb.h>
 
 #include "test_harness.h"
 
 namespace vt { namespace tests { namespace unit {
 
-using TestGossipLB = TestHarness;
+using TestTemperedLB = TestHarness;
 using ElementIDStruct = vt::vrt::collection::balance::ElementIDStruct;
 using ElementIDType = vt::vrt::collection::balance::ElementIDType;
 using ObjectOrdering = vt::vrt::collection::lb::ObjectOrderEnum;
@@ -80,8 +80,8 @@ void orderAndVerify(
   TimeType my_load_ms, TimeType target_load_ms,
   const std::vector<ElementIDType> &soln
 ) {
-  // have GossipLB order the objects
-  auto ordered_objs = vt::vrt::collection::lb::GossipLB::orderObjects(
+  // have TemperedLB order the objects
+  auto ordered_objs = vt::vrt::collection::lb::TemperedLB::orderObjects(
     order, cur_objs, my_load_ms, target_load_ms
   );
 
@@ -127,7 +127,7 @@ void orderUsingTargetLoadAndVerify(
 
 ///////////////////////////////////////////////////////////////////////////
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_elmid) {
+TEST_F(TestTemperedLB, test_temperedlb_ordering_elmid) {
   ObjectOrdering order = ObjectOrdering::ElmID;
   TimeType over_avg = 4.5;
   // result will be independent of over_avg
@@ -138,7 +138,7 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_elmid) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_intermediate) {
+TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_intermediate) {
   ObjectOrdering order = ObjectOrdering::FewestMigrations;
   TimeType over_avg = 4.5;
   // single_obj_load will be 5.0
@@ -148,7 +148,7 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_intermediate) {
   orderUsingOverloadAndVerify(order, over_avg, soln);
 }
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_largest) {
+TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_largest) {
   ObjectOrdering order = ObjectOrdering::FewestMigrations;
   TimeType over_avg = 12.5;
   // single_obj_load will be 9.0
@@ -158,7 +158,7 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_largest) {
   orderUsingOverloadAndVerify(order, over_avg, soln);
 }
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_smallest) {
+TEST_F(TestTemperedLB, test_temperedlb_ordering_fewestmigrations_smallest) {
   ObjectOrdering order = ObjectOrdering::FewestMigrations;
   TimeType over_avg = 1.5;
   // single_obj_load will be 2.0
@@ -170,7 +170,7 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_fewestmigrations_smallest) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_smallobjects_intermediate) {
+TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_intermediate) {
   ObjectOrdering order = ObjectOrdering::SmallObjects;
   TimeType over_avg = 4.5;
   // marginal_obj_load will be 3.0
@@ -180,7 +180,7 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_smallobjects_intermediate) {
   orderUsingOverloadAndVerify(order, over_avg, soln);
 }
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_smallobjects_largest) {
+TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_largest) {
   ObjectOrdering order = ObjectOrdering::SmallObjects;
   TimeType target_load = 0.5;
   // marginal_obj_load will be 9.0
@@ -190,7 +190,7 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_smallobjects_largest) {
   orderUsingTargetLoadAndVerify(order, target_load, soln);
 }
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_smallobjects_smallest) {
+TEST_F(TestTemperedLB, test_temperedlb_ordering_smallobjects_smallest) {
   ObjectOrdering order = ObjectOrdering::SmallObjects;
   TimeType over_avg = 1.5;
   // marginal_obj_load will be 2.0
@@ -202,7 +202,7 @@ TEST_F(TestGossipLB, test_gossiplb_ordering_smallobjects_smallest) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-TEST_F(TestGossipLB, test_gossiplb_ordering_largestobjects) {
+TEST_F(TestTemperedLB, test_temperedlb_ordering_largestobjects) {
   ObjectOrdering order = ObjectOrdering::LargestObjects;
   TimeType over_avg = 4.5;
   // result will be independent of over_avg
