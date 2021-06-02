@@ -117,6 +117,46 @@ struct hash<vt::epoch::EpochType> {
 
 } /* end namespace std */
 
+#include <fmt/format.h>
+
+/// Custom fmt formatter/print for \c EpochType
+template <>
+struct fmt::formatter<vt::epoch::EpochType> {
+  /// Presentation format:
+  ///  - 'x' - hex (default)
+  ///  - 'd' - decimal
+  ///  - 'b' - binary
+  char presentation = 'x';
+
+  /// Parses format specifications of the form ['f' | 'e'].
+  auto constexpr parse(format_parse_context& ctx) {
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+    if (it != end && (*it == 'x' || *it == 'd' || *it == 'b')) {
+      presentation = *it++;
+    }
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}') {
+      throw format_error("invalid format");
+    }
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  /// Formats the epoch using the parsed format specification (presentation)
+  /// stored in this formatter.
+  template <typename FormatContext>
+  auto format(vt::epoch::EpochType const& e, FormatContext& ctx) {
+    return format_to(
+      ctx.out(),
+      presentation == 'b' ? "{:b}" : (presentation == 'd' ? "{:d}" : "{:x}"),
+      *e
+    );
+  }
+};
+
 namespace vt {
 
 /// The strong epoch type for holding a epoch for termination detection
