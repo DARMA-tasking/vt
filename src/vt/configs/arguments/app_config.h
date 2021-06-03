@@ -210,6 +210,7 @@ struct AppConfig {
   bool vt_debug_objgroup     = false;
   bool vt_debug_phase        = false;
   bool vt_debug_context      = false;
+  bool vt_debug_epoch        = false;
 
   bool vt_debug_print_flush = false;
 
@@ -359,6 +360,7 @@ struct AppConfig {
       | vt_debug_objgroup
       | vt_debug_phase
       | vt_debug_context
+      | vt_debug_epoch
 
       | vt_debug_print_flush
 

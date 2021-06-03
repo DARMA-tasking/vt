@@ -236,7 +236,7 @@ struct IntegralSetBase {
   DomainT range() const { return ub_ - lb_; }
   DomainT lower() const { return lb_; }
   DomainT upper() const { return ub_; }
-  bool    empty() const { return set_.size() == 0; }
+  bool    empty() const { return elms_ == 0; }
 
   std::size_t size() const { return elms_; }
   std::size_t compressedSize() const { return set_.size(); }
@@ -325,7 +325,7 @@ private:
       ub_ = std::max<DomainT>(ub_, i.upper());
     }
     // Increment count of non-compressed elements
-    elms_++;
+    elms_ += i.width();
   }
 
   IteratorType join(IteratorType it) {

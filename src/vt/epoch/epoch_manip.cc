@@ -45,10 +45,167 @@
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 #include "vt/epoch/epoch_manip.h"
+#include "vt/context/context.h"
+#include "vt/utils/bits/bits_common.h"
+#include "vt/utils/bits/bits_packer.h"
+#include "vt/termination/term_common.h"
+
+#include <fmt/ostream.h>
 
 namespace vt { namespace epoch {
 
-/*static*/ EpochType EpochManip::cur_rooted_ = no_epoch;
-/*static*/ EpochType EpochManip::cur_non_rooted_ = no_epoch;
+static EpochType const arch_epoch_coll = 0ull;
+
+EpochManip::EpochManip()
+  : terminated_collective_epochs_(
+      std::make_unique<EpochWindow>(arch_epoch_coll)
+    )
+{ }
+
+/*static*/ EpochType EpochManip::generateEpoch(
+  bool const& is_rooted, NodeType const& root_node,
+  eEpochCategory const& category
+) {
+  EpochType new_epoch = 0;
+  bool const& has_category = category != eEpochCategory::NoCategoryEpoch;
+  EpochManip::setIsRooted(new_epoch, is_rooted);
+
+  if (has_category) {
+    EpochManip::setCategory(new_epoch, category);
+  }
+
+  if (is_rooted) {
+    vtAssertExpr(root_node != uninitialized_destination);
+    EpochManip::setNode(new_epoch, root_node);
+  }
+
+  // Set sequence ID to 0--this is the archetypical epoch with just control bits
+  // initialized
+  EpochManip::setSeq(new_epoch, 0);
+
+  return new_epoch;
+}
+
+/*static*/ EpochType EpochManip::generateRootedEpoch(
+  eEpochCategory const& category
+) {
+  auto const root_node = theContext()->getNode();
+  return generateEpoch(true,root_node,category);
+}
+
+EpochType EpochManip::getNextCollectiveEpoch(
+  eEpochCategory const& category
+) {
+  auto const no_dest = uninitialized_destination;
+  auto const arch_epoch = generateEpoch(false,no_dest,category);
+  return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
+}
+
+EpochType EpochManip::getNextRootedEpoch(
+  eEpochCategory const& category
+) {
+  auto const root_node = theContext()->getNode();
+  auto const arch_epoch = getNextRootedEpoch(category, root_node);
+  return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
+}
+
+EpochType EpochManip::getNextRootedEpoch(
+  eEpochCategory const& category, NodeType const root_node
+) {
+  auto const arch_epoch = generateEpoch(true,root_node,category);
+  return getTerminatedWindow(arch_epoch)->allocateNewEpoch();
+}
+
+EpochType EpochManip::getArchetype(EpochType epoch) const {
+  auto epoch_arch = epoch;
+  epoch::EpochManip::setSeq(epoch_arch,0);
+  return epoch_arch;
+}
+
+EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
+  auto const is_rooted = isRooted(epoch);
+  if (is_rooted and epoch != term::any_epoch_sentinel) {
+    auto const& arch_epoch = getArchetype(epoch);
+    auto iter = terminated_epochs_.find(arch_epoch);
+    if (iter == terminated_epochs_.end()) {
+      terminated_epochs_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(arch_epoch),
+        std::forward_as_tuple(std::make_unique<EpochWindow>(arch_epoch))
+      );
+      iter = terminated_epochs_.find(arch_epoch);
+    }
+    return iter->second.get();
+  } else {
+    vtAssertExpr(terminated_collective_epochs_ != nullptr);
+    return terminated_collective_epochs_.get();
+  }
+}
+
+/*static*/ bool EpochManip::isRooted(EpochType const& epoch) {
+  constexpr BitPackerType::FieldType field = eEpochRoot::rEpochIsRooted;
+  constexpr BitPackerType::FieldType size = 1;
+  return BitPackerType::boolGetField<field,size,EpochType>(epoch);
+}
+
+/*static*/ eEpochCategory EpochManip::category(EpochType const& epoch) {
+  return BitPackerType::getField<
+    eEpochRoot::rEpochCategory, epoch_category_num_bits, eEpochCategory
+  >(epoch);
+}
+
+/*static*/ NodeType EpochManip::node(EpochType const& epoch) {
+  vtAssert(isRooted(epoch), "Must be rooted to manipulate the node");
+
+  return BitPackerType::getField<
+    eEpochRoot::rEpochNode, node_num_bits, NodeType
+  >(epoch);
+}
+
+/*static*/ EpochType EpochManip::seq(EpochType const& epoch) {
+  if (isRooted(epoch)) {
+    return BitPackerType::getField<
+      eEpochRoot::rEpochSequential, epoch_seq_root_num_bits, EpochType
+    >(epoch);
+  } else {
+    return BitPackerType::getField<
+      eEpochColl::cEpochSequential, epoch_seq_coll_num_bits, EpochType
+    >(epoch);
+  }
+}
+
+/*static*/
+void EpochManip::setIsRooted(EpochType& epoch, bool const is_rooted) {
+  BitPackerType::boolSetField<eEpochRoot::rEpochIsRooted,1,EpochType>(
+    epoch, is_rooted
+  );
+}
+
+/*static*/
+void EpochManip::setCategory(EpochType& epoch, eEpochCategory const cat) {
+  BitPackerType::setField<
+    eEpochRoot::rEpochCategory, epoch_category_num_bits
+  >(epoch,cat);
+}
+
+/*static*/
+void EpochManip::setNode(EpochType& epoch, NodeType const node) {
+  vtAssert(isRooted(epoch), "Must be rooted to manipulate the node");
+
+  BitPackerType::setField<eEpochRoot::rEpochNode, node_num_bits>(epoch,node);
+}
+
+/*static*/
+void EpochManip::setSeq(EpochType& epoch, EpochType const seq) {
+  if (isRooted(epoch)) {
+    BitPackerType::setField<
+      eEpochRoot::rEpochSequential, epoch_seq_root_num_bits
+    >(epoch,seq);
+  } else {
+    BitPackerType::setField<
+      eEpochColl::cEpochSequential, epoch_seq_coll_num_bits
+    >(epoch,seq);
+  }
+}
 
 }} /* end namespace vt::epoch */

@@ -47,30 +47,36 @@
 
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
+#include "vt/epoch/epoch_window.h"
+#include "vt/termination/epoch_tags.h"
+#include "vt/termination/interval/integral_set.h"
 #include "vt/utils/bits/bits_common.h"
 #include "vt/utils/bits/bits_packer.h"
+#include "vt/runtime/component/component.h"
+
+#include <unordered_map>
 
 namespace vt { namespace epoch {
 
 /** \file */
 
-/// The default epoch node used for non-rooted epochs
-static constexpr NodeType const default_epoch_node = uninitialized_destination;
-/// The default epoch category
-static constexpr eEpochCategory const default_epoch_category =
-  eEpochCategory::NoCategoryEpoch;
-
 /**
  * \struct EpochManip epoch_manip.h vt/epoch/epoch_manip.h
  *
- * \brief Class used to manipulate the bits in a \c EpochType and manage the
- * current sequential IDs for allocating epochs
+ * \brief Component for managing epoch ID allocation/deallocation and
+ * manipulating the bits inside an epoch identifier.
  *
  * Used by the system mostly to manage the bits inside an \c EpochType. It knows
- * how to set the appropriate bits to change the static type of an \c EpochType
+ * how to set the appropriate bits to change the type bits of an \c EpochType
  * by setting the bit pattern.
  */
-struct EpochManip {
+struct EpochManip : runtime::component::Component<EpochManip> {
+  using CapturedContextType = term::ParentEpochCapture;
+
+  EpochManip();
+
+  std::string name() override { return "EpochManip"; }
+
   /*
    *  Epoch getters to check type and state of EpochType
    */
@@ -82,27 +88,7 @@ struct EpochManip {
    *
    * \return whether the \c epoch is rooted
    */
-  static bool           isRooted   (EpochType const& epoch);
-
-  /**
-   * \brief Gets whether the epoch has a category or not
-   *
-   * \param[in] epoch the epoch to operate on
-   *
-   * \return whether \c epoch has a category---
-   *         not \c eEpochCategory::NoCategoryEpoch
-   */
-  static bool           hasCategory(EpochType const& epoch);
-
-  /**
-   * \brief Gets whether the epoch is a user epoch (specifically a
-   * user-customized dispatched epoch)
-   *
-   * \param[in] epoch the epoch to operate on
-   *
-   * \return whether the \c epoch is a user epoch
-   */
-  static bool           isUser     (EpochType const& epoch);
+  static bool isRooted(EpochType const& epoch);
 
   /**
    * \brief Gets the \c eEpochCategory of a given epoch
@@ -111,7 +97,7 @@ struct EpochManip {
    *
    * \return the category of the \c epoch
    */
-  static eEpochCategory category   (EpochType const& epoch);
+  static eEpochCategory category(EpochType const& epoch);
 
   /**
    * \brief Gets the node for the epoch (only relevant for rooted)
@@ -120,7 +106,7 @@ struct EpochManip {
    *
    * \return the node (arbitrator) for the \c epoch
    */
-  static NodeType       node       (EpochType const& epoch);
+  static NodeType node(EpochType const& epoch);
 
   /**
    * \brief Gets the sequential ID for an epoch
@@ -129,7 +115,7 @@ struct EpochManip {
    *
    * \return the sequential number for an \c epoch
    */
-  static EpochType      seq        (EpochType const& epoch);
+  static EpochType seq(EpochType const& epoch);
 
   /*
    *  Epoch setters to manipulate the type and state of EpochType
@@ -141,23 +127,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] is_rooted whether to set the epoch as rooted or not
    */
-  static void setIsRooted   (EpochType& epoch, bool           const is_rooted);
-
-  /**
-   * \brief Set whether the \c epoch has a category or not
-   *
-   * \param[in,out] epoch the epoch to modify
-   * \param[in] has_cat whether to the epoch has a category
-   */
-  static void setHasCategory(EpochType& epoch, bool           const has_cat  );
-
-  /**
-   * \brief Set whether the \c epoch is a user epoch or not
-   *
-   * \param[in,out] epoch the epoch to modify
-   * \param[in] is_user whether to set the epoch as user or not
-   */
-  static void setIsUser     (EpochType& epoch, bool           const is_user  );
+  static void setIsRooted(EpochType& epoch, bool const is_rooted);
 
   /**
    * \brief Set the category for the \c epoch
@@ -165,7 +135,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] cat whether to set the epoch as rooted or not
    */
-  static void setCategory   (EpochType& epoch, eEpochCategory const cat      );
+  static void setCategory(EpochType& epoch, eEpochCategory const cat);
 
   /**
    * \brief Set the node for a rooted \c epoch
@@ -173,7 +143,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] node whether to set the epoch as rooted or not
    */
-  static void setNode       (EpochType& epoch, NodeType       const node     );
+  static void setNode(EpochType& epoch, NodeType const node);
 
   /**
    * \brief Set the sequential ID for an \c epoch
@@ -181,7 +151,7 @@ struct EpochManip {
    * \param[in,out] epoch the epoch to modify
    * \param[in] seq the sequential ID to set on the epoch
    */
-  static void setSeq        (EpochType& epoch, EpochType      const seq      );
+  static void setSeq(EpochType& epoch, EpochType const seq);
 
   /*
    * General (stateless) methods for creating a epoch with certain properties
@@ -189,96 +159,110 @@ struct EpochManip {
    */
 
   /**
-   * \brief Make a rooted epoch with a given sequential ID
+   * \brief Generate the control bits for a rooted epoch
    *
-   * \param[in] seq the sequential ID for the epoch
-   * \param[in] is_user whether the epoch is a user epoch or not
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
-  static EpochType makeRootedEpoch(
-    EpochType      const& seq,
-    bool           const& is_user    = false,
+  static EpochType generateRootedEpoch(
     eEpochCategory const& category   = default_epoch_category
   );
 
   /**
-   * \brief Make a new epoch (rooted or collective) with a given sequential ID
-   *
-   * \param[in] seq the sequential ID for the epoch
-   * \param[in] is_rooted if the epoch should be rooted or not
-   * \param[in] root_node the root node for the epoch if \c is_rooted
-   * \param[in] is_user whether the epoch is a user epoch or not
-   * \param[in] category the category for the epoch
-   *
-   * \return the newly created epoch
-   */
-  static EpochType makeEpoch(
-    EpochType      const& seq,
-    bool           const& is_rooted  = false,
-    NodeType       const& root_node  = default_epoch_node,
-    bool           const& is_user    = false,
-    eEpochCategory const& category   = default_epoch_category
-  );
-
-  /**
-   * \brief Create the next rooted epoch, stateful
-   *
-   * \param[in] is_user whether the epoch is a user epoch or not
-   * \param[in] category the category for the epoch
-   *
-   * \return the newly created epoch
-   */
-  static EpochType makeNewRootedEpoch(
-    bool           const& is_user    = false,
-    eEpochCategory const& category   = default_epoch_category
-  );
-
-  /**
-   * \brief Create the next epoch (rooted or collective), stateful
+   * \brief Generate the control bits for an epoch type (rooted or collective)
    *
    * \param[in] is_rooted if the epoch should be rooted or not
    * \param[in] root_node the root node for the epoch if \c is_rooted
-   * \param[in] is_user whether the epoch is a user epoch or not
    * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
-  static EpochType makeNewEpoch(
+  static EpochType generateEpoch(
     bool           const& is_rooted  = false,
     NodeType       const& root_node  = default_epoch_node,
-    bool           const& is_user    = false,
     eEpochCategory const& category   = default_epoch_category
   );
 
   /*
-   * Stateful methods for creating a epoch based on epochs that have already
-   * been created in the past
+   * Stateful methods for generating a new epoch with certain properties
+   * using the next sequence number available
    */
 
   /**
-   * \brief The next epoch given an epoch, increments the sequential ID
+   * \brief Stateful method to create the next rooted epoch
    *
-   * \param[in] epoch the epoch to start from
+   * \param[in] category the category for the epoch
    *
    * \return the newly created epoch
    */
-  static EpochType next(EpochType const& epoch);
+  EpochType getNextRootedEpoch(
+    eEpochCategory const& category = default_epoch_category
+  );
+
+  /**
+   * \brief Stateful method to create the next rooted epoch with a particular
+   * node embedded in the bits
+   *
+   * \param[in] category the category for the epoch
+   * \param[in] root_node the root node for the epoch
+   *
+   * \return the newly created epoch
+   */
+  EpochType getNextRootedEpoch(
+    eEpochCategory const& category, NodeType const root_node
+  );
+
+  /**
+   * \brief Stateful method to create the next collective epoch
+   *
+   * \param[in] category the category for the epoch
+   *
+   * \return the newly created epoch
+   */
+  EpochType getNextCollectiveEpoch(
+    eEpochCategory const& category = default_epoch_category
+  );
+
+public:
+  /**
+   * \brief Get an appropriate window that stores the list of
+   * terminated epoch based on the epoch archetype
+   *
+   * \param[in] epoch the epoch in question
+   *
+   * \return the window of terminated epochs of that kind
+   */
+  EpochWindow* getTerminatedWindow(EpochType epoch);
+
+  /**
+   * \internal \brief Get archetype bits embedded in epoch
+   *
+   * \param[in] epoch the epoch in question
+   *
+   * \return all bits except for archetype bits masked out
+   */
+  EpochType getArchetype(EpochType epoch) const;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | terminated_epochs_
+      | terminated_collective_epochs_;
+  }
 
 private:
-  static EpochType nextSlow(EpochType const& epoch);
-  static EpochType nextFast(EpochType const& epoch);
-
-private:
-  static EpochType cur_rooted_;     /**< The current rooted sequential ID  */
-  static EpochType cur_non_rooted_; /**< The current non-rooted sequential ID */
+  // epoch window container for specific archetyped epochs
+  std::unordered_map<EpochType,std::unique_ptr<EpochWindow>> terminated_epochs_;
+  // epoch window for basic collective epochs
+  std::unique_ptr<EpochWindow> terminated_collective_epochs_ = nullptr;
 };
 
 }} /* end namespace vt::epoch */
 
-#include "vt/epoch/epoch_manip_get.h"
-#include "vt/epoch/epoch_manip_set.h"
-#include "vt/epoch/epoch_manip_make.h"
+namespace vt {
+
+extern epoch::EpochManip* theEpoch();
+
+}  //end namespace vt
 
 #endif /*INCLUDED_EPOCH_EPOCH_MANIP_H*/

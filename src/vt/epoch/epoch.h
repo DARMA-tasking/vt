@@ -61,18 +61,22 @@ namespace vt { namespace epoch {
  *
  *   w-1 .............. w-h-1 ...............w-h-c-1 ....................0
  *   | <EpochHeader> ... | <EpochCategory> ... | <Sequential Epoch ID>   |
- *
- *      *where*    h = epoch_header_num_bits,
- *                 c = epoch_category_num_bits,
- *                 w = sizeof(EpochType) * 8
- *                 n = sizeof(NodeType)        ^             ^           ^
- *                                             | .... n .... | ..........|
- *                                               <NodeType>  <SeqEpochID>
+ *                                             |                          \
+ *      *where*    h = epoch_header_num_bits,  |                           \
+ *                 c = epoch_category_num_bits,|                            \
+ *                 w = sizeof(EpochType) * 8   |                             \
+ *                 n = sizeof(NodeType)        ^  16  ^ 5 ^   [remainder]     ^
+ *                                            /                               |
+ *                                           /                                |
+ *                                   _______                                  |
+ *                                  /                                          \
+ *                                  | .... n .... | ..........................|
+ *                                    <NodeType>          <SeqEpochID>
  *
  *  +++++++++++++++++++++++++++++++++++++++++++  Rooted Extended Layout ++
  *
- *   <EpochHeader>   = <IsRooted> <HasCategory> <IsUser>
- *   ....3 bits...   = ..bit 1..   ...bit 2...  ..bit 3..
+ *   <EpochHeader>   = <IsRooted> <HasCategory>
+ *   ....3 bits...   = ..bit 1..   ...bit 2...
  *
  * =======================================================================
  * \endverbatim
@@ -82,17 +86,11 @@ namespace vt { namespace epoch {
  * \brief The header bit positions for an epoch (\c vt::EpochType)
  */
 enum struct eEpochHeader : int8_t {
-  RootedEpoch   = 1,
-  CategoryEpoch = 2,
-  UserEpoch     = 3
+  RootedEpoch   = 1
 };
 
 /// Number of bits for root flag
 static constexpr BitCountType const epoch_root_num_bits = 1;
-/// Number of bits for category flag
-static constexpr BitCountType const epoch_hcat_num_bits = 1;
-/// Number of bits for user flag
-static constexpr BitCountType const epoch_user_num_bits = 1;
 
 /**
  *  Important: if you add new types of epoch headers to the preceding enum, you
@@ -100,6 +98,15 @@ static constexpr BitCountType const epoch_user_num_bits = 1;
  *  the header types.
  *
  */
+
+/**
+ * \brief The number of bits for all types of categories.
+ *
+ *  Important: if you add categories to the enum of epoch categories, you must
+ *  ensure the \c epoch_category_num_bits is sufficiently large.
+ *
+ */
+static constexpr BitCountType const epoch_category_num_bits = 2;
 
 /**
  * \brief These are different categories of epochs that are allowed.
@@ -118,42 +125,52 @@ inline std::ostream& operator<<(std::ostream& os, eEpochCategory const& cat) {
   return debug::printEnum<eEpochCategory>(os,cat);
 }
 
-/**
- * \brief The number of bits for all types of categories.
- *
- *  Important: if you add categories to the enum of epoch categories, you must
- *  ensure the \c epoch_category_num_bits is sufficiently large.
- *
- */
-static constexpr BitCountType const epoch_category_num_bits = 2;
+/// The number of sequential ID bits remaining for a collective \c EpochType
+static constexpr BitCountType const epoch_seq_coll_num_bits =
+  sizeof(EpochType) * 8 -
+  (epoch_root_num_bits + epoch_category_num_bits);
 
-/// The total number of bits remaining the sequential part of the \c EpochType
-static constexpr BitCountType const epoch_seq_num_bits = sizeof(EpochType) * 8 -
-  (epoch_root_num_bits     +
-   epoch_hcat_num_bits     + epoch_user_num_bits +
-   epoch_category_num_bits + node_num_bits);
+/// The total number of bits remaining for a rooted \c EpochType
+static constexpr BitCountType const epoch_seq_root_num_bits =
+  sizeof(EpochType) * 8 -
+  (epoch_root_num_bits + epoch_category_num_bits + node_num_bits);
 
 /**
- *  \brief Epoch layout enum to help with manipuating the bits
+ *  \brief Epoch layout enum for collective epochs to help with manipulating the
+ *  bits
  *
  *  This describes the layout of the epoch used by \c EpochManip to get/set the
  *  bits on an \c EpochType field
  */
-enum eEpochLayout {
-  EpochSequential   = 0,
-  EpochNode         = eEpochLayout::EpochSequential  + epoch_seq_num_bits,
-  EpochCategory     = eEpochLayout::EpochNode        + node_num_bits,
-  EpochUser         = eEpochLayout::EpochCategory    + epoch_category_num_bits,
-  EpochHasCategory  = eEpochLayout::EpochUser        + epoch_user_num_bits,
-  EpochIsRooted     = eEpochLayout::EpochHasCategory + epoch_hcat_num_bits,
-  EpochSentinelEnd  = eEpochLayout::EpochIsRooted
+enum eEpochColl {
+  cEpochSequential = 0,
+  cEpochCategory   = eEpochColl::cEpochSequential + epoch_seq_coll_num_bits,
+  cEpochIsRooted   = eEpochColl::cEpochCategory   + epoch_category_num_bits
 };
 
 /**
- *  The first basic epoch: BasicEpoch, NoCategoryEpoch:
+ *  \brief Epoch layout enum for rooted epochs to help with manipulating the
+ *  bits
+ *
+ *  This describes the layout of the epoch used by \c EpochManip to get/set the
+ *  bits on an \c EpochType field
  */
+enum eEpochRoot {
+  rEpochSequential = 0,
+  rEpochNode       = eEpochRoot::rEpochSequential + epoch_seq_root_num_bits,
+  rEpochCategory   = eEpochRoot::rEpochNode       + node_num_bits,
+  rEpochIsRooted   = eEpochRoot::rEpochCategory   + epoch_category_num_bits
+};
 
+/// The first epoch sequence number
 static constexpr EpochType const first_epoch = 1;
+
+/// The default epoch node used for non-rooted epochs
+static constexpr NodeType const default_epoch_node = uninitialized_destination;
+
+/// The default epoch category
+static constexpr eEpochCategory const default_epoch_category =
+  eEpochCategory::NoCategoryEpoch;
 
 }} //end namespace vt::epoch
 

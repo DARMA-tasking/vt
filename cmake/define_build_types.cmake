@@ -1,6 +1,5 @@
 
 
-
 # this loop executes over all known build types, not just the selected one
 foreach(loop_build_type ${VT_CONFIG_TYPES})
   #message(STATUS "generating for build type=${loop_build_type}")

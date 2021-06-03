@@ -55,131 +55,75 @@ namespace vt { namespace tests { namespace unit {
 
 struct TestEpoch      : TestHarness                       { };
 struct TestEpochParam : TestHarnessParam<::vt::EpochType> { };
+struct TestEpochBits  : TestHarness                       { };
 
-TEST_F(TestEpoch, basic_test_first_epoch_unrooted_1) {
+TEST_F(TestEpoch, basic_test_first_epoch_collective_1) {
   auto const epoch        = epoch::first_epoch;
   auto const is_rooted    = epoch::EpochManip::isRooted(epoch);
-  auto const is_user      = epoch::EpochManip::isUser(epoch);
-  auto const has_category = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq      = epoch::EpochManip::seq(epoch);
-  auto const ep_node      = epoch::EpochManip::node(epoch);
-  auto const next         = epoch::EpochManip::next(epoch);
-  auto const next_seq     = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(!is_rooted);
-  EXPECT_TRUE(!is_user);
-  EXPECT_TRUE(!has_category);
   EXPECT_EQ(get_seq, 1U);
-  EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next, 2U);
-  EXPECT_EQ(next_seq, 2U);
 }
 
-TEST_P(TestEpochParam, basic_test_epoch_unrooted_1) {
+TEST_P(TestEpochParam, basic_test_epoch_collective_1) {
   EpochType const start_seq  = GetParam();
-  auto const epoch           = epoch::EpochManip::makeEpoch(start_seq, false);
+  auto epoch                 = epoch::EpochManip::generateEpoch(false);
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
-  auto const is_user         = epoch::EpochManip::isUser(epoch);
-  auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
-  auto const ep_node         = epoch::EpochManip::node(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(!is_rooted);
-  EXPECT_TRUE(!is_user);
-  EXPECT_TRUE(!has_category);
   EXPECT_EQ(get_seq, start_seq);
-  EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next_seq, start_seq + 1);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_rooted_1) {
   auto const& n              = 48;
   EpochType const start_seq  = GetParam();
-  auto const epoch           = epoch::EpochManip::makeEpoch(start_seq, true, n);
+  auto epoch                 = epoch::EpochManip::generateEpoch(
+    true, n
+  );
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
-  auto const is_user         = epoch::EpochManip::isUser(epoch);
-  auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
   auto const ep_node         = epoch::EpochManip::node(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(is_rooted);
-  EXPECT_TRUE(!is_user);
-  EXPECT_TRUE(!has_category);
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, n);
-  EXPECT_EQ(next_seq, start_seq + 1);
-}
-
-TEST_P(TestEpochParam, basic_test_epoch_user_1) {
-  EpochType const start_seq  = GetParam();
-  auto const epoch           = epoch::EpochManip::makeEpoch(
-    start_seq, false, uninitialized_destination, true
-  );
-  auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
-  auto const is_user         = epoch::EpochManip::isUser(epoch);
-  auto const has_category    = epoch::EpochManip::hasCategory(epoch);
-  auto const get_seq         = epoch::EpochManip::seq(epoch);
-  auto const ep_node         = epoch::EpochManip::node(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
-
-  EXPECT_TRUE(!is_rooted);
-  EXPECT_TRUE(is_user);
-  EXPECT_TRUE(!has_category);
-  EXPECT_EQ(get_seq, start_seq);
-  EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next_seq, start_seq + 1);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_category_1) {
   EpochType const start_seq  = GetParam();
-  auto const epoch           = epoch::EpochManip::makeEpoch(
-    start_seq, false, uninitialized_destination, false,
+  auto epoch                 = epoch::EpochManip::generateEpoch(
+    false, uninitialized_destination,
     epoch::eEpochCategory::InsertEpoch
   );
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
-  auto const is_user         = epoch::EpochManip::isUser(epoch);
-  auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
-  auto const ep_node         = epoch::EpochManip::node(epoch);
   auto const cat             = epoch::EpochManip::category(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(!is_rooted);
-  EXPECT_TRUE(!is_user);
-  EXPECT_TRUE(has_category);
   EXPECT_EQ(get_seq, start_seq);
-  EXPECT_EQ(ep_node, 0);
-  EXPECT_EQ(next_seq, start_seq + 1);
   EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
 }
 
 TEST_P(TestEpochParam, basic_test_epoch_all_1) {
   auto const& n              = 48;
   EpochType const start_seq  = GetParam();
-  auto const epoch           = epoch::EpochManip::makeEpoch(
-    start_seq, true, n, true, epoch::eEpochCategory::InsertEpoch
+  auto epoch                 = epoch::EpochManip::generateEpoch(
+    true, n, epoch::eEpochCategory::InsertEpoch
   );
+  epoch::EpochManip::setSeq(epoch, start_seq);
   auto const is_rooted       = epoch::EpochManip::isRooted(epoch);
-  auto const is_user         = epoch::EpochManip::isUser(epoch);
-  auto const has_category    = epoch::EpochManip::hasCategory(epoch);
   auto const get_seq         = epoch::EpochManip::seq(epoch);
   auto const ep_node         = epoch::EpochManip::node(epoch);
   auto const cat             = epoch::EpochManip::category(epoch);
-  auto const next            = epoch::EpochManip::next(epoch);
-  auto const next_seq        = epoch::EpochManip::seq(next);
 
   EXPECT_TRUE(is_rooted);
-  EXPECT_TRUE(is_user);
-  EXPECT_TRUE(has_category);
   EXPECT_EQ(get_seq, start_seq);
   EXPECT_EQ(ep_node, n);
-  EXPECT_EQ(next_seq, start_seq + 1);
   EXPECT_EQ(cat, epoch::eEpochCategory::InsertEpoch);
 }
 
@@ -187,5 +131,10 @@ INSTANTIATE_TEST_SUITE_P(
   InstantiationName, TestEpochParam,
   ::testing::Range(static_cast<EpochType>(1), static_cast<EpochType>(100), 10)
 );
+
+TEST_F(TestEpochBits, test_epoch_bit_assignment) {
+  EXPECT_EQ(vt::epoch::eEpochColl::cEpochIsRooted, 63);
+  EXPECT_EQ(vt::epoch::eEpochRoot::rEpochIsRooted, 63);
+}
 
 }}} // end namespace vt::tests::unit
