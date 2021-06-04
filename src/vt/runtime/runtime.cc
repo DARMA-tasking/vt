@@ -227,12 +227,21 @@ void Runtime::pauseForDebugger() {
   ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
   handleSignalFailure();
 }
+
+/*static*/ void Runtime::sigHandlerBus(int sig) {
+  auto vt_pre    = debug::vtPre();
+  auto bred      = debug::bred();
+  ::fmt::print("{}Caught SIGBUS signal: {} \n", vt_pre, sig);
+  handleSignalFailure();
 }
 
 /*static*/ void Runtime::termHandler() {
   auto vt_pre    = debug::vtPre();
   auto bred      = debug::bred();
   ::fmt::print("{}Caught std::terminate \n", vt_pre);
+  handleSignalFailure();
+}
+
 /*static*/ void Runtime::handleSignalFailure() {
   // Try to flush out all logs before dying
 # if vt_check_enabled(trace_enabled)
@@ -281,6 +290,9 @@ void Runtime::pauseForDebugger() {
 void Runtime::setupSignalHandler() {
   if (!arg_config_->config_.vt_no_sigsegv) {
     signal(SIGSEGV, Runtime::sigHandler);
+  }
+  if (!arg_config_->config_.vt_no_sigbus) {
+    signal(SIGBUS, Runtime::sigHandlerBus);
   }
   signal(SIGUSR1, Runtime::sigHandlerUsr1);
 }

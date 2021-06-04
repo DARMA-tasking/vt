@@ -90,6 +90,7 @@ struct AppConfig {
   double vt_sched_progress_sec  = 0.0;
   bool vt_no_sigint    = false;
   bool vt_no_sigsegv   = false;
+  bool vt_no_sigbus    = false;
   bool vt_no_terminate = false;
   std::string vt_memory_reporters =
 # if (vt_feature_mimalloc != 0)
@@ -254,6 +255,7 @@ struct AppConfig {
 
       | vt_no_sigint
       | vt_no_sigsegv
+      | vt_no_sigbus
       | vt_no_terminate
 
       | vt_memory_reporters
