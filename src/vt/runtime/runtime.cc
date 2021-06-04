@@ -214,6 +214,26 @@ void Runtime::pauseForDebugger() {
   if (node == 0 || node == -1) {
     ::fmt::print("{}Caught SIGINT signal: {} \n", prefix, sig);
   }
+  handleSignalFailure();
+}
+
+/*static*/ void Runtime::sigHandlerUsr1(int sig) {
+  Runtime::sig_user_1_ = true;
+}
+
+/*static*/ void Runtime::sigHandler(int sig) {
+  auto vt_pre    = debug::vtPre();
+  auto bred      = debug::bred();
+  ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
+  handleSignalFailure();
+}
+}
+
+/*static*/ void Runtime::termHandler() {
+  auto vt_pre    = debug::vtPre();
+  auto bred      = debug::bred();
+  ::fmt::print("{}Caught std::terminate \n", vt_pre);
+/*static*/ void Runtime::handleSignalFailure() {
   // Try to flush out all logs before dying
 # if vt_check_enabled(trace_enabled)
   if (vt::theTrace()) {
@@ -227,48 +247,6 @@ void Runtime::pauseForDebugger() {
       Runtime::writeToFile(stack_pretty);
     } else {
       ::fmt::print("{}", stack_pretty);
-      ::fmt::print("\n");
-    }
-  }
-  std::_Exit(EXIT_FAILURE);
-}
-
-/*static*/ void Runtime::sigHandlerUsr1(int sig) {
-  Runtime::sig_user_1_ = true;
-}
-
-/*static*/ void Runtime::sigHandler(int sig) {
-  auto vt_pre    = debug::vtPre();
-  auto bred      = debug::bred();
-  ::fmt::print("{}Caught SIGSEGV signal: {} \n", vt_pre, sig);
-  // Try to flush out all logs before dying
-# if vt_check_enabled(trace_enabled)
-  if (vt::theTrace()) {
-    vt::theTrace()->cleanupTracesFile();
-  }
-# endif
-  if (Runtime::nodeStackWrite()) {
-    auto stack = debug::stack::dumpStack();
-    if (vt::theConfig()->vt_stack_file.empty()) {
-      ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
-      ::fmt::print("\n");
-    } else {
-      Runtime::writeToFile(std::get<0>(stack));
-    }
-  }
-  std::_Exit(EXIT_FAILURE);
-}
-
-/*static*/ void Runtime::termHandler() {
-  auto vt_pre    = debug::vtPre();
-  auto bred      = debug::bred();
-  ::fmt::print("{}Caught std::terminate \n", vt_pre);
-  if (Runtime::nodeStackWrite()) {
-    auto stack = debug::stack::dumpStack();
-    if (vt::theConfig()->vt_stack_file != "") {
-      Runtime::writeToFile(std::get<0>(stack));
-    } else {
-      ::fmt::print("{}{}{}\n", bred, std::get<0>(stack), debug::reset());
       ::fmt::print("\n");
     }
   }

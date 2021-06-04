@@ -243,6 +243,11 @@ private:
   RuntimeInstType const instance_;
 
   /**
+   * \internal \brief Handle unexpected termination
+   */
+  static void handleSignalFailure();
+
+  /**
    * \internal \brief Check if this node should dump during stack output
    *
    * \return whether this node is allowed to write
