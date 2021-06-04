@@ -106,7 +106,26 @@ NodeType PerfTestHarness::my_node_ = {};
 std::string PerfTestHarness::name_ = {};
 
 void PerfTestHarness::SetUp(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv, no_workers, true);
+  // pre-parsed args, that might contain performance-test specific args
+  std::vector<char*> args_before(argv, argv + argc);
+
+  // original args, minus performance-test specific args
+  std::vector<char*> args_after;
+
+  for (auto& arg : args_before) {
+    std::string arg_s{arg};
+    if (arg_s == "--vt_perf_gen_file") {
+      gen_file_ = true;
+    } else if (arg_s == "--vt_perf_verbose") {
+      verbose_ = true;
+    } else {
+      args_after.push_back(arg);
+    }
+  }
+
+  auto custom_argv = args_after.data();
+  auto custom_argc = static_cast<int32_t>(args_after.size());
+  CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true);
   my_node_ = theContext()->getNode();
 
   // DumpResults (which uses colorized output) will be called
@@ -153,15 +172,19 @@ void PerfTestHarness::DumpResults() const {
           debug::emph(fmt::format("{:.3f}ms", min)),
           debug::emph(fmt::format("{:.3f}ms", max)));
 
-        // for (uint32_t run_num = 0; run_num < num_timings; ++run_num) {
-        //   fmt::print(
-        //     "{} Run {} -> {}\n", debug::proc(node), run_num,
-        //     debug::emph(fmt::format("{:.3f}ms", timings[run_num])));
-        // }
+        if (verbose_) {
+          for (uint32_t run_num = 0; run_num < num_timings; ++run_num) {
+            fmt::print(
+              "{} Run {} -> {}\n", debug::proc(node), run_num,
+              debug::emph(fmt::format("{:.3f}ms", timings[run_num])));
+          }
+        }
       }
     }
 
-    OutputToFile(name_, file_content);
+    if (gen_file_) {
+      OutputToFile(name_, file_content);
+    }
   }
 }
 

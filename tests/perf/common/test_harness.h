@@ -117,6 +117,8 @@ struct PerfTestHarness {
   static void GetMemoryUsage();
 
   protected:
+  bool gen_file_ = false;
+  bool verbose_ = false;
   static NodeType my_node_;
   static std::unordered_map<std::string, StopWatch> timers_;
   static std::string name_;
