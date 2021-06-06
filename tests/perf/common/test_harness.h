@@ -49,6 +49,7 @@
 #include "test_harness_macros.h"
 
 #include <vt/configs/types/types_type.h>
+#include <vt/utils/memory/memory_usage.h>
 #include <unordered_map>
 #include <map>
 #include <string>
@@ -114,14 +115,22 @@ struct PerfTestHarness {
    */
   static void BenchmarkPhase(std::string const& prefix = "phase");
 
-  static void GetMemoryUsage();
+  /**
+   * \brief Helper function used for tracking memory usage.
+   * Uses \c StatM to track memory usage
+   */
+  static void GetMemoryUsage(uint64_t iteration);
 
   protected:
   bool gen_file_ = false;
   bool verbose_ = false;
   static NodeType my_node_;
   static std::unordered_map<std::string, StopWatch> timers_;
+
+  // Memory footprint (in bytes) per iteration
+  static std::unordered_map<uint64_t, double> memory_load_;
   static std::string name_;
+  static vt::util::memory::StatM mem_tracker_;
 
   // Local (per node) timings
   static TestResults timings_;

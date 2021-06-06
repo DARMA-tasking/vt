@@ -101,9 +101,11 @@ void OutputToFile(std::string const& name, std::string const& content) {
 
 PerfTestHarness::CombinedResults PerfTestHarness::combined_timings_ = {};
 std::unordered_map<std::string, StopWatch> PerfTestHarness::timers_ = {};
+std::unordered_map<uint64_t, double> PerfTestHarness::memory_load_ = {};
 PerfTestHarness::TestResults PerfTestHarness::timings_ = {};
 NodeType PerfTestHarness::my_node_ = {};
 std::string PerfTestHarness::name_ = {};
+vt::util::memory::StatM PerfTestHarness::mem_tracker_ = {};
 
 void PerfTestHarness::SetUp(int argc, char** argv) {
   // pre-parsed args, that might contain performance-test specific args
@@ -229,12 +231,21 @@ void PerfTestHarness::BenchmarkPhase(std::string const& prefix)
   thePhase()->registerHookCollective(phase::PhaseHook::End, [GetName] {
     auto const name = GetName();
     AddResult({name, timers_[name].Stop()});
+    GetMemoryUsage(thePhase()->getCurrentPhase());
   });
 }
 
-void PerfTestHarness::GetMemoryUsage() {
-  auto const mem_usage = theMemUsage()->getUsageAll();
-  fmt::print("Node:{} {} memory usage {}\n", my_node_, "name", mem_usage);
+void PerfTestHarness::GetMemoryUsage(uint64_t iteration) {
+  auto mem = mem_tracker_.getUsage();
+
+  memory_load_[iteration] = static_cast<double>(mem);
+
+  auto const best_mem = util::memory::getBestMemoryUnit(mem);
+  fmt::print(
+    "{} Memory usage: {}\n", debug::proc(my_node_),
+    debug::emph(
+      fmt::format("{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem)))
+  );
 }
 
 }}}} // namespace vt::tests::perf::common
