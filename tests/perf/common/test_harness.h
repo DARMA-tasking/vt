@@ -64,6 +64,8 @@ struct PerfTestHarness {
   using CombinedResults =
     std::map<std::string, std::map<NodeType, std::vector<double>>>;
   using TestResult = std::pair<std::string, double>;
+  using MemoryUsage = std::vector<std::size_t>;
+  using CombinedMemoryUse = std::unordered_map<NodeType, MemoryUsage>;
 
   virtual ~PerfTestHarness() = default;
 
@@ -117,9 +119,9 @@ struct PerfTestHarness {
 
   /**
    * \brief Helper function used for tracking memory usage.
-   * Uses \c StatM to track memory usage
+   * Should be called each iteration. Uses \c StatM to track memory usage
    */
-  static void GetMemoryUsage(uint64_t iteration);
+  static void GetMemoryUsage();
 
   protected:
   bool gen_file_ = false;
@@ -127,16 +129,19 @@ struct PerfTestHarness {
   static NodeType my_node_;
   static std::unordered_map<std::string, StopWatch> timers_;
 
-  // Memory footprint (in bytes) per iteration
-  static std::unordered_map<uint64_t, double> memory_load_;
-  static std::string name_;
+  // Memory usage (in bytes) per iteration
+  static MemoryUsage memory_use_;
   static vt::util::memory::StatM mem_tracker_;
+
+  // Test suite name
+  static std::string name_;
 
   // Local (per node) timings
   static TestResults timings_;
 
   // Combined timings from all nodes, that are stored on the root node
   static CombinedResults combined_timings_;
+  static CombinedMemoryUse combined_mem_use_;
 };
 
 }}}} // namespace vt::tests::perf::common

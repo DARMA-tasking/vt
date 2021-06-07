@@ -58,34 +58,44 @@ namespace vt { namespace tests { namespace perf { namespace common {
 ///////////////      HELPERS      ///////////////
 /////////////////////////////////////////////////
 static void CopyTestData(
-  PerfTestHarness::TestResults const& source,
-  PerfTestHarness::CombinedResults& dest, NodeType node
-) {
-  for (auto const& test_result : source) {
+  PerfTestHarness::TestResults const& source_time,
+  PerfTestHarness::CombinedResults& dest_time,
+  PerfTestHarness::MemoryUsage const& source_memory,
+  PerfTestHarness::CombinedMemoryUse& dest_memory, NodeType node) {
+  for (auto const& test_result : source_time) {
     auto const& test_name = test_result.first;
-    auto& dst = dest[test_name][node];
+    auto& dst = dest_time[test_name][node];
     auto const& src = test_result.second;
 
     std::copy(src.begin(), src.end(), std::back_inserter(dst));
   }
+
+  std::copy(
+    source_memory.begin(), source_memory.end(),
+    std::back_inserter(dest_memory[node])
+  );
 }
 
 struct TestMsg : Message {
   vt_msg_serialize_required();
   TestMsg() = default;
 
-
-  TestMsg(PerfTestHarness::TestResults const& results, NodeType from_node)
+  TestMsg(
+    PerfTestHarness::TestResults const& results,
+    PerfTestHarness::MemoryUsage const& memory, NodeType from_node)
     : results_(results),
+      memory_load_(memory),
       from_node_(from_node) { }
 
   PerfTestHarness::TestResults results_ = {};
+  PerfTestHarness::MemoryUsage memory_load_ = {};
   NodeType from_node_ = {};
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     Message::serialize(s);
     s | results_;
+    s | memory_load_;
     s | from_node_;
   }
 };
@@ -100,15 +110,16 @@ void OutputToFile(std::string const& name, std::string const& content) {
 /////////////////////////////////////////////////
 
 PerfTestHarness::CombinedResults PerfTestHarness::combined_timings_ = {};
+PerfTestHarness::CombinedMemoryUse PerfTestHarness::combined_mem_use_ = {};
 std::unordered_map<std::string, StopWatch> PerfTestHarness::timers_ = {};
-std::unordered_map<uint64_t, double> PerfTestHarness::memory_load_ = {};
+PerfTestHarness::MemoryUsage PerfTestHarness::memory_use_ = {};
 PerfTestHarness::TestResults PerfTestHarness::timings_ = {};
 NodeType PerfTestHarness::my_node_ = {};
 std::string PerfTestHarness::name_ = {};
 vt::util::memory::StatM PerfTestHarness::mem_tracker_ = {};
 
 void PerfTestHarness::SetUp(int argc, char** argv) {
-  // pre-parsed args, that might contain performance-test specific args
+  // pre-parsed args, that may contain performance-test specific args
   std::vector<char*> args_before(argv, argv + argc);
 
   // original args, minus performance-test specific args
@@ -140,6 +151,7 @@ void PerfTestHarness::TearDown() {
   CollectiveOps::finalize();
 
   timings_.clear();
+  memory_use_.clear();
 }
 
 std::string PerfTestHarness::GetName() const {
@@ -150,6 +162,21 @@ void PerfTestHarness::DumpResults() const {
   // Only dump results on root node
   if (my_node_ == 0) {
     std::string file_content = "name,node,mean\n";
+
+    for (auto const& per_node_mem : combined_mem_use_) {
+      auto const node = per_node_mem.first;
+      auto const& memory_use = per_node_mem.second;
+
+      for (auto const mem : memory_use) {
+        auto const best_mem = util::memory::getBestMemoryUnit(mem);
+        fmt::print(
+          "{} Memory usage: {}\n", debug::proc(node),
+          debug::emph(fmt::format(
+            "{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem))
+          )
+        );
+      }
+    }
 
     for (auto& test_run : combined_timings_) {
       auto const name = test_run.first;
@@ -200,18 +227,22 @@ void PerfTestHarness::SyncResults() {
   runInEpochCollective([] {
     constexpr auto root_node = 0;
     if (my_node_ != root_node) {
-      auto msg = makeMessage<TestMsg>(timings_, my_node_);
+      auto msg = makeMessage<TestMsg>(timings_, memory_use_, my_node_);
       theMsg()->sendMsg<TestMsg, &PerfTestHarness::RecvTestResult>(
         root_node, msg);
     }else{
       // Copy the root node's data to 'combined_timings_'
-      CopyTestData(timings_, combined_timings_, my_node_);
+      CopyTestData(
+        timings_, combined_timings_, memory_use_, combined_mem_use_, my_node_);
     }
   });
 }
 
 void PerfTestHarness::RecvTestResult(TestMsg* msg) {
-  CopyTestData(msg->results_, combined_timings_, msg->from_node_);
+  CopyTestData(
+    msg->results_, combined_timings_, msg->memory_load_, combined_mem_use_,
+    msg->from_node_
+  );
 }
 
 void PerfTestHarness::SpinScheduler() {
@@ -231,21 +262,12 @@ void PerfTestHarness::BenchmarkPhase(std::string const& prefix)
   thePhase()->registerHookCollective(phase::PhaseHook::End, [GetName] {
     auto const name = GetName();
     AddResult({name, timers_[name].Stop()});
-    GetMemoryUsage(thePhase()->getCurrentPhase());
+    GetMemoryUsage();
   });
 }
 
-void PerfTestHarness::GetMemoryUsage(uint64_t iteration) {
-  auto mem = mem_tracker_.getUsage();
-
-  memory_load_[iteration] = static_cast<double>(mem);
-
-  auto const best_mem = util::memory::getBestMemoryUnit(mem);
-  fmt::print(
-    "{} Memory usage: {}\n", debug::proc(my_node_),
-    debug::emph(
-      fmt::format("{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem)))
-  );
+void PerfTestHarness::GetMemoryUsage() {
+  memory_use_.push_back(mem_tracker_.getUsage());
 }
 
 }}}} // namespace vt::tests::perf::common
