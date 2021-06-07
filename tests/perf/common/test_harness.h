@@ -81,7 +81,10 @@ struct PerfTestHarness {
   std::string GetName() const;
 
   /**
-   * \brief Dump the test results to stdout and CSV file ({name_}.csv)
+   * \brief Dump the test results to stdout and CSV files.
+   * {name_}_mem.csv file which contains memory usage for each iteration
+   * {name_}_time.csv file which contains all time-related data
+   *
    * This is called at the end of running test suite.
    */
   void DumpResults() const;
@@ -123,6 +126,10 @@ struct PerfTestHarness {
    * Should be called each iteration. Uses \c StatM to track memory usage
    */
   static void GetMemoryUsage();
+
+  private:
+  std::string OutputMemoryUse() const;
+  std::string OutputTimeResults() const;
 
   protected:
   bool gen_file_ = false;

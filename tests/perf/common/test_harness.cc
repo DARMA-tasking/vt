@@ -168,73 +168,87 @@ std::string PerfTestHarness::GetName() const {
   return name_;
 }
 
+std::string PerfTestHarness::OutputMemoryUse() const {
+  std::string file_content =  "name,node,mem\n";
+
+  for (auto const& per_node_mem : combined_mem_use_) {
+    auto const node = per_node_mem.first;
+    auto const& memory_use = per_node_mem.second;
+
+    std::size_t cur_min = std::numeric_limits<std::size_t>::max();
+    std::size_t cur_max = 0;
+
+    for (auto const mem : memory_use) {
+      cur_min = std::min(mem, cur_min);
+      cur_max = std::max(mem, cur_max);
+
+      file_content.append(fmt::format("{},{},{}\n", name_, node, mem));
+
+      if (verbose_) {
+        fmt::print(
+          "{} Memory usage: {}\n", debug::proc(node),
+          GetFormattedMemUsage(mem));
+      }
+    }
+
+    fmt::print(
+      "{} {}: Memory usage: min:{} max:{}\n", debug::proc(node),
+      debug::reg(name_), GetFormattedMemUsage(cur_min),
+      GetFormattedMemUsage(cur_max));
+  }
+
+  return file_content;
+}
+
+std::string PerfTestHarness::OutputTimeResults() const {
+  std::string file_content =  "name,node,mean\n";
+
+  for (auto& test_run : combined_timings_) {
+    auto const name = test_run.first;
+
+    for (auto& per_node_result : test_run.second) {
+      auto const node = per_node_result.first;
+      auto& timings = per_node_result.second;
+
+      auto const num_timings = timings.size();
+      auto const mean =
+        std::accumulate(timings.begin(), timings.end(), 0.0) / num_timings;
+      std::sort(timings.begin(), timings.end());
+      auto const& min = timings.front();
+      auto const& max = timings.back();
+
+      file_content.append(fmt::format("{},{},{:.3f}\n", name, node, mean));
+
+      fmt::print(
+        "{} Timings for {} (mean value: {} min: {} max: {})\n",
+        debug::proc(node), debug::reg(name),
+        debug::emph(fmt::format("{:.3f}ms", mean)),
+        debug::emph(fmt::format("{:.3f}ms", min)),
+        debug::emph(fmt::format("{:.3f}ms", max)));
+
+      if (verbose_) {
+        for (uint32_t run_num = 0; run_num < num_timings; ++run_num) {
+          fmt::print(
+            "{} Run {} -> {}\n", debug::proc(node), run_num,
+            debug::emph(fmt::format("{:.3f}ms", timings[run_num])));
+        }
+      }
+    }
+  }
+
+  return file_content;
+}
+
 void PerfTestHarness::DumpResults() const {
   // Only dump results on root node
   if (my_node_ == 0) {
-    std::string file_content = "name,node,mean\n";
 
-    for (auto const& per_node_mem : combined_mem_use_) {
-      auto const node = per_node_mem.first;
-      auto const& memory_use = per_node_mem.second;
-
-      std::size_t cur_min =  std::numeric_limits<std::size_t>::max();
-      std::size_t cur_max = 0;
-
-      for (auto const mem : memory_use) {
-        cur_min = std::min(mem, cur_min);
-        cur_max = std::max(mem, cur_max);
-
-        if (verbose_) {
-          fmt::print(
-            "{} Memory usage: {}\n", debug::proc(node),
-            GetFormattedMemUsage(mem)
-          );
-        }
-      }
-
-      fmt::print(
-        "{} {}: Memory usage: min:{} max:{}\n", debug::proc(node),
-        debug::reg(name_), GetFormattedMemUsage(cur_min),
-        GetFormattedMemUsage(cur_max)
-      );
-    }
-
-    for (auto& test_run : combined_timings_) {
-      auto const name = test_run.first;
-
-      for (auto& per_node_result : test_run.second) {
-        auto const node = per_node_result.first;
-        auto& timings = per_node_result.second;
-
-        auto const num_timings = timings.size();
-        auto const mean =
-          std::accumulate(timings.begin(), timings.end(), 0.0) / num_timings;
-        std::sort(timings.begin(), timings.end());
-        auto const& min = timings.front();
-        auto const& max = timings.back();
-
-        file_content.append(fmt::format("{},{},{:.3f}\n", name, node, mean));
-
-        fmt::print(
-          "{} Timings for {} (mean value: {} min: {} max: {})\n",
-          debug::proc(node), debug::reg(name),
-          debug::emph(fmt::format("{:.3f}ms", mean)),
-          debug::emph(fmt::format("{:.3f}ms", min)),
-          debug::emph(fmt::format("{:.3f}ms", max))
-        );
-
-        if (verbose_) {
-          for (uint32_t run_num = 0; run_num < num_timings; ++run_num) {
-            fmt::print(
-              "{} Run {} -> {}\n", debug::proc(node), run_num,
-              debug::emph(fmt::format("{:.3f}ms", timings[run_num])));
-          }
-        }
-      }
-    }
+    auto const memory_file = OutputMemoryUse();
+    auto const time_file_data = OutputTimeResults();
 
     if (gen_file_) {
-      OutputToFile(name_, file_content);
+      OutputToFile(fmt::format("{}_mem", name_), memory_file);
+      OutputToFile(fmt::format("{}_time", name_), time_file_data);
     }
   }
 }
