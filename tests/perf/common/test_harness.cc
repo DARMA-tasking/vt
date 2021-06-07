@@ -121,12 +121,6 @@ void OutputToFile(std::string const& name, std::string const& content) {
 
 PerfTestHarness::CombinedResults PerfTestHarness::combined_timings_ = {};
 PerfTestHarness::CombinedMemoryUse PerfTestHarness::combined_mem_use_ = {};
-std::unordered_map<std::string, StopWatch> PerfTestHarness::timers_ = {};
-PerfTestHarness::MemoryUsage PerfTestHarness::memory_use_ = {};
-PerfTestHarness::TestResults PerfTestHarness::timings_ = {};
-NodeType PerfTestHarness::my_node_ = {};
-std::string PerfTestHarness::name_ = {};
-vt::util::memory::StatM PerfTestHarness::mem_tracker_ = {};
 
 void PerfTestHarness::SetUp(int argc, char** argv) {
   // pre-parsed args, that may contain performance-test specific args
@@ -260,7 +254,7 @@ void PerfTestHarness::AddResult(TestResult const& test_result) {
 void PerfTestHarness::SyncResults() {
   // Root node will be responsible for generating the final output
   // so every other node sends its results to it (at the end of test iteration)
-  runInEpochCollective([] {
+  runInEpochCollective([this] {
     constexpr auto root_node = 0;
     if (my_node_ != root_node) {
       auto msg = makeMessage<TestMsg>(timings_, memory_use_, my_node_);
@@ -291,11 +285,11 @@ void PerfTestHarness::BenchmarkPhase(std::string const& prefix)
     return fmt::format("{}{}", prefix, thePhase()->getCurrentPhase());
   };
 
-  thePhase()->registerHookCollective(phase::PhaseHook::Start, [GetName] {
+  thePhase()->registerHookCollective(phase::PhaseHook::Start, [this, GetName] {
     timers_[GetName()].Start();
   });
 
-  thePhase()->registerHookCollective(phase::PhaseHook::End, [GetName] {
+  thePhase()->registerHookCollective(phase::PhaseHook::End, [this, GetName] {
     auto const name = GetName();
     AddResult({name, timers_[name].Stop()});
     GetMemoryUsage();

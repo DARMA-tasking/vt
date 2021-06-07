@@ -94,13 +94,13 @@ struct PerfTestHarness {
    *
    * \param[in] test_result name-time pair of test result
    */
-  static void AddResult(TestResult const& test_result);
+  void AddResult(TestResult const& test_result);
 
   /**
    * \brief Send the tests' results to root node.
    * This is called after each test iteration.
    */
-  static void SyncResults();
+  void SyncResults();
 
   /**
    * \brief Handler for receiving test results from other nodes
@@ -119,13 +119,13 @@ struct PerfTestHarness {
    * This will register for Begin/End Phase notifications from \c PhaseManager
    * and uses \c StopWatch to measure time
    */
-  static void BenchmarkPhase(std::string const& prefix = "phase");
+  void BenchmarkPhase(std::string const& prefix = "phase");
 
   /**
    * \brief Helper function used for tracking memory usage.
    * Should be called each iteration. Uses \c StatM to track memory usage
    */
-  static void GetMemoryUsage();
+  void GetMemoryUsage();
 
   private:
   std::string OutputMemoryUse() const;
@@ -134,18 +134,16 @@ struct PerfTestHarness {
   protected:
   bool gen_file_ = false;
   bool verbose_ = false;
-  static NodeType my_node_;
+  NodeType my_node_ = {};
+  std::string name_ = {};
 
   // Memory usage (in bytes) per iteration
-  static MemoryUsage memory_use_;
-  static vt::util::memory::StatM mem_tracker_;
-
-  // Test suite name
-  static std::string name_;
+  MemoryUsage memory_use_ = {};
+  vt::util::memory::StatM mem_tracker_ = {};
 
   // Local (per node) timings.
-  static TestResults timings_;
-  static std::unordered_map<std::string, StopWatch> timers_;
+  TestResults timings_ = {};
+  std::unordered_map<std::string, StopWatch> timers_ = {};
 
   // Combined timings from all nodes, that are stored on the root node
   static CombinedResults combined_timings_;
