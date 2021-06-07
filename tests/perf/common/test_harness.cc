@@ -70,9 +70,10 @@ static void CopyTestData(
     std::copy(src.begin(), src.end(), std::back_inserter(dst));
   }
 
+  dest_memory[node].resize(source_memory.size());
+
   std::copy(
-    source_memory.begin(), source_memory.end(),
-    std::back_inserter(dest_memory[node])
+    source_memory.begin(), source_memory.end(), dest_memory[node].begin()
   );
 }
 
