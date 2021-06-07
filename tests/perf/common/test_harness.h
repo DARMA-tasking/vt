@@ -60,9 +60,9 @@ struct TestMsg;
 
 struct PerfTestHarness {
   using TestResult = std::pair<std::string, TimeDuration>;
-  using TestResults = std::unordered_map<std::string, std::vector<TimeDuration>>;
+  using TestResults = std::vector<TestResult>;
   using PerNodeResults = std::unordered_map<NodeType, std::vector<TimeDuration>>;
-  using CombinedResults = std::unordered_map<std::string, PerNodeResults>;
+  using CombinedResults = std::vector<std::pair<std::string, PerNodeResults>>;
 
   // Memory use at the end of test iteration (i.e. phase)
   using MemoryUsage = std::vector<std::size_t>;

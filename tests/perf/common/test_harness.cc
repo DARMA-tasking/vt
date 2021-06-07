@@ -64,10 +64,21 @@ static void CopyTestData(
   PerfTestHarness::CombinedMemoryUse& dest_memory, NodeType node) {
   for (auto const& test_result : source_time) {
     auto const& test_name = test_result.first;
-    auto& dst = dest_time[test_name][node];
-    auto const& src = test_result.second;
+    auto const time = test_result.second;
 
-    std::copy(src.begin(), src.end(), std::back_inserter(dst));
+    auto const it = std::find_if(dest_time.begin(), dest_time.end(), [test_name](auto const& result){
+      return test_name == result.first;
+    });
+
+    if (it != dest_time.end()) {
+      it->second[node].push_back(time);
+    } else {
+      PerfTestHarness::PerNodeResults map;
+      map[node] = std::vector<TimeDuration>{time};
+
+      dest_time.push_back({test_name, map});
+    }
+
   }
 
   dest_memory[node].resize(source_memory.size());
@@ -248,7 +259,7 @@ void PerfTestHarness::DumpResults() const {
 }
 
 void PerfTestHarness::AddResult(TestResult const& test_result) {
-  timings_[test_result.first].push_back(test_result.second);
+  timings_.push_back(test_result);
 }
 
 void PerfTestHarness::SyncResults() {
@@ -282,7 +293,7 @@ void PerfTestHarness::SpinScheduler() {
 void PerfTestHarness::BenchmarkPhase(std::string const& prefix)
 {
   auto GetName = [prefix] {
-    return fmt::format("{}{}", prefix, thePhase()->getCurrentPhase());
+    return fmt::format("{} {}", prefix, thePhase()->getCurrentPhase());
   };
 
   thePhase()->registerHookCollective(phase::PhaseHook::Start, [this, GetName] {
@@ -297,6 +308,7 @@ void PerfTestHarness::BenchmarkPhase(std::string const& prefix)
 }
 
 void PerfTestHarness::GetMemoryUsage() {
+  // Memory footpring from PerfTestHarness' internal data structs are included
   memory_use_.push_back(mem_tracker_.getUsage());
 }
 
