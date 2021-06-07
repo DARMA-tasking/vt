@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                scoped_timer.h
+//                                  timers.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -50,9 +50,11 @@
 namespace vt { namespace tests { namespace perf { namespace common {
 
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
-using DurationMicro = std::chrono::duration<double, std::micro>;
-using DurationMilli = std::chrono::duration<double, std::milli>;
-using DurationSec = std::chrono::duration<double>;
+
+using TimeDuration = double;
+using DurationMicro = std::chrono::duration<TimeDuration, std::micro>;
+using DurationMilli = std::chrono::duration<TimeDuration, std::milli>;
+using DurationSec = std::chrono::duration<TimeDuration>;
 
 template <typename Duration>
 struct DurationConverter {
@@ -86,7 +88,7 @@ struct StopWatch {
   void Start();
 
   template <typename Duration = DurationMilli>
-  double Stop() {
+  TimeDuration Stop() {
     auto const now = std::chrono::steady_clock::now();
     auto const delta = Duration{now - cur_time_};
     cur_time_ = now;

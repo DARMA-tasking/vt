@@ -51,7 +51,6 @@
 #include <vt/configs/types/types_type.h>
 #include <vt/utils/memory/memory_usage.h>
 #include <unordered_map>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -60,10 +59,12 @@ namespace vt { namespace tests { namespace perf { namespace common {
 struct TestMsg;
 
 struct PerfTestHarness {
-  using TestResults = std::map<std::string, std::vector<double>>;
-  using CombinedResults =
-    std::map<std::string, std::map<NodeType, std::vector<double>>>;
-  using TestResult = std::pair<std::string, double>;
+  using TestResult = std::pair<std::string, TimeDuration>;
+  using TestResults = std::unordered_map<std::string, std::vector<TimeDuration>>;
+  using PerNodeResults = std::unordered_map<NodeType, std::vector<TimeDuration>>;
+  using CombinedResults = std::unordered_map<std::string, PerNodeResults>;
+
+  // Memory use at the end of test iteration (i.e. phase)
   using MemoryUsage = std::vector<std::size_t>;
   using CombinedMemoryUse = std::unordered_map<NodeType, MemoryUsage>;
 
@@ -73,7 +74,7 @@ struct PerfTestHarness {
   virtual void TearDown();
 
   /**
-   * \brief Get the name if this test suite
+   * \brief Get the name of this test suite
    *
    * \return name
    */

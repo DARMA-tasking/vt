@@ -77,6 +77,15 @@ static void CopyTestData(
   );
 }
 
+static std::string GetFormattedMemUsage(std::size_t memory) {
+  auto const best_mem = util::memory::getBestMemoryUnit(memory);
+
+  return fmt::format(
+    "{}",
+    debug::emph(
+      fmt::format("{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem))));
+}
+
 struct TestMsg : Message {
   vt_msg_serialize_required();
   TestMsg() = default;
@@ -168,15 +177,26 @@ void PerfTestHarness::DumpResults() const {
       auto const node = per_node_mem.first;
       auto const& memory_use = per_node_mem.second;
 
+      std::size_t cur_min =  std::numeric_limits<std::size_t>::max();
+      std::size_t cur_max = 0;
+
       for (auto const mem : memory_use) {
-        auto const best_mem = util::memory::getBestMemoryUnit(mem);
-        fmt::print(
-          "{} Memory usage: {}\n", debug::proc(node),
-          debug::emph(fmt::format(
-            "{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem))
-          )
-        );
+        cur_min = std::min(mem, cur_min);
+        cur_max = std::max(mem, cur_max);
+
+        if (verbose_) {
+          fmt::print(
+            "{} Memory usage: {}\n", debug::proc(node),
+            GetFormattedMemUsage(mem)
+          );
+        }
       }
+
+      fmt::print(
+        "{} {}: Memory usage: min:{} max:{}\n", debug::proc(node),
+        debug::reg(name_), GetFormattedMemUsage(cur_min),
+        GetFormattedMemUsage(cur_max)
+      );
     }
 
     for (auto& test_run : combined_timings_) {
@@ -200,7 +220,8 @@ void PerfTestHarness::DumpResults() const {
           debug::proc(node), debug::reg(name),
           debug::emph(fmt::format("{:.3f}ms", mean)),
           debug::emph(fmt::format("{:.3f}ms", min)),
-          debug::emph(fmt::format("{:.3f}ms", max)));
+          debug::emph(fmt::format("{:.3f}ms", max))
+        );
 
         if (verbose_) {
           for (uint32_t run_num = 0; run_num < num_timings; ++run_num) {
@@ -232,7 +253,7 @@ void PerfTestHarness::SyncResults() {
       theMsg()->sendMsg<TestMsg, &PerfTestHarness::RecvTestResult>(
         root_node, msg);
     }else{
-      // Copy the root node's data to 'combined_timings_'
+      // Copy the root node's data to combined structures
       CopyTestData(
         timings_, combined_timings_, memory_use_, combined_mem_use_, my_node_);
     }

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                scoped_timer.cc
+//                                  timers.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
