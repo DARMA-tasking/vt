@@ -243,6 +243,11 @@ private:
   RuntimeInstType const instance_;
 
   /**
+   * \internal \brief Handle unexpected termination
+   */
+  static void handleSignalFailure();
+
+  /**
    * \internal \brief Check if this node should dump during stack output
    *
    * \return whether this node is allowed to write
@@ -333,7 +338,7 @@ protected:
   void pauseForDebugger();
 
   /**
-   * \internal \brief Setup the SIGSEGV and SIGUSR1 signal handler
+   * \internal \brief Setup the handlers for SIGSEGV, SIGBUS and SIGUSR1
    */
   void setupSignalHandler();
 
@@ -351,6 +356,11 @@ protected:
    * \internal \brief SIGSEGV signal handler
    */
   static void sigHandler(int sig);
+
+  /**
+   * \internal \brief SIGBUS signal handler
+   */
+  static void sigHandlerBus(int sig);
 
   /**
    * \internal \brief SIGUSR1 signal handler

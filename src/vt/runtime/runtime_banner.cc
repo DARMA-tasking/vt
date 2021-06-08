@@ -565,6 +565,16 @@ void Runtime::printStartupBanner() {
     fmt::print("{}\t{}{}", vt_pre, f12, reset);
   }
 
+  if (getAppConfig()->vt_no_sigbus) {
+    auto f11 = fmt::format("Disabling SIGBUS signal handling");
+    auto f12 = opt_on("--vt_no_SIGBUS", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  } else {
+    auto f11 = fmt::format("SIGBUS signal handling enabled by default");
+    auto f12 = opt_inverse("--vt_no_SIGBUS", f11);
+    fmt::print("{}\t{}{}", vt_pre, f12, reset);
+  }
+
   if (getAppConfig()->vt_no_terminate) {
     auto f11 = fmt::format("Disabling std::terminate signal handling");
     auto f12 = opt_on("--vt_no_terminate", f11);

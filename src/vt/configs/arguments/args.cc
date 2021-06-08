@@ -84,14 +84,17 @@ void ArgConfig::addColorArgs(CLI::App& app) {
 void ArgConfig::addSignalArgs(CLI::App& app) {
   auto no_sigint      = "Do not register signal handler for SIGINT";
   auto no_sigsegv     = "Do not register signal handler for SIGSEGV";
+  auto no_sigbus      = "Do not register signal handler for SIGBUS";
   auto no_terminate   = "Do not register handler for std::terminate";
   auto d = app.add_flag("--vt_no_SIGINT",    config_.vt_no_sigint,    no_sigint);
   auto e = app.add_flag("--vt_no_SIGSEGV",   config_.vt_no_sigsegv,   no_sigsegv);
+  auto g = app.add_flag("--vt_no_SIGBUS",    config_.vt_no_sigbus,    no_sigbus);
   auto f = app.add_flag("--vt_no_terminate", config_.vt_no_terminate, no_terminate);
   auto signalGroup = "Signal Handling";
   d->group(signalGroup);
   e->group(signalGroup);
   f->group(signalGroup);
+  g->group(signalGroup);
 }
 
 void ArgConfig::addMemUsageArgs(CLI::App& app) {
