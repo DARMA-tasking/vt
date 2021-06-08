@@ -125,9 +125,10 @@ struct NodeObj {
       NodeType const next =
         theContext()->getNode() == ping_node ? pong_node : ping_node;
 
+      auto msg = vt::makeMessage<NodeObj::PingMsg<num_bytes>>(cnt + 1);
       proxy_[next]
-        .send<NodeObj::PingMsg<num_bytes>, &NodeObj::pingPong<num_bytes>>(
-          cnt + 1);
+        .sendMsg<NodeObj::PingMsg<num_bytes>, &NodeObj::pingPong<num_bytes>>(
+          msg);
     }
   }
 
