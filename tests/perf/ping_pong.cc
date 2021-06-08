@@ -73,7 +73,7 @@ struct NodeObj {
     std::array<char, num_bytes> payload;
 
     PingMsg() : Message() { }
-    PingMsg(int64_t const in_count) : Message(), count(in_count) { }
+    explicit PingMsg(int64_t const in_count) : Message(), count(in_count) { }
   };
 
   template <int64_t num_bytes>
@@ -85,7 +85,7 @@ struct NodeObj {
         prev_bytes(in_prev_bytes) { }
   };
 
-  NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
+  explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
   void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
 
   void addPerfStats(int64_t const& num_bytes) {
