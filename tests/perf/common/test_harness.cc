@@ -66,9 +66,10 @@ static void CopyTestData(
     auto const& test_name = test_result.first;
     auto const time = test_result.second;
 
-    auto const it = std::find_if(dest_time.begin(), dest_time.end(), [test_name](auto const& result){
-      return test_name == result.first;
-    });
+    auto const& it = std::find_if(
+      dest_time.begin(), dest_time.end(),
+      [test_name](auto const& result) { return test_name == result.first; }
+    );
 
     if (it != dest_time.end()) {
       it->second[node].push_back(time);
@@ -89,7 +90,7 @@ static void CopyTestData(
 }
 
 static std::string GetFormattedMemUsage(std::size_t memory) {
-  auto const best_mem = util::memory::getBestMemoryUnit(memory);
+  auto const& best_mem = util::memory::getBestMemoryUnit(memory);
 
   return fmt::format(
     "{}",
@@ -262,19 +263,29 @@ void PerfTestHarness::AddResult(TestResult const& test_result) {
   timings_.push_back(test_result);
 }
 
+void PerfTestHarness::StartTimer(std::string const& name) {
+  timers_[name].Start();
+}
+
+void PerfTestHarness::StopTimer(std::string const& name) {
+  AddResult({name, timers_[name].Stop()});
+}
+
 void PerfTestHarness::SyncResults() {
   // Root node will be responsible for generating the final output
   // so every other node sends its results to it (at the end of test iteration)
   runInEpochCollective([this] {
     constexpr auto root_node = 0;
+
     if (my_node_ != root_node) {
       auto msg = makeMessage<TestMsg>(timings_, memory_use_, my_node_);
       theMsg()->sendMsg<TestMsg, &PerfTestHarness::RecvTestResult>(
         root_node, msg);
-    }else{
+    } else {
       // Copy the root node's data to combined structures
       CopyTestData(
-        timings_, combined_timings_, memory_use_, combined_mem_use_, my_node_);
+        timings_, combined_timings_, memory_use_, combined_mem_use_, my_node_
+      );
     }
   });
 }

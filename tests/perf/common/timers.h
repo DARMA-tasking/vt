@@ -71,19 +71,19 @@ struct DurationConverter {
   }
 };
 
-/*
-* Simple stopwatch utility struct for measuring time.
-*
-* Example use:
-*
-* StopWatch t;
-*
-* t.Start();
-* SomeFunction();
-* auto const delta = t.Stop<DurationMicro>();
-*
-* fmt::print("SomeFunction took {}?s", delta);
-*/
+/**
+ * \brief Simple stopwatch utility struct for measuring time.
+ *
+ * Example use:
+ *
+ * StopWatch t;
+ *
+ * t.Start();
+ * SomeFunction();
+ * auto const delta = t.Stop<DurationMicro>();
+ *
+ * fmt::print("SomeFunction took {}?s", delta);
+ */
 struct StopWatch {
   void Start();
 

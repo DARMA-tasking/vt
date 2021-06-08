@@ -97,6 +97,21 @@ struct PerfTestHarness {
   void AddResult(TestResult const& test_result);
 
   /**
+   * \brief Add and start a timer with name \c name
+   *
+   * \param[in] name name of the timer
+   */
+  void StartTimer(std::string const& name);
+
+  /**
+   * \brief Stop the timer \c name and add test result.
+   * This function calls \c AddResult
+   *
+   * \param[in] name name of the timer
+   */
+  void StopTimer(std::string const& name);
+
+  /**
    * \brief Send the tests' results to root node.
    * This is called after each test iteration.
    */

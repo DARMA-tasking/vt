@@ -42,6 +42,7 @@
 */
 #include "common/test_harness.h"
 #include <vt/collective/collective_ops.h>
+#include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 
 #include <cassert>
@@ -63,73 +64,96 @@ static int64_t num_pings = 1024;
 static constexpr NodeType const ping_node = 0;
 static constexpr NodeType const pong_node = 1;
 
-template <int64_t num_bytes>
-struct PingMsg : ShortMessage {
-  int64_t count = 0;
-  std::array<char, num_bytes> payload;
+struct MyTest : PerfTestHarness { };
 
-  PingMsg() : ShortMessage() { }
-  PingMsg(int64_t const in_count) : ShortMessage(), count(in_count) { }
-};
+struct NodeObj {
+  template <int64_t num_bytes>
+  struct PingMsg : Message {
+    int64_t count = 0;
+    std::array<char, num_bytes> payload;
 
-template <int64_t num_bytes>
-struct FinishedPingMsg : ShortMessage {
-  int64_t prev_bytes = 0;
+    PingMsg() : Message() { }
+    PingMsg(int64_t const in_count) : Message(), count(in_count) { }
+  };
 
-  FinishedPingMsg(int64_t const in_prev_bytes)
-    : ShortMessage(), prev_bytes(in_prev_bytes)
-  { }
-};
+  template <int64_t num_bytes>
+  struct FinishedPingMsg : Message {
+    int64_t prev_bytes = 0;
 
-struct MyTest : PerfTestHarness {
-  static void printTiming(int64_t const& num_bytes) {
-    auto const& name = fmt::format("{}", num_bytes);
-    AddResult({name, timers_[name].Stop()});
+    FinishedPingMsg(int64_t const in_prev_bytes)
+      : Message(),
+        prev_bytes(in_prev_bytes) { }
+  };
+
+  NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
+  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
+
+  void addPerfStats(int64_t const& num_bytes) {
+    test_obj_->StopTimer(fmt::format("{}", num_bytes));
+    test_obj_->GetMemoryUsage();
+    test_obj_->StartTimer(fmt::format("{}", num_bytes * 2));
   }
 
   template <int64_t num_bytes>
-  static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
-    printTiming(num_bytes);
+  void finishedPing(FinishedPingMsg<num_bytes>* msg) {
+    // End of iteration for node 0
+    addPerfStats(num_bytes);
 
     if (num_bytes != max_bytes) {
-      timers_[fmt::format("{}", num_bytes * 2)].Start();
+      constexpr auto new_num_bytes = num_bytes * 2;
+      test_obj_->StartTimer(fmt::format("{}", new_num_bytes));
 
-      auto pmsg = makeMessage<PingMsg<num_bytes * 2>>();
-      theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong<num_bytes * 2>>(
-        pong_node, pmsg);
+      proxy_[pong_node]
+        .send<
+          NodeObj::PingMsg<new_num_bytes>, &NodeObj::pingPong<new_num_bytes>>();
     }
   }
 
   template <int64_t num_bytes>
-  static void pingPong(PingMsg<num_bytes>* in_msg) {
+  void pingPong(PingMsg<num_bytes>* in_msg) {
     auto const& cnt = in_msg->count;
 
     if (cnt >= num_pings) {
-      auto msg = makeMessage<FinishedPingMsg<num_bytes>>(num_bytes);
-      theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing<num_bytes>>(
-        0, msg);
+      // End of iteration for node 1
+      addPerfStats(num_bytes);
+
+      proxy_[0]
+        .send<
+          NodeObj::FinishedPingMsg<num_bytes>,
+          &NodeObj::finishedPing<num_bytes>>(num_bytes);
     } else {
       NodeType const next =
         theContext()->getNode() == ping_node ? pong_node : ping_node;
 
-      auto m = makeMessage<PingMsg<num_bytes>>(cnt + 1);
-      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(next, m);
+      proxy_[next]
+        .send<NodeObj::PingMsg<num_bytes>, &NodeObj::pingPong<num_bytes>>(
+          cnt + 1);
     }
   }
+
+  private:
+  MyTest* test_obj_ = nullptr;
+  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
 };
 
 template <>
-void MyTest::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
-  MyTest::printTiming(max_bytes);
+void NodeObj::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
+  addPerfStats(max_bytes);
 }
 
 VT_PERF_TEST(MyTest, test_ping_pong) {
-  timers_[fmt::format("{}", min_bytes)].Start();
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(this);
+  grp_proxy[my_node_]
+    .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
-  if (my_node_ == 0) {
-    auto m = makeMessage<PingMsg<min_bytes>>();
-    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong<min_bytes>>(pong_node, m);
-  }
+  vt::runInEpochCollective([this, grp_proxy] {
+    StartTimer(fmt::format("{}", min_bytes));
+
+    if (my_node_ == 0) {
+      grp_proxy[pong_node]
+        .send<NodeObj::PingMsg<min_bytes>, &NodeObj::pingPong<min_bytes>>();
+    }
+  });
 }
 
 VT_PERF_TEST_MAIN()
