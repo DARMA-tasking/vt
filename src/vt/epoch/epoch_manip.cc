@@ -80,7 +80,7 @@ EpochManip::EpochManip()
 
   // Set sequence ID to 0--this is the archetypical epoch with just control bits
   // initialized
-  EpochManip::setSeq(new_epoch, makeEpochZero());
+  EpochManip::setSeq(new_epoch, 0);
 
   return new_epoch;
 }
@@ -117,7 +117,7 @@ EpochType EpochManip::getNextRootedEpoch(
 
 EpochType EpochManip::getArchetype(EpochType epoch) const {
   auto epoch_arch = epoch;
-  epoch::EpochManip::setSeq(epoch_arch, makeEpochZero());
+  epoch::EpochManip::setSeq(epoch_arch, 0);
   return epoch_arch;
 }
 
@@ -198,7 +198,7 @@ void EpochManip::setNode(EpochType& epoch, NodeType const node) {
 }
 
 /*static*/
-void EpochManip::setSeq(EpochType& epoch, EpochType const seq) {
+void EpochManip::setSeq(EpochType& epoch, EpochType::ImplType const seq) {
   if (isRooted(epoch)) {
     BitPackerType::setField<
       eEpochRoot::rEpochSequential, epoch_seq_root_num_bits

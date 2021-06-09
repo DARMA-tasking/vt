@@ -150,7 +150,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    * \param[in,out] epoch the epoch to modify
    * \param[in] seq the sequential ID to set on the epoch
    */
-  static void setSeq(EpochType& epoch, EpochType const seq);
+  static void setSeq(EpochType& epoch, EpochType::ImplType const seq);
 
   /*
    * General (stateless) methods for creating a epoch with certain properties

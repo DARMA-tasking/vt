@@ -56,22 +56,20 @@ EpochWindow::EpochWindow(EpochType epoch) {
   // easily to incoming epochs to check that they match all the control bit
   // fields. For efficiency, the window relies on the sequentiality of
   // same-typed epochs to create a semi-contiguous window of terminated epochs.
-  EpochManip::setSeq(arch_epoch, makeEpochZero());
+  EpochManip::setSeq(arch_epoch, 0);
   archetype_epoch_ = arch_epoch;
 
   // Set all non-control bits (sequence bits to max value) to build the max
   // epoch allowed for this archetype
   EpochType max_epoch = archetype_epoch_;
-  EpochManip::setSeq(
-    max_epoch, EpochType{static_cast<EpochType::ImplType>(~0ull-1)}
-  );
+  EpochManip::setSeq(max_epoch, static_cast<EpochType::ImplType>(~0ull-1));
 
   // The minimum epoch within this archetype always starts with the sequence
   // number at 1; this saves space for the global, collective epoch which is
   // zero. In fact, for simplicity, the global epoch is all zeros given the
   // control bit scheme
   EpochType min_epoch = archetype_epoch_;
-  EpochManip::setSeq(min_epoch, EpochType{1ull});
+  EpochManip::setSeq(min_epoch, 1ull);
 
   using IntervalType = typename IntegralSet<EpochType::ImplType>::IntervalType;
 
@@ -124,7 +122,7 @@ EpochType EpochWindow::allocateNewEpoch() {
 
 inline bool EpochWindow::isArchetypal(EpochType epoch) {
   auto epoch_arch = epoch;
-  epoch::EpochManip::setSeq(epoch_arch, makeEpochZero());
+  epoch::EpochManip::setSeq(epoch_arch, 0);
   return epoch_arch == archetype_epoch_;
 }
 
