@@ -150,6 +150,7 @@ struct PerfTestHarness {
   bool gen_file_ = false;
   bool verbose_ = false;
   NodeType my_node_ = {};
+  NodeType num_nodes_ = {};
   std::string name_ = {};
 
   // Memory usage (in bytes) per iteration

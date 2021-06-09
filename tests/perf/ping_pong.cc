@@ -89,9 +89,9 @@ struct NodeObj {
   void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
 
   void addPerfStats(int64_t const& num_bytes) {
-    test_obj_->StopTimer(fmt::format("{}", num_bytes));
+    test_obj_->StopTimer(fmt::format("{} bytes", num_bytes));
     test_obj_->GetMemoryUsage();
-    test_obj_->StartTimer(fmt::format("{}", num_bytes * 2));
+    test_obj_->StartTimer(fmt::format("{} bytes", num_bytes * 2));
   }
 
   template <int64_t num_bytes>
@@ -101,7 +101,7 @@ struct NodeObj {
 
     if (num_bytes != max_bytes) {
       constexpr auto new_num_bytes = num_bytes * 2;
-      test_obj_->StartTimer(fmt::format("{}", new_num_bytes));
+      test_obj_->StartTimer(fmt::format("{} bytes", new_num_bytes));
 
       proxy_[pong_node]
         .send<
@@ -148,7 +148,7 @@ VT_PERF_TEST(MyTest, test_ping_pong) {
     .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
   vt::runInEpochCollective([this, grp_proxy] {
-    StartTimer(fmt::format("{}", min_bytes));
+    StartTimer(fmt::format("{} bytes", min_bytes));
 
     if (my_node_ == 0) {
       grp_proxy[pong_node]
