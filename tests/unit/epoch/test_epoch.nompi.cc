@@ -127,7 +127,7 @@ TEST_P(TestEpochParam, basic_test_epoch_all_1) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-  InstantiationName, TestEpochParam, ::testing::Range(1, 100, 10)
+  InstantiationName, TestEpochParam, ::testing::Range(1ull, 100ull, 10ull)
 );
 
 TEST_F(TestEpochBits, test_epoch_bit_assignment) {
