@@ -76,7 +76,7 @@ EpochWindow::EpochWindow(EpochType epoch) {
   using IntervalType = typename IntegralSet<EpochType::ImplType>::IntervalType;
 
   // The allowable interval for this window
-  IntervalType interval{min_epoch, max_epoch};
+  IntervalType interval{*min_epoch, *max_epoch};
 
   // The ranged counter for allocating the next epoch which will always be
   // within the interval
@@ -145,8 +145,8 @@ void EpochWindow::activateEpoch(EpochType epoch) {
     terminated_epochs_.size()
   );
 
-  if (terminated_epochs_.contains(epoch)) {
-    terminated_epochs_.erase(epoch);
+  if (terminated_epochs_.contains(*epoch)) {
+    terminated_epochs_.erase(*epoch);
   }
 
   vt_debug_print(
