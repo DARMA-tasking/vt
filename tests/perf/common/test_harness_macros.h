@@ -47,8 +47,6 @@
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
-static constexpr uint32_t NUM_ITERS = 50;
-
 /**
   * \brief  Helper macros for registering the test and generating main function.
   * Example usage:
@@ -71,9 +69,7 @@ static constexpr uint32_t NUM_ITERS = 50;
   #define VT_PERF_TEST(StructName, TestName)               \
     struct StructName##TestName : StructName {             \
       StructName##TestName() { name_ = #TestName; }        \
-      void SetUp(int argc, char** argv) override {         \
-        StructName::SetUp(argc, argv);                     \
-      }                                                    \
+      void SetUp() override { StructName::SetUp(); }       \
       void TearDown() override { StructName::TearDown(); } \
       void TestFunc();                                     \
     };                                                     \
@@ -90,17 +86,20 @@ static constexpr uint32_t NUM_ITERS = 50;
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                    \
                                                                                \
       TestType test;                                                           \
+      test.Initialize(argc, argv);                                             \
+      auto const num_iters = test.GetNumIters();                               \
+                                                                               \
       StopWatch timer;                                                         \
                                                                                \
       if (rank == 0) {                                                         \
         fmt::print(                                                            \
           "\033[1mRunning test:\033[00m \033[32m{}\033[00m (Number of runs = " \
           "\033[32m{}\033[00m) ...\n",                                         \
-          test.GetName(), NUM_ITERS);                                          \
+          test.GetName(), num_iters);                                          \
       }                                                                        \
                                                                                \
-      for (uint32_t i = 1; i <= NUM_ITERS; ++i) {                              \
-        test.SetUp(argc, argv);                                                \
+      for (uint32_t i = 1; i <= num_iters; ++i) {                              \
+        test.SetUp();                                                          \
                                                                                \
         timer.Start();                                                         \
         test.TestFunc();                                                       \

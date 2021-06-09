@@ -134,30 +134,9 @@ void OutputToFile(std::string const& name, std::string const& content) {
 PerfTestHarness::CombinedResults PerfTestHarness::combined_timings_ = {};
 PerfTestHarness::CombinedMemoryUse PerfTestHarness::combined_mem_use_ = {};
 
-void PerfTestHarness::SetUp(int argc, char** argv) {
-  // pre-parsed args, that may contain performance-test specific args
-  std::vector<char*> args_before(argv, argv + argc);
-
-  // original args, minus performance-test specific args
-  std::vector<char*> args_after;
-
-  for (auto& arg : args_before) {
-    std::string arg_s{arg};
-    if (arg_s == "--vt_perf_gen_file") {
-      gen_file_ = true;
-    } else if (arg_s == "--vt_perf_verbose") {
-      verbose_ = true;
-    } else {
-      args_after.push_back(arg);
-    }
-  }
-
-  if(!verbose_){
-    args_after.push_back(const_cast<char*>("--vt_quiet"));
-  }
-
-  auto custom_argv = args_after.data();
-  auto custom_argc = static_cast<int32_t>(args_after.size());
+void PerfTestHarness::SetUp() {
+  auto custom_argv = custom_args_.data();
+  auto custom_argc = static_cast<int32_t>(custom_args_.size());
   CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true);
   my_node_ = theContext()->getNode();
   num_nodes_ = theContext()->getNumNodes();
@@ -175,8 +154,35 @@ void PerfTestHarness::TearDown() {
   memory_use_.clear();
 }
 
+void PerfTestHarness::Initialize(int argc, char** argv) {
+  // pre-parsed args, that may contain performance-test specific args
+  std::vector<char*> args_before(argv, argv + argc);
+
+  for (auto& arg : args_before) {
+    std::string arg_s{arg};
+    if (arg_s == "--vt_perf_gen_file") {
+      gen_file_ = true;
+    } else if (arg_s == "--vt_perf_verbose") {
+      verbose_ = true;
+    } else if (arg_s.substr(0, 18) == "--vt_perf_num_iter") {
+      // Assume it's in form '--vt_perf_num_iter={num}'
+      num_iters_ = stoi(arg_s.substr(19));
+    } else {
+      custom_args_.push_back(arg);
+    }
+  }
+
+  if(!verbose_){
+    custom_args_.push_back(const_cast<char*>("--vt_quiet"));
+  }
+}
+
 std::string PerfTestHarness::GetName() const {
   return name_;
+}
+
+uint32_t PerfTestHarness::GetNumIters() const {
+  return num_iters_;
 }
 
 std::string PerfTestHarness::OutputMemoryUse() const {
