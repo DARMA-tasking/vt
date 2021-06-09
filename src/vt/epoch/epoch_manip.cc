@@ -162,16 +162,16 @@ EpochWindow* EpochManip::getTerminatedWindow(EpochType epoch) {
   >(*epoch);
 }
 
-/*static*/ EpochType EpochManip::seq(EpochType const& epoch) {
+/*static*/ EpochType::ImplType EpochManip::seq(EpochType const& epoch) {
   using ImplType = typename EpochType::ImplType;
   if (isRooted(epoch)) {
-    return EpochType{BitPackerType::getField<
+    return BitPackerType::getField<
       eEpochRoot::rEpochSequential, epoch_seq_root_num_bits, ImplType
-    >(*epoch)};
+    >(*epoch);
   } else {
-    return EpochType{BitPackerType::getField<
+    return BitPackerType::getField<
       eEpochColl::cEpochSequential, epoch_seq_coll_num_bits, ImplType
-    >(*epoch)};
+    >(*epoch);
   }
 }
 

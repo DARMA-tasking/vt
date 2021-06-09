@@ -114,7 +114,7 @@ struct EpochManip : runtime::component::Component<EpochManip> {
    *
    * \return the sequential number for an \c epoch
    */
-  static EpochType seq(EpochType const& epoch);
+  static EpochType::ImplType seq(EpochType const& epoch);
 
   /*
    *  Epoch setters to manipulate the type and state of EpochType
