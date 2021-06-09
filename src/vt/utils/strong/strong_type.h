@@ -175,6 +175,16 @@ struct hash<vt::util::strong::detail::Strong<T, init_val, Tag>> {
   }
 };
 
+template <typename T, T init_val, typename Tag>
+struct less<vt::util::strong::detail::Strong<T, init_val, Tag>> {
+  bool operator()(
+    vt::util::strong::detail::Strong<T, init_val, Tag> const& a,
+    vt::util::strong::detail::Strong<T, init_val, Tag> const& b
+) const {
+    return *a < *b;
+  }
+};
+
 } /* end namespace std */
 
 namespace vt {
