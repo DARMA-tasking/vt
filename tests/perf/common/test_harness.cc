@@ -152,6 +152,10 @@ void PerfTestHarness::SetUp(int argc, char** argv) {
     }
   }
 
+  if(!verbose_){
+    args_after.push_back(const_cast<char*>("--vt_quiet"));
+  }
+
   auto custom_argv = args_after.data();
   auto custom_argc = static_cast<int32_t>(args_after.size());
   CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true);
