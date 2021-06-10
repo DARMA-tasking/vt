@@ -262,9 +262,9 @@ void GreedyLB::recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs) {
 }
 
 void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
-#define SCATTER 0
+#define SCATTER 1
 #define PT2PT 0
-#define BROADCAST 1
+#define BROADCAST 0
 
 #if SCATTER
   std::size_t max_recs = 1, max_bytes = 0;
