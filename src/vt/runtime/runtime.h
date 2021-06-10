@@ -69,6 +69,7 @@ struct Runtime {
     int& argc, char**& argv,
     WorkerCountType in_num_workers = no_workers, bool const interop_mode = false,
     MPI_Comm* in_comm = nullptr,
+    bool delay_startup_banner = false,
     RuntimeInstType const in_instance = RuntimeInstType::DefaultInstance
   );
 
@@ -162,7 +163,9 @@ public:
   ComponentPtrType<objgroup::ObjGroupManager> theObjGroup;
 
   // Node-level worker-based components for vt (these are optional)
-  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp;
+  #if vt_threading_enabled
+  ComponentPtrType<worker::WorkerGroupType> theWorkerGrp = nullptr;
+  #endif
 
   // Optional components
   #if backend_check_enabled(trace_enabled)
@@ -180,6 +183,7 @@ protected:
   MPI_Comm* communicator_ = nullptr;
   int user_argc_ = 0;
   char** user_argv_ = nullptr;
+  bool delay_startup_banner_ = false; /**< Delay printout of startup banner */
 };
 
 }} /* end namespace vt::runtime */

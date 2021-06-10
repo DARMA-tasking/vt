@@ -91,10 +91,11 @@ namespace vt { namespace runtime {
 
 Runtime::Runtime(
   int& argc, char**& argv, WorkerCountType in_num_workers,
-  bool const interop_mode, MPI_Comm* in_comm, RuntimeInstType const in_instance
+  bool const interop_mode, MPI_Comm* in_comm, bool delay_startup_banner,
+  RuntimeInstType const in_instance
 )  : instance_(in_instance), runtime_active_(false), is_interop_(interop_mode),
      num_workers_(in_num_workers), communicator_(in_comm), user_argc_(argc),
-     user_argv_(argv)
+     user_argv_(argv), delay_startup_banner_(delay_startup_banner)
 {
   ArgType::parse(argc, argv);
   if (argc > 0) {
@@ -535,20 +536,10 @@ void Runtime::printStartupBanner() {
   if (ArgType::vt_lb_stats) {
     auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
-
-    auto const fname = ArgType::vt_lb_stats_file;
-    if (fname != "") {
-      auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
-      auto f12 = opt_on("--vt_lb_stats_file", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
-
-    auto const fdir = ArgType::vt_lb_stats_dir;
-    if (fdir != "") {
-      auto f11 = fmt::format("LB stats directory \"{}\"", fdir);
-      auto f12 = opt_on("--vt_lb_stats_dir", f11);
-      fmt::print("{}\t{}{}", vt_pre, f12, reset);
-    }
+    vtAbort(
+      "--vt_lb_stats was used, but load balancing statistics collection "
+      "is disabled in this release."
+    );
   }
 
 
@@ -990,8 +981,17 @@ bool Runtime::initialize(bool const force_now) {
     initializeErrorHandlers();
     sync();
     if (theContext->getNode() == 0) {
-      printStartupBanner();
+      auto fn = [=]{
+        printStartupBanner();
+      };
+
+      if (delay_startup_banner_) {
+        theSched->enqueue(fn);
+      } else {
+        fn();
+      }
     }
+
     setup();
     sync();
     initialized_ = true;
@@ -1027,7 +1027,12 @@ bool Runtime::finalize(bool const force_now) {
 }
 
 void Runtime::sync() {
-  MPI_Barrier(theContext->getComm());
+  MPI_Comm comm = theContext->getComm();
+  if (comm == MPI_COMM_NULL) {
+    vtAbort("Trying to sync runtime while the communicator is not available");
+  } else {
+    MPI_Barrier(comm);
+  }
 }
 
 void Runtime::runScheduler() {
@@ -1216,6 +1221,7 @@ void Runtime::initializeComponents() {
     theTrace->initialize();
   #endif
   theEvent->initialize();
+  vrt::collection::balance::ProcStats::initialize();
 
   debug_print(runtime, node, "end: initializeComponents\n");
 }
@@ -1285,6 +1291,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
   bool const has_workers = num_workers != no_workers;
 
   if (has_workers) {
+    #if vt_threading_enabled
     ContextAttorney::setNumWorkers(num_workers);
 
     // Initialize individual memory pool for each worker
@@ -1301,6 +1308,7 @@ void Runtime::initializeWorkers(WorkerCountType const num_workers) {
       }
     };
     theWorkerGrp->registerIdleListener(localTermFn);
+    #endif
   } else {
     // Without workers running on the node, the termination detector should
     // enable/disable the global collective epoch based on the state of the
@@ -1362,6 +1370,7 @@ void Runtime::finalizeComponents() {
 
   // Finalize memory usage component
   util::memory::MemoryUsage::finalize();
+  vrt::collection::balance::ProcStats::finalize();
 
   debug_print(runtime, node, "end: finalizeComponents\n");
 }
@@ -1369,7 +1378,9 @@ void Runtime::finalizeComponents() {
 void Runtime::finalizeOptionalComponents() {
   debug_print(runtime, node, "begin: finalizeOptionalComponents\n");
 
+#if vt_threading_enabled
   theWorkerGrp = nullptr;
+#endif
 
   debug_print(runtime, node, "end: finalizeOptionalComponents\n");
 }

@@ -70,6 +70,7 @@ struct MPISingletonMultiTest {
     comm_ = MPI_COMM_WORLD;
     MPI_Barrier(comm_);
   }
+
   virtual ~MPISingletonMultiTest() {
     MPI_Barrier(comm_);
     MPI_Finalize();
@@ -91,19 +92,22 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
 
     TestHarnessAny<TestBase>::SetUp();
 
+    // TODO (STRZ) - do we want to use additional args here as well?
     if (mpi_singleton == nullptr) {
-      mpi_singleton = std::make_unique<MPISingletonMultiTest>(
-        test_argc, test_argv
-      );
+      mpi_singleton =
+        std::make_unique<MPISingletonMultiTest>(test_argc, test_argv);
     }
 
-    CollectiveOps::initialize(test_argc, test_argv, no_workers, true);
+    auto const new_args = injectAdditionalArgs(test_argc, test_argv);
+    auto custom_argc = new_args.first;
+    auto custom_argv = new_args.second;
+    CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true);
 
-    #if DEBUG_TEST_HARNESS_PRINT
-      auto const& my_node = theContext()->getNode();
-      auto const& num_nodes = theContext()->getNumNodes();
-      fmt::print("my_node={}, num_nodes={}\n", my_node, num_nodes);
-    #endif
+#if DEBUG_TEST_HARNESS_PRINT
+    auto const& my_node = theContext()->getNode();
+    auto const& num_nodes = theContext()->getNumNodes();
+    fmt::print("my_node={}, num_nodes={}\n", my_node, num_nodes);
+#endif
   }
 
   virtual void TearDown() {
@@ -113,10 +117,10 @@ struct TestParallelHarnessAny : TestHarnessAny<TestBase> {
       runScheduler();
     }
 
-    #if DEBUG_TEST_HARNESS_PRINT
-      auto const& my_node = theContext()->getNode();
-      fmt::print("my_node={}, tearing down runtime\n", my_node);
-    #endif
+#if DEBUG_TEST_HARNESS_PRINT
+    auto const& my_node = theContext()->getNode();
+    fmt::print("my_node={}, tearing down runtime\n", my_node);
+#endif
 
     CollectiveOps::finalize();
 
@@ -136,6 +140,20 @@ protected:
   }
 
 private:
+  std::pair<int, char**>
+  injectAdditionalArgs(int old_argc, char** old_argv) {
+    std::copy(
+      old_argv, old_argv + old_argc, std::back_inserter(additional_args_)
+    );
+
+    addAdditionalArgs();
+
+    int custom_argc = additional_args_.size();
+    char** custom_argv = additional_args_.data();
+
+    return std::make_pair(custom_argc, custom_argv);
+  }
+
   /**
    * \internal \brief Add additional arguments used during initialization of vt
    * components

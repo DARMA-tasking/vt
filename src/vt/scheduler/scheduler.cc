@@ -129,16 +129,22 @@ bool Scheduler::progressImpl() {
   bool const col_sch = theCollection()->progress();
   bool const obj_sch = theObjGroup()->progress();
 
+#if vt_threading_enabled
   bool const worker_sch =
     theContext()->hasWorkers() ? theWorkerGrp()->progress(),false : false;
   bool const worker_comm_sch =
     theContext()->hasWorkers() ? theWorkerGrp()->commScheduler() : false;
+#endif
 
   checkTermSingleNode();
 
   bool scheduled_work =
     msg_sch or evt_sch or seq_sch or vrt_sch or
-    col_sch or obj_sch or worker_sch or worker_comm_sch;
+    col_sch or obj_sch
+#if vt_threading_enabled
+    or worker_sch or worker_comm_sch
+#endif
+    ;
 
   return scheduled_work;
 }

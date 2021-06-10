@@ -2,11 +2,11 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   atomic.h
+//                           test_group.extended.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -42,32 +42,59 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_ATOMIC_ATOMIC_H
-#define INCLUDED_UTILS_ATOMIC_ATOMIC_H
+#include <gtest/gtest.h>
 
-#include "vt/config.h"
+#include "test_parallel_harness.h"
 
-#if backend_check_enabled(openmp)
-  #include "vt/utils/atomic/omp_atomic.h"
-#elif backend_check_enabled(stdthread)
-  #include "vt/utils/atomic/std_atomic.h"
-#else
-  #include "vt/utils/atomic/null_atomic.h"
-#endif
+#include "vt/transport.h"
 
-namespace vt { namespace util { namespace atomic {
+namespace vt { namespace tests { namespace unit {
 
-#if backend_check_enabled(openmp)
-  template <typename T>
-  using AtomicType = AtomicOMP<T>;
-#elif backend_check_enabled(stdthread)
-  template <typename T>
-  using AtomicType = AtomicSTD<T>;
-#else
-  template <typename T>
-  using AtomicType = AtomicNull<T>;
-#endif
+struct MySimpleMsg : ::vt::Message { };
 
-}}} /* end namespace vt::util::atomic */
+static void msgHandlerGroup(MySimpleMsg* msg) {
+  auto const cur_node = ::vt::theContext()->getNode();
+  vtAssert(cur_node % 2 == 0, "This handler should only execute on even nodes");
 
-#endif /*INCLUDED_UTILS_ATOMIC_ATOMIC_H*/
+  ::fmt::print("msgHandlerGroup: triggered on node={}\n", cur_node);
+}
+
+// demonstrate collective group creation and broadcast to that group
+static inline void activeMessageGroupCollective() {
+  NodeType const this_node = ::vt::theContext()->getNode();
+
+  auto const is_even_node = this_node % 2 == 0;
+
+  if (this_node == 0) {
+    int val = 10;
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    vt::theSched()->runSchedulerWhile(
+      [&val]{
+        return --val >= 0;
+      }
+    );
+  }
+
+  auto group = theGroup()->newGroupCollective(
+    is_even_node, [](GroupType group_id){
+      fmt::print("Group is created: id={:x}\n", group_id);
+
+      // node 1 broadcasts to the group of even nodes
+      auto const my_node = ::vt::theContext()->getNode();
+      if (my_node == 1) {
+        auto msg = makeSharedMessage<MySimpleMsg>();
+        envelopeSetGroup(msg->env, group_id);
+        theMsg()->broadcastMsg<MySimpleMsg,msgHandlerGroup>(msg);
+      }
+    }
+  );
+  (void)group;
+}
+
+struct TestGroupExtended : TestParallelHarness {};
+
+TEST_F(TestGroupExtended, test_group_collective) {
+  vt::runInEpochCollective([] { activeMessageGroupCollective(); });
+}
+
+}}} // end namespace vt::tests::unit

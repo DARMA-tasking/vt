@@ -53,9 +53,11 @@
 namespace vt {  namespace ctx {
 
 struct ContextAttorney {
+  #if vt_threading_enabled
   // Allow the worker or worker group to modify the contextual worker
   friend worker::WorkerGroupType;
   friend worker::WorkerType;
+  #endif
   // Allow the runtime to set the number of workers
   friend runtime::Runtime;
 

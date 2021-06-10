@@ -45,18 +45,16 @@
 #if !defined INCLUDED_WORKER_WORKER_HEADERS_H
 #define INCLUDED_WORKER_WORKER_HEADERS_H
 
+#if vt_threading_enabled
+
 #include "vt/worker/worker.h"
 #include "vt/worker/worker_group.h"
 #include "vt/worker/worker_types.h"
 
 #if backend_check_enabled(openmp)
   #include "vt/worker/worker_group_omp.h"
-#elif backend_check_enabled(stdthread)
-  #include "vt/worker/worker_group.h"
-#elif backend_no_threading
-  #include "vt/worker/worker_group.h"
 #else
-  backend_static_assert_unreachable
+  #include "vt/worker/worker_group.h"
 #endif
 
 namespace vt { namespace worker {
@@ -65,20 +63,16 @@ namespace vt { namespace worker {
   using WorkerGroupType = WorkerGroupOMP;
 #elif backend_check_enabled(stdthread)
   using WorkerGroupType = WorkerGroupSTD;
-#elif backend_no_threading
+#elif vt_check_enabled(fcontext)
   using WorkerGroupType = WorkerGroupSeq;
-#else
-  backend_static_assert_unreachable
 #endif
 
 #if backend_check_enabled(openmp)
   using WorkerType = OMPWorker;
 #elif backend_check_enabled(stdthread)
   using WorkerType = StdThreadWorker;
-#elif backend_no_threading
+#elif vt_check_enabled(fcontext)
   using WorkerType = WorkerSeq;
-#else
-  backend_static_assert_unreachable
 #endif
 
 }} /* end namespace vt::worker */
@@ -88,5 +82,7 @@ namespace vt {
 extern worker::WorkerGroupType* theWorkerGrp();
 
 } /* end namespace vt */
+
+#endif /* vt_threading_enabled */
 
 #endif /*INCLUDED_WORKER_WORKER_HEADERS_H*/
