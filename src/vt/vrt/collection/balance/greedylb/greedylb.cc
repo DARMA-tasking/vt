@@ -267,7 +267,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
 #define BROADCAST 1
 
 #if SCATTER
-  std::size_t max_recs = 0, max_bytes = 0;
+  std::size_t max_recs = 1, max_bytes = 0;
 #endif
   std::vector<GreedyProc> load(std::move(in_load));
   std::vector<std::vector<GreedyLBTypes::ObjIDType>> node_transfer(load.size());
