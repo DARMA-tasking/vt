@@ -86,7 +86,9 @@ private:
   void runBalancer(ObjSampleType&& objs, LoadProfileType&& profile);
   void transferObjs(std::vector<GreedyProc>&& load);
   ObjIDType objSetNode(NodeType const& node, ObjIDType const& id);
-  void recvObjsDirect(GreedyLBTypes::ObjIDType* objs);
+  void recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs);
+  void recvObjs(GreedySendMsg* msg);
+  void recvObjsBcast(GreedyBcastMsg* msg);
   void finishedTransferExchange();
   void collectHandler(GreedyCollectMsg* msg);
 

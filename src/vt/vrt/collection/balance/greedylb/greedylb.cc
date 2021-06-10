@@ -214,24 +214,39 @@ GreedyLB::ObjIDType GreedyLB::objSetNode(
   return new_id;
 }
 
-void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
+void GreedyLB::recvObjs(GreedySendMsg* msg) {
+  vt_debug_print(
+    normal, lb,
+    "recvObjs: msg->transfer_.size={}\n", msg->transfer_.size()
+  );
+  recvObjsDirect(msg->transfer_.size(), &msg->transfer_[0]);
+}
+
+void GreedyLB::recvObjsBcast(GreedyBcastMsg* msg) {
+  auto const n = theContext()->getNode();
+  vt_debug_print(
+    normal, lb,
+    "recvObjs: msg->transfer_.size={}\n", msg->transfer_[n].size()
+  );
+  recvObjsDirect(msg->transfer_[n].size(), &msg->transfer_[n][0]);
+}
+
+void GreedyLB::recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs) {
   auto const& this_node = theContext()->getNode();
-  auto const& num_recs = *objs;
-  auto recs = objs + 1;
+  auto const& num_recs = len;
   vt_debug_print(
     normal, lb,
     "recvObjsDirect: num_recs={}\n", num_recs
   );
 
-  for (decltype(+num_recs.id) i = 0; i < num_recs.id; i++) {
-    auto const to_node = objGetNode(recs[i]);
-    auto const new_obj_id = objSetNode(this_node,recs[i]);
+  for (std::size_t i = 0; i < len; i++) {
+    auto const to_node = objGetNode(objs[i]);
+    auto const new_obj_id = objSetNode(this_node,objs[i]);
     vt_debug_print(
       verbose, lb,
-      "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}, "
-      "byte_offset={}\n",
-      i, to_node, recs[i], new_obj_id, num_recs,
-      reinterpret_cast<char*>(recs) - reinterpret_cast<char*>(objs)
+      "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}"
+      "\n",
+      i, to_node, objs[i], new_obj_id, num_recs
     );
 
     migrateObjectTo(new_obj_id, to_node);
@@ -243,11 +258,17 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     verbose, lb,
     "recvObjsHan: num_recs={}\n", *objs
   );
-  scatter_proxy.get()->recvObjsDirect(objs);
+  scatter_proxy.get()->recvObjsDirect(static_cast<std::size_t>(objs->id), objs+1);
 }
 
 void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
+#define SCATTER 0
+#define PT2PT 0
+#define BROADCAST 1
+
+#if SCATTER
   std::size_t max_recs = 0, max_bytes = 0;
+#endif
   std::vector<GreedyProc> load(std::move(in_load));
   std::vector<std::vector<GreedyLBTypes::ObjIDType>> node_transfer(load.size());
   for (auto&& elm : load) {
@@ -259,10 +280,14 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       if (cur_node != node) {
         auto const new_obj_id = objSetNode(node, rec);
         node_transfer[cur_node].push_back(new_obj_id);
+#if SCATTER
         max_recs = std::max(max_recs, node_transfer[cur_node].size() + 1);
+#endif
       }
     }
   }
+
+#if SCATTER
   max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
   vt_debug_print(
     normal, lb,
@@ -280,6 +305,23 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       }
     }
   );
+#elif PT2PT
+  for (NodeType n = 0; n < theContext()->getNumNodes(); n++) {
+    vtAssert(
+      node_transfer.size() == static_cast<size_t>(theContext()->getNumNodes()),
+      "Must contain all nodes"
+    );
+    proxy[n].send<GreedySendMsg, &GreedyLB::recvObjs>(node_transfer[n]);
+  }
+#elif BROADCAST
+  proxy.broadcast<GreedyBcastMsg, &GreedyLB::recvObjsBcast>(node_transfer);
+#else
+# error "Must select some strategy for distribuing info"
+#endif
+
+#undef BROADCAST
+#undef PT2PT
+#undef SCATTER
 }
 
 double GreedyLB::getAvgLoad() const {
