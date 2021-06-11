@@ -106,6 +106,15 @@ template <typename ColT>
 Broadcasts<ColT>::m_ = {};
 }
 
+template <typename MsgT>
+void forbidCustomSizedMsg(const MsgPtr<MsgT>& msg) {
+  const bool is_serializable = ::vt::messaging::msg_defines_serialize_mode<MsgT>::value
+    and (::vt::messaging::msg_serialization_mode<MsgT>::supported
+    or ::vt::messaging::msg_serialization_mode<MsgT>::required);
+  if (not is_serializable and (sizeof(MsgT) != msg.size()))
+    vtAbort(fmt::format("Got custom-sized message with sizeof({})=={} and msg.size()=={}", typeid(*msg.get()).name(), sizeof(MsgT), msg.size()));
+}
+
 template <typename>
 void CollectionManager::cleanupAll() {
   /*
@@ -836,6 +845,7 @@ void CollectionManager::invokeMsgImpl(
   auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msgPtr.get());
   const bool is_bcast = false;
 
+  forbidCustomSizedMsg(msgPtr);
   trace_event = theMsg()->makeTraceCreationSend(
     han, reg_type, msg_size, is_bcast
   );
@@ -967,6 +977,7 @@ messaging::PendingSend CollectionManager::broadcastCollectiveMsgImpl(
   auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   const bool is_bcast = true;
 
+  forbidCustomSizedMsg(msg);
   auto event = theMsg()->makeTraceCreationSend(
     han, reg_type, msg_size, is_bcast
   );
@@ -1129,6 +1140,7 @@ messaging::PendingSend CollectionManager::broadcastMsgUntypedHandler(
   auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   const bool is_bcast = true;
 
+  forbidCustomSizedMsg(msg);
   auto event = theMsg()->makeTraceCreationSend(
     handler, reg_type, msg_size, is_bcast
   );
@@ -1470,6 +1482,7 @@ messaging::PendingSend CollectionManager::sendMsgUntypedHandler(
   auto msg_size = vt::serialization::MsgSizer<MsgT>::get(msg.get());
   const bool is_bcast = false;
 
+  forbidCustomSizedMsg(msg);
   auto event = theMsg()->makeTraceCreationSend(
     handler, reg_type, msg_size, is_bcast
   );
