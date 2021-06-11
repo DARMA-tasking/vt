@@ -134,6 +134,7 @@ rdma::Manager*              theHandleRDMA()         { return CUR_RT->theHandleRD
 util::memory::MemoryUsage*  theMemUsage()           { return CUR_RT->theMemUsage;       }
 vrt::collection::balance::NodeStats* theNodeStats() { return CUR_RT->theNodeStats;      }
 vrt::collection::balance::StatsRestartReader* theStatsReader() { return CUR_RT->theStatsReader;      }
+vrt::collection::balance::LoadStatsReplayer* theLoadStatsReplayer() { return CUR_RT->theLoadStatsReplayer; }
 vrt::collection::balance::LBManager* theLBManager() { return CUR_RT->theLBManager;      }
 timetrigger::TimeTriggerManager* theTimeTrigger()   { return CUR_RT->theTimeTrigger;    }
 vt::arguments::AppConfig*   theConfig()             { return &CUR_RT->theArgConfig->config_;      }

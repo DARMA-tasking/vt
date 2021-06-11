@@ -82,7 +82,8 @@ enum CatEnum : uint64_t {
   temperedlb   = 1ull<<30,
   phase        = 1ull<<31,
   context      = 1ull<<32,
-  epoch        = 1ull<<33
+  epoch        = 1ull<<33,
+  replay       = 1ull<<34
 };
 
 enum CtxEnum : uint64_t {
@@ -140,6 +141,7 @@ vt_option_category_pretty_print(reduce,       "reduce")
 vt_option_category_pretty_print(rdma,         "RDMA")
 vt_option_category_pretty_print(rdma_channel, "RDMA Channel")
 vt_option_category_pretty_print(rdma_state,   "RDMA State")
+vt_option_category_pretty_print(replay,       "stats-replay")
 vt_option_category_pretty_print(runtime,      "runtime")
 vt_option_category_pretty_print(scatter,      "scatter")
 vt_option_category_pretty_print(sequence,     "sequencer")
