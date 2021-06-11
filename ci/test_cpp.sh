@@ -9,7 +9,8 @@ export VT=${source_dir}
 export VT_BUILD=${build_dir}/vt
 pushd "$VT_BUILD"
 
-ctest --output-on-failure | tee cmake-output.log
+# Run unit tests only (use label 'unit_test')
+ctest --output-on-failure -L unit_test | tee cmake-output.log
 
 if test "${CODE_COVERAGE:-0}" -eq 1
 then

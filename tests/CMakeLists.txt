@@ -103,6 +103,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
         FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
         PASS_REGULAR_EXPRESSION "PASSED"
         SKIP_REGULAR_EXPRESSION "SKIPPED"
+        LABELS "unit_test"
       )
     endforeach()
   else()
@@ -112,6 +113,15 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
       TEST_SUFFIX            _no_mpi
       TEST_PREFIX            vt:
       TEST_LIST              ${CUR_TEST_LIST}
+    )
+
+    set_tests_properties(
+      ${${CUR_TEST_LIST}}
+      PROPERTIES TIMEOUT 60
+      FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
+      PASS_REGULAR_EXPRESSION "PASSED"
+      SKIP_REGULAR_EXPRESSION "SKIPPED"
+      LABELS "unit_test"
     )
   endif()
 
@@ -196,11 +206,6 @@ endforeach()
 # Performance Tests
 #
 
-add_library(perf_timer STATIC
-  ${PROJECT_TEST_PERF_DIR}/common/timers.h
-  ${PROJECT_TEST_PERF_DIR}/common/timers.cc
-)
-
 file(GLOB PROJECT_PERF_TESTS ${PROJECT_TEST_PERF_DIR}/*.cc)
 
 foreach(PERF_TEST ${PROJECT_PERF_TESTS})
@@ -213,6 +218,16 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
   add_executable(${TEST_NAME} ${PERF_TEST}
     ${PROJECT_TEST_PERF_DIR}/common/test_harness.h
     ${PROJECT_TEST_PERF_DIR}/common/test_harness.cc
+    ${PROJECT_TEST_PERF_DIR}/common/timers.h
+    ${PROJECT_TEST_PERF_DIR}/common/timers.cc
+  )
+
+  string(REPLACE " " ";" VT_TEST_EXTRA_FLAGS "$ENV{VT_TESTS_ARGUMENTS}")
+
+  add_test(
+    NAME ${TEST_NAME}
+    COMMAND ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS_LIST} ${MPI_NUMPROC_FLAG} ${MPI_MAX_NUMPROC}
+            ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME} ${VT_TEST_EXTRA_FLAGS}
   )
 
   link_target_with_vt(
@@ -220,6 +235,8 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     DEFAULT_LINK_SET
   )
 
-  target_link_libraries(${TEST_NAME} PUBLIC perf_timer)
-
+  set_tests_properties(
+    ${TEST_NAME}
+    PROPERTIES LABELS "perf_test"
+  )
 endforeach()
