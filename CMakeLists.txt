@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17 FATAL_ERROR)
-project(vt)
+project(vt VERSION 1.0.2)
 
 # To generate output file with compilation errors and warnings
 # CMake generator needs to be known

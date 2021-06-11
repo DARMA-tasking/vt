@@ -3,7 +3,6 @@
 // *****************************************************************************
 //
 //                          concurrent_deque_locked.h
-//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
