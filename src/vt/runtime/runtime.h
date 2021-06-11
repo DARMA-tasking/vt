@@ -412,6 +412,7 @@ public:
   ComponentPtrType<rdma::Manager> theHandleRDMA = nullptr;
   ComponentPtrType<vrt::collection::balance::NodeStats> theNodeStats = nullptr;
   ComponentPtrType<vrt::collection::balance::StatsRestartReader> theStatsReader = nullptr;
+  ComponentPtrType<vrt::collection::balance::LoadStatsReplayer> theLoadStatsReplayer = nullptr;
   ComponentPtrType<vrt::collection::balance::LBManager> theLBManager = nullptr;
   ComponentPtrType<timetrigger::TimeTriggerManager> theTimeTrigger = nullptr;
   ComponentPtrType<phase::PhaseManager> thePhase = nullptr;
