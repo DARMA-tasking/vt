@@ -95,7 +95,7 @@ set(
       serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
-    utils/memory utils/mpi_limits
+    utils/memory utils/mpi_limits utils/compress utils/json
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
       registry/auto/vc registry/auto/rdma registry/auto/index
