@@ -53,6 +53,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/utils/json/base_appender.h"
 
 #include <string>
 #include <unordered_map>
@@ -269,6 +270,8 @@ private:
   FILE* stats_file_ = nullptr;
   /// Whether the stats directory has been created
   bool created_dir_ = false;
+  /// The appender for outputting stat files in JSON format
+  std::unique_ptr<util::json::BaseAppender> stat_writer_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

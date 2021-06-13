@@ -48,13 +48,14 @@
 #include "vt/timing/timing.h"
 #include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/runtime.h"
+#include "vt/utils/json/json_appender.h"
 
 #include <vector>
 #include <unordered_map>
 #include <cstdio>
 #include <sys/stat.h>
 
-#include "fmt/core.h"
+#include <fmt/core.h>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -167,8 +168,17 @@ void NodeStats::createStatsFile() {
     vtAssert(false, "Trying to dump stats when VT runtime is deallocated?");
   }
 
+#if CSV_STAT_FILE
   stats_file_ = fopen(file_name.c_str(), "w+");
   vtAssertExpr(stats_file_ != nullptr);
+#else
+  using JSONAppender = util::json::Appender<std::ofstream>;
+
+  if (not stat_writer_) {
+    auto name = fmt::format("jstat.{}.json", theContext()->getNode());
+    stat_writer_ = std::make_unique<JSONAppender>("phases", file_name, true);
+  }
+#endif
 }
 
 void NodeStats::finalize() {
@@ -224,6 +234,7 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
 
   vt_print(lb, "NodeStats::outputStatsForPhase: phase={}\n", phase);
 
+#if CSV_STAT_FILE
   for (auto&& elm : node_data_.at(phase)) {
     ElementIDStruct id = elm.first;
     TimeType time = elm.second;
@@ -259,6 +270,37 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
   }
 
   fflush(stats_file_);
+#else
+  using json = nlohmann::json;
+
+  json j;
+  j["id"] = phase;
+
+  std::size_t i = 0;
+  for (auto&& elm : node_data_.at(phase)) {
+    ElementIDStruct id = elm.first;
+    TimeType time = elm.second;
+    j["tasks"][i]["resource"] = "cpu";
+    j["tasks"][i]["node"] = theContext()->getNode();
+    j["tasks"][i]["object"] = id.id;
+    j["tasks"][i]["time"] = time;
+
+    auto const& subphase_times = node_subphase_data_.at(phase)[id];
+    std::size_t const subphases = subphase_times.size();
+    if (subphases != 0) {
+      for (std::size_t s = 0; s < subphases; s++) {
+        j["tasks"][i]["subphases"][s]["id"] = s;
+        j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
+      }
+    }
+    i++;
+  }
+
+  using JSONAppender = util::json::Appender<std::ofstream>;
+
+  auto writer = static_cast<JSONAppender*>(stat_writer_.get());
+  writer->addElm(j);
+#endif
 }
 
 ElementIDStruct NodeStats::addNodeStats(
