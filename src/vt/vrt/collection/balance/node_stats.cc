@@ -175,7 +175,6 @@ void NodeStats::createStatsFile() {
   using JSONAppender = util::json::Appender<std::ofstream>;
 
   if (not stat_writer_) {
-    auto name = fmt::format("jstat.{}.json", theContext()->getNode());
     stat_writer_ = std::make_unique<JSONAppender>("phases", file_name, true);
   }
 #endif
