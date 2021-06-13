@@ -141,9 +141,9 @@ set(
   ${PROJECT_TEST_UNIT_DIR}/main.cc
 )
 
-# List of test files that should be excluded
+# List of unit test files that should be excluded
 set(
-  EXCLUDED_TEST_FILES
+  EXCLUDED_UNIT_TEST_FILES
   ${PROJECT_TEST_UNIT_DIR}/sequencer/test_sequencer_extensive.extended.cc
 )
 
@@ -165,8 +165,8 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
   foreach (unit_test_file ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
     #message(STATUS "Considering ${unit_test_file}")
 
-    if (${unit_test_file} IN_LIST EXCLUDED_TEST_FILES)
-      message(STATUS "Test file ${unit_test_file} is present on EXCLUDED_TEST_FILES list. Skipping!")
+    if (${unit_test_file} IN_LIST EXCLUDED_UNIT_TEST_FILES)
+      message(STATUS "Test file ${unit_test_file} is present on EXCLUDED_UNIT_TEST_FILES list. Skipping!")
       continue()
     endif()
 
@@ -206,9 +206,21 @@ endforeach()
 # Performance Tests
 #
 
+# List of perf test files that should be excluded
+set(
+  EXCLUDED_PERF_TEST_FILES
+  ${PROJECT_TEST_PERF_DIR}/memory_checker.cc
+  ${PROJECT_TEST_PERF_DIR}/comm_cost_curve.cc
+)
+
 file(GLOB PROJECT_PERF_TESTS ${PROJECT_TEST_PERF_DIR}/*.cc)
 
 foreach(PERF_TEST ${PROJECT_PERF_TESTS})
+  if (${PERF_TEST} IN_LIST EXCLUDED_PERF_TEST_FILES)
+    message(STATUS "Test file ${PERF_TEST} is present on EXCLUDED_PERF_TEST_FILES list. Skipping!")
+    continue()
+  endif()
+
   GET_FILENAME_COMPONENT(
     TEST_NAME
     ${PERF_TEST}
@@ -237,6 +249,8 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
 
   set_tests_properties(
     ${TEST_NAME}
-    PROPERTIES LABELS "perf_test"
+    PROPERTIES
+    TIMEOUT 300
+    LABELS "perf_test"
   )
 endforeach()

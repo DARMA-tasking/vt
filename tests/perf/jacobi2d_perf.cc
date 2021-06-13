@@ -307,7 +307,6 @@ public:
 
   }
 
-
   void init() {
 
     //--- Each object will work with (numRowsPerObject_ + 2) unknowns
@@ -376,9 +375,7 @@ public:
     }
 
     std::copy(tcur_.begin(), tcur_.end(), told_.begin());
-
   }
-
 
   void init(LPMsg* msg) {
 
@@ -401,8 +398,6 @@ bool isWorkDone( vt::objgroup::proxy::Proxy<NodeObj> const& proxy){
 struct JacobiTest : vt::tests::perf::common::PerfTestHarness {};
 
 VT_PERF_TEST(JacobiTest, jacobi2d_vt) {
-  BenchmarkPhase();
-
   size_t numX_objs = default_num_objs;
   size_t numY_objs = default_num_objs;
   size_t maxIter = 100;
@@ -428,12 +423,18 @@ VT_PERF_TEST(JacobiTest, jacobi2d_vt) {
     });
 
   while (!isWorkDone(grp_proxy)) {
+    auto const& name = fmt::format("Phase {}", vt::thePhase()->getCurrentPhase());
+    StartTimer(name);
+
     vt::runInEpochCollective([col_proxy] {
       col_proxy.broadcastCollective<
         LinearPb2DJacobi::BlankMsg, &LinearPb2DJacobi::doIter>();
     });
 
     vt::thePhase()->nextPhaseCollective();
+
+    GetMemoryUsage();
+    StopTimer(name);
   }
 }
 

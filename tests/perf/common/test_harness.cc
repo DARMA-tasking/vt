@@ -335,23 +335,6 @@ void PerfTestHarness::SpinScheduler() {
   theSched()->runSchedulerWhile([] { return !rt->isTerminated(); });
 }
 
-void PerfTestHarness::BenchmarkPhase(std::string const& prefix)
-{
-  auto GetName = [prefix] {
-    return fmt::format("{} {}", prefix, thePhase()->getCurrentPhase());
-  };
-
-  thePhase()->registerHookCollective(phase::PhaseHook::Start, [this, GetName] {
-    timers_[GetName()].Start();
-  });
-
-  thePhase()->registerHookCollective(phase::PhaseHook::End, [this, GetName] {
-    auto const name = GetName();
-    AddResult({name, timers_[name].Stop()});
-    GetMemoryUsage();
-  });
-}
-
 void PerfTestHarness::GetMemoryUsage() {
   // Memory footpring from PerfTestHarness' internal data structs are included
   memory_use_.push_back(mem_tracker_.getUsage());

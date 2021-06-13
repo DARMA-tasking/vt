@@ -45,21 +45,15 @@
 #include <vt/objgroup/manager.h>
 #include <vt/messaging/active.h>
 
-#include <cassert>
-#include <cstdint>
-
 #include <fmt/core.h>
-
-#define DEBUG_PING_PONG 0
-#define REUSE_MESSAGE_PING_PONG 0
 
 using namespace vt;
 using namespace vt::tests::perf::common;
 
 static constexpr int64_t const min_bytes = 1;
-static constexpr int64_t const max_bytes = 16384;
+static constexpr int64_t const max_bytes = 16777216;
 
-static int64_t num_pings = 1024;
+static int64_t num_pings = 10;
 
 static constexpr NodeType const ping_node = 0;
 static constexpr NodeType const pong_node = 1;
@@ -70,7 +64,7 @@ struct NodeObj {
   template <int64_t num_bytes>
   struct PingMsg : Message {
     int64_t count = 0;
-    std::array<char, num_bytes> payload;
+    std::array<char, num_bytes> payload_;
 
     PingMsg() : Message() { }
     explicit PingMsg(int64_t const in_count) : Message(), count(in_count) { }

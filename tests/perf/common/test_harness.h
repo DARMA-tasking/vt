@@ -147,13 +147,6 @@ struct PerfTestHarness {
   static void SpinScheduler();
 
   /**
-   * \brief Helper function used for phase-based tests.
-   * This will register for Begin/End Phase notifications from \c PhaseManager
-   * and uses \c StopWatch to measure time
-   */
-  void BenchmarkPhase(std::string const& prefix = "phase");
-
-  /**
    * \brief Helper function used for tracking memory usage.
    * Should be called each iteration. Uses \c StatM to track memory usage
    */
