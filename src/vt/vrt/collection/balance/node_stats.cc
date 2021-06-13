@@ -230,11 +230,11 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
     return;
   }
 
-  vtAssertExpr(stats_file_ != nullptr);
-
   vt_print(lb, "NodeStats::outputStatsForPhase: phase={}\n", phase);
 
 #if CSV_STAT_FILE
+  vtAssertExpr(stats_file_ != nullptr);
+
   for (auto&& elm : node_data_.at(phase)) {
     ElementIDStruct id = elm.first;
     TimeType time = elm.second;
