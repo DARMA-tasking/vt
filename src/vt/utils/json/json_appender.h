@@ -45,6 +45,7 @@
 #if !defined INCLUDED_VT_UTILS_JSON_JSON_APPENDER_H
 #define INCLUDED_VT_UTILS_JSON_JSON_APPENDER_H
 
+#include "vt/utils/json/base_appender.h"
 #include "vt/utils/json/output_adaptor.h"
 
 #include <nlohmann/json.hpp>
@@ -60,7 +61,7 @@ namespace vt { namespace util { namespace json {
  * array until it is destroyed.
  */
 template <typename StreamLike>
-struct Appender {
+struct Appender : BaseAppender {
   using jsonlib        = nlohmann::json;
   using SerializerType = nlohmann::detail::serializer<jsonlib>;
   using AdaptorType    = util::json::OutputAdaptor<StreamLike>;
@@ -109,7 +110,7 @@ struct Appender {
   /**
    * \brief Finalize the output, closing the array, and flushing the stream
    */
-  ~Appender() {
+  virtual ~Appender() {
     oa_->write_character(']');
     oa_->write_character('}');
     // causes the final flush to happen
