@@ -51,7 +51,6 @@ namespace vt { namespace util { namespace compress {
 
 template <typename StreamLike>
 bool Compressor::write(StreamLike& s, uint8_t const* buffer, std::size_t const size) {
-  vtAssert(enc_, "Must have a valid compressor");
   return writeImpl(s, buffer, size, false);
 }
 
@@ -84,7 +83,6 @@ bool Compressor::writeImpl(
 
 template <typename StreamLike>
 bool Compressor::finish(StreamLike& s) {
-  vtAssert(enc_, "Must have a valid compressor");
   return writeImpl(s, nullptr, 0, true);
 }
 
