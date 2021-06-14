@@ -77,11 +77,7 @@ struct OutputAdaptor : nlohmann::detail::output_adapter_protocol<CharType> {
    * \param[in] c the character
    */
   void write_character(CharType c) override {
-    if (c_) {
-      c_->write(os_, reinterpret_cast<uint8_t const*>(&c), 1);
-    } else {
-      os_.write(&c, 1);
-    }
+    write_characters(&c, 1);
   }
 
   /**
