@@ -1618,8 +1618,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \param[in] op the async operation to register
    */
-  template <typename T>
-  void registerAsyncOp(std::unique_ptr<T> op);
+  void registerAsyncOp(std::unique_ptr<AsyncOp> op);
 
   /**
    * \brief Block the current task's execution on an pollable async operation
@@ -1630,8 +1629,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \param[in] op the async operation to block on
    */
-  template <typename T>
-  void blockOnAsyncOp(std::unique_ptr<T> op);
+  void blockOnAsyncOp(std::unique_ptr<AsyncOp> op);
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
