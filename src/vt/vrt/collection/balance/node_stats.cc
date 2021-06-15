@@ -49,6 +49,7 @@
 #include "vt/configs/arguments/app_config.h"
 #include "vt/runtime/runtime.h"
 #include "vt/utils/json/json_appender.h"
+#include "vt/vrt/collection/balance/stats_data.h"
 
 #include <vector>
 #include <unordered_map>
@@ -89,36 +90,34 @@ bool NodeStats::migrateObjTo(ElementIDStruct obj_id, NodeType to_node) {
 
 std::unordered_map<PhaseType, LoadMapType> const*
 NodeStats::getNodeLoad() const {
-  return &node_data_;
+  return &stats_->node_data_;
 }
 
 std::unordered_map<PhaseType, SubphaseLoadMapType> const*
 NodeStats::getNodeSubphaseLoad() const {
-  return &node_subphase_data_;
+  return &stats_->node_subphase_data_;
 }
 
 std::unordered_map<PhaseType, CommMapType> const* NodeStats::getNodeComm() const {
-  return &node_comm_;
+  return &stats_->node_comm_;
 }
 
 std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> const* NodeStats::getNodeSubphaseComm() const {
-  return &node_subphase_comm_;
+  return &stats_->node_subphase_comm_;
 }
 
 void NodeStats::clearStats() {
-  NodeStats::node_comm_.clear();
-  NodeStats::node_data_.clear();
-  NodeStats::node_subphase_data_.clear();
-  NodeStats::node_migrate_.clear();
+  stats_->clear();
+  node_migrate_.clear();
   next_elm_ = 1;
 }
 
 void NodeStats::startIterCleanup(PhaseType phase, unsigned int look_back) {
   if (phase >= look_back) {
-    node_data_.erase(phase - look_back);
-    node_subphase_data_.erase(phase - look_back);
-    node_comm_.erase(phase - look_back);
-    node_subphase_comm_.erase(phase - look_back);
+    stats_->node_data_.erase(phase - look_back);
+    stats_->node_subphase_data_.erase(phase - look_back);
+    stats_->node_comm_.erase(phase - look_back);
+    stats_->node_subphase_comm_.erase(phase - look_back);
   }
 
   // Clear migrate lambdas and proxy lookup since LB is complete
@@ -134,6 +133,8 @@ ElementIDStruct NodeStats::getNextElm() {
 }
 
 void NodeStats::initialize() {
+  stats_ = std::make_unique<StatsData>();
+
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_stats) {
     theNodeStats()->createStatsFile();
@@ -168,33 +169,25 @@ void NodeStats::createStatsFile() {
     vtAssert(false, "Trying to dump stats when VT runtime is deallocated?");
   }
 
-#if CSV_STAT_FILE
-  stats_file_ = fopen(file_name.c_str(), "w+");
-  vtAssertExpr(stats_file_ != nullptr);
-#else
   using JSONAppender = util::json::Appender<std::ofstream>;
 
   if (not stat_writer_) {
     stat_writer_ = std::make_unique<JSONAppender>("phases", file_name, true);
   }
-#endif
 }
 
 void NodeStats::finalize() {
+  stat_writer_ = nullptr;
+
   // If statistics are enabled, close output file and clear stats
 #if vt_check_enabled(lblite)
   if (theConfig()->vt_lb_stats) {
-    closeStatsFile();
     clearStats();
   }
 #endif
 }
 
 void NodeStats::closeStatsFile() {
-  if (stats_file_) {
-    fclose(stats_file_);
-    stats_file_ = nullptr;
-  }
 }
 
 std::pair<ElementIDType, ElementIDType>
@@ -231,75 +224,11 @@ void NodeStats::outputStatsForPhase(PhaseType phase) {
 
   vt_print(lb, "NodeStats::outputStatsForPhase: phase={}\n", phase);
 
-#if CSV_STAT_FILE
-  vtAssertExpr(stats_file_ != nullptr);
-
-  for (auto&& elm : node_data_.at(phase)) {
-    ElementIDStruct id = elm.first;
-    TimeType time = elm.second;
-    const auto& subphase_times = node_subphase_data_.at(phase)[id];
-    size_t subphases = subphase_times.size();
-
-    auto obj_str = fmt::format("{},{},{:e},{},[", phase, id.id, time, subphases);
-
-    for (size_t s = 0; s < subphases; s++) {
-      if (s > 0) {
-        obj_str += ",";
-      }
-
-      obj_str += fmt::format("{:e}", subphase_times[s]);
-    }
-
-    obj_str += "]\n";
-
-    fprintf(stats_file_, "%s", obj_str.c_str());
-  }
-
-  for (auto&& elm : node_comm_.at(phase)) {
-    using E = typename std::underlying_type<CommCategory>::type;
-
-    auto const& comm = elm.first;
-    auto const recvSend = getRecvSendDirection(comm);
-    auto const cat = static_cast<E>(comm.cat_);
-    auto obj_str = fmt::format(
-      "{},{},{},{},{}\n", phase, recvSend.first, recvSend.second,
-      elm.second.bytes, cat
-    );
-    fprintf(stats_file_, "%s", obj_str.c_str());
-  }
-
-  fflush(stats_file_);
-#else
-  using json = nlohmann::json;
-
-  json j;
-  j["id"] = phase;
-
-  std::size_t i = 0;
-  for (auto&& elm : node_data_.at(phase)) {
-    ElementIDStruct id = elm.first;
-    TimeType time = elm.second;
-    j["tasks"][i]["resource"] = "cpu";
-    j["tasks"][i]["node"] = theContext()->getNode();
-    j["tasks"][i]["object"] = id.id;
-    j["tasks"][i]["time"] = time;
-
-    auto const& subphase_times = node_subphase_data_.at(phase)[id];
-    std::size_t const subphases = subphase_times.size();
-    if (subphases != 0) {
-      for (std::size_t s = 0; s < subphases; s++) {
-        j["tasks"][i]["subphases"][s]["id"] = s;
-        j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
-      }
-    }
-    i++;
-  }
-
   using JSONAppender = util::json::Appender<std::ofstream>;
 
+  auto j = stats_->toJson(phase);
   auto writer = static_cast<JSONAppender*>(stat_writer_.get());
-  writer->addElm(j);
-#endif
+  writer->addElm(*j);
 }
 
 ElementIDStruct NodeStats::addNodeStats(
@@ -318,7 +247,7 @@ ElementIDStruct NodeStats::addNodeStats(
     obj_id, phase, subphase_time.size(), time
   );
 
-  auto &phase_data = node_data_[phase];
+  auto &phase_data = stats_->node_data_[phase];
   auto elm_iter = phase_data.find(obj_id);
   vtAssert(elm_iter == phase_data.end(), "Must not exist");
   phase_data.emplace(
@@ -327,7 +256,7 @@ ElementIDStruct NodeStats::addNodeStats(
     std::forward_as_tuple(time)
   );
 
-  auto &subphase_data = node_subphase_data_[phase];
+  auto &subphase_data = stats_->node_subphase_data_[phase];
   auto elm_subphase_iter = subphase_data.find(obj_id);
   vtAssert(elm_subphase_iter == subphase_data.end(), "Must not exist");
   subphase_data.emplace(
@@ -336,12 +265,12 @@ ElementIDStruct NodeStats::addNodeStats(
     std::forward_as_tuple(subphase_time)
   );
 
-  auto &comm_data = node_comm_[phase];
+  auto &comm_data = stats_->node_comm_[phase];
   for (auto&& c : comm) {
     comm_data[c.first] += c.second;
   }
 
-  auto &subphase_comm_data = node_subphase_comm_[phase];
+  auto &subphase_comm_data = stats_->node_subphase_comm_[phase];
   for (SubphaseType i = 0; i < subphase_comm.size(); i++) {
     for (auto& sp : subphase_comm[i]) {
       subphase_comm_data[i][sp.first] += sp.second;

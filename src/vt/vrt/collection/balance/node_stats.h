@@ -54,6 +54,7 @@
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/utils/json/base_appender.h"
+#include "vt/vrt/collection/balance/stats_data.h"
 
 #include <string>
 #include <unordered_map>
@@ -227,15 +228,11 @@ public:
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_
-      | node_data_
-      | node_subphase_data_
       | node_migrate_
       | node_collection_lookup_
-      | node_comm_
       | next_elm_
-      | stats_file_
       | created_dir_
-      | node_subphase_comm_;
+      | stats_;
   }
 
 private:
@@ -252,26 +249,18 @@ private:
 private:
   /// Local proxy to objgroup
   objgroup::proxy::Proxy<NodeStats> proxy_;
-  /// Node timings for each local object
-  std::unordered_map<PhaseType, LoadMapType> node_data_;
-  /// Node subphase timings for each local object
-  std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDStruct,MigrateFnType> node_migrate_;
   /// Map from element ID to the collection's virtual proxy (untyped)
   std::unordered_map<ElementIDStruct,VirtualProxyType> node_collection_lookup_;
-  /// Node communication graph for each local object
-  std::unordered_map<PhaseType, CommMapType> node_comm_;
-  /// Node communication graph for each subphase
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// The current element ID
   ElementIDType next_elm_;
-  /// The stats file name for outputting instrumentation
-  FILE* stats_file_ = nullptr;
   /// Whether the stats directory has been created
   bool created_dir_ = false;
   /// The appender for outputting stat files in JSON format
   std::unique_ptr<util::json::BaseAppender> stat_writer_ = nullptr;
+  /// The struct that holds all the statistic data
+  std::unique_ptr<StatsData> stats_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
