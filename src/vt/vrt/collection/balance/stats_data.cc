@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               base_appender.h
+//                                stats_data.cc
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,20 +42,47 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_UTILS_JSON_BASE_APPENDER_H
-#define INCLUDED_VT_UTILS_JSON_BASE_APPENDER_H
+#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/context/context.h"
 
-namespace vt { namespace util { namespace json {
+#include <nlohmann/json.hpp>
 
-/**
- * \struct BaseAppender
- *
- * \brief Base class for JSON appender to avoid unnecessary inclusions.
- */
-struct BaseAppender {
-  virtual ~BaseAppender() = default;
-};
+namespace vt { namespace vrt { namespace collection { namespace balance {
 
-}}} /* end namespace vt::util::json */
+std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
+  using json = nlohmann::json;
 
-#endif /*INCLUDED_VT_UTILS_JSON_BASE_APPENDER_H*/
+  json j;
+  j["id"] = phase;
+
+  std::size_t i = 0;
+  for (auto&& elm : node_data_.at(phase)) {
+    ElementIDStruct id = elm.first;
+    TimeType time = elm.second;
+    j["tasks"][i]["resource"] = "cpu";
+    j["tasks"][i]["node"] = theContext()->getNode();
+    j["tasks"][i]["object"] = id.id;
+    j["tasks"][i]["time"] = time;
+
+    auto const& subphase_times = node_subphase_data_.at(phase).at(id);
+    std::size_t const subphases = subphase_times.size();
+    if (subphases != 0) {
+      for (std::size_t s = 0; s < subphases; s++) {
+        j["tasks"][i]["subphases"][s]["id"] = s;
+        j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
+      }
+    }
+    i++;
+  }
+
+  return std::make_unique<json>(std::move(j));
+}
+
+void StatsData::clear() {
+  node_comm_.clear();
+  node_data_.clear();
+  node_subphase_data_.clear();
+  node_subphase_comm_.clear();
+}
+
+}}}} /* end namespace vt::vrt::collection::balance */

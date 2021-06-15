@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               base_appender.h
+//                                 stats_data.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,20 +42,46 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_UTILS_JSON_BASE_APPENDER_H
-#define INCLUDED_VT_UTILS_JSON_BASE_APPENDER_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H
 
-namespace vt { namespace util { namespace json {
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
+#include "vt/vrt/collection/balance/lb_comm.h"
 
-/**
- * \struct BaseAppender
- *
- * \brief Base class for JSON appender to avoid unnecessary inclusions.
- */
-struct BaseAppender {
-  virtual ~BaseAppender() = default;
+#include <unordered_map>
+#include <memory>
+
+#include <nlohmann/json_fwd.hpp>
+
+namespace vt { namespace vrt { namespace collection { namespace balance {
+
+struct StatsData {
+  StatsData() = default;
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | node_data_;
+    s | node_comm_;
+    s | node_subphase_data_;
+    s | node_subphase_comm_;
+  }
+
+  std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
+
+  void clear();
+
+public:
+  /// Node timings for each local object
+  std::unordered_map<PhaseType, LoadMapType> node_data_;
+  /// Node communication graph for each local object
+  std::unordered_map<PhaseType, CommMapType> node_comm_;
+  /// Node subphase timings for each local object
+  std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
+  /// Node communication graph for each subphase
+  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
 };
 
-}}} /* end namespace vt::util::json */
+}}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_UTILS_JSON_BASE_APPENDER_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DATA_H*/
