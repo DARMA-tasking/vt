@@ -67,8 +67,8 @@ struct AsyncOpCUDA : AsyncOp {
   AsyncOpCUDA(cudaStream_t in_stream, ActionType in_cont = nullptr)
     : cont_(in_cont)
   {
-    cudaEventCreate(&event_);
-    cudaEventRecord(event_, in_stream);
+    vtAbortIf(cudaSuccess != cudaEventCreate(&event_), "Failed to create event");
+    vtAbortIf(cudaSuccess != cudaEventRecord(event_, in_stream), "Failed to record event");
   }
 
   /**
@@ -88,13 +88,16 @@ struct AsyncOpCUDA : AsyncOp {
    * \return whether the CUDA event is complete
    */
   bool poll() override {
-    return cudaEventQuery(event_) == cudaSuccess;
+    auto ret = cudaEventQuery(event_);
+    vtAbortIf(cudaSuccess != ret && cudaErrorNotReady != ret, "Failure on stream");
+    return ret == cudaSuccess;
   }
 
   /**
    * \brief Trigger continuation after completion
    */
   void done() override {
+    vtAbortIf(cudaSuccess != cudaEventDestroy(event_), "Failed to destroy event");
     if (cont_) {
       cont_();
     }
