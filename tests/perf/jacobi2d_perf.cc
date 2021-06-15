@@ -400,7 +400,7 @@ struct JacobiTest : vt::tests::perf::common::PerfTestHarness {};
 VT_PERF_TEST(JacobiTest, jacobi2d_vt) {
   size_t numX_objs = default_num_objs;
   size_t numY_objs = default_num_objs;
-  size_t maxIter = 100;
+  size_t maxIter = 50;
 
   // Object group of all nodes that take part in computation
   // Used to determine whether the computation is finished
@@ -423,7 +423,7 @@ VT_PERF_TEST(JacobiTest, jacobi2d_vt) {
     });
 
   while (!isWorkDone(grp_proxy)) {
-    auto const& name = fmt::format("Phase {}", vt::thePhase()->getCurrentPhase());
+    auto const& name = fmt::format("{} Phase", vt::thePhase()->getCurrentPhase());
     StartTimer(name);
 
     vt::runInEpochCollective([col_proxy] {
@@ -433,8 +433,8 @@ VT_PERF_TEST(JacobiTest, jacobi2d_vt) {
 
     vt::thePhase()->nextPhaseCollective();
 
-    GetMemoryUsage();
     StopTimer(name);
+    GetMemoryUsage();
   }
 }
 

@@ -219,7 +219,7 @@ std::string PerfTestHarness::OutputMemoryUse() const {
 }
 
 std::string PerfTestHarness::OutputTimeResults() const {
-  std::string file_content =  "name,node,mean\n";
+  std::string file_content = "name,node,mean\n";
 
   auto HandleTestResults =
     [&file_content, this]
