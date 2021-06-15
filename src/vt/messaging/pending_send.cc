@@ -55,8 +55,7 @@ PendingSend::PendingSend(EpochType ep, EpochActionType const& in_action)
 }
 
 PendingSend::PendingSend(PendingSend&& in) noexcept
-  : msg_size_(std::move(in.msg_size_)),
-    epoch_produced_(std::move(in.epoch_produced_))
+  : epoch_produced_(std::move(in.epoch_produced_))
 {
   std::swap(msg_, in.msg_);
   std::swap(epoch_action_, in.epoch_action_);
@@ -65,7 +64,7 @@ PendingSend::PendingSend(PendingSend&& in) noexcept
 
 void PendingSend::sendMsg() {
   if (send_action_ == nullptr) {
-    theMsg()->doMessageSend(msg_, msg_size_);
+    theMsg()->doMessageSend(msg_);
   } else {
     send_action_(msg_);
   }

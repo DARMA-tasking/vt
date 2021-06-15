@@ -248,7 +248,7 @@ void GroupManager::initializeLocalGroup(
 
 /*static*/ EventType GroupManager::groupHandler(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
-  MsgSizeType const size, bool const root, bool* const deliver
+  bool const root, bool* const deliver
 ) {
   auto const& msg = reinterpret_cast<ShortMessage*>(base.get());
   auto const& is_pipe = envelopeIsPipe(msg->env);
@@ -262,20 +262,20 @@ void GroupManager::initializeLocalGroup(
       normal, group,
       "GroupManager::groupHandler: size={}, root={}, from={}, group={:x}, "
       "bcast={}, dest={}\n",
-      size, root, from, group, is_bcast, dest
+      base.size(), root, from, group, is_bcast, dest
     );
 
     if (is_bcast) {
       // Deliver the message normally if it's not a the root of a broadcast
       *deliver = !root;
       if (group == default_group) {
-        return global::DefaultGroup::broadcast(base,from,size,root,deliver);
+        return global::DefaultGroup::broadcast(base,from,root,deliver);
       } else {
         auto const& is_collective_group = GroupIDBuilder::isCollective(group);
         if (is_collective_group) {
-          return theGroup()->sendGroupCollective(base,from,size,root,deliver);
+          return theGroup()->sendGroupCollective(base,from,root,deliver);
         } else {
-          return theGroup()->sendGroup(base,from,size,root,deliver);
+          return theGroup()->sendGroup(base,from,root,deliver);
         }
       }
     } else {
@@ -295,7 +295,7 @@ void GroupManager::initializeLocalGroup(
 
 EventType GroupManager::sendGroupCollective(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
-  MsgSizeType const size, bool const is_root,
+  bool const is_root,
   bool* const deliver
 ) {
   auto const& send_tag = static_cast<messaging::MPI_TagType>(
@@ -348,11 +348,11 @@ EventType GroupManager::sendGroupCollective(
           normal, broadcast,
           "GroupManager::sendGroupCollective *send* size={}, from={}, child={}, "
           "send={}, msg={}\n",
-          size, from, child, send, print_ptr(msg)
+          base.size(), from, child, send, print_ptr(msg)
         );
 
         if (send) {
-          theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
+          theMsg()->sendMsgBytesWithPut(child, base, send_tag);
         }
       });
 
@@ -360,7 +360,7 @@ EventType GroupManager::sendGroupCollective(
        *  Send message to the root node of the group
        */
       if (send_to_root) {
-        theMsg()->sendMsgBytesWithPut(root_node, base, size, send_tag);
+        theMsg()->sendMsgBytesWithPut(root_node, base, send_tag);
       }
 
       if (!first_send && this_node_dest) {
@@ -376,10 +376,10 @@ EventType GroupManager::sendGroupCollective(
     }
   } else if (in_group && !group_ready) {
     local_collective_group_info_.find(group)->second->readyAction(
-      [base,from,size,is_root]{
+      [base,from,is_root]{
         // Do not capture deliver, it's a pointer to stack memory
         bool dummy;
-        theGroup()->sendGroupCollective(base,from,size,is_root,&dummy);
+        theGroup()->sendGroupCollective(base,from,is_root,&dummy);
       }
     );
     *deliver = true;
@@ -393,7 +393,7 @@ EventType GroupManager::sendGroupCollective(
      *  must forward.
      */
     auto const put_event = theMsg()->sendMsgBytesWithPut(
-      root_node, base, size, send_tag
+      root_node, base, send_tag
     );
     /*
      *  Do not deliver on this node since it is not part of the group and will
@@ -406,7 +406,7 @@ EventType GroupManager::sendGroupCollective(
 
 EventType GroupManager::sendGroup(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
-  MsgSizeType const size, bool const is_root,
+  bool const is_root,
   bool* const deliver
 ) {
   auto const& this_node = theContext()->getNode();
@@ -434,7 +434,7 @@ EventType GroupManager::sendGroup(
       messaging::MPITag::ActiveMsgTag
     );
 
-    return theMsg()->sendMsgBytesWithPut(node, base, size, send_tag);
+    return theMsg()->sendMsgBytesWithPut(node, base, send_tag);
   };
 
   EventType ret_event = no_event;
@@ -463,7 +463,7 @@ EventType GroupManager::sendGroup(
         normal, broadcast,
         "GroupManager::sendGroup: *send* remote size={}, from={}, found={}, "
         "dest={}, group={:x}, is_root={} \n",
-        size, from, remote_iter != remote_group_info_.end(), dest, group,
+        base.size(), from, remote_iter != remote_group_info_.end(), dest, group,
         is_root
       );
 
@@ -485,11 +485,11 @@ EventType GroupManager::sendGroup(
             vt_debug_print(
               verbose, broadcast,
               "GroupManager::sendGroup: *send* size={}, from={}, child={}\n",
-              size, from, child
+              base.size(), from, child
             );
 
             if (child != this_node) {
-              theMsg()->sendMsgBytesWithPut(child, base, size, send_tag);
+              theMsg()->sendMsgBytesWithPut(child, base, send_tag);
             }
           });
         }

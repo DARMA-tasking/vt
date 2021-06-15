@@ -299,7 +299,6 @@ private:
    *
    * \param[in] base the message to send
    * \param[in] from sender node
-   * \param[in] size number of bytes of the message being sent
    * \param[in] is_root whether this node is the root
    * \param[out] deliver whether the caller should deliver locally
    *
@@ -307,7 +306,7 @@ private:
    */
   EventType sendGroup(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
-    MsgSizeType const size, bool const is_root,
+    bool const is_root,
     bool* const deliver
   );
 
@@ -316,7 +315,6 @@ private:
    *
    * \param[in] base the message to send
    * \param[in] from sender node
-   * \param[in] size number of bytes of the message being sent
    * \param[in] is_root whether this node is the root
    * \param[out] deliver whether the caller should deliver locally
    *
@@ -324,7 +322,7 @@ private:
    */
   EventType sendGroupCollective(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const from,
-    MsgSizeType const size, bool const is_root,
+    bool const is_root,
     bool* const deliver
   );
 
@@ -393,7 +391,6 @@ private:
    *
    * \param[in] msg the message to send
    * \param[in] from sender node
-   * \param[in] size number of bytes of the message being sent
    * \param[in] is_root whether this node is the root
    * \param[out] deliver whether the caller should deliver locally
    *
@@ -401,7 +398,7 @@ private:
    */
   static EventType groupHandler(
     MsgSharedPtr<BaseMsgType> const& msg, NodeType const from,
-    MsgSizeType const msg_size, bool const is_root,
+    bool const is_root,
     bool* const deliver
   );
 

@@ -165,6 +165,24 @@ ActiveMessenger::ActiveMessenger()
   vtAssertExpr(epoch_stack_.size() == 0);
 }
 
+trace::TraceEventIDType ActiveMessenger::makeTraceCreationSend(
+  HandlerType const handler, auto_registry::RegistryTypeEnum type,
+  ByteType serialized_msg_size, bool is_bcast
+) {
+  #if vt_check_enabled(trace_enabled)
+    trace::TraceEntryIDType ep = auto_registry::handlerTraceID(handler, type);
+    trace::TraceEventIDType event = trace::no_trace_event;
+    if (not is_bcast) {
+      event = theTrace()->messageCreation(ep, serialized_msg_size);
+    } else {
+      event = theTrace()->messageCreationBcast(ep, serialized_msg_size);
+    }
+    return event;
+  #else
+    return trace::no_trace_event;
+  #endif
+}
+
 void ActiveMessenger::packMsg(
   MessageType* msg, MsgSizeType size, void* ptr, MsgSizeType ptr_bytes
 ) {
@@ -180,7 +198,7 @@ void ActiveMessenger::packMsg(
 
 EventType ActiveMessenger::sendMsgBytesWithPut(
   NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-  MsgSizeType const& msg_size, TagType const& send_tag
+  TagType const& send_tag
 ) {
   auto msg = base.get();
   auto const& is_term = envelopeIsTerm(msg->env);
@@ -192,7 +210,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     vt_debug_print(
       normal, active,
       "sendMsgBytesWithPut: size={}, dest={}, is_put={}, is_put_packed={}\n",
-      msg_size, dest, print_bool(is_put), print_bool(is_put_packed)
+      base.size(), dest, print_bool(is_put), print_bool(is_put_packed)
     );
   }
 
@@ -201,7 +219,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
     "Destination {} should != this node"
   );
 
-  MsgSizeType new_msg_size = msg_size;
+  MsgSizeType new_msg_size = base.size();
 
   if (is_put && !is_put_packed) {
     auto const& put_ptr = envelopeGetPutPtr(msg->env);
@@ -226,12 +244,12 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
         verbose, active,
         "sendMsgBytesWithPut: (put) put_ptr={}, size:[msg={},put={},rem={}],"
         "dest={}, max_pack_size={}, direct_buf_pack={}\n",
-        put_ptr, msg_size, put_size, rem_size, dest, max_pack_direct_size,
+        put_ptr, base.size(), put_size, rem_size, dest, max_pack_direct_size,
         print_bool(direct_buf_pack)
       );
     }
     if (direct_buf_pack) {
-      packMsg(msg, msg_size, put_ptr, put_size);
+      packMsg(msg, base.size(), put_ptr, put_size);
       new_msg_size += put_size;
       envelopeSetPutTag(msg->env, PutPackedTag);
       setPackedPutType(msg->env);
@@ -422,7 +440,7 @@ EventType ActiveMessenger::sendMsgBytes(
 }
 
 EventType ActiveMessenger::doMessageSend(
-  MsgSharedPtr<BaseMsgType>& base, MsgSizeType msg_size
+  MsgSharedPtr<BaseMsgType>& base
 ) {
   auto const& send_tag = static_cast<MPI_TagType>(MPITag::ActiveMsgTag);
 
@@ -456,8 +474,8 @@ EventType ActiveMessenger::doMessageSend(
       // auto cur_event = envelopeGetTraceEvent(msg->env);
       // if (cur_event == trace::no_trace_event) {
       auto event = makeTraceCreationSend(
-        base, handler, auto_registry::RegistryTypeEnum::RegGeneral,
-        msg_size, is_bcast
+        handler, auto_registry::RegistryTypeEnum::RegGeneral,
+        base.size(), is_bcast
       );
       envelopeSetTraceEvent(msg->env, event);
     }
@@ -476,11 +494,11 @@ EventType ActiveMessenger::doMessageSend(
 
   bool deliver = false;
   EventType const ret_event = group::GroupActiveAttorney::groupHandler(
-    base, uninitialized_destination, msg_size, true, &deliver
+    base, uninitialized_destination, true, &deliver
   );
 
   if (deliver) {
-    sendMsgBytesWithPut(dest, base, msg_size, send_tag);
+    sendMsgBytesWithPut(dest, base, send_tag);
     return no_event;
   }
 
@@ -866,7 +884,7 @@ bool ActiveMessenger::recvDataMsg(
 
 bool ActiveMessenger::processActiveMsg(
   MsgSharedPtr<BaseMsgType> const& base, NodeType const& from,
-  MsgSizeType const& size, bool insert, ActionType cont
+  bool insert, ActionType cont
 ) {
   using ::vt::group::GroupActiveAttorney;
 
@@ -874,7 +892,7 @@ bool ActiveMessenger::processActiveMsg(
 
   // Call group handler
   bool deliver = false;
-  GroupActiveAttorney::groupHandler(base, from, size, false, &deliver);
+  GroupActiveAttorney::groupHandler(base, from, false, &deliver);
 
   auto const is_term = envelopeIsTerm(msg->env);
 
@@ -889,7 +907,7 @@ bool ActiveMessenger::processActiveMsg(
   if (deliver) {
     return prepareActiveMsgToRun(base,from,insert,cont);
   } else {
-    amForwardCounterGauge.incrementUpdate(size, 1);
+    amForwardCounterGauge.incrementUpdate(base.size(), 1);
 
     if (cont != nullptr) {
       cont();
@@ -1064,7 +1082,8 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
 
   MessageType* msg = reinterpret_cast<MessageType*>(buf);
   envelopeInitRecv(msg->env);
-  MsgPtr<MessageType> base = MsgPtr<MessageType>{msg};
+  // Derive the message size from the number of bytes actually received
+  MsgPtr<MessageType> base{msg, static_cast<ByteType>(num_probe_bytes)};
 
   auto const is_term = envelopeIsTerm(msg->env);
   auto const is_put = envelopeIsPut(msg->env);
@@ -1075,7 +1094,7 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
       normal, active,
       "finishPendingActiveMsgAsyncRecv: msg_size={}, sender={}, is_put={}, "
       "is_bcast={}, handler={}\n",
-      num_probe_bytes, sender, print_bool(is_put),
+      base.size(), sender, print_bool(is_put),
       print_bool(envelopeIsBcast(msg->env)), envelopeGetHandler(msg->env)
     );
   }
@@ -1106,14 +1125,14 @@ void ActiveMessenger::finishPendingActiveMsgAsyncRecv(InProgressIRecv* irecv) {
         1, put_tag, sender,
         [=](PtrLenPairType ptr, ActionType deleter){
           envelopeSetPutPtr(base->env, std::get<0>(ptr), std::get<1>(ptr));
-          processActiveMsg(base, sender, num_probe_bytes, true, deleter);
+          processActiveMsg(base, sender, true, deleter);
         }
      );
     }
   }
 
   if (!is_put || put_finished) {
-    processActiveMsg(base, sender, msg_bytes, true);
+    processActiveMsg(MsgPtr<MessageType>(base, msg_bytes), sender, true); // Note: use updated msg_bytes for message size
   }
 }
 

@@ -139,7 +139,6 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
   VirtualProxyType const& toProxy, MsgT *const msg
 ) {
   auto base_msg = promoteMsg(msg).template to<BaseMsgType>();
-  ByteType msg_sz = sizeof(MsgT);
 
   if (theContext()->getWorker() == worker_id_comm_thread) {
     NodeType const& home_node = VirtualProxyBuilder::getVirtualNode(toProxy);
@@ -159,7 +158,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
 
     // route the message to the destination using the location manager
     messaging::PendingSend pending(
-      base_msg, msg_sz, [=](MsgPtr<BaseMsgType> mymsg){
+      base_msg, [=](MsgPtr<BaseMsgType> mymsg){
         // Uses special implementation overload not exposed in theMsg..
         MsgT* typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
         auto sendSerialHan = auto_registry::makeAutoHandler<MsgT,virtualTypedMsgHandler<MsgT>>();
@@ -188,7 +187,7 @@ messaging::PendingSend VirtualContextManager::sendSerialMsg(
     return pending;
   } else {
     return messaging::PendingSend(
-      base_msg, msg_sz, [=](MsgPtr<BaseMsgType> mymsg) {
+      base_msg, [=](MsgPtr<BaseMsgType> mymsg) {
         #if vt_threading_enabled
         theWorkerGrp()->enqueueCommThread([=]{
           auto typed_msg = reinterpret_cast<MsgT*>(mymsg.get());
@@ -335,8 +334,7 @@ messaging::PendingSend VirtualContextManager::sendMsg(
   );
 
   auto base_msg = msg.template to<BaseMsgType>();
-  ByteType msg_sz = sizeof(MsgT);
-  return messaging::PendingSend(base_msg, msg_sz,
+  return messaging::PendingSend(base_msg,
     [=](MsgPtr<BaseMsgType> mymsg){
       // route the message to the destination using the location manager
       auto msg_shared = promoteMsg(reinterpret_cast<MsgT*>(mymsg.get()));

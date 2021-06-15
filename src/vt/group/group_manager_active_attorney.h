@@ -61,7 +61,7 @@ struct GroupActiveAttorney {
 private:
   static EventType groupHandler(
     MsgSharedPtr<BaseMsgType> const& msg, NodeType const& from,
-    MsgSizeType const& msg_size, bool const is_root,
+    bool const is_root,
     bool* const deliver
   );
 };

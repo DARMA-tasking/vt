@@ -395,10 +395,9 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
   template <typename MsgT>
   void setTagMessage(MsgT* msg, TagType tag);
 
-  template <typename MsgPtrT>
   trace::TraceEventIDType makeTraceCreationSend(
-    MsgPtrT msg, HandlerType const handler, auto_registry::RegistryTypeEnum type,
-    MsgSizeType msg_size, bool is_bcast
+    HandlerType const handler, auto_registry::RegistryTypeEnum type,
+    ByteType serialized_msg_size, bool is_bcast
   );
 
   // With serialization, the correct method is resolved via SFINAE.
@@ -408,7 +407,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MsgT>& msg,
-    ByteType msg_size,
     TagType tag
   );
 
@@ -428,7 +426,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MsgT>& msg,
-    ByteType msg_size,
     TagType tag
   ) {
 #ifndef vt_quirked_serialize_method_detection
@@ -437,7 +434,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       "Message prohibiting serialization must not have a serialization function."
     );
 #endif
-    return sendMsgCopyableImpl<MsgT>(dest, han, msg, msg_size, tag);
+    return sendMsgCopyableImpl<MsgT>(dest, han, msg, tag);
   }
 
   // Serializable and serialization required on this type.
@@ -453,7 +450,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MsgT>& msg,
-    ByteType msg_size,
     TagType tag
   ) {
 #ifndef vt_quirked_serialize_method_detection
@@ -462,7 +458,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       "Message requiring serialization must have a serialization function."
     );
 #endif
-    return sendMsgSerializableImpl<MsgT>(dest, han, msg, msg_size, tag);
+    return sendMsgSerializableImpl<MsgT>(dest, han, msg, tag);
   }
 
   // Serializable, but support is only for derived types.
@@ -479,7 +475,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MsgT>& msg,
-    ByteType msg_size,
     TagType tag
   ) {
 #ifndef vt_quirked_serialize_method_detection
@@ -488,7 +483,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
        "Message supporting serialization must have a serialization function."
      );
 #endif
-    return sendMsgCopyableImpl<MsgT>(dest, han, msg, msg_size, tag);
+    return sendMsgCopyableImpl<MsgT>(dest, han, msg, tag);
   }
 
   // Messaged marked as prohibiting serialization cannot define
@@ -505,7 +500,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MsgT>& msg,
-    ByteType msg_size,
     TagType tag
   ) {
 #ifndef vt_quirked_serialize_method_detection
@@ -514,7 +508,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
       "Message prohibiting serialization must not have a serialization function."
     );
 #endif
-    return sendMsgCopyableImpl<MsgT>(dest, han, msg, msg_size, tag);
+    return sendMsgCopyableImpl<MsgT>(dest, han, msg, tag);
   }
 
   template <typename MsgT>
@@ -522,7 +516,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
     NodeType dest,
     HandlerType han,
     MsgSharedPtr<MsgT>& msg,
-    ByteType msg_size,
     TagType tag
   );
 
@@ -1328,7 +1321,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    * \return the event for tracking the send completion
    */
   EventType doMessageSend(
-    MsgSharedPtr<BaseMsgType>& msg, MsgSizeType msg_size
+    MsgSharedPtr<BaseMsgType>& msg
   );
 
   /**
@@ -1424,7 +1417,6 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \param[in] base the message ptr
    * \param[in] sender the sender of the message
-   * \param[in] size the size of the message
    * \param[in] insert whether to insert the message if handler does not exist
    * \param[in] cont continuation after message is processed
    *
@@ -1432,7 +1424,7 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    */
   bool processActiveMsg(
     MsgSharedPtr<BaseMsgType> const& base, NodeType const& sender,
-    MsgSizeType const& size, bool insert, ActionType cont = nullptr
+    bool insert, ActionType cont = nullptr
   );
 
   /**
@@ -1491,14 +1483,13 @@ struct ActiveMessenger : runtime::component::PollableComponent<ActiveMessenger> 
    *
    * \param[in] dest the destination of the message
    * \param[in] base the message base pointer
-   * \param[in] msg_size the size of the message
    * \param[in] send_tag the send tag on the message
    *
    * \return the event to test/wait for completion
    */
   EventType sendMsgBytesWithPut(
     NodeType const& dest, MsgSharedPtr<BaseMsgType> const& base,
-    MsgSizeType const& msg_size, TagType const& send_tag
+    TagType const& send_tag
   );
 
   /**
