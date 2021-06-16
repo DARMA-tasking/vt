@@ -109,6 +109,7 @@ public:
    * \param[in] phase the current phase
    * \param[in] time the time the object took
    * \param[in] comm the comm graph for the object
+   * \param[in] index the index for the object
    *
    * \return the ID struct for the object assigned for this phase
    */
@@ -116,7 +117,8 @@ public:
     Migratable* col_elm,
     PhaseType const& phase, TimeType const& time,
     std::vector<TimeType> const& subphase_time,
-    CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
+    CommMapType const& comm, std::vector<CommMapType> const& subphase_comm,
+    std::vector<uint64_t> const& index
   );
 
   /**

@@ -240,7 +240,8 @@ ElementIDStruct NodeStats::addNodeStats(
   Migratable* col_elm,
   PhaseType const& phase, TimeType const& time,
   std::vector<TimeType> const& subphase_time,
-  CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
+  CommMapType const& comm, std::vector<CommMapType> const& subphase_comm,
+  std::vector<uint64_t> const& index
 ) {
   // The ID struct is modified when a object is migrated into a node
 
@@ -251,6 +252,9 @@ ElementIDStruct NodeStats::addNodeStats(
     "NodeStats::addNodeStats: obj_id={}, phase={}, subphases={}, load={}\n",
     obj_id, phase, subphase_time.size(), time
   );
+
+  // Add the index to the map
+  stats_->node_idx_[obj_id] = std::make_tuple(col_elm->getProxy(), index);
 
   auto &phase_data = stats_->node_data_[phase];
   auto elm_iter = phase_data.find(obj_id);

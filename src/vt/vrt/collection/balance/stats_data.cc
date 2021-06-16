@@ -61,8 +61,18 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
     TimeType time = elm.second;
     j["tasks"][i]["resource"] = "cpu";
     j["tasks"][i]["node"] = theContext()->getNode();
-    j["tasks"][i]["object"] = id.id;
     j["tasks"][i]["time"] = time;
+    j["tasks"][i]["entity"]["type"] = "object";
+    j["tasks"][i]["entity"]["id"] = id.id;
+    j["tasks"][i]["entity"]["home"] = id.home_node;
+    if (node_idx_.find(id) != node_idx_.end()) {
+      auto const& proxy_id = std::get<0>(node_idx_.find(id)->second);
+      auto const& idx_vec = std::get<1>(node_idx_.find(id)->second);
+      j["tasks"][i]["entity"]["collection_id"] = proxy_id;
+      for (std::size_t x = 0; x < idx_vec.size(); x++) {
+        j["tasks"][i]["entity"]["index"][x] = idx_vec[x];
+      }
+    }
 
     auto const& subphase_times = node_subphase_data_.at(phase).at(id);
     std::size_t const subphases = subphase_times.size();
@@ -75,7 +85,142 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
     i++;
   }
 
+  i = 0;
+  if (node_comm_.find(phase) != node_comm_.end()) {
+    for (auto&& elm : node_comm_.at(phase)) {
+      auto volume = elm.second;
+      auto const& key = elm.first;
+      j["communications"][i]["bytes"] = volume.bytes;
+      j["communications"][i]["messages"] = volume.messages;
+
+      switch(key.cat_) {
+      case CommCategory::Broadcast:
+      case CommCategory::SendRecv: {
+        if (key.cat_ == CommCategory::SendRecv) {
+          j["communications"][i]["type"] = "SendRecv";
+        } else {
+          j["communications"][i]["type"] = "Broadcast";
+        }
+        j["communications"][i]["from"]["type"] = "object";
+        j["communications"][i]["from"]["id"] = key.fromObj().id;
+        j["communications"][i]["from"]["home"] = key.fromObj().home_node;
+        j["communications"][i]["to"]["type"] = "object";
+        j["communications"][i]["to"]["id"] = key.toObj().id;
+        j["communications"][i]["to"]["home"] = key.toObj().home_node;
+        break;
+      }
+      case CommCategory::NodeToCollection:
+      case CommCategory::NodeToCollectionBcast: {
+        if (key.cat_ == CommCategory::NodeToCollection) {
+          j["communications"][i]["type"] = "NodeToCollection";
+        } else {
+          j["communications"][i]["type"] = "NodeToCollectionBcast";
+        }
+
+        j["communications"][i]["from"]["type"] = "node";
+        j["communications"][i]["from"]["id"] = key.fromNode();
+        j["communications"][i]["to"]["type"] = "object";
+        j["communications"][i]["to"]["id"] = key.toObj().id;
+        j["communications"][i]["to"]["home"] = key.toObj().home_node;
+        break;
+      }
+      case CommCategory::CollectionToNode:
+      case CommCategory::CollectionToNodeBcast: {
+        if (key.cat_ == CommCategory::CollectionToNode) {
+          j["communications"][i]["type"] = "CollectionToNode";
+        } else {
+          j["communications"][i]["type"] = "CollectionToNodeBcast";
+        }
+
+        j["communications"][i]["to"]["type"] = "node";
+        j["communications"][i]["to"]["id"] = key.toNode();
+        j["communications"][i]["from"]["type"] = "object";
+        j["communications"][i]["from"]["id"] = key.fromObj().id;
+        j["communications"][i]["from"]["home"] = key.fromObj().home_node;
+        break;
+      }
+      case CommCategory::LocalInvoke:
+      case CommCategory::CollectiveToCollectionBcast:
+        // not currently supported
+        break;
+      }
+      i++;
+    }
+  }
+
   return std::make_unique<json>(std::move(j));
+}
+
+/*static*/ std::unique_ptr<StatsData> StatsData::fromJson(
+  std::unique_ptr<nlohmann::json> jin
+) {
+  auto this_node = theContext()->getNode();
+
+  auto sd = std::make_unique<StatsData>();
+
+  auto const& j = *jin;
+  auto phases = j["phases"];
+  if (phases.is_array()) {
+    for (auto const& phase : phases) {
+      auto id = phase["id"];
+      auto tasks = phase["tasks"];
+
+      sd->node_data_[id];
+
+      if (tasks.is_array()) {
+        for (auto const& task : tasks) {
+          auto node = task["node"];
+          auto time = task["time"];
+          auto etype = task["entity"]["type"];
+          vtAssertExpr(time.is_number());
+          vtAssertExpr(node.is_number());
+          vtAssertExpr(node == theContext()->getNode());
+
+          if (etype == "object") {
+            auto home = task["entity"]["home"];
+            auto object = task["entity"]["id"];
+            vtAssertExpr(object.is_number());
+            vtAssertExpr(home.is_number());
+
+            auto elm = ElementIDStruct{object, home, this_node};
+            sd->node_data_[id][elm] = time;
+
+            auto cid = task["entity"]["collection_id"];
+            auto idx = task["entity"]["index"];
+            if (cid.is_number() && idx.is_array()) {
+              std::vector<uint64_t> arr;
+              for (auto const& index : idx) {
+                arr.push_back(static_cast<uint64_t>(index));
+              }
+              auto proxy = static_cast<VirtualProxyType>(cid);
+              sd->node_idx_[elm] = std::make_tuple(proxy, arr);
+            }
+
+            auto subphases = task["subphases"];
+            if (subphases.is_array()) {
+              for (auto const& s : subphases) {
+                auto sid = s["id"];
+                auto stime = s["time"];
+
+                vtAssertExpr(sid.is_number());
+                vtAssertExpr(stime.is_number());
+
+                sd->node_subphase_data_[id][elm].resize(
+                  static_cast<std::size_t>(sid) + 1
+                );
+                sd->node_subphase_data_[id][elm][sid] = stime;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // @todo: implement communication de-serialization, no use for it right now, so
+  // it will be ignored
+
+  return sd;
 }
 
 void StatsData::clear() {
@@ -83,6 +228,7 @@ void StatsData::clear() {
   node_data_.clear();
   node_subphase_data_.clear();
   node_subphase_comm_.clear();
+  node_idx_.clear();
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
