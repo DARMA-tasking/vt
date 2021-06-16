@@ -65,9 +65,8 @@ struct Reader {
    * \param[in] in_filename the file name to read
    * \param[in] in_compressed whether the data is compressed
    */
-  Reader(std::string const& in_filename, bool in_compressed)
-    : filename_(in_filename),
-      compressed_(in_compressed)
+  explicit Reader(std::string const& in_filename)
+    : filename_(in_filename)
   { }
 
   /**
@@ -79,7 +78,6 @@ struct Reader {
 
 private:
   std::string filename_ = "";   /**< The file name */
-  bool compressed_ = false;     /**< Whether the file is compressed */
 };
 
 }}} /* end namespace vt::util::json */

@@ -134,7 +134,7 @@ void StatsRestartReader::inputStatsFile(
   using vt::util::json::Reader;
   using vt::vrt::collection::balance::StatsData;
 
-  Reader r{fileName, true};
+  Reader r{fileName};
   auto json = r.readFile();
   auto sd = StatsData::fromJson(std::move(json));
 

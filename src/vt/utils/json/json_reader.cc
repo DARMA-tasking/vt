@@ -58,8 +58,29 @@ namespace vt { namespace util { namespace json {
 std::unique_ptr<nlohmann::json> Reader::readFile() {
   using json = nlohmann::json;
 
+  bool compressed = true;
+
+  // determine if the file is compressed or not
+  {
+    std::ifstream is(filename_);
+    vtAbortIf(not is.good(), "Filename must be valid.");
+    char f = '\0';
+    while (is.good()) {
+      f = is.get();
+      if (f == ' ' or f == '\t' or f == '\n') {
+        continue;
+      } else {
+        break;
+      }
+    }
+    if (f == '{') {
+      compressed = false;
+    }
+    is.close();
+  }
+
   // @todo: add parser callbacks to allow filtering values while reading
-  if (compressed_) {
+  if (compressed) {
     DecompressionInputContainer c(filename_);
     json j = json::parse(c);
     return std::make_unique<json>(std::move(j));
