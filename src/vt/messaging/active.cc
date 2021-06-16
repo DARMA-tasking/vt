@@ -1290,7 +1290,7 @@ void ActiveMessenger::blockOnAsyncOp(std::unique_ptr<AsyncOp> op) {
     if (theConfig()->vt_ult_disable) {
       vtAbort(
         "You have disabled user-level threads with --vt_ult_disable,"
-        " please enable to block on a async operation"
+        " please enable to block on an async operation"
       );
     } else {
       vtAbort("Trying to block a thread on an AsyncOp when no thread is active");
