@@ -48,8 +48,12 @@
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/objgroup/manager.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/utils/json/json_reader.h"
 
 #include <cinttypes>
+
+#include <nlohmann/json.hpp>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -127,53 +131,20 @@ void StatsRestartReader::inputStatsFile(
   std::string const& fileName,
   std::deque<std::set<ElementIDType>>& element_history
 ) {
-  std::FILE *pFile = std::fopen(fileName.c_str(), "r");
-  if (pFile == nullptr) {
-    vtAssert(pFile, "File opening failed");
-  }
+  using vt::util::json::Reader;
+  using vt::vrt::collection::balance::StatsData;
 
-  std::set<ElementIDType> buffer;
+  Reader r{fileName, true};
+  auto json = r.readFile();
+  auto sd = StatsData::fromJson(std::move(json));
 
-  // Load: Format of a line :size_t, ElementIDType, TimeType
-  size_t phaseID = 0, prevPhaseID = 0;
-  ElementIDType elmID;
-  TimeType tval;
-  CommBytesType d_buffer;
-  using vtCommType = typename std::underlying_type<CommCategory>::type;
-  vtCommType typeID;
-  char separator;
-  fpos_t pos;
-  bool finished = false;
-  while (!finished) {
-    if (fscanf(pFile, "%zu %c %" PRIu64 " %c %lf",
-               &phaseID, &separator, &elmID, &separator, &tval) > 0) {
-      fgetpos(pFile, &pos);
-      if (fscanf(pFile, "%c", &separator)) {
-        if (separator == ',') {
-          // COM detected, read the end of line and do nothing else
-          int res = fscanf (pFile, "%lf %c %hhi", &d_buffer, &separator, &typeID);
-          vtAssertExpr(res == 3);
-        } else {
-          // Load detected, create the new element
-          fsetpos (pFile,&pos);
-          if (prevPhaseID != phaseID) {
-            prevPhaseID = phaseID;
-            element_history.push_back(buffer);
-            buffer.clear();
-          }
-          buffer.insert(elmID);
-        }
-      }
-    } else {
-      finished = true;
+  for (PhaseType phase = 0; phase < sd->node_data_.size(); phase++) {
+    std::set<ElementIDType> buffer;
+    for (auto const& obj : sd->node_data_[phase]) {
+      buffer.insert(obj.first.id);
     }
-  }
-
-  if (!buffer.empty()) {
     element_history.push_back(buffer);
   }
-
-  std::fclose(pFile);
 }
 
 void StatsRestartReader::createMigrationInfo(
