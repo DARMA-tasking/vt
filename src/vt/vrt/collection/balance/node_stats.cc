@@ -148,6 +148,7 @@ void NodeStats::createStatsFile() {
   auto const dir = theConfig()->vt_lb_stats_dir;
   auto const file = fmt::format("{}.{}.out", base_file, node);
   auto const file_name = fmt::format("{}/{}", dir, file);
+  auto const compress = theConfig()->vt_lb_stats_compress;
 
   vt_debug_print(
     normal, lb,
@@ -172,7 +173,7 @@ void NodeStats::createStatsFile() {
   using JSONAppender = util::json::Appender<std::ofstream>;
 
   if (not stat_writer_) {
-    stat_writer_ = std::make_unique<JSONAppender>("phases", file_name, true);
+    stat_writer_ = std::make_unique<JSONAppender>("phases", file_name, compress);
   }
 }
 

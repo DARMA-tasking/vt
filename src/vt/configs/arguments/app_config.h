@@ -140,6 +140,7 @@ struct AppConfig {
   int32_t vt_lb_interval      = 1;
   bool vt_lb_keep_last_elm    = false;
   bool vt_lb_stats            = false;
+  bool vt_lb_stats_compress   = true;
   std::string vt_lb_stats_dir     = "vt_lb_stats";
   std::string vt_lb_stats_file    = "stats";
   std::string vt_lb_stats_dir_in  = "vt_lb_stats_in";
@@ -300,6 +301,7 @@ struct AppConfig {
       | vt_lb_args
       | vt_lb_interval
       | vt_lb_stats
+      | vt_lb_stats_compress
       | vt_lb_stats_dir
       | vt_lb_stats_file
       | vt_lb_stats_dir_in

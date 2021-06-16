@@ -331,6 +331,14 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
+    if (getAppConfig()->vt_lb_stats_compress) {
+      auto f10 = opt_on("--vt_lb_stats_compress", "Compressing statistics files");
+      fmt::print("{}\t{}{}", vt_pre, f10, reset);
+    } else {
+      auto f10 = opt_off("--vt_lb_stats_compress", "Not compressing statistics files");
+      fmt::print("{}\t{}{}", vt_pre, f10, reset);
+    }
+
     auto const fname = getAppConfig()->vt_lb_stats_file;
     if (fname != "") {
       auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
