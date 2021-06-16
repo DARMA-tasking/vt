@@ -224,6 +224,7 @@ public:
 
   void initialize() override;
   void finalize() override;
+  void fatalError() override;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {

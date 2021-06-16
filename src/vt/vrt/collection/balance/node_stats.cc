@@ -187,6 +187,11 @@ void NodeStats::finalize() {
 #endif
 }
 
+void NodeStats::fatalError() {
+  // make flush occur on all stat data collected immediately
+  stat_writer_ = nullptr;
+}
+
 void NodeStats::closeStatsFile() {
 }
 
