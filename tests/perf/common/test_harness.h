@@ -59,9 +59,9 @@ namespace vt { namespace tests { namespace perf { namespace common {
 struct TestMsg;
 
 struct PerfTestHarness {
-  using TestResult = std::pair<std::string, TimeDuration>;
+  using TestResult = std::pair<std::string, TimeType>;
   using TestResults = std::vector<TestResult>;
-  using PerNodeResults = std::unordered_map<NodeType, std::vector<TimeDuration>>;
+  using PerNodeResults = std::unordered_map<NodeType, std::vector<TimeType>>;
   using CombinedResults = std::vector<std::pair<std::string, PerNodeResults>>;
 
   // Memory use at the end of test iteration (i.e. phase)

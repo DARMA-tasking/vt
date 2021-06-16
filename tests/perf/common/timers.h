@@ -45,21 +45,20 @@
 #if !defined INCLUDED_VT_TEST_PERF_COMMON_TIMERS_H
 #define INCLUDED_VT_TEST_PERF_COMMON_TIMERS_H
 
+#include "vt/timing/timing_type.h"
+
 #include <chrono>
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
-using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
-
-using TimeDuration = double;
-using DurationMicro = std::chrono::duration<TimeDuration, std::micro>;
-using DurationMilli = std::chrono::duration<TimeDuration, std::milli>;
-using DurationSec = std::chrono::duration<TimeDuration>;
-
+using TimePoint     = std::chrono::time_point<std::chrono::steady_clock>;
+using DurationMicro = std::chrono::duration<TimeType, std::micro>;
+using DurationMilli = std::chrono::duration<TimeType, std::milli>;
+using DurationSec   = std::chrono::duration<TimeType>;
 template <typename Duration>
 struct DurationConverter {
   static DurationMicro ToMicro(Duration const& in_duration) {
-    return DurationSec{in_duration};
+    return DurationMicro{in_duration};
   }
 
   static DurationMilli ToMilli(Duration const& in_duration) {
@@ -80,15 +79,15 @@ struct DurationConverter {
  *
  * t.Start();
  * SomeFunction();
- * auto const delta = t.Stop<DurationMicro>();
+ * auto const delta = t.Stop<DurationMilli>();
  *
- * fmt::print("SomeFunction took {}?s", delta);
+ * fmt::print("SomeFunction took {}ms", delta);
  */
 struct StopWatch {
   void Start();
 
   template <typename Duration = DurationMilli>
-  TimeDuration Stop() {
+  TimeType Stop() {
     auto const now = std::chrono::steady_clock::now();
     auto const delta = Duration{now - cur_time_};
     cur_time_ = now;

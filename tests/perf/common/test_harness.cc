@@ -75,7 +75,7 @@ static void CopyTestData(
       it->second[node].push_back(time);
     } else {
       PerfTestHarness::PerNodeResults map;
-      map[node] = std::vector<TimeDuration>{time};
+      map[node] = std::vector<TimeType>{time};
 
       dest_time.push_back({test_name, map});
     }
