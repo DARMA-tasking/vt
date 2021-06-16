@@ -1277,4 +1277,37 @@ void ActiveMessenger::unregisterHandlerFn(
   return theRegistry()->unregisterHandlerFn(han, tag);
 }
 
+void ActiveMessenger::registerAsyncOp(std::unique_ptr<AsyncOp> in) {
+  in_progress_ops.emplace(AsyncOpWrapper{std::move(in)});
+}
+
+void ActiveMessenger::blockOnAsyncOp(std::unique_ptr<AsyncOp> op) {
+#if vt_check_enabled(fcontext)
+  using TA = sched::ThreadAction;
+  auto tid = TA::getActiveThreadID();
+
+  if (tid == no_thread_id) {
+    if (theConfig()->vt_ult_disable) {
+      vtAbort(
+        "You have disabled user-level threads with --vt_ult_disable,"
+        " please enable to block on an async operation"
+      );
+    } else {
+      vtAbort("Trying to block a thread on an AsyncOp when no thread is active");
+    }
+  }
+
+  in_progress_ops.emplace(AsyncOpWrapper{std::move(op), tid});
+
+  // Suspend the currently running thread!
+  TA::suspend();
+
+#else
+  vtAbort(
+    "Using a blocking async operation without threads is not allowed. "
+    "Please enable fcontext in cmake and re-run"
+  );
+#endif
+}
+
 }} // end namespace vt::messaging
