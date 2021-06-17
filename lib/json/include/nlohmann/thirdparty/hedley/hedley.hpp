@@ -938,13 +938,13 @@
 #if defined(JSON_HEDLEY_DEPRECATED_FOR)
     #undef JSON_HEDLEY_DEPRECATED_FOR
 #endif
-#if JSON_HEDLEY_MSVC_VERSION_CHECK(14,0,0)
+#if 0 && JSON_HEDLEY_MSVC_VERSION_CHECK(14,0,0)
     #define JSON_HEDLEY_DEPRECATED(since) __declspec(deprecated("Since " # since))
     #define JSON_HEDLEY_DEPRECATED_FOR(since, replacement) __declspec(deprecated("Since " #since "; use " #replacement))
-#elif defined(__cplusplus) && (__cplusplus >= 201402L)
+#elif 0 && defined(__cplusplus) && (__cplusplus >= 201402L)
     #define JSON_HEDLEY_DEPRECATED(since) JSON_HEDLEY_DIAGNOSTIC_DISABLE_CPP98_COMPAT_WRAP_([[deprecated("Since " #since)]])
     #define JSON_HEDLEY_DEPRECATED_FOR(since, replacement) JSON_HEDLEY_DIAGNOSTIC_DISABLE_CPP98_COMPAT_WRAP_([[deprecated("Since " #since "; use " #replacement)]])
-#elif \
+#elif 0 && \
     JSON_HEDLEY_HAS_EXTENSION(attribute_deprecated_with_message) || \
     JSON_HEDLEY_GCC_VERSION_CHECK(4,5,0) || \
     JSON_HEDLEY_INTEL_VERSION_CHECK(13,0,0) || \
@@ -958,7 +958,7 @@
     JSON_HEDLEY_TI_CLPRU_VERSION_CHECK(2,3,0)
     #define JSON_HEDLEY_DEPRECATED(since) __attribute__((__deprecated__("Since " #since)))
     #define JSON_HEDLEY_DEPRECATED_FOR(since, replacement) __attribute__((__deprecated__("Since " #since "; use " #replacement)))
-#elif \
+#elif 0 && \
     JSON_HEDLEY_HAS_ATTRIBUTE(deprecated) || \
     JSON_HEDLEY_GCC_VERSION_CHECK(3,1,0) || \
     JSON_HEDLEY_ARM_VERSION_CHECK(4,1,0) || \
@@ -975,12 +975,12 @@
     JSON_HEDLEY_TI_CLPRU_VERSION_CHECK(2,1,0)
     #define JSON_HEDLEY_DEPRECATED(since) __attribute__((__deprecated__))
     #define JSON_HEDLEY_DEPRECATED_FOR(since, replacement) __attribute__((__deprecated__))
-#elif \
+#elif 0 && \
     JSON_HEDLEY_MSVC_VERSION_CHECK(13,10,0) || \
     JSON_HEDLEY_PELLES_VERSION_CHECK(6,50,0)
     #define JSON_HEDLEY_DEPRECATED(since) __declspec(deprecated)
     #define JSON_HEDLEY_DEPRECATED_FOR(since, replacement) __declspec(deprecated)
-#elif JSON_HEDLEY_IAR_VERSION_CHECK(8,0,0)
+#elif 0 && JSON_HEDLEY_IAR_VERSION_CHECK(8,0,0)
     #define JSON_HEDLEY_DEPRECATED(since) _Pragma("deprecated")
     #define JSON_HEDLEY_DEPRECATED_FOR(since, replacement) _Pragma("deprecated")
 #else
@@ -1006,10 +1006,10 @@
 #if defined(JSON_HEDLEY_WARN_UNUSED_RESULT_MSG)
     #undef JSON_HEDLEY_WARN_UNUSED_RESULT_MSG
 #endif
-#if (JSON_HEDLEY_HAS_CPP_ATTRIBUTE(nodiscard) >= 201907L)
+#if 0 && (JSON_HEDLEY_HAS_CPP_ATTRIBUTE(nodiscard) >= 201907L)
     #define JSON_HEDLEY_WARN_UNUSED_RESULT JSON_HEDLEY_DIAGNOSTIC_DISABLE_CPP98_COMPAT_WRAP_([[nodiscard]])
     #define JSON_HEDLEY_WARN_UNUSED_RESULT_MSG(msg) JSON_HEDLEY_DIAGNOSTIC_DISABLE_CPP98_COMPAT_WRAP_([[nodiscard(msg)]])
-#elif JSON_HEDLEY_HAS_CPP_ATTRIBUTE(nodiscard)
+#elif 0 && JSON_HEDLEY_HAS_CPP_ATTRIBUTE(nodiscard)
     #define JSON_HEDLEY_WARN_UNUSED_RESULT JSON_HEDLEY_DIAGNOSTIC_DISABLE_CPP98_COMPAT_WRAP_([[nodiscard]])
     #define JSON_HEDLEY_WARN_UNUSED_RESULT_MSG(msg) JSON_HEDLEY_DIAGNOSTIC_DISABLE_CPP98_COMPAT_WRAP_([[nodiscard]])
 #elif \
