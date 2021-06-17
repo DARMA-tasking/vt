@@ -56,33 +56,39 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
   j["id"] = phase;
 
   std::size_t i = 0;
-  for (auto&& elm : node_data_.at(phase)) {
-    ElementIDStruct id = elm.first;
-    TimeType time = elm.second;
-    j["tasks"][i]["resource"] = "cpu";
-    j["tasks"][i]["node"] = theContext()->getNode();
-    j["tasks"][i]["time"] = time;
-    j["tasks"][i]["entity"]["type"] = "object";
-    j["tasks"][i]["entity"]["id"] = id.id;
-    j["tasks"][i]["entity"]["home"] = id.home_node;
-    if (node_idx_.find(id) != node_idx_.end()) {
-      auto const& proxy_id = std::get<0>(node_idx_.find(id)->second);
-      auto const& idx_vec = std::get<1>(node_idx_.find(id)->second);
-      j["tasks"][i]["entity"]["collection_id"] = proxy_id;
-      for (std::size_t x = 0; x < idx_vec.size(); x++) {
-        j["tasks"][i]["entity"]["index"][x] = idx_vec[x];
+  if (node_data_.find(phase) != node_data_.end()) {
+    for (auto&& elm : node_data_.at(phase)) {
+      ElementIDStruct id = elm.first;
+      TimeType time = elm.second;
+      j["tasks"][i]["resource"] = "cpu";
+      j["tasks"][i]["node"] = theContext()->getNode();
+      j["tasks"][i]["time"] = time;
+      j["tasks"][i]["entity"]["type"] = "object";
+      j["tasks"][i]["entity"]["id"] = id.id;
+      j["tasks"][i]["entity"]["home"] = id.home_node;
+      if (node_idx_.find(id) != node_idx_.end()) {
+        auto const& proxy_id = std::get<0>(node_idx_.find(id)->second);
+        auto const& idx_vec = std::get<1>(node_idx_.find(id)->second);
+        j["tasks"][i]["entity"]["collection_id"] = proxy_id;
+        for (std::size_t x = 0; x < idx_vec.size(); x++) {
+          j["tasks"][i]["entity"]["index"][x] = idx_vec[x];
+        }
       }
-    }
 
-    auto const& subphase_times = node_subphase_data_.at(phase).at(id);
-    std::size_t const subphases = subphase_times.size();
-    if (subphases != 0) {
-      for (std::size_t s = 0; s < subphases; s++) {
-        j["tasks"][i]["subphases"][s]["id"] = s;
-        j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
+      if (node_subphase_data_.find(phase) != node_subphase_data_.end()) {
+        if (node_subphase_data_.at(phase).find(id) != node_subphase_data_.at(phase).end()) {
+          auto const& subphase_times = node_subphase_data_.at(phase).at(id);
+          std::size_t const subphases = subphase_times.size();
+          if (subphases != 0) {
+            for (std::size_t s = 0; s < subphases; s++) {
+              j["tasks"][i]["subphases"][s]["id"] = s;
+              j["tasks"][i]["subphases"][s]["time"] = subphase_times[s];
+            }
+          }
+        }
       }
+      i++;
     }
-    i++;
   }
 
   i = 0;
