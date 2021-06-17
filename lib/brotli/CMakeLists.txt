@@ -4,7 +4,7 @@
 # support 2.8.7.
 cmake_minimum_required(VERSION 2.8.6)
 
-project(brotli)
+project(brotli VERSION 1.0.9)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to Release as none was specified.")
