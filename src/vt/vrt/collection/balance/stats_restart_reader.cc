@@ -50,6 +50,8 @@
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/stats_data.h"
 #include "vt/utils/json/json_reader.h"
+#include "vt/utils/json/decompression_input_container.h"
+#include "vt/utils/json/input_iterator.h"
 
 #include <cinttypes>
 
@@ -100,17 +102,51 @@ StatsRestartReader::getMigrationList() const {
   return proc_move_list_;
 }
 
-void StatsRestartReader::readStats(std::string const& fileName) {
+std::deque<std::set<ElementIDType>> StatsRestartReader::readIntoElementHistory(
+  std::unique_ptr<StatsData> sd
+) {
+  std::deque<std::set<ElementIDType>> element_history;
+  for (PhaseType phase = 0; phase < sd->node_data_.size(); phase++) {
+    std::set<ElementIDType> buffer;
+    for (auto const& obj : sd->node_data_[phase]) {
+      buffer.insert(obj.first.id);
+    }
+    element_history.push_back(buffer);
+  }
+  return element_history;
+}
 
+void StatsRestartReader::readStatsFromStream(std::stringstream stream) {
+  using vt::util::json::DecompressionInputContainer;
+  using vt::vrt::collection::balance::StatsData;
+  using json = nlohmann::json;
+
+  auto c = DecompressionInputContainer(
+    DecompressionInputContainer::AnyStreamTag{}, std::move(stream)
+  );
+  json j = json::parse(c);
+  auto jptr = std::make_unique<json>(std::move(j));
+  auto sd = StatsData::fromJson(std::move(jptr));
+
+  auto element_history = readIntoElementHistory(std::move(sd));
+  constructMoveList(std::move(element_history));
+}
+
+void StatsRestartReader::readStats(std::string const& fileName) {
   // Read the input files
-  std::deque<std::set<ElementIDType>> elements_history;
-  inputStatsFile(fileName, elements_history);
-  if (elements_history.empty()) {
+  auto elements_history = inputStatsFile(fileName);
+  constructMoveList(std::move(elements_history));
+}
+
+void StatsRestartReader::constructMoveList(
+  std::deque<std::set<ElementIDType>> element_history
+) {
+  if (element_history.empty()) {
     vtWarn("No element history provided");
     return;
   }
 
-  auto const num_iters = elements_history.size() - 1;
+  auto const num_iters = element_history.size() - 1;
   proc_move_list_.resize(num_iters);
   proc_phase_runs_LB_.resize(num_iters, true);
 
@@ -120,13 +156,11 @@ void StatsRestartReader::readStats(std::string const& fileName) {
   }
 
   // Communicate the migration information
-  createMigrationInfo(elements_history);
+  createMigrationInfo(element_history);
 }
 
-void StatsRestartReader::inputStatsFile(
-  std::string const& fileName,
-  std::deque<std::set<ElementIDType>>& element_history
-) {
+std::deque<std::set<ElementIDType>>
+StatsRestartReader::inputStatsFile(std::string const& fileName) {
   using vt::util::json::Reader;
   using vt::vrt::collection::balance::StatsData;
 
@@ -134,13 +168,7 @@ void StatsRestartReader::inputStatsFile(
   auto json = r.readFile();
   auto sd = StatsData::fromJson(std::move(json));
 
-  for (PhaseType phase = 0; phase < sd->node_data_.size(); phase++) {
-    std::set<ElementIDType> buffer;
-    for (auto const& obj : sd->node_data_[phase]) {
-      buffer.insert(obj.first.id);
-    }
-    element_history.push_back(buffer);
-  }
+  return readIntoElementHistory(std::move(sd));
 }
 
 void StatsRestartReader::createMigrationInfo(
