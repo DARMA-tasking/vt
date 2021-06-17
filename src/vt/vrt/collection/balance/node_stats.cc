@@ -143,11 +143,7 @@ void NodeStats::initialize() {
 }
 
 void NodeStats::createStatsFile() {
-  auto const node = theContext()->getNode();
-  auto const base_file = theConfig()->vt_lb_stats_file;
-  auto const dir = theConfig()->vt_lb_stats_dir;
-  auto const file = fmt::format("{}.{}.out", base_file, node);
-  auto const file_name = fmt::format("{}/{}", dir, file);
+  auto const file_name = theConfig()->getLBStatsFileOut();
   auto const compress = theConfig()->vt_lb_stats_compress;
 
   vt_debug_print(
@@ -155,8 +151,9 @@ void NodeStats::createStatsFile() {
     "NodeStats::createStatsFile: file={}\n", file_name
   );
 
+  auto const dir = theConfig()->vt_lb_stats_dir;
   // Node 0 creates the directory
-  if (not created_dir_ and node == 0) {
+  if (not created_dir_ and theContext()->getNode() == 0) {
     mkdir(dir.c_str(), S_IRWXU);
     created_dir_ = true;
   }

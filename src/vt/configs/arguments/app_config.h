@@ -142,9 +142,9 @@ struct AppConfig {
   bool vt_lb_stats            = false;
   bool vt_lb_stats_compress   = true;
   std::string vt_lb_stats_dir     = "vt_lb_stats";
-  std::string vt_lb_stats_file    = "stats";
+  std::string vt_lb_stats_file    = "stats.%p.json";
   std::string vt_lb_stats_dir_in  = "vt_lb_stats_in";
-  std::string vt_lb_stats_file_in = "stats_in";
+  std::string vt_lb_stats_file_in = "stats.%p.json";
 
   bool vt_no_detect_hang       = false;
   bool vt_print_no_progress    = true;
@@ -240,6 +240,8 @@ struct AppConfig {
   /// Does not include argv[0]. Original char* objects.
   std::vector<char*> passthru_args;
 
+  std::string getLBStatsFileOut() const;
+  std::string getLBStatsFileIn() const;
 
   template <typename Serializer>
   void serialize(Serializer& s) {

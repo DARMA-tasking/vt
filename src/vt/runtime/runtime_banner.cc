@@ -341,7 +341,7 @@ void Runtime::printStartupBanner() {
 
     auto const fname = getAppConfig()->vt_lb_stats_file;
     if (fname != "") {
-      auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
+      auto f11 = fmt::format("LB stats file name \"{}\"", fname);
       auto f12 = opt_on("--vt_lb_stats_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
@@ -355,7 +355,7 @@ void Runtime::printStartupBanner() {
 
     auto const fnamein = getAppConfig()->vt_lb_stats_file_in;
     if (fnamein != "") {
-      auto f11 = fmt::format("LB stats file name in \"{}.0.out\"", fnamein);
+      auto f11 = fmt::format("LB stats file name in \"{}\"", fnamein);
       auto f12 = opt_on("--vt_lb_stats_file_in", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }

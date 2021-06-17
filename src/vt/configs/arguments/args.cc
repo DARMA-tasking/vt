@@ -43,6 +43,7 @@
 
 #include "vt/config.h"
 #include "vt/configs/arguments/args.h"
+#include "vt/context/context.h"
 
 #include <string>
 #include <vector>
@@ -744,6 +745,30 @@ std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc,
   argv = &new_argv[0];
 
   return std::make_tuple(-1, std::string{});
+}
+
+std::string AppConfig::getLBStatsFileOut() const {
+  auto name = vt_lb_stats_file;
+  std::size_t rank = name.find("%p");
+  auto str_rank = std::to_string(theContext()->getNode());
+  if (rank == std::string::npos) {
+    name = name + str_rank;
+  } else {
+    name.replace(rank, 2, str_rank);
+  }
+  return vt_lb_stats_dir + "/" + name;
+}
+
+std::string AppConfig::getLBStatsFileIn() const {
+  auto name = vt_lb_stats_file_in;
+  std::size_t rank = name.find("%p");
+  auto str_rank = std::to_string(theContext()->getNode());
+  if (rank == std::string::npos) {
+    name = name + str_rank;
+  } else {
+    name.replace(rank, 2, str_rank);
+  }
+  return vt_lb_stats_dir_in + "/" + name;
 }
 
 }} /* end namespace vt::arguments */
