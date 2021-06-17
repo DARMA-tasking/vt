@@ -65,10 +65,14 @@ Decompressor<Readable>::Decompressor(Readable in_r, std::size_t buf_len_)
   // potentially
   buf_in_ = std::make_unique<uint8_t[]>(in_buf_len_);
 
-  r_.seekg(0, r_.end);
-  int length = r_.tellg();
-  r_.seekg(0, r_.beg);
-  fmt::print("decompressor: length={}\n", length);
+  // r_.seekg(0, r_.end);
+  // int length = r_.tellg();
+  // r_.seekg(0, r_.beg);
+
+  // vt_debug_print(
+  //   terse, gen,
+  //   "decompressor: length={}\n", length
+  // );
 }
 
 template <typename Readable>
@@ -149,9 +153,6 @@ std::size_t Decompressor<Readable>::read(
 
 template <typename Readable>
 bool Decompressor<Readable>::getMoreInput() {
-  auto cur = r_.tellg();
-
-  fmt::print("getMoreInput: avail_in_={}, tellg={}, cur={}\n", avail_in_, r_.tellg(), cur);
   if (avail_in_ == 0) {
     // read some data, up to our internal temporary buffer length
     r_.read(reinterpret_cast<char*>(buf_in_.get()), in_buf_len_);
@@ -159,8 +160,6 @@ bool Decompressor<Readable>::getMoreInput() {
     // check how much we actually read in
     avail_in_ = r_.gcount();
     next_in_ = buf_in_.get();
-
-    fmt::print("getMoreInput (after): avail_in_={}\n", avail_in_);
 
     return avail_in_ != 0;
   } else {
