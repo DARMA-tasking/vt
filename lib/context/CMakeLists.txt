@@ -76,7 +76,6 @@ set(FCONTEXT_LIBRARY fcontext)
 
 add_library(
   ${FCONTEXT_LIBRARY}
-  STATIC
   ${HEADER_FILES} ${SOURCE_FILES} ${ASM_SOURCES}
 )
 
