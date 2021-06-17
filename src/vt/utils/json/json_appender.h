@@ -117,17 +117,21 @@ struct Appender : BaseAppender {
     oa_ = nullptr;
     os_.flush();
     // will close automatically when out of scope
+    finished_ = true;
     return std::move(os_);
   }
 
   virtual ~Appender() {
-    finish();
+    if (not finished_) {
+      finish();
+    }
   }
 
 private:
   StreamLike os_;                              /**< The stream to write to */
   std::shared_ptr<AdaptorType> oa_ = nullptr;  /**< The output adaptor */
   bool first_append = true;                    /**< First append?  */
+  bool finished_ = false;                      /**< Is finished? */
 };
 
 }}} /* end namespace vt::util::json */
