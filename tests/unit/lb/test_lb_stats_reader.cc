@@ -46,7 +46,9 @@
 #include <vector>
 
 #include <vt/vrt/collection/balance/node_stats.h>
+#include <vt/vrt/collection/balance/stats_data.h>
 #include <vt/vrt/collection/balance/stats_restart_reader.h>
+#include <vt/utils/json/json_appender.h>
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
@@ -79,58 +81,74 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   // Node 2 -> [0, 1, 2, 3, 4] // local ID
 
   auto const& this_node = theContext()->getNode();
-  auto const& num_node = theContext()->getNumNodes();
+  auto const& num_nodes = theContext()->getNumNodes();
+
+  using vt::vrt::collection::balance::ElementIDStruct;
 
   const size_t numElements = 5;
-  std::vector<ElementIDType> myElemList(numElements, 0);
+  std::vector<ElementIDStruct> myElemList(numElements);
 
   for (size_t ii = 0; ii < numElements; ++ii) {
 	//--- Shift by 1 to avoid the null permID
-    myElemList[ii] = getElemPermID(ii+1, this_node);
+    myElemList[ii] = ElementIDStruct{
+      getElemPermID(ii+1, this_node), this_node, this_node
+    };
   }
 
-  // Write the input file to test
-  std::string fileName = "test_lb_stats_read_" + std::to_string(this_node)
-    + std::string(".out");
-  std::ofstream out(fileName);
-  size_t iterID = 0;
+  using JSONAppender = vt::util::json::Appender<std::stringstream>;
+
+  std::stringstream stream{std::ios_base::out | std::ios_base::in};
+  auto ap = std::make_unique<JSONAppender>("phases", std::move(stream), true);
+
+  using vt::vrt::collection::balance::StatsData;
+  auto sd = std::make_unique<StatsData>();
+
+  PhaseType phase = 0;
   double tval = 0.0;
+
   //--- Iteration 0
-  for (auto elmID : myElemList) {
+  for (auto&& elmID : myElemList) {
     //--- Use a dummy time value as it is not used.
-    out << iterID << "," << elmID << "," << tval << std::endl;
+    sd->node_data_[phase][elmID] = tval;
   }
-  iterID += 1;
+
   //--- Iteration 1
-  if (this_node != num_node - 1) {
-    out << iterID << "," << myElemList[0] << "," << tval << std::endl;
-  }
-  else {
-    for (auto elmID : myElemList) {
-      out << iterID << "," << elmID << "," << tval << std::endl;
+  phase += 1;
+  if (this_node != num_nodes - 1) {
+    sd->node_data_[phase][myElemList[0]] = tval;
+  } else {
+    for (auto&& elmID : myElemList) {
+      sd->node_data_[phase][elmID] = tval;
     }
-    for (NodeType in = 0; in+1 < num_node; ++in) {
+    for (NodeType in = 0; in+1 < num_nodes; ++in) {
       for (uint64_t elmID = 1; elmID < numElements; ++elmID) {
-        ElementIDType permID = getElemPermID(elmID+1, in);
-        out << iterID << "," << permID << "," << tval << std::endl;
+        auto permID = ElementIDStruct{getElemPermID(elmID+1, in), this_node, in};
+        sd->node_data_[phase][permID] = tval;
       }
     }
   }
-  iterID += 1;
+
   //--- Iteration 2
-  for (auto elmID : myElemList) {
-    out << iterID << "," << elmID << "," << tval << std::endl;
+  phase += 1;
+  for (auto&& elmID : myElemList) {
+    sd->node_data_[phase][elmID] = tval;
   }
-  iterID += 1;
-  out.close();
+
+  phase += 1;
+
+  // Write the stats
+  for (PhaseType p = 0; p < phase; p++) {
+    auto json = sd->toJson(p);
+    ap->addElm(*json);
+  }
+
+  stream = ap->finish();
 
   //--- Start the testing
-
   auto ptr = vrt::collection::balance::StatsRestartReader::construct();
-  ptr->readStats(fileName);
+  ptr->readStatsFromStream(std::move(stream));
 
   //--- Spin here so the test does not end before the communications complete
-
   vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
 
   //--- Check the read values
@@ -138,7 +156,7 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   auto const &migrationList = ptr->getMigrationList();
   auto const numIters = migrationList.size();
 
-  EXPECT_TRUE(numIters == iterID - 1);
+  EXPECT_TRUE(numIters == phase - 1);
 
   //--- Iteration 0 -> 1
   size_t phaseID = 0;
@@ -147,22 +165,22 @@ TEST_F(TestLBStatsReader, test_lb_stats_read_1) {
   if (myList.size() > 0) {
     for (size_t ii = 1; ii < numElements; ++ii) {
       auto myPermID = myElemList[ii];
-      auto it = std::find(myList.begin(), myList.end(), myPermID);
+      auto it = std::find(myList.begin(), myList.end(), myPermID.id);
       EXPECT_TRUE(it != myList.end());
       size_t shift = static_cast<size_t>(it - myList.begin());
-      EXPECT_TRUE(myList[shift+1] == static_cast<ElementIDType>(num_node - 1));
+      EXPECT_TRUE(myList[shift+1] == static_cast<ElementIDType>(num_nodes - 1));
     }
   }
 
   //--- Iteration 1 -> 2
   phaseID = 1;
   myList = migrationList[phaseID];
-  if (this_node != num_node - 1) {
+  if (this_node != num_nodes - 1) {
     EXPECT_TRUE(myList.size() == 0);
   }
   else {
     EXPECT_TRUE(myList.size() % 2 == 0);
-    for (NodeType in = 0; in+1 < num_node; ++in) {
+    for (NodeType in = 0; in+1 < num_nodes; ++in) {
       for (ElementIDType elmID = 1; elmID < numElements; ++elmID) {
         ElementIDType permID = getElemPermID(elmID + 1, in);
         auto it = std::find(myList.begin(), myList.end(), permID);
