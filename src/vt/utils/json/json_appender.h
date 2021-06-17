@@ -110,12 +110,18 @@ struct Appender : BaseAppender {
   /**
    * \brief Finalize the output, closing the array, and flushing the stream
    */
-  virtual ~Appender() {
+  StreamLike finish() {
     oa_->write_character(']');
     oa_->write_character('}');
     // causes the final flush to happen
     oa_ = nullptr;
-    os_.close();
+    os_.flush();
+    // will close automatically when out of scope
+    return std::move(os_);
+  }
+
+  virtual ~Appender() {
+    finish();
   }
 
 private:

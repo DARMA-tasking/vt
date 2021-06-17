@@ -57,7 +57,7 @@ DecompressionInputContainer::DecompressionInputContainer(
 {
   std::ifstream is(filename, std::ios::binary);
   vtAssertExpr(is.good());
-  d_ = std::make_unique<DecompressorType>(std::move(is));
+  d_ = std::make_unique<DecompressorStreamType<std::ifstream>>(std::move(is));
   output_buf_ = std::make_unique<char[]>(chunk_size_);
   len_ = d_->read(reinterpret_cast<uint8_t*>(output_buf_.get()), chunk_size_);
 }

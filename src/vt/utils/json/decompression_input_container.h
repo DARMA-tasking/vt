@@ -45,6 +45,7 @@
 #if !defined INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_H
 #define INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_H
 
+#include "vt/utils/compress/decompressor_base.h"
 #include "vt/utils/compress/decompressor.h"
 
 #include <memory>
@@ -59,7 +60,9 @@ namespace vt { namespace util { namespace json {
  * to the JSON reader through the \c InputIterator
  */
 struct DecompressionInputContainer {
-  using DecompressorType = compress::Decompressor<std::ifstream>;
+  template <typename StreamT>
+  using DecompressorStreamType = compress::Decompressor<StreamT>;
+  using DecompressorType = compress::DecompressorBase;
 
   /**
    * \brief Construct with filename to read
@@ -69,6 +72,20 @@ struct DecompressionInputContainer {
    */
   explicit DecompressionInputContainer(
     std::string const& filename, std::size_t in_chunk_size = 1 << 16
+  );
+
+  /// Tag type for non-file constructor
+  struct AnyStreamTag {};
+
+  /**
+   * \brief Construct with anything that resembles a stream
+   *
+   * \param[in] stream the stream
+   * \param[in] in_chunk_size the chunk size to read in increments
+   */
+  template <typename StreamLike>
+  explicit DecompressionInputContainer(
+    AnyStreamTag, StreamLike stream, std::size_t in_chunk_size = 1 << 16
   );
 
   /**
@@ -94,5 +111,7 @@ private:
 };
 
 }}} /* end namespace vt::util::json */
+
+#include "vt/utils/json/decompression_input_container.impl.h"
 
 #endif /*INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_H*/

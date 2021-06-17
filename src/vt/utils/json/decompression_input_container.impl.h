@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                decompressor.h
+//                     decompression_input_container.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,73 +42,21 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_UTILS_COMPRESS_DECOMPRESSOR_H
-#define INCLUDED_VT_UTILS_COMPRESS_DECOMPRESSOR_H
+#if !defined INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_IMPL_H
+#define INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_IMPL_H
 
-#include "vt/utils/compress/decompressor_base.h"
+namespace vt { namespace util { namespace json {
 
-#include <cstdlib>
-#include <memory>
+template <typename StreamLike>
+DecompressionInputContainer::DecompressionInputContainer(
+  AnyStreamTag, StreamLike stream, std::size_t in_chunk_size
+) : chunk_size_(in_chunk_size)
+{
+  d_ = std::make_unique<DecompressorStreamType<StreamLike>>(std::move(stream));
+  output_buf_ = std::make_unique<char[]>(chunk_size_);
+  len_ = d_->read(reinterpret_cast<uint8_t*>(output_buf_.get()), chunk_size_);
+}
 
-#include <brotli/decode.h>
+}}} /* end namespace vt::util::json */
 
-namespace vt { namespace util { namespace compress {
-
-/**
- * \struct Decompressor
- *
- * \brief A streaming decompressor for reading an input buffer with brotli
- * compression.
- */
-template <typename Readable>
-struct Decompressor : DecompressorBase {
-
-  /**
-   * \brief Construct the decompressor
-   *
-   * \param[in] in_r the stream-like readable to read from
-   * \param[in] buf_len_ the temporary buffer length
-   */
-  explicit Decompressor(Readable in_r, std::size_t buf_len_ = 1 << 16);
-
-  virtual ~Decompressor();
-
-  /**
-   * \brief Read bytes into output buffer
-   *
-   * \param[in] output_buffer the output buffer
-   * \param[in] bytes_to_output the number of bytes in the output buffer
-   *
-   * \return how many bytes it actually read into the buffer
-   */
-  std::size_t read(uint8_t* output_buffer, std::size_t bytes_to_output) override;
-
-  /**
-   * \brief Whether we are done with decompressing the file
-   *
-   * \return whether we are done
-   */
-  bool done() const override;
-
-protected:
-  /**
-   * \internal \brief Get more input, we need it to keep streaming output
-   *
-   * \return whether more input is available
-   */
-  bool getMoreInput();
-
-private:
-  Readable r_;
-  BrotliDecoderState* dec_ = nullptr;  /**< Underlying decoder state */
-  std::size_t in_buf_len_ = 0;         /**< Input buffer max length (chunk) */
-  std::unique_ptr<uint8_t[]> buf_in_;  /**< Temporary input buffer to read */
-  uint8_t const* next_in_ = nullptr;   /**< Next input pointer */
-  std::size_t avail_in_ = 0;           /**< Available length of input data */
-};
-
-}}} /* end namespace vt::util::compress */
-
-#include "vt/utils/compress/decompressor.impl.h"
-
-#endif /*INCLUDED_VT_UTILS_COMPRESS_DECOMPRESSOR_H*/
+#endif /*INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_IMPL_H*/
