@@ -4,7 +4,7 @@
 # support 2.8.7.
 cmake_minimum_required(VERSION 2.8.6)
 
-project(brotli C)
+project(brotli)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to Release as none was specified.")
@@ -190,6 +190,9 @@ foreach(lib IN LISTS BROTLI_SHARED_LIBS BROTLI_STATIC_LIBS)
     $<BUILD_INTERFACE:${BROTLI_INCLUDE_DIRS}>
     $<INSTALL_INTERFACE:include>
   )
+  if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel")
+    target_compile_definitions(${lib} PRIVATE __PURE_INTEL_C99_HEADERS__=1)
+  endif()
   target_link_libraries(${lib} ${LIBM_LIBRARY})
   set_property(TARGET ${lib} APPEND PROPERTY INCLUDE_DIRECTORIES ${BROTLI_INCLUDE_DIRS})
   set_target_properties(${lib} PROPERTIES
