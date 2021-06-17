@@ -57,15 +57,24 @@ namespace vt { namespace tests { namespace perf { namespace common {
 
 struct TestMsg;
 
+template <typename T>
+struct TestResultHolder{
+  T mean_;
+  T min_;
+  T max_;
+};
+
 struct PerfTestHarness {
-  using TestResult = std::pair<std::string, TimeType>;
-  using TestResults = std::vector<TestResult>;
-  using PerNodeResults = std::unordered_map<NodeType, std::vector<TimeType>>;
-  using CombinedResults = std::vector<std::pair<std::string, PerNodeResults>>;
+  using TestName = std::string;
+  using TestResult = std::pair<TestName, TimeType>;
+  using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType>>;
+  using TestResults = std::vector<std::vector<TestResult>>;
+  using PerNodeResults = std::unordered_map<NodeType, TestResultHolder<TimeType>>;
+  using CombinedResults = std::vector<std::pair<TestName, PerNodeResults>>;
 
   // Memory use at the end of test iteration (i.e. phase)
-  using MemoryUsage = std::vector<std::size_t>;
-  using CombinedMemoryUse = std::unordered_map<NodeType, MemoryUsage>;
+  using MemoryUsage = std::vector<std::vector<std::size_t>>;
+  using CombinedMemoryUse = std::unordered_map<NodeType, std::vector<TestResultHolder<std::size_t>>>;
 
   virtual ~PerfTestHarness() = default;
 
@@ -159,6 +168,7 @@ struct PerfTestHarness {
   bool gen_file_ = false;
   bool verbose_ = false;
   uint32_t num_iters_ = 50;
+  uint32_t current_iter_ = 0;
   std::vector<char*> custom_args_ = {};
 
   NodeType my_node_ = {};

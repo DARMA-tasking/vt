@@ -104,7 +104,10 @@ namespace vt { namespace tests { namespace perf { namespace common {
         test.TestFunc();                                                       \
         PerfTestHarness::SpinScheduler();                                      \
         test.AddResult({test.GetName(), timer.Stop()});                        \
-        test.SyncResults();                                                    \
+                                                                               \
+        if (i == num_iters) {                                                  \
+          test.SyncResults();                                                  \
+        }                                                                      \
                                                                                \
         test.TearDown();                                                       \
       }                                                                        \
