@@ -111,6 +111,8 @@ std::size_t hash(const BasicJsonType& j)
         default: // LCOV_EXCL_LINE
             JSON_ASSERT(false); // LCOV_EXCL_LINE
     }
+
+    return 0;
 }
 
 }  // namespace detail
