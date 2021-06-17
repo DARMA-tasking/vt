@@ -63,7 +63,8 @@ std::unique_ptr<nlohmann::json> Reader::readFile() {
   // determine if the file is compressed or not
   {
     std::ifstream is(filename_);
-    vtAbortIf(not is.good(), "Filename must be valid.");
+    auto str = fmt::format("Filename is not valid: {}", filename_);
+    vtAbortIf(not is.good(), str);
     char f = '\0';
     while (is.good()) {
       f = is.get();
