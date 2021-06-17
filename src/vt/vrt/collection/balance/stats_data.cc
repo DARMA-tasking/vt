@@ -183,38 +183,50 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
           vtAssertExpr(node == theContext()->getNode());
 
           if (etype == "object") {
-            auto home = task["entity"]["home"];
             auto object = task["entity"]["id"];
             vtAssertExpr(object.is_number());
-            vtAssertExpr(home.is_number());
+
+            NodeType home = uninitialized_destination;
+            if (task["entity"].find("home") != task["entity"].end()) {
+              auto home_json = task["entity"]["home"];
+              vtAssertExpr(home_json.is_number());
+              home = home_json;
+            }
 
             auto elm = ElementIDStruct{object, home, this_node};
             sd->node_data_[id][elm] = time;
 
-            auto cid = task["entity"]["collection_id"];
-            auto idx = task["entity"]["index"];
-            if (cid.is_number() && idx.is_array()) {
-              std::vector<uint64_t> arr;
-              for (auto const& index : idx) {
-                arr.push_back(static_cast<uint64_t>(index));
+            if (
+              task["entity"].find("collection_id") != task["entity"].end() and
+              task["entity"].find("index") != task["entity"].end()
+            ) {
+              auto cid = task["entity"]["collection_id"];
+              auto idx = task["entity"]["index"];
+              if (cid.is_number() && idx.is_array()) {
+                std::vector<uint64_t> arr;
+                for (auto const& index : idx) {
+                  arr.push_back(static_cast<uint64_t>(index));
+                }
+                auto proxy = static_cast<VirtualProxyType>(cid);
+                sd->node_idx_[elm] = std::make_tuple(proxy, arr);
               }
-              auto proxy = static_cast<VirtualProxyType>(cid);
-              sd->node_idx_[elm] = std::make_tuple(proxy, arr);
             }
 
-            auto subphases = task["subphases"];
-            if (subphases.is_array()) {
-              for (auto const& s : subphases) {
-                auto sid = s["id"];
-                auto stime = s["time"];
+            if (task.find("subphases") != task.end()) {
+              auto subphases = task["subphases"];
+              if (subphases.is_array()) {
+                for (auto const& s : subphases) {
+                  auto sid = s["id"];
+                  auto stime = s["time"];
 
-                vtAssertExpr(sid.is_number());
-                vtAssertExpr(stime.is_number());
+                  vtAssertExpr(sid.is_number());
+                  vtAssertExpr(stime.is_number());
 
-                sd->node_subphase_data_[id][elm].resize(
-                  static_cast<std::size_t>(sid) + 1
-                );
-                sd->node_subphase_data_[id][elm][sid] = stime;
+                  sd->node_subphase_data_[id][elm].resize(
+                    static_cast<std::size_t>(sid) + 1
+                  );
+                  sd->node_subphase_data_[id][elm][sid] = stime;
+                }
               }
             }
           }
