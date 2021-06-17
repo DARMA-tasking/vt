@@ -65,7 +65,12 @@ DecompressionInputContainer::DecompressionInputContainer(
 bool DecompressionInputContainer::advance() const {
   if (cur_ + 1 == len_) {
     len_ = d_->read(reinterpret_cast<uint8_t*>(output_buf_.get()), chunk_size_);
-    cur_ = -1;
+    cur_ = 0;
+    if (cur_ + 1 < len_) {
+      return true;
+    } else {
+      return false;
+    }
   }
   if (cur_ + 1 < len_) {
     cur_++;
