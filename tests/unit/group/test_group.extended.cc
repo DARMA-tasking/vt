@@ -3,7 +3,6 @@
 // *****************************************************************************
 //
 //                           test_group.extended.cc
-//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2021 National Technology & Engineering Solutions of Sandia, LLC
