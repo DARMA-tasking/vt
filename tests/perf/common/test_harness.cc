@@ -56,14 +56,14 @@ namespace vt { namespace tests { namespace perf { namespace common {
 /////////////////////////////////////////////////
 ///////////////      HELPERS      ///////////////
 /////////////////////////////////////////////////
-template <typename T, typename S>
-std::vector<S> ProcessInput(
-  std::vector<std::vector<T>> const& input_vec,
-  std::function<void(S&, T const&)> populate,
-  std::function<void(S&, size_t)> mean
+template <typename InputType, typename OutputType>
+std::vector<OutputType> ProcessInput(
+  std::vector<std::vector<InputType>> const& input_vec,
+  std::function<void(OutputType&, InputType const&)> populate,
+  std::function<void(OutputType&, size_t)> mean
 ) {
   auto const vec_size = input_vec.front().size();
-  std::vector<S> mean_values_vec(vec_size, S{});
+  std::vector<OutputType> mean_values_vec(vec_size, OutputType{});
 
   for (auto const& per_iter : input_vec) {
     for (uint32_t i = 0; i < vec_size; ++i) {
@@ -247,18 +247,6 @@ std::string PerfTestHarness::OutputMemoryUse() const {
     std::size_t cur_min = std::numeric_limits<std::size_t>::max();
     std::size_t cur_max = 0;
 
-    // std::vector<size_t> mean_mem_use(num_iters_, 0);
-
-    // for (auto const& per_iter_memory : memory_use) {
-    //   for (uint32_t i = 0; i < num_iters_; ++i) {
-    //     mean_mem_use[i] += per_iter_memory[i];
-    //   }
-    // }
-
-    // for (auto& mem : mean_mem_use) {
-    //   mem /= num_iters_;
-    // }
-
     for (auto const mem : memory_use) {
       cur_min = std::min(mem.min_, cur_min);
       cur_max = std::max(mem.max_, cur_max);
@@ -293,13 +281,6 @@ std::string PerfTestHarness::OutputTimeResults() const {
         auto const node = per_node_result.first;
         auto& timings = per_node_result.second;
 
-        // auto const num_timings = timings.size();
-        // auto const mean =
-        //   std::accumulate(timings.begin(), timings.end(), 0.0) / num_timings;
-        // std::sort(timings.begin(), timings.end());
-        // auto const& min = timings.front();
-        // auto const& max = timings.back();
-
         file_content.append(fmt::format("{},{},{:.3f}\n", name, node, timings.mean_));
 
         fmt::print(
@@ -308,14 +289,6 @@ std::string PerfTestHarness::OutputTimeResults() const {
           debug::emph(fmt::format("{:.3f}ms", timings.mean_)),
           debug::emph(fmt::format("{:.3f}ms", timings.min_)),
           debug::emph(fmt::format("{:.3f}ms", timings.max_)));
-
-        // if (verbose_) {
-        //   for (uint32_t run_num = 0; run_num < num_timings; ++run_num) {
-        //     fmt::print(
-        //       "{} Run {} -> {}\n", debug::proc(node), run_num,
-        //       debug::emph(fmt::format("{:.3f}ms", timings[run_num])));
-        //   }
-        // }
       }
     };
 

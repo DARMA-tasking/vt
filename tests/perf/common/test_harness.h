@@ -59,9 +59,9 @@ struct TestMsg;
 
 template <typename T>
 struct TestResultHolder{
-  T mean_;
-  T min_;
-  T max_;
+  T mean_ = {};
+  T min_ = std::numeric_limits<T>::max();
+  T max_ = {};
 };
 
 struct PerfTestHarness {

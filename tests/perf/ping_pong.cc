@@ -53,7 +53,7 @@ using namespace vt::tests::perf::common;
 static constexpr int64_t const min_bytes = 1;
 static constexpr int64_t const max_bytes = 16777216;
 
-static constexpr int64_t num_pings = 10;
+static constexpr int64_t num_pings = 20;
 
 static constexpr NodeType const ping_node = 0;
 static constexpr NodeType const pong_node = 1;
