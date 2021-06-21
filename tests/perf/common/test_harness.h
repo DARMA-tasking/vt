@@ -86,8 +86,8 @@ struct PerfTestHarness {
    * Perf specific args:
    * --vt_perf_gen_file - generate .CSV files with test results
    * --vt_perf_verbose  - output per iteration times/memory use
-   * --vt_perf_num_iter - set the number of iterations that tests should run
-   *                      (e.g. --vt_perf_num_iter=100)
+   * --vt_perf_num_runs - set how many times the tests should run
+   *                      (e.g. --vt_perf_num_run=100)
    */
   void Initialize(int argc, char** argv);
 
@@ -99,11 +99,11 @@ struct PerfTestHarness {
   std::string GetName() const;
 
   /**
-   * \brief Get the number of iterations that this test will run
+   * \brief Get the number of runs that this test will run
    *
-   * \return Number of iterations
+   * \return Number of runs
    */
-  uint32_t GetNumIters() const;
+  uint32_t GetNumRuns() const;
 
   /**
    * \brief Dump the test results to stdout and CSV files.
@@ -138,7 +138,7 @@ struct PerfTestHarness {
 
   /**
    * \brief Send the tests' results to root node.
-   * This is called after each test iteration.
+   * This is called after each test run.
    */
   void SyncResults();
 
@@ -167,8 +167,8 @@ struct PerfTestHarness {
   protected:
   bool gen_file_ = false;
   bool verbose_ = false;
-  uint32_t num_iters_ = 50;
-  uint32_t current_iter_ = 0;
+  uint32_t num_runs_ = 50;
+  uint32_t current_run_ = 0;
   std::vector<char*> custom_args_ = {};
 
   NodeType my_node_ = {};

@@ -56,54 +56,78 @@ namespace vt { namespace tests { namespace perf { namespace common {
 /////////////////////////////////////////////////
 ///////////////      HELPERS      ///////////////
 /////////////////////////////////////////////////
-template <typename InputType, typename OutputType>
-std::vector<OutputType> ProcessInput(
-  std::vector<std::vector<InputType>> const& input_vec,
-  std::function<void(OutputType&, InputType const&)> populate,
-  std::function<void(OutputType&, size_t)> mean
-) {
-  auto const vec_size = input_vec.front().size();
-  std::vector<OutputType> mean_values_vec(vec_size, OutputType{});
 
-  for (auto const& per_iter : input_vec) {
-    for (uint32_t i = 0; i < vec_size; ++i) {
-      populate(mean_values_vec[i], per_iter[i]);
+/**
+ * \brief Prints memory usage in human readable format
+ */
+static std::string GetFormattedMemUsage(std::size_t memory) {
+  auto const& best_mem = util::memory::getBestMemoryUnit(memory);
+
+  return fmt::format(
+    "{}",
+    debug::emph(
+      fmt::format("{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem))));
+}
+
+/**
+ * \brief Helper function that converts the test results from all runs into a final vector,
+ * which contains mean/min/max values for each test result.
+ *
+ * \param[in] input_vec vector that contains test data (memory usage or timers) from all test runs
+ * By default all tests are run 50 times (see --vt_perf_num_runs flag) so this vector will have 50 elems,
+ * and each element is a vector of test results for that run.
+ *
+ * \param[in] populate function that will be called (for each test run) in order to generate the output vector.
+ * Takes three params:
+ *  1. Final test result
+ *  2. Test result for given test run
+ *  3. Number of test runs
+ *
+ * \return Vector with final test results (mean/min/max)
+ */
+template <typename InputT, typename OutputT>
+std::vector<OutputT> ProcessInput(
+  std::vector<std::vector<InputT>> const& input_vec,
+  std::function<void(OutputT&, InputT const&, std::size_t const)> populate) {
+  auto const vec_size = input_vec.front().size();
+  auto const num_runs = input_vec.size();
+  std::vector<OutputT> values_vec(vec_size, OutputT{});
+
+  for (auto const& per_run_result : input_vec) {
+    for (std::decay_t<decltype(vec_size)> i = 0; i < vec_size; ++i) {
+      populate(values_vec[i], per_run_result[i], num_runs);
     }
   }
 
-  for (auto& mem : mean_values_vec) {
-    mean(mem, vec_size);
-  }
-
-  return mean_values_vec;
+  return values_vec;
 }
 
+/**
+ * \brief Aggregates results from all nodes, Called at the end of all test runs (on root node)
+ */
 static void CopyTestData(
   PerfTestHarness::TestResults const& source_time,
   PerfTestHarness::CombinedResults& dest_time,
   PerfTestHarness::MemoryUsage const& source_memory,
-  PerfTestHarness::CombinedMemoryUse& dest_memory, NodeType node
+  PerfTestHarness::CombinedMemoryUse& dest_memory, NodeType const node
 ) {
-  auto mean_time_use =
+  auto time_use =
     ProcessInput<PerfTestHarness::TestResult, PerfTestHarness::FinalTestResult>(
       source_time,
       [](
         PerfTestHarness::FinalTestResult& left,
-        PerfTestHarness::TestResult const& right) {
+        PerfTestHarness::TestResult const& right, std::size_t const num_elems) {
         if (left.first.empty()) {
           left = {right.first, {right.second, right.second, right.second}};
         } else {
-          left.second.mean_ += right.second;
+          left.second.mean_ += right.second / num_elems;
           left.second.min_ = std::min(left.second.min_, right.second);
           left.second.max_ = std::max(left.second.max_, right.second);
         }
-      },
-      [](PerfTestHarness::FinalTestResult& left, size_t num_elems) {
-        left.second.mean_ /= num_elems;
       }
     );
 
-  for (auto const& test_result : mean_time_use) {
+  for (auto const& test_result : time_use) {
     auto const& test_name = test_result.first;
     auto const time = test_result.second;
 
@@ -120,32 +144,22 @@ static void CopyTestData(
 
       dest_time.push_back({test_name, map});
     }
-
   }
 
-  auto mean_mem_use = ProcessInput<size_t, TestResultHolder<size_t>>(
-    source_memory, [](TestResultHolder<size_t>& left, size_t const& right) {
-      left.mean_ += right;
+  auto mem_use = ProcessInput<size_t, TestResultHolder<size_t>>(
+    source_memory,
+    [](
+      TestResultHolder<size_t>& left, size_t const& right,
+      std::size_t const num_elems) {
+      left.mean_ += right / num_elems;
       left.min_ = std::min(left.min_, right);
       left.max_ = std::max(left.max_, right);
-    },
-    [](TestResultHolder<size_t>& left, size_t num_elems) { left.mean_ /= num_elems; }
+    }
   );
 
-  dest_memory[node].resize(mean_mem_use.size());
+  dest_memory[node].resize(mem_use.size());
 
-  std::copy(
-    mean_mem_use.begin(), mean_mem_use.end(), dest_memory[node].begin()
-  );
-}
-
-static std::string GetFormattedMemUsage(std::size_t memory) {
-  auto const& best_mem = util::memory::getBestMemoryUnit(memory);
-
-  return fmt::format(
-    "{}",
-    debug::emph(
-      fmt::format("{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem))));
+  std::copy(mem_use.begin(), mem_use.end(), dest_memory[node].begin());
 }
 
 struct TestMsg : Message {
@@ -199,7 +213,7 @@ void PerfTestHarness::SetUp() {
 void PerfTestHarness::TearDown() {
   SpinScheduler();
   CollectiveOps::finalize();
-  current_iter_++;
+  current_run_++;
 }
 
 void PerfTestHarness::Initialize(int argc, char** argv) {
@@ -212,9 +226,9 @@ void PerfTestHarness::Initialize(int argc, char** argv) {
       gen_file_ = true;
     } else if (arg_s == "--vt_perf_verbose") {
       verbose_ = true;
-    } else if (arg_s.substr(0, 18) == "--vt_perf_num_iter") {
-      // Assume it's in form '--vt_perf_num_iter={num}'
-      num_iters_ = stoi(arg_s.substr(19));
+    } else if (arg_s.substr(0, 18) == "--vt_perf_num_runs") {
+      // Assume it's in form '--vt_perf_num_runs={num}'
+      num_runs_ = stoi(arg_s.substr(19));
     } else {
       custom_args_.push_back(arg);
     }
@@ -224,16 +238,16 @@ void PerfTestHarness::Initialize(int argc, char** argv) {
     custom_args_.push_back(const_cast<char*>("--vt_quiet"));
   }
 
-  memory_use_.resize(num_iters_);
-  timings_.resize(num_iters_);
+  memory_use_.resize(num_runs_);
+  timings_.resize(num_runs_);
 }
 
 std::string PerfTestHarness::GetName() const {
   return name_;
 }
 
-uint32_t PerfTestHarness::GetNumIters() const {
-  return num_iters_;
+uint32_t PerfTestHarness::GetNumRuns() const {
+  return num_runs_;
 }
 
 std::string PerfTestHarness::OutputMemoryUse() const {
@@ -330,7 +344,7 @@ void PerfTestHarness::DumpResults() const {
 }
 
 void PerfTestHarness::AddResult(TestResult const& test_result) {
-  timings_[current_iter_].push_back(test_result);
+  timings_[current_run_].push_back(test_result);
 }
 
 void PerfTestHarness::StartTimer(std::string const& name) {
@@ -343,7 +357,7 @@ void PerfTestHarness::StopTimer(std::string const& name) {
 
 void PerfTestHarness::SyncResults() {
   // Root node will be responsible for generating the final output
-  // so every other node sends its results to it (at the end of test iteration)
+  // so every other node sends its results to it (at the end of test runs)
   runInEpochCollective([this] {
     constexpr auto root_node = 0;
 
@@ -373,7 +387,7 @@ void PerfTestHarness::SpinScheduler() {
 
 void PerfTestHarness::GetMemoryUsage() {
   // Memory footpring from PerfTestHarness' internal data structs are included
-  memory_use_[current_iter_].push_back(mem_tracker_.getUsage());
+  memory_use_[current_run_].push_back(mem_tracker_.getUsage());
 }
 
 }}}} // namespace vt::tests::perf::common

@@ -86,7 +86,7 @@ namespace vt { namespace tests { namespace perf { namespace common {
                                                                                \
       TestType test;                                                           \
       test.Initialize(argc, argv);                                             \
-      auto const num_iters = test.GetNumIters();                               \
+      auto const num_runs = test.GetNumRuns();                                 \
                                                                                \
       StopWatch timer;                                                         \
                                                                                \
@@ -94,10 +94,10 @@ namespace vt { namespace tests { namespace perf { namespace common {
         fmt::print(                                                            \
           "\033[1mRunning test:\033[00m \033[32m{}\033[00m (Number of runs = " \
           "\033[32m{}\033[00m) ...\n",                                         \
-          test.GetName(), num_iters);                                          \
+          test.GetName(), num_runs);                                           \
       }                                                                        \
                                                                                \
-      for (uint32_t i = 1; i <= num_iters; ++i) {                              \
+      for (uint32_t i = 1; i <= num_runs; ++i) {                               \
         test.SetUp();                                                          \
                                                                                \
         timer.Start();                                                         \
@@ -105,7 +105,7 @@ namespace vt { namespace tests { namespace perf { namespace common {
         PerfTestHarness::SpinScheduler();                                      \
         test.AddResult({test.GetName(), timer.Stop()});                        \
                                                                                \
-        if (i == num_iters) {                                                  \
+        if (i == num_runs) {                                                   \
           test.SyncResults();                                                  \
         }                                                                      \
                                                                                \
