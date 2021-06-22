@@ -3,7 +3,6 @@
 // *****************************************************************************
 //
 //                               base_appender.h
-//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
@@ -59,3 +58,4 @@ struct BaseAppender {
 }}} /* end namespace vt::util::json */
 
 #endif /*INCLUDED_VT_UTILS_JSON_BASE_APPENDER_H*/
+

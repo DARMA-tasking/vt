@@ -3,7 +3,6 @@
 // *****************************************************************************
 //
 //                       decompression_input_container.cc
-//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,9 +40,6 @@
 // *****************************************************************************
 //@HEADER
 */
-
-#if !defined INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_CC
-#define INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_CC
 
 #include "vt/utils/json/decompression_input_container.h"
 
@@ -85,5 +81,3 @@ char const& DecompressionInputContainer::getCurrent() const {
 }
 
 }}} /* end namespace vt::util::json */
-
-#endif /*INCLUDED_VT_UTILS_JSON_DECOMPRESSION_INPUT_CONTAINER_CC*/

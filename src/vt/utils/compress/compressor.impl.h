@@ -3,7 +3,6 @@
 // *****************************************************************************
 //
 //                              compressor.impl.h
-//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
@@ -89,3 +88,4 @@ bool Compressor::finish(StreamLike& s) {
 }}} /* end namespace vt::util::compress */
 
 #endif /*INCLUDED_VT_UTILS_COMPRESS_COMPRESSOR_IMPL_H*/
+

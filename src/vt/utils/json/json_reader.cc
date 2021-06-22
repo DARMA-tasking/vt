@@ -3,7 +3,6 @@
 // *****************************************************************************
 //
 //                                json_reader.cc
-//                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,9 +40,6 @@
 // *****************************************************************************
 //@HEADER
 */
-
-#if !defined INCLUDED_VT_UTILS_JSON_JSON_READER_CC
-#define INCLUDED_VT_UTILS_JSON_JSON_READER_CC
 
 #include "vt/utils/json/json_reader.h"
 #include "vt/utils/json/decompression_input_container.h"
@@ -95,5 +91,3 @@ std::unique_ptr<nlohmann::json> Reader::readFile() {
 }
 
 }}} /* end namespace vt::util::json */
-
-#endif /*INCLUDED_VT_UTILS_JSON_JSON_READER_CC*/
