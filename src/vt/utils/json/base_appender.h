@@ -58,4 +58,3 @@ struct BaseAppender {
 }}} /* end namespace vt::util::json */
 
 #endif /*INCLUDED_VT_UTILS_JSON_BASE_APPENDER_H*/
-

@@ -88,4 +88,3 @@ bool Compressor::finish(StreamLike& s) {
 }}} /* end namespace vt::util::compress */
 
 #endif /*INCLUDED_VT_UTILS_COMPRESS_COMPRESSOR_IMPL_H*/
-

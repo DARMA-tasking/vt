@@ -115,4 +115,3 @@ inline InputIterator end(DecompressionInputContainer const&) {
 }}} /* end namespace vt::util::json */
 
 #endif /*INCLUDED_VT_UTILS_JSON_INPUT_ITERATOR_H*/
-
