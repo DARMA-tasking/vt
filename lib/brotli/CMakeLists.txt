@@ -109,6 +109,12 @@ if (ENABLE_SANITIZER)
   endif()
 endif ()
 
+option(BROTLI_BUILD_PORTABLE "Make brotli not incur undefined behavior" OFF)
+if (BROTLI_BUILD_PORTABLE)
+  message(STATUS "Building brotli in portable mode")
+  add_definitions(-DBROTLI_BUILD_PORTABLE)
+endif()
+
 include(CheckFunctionExists)
 set(LIBM_LIBRARY)
 CHECK_FUNCTION_EXISTS(log2 LOG2_RES)

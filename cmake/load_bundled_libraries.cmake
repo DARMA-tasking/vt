@@ -33,6 +33,7 @@ add_subdirectory(${PROJECT_LIB_DIR}/json)
 set(BROTLI_DISABLE_TESTS ON)
 # we need to disable bundled mode so it will install properly
 set(BROTLI_BUNDLED_MODE OFF)
+set(BROTLI_BUILD_PORTABLE ON)
 set(BROTLI_LIBRARY brotlicommon brotlienc brotlidec)
 add_subdirectory(${PROJECT_LIB_DIR}/brotli)
 
