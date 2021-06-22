@@ -176,13 +176,13 @@ struct is_complete_type : std::false_type {};
 template<typename T>
 struct is_complete_type<T, decltype(void(sizeof(T)))> : std::true_type {};
 
-template<typename BasicJsonType, typename CompatibleObjectType,
+template<typename CompatibleObjectType, typename BasicJsonType,
          typename = void>
 struct is_compatible_object_type_impl : std::false_type {};
 
-template<typename BasicJsonType, typename CompatibleObjectType>
+template<typename CompatibleObjectType, typename BasicJsonType>
 struct is_compatible_object_type_impl <
-    BasicJsonType, CompatibleObjectType,
+    CompatibleObjectType, BasicJsonType,
     enable_if_t < is_detected<mapped_type_t, CompatibleObjectType>::value&&
     is_detected<key_type_t, CompatibleObjectType>::value >>
 {
@@ -199,15 +199,15 @@ struct is_compatible_object_type_impl <
 
 template<typename BasicJsonType, typename CompatibleObjectType>
 struct is_compatible_object_type
-    : is_compatible_object_type_impl<BasicJsonType, CompatibleObjectType> {};
+    : is_compatible_object_type_impl<CompatibleObjectType, BasicJsonType> {};
 
-template<typename BasicJsonType, typename ConstructibleObjectType,
+template<typename ConstructibleObjectType, typename BasicJsonType,
          typename = void>
 struct is_constructible_object_type_impl : std::false_type {};
 
-template<typename BasicJsonType, typename ConstructibleObjectType>
+template<typename ConstructibleObjectType, typename BasicJsonType>
 struct is_constructible_object_type_impl <
-    BasicJsonType, ConstructibleObjectType,
+    ConstructibleObjectType, BasicJsonType,
     enable_if_t < is_detected<mapped_type_t, ConstructibleObjectType>::value&&
     is_detected<key_type_t, ConstructibleObjectType>::value >>
 {
@@ -231,8 +231,7 @@ struct is_constructible_object_type_impl <
 
 template<typename BasicJsonType, typename ConstructibleObjectType>
 struct is_constructible_object_type
-    : is_constructible_object_type_impl<BasicJsonType,
-      ConstructibleObjectType> {};
+  : is_constructible_object_type_impl<ConstructibleObjectType, BasicJsonType> {};
 
 template<typename BasicJsonType, typename CompatibleStringType,
          typename = void>
@@ -271,12 +270,12 @@ template<typename BasicJsonType, typename ConstructibleStringType>
 struct is_constructible_string_type
     : is_constructible_string_type_impl<BasicJsonType, ConstructibleStringType> {};
 
-template<typename BasicJsonType, typename CompatibleArrayType, typename = void>
+template<typename CompatibleArrayType, typename BasicJsonType, typename = void>
 struct is_compatible_array_type_impl : std::false_type {};
 
-template<typename BasicJsonType, typename CompatibleArrayType>
+template<typename CompatibleArrayType, typename BasicJsonType>
 struct is_compatible_array_type_impl <
-    BasicJsonType, CompatibleArrayType,
+    CompatibleArrayType, BasicJsonType,
     enable_if_t < is_detected<value_type_t, CompatibleArrayType>::value&&
     is_detected<iterator_t, CompatibleArrayType>::value&&
 // This is needed because json_reverse_iterator has a ::iterator type...
@@ -292,21 +291,21 @@ struct is_compatible_array_type_impl <
 
 template<typename BasicJsonType, typename CompatibleArrayType>
 struct is_compatible_array_type
-    : is_compatible_array_type_impl<BasicJsonType, CompatibleArrayType> {};
+    : is_compatible_array_type_impl<CompatibleArrayType, BasicJsonType> {};
 
-template<typename BasicJsonType, typename ConstructibleArrayType, typename = void>
+template<typename ConstructibleArrayType, typename BasicJsonType, typename = void>
 struct is_constructible_array_type_impl : std::false_type {};
 
-template<typename BasicJsonType, typename ConstructibleArrayType>
+template<typename ConstructibleArrayType, typename BasicJsonType>
 struct is_constructible_array_type_impl <
-    BasicJsonType, ConstructibleArrayType,
+    ConstructibleArrayType, BasicJsonType,
     enable_if_t<std::is_same<ConstructibleArrayType,
     typename BasicJsonType::value_type>::value >>
             : std::true_type {};
 
-template<typename BasicJsonType, typename ConstructibleArrayType>
+template<typename ConstructibleArrayType, typename BasicJsonType>
 struct is_constructible_array_type_impl <
-    BasicJsonType, ConstructibleArrayType,
+    ConstructibleArrayType, BasicJsonType,
     enable_if_t < !std::is_same<ConstructibleArrayType,
     typename BasicJsonType::value_type>::value&&
     std::is_default_constructible<ConstructibleArrayType>::value&&
@@ -335,7 +334,7 @@ detected_t<value_type_t, ConstructibleArrayType >>::value >>
 
 template<typename BasicJsonType, typename ConstructibleArrayType>
 struct is_constructible_array_type
-    : is_constructible_array_type_impl<BasicJsonType, ConstructibleArrayType> {};
+  : is_constructible_array_type_impl<ConstructibleArrayType, BasicJsonType> {};
 
 template<typename RealIntegerType, typename CompatibleNumberIntegerType,
          typename = void>
