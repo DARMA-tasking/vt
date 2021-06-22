@@ -747,8 +747,9 @@ std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc,
   return std::make_tuple(-1, std::string{});
 }
 
-std::string AppConfig::getLBStatsFileOut() const {
-  auto name = vt_lb_stats_file;
+namespace {
+static std::string buildFile(std::string const& file, std::string const& dir) {
+  std::string name = file;
   std::size_t rank = name.find("%p");
   auto str_rank = std::to_string(theContext()->getNode());
   if (rank == std::string::npos) {
@@ -756,19 +757,17 @@ std::string AppConfig::getLBStatsFileOut() const {
   } else {
     name.replace(rank, 2, str_rank);
   }
-  return vt_lb_stats_dir + "/" + name;
+  return dir + "/" + name;
+
+}
+} /* end anon namespace */
+
+std::string AppConfig::getLBStatsFileOut() const {
+  return buildFile(vt_lb_stats_file, vt_lb_stats_dir);
 }
 
 std::string AppConfig::getLBStatsFileIn() const {
-  auto name = vt_lb_stats_file_in;
-  std::size_t rank = name.find("%p");
-  auto str_rank = std::to_string(theContext()->getNode());
-  if (rank == std::string::npos) {
-    name = name + str_rank;
-  } else {
-    name.replace(rank, 2, str_rank);
-  }
-  return vt_lb_stats_dir_in + "/" + name;
+  return buildFile(vt_lb_stats_file_in, vt_lb_stats_dir_in);
 }
 
 }} /* end namespace vt::arguments */
