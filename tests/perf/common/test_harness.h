@@ -160,19 +160,19 @@ struct PerfTestHarness {
    */
   void GetMemoryUsage();
 
-  private:
+private:
   std::string OutputMemoryUse() const;
   std::string OutputTimeResults() const;
 
-  protected:
+protected:
   bool gen_file_ = false;
   bool verbose_ = false;
   uint32_t num_runs_ = 50;
   uint32_t current_run_ = 0;
   std::vector<char*> custom_args_ = {};
 
-  NodeType my_node_ = {};
-  NodeType num_nodes_ = {};
+  NodeType my_node_ = uninitialized_destination;
+  NodeType num_nodes_ = uninitialized_destination;
   std::string name_ = {};
 
   // Memory usage (in bytes) per iteration

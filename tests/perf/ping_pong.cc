@@ -126,7 +126,7 @@ struct NodeObj {
     }
   }
 
-  private:
+private:
   MyTest* test_obj_ = nullptr;
   vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
 };

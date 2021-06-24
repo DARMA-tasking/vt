@@ -94,7 +94,7 @@ struct StopWatch {
     return delta.count();
   }
 
-  private:
+private:
   TimePoint cur_time_ = std::chrono::steady_clock::now();
 };
 

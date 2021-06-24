@@ -66,7 +66,9 @@ static std::string GetFormattedMemUsage(std::size_t memory) {
   return fmt::format(
     "{}",
     debug::emph(
-      fmt::format("{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem))));
+      fmt::format("{:.6g}{}", std::get<1>(best_mem), std::get<0>(best_mem))
+    )
+  );
 }
 
 /**
@@ -88,7 +90,8 @@ static std::string GetFormattedMemUsage(std::size_t memory) {
 template <typename InputT, typename OutputT>
 std::vector<OutputT> ProcessInput(
   std::vector<std::vector<InputT>> const& input_vec,
-  std::function<void(OutputT&, InputT const&, std::size_t const)> populate) {
+  std::function<void(OutputT&, InputT const&, std::size_t const)> populate
+) {
   auto const vec_size = input_vec.front().size();
   auto const num_runs = input_vec.size();
   std::vector<OutputT> values_vec(vec_size, OutputT{});
@@ -150,7 +153,8 @@ static void CopyTestData(
     source_memory,
     [](
       TestResultHolder<size_t>& left, size_t const& right,
-      std::size_t const num_elems) {
+      std::size_t const num_elems
+    ) {
       left.mean_ += right / num_elems;
       left.min_ = std::min(left.min_, right);
       left.max_ = std::max(left.max_, right);
@@ -168,7 +172,8 @@ struct TestMsg : Message {
 
   TestMsg(
     PerfTestHarness::TestResults const& results,
-    PerfTestHarness::MemoryUsage const& memory, NodeType from_node)
+    PerfTestHarness::MemoryUsage const& memory, NodeType from_node
+  )
     : results_(results),
       memory_load_(memory),
       from_node_(from_node) { }
@@ -277,7 +282,8 @@ std::string PerfTestHarness::OutputMemoryUse() const {
     fmt::print(
       "{} {}: Memory usage: min: {} max: {}\n", debug::proc(node),
       debug::reg(name_), GetFormattedMemUsage(cur_min),
-      GetFormattedMemUsage(cur_max));
+      GetFormattedMemUsage(cur_max)
+    );
   }
 
   return file_content;
@@ -302,7 +308,8 @@ std::string PerfTestHarness::OutputTimeResults() const {
           debug::proc(node), debug::reg(name),
           debug::emph(fmt::format("{:.3f}ms", timings.mean_)),
           debug::emph(fmt::format("{:.3f}ms", timings.min_)),
-          debug::emph(fmt::format("{:.3f}ms", timings.max_)));
+          debug::emph(fmt::format("{:.3f}ms", timings.max_))
+        );
       }
     };
 
@@ -364,7 +371,8 @@ void PerfTestHarness::SyncResults() {
     if (my_node_ != root_node) {
       auto msg = makeMessage<TestMsg>(timings_, memory_use_, my_node_);
       theMsg()->sendMsg<TestMsg, &PerfTestHarness::RecvTestResult>(
-        root_node, msg);
+        root_node, msg
+      );
     } else {
       // Copy the root node's data to combined structures
       CopyTestData(

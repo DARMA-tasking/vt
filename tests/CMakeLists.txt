@@ -170,13 +170,13 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
       continue()
     endif()
 
-    GET_FILENAME_COMPONENT(
+    get_filename_component(
       UNIT_TEST
       ${unit_test_file}
       NAME_WE
     )
 
-    GET_FILENAME_COMPONENT(
+    get_filename_component(
       UNIT_TEST_FULL_EXTENSION
       ${unit_test_file}
       EXT
@@ -221,7 +221,7 @@ foreach(PERF_TEST ${PROJECT_PERF_TESTS})
     continue()
   endif()
 
-  GET_FILENAME_COMPONENT(
+  get_filename_component(
     TEST_NAME
     ${PERF_TEST}
     NAME_WLE
