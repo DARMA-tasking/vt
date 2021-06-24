@@ -209,10 +209,6 @@ void PerfTestHarness::SetUp() {
   CollectiveOps::initialize(custom_argc, custom_argv, no_workers, true);
   my_node_ = theContext()->getNode();
   num_nodes_ = theContext()->getNumNodes();
-
-  // DumpResults (which uses colorized output) will be called
-  // after vt finalizes, so we use preconfig here
-  vt::debug::preConfigRef()->colorize_output = true;
 }
 
 void PerfTestHarness::TearDown() {
@@ -245,6 +241,9 @@ void PerfTestHarness::Initialize(int argc, char** argv) {
 
   memory_use_.resize(num_runs_);
   timings_.resize(num_runs_);
+
+  // PerfTestHarness::Initialize is called before vt initializes
+  vt::debug::preConfigRef()->colorize_output = true;
 }
 
 std::string PerfTestHarness::GetName() const {
