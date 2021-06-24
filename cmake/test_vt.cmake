@@ -120,6 +120,7 @@ macro(add_test_for_example_vt test_target test_exec test_list)
       vt_example:${test_name}_${PROC}
       PROPERTIES
       FAIL_REGULAR_EXPRESSION "Segmentation fault"
+      LABELS "example"
     )
   endforeach()
 endmacro()
