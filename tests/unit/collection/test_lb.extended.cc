@@ -207,14 +207,7 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
     auto& json = *json_ptr;
 
     EXPECT_TRUE(json.find("phases") != json.end());
-
-    int len = 0;
-    for (auto&& phase : json["phases"]) {
-      (void)phase;
-      len++;
-    }
-
-    EXPECT_EQ(len, num_phases);
+    EXPECT_EQ(json["phases"].size(), num_phases);
   });
 
   if (vt::theContext()->getNode() == 0) {
