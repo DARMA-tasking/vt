@@ -182,7 +182,7 @@ types, like an `object` or `node` depending on the type of communication.
 \endcode
 
 
-The type of communication lines up the enum
+The type of communication lines up with the enum
 `vt::vrt::collection::balance::CommCategory` in the code.
 
 | Value | Enum entry | Description |
