@@ -93,7 +93,7 @@ struct Compressor {
   template <typename StreamLike>
   bool finish(StreamLike& s);
 
-protected:
+private:
   /**
    * \internal \brief Compress data and output to writable, optionally finishing
    *
