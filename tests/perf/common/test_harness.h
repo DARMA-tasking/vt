@@ -49,13 +49,12 @@
 
 #include <vt/configs/types/types_type.h>
 #include <vt/utils/memory/memory_usage.h>
+
 #include <unordered_map>
 #include <string>
 #include <vector>
 
 namespace vt { namespace tests { namespace perf { namespace common {
-
-struct TestMsg;
 
 template <typename T>
 struct TestResultHolder{
@@ -112,7 +111,7 @@ struct PerfTestHarness {
    *
    * This is called at the end of running test suite.
    */
-  void DumpResults() const;
+  void DumpResults();
 
   /**
    * \brief Add a single test result (name-time pair)
@@ -143,11 +142,17 @@ struct PerfTestHarness {
   void SyncResults();
 
   /**
-   * \brief Handler for receiving test results from other nodes
+   * \brief Copies the test results into combined structures.
+   * Called at the end of all test runs (on root node)
    *
-   * \param[in] msg message that contains the results
+   * \param[in] timers time results from all test runs
+   * \param[in] memory_usage memory usage from all test runs
+   * \param[in] from_node which node sent these results
    */
-  static void RecvTestResult(TestMsg* msg);
+  void CopyTestData(
+    PerfTestHarness::TestResults const& timers,
+    PerfTestHarness::MemoryUsage const& memory_usage, NodeType const from_node
+  );
 
   /**
    * \brief Spin the scheduler until all work is done.
@@ -162,7 +167,7 @@ struct PerfTestHarness {
 
 private:
   std::string OutputMemoryUse() const;
-  std::string OutputTimeResults() const;
+  std::string OutputTimeResults();
 
 protected:
   bool gen_file_ = false;
@@ -184,8 +189,8 @@ protected:
   std::unordered_map<std::string, StopWatch> timers_ = {};
 
   // Combined timings from all nodes, that are stored on the root node
-  static CombinedResults combined_timings_;
-  static CombinedMemoryUse combined_mem_use_;
+  CombinedResults combined_timings_;
+  CombinedMemoryUse combined_mem_use_;
 };
 
 }}}} // namespace vt::tests::perf::common

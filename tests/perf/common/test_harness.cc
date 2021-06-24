@@ -47,6 +47,7 @@
 #include <vt/scheduler/scheduler.h>
 #include <vt/phase/phase_manager.h>
 #include <vt/utils/memory/memory_usage.h>
+#include <vt/objgroup/manager.h>
 
 #include <numeric>
 #include <fstream>
@@ -105,75 +106,13 @@ std::vector<OutputT> ProcessInput(
   return values_vec;
 }
 
-/**
- * \brief Aggregates results from all nodes, Called at the end of all test runs (on root node)
- */
-static void CopyTestData(
-  PerfTestHarness::TestResults const& source_time,
-  PerfTestHarness::CombinedResults& dest_time,
-  PerfTestHarness::MemoryUsage const& source_memory,
-  PerfTestHarness::CombinedMemoryUse& dest_memory, NodeType const node
-) {
-  auto time_use =
-    ProcessInput<PerfTestHarness::TestResult, PerfTestHarness::FinalTestResult>(
-      source_time,
-      [](
-        PerfTestHarness::FinalTestResult& left,
-        PerfTestHarness::TestResult const& right, std::size_t const num_elems) {
-        if (left.first.empty()) {
-          left = {right.first, {right.second, right.second, right.second}};
-        } else {
-          left.second.mean_ += right.second / num_elems;
-          left.second.min_ = std::min(left.second.min_, right.second);
-          left.second.max_ = std::max(left.second.max_, right.second);
-        }
-      }
-    );
-
-  for (auto const& test_result : time_use) {
-    auto const& test_name = test_result.first;
-    auto const time = test_result.second;
-
-    auto const& it = std::find_if(
-      dest_time.begin(), dest_time.end(),
-      [test_name](auto const& result) { return test_name == result.first; }
-    );
-
-    if (it != dest_time.end()) {
-      it->second[node] = time;
-    } else {
-      PerfTestHarness::PerNodeResults map;
-      map[node] = time;
-
-      dest_time.push_back({test_name, map});
-    }
-  }
-
-  auto mem_use = ProcessInput<size_t, TestResultHolder<size_t>>(
-    source_memory,
-    [](
-      TestResultHolder<size_t>& left, size_t const& right,
-      std::size_t const num_elems
-    ) {
-      left.mean_ += right / num_elems;
-      left.min_ = std::min(left.min_, right);
-      left.max_ = std::max(left.max_, right);
-    }
-  );
-
-  dest_memory[node].resize(mem_use.size());
-
-  std::copy(mem_use.begin(), mem_use.end(), dest_memory[node].begin());
-}
-
 struct TestMsg : Message {
   vt_msg_serialize_required();
   TestMsg() = default;
 
   TestMsg(
     PerfTestHarness::TestResults const& results,
-    PerfTestHarness::MemoryUsage const& memory, NodeType from_node
-  )
+    PerfTestHarness::MemoryUsage const& memory, NodeType const from_node)
     : results_(results),
       memory_load_(memory),
       from_node_(from_node) { }
@@ -191,6 +130,17 @@ struct TestMsg : Message {
   }
 };
 
+struct TestNodeObj {
+  explicit TestNodeObj(PerfTestHarness* test_harness) : test_harness_(test_harness) { }
+  void RecvTestResult(TestMsg* msg) {
+    test_harness_->CopyTestData(
+      msg->results_, msg->memory_load_, msg->from_node_
+    );
+  }
+
+  PerfTestHarness* test_harness_ = nullptr;
+};
+
 void OutputToFile(std::string const& name, std::string const& content) {
   std::ofstream file(fmt::format("{}.csv", name));
   file << content;
@@ -199,9 +149,6 @@ void OutputToFile(std::string const& name, std::string const& content) {
 /////////////////////////////////////////////////
 ///////////////   TEST HARNESS    ///////////////
 /////////////////////////////////////////////////
-
-PerfTestHarness::CombinedResults PerfTestHarness::combined_timings_ = {};
-PerfTestHarness::CombinedMemoryUse PerfTestHarness::combined_mem_use_ = {};
 
 void PerfTestHarness::SetUp() {
   auto custom_argv = custom_args_.data();
@@ -213,6 +160,7 @@ void PerfTestHarness::SetUp() {
 
 void PerfTestHarness::TearDown() {
   SpinScheduler();
+
   CollectiveOps::finalize();
   current_run_++;
 }
@@ -288,7 +236,7 @@ std::string PerfTestHarness::OutputMemoryUse() const {
   return file_content;
 }
 
-std::string PerfTestHarness::OutputTimeResults() const {
+std::string PerfTestHarness::OutputTimeResults() {
   std::string file_content = "name,node,mean\n";
 
   auto HandleTestResults =
@@ -331,7 +279,7 @@ std::string PerfTestHarness::OutputTimeResults() const {
   return file_content;
 }
 
-void PerfTestHarness::DumpResults() const {
+void PerfTestHarness::DumpResults() {
   // Only dump results on root node
   if (my_node_ == 0) {
     fmt::print(
@@ -362,30 +310,75 @@ void PerfTestHarness::StopTimer(std::string const& name) {
 }
 
 void PerfTestHarness::SyncResults() {
+  auto proxy = theObjGroup()->makeCollective<TestNodeObj>(this);
   // Root node will be responsible for generating the final output
   // so every other node sends its results to it (at the end of test runs)
-  runInEpochCollective([this] {
+  runInEpochCollective([proxy, this] {
     constexpr auto root_node = 0;
 
     if (my_node_ != root_node) {
-      auto msg = makeMessage<TestMsg>(timings_, memory_use_, my_node_);
-      theMsg()->sendMsg<TestMsg, &PerfTestHarness::RecvTestResult>(
-        root_node, msg
-      );
+      proxy[root_node].send<TestMsg, &TestNodeObj::RecvTestResult>(
+        timings_, memory_use_, my_node_);
     } else {
       // Copy the root node's data to combined structures
-      CopyTestData(
-        timings_, combined_timings_, memory_use_, combined_mem_use_, my_node_
-      );
+      CopyTestData(timings_, memory_use_, my_node_);
     }
   });
 }
 
-void PerfTestHarness::RecvTestResult(TestMsg* msg) {
-  CopyTestData(
-    msg->results_, combined_timings_, msg->memory_load_, combined_mem_use_,
-    msg->from_node_
+void PerfTestHarness::CopyTestData(
+  PerfTestHarness::TestResults const& source_time,
+  PerfTestHarness::MemoryUsage const& source_memory, NodeType const node
+) {
+  auto time_use =
+    ProcessInput<PerfTestHarness::TestResult, PerfTestHarness::FinalTestResult>(
+      source_time,
+      [](
+        PerfTestHarness::FinalTestResult& left,
+        PerfTestHarness::TestResult const& right, std::size_t const num_elems) {
+        if (left.first.empty()) {
+          left = {right.first, {right.second / num_elems, right.second, right.second}};
+        } else {
+          left.second.mean_ += right.second / num_elems;
+          left.second.min_ = std::min(left.second.min_, right.second);
+          left.second.max_ = std::max(left.second.max_, right.second);
+        }
+      });
+
+  for (auto const& test_result : time_use) {
+    auto const& test_name = test_result.first;
+    auto const time = test_result.second;
+
+    auto const& it = std::find_if(
+      combined_timings_.begin(), combined_timings_.end(),
+      [test_name](auto const& result) { return test_name == result.first; }
+    );
+
+    if (it != combined_timings_.end()) {
+      it->second[node] = time;
+    } else {
+      PerfTestHarness::PerNodeResults map;
+      map[node] = time;
+
+      combined_timings_.push_back({test_name, map});
+    }
+  }
+
+  auto mem_use = ProcessInput<size_t, TestResultHolder<size_t>>(
+    source_memory,
+    [](
+      TestResultHolder<size_t>& left, size_t const& right,
+      std::size_t const num_elems
+    ) {
+      left.mean_ += right / num_elems;
+      left.min_ = std::min(left.min_, right);
+      left.max_ = std::max(left.max_, right);
+    }
   );
+
+  combined_mem_use_[node].resize(mem_use.size());
+
+  std::copy(mem_use.begin(), mem_use.end(), combined_mem_use_[node].begin());
 }
 
 void PerfTestHarness::SpinScheduler() {
