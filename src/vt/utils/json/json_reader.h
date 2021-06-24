@@ -69,6 +69,13 @@ struct Reader {
   { }
 
   /**
+   * \brief Check if the file is compressed or not
+   *
+   * \return whether the file is compressed
+   */
+  bool isCompressed() const;
+
+  /**
    * \brief Read the file and output JSON
    *
    * \return the JSON
