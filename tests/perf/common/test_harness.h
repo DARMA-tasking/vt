@@ -57,8 +57,9 @@
 namespace vt { namespace tests { namespace perf { namespace common {
 
 template <typename T>
-struct TestResultHolder{
+struct TestResultHolder {
   T mean_ = {};
+  T std_dev_ = {};
   T min_ = std::numeric_limits<T>::max();
   T max_ = {};
 };

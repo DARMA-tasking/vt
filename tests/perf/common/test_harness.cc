@@ -80,26 +80,43 @@ static std::string GetFormattedMemUsage(std::size_t memory) {
  * By default all tests are run 50 times (see --vt_perf_num_runs flag) so this vector will have 50 elems,
  * and each element is a vector of test results for that run.
  *
- * \param[in] populate function that will be called (for each test run) in order to generate the output vector.
+ * \param[in] populate function that will be called (for each test run) in order to calculate mean/min/max.
  * Takes three params:
  *  1. Final test result
  *  2. Test result for given test run
  *  3. Number of test runs
  *
- * \return Vector with final test results (mean/min/max)
+ * \param[in] std_dev function that will be called (for each test run) in order to calculate standard deviation.
+ * Takes four params:
+ *  1. Final test result
+ *  2. Test result for given test run
+ *  3. Number of test runs
+ *  4. Whether it's the last test run iteration (it's when standard deviation should be calculated)
+ *
+ * \return Vector with final test results (mean/std_dev/min/max)
  */
 template <typename InputT, typename OutputT>
 std::vector<OutputT> ProcessInput(
   std::vector<std::vector<InputT>> const& input_vec,
-  std::function<void(OutputT&, InputT const&, std::size_t const)> populate
+  std::function<void(OutputT&, InputT const&, std::size_t const)> populate,
+  std::function<void(OutputT&, InputT const&, std::size_t const, bool const)> std_dev
 ) {
   auto const vec_size = input_vec.front().size();
   auto const num_runs = input_vec.size();
   std::vector<OutputT> values_vec(vec_size, OutputT{});
 
+  // Calculate mean/min/max
   for (auto const& per_run_result : input_vec) {
     for (std::decay_t<decltype(vec_size)> i = 0; i < vec_size; ++i) {
       populate(values_vec[i], per_run_result[i], num_runs);
+    }
+  }
+
+  // Calculate variance and standard deviation
+  for (std::decay_t<decltype(num_runs)> i = 0; i < num_runs; ++i) {
+    for (std::decay_t<decltype(vec_size)> j = 0; j < vec_size; ++j) {
+      auto const is_last_elem = i == (num_runs - 1);
+      std_dev(values_vec[j], input_vec[i][j], num_runs, is_last_elem);
     }
   }
 
@@ -251,9 +268,10 @@ std::string PerfTestHarness::OutputTimeResults() {
         file_content.append(fmt::format("{},{},{:.3f}\n", name, node, timings.mean_));
 
         fmt::print(
-          "{} Results for {} (mean value: {} min: {} max: {})\n",
+          "{} Results for {} (avg: {} stdev: {} min: {} max: {})\n",
           debug::proc(node), debug::reg(name),
           debug::emph(fmt::format("{:.3f}ms", timings.mean_)),
+          debug::emph(fmt::format("{:.3f}ms", timings.std_dev_)),
           debug::emph(fmt::format("{:.3f}ms", timings.min_)),
           debug::emph(fmt::format("{:.3f}ms", timings.max_))
         );
@@ -311,6 +329,7 @@ void PerfTestHarness::StopTimer(std::string const& name) {
 
 void PerfTestHarness::SyncResults() {
   auto proxy = theObjGroup()->makeCollective<TestNodeObj>(this);
+
   // Root node will be responsible for generating the final output
   // so every other node sends its results to it (at the end of test runs)
   runInEpochCollective([proxy, this] {
@@ -337,13 +356,27 @@ void PerfTestHarness::CopyTestData(
         PerfTestHarness::FinalTestResult& left,
         PerfTestHarness::TestResult const& right, std::size_t const num_elems) {
         if (left.first.empty()) {
-          left = {right.first, {right.second / num_elems, right.second, right.second}};
+          left = {
+            right.first,
+            {right.second / num_elems, 0, right.second, right.second}};
         } else {
           left.second.mean_ += right.second / num_elems;
           left.second.min_ = std::min(left.second.min_, right.second);
           left.second.max_ = std::max(left.second.max_, right.second);
         }
-      });
+      },
+      [](
+        PerfTestHarness::FinalTestResult& left,
+        PerfTestHarness::TestResult const& right, std::size_t const num_elems,
+        bool const is_last
+      ) {
+        left.second.std_dev_ += std::pow(right.second - left.second.mean_, 2) / num_elems;
+
+        if (is_last) {
+          left.second.std_dev_ = std::sqrt(left.second.std_dev_);
+        }
+      }
+    );
 
   for (auto const& test_result : time_use) {
     auto const& test_name = test_result.first;
@@ -373,7 +406,17 @@ void PerfTestHarness::CopyTestData(
       left.mean_ += right / num_elems;
       left.min_ = std::min(left.min_, right);
       left.max_ = std::max(left.max_, right);
-    }
+    },
+     [](
+        TestResultHolder<size_t>& left, size_t const& right, std::size_t const num_elems,
+        bool const is_last
+      ) {
+        left.std_dev_ += std::pow(right - left.mean_, 2) / num_elems;
+
+        if (is_last) {
+          left.std_dev_ = std::sqrt(left.std_dev_);
+        }
+      }
   );
 
   combined_mem_use_[node].resize(mem_use.size());
