@@ -108,10 +108,10 @@ std::size_t Decompressor<Readable>::read(
     case BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT:
     {
       // We need to read more to continue decoding
-      vtAssert(avail_in_ == 0, "Should not have more input if we need more");
+      vtAssert(avail_in_ == 0, "Brotli asked for more input even though we still had some.");
       bool const has_more_input = getMoreInput();
       if (not has_more_input) {
-        vtAbort("Needs more input to decompress but the file terminated early");
+        vtAbort("Brotli asked for more input but the file terminated early.");
       }
       break;
     }
@@ -119,14 +119,14 @@ std::size_t Decompressor<Readable>::read(
     {
       // this is an expected condition
       vtAssert(
-        avail_out == 0, "Available output should be 0 if we need more output"
+        avail_out == 0, "Brotli asked for more output even though we still had some."
       );
       break;
     }
     case BROTLI_DECODER_RESULT_SUCCESS:
     {
       if (avail_in_ != 0 or getMoreInput()) {
-        vtAbort("Decompressor terminated early before reading the whole file!");
+        vtAbort("Brotli terminated early before reading the whole file!");
       }
       success = true;
       break;
