@@ -50,7 +50,8 @@ namespace vt { namespace util { namespace compress {
 
 template <typename StreamLike>
 bool Compressor::write(StreamLike& s, uint8_t const* buffer, std::size_t const size) {
-  return writeImpl(s, buffer, size, false);
+  constexpr auto finish_writing = false;
+  return writeImpl(s, buffer, size, finish_writing);
 }
 
 template <typename StreamLike>
@@ -82,7 +83,8 @@ bool Compressor::writeImpl(
 
 template <typename StreamLike>
 bool Compressor::finish(StreamLike& s) {
-  return writeImpl(s, nullptr, 0, true);
+  constexpr auto finish_writing = true;
+  return writeImpl(s, nullptr, 0, finish_writing);
 }
 
 }}} /* end namespace vt::util::compress */
