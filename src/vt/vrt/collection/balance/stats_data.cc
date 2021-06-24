@@ -179,7 +179,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
           auto etype = task["entity"]["type"];
           vtAssertExpr(time.is_number());
           vtAssertExpr(node.is_number());
-          vtAssertExpr(node == theContext()->getNode());
+          vtAssertExpr(node == this_node);
 
           if (etype == "object") {
             auto object = task["entity"]["id"];
@@ -192,7 +192,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
               home = home_json;
             }
 
-            auto elm = ElementIDStruct{object, home, this_node};
+            auto elm = ElementIDStruct{object, home, node};
             sd->node_data_[id][elm] = time;
 
             if (
