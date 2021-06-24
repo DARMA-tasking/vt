@@ -111,7 +111,7 @@ std::deque<std::set<ElementIDType>> StatsRestartReader::readIntoElementHistory(
     for (auto const& obj : sd->node_data_[phase]) {
       buffer.insert(obj.first.id);
     }
-    element_history.push_back(buffer);
+    element_history.emplace_back(std::move(buffer));
   }
   return element_history;
 }
