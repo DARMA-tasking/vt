@@ -71,7 +71,7 @@ Compressor::Compressor(int in_quality, int in_window_bits, std::size_t buf_size)
   // Set the lgwin parameter for the encoder
   BrotliEncoderSetParameter(enc_, BROTLI_PARAM_LGWIN, window_bits_);
 
-  out_buf_ = std::make_unique<uint8_t[]>(buf_size);
+  out_buf_ = std::make_unique<uint8_t[]>(buf_size_);
 }
 
 Compressor::~Compressor() {
