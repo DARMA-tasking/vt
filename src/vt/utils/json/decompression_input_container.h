@@ -102,11 +102,11 @@ struct DecompressionInputContainer {
   char const& getCurrent() const;
 
 private:
-  std::size_t chunk_size_ = 0;                     /**< The chunk size */
-  std::unique_ptr<DecompressorType> d_ = nullptr;  /**< The decompressor */
-  std::unique_ptr<char[]> output_buf_ = nullptr;   /**< The temp output buffer */
-  std::size_t mutable cur_ = 0;                    /**< Current position */
-  std::size_t mutable len_ = 0;                    /**< Max position in buf */
+  std::size_t chunk_size_ = 0;                      /**< The chunk size */
+  std::unique_ptr<DecompressorType> d_ = nullptr;   /**< The decompressor */
+  std::unique_ptr<uint8_t[]> output_buf_ = nullptr; /**< The temp output buffer */
+  std::size_t mutable cur_ = 0;                     /**< Current position */
+  std::size_t mutable len_ = 0;                     /**< Max position in buf */
 };
 
 }}} /* end namespace vt::util::json */

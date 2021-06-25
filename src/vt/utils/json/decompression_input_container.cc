@@ -54,13 +54,13 @@ DecompressionInputContainer::DecompressionInputContainer(
   std::ifstream is(filename, std::ios::binary);
   vtAssertExpr(is.good());
   d_ = std::make_unique<DecompressorStreamType<std::ifstream>>(std::move(is));
-  output_buf_ = std::make_unique<char[]>(chunk_size_);
-  len_ = d_->read(reinterpret_cast<uint8_t*>(output_buf_.get()), chunk_size_);
+  output_buf_ = std::make_unique<uint8_t[]>(chunk_size_);
+  len_ = d_->read(output_buf_.get(), chunk_size_);
 }
 
 bool DecompressionInputContainer::advance() const {
   if (cur_ + 1 == len_) {
-    len_ = d_->read(reinterpret_cast<uint8_t*>(output_buf_.get()), chunk_size_);
+    len_ = d_->read(output_buf_.get(), chunk_size_);
     cur_ = 0;
     if (cur_ + 1 < len_) {
       return true;
@@ -77,7 +77,8 @@ bool DecompressionInputContainer::advance() const {
 }
 
 char const& DecompressionInputContainer::getCurrent() const {
-  return output_buf_[cur_];
+  uint8_t const* ptr = &output_buf_[cur_];
+  return *reinterpret_cast<char const*>(ptr);
 }
 
 }}} /* end namespace vt::util::json */

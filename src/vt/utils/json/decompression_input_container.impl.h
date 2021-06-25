@@ -52,8 +52,8 @@ DecompressionInputContainer::DecompressionInputContainer(
 ) : chunk_size_(in_chunk_size)
 {
   d_ = std::make_unique<DecompressorStreamType<StreamLike>>(std::move(stream));
-  output_buf_ = std::make_unique<char[]>(chunk_size_);
-  len_ = d_->read(reinterpret_cast<uint8_t*>(output_buf_.get()), chunk_size_);
+  output_buf_ = std::make_unique<uint8_t[]>(chunk_size_);
+  len_ = d_->read(output_buf_.get(), chunk_size_);
 }
 
 }}} /* end namespace vt::util::json */
