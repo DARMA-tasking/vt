@@ -202,10 +202,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
               auto cid = task["entity"]["collection_id"];
               auto idx = task["entity"]["index"];
               if (cid.is_number() && idx.is_array()) {
-                std::vector<uint64_t> arr;
-                for (auto const& index : idx) {
-                  arr.push_back(static_cast<uint64_t>(index));
-                }
+                std::vector<uint64_t> arr = idx;
                 auto proxy = static_cast<VirtualProxyType>(cid);
                 sd->node_idx_[elm] = std::make_tuple(proxy, arr);
               }
