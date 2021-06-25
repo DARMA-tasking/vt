@@ -103,12 +103,12 @@ StatsRestartReader::getMigrationList() const {
 }
 
 std::deque<std::set<ElementIDType>> StatsRestartReader::readIntoElementHistory(
-  std::unique_ptr<StatsData> sd
+  StatsData const& sd
 ) {
   std::deque<std::set<ElementIDType>> element_history;
-  for (PhaseType phase = 0; phase < sd->node_data_.size(); phase++) {
+  for (PhaseType phase = 0; phase < sd.node_data_.size(); phase++) {
     std::set<ElementIDType> buffer;
-    for (auto const& obj : sd->node_data_[phase]) {
+    for (auto const& obj : sd.node_data_.at(phase)) {
       buffer.insert(obj.first.id);
     }
     element_history.emplace_back(std::move(buffer));
@@ -125,10 +125,9 @@ void StatsRestartReader::readStatsFromStream(std::stringstream stream) {
     DecompressionInputContainer::AnyStreamTag{}, std::move(stream)
   );
   json j = json::parse(c);
-  auto jptr = std::make_unique<json>(std::move(j));
-  auto sd = StatsData::fromJson(std::move(jptr));
+  auto sd = StatsData(j);
 
-  auto element_history = readIntoElementHistory(std::move(sd));
+  auto element_history = readIntoElementHistory(sd);
   constructMoveList(std::move(element_history));
 }
 
@@ -166,9 +165,9 @@ StatsRestartReader::inputStatsFile(std::string const& fileName) {
 
   Reader r{fileName};
   auto json = r.readFile();
-  auto sd = StatsData::fromJson(std::move(json));
+  auto sd = StatsData(*json);
 
-  return readIntoElementHistory(std::move(sd));
+  return readIntoElementHistory(sd);
 }
 
 void StatsRestartReader::createMigrationInfo(

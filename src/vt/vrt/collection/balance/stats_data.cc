@@ -156,21 +156,16 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
   return std::make_unique<json>(std::move(j));
 }
 
-/*static*/ std::unique_ptr<StatsData> StatsData::fromJson(
-  std::unique_ptr<nlohmann::json> jin
-) {
+StatsData::StatsData(nlohmann::json const& j) {
   auto this_node = theContext()->getNode();
 
-  auto sd = std::make_unique<StatsData>();
-
-  auto const& j = *jin;
   auto phases = j["phases"];
   if (phases.is_array()) {
     for (auto const& phase : phases) {
       auto id = phase["id"];
       auto tasks = phase["tasks"];
 
-      sd->node_data_[id];
+      this->node_data_[id];
 
       if (tasks.is_array()) {
         for (auto const& task : tasks) {
@@ -193,7 +188,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
             }
 
             auto elm = ElementIDStruct{object, home, node};
-            sd->node_data_[id][elm] = time;
+            this->node_data_[id][elm] = time;
 
             if (
               task["entity"].find("collection_id") != task["entity"].end() and
@@ -204,7 +199,7 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
               if (cid.is_number() && idx.is_array()) {
                 std::vector<uint64_t> arr = idx;
                 auto proxy = static_cast<VirtualProxyType>(cid);
-                sd->node_idx_[elm] = std::make_tuple(proxy, arr);
+                this->node_idx_[elm] = std::make_tuple(proxy, arr);
               }
             }
 
@@ -218,10 +213,10 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
                   vtAssertExpr(sid.is_number());
                   vtAssertExpr(stime.is_number());
 
-                  sd->node_subphase_data_[id][elm].resize(
+                  this->node_subphase_data_[id][elm].resize(
                     static_cast<std::size_t>(sid) + 1
                   );
-                  sd->node_subphase_data_[id][elm][sid] = stime;
+                  this->node_subphase_data_[id][elm][sid] = stime;
                 }
               }
             }
@@ -233,8 +228,6 @@ std::unique_ptr<nlohmann::json> StatsData::toJson(PhaseType phase) const {
 
   // @todo: implement communication de-serialization, no use for it right now, so
   // it will be ignored
-
-  return sd;
 }
 
 void StatsData::clear() {

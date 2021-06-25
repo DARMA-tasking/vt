@@ -64,6 +64,13 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct StatsData {
   StatsData() = default;
 
+  /**
+   * \brief Create \c StatsData from input JSON
+   *
+   * \param[in] j the json that contains the stats
+   */
+  StatsData(nlohmann::json const& j);
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | node_data_;
@@ -81,15 +88,6 @@ struct StatsData {
    * \return the json data structure
    */
   std::unique_ptr<nlohmann::json> toJson(PhaseType phase) const;
-
-  /**
-   * \brief Create \c StatsData from input JSON
-   *
-   * \param[in] j the json that contains the stats
-   *
-   * \return the new \c StatsData
-   */
-  static std::unique_ptr<StatsData> fromJson(std::unique_ptr<nlohmann::json> j);
 
   /**
    * \brief Clear all statistics
