@@ -1,0 +1,33 @@
+name: Check License
+
+on: pull_request
+
+jobs:
+  check-license:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install libfile-find-rule-perl
+
+    - name: Check license
+      shell: bash
+      working-directory: ${{runner.workspace}}
+      run: |
+        for sub_dir in "src" "tests/unit" "tests/perf" "tutorial" "examples"
+        do
+          ./vt/scripts/add-license-perl.pl "./vt/$sub_dir" ./vt/scripts/license-template
+        done
+
+        cd vt
+
+        result=$(git diff --name-only)
+
+        if [ -n "$result" ]; then
+          echo -e "Following files have incorrect license!\n"
+          echo "$result"
+          echo -e "\nPlease use /vt/scripts/add-license-perl.pl on your files!"
+
+          exit 1
+        fi

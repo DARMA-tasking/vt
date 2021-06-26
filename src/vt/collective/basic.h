@@ -3,7 +3,7 @@
 // *****************************************************************************
 //
 //                                   basic.h
-//                       DARMA/vt => Virtual Transport
+//                       DARMA/vt => Virtual Transpor
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
