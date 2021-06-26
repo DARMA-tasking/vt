@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_GROUP_INFO_BASE_H
-#define INCLUDED_GROUP_GROUP_INFO_BASE_H
+#if !defined INCLUDED_VT_GROUP_BASE_GROUP_INFO_BASE_H
+#define INCLUDED_VT_GROUP_BASE_GROUP_INFO_BASE_H
 
 #include "vt/config.h"
 #include "vt/group/group_common.h"
@@ -66,4 +66,4 @@ protected:
 
 }} /* end namespace vt::group */
 
-#endif /*INCLUDED_GROUP_GROUP_INFO_BASE_H*/
+#endif /*INCLUDED_VT_GROUP_BASE_GROUP_INFO_BASE_H*/

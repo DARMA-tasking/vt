@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONTEXT_CONTEXT_ATTORNEY_H
-#define INCLUDED_CONTEXT_CONTEXT_ATTORNEY_H
+#if !defined INCLUDED_VT_CONTEXT_CONTEXT_ATTORNEY_H
+#define INCLUDED_VT_CONTEXT_CONTEXT_ATTORNEY_H
 
 #include "vt/config.h"
 #include "vt/context/context_attorney_fwd.h"
@@ -87,4 +87,4 @@ private:
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_CONTEXT_CONTEXT_ATTORNEY_H*/
+#endif /*INCLUDED_VT_CONTEXT_CONTEXT_ATTORNEY_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_PROXY_COLLECTION_ELM_PROXY_H
-#define INCLUDED_VRT_PROXY_COLLECTION_ELM_PROXY_H
+#if !defined INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_H
+#define INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/proxy_traits/proxy_elm_traits.h"
@@ -127,4 +127,4 @@ struct hash<ElmProxyType<ColT, IndexT>> {
 };
 }
 
-#endif /*INCLUDED_VRT_PROXY_COLLECTION_ELM_PROXY_H*/
+#endif /*INCLUDED_VT_VRT_PROXY_COLLECTION_ELM_PROXY_H*/

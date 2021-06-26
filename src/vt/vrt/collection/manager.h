@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MANAGER_H
-#define INCLUDED_VRT_COLLECTION_MANAGER_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_MANAGER_H
+#define INCLUDED_VT_VRT_COLLECTION_MANAGER_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -2101,4 +2101,4 @@ namespace details
 #include "vt/pipe/callback/proxy_bcast/callback_proxy_bcast.impl.h"
 #include "vt/pipe/callback/proxy_send/callback_proxy_send.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_MANAGER_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_MANAGER_H*/

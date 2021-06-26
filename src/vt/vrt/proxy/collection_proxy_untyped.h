@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_PROXY_COLLECTION_PROXY_UNTYPED_H
-#define INCLUDED_VRT_PROXY_COLLECTION_PROXY_UNTYPED_H
+#if !defined INCLUDED_VT_VRT_PROXY_COLLECTION_PROXY_UNTYPED_H
+#define INCLUDED_VT_VRT_PROXY_COLLECTION_PROXY_UNTYPED_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/proxy_traits/proxy_col_traits.h"
@@ -82,4 +82,4 @@ private:
 
 #include "vt/vrt/proxy/collection_proxy_untyped.impl.h"
 
-#endif /*INCLUDED_VRT_PROXY_COLLECTION_PROXY_UNTYPED_H*/
+#endif /*INCLUDED_VT_VRT_PROXY_COLLECTION_PROXY_UNTYPED_H*/

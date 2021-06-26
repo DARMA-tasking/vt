@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_HANDLER_HANDLER_H
-#define INCLUDED_HANDLER_HANDLER_H
+#if !defined INCLUDED_VT_HANDLER_HANDLER_H
+#define INCLUDED_VT_HANDLER_HANDLER_H
 
 #include <vector>
 #include <unordered_map>
@@ -123,4 +123,4 @@ struct HandlerManager {
 
 } //end namespace vt
 
-#endif /*INCLUDED_HANDLER_HANDLER_H*/
+#endif /*INCLUDED_VT_HANDLER_HANDLER_H*/

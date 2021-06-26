@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_TLS_STD_TLS_H
-#define INCLUDED_UTILS_TLS_STD_TLS_H
+#if !defined INCLUDED_VT_UTILS_TLS_STD_TLS_H
+#define INCLUDED_VT_UTILS_TLS_STD_TLS_H
 
 #include "vt/config.h"
 
@@ -78,4 +78,4 @@ thread_local T ThreadLocalSTD<T,tag>::value_;
 
 #endif /*vt_check_enabled(stdthread)*/
 
-#endif /*INCLUDED_UTILS_TLS_STD_TLS_H*/
+#endif /*INCLUDED_VT_UTILS_TLS_STD_TLS_H*/

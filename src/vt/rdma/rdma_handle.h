@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_HANDLE_H
-#define INCLUDED_RDMA_RDMA_HANDLE_H
+#if !defined INCLUDED_VT_RDMA_RDMA_HANDLE_H
+#define INCLUDED_VT_RDMA_RDMA_HANDLE_H
 
 #include "vt/config.h"
 #include "vt/rdma/rdma_common.h"
@@ -84,4 +84,4 @@ using RDMA_HandleManagerType = HandleManager;
 
 }} //end namespace vt::rdma
 
-#endif /*INCLUDED_RDMA_RDMA_HANDLE_H*/
+#endif /*INCLUDED_VT_RDMA_RDMA_HANDLE_H*/

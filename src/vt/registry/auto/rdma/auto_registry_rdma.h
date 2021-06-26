@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_RDMA_AUTO_REGISTRY_RDMA_H
-#define INCLUDED_REGISTRY_AUTO_RDMA_AUTO_REGISTRY_RDMA_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_RDMA_AUTO_REGISTRY_RDMA_H
+#define INCLUDED_VT_REGISTRY_AUTO_RDMA_AUTO_REGISTRY_RDMA_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -66,4 +66,4 @@ HandlerType makeAutoHandlerRDMAGet();
 
 #include "vt/registry/auto/rdma/auto_registry_rdma.impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_RDMA_AUTO_REGISTRY_RDMA_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_RDMA_AUTO_REGISTRY_RDMA_H*/

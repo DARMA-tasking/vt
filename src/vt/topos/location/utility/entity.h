@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_UTILITY_ENTITY_H
-#define INCLUDED_TOPOS_LOCATION_UTILITY_ENTITY_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_UTILITY_ENTITY_H
+#define INCLUDED_VT_TOPOS_LOCATION_UTILITY_ENTITY_H
 
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
@@ -77,4 +77,4 @@ private:
 
 }}  // end namespace vt::location
 
-#endif /*INCLUDED_TOPOS_LOCATION_UTILITY_ENTITY_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_UTILITY_ENTITY_H*/

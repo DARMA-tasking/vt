@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H
-#define INCLUDED_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H
+#define INCLUDED_VT_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -64,4 +64,4 @@ HandlerType makeAutoHandlerVC();
 
 #include "vt/registry/auto/vc/auto_registry_vc_impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_VC_AUTO_REGISTRY_VC_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_MANAGER_TL_H
-#define INCLUDED_PIPE_PIPE_MANAGER_TL_H
+#if !defined INCLUDED_VT_PIPE_PIPE_MANAGER_TL_H
+#define INCLUDED_VT_PIPE_PIPE_MANAGER_TL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -209,4 +209,4 @@ struct PipeManagerTL : virtual PipeManagerBase {
 
 }} /* end namespace vt::pipe */
 
-#endif /*INCLUDED_PIPE_PIPE_MANAGER_TL_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_MANAGER_TL_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_TLS_TLS_IMPL_H
-#define INCLUDED_UTILS_TLS_TLS_IMPL_H
+#if !defined INCLUDED_VT_UTILS_TLS_TLS_IMPL_H
+#define INCLUDED_VT_UTILS_TLS_TLS_IMPL_H
 
 #include "vt/config.h"
 
@@ -104,4 +104,4 @@ namespace vt { namespace util { namespace tls {
 
 }}} /* end namespace vt::util::tls */
 
-#endif /*INCLUDED_UTILS_TLS_TLS_IMPL_H*/
+#endif /*INCLUDED_VT_UTILS_TLS_TLS_IMPL_H*/

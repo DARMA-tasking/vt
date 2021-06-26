@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_GROUP_OMP_H
-#define INCLUDED_WORKER_WORKER_GROUP_OMP_H
+#if !defined INCLUDED_VT_WORKER_WORKER_GROUP_OMP_H
+#define INCLUDED_VT_WORKER_WORKER_GROUP_OMP_H
 
 #include "vt/config.h"
 
@@ -130,4 +130,4 @@ static_assert(
 
 #endif /*vt_check_enabled(openmp)*/
 
-#endif /*INCLUDED_WORKER_WORKER_GROUP_OMP_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_GROUP_OMP_H*/

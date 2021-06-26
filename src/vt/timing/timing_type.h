@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TIMING_TIMING_TYPE_H
-#define INCLUDED_TIMING_TIMING_TYPE_H
+#if !defined INCLUDED_VT_TIMING_TIMING_TYPE_H
+#define INCLUDED_VT_TIMING_TIMING_TYPE_H
 
 #include "vt/config.h"
 
@@ -52,4 +52,4 @@ using TimeType = double;
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_TIMING_TIMING_TYPE_H*/
+#endif /*INCLUDED_VT_TIMING_TIMING_TYPE_H*/

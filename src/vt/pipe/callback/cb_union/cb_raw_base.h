@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
-#define INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
+#define INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H
 
 #include "vt/config.h"
 #include "vt/pipe/callback/cb_union/cb_raw.h"
@@ -277,4 +277,4 @@ using CallbackU = pipe::callback::cbunion::CallbackRawBaseSingle;
 
 #include "vt/pipe/callback/cb_union/cb_raw_base.impl.h"
 
-#endif /*INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_H*/

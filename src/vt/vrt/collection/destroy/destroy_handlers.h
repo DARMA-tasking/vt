@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_DESTROY_DESTROY_HANDLERS_H
-#define INCLUDED_VRT_COLLECTION_DESTROY_DESTROY_HANDLERS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_DESTROY_DESTROY_HANDLERS_H
+#define INCLUDED_VT_VRT_COLLECTION_DESTROY_DESTROY_HANDLERS_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -59,4 +59,4 @@ struct DestroyHandlers {
 
 #include "vt/vrt/collection/destroy/destroy_handlers.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_DESTROY_DESTROY_HANDLERS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_DESTROY_DESTROY_HANDLERS_H*/

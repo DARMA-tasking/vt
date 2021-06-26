@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_BITS_PACKER
-#define INCLUDED_BITS_PACKER
+#if !defined INCLUDED_VT_UTILS_BITS_BITS_PACKER_H
+#define INCLUDED_VT_UTILS_BITS_BITS_PACKER_H
 
 #include <cassert>
 #include <cstdlib>
@@ -93,4 +93,4 @@ namespace vt {
 
 #include "vt/utils/bits/bits_packer.impl.h"
 
-#endif  /*INCLUDED_BITS_PACKER*/
+#endif  /*INCLUDED_VT_UTILS_BITS_BITS_PACKER_H*/

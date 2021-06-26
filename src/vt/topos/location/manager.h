@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_MANAGER_H
-#define INCLUDED_TOPOS_LOCATION_MANAGER_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_MANAGER_H
+#define INCLUDED_VT_TOPOS_LOCATION_MANAGER_H
 
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
@@ -214,4 +214,4 @@ extern location::LocationManager* theLocMan();
 
 }  // end namespace vt
 
-#endif /*INCLUDED_TOPOS_LOCATION_MANAGER_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_MANAGER_H*/

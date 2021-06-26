@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_STATE_IMPL_H
-#define INCLUDED_RDMA_RDMA_STATE_IMPL_H
+#if !defined INCLUDED_VT_RDMA_STATE_RDMA_STATE_IMPL_H
+#define INCLUDED_VT_RDMA_STATE_RDMA_STATE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/rdma/state/rdma_state.h"
@@ -127,4 +127,4 @@ RDMA_HandlerType State::setRDMAPutFn(
 
 }} /* end namespace vt::rdma */
 
-#endif /*INCLUDED_RDMA_RDMA_STATE_IMPL_H*/
+#endif /*INCLUDED_VT_RDMA_STATE_RDMA_STATE_IMPL_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EVENT_EVENT_RECORD_H
-#define INCLUDED_EVENT_EVENT_RECORD_H
+#if !defined INCLUDED_VT_EVENT_EVENT_RECORD_H
+#define INCLUDED_VT_EVENT_EVENT_RECORD_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -144,4 +144,4 @@ private:
 
 }} //end namespace vt::event
 
-#endif /*INCLUDED_EVENT_EVENT_RECORD_H*/
+#endif /*INCLUDED_VT_EVENT_EVENT_RECORD_H*/

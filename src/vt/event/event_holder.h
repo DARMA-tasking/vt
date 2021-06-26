@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EVENT_EVENT_HOLDER_H
-#define INCLUDED_EVENT_EVENT_HOLDER_H
+#if !defined INCLUDED_VT_EVENT_EVENT_HOLDER_H
+#define INCLUDED_VT_EVENT_EVENT_HOLDER_H
 
 #include "vt/config.h"
 #include "vt/event/event_record.h"
@@ -83,4 +83,4 @@ private:
 
 }} //end namespace vt::event
 
-#endif /*INCLUDED_EVENT_EVENT_HOLDER_H*/
+#endif /*INCLUDED_VT_EVENT_EVENT_HOLDER_H*/

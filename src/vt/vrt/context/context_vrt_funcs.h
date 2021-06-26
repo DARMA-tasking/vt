@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H
-#define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H
+#if !defined INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H
+#define INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_FUNCS_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -58,4 +58,4 @@ using ActiveVrtTypedFnType = void(MessageT*, VirtualContextT*);
 
 }} /* end namespace vt::context */
 
-#endif /*INCLUDED_VRT_CONTEXT/CONTEXT_VRT_FUNCS_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT/CONTEXT_VRT_FUNCS_H*/

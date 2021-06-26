@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_CHANNEL_H
-#define INCLUDED_RDMA_RDMA_CHANNEL_H
+#if !defined INCLUDED_VT_RDMA_CHANNEL_RDMA_CHANNEL_H
+#define INCLUDED_VT_RDMA_CHANNEL_RDMA_CHANNEL_H
 
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
@@ -133,4 +133,4 @@ private:
 
 }} //end namespace vt::rdma
 
-#endif /*INCLUDED_RDMA_RDMA_CHANNEL_H*/
+#endif /*INCLUDED_VT_RDMA_CHANNEL_RDMA_CHANNEL_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
-#define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
+#if !defined INCLUDED_VT_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
+#define INCLUDED_VT_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H
 
 #include "vt/config.h"
 #include "vt/utils/mutex/mutex.h"
@@ -169,4 +169,4 @@ typename ConcurrentDequeLocked<T>::SizeType ConcurrentDequeLocked<T>::size() {
 
 }}} //end namespace vt::util::container
 
-#endif /*INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H*/
+#endif /*INCLUDED_VT_UTILS_CONTAINER_CONCURRENT_DEQUE_LOCKED_IMPL_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_MANAGER_FWD_H
-#define INCLUDED_TOPOS_LOCATION_MANAGER_FWD_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_MANAGER_FWD_H
+#define INCLUDED_VT_TOPOS_LOCATION_MANAGER_FWD_H
 
 #include "vt/config.h"
 
@@ -58,4 +58,4 @@ extern location::LocationManager* theLocMan();
 
 }  // end namespace vt
 
-#endif /*INCLUDED_TOPOS_LOCATION_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_MANAGER_FWD_H*/

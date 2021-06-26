@@ -40,8 +40,8 @@
 // *****************************************************************************
 //@HEADER
 */
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_H
+#define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -248,4 +248,4 @@ struct RunnableGen {
 
 #include "vt/registry/auto/auto_registry_general_impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_H*/

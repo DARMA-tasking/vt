@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_GROUP_H
-#define INCLUDED_RDMA_RDMA_GROUP_H
+#if !defined INCLUDED_VT_RDMA_GROUP_RDMA_GROUP_H
+#define INCLUDED_VT_RDMA_GROUP_RDMA_GROUP_H
 
 #include "vt/config.h"
 #include "vt/rdma/group/rdma_map.h"
@@ -111,4 +111,4 @@ struct Group {
 
 }} //end namespace vt::rdma
 
-#endif /*INCLUDED_RDMA_RDMA_GROUP_H*/
+#endif /*INCLUDED_VT_RDMA_GROUP_RDMA_GROUP_H*/

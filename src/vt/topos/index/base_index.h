@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_INDEX_BASE_INDEX_H
-#define INCLUDED_TOPOS_INDEX_BASE_INDEX_H
+#if !defined INCLUDED_VT_TOPOS_INDEX_BASE_INDEX_H
+#define INCLUDED_VT_TOPOS_INDEX_BASE_INDEX_H
 
 #include "vt/config.h"
 
@@ -52,4 +52,4 @@ struct BaseIndex { };
 
 }} /* end namespace vt::index */
 
-#endif /*INCLUDED_TOPOS_INDEX_BASE_INDEX_H*/
+#endif /*INCLUDED_VT_TOPOS_INDEX_BASE_INDEX_H*/

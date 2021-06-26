@@ -3,7 +3,7 @@ name: Check header guards
 on: pull_request
 
 jobs:
-  build:
+  check-guards:
     runs-on: ubuntu-latest
     steps:
 

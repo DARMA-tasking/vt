@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_SCATTER_SCATTER_MSG_H
-#define INCLUDED_COLLECTIVE_SCATTER_SCATTER_MSG_H
+#if !defined INCLUDED_VT_COLLECTIVE_SCATTER_SCATTER_MSG_H
+#define INCLUDED_VT_COLLECTIVE_SCATTER_SCATTER_MSG_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -64,4 +64,4 @@ struct ScatterMsg : ::vt::Message {
 
 }}} /* end namespace vt::collective::scatter */
 
-#endif /*INCLUDED_COLLECTIVE_SCATTER_SCATTER_MSG_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_SCATTER_SCATTER_MSG_H*/

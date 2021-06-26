@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_ACTION_COMMON_IMPL_H
-#define INCLUDED_TERMINATION_ACTION_COMMON_IMPL_H
+#if !defined INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_ACTION_COMMON_IMPL_H
+#define INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_ACTION_COMMON_IMPL_H
 
 #include "vt/collective/collective_alg.h"
 
@@ -178,4 +178,4 @@ inline void add(vt::EpochType const& epoch, int order){
 
 }}}} // end namespace vt::tests::unit::action
 
-#endif /*INCLUDED_TERMINATION_ACTION_COMMON_IMPL_H*/
+#endif /*INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_ACTION_COMMON_IMPL_H*/

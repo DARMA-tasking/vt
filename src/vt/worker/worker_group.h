@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_GROUP_H
-#define INCLUDED_WORKER_WORKER_GROUP_H
+#if !defined INCLUDED_VT_WORKER_WORKER_GROUP_H
+#define INCLUDED_VT_WORKER_WORKER_GROUP_H
 
 #include "vt/config.h"
 #include "vt/worker/worker_common.h"
@@ -133,4 +133,4 @@ private:
 
 #include "vt/worker/worker_group.impl.h"
 
-#endif /*INCLUDED_WORKER_WORKER_GROUP_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_GROUP_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EPOCH_EPOCH_MANIP_H
-#define INCLUDED_EPOCH_EPOCH_MANIP_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_MANIP_H
+#define INCLUDED_VT_EPOCH_EPOCH_MANIP_H
 
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
@@ -264,4 +264,4 @@ extern epoch::EpochManip* theEpoch();
 
 }  //end namespace vt
 
-#endif /*INCLUDED_EPOCH_EPOCH_MANIP_H*/
+#endif /*INCLUDED_VT_EPOCH_EPOCH_MANIP_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_STATIC_CHECKS_ALL_TRUE_H
-#define INCLUDED_UTILS_STATIC_CHECKS_ALL_TRUE_H
+#if !defined INCLUDED_VT_UTILS_STATIC_CHECKS_ALL_TRUE_H
+#define INCLUDED_VT_UTILS_STATIC_CHECKS_ALL_TRUE_H
 
 #include "vt/config.h"
 
@@ -54,4 +54,4 @@ using all_true = std::is_same<BoolPack<bs..., true>, BoolPack<true, bs...>>;
 
 }} /* end namespace vt::util */
 
-#endif /*INCLUDED_UTILS_STATIC_CHECKS/ALL_TRUE_H*/
+#endif /*INCLUDED_VT_UTILS_STATIC_CHECKS/ALL_TRUE_H*/

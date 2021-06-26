@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_MAPPING_MAPPING_SEED_H
-#define INCLUDED_TOPOS_MAPPING_MAPPING_SEED_H
+#if !defined INCLUDED_VT_TOPOS_MAPPING_SEED_SEED_H
+#define INCLUDED_VT_TOPOS_MAPPING_SEED_SEED_H
 
 #include "vt/config.h"
 #include "vt/topos/mapping/mapping.h"
@@ -56,4 +56,4 @@ NodeType randomSeedMapNode(SeedType seed, NodeType nnodes);
 
 }} /* end namespace vt::mapping */
 
-#endif /*INCLUDED_TOPOS_MAPPING/MAPPING_SEED_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_SEED_SEED_H*/

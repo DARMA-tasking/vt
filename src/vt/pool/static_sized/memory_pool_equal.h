@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H
-#define INCLUDED_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H
+#if !defined INCLUDED_VT_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H
+#define INCLUDED_VT_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope.h"
@@ -104,4 +104,4 @@ private:
 
 }} //end namespace vt::pool
 
-#endif /*INCLUDED_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H*/
+#endif /*INCLUDED_VT_POOL_STATIC_SIZED_MEMORY_POOL_EQUAL_H*/

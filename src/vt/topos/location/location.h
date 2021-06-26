@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_LOCATION_H
-#define INCLUDED_TOPOS_LOCATION_LOCATION_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_LOCATION_H
+#define INCLUDED_VT_TOPOS_LOCATION_LOCATION_H
 
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
@@ -463,4 +463,4 @@ private:
 
 #include "vt/topos/location/location.impl.h"
 
-#endif /*INCLUDED_TOPOS_LOCATION_LOCATION_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_LOCATION_H*/

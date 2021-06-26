@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_GROUP_MANAGER_IMPL_H
-#define INCLUDED_GROUP_GROUP_MANAGER_IMPL_H
+#if !defined INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
+#define INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -151,4 +151,4 @@ void GroupManagerT<T>::triggerContinuationT(
 
 }} /* end namespace vt::group */
 
-#endif /*INCLUDED_GROUP_GROUP_MANAGER_IMPL_H*/
+#endif /*INCLUDED_VT_GROUP_GROUP_MANAGER_IMPL_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H
-#define INCLUDED_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/types/insertable.h"
@@ -71,4 +71,4 @@ void Insertable<ColT,IndexT>::finishInserting() {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H*/

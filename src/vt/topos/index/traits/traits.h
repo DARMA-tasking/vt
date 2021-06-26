@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H
-#define INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H
+#if !defined INCLUDED_VT_TOPOS_INDEX_TRAITS_TRAITS_H
+#define INCLUDED_VT_TOPOS_INDEX_TRAITS_TRAITS_H
 
 #include "vt/config.h"
 
@@ -175,4 +175,4 @@ struct IndexTraits {
 
 }}  // end namespace vt::index
 
-#endif /*INCLUDED_TOPOS_INDEX_TRAITS_TRAITS_H*/
+#endif /*INCLUDED_VT_TOPOS_INDEX_TRAITS_TRAITS_H*/

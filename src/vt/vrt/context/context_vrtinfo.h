@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONTEXT_VRT_INFO
-#define INCLUDED_CONTEXT_VRT_INFO
+#if !defined INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRTINFO_H
+#define INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRTINFO_H
 
 #include "vt/config.h"
 #include "vt/vrt/context/context_vrt.h"
@@ -127,4 +127,4 @@ struct VirtualInfo {
 
 }}  // end namespace vt::vrt
 
-#endif /*INCLUDED_CONTEXT_VRT_INFO*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRTINFO_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_CONFIG_ASSERT_H
-#define INCLUDED_CONFIGS_ERROR_CONFIG_ASSERT_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_CONFIG_ASSERT_H
+#define INCLUDED_VT_CONFIGS_ERROR_CONFIG_ASSERT_H
 
 /*
  *  Configurable assert allows different behaviors to occur depending on
@@ -173,4 +173,4 @@
   )
 #endif
 
-#endif /*INCLUDED_CONFIGS_ERROR_CONFIG_ASSERT_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_CONFIG_ASSERT_H*/

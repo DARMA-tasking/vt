@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_TYPES_H
-#define INCLUDED_WORKER_WORKER_TYPES_H
+#if !defined INCLUDED_VT_WORKER_WORKER_TYPES_H
+#define INCLUDED_VT_WORKER_WORKER_TYPES_H
 
 #include "vt/config.h"
 
@@ -54,4 +54,4 @@ using WorkUnitType = std::function<void()>;
 
 }} /* end namespace vt::worker */
 
-#endif /*INCLUDED_WORKER_WORKER_TYPES_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_TYPES_H*/

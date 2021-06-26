@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_INDEX
-#define INCLUDED_TOPOS_INDEX
+#if !defined INCLUDED_VT_TOPOS_INDEX_INDEX_H
+#define INCLUDED_VT_TOPOS_INDEX_INDEX_H
 
 #include <cstdint>
 
@@ -86,4 +86,4 @@ template <typename T>           using IdxType3D = index::Index3D<T>;
 
 #include "vt/topos/index/printer/print_index.h"
 
-#endif  /*INCLUDED_TOPOS_INDEX*/
+#endif  /*INCLUDED_VT_TOPOS_INDEX_INDEX_H*/

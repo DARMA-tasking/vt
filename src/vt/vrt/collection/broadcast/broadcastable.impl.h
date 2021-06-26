@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H
-#define INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/broadcast/broadcastable.h"
@@ -156,4 +156,4 @@ Broadcastable<ColT, IndexT, BaseProxyT>::broadcastCollective(Args&&... args) con
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BROADCAST_BROADCASTABLE_IMPL_H*/

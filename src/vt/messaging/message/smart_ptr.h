@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_MESSAGE_SMART_PTR_H
-#define INCLUDED_MESSAGING_MESSAGE_SMART_PTR_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_H
 
 #include "vt/config.h"
 #include "vt/messaging/message/message.h"
@@ -418,4 +418,4 @@ using MsgPtr = messaging::MsgSharedPtr<T>;
 } /* end namespace vt */
 
 
-#endif /*INCLUDED_MESSAGING_MESSAGE_SMART_PTR_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_SMART_PTR_H*/

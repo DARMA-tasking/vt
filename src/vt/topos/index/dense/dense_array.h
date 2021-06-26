@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
-#define INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
+#if !defined INCLUDED_VT_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
+#define INCLUDED_VT_TOPOS_INDEX_DENSE_DENSE_ARRAY_H
 
 #include "vt/config.h"
 #include "vt/topos/index/base_index.h"
@@ -159,4 +159,4 @@ static_assert(
 
 #include "vt/topos/index/dense/dense_array.impl.h"
 
-#endif /*INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_H*/
+#endif /*INCLUDED_VT_TOPOS_INDEX_DENSE_DENSE_ARRAY_H*/

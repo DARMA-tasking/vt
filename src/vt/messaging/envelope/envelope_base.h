@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_BASE_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_BASE_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_BASE_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_BASE_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope/envelope_type.h"
@@ -114,4 +114,4 @@ static_assert(std::is_trivially_destructible<Envelope>(), "Envelope must be triv
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_BASE_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_BASE_H*/

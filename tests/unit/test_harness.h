@@ -40,8 +40,8 @@
 // *****************************************************************************
 //@HEADER
 */
-#if ! defined __VIRTUAL_TRANSPORT_TEST_HARNESS__
-#define __VIRTUAL_TRANSPORT_TEST_HARNESS__
+#if ! defined INCLUDED_UNIT_TEST_HARNESS_H
+#define INCLUDED_UNIT_TEST_HARNESS_H
 
 #include <vt/config.h>
 #include <gtest/gtest.h>
@@ -75,4 +75,4 @@ using TestHarnessParam = TestHarnessAny<testing::TestWithParam<ParamT>>;
 
 }}} // end namespace vt::tests::unit
 
-#endif /* __VIRTUAL_TRANSPORT_TEST_HARNESS__ */
+#endif /* INCLUDED_UNIT_TEST_HARNESS_H */

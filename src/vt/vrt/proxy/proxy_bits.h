@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONTEXT_VRT_PROXY
-#define INCLUDED_CONTEXT_VRT_PROXY
+#if !defined INCLUDED_VT_VRT_PROXY_PROXY_BITS_H
+#define INCLUDED_VT_VRT_PROXY_PROXY_BITS_H
 
 #include "vt/config.h"
 #include "vt/vrt/context/context_vrt_fwd.h"
@@ -107,4 +107,4 @@ struct VirtualProxyBuilder {
 
 }}  // end namespace vt::vrt
 
-#endif  /*INCLUDED_CONTEXT_VRT_PROXY*/
+#endif  /*INCLUDED_VT_VRT_PROXY_PROXY_BITS_H*/

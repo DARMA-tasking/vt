@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TYPES_SIZE
-#define INCLUDED_TYPES_SIZE
+#if !defined INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H
+#define INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H
 
 #include "vt/utils/bits/bits_counter.h"
 
@@ -67,4 +67,4 @@ static constexpr BitCountType const
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_TYPES_SIZE*/
+#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_SIZE_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_SEND_SENDABLE_H
-#define INCLUDED_VRT_COLLECTION_SEND_SENDABLE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_SEND_SENDABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_SEND_SENDABLE_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/active/active_funcs.h"
@@ -125,4 +125,4 @@ struct Sendable : BaseProxyT {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_SEND_SENDABLE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_SEND_SENDABLE_H*/

@@ -40,8 +40,8 @@
 // *****************************************************************************
 //@HEADER
 */
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H
+#define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -164,4 +164,4 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 
 }} // end namespace vt::auto_registry
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H*/

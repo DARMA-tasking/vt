@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_RAW_DATA_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_RAW_DATA_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_RAW_DATA_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_RAW_DATA_H
 
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/lb_comm.h"

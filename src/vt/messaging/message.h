@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_MESSAGE_H
-#define INCLUDED_MESSAGING_MESSAGE_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_H
 
 #include "vt/messaging/message/message.h"
 #include "vt/messaging/message/put_message.h"
@@ -51,4 +51,4 @@
 #include "vt/messaging/message/message_priority.h"
 #include "vt/messaging/message/message_serialize.h"
 
-#endif /*INCLUDED_MESSAGING_MESSAGE_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_H*/

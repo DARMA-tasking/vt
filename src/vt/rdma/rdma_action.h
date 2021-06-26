@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_ACTION_H
-#define INCLUDED_RDMA_RDMA_ACTION_H
+#if !defined INCLUDED_VT_RDMA_RDMA_ACTION_H
+#define INCLUDED_VT_RDMA_RDMA_ACTION_H
 
 #include "vt/config.h"
 #include "vt/rdma/rdma_common.h"
@@ -77,4 +77,4 @@ struct Action {
 
 }} //end namespace vt::rdma
 
-#endif /*INCLUDED_RDMA_RDMA_ACTION_H*/
+#endif /*INCLUDED_VT_RDMA_RDMA_ACTION_H*/

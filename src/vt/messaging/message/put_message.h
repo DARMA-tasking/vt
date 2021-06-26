@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H
-#define INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_PUT_MESSAGE_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_PUT_MESSAGE_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope.h"
@@ -73,4 +73,4 @@ using PayloadMessage = messaging::PutMessageComponent<
 
 } // end namespace vt
 
-#endif /*INCLUDED_MESSAGING_MESSAGE_PUT_MESSAGE_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_PUT_MESSAGE_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_CODE_H
-#define INCLUDED_CONFIGS_ERROR_CODE_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_CODE_CLASS_H
+#define INCLUDED_VT_CONFIGS_ERROR_CODE_CLASS_H
 
 #include <cstdlib>
 
@@ -80,4 +80,4 @@ enum struct ModuleErrorCode : int8_t {
 
 }} /* end namespace vt::error */
 
-#endif /*INCLUDED_CONFIGS_ERROR_CODE_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_CODE_CLASS_H*/

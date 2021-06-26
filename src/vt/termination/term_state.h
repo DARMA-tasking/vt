@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERM_STATE_H
-#define INCLUDED_TERMINATION_TERM_STATE_H
+#if !defined INCLUDED_VT_TERMINATION_TERM_STATE_H
+#define INCLUDED_VT_TERMINATION_TERM_STATE_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -133,4 +133,4 @@ private:
 
 }} //end namespace vt::term
 
-#endif /*INCLUDED_TERMINATION_TERM_STATE_H*/
+#endif /*INCLUDED_VT_TERMINATION_TERM_STATE_H*/

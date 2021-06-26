@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERMINATION_H
-#define INCLUDED_TERMINATION_TERMINATION_H
+#if !defined INCLUDED_VT_TERMINATION_TERMINATION_H
+#define INCLUDED_VT_TERMINATION_TERMINATION_H
 
 #include "vt/config.h"
 #include "vt/termination/term_common.h"
@@ -758,4 +758,4 @@ private:
 
 #include "vt/termination/termination.impl.h"
 
-#endif /*INCLUDED_TERMINATION_TERMINATION_H*/
+#endif /*INCLUDED_VT_TERMINATION_TERMINATION_H*/

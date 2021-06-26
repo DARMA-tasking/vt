@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_MANAGER_TYPED_FWD_H
-#define INCLUDED_PIPE_PIPE_MANAGER_TYPED_FWD_H
+#if !defined INCLUDED_VT_PIPE_PIPE_MANAGER_TYPED_FWD_H
+#define INCLUDED_VT_PIPE_PIPE_MANAGER_TYPED_FWD_H
 
 #include "vt/config.h"
 
@@ -52,4 +52,4 @@ struct PipeManagerTyped;
 
 }} /* end namespace vt::pipe */
 
-#endif /*INCLUDED_PIPE_PIPE_MANAGER_TYPED_FWD_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_MANAGER_TYPED_FWD_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_MESSAGE_MESSAGE_H
-#define INCLUDED_MESSAGING_MESSAGE_MESSAGE_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_H
 
 #include "vt/config.h"
 #include "vt/pool/pool.h"
@@ -280,4 +280,4 @@ static_assert(
 
 } // end namespace vt
 
-#endif /*INCLUDED_MESSAGING_MESSAGE_MESSAGE_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_H*/

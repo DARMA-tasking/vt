@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_MAPPING_ADAPT_MAPPERS_H
-#define INCLUDED_TOPOS_MAPPING_ADAPT_MAPPERS_H
+#if !defined INCLUDED_VT_TOPOS_MAPPING_ADAPT_MAPPERS_H
+#define INCLUDED_VT_TOPOS_MAPPING_ADAPT_MAPPERS_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_general.h"
@@ -57,4 +57,4 @@ using FunctorAdapt = ::vt::auto_registry::FunctorAdapter<F,f>;
 
 }}  // end namespace vt::mapping
 
-#endif /*INCLUDED_TOPOS_MAPPING_ADAPT_MAPPERS_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_ADAPT_MAPPERS_H*/

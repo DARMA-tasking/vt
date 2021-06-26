@@ -41,11 +41,11 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EPOCH_EPOCH_HEADERS_H
-#define INCLUDED_EPOCH_EPOCH_HEADERS_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_HEADERS_H
+#define INCLUDED_VT_EPOCH_EPOCH_HEADERS_H
 
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 #include "vt/epoch/epoch_manip.h"
 
-#endif /*INCLUDED_EPOCH_EPOCH_HEADERS_H*/
+#endif /*INCLUDED_VT_EPOCH_EPOCH_HEADERS_H*/

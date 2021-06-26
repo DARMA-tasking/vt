@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_COMMON_H
-#define INCLUDED_RDMA_RDMA_COMMON_H
+#if !defined INCLUDED_VT_RDMA_RDMA_COMMON_H
+#define INCLUDED_VT_RDMA_RDMA_COMMON_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -128,4 +128,4 @@ static constexpr ByteType rdma_default_byte_size = sizeof(char);
   )                                                                     \
 )
 
-#endif /*INCLUDED_RDMA_RDMA_COMMON_H*/
+#endif /*INCLUDED_VT_RDMA_RDMA_COMMON_H*/

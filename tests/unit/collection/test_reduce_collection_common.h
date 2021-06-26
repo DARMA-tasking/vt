@@ -41,14 +41,14 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_COMMON_H
+#define INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_COMMON_H
+
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
 #include "data_message.h"
 #include "vt/vrt/collection/manager.h"
-
-#if !defined INCLUDED_TEST_REDUCE_COLLECTION_COMMON_H
-#define INCLUDED_TEST_REDUCE_COLLECTION_COMMON_H
 
 namespace vt { namespace tests { namespace unit { namespace reduce {
 
@@ -168,4 +168,5 @@ void reducePlus(MyReduceMsg* msg) {
 }
 
 }}}} // end namespace vt::tests::unit::reduce
-#endif /*INCLUDED_TEST_REDUCE_COLLECTION_COMMON_H*/
+
+#endif /*INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_COMMON_H*/

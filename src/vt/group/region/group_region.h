@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_REGION_GROUP_REGION_H
-#define INCLUDED_GROUP_REGION_GROUP_REGION_H
+#if !defined INCLUDED_VT_GROUP_REGION_GROUP_REGION_H
+#define INCLUDED_VT_GROUP_REGION_GROUP_REGION_H
 
 #include "vt/config.h"
 #include "vt/group/group_common.h"
@@ -83,4 +83,4 @@ struct ShallowList;
 
 }}} /* end namespace vt::group::region */
 
-#endif /*INCLUDED_GROUP_REGION_GROUP_REGION_H*/
+#endif /*INCLUDED_VT_GROUP_REGION_GROUP_REGION_H*/

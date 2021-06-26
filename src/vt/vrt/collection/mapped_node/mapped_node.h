@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H
-#define INCLUDED_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H
+#define INCLUDED_VT_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H
 
 #include "vt/config.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
@@ -70,4 +70,4 @@ struct MappedNode : BaseProxyT {
 
 #include "vt/vrt/collection/mapped_node/mapped_node.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_MAPPED_NODE_MAPPED_NODE_H*/

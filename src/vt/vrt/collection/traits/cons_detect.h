@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_CONS_DETECT_H
-#define INCLUDED_VRT_COLLECTION_CONS_DETECT_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TRAITS_CONS_DETECT_H
+#define INCLUDED_VT_VRT_COLLECTION_TRAITS_CONS_DETECT_H
 
 #include "vt/config.h"
 
@@ -79,4 +79,4 @@ struct ConstructorType {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_CONS_DETECT_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TRAITS_CONS_DETECT_H*/

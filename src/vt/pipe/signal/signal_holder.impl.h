@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_SIGNAL_SIGNAL_HOLDER_IMPL_H
-#define INCLUDED_PIPE_SIGNAL_SIGNAL_HOLDER_IMPL_H
+#if !defined INCLUDED_VT_PIPE_SIGNAL_SIGNAL_HOLDER_IMPL_H
+#define INCLUDED_VT_PIPE_SIGNAL_SIGNAL_HOLDER_IMPL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -226,4 +226,4 @@ bool SignalHolder<SignalT>::exists(PipeType const& pipe) const {
 
 }}} /* end namespace vt::pipe::signal */
 
-#endif /*INCLUDED_PIPE_SIGNAL_SIGNAL_HOLDER_IMPL_H*/
+#endif /*INCLUDED_VT_PIPE_SIGNAL_SIGNAL_HOLDER_IMPL_H*/

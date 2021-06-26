@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_ATOMIC_NULL_ATOMIC_H
-#define INCLUDED_UTILS_ATOMIC_NULL_ATOMIC_H
+#if !defined INCLUDED_VT_UTILS_ATOMIC_NULL_ATOMIC_H
+#define INCLUDED_VT_UTILS_ATOMIC_NULL_ATOMIC_H
 
 #include "vt/config.h"
 
@@ -101,4 +101,4 @@ private:
 
 #endif /*backend_no_threading*/
 
-#endif /*INCLUDED_UTILS_ATOMIC_NULL_ATOMIC_H*/
+#endif /*INCLUDED_VT_UTILS_ATOMIC_NULL_ATOMIC_H*/

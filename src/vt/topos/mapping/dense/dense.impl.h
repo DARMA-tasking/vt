@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_MAPPING_DENSE_IMPL
-#define INCLUDED_TOPOS_MAPPING_DENSE_IMPL
+#if !defined INCLUDED_VT_TOPOS_MAPPING_DENSE_DENSE_IMPL_H
+#define INCLUDED_VT_TOPOS_MAPPING_DENSE_DENSE_IMPL_H
 
 #include <cmath>
 
@@ -190,4 +190,4 @@ NodeType denseBlockMap(IdxPtr<Idx> idx, IdxPtr<Idx> max_idx, NodeType nnodes) {
 
 }}  // end namespace vt::mapping
 
-#endif /*INCLUDED_TOPOS_MAPPING_DENSE_IMPL*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_DENSE_DENSE_IMPL_H*/

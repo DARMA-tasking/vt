@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EPOCH_EPOCH_H
-#define INCLUDED_EPOCH_EPOCH_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_H
+#define INCLUDED_VT_EPOCH_EPOCH_H
 
 #include "vt/config.h"
 #include "vt/utils/bits/bits_common.h"
@@ -173,4 +173,4 @@ static constexpr eEpochCategory const default_epoch_category =
 
 }} //end namespace vt::epoch
 
-#endif /*INCLUDED_EPOCH_EPOCH_H*/
+#endif /*INCLUDED_VT_EPOCH_EPOCH_H*/

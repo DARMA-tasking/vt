@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_UTIL_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_UTIL_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_UTIL_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_UTIL_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope/envelope_type.h"
@@ -116,4 +116,4 @@ inline void envelopeInitEmpty(EpochTagEnvelope& env);
 
 #include "vt/messaging/envelope/envelope_extended_util.impl.h"
 
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_UTIL_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_UTIL_H*/

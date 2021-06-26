@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_INVOKE_INVOKABLE_IMPL_H
-#define INCLUDED_VRT_COLLECTION_INVOKE_INVOKABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INVOKE_INVOKABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_INVOKE_INVOKABLE_IMPL_H
 
 #include "vt/vrt/collection/invoke/invokable.h"
 #include "vt/vrt/collection/manager.h"
@@ -99,4 +99,4 @@ Invokable<ColT, IndexT, BaseProxyT>::invoke(Args&&... args) const {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_INVOKE_INVOKABLE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INVOKE_INVOKABLE_IMPL_H*/

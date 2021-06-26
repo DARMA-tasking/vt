@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_ATOMIC_OMP_ATOMIC_H
-#define INCLUDED_UTILS_ATOMIC_OMP_ATOMIC_H
+#if !defined INCLUDED_VT_UTILS_ATOMIC_OMP_ATOMIC_H
+#define INCLUDED_VT_UTILS_ATOMIC_OMP_ATOMIC_H
 
 #include "vt/config.h"
 
@@ -176,4 +176,4 @@ private:
 
 #endif /*vt_check_enabled(openmp)*/
 
-#endif /*INCLUDED_UTILS_ATOMIC_OMP_ATOMIC_H*/
+#endif /*INCLUDED_VT_UTILS_ATOMIC_OMP_ATOMIC_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_IMPL_H
+#define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_IMPL_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -95,4 +95,4 @@ AutoHandlerType const RunnableGen<AdapterT, RegT, InfoT, FnT>::idx =
 
 }} /* end namespace vt::auto_registry */
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_IMPL_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_IMPL_H*/

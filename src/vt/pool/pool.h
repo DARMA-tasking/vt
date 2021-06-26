@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_POOL_POOL_H
-#define INCLUDED_POOL_POOL_H
+#if !defined INCLUDED_VT_POOL_POOL_H
+#define INCLUDED_VT_POOL_POOL_H
 
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
@@ -251,4 +251,4 @@ extern pool::Pool* thePool();
 
 } //end namespace vt
 
-#endif /*INCLUDED_POOL_POOL_H*/
+#endif /*INCLUDED_VT_POOL_POOL_H*/

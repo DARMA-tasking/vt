@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_MSG_H
-#define INCLUDED_RDMA_RDMA_MSG_H
+#if !defined INCLUDED_VT_RDMA_RDMA_MSG_H
+#define INCLUDED_VT_RDMA_RDMA_MSG_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -177,4 +177,4 @@ struct StateMessage : vt::Message {
 
 }} //end namespace vt::rdma
 
-#endif /*INCLUDED_RDMA_RDMA_MSG_H*/
+#endif /*INCLUDED_VT_RDMA_RDMA_MSG_H*/

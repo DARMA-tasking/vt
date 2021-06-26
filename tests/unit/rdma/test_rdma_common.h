@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TESTS_RDMA_COMMON_H
-#define INCLUDED_VT_TESTS_RDMA_COMMON_H
+#if !defined INCLUDED_UNIT_RDMA_TEST_RDMA_COMMON_H
+#define INCLUDED_UNIT_RDMA_TEST_RDMA_COMMON_H
 
 #include <gtest/gtest.h>
 #include "vt/configs/types/types_type.h"
@@ -80,4 +80,4 @@ struct UpdateData {
 
 }}} /* end namespace vt::tests::unit */
 
-#endif /*INCLUDED_VT_TESTS_RDMA_COMMON_H*/
+#endif /*INCLUDED_UNIT_RDMA_TEST_RDMA_COMMON_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TRAITS_COLL_MSG_H
-#define INCLUDED_VRT_COLLECTION_TRAITS_COLL_MSG_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TRAITS_COLL_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_TRAITS_COLL_MSG_H
 
 #include "vt/config.h"
 
@@ -60,4 +60,4 @@ struct ColMsgTraits {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_TRAITS_COLL_MSG_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TRAITS_COLL_MSG_H*/

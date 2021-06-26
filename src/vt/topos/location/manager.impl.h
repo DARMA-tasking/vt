@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_MANAGER_IMPL_H
-#define INCLUDED_TOPOS_LOCATION_MANAGER_IMPL_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_MANAGER_IMPL_H
+#define INCLUDED_VT_TOPOS_LOCATION_MANAGER_IMPL_H
 
 #include "vt/config.h"
 #include "vt/topos/location/manager.h"
@@ -154,4 +154,4 @@ template <typename LocType>
 
 }} /* end namespace vt::location */
 
-#endif /*INCLUDED_TOPOS_LOCATION_MANAGER_IMPL_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_MANAGER_IMPL_H*/

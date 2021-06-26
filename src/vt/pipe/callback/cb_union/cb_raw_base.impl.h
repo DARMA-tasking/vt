@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_IMPL_H
-#define INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_IMPL_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_IMPL_H
+#define INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/pipe/callback/cb_union/cb_raw.h"
@@ -117,4 +117,4 @@ void CallbackRawBaseSingle::serialize(SerializerT& s) {
 
 }}}} /* end namespace vt::pipe::callback::cbunion */
 
-#endif /*INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_IMPL_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_BASE_IMPL_H*/

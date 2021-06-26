@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H
-#define INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_ACTION_VIRTUAL_H
+#define INCLUDED_VT_SEQUENCE_SEQ_ACTION_VIRTUAL_H
 
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
@@ -68,4 +68,4 @@ struct ActionVirtual {
 
 #include "vt/sequence/seq_action_virtual.impl.h"
 
-#endif /* INCLUDED_SEQUENCE_SEQ_ACTION_VIRTUAL_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_ACTION_VIRTUAL_H*/

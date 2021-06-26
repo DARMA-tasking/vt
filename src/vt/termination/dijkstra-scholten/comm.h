@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_H
-#define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_H
+#if !defined INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_H
+#define INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_H
 
 #include "vt/config.h"
 #include "vt/termination/dijkstra-scholten/ds.fwd.h"
@@ -89,4 +89,4 @@ protected:
 
 }}} /* end namespace vt::term::ds */
 
-#endif /*INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_H*/
+#endif /*INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_H*/

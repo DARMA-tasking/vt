@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_BASE_IMPL_H
-#define INCLUDED_VRT_COLLECTION_TYPES_BASE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_BASE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_BASE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -122,4 +122,4 @@ void CollectionBase<ColT, IndexT>::setSize(VirtualElmCountType const& elms) {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_BASE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_BASE_IMPL_H*/

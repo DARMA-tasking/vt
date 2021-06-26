@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNTIME_RUNTIME_COMMON_H
-#define INCLUDED_RUNTIME_RUNTIME_COMMON_H
+#if !defined INCLUDED_VT_RUNTIME_RUNTIME_COMMON_H
+#define INCLUDED_VT_RUNTIME_RUNTIME_COMMON_H
 
 #include "vt/config.h"
 
@@ -57,4 +57,4 @@ using RuntimeInstType = eRuntimeInstance;
 
 }} /* end namespace vt::runtime */
 
-#endif /*INCLUDED_RUNTIME_RUNTIME_COMMON_H*/
+#endif /*INCLUDED_VT_RUNTIME_RUNTIME_COMMON_H*/

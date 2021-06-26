@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_CONSTANTS_H
-#define INCLUDED_TRACE_TRACE_CONSTANTS_H
+#if !defined INCLUDED_VT_TRACE_TRACE_CONSTANTS_H
+#define INCLUDED_VT_TRACE_TRACE_CONSTANTS_H
 
 namespace vt { namespace trace {
 
@@ -112,4 +112,4 @@ enum eTraceEnvelopeTypes {
 
 }} //end namespace vt::trace
 
-#endif /*INCLUDED_TRACE_TRACE_CONSTANTS_H*/
+#endif /*INCLUDED_VT_TRACE_TRACE_CONSTANTS_H*/

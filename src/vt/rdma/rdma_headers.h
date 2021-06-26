@@ -41,10 +41,10 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_HEADERS_H
-#define INCLUDED_RDMA_RDMA_HEADERS_H
+#if !defined INCLUDED_VT_RDMA_RDMA_HEADERS_H
+#define INCLUDED_VT_RDMA_RDMA_HEADERS_H
 
 #include "vt/rdma/rdma.h"
 #include "vt/rdma/collection/rdma_collection.h"
 
-#endif /*INCLUDED_RDMA_RDMA_HEADERS_H*/
+#endif /*INCLUDED_VT_RDMA_RDMA_HEADERS_H*/

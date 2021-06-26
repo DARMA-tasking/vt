@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_MUTEX_NULL_MUTEX_H
-#define INCLUDED_UTILS_MUTEX_NULL_MUTEX_H
+#if !defined INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H
+#define INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H
 
 #include "vt/config.h"
 
@@ -61,4 +61,4 @@ struct NullMutex {
 
 }}} /* end namespace vt::util::mutex */
 
-#endif /*INCLUDED_UTILS_MUTEX_NULL_MUTEX_H*/
+#endif /*INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_MAPPING
-#define INCLUDED_TOPOS_MAPPING
+#if !defined INCLUDED_VT_TOPOS_MAPPING_MAPPING_H
+#define INCLUDED_VT_TOPOS_MAPPING_MAPPING_H
 
 #include "vt/config.h"
 #include "vt/topos/mapping/mapping_function.h"
@@ -83,4 +83,4 @@ using CoreSeedMapType = SeedMapType;
 
 }}  // end namespace vt::location
 
-#endif  /*INCLUDED_TOPOS_MAPPING*/
+#endif  /*INCLUDED_VT_TOPOS_MAPPING_MAPPING_H*/

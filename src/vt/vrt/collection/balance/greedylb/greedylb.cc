@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC
-#define INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb.h"
@@ -343,4 +343,4 @@ void GreedyLB::calcLoadOver() {
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_CC*/

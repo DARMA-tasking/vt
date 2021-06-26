@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H
-#define INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H
+#if !defined INCLUDED_VT_UTILS_MUTEX_MUTEX_TRAITS_H
+#define INCLUDED_VT_UTILS_MUTEX_MUTEX_TRAITS_H
 
 #include "vt/config.h"
 
@@ -83,4 +83,4 @@ struct MutexTraits {
 
 }}} /* end namespace vt::util::mutex */
 
-#endif /*INCLUDED_UTILS_MUTEX_MUTEX_TRAITS_H*/
+#endif /*INCLUDED_VT_UTILS_MUTEX_MUTEX_TRAITS_H*/

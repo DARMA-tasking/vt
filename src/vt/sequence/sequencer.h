@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQUENCER_H
-#define INCLUDED_SEQUENCE_SEQUENCER_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQUENCER_H
+#define INCLUDED_VT_SEQUENCE_SEQUENCER_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -236,5 +236,5 @@ extern seq::Sequencer* theSeq();
 
 #include "vt/sequence/sequencer.impl.h"
 
-#endif /*INCLUDED_SEQUENCE_SEQUENCER_H*/
+#endif /*INCLUDED_VT_SEQUENCE_SEQUENCER_H*/
 

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_H
-#define INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_ANON_CALLBACK_ANON_H
+#define INCLUDED_VT_PIPE_CALLBACK_ANON_CALLBACK_ANON_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -90,4 +90,4 @@ private:
 
 #include "vt/pipe/callback/anon/callback_anon.impl.h"
 
-#endif /*INCLUDED_PIPE_CALLBACK_ANON_CALLBACK_ANON_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_ANON_CALLBACK_ANON_H*/

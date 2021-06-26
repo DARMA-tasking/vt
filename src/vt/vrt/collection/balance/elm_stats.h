@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
@@ -133,4 +133,4 @@ protected:
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_H*/

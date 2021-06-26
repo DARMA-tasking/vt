@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_SIGNAL_SIGNAL_H
-#define INCLUDED_PIPE_SIGNAL_SIGNAL_H
+#if !defined INCLUDED_VT_PIPE_SIGNAL_SIGNAL_H
+#define INCLUDED_VT_PIPE_SIGNAL_SIGNAL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -91,4 +91,4 @@ using SignalVoid = Signal<SigVoidType>;
 
 }}} /* end namespace vt::pipe::signal */
 
-#endif /*INCLUDED_PIPE_SIGNAL_SIGNAL_H*/
+#endif /*INCLUDED_VT_PIPE_SIGNAL_SIGNAL_H*/

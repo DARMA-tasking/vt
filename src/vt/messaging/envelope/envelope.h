@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_H
 
 #include "vt/config.h"
 
@@ -60,4 +60,4 @@
 #include "vt/messaging/envelope/envelope_extended.h"
 #include "vt/messaging/envelope/envelope_extended_util.h"
 
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_H*/

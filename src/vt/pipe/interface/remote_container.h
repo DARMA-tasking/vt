@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_H
-#define INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_H
+#if !defined INCLUDED_VT_PIPE_INTERFACE_REMOTE_CONTAINER_H
+#define INCLUDED_VT_PIPE_INTERFACE_REMOTE_CONTAINER_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -104,4 +104,4 @@ private:
 
 #include "vt/pipe/interface/remote_container.impl.h"
 
-#endif /*INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_H*/
+#endif /*INCLUDED_VT_PIPE_INTERFACE_REMOTE_CONTAINER_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope/envelope_type.h"
@@ -122,6 +122,4 @@ static_assert(
 
 } /* end namespace vt */
 
-#include "vt/messaging/envelope/envelope_extended.impl.h"
-
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_EXTENDED_H*/

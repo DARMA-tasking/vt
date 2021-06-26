@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONTEXT_VRT_FWD
-#define INCLUDED_CONTEXT_VRT_FWD
+#if !defined INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_FWD_H
+#define INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_FWD_H
 
 #include "vt/config.h"
 #include "vt/vrt/context/context_vrt.h"
@@ -66,5 +66,5 @@ struct VirtualMakeClosure;
 
 }}  // end namespace vt::vrt
 
-#endif /*INCLUDED_CONTEXT_VRT_FWD*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_FWD_H*/
 

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_MANAGER_H
-#define INCLUDED_PIPE_PIPE_MANAGER_H
+#if !defined INCLUDED_VT_PIPE_PIPE_MANAGER_H
+#define INCLUDED_VT_PIPE_PIPE_MANAGER_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -380,4 +380,4 @@ private:
 #include "vt/pipe/pipe_manager_typed.impl.h"
 #include "vt/pipe/pipe_manager.impl.h"
 
-#endif /*INCLUDED_PIPE_PIPE_MANAGER_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_MANAGER_H*/

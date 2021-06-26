@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_H
-#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_H
 
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce.fwd.h"
@@ -386,4 +386,4 @@ private:
 
 #include "vt/collective/reduce/reduce.impl.h"
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_H*/

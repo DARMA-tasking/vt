@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNTIME_H
-#define INCLUDED_RUNTIME_H
+#if !defined INCLUDED_VT_RUNTIME_RUNTIME_H
+#define INCLUDED_VT_RUNTIME_RUNTIME_H
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
@@ -448,4 +448,4 @@ protected:
 
 }} /* end namespace vt::runtime */
 
-#endif /*INCLUDED_RUNTIME_H*/
+#endif /*INCLUDED_VT_RUNTIME_RUNTIME_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H
-#define INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_CACHE_CACHE_H
+#define INCLUDED_VT_TOPOS_LOCATION_CACHE_CACHE_H
 
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
@@ -96,4 +96,4 @@ struct LocationCache {
 
 #include "vt/topos/location/cache/cache.impl.h"
 
-#endif /*INCLUDED_TOPOS_LOCATION_CACHE_CACHE_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_CACHE_CACHE_H*/

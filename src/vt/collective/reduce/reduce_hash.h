@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_HASH_H
-#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_HASH_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_HASH_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_HASH_H
 
 #include "vt/collective/reduce/reduce_scope.h"
 
@@ -70,4 +70,4 @@ struct hash<vt::collective::reduce::ReduceVirtualIDType> {
 
 } /* end namespace std */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_HASH_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_HASH_H*/

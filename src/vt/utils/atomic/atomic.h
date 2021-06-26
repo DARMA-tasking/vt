@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_ATOMIC_ATOMIC_H
-#define INCLUDED_UTILS_ATOMIC_ATOMIC_H
+#if !defined INCLUDED_VT_UTILS_ATOMIC_ATOMIC_H
+#define INCLUDED_VT_UTILS_ATOMIC_ATOMIC_H
 
 #include "vt/config.h"
 
@@ -69,4 +69,4 @@ namespace vt { namespace util { namespace atomic {
 
 }}} /* end namespace vt::util::atomic */
 
-#endif /*INCLUDED_UTILS_ATOMIC_ATOMIC_H*/
+#endif /*INCLUDED_VT_UTILS_ATOMIC_ATOMIC_H*/

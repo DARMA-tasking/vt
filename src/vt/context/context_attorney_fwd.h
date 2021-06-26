@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONTEXT_CONTEXT_ATTORNEY_FWD_H
-#define INCLUDED_CONTEXT_CONTEXT_ATTORNEY_FWD_H
+#if !defined INCLUDED_VT_CONTEXT_CONTEXT_ATTORNEY_FWD_H
+#define INCLUDED_VT_CONTEXT_CONTEXT_ATTORNEY_FWD_H
 
 #include "vt/config.h"
 
@@ -52,4 +52,4 @@ struct ContextAttorney;
 
 }} /* end namespace vt::ctx */
 
-#endif /*INCLUDED_CONTEXT_CONTEXT_ATTORNEY_FWD_H*/
+#endif /*INCLUDED_VT_CONTEXT_CONTEXT_ATTORNEY_FWD_H*/

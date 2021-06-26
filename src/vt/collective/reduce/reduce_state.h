@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
-#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_H
 
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce_msg.h"
@@ -70,4 +70,4 @@ struct ReduceState {
 
 }}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_STATE_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_STATE_H*/

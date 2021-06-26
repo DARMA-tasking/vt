@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_IMPL_H
-#define INCLUDED_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_IMPL_H
+#if !defined INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_IMPL_H
+#define INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/proxy/base_collection_elm_proxy.h"
@@ -64,4 +64,4 @@ void BaseCollectionElmProxy<IndexT>::serialize(SerializerT& s) {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_IMPL_H*/

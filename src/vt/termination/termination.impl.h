@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERMINATION_IMPL_H
-#define INCLUDED_TERMINATION_TERMINATION_IMPL_H
+#if !defined INCLUDED_VT_TERMINATION_TERMINATION_IMPL_H
+#define INCLUDED_VT_TERMINATION_TERMINATION_IMPL_H
 
 #include "vt/config.h"
 #include "vt/termination/termination.h"
@@ -85,4 +85,4 @@ inline bool TerminationDetector::isDS(EpochType epoch) {
 
 }} /* end namespace vt::term */
 
-#endif /*INCLUDED_TERMINATION_TERMINATION_IMPL_H*/
+#endif /*INCLUDED_VT_TERMINATION_TERMINATION_IMPL_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_ATOMIC_STD_ATOMIC_H
-#define INCLUDED_UTILS_ATOMIC_STD_ATOMIC_H
+#if !defined INCLUDED_VT_UTILS_ATOMIC_STD_ATOMIC_H
+#define INCLUDED_VT_UTILS_ATOMIC_STD_ATOMIC_H
 
 #include "vt/config.h"
 
@@ -58,4 +58,4 @@ using AtomicSTD = std::atomic<T>;
 
 #endif /*vt_check_enabled(stdthread)*/
 
-#endif /*INCLUDED_UTILS_ATOMIC_STD_ATOMIC_H*/
+#endif /*INCLUDED_VT_UTILS_ATOMIC_STD_ATOMIC_H*/

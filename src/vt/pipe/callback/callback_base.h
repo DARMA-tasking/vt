@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_CALLBACK_BASE_H
-#define INCLUDED_PIPE_CALLBACK_CALLBACK_BASE_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_CALLBACK_BASE_H
+#define INCLUDED_VT_PIPE_CALLBACK_CALLBACK_BASE_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -140,4 +140,4 @@ private:
 
 }}} /* end namespace vt::pipe::callback */
 
-#endif /*INCLUDED_PIPE_CALLBACK_CALLBACK_BASE_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_CALLBACK_BASE_H*/

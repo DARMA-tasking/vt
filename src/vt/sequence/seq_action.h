@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_ACTION_H
-#define INCLUDED_SEQUENCE_SEQ_ACTION_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_ACTION_H
+#define INCLUDED_VT_SEQUENCE_SEQ_ACTION_H
 
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
@@ -68,4 +68,4 @@ struct Action {
 
 #include "vt/sequence/seq_action.impl.h"
 
-#endif /* INCLUDED_SEQUENCE_SEQ_ACTION_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_ACTION_H*/

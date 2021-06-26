@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_INTERFACE_H
+#define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_INTERFACE_H
 
 #include "vt/registry/auto/auto_registry_common.h"
 #include "vt/config.h"
@@ -75,4 +75,4 @@ AutoActiveFunctorType getAutoHandlerFunctor(HandlerType const handler);
 #include "vt/registry/auto/functor/auto_registry_functor.h"
 #include "vt/registry/auto/index/auto_registry_index.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_INTERFACE_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_INTERFACE_H*/

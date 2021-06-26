@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_H
-#define INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_KEYVAL_PRINTER_H
+#define INCLUDED_VT_CONFIGS_ERROR_KEYVAL_PRINTER_H
 
 #include "vt/configs/error/common.h"
 #include "vt/configs/debug/debug_config.h"
@@ -75,4 +75,4 @@ struct PrinterNameValue {
 
 #include "vt/configs/error/keyval_printer.impl.h"
 
-#endif /*INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_KEYVAL_PRINTER_H*/

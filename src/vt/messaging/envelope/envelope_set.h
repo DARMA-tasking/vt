@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SET_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SET_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_SET_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_SET_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope/envelope_type.h"
@@ -241,4 +241,4 @@ inline void envelopeUnlockForForwarding(Env& env);
 
 #include "vt/messaging/envelope/envelope_set.impl.h"
 
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SET_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_SET_H*/

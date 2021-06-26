@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb_types.h"
@@ -131,4 +131,4 @@ struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H*/

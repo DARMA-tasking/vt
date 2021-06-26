@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_CLOSURE_H
-#define INCLUDED_SEQUENCE_SEQ_CLOSURE_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_CLOSURE_H
+#define INCLUDED_VT_SEQUENCE_SEQ_CLOSURE_H
 
 #include <list>
 #include <memory>
@@ -70,4 +70,4 @@ using SeqExpandedClosureType = SeqClosure;
 
 }} //end namespace vt::seq
 
-#endif /* INCLUDED_SEQUENCE_SEQ_CLOSURE_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_CLOSURE_H*/

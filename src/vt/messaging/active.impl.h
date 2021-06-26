@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ACTIVE_IMPL_H
-#define INCLUDED_MESSAGING_ACTIVE_IMPL_H
+#if !defined INCLUDED_VT_MESSAGING_ACTIVE_IMPL_H
+#define INCLUDED_VT_MESSAGING_ACTIVE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/messaging/active.h"
@@ -550,4 +550,4 @@ inline EpochType ActiveMessenger::setupEpochMsg(MsgSharedPtr<MsgT> const& msg) {
 
 }} //end namespace vt::messaging
 
-#endif /*INCLUDED_MESSAGING_ACTIVE_IMPL_H*/
+#endif /*INCLUDED_VT_MESSAGING_ACTIVE_IMPL_H*/

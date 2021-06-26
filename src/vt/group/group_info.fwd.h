@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_GROUP_INFO_FWD_H
-#define INCLUDED_GROUP_GROUP_INFO_FWD_H
+#if !defined INCLUDED_VT_GROUP_GROUP_INFO_FWD_H
+#define INCLUDED_VT_GROUP_GROUP_INFO_FWD_H
 
 #include "vt/config.h"
 
@@ -56,4 +56,4 @@ struct FinishedWork;
 
 }} /* end namespace vt::group */
 
-#endif /*INCLUDED_GROUP_GROUP_INFO_FWD_H*/
+#endif /*INCLUDED_VT_GROUP_GROUP_INFO_FWD_H*/

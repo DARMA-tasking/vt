@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H
-#define INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H
+#if !defined INCLUDED_VT_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H
+#define INCLUDED_VT_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H
 
 #include "vt/config.h"
 #include "vt/topos/index/dense/dense_array.h"
@@ -282,4 +282,4 @@ namespace std {
   };
 }
 
-#endif /*INCLUDED_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H*/
+#endif /*INCLUDED_VT_TOPOS_INDEX_DENSE_DENSE_ARRAY_IMPL_H*/

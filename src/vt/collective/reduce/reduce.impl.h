@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_IMPL_H
-#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_IMPL_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_IMPL_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/collective/collective_alg.h"
@@ -315,4 +315,4 @@ void Reduce::reduceNewMsg(MsgT* msg) {
 
 }}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_IMPL_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_IMPL_H*/

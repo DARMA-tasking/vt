@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_SEQ_H
-#define INCLUDED_WORKER_WORKER_SEQ_H
+#if !defined INCLUDED_VT_WORKER_WORKER_SEQ_H
+#define INCLUDED_VT_WORKER_WORKER_SEQ_H
 
 #include "vt/config.h"
 
@@ -107,4 +107,4 @@ static_assert(
 
 #endif /*backend_no_threading*/
 
-#endif /*INCLUDED_WORKER_WORKER_SEQ_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_SEQ_H*/

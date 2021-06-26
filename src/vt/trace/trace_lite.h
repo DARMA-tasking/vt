@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_LITE_H
-#define INCLUDED_TRACE_TRACE_LITE_H
+#if !defined INCLUDED_VT_TRACE_TRACE_LITE_H
+#define INCLUDED_VT_TRACE_TRACE_LITE_H
 
 #include "vt/configs/features/features_enableif.h"
 #include "vt/trace/trace_common.h"
@@ -393,4 +393,4 @@ namespace vt {
 
 }
 
-#endif /*INCLUDED_TRACE_TRACE_LITE_H*/
+#endif /*INCLUDED_VT_TRACE_TRACE_LITE_H*/

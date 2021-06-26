@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_TRAITS_H
-#define INCLUDED_WORKER_WORKER_TRAITS_H
+#if !defined INCLUDED_VT_WORKER_WORKER_TRAITS_H
+#define INCLUDED_VT_WORKER_WORKER_TRAITS_H
 
 #include "vt/config.h"
 #include "vt/worker/worker_common.h"
@@ -109,4 +109,4 @@ struct WorkerTraits {
 
 }} /* end namespace vt::worker */
 
-#endif /*INCLUDED_WORKER_WORKER_TRAITS_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_TRAITS_H*/

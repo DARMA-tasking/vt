@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_HASH_HASH_TUPLE_H
-#define INCLUDED_UTILS_HASH_HASH_TUPLE_H
+#if !defined INCLUDED_VT_UTILS_HASH_HASH_TUPLE_H
+#define INCLUDED_VT_UTILS_HASH_HASH_TUPLE_H
 
 #include <tuple>
 
@@ -57,4 +57,4 @@ namespace std {
   };
 }
 
-#endif /*INCLUDED_UTILS_HASH_HASH_TUPLE_H*/
+#endif /*INCLUDED_VT_UTILS_HASH_HASH_TUPLE_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_PHASE_MSG_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_PHASE_MSG_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_PHASE_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_PHASE_MSG_H
 
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce.h"
@@ -65,4 +65,4 @@ private:
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_PHASE_MSG_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_PHASE_MSG_H*/

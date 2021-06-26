@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
@@ -274,4 +274,4 @@ extern vrt::collection::balance::NodeStats* theNodeStats();
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H*/

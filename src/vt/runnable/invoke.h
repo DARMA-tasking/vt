@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_INVOKE_H
-#define INCLUDED_RUNNABLE_INVOKE_H
+#if !defined INCLUDED_VT_RUNNABLE_INVOKE_H
+#define INCLUDED_VT_RUNNABLE_INVOKE_H
 
 #include "vt/config.h"
 #include "vt/utils/demangle/demangle.h"
@@ -223,4 +223,4 @@ util::IsVoidReturn<Callable> invoke(Args&&... args) {
 
 }} // namespace vt::runnable
 
-#endif /*INCLUDED_RUNNABLE_INVOKE_H*/
+#endif /*INCLUDED_VT_RUNNABLE_INVOKE_H*/

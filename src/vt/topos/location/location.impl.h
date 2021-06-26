@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H
-#define INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_LOCATION_IMPL_H
+#define INCLUDED_VT_TOPOS_LOCATION_LOCATION_IMPL_H
 
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
@@ -923,4 +923,4 @@ template <typename EntityID>
 
 }}  // end namespace vt::location
 
-#endif /*INCLUDED_TOPOS_LOCATION_LOCATION_IMPL_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_LOCATION_IMPL_H*/

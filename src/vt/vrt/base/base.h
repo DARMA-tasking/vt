@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_BASE_BASE_H
-#define INCLUDED_VRT_BASE_BASE_H
+#if !defined INCLUDED_VT_VRT_BASE_BASE_H
+#define INCLUDED_VT_VRT_BASE_BASE_H
 
 #include "vt/config.h"
 
@@ -74,4 +74,4 @@ private:
 
 }} /* end namespace vt::vrt */
 
-#endif /*INCLUDED_VRT_BASE_BASE_H*/
+#endif /*INCLUDED_VT_VRT_BASE_BASE_H*/

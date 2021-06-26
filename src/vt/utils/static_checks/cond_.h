@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_STATIC_CHECKS_COND__H
-#define INCLUDED_UTILS_STATIC_CHECKS_COND__H
+#if !defined INCLUDED_VT_UTILS_STATIC_CHECKS_COND__H
+#define INCLUDED_VT_UTILS_STATIC_CHECKS_COND__H
 
 #include "vt/config.h"
 
@@ -56,4 +56,4 @@ struct cond_<false, T, F> { using type = F; };
 
 }} /* end namespace vt::util */
 
-#endif /*INCLUDED_UTILS_STATIC_CHECKS_COND__H*/
+#endif /*INCLUDED_VT_UTILS_STATIC_CHECKS_COND__H*/

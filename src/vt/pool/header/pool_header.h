@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_POOL_HEADER_POOL_HEADER_H
-#define INCLUDED_POOL_HEADER_POOL_HEADER_H
+#if !defined INCLUDED_VT_POOL_HEADER_POOL_HEADER_H
+#define INCLUDED_VT_POOL_HEADER_POOL_HEADER_H
 
 #include "vt/config.h"
 
@@ -75,4 +75,4 @@ struct HeaderManager {
 
 }} /* end namespace vt::pool */
 
-#endif /*INCLUDED_POOL_HEADER_POOL_HEADER_H*/
+#endif /*INCLUDED_VT_POOL_HEADER_POOL_HEADER_H*/

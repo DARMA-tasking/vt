@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TYPES_TYPE
-#define INCLUDED_TYPES_TYPE
+#if !defined INCLUDED_VT_CONFIGS_TYPES_TYPES_TYPE_H
+#define INCLUDED_VT_CONFIGS_TYPES_TYPES_TYPE_H
 
 #include <cstdint>
 #include <functional>
@@ -130,4 +130,4 @@ using ActionNodeType          = std::function<void(NodeType)>;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_TYPES_TYPE*/
+#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_TYPE_H*/

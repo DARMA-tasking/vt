@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_ULT_CONTEXT_H
-#define INCLUDED_SEQUENCE_SEQ_ULT_CONTEXT_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_ULT_CONTEXT_H
+#define INCLUDED_VT_SEQUENCE_SEQ_ULT_CONTEXT_H
 
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
@@ -112,4 +112,4 @@ private:
 
 }} /* end namespace vt::seq */
 
-#endif /*INCLUDED_SEQUENCE_SEQ_ULT_CONTEXT_H*/
+#endif /*INCLUDED_VT_SEQUENCE_SEQ_ULT_CONTEXT_H*/

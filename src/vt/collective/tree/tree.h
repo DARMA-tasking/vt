@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_TREE_TREE_H
-#define INCLUDED_COLLECTIVE_TREE_TREE_H
+#if !defined INCLUDED_VT_COLLECTIVE_TREE_TREE_H
+#define INCLUDED_VT_COLLECTIVE_TREE_TREE_H
 
 #include "vt/config.h"
 
@@ -194,4 +194,4 @@ private:
 
 }}} //end namespace vt::collective::tree
 
-#endif /*INCLUDED_COLLECTIVE_TREE_TREE_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_TREE_TREE_H*/

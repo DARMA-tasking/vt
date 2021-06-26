@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_MUTEX_MUTEX_H
-#define INCLUDED_UTILS_MUTEX_MUTEX_H
+#if !defined INCLUDED_VT_UTILS_MUTEX_MUTEX_H
+#define INCLUDED_VT_UTILS_MUTEX_MUTEX_H
 
 #include "vt/config.h"
 #include "vt/utils/mutex/lock_guard.h"
@@ -75,4 +75,4 @@ using LockGuardPtrType = LockGuardAnyPtrType<MutexType>;
 
 }}} /* end namespace vt::util::mutex */
 
-#endif /*INCLUDED_UTILS_MUTEX_MUTEX_H*/
+#endif /*INCLUDED_VT_UTILS_MUTEX_MUTEX_H*/

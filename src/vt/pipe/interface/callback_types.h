@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_INTERFACE_CALLBACK_TYPES_H
-#define INCLUDED_PIPE_INTERFACE_CALLBACK_TYPES_H
+#if !defined INCLUDED_VT_PIPE_INTERFACE_CALLBACK_TYPES_H
+#define INCLUDED_VT_PIPE_INTERFACE_CALLBACK_TYPES_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -76,4 +76,4 @@ struct CallbackVrtTypes {
 
 }}} /* end namespace vt::pipe::interface */
 
-#endif /*INCLUDED_PIPE_INTERFACE_CALLBACK_TYPES_H*/
+#endif /*INCLUDED_VT_PIPE_INTERFACE_CALLBACK_TYPES_H*/

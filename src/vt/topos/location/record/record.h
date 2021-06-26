@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_RECORD_RECORD_H
-#define INCLUDED_TOPOS_LOCATION_RECORD_RECORD_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_RECORD_RECORD_H
+#define INCLUDED_VT_TOPOS_LOCATION_RECORD_RECORD_H
 
 #include "vt/config.h"
 #include "vt/topos/location/record/state.h"
@@ -86,4 +86,4 @@ private:
 
 #include "vt/topos/location/record/record.impl.h"
 
-#endif /*INCLUDED_TOPOS_LOCATION_RECORD_RECORD_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_RECORD_RECORD_H*/

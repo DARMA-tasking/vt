@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_DISPATCH_DISPATCH_H
-#define INCLUDED_VRT_COLLECTION_DISPATCH_DISPATCH_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
+#define INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/traits/coll_msg.h"
@@ -91,4 +91,4 @@ private:
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_DISPATCH_DISPATCH_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_DISPATCH_DISPATCH_H*/

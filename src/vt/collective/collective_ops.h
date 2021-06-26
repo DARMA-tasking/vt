@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H
+#if !defined INCLUDED_VT_COLLECTIVE_COLLECTIVE_OPS_H
+#define INCLUDED_VT_COLLECTIVE_COLLECTIVE_OPS_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -84,4 +84,4 @@ using CollectiveOps = CollectiveAnyOps<collective_default_inst>;
 
 } //end namespace vt
 
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_OPS_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_COLLECTIVE_OPS_H*/

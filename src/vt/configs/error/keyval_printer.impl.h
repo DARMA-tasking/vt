@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H
-#define INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H
+#define INCLUDED_VT_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H
 
 #include "vt/configs/error/keyval_printer.h"
 #include "vt/configs/debug/debug_colorize.h"
@@ -83,4 +83,4 @@ PrinterNameValue<cur,ConsT,ConsU>::make(ConsT const& names, ConsU const& values)
 
 }}} /* end namespace vt::util::error */
 
-#endif /*INCLUDED_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_KEYVAL_PRINTER_IMPL_H*/

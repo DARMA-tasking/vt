@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H
-#define INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H
+#define INCLUDED_VT_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -85,4 +85,4 @@ private:
 
 #include "vt/pipe/callback/handler_send/callback_send_tl.impl.h"
 
-#endif /*INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_TL_H*/

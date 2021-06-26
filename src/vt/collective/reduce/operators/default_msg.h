@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H
-#define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H
 
 #include "vt/config.h"
 #include "vt/collective/reduce/operators/default_op.h"
@@ -191,4 +191,4 @@ using ReduceNoneMsg = reduce::operators::ReduceTMsg<NoneType>;
 
 }} /* end namespace vt::collective */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_MSG_H*/

@@ -43,8 +43,8 @@
 
 #include "test_termination_action_common.h"
 
-#if !defined INCLUDED_TERMINATION_ACTION_CALLABLE_H
-#define INCLUDED_TERMINATION_ACTION_CALLABLE_H
+#if !defined INCLUDED_VT_TERMINATION_ACTION_CALLABLE_H
+#define INCLUDED_VT_TERMINATION_ACTION_CALLABLE_H
 
 namespace vt { namespace tests { namespace unit { namespace channel {
 
@@ -115,4 +115,4 @@ TEST_F(TestTermCallable, test_add_action_unique) /*NOLINT*/{
 
 }}} // namespace vt::tests::unit::action
 
-#endif /*INCLUDED_TERMINATION_ACTION_CALLABLE_H*/
+#endif /*INCLUDED_VT_TERMINATION_ACTION_CALLABLE_H*/

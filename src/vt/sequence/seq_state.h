@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_STATE_H
-#define INCLUDED_SEQUENCE_SEQ_STATE_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_STATE_H
+#define INCLUDED_VT_SEQUENCE_SEQ_STATE_H
 
 #include <list>
 #include <unordered_map>
@@ -95,4 +95,4 @@ typename SeqMsgState<MessageT, f>::TaggedMsgContainerType SeqMsgState<MessageT, 
 
 }} //end namespace vt::seq
 
-#endif /* INCLUDED_SEQUENCE_SEQ_STATE_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_STATE_H*/

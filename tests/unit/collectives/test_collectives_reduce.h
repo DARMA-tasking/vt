@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_COLLECTIVES_TEST_COLLECTIVES_REDUCE_H
+#define INCLUDED_UNIT_COLLECTIVES_TEST_COLLECTIVES_REDUCE_H
+
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
@@ -149,3 +152,5 @@ struct Verify {
 };
 
 }}} // end namespace vt::tests::unit
+
+#endif /*INCLUDED_UNIT_COLLECTIVES_TEST_COLLECTIVES_REDUCE_H*/

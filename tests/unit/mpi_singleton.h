@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined __VIRTUAL_TRANSPORT_MPI_SINGLETON___
-#define __VIRTUAL_TRANSPORT_MPI_SINGLETON___
+#if !defined INCLUDED_UNIT_MPI_SINGLETON_H
+#define INCLUDED_UNIT_MPI_SINGLETON_H
 
 #include <memory>
 #include <mpi.h>
@@ -94,4 +94,4 @@ private:
 
 }}} // namespace vt::tests::unit
 
-#endif /* __VIRTUAL_TRANSPORT_MPI_SINGLETON___ */
+#endif /* INCLUDED_UNIT_MPI_SINGLETON_H */

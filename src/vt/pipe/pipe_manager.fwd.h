@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_MANAGER_FWD_H
-#define INCLUDED_PIPE_PIPE_MANAGER_FWD_H
+#if !defined INCLUDED_VT_PIPE_PIPE_MANAGER_FWD_H
+#define INCLUDED_VT_PIPE_PIPE_MANAGER_FWD_H
 
 #include "vt/config.h"
 //#include "vt/pipe/msg/callback.h"
@@ -72,4 +72,4 @@ extern pipe::PipeManager* theCB();
 
 } // end namespace vt
 
-#endif /*INCLUDED_PIPE_PIPE_MANAGER_FWD_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_MANAGER_FWD_H*/

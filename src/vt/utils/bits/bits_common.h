@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_BITS_COMMON
-#define INCLUDED_BITS_COMMON
+#if !defined INCLUDED_VT_UTILS_BITS_BITS_COMMON_H
+#define INCLUDED_VT_UTILS_BITS_BITS_COMMON_H
 
 #include "vt/utils/bits/bits_counter.h"
 #include "vt/utils/bits/bits_packer.h"
@@ -56,4 +56,4 @@ using BitPackerType = utils::BitPacker;
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_BITS_COMMON*/
+#endif  /*INCLUDED_VT_UTILS_BITS_BITS_COMMON_H*/

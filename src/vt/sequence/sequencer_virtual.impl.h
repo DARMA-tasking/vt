@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H
-#define INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H
+#define INCLUDED_VT_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H
 
 #include "vt/config.h"
 #include "vt/sequence/sequencer.h"
@@ -296,4 +296,4 @@ void TaggedSequencerVrt<SeqTag, SeqTrigger>::wait_on_trigger(
 
 }} //end namespace vt::seq
 
-#endif /*INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H*/
+#endif /*INCLUDED_VT_SEQUENCE_SEQUENCER_VIRTUAL_IMPL_H*/

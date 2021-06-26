@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_COMMON_H
-#define INCLUDED_CONFIGS_ERROR_COMMON_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_COMMON_H
+#define INCLUDED_VT_CONFIGS_ERROR_COMMON_H
 
 #include "vt/configs/types/types_headers.h"
 #include "vt/collective/basic.h"
@@ -59,4 +59,4 @@ extern NodeType preNodes();
 
 }} /* end namespace vt::debug */
 
-#endif /*INCLUDED_CONFIGS_ERROR_COMMON_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_COMMON_H*/

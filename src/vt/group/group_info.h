@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_GROUP_INFO_H
-#define INCLUDED_GROUP_GROUP_INFO_H
+#if !defined INCLUDED_VT_GROUP_GROUP_INFO_H
+#define INCLUDED_VT_GROUP_GROUP_INFO_H
 
 #include "vt/config.h"
 #include "vt/group/group_common.h"
@@ -136,4 +136,4 @@ private:
 
 #include "vt/group/group_info.impl.h"
 
-#endif /*INCLUDED_GROUP_GROUP_INFO_H*/
+#endif /*INCLUDED_VT_GROUP_GROUP_INFO_H*/

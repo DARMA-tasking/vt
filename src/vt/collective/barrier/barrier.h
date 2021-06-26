@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_BARRIER_BARRIER_H
-#define INCLUDED_COLLECTIVE_BARRIER_BARRIER_H
+#if !defined INCLUDED_VT_COLLECTIVE_BARRIER_BARRIER_H
+#define INCLUDED_VT_COLLECTIVE_BARRIER_BARRIER_H
 
 #include <unordered_map>
 
@@ -255,4 +255,4 @@ private:
 
 }}}  // end namespace vt::collective::barrier
 
-#endif /*INCLUDED_COLLECTIVE_BARRIER_BARRIER_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_BARRIER_BARRIER_H*/

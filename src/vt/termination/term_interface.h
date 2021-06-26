@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERM_INTERFACE_H
-#define INCLUDED_TERMINATION_TERM_INTERFACE_H
+#if !defined INCLUDED_VT_TERMINATION_TERM_INTERFACE_H
+#define INCLUDED_VT_TERMINATION_TERM_INTERFACE_H
 
 #include "vt/config.h"
 #include "vt/termination/term_common.h"
@@ -64,4 +64,4 @@ struct TermInterface {
 
 }} /* end namespace vt::term */
 
-#endif /*INCLUDED_TERMINATION_TERM_INTERFACE_H*/
+#endif /*INCLUDED_VT_TERMINATION_TERM_INTERFACE_H*/

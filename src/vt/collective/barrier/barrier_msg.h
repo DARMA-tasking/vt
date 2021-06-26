@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_BARRIER_BARRIER_MSG_H
-#define INCLUDED_COLLECTIVE_BARRIER_BARRIER_MSG_H
+#if !defined INCLUDED_VT_COLLECTIVE_BARRIER_BARRIER_MSG_H
+#define INCLUDED_VT_COLLECTIVE_BARRIER_BARRIER_MSG_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -63,4 +63,4 @@ struct BarrierMsg : vt::EpochMessage {
 
 }}} /* end namespace vt::collective::barrier */
 
-#endif /*INCLUDED_COLLECTIVE_BARRIER_BARRIER_MSG_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_BARRIER_BARRIER_MSG_H*/

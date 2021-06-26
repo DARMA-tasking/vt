@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_MANAGER_BASE_IMPL_H
-#define INCLUDED_PIPE_PIPE_MANAGER_BASE_IMPL_H
+#if !defined INCLUDED_VT_PIPE_PIPE_MANAGER_BASE_IMPL_H
+#define INCLUDED_VT_PIPE_PIPE_MANAGER_BASE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -215,4 +215,4 @@ void PipeManagerBase::addListener(PipeType const& pipe, FuncMsgType<MsgT> fn) {
 
 }} /* end namespace vt::pipe */
 
-#endif /*INCLUDED_PIPE_PIPE_MANAGER_BASE_IMPL_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_MANAGER_BASE_IMPL_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_RECORD_STATE_H
-#define INCLUDED_TOPOS_LOCATION_RECORD_STATE_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_H
+#define INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -60,4 +60,4 @@ enum class eLocState : int32_t {
 
 }}  // end namespace vt::location
 
-#endif /*INCLUDED_TOPOS_LOCATION_RECORD_STATE_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_H*/

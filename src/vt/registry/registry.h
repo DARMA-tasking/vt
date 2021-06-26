@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_REGISTRY_H
-#define INCLUDED_REGISTRY_REGISTRY_H
+#if !defined INCLUDED_VT_REGISTRY_REGISTRY_H
+#define INCLUDED_VT_REGISTRY_REGISTRY_H
 
 #include <vector>
 #include <unordered_map>
@@ -166,4 +166,4 @@ extern registry::Registry* theRegistry();
 
 } // end namespace vt
 
-#endif /*INCLUDED_REGISTRY_REGISTRY_H*/
+#endif /*INCLUDED_VT_REGISTRY_REGISTRY_H*/

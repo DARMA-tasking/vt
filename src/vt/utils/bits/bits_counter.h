@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_BITS_COUNTER
-#define INCLUDED_BITS_COUNTER
+#if !defined INCLUDED_VT_UTILS_BITS_BITS_COUNTER_H
+#define INCLUDED_VT_UTILS_BITS_BITS_COUNTER_H
 
 // Do not pull in other VT dependencies here
 
@@ -55,4 +55,4 @@ struct BitCounter {
 
 }} // end namespace vt::utils
 
-#endif  /*INCLUDED_BITS_COUNTER*/
+#endif  /*INCLUDED_VT_UTILS_BITS_BITS_COUNTER_H*/

@@ -41,11 +41,11 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_HANDLER_H
+#define INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_HANDLER_H
+
 #include "test_reduce_collection_common.h"
 #include "test_parallel_harness.h"
-
-#if !defined INCLUDED_TEST_REDUCE_COLLECTION_HANDLER_H
-#define INCLUDED_TEST_REDUCE_COLLECTION_HANDLER_H
 
 #define ENABLE_REDUCE_EXPR_CALLBACK 0
 
@@ -226,4 +226,4 @@ void colHanPartialProxy(ColMsg* msg, MyCol* col) {
 #endif
 
 }}}} // end namespace vt::tests::unit::reduce
-#endif /*INCLUDED_TEST_REDUCE_COLLECTION_HANDLER_H*/
+#endif /*INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_HANDLER_H*/

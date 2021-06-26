@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PARAMETERIZATION_PARAM_META_H
-#define INCLUDED_PARAMETERIZATION_PARAM_META_H
+#if !defined INCLUDED_VT_PARAMETERIZATION_PARAM_META_H
+#define INCLUDED_VT_PARAMETERIZATION_PARAM_META_H
 
 #include "vt/config.h"
 
@@ -92,4 +92,4 @@ void invokeCallableTuple(std::tuple<Args...>& tup, FnT fn, bool const& is_functo
 
 }} /* end namespace vt::param */
 
-#endif /*INCLUDED_PARAMETERIZATION_PARAM_META_H*/
+#endif /*INCLUDED_VT_PARAMETERIZATION_PARAM_META_H*/

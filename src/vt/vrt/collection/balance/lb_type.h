@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H
 
 #include "vt/config.h"
 
@@ -88,4 +88,4 @@ extern std::unordered_map<LBType,std::string> lb_names_;
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_LB_TYPE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_TYPE_H*/

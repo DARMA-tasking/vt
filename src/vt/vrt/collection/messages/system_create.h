@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H
-#define INCLUDED_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H
+#define INCLUDED_VT_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -198,4 +198,4 @@ struct UpdateInsertMsg : ::vt::Message {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_MESSAGES_SYSTEM_CREATE_H*/

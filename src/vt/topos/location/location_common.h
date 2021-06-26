@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_LOCATION_COMMON_H
-#define INCLUDED_TOPOS_LOCATION_LOCATION_COMMON_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_LOCATION_COMMON_H
+#define INCLUDED_VT_TOPOS_LOCATION_LOCATION_COMMON_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -74,4 +74,4 @@ static constexpr LocInstType const no_loc_inst = -1;
 
 }}  // end namespace vt::location
 
-#endif /*INCLUDED_TOPOS_LOCATION_LOCATION_COMMON_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_LOCATION_COMMON_H*/

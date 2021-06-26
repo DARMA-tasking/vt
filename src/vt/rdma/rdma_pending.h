@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_PENDING_H
-#define INCLUDED_RDMA_RDMA_PENDING_H
+#if !defined INCLUDED_VT_RDMA_RDMA_PENDING_H
+#define INCLUDED_VT_RDMA_RDMA_PENDING_H
 
 #include "vt/config.h"
 #include "vt/activefn/activefn.h"
@@ -78,4 +78,4 @@ struct Pending {
 
 }} //end namespace vt::rdma
 
-#endif /*INCLUDED_RDMA_RDMA_PENDING_H*/
+#endif /*INCLUDED_VT_RDMA_RDMA_PENDING_H*/

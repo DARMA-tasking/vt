@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
@@ -107,4 +107,4 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H*/

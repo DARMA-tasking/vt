@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERM_ACTION_H
-#define INCLUDED_TERMINATION_TERM_ACTION_H
+#if !defined INCLUDED_VT_TERMINATION_TERM_ACTION_H
+#define INCLUDED_VT_TERMINATION_TERM_ACTION_H
 
 #include "vt/config.h"
 #include "vt/termination/term_common.h"
@@ -130,4 +130,4 @@ protected:
 
 #include "vt/termination/term_action.impl.h"
 
-#endif /*INCLUDED_TERMINATION_TERM_ACTION_H*/
+#endif /*INCLUDED_VT_TERMINATION_TERM_ACTION_H*/

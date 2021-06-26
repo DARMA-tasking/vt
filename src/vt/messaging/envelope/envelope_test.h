@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TEST_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TEST_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_TEST_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_TEST_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -140,4 +140,4 @@ inline bool envelopeIsLocked(Env& env);
 
 #include "vt/messaging/envelope/envelope_test.impl.h"
 
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_TEST_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_TEST_H*/

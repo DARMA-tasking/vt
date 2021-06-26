@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TIMING_TIMING_H
-#define INCLUDED_TIMING_TIMING_H
+#if !defined INCLUDED_VT_TIMING_TIMING_H
+#define INCLUDED_VT_TIMING_TIMING_H
 
 #include "vt/config.h"
 #include "vt/timing/timing_type.h"
@@ -55,4 +55,4 @@ struct Timing {
 
 }} /* end namespace vt::timing */
 
-#endif /*INCLUDED_TIMING_TIMING_H*/
+#endif /*INCLUDED_VT_TIMING_TIMING_H*/

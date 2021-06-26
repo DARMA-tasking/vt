@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_STATE_H
-#define INCLUDED_RDMA_RDMA_STATE_H
+#if !defined INCLUDED_VT_RDMA_STATE_RDMA_STATE_H
+#define INCLUDED_VT_RDMA_STATE_RDMA_STATE_H
 
 #include "vt/config.h"
 #include "vt/rdma/rdma_common.h"
@@ -197,4 +197,4 @@ private:
 
 #include "vt/rdma/state/rdma_state.impl.h"
 
-#endif /*INCLUDED_RDMA_RDMA_STATE_H*/
+#endif /*INCLUDED_VT_RDMA_STATE_RDMA_STATE_H*/

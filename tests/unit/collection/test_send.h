@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_COLLECTION_TEST_SEND_H
+#define INCLUDED_UNIT_COLLECTION_TEST_SEND_H
+
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
@@ -188,3 +191,5 @@ TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
 }
 
 }}}} // end namespace vt::tests::unit::send
+
+#endif /*INCLUDED_UNIT_COLLECTION_TEST_SEND_H*/

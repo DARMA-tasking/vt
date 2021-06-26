@@ -41,12 +41,12 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_CHANNEL_MESSAGE_H
+#define INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_CHANNEL_MESSAGE_H
+
 #include "data_message.h"
 #include "vt/configs/types/types_type.h"
 #include "vt/messaging/message/message.h"
-
-#if !defined INCLUDED_TERMINATION_CHANNEL_MESSAGES_H
-#define INCLUDED_TERMINATION_CHANNEL_MESSAGES_H
 
 namespace vt { namespace tests { namespace unit { namespace channel {
 
@@ -94,4 +94,4 @@ struct CtrlMsg : vt::Message {
 
 }}}} // end namespace vt::tests::unit::channel
 
-#endif /*INCLUDED_TERMINATION_CHANNEL_MESSAGES_H*/
+#endif /*INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_CHANNEL_MESSAGE_H*/

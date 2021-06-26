@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_CODE_H
-#define INCLUDED_CONFIGS_ERROR_CODE_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_CODE_H
+#define INCLUDED_VT_CONFIGS_ERROR_CODE_H
 
 #include "vt/configs/error/code_class.h"
 
@@ -59,4 +59,4 @@ enum struct ErrorCode : int8_t {
 
 }} /* end namespace vt::error */
 
-#endif /*INCLUDED_CONFIGS_ERROR_CODE_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_CODE_H*/

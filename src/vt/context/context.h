@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONTEXT
-#define INCLUDED_CONTEXT
+#if !defined INCLUDED_VT_CONTEXT_CONTEXT_H
+#define INCLUDED_VT_CONTEXT_CONTEXT_H
 
 #include <memory>
 #include <mpi.h>
@@ -234,5 +234,5 @@ extern ctx::Context* theContext();
 
 } // end namespace vt
 
-#endif /*INCLUDED_CONTEXT*/
+#endif /*INCLUDED_VT_CONTEXT_CONTEXT_H*/
 

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_HANDLERS_H
-#define INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_HANDLERS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_MIGRATE_MIGRATE_HANDLERS_H
+#define INCLUDED_VT_VRT_COLLECTION_MIGRATE_MIGRATE_HANDLERS_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -60,4 +60,4 @@ struct MigrateHandlers {
 
 #include "vt/vrt/collection/migrate/migrate_handlers.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_MIGRATE_MIGRATE_HANDLERS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_MIGRATE_MIGRATE_HANDLERS_H*/

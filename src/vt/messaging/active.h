@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ACTIVE_H
-#define INCLUDED_MESSAGING_ACTIVE_H
+#if !defined INCLUDED_VT_MESSAGING_ACTIVE_H
+#define INCLUDED_VT_MESSAGING_ACTIVE_H
 
 #include <cstdint>
 #include <memory>
@@ -1778,4 +1778,4 @@ extern messaging::ActiveMessenger* theMsg();
 
 #include "vt/messaging/active.impl.h"
 
-#endif /*INCLUDED_MESSAGING_ACTIVE_H*/
+#endif /*INCLUDED_VT_MESSAGING_ACTIVE_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_DISPATCH_REGISTRY_H
-#define INCLUDED_VRT_COLLECTION_DISPATCH_REGISTRY_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_DISPATCH_REGISTRY_H
+#define INCLUDED_VT_VRT_COLLECTION_DISPATCH_REGISTRY_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -89,4 +89,4 @@ inline AutoHandlerType makeVrtDispatch(
 
 }}} /* end namespace vt::vrt::collection: */
 
-#endif /*INCLUDED_VRT_COLLECTION_DISPATCH_REGISTRY_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_DISPATCH_REGISTRY_H*/

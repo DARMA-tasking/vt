@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_SOFT_ERROR_H
-#define INCLUDED_CONFIGS_ERROR_SOFT_ERROR_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_SOFT_ERROR_H
+#define INCLUDED_VT_CONFIGS_ERROR_SOFT_ERROR_H
 
 /*
  *  A soft error is treated like an ignored warning in certain build/runtime
@@ -159,4 +159,4 @@ inline void warning(
     vtWarnIfCode(code,INVERT_COND(cond),str)
 #endif
 
-#endif /*INCLUDED_CONFIGS_ERROR_SOFT_ERROR_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_SOFT_ERROR_H*/

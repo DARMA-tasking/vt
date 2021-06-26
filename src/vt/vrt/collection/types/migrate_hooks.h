@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_MIGRATE_HOOKS_H
-#define INCLUDED_VRT_COLLECTION_TYPES_MIGRATE_HOOKS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATE_HOOKS_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATE_HOOKS_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -108,4 +108,4 @@ protected:
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_MIGRATE_HOOKS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATE_HOOKS_H*/

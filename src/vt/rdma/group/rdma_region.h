@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_REGION_H
-#define INCLUDED_RDMA_RDMA_REGION_H
+#if !defined INCLUDED_VT_RDMA_GROUP_RDMA_REGION_H
+#define INCLUDED_VT_RDMA_GROUP_RDMA_REGION_H
 
 #include "vt/config.h"
 #include "vt/rdma/rdma_common.h"
@@ -99,4 +99,4 @@ struct Region {
 
 }} //end namespace vt::rdma
 
-#endif /*INCLUDED_RDMA_RDMA_REGION_H*/
+#endif /*INCLUDED_VT_RDMA_GROUP_RDMA_REGION_H*/

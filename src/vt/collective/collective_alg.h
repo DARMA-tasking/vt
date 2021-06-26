@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
-#define INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H
+#if !defined INCLUDED_VT_COLLECTIVE_COLLECTIVE_ALG_H
+#define INCLUDED_VT_COLLECTIVE_COLLECTIVE_ALG_H
 
 #include "vt/config.h"
 #include "vt/collective/tree/tree.h"
@@ -173,4 +173,4 @@ extern collective::CollectiveAlg *theCollective();
 #include "vt/collective/reduce/reduce_manager.impl.h"
 #include "vt/collective/scatter/scatter.impl.h"
 
-#endif /*INCLUDED_COLLECTIVE_COLLECTIVE_ALG_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_COLLECTIVE_ALG_H*/

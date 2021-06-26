@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H
-#define INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H
 
 #include "vt/config.h"
 #include "vt/collective/reduce/operators/default_op.h"
@@ -80,4 +80,4 @@ template <typename MsgT, typename Op, typename ActOp>
 
 }}}} /* end namespace vt::collective::reduce::operators */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_DEFAULT_OP_IMPL_H*/

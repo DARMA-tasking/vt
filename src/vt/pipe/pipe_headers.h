@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_HEADERS_H
-#define INCLUDED_PIPE_PIPE_HEADERS_H
+#if !defined INCLUDED_VT_PIPE_PIPE_HEADERS_H
+#define INCLUDED_VT_PIPE_PIPE_HEADERS_H
 
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/pipe.h"
@@ -54,4 +54,4 @@
 #include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.h"
 #include "vt/pipe/callback/anon/callback_anon_tl.h"
 
-#endif /*INCLUDED_PIPE_PIPE_HEADERS_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_HEADERS_H*/

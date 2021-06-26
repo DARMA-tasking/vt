@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_INVOKE_INVOKABLE_H
-#define INCLUDED_VRT_COLLECTION_INVOKE_INVOKABLE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INVOKE_INVOKABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_INVOKE_INVOKABLE_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/active/active_funcs.h"
@@ -92,4 +92,4 @@ struct Invokable : BaseProxyT {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_INVOKE_INVOKABLE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INVOKE_INVOKABLE_H*/

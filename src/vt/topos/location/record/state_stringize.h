@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_RECORD_STATE_STRINGIZE_H
-#define INCLUDED_TOPOS_LOCATION_RECORD_STATE_STRINGIZE_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_STRINGIZE_H
+#define INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_STRINGIZE_H
 
 #include "vt/config.h"
 #include "vt/topos/location/record/state.h"
@@ -57,4 +57,4 @@
     )                                                             \
   )
 
-#endif /*INCLUDED_TOPOS_LOCATION_RECORD_STATE_STRINGIZE_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_STRINGIZE_H*/

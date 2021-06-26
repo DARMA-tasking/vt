@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_REGION_GROUP_SHALLOW_LIST_H
-#define INCLUDED_GROUP_REGION_GROUP_SHALLOW_LIST_H
+#if !defined INCLUDED_VT_GROUP_REGION_GROUP_SHALLOW_LIST_H
+#define INCLUDED_VT_GROUP_REGION_GROUP_SHALLOW_LIST_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -80,4 +80,4 @@ private:
 
 }}} /* end namespace vt::group::region */
 
-#endif /*INCLUDED_GROUP_REGION_GROUP_SHALLOW_LIST_H*/
+#endif /*INCLUDED_VT_GROUP_REGION_GROUP_SHALLOW_LIST_H*/

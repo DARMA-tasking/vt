@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H
-#define INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H
+#define INCLUDED_VT_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/collection/auto_registry_collection.h"
@@ -117,4 +117,4 @@ void setHandlerTraceNameCollMem(std::string const& name, std::string const& pare
 
 }} /* end namespace vt::auto_registry */
 
-#endif /*INCLUDED_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_COLLECTION_AUTO_REGISTRY_COLLECTION_IMPL_H*/

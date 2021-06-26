@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_REGION_GROUP_LIST_H
-#define INCLUDED_GROUP_REGION_GROUP_LIST_H
+#if !defined INCLUDED_VT_GROUP_REGION_GROUP_LIST_H
+#define INCLUDED_VT_GROUP_REGION_GROUP_LIST_H
 
 namespace vt { namespace group { namespace region {
 
@@ -76,4 +76,4 @@ private:
 
 }}} /* end namespace vt::group::region */
 
-#endif /*INCLUDED_GROUP_REGION_GROUP_LIST_H*/
+#endif /*INCLUDED_VT_GROUP_REGION_GROUP_LIST_H*/

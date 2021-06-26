@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_EVENT_H
-#define INCLUDED_TRACE_TRACE_EVENT_H
+#if !defined INCLUDED_VT_TRACE_TRACE_EVENT_H
+#define INCLUDED_VT_TRACE_TRACE_EVENT_H
 
 #include "vt/trace/trace_common.h"
 
@@ -93,4 +93,4 @@ private:
 
 }} //end namespace vt::trace
 
-#endif /*INCLUDED_TRACE_TRACE_EVENT_H*/
+#endif /*INCLUDED_VT_TRACE_TRACE_EVENT_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNTIME_INST_H
-#define INCLUDED_RUNTIME_INST_H
+#if !defined INCLUDED_VT_RUNTIME_RUNTIME_INST_H
+#define INCLUDED_VT_RUNTIME_RUNTIME_INST_H
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_common.h"
@@ -74,4 +74,4 @@ extern runtime::Runtime* rt;
 
 #include "vt/runtime/runtime_inst.impl.h"
 
-#endif /*INCLUDED_RUNTIME_INST_H*/
+#endif /*INCLUDED_VT_RUNTIME_RUNTIME_INST_H*/

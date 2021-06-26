@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_STDTHREAD_H
-#define INCLUDED_WORKER_WORKER_STDTHREAD_H
+#if !defined INCLUDED_VT_WORKER_WORKER_STDTHREAD_H
+#define INCLUDED_VT_WORKER_WORKER_STDTHREAD_H
 
 #include "vt/config.h"
 
@@ -113,4 +113,4 @@ static_assert(
 
 #endif /*vt_check_enabled(stdthread)*/
 
-#endif /*INCLUDED_WORKER_WORKER_STDTHREAD_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_STDTHREAD_H*/

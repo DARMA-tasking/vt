@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_H
-#define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_H
+#if !defined INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_DS_H
+#define INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_DS_H
 
 #include "vt/config.h"
 #include "vt/termination/dijkstra-scholten/ack_request.h"
@@ -120,4 +120,4 @@ public:
 
 }}} /* end namespace vt::term::ds */
 
-#endif /*INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_H*/
+#endif /*INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_DS_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_CC
-#define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_CC
+#if !defined INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_CC
+#define INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_CC
 
 #include "vt/config.h"
 #include "vt/termination/termination.h"
@@ -149,4 +149,4 @@ StateDS::getTerminator(EpochType const& epoch) {
 
 }}} /* end namespace vt::term::ds */
 
-#endif /*INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_CC*/
+#endif /*INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_COMM_CC*/

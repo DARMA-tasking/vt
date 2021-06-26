@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if ! defined __VIRTUAL_TRANSPORT_TEST_PARALLEL_HARNESS__
-#define __VIRTUAL_TRANSPORT_TEST_PARALLEL_HARNESS__
+#if ! defined INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
+#define INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H
 
 #include <vector>
 
@@ -172,4 +172,4 @@ using TestParameterHarnessNode = TestParallelHarnessParam<vt::NodeType>;
 
 }}} // end namespace vt::tests::unit
 
-#endif /* __VIRTUAL_TRANSPORT_TEST_PARALLEL_HARNESS__ */
+#endif /* INCLUDED_UNIT_TEST_PARALLEL_HARNESS_H */

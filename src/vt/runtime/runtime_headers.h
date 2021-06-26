@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNTIME_RUNTIME_HEADERS_H
-#define INCLUDED_RUNTIME_RUNTIME_HEADERS_H
+#if !defined INCLUDED_VT_RUNTIME_RUNTIME_HEADERS_H
+#define INCLUDED_VT_RUNTIME_RUNTIME_HEADERS_H
 
 #include "vt/runtime/runtime_common.h"
 #include "vt/runtime/runtime_inst.h"
@@ -68,4 +68,4 @@ using RuntimePtrType = RuntimeType;
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_RUNTIME_RUNTIME_HEADERS_H*/
+#endif /*INCLUDED_VT_RUNTIME_RUNTIME_HEADERS_H*/

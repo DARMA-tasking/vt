@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_H
-#define INCLUDED_PIPE_PIPE_H
+#if !defined INCLUDED_VT_PIPE_PIPE_H
+#define INCLUDED_VT_PIPE_PIPE_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -56,4 +56,4 @@ namespace vt { namespace pipe {
 
 }} /* end namespace vt::pipe */
 
-#endif /*INCLUDED_PIPE_PIPE_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_GLOBAL_GROUP_DEFAULT_H
-#define INCLUDED_GROUP_GLOBAL_GROUP_DEFAULT_H
+#if !defined INCLUDED_VT_GROUP_GLOBAL_GROUP_DEFAULT_H
+#define INCLUDED_VT_GROUP_GLOBAL_GROUP_DEFAULT_H
 
 #include "vt/config.h"
 #include "vt/group/group_common.h"
@@ -106,4 +106,4 @@ extern std::unique_ptr<DefaultGroup> default_group_;
 
 #include "vt/group/global/group_default.impl.h"
 
-#endif /*INCLUDED_GROUP_GLOBAL_GROUP_DEFAULT_H*/
+#endif /*INCLUDED_VT_GROUP_GLOBAL_GROUP_DEFAULT_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_MESSAGES_USER_H
-#define INCLUDED_VRT_COLLECTION_MESSAGES_USER_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_MESSAGES_USER_H
+#define INCLUDED_VT_VRT_COLLECTION_MESSAGES_USER_H
 
 #include "vt/config.h"
 #include "vt/topos/location/message/msg.h"
@@ -162,4 +162,4 @@ using CollectionMessage = vrt::collection::CollectionMessage<ColT, MsgT>;
 
 #include "vt/vrt/collection/messages/user.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_MESSAGES_USER_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_MESSAGES_USER_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_COMM_OVERHEAD_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_COMM_OVERHEAD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_COMM_OVERHEAD_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_COMM_OVERHEAD_H
 
 #include "vt/vrt/collection/balance/model/composed_model.h"
 #include <unordered_map>

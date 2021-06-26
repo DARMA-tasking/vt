@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H
-#define INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQUENCER_VIRTUAL_H
+#define INCLUDED_VT_SEQUENCE_SEQUENCER_VIRTUAL_H
 
 #include "vt/config.h"
 #include "vt/sequence/sequencer.h"
@@ -128,4 +128,4 @@ extern seq::SequencerVirtual* theVirtualSeq();
 
 #include "vt/sequence/sequencer_virtual.impl.h"
 
-#endif /*INCLUDED_SEQUENCE_SEQUENCER_VIRTUAL_H*/
+#endif /*INCLUDED_VT_SEQUENCE_SEQUENCER_VIRTUAL_H*/

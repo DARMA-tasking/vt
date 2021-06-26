@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_VRT_COMMON_H
-#define INCLUDED_VRT_VRT_COMMON_H
+#if !defined INCLUDED_VT_VRT_VRT_COMMON_H
+#define INCLUDED_VT_VRT_VRT_COMMON_H
 
 #include "vt/config.h"
 
@@ -52,4 +52,4 @@ static constexpr NodeType const default_collection_reduce_root_node = 0;
 
 }} /* end namespace vt::vrt */
 
-#endif /*INCLUDED_VRT_VRT_COMMON_H*/
+#endif /*INCLUDED_VT_VRT_VRT_COMMON_H*/

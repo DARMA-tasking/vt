@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_COLLECTION_TEST_BROADCAST_H
+#define INCLUDED_UNIT_COLLECTION_TEST_BROADCAST_H
+
 #include <gtest/gtest.h>
 
 #include "vt/vrt/collection/manager.h"
@@ -140,3 +143,5 @@ TYPED_TEST_P(TestBroadcast, test_broadcast_1) {
 }
 
 }}}} // end namespace vt::tests::unit::bcast
+
+#endif /*INCLUDED_UNIT_COLLECTION_TEST_BROADCAST_H*/

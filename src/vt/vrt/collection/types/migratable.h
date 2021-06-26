@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_H
-#define INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATABLE_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -119,4 +119,4 @@ protected:
 
 #include "vt/vrt/collection/types/migratable.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATABLE_H*/

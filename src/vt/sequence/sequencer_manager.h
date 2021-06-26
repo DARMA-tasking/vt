@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H
-#define INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQUENCER_MANAGER_H
+#define INCLUDED_VT_SEQUENCE_SEQUENCER_MANAGER_H
 
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
@@ -71,4 +71,4 @@ private:
 
 #include "vt/sequence/sequencer_manager.impl.h"
 
-#endif /*INCLUDED_SEQUENCE_SEQUENCER_MANAGER_H*/
+#endif /*INCLUDED_VT_SEQUENCE_SEQUENCER_MANAGER_H*/

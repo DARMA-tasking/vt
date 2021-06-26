@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_REGISTRY_H
-#define INCLUDED_TRACE_TRACE_REGISTRY_H
+#if !defined INCLUDED_VT_TRACE_TRACE_REGISTRY_H
+#define INCLUDED_VT_TRACE_TRACE_REGISTRY_H
 
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_containers.h"
@@ -73,4 +73,4 @@ struct TraceRegistry {
 
 }} //end namespace vt::trace
 
-#endif /*INCLUDED_TRACE_TRACE_REGISTRY_H*/
+#endif /*INCLUDED_VT_TRACE_TRACE_REGISTRY_H*/

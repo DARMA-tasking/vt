@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_COMMON_H
-#define INCLUDED_TRACE_TRACE_COMMON_H
+#if !defined INCLUDED_VT_TRACE_TRACE_COMMON_H
+#define INCLUDED_VT_TRACE_TRACE_COMMON_H
 
 #include "vt/configs/types/types_type.h"
 
@@ -71,4 +71,4 @@ static constexpr NodeType const designated_root_node = 0;
 
 }} //end namespace vt::trace
 
-#endif /*INCLUDED_TRACE_TRACE_COMMON_H*/
+#endif /*INCLUDED_VT_TRACE_TRACE_COMMON_H*/

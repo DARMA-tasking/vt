@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SCHEDULER_SCHEDULER_H
-#define INCLUDED_SCHEDULER_SCHEDULER_H
+#if !defined INCLUDED_VT_SCHEDULER_SCHEDULER_H
+#define INCLUDED_VT_SCHEDULER_SCHEDULER_H
 
 #include "vt/config.h"
 #include "vt/scheduler/queue.h"
@@ -427,4 +427,4 @@ extern sched::Scheduler* theSched();
 
 #include "vt/scheduler/scheduler.impl.h"
 
-#endif /*INCLUDED_SCHEDULER_SCHEDULER_H*/
+#endif /*INCLUDED_VT_SCHEDULER_SCHEDULER_H*/

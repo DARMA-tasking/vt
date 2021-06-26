@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_SCATTER_SCATTER_IMPL_H
-#define INCLUDED_COLLECTIVE_SCATTER_SCATTER_IMPL_H
+#if !defined INCLUDED_VT_COLLECTIVE_SCATTER_SCATTER_IMPL_H
+#define INCLUDED_VT_COLLECTIVE_SCATTER_SCATTER_IMPL_H
 
 #include "vt/config.h"
 #include "vt/collective/scatter/scatter.h"
@@ -108,4 +108,4 @@ void Scatter::scatter(
 
 }}} /* end namespace vt::collective::scatter */
 
-#endif /*INCLUDED_COLLECTIVE_SCATTER_SCATTER_IMPL_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_SCATTER_SCATTER_IMPL_H*/

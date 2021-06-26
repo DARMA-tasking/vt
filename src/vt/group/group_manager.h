@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_GROUP_MANAGER_H
-#define INCLUDED_GROUP_GROUP_MANAGER_H
+#if !defined INCLUDED_VT_GROUP_GROUP_MANAGER_H
+#define INCLUDED_VT_GROUP_GROUP_MANAGER_H
 
 #include "vt/config.h"
 #include "vt/group/group_common.h"
@@ -455,4 +455,4 @@ extern group::GroupManager* theGroup();
 
 #include "vt/group/group_manager.impl.h"
 
-#endif /*INCLUDED_GROUP_GROUP_MANAGER_H*/
+#endif /*INCLUDED_VT_GROUP_GROUP_MANAGER_H*/

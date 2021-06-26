@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H
-#define INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_HOLDERS_HOLDER_H
+#define INCLUDED_VT_VRT_COLLECTION_HOLDERS_HOLDER_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -270,4 +270,4 @@ private:
 
 #include "vt/vrt/collection/holders/holder.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_HOLDERS_HOLDER_H*/

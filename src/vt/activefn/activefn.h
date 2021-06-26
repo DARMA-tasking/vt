@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_FUNCTION
-#define INCLUDED_REGISTRY_FUNCTION
+#if !defined INCLUDED_VT_ACTIVEFN_ACTIVEFN_H
+#define INCLUDED_VT_ACTIVEFN_ACTIVEFN_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -119,4 +119,4 @@ using ActiveTypedRDMAPutFnType = void(
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_REGISTRY_FUNCTION*/
+#endif  /*INCLUDED_VT_ACTIVEFN_ACTIVEFN_H*/

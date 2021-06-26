@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_ACTION_COMMON_H
+#define INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_ACTION_COMMON_H
+
 #include <gtest/gtest.h>
 #include <random>
 #include <vector>
@@ -48,9 +51,6 @@
 #include "test_parallel_harness.h"
 #include "test_termination_channel_counting.h"
 #include "test_helpers.h"
-
-#if !defined INCLUDED_TERMINATION_ACTION_COMMON_H
-#define INCLUDED_TERMINATION_ACTION_COMMON_H
 
 using namespace vt::tests::unit;
 
@@ -145,4 +145,4 @@ inline void finalize(vt::EpochType const& epoch, int order);
 
 #include "test_termination_action_common.impl.h"
 
-#endif /*INCLUDED_TERMINATION_ACTION_COMMON_H*/
+#endif /*INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_ACTION_COMMON_H*/

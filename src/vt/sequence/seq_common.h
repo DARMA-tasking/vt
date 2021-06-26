@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_COMMON_H
-#define INCLUDED_SEQUENCE_SEQ_COMMON_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_COMMON_H
+#define INCLUDED_VT_SEQUENCE_SEQ_COMMON_H
 
 #include <cstdint>
 #include <functional>
@@ -117,4 +117,4 @@ using UserSeqFunWithIDType = seq::UserSeqFunWithIDType;
 
 } // end namespace vt
 
-#endif /* INCLUDED_SEQUENCE_SEQ_COMMON_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_COMMON_H*/

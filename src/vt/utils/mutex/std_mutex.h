@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_MUTEX_STD_MUTEX_H
-#define INCLUDED_UTILS_MUTEX_STD_MUTEX_H
+#if !defined INCLUDED_VT_UTILS_MUTEX_STD_MUTEX_H
+#define INCLUDED_VT_UTILS_MUTEX_STD_MUTEX_H
 
 #include "vt/config.h"
 
@@ -68,4 +68,4 @@ static_assert(
 
 #endif /*vt_check_enabled(stdthread)*/
 
-#endif /*INCLUDED_UTILS_MUTEX_STD_MUTEX_H*/
+#endif /*INCLUDED_VT_UTILS_MUTEX_STD_MUTEX_H*/

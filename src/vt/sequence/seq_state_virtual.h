@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_STATE_VIRTUAL_H
-#define INCLUDED_SEQUENCE_SEQ_STATE_VIRTUAL_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_STATE_VIRTUAL_H
+#define INCLUDED_VT_SEQUENCE_SEQ_STATE_VIRTUAL_H
 
 #include <list>
 #include <unordered_map>
@@ -101,4 +101,4 @@ typename SeqMsgStateVirtual<VcT, MsgT, f>::TaggedMsgContainerType
 
 }} //end namespace vt::seq
 
-#endif /* INCLUDED_SEQUENCE_SEQ_STATE_VIRTUAL_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_STATE_VIRTUAL_H*/

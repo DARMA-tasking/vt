@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H
-#define INCLUDED_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H
+#define INCLUDED_VT_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -108,4 +108,4 @@ bool const RunnableFunctor<AdapterT, RegT, InfoT, FnT, msg, Args...>::IsMsgType;
 
 #include "vt/registry/auto/functor/auto_registry_functor_impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_FUNCTOR_AUTO_REGISTRY_FUNCTOR_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EVENT_EVENT_H
-#define INCLUDED_EVENT_EVENT_H
+#if !defined INCLUDED_VT_EVENT_EVENT_H
+#define INCLUDED_VT_EVENT_EVENT_H
 
 #include "vt/config.h"
 #include "vt/runtime/component/component_pack.h"
@@ -234,4 +234,4 @@ extern event::AsyncEvent* theEvent();
 
 } //end namespace vt
 
-#endif /*INCLUDED_EVENT_EVENT_H*/
+#endif /*INCLUDED_VT_EVENT_EVENT_H*/

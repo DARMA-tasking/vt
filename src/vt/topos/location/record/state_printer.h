@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_RECORD_STATE_PRINTER_H
-#define INCLUDED_TOPOS_LOCATION_RECORD_STATE_PRINTER_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_PRINTER_H
+#define INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_PRINTER_H
 
 #include "vt/config.h"
 #include "vt/topos/location/record/state.h"
@@ -71,4 +71,4 @@ inline std::ostream& operator<<(std::ostream& os, eLocState const& state) {
 
 }}  // end namespace vt::location
 
-#endif /*INCLUDED_TOPOS_LOCATION_RECORD_STATE_PRINTER_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_RECORD_STATE_PRINTER_H*/

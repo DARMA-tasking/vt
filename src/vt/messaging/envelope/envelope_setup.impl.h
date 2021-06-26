@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope/envelope_setup.h"
@@ -110,4 +110,4 @@ inline void envelopeInitRecv(Env& env) {
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_SETUP_IMPL_H*/

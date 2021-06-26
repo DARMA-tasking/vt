@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_PROXY_BASE_COLLECTION_PROXY_H
-#define INCLUDED_VRT_PROXY_BASE_COLLECTION_PROXY_H
+#if !defined INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_PROXY_H
+#define INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_PROXY_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -77,4 +77,4 @@ protected:
 
 #include "vt/vrt/proxy/base_collection_proxy.impl.h"
 
-#endif /*INCLUDED_VRT_PROXY_BASE_COLLECTION_PROXY_H*/
+#endif /*INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_PROXY_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_PROXY_BASE_ELM_PROXY_H
-#define INCLUDED_VRT_PROXY_BASE_ELM_PROXY_H
+#if !defined INCLUDED_VT_VRT_PROXY_BASE_ELM_PROXY_H
+#define INCLUDED_VT_VRT_PROXY_BASE_ELM_PROXY_H
 
 #include "vt/config.h"
 
@@ -102,4 +102,4 @@ namespace std {
   };
 }
 
-#endif /*INCLUDED_VRT_PROXY_BASE_ELM_PROXY_H*/
+#endif /*INCLUDED_VT_VRT_PROXY_BASE_ELM_PROXY_H*/

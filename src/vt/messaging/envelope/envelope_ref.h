@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_REF_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_REF_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_REF_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_REF_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope/envelope_type.h"
@@ -76,4 +76,4 @@ inline RefType envelopeDeref(Env& env);
 
 #include "vt/messaging/envelope/envelope_ref.impl.h"
 
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_REF_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_REF_H*/

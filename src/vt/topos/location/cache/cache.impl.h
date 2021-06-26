@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_LOCATION_CACHE_CACHE_IMPL_H
-#define INCLUDED_TOPOS_LOCATION_CACHE_CACHE_IMPL_H
+#if !defined INCLUDED_VT_TOPOS_LOCATION_CACHE_CACHE_IMPL_H
+#define INCLUDED_VT_TOPOS_LOCATION_CACHE_CACHE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/topos/location/location_common.h"
@@ -152,4 +152,4 @@ void LocationCache<KeyT, ValueT>::printCache() const {
 
 }}  // end namespace vt::location
 
-#endif /*INCLUDED_TOPOS_LOCATION_CACHE_CACHE_IMPL_H*/
+#endif /*INCLUDED_VT_TOPOS_LOCATION_CACHE_CACHE_IMPL_H*/

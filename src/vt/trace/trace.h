@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_H
-#define INCLUDED_TRACE_TRACE_H
+#if !defined INCLUDED_VT_TRACE_TRACE_H
+#define INCLUDED_VT_TRACE_TRACE_H
 
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_containers.h"
@@ -411,4 +411,4 @@ private:
 
 }} //end namespace vt::trace
 
-#endif /*INCLUDED_TRACE_TRACE_H*/
+#endif /*INCLUDED_VT_TRACE_TRACE_H*/

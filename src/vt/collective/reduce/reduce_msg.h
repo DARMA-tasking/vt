@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTIVE_REDUCE_REDUCE_MSG_H
-#define INCLUDED_COLLECTIVE_REDUCE_REDUCE_MSG_H
+#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H
+#define INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H
 
 #include "vt/config.h"
 #include "vt/collective/reduce/reduce.fwd.h"
@@ -99,4 +99,4 @@ struct ReduceMsg : SerializeSupported<
 
 }}} /* end namespace vt::collective::reduce */
 
-#endif /*INCLUDED_COLLECTIVE_REDUCE_REDUCE_MSG_H*/
+#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_REDUCE_MSG_H*/

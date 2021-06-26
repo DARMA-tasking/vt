@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H
-#define INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -212,4 +212,4 @@ void Holder<ColT, IndexT>::applyListeners(
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_HOLDERS_HOLDER_IMPL_H*/

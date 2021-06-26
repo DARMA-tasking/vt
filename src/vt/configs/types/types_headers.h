@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TYPES_HEADERS
-#define INCLUDED_TYPES_HEADERS
+#if !defined INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H
+#define INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H
 
 // Include common types, their sizes, and sentinel values
 #include "vt/configs/types/types_type.h"
@@ -50,4 +50,4 @@
 #include "vt/configs/types/types_size.h"
 #include "vt/configs/types/types_sentinels.h"
 
-#endif  /*INCLUDED_TYPES_HEADERS*/
+#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H*/

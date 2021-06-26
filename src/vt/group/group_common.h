@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_GROUP_COMMON_H
-#define INCLUDED_GROUP_GROUP_COMMON_H
+#if !defined INCLUDED_VT_GROUP_GROUP_COMMON_H
+#define INCLUDED_VT_GROUP_GROUP_COMMON_H
 
 #include <cstdlib>
 
@@ -64,4 +64,4 @@ static struct GroupCollectiveLabelTagType { } GroupCollectiveLabelTag { };
 
 }} /* end namespace vt::group */
 
-#endif /*INCLUDED_GROUP_GROUP_COMMON_H*/
+#endif /*INCLUDED_VT_GROUP_GROUP_COMMON_H*/

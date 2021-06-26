@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_RDMA_TEST_RDMA_HANDLE_H
+#define INCLUDED_UNIT_RDMA_TEST_RDMA_HANDLE_H
+
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
@@ -275,3 +278,5 @@ TYPED_TEST_P(TestRDMAHandle, test_rdma_handle_5) {
 }
 
 }}} /* end namespace vt::tests::unit */
+
+#endif /*INCLUDED_UNIT_RDMA_TEST_RDMA_HANDLE_H*/

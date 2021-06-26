@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_ACTION_IMPL_H
-#define INCLUDED_SEQUENCE_SEQ_ACTION_IMPL_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_ACTION_IMPL_H
+#define INCLUDED_VT_SEQUENCE_SEQ_ACTION_IMPL_H
 
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
@@ -79,4 +79,4 @@ Action<MessageT>::generateCallable(MsgSharedPtr<MessageT> msg) const {
 
 }} //end namespace vt::seq
 
-#endif /* INCLUDED_SEQUENCE_SEQ_ACTION_IMPL_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_ACTION_IMPL_H*/

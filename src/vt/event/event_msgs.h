@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EVENT_EVENT_MSGS_H
-#define INCLUDED_EVENT_EVENT_MSGS_H
+#if !defined INCLUDED_VT_EVENT_EVENT_MSGS_H
+#define INCLUDED_VT_EVENT_EVENT_MSGS_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -76,4 +76,4 @@ extern HandlerType check_event_finished_han;
 
 } //end namespace vt
 
-#endif /*INCLUDED_EVENT_EVENT_MSGS_H*/
+#endif /*INCLUDED_VT_EVENT_EVENT_MSGS_H*/

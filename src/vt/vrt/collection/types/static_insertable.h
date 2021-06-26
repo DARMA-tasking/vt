@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H
-#define INCLUDED_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/types/base.h"
@@ -65,4 +65,4 @@ struct StaticInsertableCollectionBase :
 
 #include "vt/vrt/collection/types/static_insertable.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H*/

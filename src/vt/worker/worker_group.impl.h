@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_GROUP_IMPL_H
-#define INCLUDED_WORKER_WORKER_GROUP_IMPL_H
+#if !defined INCLUDED_VT_WORKER_WORKER_GROUP_IMPL_H
+#define INCLUDED_VT_WORKER_WORKER_GROUP_IMPL_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -207,4 +207,4 @@ void WorkerGroupAny<WorkerT>::joinWorkers() {
 
 }} /* end namespace vt::worker */
 
-#endif /*INCLUDED_WORKER_WORKER_GROUP_IMPL_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_GROUP_IMPL_H*/

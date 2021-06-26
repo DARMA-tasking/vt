@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_MAPPING_DENSE
-#define INCLUDED_TOPOS_MAPPING_DENSE
+#if !defined INCLUDED_VT_TOPOS_MAPPING_DENSE_DENSE_H
+#define INCLUDED_VT_TOPOS_MAPPING_DENSE_DENSE_H
 
 #include "vt/config.h"
 #include "vt/topos/mapping/mapping.h"
@@ -127,4 +127,4 @@ using dense3DBlkMapFn = Adapt<MapAdapter<i3D<T>>, dense3DBlockMap<T>>;
 
 #include "vt/topos/mapping/dense/dense.impl.h"
 
-#endif /*INCLUDED_TOPOS_MAPPING_DENSE*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_DENSE_DENSE_H*/

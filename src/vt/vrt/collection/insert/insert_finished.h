@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
-#define INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/reducable/reducable.h"
@@ -64,4 +64,4 @@ struct InsertFinished : BaseProxyT {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_INSERT_INSERT_FINISHED_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H*/

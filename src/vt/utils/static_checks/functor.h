@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_STATIC_CHECKS_FUNCTOR_H
-#define INCLUDED_UTILS_STATIC_CHECKS_FUNCTOR_H
+#if !defined INCLUDED_VT_UTILS_STATIC_CHECKS_FUNCTOR_H
+#define INCLUDED_VT_UTILS_STATIC_CHECKS_FUNCTOR_H
 
 #include "vt/config.h"
 
@@ -79,4 +79,4 @@ struct FunctorExtractor {
 
 }} /* end namespace vt::util */
 
-#endif /*INCLUDED_UTILS_STATIC_CHECKS_FUNCTOR_H*/
+#endif /*INCLUDED_VT_UTILS_STATIC_CHECKS_FUNCTOR_H*/

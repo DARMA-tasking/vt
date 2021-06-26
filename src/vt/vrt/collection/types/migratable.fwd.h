@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_FWD_H
-#define INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_FWD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATABLE_FWD_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATABLE_FWD_H
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
@@ -53,4 +53,4 @@ struct Migratable;
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_MIGRATABLE_FWD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_MIGRATABLE_FWD_H*/

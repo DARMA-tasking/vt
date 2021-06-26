@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_BITS_BITS_PACKER_IMPL_H
-#define INCLUDED_UTILS_BITS_BITS_PACKER_IMPL_H
+#if !defined INCLUDED_VT_UTILS_BITS_BITS_PACKER_IMPL_H
+#define INCLUDED_VT_UTILS_BITS_BITS_PACKER_IMPL_H
 
 #include "vt/config.h"
 
@@ -141,4 +141,4 @@ BitPacker::boolGetField(BitField const& field) {
 
 }} /* end namespace vt::utils */
 
-#endif /*INCLUDED_UTILS_BITS_BITS_PACKER_IMPL_H*/
+#endif /*INCLUDED_VT_UTILS_BITS_BITS_PACKER_IMPL_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERM_COMMON_H
-#define INCLUDED_TERMINATION_TERM_COMMON_H
+#if !defined INCLUDED_VT_TERMINATION_TERM_COMMON_H
+#define INCLUDED_VT_TERMINATION_TERM_COMMON_H
 
 #include "vt/config.h"
 #include "vt/termination/termination.fwd.h"
@@ -64,4 +64,4 @@ extern term::TerminationDetector* theTerm();
 
 } // end namespace vt
 
-#endif /*INCLUDED_TERMINATION_TERM_COMMON_H*/
+#endif /*INCLUDED_VT_TERMINATION_TERM_COMMON_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_TERM_MSGS_H
-#define INCLUDED_TERMINATION_TERM_MSGS_H
+#if !defined INCLUDED_VT_TERMINATION_TERM_MSGS_H
+#define INCLUDED_VT_TERMINATION_TERM_MSGS_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -106,4 +106,4 @@ struct BuildGraphMsg : vt::ShortMessage { };
 
 }} //end namespace vt::term
 
-#endif /*INCLUDED_TERMINATION_TERM_MSGS_H*/
+#endif /*INCLUDED_VT_TERMINATION_TERM_MSGS_H*/

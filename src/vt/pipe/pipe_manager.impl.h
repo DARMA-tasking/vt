@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_PIPE_PIPE_MANAGER_IMPL_H
+#define INCLUDED_VT_PIPE_PIPE_MANAGER_IMPL_H
+
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/pipe_manager.h"
@@ -176,3 +179,5 @@ void triggerCallbackMsgHan(MsgT* msg) {
 }
 
 }} /* end namespace vt::pipe */
+
+#endif /*INCLUDED_VT_PIPE_PIPE_MANAGER_IMPL_H*/

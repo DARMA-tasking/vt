@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_DESTROY_DESTROYABLE_H
-#define INCLUDED_VRT_COLLECTION_DESTROY_DESTROYABLE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_DESTROY_DESTROYABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_DESTROY_DESTROYABLE_H
 
 #include "vt/config.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
@@ -62,4 +62,4 @@ struct Destroyable : BaseProxyT {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_DESTROY_DESTROYABLE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_DESTROY_DESTROYABLE_H*/

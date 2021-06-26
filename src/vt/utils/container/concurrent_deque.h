@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_H
-#define INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_H
+#if !defined INCLUDED_VT_UTILS_CONTAINER_CONCURRENT_DEQUE_H
+#define INCLUDED_VT_UTILS_CONTAINER_CONCURRENT_DEQUE_H
 
 #include "vt/config.h"
 #include "vt/utils/mutex/mutex.h"
@@ -55,5 +55,5 @@ using ConcurrentDeque = ConcurrentDequeLocked<T>;
 
 }}} //end namespace vt::util::container
 
-#endif /*INCLUDED_UTILS_CONTAINER_CONCURRENT_DEQUE_H*/
+#endif /*INCLUDED_VT_UTILS_CONTAINER_CONCURRENT_DEQUE_H*/
 

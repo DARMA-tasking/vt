@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_MESSAGE_REFS_H
-#define INCLUDED_MESSAGING_MESSAGE_REFS_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_REFS_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_REFS_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope.h"
@@ -60,4 +60,4 @@ void messageDeref(MsgT* msg);
 
 #include "vt/messaging/message/refs.impl.h"
 
-#endif /*INCLUDED_MESSAGING_MESSAGE_REFS_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_REFS_H*/

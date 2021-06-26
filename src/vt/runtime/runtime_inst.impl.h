@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNTIME_INST_IMPL_H
-#define INCLUDED_RUNTIME_INST_IMPL_H
+#if !defined INCLUDED_VT_RUNTIME_RUNTIME_INST_IMPL_H
+#define INCLUDED_VT_RUNTIME_RUNTIME_INST_IMPL_H
 
 #include "vt/config.h"
 #include "vt/runtime/runtime_inst.h"
@@ -57,4 +57,4 @@ template <eRuntimeInstance instance>
 
 }} /* end namespace vt::runtime */
 
-#endif /*INCLUDED_RUNTIME_INST_IMPL_H*/
+#endif /*INCLUDED_VT_RUNTIME_RUNTIME_INST_IMPL_H*/

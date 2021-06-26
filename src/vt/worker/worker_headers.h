@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_HEADERS_H
-#define INCLUDED_WORKER_WORKER_HEADERS_H
+#if !defined INCLUDED_VT_WORKER_WORKER_HEADERS_H
+#define INCLUDED_VT_WORKER_WORKER_HEADERS_H
 
 #if vt_threading_enabled
 
@@ -84,4 +84,4 @@ extern worker::WorkerGroupType* theWorkerGrp();
 
 #endif /* vt_threading_enabled */
 
-#endif /*INCLUDED_WORKER_WORKER_HEADERS_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_HEADERS_H*/

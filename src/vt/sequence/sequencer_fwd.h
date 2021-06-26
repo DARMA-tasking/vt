@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQUENCER_FWD_H
-#define INCLUDED_SEQUENCE_SEQUENCER_FWD_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQUENCER_FWD_H
+#define INCLUDED_VT_SEQUENCE_SEQUENCER_FWD_H
 
 #include "vt/config.h"
 #include "vt/sequence/seq_common.h"
@@ -55,4 +55,4 @@ struct SequencerVirtual;
 
 }} // end namespace vt::seq
 
-#endif /* INCLUDED_SEQUENCE_SEQUENCER_FWD_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQUENCER_FWD_H*/

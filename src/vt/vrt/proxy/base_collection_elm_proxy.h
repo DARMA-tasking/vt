@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_H
-#define INCLUDED_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_H
+#if !defined INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_H
+#define INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_H
 
 #include "vt/config.h"
 #include "vt/vrt/proxy/base_elm_proxy.h"
@@ -75,4 +75,4 @@ protected:
 
 #include "vt/vrt/proxy/base_collection_elm_proxy.impl.h"
 
-#endif /*INCLUDED_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_H*/
+#endif /*INCLUDED_VT_VRT_PROXY_BASE_COLLECTION_ELM_PROXY_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_COLLECTION_FWD_H
-#define INCLUDED_RDMA_RDMA_COLLECTION_FWD_H
+#if !defined INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_FWD_H
+#define INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_FWD_H
 
 namespace vt { namespace rdma {
 
@@ -50,4 +50,4 @@ struct RDMACollectionManager;
 
 }} /* end namespace vt::rdma */
 
-#endif /*INCLUDED_RDMA_RDMA_COLLECTION_FWD_H*/
+#endif /*INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_FWD_H*/

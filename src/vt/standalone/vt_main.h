@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_STANDALONE_VT_MAIN_H
-#define INCLUDED_STANDALONE_VT_MAIN_H
+#if !defined INCLUDED_VT_STANDALONE_VT_MAIN_H
+#define INCLUDED_VT_STANDALONE_VT_MAIN_H
 
 #include "vt/config.h"
 #include "vt/context/context.h"
@@ -108,4 +108,4 @@ int vt_main(
     return vt::standalone::vt_main<MAIN_VT_TYPE>(argc, argv);  \
   }
 
-#endif /*INCLUDED_STANDALONE_VT_MAIN_H*/
+#endif /*INCLUDED_VT_STANDALONE_VT_MAIN_H*/

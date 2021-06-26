@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_WORKER_WORKER_COMMON_H
-#define INCLUDED_WORKER_WORKER_COMMON_H
+#if !defined INCLUDED_VT_WORKER_WORKER_COMMON_H
+#define INCLUDED_VT_WORKER_WORKER_COMMON_H
 
 #include "vt/config.h"
 
@@ -76,4 +76,4 @@ using WorkerFinishedFnType = std::function<void(WorkerIDType, WorkUnitCountType)
 
 }} /* end namespace vt::worker */
 
-#endif /*INCLUDED_WORKER_WORKER_COMMON_H*/
+#endif /*INCLUDED_VT_WORKER_WORKER_COMMON_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H
-#define INCLUDED_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H
+#define INCLUDED_VT_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -60,4 +60,4 @@ AutoHandlerType makeAutoIndex();
 
 #include "vt/registry/auto/index/auto_registry_index.impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_INDEX_AUTO_REGISTRY_INDEX_H*/

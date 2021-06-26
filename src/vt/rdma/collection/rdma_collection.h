@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_COLLECTION_H
-#define INCLUDED_RDMA_RDMA_COLLECTION_H
+#if !defined INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_H
+#define INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_H
 
 #include "vt/configs/types/types_rdma.h"
 #include "vt/rdma/collection/rdma_collection_fwd.h"
@@ -82,4 +82,4 @@ struct RDMACollectionManager {
 
 }} /* end namespace vt::rdma */
 
-#endif /*INCLUDED_RDMA_RDMA_COLLECTION_H*/
+#endif /*INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_H*/

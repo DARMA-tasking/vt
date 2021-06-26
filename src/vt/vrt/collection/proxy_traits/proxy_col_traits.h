@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
-#define INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
+#define INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/destroy/destroyable.h"
@@ -86,4 +86,4 @@ struct ProxyCollectionTraits : col_proxy::Chain1<ColT,IndexT> {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H
-#define INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H
+#if !defined INCLUDED_VT_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H
+#define INCLUDED_VT_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -166,4 +166,4 @@ void RemoteContainer<MsgT,TupleT>::serialize(SerializerT& s) {
 
 }}} /* end namespace vt::pipe::interface */
 
-#endif /*INCLUDED_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H*/
+#endif /*INCLUDED_VT_PIPE_INTERFACE_REMOTE_CONTAINER_IMPL_H*/

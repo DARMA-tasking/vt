@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_TLS_OMP_TLS_H
-#define INCLUDED_UTILS_TLS_OMP_TLS_H
+#if !defined INCLUDED_VT_UTILS_TLS_OMP_TLS_H
+#define INCLUDED_VT_UTILS_TLS_OMP_TLS_H
 
 #include "vt/config.h"
 
@@ -96,4 +96,4 @@ private:
 }}} /* end namespace vt::util::tls */
 
 #endif /*vt_check_enabled(openmp)*/
-#endif /*INCLUDED_UTILS_TLS_OMP_TLS_H*/
+#endif /*INCLUDED_VT_UTILS_TLS_OMP_TLS_H*/

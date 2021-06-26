@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_ERROR_H
-#define INCLUDED_CONFIGS_ERROR_ERROR_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_ERROR_H
+#define INCLUDED_VT_CONFIGS_ERROR_ERROR_H
 
 #include "vt/configs/types/types_headers.h"
 #include "vt/configs/debug/debug_config.h"
@@ -86,4 +86,4 @@ displayLoc(
 
 #include "vt/configs/error/error.impl.h"
 
-#endif /*INCLUDED_CONFIGS_ERROR_ERROR_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_ERROR_H*/

@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_NODE_H
-#define INCLUDED_SEQUENCE_SEQ_NODE_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_NODE_H
+#define INCLUDED_VT_SEQUENCE_SEQ_NODE_H
 
 #include <list>
 #include <memory>
@@ -150,4 +150,4 @@ private:
 
 #include "vt/sequence/seq_node.impl.h"
 
-#endif /* INCLUDED_SEQUENCE_SEQ_NODE_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_NODE_H*/

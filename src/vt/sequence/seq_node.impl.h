@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_NODE_IMPL_H
-#define INCLUDED_SEQUENCE_SEQ_NODE_IMPL_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_NODE_IMPL_H
+#define INCLUDED_VT_SEQUENCE_SEQ_NODE_IMPL_H
 
 #include <list>
 #include <memory>
@@ -93,4 +93,4 @@ SeqNode::SeqNode(SeqType const& id, SeqNodeLeafTag, FnT&&... fns)
 
 }} //end namespace vt::seq
 
-#endif /* INCLUDED_SEQUENCE_SEQ_NODE_IMPL_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_NODE_IMPL_H*/

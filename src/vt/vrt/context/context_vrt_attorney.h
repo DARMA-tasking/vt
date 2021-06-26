@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_ATTORNEY_H
-#define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_ATTORNEY_H
+#if !defined INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_ATTORNEY_H
+#define INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_ATTORNEY_H
 
 #include "vt/config.h"
 #include "vt/vrt/context/context_vrt.h"
@@ -62,4 +62,4 @@ private:
 
 }} /* end namespace vt::vrt */
 
-#endif /*INCLUDED_VRT_CONTEXT_CONTEXT_VRT_ATTORNEY_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_ATTORNEY_H*/

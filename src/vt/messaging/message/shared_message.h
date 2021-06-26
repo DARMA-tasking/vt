@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H
-#define INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_SHARED_MESSAGE_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_SHARED_MESSAGE_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope.h"
@@ -129,4 +129,4 @@ MsgPtr<MsgT> makeMessageSz(std::size_t size, Args&&... args);
 
 #include "vt/messaging/message/shared_message.impl.h"
 
-#endif /*INCLUDED_MESSAGING_MESSAGE_SHARED_MESSAGE_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_SHARED_MESSAGE_H*/

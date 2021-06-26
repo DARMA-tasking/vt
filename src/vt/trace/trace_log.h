@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_LOG_H
-#define INCLUDED_TRACE_TRACE_LOG_H
+#if !defined INCLUDED_VT_TRACE_TRACE_LOG_H
+#define INCLUDED_VT_TRACE_TRACE_LOG_H
 
 #include "vt/config.h"
 #include "vt/trace/trace_common.h"
@@ -369,4 +369,4 @@ private:
 
 }} //end namespace vt::trace
 
-#endif /*INCLUDED_TRACE_TRACE_LOG_H*/
+#endif /*INCLUDED_VT_TRACE_TRACE_LOG_H*/

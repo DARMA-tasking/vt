@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_H
-#define INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_H
+#define INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_H
 
 #include "vt/config.h"
 #include "vt/pipe/callback/handler_send/callback_send_tl.h"
@@ -272,4 +272,4 @@ struct GeneralCallback {
 
 }}}} /* end namespace vt::pipe::callback::cbunion */
 
-#endif /*INCLUDED_PIPE_CALLBACK_CB_UNION_CB_RAW_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_CB_UNION_CB_RAW_H*/

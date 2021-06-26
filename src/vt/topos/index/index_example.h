@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_INDEX_EXAMPLE
-#define INCLUDED_TOPOS_INDEX_EXAMPLE
+#if !defined INCLUDED_VT_TOPOS_INDEX_INDEX_EXAMPLE_H
+#define INCLUDED_VT_TOPOS_INDEX_INDEX_EXAMPLE_H
 
 #include "vt/config.h"
 #include "vt/serialization/traits/byte_copy_trait.h"
@@ -111,4 +111,4 @@ static_assert(
 
 }} // end namespace vt::index
 
-#endif  /*INCLUDED_TOPOS_INDEX_EXAMPLE*/
+#endif  /*INCLUDED_VT_TOPOS_INDEX_INDEX_EXAMPLE_H*/

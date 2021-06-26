@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_COLLECTION_INFO_H
-#define INCLUDED_VRT_COLLECTION_COLLECTION_INFO_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_COLLECTION_INFO_H
+#define INCLUDED_VT_VRT_COLLECTION_COLLECTION_INFO_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/manager.fwd.h"
@@ -86,4 +86,4 @@ private:
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_COLLECTION_INFO_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_COLLECTION_INFO_H*/
