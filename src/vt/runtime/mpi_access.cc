@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               mpi_access.cc
+//                                mpi_access.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

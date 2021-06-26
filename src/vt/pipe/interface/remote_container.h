@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            remote_container.h
+//                              remote_container.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

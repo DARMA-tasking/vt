@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                         test_sequencer.extended.cc
+//                          test_sequencer.extended.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

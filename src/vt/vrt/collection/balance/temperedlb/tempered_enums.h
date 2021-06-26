@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              tempered_enums.h
+//                               tempered_enums.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              invokable.impl.h
+//                               invokable.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

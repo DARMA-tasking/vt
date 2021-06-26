@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              mpi_singleton.h
+//                               mpi_singleton.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

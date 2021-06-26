@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                trace_lite.h
+//                                 trace_lite.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

@@ -5,7 +5,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          generate_mpi_wrapper.pl
+//                           generate_mpi_wrappers.pl
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

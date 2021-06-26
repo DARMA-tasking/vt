@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 comm_overhead.h
+//                               comm_overhead.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

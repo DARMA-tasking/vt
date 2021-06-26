@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                     test_model_multiple_phases.nompi
+//                     test_model_multiple_phases.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 composed_model.h
+//                               composed_model.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

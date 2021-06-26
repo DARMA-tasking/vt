@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            message_serialize.h
+//                             message_serialize.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

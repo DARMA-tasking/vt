@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 select_subphases.h
+//                              select_subphases.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

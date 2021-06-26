@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          lb_args_enum_converter.h
+//                           lb_args_enum_converter.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC

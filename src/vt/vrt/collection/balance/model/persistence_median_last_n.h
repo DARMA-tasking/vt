@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                          persistence_median_last_n.h
+//                         persistence_median_last_n.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
