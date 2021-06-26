@@ -5,7 +5,7 @@ use File::Find::Rule;
 use strict;
 use warnings;
 
-my ($path, $template, $extension) = ($ARGV[0], "license-template", "*.*");
+my ($path, $template, $extension) = ($ARGV[0], "license-template", ["*.h", "*.cc"]);
 
 $template  = $ARGV[1] if (@ARGV > 1);
 $extension = $ARGV[2] if (@ARGV > 2);
