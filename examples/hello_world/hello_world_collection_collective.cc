@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                       simple_collection_collective.cc
+//                     hello_world_collection_collective.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
