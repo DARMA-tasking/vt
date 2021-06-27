@@ -14,20 +14,9 @@ jobs:
         uses: actions/setup-python@v2
         with:
             python-version: '3.7'
+
       - name: Install checkguard
         run: pip install guardonce
 
       - name: Check that include guards are properly named
-        run: |
-          wrong_files=""
-
-          for sub_dir in "src" "tests/unit" "tests/perf"
-          do
-            wrong_files+=$(checkguard -r "$sub_dir" -p "path -1 | prepend INCLUDED_ | upper")
-          done
-
-          if [[ $wrong_files ]]; then
-            echo "Files with wrong header guard:"
-            printf "%s\n" "$wrong_files"
-            exit 1
-          fi
+        run: ./scripts/check_guards.sh $(pwd)
