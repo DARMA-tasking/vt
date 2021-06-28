@@ -48,6 +48,9 @@
 #include "data_message.h"
 
 #include "vt/vrt/collection/manager.h"
+#include "vt/utils/json/json_reader.h"
+
+#include <nlohmann/json.hpp>
 
 #include <dirent.h>
 
@@ -150,7 +153,7 @@ struct TestParallelHarnessWithStatsDumping : TestParallelHarnessParam<int> {
   virtual void addAdditionalArgs() override {
     static char vt_lb_stats[]{"--vt_lb_stats"};
     static char vt_lb_stats_dir[]{"--vt_lb_stats_dir=test_stats_dir"};
-    static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile"};
+    static char vt_lb_stats_file[]{"--vt_lb_stats_file=test_stats_outfile.%p.json"};
 
     addArgs(vt_lb_stats, vt_lb_stats_dir, vt_lb_stats_file);
   }
@@ -193,15 +196,19 @@ TEST_P(TestNodeStatsDumper, test_node_stats_dumping_with_interval) {
     vt::thePhase()->nextPhaseCollective();
   }
 
-  auto const file_name = fmt::format(
-    "{}.{}.out", theConfig()->vt_lb_stats_file, vt::theContext()->getNode()
-  );
-  auto const file_path =
-    fmt::format("{}/{}", theConfig()->vt_lb_stats_dir, file_name);
-  auto const readPhases = getPhasesFromStatsFile(file_path.c_str());
-  EXPECT_EQ(readPhases.size(), num_phases);
+  // Finalize to get data output
+  theNodeStats()->finalize();
 
-  vt::theCollective()->barrier();
+  using vt::util::json::Reader;
+
+  vt::runInEpochCollective([=]{
+    Reader r(theConfig()->getLBStatsFileOut());
+    auto json_ptr = r.readFile();
+    auto& json = *json_ptr;
+
+    EXPECT_TRUE(json.find("phases") != json.end());
+    EXPECT_EQ(json["phases"].size(), num_phases);
+  });
 
   if (vt::theContext()->getNode() == 0) {
     removeStatsOutputDir(vt::theConfig()->vt_lb_stats_dir.c_str());
@@ -253,25 +260,6 @@ void removeStatsOutputDir(char const* path) {
 
     rmdir(path);
   }
-}
-
-std::map<int, int> getPhasesFromStatsFile(const char* file_path) {
-  std::ifstream stats_file{file_path};
-  std::string line;
-
-  std::map<int, int> phases;
-
-  while (std::getline(stats_file, line)) {
-    std::istringstream iss{line};
-    int phase_num;
-    if (!(iss >> phase_num)) {
-      break;
-    }
-
-    phases[phase_num]++;
-  }
-
-  return phases;
 }
 
 auto const intervals = ::testing::Values(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);

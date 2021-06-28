@@ -92,8 +92,13 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   auto const& comm = stats.getComm(cur_phase);
   auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
 
+  std::vector<uint64_t> idx;
+  for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
+    idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
+  }
+
   theNodeStats()->addNodeStats(
-    col, cur_phase, total_load, subphase_loads, comm, subphase_comm
+    col, cur_phase, total_load, subphase_loads, comm, subphase_comm, idx
   );
 
   auto model = theLBManager()->getLoadModel();

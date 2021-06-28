@@ -48,8 +48,14 @@
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/objgroup/manager.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
+#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/utils/json/json_reader.h"
+#include "vt/utils/json/decompression_input_container.h"
+#include "vt/utils/json/input_iterator.h"
 
 #include <cinttypes>
+
+#include <nlohmann/json.hpp>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -67,11 +73,7 @@ void StatsRestartReader::setProxy(
 }
 
 void StatsRestartReader::startup() {
-  auto const node = theContext()->getNode();
-  std::string const& base_file = theConfig()->vt_lb_stats_file_in;
-  std::string const& dir = theConfig()->vt_lb_stats_dir_in;
-  auto const file = fmt::format("{}.{}.out", base_file, node);
-  auto const file_name = fmt::format("{}/{}", dir, file);
+  auto const file_name = theConfig()->getLBStatsFileIn();
   readStats(file_name);
 }
 
@@ -100,17 +102,50 @@ StatsRestartReader::getMigrationList() const {
   return proc_move_list_;
 }
 
-void StatsRestartReader::readStats(std::string const& fileName) {
+std::deque<std::set<ElementIDType>> StatsRestartReader::readIntoElementHistory(
+  StatsData const& sd
+) {
+  std::deque<std::set<ElementIDType>> element_history;
+  for (PhaseType phase = 0; phase < sd.node_data_.size(); phase++) {
+    std::set<ElementIDType> buffer;
+    for (auto const& obj : sd.node_data_.at(phase)) {
+      buffer.insert(obj.first.id);
+    }
+    element_history.emplace_back(std::move(buffer));
+  }
+  return element_history;
+}
 
+void StatsRestartReader::readStatsFromStream(std::stringstream stream) {
+  using vt::util::json::DecompressionInputContainer;
+  using vt::vrt::collection::balance::StatsData;
+  using json = nlohmann::json;
+
+  auto c = DecompressionInputContainer(
+    DecompressionInputContainer::AnyStreamTag{}, std::move(stream)
+  );
+  json j = json::parse(c);
+  auto sd = StatsData(j);
+
+  auto element_history = readIntoElementHistory(sd);
+  constructMoveList(std::move(element_history));
+}
+
+void StatsRestartReader::readStats(std::string const& fileName) {
   // Read the input files
-  std::deque<std::set<ElementIDType>> elements_history;
-  inputStatsFile(fileName, elements_history);
-  if (elements_history.empty()) {
+  auto elements_history = inputStatsFile(fileName);
+  constructMoveList(std::move(elements_history));
+}
+
+void StatsRestartReader::constructMoveList(
+  std::deque<std::set<ElementIDType>> element_history
+) {
+  if (element_history.empty()) {
     vtWarn("No element history provided");
     return;
   }
 
-  auto const num_iters = elements_history.size() - 1;
+  auto const num_iters = element_history.size() - 1;
   proc_move_list_.resize(num_iters);
   proc_phase_runs_LB_.resize(num_iters, true);
 
@@ -120,60 +155,19 @@ void StatsRestartReader::readStats(std::string const& fileName) {
   }
 
   // Communicate the migration information
-  createMigrationInfo(elements_history);
+  createMigrationInfo(element_history);
 }
 
-void StatsRestartReader::inputStatsFile(
-  std::string const& fileName,
-  std::deque<std::set<ElementIDType>>& element_history
-) {
-  std::FILE *pFile = std::fopen(fileName.c_str(), "r");
-  if (pFile == nullptr) {
-    vtAssert(pFile, "File opening failed");
-  }
+std::deque<std::set<ElementIDType>>
+StatsRestartReader::inputStatsFile(std::string const& fileName) {
+  using vt::util::json::Reader;
+  using vt::vrt::collection::balance::StatsData;
 
-  std::set<ElementIDType> buffer;
+  Reader r{fileName};
+  auto json = r.readFile();
+  auto sd = StatsData(*json);
 
-  // Load: Format of a line :size_t, ElementIDType, TimeType
-  size_t phaseID = 0, prevPhaseID = 0;
-  ElementIDType elmID;
-  TimeType tval;
-  CommBytesType d_buffer;
-  using vtCommType = typename std::underlying_type<CommCategory>::type;
-  vtCommType typeID;
-  char separator;
-  fpos_t pos;
-  bool finished = false;
-  while (!finished) {
-    if (fscanf(pFile, "%zu %c %" PRIu64 " %c %lf",
-               &phaseID, &separator, &elmID, &separator, &tval) > 0) {
-      fgetpos(pFile, &pos);
-      if (fscanf(pFile, "%c", &separator)) {
-        if (separator == ',') {
-          // COM detected, read the end of line and do nothing else
-          int res = fscanf (pFile, "%lf %c %hhi", &d_buffer, &separator, &typeID);
-          vtAssertExpr(res == 3);
-        } else {
-          // Load detected, create the new element
-          fsetpos (pFile,&pos);
-          if (prevPhaseID != phaseID) {
-            prevPhaseID = phaseID;
-            element_history.push_back(buffer);
-            buffer.clear();
-          }
-          buffer.insert(elmID);
-        }
-      }
-    } else {
-      finished = true;
-    }
-  }
-
-  if (!buffer.empty()) {
-    element_history.push_back(buffer);
-  }
-
-  std::fclose(pFile);
+  return readIntoElementHistory(sd);
 }
 
 void StatsRestartReader::createMigrationInfo(

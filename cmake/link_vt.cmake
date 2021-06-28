@@ -32,6 +32,8 @@ function(link_target_with_vt)
     LINK_DL
     LINK_ZOLTAN
     LINK_FORT
+    LINK_JSON
+    LINK_BROTLI
   )
   set(
     multiValueArg
@@ -47,6 +49,18 @@ function(link_target_with_vt)
     message(STATUS "link_target_with_vt(..): argc=${ARGC}")
     message(STATUS "link_target_with_vt: target=${ARG_TARGET}")
     message(STATUS "link_target_with_vt: default link=${ARG_DEFAULT_LINK_SET}")
+  endif()
+
+  if (NOT DEFINED ARG_LINK_JSON AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_JSON)
+    target_link_libraries(
+      ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${JSON_LIBRARY}
+    )
+  endif()
+
+  if (NOT DEFINED ARG_LINK_BROTLI AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_BROTLI)
+    target_link_libraries(
+      ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${BROTLI_LIBRARY}
+    )
   endif()
 
   if (NOT DEFINED ARG_LINK_FORT AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_FORT)

@@ -242,6 +242,12 @@ void Runtime::pauseForDebugger() {
 }
 
 /*static*/ void Runtime::handleSignalFailure() {
+  // Tell all components there has been a fatal error
+  if (rt->p_) {
+    rt->p_->foreach([](component::BaseComponent* base) {
+      base->fatalError();
+    });
+  }
   // Try to flush out all logs before dying
 # if vt_check_enabled(trace_enabled)
   if (vt::theTrace()) {

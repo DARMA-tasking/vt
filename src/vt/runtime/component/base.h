@@ -93,6 +93,11 @@ struct BaseComponent : Diagnostic, Bufferable, Progressable {
    */
   virtual void startup() = 0;
 
+  /**
+   * \internal \brief Invoked if an fatal error occurs
+   */
+  virtual void fatalError() {}
+
   virtual ~BaseComponent() { }
 
   friend struct ComponentPack;

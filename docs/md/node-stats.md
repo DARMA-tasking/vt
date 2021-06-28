@@ -29,23 +29,161 @@ the statistics and mapping.
 
 \subsection stats-file-format File Format
 
-Each line in the file will one of two formats. The first line is a computation
-time line for each phase, that breaks time down into subphases:
+The VOM files are output in JSON format, either compressed with brotli
+compression (default on) or pure JSON if the argument `--vt_lb_stats_compress`
+is set to `false`.
 
-\code
-<phase>, <object-id>, <time-in-seconds> <#-of-subphases> '[' [<subphase-time-1>] ... [<subphase-time-N>] ']'
+The JSON files contain an array of `phases` that have been captured by \vt and
+output to the file. Each phase has an `id` indicating which phase it was while
+the application was running. Each phase also has an array of `tasks` that
+represent work that was done during that phase. Each task has a `time`,
+`resource`, `node`, `entity`, and optionally a list of `subphases`. The `entity`
+contains information about the task that performed this work. If that `entity`
+is a virtual collection object, it will specify the unique `id` for the object,
+and optionally the `index`, `home`, and `collection_id` for that object.
+
+\code{.json}
+{
+    "phases": [
+        {
+            "id": 0,
+            "tasks": [
+                {
+                    "entity": {
+                        "collection_id": 7,
+                        "home": 0,
+                        "id": 12884901888,
+                        "index": [
+                            3
+                        ],
+                        "type": "object"
+                    },
+                    "node": 0,
+                    "resource": "cpu",
+                    "subphases": [
+                        {
+                            "id": 0,
+                            "time": 0.014743804931640625
+                        }
+                    ],
+                    "time": 0.014743804931640625
+                },
+                {
+                    "entity": {
+                        "collection_id": 7,
+                        "home": 0,
+                        "id": 4294967296,
+                        "index": [
+                            1
+                        ],
+                        "type": "object"
+                    },
+                    "node": 0,
+                    "resource": "cpu",
+                    "subphases": [
+                        {
+                            "id": 0,
+                            "time": 0.013672113418579102
+                        }
+                    ],
+                    "time": 0.013672113418579102
+                }
+            ]
+        },
+        {
+            "id": 1,
+            "tasks": [
+                {
+                    "entity": {
+                        "collection_id": 7,
+                        "home": 0,
+                        "id": 12884901888,
+                        "index": [
+                            3
+                        ],
+                        "type": "object"
+                    },
+                    "node": 0,
+                    "resource": "cpu",
+                    "subphases": [
+                        {
+                            "id": 0,
+                            "time": 0.014104127883911133
+                        }
+                    ],
+                    "time": 0.014104127883911133
+                }
+            ]
+        }
+    ]
+}
 \endcode
 
-The second line format is a communication line:
+Each phase in the file may also have a `communications` array that specify any
+communication between tasks that occurred during the phase. Each communication
+has `type`, which is described below in the following table. Additionally, it
+specifies the `bytes`, number of `messages`, and the two entities that were
+involved in the operator as `to` and `from`. The entities may be of different
+types, like an `object` or `node` depending on the type of communication.
 
-\code
-<phase>, <object-id1-to/recv>, <object-id2-from/send>, <num-bytes>, <comm-type={1..6}>
+\code{.json}
+{
+    "phases": [
+        {
+            "communications": [
+                {
+                    "bytes": 262.0,
+                    "from": {
+                        "home": 1,
+                        "id": 1,
+                        "type": "object"
+                    },
+                    "messages": 1,
+                    "to": {
+                        "home": 0,
+                        "id": 4294967296,
+                        "type": "object"
+                    },
+                    "type": "SendRecv"
+                },
+                {
+                    "bytes": 96.0,
+                    "from": {
+                        "home": 0,
+                        "id": 4294967296,
+                        "type": "object"
+                    },
+                    "messages": 1,
+                    "to": {
+                        "id": 1,
+                        "type": "node"
+                    },
+                    "type": "CollectionToNode"
+                },
+                {
+                    "bytes": 259.0,
+                    "from": {
+                        "id": 0,
+                        "type": "node"
+                    },
+                    "messages": 1,
+                    "to": {
+                        "home": 0,
+                        "id": 0,
+                        "type": "object"
+                    },
+                    "type": "NodeToCollection"
+                }
+            ],
+            "id": 0
+        }
+    ]
+}
 \endcode
 
 
-Where `<comm-type>` is the type of communication occurred. The type of
-communication lines up the enum `vt::vrt::collection::balance::CommCategory` in
-the code.
+The type of communication lines up with the enum
+`vt::vrt::collection::balance::CommCategory` in the code.
 
 | Value | Enum entry | Description |
 | ----- | ---------- | ----------- |

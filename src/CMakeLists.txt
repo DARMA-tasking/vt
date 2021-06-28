@@ -95,7 +95,7 @@ set(
       serialization/sizing
     utils/demangle utils/container utils/bits utils/mutex
     utils/hash utils/atomic utils/tls utils/static_checks utils/string
-    utils/memory utils/mpi_limits
+    utils/memory utils/mpi_limits utils/compress utils/json
     registry/auto
       registry/auto/functor registry/auto/map registry/auto/collection
       registry/auto/vc registry/auto/rdma registry/auto/index
@@ -306,6 +306,9 @@ install(
 set(FMT_LIBRARY_EXPORT ${FMT_LIBRARY})
 install(TARGETS ${FMT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 
+install(TARGETS ${JSON_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+install(TARGETS ${BROTLI_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
+
 if (vt_mimalloc_enabled)
   set(MIMALLOC_LIBRARY_EXPORT ${MIMALLOC_LIBRARY})
 endif()
@@ -338,6 +341,8 @@ export(
                             ${FMT_LIBRARY_EXPORT}
                             ${CHEKPOINT_EXPORT}
                             ${DETECTOR_EXPORT}
+                            ${JSON_LIBRARY}
+                            ${BROTLI_LIBRARY}
   FILE                      "vtTargets.cmake"
   NAMESPACE                 vt::runtime::
 )
