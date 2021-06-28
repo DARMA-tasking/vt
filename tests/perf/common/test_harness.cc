@@ -254,7 +254,7 @@ std::string PerfTestHarness::OutputMemoryUse() const {
 }
 
 std::string PerfTestHarness::OutputTimeResults() {
-  std::string file_content = "name,node,mean\n";
+  std::string file_content = "name,node,mean,stdev\n";
 
   auto HandleTestResults =
     [&file_content]
@@ -265,7 +265,10 @@ std::string PerfTestHarness::OutputTimeResults() {
         auto const node = per_node_result.first;
         auto& timings = per_node_result.second;
 
-        file_content.append(fmt::format("{},{},{:.3f}\n", name, node, timings.mean_));
+        file_content.append(fmt::format(
+          "{},{},{:.3f},{:.3f}\n", name, node, timings.mean_,
+          timings.std_dev_)
+        );
 
         fmt::print(
           "{} Results for {} (avg: {} stdev: {} min: {} max: {})\n",
