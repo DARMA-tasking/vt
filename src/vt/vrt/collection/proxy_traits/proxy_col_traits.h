@@ -5,7 +5,7 @@
 //                              proxy_col_traits.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
-#define INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
+#define INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/destroy/destroyable.h"
@@ -86,4 +86,4 @@ struct ProxyCollectionTraits : col_proxy::Chain1<ColT,IndexT> {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PROXY_TRAITS_PROXY_COL_TRAITS_H*/

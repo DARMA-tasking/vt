@@ -5,7 +5,7 @@
 //                                 null_mutex.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_MUTEX_NULL_MUTEX_H
-#define INCLUDED_UTILS_MUTEX_NULL_MUTEX_H
+#if !defined INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H
+#define INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H
 
 #include "vt/config.h"
 
@@ -61,4 +61,4 @@ struct NullMutex {
 
 }}} /* end namespace vt::util::mutex */
 
-#endif /*INCLUDED_UTILS_MUTEX_NULL_MUTEX_H*/
+#endif /*INCLUDED_VT_UTILS_MUTEX_NULL_MUTEX_H*/

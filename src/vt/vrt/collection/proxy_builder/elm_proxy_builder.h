@@ -5,7 +5,7 @@
 //                             elm_proxy_builder.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H
-#define INCLUDED_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H
+#define INCLUDED_VT_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H
 
 #include "vt/config.h"
 #include "vt/utils/bits/bits_common.h"
@@ -68,4 +68,4 @@ struct VirtualElemProxyBuilder {
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PROXY_BUILDER_ELM_PROXY_BUILDER_H*/

@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                  test_termination_action_callable.extended.cc
+//                 test_termination_action_callable.extended.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -43,8 +43,8 @@
 
 #include "test_termination_action_common.h"
 
-#if !defined INCLUDED_TERMINATION_ACTION_CALLABLE_H
-#define INCLUDED_TERMINATION_ACTION_CALLABLE_H
+#if !defined INCLUDED_VT_TERMINATION_ACTION_CALLABLE_H
+#define INCLUDED_VT_TERMINATION_ACTION_CALLABLE_H
 
 namespace vt { namespace tests { namespace unit { namespace channel {
 
@@ -115,4 +115,4 @@ TEST_F(TestTermCallable, test_add_action_unique) /*NOLINT*/{
 
 }}} // namespace vt::tests::unit::action
 
-#endif /*INCLUDED_TERMINATION_ACTION_CALLABLE_H*/
+#endif /*INCLUDED_VT_TERMINATION_ACTION_CALLABLE_H*/

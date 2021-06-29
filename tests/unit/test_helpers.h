@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               test_helpers.h
+//                                test_helpers.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TEST_HELPERS_H
-#define INCLUDED_TEST_HELPERS_H
+#if !defined INCLUDED_UNIT_TEST_HELPERS_H
+#define INCLUDED_UNIT_TEST_HELPERS_H
 
 #include "mpi_singleton.h"
 #include "vt/context/context.h"
@@ -137,4 +137,4 @@ min_req_num_nodes, max_req_num_nodes)              \
 
 }}} // namespace vt::tests::unit
 
-#endif /* INCLUDED_TEST_HELPERS_H */
+#endif /* INCLUDED_UNIT_TEST_HELPERS_H */

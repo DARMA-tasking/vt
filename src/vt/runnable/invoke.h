@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 invoke.h
+//                                   invoke.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNNABLE_INVOKE_H
-#define INCLUDED_RUNNABLE_INVOKE_H
+#if !defined INCLUDED_VT_RUNNABLE_INVOKE_H
+#define INCLUDED_VT_RUNNABLE_INVOKE_H
 
 #include "vt/config.h"
 #include "vt/utils/demangle/demangle.h"
@@ -223,4 +223,4 @@ util::IsVoidReturn<Callable> invoke(Args&&... args) {
 
 }} // namespace vt::runnable
 
-#endif /*INCLUDED_RUNNABLE_INVOKE_H*/
+#endif /*INCLUDED_VT_RUNNABLE_INVOKE_H*/

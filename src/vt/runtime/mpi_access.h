@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                mpi_access.h
+//                                 mpi_access.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RUNTIME_MPI_ACCESS_H
-#define INCLUDED_RUNTIME_MPI_ACCESS_H
+#if !defined INCLUDED_VT_RUNTIME_MPI_ACCESS_H
+#define INCLUDED_VT_RUNTIME_MPI_ACCESS_H
 
 #include "vt/configs/features/features_enableif.h"
 
@@ -97,4 +97,4 @@ namespace vt { namespace runtime {
 }} // end namespace vt::runtime
 #endif // vt_check_enabled(mpi_access_guards)
 
-#endif /* INCLUDED_RUNTIME_MPI_ACCESS_H */
+#endif /* INCLUDED_VT_RUNTIME_MPI_ACCESS_H */

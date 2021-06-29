@@ -5,7 +5,7 @@
 //                             callback_send.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_IMPL_H
-#define INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_IMPL_H
+#if !defined INCLUDED_VT_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_IMPL_H
+#define INCLUDED_VT_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_IMPL_H
 
 #include "vt/config.h"
 #include "vt/pipe/pipe_common.h"
@@ -121,4 +121,4 @@ CallbackSend<MsgT>::triggerDispatch(SignalDataType* data, PipeType const& pid) {
 
 }}} /* end namespace vt::pipe::callback */
 
-#endif /*INCLUDED_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_IMPL_H*/
+#endif /*INCLUDED_VT_PIPE_CALLBACK_HANDLER_SEND_CALLBACK_SEND_IMPL_H*/

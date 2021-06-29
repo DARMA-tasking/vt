@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              pmpi_component.h
+//                               pmpi_component.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PMPI_PMPI_COMPONENT
-#define INCLUDED_PMPI_PMPI_COMPONENT
+#if !defined INCLUDED_VT_PMPI_PMPI_COMPONENT_H
+#define INCLUDED_VT_PMPI_PMPI_COMPONENT_H
 
 #include "vt/config.h"
 
@@ -107,4 +107,4 @@ namespace vt {
 
 #endif // vt_check_enabled(pmpi_access_guards)
 
-#endif /*INCLUDED_PMPI_PMPI_COMPONENT*/
+#endif /*INCLUDED_VT_PMPI_PMPI_COMPONENT_H*/

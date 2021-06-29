@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  test_send.h
+//                                 test_send.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -40,6 +40,9 @@
 // *****************************************************************************
 //@HEADER
 */
+
+#if !defined INCLUDED_UNIT_COLLECTION_TEST_SEND_H
+#define INCLUDED_UNIT_COLLECTION_TEST_SEND_H
 
 #include <gtest/gtest.h>
 
@@ -188,3 +191,5 @@ TYPED_TEST_P(TestCollectionSendMem, test_collection_send_ptm_1) {
 }
 
 }}}} // end namespace vt::tests::unit::send
+
+#endif /*INCLUDED_UNIT_COLLECTION_TEST_SEND_H*/

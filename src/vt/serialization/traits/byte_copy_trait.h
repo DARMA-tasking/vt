@@ -5,7 +5,7 @@
 //                              byte_copy_trait.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SERIALIZATION_TRAITS_BYTE_COPY_TRAIT_H
-#define INCLUDED_SERIALIZATION_TRAITS_BYTE_COPY_TRAIT_H
+#if !defined INCLUDED_VT_SERIALIZATION_TRAITS_BYTE_COPY_TRAIT_H
+#define INCLUDED_VT_SERIALIZATION_TRAITS_BYTE_COPY_TRAIT_H
 
 #include "vt/config.h"
 
@@ -60,4 +60,4 @@ struct NotByteCopyTrait {
 
 }} /* end namespace vt::serialization */
 
-#endif /*INCLUDED_SERIALIZATION_TRAITS_BYTE_COPY_TRAIT_H*/
+#endif /*INCLUDED_VT_SERIALIZATION_TRAITS_BYTE_COPY_TRAIT_H*/

@@ -5,7 +5,7 @@
 //                      test_collection_construct_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTION_TEST_COLLECTION_CONSTRUCT_COMMON_H
-#define INCLUDED_COLLECTION_TEST_COLLECTION_CONSTRUCT_COMMON_H
+#if !defined INCLUDED_UNIT_COLLECTION_TEST_COLLECTION_CONSTRUCT_COMMON_H
+#define INCLUDED_UNIT_COLLECTION_TEST_COLLECTION_CONSTRUCT_COMMON_H
 
 #include "test_parallel_harness.h"
 #include "test_collection_common.h"
@@ -178,4 +178,4 @@ REGISTER_TYPED_TEST_SUITE_P(TestConstructDist, test_construct_distributed_1);
 
 }}} // end namespace vt::tests::unit
 
-#endif /*INCLUDED_COLLECTION_TEST_COLLECTION_CONSTRUCT_COMMON_H*/
+#endif /*INCLUDED_UNIT_COLLECTION_TEST_COLLECTION_CONSTRUCT_COMMON_H*/

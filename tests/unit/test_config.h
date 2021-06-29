@@ -5,7 +5,7 @@
 //                                test_config.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if ! defined __VIRTUAL_TRANSPORT_TEST_CONFIG__
-#define __VIRTUAL_TRANSPORT_TEST_CONFIG__
+#if ! defined INCLUDED_UNIT_TEST_CONFIG_H
+#define INCLUDED_UNIT_TEST_CONFIG_H
 
 #define DEBUG_TEST_HARNESS_PRINT 0
 
@@ -52,4 +52,4 @@
 //   INSTANTIATE_TYPED_TEST_SUITE_P(test_name, test_class, test_types, DEFAULT_NAME_GEN);
 #define DEFAULT_NAME_GEN
 
-#endif /* __VIRTUAL_TRANSPORT_TEST_CONFIG__ */
+#endif /* INCLUDED_UNIT_TEST_CONFIG_H */

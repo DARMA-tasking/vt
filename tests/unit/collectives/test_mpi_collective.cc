@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           test_mpi_collective.cc
+//                            test_mpi_collective.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -35,7 +35,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-// Questions? Contact darma@sandia.go
+// Questions? Contact darma@sandia.gov
 //
 // *****************************************************************************
 //@HEADER

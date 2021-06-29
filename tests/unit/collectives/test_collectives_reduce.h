@@ -5,7 +5,7 @@
 //                          test_collectives_reduce.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -40,6 +40,9 @@
 // *****************************************************************************
 //@HEADER
 */
+
+#if !defined INCLUDED_UNIT_COLLECTIVES_TEST_COLLECTIVES_REDUCE_H
+#define INCLUDED_UNIT_COLLECTIVES_TEST_COLLECTIVES_REDUCE_H
 
 #include <gtest/gtest.h>
 
@@ -149,3 +152,5 @@ struct Verify {
 };
 
 }}} // end namespace vt::tests::unit
+
+#endif /*INCLUDED_UNIT_COLLECTIVES_TEST_COLLECTIVES_REDUCE_H*/

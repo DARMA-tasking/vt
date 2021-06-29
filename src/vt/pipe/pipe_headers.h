@@ -5,7 +5,7 @@
 //                                pipe_headers.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_HEADERS_H
-#define INCLUDED_PIPE_PIPE_HEADERS_H
+#if !defined INCLUDED_VT_PIPE_PIPE_HEADERS_H
+#define INCLUDED_VT_PIPE_PIPE_HEADERS_H
 
 #include "vt/pipe/pipe_common.h"
 #include "vt/pipe/pipe.h"
@@ -54,4 +54,4 @@
 #include "vt/pipe/callback/proxy_send/callback_proxy_send_tl.h"
 #include "vt/pipe/callback/anon/callback_anon_tl.h"
 
-#endif /*INCLUDED_PIPE_PIPE_HEADERS_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_HEADERS_H*/

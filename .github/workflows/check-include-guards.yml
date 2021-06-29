@@ -1,0 +1,22 @@
+name: Check header guards
+
+on: pull_request
+
+jobs:
+  check-guards:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Setup Dependencies
+        uses: actions/setup-python@v2
+        with:
+            python-version: '3.7'
+
+      - name: Install checkguard
+        run: pip install guardonce
+
+      - name: Check that include guards are properly named
+        run: ./scripts/check_guards.sh $(pwd)

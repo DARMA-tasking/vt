@@ -5,7 +5,7 @@
 //                               epoch_headers.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,11 +41,11 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_EPOCH_EPOCH_HEADERS_H
-#define INCLUDED_EPOCH_EPOCH_HEADERS_H
+#if !defined INCLUDED_VT_EPOCH_EPOCH_HEADERS_H
+#define INCLUDED_VT_EPOCH_EPOCH_HEADERS_H
 
 #include "vt/config.h"
 #include "vt/epoch/epoch.h"
 #include "vt/epoch/epoch_manip.h"
 
-#endif /*INCLUDED_EPOCH_EPOCH_HEADERS_H*/
+#endif /*INCLUDED_VT_EPOCH_EPOCH_HEADERS_H*/

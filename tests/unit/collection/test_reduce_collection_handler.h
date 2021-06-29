@@ -5,7 +5,7 @@
 //                       test_reduce_collection_handler.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,11 +41,11 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_HANDLER_H
+#define INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_HANDLER_H
+
 #include "test_reduce_collection_common.h"
 #include "test_parallel_harness.h"
-
-#if !defined INCLUDED_TEST_REDUCE_COLLECTION_HANDLER_H
-#define INCLUDED_TEST_REDUCE_COLLECTION_HANDLER_H
 
 #define ENABLE_REDUCE_EXPR_CALLBACK 0
 
@@ -226,4 +226,4 @@ void colHanPartialProxy(ColMsg* msg, MyCol* col) {
 #endif
 
 }}}} // end namespace vt::tests::unit::reduce
-#endif /*INCLUDED_TEST_REDUCE_COLLECTION_HANDLER_H*/
+#endif /*INCLUDED_UNIT_COLLECTION_TEST_REDUCE_COLLECTION_HANDLER_H*/

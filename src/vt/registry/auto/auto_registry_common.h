@@ -5,7 +5,7 @@
 //                            auto_registry_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_COMMON_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_COMMON_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_COMMON_H
+#define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_COMMON_H
 
 #include "vt/trace/trace_event.h"
 
@@ -213,4 +213,4 @@ using AutoActiveObjGroupContainerType      = RegContType<AutoActiveObjGroupType>
 
 }} // end namespace vt::auto_registry
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_COMMON_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_COMMON_H*/

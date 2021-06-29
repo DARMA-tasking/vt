@@ -5,7 +5,7 @@
 //                             auto_registry_map.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H
-#define INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H
+#define INCLUDED_VT_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -78,4 +78,4 @@ AutoActiveMapType getHandlerMap(HandlerType const han);
 
 #include "vt/registry/auto/map/auto_registry_map_impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_MAP_AUTO_REGISTRY_MAP_H*/

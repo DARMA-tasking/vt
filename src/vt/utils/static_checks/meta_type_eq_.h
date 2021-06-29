@@ -5,7 +5,7 @@
 //                               meta_type_eq_.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_STATIC_CHECKS_META_TYPE_EQ__H
-#define INCLUDED_UTILS_STATIC_CHECKS_META_TYPE_EQ__H
+#if !defined INCLUDED_VT_UTILS_STATIC_CHECKS_META_TYPE_EQ__H
+#define INCLUDED_VT_UTILS_STATIC_CHECKS_META_TYPE_EQ__H
 
 #include "vt/config.h"
 #include "vt/utils/static_checks/cond_.h"
@@ -64,4 +64,4 @@ using meta_type_eq = meta_and<std::is_same<Ts, T>...>;
 
 }} /* end namespace vt::util */
 
-#endif /*INCLUDED_UTILS_STATIC_CHECKS_META_TYPE_EQ__H*/
+#endif /*INCLUDED_VT_UTILS_STATIC_CHECKS_META_TYPE_EQ__H*/
