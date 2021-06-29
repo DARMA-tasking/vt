@@ -60,6 +60,17 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+/**
+ * \enum DataDistStrategy
+ *
+ * \brief How to distribute the data after the centralized LB makes a decision.
+ */
+enum struct DataDistStrategy : uint8_t {
+  SCATTER = 0,
+  BCAST = 1,
+  PT2PT = 2
+};
+
 struct GreedyLB : BaseLB {
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
   using TransferType     = std::map<NodeType, std::vector<ObjIDType>>;
@@ -107,6 +118,8 @@ private:
   double max_threshold = 0.0f;
   double min_threshold = 0.0f;
   bool auto_threshold = true;
+
+  DataDistStrategy strat_ = DataDistStrategy::SCATTER;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

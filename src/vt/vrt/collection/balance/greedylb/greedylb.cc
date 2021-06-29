@@ -72,11 +72,23 @@ void GreedyLB::init(objgroup::proxy::Proxy<GreedyLB> in_proxy) {
 }
 
 void GreedyLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"min", "max", "auto"};
+  std::vector<std::string> allowed{"min", "max", "auto", "strategy"};
   spec->checkAllowedKeys(allowed);
   min_threshold = spec->getOrDefault<double>("min", greedy_threshold_p);
   max_threshold = spec->getOrDefault<double>("max", greedy_max_threshold_p);
   auto_threshold = spec->getOrDefault<bool>("auto", greedy_auto_threshold_p);
+
+  std::string extract = spec->getOrDefault<std::string>("strategy", "scatter");
+  if (extract.compare("scatter") == 0) {
+    strat_ = DataDistStrategy::SCATTER;
+  } else if (extract.compare("pt2pt") == 0) {
+    strat_ = DataDistStrategy::PT2PT;
+  } else if (extract.compare("broadcast") == 0) {
+    strat_ = DataDistStrategy::BCAST;
+  } else {
+    auto str = fmt::format("GreedyLB strategy={} is not valid", extract);
+    vtAbort(str);
+  }
 }
 
 void GreedyLB::runLB() {
@@ -262,13 +274,7 @@ void GreedyLB::recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs) {
 }
 
 void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
-#define SCATTER 1
-#define PT2PT 0
-#define BROADCAST 0
-
-#if SCATTER
   std::size_t max_recs = 1, max_bytes = 0;
-#endif
   std::vector<GreedyProc> load(std::move(in_load));
   std::vector<std::vector<GreedyLBTypes::ObjIDType>> node_transfer(load.size());
   for (auto&& elm : load) {
@@ -280,48 +286,40 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       if (cur_node != node) {
         auto const new_obj_id = objSetNode(node, rec);
         node_transfer[cur_node].push_back(new_obj_id);
-#if SCATTER
         max_recs = std::max(max_recs, node_transfer[cur_node].size() + 1);
-#endif
       }
     }
   }
 
-#if SCATTER
-  max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
-  vt_debug_print(
-    normal, lb,
-    "GreedyLB::transferObjs: max_recs={}, max_bytes={}\n",
-    max_recs, max_bytes
-  );
-  theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
-    max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
-      auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
-      auto const& proc = node_transfer[node];
-      auto const& rec_size = proc.size();
-      ptr_out->id = rec_size;
-      for (size_t i = 0; i < rec_size; i++) {
-        *(ptr_out + i + 1) = proc[i];
-      }
-    }
-  );
-#elif PT2PT
-  for (NodeType n = 0; n < theContext()->getNumNodes(); n++) {
-    vtAssert(
-      node_transfer.size() == static_cast<size_t>(theContext()->getNumNodes()),
-      "Must contain all nodes"
+  if (strat_ == DataDistStrategy::SCATTER) {
+    max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
+    vt_debug_print(
+      normal, lb,
+      "GreedyLB::transferObjs: max_recs={}, max_bytes={}\n",
+      max_recs, max_bytes
     );
-    proxy[n].send<GreedySendMsg, &GreedyLB::recvObjs>(node_transfer[n]);
+    theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
+      max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
+        auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
+        auto const& proc = node_transfer[node];
+        auto const& rec_size = proc.size();
+        ptr_out->id = rec_size;
+        for (size_t i = 0; i < rec_size; i++) {
+          *(ptr_out + i + 1) = proc[i];
+        }
+      }
+    );
+  } else if (strat_ == DataDistStrategy::PT2PT) {
+    for (NodeType n = 0; n < theContext()->getNumNodes(); n++) {
+      vtAssert(
+        node_transfer.size() == static_cast<size_t>(theContext()->getNumNodes()),
+        "Must contain all nodes"
+      );
+      proxy[n].send<GreedySendMsg, &GreedyLB::recvObjs>(node_transfer[n]);
+    }
+  } else if (strat_ == DataDistStrategy::BCAST) {
+    proxy.broadcast<GreedyBcastMsg, &GreedyLB::recvObjsBcast>(node_transfer);
   }
-#elif BROADCAST
-  proxy.broadcast<GreedyBcastMsg, &GreedyLB::recvObjsBcast>(node_transfer);
-#else
-# error "Must select some strategy for distribuing info"
-#endif
-
-#undef BROADCAST
-#undef PT2PT
-#undef SCATTER
 }
 
 double GreedyLB::getAvgLoad() const {
