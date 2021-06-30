@@ -223,7 +223,67 @@ TEST_F(TestCheckpoint, test_checkpoint_1) {
     // Ensure that all elements were properly destroyed
     EXPECT_EQ(counter, 0);
   }
+}
 
+TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
+  auto this_node = theContext()->getNode();
+  auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+
+  auto range = vt::Index3D(num_nodes, num_elms, 4);
+  auto checkpoint_name = "test_checkpoint_dir";
+  auto proxy = vt::theCollection()->constructCollective<TestCol>(range);
+
+  vt::runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
+    }
+  });
+
+  for (int i = 0; i < 5; i++) {
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+      }
+    });
+  }
+
+  vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
+
+  // Wait for all checkpoints to complete
+  vt::theCollective()->barrier();
+
+  // Null the token to ensure we don't end up getting the same instance
+  vt::runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.broadcast<TestCol::NullMsg,&TestCol::nullToken>();
+    }
+  });
+
+  vt::thePhase()->nextPhaseCollective();
+
+  vt::theCollective()->barrier();
+
+  vt::theCollection()->restoreFromFileInPlace<TestCol>(
+    proxy, range, checkpoint_name
+  );
+
+  // Restoration should be done now
+  vt::theCollective()->barrier();
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.broadcast<TestCol::NullMsg,&TestCol::verify>();
+    }
+  });
+
+  runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.destroy();
+    }
+  });
+
+  // Ensure that all elements were properly destroyed
+  EXPECT_EQ(counter, 0);
 }
 
 }}} // end namespace vt::tests::unit
