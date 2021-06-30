@@ -1871,6 +1871,29 @@ public:
     typename ColT::IndexType range, std::string const& file_base
   );
 
+  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  struct RestoreMigrateMsg : vt::Message {
+    RestoreMigrateMsg() = default;
+    RestoreMigrateMsg(NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy)
+      : to_node_(in_to_node),
+        idx_(in_idx),
+        proxy_(in_proxy)
+    { }
+
+    NodeType to_node_ = uninitialized_destination;
+    IdxT idx_;
+    CollectionProxyWrapType<ColT> proxy_;
+  };
+
+  template <typename ColT>
+  static void restoreHandler(RestoreMigrateMsg<ColT>* msg);
+
+  template <typename ColT>
+  void restoreFromFileInPlace(
+    CollectionProxyWrapType<ColT> proxy, typename ColT::IndexType range,
+    std::string const& file_base
+  );
+
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | buffers_
