@@ -1871,9 +1871,12 @@ public:
     typename ColT::IndexType range, std::string const& file_base
   );
 
-private:
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
-  struct RestoreMigrateMsg : vt::Message {
+  template <
+    typename ColT,
+    typename MsgT = vt::Message,
+    typename IdxT = typename ColT::IndexType
+  >
+  struct RestoreMigrateMsg : MsgT {
     RestoreMigrateMsg() = default;
     RestoreMigrateMsg(NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy)
       : to_node_(in_to_node),
@@ -1887,17 +1890,18 @@ private:
   };
 
   template <typename ColT, typename IdxT = typename ColT::IndexType>
-  struct RestoreMigrateColMsg : RestoreMigrateMsg<ColT, IdxT>, CollectionMessage<ColT> {
+  struct RestoreMigrateColMsg
+    : RestoreMigrateMsg<ColT, CollectionMessage<ColT>, IdxT>
+  {
     RestoreMigrateColMsg() = default;
     RestoreMigrateColMsg(NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy)
-      : RestoreMigrateMsg<ColT>(in_to_node, in_idx, in_proxy)
+      : RestoreMigrateMsg<ColT, CollectionMessage<ColT>, IdxT>(in_to_node, in_idx, in_proxy)
     { }
   };
 
   template <typename ColT>
   static void restoreHandler(RestoreMigrateMsg<ColT>* msg);
 
-public:
   /**
    * \brief Restore the collection (collective) from file on top of an existing
    * collection. Migrates collection elements to the rank saved from the
