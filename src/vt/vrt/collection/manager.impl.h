@@ -3162,7 +3162,9 @@ void CollectionManager::checkpointToFile(
 
 namespace detail {
 template <typename ColT>
-inline void restoreOffHomeElement(CollectionManager::RestoreMigrateColMsg<ColT>* msg, ColT*) {
+inline void restoreOffHomeElement(
+  CollectionManager::RestoreMigrateColMsg<ColT>* msg, ColT*
+) {
   auto idx = msg->idx_;
   auto node = msg->to_node_;
   auto proxy = msg->proxy_;
@@ -3219,10 +3221,13 @@ void CollectionManager::restoreFromFileInPlace(
         vtAssertExpr(mapped_node != uninitialized_destination);
         auto this_node = theContext()->getNode();
 
-        auto msg = makeMessage<RestoreMigrateMsg<ColT>>(this_node, idx, proxy);
-        theMsg()->sendMsg<
-          RestoreMigrateMsg<ColT>, restoreHandler<ColT>
-        >(mapped_node, msg);
+        using MsgType = RestoreMigrateMsg<ColT>;
+        auto msg = makeMessage<MsgType>(this_node, idx, proxy);
+        if (mapped_node != this_node) {
+          theMsg()->sendMsg<MsgType, restoreHandler<ColT>>(mapped_node, msg);
+        } else {
+          restoreHandler<ColT>(msg.get());
+        }
       }
     }
   });
