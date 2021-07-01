@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                               test_harness.h
+//                                test_harness.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
-#define __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
+#if !defined INCLUDED_PERF_COMMON_TEST_HARNESS_H
+#define INCLUDED_PERF_COMMON_TEST_HARNESS_H
 
 #include "timers.h"
 #include "test_harness_macros.h"
@@ -198,4 +198,4 @@ protected:
 
 }}}} // namespace vt::tests::perf::common
 
-#endif // __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS__
+#endif /*INCLUDED_PERF_COMMON_TEST_HARNESS_H*/

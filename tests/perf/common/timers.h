@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  timers.h
+//                                   timers.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TEST_PERF_COMMON_TIMERS_H
-#define INCLUDED_VT_TEST_PERF_COMMON_TIMERS_H
+#if !defined INCLUDED_PERF_COMMON_TIMERS_H
+#define INCLUDED_PERF_COMMON_TIMERS_H
 
 #include "vt/timing/timing_type.h"
 
@@ -100,4 +100,4 @@ private:
 
 }}}} // namespace vt::tests::perf::common
 
-#endif // INCLUDED_VT_TEST_PERF_COMMON_TIMERS_H
+#endif /*INCLUDED_PERF_COMMON_TIMERS_H*/

@@ -5,7 +5,7 @@
 //                            test_harness_macros.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS_MACROS__
-#define __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS_MACROS__
+#if !defined INCLUDED_PERF_COMMON_TEST_HARNESS_MACROS_H
+#define INCLUDED_PERF_COMMON_TEST_HARNESS_MACROS_H
 
 namespace vt { namespace tests { namespace perf { namespace common {
 
@@ -122,4 +122,4 @@ namespace vt { namespace tests { namespace perf { namespace common {
 
 }}}} // namespace vt::tests::perf::common
 
-#endif // __VIRTUAL_TRANSPORT_TEST_PERFORMANCE_PARALLEL_HARNESS_MACROS__
+#endif /*INCLUDED_PERF_COMMON_TEST_HARNESS_MACROS_H*/
