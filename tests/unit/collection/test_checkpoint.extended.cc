@@ -233,6 +233,9 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
   auto checkpoint_name = "test_checkpoint_dir";
   auto proxy = vt::theCollection()->constructCollective<TestCol>(range);
 
+  theConfig()->vt_lb = true;
+  theConfig()->vt_lb_name = "TemperedLB";
+
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
       proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
@@ -245,24 +248,30 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
         proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
       }
     });
+
+    vt::thePhase()->nextPhaseCollective();
   }
 
+  vt_print(gen, "checkpointToFile\n");
   vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
 
   // Wait for all checkpoints to complete
   vt::theCollective()->barrier();
 
-  // Null the token to ensure we don't end up getting the same instance
+  // Do more work after the checkpoint
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      proxy.broadcast<TestCol::NullMsg,&TestCol::nullToken>();
+      proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
     }
   });
 
+  // Run the LB one more time so we might get a different distribution
   vt::thePhase()->nextPhaseCollective();
 
   vt::theCollective()->barrier();
 
+  // Now, restore from the previous distribution
+  vt_print(gen, "restoreFromFileInPlace\n");
   vt::theCollection()->restoreFromFileInPlace<TestCol>(
     proxy, range, checkpoint_name
   );
