@@ -233,7 +233,7 @@ EventType ActiveMessenger::sendMsgBytesWithPut(
 
   vtWarnIf(
     !(dest != theContext()->getNode() || is_bcast),
-    "Destination {} should != this node"
+    fmt::format("Destination {} should != this node", dest)
   );
 
   MsgSizeType new_msg_size = base.size();
@@ -522,8 +522,16 @@ EventType ActiveMessenger::doMessageSend(
     base, uninitialized_destination, true, &deliver
   );
 
+  // Don't go through MPI with self-send, schedule the message locally instead
+  auto const this_node = theContext()->getNode();
   if (deliver) {
-    sendMsgBytesWithPut(dest, base, send_tag);
+    if (dest != this_node) {
+      sendMsgBytesWithPut(dest, base, send_tag);
+    } else {
+      runnable::makeRunnable(base, true, envelopeGetHandler(msg->env), dest)
+        .withTDEpochFromMsg(is_term)
+        .enqueue();
+    }
     return no_event;
   }
 
