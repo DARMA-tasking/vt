@@ -99,7 +99,8 @@ struct NodeObj {
 
       proxy_[pong_node]
         .send<
-          NodeObj::PingMsg<new_num_bytes>, &NodeObj::pingPong<new_num_bytes>>();
+          NodeObj::PingMsg<new_num_bytes>, &NodeObj::pingPong<new_num_bytes>
+        >();
     }
   }
 
@@ -122,7 +123,8 @@ struct NodeObj {
       auto msg = vt::makeMessage<NodeObj::PingMsg<num_bytes>>(cnt + 1);
       proxy_[next]
         .sendMsg<NodeObj::PingMsg<num_bytes>, &NodeObj::pingPong<num_bytes>>(
-          msg);
+          msg
+        );
     }
   }
 

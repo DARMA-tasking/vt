@@ -69,12 +69,14 @@ struct PerfTestHarness {
   using TestResult = std::pair<TestName, TimeType>;
   using FinalTestResult = std::pair<TestName, TestResultHolder<TimeType>>;
   using TestResults = std::vector<std::vector<TestResult>>;
-  using PerNodeResults = std::unordered_map<NodeType, TestResultHolder<TimeType>>;
+  using PerNodeResults =
+    std::unordered_map<NodeType, TestResultHolder<TimeType>>;
   using CombinedResults = std::vector<std::pair<TestName, PerNodeResults>>;
 
   // Memory use at the end of test iteration (i.e. phase)
   using MemoryUsage = std::vector<std::vector<std::size_t>>;
-  using CombinedMemoryUse = std::unordered_map<NodeType, std::vector<TestResultHolder<std::size_t>>>;
+  using CombinedMemoryUse =
+    std::unordered_map<NodeType, std::vector<TestResultHolder<std::size_t>>>;
 
   virtual ~PerfTestHarness() = default;
 

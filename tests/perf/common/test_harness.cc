@@ -73,25 +73,29 @@ static std::string GetFormattedMemUsage(std::size_t memory) {
 }
 
 /**
- * \brief Helper function that converts the test results from all runs into a final vector,
- * which contains mean/min/max values for each test result.
+ * \brief Helper function that converts the test results
+ * from all runs into a final vector, which contains
+ * mean/min/max values for each test result.
  *
- * \param[in] input_vec vector that contains test data (memory usage or timers) from all test runs
- * By default all tests are run 50 times (see --vt_perf_num_runs flag) so this vector will have 50 elems,
+ * \param[in] input_vec vector that contains test data (memory usage or timers)
+ * from all test runs. By default all tests are run 50 times
+ * (see --vt_perf_num_runs flag) so this vector will have 50 elems
  * and each element is a vector of test results for that run.
  *
- * \param[in] populate function that will be called (for each test run) in order to calculate mean/min/max.
+ * \param[in] populate function that will be called (for each test run)
+ * in order to calculate mean/min/max.
  * Takes three params:
  *  1. Final test result
  *  2. Test result for given test run
  *  3. Number of test runs
  *
- * \param[in] std_dev function that will be called (for each test run) in order to calculate standard deviation.
+ * \param[in] std_dev function that will be called (for each test run)
+ * in order to calculate standard deviation.
  * Takes four params:
  *  1. Final test result
  *  2. Test result for given test run
  *  3. Number of test runs
- *  4. Whether it's the last test run iteration (it's when standard deviation should be calculated)
+ *  4. Whether it's the last test run iteration
  *
  * \return Vector with final test results (mean/std_dev/min/max)
  */
@@ -99,8 +103,10 @@ template <typename InputT, typename OutputT>
 std::vector<OutputT> ProcessInput(
   std::vector<std::vector<InputT>> const& input_vec,
   std::function<void(OutputT&, InputT const&, std::size_t const)> populate,
-  std::function<void(OutputT&, InputT const&, std::size_t const, bool const)> std_dev
-) {
+  std::function<void(OutputT&, InputT const&, std::size_t const, bool const)>
+    std_dev
+  )
+{
   auto const vec_size = input_vec.front().size();
   auto const num_runs = input_vec.size();
   std::vector<OutputT> values_vec(vec_size, OutputT{});
@@ -148,7 +154,9 @@ struct TestMsg : Message {
 };
 
 struct TestNodeObj {
-  explicit TestNodeObj(PerfTestHarness* test_harness) : test_harness_(test_harness) { }
+  explicit TestNodeObj(PerfTestHarness* test_harness)
+    : test_harness_(test_harness) { }
+
   void RecvTestResult(TestMsg* msg) {
     test_harness_->CopyTestData(
       msg->results_, msg->memory_load_, msg->from_node_
@@ -371,15 +379,14 @@ void PerfTestHarness::CopyTestData(
       [](
         PerfTestHarness::FinalTestResult& left,
         PerfTestHarness::TestResult const& right, std::size_t const num_elems,
-        bool const is_last
-      ) {
-        left.second.std_dev_ += std::pow(right.second - left.second.mean_, 2) / num_elems;
+        bool const is_last) {
+        left.second.std_dev_ +=
+          std::pow(right.second - left.second.mean_, 2) / num_elems;
 
         if (is_last) {
           left.second.std_dev_ = std::sqrt(left.second.std_dev_);
         }
-      }
-    );
+      });
 
   for (auto const& test_result : time_use) {
     auto const& test_name = test_result.first;
@@ -405,21 +412,23 @@ void PerfTestHarness::CopyTestData(
     [](
       TestResultHolder<size_t>& left, size_t const& right,
       std::size_t const num_elems
-    ) {
+      )
+    {
       left.mean_ += right / num_elems;
       left.min_ = std::min(left.min_, right);
       left.max_ = std::max(left.max_, right);
     },
-     [](
-        TestResultHolder<size_t>& left, size_t const& right, std::size_t const num_elems,
-        bool const is_last
-      ) {
-        left.std_dev_ += std::pow(right - left.mean_, 2) / num_elems;
+    [](
+      TestResultHolder<size_t>& left, size_t const& right,
+      std::size_t const num_elems, bool const is_last
+      )
+    {
+      left.std_dev_ += std::pow(right - left.mean_, 2) / num_elems;
 
-        if (is_last) {
-          left.std_dev_ = std::sqrt(left.std_dev_);
-        }
+      if (is_last) {
+        left.std_dev_ = std::sqrt(left.std_dev_);
       }
+    }
   );
 
   combined_mem_use_[node].resize(mem_use.size());
