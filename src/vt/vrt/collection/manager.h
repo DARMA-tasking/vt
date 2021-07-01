@@ -1871,6 +1871,7 @@ public:
     typename ColT::IndexType range, std::string const& file_base
   );
 
+private:
   template <typename ColT, typename IdxT = typename ColT::IndexType>
   struct RestoreMigrateMsg : vt::Message {
     RestoreMigrateMsg() = default;
@@ -1885,9 +1886,27 @@ public:
     CollectionProxyWrapType<ColT> proxy_;
   };
 
+  template <typename ColT, typename IdxT = typename ColT::IndexType>
+  struct RestoreMigrateColMsg : RestoreMigrateMsg<ColT, IdxT>, CollectionMessage<ColT> {
+    RestoreMigrateColMsg() = default;
+    RestoreMigrateColMsg(NodeType in_to_node, IdxT in_idx, CollectionProxyWrapType<ColT> in_proxy)
+      : RestoreMigrateMsg<ColT>(in_to_node, in_idx, in_proxy)
+    { }
+  };
+
   template <typename ColT>
   static void restoreHandler(RestoreMigrateMsg<ColT>* msg);
 
+public:
+  /**
+   * \brief Restore the collection (collective) from file on top of an existing
+   * collection. Migrates collection elements to the rank saved from the
+   * checkpoint.
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] range the range of the collection to restore
+   * \param[in] file_base the base file name for the files to read
+   */
   template <typename ColT>
   void restoreFromFileInPlace(
     CollectionProxyWrapType<ColT> proxy, typename ColT::IndexType range,

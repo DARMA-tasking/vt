@@ -3160,12 +3160,28 @@ void CollectionManager::checkpointToFile(
   checkpoint::serializeToFile(directory, directory_name);
 }
 
+namespace detail {
+template <typename ColT>
+inline void restoreOffHomeElement(CollectionManager::RestoreMigrateColMsg<ColT>* msg, ColT*) {
+  auto idx = msg->idx_;
+  auto node = msg->to_node_;
+  auto proxy = msg->proxy_;
+  theCollection()->migrate(proxy(idx), node);
+}
+} /* end namespace detail */
+
 template <typename ColT>
 /*static*/ void CollectionManager::restoreHandler(RestoreMigrateMsg<ColT>* msg) {
   auto idx = msg->idx_;
   auto node = msg->to_node_;
   auto proxy = msg->proxy_;
-  theCollection()->migrate(proxy(idx), node);
+  if (proxy(idx).tryGetLocalPtr() != nullptr) {
+    theCollection()->migrate(proxy(idx), node);
+  } else {
+    proxy(idx).template send<
+      RestoreMigrateColMsg<ColT>, detail::restoreOffHomeElement<ColT>
+    >(node, idx, proxy);
+  }
 }
 
 template <typename ColT>
