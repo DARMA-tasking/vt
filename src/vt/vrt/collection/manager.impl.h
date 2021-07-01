@@ -3223,20 +3223,9 @@ void CollectionManager::restoreFromFileInPlace(
     auto const elm_exists = elm_holder->exists(idx);
     vtAssertExpr(elm_exists);
 
-#if 0
-    auto col_ptr = checkpoint::deserializeFromFile<ColT>(file_name);
-    col_ptr->stats_.resetPhase();
-
-    auto map_han = UniversalIndexHolder<>::getMap(proxy_bits);
-    elm_holder->remove(idx);
-    elm_holder->insert(idx, typename Holder<ColT, IndexType>::InnerHolder{
-      std::move(col_ptr), map_han, range
-    });
-#else
     auto ptr = elm_holder->lookup(idx).getCollection();
     checkpoint::deserializeInPlaceFromFile<ColT>(file_name, static_cast<ColT*>(ptr));
     ptr->stats_.resetPhase();
-#endif
   }
 }
 
