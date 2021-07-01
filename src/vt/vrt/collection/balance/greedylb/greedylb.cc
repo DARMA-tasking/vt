@@ -56,6 +56,7 @@
 #include "vt/context/context.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/collective/reduce/reduce.h"
+#include "vt/vrt/collection/balance/lb_args_enum_converter.h"
 
 #include <unordered_map>
 #include <memory>
@@ -78,17 +79,14 @@ void GreedyLB::inputParams(balance::SpecEntry* spec) {
   max_threshold = spec->getOrDefault<double>("max", greedy_max_threshold_p);
   auto_threshold = spec->getOrDefault<bool>("auto", greedy_auto_threshold_p);
 
-  std::string extract = spec->getOrDefault<std::string>("strategy", "scatter");
-  if (extract.compare("scatter") == 0) {
-    strat_ = DataDistStrategy::SCATTER;
-  } else if (extract.compare("pt2pt") == 0) {
-    strat_ = DataDistStrategy::PT2PT;
-  } else if (extract.compare("broadcast") == 0) {
-    strat_ = DataDistStrategy::BCAST;
-  } else {
-    auto str = fmt::format("GreedyLB strategy={} is not valid", extract);
-    vtAbort(str);
-  }
+  balance::LBArgsEnumConverter<DataDistStrategy> strategy_converter_(
+    "strategy", "DataDistStrategy", {
+      {DataDistStrategy::scatter, "scatter"},
+      {DataDistStrategy::pt2pt,   "pt2pt"},
+      {DataDistStrategy::bcast,   "bcast"}
+    }
+  );
+  strat_ = strategy_converter_.getFromSpec(spec, strat_);
 }
 
 void GreedyLB::runLB() {
@@ -291,7 +289,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
     }
   }
 
-  if (strat_ == DataDistStrategy::SCATTER) {
+  if (strat_ == DataDistStrategy::scatter) {
     max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
     vt_debug_print(
       normal, lb,
@@ -309,7 +307,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
         }
       }
     );
-  } else if (strat_ == DataDistStrategy::PT2PT) {
+  } else if (strat_ == DataDistStrategy::pt2pt) {
     for (NodeType n = 0; n < theContext()->getNumNodes(); n++) {
       vtAssert(
         node_transfer.size() == static_cast<size_t>(theContext()->getNumNodes()),
@@ -317,7 +315,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       );
       proxy[n].send<GreedySendMsg, &GreedyLB::recvObjs>(node_transfer[n]);
     }
-  } else if (strat_ == DataDistStrategy::BCAST) {
+  } else if (strat_ == DataDistStrategy::bcast) {
     proxy.broadcast<GreedyBcastMsg, &GreedyLB::recvObjsBcast>(node_transfer);
   }
 }

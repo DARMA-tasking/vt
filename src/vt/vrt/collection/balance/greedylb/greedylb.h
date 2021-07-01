@@ -66,9 +66,9 @@ namespace vt { namespace vrt { namespace collection { namespace lb {
  * \brief How to distribute the data after the centralized LB makes a decision.
  */
 enum struct DataDistStrategy : uint8_t {
-  SCATTER = 0,
-  BCAST = 1,
-  PT2PT = 2
+  scatter = 0,
+  bcast = 1,
+  pt2pt = 2
 };
 
 struct GreedyLB : BaseLB {
@@ -119,7 +119,7 @@ private:
   double min_threshold = 0.0f;
   bool auto_threshold = true;
 
-  DataDistStrategy strat_ = DataDistStrategy::SCATTER;
+  DataDistStrategy strat_ = DataDistStrategy::scatter;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
