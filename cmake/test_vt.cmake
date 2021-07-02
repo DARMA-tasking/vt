@@ -98,7 +98,7 @@ endfunction()
 # Set up test scaffolding for running examples
 macro(add_test_for_example_vt test_target test_exec test_list)
   foreach(PROC ${PROC_TEST_LIST})
-    GET_FILENAME_COMPONENT(test_name ${test_exec} NAME_WE)
+    get_filename_component(test_name ${test_exec} NAME_WE)
 
     # Examples run with additional flags per enabled build options
     # when such can be applied generally. This does not cover specific
@@ -120,6 +120,7 @@ macro(add_test_for_example_vt test_target test_exec test_list)
       vt_example:${test_name}_${PROC}
       PROPERTIES
       FAIL_REGULAR_EXPRESSION "Segmentation fault"
+      LABELS "example"
     )
   endforeach()
 endmacro()

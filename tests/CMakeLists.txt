@@ -34,10 +34,6 @@ subdirlist(
   ${PROJECT_TEST_UNIT_DIR}
 )
 
-subdirlist(
-  PROJECT_PERF_TESTS
-  ${PROJECT_TEST_PERF_DIR}
-)
 
 #
 # Setup/add googletest CMake configuration
@@ -107,6 +103,7 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
         FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
         PASS_REGULAR_EXPRESSION "PASSED"
         SKIP_REGULAR_EXPRESSION "SKIPPED"
+        LABELS "unit_test"
       )
     endforeach()
   else()
@@ -116,6 +113,15 @@ function(add_unit_test unit_test_name unit_test_files uses_mpi)
       TEST_SUFFIX            _no_mpi
       TEST_PREFIX            vt:
       TEST_LIST              ${CUR_TEST_LIST}
+    )
+
+    set_tests_properties(
+      ${${CUR_TEST_LIST}}
+      PROPERTIES TIMEOUT 60
+      FAIL_REGULAR_EXPRESSION "FAILED;should be deleted but never is;Segmentation fault"
+      PASS_REGULAR_EXPRESSION "PASSED"
+      SKIP_REGULAR_EXPRESSION "SKIPPED"
+      LABELS "unit_test"
     )
   endif()
 
@@ -135,9 +141,9 @@ set(
   ${PROJECT_TEST_UNIT_DIR}/main.cc
 )
 
-# List of test files that should be excluded
+# List of unit test files that should be excluded
 set(
-  EXCLUDED_TEST_FILES
+  EXCLUDED_UNIT_TEST_FILES
   ${PROJECT_TEST_UNIT_DIR}/sequencer/test_sequencer_extensive.extended.cc
 )
 
@@ -159,18 +165,18 @@ foreach(SUB_DIR ${UNIT_TEST_SUBDIRS_LIST})
   foreach (unit_test_file ${${SUB_DIR}_UNIT_TEST_SOURCE_FILES})
     #message(STATUS "Considering ${unit_test_file}")
 
-    if (${unit_test_file} IN_LIST EXCLUDED_TEST_FILES)
-      message(STATUS "Test file ${unit_test_file} is present on EXCLUDED_TEST_FILES list. Skipping!")
+    if (${unit_test_file} IN_LIST EXCLUDED_UNIT_TEST_FILES)
+      message(STATUS "Test file ${unit_test_file} is present on EXCLUDED_UNIT_TEST_FILES list. Skipping!")
       continue()
     endif()
 
-    GET_FILENAME_COMPONENT(
+    get_filename_component(
       UNIT_TEST
       ${unit_test_file}
       NAME_WE
     )
 
-    GET_FILENAME_COMPONENT(
+    get_filename_component(
       UNIT_TEST_FULL_EXTENSION
       ${unit_test_file}
       EXT
@@ -200,19 +206,51 @@ endforeach()
 # Performance Tests
 #
 
-foreach(PERF_TEST ${PROJECT_PERF_TESTS})
-  add_executable(${PERF_TEST} ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc)
-  add_dependencies(perf_tests ${PERF_TEST})
+# List of perf test files that should be excluded
+set(
+  EXCLUDED_PERF_TEST_FILES
+  ${PROJECT_TEST_PERF_DIR}/memory_checker.cc
+  ${PROJECT_TEST_PERF_DIR}/comm_cost_curve.cc
+)
 
-  link_target_with_vt(
-    TARGET ${PERF_TEST}
-    DEFAULT_LINK_SET
-    LINK_GTEST ON
+file(GLOB PROJECT_PERF_TESTS ${PROJECT_TEST_PERF_DIR}/*.cc)
+
+foreach(PERF_TEST ${PROJECT_PERF_TESTS})
+  if (${PERF_TEST} IN_LIST EXCLUDED_PERF_TEST_FILES)
+    message(STATUS "Test file ${PERF_TEST} is present on EXCLUDED_PERF_TEST_FILES list. Skipping!")
+    continue()
+  endif()
+
+  get_filename_component(
+    TEST_NAME
+    ${PERF_TEST}
+    NAME_WLE
   )
 
-  add_test_for_example_vt(
-    ${PERF_TEST}
-    ${PROJECT_TEST_PERF_DIR}/${PERF_TEST}.cc
-    perf_tests
+  add_executable(${TEST_NAME} ${PERF_TEST}
+    ${PROJECT_TEST_PERF_DIR}/common/test_harness.h
+    ${PROJECT_TEST_PERF_DIR}/common/test_harness.cc
+    ${PROJECT_TEST_PERF_DIR}/common/timers.h
+    ${PROJECT_TEST_PERF_DIR}/common/timers.cc
+  )
+
+  string(REPLACE " " ";" VT_TEST_EXTRA_FLAGS "$ENV{VT_TESTS_ARGUMENTS}")
+
+  add_test(
+    NAME ${TEST_NAME}
+    COMMAND ${MPI_RUN_COMMAND} ${MPI_EXTRA_FLAGS_LIST} ${MPI_NUMPROC_FLAG} ${MPI_MAX_NUMPROC}
+            ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME} ${VT_TEST_EXTRA_FLAGS}
+  )
+
+  link_target_with_vt(
+    TARGET ${TEST_NAME}
+    DEFAULT_LINK_SET
+  )
+
+  set_tests_properties(
+    ${TEST_NAME}
+    PROPERTIES
+    TIMEOUT 300
+    LABELS "perf_test"
   )
 endforeach()

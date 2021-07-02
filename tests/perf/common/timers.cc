@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              comm_cost_curve.cc
+//                                  timers.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,93 +41,12 @@
 //@HEADER
 */
 
-#include <vt/collective/startup.h>
-#include <vt/messaging/active.h>
+#include "timers.h"
 
-#include <cstdlib>
-#include <array>
+namespace vt { namespace tests { namespace perf { namespace common {
 
-struct PingMsg : vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_required(); // by payload_
-
-  PingMsg() = default;
-  explicit PingMsg(int64_t size) {
-    payload_.resize(size);
-  }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | payload_;
-  }
-
-  std::vector<char> payload_;
-};
-
-static constexpr int64_t const max_bytes = 0x1000000;
-static int pings = 64;
-static bool is_done = false;
-
-static void done(PingMsg* msg) {
-  is_done = true;
+void StopWatch::Start() {
+  cur_time_ = std::chrono::steady_clock::now();
 }
 
-static void handler(PingMsg*) {
-  static int count = 0;
-  count++;
-  if (count == pings) {
-    auto msg = vt::makeMessage<PingMsg>(1);
-    vt::theMsg()->sendMsg<PingMsg,done>(0, msg);
-    count = 0;
-  }
-}
-
-template <int64_t bytes>
-void sender() {
-  auto start = vt::timing::Timing::getCurrentTime();
-  for (int i = 0; i < pings; i++) {
-    auto msg = vt::makeMessage<PingMsg>(bytes);
-    vt::theMsg()->sendMsg<PingMsg,handler>(1, msg);
-  }
-
-  vt::theSched()->runSchedulerWhile([]{return !is_done; });
-
-  is_done = false;
-  auto time = (vt::timing::Timing::getCurrentTime() - start) / pings;
-  auto Mb = static_cast<double>(bytes) / 1024.0 / 1024.0;
-  fmt::print("{:<8} {:<16} 0x{:<10x} {:<22} {:<22}\n", pings, bytes, bytes, Mb, time);
-}
-
-template <int64_t bytes>
-void send() {
-  sender<bytes>();
-  send<bytes << 1>();
-}
-
-template <>
-void send<max_bytes>() {
-  sender<max_bytes>();
-}
-
-int main(int argc, char** argv) {
-  vt::initialize(argc, argv);
-
-  auto const this_node = vt::theContext()->getNode();
-
-  if (argc == 2) {
-    pings = atoi(argv[1]);
-  } else {
-    pings = 10;
-  }
-
-  if (this_node == 0) {
-    fmt::print(
-      "{:<8} {:<16} 0x{:<10} {:<22} {:<22}\n",
-      "Pings", "Bytes", "Bytes", "Mb", "Time per"
-    );
-    send<0x1>();
-  }
-
-  vt::finalize();
-}
+}}}} // namespace vt::tests::perf::common

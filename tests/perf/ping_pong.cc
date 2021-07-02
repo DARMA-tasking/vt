@@ -40,140 +40,117 @@
 // *****************************************************************************
 //@HEADER
 */
-
-#include <cassert>
-#include <cstdint>
+#include "common/test_harness.h"
+#include <vt/collective/collective_ops.h>
+#include <vt/objgroup/manager.h>
+#include <vt/messaging/active.h>
 
 #include <fmt/core.h>
 
-#include "vt/transport.h"
-
-#define DEBUG_PING_PONG 0
-#define REUSE_MESSAGE_PING_PONG 0
-
 using namespace vt;
+using namespace vt::tests::perf::common;
 
 static constexpr int64_t const min_bytes = 1;
-static constexpr int64_t const max_bytes = 16384;
+static constexpr int64_t const max_bytes = 16777216;
 
-static int64_t num_pings = 1024;
+static constexpr int64_t num_pings = 20;
 
 static constexpr NodeType const ping_node = 0;
 static constexpr NodeType const pong_node = 1;
 
-static double startTime = 0.0;
+struct MyTest : PerfTestHarness { };
 
-template <int64_t num_bytes>
-struct PingMsg : ShortMessage {
-  int64_t count = 0;
-  std::array<char, num_bytes> payload;
+struct NodeObj {
+  template <int64_t num_bytes>
+  struct PingMsg : Message {
+    int64_t count = 0;
+    std::array<char, num_bytes> payload_;
 
-  PingMsg() : ShortMessage() { }
-  PingMsg(int64_t const in_count) : ShortMessage(), count(in_count) { }
-};
+    PingMsg() : Message() { }
+    explicit PingMsg(int64_t const in_count) : Message(), count(in_count) { }
+  };
 
-template <int64_t num_bytes>
-struct FinishedPingMsg : ShortMessage {
-  int64_t prev_bytes = 0;
+  template <int64_t num_bytes>
+  struct FinishedPingMsg : Message {
+    int64_t prev_bytes = 0;
 
-  FinishedPingMsg(int64_t const in_prev_bytes)
-    : ShortMessage(), prev_bytes(in_prev_bytes)
-  { }
-};
+    FinishedPingMsg(int64_t const in_prev_bytes)
+      : Message(),
+        prev_bytes(in_prev_bytes) { }
+  };
 
-template <int64_t num_bytes>
-static void pingPong(PingMsg<num_bytes>* in_msg);
+  explicit NodeObj(MyTest* test_obj) : test_obj_(test_obj) { }
+  void initialize() { proxy_ = vt::theObjGroup()->getProxy<NodeObj>(this); }
 
-template <int64_t num_bytes>
-static void finishedPing(FinishedPingMsg<num_bytes>* msg);
-
-static void printTiming(int64_t const& num_bytes) {
-  double const total = MPI_Wtime() - startTime;
-
-  startTime = MPI_Wtime();
-
-  fmt::print(
-    "{}: Finished num_pings={}, bytes={}, total time={}, time/msg={}\n",
-    theContext()->getNode(), num_pings, num_bytes, total, total/num_pings
-  );
-}
-
-template <int64_t num_bytes>
-static void finishedPing(FinishedPingMsg<num_bytes>* msg) {
-  printTiming(num_bytes);
-
-  if (num_bytes != max_bytes) {
-    auto pmsg = makeMessage<PingMsg<num_bytes * 2>>();
-    theMsg()->sendMsg<PingMsg<num_bytes * 2>, pingPong<num_bytes * 2>>(
-      pong_node, pmsg
-    );
+  void addPerfStats(int64_t const& num_bytes) {
+    test_obj_->StopTimer(fmt::format("{} Bytes", num_bytes));
+    test_obj_->GetMemoryUsage();
+    test_obj_->StartTimer(fmt::format("{} Bytes", num_bytes * 2));
   }
-}
+
+  template <int64_t num_bytes>
+  void finishedPing(FinishedPingMsg<num_bytes>* msg) {
+    // End of iteration for node 0
+    addPerfStats(num_bytes);
+
+    if (num_bytes != max_bytes) {
+      constexpr auto new_num_bytes = num_bytes * 2;
+      test_obj_->StartTimer(fmt::format("{} Bytes", new_num_bytes));
+
+      proxy_[pong_node]
+        .send<
+          NodeObj::PingMsg<new_num_bytes>, &NodeObj::pingPong<new_num_bytes>
+        >();
+    }
+  }
+
+  template <int64_t num_bytes>
+  void pingPong(PingMsg<num_bytes>* in_msg) {
+    auto const& cnt = in_msg->count;
+
+    if (cnt >= num_pings) {
+      // End of iteration for node 1
+      addPerfStats(num_bytes);
+
+      proxy_[0]
+        .send<
+          NodeObj::FinishedPingMsg<num_bytes>,
+          &NodeObj::finishedPing<num_bytes>>(num_bytes);
+    } else {
+      NodeType const next =
+        theContext()->getNode() == ping_node ? pong_node : ping_node;
+
+      auto msg = vt::makeMessage<NodeObj::PingMsg<num_bytes>>(cnt + 1);
+      proxy_[next]
+        .sendMsg<NodeObj::PingMsg<num_bytes>, &NodeObj::pingPong<num_bytes>>(
+          msg
+        );
+    }
+  }
+
+private:
+  MyTest* test_obj_ = nullptr;
+  vt::objgroup::proxy::Proxy<NodeObj> proxy_ = {};
+};
 
 template <>
-void finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
-  printTiming(max_bytes);
+void NodeObj::finishedPing<max_bytes>(FinishedPingMsg<max_bytes>* msg) {
+  addPerfStats(max_bytes);
 }
 
-template <int64_t num_bytes>
-static void pingPong(PingMsg<num_bytes>* in_msg) {
-  auto const& cnt = in_msg->count;
+VT_PERF_TEST(MyTest, test_ping_pong) {
+  auto grp_proxy = vt::theObjGroup()->makeCollective<NodeObj>(this);
+  grp_proxy[my_node_]
+    .invoke<decltype(&NodeObj::initialize), &NodeObj::initialize>();
 
-  #if DEBUG_PING_PONG
-    fmt::print(
-      "{}: pingPong: cnt={}, bytes={}\n",
-      theContext()->getNode(), cnt, num_bytes
-    );
-  #endif
+  vt::runInEpochCollective([this, grp_proxy] {
+    StartTimer(fmt::format("{} Bytes", min_bytes));
 
-  #if REUSE_MESSAGE_PING_PONG
-    in_msg->count++;
-  #endif
-
-  if (cnt >= num_pings) {
-    auto msg = makeMessage<FinishedPingMsg<num_bytes>>(num_bytes);
-    theMsg()->sendMsg<FinishedPingMsg<num_bytes>, finishedPing<num_bytes>>(
-      0, msg
-    );
-  } else {
-    NodeType const next =
-      theContext()->getNode() == ping_node ? pong_node : ping_node;
-    #if REUSE_MESSAGE_PING_PONG
-      // @todo: fix this memory allocation problem
-      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(
-        next, in_msg, [=]{ /*delete in_msg;*/ }
-      );
-    #else
-      auto m = makeMessage<PingMsg<num_bytes>>(cnt + 1);
-      theMsg()->sendMsg<PingMsg<num_bytes>, pingPong<num_bytes>>(next, m);
-    #endif
-  }
+    if (my_node_ == 0) {
+      grp_proxy[pong_node]
+        .send<NodeObj::PingMsg<min_bytes>, &NodeObj::pingPong<min_bytes>>();
+    }
+  });
 }
 
-int main(int argc, char** argv) {
-  CollectiveOps::initialize(argc, argv);
-
-  auto const& my_node = theContext()->getNode();
-  auto const& num_nodes = theContext()->getNumNodes();
-
-  if (num_nodes == 1) {
-    CollectiveOps::abort("At least 2 ranks required");
-  }
-
-  if (argc > 1) {
-    num_pings = atoi(argv[1]);
-  }
-
-  startTime = MPI_Wtime();
-
-  if (my_node == 0) {
-    auto m = makeMessage<PingMsg<min_bytes>>();
-    theMsg()->sendMsg<PingMsg<min_bytes>, pingPong<min_bytes>>(pong_node, m);
-  }
-
-  vt::theSched()->runSchedulerWhile([]{ return !rt->isTerminated(); });
-
-  CollectiveOps::finalize();
-
-  return 0;
-}
+VT_PERF_TEST_MAIN()

@@ -41,7 +41,8 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
+#include <vt/collective/startup.h>
+#include <vt/scheduler/scheduler.h>
 #include <vt/utils/memory/memory_usage.h>
 
 std::vector<int32_t*> ptrs;

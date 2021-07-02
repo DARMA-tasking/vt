@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              comm_cost_curve.cc
+//                                   timers.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,93 +41,63 @@
 //@HEADER
 */
 
-#include <vt/collective/startup.h>
-#include <vt/messaging/active.h>
+#if !defined INCLUDED_PERF_COMMON_TIMERS_H
+#define INCLUDED_PERF_COMMON_TIMERS_H
 
-#include <cstdlib>
-#include <array>
+#include "vt/timing/timing_type.h"
 
-struct PingMsg : vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_required(); // by payload_
+#include <chrono>
 
-  PingMsg() = default;
-  explicit PingMsg(int64_t size) {
-    payload_.resize(size);
+namespace vt { namespace tests { namespace perf { namespace common {
+
+using TimePoint     = std::chrono::time_point<std::chrono::steady_clock>;
+using DurationMicro = std::chrono::duration<TimeType, std::micro>;
+using DurationMilli = std::chrono::duration<TimeType, std::milli>;
+using DurationSec   = std::chrono::duration<TimeType>;
+template <typename Duration>
+struct DurationConverter {
+  static DurationMicro ToMicro(Duration const& in_duration) {
+    return DurationMicro{in_duration};
   }
 
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | payload_;
+  static DurationMilli ToMilli(Duration const& in_duration) {
+    return DurationMilli{in_duration};
   }
 
-  std::vector<char> payload_;
+  static DurationSec ToSec(Duration const& in_duration) {
+    return DurationSec{in_duration};
+  }
 };
 
-static constexpr int64_t const max_bytes = 0x1000000;
-static int pings = 64;
-static bool is_done = false;
+/**
+ * \brief Simple stopwatch utility struct for measuring time.
+ *
+ * Example use:
+ *
+ * StopWatch t;
+ *
+ * t.Start();
+ * SomeFunction();
+ * auto const delta = t.Stop<DurationMilli>();
+ *
+ * fmt::print("SomeFunction took {}ms", delta);
+ */
+struct StopWatch {
+  void Start();
 
-static void done(PingMsg* msg) {
-  is_done = true;
-}
+  template <typename Duration = DurationMilli>
+  TimeType Stop() {
+    auto const now = std::chrono::steady_clock::now();
+    auto const delta = Duration{now - cur_time_};
+    cur_time_ = now;
 
-static void handler(PingMsg*) {
-  static int count = 0;
-  count++;
-  if (count == pings) {
-    auto msg = vt::makeMessage<PingMsg>(1);
-    vt::theMsg()->sendMsg<PingMsg,done>(0, msg);
-    count = 0;
-  }
-}
-
-template <int64_t bytes>
-void sender() {
-  auto start = vt::timing::Timing::getCurrentTime();
-  for (int i = 0; i < pings; i++) {
-    auto msg = vt::makeMessage<PingMsg>(bytes);
-    vt::theMsg()->sendMsg<PingMsg,handler>(1, msg);
-  }
-
-  vt::theSched()->runSchedulerWhile([]{return !is_done; });
-
-  is_done = false;
-  auto time = (vt::timing::Timing::getCurrentTime() - start) / pings;
-  auto Mb = static_cast<double>(bytes) / 1024.0 / 1024.0;
-  fmt::print("{:<8} {:<16} 0x{:<10x} {:<22} {:<22}\n", pings, bytes, bytes, Mb, time);
-}
-
-template <int64_t bytes>
-void send() {
-  sender<bytes>();
-  send<bytes << 1>();
-}
-
-template <>
-void send<max_bytes>() {
-  sender<max_bytes>();
-}
-
-int main(int argc, char** argv) {
-  vt::initialize(argc, argv);
-
-  auto const this_node = vt::theContext()->getNode();
-
-  if (argc == 2) {
-    pings = atoi(argv[1]);
-  } else {
-    pings = 10;
+    return delta.count();
   }
 
-  if (this_node == 0) {
-    fmt::print(
-      "{:<8} {:<16} 0x{:<10} {:<22} {:<22}\n",
-      "Pings", "Bytes", "Bytes", "Mb", "Time per"
-    );
-    send<0x1>();
-  }
+private:
+  TimePoint cur_time_ = std::chrono::steady_clock::now();
+};
 
-  vt::finalize();
-}
+}}}} // namespace vt::tests::perf::common
+
+#endif /*INCLUDED_PERF_COMMON_TIMERS_H*/
