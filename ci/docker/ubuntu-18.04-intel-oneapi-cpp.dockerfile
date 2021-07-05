@@ -1,5 +1,5 @@
 
-FROM intel/oneapi-hpckit:2021.1-devel-ubuntu18.04 as base
+FROM intel/oneapi:os-tools-ubuntu18.04 as base
 
 ARG proxy=""
 
@@ -10,6 +10,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
+    intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic \
+    intel-oneapi-mpi-devel \
     ca-certificates \
     less \
     curl \
@@ -25,10 +27,6 @@ RUN apt-get update -y -q && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY ./ci/deps/cmake.sh cmake.sh
-RUN ./cmake.sh 3.18.4
-
-ENV PATH=/cmake/bin/:$PATH
 ENV LESSCHARSET=utf-8
 
 ENV MPICH_CC=icc \
@@ -38,6 +36,21 @@ ENV MPICH_CC=icc \
 
 ENV MPI_EXTRA_FLAGS="" \
     PATH=/usr/lib/ccache/:$PATH
+
+ENV CCL_CONFIGURATION='cpu_gpu_dpcpp' \
+    CMAKE_PREFIX_PATH='/opt/intel/oneapi/tbb/latest/env/..' \
+    CPATH='/opt/intel/oneapi/tbb/latest/env/../include:/opt/intel/oneapi/mpi/latest//include:/opt/intel/oneapi/dev-utilities/latest/include:/opt/intel/oneapi/compiler/latest/linux/include' \
+    FI_PROVIDER_PATH='/opt/intel/oneapi/mpi/latest//libfabric/lib/prov:/usr/lib64/libfabric' \
+    INTEL_LICENSE_FILE='/opt/intel/licenses:/root/intel/licenses:/opt/intel/licenses:/root/intel/licenses:/Users/Shared/Library/Application Support/Intel/Licenses' \
+    IPPCP_TARGET_ARCH='intel64' \
+    IPP_TARGET_ARCH='intel64' \
+    I_MPI_ROOT='/opt/intel/oneapi/mpi/latest' \
+    LD_LIBRARY_PATH='/opt/intel/oneapi/tbb/latest/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/latest//libfabric/lib:/opt/intel/oneapi/mpi/latest//lib/release:/opt/intel/oneapi/mpi/latest//lib:/opt/intel/oneapi/debugger/10.1.1/dep/lib:/opt/intel/oneapi/debugger/10.1.1/libipt/intel64/lib:/opt/intel/oneapi/debugger/10.1.1/gdb/intel64/lib:/opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/lib/emu:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/linux64/lib:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/compiler/lib' \
+    LIBRARY_PATH='/opt/intel/oneapi/tbb/latest/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/latest//libfabric/lib:/opt/intel/oneapi/mpi/latest//lib/release:/opt/intel/oneapi/mpi/latest//lib:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/lib' \
+    ONEAPI_ROOT='/opt/intel/oneapi' \
+    PATH='/opt/intel/oneapi/mpi/latest//libfabric/bin:/opt/intel/oneapi/mpi/latest//bin:/opt/intel/oneapi/dev-utilities/latest/bin:/opt/intel/oneapi/debugger/10.1.1/gdb/intel64/bin:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/llvm/aocl-bin:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/latest/linux/bin/intel64:/opt/intel/oneapi/compiler/latest/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
+    TBBROOT='/opt/intel/oneapi/tbb/latest/env/..' \
+    VT_MPI='impi4'
 
 FROM base as build
 COPY . /vt
