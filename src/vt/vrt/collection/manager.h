@@ -1801,6 +1801,16 @@ public:
   IndexT getRange(VirtualProxyType proxy);
 
   /**
+   * \brief Get the local indices that are currently on this node
+   *
+   * \param[in] proxy the proxy of the collection
+   *
+   * \return the set of indices on this node
+   */
+  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  std::set<IndexT> getLocalIndices(CollectionProxyWrapType<ColT> proxy);
+
+  /**
    * \brief Make the filename for checkpoint/restore
    *
    * \param[in] range range for collection
