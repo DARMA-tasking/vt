@@ -3057,6 +3057,18 @@ IndexT CollectionManager::getRange(VirtualProxyType proxy) {
   return col_holder->max_idx;
 }
 
+template <typename ColT, typename IndexT>
+std::set<IndexT> CollectionManager::getLocalIndices(
+  CollectionProxyWrapType<ColT> proxy
+) {
+  auto elm_holder = findElmHolder<ColT>(proxy);
+  std::set<IndexT> local;
+  elm_holder->foreach([&](IndexT const& idx, CollectionBase<ColT,IndexT>*) {
+    local.insert(idx);
+  });
+  return local;
+}
+
 template <typename IndexT>
 std::string CollectionManager::makeMetaFilename(
   std::string file_base, bool make_sub_dirs
