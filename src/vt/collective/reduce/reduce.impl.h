@@ -61,9 +61,10 @@ void Reduce::reduceUpHan(MsgT* msg) {
   vtAssert(msg->scope() == scope_, "Must match correct scope");
 
   vt_debug_print(
-    verbose, reduce,
-    "reduceUpHan: scope={}, stamp={}, msg={}\n",
-    msg->scope().str(), detail::stringizeStamp(msg->stamp()), print_ptr(msg)
+    terse, reduce,
+    "reduceUpHan: scope={}, stamp={}, msg={}, msg_epoch={}, stack_epoch={}\n",
+    msg->scope().str(), detail::stringizeStamp(msg->stamp()), print_ptr(msg),
+    vt::envelopeGetEpoch(msg->env), theMsg()->getEpoch()
   );
 
   reduceAddMsg<MsgT>(msg,false);
@@ -128,6 +129,11 @@ Reduce::PendingSendType Reduce::reduce(
   NodeType root, MsgT* const msg, detail::ReduceStamp id,
   ReduceNumType num_contrib
 ) {
+  vt_debug_print(
+    terse, reduce,
+    "reduce (pending-send): scope={}, stamp={}, msg_epoch={}, stack_epoch={}\n",
+     scope_.str(), detail::stringizeStamp(id), vt::envelopeGetEpoch(msg->env), theMsg()->getEpoch()
+  );
   auto msg_ptr = promoteMsg(msg);
   return PendingSendType{theMsg()->getEpochContextMsg(msg_ptr), [=](){
                            reduceImmediate<MsgT, f>(root, msg_ptr.get(), id, num_contrib);
@@ -139,6 +145,10 @@ detail::ReduceStamp Reduce::reduceImmediate(
   NodeType root, MsgT* const msg, detail::ReduceStamp id,
   ReduceNumType num_contrib
 ) {
+  if (vt::envelopeGetEpoch(msg->env) == vt::no_epoch) {
+    vt::envelopeSetEpoch(msg->env, theMsg()->getEpoch());
+  }
+
   if (scope_.get().is<detail::StrongGroup>()) {
     envelopeSetGroup(msg->env, scope_.get().get<detail::StrongGroup>().get());
   }
@@ -151,9 +161,10 @@ detail::ReduceStamp Reduce::reduceImmediate(
 
   vt_debug_print(
     terse, reduce,
-    "reduce: scope={}, stamp={}, contrib={}, msg={}, ref={}\n",
+    "reduce: scope={}, stamp={}, contrib={}, msg={}, ref={}, msg_epoch={}, stack_epoch={}\n",
     scope_.str(), detail::stringizeStamp(id), num_contrib, print_ptr(msg),
-    envelopeGetRef(msg->env)
+    envelopeGetRef(msg->env),
+    vt::envelopeGetEpoch(msg->env), theMsg()->getEpoch()
   );
 
   reduceAddMsg<MsgT>(msg,true,num_contrib);
@@ -209,12 +220,22 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
   std::size_t total = getNumChildren() + contrib;
   bool ready = nmsgs == total;
 
+  int x = 0;
+  for (auto&& m : state.msgs) {
+    vt_debug_print(
+      terse, reduce,
+      "startReduce: msg={}/{}, msg_epoch={}\n", x, nmsgs, envelopeGetEpoch(m->env)
+    );
+    x++;
+  }
+
   vt_debug_print(
     normal, reduce,
     "startReduce: scope={}, stamp={}, msg={}, children={}, "
-    "contrib_={}, local_contrib_={}, nmsgs={}, ready={}\n",
+    "contrib_={}, local_contrib_={}, nmsgs={}, ready={}, stack_epoch={}\n",
     scope_.str(), detail::stringizeStamp(id), state.msgs.size(),
-    getNumChildren(), state.num_contrib_, state.num_local_contrib_, nmsgs, ready
+    getNumChildren(), state.num_contrib_, state.num_local_contrib_, nmsgs, ready,
+    theMsg()->getEpoch()
   );
 
   if (ready) {
@@ -234,7 +255,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
         typed_msg->is_root_ = false;
 
         vt_debug_print(
-          verbose, reduce,
+          terse, reduce,
           "scope={}, stamp={}: i={} next={} has_next={} count={} msgs.size()={} "
           "ref={}\n",
           scope_.str(), detail::stringizeStamp(id),
@@ -244,7 +265,7 @@ void Reduce::startReduce(detail::ReduceStamp id, bool use_num_contrib) {
       }
 
       vt_debug_print(
-        verbose, reduce,
+        terse, reduce,
         "scope={}, stamp={}, msgs.size()={}\n",
         scope_.str(), detail::stringizeStamp(id), size
       );
