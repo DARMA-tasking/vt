@@ -89,10 +89,12 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   /// Broadcast to do a reduction over the current group
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = vt::theCB()->makeFunc<MyReduceMsg>([&cb_counter](MyReduceMsg* m) {
-        cb_counter++;
-        fmt::print("at root: final num={}\n", m->getVal());
-      });
+      auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
+        vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
+          cb_counter++;
+          fmt::print("at root: final num={}\n", m->getVal());
+        }
+      );
       proxy.broadcast<MyCol::TestMsg,&MyCol::doReduce>(cb);
     }
   });
@@ -102,27 +104,25 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   }
 
   /// Run RotateLB to make the previous group invalid!
-  vt::arguments::ArgConfig::vt_lb = true;
-  vt::arguments::ArgConfig::vt_lb_name = "RotateLB";
-  vt::arguments::ArgConfig::vt_lb_interval = 1;
+  vt::theConfig()->vt_lb = true;
+  vt::theConfig()->vt_lb_name = "RotateLB";
+  vt::theConfig()->vt_lb_interval = 1;
 
   vt::theCollective()->barrier();
 
-  int phase = 0;
-
   vt::runInEpochCollective([&]{
-    if (this_node == 0) {
-      vt::theCollection()->nextPhase(proxy, phase);
-    }
+    vt::thePhase()->nextPhaseCollective();
   });
 
   // Try to do another reduction; should fail if group is not setup correctly
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      auto cb = vt::theCB()->makeFunc<MyReduceMsg>([&cb_counter](MyReduceMsg* m) {
-        cb_counter++;
-        fmt::print("at root: final num={}\n", m->getVal());
-      });
+      auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
+        vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
+          cb_counter++;
+          fmt::print("at root: final num={}\n", m->getVal());
+        }
+      );
       proxy.broadcast<MyCol::TestMsg,&MyCol::doReduce>(cb);
     }
   });
