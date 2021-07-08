@@ -45,32 +45,32 @@
 #define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/insert/insert_finished.h"
+#include "vt/vrt/collection/insert/modifyable.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-InsertStartEnd<ColT,IndexT,BaseProxyT>::InsertStartEnd(
+Modifyable<ColT,IndexT,BaseProxyT>::Modifyable(
   VirtualProxyType const in_proxy
 ) : BaseProxyT(in_proxy)
 { }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-InserterToken InsertStartEnd<ColT,IndexT,BaseProxyT>::beginInserting(
+ModifierToken Modifyable<ColT,IndexT,BaseProxyT>::beginModification(
   std::string const& label
 ) const {
   auto const col_proxy = this->getProxy();
-  return theCollection()->beginInserting<ColT>(col_proxy, label);
+  return theCollection()->beginModification<ColT>(col_proxy, label);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-void InsertStartEnd<ColT,IndexT,BaseProxyT>::finishInserting(
-  InserterToken&& token
+void Modifyable<ColT,IndexT,BaseProxyT>::finishModification(
+  ModifierToken&& token
 ) const {
   auto const col_proxy = this->getProxy();
-  theCollection()->finishInserting<ColT>(col_proxy, std::move(token));
+  theCollection()->finishModification<ColT>(col_proxy, std::move(token));
 }
 
 }}} /* end namespace vt::vrt::collection */

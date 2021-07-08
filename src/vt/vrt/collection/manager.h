@@ -1387,28 +1387,28 @@ public:
   static void pingHomeHandler(InsertMsg<ColT, MsgT>* msg);
 
   /**
-   * \brief Begin an insertion epoch collectively for a collection with dynamic
-   * membership
+   * \brief Begin a modification epoch collectively for a collection with
+   * dynamic membership
    *
    * \param[in] proxy the collection proxy
    * \param[in] label label for the insertion epoch
    *
-   * \return the inserter token
+   * \return the modifier token
    */
   template <typename ColT>
-  InserterToken beginInserting(
+  ModifierToken beginModification(
     CollectionProxyWrapType<ColT> const& proxy, std::string const& label
   );
 
   /**
-   * \brief Finish an insertion epoch collectively for a collection
+   * \brief Finish an modification epoch collectively for a collection
    *
    * \param[in] proxy the collection proxy
    * \param[in] token the insertion token
    */
   template <typename ColT>
-  void finishInserting(
-    CollectionProxyWrapType<ColT> const& proxy, InserterToken&& token
+  void finishModification(
+    CollectionProxyWrapType<ColT> const& proxy, ModifierToken&& token
   );
 
   /**
@@ -1434,7 +1434,7 @@ public:
   template <typename ColT, typename MsgT>
   void insert(
     CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
-    NodeType const node, InserterToken& token, MsgSharedPtr<MsgT> msg = nullptr,
+    NodeType const node, ModifierToken& token, MsgSharedPtr<MsgT> msg = nullptr,
     bool pinged_home_already = false
   );
 
@@ -1799,7 +1799,7 @@ private:
 #include "vt/vrt/collection/reducable/reducable.impl.h"
 #include "vt/vrt/collection/invoke/invokable.impl.h"
 #include "vt/vrt/collection/insert/insertable.impl.h"
-#include "vt/vrt/collection/insert/insert_finished.impl.h"
+#include "vt/vrt/collection/insert/modifyable.impl.h"
 #include "vt/vrt/collection/destroy/destroyable.impl.h"
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"

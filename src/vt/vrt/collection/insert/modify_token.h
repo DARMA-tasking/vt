@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              insert_finished.h
+//                                modify_token.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,43 +41,40 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
-#define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
-
-#include "vt/config.h"
-#include "vt/vrt/collection/insert/insert_token.h"
-#include "vt/vrt/collection/reducable/reducable.h"
-#include "vt/vrt/proxy/base_collection_proxy.h"
-#include "vt/activefn/activefn.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFY_TOKEN_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFY_TOKEN_H
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-struct InsertStartEnd : BaseProxyT {
-  InsertStartEnd() = default;
-  InsertStartEnd(InsertStartEnd const&) = default;
-  InsertStartEnd(InsertStartEnd&&) = default;
-  explicit InsertStartEnd(VirtualProxyType const in_proxy);
-  InsertStartEnd& operator=(InsertStartEnd const&) = default;
-
-public:
+/**
+ * \struct ModifierToken
+ *
+ * \brief Encapsulates a insertion epoch for a collective insertion on the
+ * collection.
+ */
+struct ModifierToken {
   /**
-   * \brief A collective call to start an insertion epoch
+   * \internal \brief Construct an \c ModifierToken
    *
-   * \param[in] label an optional label for the insertion epoch
-   *
-   * \return the insert token
+   * \param[in] in_modify_epoch the modification epoch
    */
-  InserterToken beginInserting(std::string const& label = "insertion") const;
+  explicit ModifierToken(EpochType in_modify_epoch)
+    : modify_epoch_(in_modify_epoch)
+  { }
+  ModifierToken(ModifierToken const&) = delete;
+  ModifierToken(ModifierToken&&) = default;
 
   /**
-   * \brief A collective call to finish an insertion epoch
+   * \brief Get the modify epoch
    *
-   * \param[in] token the insert token
+   * \return the modify epoch
    */
-  void finishInserting(InserterToken&& token) const;
+  EpochType modifyEpoch() const { return modify_epoch_; }
+
+private:
+  EpochType modify_epoch_ = no_epoch; /**< The modify epoch */
 };
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFY_TOKEN_H*/

@@ -1436,7 +1436,7 @@ inline void CollectionManager::insertCollectionInfo(
 template <typename ColT, typename MsgT>
 /*static*/ void CollectionManager::insertHandler(InsertMsg<ColT, MsgT>* msg) {
   auto const insert_epoch = msg->insert_epoch_;
-  InserterToken token{insert_epoch};
+  ModifierToken token{insert_epoch};
   theCollection()->insert<ColT, MsgT>(
     msg->proxy_, msg->idx_, msg->construct_node_, token, msg->insert_msg_,
     msg->pinged_
@@ -1526,33 +1526,33 @@ ColT* CollectionManager::tryGetLocalPtr(
 }
 
 template <typename ColT>
-InserterToken CollectionManager::beginInserting(
+ModifierToken CollectionManager::beginModification(
   CollectionProxyWrapType<ColT> const& proxy, std::string const& label
 ) {
   auto epoch = theTerm()->makeEpochCollective(label);
 
   vt_debug_print(
     normal, vrt_coll,
-    "beginInserting: label={}, epoch={:x}\n", label, epoch
+    "beginModification: label={}, epoch={:x}\n", label, epoch
   );
 
-  InserterToken token{epoch};
+  ModifierToken token{epoch};
   return std::move(token);
 }
 
 template <typename ColT>
-void CollectionManager::finishInserting(
-  CollectionProxyWrapType<ColT> const& proxy, InserterToken&& token
+void CollectionManager::finishModification(
+  CollectionProxyWrapType<ColT> const& proxy, ModifierToken&& token
 ) {
   using IndexType = typename ColT::IndexType;
 
   auto untyped_proxy = proxy.getProxy();
 
-  auto const epoch = token.insertEpoch();
+  auto const epoch = token.modifyEpoch();
 
   vt_debug_print(
     normal, vrt_coll,
-    "finishInserting: epoch={:x}\n", epoch
+    "finishModification: epoch={:x}\n", epoch
   );
 
   theTerm()->finishedEpoch(epoch);
@@ -1645,14 +1645,14 @@ struct InsertMsgDispatcher<
 template <typename ColT, typename MsgT>
 void CollectionManager::insert(
   CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
-  NodeType const node, InserterToken& token, MsgSharedPtr<MsgT> insert_msg,
+  NodeType const node, ModifierToken& token, MsgSharedPtr<MsgT> insert_msg,
   bool pinged_home_already
 ) {
   using IndexType = typename ColT::IndexType;
 
-  auto const insert_epoch = token.insertEpoch();
+  auto const modify_epoch = token.modifyEpoch();
   auto const untyped_proxy = proxy.getProxy();
-  vtAssert(insert_epoch != no_epoch, "Insertion epoch should be valid");
+  vtAssert(modify_epoch != no_epoch, "Insertion epoch should be valid");
 
   vt_debug_print(
     normal, vrt_coll,
@@ -1660,7 +1660,7 @@ void CollectionManager::insert(
     untyped_proxy
   );
 
-  theMsg()->pushEpoch(insert_epoch);
+  theMsg()->pushEpoch(modify_epoch);
 
   auto const mapped_node = getMappedNode<ColT>(proxy, idx);
   auto const has_explicit_node = node != uninitialized_destination;
@@ -1701,7 +1701,7 @@ void CollectionManager::insert(
       // has a reserved entry from another insertion. If so, we cancel the
       // insertion---otherwise, we reserve for this insertion
       auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
-        proxy, idx, insert_node, mapped_node, insert_epoch, insert_msg
+        proxy, idx, insert_node, mapped_node, modify_epoch, insert_msg
       );
       theMsg()->markAsCollectionMessage(msg);
       theMsg()->sendMsg<InsertMsg<ColT, MsgT>, pingHomeHandler<ColT>>(
@@ -1720,7 +1720,7 @@ void CollectionManager::insert(
     raw_ptr->getStats().updatePhase(thePhase()->getCurrentPhase());
   } else if (insert_node != this_node) {
     auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
-      proxy, idx, insert_node, mapped_node, insert_epoch, insert_msg
+      proxy, idx, insert_node, mapped_node, modify_epoch, insert_msg
     );
     theMsg()->markAsCollectionMessage(msg);
     theMsg()->sendMsg<InsertMsg<ColT, MsgT>,insertHandler<ColT, MsgT>>(
@@ -1728,7 +1728,7 @@ void CollectionManager::insert(
     );
   }
 
-  theMsg()->popEpoch(insert_epoch);
+  theMsg()->popEpoch(modify_epoch);
 }
 
 /*

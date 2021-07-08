@@ -46,7 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/send/sendable.h"
-#include "vt/vrt/collection/insert/insert_token.h"
+#include "vt/vrt/collection/insert/modify_token.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -67,42 +67,42 @@ struct ElmInsertable : BaseProxyT {
    * insertions. The element will be inserted on the node where the initial map
    * puts it.
    *
-   * \param[in] token the insertion token
+   * \param[in] token the modifier token
    */
-  void insert(InserterToken& token) const;
+  void insert(ModifierToken& token) const;
 
   /**
    * \brief Insert a new collection element (calling the default
    * constructor). Collective must have dynamic membership to perform
    * insertions.
    *
-   * \param[in] token the insertion token
+   * \param[in] token the modifier token
    * \param[in] node the node to insert on
    */
-  void insertAt(InserterToken& token, NodeType node) const;
+  void insertAt(ModifierToken& token, NodeType node) const;
 
   /**
    * \brief Insert a new collection element, calling the constructor that takes
    * a message as an argument. Collective must have dynamic membership to
    * perform insertions.
    *
-   * \param[in] token the insertion token
+   * \param[in] token the modifier token
    * \param[in] msg the message
    */
   template <typename MsgT>
-  void insertMsg(InserterToken& token, MsgSharedPtr<MsgT> msg) const;
+  void insertMsg(ModifierToken& token, MsgSharedPtr<MsgT> msg) const;
 
   /**
    * \brief Insert a new collection element, calling the constructor that takes
    * a message as an argument. Collective must have dynamic membership to
    * perform insertions.
    *
-   * \param[in] token the insertion token
+   * \param[in] token the modifier token
    * \param[in] node the node to insert on
    * \param[in] msg the message
    */
   template <typename MsgT>
-  void insertAtMsg(InserterToken& token, NodeType node, MsgSharedPtr<MsgT> msg) const;
+  void insertAtMsg(ModifierToken& token, NodeType node, MsgSharedPtr<MsgT> msg) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
