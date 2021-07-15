@@ -71,7 +71,6 @@
 #include "vt/topos/location/location_headers.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/reduce/reduce_msg.h"
-#include "vt/collective/reduce/reduce_hash.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/vrt/collection/op_buffer.h"
