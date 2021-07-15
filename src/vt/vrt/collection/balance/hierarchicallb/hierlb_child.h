@@ -5,7 +5,7 @@
 //                                hierlb_child.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_CHILD_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_CHILD_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_CHILD_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_CHILD_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_types.h"
@@ -65,4 +65,4 @@ struct HierLBChild : HierLBTypes {
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_CHILD_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_HIERARCHICALLB_HIERLB_CHILD_H*/

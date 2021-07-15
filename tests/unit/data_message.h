@@ -5,7 +5,7 @@
 //                                data_message.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if ! defined __VIRTUAL_TRANSPORT_DATA_MESSAGE__
-#define __VIRTUAL_TRANSPORT_DATA_MESSAGE__
+#if ! defined INCLUDED_UNIT_DATA_MESSAGE_H
+#define INCLUDED_UNIT_DATA_MESSAGE_H
 
 #include "vt/messaging/message.h"
 
@@ -123,4 +123,4 @@ struct WaitInfoMsg : MessageT {
 
 }}} // end namespace vt::tests::unit
 
-#endif /* __VIRTUAL_TRANSPORT_DATA_MESSAGE__*/
+#endif /* INCLUDED_UNIT_DATA_MESSAGE_H*/

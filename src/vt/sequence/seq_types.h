@@ -5,7 +5,7 @@
 //                                 seq_types.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_SEQUENCE_SEQ_TYPES_H
-#define INCLUDED_SEQUENCE_SEQ_TYPES_H
+#if !defined INCLUDED_VT_SEQUENCE_SEQ_TYPES_H
+#define INCLUDED_VT_SEQUENCE_SEQ_TYPES_H
 
 #include <list>
 #include <memory>
@@ -105,4 +105,4 @@ enum class eSeqNodeState : int8_t {
 
 }} //end namespace vt::seq
 
-#endif /* INCLUDED_SEQUENCE_SEQ_TYPES_H*/
+#endif /* INCLUDED_VT_SEQUENCE_SEQ_TYPES_H*/

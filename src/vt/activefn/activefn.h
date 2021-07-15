@@ -5,7 +5,7 @@
 //                                  activefn.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_REGISTRY_FUNCTION
-#define INCLUDED_REGISTRY_FUNCTION
+#if !defined INCLUDED_VT_ACTIVEFN_ACTIVEFN_H
+#define INCLUDED_VT_ACTIVEFN_ACTIVEFN_H
 
 #include "vt/config.h"
 #include "vt/messaging/message.h"
@@ -119,4 +119,4 @@ using ActiveTypedRDMAPutFnType = void(
 
 }  // end namespace vt
 
-#endif  /*INCLUDED_REGISTRY_FUNCTION*/
+#endif  /*INCLUDED_VT_ACTIVEFN_ACTIVEFN_H*/

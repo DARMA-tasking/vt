@@ -23,6 +23,20 @@ add_subdirectory(${PROJECT_LIB_DIR}/CLI)
 set(FMT_LIBRARY fmt)
 add_subdirectory(${PROJECT_LIB_DIR}/fmt)
 
+# json library always included in the build
+set(JSON_BuildTests OFF)
+set(JSON_MultipleHeaders ON)
+set(JSON_LIBRARY nlohmann_json)
+add_subdirectory(${PROJECT_LIB_DIR}/json)
+
+# brotli library always included in the build
+set(BROTLI_DISABLE_TESTS ON)
+# we need to disable bundled mode so it will install properly
+set(BROTLI_BUNDLED_MODE OFF)
+set(BROTLI_BUILD_PORTABLE ON)
+set(BROTLI_LIBRARY brotlicommon brotlienc brotlidec)
+add_subdirectory(${PROJECT_LIB_DIR}/brotli)
+
 # Optionally include mimalloc (alternative memory allocator)
 if (vt_mimalloc_enabled)
   add_subdirectory(${PROJECT_LIB_DIR}/mimalloc)

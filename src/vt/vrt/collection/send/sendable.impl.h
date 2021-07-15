@@ -5,7 +5,7 @@
 //                               sendable.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_SEND_SENDABLE_IMPL_H
-#define INCLUDED_VRT_COLLECTION_SEND_SENDABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_SEND_SENDABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_SEND_SENDABLE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/send/sendable.h"
@@ -132,4 +132,4 @@ messaging::PendingSend Sendable<ColT,IndexT,BaseProxyT>::send(Args&&... args) co
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VRT_COLLECTION_SEND_SENDABLE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_SEND_SENDABLE_IMPL_H*/

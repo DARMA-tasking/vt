@@ -5,7 +5,7 @@
 //                                  mapping.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TOPOS_MAPPING
-#define INCLUDED_TOPOS_MAPPING
+#if !defined INCLUDED_VT_TOPOS_MAPPING_MAPPING_H
+#define INCLUDED_VT_TOPOS_MAPPING_MAPPING_H
 
 #include "vt/config.h"
 #include "vt/topos/mapping/mapping_function.h"
@@ -83,4 +83,4 @@ using CoreSeedMapType = SeedMapType;
 
 }}  // end namespace vt::location
 
-#endif  /*INCLUDED_TOPOS_MAPPING*/
+#endif  /*INCLUDED_VT_TOPOS_MAPPING_MAPPING_H*/

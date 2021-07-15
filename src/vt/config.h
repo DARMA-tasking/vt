@@ -5,7 +5,7 @@
 //                                   config.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,11 +41,11 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS
-#define INCLUDED_CONFIGS
+#if !defined INCLUDED_VT_CONFIG_H
+#define INCLUDED_VT_CONFIG_H
 
 #include "vt/configs/debug/debug_masterconfig.h"
 #include "vt/configs/types/types_headers.h"
 #include "vt/configs/error/error_headers.h"
 
-#endif  /*INCLUDED_CONFIGS*/
+#endif  /*INCLUDED_VT_CONFIG_H*/

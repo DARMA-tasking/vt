@@ -5,7 +5,7 @@
 //                              assert_out_info.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_CONFIGS_ERROR_ASSERT_OUT_INFO_H
-#define INCLUDED_CONFIGS_ERROR_ASSERT_OUT_INFO_H
+#if !defined INCLUDED_VT_CONFIGS_ERROR_ASSERT_OUT_INFO_H
+#define INCLUDED_VT_CONFIGS_ERROR_ASSERT_OUT_INFO_H
 
 #include "vt/configs/error/common.h"
 #include "vt/configs/types/types_type.h"
@@ -74,4 +74,4 @@ assertOutInfo(
 
 #include "vt/configs/error/assert_out_info.impl.h"
 
-#endif /*INCLUDED_CONFIGS_ERROR_ASSERT_OUT_INFO_H*/
+#endif /*INCLUDED_VT_CONFIGS_ERROR_ASSERT_OUT_INFO_H*/

@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   lb_manager.h
+//                                 lb_manager.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_LB_MANAGER_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_LB_MANAGER_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_type.h"
@@ -205,4 +205,4 @@ extern vrt::collection::balance::LBManager* theLBManager();
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_INVOKE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_LB_MANAGER_H*/

@@ -5,7 +5,7 @@
 //                                envelope_get.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_GET_H
-#define INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_GET_H
+#if !defined INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_GET_H
+#define INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_GET_H
 
 #include "vt/config.h"
 #include "vt/messaging/envelope/envelope_type.h"
@@ -152,4 +152,4 @@ inline bool envelopeGetTraceRuntimeEnabled(Env& env);
 
 #include "vt/messaging/envelope/envelope_get.impl.h"
 
-#endif /*INCLUDED_MESSAGING_ENVELOPE_ENVELOPE_GET_H*/
+#endif /*INCLUDED_VT_MESSAGING_ENVELOPE_ENVELOPE_GET_H*/

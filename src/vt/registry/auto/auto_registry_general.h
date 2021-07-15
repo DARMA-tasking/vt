@@ -5,7 +5,7 @@
 //                           auto_registry_general.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -40,8 +40,8 @@
 // *****************************************************************************
 //@HEADER
 */
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_H
+#define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -248,4 +248,4 @@ struct RunnableGen {
 
 #include "vt/registry/auto/auto_registry_general_impl.h"
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_GENERAL_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_GENERAL_H*/

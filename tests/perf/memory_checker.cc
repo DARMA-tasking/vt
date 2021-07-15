@@ -5,7 +5,7 @@
 //                              memory_checker.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,7 +41,8 @@
 //@HEADER
 */
 
-#include <vt/transport.h>
+#include <vt/collective/startup.h>
+#include <vt/scheduler/scheduler.h>
 #include <vt/utils/memory/memory_usage.h>
 
 std::vector<int32_t*> ptrs;

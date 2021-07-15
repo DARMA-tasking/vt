@@ -5,7 +5,7 @@
 //                              comm_cost_curve.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-
-#include <vt/transport.h>
+#include <vt/collective/startup.h>
+#include <vt/messaging/active.h>
 
 #include <cstdlib>
 #include <array>
@@ -91,7 +91,7 @@ void sender() {
     vt::theMsg()->sendMsg<PingMsg,handler>(1, msg);
   }
 
-  runSchedulerWhile([]{return !is_done; });
+  vt::theSched()->runSchedulerWhile([]{return !is_done; });
 
   is_done = false;
   auto time = (vt::timing::Timing::getCurrentTime() - start) / pings;

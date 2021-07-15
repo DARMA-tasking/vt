@@ -5,7 +5,7 @@
 //                         context_vrt_internal_msgs.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
-#define INCLUDED_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
+#if !defined INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
+#define INCLUDED_VT_VRT_CONTEXT_CONTEXT_VRT_INTERNAL_MSGS_H
 
 #include "vt/config.h"
 #include "vt/vrt/proxy/proxy_bits.h"
@@ -98,4 +98,4 @@ struct VirtualProxyRequestMsg : ShortMessage {
 
 }} /* end namespace vt::vrt */
 
-#endif /*INCLUDED_VRT_CONTEXT/CONTEXT_VRT_INTERNAL_MSGS_H*/
+#endif /*INCLUDED_VT_VRT_CONTEXT/CONTEXT_VRT_INTERNAL_MSGS_H*/

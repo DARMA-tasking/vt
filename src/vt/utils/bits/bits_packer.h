@@ -5,7 +5,7 @@
 //                                bits_packer.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_BITS_PACKER
-#define INCLUDED_BITS_PACKER
+#if !defined INCLUDED_VT_UTILS_BITS_BITS_PACKER_H
+#define INCLUDED_VT_UTILS_BITS_BITS_PACKER_H
 
 #include <cassert>
 #include <cstdlib>
@@ -93,4 +93,4 @@ namespace vt {
 
 #include "vt/utils/bits/bits_packer.impl.h"
 
-#endif  /*INCLUDED_BITS_PACKER*/
+#endif  /*INCLUDED_VT_UTILS_BITS_BITS_PACKER_H*/

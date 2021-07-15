@@ -5,7 +5,7 @@
 //                           test_collection_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_COLLECTION_TEST_COLLECTION_COMMON_H
-#define INCLUDED_COLLECTION_TEST_COLLECTION_COMMON_H
+#if !defined INCLUDED_UNIT_COLLECTION_TEST_COLLECTION_COMMON_H
+#define INCLUDED_UNIT_COLLECTION_TEST_COLLECTION_COMMON_H
 
 #include <vt/topos/index/index.h>
 #include <vt/context/context.h>
@@ -148,4 +148,4 @@ CONSTRUCT_TUPLE_TYPE(test_data::C,magic_C_t_)
 
 }}} // end namespace vt::tests::unit
 
-#endif /*INCLUDED_COLLECTION_TEST_COLLECTION_COMMON_H*/
+#endif /*INCLUDED_UNIT_COLLECTION_TEST_COLLECTION_COMMON_H*/

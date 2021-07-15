@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             runtime_banner.cc
+//                              runtime_banner.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -331,9 +331,17 @@ void Runtime::printStartupBanner() {
     auto f9 = opt_on("--vt_lb_stats", "Load balancing statistics collection");
     fmt::print("{}\t{}{}", vt_pre, f9, reset);
 
+    if (getAppConfig()->vt_lb_stats_compress) {
+      auto f10 = opt_on("--vt_lb_stats_compress", "Compressing statistics files");
+      fmt::print("{}\t{}{}", vt_pre, f10, reset);
+    } else {
+      auto f10 = opt_off("--vt_lb_stats_compress", "Not compressing statistics files");
+      fmt::print("{}\t{}{}", vt_pre, f10, reset);
+    }
+
     auto const fname = getAppConfig()->vt_lb_stats_file;
     if (fname != "") {
-      auto f11 = fmt::format("LB stats file name \"{}.0.out\"", fname);
+      auto f11 = fmt::format("LB stats file name \"{}\"", fname);
       auto f12 = opt_on("--vt_lb_stats_file", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }
@@ -347,7 +355,7 @@ void Runtime::printStartupBanner() {
 
     auto const fnamein = getAppConfig()->vt_lb_stats_file_in;
     if (fnamein != "") {
-      auto f11 = fmt::format("LB stats file name in \"{}.0.out\"", fnamein);
+      auto f11 = fmt::format("LB stats file name in \"{}\"", fnamein);
       auto f12 = opt_on("--vt_lb_stats_file_in", f11);
       fmt::print("{}\t{}{}", vt_pre, f12, reset);
     }

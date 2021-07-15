@@ -5,7 +5,7 @@
 //                                group_region.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_GROUP_REGION_GROUP_REGION_H
-#define INCLUDED_GROUP_REGION_GROUP_REGION_H
+#if !defined INCLUDED_VT_GROUP_REGION_GROUP_REGION_H
+#define INCLUDED_VT_GROUP_REGION_GROUP_REGION_H
 
 #include "vt/config.h"
 #include "vt/group/group_common.h"
@@ -83,4 +83,4 @@ struct ShallowList;
 
 }}} /* end namespace vt::group::region */
 
-#endif /*INCLUDED_GROUP_REGION_GROUP_REGION_H*/
+#endif /*INCLUDED_VT_GROUP_REGION_GROUP_REGION_H*/

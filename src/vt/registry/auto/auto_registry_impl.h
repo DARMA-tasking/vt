@@ -5,7 +5,7 @@
 //                             auto_registry_impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -40,8 +40,8 @@
 // *****************************************************************************
 //@HEADER
 */
-#if !defined INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H
-#define INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H
+#if !defined INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H
+#define INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H
 
 #include "vt/config.h"
 #include "vt/registry/auto/auto_registry_common.h"
@@ -164,4 +164,4 @@ void setHandlerTraceName(std::string const& name, std::string const& parent) {
 
 }} // end namespace vt::auto_registry
 
-#endif /*INCLUDED_REGISTRY_AUTO_REGISTRY_IMPL_H*/
+#endif /*INCLUDED_VT_REGISTRY_AUTO_AUTO_REGISTRY_IMPL_H*/

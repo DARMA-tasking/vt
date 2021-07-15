@@ -5,7 +5,7 @@
 //                                  demangle.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_UTILS_DEMANGLE_DEMANGLE_H
-#define INCLUDED_UTILS_DEMANGLE_DEMANGLE_H
+#if !defined INCLUDED_VT_UTILS_DEMANGLE_DEMANGLE_H
+#define INCLUDED_VT_UTILS_DEMANGLE_DEMANGLE_H
 
 #include "vt/config.h"
 
@@ -158,4 +158,4 @@ struct DemanglerUtils {
 
 }}} // end namespace vt::util::demangle
 
-#endif /*INCLUDED_UTILS_DEMANGLE_DEMANGLE_H*/
+#endif /*INCLUDED_VT_UTILS_DEMANGLE_DEMANGLE_H*/

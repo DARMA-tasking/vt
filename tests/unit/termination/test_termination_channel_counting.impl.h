@@ -5,7 +5,7 @@
 //                   test_termination_channel_counting.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_CHANNEL_COUNTING_IMPL_H
-#define INCLUDED_TERMINATION_CHANNEL_COUNTING_IMPL_H
+#if !defined INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_CHANNEL_COUNTING_IMPL_H
+#define INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_CHANNEL_COUNTING_IMPL_H
 
 namespace vt { namespace tests { namespace unit { namespace channel {
 
@@ -261,4 +261,4 @@ inline bool hasEnded(vt::EpochType ep) {
 
 }}}} // end namespace vt::tests::unit::channel
 
-#endif /*INCLUDED_TERMINATION_CHANNEL_COUNTING_IMPL_H*/
+#endif /*INCLUDED_UNIT_TERMINATION_TEST_TERMINATION_CHANNEL_COUNTING_IMPL_H*/

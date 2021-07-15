@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              mpi_singleton.h
+//                               mpi_singleton.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined __VIRTUAL_TRANSPORT_MPI_SINGLETON___
-#define __VIRTUAL_TRANSPORT_MPI_SINGLETON___
+#if !defined INCLUDED_UNIT_MPI_SINGLETON_H
+#define INCLUDED_UNIT_MPI_SINGLETON_H
 
 #include <memory>
 #include <mpi.h>
@@ -94,4 +94,4 @@ private:
 
 }}} // namespace vt::tests::unit
 
-#endif /* __VIRTUAL_TRANSPORT_MPI_SINGLETON___ */
+#endif /* INCLUDED_UNIT_MPI_SINGLETON_H */

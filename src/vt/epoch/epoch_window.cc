@@ -5,7 +5,7 @@
 //                               epoch_window.cc
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -85,7 +85,8 @@ EpochWindow::EpochWindow(EpochType epoch) {
   // All epochs in a given window start out terminated (thus, reusable).
   terminated_epochs_.insertInterval(interval);
 
-  fmt::print(
+  vt_print(
+    term,
     "EpochWindow: epoch={:x}, arch={:x}, min={:x}, max={:x}\n",
     epoch, archetype_epoch_, min_epoch, max_epoch
   );

@@ -5,7 +5,7 @@
 //                              vt_git_revision.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined VT_CONFIG_GIT_REVISION_H
-#define VT_CONFIG_GIT_REVISION_H
+#if !defined INCLUDED_VT_CONFIGS_GENERATED_VT_GIT_REVISION_H
+#define INCLUDED_VT_CONFIGS_GENERATED_VT_GIT_REVISION_H
 
 #include <string>
 
@@ -52,4 +52,4 @@ extern std::string const vt_git_refspec;
 extern std::string const vt_git_description;
 extern std::string const vt_git_clean_status;
 
-#endif /*VT_CONFIG_GIT_REVISION_H*/
+#endif /*INCLUDED_VT_CONFIGS_GENERATED_VT_GIT_REVISION_H*/

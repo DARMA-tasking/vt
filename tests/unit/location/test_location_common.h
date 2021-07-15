@@ -5,7 +5,7 @@
 //                            test_location_common.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TEST_LOCATION_COMMON_H
-#define INCLUDED_TEST_LOCATION_COMMON_H
+#if !defined INCLUDED_UNIT_LOCATION_TEST_LOCATION_COMMON_H
+#define INCLUDED_UNIT_LOCATION_TEST_LOCATION_COMMON_H
 
 #include "data_message.h"
 #include "test_parallel_harness.h"
@@ -199,4 +199,4 @@ using MsgType = testing::Types<ShortMsg, LongMsg, SerialMsg>;
 
 }}}} // namespace vt::tests::unit::location
 
-#endif /*INCLUDED_TEST_LOCATION_COMMON_H*/
+#endif /*INCLUDED_UNIT_LOCATION_TEST_LOCATION_COMMON_H*/

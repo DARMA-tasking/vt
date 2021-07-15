@@ -5,7 +5,7 @@
 //                              collection_proxy.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_PROXY_COLLECTION_PROXY_H
-#define INCLUDED_VRT_PROXY_COLLECTION_PROXY_H
+#if !defined INCLUDED_VT_VRT_PROXY_COLLECTION_PROXY_H
+#define INCLUDED_VT_VRT_PROXY_COLLECTION_PROXY_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/proxy_traits/proxy_col_traits.h"
@@ -128,4 +128,4 @@ using CollectionProxy = vrt::collection::CollectionProxy<ColT,IndexT>;
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VRT_PROXY_COLLECTION_PROXY_H*/
+#endif /*INCLUDED_VT_VRT_PROXY_COLLECTION_PROXY_H*/

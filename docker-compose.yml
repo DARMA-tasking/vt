@@ -14,7 +14,7 @@
 #             clang-3.9, clang-4.0, clang-5.0, clang-6.0, clang-7, clang-8,
 #             clang-9, clang-10,
 #             icc-18, icc-19,
-#             nvcc-10, nvcc-11}
+#             nvcc-10, nvcc-10.2, nvcc-11}
 #   REPO=lifflander1/vt
 #   UBUNTU={18.04, 20.04}
 #   ULIMIT_CORE=0
@@ -87,6 +87,7 @@ volumes:
   amd64-ubuntu-18.04-icc-19-cache:
   amd64-ubuntu-18.04-icc-20-cache:
   amd64-ubuntu-18.04-nvcc-10-cache:
+  amd64-ubuntu-18.04-nvcc-10.2-cache:
   amd64-ubuntu-18.04-nvcc-11-cache:
   amd64-alpine-clang-3.9-cache:
   amd64-alpine-clang-4.0-cache:
@@ -106,6 +107,7 @@ volumes:
   amd64-alpine-icc-19-cache:
   amd64-alpine-icc-20-cache:
   amd64-alpine-nvcc-10-cache:
+  amd64-alpine-nvcc-10.2-cache:
   amd64-alpine-nvcc-11-cache:
   arm64v8-ubuntu-18.04-gcc-7-cache:
   arm64v8-alpine-gcc-7-cache:

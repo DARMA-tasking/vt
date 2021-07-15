@@ -5,7 +5,7 @@
 //                           pipe_manager_typed.fwd.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_PIPE_PIPE_MANAGER_TYPED_FWD_H
-#define INCLUDED_PIPE_PIPE_MANAGER_TYPED_FWD_H
+#if !defined INCLUDED_VT_PIPE_PIPE_MANAGER_TYPED_FWD_H
+#define INCLUDED_VT_PIPE_PIPE_MANAGER_TYPED_FWD_H
 
 #include "vt/config.h"
 
@@ -52,4 +52,4 @@ struct PipeManagerTyped;
 
 }} /* end namespace vt::pipe */
 
-#endif /*INCLUDED_PIPE_PIPE_MANAGER_TYPED_FWD_H*/
+#endif /*INCLUDED_VT_PIPE_PIPE_MANAGER_TYPED_FWD_H*/

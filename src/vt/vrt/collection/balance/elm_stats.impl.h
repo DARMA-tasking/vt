@@ -5,7 +5,7 @@
 //                               elm_stats.impl.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/elm_stats.h"
@@ -92,8 +92,13 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   auto const& comm = stats.getComm(cur_phase);
   auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
 
+  std::vector<uint64_t> idx;
+  for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
+    idx.push_back(static_cast<uint64_t>(col->getIndex()[i]));
+  }
+
   theNodeStats()->addNodeStats(
-    col, cur_phase, total_load, subphase_loads, comm, subphase_comm
+    col, cur_phase, total_load, subphase_loads, comm, subphase_comm, idx
   );
 
   auto model = theLBManager()->getLoadModel();
@@ -102,4 +107,4 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_ELM_STATS_IMPL_H*/

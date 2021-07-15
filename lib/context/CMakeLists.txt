@@ -171,7 +171,7 @@ option(
 if(vt_fcontext_build_tests_examples)
 
   foreach(EXAMPLE_FULL ${PROJECT_C_EXAMPLES})
-    GET_FILENAME_COMPONENT(
+    get_filename_component(
       EXAMPLE
       ${EXAMPLE_FULL}
       NAME_WE
@@ -196,7 +196,7 @@ if(vt_fcontext_build_tests_examples)
   endforeach()
 
   foreach(EXAMPLE_FULL ${PROJECT_CXX_EXAMPLES})
-    GET_FILENAME_COMPONENT(
+    get_filename_component(
       EXAMPLE
       ${EXAMPLE_FULL}
       NAME_WE

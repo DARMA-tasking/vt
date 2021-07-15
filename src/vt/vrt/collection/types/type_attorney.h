@@ -5,7 +5,7 @@
 //                               type_attorney.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H
-#define INCLUDED_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H
+#define INCLUDED_VT_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/manager.fwd.h"
@@ -70,4 +70,4 @@ private:
 
 #include "vt/vrt/collection/types/type_attorney.impl.h"
 
-#endif /*INCLUDED_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_TYPE_ATTORNEY_H*/

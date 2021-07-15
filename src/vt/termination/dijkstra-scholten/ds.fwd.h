@@ -5,7 +5,7 @@
 //                                   ds.fwd.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_FWD_H
-#define INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_FWD_H
+#if !defined INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_DS_FWD_H
+#define INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_DS_FWD_H
 
 #include "vt/config.h"
 
@@ -54,4 +54,4 @@ struct TermDS;
 }}} /* end namespace vt::term::ds */
 
 
-#endif /*INCLUDED_TERMINATION_DIJKSTRA_SCHOLTEN_DS_FWD_H*/
+#endif /*INCLUDED_VT_TERMINATION_DIJKSTRA_SCHOLTEN_DS_FWD_H*/

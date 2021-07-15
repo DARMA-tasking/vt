@@ -5,7 +5,7 @@
 //                               types_headers.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TYPES_HEADERS
-#define INCLUDED_TYPES_HEADERS
+#if !defined INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H
+#define INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H
 
 // Include common types, their sizes, and sentinel values
 #include "vt/configs/types/types_type.h"
@@ -50,4 +50,4 @@
 #include "vt/configs/types/types_size.h"
 #include "vt/configs/types/types_sentinels.h"
 
-#endif  /*INCLUDED_TYPES_HEADERS*/
+#endif  /*INCLUDED_VT_CONFIGS_TYPES_TYPES_HEADERS_H*/

@@ -5,7 +5,7 @@
 //                            stats_restart_reader.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/vrt/collection/balance/stats_data.h"
 
 #include <deque>
 #include <map>
@@ -82,7 +83,15 @@ public:
 
   void startup() override;
 
+  void readStatsFromStream(std::stringstream stream);
+
+  void constructMoveList(std::deque<std::set<ElementIDType>> element_history);
+
   void readStats(std::string const& fileName);
+
+  std::deque<std::set<ElementIDType>> readIntoElementHistory(
+    StatsData const& sd
+  );
 
   std::vector<ElementIDType> const& getMoveList(PhaseType phase) const;
 
@@ -102,9 +111,8 @@ public:
   }
 
 private:
-  void inputStatsFile(
-    std::string const& fileName,
-    std::deque<std::set<ElementIDType>>& element_history
+  std::deque<std::set<ElementIDType>> inputStatsFile(
+    std::string const& fileName
   );
 
   void createMigrationInfo(

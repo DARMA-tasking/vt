@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 naive_persistence.h
+//                             naive_persistence.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_NAIVE_PERSISTENCE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_NAIVE_PERSISTENCE_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_NAIVE_PERSISTENCE_H
 
 #include "vt/vrt/collection/balance/model/composed_model.h"
 #include <unordered_map>

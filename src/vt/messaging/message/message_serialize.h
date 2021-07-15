@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            message_serialize.h
+//                             message_serialize.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_MESSAGING_MESSAGE_MESSAGE_SERIALIZE_H
-#define INCLUDED_MESSAGING_MESSAGE_MESSAGE_SERIALIZE_H
+#if !defined INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_SERIALIZE_H
+#define INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_SERIALIZE_H
 
 #include <type_traits>
 
@@ -467,4 +467,4 @@ using SerializeIfNeeded = vt::messaging::SerializeIfNeededMsg<MsgT, SelfT, DepTy
 
 } //end namespace vt
 
-#endif /*INCLUDED_MESSAGING_MESSAGE_MESSAGE_SERIALIZE_H*/
+#endif /*INCLUDED_VT_MESSAGING_MESSAGE_MESSAGE_SERIALIZE_H*/

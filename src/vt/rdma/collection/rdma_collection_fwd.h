@@ -5,7 +5,7 @@
 //                            rdma_collection_fwd.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_RDMA_RDMA_COLLECTION_FWD_H
-#define INCLUDED_RDMA_RDMA_COLLECTION_FWD_H
+#if !defined INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_FWD_H
+#define INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_FWD_H
 
 namespace vt { namespace rdma {
 
@@ -50,4 +50,4 @@ struct RDMACollectionManager;
 
 }} /* end namespace vt::rdma */
 
-#endif /*INCLUDED_RDMA_RDMA_COLLECTION_FWD_H*/
+#endif /*INCLUDED_VT_RDMA_COLLECTION_RDMA_COLLECTION_FWD_H*/

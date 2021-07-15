@@ -5,7 +5,7 @@
 #  VT_EXE_LINKER_FLAGS - flags dependent projects must include for linking
 
 # Compute paths
-GET_FILENAME_COMPONENT (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component (VT_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 include(${VT_CMAKE_DIR}/vtTargets.cmake)
 if (@vt_trace_only@)

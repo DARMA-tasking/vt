@@ -5,7 +5,7 @@
 //                               trace_registry.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_TRACE_TRACE_REGISTRY_H
-#define INCLUDED_TRACE_TRACE_REGISTRY_H
+#if !defined INCLUDED_VT_TRACE_TRACE_REGISTRY_H
+#define INCLUDED_VT_TRACE_TRACE_REGISTRY_H
 
 #include "vt/trace/trace_common.h"
 #include "vt/trace/trace_containers.h"
@@ -73,4 +73,4 @@ struct TraceRegistry {
 
 }} //end namespace vt::trace
 
-#endif /*INCLUDED_TRACE_TRACE_REGISTRY_H*/
+#endif /*INCLUDED_VT_TRACE_TRACE_REGISTRY_H*/

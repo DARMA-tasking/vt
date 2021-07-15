@@ -2,10 +2,10 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                app_config.h
+//                                 app_config.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2020 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -140,10 +140,11 @@ struct AppConfig {
   int32_t vt_lb_interval      = 1;
   bool vt_lb_keep_last_elm    = false;
   bool vt_lb_stats            = false;
+  bool vt_lb_stats_compress   = true;
   std::string vt_lb_stats_dir     = "vt_lb_stats";
-  std::string vt_lb_stats_file    = "stats";
+  std::string vt_lb_stats_file    = "stats.%p.json";
   std::string vt_lb_stats_dir_in  = "vt_lb_stats_in";
-  std::string vt_lb_stats_file_in = "stats_in";
+  std::string vt_lb_stats_file_in = "stats.%p.json";
 
   bool vt_no_detect_hang       = false;
   bool vt_print_no_progress    = true;
@@ -239,6 +240,8 @@ struct AppConfig {
   /// Does not include argv[0]. Original char* objects.
   std::vector<char*> passthru_args;
 
+  std::string getLBStatsFileOut() const;
+  std::string getLBStatsFileIn() const;
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -300,6 +303,7 @@ struct AppConfig {
       | vt_lb_args
       | vt_lb_interval
       | vt_lb_stats
+      | vt_lb_stats_compress
       | vt_lb_stats_dir
       | vt_lb_stats_file
       | vt_lb_stats_dir_in

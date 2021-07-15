@@ -5,7 +5,7 @@
 //                                 node_stats.h
 //                       DARMA/vt => Virtual Transport
 //
-// Copyright 2019 National Technology & Engineering Solutions of Sandia, LLC
+// Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
 // (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S.
 // Government retains certain rights in this software.
 //
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H
-#define INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
@@ -53,6 +53,8 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/utils/json/base_appender.h"
+#include "vt/vrt/collection/balance/stats_data.h"
 
 #include <string>
 #include <unordered_map>
@@ -107,6 +109,7 @@ public:
    * \param[in] phase the current phase
    * \param[in] time the time the object took
    * \param[in] comm the comm graph for the object
+   * \param[in] index the index for the object
    *
    * \return the ID struct for the object assigned for this phase
    */
@@ -114,7 +117,8 @@ public:
     Migratable* col_elm,
     PhaseType const& phase, TimeType const& time,
     std::vector<TimeType> const& subphase_time,
-    CommMapType const& comm, std::vector<CommMapType> const& subphase_comm
+    CommMapType const& comm, std::vector<CommMapType> const& subphase_comm,
+    std::vector<uint64_t> const& index
   );
 
   /**
@@ -222,19 +226,16 @@ public:
 
   void initialize() override;
   void finalize() override;
+  void fatalError() override;
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | proxy_
-      | node_data_
-      | node_subphase_data_
       | node_migrate_
       | node_collection_lookup_
-      | node_comm_
       | next_elm_
-      | stats_file_
       | created_dir_
-      | node_subphase_comm_;
+      | stats_;
   }
 
 private:
@@ -251,24 +252,18 @@ private:
 private:
   /// Local proxy to objgroup
   objgroup::proxy::Proxy<NodeStats> proxy_;
-  /// Node timings for each local object
-  std::unordered_map<PhaseType, LoadMapType> node_data_;
-  /// Node subphase timings for each local object
-  std::unordered_map<PhaseType, SubphaseLoadMapType> node_subphase_data_;
   /// Local migration type-free lambdas for each object
   std::unordered_map<ElementIDStruct,MigrateFnType> node_migrate_;
   /// Map from element ID to the collection's virtual proxy (untyped)
   std::unordered_map<ElementIDStruct,VirtualProxyType> node_collection_lookup_;
-  /// Node communication graph for each local object
-  std::unordered_map<PhaseType, CommMapType> node_comm_;
-  /// Node communication graph for each subphase
-  std::unordered_map<PhaseType, std::unordered_map<SubphaseType, CommMapType>> node_subphase_comm_;
   /// The current element ID
   ElementIDType next_elm_;
-  /// The stats file name for outputting instrumentation
-  FILE* stats_file_ = nullptr;
   /// Whether the stats directory has been created
   bool created_dir_ = false;
+  /// The appender for outputting stat files in JSON format
+  std::unique_ptr<util::json::BaseAppender> stat_writer_ = nullptr;
+  /// The struct that holds all the statistic data
+  std::unique_ptr<StatsData> stats_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
@@ -279,4 +274,4 @@ extern vrt::collection::balance::NodeStats* theNodeStats();
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VRT_COLLECTION_BALANCE_NODE_STATS_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_NODE_STATS_H*/
