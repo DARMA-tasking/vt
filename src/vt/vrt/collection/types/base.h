@@ -53,6 +53,7 @@
 #include "vt/vrt/collection/types/untyped.h"
 #include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/proxy/collection_proxy.h"
+#include "vt/collective/reduce/scoping/strong_types.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -61,6 +62,8 @@ struct CollectionBase : Indexable<IndexT> {
   using ProxyType = VirtualElmProxyType<ColT, IndexT>;
   using CollectionProxyType = CollectionProxy<ColT, IndexT>;
   using IndexType = IndexT;
+  using ReduceStampType = collective::reduce::detail::ReduceStamp;
+  using ReduceSeqStampType = collective::reduce::detail::StrongSeq;
 
   CollectionBase() = default;
   CollectionBase(
@@ -89,11 +92,19 @@ struct CollectionBase : Indexable<IndexT> {
 
   friend struct CollectionManager;
 
+  /**
+   * \brief Get the next reduce stamp and increment
+   *
+   * \return the reduce stamp
+   */
+  ReduceStampType getStampInc();
+
 protected:
   VirtualElmCountType numElems_ = no_elms;
   EpochType cur_bcast_epoch_ = 0;
   bool hasStaticSize_ = true;
   bool elmsFixedAtCreation_ = true;
+  ReduceSeqStampType reduce_stamp_ = ReduceSeqStampType{1};
 };
 
 }}} /* end namespace vt::vrt::collection */

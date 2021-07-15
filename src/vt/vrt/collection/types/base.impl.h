@@ -110,6 +110,7 @@ void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   s | elmsFixedAtCreation_;
   s | cur_bcast_epoch_;
   s | numElems_;
+  s | reduce_stamp_;
 }
 
 template <typename ColT, typename IndexT>
@@ -118,6 +119,15 @@ template <typename ColT, typename IndexT>
 template <typename ColT, typename IndexT>
 void CollectionBase<ColT, IndexT>::setSize(VirtualElmCountType const& elms) {
   numElems_ = elms;
+}
+
+template <typename ColT, typename IndexT>
+typename CollectionBase<ColT, IndexT>::ReduceStampType
+CollectionBase<ColT, IndexT>::getStampInc() {
+  ReduceStampType stamp;
+  stamp.init<ReduceSeqStampType>(reduce_stamp_);
+  ++reduce_stamp_;
+  return stamp;
 }
 
 }}} /* end namespace vt::vrt::collection */
