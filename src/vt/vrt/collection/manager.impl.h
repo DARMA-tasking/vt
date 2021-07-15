@@ -1195,6 +1195,17 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
 ) {
   using IndexT = typename ColT::IndexType;
 
+  vtAssert(
+    hasContext<IndexT>(), "Must have collection element context"
+  );
+  vtAssert(
+    queryProxyContext<IndexT>() == proxy.getProxy(),
+    "Must have matching proxy context"
+  );
+
+  // Get the current running index context
+  IndexT idx = *queryIndexContext<IndexT>();
+
   auto msg = promoteMsg(raw_msg);
 
   vt_debug_print(
@@ -1233,13 +1244,9 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
 
       vtAssert(group_ready, "Must be ready");
 
-      ReduceVirtualIDType reduce_id = std::make_tuple(stamp,col_proxy);
-
-      auto stamp_iter = reduce_cur_stamp_.find(reduce_id);
-
-      ReduceStamp cur_stamp = stamp;
-      if (stamp == ReduceStamp{} && stamp_iter != reduce_cur_stamp_.end()) {
-        cur_stamp = stamp_iter->second;
+      auto cur_stamp = stamp;
+      if (cur_stamp == ReduceStamp{}) {
+        cur_stamp = proxy(idx).tryGetLocalPtr()->getStampInc();
       }
 
       collective::reduce::Reduce* r = nullptr;
@@ -1249,24 +1256,10 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
         r = theCollective()->getReducerVrtProxy(col_proxy);
       }
 
-      auto ret_stamp = r->reduceImmediate<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
+      r->reduceImmediate<MsgT,f>(root_node, msg.get(), cur_stamp, num_elms);
 
       vt_debug_print(
         normal, vrt_coll,
-        "reduceMsg: col_proxy={:x}, num_elms={}\n",
-        col_proxy, num_elms
-      );
-
-      if (stamp_iter == reduce_cur_stamp_.end()) {
-        reduce_cur_stamp_.emplace(
-          std::piecewise_construct,
-          std::forward_as_tuple(reduce_id),
-          std::forward_as_tuple(ret_stamp)
-        );
-      }
-
-      vt_debug_print(
-        verbose, vrt_coll,
         "reduceMsg: col_proxy={:x}, num_elms={}\n",
         col_proxy, num_elms
       );
