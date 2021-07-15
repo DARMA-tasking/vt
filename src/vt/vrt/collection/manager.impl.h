@@ -2693,6 +2693,21 @@ void CollectionManager::insert(
          */
         CollectionTypeAttorney::setup(new_vc, num_elms, cur_idx, untyped_proxy);
 
+        auto elm_holder = findElmHolder<ColT,IndexT>(untyped_proxy);
+
+        // Temporary hack to get a somewhat valid reduce sequence number during
+        // dynamic insertions. Will not work properly when no elements are
+        // mapped to this node.
+        using StrongSeq = collective::reduce::detail::StrongSeq;
+        using SeqType = typename StrongSeq::Type;
+        SeqType min_seq = std::numeric_limits<SeqType>::max();
+        elm_holder->foreach([&](IndexT const&, CollectionBase<ColT,IndexT>* c) {
+          min_seq = std::min(*c->reduce_stamp_, min_seq);
+        });
+        if (min_seq != std::numeric_limits<SeqType>::max()) {
+          new_vc->reduce_stamp_ = StrongSeq{min_seq};
+        }
+
         new_vc->getStats().updatePhase(thePhase()->getCurrentPhase());
 
         theCollection()->insertCollectionElement<ColT, IndexT>(
