@@ -75,7 +75,6 @@
 #include "vt/topos/mapping/mapping_headers.h"
 #include "vt/termination/term_headers.h"
 #include "vt/serialization/sizer.h"
-#include "vt/collective/reduce/reduce_hash.h"
 #include "vt/group/group_headers.h"
 #include "vt/pipe/pipe_headers.h"
 #include "vt/scheduler/scheduler.h"
