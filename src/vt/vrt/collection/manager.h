@@ -113,7 +113,6 @@ struct CollectionManager
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
-  using ReduceVirtualIDType = collective::reduce::ReduceVirtualIDType;
   using ReduceStamp = collective::reduce::ReduceStamp;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
@@ -2057,7 +2056,6 @@ private:
 
   CleanupListFnType cleanup_fns_;
   std::unordered_set<VirtualProxyType> constructed_;
-  std::unordered_map<ReduceVirtualIDType,ReduceStamp> reduce_cur_stamp_;
   std::unordered_map<VirtualProxyType,ActionType> collect_stats_for_lb_;
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
