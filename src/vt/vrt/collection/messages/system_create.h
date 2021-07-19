@@ -54,31 +54,25 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <
-  typename RemoteInfo, typename ArgsTuple, typename CollectionT, typename IndexT
->
+template <typename RemoteInfo, typename CollectionT>
 struct CollectionCreateMsg : ::vt::Message {
   using MessageParentType = ::vt::Message;
-  vt_msg_serialize_if_needed_by_parent_or_type2(RemoteInfo, ArgsTuple);
+  vt_msg_serialize_if_needed_by_parent_or_type1(RemoteInfo);
 
   using CollectionType = CollectionT;
-  using IndexType = IndexT;
-  using ArgsTupleType = ArgsTuple;
 
   RemoteInfo info;
-  ArgsTuple tup;
   HandlerType map;
 
   CollectionCreateMsg() = default;
-  CollectionCreateMsg(
-    HandlerType const in_han, ArgsTuple&& in_tup
-  ) : ::vt::Message(), tup(std::forward<ArgsTuple>(in_tup)), map(in_han)
+  CollectionCreateMsg(HandlerType const in_han)
+    : map(in_han)
   { }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     MessageParentType::serialize(s);
-    s | info | tup | map;
+    s | info | map;
   }
 };
 

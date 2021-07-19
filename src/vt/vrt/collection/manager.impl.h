@@ -56,7 +56,6 @@
 #include "vt/vrt/collection/messages/user_wrap.h"
 #include "vt/vrt/collection/types/type_attorney.h"
 #include "vt/vrt/collection/defaults/default_map.h"
-#include "vt/vrt/collection/constructor/coll_constructors_deref.h"
 #include "vt/vrt/collection/migrate/migrate_msg.h"
 #include "vt/vrt/collection/migrate/migrate_handlers.h"
 #include "vt/vrt/collection/active/active_funcs.h"
@@ -130,17 +129,10 @@ void CollectionManager::destroyCollections() {
   UniversalIndexHolder<>::destroyAllLive();
 }
 
-template <typename ColT, typename IndexT, typename Tuple, size_t... I>
+template <typename ColT, typename IndexT, typename... Args>
 /*static*/ typename CollectionManager::VirtualPtrType<ColT, IndexT>
-CollectionManager::runConstructor(
-  VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
-  std::index_sequence<I...>
-) {
-  return std::make_unique<ColT>(
-    std::forward<typename std::tuple_element<I,Tuple>::type>(
-      std::get<I>(*tup)
-    )...
-  );
+CollectionManager::runConstructor(Args&&... args) {
+  return std::make_unique<ColT>(std::forward<Args>(args)...);
 }
 
 template <typename ColT>
@@ -154,7 +146,7 @@ void CollectionManager::addCleanupFn(VirtualProxyType proxy) {
 template <typename SysMsgT>
 /*static*/ void CollectionManager::distConstruct(SysMsgT* msg) {
   using ColT        = typename SysMsgT::CollectionType;
-  using IndexT      = typename SysMsgT::IndexType;
+  using IndexT      = typename ColT::IndexType;
   using BaseIdxType = vt::index::BaseIndex;
 
   auto const num_nodes = theContext()->getNumNodes();
@@ -220,17 +212,7 @@ template <typename SysMsgT>
         // is often very handy
         IdxContextHolder::set(&cur_idx,proxy);
 
-        #if vt_check_enabled(cons_multi_idx)
-          auto new_vc = DerefCons::derefTuple<ColT, IndexT, decltype(msg->tup)>(
-            num_elms, cur_idx, &msg->tup
-          );
-        #else
-          using Args = typename SysMsgT::ArgsTupleType;
-          static constexpr auto num_args = std::tuple_size<Args>::value;
-          auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
-            num_elms, cur_idx, &msg->tup, std::make_index_sequence<num_args>{}
-          );
-        #endif
+        auto new_vc = CollectionManager::runConstructor<ColT, IndexT>();
 
         /*
          * Set direct attributes of the newly constructed element directly on
@@ -1856,26 +1838,16 @@ void CollectionManager::staticInsert(
   using IndexT           = typename ColT::IndexType;
   using IdxContextHolder = CollectionContextHolder<IndexT>;
 
-  auto tuple = std::make_tuple(std::forward<Args>(args)...);
-
   auto holder = findColHolder<ColT, IndexT>(proxy);
 
   auto range = holder->max_idx;
-  auto const num_elms = range.getSize();
 
   // Set the current context index to `idx`
   IdxContextHolder::set(&idx,proxy);
 
-  #if vt_check_enabled(cons_multi_idx)
-    auto elm_ptr = DerefCons::derefTuple<ColT, IndexT, decltype(tuple)>(
-      num_elms, idx, &tuple
-    );
-  #else
-    static constexpr auto num_args = std::tuple_size<decltype(tuple)>::value;
-    auto elm_ptr = CollectionManager::runConstructor<ColT, IndexT>(
-      num_elms, idx, &tuple, std::make_index_sequence<num_args>{}
-    );
-  #endif
+  auto elm_ptr = CollectionManager::runConstructor<ColT, IndexT>(
+    std::forward<Args>(args)...
+  );
 
   // Clear the current index context
   IdxContextHolder::clear();
@@ -2096,46 +2068,35 @@ template <typename ColT>
 }
 
 
-template <typename ColT, typename... Args>
+template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
-CollectionManager::construct(
-  typename ColT::IndexType range, Args&&... args
-) {
+CollectionManager::construct(typename ColT::IndexType range) {
   auto const map_han = getDefaultMap<ColT>();
-  return constructMap<ColT,Args...>(range,map_han,args...);
+  return constructMap<ColT>(range,map_han);
 }
 
 template <
-  typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn,
-  typename... Args
+  typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
 >
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
-CollectionManager::construct(
-  typename ColT::IndexType range, Args&&... args
-) {
+CollectionManager::construct(typename ColT::IndexType range) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructMap<ColT,Args...>(range, map_han, args...);
+  return constructMap<ColT>(range, map_han);
 }
 
-template <typename ColT, typename... Args>
+template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::constructMap(
-  typename ColT::IndexType range, HandlerType const map_handler,
-  Args&&... args
+  typename ColT::IndexType range, HandlerType const map_handler
 ) {
   using IndexT = typename ColT::IndexType;
-  using ArgsTupleType = std::tuple<typename std::decay<Args>::type...>;
-  using MsgType = CollectionCreateMsg<
-    CollectionInfo<ColT, IndexT>, ArgsTupleType, ColT, IndexT
-  >;
+  using MsgType = CollectionCreateMsg<CollectionInfo<ColT, IndexT>, ColT>;
 
   auto const& new_proxy = makeNewCollectionProxy();
   auto const& is_static = ColT::isStaticSized();
   auto const& node = theContext()->getNode();
-  auto create_msg = makeMessage<MsgType>(
-    map_handler, ArgsTupleType{std::forward<Args>(args)...}
-  );
+  auto create_msg = makeMessage<MsgType>(map_handler);
 
   CollectionInfo<ColT, IndexT> info(range, is_static, node, new_proxy);
 
@@ -2159,9 +2120,7 @@ CollectionManager::constructMap(
     create_msg, false
   );
 
-  auto create_msg_local = makeMessage<MsgType>(
-    map_handler, ArgsTupleType{std::forward<Args>(args)...}
-  );
+  auto create_msg_local = makeMessage<MsgType>(map_handler);
   create_msg_local->info = info;
   CollectionManager::distConstruct<MsgType>(create_msg_local.get());
 
@@ -2676,15 +2635,7 @@ void CollectionManager::insert(
         // index during the constructor
         IdxContextHolder::set(&cur_idx,untyped_proxy);
 
-#       if vt_check_enabled(cons_multi_idx)
-        auto new_vc = DerefCons::derefTuple<ColT,IndexT,std::tuple<>>(
-          num_elms, cur_idx, &tup
-        );
-#       else
-        auto new_vc = CollectionManager::runConstructor<ColT, IndexT>(
-          num_elms, cur_idx, &tup, std::make_index_sequence<0>{}
-        );
-#       endif
+        auto new_vc = CollectionManager::runConstructor<ColT, IndexT>();
 
         /*
          * Set direct attributes of the newly constructed element directly on

@@ -52,9 +52,6 @@
 #include "vt/vrt/collection/types/headers.h"
 #include "vt/vrt/collection/holders/holder.h"
 #include "vt/vrt/collection/holders/entire_holder.h"
-#include "vt/vrt/collection/traits/cons_detect.h"
-#include "vt/vrt/collection/traits/cons_dispatch.h"
-#include "vt/vrt/collection/constructor/coll_constructors.h"
 #include "vt/vrt/collection/migrate/manager_migrate_attorney.fwd.h"
 #include "vt/vrt/collection/migrate/migrate_status.h"
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.fwd.h"
@@ -184,31 +181,25 @@ struct CollectionManager
    *
    * \param[in] range index range for the collection
    * \param[in] map pre-registered map handler
-   * \param[in] args arguments to pass to collection construct
    *
    * \return proxy to the new collection
    */
-  template <typename ColT, typename... Args>
+  template <typename ColT>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  constructMap(
-    typename ColT::IndexType range, HandlerType const map,
-    Args&&... args
-  );
+  constructMap(typename ColT::IndexType range, HandlerType const map);
 
   /**
    * \brief Construct a new virtual context collection with templated map
    *
    * \param[in] range index range for the collection
-   * \param[in] args arguments to pass to collection construct
    *
    * \return proxy to the new collection
    */
   template <
-    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn,
-    typename... Args
+    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  construct(typename ColT::IndexType range, Args&&... args);
+  construct(typename ColT::IndexType range);
 
   /**
    * \brief Construct a new virtual context collection using the default map for
@@ -218,13 +209,12 @@ struct CollectionManager
    *  \c vrt::collection::DefaultMap<...> specialization on the Index type.
    *
    * \param[in] range index range for the collection
-   * \param[in] args arguments to pass to collection construct
    *
    * \return proxy to the new collection
    */
-  template <typename ColT, typename... Args>
+  template <typename ColT>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  construct(typename ColT::IndexType range, Args&&... args);
+  construct(typename ColT::IndexType range);
 
   /**
    * \brief Collectively construct a new virtual context collection with
@@ -1391,25 +1381,14 @@ public:
   /**
    * \internal \brief Run the collection element's constructor
    *
-   * This is the non-traits version of running the constructor: does not require
-   * the detection idiom to dispatch to constructor.
-   *
-   * The alternative traits version of running the constructor based on the
-   * detected available constructor types will be accessed through the traits
-   * class directly by invoking the constructor. The traits-based alternative
-   * is \c DerefCons::derefTuple
-   *
    * \param[in] elms number of elements
    * \param[in] idx the index for this element
-   * \param[in] tup the constructor args in a tuple
+   * \param[in] args the constructor args
    *
    * \return unique pointer to the new element
    */
-  template <typename ColT, typename IndexT, typename Tuple, size_t... I>
-  static VirtualPtrType<ColT, IndexT> runConstructor(
-    VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
-    std::index_sequence<I...>
-  );
+  template <typename ColT, typename IndexT, typename... Args>
+  static VirtualPtrType<ColT, IndexT> runConstructor(Args&&... args);
 
   /**
    * \internal \brief Insert a new collection element
