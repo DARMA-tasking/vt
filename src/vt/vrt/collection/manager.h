@@ -225,7 +225,6 @@ struct CollectionManager
    *  collection where each index is mapped with the \c MapFnT.
    *
    * \param[in] range index range for the collection
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
    */
@@ -233,7 +232,7 @@ struct CollectionManager
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   IsDefaultConstructableType<ColT> constructCollective(
-    typename ColT::IndexType range, TagType const& tag = no_tag
+    typename ColT::IndexType range
   );
 
   /**
@@ -248,7 +247,6 @@ struct CollectionManager
    *
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
    */
@@ -256,8 +254,7 @@ struct CollectionManager
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
-    TagType const& tag = no_tag
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
   );
 
   /**
@@ -269,13 +266,12 @@ struct CollectionManager
    *  collection where each index is mapped with the default mapping function.
    *
    * \param[in] range index range for the collection
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   IsDefaultConstructableType<ColT> constructCollective(
-    typename ColT::IndexType range, TagType const& tag = no_tag
+    typename ColT::IndexType range
   );
 
   /**
@@ -290,15 +286,12 @@ struct CollectionManager
    *
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range,
-    DistribConstructFn<ColT> cons_fn,
-    TagType const& tag = no_tag
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
   );
 
   /**
@@ -314,14 +307,13 @@ struct CollectionManager
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
    * \param[in] map_han the registered map function
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollectiveMap(
     typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
-    HandlerType const map_han, TagType const& tag
+    HandlerType const map_han
   );
 
 private:
@@ -362,14 +354,11 @@ public:
    * the collection can be used.
    *
    * \param[in] range index range for the collection
-   * \param[in] tag tag for out of order construction
    *
    * \return insert token for performing insertions
    */
   template <typename ColT>
-  InsertToken<ColT> constructInsert(
-    typename ColT::IndexType range, TagType const& tag = no_tag
-  );
+  InsertToken<ColT> constructInsert(typename ColT::IndexType range);
 
   /**
    * \brief Collectively construct a virtual context collection with a staged
@@ -381,16 +370,13 @@ public:
    * the collection can be used.
    *
    * \param[in] range index range for the collection
-   * \param[in] tag tag for out of order construction
    *
    * \return insert token for performing insertions
    */
   template <
     typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
-  InsertToken<ColT> constructInsert(
-    typename ColT::IndexType range, TagType const& tag = no_tag
-  );
+  InsertToken<ColT> constructInsert(typename ColT::IndexType range);
 
   /**
    * \brief Collectively construct a virtual context collection with a staged
@@ -403,13 +389,12 @@ public:
    *
    * \param[in] range index range for the collection
    * \param[in] map_han pre-registered map handler function
-   * \param[in] tag tag for out of order construction
    *
    * \return insert token for performing insertions
    */
   template <typename ColT>
   InsertToken<ColT> constructInsertMap(
-    typename ColT::IndexType range, HandlerType const map_han, TagType const& tag
+    typename ColT::IndexType range, HandlerType const map_han
   );
 
   /**
@@ -452,15 +437,14 @@ public:
   );
 
   /**
-   * \internal \brief Make the next distributed proxy during collective, SPMD
-   * collection construction
+   * \internal \brief Make the next collection proxy
    *
-   * \param[in] tag optional tag for out-of-order construction
+   * \param[in] is_collective whether the collection is collective
+   * \param[in] iss_migratable whether the collection is migratable
    *
    * \return the collection proxy bits
    */
-  template <typename=void>
-  VirtualProxyType makeDistProxy(TagType const& tag = no_tag);
+  VirtualProxyType makeCollectionProxy(bool is_collective, bool is_migratable);
 
   /**
    * \internal \brief Construct all elements on this node during rooted
@@ -1493,13 +1477,6 @@ private:
 
 protected:
   /**
-   * \internal \brief Make the next collection proxy bits
-   *
-   * \return the new proxy
-   */
-  VirtualProxyType makeNewCollectionProxy();
-
-  /**
    * \internal \brief Insert collection into \c UniversalIndexHolder
    *
    * \param[in] proxy the collection proxy bits
@@ -1921,18 +1898,13 @@ public:
       | constructed_
       | insert_finished_action_
       | user_insert_action_
-      | dist_tag_id_
       | release_lb_
-      | collect_stats_for_lb_;
+      | collect_stats_for_lb_
+      | next_collective_id_
+      | next_rooted_id_;
   }
 
 private:
-  /**
-   * \brief Next proxy identifier for assignment of virtual proxy IDs
-   */
-  template <typename=void>
-  static VirtualIDType curIdent_;
-
   /**
    * \brief Buffered broadcasts
    */
@@ -2101,20 +2073,15 @@ private:
   std::unordered_map<VirtualProxyType,ActionType> collect_stats_for_lb_;
   std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
   std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
-  std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
+  VirtualIDType next_collective_id_ = 0;
+  VirtualIDType next_rooted_id_ = 0;
 };
 
 // These are static variables in class templates because Intel 18
 // dislikes static class member variable templates
 namespace details
 {
-  template <typename T>
-  struct CurIdent
-  {
-    static VirtualIDType m_;
-  };
-
   template <typename ColT>
   struct Broadcasts
   {

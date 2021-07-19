@@ -95,9 +95,6 @@
 namespace vt { namespace vrt { namespace collection {
 
 namespace details {
-template <typename T>
-/*static*/ VirtualIDType CurIdent<T>::m_ = 0;
-
 template <typename ColT>
 /*static*/ CollectionManager::BcastBufferType<ColT>
 Broadcasts<ColT>::m_ = {};
@@ -1560,35 +1557,30 @@ bool CollectionManager::insertCollectionElement(
 
 template <typename ColT>
 CollectionManager::IsDefaultConstructableType<ColT>
-CollectionManager::constructCollective(
-  typename ColT::IndexType range, TagType const& tag
-) {
+CollectionManager::constructCollective(typename ColT::IndexType range) {
   auto const map_han = getDefaultMap<ColT>();
   auto cons_fn = [](typename ColT::IndexType){return std::make_unique<ColT>();};
-  return constructCollectiveMap<ColT>(range,cons_fn,map_han,tag);
+  return constructCollectiveMap<ColT>(range,cons_fn,map_han);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::constructCollective(
-  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
-  TagType const& tag
+  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
 ) {
   auto const map_han = getDefaultMap<ColT>();
-  return constructCollectiveMap<ColT>(range,cons_fn,map_han,tag);
+  return constructCollectiveMap<ColT>(range,cons_fn,map_han);
 }
 
 template <
   typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
 >
 CollectionManager::IsDefaultConstructableType<ColT, typename ColT::IndexType>
-CollectionManager::constructCollective(
-  typename ColT::IndexType range, TagType const& tag
-) {
+CollectionManager::constructCollective(typename ColT::IndexType range) {
   using IndexT = typename ColT::IndexType;
   auto cons_fn = [](typename ColT::IndexType){return std::make_unique<ColT>();};
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructCollectiveMap<ColT>(range,cons_fn,map_han,tag);
+  return constructCollectiveMap<ColT>(range,cons_fn,map_han);
 }
 
 template <
@@ -1596,19 +1588,18 @@ template <
 >
 CollectionManager::CollectionProxyWrapType<ColT, typename ColT::IndexType>
 CollectionManager::constructCollective(
-  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
-  TagType const& tag
+  typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
 ) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructCollectiveMap<ColT>(range,cons_fn,map_han,tag);
+  return constructCollectiveMap<ColT>(range,cons_fn,map_han);
 }
 
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::constructCollectiveMap(
   typename ColT::IndexType range, DistribConstructFn<ColT> user_construct_fn,
-  HandlerType const map_han, TagType const& tag
+  HandlerType const map_han
 ) {
   using IndexT         = typename ColT::IndexType;
   using TypedProxyType = CollectionProxyWrapType<ColT>;
@@ -1618,8 +1609,8 @@ CollectionManager::constructCollectiveMap(
   // Register the collection mapping function
   // auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
 
-  // Create a new distributed proxy, ordered wrt the input tag
-  auto const& proxy = makeDistProxy<>(tag);
+  // Create a new distributed proxy
+  auto const& proxy = makeCollectionProxy(true, true);
 
   // Initialize the typed proxy for the user interface, returned from this fn
   auto const typed_proxy = TypedProxyType{proxy};
@@ -1629,7 +1620,7 @@ CollectionManager::constructCollectiveMap(
   auto const& is_static = ColT::isStaticSized();
   vtAssertInfo(
     is_static, "Distributed collection construct must be statically sized",
-    is_static, tag, map_han
+    is_static, map_han
   );
 
   // Invoke getCollectionLM() to create a new location manager instance for this
@@ -1753,49 +1744,7 @@ CollectionManager::constructCollectiveMap(
   return typed_proxy;
 }
 
-template <typename>
-VirtualProxyType CollectionManager::makeDistProxy(TagType const& tag) {
-  static constexpr VirtualIDType first_dist_id = 0;
-
-  // Get the next distributed ID for a given tag
-  auto id_iter = dist_tag_id_.find(tag);
-  if (id_iter == dist_tag_id_.end()) {
-    dist_tag_id_.emplace(
-      std::piecewise_construct,
-      std::forward_as_tuple(tag),
-      std::forward_as_tuple(first_dist_id)
-    );
-    id_iter = dist_tag_id_.find(tag);
-  }
-
-  vtAssertInfo(
-    id_iter != dist_tag_id_.end(), "Dist tag iter must not be end",
-    tag, first_dist_id
-  );
-
-  VirtualIDType const new_dist_id = id_iter->second++;
-
-  auto const& this_node = theContext()->getNode();
-  bool const& is_collection = true;
-  bool const& is_migratable = true;
-  bool const& is_distributed = true;
-
-  // Create the new proxy with the `new_dist_id`
-  auto const proxy = VirtualProxyBuilder::createProxy(
-    new_dist_id, this_node, is_collection, is_migratable, is_distributed
-  );
-
-  vt_debug_print(
-    verbose, vrt_coll,
-    "makeDistProxy: node={}, new_dist_id={}, proxy={:x}\n",
-    this_node, new_dist_id, proxy
-  );
-
-  return proxy;
-}
-
 /* end SPMD distributed collection support */
-
 
 template <typename ColT>
 void CollectionManager::staticInsertColPtr(
@@ -1866,36 +1815,36 @@ template <
   typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
 >
 InsertToken<ColT> CollectionManager::constructInsert(
-  typename ColT::IndexType range, TagType const& tag
+  typename ColT::IndexType range
 ) {
   using IndexT = typename ColT::IndexType;
   auto const& map_han = auto_registry::makeAutoHandlerMap<IndexT, fn>();
-  return constructInsertMap<ColT>(range, map_han, tag);
+  return constructInsertMap<ColT>(range, map_han);
 }
 
 template <typename ColT>
 InsertToken<ColT> CollectionManager::constructInsert(
-  typename ColT::IndexType range, TagType const& tag
+  typename ColT::IndexType range
 ) {
   auto const map_han = getDefaultMap<ColT>();
-  return constructInsertMap<ColT>(range, map_han, tag);
+  return constructInsertMap<ColT>(range, map_han);
 }
 
 template <typename ColT>
 InsertToken<ColT> CollectionManager::constructInsertMap(
-  typename ColT::IndexType range, HandlerType const map_han, TagType const& tag
+  typename ColT::IndexType range, HandlerType const map_han
 ) {
   using IndexT         = typename ColT::IndexType;
 
-  // Create a new distributed proxy, ordered wrt the input tag
-  auto const& proxy = makeDistProxy<>(tag);
+  // Create a new distributed proxy
+  auto const& proxy = makeCollectionProxy(true, true);
 
   // For now, the staged insert collection must be statically sized. It is *not*
   // dynamically insertable!
   auto const& is_static = ColT::isStaticSized();
   vtAssertInfo(
     is_static, "Staged insert construction must be statically sized",
-    is_static, tag, map_han
+    is_static, map_han
   );
 
   // Invoke getCollectionLM() to create a new location manager instance for this
@@ -2093,7 +2042,7 @@ CollectionManager::constructMap(
   using IndexT = typename ColT::IndexType;
   using MsgType = CollectionCreateMsg<CollectionInfo<ColT, IndexT>, ColT>;
 
-  auto const& new_proxy = makeNewCollectionProxy();
+  auto const& new_proxy = makeCollectionProxy(false, true);
   auto const& is_static = ColT::isStaticSized();
   auto const& node = theContext()->getNode();
   auto create_msg = makeMessage<MsgType>(map_handler);
@@ -2132,11 +2081,6 @@ inline void CollectionManager::insertCollectionInfo(
   EpochType const& insert_epoch
 ) {
   UniversalIndexHolder<>::insertMap(proxy,map_han,insert_epoch);
-}
-
-inline VirtualProxyType CollectionManager::makeNewCollectionProxy() {
-  auto const& node = theContext()->getNode();
-  return VirtualProxyBuilder::createProxy(details::CurIdent<void>::m_++, node, true, true);
 }
 
 /*
