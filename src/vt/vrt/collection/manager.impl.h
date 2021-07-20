@@ -3173,7 +3173,9 @@ inline void restoreOffHomeElement(
 } /* end namespace detail */
 
 template <typename ColT>
-/*static*/ void CollectionManager::restoreHandler(RestoreMigrateMsg<ColT>* msg) {
+/*static*/ void CollectionManager::migrateToRestoreLocation(
+  RestoreMigrateMsg<ColT>* msg
+) {
   auto idx = msg->idx_;
   auto node = msg->to_node_;
   auto proxy = msg->proxy_;
@@ -3224,9 +3226,11 @@ void CollectionManager::restoreFromFileInPlace(
         using MsgType = RestoreMigrateMsg<ColT>;
         auto msg = makeMessage<MsgType>(this_node, idx, proxy);
         if (mapped_node != this_node) {
-          theMsg()->sendMsg<MsgType, restoreHandler<ColT>>(mapped_node, msg);
+          theMsg()->sendMsg<MsgType, migrateToRestoreLocation<ColT>>(
+            mapped_node, msg
+          );
         } else {
-          restoreHandler<ColT>(msg.get());
+          migrateToRestoreLocation<ColT>(msg.get());
         }
       }
     }
