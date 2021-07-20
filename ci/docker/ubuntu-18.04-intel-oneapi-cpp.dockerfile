@@ -10,8 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y -q && \
     apt-get install -y -q --no-install-recommends \
-    intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic \
-    intel-oneapi-mpi-devel \
+    intel-oneapi-compiler-dpcpp-cpp \
     ca-certificates \
     less \
     curl \
@@ -27,16 +26,30 @@ RUN apt-get update -y -q && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV LESSCHARSET=utf-8
+ENV CMAKE_PREFIX_PATH='/opt/intel/oneapi/tbb/latest/env/..' \
+    CMPLR_ROOT=/opt/intel/oneapi/compiler/latest \
+    CPATH='/opt/intel/oneapi/tbb/latest/env/../include:/opt/intel/oneapi/dev-utilities/latest/include:/opt/intel/oneapi/compiler/latest/linux/include' \
+    INFOPATH=/opt/intel/oneapi/debugger/10.1.2/gdb/intel64/lib \
+    INTEL_LICENSE_FILE='/opt/intel/licenses:/root/intel/licenses:/opt/intel/licenses:/root/intel/licenses:/Users/Shared/Library/Application Support/Intel/Licenses' \
+    LD_LIBRARY_PATH='/opt/intel/oneapi/tbb/latest/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/debugger/10.1.1/dep/lib:/opt/intel/oneapi/debugger/10.1.1/libipt/intel64/lib:/opt/intel/oneapi/debugger/10.1.1/gdb/intel64/lib:/opt/intel/oneapi/compiler/latest/linux/lib:/opt/intel/oneapi/compiler/latest/linux/lib/x64:/opt/intel/oneapi/compiler/latest/linux/lib/emu:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/host/linux64/lib:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/linux64/lib:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/compiler/lib' \
+    LIBRARY_PATH='/opt/intel/oneapi/tbb/latest/env/../lib/intel64/gcc4.8:/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/latest/linux/lib' \
+    ONEAPI_ROOT='/opt/intel/oneapi' \
+    PATH='/opt/intel/oneapi/dev-utilities/latest/bin:/opt/intel/oneapi/debugger/10.1.1/gdb/intel64/bin:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/llvm/aocl-bin:/opt/intel/oneapi/compiler/latest/linux/lib/oclfpga/bin:/opt/intel/oneapi/compiler/latest/linux/bin/intel64:/opt/intel/oneapi/compiler/latest/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' \
+    TBBROOT='/opt/intel/oneapi/tbb/latest/env/..'
 
-ENV MPICH_CC=icc \
-    MPICH_CXX=icpc \
-    CC=mpicc \
-    CXX=mpicxx
+ENV CC=icx \
+    CXX=icpx
 
-ENV MPI_EXTRA_FLAGS="" \
+COPY ./ci/deps/mpich.sh mpich.sh
+RUN ./mpich.sh 3.3.2 -j4
+
+ENV CC=mpicc \
+    CXX=mpicxx \
+    MPICH_CC=icx \
+    MPICH_CXX=icpx \
+    MPI_EXTRA_FLAGS="" \
+    LESSCHARSET=utf-8 \
     PATH=/usr/lib/ccache/:$PATH
-
 
 FROM base as build
 COPY . /vt
@@ -75,8 +88,7 @@ ENV VT_LB_ENABLED=${VT_LB_ENABLED} \
     VT_DIAGNOSTICS_RUNTIME_ENABLED=${VT_DIAGNOSTICS_RUNTIME_ENABLED} \
     CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 
-RUN . /opt/intel/oneapi/setvars.sh && \
-    /vt/ci/build_cpp.sh /vt /build
+RUN /vt/ci/build_cpp.sh /vt /build
 
 FROM build as test
 RUN /vt/ci/test_cpp.sh /vt /build
