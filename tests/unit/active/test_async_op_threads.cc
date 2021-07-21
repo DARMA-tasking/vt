@@ -45,6 +45,7 @@
 
 #include <vt/messaging/async_op_mpi.h>
 #include <vt/messaging/active.h>
+#include <vt/objgroup/headers.h>
 
 #include <gtest/gtest.h>
 
