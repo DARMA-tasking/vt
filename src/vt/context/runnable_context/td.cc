@@ -63,7 +63,7 @@ TD::TD(EpochType in_ep)
 
 void TD::begin() {
   theMsg()->pushEpoch(ep_);
-  epoch_stack_size_ = theMsg()->getEpochStack().size();
+  base_epoch_stack_size_ = theMsg()->getEpochStack().size();
 }
 
 void TD::end() {
@@ -76,18 +76,12 @@ void TD::end() {
     epoch_stack.size()
   );
 
-  vtAssertNot(
-    epoch_stack_size_ < epoch_stack.size(),
+  vtAssert(
+    base_epoch_stack_size_ <= epoch_stack.size(),
     "Epoch stack popped below preceding push size in handler"
   );
 
-  vtAssert(
-    epoch_stack_size_ == epoch_stack.size(), "Stack must be same size"
-  );
-
-  vtAssertNotExpr(epoch_stack.size() == 0);
-
-  while (epoch_stack.size() > epoch_stack_size_) {
+  while (epoch_stack.size() > base_epoch_stack_size_) {
     theMsg()->popEpoch();
   }
 
@@ -97,7 +91,7 @@ void TD::end() {
 void TD::suspend() {
   auto& epoch_stack = theMsg()->getEpochStack();
 
-  while (epoch_stack.size() > epoch_stack_size_) {
+  while (epoch_stack.size() > base_epoch_stack_size_) {
     suspended_epochs_.push_back(theMsg()->getEpoch());
     theMsg()->popEpoch();
   }
@@ -115,7 +109,6 @@ void TD::resume() {
   }
 
   suspended_epochs_.clear();
-
 }
 
 }} /* end namespace vt::ctx */
