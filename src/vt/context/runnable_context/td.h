@@ -108,7 +108,7 @@ struct TD final : Base {
 
 private:
   EpochType ep_ = no_epoch;                    /**< The epoch for the task */
-  std::size_t epoch_stack_size_ = 0;           /**< Epoch stack size at start  */
+  std::size_t base_epoch_stack_size_ = 0;      /**< Epoch stack size at start  */
   std::vector<EpochType> suspended_epochs_;    /**< Suspended epoch stack */
 };
 
