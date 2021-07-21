@@ -108,13 +108,14 @@ void TD::suspend() {
 }
 
 void TD::resume() {
+  theMsg()->pushEpoch(ep_);
+
   auto const sz = suspended_epochs_.size();
   for (std::size_t i = 0; i < sz; i++) {
     theMsg()->pushEpoch(suspended_epochs_[sz - i - 1]);
   }
   suspended_epochs_.clear();
 
-  theMsg()->pushEpoch(ep_);
 }
 
 }} /* end namespace vt::ctx */
