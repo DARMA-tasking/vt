@@ -91,8 +91,6 @@ void TD::end() {
     theMsg()->popEpoch();
   }
 
-  vtAssertExpr(epoch_stack.size() == epoch_stack_size_);
-
   theMsg()->popEpoch(ep_);
 }
 
