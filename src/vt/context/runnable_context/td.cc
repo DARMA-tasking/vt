@@ -63,7 +63,17 @@ TD::TD(EpochType in_ep)
 
 void TD::begin() {
   theMsg()->pushEpoch(ep_);
-  base_epoch_stack_size_ = theMsg()->getEpochStack().size();
+
+  auto& epoch_stack = theMsg()->getEpochStack();
+
+  vt_debug_print(
+    verbose, context,
+    "TD::begin: top={:x}, size={}\n",
+    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
+    epoch_stack.size()
+  );
+
+  base_epoch_stack_size_ = epoch_stack.size();
 }
 
 void TD::end() {
@@ -71,9 +81,9 @@ void TD::end() {
 
   vt_debug_print(
     verbose, context,
-    "TD::end: top={:x}, size={}\n",
+    "TD::end: top={:x}, size={}, base_size={}\n",
     epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
-    epoch_stack.size()
+    epoch_stack.size(), base_epoch_stack_size_
   );
 
   vtAssert(
@@ -91,6 +101,13 @@ void TD::end() {
 void TD::suspend() {
   auto& epoch_stack = theMsg()->getEpochStack();
 
+  vt_debug_print(
+    verbose, context,
+    "TD::suspend: top={:x}, size={}, base_size={}\n",
+    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
+    epoch_stack.size(), base_epoch_stack_size_
+  );
+
   while (epoch_stack.size() > base_epoch_stack_size_) {
     suspended_epochs_.push_back(theMsg()->getEpoch());
     theMsg()->popEpoch();
@@ -104,6 +121,13 @@ void TD::resume() {
 
   auto& epoch_stack = theMsg()->getEpochStack();
   base_epoch_stack_size_ = epoch_stack.size();
+
+  vt_debug_print(
+    verbose, context,
+    "TD::resume: top={:x}, size={}, base_size={}\n",
+    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
+    epoch_stack.size(), base_epoch_stack_size_
+  );
 
   for (auto it = suspended_epochs_.rbegin();
        it != suspended_epochs_.rend();
