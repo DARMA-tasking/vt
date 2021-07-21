@@ -276,6 +276,7 @@ std::size_t StatM::getUsage() {
     return 0;
   }
 # else
+  (void)failed_; // Suppress unused private variable warning
   return 0;
 # endif
 }
