@@ -110,10 +110,12 @@ void TD::suspend() {
 void TD::resume() {
   theMsg()->pushEpoch(ep_);
 
-  auto const sz = suspended_epochs_.size();
-  for (std::size_t i = 0; i < sz; i++) {
-    theMsg()->pushEpoch(suspended_epochs_[sz - i - 1]);
+  for (auto it = suspended_epochs_.rbegin();
+       it != suspended_epochs_.rend();
+       ++it) {
+    theMsg()->pushEpoch(*it);
   }
+
   suspended_epochs_.clear();
 
 }
