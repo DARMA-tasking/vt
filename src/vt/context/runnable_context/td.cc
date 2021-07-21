@@ -102,6 +102,9 @@ void TD::suspend() {
 void TD::resume() {
   theMsg()->pushEpoch(ep_);
 
+  auto& epoch_stack = theMsg()->getEpochStack();
+  base_epoch_stack_size_ = epoch_stack.size();
+
   for (auto it = suspended_epochs_.rbegin();
        it != suspended_epochs_.rend();
        ++it) {
