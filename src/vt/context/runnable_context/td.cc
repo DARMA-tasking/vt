@@ -63,7 +63,17 @@ TD::TD(EpochType in_ep)
 
 void TD::begin() {
   theMsg()->pushEpoch(ep_);
-  epoch_stack_size_ = theMsg()->getEpochStack().size();
+
+  auto& epoch_stack = theMsg()->getEpochStack();
+
+  vt_debug_print(
+    verbose, context,
+    "TD::begin: top={:x}, size={}\n",
+    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
+    epoch_stack.size()
+  );
+
+  base_epoch_stack_size_ = epoch_stack.size();
 }
 
 void TD::end() {
@@ -71,27 +81,19 @@ void TD::end() {
 
   vt_debug_print(
     verbose, context,
-    "TD::end: top={:x}, size={}\n",
+    "TD::end: top={:x}, size={}, base_size={}\n",
     epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
-    epoch_stack.size()
-  );
-
-  vtAssertNot(
-    epoch_stack_size_ < epoch_stack.size(),
-    "Epoch stack popped below preceding push size in handler"
+    epoch_stack.size(), base_epoch_stack_size_
   );
 
   vtAssert(
-    epoch_stack_size_ == epoch_stack.size(), "Stack must be same size"
+    base_epoch_stack_size_ <= epoch_stack.size(),
+    "Epoch stack popped below preceding push size in handler"
   );
 
-  vtAssertNotExpr(epoch_stack.size() == 0);
-
-  while (epoch_stack.size() > epoch_stack_size_) {
+  while (epoch_stack.size() > base_epoch_stack_size_) {
     theMsg()->popEpoch();
   }
-
-  vtAssertExpr(epoch_stack.size() == epoch_stack_size_);
 
   theMsg()->popEpoch(ep_);
 }
@@ -99,7 +101,14 @@ void TD::end() {
 void TD::suspend() {
   auto& epoch_stack = theMsg()->getEpochStack();
 
-  while (epoch_stack.size() > epoch_stack_size_) {
+  vt_debug_print(
+    verbose, context,
+    "TD::suspend: top={:x}, size={}, base_size={}\n",
+    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
+    epoch_stack.size(), base_epoch_stack_size_
+  );
+
+  while (epoch_stack.size() > base_epoch_stack_size_) {
     suspended_epochs_.push_back(theMsg()->getEpoch());
     theMsg()->popEpoch();
   }
@@ -108,13 +117,25 @@ void TD::suspend() {
 }
 
 void TD::resume() {
-  auto const sz = suspended_epochs_.size();
-  for (std::size_t i = 0; i < sz; i++) {
-    theMsg()->pushEpoch(suspended_epochs_[sz - i - 1]);
-  }
-  suspended_epochs_.clear();
-
   theMsg()->pushEpoch(ep_);
+
+  auto& epoch_stack = theMsg()->getEpochStack();
+  base_epoch_stack_size_ = epoch_stack.size();
+
+  vt_debug_print(
+    verbose, context,
+    "TD::resume: top={:x}, size={}, base_size={}\n",
+    epoch_stack.size() > 0 ? epoch_stack.top(): no_epoch,
+    epoch_stack.size(), base_epoch_stack_size_
+  );
+
+  for (auto it = suspended_epochs_.rbegin();
+       it != suspended_epochs_.rend();
+       ++it) {
+    theMsg()->pushEpoch(*it);
+  }
+
+  suspended_epochs_.clear();
 }
 
 }} /* end namespace vt::ctx */
