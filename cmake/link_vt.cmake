@@ -53,7 +53,7 @@ function(link_target_with_vt)
 
   if (NOT DEFINED ARG_LINK_JSON AND ${ARG_DEFAULT_LINK_SET} OR ARG_LINK_JSON)
     target_link_libraries(
-      ${ARG_TARGET} PRIVATE ${ARG_BUILD_TYPE} ${JSON_LIBRARY}
+      ${ARG_TARGET} PUBLIC ${ARG_BUILD_TYPE} ${JSON_LIBRARY}
     )
   endif()
 
