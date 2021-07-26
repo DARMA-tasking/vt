@@ -24,7 +24,7 @@ variables:
   REPO: lifflander1/vt
   ARCH: amd64
   UBUNTU: 18.04
-  COMPILER_TYPE: intel
+  COMPILER_TYPE: intel-oneapi
   COMPILER: icc-18
   BUILD_TYPE: release
   ULIMIT_CORE: 0
