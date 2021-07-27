@@ -114,15 +114,17 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     .dynamicMembership(true)
     .wait();
 
-  auto token = proxy.beginInserting();
+  {
+    auto token = proxy.beginInserting();
 
-  for (int i = 0; i < range.x() / 2; i++) {
-    if (i % num_nodes == this_node) {
-      proxy[i].insert(token);
+    for (int i = 0; i < range.x() / 2; i++) {
+      if (i % num_nodes == this_node) {
+        proxy[i].insert(token);
+      }
     }
-  }
 
-  proxy.finishInserting(std::move(token));
+    proxy.finishInserting(std::move(token));
+  }
 
   for (int phase = 0; phase < num_phases; phase++) {
     // Do some work.
