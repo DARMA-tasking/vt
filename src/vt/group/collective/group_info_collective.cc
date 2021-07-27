@@ -157,7 +157,10 @@ void InfoColl::setupCollective() {
   new_tree_cont_      = theGroup()->nextCollectiveID();
   new_root_cont_      = theGroup()->nextCollectiveID();
 
-  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::registerContinuationT(
+  using GroupCollectiveTMsg = GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>;
+  using GroupOnlyTMsg       = GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>;
+
+  GroupCollectiveTMsg::registerContinuationT(
     down_tree_cont_,
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -165,7 +168,7 @@ void InfoColl::setupCollective() {
       iter->second->downTree(msg.get());
     }
   );
-  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
+  GroupOnlyTMsg::registerContinuationT(
     down_tree_fin_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -173,7 +176,7 @@ void InfoColl::setupCollective() {
       iter->second->downTreeFinished(msg.get());
     }
   );
-  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
+  GroupOnlyTMsg::registerContinuationT(
     finalize_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -181,7 +184,7 @@ void InfoColl::setupCollective() {
       iter->second->finalizeTree(msg.get());
     }
   );
-  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
+  GroupOnlyTMsg::registerContinuationT(
     new_tree_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -190,7 +193,7 @@ void InfoColl::setupCollective() {
       iter->second->newTree(from);
     }
   );
-  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::registerContinuationT(
+  GroupCollectiveTMsg::registerContinuationT(
     new_root_cont_,
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -204,6 +207,13 @@ void InfoColl::setupCollective() {
   // registered which checks for message counts and then dispatches to the
   // secondary continuation.
   up_tree_cont_ = makeCollectiveContinuation(group_);
+
+  GroupCollectiveTMsg::triggerWaitingContinuations(new_root_cont_);
+  GroupCollectiveTMsg::triggerWaitingContinuations(down_tree_cont_);
+  GroupOnlyTMsg::triggerWaitingContinuations(down_tree_fin_cont_);
+  GroupOnlyTMsg::triggerWaitingContinuations(finalize_cont_);
+  GroupOnlyTMsg::triggerWaitingContinuations(new_tree_cont_);
+  GroupCollectiveTMsg::triggerWaitingContinuations(up_tree_cont_);
 
   vt_debug_print(
     normal, group,

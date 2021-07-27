@@ -441,6 +441,7 @@ struct GroupManagerT : public GroupManager
   static RemoteOperationIDType registerContinuationT(ActionTType action);
   static void registerContinuationT(RemoteOperationIDType const op, ActionTType a);
   static void triggerContinuationT(RemoteOperationIDType const op, T t);
+  static void triggerWaitingContinuations(RemoteOperationIDType const op);
 
 private:
   static ActionContainerTType continuation_actions_t_;
