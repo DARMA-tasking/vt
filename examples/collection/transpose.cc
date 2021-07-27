@@ -134,11 +134,10 @@ struct SubSolveInfo {
 // The VT collection with blocks of data
 struct Block : vt::Collection<Block, vt::Index1D> {
 
-  Block() = default;
-  Block(int num_elm, int n_pieces) {
+  Block() {
     fmt::print(
-      "construct: node={}, elm={}, pieces={}\n",
-      vt::theContext()->getNode(), num_elm, n_pieces
+      "construct: node={}\n",
+      vt::theContext()->getNode()
     );
   }
 
@@ -335,9 +334,7 @@ int main(int argc, char** argv) {
 
   if (this_node == 0) {
     auto range = vt::Index1D(num_pieces);
-    auto proxy = vt::theCollection()->construct<Block, my_map>(
-      range, num_elem, num_pieces
-    );
+    auto proxy = vt::theCollection()->construct<Block, my_map>(range);
     proxy.broadcast<SolveMsg<Block>, &Block::solve>();
   }
 

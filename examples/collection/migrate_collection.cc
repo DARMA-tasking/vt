@@ -48,9 +48,9 @@ static constexpr int32_t const default_num_elms = 16;
 
 struct Hello : vt::Collection<Hello, vt::Index1D> {
 
-  explicit Hello(vt::NodeType create) {
+  Hello() {
     vt::NodeType this_node = vt::theContext()->getNode();
-    fmt::print("{}: Hello: create={}, index={}\n", this_node, create, getIndex());
+    fmt::print("{}: Hello: index={}\n", this_node, getIndex());
     test_val = getIndex().x() * 29.3;
   }
 
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
 
   if (this_node == 0) {
     auto range = vt::Index1D(num_elms);
-    auto proxy = vt::theCollection()->construct<Hello>(range, this_node);
+    auto proxy = vt::theCollection()->construct<Hello>(range);
 
     vt::runInEpochRooted([=] { proxy.broadcast<ColMsg, doWork>(this_node); });
 
