@@ -48,6 +48,10 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/model/per_collection.h"
 #include "vt/vrt/collection/balance/model/stats_replay.h"
+#include "vt/vrt/collection/balance/stats_data.h"
+#include "vt/utils/json/json_reader.h"
+
+#include <nlohmann/json.hpp>
 
 #include <cinttypes>
 #include <fstream>
@@ -176,81 +180,63 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::readStats(
   std::size_t initial_phase, std::size_t phases_to_run,
   bool convert_from_release
 ) {
-  auto const node = theContext()->getNode();
-  std::string const& base_file = theConfig()->vt_lb_stats_file_in;
-  std::string const& dir = theConfig()->vt_lb_stats_dir_in;
-  auto const file = fmt::format("{}.{}.out", base_file, node);
-  auto const filename = fmt::format("{}/{}", dir, file);
+  auto const filename = theConfig()->getLBStatsFileIn();
   vt_debug_print(terse, replay, "input file: {}\n", filename);
   // Read the input files
-  auto loads_map = inputStatsFile(
-    filename, initial_phase, phases_to_run, convert_from_release
-  );
-  return loads_map;
+  try {
+    auto loads_map = inputStatsFile(
+      filename, initial_phase, phases_to_run, convert_from_release
+    );
+    return loads_map;
+  } catch (std::exception& e) {
+    vtAbort(e.what());
+  }
+  return ElmPhaseLoadsMapType();
 }
 
 LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
   std::string const& filename, std::size_t initial_phase,
   std::size_t phases_to_run, bool convert_from_release
 ) {
+  using vt::util::json::Reader;
+  using vt::vrt::collection::balance::StatsData;
+
+  vt_debug_print(
+    normal, replay, "constructing reader\n"
+  );
+  Reader r{filename};
+  vt_debug_print(
+    normal, replay, "reading file\n"
+  );
+  auto json = r.readFile();
+  vt_debug_print(
+    normal, replay, "constructing stats data\n"
+  );
+  auto sd = StatsData(*json);
+
   ElmPhaseLoadsMapType loads_by_elm_by_phase;
-
-  std::ifstream f(filename.c_str());
-  std::string line;
-
-  while (std::getline(f, line)) {
-    vtAssert(
-      std::count(line.begin(), line.end(), ' ') == 0,
-      "Spaces in stats file not expected"
+  auto stop_phase = initial_phase + phases_to_run;
+  for (PhaseType phase = initial_phase; phase < stop_phase; phase++) {
+    vt_debug_print(
+      terse, replay, "reading phase {} data\n", phase
     );
-
-    bool is_load_line = false;
-    auto pos = line.find('[');
-    if (pos != std::string::npos) {
-      // this line contains subphase loads notation, i.e.,
-      // phase,elm_id,phase_load,n_subphases,[subphase0_load,subphase1_load...]
-      is_load_line = true;
-    } else if (std::count(line.begin(), line.end(), ',') == 2) {
-      // this line does not contain subphase loads notation, i.e.,
-      // phase,elm_id,phase_load
-      is_load_line = true;
-    } // else it is comm data, i.e., phase,elm1_id,elm2_id,bytes,category
-
-    if (is_load_line) {
-      std::string nocommas = std::regex_replace(line, std::regex(","), " ");
-      std::istringstream iss(nocommas);
-
-      std::size_t phase = 0;
-      ElementIDType read_elm_id = 0;
-      vt::TimeType load = 0.;
-      iss >> phase >> read_elm_id >> load;
-
-      // only load in stats that are strictly necessary, ignoring the rest
-      if (phase >= initial_phase && phase < initial_phase + phases_to_run) {
-        auto elm_id = convert_from_release ?
-          convertReleaseStatsID(read_elm_id) : read_elm_id;
+    try {
+      auto &phase_data = sd.node_data_.at(phase);
+      for (auto const& entry : phase_data) {
+        auto elm_id = entry.first;
+        auto load = entry.second;
         vt_debug_print(
           normal, replay,
-          "reading in loads for elm={}, converted_elm={}, phase={}, load={}\n",
-          read_elm_id, elm_id, phase, load
+          "reading in loads for elm={}, home={}, phase={}, load={}\n",
+          elm_id.id, elm_id.home_node, phase, load
         );
-        loads_by_elm_by_phase[elm_id][phase] = load;
-      } else {
-        vt_debug_print(
-          verbose, replay,
-          "skipping loads for elm={}, phase={}\n",
-          read_elm_id, phase
-        );
+        loads_by_elm_by_phase[elm_id.id][phase] = load;
       }
-    } else {
-      vt_debug_print(
-        verbose, replay,
-        "skipping line: {}\n",
-        line
-      );
+    } catch (...) {
+      auto str = fmt::format("Data for phase {} was not found", phase);
+      vtAbort(str);
     }
   }
-  f.close();
 
   return loads_by_elm_by_phase;
 }
