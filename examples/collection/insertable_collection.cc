@@ -70,7 +70,6 @@ int main(int argc, char** argv) {
 
   auto range = vt::Index1D(num_elms);
   auto proxy = vt::makeCollection<InsertCol>()
-    // .bounds(range)
     .dynamicMembership(true)
     .collective(true)
     .wait();
