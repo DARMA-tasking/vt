@@ -53,6 +53,17 @@
 
 namespace vt { namespace mapping {
 
+/**
+ * \struct BaseMapper
+ *
+ * \brief The base class for a general mapper object group used for mapping
+ * elements of a collection to a node
+ */
+template <typename IdxT>
+struct BaseMapper {
+  virtual NodeType map(IdxT* idx, int ndim) = 0;
+};
+
 template <typename IndexElmType, typename PhysicalType>
 NodeType blockMapDenseFlatIndex(
   IndexElmType* flat_idx, IndexElmType* num_elems, PhysicalType num_resources

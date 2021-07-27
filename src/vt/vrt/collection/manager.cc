@@ -125,4 +125,8 @@ VirtualProxyType CollectionManager::makeCollectionProxy(
   return proxy;
 }
 
+/*static*/ void CollectionManager::computeReduceStamp(CollectionStampMsg* msg) {
+  theCollection()->reduce_stamp_[msg->proxy_] = msg->getVal();
+}
+
 }}} /* end namespace vt::vrt::collection */

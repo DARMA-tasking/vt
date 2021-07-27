@@ -48,7 +48,6 @@
 #include "vt/vrt/vrt_common.h"
 #include "vt/vrt/collection/proxy_builder/elm_proxy_builder.h"
 #include "vt/vrt/collection/types/base.fwd.h"
-#include "vt/vrt/collection/types/insertable.h"
 #include "vt/vrt/collection/types/indexable.h"
 #include "vt/vrt/collection/types/untyped.h"
 #include "vt/vrt/collection/manager.fwd.h"
@@ -66,24 +65,11 @@ struct CollectionBase : Indexable<IndexT> {
   using ReduceSeqStampType = collective::reduce::detail::StrongSeq;
 
   CollectionBase() = default;
-  CollectionBase(
-    bool const static_size, bool const elms_fixed,
-    VirtualElmCountType const num = -1
-  );
 
   virtual ~CollectionBase();
 
   ProxyType getElementProxy(IndexT const& idx) const;
   CollectionProxyType getCollectionProxy() const;
-
-  bool isStatic() const;
-
-  static bool isStaticSized();
-
-  void setSize(VirtualElmCountType const& elms);
-
-  // Should be implemented in derived class (non-virtual)
-  VirtualElmCountType getSize() const;
 
   virtual void migrate(NodeType const& node) override;
 
@@ -99,11 +85,13 @@ struct CollectionBase : Indexable<IndexT> {
    */
   ReduceStampType getStampInc();
 
+  /**
+   * \brief Zero out the reduce stamp
+   */
+  void zeroReduceStamp();
+
 protected:
-  VirtualElmCountType numElems_ = no_elms;
   EpochType cur_bcast_epoch_ = 0;
-  bool hasStaticSize_ = true;
-  bool elmsFixedAtCreation_ = true;
   ReduceSeqStampType reduce_stamp_ = ReduceSeqStampType{1};
 };
 

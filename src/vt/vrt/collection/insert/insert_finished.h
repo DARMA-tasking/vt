@@ -45,6 +45,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/insert/insert_token.h"
 #include "vt/vrt/collection/reducable/reducable.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
 #include "vt/activefn/activefn.h"
@@ -52,14 +53,29 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-struct InsertFinished : BaseProxyT {
-  InsertFinished() = default;
-  InsertFinished(InsertFinished const&) = default;
-  InsertFinished(InsertFinished&&) = default;
-  explicit InsertFinished(VirtualProxyType const in_proxy);
-  InsertFinished& operator=(InsertFinished const&) = default;
+struct InsertStartEnd : BaseProxyT {
+  InsertStartEnd() = default;
+  InsertStartEnd(InsertStartEnd const&) = default;
+  InsertStartEnd(InsertStartEnd&&) = default;
+  explicit InsertStartEnd(VirtualProxyType const in_proxy);
+  InsertStartEnd& operator=(InsertStartEnd const&) = default;
 
-  void finishedInserting(ActionType action = nullptr) const;
+public:
+  /**
+   * \brief A collective call to start an insertion epoch
+   *
+   * \param[in] label an optional label for the insertion epoch
+   *
+   * \return the insert token
+   */
+  InserterToken beginInserting(std::string const& label = "insertion") const;
+
+  /**
+   * \brief A collective call to finish an insertion epoch
+   *
+   * \param[in] token the insert token
+   */
+  void finishInserting(InserterToken&& token) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

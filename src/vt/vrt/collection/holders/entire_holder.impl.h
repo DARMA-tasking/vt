@@ -55,94 +55,11 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename always_void_>
-/*static*/ void UniversalIndexHolder<always_void_>::destroyAllLive() {
-  for (auto&& elm : live_collections_) {
-    elm.second->destroy();
-  }
-  live_collections_.clear();
-}
-
-template <typename always_void_>
-/*static*/ void UniversalIndexHolder<always_void_>::destroyCollection(
-  VirtualProxyType const proxy
-) {
-  auto iter = live_collections_.find(proxy);
-  if (iter != live_collections_.end()) {
-    live_collections_.erase(iter);
-  }
-}
-
-template <typename always_void_>
-/*static*/ void UniversalIndexHolder<always_void_>::insertMap(
-  VirtualProxyType const proxy, HandlerType const han,
-  EpochType const& insert_epoch
-) {
-  live_collections_map_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(han)
-  );
-  insert_epoch_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(insert_epoch)
-  );
-}
-
-template <typename always_void_>
-/*static*/ void UniversalIndexHolder<always_void_>::insertSetEpoch(
-  VirtualProxyType const proxy, EpochType const& insert_epoch
-) {
-  auto iter = insert_epoch_.find(proxy);
-  vtAssert(iter != insert_epoch_.end(), "Proxy must exist in insert epoch");
-  iter->second = insert_epoch;
-}
-
-template <typename always_void_>
-/*static*/ EpochType UniversalIndexHolder<always_void_>::insertGetEpoch(
-  VirtualProxyType const proxy
-) {
-  auto iter = insert_epoch_.find(proxy);
-  vtAssert(iter != insert_epoch_.end(), "Proxy must exist in insert epoch");
-  return iter->second;
-}
-
-template <typename always_void_>
-/*static*/ HandlerType UniversalIndexHolder<always_void_>::getMap(
-  VirtualProxyType const proxy
-) {
-  auto map_iter = live_collections_map_.find(proxy);
-  vtAssert(map_iter != live_collections_map_.end(), "Map must exist");
-  return map_iter->second;
-}
-
-template <typename always_void_>
-/*static*/ std::unordered_map<VirtualProxyType,std::shared_ptr<BaseHolder>>
-UniversalIndexHolder<always_void_>::live_collections_;
-
-template <typename always_void_>
-/*static*/ std::unordered_map<VirtualProxyType,HandlerType>
-UniversalIndexHolder<always_void_>::live_collections_map_;
-
-template <typename always_void_>
-/*static*/ std::unordered_map<VirtualProxyType,EpochType>
-UniversalIndexHolder<always_void_>::insert_epoch_ = {};
-
 template <typename ColT, typename IndexT>
 /*static*/ void EntireHolder<ColT, IndexT>::insert(
   VirtualProxyType const& proxy, InnerHolderPtr ptr
 ) {
-  proxy_container_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(ptr)
-  );
-  UniversalIndexHolder<>::live_collections_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(proxy),
-    std::forward_as_tuple(ptr)
-  );
+  proxy_container_[proxy] = ptr;
 }
 
 template <typename ColT, typename IndexT>

@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/send/sendable.h"
+#include "vt/vrt/collection/insert/insert_token.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -60,7 +61,16 @@ struct ElmInsertable : BaseProxyT {
   template <typename SerializerT>
   void serialize(SerializerT& s);
 
-  void insert(NodeType node = uninitialized_destination) const;
+  /**
+   * \brief Insert a new collection element. Collective must have dynamic
+   * membership to perform insertions dynamically.
+   *
+   * \param[in] token the insertion token
+   * \param[in] node (optional) the node to insert on, otherwise the home node
+   */
+  void insert(
+    InserterToken& token, NodeType node = uninitialized_destination
+  ) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

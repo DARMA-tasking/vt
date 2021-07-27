@@ -64,11 +64,13 @@ void ElmInsertable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-void ElmInsertable<ColT,IndexT,BaseProxyT>::insert(NodeType node) const {
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insert(
+  InserterToken& token, NodeType node
+) const {
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();
-  theCollection()->insert<ColT,IndexT>(col_proxy,idx,node);
+  theCollection()->insert<ColT>(col_proxy, idx, node, token);
 }
 
 }}} /* end namespace vt::vrt::collection */

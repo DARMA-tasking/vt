@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           static_insertable.impl.h
+//                              typeless_holder.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,35 +41,37 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_HOLDERS_TYPELESS_HOLDER_H
+#define INCLUDED_VT_VRT_COLLECTION_HOLDERS_TYPELESS_HOLDER_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/types/base.h"
-#include "vt/vrt/collection/types/static_size.h"
+#include "vt/vrt/collection/holders/base_holder.h"
+
+#include <memory>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-StaticInsertableCollectionBase<ColT, IndexT>::StaticInsertableCollectionBase(
-  VirtualElmCountType const inNumElems
-) : StaticCollectionBase<ColT, IndexT>(inNumElems),
-    Insertable<ColT, IndexT>()
-{
-  CollectionBase<ColT, IndexT>::elmsFixedAtCreation_ = false;
-}
+struct TypelessHolder {
 
-template <typename ColT, typename IndexT>
-StaticInsertableCollectionBase<ColT, IndexT>::StaticInsertableCollectionBase()
-  : StaticInsertableCollectionBase(no_elms)
-{ }
+  void insertCollectionInfo(
+    VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr
+  );
+  void insertMap(VirtualProxyType const proxy, HandlerType const map_han);
+  HandlerType getMap(VirtualProxyType const proxy);
+  void destroyAllLive();
+  void destroyCollection(VirtualProxyType const proxy);
 
-template <typename ColT, typename IndexT>
-/*static*/ bool StaticInsertableCollectionBase<ColT, IndexT>::isStaticSized() {
-  return false;
-}
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | live_
+      | map_;
+  }
+
+private:
+  std::unordered_map<VirtualProxyType,std::shared_ptr<BaseHolder>> live_;
+  std::unordered_map<VirtualProxyType,HandlerType> map_;
+};
 
 }}} /* end namespace vt::vrt::collection */
 
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_HOLDERS_TYPELESS_HOLDER_H*/

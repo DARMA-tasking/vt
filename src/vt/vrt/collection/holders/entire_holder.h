@@ -54,29 +54,6 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename=void>
-struct UniversalIndexHolder {
-  static void destroyAllLive();
-  static void destroyCollection(VirtualProxyType const proxy);
-  static void insertMap(
-    VirtualProxyType const proxy, HandlerType const han,
-    EpochType const& insert_epoch = no_epoch
-  );
-  static HandlerType getMap(VirtualProxyType const proxy);
-public:
-  static void insertSetEpoch(
-    VirtualProxyType const proxy, EpochType const& insert_epoch
-  );
-  static EpochType insertGetEpoch(VirtualProxyType const proxy);
-  static std::unordered_map<VirtualProxyType,EpochType> insert_epoch_;
-  static std::unordered_map<
-    VirtualProxyType,std::shared_ptr<BaseHolder>
-  > live_collections_;
-  static std::unordered_map<VirtualProxyType,HandlerType> live_collections_map_;
-private:
-  static std::size_t num_collections_phase_;
-};
-
 template <typename ColT, typename IndexT>
 struct EntireHolder {
   using InnerHolder = CollectionHolder<ColT, IndexT>;

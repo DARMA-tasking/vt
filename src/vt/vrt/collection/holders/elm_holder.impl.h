@@ -56,19 +56,13 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-ElementHolder<ColT, IndexT>::ElementHolder(
-  VirtualPtrType in_vc_ptr_, HandlerType const in_han, IndexT const& idx
-) : vc_ptr_(std::move(in_vc_ptr_)), map_fn(in_han), max_idx(idx)
+ElementHolder<ColT, IndexT>::ElementHolder(VirtualPtrType in_vc_ptr_)
+  : vc_ptr_(std::move(in_vc_ptr_))
 { }
 
 template <typename ColT, typename IndexT>
-/*virtual*/ ElementHolder<ColT, IndexT>::~ElementHolder() {
-  vc_ptr_ = nullptr;
-}
-
-template <typename ColT, typename IndexT>
 typename ElementHolder<ColT, IndexT>::VirtualPtrType::pointer
-ElementHolder<ColT, IndexT>::getCollection() const {
+ElementHolder<ColT, IndexT>::getRawPtr() const {
   vtAssert(vc_ptr_ != nullptr, "Must be valid pointer");
   return vc_ptr_.get();
 }

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 deletable.h
+//                              typeless_holder.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,20 +41,40 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_DELETABLE_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_DELETABLE_H
-
-#include "vt/config.h"
+#include "vt/vrt/collection/holders/typeless_holder.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename IndexT>
-struct Deletable {
-  Deletable() = default;
+void TypelessHolder::destroyAllLive() {
+  for (auto&& elm : live_) {
+    elm.second->destroy();
+  }
+  live_.clear();
+}
 
-  void deleteElement(IndexT const& idx);
-};
+void TypelessHolder::destroyCollection(VirtualProxyType const proxy) {
+  auto iter = live_.find(proxy);
+  if (iter != live_.end()) {
+    live_.erase(iter);
+  }
+}
+
+void TypelessHolder::insertCollectionInfo(
+  VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr
+) {
+  live_[proxy] = ptr;
+}
+
+void TypelessHolder::insertMap(
+  VirtualProxyType const proxy, HandlerType const map_han
+) {
+  map_[proxy] = map_han;
+}
+
+HandlerType TypelessHolder::getMap(VirtualProxyType const proxy) {
+  auto map_iter = map_.find(proxy);
+  vtAssert(map_iter != map_.end(), "Map must exist");
+  return map_iter->second;
+}
 
 }}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_DELETABLE_H*/

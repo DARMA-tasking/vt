@@ -60,7 +60,7 @@ template <typename ColT, typename IndexT>
 using Chain5 = RDMAable<ColT,IndexT,BaseCollectionProxy<ColT,IndexT>>;
 
 template <typename ColT, typename IndexT>
-using Chain4 = InsertFinished<ColT,IndexT,Chain5<ColT,IndexT>>;
+using Chain4 = InsertStartEnd<ColT,IndexT,Chain5<ColT,IndexT>>;
 
 template <typename ColT, typename IndexT>
 using Chain3 = Broadcastable<ColT,IndexT,Chain4<ColT,IndexT>>;

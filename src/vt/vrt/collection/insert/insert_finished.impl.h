@@ -52,17 +52,25 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-InsertFinished<ColT,IndexT,BaseProxyT>::InsertFinished(
+InsertStartEnd<ColT,IndexT,BaseProxyT>::InsertStartEnd(
   VirtualProxyType const in_proxy
 ) : BaseProxyT(in_proxy)
 { }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
-  ActionType action
+InserterToken InsertStartEnd<ColT,IndexT,BaseProxyT>::beginInserting(
+  std::string const& label
 ) const {
   auto const col_proxy = this->getProxy();
-  theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
+  return theCollection()->beginInserting<ColT>(col_proxy, label);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void InsertStartEnd<ColT,IndexT,BaseProxyT>::finishInserting(
+  InserterToken&& token
+) const {
+  auto const col_proxy = this->getProxy();
+  theCollection()->finishInserting<ColT>(col_proxy, std::move(token));
 }
 
 }}} /* end namespace vt::vrt::collection */

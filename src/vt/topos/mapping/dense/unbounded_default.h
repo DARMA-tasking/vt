@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              insertable.impl.h
+//                             unbounded_default.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,34 +41,27 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H
+#if !defined INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_H
+#define INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/types/insertable.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/topos/mapping/dense/dense.h"
 
-#include <cassert>
+namespace vt { namespace mapping {
 
-namespace vt { namespace vrt { namespace collection {
+/**
+ * \struct UnboundedDefaultMap
+ *
+ * \brief The default mapper for an unbounded dynamic collection
+ */
+template <typename IdxT>
+struct UnboundedDefaultMap : BaseMapper<IdxT> {
+  static ObjGroupProxyType construct();
 
-template <typename ColT, typename IndexT>
-void Insertable<ColT,IndexT>::insert(IndexT const& idx, NodeType const& node) {
-  theCollection()->insert<ColT>(idx, node);
-}
+  NodeType map(IdxT* idx, int ndim) override;
+};
 
-template <typename ColT, typename IndexT>
-void Insertable<ColT,IndexT>::beginInserting() {
-    vtAssert(doneInserting == false, "Must not be done inserting");
-}
+}} /* end namespace vt::mapping */
 
-template <typename ColT, typename IndexT>
-void Insertable<ColT,IndexT>::finishInserting() {
-  vtAssert(doneInserting == false, "Must not be done inserting");
-  doneInserting = true;
-  // barrier, make sure that size is consistent
-}
+#include "vt/topos/mapping/dense/unbounded_default.impl.h"
 
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_IMPL_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_H*/

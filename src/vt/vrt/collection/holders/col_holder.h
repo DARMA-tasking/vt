@@ -68,12 +68,17 @@ public:
    * \internal \brief Construct a collection holder for meta-data
    *
    * \param[in] in_map_fn the map function
-   * \param[in] idx the index range
-   * \param[in] in_is_static whether the collection is static
+   * \param[in] in_has_dynamic_membership collection has dynamic membership?
+   * \param[in] in_map_object the map object
+   * \param[in] in_has_bounds whether it has bounds
+   * \param[in] in_bounds the bounds
    */
   CollectionHolder(
-    HandlerType const in_map_fn, IndexT const& idx, bool const in_is_static
+    HandlerType const in_map_fn, bool const in_has_dynamic_membership,
+    ObjGroupProxyType in_map_object, bool const in_has_bounds,
+    IndexT const in_bounds
   );
+
   virtual ~CollectionHolder() {}
 
 public:
@@ -82,10 +87,12 @@ public:
    */
   void destroy() override;
 
-  bool is_static_ = false;                    /**< Whether is static sized */
-  HandlerType map_fn = uninitialized_handler; /**< The map function */
-  IndexT max_idx;                             /**< Index range for collection */
-  Holder<ColT, IndexT> holder_;               /**< Inner holder of elements */
+  HandlerType map_fn = uninitialized_handler;  /**< The map function */
+  bool has_dynamic_membership_ = false;        /**< Whether has dynamic membership */
+  ObjGroupProxyType map_object = no_obj_group; /**< The map object */
+  bool has_bounds = false;                     /**< Whether it as bounds */
+  IndexT bounds = {};                          /**< The bounds */
+  Holder<ColT, IndexT> holder_;                /**< Inner holder of elements */
 };
 
 }}} /* end namespace vt::vrt::collection */

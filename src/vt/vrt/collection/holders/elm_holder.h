@@ -53,23 +53,25 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+/**
+ * \struct ElementHolder
+ *
+ * \brief The holder for the actual collection object that saves a unique_ptr to
+ * the element.
+ */
 template <typename ColT, typename IndexT>
 struct ElementHolder {
   using VirtualPtrType = std::unique_ptr<CollectionBase<ColT,IndexT>>;
 
-  ElementHolder(
-    VirtualPtrType in_vc_ptr_, HandlerType const in_han, IndexT const& idx
-  );
+  explicit ElementHolder(VirtualPtrType in_vc_ptr_);
   ElementHolder(ElementHolder&&) = default;
 
-  virtual ~ElementHolder();
+  virtual ~ElementHolder() = default;
 
-  typename VirtualPtrType::pointer getCollection() const;
+  typename VirtualPtrType::pointer getRawPtr() const;
 
   bool erased_ = false;
   VirtualPtrType vc_ptr_ = nullptr;
-  HandlerType map_fn = uninitialized_handler;
-  IndexT max_idx;
 };
 
 }}} /* end namespace vt::vrt::collection */

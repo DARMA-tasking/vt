@@ -54,28 +54,6 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename RemoteInfo, typename CollectionT>
-struct CollectionCreateMsg : ::vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_if_needed_by_parent_or_type1(RemoteInfo);
-
-  using CollectionType = CollectionT;
-
-  RemoteInfo info;
-  HandlerType map;
-
-  CollectionCreateMsg() = default;
-  CollectionCreateMsg(HandlerType const in_han)
-    : map(in_han)
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | info | map;
-  }
-};
-
 struct CollectionConsMsg : ::vt::collective::ReduceNoneMsg {
   using MessageParentType = ::vt::collective::ReduceNoneMsg;
   vt_msg_serialize_prohibited();
@@ -88,6 +66,20 @@ struct CollectionConsMsg : ::vt::collective::ReduceNoneMsg {
   VirtualProxyType getProxy() const { return proxy; }
 
   VirtualProxyType proxy = {};
+};
+
+struct CollectionStampMsg : vt::collective::ReduceTMsg<SequentialIDType> {
+  using MessageParentType = vt::collective::ReduceTMsg<SequentialIDType>;
+  vt_msg_serialize_prohibited();
+
+  CollectionStampMsg() = default;
+  CollectionStampMsg(
+    VirtualProxyType const in_proxy, SequentialIDType const in_val
+  ) : vt::collective::ReduceTMsg<SequentialIDType>(in_val),
+      proxy_(in_proxy)
+  { }
+
+  VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
 struct CollectionGroupMsg : CollectionConsMsg {
@@ -106,88 +98,31 @@ private:
   GroupType group_ = no_group;
 };
 
-struct FinishedUpdateMsg : ::vt::collective::reduce::ReduceMsg {
-  using MessageParentType = ::vt::collective::reduce::ReduceMsg;
-  vt_msg_serialize_prohibited();
-
-  FinishedUpdateMsg() = default;
-  explicit FinishedUpdateMsg(VirtualProxyType const& in_proxy)
-    : proxy_(in_proxy)
-  { }
-
-  VirtualProxyType proxy_ = {};
-};
-
-template <typename ColT, typename IndexT>
+template <typename ColT>
 struct InsertMsg : ::vt::Message {
+  using IndexType = typename ColT::IndexType;
+
   using MessageParentType = ::vt::Message;
   vt_msg_serialize_prohibited();
 
   InsertMsg() = default;
 
   InsertMsg(
-    CollectionProxy<ColT,IndexT> in_proxy,
-    IndexT in_max, IndexT in_idx, NodeType in_construct_node,
-    NodeType in_home_node, EpochType in_epoch, EpochType in_g_epoch
-  ) : proxy_(in_proxy), max_(in_max), idx_(in_idx),
-      construct_node_(in_construct_node), home_node_(in_home_node),
-      epoch_(in_epoch), g_epoch_(in_g_epoch)
+    CollectionProxy<ColT> in_proxy, IndexType in_idx, NodeType in_construct_node,
+    NodeType in_home_node, EpochType in_insert_epoch
+  ) : proxy_(in_proxy),
+      idx_(in_idx),
+      construct_node_(in_construct_node),
+      home_node_(in_home_node),
+      insert_epoch_(in_insert_epoch)
   { }
 
-  CollectionProxy<ColT,IndexT> proxy_ = {};
-  IndexT max_ = {}, idx_ = {};
+  CollectionProxy<ColT> proxy_ = {};
+  IndexType idx_ = {};
   NodeType construct_node_ = uninitialized_destination;
   NodeType home_node_ = uninitialized_destination;
-  EpochType epoch_ = no_epoch;
-  EpochType g_epoch_ = no_epoch;
+  EpochType insert_epoch_ = no_epoch;
   bool pinged_ = false;
-};
-
-template <typename ColT, typename IndexT>
-struct DoneInsertMsg : ::vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_prohibited();
-
-  DoneInsertMsg() = default;
-
-  DoneInsertMsg(
-    CollectionProxy<ColT,IndexT> in_proxy,
-    NodeType const& in_action_node = uninitialized_destination
-  ) : action_node_(in_action_node), proxy_(in_proxy)
-  { }
-
-  NodeType action_node_ = uninitialized_destination;
-  CollectionProxy<ColT,IndexT> proxy_ = {};
-};
-
-template <typename ColT, typename IndexT>
-struct ActInsertMsg : ::vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_prohibited();
-
-  ActInsertMsg() = default;
-
-  explicit ActInsertMsg(CollectionProxy<ColT,IndexT> in_proxy)
-    : proxy_(in_proxy)
-  { }
-
-  CollectionProxy<ColT,IndexT> proxy_ = {};
-};
-
-template <typename ColT, typename IndexT>
-struct UpdateInsertMsg : ::vt::Message {
-  using MessageParentType = ::vt::Message;
-  vt_msg_serialize_prohibited();
-
-  UpdateInsertMsg() = default;
-
-  UpdateInsertMsg(
-    CollectionProxy<ColT,IndexT> in_proxy, EpochType const& in_epoch
-  ) : proxy_(in_proxy), epoch_(in_epoch)
-  { }
-
-  CollectionProxy<ColT,IndexT> proxy_ = {};
-  EpochType epoch_ = no_epoch;
 };
 
 }}} /* end namespace vt::vrt::collection */

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                static_size.h
+//                              construct_po_msg.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,31 +41,37 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_MSG_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/types/base.h"
-#include "vt/vrt/collection/types/type_attorney.h"
-#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/collection/param/construct_po.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace param {
 
-template <typename ColT, typename IndexT>
-struct StaticCollectionBase :
-  CollectionBase<ColT, IndexT>
-{
-  explicit StaticCollectionBase(VirtualElmCountType const inNumElems);
-  StaticCollectionBase();
+/**
+ * \struct ConstructParamMsg
+ *
+ * \brief Construct PO configuration message for distributed construction
+ */
+template <typename ColT>
+struct ConstructParamMsg : vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // po
 
-  VirtualElmCountType getSize() const;
-  static bool isStaticSized();
+  ConstructParamMsg() = default;
+  explicit ConstructParamMsg(param::ConstructParams<ColT> in_po)
+    : po(std::move(in_po))
+  { }
 
-  friend struct CollectionTypeAttorney;
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | po;
+  }
+
+  param::ConstructParams<ColT> po; /**< The construction parameters */
 };
 
-}}} /* end namespace vt::vrt::collection */
+}}}} /* end namespace vt::vrt::collection::param */
 
-#include "vt/vrt/collection/types/static_size.impl.h"
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_MSG_H*/

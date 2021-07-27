@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              insertable_epoch.h
+//                             construct_po.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,31 +41,49 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_EPOCH_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_EPOCH_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_IMPL_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/types/insertable.h"
+#include "vt/vrt/collection/param/construct_po.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace param {
 
-/*
- * Can be inserted during a specific epoch which is a dynamic (partially
- * collective) property over time
+template <typename ColT>
+EpochType ConstructParams<ColT>::deferWithEpoch(ProxyFnType cb) {
+  // validate all the inputs for the configuration
+  validateInputs();
+  // Set constructed to true
+  constructed_ = true;
+
+  auto tup = theCollection()->makeCollection<ColT>(std::move(*this));
+  auto epoch = std::get<0>(tup);
+  auto proxy = std::get<1>(tup);
+
+  theTerm()->addAction(epoch, [=]{ cb(CollectionProxy<ColT>{proxy}); });
+
+  return std::get<0>(tup);
+}
+
+/**
+ * \brief Wait for construction to complete and then return the proxy
+ *
+ * \return the proxy after the construction is complete
  */
+template <typename ColT>
+typename ConstructParams<ColT>::ProxyType ConstructParams<ColT>::wait() {
+  // wait for the collection to be constructed
+  ProxyType out_proxy;
+  bool action_run = false;
+  auto ep = deferWithEpoch([&](ProxyType proxy) {
+    out_proxy = proxy;
+    action_run = true;
+  });
+  runSchedulerThrough(ep);
+  theSched()->runSchedulerWhile([&]{ return not action_run; });
+  return out_proxy;
+}
 
-template <typename ColT, typename IndexT>
-struct InsertableEpoch :
-  Insertable<ColT, IndexT>
-{
-  InsertableEpoch()
-    : Insertable<ColT, IndexT>()
-  { }
 
-protected:
-  EpochType curEpoch_ = no_epoch;
-};
+}}}} /* end namespace vt::vrt::collection::param */
 
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_EPOCH_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_IMPL_H*/

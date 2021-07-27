@@ -51,8 +51,14 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
 CollectionHolder<ColT, IndexT>::CollectionHolder(
-  HandlerType const in_map_fn, IndexT const& idx, bool const in_is_static
-) : is_static_(in_is_static), map_fn(in_map_fn), max_idx(idx)
+  HandlerType const in_map_fn, bool const in_has_dynamic_membership,
+  ObjGroupProxyType in_map_object, bool const in_has_bounds,
+  IndexT const in_bounds
+) : map_fn(in_map_fn),
+    has_dynamic_membership_(in_has_dynamic_membership),
+    map_object(in_map_object),
+    has_bounds(in_has_bounds),
+    bounds(in_bounds)
 { }
 
 template <typename ColT, typename IndexT>

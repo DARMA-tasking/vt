@@ -78,7 +78,7 @@ private:
 
   static MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-    VirtualPtrType vc_elm, IndexT const& range, HandlerType const map_han
+    VirtualPtrType vc_elm
   );
 };
 

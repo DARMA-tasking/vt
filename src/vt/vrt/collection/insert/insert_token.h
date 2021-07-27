@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              static_size.impl.h
+//                                insert_token.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,36 +41,40 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_IMPL_H
-
-#include "vt/config.h"
-#include "vt/vrt/collection/types/base.h"
-#include "vt/vrt/collection/manager.fwd.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_TOKEN_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_TOKEN_H
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-StaticCollectionBase<ColT, IndexT>::StaticCollectionBase(
-  VirtualElmCountType const inNumElems
-) : CollectionBase<ColT, IndexT>(false, false, inNumElems)
-{ }
+/**
+ * \struct InserterToken
+ *
+ * \brief Encapsulates a insertion epoch for a collective insertion on the
+ * collection.
+ */
+struct InserterToken {
+  /**
+   * \internal \brief Construct an \c InserterToken
+   *
+   * \param[in] in_insert_epoch the insertion epoch
+   */
+  explicit InserterToken(EpochType in_insert_epoch)
+    : insert_epoch_(in_insert_epoch)
+  { }
+  InserterToken(InserterToken const&) = delete;
+  InserterToken(InserterToken&&) = default;
 
-template <typename ColT, typename IndexT>
-StaticCollectionBase<ColT, IndexT>::StaticCollectionBase()
-  : StaticCollectionBase(no_elms)
-{ }
+  /**
+   * \brief Get the insertion epoch
+   *
+   * \return the insertion epoch
+   */
+  EpochType insertEpoch() const { return insert_epoch_; }
 
-template <typename ColT, typename IndexT>
-VirtualElmCountType StaticCollectionBase<ColT, IndexT>::getSize() const {
-  return this->numElems_;
-}
-
-template <typename ColT, typename IndexT>
-/*static*/ bool StaticCollectionBase<ColT, IndexT>::isStaticSized() {
-  return true;
-}
+private:
+  EpochType insert_epoch_ = no_epoch; /**< The insertion epoch */
+};
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_TOKEN_H*/
