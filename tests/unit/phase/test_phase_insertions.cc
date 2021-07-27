@@ -105,7 +105,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
 
   auto this_node = theContext()->getNode();
   auto num_nodes = theContext()->getNumNodes();
-  // int insert_counter = range.x() / 2;
+  int insert_counter = range.x() / 2;
 
   auto proxy = vt::makeCollection<MyCol>()
     .bounds(range)
@@ -140,7 +140,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     auto token = proxy.beginInserting();
 
     if (this_node == 0 and insert_counter < num_elms) {
-      proxy[insert_counter].insert(token, );
+      proxy[insert_counter].insert(token);
       insert_counter++;
     }
 
