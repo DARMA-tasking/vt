@@ -76,7 +76,6 @@ struct ConstructHandlers {
     //   "{}: constructed TestCol: idx.x()={}\n",
     //   theContext()->getNode(), col->getInex().x(), print_ptr(col)
     // );
-    EXPECT_TRUE(col->isConstructed());
   }
 };
 
@@ -86,53 +85,21 @@ struct TestConstruct : TestParallelHarness {};
 template <typename CollectionT>
 struct TestConstructDist : TestParallelHarness {};
 
-template <typename ColT, typename Tuple>
+template <typename ColT>
 struct ConstructParams {
   using IndexType = typename ColT::IndexType;
   using ProxyType = CollectionIndexProxy<ColT,IndexType>;
-  static ProxyType constructTup(IndexType idx,Tuple args) {
-    return construct(idx,args);
-  }
-  template <typename... Args>
-  static ProxyType construct(IndexType idx, std::tuple<Args...> args) {
-    return unpack(idx,args,std::index_sequence_for<Args...>{});
-  }
-  template <std::size_t ...I>
-  static ProxyType unpack(
-    IndexType idx, Tuple args, std::index_sequence<I...>
-  ) {
-    return theCollection()->construct<ColT>(idx,std::get<I>(args)...);
-  }
 
-  static ProxyType constructTupCollective(IndexType idx,Tuple args) {
-    return constructCollective(idx,args);
+  static ProxyType construct(IndexType idx) {
+    return theCollection()->construct<ColT>(idx);
   }
-  template <typename... Args>
-  static ProxyType constructCollective(
-    IndexType idx, std::tuple<Args...> args
-  ) {
-    return unpackCollective(idx,args,std::index_sequence_for<Args...>{});
-  }
-  template <std::size_t ...I>
-  static ProxyType unpackCollective(
-    IndexType idx, Tuple args, std::index_sequence<I...>
-  ) {
+  static ProxyType constructCollective(IndexType idx) {
     return theCollection()->constructCollective<ColT>(
       idx,[=](IndexType my_idx) {
-        return std::make_unique<ColT>(std::get<I>(args)...);
+        return std::make_unique<ColT>();
       }
     );
   }
-};
-
-struct BaseCol {
-  BaseCol() = default;
-  explicit BaseCol(bool const in_constructed)
-    : constructed_(in_constructed)
-  {}
-  bool isConstructed() const { return constructed_; }
-protected:
-  bool constructed_ = false;
 };
 
 TYPED_TEST_SUITE_P(TestConstruct);
@@ -141,14 +108,12 @@ TYPED_TEST_SUITE_P(TestConstructDist);
 TYPED_TEST_P(TestConstruct, test_construct_1) {
   using ColType   = TypeParam;
   using MsgType   = typename ColType::MsgType;
-  using TestParamType = typename ColType::ParamType;
 
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const& col_size = 32;
     auto rng = TestIndex(col_size);
-    TestParamType args = ConstructTuple<TestParamType>::construct();
-    auto proxy = ConstructParams<ColType,TestParamType>::constructTup(rng,args);
+    auto proxy = ConstructParams<ColType>::construct(rng);
     proxy.template broadcast<
       MsgType,
       ConstructHandlers::handler<ColType,MsgType>
@@ -159,14 +124,10 @@ TYPED_TEST_P(TestConstruct, test_construct_1) {
 TYPED_TEST_P(TestConstructDist, test_construct_distributed_1) {
   using ColType   = TypeParam;
   using MsgType   = typename ColType::MsgType;
-  using TestParamType = typename ColType::ParamType;
 
   auto const& col_size = 32;
   auto rng = TestIndex(col_size);
-  TestParamType args = ConstructTuple<TestParamType>::construct();
-  auto proxy = ConstructParams<ColType,TestParamType>::constructTupCollective(
-    rng,args
-  );
+  auto proxy = ConstructParams<ColType>::constructCollective(rng);
   proxy.template broadcast<
     MsgType,
     ConstructHandlers::handler<ColType,MsgType>

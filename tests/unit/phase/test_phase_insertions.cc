@@ -58,7 +58,7 @@ static constexpr int const num_phases = 10;
 
 static bool created_elm_0 = false;
 
-struct MyCol : vt::InsertableCollection<MyCol,vt::Index1D> {
+struct MyCol : vt::Collection<MyCol,vt::Index1D> {
   MyCol() {
     fmt::print("{}: constructing element: idx={}\n", theContext()->getNode(), getIndex());
     if (getIndex() == vt::Index1D{0}) {
@@ -96,20 +96,6 @@ static NodeType map_fn(Index1D* idx, Index1D* max_idx, NodeType nnodes) {
   return mapping::dense1DRoundRobinMap(idx, max_idx, nnodes);
 }
 
-static vt::vrt::collection::CollectionProxy<MyCol> proxy;
-
-struct ProxyMsg : vt::Message {
-  explicit ProxyMsg(VirtualProxyType const in_proxy)
-    : proxy_(in_proxy)
-  { }
-
-  VirtualProxyType proxy_ = no_vrt_proxy;
-};
-
-void proxyHandler(ProxyMsg* m) {
-  proxy = vt::vrt::collection::CollectionProxy<MyCol>{m->proxy_};
-}
-
 using TestPhaseInsertions = TestParallelHarness;
 
 TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
@@ -118,27 +104,25 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
   auto range = vt::Index1D(num_elms);
 
   auto this_node = theContext()->getNode();
-  int insert_counter = range.x() / 2;
+  auto num_nodes = theContext()->getNumNodes();
+  // int insert_counter = range.x() / 2;
 
-  // Construct a collection
-  runInEpochCollective([&]{
-    // For now, since insertable collections aren't allowed to be collectively
-    // constructed, used a rooted construction with rooted broadcasts.
-    if (this_node == 0) {
-      proxy = vt::theCollection()->construct<MyCol, map_fn>(range);
-      auto m = makeMessage<ProxyMsg>(proxy.getProxy());
-      theMsg()->broadcastMsg<ProxyMsg, proxyHandler>(m);
-    }
-  });
+  auto proxy = vt::makeCollection<MyCol>()
+    .bounds(range)
+    .mapperFunc<map_fn>()
+    .collective(true)
+    .dynamicMembership(true)
+    .wait();
 
-  // Insert every other element
-  runInEpochCollective([&]{
-    if (this_node == 0) {
-      for (int i = 0; i < range.x() / 2; i++) {
-        proxy[i].insert();
-      }
+  auto token = proxy.beginInserting();
+
+  for (int i = 0; i < range.x() / 2; i++) {
+    if (i % num_nodes == this_node) {
+      proxy[i].insert(token);
     }
-  });
+  }
+
+  proxy.finishInserting(std::move(token));
 
   for (int phase = 0; phase < num_phases; phase++) {
     // Do some work.
@@ -151,20 +135,21 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
 
-    // Insert the next element
-    runInEpochCollective([&]{
-      if (this_node == 0 and insert_counter < num_elms) {
-        proxy[insert_counter].insert();
-        insert_counter++;
-      }
+    auto token = proxy.beginInserting();
 
-      // Try to re-insert an element that already exists to test for reinsertion
-      // bugs
-      if (this_node == 0 or this_node == 1) {
-        proxy[0].insert(1);
-        proxy[0].insert(0);
-      }
-    });
+    if (this_node == 0 and insert_counter < num_elms) {
+      proxy[insert_counter].insert(token, );
+      insert_counter++;
+    }
+
+    // Try to re-insert an element that already exists to test for reinsertion
+    // bugs
+    if (this_node == 0 or this_node == 1) {
+      proxy[0].insert(token, 1);
+      proxy[0].insert(token, 0);
+    }
+
+    proxy.finishInserting(std::move(token));
   }
 }
 
