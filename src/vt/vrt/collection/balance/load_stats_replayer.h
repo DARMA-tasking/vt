@@ -70,6 +70,7 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct LoadStatsReplayer : runtime::component::Component<LoadStatsReplayer> {
 public:
+  using IndexVec = std::vector<uint64_t>;
   using ElmIDType = StatsDriven2DCollection::ElmIDType;
   using PhaseLoadsMapType = StatsDriven2DCollection::PhaseLoadsMapType;
   using ElmPhaseLoadsMapType = std::unordered_map<
@@ -116,9 +117,18 @@ public:
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
-  vt::Index2D getIndexFromElm(ElmIDType elm_id);
+  IndexVec getIndexFromElm(ElmIDType elm_id);
 
-  void addElmToIndexMapping(ElmIDType elm_id, vt::Index2D index);
+  template <typename IndexType>
+  IndexType getTypedIndexFromElm(ElmIDType elm_id) {
+    vtAbort("getTypedIndexFromElm: unexpected index type");
+    return IndexType();
+  }
+
+  void addElmToIndexMapping(ElmIDType elm_id, Index1D index);
+  void addElmToIndexMapping(ElmIDType elm_id, Index2D index);
+  void addElmToIndexMapping(ElmIDType elm_id, Index3D index);
+  void addElmToIndexMapping(ElmIDType elm_id, IndexVec index);
 
   template <typename Serializer>
   void serialize(Serializer& s) {
@@ -165,7 +175,7 @@ private:
   vt::CollectionProxy<StatsDriven2DCollection, vt::Index2D> coll_proxy_;
 
   /// \brief Mapping from element ids to vt indices
-  std::unordered_map<ElmIDType, vt::Index2D> elm_to_index_mapping_;
+  std::unordered_map<ElmIDType, IndexVec> elm_to_index_mapping_;
 
   /// \brief Loads imported from stats files
   ElmPhaseLoadsMapType loads_by_elm_by_phase_;

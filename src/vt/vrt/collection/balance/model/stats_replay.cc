@@ -74,7 +74,7 @@ TimeType StatsReplay::getWork(ElementIDStruct object, PhaseOffset offset)
     "This driver only supports offset.subphase == WHOLE_PHASE"
   );
 
-  auto index = vt::theLoadStatsReplayer()->getIndexFromElm(object.id);
+  auto index = vt::theLoadStatsReplayer()->getTypedIndexFromElm<Index2D>(object.id);
 
   auto elm_ptr = proxy_(index).tryGetLocalPtr();
   if (elm_ptr == nullptr) {
