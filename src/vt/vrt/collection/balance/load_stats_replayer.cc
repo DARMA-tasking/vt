@@ -140,7 +140,7 @@ void LoadStatsReplayer::configureCollectionForReplay(
   configureCollectionWithLoads(loads_by_elm_by_phase, initial_phase);
 }
 
-vt::Index2D LoadStatsReplayer::getIndexFromElm(ElmIDType elm_id) {
+LoadStatsReplayer::IndexVec LoadStatsReplayer::getIndexFromElm(ElmIDType elm_id) {
   auto replayer = vt::theLoadStatsReplayer();
   auto idxiter = replayer->elm_to_index_mapping_.find(elm_id);
   vtAssert(
@@ -151,8 +151,56 @@ vt::Index2D LoadStatsReplayer::getIndexFromElm(ElmIDType elm_id) {
   return index;
 }
 
+template <>
+Index1D LoadStatsReplayer::getTypedIndexFromElm(ElmIDType elm_id) {
+  IndexVec vec = getIndexFromElm(elm_id);
+  vtAssert(vec.size() == 1, "getTypedIndexFromElm: unexpected number of entries in index vector");
+  return Index1D(static_cast<int>(vec[0]));
+}
+
+template <>
+Index2D LoadStatsReplayer::getTypedIndexFromElm(ElmIDType elm_id) {
+  IndexVec vec = getIndexFromElm(elm_id);
+  vtAssert(vec.size() == 2, "getTypedIndexFromElm: unexpected number of entries in index vector");
+  return Index2D(static_cast<int>(vec[0]), static_cast<int>(vec[1]));
+}
+
+template <>
+Index3D LoadStatsReplayer::getTypedIndexFromElm(ElmIDType elm_id) {
+  IndexVec vec = getIndexFromElm(elm_id);
+  vtAssert(vec.size() == 3, "getTypedIndexFromElm: unexpected number of entries in index vector");
+  return Index3D(static_cast<int>(vec[0]), static_cast<int>(vec[1]), static_cast<int>(vec[2]));
+}
+
 void LoadStatsReplayer::addElmToIndexMapping(
-  ElmIDType elm_id, vt::Index2D index
+  ElmIDType elm_id, Index1D index
+) {
+  IndexVec vec;
+  vec.push_back(index.x());
+  addElmToIndexMapping(elm_id, vec);
+}
+
+void LoadStatsReplayer::addElmToIndexMapping(
+  ElmIDType elm_id, Index2D index
+) {
+  IndexVec vec;
+  vec.push_back(index.x());
+  vec.push_back(index.y());
+  addElmToIndexMapping(elm_id, vec);
+}
+
+void LoadStatsReplayer::addElmToIndexMapping(
+  ElmIDType elm_id, Index3D index
+) {
+  IndexVec vec;
+  vec.push_back(index.x());
+  vec.push_back(index.y());
+  vec.push_back(index.z());
+  addElmToIndexMapping(elm_id, vec);
+}
+
+void LoadStatsReplayer::addElmToIndexMapping(
+  ElmIDType elm_id, IndexVec index
 ) {
   auto replayer = vt::theLoadStatsReplayer();
   replayer->elm_to_index_mapping_[elm_id] = index;
@@ -217,12 +265,13 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
     }
   }
 
+  vtAssert(sd.node_idx_.size() > 0, "json files must contain vt indices");
+
   for (auto const &entry : sd.node_idx_) {
     auto &elm_id = entry.first;
     auto &vec = std::get<1>(entry.second);
-    vtAssert(vec.size() == 2, "Expected 2D index");
-    auto idx = Index2D(static_cast<int>(vec[0]), static_cast<int>(vec[1]));
-    elm_to_index_mapping_[elm_id.id] = idx;
+    addElmToIndexMapping(elm_id.id, vec);
+    auto idx = getTypedIndexFromElm<Index2D>(elm_id.id);
     vt_debug_print(
       normal, replay,
       "reading in mapping from elm={} to index={}\n",
@@ -274,7 +323,7 @@ void LoadStatsReplayer::migrateInitialObjectsHere(
     auto &loads_by_phase = item.second;
     auto it = loads_by_phase.find(initial_phase);
     if (it != loads_by_phase.end()) {
-      auto index = getIndexFromElm(elm_id);
+      auto index = getTypedIndexFromElm<Index2D>(elm_id);
       if (coll_proxy_[index].tryGetLocalPtr() != nullptr) {
         vt_debug_print(
           normal, replay,
@@ -305,7 +354,7 @@ void LoadStatsReplayer::stuffStatsIntoCollection(
     auto &loads_by_phase = item.second;
     auto it = loads_by_phase.find(initial_phase);
     if (it != loads_by_phase.end()) {
-      auto index = getIndexFromElm(elm_id);
+      auto index = getTypedIndexFromElm<Index2D>(elm_id);
       vtAssert(
         coll_proxy_[index].tryGetLocalPtr() != nullptr,
         "should be local by now"
@@ -325,7 +374,7 @@ void LoadStatsReplayer::stuffStatsIntoCollection(
   for (auto item : loads_by_elm_by_phase) {
     auto elm_id = item.first;
     auto &loads_by_phase = item.second;
-    auto index = getIndexFromElm(elm_id);
+    auto index = getTypedIndexFromElm<Index2D>(elm_id);
     vt_debug_print(
       normal, replay,
       "sending stats for elm {} to index {}\n",
