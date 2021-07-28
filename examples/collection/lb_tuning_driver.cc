@@ -51,9 +51,9 @@ int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   vtAbortIf(
-    argc != 5,
-    "Must have four arguments: <num elms per rank>, <initial phase>, "
-    "<phases to run>, <release?1:0>"
+    argc != 4,
+    "Must have three arguments: <num elms per rank>, <initial phase>, "
+    "<phases to run>"
   );
 
   // number of elements per rank
@@ -62,11 +62,9 @@ int main(int argc, char** argv) {
   int initial_phase = atoi(argv[2]);
   // phases to run after loading object stats
   int32_t phases_to_run = atoi(argv[3]);
-  // whether or not the stats files were generated with release 1.0
-  int convert_from_release = atoi(argv[4]);
 
   vt::theLoadStatsReplayer()->createAndConfigureForReplay(
-    num_elms_per_rank, initial_phase, phases_to_run, convert_from_release
+    num_elms_per_rank, initial_phase, phases_to_run
   );
 
   auto const node = vt::theContext()->getNode();

@@ -77,11 +77,11 @@ void LoadStatsReplayer::startup() {
 
 void LoadStatsReplayer::createAndConfigureForReplay(
   std::size_t coll_elms_per_node, std::size_t initial_phase,
-  std::size_t phases_to_run, bool convert_from_release
+  std::size_t phases_to_run
 ) {
   createCollectionAndModel(coll_elms_per_node, initial_phase);
   loads_by_elm_by_phase_ = loadStatsToReplay(
-    initial_phase, phases_to_run, convert_from_release
+    initial_phase, phases_to_run
   );
   configureCollectionForReplay(loads_by_elm_by_phase_, initial_phase);
   loads_by_elm_by_phase_.clear();
@@ -122,17 +122,14 @@ void LoadStatsReplayer::createCollectionAndModel(
 }
 
 LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::loadStatsToReplay(
-  std::size_t initial_phase, std::size_t phases_to_run,
-  bool convert_from_release
+  std::size_t initial_phase, std::size_t phases_to_run
 ) {
   // absorb relevant phases from existing stats files
   vt_debug_print(
     normal, replay,
     "loadStatsToReplay: reading stats from file\n"
   );
-  auto loads_by_elm_by_phase = readStats(
-    initial_phase, phases_to_run, convert_from_release
-  );
+  auto loads_by_elm_by_phase = readStats(initial_phase, phases_to_run);
   return loads_by_elm_by_phase;
 }
 
@@ -177,16 +174,13 @@ void LoadStatsReplayer::addElmToIndexMapping(
 }
 
 LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::readStats(
-  std::size_t initial_phase, std::size_t phases_to_run,
-  bool convert_from_release
+  std::size_t initial_phase, std::size_t phases_to_run
 ) {
   auto const filename = theConfig()->getLBStatsFileIn();
   vt_debug_print(terse, replay, "input file: {}\n", filename);
   // Read the input files
   try {
-    auto loads_map = inputStatsFile(
-      filename, initial_phase, phases_to_run, convert_from_release
-    );
+    auto loads_map = inputStatsFile(filename, initial_phase, phases_to_run);
     return loads_map;
   } catch (std::exception& e) {
     vtAbort(e.what());
@@ -196,7 +190,7 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::readStats(
 
 LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
   std::string const& filename, std::size_t initial_phase,
-  std::size_t phases_to_run, bool convert_from_release
+  std::size_t phases_to_run
 ) {
   using vt::util::json::Reader;
   using vt::vrt::collection::balance::StatsData;
@@ -239,16 +233,6 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
   }
 
   return loads_by_elm_by_phase;
-}
-
-LoadStatsReplayer::ElmIDType LoadStatsReplayer::convertReleaseStatsID(
-  ElmIDType release_perm_id
-) {
-  auto local_id = release_perm_id >> 32;
-  auto node_id = release_perm_id - (local_id << 32);
-  auto converted_local_id = (local_id - 1) / 2;
-  auto converted_elm_id = converted_local_id << 32 | node_id;
-  return converted_elm_id;
 }
 
 void LoadStatsReplayer::determineElmToIndexMapping(
