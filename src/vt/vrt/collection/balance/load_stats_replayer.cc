@@ -48,6 +48,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/model/per_collection.h"
 #include "vt/vrt/collection/balance/model/stats_replay.h"
+#include "vt/vrt/collection/balance/model/stats_replay.impl.h"
 #include "vt/vrt/collection/balance/stats_data.h"
 #include "vt/utils/json/json_reader.h"
 
@@ -114,9 +115,9 @@ void LoadStatsReplayer::createCollectionAndModel(
   auto per_col = std::make_shared<
     vt::vrt::collection::balance::PerCollection
   >(base);
-  auto replay_model = std::make_shared<StatsReplay>(
-    base, coll_proxy_
-  );
+  auto replay_model = std::make_shared<StatsReplay<
+    StatsDriven2DCollection, Index2D
+  >>(base, coll_proxy_);
   per_col->addModel(proxy_bits, replay_model);
   vt::theLBManager()->setLoadModel(per_col);
 }
