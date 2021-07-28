@@ -101,7 +101,7 @@ public:
 
   void createAndConfigureForReplay(
     std::size_t coll_elms_per_node, std::size_t initial_phase,
-    std::size_t phases_to_run, bool convert_from_release
+    std::size_t phases_to_run
   );
 
   void createCollectionAndModel(
@@ -109,8 +109,7 @@ public:
   );
 
   ElmPhaseLoadsMapType loadStatsToReplay(
-    std::size_t initial_phase, std::size_t phases_to_run,
-    bool convert_from_release
+    std::size_t initial_phase, std::size_t phases_to_run
   );
 
   void configureCollectionForReplay(
@@ -143,16 +142,13 @@ public:
 
 private:
   ElmPhaseLoadsMapType readStats(
-    std::size_t initial_phase, std::size_t phases_to_run,
-    bool convert_from_release
+    std::size_t initial_phase, std::size_t phases_to_run
   );
 
   ElmPhaseLoadsMapType inputStatsFile(
     std::string const& filename, std::size_t initial_phase,
-    std::size_t phases_to_run, bool convert_from_release
+    std::size_t phases_to_run
   );
-
-  ElmIDType convertReleaseStatsID(ElmIDType release_perm_id);
 
   void determineElmToIndexMapping(
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase
