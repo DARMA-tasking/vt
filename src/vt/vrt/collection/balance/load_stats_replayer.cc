@@ -136,7 +136,6 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::loadStatsToReplay(
 void LoadStatsReplayer::configureCollectionForReplay(
   const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
 ) {
-  determineElmToIndexMapping(loads_by_elm_by_phase);
   configureElementLocations(loads_by_elm_by_phase, initial_phase);
   configureCollectionWithLoads(loads_by_elm_by_phase, initial_phase);
 }
@@ -157,20 +156,6 @@ void LoadStatsReplayer::addElmToIndexMapping(
 ) {
   auto replayer = vt::theLoadStatsReplayer();
   replayer->elm_to_index_mapping_[elm_id] = index;
-}
-
-/*static*/ void LoadStatsReplayer::receiveElmToIndexMapping(
-  StatsDriven2DCollection::ElmToIndexMappingMsg* msg
-) {
-  auto elm_id = msg->elm_id_;
-  auto index = msg->index_;
-  auto replayer = vt::theLoadStatsReplayer();
-  replayer->elm_to_index_mapping_[elm_id] = index;
-  vt_debug_print(
-    normal, replay,
-    "receiveElmToIndexMapping: elm {} is index {}\n",
-    elm_id, index
-  );
 }
 
 LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::readStats(
@@ -221,7 +206,7 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
         auto load = entry.second;
         vt_debug_print(
           normal, replay,
-          "reading in loads for elm={}, home={}, phase={}, load={}\n",
+          "reading in loads for elm={}, home={} on phase={}: load={}\n",
           elm_id.id, elm_id.home_node, phase, load
         );
         loads_by_elm_by_phase[elm_id.id][phase] = load;
@@ -232,26 +217,20 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
     }
   }
 
-  return loads_by_elm_by_phase;
-}
+  for (auto const &entry : sd.node_idx_) {
+    auto &elm_id = entry.first;
+    auto &vec = std::get<1>(entry.second);
+    vtAssert(vec.size() == 2, "Expected 2D index");
+    auto idx = Index2D(static_cast<int>(vec[0]), static_cast<int>(vec[1]));
+    elm_to_index_mapping_[elm_id.id] = idx;
+    vt_debug_print(
+      normal, replay,
+      "reading in mapping from elm={} to index={}\n",
+      elm_id.id, idx
+    );
+  }
 
-void LoadStatsReplayer::determineElmToIndexMapping(
-  const ElmPhaseLoadsMapType &loads_by_elm_by_phase
-) {
-  // empirically determine mapping from elm ids to vt indices
-  vt_debug_print(
-    normal, replay,
-    "determineElmToIndexMapping\n"
-  );
-  vt::runInEpochCollective([=]{
-    coll_proxy_.broadcastCollective<
-      StatsDriven2DCollection::NullMsg,
-      &StatsDriven2DCollection::shareElmToIndexMapping
-    >();
-  });
-  vt::runInEpochCollective([this, &loads_by_elm_by_phase]{
-    requestElmIndices(loads_by_elm_by_phase);
-  });
+  return loads_by_elm_by_phase;
 }
 
 void LoadStatsReplayer::configureElementLocations(
@@ -282,59 +261,6 @@ void LoadStatsReplayer::configureCollectionWithLoads(
     // with loads directly to that index
     stuffStatsIntoCollection(loads_by_elm_by_phase, initial_phase);
   });
-}
-
-void LoadStatsReplayer::requestElmIndices(
-  const ElmPhaseLoadsMapType &loads_by_elm_by_phase
-) {
-  // loop over local stats elms, asking rank determined by hashing perm id what
-  // the index is
-  auto const this_rank = vt::theContext()->getNode();
-  for (auto item : loads_by_elm_by_phase) {
-    auto elm_id = item.first;
-    vt::NodeType dest = findDirectoryNode(elm_id);
-    if (dest != this_rank) {
-      vt_debug_print(
-        normal, replay,
-        "looking for index of elm {}\n",
-        elm_id
-      );
-      auto query = vt::makeMessage<ElmToIndexQueryMsg>(elm_id, this_rank);
-      vt::theMsg()->sendMsg<ElmToIndexQueryMsg, requestElmToIndexMapping>(
-        dest, query
-      );
-    }
-  }
-}
-
-/*static*/ void LoadStatsReplayer::requestElmToIndexMapping(
-  ElmToIndexQueryMsg *msg
-) {
-  auto dest = msg->src_;
-  auto elm_id = msg->elm_id_;
-  auto replayer = vt::theLoadStatsReplayer();
-  auto iter = replayer->elm_to_index_mapping_.find(elm_id);
-  if (iter == replayer->elm_to_index_mapping_.end()) {
-    vt_print(
-      replay,
-      "requestElmToIndexMapping: {} asked for index of {} but it is unknown\n",
-      dest, elm_id
-    );
-    vtAbort("unknown id");
-  }
-
-  auto index = replayer->getIndexFromElm(elm_id);
-  auto response = vt::makeMessage<
-    StatsDriven2DCollection::ElmToIndexMappingMsg
-  >(index, elm_id);
-  vt_debug_print(
-    normal, replay,
-    "requestElmToIndexMapping: responding that elm {} is index {}\n",
-    elm_id, index
-  );
-  vt::theMsg()->sendMsg<
-    StatsDriven2DCollection::ElmToIndexMappingMsg, receiveElmToIndexMapping
-  >(dest, response);
 }
 
 void LoadStatsReplayer::migrateInitialObjectsHere(

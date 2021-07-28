@@ -120,19 +120,6 @@ public:
 
   void addElmToIndexMapping(ElmIDType elm_id, vt::Index2D index);
 
-  inline vt::NodeType findDirectoryNode(ElmIDType elm_id) {
-    auto const nranks = vt::theContext()->getNumNodes();
-    #if 0 // most efficient, but bypasses some code paths
-      return (elm_id & 0xFFFFFFFF) % nranks;
-    #else // for more rigorous testing
-      return elm_id % nranks;
-    #endif
-  }
-
-  static void receiveElmToIndexMapping(
-    StatsDriven2DCollection::ElmToIndexMappingMsg* msg
-  );
-
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | proxy_
@@ -148,10 +135,6 @@ private:
   ElmPhaseLoadsMapType inputStatsFile(
     std::string const& filename, std::size_t initial_phase,
     std::size_t phases_to_run
-  );
-
-  void determineElmToIndexMapping(
-    const ElmPhaseLoadsMapType &loads_by_elm_by_phase
   );
 
   void configureElementLocations(

@@ -66,17 +66,6 @@ struct StatsDriven2DCollection : vt::Collection<
 
   using NullMsg = vt::CollectionMessage<StatsDriven2DCollection>;
 
-  struct ElmToIndexMappingMsg : vt::Message {
-    using ElmIDType = StatsDriven2DCollection::ElmIDType;
-
-    vt::Index2D index_;
-    ElmIDType elm_id_;
-
-    explicit ElmToIndexMappingMsg(vt::Index2D index, ElmIDType elm_id)
-      : index_(index), elm_id_(elm_id)
-    { }
-  };
-
   struct MigrateHereMsg : vt::CollectionMessage<StatsDriven2DCollection> {
     MigrateHereMsg() = default;
 
@@ -125,8 +114,6 @@ struct StatsDriven2DCollection : vt::Collection<
   }
 
   void setInitialPhase(InitialPhaseMsg* msg);
-
-  void shareElmToIndexMapping(NullMsg* msg);
 
   void migrateSelf(MigrateHereMsg* msg);
 

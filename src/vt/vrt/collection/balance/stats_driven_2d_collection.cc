@@ -52,27 +52,6 @@ void StatsDriven2DCollection::setInitialPhase(InitialPhaseMsg* msg) {
   initial_phase_ = msg->phase_;
 }
 
-void StatsDriven2DCollection::shareElmToIndexMapping(NullMsg* msg) {
-  // announce mapping from perm id to index to rank determined by hashing
-  auto elm_id = this->getElmID().id;
-  auto index = this->getIndex();
-  auto response = vt::makeMessage<ElmToIndexMappingMsg>(index, elm_id);
-  auto const this_rank = vt::theContext()->getNode();
-  vt::NodeType dest = vt::theLoadStatsReplayer()->findDirectoryNode(elm_id);
-  vt_debug_print(
-    normal, replay,
-    "shareElmToIndexMapping: sharing with {} that obj {} is index {}\n",
-    dest, elm_id, index
-  );
-  if (dest != this_rank) {
-    vt::theMsg()->sendMsg<
-      ElmToIndexMappingMsg, LoadStatsReplayer::receiveElmToIndexMapping
-    >(dest, response);
-  } else { // are self-sends allowed now?
-    LoadStatsReplayer::receiveElmToIndexMapping(response.get());
-  }
-}
-
 void StatsDriven2DCollection::migrateSelf(MigrateHereMsg* msg) {
   // migrate oneself to the requesting rank
   auto const this_rank = vt::theContext()->getNode();
