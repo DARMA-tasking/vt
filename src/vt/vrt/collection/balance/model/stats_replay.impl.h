@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              stats_replay.cc
+//                            stats_replay.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,13 +42,15 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H
 
 #include "vt/vrt/collection/balance/model/stats_replay.h"
-#include "vt/vrt/collection/balance/load_stats_replayer.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-StatsReplay::StatsReplay(
+template <typename CollectionType, typename CollectionIndexType>
+StatsReplay<CollectionType, CollectionIndexType>::StatsReplay(
   std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy
 )
   : ComposedModel(base)
@@ -56,8 +58,10 @@ StatsReplay::StatsReplay(
 {
 }
 
-TimeType StatsReplay::getWork(ElementIDStruct object, PhaseOffset offset)
-{
+template <typename CollectionType, typename CollectionIndexType>
+TimeType StatsReplay<CollectionType, CollectionIndexType>::getWork(
+  ElementIDStruct object, PhaseOffset offset
+) {
   auto const phase = getNumCompletedPhases() - 1;
   vt_debug_print(
     verbose, replay,
@@ -74,7 +78,9 @@ TimeType StatsReplay::getWork(ElementIDStruct object, PhaseOffset offset)
     "This driver only supports offset.subphase == WHOLE_PHASE"
   );
 
-  auto index = vt::theLoadStatsReplayer()->getTypedIndexFromElm<Index2D>(object.id);
+  auto index = vt::theLoadStatsReplayer()->getTypedIndexFromElm<
+    CollectionIndexType
+  >(object.id);
 
   auto elm_ptr = proxy_(index).tryGetLocalPtr();
   if (elm_ptr == nullptr) {
@@ -95,4 +101,6 @@ TimeType StatsReplay::getWork(ElementIDStruct object, PhaseOffset offset)
   return load;
 }
 
-}}}}
+}}}} // end namespace
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H*/

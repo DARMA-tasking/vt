@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-/   /                            stats_replay.h
+//                               stats_replay.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -53,9 +53,10 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 /**
  * \brief A load model that extracts stored loads from a StatsDriven2DCollection
  */
+template <typename CollectionType, typename CollectionIndexType>
 class StatsReplay : public ComposedModel {
 public:
-  using ProxyType = vt::CollectionProxy<StatsDriven2DCollection, vt::Index2D>;
+  using ProxyType = vt::CollectionProxy<CollectionType, CollectionIndexType>;
 
   StatsReplay(std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy);
 
