@@ -87,6 +87,14 @@ struct TestCol : vt::Collection<TestCol,vt::Index3D> {
 
   struct NullMsg : vt::CollectionMessage<TestCol> {};
 
+  void saveNode(NullMsg*) {
+    final_node = theContext()->getNode();
+  }
+
+  void checkNode(NullMsg*) {
+    EXPECT_EQ(final_node, theContext()->getNode());
+  }
+
   void init(NullMsg*) {
     auto idx = getIndex();
 
@@ -140,12 +148,18 @@ struct TestCol : vt::Collection<TestCol,vt::Index3D> {
     if (s.isUnpacking()) {
       token = std::make_shared<int>();
     }
-    s | *token;
+    bool is_null = token == nullptr;
+    s | is_null;
+    if (not is_null) {
+      s | *token;
+    }
+    s | final_node;
   }
 
   int iter = 0;
   std::vector<double> data1, data2;
   std::shared_ptr<int> token;
+  NodeType final_node = uninitialized_destination;
 };
 
 using TestCheckpoint = TestParallelHarness;
@@ -293,6 +307,64 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_2) {
 
   // Ensure that all elements were properly destroyed
   EXPECT_EQ(counter, 0);
+}
+
+TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
+  auto this_node = theContext()->getNode();
+  auto num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
+
+  auto range = vt::Index3D(num_nodes, num_elms, 4);
+  auto checkpoint_name = "test_checkpoint_dir_2";
+  auto proxy = vt::theCollection()->constructCollective<TestCol>(range);
+
+  theConfig()->vt_lb = true;
+  theConfig()->vt_lb_name = "TemperedLB";
+
+  vt::runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.broadcast<TestCol::NullMsg,&TestCol::init>();
+    }
+  });
+
+  for (int i = 0; i < 5; i++) {
+    vt::runInEpochCollective([&]{
+      if (this_node == 0) {
+        proxy.template broadcast<TestCol::NullMsg,&TestCol::doIter>();
+      }
+    });
+
+    vt::thePhase()->nextPhaseCollective();
+  }
+
+  vt::runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.broadcast<TestCol::NullMsg,&TestCol::saveNode>();
+    }
+  });
+
+  vt::runInEpochCollective([&]{
+    vt_print(gen, "checkpointToFile\n");
+    vt::theCollection()->checkpointToFile(proxy, checkpoint_name);
+  });
+
+  vt::runInEpochCollective([&]{
+    if (this_node == 0) {
+      proxy.destroy();
+    }
+  });
+
+  auto proxy_new = vt::theCollection()->constructCollective<TestCol>(range);
+
+  // Now, restore from the previous distribution
+  vt_print(gen, "restoreFromFileInPlace\n");
+  vt::theCollection()->restoreFromFileInPlace<TestCol>(
+    proxy_new, range, checkpoint_name
+  );
+
+  // Do more work after the checkpoint
+  vt::runInEpochCollective([&]{
+    proxy_new.broadcast<TestCol::NullMsg,&TestCol::checkNode>();
+  });
 }
 
 }}} // end namespace vt::tests::unit
