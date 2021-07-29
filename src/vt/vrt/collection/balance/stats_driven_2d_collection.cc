@@ -48,6 +48,16 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+/*static*/
+std::map<vt::Index2D, int /*mpi_rank*/> StatsDriven2DCollection::rank_mapping_;
+
+/*static*/
+void StatsDriven2DCollection::addMapping(
+  vt::Index2D idx, vt::NodeType home
+) {
+  rank_mapping_[idx] = home;
+}
+
 void StatsDriven2DCollection::setInitialPhase(InitialPhaseMsg* msg) {
   initial_phase_ = msg->phase_;
 }

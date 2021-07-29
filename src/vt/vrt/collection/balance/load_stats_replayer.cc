@@ -80,10 +80,10 @@ void LoadStatsReplayer::createAndConfigureForReplay(
   std::size_t coll_elms_per_node, std::size_t initial_phase,
   std::size_t phases_to_run
 ) {
-  createCollectionAndModel(coll_elms_per_node, initial_phase);
   loads_by_elm_by_phase_ = loadStatsToReplay(
     initial_phase, phases_to_run
   );
+  createCollectionAndModel(coll_elms_per_node, initial_phase);
   configureCollectionForReplay(loads_by_elm_by_phase_, initial_phase);
   loads_by_elm_by_phase_.clear();
 }
@@ -268,6 +268,9 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
 
   vtAssert(sd.node_idx_.size() > 0, "json files must contain vt indices");
 
+  // correctly building the collection map here relies on sd.node_idx_
+  // containing phases that show each index on its home rank at least once
+  // TODO: make this work without that assumption
   for (auto const &entry : sd.node_idx_) {
     auto &elm_id = entry.first;
     auto &vec = std::get<1>(entry.second);
@@ -275,9 +278,10 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
     auto idx = getTypedIndexFromElm<Index2D>(elm_id.id);
     vt_debug_print(
       normal, replay,
-      "reading in mapping from elm={} to index={}\n",
-      elm_id.id, idx
+      "reading in mapping from elm={}, home={} to index={}\n",
+      elm_id.id, elm_id.home_node, idx
     );
+    StatsDriven2DCollection::addMapping(idx, elm_id.home_node);
   }
 
   return loads_by_elm_by_phase;
