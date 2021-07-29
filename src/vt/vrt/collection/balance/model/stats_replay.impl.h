@@ -78,9 +78,9 @@ TimeType StatsReplay<CollectionIndexType>::getWork(
     "This driver only supports offset.subphase == WHOLE_PHASE"
   );
 
-  auto index = vt::theLoadStatsReplayer()->getTypedIndexFromElm<
-    CollectionIndexType
-  >(object.id);
+  auto index = StatsDrivenCollection<CollectionIndexType>::getIndexFromElm(
+    object.id
+  );
 
   auto elm_ptr = proxy_(index).tryGetLocalPtr();
   if (elm_ptr == nullptr) {
