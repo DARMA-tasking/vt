@@ -147,8 +147,8 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     // Try to re-insert an element that already exists to test for reinsertion
     // bugs
     if (this_node == 0 or this_node == 1) {
-      proxy[0].insert(token, 1);
-      proxy[0].insert(token, 0);
+      proxy[0].insertAt(token, 1);
+      proxy[0].insertAt(token, 0);
     }
 
     proxy.finishInserting(std::move(token));

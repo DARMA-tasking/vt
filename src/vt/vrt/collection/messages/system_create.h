@@ -54,6 +54,8 @@
 
 namespace vt { namespace vrt { namespace collection {
 
+struct InsertNullMsg : vt::Message {};
+
 struct CollectionStampMsg : vt::collective::ReduceTMsg<SequentialIDType> {
   using MessageParentType = vt::collective::ReduceTMsg<SequentialIDType>;
   vt_msg_serialize_prohibited();
@@ -68,24 +70,46 @@ struct CollectionStampMsg : vt::collective::ReduceTMsg<SequentialIDType> {
   VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
-template <typename ColT>
+template <typename ColT, typename MsgT>
 struct InsertMsg : ::vt::Message {
   using IndexType = typename ColT::IndexType;
 
   using MessageParentType = ::vt::Message;
-  vt_msg_serialize_prohibited();
+  vt_msg_serialize_required(); // insert_msg_
 
   InsertMsg() = default;
 
   InsertMsg(
     CollectionProxy<ColT> in_proxy, IndexType in_idx, NodeType in_construct_node,
-    NodeType in_home_node, EpochType in_insert_epoch
+    NodeType in_home_node, EpochType in_insert_epoch,
+    MsgSharedPtr<MsgT> in_insert_msg = nullptr
   ) : proxy_(in_proxy),
       idx_(in_idx),
       construct_node_(in_construct_node),
       home_node_(in_home_node),
-      insert_epoch_(in_insert_epoch)
+      insert_epoch_(in_insert_epoch),
+      insert_msg_(in_insert_msg)
   { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | proxy_
+      | idx_
+      | construct_node_
+      | home_node_
+      | insert_epoch_
+      | pinged_;
+    bool is_null = insert_msg_ == nullptr;
+    s | is_null;
+    if (not is_null) {
+      if (s.isUnpacking()) {
+        insert_msg_ = makeMessage<MsgT>();
+      }
+      MsgT* raw_msg = insert_msg_.get();
+      s | *raw_msg;
+    }
+  }
 
   CollectionProxy<ColT> proxy_ = {};
   IndexType idx_ = {};
@@ -93,6 +117,7 @@ struct InsertMsg : ::vt::Message {
   NodeType home_node_ = uninitialized_destination;
   EpochType insert_epoch_ = no_epoch;
   bool pinged_ = false;
+  MsgSharedPtr<MsgT> insert_msg_ = nullptr;
 };
 
 }}} /* end namespace vt::vrt::collection */

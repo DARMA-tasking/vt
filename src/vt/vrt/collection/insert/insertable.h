@@ -62,15 +62,47 @@ struct ElmInsertable : BaseProxyT {
   void serialize(SerializerT& s);
 
   /**
-   * \brief Insert a new collection element. Collective must have dynamic
-   * membership to perform insertions dynamically.
+   * \brief Insert a new collection element (calling the default
+   * constructor). Collective must have dynamic membership to perform
+   * insertions. The element will be inserted on the node where the initial map
+   * puts it.
    *
    * \param[in] token the insertion token
-   * \param[in] node (optional) the node to insert on, otherwise the home node
    */
-  void insert(
-    InserterToken& token, NodeType node = uninitialized_destination
-  ) const;
+  void insert(InserterToken& token) const;
+
+  /**
+   * \brief Insert a new collection element (calling the default
+   * constructor). Collective must have dynamic membership to perform
+   * insertions.
+   *
+   * \param[in] token the insertion token
+   * \param[in] node the node to insert on
+   */
+  void insertAt(InserterToken& token, NodeType node) const;
+
+  /**
+   * \brief Insert a new collection element, calling the constructor that takes
+   * a message as an argument. Collective must have dynamic membership to
+   * perform insertions.
+   *
+   * \param[in] token the insertion token
+   * \param[in] msg the message
+   */
+  template <typename MsgT>
+  void insertMsg(InserterToken& token, MsgSharedPtr<MsgT> msg) const;
+
+  /**
+   * \brief Insert a new collection element, calling the constructor that takes
+   * a message as an argument. Collective must have dynamic membership to
+   * perform insertions.
+   *
+   * \param[in] token the insertion token
+   * \param[in] node the node to insert on
+   * \param[in] msg the message
+   */
+  template <typename MsgT>
+  void insertAtMsg(InserterToken& token, NodeType node, MsgSharedPtr<MsgT> msg) const;
 };
 
 }}} /* end namespace vt::vrt::collection */

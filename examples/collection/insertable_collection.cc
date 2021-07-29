@@ -79,11 +79,11 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < range.x() / 2; i++) {
       if (i % num_nodes == this_node) {
-        proxy[i].insert(token, i % 2);
+        proxy[i].insertAt(token, i % 2);
       }
     }
 
-    fmt::print("calling finished insert\n");
+    fmt::print("calling finishedInserting");
     proxy.finishInserting(std::move(token));
   }
 
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     fmt::print("insertions are finished (first phase)\n");
     for (int i = range.x()/2; i < range.x(); i++) {
       if (i % num_nodes == this_node) {
-        proxy[i].insert(token, i % 2);
+        proxy[i].insertAt(token, i % 2);
       }
     }
     proxy.finishInserting(std::move(token));

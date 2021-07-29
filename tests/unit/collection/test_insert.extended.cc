@@ -147,7 +147,7 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
   auto token = proxy.beginInserting();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i++) {
-      proxy[i].insert(token, this_node);
+      proxy[i].insertAt(token, this_node);
     }
   }
   proxy.finishInserting(std::move(token));
@@ -174,7 +174,7 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
   auto token = proxy.beginInserting();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i+=16) {
-      proxy[i].insert(token, this_node);
+      proxy[i].insertAt(token, this_node);
     }
   }
   proxy.finishInserting(std::move(token));
@@ -201,7 +201,7 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
   auto token = proxy.beginInserting();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i++) {
-      proxy[i].insert(token, (this_node + 1) % num_nodes);
+      proxy[i].insertAt(token, (this_node + 1) % num_nodes);
       // ::fmt::print("sending to {}\n", i);
     }
   }
@@ -239,7 +239,7 @@ TEST_F(TestInsert, test_insert_send_sparse_node_1) {
   auto token = proxy.beginInserting();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i+=16) {
-      proxy[i].insert(token, (this_node + 1) % num_nodes);
+      proxy[i].insertAt(token, (this_node + 1) % num_nodes);
     }
   }
   proxy.finishInserting(std::move(token));

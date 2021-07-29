@@ -1431,17 +1431,18 @@ inline void CollectionManager::insertCollectionInfo(
  * Support of virtual context collection element dynamic insertion
  */
 
-template <typename ColT>
-/*static*/ void CollectionManager::insertHandler(InsertMsg<ColT>* msg) {
+template <typename ColT, typename MsgT>
+/*static*/ void CollectionManager::insertHandler(InsertMsg<ColT, MsgT>* msg) {
   auto const insert_epoch = msg->insert_epoch_;
   InserterToken token{insert_epoch};
-  theCollection()->insert<ColT>(
-    msg->proxy_, msg->idx_, msg->construct_node_, token, msg->pinged_
+  theCollection()->insert<ColT, MsgT>(
+    msg->proxy_, msg->idx_, msg->construct_node_, token, msg->insert_msg_,
+    msg->pinged_
   );
 }
 
-template <typename ColT>
-/*static*/ void CollectionManager::pingHomeHandler(InsertMsg<ColT>* msg) {
+template <typename ColT, typename MsgT>
+/*static*/ void CollectionManager::pingHomeHandler(InsertMsg<ColT, MsgT>* msg) {
   using IndexType = typename ColT::IndexType;
   auto proxy = msg->proxy_;
   auto idx = msg->idx_;
@@ -1463,13 +1464,13 @@ template <typename ColT>
     lm->registerEntityRemote(elm, msg->home_node_, insert_node);
 
     // send a message back that the insertion shall proceed
-    auto send_msg = makeMessage<InsertMsg<ColT>>(
+    auto send_msg = makeMessage<InsertMsg<ColT, MsgT>>(
       msg->proxy_, msg->idx_, msg->construct_node_, msg->home_node_,
-      msg->insert_epoch_
+      msg->insert_epoch_, msg->insert_msg_
     );
     send_msg->pinged_ = true;
     theMsg()->markAsCollectionMessage(send_msg);
-    theMsg()->sendMsg<InsertMsg<ColT>,insertHandler<ColT>>(
+    theMsg()->sendMsg<InsertMsg<ColT, MsgT>,insertHandler<ColT, MsgT>>(
       insert_node, send_msg
     );
   }
@@ -1614,10 +1615,42 @@ void CollectionManager::finishInserting(
   });
 }
 
-template <typename ColT>
+namespace detail {
+
+template <typename MsgT, typename ColT, typename Enable_ = void>
+struct InsertMsgDispatcher;
+
+template <typename MsgT, typename ColT>
+struct InsertMsgDispatcher<
+  MsgT, ColT,
+  std::enable_if_t<std::is_same<MsgT, InsertNullMsg>::value>
+> {
+  static CollectionManager::DistribConstructFn<ColT> makeCons(MsgSharedPtr<MsgT>) {
+    using IndexType = typename ColT::IndexType;
+    return [](IndexType){ return std::make_unique<ColT>(); };
+  }
+};
+
+template <typename MsgT, typename ColT>
+struct InsertMsgDispatcher<
+  MsgT, ColT,
+  std::enable_if_t<not std::is_same<MsgT, InsertNullMsg>::value>
+> {
+  static CollectionManager::DistribConstructFn<ColT> makeCons(
+    MsgSharedPtr<MsgT> msg
+  ) {
+    using IndexType = typename ColT::IndexType;
+    return [=](IndexType){ return std::make_unique<ColT>(msg.get()); };
+  }
+};
+
+} /* end namespace detail */
+
+template <typename ColT, typename MsgT>
 void CollectionManager::insert(
   CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
-  NodeType const node, InserterToken& token, bool pinged_home_already
+  NodeType const node, InserterToken& token, MsgSharedPtr<MsgT> insert_msg,
+  bool pinged_home_already
 ) {
   using IndexType = typename ColT::IndexType;
 
@@ -1642,7 +1675,8 @@ void CollectionManager::insert(
 
   vt_debug_print(
     normal, vrt_coll,
-    "insert: insert_node={}, mapped_node={}\n", insert_node, mapped_node
+    "insert: insert_node={}, mapped_node={}\n",
+    insert_node, mapped_node
   );
 
   if (insert_node == this_node and not pinged_home_already) {
@@ -1670,11 +1704,11 @@ void CollectionManager::insert(
       // Case 1: insertion from the non-home node---we must check if the home
       // has a reserved entry from another insertion. If so, we cancel the
       // insertion---otherwise, we reserve for this insertion
-      auto msg = makeMessage<InsertMsg<ColT>>(
-        proxy, idx, insert_node, mapped_node, insert_epoch
+      auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
+        proxy, idx, insert_node, mapped_node, insert_epoch, insert_msg
       );
       theMsg()->markAsCollectionMessage(msg);
-      theMsg()->sendMsg<InsertMsg<ColT>, pingHomeHandler<ColT>>(
+      theMsg()->sendMsg<InsertMsg<ColT, MsgT>, pingHomeHandler<ColT>>(
         mapped_node, msg
       );
       proceed_with_insertion = false;
@@ -1682,20 +1716,20 @@ void CollectionManager::insert(
   }
 
   if (insert_node == this_node and proceed_with_insertion) {
-    makeCollectionElement<ColT>(
-      untyped_proxy, idx, mapped_node,
-      [](IndexType){ return std::make_unique<ColT>(); }
-    );
+    auto cons_fn = detail::InsertMsgDispatcher<MsgT, ColT>::makeCons(insert_msg);
+    makeCollectionElement<ColT>(untyped_proxy, idx, mapped_node, cons_fn);
 
     auto elm_holder = findElmHolder<ColT>(untyped_proxy);
     auto raw_ptr = elm_holder->lookup(idx).getRawPtr();
     raw_ptr->getStats().updatePhase(thePhase()->getCurrentPhase());
   } else if (insert_node != this_node) {
-    auto msg = makeMessage<InsertMsg<ColT>>(
-      proxy, idx, insert_node, mapped_node, insert_epoch
+    auto msg = makeMessage<InsertMsg<ColT, MsgT>>(
+      proxy, idx, insert_node, mapped_node, insert_epoch, insert_msg
     );
     theMsg()->markAsCollectionMessage(msg);
-    theMsg()->sendMsg<InsertMsg<ColT>,insertHandler<ColT>>(insert_node, msg);
+    theMsg()->sendMsg<InsertMsg<ColT, MsgT>,insertHandler<ColT, MsgT>>(
+      insert_node, msg
+    );
   }
 
   theMsg()->popEpoch(insert_epoch);

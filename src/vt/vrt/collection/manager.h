@@ -1375,16 +1375,16 @@ public:
    *
    * \param[in] msg insert message
    */
-  template <typename ColT>
-  static void insertHandler(InsertMsg<ColT>* msg);
+  template <typename ColT, typename MsgT>
+  static void insertHandler(InsertMsg<ColT, MsgT>* msg);
 
   /**
    * \internal \brief Handler to query home before inserting on this node
    *
    * \param[in] msg insert message
    */
-  template <typename ColT>
-  static void pingHomeHandler(InsertMsg<ColT>* msg);
+  template <typename ColT, typename MsgT>
+  static void pingHomeHandler(InsertMsg<ColT, MsgT>* msg);
 
   /**
    * \brief Begin an insertion epoch collectively for a collection with dynamic
@@ -1431,10 +1431,11 @@ public:
    * \param[in] pinged_home_already whether the home node has been contacted to
    * ensure an insertion has not occurred already
    */
-  template <typename ColT>
+  template <typename ColT, typename MsgT>
   void insert(
     CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
-    NodeType const node, InserterToken& token, bool pinged_home_already = false
+    NodeType const node, InserterToken& token, MsgSharedPtr<MsgT> msg = nullptr,
+    bool pinged_home_already = false
   );
 
   /**

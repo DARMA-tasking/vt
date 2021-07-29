@@ -64,13 +64,47 @@ void ElmInsertable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-void ElmInsertable<ColT,IndexT,BaseProxyT>::insert(
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insert(InserterToken& token) const {
+  auto const col_proxy = this->getCollectionProxy();
+  auto const elm_proxy = this->getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+  theCollection()->insert<ColT, InsertNullMsg>(
+    col_proxy, idx, uninitialized_destination, token
+  );
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insertAt(
   InserterToken& token, NodeType node
 ) const {
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();
-  theCollection()->insert<ColT>(col_proxy, idx, node, token);
+  theCollection()->insert<ColT, InsertNullMsg>(col_proxy, idx, node, token);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT>
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insertAtMsg(
+  InserterToken& token, NodeType node, MsgSharedPtr<MsgT> msg
+) const {
+  auto const col_proxy = this->getCollectionProxy();
+  auto const elm_proxy = this->getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+  theCollection()->insert<ColT, MsgT>(col_proxy, idx, node, token, msg);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT>
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insertMsg(
+  InserterToken& token, MsgSharedPtr<MsgT> msg
+) const {
+  auto const col_proxy = this->getCollectionProxy();
+  auto const elm_proxy = this->getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+  theCollection()->insert<ColT, MsgT>(
+    col_proxy, idx, uninitialized_destination, token, msg
+  );
 }
 
 }}} /* end namespace vt::vrt::collection */
