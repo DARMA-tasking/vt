@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                        stats_driven_2d_collection.h
+//                         stats_driven_collection.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_2D_COLLECTION_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_2D_COLLECTION_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/collection_headers.h"
@@ -51,22 +51,24 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
- * \struct StatsDriven2DCollection
+ * \struct StatsDrivenCollection
  *
  * \brief A collection that can be used with the StatsDrivenLoadModel to replay
  * task costs from imported stats files.
  */
-struct StatsDriven2DCollection : vt::Collection<
-  StatsDriven2DCollection, vt::Index2D
+template <typename IndexType>
+struct StatsDrivenCollection : vt::Collection<
+  StatsDrivenCollection<IndexType>, IndexType
 > {
+  using ThisType = StatsDrivenCollection<IndexType>;
   using ElmIDType = ElementIDType;
   using PhaseLoadsMapType = std::unordered_map<
     std::size_t /*phase from stats file*/, vt::TimeType
   >;
 
-  using NullMsg = vt::CollectionMessage<StatsDriven2DCollection>;
+  using NullMsg = vt::CollectionMessage<ThisType>;
 
-  struct MigrateHereMsg : vt::CollectionMessage<StatsDriven2DCollection> {
+  struct MigrateHereMsg : vt::CollectionMessage<ThisType> {
     MigrateHereMsg() = default;
 
     MigrateHereMsg(vt::NodeType src)
@@ -76,8 +78,8 @@ struct StatsDriven2DCollection : vt::Collection<
     vt::NodeType src_ = vt::uninitialized_destination;
   };
 
-  struct LoadStatsDataMsg : vt::CollectionMessage<StatsDriven2DCollection> {
-    using MessageParentType = vt::CollectionMessage<StatsDriven2DCollection>;
+  struct LoadStatsDataMsg : vt::CollectionMessage<ThisType> {
+    using MessageParentType = vt::CollectionMessage<ThisType>;
     vt_msg_serialize_required();
 
     LoadStatsDataMsg() = default;
@@ -95,7 +97,7 @@ struct StatsDriven2DCollection : vt::Collection<
     PhaseLoadsMapType stats_;
   };
 
-  struct InitialPhaseMsg : vt::CollectionMessage<StatsDriven2DCollection> {
+  struct InitialPhaseMsg : vt::CollectionMessage<ThisType> {
     InitialPhaseMsg() = default;
 
     InitialPhaseMsg(std::size_t initial_phase)
@@ -105,10 +107,10 @@ struct StatsDriven2DCollection : vt::Collection<
     std::size_t phase_ = 0;
   };
 
-  StatsDriven2DCollection() = default;
+  StatsDrivenCollection() = default;
 
-  inline static vt::NodeType collectionMap(
-    vt::Index2D* idx, vt::Index2D*, vt::NodeType
+  inline static NodeType collectionMap(
+    IndexType* idx, IndexType*, NodeType
   ) {
     // correct operation here requires that the home rank specifically
     // know that it maps locally
@@ -119,10 +121,8 @@ struct StatsDriven2DCollection : vt::Collection<
         "collectionMap: index {} maps to rank {}\n",
         *idx, it->second
       );
-      vtAssertExpr(it->second == idx->x());
       return it->second;
     }
-    vtAssertExpr(idx->x() != theContext()->getNode());
     return uninitialized_destination;
   }
 
@@ -136,17 +136,17 @@ struct StatsDriven2DCollection : vt::Collection<
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    vt::Collection<StatsDriven2DCollection, vt::Index2D>::serialize(s);
+    vt::Collection<ThisType, IndexType>::serialize(s);
     s | stats_to_replay_
       | initial_phase_;
   }
 
   virtual void epiMigrateIn();
 
-  static void addMapping(vt::Index2D idx, vt::NodeType home);
+  static void addMapping(IndexType idx, NodeType home);
 
 private:
-  static std::map<vt::Index2D, int /*mpi_rank*/> rank_mapping_;
+  static std::map<IndexType, int /*mpi_rank*/> rank_mapping_;
 
   /// \brief Loads to feed into StatsReplay load model
   PhaseLoadsMapType stats_to_replay_;
@@ -156,4 +156,4 @@ private:
 
 }}}} /* end namespace vt::vrt::collection::balance */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_2D_COLLECTION_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_H*/

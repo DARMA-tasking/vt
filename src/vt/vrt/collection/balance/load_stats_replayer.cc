@@ -44,6 +44,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/load_stats_replayer.h"
+#include "vt/vrt/collection/balance/stats_driven_collection.impl.h"
 #include "vt/objgroup/manager.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/model/per_collection.h"
@@ -98,11 +99,11 @@ void LoadStatsReplayer::createCollectionAndModel(
     coll_elms_per_node
   );
   auto nranks = vt::theContext()->getNumNodes();
-  auto range = vt::Index2D(
+  auto range = Index2D(
     static_cast<int>(nranks), static_cast<int>(coll_elms_per_node)
   );
   coll_proxy_ = vt::theCollection()->constructCollective<
-    StatsDriven2DCollection, StatsDriven2DCollection::collectionMap
+    StatsDrivenCollection<Index2D>, StatsDrivenCollection<Index2D>::collectionMap
   >(range);
   auto proxy_bits = coll_proxy_.getProxy();
 
@@ -115,9 +116,7 @@ void LoadStatsReplayer::createCollectionAndModel(
   auto per_col = std::make_shared<
     vt::vrt::collection::balance::PerCollection
   >(base);
-  auto replay_model = std::make_shared<StatsReplay<
-    StatsDriven2DCollection, Index2D
-  >>(base, coll_proxy_);
+  auto replay_model = std::make_shared<StatsReplay<Index2D>>(base, coll_proxy_);
   per_col->addModel(proxy_bits, replay_model);
   vt::theLBManager()->setLoadModel(per_col);
 }
@@ -281,7 +280,7 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
       "reading in mapping from elm={}, home={} to index={}\n",
       elm_id.id, elm_id.home_node, idx
     );
-    StatsDriven2DCollection::addMapping(idx, elm_id.home_node);
+    StatsDrivenCollection<Index2D>::addMapping(idx, elm_id.home_node);
   }
 
   return loads_by_elm_by_phase;
@@ -342,8 +341,8 @@ void LoadStatsReplayer::migrateInitialObjectsHere(
           index, elm_id
         );
         coll_proxy_[index].send<
-          StatsDriven2DCollection::MigrateHereMsg,
-          &StatsDriven2DCollection::migrateSelf
+          StatsDrivenCollection<Index2D>::MigrateHereMsg,
+          &StatsDrivenCollection<Index2D>::migrateSelf
         >(this_rank);
       }
     }
@@ -367,12 +366,12 @@ void LoadStatsReplayer::stuffStatsIntoCollection(
     }
   }
   // tell the collection what the initial phase is
-  auto msg = makeMessage<StatsDriven2DCollection::InitialPhaseMsg>(
+  auto msg = makeMessage<StatsDrivenCollection<Index2D>::InitialPhaseMsg>(
     initial_phase
   );
   coll_proxy_.broadcastCollectiveMsg<
-    StatsDriven2DCollection::InitialPhaseMsg,
-    &StatsDriven2DCollection::setInitialPhase
+    StatsDrivenCollection<Index2D>::InitialPhaseMsg,
+    &StatsDrivenCollection<Index2D>::setInitialPhase
   >(msg.get());
   // send a message to each elm appearing in our stats files with all
   // relevant loads
@@ -386,8 +385,8 @@ void LoadStatsReplayer::stuffStatsIntoCollection(
       elm_id, index
     );
     coll_proxy_[index].template send<
-      StatsDriven2DCollection::LoadStatsDataMsg,
-      &StatsDriven2DCollection::recvLoadStatsData
+      StatsDrivenCollection<Index2D>::LoadStatsDataMsg,
+      &StatsDrivenCollection<Index2D>::recvLoadStatsData
     >(loads_by_phase);
   }
 }
