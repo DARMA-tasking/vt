@@ -49,8 +49,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-template <typename CollectionType, typename CollectionIndexType>
-StatsReplay<CollectionType, CollectionIndexType>::StatsReplay(
+template <typename CollectionIndexType>
+StatsReplay<CollectionIndexType>::StatsReplay(
   std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy
 )
   : ComposedModel(base)
@@ -58,8 +58,8 @@ StatsReplay<CollectionType, CollectionIndexType>::StatsReplay(
 {
 }
 
-template <typename CollectionType, typename CollectionIndexType>
-TimeType StatsReplay<CollectionType, CollectionIndexType>::getWork(
+template <typename CollectionIndexType>
+TimeType StatsReplay<CollectionIndexType>::getWork(
   ElementIDStruct object, PhaseOffset offset
 ) {
   auto const phase = getNumCompletedPhases() - 1;

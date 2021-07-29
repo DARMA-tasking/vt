@@ -46,17 +46,19 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_H
 
 #include "vt/vrt/collection/balance/model/composed_model.h"
-#include "vt/vrt/collection/balance/stats_driven_2d_collection.h"
+#include "vt/vrt/collection/balance/stats_driven_collection.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
  * \brief A load model that extracts stored loads from a StatsDriven2DCollection
  */
-template <typename CollectionType, typename CollectionIndexType>
+template <typename CollectionIndexType>
 class StatsReplay : public ComposedModel {
 public:
-  using ProxyType = vt::CollectionProxy<CollectionType, CollectionIndexType>;
+  using ProxyType = vt::CollectionProxy<
+    StatsDrivenCollection<CollectionIndexType>, CollectionIndexType
+  >;
 
   StatsReplay(std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy);
 

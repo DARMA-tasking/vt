@@ -50,7 +50,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
-#include "vt/vrt/collection/balance/stats_driven_2d_collection.h"
+#include "vt/vrt/collection/balance/stats_driven_collection.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -71,8 +71,8 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 struct LoadStatsReplayer : runtime::component::Component<LoadStatsReplayer> {
 public:
   using IndexVec = std::vector<uint64_t>;
-  using ElmIDType = StatsDriven2DCollection::ElmIDType;
-  using PhaseLoadsMapType = StatsDriven2DCollection::PhaseLoadsMapType;
+  using ElmIDType = StatsDrivenCollection<Index2D>::ElmIDType;
+  using PhaseLoadsMapType = StatsDrivenCollection<Index2D>::PhaseLoadsMapType;
   using ElmPhaseLoadsMapType = std::unordered_map<
     ElmIDType, PhaseLoadsMapType
   >;
@@ -172,7 +172,7 @@ private:
   objgroup::proxy::Proxy<LoadStatsReplayer> proxy_;
 
   /// \brief Proxy for created collection
-  vt::CollectionProxy<StatsDriven2DCollection, vt::Index2D> coll_proxy_;
+  vt::CollectionProxy<StatsDrivenCollection<Index2D>, Index2D> coll_proxy_;
 
   /// \brief Mapping from element ids to vt indices
   std::unordered_map<ElmIDType, IndexVec> elm_to_index_mapping_;

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                       stats_driven_2d_collection.cc
+//                       stats_driven_collection.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,29 +42,37 @@
 //@HEADER
 */
 
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_IMPLH
+
 #include "vt/config.h"
-#include "vt/vrt/collection/balance/stats_driven_2d_collection.h"
+#include "vt/vrt/collection/balance/stats_driven_collection.h"
 #include "vt/vrt/collection/balance/load_stats_replayer.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
+template <typename IndexType>
 /*static*/
-std::map<vt::Index2D, int /*mpi_rank*/> StatsDriven2DCollection::rank_mapping_;
+std::map<IndexType, int /*mpi_rank*/>
+StatsDrivenCollection<IndexType>::rank_mapping_;
 
+template <typename IndexType>
 /*static*/
-void StatsDriven2DCollection::addMapping(
-  vt::Index2D idx, vt::NodeType home
+void StatsDrivenCollection<IndexType>::addMapping(
+  IndexType idx, NodeType home
 ) {
   rank_mapping_[idx] = home;
 }
 
-void StatsDriven2DCollection::setInitialPhase(InitialPhaseMsg* msg) {
+template <typename IndexType>
+void StatsDrivenCollection<IndexType>::setInitialPhase(InitialPhaseMsg* msg) {
   initial_phase_ = msg->phase_;
 }
 
-void StatsDriven2DCollection::migrateSelf(MigrateHereMsg* msg) {
+template <typename IndexType>
+void StatsDrivenCollection<IndexType>::migrateSelf(MigrateHereMsg* msg) {
   // migrate oneself to the requesting rank
-  auto const this_rank = vt::theContext()->getNode();
+  auto const this_rank = theContext()->getNode();
   auto dest = msg->src_;
   if (dest != this_rank) {
     vt_debug_print(
@@ -76,7 +84,8 @@ void StatsDriven2DCollection::migrateSelf(MigrateHereMsg* msg) {
   }
 }
 
-void StatsDriven2DCollection::recvLoadStatsData(LoadStatsDataMsg *msg) {
+template <typename IndexType>
+void StatsDrivenCollection<IndexType>::recvLoadStatsData(LoadStatsDataMsg *msg) {
   vt_debug_print(
     normal, replay,
     "recvLoadStatsData: index {} received stats data for {} phases\n",
@@ -85,7 +94,8 @@ void StatsDriven2DCollection::recvLoadStatsData(LoadStatsDataMsg *msg) {
   stats_to_replay_.insert(msg->stats_.begin(), msg->stats_.end());
 }
 
-vt::TimeType StatsDriven2DCollection::getLoad(int real_phase) {
+template <typename IndexType>
+vt::TimeType StatsDrivenCollection<IndexType>::getLoad(int real_phase) {
   auto simulated_phase = real_phase + initial_phase_;
   vt_debug_print(
     verbose, replay,
@@ -95,10 +105,13 @@ vt::TimeType StatsDriven2DCollection::getLoad(int real_phase) {
   return stats_to_replay_[simulated_phase];
 }
 
-void StatsDriven2DCollection::epiMigrateIn() {
+template <typename IndexType>
+void StatsDrivenCollection<IndexType>::epiMigrateIn() {
   auto elm_id = this->getElmID().id;
   auto index = this->getIndex();
   vt::theLoadStatsReplayer()->addElmToIndexMapping(elm_id, index);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_IMPL_H*/
