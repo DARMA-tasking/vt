@@ -213,10 +213,6 @@ public:
    * \param[in] in_bulk_range the bulk insertion range
    */
   ThisType&& bulkInsert(IndexType in_bulk_range) {
-    if (not has_bounds_) {
-      bounds_ = in_bulk_range;
-      has_bounds_ = true;
-    }
     bulk_inserts_.emplace_back(std::move(in_bulk_range));
     return std::move(*this);
   }
