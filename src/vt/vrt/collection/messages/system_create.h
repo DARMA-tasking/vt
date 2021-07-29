@@ -54,20 +54,6 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-struct CollectionConsMsg : ::vt::collective::ReduceNoneMsg {
-  using MessageParentType = ::vt::collective::ReduceNoneMsg;
-  vt_msg_serialize_prohibited();
-
-  CollectionConsMsg() = default;
-  explicit CollectionConsMsg(VirtualProxyType const& in_proxy)
-    : proxy(in_proxy)
-  { }
-
-  VirtualProxyType getProxy() const { return proxy; }
-
-  VirtualProxyType proxy = {};
-};
-
 struct CollectionStampMsg : vt::collective::ReduceTMsg<SequentialIDType> {
   using MessageParentType = vt::collective::ReduceTMsg<SequentialIDType>;
   vt_msg_serialize_prohibited();
@@ -80,22 +66,6 @@ struct CollectionStampMsg : vt::collective::ReduceTMsg<SequentialIDType> {
   { }
 
   VirtualProxyType proxy_ = no_vrt_proxy;
-};
-
-struct CollectionGroupMsg : CollectionConsMsg {
-  using MessageParentType = CollectionConsMsg;
-  vt_msg_serialize_prohibited();
-
-  CollectionGroupMsg() = default;
-  CollectionGroupMsg(
-    VirtualProxyType const& in_proxy, GroupType const& in_group
-  ) : CollectionConsMsg(in_proxy), group_(in_group)
-  { }
-
-  GroupType getGroup() const { return group_; }
-
-private:
-  GroupType group_ = no_group;
 };
 
 template <typename ColT>

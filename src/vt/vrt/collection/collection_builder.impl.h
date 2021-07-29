@@ -172,9 +172,6 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT> po) {
     makeCollectionElement<ColT>(proxy, idx, this_node, std::move(c));
   }
 
-  // Reduce construction of the distributed collection
-  reduceConstruction<ColT>(proxy);
-
   if (global_constructed_elms != 0) {
     // Construct a underlying group for the collection
     constructGroup<ColT>(proxy);

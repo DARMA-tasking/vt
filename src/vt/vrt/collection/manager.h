@@ -70,7 +70,6 @@
 #include "vt/collective/reduce/reduce_msg.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
-#include "vt/vrt/collection/op_buffer.h"
 #include "vt/runnable/invoke.h"
 #include "vt/context/runnable_context/lb_stats.fwd.h"
 #include "vt/vrt/collection/param/construct_po.h"
@@ -374,15 +373,6 @@ struct CollectionManager
    */
   template <typename IndexT>
   static bool hasContext();
-
-  /**
-   * \internal \brief Perform asynchronous reduction after construction of a
-   * collection to determine it's fully constructed across all nodes.
-   *
-   * \param[in] proxy the collection proxy
-   */
-  template <typename ColT>
-  static void reduceConstruction(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Construct a group for the collection
@@ -1168,30 +1158,6 @@ public:
   static void broadcastRootHandler(MsgT* msg);
 
   /**
-   * \internal \brief Inform that collection has finished construction
-   *
-   * \param[in] msg the message
-   */
-  template <typename=void>
-  static void collectionFinishedHan(CollectionConsMsg* msg);
-
-  /**
-   * \internal \brief Reduction target after group construction
-   *
-   * \param[in] msg the message
-   */
-  template <typename=void>
-  static void collectionGroupReduceHan(CollectionGroupMsg* msg);
-
-  /**
-   * \internal \brief Inform group finished construction
-   *
-   * \param[in] msg the message
-   */
-  template <typename=void>
-  static void collectionGroupFinishedHan(CollectionGroupMsg* msg);
-
-  /**
    * \internal \brief Count the number of elements for a collection on this node
    *
    * Used for automatic group creation for each collection instance for
@@ -1715,10 +1681,7 @@ public:
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | buffers_
-      | proxy_state_
-      | cleanup_fns_
-      | constructed_
+    s | cleanup_fns_
       | release_lb_
       | collect_stats_for_lb_
       | next_collective_id_
@@ -1736,97 +1699,6 @@ private:
    * \return the element ID
    */
   balance::ElementIDStruct getCurrentContext() const;
-
-  using ActionPendingType = std::function<messaging::PendingSend(void)>;
-
-  /**
-   * \brief Add to the current buffer-release state of a proxy
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] release the state to | into the bits
-   */
-  void addToState(VirtualProxyType proxy, BufferReleaseEnum release) {
-    proxy_state_[proxy] =
-      static_cast<BufferReleaseEnum>(proxy_state_[proxy] | release);
-  }
-
-  /**
-   * \brief Get the current release state bits from the collection
-   *
-   * \param[in] proxy the proxy of the collection
-   *
-   * \return the current state
-   */
-  BufferReleaseEnum getState(VirtualProxyType proxy) {
-    auto iter = proxy_state_.find(proxy);
-    return iter != proxy_state_.end() ? iter->second : BufferReleaseEnum::Unreleased;
-  }
-
-  /**
-   * \brief Get ready bits AND'ed with the required release bits
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] release the bits to check
-   *
-   * \return the current state & release
-   */
-  BufferReleaseEnum getReadyBits(
-    VirtualProxyType proxy, BufferReleaseEnum release
-  );
-
-  /**
-   * \brief Check if the collection is past the stages of setup requested in
-   * release
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] release the bits to check
-   *
-   * \return whether it is ready
-   */
-  bool checkReady(VirtualProxyType proxy, BufferReleaseEnum release);
-
-  /**
-   * \brief Buffer an operation until release bits are true
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] type the type of operation
-   * \param[in] release the release state required to execute this operation
-   * \param[in] epoch the epoch associated with the operation
-   * \param[in] action the action to execute when ready
-   *
-   * \return a pending send
-   */
-  template <typename ColT>
-  messaging::PendingSend bufferOp(
-    VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
-    EpochType epoch, ActionPendingType action
-  );
-
-  /**
-   * \brief Buffer an operation until release bits are true. Execute it if the
-   * release bits are set properly immediately.
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] type the type of operation
-   * \param[in] release the release state required to execute this operation
-   * \param[in] epoch the epoch associated with the operation
-   * \param[in] action the action to execute when ready
-   *
-   * \return a pending send
-   */
-  template <typename ColT>
-  messaging::PendingSend bufferOpOrExecute(
-    VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
-    EpochType epoch, ActionPendingType action
-  );
-
-  /**
-   * \brief Trigger ready operation for a certain type
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] type the type of operation to release
-   */
-  void triggerReadyOps(VirtualProxyType proxy, BufferTypeEnum type);
 
 ////////////////////////////////////////////////////////////////////////////////
 private:
@@ -1908,17 +1780,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 private:
-  using ActionPendingVecType = std::vector<ActionPendingType>;
-  using ReleaseToAction = std::unordered_map<BufferReleaseEnum, ActionPendingVecType>;
-  using BufferToRelease = std::unordered_map<BufferTypeEnum, ReleaseToAction>;
-  using ProxyToBuffer = std::unordered_map<VirtualProxyType, BufferToRelease>;
-  using ProxyToState = std::unordered_map<VirtualProxyType, BufferReleaseEnum>;
-
-  ProxyToBuffer buffers_;
-  ProxyToState proxy_state_;
-
   CleanupListFnType cleanup_fns_;
-  std::unordered_set<VirtualProxyType> constructed_;
   std::unordered_map<VirtualProxyType,ActionType> collect_stats_for_lb_;
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
   VirtualIDType next_collective_id_ = 0;
