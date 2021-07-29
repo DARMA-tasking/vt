@@ -81,12 +81,9 @@ void LoadStatsReplayer::createAndConfigureForReplay(
   std::size_t coll_elms_per_node, std::size_t initial_phase,
   std::size_t phases_to_run
 ) {
-  loads_by_elm_by_phase_ = loadStatsToReplay(
-    initial_phase, phases_to_run
-  );
+  auto loads = loadStatsToReplay(initial_phase, phases_to_run);
   createCollectionAndModel(coll_elms_per_node, initial_phase);
-  configureCollectionForReplay(loads_by_elm_by_phase_, initial_phase);
-  loads_by_elm_by_phase_.clear();
+  configureCollectionForReplay(loads, initial_phase);
 }
 
 void LoadStatsReplayer::createCollectionAndModel(
@@ -103,9 +100,17 @@ void LoadStatsReplayer::createCollectionAndModel(
     static_cast<int>(nranks), static_cast<int>(coll_elms_per_node)
   );
   coll_proxy_ = vt::theCollection()->constructCollective<
-    StatsDrivenCollection<Index2D>, StatsDrivenCollection<Index2D>::collectionMap
+    StatsDrivenCollection<IndexType>, StatsDrivenCollection<IndexType>::collectionMap
   >(range);
   auto proxy_bits = coll_proxy_.getProxy();
+
+  runInEpochCollective([=]{
+    // tell the collection what the initial phase is
+    coll_proxy_.broadcastCollective<
+      StatsDrivenCollection<IndexType>::InitialPhaseMsg,
+      &StatsDrivenCollection<IndexType>::setInitialPhase
+    >(initial_phase);
+  });
 
   // create the load model that will allow the stored load stats to be used
   vt_debug_print(
@@ -116,7 +121,7 @@ void LoadStatsReplayer::createCollectionAndModel(
   auto per_col = std::make_shared<
     vt::vrt::collection::balance::PerCollection
   >(base);
-  auto replay_model = std::make_shared<StatsReplay<Index2D>>(base, coll_proxy_);
+  auto replay_model = std::make_shared<StatsReplay<IndexType>>(base, coll_proxy_);
   per_col->addModel(proxy_bits, replay_model);
   vt::theLBManager()->setLoadModel(per_col);
 }
@@ -138,72 +143,6 @@ void LoadStatsReplayer::configureCollectionForReplay(
 ) {
   configureElementLocations(loads_by_elm_by_phase, initial_phase);
   configureCollectionWithLoads(loads_by_elm_by_phase, initial_phase);
-}
-
-LoadStatsReplayer::IndexVec LoadStatsReplayer::getIndexFromElm(ElmIDType elm_id) {
-  auto replayer = vt::theLoadStatsReplayer();
-  auto idxiter = replayer->elm_to_index_mapping_.find(elm_id);
-  vtAssert(
-    idxiter != replayer->elm_to_index_mapping_.end(),
-    "Element ID to index mapping must be known"
-  );
-  auto index = idxiter->second;
-  return index;
-}
-
-template <>
-Index1D LoadStatsReplayer::getTypedIndexFromElm(ElmIDType elm_id) {
-  IndexVec vec = getIndexFromElm(elm_id);
-  vtAssert(vec.size() == 1, "getTypedIndexFromElm: unexpected number of entries in index vector");
-  return Index1D(static_cast<int>(vec[0]));
-}
-
-template <>
-Index2D LoadStatsReplayer::getTypedIndexFromElm(ElmIDType elm_id) {
-  IndexVec vec = getIndexFromElm(elm_id);
-  vtAssert(vec.size() == 2, "getTypedIndexFromElm: unexpected number of entries in index vector");
-  return Index2D(static_cast<int>(vec[0]), static_cast<int>(vec[1]));
-}
-
-template <>
-Index3D LoadStatsReplayer::getTypedIndexFromElm(ElmIDType elm_id) {
-  IndexVec vec = getIndexFromElm(elm_id);
-  vtAssert(vec.size() == 3, "getTypedIndexFromElm: unexpected number of entries in index vector");
-  return Index3D(static_cast<int>(vec[0]), static_cast<int>(vec[1]), static_cast<int>(vec[2]));
-}
-
-void LoadStatsReplayer::addElmToIndexMapping(
-  ElmIDType elm_id, Index1D index
-) {
-  IndexVec vec;
-  vec.push_back(index.x());
-  addElmToIndexMapping(elm_id, vec);
-}
-
-void LoadStatsReplayer::addElmToIndexMapping(
-  ElmIDType elm_id, Index2D index
-) {
-  IndexVec vec;
-  vec.push_back(index.x());
-  vec.push_back(index.y());
-  addElmToIndexMapping(elm_id, vec);
-}
-
-void LoadStatsReplayer::addElmToIndexMapping(
-  ElmIDType elm_id, Index3D index
-) {
-  IndexVec vec;
-  vec.push_back(index.x());
-  vec.push_back(index.y());
-  vec.push_back(index.z());
-  addElmToIndexMapping(elm_id, vec);
-}
-
-void LoadStatsReplayer::addElmToIndexMapping(
-  ElmIDType elm_id, IndexVec index
-) {
-  auto replayer = vt::theLoadStatsReplayer();
-  replayer->elm_to_index_mapping_[elm_id] = index;
 }
 
 LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::readStats(
@@ -273,14 +212,16 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
   for (auto const &entry : sd.node_idx_) {
     auto &elm_id = entry.first;
     auto &vec = std::get<1>(entry.second);
-    addElmToIndexMapping(elm_id.id, vec);
-    auto idx = getTypedIndexFromElm<Index2D>(elm_id.id);
+    StatsDrivenCollection<IndexType>::addElmToIndexMapping(elm_id.id, vec);
+    auto idx = StatsDrivenCollection<IndexType>::getIndexFromElm(elm_id.id);
     vt_debug_print(
       normal, replay,
       "reading in mapping from elm={}, home={} to index={}\n",
       elm_id.id, elm_id.home_node, idx
     );
-    StatsDrivenCollection<Index2D>::addMapping(idx, elm_id.home_node);
+    StatsDrivenCollection<IndexType>::addCollectionMapping(
+      idx, elm_id.home_node
+    );
   }
 
   return loads_by_elm_by_phase;
@@ -295,8 +236,10 @@ void LoadStatsReplayer::configureElementLocations(
     "configureElementLocations: initial_phase={}\n",
     initial_phase
   );
-  vt::runInEpochCollective([this, &loads_by_elm_by_phase, initial_phase]{
-    migrateInitialObjectsHere(loads_by_elm_by_phase, initial_phase);
+  vt::runInEpochCollective([this, &loads_by_elm_by_phase, &initial_phase]{
+    StatsDrivenCollection<IndexType>::migrateInitialObjectsHere(
+      this->coll_proxy_, loads_by_elm_by_phase, initial_phase
+    );
   });
 }
 
@@ -316,39 +259,6 @@ void LoadStatsReplayer::configureCollectionWithLoads(
   });
 }
 
-void LoadStatsReplayer::migrateInitialObjectsHere(
-  const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
-) {
-  // loop over stats elms that were local for initial phase, asking for the
-  // corresponding collection elements to be migrated here
-  auto const this_rank = vt::theContext()->getNode();
-  for (auto item : loads_by_elm_by_phase) {
-    auto elm_id = item.first;
-    auto &loads_by_phase = item.second;
-    auto it = loads_by_phase.find(initial_phase);
-    if (it != loads_by_phase.end()) {
-      auto index = getTypedIndexFromElm<Index2D>(elm_id);
-      if (coll_proxy_[index].tryGetLocalPtr() != nullptr) {
-        vt_debug_print(
-          normal, replay,
-          "index {} (elm {}) is already here\n",
-          index, elm_id
-        );
-      } else {
-        vt_debug_print(
-          normal, replay,
-          "requesting index {} (elm {}) to migrate here\n",
-          index, elm_id
-        );
-        coll_proxy_[index].send<
-          StatsDrivenCollection<Index2D>::MigrateHereMsg,
-          &StatsDrivenCollection<Index2D>::migrateSelf
-        >(this_rank);
-      }
-    }
-  }
-}
-
 void LoadStatsReplayer::stuffStatsIntoCollection(
   const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
 ) {
@@ -358,35 +268,28 @@ void LoadStatsReplayer::stuffStatsIntoCollection(
     auto &loads_by_phase = item.second;
     auto it = loads_by_phase.find(initial_phase);
     if (it != loads_by_phase.end()) {
-      auto index = getTypedIndexFromElm<Index2D>(elm_id);
+      auto index = StatsDrivenCollection<IndexType>::getIndexFromElm(elm_id);
       vtAssert(
         coll_proxy_[index].tryGetLocalPtr() != nullptr,
         "should be local by now"
       );
     }
   }
-  // tell the collection what the initial phase is
-  auto msg = makeMessage<StatsDrivenCollection<Index2D>::InitialPhaseMsg>(
-    initial_phase
-  );
-  coll_proxy_.broadcastCollectiveMsg<
-    StatsDrivenCollection<Index2D>::InitialPhaseMsg,
-    &StatsDrivenCollection<Index2D>::setInitialPhase
-  >(msg.get());
+
   // send a message to each elm appearing in our stats files with all
   // relevant loads
   for (auto item : loads_by_elm_by_phase) {
     auto elm_id = item.first;
     auto &loads_by_phase = item.second;
-    auto index = getTypedIndexFromElm<Index2D>(elm_id);
+    auto index = StatsDrivenCollection<IndexType>::getIndexFromElm(elm_id);
     vt_debug_print(
       normal, replay,
       "sending stats for elm {} to index {}\n",
       elm_id, index
     );
     coll_proxy_[index].template send<
-      StatsDrivenCollection<Index2D>::LoadStatsDataMsg,
-      &StatsDrivenCollection<Index2D>::recvLoadStatsData
+      StatsDrivenCollection<IndexType>::LoadStatsDataMsg,
+      &StatsDrivenCollection<IndexType>::recvLoadStatsData
     >(loads_by_phase);
   }
 }

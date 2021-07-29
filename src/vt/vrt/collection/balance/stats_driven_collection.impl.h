@@ -43,7 +43,7 @@
 */
 
 #if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_IMPLH
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/stats_driven_collection.h"
@@ -58,18 +58,89 @@ StatsDrivenCollection<IndexType>::rank_mapping_;
 
 template <typename IndexType>
 /*static*/
-void StatsDrivenCollection<IndexType>::addMapping(
+std::unordered_map<
+  typename StatsDrivenCollection<IndexType>::ElmIDType, IndexType
+> StatsDrivenCollection<IndexType>::elm_to_index_mapping_;
+
+template <typename IndexType>
+/*static*/
+void StatsDrivenCollection<IndexType>::addCollectionMapping(
   IndexType idx, NodeType home
 ) {
   rank_mapping_[idx] = home;
 }
 
 template <typename IndexType>
-void StatsDrivenCollection<IndexType>::setInitialPhase(InitialPhaseMsg* msg) {
-  initial_phase_ = msg->phase_;
+/*static*/
+void StatsDrivenCollection<IndexType>::addElmToIndexMapping(
+  ElmIDType elm_id, IndexType index
+) {
+  elm_to_index_mapping_[elm_id] = index;
 }
 
 template <typename IndexType>
+/*static*/
+void StatsDrivenCollection<IndexType>::addElmToIndexMapping(
+  ElmIDType elm_id, IndexVec idx_vec
+) {
+  IndexType index;
+  int i=0;
+  for (auto &entry : idx_vec) {
+    index[i++] = entry;
+  }
+  elm_to_index_mapping_[elm_id] = index;
+}
+
+template <typename IndexType>
+/*static*/
+IndexType StatsDrivenCollection<IndexType>::getIndexFromElm(ElmIDType elm_id) {
+  auto idxiter = elm_to_index_mapping_.find(elm_id);
+  vtAssert(
+    idxiter != elm_to_index_mapping_.end(),
+    "Element ID to index mapping must be known"
+  );
+  auto index = idxiter->second;
+  return index;
+}
+
+template <typename IndexType>
+
+/*static*/
+void StatsDrivenCollection<IndexType>::migrateInitialObjectsHere(
+  ProxyType coll_proxy, const ElmPhaseLoadsMapType &loads_by_elm_by_phase,
+  std::size_t initial_phase
+) {
+  // loop over stats elms that were local for initial phase, asking for the
+  // corresponding collection elements to be migrated here
+  auto const this_rank = vt::theContext()->getNode();
+  for (auto &item : loads_by_elm_by_phase) {
+    auto elm_id = item.first;
+    auto &loads_by_phase = item.second;
+    auto it = loads_by_phase.find(initial_phase);
+    if (it != loads_by_phase.end()) {
+      auto index = getIndexFromElm(elm_id);
+      if (coll_proxy[index].tryGetLocalPtr() != nullptr) {
+        vt_debug_print(
+          normal, replay,
+          "index {} (elm {}) is already here\n",
+          index, elm_id
+        );
+      } else {
+        vt_debug_print(
+          normal, replay,
+          "requesting index {} (elm {}) to migrate here\n",
+          index, elm_id
+        );
+        coll_proxy[index].template send<
+          MigrateHereMsg, &StatsDrivenCollection<IndexType>::migrateSelf
+        >(this_rank);
+      }
+    }
+  }
+}
+
+template <typename IndexType>
+
 void StatsDrivenCollection<IndexType>::migrateSelf(MigrateHereMsg* msg) {
   // migrate oneself to the requesting rank
   auto const this_rank = theContext()->getNode();
@@ -96,6 +167,7 @@ void StatsDrivenCollection<IndexType>::recvLoadStatsData(LoadStatsDataMsg *msg) 
 
 template <typename IndexType>
 vt::TimeType StatsDrivenCollection<IndexType>::getLoad(int real_phase) {
+  vtAssert(initial_phase_ >= 0, "Initial phase did not get set before load was queried");
   auto simulated_phase = real_phase + initial_phase_;
   vt_debug_print(
     verbose, replay,
@@ -109,7 +181,7 @@ template <typename IndexType>
 void StatsDrivenCollection<IndexType>::epiMigrateIn() {
   auto elm_id = this->getElmID().id;
   auto index = this->getIndex();
-  vt::theLoadStatsReplayer()->addElmToIndexMapping(elm_id, index);
+  addElmToIndexMapping(elm_id, index);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

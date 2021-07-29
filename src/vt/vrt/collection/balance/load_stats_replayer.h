@@ -70,24 +70,15 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct LoadStatsReplayer : runtime::component::Component<LoadStatsReplayer> {
 public:
+  using IndexType = Index2D;
   using IndexVec = std::vector<uint64_t>;
-  using ElmIDType = StatsDrivenCollection<Index2D>::ElmIDType;
-  using PhaseLoadsMapType = StatsDrivenCollection<Index2D>::PhaseLoadsMapType;
+  using ElmIDType = ElementIDType;
+  using PhaseLoadsMapType = std::unordered_map<
+    std::size_t /*phase from stats file*/, vt::TimeType
+  >;
   using ElmPhaseLoadsMapType = std::unordered_map<
     ElmIDType, PhaseLoadsMapType
   >;
-
-private:
-  struct ElmToIndexQueryMsg : vt::Message {
-    using ElmIDType = LoadStatsReplayer::ElmIDType;
-
-    ElmIDType elm_id_;
-    vt::NodeType src_;
-
-    explicit ElmToIndexQueryMsg(ElmIDType elm_id, vt::NodeType src)
-      : elm_id_(elm_id), src_(src)
-    { }
-  };
 
 public:
   LoadStatsReplayer() = default;
@@ -109,35 +100,20 @@ public:
     std::size_t coll_elms_per_node, std::size_t initial_phase
   );
 
-  ElmPhaseLoadsMapType loadStatsToReplay(
-    std::size_t initial_phase, std::size_t phases_to_run
-  );
-
   void configureCollectionForReplay(
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
-  IndexVec getIndexFromElm(ElmIDType elm_id);
-
-  template <typename IndexType>
-  IndexType getTypedIndexFromElm(ElmIDType elm_id) {
-    vtAbort("getTypedIndexFromElm: unexpected index type");
-    return IndexType();
-  }
-
-  void addElmToIndexMapping(ElmIDType elm_id, Index1D index);
-  void addElmToIndexMapping(ElmIDType elm_id, Index2D index);
-  void addElmToIndexMapping(ElmIDType elm_id, Index3D index);
-  void addElmToIndexMapping(ElmIDType elm_id, IndexVec index);
-
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | proxy_
-      | elm_to_index_mapping_
-      | loads_by_elm_by_phase_;
+    s | proxy_;
   }
 
 private:
+  ElmPhaseLoadsMapType loadStatsToReplay(
+    std::size_t initial_phase, std::size_t phases_to_run
+  );
+
   ElmPhaseLoadsMapType readStats(
     std::size_t initial_phase, std::size_t phases_to_run
   );
@@ -155,14 +131,6 @@ private:
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
-  void requestElmIndices(const ElmPhaseLoadsMapType &loads_by_elm_by_phase);
-
-  static void requestElmToIndexMapping(ElmToIndexQueryMsg *msg);
-
-  void migrateInitialObjectsHere(
-    const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
-  );
-
   void stuffStatsIntoCollection(
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
@@ -172,13 +140,7 @@ private:
   objgroup::proxy::Proxy<LoadStatsReplayer> proxy_;
 
   /// \brief Proxy for created collection
-  vt::CollectionProxy<StatsDrivenCollection<Index2D>, Index2D> coll_proxy_;
-
-  /// \brief Mapping from element ids to vt indices
-  std::unordered_map<ElmIDType, IndexVec> elm_to_index_mapping_;
-
-  /// \brief Loads imported from stats files
-  ElmPhaseLoadsMapType loads_by_elm_by_phase_;
+  vt::CollectionProxy<StatsDrivenCollection<IndexType>, IndexType> coll_proxy_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

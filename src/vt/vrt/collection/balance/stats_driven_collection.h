@@ -61,9 +61,14 @@ struct StatsDrivenCollection : vt::Collection<
   StatsDrivenCollection<IndexType>, IndexType
 > {
   using ThisType = StatsDrivenCollection<IndexType>;
+  using ProxyType = vt::CollectionProxy<ThisType, IndexType>;
+  using IndexVec = std::vector<uint64_t>;
   using ElmIDType = ElementIDType;
   using PhaseLoadsMapType = std::unordered_map<
     std::size_t /*phase from stats file*/, vt::TimeType
+  >;
+  using ElmPhaseLoadsMapType = std::unordered_map<
+    ElmIDType, PhaseLoadsMapType
   >;
 
   using NullMsg = vt::CollectionMessage<ThisType>;
@@ -126,7 +131,14 @@ struct StatsDrivenCollection : vt::Collection<
     return uninitialized_destination;
   }
 
-  void setInitialPhase(InitialPhaseMsg* msg);
+  void setInitialPhase(InitialPhaseMsg* msg) {
+    initial_phase_ = msg->phase_;
+  }
+
+  static void migrateInitialObjectsHere(
+    ProxyType coll_proxy, const ElmPhaseLoadsMapType &loads_by_elm_by_phase,
+    std::size_t initial_phase
+  );
 
   void migrateSelf(MigrateHereMsg* msg);
 
@@ -143,15 +155,24 @@ struct StatsDrivenCollection : vt::Collection<
 
   virtual void epiMigrateIn();
 
-  static void addMapping(IndexType idx, NodeType home);
+  static void addCollectionMapping(IndexType idx, NodeType home);
+
+  static void addElmToIndexMapping(ElmIDType elm_id, IndexType index);
+
+  static void addElmToIndexMapping(ElmIDType elm_id, IndexVec idx_vec);
+
+  static IndexType getIndexFromElm(ElmIDType elm_id);
 
 private:
-  static std::map<IndexType, int /*mpi_rank*/> rank_mapping_;
-
   /// \brief Loads to feed into StatsReplay load model
   PhaseLoadsMapType stats_to_replay_;
   /// \brief Initial phase for replaying (offset so this is simulated phase 0)
-  std::size_t initial_phase_;
+  std::size_t initial_phase_ = -1;
+
+  /// \brief Mapping from vt indices to home ranks for collection construction
+  static std::map<IndexType, int /*mpi_rank*/> rank_mapping_;
+  /// \brief Mapping from element ids to vt indices
+  static std::unordered_map<ElmIDType, IndexType> elm_to_index_mapping_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
