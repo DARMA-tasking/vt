@@ -110,7 +110,20 @@ struct StatsDriven2DCollection : vt::Collection<
   inline static vt::NodeType collectionMap(
     vt::Index2D* idx, vt::Index2D*, vt::NodeType
   ) {
-    return idx->x();
+    // correct operation here requires that the home rank specifically
+    // know that it maps locally
+    auto it = rank_mapping_.find(*idx);
+    if (it != rank_mapping_.end()) {
+      vt_debug_print(
+        normal, replay,
+        "collectionMap: index {} maps to rank {}\n",
+        *idx, it->second
+      );
+      vtAssertExpr(it->second == idx->x());
+      return it->second;
+    }
+    vtAssertExpr(idx->x() != theContext()->getNode());
+    return uninitialized_destination;
   }
 
   void setInitialPhase(InitialPhaseMsg* msg);
@@ -130,7 +143,11 @@ struct StatsDriven2DCollection : vt::Collection<
 
   virtual void epiMigrateIn();
 
+  static void addMapping(vt::Index2D idx, vt::NodeType home);
+
 private:
+  static std::map<vt::Index2D, int /*mpi_rank*/> rank_mapping_;
+
   /// \brief Loads to feed into StatsReplay load model
   PhaseLoadsMapType stats_to_replay_;
   /// \brief Initial phase for replaying (offset so this is simulated phase 0)
