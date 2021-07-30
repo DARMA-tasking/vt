@@ -48,28 +48,33 @@
 
 #include <memory>
 #include <unordered_map>
+#include <functional>
 
 namespace vt { namespace vrt { namespace collection {
 
 struct TypelessHolder {
 
   void insertCollectionInfo(
-    VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr
+    VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr,
+    std::function<void()> group_constructor
   );
   void insertMap(VirtualProxyType const proxy, HandlerType const map_han);
   HandlerType getMap(VirtualProxyType const proxy);
+  void invokeAllGroupConstructors();
   void destroyAllLive();
   void destroyCollection(VirtualProxyType const proxy);
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     s | live_
-      | map_;
+      | map_
+      | group_constructors_;
   }
 
 private:
   std::unordered_map<VirtualProxyType,std::shared_ptr<BaseHolder>> live_;
   std::unordered_map<VirtualProxyType,HandlerType> map_;
+  std::unordered_map<VirtualProxyType,std::function<void()>> group_constructors_;
 };
 
 }}} /* end namespace vt::vrt::collection */

@@ -42,6 +42,7 @@
 */
 
 #include "vt/vrt/collection/holders/typeless_holder.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -50,19 +51,40 @@ void TypelessHolder::destroyAllLive() {
     elm.second->destroy();
   }
   live_.clear();
+  group_constructors_.clear();
 }
 
 void TypelessHolder::destroyCollection(VirtualProxyType const proxy) {
-  auto iter = live_.find(proxy);
-  if (iter != live_.end()) {
-    live_.erase(iter);
+  {
+    auto iter = live_.find(proxy);
+    if (iter != live_.end()) {
+      live_.erase(iter);
+    }
+  }
+  {
+    auto iter = group_constructors_.find(proxy);
+    if (iter != group_constructors_.end()) {
+      group_constructors_.erase(iter);
+    }
+  }
+}
+
+void TypelessHolder::invokeAllGroupConstructors() {
+  for (auto&& proxy : live_) {
+    runInEpochCollective([&]{
+      auto iter = group_constructors_.find(proxy.first);
+      vtAssert(iter != group_constructors_.end(), "Must have group constructor");
+      iter->second();
+    });
   }
 }
 
 void TypelessHolder::insertCollectionInfo(
-  VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr
+  VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr,
+  std::function<void()> group_constructor
 ) {
   live_[proxy] = ptr;
+  group_constructors_[proxy] = group_constructor;
 }
 
 void TypelessHolder::insertMap(

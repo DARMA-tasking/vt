@@ -1348,7 +1348,9 @@ void CollectionManager::insertMetaCollection(
   // Create and insert the meta-data into the meta-collection holder
   auto holder = std::make_shared<HolderType>(std::forward<Args>(args)...);
   MetaHolderType::insert(proxy,holder);
-  typeless_holder_.insertCollectionInfo(proxy, holder);
+  typeless_holder_.insertCollectionInfo(proxy, holder, [proxy]{
+    theCollection()->constructGroup<ColT>(proxy);
+  });
   /*
    *  This is to ensure that the collection LM instance gets created so that
    *  messages can be forwarded properly
@@ -1601,18 +1603,12 @@ void CollectionManager::finishInserting(
     }
   });
 
-  runInEpochCollective([&]{
-    auto const elms = theCollection()->groupElementCount<ColT>(untyped_proxy);
-    bool const in_group = elms > 0;
+  vt_debug_print(
+    verbose, vrt_coll,
+    "finishedInserting: creating new group\n"
+  );
 
-    vt_debug_print(
-      verbose, vrt_coll,
-      "finishedInserting: creating new group: elms={}, in_group={}\n",
-      elms, in_group
-    );
-
-    createGroupCollection<ColT>(untyped_proxy, in_group);
-  });
+  runInEpochCollective([&]{ constructGroup<ColT>(untyped_proxy); });
 }
 
 namespace detail {
