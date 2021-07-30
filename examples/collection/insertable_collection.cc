@@ -83,20 +83,20 @@ int main(int argc, char** argv) {
       }
     }
 
-    fmt::print("calling finishedInserting");
     proxy.finishInserting(std::move(token));
+    fmt::print("called finishedInserting\n");
   }
 
   {
     auto token = proxy.beginInserting();
 
-    fmt::print("insertions are finished (first phase)\n");
     for (int i = range.x()/2; i < range.x(); i++) {
       if (i % num_nodes == this_node) {
         proxy[i].insertAt(token, i % 2);
       }
     }
     proxy.finishInserting(std::move(token));
+    fmt::print("called finishedInserting (2)\n");
   }
 
 
