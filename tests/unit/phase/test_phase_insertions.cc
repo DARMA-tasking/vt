@@ -115,7 +115,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     .wait();
 
   {
-    auto token = proxy.beginInserting();
+    auto token = proxy.beginModification();
 
     for (int i = 0; i < range.x() / 2; i++) {
       if (i % num_nodes == this_node) {
@@ -123,7 +123,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
       }
     }
 
-    proxy.finishInserting(std::move(token));
+    proxy.finishModification(std::move(token));
   }
 
   for (int phase = 0; phase < num_phases; phase++) {
@@ -137,7 +137,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
     // Go to the next phase.
     vt::thePhase()->nextPhaseCollective();
 
-    auto token = proxy.beginInserting();
+    auto token = proxy.beginModification();
 
     if (this_node == 0 and insert_counter < num_elms) {
       proxy[insert_counter].insert(token);
@@ -151,7 +151,7 @@ TEST_F(TestPhaseInsertions, test_phase_insertions_1) {
       proxy[0].insertAt(token, 0);
     }
 
-    proxy.finishInserting(std::move(token));
+    proxy.finishModification(std::move(token));
   }
 }
 

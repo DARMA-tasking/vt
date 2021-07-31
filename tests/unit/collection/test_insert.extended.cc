@@ -96,13 +96,13 @@ TEST_F(TestInsert, test_insert_dense_1) {
     .bounds(range)
     .wait();
 
-  auto token = proxy.beginInserting();
+  auto token = proxy.beginModification();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i++) {
       proxy[i].insert(token);
     }
   }
-  proxy.finishInserting(std::move(token));
+  proxy.finishModification(std::move(token));
 
   EXPECT_EQ(num_inserted, num_elms_per_node);
   num_inserted = 0;
@@ -119,13 +119,13 @@ TEST_F(TestInsert, test_insert_sparse_1) {
     .bounds(range)
     .wait();
 
-  auto token = proxy.beginInserting();
+  auto token = proxy.beginModification();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i+=16) {
       proxy[i].insert(token);
     }
   }
-  proxy.finishInserting(std::move(token));
+  proxy.finishModification(std::move(token));
 
   /// ::fmt::print("num inserted={}\n", num_inserted);
   // Relies on default mapping equally distributing
@@ -144,13 +144,13 @@ TEST_F(TestInsert, test_insert_dense_node_1) {
     .bounds(range)
     .wait();
 
-  auto token = proxy.beginInserting();
+  auto token = proxy.beginModification();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i++) {
       proxy[i].insertAt(token, this_node);
     }
   }
-  proxy.finishInserting(std::move(token));
+  proxy.finishModification(std::move(token));
 
   /// ::fmt::print("num inserted={}\n", num_inserted);
   // Relies on default mapping equally distributing
@@ -171,13 +171,13 @@ TEST_F(TestInsert, test_insert_sparse_node_1) {
     .bounds(range)
     .wait();
 
-  auto token = proxy.beginInserting();
+  auto token = proxy.beginModification();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i+=16) {
       proxy[i].insertAt(token, this_node);
     }
   }
-  proxy.finishInserting(std::move(token));
+  proxy.finishModification(std::move(token));
 
   /// ::fmt::print("num inserted={}\n", num_inserted);
   // Relies on default mapping equally distributing
@@ -198,14 +198,14 @@ TEST_F(TestInsert, test_insert_send_dense_node_1) {
     .bounds(range)
     .wait();
 
-  auto token = proxy.beginInserting();
+  auto token = proxy.beginModification();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i++) {
       proxy[i].insertAt(token, (this_node + 1) % num_nodes);
       // ::fmt::print("sending to {}\n", i);
     }
   }
-  proxy.finishInserting(std::move(token));
+  proxy.finishModification(std::move(token));
 
   runInEpochCollective([&]{
     if (this_node == 0) {
@@ -236,13 +236,13 @@ TEST_F(TestInsert, test_insert_send_sparse_node_1) {
     .bounds(range)
     .wait();
 
-  auto token = proxy.beginInserting();
+  auto token = proxy.beginModification();
   if (this_node == 0) {
     for (auto i = 0; i < range.x(); i+=16) {
       proxy[i].insertAt(token, (this_node + 1) % num_nodes);
     }
   }
-  proxy.finishInserting(std::move(token));
+  proxy.finishModification(std::move(token));
 
   runInEpochCollective([&]{
     if (this_node == 0) {

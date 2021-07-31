@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     .wait();
 
   {
-    auto token = proxy.beginInserting();
+    auto token = proxy.beginModification();
 
     for (int i = 0; i < range.x() / 2; i++) {
       if (i % num_nodes == this_node) {
@@ -83,20 +83,20 @@ int main(int argc, char** argv) {
       }
     }
 
-    proxy.finishInserting(std::move(token));
-    fmt::print("called finishedInserting\n");
+    proxy.finishModification(std::move(token));
+    fmt::print("called finishedModification\n");
   }
 
   {
-    auto token = proxy.beginInserting();
+    auto token = proxy.beginModification();
 
     for (int i = range.x()/2; i < range.x(); i++) {
       if (i % num_nodes == this_node) {
         proxy[i].insertAt(token, i % 2);
       }
     }
-    proxy.finishInserting(std::move(token));
-    fmt::print("called finishedInserting (2)\n");
+    proxy.finishModification(std::move(token));
+    fmt::print("called finishedModification (2)\n");
   }
 
 
