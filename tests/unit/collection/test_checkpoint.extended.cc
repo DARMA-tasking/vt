@@ -355,15 +355,17 @@ TEST_F(TestCheckpoint, test_checkpoint_in_place_3) {
 
   auto proxy_new = vt::theCollection()->constructCollective<TestCol>(range);
 
-  // Now, restore from the previous distribution
-  vt_print(gen, "restoreFromFileInPlace\n");
-  vt::theCollection()->restoreFromFileInPlace<TestCol>(
-    proxy_new, range, checkpoint_name
-  );
+  vt::runInEpochCollective([&]{
+    // Now, restore from the previous distribution
+    vt_print(gen, "restoreFromFileInPlace\n");
+    vt::theCollection()->restoreFromFileInPlace<TestCol>(
+      proxy_new, range, checkpoint_name
+    );
+  });
 
   // Do more work after the checkpoint
   vt::runInEpochCollective([&]{
-    proxy_new.broadcast<TestCol::NullMsg,&TestCol::checkNode>();
+    proxy_new.broadcastCollective<TestCol::NullMsg,&TestCol::checkNode>();
   });
 }
 
