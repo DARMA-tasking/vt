@@ -106,6 +106,10 @@ void ElmInsertable<ColT,IndexT,BaseProxyT>::insertMsg(
     col_proxy, idx, uninitialized_destination, token, msg
   );
 }
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void ElmInsertable<ColT,IndexT,BaseProxyT>::destroy(ModifierToken& token) const {
+
+}
 
 }}} /* end namespace vt::vrt::collection */
 

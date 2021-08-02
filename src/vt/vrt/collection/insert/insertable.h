@@ -103,6 +103,13 @@ struct ElmInsertable : BaseProxyT {
    */
   template <typename MsgT>
   void insertAtMsg(ModifierToken& token, NodeType node, MsgSharedPtr<MsgT> msg) const;
+
+  /**
+   * \brief Destroy the collection element
+   *
+   * \param[in] token the modifier token
+   */
+  void destroy(ModifierToken& token) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
