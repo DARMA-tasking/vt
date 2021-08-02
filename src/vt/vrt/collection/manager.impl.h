@@ -3160,6 +3160,100 @@ void CollectionManager::checkpointToFile(
   checkpoint::serializeToFile(directory, directory_name);
 }
 
+namespace detail {
+template <typename ColT>
+inline void restoreOffHomeElement(
+  CollectionManager::RestoreMigrateColMsg<ColT>* msg, ColT*
+) {
+  auto idx = msg->idx_;
+  auto node = msg->to_node_;
+  auto proxy = msg->proxy_;
+  theCollection()->migrate(proxy(idx), node);
+}
+} /* end namespace detail */
+
+template <typename ColT>
+/*static*/ void CollectionManager::migrateToRestoreLocation(
+  RestoreMigrateMsg<ColT>* msg
+) {
+  auto idx = msg->idx_;
+  auto node = msg->to_node_;
+  auto proxy = msg->proxy_;
+  if (proxy(idx).tryGetLocalPtr() != nullptr) {
+    theCollection()->migrate(proxy(idx), node);
+  } else {
+    proxy(idx).template send<
+      RestoreMigrateColMsg<ColT>, detail::restoreOffHomeElement<ColT>
+    >(node, idx, proxy);
+  }
+}
+
+template <typename ColT>
+void CollectionManager::restoreFromFileInPlace(
+  CollectionProxyWrapType<ColT> proxy, typename ColT::IndexType range,
+  std::string const& file_base
+) {
+  using IndexType = typename ColT::IndexType;
+  using DirectoryType = CollectionDirectory<IndexType>;
+
+  auto proxy_bits = proxy.getProxy();
+
+  auto metadata_file_name = makeMetaFilename<IndexType>(file_base, false);
+
+  if (access(metadata_file_name.c_str(), F_OK) == -1) {
+    // file doesn't exist, try looking in sub-directory
+    metadata_file_name = makeMetaFilename<IndexType>(file_base, true);
+  }
+
+  if (access(metadata_file_name.c_str(), F_OK) == -1) {
+    throw std::runtime_error("Collection directory file cannot be found");
+  }
+
+  auto directory = checkpoint::deserializeFromFile<DirectoryType>(
+    metadata_file_name
+  );
+
+  runInEpochCollective([&]{
+    for (auto&& elm : directory->elements_) {
+      auto idx = elm.idx_;
+      auto file_name = elm.file_name_;
+
+      if (proxy(idx).tryGetLocalPtr() == nullptr) {
+        auto mapped_node = getMappedNode<ColT, IndexType>(proxy, idx);
+        vtAssertExpr(mapped_node != uninitialized_destination);
+        auto this_node = theContext()->getNode();
+
+        using MsgType = RestoreMigrateMsg<ColT>;
+        auto msg = makeMessage<MsgType>(this_node, idx, proxy);
+        if (mapped_node != this_node) {
+          theMsg()->sendMsg<MsgType, migrateToRestoreLocation<ColT>>(
+            mapped_node, msg
+          );
+        } else {
+          migrateToRestoreLocation<ColT>(msg.get());
+        }
+      }
+    }
+  });
+
+  for (auto&& elm : directory->elements_) {
+    auto idx = elm.idx_;
+    auto file_name = elm.file_name_;
+    vtAssertExpr(proxy(idx).tryGetLocalPtr() != nullptr);
+
+    auto holder = findColHolder<ColT, IndexType>(proxy_bits);
+    vtAssertExpr(holder != nullptr);
+
+    auto elm_holder = findElmHolder<ColT,IndexType>(proxy_bits);
+    auto const elm_exists = elm_holder->exists(idx);
+    vtAssertExpr(elm_exists);
+
+    auto ptr = elm_holder->lookup(idx).getCollection();
+    checkpoint::deserializeInPlaceFromFile<ColT>(file_name, static_cast<ColT*>(ptr));
+    ptr->stats_.resetPhase();
+  }
+}
+
 template <typename ColT>
 CollectionManager::CollectionProxyWrapType<ColT>
 CollectionManager::restoreFromFile(
