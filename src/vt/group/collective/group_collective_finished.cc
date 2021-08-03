@@ -61,7 +61,10 @@ void InfoColl::CollSetupFinished::operator()(FinishedReduceMsg* msg) {
   );
   auto const& this_node = theContext()->getNode();
   auto info = iter->second.get();
-  if (info->known_root_node_ != this_node) {
+  if (
+    info->known_root_node_ != this_node and
+    info->known_root_node_ != uninitialized_destination
+  ) {
     auto nmsg = makeMessage<GroupOnlyMsg>(
       msg->getGroup(),info->new_tree_cont_
     );

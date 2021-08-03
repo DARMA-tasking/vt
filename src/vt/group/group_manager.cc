@@ -138,7 +138,6 @@ NodeType GroupManager::groupRoot(GroupType const group) const {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& root = iter->second->getRoot();
-  vtAssert(root != uninitialized_destination, "Must have valid root");
   return root;
 }
 
@@ -307,6 +306,10 @@ EventType GroupManager::sendGroupCollective(
   auto const& info = *iter->second;
   auto const& in_group = info.inGroup();
   auto const& group_ready = info.isReady();
+
+  if (info.emptyGroup()) {
+    return no_event;
+  }
 
   if (in_group && group_ready) {
     auto const& this_node = theContext()->getNode();

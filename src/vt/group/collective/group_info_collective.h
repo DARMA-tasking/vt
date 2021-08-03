@@ -94,6 +94,7 @@ public:
   void readyAction(ActionType const action);
   MPI_Comm getComm() const;
   void freeComm();
+  bool emptyGroup() const;
 
 protected:
   void setupCollective();
@@ -136,6 +137,7 @@ protected:
   bool is_new_root_                      = false;
   bool has_root_                         = false;
   bool is_default_group_                 = false;
+  bool empty_group_                      = false;
   std::size_t subtree_                   = 0;
 
 private:

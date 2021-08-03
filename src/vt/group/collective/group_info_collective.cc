@@ -303,7 +303,10 @@ void InfoColl::upTree() {
       return;
     } else {
       if (msg_in_group.size() == 0) {
-        vtAbort("A group must have at least a single node {}");
+        empty_group_ = true;
+        in_phase_two_ = true;
+        finalize();
+        return;
       }
       /*
        *  Sort nodes to find the largest node to make it the root of the whole
@@ -646,10 +649,14 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
 }
 
 void InfoColl::newTree(NodeType const& parent) {
+  if (not empty_group_) {
+    vtAssert(is_in_group, "Must be in group");
+  }
+
   auto const& group_ = getGroupID();
   collective_->parent_ = is_new_root_ ? -1 : parent;
   sendDownNewTree();
-  vtAssert(is_in_group, "Must be in group");
+
   auto const& is_root = is_new_root_;
   collective_->span_   = std::make_unique<TreeType>(
     is_root, collective_->parent_, collective_->span_children_
@@ -746,7 +753,6 @@ void InfoColl::finalize() {
 
 void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   auto const& new_root = msg->getRoot();
-  vtAssert(new_root != uninitialized_destination, "Must have root node");
   vt_debug_print(
     verbose, group,
     "InfoColl::finalizeTree: group={:x}, new_root={}\n",
@@ -792,6 +798,10 @@ bool InfoColl::isReady() const {
   return
     in_phase_two_ && has_root_ &&
     (!is_in_group || collective_->span_ != nullptr);
+}
+
+bool InfoColl::emptyGroup() const {
+  return empty_group_;
 }
 
 void InfoColl::readyAction(ActionType const action) {
