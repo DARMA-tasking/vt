@@ -1751,7 +1751,14 @@ void CollectionManager::destroyElm(
   // First, check on this node for the element, and remove it if it's found
   auto elm_holder = findElmHolder<ColT>(untyped_proxy);
   if (elm_holder->exists(idx)) {
-    elm_holder->remove(idx);
+    // Delay this so we can finish processing this work unit first (which might
+    // be this collection element running)
+    theSched()->enqueue([idx,untyped_proxy]{
+      auto elm = theCollection()->findElmHolder<ColT>(untyped_proxy);
+      if (elm->exists(idx)) {
+        elm->remove(idx);
+      }
+    });
   } else {
     // Otherwise, we send a destroy message that will be routed (eventually
     // arriving) where the element resides
