@@ -70,6 +70,25 @@ struct CollectionStampMsg : vt::collective::ReduceTMsg<SequentialIDType> {
   VirtualProxyType proxy_ = no_vrt_proxy;
 };
 
+template <typename ColT>
+struct DestroyElmMsg : CollectionMessage<ColT> {
+  using MessageParentType = CollectionMessage<ColT>;
+  vt_msg_serialize_prohibited();
+
+  DestroyElmMsg() = default;
+  DestroyElmMsg(
+    VirtualProxyType in_proxy, typename ColT::IndexType in_idx,
+    EpochType in_epoch
+  ) : proxy_(in_proxy),
+      idx_(in_idx),
+      modifier_epoch_(in_epoch)
+  {}
+
+  VirtualProxyType proxy_ = no_vrt_proxy;
+  typename ColT::IndexType idx_ = {};
+  EpochType modifier_epoch_ = no_epoch;
+};
+
 template <typename ColT, typename MsgT>
 struct InsertMsg : ::vt::Message {
   using IndexType = typename ColT::IndexType;

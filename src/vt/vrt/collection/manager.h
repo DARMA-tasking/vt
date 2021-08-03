@@ -1439,6 +1439,28 @@ public:
   );
 
   /**
+   * \internal \brief Dynamically delete a collection element
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] idx the index to insert
+   * \param[in] token the inserter token with the insertion epoch
+   */
+  template <typename ColT>
+  void destroyElm(
+    CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
+    ModifierToken& token
+  );
+
+  /**
+   * \internal \brief Send message to element to delete it during a modification
+   * epoch
+   *
+   * \param[in] msg the destroy message
+   */
+  template <typename ColT>
+  static void destroyElmHandler(DestroyElmMsg<ColT>* msg, ColT*);
+
+  /**
    * \brief Try to get a pointer to a collection element
    *
    * \warning Migration may invalidate this pointer. It is not recommended to

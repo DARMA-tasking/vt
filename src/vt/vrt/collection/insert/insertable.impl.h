@@ -108,7 +108,10 @@ void ElmInsertable<ColT,IndexT,BaseProxyT>::insertMsg(
 }
 template <typename ColT, typename IndexT, typename BaseProxyT>
 void ElmInsertable<ColT,IndexT,BaseProxyT>::destroy(ModifierToken& token) const {
-
+  auto const col_proxy = this->getCollectionProxy();
+  auto const elm_proxy = this->getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+  theCollection()->destroyElm<ColT>(col_proxy, idx, token);
 }
 
 }}} /* end namespace vt::vrt::collection */

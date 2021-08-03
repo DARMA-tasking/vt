@@ -1652,7 +1652,7 @@ void CollectionManager::insert(
 
   auto const modify_epoch = token.modifyEpoch();
   auto const untyped_proxy = proxy.getProxy();
-  vtAssert(modify_epoch != no_epoch, "Insertion epoch should be valid");
+  vtAssert(modify_epoch != no_epoch, "Modification epoch should be valid");
 
   vt_debug_print(
     normal, vrt_coll,
@@ -1729,6 +1729,47 @@ void CollectionManager::insert(
   }
 
   theMsg()->popEpoch(modify_epoch);
+}
+
+template <typename ColT>
+void CollectionManager::destroyElm(
+  CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
+  ModifierToken& token
+) {
+  auto const modify_epoch = token.modifyEpoch();
+  auto const untyped_proxy = proxy.getProxy();
+  vtAssert(modify_epoch != no_epoch, "Modification epoch should be valid");
+
+  vt_debug_print(
+    normal, vrt_coll,
+    "destroyElm: proxy={:x}\n",
+    untyped_proxy
+  );
+
+  theMsg()->pushEpoch(modify_epoch);
+
+  // First, check on this node for the element, and remove it if it's found
+  auto elm_holder = findElmHolder<ColT>(untyped_proxy);
+  if (elm_holder->exists(idx)) {
+    elm_holder->remove(idx);
+  } else {
+    // Otherwise, we send a destroy message that will be routed (eventually
+    // arriving) where the element resides
+    proxy(idx).template send<DestroyElmMsg<ColT>, destroyElmHandler<ColT>>(
+      untyped_proxy, idx, modify_epoch
+    );
+  }
+
+  theMsg()->popEpoch(modify_epoch);
+}
+
+template <typename ColT>
+/*static*/ void CollectionManager::destroyElmHandler(
+  DestroyElmMsg<ColT>* msg, ColT*
+) {
+  CollectionProxyWrapType<ColT> proxy{msg->proxy_};
+  ModifierToken token{msg->modifier_epoch_};
+  theCollection()->destroyElm(proxy, msg->idx_, token);
 }
 
 /*
