@@ -2276,7 +2276,7 @@ void CollectionManager::restoreFromFileInPlace(
     auto const elm_exists = elm_holder->exists(idx);
     vtAssertExpr(elm_exists);
 
-    auto ptr = elm_holder->lookup(idx).getCollection();
+    auto ptr = elm_holder->lookup(idx).getRawPtr();
     checkpoint::deserializeInPlaceFromFile<ColT>(file_name, static_cast<ColT*>(ptr));
     ptr->stats_.resetPhase();
   }
