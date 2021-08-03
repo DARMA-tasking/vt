@@ -2199,7 +2199,7 @@ void CollectionManager::restoreFromFileInPlace(
       auto file_name = elm.file_name_;
 
       if (proxy(idx).tryGetLocalPtr() == nullptr) {
-        auto mapped_node = getMappedNode<ColT, IndexType>(proxy, idx);
+        auto mapped_node = getMappedNode<ColT>(proxy, idx);
         vtAssertExpr(mapped_node != uninitialized_destination);
         auto this_node = theContext()->getNode();
 
