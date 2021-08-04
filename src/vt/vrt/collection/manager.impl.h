@@ -158,6 +158,18 @@ GroupType CollectionManager::createGroupCollection(
     proxy, in_group
   );
 
+  {
+    // Delete the old group that is no longer needed since we are replacing it
+    auto elm_holder = theCollection()->findElmHolder<ColT>(proxy);
+    auto old_group_id = elm_holder->group();
+    if (old_group_id != no_group and old_group_id != default_group) {
+      auto old_group_default = theGroup()->isGroupDefault(old_group_id);
+      if (not old_group_default) {
+        theGroup()->deleteGroupCollective(old_group_id);
+      }
+    }
+  }
+
   auto const group_id = theGroup()->newGroupCollective(
     in_group, [proxy](GroupType new_group){
       auto const& group_root = theGroup()->groupRoot(new_group);

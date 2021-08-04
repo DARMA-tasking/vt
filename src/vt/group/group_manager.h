@@ -156,6 +156,13 @@ struct GroupManager : runtime::component::Component<GroupManager> {
   );
 
   /**
+   * \brief Delete an existing group that is no longer needed
+   *
+   * \param[in] group_id the id for the group
+   */
+  void deleteGroupCollective(GroupType group_id);
+
+  /**
    * \internal \brief Generate the next group ID
    *
    * \param[in] GroupCollectiveLabelTagType tag to indicate collective

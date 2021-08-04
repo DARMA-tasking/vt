@@ -117,6 +117,13 @@ GroupType GroupManager::newLocalGroup(
   return group;
 }
 
+void GroupManager::deleteGroupCollective(GroupType group_id) {
+  auto iter = local_collective_group_info_.find(group_id);
+  if (iter != local_collective_group_info_.end()) {
+    local_collective_group_info_.erase(iter);
+  }
+}
+
 bool GroupManager::inGroup(GroupType const group) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
