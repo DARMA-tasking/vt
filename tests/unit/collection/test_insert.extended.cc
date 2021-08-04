@@ -60,6 +60,7 @@ using namespace vt::tests::unit;
 struct WorkMsg;
 
 static int32_t num_inserted = 0;
+static int32_t num_deleted = 0;
 static int32_t num_work = 0;
 
 struct InsertTest : Collection<InsertTest,Index1D> {
@@ -68,6 +69,10 @@ struct InsertTest : Collection<InsertTest,Index1D> {
     ::fmt::print(
       "{}: inserting on node {}\n", getIndex(), theContext()->getNode()
     );
+  }
+
+  virtual ~InsertTest() {
+    num_deleted++;
   }
 
   void work(WorkMsg* msg);
@@ -96,16 +101,34 @@ TEST_F(TestInsert, test_insert_dense_1) {
     .bounds(range)
     .wait();
 
-  auto token = proxy.beginModification();
-  if (this_node == 0) {
-    for (auto i = 0; i < range.x(); i++) {
-      proxy[i].insert(token);
+  {
+    auto token = proxy.beginModification();
+    if (this_node == 0) {
+      for (auto i = 0; i < range.x(); i++) {
+        proxy[i].insert(token);
+      }
     }
+    proxy.finishModification(std::move(token));
   }
-  proxy.finishModification(std::move(token));
 
   EXPECT_EQ(num_inserted, num_elms_per_node);
   num_inserted = 0;
+
+  {
+    auto token = proxy.beginModification();
+    if (this_node == 0) {
+      for (auto i = 0; i < range.x(); i++/*=2*/) {
+        proxy[i].destroy(token);
+      }
+    }
+    proxy.finishModification(std::move(token));
+  }
+
+  EXPECT_EQ(num_deleted, num_elms_per_node/*/2*/);
+  num_deleted = 0;
+
+  // Everyone broadcast to test null spanning tree
+  proxy.broadcast<WorkMsg, &InsertTest::work>();
 }
 
 TEST_F(TestInsert, test_insert_sparse_1) {
