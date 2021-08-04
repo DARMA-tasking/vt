@@ -328,6 +328,10 @@ EventType GroupManager::sendGroupCollective(
     auto const& this_node_dest = dest == this_node;
     auto const& first_send = from == uninitialized_destination;
 
+    if (root_node == uninitialized_destination) {
+      return no_event;
+    }
+
     vtAssert(is_group_collective, "This must be a collective group");
 
     vt_debug_print(
@@ -395,6 +399,11 @@ EventType GroupManager::sendGroupCollective(
     return no_event;
   } else {
     auto const& root_node = info.getRoot();
+
+    if (root_node == uninitialized_destination) {
+      return no_event;
+    }
+
     vtAssert(!in_group, "Must not be in this group");
     /*
      *  Forward message to the root node of the group; currently, only nodes
