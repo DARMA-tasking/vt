@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             unbounded_default.h
+//                             base_mapper_object.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,27 +41,22 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_H
-#define INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_H
-
-#include "vt/topos/mapping/base_mapper_object.h"
+#if !defined INCLUDED_VT_TOPOS_MAPPING_BASE_MAPPER_OBJECT_H
+#define INCLUDED_VT_TOPOS_MAPPING_BASE_MAPPER_OBJECT_H
 
 namespace vt { namespace mapping {
 
 /**
- * \struct UnboundedDefaultMap
+ * \struct BaseMapper
  *
- * \brief The default mapper for an unbounded dynamic collection
+ * \brief The base class for a general mapper object group used for mapping
+ * elements of a collection to a node
  */
 template <typename IdxT>
-struct UnboundedDefaultMap : BaseMapper<IdxT> {
-  static ObjGroupProxyType construct();
-
-  NodeType map(IdxT* idx, int ndim) override;
+struct BaseMapper {
+  virtual NodeType map(IdxT* idx, int ndim) = 0;
 };
 
 }} /* end namespace vt::mapping */
 
-#include "vt/topos/mapping/dense/unbounded_default.impl.h"
-
-#endif /*INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_BASE_MAPPER_OBJECT_H*/
