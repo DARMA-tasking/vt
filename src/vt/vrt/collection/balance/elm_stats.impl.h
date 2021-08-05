@@ -88,9 +88,15 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   auto const& cur_phase = msg->getPhase();
   auto const& untyped_proxy = col->getProxy();
   auto const& total_load = stats.getLoad(cur_phase, getFocusedSubPhase(untyped_proxy));
-  auto const& subphase_loads = stats.subphase_timings_.at(cur_phase);
   auto const& comm = stats.getComm(cur_phase);
   auto const& subphase_comm = stats.getSubphaseComm(cur_phase);
+
+  std::vector<TimeType> empty_sub_phase;
+  std::vector<TimeType>* subphase_loads = &empty_sub_phase;
+  auto iter = stats.subphase_timings_.find(cur_phase);
+  if (iter != stats.subphase_timings_.end()) {
+    subphase_loads = &iter->second;
+  }
 
   std::vector<uint64_t> idx;
   for (index::NumDimensionsType i = 0; i < col->getIndex().ndims(); i++) {
@@ -98,7 +104,7 @@ void ElementStats::syncNextPhase(CollectStatsMsg<ColT>* msg, ColT* col) {
   }
 
   theNodeStats()->addNodeStats(
-    col, cur_phase, total_load, subphase_loads, comm, subphase_comm, idx
+    col, cur_phase, total_load, *subphase_loads, comm, subphase_comm, idx
   );
 
   auto model = theLBManager()->getLoadModel();

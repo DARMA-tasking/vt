@@ -149,15 +149,20 @@ PhaseType ElementStats::getPhase() const {
 }
 
 TimeType ElementStats::getLoad(PhaseType const& phase) const {
-  auto const& total_load = phase_timings_.at(phase);
+  auto iter = phase_timings_.find(phase);
+  if (iter != phase_timings_.end()) {
+    auto const& total_load = phase_timings_.at(phase);
 
-  vt_debug_print(
-    verbose, lb,
-    "ElementStats: getLoad: load={}, phase={}, size={}\n",
-    total_load, phase, phase_timings_.size()
-  );
+    vt_debug_print(
+      verbose, lb,
+      "ElementStats: getLoad: load={}, phase={}, size={}\n",
+      total_load, phase, phase_timings_.size()
+    );
 
-  return total_load;
+    return total_load;
+  } else {
+    return 0.0;
+  }
 }
 
 TimeType ElementStats::getLoad(PhaseType phase, SubphaseType subphase) const {
