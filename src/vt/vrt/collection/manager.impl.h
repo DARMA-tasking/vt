@@ -1549,7 +1549,7 @@ ModifierToken CollectionManager::beginModification(
   );
 
   ModifierToken token{epoch};
-  return std::move(token);
+  return token;
 }
 
 template <typename ColT>
