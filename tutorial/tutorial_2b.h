@@ -115,10 +115,15 @@ static inline void collectionReduce() {
 
   if (this_node == 0) {
     // Range of 32 elements for the collection
-    auto range = ::vt::Index1D(32);
-    // Construct the collection: invoked by one node. By default, the elements
+    auto range = vt::Index1D(32);
+
+    // Construct the collection in a rooted manner. By default, the elements
     // will be block mapped to the nodes
-    auto proxy = theCollection()->construct<ReduceCol>(range);
+    auto proxy = vt::makeCollection<ReduceCol>()
+      .collective(false) // Do a rooted construction
+      .bounds(range)     // Set the bounds for the collection
+      .bulkInsert()      // Bulk insert all the elements within the bounds
+      .wait();           // Wait for construction and get the proxy back
 
     // Broadcast a message to the entire collection. The reduceHandler will be
     // invoked on every element to the collection

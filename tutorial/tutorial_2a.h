@@ -83,13 +83,18 @@ static inline void collection() {
    * range
    */
 
-  if (this_node == 0) {
-    // Range of 32 elements for the collection
-    auto range = ::vt::Index1D(32);
-    // Construct the collection: invoked by one node. By default, the elements
-    // will be block mapped to the nodes
-    auto proxy = theCollection()->construct<MyCol>(range);
+  // Range of 32 elements for the collection
+  auto range = vt::Index1D(32);
 
+  // Construct the collection (collective variant): invoked by all nodes. By
+  // default, the elements will be block mapped to the nodes
+  auto proxy = vt::makeCollection<MyCol>()
+    .collective(true) // Collective construction (this is the default)
+    .bounds(range)    // Set the bounds for the collection
+    .bulkInsert()     // Bulk insert all the elements within the bounds
+    .wait();          // Wait for construction and get the proxy back
+
+  if (this_node == 0) {
     // Broadcast a message to the entire collection. The msgHandler will be
     // invoked on every element to the collection
     proxy.broadcast<MyCollMsg,&MyCol::msgHandler>();
@@ -97,6 +102,10 @@ static inline void collection() {
     // Send a message to the 5th element of the collection
     proxy[5].send<MyCollMsg,&MyCol::msgHandler>();
   }
+
+  // Collectively broadcast to the collection (all nodes participate for a
+  // single broadcast)
+  proxy.broadcastCollective<MyCollMsg,&MyCol::msgHandler>();
 }
 /// [Tutorial2A]
 
