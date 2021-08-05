@@ -81,14 +81,8 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   // Create a range that only hits half of the node---this requires a group for
   // the reduction to finish properly
   auto const range = Index1D(std::max(num_nodes / 2, 1));
-  auto const range2 = Index1D(num_nodes * 8);
   auto const proxy = theCollection()->constructCollective<MyCol>(
     range, [](vt::Index1D) {
-      return std::make_unique<MyCol>();
-    }
-  );
-  auto const proxy2 = theCollection()->constructCollective<MyCol>(
-    range2, [](vt::Index1D) {
       return std::make_unique<MyCol>();
     }
   );
@@ -98,7 +92,6 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   /// Broadcast to do a reduction over the current group
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      proxy2.broadcast<MyCol::TestMsg2,&MyCol::doWork>();
       auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
         vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
           cb_counter++;
@@ -127,7 +120,6 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   // Try to do another reduction; should fail if group is not setup correctly
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      proxy2.broadcast<MyCol::TestMsg2,&MyCol::doWork>();
       auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
         vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
           cb_counter++;
@@ -149,7 +141,6 @@ TEST_F(TestCollectionGroupRecreate, test_collection_group_recreate_1) {
   // Try to do another reduction; should fail if group is not setup correctly
   vt::runInEpochCollective([&]{
     if (this_node == 0) {
-      proxy2.broadcast<MyCol::TestMsg2,&MyCol::doWork>();
       auto cb = vt::theCB()->makeFunc<MyReduceMsg>(
         vt::pipe::LifetimeEnum::Once, [&cb_counter](MyReduceMsg* m) {
           cb_counter++;
