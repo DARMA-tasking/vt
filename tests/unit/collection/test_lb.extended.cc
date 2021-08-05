@@ -56,7 +56,7 @@
 
 #if vt_check_enabled(lblite)
 
-namespace vt { namespace tests { namespace unit {
+namespace vt { namespace tests { namespace unit { namespace lb {
 
 static constexpr int const num_elms = 64;
 static constexpr int const num_phases = 10;
@@ -290,6 +290,6 @@ INSTANTIATE_TEST_SUITE_P(
   NodeStatsDumperExplode, TestNodeStatsDumper, intervals
 );
 
-}}} // end namespace vt::tests::unit
+}}}} // end namespace vt::tests::unit::lb
 
 #endif /*vt_check_enabled(lblite)*/
