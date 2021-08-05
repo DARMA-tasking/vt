@@ -179,7 +179,14 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
       terse, lb,
       "LBManager: running strategy\n"
     );
-    strat->startLB(phase, base_proxy, model_.get(), theNodeStats()->getNodeComm()->at(phase));
+
+    balance::CommMapType empty_comm;
+    balance::CommMapType const* comm = &empty_comm;
+    auto iter = theNodeStats()->getNodeComm()->find(phase);
+    if (iter != theNodeStats()->getNodeComm()->end()) {
+      comm = &iter->second;
+    }
+    strat->startLB(phase, base_proxy, model_.get(), *comm);
   });
 
   int32_t global_migration_count = 0;
