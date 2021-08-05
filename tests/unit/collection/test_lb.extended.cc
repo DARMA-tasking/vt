@@ -134,6 +134,28 @@ TEST_P(TestLoadBalancer, test_load_balancer_keep_last_elm) {
   runTest();
 }
 
+struct MyCol2 : vt::Collection<MyCol2,vt::Index1D> {};
+
+TEST_P(TestLoadBalancer, test_load_balancer_no_work) {
+  auto const num_nodes = theContext()->getNumNodes();
+  auto const range = Index1D(num_nodes * 8);
+  theCollection()->constructCollective<MyCol2>(
+    range, [](vt::Index1D) { return std::make_unique<MyCol2>(); }
+  );
+
+  vt::theConfig()->vt_lb = true;
+  vt::theConfig()->vt_lb_name = "RotateLB";
+  vt::theConfig()->vt_lb_interval = 1;
+
+  vt::theCollective()->barrier();
+
+  for (int i = 0; i < 10; i++) {
+    vt::runInEpochCollective([&]{
+      vt::thePhase()->nextPhaseCollective();
+    });
+  }
+}
+
 auto balancers = ::testing::Values(
     "RandomLB",
     "RotateLB",
