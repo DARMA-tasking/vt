@@ -78,9 +78,13 @@ int main(int argc, char** argv) {
     num_elms = atoi(argv[1]);
   }
 
+  auto range = vt::Index1D(num_elms);
+  auto proxy = vt::makeCollection<Hello>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
   if (this_node == 0) {
-    auto range = vt::Index1D(num_elms);
-    auto proxy = vt::theCollection()->construct<Hello>(range);
     proxy.broadcast<Hello::TestMsg,&Hello::doWork>();
   }
 

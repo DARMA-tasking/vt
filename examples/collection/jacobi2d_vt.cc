@@ -497,8 +497,10 @@ int main(int argc, char** argv) {
     static_cast<BaseIndexType>(numY_objs)
   );
 
-  auto col_proxy =
-    vt::theCollection()->constructCollective<LinearPb2DJacobi>(range);
+  auto col_proxy = vt::makeCollection<LinearPb2DJacobi>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
 
   vt::runInEpochCollective([col_proxy, grp_proxy, numX_objs, numY_objs, maxIter] {
     col_proxy.broadcastCollective<LinearPb2DJacobi::LPMsg, &LinearPb2DJacobi::init>(

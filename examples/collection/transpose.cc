@@ -332,9 +332,14 @@ int main(int argc, char** argv) {
 
   vt::NodeType this_node = vt::theContext()->getNode();
 
+  auto range = vt::Index1D(num_pieces);
+  auto proxy = vt::makeCollection<Block>()
+    .bounds(range)
+    .bulkInsert()
+    .mapperFunc<my_map>()
+    .wait();
+
   if (this_node == 0) {
-    auto range = vt::Index1D(num_pieces);
-    auto proxy = vt::theCollection()->construct<Block, my_map>(range);
     proxy.broadcast<SolveMsg<Block>, &Block::solve>();
   }
 

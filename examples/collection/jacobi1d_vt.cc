@@ -373,8 +373,10 @@ int main(int argc, char** argv) {
   using BaseIndexType = typename vt::Index1D::DenseIndexType;
   auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
-  auto col_proxy =
-    vt::theCollection()->constructCollective<LinearPb1DJacobi>(range);
+  auto col_proxy = vt::makeCollection<LinearPb1DJacobi>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
 
   vt::runInEpochCollective([col_proxy, grp_proxy, num_objs, numRowsPerObject, maxIter]{
     col_proxy.broadcastCollective<LinearPb1DJacobi::LPMsg, &LinearPb1DJacobi::init>(
