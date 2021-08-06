@@ -94,7 +94,7 @@ struct ElmInsertable : BaseProxyT {
 
   /**
    * \brief Insert a new collection element, calling the constructor that takes
-   * a message as an argument. Collective must have dynamic membership to
+   * a message as an argument. Collection must have dynamic membership to
    * perform insertions.
    *
    * \param[in] token the modifier token
