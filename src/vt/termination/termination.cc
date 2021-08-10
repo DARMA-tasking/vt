@@ -944,7 +944,7 @@ void TerminationDetector::addLocalDependency(EpochType epoch) {
   addEpochStateDependency(epoch);
   theTerm()->produce(epoch);
   if (epoch != any_epoch_sentinel) {
-    addEpochStateDependency(any_epoch_sentinel);
+    any_epoch_state_.incrementDependency();
   }
   hang_.incrementDependency();
 }
@@ -952,7 +952,7 @@ void TerminationDetector::addLocalDependency(EpochType epoch) {
 void TerminationDetector::releaseLocalDependency(EpochType epoch) {
   hang_.decrementDependency();
   if (epoch != any_epoch_sentinel) {
-    removeEpochStateDependency(any_epoch_sentinel);
+    any_epoch_state_.decrementDependency();
   }
   theTerm()->consume(epoch);
   removeEpochStateDependency(epoch);
