@@ -47,7 +47,7 @@ namespace vt { namespace messaging {
 
 AsyncOp::AsyncOp() {
   cur_epoch_ = theMsg()->getEpoch();
-  theTerm()->produce(cur_epoch_);
+  theTerm()->addLocalDependency(cur_epoch_);
 }
 
 AsyncOp::AsyncOp(AsyncOp&& in) {
@@ -57,7 +57,7 @@ AsyncOp::AsyncOp(AsyncOp&& in) {
 
 /*virtual*/ AsyncOp::~AsyncOp() {
   if (cur_epoch_ != no_epoch) {
-    theTerm()->consume(cur_epoch_);
+    theTerm()->releaseLocalDependency(cur_epoch_);
   }
 }
 
