@@ -56,6 +56,8 @@ AsyncOp::AsyncOp(AsyncOp&& in) {
 }
 
 /*virtual*/ AsyncOp::~AsyncOp() {
+  // This case only occurs in a moved-from instance, in which case the
+  // move-ee will make the matching calls
   if (cur_epoch_ != no_epoch) {
     theTerm()->releaseLocalDependency(cur_epoch_);
   }
