@@ -238,6 +238,8 @@ then
       -Dkokkos_DISABLE:BOOL=1 \
       -Dkokkos_kernels_DISABLE:BOOL=1 \
       -Dvt_trace_only="1" \
+      -DVT_BUILD_EXAMPLES="0" \
+      -DVT_BUILD_TESTS="0" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
