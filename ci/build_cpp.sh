@@ -232,6 +232,9 @@ then
     cd vt-sample-project/build
     export vt_DIR="$VT_BUILD/install"
     cmake -G "${CMAKE_GENERATOR:-Ninja}" \
+      -Dvt_DIR="${VT}" \
+      -Dcheckpoint_DIR="${CHECKPOINT}" \
+      -Ddetector_DIR="${DETECTOR}" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
