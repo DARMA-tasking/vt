@@ -235,6 +235,8 @@ then
       -Dvt_DIR="${VT}" \
       -Dcheckpoint_DIR="${CHECKPOINT}" \
       -Ddetector_DIR="${DETECTOR}" \
+      -Dkokkos_DIR="" \
+      -DKokkosKernels_DIR="" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
