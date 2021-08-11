@@ -24,6 +24,10 @@ endmacro(require_pkg_directory)
 
 macro(find_package_local pkg_name pkg_directory pkg_other_name)
   get_directory_property(hasParent PARENT_DIRECTORY)
+
+  # Whether we loaded the package in the following loop with find_package()
+  set(${pkg_name}_PACKAGE_LOADED 0)
+
   if(hasParent)
     # Skip this logic when this macro was not invoked from the
     # top-level CMakeLists.txt file under the assumption that this
@@ -31,7 +35,7 @@ macro(find_package_local pkg_name pkg_directory pkg_other_name)
     # Note that this will also skip if you call this macro from
     # a subdirectory in your own package, so just don't do it!
 
-    #message(STATUS "skipping find_package for ${pkg_name}")
+    # message(STATUS "skipping find_package for ${pkg_name}")
   else()
     message(
       STATUS "find_package_local: pkg name=\"${pkg_name}\", "
@@ -44,9 +48,6 @@ macro(find_package_local pkg_name pkg_directory pkg_other_name)
 
     # Default search paths: root, /cmake and /CMake subdirectories
     list(APPEND prefix_args "/" "/cmake" "/CMake")
-
-    # Whether we loaded the package in the following loop with find_package()
-    set(${pkg_name}_PACKAGE_LOADED 0)
 
     foreach(prefix ${prefix_args})
       set(potential_path ${pkg_directory}/${prefix})
