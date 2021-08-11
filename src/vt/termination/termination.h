@@ -623,6 +623,20 @@ private:
 
 public:
   /**
+   * \brief Add a local work dependency on an epoch to stop propagation
+   *
+   * \param[in] epoch the epoch
+   */
+  void addLocalDependency(EpochType epoch);
+
+  /**
+   * \brief Release a local work dependency on an epoch to resume propagation
+   *
+   * \param[in] epoch the epoch
+   */
+  void releaseLocalDependency(EpochType epoch);
+
+  /**
    * \internal \brief Make a dependency between two epochs
    *
    * \param[in] predecessor the predecessor epoch

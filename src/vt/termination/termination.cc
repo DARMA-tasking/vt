@@ -940,6 +940,24 @@ void TerminationDetector::addEpochStateDependency(EpochType ep) {
   }
 }
 
+void TerminationDetector::addLocalDependency(EpochType epoch) {
+  if (epoch != any_epoch_sentinel) {
+    addEpochStateDependency(epoch);
+  }
+  theTerm()->produce(epoch);
+  any_epoch_state_.incrementDependency();
+  hang_.incrementDependency();
+}
+
+void TerminationDetector::releaseLocalDependency(EpochType epoch) {
+  hang_.decrementDependency();
+  any_epoch_state_.decrementDependency();
+  theTerm()->consume(epoch);
+  if (epoch != any_epoch_sentinel) {
+    removeEpochStateDependency(epoch);
+  }
+}
+
 void TerminationDetector::finishNoActivateEpoch(EpochType const& epoch) {
   auto ready_iter = epoch_ready_.find(epoch);
   if (ready_iter == epoch_ready_.end()) {
