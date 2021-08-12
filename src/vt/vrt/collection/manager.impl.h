@@ -1716,7 +1716,7 @@ void CollectionManager::insert(
         proxy, idx, insert_node, mapped_node, modify_epoch, insert_msg
       );
       theMsg()->markAsCollectionMessage(msg);
-      theMsg()->sendMsg<InsertMsg<ColT, MsgT>, pingHomeHandler<ColT>>(
+      theMsg()->sendMsg<InsertMsg<ColT, MsgT>, pingHomeHandler<ColT, MsgT>>(
         mapped_node, msg
       );
       proceed_with_insertion = false;
