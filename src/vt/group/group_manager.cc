@@ -314,7 +314,7 @@ EventType GroupManager::sendGroupCollective(
   auto const& in_group = info.inGroup();
   auto const& group_ready = info.isReady();
 
-  if (info.emptyGroup()) {
+  if (info.isEmptyGroup()) {
     return no_event;
   }
 

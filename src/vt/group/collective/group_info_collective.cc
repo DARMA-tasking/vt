@@ -303,7 +303,7 @@ void InfoColl::upTree() {
       return;
     } else {
       if (msg_in_group.size() == 0) {
-        empty_group_ = true;
+        is_empty_group_ = true;
         in_phase_two_ = true;
         finalize();
         return;
@@ -649,7 +649,7 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
 }
 
 void InfoColl::newTree(NodeType const& parent) {
-  if (not empty_group_) {
+  if (not is_empty_group_) {
     vtAssert(is_in_group, "Must be in group");
   }
 
@@ -800,8 +800,8 @@ bool InfoColl::isReady() const {
     (!is_in_group || collective_->span_ != nullptr);
 }
 
-bool InfoColl::emptyGroup() const {
-  return empty_group_;
+bool InfoColl::isEmptyGroup() const {
+  return is_empty_group_;
 }
 
 void InfoColl::readyAction(ActionType const action) {
