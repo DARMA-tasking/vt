@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            insert_finished.impl.h
+//                              modifyable.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/insert/modifyable.h"
@@ -75,4 +75,4 @@ void Modifyable<ColT,IndexT,BaseProxyT>::finishModification(
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H*/

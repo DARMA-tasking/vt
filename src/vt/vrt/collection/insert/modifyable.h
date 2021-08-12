@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              insert_finished.h
+//                                 modifyable.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
-#define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H
 
 #include "vt/config.h"
 #include "vt/vrt/collection/insert/modify_token.h"
@@ -78,4 +78,4 @@ public:
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H*/
