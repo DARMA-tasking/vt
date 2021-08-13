@@ -1734,7 +1734,7 @@ private:
    */
   template <typename ColT>
   std::tuple<EpochType, VirtualProxyType> makeCollection(
-    param::ConstructParams<ColT> po
+    param::ConstructParams<ColT>& po
   );
 
   /**
@@ -1752,7 +1752,7 @@ private:
    * \param[in] po the configuration
    */
   template <typename ColT>
-  void makeCollectionImpl(param::ConstructParams<ColT> po);
+  void makeCollectionImpl(param::ConstructParams<ColT>& po);
 
   /**
    * \internal \brief Construct a new collection element

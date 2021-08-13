@@ -60,7 +60,7 @@ EpochType ConstructParams<ColT>::deferWithEpoch(ProxyFnType cb) {
     has_bounds_ = true;
   }
 
-  auto tup = theCollection()->makeCollection<ColT>(std::move(*this));
+  auto tup = theCollection()->makeCollection<ColT>(*this);
   auto epoch = std::get<0>(tup);
   auto proxy = std::get<1>(tup);
 

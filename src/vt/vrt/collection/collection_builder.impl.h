@@ -52,7 +52,7 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT>
 std::tuple<EpochType, VirtualProxyType> CollectionManager::makeCollection(
-  param::ConstructParams<ColT> po
+  param::ConstructParams<ColT>& po
 ) {
   auto const is_migratable = po.migratable_;
   auto const is_collective = po.collective_;
@@ -65,7 +65,7 @@ std::tuple<EpochType, VirtualProxyType> CollectionManager::makeCollection(
     auto ep = theTerm()->makeEpochRooted("collection construction");
     theMsg()->pushEpoch(ep);
     using MsgType = param::ConstructParamMsg<ColT>;
-    auto m = makeMessage<MsgType>(std::move(po));
+    auto m = makeMessage<MsgType>(po);
     theMsg()->broadcastMsg<MsgType, makeCollectionHandler>(m);
     theMsg()->popEpoch(ep);
     theTerm()->finishedEpoch(ep);
@@ -73,7 +73,7 @@ std::tuple<EpochType, VirtualProxyType> CollectionManager::makeCollection(
   } else {
     auto ep = theTerm()->makeEpochCollective("collection construction");
     theMsg()->pushEpoch(ep);
-    makeCollectionImpl(std::move(po));
+    makeCollectionImpl(po);
     theMsg()->popEpoch(ep);
     theTerm()->finishedEpoch(ep);
     return std::make_tuple(ep, proxy_bits);
@@ -84,7 +84,7 @@ template <typename ColT>
 /*static*/ void CollectionManager::makeCollectionHandler(
   param::ConstructParamMsg<ColT>* msg
 ) {
-  theCollection()->makeCollectionImpl(std::move(msg->po));
+  theCollection()->makeCollectionImpl(msg->po);
 }
 
 namespace detail {
@@ -100,7 +100,7 @@ struct ContainableElementFn {
 } /* end namespace detail */
 
 template <typename ColT>
-void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT> po) {
+void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   using IndexType = typename ColT::IndexType;
 
   auto const proxy = po.proxy_bits_;

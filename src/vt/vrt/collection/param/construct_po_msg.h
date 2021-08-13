@@ -60,7 +60,7 @@ struct ConstructParamMsg : vt::Message {
 
   ConstructParamMsg() = default;
   explicit ConstructParamMsg(param::ConstructParams<ColT> in_po)
-    : po(std::move(in_po))
+    : po(in_po)
   { }
 
   template <typename SerializerT>
