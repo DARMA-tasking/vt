@@ -55,7 +55,7 @@ EpochType ConstructParams<ColT>::deferWithEpoch(ProxyFnType cb) {
   // Set constructed to true
   constructed_ = true;
 
-  if (not has_bounds_ and bulk_inserts_.size() > 0) {
+  if (not has_bounds_ and bulk_inserts_.size() == 1) {
     bounds_ = bulk_inserts_[0];
     has_bounds_ = true;
   }

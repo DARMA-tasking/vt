@@ -139,7 +139,7 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
 
   std::size_t global_constructed_elms = 0;
 
-  if (po.bulk_insert_bounds_) {
+  if (po.bulk_insert_bounds_ and has_bounds_) {
     po.bulk_inserts_.push_back(po.bounds_);
   }
 
