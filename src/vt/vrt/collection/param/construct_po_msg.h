@@ -59,7 +59,7 @@ struct ConstructParamMsg : vt::Message {
   vt_msg_serialize_required(); // po
 
   ConstructParamMsg() = default;
-  explicit ConstructParamMsg(param::ConstructParams<ColT> in_po)
+  explicit ConstructParamMsg(param::ConstructParams<ColT>& in_po)
     : po(in_po)
   { }
 

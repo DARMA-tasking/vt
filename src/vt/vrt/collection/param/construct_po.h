@@ -94,8 +94,36 @@ private:
 
 public:
   ConstructParams() = default;
-  ConstructParams(ConstructParams const&) = default;
   ConstructParams(ConstructParams&&) = default;
+
+  ConstructParams(ConstructParams const& x)
+    : bounds_(x.bounds_),
+      has_bounds_(x.has_bounds_),
+      bulk_inserts_(x.bulk_inserts_),
+      bulk_insert_bounds_(x.bulk_insert_bounds_),
+      cons_fn_(x.cons_fn_),
+      dynamic_membership_(x.dynamic_membership_),
+      collective_(x.collective_),
+      constructed_(x.constructed_),
+      migratable_(x.migratable_),
+      map_han_(x.map_han_),
+      proxy_bits_(x.proxy_bits_),
+      map_object_(x.map_object_)
+  {
+    vtAssert(
+      not collective_,
+      "Should only call copy ctor during rooted construction"
+    );
+    if (x.list_inserts_.size() > 0 or
+        x.list_insert_here_.size() > 0) {
+      vtAbort(
+        "listInsert/listInsertHere can not be used with rooted construction"
+      );
+    }
+    if (x.cons_fn_) {
+      vtAbort("elementConstructor can not be used with rooted construction");
+    }
+  }
 
   friend CollectionManager;
 
@@ -189,6 +217,8 @@ public:
 
   /**
    * \brief Specify a non-default constructor for each element
+   *
+   * \note Only valid with collective construction
    *
    * \param[in] in_cons_fn the construction function
    */
@@ -351,6 +381,9 @@ public:
       | map_han_
       | proxy_bits_
       | map_object_;
+    s.skip(list_inserts_);
+    s.skip(list_insert_here_);
+    s.skip(cons_fn_);
   }
 
 private:
