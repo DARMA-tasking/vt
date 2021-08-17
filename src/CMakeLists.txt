@@ -339,7 +339,7 @@ export(
                             ${MIMALLOC_LIBRARY_EXPORT}
                             ${FORT_LIBRARY_EXPORT}
                             ${FMT_LIBRARY_EXPORT}
-                            ${CHEKPOINT_EXPORT}
+                            ${CHECKPOINT_EXPORT}
                             ${DETECTOR_EXPORT}
                             ${JSON_LIBRARY}
                             ${BROTLI_LIBRARY}
