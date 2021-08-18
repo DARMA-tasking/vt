@@ -262,7 +262,6 @@ template <typename ColT, typename IndexT, typename MsgT>
 /*static*/ void CollectionManager::collectionBcastHandler(MsgT* msg) {
   auto const col_msg = static_cast<CollectionMessage<ColT>*>(msg);
   auto const bcast_proxy = col_msg->getBcastProxy();
-  // auto const& untyped_proxy = bcast_proxy;
   auto const& group = envelopeGetGroup(msg->env);
   auto const& cur_epoch = theMsg()->getEpoch();
   auto const& msg_epoch = envelopeGetEpoch(msg->env);
