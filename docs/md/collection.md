@@ -32,14 +32,13 @@ epoch terminates by triggering the callback passed to it.
 
 \subsubsection collection-collective-vs-rooted Collective vs. Rooted
 
-By default, `vt::makeCollection<T>()` will create a collective (non-rooted)
-collection. This can be changed by calling the method `.collective(false)` or
-`.rooted(true)`, which are synonymous with each other. If `.rooted(true)` is
-passed, only a single rank should invoke `vt::makeCollection<T>()` (and the
-proxy is returned to a single rank). However, after waiting for
-construction all ranks will know internally about the collection and have
-constructed the proper collection elements based on the user's insertion
-specification and corresponding mapping function.
+The function `vt::makeCollection<T>()` will create a collective (non-rooted)
+collection. Alternatively, one may call `vt::makeCollectionRooted<T>()` to
+construct a rooted collection. In this case, only a single rank should invoke
+`vt::makeCollectionRooted<T>()` (and the proxy is returned to a single
+rank). However, after waiting for construction, all ranks will know internally
+about the collection and have constructed the proper collection elements based
+on the user's insertion specification and corresponding mapping function.
 
 \subsubsection collection-bounds-insertion Bounds and Insertion
 
