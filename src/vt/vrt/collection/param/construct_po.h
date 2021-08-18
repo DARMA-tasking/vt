@@ -155,6 +155,7 @@ public:
    * \param[in] is_migratable is migratable?
    */
   ThisType&& migratable(bool is_migratable) {
+    vtAssert(false, "Currently this is not implemented");
     migratable_ = is_migratable;
     return std::move(*this);
   }
