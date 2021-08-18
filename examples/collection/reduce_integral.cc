@@ -229,7 +229,6 @@ int main(int argc, char** argv) {
 
   auto proxy = vt::makeCollection<Integration1D>()
     .bounds(range)
-    .collective(true)
     .bulkInsert()
     .wait();
 

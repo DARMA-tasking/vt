@@ -66,7 +66,7 @@ struct ConstructParams;
 
 /// fwd-declare the builder helper function
 template <typename ColT>
-ConstructParams<ColT> makeCollectionImpl();
+ConstructParams<ColT> makeCollectionImpl(bool const is_collective);
 
 /**
  * \struct ConstructParams
@@ -88,9 +88,11 @@ struct ConstructParams {
 private:
   struct BuilderTag{};
 
-  ConstructParams(BuilderTag) {}
+  ConstructParams(BuilderTag, bool const in_is_collective)
+    : collective_(in_is_collective)
+  {}
 
-  friend ThisType makeCollectionImpl<ColT>();
+  friend ThisType makeCollectionImpl<ColT>(bool const);
 
 public:
   ConstructParams() = default;
@@ -144,26 +146,6 @@ public:
   ThisType&& bounds(IndexType in_bounds) {
     bounds_ = in_bounds;
     has_bounds_ = true;
-    return std::move(*this);
-  }
-
-  /**
-   * \brief Whether this is a collective construction of the collection
-   *
-   * \param[in] is_collective is collective?
-   */
-  ThisType&& collective(bool is_collective) {
-    collective_ = is_collective;
-    return std::move(*this);
-  }
-
-  /**
-   * \brief Whether this is a rooted construction of the collection
-   *
-   * \param[in] is_rooted is rooted?
-   */
-  ThisType&& rooted(bool is_rooted) {
-    collective_ = not is_rooted;
     return std::move(*this);
   }
 
@@ -329,6 +311,19 @@ public:
    */
   ProxyType wait();
 
+  /**
+   * \internal \brief Specify whether this is a collective construction of the
+   * collection
+   *
+   * \warning Only for use internally for testing
+   *
+   * \param[in] is_collective is collective?
+   */
+  ThisType&& collective(bool is_collective) {
+    collective_ = is_collective;
+    return std::move(*this);
+  }
+
 private:
   /**
    * \brief Get the element constructor function
@@ -404,10 +399,10 @@ private:
 };
 
 template <typename ColT>
-ConstructParams<ColT> makeCollectionImpl() {
+ConstructParams<ColT> makeCollectionImpl(bool const is_collective) {
   using ConsType = ConstructParams<ColT>;
   using TagType  = typename ConsType::BuilderTag;
-  return ConsType{TagType{}};
+  return ConsType{TagType{}, is_collective};
 }
 
 }}}} /* end namespace vt::vrt::collection::param */
@@ -415,7 +410,8 @@ ConstructParams<ColT> makeCollectionImpl() {
 namespace vt {
 
 /**
- * \brief Construct a new collection with the parameter object builder
+ * \brief Construct a new collective collection with the parameter object
+ * builder
  *
  * \param[in] bounds the bounds for the collection (optional)
  *
@@ -423,7 +419,21 @@ namespace vt {
  */
 template <typename ColT>
 vrt::collection::param::ConstructParams<ColT> makeCollection() {
-  return vrt::collection::param::makeCollectionImpl<ColT>();
+  bool const is_collective = true;
+  return vrt::collection::param::makeCollectionImpl<ColT>(is_collective);
+}
+
+/**
+ * \brief Construct a new rooted collection with the parameter object builder
+ *
+ * \param[in] bounds the bounds for the collection (optional)
+ *
+ * \return the parameter configuration object
+ */
+template <typename ColT>
+vrt::collection::param::ConstructParams<ColT> makeCollectionRooted() {
+  bool const is_collective = false;
+  return vrt::collection::param::makeCollectionImpl<ColT>(is_collective);
 }
 
 } /* end namespace vt */

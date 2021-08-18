@@ -103,7 +103,6 @@ int main(int argc, char** argv) {
 
   auto proxy = vt::makeCollection<Hello>()
     .bounds(range)
-    .collective(true)
     .listInsertHere(std::move(elms))
     .wait();
 
