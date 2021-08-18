@@ -1,6 +1,5 @@
 
 macro(require_pkg_directory pkg_name pkg_user_name)
-  get_directory_property(hasParent PARENT_DIRECTORY)
   if(hasParent)
     # Skip this logic when this macro was not invoked from the
     # top-level CMakeLists.txt file under the assumption that this
@@ -23,8 +22,6 @@ macro(require_pkg_directory pkg_name pkg_user_name)
 endmacro(require_pkg_directory)
 
 macro(find_package_local pkg_name pkg_directory pkg_other_name)
-  get_directory_property(hasParent PARENT_DIRECTORY)
-
   # Whether we loaded the package in the following loop with find_package()
   set(${pkg_name}_PACKAGE_LOADED 0)
 
@@ -96,7 +93,6 @@ macro(find_package_local pkg_name pkg_directory pkg_other_name)
 endmacro(find_package_local)
 
 macro(optional_pkg_directory pkg_name pkg_user_name assume_found_if_hasparent)
-  get_directory_property(hasParent PARENT_DIRECTORY)
   if(hasParent)
     # Skip MOST of this logic when this macro was not invoked from the
     # top-level CMakeLists.txt file under the assumption that this

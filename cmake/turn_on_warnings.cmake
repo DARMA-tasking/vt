@@ -11,7 +11,6 @@ function(enable_cxx_compiler_flag_if_supported flag)
   endif()
 endfunction()
 
-get_directory_property(hasParent PARENT_DIRECTORY)
 if(NOT hasParent)
   enable_cxx_compiler_flag_if_supported("-Wall")
   enable_cxx_compiler_flag_if_supported("-pedantic")

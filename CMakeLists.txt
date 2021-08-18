@@ -9,6 +9,8 @@ set(USED_CMAKE_GENERATOR "${CMAKE_GENERATOR}" CACHE STRING "Expose CMAKE_GENERAT
 # This suppresses a warning as the old behavior is deprecated-by-definition.
 cmake_policy(SET CMP0082 NEW)
 
+get_directory_property(hasParent PARENT_DIRECTORY)
+
 include(cmake/turn_on_warnings.cmake)
 
 include(cmake/check_system_functions.cmake)
