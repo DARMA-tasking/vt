@@ -60,7 +60,7 @@ struct ConstructParamMsg : vt::Message {
 
   ConstructParamMsg() = default;
   explicit ConstructParamMsg(param::ConstructParams<ColT>& in_po)
-    : po(in_po)
+    : po(std::make_unique<param::ConstructParams<ColT>>(in_po))
   { }
 
   template <typename SerializerT>
@@ -69,7 +69,12 @@ struct ConstructParamMsg : vt::Message {
     s | po;
   }
 
-  param::ConstructParams<ColT> po; /**< The construction parameters */
+  /// Must use \c std::unique_ptr here because without the indirection,
+  /// AppleClang generates invalid alignment that causes a segfault when \c new
+  /// is called on this message type. The only other work around is some
+  /// seemingly arbitrary value to alignas (alignas(1024) seems to do the
+  /// trick).
+  std::unique_ptr<param::ConstructParams<ColT>> po = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::param */

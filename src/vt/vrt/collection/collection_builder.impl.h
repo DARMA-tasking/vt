@@ -84,7 +84,7 @@ template <typename ColT>
 /*static*/ void CollectionManager::makeCollectionHandler(
   param::ConstructParamMsg<ColT>* msg
 ) {
-  theCollection()->makeCollectionImpl(msg->po);
+  theCollection()->makeCollectionImpl(*msg->po);
 }
 
 namespace detail {
