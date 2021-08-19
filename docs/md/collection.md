@@ -32,26 +32,26 @@ epoch terminates by triggering the callback passed to it.
 
 \subsubsection collection-collective-vs-rooted Collective vs. Rooted
 
-The function `vt::makeCollection<T>()` will create a collective (non-rooted)
-collection. Alternatively, one may call `vt::makeCollectionRooted<T>()` to
-construct a rooted collection. In this case, only a single rank should invoke
-`vt::makeCollectionRooted<T>()` (and the proxy is returned to a single
-rank). However, after waiting for construction, all ranks will know internally
-about the collection and have constructed the proper collection elements based
-on the user's insertion specification and corresponding mapping function.
+The function `vt::makeCollection<T>()` will create a collection in a collective
+fashion, meaning it must be called in tandem on all nodes. Alternatively, one
+may call `vt::makeCollectionRooted<T>()` to construct a rooted collection, which
+is invoked only on a single rank. (and the proxy is returned to a single
+rank). After waiting for construction, elements will have been constructed on
+their appropriate ranks, and the provided collection proxy will be usable on any
+rank it's sent to.
 
 \subsubsection collection-bounds-insertion Bounds and Insertion
 
 For collections without dynamic membership at runtime, one must call
-`.bounds(my_range)` to specify the bounds in each dimension for the
-collection. Then, the user can specify how insertions should happen during
-construction. The `.bulkInsert()` method (with no parameter) tells the runtime
-to insert all collection elements within the bounds using the mapping function
-to determine placement. The user can also specify specific ranges to bulk insert
-using `.bulkInsert(my_range_1)` with a parameter (this can be called multiple
-times). As a shortcut, if the user does not specify bounds explicitly, instead
-calling `.bulkInsert(my_range_1)` once, `my_range_1` will be the assumed bounds
-for the collection.
+`.bounds(my_range)` to specify the bounds in each dimension for the collection
+or specify exactly one bulk insertion range (`.bulkInsert(my_range_1)`), where
+`my_range_1` will be the assumed bounds for the collection. Bulk insertion is
+one such way to specify how insertions should happen during construction. The
+`.bulkInsert()` method (with no parameter) tells the runtime to insert all
+collection elements within the bounds using the mapping function to determine
+placement. The user can also specify specific ranges to bulk insert using
+`.bulkInsert(my_range_1)` with a parameter (this can be called multiple
+times).
 
 For collective collection constructions, one may also use list insertion
 (`.listInsert(my_index_list)`) to specify non-contiguous lists of indices that
@@ -68,8 +68,9 @@ has bounds, the system will choose a default blocked mapping (across all
 dimensions) for initial placement. For collections without bounds (ones with
 dynamic membership), the system uses a simple xor hash function to generate a
 valid initial location for each index deterministically. One may specify a
-mapping function in two ways: the user can provide a stateless function
-as a template argument to `.mapperFunc<my_map>()`, where `my_map` is defined as:
+mapping function in two ways: the user can provide a stateless function as a
+template argument to `.mapperFunc<my_map>()`, where `my_map` has the following
+definition (shown for a 1-dimensional collection):
 
 \code{.cpp}
 vt::NodeType my_map(vt::Index1D* idx, vt::Index1D* bounds, vt::NodeType num_nodes) {
@@ -84,9 +85,9 @@ group instance that already exists. Otherwise, one may just give the type and
 constructor arguments to create a new instance:
 `.mapperObjGroup<MyObjectGroup>(args...)`. An object group mapper must inherit
 from `vt::mapping::BaseMapper` and implement the pure virtual method `NodeType
-map(IdxT* idx, int ndim)` to define the mapping for the runtime. As an example,
-the map object groupd used by default for unbounded collections is implemented
-as follows:
+map(IdxT* idx, int ndim, NodeType num_nodes)` to define the mapping for the
+runtime. As an example, the object group mapper used by default for unbounded
+collections is implemented as follows:
 
 \code{.cpp}
 template <typename IdxT>
@@ -96,12 +97,12 @@ struct UnboundedDefaultMap : vt::mapping::BaseMapper<IdxT> {
     return proxy.getProxy();
   }
 
-  NodeType map(IdxT* idx, int ndim) override {
+  NodeType map(IdxT* idx, int ndim, NodeType num_nodes) override {
     typename IdxT::DenseIndexType val = 0;
     for (int i = 0; i < ndim; i++) {
       val ^= idx->get(i);
     }
-    return val % theContext()->getNumNodes();
+    return val % num_nodes;
   }
 };
 \endcode
@@ -114,27 +115,28 @@ deterministic across all nodes for the same inputs.
 By default, the collection type `T` (that inherits from the runtime base type
 `vt::Collection<T, IndexType>`) must have a default constructor. However, this
 can be avoided by configuring the collection with a specialized element
-constructor using `.elementConstructor(my_lambda)`. This configuration is only
-valid for collective constructions because the element constructor
-lambda/`std::function` can not be safely sent over the network. If this is
-provided, the collection manager will not try to default construct the
-collection elements, instead calling the user-provided constructor passed to
-this function.
+constructor using `.elementConstructor(x)`, where `x`'s type is
+`std::function<std::unique_ptr<ColT>(IndexT idx)>` and `ColT` is the collection
+type and `IndexT` is the index type for the collection. This configuration is
+only valid for collective constructions because the element constructor function
+can not be safely sent over the network. If this is provided, the collection
+manager will not try to default construct the collection elements, instead
+calling the user-provided constructor passed to this function.
 
 \subsubsection collection-element-migratability Element Migratability
 
 By default, all collection elements are migratable and can be moved by the load
 balancer when it is invoked by the user. However, one may inform VT that
 collection is entirely non-migratable by setting the parameter
-`.migratable(false)` during construction. By doing this, it will be recorded as
-background load on the initially mapped rank and excluded from the load balancer
-migration decisions.
+`.migratable(false)` during construction. By doing this, work executed by its
+elements will be recorded as background load on the initially mapped rank and
+excluded from the load balancer migration decisions.
 
 \subsubsection collection-dynamic-membership Dynamic Membership
 
 By default, collections do not have dynamic membership: they might be dense or
 sparse within the specified bounds, but the set of collection elements that are
-created at construction time persist (and never grow or shrink) until the
+created at construction time persists (and never grows or shrinks) until the
 collection is completely destroyed. Dynamic membership allows the user to
 specify insertions and deletions as the program executes in a safe and orderly
 manner. To enable this, one must call `.dynamicMembership(true)`. Note that the
@@ -162,7 +164,7 @@ collective interface):
   proxy.finishModification(std::move(token));
 \endcode
 
-The calls to `proxy.beginModification()` start the insertion/detection epoch by
+The calls to `proxy.beginModification()` start the insertion/deletion epoch by
 returning a token that must be passed to the actual modification calls. To
 insert a new collection element, the interface provides several methods on the
 indexed proxy: `insert`, `insertAt`, `insertMsg` or `insertAtMsg`. The `insert`
