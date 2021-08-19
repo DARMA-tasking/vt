@@ -47,6 +47,7 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/send/sendable.h"
 #include "vt/vrt/collection/insert/modify_token.h"
+#include "vt/messaging/message/smart_ptr.h"
 
 namespace vt { namespace vrt { namespace collection {
 
@@ -90,7 +91,7 @@ struct ElmInsertable : BaseProxyT {
    * \param[in] msg the message
    */
   template <typename MsgT>
-  void insertMsg(ModifierToken& token, MsgSharedPtr<MsgT> msg) const;
+  void insertMsg(ModifierToken& token, messaging::MsgPtrThief<MsgT> msg) const;
 
   /**
    * \brief Insert a new collection element, calling the constructor that takes
@@ -102,7 +103,9 @@ struct ElmInsertable : BaseProxyT {
    * \param[in] msg the message
    */
   template <typename MsgT>
-  void insertAtMsg(ModifierToken& token, NodeType node, MsgSharedPtr<MsgT> msg) const;
+  void insertAtMsg(
+    ModifierToken& token, NodeType node, messaging::MsgPtrThief<MsgT> msg
+  ) const;
 
   /**
    * \brief Destroy the collection element

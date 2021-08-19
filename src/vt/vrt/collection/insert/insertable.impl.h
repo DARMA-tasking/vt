@@ -86,24 +86,26 @@ void ElmInsertable<ColT,IndexT,BaseProxyT>::insertAt(
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT>
 void ElmInsertable<ColT,IndexT,BaseProxyT>::insertAtMsg(
-  ModifierToken& token, NodeType node, MsgSharedPtr<MsgT> msg
+  ModifierToken& token, NodeType node, messaging::MsgPtrThief<MsgT> msg
 ) const {
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();
-  theCollection()->insert<ColT, MsgT>(col_proxy, idx, node, token, msg);
+  theCollection()->insert<ColT, MsgT>(col_proxy, idx, node, token, msgptr);
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
 template <typename MsgT>
 void ElmInsertable<ColT,IndexT,BaseProxyT>::insertMsg(
-  ModifierToken& token, MsgSharedPtr<MsgT> msg
+  ModifierToken& token, messaging::MsgPtrThief<MsgT> msg
 ) const {
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();
   theCollection()->insert<ColT, MsgT>(
-    col_proxy, idx, uninitialized_destination, token, msg
+    col_proxy, idx, uninitialized_destination, token, msgptr
   );
 }
 template <typename ColT, typename IndexT, typename BaseProxyT>
