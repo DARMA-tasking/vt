@@ -108,8 +108,8 @@ VirtualProxyType CollectionManager::makeCollectionProxy(
     next_collective_id_++ :
     next_rooted_id_++;
 
-  auto const& this_node = theContext()->getNode();
-  bool const& is_collection = true;
+  auto const this_node = theContext()->getNode();
+  bool const is_collection = true;
 
   // Create the new proxy with the `new_dist_id`
   auto const proxy = VirtualProxyBuilder::createProxy(
