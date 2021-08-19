@@ -100,7 +100,7 @@ void CollectionBase<ColT, IndexT>::zeroReduceStamp() {
 
 template <typename ColT, typename IndexT>
 typename CollectionBase<ColT, IndexT>::ReduceStampType
-CollectionBase<ColT, IndexT>::getStampInc() {
+CollectionBase<ColT, IndexT>::getNextStamp() {
   ReduceStampType stamp;
   stamp.init<ReduceSeqStampType>(reduce_stamp_);
   ++reduce_stamp_;

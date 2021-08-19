@@ -83,7 +83,7 @@ struct CollectionBase : Indexable<IndexT> {
    *
    * \return the reduce stamp
    */
-  ReduceStampType getStampInc();
+  ReduceStampType getNextStamp();
 
   /**
    * \brief Zero out the reduce stamp

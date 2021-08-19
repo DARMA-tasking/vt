@@ -962,7 +962,7 @@ messaging::PendingSend CollectionManager::reduceMsgExpr(
 
   auto cur_stamp = stamp;
   if (cur_stamp == ReduceStamp{}) {
-    cur_stamp = proxy(idx).tryGetLocalPtr()->getStampInc();
+    cur_stamp = proxy(idx).tryGetLocalPtr()->getNextStamp();
   }
 
   collective::reduce::Reduce* r = nullptr;
