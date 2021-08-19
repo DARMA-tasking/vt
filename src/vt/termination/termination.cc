@@ -554,10 +554,10 @@ void TerminationDetector::countsConstant(TermStateType& state) {
 
           auto f1 = fmt::format(
             "{}Termination counts constant (no progress) for:{} {}traversals={} "
-            "epoch={:x} produced={}{} {}consumed={}{} rooted={}, ds={}\n",
+            "epoch={:x} (label '{}') produced={}{} {}consumed={}{} rooted={}, ds={}\n",
             bred, reset,
-            magenta, state.constant_count, state.getEpoch(), state.g_prod1,
-            reset, magenta, state.g_cons1, reset, is_rooted, useDS
+            magenta, state.constant_count, state.getEpoch(), state.getLabel(),
+            state.g_prod1, reset, magenta, state.g_cons1, reset, is_rooted, useDS
           );
           vt_print(term, "{}", f1);
         }
