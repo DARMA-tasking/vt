@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                        coll_constructors_deref.impl.h
+//                           unbounded_default.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,42 +41,28 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_CONSTRUCTOR_COLL_CONSTRUCTORS_DEREF_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_CONSTRUCTOR_COLL_CONSTRUCTORS_DEREF_IMPL_H
+#if !defined INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_IMPL_H
+#define INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_IMPL_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/manager.h"
+#include "vt/objgroup/manager.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace mapping {
 
-template <typename ColT, typename IndexT, typename Tuple, typename... Args>
-/*static*/ typename CollectionManager::VirtualPtrType<ColT, IndexT>
-DerefCons::derefTuple(
-  VirtualElmCountType const& elms, IndexT const& idx, std::tuple<Args...>* tup
-) {
-  static constexpr auto size = std::tuple_size<Tuple>::value;
-  static constexpr auto seq = std::make_index_sequence<size>{};
-  using DispatcherType = DispatchCons<
-    ColT, IndexT, typename CollectionManager::VirtualPtrType<ColT, IndexT>,
-    Tuple, Args...
-  >;
-  return expandSeq<ColT, IndexT, Tuple, DispatcherType>(elms, idx, tup, seq);
+template <typename IdxT>
+NodeType UnboundedDefaultMap<IdxT>::map(IdxT* idx, int ndim, NodeType num_nodes) {
+  typename IdxT::DenseIndexType val = 0;
+  for (int i = 0; i < ndim; i++) {
+    val ^= idx->get(i);
+  }
+  return val % num_nodes;
 }
 
-template <
-  typename ColT, typename IndexT, typename Tuple, typename DispatcherT,
-  size_t... I
->
-/*static*/ typename CollectionManager::VirtualPtrType<ColT, IndexT>
-DerefCons::expandSeq(
-  VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
-  std::index_sequence<I...> seq
-) {
-  using ConsType = typename DispatcherT::template ConsType<I...>;
-  ConsType cons;
-  return cons(elms, idx, tup, seq);
+template <typename IdxT>
+/*static*/ ObjGroupProxyType UnboundedDefaultMap<IdxT>::construct() {
+  auto proxy = theObjGroup()->makeCollective<UnboundedDefaultMap<IdxT>>();
+  return proxy.getProxy();
 }
 
-}}} /* end namespace vt::vrt::collection */
+}} /* end namespace vt::mapping */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_CONSTRUCTOR_COLL_CONSTRUCTORS_DEREF_IMPL_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_DENSE_UNBOUNDED_DEFAULT_IMPL_H*/

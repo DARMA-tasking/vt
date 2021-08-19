@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                      test_construct_idx_fst.extended.cc
+//                           construct_params.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,56 +41,49 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_IMPL_H
 
-#include "test_collection_common.h"
-#include "test_collection_construct_common.h"
+#include "vt/vrt/collection/param/construct_params.h"
 
-#include <cstdint>
-#include <tuple>
-#include <string>
+namespace vt { namespace vrt { namespace collection { namespace param {
 
-namespace vt { namespace tests { namespace unit { namespace idx_fst {
+template <typename ColT>
+EpochType ConstructParams<ColT>::deferWithEpoch(ProxyFnType cb) {
+  // validate all the inputs for the configuration
+  validateInputs();
+  // Set constructed to true
+  constructed_ = true;
 
-namespace multi_param_idx_fst_ {
-template <typename... Args> struct ColMsg;
-template <typename... Args>
-struct TestCol : Collection<TestCol<Args...>,TestIndex>, BaseCol {
-  using MsgType = ColMsg<Args...>;
-  using ParamType = std::tuple<Args...>;
-  TestCol() = default;
-  TestCol(Args... args,TestIndex idx)
-    : Collection<TestCol, TestIndex>(),
-      BaseCol(true)
-  {
-    #if PRINT_CONSTRUCTOR_VALUES
-      ConstructTuple<ParamType>::print(std::make_tuple(args...));
-    #endif
-    ConstructTuple<ParamType>::isCorrect(std::make_tuple(args...));
-  }
-};
-template <typename... Args>
-struct ColMsg : CollectionMessage<TestCol<Args...>> {};
-} /* end namespace multi_param_idx_fst_ */
+  auto tup = theCollection()->makeCollection<ColT>(*this);
+  auto epoch = std::get<0>(tup);
+  auto proxy = std::get<1>(tup);
 
-using CollectionTestTypes = testing::Types<
-  multi_param_idx_fst_           ::TestCol<int32_t>,
-  multi_param_idx_fst_           ::TestCol<int64_t>,
-  multi_param_idx_fst_           ::TestCol<std::string>,
-  multi_param_idx_fst_           ::TestCol<test_data::A>,
-  multi_param_idx_fst_           ::TestCol<test_data::B>,
-  multi_param_idx_fst_           ::TestCol<test_data::C>,
-  multi_param_idx_fst_           ::TestCol<int32_t,int32_t>,
-  multi_param_idx_fst_           ::TestCol<int64_t,int64_t>
->;
+  theTerm()->addAction(epoch, [=]{ cb(CollectionProxy<ColT>{proxy}); });
 
-// This test depends on detecting constructor index
-#if vt_check_enabled(cons_multi_idx)
+  return epoch;
+}
 
-  INSTANTIATE_TYPED_TEST_SUITE_P(
-    test_construct_idx_fst, TestConstruct, CollectionTestTypes
-  );
+/**
+ * \brief Wait for construction to complete and then return the proxy
+ *
+ * \return the proxy after the construction is complete
+ */
+template <typename ColT>
+typename ConstructParams<ColT>::ProxyType ConstructParams<ColT>::wait() {
+  // wait for the collection to be constructed
+  ProxyType out_proxy;
+  bool action_run = false;
+  auto ep = deferWithEpoch([&](ProxyType proxy) {
+    out_proxy = proxy;
+    action_run = true;
+  });
+  runSchedulerThrough(ep);
+  theSched()->runSchedulerWhile([&]{ return not action_run; });
+  return out_proxy;
+}
 
-#endif /*vt_check_enabled(cons_multi_idx)*/
 
-}}}} // end namespace vt::tests::unit::idx_fst
+}}}} /* end namespace vt::vrt::collection::param */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_IMPL_H*/

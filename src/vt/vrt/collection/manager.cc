@@ -101,4 +101,32 @@ void CollectionManager::schedule(ActionType action) {
   theSched()->enqueue(action);
 }
 
+VirtualProxyType CollectionManager::makeCollectionProxy(
+  bool is_collective, bool is_migratable
+) {
+  VirtualIDType const new_id = is_collective ?
+    next_collective_id_++ :
+    next_rooted_id_++;
+
+  auto const this_node = theContext()->getNode();
+  bool const is_collection = true;
+
+  // Create the new proxy with the `new_dist_id`
+  auto const proxy = VirtualProxyBuilder::createProxy(
+    new_id, this_node, is_collection, is_migratable, is_collective
+  );
+
+  vt_debug_print(
+    verbose, vrt_coll,
+    "makeCollectionProxy: node={}, new_dist_id={}, proxy={:x}\n",
+    this_node, new_id, proxy
+  );
+
+  return proxy;
+}
+
+/*static*/ void CollectionManager::computeReduceStamp(CollectionStampMsg* msg) {
+  theCollection()->reduce_stamp_[msg->proxy_] = msg->getVal();
+}
+
 }}} /* end namespace vt::vrt::collection */

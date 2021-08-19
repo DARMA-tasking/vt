@@ -254,8 +254,6 @@ struct Holder {
 private:
   bool erased                                                     = false;
   typename TypedIndexContainer::iterator foreach_iter             = {};
-  std::unordered_map<EpochType, CollectionMessage<ColT>*> bcasts_ = {};
-  EpochType cur_bcast_epoch_                                      = 1;
   TypedIndexContainer vc_container_                               = {};
   bool is_destroyed_                                              = false;
   GroupType cur_group_                                            = no_group;

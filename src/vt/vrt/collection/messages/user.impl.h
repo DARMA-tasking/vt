@@ -92,16 +92,6 @@ void CollectionMessage<ColT, BaseMsgT>::setBcastProxy(
 }
 
 template <typename ColT, typename BaseMsgT>
-EpochType CollectionMessage<ColT, BaseMsgT>::getBcastEpoch() const {
-  return bcast_epoch_;
-}
-
-template <typename ColT, typename BaseMsgT>
-void CollectionMessage<ColT, BaseMsgT>::setBcastEpoch(EpochType const& epoch) {
-  bcast_epoch_ = epoch;
-}
-
-template <typename ColT, typename BaseMsgT>
 NodeType CollectionMessage<ColT, BaseMsgT>::getFromNode() const {
   return from_node_;
 }
@@ -118,7 +108,6 @@ void CollectionMessage<ColT, BaseMsgT>::serialize(SerializerT& s) {
   s | vt_sub_handler_;
   s | to_proxy_;
   s | bcast_proxy_;
-  s | bcast_epoch_;
   s | is_wrap_;
   s | from_node_;
 

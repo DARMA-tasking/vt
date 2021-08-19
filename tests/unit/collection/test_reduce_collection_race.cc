@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 deletable.h
+//                        test_reduce_collection_race.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,20 +41,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_DELETABLE_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_DELETABLE_H
+#include <vt/transport.h>
+#include "test_parallel_harness.h"
 
-#include "vt/config.h"
+namespace vt { namespace tests { namespace unit { namespace race {
 
-namespace vt { namespace vrt { namespace collection {
+using TestReduceCollectionRace = TestParallelHarnessParam<int>;
 
-template <typename IndexT>
-struct Deletable {
-  Deletable() = default;
+struct MyCol : vt::Collection<MyCol, vt::Index1D> {};
+struct TestMsg : vt::CollectionMessage<MyCol> {};
+using ReduceMsg = vt::collective::ReduceTMsg<int>;
 
-  void deleteElement(IndexT const& idx);
+static int multipler = 0;
+
+struct ReduceFunctor {
+  void operator()(ReduceMsg* msg) {
+    auto const num_nodes = theContext()->getNumNodes();
+    auto const num_elems = num_nodes * multipler;
+    fmt::print("reduce finished: val={}, num_elems={}\n", msg->getVal(), num_elems);
+    EXPECT_EQ(msg->getVal(), (num_elems * (num_elems-1))/2);
+  }
 };
 
-}}} /* end namespace vt::vrt::collection */
+static void handler(TestMsg*, MyCol* col) {
+  auto proxy = col->getCollectionProxy();
+  auto msg = vt::makeMessage<ReduceMsg>(static_cast<int>(col->getIndex().x()));
+  auto cb = vt::theCB()->makeSend<ReduceFunctor>(0);
+  proxy.reduce<vt::collective::PlusOp<int>>(msg.get(), cb);
+}
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_DELETABLE_H*/
+TEST_P(TestReduceCollectionRace, test_reduce_race_1) {
+  auto const num_nodes = theContext()->getNumNodes();
+
+  multipler = GetParam();
+  auto const range = Index1D(multipler * num_nodes);
+  auto proxy = theCollection()->constructCollective<MyCol>(range);
+
+  proxy.broadcastCollective<TestMsg, &handler>();
+  proxy.broadcastCollective<TestMsg, &handler>();
+  proxy.broadcastCollective<TestMsg, &handler>();
+  proxy.broadcastCollective<TestMsg, &handler>();
+  proxy.broadcastCollective<TestMsg, &handler>();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  InstantiationName, TestReduceCollectionRace, ::testing::Range(1, 5)
+);
+
+}}}} // end namespace vt::tests::unit::race

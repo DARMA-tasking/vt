@@ -87,13 +87,6 @@ RemoteOperationIDType GroupManagerT<T>::registerContinuationT(ActionTType act) {
     std::forward_as_tuple(next_id),
     std::forward_as_tuple(ActionListTType{act})
   );
-  auto iter = waiting_cont_.find(next_id);
-  if (iter != waiting_cont_.end()) {
-    for (auto&& elm : iter->second) {
-      act(elm);
-    }
-    waiting_cont_.clear();
-  }
   return next_id;
 }
 
@@ -109,12 +102,25 @@ void GroupManagerT<T>::registerContinuationT(
   pushCleanupAction();
 
   continuation_actions_t_[op].push_back(action);
-  auto iter = waiting_cont_.find(op);
-  if (iter != waiting_cont_.end()) {
-    for (auto&& elm : iter->second) {
-      action(elm);
+}
+
+template <typename T>
+/*static*/ void GroupManagerT<T>::triggerWaitingContinuations(
+  RemoteOperationIDType const op
+) {
+  auto action_iter = continuation_actions_t_.find(op);
+  auto const found = action_iter != continuation_actions_t_.end();
+
+  if (found) {
+    auto iter = waiting_cont_.find(op);
+    if (iter != waiting_cont_.end()) {
+      for (auto&& elm : iter->second) {
+        for (auto&& action : action_iter->second) {
+          action(elm);
+        }
+      }
+      waiting_cont_.clear();
     }
-    waiting_cont_.clear();
   }
 }
 

@@ -160,7 +160,7 @@ void Holder<ColT, IndexT>::foreach(FuncApplyType fn) {
     if (!elm.second.erased_) {
       auto const& idx = elm.first;
       auto const& holder = elm.second;
-      auto const col_ptr = holder.getCollection();
+      auto const col_ptr = holder.getRawPtr();
       fn(idx, col_ptr);
     }
   }

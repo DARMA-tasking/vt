@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            insert_finished.impl.h
+//                              typeless_holder.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,30 +41,62 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H
-
-#include "vt/config.h"
-#include "vt/vrt/collection/insert/insert_finished.h"
-#include "vt/vrt/collection/manager.h"
-#include "vt/vrt/proxy/base_collection_proxy.h"
+#include "vt/vrt/collection/holders/typeless_holder.h"
+#include "vt/scheduler/scheduler.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-InsertFinished<ColT,IndexT,BaseProxyT>::InsertFinished(
-  VirtualProxyType const in_proxy
-) : BaseProxyT(in_proxy)
-{ }
+void TypelessHolder::destroyAllLive() {
+  for (auto&& elm : live_) {
+    elm.second->destroy();
+  }
+  live_.clear();
+  group_constructors_.clear();
+}
 
-template <typename ColT, typename IndexT, typename BaseProxyT>
-void InsertFinished<ColT,IndexT,BaseProxyT>::finishedInserting(
-  ActionType action
-) const {
-  auto const col_proxy = this->getProxy();
-  theCollection()->finishedInserting<ColT,IndexT>(col_proxy,action);
+void TypelessHolder::destroyCollection(VirtualProxyType const proxy) {
+  {
+    auto iter = live_.find(proxy);
+    if (iter != live_.end()) {
+      live_.erase(iter);
+    }
+  }
+  {
+    auto iter = group_constructors_.find(proxy);
+    if (iter != group_constructors_.end()) {
+      group_constructors_.erase(iter);
+    }
+  }
+}
+
+void TypelessHolder::invokeAllGroupConstructors() {
+  for (auto&& proxy : live_) {
+    runInEpochCollective([&]{
+      auto iter = group_constructors_.find(proxy.first);
+      vtAssert(iter != group_constructors_.end(), "Must have group constructor");
+      iter->second();
+    });
+  }
+}
+
+void TypelessHolder::insertCollectionInfo(
+  VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr,
+  std::function<void()> group_constructor
+) {
+  live_[proxy] = ptr;
+  group_constructors_[proxy] = group_constructor;
+}
+
+void TypelessHolder::insertMap(
+  VirtualProxyType const proxy, HandlerType const map_han
+) {
+  map_[proxy] = map_han;
+}
+
+HandlerType TypelessHolder::getMap(VirtualProxyType const proxy) {
+  auto map_iter = map_.find(proxy);
+  vtAssert(map_iter != map_.end(), "Map must exist");
+  return map_iter->second;
 }
 
 }}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_INSERT_FINISHED_IMPL_H*/

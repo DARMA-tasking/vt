@@ -118,7 +118,10 @@ int main(int argc, char** argv) {
   }
 
   auto range = vt::Index1D(num_elms);
-  auto proxy = vt::theCollection()->constructCollective<IterCol>(range);
+  auto proxy = vt::makeCollection<IterCol>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
 
   for (int i = 0; i < num_iter; i++) {
     auto cur_time = vt::timing::Timing::getCurrentTime();

@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                static_size.h
+//                              modifyable.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,31 +41,38 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/types/base.h"
-#include "vt/vrt/collection/types/type_attorney.h"
-#include "vt/vrt/collection/manager.fwd.h"
+#include "vt/vrt/collection/insert/modifyable.h"
+#include "vt/vrt/collection/manager.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-struct StaticCollectionBase :
-  CollectionBase<ColT, IndexT>
-{
-  explicit StaticCollectionBase(VirtualElmCountType const inNumElems);
-  StaticCollectionBase();
+template <typename ColT, typename IndexT, typename BaseProxyT>
+Modifyable<ColT,IndexT,BaseProxyT>::Modifyable(
+  VirtualProxyType const in_proxy
+) : BaseProxyT(in_proxy)
+{ }
 
-  VirtualElmCountType getSize() const;
-  static bool isStaticSized();
+template <typename ColT, typename IndexT, typename BaseProxyT>
+ModifierToken Modifyable<ColT,IndexT,BaseProxyT>::beginModification(
+  std::string const& label
+) const {
+  auto const col_proxy = this->getProxy();
+  return theCollection()->beginModification<ColT>(col_proxy, label);
+}
 
-  friend struct CollectionTypeAttorney;
-};
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void Modifyable<ColT,IndexT,BaseProxyT>::finishModification(
+  ModifierToken&& token
+) const {
+  auto const col_proxy = this->getProxy();
+  theCollection()->finishModification<ColT>(col_proxy, std::move(token));
+}
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vt/vrt/collection/types/static_size.impl.h"
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_IMPL_H*/

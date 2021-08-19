@@ -150,6 +150,12 @@ template <typename UserMsgT, typename BaseEagerMsgT>
 ) {
   auto const handler = sys_msg->handler;
 
+  vt_debug_print(
+    normal, serial_msg,
+    "payloadMsgHandler: handler={}, bytes={}, epoch={}\n",
+    handler, sys_msg->bytes, envelopeGetEpoch(sys_msg->env)
+  );
+
   auto msg_data = sys_msg->payload.data();
   auto user_msg = deserializeFullMessage<UserMsgT>(msg_data);
 

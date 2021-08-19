@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                cons_detect.h
+//                              typeless_holder.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,42 +41,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TRAITS_CONS_DETECT_H
-#define INCLUDED_VT_VRT_COLLECTION_TRAITS_CONS_DETECT_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_HOLDERS_TYPELESS_HOLDER_H
+#define INCLUDED_VT_VRT_COLLECTION_HOLDERS_TYPELESS_HOLDER_H
 
-#include "vt/config.h"
+#include "vt/vrt/collection/holders/base_holder.h"
 
-#include "detector_headers.h"
-
+#include <memory>
+#include <unordered_map>
 #include <functional>
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT, typename... Args>
-struct ConstructorType {
-  template <typename U>
-  using non_idx_t = decltype(U(std::declval<Args>()...));
-  template <typename U>
-  using idx_fst_t = decltype(U(std::declval<IndexT>(),std::declval<Args>()...));
-  template <typename U>
-  using idx_snd_t = decltype(U(std::declval<Args>()...,std::declval<IndexT>()));
+struct TypelessHolder {
 
-  using has_non_index_cons = detection::is_detected<non_idx_t, ColT>;
-  using has_index_fst      = detection::is_detected<idx_fst_t, ColT>;
-  using has_index_snd      = detection::is_detected<idx_snd_t, ColT>;
+  void insertCollectionInfo(
+    VirtualProxyType const proxy, std::shared_ptr<BaseHolder> ptr,
+    std::function<void()> group_constructor
+  );
+  void insertMap(VirtualProxyType const proxy, HandlerType const map_han);
+  HandlerType getMap(VirtualProxyType const proxy);
+  void invokeAllGroupConstructors();
+  void destroyAllLive();
+  void destroyCollection(VirtualProxyType const proxy);
 
-  static constexpr auto const non_index_cons = has_non_index_cons::value;
-  static constexpr auto const index_fst      = has_index_fst::value;
-  static constexpr auto const index_snd      = has_index_snd::value;
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | live_
+      | map_
+      | group_constructors_;
+  }
 
-  static constexpr auto const use_no_index   =
-    non_index_cons && !index_snd && !index_fst;
-  static constexpr auto const use_index_fst  =
-    index_fst;
-  static constexpr auto const use_index_snd  =
-    index_snd && !index_fst;
+private:
+  std::unordered_map<VirtualProxyType,std::shared_ptr<BaseHolder>> live_;
+  std::unordered_map<VirtualProxyType,HandlerType> map_;
+  std::unordered_map<VirtualProxyType,std::function<void()>> group_constructors_;
 };
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_TRAITS_CONS_DETECT_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_HOLDERS_TYPELESS_HOLDER_H*/

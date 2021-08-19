@@ -182,7 +182,11 @@ void BaseLB::statsHandler(StatsMsgType* msg) {
   }
 }
 
-void BaseLB::applyMigrations(TransferVecType const &transfers) {
+void BaseLB::applyMigrations(
+  TransferVecType const &transfers, MigrationCountCB migration_count_callback
+) {
+  migration_count_cb_ = migration_count_callback;
+
   TransferType off_node_migrate;
 
   for (auto&& elm : transfers) {
@@ -239,6 +243,9 @@ void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
 
 void BaseLB::finalize(CountMsg* msg) {
   auto global_count = msg->getVal();
+  if (migration_count_cb_) {
+    migration_count_cb_(global_count);
+  }
   auto const& this_node = theContext()->getNode();
   if (this_node == 0) {
     auto const total_time = timing::Timing::getCurrentTime() - start_time_;

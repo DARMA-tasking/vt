@@ -58,8 +58,6 @@ template <typename ColT, typename IndexT, typename BaseProxyT>
 void MappedNode<ColT,IndexT,BaseProxyT>::getMappedNode() const {
   auto const& idx = getIndex();
   auto col_proxy = this->getCollectionProxy();
-  // auto elm_proxy = this->getElementProxy();
-  // auto proxy = VrtElmProxy<ColT, IndexT>(col_proxy,elm_proxy);
   theCollection()->getMappedNode(col_proxy,idx);
 }
 

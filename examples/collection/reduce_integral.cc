@@ -227,7 +227,10 @@ int main(int argc, char** argv) {
   using BaseIndexType = typename vt::Index1D::DenseIndexType;
   auto range = vt::Index1D(static_cast<BaseIndexType>(num_objs));
 
-  auto proxy = vt::theCollection()->constructCollective<Integration1D>(range);
+  auto proxy = vt::makeCollection<Integration1D>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
 
   vt::runInEpochCollective([proxy, num_objs, numIntPerObject]{
     proxy.broadcastCollective<Integration1D::InitMsg, &Integration1D::compute>(

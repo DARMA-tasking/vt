@@ -76,6 +76,7 @@ struct BaseLB {
   using LoadType         = double;
   using QuantityType     = std::map<StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<Statistic, QuantityType>;
+  using MigrationCountCB = std::function<void(int32_t)>;
 
   explicit BaseLB(
     bool in_comm_aware = false,
@@ -116,7 +117,9 @@ struct BaseLB {
   int32_t getBinSize() const { return bin_size_; }
   NodeType objGetNode(ObjIDType const id) const;
 
-  void applyMigrations(TransferVecType const& transfers);
+  void applyMigrations(
+    TransferVecType const& transfers, MigrationCountCB migration_count_callback
+  );
   void migrationDone();
   void migrateObjectTo(ObjIDType const obj_id, NodeType const node);
   void transferSend(NodeType from, TransferVecType const& transfer);
@@ -153,6 +156,7 @@ private:
   TransferVecType transfers_                      = {};
   TransferType off_node_migrate_                  = {};
   int32_t local_migration_count_                  = 0;
+  MigrationCountCB migration_count_cb_            = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */

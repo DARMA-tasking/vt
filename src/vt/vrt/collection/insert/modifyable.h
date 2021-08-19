@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              insertable_epoch.h
+//                                 modifyable.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,31 +41,41 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_EPOCH_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_EPOCH_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H
 
 #include "vt/config.h"
-#include "vt/vrt/collection/types/insertable.h"
+#include "vt/vrt/collection/insert/modify_token.h"
+#include "vt/vrt/proxy/base_collection_proxy.h"
 
 namespace vt { namespace vrt { namespace collection {
 
-/*
- * Can be inserted during a specific epoch which is a dynamic (partially
- * collective) property over time
- */
+template <typename ColT, typename IndexT, typename BaseProxyT>
+struct Modifyable : BaseProxyT {
+  Modifyable() = default;
+  Modifyable(Modifyable const&) = default;
+  Modifyable(Modifyable&&) = default;
+  explicit Modifyable(VirtualProxyType const in_proxy);
+  Modifyable& operator=(Modifyable const&) = default;
 
-template <typename ColT, typename IndexT>
-struct InsertableEpoch :
-  Insertable<ColT, IndexT>
-{
-  InsertableEpoch()
-    : Insertable<ColT, IndexT>()
-  { }
+public:
+  /**
+   * \brief A collective call to start an modification epoch
+   *
+   * \param[in] label an optional label for the modification epoch
+   *
+   * \return the modify token
+   */
+  ModifierToken beginModification(std::string const& label = "modify") const;
 
-protected:
-  EpochType curEpoch_ = no_epoch;
+  /**
+   * \brief A collective call to finish an modification epoch
+   *
+   * \param[in] token the modify token
+   */
+  void finishModification(ModifierToken&& token) const;
 };
 
 }}} /* end namespace vt::vrt::collection */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_INSERTABLE_EPOCH_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFYABLE_H*/

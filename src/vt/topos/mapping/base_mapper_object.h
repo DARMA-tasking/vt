@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              static_size.impl.h
+//                             base_mapper_object.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,36 +41,23 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_IMPL_H
+#if !defined INCLUDED_VT_TOPOS_MAPPING_BASE_MAPPER_OBJECT_H
+#define INCLUDED_VT_TOPOS_MAPPING_BASE_MAPPER_OBJECT_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/types/base.h"
-#include "vt/vrt/collection/manager.fwd.h"
+namespace vt { namespace mapping {
 
-namespace vt { namespace vrt { namespace collection {
+/**
+ * \struct BaseMapper
+ *
+ * \brief The base class for a general mapper object group used for mapping
+ * elements of a collection to a node
+ */
+template <typename IdxT>
+struct BaseMapper {
+  virtual ~BaseMapper() = default;
+  virtual NodeType map(IdxT* idx, int ndim, NodeType num_nodes) = 0;
+};
 
-template <typename ColT, typename IndexT>
-StaticCollectionBase<ColT, IndexT>::StaticCollectionBase(
-  VirtualElmCountType const inNumElems
-) : CollectionBase<ColT, IndexT>(false, false, inNumElems)
-{ }
+}} /* end namespace vt::mapping */
 
-template <typename ColT, typename IndexT>
-StaticCollectionBase<ColT, IndexT>::StaticCollectionBase()
-  : StaticCollectionBase(no_elms)
-{ }
-
-template <typename ColT, typename IndexT>
-VirtualElmCountType StaticCollectionBase<ColT, IndexT>::getSize() const {
-  return this->numElems_;
-}
-
-template <typename ColT, typename IndexT>
-/*static*/ bool StaticCollectionBase<ColT, IndexT>::isStaticSized() {
-  return true;
-}
-
-}}} /* end namespace vt::vrt::collection */
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_SIZE_IMPL_H*/
+#endif /*INCLUDED_VT_TOPOS_MAPPING_BASE_MAPPER_OBJECT_H*/

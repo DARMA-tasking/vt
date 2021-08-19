@@ -55,16 +55,6 @@
 namespace vt { namespace vrt { namespace collection {
 
 template <typename ColT, typename IndexT>
-CollectionBase<ColT, IndexT>::CollectionBase(
-  bool const static_size, bool const elms_fixed,
-  VirtualElmCountType const num
-) : Indexable<IndexT>(),
-    numElems_(num),
-    hasStaticSize_(static_size),
-    elmsFixedAtCreation_(elms_fixed)
-{ }
-
-template <typename ColT, typename IndexT>
 typename CollectionBase<ColT, IndexT>::ProxyType
 CollectionBase<ColT, IndexT>::getElementProxy(IndexT const& idx) const {
   VirtualElmOnlyProxyType elmProxy;
@@ -86,16 +76,6 @@ CollectionBase<ColT, IndexT>::getCollectionProxy() const {
 }
 
 template <typename ColT, typename IndexT>
-bool CollectionBase<ColT, IndexT>::isStatic() const {
-  return hasStaticSize_ && elmsFixedAtCreation_;
-}
-
-template <typename ColT, typename IndexT>
-/*static*/ bool CollectionBase<ColT, IndexT>::isStaticSized() {
-  return true;
-}
-
-template <typename ColT, typename IndexT>
 /*virtual*/ void CollectionBase<ColT, IndexT>::migrate(NodeType const& node) {
   auto const proxy = this->getCollectionProxy();
   auto const index = this->getIndex();
@@ -106,18 +86,25 @@ template <typename ColT, typename IndexT>
 template <typename Serializer>
 void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   Indexable<IndexT>::serialize(s);
-  s | hasStaticSize_;
-  s | elmsFixedAtCreation_;
   s | cur_bcast_epoch_;
-  s | numElems_;
+  s | reduce_stamp_;
 }
 
 template <typename ColT, typename IndexT>
 /*virtual*/ CollectionBase<ColT, IndexT>::~CollectionBase() {}
 
 template <typename ColT, typename IndexT>
-void CollectionBase<ColT, IndexT>::setSize(VirtualElmCountType const& elms) {
-  numElems_ = elms;
+void CollectionBase<ColT, IndexT>::zeroReduceStamp() {
+  *reduce_stamp_ = 0;
+}
+
+template <typename ColT, typename IndexT>
+typename CollectionBase<ColT, IndexT>::ReduceStampType
+CollectionBase<ColT, IndexT>::getNextStamp() {
+  ReduceStampType stamp;
+  stamp.init<ReduceSeqStampType>(reduce_stamp_);
+  ++reduce_stamp_;
+  return stamp;
 }
 
 }}} /* end namespace vt::vrt::collection */

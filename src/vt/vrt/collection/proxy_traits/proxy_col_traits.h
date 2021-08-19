@@ -48,7 +48,7 @@
 #include "vt/vrt/collection/destroy/destroyable.h"
 #include "vt/vrt/collection/reducable/reducable.h"
 #include "vt/vrt/collection/broadcast/broadcastable.h"
-#include "vt/vrt/collection/insert/insert_finished.h"
+#include "vt/vrt/collection/insert/modifyable.h"
 #include "vt/vrt/collection/rdmaable/rdmaable.h"
 #include "vt/vrt/proxy/base_collection_proxy.h"
 
@@ -60,7 +60,7 @@ template <typename ColT, typename IndexT>
 using Chain5 = RDMAable<ColT,IndexT,BaseCollectionProxy<ColT,IndexT>>;
 
 template <typename ColT, typename IndexT>
-using Chain4 = InsertFinished<ColT,IndexT,Chain5<ColT,IndexT>>;
+using Chain4 = Modifyable<ColT,IndexT,Chain5<ColT,IndexT>>;
 
 template <typename ColT, typename IndexT>
 using Chain3 = Broadcastable<ColT,IndexT,Chain4<ColT,IndexT>>;

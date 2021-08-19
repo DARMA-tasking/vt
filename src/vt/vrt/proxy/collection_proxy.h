@@ -120,10 +120,10 @@ struct CollectionProxy : ProxyCollectionTraits<ColT, IndexT> {
 
 namespace vt {
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT = typename ColT::IndexType>
 using CollectionIndexProxy = vrt::collection::CollectionProxy<ColT,IndexT>;
 
-template <typename ColT, typename IndexT>
+template <typename ColT, typename IndexT = typename ColT::IndexType>
 using CollectionProxy = vrt::collection::CollectionProxy<ColT,IndexT>;
 
 } /* end namespace vt */

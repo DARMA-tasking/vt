@@ -54,6 +54,8 @@ namespace vt { namespace collective { namespace reduce { namespace detail {
  */
 template <typename T, T initial_value, typename Tag>
 struct Strong {
+  using Type = T;
+
   Strong() = default;
   explicit Strong(T v) : v_(v) { }
   operator T() { return v_; }

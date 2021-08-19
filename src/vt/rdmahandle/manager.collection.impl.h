@@ -103,7 +103,7 @@ Handle<T, E, IndexT> Manager::makeCollectionHandles(
   if (iter == collection_to_manager_[proxy_bits].end()) {
     // First time this handle is being created on this node
     if (map_han == -1) {
-      map_han = vrt::collection::UniversalIndexHolder<>::getMap(proxy_bits);
+      map_han = theCollection()->getTypelessHolder().getMap(proxy_bits);
     }
     sub_proxy = SubType::construct(true, range, true, map_han);
     // Register the migration listener

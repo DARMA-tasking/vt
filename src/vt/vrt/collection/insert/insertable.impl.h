@@ -64,11 +64,56 @@ void ElmInsertable<ColT,IndexT,BaseProxyT>::serialize(SerializerT& s) {
 }
 
 template <typename ColT, typename IndexT, typename BaseProxyT>
-void ElmInsertable<ColT,IndexT,BaseProxyT>::insert(NodeType node) const {
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insert(ModifierToken& token) const {
   auto const col_proxy = this->getCollectionProxy();
   auto const elm_proxy = this->getElementProxy();
   auto const idx = elm_proxy.getIndex();
-  theCollection()->insert<ColT,IndexT>(col_proxy,idx,node);
+  theCollection()->insert<ColT, InsertNullMsg>(
+    col_proxy, idx, uninitialized_destination, token
+  );
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insertAt(
+  ModifierToken& token, NodeType node
+) const {
+  auto const col_proxy = this->getCollectionProxy();
+  auto const elm_proxy = this->getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+  theCollection()->insert<ColT, InsertNullMsg>(col_proxy, idx, node, token);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT>
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insertAtMsg(
+  ModifierToken& token, NodeType node, messaging::MsgPtrThief<MsgT> msg
+) const {
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  auto const col_proxy = this->getCollectionProxy();
+  auto const elm_proxy = this->getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+  theCollection()->insert<ColT, MsgT>(col_proxy, idx, node, token, msgptr);
+}
+
+template <typename ColT, typename IndexT, typename BaseProxyT>
+template <typename MsgT>
+void ElmInsertable<ColT,IndexT,BaseProxyT>::insertMsg(
+  ModifierToken& token, messaging::MsgPtrThief<MsgT> msg
+) const {
+  MsgSharedPtr<MsgT> msgptr = msg.msg_;
+  auto const col_proxy = this->getCollectionProxy();
+  auto const elm_proxy = this->getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+  theCollection()->insert<ColT, MsgT>(
+    col_proxy, idx, uninitialized_destination, token, msgptr
+  );
+}
+template <typename ColT, typename IndexT, typename BaseProxyT>
+void ElmInsertable<ColT,IndexT,BaseProxyT>::destroy(ModifierToken& token) const {
+  auto const col_proxy = this->getCollectionProxy();
+  auto const elm_proxy = this->getElementProxy();
+  auto const idx = elm_proxy.getIndex();
+  theCollection()->destroyElm<ColT>(col_proxy, idx, token);
 }
 
 }}} /* end namespace vt::vrt::collection */

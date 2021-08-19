@@ -156,6 +156,13 @@ struct GroupManager : runtime::component::Component<GroupManager> {
   );
 
   /**
+   * \brief Delete an existing group that is no longer needed
+   *
+   * \param[in] group_id the id for the group
+   */
+  void deleteGroupCollective(GroupType group_id);
+
+  /**
    * \internal \brief Generate the next group ID
    *
    * \param[in] GroupCollectiveLabelTagType tag to indicate collective
@@ -441,6 +448,7 @@ struct GroupManagerT : public GroupManager
   static RemoteOperationIDType registerContinuationT(ActionTType action);
   static void registerContinuationT(RemoteOperationIDType const op, ActionTType a);
   static void triggerContinuationT(RemoteOperationIDType const op, T t);
+  static void triggerWaitingContinuations(RemoteOperationIDType const op);
 
 private:
   static ActionContainerTType continuation_actions_t_;

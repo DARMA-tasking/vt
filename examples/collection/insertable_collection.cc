@@ -45,7 +45,7 @@
 
 static constexpr int32_t const default_num_elms = 64;
 
-struct InsertCol : vt::InsertableCollection<InsertCol, vt::Index1D> {
+struct InsertCol : vt::Collection<InsertCol, vt::Index1D> {
   InsertCol() {
     vt::NodeType this_node = vt::theContext()->getNode();
     ::fmt::print("{}: constructing: idx={}\n", this_node, getIndex().x());
@@ -61,33 +61,43 @@ int main(int argc, char** argv) {
   }
 
   vt::NodeType this_node = vt::theContext()->getNode();
+  vt::NodeType num_nodes = vt::theContext()->getNumNodes();
 
   int32_t num_elms = default_num_elms;
   if (argc > 1) {
     num_elms = atoi(argv[1]);
   }
 
-  if (this_node == 0) {
-    auto range = vt::Index1D(num_elms);
-    auto proxy = vt::theCollection()->construct<InsertCol>(range);
+  auto range = vt::Index1D(num_elms);
+  auto proxy = vt::makeCollection<InsertCol>()
+    .dynamicMembership(true)
+    .wait();
+
+  {
+    auto token = proxy.beginModification();
 
     for (int i = 0; i < range.x() / 2; i++) {
-      proxy[i].insert(i % 2);
+      if (i % num_nodes == this_node) {
+        proxy[i].insertAt(token, i % 2);
+      }
     }
 
-    fmt::print("calling finished insert\n");
-
-    proxy.finishedInserting([=]{
-      fmt::print("insertions are finished (first phase)\n");
-      for (int i = range.x()/2; i < range.x(); i++) {
-        proxy[i].insert(i % 2);
-      }
-
-      proxy.finishedInserting([]{
-        fmt::print("insertions are finished (second phase)\n");
-      });
-    });
+    proxy.finishModification(std::move(token));
+    fmt::print("called finishedModification\n");
   }
+
+  {
+    auto token = proxy.beginModification();
+
+    for (int i = range.x()/2; i < range.x(); i++) {
+      if (i % num_nodes == this_node) {
+        proxy[i].insertAt(token, i % 2);
+      }
+    }
+    proxy.finishModification(std::move(token));
+    fmt::print("called finishedModification (2)\n");
+  }
+
 
   vt::finalize();
 

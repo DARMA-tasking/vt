@@ -89,20 +89,22 @@ int main(int argc, char** argv) {
   }
 
   auto range = vt::Index1D(num_elms);
-  auto token = vt::theCollection()->constructInsert<Hello>(range);
 
+  std::vector<std::tuple<vt::Index1D, std::unique_ptr<Hello>>> elms;
   for (int i = 0; i < num_elms; i++) {
     // Insert even elements, round-robin the insertions from each node
     if ((i / 2) % num_nodes == this_node and i % 2 == 0) {
       auto str = fmt::format("inserted from {}", this_node);
-
-      // Construct the i'th element on this node, passing str to the constructor
-      token[i].insert(str);
+      elms.emplace_back(
+        std::make_tuple(vt::Index1D{i}, std::make_unique<Hello>(str))
+      );
     }
   }
 
-  // Finish all inserts on this node by invalidating the insert token
-  auto proxy = vt::theCollection()->finishedInsert(std::move(token));
+  auto proxy = vt::makeCollection<Hello>()
+    .bounds(range)
+    .listInsertHere(std::move(elms))
+    .wait();
 
   if (this_node == 1) {
     proxy.broadcast<Hello::TestMsg,&Hello::doWork>();

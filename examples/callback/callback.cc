@@ -130,7 +130,10 @@ int main(int argc, char** argv) {
   }
 
   auto obj = vt::theObjGroup()->makeCollective<MyObj>();
-  auto col = vt::theCollection()->constructCollective<MyCol>(vt::Index1D(8));
+  auto col = vt::makeCollection<MyCol>()
+    .bounds(vt::Index1D(8))
+    .bulkInsert()
+    .wait();
 
   if (this_node == 0) {
     vt::NodeType dest = num_nodes > 2 ? 2 : 0;

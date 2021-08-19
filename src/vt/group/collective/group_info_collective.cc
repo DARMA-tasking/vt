@@ -157,7 +157,10 @@ void InfoColl::setupCollective() {
   new_tree_cont_      = theGroup()->nextCollectiveID();
   new_root_cont_      = theGroup()->nextCollectiveID();
 
-  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::registerContinuationT(
+  using GroupCollectiveTMsg = GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>;
+  using GroupOnlyTMsg       = GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>;
+
+  GroupCollectiveTMsg::registerContinuationT(
     down_tree_cont_,
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -165,7 +168,7 @@ void InfoColl::setupCollective() {
       iter->second->downTree(msg.get());
     }
   );
-  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
+  GroupOnlyTMsg::registerContinuationT(
     down_tree_fin_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -173,7 +176,7 @@ void InfoColl::setupCollective() {
       iter->second->downTreeFinished(msg.get());
     }
   );
-  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
+  GroupOnlyTMsg::registerContinuationT(
     finalize_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -181,7 +184,7 @@ void InfoColl::setupCollective() {
       iter->second->finalizeTree(msg.get());
     }
   );
-  GroupManagerT<MsgSharedPtr<GroupOnlyMsg>>::registerContinuationT(
+  GroupOnlyTMsg::registerContinuationT(
     new_tree_cont_,
     [group_](MsgSharedPtr<GroupOnlyMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -190,7 +193,7 @@ void InfoColl::setupCollective() {
       iter->second->newTree(from);
     }
   );
-  GroupManagerT<MsgSharedPtr<GroupCollectiveMsg>>::registerContinuationT(
+  GroupCollectiveTMsg::registerContinuationT(
     new_root_cont_,
     [group_](MsgSharedPtr<GroupCollectiveMsg> msg){
       auto iter = theGroup()->local_collective_group_info_.find(group_);
@@ -204,6 +207,13 @@ void InfoColl::setupCollective() {
   // registered which checks for message counts and then dispatches to the
   // secondary continuation.
   up_tree_cont_ = makeCollectiveContinuation(group_);
+
+  GroupCollectiveTMsg::triggerWaitingContinuations(new_root_cont_);
+  GroupCollectiveTMsg::triggerWaitingContinuations(down_tree_cont_);
+  GroupOnlyTMsg::triggerWaitingContinuations(down_tree_fin_cont_);
+  GroupOnlyTMsg::triggerWaitingContinuations(finalize_cont_);
+  GroupOnlyTMsg::triggerWaitingContinuations(new_tree_cont_);
+  GroupCollectiveTMsg::triggerWaitingContinuations(up_tree_cont_);
 
   vt_debug_print(
     normal, group,
@@ -293,7 +303,10 @@ void InfoColl::upTree() {
       return;
     } else {
       if (msg_in_group.size() == 0) {
-        vtAbort("A group must have at least a single node {}");
+        is_empty_group_ = true;
+        in_phase_two_ = true;
+        finalize();
+        return;
       }
       /*
        *  Sort nodes to find the largest node to make it the root of the whole
@@ -636,10 +649,14 @@ void InfoColl::downTree(GroupCollectiveMsg* msg) {
 }
 
 void InfoColl::newTree(NodeType const& parent) {
+  if (not is_empty_group_) {
+    vtAssert(is_in_group, "Must be in group");
+  }
+
   auto const& group_ = getGroupID();
   collective_->parent_ = is_new_root_ ? -1 : parent;
   sendDownNewTree();
-  vtAssert(is_in_group, "Must be in group");
+
   auto const& is_root = is_new_root_;
   collective_->span_   = std::make_unique<TreeType>(
     is_root, collective_->parent_, collective_->span_children_
@@ -736,7 +753,6 @@ void InfoColl::finalize() {
 
 void InfoColl::finalizeTree(GroupOnlyMsg* msg) {
   auto const& new_root = msg->getRoot();
-  vtAssert(new_root != uninitialized_destination, "Must have root node");
   vt_debug_print(
     verbose, group,
     "InfoColl::finalizeTree: group={:x}, new_root={}\n",
@@ -782,6 +798,10 @@ bool InfoColl::isReady() const {
   return
     in_phase_two_ && has_root_ &&
     (!is_in_group || collective_->span_ != nullptr);
+}
+
+bool InfoColl::isEmptyGroup() const {
+  return is_empty_group_;
 }
 
 void InfoColl::readyAction(ActionType const action) {

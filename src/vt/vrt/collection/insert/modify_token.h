@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             static_insertable.h
+//                                modify_token.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,28 +41,40 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H
-
-#include "vt/config.h"
-#include "vt/vrt/collection/types/base.h"
-#include "vt/vrt/collection/types/static_size.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFY_TOKEN_H
+#define INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFY_TOKEN_H
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
-struct StaticInsertableCollectionBase :
-  StaticCollectionBase<ColT, IndexT>,
-  Insertable<ColT, IndexT>
-{
-  explicit StaticInsertableCollectionBase(VirtualElmCountType const inNumElems);
-  StaticInsertableCollectionBase();
+/**
+ * \struct ModifierToken
+ *
+ * \brief Encapsulates a insertion epoch for a collective insertion on the
+ * collection.
+ */
+struct ModifierToken {
+  /**
+   * \internal \brief Construct an \c ModifierToken
+   *
+   * \param[in] in_modify_epoch the modification epoch
+   */
+  explicit ModifierToken(EpochType in_modify_epoch)
+    : modify_epoch_(in_modify_epoch)
+  { }
+  ModifierToken(ModifierToken const&) = delete;
+  ModifierToken(ModifierToken&&) = default;
 
-  static bool isStaticSized();
+  /**
+   * \brief Get the modify epoch
+   *
+   * \return the modify epoch
+   */
+  EpochType modifyEpoch() const { return modify_epoch_; }
+
+private:
+  EpochType modify_epoch_ = no_epoch; /**< The modify epoch */
 };
 
 }}} /* end namespace vt::vrt::collection */
 
-#include "vt/vrt/collection/types/static_insertable.impl.h"
-
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_INSERT_MODIFY_TOKEN_H*/

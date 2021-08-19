@@ -52,9 +52,7 @@
 #include "vt/vrt/collection/types/headers.h"
 #include "vt/vrt/collection/holders/holder.h"
 #include "vt/vrt/collection/holders/entire_holder.h"
-#include "vt/vrt/collection/traits/cons_detect.h"
-#include "vt/vrt/collection/traits/cons_dispatch.h"
-#include "vt/vrt/collection/constructor/coll_constructors.h"
+#include "vt/vrt/collection/holders/typeless_holder.h"
 #include "vt/vrt/collection/migrate/manager_migrate_attorney.fwd.h"
 #include "vt/vrt/collection/migrate/migrate_status.h"
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.fwd.h"
@@ -62,7 +60,6 @@
 #include "vt/vrt/collection/traits/coll_msg.h"
 #include "vt/vrt/collection/dispatch/dispatch.h"
 #include "vt/vrt/collection/dispatch/registry.h"
-#include "vt/vrt/collection/staged_token/token.h"
 #include "vt/vrt/collection/listener/listen_events.h"
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/topos/mapping/mapping_headers.h"
@@ -71,12 +68,12 @@
 #include "vt/topos/location/location_headers.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/collective/reduce/reduce_msg.h"
-#include "vt/collective/reduce/reduce_hash.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
-#include "vt/vrt/collection/op_buffer.h"
 #include "vt/runnable/invoke.h"
 #include "vt/context/runnable_context/lb_stats.fwd.h"
+#include "vt/vrt/collection/param/construct_params.h"
+#include "vt/vrt/collection/param/construct_params_msg.h"
 
 #include <memory>
 #include <vector>
@@ -113,7 +110,6 @@ struct CollectionManager
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
-  using ReduceVirtualIDType = collective::reduce::ReduceVirtualIDType;
   using ReduceStamp = collective::reduce::ReduceStamp;
   using ActionContainerType = std::vector<ActionProxyType>;
   using BufferedActionType = std::unordered_map<
@@ -121,16 +117,9 @@ struct CollectionManager
   >;
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using CollectionProxyWrapType = CollectionProxy<ColT,IndexT>;
-  template <typename ColT>
-  using EpochBcastType = std::unordered_map<EpochType,CollectionMessage<ColT>*>;
-  template <typename ColT>
-  using BcastBufferType = std::unordered_map<
-    VirtualProxyType, EpochBcastType<ColT>
-  >;
   using CleanupFnType = std::function<void()>;
   using CleanupListFnType = std::unordered_map<VirtualProxyType,std::list<CleanupFnType>>;
   using DispatchHandlerType = auto_registry::AutoHandlerType;
-  using ActionVecType = std::vector<ActionType>;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;
@@ -186,31 +175,25 @@ struct CollectionManager
    *
    * \param[in] range index range for the collection
    * \param[in] map pre-registered map handler
-   * \param[in] args arguments to pass to collection construct
    *
    * \return proxy to the new collection
    */
-  template <typename ColT, typename... Args>
+  template <typename ColT>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  constructMap(
-    typename ColT::IndexType range, HandlerType const map,
-    Args&&... args
-  );
+  constructMap(typename ColT::IndexType range, HandlerType const map);
 
   /**
    * \brief Construct a new virtual context collection with templated map
    *
    * \param[in] range index range for the collection
-   * \param[in] args arguments to pass to collection construct
    *
    * \return proxy to the new collection
    */
   template <
-    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn,
-    typename... Args
+    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  construct(typename ColT::IndexType range, Args&&... args);
+  construct(typename ColT::IndexType range);
 
   /**
    * \brief Construct a new virtual context collection using the default map for
@@ -220,13 +203,12 @@ struct CollectionManager
    *  \c vrt::collection::DefaultMap<...> specialization on the Index type.
    *
    * \param[in] range index range for the collection
-   * \param[in] args arguments to pass to collection construct
    *
    * \return proxy to the new collection
    */
-  template <typename ColT, typename... Args>
+  template <typename ColT>
   CollectionProxyWrapType<ColT, typename ColT::IndexType>
-  construct(typename ColT::IndexType range, Args&&... args);
+  construct(typename ColT::IndexType range);
 
   /**
    * \brief Collectively construct a new virtual context collection with
@@ -237,7 +219,6 @@ struct CollectionManager
    *  collection where each index is mapped with the \c MapFnT.
    *
    * \param[in] range index range for the collection
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
    */
@@ -245,7 +226,7 @@ struct CollectionManager
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   IsDefaultConstructableType<ColT> constructCollective(
-    typename ColT::IndexType range, TagType const& tag = no_tag
+    typename ColT::IndexType range
   );
 
   /**
@@ -260,7 +241,6 @@ struct CollectionManager
    *
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
    */
@@ -268,8 +248,7 @@ struct CollectionManager
     typename ColT,  mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
   >
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
-    TagType const& tag = no_tag
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
   );
 
   /**
@@ -281,13 +260,12 @@ struct CollectionManager
    *  collection where each index is mapped with the default mapping function.
    *
    * \param[in] range index range for the collection
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   IsDefaultConstructableType<ColT> constructCollective(
-    typename ColT::IndexType range, TagType const& tag = no_tag
+    typename ColT::IndexType range
   );
 
   /**
@@ -302,15 +280,12 @@ struct CollectionManager
    *
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to the new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollective(
-    typename ColT::IndexType range,
-    DistribConstructFn<ColT> cons_fn,
-    TagType const& tag = no_tag
+    typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn
   );
 
   /**
@@ -326,115 +301,14 @@ struct CollectionManager
    * \param[in] range index range for the collection
    * \param[in] cons_fn construct function to create an element on each node
    * \param[in] map_han the registered map function
-   * \param[in] tag tag for out-or-order creation
    *
    * \return proxy to new collection
    */
   template <typename ColT>
   CollectionProxyWrapType<ColT> constructCollectiveMap(
     typename ColT::IndexType range, DistribConstructFn<ColT> cons_fn,
-    HandlerType const map_han, TagType const& tag
+    HandlerType const map_han
   );
-
-private:
-  /**
-   * \internal \brief Insert into a collection on this node
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] idx the index to insert
-   * \param[in] args arguments for the collection constructor
-   */
-  template <typename ColT, typename... Args>
-  void staticInsert(
-    VirtualProxyType proxy, typename ColT::IndexType idx, Args&&... args
-  );
-
-  /**
-   * \internal \brief Insert into a collection on this node with a pointer to
-   * the collection element to insert
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] idx the index to insert
-   * \param[in] ptr unique ptr to insert for the collection
-   */
-  template <typename ColT>
-  void staticInsertColPtr(
-    VirtualProxyType proxy, typename ColT::IndexType idx,
-    std::unique_ptr<ColT> ptr
-  );
-
-public:
-  /**
-   * \brief Collectively construct a virtual context collection with a staged
-   * insert token to split initial construction with element insertion. Use
-   * default map for index specified.
-   *
-   * Construct virtual context collection with user insertions before the
-   * collection is used. The token must be moved into \c finishedInsert before
-   * the collection can be used.
-   *
-   * \param[in] range index range for the collection
-   * \param[in] tag tag for out of order construction
-   *
-   * \return insert token for performing insertions
-   */
-  template <typename ColT>
-  InsertToken<ColT> constructInsert(
-    typename ColT::IndexType range, TagType const& tag = no_tag
-  );
-
-  /**
-   * \brief Collectively construct a virtual context collection with a staged
-   * insert token to split initial construction with element insertion. Use
-   * map specified by non-type template parameter.
-   *
-   * Construct virtual context collection with user insertions before the
-   * collection is used. The token must be moved into \c finishedInsert before
-   * the collection can be used.
-   *
-   * \param[in] range index range for the collection
-   * \param[in] tag tag for out of order construction
-   *
-   * \return insert token for performing insertions
-   */
-  template <
-    typename ColT, mapping::ActiveMapTypedFnType<typename ColT::IndexType> fn
-  >
-  InsertToken<ColT> constructInsert(
-    typename ColT::IndexType range, TagType const& tag = no_tag
-  );
-
-  /**
-   * \brief Collectively construct a virtual context collection with a staged
-   * insert token to split initial construction with element insertion. Use
-   * pre-registered map handler passed to method.
-   *
-   * Construct virtual context collection with user insertions before the
-   * collection is used. The token must be moved into \c finishedInsert before
-   * the collection can be used.
-   *
-   * \param[in] range index range for the collection
-   * \param[in] map_han pre-registered map handler function
-   * \param[in] tag tag for out of order construction
-   *
-   * \return insert token for performing insertions
-   */
-  template <typename ColT>
-  InsertToken<ColT> constructInsertMap(
-    typename ColT::IndexType range, HandlerType const map_han, TagType const& tag
-  );
-
-  /**
-   * \brief Tell the system that insertions are complete on a staged insert
-   * collection.
-   *
-   * \param[in] token insert token moved here to indicate completion of insert
-   * phase
-   *
-   * \return the proxy for the collection
-   */
-  template <typename ColT>
-  CollectionProxyWrapType<ColT> finishedInsert(InsertToken<ColT>&& token);
 
   /**
    * \brief Get the default map registered handler for a collection
@@ -459,29 +333,19 @@ public:
    * \param[in] inner_holder_args arguments to construct the inner holder
    */
   template <typename ColT, typename... Args>
-  static void insertMetaCollection(
+  void insertMetaCollection(
     VirtualProxyType const& proxy, Args&&... inner_holder_args
   );
 
   /**
-   * \internal \brief Make the next distributed proxy during collective, SPMD
-   * collection construction
+   * \internal \brief Make the next collection proxy
    *
-   * \param[in] tag optional tag for out-of-order construction
+   * \param[in] is_collective whether the collection is collective
+   * \param[in] is_migratable whether the collection is migratable
    *
    * \return the collection proxy bits
    */
-  template <typename=void>
-  VirtualProxyType makeDistProxy(TagType const& tag = no_tag);
-
-  /**
-   * \internal \brief Construct all elements on this node during rooted
-   * collection construction
-   *
-   * \param[in] msg holds meta-data for collection construction
-   */
-  template <typename SysMsgT>
-  static void distConstruct(SysMsgT* msg);
+  VirtualProxyType makeCollectionProxy(bool is_collective, bool is_migratable);
 
   /**
    * \brief Query the current index context of the running handler
@@ -511,15 +375,6 @@ public:
   static bool hasContext();
 
   /**
-   * \internal \brief Perform asynchronous reduction after construction of a
-   * collection to determine it's fully constructed across all nodes.
-   *
-   * \param[in] proxy the collection proxy
-   */
-  template <typename ColT>
-  static void reduceConstruction(VirtualProxyType const& proxy);
-
-  /**
    * \internal \brief Construct a group for the collection
    *
    * This must be called for every collection before any reductions can safely
@@ -529,10 +384,9 @@ public:
    * after LB) because it will just hit extra nodes that may not have elements.
    *
    * \param[in] proxy the collection proxy
-   * \param[in] immediate whether to start group construction now
    */
   template <typename ColT>
-  static void groupConstruction(VirtualProxyType const& proxy, bool immediate);
+  void constructGroup(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Send a message to a collection element with handler type
@@ -1255,43 +1109,6 @@ public:
   template <typename=void>
   DispatchBasePtrType getDispatcher(DispatchHandlerType const& han);
 
-private:
-  /**
-   * \internal \brief Buffer a broadcast for later delivery
-   *
-   * \param[in] proxy the collection proxy bits
-   * \param[in] epoch the bcast epoch (sequence number)
-   * \param[in] msg the message
-   */
-  template <typename ColT, typename MsgT>
-  void bufferBroadcastMsg(
-    VirtualProxyType const& proxy, EpochType const& epoch, MsgT* msg
-  );
-
-  /**
-   * \internal \brief Clear all buffered broadcasts for a given collection
-   *
-   * \param[in] proxy the collection proxy bits
-   * \param[in] epoch the bcast epoch (sequence number)
-   */
-  template <typename ColT>
-  void clearBufferedBroadcastMsg(
-    VirtualProxyType const& proxy, EpochType const& epoch
-  );
-
-  /**
-   * \internal \brief Get a buffered message
-   *
-   * \param[in] proxy the collection proxy bits
-   * \param[in] epoch the bcast epoch (sequence number)
-   *
-   * \return the bcast message
-   */
-  template <typename ColT, typename MsgT>
-  CollectionMessage<ColT>* getBufferedBroadcastMsg(
-    VirtualProxyType const& proxy, EpochType const& epoch
-  );
-
 public:
   /**
    * \internal \brief Deliver a promoted/wrapped message to a collection element
@@ -1341,30 +1158,6 @@ public:
   static void broadcastRootHandler(MsgT* msg);
 
   /**
-   * \internal \brief Inform that collection has finished construction
-   *
-   * \param[in] msg the message
-   */
-  template <typename=void>
-  static void collectionFinishedHan(CollectionConsMsg* msg);
-
-  /**
-   * \internal \brief Reduction target after group construction
-   *
-   * \param[in] msg the message
-   */
-  template <typename=void>
-  static void collectionGroupReduceHan(CollectionGroupMsg* msg);
-
-  /**
-   * \internal \brief Inform group finished construction
-   *
-   * \param[in] msg the message
-   */
-  template <typename=void>
-  static void collectionGroupFinishedHan(CollectionGroupMsg* msg);
-
-  /**
    * \internal \brief Count the number of elements for a collection on this node
    *
    * Used for automatic group creation for each collection instance for
@@ -1374,7 +1167,7 @@ public:
    *
    * \return number of local elmeents
    */
-  template <typename ColT, typename IndexT>
+  template <typename ColT>
   std::size_t groupElementCount(VirtualProxyType const& proxy);
 
   /**
@@ -1385,7 +1178,7 @@ public:
    *
    * \return the new group ID
    */
-  template <typename ColT, typename IndexT>
+  template <typename ColT>
   GroupType createGroupCollection(
     VirtualProxyType const& proxy, bool const in_group
   );
@@ -1393,25 +1186,14 @@ public:
   /**
    * \internal \brief Run the collection element's constructor
    *
-   * This is the non-traits version of running the constructor: does not require
-   * the detection idiom to dispatch to constructor.
-   *
-   * The alternative traits version of running the constructor based on the
-   * detected available constructor types will be accessed through the traits
-   * class directly by invoking the constructor. The traits-based alternative
-   * is \c DerefCons::derefTuple
-   *
    * \param[in] elms number of elements
    * \param[in] idx the index for this element
-   * \param[in] tup the constructor args in a tuple
+   * \param[in] args the constructor args
    *
    * \return unique pointer to the new element
    */
-  template <typename ColT, typename IndexT, typename Tuple, size_t... I>
-  static VirtualPtrType<ColT, IndexT> runConstructor(
-    VirtualElmCountType const& elms, IndexT const& idx, Tuple* tup,
-    std::index_sequence<I...>
-  );
+  template <typename ColT, typename IndexT, typename... Args>
+  static VirtualPtrType<ColT, IndexT> runConstructor(Args&&... args);
 
   /**
    * \internal \brief Insert a new collection element
@@ -1425,11 +1207,8 @@ public:
    * collection holders.
    *
    * \param[in] vc unique pointer to the new, constructed collection element
-   * \param[in] idx element index
-   * \param[in] max_idx index range for collection
-   * \param[in] map_han registered map handler
    * \param[in] proxy collection proxy bits
-   * \param[in] is_static whether the collection is statically sized
+   * \param[in] idx element index
    * \param[in] home_node the home node for this element
    * \param[in] is_migrated_in whether it just migrated in
    * \param[in] migrated_from where it migrated in from
@@ -1438,11 +1217,10 @@ public:
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   bool insertCollectionElement(
-    VirtualPtrType<ColT, IndexT> vc, IndexT const& idx, IndexT const& max_idx,
-    HandlerType const map_han, VirtualProxyType const& proxy,
-    bool const is_static, NodeType const& home_node,
-    bool const& is_migrated_in = false,
-    NodeType const& migrated_from = uninitialized_destination
+    VirtualPtrType<ColT, IndexT> vc, VirtualProxyType const proxy,
+    IndexT const& idx, NodeType const home_node,
+    bool const is_migrated_in = false,
+    NodeType const migrated_from  = uninitialized_destination
   );
 
 private:
@@ -1516,22 +1294,13 @@ private:
 
 protected:
   /**
-   * \internal \brief Make the next collection proxy bits
-   *
-   * \return the new proxy
-   */
-  VirtualProxyType makeNewCollectionProxy();
-
-  /**
-   * \internal \brief Insert collection into \c UniversalIndexHolder
+   * \internal \brief Insert collection into \c TypelessHolder
    *
    * \param[in] proxy the collection proxy bits
-   * \param[in] map the map function
-   * \param[in] insert_epoch insert epoch for dynamic insertions
+   * \param[in] map_han the map function
    */
   void insertCollectionInfo(
-    VirtualProxyType const& proxy, HandlerType const map,
-    EpochType const& insert_epoch = no_epoch
+    VirtualProxyType const& proxy, HandlerType const map_han
   );
 
 private:
@@ -1567,10 +1336,23 @@ public:
    *
    * \return the mapped node
    */
-  template <typename ColT, typename IndexT>
+  template <typename ColT>
   NodeType getMappedNode(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
+    CollectionProxyWrapType<ColT> const& proxy,
     typename ColT::IndexType const& idx
+  );
+
+  /**
+   * \brief Get the default mapped node for an element
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] idx the index
+   *
+   * \return the mapped node
+   */
+  template <typename ColT>
+  NodeType getMappedNode(
+    VirtualProxyType proxy, typename ColT::IndexType const& idx
   );
 
   /**
@@ -1593,16 +1375,49 @@ public:
    *
    * \param[in] msg insert message
    */
-  template <typename ColT, typename IndexT>
-  static void insertHandler(InsertMsg<ColT,IndexT>* msg);
+  template <typename ColT, typename MsgT>
+  static void insertHandler(InsertMsg<ColT, MsgT>* msg);
 
   /**
    * \internal \brief Handler to query home before inserting on this node
    *
    * \param[in] msg insert message
    */
-  template <typename ColT, typename IndexT>
-  static void pingHomeHandler(InsertMsg<ColT,IndexT>* msg);
+  template <typename ColT, typename MsgT>
+  static void pingHomeHandler(InsertMsg<ColT, MsgT>* msg);
+
+  /**
+   * \brief Begin a modification epoch collectively for a collection with
+   * dynamic membership
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] label label for the insertion epoch
+   *
+   * \return the modifier token
+   */
+  template <typename ColT>
+  ModifierToken beginModification(
+    CollectionProxyWrapType<ColT> const& proxy, std::string const& label
+  );
+
+  /**
+   * \brief Finish an modification epoch collectively for a collection
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] token the insertion token
+   */
+  template <typename ColT>
+  void finishModification(
+    CollectionProxyWrapType<ColT> const& proxy, ModifierToken&& token
+  );
+
+  /**
+   * \internal \brief Handler that receives the reduce stamp after insertions
+   * are complete
+   *
+   * \param[in] msg the stamp message
+   */
+  static void computeReduceStamp(CollectionStampMsg* msg);
 
   /**
    * \internal \brief Dynamically insert an element or send a message to mapped
@@ -1612,15 +1427,38 @@ public:
    * \param[in] proxy the collection proxy
    * \param[in] idx the index to insert
    * \param[in] node the node to insert on
+   * \param[in] token the inserter token with the insertion epoch
    * \param[in] pinged_home_already whether the home node has been contacted to
    * ensure an insertion has not occurred already
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
+  template <typename ColT, typename MsgT>
   void insert(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy, IndexT idx,
-    NodeType const& node = uninitialized_destination,
+    CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
+    NodeType const node, ModifierToken& token, MsgSharedPtr<MsgT> msg = nullptr,
     bool pinged_home_already = false
   );
+
+  /**
+   * \internal \brief Dynamically delete a collection element
+   *
+   * \param[in] proxy the collection proxy
+   * \param[in] idx the index to insert
+   * \param[in] token the inserter token with the insertion epoch
+   */
+  template <typename ColT>
+  void destroyElm(
+    CollectionProxyWrapType<ColT> const& proxy, typename ColT::IndexType idx,
+    ModifierToken& token
+  );
+
+  /**
+   * \internal \brief Send message to element to delete it during a modification
+   * epoch
+   *
+   * \param[in] msg the destroy message
+   */
+  template <typename ColT>
+  static void destroyElmHandler(DestroyElmMsg<ColT>* msg, ColT*);
 
   /**
    * \brief Try to get a pointer to a collection element
@@ -1639,69 +1477,6 @@ public:
   );
 
   /**
-   * \internal \brief Done with insertions
-   *
-   * \param[in] msg done insert message
-   */
-  template <typename ColT, typename IndexT>
-  static void doneInsertHandler(DoneInsertMsg<ColT,IndexT>* msg);
-
-  /**
-   * \internal \brief Do a dynamic insertion handler
-   *
-   * \param[in] msg insert message
-   */
-  template <typename ColT, typename IndexT>
-  static void actInsertHandler(ActInsertMsg<ColT,IndexT>* msg);
-
-  /**
-   * \internal \brief Update the insert epoch
-   *
-   * \param[in] msg the update insert message
-   */
-  template <typename ColT, typename IndexT>
-  static void updateInsertEpochHandler(UpdateInsertMsg<ColT,IndexT>* msg);
-
-  /**
-   * \internal \brief Finished insert
-   *
-   * \param[in] msg the finished update
-   */
-  template <typename=void>
-  static void finishedUpdateHan(FinishedUpdateMsg* msg);
-
-  /**
-   * \internal \brief Trigger insert actions after insert epoch terminates
-   *
-   * \param[in] proxy the collection proxy bits
-   */
-  template <typename=void>
-  void actInsert(VirtualProxyType const& proxy);
-
-  /**
-   * \internal \brief Setup the next insertion epoch
-   *
-   * \param[in] proxy the collection proxy bits
-   * \param[in] insert_epoch the insert epoch
-   */
-  template <typename ColT, typename IndexT>
-  void setupNextInsertTrigger(
-    VirtualProxyType const& proxy, EpochType const& insert_epoch
-  );
-
-  /**
-   * \brief Tell VT that insertions are complete
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] insert_action action to execute after insertions complete
-   */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  void finishedInserting(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
-    ActionType insert_action = nullptr
-  );
-
-  /**
    * \internal \brief Add a cleanup function for a collection after destruction
    *
    * \param[in] proxy the collection proxy bits
@@ -1710,31 +1485,18 @@ public:
   void addCleanupFn(VirtualProxyType proxy);
 
 private:
-  /**
-   * \internal \brief Finish insertion epoch
-   *
-   * \param[in] proxy the collection proxy
-   * \param[in] insert_epoch insert epoch
-   */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  void finishedInsertEpoch(
-    CollectionProxyWrapType<ColT,IndexT> const& proxy,
-    EpochType const& insert_epoch
-  );
-
-private:
   template <typename ColT, typename IndexT>
   friend struct CollectionElmAttorney;
 
   template <typename ColT, typename IndexT>
   friend struct CollectionElmDestroyAttorney;
 
-  template <typename ColT, typename IndexT>
-  friend struct InsertTokenRval;
-
   friend struct balance::ElementStats;
 
   friend struct ctx::LBStats;
+
+  template <typename ColT>
+  friend struct param::ConstructParams;
 
   /**
    * \internal \brief Migrate an element out of this node
@@ -1757,19 +1519,23 @@ private:
    * \param[in] idx the index
    * \param[in] from node it migrated out of
    * \param[in] vrt_elm_ptr unique pointer to the element
-   * \param[in] range index range for collection
-   * \param[in] map_han registered map handler
    *
    * \return migration status
    */
   template <typename ColT, typename IndexT>
   MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-    VirtualPtrType<ColT, IndexT> vrt_elm_ptr, IndexT const& range,
-    HandlerType const map_han
+    VirtualPtrType<ColT, IndexT> vrt_elm_ptr
   );
 
 public:
+  /**
+   * \brief Get the typeless holder data about the collection
+   *
+   * \return the typeless holder
+   */
+  TypelessHolder& getTypelessHolder() { return typeless_holder_; }
+
   /**
    * \brief Register listener function for a given collection
    *
@@ -1938,30 +1704,16 @@ public:
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    s | buffers_
-      | proxy_state_
-      | cleanup_fns_
-      | constructed_
-      | reduce_cur_stamp_
-      | insert_finished_action_
-      | user_insert_action_
-      | dist_tag_id_
+    s | cleanup_fns_
       | release_lb_
-      | collect_stats_for_lb_;
+      | collect_stats_for_lb_
+      | next_collective_id_
+      | next_rooted_id_
+      | typeless_holder_
+      | reduce_stamp_;
   }
 
 private:
-  /**
-   * \brief Next proxy identifier for assignment of virtual proxy IDs
-   */
-  template <typename=void>
-  static VirtualIDType curIdent_;
-
-  /**
-   * \brief Buffered broadcasts
-   */
-  template <typename ColT>
-  static BcastBufferType<ColT> broadcasts_;
 
   /**
    * \internal \brief Get the current LB element ID struct based on handler
@@ -1971,181 +1723,94 @@ private:
    */
   balance::ElementIDStruct getCurrentContext() const;
 
+////////////////////////////////////////////////////////////////////////////////
+private:
   /**
-   * \internal \brief Get the mapped node for an element
+   * \internal \brief Make a new collection from a user configuration
    *
-   * \param[in] proxy the collection proxy bits
-   * \param[in] cur the index
+   * \param[in] po the configuration
    *
-   * \return the mapped node
-   */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
-  NodeType getMapped(VirtualProxyType proxy, IdxT cur) {
-    auto map_han = UniversalIndexHolder<>::getMap(proxy);
-    auto max = getRange<ColT>(proxy);
-    return getMapped<ColT>(map_han, cur, max);
-  }
-
-  /**
-   * \internal \brief Get the mapped node for an element with a specific map
-   * function
-   *
-   * \param[in] proxy the collection proxy bits
-   * \param[in] map_han the registered map
-   * \param[in] cur the index
-   *
-   * \return the mapped node
-   */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
-  NodeType getMapped(VirtualProxyType proxy, HandlerType map_han, IdxT cur) {
-    auto max = getRange<ColT>(proxy);
-    return getMapped<ColT>(map_han, cur, max);
-  }
-
-  /**
-   * \internal \brief Get the mapped node for an element with a specific map
-   * function and the index range
-   *
-   * \param[in] map_han the registered map
-   * \param[in] cur the index
-   * \param[in] max the index range for the collection
-   *
-   * \return the mapped node
-   */
-  template <typename ColT, typename IdxT = typename ColT::IndexType>
-  NodeType getMapped(HandlerType map_han, IdxT cur, IdxT max) {
-    auto fn = auto_registry::getHandlerMap(map_han);
-    auto const cur_base = static_cast<vt::index::BaseIndex*>(&cur);
-    auto const max_base = static_cast<vt::index::BaseIndex*>(&max);
-    return fn(cur_base, max_base, theContext()->getNumNodes());
-  }
-
-  using ActionPendingType = std::function<messaging::PendingSend(void)>;
-
-  /**
-   * \brief Add to the current buffer-release state of a proxy
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] release the state to | into the bits
-   */
-  void addToState(VirtualProxyType proxy, BufferReleaseEnum release) {
-    proxy_state_[proxy] =
-      static_cast<BufferReleaseEnum>(proxy_state_[proxy] | release);
-  }
-
-  /**
-   * \brief Get the current release state bits from the collection
-   *
-   * \param[in] proxy the proxy of the collection
-   *
-   * \return the current state
-   */
-  BufferReleaseEnum getState(VirtualProxyType proxy) {
-    auto iter = proxy_state_.find(proxy);
-    return iter != proxy_state_.end() ? iter->second : BufferReleaseEnum::Unreleased;
-  }
-
-  /**
-   * \brief Get ready bits AND'ed with the required release bits
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] release the bits to check
-   *
-   * \return the current state & release
-   */
-  BufferReleaseEnum getReadyBits(
-    VirtualProxyType proxy, BufferReleaseEnum release
-  );
-
-  /**
-   * \brief Check if the collection is past the stages of setup requested in
-   * release
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] release the bits to check
-   *
-   * \return whether it is ready
-   */
-  bool checkReady(VirtualProxyType proxy, BufferReleaseEnum release);
-
-  /**
-   * \brief Buffer an operation until release bits are true
-   *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] type the type of operation
-   * \param[in] release the release state required to execute this operation
-   * \param[in] epoch the epoch associated with the operation
-   * \param[in] action the action to execute when ready
-   *
-   * \return a pending send
+   * \return tuple including epoch (to wait on) and proxy
    */
   template <typename ColT>
-  messaging::PendingSend bufferOp(
-    VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
-    EpochType epoch, ActionPendingType action
+  std::tuple<EpochType, VirtualProxyType> makeCollection(
+    param::ConstructParams<ColT>& po
   );
 
   /**
-   * \brief Buffer an operation until release bits are true. Execute it if the
-   * release bits are set properly immediately.
+   * \internal \brief Handler for receiving a new collection configuration to
+   * construct on this node
    *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] type the type of operation
-   * \param[in] release the release state required to execute this operation
-   * \param[in] epoch the epoch associated with the operation
-   * \param[in] action the action to execute when ready
-   *
-   * \return a pending send
+   * \param[in] msg the configuration message
    */
   template <typename ColT>
-  messaging::PendingSend bufferOpOrExecute(
-    VirtualProxyType proxy, BufferTypeEnum type, BufferReleaseEnum release,
-    EpochType epoch, ActionPendingType action
+  static void makeCollectionHandler(param::ConstructParamMsg<ColT>* msg);
+
+  /**
+   * \internal \brief System function to actually constructing the collection
+   *
+   * \param[in] po the configuration
+   */
+  template <typename ColT>
+  void makeCollectionImpl(param::ConstructParams<ColT>& po);
+
+  /**
+   * \internal \brief Construct a new collection element
+   *
+   * \param[in] proxy the virtual proxy
+   * \param[in] idx the index of the element
+   * \param[in] mapped_node the home node for the element
+   * \param[in] cons_fn the construct function/functor
+   * \param[in] zero_reduce_stamp whether to zero the reduce stamp for insertion
+   */
+  template <typename ColT, typename Callable>
+  void makeCollectionElement(
+    VirtualProxyType const proxy, typename ColT::IndexType idx,
+    NodeType const mapped_node, Callable&& cons_fn,
+    bool zero_reduce_stamp = false
   );
 
   /**
-   * \brief Trigger ready operation for a certain type
+   * \brief Check if an element is mapped here (to this node)
    *
-   * \param[in] proxy the proxy of the collection
-   * \param[in] type the type of operation to release
+   * \param[in] map_han The map handler
+   * \param[in] map_object The map object
+   * \param[in] idx The index of the element
+   * \param[in] bounds The optional bounds of the collection
+   *
+   * \return whether it is mapped here
    */
-  void triggerReadyOps(VirtualProxyType proxy, BufferTypeEnum type);
+  template <typename IdxT>
+  bool elementMappedHere(
+    HandlerType map_han, ObjGroupProxyType map_object, IdxT idx, IdxT bounds
+  );
 
-  using ActionPendingVecType = std::vector<ActionPendingType>;
-  using ReleaseToAction = std::unordered_map<BufferReleaseEnum, ActionPendingVecType>;
-  using BufferToRelease = std::unordered_map<BufferTypeEnum, ReleaseToAction>;
-  using ProxyToBuffer = std::unordered_map<VirtualProxyType, BufferToRelease>;
-  using ProxyToState = std::unordered_map<VirtualProxyType, BufferReleaseEnum>;
+  /**
+   * \brief Check where an element is mapped
+   *
+   * \param[in] map_han The map handler
+   * \param[in] map_object The map object
+   * \param[in] idx The index of the element
+   * \param[in] bounds The optional bounds of the collection
+   *
+   * \return the node where it is mapped
+   */
+  template <typename IdxT>
+  NodeType getElementMapping(
+    HandlerType map_han, ObjGroupProxyType map_object, IdxT idx, IdxT bounds
+  );
 
-  ProxyToBuffer buffers_;
-  ProxyToState proxy_state_;
+////////////////////////////////////////////////////////////////////////////////
 
+private:
   CleanupListFnType cleanup_fns_;
-  std::unordered_set<VirtualProxyType> constructed_;
-  std::unordered_map<ReduceVirtualIDType,ReduceStamp> reduce_cur_stamp_;
   std::unordered_map<VirtualProxyType,ActionType> collect_stats_for_lb_;
-  std::unordered_map<VirtualProxyType,ActionVecType> insert_finished_action_ = {};
-  std::unordered_map<VirtualProxyType,ActionVecType> user_insert_action_ = {};
-  std::unordered_map<TagType,VirtualIDType> dist_tag_id_ = {};
   std::unordered_map<VirtualProxyType,ActionType> release_lb_ = {};
+  VirtualIDType next_collective_id_ = 0;
+  VirtualIDType next_rooted_id_ = 0;
+  TypelessHolder typeless_holder_;
+  std::unordered_map<VirtualProxyType, SequentialIDType> reduce_stamp_;
 };
-
-// These are static variables in class templates because Intel 18
-// dislikes static class member variable templates
-namespace details
-{
-  template <typename T>
-  struct CurIdent
-  {
-    static VirtualIDType m_;
-  };
-
-  template <typename ColT>
-  struct Broadcasts
-  {
-    static typename CollectionManager::BcastBufferType<ColT> m_;
-  };
-}
 
 }}} /* end namespace vt::vrt::collection */
 
@@ -2156,17 +1821,15 @@ namespace details
 #include "vt/vrt/collection/reducable/reducable.impl.h"
 #include "vt/vrt/collection/invoke/invokable.impl.h"
 #include "vt/vrt/collection/insert/insertable.impl.h"
-#include "vt/vrt/collection/insert/insert_finished.impl.h"
+#include "vt/vrt/collection/insert/modifyable.impl.h"
 #include "vt/vrt/collection/destroy/destroyable.impl.h"
 #include "vt/vrt/collection/destroy/manager_destroy_attorney.impl.h"
 #include "vt/vrt/collection/broadcast/broadcastable.impl.h"
 #include "vt/vrt/collection/rdmaable/rdmaable.impl.h"
 #include "vt/vrt/collection/balance/elm_stats.impl.h"
-#include "vt/vrt/collection/types/insertable.impl.h"
 #include "vt/vrt/collection/types/indexable.impl.h"
 #include "vt/vrt/collection/dispatch/dispatch.impl.h"
 #include "vt/vrt/collection/dispatch/registry.impl.h"
-#include "vt/vrt/collection/staged_token/token.impl.h"
 #include "vt/vrt/collection/types/base.impl.h"
 #include "vt/rdmahandle/manager.collection.impl.h"
 #include "vt/vrt/proxy/collection_proxy.impl.h"

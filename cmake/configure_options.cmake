@@ -209,5 +209,3 @@ else()
     message(STATUS "Building VT with memory pool disabled")
     set (vt_feature_cmake_memory_pool "0")
 endif()
-
-set (vt_feature_cmake_cons_multi_idx "0")

@@ -53,7 +53,6 @@
 #define vt_feature_cmake_print_term_msgs     @vt_feature_cmake_print_term_msgs@
 #define vt_feature_cmake_no_pool_alloc_env   @vt_feature_cmake_no_pool_alloc_env@
 #define vt_feature_cmake_memory_pool         @vt_feature_cmake_memory_pool@
-#define vt_feature_cmake_cons_multi_idx      @vt_feature_cmake_cons_multi_idx@
 #define vt_feature_cmake_priority_bits_level @vt_feature_cmake_priority_bits_level@
 #define vt_feature_cmake_priorities          @vt_feature_cmake_priorities@
 #define vt_feature_cmake_fcontext            @vt_feature_cmake_fcontext@

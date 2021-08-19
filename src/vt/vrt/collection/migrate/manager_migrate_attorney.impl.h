@@ -73,10 +73,10 @@ template <typename ColT, typename IndexT>
 template <typename ColT, typename IndexT>
 /*static*/ MigrateStatus CollectionElmAttorney<ColT, IndexT>::migrateIn(
   VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-  VirtualPtrType vc_elm, IndexT const& range, HandlerType const map_han
+  VirtualPtrType vc_elm
 ) {
   return theCollection()->migrateIn<ColT,IndexT>(
-    proxy, idx, from, std::move(vc_elm), range, map_han
+    proxy, idx, from, std::move(vc_elm)
   );
 }
 

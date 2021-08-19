@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                           static_insertable.impl.h
+//                            construct_params_msg.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,35 +41,42 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H
 
-#include "vt/config.h"
-#include "vt/vrt/collection/types/base.h"
-#include "vt/vrt/collection/types/static_size.h"
+#include "vt/vrt/collection/param/construct_params.h"
 
-namespace vt { namespace vrt { namespace collection {
+namespace vt { namespace vrt { namespace collection { namespace param {
 
-template <typename ColT, typename IndexT>
-StaticInsertableCollectionBase<ColT, IndexT>::StaticInsertableCollectionBase(
-  VirtualElmCountType const inNumElems
-) : StaticCollectionBase<ColT, IndexT>(inNumElems),
-    Insertable<ColT, IndexT>()
-{
-  CollectionBase<ColT, IndexT>::elmsFixedAtCreation_ = false;
-}
+/**
+ * \struct ConstructParamMsg
+ *
+ * \brief Construct PO configuration message for distributed construction
+ */
+template <typename ColT>
+struct ConstructParamMsg : vt::Message {
+  using MessageParentType = ::vt::Message;
+  vt_msg_serialize_required(); // po
 
-template <typename ColT, typename IndexT>
-StaticInsertableCollectionBase<ColT, IndexT>::StaticInsertableCollectionBase()
-  : StaticInsertableCollectionBase(no_elms)
-{ }
+  ConstructParamMsg() = default;
+  explicit ConstructParamMsg(param::ConstructParams<ColT>& in_po)
+    : po(std::make_unique<param::ConstructParams<ColT>>(in_po))
+  { }
 
-template <typename ColT, typename IndexT>
-/*static*/ bool StaticInsertableCollectionBase<ColT, IndexT>::isStaticSized() {
-  return false;
-}
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | po;
+  }
 
-}}} /* end namespace vt::vrt::collection */
+  /// Must use \c std::unique_ptr here because without the indirection,
+  /// AppleClang generates invalid alignment that causes a segfault when \c new
+  /// is called on this message type. The only other work around is some
+  /// seemingly arbitrary value to alignas (alignas(1024) seems to do the
+  /// trick).
+  std::unique_ptr<param::ConstructParams<ColT>> po = nullptr;
+};
 
+}}}} /* end namespace vt::vrt::collection::param */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_TYPES_STATIC_INSERTABLE_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H*/

@@ -117,6 +117,13 @@ GroupType GroupManager::newLocalGroup(
   return group;
 }
 
+void GroupManager::deleteGroupCollective(GroupType group_id) {
+  auto iter = local_collective_group_info_.find(group_id);
+  if (iter != local_collective_group_info_.end()) {
+    local_collective_group_info_.erase(iter);
+  }
+}
+
 bool GroupManager::inGroup(GroupType const group) {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
@@ -138,7 +145,6 @@ NodeType GroupManager::groupRoot(GroupType const group) const {
   auto iter = local_collective_group_info_.find(group);
   vtAssert(iter != local_collective_group_info_.end(), "Must exist");
   auto const& root = iter->second->getRoot();
-  vtAssert(root != uninitialized_destination, "Must have valid root");
   return root;
 }
 
@@ -308,6 +314,10 @@ EventType GroupManager::sendGroupCollective(
   auto const& in_group = info.inGroup();
   auto const& group_ready = info.isReady();
 
+  if (info.isEmptyGroup()) {
+    return no_event;
+  }
+
   if (in_group && group_ready) {
     auto const& this_node = theContext()->getNode();
     auto const& dest = envelopeGetDest(msg->env);
@@ -317,6 +327,10 @@ EventType GroupManager::sendGroupCollective(
     auto const& send_to_root = is_root && this_node != root_node;
     auto const& this_node_dest = dest == this_node;
     auto const& first_send = from == uninitialized_destination;
+
+    if (root_node == uninitialized_destination) {
+      return no_event;
+    }
 
     vtAssert(is_group_collective, "This must be a collective group");
 
@@ -385,6 +399,11 @@ EventType GroupManager::sendGroupCollective(
     return no_event;
   } else {
     auto const& root_node = info.getRoot();
+
+    if (root_node == uninitialized_destination) {
+      return no_event;
+    }
+
     vtAssert(!in_group, "Must not be in this group");
     /*
      *  Forward message to the root node of the group; currently, only nodes
