@@ -341,7 +341,7 @@ struct CollectionManager
    * \internal \brief Make the next collection proxy
    *
    * \param[in] is_collective whether the collection is collective
-   * \param[in] iss_migratable whether the collection is migratable
+   * \param[in] is_migratable whether the collection is migratable
    *
    * \return the collection proxy bits
    */
