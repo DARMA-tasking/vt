@@ -57,7 +57,7 @@ template <typename IdxT>
 struct UnboundedDefaultMap : BaseMapper<IdxT> {
   static ObjGroupProxyType construct();
 
-  NodeType map(IdxT* idx, int ndim) override;
+  NodeType map(IdxT* idx, int ndim, NodeType num_nodes) override;
 };
 
 }} /* end namespace vt::mapping */

@@ -250,7 +250,8 @@ NodeType CollectionManager::getElementMapping(
   } else if (map_object != no_obj_group) {
     objgroup::proxy::Proxy<mapping::BaseMapper<IdxT>> p{map_object};
     auto map_obj_ptr = p.get();
-    return map_obj_ptr->map(&idx, idx.ndims());
+    auto num_nodes = theContext()->getNumNodes();
+    return map_obj_ptr->map(&idx, idx.ndims(), num_nodes);
   } else {
     vtAbort("No valid map fn or object group specified for the collection");
     return uninitialized_destination;
