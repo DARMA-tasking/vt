@@ -72,8 +72,8 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/runnable/invoke.h"
 #include "vt/context/runnable_context/lb_stats.fwd.h"
-#include "vt/vrt/collection/param/construct_po.h"
-#include "vt/vrt/collection/param/construct_po_msg.h"
+#include "vt/vrt/collection/param/construct_params.h"
+#include "vt/vrt/collection/param/construct_params_msg.h"
 
 #include <memory>
 #include <vector>

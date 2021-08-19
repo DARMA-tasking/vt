@@ -2366,6 +2366,6 @@ messaging::PendingSend CollectionManager::schedule(
 }}} /* end namespace vt::vrt::collection */
 
 #include "vt/vrt/collection/collection_builder.impl.h"
-#include "vt/vrt/collection/param/construct_po.impl.h"
+#include "vt/vrt/collection/param/construct_params.impl.h"
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_MANAGER_IMPL_H*/

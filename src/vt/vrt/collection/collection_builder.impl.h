@@ -45,7 +45,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_COLLECTION_BUILDER_IMPL_H
 
 #include "vt/vrt/collection/manager.h"
-#include "vt/vrt/collection/param/construct_po.h"
+#include "vt/vrt/collection/param/construct_params.h"
 #include "vt/topos/mapping/dense/unbounded_default.h"
 
 namespace vt { namespace vrt { namespace collection {
@@ -103,6 +103,11 @@ template <typename ColT>
 void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   using IndexType = typename ColT::IndexType;
 
+  if (not po.has_bounds_ and po.bulk_inserts_.size() == 1) {
+    po.bounds_ = po.bulk_inserts_[0];
+    po.has_bounds_ = true;
+  }
+
   auto const proxy = po.proxy_bits_;
   auto const has_dynamic_membership = po.dynamic_membership_;
   auto const this_node = theContext()->getNode();
@@ -138,6 +143,17 @@ void CollectionManager::makeCollectionImpl(param::ConstructParams<ColT>& po) {
   );
 
   std::size_t global_constructed_elms = 0;
+
+  if (po.bulk_insert_bounds_) {
+    vtAssert(
+      po.bulk_inserts_.size() == 0,
+      "To bulk insert bounds, the collection must have no other bulk insertions"
+    );
+    vtAssert(
+      po.list_inserts_.size() == 0,
+      "To bulk insert bounds, the collection must have no other list insertions"
+    );
+  }
 
   if (po.bulk_insert_bounds_ and po.has_bounds_) {
     po.bulk_inserts_.push_back(po.bounds_);

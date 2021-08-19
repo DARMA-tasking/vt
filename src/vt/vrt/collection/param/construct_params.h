@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                construct_po.h
+//                              construct_params.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_H
-#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_H
+#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_H
 
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
@@ -193,6 +193,7 @@ public:
    */
   template <typename T, typename... Args>
   ThisType&& mapperObjGroup(Args&&... args) {
+    vtAssert(collective_, "Must be collective to create object group mapper");
     auto proxy = T::construct(std::forward<Args>(args)...);
     map_object_ = proxy.getProxy();
     return std::move(*this);
@@ -411,7 +412,7 @@ ConstructParams<ColT> makeCollectionImpl(bool const is_collective) {
 namespace vt {
 
 /**
- * \brief Construct a new collective collection with the parameter object
+ * \brief Collectively construct a new collection with the parameter object
  * builder
  *
  * \param[in] bounds the bounds for the collection (optional)
@@ -425,7 +426,8 @@ vrt::collection::param::ConstructParams<ColT> makeCollection() {
 }
 
 /**
- * \brief Construct a new rooted collection with the parameter object builder
+ * \brief Construct a new collection (from a single node) with the parameter
+ * object builder
  *
  * \param[in] bounds the bounds for the collection (optional)
  *
@@ -439,4 +441,4 @@ vrt::collection::param::ConstructParams<ColT> makeCollectionRooted() {
 
 } /* end namespace vt */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_H*/

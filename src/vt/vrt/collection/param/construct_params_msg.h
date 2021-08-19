@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                              construct_po_msg.h
+//                            construct_params_msg.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,10 +41,10 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_MSG_H
-#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_MSG_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H
+#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H
 
-#include "vt/vrt/collection/param/construct_po.h"
+#include "vt/vrt/collection/param/construct_params.h"
 
 namespace vt { namespace vrt { namespace collection { namespace param {
 
@@ -74,4 +74,4 @@ struct ConstructParamMsg : vt::Message {
 
 }}}} /* end namespace vt::vrt::collection::param */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_MSG_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_MSG_H*/

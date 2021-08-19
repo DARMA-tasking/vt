@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                             construct_po.impl.h
+//                           construct_params.impl.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,10 +41,10 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_IMPL_H
 
-#include "vt/vrt/collection/param/construct_po.h"
+#include "vt/vrt/collection/param/construct_params.h"
 
 namespace vt { namespace vrt { namespace collection { namespace param {
 
@@ -54,11 +54,6 @@ EpochType ConstructParams<ColT>::deferWithEpoch(ProxyFnType cb) {
   validateInputs();
   // Set constructed to true
   constructed_ = true;
-
-  if (not has_bounds_ and bulk_inserts_.size() == 1) {
-    bounds_ = bulk_inserts_[0];
-    has_bounds_ = true;
-  }
 
   auto tup = theCollection()->makeCollection<ColT>(*this);
   auto epoch = std::get<0>(tup);
@@ -91,4 +86,4 @@ typename ConstructParams<ColT>::ProxyType ConstructParams<ColT>::wait() {
 
 }}}} /* end namespace vt::vrt::collection::param */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PO_IMPL_H*/
+#endif /*INCLUDED_VT_VRT_COLLECTION_PARAM_CONSTRUCT_PARAMS_IMPL_H*/
