@@ -61,7 +61,7 @@ EpochType ConstructParams<ColT>::deferWithEpoch(ProxyFnType cb) {
 
   theTerm()->addAction(epoch, [=]{ cb(CollectionProxy<ColT>{proxy}); });
 
-  return std::get<0>(tup);
+  return epoch;
 }
 
 /**
