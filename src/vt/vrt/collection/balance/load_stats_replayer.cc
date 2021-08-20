@@ -99,11 +99,12 @@ void LoadStatsReplayer::createCollectionAndModel(
   auto range = Index2D(
     static_cast<int>(nranks), static_cast<int>(coll_elms_per_node)
   );
+  auto map_proxy = theObjGroup()->makeCollective(&mapping_);
 
   coll_proxy_ = vt::makeCollection<StatsDrivenCollection<IndexType>>()
     .bounds(range)
     .bulkInsert()
-    .mapperFunc<StatsDrivenCollection<IndexType>::collectionMap>()
+    .mapperObjGroup<StatsDrivenCollectionMapper<IndexType>>(map_proxy)
     .wait();
   auto proxy_bits = coll_proxy_.getProxy();
 
@@ -124,7 +125,7 @@ void LoadStatsReplayer::createCollectionAndModel(
   auto per_col = std::make_shared<
     vt::vrt::collection::balance::PerCollection
   >(base);
-  auto replay_model = std::make_shared<StatsReplay<IndexType>>(base, coll_proxy_);
+  auto replay_model = std::make_shared<StatsReplay<IndexType>>(base, coll_proxy_, mapping_);
   per_col->addModel(proxy_bits, replay_model);
   vt::theLBManager()->setLoadModel(per_col);
 }
@@ -215,14 +216,14 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
   for (auto const &entry : sd.node_idx_) {
     auto &elm_id = entry.first;
     auto &vec = std::get<1>(entry.second);
-    StatsDrivenCollection<IndexType>::addElmToIndexMapping(elm_id.id, vec);
-    auto idx = StatsDrivenCollection<IndexType>::getIndexFromElm(elm_id.id);
+    mapping_.addElmToIndexMapping(elm_id.id, vec);
+    auto idx = mapping_.getIndexFromElm(elm_id.id);
     vt_debug_print(
       normal, replay,
       "reading in mapping from elm={}, home={} to index={}\n",
       elm_id.id, elm_id.home_node, idx
     );
-    StatsDrivenCollection<IndexType>::addCollectionMapping(
+    mapping_.addCollectionMapping(
       idx, elm_id.home_node
     );
   }
@@ -241,7 +242,7 @@ void LoadStatsReplayer::configureElementLocations(
   );
   vt::runInEpochCollective([this, &loads_by_elm_by_phase, &initial_phase]{
     StatsDrivenCollection<IndexType>::migrateInitialObjectsHere(
-      this->coll_proxy_, loads_by_elm_by_phase, initial_phase
+      this->coll_proxy_, loads_by_elm_by_phase, initial_phase, this->mapping_
     );
   });
 }
@@ -271,7 +272,7 @@ void LoadStatsReplayer::stuffStatsIntoCollection(
     auto &loads_by_phase = item.second;
     auto it = loads_by_phase.find(initial_phase);
     if (it != loads_by_phase.end()) {
-      auto index = StatsDrivenCollection<IndexType>::getIndexFromElm(elm_id);
+      auto index = mapping_.getIndexFromElm(elm_id);
       vtAssert(
         coll_proxy_[index].tryGetLocalPtr() != nullptr,
         "should be local by now"
@@ -284,7 +285,7 @@ void LoadStatsReplayer::stuffStatsIntoCollection(
   for (auto item : loads_by_elm_by_phase) {
     auto elm_id = item.first;
     auto &loads_by_phase = item.second;
-    auto index = StatsDrivenCollection<IndexType>::getIndexFromElm(elm_id);
+    auto index = mapping_.getIndexFromElm(elm_id);
     vt_debug_print(
       normal, replay,
       "sending stats for elm {} to index {}\n",

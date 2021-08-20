@@ -47,6 +47,7 @@
 
 #include "vt/vrt/collection/balance/model/composed_model.h"
 #include "vt/vrt/collection/balance/stats_driven_collection.h"
+#include "vt/vrt/collection/balance/stats_driven_collection_mapper.impl.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -60,12 +61,16 @@ public:
     StatsDrivenCollection<CollectionIndexType>, CollectionIndexType
   >;
 
-  StatsReplay(std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy);
+  StatsReplay(
+    std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy,
+    StatsDrivenCollectionMapper<CollectionIndexType> &mapper
+  );
 
   TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
 
 private:
   ProxyType proxy_;
+  StatsDrivenCollectionMapper<CollectionIndexType> &mapper_;
 
 }; // class StatsReplay
 

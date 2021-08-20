@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            stats_replay.impl.h
+//                      stats_driven_collection_mapper.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,64 +42,65 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_MAPPER_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_MAPPER_H
 
-#include "vt/vrt/collection/balance/model/stats_replay.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/collection_headers.h"
+#include "vt/topos/mapping/base_mapper_object.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-template <typename CollectionIndexType>
-StatsReplay<CollectionIndexType>::StatsReplay(
-  std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy,
-  StatsDrivenCollectionMapper<CollectionIndexType> &mapper
-)
-  : ComposedModel(base)
-  , proxy_(in_proxy)
-  , mapper_(mapper)
-{
-}
+/**
+ * \struct StatsDrivenCollectionMapper
+ *
+ * \brief Tracks the layout of a collection and the mapping between vt
+ * index and element id.
+ */
+template <typename IndexType>
+struct StatsDrivenCollectionMapper : vt::mapping::BaseMapper<IndexType> {
+  using ThisType = StatsDrivenCollectionMapper<IndexType>;
+  using IndexVec = std::vector<uint64_t>;
+  using ElmIDType = ElementIDType;
 
-template <typename CollectionIndexType>
-TimeType StatsReplay<CollectionIndexType>::getWork(
-  ElementIDStruct object, PhaseOffset offset
-) {
-  auto const phase = getNumCompletedPhases() - 1;
-  vt_debug_print(
-    verbose, replay,
-    "getWork {} phase={}\n",
-    object.id, phase
-  );
+  StatsDrivenCollectionMapper() = default;
 
-  vtAbortIf(
-    offset.phases != PhaseOffset::NEXT_PHASE,
-    "This driver only supports offset.phases == NEXT_PHASE"
-  );
-  vtAbortIf(
-    offset.subphase != PhaseOffset::WHOLE_PHASE,
-    "This driver only supports offset.subphase == WHOLE_PHASE"
-  );
-
-  auto index = mapper_.getIndexFromElm(object.id);
-  auto elm_ptr = proxy_(index).tryGetLocalPtr();
-  if (elm_ptr == nullptr) {
-    vt_debug_print(
-      verbose, replay,
-      "getWork: could not find elm_id={} index={}\n",
-      object.id, index
-    );
-    return 0; // FIXME: this BREAKS the O_l statistics post-migration!
+  NodeType map(IndexType* idx, int ndim, NodeType num_nodes) override {
+    // correct operation here requires that the home rank specifically
+    // know that it maps locally
+    auto it = rank_mapping_.find(*idx);
+    if (it != rank_mapping_.end()) {
+      vt_debug_print(
+        normal, replay,
+        "StatsDrivenCollectionMapper: index {} maps to rank {}\n",
+        *idx, it->second
+      );
+      return it->second;
+    }
+    return uninitialized_destination;
   }
-  vtAbortIf(elm_ptr == nullptr, "Must have element locally");
-  auto load = elm_ptr->getLoad(phase);
-  vt_debug_print(
-    verbose, replay,
-    "getWork: elm_id={} index={} has load={}\n",
-    object.id, index, load
-  );
-  return load;
-}
 
-}}}} // end namespace
+  template <typename Serializer>
+  void serialize(Serializer& s) {
+    s | rank_mapping_
+      | elm_to_index_mapping_;
+  }
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H*/
+  void addCollectionMapping(IndexType idx, NodeType home);
+
+  void addElmToIndexMapping(ElmIDType elm_id, IndexType index);
+
+  void addElmToIndexMapping(ElmIDType elm_id, IndexVec idx_vec);
+
+  IndexType getIndexFromElm(ElmIDType elm_id);
+
+private:
+  std::map<IndexType, int /*mpi_rank*/> rank_mapping_ = {};
+
+  /// \brief Mapping from element ids to vt indices
+  std::unordered_map<ElmIDType, IndexType> elm_to_index_mapping_ = {};
+};
+
+}}}} /* end namespace vt::vrt::collection::balance */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_MAPPER_H*/

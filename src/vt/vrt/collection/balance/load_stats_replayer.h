@@ -51,6 +51,7 @@
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/vrt/collection/balance/stats_driven_collection.h"
+#include "vt/vrt/collection/balance/stats_driven_collection_mapper.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -141,6 +142,9 @@ private:
 
   /// \brief Proxy for created collection
   vt::CollectionProxy<StatsDrivenCollection<IndexType>, IndexType> coll_proxy_;
+
+  /// \brief Mappings related to this collection
+  StatsDrivenCollectionMapper<IndexType> mapping_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

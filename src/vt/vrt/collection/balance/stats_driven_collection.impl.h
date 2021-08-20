@@ -48,77 +48,31 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/stats_driven_collection.h"
 #include "vt/vrt/collection/balance/load_stats_replayer.h"
+#include "vt/vrt/collection/balance/stats_driven_collection_mapper.impl.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename IndexType>
 /*static*/
-std::map<IndexType, int /*mpi_rank*/>
-StatsDrivenCollection<IndexType>::rank_mapping_;
+StatsDrivenCollectionMapper<IndexType>*
+StatsDrivenCollection<IndexType>::mapping_ = nullptr;
 
 template <typename IndexType>
-/*static*/
-std::unordered_map<
-  typename StatsDrivenCollection<IndexType>::ElmIDType, IndexType
-> StatsDrivenCollection<IndexType>::elm_to_index_mapping_;
-
-template <typename IndexType>
-/*static*/
-void StatsDrivenCollection<IndexType>::addCollectionMapping(
-  IndexType idx, NodeType home
-) {
-  rank_mapping_[idx] = home;
-}
-
-template <typename IndexType>
-/*static*/
-void StatsDrivenCollection<IndexType>::addElmToIndexMapping(
-  ElmIDType elm_id, IndexType index
-) {
-  elm_to_index_mapping_[elm_id] = index;
-}
-
-template <typename IndexType>
-/*static*/
-void StatsDrivenCollection<IndexType>::addElmToIndexMapping(
-  ElmIDType elm_id, IndexVec idx_vec
-) {
-  IndexType index;
-  int i=0;
-  for (auto &entry : idx_vec) {
-    index[i++] = entry;
-  }
-  elm_to_index_mapping_[elm_id] = index;
-}
-
-template <typename IndexType>
-/*static*/
-IndexType StatsDrivenCollection<IndexType>::getIndexFromElm(ElmIDType elm_id) {
-  auto idxiter = elm_to_index_mapping_.find(elm_id);
-  vtAssert(
-    idxiter != elm_to_index_mapping_.end(),
-    "Element ID to index mapping must be known"
-  );
-  auto index = idxiter->second;
-  return index;
-}
-
-template <typename IndexType>
-
 /*static*/
 void StatsDrivenCollection<IndexType>::migrateInitialObjectsHere(
   ProxyType coll_proxy, const ElmPhaseLoadsMapType &loads_by_elm_by_phase,
-  std::size_t initial_phase
+  std::size_t initial_phase, StatsDrivenCollectionMapper<IndexType> &mapper
 ) {
   // loop over stats elms that were local for initial phase, asking for the
   // corresponding collection elements to be migrated here
+  mapping_ = &mapper;
   auto const this_rank = vt::theContext()->getNode();
   for (auto &item : loads_by_elm_by_phase) {
     auto elm_id = item.first;
     auto &loads_by_phase = item.second;
     auto it = loads_by_phase.find(initial_phase);
     if (it != loads_by_phase.end()) {
-      auto index = getIndexFromElm(elm_id);
+      auto index = mapper.getIndexFromElm(elm_id);
       if (coll_proxy[index].tryGetLocalPtr() != nullptr) {
         vt_debug_print(
           normal, replay,
@@ -140,7 +94,6 @@ void StatsDrivenCollection<IndexType>::migrateInitialObjectsHere(
 }
 
 template <typename IndexType>
-
 void StatsDrivenCollection<IndexType>::migrateSelf(MigrateHereMsg* msg) {
   // migrate oneself to the requesting rank
   auto const this_rank = theContext()->getNode();
@@ -181,7 +134,7 @@ template <typename IndexType>
 void StatsDrivenCollection<IndexType>::epiMigrateIn() {
   auto elm_id = this->getElmID().id;
   auto index = this->getIndex();
-  addElmToIndexMapping(elm_id, index);
+  mapping_->addElmToIndexMapping(elm_id, index);
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */
