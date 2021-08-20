@@ -99,9 +99,12 @@ void LoadStatsReplayer::createCollectionAndModel(
   auto range = Index2D(
     static_cast<int>(nranks), static_cast<int>(coll_elms_per_node)
   );
-  coll_proxy_ = vt::theCollection()->constructCollective<
-    StatsDrivenCollection<IndexType>, StatsDrivenCollection<IndexType>::collectionMap
-  >(range);
+
+  coll_proxy_ = vt::makeCollection<StatsDrivenCollection<IndexType>>()
+    .bounds(range)
+    .bulkInsert()
+    .mapperFunc<StatsDrivenCollection<IndexType>::collectionMap>()
+    .wait();
   auto proxy_bits = coll_proxy_.getProxy();
 
   runInEpochCollective([=]{

@@ -115,7 +115,7 @@ struct StatsDrivenCollection : vt::Collection<
   StatsDrivenCollection() = default;
 
   inline static NodeType collectionMap(
-    IndexType* idx, IndexType*, NodeType
+    IndexType* idx, IndexType* bounds, NodeType num_nodes
   ) {
     // correct operation here requires that the home rank specifically
     // know that it maps locally
