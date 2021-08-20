@@ -60,9 +60,6 @@ using vt::vrt::collection::balance::LoadStatsReplayer;
 TEST_F(TestModelStatsReplay, test_model_stats_replay_1) {
   std::size_t coll_elms_per_node = 3;
   std::size_t initial_phase = 3;
-  vt::theLoadStatsReplayer()->createCollectionAndModel(
-    coll_elms_per_node, initial_phase
-  );
 
   auto this_node = vt::theContext()->getNode();
   LoadStatsReplayer::ElmPhaseLoadsMapType loads;
@@ -70,9 +67,15 @@ TEST_F(TestModelStatsReplay, test_model_stats_replay_1) {
     auto elm_id = (y << 32) | this_node;
     loads[elm_id][initial_phase] = y + this_node + 2;
   }
+  // FIXME: this one doesn't read from json, so it still needs a collection
+  // element construction map and a mapping from element to vt index
+
+  auto coll_proxy = vt::theLoadStatsReplayer()->createCollectionAndModel(
+    coll_elms_per_node, initial_phase
+  );
 
   vt::theLoadStatsReplayer()->configureCollectionForReplay(
-    loads, initial_phase
+    coll_proxy, loads, initial_phase
   );
 
   // Add a hook for after LB runs, but before instrumentation is cleared
