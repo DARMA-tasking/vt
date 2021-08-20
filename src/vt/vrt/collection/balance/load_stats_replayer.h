@@ -97,11 +97,14 @@ public:
     std::size_t phases_to_run
   );
 
-  void createCollectionAndModel(
+  CollectionProxy<StatsDrivenCollection<IndexType>> createCollectionAndModel(
+    StatsDrivenCollectionMapper<IndexType> &mapping,
     std::size_t coll_elms_per_node, std::size_t initial_phase
   );
 
   void configureCollectionForReplay(
+    CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
+    StatsDrivenCollectionMapper<IndexType> &mapping,
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
@@ -112,36 +115,41 @@ public:
 
 private:
   ElmPhaseLoadsMapType loadStatsToReplay(
-    std::size_t initial_phase, std::size_t phases_to_run
+    std::size_t initial_phase, std::size_t phases_to_run,
+    StatsDrivenCollectionMapper<IndexType> &mapping
   );
 
   ElmPhaseLoadsMapType readStats(
-    std::size_t initial_phase, std::size_t phases_to_run
+    std::size_t initial_phase, std::size_t phases_to_run,
+    StatsDrivenCollectionMapper<IndexType> &mapping
   );
 
   ElmPhaseLoadsMapType inputStatsFile(
     std::string const& filename, std::size_t initial_phase,
-    std::size_t phases_to_run
+    std::size_t phases_to_run, StatsDrivenCollectionMapper<IndexType> &mapping
   );
 
   void configureElementLocations(
+    CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
+    StatsDrivenCollectionMapper<IndexType> &mapping,
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
   void configureCollectionWithLoads(
+    CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
+    StatsDrivenCollectionMapper<IndexType> &mapping,
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
   void stuffStatsIntoCollection(
+    CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
+    StatsDrivenCollectionMapper<IndexType> &mapping,
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
 private:
   /// \brief Proxy for communicating
   objgroup::proxy::Proxy<LoadStatsReplayer> proxy_;
-
-  /// \brief Proxy for created collection
-  vt::CollectionProxy<StatsDrivenCollection<IndexType>, IndexType> coll_proxy_;
 
   /// \brief Mappings related to this collection
   StatsDrivenCollectionMapper<IndexType> mapping_;
