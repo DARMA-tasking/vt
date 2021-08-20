@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/collection_headers.h"
+#include "vt/vrt/collection/balance/stats_driven_collection_mapper.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -114,30 +115,13 @@ struct StatsDrivenCollection : vt::Collection<
 
   StatsDrivenCollection() = default;
 
-  inline static NodeType collectionMap(
-    IndexType* idx, IndexType* bounds, NodeType num_nodes
-  ) {
-    // correct operation here requires that the home rank specifically
-    // know that it maps locally
-    auto it = rank_mapping_.find(*idx);
-    if (it != rank_mapping_.end()) {
-      vt_debug_print(
-        normal, replay,
-        "collectionMap: index {} maps to rank {}\n",
-        *idx, it->second
-      );
-      return it->second;
-    }
-    return uninitialized_destination;
-  }
-
   void setInitialPhase(InitialPhaseMsg* msg) {
     initial_phase_ = msg->phase_;
   }
 
   static void migrateInitialObjectsHere(
     ProxyType coll_proxy, const ElmPhaseLoadsMapType &loads_by_elm_by_phase,
-    std::size_t initial_phase
+    std::size_t initial_phase, StatsDrivenCollectionMapper<IndexType> &mapper
   );
 
   void migrateSelf(MigrateHereMsg* msg);
@@ -155,24 +139,13 @@ struct StatsDrivenCollection : vt::Collection<
 
   virtual void epiMigrateIn();
 
-  static void addCollectionMapping(IndexType idx, NodeType home);
-
-  static void addElmToIndexMapping(ElmIDType elm_id, IndexType index);
-
-  static void addElmToIndexMapping(ElmIDType elm_id, IndexVec idx_vec);
-
-  static IndexType getIndexFromElm(ElmIDType elm_id);
-
 private:
   /// \brief Loads to feed into StatsReplay load model
   PhaseLoadsMapType stats_to_replay_;
   /// \brief Initial phase for replaying (offset so this is simulated phase 0)
   std::size_t initial_phase_ = -1;
-
-  /// \brief Mapping from vt indices to home ranks for collection construction
-  static std::map<IndexType, int /*mpi_rank*/> rank_mapping_;
-  /// \brief Mapping from element ids to vt indices
-  static std::unordered_map<ElmIDType, IndexType> elm_to_index_mapping_;
+  /// \brief Mapper from collection element IDs to indices
+  static StatsDrivenCollectionMapper<IndexType> *mapping_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

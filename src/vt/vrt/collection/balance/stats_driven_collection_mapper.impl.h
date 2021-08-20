@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                            stats_replay.impl.h
+//                   stats_driven_collection_mapper.impl.h
 //                           DARMA Toolkit v. 1.0.0
 //                       DARMA/vt => Virtual Transport
 //
@@ -42,64 +42,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_MAPPER_IMPL_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_MAPPER_IMPL_H
 
-#include "vt/vrt/collection/balance/model/stats_replay.h"
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/stats_driven_collection_mapper.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-template <typename CollectionIndexType>
-StatsReplay<CollectionIndexType>::StatsReplay(
-  std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy,
-  StatsDrivenCollectionMapper<CollectionIndexType> &mapper
-)
-  : ComposedModel(base)
-  , proxy_(in_proxy)
-  , mapper_(mapper)
-{
-}
-
-template <typename CollectionIndexType>
-TimeType StatsReplay<CollectionIndexType>::getWork(
-  ElementIDStruct object, PhaseOffset offset
+template <typename IndexType>
+void StatsDrivenCollectionMapper<IndexType>::addCollectionMapping(
+  IndexType idx, NodeType home
 ) {
-  auto const phase = getNumCompletedPhases() - 1;
-  vt_debug_print(
-    verbose, replay,
-    "getWork {} phase={}\n",
-    object.id, phase
-  );
-
-  vtAbortIf(
-    offset.phases != PhaseOffset::NEXT_PHASE,
-    "This driver only supports offset.phases == NEXT_PHASE"
-  );
-  vtAbortIf(
-    offset.subphase != PhaseOffset::WHOLE_PHASE,
-    "This driver only supports offset.subphase == WHOLE_PHASE"
-  );
-
-  auto index = mapper_.getIndexFromElm(object.id);
-  auto elm_ptr = proxy_(index).tryGetLocalPtr();
-  if (elm_ptr == nullptr) {
-    vt_debug_print(
-      verbose, replay,
-      "getWork: could not find elm_id={} index={}\n",
-      object.id, index
-    );
-    return 0; // FIXME: this BREAKS the O_l statistics post-migration!
-  }
-  vtAbortIf(elm_ptr == nullptr, "Must have element locally");
-  auto load = elm_ptr->getLoad(phase);
-  vt_debug_print(
-    verbose, replay,
-    "getWork: elm_id={} index={} has load={}\n",
-    object.id, index, load
-  );
-  return load;
+  rank_mapping_[idx] = home;
 }
 
-}}}} // end namespace
+template <typename IndexType>
+void StatsDrivenCollectionMapper<IndexType>::addElmToIndexMapping(
+  ElmIDType elm_id, IndexType index
+) {
+  elm_to_index_mapping_[elm_id] = index;
+}
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_STATS_REPLAY_IMPL_H*/
+template <typename IndexType>
+void StatsDrivenCollectionMapper<IndexType>::addElmToIndexMapping(
+  ElmIDType elm_id, IndexVec idx_vec
+) {
+  IndexType index;
+  int i=0;
+  for (auto &entry : idx_vec) {
+    index[i++] = entry;
+  }
+  elm_to_index_mapping_[elm_id] = index;
+}
+
+template <typename IndexType>
+IndexType StatsDrivenCollectionMapper<IndexType>::getIndexFromElm(ElmIDType elm_id) {
+  auto idxiter = elm_to_index_mapping_.find(elm_id);
+  vtAssert(
+    idxiter != elm_to_index_mapping_.end(),
+    "Element ID to index mapping must be known"
+  );
+  auto index = idxiter->second;
+  return index;
+}
+
+}}}} /* end namespace vt::vrt::collection::balance */
+
+#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_STATS_DRIVEN_COLLECTION_MAPPER_IMPL_H*/
