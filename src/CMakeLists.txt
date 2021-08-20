@@ -318,18 +318,6 @@ if (vt_libfort_enabled)
   install(TARGETS ${FORT_LIBRARY} EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
 endif()
 
-if (NOT hasParent)
-  if (NOT detector_PACKAGE_LOADED)
-    install(TARGETS detector EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-    set(DETECTOR_EXPORT detector)
-  endif()
-
-  if (NOT checkpoint_PACKAGE_LOADED)
-    install(TARGETS checkpoint EXPORT ${VIRTUAL_TRANSPORT_LIBRARY})
-    set(CHECKPOINT_EXPORT checkpoint)
-  endif()
-endif()
-
 if (vt_fcontext_enabled)
   set(FCONTEXT_LIBRARY_EXPORT ${FCONTEXT_LIBRARY})
 endif()
@@ -341,8 +329,6 @@ export(
                             ${MIMALLOC_LIBRARY_EXPORT}
                             ${FORT_LIBRARY_EXPORT}
                             ${FMT_LIBRARY_EXPORT}
-                            ${CHECKPOINT_EXPORT}
-                            ${DETECTOR_EXPORT}
                             ${JSON_LIBRARY}
                             ${BROTLI_LIBRARY}
   FILE                      "vtTargets.cmake"
