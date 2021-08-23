@@ -19,12 +19,12 @@ include(CMakeFindDependencyMacro)
 
 find_dependency(MPI REQUIRED)
 
-if (@vt_find_detector_dep@)
+if (@detector_PACKAGE_LOADED@)
   set (detector_DIR @detector_DIR@)
   find_dependency(detector REQUIRED HINTS @detector_DIR@)
 endif()
 
-if (@vt_find_checkpoint_dep@)
+if (@checkpoint_PACKAGE_LOADED@)
   set (checkpoint_DIR @checkpoint_DIR@)
   find_dependency(checkpoint REQUIRED HINTS @checkpoint_DIR@)
 endif()
