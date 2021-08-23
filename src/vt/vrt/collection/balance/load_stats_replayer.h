@@ -97,7 +97,20 @@ public:
     std::size_t phases_to_run
   );
 
-  CollectionProxy<StatsDrivenCollection<IndexType>> createCollectionAndModel(
+  CollectionProxy<StatsDrivenCollection<Index1D>>
+  create1DCollection(
+    StatsDrivenCollectionMapper<Index1D> &mapping,
+    std::size_t coll_elms, std::size_t initial_phase
+  );
+
+  CollectionProxy<StatsDrivenCollection<Index2D>>
+  create2DCollection(
+    StatsDrivenCollectionMapper<Index2D> &mapping,
+    std::size_t coll_elms_per_node, std::size_t initial_phase
+  );
+
+  void createLoadModel(
+    CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
     StatsDrivenCollectionMapper<IndexType> &mapping,
     std::size_t coll_elms_per_node, std::size_t initial_phase
   );

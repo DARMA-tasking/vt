@@ -82,21 +82,55 @@ void LoadStatsReplayer::createAndConfigureForReplay(
   std::size_t phases_to_run
 ) {
   auto loads = loadStatsToReplay(initial_phase, phases_to_run, mapping_);
-  auto coll_proxy = createCollectionAndModel(
+  auto coll_proxy = create2DCollection(
     mapping_, coll_elms_per_node, initial_phase
+  );
+  createLoadModel(
+    coll_proxy, mapping_, coll_elms_per_node, initial_phase
   );
   configureCollectionForReplay(coll_proxy, mapping_, loads, initial_phase);
 }
 
-CollectionProxy<StatsDrivenCollection<LoadStatsReplayer::IndexType>>
-LoadStatsReplayer::createCollectionAndModel(
-  StatsDrivenCollectionMapper<IndexType> &mapping,
+CollectionProxy<StatsDrivenCollection<Index1D>>
+LoadStatsReplayer::create1DCollection(
+  StatsDrivenCollectionMapper<Index1D> &mapping,
+  std::size_t coll_elms, std::size_t initial_phase
+) {
+  // create a stats-driven collection to mirror the one from the stats files
+  vt_debug_print(
+    normal, replay,
+    "create1DCollection: creating 1d collection with {} elms\n",
+    coll_elms
+  );
+  auto range = Index1D(static_cast<int>(coll_elms));
+  auto map_proxy = theObjGroup()->makeCollective(&mapping);
+
+  auto coll_proxy = vt::makeCollection<StatsDrivenCollection<Index1D>>()
+    .bounds(range)
+    .bulkInsert()
+    .mapperObjGroup<StatsDrivenCollectionMapper<Index1D>>(map_proxy)
+    .wait();
+
+  runInEpochCollective([=]{
+    // tell the collection what the initial phase is
+    coll_proxy.broadcastCollective<
+      StatsDrivenCollection<Index1D>::InitialPhaseMsg,
+      &StatsDrivenCollection<Index1D>::setInitialPhase
+    >(initial_phase);
+  });
+
+  return coll_proxy;
+}
+
+CollectionProxy<StatsDrivenCollection<Index2D>>
+LoadStatsReplayer::create2DCollection(
+  StatsDrivenCollectionMapper<Index2D> &mapping,
   std::size_t coll_elms_per_node, std::size_t initial_phase
 ) {
   // create a stats-driven collection to mirror the one from the stats files
   vt_debug_print(
     normal, replay,
-    "createCollectionAndModel: creating collection with {} elms per node\n",
+    "create2DCollection: creating 2d collection with {} elms per node\n",
     coll_elms_per_node
   );
   auto nranks = vt::theContext()->getNumNodes();
@@ -105,26 +139,33 @@ LoadStatsReplayer::createCollectionAndModel(
   );
   auto map_proxy = theObjGroup()->makeCollective(&mapping);
 
-  auto coll_proxy = vt::makeCollection<StatsDrivenCollection<IndexType>>()
+  auto coll_proxy = vt::makeCollection<StatsDrivenCollection<Index2D>>()
     .bounds(range)
     .bulkInsert()
-    .mapperObjGroup<StatsDrivenCollectionMapper<IndexType>>(map_proxy)
+    .mapperObjGroup<StatsDrivenCollectionMapper<Index2D>>(map_proxy)
     .wait();
-  auto proxy_bits = coll_proxy.getProxy();
 
   runInEpochCollective([=]{
     // tell the collection what the initial phase is
     coll_proxy.broadcastCollective<
-      StatsDrivenCollection<IndexType>::InitialPhaseMsg,
-      &StatsDrivenCollection<IndexType>::setInitialPhase
+      StatsDrivenCollection<Index2D>::InitialPhaseMsg,
+      &StatsDrivenCollection<Index2D>::setInitialPhase
     >(initial_phase);
   });
 
-  // create the load model that will allow the stored load stats to be used
+  return coll_proxy;
+}
+
+void LoadStatsReplayer::createLoadModel(
+  CollectionProxy<StatsDrivenCollection<LoadStatsReplayer::IndexType>> &coll_proxy,
+  StatsDrivenCollectionMapper<IndexType> &mapping,
+  std::size_t coll_elms_per_node, std::size_t initial_phase
+) {
   vt_debug_print(
     normal, replay,
-    "createCollectionAndModel: creating load model\n"
+    "createLoadModel: creating load model\n"
   );
+  auto proxy_bits = coll_proxy.getProxy();
   auto base = vt::theLBManager()->getBaseLoadModel();
   auto per_col = std::make_shared<
     vt::vrt::collection::balance::PerCollection
@@ -132,8 +173,6 @@ LoadStatsReplayer::createCollectionAndModel(
   auto replay_model = std::make_shared<StatsReplay<IndexType>>(base, coll_proxy, mapping);
   per_col->addModel(proxy_bits, replay_model);
   vt::theLBManager()->setLoadModel(per_col);
-
-  return coll_proxy;
 }
 
 LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::loadStatsToReplay(
