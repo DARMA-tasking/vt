@@ -109,12 +109,6 @@ public:
     std::size_t coll_elms_per_node, std::size_t initial_phase
   );
 
-  void createLoadModel(
-    CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
-    StatsDrivenCollectionMapper<IndexType> &mapping,
-    std::size_t coll_elms_per_node, std::size_t initial_phase
-  );
-
   void configureCollectionForReplay(
     CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
     StatsDrivenCollectionMapper<IndexType> &mapping,
@@ -163,9 +157,6 @@ private:
 private:
   /// \brief Proxy for communicating
   objgroup::proxy::Proxy<LoadStatsReplayer> proxy_;
-
-  /// \brief Mappings related to this collection
-  StatsDrivenCollectionMapper<IndexType> mapping_;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

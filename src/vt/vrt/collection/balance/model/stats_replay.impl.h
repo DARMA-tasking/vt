@@ -51,12 +51,9 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename CollectionIndexType>
 StatsReplay<CollectionIndexType>::StatsReplay(
-  std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy,
-  StatsDrivenCollectionMapper<CollectionIndexType> &mapper
+  std::shared_ptr<balance::LoadModel> base
 )
   : ComposedModel(base)
-  , proxy_(in_proxy)
-  , mapper_(mapper)
 {
 }
 
