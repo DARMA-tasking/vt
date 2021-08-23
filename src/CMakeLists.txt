@@ -87,6 +87,7 @@ set(
         vrt/collection/balance/statsmaplb
         vrt/collection/balance/zoltanlb
         vrt/collection/balance/randomlb
+        vrt/collection/balance/printstatslb
         vrt/collection/balance/lb_invoke
         vrt/collection/balance/model
         vrt/collection/balance/proxy

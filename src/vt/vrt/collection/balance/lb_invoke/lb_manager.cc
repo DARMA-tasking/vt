@@ -53,6 +53,7 @@
 #include "vt/vrt/collection/balance/rotatelb/rotatelb.h"
 #include "vt/vrt/collection/balance/temperedlb/temperedlb.h"
 #include "vt/vrt/collection/balance/statsmaplb/statsmaplb.h"
+#include "vt/vrt/collection/balance/printstatslb/printstatslb.h"
 #include "vt/vrt/collection/balance/stats_restart_reader.h"
 #include "vt/vrt/collection/balance/zoltanlb/zoltanlb.h"
 #include "vt/vrt/collection/balance/randomlb/randomlb.h"
@@ -235,11 +236,6 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
     );
   }
 
-  if (lb == LBType::NoLB) {
-    // nothing to do
-    return;
-  }
-
   switch (lb) {
   case LBType::HierarchicalLB: lb_instances_["chosen"] = makeLB<lb::HierarchicalLB>(); break;
   case LBType::GreedyLB:       lb_instances_["chosen"] = makeLB<lb::GreedyLB>();       break;
@@ -250,9 +246,7 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
 #   if vt_check_enabled(zoltan)
   case LBType::ZoltanLB:       lb_instances_["chosen"] = makeLB<lb::ZoltanLB>();       break;
 #   endif
-  case LBType::NoLB:
-    vtAssert(false, "LBType::NoLB is not a valid LB for collectiveImpl");
-    break;
+  case LBType::NoLB:           lb_instances_["chosen"] = makeLB<lb::PrintStatsLB>();   break;
   default:
     vtAssert(false, "A valid LB must be passed to collectiveImpl");
     break;
