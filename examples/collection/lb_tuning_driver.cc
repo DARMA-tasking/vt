@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   // phases to run after loading object stats
   int32_t phases_to_run = atoi(argv[3]);
 
-  vt::theLoadStatsReplayer()->createAndConfigureForReplay(
+  vt::theLoadStatsReplayer()->create2DAndConfigureForReplay(
     num_elms_per_rank, initial_phase, phases_to_run
   );
 
