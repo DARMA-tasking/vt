@@ -272,7 +272,7 @@ void GreedyLB::recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs) {
 }
 
 void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
-  std::size_t max_recs = 1, max_bytes = 0;
+  std::size_t max_recs = 1;
   std::vector<GreedyProc> load(std::move(in_load));
   std::vector<std::vector<GreedyLBTypes::ObjIDType>> node_transfer(load.size());
   for (auto&& elm : load) {
@@ -290,7 +290,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
   }
 
   if (strat_ == DataDistStrategy::scatter) {
-    max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
+    std::size_t max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
     vt_debug_print(
       normal, lb,
       "GreedyLB::transferObjs: max_recs={}, max_bytes={}\n",
