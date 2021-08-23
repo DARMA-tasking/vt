@@ -9,6 +9,7 @@ set(
   reduce_integral
   transpose
   lb_tuning_driver
+  lb_tuning_driver_1d
 )
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})
