@@ -129,6 +129,44 @@ struct GreedyCollectMsg : GreedyLBTypes, collective::ReduceTMsg<GreedyPayload> {
   }
 };
 
+struct GreedySendMsg : GreedyLBTypes, vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required(); // vector
+
+  GreedySendMsg() = default;
+  explicit GreedySendMsg(std::vector<GreedyLBTypes::ObjIDType> const& in)
+    : transfer_(in)
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | transfer_;
+  }
+
+  std::vector<GreedyLBTypes::ObjIDType> transfer_;
+};
+
+struct GreedyBcastMsg : GreedyLBTypes, vt::Message {
+  using MessageParentType = vt::Message;
+  vt_msg_serialize_required(); // vector
+
+  using DataType = std::vector<std::vector<GreedyLBTypes::ObjIDType>>;
+
+  GreedyBcastMsg() = default;
+  explicit GreedyBcastMsg(DataType const& in)
+    : transfer_(in)
+  { }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+    s | transfer_;
+  }
+
+  DataType transfer_;
+};
+
 }}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_MSGS_H*/

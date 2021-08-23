@@ -101,6 +101,12 @@ void TestLoadBalancer::runTest() {
       fmt::print("Using lb_args {}\n", lb_args);
     }
   }
+  if (lb_name.substr(0, 8).compare("GreedyLB") == 0) {
+    vt::theConfig()->vt_lb_name = "GreedyLB";
+    auto strat_arg = lb_name.substr(9, lb_name.size() - 9);
+    fmt::print("strat_arg={}\n", strat_arg);
+    vt::theConfig()->vt_lb_args = strat_arg;
+  }
 
   vt::theCollective()->barrier();
 
@@ -161,7 +167,9 @@ auto balancers = ::testing::Values(
     "RotateLB",
     "HierarchicalLB",
     "TemperedLB",
-    "GreedyLB"
+    "GreedyLB:strategy=scatter",
+    "GreedyLB:strategy=pt2pt",
+    "GreedyLB:strategy=bcast"
 #   if vt_check_enabled(zoltan)
     , "ZoltanLB"
 #   endif

@@ -60,6 +60,17 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
+/**
+ * \enum DataDistStrategy
+ *
+ * \brief How to distribute the data after the centralized LB makes a decision.
+ */
+enum struct DataDistStrategy : uint8_t {
+  scatter = 0,
+  bcast = 1,
+  pt2pt = 2
+};
+
 struct GreedyLB : BaseLB {
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
   using TransferType     = std::map<NodeType, std::vector<ObjIDType>>;
@@ -86,7 +97,9 @@ private:
   void runBalancer(ObjSampleType&& objs, LoadProfileType&& profile);
   void transferObjs(std::vector<GreedyProc>&& load);
   ObjIDType objSetNode(NodeType const& node, ObjIDType const& id);
-  void recvObjsDirect(GreedyLBTypes::ObjIDType* objs);
+  void recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs);
+  void recvObjs(GreedySendMsg* msg);
+  void recvObjsBcast(GreedyBcastMsg* msg);
   void finishedTransferExchange();
   void collectHandler(GreedyCollectMsg* msg);
 
@@ -105,8 +118,24 @@ private:
   double max_threshold = 0.0f;
   double min_threshold = 0.0f;
   bool auto_threshold = true;
+
+  DataDistStrategy strat_ = DataDistStrategy::scatter;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
+
+namespace std {
+
+template <>
+struct hash<::vt::vrt::collection::lb::DataDistStrategy> {
+  size_t operator()(::vt::vrt::collection::lb::DataDistStrategy const& in) const {
+    using under = std::underlying_type<
+      ::vt::vrt::collection::lb::DataDistStrategy
+    >::type;
+    return std::hash<under>()(static_cast<under>(in));
+  }
+};
+
+} /* end namespace std */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_GREEDYLB_GREEDYLB_H*/

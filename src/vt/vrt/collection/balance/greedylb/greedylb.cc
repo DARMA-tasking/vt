@@ -56,6 +56,7 @@
 #include "vt/context/context.h"
 #include "vt/vrt/collection/manager.h"
 #include "vt/collective/reduce/reduce.h"
+#include "vt/vrt/collection/balance/lb_args_enum_converter.h"
 
 #include <unordered_map>
 #include <memory>
@@ -72,11 +73,20 @@ void GreedyLB::init(objgroup::proxy::Proxy<GreedyLB> in_proxy) {
 }
 
 void GreedyLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"min", "max", "auto"};
+  std::vector<std::string> allowed{"min", "max", "auto", "strategy"};
   spec->checkAllowedKeys(allowed);
   min_threshold = spec->getOrDefault<double>("min", greedy_threshold_p);
   max_threshold = spec->getOrDefault<double>("max", greedy_max_threshold_p);
   auto_threshold = spec->getOrDefault<bool>("auto", greedy_auto_threshold_p);
+
+  balance::LBArgsEnumConverter<DataDistStrategy> strategy_converter_(
+    "strategy", "DataDistStrategy", {
+      {DataDistStrategy::scatter, "scatter"},
+      {DataDistStrategy::pt2pt,   "pt2pt"},
+      {DataDistStrategy::bcast,   "bcast"}
+    }
+  );
+  strat_ = strategy_converter_.getFromSpec(spec, strat_);
 }
 
 void GreedyLB::runLB() {
@@ -214,24 +224,39 @@ GreedyLB::ObjIDType GreedyLB::objSetNode(
   return new_id;
 }
 
-void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
+void GreedyLB::recvObjs(GreedySendMsg* msg) {
+  vt_debug_print(
+    normal, lb,
+    "recvObjs: msg->transfer_.size={}\n", msg->transfer_.size()
+  );
+  recvObjsDirect(msg->transfer_.size(), &msg->transfer_[0]);
+}
+
+void GreedyLB::recvObjsBcast(GreedyBcastMsg* msg) {
+  auto const n = theContext()->getNode();
+  vt_debug_print(
+    normal, lb,
+    "recvObjs: msg->transfer_.size={}\n", msg->transfer_[n].size()
+  );
+  recvObjsDirect(msg->transfer_[n].size(), &msg->transfer_[n][0]);
+}
+
+void GreedyLB::recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs) {
   auto const& this_node = theContext()->getNode();
-  auto const& num_recs = *objs;
-  auto recs = objs + 1;
+  auto const& num_recs = len;
   vt_debug_print(
     normal, lb,
     "recvObjsDirect: num_recs={}\n", num_recs
   );
 
-  for (decltype(+num_recs.id) i = 0; i < num_recs.id; i++) {
-    auto const to_node = objGetNode(recs[i]);
-    auto const new_obj_id = objSetNode(this_node,recs[i]);
+  for (std::size_t i = 0; i < len; i++) {
+    auto const to_node = objGetNode(objs[i]);
+    auto const new_obj_id = objSetNode(this_node,objs[i]);
     vt_debug_print(
       verbose, lb,
-      "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}, "
-      "byte_offset={}\n",
-      i, to_node, recs[i], new_obj_id, num_recs,
-      reinterpret_cast<char*>(recs) - reinterpret_cast<char*>(objs)
+      "\t recvObjs: i={}, to_node={}, obj={}, new_obj_id={}, num_recs={}"
+      "\n",
+      i, to_node, objs[i], new_obj_id, num_recs
     );
 
     migrateObjectTo(new_obj_id, to_node);
@@ -243,11 +268,11 @@ void GreedyLB::recvObjsDirect(GreedyLBTypes::ObjIDType* objs) {
     verbose, lb,
     "recvObjsHan: num_recs={}\n", *objs
   );
-  scatter_proxy.get()->recvObjsDirect(objs);
+  scatter_proxy.get()->recvObjsDirect(static_cast<std::size_t>(objs->id), objs+1);
 }
 
 void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
-  std::size_t max_recs = 0, max_bytes = 0;
+  std::size_t max_recs = 1;
   std::vector<GreedyProc> load(std::move(in_load));
   std::vector<std::vector<GreedyLBTypes::ObjIDType>> node_transfer(load.size());
   for (auto&& elm : load) {
@@ -263,23 +288,36 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       }
     }
   }
-  max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
-  vt_debug_print(
-    normal, lb,
-    "GreedyLB::transferObjs: max_recs={}, max_bytes={}\n",
-    max_recs, max_bytes
-  );
-  theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
-    max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
-      auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
-      auto const& proc = node_transfer[node];
-      auto const& rec_size = proc.size();
-      ptr_out->id = rec_size;
-      for (size_t i = 0; i < rec_size; i++) {
-        *(ptr_out + i + 1) = proc[i];
+
+  if (strat_ == DataDistStrategy::scatter) {
+    std::size_t max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
+    vt_debug_print(
+      normal, lb,
+      "GreedyLB::transferObjs: max_recs={}, max_bytes={}\n",
+      max_recs, max_bytes
+    );
+    theCollective()->scatter<GreedyLBTypes::ObjIDType,recvObjsHan>(
+      max_bytes*load.size(),max_bytes,nullptr,[&](NodeType node, void* ptr){
+        auto ptr_out = reinterpret_cast<GreedyLBTypes::ObjIDType*>(ptr);
+        auto const& proc = node_transfer[node];
+        auto const& rec_size = proc.size();
+        ptr_out->id = rec_size;
+        for (size_t i = 0; i < rec_size; i++) {
+          *(ptr_out + i + 1) = proc[i];
+        }
       }
+    );
+  } else if (strat_ == DataDistStrategy::pt2pt) {
+    for (NodeType n = 0; n < theContext()->getNumNodes(); n++) {
+      vtAssert(
+        node_transfer.size() == static_cast<size_t>(theContext()->getNumNodes()),
+        "Must contain all nodes"
+      );
+      proxy[n].send<GreedySendMsg, &GreedyLB::recvObjs>(node_transfer[n]);
     }
-  );
+  } else if (strat_ == DataDistStrategy::bcast) {
+    proxy.broadcast<GreedyBcastMsg, &GreedyLB::recvObjsBcast>(node_transfer);
+  }
 }
 
 double GreedyLB::getAvgLoad() const {
