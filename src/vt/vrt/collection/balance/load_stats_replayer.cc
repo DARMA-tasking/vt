@@ -81,14 +81,24 @@ void LoadStatsReplayer::createAndConfigureForReplay(
   std::size_t coll_elms_per_node, std::size_t initial_phase,
   std::size_t phases_to_run
 ) {
-  auto loads = loadStatsToReplay(initial_phase, phases_to_run, mapping_);
+  auto base = vt::theLBManager()->getBaseLoadModel();
+  auto replay_model = std::make_shared<StatsReplay<IndexType>>(base);
+  auto &mapping = replay_model->getMapping();
+
+  auto loads = loadStatsToReplay(initial_phase, phases_to_run, mapping);
   auto coll_proxy = create2DCollection(
-    mapping_, coll_elms_per_node, initial_phase
+    mapping, coll_elms_per_node, initial_phase
   );
-  createLoadModel(
-    coll_proxy, mapping_, coll_elms_per_node, initial_phase
-  );
-  configureCollectionForReplay(coll_proxy, mapping_, loads, initial_phase);
+
+  replay_model->setCollectionProxy(coll_proxy);
+  auto per_col = std::make_shared<
+    vt::vrt::collection::balance::PerCollection
+  >(base);
+  auto proxy_bits = coll_proxy.getProxy();
+  per_col->addModel(proxy_bits, replay_model);
+  vt::theLBManager()->setLoadModel(per_col);
+
+  configureCollectionForReplay(coll_proxy, mapping, loads, initial_phase);
 }
 
 CollectionProxy<StatsDrivenCollection<Index1D>>
@@ -154,25 +164,6 @@ LoadStatsReplayer::create2DCollection(
   });
 
   return coll_proxy;
-}
-
-void LoadStatsReplayer::createLoadModel(
-  CollectionProxy<StatsDrivenCollection<LoadStatsReplayer::IndexType>> &coll_proxy,
-  StatsDrivenCollectionMapper<IndexType> &mapping,
-  std::size_t coll_elms_per_node, std::size_t initial_phase
-) {
-  vt_debug_print(
-    normal, replay,
-    "createLoadModel: creating load model\n"
-  );
-  auto proxy_bits = coll_proxy.getProxy();
-  auto base = vt::theLBManager()->getBaseLoadModel();
-  auto per_col = std::make_shared<
-    vt::vrt::collection::balance::PerCollection
-  >(base);
-  auto replay_model = std::make_shared<StatsReplay<IndexType>>(base, coll_proxy, mapping);
-  per_col->addModel(proxy_bits, replay_model);
-  vt::theLBManager()->setLoadModel(per_col);
 }
 
 LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::loadStatsToReplay(

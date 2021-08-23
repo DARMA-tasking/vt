@@ -62,15 +62,19 @@ public:
   >;
 
   StatsReplay(
-    std::shared_ptr<balance::LoadModel> base, ProxyType in_proxy,
-    StatsDrivenCollectionMapper<CollectionIndexType> &mapper
+    std::shared_ptr<balance::LoadModel> base
   );
+
+  StatsDrivenCollectionMapper<CollectionIndexType> &
+  getMapping() { return mapper_; }
+
+  void setCollectionProxy(ProxyType &proxy) { proxy_ = proxy; }
 
   TimeType getWork(ElementIDStruct object, PhaseOffset when) override;
 
 private:
   ProxyType proxy_;
-  StatsDrivenCollectionMapper<CollectionIndexType> &mapper_;
+  StatsDrivenCollectionMapper<CollectionIndexType> mapper_;
 
 }; // class StatsReplay
 
