@@ -71,7 +71,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  */
 struct LoadStatsReplayer : runtime::component::Component<LoadStatsReplayer> {
 public:
-  using IndexType = Index2D;
   using IndexVec = std::vector<uint64_t>;
   using ElmIDType = ElementIDType;
   using PhaseLoadsMapType = std::unordered_map<
@@ -92,7 +91,12 @@ public:
 
   void startup() override;
 
-  void createAndConfigureForReplay(
+  void create1DAndConfigureForReplay(
+    std::size_t coll_elms_per_node, std::size_t initial_phase,
+    std::size_t phases_to_run
+  );
+
+  void create2DAndConfigureForReplay(
     std::size_t coll_elms_per_node, std::size_t initial_phase,
     std::size_t phases_to_run
   );
@@ -109,6 +113,7 @@ public:
     std::size_t coll_elms_per_node, std::size_t initial_phase
   );
 
+  template <typename IndexType>
   void configureCollectionForReplay(
     CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
     StatsDrivenCollectionMapper<IndexType> &mapping,
@@ -121,33 +126,39 @@ public:
   }
 
 private:
+  template <typename IndexType>
   ElmPhaseLoadsMapType loadStatsToReplay(
     std::size_t initial_phase, std::size_t phases_to_run,
     StatsDrivenCollectionMapper<IndexType> &mapping
   );
 
+  template <typename IndexType>
   ElmPhaseLoadsMapType readStats(
     std::size_t initial_phase, std::size_t phases_to_run,
     StatsDrivenCollectionMapper<IndexType> &mapping
   );
 
+  template <typename IndexType>
   ElmPhaseLoadsMapType inputStatsFile(
     std::string const& filename, std::size_t initial_phase,
     std::size_t phases_to_run, StatsDrivenCollectionMapper<IndexType> &mapping
   );
 
+  template <typename IndexType>
   void configureElementLocations(
     CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
     StatsDrivenCollectionMapper<IndexType> &mapping,
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
+  template <typename IndexType>
   void configureCollectionWithLoads(
     CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
     StatsDrivenCollectionMapper<IndexType> &mapping,
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
   );
 
+  template <typename IndexType>
   void stuffStatsIntoCollection(
     CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
     StatsDrivenCollectionMapper<IndexType> &mapping,
