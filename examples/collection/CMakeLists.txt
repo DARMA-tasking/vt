@@ -10,6 +10,7 @@ set(
   transpose
   lb_tuning_driver
   lb_tuning_driver_1d
+  predictive_model_dumper
 )
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})
