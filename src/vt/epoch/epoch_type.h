@@ -118,9 +118,11 @@ struct hash<vt::epoch::EpochType> {
 
 #include <fmt/format.h>
 
+namespace fmt {
+
 /// Custom fmt formatter/print for \c EpochType
 template <>
-struct fmt::formatter<vt::epoch::EpochType> {
+struct formatter<vt::epoch::EpochType> {
   /// Presentation format:
   ///  - 'x' - hex (default)
   ///  - 'd' - decimal
@@ -128,7 +130,7 @@ struct fmt::formatter<vt::epoch::EpochType> {
   char presentation = 'x';
 
   /// Parses format specifications of the form ['f' | 'e'].
-  auto constexpr parse(format_parse_context& ctx) {
+  auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
     // Parse the presentation format and store it in the formatter:
     auto it = ctx.begin(), end = ctx.end();
     if (it != end && (*it == 'x' || *it == 'd' || *it == 'b')) {
@@ -155,6 +157,8 @@ struct fmt::formatter<vt::epoch::EpochType> {
     );
   }
 };
+
+} /* end namespace fmt */
 
 namespace vt {
 
