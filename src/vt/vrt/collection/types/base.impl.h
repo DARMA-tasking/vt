@@ -86,7 +86,6 @@ template <typename ColT, typename IndexT>
 template <typename Serializer>
 void CollectionBase<ColT, IndexT>::serialize(Serializer& s) {
   Indexable<IndexT>::serialize(s);
-  s | cur_bcast_epoch_;
   s | reduce_stamp_;
 }
 
