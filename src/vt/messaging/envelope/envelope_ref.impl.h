@@ -60,9 +60,9 @@ inline void envelopeRef(Env& env) {
     "instead of a MsgPtr/makeMessage/makeSharedMessage construct."
   );
   vtAssertInfo(
-    envp->ref >= 0 and envp->ref < 100,
+    envp->ref >= 0 and envp->ref < 10000,
     "Bad ref-count on message ref-increment. "
-    "Message ref-count must never be negative and cannnot exceed limit (100).",
+    "Message ref-count must never be negative and cannnot exceed limit (10000).",
     static_cast<RefType>(envp->ref)
   );
 
