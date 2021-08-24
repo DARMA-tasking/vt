@@ -244,6 +244,7 @@ then
       -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" \
       -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
       -DCMAKE_C_COMPILER="${CC:-cc}" \
+      -Dbuild_with_tpl=1 \
       ..
     cmake --build .
 fi

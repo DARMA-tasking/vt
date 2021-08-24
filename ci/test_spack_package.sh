@@ -26,9 +26,7 @@ git clone https://github.com/DARMA-tasking/spack-package.git
     unity_build_enabled="$VT_UNITY_BUILD_ENABLED" \
     fcontext_enabled="$VT_FCONTEXT_ENABLED" \
     use_openmp="$VT_USE_OPENMP" \
-    use_std_thread="$VT_USE_STD_THREAD" \
-    -build_tests \
-    -build_examples
+    use_std_thread="$VT_USE_STD_THREAD"
 
 git clone https://github.com/DARMA-tasking/vt-sample-project
 mkdir -p vt-sample-project/build
@@ -39,5 +37,6 @@ cmake -G "${CMAKE_GENERATOR:-Ninja}" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_CXX_COMPILER="${CXX:-c++}" \
   -DCMAKE_C_COMPILER="${CC:-cc}" \
+  -Dbuild_with_libs=1 \
   ..
 cmake --build .
