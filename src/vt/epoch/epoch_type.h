@@ -66,14 +66,6 @@ struct EpochType : Strong<
   EpochType() = default;
 
   /**
-   * \brief Nullptr constructor default constructs strong type to set initial
-   * sentinel value
-   *
-   * \param[in] nullptr_t nullptr
-   */
-  constexpr EpochType(std::nullptr_t) {}
-
-  /**
    * \brief Construct with a particular underlying value
    *
    * \param[in] in the value
@@ -166,7 +158,7 @@ namespace vt {
 using EpochType = epoch::EpochType;
 
 /// The sentinel value for a empty epoch
-static constexpr EpochType const no_epoch = nullptr;
+static constexpr EpochType const no_epoch = {};
 
 } /* end namespace vt */
 
