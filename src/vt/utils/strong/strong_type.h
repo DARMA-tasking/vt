@@ -58,6 +58,7 @@ namespace vt { namespace util { namespace strong { namespace detail {
  */
 template <typename T, T init_val, typename Tag>
 struct Strong {
+  using Type = T;
   using ThisType = Strong<T, init_val, Tag>;
 
   /// All \c Strong types are byte-copyable and arithmetic and thus don't need a

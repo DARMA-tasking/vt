@@ -103,7 +103,7 @@ typename CollectionBase<ColT, IndexT>::ReduceStampType
 CollectionBase<ColT, IndexT>::getNextStamp() {
   ReduceStampType stamp;
   stamp.init<ReduceSeqStampType>(reduce_stamp_);
-  ++reduce_stamp_;
+  *reduce_stamp_ = *reduce_stamp_ + 1;
   return stamp;
 }
 
