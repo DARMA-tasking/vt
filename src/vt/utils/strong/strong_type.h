@@ -52,8 +52,6 @@ namespace vt { namespace util { namespace strong { namespace detail {
  * \brief Used to hoist weak C++ types (like \c vt::VirtualProxyType ) into
  * strongly typed values that have a unique type to enforce interfaces, inhibit
  * dangerous conversions, and provide more semantic control.
- *
- * All \c Strong types are arithmetic types, thus have operators defined on them
  */
 template <typename T, T init_val, typename Tag>
 struct Strong {
