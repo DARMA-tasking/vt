@@ -34,7 +34,7 @@ set(BROTLI_DISABLE_TESTS ON)
 # we need to disable bundled mode so it will install properly
 set(BROTLI_BUNDLED_MODE OFF)
 set(BROTLI_BUILD_PORTABLE ON)
-set(BROTLI_LIBRARY brotlicommon brotlienc brotlidec)
+set(BROTLI_LIBRARY brotlicommon-static brotlienc-static brotlidec-static)
 add_subdirectory(${PROJECT_LIB_DIR}/brotli)
 
 # Optionally include mimalloc (alternative memory allocator)
