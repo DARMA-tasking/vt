@@ -360,7 +360,10 @@ private:
       vtAssert(collective_, "Must be a collective construct to insert a list");
     }
     if (not dynamic_membership_) {
-      vtAssert(has_bounds_, "Must have valid bounds");
+      vtAssert(
+        has_bounds_ or (not has_bounds_ and bulk_inserts_.size() == 1),
+        "Must have valid bounds or exactly one bulk insert"
+      );
     }
   }
 
