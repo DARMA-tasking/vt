@@ -121,7 +121,7 @@ struct formatter<vt::epoch::EpochType> {
   ///  - 'b' - binary
   char presentation = 'x';
 
-  /// Parses format specifications of the form ['f' | 'e'].
+  /// Parses format specifications of the form ['x' | 'd' | 'b'].
   auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
     // Parse the presentation format and store it in the formatter:
     auto it = ctx.begin(), end = ctx.end();
