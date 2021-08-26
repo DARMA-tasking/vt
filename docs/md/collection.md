@@ -81,13 +81,13 @@ vt::NodeType my_map(vt::Index1D* idx, vt::Index1D* bounds, vt::NodeType num_node
 Or, alternatively, one may specify a object group mapper, which contains an
 instance across all ranks that may communicate to determine placement. The
 `.mapperObjGroup(proxy)` method configures the mapping object with an object
-group instance that already exists. Otherwise, one may just give the type and
-constructor arguments to create a new instance:
-`.mapperObjGroup<MyObjectGroup>(args...)`. An object group mapper must inherit
-from `vt::mapping::BaseMapper` and implement the pure virtual method `NodeType
-map(IdxT* idx, int ndim, NodeType num_nodes)` to define the mapping for the
-runtime. As an example, the object group mapper used by default for unbounded
-collections is implemented as follows:
+group instance that already exists by passing the proxy to it. Otherwise, one
+may just give the type and constructor arguments to create a new instance:
+`.mapperObjGroupConstruct<MyObjectGroup>(args...)`. An object group mapper must
+inherit from `vt::mapping::BaseMapper` and implement the pure virtual method
+`NodeType map(IdxT* idx, int ndim, NodeType num_nodes)` to define the mapping
+for the runtime. As an example, the object group mapper used by default for
+unbounded collections is implemented as follows:
 
 \code{.cpp}
 template <typename IdxT>
