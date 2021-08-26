@@ -74,8 +74,8 @@ namespace vt { namespace objgroup { namespace proxy {
  */
 template <typename ObjT>
 struct Proxy {
+  using ObjGroupType = ObjT;
   using ReduceStamp = collective::reduce::ReduceStamp;
-
   using PendingSendType = messaging::PendingSend;
 
   Proxy() = default;

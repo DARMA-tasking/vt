@@ -54,6 +54,8 @@ namespace vt { namespace mapping {
  */
 template <typename IdxT>
 struct BaseMapper {
+  using BaseIndexType = IdxT;
+
   virtual ~BaseMapper() = default;
   virtual NodeType map(IdxT* idx, int ndim, NodeType num_nodes) = 0;
 };

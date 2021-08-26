@@ -46,6 +46,7 @@
 
 #include "vt/vrt/proxy/collection_proxy.h"
 #include "vt/registry/auto/map/auto_registry_map.h"
+#include "vt/topos/mapping/base_mapper_object.h"
 
 #include <functional>
 #include <memory>
@@ -178,24 +179,43 @@ public:
   }
 
   /**
-   * \brief Explicitly specify an existing objgroup for the mapper
+   * \brief Explicitly specify an existing objgroup for the mapper.
+   *
+   * \note The user's mapper must inherit from \c mapping::BaseIndex
+   *
+   * \param[in] proxy the typed objgroup proxy of the mapper
    */
-  template <typename T, typename ProxyT>
-  ThisType&& mapperObjGroup(ProxyT proxy) {
+  template <
+    typename ProxyT,
+    typename ObjGroupT = typename ProxyT::ObjGroupType,
+    typename IndexT    = typename ObjGroupT::BaseIndexType
+  >
+  ThisType&& mapperObjGroup(
+    ProxyT proxy,
+    std::enable_if_t<
+      std::is_convertible<ObjGroupT*, mapping::BaseMapper<IndexT>*>::value
+    >* = nullptr
+  ) {
     map_object_ = proxy.getProxy();
     return std::move(*this);
   }
 
   /**
-   * \brief Explicitly specify an existing objgroup for the mapper
+   * \brief Specify a objgroup type for the mapper to construct and then use for
+   * the mapping
    *
    * \warning Only valid as a collective invocation
    */
   template <typename T, typename... Args>
-  ThisType&& mapperObjGroup(Args&&... args) {
+  ThisType&& mapperObjGroupConstruct(Args&&... args) {
+    static_assert(
+      std::is_convertible<
+        T*, mapping::BaseMapper<typename T::BaseIndexType>*
+      >::value,
+      "The object group type must be convertible to a mapping::BaseMapper<IdxT>"
+    );
     vtAssert(collective_, "Must be collective to create object group mapper");
-    auto proxy = T::construct(std::forward<Args>(args)...);
-    map_object_ = proxy.getProxy();
+    map_object_ = T::construct(std::forward<Args>(args)...);
     return std::move(*this);
   }
 
