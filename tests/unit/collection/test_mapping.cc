@@ -153,8 +153,9 @@ std::vector<T> kFactors(T n, int8_t k) {
 TYPED_TEST_SUITE_P(TestMapping);
 
 TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
-  using IndexType = TypeParam;
-  using ColType   = MappingTest<IndexType>;
+  using IndexType  = typename std::tuple_element<0,TypeParam>::type;
+  using MapperType = typename std::tuple_element<1,TypeParam>::type;
+  using ColType    = MappingTest<IndexType>;
 
   auto const this_node = theContext()->getNode();
   auto const num_nodes = theContext()->getNumNodes();
@@ -173,7 +174,8 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
 
   fmt::print("total range is {}\n", range);
 
-  auto my_proxy = vt::theObjGroup()->makeCollective<MyMapper<IndexType>>();
+  auto my_proxy_raw = MapperType::construct();
+  objgroup::proxy::Proxy<MapperType> my_proxy{my_proxy_raw};
 
   int counter = 0;
   range.foreach([&](IndexType test_idx) {
@@ -196,7 +198,7 @@ TYPED_TEST_P(TestMapping, test_custom_mapping_1) {
 
   auto proxy2 = vt::makeCollection<ColType>()
     .bulkInsert(range)
-    .template mapperObjGroupConstruct<MyMapper<IndexType>>()
+    .template mapperObjGroupConstruct<MapperType>()
     .wait();
 
   vt::runInEpochCollective([&]{
@@ -289,59 +291,16 @@ private:
   objgroup::proxy::Proxy<MyDistMapper<IndexT>> proxy;
 };
 
-TYPED_TEST_P(TestMapping, test_custom_distributed_mapping_2) {
-  using IndexType = TypeParam;
-  using ColType   = MappingTest<IndexType>;
-
-  auto const this_node = theContext()->getNode();
-  auto const num_nodes = theContext()->getNumNodes();
-
-  num_work = 0;
-
-  auto const total = num_nodes * num_elms_per_node;
-  IndexType range = {};
-  auto ndims = range.ndims();
-
-  auto factors = kFactors(total, ndims);
-  vtAssertExpr(factors.size() == static_cast<std::size_t>(ndims));
-  for (index::NumDimensionsType i = 0; i < ndims; i++) {
-    range[i] = factors[i];
-  }
-
-  fmt::print("total range is {}\n", range);
-
-  using MapperType = MyDistMapper<IndexType>;
-
-  auto my_proxy_raw = MapperType::construct();
-  objgroup::proxy::Proxy<MapperType> my_proxy{my_proxy_raw};
-
-  int counter = 0;
-  range.foreach([&](IndexType test_idx) {
-    if (my_proxy.get()->map(&test_idx, ndims, num_nodes) == this_node) {
-      counter++;
-    }
-  });
-
-  auto proxy = vt::makeCollection<ColType>()
-    .bulkInsert(range)
-    .mapperObjGroup(my_proxy)
-    .wait();
-
-  vt::runInEpochCollective([&]{
-    proxy.template broadcastCollective<WorkMsg<IndexType>, work<IndexType>>();
-  });
-
-  EXPECT_EQ(counter, num_work);
-  num_work = 0;
-}
-
 using IndexTestTypes = testing::Types<
-  vt::Index1D,
-  vt::Index2D,
-  vt::Index3D
+  std::tuple<vt::Index1D, MyMapper<vt::Index1D>>,
+  std::tuple<vt::Index2D, MyMapper<vt::Index2D>>,
+  std::tuple<vt::Index3D, MyMapper<vt::Index3D>>,
+  std::tuple<vt::Index1D, MyDistMapper<vt::Index1D>>,
+  std::tuple<vt::Index2D, MyDistMapper<vt::Index2D>>,
+  std::tuple<vt::Index3D, MyDistMapper<vt::Index3D>>
 >;
 
-REGISTER_TYPED_TEST_SUITE_P(TestMapping, test_custom_mapping_1, test_custom_distributed_mapping_2);
+REGISTER_TYPED_TEST_SUITE_P(TestMapping, test_custom_mapping_1);
 
 INSTANTIATE_TYPED_TEST_SUITE_P(
   test_all_mappings, TestMapping, IndexTestTypes, DEFAULT_NAME_GEN
