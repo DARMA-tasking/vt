@@ -181,7 +181,7 @@ public:
   /**
    * \brief Explicitly specify an existing objgroup for the mapper.
    *
-   * \note The user's mapper must inherit from \c mapping::BaseIndex
+   * \note The user's mapper must inherit from \c mapping::BaseMapper<IdxT>
    *
    * \param[in] proxy the typed objgroup proxy of the mapper
    */
