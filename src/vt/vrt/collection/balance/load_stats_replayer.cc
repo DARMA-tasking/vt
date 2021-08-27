@@ -139,6 +139,8 @@ LoadStatsReplayer::create1DCollection(
   );
   auto range = Index1D(static_cast<int>(coll_elms));
   auto map_proxy = theObjGroup()->makeCollective(&mapping);
+  mapping.setProxy(map_proxy);
+  mapping.notifyOwners(1);
 
   auto coll_proxy = vt::makeCollection<StatsDrivenCollection<Index1D>>()
     .bounds(range)
@@ -173,6 +175,8 @@ LoadStatsReplayer::create2DCollection(
     static_cast<int>(nranks), static_cast<int>(coll_elms_per_node)
   );
   auto map_proxy = theObjGroup()->makeCollective(&mapping);
+  mapping.setProxy(map_proxy);
+  mapping.notifyOwners(2);
 
   auto coll_proxy = vt::makeCollection<StatsDrivenCollection<Index2D>>()
     .bounds(range)
