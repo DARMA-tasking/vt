@@ -51,6 +51,91 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename IndexType>
+void StatsDrivenCollectionMapper<IndexType>::getMap(GetMapMsg* msg) {
+  auto node = map(&msg->idx_, msg->idx_.ndims(), theContext()->getNumNodes());
+  auto r = msg->request_node_;
+  proxy_[r].template send<
+    SendMapMsg, &StatsDrivenCollectionMapper<IndexType>::recvMap
+  >(msg->idx_, node);
+}
+
+template <typename IndexType>
+void StatsDrivenCollectionMapper<IndexType>::recvMap(SendMapMsg* msg) {
+  rank_mapping_[msg->idx_] = msg->home_node_;
+}
+
+template <typename IndexType>
+NodeType StatsDrivenCollectionMapper<IndexType>::getOwner(
+  const IndexType &idx, int ndim, NodeType num_nodes
+) const {
+  uint64_t val = 0;
+  for (int i = 0; i < ndim; i++) {
+    auto dval = static_cast<uint64_t>(idx.get(i));
+    val ^= dval << (i * 16);
+  }
+  auto const owner = static_cast<NodeType>(val % num_nodes);
+  return owner;
+}
+
+template <typename IndexType>
+void StatsDrivenCollectionMapper<IndexType>::notifyOwners(int ndim) {
+  runInEpochCollective([=]{
+    auto num_nodes = theContext()->getNumNodes();
+    auto this_node = theContext()->getNode();
+    for (auto item : rank_mapping_) {
+      auto owner = getOwner(item.first, ndim, num_nodes);
+      if (owner != this_node) {
+        proxy_[owner].template send<
+          SendMapMsg, &StatsDrivenCollectionMapper<IndexType>::recvMap
+        >(item.first, item.second);
+      }
+    }
+  });
+}
+
+template <typename IndexType>
+NodeType StatsDrivenCollectionMapper<IndexType>::map(
+  IndexType* idx, int ndim, NodeType num_nodes
+) {
+  // if we know, just return what's known
+  {
+    auto it = rank_mapping_.find(*idx);
+    if (it != rank_mapping_.end()) {
+      vt_debug_print(
+        normal, replay,
+        "StatsDrivenCollectionMapper: index {} maps to rank {}\n",
+        *idx, it->second
+      );
+      return it->second;
+    }
+  }
+
+  // otherwise, phone for help
+  auto owner = getOwner(*idx, ndim, num_nodes);
+  if (owner == theContext()->getNode()) {
+    auto str = fmt::format(
+      "map queried about index {}, which was not known to this rank",
+      idx->get(0)
+    );
+    vtAbort(str);
+    return uninitialized_destination;
+  } else {
+    // runInEpochRooted is not DS?
+    auto ep = theTerm()->makeEpochRooted("mapTest", term::UseDS{true});
+    theMsg()->pushEpoch(ep);
+    proxy_[owner].template send<
+      GetMapMsg, &StatsDrivenCollectionMapper<IndexType>::getMap
+    >(*idx, theContext()->getNode());
+    theMsg()->popEpoch(ep);
+    theTerm()->finishedEpoch(ep);
+    runSchedulerThrough(ep);
+    auto it = rank_mapping_.find(*idx);
+    vtAssert(it != rank_mapping_.end(), "Home rank still not known");
+    return it->second;
+  }
+}
+
+template <typename IndexType>
 void StatsDrivenCollectionMapper<IndexType>::addCollectionMapping(
   IndexType idx, NodeType home
 ) {

@@ -65,25 +65,46 @@ struct StatsDrivenCollectionMapper : vt::mapping::BaseMapper<IndexType> {
 
   StatsDrivenCollectionMapper() = default;
 
-  NodeType map(IndexType* idx, int ndim, NodeType num_nodes) override {
-    // correct operation here requires that the home rank specifically
-    // know that it maps locally
-    auto it = rank_mapping_.find(*idx);
-    if (it != rank_mapping_.end()) {
-      vt_debug_print(
-        normal, replay,
-        "StatsDrivenCollectionMapper: index {} maps to rank {}\n",
-        *idx, it->second
-      );
-      return it->second;
-    }
-    return uninitialized_destination;
-  }
+  struct GetMapMsg : Message {
+    GetMapMsg() = default;
+    GetMapMsg(IndexType in_idx, NodeType in_request_node)
+      : idx_(in_idx),
+        request_node_(in_request_node)
+    { }
+    IndexType idx_ = {};
+    NodeType request_node_ = uninitialized_destination;
+  };
+
+  struct SendMapMsg : Message {
+    SendMapMsg() = default;
+    explicit SendMapMsg(IndexType idx, NodeType in_home_node)
+      : idx_(idx), home_node_(in_home_node)
+    { }
+    IndexType idx_ = {};
+    NodeType home_node_ = uninitialized_destination;
+  };
+
+  void getMap(GetMapMsg* msg);
+
+  void recvMap(SendMapMsg* msg);
+
+  NodeType getOwner(const IndexType &idx, int ndim, NodeType num_nodes) const;
+
+  void notifyOwners(int ndim);
+
+  NodeType map(IndexType* idx, int ndim, NodeType num_nodes) override;
 
   template <typename Serializer>
   void serialize(Serializer& s) {
-    s | rank_mapping_
+    s | proxy_
+      | rank_mapping_
       | elm_to_index_mapping_;
+  }
+
+  void setProxy(
+    objgroup::proxy::Proxy<StatsDrivenCollectionMapper<IndexType>> proxy
+  ) {
+    proxy_ = proxy;
   }
 
   void addCollectionMapping(IndexType idx, NodeType home);
@@ -95,6 +116,8 @@ struct StatsDrivenCollectionMapper : vt::mapping::BaseMapper<IndexType> {
   IndexType getIndexFromElm(ElmIDType elm_id);
 
 private:
+  objgroup::proxy::Proxy<StatsDrivenCollectionMapper<IndexType>> proxy_;
+
   std::map<IndexType, int /*mpi_rank*/> rank_mapping_ = {};
 
   /// \brief Mapping from element ids to vt indices
