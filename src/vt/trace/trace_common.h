@@ -47,6 +47,7 @@
 #include "vt/configs/types/types_type.h"
 
 #include <cstdint>
+#include <cstddef>
 
 namespace vt { namespace trace {
 
