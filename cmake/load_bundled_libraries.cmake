@@ -57,12 +57,9 @@ if (vt_asan_enabled)
 endif()
 
 if (vt_ubsan_enabled)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR
-     CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
-     (CMAKE_CXX_COMPILER_ID
-       STREQUAL
-       "GNU"
-       AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.8"))
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR
+      CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+      CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     message(STATUS "Building with undefined behavior sanitizer enabled")
   else()
     message(SEND_ERROR "Cannot use UBSan without clang or gcc >= 4.8")
