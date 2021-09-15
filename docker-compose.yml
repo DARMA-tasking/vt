@@ -26,6 +26,7 @@
 #   VT_DOCS=0                 # Enable doxygen build
 #   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
 #   VT_ASAN=0                 # Enable address sanitizer
+#   VT_UBSAN=0                # Enable undefined behavior sanitizer
 #   VT_WERROR=1               # Treat all warnings as errors
 #   VT_EXTENDED_TESTS=1       # Build all the extended testing
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
@@ -132,6 +133,7 @@ x-vtopts: &vtopts
   VT_TRACE_RUNTIME_ENABLED: ${VT_TRACE_RT:-0}
   VT_BUILD_TRACE_ONLY: ${VT_TRACE_ONLY:-0}
   VT_ASAN_ENABLED: ${VT_ASAN:-0}
+  VT_UBSAN_ENABLED: ${VT_UBSAN:-0}
   VT_WERROR_ENABLED: ${VT_WERROR:-1}
   VT_POOL_ENABLED: ${VT_POOL:-1}
   VT_ZOLTAN_ENABLED: ${VT_ZOLTAN:-0}
