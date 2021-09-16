@@ -52,16 +52,6 @@ char** test_argv = nullptr;
 
 }}} // end namespace vt::tests::unit
 
-extern "C" {
-void __ubsan_on_report() {
-  FAIL() << "Encountered an undefined behavior sanitizer error";
-}
-
-void __asan_on_error() {
-  FAIL() << "Encountered an address sanitizer error";
-}
-}
-
 int main(int argc, char **argv) {
 
   using namespace vt::tests::unit;
