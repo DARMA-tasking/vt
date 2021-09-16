@@ -25,6 +25,7 @@ RUN apt-get update -y -q && \
     make-guile \
     libomp5 \
     libomp-dev \
+    llvm-10 \
     ccache && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
