@@ -74,11 +74,193 @@ bool TemperedLB::isOverloaded(LoadType load) const {
   return load > target_max_load_ * temperedlb_load_threshold;
 }
 
-void TemperedLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{
-    "knowledge", "fanout", "rounds", "iters", "criterion", "trials",
-    "deterministic", "inform", "ordering", "cmf", "rollback", "targetpole",
+/*static*/ std::unordered_map<std::string, std::string>
+TemperedLB::getInputKeysWithHelp() {
+  std::unordered_map<std::string, std::string> const keys_help = {
+    {
+      "knowledge",
+      R"(
+Values: {UserDefined, Complete, Log}
+Default: Log
+Description:
+  How the fanout and the number of rounds are determined. Options are:
+    UserDefined: the fanout and rounds must be set explicitly.
+    Complete: the fanout will be as large as possible, with only one round, to
+      guarantee full information.
+    Log: choose rounds and/or fanout based on log rule. Either fanout or
+      rounds must be explicitly set, but not both.  The relationship between
+      rounds and fanout will be approximately
+      rounds = log(num_ranks)/log(fanout).
+)"
+    },
+    {
+      "fanout",
+      R"(
+Values: <uint16_t>
+Default: N/A
+Description:
+  The number of ranks each underloaded rank will communicate with. May be
+  determined automatically by an appropriate choice for knowledge.
+)"
+    },
+    {
+      "rounds",
+      R"(
+Values: <uint8_t>
+Default: N/A
+Description:
+  The number of information propagation rounds. May be determined automatically
+  by an appropriate choice for knowledge.
+)"
+    },
+    {
+      "iters",
+      R"(
+Values: <uint16_t>
+Default: 4
+Description:
+  The number of iterations of the information propagation and transfer steps.
+)"
+    },
+    {
+      "trials",
+      R"(
+Values: <uint16_t>
+Default: 1
+Description:
+  How many times to repeat the requested number of iterations, hoping to find
+  a better imbalance. Increasing this helps if it's easy to get stuck in a
+  local minimum.
+)"
+    },
+    {
+      "criterion",
+      R"(
+Values: {Grapevine, ModifiedGrapevine}
+Default: ModifiedGrapevine
+Description:
+  The criterion used for evaluating if a proposed transfer should be accepted.
+  Options are:
+    Grapevine: accept if the proposed transfer will not overload the recipient.
+    ModifiedGrapevine: accept if the proposed transfer will not make the load of
+      the recipient higher than was the load of the sender immediately before
+      proposing the transfer.
+)"
+    },
+    {
+      "inform",
+      R"(
+Values: {SyncInform, AsyncInform}
+Default: AsyncInform
+Description:
+  Approach used to track rounds in the information propagatation step. Options
+  are:
+    SyncInform: synchronous sharing of underloaded processor loads. The round
+      number is defined at the processor level. This approach propagates known
+      loads after all messages for a round are received, maximizing the amount
+      of information propagated per round, but has a synchronization cost.
+    AsyncInform: asynchronous sharing of underloaded processor loads. The round
+      number is defined at the message level. This approach propagates known
+      loads when the first message for a round is received, avoiding the
+      synchronization cost but delaying the propagation of some information
+      until the following round.
+)"
+    },
+    {
+      "ordering",
+      R"(
+Values: {Arbitrary, ElmID, FewestMigrations, SmallObject, LargestObjects}
+Default: FewestMigrations
+Description:
+  The order in which local objects are considered for transfer. Options are:
+    Arbitrary: iterate as defined by the unordered_map.
+    ElmID: sort ascending by the element ID.
+    FewestMigrations: order for fewest migrations. Start with the object with
+      the smallest load that can be transferred to drop the processor load
+      below the average, then order by descending load for objects with smaller
+      loads, and finally order by ascending load for objects with larger loads.
+    SmallObjects: order for migrating the objects with the smallest loads.
+      Find the object with the smallest load where the sum of its own load and
+      all smaller loads meets or exceeds the amount by which the load of this
+      processor load exceeds the target load. Order starting with that object,
+      then by descending load for objects with smaller loads, and finally by
+      ascending load for objects with larger loads.
+    LargestObjects: order by descending load.
+)"
+    },
+    {
+      "cmf",
+      R"(
+Values: {Original, NormByMax, NormBySelf, NormByMaxExcludeIneligible}
+Default: NormByMax
+Description:
+  Approach for computing the CMF used to pick an object to transfer. Options
+  are:
+    Original: the original formula but re-computed after each accepted transfer.
+      Remove processors from the CMF as soon as they exceed the target (e.g.,
+      processor-average) load. Use a CMF factor of 1.0/x, where x is the target
+      load.
+    NormByMax: compute the CMF factor using the largest processor load in the
+      CMF. Do not remove processors from the CMF that exceed the target load
+      until the next iteration. Use a CMF factor of 1.0/x, where x is the
+      greater of the target load and the load of the most loaded processor in
+      the CMF.
+    NormBySelf: compute the CMF factor using the load of this processor. Do not
+      remove processors from the CMF that exceed the target load until the next
+      iteration. Use a CMF factor of 1.0/x, where x is the load of the processor
+      that is computing the CMF.
+    NormByMaxExcludeIneligible: narrow the CMF to only include processors that
+      can accommodate the transfer. Use a CMF factor of 1.0/x, where x is the
+      greater of the target load and the load of the most loaded processor in
+      the CMF. Only include processors in the CMF that will pass the chosen
+      Criterion for the object being considered for transfer.
+)"
+    },
+    {
+      "deterministic",
+      R"(
+Values: {true, false}
+Default: false
+Description:
+  Whether to make migration choices deterministic. This will only lead to
+  reproducibility when paired with deterministic object loads, for example when
+  using a driver that feeds the load balancer object loads read from vt stats
+  files.  Enabling this requires choosing options for inform and ordering that
+  are themselves deterministic.
+)"
+    },
+    {
+      "rollback",
+      R"(
+Values: {true, false}
+Default: true
+Description:
+  If the final iteration of a trial has a worse imbalance than any earier
+  iteration, it will roll back to the iteration with the best imbalance.
+)"
+    },
+    {
+      "targetpole",
+      R"(
+Values: {true, false}
+Default: false
+Description:
+  When an object load exceeds the processor-average load (i.e., we have a "long
+  pole"), adjust the target load to be the maximum object load ("longest pole")
+  instead of the processor-average load.
+)"
+    },
   };
+  return keys_help;
+}
+
+void TemperedLB::inputParams(balance::SpecEntry* spec) {
+  auto keys_help = getInputKeysWithHelp();
+
+  std::vector<std::string> allowed;
+  for (auto&& elm : keys_help) {
+    allowed.push_back(elm.first);
+  }
   spec->checkAllowedKeys(allowed);
 
   // the following options interact with each other, so we need to know
