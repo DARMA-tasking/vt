@@ -262,6 +262,7 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
   runLB(base_proxy, phase);
 }
 
+/*static*/
 void LBManager::printLBArgsHelp(LBType lb) {
   if (theContext()->getNode() == 0) {
     fmt::print("\nLB arguments for {}:\n\n", lb_names_[lb]);
@@ -284,14 +285,22 @@ void LBManager::printLBArgsHelp(LBType lb) {
     case LBType::RandomLB:
       help = std::move(lb::RandomLB::getInputKeysWithHelp());
       break;
+    case LBType::NoLB:
+      // deliberately skip retrieving arguments
+      break;
     default:
       fmt::print("Documentation has not been provided for this LB.\n\n");
+      return;
       break;
     }
 
-    for (auto &arg_help : help) {
-      fmt::print("Argument: {}\n", arg_help.first);
-      fmt::print("{}\n", arg_help.second);
+    if (help.size() > 0) {
+      for (auto &arg_help : help) {
+        fmt::print("Argument: {}\n", arg_help.first);
+        fmt::print("{}\n", arg_help.second);
+      }
+    } else {
+      fmt::print("No LB arguments are supported by this load balancer.\n\n");
     }
   }
 }
