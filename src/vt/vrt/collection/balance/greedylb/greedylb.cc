@@ -112,6 +112,10 @@ Description:
     {
       "strategy",
       R"(
+Values: {scatter, bcast, pt2pt}
+Default: scatter
+Description:
+  How to distribute the data after the centralized LB makes a decision
 )"
     }
   };
