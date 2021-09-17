@@ -133,6 +133,14 @@ public:
    */
   void startLB(PhaseType phase, LBType lb);
 
+  /**
+   * \internal
+   * \brief Print documentation for LB args for the chosen LB
+   *
+   * \param[in] lb the load balancer to query
+   */
+  static void printLBArgsHelp(LBType lb);
+
 protected:
   /**
    * \internal
