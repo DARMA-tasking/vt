@@ -305,6 +305,22 @@ void LBManager::printLBArgsHelp(LBType lb) {
   }
 }
 
+/*static*/
+void LBManager::printLBArgsHelp(std::string lb_name) {
+  if (lb_name.compare("NoLB") == 0) {
+    for (auto&& lb : vrt::collection::balance::lb_names_) {
+      vrt::collection::balance::LBManager::printLBArgsHelp(lb.first);
+    }
+  } else {
+    for (auto&& lb : vrt::collection::balance::lb_names_) {
+      if (lb_name == lb.second) {
+        vrt::collection::balance::LBManager::printLBArgsHelp(lb.first);
+      break;
+      }
+    }
+  }
+}
+
 void LBManager::startup() {
   thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
     auto const phase = thePhase()->getCurrentPhase();
