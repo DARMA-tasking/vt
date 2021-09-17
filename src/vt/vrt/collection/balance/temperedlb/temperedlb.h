@@ -76,6 +76,8 @@ public:
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override;
 
+  static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
+
   static std::vector<ObjIDType> orderObjects(
     ObjectOrderEnum obj_ordering,
     std::unordered_map<ObjIDType, TimeType> cur_objs,
