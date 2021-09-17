@@ -262,6 +262,40 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
   runLB(base_proxy, phase);
 }
 
+void LBManager::printLBArgsHelp(LBType lb) {
+  if (theContext()->getNode() == 0) {
+    fmt::print("\nLB arguments for {}:\n\n", lb_names_[lb]);
+
+    std::unordered_map<std::string, std::string> help;
+
+    switch (lb) {
+    case LBType::HierarchicalLB:
+      help = std::move(lb::HierarchicalLB::getInputKeysWithHelp());
+      break;
+    case LBType::GreedyLB:
+      help = std::move(lb::GreedyLB::getInputKeysWithHelp());
+      break;
+    case LBType::RotateLB:
+      help = std::move(lb::RotateLB::getInputKeysWithHelp());
+      break;
+    case LBType::TemperedLB:
+      help = std::move(lb::TemperedLB::getInputKeysWithHelp());
+      break;
+    case LBType::RandomLB:
+      help = std::move(lb::RandomLB::getInputKeysWithHelp());
+      break;
+    default:
+      fmt::print("Documentation has not been provided for this LB.\n\n");
+      break;
+    }
+
+    for (auto &arg_help : help) {
+      fmt::print("Argument: {}\n", arg_help.first);
+      fmt::print("{}\n", arg_help.second);
+    }
+  }
+}
+
 void LBManager::startup() {
   thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
     auto const phase = thePhase()->getCurrentPhase();
