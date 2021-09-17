@@ -271,19 +271,19 @@ void LBManager::printLBArgsHelp(LBType lb) {
 
     switch (lb) {
     case LBType::HierarchicalLB:
-      help = std::move(lb::HierarchicalLB::getInputKeysWithHelp());
+      help = lb::HierarchicalLB::getInputKeysWithHelp();
       break;
     case LBType::GreedyLB:
-      help = std::move(lb::GreedyLB::getInputKeysWithHelp());
+      help = lb::GreedyLB::getInputKeysWithHelp();
       break;
     case LBType::RotateLB:
-      help = std::move(lb::RotateLB::getInputKeysWithHelp());
+      help = lb::RotateLB::getInputKeysWithHelp();
       break;
     case LBType::TemperedLB:
-      help = std::move(lb::TemperedLB::getInputKeysWithHelp());
+      help = lb::TemperedLB::getInputKeysWithHelp();
       break;
     case LBType::RandomLB:
-      help = std::move(lb::RandomLB::getInputKeysWithHelp());
+      help = lb::RandomLB::getInputKeysWithHelp();
       break;
     case LBType::NoLB:
       // deliberately skip retrieving arguments
