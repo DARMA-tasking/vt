@@ -264,44 +264,42 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
 
 /*static*/
 void LBManager::printLBArgsHelp(LBType lb) {
-  if (theContext()->getNode() == 0) {
-    fmt::print("\nLB arguments for {}:\n\n", lb_names_[lb]);
+  fmt::print("\nLB arguments for {}:\n\n", lb_names_[lb]);
 
-    std::unordered_map<std::string, std::string> help;
+  std::unordered_map<std::string, std::string> help;
 
-    switch (lb) {
-    case LBType::HierarchicalLB:
-      help = lb::HierarchicalLB::getInputKeysWithHelp();
-      break;
-    case LBType::GreedyLB:
-      help = lb::GreedyLB::getInputKeysWithHelp();
-      break;
-    case LBType::RotateLB:
-      help = lb::RotateLB::getInputKeysWithHelp();
-      break;
-    case LBType::TemperedLB:
-      help = lb::TemperedLB::getInputKeysWithHelp();
-      break;
-    case LBType::RandomLB:
-      help = lb::RandomLB::getInputKeysWithHelp();
-      break;
-    case LBType::NoLB:
-      // deliberately skip retrieving arguments
-      break;
-    default:
-      fmt::print("Documentation has not been provided for this LB.\n\n");
-      return;
-      break;
+  switch (lb) {
+  case LBType::HierarchicalLB:
+    help = lb::HierarchicalLB::getInputKeysWithHelp();
+    break;
+  case LBType::GreedyLB:
+    help = lb::GreedyLB::getInputKeysWithHelp();
+    break;
+  case LBType::RotateLB:
+    help = lb::RotateLB::getInputKeysWithHelp();
+    break;
+  case LBType::TemperedLB:
+    help = lb::TemperedLB::getInputKeysWithHelp();
+    break;
+  case LBType::RandomLB:
+    help = lb::RandomLB::getInputKeysWithHelp();
+    break;
+  case LBType::NoLB:
+    // deliberately skip retrieving arguments
+    break;
+  default:
+    fmt::print("Documentation has not been provided for this LB.\n\n");
+    return;
+    break;
+  }
+
+  if (help.size() > 0) {
+    for (auto &arg_help : help) {
+      fmt::print("Argument: {}", arg_help.first);
+      fmt::print("{}\n", arg_help.second);
     }
-
-    if (help.size() > 0) {
-      for (auto &arg_help : help) {
-        fmt::print("Argument: {}\n", arg_help.first);
-        fmt::print("{}\n", arg_help.second);
-      }
-    } else {
-      fmt::print("No LB arguments are supported by this load balancer.\n\n");
-    }
+  } else {
+    fmt::print("No LB arguments are supported by this load balancer.\n\n");
   }
 }
 
