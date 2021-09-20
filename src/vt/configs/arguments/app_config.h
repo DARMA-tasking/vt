@@ -145,6 +145,7 @@ struct AppConfig {
   std::string vt_lb_stats_file    = "stats.%p.json";
   std::string vt_lb_stats_dir_in  = "vt_lb_stats_in";
   std::string vt_lb_stats_file_in = "stats.%p.json";
+  bool vt_help_lb_args        = false;
 
   bool vt_no_detect_hang       = false;
   bool vt_print_no_progress    = true;
@@ -308,6 +309,7 @@ struct AppConfig {
       | vt_lb_stats_file
       | vt_lb_stats_dir_in
       | vt_lb_stats_file_in
+      | vt_help_lb_args
 
       | vt_no_detect_hang
       | vt_print_no_progress
