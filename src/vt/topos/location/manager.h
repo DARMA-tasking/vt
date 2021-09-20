@@ -81,6 +81,7 @@ struct LocationManager : runtime::component::Component<LocationManager> {
   using LocInstContainerType = std::unordered_map<LocInstType, LocCoordPtrType>;
   using VrtLocType = EntityLocationCoord<int32_t>;
   using VrtLocProxyType = EntityLocationCoord<VirtualProxyType>;
+  using DataRepType = EntityLocationCoord<DataRepIDType>;
 
   template <typename ColT, typename IndexT>
   using CollectionProxyType = ::vt::vrt::VirtualElmProxyType<ColT, IndexT>;
@@ -117,6 +118,7 @@ struct LocationManager : runtime::component::Component<LocationManager> {
 
   PtrType<VrtLocType> virtual_loc = std::make_unique<VrtLocType>();
   PtrType<VrtLocProxyType> vrtContextLoc = std::make_unique<VrtLocProxyType>();
+  PtrType<DataRepType> dataRep = std::make_unique<DataRepType>();
 
   /**
    * \internal \brief Get the location coordinator for a collection
