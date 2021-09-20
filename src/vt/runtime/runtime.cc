@@ -169,14 +169,20 @@ Runtime::Runtime(
       // exit code of 0 -> 'help'
       std::ostream& out = exit_code == 0 ? std::cout : std::cerr;
 
-      out << "--- VT INITIALIZATION ABORT ---" << "\n\n"
-          << msg << "\n"
-          << "--- VT INITIALIZATION ABORT ---" << "\n"
-          << std::flush;
+      if (exit_code != 0) {
+        out << "--- VT INITIALIZATION ABORT ---" << "\n";
+      }
+      out << "\n" << msg << "\n";
+      if (exit_code != 0) {
+        out << "--- VT INITIALIZATION ABORT ---" << "\n";
+      }
+      out << std::flush;
     }
 
-    // Even in interop mode, still abort MPI on bad args.
-    MPI_Abort(comm, exit_code);
+    if (exit_code != 0) {
+      // Even in interop mode, still abort MPI on bad args.
+      MPI_Abort(comm, exit_code);
+    }
     MPI_Finalize();
 
     std::_Exit(exit_code); // no return
