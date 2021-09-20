@@ -156,6 +156,14 @@ Runtime::Runtime(
     arg_config_->parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);
 
+  if (getAppConfig()->vt_help_lb_args) {
+    // Help requested
+    vrt::collection::balance::LBManager::printLBArgsHelp(getAppConfig()->vt_lb_name);
+     if (exit_code == -1) {
+       exit_code = 0;
+     }
+  }
+
   if (exit_code not_eq -1) {
     // Help requested or invalid argument(s).
     MPI_Comm comm = initial_communicator_;

@@ -343,7 +343,7 @@ void ArgConfig::addLbArgs(CLI::App& app) {
    * Flags for enabling load balancing and configuring it
    */
   auto lb            = "Enable load balancing";
-  auto lb_args       = "Arguments pass to LB: \"x=0 y=1 test=2\"";
+  auto lb_args       = "Arguments pass to LB: \"x=0 y=1\"; try --vt_help_lb_args";
   auto lb_quiet      = "Silence load balancing output";
   auto lb_file_name  = "LB specification file to read";
   auto lb_show_spec  = "Show LB specification during startup";
@@ -393,6 +393,12 @@ void ArgConfig::addLbArgs(CLI::App& app) {
   xx->group(debugLB);
   xy->group(debugLB);
   xz->group(debugLB);
+
+  // help options deliberately omitted from the debugLB group above so that
+  // they appear grouped with --vt_help when --vt_help is used
+  auto help_lb_args  = "Print help for --vt_lb_args";
+  auto h1 = app.add_flag("--vt_help_lb_args", config_.vt_help_lb_args, help_lb_args);
+  (void) h1;
 }
 
 void ArgConfig::addDiagnosticArgs(CLI::App& app) {
