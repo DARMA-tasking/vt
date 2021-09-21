@@ -264,7 +264,15 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
 
 /*static*/
 void LBManager::printLBArgsHelp(LBType lb) {
-  fmt::print("\nLB arguments for {}:\n\n", lb_names_[lb]);
+  auto sep = fmt::format("{}{:-^120}{}\n", debug::bd_green(), "", debug::reset());
+  fmt::print(sep);
+  fmt::print(
+    "{}{}LB arguments for {}{}{}:\n",
+    debug::vtPre(), debug::green(), debug::magenta(),
+    lb_names_[lb], debug::reset()
+  );
+  fmt::print(sep);
+  fmt::print("\n");
 
   std::unordered_map<std::string, std::string> help;
 
@@ -303,8 +311,11 @@ void LBManager::printLBArgsHelp(LBType lb) {
 
   if (help.size() > 0) {
     for (auto &arg_help : help) {
-      fmt::print("Argument: {}", arg_help.first);
-      fmt::print("{}\n", arg_help.second);
+      fmt::print(
+        "{}Argument: {}{}{}",
+        debug::yellow(), debug::red(), arg_help.first, debug::reset()
+      );
+      fmt::print("{}{}{}\n", debug::reset(), arg_help.second, debug::reset());
     }
   } else {
     fmt::print("No LB arguments are supported by this load balancer.\n\n");
@@ -321,7 +332,7 @@ void LBManager::printLBArgsHelp(std::string lb_name) {
     for (auto&& lb : vrt::collection::balance::lb_names_) {
       if (lb_name == lb.second) {
         vrt::collection::balance::LBManager::printLBArgsHelp(lb.first);
-      break;
+        break;
       }
     }
   }
