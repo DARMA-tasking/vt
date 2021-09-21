@@ -284,6 +284,14 @@ void LBManager::printLBArgsHelp(LBType lb) {
   case LBType::RandomLB:
     help = lb::RandomLB::getInputKeysWithHelp();
     break;
+  case LBType::StatsMapLB:
+    help = lb::StatsMapLB::getInputKeysWithHelp();
+    break;
+# if vt_check_enabled(zoltan)
+  case LBType::ZoltanLB:
+    help = lb::ZoltanLB::getInputKeysWithHelp();
+    break;
+# endif
   case LBType::NoLB:
     // deliberately skip retrieving arguments
     break;

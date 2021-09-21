@@ -46,6 +46,8 @@
 
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 
+#include <unordered_map>
+
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
 struct BaseLB;
@@ -61,6 +63,10 @@ struct StatsMapLB : BaseLB {
   void init(objgroup::proxy::Proxy<StatsMapLB> in_proxy);
   void runLB() override;
   void inputParams(balance::SpecEntry* spec) override { }
+
+  static std::unordered_map<std::string, std::string> getInputKeysWithHelp() {
+    return std::unordered_map<std::string, std::string>{};
+  }
 
 private:
   objgroup::proxy::Proxy<StatsMapLB> proxy_ = {};
