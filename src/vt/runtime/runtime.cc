@@ -157,11 +157,18 @@ Runtime::Runtime(
   int exit_code = std::get<0>(result);
 
   if (getAppConfig()->vt_help_lb_args) {
-    // Help requested
-    vrt::collection::balance::LBManager::printLBArgsHelp(getAppConfig()->vt_lb_name);
-     if (exit_code == -1) {
-       exit_code = 0;
-     }
+    // Help requested or invalid argument(s).
+    int rank = 0;
+    MPI_Comm_rank(initial_communicator_, &rank);
+
+    if (rank == 0) {
+      // Help requested
+      vt::debug::preConfigRef()->colorize_output = true;
+      vrt::collection::balance::LBManager::printLBArgsHelp(getAppConfig()->vt_lb_name);
+    }
+    if (exit_code == -1) {
+      exit_code = 0;
+    }
   }
 
   if (exit_code not_eq -1) {
