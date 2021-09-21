@@ -75,6 +75,7 @@ stages:
             echo setup
       - task: Bash@3
         displayName: Build timestamp for caching
+        continueOnError: true
         inputs:
           targetType: 'inline'
           script: |
@@ -96,11 +97,15 @@ stages:
             echo "##vso[task.setvariable variable=TS_DAY]$val"
       - task: Bash@3
         displayName: Output timestamp for caching
+        continueOnError: true
+        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
           targetType: 'inline'
           script: 'echo "my pipeline variable is $(TS) $(TS_YEAR) $(TS_MONTH) $(TS_DAY)"'
       - task: Cache@2
         displayName: Update cache
+        continueOnError: true
+        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
           securityNamespace: cache
           key: $(Agent.OS) | "$(cache_name)" | $(TS_YEAR) | $(TS_MONTH) | $(TS_DAY) | $(TS)
@@ -112,6 +117,7 @@ stages:
             $(Agent.OS) | "$(cache_name)"
       - task: Bash@3
         displayName: Check for changes in containers
+        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
           targetType: 'inline'
           script: |
@@ -135,6 +141,7 @@ stages:
           CODECOV_TOKEN: $(codecov_token)
       - task: Bash@3
         displayName: Put compilation's and tests' logs in PR comment
+        continueOnError: true
         condition: and(succeededOrFailed(), eq(variables['Build.Reason'], 'PullRequest'))
         inputs:
           targetType: 'inline'
@@ -153,6 +160,7 @@ stages:
           GITHUB_PAT: $(github_pat)
       - task: DockerCompose@0
         displayName: Push container to registry
+        continueOnError: true
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
         inputs:
           containerregistrytype: 'Container Registry'
@@ -162,6 +170,8 @@ stages:
           dockerComposeCommand: 'push alpine-cpp-clean'
       - task: Bash@3
         displayName: Create artifacts
+        continueOnError: true
+        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
           targetType: 'inline'
           script: |
@@ -169,13 +179,24 @@ stages:
             zip -j $(Agent.TempDirectory)/cmake-output.log.gz $(build_root)/vt/cmake-output.log
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake test output artifact
+        continueOnError: true
+        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
           targetPath: '$(Agent.TempDirectory)/LastTest.log.gz'
           artifact: 'CMakeLastTestLog'
           publishLocation: 'pipeline'
       - task: PublishPipelineArtifact@1
         displayName: Upload CMake full output artifact
+        continueOnError: true
+        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
         inputs:
           targetPath: '$(Agent.TempDirectory)/cmake-output.log.gz'
           artifact: 'CMakeOutputLog'
           publishLocation: 'pipeline'
+      - task: Bash@3
+        displayName: Finish pipeline
+        condition: in(variables['Agent.JobStatus'], 'Succeeded', 'SucceededWithIssues')
+        inputs:
+          targetType: 'inline'
+          script: |
+            echo Done
