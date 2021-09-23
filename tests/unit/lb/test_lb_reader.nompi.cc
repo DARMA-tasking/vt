@@ -108,7 +108,7 @@ TEST_F(TestLBReader, test_lb_read_2) {
   std::ofstream out(file_name);
   out << ""
     "0 NoLB\n"
-    "1 HierarchicalLB min=0.9 max=1.1 auto=false\n"
+    "1 HierarchicalLB I_tolerance=0.9 threshold=1.1\n"
     "%10 TemperedLB c=1 k=5 f=2 i=10\n"
     "%5 GreedyLB min=1.0\n"
     "120 HierarchicalLB test_xyz=3\n";
@@ -133,9 +133,8 @@ TEST_F(TestLBReader, test_lb_read_2) {
     case 1:
       EXPECT_TRUE(entry != nullptr);
       EXPECT_TRUE(entry->getLB() == SpecLBType::HierarchicalLB);
-      EXPECT_TRUE(entry->getOrDefault<double>("min", 0.) == 0.9);
-      EXPECT_TRUE(entry->getOrDefault<double>("max", 0.) == 1.1);
-      EXPECT_TRUE(entry->getOrDefault<bool>("auto", true) == false);
+      EXPECT_TRUE(entry->getOrDefault<double>("I_tolerance", 0.) == 0.9);
+      EXPECT_TRUE(entry->getOrDefault<double>("threshold", 0.) == 1.1);
       EXPECT_EQ(entry->getIdx(), 1);
       break;
     case 10:
@@ -171,8 +170,8 @@ TEST_F(TestLBReader, test_lb_read_2) {
     case 115:
       EXPECT_TRUE(entry != nullptr);
       EXPECT_TRUE(entry->getLB() == SpecLBType::GreedyLB);
-      EXPECT_TRUE(entry->getOrDefault<double>("min", 0.) == 1.0);
-      EXPECT_EQ(entry->getParams().at("min"), "1.0");
+      EXPECT_TRUE(entry->getOrDefault<double>("I_tolerance", 0.) == 1.0);
+      EXPECT_EQ(entry->getParams().at("I_tolerance"), "1.0");
       break;
     case 120:
       EXPECT_TRUE(entry != nullptr);
@@ -187,10 +186,10 @@ TEST_F(TestLBReader, test_lb_read_2) {
   std::string expected_spec =
     "vt: \tExact specification lines:\n"
     "vt: \tRun `NoLB` on phase 0\n"
-    "vt: \tRun `HierarchicalLB` on phase 1 with arguments `auto=false max=1.1 min=0.9`\n"
+    "vt: \tRun `HierarchicalLB` on phase 1 with arguments `threshold=1.1 I_tolerance=0.9`\n"
     "vt: \tRun `HierarchicalLB` on phase 120 with arguments `test_xyz=3`\n"
     "vt: \tMod (%) specification lines:\n"
-    "vt: \tRun `GreedyLB` every 5 phases with arguments `min=1.0` excluding phases 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120\n"
+    "vt: \tRun `GreedyLB` every 5 phases with arguments `I_tolerance=1.0` excluding phases 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120\n"
     "vt: \tRun `TemperedLB` every 10 phases with arguments `c=1 f=2 i=10 k=5` excluding phases 120\n";
   EXPECT_EQ(Spec::toString(), expected_spec);
 }

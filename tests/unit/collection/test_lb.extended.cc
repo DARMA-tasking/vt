@@ -167,9 +167,9 @@ auto balancers = ::testing::Values(
     "RotateLB",
     "HierarchicalLB",
     "TemperedLB",
-    "GreedyLB:strategy=scatter",
-    "GreedyLB:strategy=pt2pt",
-    "GreedyLB:strategy=bcast"
+    "GreedyLB:data_dist=scatter",
+    "GreedyLB:data_dist=pt2pt",
+    "GreedyLB:data_dist=bcast"
 #   if vt_check_enabled(zoltan)
     , "ZoltanLB"
 #   endif
