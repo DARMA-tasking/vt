@@ -76,46 +76,32 @@ void GreedyLB::init(objgroup::proxy::Proxy<GreedyLB> in_proxy) {
 GreedyLB::getInputKeysWithHelp() {
   std::unordered_map<std::string, std::string> const keys_help = {
     {
-      "min",
+      "I_tolerance",
       R"(
 Values: <double>
-Default: 0.8
+Default: 0.05
 Description:
-  The load threshold for objects to consider on each node. The default value of
-  0.8 will consider 80% of the average load for re-balancing on each node. The
-  order these will be selected is based on the value passed to "strategy". If
-  the parameter "auto" is set to "true", this will be the minimum threshold;
-  otherwise, it sets the threshold directly.
+  If the imbalance metric, I, is greater than I_tolerance, the load balancer
+  will run.
 )"
     },
     {
-      "max",
+      "threshold",
       R"(
 Values: <double>
-Default: 1.004
+Default: 0.5
 Description:
-  The maximum load threshold for objects to consider on each node which is only
-  used if "auto" is "true".
+  The load threshold of objects to consider for potential migration on each
+  rank. All objects over threshold * average_load on each rank will considered.
 )"
     },
     {
-      "auto",
-      R"(
-Values: {true, false}
-Default: true
-Description:
-  Automatically determine the threshold between "min" and "max" using
-  calculated I (imbalance metric) with the formula
-  min(max(1-I, min), max).
-)"
-    },
-    {
-      "strategy",
+      "data_dist",
       R"(
 Values: {scatter, bcast, pt2pt}
 Default: scatter
 Description:
-  How to distribute the data after the centralized LB makes a decision
+  How to distribute the migrations decisions after the centralized LB runs.
 )"
     }
   };
@@ -130,18 +116,17 @@ void GreedyLB::inputParams(balance::SpecEntry* spec) {
     allowed.push_back(elm.first);
   }
   spec->checkAllowedKeys(allowed);
-  min_threshold = spec->getOrDefault<double>("min", greedy_threshold_p);
-  max_threshold = spec->getOrDefault<double>("max", greedy_max_threshold_p);
-  auto_threshold = spec->getOrDefault<bool>("auto", greedy_auto_threshold_p);
+  I_tolerance = spec->getOrDefault<double>("I_tolerance", I_tolerance);
+  this_threshold = spec->getOrDefault<double>("threshold", this_threshold);
 
-  balance::LBArgsEnumConverter<DataDistStrategy> strategy_converter_(
-    "strategy", "DataDistStrategy", {
+  balance::LBArgsEnumConverter<DataDistStrategy> data_dist_converter_(
+    "data_dist", "DataDistStrategy", {
       {DataDistStrategy::scatter, "scatter"},
       {DataDistStrategy::pt2pt,   "pt2pt"},
       {DataDistStrategy::bcast,   "bcast"}
     }
   );
-  strat_ = strategy_converter_.getFromSpec(spec, strat_);
+  data_dist_ = data_dist_converter_.getFromSpec(spec, data_dist_);
 }
 
 void GreedyLB::runLB() {
@@ -158,19 +143,15 @@ void GreedyLB::loadStats() {
   this_load_begin = this_load;
 
   if (avg_load > 0.0000000001) {
-    should_lb = I > greedy_tolerance;
-  }
-
-  if (auto_threshold) {
-    this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
+    should_lb = I > I_tolerance;
   }
 
   if (this_node == 0) {
     vt_print(
       lb,
       "loadStats: load={:.2f}, total={:.2f}, avg={:.2f}, I={:.2f},"
-      "should_lb={}, auto={}, threshold={}\n",
-      this_load, total_load, avg_load, I, should_lb, auto_threshold,
+      "should_lb={}, I_tolerance={}, threshold={}\n",
+      this_load, total_load, avg_load, I, should_lb, I_tolerance,
       this_threshold
     );
     fflush(stdout);
@@ -344,7 +325,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
     }
   }
 
-  if (strat_ == DataDistStrategy::scatter) {
+  if (data_dist_ == DataDistStrategy::scatter) {
     std::size_t max_bytes =  max_recs * sizeof(GreedyLBTypes::ObjIDType);
     vt_debug_print(
       normal, lb,
@@ -362,7 +343,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
         }
       }
     );
-  } else if (strat_ == DataDistStrategy::pt2pt) {
+  } else if (data_dist_ == DataDistStrategy::pt2pt) {
     for (NodeType n = 0; n < theContext()->getNumNodes(); n++) {
       vtAssert(
         node_transfer.size() == static_cast<size_t>(theContext()->getNumNodes()),
@@ -370,7 +351,7 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
       );
       proxy[n].send<GreedySendMsg, &GreedyLB::recvObjs>(node_transfer[n]);
     }
-  } else if (strat_ == DataDistStrategy::bcast) {
+  } else if (data_dist_ == DataDistStrategy::bcast) {
     proxy.broadcast<GreedyBcastMsg, &GreedyLB::recvObjsBcast>(node_transfer);
   }
 }

@@ -111,17 +111,12 @@ private:
   static objgroup::proxy::Proxy<GreedyLB> scatter_proxy;
 
 private:
-  double this_threshold = 0.0f;
+  double I_tolerance = 0.05f;
+  double this_threshold = 0.5f;
   LoadType this_load_begin = 0.0f;
   ObjSampleType load_over;
   objgroup::proxy::Proxy<GreedyLB> proxy = {};
-
-  // Parameters read from LB spec file
-  double max_threshold = 0.0f;
-  double min_threshold = 0.0f;
-  bool auto_threshold = true;
-
-  DataDistStrategy strat_ = DataDistStrategy::scatter;
+  DataDistStrategy data_dist_ = DataDistStrategy::scatter;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
