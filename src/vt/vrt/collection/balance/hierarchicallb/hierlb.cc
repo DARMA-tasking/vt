@@ -75,41 +75,27 @@ void HierarchicalLB::init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy) {
 HierarchicalLB::getInputKeysWithHelp() {
   std::unordered_map<std::string, std::string> const keys_help = {
     {
-      "min",
+      "I_tolerance",
       R"(
 Values: <double>
-Default: 0.8
+Default: 0.05
 Description:
-  The load threshold for objects to consider on each node. The default value of
-  0.8 will consider 80% of the average load for re-balancing on each node. The
-  order these will be selected is based on the value passed to "strategy". If
-  the parameter "auto" is set to "true", this will be the minimum threshold;
-  otherwise, it sets the threshold directly.
+  If the imbalance metric, I, is greater than I_tolerance, the load balancer
+  will run.
 )"
     },
     {
-      "max",
+      "threshold",
       R"(
 Values: <double>
-Default: 1.004
+Default: 0.5
 Description:
-  The maximum load threshold for objects to consider on each node which is only
-  used if "auto" is "true".
+  The load threshold of objects to consider for potential migration on each
+  rank. All objects over threshold * average_load on each rank will considered.
 )"
     },
     {
-      "auto",
-      R"(
-Values: {true, false}
-Default: true
-Description:
-  Automatically determine the threshold between "min" and "max" using
-  calculated I (imbalance metric) with the formula
-  min(max(1-I, min), max).
-)"
-    },
-    {
-      "strategy",
+      "object_selection",
       R"(
 Values: {LoadOverLessThan, LoadOverGreaterThan, LoadOverOneEach}
 Default: LoadOverLessThan
@@ -134,12 +120,11 @@ void HierarchicalLB::inputParams(balance::SpecEntry* spec) {
     allowed.push_back(elm.first);
   }
   spec->checkAllowedKeys(allowed);
-  min_threshold = spec->getOrDefault<double>("min", hierlb_threshold_p);
-  max_threshold = spec->getOrDefault<double>("max", hierlb_max_threshold_p);
-  auto_threshold = spec->getOrDefault<bool>("auto", hierlb_auto_threshold_p);
+  this_threshold = spec->getOrDefault<double>("threshold", this_threshold);
+  I_tolerance = spec->getOrDefault<double>("I_tolerance", I_tolerance);
 
   std::string extract = spec->getOrDefault<std::string>(
-    "strategy", "LoadOverLessThan"
+    "object_selection", "LoadOverLessThan"
   );
   if (extract.compare("LoadOverLessThan") == 0) {
     extract_strategy = HeapExtractEnum::LoadOverLessThan;
@@ -154,7 +139,7 @@ void HierarchicalLB::inputParams(balance::SpecEntry* spec) {
   }
 }
 
-void HierarchicalLB::setupTree(double const threshold) {
+void HierarchicalLB::setupTree() {
   vtAssert(
     tree_setup == false,
     "Tree must not already be set up when is this called"
@@ -163,12 +148,10 @@ void HierarchicalLB::setupTree(double const threshold) {
   auto const& this_node = theContext()->getNode();
   auto const& num_nodes = theContext()->getNumNodes();
 
-  this_threshold = threshold;
-
   vt_debug_print(
     terse, hierlb,
     "HierarchicalLB: setupTree: threshold={}\n",
-    threshold
+    this_threshold
   );
 
   for (NodeType node = 0; node < hierlb_nary; node++) {
@@ -256,19 +239,15 @@ void HierarchicalLB::loadStats() {
   this_load_begin = this_load;
 
   if (avg_load > 0.0000000001) {
-    should_lb = I > hierlb_tolerance;
-  }
-
-  if (auto_threshold) {
-    this_threshold = std::min(std::max(1.0f - I, min_threshold), max_threshold);
+    should_lb = I > I_tolerance;
   }
 
   if (this_node == 0) {
     vt_print(
       hierlb,
       "loadStats: load={:.2f}, total={:.2f}, avg={:.2f}, I={:.2f},"
-      "should_lb={}, auto={}, threshold={}\n",
-      this_load, total_load, avg_load, I, should_lb, auto_threshold,
+      "should_lb={}, I_tolerance={}, threshold={}\n",
+      this_load, total_load, avg_load, I, should_lb, I_tolerance,
       this_threshold
     );
     fflush(stdout);
@@ -758,7 +737,7 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
 }
 
 void HierarchicalLB::runLB() {
-  setupTree(min_threshold);
+  setupTree();
 
   auto cb = vt::theCB()->makeBcast<
     HierarchicalLB, SetupDoneMsg, &HierarchicalLB::setupDone

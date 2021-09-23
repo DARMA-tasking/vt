@@ -78,7 +78,7 @@ struct HierarchicalLB : BaseLB {
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
 
-  void setupTree(double const threshold);
+  void setupTree();
   void calcLoadOver(HeapExtractEnum const extract);
   void loadOverBin(ObjBinType bin, ObjBinListType& bin_list);
   void procDataIn(ElementLoadType const& data_in);
@@ -121,7 +121,8 @@ private:
   void loadStats();
 
 private:
-  double this_threshold = 0.0f;
+  double this_threshold = 0.5f;
+  double I_tolerance = 0.05f;
   bool tree_setup = false;
   NodeType parent = uninitialized_destination;
   NodeType bottom_parent = uninitialized_destination;
@@ -132,9 +133,6 @@ private:
   int64_t migrates_expected = 0, transfer_count = 0;
   TransferType transfers;
   objgroup::proxy::Proxy<HierarchicalLB> proxy = {};
-  double max_threshold = 0.0f;
-  double min_threshold = 0.0f;
-  bool auto_threshold = true;
   HeapExtractEnum extract_strategy = HeapExtractEnum::LoadOverLessThan;
 };
 
