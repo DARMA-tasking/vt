@@ -28,4 +28,8 @@ elseif (NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel")
   message(FATAL_ERROR "Your C++ compiler may not support C++14.")
 endif ()
 
+if (vt_asan_enabled)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+endif()
 endmacro()
