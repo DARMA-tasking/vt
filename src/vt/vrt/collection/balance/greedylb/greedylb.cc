@@ -81,11 +81,10 @@ GreedyLB::getInputKeysWithHelp() {
 Values: <double>
 Default: 0.8
 Description:
-  The load threshold for objects to consider on each node. The default value of
-  0.8 will consider 80% of the average load for re-balancing on each node. The
-  order these will be selected is based on the value passed to "strategy". If
-  the parameter "auto" is set to "true", this will be the minimum threshold;
-  otherwise, it sets the threshold directly.
+  The load threshold of objects to consider for potential migration on each
+  rank. All objects over threshold * average_load on each rank will
+  considered. If the parameter "auto" is set to "true", this will be the minimum
+  threshold; otherwise, it sets the threshold directly.
 )"
     },
     {
