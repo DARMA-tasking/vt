@@ -82,7 +82,7 @@ Values: <double>
 Default: 0.8
 Description:
   The load threshold of objects to consider for potential migration on each
-  rank. All objects over threshold * average_load on each rank will
+  rank. All objects over threshold * average_load on each rank will be
   considered. If the parameter "auto" is set to "true", this will be the minimum
   threshold; otherwise, it sets the threshold directly.
 )"
