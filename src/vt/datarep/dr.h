@@ -57,6 +57,16 @@
 
 namespace vt { namespace datarep {
 
+namespace detail {
+
+template <typename T>
+struct DataResponseMsg;
+
+template <typename T>
+struct DataRequestMsg;
+
+} /* end namespace detail */
+
 struct DataReplicator : runtime::component::Component<DataReplicator> {
 
   std::string name() override { return "DataReplicator"; }
@@ -83,54 +93,20 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
   void unregisterHandle(DataRepIDType handle_id);
 
   template <typename T>
-  struct DataRequestMsg : vt::Message {
-    using MessageParentType = vt::Message;
-    vt_msg_serialize_prohibited();
-
-    DataRequestMsg(NodeType in_requestor, DataRepIDType in_handle_id)
-      : requestor_(in_requestor),
-        handle_id_(in_handle_id)
-    { }
-
-    NodeType requestor_ = uninitialized_destination;
-    DataRepIDType handle_id_ = no_datarep;
-  };
-
-  template <typename T>
-  struct DataResponseMsg : vt::Message {
-    using MessageParentType = vt::Message;
-    vt_msg_serialize_if_needed_by_parent_or_type1(T);
-
-    DataResponseMsg() = default; // for serializer
-    DataResponseMsg(DataRepIDType in_handle_id, T const& data)
-      : handle_id_(in_handle_id),
-        data_(std::make_unique<T>(data))
-    { }
-
-    template <typename SerializerT>
-    void serialize(SerializerT& s) {
-      MessageParentType::serialize(s);
-      s | handle_id_;
-      s | data_;
-    }
-
-    DataRepIDType handle_id_ = no_datarep;
-    std::unique_ptr<T> data_;
-  };
-
-  template <typename T>
   bool requestData(DataRepIDType handle_id, bool* ready_ptr);
 
   template <typename T>
   T const& getDataRef(DataRepIDType handle_id) const;
 
 private:
+  template <typename T>
+  static void staticRequestHandler(detail::DataRequestMsg<T>* msg);
 
   template <typename T>
-  void dataIncomingHandler(DataResponseMsg<T>* msg);
+  void dataIncomingHandler(detail::DataResponseMsg<T>* msg);
 
   template <typename T>
-  void dataRequestHandler(DataRequestMsg<T>* msg);
+  void dataRequestHandler(detail::DataRequestMsg<T>* msg);
 
   NodeType getHomeNode(DataRepIDType handle_id) const {
     return handle_id >> 48;

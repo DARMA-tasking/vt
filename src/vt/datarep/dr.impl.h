@@ -46,6 +46,7 @@
 
 #include "vt/topos/location/manager.h"
 #include "vt/datarep/dr.h"
+#include "vt/datarep/msg.h"
 #include "vt/objgroup/manager.h"
 
 namespace vt { namespace datarep {
@@ -118,17 +119,27 @@ bool DataReplicator::requestData(DataRepIDType handle_id, bool* ready_ptr) {
       "requestData: handle_id={} remote request\n", handle_id
     );
     waiting_[handle_id].push_back(ready_ptr);
-    theLocMan()->dataRep->getLocation(
-      handle_id, getHomeNode(handle_id), [=](NodeType loc) {
-        auto const this_node = theContext()->getNode();
-        auto proxy = objgroup::proxy::Proxy<DataReplicator>{proxy_};
-        proxy[loc].send<
-          DataRequestMsg<T>, &DataReplicator::dataRequestHandler<T>
-        >(this_node, handle_id);
-      }
+
+    using MsgType = detail::DataRequestMsg<T>;
+    auto const this_node = theContext()->getNode();
+    auto msg = makeMessage<MsgType>(this_node, handle_id);
+    theLocMan()->dataRep->routeMsgHandler<MsgType, staticRequestHandler<T>>(
+      handle_id, getHomeNode(handle_id), msg.get()
     );
     return false;
   }
+}
+
+template <typename T>
+/*static*/ void DataReplicator::staticRequestHandler(
+  detail::DataRequestMsg<T>* msg
+) {
+  auto proxy = objgroup::proxy::Proxy<DataReplicator>{theDR()->proxy_};
+  auto loc = theContext()->getNode();
+  proxy[loc].invoke<
+    decltype(&DataReplicator::dataRequestHandler<T>),
+    &DataReplicator::dataRequestHandler<T>
+  >(msg);
 }
 
 template <typename T>
@@ -143,7 +154,7 @@ T const& DataReplicator::getDataRef(DataRepIDType handle_id) const {
 }
 
 template <typename T>
-void DataReplicator::dataIncomingHandler(DataResponseMsg<T>* msg) {
+void DataReplicator::dataIncomingHandler(detail::DataResponseMsg<T>* msg) {
   auto const han_id = msg->handle_id_;
   vt_debug_print(
     normal, gen,
@@ -167,7 +178,7 @@ void DataReplicator::dataIncomingHandler(DataResponseMsg<T>* msg) {
 }
 
 template <typename T>
-void DataReplicator::dataRequestHandler(DataRequestMsg<T>* msg) {
+void DataReplicator::dataRequestHandler(detail::DataRequestMsg<T>* msg) {
   auto const requestor = msg->requestor_;
   auto const handle_id = msg->handle_id_;
   auto const found = requestData<T>(handle_id, nullptr);
@@ -179,7 +190,7 @@ void DataReplicator::dataRequestHandler(DataRequestMsg<T>* msg) {
   if (found) {
     auto proxy = objgroup::proxy::Proxy<DataReplicator>{proxy_};
     proxy[requestor].template send<
-      DataResponseMsg<T>, &DataReplicator::dataIncomingHandler<T>
+      detail::DataResponseMsg<T>, &DataReplicator::dataIncomingHandler<T>
     >(handle_id, getDataRef<T>(handle_id));
   }
 }
