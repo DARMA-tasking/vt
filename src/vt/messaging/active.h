@@ -187,6 +187,14 @@ struct InProgressIRecv : InProgressBase {
     return flag;
   }
 
+  /**
+   * \brief Reconstructor for footprinting
+   */
+  static InProgressIRecv& reconstruct(void* buf) {
+    auto* ipir = new (buf) InProgressIRecv{nullptr, 0, 0};
+    return *ipir;
+  }
+
 private:
   MPI_Request req = MPI_REQUEST_NULL;
 };
@@ -233,6 +241,17 @@ struct InProgressDataIRecv : InProgressBase {
       | priority
       | cur
       | reqs;
+  }
+
+  /**
+   * \brief Reconstructor for footprinting
+   */
+  static InProgressDataIRecv& reconstruct(void* buf) {
+    auto* ipdir = new (buf) InProgressDataIRecv{
+      nullptr, 0, 0, std::vector<MPI_Request>{},
+      nullptr, ActionType{}, ContinuationDeleterType{}, 0
+    };
+    return *ipdir;
   }
 
   void* user_buf = nullptr;

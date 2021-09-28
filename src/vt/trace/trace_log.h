@@ -236,7 +236,7 @@ struct Log final {
     }
   }
 
-  // No default constructor. Seems wierd? Copy+move all the way..
+  // No default constructor. Seems weird? Copy+move all the way..
   // (Copy-constructible and copy-assignable required for dequeue.)
   Log() = delete;
   Log(Log const& in) = default;
@@ -332,6 +332,15 @@ struct Log final {
   inline Data::SysData const& sys_data() const {
     assert(data.sys.data_type == LogDataType::sys && "Expecting sys data-type");
     return data.sys;
+  }
+
+  /**
+   * \brief Reconstructor for footprinting
+   */
+  static Log& reconstruct(void* buf) {
+    auto* l = new (buf)
+      Log{0.0, TraceConstantsType::InvalidTraceType, std::string{}, 0};
+    return *l;
   }
 
   template <typename Serializer>

@@ -157,7 +157,7 @@ struct MsgSharedPtr final {
   }
 
   /// [obsolete] Use to() as MsgVirtualPtr <-> MsgSharedPtr.
-  /// Both methods are equivalent in funciton.
+  /// Both methods are equivalent in function.
   template <typename U>
   MsgSharedPtr<U> toVirtual() const {
     return to<U>();
@@ -307,7 +307,7 @@ private:
 /**
  * \brief Helper to unify 'stealing' message ownership.
  *
- * This type is not intented to be used directly. It uses implicit conversion
+ * This type is not intended to be used directly. It uses implicit conversion
  * construtors to perform a 'std::move' on a \c MsgPtr<MsgT>&.
  *
  * If a normal \c MsgT* is supplied, it is promoted without stealing.
@@ -376,7 +376,7 @@ using MsgSharedPtr = messaging::MsgSharedPtr<T>;
  * \brief Wrapper to manage Active Messages.
  *
  * A MsgPtr represents a 'shared pointer like' object wrapping a
- * message that correcly manages reference-counts to order to
+ * message that correctly manages reference-counts to order to
  * eliminate memory leaks.
  */
 template <typename T>

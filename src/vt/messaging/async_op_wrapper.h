@@ -106,6 +106,14 @@ struct AsyncOpWrapper {
     s | valid | op_ | tid_;
   }
 
+  /**
+   * \brief Reconstructor for footprinting
+   */
+  static AsyncOpWrapper& reconstruct(void* buf) {
+    auto* asyncOpWrapper = new (buf) AsyncOpWrapper{nullptr};
+    return *asyncOpWrapper;
+  }
+
 public:
   bool valid = false;                         /**< Whether op is valid  */
 

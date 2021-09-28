@@ -74,6 +74,14 @@ struct Info {
       offset(in_offset), is_local(in_is_local)
   { }
 
+  /**
+   * \brief Reconstructor for footprinting
+   */
+  static Info& reconstruct(void* buf) {
+    auto* info = new (buf) Info{RDMA_TypeType::Uninitialized};
+    return *info;
+  }
+
   template <typename Serializer>
   void serialize(Serializer& s) {
     s | rdma_type
