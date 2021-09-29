@@ -50,22 +50,32 @@ namespace vt { namespace datarep {
 
 struct DataStoreBase {
   virtual ~DataStoreBase() = default;
-  virtual void const* get() const = 0;
+  virtual void const* get(DataVersionType version) const = 0;
+  virtual bool hasVersion(DataVersionType version) const = 0;
 };
 
 template <typename T>
 struct DataStore final : DataStoreBase {
 
-  explicit DataStore(std::unique_ptr<T> data)
-    : cache_(std::move(data))
-  { }
+  explicit DataStore(
+    bool in_is_master, DataVersionType version, std::shared_ptr<T> data
+  ) : is_master(in_is_master)
+  {
+    cache_[version] = data;
+  }
 
-  void const* get() const override {
-    return static_cast<void const*>(cache_.get());
+  void const* get(DataVersionType version) const override {
+    auto iter = cache_.find(version);
+    return static_cast<void const*>(iter->second.get());
+  }
+
+  bool hasVersion(DataVersionType version) const override {
+    return cache_.find(version) != cache_.end();
   }
 
 private:
-  std::unique_ptr<T> cache_ = nullptr;
+  bool is_master = false;
+  std::unordered_map<DataVersionType, std::shared_ptr<T>> cache_ = {};
 };
 
 }} /* end namespace vt::datarep */

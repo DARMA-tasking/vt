@@ -58,9 +58,9 @@ struct Reader {
 public:
   bool isReady() const { return ready_; }
 
-  void fetch();
+  void fetch(DataVersionType version);
 
-  T const& get() const;
+  T const& get(DataVersionType version) const;
 
 private:
   DataRepIDType handle_ = no_datarep;

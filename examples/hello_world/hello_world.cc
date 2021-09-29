@@ -59,9 +59,9 @@ static void hello_world(HelloMsg* msg) {
   fmt::print("{}: Hello from node {} (start)\n", this_node, msg->from);
   auto han_id = msg->handle_id_;
   vt::datarep::Reader<std::vector<double>> my_reader{han_id};
-  my_reader.fetch();
+  my_reader.fetch(0);
   vt::theSched()->runSchedulerWhile([&]{ return not my_reader.isReady(); });
-  auto const& vec = my_reader.get();
+  auto const& vec = my_reader.get(0);
   for (auto&& elm : vec) {
     vt_print(gen, "elm={}\n", elm);
   }
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 10; i++) {
       my_vec.push_back(i*10);
     }
-    auto my_dr = vt::theDR()->makeHandle(std::move(my_vec));
+    auto my_dr = vt::theDR()->makeHandle(0, std::move(my_vec));
     auto msg = vt::makeMessage<HelloMsg>(this_node, my_dr.getHandleID());
     vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
   }

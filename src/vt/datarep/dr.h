@@ -68,7 +68,6 @@ struct DataRequestMsg;
 } /* end namespace detail */
 
 struct DataReplicator : runtime::component::Component<DataReplicator> {
-
   std::string name() override { return "DataReplicator"; }
 
   static std::unique_ptr<DataReplicator> construct();
@@ -81,7 +80,7 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
   Reader<T> makeReader(DataRepIDType handle);
 
   template <typename T>
-  DR<T> makeHandle(T&& data);
+  DR<T> makeHandle(DataVersionType version, T&& data);
 
   template <typename T>
   void migrateHandle(DR<T>& handle, vt::NodeType migrated_to);
@@ -93,10 +92,12 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
   void unregisterHandle(DataRepIDType handle_id);
 
   template <typename T>
-  bool requestData(DataRepIDType handle_id, bool* ready_ptr);
+  bool requestData(
+    DataVersionType version, DataRepIDType handle_id, bool* ready_ptr
+  );
 
   template <typename T>
-  T const& getDataRef(DataRepIDType handle_id) const;
+  T const& getDataRef(DataVersionType version, DataRepIDType handle_id) const;
 
 private:
   template <typename T>
