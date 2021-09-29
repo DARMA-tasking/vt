@@ -83,6 +83,12 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
   DR<T> makeHandle(DataVersionType version, T&& data);
 
   template <typename T>
+  void publishVersion(DataRepIDType handle, DataVersionType version, T&& data);
+
+  template <typename T>
+  void unpublishVersion(DataRepIDType handle, DataVersionType version);
+
+  template <typename T>
   void migrateHandle(DR<T>& handle, vt::NodeType migrated_to);
 
   template <typename T>
@@ -93,7 +99,7 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
 
   template <typename T>
   bool requestData(
-    DataVersionType version, DataRepIDType handle_id, bool* ready_ptr
+    DataVersionType version, DataRepIDType handle_id, ReaderBase* reader
   );
 
   template <typename T>
@@ -117,7 +123,7 @@ private:
   DataRepIDType identifier_ = 1;
   ObjGroupProxyType proxy_ = no_obj_group;
   std::unordered_map<DataRepIDType, std::unique_ptr<DataStoreBase>> local_store_;
-  std::unordered_map<DataRepIDType, std::vector<bool*>> waiting_;
+  std::unordered_map<DataRepIDType, std::vector<ReaderBase*>> waiting_;
 };
 
 }} /* end namespace vt::datarep */

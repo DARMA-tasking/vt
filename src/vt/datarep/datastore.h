@@ -45,6 +45,7 @@
 #define INCLUDED_VT_DATAREP_DATASTORE_H
 
 #include <memory>
+#include <unordered_map>
 
 namespace vt { namespace datarep {
 
@@ -52,6 +53,7 @@ struct DataStoreBase {
   virtual ~DataStoreBase() = default;
   virtual void const* get(DataVersionType version) const = 0;
   virtual bool hasVersion(DataVersionType version) const = 0;
+  virtual void unpublishVersion(DataVersionType version) = 0;
 };
 
 template <typename T>
@@ -67,6 +69,22 @@ struct DataStore final : DataStoreBase {
   void const* get(DataVersionType version) const override {
     auto iter = cache_.find(version);
     return static_cast<void const*>(iter->second.get());
+  }
+
+  std::shared_ptr<T> getSharedPtr(DataVersionType version) const {
+    auto iter = cache_.find(version);
+    return iter->second;
+  }
+
+  void publishVersion(DataVersionType version, std::shared_ptr<T> data) {
+    cache_[version] = data;
+  }
+
+  void unpublishVersion(DataVersionType version) override {
+    auto iter = cache_.find(version);
+    if (iter != cache_.end()) {
+      cache_.erase(iter);
+    }
   }
 
   bool hasVersion(DataVersionType version) const override {

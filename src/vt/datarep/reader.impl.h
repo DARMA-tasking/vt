@@ -51,13 +51,14 @@ namespace vt { namespace datarep {
 
 template <typename T>
 void Reader<T>::fetch(DataVersionType version) {
-  theDR()->requestData<T>(version, handle_, &ready_);
+  theDR()->requestData<T>(version, handle_, this);
 }
 
 template <typename T>
 T const& Reader<T>::get(DataVersionType version) const {
   vtAssert(ready_, "Data must be ready to get it");
-  return theDR()->getDataRef<T>(version, handle_);
+  vtAssert(data_ != nullptr, "Must have data");
+  return *data_;
 }
 
 }} /* end namespace vt::datarep */

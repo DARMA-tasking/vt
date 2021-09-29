@@ -47,6 +47,7 @@
 #include "vt/topos/location/manager.h"
 #include "vt/datarep/dr.h"
 #include "vt/datarep/msg.h"
+#include "vt/datarep/datastore.h"
 #include "vt/objgroup/manager.h"
 
 namespace vt { namespace datarep {
@@ -83,6 +84,35 @@ DR<T> DataReplicator::makeHandle(DataVersionType version, T&& data) {
 }
 
 template <typename T>
+void DataReplicator::publishVersion(
+  DataRepIDType handle, DataVersionType version, T&& data
+) {
+  vt_debug_print(
+    normal, gen,
+    "publishVersion handle_id={}, version={}\n",
+    handle, version
+  );
+  auto iter = local_store_.find(handle);
+  vtAssert(iter != local_store_.end(), "Handle must exist");
+  auto ds = static_cast<DataStore<T>*>(iter->second.get());
+  ds->publishVersion(version, std::make_shared<T>(std::forward<T>(data)));
+}
+
+template <typename T>
+void DataReplicator::unpublishVersion(
+  DataRepIDType handle, DataVersionType version
+) {
+  vt_debug_print(
+    normal, gen,
+    "unpublishVersion handle_id={}, version={}\n",
+    handle, version
+  );
+  auto iter = local_store_.find(handle);
+  vtAssert(iter != local_store_.end(), "Handle must exist");
+  iter->second->unpublishVersion(version);
+}
+
+template <typename T>
 void DataReplicator::migrateHandle(DR<T>& handle, vt::NodeType migrated_to) {
   theLocMan()->dataRep->entityEmigrated(handle.handle_, migrated_to);
 }
@@ -102,7 +132,7 @@ void DataReplicator::unregisterHandle(DataRepIDType handle_id) {
 
 template <typename T>
 bool DataReplicator::requestData(
-  DataVersionType version, DataRepIDType handle_id, bool* ready_ptr
+  DataVersionType version, DataRepIDType handle_id, ReaderBase* reader
 ) {
   auto iter = local_store_.find(handle_id);
   if (iter != local_store_.end() && iter->second->hasVersion(version)) {
@@ -113,8 +143,11 @@ bool DataReplicator::requestData(
     // found in cache
     // deliver to the Reader
     // nothing to do data is here
-    if (ready_ptr) {
-      *ready_ptr = true;
+    if (reader) {
+      auto ds = static_cast<DataStore<T>*>(iter->second.get());
+      auto tr = static_cast<Reader<T>*>(reader);
+      tr->data_ = ds->getSharedPtr(version);
+      tr->ready_ = true;
     }
     return true;
   } else {
@@ -122,7 +155,7 @@ bool DataReplicator::requestData(
       normal, gen,
       "requestData: handle_id={} remote request\n", handle_id
     );
-    waiting_[handle_id].push_back(ready_ptr);
+    waiting_[handle_id].push_back(reader);
 
     using MsgType = detail::DataRequestMsg<T>;
     auto const this_node = theContext()->getNode();
@@ -178,11 +211,14 @@ void DataReplicator::dataIncomingHandler(detail::DataResponseMsg<T>* msg) {
       )
     )
   );
+  auto ds = static_cast<DataStore<T>*>(local_store_.find(han_id)->second.get());
   // Inform that the data is ready
   auto witer = waiting_.find(han_id);
   if (witer != waiting_.end()) {
     for (auto&& elm : witer->second) {
-      *elm = true;
+      auto tr = static_cast<Reader<T>*>(elm);
+      tr->data_ = ds->getSharedPtr(version);
+      tr->ready_ = true;
     }
     waiting_.erase(witer);
   }

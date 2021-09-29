@@ -63,6 +63,11 @@ struct DR {
 
   DataRepIDType getHandleID() const { return handle_; }
 
+  template <typename U>
+  void publish(DataVersionType version, U&& data);
+
+  void unpublish(DataVersionType version);
+
 private:
   struct DR_TAG_CONSTRUCT {};
 

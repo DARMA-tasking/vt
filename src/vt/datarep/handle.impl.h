@@ -56,6 +56,18 @@ DR<T>::~DR() {
   }
 }
 
+template <typename T>
+template <typename U>
+void DR<T>::publish(DataVersionType version, U&& data) {
+  theDR()->publishVersion(handle_, version, std::forward<U>(data));
+}
+
+template <typename T>
+void DR<T>::unpublish(DataVersionType version) {
+
+}
+
+
 }} /* end namespace vt::datarep */
 
 #endif /*INCLUDED_VT_DATAREP_HANDLE_IMPL_H*/

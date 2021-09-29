@@ -49,11 +49,16 @@
 
 namespace vt { namespace datarep {
 
+struct ReaderBase {};
+
 template <typename T>
-struct Reader {
+struct Reader : ReaderBase {
   explicit Reader(DataRepIDType handle_id)
     : handle_(handle_id)
   { }
+  Reader(Reader const&) = default;
+  Reader(Reader&&) = default;
+  Reader& operator=(Reader const&) = default;
 
 public:
   bool isReady() const { return ready_; }
@@ -63,8 +68,12 @@ public:
   T const& get(DataVersionType version) const;
 
 private:
+  friend struct DataReplicator;
+
   DataRepIDType handle_ = no_datarep;
+  DataVersionType version_ = -1;
   bool ready_ = false;
+  std::shared_ptr<T> data_ = nullptr;
 };
 
 }} /* end namespace vt::datarep */
