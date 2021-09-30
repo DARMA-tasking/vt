@@ -262,6 +262,82 @@ void LBManager::startLB(PhaseType phase, LBType lb) {
   runLB(base_proxy, phase);
 }
 
+/*static*/
+void LBManager::printLBArgsHelp(LBType lb) {
+  auto sep = fmt::format("{}{:-^120}{}\n", debug::bd_green(), "", debug::reset());
+  fmt::print(sep);
+  fmt::print(
+    "{}{}LB arguments for {}{}{}:\n",
+    debug::vtPre(), debug::green(), debug::magenta(),
+    lb_names_[lb], debug::reset()
+  );
+  fmt::print(sep);
+  fmt::print("\n");
+
+  std::unordered_map<std::string, std::string> help;
+
+  switch (lb) {
+  case LBType::HierarchicalLB:
+    help = lb::HierarchicalLB::getInputKeysWithHelp();
+    break;
+  case LBType::GreedyLB:
+    help = lb::GreedyLB::getInputKeysWithHelp();
+    break;
+  case LBType::RotateLB:
+    help = lb::RotateLB::getInputKeysWithHelp();
+    break;
+  case LBType::TemperedLB:
+    help = lb::TemperedLB::getInputKeysWithHelp();
+    break;
+  case LBType::RandomLB:
+    help = lb::RandomLB::getInputKeysWithHelp();
+    break;
+  case LBType::StatsMapLB:
+    help = lb::StatsMapLB::getInputKeysWithHelp();
+    break;
+# if vt_check_enabled(zoltan)
+  case LBType::ZoltanLB:
+    help = lb::ZoltanLB::getInputKeysWithHelp();
+    break;
+# endif
+  case LBType::NoLB:
+    // deliberately skip retrieving arguments
+    break;
+  default:
+    fmt::print("Documentation has not been provided for this LB.\n\n");
+    return;
+    break;
+  }
+
+  if (help.size() > 0) {
+    for (auto &arg_help : help) {
+      fmt::print(
+        "{}Argument: {}{}{}",
+        debug::yellow(), debug::red(), arg_help.first, debug::reset()
+      );
+      fmt::print("{}{}{}\n", debug::reset(), arg_help.second, debug::reset());
+    }
+  } else {
+    fmt::print("No LB arguments are supported by this load balancer.\n\n");
+  }
+}
+
+/*static*/
+void LBManager::printLBArgsHelp(std::string lb_name) {
+  if (lb_name.compare("NoLB") == 0) {
+    for (auto&& lb : vrt::collection::balance::lb_names_) {
+      vrt::collection::balance::LBManager::printLBArgsHelp(lb.first);
+    }
+  } else {
+    for (auto&& lb : vrt::collection::balance::lb_names_) {
+      if (lb_name == lb.second) {
+        vrt::collection::balance::LBManager::printLBArgsHelp(lb.first);
+        break;
+      }
+    }
+  }
+}
+
 void LBManager::startup() {
   thePhase()->registerHookCollective(phase::PhaseHook::EndPostMigration, []{
     auto const phase = thePhase()->getCurrentPhase();

@@ -156,6 +156,21 @@ Runtime::Runtime(
     arg_config_->parse(/*out*/ argc, /*out*/ argv);
   int exit_code = std::get<0>(result);
 
+  if (getAppConfig()->vt_help_lb_args) {
+    // Help requested or invalid argument(s).
+    int rank = 0;
+    MPI_Comm_rank(initial_communicator_, &rank);
+
+    if (rank == 0) {
+      // Help requested
+      vt::debug::preConfigRef()->colorize_output = true;
+      vrt::collection::balance::LBManager::printLBArgsHelp(getAppConfig()->vt_lb_name);
+    }
+    if (exit_code == -1) {
+      exit_code = 0;
+    }
+  }
+
   if (exit_code not_eq -1) {
     // Help requested or invalid argument(s).
     MPI_Comm comm = initial_communicator_;
@@ -169,14 +184,20 @@ Runtime::Runtime(
       // exit code of 0 -> 'help'
       std::ostream& out = exit_code == 0 ? std::cout : std::cerr;
 
-      out << "--- VT INITIALIZATION ABORT ---" << "\n\n"
-          << msg << "\n"
-          << "--- VT INITIALIZATION ABORT ---" << "\n"
-          << std::flush;
+      if (exit_code != 0) {
+        out << "--- VT INITIALIZATION ABORT ---" << "\n";
+      }
+      out << "\n" << msg << "\n";
+      if (exit_code != 0) {
+        out << "--- VT INITIALIZATION ABORT ---" << "\n";
+      }
+      out << std::flush;
     }
 
-    // Even in interop mode, still abort MPI on bad args.
-    MPI_Abort(comm, exit_code);
+    if (exit_code != 0) {
+      // Even in interop mode, still abort MPI on bad args.
+      MPI_Abort(comm, exit_code);
+    }
     MPI_Finalize();
 
     std::_Exit(exit_code); // no return

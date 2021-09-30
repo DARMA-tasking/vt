@@ -72,8 +72,62 @@ void GreedyLB::init(objgroup::proxy::Proxy<GreedyLB> in_proxy) {
   proxy = scatter_proxy = in_proxy;
 }
 
+/*static*/ std::unordered_map<std::string, std::string>
+GreedyLB::getInputKeysWithHelp() {
+  std::unordered_map<std::string, std::string> const keys_help = {
+    {
+      "min",
+      R"(
+Values: <double>
+Default: 0.8
+Description:
+  The load threshold of objects to consider for potential migration on each
+  rank. All objects over threshold * average_load on each rank will be
+  considered. If the parameter "auto" is set to "true", this will be the minimum
+  threshold; otherwise, it sets the threshold directly.
+)"
+    },
+    {
+      "max",
+      R"(
+Values: <double>
+Default: 1.004
+Description:
+  The maximum load threshold for objects to consider on each node which is only
+  used if "auto" is "true".
+)"
+    },
+    {
+      "auto",
+      R"(
+Values: {true, false}
+Default: true
+Description:
+  Automatically determine the threshold between "min" and "max" using
+  calculated I (imbalance metric) with the formula
+  min(max(1-I, min), max).
+)"
+    },
+    {
+      "strategy",
+      R"(
+Values: {scatter, bcast, pt2pt}
+Default: scatter
+Description:
+  How to distribute the data after the centralized LB makes a decision
+)"
+    }
+  };
+  return keys_help;
+}
+
 void GreedyLB::inputParams(balance::SpecEntry* spec) {
-  std::vector<std::string> allowed{"min", "max", "auto", "strategy"};
+  auto keys_help = getInputKeysWithHelp();
+
+  std::vector<std::string> allowed;
+  for (auto&& elm : keys_help) {
+    allowed.push_back(elm.first);
+  }
   spec->checkAllowedKeys(allowed);
   min_threshold = spec->getOrDefault<double>("min", greedy_threshold_p);
   max_threshold = spec->getOrDefault<double>("max", greedy_max_threshold_p);
