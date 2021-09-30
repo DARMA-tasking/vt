@@ -213,9 +213,10 @@ protected:
 
 private:
   void computeStatistics(PhaseType phase);
-  void computeStatisticsOver(PhaseType phase, lb::Statistic stats);
   void statsHandler(StatsMsgType* msg);
-  balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;
+  balance::LoadData reduceVec(
+    lb::Statistic stat, std::vector<balance::LoadData>&& vec
+  ) const;
   bool isCollectiveComm(balance::CommCategory cat) const;
 
 private:

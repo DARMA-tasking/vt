@@ -524,12 +524,16 @@ void TemperedLB::doLBStages(TimeType start_imb) {
 
       if (rollback_ || theConfig()->vt_debug_temperedlb || (iter_ == num_iters_ - 1)) {
         runInEpochCollective("TemperedLB::doLBStages -> P_l reduce", [=] {
-          using ReduceOp = collective::PlusOp<balance::LoadData>;
+          using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
           auto cb = vt::theCB()->makeBcast<
             TemperedLB, StatsMsgType, &TemperedLB::loadStatsHandler
           >(this->proxy_);
           // Perform the reduction for P_l -> processor load only
-          auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_new_load_);
+          auto msg = makeMessage<StatsMsgType>(
+            std::vector<balance::LoadData>{
+              {balance::LoadData{Statistic::P_l, this_new_load_}}
+            }
+          );
           this->proxy_.template reduce<ReduceOp>(msg,cb);
         });
       }
@@ -587,7 +591,7 @@ void TemperedLB::doLBStages(TimeType start_imb) {
 }
 
 void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
-  auto in = msg->getConstVal();
+  auto in = msg->getConstVal()[0];
   new_imbalance_ = in.I();
 
   auto this_node = theContext()->getNode();
