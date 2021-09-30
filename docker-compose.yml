@@ -151,6 +151,7 @@ x-vtopts: &vtopts
   https_proxy: ${PROXY-}
   http_proxy: ${PROXY-}
   LSAN_OPTIONS: ${LSAN_OPTIONS-}
+  UBSAN_OPTIONS: ${UBSAN_OPTIONS-}
   VT_CI_BUILD: ${VT_CI_BUILD:-0}
   VT_DEBUG_VERBOSE: ${VT_DEBUG_VERBOSE-}
   VT_TESTS_NUM_NODES: ${VT_TESTS_NUM_NODES:-}

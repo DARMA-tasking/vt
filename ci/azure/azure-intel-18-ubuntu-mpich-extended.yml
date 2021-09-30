@@ -52,6 +52,7 @@ variables:
   TS_DAY: 0
 
 
+
 stages:
 - stage: Build
   displayName: Build image

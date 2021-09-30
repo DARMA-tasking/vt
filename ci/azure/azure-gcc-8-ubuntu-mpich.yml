@@ -58,6 +58,7 @@ variables:
   TS_DAY: 0
   LSAN_OPTIONS: suppressions=/vt/tests/lsan.supp
 
+
 stages:
 - stage: Build
   displayName: Build image
