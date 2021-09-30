@@ -75,7 +75,7 @@ void BaseLB::startLB(
   importProcessorData(in_stats, in_comm_stats);
 
   runInEpochCollective(
-    "BaseLB::startLB -> finishedStats", [this,total_load]{
+    "BaseLB::startLB -> runLB", [this,total_load]{
       getArgs(phase_);
       inputParams(spec_entry_.get());
       runLB(total_load);
