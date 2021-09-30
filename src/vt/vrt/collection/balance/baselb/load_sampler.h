@@ -59,11 +59,8 @@ struct LoadSamplerBaseLB : BaseLB {
   using ObjSampleType    = std::map<ObjBinType, ObjBinListType>;
 
   explicit LoadSamplerBaseLB(
-    bool in_comm_aware = false,
-    bool in_comm_collectives = false,
     int32_t in_bin_size = default_bin_size
-  ) : BaseLB(in_comm_aware, in_comm_collectives),
-      bin_size_(in_bin_size)
+  ) : bin_size_(in_bin_size)
   { }
 
 public:

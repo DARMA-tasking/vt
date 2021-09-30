@@ -71,13 +71,7 @@ struct BaseLB {
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
 
-  explicit BaseLB(
-    bool in_comm_aware = false,
-    bool in_comm_collectives = false
-  ) : comm_aware_(in_comm_aware),
-      comm_collectives_(in_comm_collectives)
-  { }
-
+  BaseLB() = default;
   BaseLB(BaseLB const &) = delete;
   BaseLB(BaseLB &&) noexcept = default;
   BaseLB &operator=(BaseLB const &) = delete;
@@ -139,8 +133,6 @@ protected:
   ElementCommType const* comm_data                = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
   PhaseType phase_                                = 0;
-  bool comm_aware_                                = false;
-  bool comm_collectives_                          = false;
   std::unique_ptr<balance::SpecEntry> spec_entry_ = nullptr;
   // Observer only - LBManager owns the instance
   balance::LoadModel* load_model_                 = nullptr;
