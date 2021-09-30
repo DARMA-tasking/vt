@@ -175,7 +175,7 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
   });
 
   runInEpochCollective("LBManager::runLB -> computeStats", [=] {
-    computeStatistics(phase);
+    computeStatistics(false, phase);
   });
 
   runInEpochCollective("LBManager::runLB -> startLB", [=] {
@@ -419,15 +419,13 @@ void LBManager::statsHandler(StatsMsgType* msg) {
   }
 }
 
-void LBManager::computeStatistics(PhaseType phase) {
+void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
   vt_debug_print(
     normal, lb,
     "computeStatistics\n"
   );
 
   using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
-
-  bool comm_collectives_ = false;
 
   auto cb = vt::theCB()->makeBcast<
     LBManager, StatsMsgType, &LBManager::statsHandler
@@ -456,7 +454,7 @@ void LBManager::computeStatistics(PhaseType phase) {
 
   double comm_load = 0.0;
   for (auto&& elm : *comm_data) {
-    if (not comm_collectives_ and isCollectiveComm(elm.first.cat_)) {
+    if (not comm_collectives and isCollectiveComm(elm.first.cat_)) {
       continue;
     }
     if (elm.first.onNode() or elm.first.selfEdge()) {

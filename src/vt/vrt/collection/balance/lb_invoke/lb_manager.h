@@ -212,7 +212,7 @@ protected:
   void runLB(LBProxyType base_proxy, PhaseType phase);
 
 private:
-  void computeStatistics(PhaseType phase);
+  void computeStatistics(bool comm_collectives, PhaseType phase);
   void statsHandler(StatsMsgType* msg);
   balance::LoadData reduceVec(
     lb::Statistic stat, std::vector<balance::LoadData>&& vec
