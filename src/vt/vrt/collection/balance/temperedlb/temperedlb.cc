@@ -421,6 +421,8 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
 void TemperedLB::runLB() {
   bool should_lb = false;
 
+  stats = *getStats();
+
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   auto const max  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
   auto const pole = stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max) * 1000;

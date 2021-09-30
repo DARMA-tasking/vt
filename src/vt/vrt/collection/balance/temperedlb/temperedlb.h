@@ -65,6 +65,9 @@ struct TemperedLB : BaseLB {
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
   using RejectionMsgType = balance::RejectionStatsMsg;
+  using StatsMsgType     = balance::NodeStatsMsg;
+  using QuantityType     = std::map<lb::StatisticQuantity, double>;
+  using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
 
   TemperedLB() = default;
   TemperedLB(TemperedLB const&) = delete;
@@ -176,6 +179,7 @@ private:
   std::vector<bool> propagated_k_;
   std::mt19937 gen_propagate_;
   std::mt19937 gen_sample_;
+  StatisticMapType stats;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

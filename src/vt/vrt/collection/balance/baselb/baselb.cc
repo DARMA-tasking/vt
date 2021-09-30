@@ -63,6 +63,7 @@ void BaseLB::startLB(
   PhaseType phase,
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
+  StatisticMapType const& in_stats,
   ElementCommType const& in_comm_stats
 ) {
   start_time_ = timing::Timing::getCurrentTime();
@@ -70,11 +71,8 @@ void BaseLB::startLB(
   proxy_ = proxy;
   load_model_ = model;
 
-  importProcessorData(in_comm_stats);
+  importProcessorData(in_stats, in_comm_stats);
 
-  runInEpochCollective(
-    "BaseLB::startLB -> computeStatistics", [this]{ computeStatistics(); }
-  );
   runInEpochCollective(
     "BaseLB::startLB -> finishedStats", [this]{ finishedStats(); }
   );
@@ -95,7 +93,7 @@ BaseLB::ObjBinType BaseLB::histogramSample(LoadType const& load) const {
 }
 
 void BaseLB::importProcessorData(
-  ElementCommType const& comm_in
+  StatisticMapType const& in_stats, ElementCommType const& comm_in
 ) {
   auto const& this_node = theContext()->getNode();
   vt_debug_print(
@@ -119,6 +117,7 @@ void BaseLB::importProcessorData(
   }
 
   comm_data = &comm_in;
+  base_stats_ = &in_stats;
 }
 
 void BaseLB::getArgs(PhaseType phase) {
@@ -136,48 +135,6 @@ void BaseLB::getArgs(PhaseType phase) {
     auto const args = theConfig()->vt_lb_args;
     spec_entry_ = std::make_unique<SpecEntry>(
       ReadLBSpec::makeSpecFromParams(args)
-    );
-  }
-}
-
-void BaseLB::statsHandler(StatsMsgType* msg) {
-  auto in       = msg->getConstVal();
-  auto max      = in.max();
-  auto min      = in.min();
-  auto avg      = in.avg();
-  auto sum      = in.sum();
-  auto npr      = in.npr();
-  auto car      = in.N_;
-  auto imb      = in.I();
-  auto var      = in.var();
-  auto stdv     = in.stdv();
-  auto skew     = in.skew();
-  auto krte     = in.krte();
-  auto the_stat = msg->stat_;
-
-  stats[the_stat][lb::StatisticQuantity::max] = max;
-  stats[the_stat][lb::StatisticQuantity::min] = min;
-  stats[the_stat][lb::StatisticQuantity::avg] = avg;
-  stats[the_stat][lb::StatisticQuantity::sum] = sum;
-  stats[the_stat][lb::StatisticQuantity::npr] = npr;
-  stats[the_stat][lb::StatisticQuantity::car] = car;
-  stats[the_stat][lb::StatisticQuantity::var] = var;
-  stats[the_stat][lb::StatisticQuantity::npr] = npr;
-  stats[the_stat][lb::StatisticQuantity::imb] = imb;
-  stats[the_stat][lb::StatisticQuantity::std] = stdv;
-  stats[the_stat][lb::StatisticQuantity::skw] = skew;
-  stats[the_stat][lb::StatisticQuantity::kur] = krte;
-
-  if (theContext()->getNode() == 0) {
-    vt_print(
-      lb,
-      "BaseLB: Statistic={}: "
-      " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
-      " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
-      " npr={}, imb={:.2f}, num_stats={}\n",
-      lb_stat_name_[the_stat],
-      max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
-      stats.size()
     );
   }
 }
@@ -218,7 +175,7 @@ void BaseLB::applyMigrations(
 
   // Re-compute the statistics with the new partition based on current
   // this_load_ values
-  computeStatistics();
+  // computeStatistics();
   migrationDone();
 }
 
@@ -277,100 +234,6 @@ void BaseLB::finishedStats() {
   getArgs(phase_);
   this->inputParams(spec_entry_.get());
   this->runLB();
-}
-
-void BaseLB::computeStatistics() {
-  vt_debug_print(
-    normal, lb,
-    "computeStatistics: this_load={}\n", this_load
-  );
-
-  computeStatisticsOver(Statistic::P_l);
-  computeStatisticsOver(Statistic::O_l);
-
-  if (comm_aware_) {
-    computeStatisticsOver(Statistic::P_c);
-    computeStatisticsOver(Statistic::O_c);
-  }
-  // @todo: add P_c, P_t, O_c, O_t
-}
-
-balance::LoadData BaseLB::reduceVec(std::vector<balance::LoadData>&& vec) const {
-  balance::LoadData reduce_ld(0.0f);
-  if (vec.size() == 0) {
-    return reduce_ld;
-  } else {
-    for (std::size_t i = 1; i < vec.size(); i++) {
-      vec[0] = vec[0] + vec[i];
-    }
-    return vec[0];
-  }
-}
-
-bool BaseLB::isCollectiveComm(balance::CommCategory cat) const {
-  bool is_collective =
-    cat == balance::CommCategory::Broadcast or
-    cat == balance::CommCategory::CollectionToNodeBcast or
-    cat == balance::CommCategory::NodeToCollectionBcast;
-  return is_collective;
-}
-
-void BaseLB::computeStatisticsOver(Statistic stat) {
-  using ReduceOp = collective::PlusOp<balance::LoadData>;
-
-  auto cb = vt::theCB()->makeBcast<BaseLB, StatsMsgType, &BaseLB::statsHandler>(proxy_);
-
-  switch (stat) {
-  case Statistic::P_l: {
-    // Perform the reduction for P_l -> processor load only
-    auto msg = makeMessage<StatsMsgType>(Statistic::P_l, this_load);
-    proxy_.template reduce<ReduceOp>(msg,cb);
-  }
-  break;
-  case Statistic::P_c: {
-    // Perform the reduction for P_c -> processor comm only
-    double comm_load = 0.0;
-    for (auto&& elm : *comm_data) {
-      if (not comm_collectives_ and isCollectiveComm(elm.first.cat_)) {
-        continue;
-      }
-      if (elm.first.onNode() or elm.first.selfEdge()) {
-        continue;
-      }
-      //vt_print(lb, "comm_load={}, elm={}\n", comm_load, elm.second.bytes);
-      comm_load += elm.second.bytes;
-    }
-    auto msg = makeMessage<StatsMsgType>(Statistic::P_c, comm_load);
-    proxy_.template reduce<ReduceOp>(msg,cb);
-  }
-  break;
-  case Statistic::O_c: {
-    // Perform the reduction for O_c -> object comm only
-    std::vector<balance::LoadData> lds;
-    for (auto&& elm : *comm_data) {
-      // Only count object-to-object direct edges in the O_c statistics
-      if (elm.first.cat_ == balance::CommCategory::SendRecv and not elm.first.selfEdge()) {
-        lds.emplace_back(balance::LoadData(elm.second.bytes));
-      }
-    }
-    auto msg = makeMessage<StatsMsgType>(Statistic::O_c, reduceVec(std::move(lds)));
-    proxy_.template reduce<ReduceOp>(msg,cb);
-  }
-  break;
-  case Statistic::O_l: {
-    // Perform the reduction for O_l -> object load only
-    std::vector<balance::LoadData> lds;
-    for (auto elm : *load_model_) {
-      lds.emplace_back(load_model_->getWork(elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}));
-    }
-    auto msg = makeMessage<StatsMsgType>(Statistic::O_l, reduceVec(std::move(lds)));
-    proxy_.template reduce<ReduceOp>(msg,cb);
-  }
-  break;
-  default:
-    break;
-  }
-
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

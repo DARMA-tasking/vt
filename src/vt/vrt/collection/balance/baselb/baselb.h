@@ -47,7 +47,6 @@
 #include "vt/config.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/baselb/baselb_msgs.h"
-#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/lb_comm.h"
 #include "vt/vrt/collection/balance/read_lb.h"
 #include "vt/objgroup/headers.h"
@@ -69,14 +68,13 @@ struct BaseLB {
   using ObjSampleType    = std::map<ObjBinType, ObjBinListType>;
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
   using ElementCommType  = balance::CommMapType;
-  using StatsMsgType     = balance::NodeStatsMsg;
   using TransferDestType = std::tuple<ObjIDType,NodeType>;
   using TransferVecType  = std::vector<TransferDestType>;
   using TransferType     = std::map<NodeType, TransferVecType>;
   using LoadType         = double;
-  using QuantityType     = std::map<StatisticQuantity, double>;
-  using StatisticMapType = std::unordered_map<Statistic, QuantityType>;
   using MigrationCountCB = std::function<void(int32_t)>;
+  using QuantityType     = std::map<lb::StatisticQuantity, double>;
+  using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
 
   explicit BaseLB(
     bool in_comm_aware = false,
@@ -106,10 +104,17 @@ struct BaseLB {
    * through calls to `migrateObjectTo`. Callers can then access that
    * set using `getTransfers` and apply it using `applyMigrations`.
    */
-  void startLB(PhaseType phase, objgroup::proxy::Proxy<BaseLB> proxy, balance::LoadModel *model, ElementCommType const& in_comm_stats);
-  void computeStatistics();
-  void importProcessorData(ElementCommType const& cm);
-  void statsHandler(StatsMsgType* msg);
+  void startLB(
+    PhaseType phase,
+    objgroup::proxy::Proxy<BaseLB> proxy,
+    balance::LoadModel *model,
+    StatisticMapType const& in_stats,
+    ElementCommType const& in_comm_stats
+  );
+
+  void importProcessorData(
+    StatisticMapType const& in_stats, ElementCommType const& cm
+  );
   void finishedStats();
 
   ObjBinType histogramSample(LoadType const& load) const;
@@ -129,12 +134,13 @@ struct BaseLB {
   virtual void inputParams(balance::SpecEntry* spec) = 0;
   virtual void runLB() = 0;
 
+  StatisticMapType const* getStats() const {
+    return base_stats_;
+  }
+
   TransferVecType& getTransfers() { return transfers_; }
 
 protected:
-  balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;
-  bool isCollectiveComm(balance::CommCategory cat) const;
-  void computeStatisticsOver(Statistic stats);
   void getArgs(PhaseType phase);
 
 protected:
@@ -143,7 +149,6 @@ protected:
   ObjSampleType obj_sample                        = {};
   LoadType this_load                              = 0.0f;
   ElementCommType const* comm_data                = nullptr;
-  StatisticMapType stats                          = {};
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
   PhaseType phase_                                = 0;
   bool comm_aware_                                = false;
@@ -157,6 +162,7 @@ private:
   TransferType off_node_migrate_                  = {};
   int32_t local_migration_count_                  = 0;
   MigrationCountCB migration_count_cb_            = nullptr;
+  StatisticMapType const* base_stats_             = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance::lb */

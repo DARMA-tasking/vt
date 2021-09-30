@@ -45,14 +45,18 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_LB_INVOKE_LB_MANAGER_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/lb_type.h"
 #include "vt/vrt/collection/balance/lb_invoke/invoke_msg.h"
 #include "vt/configs/arguments/args.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
 
 #include <functional>
+#include <map>
+#include <unordered_map>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
@@ -68,7 +72,10 @@ class LoadModel;
  * and invocation.
  */
 struct LBManager : runtime::component::Component<LBManager> {
-  using LBProxyType    = objgroup::proxy::Proxy<lb::BaseLB>;
+  using LBProxyType      = objgroup::proxy::Proxy<lb::BaseLB>;
+  using StatsMsgType     = balance::NodeStatsMsg;
+  using QuantityType     = std::map<lb::StatisticQuantity, double>;
+  using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
 
   /**
    * \internal \brief System call to construct a \c LBManager
@@ -187,7 +194,8 @@ public:
       | proxy_
       | base_model_
       | model_
-      | lb_instances_;
+      | lb_instances_
+      | stats;
   }
 
 protected:
@@ -204,6 +212,13 @@ protected:
   void runLB(LBProxyType base_proxy, PhaseType phase);
 
 private:
+  void computeStatistics(PhaseType phase);
+  void computeStatisticsOver(PhaseType phase, lb::Statistic stats);
+  void statsHandler(StatsMsgType* msg);
+  balance::LoadData reduceVec(std::vector<balance::LoadData>&& vec) const;
+  bool isCollectiveComm(balance::CommCategory cat) const;
+
+private:
   PhaseType cached_phase_                  = no_lb_phase;
   LBType cached_lb_                        = LBType::NoLB;
   std::function<void()> destroy_lb_        = nullptr;
@@ -211,6 +226,7 @@ private:
   std::shared_ptr<LoadModel> base_model_;
   std::shared_ptr<LoadModel> model_;
   std::unordered_map<std::string, LBProxyType> lb_instances_;
+  StatisticMapType stats;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */
