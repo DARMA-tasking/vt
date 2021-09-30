@@ -145,6 +145,7 @@ void GreedyLB::inputParams(balance::SpecEntry* spec) {
 
 void GreedyLB::runLB(TimeType total_load) {
   this_load = loadMilli(total_load);
+  buildHistogram();
   loadStats();
 }
 

@@ -89,36 +89,14 @@ BaseLB::LoadType BaseLB::loadMilli(LoadType const& load) {
   return load * 1000;
 }
 
-BaseLB::ObjBinType BaseLB::histogramSample(LoadType const& load) const {
-  auto const bin_size = getBinSize();
-  ObjBinType const bin =
-    ((static_cast<int32_t>(load)) / bin_size * bin_size)
-    + bin_size;
-  return bin;
-}
-
 void BaseLB::importProcessorData(
   StatisticMapType const& in_stats, ElementCommType const& comm_in
 ) {
-  auto const& this_node = theContext()->getNode();
   vt_debug_print(
     normal, lb,
-    "{}: importProcessorData: load stats size={}, load comm size={}\n",
-    this_node, load_model_->getNumObjects(), comm_in.size()
+    "importProcessorData: load stats size={}, load comm size={}\n",
+    load_model_->getNumObjects(), comm_in.size()
   );
-  for (auto obj : *load_model_) {
-    auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
-    auto const& load_milli = loadMilli(load);
-    auto const& bin = histogramSample(load_milli);
-    obj_sample[bin].push_back(obj);
-
-    vt_debug_print(
-      verbose, lb,
-      "\t {}: importProcessorData: obj={}, home={}, load={}, "
-      "load_milli={}, bin={}\n",
-      this_node, obj.id, obj.home_node, load, load_milli, bin
-    );
-  }
 
   comm_data = &comm_in;
   base_stats_ = &in_stats;

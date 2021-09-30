@@ -59,13 +59,8 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-static constexpr int32_t const default_bin_size = 10;
-
 struct BaseLB {
   using ObjIDType        = balance::ElementIDStruct;
-  using ObjBinType       = int32_t;
-  using ObjBinListType   = std::list<ObjIDType>;
-  using ObjSampleType    = std::map<ObjBinType, ObjBinListType>;
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
   using ElementCommType  = balance::CommMapType;
   using TransferDestType = std::tuple<ObjIDType,NodeType>;
@@ -78,10 +73,8 @@ struct BaseLB {
 
   explicit BaseLB(
     bool in_comm_aware = false,
-    bool in_comm_collectives = false,
-    int32_t in_bin_size = default_bin_size
-  ) : bin_size_(in_bin_size),
-      comm_aware_(in_comm_aware),
+    bool in_comm_collectives = false
+  ) : comm_aware_(in_comm_aware),
       comm_collectives_(in_comm_collectives)
   { }
 
@@ -117,9 +110,7 @@ struct BaseLB {
     StatisticMapType const& in_stats, ElementCommType const& cm
   );
 
-  ObjBinType histogramSample(LoadType const& load) const;
   static LoadType loadMilli(LoadType const& load);
-  int32_t getBinSize() const { return bin_size_; }
   NodeType objGetNode(ObjIDType const id) const;
 
   void applyMigrations(
@@ -145,8 +136,6 @@ protected:
 
 protected:
   double start_time_                              = 0.0f;
-  int32_t bin_size_                               = 10;
-  ObjSampleType obj_sample                        = {};
   ElementCommType const* comm_data                = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
   PhaseType phase_                                = 0;

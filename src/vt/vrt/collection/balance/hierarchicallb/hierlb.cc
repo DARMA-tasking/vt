@@ -759,6 +759,7 @@ void HierarchicalLB::clearObj(ObjSampleType& objs) {
 
 void HierarchicalLB::runLB(TimeType total_load) {
   this_load = loadMilli(total_load);
+  buildHistogram();
   setupTree(min_threshold);
 
   auto cb = vt::theCB()->makeBcast<

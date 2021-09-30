@@ -49,7 +49,7 @@
 #include "vt/vrt/collection/balance/greedylb/greedylb_types.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb_constants.h"
 #include "vt/vrt/collection/balance/greedylb/greedylb_msgs.h"
-#include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/baselb/load_sampler.h"
 #include "vt/timing/timing.h"
 
 #include <unordered_map>
@@ -71,7 +71,7 @@ enum struct DataDistStrategy : uint8_t {
   pt2pt = 2
 };
 
-struct GreedyLB : BaseLB {
+struct GreedyLB : LoadSamplerBaseLB {
   using ElementLoadType  = std::unordered_map<ObjIDType,TimeType>;
   using TransferType     = std::map<NodeType, std::vector<ObjIDType>>;
   using LoadType         = double;

@@ -50,7 +50,7 @@
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_child.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_strat.h"
-#include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/baselb/load_sampler.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/headers.h"
 
@@ -62,7 +62,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct HierarchicalLB : BaseLB {
+struct HierarchicalLB : LoadSamplerBaseLB {
   using ChildPtrType = std::unique_ptr<HierLBChild>;
   using ChildMapType = std::unordered_map<NodeType,ChildPtrType>;
   using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
