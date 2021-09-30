@@ -80,9 +80,7 @@ struct BaseLB {
   virtual ~BaseLB() = default;
 
   /**
-   * This will calculate global statistics over the individual
-   * processor and object work and communication data passed in, and
-   * then invoke the particular strategy implementations through
+   * This must invoke the particular strategy implementations through
    * virtual methods `initParams` and `runLB`
    *
    * This expects to be run within a collective epoch. When that epoch
