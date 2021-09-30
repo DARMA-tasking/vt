@@ -45,6 +45,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/temperedlb/tempered_msgs.h"
 #include "vt/vrt/collection/balance/temperedlb/criterion.h"
