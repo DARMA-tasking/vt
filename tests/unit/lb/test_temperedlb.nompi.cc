@@ -96,7 +96,7 @@ void orderUsingOverloadAndVerify(
   const std::vector<ElementIDType> &soln
 ) {
   std::unordered_map<ElementIDStruct, TimeType> cur_objs;
-  TimeType my_load = setupProblem(cur_objs)
+  TimeType my_load = setupProblem(cur_objs);
   TimeType target_load = my_load - over_avg_sec;
 
   orderAndVerify(order, cur_objs, my_load, target_load, soln);
@@ -107,8 +107,8 @@ void orderUsingTargetLoadAndVerify(
   const std::vector<ElementIDType> &soln
 ) {
   std::unordered_map<ElementIDStruct, TimeType> cur_objs;
-  TimeType my_load = setupProblem(cur_objs)
-  TimeType target_load = target_load_sec
+  TimeType my_load = setupProblem(cur_objs);
+  TimeType target_load = target_load_sec;
 
   orderAndVerify(order, cur_objs, my_load, target_load, soln);
 }
