@@ -153,6 +153,6 @@ private:
   StatisticMapType const* base_stats_             = nullptr;
 };
 
-}}}} /* end namespace vt::vrt::collection::balance::lb */
+}}}} /* end namespace vt::vrt::collection::lb */
 
 #endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_BASELB_H*/
