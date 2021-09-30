@@ -73,7 +73,7 @@ struct HierarchicalLB : BaseLB {
   virtual ~HierarchicalLB() {}
 
   void init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy);
-  void runLB() override;
+  void runLB(TimeType total_load) override;
   void inputParams(balance::SpecEntry* spec) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
@@ -136,6 +136,7 @@ private:
   double min_threshold = 0.0f;
   bool auto_threshold = true;
   HeapExtractEnum extract_strategy = HeapExtractEnum::LoadOverLessThan;
+  LoadType this_load = 0.0f;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

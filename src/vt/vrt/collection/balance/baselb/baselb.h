@@ -109,13 +109,13 @@ struct BaseLB {
     objgroup::proxy::Proxy<BaseLB> proxy,
     balance::LoadModel *model,
     StatisticMapType const& in_stats,
-    ElementCommType const& in_comm_stats
+    ElementCommType const& in_comm_stats,
+    TimeType total_load
   );
 
   void importProcessorData(
     StatisticMapType const& in_stats, ElementCommType const& cm
   );
-  void finishedStats();
 
   ObjBinType histogramSample(LoadType const& load) const;
   static LoadType loadMilli(LoadType const& load);
@@ -132,7 +132,7 @@ struct BaseLB {
   void finalize(CountMsg* msg);
 
   virtual void inputParams(balance::SpecEntry* spec) = 0;
-  virtual void runLB() = 0;
+  virtual void runLB(TimeType total_load) = 0;
 
   StatisticMapType const* getStats() const {
     return base_stats_;
@@ -147,7 +147,6 @@ protected:
   double start_time_                              = 0.0f;
   int32_t bin_size_                               = 10;
   ObjSampleType obj_sample                        = {};
-  LoadType this_load                              = 0.0f;
   ElementCommType const* comm_data                = nullptr;
   objgroup::proxy::Proxy<BaseLB> proxy_           = {};
   PhaseType phase_                                = 0;

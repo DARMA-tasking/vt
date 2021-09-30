@@ -143,7 +143,8 @@ void GreedyLB::inputParams(balance::SpecEntry* spec) {
   strat_ = strategy_converter_.getFromSpec(spec, strat_);
 }
 
-void GreedyLB::runLB() {
+void GreedyLB::runLB(TimeType total_load) {
+  this_load = loadMilli(total_load);
   loadStats();
 }
 

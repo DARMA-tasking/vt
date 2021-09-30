@@ -228,6 +228,7 @@ private:
   std::shared_ptr<LoadModel> model_;
   std::unordered_map<std::string, LBProxyType> lb_instances_;
   StatisticMapType stats;
+  TimeType total_load = 0.;
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

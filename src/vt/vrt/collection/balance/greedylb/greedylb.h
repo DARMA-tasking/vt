@@ -81,7 +81,7 @@ struct GreedyLB : BaseLB {
   virtual ~GreedyLB() {}
 
   void init(objgroup::proxy::Proxy<GreedyLB> in_proxy);
-  void runLB() override;
+  void runLB(TimeType total_load) override;
   void inputParams(balance::SpecEntry* spec) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
@@ -122,6 +122,7 @@ private:
   bool auto_threshold = true;
 
   DataDistStrategy strat_ = DataDistStrategy::scatter;
+  LoadType this_load = 0.0f;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

@@ -61,7 +61,7 @@ struct StatsMapLB : BaseLB {
   virtual ~StatsMapLB() = default;
 
   void init(objgroup::proxy::Proxy<StatsMapLB> in_proxy);
-  void runLB() override;
+  void runLB(TimeType) override;
   void inputParams(balance::SpecEntry* spec) override { }
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp() {

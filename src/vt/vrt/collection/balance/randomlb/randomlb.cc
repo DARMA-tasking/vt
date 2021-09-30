@@ -94,7 +94,7 @@ void RandomLB::inputParams(balance::SpecEntry* spec) {
   randomize_seed_ = spec->getOrDefault<bool>("randomize_seed", randomize_seed_);
 }
 
-void RandomLB::runLB() {
+void RandomLB::runLB(TimeType) {
   auto const this_node = theContext()->getNode();
   auto const num_nodes = static_cast<int32_t>(theContext()->getNumNodes());
 

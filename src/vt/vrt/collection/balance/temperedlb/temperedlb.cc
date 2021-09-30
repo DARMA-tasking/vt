@@ -418,14 +418,15 @@ void TemperedLB::inputParams(balance::SpecEntry* spec) {
   }
 }
 
-void TemperedLB::runLB() {
+void TemperedLB::runLB(TimeType total_load) {
   bool should_lb = false;
 
+  this_load = total_load;
   stats = *getStats();
 
   auto const avg  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
   auto const max  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
-  auto const pole = stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max) * 1000;
+  auto const pole = stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max);
   auto const imb  = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
   auto const load = this_load;
 
@@ -601,7 +602,7 @@ void TemperedLB::loadStatsHandler(StatsMsgType* msg) {
       "TemperedLB::loadStatsHandler: trial={} iter={} max={:0.2f} min={:0.2f} "
       "avg={:0.2f} pole={:0.2f} imb={:0.4f}\n",
       trial_, iter_, in.max(), in.min(), in.avg(),
-      stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max) * 1000,
+      stats.at(lb::Statistic::O_l).at(lb::StatisticQuantity::max),
       in.I()
     );
   }
@@ -1046,11 +1047,9 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
       // (incorrectly) reflect the total load, which will not be a problem
       auto single_obj_load = this_new_load;
       for (auto &obj : cur_objs) {
-        // the object stats are in seconds but the processor stats are in
-        // milliseconds; for now, convert the object loads to milliseconds
-        auto obj_load_ms = loadMilli(obj.second);
-        if (obj_load_ms > over_avg && obj_load_ms < single_obj_load) {
-          single_obj_load = obj_load_ms;
+        auto obj_load = obj.second;
+        if (obj_load > over_avg && obj_load < single_obj_load) {
+          single_obj_load = obj_load;
         }
       }
       // sort largest to smallest if <= single_obj_load
@@ -1060,8 +1059,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         [&cur_objs, single_obj_load](
           const ObjIDType &left, const ObjIDType &right
         ) {
-          auto left_load = loadMilli(cur_objs[left]);
-          auto right_load = loadMilli(cur_objs[right]);
+          auto left_load = cur_objs[left];
+          auto right_load = cur_objs[right];
           if (left_load <= single_obj_load && right_load <= single_obj_load) {
             // we're in the sort load descending regime (first section)
             return left_load > right_load;
@@ -1080,7 +1079,7 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
       vt_debug_print(
         normal, temperedlb,
         "TemperedLB::decide: over_avg={}, single_obj_load={}\n",
-        over_avg, loadMilli(cur_objs[ordered_obj_ids[0]])
+        over_avg, cur_objs[ordered_obj_ids[0]]
       );
     }
     break;
@@ -1093,7 +1092,6 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
       std::sort(
         ordered_obj_ids.begin(), ordered_obj_ids.end(),
         [&cur_objs](const ObjIDType &left, const ObjIDType &right) {
-          // skipping the conversion to milliseconds here
           auto left_load = cur_objs[left];
           auto right_load = cur_objs[right];
           // sort load descending
@@ -1101,9 +1099,9 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         }
       );
       auto cum_obj_load = this_new_load;
-      auto single_obj_load = loadMilli(cur_objs[ordered_obj_ids[0]]);
+      auto single_obj_load = cur_objs[ordered_obj_ids[0]];
       for (auto obj_id : ordered_obj_ids) {
-        auto this_obj_load = loadMilli(cur_objs[obj_id]);
+        auto this_obj_load = cur_objs[obj_id];
         if (cum_obj_load - this_obj_load < over_avg) {
           single_obj_load = this_obj_load;
           break;
@@ -1119,8 +1117,8 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
         [&cur_objs, single_obj_load](
           const ObjIDType &left, const ObjIDType &right
         ) {
-          auto left_load = loadMilli(cur_objs[left]);
-          auto right_load = loadMilli(cur_objs[right]);
+          auto left_load = cur_objs[left];
+          auto right_load = cur_objs[right];
           if (left_load <= single_obj_load && right_load <= single_obj_load) {
             // we're in the sort load descending regime (first section)
             return left_load > right_load;
@@ -1139,7 +1137,7 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
       vt_debug_print(
         normal, temperedlb,
         "TemperedLB::decide: over_avg={}, marginal_obj_load={}\n",
-        over_avg, loadMilli(cur_objs[ordered_obj_ids[0]])
+        over_avg, cur_objs[ordered_obj_ids[0]]
       );
     }
     break;
@@ -1149,7 +1147,6 @@ std::vector<TemperedLB::ObjIDType> TemperedLB::orderObjects(
       std::sort(
         ordered_obj_ids.begin(), ordered_obj_ids.end(),
         [&cur_objs](const ObjIDType &left, const ObjIDType &right) {
-          // skipping the conversion to milliseconds here
           auto left_load = cur_objs[left];
           auto right_load = cur_objs[right];
           // sort load descending
@@ -1187,10 +1184,6 @@ void TemperedLB::decide() {
         auto obj_id = *iter;
         auto obj_load = cur_objs_[obj_id];
 
-        // the object stats are in seconds but the processor stats are in
-        // milliseconds; for now, convert the object loads to milliseconds
-        auto obj_load_ms = loadMilli(obj_load);
-
         if (cmf_type_ == CMFTypeEnum::Original) {
           // Rebuild the relaxed underloaded set based on updated load of this node
           under = makeUnderloaded();
@@ -1200,7 +1193,7 @@ void TemperedLB::decide() {
         } else if (cmf_type_ == CMFTypeEnum::NormByMaxExcludeIneligible) {
           // Rebuild the underloaded set and eliminate processors that will
           // fail the Criterion for this object
-          under = makeSufficientlyUnderloaded(obj_load_ms);
+          under = makeSufficientlyUnderloaded(obj_load);
           if (under.size() == 0) {
             ++n_rejected;
             iter++;
@@ -1225,14 +1218,14 @@ void TemperedLB::decide() {
         auto& selected_load = load_iter->second;
 
         bool eval = Criterion(criterion_)(
-          this_new_load_, selected_load, obj_load_ms, target_max_load_
+          this_new_load_, selected_load, obj_load, target_max_load_
         );
 
         vt_debug_print(
           verbose, temperedlb,
           "TemperedLB::decide: trial={}, iter={}, under.size()={}, "
           "selected_node={}, selected_load={:e}, obj_id={:x}, home={}, "
-          "obj_load_ms={:e}, target_max_load={:e}, this_new_load_={:e}, "
+          "obj_load={:e}, target_max_load={:e}, this_new_load_={:e}, "
           "criterion={}\n",
           trial_,
           iter_,
@@ -1241,7 +1234,7 @@ void TemperedLB::decide() {
           selected_load,
           obj_id.id,
           obj_id.home_node,
-          obj_load_ms,
+          obj_load,
           target_max_load_,
           this_new_load_,
           eval
@@ -1249,12 +1242,12 @@ void TemperedLB::decide() {
 
         if (eval) {
           ++n_transfers;
-          // transfer the object load in seconds, not milliseconds,
+          // transfer the object load in seconds
           // to match the object load units on the receiving end
           migrate_objs[selected_node][obj_id] = obj_load;
 
-          this_new_load_ -= obj_load_ms;
-          selected_load += obj_load_ms;
+          this_new_load_ -= obj_load;
+          selected_load += obj_load;
 
           iter = ordered_obj_ids.erase(iter);
           cur_objs_.erase(obj_id);
@@ -1318,7 +1311,7 @@ void TemperedLB::inLazyMigrations(balance::LazyMigrationMsg* msg) {
     vtAssert(iter == cur_objs_.end(), "Incoming object should not exist");
     cur_objs_.insert(obj);
     // need to convert to milliseconds because we received seconds
-    this_new_load_ += loadMilli(obj.second);
+    this_new_load_ += obj.second;
   }
 }
 

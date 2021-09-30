@@ -64,7 +64,8 @@ void BaseLB::startLB(
   objgroup::proxy::Proxy<BaseLB> proxy,
   balance::LoadModel* model,
   StatisticMapType const& in_stats,
-  ElementCommType const& in_comm_stats
+  ElementCommType const& in_comm_stats,
+  TimeType total_load
 ) {
   start_time_ = timing::Timing::getCurrentTime();
   phase_ = phase;
@@ -74,7 +75,11 @@ void BaseLB::startLB(
   importProcessorData(in_stats, in_comm_stats);
 
   runInEpochCollective(
-    "BaseLB::startLB -> finishedStats", [this]{ finishedStats(); }
+    "BaseLB::startLB -> finishedStats", [this,total_load]{
+      getArgs(phase_);
+      inputParams(spec_entry_.get());
+      runLB(total_load);
+    }
   );
 }
 
@@ -105,14 +110,13 @@ void BaseLB::importProcessorData(
     auto load = load_model_->getWork(obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE});
     auto const& load_milli = loadMilli(load);
     auto const& bin = histogramSample(load_milli);
-    this_load += load_milli;
     obj_sample[bin].push_back(obj);
 
     vt_debug_print(
       verbose, lb,
-      "\t {}: importProcessorData: this_load={}, obj={}, home={}, load={}, "
+      "\t {}: importProcessorData: obj={}, home={}, load={}, "
       "load_milli={}, bin={}\n",
-      this_node, this_load, obj.id, obj.home_node, load, load_milli, bin
+      this_node, obj.id, obj.home_node, load, load_milli, bin
     );
   }
 
@@ -228,12 +232,6 @@ void BaseLB::migrationDone() {
 
 NodeType BaseLB::objGetNode(ObjIDType const id) const {
   return balance::objGetNode(id);
-}
-
-void BaseLB::finishedStats() {
-  getArgs(phase_);
-  this->inputParams(spec_entry_.get());
-  this->runLB();
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */

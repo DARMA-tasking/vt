@@ -190,7 +190,7 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     if (iter != theNodeStats()->getNodeComm()->end()) {
       comm = &iter->second;
     }
-    strat->startLB(phase, base_proxy, model_.get(), stats, *comm);
+    strat->startLB(phase, base_proxy, model_.get(), stats, *comm, total_load);
   });
 
   int32_t global_migration_count = 0;
@@ -433,7 +433,7 @@ void LBManager::computeStatistics(PhaseType phase) {
     LBManager, StatsMsgType, &LBManager::statsHandler
   >(proxy_);
 
-  TimeType total_load = 0;
+  total_load = 0.;
   std::vector<balance::LoadData> P_c;
   for (auto elm : *model_) {
     auto work = model_->getWork(
