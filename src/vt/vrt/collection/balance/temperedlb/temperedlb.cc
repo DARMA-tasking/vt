@@ -475,13 +475,6 @@ void TemperedLB::doLBStages(TimeType start_imb) {
     for (iter_ = 0; iter_ < num_iters_; iter_++) {
       bool first_iter = iter_ == 0;
 
-      vt_debug_print(
-        normal, temperedlb,
-        "TemperedLB::doLBStages: (before) running trial={}, iter={}, "
-        "num_iters={}, load={}, new_load={}\n",
-        trial_, iter_, num_iters_, this_load, this_new_load_
-      );
-
       if (first_iter) {
         // Copy this node's object assignments to a local, mutable copy
         cur_objs_.clear();
@@ -495,6 +488,13 @@ void TemperedLB::doLBStages(TimeType start_imb) {
         load_info_.clear();
         is_overloaded_ = is_underloaded_ = false;
       }
+
+      vt_debug_print(
+        normal, temperedlb,
+        "TemperedLB::doLBStages: (before) running trial={}, iter={}, "
+        "num_iters={}, load={}, new_load={}\n",
+        trial_, iter_, num_iters_, this_load, this_new_load_
+      );
 
       if (isOverloaded(this_new_load_)) {
         is_overloaded_ = true;
