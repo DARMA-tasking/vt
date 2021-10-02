@@ -2,7 +2,7 @@
 ############## Warning this is a generated file---do not modify ###############
 ###############################################################################
 
-name: PR tests (clang-10, ubuntu, mpich, undefined behavior sanitizer)
+name: PR tests (clang-10, ubuntu, mpich)
 
 trigger:
   branches:
