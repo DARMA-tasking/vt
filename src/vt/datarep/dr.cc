@@ -54,4 +54,3 @@ namespace vt { namespace datarep {
 }
 
 }} /* end namespace vt::datarep */
-
