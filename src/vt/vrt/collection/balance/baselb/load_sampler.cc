@@ -41,9 +41,6 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_LOAD_SAMPLER_CC
-#define INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_LOAD_SAMPLER_CC
-
 #include "vt/vrt/collection/balance/baselb/load_sampler.h"
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
@@ -77,4 +74,3 @@ LoadSamplerBaseLB::histogramSample(LoadType const& load) const {
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
-#endif /*INCLUDED_VT_VRT_COLLECTION_BALANCE_BASELB_LOAD_SAMPLER_CC*/
