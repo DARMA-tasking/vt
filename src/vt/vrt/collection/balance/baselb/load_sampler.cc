@@ -73,4 +73,3 @@ LoadSamplerBaseLB::histogramSample(LoadType const& load) const {
 }
 
 }}}} /* end namespace vt::vrt::collection::lb */
-
