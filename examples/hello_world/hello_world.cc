@@ -62,7 +62,7 @@ static void hello_world(HelloMsg* msg) {
   my_reader.fetch(0);
   vt::theSched()->runSchedulerWhile([&]{ return not my_reader.isReady(); });
   auto const& vec = my_reader.get(0);
-  for (auto&& elm : vec) {
+  for (auto&& elm : *vec) {
     vt_print(gen, "elm={}\n", elm);
   }
   fmt::print("{}: Hello from node {}\n", this_node, msg->from);

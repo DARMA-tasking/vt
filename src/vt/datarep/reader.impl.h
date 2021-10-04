@@ -55,10 +55,10 @@ void Reader<T>::fetch(DataVersionType version) {
 }
 
 template <typename T>
-T const& Reader<T>::get(DataVersionType version) const {
+std::shared_ptr<T const> Reader<T>::get(DataVersionType version) const {
   vtAssert(ready_, "Data must be ready to get it");
   vtAssert(data_ != nullptr, "Must have data");
-  return *data_;
+  return data_;
 }
 
 }} /* end namespace vt::datarep */

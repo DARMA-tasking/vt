@@ -65,7 +65,7 @@ public:
 
   void fetch(DataVersionType version);
 
-  T const& get(DataVersionType version) const;
+  std::shared_ptr<T const> get(DataVersionType version) const;
 
 private:
   friend struct DataReplicator;
