@@ -77,10 +77,16 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
   }
 
   template <typename T>
-  Reader<T> makeReader(DataRepIDType handle);
+  DataRepIDType registerHandle();
+
+  template <typename T>
+  void unregisterHandle(DataRepIDType handle_id);
 
   template <typename T>
   DR<T> makeHandle(DataVersionType version, T&& data);
+
+  template <typename T>
+  Reader<T> makeReader(DataRepIDType handle);
 
   template <typename T>
   void publishVersion(DataRepIDType handle, DataVersionType version, T&& data);
@@ -92,20 +98,14 @@ struct DataReplicator : runtime::component::Component<DataReplicator> {
   void migrateHandle(DR<T>& handle, vt::NodeType migrated_to);
 
   template <typename T>
-  DataRepIDType registerHandle();
-
-  template <typename T>
-  void unregisterHandle(DataRepIDType handle_id);
-
-  template <typename T>
   bool requestData(
     DataVersionType version, DataRepIDType handle_id, ReaderBase* reader
   );
 
+private:
   template <typename T>
   T const& getDataRef(DataVersionType version, DataRepIDType handle_id) const;
 
-private:
   template <typename T>
   static void staticRequestHandler(detail::DataRequestMsg<T>* msg);
 
