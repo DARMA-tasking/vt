@@ -432,12 +432,12 @@ void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
   >(proxy_);
 
   total_load = 0.;
-  std::vector<balance::LoadData> P_c;
+  std::vector<balance::LoadData> O_l;
   for (auto elm : *model_) {
     auto work = model_->getWork(
       elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
     );
-    P_c.emplace_back(LoadData{lb::Statistic::O_l, work});
+    O_l.emplace_back(LoadData{lb::Statistic::O_l, work});
     total_load += work;
   }
 
@@ -450,7 +450,7 @@ void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
 
   std::vector<LoadData> lstats;
   lstats.emplace_back(LoadData{lb::Statistic::P_l, total_load});
-  lstats.emplace_back(reduceVec(lb::Statistic::P_c, std::move(P_c)));
+  lstats.emplace_back(reduceVec(lb::Statistic::O_l, std::move(O_l)));
 
   double comm_load = 0.0;
   for (auto&& elm : *comm_data) {
