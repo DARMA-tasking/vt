@@ -64,7 +64,7 @@ void DR<T>::publish(DataVersionType version, U&& data) {
 
 template <typename T>
 void DR<T>::unpublish(DataVersionType version) {
-
+  theDR()->unpublishVersion<T>(handle_, version);
 }
 
 
