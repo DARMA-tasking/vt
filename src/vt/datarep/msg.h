@@ -48,33 +48,33 @@
 
 namespace vt { namespace datarep { namespace detail {
 
-template <typename T>
+template <typename T, typename IndexT>
 struct DataRequestMsg : LocationRoutedMsg<DataRepIDType, vt::Message> {
   using MessageParentType = vt::Message;
   vt_msg_serialize_prohibited();
 
   DataRequestMsg(
-    NodeType in_requestor, DataRepIDType in_handle_id,
+    DR_Base<IndexT> in_dr_base, NodeType in_requestor,
     DataVersionType in_version
-  ) : requestor_(in_requestor),
-      handle_id_(in_handle_id),
+  ) : dr_base_(in_dr_base),
+      requestor_(in_requestor),
       version_(in_version)
   { }
 
+  detail::DR_Base<IndexT> dr_base_;
   NodeType requestor_ = uninitialized_destination;
-  DataRepIDType handle_id_ = no_datarep;
   DataVersionType version_ = -1;
 };
 
-template <typename T>
+template <typename T, typename IndexT>
 struct DataResponseMsg : vt::Message {
   using MessageParentType = vt::Message;
   vt_msg_serialize_if_needed_by_parent_or_type1(T);
 
   DataResponseMsg() = default; // for serializer
   DataResponseMsg(
-    DataRepIDType in_handle_id, T const& data, DataVersionType in_version
-  ) : handle_id_(in_handle_id),
+    DR_Base<IndexT> in_dr_base, T const& data, DataVersionType in_version
+  ) : dr_base_(in_dr_base),
       data_(std::make_unique<T>(data)),
       version_(in_version)
   { }
@@ -82,12 +82,12 @@ struct DataResponseMsg : vt::Message {
   template <typename SerializerT>
   void serialize(SerializerT& s) {
     MessageParentType::serialize(s);
-    s | handle_id_;
+    s | dr_base_;
     s | data_;
     s | version_;
   }
 
-  DataRepIDType handle_id_ = no_datarep;
+  detail::DR_Base<IndexT> dr_base_;
   std::unique_ptr<T> data_;
   DataVersionType version_ = -1;
 };

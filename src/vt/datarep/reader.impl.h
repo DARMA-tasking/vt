@@ -49,13 +49,13 @@
 
 namespace vt { namespace datarep {
 
-template <typename T>
-void Reader<T>::fetch(DataVersionType version) {
-  theDR()->requestData<T>(version, handle_, this);
+template <typename T, typename IndexT>
+void Reader<T, IndexT>::fetch(DataVersionType version) {
+  theDR()->requestData<T, IndexT>(*this, version, this);
 }
 
-template <typename T>
-std::shared_ptr<T const> Reader<T>::get(DataVersionType version) const {
+template <typename T, typename IndexT>
+std::shared_ptr<T const> Reader<T, IndexT>::get(DataVersionType version) const {
   vtAssert(ready_, "Data must be ready to get it");
   vtAssert(data_ != nullptr, "Must have data");
   return data_;

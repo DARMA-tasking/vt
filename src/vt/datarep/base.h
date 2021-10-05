@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   handle.h
+//                                    base.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,52 +41,51 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_DATAREP_HANDLE_H
-#define INCLUDED_VT_DATAREP_HANDLE_H
+#if !defined INCLUDED_VT_DATAREP_BASE_H
+#define INCLUDED_VT_DATAREP_BASE_H
 
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
-#include "vt/datarep/base.h"
 
-#include <memory>
+namespace vt { namespace datarep { namespace detail {
 
-namespace vt { namespace datarep {
+struct ReaderBase {};
 
-template <typename T, typename IndexT = int8_t>
-struct DR : detail::DR_Base<IndexT> {
+template <typename IndexT>
+struct DR_Base : ReaderBase {
 
-  DR() = default;
-  DR(DR const&) = default;
-  DR(DR&&) = default;
-  DR& operator=(DR const&) = default;
-  ~DR();
+  DR_Base() = default;
+  explicit DR_Base(DataRepIDType in_handle)
+    : handle_(in_handle)
+  { }
 
-  template <typename U>
-  void publish(DataVersionType version, U&& data);
+  DR_Base(DataRepIDType in_handle, IndexT in_index, TagType in_tag)
+    : handle_(in_handle),
+      tag_(in_tag),
+      is_proxy_(true),
+      index_(in_index)
+  { }
 
-  void unpublish(DataVersionType version);
+  DataRepIDType getHandleID() const { return handle_; }
+  TagType getTag() const { return tag_; }
+  bool isProxy() const { return is_proxy_; }
+  IndexT getIndex() const { return index_; }
 
   template <typename SerializerT>
   void serialize(SerializerT& s) {
-    detail::DR_Base<IndexT>::serialize(s);
+    s | handle_
+      | tag_
+      | is_proxy_
+      | index_;
   }
 
-private:
-  struct DR_TAG_CONSTRUCT {};
-
-  DR(DR_TAG_CONSTRUCT, DataRepIDType in_handle)
-    : detail::DR_Base<IndexT>(in_handle)
-  {}
-
-  DR(
-    DR_TAG_CONSTRUCT, DataRepIDType in_handle, IndexT in_index,
-    TagType in_tag = no_tag
-  ) : detail::DR_Base<IndexT>(in_handle, in_index, in_tag)
-  {}
-
-  friend struct DataReplicator;
+protected:
+  DataRepIDType handle_ = no_datarep;
+  TagType tag_ = no_tag;
+  bool is_proxy_ = false;
+  IndexT index_ = {};
 };
 
-}} /* end namespace vt::datarep */
+}}} /* end namespace vt::datarep::detail */
 
-#endif /*INCLUDED_VT_DATAREP_HANDLE_H*/
+#endif /*INCLUDED_VT_DATAREP_BASE_H*/

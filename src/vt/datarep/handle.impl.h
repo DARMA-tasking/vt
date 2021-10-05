@@ -49,22 +49,23 @@
 
 namespace vt { namespace datarep {
 
-template <typename T>
-DR<T>::~DR() {
-  if (handle_ != no_datarep) {
-    theDR()->unregisterHandle<T>(handle_);
+template <typename T, typename IndexT>
+DR<T, IndexT>::~DR() {
+  auto const handle = detail::DR_Base<IndexT>::getHandleID();
+  if (handle != no_datarep) {
+    theDR()->unregisterHandle<T>(handle);
   }
 }
 
-template <typename T>
+template <typename T, typename IndexT>
 template <typename U>
-void DR<T>::publish(DataVersionType version, U&& data) {
-  theDR()->publishVersion(handle_, version, std::forward<U>(data));
+void DR<T, IndexT>::publish(DataVersionType version, U&& data) {
+  theDR()->publishVersion<T, IndexT>(*this, version, std::forward<U>(data));
 }
 
-template <typename T>
-void DR<T>::unpublish(DataVersionType version) {
-  theDR()->unpublishVersion<T>(handle_, version);
+template <typename T, typename IndexT>
+void DR<T, IndexT>::unpublish(DataVersionType version) {
+  theDR()->unpublishVersion<T, IndexT>(*this, version);
 }
 
 

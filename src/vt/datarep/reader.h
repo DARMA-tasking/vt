@@ -46,16 +46,20 @@
 
 #include "vt/configs/types/types_type.h"
 #include "vt/configs/types/types_sentinels.h"
+#include "vt/datarep/base.h"
 
 namespace vt { namespace datarep {
 
-struct ReaderBase {};
-
-template <typename T>
-struct Reader : ReaderBase {
-  explicit Reader(DataRepIDType handle_id)
-    : handle_(handle_id)
+template <typename T, typename IndexT = int8_t>
+struct Reader : detail::DR_Base<IndexT> {
+  explicit Reader(DataRepIDType in_handle)
+    : detail::DR_Base<IndexT>(in_handle)
   { }
+
+  Reader(DataRepIDType in_handle, IndexT in_index, TagType in_tag = no_tag)
+    : detail::DR_Base<IndexT>(in_handle, in_index, in_tag)
+  {}
+
   Reader(Reader const&) = default;
   Reader(Reader&&) = default;
   Reader& operator=(Reader const&) = default;
@@ -70,7 +74,6 @@ public:
 private:
   friend struct DataReplicator;
 
-  DataRepIDType handle_ = no_datarep;
   DataVersionType version_ = -1;
   bool ready_ = false;
   std::shared_ptr<T> data_ = nullptr;
