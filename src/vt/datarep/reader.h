@@ -52,6 +52,7 @@ namespace vt { namespace datarep {
 
 template <typename T, typename IndexT = int8_t>
 struct Reader : detail::DR_Base<IndexT> {
+  Reader() = default;
   explicit Reader(DataRepIDType in_handle)
     : detail::DR_Base<IndexT>(in_handle)
   { }

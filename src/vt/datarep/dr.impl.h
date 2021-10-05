@@ -59,7 +59,7 @@ Reader<T> DataReplicator::makeReader(DataRepIDType handle) {
     "makeReader: handle_id={}\n",
     handle
   );
-  return Reader<T>{typename Reader<T>::READER_CONSTRUCT_TAG{}, handle};
+  return Reader<T>{handle};
 }
 
 template <typename T>
@@ -90,6 +90,23 @@ DR<T, typename ProxyType::IndexType> DataReplicator::makeIndexedHandle(
 
   using TagType = typename DR<T, IndexType>::DR_TAG_CONSTRUCT;
   return DR<T, IndexType>{TagType{}, proxy_bits, index, tag};
+}
+
+template <typename T, typename ProxyType>
+Reader<T, typename ProxyType::IndexType> DataReplicator::makeIndexedReader(
+  ProxyType proxy, TagType tag
+) {
+  using IndexType = typename ProxyType::IndexType;
+
+  auto proxy_bits = proxy.getCollectionProxy();
+  auto index = proxy.getElementProxy().getIndex();
+  vt_debug_print(
+    normal, gen,
+    "makeIndexedReader: proxy={:x}, index={}, tag={}\n",
+    proxy_bits, index, tag
+  );
+
+  return Reader<T, IndexType>{proxy_bits, index, tag};
 }
 
 template <typename T, typename IndexT>
@@ -195,13 +212,23 @@ bool DataReplicator::requestData(
       "requestData: handle_id={} remote request\n", handle
     );
     waiting_[handle].push_back(reader);
+    auto tr = static_cast<Reader<T, IndexT>*>(reader);
 
     using MsgType = detail::DataRequestMsg<T, IndexT>;
     auto const this_node = theContext()->getNode();
     auto msg = makeMessage<MsgType>(dr_base, this_node, version);
-    theLocMan()->dataRep->routeMsgHandler<MsgType, staticRequestHandler<T, IndexT>>(
-      handle, getHomeNode(handle), msg.get()
-    );
+    if (tr->isProxy()) {
+      // auto const proxy_bits = tr->getHandleID();
+      // auto const idx = tr->getIndex();
+      // auto lm = theLocMan()->getCollectionLM<IndexT>(proxy);
+      vtAssert(false, "Unimplemented");
+      return false;
+    } else {
+      auto lm = theLocMan()->dataRep.get();
+      lm->routeMsgHandler<MsgType, staticRequestHandler<T, IndexT>>(
+        handle, getHomeNode(handle), msg.get()
+      );
+    }
     return false;
   }
 }
