@@ -1,7 +1,0 @@
-function:src/vt/collective/scatter/scatter.cc
-function:src/vt/rdmahandle/manager.collection.impl.h
-function:src/vt/rdmahandle/sub_handle.impl.h
-function:src/vt/runnable/runnable.cc
-function:src/vt/vrt/collection/collection_builder.impl.h
-function:tests/unit/mapping/test_mapping_registry.cc
-vptr:src/vt/objgroup/manager.impl.h
