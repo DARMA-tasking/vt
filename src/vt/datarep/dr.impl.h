@@ -98,6 +98,7 @@ void DataReplicator::publishVersion(
 ) {
   auto handle = dr_base.getHandleID();
   auto tag = dr_base.getTag();
+  auto idx = dr_base.getIndex();
   auto id = detail::DataIdentifier{handle, tag};
   vt_debug_print(
     normal, gen,
@@ -110,14 +111,14 @@ void DataReplicator::publishVersion(
       std::piecewise_construct,
       std::forward_as_tuple(id),
       std::forward_as_tuple(
-        std::make_unique<DataStore<T>>(
-          true, version, std::make_shared<T>(std::forward<T>(data))
+        std::make_unique<DataStore<T, IndexT>>(
+          true, idx, version, std::make_shared<T>(std::forward<T>(data))
         )
       )
     );
   } else {
-    auto ds = static_cast<DataStore<T>*>(iter->second.get());
-    ds->publishVersion(version, std::make_shared<T>(std::forward<T>(data)));
+    auto ds = static_cast<DataStore<T, IndexT>*>(iter->second.get());
+    ds->publishVersion(idx, version, std::make_shared<T>(std::forward<T>(data)));
   }
 }
 
@@ -127,6 +128,7 @@ void DataReplicator::unpublishVersion(
 ) {
   auto handle = dr_base.getHandleID();
   auto tag = dr_base.getTag();
+  auto idx = dr_base.getIndex();
   auto id = detail::DataIdentifier{handle, tag};
   vt_debug_print(
     normal, gen,
@@ -135,7 +137,8 @@ void DataReplicator::unpublishVersion(
   );
   auto iter = local_store_.find(id);
   vtAssert(iter != local_store_.end(), "Handle must exist");
-  iter->second->unpublishVersion(version);
+  auto ds = static_cast<DataStore<T, IndexT>*>(iter->second.get());
+  ds->unpublishVersion(idx, version);
 }
 
 template <typename T>
@@ -161,11 +164,17 @@ bool DataReplicator::requestData(
   detail::DR_Base<IndexT> dr_base, DataVersionType version,
   detail::ReaderBase* reader
 ) {
-  auto handle = dr_base.getHandleID();
-  auto tag = dr_base.getTag();
-  auto id = detail::DataIdentifier{handle, tag};
+  auto const handle = dr_base.getHandleID();
+  auto const tag = dr_base.getTag();
+  auto const idx = dr_base.getIndex();
+  auto const id = detail::DataIdentifier{handle, tag};
   auto iter = local_store_.find(id);
-  if (iter != local_store_.end() && iter->second->hasVersion(version)) {
+  if (
+    iter != local_store_.end() and
+    static_cast<DataStore<T, IndexT>*>(iter->second.get())->hasVersion(
+      idx, version
+    )
+  ) {
     vt_debug_print(
       normal, gen,
       "requestData: handle_id={} found locally\n", handle
@@ -174,9 +183,9 @@ bool DataReplicator::requestData(
     // deliver to the Reader
     // nothing to do data is here
     if (reader) {
-      auto ds = static_cast<DataStore<T>*>(iter->second.get());
-      auto tr = static_cast<Reader<T>*>(reader);
-      tr->data_ = ds->getSharedPtr(version);
+      auto ds = static_cast<DataStore<T, IndexT>*>(iter->second.get());
+      auto tr = static_cast<Reader<T, IndexT>*>(reader);
+      tr->data_ = ds->getSharedPtr(idx, version);
       tr->ready_ = true;
     }
     return true;
@@ -213,16 +222,18 @@ template <typename T, typename IndexT>
 T const& DataReplicator::getDataRef(
   detail::DR_Base<IndexT> dr_base, DataVersionType version
 ) const {
-  auto handle = dr_base.getHandleID();
-  auto tag = dr_base.getTag();
-  auto id = detail::DataIdentifier{handle, tag};
+  auto const handle = dr_base.getHandleID();
+  auto const tag = dr_base.getTag();
+  auto const idx = dr_base.getIndex();
+  auto const id = detail::DataIdentifier{handle, tag};
   auto iter = local_store_.find(id);
   vtAssert(iter != local_store_.end(), "Must exist at this point");
   vt_debug_print(
     normal, gen,
-    "getDataRef: handle_id={}, version={}\n", handle, version
+    "getDataRef: handle_id={}, version={}, idx={}\n", handle, version, idx
   );
-  return *static_cast<T const*>(iter->second->get(version));
+  auto ds = static_cast<DataStore<T, IndexT>*>(iter->second.get());
+  return *static_cast<T const*>(ds->get(idx, version));
 }
 
 template <typename T, typename IndexT>
@@ -232,6 +243,7 @@ void DataReplicator::dataIncomingHandler(
   auto const dr_base = msg->dr_base_;
   auto const handle = dr_base.getHandleID();
   auto const tag = dr_base.getTag();
+  auto const idx = dr_base.getIndex();
   auto const id = detail::DataIdentifier{handle, tag};
   auto const version = msg->version_;
   vt_debug_print(
@@ -244,18 +256,20 @@ void DataReplicator::dataIncomingHandler(
     std::piecewise_construct,
     std::forward_as_tuple(id),
     std::forward_as_tuple(
-      std::make_unique<DataStore<T>>(
-        false, version, std::make_shared<T>(std::move(*msg->data_.get()))
+      std::make_unique<DataStore<T, IndexT>>(
+        false, idx, version, std::make_shared<T>(std::move(*msg->data_.get()))
       )
     )
   );
-  auto ds = static_cast<DataStore<T>*>(local_store_.find(id)->second.get());
+  auto ds = static_cast<DataStore<T, IndexT>*>(
+    local_store_.find(id)->second.get()
+  );
   // Inform that the data is ready
   auto witer = waiting_.find(id);
   if (witer != waiting_.end()) {
     for (auto&& elm : witer->second) {
       auto tr = static_cast<Reader<T>*>(elm);
-      tr->data_ = ds->getSharedPtr(version);
+      tr->data_ = ds->getSharedPtr(idx, version);
       tr->ready_ = true;
     }
     waiting_.erase(witer);

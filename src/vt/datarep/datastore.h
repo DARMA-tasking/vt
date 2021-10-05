@@ -51,49 +51,64 @@ namespace vt { namespace datarep {
 
 struct DataStoreBase {
   virtual ~DataStoreBase() = default;
-  virtual void const* get(DataVersionType version) const = 0;
-  virtual bool hasVersion(DataVersionType version) const = 0;
-  virtual void unpublishVersion(DataVersionType version) = 0;
 };
 
-template <typename T>
+template <typename T, typename IndexT>
 struct DataStore final : DataStoreBase {
+  using VersionMapType = std::unordered_map<DataVersionType, std::shared_ptr<T>>;
 
   explicit DataStore(
-    bool in_is_master, DataVersionType version, std::shared_ptr<T> data
+    bool in_is_master, IndexT idx, DataVersionType version,
+    std::shared_ptr<T> data
   ) : is_master(in_is_master)
   {
-    cache_[version] = data;
+    cache_[idx][version] = data;
   }
 
-  void const* get(DataVersionType version) const override {
-    auto iter = cache_.find(version);
-    return static_cast<void const*>(iter->second.get());
+  void const* get(IndexT idx, DataVersionType version) const {
+    auto iter = cache_.find(idx);
+    return static_cast<void const*>(iter->second.find(version)->second.get());
   }
 
-  std::shared_ptr<T> getSharedPtr(DataVersionType version) const {
-    auto iter = cache_.find(version);
-    return iter->second;
-  }
-
-  void publishVersion(DataVersionType version, std::shared_ptr<T> data) {
-    cache_[version] = data;
-  }
-
-  void unpublishVersion(DataVersionType version) override {
-    auto iter = cache_.find(version);
+  std::shared_ptr<T> getSharedPtr(IndexT idx, DataVersionType version) const {
+    auto iter = cache_.find(idx);
     if (iter != cache_.end()) {
-      cache_.erase(iter);
+      auto iter2 = iter->second.find(version);
+      if (iter2 != iter->second.end()) {
+        return iter2->second;
+      }
+    }
+    return nullptr;
+  }
+
+  void publishVersion(
+    IndexT idx, DataVersionType version, std::shared_ptr<T> data
+  ) {
+    cache_[idx][version] = data;
+  }
+
+  void unpublishVersion(IndexT idx, DataVersionType version) {
+    auto iter = cache_.find(idx);
+    if (iter != cache_.end()) {
+      auto iter2 = iter->second.find(version);
+      if (iter2 != iter->second.end()) {
+        iter2->second.erase(iter2);
+      }
+      if (iter->second.size() == 0) {
+        cache_.erase(iter);
+      }
     }
   }
 
-  bool hasVersion(DataVersionType version) const override {
-    return cache_.find(version) != cache_.end();
+  bool hasVersion(IndexT idx, DataVersionType version) const {
+    auto iter = cache_.find(idx);
+    return iter != cache_.end() and
+           iter->second.find(version) != iter->second.end();
   }
 
 private:
   bool is_master = false;
-  std::unordered_map<DataVersionType, std::shared_ptr<T>> cache_ = {};
+  std::unordered_map<IndexT, VersionMapType> cache_ = {};
 };
 
 }} /* end namespace vt::datarep */
