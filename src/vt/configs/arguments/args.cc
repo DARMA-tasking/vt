@@ -748,7 +748,7 @@ std::tuple<int, std::string> ArgConfig::parseArguments(CLI::App& app, int& argc,
 
   // Set them back with all vt (and MPI) arguments elided
   argc = new_argc;
-  argv = &new_argv[0];
+  argv = new_argv.get();
 
   return std::make_tuple(-1, std::string{});
 }

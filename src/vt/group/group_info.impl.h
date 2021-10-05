@@ -187,7 +187,7 @@ template <typename MsgT>
 
     // Create parent region
     auto region = std::make_unique<region::List>(
-      &local_nodes[0], num_children, true
+      local_nodes.data(), num_children, true
     );
 
     theGroup()->initializeRemoteGroup(

@@ -61,9 +61,9 @@ struct TestInitialization : TestParallelHarness {
     static char prog_name[]{"vt_program"};
     static char cli_argument[]{"--cli_argument=100"};
     static char vt_no_terminate[]{"--vt_no_terminate"};
-    custom_args.emplace_back(&prog_name[0]);
-    custom_args.emplace_back(&cli_argument[0]);
-    custom_args.emplace_back(&vt_no_terminate[0]);
+    custom_args.emplace_back(prog_name);
+    custom_args.emplace_back(cli_argument);
+    custom_args.emplace_back(vt_no_terminate);
     custom_args.emplace_back(nullptr);
 
     custom_argc = custom_args.size() - 1;

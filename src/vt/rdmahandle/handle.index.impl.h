@@ -160,11 +160,11 @@ Handle<
   if (this->getBuffer() == nullptr) {
     auto ptr = std::make_unique<T[]>(len);
     auto r = proxy.get()->rget(
-      index, l, &ptr[0], len, offset + this->hoff()
+      index, l, ptr.get(), len, offset + this->hoff()
     );
     r.addAction([cptr=std::move(ptr),actions=this->actions_]{
       for (auto&& action : actions) {
-        action(&cptr[0]);
+        action(cptr.get());
       }
     });
     return r;
