@@ -54,6 +54,35 @@ struct HelloMsg : vt::Message {
   vt::DataRepIDType handle_id_ = vt::no_datarep;
 };
 
+struct MyCol : vt::Collection<MyCol, vt::Index2D> {
+  MyCol() {
+    auto proxy = getCollectionProxy();
+    auto idx = getIndex();
+    vt_print(gen, "MyCol: {}\n", idx);
+    test_dr = vt::theDR()->makeIndexedHandle<std::vector<double>>(proxy[idx]);
+    test_dr.publish(0, std::vector<double>{10.2, 32.4, 22.3 + idx.x() * idx.y()});
+  }
+
+  using TestMsg = vt::CollectionMessage<MyCol>;
+
+  void doWork(TestMsg* msg) {
+    auto proxy = getCollectionProxy();
+    auto idx = getIndex();
+    vt_print(gen, "Hello from {}\n", idx);
+    vt::datarep::Reader<std::vector<double>, vt::Index2D> reader;
+    auto idx_x = (idx.x() + 1) % 8;
+    reader = vt::theDR()->makeIndexedReader<std::vector<double>>(proxy(idx_x, idx.y()));
+    reader.fetch(0);
+    vt::theSched()->runSchedulerWhile([&]{ return not reader.isReady(); });
+    auto const& vec = reader.get(0);
+    for (auto&& elm : *vec) {
+      vt_print(gen, "idx={}, elm={}\n", idx, elm);
+    }
+  }
+
+  vt::datarep::DR<std::vector<double>, vt::Index2D> test_dr;
+};
+
 static void hello_world(HelloMsg* msg) {
   vt::NodeType this_node = vt::theContext()->getNode();
   fmt::print("{}: Hello from node {} (start)\n", this_node, msg->from);
@@ -78,12 +107,22 @@ int main(int argc, char** argv) {
     return vt::rerror("requires at least 2 nodes");
   }
 
+  auto range = vt::Index2D(8, 1);
+  auto proxy = vt::makeCollection<MyCol>()
+    .bounds(range)
+    .bulkInsert()
+    .wait();
+
+  proxy.broadcastCollective<MyCol::TestMsg,&MyCol::doWork>();
+
   if (this_node == 0) {
     std::vector<double> my_vec;
     for (int i = 0; i < 10; i++) {
       my_vec.push_back(i*10);
     }
-    auto my_dr = vt::theDR()->makeHandle(0, std::move(my_vec));
+    auto my_dr = vt::theDR()->makeHandle<std::vector<double>>();
+    my_dr.publish(0, std::move(my_vec));
+
     auto msg = vt::makeMessage<HelloMsg>(this_node, my_dr.getHandleID());
     vt::theMsg()->broadcastMsg<HelloMsg, hello_world>(msg);
   }
