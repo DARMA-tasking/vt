@@ -60,7 +60,7 @@ static void tellHandle(HandleMsg* msg) {
     fmt::print("{}: handle={}, requesting data\n", this_node, msg->han);
     int const num_elm = 2;
     vt::theRDMA()->getTypedDataInfoBuf(
-      msg->han, &my_data[0], num_elm, vt::no_byte, vt::no_tag, [=]{
+      msg->han, my_data.get(), num_elm, vt::no_byte, vt::no_tag, [=]{
         for (auto i = 0; i < num_elm; i++) {
           fmt::print("node {}: \t: my_data[{}] = {}\n", this_node, i, my_data[i]);
         }
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 
   if (this_node == 0) {
     vt::RDMA_HandleType my_handle =
-      vt::theRDMA()->registerNewTypedRdmaHandler(&my_data[0], my_data_len);
+      vt::theRDMA()->registerNewTypedRdmaHandler(my_data.get(), my_data_len);
 
     auto msg = vt::makeMessage<HandleMsg>(this_node);
     msg->han = my_handle;

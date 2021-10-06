@@ -86,7 +86,7 @@ static vt::RDMA_GetType test_get_fn(
     this_node, num_bytes, tag
   );
   return vt::RDMA_GetType{
-    &my_data[0] + tag, num_bytes == vt::no_byte ? sizeof(double)*10 : num_bytes
+    my_data.get() + tag, num_bytes == vt::no_byte ? sizeof(double)*10 : num_bytes
   };
 }
 

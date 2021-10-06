@@ -283,7 +283,7 @@ void GreedyLB::recvObjs(GreedySendMsg* msg) {
     normal, lb,
     "recvObjs: msg->transfer_.size={}\n", msg->transfer_.size()
   );
-  recvObjsDirect(msg->transfer_.size(), &msg->transfer_[0]);
+  recvObjsDirect(msg->transfer_.size(), msg->transfer_.data());
 }
 
 void GreedyLB::recvObjsBcast(GreedyBcastMsg* msg) {
@@ -292,7 +292,7 @@ void GreedyLB::recvObjsBcast(GreedyBcastMsg* msg) {
     normal, lb,
     "recvObjs: msg->transfer_.size={}\n", msg->transfer_[n].size()
   );
-  recvObjsDirect(msg->transfer_[n].size(), &msg->transfer_[n][0]);
+  recvObjsDirect(msg->transfer_[n].size(), msg->transfer_[n].data());
 }
 
 void GreedyLB::recvObjsDirect(std::size_t len, GreedyLBTypes::ObjIDType* objs) {

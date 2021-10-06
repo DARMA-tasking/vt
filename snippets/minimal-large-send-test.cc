@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
   std::vector<MPI_Status> stats;
   stats.resize(reqs.size());
-  MPI_Waitall(reqs.size(), &reqs[0], &stats[0]);
+  MPI_Waitall(reqs.size(), reqs.data(), stats.data());
 
   MPI_Finalize();
 

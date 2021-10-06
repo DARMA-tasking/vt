@@ -126,7 +126,7 @@ TEST_P(TestActiveBroadcastPut, test_type_safe_active_fn_bcast2) {
       if (my_node == root) {
         for (int i = 0; i < num_msg_sent; i++) {
           auto msg = makeMessage<PutTestMessage>();
-          msg->setPut(&put_payload[0], put_size * sizeof(int));
+          msg->setPut(put_payload.data(), put_size * sizeof(int));
           theMsg()->broadcastMsg<PutTestMessage, test_handler>(msg);
         }
       }

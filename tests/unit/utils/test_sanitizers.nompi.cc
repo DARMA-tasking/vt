@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                   main.cc
+//                           test_sanitizers.nompi.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -42,35 +42,19 @@
 */
 
 #include <gtest/gtest.h>
+#include <gtest/gtest-spi.h>
 
-#include "test_harness.h"
-
-namespace vt { namespace tests { namespace unit {
-
-int test_argc = 0;
-char** test_argv = nullptr;
-
-}}} // end namespace vt::tests::unit
-
-extern "C" {
 #ifdef VT_UBSAN_ENABLED
 
-void __ubsan_on_report() {
-  FAIL() << "Encountered an undefined behavior sanitizer error";
+void test_if_ubsan_fails() {
+  int i = 2048;
+  i <<= 28;
+  std::cout << "i: " << i << std::endl;
+}
+
+TEST(TestSanitizers, test_if_ubsan_fails) {
+  EXPECT_FATAL_FAILURE(
+    test_if_ubsan_fails(), "Encountered an undefined behavior sanitizer error");
 }
 
 #endif
-}
-
-int main(int argc, char** argv) {
-  using namespace vt::tests::unit;
-
-  test_argc = argc;
-  test_argv = argv;
-
-  ::testing::InitGoogleTest(&test_argc, test_argv);
-
-  TestHarness::store_cmdline_args(test_argc, test_argv);
-
-  return RUN_ALL_TESTS();
-}

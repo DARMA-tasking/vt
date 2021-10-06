@@ -194,7 +194,7 @@ bool DenseIndexArray<IndexType, ndim>::operator==(
 
 template <typename IndexType, NumDimensionsType ndim>
 IndexType const* DenseIndexArray<IndexType, ndim>::raw() const {
-  return &dims[0];
+  return dims.data();
 }
 
 template <typename IndexType, NumDimensionsType ndim>

@@ -59,7 +59,7 @@ ShallowList::ShallowList(List const& in_list)
 { }
 
 ShallowList::ShallowList(ListType const& in_list)
-  : ShallowList(&in_list[0], in_list.size())
+  : ShallowList(in_list.data(), in_list.size())
 { }
 
 /*virtual*/ ShallowList::SizeType ShallowList::getSize() const {
