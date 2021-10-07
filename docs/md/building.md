@@ -70,6 +70,7 @@ build configuration:
 | `VT_BUILD_TESTS`                 | 1               | Build all VT tests                                                                                 |
 | `VT_BUILD_EXAMPLES`              | 1               | Build all VT examples                                                                              |
 | `vt_debug_verbose`               | 1 (not Release) | Enable VT verbose debug prints at compile-time                                                     |
+| `vt_no_color_enabled`            | 0               | Set `--vt_no_color` flag to true by default                                                        |
 
 \subsection using-the-build-script Using the Build Script
 
@@ -105,6 +106,7 @@ parameters.
 | `VT_DIAGNOSTICS_RUNTIME_ENABLED` | 0             | Enable VT component diagnostics at runtime by default                                              |
 | `VT_DEBUG_VERBOSE`               | <empty>       | Enable VT verbose debug prints at compile-time                                                     |
 | `VT_TESTS_NUM_NODES`             | <empty>       | Maximum number of nodes used for tests. If empty, then the default value detected by CMake is used |
+| `VT_NO_COLOR_ENABLED`            | 0             | Set `--vt_no_color` flag to true by default                                                        |
 
 With these set, invoke the script with two arguments: the path to the *vt* root
 directory and the build path. Here's an example assuming that *vt* is cloned
@@ -162,7 +164,7 @@ which `docker-compose` will read.
 #   VT_DOCS=0                 # Enable doxygen build
 #   VT_TRACE_RT=0             # Enable tracing at runtime (for testing)
 #   VT_ASAN=0                 # Enable address sanitizer
-#   VT_UBSAN=0                 # Enable undefined behavior sanitizer
+#   VT_UBSAN=0                # Enable undefined behavior sanitizer
 #   VT_WERROR=1               # Treat all warnings as errors
 #   VT_EXTENDED_TESTS=1       # Build all the extended testing
 #   VT_ZOLTAN=0               # Build with Zoltan enabled
@@ -175,6 +177,7 @@ which `docker-compose` will read.
 #   BUILD_TYPE=release        # CMake build type
 #   CODE_COVERAGE=0           # Enable generation of code coverage reports
 #   VT_DEBUG_VERBOSE          # Enable verbose debug prints at compile-time
+#   VT_NO_COLOR_ENABLED=0     # Set --vt_no_color flag to true by default
 ```
 
 With these set, one may run the following for a non-interactive build with

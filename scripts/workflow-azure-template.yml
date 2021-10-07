@@ -39,6 +39,7 @@ variables:
   VT_ZOLTAN: [% vt_zoltan %]
   VT_CI_BUILD: [% vt_ci_build %]
   VT_DIAGNOSTICS: [% vt_diagnostics %]
+  VT_NO_COLOR: [% vt_no_color %]
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: [% cache_name %]
   build_root: "$(CACHE)/[% build_root %]/"

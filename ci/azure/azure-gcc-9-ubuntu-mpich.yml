@@ -49,6 +49,7 @@ variables:
   VT_ZOLTAN: 1
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
+  VT_NO_COLOR: 1
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: ubuntu-gcc-9-cache
   build_root: "$(CACHE)/$(ARCH)-ubuntu-$(UBUNTU)-$(COMPILER)-cache/"
