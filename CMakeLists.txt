@@ -104,14 +104,6 @@ if (vt_trace_only)
   message(STATUS "Building additional target for VT in trace-only mode")
 endif()
 
-option(vt_no_color_enabled "Build VT with option --vt_no_color set to true by default" OFF)
-if(vt_no_color_enabled)
-  message(STATUS "Building VT with --vt_no_color set to true by default")
-  add_compile_definitions(VT_NO_COLOR_ENABLED=true)
-else()
-  add_compile_definitions(VT_NO_COLOR_ENABLED=false)
-endif()
-
 # Primary VT build
 add_subdirectory(src)
 

@@ -203,6 +203,14 @@ add_library(
   ${HEADER_FILES} ${SOURCE_FILES}
 )
 
+option(vt_no_color_enabled "Build VT with option --vt_no_color set to true by default" OFF)
+if(vt_no_color_enabled)
+  message(STATUS "Building VT with --vt_no_color set to true by default")
+  target_compile_definitions(${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC VT_NO_COLOR_ENABLED)
+else()
+  message(STATUS "Building VT with --vt_no_color set to false by default")
+endif()
+
 target_compile_features(
   ${VIRTUAL_TRANSPORT_LIBRARY} PUBLIC
   cxx_std_14
