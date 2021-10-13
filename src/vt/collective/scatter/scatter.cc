@@ -119,7 +119,7 @@ void Scatter::scatterIn(ScatterMsg* msg) {
     );
   });
   auto active_fn = auto_registry::getAutoHandler(user_handler);
-  active_fn(reinterpret_cast<BaseMessage*>(in_base_ptr));
+  active_fn->dispatch(reinterpret_cast<BaseMessage*>(in_base_ptr), nullptr);
 }
 
 /*static*/ void Scatter::scatterHandler(ScatterMsg* msg) {

@@ -61,11 +61,64 @@
 
 namespace vt { namespace auto_registry {
 
-using AutoActiveType              = ActiveFnPtrType;
+struct SentinelObject {};
+
+struct BaseDispatcher {
+  virtual ~BaseDispatcher() = default;
+  virtual void dispatch(messaging::BaseMsg* msg, void* object) = 0;
+};
+
+template <typename MsgT, typename HandlerT, typename ObjT>
+struct Dispatcher final : BaseDispatcher {
+  explicit Dispatcher(HandlerT in_fn_ptr)
+    : fn_ptr_(in_fn_ptr)
+  { }
+
+private:
+  template <typename T, typename = void>
+  struct DispatchImpl;
+
+  template <typename T>
+  struct DispatchImpl<
+    T,
+    typename std::enable_if_t<
+      std::is_same<T, ActiveTypedFnType<MsgT>*>::value
+    >
+  > {
+    static void run(MsgT* msg, void* object, HandlerT han) {
+      han(msg);
+    }
+  };
+
+  template <typename T>
+  struct DispatchImpl<
+    T,
+    typename std::enable_if_t<
+      std::is_same<
+        T, vrt::collection::ActiveColMemberTypedFnType<MsgT, ObjT>
+      >::value
+    >
+  > {
+    static void run(MsgT* msg, void* object, HandlerT han) {
+      auto elm = static_cast<ObjT*>(object);
+      (elm->*han)(msg);
+    }
+  };
+
+public:
+  void dispatch(messaging::BaseMsg* msg, void* object) override {
+    DispatchImpl<HandlerT>::run(static_cast<MsgT*>(msg), object, fn_ptr_);
+  }
+
+private:
+  HandlerT fn_ptr_ = nullptr;
+};
+
+using AutoActiveType              = std::shared_ptr<BaseDispatcher>;
 using AutoActiveFunctorType       = ActiveFnPtrType;
 using AutoActiveVCType            = vrt::ActiveVirtualFnPtrType;
 using AutoActiveCollectionType    = vrt::collection::ActiveColFnPtrType;
-using AutoActiveCollectionMemType = vrt::collection::ActiveColMemberFnPtrType;
+using AutoActiveCollectionMemType = std::shared_ptr<BaseDispatcher>;
 using AutoActiveMapType           = mapping::ActiveMapFnPtrType;
 using AutoActiveMapFunctorType    = mapping::ActiveMapFnPtrType;
 using AutoActiveSeedMapType       = mapping::ActiveSeedMapFnPtrType;

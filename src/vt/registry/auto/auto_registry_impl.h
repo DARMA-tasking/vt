@@ -91,7 +91,7 @@ inline HandlerType makeAutoHandlerObjGroup(HandlerControlType ctrl) {
 
 template <typename MessageT, ActiveTypedFnType<MessageT>* f>
 inline HandlerType makeAutoHandler() {
-  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f>;
+  using AdapterT = FunctorAdapter<ActiveTypedFnType<MessageT>, f, MessageT>;
   using ContainerType = AutoActiveContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveType>;
   using FuncType = ActiveFnPtrType;

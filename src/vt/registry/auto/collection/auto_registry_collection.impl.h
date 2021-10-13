@@ -85,7 +85,9 @@ template <
   typename ColT, typename MsgT, ActiveColMemberTypedFnType<MsgT, ColT> f
 >
 inline HandlerType makeAutoHandlerCollectionMem() {
-  using FunctorT = FunctorAdapterMember<ActiveColMemberTypedFnType<MsgT, ColT>, f>;
+  using FunctorT = FunctorAdapterMember<
+    ActiveColMemberTypedFnType<MsgT, ColT>, f, ColT, MsgT
+  >;
   using ContainerType = AutoActiveCollectionMemContainerType;
   using RegInfoType = AutoRegInfoType<AutoActiveCollectionMemType>;
   using FuncType = ActiveColMemberFnPtrType;

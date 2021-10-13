@@ -145,10 +145,11 @@ struct FunctorAdapterParam {
 #endif // end trace_enabled
 };
 
-template <typename F, F* f>
+template <typename F, F* f, typename MsgT = void>
 struct FunctorAdapter {
   using FunctionPtrType = F*;
-  using ObjType = void;
+  using ObjType = SentinelObject;
+  using MsgType = MsgT;
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
@@ -176,10 +177,11 @@ struct FunctorAdapter {
 #endif // end trace_enabled
 };
 
-template <typename F, F f, typename ObjT = void>
+template <typename F, F f, typename ObjT = void, typename MsgT = void>
 struct FunctorAdapterMember {
   using FunctionPtrType = F;
   using ObjType = ObjT;
+  using MsgType = MsgT;
 
   static constexpr FunctionPtrType getFunction() { return f; }
 
