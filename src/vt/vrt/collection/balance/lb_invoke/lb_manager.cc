@@ -407,7 +407,7 @@ void LBManager::statsHandler(StatsMsgType* msg) {
     if (theContext()->getNode() == 0) {
       vt_print(
         lb,
-        "BaseLB: Statistic={}: "
+        "LBManager: Statistic={}: "
         " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
         " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
         " npr={}, imb={:.2f}, num_stats={}\n",
