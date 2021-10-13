@@ -72,7 +72,7 @@ struct LoadData {
     );
   }
 
-  friend LoadData operator+(LoadData& a1, LoadData const& a2) {
+  friend LoadData operator+(LoadData a1, LoadData const& a2) {
     vt_debug_print(
       verbose, lb,
       "operator+: a1.N_={}, a2.N_={}\n", a1.N_, a2.N_
