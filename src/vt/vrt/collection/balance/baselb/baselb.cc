@@ -155,9 +155,8 @@ void BaseLB::applyMigrations(
     transferSend(elm.first, elm.second);
   }
 
-  // Re-compute the statistics with the new partition based on current
-  // this_load_ values
-  // computeStatistics();
+  // @todo: removed re-computation of statistics, which needs to be added back
+  // in the future.
   migrationDone();
 }
 
