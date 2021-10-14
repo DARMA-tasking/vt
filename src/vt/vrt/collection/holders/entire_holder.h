@@ -54,9 +54,9 @@
 
 namespace vt { namespace vrt { namespace collection {
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct EntireHolder {
-  using InnerHolder = CollectionHolder<ColT, IndexT>;
+  using InnerHolder = CollectionHolder<IndexT>;
   using InnerHolderPtr = std::shared_ptr<InnerHolder>;
   using ProxyContainerType = std::unordered_map<
     VirtualProxyType, InnerHolderPtr

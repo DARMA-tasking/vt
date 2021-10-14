@@ -81,7 +81,7 @@ struct ConstructParams {
   using ProxyType         = CollectionProxy<ColT>;
   using ApplyFnType       = std::function<void(IndexType)>;
   using ProxyFnType       = std::function<void(ProxyType)>;
-  using VirtualPtrType    = std::unique_ptr<CollectionBase<ColT,IndexType>>;
+  using VirtualPtrType    = std::unique_ptr<Indexable<IndexType>>;
   using ConstructFnType   = std::function<VirtualPtrType(IndexType)>;
   using ListInsertType    = std::function<void(ApplyFnType)>;
   using ListInsertElmType = std::tuple<IndexType, std::unique_ptr<ColT>>;

@@ -46,6 +46,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/vrt_common.h"
+#include "vt/vrt/collection/manager.fwd.h"
 #include "vt/vrt/collection/types/type_attorney.h"
 #include "vt/vrt/collection/types/migrate_hooks.h"
 #include "vt/vrt/collection/types/migratable.h"
@@ -54,6 +55,9 @@ namespace vt { namespace vrt { namespace collection {
 
 template <typename IndexT>
 struct Indexable : Migratable {
+  using IndexType = IndexT;
+  using ReduceStampType = collective::reduce::detail::ReduceStamp;
+  using ReduceSeqStampType = collective::reduce::detail::StrongSeq;
 
   explicit Indexable(IndexT&& in_index);
   Indexable() = default;
@@ -66,6 +70,7 @@ protected:
 
 private:
   friend struct CollectionTypeAttorney;
+  friend struct CollectionManager;
 
   void setIndex(IndexT const& in_index);
 
@@ -76,6 +81,23 @@ private:
   // constructor overload has no index, it will not be set until the its set
   // through the `CollectionTypeAttorney`
   bool set_index_ = false;
+
+public:
+  /**
+   * \brief Get the next reduce stamp and increment
+   *
+   * \return the reduce stamp
+   */
+  ReduceStampType getNextStamp();
+
+  /**
+   * \brief Zero out the reduce stamp
+   */
+  void zeroReduceStamp();
+
+protected:
+  EpochType cur_bcast_epoch_ = 0;
+  ReduceSeqStampType reduce_stamp_ = ReduceSeqStampType{1};
 };
 
 }}} /* end namespace vt::vrt::collection */
