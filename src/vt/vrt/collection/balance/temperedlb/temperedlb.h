@@ -45,6 +45,7 @@
 #define INCLUDED_VT_VRT_COLLECTION_BALANCE_TEMPEREDLB_TEMPEREDLB_H
 
 #include "vt/config.h"
+#include "vt/vrt/collection/balance/stats_msg.h"
 #include "vt/vrt/collection/balance/baselb/baselb.h"
 #include "vt/vrt/collection/balance/temperedlb/tempered_msgs.h"
 #include "vt/vrt/collection/balance/temperedlb/criterion.h"
@@ -65,6 +66,9 @@ struct TemperedLB : BaseLB {
   using ObjsType       = std::unordered_map<ObjIDType, LoadType>;
   using ReduceMsgType  = vt::collective::ReduceNoneMsg;
   using RejectionMsgType = balance::RejectionStatsMsg;
+  using StatsMsgType     = balance::NodeStatsMsg;
+  using QuantityType     = std::map<lb::StatisticQuantity, double>;
+  using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
 
   TemperedLB() = default;
   TemperedLB(TemperedLB const&) = delete;
@@ -73,7 +77,7 @@ struct TemperedLB : BaseLB {
 
 public:
   void init(objgroup::proxy::Proxy<TemperedLB> in_proxy);
-  void runLB() override;
+  void runLB(TimeType total_load) override;
   void inputParams(balance::SpecEntry* spec) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
@@ -176,6 +180,8 @@ private:
   std::vector<bool> propagated_k_;
   std::mt19937 gen_propagate_;
   std::mt19937 gen_sample_;
+  StatisticMapType stats;
+  LoadType this_load                                = 0.0f;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

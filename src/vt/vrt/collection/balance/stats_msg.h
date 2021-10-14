@@ -54,14 +54,17 @@
 #include <algorithm>
 #include <limits>
 #include <type_traits>
+#include <vector>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 struct LoadData {
+  using isByteCopyable = std::true_type;
+
   LoadData() = default;
-  LoadData(TimeType const y)
+  LoadData(lb::Statistic in_stat, TimeType const y)
     : max_(y), sum_(y), min_(y), avg_(y), M2_(0.0f), M3_(0.0f), M4_(0.0f),
-      N_(1), P_(y not_eq 0.0f)
+      N_(1), P_(y not_eq 0.0f), stat_(in_stat)
   {
     vt_debug_print(
       verbose, lb,
@@ -110,6 +113,7 @@ struct LoadData {
     a1.max_  = std::max(a1.max_, a2.max_);
     a1.sum_ += a2.sum_;
     a1.P_   += a2.P_;
+    a1.stat_ = a2.stat_;
 
     return a1;
   }
@@ -160,6 +164,7 @@ struct LoadData {
   TimeType M4_  = 0.0;
   int32_t  N_ = 0;
   int32_t  P_ = 0;
+  lb::Statistic stat_ = lb::Statistic::P_l;
 };
 
 static_assert(
@@ -167,27 +172,25 @@ static_assert(
   "Must be trivially copyable to avoid serialization."
 );
 
-struct NodeStatsMsg : NonSerialized<
-  collective::ReduceTMsg<LoadData>,
+struct NodeStatsMsg : SerializeRequired<
+  collective::ReduceTMsg<std::vector<LoadData>>,
   NodeStatsMsg
 >
 {
-  using MessageParentType = NonSerialized<
-    collective::ReduceTMsg<LoadData>,
+  using MessageParentType = SerializeRequired<
+    collective::ReduceTMsg<std::vector<LoadData>>,
     NodeStatsMsg
   >;
 
   NodeStatsMsg() = default;
-  NodeStatsMsg(lb::Statistic in_stat, TimeType const in_total_load)
-    : MessageParentType(LoadData(in_total_load)),
-      stat_(in_stat)
-  { }
-  NodeStatsMsg(lb::Statistic in_stat, LoadData&& ld)
-    : MessageParentType(std::move(ld)),
-      stat_(in_stat)
+  explicit NodeStatsMsg(std::vector<LoadData> ld)
+    : MessageParentType(std::move(ld))
   { }
 
-  lb::Statistic stat_ = lb::Statistic::P_l;
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    MessageParentType::serialize(s);
+  }
 };
 
 }}}} /* end namespace vt::vrt::collection::balance */

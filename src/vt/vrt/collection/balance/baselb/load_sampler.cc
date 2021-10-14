@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                  plus_op.h
+//                               load_sampler.cc
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,54 +41,35 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_PLUS_OP_H
-#define INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_PLUS_OP_H
+#include "vt/vrt/collection/balance/baselb/load_sampler.h"
 
-#include "vt/config.h"
+namespace vt { namespace vrt { namespace collection { namespace lb {
 
-namespace vt { namespace collective { namespace reduce { namespace operators {
+void LoadSamplerBaseLB::buildHistogram() {
+  for (auto obj : *load_model_) {
+    auto load = load_model_->getWork(
+      obj, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+    );
+    auto const& load_milli = loadMilli(load);
+    auto const& bin = histogramSample(load_milli);
+    obj_sample[bin].push_back(obj);
 
-template <typename T>
-struct PlusOp {
-  void operator()(T& v1, T const& v2) {
-    v1 = v1 + v2;
+    vt_debug_print(
+      verbose, lb,
+      "\t buildHistogram: obj={}, home={}, load={}, "
+      "load_milli={}, bin={}\n",
+      obj.id, obj.home_node, load, load_milli, bin
+    );
   }
-};
+}
 
-template <typename T>
-struct PlusOp< std::vector<T> > {
-  void operator()(std::vector<T>& v1, std::vector<T> const& v2) {
-    vtAssert(v1.size() == v2.size(), "Sizes of vectors in reduce must be equal");
-    for (size_t ii = 0; ii < v1.size(); ++ii)
-      v1[ii] = v1[ii] + v2[ii];
-  }
-};
+LoadSamplerBaseLB::ObjBinType
+LoadSamplerBaseLB::histogramSample(LoadType const& load) const {
+  auto const bin_size = getBinSize();
+  ObjBinType const bin =
+    ((static_cast<int32_t>(load)) / bin_size * bin_size)
+    + bin_size;
+  return bin;
+}
 
-template <>
-struct PlusOp< std::vector<bool> > {
-  void operator()(std::vector<bool>& v1, std::vector<bool> const& v2) {
-    vtAssert(v1.size() == v2.size(), "Sizes of vectors in reduce must be equal");
-    for (size_t ii = 0; ii < v1.size(); ++ii)
-      v1[ii] = v1[ii] + v2[ii];
-  }
-};
-
-template <typename T, std::size_t N>
-struct PlusOp< std::array<T,N> > {
-  void operator()(std::array<T,N>& v1, std::array<T,N> const& v2) {
-    for (size_t ii = 0; ii < N; ++ii)
-      v1[ii] += v2[ii];
-  }
-};
-
-
-}}}} /* end namespace vt::collective::reduce::operators */
-
-namespace vt { namespace collective {
-
-template <typename T>
-using PlusOp = reduce::operators::PlusOp<T>;
-
-}} /* end namespace vt::collective */
-
-#endif /*INCLUDED_VT_COLLECTIVE_REDUCE_OPERATORS_FUNCTORS_PLUS_OP_H*/
+}}}} /* end namespace vt::vrt::collection::lb */

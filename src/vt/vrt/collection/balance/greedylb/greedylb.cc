@@ -143,7 +143,9 @@ void GreedyLB::inputParams(balance::SpecEntry* spec) {
   strat_ = strategy_converter_.getFromSpec(spec, strat_);
 }
 
-void GreedyLB::runLB() {
+void GreedyLB::runLB(TimeType total_load) {
+  this_load = loadMilli(total_load);
+  buildHistogram();
   loadStats();
 }
 
@@ -151,7 +153,7 @@ void GreedyLB::loadStats() {
   auto const& this_node = theContext()->getNode();
   auto avg_load = getAvgLoad();
   auto total_load = getSumLoad();
-  auto I = stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
+  auto I = getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::imb);
 
   bool should_lb = false;
   this_load_begin = this_load;
@@ -375,15 +377,15 @@ void GreedyLB::transferObjs(std::vector<GreedyProc>&& in_load) {
 }
 
 double GreedyLB::getAvgLoad() const {
-  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
+  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::avg);
 }
 
 double GreedyLB::getMaxLoad() const {
-  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
+  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::max);
 }
 
 double GreedyLB::getSumLoad() const {
-  return stats.at(lb::Statistic::P_l).at(lb::StatisticQuantity::sum);
+  return getStats()->at(lb::Statistic::P_l).at(lb::StatisticQuantity::sum);
 }
 
 void GreedyLB::loadOverBin(ObjBinType bin, ObjBinListType& bin_list) {

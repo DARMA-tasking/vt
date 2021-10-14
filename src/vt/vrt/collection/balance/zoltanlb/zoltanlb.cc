@@ -127,8 +127,9 @@ void ZoltanLB::inputParams(balance::SpecEntry* spec) {
   }
 }
 
-void ZoltanLB::runLB() {
+void ZoltanLB::runLB(TimeType total_load) {
   auto const& this_node = theContext()->getNode();
+  this_load = loadMilli(total_load);
 
   if (this_node == 0) {
     vt_print(lb, "ZoltanLB: runLB: edges={}\n", do_edges_);

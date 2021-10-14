@@ -64,7 +64,7 @@ struct ZoltanLB : BaseLB {
   ZoltanLB();
 
   void init(objgroup::proxy::Proxy<ZoltanLB> in_proxy);
-  void runLB() override;
+  void runLB(TimeType total_load) override;
   void inputParams(balance::SpecEntry* spec) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
@@ -152,6 +152,7 @@ private:
   int max_edges_per_node_ = 0;
   balance::ElementIDType edge_id_ = 0;
   collective::CollectiveScope collective_scope_;
+  LoadType this_load = 0.0f;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */

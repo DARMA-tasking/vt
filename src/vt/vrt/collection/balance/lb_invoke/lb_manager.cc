@@ -147,10 +147,10 @@ LBType LBManager::decideLBToRun(PhaseType phase, bool try_file) {
 
 void LBManager::setLoadModel(std::shared_ptr<LoadModel> model) {
   model_ = model;
-  auto stats = theNodeStats();
-  model_->setLoads(stats->getNodeLoad(),
-                   stats->getNodeSubphaseLoad(),
-                   stats->getNodeComm());
+  auto nstats = theNodeStats();
+  model_->setLoads(nstats->getNodeLoad(),
+                   nstats->getNodeSubphaseLoad(),
+                   nstats->getNodeComm());
 }
 
 template <typename LB>
@@ -174,6 +174,10 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     model_->updateLoads(phase);
   });
 
+  runInEpochCollective("LBManager::runLB -> computeStats", [=] {
+    computeStatistics(false, phase);
+  });
+
   runInEpochCollective("LBManager::runLB -> startLB", [=] {
     vt_debug_print(
       terse, lb,
@@ -186,7 +190,7 @@ LBManager::runLB(LBProxyType base_proxy, PhaseType phase) {
     if (iter != theNodeStats()->getNodeComm()->end()) {
       comm = &iter->second;
     }
-    strat->startLB(phase, base_proxy, model_.get(), *comm);
+    strat->startLB(phase, base_proxy, model_.get(), stats, *comm, total_load);
   });
 
   int32_t global_migration_count = 0;
@@ -368,6 +372,135 @@ void LBManager::finishedLB(PhaseType phase) {
     destroy_lb_();
     destroy_lb_ = nullptr;
   }
+}
+
+void LBManager::statsHandler(StatsMsgType* msg) {
+  auto in_stat_vec = msg->getConstVal();
+
+  for (auto&& st : in_stat_vec) {
+    auto stat     = st.stat_;
+    auto max      = st.max();
+    auto min      = st.min();
+    auto avg      = st.avg();
+    auto sum      = st.sum();
+    auto npr      = st.npr();
+    auto car      = st.N_;
+    auto imb      = st.I();
+    auto var      = st.var();
+    auto stdv     = st.stdv();
+    auto skew     = st.skew();
+    auto krte     = st.krte();
+
+    stats[stat][lb::StatisticQuantity::max] = max;
+    stats[stat][lb::StatisticQuantity::min] = min;
+    stats[stat][lb::StatisticQuantity::avg] = avg;
+    stats[stat][lb::StatisticQuantity::sum] = sum;
+    stats[stat][lb::StatisticQuantity::npr] = npr;
+    stats[stat][lb::StatisticQuantity::car] = car;
+    stats[stat][lb::StatisticQuantity::var] = var;
+    stats[stat][lb::StatisticQuantity::npr] = npr;
+    stats[stat][lb::StatisticQuantity::imb] = imb;
+    stats[stat][lb::StatisticQuantity::std] = stdv;
+    stats[stat][lb::StatisticQuantity::skw] = skew;
+    stats[stat][lb::StatisticQuantity::kur] = krte;
+
+    if (theContext()->getNode() == 0) {
+      vt_print(
+        lb,
+        "LBManager: Statistic={}: "
+        " max={:.2f}, min={:.2f}, sum={:.2f}, avg={:.2f}, var={:.2f},"
+        " stdev={:.2f}, nproc={}, cardinality={} skewness={:.2f}, kurtosis={:.2f},"
+        " npr={}, imb={:.2f}, num_stats={}\n",
+        lb::lb_stat_name_[stat],
+        max, min, sum, avg, var, stdv, npr, car, skew, krte, npr, imb,
+        stats.size()
+      );
+    }
+  }
+}
+
+void LBManager::computeStatistics(bool comm_collectives, PhaseType phase) {
+  vt_debug_print(
+    normal, lb,
+    "computeStatistics\n"
+  );
+
+  using ReduceOp = collective::PlusOp<std::vector<balance::LoadData>>;
+
+  auto cb = vt::theCB()->makeBcast<
+    LBManager, StatsMsgType, &LBManager::statsHandler
+  >(proxy_);
+
+  total_load = 0.;
+  std::vector<balance::LoadData> O_l;
+  for (auto elm : *model_) {
+    auto work = model_->getWork(
+      elm, {balance::PhaseOffset::NEXT_PHASE, balance::PhaseOffset::WHOLE_PHASE}
+    );
+    O_l.emplace_back(LoadData{lb::Statistic::O_l, work});
+    total_load += work;
+  }
+
+  balance::CommMapType empty_comm;
+  balance::CommMapType const* comm_data = &empty_comm;
+  auto iter = theNodeStats()->getNodeComm()->find(phase);
+  if (iter != theNodeStats()->getNodeComm()->end()) {
+    comm_data = &iter->second;
+  }
+
+  std::vector<LoadData> lstats;
+  lstats.emplace_back(LoadData{lb::Statistic::P_l, total_load});
+  lstats.emplace_back(reduceVec(lb::Statistic::O_l, std::move(O_l)));
+
+  double comm_load = 0.0;
+  for (auto&& elm : *comm_data) {
+    if (not comm_collectives and isCollectiveComm(elm.first.cat_)) {
+      continue;
+    }
+    if (elm.first.onNode() or elm.first.selfEdge()) {
+      continue;
+    }
+    //vt_print(lb, "comm_load={}, elm={}\n", comm_load, elm.second.bytes);
+    comm_load += elm.second.bytes;
+  }
+
+  lstats.emplace_back(LoadData{lb::Statistic::P_c, comm_load});
+
+  std::vector<balance::LoadData> O_c;
+  for (auto&& elm : *comm_data) {
+    // Only count object-to-object direct edges in the O_c statistics
+    if (elm.first.cat_ == balance::CommCategory::SendRecv and not elm.first.selfEdge()) {
+      O_c.emplace_back(LoadData{lb::Statistic::O_c, elm.second.bytes});
+    }
+  }
+
+  lstats.emplace_back(reduceVec(lb::Statistic::O_c, std::move(O_c)));
+
+  auto msg = makeMessage<StatsMsgType>(std::move(lstats));
+  proxy_.template reduce<ReduceOp>(msg,cb);
+}
+
+balance::LoadData
+LBManager::reduceVec(
+  lb::Statistic stat, std::vector<balance::LoadData>&& vec
+) const {
+  balance::LoadData reduce_ld(stat, 0.0f);
+  if (vec.size() == 0) {
+    return reduce_ld;
+  } else {
+    for (std::size_t i = 1; i < vec.size(); i++) {
+      vec[0] = vec[0] + vec[i];
+    }
+    return vec[0];
+  }
+}
+
+bool LBManager::isCollectiveComm(balance::CommCategory cat) const {
+  bool is_collective =
+    cat == balance::CommCategory::Broadcast or
+    cat == balance::CommCategory::CollectionToNodeBcast or
+    cat == balance::CommCategory::NodeToCollectionBcast;
+  return is_collective;
 }
 
 }}}} /* end namespace vt::vrt::collection::balance */

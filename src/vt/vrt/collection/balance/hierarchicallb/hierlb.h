@@ -50,7 +50,7 @@
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_child.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_msgs.h"
 #include "vt/vrt/collection/balance/hierarchicallb/hierlb_strat.h"
-#include "vt/vrt/collection/balance/baselb/baselb.h"
+#include "vt/vrt/collection/balance/baselb/load_sampler.h"
 #include "vt/timing/timing.h"
 #include "vt/objgroup/headers.h"
 
@@ -62,7 +62,7 @@
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-struct HierarchicalLB : BaseLB {
+struct HierarchicalLB : LoadSamplerBaseLB {
   using ChildPtrType = std::unique_ptr<HierLBChild>;
   using ChildMapType = std::unordered_map<NodeType,ChildPtrType>;
   using ElementLoadType = std::unordered_map<ObjIDType,TimeType>;
@@ -73,7 +73,7 @@ struct HierarchicalLB : BaseLB {
   virtual ~HierarchicalLB() {}
 
   void init(objgroup::proxy::Proxy<HierarchicalLB> in_proxy);
-  void runLB() override;
+  void runLB(TimeType total_load) override;
   void inputParams(balance::SpecEntry* spec) override;
 
   static std::unordered_map<std::string, std::string> getInputKeysWithHelp();
@@ -136,6 +136,7 @@ private:
   double min_threshold = 0.0f;
   bool auto_threshold = true;
   HeapExtractEnum extract_strategy = HeapExtractEnum::LoadOverLessThan;
+  LoadType this_load = 0.0f;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
