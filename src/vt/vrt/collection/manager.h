@@ -103,10 +103,10 @@ namespace vt { namespace vrt { namespace collection {
 struct CollectionManager
   : runtime::component::Component<CollectionManager>
 {
-  template <typename ColT, typename IndexT>
-  using CollectionType = typename Holder<ColT, IndexT>::Collection;
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  using VirtualPtrType = typename Holder<ColT, IndexT>::VirtualPtrType;
+  template <typename IndexT>
+  using CollectionType = typename Holder<IndexT>::Collection;
+  template <typename IndexT>
+  using VirtualPtrType = typename Holder<IndexT>::VirtualPtrType;
   using ActionProxyType = std::function<void(VirtualProxyType)>;
   template <typename IndexT>
   using ReduceIdxFuncType = std::function<bool(IndexT const&)>;
@@ -122,7 +122,7 @@ struct CollectionManager
   using DispatchHandlerType = auto_registry::AutoHandlerType;
 
   template <typename ColT, typename IndexT = typename ColT::IndexType>
-  using DistribConstructFn = std::function<VirtualPtrType<ColT>(IndexT idx)>;
+  using DistribConstructFn = std::function<VirtualPtrType<IndexT>(IndexT idx)>;
 
   template <typename T, typename U=void>
   using IsColMsgType = std::enable_if_t<ColMsgTraits<T>::is_coll_msg, messaging::PendingSend>;
@@ -1121,7 +1121,7 @@ public:
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
   static IsWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    MsgT* msg, Indexable<IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
@@ -1137,7 +1137,7 @@ public:
    */
   template <typename ColT, typename IndexT, typename MsgT, typename UserMsgT>
   static IsNotWrapType<ColT, UserMsgT, MsgT> collectionAutoMsgDeliver(
-    MsgT* msg, CollectionBase<ColT, IndexT>* col, HandlerType han,
+    MsgT* msg, Indexable<IndexT>* col, HandlerType han,
     NodeType from, trace::TraceEventIDType event, bool immediate
   );
 
@@ -1193,7 +1193,7 @@ public:
    * \return unique pointer to the new element
    */
   template <typename ColT, typename IndexT, typename... Args>
-  static VirtualPtrType<ColT, IndexT> runConstructor(Args&&... args);
+  static VirtualPtrType<IndexT> runConstructor(Args&&... args);
 
   /**
    * \internal \brief Insert a new collection element
@@ -1217,7 +1217,7 @@ public:
    */
   template <typename ColT, typename IndexT = typename ColT::IndexType>
   bool insertCollectionElement(
-    VirtualPtrType<ColT, IndexT> vc, VirtualProxyType const proxy,
+    VirtualPtrType<IndexT> vc, VirtualProxyType const proxy,
     IndexT const& idx, NodeType const home_node,
     bool const is_migrated_in = false,
     NodeType const migrated_from  = uninitialized_destination
@@ -1242,8 +1242,8 @@ private:
    *
    * \return the collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  CollectionHolder<ColT, IndexT>* findColHolder(VirtualProxyType const& proxy);
+  template <typename IndexT>
+  CollectionHolder<IndexT>* findColHolder(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Get the collection element holder
@@ -1252,8 +1252,8 @@ private:
    *
    * \return the element collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<ColT, IndexT>* findElmHolder(VirtualProxyType const& proxy);
+  template <typename IndexT>
+  Holder<IndexT>* findElmHolder(VirtualProxyType const& proxy);
 
   /**
    * \internal \brief Get the collection element holder
@@ -1262,8 +1262,8 @@ private:
    *
    * \return the element collection holder
    */
-  template <typename ColT, typename IndexT = typename ColT::IndexType>
-  Holder<ColT, IndexT>* findElmHolder(CollectionProxyWrapType<ColT> proxy);
+  template <typename ProxyT, typename IndexT = typename ProxyT::IndexType>
+  Holder<IndexT>* findElmHolder(ProxyT proxy);
 
 public:
   /**
@@ -1350,10 +1350,8 @@ public:
    *
    * \return the mapped node
    */
-  template <typename ColT>
-  NodeType getMappedNode(
-    VirtualProxyType proxy, typename ColT::IndexType const& idx
-  );
+  template <typename IdxT>
+  NodeType getMappedNode(VirtualProxyType proxy, IdxT const& idx);
 
   /**
    * \brief Migrate element to a new node
@@ -1525,7 +1523,7 @@ private:
   template <typename ColT, typename IndexT>
   MigrateStatus migrateIn(
     VirtualProxyType const& proxy, IndexT const& idx, NodeType const& from,
-    VirtualPtrType<ColT, IndexT> vrt_elm_ptr
+    VirtualPtrType<IndexT> vrt_elm_ptr
   );
 
 public:

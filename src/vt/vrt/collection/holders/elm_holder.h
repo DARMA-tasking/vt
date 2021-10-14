@@ -59,9 +59,9 @@ namespace vt { namespace vrt { namespace collection {
  * \brief The holder for the actual collection object that saves a unique_ptr to
  * the element.
  */
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 struct ElementHolder {
-  using VirtualPtrType = std::unique_ptr<CollectionBase<ColT,IndexT>>;
+  using VirtualPtrType = std::unique_ptr<Indexable<IndexT>>;
 
   explicit ElementHolder(VirtualPtrType in_vc_ptr_);
   ElementHolder(ElementHolder&&) = default;
