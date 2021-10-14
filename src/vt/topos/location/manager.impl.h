@@ -56,9 +56,9 @@
 
 namespace vt { namespace location {
 
-template <typename ColT, typename IndexT>
+template <typename IndexT>
 void LocationManager::insertCollectionLM(VirtualProxyType const& proxy) {
-  using LocType = VrtColl<ColT, IndexT>;
+  using LocType = IndexedElmType<IndexT>;
   auto loc_man_typed = new LocType(
     collection_lm_tag_t{}, static_cast<LocInstType>(proxy)
   );
@@ -76,10 +76,10 @@ void LocationManager::insertCollectionLM(VirtualProxyType const& proxy) {
   );
 }
 
-template <typename ColT, typename IndexT>
-LocationManager::VrtColl<ColT, IndexT>*
+template <typename IndexT>
+LocationManager::IndexedElmType<IndexT>*
 LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
-  using LocType = VrtColl<ColT, IndexT>;
+  using LocType = IndexedElmType<IndexT>;
 
   auto loc_iter = collectionLoc.find(proxy);
   auto const& found = loc_iter != collectionLoc.end();
@@ -91,7 +91,7 @@ LocationManager::getCollectionLM(VirtualProxyType const& proxy) {
   );
 
   if (!found) {
-    LocationManager::insertCollectionLM<ColT, IndexT>(proxy);
+    LocationManager::insertCollectionLM<IndexT>(proxy);
     loc_iter = collectionLoc.find(proxy);
   } else if (!found) {
     return nullptr;
