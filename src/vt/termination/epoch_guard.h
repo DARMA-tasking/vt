@@ -50,8 +50,8 @@ namespace vt {
 struct epoch_guard {
 public:
 
-  explicit epoch_guard( EpochType ep )
-    : guarded_epoch_( ep )
+  explicit epoch_guard( EpochType ep, bool finish_on_release = false )
+    : guarded_epoch_( ep ), finish_on_release_( finish_on_release )
   {
     vtAssert( guarded_epoch_ != no_epoch, "epoch guard cannot take no_epoch" );
     theMsg()->pushEpoch( guarded_epoch_ );
@@ -63,14 +63,22 @@ public:
   ~epoch_guard()
   {
     theMsg()->popEpoch( guarded_epoch_ );
+    if ( finish_on_release_ )
+      finish();
   }
 
   epoch_guard &operator=( const epoch_guard & ) = delete;
   epoch_guard &operator=( epoch_guard && ) noexcept = default;
 
+  void finish()
+  {
+    theTerm()->finishedEpoch( guarded_epoch_ );
+  }
+
 private:
 
   EpochType guarded_epoch_ = no_epoch;
+  bool finish_on_release_ = false;
 };
 }
 

@@ -69,7 +69,7 @@ struct TestEpochGuard : TestParallelHarness {
   {
     ep = theTerm()->makeEpochCollective();
 
-    auto guard = epoch_guard( ep );
+    auto guard = epoch_guard( ep, true );
 
     auto msg = makeMessage<TestMsg>();
     EXPECT_EQ(theMsg()->getEpoch(), ep);
@@ -77,7 +77,6 @@ struct TestEpochGuard : TestParallelHarness {
     if (0 == node) {
       theMsg()->sendMsg<TestMsg, test_guarded_msg_recv>(1, msg);
     }
-    theTerm()->finishedEpoch( ep );
   }
 };
 
