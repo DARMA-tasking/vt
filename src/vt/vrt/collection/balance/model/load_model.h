@@ -50,24 +50,6 @@
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-/**
- * \brief A description of the interval of interest for a modeled load query
- *
- * The value of `phases` can be in the past or future. Negative values
- * represent a distance into the past, in which -1 is most recent. A
- * value of 0 represents the immediate upcoming phase. Positive values
- * represent more distant future phases.
- */
-struct PhaseOffset {
-  PhaseOffset() = delete;
-
-  int phases;
-  static constexpr unsigned int NEXT_PHASE = 0;
-
-  unsigned int subphase;
-  static constexpr unsigned int WHOLE_PHASE = ~0u;
-};
-
 class ObjectIterator {
   using difference_type = std::ptrdiff_t;
   using value_type = LoadMapType::key_type;

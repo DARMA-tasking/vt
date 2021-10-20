@@ -51,6 +51,8 @@
 #include <cstdlib>
 #include <unordered_map>
 #include <ostream>
+#include <map>
+#include <vector>
 
 #include <fmt/ostream.h>
 
@@ -92,6 +94,53 @@ static constexpr ElementIDType const no_element_id = 0;
 
 using LoadMapType         = std::unordered_map<ElementIDStruct,TimeType>;
 using SubphaseLoadMapType = std::unordered_map<ElementIDStruct, std::vector<TimeType>>;
+
+/**
+ * \brief A description of the interval of interest for a modeled load query
+ *
+ * The value of `phases` can be in the past or future. Negative values
+ * represent a distance into the past, in which -1 is most recent. A
+ * value of 0 represents the immediate upcoming phase. Positive values
+ * represent more distant future phases.
+ */
+struct PhaseOffset {
+  PhaseOffset() = delete;
+
+  int phases;
+  static constexpr unsigned int NEXT_PHASE = 0;
+
+  unsigned int subphase;
+  static constexpr unsigned int WHOLE_PHASE = ~0u;
+};
+
+struct LoadSummary
+{
+  TimeType whole_phase_load_;
+  std::vector<TimeType> subphase_loads_;
+
+  TimeType get(PhaseOffset when)
+  {
+    if (when.subphase == PhaseOffset::WHOLE_PHASE)
+      return whole_phase_load_;
+    else
+      return subphase_loads_.at(when.subphase);
+  }
+};
+
+struct Reassignment
+{
+  // Include the subject node so that these structures can be formed
+  // and passed through collectives
+  NodeType node_;
+  std::map<ElementIDStruct, NodeType> depart_;
+  std::map<ElementIDStruct, LoadSummary> arrive_;
+};
+
+class LoadModel;
+
+LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
+                           ElementIDStruct object, PhaseOffset when);
+
 } /* end namespace balance */
 
 namespace lb {

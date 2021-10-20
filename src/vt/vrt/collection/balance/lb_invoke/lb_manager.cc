@@ -62,6 +62,7 @@
 #include "vt/vrt/collection/balance/model/load_model.h"
 #include "vt/vrt/collection/balance/model/naive_persistence.h"
 #include "vt/vrt/collection/balance/model/raw_data.h"
+#include "vt/vrt/collection/balance/model/proposed_reassignment.h"
 #include "vt/phase/phase_manager.h"
 #include "vt/vrt/collection/manager.h"
 

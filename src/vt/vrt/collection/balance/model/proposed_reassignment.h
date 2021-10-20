@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                 lb_common.cc
+//                                 load_model.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,33 +41,63 @@
 //@HEADER
 */
 
-#include "vt/config.h"
-#include "vt/vrt/collection/balance/lb_common.h"
-#include "vt/vrt/collection/balance/model/load_model.h"
+#if !defined INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_PROPOSED_REASSIGNMENT_H
+#define INCLUDED_VT_VRT_COLLECTION_BALANCE_MODEL_PROPOSED_REASSIGNMENT_H
 
-#include <ostream>
-#include <fmt/ostream.h>
+#include "vt/config.h"
+#include "vt/vrt/collection/balance/model/composed_model.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
-std::ostream& operator<<(
-  std::ostream& os, const ::vt::vrt::collection::balance::ElementIDStruct& id
-) {
-  os << "(" << id.id << "," << id.home_node << "," << id.curr_node << ")";
-  return os;
-}
-
-LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
-                           ElementIDStruct object, PhaseOffset when)
+class ProposedReassignment : public ComposedModel
 {
-  LoadSummary ret;
-  ret.whole_phase_load_ = model->getWork(object, {when.phases, PhaseOffset::WHOLE_PHASE});
+  ProposedReassignment(std::shared_ptr<balance::LoadModel> base,
+                       Reassignment reassignment)
+    : ComposedModel(base)
+    , reassignment_(std::move(reassignment))
+  {
+    vtAssert(reassignment_.node_ == vt::theContext()->getNode(),
+             "ProposedReassignment model needs to be applied to the present node's data");
 
-  unsigned int subphases = model->getNumSubphases();
-  for (unsigned int i = 0; i < subphases; ++i)
-    ret.subphase_loads_.push_back(model->getWork(object, {when.phases, i}));
+    // Check invariants?
 
-  return ret;
-}
+    // depart should be a subset of present
 
-}}}} /* end namespace vt::vrt::collection::balance */
+    // subtract depart to allow for self-migration
+    // arrive ^ (present \ depart) == 0
+  }
+
+  ObjectIterator begin() override;
+  ObjectIterator end() override;
+
+  int getNumObjects() override
+  {
+    int base = ComposedModel::getNumObjects();
+    int departing = reassignment_.depart_.size();
+    int arriving = reassignment_.arrive_.size();
+
+    // This would handle self-migration without a problem
+    return base - departing + arriving;
+  }
+
+  TimeType getWork(ElementIDStruct object, PhaseOffset when) override
+  {
+    auto a = reassignment_.arrive_.find(object);
+    if (a != reassignment_.arrive_.end()) {
+      return a->second.get(when);
+    }
+
+    // Check this *after* arrivals to handle hypothetical self-migration
+    vtAssert(reassignment_.depart_.find(object) == reassignment_.depart_.end(),
+             "Departing object should not appear as a load query subject");
+
+    return ComposedModel::getWork(object, when);
+  }
+
+ private:
+  Reassignment reassignment_;
+};
+
+}}}}
+
+#endif
