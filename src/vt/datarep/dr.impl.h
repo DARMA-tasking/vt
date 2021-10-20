@@ -45,6 +45,7 @@
 #define INCLUDED_VT_DATAREP_DR_IMPL_H
 
 #include "vt/topos/location/manager.h"
+#include "vt/vrt/collection/manager.h"
 #include "vt/datarep/dr.h"
 #include "vt/datarep/msg.h"
 #include "vt/datarep/datastore.h"
@@ -176,6 +177,56 @@ void DataReplicator::unregisterHandle(DataRepIDType handle_id) {
   // unregister the ID here
 }
 
+namespace detail {
+
+template <typename IndexT, typename = void>
+struct DispatchLocation;
+
+template <typename IndexT>
+struct DispatchLocation<
+  IndexT, typename std::enable_if_t<not std::is_same<IndexT, int8_t>::value>
+> {
+  template <typename T>
+  static void work(
+    DataRepIDType handle, IndexT const& idx, detail::DR_Base<IndexT> dr_base,
+    DataVersionType version
+  ) {
+    using MsgType = detail::DataRequestMsg<T, IndexT, IndexT>;
+    auto this_node = theContext()->getNode();
+    auto msg = makeMessage<MsgType>(dr_base, this_node, version);
+    auto lm = theLocMan()->getCollectionLM<IndexT>(handle);
+    auto home_node = theCollection()->getMappedNode(handle, idx);
+    lm->template routeMsgHandler<
+      MsgType, DataReplicator::staticRequestHandler<T, IndexT, IndexT>
+    >(
+      idx, home_node, msg.get()
+    );
+  }
+};
+
+template <typename IndexT>
+struct DispatchLocation<
+  IndexT, typename std::enable_if_t<std::is_same<IndexT, int8_t>::value>
+> {
+  template <typename T>
+  static void work(
+    DataRepIDType handle, IndexT const& idx, detail::DR_Base<IndexT> dr_base,
+    DataVersionType version
+  ) {
+    using MsgType = detail::DataRequestMsg<T, IndexT>;
+    auto lm = theLocMan()->dataRep.get();
+    auto this_node = theContext()->getNode();
+    auto msg = makeMessage<MsgType>(dr_base, this_node, version);
+    lm->template routeMsgHandler<
+      MsgType, DataReplicator::staticRequestHandler<T, IndexT, DataRepIDType>
+    >(
+      handle, DataReplicator::getHomeNode(handle), msg.get()
+    );
+  }
+};
+
+} /* end namespace detail */
+
 template <typename T, typename IndexT>
 bool DataReplicator::requestData(
   detail::DR_Base<IndexT> dr_base, DataVersionType version,
@@ -194,7 +245,7 @@ bool DataReplicator::requestData(
   ) {
     vt_debug_print(
       normal, gen,
-      "requestData: handle_id={} found locally\n", handle
+      "requestData: handle_id={}, idx={}, found locally\n", handle, idx
     );
     // found in cache
     // deliver to the Reader
@@ -209,39 +260,38 @@ bool DataReplicator::requestData(
   } else {
     vt_debug_print(
       normal, gen,
-      "requestData: handle_id={} remote request\n", handle
+      "requestData: handle_id={}, idx={}, remote request\n", handle, idx
     );
-    waiting_[handle].push_back(reader);
-    auto tr = static_cast<Reader<T, IndexT>*>(reader);
 
-    using MsgType = detail::DataRequestMsg<T, IndexT>;
-    auto const this_node = theContext()->getNode();
-    auto msg = makeMessage<MsgType>(dr_base, this_node, version);
-    if (tr->isProxy()) {
-      // auto const proxy_bits = tr->getHandleID();
-      // auto const idx = tr->getIndex();
-      // auto lm = theLocMan()->getCollectionLM<IndexT>(proxy);
-      vtAssert(false, "Unimplemented");
-      return false;
-    } else {
-      auto lm = theLocMan()->dataRep.get();
-      lm->routeMsgHandler<MsgType, staticRequestHandler<T, IndexT>>(
-        handle, getHomeNode(handle), msg.get()
+    // Add a new waiter for the data
+    auto witer = waiting_.find(handle);
+    if (witer == waiting_.end()) {
+      waiting_.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(handle),
+        std::forward_as_tuple(std::make_unique<Waiting<IndexT>>())
       );
+      witer = waiting_.find(handle);
     }
+    auto wr = static_cast<Waiting<IndexT>*>(witer->second.get());
+    wr->addWaiting(idx, reader);
+
+    detail::DispatchLocation<IndexT>::template work<T>(
+      handle, idx, dr_base, version
+    );
     return false;
   }
 }
 
-template <typename T, typename IndexT>
+template <typename T, typename IndexT, typename LocType>
 /*static*/ void DataReplicator::staticRequestHandler(
-  detail::DataRequestMsg<T, IndexT>* msg
+  detail::DataRequestMsg<T, IndexT, LocType>* msg
 ) {
   auto proxy = objgroup::proxy::Proxy<DataReplicator>{theDR()->proxy_};
   auto loc = theContext()->getNode();
   proxy[loc].invoke<
-    decltype(&DataReplicator::dataRequestHandler<T, IndexT>),
-    &DataReplicator::dataRequestHandler<T, IndexT>
+    decltype(&DataReplicator::dataRequestHandler<T, IndexT, LocType>),
+    &DataReplicator::dataRequestHandler<T, IndexT, LocType>
   >(msg);
 }
 
@@ -275,45 +325,57 @@ void DataReplicator::dataIncomingHandler(
   auto const version = msg->version_;
   vt_debug_print(
     normal, gen,
-    "dataIncomingHandler: han_id={}, version={}\n", handle, version
+    "dataIncomingHandler: han_id={}, version={}, idx={}\n", handle, version, idx
   );
   auto iter = local_store_.find(id);
-  vtAssert(iter == local_store_.end(), "Must not exist if requested");
-  local_store_.emplace(
-    std::piecewise_construct,
-    std::forward_as_tuple(id),
-    std::forward_as_tuple(
-      std::make_unique<DataStore<T, IndexT>>(
-        false, idx, version, std::make_shared<T>(std::move(*msg->data_.get()))
+  if (iter == local_store_.end()) {
+    local_store_.emplace(
+      std::piecewise_construct,
+      std::forward_as_tuple(id),
+      std::forward_as_tuple(
+        std::make_unique<DataStore<T, IndexT>>(
+          false, idx, version, std::make_shared<T>(std::move(*msg->data_.get()))
+        )
       )
-    )
-  );
+    );
+  } else {
+    auto ds = static_cast<DataStore<T, IndexT>*>(iter->second.get());
+    ds->publishVersion(
+      idx, version, std::make_shared<T>(std::move(*msg->data_.get()))
+    );
+  }
+
   auto ds = static_cast<DataStore<T, IndexT>*>(
     local_store_.find(id)->second.get()
   );
+
   // Inform that the data is ready
-  auto witer = waiting_.find(id);
+  auto witer = waiting_.find(handle);
   if (witer != waiting_.end()) {
-    for (auto&& elm : witer->second) {
-      auto tr = static_cast<Reader<T>*>(elm);
+    auto wr = static_cast<Waiting<IndexT>*>(witer->second.get());
+    auto vec = wr->getReaders(idx);
+    for (auto&& elm : vec) {
+      auto tr = static_cast<Reader<T, IndexT>*>(elm);
       tr->data_ = ds->getSharedPtr(idx, version);
       tr->ready_ = true;
     }
-    waiting_.erase(witer);
   }
 }
 
-template <typename T, typename IndexT>
-void DataReplicator::dataRequestHandler(detail::DataRequestMsg<T, IndexT>* msg) {
+template <typename T, typename IndexT, typename LocType>
+void DataReplicator::dataRequestHandler(
+  detail::DataRequestMsg<T, IndexT, LocType>* msg
+) {
   auto const dr_base = msg->dr_base_;
+  auto const idx = dr_base.getIndex();
   auto const handle = dr_base.getHandleID();
   auto const requestor = msg->requestor_;
   auto const version = msg->version_;
   auto const found = requestData<T, IndexT>(dr_base, version, nullptr);
   vt_debug_print(
     normal, gen,
-    "dataRequestHandle: handle={}, requestor={}, version={}, found={}\n",
-    handle, requestor, version, found
+    "dataRequestHandle: handle={}, idx={}, requestor={}, version={}, found={}\n",
+    handle, idx, requestor, version, found
   );
   if (found) {
     auto proxy = objgroup::proxy::Proxy<DataReplicator>{proxy_};

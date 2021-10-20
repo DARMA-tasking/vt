@@ -51,6 +51,7 @@
 #include "vt/datarep/reader.h"
 #include "vt/datarep/handle.h"
 #include "vt/datarep/datastore.h"
+#include "vt/datarep/waiting.h"
 
 #include <memory>
 #include <unordered_map>
@@ -60,7 +61,7 @@ namespace vt { namespace datarep { namespace detail {
 template <typename T, typename IndexT>
 struct DataResponseMsg;
 
-template <typename T, typename IndexT>
+template <typename T, typename IndexT, typename LocType>
 struct DataRequestMsg;
 
 struct DataIdentifier {
@@ -146,16 +147,17 @@ private:
   template <typename T, typename IndexT>
   T const& getDataRef(detail::DR_Base<IndexT> dr_base, DataVersionType version) const;
 
-  template <typename T, typename IndexT>
-  static void staticRequestHandler(detail::DataRequestMsg<T, IndexT>* msg);
+  template <typename T, typename IndexT, typename LocType>
+  static void staticRequestHandler(detail::DataRequestMsg<T, IndexT, LocType>* msg);
 
   template <typename T, typename IndexT>
   void dataIncomingHandler(detail::DataResponseMsg<T, IndexT>* msg);
 
-  template <typename T, typename IndexT>
-  void dataRequestHandler(detail::DataRequestMsg<T, IndexT>* msg);
+  template <typename T, typename IndexT, typename LocType>
+  void dataRequestHandler(detail::DataRequestMsg<T, IndexT, LocType>* msg);
 
-  NodeType getHomeNode(DataRepIDType handle_id) const {
+public:
+  static NodeType getHomeNode(DataRepIDType handle_id) {
     return handle_id >> 48;
   }
 
@@ -163,7 +165,7 @@ private:
   DataRepIDType identifier_ = 1;
   ObjGroupProxyType proxy_ = no_obj_group;
   std::unordered_map<DataIdentifier, std::unique_ptr<DataStoreBase>> local_store_;
-  std::unordered_map<DataIdentifier, std::vector<ReaderBase*>> waiting_;
+  std::unordered_map<DataIdentifier, std::unique_ptr<WaitingBase>> waiting_;
 };
 
 }} /* end namespace vt::datarep */

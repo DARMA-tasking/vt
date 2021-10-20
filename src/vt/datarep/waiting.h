@@ -2,7 +2,7 @@
 //@HEADER
 // *****************************************************************************
 //
-//                                    msg.h
+//                                  waiting.h
 //                       DARMA/vt => Virtual Transport
 //
 // Copyright 2019-2021 National Technology & Engineering Solutions of Sandia, LLC
@@ -41,58 +41,38 @@
 //@HEADER
 */
 
-#if !defined INCLUDED_VT_DATAREP_MSG_H
-#define INCLUDED_VT_DATAREP_MSG_H
+#if !defined INCLUDED_VT_DATAREP_WAITING_H
+#define INCLUDED_VT_DATAREP_WAITING_H
 
-#include "vt/topos/location/message/msg.h"
+#include "vt/datarep/base.h"
 
-namespace vt { namespace datarep { namespace detail {
+namespace vt { namespace datarep {
 
-template <typename T, typename IndexT, typename LocType = DataRepIDType>
-struct DataRequestMsg : LocationRoutedMsg<LocType, vt::Message> {
-  using MessageParentType = vt::Message;
-  vt_msg_serialize_prohibited();
-
-  DataRequestMsg(
-    DR_Base<IndexT> in_dr_base, NodeType in_requestor,
-    DataVersionType in_version
-  ) : dr_base_(in_dr_base),
-      requestor_(in_requestor),
-      version_(in_version)
-  { }
-
-  detail::DR_Base<IndexT> dr_base_;
-  NodeType requestor_ = uninitialized_destination;
-  DataVersionType version_ = -1;
+struct WaitingBase {
+  virtual ~WaitingBase() = default;
 };
 
-template <typename T, typename IndexT>
-struct DataResponseMsg : vt::Message {
-  using MessageParentType = vt::Message;
-  vt_msg_serialize_if_needed_by_parent_or_type1(T);
+template <typename IndexT>
+struct Waiting final : WaitingBase {
 
-  DataResponseMsg() = default; // for serializer
-  DataResponseMsg(
-    DR_Base<IndexT> in_dr_base, T const& data, DataVersionType in_version
-  ) : dr_base_(in_dr_base),
-      data_(std::make_unique<T>(data)),
-      version_(in_version)
-  { }
-
-  template <typename SerializerT>
-  void serialize(SerializerT& s) {
-    MessageParentType::serialize(s);
-    s | dr_base_;
-    s | data_;
-    s | version_;
+  void addWaiting(IndexT const& idx, detail::ReaderBase* reader) {
+    waiting_[idx].push_back(reader);
   }
 
-  detail::DR_Base<IndexT> dr_base_;
-  std::unique_ptr<T> data_;
-  DataVersionType version_ = -1;
+  std::vector<detail::ReaderBase*> getReaders(IndexT const& idx) {
+    std::vector<detail::ReaderBase*> out;
+    auto iter = waiting_.find(idx);
+    if (iter != waiting_.end()) {
+      out = std::move(iter->second);
+      waiting_.erase(iter);
+    }
+    return out;
+  }
+
+private:
+  std::unordered_map<IndexT, std::vector<detail::ReaderBase*>> waiting_;
 };
 
+}} /* end namespace vt::datarep */
 
-}}} /* end namespace vt::datarep::detail */
-
-#endif /*INCLUDED_VT_DATAREP_MSG_H*/
+#endif /*INCLUDED_VT_DATAREP_WAITING_H*/
