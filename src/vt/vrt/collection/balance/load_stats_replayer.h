@@ -87,6 +87,12 @@ public:
     std::size_t phases_to_run
   );
 
+  CollectionProxy<StatsDrivenCollection<Index1D>>
+  create1DAndConfigureEmulation(
+    std::size_t coll_elms_per_node, std::size_t initial_phase,
+    std::size_t phases_to_run
+  );
+
   void create2DAndConfigureForReplay(
     std::size_t coll_elms_per_node, std::size_t initial_phase,
     std::size_t phases_to_run
@@ -109,6 +115,12 @@ public:
     CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
     StatsDrivenCollectionMapper<IndexType> &mapping,
     const ElmPhaseLoadsMapType &loads_by_elm_by_phase, std::size_t initial_phase
+  );
+
+  template <typename IndexType>
+  void emulatePhase(
+    CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
+    std::size_t real_phase
   );
 
   template <typename Serializer>

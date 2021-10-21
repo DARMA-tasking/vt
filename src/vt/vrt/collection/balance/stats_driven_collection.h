@@ -105,6 +105,16 @@ struct StatsDrivenCollection : vt::Collection<
     std::size_t phase_ = 0;
   };
 
+  struct EmulateMsg : vt::CollectionMessage<ThisType> {
+    EmulateMsg() = default;
+
+    explicit EmulateMsg(std::size_t real_phase)
+      : phase_(real_phase)
+    { }
+
+    std::size_t phase_ = 0;
+  };
+
   StatsDrivenCollection() = default;
 
   void setInitialPhase(InitialPhaseMsg* msg) {
@@ -121,6 +131,8 @@ struct StatsDrivenCollection : vt::Collection<
   void recvLoadStatsData(LoadStatsDataMsg *msg);
 
   vt::TimeType getLoad(int real_phase);
+
+  void emulate(EmulateMsg *msg);
 
   template <typename Serializer>
   void serialize(Serializer& s) {

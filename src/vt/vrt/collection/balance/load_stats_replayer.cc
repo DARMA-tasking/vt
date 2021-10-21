@@ -51,6 +51,8 @@
 #include "vt/vrt/collection/balance/model/per_collection.h"
 #include "vt/vrt/collection/balance/model/stats_replay.h"
 #include "vt/vrt/collection/balance/model/stats_replay.impl.h"
+#include "vt/vrt/collection/balance/model/stats_emulation.h"
+#include "vt/vrt/collection/balance/model/stats_emulation.impl.h"
 
 #include <cinttypes>
 #include <fstream>
@@ -96,6 +98,32 @@ void LoadStatsReplayer::create1DAndConfigureForReplay(
   vt::theLBManager()->setLoadModel(per_col);
 
   configureCollectionForReplay(coll_proxy, mapping, loads, initial_phase);
+}
+
+CollectionProxy<StatsDrivenCollection<Index1D>>
+LoadStatsReplayer::create1DAndConfigureEmulation(
+  std::size_t coll_elms, std::size_t initial_phase,
+  std::size_t phases_to_run
+) {
+  auto base = vt::theLBManager()->getBaseLoadModel();
+  auto emu_model = std::make_shared<StatsEmulation<Index1D>>(base);
+  auto &mapping = emu_model->getMapping();
+
+  auto loads = loadStatsToReplay(initial_phase, phases_to_run, mapping);
+  auto coll_proxy = create1DCollection(
+    mapping, coll_elms, initial_phase
+  );
+
+  emu_model->setCollectionProxy(coll_proxy);
+  auto per_col = std::make_shared<
+    vt::vrt::collection::balance::PerCollection
+  >(base);
+  auto proxy_bits = coll_proxy.getProxy();
+  per_col->addModel(proxy_bits, emu_model);
+  vt::theLBManager()->setLoadModel(per_col);
+
+  configureCollectionForReplay(coll_proxy, mapping, loads, initial_phase);
+  return coll_proxy;
 }
 
 void LoadStatsReplayer::create2DAndConfigureForReplay(

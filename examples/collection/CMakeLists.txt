@@ -11,6 +11,7 @@ set(
   lb_tuning_driver
   lb_tuning_driver_1d
   predictive_model_dumper
+  stats_emulation_1d
 )
 
 foreach(EXAMPLE_NAME ${COLLECTION_EXAMPLES})

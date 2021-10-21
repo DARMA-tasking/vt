@@ -50,6 +50,9 @@
 #include "vt/vrt/collection/balance/load_stats_replayer.h"
 #include "vt/vrt/collection/balance/stats_driven_collection_mapper.impl.h"
 
+#include <thread>
+#include <chrono>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename IndexType>
@@ -128,6 +131,13 @@ vt::TimeType StatsDrivenCollection<IndexType>::getLoad(int real_phase) {
     this->getIndex(), real_phase, simulated_phase, initial_phase_
   );
   return stats_to_replay_[simulated_phase].duration;
+}
+
+template <typename IndexType>
+void StatsDrivenCollection<IndexType>::emulate(EmulateMsg *msg) {
+  std::size_t us = getLoad(msg->phase_) * 1e6;
+  auto duration = std::chrono::microseconds(us);
+  std::this_thread::sleep_for(duration);
 }
 
 template <typename IndexType>

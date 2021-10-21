@@ -49,6 +49,7 @@
 #include "vt/vrt/collection/balance/load_stats_replayer.h"
 #include "vt/vrt/collection/balance/stats_driven_collection.impl.h"
 #include "vt/objgroup/manager.h"
+#include "vt/scheduler/scheduler.h"
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/vrt/collection/balance/stats_data.h"
 #include "vt/utils/json/json_reader.h"
@@ -60,6 +61,20 @@
 #include <regex>
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
+
+template <typename IndexType>
+void LoadStatsReplayer::emulatePhase(
+  CollectionProxy<StatsDrivenCollection<IndexType>> &coll_proxy,
+  std::size_t real_phase
+) {
+  using MsgType = typename StatsDrivenCollection<IndexType>::EmulateMsg;
+  vt::runInEpochCollective([=]{
+    auto msg = makeMessage<MsgType>(real_phase);
+    coll_proxy.template broadcastCollectiveMsg<
+      MsgType, &StatsDrivenCollection<IndexType>::emulate
+    >(msg.get());
+  });
+}
 
 template <typename IndexType>
 ElmPhaseLoadsMapType LoadStatsReplayer::loadStatsToReplay(
