@@ -147,6 +147,9 @@ class LoadModel;
 LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
                            ElementIDStruct object, PhaseOffset when);
 
+LoadSummary getObjectLoads(LoadModel* model,
+                           ElementIDStruct object, PhaseOffset when);
+
 } /* end namespace balance */
 
 namespace lb {

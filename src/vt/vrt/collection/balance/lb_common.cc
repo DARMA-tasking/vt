@@ -58,6 +58,11 @@ std::ostream& operator<<(
 }
 
 LoadSummary getObjectLoads(std::shared_ptr<LoadModel> model,
+                           ElementIDStruct object, PhaseOffset when) {
+  return getObjectLoads(model.get(), object, when);
+}
+
+LoadSummary getObjectLoads(LoadModel* model,
                            ElementIDStruct object, PhaseOffset when)
 {
   LoadSummary ret;
