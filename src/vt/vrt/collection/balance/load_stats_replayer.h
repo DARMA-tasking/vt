@@ -50,6 +50,7 @@
 #include "vt/vrt/collection/balance/lb_common.h"
 #include "vt/runtime/component/component_pack.h"
 #include "vt/objgroup/proxy/proxy_objgroup.h"
+#include "vt/vrt/collection/balance/stats_driven_types.h"
 #include "vt/vrt/collection/balance/stats_driven_collection.h"
 #include "vt/vrt/collection/balance/stats_driven_collection_mapper.h"
 
@@ -70,16 +71,6 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
  * the LB configuration you want to use for future at-scale runs.
  */
 struct LoadStatsReplayer : runtime::component::Component<LoadStatsReplayer> {
-public:
-  using IndexVec = std::vector<uint64_t>;
-  using ElmIDType = ElementIDType;
-  using PhaseLoadsMapType = std::unordered_map<
-    std::size_t /*phase from stats file*/, vt::TimeType
-  >;
-  using ElmPhaseLoadsMapType = std::unordered_map<
-    ElmIDType, PhaseLoadsMapType
-  >;
-
 public:
   LoadStatsReplayer() = default;
 

@@ -62,7 +62,7 @@
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename IndexType>
-LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::loadStatsToReplay(
+ElmPhaseLoadsMapType LoadStatsReplayer::loadStatsToReplay(
   std::size_t initial_phase, std::size_t phases_to_run,
   StatsDrivenCollectionMapper<IndexType> &mapping
 ) {
@@ -90,7 +90,7 @@ void LoadStatsReplayer::configureCollectionForReplay(
 }
 
 template <typename IndexType>
-LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::readStats(
+ElmPhaseLoadsMapType LoadStatsReplayer::readStats(
   std::size_t initial_phase, std::size_t phases_to_run,
   StatsDrivenCollectionMapper<IndexType> &mapping
 ) {
@@ -109,7 +109,7 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::readStats(
 }
 
 template <typename IndexType>
-LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
+ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
   std::string const& filename, std::size_t initial_phase,
   std::size_t phases_to_run, StatsDrivenCollectionMapper<IndexType> &mapping
 ) {
@@ -145,7 +145,7 @@ LoadStatsReplayer::ElmPhaseLoadsMapType LoadStatsReplayer::inputStatsFile(
           "reading in loads for elm={}, home={} on phase={}: load={}\n",
           elm_id.id, elm_id.home_node, phase, load
         );
-        loads_by_elm_by_phase[elm_id.id][phase] = load;
+        loads_by_elm_by_phase[elm_id.id][phase].duration = load;
       }
     } catch (...) {
       auto str = fmt::format("Data for phase {} was not found", phase);

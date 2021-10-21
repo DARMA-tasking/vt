@@ -47,6 +47,7 @@
 
 #include "vt/config.h"
 #include "vt/vrt/collection/collection_headers.h"
+#include "vt/vrt/collection/balance/stats_driven_types.h"
 #include "vt/vrt/collection/balance/stats_driven_collection_mapper.h"
 
 namespace vt { namespace vrt { namespace collection { namespace balance {
@@ -63,15 +64,6 @@ struct StatsDrivenCollection : vt::Collection<
 > {
   using ThisType = StatsDrivenCollection<IndexType>;
   using ProxyType = vt::CollectionProxy<ThisType, IndexType>;
-  using IndexVec = std::vector<uint64_t>;
-  using ElmIDType = ElementIDType;
-  using PhaseLoadsMapType = std::unordered_map<
-    std::size_t /*phase from stats file*/, vt::TimeType
-  >;
-  using ElmPhaseLoadsMapType = std::unordered_map<
-    ElmIDType, PhaseLoadsMapType
-  >;
-
   using NullMsg = vt::CollectionMessage<ThisType>;
 
   struct MigrateHereMsg : vt::CollectionMessage<ThisType> {

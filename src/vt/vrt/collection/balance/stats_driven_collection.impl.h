@@ -127,7 +127,7 @@ vt::TimeType StatsDrivenCollection<IndexType>::getLoad(int real_phase) {
     "getLoad: index {} has load for real_phase={} (sim_phase={} given initial_phase_={})\n",
     this->getIndex(), real_phase, simulated_phase, initial_phase_
   );
-  return stats_to_replay_[simulated_phase];
+  return stats_to_replay_[simulated_phase].duration;
 }
 
 template <typename IndexType>
