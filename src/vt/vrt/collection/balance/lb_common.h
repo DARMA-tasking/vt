@@ -125,6 +125,12 @@ struct LoadSummary
     else
       return subphase_loads_.at(when.subphase);
   }
+
+  template <typename SerializerT>
+  void serialize(SerializerT& s) {
+    s | whole_phase_load_
+      | subphase_loads_;
+  }
 };
 
 struct Reassignment
