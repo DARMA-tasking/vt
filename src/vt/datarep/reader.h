@@ -69,6 +69,7 @@ public:
   bool isReady() const { return ready_; }
 
   void fetch(DataVersionType version);
+  void release(DataVersionType version);
 
   std::shared_ptr<T const> get(DataVersionType version) const;
 

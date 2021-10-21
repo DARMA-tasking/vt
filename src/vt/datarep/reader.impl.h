@@ -55,6 +55,11 @@ void Reader<T, IndexT>::fetch(DataVersionType version) {
 }
 
 template <typename T, typename IndexT>
+void Reader<T, IndexT>::release(DataVersionType version) {
+  data_ = nullptr;
+}
+
+template <typename T, typename IndexT>
 std::shared_ptr<T const> Reader<T, IndexT>::get(DataVersionType version) const {
   vtAssert(ready_, "Data must be ready to get it");
   vtAssert(data_ != nullptr, "Must have data");
