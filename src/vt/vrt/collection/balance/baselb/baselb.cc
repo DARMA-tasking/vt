@@ -175,6 +175,114 @@ void BaseLB::transferMigrations(TransferMsg<TransferVecType>* msg) {
   }
 }
 
+std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
+  using namespace balance;
+
+  pending_reassignment_ = std::make_unique<Reassignment>();
+  Reassignment& r = *pending_reassignment_.get();
+
+  r.node_ = theContext()->getNode();
+
+  // Do local setup of reassignment data structure
+  for (auto&& transfer : transfers_) {
+    auto const obj_id = std::get<0>(transfer);
+    auto const new_node = std::get<1>(transfer);
+    auto const current_node = obj_id.curr_node;
+
+    // self-migration
+    if (current_node == new_node) {
+      vtAbort("Not currently implemented -- self-migration");
+    }
+
+    // the object lives here, so it's departing.
+    if (current_node == r.node_) {
+      r.depart_[obj_id] = new_node;
+    } else if (new_node == r.node_) {
+      // the object's new location is here---so it's arriving
+
+      // @todo: this might not be valid to call here because we might not have
+      // the data yet.
+      r.arrive_[obj_id] = getObjectLoads(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+    } else {
+      // The user has specified a migration neither on the send or receive side?
+      vtAbort(
+        "A migration has been requested for an object that neither lives here"
+        " or will be migrated here"
+      );
+    }
+  }
+
+  // Do remote work to normalize the reassignments
+  runInEpochCollective("BaseLB -> normalizeReassignments", [&]{
+    // Notify all potential recipients for this reassignment that they have an
+    // arriving object
+    using DepartMsgType = TransferMsg<DepartListType>;
+    std::map<NodeType, DepartListType> depart_map;
+
+    for (auto&& departing : r.depart_) {
+      auto const obj_id = std::get<0>(departing);
+      auto const dest = std::get<1>(departing);
+      auto const load_summary = getObjectLoads(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+      );
+      depart_map[dest].push_back(std::make_tuple(obj_id, load_summary));
+    }
+
+    for (auto&& depart_list : depart_map) {
+      auto const dest = std::get<0>(depart_list);
+      auto const& vec = std::get<1>(depart_list);
+      proxy_[dest].template send<DepartMsgType, &BaseLB::notifyDeparting>(vec);
+    }
+
+    // Notify current owner's of objects that their object has been reassigned
+    // to this node
+    using ArriveMsgType = TransferMsg<ArriveListType>;
+    std::map<NodeType, ArriveListType> arrive_map;
+
+    for (auto&& arriving : r.arrive_) {
+      auto const obj_id = std::get<0>(arriving);
+      auto const current_node = obj_id.curr_node;
+      arrive_map[current_node].push_back(std::make_tuple(obj_id, r.node_));
+    }
+
+    for (auto&& arrive_list : arrive_map) {
+      auto const dest = std::get<0>(arrive_list);
+      auto const& vec = std::get<1>(arrive_list);
+      proxy_[dest].template send<ArriveMsgType, &BaseLB::notifyArriving>(vec);
+    }
+  });
+
+  return std::move(pending_reassignment_);
+}
+
+void BaseLB::notifyDeparting(TransferMsg<DepartListType>* msg) {
+  auto const& arrival_list = msg->getTransfer();
+  auto& r = *pending_reassignment_.get();
+
+  // Add arriving objects to our local reassignment list
+  for (auto&& arrival : arrival_list) {
+    auto const obj_id = std::get<0>(arrival);
+    auto const& load_summary = std::get<1>(arrival);
+    r.arrive_[obj_id] = load_summary;
+  }
+}
+
+void BaseLB::notifyArriving(TransferMsg<ArriveListType>* msg) {
+  auto const& depart_list = msg->getTransfer();
+  auto& r = *pending_reassignment_.get();
+
+  // Add departing objects to our local reassignment list
+  for (auto&& depart : depart_list) {
+    auto const obj_id = std::get<0>(depart);
+    auto const& new_node = std::get<1>(depart);
+    r.depart_[obj_id] = new_node;
+  }
+
+  // @todo: send back data
+}
+
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
   transfers_.push_back(TransferDestType{obj_id, to});
 }

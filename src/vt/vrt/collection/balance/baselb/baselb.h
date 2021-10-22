@@ -70,6 +70,9 @@ struct BaseLB {
   using MigrationCountCB = std::function<void(int32_t)>;
   using QuantityType     = std::map<lb::StatisticQuantity, double>;
   using StatisticMapType = std::unordered_map<lb::Statistic, QuantityType>;
+  using LoadSummary      = balance::LoadSummary;
+  using DepartListType   = std::vector<std::tuple<ObjIDType, LoadSummary>>;
+  using ArriveListType   = std::vector<std::tuple<ObjIDType, NodeType>>;
 
   BaseLB() = default;
   BaseLB(BaseLB const &) = delete;
@@ -104,6 +107,16 @@ struct BaseLB {
 
   static LoadType loadMilli(LoadType const& load);
   NodeType objGetNode(ObjIDType const id) const;
+
+  /**
+   * \brief Normalizes the reassignment graph by setting up in/out edges on both
+   * sides regardless of how they are pass to \c migrateObjectTo
+   *
+   * \return A normalized reassignment
+   */
+  std::unique_ptr<balance::Reassignment> normalizeReassignments();
+  void notifyDeparting(TransferMsg<DepartListType>* msg);
+  void notifyArriving(TransferMsg<ArriveListType>* msg);
 
   void applyMigrations(
     TransferVecType const& transfers, MigrationCountCB migration_count_callback
@@ -141,6 +154,7 @@ private:
   int32_t local_migration_count_                  = 0;
   MigrationCountCB migration_count_cb_            = nullptr;
   StatisticMapType const* base_stats_             = nullptr;
+  std::unique_ptr<balance::Reassignment> pending_reassignment_ = nullptr;
 };
 
 }}}} /* end namespace vt::vrt::collection::lb */
