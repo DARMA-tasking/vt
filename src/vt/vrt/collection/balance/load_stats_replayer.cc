@@ -51,10 +51,6 @@
 #include "vt/vrt/collection/balance/model/per_collection.h"
 #include "vt/vrt/collection/balance/model/stats_replay.h"
 #include "vt/vrt/collection/balance/model/stats_replay.impl.h"
-#include "vt/vrt/collection/balance/stats_data.h"
-#include "vt/utils/json/json_reader.h"
-
-#include <nlohmann/json.hpp>
 
 #include <cinttypes>
 #include <fstream>
