@@ -77,7 +77,7 @@ struct StatsDrivenCollection : vt::Collection<
   struct MigrateHereMsg : vt::CollectionMessage<ThisType> {
     MigrateHereMsg() = default;
 
-    MigrateHereMsg(vt::NodeType src)
+    explicit MigrateHereMsg(vt::NodeType src)
       : src_(src)
     { }
 
@@ -90,7 +90,7 @@ struct StatsDrivenCollection : vt::Collection<
 
     LoadStatsDataMsg() = default;
 
-    LoadStatsDataMsg(const PhaseLoadsMapType &stats)
+    explicit LoadStatsDataMsg(const PhaseLoadsMapType &stats)
       : stats_(stats)
     { }
 
@@ -106,7 +106,7 @@ struct StatsDrivenCollection : vt::Collection<
   struct InitialPhaseMsg : vt::CollectionMessage<ThisType> {
     InitialPhaseMsg() = default;
 
-    InitialPhaseMsg(std::size_t initial_phase)
+    explicit InitialPhaseMsg(std::size_t initial_phase)
       : phase_(initial_phase)
     { }
 
