@@ -94,20 +94,29 @@ void StatsDrivenCollectionMapper<IndexType>::notifyOwners(int ndim) {
 }
 
 template <typename IndexType>
+NodeType StatsDrivenCollectionMapper<IndexType>::getKnownHome(
+  const IndexType &idx
+) {
+  auto it = rank_mapping_.find(idx);
+  if (it != rank_mapping_.end()) {
+    vt_debug_print(
+      normal, replay,
+      "StatsDrivenCollectionMapper: index {} maps to rank {}\n",
+      idx, it->second
+    );
+    return it->second;
+  }
+  return uninitialized_destination;
+}
+
+template <typename IndexType>
 NodeType StatsDrivenCollectionMapper<IndexType>::map(
   IndexType* idx, int ndim, NodeType num_nodes
 ) {
   // if we know, just return what's known
-  {
-    auto it = rank_mapping_.find(*idx);
-    if (it != rank_mapping_.end()) {
-      vt_debug_print(
-        normal, replay,
-        "StatsDrivenCollectionMapper: index {} maps to rank {}\n",
-        *idx, it->second
-      );
-      return it->second;
-    }
+  auto known = getKnownHome(*idx);
+  if (known != uninitialized_destination) {
+    return known;
   }
 
   // otherwise, phone for help

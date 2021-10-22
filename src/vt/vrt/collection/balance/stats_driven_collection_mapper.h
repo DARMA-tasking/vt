@@ -92,6 +92,8 @@ struct StatsDrivenCollectionMapper : vt::mapping::BaseMapper<IndexType> {
 
   void notifyOwners(int ndim);
 
+  NodeType getKnownHome(const IndexType &idx);
+
   NodeType map(IndexType* idx, int ndim, NodeType num_nodes) override;
 
   template <typename Serializer>

@@ -115,6 +115,23 @@ struct StatsDrivenCollection : vt::Collection<
     std::size_t phase_ = 0;
   };
 
+  struct ResultMsg : vt::Message {
+    using MessageParentType = vt::Message;
+    vt_msg_serialize_required();
+
+    ResultMsg() = default;
+
+    explicit ResultMsg(std::size_t result_bytes)
+      : result_(result_bytes) { }
+    std::vector<char> result_;
+
+    template <typename Serializer>
+    void serialize(Serializer& s) {
+      MessageParentType::serialize(s);
+      s | result_;
+    }
+  };
+
   StatsDrivenCollection() = default;
 
   void setInitialPhase(InitialPhaseMsg* msg) {
@@ -132,13 +149,20 @@ struct StatsDrivenCollection : vt::Collection<
 
   vt::TimeType getLoad(int real_phase);
 
+  std::size_t getPayloadSize(int real_phase);
+
+  std::size_t getReturnSize(int real_phase);
+
   void emulate(EmulateMsg *msg);
+
+  static void recvResult(ResultMsg *msg);
 
   template <typename Serializer>
   void serialize(Serializer& s) {
     vt::Collection<ThisType, IndexType>::serialize(s);
     s | stats_to_replay_
-      | initial_phase_;
+      | initial_phase_
+      | payload_;
   }
 
   virtual void epiMigrateIn();
@@ -148,6 +172,8 @@ private:
   PhaseLoadsMapType stats_to_replay_;
   /// \brief Initial phase for replaying (offset so this is simulated phase 0)
   std::size_t initial_phase_ = -1;
+  /// \brief Additional payload that would need to be serialized
+  std::vector<char> payload_;
   /// \brief Mapper from collection element IDs to indices
   static StatsDrivenCollectionMapper<IndexType> *mapping_;
 };
