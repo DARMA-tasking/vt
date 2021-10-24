@@ -126,7 +126,7 @@ struct hash<StatisticType> {
 
 namespace vt { namespace vrt { namespace collection { namespace lb {
 
-extern std::unordered_map<Statistic,std::string> lb_stat_name_;
+std::unordered_map<Statistic, std::string>& get_lb_stat_name();
 
 }}}} /* end namespace vt::vrt::collection::lb */
 
