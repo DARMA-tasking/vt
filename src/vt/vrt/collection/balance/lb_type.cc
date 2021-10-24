@@ -49,7 +49,7 @@ namespace vt { namespace vrt { namespace collection {
 
 namespace balance {
 
-std::unordered_map<LBType,std::string> lb_names_ = {
+static std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::NoLB,           std::string{"NoLB"          }},
 # if vt_check_enabled(zoltan)
   {LBType::ZoltanLB,       std::string{"ZoltanLB"      }},
@@ -62,11 +62,15 @@ std::unordered_map<LBType,std::string> lb_names_ = {
   {LBType::RandomLB,       std::string{"RandomLB"      }},
 };
 
+std::unordered_map<LBType, std::string>& get_lb_names() {
+  return lb_names_;
+}
+
 } /* end namespace balance */
 
 namespace lb {
 
-std::unordered_map<Statistic,std::string> lb_stat_name_ = {
+static std::unordered_map<Statistic,std::string> lb_stat_name_ = {
   {Statistic::P_l,         std::string{"P_l"}},
   {Statistic::P_c,         std::string{"P_c"}},
   {Statistic::P_t,         std::string{"P_t"}},
@@ -76,6 +80,10 @@ std::unordered_map<Statistic,std::string> lb_stat_name_ = {
   {Statistic::ObjectRatio, std::string{"ObjectRatio"}},
   {Statistic::EdgeRatio,   std::string{"EdgeRatio"}}
 };
+
+std::unordered_map<Statistic, std::string>& get_lb_stat_name() {
+  return lb_stat_name_;
+}
 
 } /* end namespace lb */
 

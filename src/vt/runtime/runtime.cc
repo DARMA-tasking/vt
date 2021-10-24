@@ -391,7 +391,7 @@ bool Runtime::tryFinalize(bool const disable_sig) {
 bool Runtime::needStatsRestartReader() {
   #if vt_check_enabled(lblite)
     if (arg_config_->config_.vt_lb_stats) {
-      auto lbNames = vrt::collection::balance::lb_names_;
+      auto lbNames = vrt::collection::balance::get_lb_names();
       auto mapLB = vrt::collection::balance::LBType::StatsMapLB;
       if (arg_config_->config_.vt_lb_name == lbNames[mapLB]) {
         return true;
