@@ -98,11 +98,14 @@ struct StatsDrivenCollection : vt::Collection<
   struct InitialPhaseMsg : vt::CollectionMessage<ThisType> {
     InitialPhaseMsg() = default;
 
-    explicit InitialPhaseMsg(std::size_t initial_phase)
-      : phase_(initial_phase)
+    InitialPhaseMsg(
+      std::size_t initial_phase, std::size_t phases_to_simulate)
+      : phase_(initial_phase),
+        phases_to_simulate_(phases_to_simulate)
     { }
 
     std::size_t phase_ = 0;
+    std::size_t phases_to_simulate_ = 0;
   };
 
   struct EmulateMsg : vt::CollectionMessage<ThisType> {
@@ -136,6 +139,7 @@ struct StatsDrivenCollection : vt::Collection<
 
   void setInitialPhase(InitialPhaseMsg* msg) {
     initial_phase_ = msg->phase_;
+    phases_to_simulate_ = msg->phases_to_simulate_;
   }
 
   static void migrateInitialObjectsHere(
@@ -162,6 +166,7 @@ struct StatsDrivenCollection : vt::Collection<
     vt::Collection<ThisType, IndexType>::serialize(s);
     s | stats_to_replay_
       | initial_phase_
+      | phases_to_simulate_
       | payload_;
   }
 
@@ -172,6 +177,8 @@ private:
   PhaseLoadsMapType stats_to_replay_;
   /// \brief Initial phase for replaying (offset so this is simulated phase 0)
   std::size_t initial_phase_ = -1;
+  /// \brief How many phases to simulate before switching to emulation
+  std::size_t phases_to_simulate_ = 0;
   /// \brief Additional payload that would need to be serialized
   std::vector<char> payload_;
   /// \brief Mapper from collection element IDs to indices

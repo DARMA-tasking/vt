@@ -52,9 +52,9 @@ int main(int argc, char** argv) {
   vt::initialize(argc, argv);
 
   vtAbortIf(
-    argc != 4,
-    "Must have three arguments: <num elms>, <initial phase>, "
-    "<phases to run>"
+    argc != 5,
+    "Must have four arguments: <num elms>, <initial phase>, "
+    "<num phases to run>, <num phases to simulate>"
   );
 
   // number of collection elements
@@ -63,9 +63,11 @@ int main(int argc, char** argv) {
   int initial_phase = atoi(argv[2]);
   // phases to run after loading object stats
   int32_t phases_to_run = atoi(argv[3]);
+  // phases to simulate before switching to emulation
+  int32_t phases_to_simulate = atoi(argv[4]);
 
   auto proxy = vt::theLoadStatsReplayer()->create1DAndConfigureEmulation(
-    num_elms, initial_phase, phases_to_run
+    num_elms, initial_phase, phases_to_run, phases_to_simulate
   );
 
   auto const node = vt::theContext()->getNode();
@@ -73,8 +75,13 @@ int main(int argc, char** argv) {
   if (node == 0)
     vt_print(replay, "Timestepping...\n");
   for (int i = 0; i < phases_to_run; i++) {
-    if (node == 0)
-      vt_print(replay, "Emulated phase {}...\n", i + initial_phase);
+    if (node == 0) {
+      if (i < phases_to_simulate) {
+        vt_print(replay, "Simulating phase {}...\n", i + initial_phase);
+      } else {
+        vt_print(replay, "Emulating phase {}...\n", i + initial_phase);
+      }
+    }
 
     vt::theLoadStatsReplayer()->emulatePhase(proxy, i);
     vt::thePhase()->nextPhaseCollective();

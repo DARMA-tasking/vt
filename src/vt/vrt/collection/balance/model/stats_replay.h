@@ -49,6 +49,8 @@
 #include "vt/vrt/collection/balance/stats_driven_collection.h"
 #include "vt/vrt/collection/balance/stats_driven_collection_mapper.impl.h"
 
+#include <unordered_set>
+
 namespace vt { namespace vrt { namespace collection { namespace balance {
 
 /**
@@ -62,7 +64,8 @@ public:
   >;
 
   StatsReplay(
-    std::shared_ptr<balance::LoadModel> base
+    std::shared_ptr<balance::LoadModel> base,
+    PhaseType phases_to_simulate
   );
 
   StatsDrivenCollectionMapper<CollectionIndexType> &
@@ -75,6 +78,7 @@ public:
 private:
   ProxyType proxy_;
   StatsDrivenCollectionMapper<CollectionIndexType> mapper_;
+  PhaseType phases_to_simulate_ = 0;
 
 }; // class StatsReplay
 

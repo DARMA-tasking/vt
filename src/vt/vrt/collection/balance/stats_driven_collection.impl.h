@@ -137,13 +137,11 @@ template <typename IndexType>
 std::size_t StatsDrivenCollection<IndexType>::getPayloadSize(int real_phase) {
   vtAssert(initial_phase_ >= 0, "Initial phase did not get set before payload size was queried");
   auto simulated_phase = real_phase + initial_phase_;
-  if (stats_to_replay_.find(simulated_phase) != stats_to_replay_.end()) {
-    auto bytes = stats_to_replay_[simulated_phase].serialized_bytes;
-    if (bytes > 0) {
-      // subtract off the serialized size of data needed for functionality
-      auto adjust = ::checkpoint::getSize(stats_to_replay_);
-      return (bytes > adjust ? bytes - adjust : 0);
-    }
+  auto bytes = stats_to_replay_[simulated_phase].serialized_bytes;
+  if (bytes > 0) {
+    // subtract off the serialized size of data needed for functionality
+    auto adjust = ::checkpoint::getSize(stats_to_replay_);
+    return (bytes > adjust ? bytes - adjust : 0);
   }
   return 0;
 }
@@ -152,10 +150,7 @@ template <typename IndexType>
 std::size_t StatsDrivenCollection<IndexType>::getReturnSize(int real_phase) {
   vtAssert(initial_phase_ >= 0, "Initial phase did not get set before return size was queried");
   auto simulated_phase = real_phase + initial_phase_;
-  if (stats_to_replay_.find(simulated_phase) != stats_to_replay_.end()) {
-    return stats_to_replay_[simulated_phase].callback_bytes;
-  }
-  return 0;
+  return stats_to_replay_[simulated_phase].callback_bytes;
 }
 
 template <typename IndexType>
@@ -165,46 +160,69 @@ void StatsDrivenCollection<IndexType>::emulate(EmulateMsg *msg) {
   // start tracking real time usage
   clock::time_point start = clock::now();
 
-  // do any real work in here where we can hide the time cost
-  double time_to_emulate = getLoad(msg->phase_);
-
   // set up the serialized size needed for the next phase
   auto payload_size = getPayloadSize(msg->phase_ + 1);
   payload_.resize(payload_size);
+  auto achieved = ::checkpoint::getSize(*this);
 
-  // figure out how much time we've wasted on real work
-  double adjust = std::chrono::duration_cast<std::chrono::duration<double>>(
-    clock::now() - start
-  ).count();
-
-  if (time_to_emulate > adjust) {
-    // subtract off time already wasted and spin for what remains
-    std::size_t remaining_time_us = (time_to_emulate - adjust) * 1e6;
-    auto duration = std::chrono::microseconds(remaining_time_us);
-    std::this_thread::sleep_for(duration);
-  } else {
-    vt_print(
-      replay,
-      "emulate: warning: really ran {} sec when {} sec was desired\n",
-      adjust, time_to_emulate
-    );
-  }
-
-  // send result back to home rank if we're not at home
   auto idx = this->getIndex();
-  auto home = mapping_->getKnownHome(idx);
-  vtAssert(home != uninitialized_destination, "Home must be known");
-  if (home != theContext()->getNode()) {
-    auto return_size = getReturnSize(msg->phase_);
-    if (return_size > 0) {
-      vt_debug_print(
-        terse, replay,
-        "emulate: index {} is sending {} bytes to home rank {}\n",
-        idx, return_size, home
+  auto simulated_phase = msg->phase_ + 1 + initial_phase_;
+  vt_debug_print(
+    normal, replay,
+    "emulate: index {} has serialized size {} when {} was requested\n",
+    idx, achieved, stats_to_replay_[simulated_phase].serialized_bytes
+  );
+
+  if (msg->phase_ >= phases_to_simulate_) {
+    vt_debug_print(
+      normal, replay,
+      "emulate: emulating index {} in phase {}\n",
+      idx, msg->phase_
+    );
+
+    // do any real work in here where we can hide the time cost
+    double time_to_emulate = getLoad(msg->phase_);
+
+    // figure out how much time we've wasted on real work
+    double adjust = std::chrono::duration_cast<std::chrono::duration<double>>(
+      clock::now() - start
+    ).count();
+
+    if (time_to_emulate > adjust) {
+      // subtract off time already wasted and spin for what remains
+      std::size_t remaining_time_us = (time_to_emulate - adjust) * 1e6;
+      auto duration = std::chrono::microseconds(remaining_time_us);
+      std::this_thread::sleep_for(duration);
+    } else {
+      vt_print(
+        replay,
+        "emulate: warning: really ran {} sec when {} sec was desired\n",
+        adjust, time_to_emulate
       );
-      auto ret_msg = makeMessage<ResultMsg>(return_size);
-      theMsg()->sendMsg<ResultMsg, recvResult>(home, ret_msg);
     }
+
+    // send result back to home rank if we're not at home
+    auto home = mapping_->getKnownHome(idx);
+    vtAssert(home != uninitialized_destination, "Home must be known");
+    if (home != theContext()->getNode()) {
+      auto return_size = getReturnSize(msg->phase_);
+      if (return_size > 0) {
+        vt_debug_print(
+          terse, replay,
+          "emulate: index {} is sending {} bytes to home rank {}\n",
+          idx, return_size, home
+        );
+        auto ret_msg = makeMessage<ResultMsg>(return_size);
+        theMsg()->sendMsg<ResultMsg, recvResult>(home, ret_msg);
+      }
+    }
+  } else {
+    vt_debug_print(
+      normal, replay,
+      "emulate: simulating index {} in phase {}\n",
+      idx, msg->phase_
+    );
+    (void) start;
   }
 }
 

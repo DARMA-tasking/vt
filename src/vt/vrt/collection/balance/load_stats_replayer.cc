@@ -81,12 +81,14 @@ void LoadStatsReplayer::create1DAndConfigureForReplay(
   std::size_t phases_to_run
 ) {
   auto base = vt::theLBManager()->getBaseLoadModel();
-  auto replay_model = std::make_shared<StatsReplay<Index1D>>(base);
+  auto replay_model = std::make_shared<StatsReplay<Index1D>>(
+    base, phases_to_run
+  );
   auto &mapping = replay_model->getMapping();
 
   auto loads = loadStatsToReplay(initial_phase, phases_to_run, mapping);
   auto coll_proxy = create1DCollection(
-    mapping, coll_elms, initial_phase
+    mapping, coll_elms, initial_phase, phases_to_run
   );
 
   replay_model->setCollectionProxy(coll_proxy);
@@ -103,15 +105,17 @@ void LoadStatsReplayer::create1DAndConfigureForReplay(
 CollectionProxy<StatsDrivenCollection<Index1D>>
 LoadStatsReplayer::create1DAndConfigureEmulation(
   std::size_t coll_elms, std::size_t initial_phase,
-  std::size_t phases_to_run
+  std::size_t phases_to_run, std::size_t phases_to_simulate
 ) {
   auto base = vt::theLBManager()->getBaseLoadModel();
-  auto emu_model = std::make_shared<StatsEmulation<Index1D>>(base);
+  auto emu_model = std::make_shared<StatsReplay<Index1D>>(
+    base, phases_to_simulate
+  );
   auto &mapping = emu_model->getMapping();
 
   auto loads = loadStatsToReplay(initial_phase, phases_to_run, mapping);
   auto coll_proxy = create1DCollection(
-    mapping, coll_elms, initial_phase
+    mapping, coll_elms, initial_phase, phases_to_simulate
   );
 
   emu_model->setCollectionProxy(coll_proxy);
@@ -131,12 +135,14 @@ void LoadStatsReplayer::create2DAndConfigureForReplay(
   std::size_t phases_to_run
 ) {
   auto base = vt::theLBManager()->getBaseLoadModel();
-  auto replay_model = std::make_shared<StatsReplay<Index2D>>(base);
+  auto replay_model = std::make_shared<StatsReplay<Index2D>>(
+    base, phases_to_run
+  );
   auto &mapping = replay_model->getMapping();
 
   auto loads = loadStatsToReplay(initial_phase, phases_to_run, mapping);
   auto coll_proxy = create2DCollection(
-    mapping, coll_elms_per_node, initial_phase
+    mapping, coll_elms_per_node, initial_phase, phases_to_run
   );
 
   replay_model->setCollectionProxy(coll_proxy);
@@ -153,7 +159,8 @@ void LoadStatsReplayer::create2DAndConfigureForReplay(
 CollectionProxy<StatsDrivenCollection<Index1D>>
 LoadStatsReplayer::create1DCollection(
   StatsDrivenCollectionMapper<Index1D> &mapping,
-  std::size_t coll_elms, std::size_t initial_phase
+  std::size_t coll_elms, std::size_t initial_phase,
+  std::size_t phases_to_simulate
 ) {
   // create a stats-driven collection to mirror the one from the stats files
   vt_debug_print(
@@ -177,7 +184,7 @@ LoadStatsReplayer::create1DCollection(
     coll_proxy.broadcastCollective<
       StatsDrivenCollection<Index1D>::InitialPhaseMsg,
       &StatsDrivenCollection<Index1D>::setInitialPhase
-    >(initial_phase);
+    >(initial_phase, phases_to_simulate);
   });
 
   return coll_proxy;
@@ -186,7 +193,8 @@ LoadStatsReplayer::create1DCollection(
 CollectionProxy<StatsDrivenCollection<Index2D>>
 LoadStatsReplayer::create2DCollection(
   StatsDrivenCollectionMapper<Index2D> &mapping,
-  std::size_t coll_elms_per_node, std::size_t initial_phase
+  std::size_t coll_elms_per_node, std::size_t initial_phase,
+  std::size_t phases_to_simulate
 ) {
   // create a stats-driven collection to mirror the one from the stats files
   vt_debug_print(
@@ -213,7 +221,7 @@ LoadStatsReplayer::create2DCollection(
     coll_proxy.broadcastCollective<
       StatsDrivenCollection<Index2D>::InitialPhaseMsg,
       &StatsDrivenCollection<Index2D>::setInitialPhase
-    >(initial_phase);
+    >(initial_phase, phases_to_simulate);
   });
 
   return coll_proxy;

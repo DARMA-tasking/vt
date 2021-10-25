@@ -51,9 +51,11 @@ namespace vt { namespace vrt { namespace collection { namespace balance {
 
 template <typename CollectionIndexType>
 StatsReplay<CollectionIndexType>::StatsReplay(
-  std::shared_ptr<balance::LoadModel> base
+  std::shared_ptr<balance::LoadModel> base,
+  PhaseType phases_to_simulate
 )
-  : ComposedModel(base)
+  : ComposedModel(base),
+    phases_to_simulate_(phases_to_simulate)
 {
 }
 
@@ -68,33 +70,37 @@ TimeType StatsReplay<CollectionIndexType>::getWork(
     object.id, phase
   );
 
-  vtAbortIf(
-    offset.phases != PhaseOffset::NEXT_PHASE,
-    "This driver only supports offset.phases == NEXT_PHASE"
-  );
-  vtAbortIf(
-    offset.subphase != PhaseOffset::WHOLE_PHASE,
-    "This driver only supports offset.subphase == WHOLE_PHASE"
-  );
+  if (phase >= phases_to_simulate_) {
+    return ComposedModel::getWork(object, offset);
+  } else {
+    vtAbortIf(
+      offset.phases != PhaseOffset::NEXT_PHASE,
+      "This driver only supports offset.phases == NEXT_PHASE"
+    );
+    vtAbortIf(
+      offset.subphase != PhaseOffset::WHOLE_PHASE,
+      "This driver only supports offset.subphase == WHOLE_PHASE"
+    );
 
-  auto index = mapper_.getIndexFromElm(object.id);
-  auto elm_ptr = proxy_(index).tryGetLocalPtr();
-  if (elm_ptr == nullptr) {
+    auto index = mapper_.getIndexFromElm(object.id);
+    auto elm_ptr = proxy_(index).tryGetLocalPtr();
+    if (elm_ptr == nullptr) {
+      vt_debug_print(
+        verbose, replay,
+        "getWork: could not find elm_id={} index={}\n",
+        object.id, index
+      );
+      return 0; // FIXME: this BREAKS the O_l statistics post-migration!
+    }
+    vtAbortIf(elm_ptr == nullptr, "Must have element locally");
+    auto load = elm_ptr->getLoad(phase);
     vt_debug_print(
       verbose, replay,
-      "getWork: could not find elm_id={} index={}\n",
-      object.id, index
+      "getWork: elm_id={} index={} has load={}\n",
+      object.id, index, load
     );
-    return 0; // FIXME: this BREAKS the O_l statistics post-migration!
+    return load;
   }
-  vtAbortIf(elm_ptr == nullptr, "Must have element locally");
-  auto load = elm_ptr->getLoad(phase);
-  vt_debug_print(
-    verbose, replay,
-    "getWork: elm_id={} index={} has load={}\n",
-    object.id, index, load
-  );
-  return load;
 }
 
 }}}} // end namespace
