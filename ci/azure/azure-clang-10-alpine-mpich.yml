@@ -50,6 +50,7 @@ variables:
   VT_CI_BUILD: 1
   VT_DIAGNOSTICS: 1
   VT_NO_COLOR: 1
+  VT_SHARED_LIB: 0
   CACHE: "$(Agent.TempDirectory)/cache/"
   cache_name: alpine-clang-10-cache
   build_root: "$(CACHE)/$(ARCH)-alpine-$(COMPILER)-cache/"
