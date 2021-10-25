@@ -209,7 +209,7 @@ std::unique_ptr<balance::Reassignment> BaseLB::normalizeReassignments() {
       // The user has specified a migration neither on the send or receive side?
       vtAbort(
         "A migration has been requested for an object that neither lives here"
-        " or will be migrated here"
+        " nor will be migrated here"
       );
     }
   }
@@ -270,17 +270,39 @@ void BaseLB::notifyDeparting(TransferMsg<DepartListType>* msg) {
 }
 
 void BaseLB::notifyArriving(TransferMsg<ArriveListType>* msg) {
+  using namespace balance;
+
   auto const& depart_list = msg->getTransfer();
   auto& r = *pending_reassignment_.get();
+
+  NodeType from = uninitialized_destination;
+  DepartListType summary;
 
   // Add departing objects to our local reassignment list
   for (auto&& depart : depart_list) {
     auto const obj_id = std::get<0>(depart);
     auto const& new_node = std::get<1>(depart);
     r.depart_[obj_id] = new_node;
+    from = obj_id.curr_node;
+    summary.push_back(
+      std::make_tuple(obj_id, getObjectLoads(
+        load_model_, obj_id, {PhaseOffset::NEXT_PHASE, PhaseOffset::WHOLE_PHASE}
+     )
+    ));
   }
 
-  // @todo: send back data
+  using LoadSummaryMsg = TransferMsg<DepartListType>;
+  proxy_[from].template send<LoadSummaryMsg, &BaseLB::arriveLoadSummary>(summary);
+}
+
+void BaseLB::arriveLoadSummary(TransferMsg<DepartListType>* msg) {
+  auto& r = *pending_reassignment_.get();
+  auto const& arrive_list = msg->getTransfer();
+  for (auto&& elm : arrive_list) {
+    auto const obj_id = std::get<0>(elm);
+    auto const load_sum = std::get<1>(elm);
+    r.arrive_[obj_id] = load_sum;
+  }
 }
 
 void BaseLB::migrateObjectTo(ObjIDType const obj_id, NodeType const to) {
