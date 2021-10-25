@@ -34,6 +34,7 @@ jobs:
       VT_CI_BUILD: [% vt_ci_build %]
       VT_DIAGNOSTICS: [% vt_diagnostics %]
       VT_NO_COLOR: [% vt_no_color %]
+      VT_SHARED_LIB: [% vt_shared_lib %]
       CACHE: [% cache_dir %]
 
     steps:

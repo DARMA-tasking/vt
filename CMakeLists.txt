@@ -104,6 +104,14 @@ if (vt_trace_only)
   message(STATUS "Building additional target for VT in trace-only mode")
 endif()
 
+option(vt_shared_lib_enabled "Build VT as shared library" OFF)
+if (vt_shared_lib_enabled)
+  message(STATUS "Building VT as shared library")
+  set(BUILD_SHARED_LIBS ON)
+else()
+  set(BUILD_SHARED_LIBS OFF)
+endif()
+
 # Primary VT build
 add_subdirectory(src)
 

@@ -199,8 +199,12 @@ endif()
 
 add_library(
   ${VIRTUAL_TRANSPORT_LIBRARY}
-  STATIC
   ${HEADER_FILES} ${SOURCE_FILES}
+)
+
+set_target_properties(
+  ${VIRTUAL_TRANSPORT_LIBRARY} PROPERTIES
+  POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
 )
 
 option(vt_no_color_enabled "Build VT with option --vt_no_color set to true by default" OFF)
