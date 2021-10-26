@@ -44,10 +44,8 @@
 #include <gtest/gtest.h>
 
 #include "test_parallel_harness.h"
-#include "data_message.h"
 #include "test_helpers.h"
 
-#include "vt/pipe/pipe_manager.h"
 #include "vt/collective/collective_alg.h"
 #include "vt/termination/epoch_guard.h"
 
