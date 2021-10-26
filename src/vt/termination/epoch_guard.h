@@ -42,9 +42,9 @@
 */
 
 #if !defined INCLUDED_VT_TERMINATION_EPOCH_GUARD_H
-  #define INCLUDED_VT_TERMINATION_EPOCH_GUARD_H
+#define INCLUDED_VT_TERMINATION_EPOCH_GUARD_H
 
-  #include "vt/config.h"
+#include "vt/config.h"
 
 namespace vt {
 struct epoch_guard {
