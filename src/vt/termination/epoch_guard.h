@@ -42,41 +42,38 @@
 */
 
 #if !defined INCLUDED_VT_TERMINATION_EPOCH_GUARD_H
-#define INCLUDED_VT_TERMINATION_EPOCH_GUARD_H
+  #define INCLUDED_VT_TERMINATION_EPOCH_GUARD_H
 
-#include "vt/config.h"
+  #include "vt/config.h"
 
 namespace vt {
 struct epoch_guard {
-public:
-
-  explicit epoch_guard( EpochType ep )
-    : guarded_epoch_( ep )
-  {
-    vtAssert( guarded_epoch_ != no_epoch, "epoch guard cannot take no_epoch" );
-    theMsg()->pushEpoch( guarded_epoch_ );
+  public:
+  explicit epoch_guard(EpochType ep) : guarded_epoch_(ep) {
+    vtAssert(guarded_epoch_ != no_epoch, "epoch guard cannot take no_epoch");
+    theMsg()->pushEpoch(guarded_epoch_);
   }
 
-  epoch_guard( const epoch_guard & ) = delete;
-  epoch_guard( epoch_guard && ) noexcept = default;
+  epoch_guard(const epoch_guard&) = delete;
+  epoch_guard(epoch_guard&&) noexcept = default;
 
-  ~epoch_guard()
-  {
-    theMsg()->popEpoch( guarded_epoch_ );
+  ~epoch_guard() { pop(); }
+
+  epoch_guard& operator=(const epoch_guard&) = delete;
+  epoch_guard& operator=(epoch_guard&&) noexcept = default;
+
+  void finish_epoch() { theTerm()->finishedEpoch(guarded_epoch_); }
+
+  void pop() {
+    if (guarded_epoch_ != no_epoch) {
+      theMsg()->popEpoch(guarded_epoch_);
+      guarded_epoch_ = no_epoch;
+    }
   }
 
-  epoch_guard &operator=( const epoch_guard & ) = delete;
-  epoch_guard &operator=( epoch_guard && ) noexcept = default;
-
-  void finish_epoch()
-  {
-    theTerm()->finishedEpoch( guarded_epoch_ );
-  }
-
-private:
-
+  private:
   EpochType guarded_epoch_ = no_epoch;
 };
-}
+} // namespace vt
 
 #endif /*INCLUDED_VT_TERMINATION_EPOCH_GUARD_H*/
